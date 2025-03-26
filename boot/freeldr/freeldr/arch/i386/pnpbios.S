@@ -1,20 +1,8 @@
 /*
- *  FreeLoader
- *  Copyright (C) 2003  Eric Kohl
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     PnP BIOS helper functions
+ * COPYRIGHT:   Copyright 2003 Eric Kohl <eric.kohl@reactos.org>
  */
 
 #include <asm.inc>
@@ -168,6 +156,43 @@ _PnpBiosGetDeviceNode:
     mov esi, [ebp + 8]
     mov al, byte ptr ds:[BSS_PnpNodeNumber]
     mov [esi], al
+
+    pop es
+    popa
+
+    mov esp, ebp
+    pop ebp
+
+    mov eax, [BSS_PnpResult]
+
+    ret
+
+
+/*
+ * U32 PnpBiosGetDockStationInformation(U8 *DockingStationInfo);
+ *
+ * RETURNS:
+ */
+PUBLIC _PnpBiosGetDockStationInformation
+_PnpBiosGetDockStationInformation:
+
+    push ebp
+    mov ebp, esp
+
+    pusha
+    push es
+
+    /* Convert pointer to info structure to segment/offset */
+    mov eax, [ebp + 8]
+    shr eax, 4
+    and eax, HEX(0f000)
+    mov word ptr ds:[BSS_PnpBiosBufferSegment], ax
+    mov eax, [ebp + 8]
+    and eax, HEX(0ffff)
+    mov word ptr ds:[BSS_PnpBiosBufferOffset], ax
+
+    mov bx, FNID_PnpBiosGetDockStationInformation
+    call i386CallRealMode
 
     pop es
     popa

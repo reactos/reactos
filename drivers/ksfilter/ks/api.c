@@ -777,7 +777,7 @@ KspAddObjectCreateItemToList(
             return STATUS_SUCCESS;
         }
 
-        if (!wcsicmp(ObjectClass, CreateEntry->CreateItem->ObjectClass.Buffer))
+        if (!_wcsicmp(ObjectClass, CreateEntry->CreateItem->ObjectClass.Buffer))
         {
             /* the same object class already exists */
             return STATUS_OBJECT_NAME_COLLISION;

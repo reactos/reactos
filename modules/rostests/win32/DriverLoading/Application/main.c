@@ -100,7 +100,7 @@ SneakyUndocumentedMethods(LPCWSTR lpDriverPath)
         if (LoadVia_SystemExtendServiceTableInformation(szDevice))
         {
             wprintf(L"\tStarted\n");
-            
+
             NtStopDriver(DRIVER_NAME);
         }
 

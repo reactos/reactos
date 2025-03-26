@@ -1,0 +1,9 @@
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_XML_FILE "XML 文件"
+    IDS_XLS_FILE "XSL 樣式表"
+END

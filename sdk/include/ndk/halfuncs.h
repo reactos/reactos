@@ -81,6 +81,7 @@ HalInitializeProcessor(
     _In_ struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
 
+CODE_SEG("INIT")
 NTHALAPI
 BOOLEAN
 NTAPI
@@ -176,6 +177,7 @@ HalGetInterruptSource(
 );
 #endif
 
+CODE_SEG("INIT")
 NTHALAPI
 VOID
 NTAPI
@@ -189,6 +191,23 @@ FASTCALL
 HalRequestSoftwareInterrupt(
     _In_ KIRQL SoftwareInterruptRequested
 );
+
+#ifdef _M_AMD64
+
+NTHALAPI
+VOID
+NTAPI
+HalSendNMI(
+    _In_ KAFFINITY TargetSet);
+
+NTHALAPI
+VOID
+NTAPI
+HalSendSoftwareInterrupt(
+    _In_ KAFFINITY TargetSet,
+    _In_ KIRQL Irql);
+
+#endif // _M_AMD64
 
 NTHALAPI
 VOID
@@ -296,8 +315,6 @@ HalSetTimeIncrement(
 //
 // BIOS call API
 //
-#ifdef _M_AMD64
-
 NTSTATUS
 NTAPI
 x86BiosAllocateBuffer(
@@ -332,8 +349,6 @@ NTAPI
 x86BiosCall(
     _In_ ULONG InterruptNumber,
     _Inout_ PX86_BIOS_REGISTERS Registers);
-
-#endif // _M_AMD64
 
 #endif // NTOS_MODE_USER
 #endif // _HALFUNCS_H

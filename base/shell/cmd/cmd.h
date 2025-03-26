@@ -325,7 +325,7 @@ VOID   StripQuotes(LPTSTR);
 BOOL IsValidPathName(IN LPCTSTR pszPath);
 BOOL IsExistingFile(IN LPCTSTR pszPath);
 BOOL IsExistingDirectory(IN LPCTSTR pszPath);
-VOID   GetPathCase(TCHAR *, TCHAR *);
+VOID GetPathCase(IN LPCTSTR Path, OUT LPTSTR OutPath);
 
 #define PROMPT_NO    0
 #define PROMPT_YES   1
@@ -434,6 +434,7 @@ INT cmd_path (LPTSTR);
 VOID InitPrompt (VOID);
 VOID PrintPrompt (VOID);
 INT  cmd_prompt (LPTSTR);
+BOOL HasInfoLine(VOID);
 
 /* Prototypes for REDIR.C */
 HANDLE GetHandle(UINT Number);

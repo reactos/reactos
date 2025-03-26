@@ -1,0 +1,56 @@
+# Labelling by the files touched
+
+ATL:
+- changed-files:
+  - any-glob-to-any-file:
+    - sdk/lib/atl/**
+
+drivers:
+- changed-files:
+  - any-glob-to-any-file:
+    - drivers/**
+    - sdk/lib/drivers/**
+  - all-globs-to-any-file:
+    - win32ss/drivers/**
+    - '!win32ss/drivers/font/**'
+
+freeldr:
+- changed-files:
+  - any-glob-to-any-file:
+    - boot/freeldr/**
+
+"kernel&hal":
+- changed-files:
+  - any-glob-to-any-file:
+    - hal/**
+    - ntoskrnl/**
+
+ROSTESTS:
+- changed-files:
+  - any-glob-to-any-file:
+    - modules/rostests/**
+
+shell:
+- changed-files:
+  - any-glob-to-any-file:
+    - base/shell/explorer/**
+    - base/shell/rshell/**
+    - dll/shellext/**
+    - dll/win32/browseui/**
+    - dll/win32/shell32/**
+
+Win32SS:
+- changed-files:
+  - any-glob-to-any-file:
+    - win32ss/**
+
+"input method":
+- changed-files:
+  - any-glob-to-any-file:
+    - base/applications/ctfmon/**
+    - dll/ime/**
+    - dll/win32/imm32/**
+    - dll/win32/msctf/**
+    - dll/win32/msutb/**
+    - win32ss/user/ntuser/ime.c
+    - win32ss/user/user32/misc/imm.c

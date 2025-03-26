@@ -8,40 +8,17 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
-class CDrmPort2 : public IDrmPort2
+class CDrmPort2 : public CUnknownImpl<IDrmPort2>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IDrmPort2;
     CDrmPort2(IUnknown *OuterUnknown){}
     virtual ~CDrmPort2(){}
-
-protected:
-    LONG m_Ref;
-
 };
 
 NTSTATUS
@@ -154,5 +131,3 @@ NewIDrmPort(
     *OutPort = (PDRMPORT2)This;
     return STATUS_SUCCESS;
 }
-
-

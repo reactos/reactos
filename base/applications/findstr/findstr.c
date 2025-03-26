@@ -168,7 +168,7 @@ main (int argc, char **argv)
 	      case 'B':		/* Matches pattern if at the beginning of a line */
 	        at_start = 1;
 	        break;
-			
+
 	      //case 'c':
 	      //case 'C':		/* Literal? */
 	      //  literal_search = 1;
@@ -178,7 +178,7 @@ main (int argc, char **argv)
 	      case 'E':		/* matches pattern if at end of line */
 	        at_end = 1;
 	        break;
-			
+
 	      case 'i':
 	      case 'I':		/* Ignore */
 	        ignore_case = 1;
@@ -187,22 +187,22 @@ main (int argc, char **argv)
 	      case 'm':
 	      case 'M':		/* only filename */
 	        only_fname = 1;
-	        break;			
-			
+	        break;
+
 	      case 'n':
 	      case 'N':		/* Number */
 	        number_output = 1;
 	        break;
-			
+
 	      case 'r':
 	      case 'R':		/* search strings as regular expressions */
 	        reg_express = 1;
-	        break;	
+	        break;
 
 	      case 's':
 	      case 'S':		/* search files in child directory too*/
 	        sub_dirs = 1;
-	        break;				
+	        break;
 
 	      case 'v':
 	      case 'V':		/* Not with */
@@ -212,8 +212,8 @@ main (int argc, char **argv)
 	      case 'x':
 	      case 'X':		/* exact match */
 	        exact_match = 1;
-	        break;			
-			
+	        break;
+
 	      default:
 	        usage ();
 	        exit (2);		/* syntax error .. return error 2 */

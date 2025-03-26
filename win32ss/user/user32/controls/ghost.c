@@ -331,7 +331,7 @@ Ghost_OnNCPaint(HWND hwnd, HRGN hrgn, BOOL bUnicode)
 {
     HDC hdc;
 
-    // do the default behaivour
+    // do the default behaviour
     if (bUnicode)
         DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
     else

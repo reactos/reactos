@@ -188,6 +188,7 @@ MiSimpleRead(PFILE_OBJECT FileObject,
     return Status;
 }
 
+#ifdef NEWCC
 /*
 
 Convenience function for writing from kernel space.  This issues a paging
@@ -334,3 +335,4 @@ _MiWriteBackPage(PFILE_OBJECT FileObject,
 
     return Status;
 }
+#endif

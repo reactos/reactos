@@ -324,7 +324,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 
     ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
     if (!ppdev)
-        ppdev = gppdevPrimary;
+        ppdev = gpmdev->ppdevGlobal;
 
     if (bCallDriver)
     {
@@ -458,7 +458,7 @@ EBRUSHOBJ_psoMask(EBRUSHOBJ *pebo)
             /* Get the PDEV */
             ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
             if (!ppdev)
-                ppdev = gppdevPrimary;
+                ppdev = gpmdev->ppdevGlobal;
 
             /* Use the hatch bitmap as the mask */
             hbmMask = (HBITMAP)ppdev->ahsurf[pebo->pbrush->iHatch];

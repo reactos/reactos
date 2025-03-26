@@ -61,7 +61,7 @@ GetW32ThreadInfo(VOID)
  *  2) pSecurityInfo - type of information to retrieve
  *  3) pSecurityDescriptor - buffer which receives descriptor
  *  4) dwLength - size, in bytes, of buffer 'pSecurityDescriptor'
- *  5) pdwLengthNeeded - reseives actual size of descriptor
+ *  5) pdwLengthNeeded - receives actual size of the descriptor
  *
  * Return Vaules:
  *  TRUE on success
@@ -80,21 +80,16 @@ GetUserObjectSecurity(
     OUT PDWORD pdwLengthNeeded
 )
 {
-DWORD dwWin32Error;
-NTSTATUS Status;
+    NTSTATUS Status;
 
-
-    Status = NtQuerySecurityObject(
-        hObject,            // Object Handle
-        *pSecurityInfo,     // Security Information
-        pSecurityDescriptor,// Security Descriptor
-        dwLength,           // Buffer Length
-        pdwLengthNeeded     // Actual Length
-    );
-
-    if ( ! NT_SUCCESS( Status ) ) {
-        dwWin32Error = RtlNtStatusToDosError( Status );
-        NtCurrentTeb()->LastErrorValue = dwWin32Error;
+    Status = NtQuerySecurityObject(hObject,
+                                   *pSecurityInfo,
+                                   pSecurityDescriptor,
+                                   dwLength,
+                                   pdwLengthNeeded);
+    if (!NT_SUCCESS(Status))
+    {
+        UserSetLastNTError(Status);
         return FALSE;
     }
 
@@ -128,19 +123,14 @@ SetUserObjectSecurity(
     IN PSECURITY_DESCRIPTOR pSecurityDescriptor
 )
 {
-DWORD dwWin32Error;
-NTSTATUS Status;
+    NTSTATUS Status;
 
-
-    Status = NtSetSecurityObject(
-        hObject,            // Object Handle
-        *pSecurityInfo,     // Security Information
-        pSecurityDescriptor // Security Descriptor
-    );
-
-    if ( ! NT_SUCCESS( Status ) ) {
-        dwWin32Error = RtlNtStatusToDosError( Status );
-        NtCurrentTeb()->LastErrorValue = dwWin32Error;
+    Status = NtSetSecurityObject(hObject,
+                                 *pSecurityInfo,
+                                 pSecurityDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        UserSetLastNTError(Status);
         return FALSE;
     }
 

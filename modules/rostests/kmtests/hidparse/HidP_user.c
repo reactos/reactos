@@ -22,8 +22,10 @@ START_TEST(HidPDescription)
     KmtStartService(L"hidusb", &ServiceHandle);
     CloseServiceHandle(ServiceHandle);
 
-    KmtLoadDriver(L"HidP", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"HidP", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     Error = KmtSendToDriver(IOCTL_TEST_DESCRIPTION);
     ok(Error == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lx\n", Error);

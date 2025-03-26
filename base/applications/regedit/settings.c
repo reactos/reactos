@@ -1,31 +1,17 @@
 /*
  * Regedit settings
  *
- * Copyright (C) 2012 Edijs Kolesnikovics <terminedijs@yahoo.com>
- * Copyright (C) 2012 Grégori Macário Harbs <mysoft64bits at gmail dot com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * Copyright 2012 Edijs Kolesnikovics <terminedijs@yahoo.com>
+ * Copyright 2012 Grégori Macário Harbs <mysoft64bits@gmail.com>
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
-#include <strsafe.h>
 
 const WCHAR g_szGeneralRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit";
-DECLSPEC_IMPORT ULONG WINAPIV DbgPrint(PCH Format,...);
+DECLSPEC_IMPORT ULONG WINAPIV DbgPrint(PCCH Format,...);
 
-/* 
+/*
 VV,VV,VV,VV,WA,WA,WA,WA,WB,WB,WB,WB,R1,R1,R1,R1
 R2,R2,R2,R2,R3,R3,R3,R3,R4,R4,R4,r4,LL,LL,LL,LL
 TT,TT,TT,TT,RR,RR,RR,RR,BB,BB,BB,BB,SS,SS,SS,SS
@@ -101,7 +87,7 @@ extern void LoadSettings(void)
             ShowWindow(hFrameWnd, SW_SHOWNORMAL);
 
         /* Restore key position */
-        if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, L"LastKey", szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
+        if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, L"LastKey", szBuffer, ARRAY_SIZE(szBuffer)) == ERROR_SUCCESS)
         {
             SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
         }
@@ -132,7 +118,7 @@ extern void SaveSettings(void)
         rootName = get_root_key_name(hRootKey);
 
         /* Load "My Computer" string and complete it */
-        if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer)) &&
+        if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, ARRAY_SIZE(szBuffer)) &&
             SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
             SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), rootName)) &&
             SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))

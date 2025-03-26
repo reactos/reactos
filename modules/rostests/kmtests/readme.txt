@@ -7,5 +7,5 @@ The example subdirectory contains a set of small tests that can be used as
 examples and templates.
 
 
-See http://www.reactos.org/wiki/KmtestsHowto for more
+See https://reactos.org/wiki/KmtestsHowto for more
 information and a guide on how to use the framework.

@@ -43,7 +43,7 @@ if(MSVC)
     add_importlibs(libxslt ntdll)
 endif()
 
-if(GCC OR CLANG)
+if(NOT MSVC)
     target_compile_options(libxslt PRIVATE -Wno-misleading-indentation -Wno-pointer-sign -Wno-unused-function)
 endif()
 

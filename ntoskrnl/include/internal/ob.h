@@ -54,6 +54,16 @@
                                                          OBJ_AUDIT_OBJECT_CLOSE)
 
 //
+// Handle Access Protection Close Flag
+//
+#define ObpAccessProtectCloseBit 0x02000000L
+
+//
+// System Process Quota Block
+//
+#define OBP_SYSTEM_PROCESS_QUOTA ((PEPROCESS_QUOTA_BLOCK)(ULONG_PTR)1)
+
+//
 // Identifies a Kernel Handle
 //
 #ifdef _WIN64
@@ -159,6 +169,7 @@ typedef struct _OB_TEMP_BUFFER
 //
 // Startup and Shutdown Functions
 //
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ObInitSystem(
@@ -194,7 +205,7 @@ ObpLookupEntryDirectory(
     IN POBJECT_DIRECTORY Directory,
     IN PUNICODE_STRING Name,
     IN ULONG Attributes,
-    IN UCHAR SearchShadow,
+    IN BOOLEAN SearchShadow,
     IN POBP_LOOKUP_CONTEXT Context
 );
 
@@ -294,9 +305,9 @@ ObpSetHandleAttributes(
 NTSTATUS
 NTAPI
 ObQueryDeviceMapInformation(
-    IN PEPROCESS Process,
-    OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-    IN ULONG Flags
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags
 );
 
 //
@@ -429,6 +440,7 @@ ObInheritDeviceMap(
     IN PEPROCESS Process
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpCreateDosDevicesDirectory(
@@ -450,6 +462,7 @@ ObpReferenceDeviceMap(
 //
 // Security descriptor cache functions
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpInitSdCache(
@@ -635,6 +648,7 @@ extern ALIGNEDNAME ObpDosDevicesShortNameRoot;
 extern UNICODE_STRING ObpDosDevicesShortName;
 extern WCHAR ObpUnsecureGlobalNamesBuffer[128];
 extern ULONG ObpUnsecureGlobalNamesLength;
+extern ULONG ObpCaseInsensitive;
 extern ULONG ObpObjectSecurityMode;
 extern ULONG ObpProtectionMode;
 extern ULONG ObpLUIDDeviceMapsDisabled;

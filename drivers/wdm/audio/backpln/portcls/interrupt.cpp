@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 typedef struct
@@ -21,27 +18,11 @@ typedef struct
     PVOID DynamicContext;
 }SYNC_ENTRY, *PSYNC_ENTRY;
 
-class CInterruptSync : public IInterruptSync
+class CInterruptSync : public CUnknownImpl<IInterruptSync>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IInterruptSync;
     CInterruptSync(IUnknown *OuterUnknown){}
     virtual ~CInterruptSync(){}
@@ -59,18 +40,13 @@ public:
     PVOID m_DynamicContext;
     NTSTATUS m_Status;
 
-    LONG m_Ref;
-
     friend BOOLEAN NTAPI CInterruptSynchronizedRoutine(IN PVOID  ServiceContext);
     friend BOOLEAN NTAPI IInterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
 };
 
-
 //---------------------------------------------------------------
 // IUnknown methods
 //
-
-
 
 NTSTATUS
 NTAPI
@@ -90,7 +66,6 @@ CInterruptSync::QueryInterface(
         return STATUS_SUCCESS;
     }
 
-
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
         DPRINT1("CInterruptSync::QueryInterface: no interface!!! iface %S\n", GuidString.Buffer);
@@ -103,7 +78,6 @@ CInterruptSync::QueryInterface(
 //---------------------------------------------------------------
 // CInterruptSync methods
 //
-
 
 BOOLEAN
 NTAPI
@@ -126,7 +100,7 @@ CInterruptSync::CallSynchronizedRoutine(
     KIRQL OldIrql;
 
     DPRINT("CInterruptSync::CallSynchronizedRoutine this %p Routine %p DynamicContext %p Irql %x Interrupt %p\n", this, Routine, DynamicContext, KeGetCurrentIrql(), m_Interrupt);
-    
+
     if (!m_Interrupt)
     {
         DPRINT("CInterruptSync_CallSynchronizedRoutine %p no interrupt connected\n", this);
@@ -237,7 +211,6 @@ IInterruptServiceRoutine(
     }
 }
 
-
 NTSTATUS
 NTAPI
 CInterruptSync::Connect()
@@ -272,7 +245,6 @@ CInterruptSync::Connect()
     DPRINT1("CInterruptSync::Connect result %x\n", Status);
     return Status;
 }
-
 
 VOID
 NTAPI
@@ -330,7 +302,7 @@ PcNewInterruptSync(
     CInterruptSync * This;
     NTSTATUS Status;
 
-    DPRINT("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n", 
+    DPRINT("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n",
             OutInterruptSync, OuterUnknown, ResourceList, ResourceIndex, Mode);
 
     if (!OutInterruptSync || !ResourceList || Mode < InterruptSyncModeNormal || Mode > InterruptSyncModeRepeat)

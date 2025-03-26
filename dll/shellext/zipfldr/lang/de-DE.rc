@@ -76,6 +76,9 @@ BEGIN
     IDS_CANTCREATEZIP "Fehler beim Erstellen des Archivs '%s' (Fehler Code: %d)."
     IDS_CANTREADFILE "Datei '%s' konnte nicht gelesen werden."
     IDS_EXTRACTING "Extrahieren..."
+    IDS_CANTEXTRACTFILE "Datei '%1' konnte nicht extrahiert werden."
+    IDS_DECOMPRESSERROR "Kompressionsverfahren %d wird nicht unterstützt. Dennoch fortfahren?"
+    IDS_UNKNOWNERROR "Unbekannter Fehler 0x%08x."
 
     IDS_WIZ_TITLE "Extrahier-Assistent"
     IDS_WIZ_DEST_TITLE "Ziel auswählen"

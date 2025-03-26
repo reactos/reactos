@@ -7,6 +7,10 @@
 
 #include "precomp.h"
 
+DWORD WINAPI GetBitmapAttributes(HBITMAP hbm);
+HBITMAP WINAPI SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags);
+HBITMAP WINAPI ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags);
+
 void Test_CreateBitmap_Params()
 {
     HBITMAP hbmp;
@@ -179,9 +183,70 @@ void Test_CreateBitmap()
     ok(hbmp == 0, "Expected failure for 33 bpp\n");
 }
 
+void Test_BitmapAttributes()
+{
+    static const WORD pattern_bits[] = { 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa };
+    HBITMAP hbmp,hbmpso,hbmpsoc;
+    INT ret;
+    BITMAP bm;
+
+    hbmp = CreateBitmap(0, 0, 0, 0, NULL);
+    ok(hbmp != 0, "should get a 1x1 bitmap\n");
+    ok(hbmp == GetStockObject(DEFAULT_BITMAP), "\n");
+    ok(GetBitmapAttributes(hbmp) == 1,"\n");
+
+    ok(SetBitmapAttributes(hbmp, 0x00000002) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000004) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000008) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000010) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000020) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000040) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000080) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000100) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000200) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000400) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0x00000800) == 0,"\n");
+    ok(SetBitmapAttributes(hbmp, 0xFFFFFFFF) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000002) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000004) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000008) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000010) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000020) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000040) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000080) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000100) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000200) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000400) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0x00000800) == 0,"\n");
+    ok(ClearBitmapAttributes(hbmp, 0xFFFFFFFF) == 0,"\n");
+    DeleteObject(hbmp);
+
+    hbmp = CreateBitmap( 16, 8, 1, 1, pattern_bits );
+    ok(hbmp != 0, "should get a pattern bitmap\n");
+    ok(GetBitmapAttributes(hbmp) == 0,"\n");
+
+    hbmpso = SetBitmapAttributes(hbmp, 1);
+    ok(hbmpso != 0, "should get stock pattern bitmap\n");
+    ok(GetBitmapAttributes(hbmpso) == 1,"\n");
+    ok(hbmpso != hbmp,"\n");
+
+    DeleteObject(hbmpso);
+    ret = GetObjectW(hbmpso, sizeof(bm), &bm);
+    ok(ret == sizeof(bm), "GetObject returned %d\n", ret);
+
+    hbmpsoc = ClearBitmapAttributes(hbmpso, 1);
+    ok(hbmpsoc != 0, "should get pattern bitmap\n");
+    ok(GetBitmapAttributes(hbmp) == 0,"\n");
+    ok(hbmpsoc == hbmp,"\n");
+
+    DeleteObject(hbmp);
+    ret = GetObjectW(hbmp, sizeof(bm), &bm);
+    ok(ret == 0, "GetObject returned %d\n", ret);
+}
+
 START_TEST(CreateBitmap)
 {
     Test_CreateBitmap_Params();
     Test_CreateBitmap();
-
+    Test_BitmapAttributes();
 }

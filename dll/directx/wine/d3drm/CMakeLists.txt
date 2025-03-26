@@ -1,5 +1,5 @@
 
-add_definitions(-D__WINESRC__)
+add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3drm.dll d3drm.spec ADD_IMPORTLIB)
 
@@ -28,3 +28,7 @@ target_link_libraries(d3drm dxguid uuid wine)
 add_importlibs(d3drm ddraw d3dxof msvcrt kernel32 ntdll)
 add_pch(d3drm precomp.h SOURCE)
 add_cd_file(TARGET d3drm DESTINATION reactos/system32 FOR all)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(d3drm PRIVATE -Wno-incompatible-function-pointer-types)
+endif()

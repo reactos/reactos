@@ -32,13 +32,6 @@ ULONG DbgPrint(PCH Format,...);
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
-struct CCoInit
-{
-    CCoInit() { hres = CoInitialize(NULL); }
-    ~CCoInit() { if (SUCCEEDED(hres)) { CoUninitialize(); } }
-    HRESULT hres;
-};
-
 
 DEFINE_GUID(IID_IACLCustomMRU,             0xf729fc5e, 0x8769, 0x4f3e, 0xbd, 0xb2, 0xd7, 0xb5, 0x0f, 0xd2, 0x27, 0x5b);
 static const WCHAR szTestPath[] = L"TESTPATH_BROWSEUI_APITEST";
@@ -46,7 +39,7 @@ static const WCHAR szTestPath[] = L"TESTPATH_BROWSEUI_APITEST";
 #undef INTERFACE
 #define INTERFACE IACLCustomMRU
 
-/* based on https://msdn.microsoft.com/en-gb/library/windows/desktop/bb776380(v=vs.85).aspx */
+/* based on https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/bb776380(v=vs.85) */
 DECLARE_INTERFACE_IID_(IACLCustomMRU, IUnknown, "F729FC5E-8769-4F3E-BDB2-D7B50FD2275B")
 {
     // *** IUnknown methods ***
@@ -551,8 +544,8 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
 START_TEST(IACLCustomMRU)
 {
     CCoInit init;
-    ok_hex(init.hres, S_OK);
-    if (!SUCCEEDED(init.hres))
+    ok_hex(init.hr, S_OK);
+    if (!SUCCEEDED(init.hr))
         return;
 
     test_IACLCustomMRU_Basics();

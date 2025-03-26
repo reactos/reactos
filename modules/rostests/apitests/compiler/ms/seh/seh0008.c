@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0008.c";
-int perfect;
 
 void rtlRaiseStatus(DWORD Status) {
   RaiseException(Status, 0, /*no flags*/ 0, 0);

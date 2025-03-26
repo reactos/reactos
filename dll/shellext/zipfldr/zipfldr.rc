@@ -3,10 +3,11 @@
 
 #include "resource.h"
 
-164 BITMAP "res/zipfldr.bmp"
-200 BITMAP "res/header.bmp"
-201 BITMAP "res/watermark.bmp"
-1 ICON "res/zipfldr.ico"
+IDI_ZIPFLDR ICON "res/zipfldr.ico"
+
+IDB_ZIPFLDR BITMAP "res/zipfldr.bmp"
+IDB_HEADER BITMAP "res/header.bmp"
+IDB_WATERMARK BITMAP "res/watermark.bmp"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Zip Shell Extension"
@@ -20,7 +21,6 @@ IDR_ZIPFLDR REGISTRY "res/zipfldr.rgs"
 
 /* UTF-8 */
 #pragma code_page(65001)
-
 
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
@@ -58,8 +58,14 @@ IDR_ZIPFLDR REGISTRY "res/zipfldr.rgs"
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

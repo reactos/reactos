@@ -1,0 +1,21 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi (India) resource file
+ * TRANSLATOR:  Copyright 2019 Arnav Bhatt <arnavbhatt2004@gmail.com>
+*/
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME    "नाम"
+    IDS_COL_TYPE    "प्रकार"
+    IDS_COL_SIZE    "साइज़"
+    IDS_COL_MDATE   "तिथि संशोधित"
+    IDS_COL_PATH    "Path"
+    IDS_COL_ATT     "Attributes"
+
+    IDS_EXTRACT     "Extract..."
+    IDS_EXTRACTALL  "Extract &All..."
+END

@@ -62,6 +62,10 @@ class BRUSH;
 typedef class BRUSH *PBRUSH;
 #endif
 
+/*
+ * EBRUSHOBJ structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/EBRUSHOBJ
+ */
 typedef struct _EBRUSHOBJ
 {
     BRUSHOBJ    BrushObject;
@@ -131,6 +135,7 @@ struct _SURFACE;
 struct _PALETTE;
 struct _DC;
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitBrushImpl(VOID);

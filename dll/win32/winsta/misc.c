@@ -2,9 +2,9 @@
  * PROJECT:         ReactOS winsta.dll
  * FILE:            lib/winsta/misc.c
  * PURPOSE:         WinStation
- * PROGRAMMER:      Samuel Serapi?n
+ * PROGRAMMER:      Samuel Serapión
  * NOTES:           Misc functions.
- * 
+ *
  */
 
 #include "winsta.h"

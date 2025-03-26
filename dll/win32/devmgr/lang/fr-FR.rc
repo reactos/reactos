@@ -33,6 +33,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "Rang I/O"
+    IDS_COPY "&Copier"
 END
 
 STRINGTABLE
@@ -74,7 +75,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Les pilotes de ce périphérique ne sont pas installés."
     IDS_DEV_HARDWARE_DISABLED "Ce périphérique est désactivé car le BIOS ne lui a pas donné de ressources."
     IDS_DEV_CANT_SHARE_IRQ "Ce périphérique utilise une Interruption Matérielle (IRQ) qui est utilisée par un autre périphérique et ne peut être partagée.\nVous devez changer les réglages en conflit ou enlever le pilote en mode-réel causant le conflit."
-    IDS_DEV_FAILED_ADD "Ce périphérique ne fonctionne pas correctement parce que %1 ne fonctionne pas correctement."
+    IDS_DEV_FAILED_ADD "Ce périphérique ne fonctionne pas correctement parce que ReactOS ne peut pas charger les pilotes requis pour ce périphérique."
     IDS_DEV_DISABLED_SERVICE "ReactOS ne peut pas installer les pilotes pour ce périphérique car il ne peut pas accéder au lecteur ou à l'emplacement réseau contenant les fichiers d'installation."
     IDS_DEV_TRANSLATION_FAILED "Ce périphérique ne répond pas à son pilote."
     IDS_DEV_NO_SOFTCONFIG "ReactOS ne peut pas déterminer les réglages de ce périphérique. Consultez la documentation accompagnant ce périphérique et utilisez la page des Ressources pour modifier la configuration."
@@ -227,7 +228,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Paramètres de la ressource :", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -285,14 +286,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Gestionnaire de périphériques ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Désactiver ce périphérique va le rendre inopérant.\r\nVoulez-vous réellement le désactiver ?"
-  IDS_CONFIRM_UNINSTALL     "Attention : vous êtes sur le point de désinstaller ce périphérique de votre système.\r\nVoulez-vous continuer ?"
+  IDS_CONFIRM_DISABLE       "Désactiver ce périphérique va le rendre inopérant.\nVoulez-vous réellement le désactiver ?"
+  IDS_CONFIRM_UNINSTALL     "Attention : vous êtes sur le point de désinstaller ce périphérique de votre système.\nVoulez-vous continuer ?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Mettre le pilote logiciel à jour..."
   IDS_MENU_ENABLE           "Activer"
@@ -303,7 +305,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Propriétés"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Propriétés"
   IDS_TOOLTIP_SCAN          "Vérifier les changements de matériel"
@@ -314,7 +316,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Ouvre les priopriétés pour la sélection actuelle."

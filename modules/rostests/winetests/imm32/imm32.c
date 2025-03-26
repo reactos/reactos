@@ -24,7 +24,11 @@
 #include "winuser.h"
 #include "wingdi.h"
 #include "imm.h"
+#ifdef __REACTOS__
+#include "ddk/immdev.h"
+#else
 #include "ddk/imm.h"
+#endif
 
 static BOOL (WINAPI *pImmAssociateContextEx)(HWND,HIMC,DWORD);
 static BOOL (WINAPI *pImmIsUIMessageA)(HWND,UINT,WPARAM,LPARAM);
@@ -57,11 +61,13 @@ typedef struct
     } u;
 } TEST_INPUT;
 
+#ifndef __REACTOS__
 typedef struct _tagTRANSMSG {
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
 } TRANSMSG, *LPTRANSMSG;
+#endif
 
 static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 
@@ -293,7 +299,11 @@ static void cleanup(void) {
 }
 
 static void test_ImmNotifyIME(void) {
+#ifdef __REACTOS__
+    static char string[] = "wine";
+#else
     static const char string[] = "wine";
+#endif
     char resstr[16] = "";
     HIMC imc;
     BOOL ret;
@@ -422,7 +432,11 @@ static LRESULT WINAPI test_ime_wnd_proc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
 static void test_ImmGetCompositionString(void)
 {
     HIMC imc;
+#ifdef __REACTOS__
+    static WCHAR string[] = {'w','i','n','e',0x65e5,0x672c,0x8a9e};
+#else
     static const WCHAR string[] = {'w','i','n','e',0x65e5,0x672c,0x8a9e};
+#endif
     char cstring[20];
     WCHAR wstring[20];
     LONG len;
@@ -606,9 +620,17 @@ static void test_ImmIME(void)
     if (imc)
     {
         BOOL rc;
+#ifdef __REACTOS__
+        rc = ImmConfigureIMEA((HKL)imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#else
         rc = ImmConfigureIMEA(imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#endif
         ok (rc == 0, "ImmConfigureIMEA did not fail\n");
+#ifdef __REACTOS__
+        rc = ImmConfigureIMEW((HKL)imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#else
         rc = ImmConfigureIMEW(imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#endif
         ok (rc == 0, "ImmConfigureIMEW did not fail\n");
     }
     ImmReleaseContext(hwnd,imc);

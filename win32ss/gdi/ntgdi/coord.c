@@ -416,11 +416,11 @@ NtGdiTransformPoints(
     switch (iMode)
     {
         case GdiDpToLp:
-            DC_vXformDeviceToWorld(pdc, Count, Points, Points);
+            ret = INTERNAL_APPLY_MATRIX(DC_pmxDeviceToWorld(pdc), Points, Count);
             break;
 
         case GdiLpToDp:
-            DC_vXformWorldToDevice(pdc, Count, Points, Points);
+            ret = INTERNAL_APPLY_MATRIX(DC_pmxWorldToDevice(pdc), Points, Count);
             break;
 
         case 2: // Not supported yet. Need testing.
@@ -432,17 +432,20 @@ NtGdiTransformPoints(
         }
     }
 
-    _SEH2_TRY
+    if (ret)
     {
-        /* Pointer was already probed! */
-        RtlCopyMemory(UnsafePtOut, Points, Size);
+        _SEH2_TRY
+        {
+            /* Pointer was already probed! */
+            RtlCopyMemory(UnsafePtOut, Points, Size);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Do not set last error */
+            ret = FALSE;
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Do not set last error */
-        ret = 0;
-    }
-    _SEH2_END;
 
 //
 // If we are getting called that means User XForms is a mess!
@@ -866,22 +869,22 @@ IntGdiSetMapMode(
             break;
 
         case MM_LOENGLISH:
-            pdcattr->szlWindowExt.cx = MulDiv(1000, pdcattr->szlVirtualDeviceMm.cx, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(1000, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlWindowExt.cx = EngMulDiv(1000, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = EngMulDiv(1000, pdcattr->szlVirtualDeviceMm.cy, 254);
             pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
             pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_HIENGLISH:
-            pdcattr->szlWindowExt.cx = MulDiv(10000, pdcattr->szlVirtualDeviceMm.cx, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(10000, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlWindowExt.cx = EngMulDiv(10000, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = EngMulDiv(10000, pdcattr->szlVirtualDeviceMm.cy, 254);
             pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
             pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_TWIPS:
-            pdcattr->szlWindowExt.cx = MulDiv(14400, pdcattr->szlVirtualDeviceMm.cx, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(14400, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlWindowExt.cx = EngMulDiv(14400, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = EngMulDiv(14400, pdcattr->szlVirtualDeviceMm.cy, 254);
             pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
             pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;

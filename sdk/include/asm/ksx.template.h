@@ -126,10 +126,15 @@ CONSTANT(IPI_LEVEL),
 CONSTANT(POWER_LEVEL),
 CONSTANT(PROFILE_LEVEL),
 CONSTANT(HIGH_LEVEL),
-RAW("#ifdef NT_UP"),
-{TYPE_CONSTANT, "SYNCH_LEVEL", DISPATCH_LEVEL},
+
+RAW("#ifndef CONFIG_SMP"),
+CONSTANTX(SYNCH_LEVEL, DISPATCH_LEVEL),
 RAW("#else"),
-{TYPE_CONSTANT, "SYNCH_LEVEL", (IPI_LEVEL - 2)},
+#if defined(_M_IX86) && (NTDDI_VERSION < NTDDI_WS03)
+CONSTANTX(SYNCH_LEVEL, (IPI_LEVEL - 1)),
+#else
+CONSTANTX(SYNCH_LEVEL, (IPI_LEVEL - 2)),
+#endif
 RAW("#endif"),
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
@@ -280,7 +285,7 @@ HEADER("Stack sizes"),
 CONSTANT(KERNEL_STACK_SIZE), /// FIXME: Obsolete
 CONSTANT(KERNEL_LARGE_STACK_SIZE),
 CONSTANT(KERNEL_LARGE_STACK_COMMIT),
-//CONSTANT(DOUBLE_FAULT_STACK_SIZE),
+CONSTANT(DOUBLE_FAULT_STACK_SIZE),
 #ifdef _M_AMD64
 CONSTANT(KERNEL_MCA_EXCEPTION_STACK_SIZE),
 CONSTANT(NMI_STACK_SIZE),
@@ -332,7 +337,7 @@ CONSTANT(DBG_STATUS_CONTROL_C),
 //CONSTANT(KI_SLIST_FAULT_COUNT_MAXIMUM), // i386
 //CONSTANTUSER_CALLBACK_FILTER),
 
-#ifndef _M_ARM
+#if !defined(_M_ARM) && !defined(_M_ARM64)
 CONSTANT(MAXIMUM_IDTVECTOR),
 //CONSTANT(MAXIMUM_PRIMARY_VECTOR),
 CONSTANT(PRIMARY_VECTOR_BASE),
@@ -762,6 +767,7 @@ OFFSET(ThSystemCallNumber, KTHREAD, SystemCallNumber),
 OFFSET(ThTrapFrame, KTHREAD, TrapFrame),
 OFFSET(ThApcState, KTHREAD, ApcState),
 OFFSET(ThPriority, KTHREAD, Priority), // obsolete
+OFFSET(ThSwapBusy, KTHREAD, SwapBusy),
 OFFSET(ThContextSwitches, KTHREAD, ContextSwitches),
 OFFSET(ThState, KTHREAD, State),
 OFFSET(ThProcess, KTHREAD, Process), // thProcess in native headers
@@ -779,7 +785,7 @@ OFFSET(ThSpecialApcDisable, KTHREAD, SpecialApcDisable),
 //OFFSET(ThVfpState, KTHREAD, VfpState),
 #endif
 OFFSET(ThNextProcessor, KTHREAD, NextProcessor),
-OFFSET(ThProcess, KTHREAD, Process),
+//OFFSET(ThProcess, KTHREAD, Process),
 OFFSET(ThPreviousMode, KTHREAD, PreviousMode),
 OFFSET(ThPriorityDecrement, KTHREAD, PriorityDecrement), // obsolete
 OFFSET(ThAdjustReason, KTHREAD, AdjustReason),
@@ -925,10 +931,10 @@ OFFSET(IbWow64CfgBitMap, PS_SYSTEM_DLL_INIT_BLOCK, Wow64CfgBitMap),
 OFFSET(IbMitigationOptionsMap, PS_SYSTEM_DLL_INIT_BLOCK, MitigationOptionsMap),
 
 HEADER("Extended context"),
-OFFSET(CxxLegacyOffset 0x8
-OFFSET(CxxLegacyLength 0xc
-OFFSET(CxxXStateOffset 0x10
-OFFSET(CxxXStateLength 0x14
+OFFSET(CxxLegacyOffset 0x8),
+OFFSET(CxxLegacyLength 0xc),
+OFFSET(CxxXStateOffset 0x10),
+OFFSET(CxxXStateLength 0x14),
 
 HEADER("Enclave call dispatch frame"),
 OFFSET(EcEnclaveNumber, ???, EnclaveNumber),

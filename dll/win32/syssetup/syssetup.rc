@@ -22,6 +22,8 @@ IDB_CLASSIC BITMAP "resources/thmclassic.bmp"
 IDB_LAUTUS BITMAP "resources/thmlautus.bmp"
 IDB_LUNAR BITMAP "resources/thmlunar.bmp"
 IDB_MIZU BITMAP "resources/thmmizu.bmp"
+IDB_REACTOS BITMAP "resources/reactos.bmp"
+IDB_LINE BITMAP "resources/line.bmp"
 
 IDI_ICON1 ICON "resources/1.ico"
 IDI_ICON2 ICON "resources/2.ico"
@@ -31,7 +33,22 @@ IDI_ICON5 ICON "resources/5.ico"
 
 STRINGTABLE
 BEGIN
-    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nSYSLINUX - http://syslinux.zytor.com\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nadns - http://www.gnu.org/software/adns\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://www.ext2fsd.com/\nGNU FreeFont - http://savannah.gnu.org/projects/freefont/\nDejaVu Fonts - http://dejavu.sourceforge.net\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts/\nBtrfs - https://github.com/maharmstone/btrfs"
+    IDS_ACKPROJECTS "Wine - http://winehq.org\
+\nFreeType - http://freetype.org\
+\nSYSLINUX - http://syslinux.zytor.com\
+\nMinGW - http://mingw.org\
+\nBochs - http://bochs.sourceforge.net\
+\nMesa3D - http://mesa3d.org\
+\nadns - http://gnu.org/software/adns\
+\nICU - http://icu.unicode.org\
+\nGraphApp - http://enchantia.com/software/graphapp\
+\nExt2 - http://sourceforge.net/projects/ext2fsd\
+\nGNU FreeFont - http://savannah.gnu.org/projects/freefont\
+\nDejaVu Fonts - http://dejavu.sourceforge.net\
+\nLiberation(tm) Fonts - http://pagure.io/liberation-fonts\
+\nBtrfs - https://github.com/maharmstone/btrfs\
+\nTango Desktop Project - http://tango.freedesktop.org/Tango_Desktop_Project\
+"
 END
 
 IDR_GPL RT_TEXT "COPYING"
@@ -60,6 +77,9 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_EL_GR
     #include "lang/el-GR.rc"
 #endif
+#ifdef LANGUAGE_EN_GB
+    #include "lang/en-GB.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
@@ -69,8 +89,8 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_ET_EE
     #include "lang/et-EE.rc"
 #endif
-#ifdef LANGUAGE_FI_FI
-    #include "lang/fi-FI.rc"
+#ifdef LANGUAGE_EU_ES
+    #include "lang/eu-ES.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
@@ -80,6 +100,9 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_HI_IN
     #include "lang/hi-IN.rc"
+#endif
+#ifdef LANGUAGE_HR_HR
+    #include "lang/hr-HR.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
@@ -92,9 +115,6 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/lt-LT.rc"
 #endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
@@ -137,6 +157,9 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

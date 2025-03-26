@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS Win32 Setup
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Spanish locale file
- * COPYRIGHT:   2014 Ismael Ferreras Morezuelas
- *              2018 Julio Carchi Ruiz
- *              2020 Julen Urizar Compains
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2018 Julio Carchi Ruiz <contacto@julcar.info.tm>
+ *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -14,8 +14,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido al asistente de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Este asistente instalará ReactOS en su equipo.\n\nEl asistente necesita recopilar cierta información sobre usted y su equipo para poder configurarse de forma correcta.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Bienvenido a la segunda fase de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Este asistente configurará ReactOS en su equipo.\n\nEl asistente necesita que aporte información sobre usted y su equipo para poder configurarlo de forma correcta.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Pulse Siguiente para continuar con la instalación.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -39,7 +39,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Por favor, escriba una opción de producto:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "&Opciones de producto:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Información de producto", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Descripción:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -51,10 +51,10 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "&Nombre:", IDC_STATIC, 83, 37, 44, 8, SS_RIGHT
+    LTEXT "Escriba su nombre completo y el nombre de su compañía u organización.", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "&Nombre:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organización:", IDC_STATIC, 83, 57, 44, 8,  SS_RIGHT
+    LTEXT "&Organización:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -64,16 +64,16 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. Si se encuentra conectado a una red, el nombre tiene que ser único.", IDC_STATIC, 54, 7, 250, 24
-    LTEXT "Nombre del &equipo:", IDC_STATIC, 53, 38, 75, 8, SS_RIGHT
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. Si se encuentra conectado a una red, el nombre tiene que ser único.", IDC_STATIC, 54, 7, 241, 24
+    LTEXT "Nombre del &equipo:", IDC_STATIC, 54, 38, 75, 8
+    EDITTEXT IDC_COMPUTERNAME, 156, 35, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrador. Puede utilizar este perfil si necesita acceso completo a su equipo.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Escriba una contraseña para este perfil de 127 caracteres o menos.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Contraseña de &Administrador:", IDC_STATIC, 25, 104, 104, 8, SS_RIGHT
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Repita la contraseña:", IDC_STATIC, 54, 123, 75, 8, SS_RIGHT
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrador. Puede utilizar este perfil si necesita acceso completo a su equipo.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Escriba una contraseña para este perfil de 127 caracteres o menos.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Contraseña de &Administrador:", IDC_STATIC, 54, 104, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 156, 101, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "&Repita la contraseña:", IDC_STATIC, 54, 123, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 156, 120, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -83,11 +83,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Las opciones regionales y de idioma permiten configurar la forma en la que se representan fechas, números, monedas y horas. También permite compatibilizar con otros idiomas y cambiar los ajustes de ubicación.", IDC_STATIC, 53, 6, 253, 30
-    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
-    LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 109, 250, 16
     LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -100,10 +101,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Fecha y hora", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Zona horaria", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Ajustar el reloj automáticamente durante el horario de verano", IDC_AUTODAYLIGHT, 53, 124, 230, 10 //201
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Ajustar el reloj automáticamente durante el horario de verano", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -119,9 +120,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Registrando componentes", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Instalando elementos del menú de inicio", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Guardando la configuración", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Eliminando archivos temporales", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -129,7 +133,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Finalización de la Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "El asistente de Instalación de ReactOS ha terminado.", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "El asistente de Instalación de ReactOS ha finalizado.", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "La instalación de ReactOS se ha completado correctamente.\nSe reiniciará el equipo al hacer clic sobre el botón Terminar.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Si hay algún CD en el lector de disco, retírelo.\nUna vez hecho esto reinicie su equipo pulsando Terminar.", IDC_STATIC, 115, 169, 195, 17
@@ -144,13 +148,14 @@ BEGIN
     DEFPUSHBUTTON   "Aceptar", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Espere un momento..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -182,10 +187,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Debe dar un nombre y una contraseña de Administrador a su equipo."
     IDS_LOCALETITLE "Opciones regionales"
     IDS_LOCALESUBTITLE "Puede personalizar ReactOS para diferentes regiones e idiomas."
+    IDS_LOCALETEXT "Los formatos y estándares están configurados como %s, y tu región está localizada en %s."
+    IDS_LAYOUTTEXT "Tu distribución de entrada de teclado es: %s"
     IDS_DATETIMETITLE "Fecha y hora"
     IDS_DATETIMESUBTITLE "Fije la fecha y hora correcta de su equipo."
-    IDS_PROCESSTITLE "Registrando componentes"
-    IDS_PROCESSSUBTITLE "Espere un momento..."
+    IDS_PROCESSTITLE "Finalizando la instalación"
+    IDS_PROCESSSUBTITLE "Por favor, espere, la instalación está ultimando detalles."
     IDS_THEMESELECTIONTITLE "Apariencia"
     IDS_THEMESELECTIONSUBTITLE "Seleccione el estilo de su preferencia."
 END
@@ -194,7 +201,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Instalación de ReactOS"
     IDS_UNKNOWN_ERROR "Error desconocido"
-    IDS_REGISTERING_COMPONENTS "Registrando componentes..."
     IDS_LOADLIBRARY_FAILED "No se pudo cargar la librería: "
     IDS_GETPROCADDR_FAILED "No se pudo obtener la ubicación del proceso: "
     IDS_REGSVR_FAILED "No se pudo registrar la librería: "
@@ -252,10 +258,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Opciones de producto"
-    IDS_PRODUCTSUBTITLE "Puedes seleccionar una opción de producto afectará al comportamiento del sistema."
+    IDS_PRODUCTSUBTITLE "Puedes seleccionar una opción de producto. Afectará al comportamiento del sistema."
     IDS_PRODUCTSERVERNAME "ReactOS como Servidor"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS como Sobremesa"
-    IDS_PRODUCTSERVERINFO "El sistema será reconocido como un servidor. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" serán independientes de ""Mis documentos""."
-    IDS_PRODUCTWORKSTATIONINFO "El sistema será reconocido como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
+    IDS_PRODUCTSERVERINFO "El sistema se mostrará como un servidor. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" serán independientes de ""Mis documentos""."
+    IDS_PRODUCTWORKSTATIONINFO "El sistema se mostrará como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
     IDS_DEFAULT "(Por defecto)"
 END

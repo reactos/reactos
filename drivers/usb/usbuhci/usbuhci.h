@@ -56,7 +56,7 @@ typedef struct _UHCI_HCD_TD {
     struct {
       ULONG Frame;
       ULONG Pad2;
-    }; 
+    };
 #endif
   } DUMMYUNIONNAME;
   LIST_ENTRY TdLink;
@@ -129,10 +129,10 @@ typedef struct _UHCI_TRANSFER {
   SIZE_T TransferLen;
 } UHCI_TRANSFER, *PUHCI_TRANSFER;
 
-#define UHCI_FRAME_LIST_POINTER_VALID      (0 << 0) 
-#define UHCI_FRAME_LIST_POINTER_TERMINATE  (1 << 0) 
-#define UHCI_FRAME_LIST_POINTER_TD         (0 << 1) 
-#define UHCI_FRAME_LIST_POINTER_QH         (1 << 1) 
+#define UHCI_FRAME_LIST_POINTER_VALID      (0 << 0)
+#define UHCI_FRAME_LIST_POINTER_TERMINATE  (1 << 0)
+#define UHCI_FRAME_LIST_POINTER_TD         (0 << 1)
+#define UHCI_FRAME_LIST_POINTER_QH         (1 << 1)
 
 #define UHCI_FRAME_LIST_INDEX_MASK         0x3FF
 #define UHCI_MAX_STATIC_SOF_TDS            8

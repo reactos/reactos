@@ -1,6 +1,6 @@
 /*
- * Note: Strstreams are really broken in STLport. But strstreams are 
- * obsolete, and even if ones was mentioned in D7.1--D7.4 of 
+ * Note: Strstreams are really broken in STLport. But strstreams are
+ * obsolete, and even if ones was mentioned in D7.1--D7.4 of
  * Standard, we have no wish to spent time with repair ones.
  */
 #if !defined (_STLP_NO_IOSTREAMS)
@@ -30,6 +30,6 @@ void StrstreamBufferTest::read_from_buffer()
   strstream stream(hello, sizeof(hello), ios_base::in);
   char cur;
   stream >> cur;
-  CPPUNIT_ASSERT(cur == 'H'); 
+  CPPUNIT_ASSERT(cur == 'H');
 }
 #endif

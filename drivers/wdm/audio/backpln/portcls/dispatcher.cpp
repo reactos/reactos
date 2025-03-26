@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 NTSTATUS
@@ -48,7 +45,6 @@ Dispatch_fnRead(
     // get dispatch context
     DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
-
     // let IrpTarget handle request
     return DispatchContext->Target->Read(DeviceObject, Irp);
 }
@@ -68,7 +64,6 @@ Dispatch_fnWrite(
     // get dispatch context
     DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
-
     // let IrpTarget handle request
     return DispatchContext->Target->Write(DeviceObject, Irp);
 }
@@ -87,7 +82,6 @@ Dispatch_fnFlush(
 
     // get dispatch context
     DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
-
 
     // let IrpTarget handle request
     return DispatchContext->Target->Flush(DeviceObject, Irp);
@@ -135,7 +129,6 @@ Dispatch_fnQuerySecurity(
     // get dispatch context
     DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
-
     // let IrpTarget handle request
     return DispatchContext->Target->QuerySecurity(DeviceObject, Irp);
 }
@@ -180,7 +173,6 @@ Dispatch_fnFastDeviceIoControl(
     // let IrpTarget handle request
     return DispatchContext->Target->FastDeviceIoControl(FileObject, Wait, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, IoControlCode, IoStatus, DeviceObject);
 }
-
 
 BOOLEAN
 NTAPI
@@ -279,4 +271,3 @@ NewDispatchObject(
     DPRINT("KsAllocateObjectHeader result %x Target %p Context %p\n", Status, Target, DispatchContext);
     return Status;
 }
-

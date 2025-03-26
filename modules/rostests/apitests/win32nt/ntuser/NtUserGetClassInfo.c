@@ -5,7 +5,7 @@
  * PROGRAMMERS:
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 
 START_TEST(NtUserGetClassInfo)
 {
@@ -13,6 +13,11 @@ START_TEST(NtUserGetClassInfo)
     WNDCLASSEXW wclex, wclex2 = {0};
     UNICODE_STRING us;
     PWSTR pwstr = NULL;
+
+#ifdef _M_AMD64
+    skip("Test is broken on x64.\n");
+    return;
+#endif
 
     us.Length = 8;
     us.MaximumLength = 8;

@@ -8,6 +8,19 @@ int
 CDECL
 _memicmp(const void *s1, const void *s2, size_t n)
 {
+    if (NtCurrentPeb()->OSMajorVersion >= 6)
+    {
+        if (!s1 || !s2)
+        {
+            if (n != 0)
+            {
+                MSVCRT_INVALID_PMT(NULL, EINVAL);
+                return _NLSCMPERROR;
+            }
+            return 0;
+        }
+    }
+
   if (n != 0)
   {
     const unsigned char *p1 = s1, *p2 = s2;

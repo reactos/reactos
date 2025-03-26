@@ -33,7 +33,7 @@ BEGIN
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Forbreder nettverk tilkoblinger..."
     IDS_APPLYINGCOMPUTERSETTINGS "Bruker datamaskin innstillinger..."
@@ -44,7 +44,8 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Kjører pålogging skripter..."
     IDS_LOADINGYOURPERSONALSETTINGS "Laster dine personlige innstillinger..."
     IDS_CLOSINGNETWORKCONNECTIONS "Avslutter nettverk tilkoblinger..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS avsluttes..."
+    IDS_REACTOSISRESTARTING "Restarting..."
+    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
     IDS_PREPARETOSTANDBY "Forbreder ventemodus..."
     IDS_PREPARETOHIBERNATE "Forbreder dvalemodus..."
     IDS_SAVEYOURSETTINGS "Lagrer innstillingene..."
@@ -53,7 +54,7 @@ BEGIN
     IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Winlogon mislykket å aktivere bruker skall!"
 END

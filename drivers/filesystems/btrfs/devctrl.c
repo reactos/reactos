@@ -202,12 +202,12 @@ static NTSTATUS probe_volume(void* data, ULONG length, KPROCESSOR_MODE processor
 
     ObDereferenceObject(FileObject);
 
-    volume_removal(drvobj, &pnp_name);
+    volume_removal(&pnp_name);
 
     if (RtlCompareMemory(guid, &GUID_DEVINTERFACE_DISK, sizeof(GUID)) == sizeof(GUID))
-        disk_arrival(drvobj, &pnp_name);
+        disk_arrival(&pnp_name);
     else
-        volume_arrival(drvobj, &pnp_name);
+        volume_arrival(&pnp_name, false);
 
     return STATUS_SUCCESS;
 }

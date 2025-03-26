@@ -1,9 +1,8 @@
 /*
- * PROJECT:          ReactOS
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/audiosrv.h
- * PURPOSE:          Audio Service (private header)
- * COPYRIGHT:        Copyright 2007 Andrew Greenwood
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Audio Service (private header)
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood
  */
 
 #ifndef _AUDIOSRV_PCH_
@@ -61,10 +60,6 @@ HandleDeviceEvent(
 
 BOOL
 StartSystemAudioServices(VOID);
-
-/* Debugging */
-
-void logmsg(char* string, ...);
 
 #endif
 

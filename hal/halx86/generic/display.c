@@ -31,10 +31,8 @@ VOID
 NTAPI
 HalDisplayString(IN PCH String)
 {
-#ifndef _MINIHAL_
     /* Call the Inbv driver */
     InbvDisplayString(String);
-#endif
 }
 
 /*

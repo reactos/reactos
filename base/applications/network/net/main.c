@@ -29,11 +29,8 @@ COMMAND cmds[] =
     {L"help",       cmdHelp},
     {L"helpmsg",    cmdHelpMsg},
     {L"localgroup", cmdLocalGroup},
-    {L"name",       unimplemented},
     {L"pause",      cmdPause},
-    {L"print",      unimplemented},
-    {L"send",       unimplemented},
-    {L"session",    unimplemented},
+    {L"session",    cmdSession},
     {L"share",      cmdShare},
     {L"start",      cmdStart},
     {L"statistics", cmdStatistics},
@@ -77,6 +74,20 @@ PrintPadding(
     ConPuts(StdOut, szMsgBuffer);
 }
 
+
+DWORD
+TranslateAppMessage(
+    DWORD dwMessage)
+{
+    switch (dwMessage)
+    {
+        case NERR_Success:
+            return 3500; // APPERR_3500
+        case ERROR_MORE_DATA:
+            return 3513; // APPERR_3513
+    }
+    return dwMessage;
+}
 
 VOID
 PrintMessageStringV(

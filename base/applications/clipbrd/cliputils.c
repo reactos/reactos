@@ -164,7 +164,8 @@ UINT GetAutomaticClipboardFormat(void)
         CF_DSPBITMAP,
         CF_DSPMETAFILEPICT,
         CF_DSPENHMETAFILE,
-        CF_PALETTE
+        CF_PALETTE,
+        CF_HDROP
     };
 
     return GetPriorityClipboardFormat(uFormatList, ARRAYSIZE(uFormatList));

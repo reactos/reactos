@@ -105,14 +105,14 @@ CTTY device\n\n\
             CON is usually the default standard I/O device.\n\n\
 To return control to the standard console, type: CTTY CON on the auxiliary\n\
 device."
-    STRING_DATE_HELP1 "\nGeben Sie das neue Datum ein (mm%cdd%cyyyy): "
-    STRING_DATE_HELP2 "\nGeben Sie das neue Datum ein (dd%cmm%cyyyy): "
-    STRING_DATE_HELP3 "\nGeben Sie das neue Datum ein (yyyy%cmm%cdd): "
+    STRING_DATE_HELP1 "Geben Sie das neue Datum ein (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Geben Sie das neue Datum ein (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Geben Sie das neue Datum ein (yyyy%cmm%cdd): "
     STRING_DATE_HELP4 "Ändert das eingestellte Datum oder zeigt es an.\n\n\
 DATE [/T][Datum]\n\n\
   /T           nur Datum anzeigen\n\n\
 Der Befehl DATE ohne Parameter zeigt das aktuelle Datum an und fragt nach\n\
-einem neuen. Drücken Sie die EINGABETASTE, um das bisherige Datum zu behalten."
+einem neuen. Drücken Sie ENTER, um das bisherige Datum zu behalten."
     STRING_DEL_HELP1 "Löscht eine oder mehrere Dateien.\n\n\
 DEL [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
@@ -170,10 +170,10 @@ Optionen können in der Umgebungsvariablen DIRCMD voreingestellt werden.\n\
     STRING_DIR_HELP2 " Datenträger in Laufwerk %c ist %s\n"
     STRING_DIR_HELP3 " Datenträger in Laufwerk %c hat keine Bezeichnung\n"
     STRING_DIR_HELP4 " Volumeseriennummer: %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Anzahl der angezeigten Dateien:\n%16i Datei(en)% 15s Bytes\n"
-    STRING_DIR_HELP6 "%16i Verzeichnis(se), % 15s Bytes frei\n"
+    STRING_DIR_HELP5 "\n     Anzahl der angezeigten Dateien:\n%16i Datei(en)        %14s Bytes\n"
+    STRING_DIR_HELP6 "%16i Verzeichnis(se), %14s Bytes frei\n"
     STRING_DIR_HELP7 "\n Verzeichnis von %s\n\n"
-    STRING_DIR_HELP8 "%16i Datei(en)% 14s Bytes\n"
+    STRING_DIR_HELP8 "%16i Datei(en)        %14s Bytes\n"
     STRING_DIRSTACK_HELP1 "Speichert das aktuelle Verzeichnis für den POPD-Befehl und\n\
 wechselt dann in das festgelegte Verzeichnis.\n\n\
 PUSHD [path | ..]\n\n\
@@ -243,7 +243,8 @@ Variable1==Variable2\n\
 EXIST Dateiname   Bedingung ist erfüllt, wenn die angegebene Datei existiert.\n\
 DEFINED Variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
                   wurde."
-    STRING_LOCALE_HELP1 "Aktuelle Zeit: "
+    STRING_DATE_NOW "Aktuelles Datum: "
+    STRING_TIME_NOW "Aktuelle Zeit: "
     STRING_MKDIR_HELP "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"
     STRING_MKLINK_HELP "Erzeugt eine Dateisystemverknüpfung.\n\n\
@@ -333,35 +334,6 @@ REN [/E /N /P /Q /S /T] alter_Name ... neuer_Name\n\n\
 Nutzen Sie den 'move' Befehl falls Sie Objekte verschieben wollen.\n"
     STRING_REN_HELP2 "    %lu Datei umbenannt\n"
     STRING_REN_HELP3 "    %lu Dateien umbenannt\n"
-    STRING_REPLACE_HELP1 "Ersetzt Dateien.\n\n\
-REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/A] [/P] [/R] [/W]\n\
-REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [Laufwerk1:][Pfad1]Dateiname Bezeichnet die Quelldatei(en).\n\
-  [Laufwerk2:][Pfad2]          Bezeichnet den Pfad in dem die Dateien ersetzt\n\
-                               werden sollen.\n\
-  /A                           Fügt neue Dateien dem Zielpfad hinzu. Kann nicht\n\
-                               mit /S oder /U Parameter genutzt werden.\n\
-  /P                           Wartet auf Bestätigung bevor eine Datei ersetzt\n\
-                               oder eine Quelldatei hinzugefügt wird.\n\
-  /R                           Ersetzt schreibgeschützte Dateien.\n\
-  /S                           Ersetzt Dateien in allen Unterordnern des Ziel-\n\
-                               pfades. Kann nicht mit Parameter /A genutzt\n\
-                               werden.\n\
-  /W                           Wartet vor dem Start, bis ein Datenträger\n\
-                               eingelegt wurde.\n\
-  /U                           Ersetzt (aktualisiert) nur Dateien, die älter\n\
-                               sind als die Quelldaten. Kann nicht mit Paramater\n\
-                               /A genutzt werden\n"
-    STRING_REPLACE_HELP2 "Quellpfad benötigt\n"
-    STRING_REPLACE_HELP3 "Keine Dateien ersetzt\n"
-    STRING_REPLACE_HELP4 "%lu Datei(en) ersetzt\n"
-    STRING_REPLACE_HELP5 "Ersetze %s\n"
-    STRING_REPLACE_HELP6 "Ersetze %s\n"
-    STRING_REPLACE_HELP7 "Keine Dateien hinzugefügt\n"
-    STRING_REPLACE_HELP8 "%lu Datei(en) hinzugefügt\n"
-    STRING_REPLACE_HELP9 "Füge %s hinzu (J/N)? "
-    STRING_REPLACE_HELP10 "Ersetze %s (J/N)? "
-    STRING_REPLACE_HELP11 "Füge %s hinzu\n"
     STRING_SHIFT_HELP "Verändert die Position ersetzbarer Parameter in einem Batchprogramm.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "Bewegt den Cursor und optional die Ausgabe\n\n\
@@ -393,7 +365,7 @@ TITLE [Zeichenfolge]\n\n\
 TIME [/T][Zeit]\n\n\
   /T    nur anzeigen\n\n\
 TIME ohne Parameter zeigt die aktuelle Systemzeit an und fragt nach der neuen\n\
-Uhrzeit. Drücken Sie die EINGABETASTE, um die bisherige Zeit beizubehalten."
+Uhrzeit. Drücken Sie ENTER, um die bisherige Zeit beizubehalten."
     STRING_TIME_HELP2 "Geben Sie eine neue Zeit ein: "
     STRING_TIMER_HELP1 "Verstrichene %d Millisekunden\n"
     STRING_TIMER_HELP2 "Verstrichene %02d%c%02d%c%02d%c%02d\n"
@@ -441,7 +413,7 @@ VER [/C][/R][/W]\n\n\
  (nach eigenem Belieben) jeder höheren Version veröffentlicht, verändern."
     STRING_VERSION_HELP5 "\nSenden Sie Fehlerberichte an <ros-dev@reactos.org>.\n\
 Updates sind auf der offiziellen ReactOS-Webseite verfügbar:\n\
-http://www.reactos.org"
+https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS-Version programmiert von:\n"
     STRING_VERSION_HELP7 "\nReactOS-Version programmiert von:\n"
     STRING_VOL_HELP1 " Datenträger im Laufwerk %c ist %s\n"
@@ -477,23 +449,23 @@ Titel         neuer Titel"
     STRING_CMD_ERROR3 "%s kann nicht in die Datei umgeleitet werden\n"
     STRING_CMD_ERROR4 "Ausführend %s...\n"
     STRING_CMD_ERROR5 "Ausführend cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "Fehler: Hinter- und Vordergrund können nicht die selben Farben haben!"
-    STRING_COLOR_ERROR2 "Fehler in der Farbangabe"
+    STRING_COLOR_ERROR1 "Fehler: Hinter- und Vordergrund können nicht die selben Farben haben!\n"
+    STRING_COLOR_ERROR2 "Fehler in der Farbangabe\n"
     STRING_CONSOLE_ERROR "Unbekannter Fehler: %d\n"
     STRING_COPY_ERROR1 "Fehler: Quelle kann nicht geöffnet werden - %s!\n"
     STRING_COPY_ERROR2 "Fehler: Kann nicht über sich selbst kopiert werden.\n"
     STRING_COPY_ERROR3 "Fehler: Schreibziel!\n"
     STRING_COPY_ERROR4 "Fehler: Noch nicht implementiert!\n"
-    STRING_DATE_ERROR "Ungültiges Datum."
+    STRING_DATE_ERROR "Ungültiges Datum.\n"
     STRING_DEL_ERROR5 "Die Datei %s wird gelöscht! "
     STRING_DEL_ERROR6 "Sind Sie sicher (J/N)? "
     STRING_DEL_ERROR7 "Löschen: %s\n"
     STRING_ERROR_ERROR1 "Unbekannter Fehler! Fehlernummer: 0x%lx\n"
     STRING_ERROR_ERROR2 "Syntax-Fehler"
-    STRING_FOR_ERROR1 "'in' fehlt für ein Statement."
-    STRING_FOR_ERROR2 "Klammern nicht gefunden."
-    STRING_FOR_ERROR3 "'do' fehlt."
-    STRING_FOR_ERROR4 "kein Befehl nach 'do'."
+    STRING_FOR_ERROR1 "'in' fehlt für ein Statement.\n"
+    STRING_FOR_ERROR2 "Klammern nicht gefunden.\n"
+    STRING_FOR_ERROR3 "'do' fehlt.\n"
+    STRING_FOR_ERROR4 "kein Befehl nach 'do'.\n"
     STRING_FREE_ERROR1 "Ungültiges Laufwerk"
     STRING_FREE_ERROR2 "keine Bezeichnung"
     STRING_GOTO_ERROR1 "Keine Sprungmarke für GOTO gesetzt\n"
@@ -502,10 +474,10 @@ Titel         neuer Titel"
     STRING_MD_ERROR2 "Der Pfad zum neuen Ordner existiert nicht.\n"//FIXME
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[FEHLER]\n"
-    STRING_REN_ERROR1 "MoveFile() ist fehlgeschlagen. Fehler: %lu\n"
-    STRING_TIME_ERROR1 "Ungültige Zeit."
-    STRING_TYPE_ERROR1 "Ungültige Option '/%s'\n"
-    STRING_WINDOW_ERROR1 "Fenster nicht gefunden"
+    STRING_REN_ERROR "MoveFile() ist fehlgeschlagen. Fehler: %lu\n"
+    STRING_TIME_ERROR "Ungültige Zeit.\n"
+    STRING_TYPE_ERROR "Ungültige Option '/%s'\n"
+    STRING_WINDOW_ERROR "Fenster nicht gefunden\n"
     STRING_ERROR_PARAMETERF_ERROR "Parameterformat ist nicht korrekt - %c\n"
     STRING_ERROR_INVALID_SWITCH "Ungültiger Parameter - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Zu viele Parameter - %s\n"
@@ -519,24 +491,25 @@ Titel         neuer Titel"
     STRING_ERROR_CANNOTPIPE "Fehler: Pipen nicht möglich! Temporäre Datei kann nicht geöffnet werden!\n"
     STRING_ERROR_D_PAUSEMSG "Drücken Sie eine beliebige Taste . . . "
     STRING_ERROR_DRIVER_NOT_READY "Laufwerk ist nicht bereit"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Ungültiger Parameter - %s\n"
-    STRING_REPLACE_ERROR2 "Pfad wurde nicht gefunden - %s\n"
-    STRING_REPLACE_ERROR3 "Der Dateiname, Ordnername oder die Syntax der Volumenbezeichung sind inkorrekt.\n"
-    STRING_REPLACE_ERROR4 "Ungültige Parameterkombination\n"
-    STRING_REPLACE_ERROR5 "Zugriff verweigert - %s\n"
-    STRING_REPLACE_ERROR6 "Keine Dateien gefunden - %s\n"
-    STRING_REPLACE_ERROR7 "Erweiterter Fehler 32\n"
     STRING_CMD_INFOLINE "  ReactOS Eingabeaufforderung                            HELP eingeben = Hilfe  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Eingabeaufforderung\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Läuft in: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d Datei(en) kopiert\n"
     STRING_DELETE_WIPE "sicher gelöscht"
-    STRING_FOR_ERROR "ungültige Variablenangabe."
-    STRING_SCREEN_COL "ungültige Spalten-Angabe"
-    STRING_SCREEN_ROW "ungültige Zeilen-Angabe"
+    STRING_FOR_ERROR "ungültige Variablenangabe.\n"
+    STRING_SCREEN_COL "ungültige Spalten-Angabe\n"
+    STRING_SCREEN_ROW "ungültige Zeilen-Angabe\n"
     STRING_TIMER_TIME "Timer %d ist %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Symbolische Verknüpfung erstellt für %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Hardlink erstellt für %s <<===>> %s\n"

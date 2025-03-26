@@ -1,9 +1,9 @@
 
 add_subdirectory(3rdparty)
-add_subdirectory(apisets)
 add_subdirectory(appcompat)
 add_subdirectory(cpl)
 add_subdirectory(directx)
+add_subdirectory(ime)
 add_subdirectory(keyboard)
 add_subdirectory(nls)
 add_subdirectory(np)

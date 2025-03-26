@@ -87,6 +87,41 @@ HideMinimizedWindows(IN BOOL bHide)
 }
 #endif
 
+static BOOL
+IsExplorerSystemShell()
+{
+    BOOL bIsSystemShell = TRUE; // Assume we are the system shell by default.
+    WCHAR szPath[MAX_PATH];
+
+    if (!GetModuleFileNameW(NULL, szPath, _countof(szPath)))
+        return FALSE;
+
+    LPWSTR szExplorer = PathFindFileNameW(szPath);
+
+    HKEY hKeyWinlogon;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                      0, KEY_READ, &hKeyWinlogon) == ERROR_SUCCESS)
+    {
+        LSTATUS Status;
+        DWORD dwType;
+        WCHAR szShell[MAX_PATH];
+        DWORD cbShell = sizeof(szShell);
+
+        // TODO: Add support for paths longer than MAX_PATH
+        Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
+        if (Status == ERROR_SUCCESS)
+        {
+            if ((dwType != REG_SZ && dwType != REG_EXPAND_SZ) || !StrStrIW(szShell, szExplorer))
+                bIsSystemShell = FALSE;
+        }
+
+        RegCloseKey(hKeyWinlogon);
+    }
+
+    return bIsSystemShell;
+}
+
 #if !WIN7_COMPAT_MODE
 static INT
 StartWithCommandLine(IN HINSTANCE hInstance)
@@ -154,6 +189,8 @@ StartWithDesktop(IN HINSTANCE hInstance)
     buttons to work right) */
     HideMinimizedWindows(TRUE);
 
+    ProcessRunOnceItems(); // Must be executed before the desktop is created
+
     HANDLE hShellDesktop = NULL;
     if (Tray != NULL)
         hShellDesktop = DesktopCreateWindow(Tray);
@@ -167,6 +204,7 @@ StartWithDesktop(IN HINSTANCE hInstance)
         ProcessStartupItems();
         DoFinishStartupItems();
     }
+    ReleaseStartupMutex(); // For ProcessRunOnceItems
 #endif
 
     if (Tray != NULL)
@@ -209,15 +247,14 @@ _tWinMain(IN HINSTANCE hInstance,
     TRACE("Explorer starting... Command line: %S\n", lpCmdLine);
 
 #if !WIN7_COMPAT_MODE
-    if (GetShellWindow() == NULL)
-        bExplorerIsShell = TRUE;
+    bExplorerIsShell = (GetShellWindow() == NULL) && IsExplorerSystemShell();
 
     if (!bExplorerIsShell)
     {
         return StartWithCommandLine(hInstance);
     }
 #else
-    bExplorerIsShell = TRUE;
+    bExplorerIsShell = IsExplorerSystemShell();
 #endif
 
     return StartWithDesktop(hInstance);

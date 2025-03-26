@@ -90,7 +90,7 @@ UpdateGroupsList(HWND hwndListView)
 static VOID
 UpdateGroupProperties(HWND hwndDlg)
 {
-    TCHAR szGroupName[UNLEN];
+    TCHAR szGroupName[UNLEN + 1];
     INT iItem;
     HWND hwndLV;
     PLOCALGROUP_INFO_1 pGroupInfo = NULL;
@@ -104,7 +104,7 @@ UpdateGroupProperties(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          iItem, 0,
                          szGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     NetLocalGroupGetInfo(NULL, szGroupName, 1, (LPBYTE*)&pGroupInfo);
 
@@ -155,19 +155,11 @@ NewGroupDlgProc(HWND hwndDlg,
                         break;
                     }
 
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        groupInfo->lgrpi1_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_GROUP_NEW_NAME, groupInfo->lgrpi1_name, nLength + 1);
-                    }
+                    /* Get Name */
+                    groupInfo->lgrpi1_name = GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_NAME);
 
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        groupInfo->lgrpi1_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, groupInfo->lgrpi1_comment, nLength + 1);
-                    }
+                    /* Get Description */
+                    groupInfo->lgrpi1_comment = GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_DESCRIPTION);
 
                     EndDialog(hwndDlg, IDOK);
                     break;
@@ -228,11 +220,8 @@ GroupNew(HWND hwndDlg)
                              group.lgrpi1_comment);
     }
 
-    if (group.lgrpi1_name)
-        HeapFree(GetProcessHeap(), 0, group.lgrpi1_name);
-
-    if (group.lgrpi1_comment)
-        HeapFree(GetProcessHeap(), 0, group.lgrpi1_comment);
+    HeapFree(GetProcessHeap(), 0, group.lgrpi1_name);
+    HeapFree(GetProcessHeap(), 0, group.lgrpi1_comment);
 }
 
 
@@ -254,7 +243,7 @@ GroupRename(HWND hwndDlg)
 static BOOL
 GroupDelete(HWND hwndDlg)
 {
-    TCHAR szGroupName[UNLEN];
+    TCHAR szGroupName[UNLEN + 1];
     TCHAR szText[256];
     INT nItem;
     HWND hwndLV;
@@ -269,7 +258,7 @@ GroupDelete(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Display a warning message, because the delete operation cannot be reverted */
     wsprintf(szText, TEXT("Dou you really want to delete the user group \"%s\"?"), szGroupName);
@@ -336,8 +325,8 @@ OnGroupsPageBeginLabelEdit(LPNMLVDISPINFO pnmv)
 static BOOL
 OnGroupsPageEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
-    TCHAR szOldGroupName[UNLEN];
-    TCHAR szNewGroupName[UNLEN];
+    TCHAR szOldGroupName[UNLEN + 1];
+    TCHAR szNewGroupName[UNLEN + 1];
     LOCALGROUP_INFO_0 lgrpi0;
     NET_API_STATUS status;
 
@@ -349,7 +338,7 @@ OnGroupsPageEndLabelEdit(LPNMLVDISPINFO pnmv)
     ListView_GetItemText(pnmv->hdr.hwndFrom,
                          pnmv->item.iItem, 0,
                          szOldGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Leave, if the user canceled the edit action */
     if (pnmv->item.pszText == NULL)

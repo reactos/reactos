@@ -81,8 +81,14 @@ add_library(ole32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/irot_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32.def)
 
+if(MSVC)
+    # Disable warning C4090: '=': different 'const' qualifiers
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    target_compile_options(ole32 PRIVATE /wd4090 /wd4146)
+endif()
+
 set_module_type(ole32 win32dll)
-target_link_libraries(ole32 wine uuid ${PSEH_LIB})
+target_link_libraries(ole32 wine uuid ${PSEH_LIB} oldnames)
 add_delay_importlibs(ole32 oleaut32)
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 kernel32_vista ntdll)
 add_dependencies(ole32 ole32idl)

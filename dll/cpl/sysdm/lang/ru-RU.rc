@@ -3,16 +3,16 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общие"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Операционная система:", IDC_STATIC, 4, 116, 87, 9
+    LTEXT "Операционная система:", IDC_STATIC, 4, 116, 100, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Версия", IDC_ROSVERSION, 10, 137, 116, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "Время работы системы:", IDC_STATIC, 4, 158, 86, 9
-    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
-    LTEXT "Компьютер:", IDC_STATIC, 124, 116, 40, 9
+    LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "Время работы системы:", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "", IDC_UPTIME, 10, 173, 116, 9
+    LTEXT "Компьютер:", IDC_STATIC, 124, 116, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -26,7 +26,7 @@ END
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Оборудование"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Диспетчер устройств", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
@@ -42,35 +42,35 @@ BEGIN
     PUSHBUTTON "&Профили оборудования...", IDC_HARDWARE_PROFILE, 144, 190, 100, 14
 END
 
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Дополнительно"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Необходимо иметь права администратора для изменения большинства перечисленных параметров.", IDC_STATIC, 12, 5, 253, 8
-    GROUPBOX "Быстродействие", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "Визуальные эффекты, использование процессора, оперативной и виртуальной памяти", IDC_STATIC, 16, 29, 210, 20
-    PUSHBUTTON "&Параметры", IDC_PERFOR, 194, 48, 50, 15
-    GROUPBOX "Профили пользователей", IDC_STATIC, 6, 75, 244, 48
-    LTEXT "Параметры рабочего стола, относящиеся ко входу в систему", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Параметры", IDC_USERPROFILE, 194, 103, 50, 15
-    GROUPBOX "Загрузка и восстановление", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Загрузка и восстановление системы, отладочная информация", IDC_STATIC, 16, 144, 210, 20
-    PUSHBUTTON "&Параметры", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Настройки системы", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "П&еременные среды", IDC_ENVVAR, 88, 192, 80, 15
-    PUSHBUTTON "Отчет об ошибках", IDC_ERRORREPORT, 170, 192, 80, 15
+    LTEXT "Необходимо иметь права администратора для изменения большинства перечисленных параметров.", IDC_STATIC, 12, 5, 236, 17
+    GROUPBOX "Быстродействие", IDC_STATIC, 6, 28, 244, 50
+    LTEXT "Визуальные эффекты, использование процессора, оперативной и виртуальной памяти", IDC_STATIC, 16, 39, 210, 20
+    PUSHBUTTON "&Параметры", IDC_PERFOR, 194, 58, 50, 15
+    GROUPBOX "Профили пользователей", IDC_STATIC, 6, 85, 244, 48
+    LTEXT "Параметры рабочего стола, относящиеся ко входу в систему", IDC_STATIC, 16, 98, 210, 20
+    PUSHBUTTON "Параметры", IDC_USERPROFILE, 194, 113, 50, 15
+    GROUPBOX "Загрузка и восстановление", IDC_STATIC, 6, 141, 244, 52
+    LTEXT "Загрузка и восстановление системы, отладочная информация", IDC_STATIC, 16, 154, 210, 20
+    PUSHBUTTON "&Параметры", IDC_STAREC, 194, 172, 50, 15
+    PUSHBUTTON "Настройки системы", IDC_SYSSETTINGS, 6, 202, 80, 15
+    PUSHBUTTON "П&еременные среды", IDC_ENVVAR, 88, 202, 80, 15
+    PUSHBUTTON "Отчет об ошибках", IDC_ERRORREPORT, 170, 202, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Системные параметры"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Информация о версии", IDC_STATIC, 6, 3, 210, 73
     LTEXT "ReactOS собран как серверная ОС и сообщает приложениям об этом. Установка флажка изменит это (только для приложений).", IDC_STATIC, 15, 15, 183, 41
     CONTROL "Представляться как рабочая станция", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
-    PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
+    PUSHBUTTON "ОК", IDOK, 166, 83, 50, 14
 END
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
@@ -96,7 +96,7 @@ BEGIN
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
-    DEFPUSHBUTTON "OK", IDOK, 143, 213, 50, 14
+    DEFPUSHBUTTON "ОК", IDOK, 143, 213, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 197, 213, 50, 14
 END
 
@@ -122,7 +122,7 @@ END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Копия Профиля"
+CAPTION "Копия профиля"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Из:", IDC_STATIC, 5, 10, 20, 8
@@ -138,11 +138,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Переименовать профиль"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Старое:", IDC_STATIC, 5, 10, 20, 8
-    LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT "Новое:", IDC_STATIC, 5, 30, 20, 8
-    EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
-    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
+    LTEXT "Старое:", IDC_STATIC, 5, 10, 30, 8
+    LTEXT "", IDC_RENPROFEDITFROM, 40, 10, 150, 10
+    LTEXT "Новое:", IDC_STATIC, 5, 30, 30, 8
+    EDITTEXT IDC_RENPROFEDITTO, 40, 30, 150, 12
+    DEFPUSHBUTTON "ОК", IDOK, 199, 9, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 199, 30, 50, 14
 END
 
@@ -152,7 +152,7 @@ CAPTION "Профили пользователей"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Профиль пользователя содержит настройки рабочего стола и другие сведения, используемые при входе в систему. Можно создать различные профили на разных компьютерах для одного пользователя или использовать один общий профиль.", IDC_STATIC, 40, 6, 204, 42
+    LTEXT "Профиль пользователя содержит настройки рабочего стола и другие сведения, используемые при входе в систему. Можно создать различные профили на разных компьютерах для одного пользователя или использовать один общий профиль.", IDC_STATIC, 40, 6, 204, 44
     LTEXT "Профили, хранящиеся на этом компьютере:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -161,35 +161,35 @@ BEGIN
     PUSHBUTTON "Копировать", IDC_USERPROFILE_COPY, 200, 155, 50, 15
     CONTROL "Создайте новый профиль, используя <A>Профили пользователей</A> в Панели управления.",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
-    DEFPUSHBUTTON "OK", IDOK, 134, 198, 54, 15
+    DEFPUSHBUTTON "ОК", IDOK, 134, 198, 54, 15
     PUSHBUTTON "Отмена", IDCANCEL, 196, 198, 54, 15
 END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Change Profile Type"
+CAPTION "Изменение типа профиля"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
-    AUTORADIOBUTTON "&Roaming profile", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
-    AUTORADIOBUTTON "&Local profile", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
-    DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 122, 82, 50, 14
+    AUTORADIOBUTTON "&Перемещаемый профиль", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
+    AUTORADIOBUTTON "&Локальный профиль", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
+    DEFPUSHBUTTON "ОК", IDOK, 60, 82, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 122, 82, 50, 14
 END
 
 IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy To"
+CAPTION "Копирование профиля"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Copy &profile to", -1, 8, 9, 185, 52
+    GROUPBOX "&Копировать профиль в", -1, 8, 9, 185, 52
     EDITTEXT IDC_USERPROFILE_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
-    PUSHBUTTON "&Browse", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
-    GROUPBOX "Permitted to use", -1, 8, 77, 185, 48
+    PUSHBUTTON "&Обзор", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
+    GROUPBOX "Разрешить использование", -1, 8, 77, 185, 48
     LTEXT "", IDC_USERPROFILE_COPY_USER, 15, 91, 167, 8
-    PUSHBUTTON "&Change", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 204, 13, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 204, 30, 50, 14
+    PUSHBUTTON "&Изменить", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
+    DEFPUSHBUTTON "ОК", IDOK, 204, 13, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 204, 30, 50, 14
 END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
@@ -221,14 +221,14 @@ BEGIN
     LTEXT "Файл дампа памяти:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Заменять &существующий файл дампа", IDC_STRRECOVERWRITE, 17, 228, 145, 10
-    DEFPUSHBUTTON "OK", IDOK, 141, 258, 50, 15
+    DEFPUSHBUTTON "ОК", IDOK, 141, 258, 50, 15
     PUSHBUTTON "Отмена", IDCANCEL, 195, 258, 50, 15
 END
 
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Виртуальная память"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Диск [метка тома]", IDC_STATIC, 12, 5, 96, 9
     LTEXT "Файл подкачки (МБ)", IDC_STATIC, 115, 5, 96, 9
@@ -253,51 +253,74 @@ BEGIN
     LTEXT "%s", IDC_RECOMMENDED, 98, 199, 108, 9
     LTEXT "Текущий размер:", IDC_STATIC, 18, 210, 78, 9
     LTEXT "%s", IDC_CURRENT, 98, 210, 108, 9
-    DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
+    DEFPUSHBUTTON "ОК", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Отмена", IDCANCEL, 168, 230, 48, 15
 END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Переменные среды"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Пользовательские переменные", IDC_STATIC, 7, 12, 238, 100
+    SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
+    GROUPBOX "Пользовательские переменные", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Создать...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON "&Изменить...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON "&Удалить", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX "Системные переменные", IDC_STATIC, 7, 116, 238, 100
+    GROUPBOX "Системные переменные", IDC_SYSTEM_VARIABLE_GROUP, 7, 116, 238, 100
     CONTROL "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "С&оздать...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
     PUSHBUTTON "И&зменить...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
     PUSHBUTTON "У&далить", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 141, 224, 50, 14, WS_GROUP
+    DEFPUSHBUTTON "ОК", IDOK, 141, 224, 50, 14, WS_GROUP
     PUSHBUTTON "Отмена", IDCANCEL, 195, 224, 50, 14
 END
 
-IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_VARIABLE DIALOGEX 10, 15, 372, 71
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Изменение переменной"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Им&я переменной:", IDC_STATIC, 7, 14, 68, 8
-    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT "Значение перемен&ной:", IDC_STATIC, 7, 32, 68, 8
-    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 50, 50, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 170, 50, 50, 14
+    SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
+    LTEXT "Им&я переменной:", IDC_STATIC, 7, 14, 78, 8
+    EDITTEXT IDC_VARIABLE_NAME, 87, 12, 277, 12, ES_AUTOHSCROLL
+    LTEXT "Значение перемен&ной:", IDC_STATIC, 7, 32, 78, 8
+    EDITTEXT IDC_VARIABLE_VALUE, 87, 30, 277, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "ОК", IDOK, 260, 50, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 314, 50, 50, 14
+    PUSHBUTTON "Обзор &каталога...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
+    PUSHBUTTON "Обзор ф&айлов...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
+END
+
+IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 324, 250
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
+CAPTION "Изменение переменной"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    SCROLLBAR IDC_DIALOG_GRIP, 317, 243, 7, 7, SBS_SIZEGRIP
+    CONTROL "", IDC_LIST_VARIABLE_VALUE, "SysListView32", LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
+                LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 10, 10, 224, 208, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Соз&дать", IDC_BUTTON_NEW, 242, 10, 74, 14
+    PUSHBUTTON "&Изменить", IDC_BUTTON_EDIT, 242, 30, 74, 14
+    PUSHBUTTON "Об&зор...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 74, 14
+    PUSHBUTTON "&Удалить", IDC_BUTTON_DELETE, 242, 70, 74, 14
+    PUSHBUTTON "Вве&рх", IDC_BUTTON_MOVE_UP, 242, 100, 74, 14
+    PUSHBUTTON "&Вниз", IDC_BUTTON_MOVE_DOWN, 242, 120, 74, 14
+    PUSHBUTTON "Из&менить текст...", IDC_BUTTON_EDIT_TEXT, 242, 150, 74, 14
+    DEFPUSHBUTTON "ОК", IDOK, 212, 228, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 266, 228, 50, 14
 END
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
 CAPTION "Лицензионное соглашение"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | WS_BORDER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
     EDITTEXT IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
-    DEFPUSHBUTTON "OK", IDOK, 106, 140, 54, 15
+    DEFPUSHBUTTON "ОК", IDOK, 106, 140, 54, 15
 END
 
 STRINGTABLE
@@ -310,7 +333,7 @@ BEGIN
     IDS_PETABYTE "Пб ОЗУ"
     IDS_MEGAHERTZ "МГц"
     IDS_GIGAHERTZ "ГГц"
-    IDS_UPTIME_FORMAT "%u дней, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%lu дней, %02lu:%02lu:%02lu"
     IDS_VARIABLE "Переменная"
     IDS_VALUE "Значение"
     IDS_NO_DUMP "(Нет)"
@@ -329,20 +352,22 @@ BEGIN
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Подтверждение удаления"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Неизвестный профиль"
     IDS_USERPROFILE_ACCOUNT_DELETED "Удалённый профиль"
-    IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
+    IDS_USERPROFILE_TYPE_TEXT "Когда %s выполняет вход на этом компьютере, операционная система должна использовать перемещаемый профиль, или только его закешированную копию."
     IDS_MESSAGEBOXTITLE "Панель управления системы"
     IDS_WARNINITIALSIZE "Введите числовое значение исходного размера файла подкачки."
     IDS_WARNMAXIMUMSIZE "Введите числовое значение для параметра максимальный размер файла подкачки."
-    IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 2 МБ и не должен превышать свободного места на выбранном диске."
-    IDS_WARNMAXIMUMRANGE "Максимальный размер файла подкачки должен быть не меньше, чем начальный размер, который не должен превышать свободного места на выбранном диске."
-    IDS_PAGEFILE_MB "%u МБ"
+    IDS_WARNINITIALRANGE "Исходный размер файла подкачки должен быть в диапазоне между 2 МБ и %lu МБ на выбранном диске."
+    IDS_WARNMAXIMUMRANGE "Максимальный размер файла подкачки должен быть больше или равен своему исходному размеру, и при этом меньше %lu МБ на выбранном диске."
+    IDS_PAGEFILE_MB "%lu МБ"
     IDS_PAGEFILE_NONE "Нет"
     IDS_PAGEFILE_SYSTEM "По выбору системы"
     IDS_INFOREBOOT "Необходимо перезагрузить компьютер для применения изменений."
-    IDS_DEVS "\nКоманда ReactOS\n\nКоординатор проекта\n\nАлексей Брагин\n\nКоллектив разработчиков\n\nАлександр Андреевич\nАлексей Брагин\nАлександр Шапошников\nАмин Халди\nЭндрю Гринвуд\nАндрей Коротаев\nАрт Йеркс\nБенедикт Фрейзен\nКамерон Гутман\nКристоф фон Виттих\nКолин Финк\nДаниэль Раймер\nДэвид Кинтана\nДмитрий Чапышев\nЭрик Коль\nГед Мёрфи\nЯннис Адамопулос\nГрегор Брюнмар\nГермес Белуска-Майто\nЭрве Поссино\nДжеймс Тэбор\nДжеффри Морлан\nЖером Гарду\nЙоханнес Андервальд\nКамиль Хорничек\nКатаяма Хирофуми MZ\nKJK::Гиперион\nМаартен Босма\nМагнус Олсен\nМарк Пиулахс\nМарк Дженсен\nМаттиас Купфер\nМайк Норделл\nПитер Хейтер\nПитер Вард\nПьер Швейцер\nСавелий Третьяков\nСтанислав Мотыльков\nСтефан Гинсберг\nСильвейн Петреоль\nТомас Блюмель\nТомас Фабер\nТимо Кройцер\nВадим Галянт\n\nАлекс Ионеску\nФилип Навара\nГуннар Далснес\nМартин Фукс\nРойс Митчелл III\nБрэндон Тёрнер\nБрайан Палмер\nКаспер Хорнструп\nДэвид Велч\nЭмануэль Алиберти\nГе ван Гельдорп\nГрегор Анич\nДжейсон Филби\nЙенс Коллин\nМихаэль Вирт\nНатан Вудс\nРоберт Дикенсон\nРекс Джоллифф\nVizzini\n\nРелиз-инженеры\n\nАмин Халди\nКолин Финк\nЙоахим Хенце\nТомас Фабер\nЦзылян Гуо\n\nРазработка веб-сайта\n\nКолин Финк\nЯн Блумквист Кинандер\nКлеменс Фридл\nЦзылян Гуо\n\nГрафический дизайн\n\nMindflyer\nWierd_W\n\nБлагодарности\n\nвсем участникам проекта\nКоманде Wine\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Подтверждение удаления профиля"
     IDS_HWPROFILE_CONFIRM_DELETE "Вы уверены что хотите удалить профиль оборудования ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "Профиль с таким названием уже существует."
     IDS_HWPROFILE_PROFILE "Профиль"
     IDS_HWPROFILE_WARNING "Внимание"
+    IDS_ENVIRONMENT_WARNING "Все изменения, внесённые здесь, будут отменены, а это значение будет отредактировано в виде текста."
+    IDS_ENVIRONMENT_WARNING_TITLE "Свойства системы"
+    IDS_FILE_BROWSE_FILTER "Все файлы (*.*)\0*.*\0"
 END

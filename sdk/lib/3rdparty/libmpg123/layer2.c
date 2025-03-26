@@ -94,7 +94,7 @@ real* init_layer12_table(mpg123_handle *fr, real *table, int m)
 real* init_layer12_table_mmx(mpg123_handle *fr, real *table, int m)
 {
 	int i,j;
-	if(!fr->p.down_sample) 
+	if(!fr->p.down_sample)
 	{
 		for(j=3,i=0;i<63;i++,j--)
 			*table++ = DOUBLE_TO_REAL(16384 * mulmul[m] * pow(2.0,(double) j / 3.0));
@@ -201,17 +201,17 @@ static int II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 	if(*bita++)
 	switch(*scfsi++)
 	{
-		case 0: 
+		case 0:
 			*scale++ = getbits_fast(fr, 6);
 			*scale++ = getbits_fast(fr, 6);
 			*scale++ = getbits_fast(fr, 6);
 		break;
-		case 1 : 
+		case 1 :
 			*scale++ = sc = getbits_fast(fr, 6);
 			*scale++ = sc;
 			*scale++ = getbits_fast(fr, 6);
 		break;
-		case 2: 
+		case 2:
 			*scale++ = sc = getbits_fast(fr, 6);
 			*scale++ = sc;
 			*scale++ = sc;
@@ -242,17 +242,17 @@ static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int
 		step = alloc1->bits;
 		for(j=0;j<stereo;j++)
 		{
-			if( (ba=*bita++) ) 
+			if( (ba=*bita++) )
 			{
 				k=(alloc2 = alloc1+ba)->bits;
-				if( (d1=alloc2->d) < 0) 
+				if( (d1=alloc2->d) < 0)
 				{
 					real cm=fr->muls[k][scale[x1]];
 					fraction[j][0][i] = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15((int)getbits(fr, k) + d1), cm);
 					fraction[j][1][i] = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15((int)getbits(fr, k) + d1), cm);
 					fraction[j][2][i] = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15((int)getbits(fr, k) + d1), cm);
-				}        
-				else 
+				}
+				else
 				{
 					const int *table[] = { 0,0,0,grp_3tab,0,grp_5tab,0,0,0,grp_9tab };
 					unsigned int idx,*tab,m=scale[x1];
@@ -260,7 +260,7 @@ static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int
 					tab = (unsigned int *) (table[d1] + idx + idx + idx);
 					fraction[j][0][i] = REAL_SCALE_LAYER12(fr->muls[*tab++][m]);
 					fraction[j][1][i] = REAL_SCALE_LAYER12(fr->muls[*tab++][m]);
-					fraction[j][2][i] = REAL_SCALE_LAYER12(fr->muls[*tab][m]);  
+					fraction[j][2][i] = REAL_SCALE_LAYER12(fr->muls[*tab][m]);
 				}
 				scale+=3;
 			}
@@ -317,10 +317,10 @@ static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int
 	Historic comment...
 	should we use individual scalefac for channel 2 or
 	is the current way the right one , where we just copy channel 1 to
-	channel 2 ?? 
+	channel 2 ??
 	The current 'strange' thing is, that we throw away the scalefac
 	values for the second channel ...!!
-	-> changed .. now we use the scalefac values of channel one !! 
+	-> changed .. now we use the scalefac values of channel one !!
 */
 	}
 
@@ -407,7 +407,7 @@ int do_layer2(mpg123_handle *fr)
 				error("missing bits in layer II step two");
 			return clip;
 		}
-		for(j=0;j<3;j++) 
+		for(j=0;j<3;j++)
 		{
 			if(single != SINGLE_STEREO)
 			clip += (fr->synth_mono)(fraction[single][j], fr);

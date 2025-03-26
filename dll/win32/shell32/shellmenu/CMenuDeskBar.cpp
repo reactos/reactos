@@ -203,7 +203,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
             return hr;
 
         pDeskBandClient->SetDeskBarSite(NULL);
-        
+
         pDeskBandClient = NULL;
         m_Client = NULL;
     }
@@ -284,7 +284,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
 
 static void AdjustForExcludeArea(BOOL alignLeft, BOOL alignTop, BOOL preferVertical, PINT px, PINT py, INT cx, INT cy, RECTL rcExclude) {
     RECT rcWindow = { *px, *py, *px + cx, *py + cy };
-    
+
     if (rcWindow.right > rcExclude.left && rcWindow.left < rcExclude.right &&
         rcWindow.bottom > rcExclude.top && rcWindow.top < rcExclude.bottom)
     {
@@ -419,7 +419,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         AdjustForExcludeArea(alignLeft, alignTop, preferVertical, &x, &y, cx, cy, *prcExclude);
 
     // Verify that it doesn't escape the work area, and flip.
-    if (alignLeft) 
+    if (alignLeft)
     {
         if (x < rcWorkArea.left && (ppt->x+cx) <= rcWorkArea.right)
         {
@@ -551,6 +551,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetIconSize(THIS_ DWORD* piIcon)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetBitmap(THIS_ HBITMAP hBitmap)
 {
+    if (m_Banner && m_Banner != hBitmap)
+        ::DeleteObject(m_Banner);
+
     m_Banner = hBitmap;
 
     BOOL bHandled;
@@ -645,7 +648,8 @@ HRESULT CMenuDeskBar::_CloseBar()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    SetWindowPos(NULL, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE);
+    if (m_hWnd)
+        SetWindowPos(NULL, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE);
 
     return UIActivateIO(FALSE, NULL);
 }
@@ -681,7 +685,7 @@ LRESULT CMenuDeskBar::_OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
         GetClientRect(&rc);
 
-        if (m_Banner != NULL)
+        if (m_Banner && m_IconSize != BMICON_SMALL)
         {
             BITMAP bm;
             ::GetObject(m_Banner, sizeof(bm), &bm);
@@ -813,7 +817,7 @@ LRESULT CMenuDeskBar::_OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CMenuDeskBar::_OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    /* If it is a flat style menu we need to handle WM_NCPAINT 
+    /* If it is a flat style menu we need to handle WM_NCPAINT
      * and paint the border with the right colour */
     if ((GetStyle() & WS_BORDER) == 0)
     {

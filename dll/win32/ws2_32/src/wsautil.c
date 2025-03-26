@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dll/win32/ws2_32_new/src/wsautil.c
+ * FILE:        dll/win32/ws2_32/src/wsautil.c
  * PURPOSE:     Winsock Utility Functions
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

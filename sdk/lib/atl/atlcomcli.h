@@ -53,12 +53,19 @@
 namespace ATL
 {
 
-inline HRESULT AtlHresultFromLastError() throw()
+inline HRESULT AtlHresultFromLastError() noexcept
 {
     DWORD dwError = ::GetLastError();
     return HRESULT_FROM_WIN32(dwError);
 }
 
+template <class T>
+class _NoAddRefReleaseOnCComPtr : public T
+{
+  private:
+    virtual ULONG STDMETHODCALLTYPE AddRef() = 0;
+    virtual ULONG STDMETHODCALLTYPE Release() = 0;
+};
 
 template<class T>
 class CComPtr
@@ -89,6 +96,19 @@ public:
     {
         if (p != NULL)
             p->Release();
+    }
+
+    HRESULT CoCreateInstance(REFCLSID rclsid, REFIID riid, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        ATLASSERT(!p);
+        return ::CoCreateInstance(rclsid, pOuter, ClsCtx, riid, (void**)&p);
+    }
+
+    HRESULT CoCreateInstance(LPCOLESTR ProgID, REFIID riid, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        CLSID clsid;
+        HRESULT hr = CLSIDFromProgID(ProgID, &clsid);
+        return FAILED(hr) ? hr : CoCreateInstance(clsid, riid, pOuter, ClsCtx);
     }
 
     T *operator = (T *lp)
@@ -135,6 +155,16 @@ public:
 
         return *this;
     }
+
+    HRESULT CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        return CoCreateInstance(rclsid, __uuidof(T), pOuter, ClsCtx);
+    }
+
+    HRESULT CoCreateInstance(LPCOLESTR ProgID, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        return CoCreateInstance(ProgID, __uuidof(T), pOuter, ClsCtx);
+    }
 #endif
 
     void Release()
@@ -173,10 +203,10 @@ public:
         return p;
     }
 
-    T *operator -> ()
+    _NoAddRefReleaseOnCComPtr<T> *operator -> () const
     {
         ATLASSERT(p != NULL);
-        return p;
+        return (_NoAddRefReleaseOnCComPtr<T> *)p;
     }
 };
 

@@ -2,20 +2,7 @@
  * Regedit resource definitions
  *
  * Copyright 2002 Robert Dickenson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #pragma once
@@ -40,9 +27,6 @@
 #define IDC_REGEDIT_FRAME             110
 #define IDR_REGEDIT_MENU              130
 #define IDD_EXPORTRANGE               131
-#define IDI_OPEN_FILE                 132
-#define IDI_CLOSED_FILE               133
-#define IDI_ROOT                      134
 #define IDI_STRING                    135
 #define IDI_BIN                       136
 #define IDR_POPUP_MENUS               137
@@ -50,7 +34,6 @@
 #define IDD_REMOVEFAVORITES           139
 #define IDD_FIND                      140
 #define IDD_FINDING                   141
-#define IDC_LICENSE_EDIT              1029
 #define ID_REGISTRY_EXIT              32770
 #define ID_FAVOURITES_ADDTOFAVOURITES 32772
 #define ID_FAVOURITES_REMOVEFAVOURITE 32773
@@ -76,48 +59,15 @@
 
 #define ID_HELP_HELPTOPICS            32794
 #define ID_HELP_ABOUT                 32795
-#define ID_WINDOW_CASCADE             32797
-#define ID_WINDOW_TILE                32798
-#define ID_WINDOW_ARRANGEICONS        32799
-#define ID_OPTIONS_FONT               32800
-#define ID_OPTIONS_AUTOREFRESH        32801
-#define ID_OPTIONS_READONLYMODE       32802
-#define ID_OPTIONS_CONFIRMONDELETE    32803
-#define ID_OPTIONS_SAVESETTINGSONEXIT 32804
-#define ID_SECURITY_PERMISSIONS       32805
-#define ID_VIEW_TREEANDDATA           32806
-#define ID_VIEW_TREEONLY              32807
-#define ID_VIEW_DATAONLY              32808
-#define ID_VIEW_DISPLAYBINARYDATA     32810
-#define ID_VIEW_REFRESHALL            32811
-#define ID_VIEW_REFRESHACTIVE         32812
-#define ID_VIEW_FINDKEY               32813
-#define ID_TREE_EXPANDONELEVEL        32814
 #define ID_TREE_EXPANDBRANCH          32815
-#define ID_TREE_EXPANDALL             32816
 #define ID_TREE_COLLAPSEBRANCH        32817
-#define ID_EDIT_ADDKEY                32818
-#define ID_EDIT_ADDVALUE              32819
-#define ID_EDIT_BINARY                32821
-#define ID_EDIT_STRING                32822
-#define ID_EDIT_DWORD                 32823
-#define ID_EDIT_MULTISTRING           32824
-#define ID_REGISTRY_OPENLOCAL         32825
-#define ID_REGISTRY_CLOSE             32826
 #define ID_REGISTRY_LOADHIVE          32827
 #define ID_REGISTRY_UNLOADHIVE        32828
-#define ID_REGISTRY_RESTORE           32829
-#define ID_REGISTRY_SAVEKEY           32830
-#define ID_REGISTRY_SELECTCOMPUTER    32831
-#define ID_REGISTRY_PRINTSUBTREE      32832
-#define ID_REGISTRY_PRINTERSETUP      32833
-#define ID_REGISTRY_SAVESUBTREEAS     32834
 #define ID_HEXEDIT_CUT                32835
 #define ID_HEXEDIT_COPY               32836
 #define ID_HEXEDIT_PASTE              32837
 #define ID_HEXEDIT_DELETE             32838
 #define ID_HEXEDIT_SELECT_ALL         32839
-#define IDS_LICENSE                   32835
 #define IDS_ERROR                     32836
 #define IDS_BAD_VALUE                 32837
 #define IDS_UNSUPPORTED_TYPE          32838
@@ -160,6 +110,7 @@
 #define ID_TREE_SUGGESTION_MAX       32887
 #define ID_TREE_EXPORT               32888
 #define ID_TREE_PERMISSIONS          32889
+#define ID_ADDRESS_FOCUS             32890
 
 #define IDS_FLT_REGFILE      31000
 #define IDS_FLT_REGFILES     31001
@@ -170,6 +121,8 @@
 #define IDS_FLT_REGEDIT4_FLT 31006
 #define IDS_FLT_ALLFILES     31007
 #define IDS_FLT_ALLFILES_FLT 31008
+#define IDS_FLT_TXTFILES     31009
+#define IDS_FLT_TXTFILES_FLT 31010
 
 #define IDS_ACCESS_FULLCONTROL      31100
 #define IDS_ACCESS_READ             31101
@@ -246,6 +199,31 @@
 #define IDS_BUS_PNPBUS            31546
 #define IDS_BUS_UNKNOWNTYPE       31547
 
+#define IDS_FIELD_KEY_NAME      31600
+#define IDS_FIELD_CLASS_NAME    31601
+#define IDS_NO_CLASS_NAME       31602
+#define IDS_NULL_TIMESTAMP      31603
+#define IDS_FIELD_NAME          31604
+#define IDS_FIELD_TYPE          31605
+#define IDS_FIELD_DATA          31606
+#define IDS_FIELD_LASTWRITE     31607
+#define IDS_UNKNOWN             31608
+#define IDS_VALUE_INDEX         31609
+
+#define IDS_REQALTERNATIVELIST  31610
+#define IDS_REQRESOURCELIST     31611
+#define IDS_REQDESCRIPTOR       31612
+#define IDS_REQDEVICETYPE       31613
+
+#define IDS_TYPE_PORT              31614
+#define IDS_TYPE_INTERRUPT         31615
+#define IDS_TYPE_MEMORY            31616
+#define IDS_TYPE_DMA               31617
+#define IDS_SHARE_DEVICE_EXCLUSIVE 31618
+#define IDS_SHARE_DRIVER_EXCLUSIVE 31619
+#define IDS_SHARE_SHARED           31620
+#define IDS_SHARE_UNDETERMINED     31621
+
 #define IDD_EDIT_STRING 2000
 #define IDC_VALUE_NAME  2001
 #define IDC_VALUE_DATA  2002
@@ -293,9 +271,77 @@
 #define IDC_REVISION           2035
 #define IDC_SHOW_RESOURCE_DATA 2036
 
+#define IDD_EDIT_REQUIREMENTS_LIST 2037
+#define IDC_REQUIREMENTS_LIST      2038
+#define IDC_REQINTERFACETYPE       2039
+#define IDC_REQBUSNUMBER           2040
+#define IDC_REQSLOTNUMBER          2041
+#define IDC_SHOW_REQUIREMENT       2042
+
+#define IDD_EDIT_REQUIREMENTS_PORT 2043
+#define IDC_REQ_PORT_TYPE          2044
+#define IDC_REQ_PORT_LENGTH        2045
+#define IDC_REQ_PORT_ALIGN         2046
+#define IDC_REQ_PORT_MIN           2047
+#define IDC_REQ_PORT_MAX           2048
+#define IDC_REQ_PORT_SHARE         2049
+#define IDC_REQ_PORT_ALTERNATIVE   2050
+#define IDC_REQ_PORT_PREFERRED     2051
+
+#define IDD_EDIT_REQUIREMENTS_MEMORY 2052
+#define IDC_REQ_MEMORY_ACCESS        2053
+#define IDC_REQ_MEMORY_LENGTH        2054
+#define IDC_REQ_MEMORY_ALIGN         2055
+#define IDC_REQ_MEMORY_MIN           2056
+#define IDC_REQ_MEMORY_MAX           2057
+#define IDC_REQ_MEMORY_SHARE         2058
+#define IDC_REQ_MEMORY_ALTERNATIVE   2059
+#define IDC_REQ_MEMORY_PREFERRED     2060
+
+#define IDD_EDIT_REQUIREMENTS_INT 2061
+#define IDC_REQ_INT_TYPE          2062
+#define IDC_REQ_INT_MIN           2063
+#define IDC_REQ_INT_MAX           2064
+#define IDC_REQ_INT_SHARE         2065
+#define IDC_REQ_INT_ALTERNATIVE   2066
+#define IDC_REQ_INT_PREFERRED     2067
+
+#define IDD_EDIT_REQUIREMENTS_DMA 2068
+#define IDC_REQ_DMA_MIN           2069
+#define IDC_REQ_DMA_MAX           2070
+#define IDC_REQ_DMA_SHARE         2071
+#define IDC_REQ_DMA_ALTERNATIVE   2072
+#define IDC_REQ_DMA_PREFERRED     2073
+
 #define ID_FAVORITES_MIN 2100
 #define ID_FAVORITES_MAX 2999
 
 #define ID_ACCEL 3000
 
 #define IDC_STATIC -1
+
+/* Command-line strings */
+#define STRING_USAGE                    3001
+#define STRING_INVALID_SWITCH           3002
+#define STRING_HELP                     3003
+#define STRING_NO_FILENAME              3004
+#define STRING_NO_REG_KEY               3005
+#define STRING_FILE_NOT_FOUND           3006
+#define STRING_CANNOT_OPEN_FILE         3007
+#define STRING_UNHANDLED_ACTION         3008
+#define STRING_OUT_OF_MEMORY            3009
+#define STRING_INVALID_HEX              3010
+#define STRING_CSV_HEX_ERROR            3011
+#define STRING_ESCAPE_SEQUENCE          3012
+#define STRING_UNKNOWN_DATA_FORMAT      3013
+#define STRING_UNEXPECTED_EOL           3014
+#define STRING_UNRECOGNIZED_LINE        3015
+#define STRING_SETVALUE_FAILED          3016
+#define STRING_OPEN_KEY_FAILED          3017
+#define STRING_UNSUPPORTED_TYPE         3018
+#define STRING_EXPORT_AS_BINARY         3019
+#define STRING_INVALID_SYSTEM_KEY       3020
+#define STRING_REG_KEY_NOT_FOUND        3021
+#define STRING_DELETE_FAILED            3022
+#define STRING_UNKNOWN_TYPE             3023
+#define STRING_INVALID_LINE_SYNTAX      3024

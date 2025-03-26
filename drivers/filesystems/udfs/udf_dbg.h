@@ -3,14 +3,14 @@
 // All rights reserved
 // This file was released under the GPLv2 on June 2015.
 ////////////////////////////////////////////////////////////////////
-/* 
-    Module name: 
+/*
+    Module name:
 
    Udf_dbg.h
 
     Abstract:
 
-   This file contains small set of debug macroses. 
+   This file contains small set of debug macroses.
    It is used by the UDF project.
 
 */
@@ -52,7 +52,7 @@
 //======================================
 
 #if defined UDF_DBG || defined PRINT_ALWAYS
-  
+
   ULONG
   _cdecl
   DbgPrint(
@@ -60,7 +60,7 @@
       ...
       );
 
-  
+
   #ifdef KdPrint
     #undef KdPrint
   #endif
@@ -92,7 +92,7 @@
 
   #ifdef USE_AD_PRINT
     #define AdPrint(_x_) {DbgPrint("Thrd:%x:",PsGetCurrentThread());DbgPrint _x_;}
-  #else 
+  #else
     #define AdPrint(_x_) {NOTHING;}
   #endif
 

@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS enAULayouts[] =
 {
-    { L"0C09", L"00000409" },
-    { NULL, NULL }
+    { 0x0C09, 0x00000409 },
+    { 0, 0 }
 };

@@ -37,6 +37,9 @@ TODO:
     Implement Save
 */
 
+// Unique GUID of the DLL where this CAddressBand is implemented so we can tell if it's really us
+static const GUID THISMODULE_GUID = { 0x60ebab6e, 0x2e4b, 0x42f6, { 0x8a,0xbc,0x80,0x73,0x1c,0xa6,0x42,0x02} };
+
 CAddressBand::CAddressBand()
 {
     fEditControl = NULL;
@@ -47,6 +50,20 @@ CAddressBand::CAddressBand()
 
 CAddressBand::~CAddressBand()
 {
+}
+
+BOOL CAddressBand::ShouldShowGoButton()
+{
+    return SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+}
+
+BOOL CAddressBand::IsGoButtonVisible(IUnknown *pUnkBand)
+{
+    CComPtr<IAddressBand> pAB;
+    IUnknown_QueryService(pUnkBand, THISMODULE_GUID, IID_PPV_ARG(IAddressBand, &pAB));
+    if (pAB)
+        return static_cast<CAddressBand*>(pAB.p)->fGoButtonShown;
+    return ShouldShowGoButton(); // We don't know, return the global state
 }
 
 void CAddressBand::FocusChange(BOOL bFocus)
@@ -168,7 +185,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    fGoButtonShown = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+    fGoButtonShown = ShouldShowGoButton();
     if (fGoButtonShown)
         CreateGoButton();
 
@@ -259,8 +276,66 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
     return S_FALSE;
 }
 
+static WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
+{
+    for (const WCHAR *pch = pszText; *pch != UNICODE_NULL; ++pch)
+    {
+        if (*pch == L'&' && pch[1] == L'&')
+        {
+            /* Skip the first '&', the second is skipped by the for-loop */
+            ++pch;
+            continue;
+        }
+        if (*pch == L'&')
+        {
+            ++pch;
+            chAccess = *pch;
+            break;
+        }
+    }
+
+    ::CharUpperBuffW(&chAccess, 1);
+    return chAccess;
+}
+
+static WCHAR GetAddressBarAccessKey(WCHAR chAccess)
+{
+    static WCHAR s_chCache = 0;
+    static LANGID s_ThreadLocale = 0;
+    if (s_chCache && s_ThreadLocale == ::GetThreadLocale())
+        return s_chCache;
+
+    WCHAR szText[80];
+    if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL,
+                     szText, _countof(szText)))
+    {
+        return chAccess;
+    }
+
+    s_chCache = GetAccessKeyFromText(chAccess, szText);
+    s_ThreadLocale = ::GetThreadLocale();
+    return s_chCache;
+}
+
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
+    // Enable Address bar access key (Alt+D)
+    switch (lpMsg->message)
+    {
+        case WM_SYSKEYDOWN:
+        case WM_SYSCHAR:
+        {
+            WCHAR chAccess = GetAddressBarAccessKey(L'D');
+            if (lpMsg->wParam == chAccess)
+            {
+                ::PostMessageW(fEditControl, EM_SETSEL, 0, -1);
+                ::SetFocus(fEditControl);
+                return S_FALSE;
+            }
+            break;
+        }
+    }
+
     if (lpMsg->hwnd == fEditControl)
     {
         switch (lpMsg->message)
@@ -307,7 +382,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
         case WM_COMMAND:
             if (wParam == IDM_TOOLBARS_GOBUTTON)
             {
-                fGoButtonShown = !SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+                fGoButtonShown = !IsGoButtonVisible(static_cast<IAddressBand*>(this));
                 SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", REG_SZ, fGoButtonShown ? (LPVOID)L"yes" : (LPVOID)L"no", fGoButtonShown ? 8 : 6, SHREGSET_FORCE_HKCU);
                 if (!fGoButton)
                     CreateGoButton();
@@ -363,6 +438,8 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Refresh(long param8)
 
 HRESULT STDMETHODCALLTYPE CAddressBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
+    if (guidService == THISMODULE_GUID)
+        return QueryInterface(riid, ppvObject);
     return E_NOTIMPL;
 }
 

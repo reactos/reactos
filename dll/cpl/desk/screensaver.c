@@ -12,20 +12,24 @@
 
 #define MAX_SCREENSAVERS 100
 
+static const TCHAR szPreviewWndClass[] = TEXT("SSDemoParent");
+
 typedef struct
 {
-    BOOL  bIsScreenSaver; /* Is this background a wallpaper */
+    BOOL  bIsScreenSaver; /* Is this a valid screensaver */
     TCHAR szFilename[MAX_PATH];
     TCHAR szDisplayName[256];
-} ScreenSaverItem;
+} SCREEN_SAVER_ITEM;
 
 
 typedef struct _DATA
 {
-    ScreenSaverItem     ScreenSaverItems[MAX_SCREENSAVERS];
+    SCREEN_SAVER_ITEM   ScreenSaverItems[MAX_SCREENSAVERS];
     PROCESS_INFORMATION PrevWindowPi;
     int                 Selection;
+    WNDPROC             OldPreviewProc;
     UINT                ScreenSaverCount;
+    HWND                ScreenSaverPreviewParent;
 } DATA, *PDATA;
 
 
@@ -53,9 +57,7 @@ GetCurrentScreenSaverValue(LPTSTR lpValue)
                           &BufSize);
     if (Ret == ERROR_SUCCESS)
     {
-        lpBuf = HeapAlloc(GetProcessHeap(),
-                          0,
-                          BufSize);
+        lpBuf = HeapAlloc(GetProcessHeap(), 0, BufSize);
         if (lpBuf)
         {
             Ret = RegQueryValueEx(hKey,
@@ -104,10 +106,79 @@ SelectionChanged(HWND hwndDlg, PDATA pData)
 }
 
 
+LRESULT CALLBACK
+RedrawSubclassProc(HWND hwndDlg,
+                   UINT uMsg,
+                   WPARAM wParam,
+                   LPARAM lParam)
+{
+    HWND hwnd;
+    PDATA pData;
+    LRESULT Ret = FALSE;
+
+    pData = (PDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    if (!pData)
+        return Ret;
+
+    Ret = CallWindowProc(pData->OldPreviewProc, hwndDlg, uMsg, wParam, lParam);
+
+    if (uMsg == WM_PAINT)
+    {
+        hwnd = pData->ScreenSaverPreviewParent;
+        if (hwnd)
+            RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
+    }
+
+    return Ret;
+}
+
+
+static VOID
+ShowScreenSaverPreview(IN LPDRAWITEMSTRUCT draw, IN PDATA pData)
+{
+    HBRUSH hBrush;
+    HDC hDC;
+    HGDIOBJ hOldObj;
+    RECT rcItem = {
+        MONITOR_LEFT,
+        MONITOR_TOP,
+        MONITOR_RIGHT,
+        MONITOR_BOTTOM
+    };
+
+    hDC = CreateCompatibleDC(draw->hDC);
+    hOldObj = SelectObject(hDC, g_GlobalData.hMonitorBitmap);
+
+    if (!IsWindowVisible(pData->ScreenSaverPreviewParent))
+    {
+        /* FIXME: Draw static bitmap inside monitor. */
+        hBrush = CreateSolidBrush(g_GlobalData.desktop_color);
+        FillRect(hDC, &rcItem, hBrush);
+        DeleteObject(hBrush);
+    }
+
+    GdiTransparentBlt(draw->hDC,
+                      draw->rcItem.left, draw->rcItem.top,
+                      draw->rcItem.right - draw->rcItem.left + 1,
+                      draw->rcItem.bottom - draw->rcItem.top + 1,
+                      hDC,
+                      0, 0,
+                      g_GlobalData.bmMonWidth, g_GlobalData.bmMonHeight,
+                      MONITOR_ALPHA);
+
+    SelectObject(hDC, hOldObj);
+    DeleteDC(hDC);
+}
+
+
+/*
+ * /p:<hwnd>    Run preview, hwnd is handle of calling window
+ */
 static VOID
 SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
 {
-    HWND hPreview = GetDlgItem(hwndDlg, IDC_SCREENS_PREVIEW);
+    HWND hPreview = pData->ScreenSaverPreviewParent;
+    HRESULT hr;
     STARTUPINFO si;
     TCHAR szCmdline[2048];
 
@@ -119,35 +190,40 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
         CloseHandle(pData->PrevWindowPi.hThread);
         pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
     }
+    ShowWindow(pData->ScreenSaverPreviewParent, SW_HIDE);
 
-    if (pData->Selection > 0)
+    if (pData->Selection < 1)
+        return;
+
+    hr = StringCbPrintf(szCmdline, sizeof(szCmdline),
+                        TEXT("%s /p %Iu"),
+                        pData->ScreenSaverItems[pData->Selection].szFilename,
+                        (ULONG_PTR)hPreview);
+    if (FAILED(hr))
+        return;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pData->PrevWindowPi, sizeof(pData->PrevWindowPi));
+
+    ShowWindow(pData->ScreenSaverPreviewParent, SW_SHOW);
+
+    if (!CreateProcess(NULL,
+                       szCmdline,
+                       NULL,
+                       NULL,
+                       FALSE,
+                       0,
+                       NULL,
+                       NULL,
+                       &si,
+                       &pData->PrevWindowPi))
     {
-        _stprintf(szCmdline,
-                  _T("%s /p %Iu"),
-                  pData->ScreenSaverItems[pData->Selection].szFilename,
-                  (ULONG_PTR)hPreview);
-
-        ZeroMemory(&si, sizeof(si));
-        si.cb = sizeof(si);
-        ZeroMemory(&pData->PrevWindowPi, sizeof(pData->PrevWindowPi));
-
-        if (!CreateProcess(NULL,
-                           szCmdline,
-                           NULL,
-                           NULL,
-                           FALSE,
-                           0,
-                           NULL,
-                           NULL,
-                           &si,
-                           &pData->PrevWindowPi))
-        {
-            pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
-        }
+        pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
     }
 }
 
-static BOOL
+static VOID
 WaitForSettingsDialog(HWND hwndDlg,
                       HANDLE hProcess)
 {
@@ -167,63 +243,57 @@ WaitForSettingsDialog(HWND hwndDlg,
             {
                 if (msg.message == WM_QUIT)
                 {
-                    return FALSE;
+                    return;
                 }
-                if (IsDialogMessage(hwndDlg, &msg))
+                if (!IsDialogMessage(hwndDlg, &msg))
                 {
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
                 }
             }
-            else
-            {
-                return FALSE;
-            }
-        }
-        else if (dwResult == WAIT_OBJECT_0)
-        {
-            return TRUE;
         }
         else
         {
-            return FALSE;
+            return;
         }
     }
 }
 
 
+/*
+ * /c:<hwnd>    Run configuration, hwnd is handle of calling window
+ */
 static VOID
-ScreensaverConfig(HWND hwndDlg, PDATA pData)
+ScreenSaverConfig(HWND hwndDlg, PDATA pData)
 {
-    /*
-     * /c:<hwnd>  Run configuration, hwnd is handle of calling window
-     */
-
-    TCHAR szCmdline[2048];
+    HRESULT hr;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
+    TCHAR szCmdline[2048];
 
     if (pData->Selection < 1)
         return;
 
-    _stprintf(szCmdline,
-              _T("%s /c:%Iu"),
-              pData->ScreenSaverItems[pData->Selection].szFilename,
-              (ULONG_PTR)hwndDlg);
+    hr = StringCbPrintf(szCmdline, sizeof(szCmdline),
+                        TEXT("%s /c:%Iu"),
+                        pData->ScreenSaverItems[pData->Selection].szFilename,
+                        (ULONG_PTR)hwndDlg);
+    if (FAILED(hr))
+        return;
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
     if (CreateProcess(NULL,
-                     szCmdline,
-                     NULL,
-                     NULL,
-                     FALSE,
-                     0,
-                     NULL,
-                     NULL,
-                     &si,
-                     &pi))
+                      szCmdline,
+                      NULL,
+                      NULL,
+                      FALSE,
+                      0,
+                      NULL,
+                      NULL,
+                      &si,
+                      &pi))
     {
         /* Kill off the previous preview process */
         if (pData->PrevWindowPi.hProcess)
@@ -234,22 +304,24 @@ ScreensaverConfig(HWND hwndDlg, PDATA pData)
             pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
         }
 
-        if (WaitForSettingsDialog(hwndDlg, pi.hProcess))
-            SetScreenSaverPreviewBox(hwndDlg, pData);
+        WaitForSettingsDialog(hwndDlg, pi.hProcess);
+        SetScreenSaverPreviewBox(hwndDlg, pData);
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
     }
 }
 
-
+/*
+ * /s   Run normal
+ */
 static VOID
-ScreensaverPreview(HWND hwndDlg, PDATA pData)
+ScreenSaverPreview(HWND hwndDlg, PDATA pData)
 {
-    /*
-       /s         Run normal
-    */
-
-    TCHAR szCmdline[2048];
+    HRESULT hr;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
+    TCHAR szCmdline[2048];
 
     if (pData->Selection < 1)
         return;
@@ -263,23 +335,25 @@ ScreensaverPreview(HWND hwndDlg, PDATA pData)
         pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
     }
 
-    _stprintf(szCmdline,
-              _T("%s /s"),
-              pData->ScreenSaverItems[pData->Selection].szFilename);
+    hr = StringCbPrintf(szCmdline, sizeof(szCmdline),
+                        TEXT("%s /s"),
+                        pData->ScreenSaverItems[pData->Selection].szFilename);
+    if (FAILED(hr))
+        return;
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
     if (CreateProcess(NULL,
-                     szCmdline,
-                     NULL,
-                     NULL,
-                     FALSE,
-                     0,
-                     NULL,
-                     NULL,
-                     &si,
-                     &pi))
+                      szCmdline,
+                      NULL,
+                      NULL,
+                      FALSE,
+                      0,
+                      NULL,
+                      NULL,
+                      &si,
+                      &pi))
     {
         WaitForSingleObject(pi.hProcess, INFINITE);
         CloseHandle(pi.hProcess);
@@ -333,136 +407,149 @@ CheckRegScreenSaverIsSecure(HWND hwndDlg)
 }
 
 
-static VOID
-SearchScreenSavers(HWND hwndScreenSavers,
-                   LPCTSTR pszSearchPath,
-                   PDATA pData)
+static BOOL
+AddScreenSaverItem(
+    _In_ HWND hwndScreenSavers,
+    _In_ PDATA pData,
+    _In_ SCREEN_SAVER_ITEM* ScreenSaverItem)
 {
-    WIN32_FIND_DATA  fd;
-    TCHAR            szSearchPath[MAX_PATH];
-    HANDLE           hFind;
-    ScreenSaverItem *ScreenSaverItem;
-    HANDLE           hModule;
-    UINT             i, ScreenSaverCount;
+    UINT i;
+
+    if (pData->ScreenSaverCount >= MAX_SCREENSAVERS)
+        return FALSE;
+
+    i = SendMessage(hwndScreenSavers,
+                    CB_ADDSTRING,
+                    0,
+                    (LPARAM)ScreenSaverItem->szDisplayName);
+    if ((i == CB_ERR) || (i == CB_ERRSPACE))
+        return FALSE;
+
+    SendMessage(hwndScreenSavers,
+                CB_SETITEMDATA,
+                i,
+                (LPARAM)pData->ScreenSaverCount);
+
+    pData->ScreenSaverCount++;
+    return TRUE;
+}
+
+static BOOL
+AddScreenSaver(
+    _In_ HWND hwndScreenSavers,
+    _In_ PDATA pData,
+    _In_ LPCTSTR pszFilePath,
+    _In_ LPCTSTR pszFileName)
+{
+    SCREEN_SAVER_ITEM* ScreenSaverItem;
+    HANDLE hModule;
     HRESULT hr;
 
-    ScreenSaverCount = pData->ScreenSaverCount;
+    if (pData->ScreenSaverCount >= MAX_SCREENSAVERS)
+        return FALSE;
 
-    hr = StringCbCopy(szSearchPath, sizeof(szSearchPath), pszSearchPath);
+    ScreenSaverItem = pData->ScreenSaverItems + pData->ScreenSaverCount;
+
+    ScreenSaverItem->bIsScreenSaver = TRUE;
+
+    hModule = LoadLibraryEx(pszFilePath,
+                            NULL,
+                            DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+    if (hModule)
+    {
+        if (LoadString(hModule,
+                       1,
+                       ScreenSaverItem->szDisplayName,
+                       _countof(ScreenSaverItem->szDisplayName)) == 0)
+        {
+            /* If the string does not exist, copy the file name */
+            hr = StringCbCopy(ScreenSaverItem->szDisplayName,
+                              sizeof(ScreenSaverItem->szDisplayName),
+                              pszFileName);
+            if (FAILED(hr))
+            {
+                FreeLibrary(hModule);
+                return FALSE;
+            }
+            /* Remove the .scr extension */
+            ScreenSaverItem->szDisplayName[_tcslen(pszFileName)-4] = _T('\0');
+        }
+        FreeLibrary(hModule);
+    }
+    else
+    {
+        hr = StringCbCopy(ScreenSaverItem->szDisplayName,
+                          sizeof(ScreenSaverItem->szDisplayName),
+                          _T("Unknown"));
+        if (FAILED(hr))
+            return FALSE;
+    }
+
+    hr = StringCbCopy(ScreenSaverItem->szFilename,
+                      sizeof(ScreenSaverItem->szFilename),
+                      pszFilePath);
+    if (FAILED(hr))
+        return FALSE;
+
+    return AddScreenSaverItem(hwndScreenSavers, pData, ScreenSaverItem);
+}
+
+static VOID
+SearchScreenSavers(
+    _In_ HWND hwndScreenSavers,
+    _In_ PDATA pData,
+    _In_ LPCTSTR pszSearchPath)
+{
+    HRESULT hr;
+    WIN32_FIND_DATA fd;
+    HANDLE hFind;
+    TCHAR szFilePath[MAX_PATH];
+
+    hr = StringCbPrintf(szFilePath, sizeof(szFilePath),
+                        TEXT("%s\\*.scr"), pszSearchPath);
     if (FAILED(hr))
         return;
-    hr = StringCbCat(szSearchPath, sizeof(szSearchPath), TEXT("\\*.scr"));
-    if (FAILED(hr))
-        return;
 
-    hFind = FindFirstFile(szSearchPath, &fd);
-
+    hFind = FindFirstFile(szFilePath, &fd);
     if (hFind == INVALID_HANDLE_VALUE)
         return;
 
-    while (ScreenSaverCount < MAX_SCREENSAVERS)
+    do
     {
         /* Don't add any hidden screensavers */
-        if ((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0)
-        {
-            TCHAR filename[MAX_PATH];
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+            continue;
 
-            hr = StringCbCopy(filename, sizeof(filename), pszSearchPath);
-            if (FAILED(hr))
-            {
-                FindClose(hFind);
-                return;
-            }
-            hr = StringCbCat(filename, sizeof(filename), _T("\\"));
-            if (FAILED(hr))
-            {
-                FindClose(hFind);
-                return;
-            }
-            hr = StringCbCat(filename, sizeof(filename), fd.cFileName);
-            if (FAILED(hr))
-            {
-                FindClose(hFind);
-                return;
-            }
-
-            ScreenSaverItem = pData->ScreenSaverItems + ScreenSaverCount;
-
-            ScreenSaverItem->bIsScreenSaver = TRUE;
-
-            hModule = LoadLibraryEx(filename,
-                                    NULL,
-                                    DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
-            if (hModule)
-            {
-                if (0 == LoadString(hModule,
-                          1,
-                          ScreenSaverItem->szDisplayName,
-                          sizeof(ScreenSaverItem->szDisplayName) / sizeof(TCHAR)))
-                {
-                    // If the string does not exists, copy the name of the file
-                    hr = StringCbCopy(ScreenSaverItem->szDisplayName, sizeof(ScreenSaverItem->szDisplayName), fd.cFileName);
-                    if (FAILED(hr))
-                    {
-                        FreeLibrary(hModule);
-                        FindClose(hFind);
-                        return;
-                    }
-                    ScreenSaverItem->szDisplayName[_tcslen(fd.cFileName)-4] = '\0';
-                }
-                FreeLibrary(hModule);
-            }
-            else
-            {
-                hr = StringCbCopy(ScreenSaverItem->szDisplayName, sizeof(ScreenSaverItem->szDisplayName), _T("Unknown"));
-                if (FAILED(hr))
-                {
-                    FindClose(hFind);
-                    return;
-                }
-            }
-
-            hr = StringCbCopy(ScreenSaverItem->szFilename, sizeof(ScreenSaverItem->szFilename), filename);
-            if (FAILED(hr))
-            {
-                FindClose(hFind);
-                return;
-            }
-
-            i = SendMessage(hwndScreenSavers,
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)ScreenSaverItem->szDisplayName);
-
-            SendMessage(hwndScreenSavers,
-                        CB_SETITEMDATA,
-                        i,
-                        (LPARAM)ScreenSaverCount);
-
-            ScreenSaverCount++;
-        }
-
-        if (!FindNextFile(hFind, &fd))
+        if (pData->ScreenSaverCount >= MAX_SCREENSAVERS)
             break;
-    }
+
+        hr = StringCbPrintf(szFilePath, sizeof(szFilePath),
+                            TEXT("%s\\%s"), pszSearchPath, fd.cFileName);
+        if (FAILED(hr))
+            break;
+
+        if (!AddScreenSaver(hwndScreenSavers, pData, szFilePath, fd.cFileName))
+            break;
+
+    } while (FindNextFile(hFind, &fd));
 
     FindClose(hFind);
-
-    pData->ScreenSaverCount = ScreenSaverCount;
 }
 
-
 static VOID
-AddScreenSavers(HWND hwndDlg, PDATA pData)
+EnumScreenSavers(
+    _In_ HWND hwndScreenSavers,
+    _In_ PDATA pData)
 {
-    HWND hwndScreenSavers = GetDlgItem(hwndDlg, IDC_SCREENS_LIST);
+    SCREEN_SAVER_ITEM* ScreenSaverItem;
+    PTCHAR pBackSlash;
     TCHAR szSearchPath[MAX_PATH];
     TCHAR szLocalPath[MAX_PATH];
-    INT i;
-    ScreenSaverItem *ScreenSaverItem = NULL;
-    LPTSTR lpBackSlash;
 
-    /* Add the "None" item */
+    /* Initialize the number of list items */
+    pData->ScreenSaverCount = 0;
+
+    /* Add the "(None)" item */
     ScreenSaverItem = pData->ScreenSaverItems;
 
     ScreenSaverItem->bIsScreenSaver = FALSE;
@@ -470,39 +557,28 @@ AddScreenSavers(HWND hwndDlg, PDATA pData)
     LoadString(hApplet,
                IDS_NONE,
                ScreenSaverItem->szDisplayName,
-               sizeof(ScreenSaverItem->szDisplayName) / sizeof(TCHAR));
+               _countof(ScreenSaverItem->szDisplayName));
 
-    i = SendMessage(hwndScreenSavers,
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)ScreenSaverItem->szDisplayName);
+    AddScreenSaverItem(hwndScreenSavers, pData, ScreenSaverItem);
 
-    SendMessage(hwndScreenSavers,
-                CB_SETITEMDATA,
-                i,
-                (LPARAM)0);
-
-    // Initialize number of items into the list
-    pData->ScreenSaverCount = 1;
-
-    // Add all the screensavers where the applet is stored.
-    GetModuleFileName(hApplet, szLocalPath, MAX_PATH);
-    lpBackSlash = _tcsrchr(szLocalPath, _T('\\'));
-    if (lpBackSlash != NULL)
+    /* Add all the screensavers where the applet is stored */
+    GetModuleFileName(hApplet, szLocalPath, _countof(szLocalPath));
+    pBackSlash = _tcsrchr(szLocalPath, _T('\\'));
+    if (pBackSlash != NULL)
     {
-        *lpBackSlash = '\0';
-        SearchScreenSavers(hwndScreenSavers, szLocalPath, pData);
+        *pBackSlash = _T('\0');
+        SearchScreenSavers(hwndScreenSavers, pData, szLocalPath);
     }
 
-    // Add all the screensavers in the C:\ReactOS\System32 directory.
-    GetSystemDirectory(szSearchPath, MAX_PATH);
-    if (lpBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
-        SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
+    /* Add all the screensavers in the C:\ReactOS\System32 directory */
+    GetSystemDirectory(szSearchPath, _countof(szSearchPath));
+    if (pBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
+        SearchScreenSavers(hwndScreenSavers, pData, szSearchPath);
 
-    // Add all the screensavers in the C:\ReactOS directory.
-    GetWindowsDirectory(szSearchPath, MAX_PATH);
-    if (lpBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
-        SearchScreenSavers(hwndScreenSavers, szSearchPath, pData);
+    /* Add all the screensavers in the C:\ReactOS directory */
+    GetWindowsDirectory(szSearchPath, _countof(szSearchPath));
+    if (pBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
+        SearchScreenSavers(hwndScreenSavers, pData, szSearchPath);
 }
 
 
@@ -510,9 +586,6 @@ static VOID
 SetScreenSaver(HWND hwndDlg, PDATA pData)
 {
     HKEY regKey;
-    BOOL DeleteMode = FALSE;
-
-    DBG_UNREFERENCED_LOCAL_VARIABLE(DeleteMode);
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER,
                      _T("Control Panel\\Desktop"),
@@ -528,7 +601,7 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
         /* Set the screensaver */
         if (pData->ScreenSaverItems[pData->Selection].bIsScreenSaver)
         {
-            SIZE_T Length = _tcslen(pData->ScreenSaverItems[pData->Selection].szFilename) * sizeof(TCHAR);
+            SIZE_T Length = (_tcslen(pData->ScreenSaverItems[pData->Selection].szFilename) + 1) * sizeof(TCHAR);
             RegSetValueEx(regKey,
                           _T("SCRNSAVE.EXE"),
                           0,
@@ -542,7 +615,6 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
         {
             /* Windows deletes the value if no screensaver is set */
             RegDeleteValue(regKey, _T("SCRNSAVE.EXE"));
-            DeleteMode = TRUE;
 
             SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, FALSE, 0, SPIF_UPDATEINIFILE);
         }
@@ -567,9 +639,8 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
                              &bRet,
                              FALSE);
         if (Time == 0)
-            Time = 60;
-        else
-            Time *= 60;
+            Time = 1;
+        Time *= 60; // Convert to seconds
 
         SystemParametersInfoW(SPI_SETSCREENSAVETIMEOUT, Time, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 
@@ -581,22 +652,53 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
 static BOOL
 OnInitDialog(HWND hwndDlg, PDATA pData)
 {
-    LPTSTR lpCurSs;
     HWND hwndSSCombo = GetDlgItem(hwndDlg, IDC_SCREENS_LIST);
-    INT Num;
+    LPTSTR pSsValue;
+    INT iCurSs;
+    WNDCLASS wc = {0};
 
-    pData = HeapAlloc(GetProcessHeap(),
-                            HEAP_ZERO_MEMORY,
-                            sizeof(DATA));
+    pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DATA));
     if (!pData)
     {
         EndDialog(hwndDlg, -1);
         return FALSE;
     }
 
-    SetWindowLongPtr(hwndDlg,
-                     DWLP_USER,
-                     (LONG_PTR)pData);
+    wc.lpfnWndProc = DefWindowProc;
+    wc.hInstance = hApplet;
+    wc.hCursor = NULL;
+    wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wc.lpszClassName = szPreviewWndClass;
+
+    if (RegisterClass(&wc))
+    {
+        HWND hParent = GetDlgItem(hwndDlg, IDC_SCREENS_PREVIEW);
+        HWND hChild;
+
+        if (hParent != NULL)
+        {
+            pData->OldPreviewProc = (WNDPROC)GetWindowLongPtr(hParent, GWLP_WNDPROC);
+            SetWindowLongPtr(hParent, GWLP_WNDPROC, (LONG_PTR)RedrawSubclassProc);
+            SetWindowLongPtr(hParent, GWLP_USERDATA, (LONG_PTR)pData);
+        }
+
+        hChild = CreateWindowEx(0, szPreviewWndClass, NULL,
+                                WS_CHILD | WS_CLIPCHILDREN,
+                                0, 0, 0, 0, hParent,
+                                NULL, hApplet, NULL);
+        if (hChild != NULL)
+        {
+            RECT rc;
+            GetClientRect(hParent, &rc);
+            rc.left += MONITOR_LEFT;
+            rc.top += MONITOR_TOP;
+            MoveWindow(hChild, rc.left, rc.top, MONITOR_WIDTH, MONITOR_HEIGHT, FALSE);
+        }
+
+        pData->ScreenSaverPreviewParent = hChild;
+    }
+
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pData);
 
     pData->Selection = -1;
 
@@ -604,85 +706,70 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
                        IDC_SCREENS_TIME,
                        UDM_SETRANGE,
                        0,
-                       MAKELONG
-                       ((short) 240, (short) 1));
+                       MAKELONG(240, 1));
 
-    AddScreenSavers(hwndDlg,
-                    pData);
+    EnumScreenSavers(hwndSSCombo, pData);
 
     CheckRegScreenSaverIsSecure(hwndDlg);
 
     /* Set the current screensaver in the combo box */
-    lpCurSs = GetCurrentScreenSaverValue(_T("SCRNSAVE.EXE"));
-    if (lpCurSs)
+    iCurSs = 0; // Default to "(None)"
+    pSsValue = GetCurrentScreenSaverValue(_T("SCRNSAVE.EXE"));
+    if (pSsValue)
     {
         BOOL bFound = FALSE;
         INT i;
 
-        for (i = 0; i < MAX_SCREENSAVERS; i++)
+        /* Find whether the current screensaver is in the list */
+        for (i = 0; i < pData->ScreenSaverCount; i++)
         {
-            if (!_tcscmp(lpCurSs, pData->ScreenSaverItems[i].szFilename))
+            if (!_tcsicmp(pSsValue, pData->ScreenSaverItems[i].szFilename))
             {
                 bFound = TRUE;
                 break;
             }
         }
 
+        if (!bFound)
+        {
+            /* The current screensaver is not in the list: add it */
+            // i = pData->ScreenSaverCount;
+            bFound = AddScreenSaver(hwndSSCombo, pData, pSsValue, _T("SCRNSAVE.EXE"));
+            if (bFound)
+                i = pData->ScreenSaverCount - 1;
+        }
+
+        HeapFree(GetProcessHeap(), 0, pSsValue);
+
         if (bFound)
         {
-            Num = SendMessage(hwndSSCombo,
-                              CB_FINDSTRINGEXACT,
-                              -1,
-                              (LPARAM)pData->ScreenSaverItems[i].szDisplayName);
-            if (Num != CB_ERR)
-                SendMessage(hwndSSCombo,
-                            CB_SETCURSEL,
-                            Num,
-                            0);
+            /* The current screensaver should be in the list: select it */
+            iCurSs = SendMessage(hwndSSCombo,
+                                 CB_FINDSTRINGEXACT,
+                                 -1,
+                                 (LPARAM)pData->ScreenSaverItems[i].szDisplayName);
+            if (iCurSs == CB_ERR)
+                iCurSs = 0; // Default to "(None)"
         }
-        else
-        {
-            SendMessage(hwndSSCombo,
-                        CB_SETCURSEL,
-                        0,
-                        0);
-        }
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpCurSs);
     }
-    else
-    {
-        /* Set screensaver to (none) */
-        SendMessage(hwndSSCombo,
-                    CB_SETCURSEL,
-                    0,
-                    0);
-    }
+    SendMessage(hwndSSCombo, CB_SETCURSEL, iCurSs, 0);
 
     /* Set the current timeout */
-    lpCurSs = GetCurrentScreenSaverValue(_T("ScreenSaveTimeOut"));
-    if (lpCurSs)
+    pSsValue = GetCurrentScreenSaverValue(_T("ScreenSaveTimeOut"));
+    if (pSsValue)
     {
-        UINT Time = _ttoi(lpCurSs);
+        UINT Time = _ttoi(pSsValue) / 60;
 
-        Time /= 60;
+        HeapFree(GetProcessHeap(), 0, pSsValue);
 
         SendDlgItemMessage(hwndDlg,
                            IDC_SCREENS_TIME,
                            UDM_SETPOS32,
                            0,
                            Time);
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpCurSs);
-
     }
 
-    SelectionChanged(hwndDlg,
-                     pData);
+    SelectionChanged(hwndDlg, pData);
 
     return TRUE;
 }
@@ -708,22 +795,38 @@ ScreenSaverPageProc(HWND hwndDlg,
 
         case WM_DESTROY:
         {
+            if (pData->ScreenSaverPreviewParent)
+            {
+                SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_SCREENS_PREVIEW),
+                                 GWLP_WNDPROC,
+                                 (LONG_PTR)pData->OldPreviewProc);
+                DestroyWindow(pData->ScreenSaverPreviewParent);
+                pData->ScreenSaverPreviewParent = NULL;
+            }
+            UnregisterClass(szPreviewWndClass, hApplet);
             if (pData->PrevWindowPi.hProcess)
             {
                 TerminateProcess(pData->PrevWindowPi.hProcess, 0);
                 CloseHandle(pData->PrevWindowPi.hProcess);
                 CloseHandle(pData->PrevWindowPi.hThread);
             }
-            HeapFree(GetProcessHeap(),
-                     0,
-                     pData);
+            HeapFree(GetProcessHeap(), 0, pData);
             break;
         }
 
         case WM_ENDSESSION:
         {
-            SetScreenSaverPreviewBox(hwndDlg,
-                                     pData);
+            SetScreenSaverPreviewBox(hwndDlg, pData);
+            break;
+        }
+
+        case WM_DRAWITEM:
+        {
+            LPDRAWITEMSTRUCT lpDrawItem;
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
+
+            if (lpDrawItem->CtlID == IDC_SCREENS_PREVIEW)
+                ShowScreenSaverPreview(lpDrawItem, pData);
             break;
         }
 
@@ -763,7 +866,7 @@ ScreenSaverPageProc(HWND hwndDlg,
                 {
                     if (command == BN_CLICKED)
                     {
-                        ScreensaverPreview(hwndDlg, pData);
+                        ScreenSaverPreview(hwndDlg, pData);
                         SetScreenSaverPreviewBox(hwndDlg, pData);
                     }
                     break;
@@ -772,16 +875,14 @@ ScreenSaverPageProc(HWND hwndDlg,
                 case IDC_SCREENS_SETTINGS: // Screensaver Settings
                 {
                     if (command == BN_CLICKED)
-                        ScreensaverConfig(hwndDlg, pData);
+                        ScreenSaverConfig(hwndDlg, pData);
                     break;
                 }
 
                 case IDC_SCREENS_USEPASSCHK: // Screensaver Is Secure
                 {
                     if (command == BN_CLICKED)
-                    {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
                     break;
                 }
             }

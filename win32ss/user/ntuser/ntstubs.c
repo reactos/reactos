@@ -9,19 +9,8 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
-DWORD
-APIENTRY
-NtUserAssociateInputContext(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
-{
-    STUB
-    return 0;
-}
-
 //
-// Works like BitBlt, http://msdn.microsoft.com/en-us/library/ms532278(VS.85).aspx
+// Works like BitBlt, https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-bitblt
 //
 BOOL
 APIENTRY
@@ -52,18 +41,6 @@ NtUserBitBltSysBmp(
 
    UserLeave();
    return Ret;
-}
-
-DWORD
-APIENTRY
-NtUserBuildHimcList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
-{
-    STUB;
-    return 0;
 }
 
 DWORD
@@ -355,18 +332,6 @@ NtUserSetSysColors(
 
 DWORD
 APIENTRY
-NtUserUpdateInputContext(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
-{
-   STUB
-
-   return 0;
-}
-
-DWORD
-APIENTRY
 NtUserUpdateInstance(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -421,24 +386,6 @@ NtUserYieldTask(VOID)
    STUB
 
    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserCreateInputContext(
-    DWORD dwUnknown1)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserDestroyInputContext(
-    DWORD dwUnknown1)
-{
-    STUB;
-    return 0;
 }
 
 DWORD
@@ -537,8 +484,8 @@ NtUserProcessConnect(
 
     TRACE("NtUserProcessConnect\n");
 
-    if ( pUserConnect == NULL ||
-         Size         != sizeof(*pUserConnect) )
+    if (pUserConnect == NULL ||
+        Size != sizeof(*pUserConnect))
     {
         return STATUS_UNSUCCESSFUL;
     }
@@ -559,14 +506,51 @@ NtUserProcessConnect(
 
     _SEH2_TRY
     {
+        UINT i;
+
         // FIXME: Check that pUserConnect->ulVersion == USER_VERSION;
+        // FIXME: Check the value of pUserConnect->dwDispatchCount.
 
         ProbeForWrite(pUserConnect, sizeof(*pUserConnect), sizeof(PVOID));
-        pUserConnect->siClient.psi = gpsi;
-        pUserConnect->siClient.aheList = gHandleTable;
+
+        // FIXME: Instead of assuming that the mapping of the heap desktop
+        // also holds there, we **MUST** create and map instead the shared
+        // section! Its client base must be stored in W32Process->pClientBase.
+        // What is currently done (ReactOS-specific only), is that within the
+        // IntUserHeapCommitRoutine()/MapGlobalUserHeap() routines we assume
+        // it's going to be also called early, so that we manually add a very
+        // first memory mapping that corresponds to the "global user heap",
+        // and that we use instead of a actual win32 "shared USER section"
+        // (see slide 29 of https://paper.bobylive.com/Meeting_Papers/BlackHat/USA-2011/BH_US_11_Mandt_win32k_Slides.pdf )
+
         pUserConnect->siClient.ulSharedDelta =
             (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
             (ULONG_PTR)W32Process->HeapMappings.UserMapping;
+
+#define SERVER_TO_CLIENT(ptr) \
+    ((PVOID)((ULONG_PTR)ptr - pUserConnect->siClient.ulSharedDelta))
+
+        ASSERT(gpsi);
+        ASSERT(gHandleTable);
+
+        pUserConnect->siClient.psi       = SERVER_TO_CLIENT(gpsi);
+        pUserConnect->siClient.aheList   = SERVER_TO_CLIENT(gHandleTable);
+        pUserConnect->siClient.pDispInfo = NULL;
+
+        // NOTE: kernel server should also have a SHAREDINFO gSharedInfo;
+        // FIXME: These USER window-proc data should be used somehow!
+
+        pUserConnect->siClient.DefWindowMsgs.maxMsgs     = 0;
+        pUserConnect->siClient.DefWindowMsgs.abMsgs      = NULL;
+        pUserConnect->siClient.DefWindowSpecMsgs.maxMsgs = 0;
+        pUserConnect->siClient.DefWindowSpecMsgs.abMsgs  = NULL;
+
+        for (i = 0; i < ARRAYSIZE(pUserConnect->siClient.awmControl); ++i)
+        {
+            pUserConnect->siClient.awmControl[i].maxMsgs = 0;
+            pUserConnect->siClient.awmControl[i].abMsgs  = NULL;
+        }
+#undef SERVER_TO_CLIENT
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -625,16 +609,6 @@ NtUserQueryInformationThread(IN HANDLE ThreadHandle,
 Quit:
     UserLeave();
     return Status;
-}
-
-DWORD
-APIENTRY
-NtUserQueryInputContext(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
-{
-    STUB;
-    return 0;
 }
 
 BOOL
@@ -727,7 +701,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 
             TRACE("Shutdown initiated\n");
 
-            if (ThreadInformationLength != sizeof(ULONG))
+            if (ThreadInformationLength != sizeof(CapturedFlags))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -737,7 +711,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
-                ProbeForWrite(ThreadInformation, sizeof(CapturedFlags), sizeof(PVOID));
+                ProbeForWrite(ThreadInformation, sizeof(CapturedFlags), __alignof(CapturedFlags));
                 CapturedFlags = *(PULONG)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -779,7 +753,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
-                ProbeForRead(ThreadInformation, sizeof(ShutdownStatus), sizeof(PVOID));
+                ProbeForRead(ThreadInformation, sizeof(ShutdownStatus), __alignof(ShutdownStatus));
                 ShutdownStatus = *(NTSTATUS*)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -809,7 +783,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
-                ProbeForRead(ThreadInformation, sizeof(CsrPortHandle), sizeof(PVOID));
+                ProbeForRead(ThreadInformation, sizeof(CsrPortHandle), __alignof(CsrPortHandle));
                 CsrPortHandle = *(PHANDLE)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -862,16 +836,6 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 Quit:
     UserLeave();
     return Status;
-}
-
-DWORD
-APIENTRY
-NtUserSetThreadLayoutHandles(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
-{
-    STUB;
-    return 0;
 }
 
 BOOL
@@ -996,6 +960,15 @@ NtGdiMakeObjectXferable(
     return 0;
 }
 
+BOOL
+APIENTRY
+NtGdiMakeObjectUnXferable(
+    _In_ HANDLE hHandle)
+{
+    STUB;
+    return 0;
+}
+
 DWORD
 APIENTRY
 NtDxEngGetRedirectionBitmap(
@@ -1004,6 +977,5 @@ NtDxEngGetRedirectionBitmap(
     STUB;
     return 0;
 }
-
 
 /* EOF */

@@ -61,6 +61,8 @@ WCHAR * CDECL wine_get_dos_file_name( LPCSTR str )
 #ifdef __REACTOS__
         ERR("Got absolute UNIX path name in function wine_get_dos_file_name. This is not UNIX. Please fix the caller!\n");
         ERR("File name: %s\n", str);
+        /* Return empty path */
+        return RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, 1 * sizeof(UNICODE_NULL));
 #else
         len += 8;  /* \??\unix prefix */
         if (!(buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return NULL;

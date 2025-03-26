@@ -2,45 +2,13 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontMenu implementation
- * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-static CLIPFORMAT g_cfHIDA;
-
-HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
-{
-    if (g_cfHIDA == NULL)
-    {
-        g_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-    }
-
-    FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-    STGMEDIUM medium;
-
-    HRESULT hr = pDataObject->GetData(&fmt, &medium);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    LPVOID lpSrc = GlobalLock(medium.hGlobal);
-    SIZE_T cbSize = GlobalSize(medium.hGlobal);
-
-    *ppcida = (CIDA *)::CoTaskMemAlloc(cbSize);
-    if (*ppcida)
-    {
-        memcpy(*ppcida, lpSrc, cbSize);
-        hr = S_OK;
-    }
-    else
-    {
-        hr = E_FAIL;
-    }
-    ReleaseStgMedium(&medium);
-    return hr;
-}
 
 const char* DFM_TO_STR(UINT uMsg)
 {
@@ -69,7 +37,7 @@ static void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry)
     WCHAR FontViewerPath[MAX_PATH] = L"%SystemRoot%\\System32\\fontview.exe";
     WCHAR FontPathArg[MAX_PATH + 3];
 
-    CStringW Path = g_FontCache->Filename(fontEntry, true);
+    CStringW Path = g_FontCache->Filename(g_FontCache->Find(fontEntry), true);
     if (!Path.IsEmpty())
     {
         // '/d' disables the install button
@@ -108,13 +76,13 @@ static HRESULT CALLBACK FontFolderMenuCallback(IShellFolder *psf, HWND hwnd, IDa
         return S_OK;
     }
     case DFM_INVOKECOMMAND:
-        // Preview is the only item we can handle
+        // Preview is the only item we handle
         if (wParam == 0)
         {
-            CComHeapPtr<CIDA> cida;
-            HRESULT hr = _GetCidlFromDataObject(pdtobj, &cida);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
+            CDataObjectHIDA cida(pdtobj);
+
+            if (FAILED_UNEXPECTEDLY(cida.hr()))
+                return cida.hr();
 
             for (UINT n = 0; n < cida->cidl; ++n)
             {
@@ -122,6 +90,15 @@ static HRESULT CALLBACK FontFolderMenuCallback(IShellFolder *psf, HWND hwnd, IDa
                 RunFontViewer(hwnd, fontEntry);
             }
             return S_OK;
+        }
+        else if (wParam == DFM_CMD_PROPERTIES)
+        {
+            TRACE("Default properties handling!\n");
+            return S_FALSE;
+        }
+        else
+        {
+            ERR("Unhandled DFM_INVOKECOMMAND(wParam=0x%x)\n", wParam);
         }
         return S_FALSE;
 

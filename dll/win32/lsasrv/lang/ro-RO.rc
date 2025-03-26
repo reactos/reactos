@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     Local Security Authority Server DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -40,8 +46,8 @@ BEGIN
     IDS_ALIAS_RID_BACKUP_OPS "Operatori de rezervă"
     IDS_ALIAS_RID_REPLICATOR "Replicatori"
     IDS_ALIAS_RID_RAS_SERVERS "Servere RAS și IAS"
-    IDS_ALIAS_RID_PREW2KCOMPACCESS "Acces compatibil ante-Windows 2000"
-    IDS_ALIAS_RID_REMOTE_DESKTOP_USERS "Utilizatori de birou la distanță"
+    IDS_ALIAS_RID_PREW2KCOMPACCESS "Acces compatibil pre-Windows 2000"
+    IDS_ALIAS_RID_REMOTE_DESKTOP_USERS "Utilizatori de desktop la distanță"
     IDS_ALIAS_RID_NETWORK_CONFIGURATION_OPS "Operatori de configurare rețea"
 END
 
@@ -55,7 +61,7 @@ BEGIN
     IDS_TCB_PRIVILEGE "Figurează ca parte a sistemului de operare"
     IDS_SECURITY_PRIVILEGE "Gestionează audit și jurnal de securitate"
     IDS_TAKE_OWNERSHIP_PRIVILEGE "Preia posesia de fișiere sau de alte obiecte"
-    IDS_LOAD_DRIVER_PRIVILEGE "Încarcă sau descarcă modulele-pilot pentru dispozitive"
+    IDS_LOAD_DRIVER_PRIVILEGE "Încarcă sau descarcă driverele pentru dispozitive"
     IDS_SYSTEM_PROFILE_PRIVILEGE "Profilează performanța sistemului"
     IDS_SYSTEMTIME_PRIVILEGE "Modifică timpul de sistem"
     IDS_PROF_SINGLE_PROCESS_PRIVILEGE "Profilează un singur proces"

@@ -537,8 +537,8 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
     NumEventsRead = 0;
     Status = ConDrvGetConsoleInput(InputBuffer->Header.Console,
                                    InputBuffer,
-                                   (GetInputRequest->Flags & CONSOLE_READ_KEEPEVENT) != 0,
-                                   (GetInputRequest->Flags & CONSOLE_READ_CONTINUE ) == 0,
+                                   (GetInputRequest->Flags & CONSOLE_READ_NOREMOVE) != 0,
+                                   (GetInputRequest->Flags & CONSOLE_READ_NOWAIT  ) == 0,
                                    InputRecord,
                                    GetInputRequest->NumRecords,
                                    &NumEventsRead);
@@ -656,7 +656,7 @@ CON_API(SrvGetConsoleInput,
 
     DPRINT("SrvGetConsoleInput\n");
 
-    if (GetInputRequest->Flags & ~(CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE))
+    if (GetInputRequest->Flags & ~(CONSOLE_READ_NOREMOVE | CONSOLE_READ_NOWAIT))
     {
         return STATUS_INVALID_PARAMETER;
     }

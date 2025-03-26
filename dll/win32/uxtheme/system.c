@@ -24,6 +24,8 @@
 #include <winreg.h>
 #include <uxundoc.h>
 
+DWORD gdwErrorInfoTlsIndex = TLS_OUT_OF_INDEXES;
+
 /***********************************************************************
  * Defines and global variables
  */
@@ -588,6 +590,19 @@ void UXTHEME_InitSystem(HINSTANCE hInst)
 
     RtlInitializeHandleTable(0xFFF, sizeof(UXTHEME_HANDLE), &g_UxThemeHandleTable);
     g_cHandles = 0;
+
+    gdwErrorInfoTlsIndex = TlsAlloc();
+}
+
+/***********************************************************************
+ *      UXTHEME_UnInitSystem
+ */
+void UXTHEME_UnInitSystem(HINSTANCE hInst)
+{
+    UXTHEME_DeleteParseErrorInfo();
+
+    TlsFree(gdwErrorInfoTlsIndex);
+    gdwErrorInfoTlsIndex = TLS_OUT_OF_INDEXES;
 }
 
 /***********************************************************************

@@ -34,7 +34,7 @@ INT_PTR CALLBACK ShutdownGuiProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpar
         default:
             return FALSE;
     }
-    
+
     return TRUE;
 }
 

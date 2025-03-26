@@ -35,7 +35,7 @@ static BOOL SCROLL_IsVertical(HWND hwnd, INT nBar)
     }
 }
 
-static LONG SCROLL_getObjectId(INT nBar)
+LONG SCROLL_getObjectId(INT nBar)
 {
     switch(nBar)
     {
@@ -273,16 +273,12 @@ static void SCROLL_DrawMovingThumb(PWND_DATA pwndData, PDRAW_CONTEXT pcontext, S
 
 
 void 
-ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
+ThemeDrawScrollBarEx(PDRAW_CONTEXT pcontext, INT nBar, PSCROLLBARINFO psbi, POINT* pt)
 {
     SCROLLINFO si;
-    SCROLLBARINFO sbi;
     BOOL vertical;
     enum SCROLL_HITTEST htHot = SCROLL_NOWHERE;
     PWND_DATA pwndData;
-
-    if (((nBar == SB_VERT) && !(pcontext->wi.dwStyle & WS_VSCROLL)) ||
-        ((nBar == SB_HORZ) && !(pcontext->wi.dwStyle & WS_HSCROLL))) return;
 
     if (!(pwndData = ThemeGetWndData(pcontext->hWnd)))
         return;
@@ -291,35 +287,48 @@ ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
         return;
 
     /* Retrieve scrollbar info */
-    sbi.cbSize = sizeof(sbi);
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL ;
     GetScrollInfo(pcontext->hWnd, nBar, &si);
-    GetScrollBarInfo(pcontext->hWnd, SCROLL_getObjectId(nBar), &sbi);
     vertical = SCROLL_IsVertical(pcontext->hWnd, nBar);
-    if(sbi.rgstate[SCROLL_TOP_ARROW] & STATE_SYSTEM_UNAVAILABLE  && 
-       sbi.rgstate[SCROLL_BOTTOM_ARROW] & STATE_SYSTEM_UNAVAILABLE  )
+    if(psbi->rgstate[SCROLL_TOP_ARROW] & STATE_SYSTEM_UNAVAILABLE  && 
+       psbi->rgstate[SCROLL_BOTTOM_ARROW] & STATE_SYSTEM_UNAVAILABLE  )
     {
-        sbi.xyThumbTop = 0;
+        psbi->xyThumbTop = 0;
     }
 
     /* The scrollbar rect is in screen coordinates */
-    OffsetRect(&sbi.rcScrollBar, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
+    OffsetRect(&psbi->rcScrollBar, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
 
     if(pt)
     {
         ScreenToWindow(pcontext->hWnd, pt);
-        htHot = SCROLL_HitTest(pcontext->hWnd, &sbi, vertical, *pt, FALSE);
+        htHot = SCROLL_HitTest(pcontext->hWnd, psbi, vertical, *pt, FALSE);
     }
 
     /* do not draw if the scrollbar rectangle is empty */
-    if(IsRectEmpty(&sbi.rcScrollBar)) return;
+    if(IsRectEmpty(&psbi->rcScrollBar)) return;
 
     /* Draw the scrollbar */
-    SCROLL_DrawArrows( pcontext, &sbi, vertical, 0, htHot );
-	SCROLL_DrawInterior( pcontext, &sbi, sbi.xyThumbTop, vertical, 0, htHot );
+    SCROLL_DrawArrows( pcontext, psbi, vertical, 0, htHot );
+	SCROLL_DrawInterior( pcontext, psbi, psbi->xyThumbTop, vertical, 0, htHot );
 }
 
+void 
+ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
+{
+    SCROLLBARINFO sbi;
+
+    if (((nBar == SB_VERT) && !(pcontext->wi.dwStyle & WS_VSCROLL)) ||
+        ((nBar == SB_HORZ) && !(pcontext->wi.dwStyle & WS_HSCROLL)))
+    {
+        return;
+    }
+
+    sbi.cbSize = sizeof(sbi);
+    GetScrollBarInfo(pcontext->hWnd, SCROLL_getObjectId(nBar), &sbi);
+    ThemeDrawScrollBarEx(pcontext, nBar, &sbi, pt);
+}
 
 
 /***********************************************************************

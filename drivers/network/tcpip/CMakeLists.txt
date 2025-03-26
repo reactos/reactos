@@ -1,8 +1,12 @@
 
-include_directories(
-    BEFORE include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include/ipv4)
+set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lwip)
+set(LWIP_INCLUDE_DIRS
+    ${LWIP_DIR}/src/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/lwip
+)
+include(${LWIP_DIR}/src/Filelists.cmake)
+add_dependencies(lwipcore xdk)
+add_subdirectory(ip)
 
 add_definitions(
     -DNDIS40
@@ -11,6 +15,7 @@ add_definitions(
 spec2def(tcpip.sys tcpip.spec)
 
 list(APPEND SOURCE
+    chew/workqueue.c
     datalink/lan.c
     tcpip/ainfo.c
     tcpip/buffer.c
@@ -26,15 +31,19 @@ list(APPEND SOURCE
     tcpip/proto.c
     tcpip/tinfo.c
     tcpip/wait.c
-    include/precomp.h)
+    include/lwip/precomp.h)
 
 add_library(tcpip MODULE
     ${SOURCE}
     tcpip.rc
     ${CMAKE_CURRENT_BINARY_DIR}/tcpip.def)
 
-target_link_libraries(tcpip ip lwip ${PSEH_LIB} chew)
+target_include_directories(tcpip BEFORE
+    PRIVATE ${LWIP_INCLUDE_DIRS}
+    PRIVATE include)
+
+target_link_libraries(tcpip ip ${PSEH_LIB})
 set_module_type(tcpip kernelmodedriver)
 add_importlibs(tcpip ndis ntoskrnl hal)
-add_pch(tcpip include/precomp.h SOURCE)
+add_pch(tcpip include/lwip/precomp.h SOURCE)
 add_cd_file(TARGET tcpip DESTINATION reactos/system32/drivers FOR all)

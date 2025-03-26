@@ -26,7 +26,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -39,20 +38,20 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 /* below is the query interface to a table */
-typedef struct tagMSIROWENTRY
+struct row_entry
 {
     struct tagMSIWHEREVIEW *wv; /* used during sorting */
     UINT values[1];
-} MSIROWENTRY;
+};
 
-typedef struct tagJOINTABLE
+struct join_table
 {
-    struct tagJOINTABLE *next;
+    struct join_table *next;
     MSIVIEW *view;
     UINT col_count;
     UINT row_count;
     UINT table_index;
-} JOINTABLE;
+};
 
 typedef struct tagMSIORDERINFO
 {
@@ -65,11 +64,11 @@ typedef struct tagMSIWHEREVIEW
 {
     MSIVIEW        view;
     MSIDATABASE   *db;
-    JOINTABLE     *tables;
+    struct join_table *tables;
     UINT           row_count;
     UINT           col_count;
     UINT           table_count;
-    MSIROWENTRY  **reorder;
+    struct row_entry **reorder;
     UINT           reorder_size; /* number of entries available in reorder */
     struct expr   *cond;
     UINT           rec_index;
@@ -91,9 +90,9 @@ static void free_reorder(MSIWHEREVIEW *wv)
         return;
 
     for (i = 0; i < wv->row_count; i++)
-        msi_free(wv->reorder[i]);
+        free(wv->reorder[i]);
 
-    msi_free( wv->reorder );
+    free(wv->reorder);
     wv->reorder = NULL;
     wv->reorder_size = 0;
     wv->row_count = 0;
@@ -101,7 +100,7 @@ static void free_reorder(MSIWHEREVIEW *wv)
 
 static UINT init_reorder(MSIWHEREVIEW *wv)
 {
-    MSIROWENTRY **new = msi_alloc_zero(sizeof(MSIROWENTRY *) * INITIAL_REORDER_SIZE);
+    struct row_entry **new = calloc(INITIAL_REORDER_SIZE, sizeof(*new));
     if (!new)
         return ERROR_OUTOFMEMORY;
 
@@ -125,22 +124,23 @@ static inline UINT find_row(MSIWHEREVIEW *wv, UINT row, UINT *(values[]))
 
 static UINT add_row(MSIWHEREVIEW *wv, UINT vals[])
 {
-    MSIROWENTRY *new;
+    struct row_entry *new;
 
     if (wv->reorder_size <= wv->row_count)
     {
-        MSIROWENTRY **new_reorder;
+        struct row_entry **new_reorder;
         UINT newsize = wv->reorder_size * 2;
 
-        new_reorder = msi_realloc_zero(wv->reorder, sizeof(MSIROWENTRY *) * newsize);
+        new_reorder = realloc(wv->reorder, newsize * sizeof(*new_reorder));
         if (!new_reorder)
             return ERROR_OUTOFMEMORY;
+        memset(new_reorder + wv->reorder_size, 0, (newsize - wv->reorder_size) * sizeof(*new_reorder));
 
         wv->reorder = new_reorder;
         wv->reorder_size = newsize;
     }
 
-    new = msi_alloc(FIELD_OFFSET( MSIROWENTRY, values[wv->table_count] ));
+    new = malloc(offsetof(struct row_entry, values[wv->table_count]));
 
     if (!new)
         return ERROR_OUTOFMEMORY;
@@ -153,9 +153,9 @@ static UINT add_row(MSIWHEREVIEW *wv, UINT vals[])
     return ERROR_SUCCESS;
 }
 
-static JOINTABLE *find_table(MSIWHEREVIEW *wv, UINT col, UINT *table_col)
+static struct join_table *find_table(MSIWHEREVIEW *wv, UINT col, UINT *table_col)
 {
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
 
     if(col == 0 || col > wv->col_count)
          return NULL;
@@ -174,7 +174,7 @@ static JOINTABLE *find_table(MSIWHEREVIEW *wv, UINT col, UINT *table_col)
 static UINT parse_column(MSIWHEREVIEW *wv, union ext_column *column,
                          UINT *column_type)
 {
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
     UINT i, r;
 
     do
@@ -187,7 +187,7 @@ static UINT parse_column(MSIWHEREVIEW *wv, union ext_column *column,
                                                   NULL, &table_name);
             if (r != ERROR_SUCCESS)
                 return r;
-            if (strcmpW(table_name, column->unparsed.table) != 0)
+            if (wcscmp(table_name, column->unparsed.table) != 0)
                 continue;
         }
 
@@ -200,7 +200,7 @@ static UINT parse_column(MSIWHEREVIEW *wv, union ext_column *column,
             if(r != ERROR_SUCCESS )
                 return r;
 
-            if(strcmpW(col_name, column->unparsed.column))
+            if(wcscmp(col_name, column->unparsed.column))
                 continue;
             column->parsed.column = i;
             column->parsed.table = table;
@@ -216,7 +216,7 @@ static UINT parse_column(MSIWHEREVIEW *wv, union ext_column *column,
 static UINT WHERE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    JOINTABLE *table;
+    struct join_table *table;
     UINT *rows;
     UINT r;
 
@@ -239,7 +239,7 @@ static UINT WHERE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
 static UINT WHERE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    JOINTABLE *table;
+    struct join_table *table;
     UINT *rows;
     UINT r;
 
@@ -259,23 +259,71 @@ static UINT WHERE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     return table->view->ops->fetch_stream( table->view, rows[table->table_index], col, stm );
 }
 
-static UINT WHERE_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
+static UINT WHERE_set_int(struct tagMSIVIEW *view, UINT row, UINT col, int val)
 {
-    MSIWHEREVIEW *wv = (MSIWHEREVIEW *)view;
+    MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
+    struct join_table *table;
+    UINT *rows;
+    UINT r;
 
-    TRACE("%p %d %p\n", wv, row, rec );
+    TRACE("view %p, row %u, col %u, val %d.\n", wv, row, col, val );
 
-    if (!wv->tables)
+    r = find_row(wv, row, &rows);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    table = find_table(wv, col, &col);
+    if (!table)
         return ERROR_FUNCTION_FAILED;
 
-    return msi_view_get_row( wv->db, view, row, rec );
+    return table->view->ops->set_int(table->view, rows[table->table_index], col, val);
+}
+
+static UINT WHERE_set_string(struct tagMSIVIEW *view, UINT row, UINT col, const WCHAR *val, int len)
+{
+    MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
+    struct join_table *table;
+    UINT *rows;
+    UINT r;
+
+    TRACE("view %p, row %u, col %u, val %s.\n", wv, row, col, debugstr_wn(val, len));
+
+    r = find_row(wv, row, &rows);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    table = find_table(wv, col, &col);
+    if (!table)
+        return ERROR_FUNCTION_FAILED;
+
+    return table->view->ops->set_string(table->view, rows[table->table_index], col, val, len);
+}
+
+static UINT WHERE_set_stream(MSIVIEW *view, UINT row, UINT col, IStream *stream)
+{
+    MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
+    struct join_table *table;
+    UINT *rows;
+    UINT r;
+
+    TRACE("view %p, row %u, col %u, stream %p.\n", wv, row, col, stream);
+
+    r = find_row(wv, row, &rows);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    table = find_table(wv, col, &col);
+    if (!table)
+        return ERROR_FUNCTION_FAILED;
+
+    return table->view->ops->set_stream(table->view, rows[table->table_index], col, stream);
 }
 
 static UINT WHERE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
     UINT i, r, offset = 0;
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
     UINT *rows;
     UINT mask_copy = mask;
 
@@ -445,7 +493,7 @@ static INT INT_evaluate_binary( MSIWHEREVIEW *wv, const UINT rows[],
 
 static inline UINT expr_fetch_value(const union ext_column *expr, const UINT rows[], UINT *val)
 {
-    JOINTABLE *table = expr->parsed.table;
+    struct join_table *table = expr->parsed.table;
 
     if( rows[table->table_index] == INVALID_ROW_INDEX )
     {
@@ -539,7 +587,7 @@ static UINT STRCMP_Evaluate( MSIWHEREVIEW *wv, const UINT rows[], const struct c
     else if( r_str && ! l_str )
         sr = -1;
     else
-        sr = strcmpW( l_str, r_str );
+        sr = wcscmp( l_str, r_str );
 
     *val = ( expr->op == OP_EQ && ( sr == 0 ) ) ||
            ( expr->op == OP_NE && ( sr != 0 ) );
@@ -599,7 +647,7 @@ static UINT WHERE_evaluate( MSIWHEREVIEW *wv, const UINT rows[],
     return ERROR_SUCCESS;
 }
 
-static UINT check_condition( MSIWHEREVIEW *wv, MSIRECORD *record, JOINTABLE **tables,
+static UINT check_condition( MSIWHEREVIEW *wv, MSIRECORD *record, struct join_table **tables,
                              UINT table_rows[] )
 {
     UINT r = ERROR_FUNCTION_FAILED;
@@ -634,10 +682,10 @@ static UINT check_condition( MSIWHEREVIEW *wv, MSIRECORD *record, JOINTABLE **ta
     return r;
 }
 
-static int compare_entry( const void *left, const void *right )
+static int __cdecl compare_entry( const void *left, const void *right )
 {
-    const MSIROWENTRY *le = *(const MSIROWENTRY**)left;
-    const MSIROWENTRY *re = *(const MSIROWENTRY**)right;
+    const struct row_entry *le = *(const struct row_entry **)left;
+    const struct row_entry *re = *(const struct row_entry **)right;
     const MSIWHEREVIEW *wv = le->wv;
     MSIORDERINFO *order = wv->order_info;
     UINT i, j, r, l_val, r_val;
@@ -681,7 +729,7 @@ static int compare_entry( const void *left, const void *right )
     return 0;
 }
 
-static void add_to_array( JOINTABLE **array, JOINTABLE *elem )
+static void add_to_array( struct join_table **array, struct join_table *elem )
 {
     while (*array && *array != elem)
         array++;
@@ -689,7 +737,7 @@ static void add_to_array( JOINTABLE **array, JOINTABLE *elem )
         *array = elem;
 }
 
-static BOOL in_array( JOINTABLE **array, JOINTABLE *elem )
+static BOOL in_array( struct join_table **array, struct join_table *elem )
 {
     while (*array && *array != elem)
         array++;
@@ -700,8 +748,8 @@ static BOOL in_array( JOINTABLE **array, JOINTABLE *elem )
 #define JOIN_TO_CONST_EXPR 0x10000 /* comparison to a table involved with
                                       a CONST_EXPR comaprison */
 
-static UINT reorder_check( const struct expr *expr, JOINTABLE **ordered_tables,
-                           BOOL process_joins, JOINTABLE **lastused )
+static UINT reorder_check( const struct expr *expr, struct join_table **ordered_tables,
+                           BOOL process_joins, struct join_table **lastused )
 {
     UINT res = 0;
 
@@ -739,12 +787,11 @@ static UINT reorder_check( const struct expr *expr, JOINTABLE **ordered_tables,
 }
 
 /* reorders the tablelist in a way to evaluate the condition as fast as possible */
-static JOINTABLE **ordertables( MSIWHEREVIEW *wv )
+static struct join_table **ordertables( MSIWHEREVIEW *wv )
 {
-    JOINTABLE *table;
-    JOINTABLE **tables;
+    struct join_table *table, **tables;
 
-    tables = msi_alloc_zero( (wv->table_count + 1) * sizeof(*tables) );
+    tables = calloc(wv->table_count + 1, sizeof(*tables));
 
     if (wv->cond)
     {
@@ -767,9 +814,9 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
     UINT r;
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
     UINT *rows;
-    JOINTABLE **ordered_tables;
+    struct join_table **ordered_tables;
     UINT i = 0;
 
     TRACE("%p %p\n", wv, record);
@@ -800,7 +847,7 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
     ordered_tables = ordertables( wv );
 
-    rows = msi_alloc( wv->table_count * sizeof(*rows) );
+    rows = malloc(wv->table_count * sizeof(*rows));
     for (i = 0; i < wv->table_count; i++)
         rows[i] = INVALID_ROW_INDEX;
 
@@ -809,20 +856,20 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if (wv->order_info)
         wv->order_info->error = ERROR_SUCCESS;
 
-    qsort(wv->reorder, wv->row_count, sizeof(MSIROWENTRY *), compare_entry);
+    qsort(wv->reorder, wv->row_count, sizeof(struct row_entry *), compare_entry);
 
     if (wv->order_info)
         r = wv->order_info->error;
 
-    msi_free( rows );
-    msi_free( ordered_tables );
+    free(rows);
+    free(ordered_tables);
     return r;
 }
 
 static UINT WHERE_close( struct tagMSIVIEW *view )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
 
     TRACE("%p\n", wv );
 
@@ -862,7 +909,7 @@ static UINT WHERE_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *nam
                                    UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    JOINTABLE *table;
+    struct join_table *table;
 
     TRACE("%p %d %p %p %p %p\n", wv, n, name, type, temporary, table_name );
 
@@ -932,7 +979,7 @@ static UINT WHERE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
                           MSIRECORD *rec, UINT row )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
     UINT r;
 
     TRACE("%p %d %p\n", wv, eModifyMode, rec);
@@ -944,8 +991,8 @@ static UINT WHERE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
     {
         UINT *rows;
 
-        if (find_row(wv, row - 1, &rows) == ERROR_SUCCESS)
-            row = rows[0] + 1;
+        if (find_row(wv, row, &rows) == ERROR_SUCCESS)
+            row = rows[0];
         else
             row = -1;
 
@@ -987,18 +1034,18 @@ static UINT WHERE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
 static UINT WHERE_delete( struct tagMSIVIEW *view )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
 
     TRACE("%p\n", wv );
 
     while(table)
     {
-        JOINTABLE *next;
+        struct join_table *next;
 
         table->view->ops->delete(table->view);
         table->view = NULL;
         next = table->next;
-        msi_free(table);
+        free(table);
         table = next;
     }
     wv->tables = NULL;
@@ -1006,49 +1053,19 @@ static UINT WHERE_delete( struct tagMSIVIEW *view )
 
     free_reorder(wv);
 
-    msi_free(wv->order_info);
+    free(wv->order_info);
     wv->order_info = NULL;
 
     msiobj_release( &wv->db->hdr );
-    msi_free( wv );
+    free(wv);
 
     return ERROR_SUCCESS;
-}
-
-static UINT WHERE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    UINT i, row_value;
-
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    if (!wv->tables)
-         return ERROR_FUNCTION_FAILED;
-
-    if (col == 0 || col > wv->col_count)
-        return ERROR_INVALID_PARAMETER;
-
-    for (i = PtrToUlong(*handle); i < wv->row_count; i++)
-    {
-        if (view->ops->fetch_int( view, i, col, &row_value ) != ERROR_SUCCESS)
-            continue;
-
-        if (row_value == val)
-        {
-            *row = i;
-            *handle = UlongToPtr(i + 1);
-            return ERROR_SUCCESS;
-        }
-    }
-
-    return ERROR_NO_MORE_ITEMS;
 }
 
 static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW *)view;
-    JOINTABLE *table = wv->tables;
+    struct join_table *table = wv->tables;
     column_info *column = columns;
     MSIORDERINFO *orderinfo;
     UINT r, count = 0;
@@ -1068,7 +1085,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
     if (count == 0)
         return ERROR_SUCCESS;
 
-    orderinfo = msi_alloc(FIELD_OFFSET(MSIORDERINFO, columns[count]));
+    orderinfo = malloc(offsetof(MSIORDERINFO, columns[count]));
     if (!orderinfo)
         return ERROR_OUTOFMEMORY;
 
@@ -1090,7 +1107,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
 
     return ERROR_SUCCESS;
 error:
-    msi_free(orderinfo);
+    free(orderinfo);
     return r;
 }
 
@@ -1098,7 +1115,9 @@ static const MSIVIEWOPS where_ops =
 {
     WHERE_fetch_int,
     WHERE_fetch_stream,
-    WHERE_get_row,
+    WHERE_set_int,
+    WHERE_set_string,
+    WHERE_set_stream,
     WHERE_set_row,
     NULL,
     WHERE_delete_row,
@@ -1108,8 +1127,6 @@ static const MSIVIEWOPS where_ops =
     WHERE_get_column_info,
     WHERE_modify,
     WHERE_delete,
-    WHERE_find_matching_rows,
-    NULL,
     NULL,
     NULL,
     NULL,
@@ -1215,10 +1232,10 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
 
     TRACE("(%s)\n", debugstr_w(tables) );
 
-    wv = msi_alloc_zero( sizeof *wv );
+    wv = calloc(1, sizeof *wv);
     if( !wv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     wv->view.ops = &where_ops;
     msiobj_addref( &db->hdr );
@@ -1227,12 +1244,12 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
 
     while (*tables)
     {
-        JOINTABLE *table;
+        struct join_table *table;
 
-        if ((ptr = strchrW(tables, ' ')))
+        if ((ptr = wcschr(tables, ' ')))
             *ptr = '\0';
 
-        table = msi_alloc(sizeof(JOINTABLE));
+        table = malloc(sizeof(*table));
         if (!table)
         {
             r = ERROR_OUTOFMEMORY;
@@ -1243,7 +1260,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
         if (r != ERROR_SUCCESS)
         {
             WARN("can't create table: %s\n", debugstr_w(tables));
-            msi_free(table);
+            free(table);
             r = ERROR_BAD_QUERY_SYNTAX;
             goto end;
         }
@@ -1254,7 +1271,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
         {
             ERR("can't get table dimensions\n");
             table->view->ops->delete(table->view);
-            msi_free(table);
+            free(table);
             goto end;
         }
 

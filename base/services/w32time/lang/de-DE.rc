@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS W32Time Service
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2021 Eric Kohl <ekohl@reactos.org>
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAYNAME "Zeitgeberdienst"
+    IDS_DESCRIPTION "Verwaltet die Datum- und Uhrzeitsynchronisation auf allen Clients und Servern im Netzwerk."
+END

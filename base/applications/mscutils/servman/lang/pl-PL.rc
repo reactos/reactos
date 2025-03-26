@@ -290,7 +290,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "OPCJE TWORZENIA:\r\nUWAGA: Nazwa opcji zawiera znak równości.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (domyślnie = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (domyślnie = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (domyślnie = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(oddzielone / (slash))>\r\n obj= <AccountName|ObjectName>\r\n       (domyślnie = LocalSystem)\r\n password= <password>\r\n"
+    IDS_HELP_OPTIONS "OPCJE TWORZENIA:\nUWAGA: Nazwa opcji zawiera znak równości.\n type= <own|share|interact|kernel|filesys|rec>\n       (domyślnie = own)\n start= <boot|system|auto|demand|disabled>\n       (domyślnie = demand)\n error= <normal|severe|critical|ignore>\n       (domyślnie = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(oddzielone / (slash))>\n obj= <AccountName|ObjectName>\n       (domyślnie = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */

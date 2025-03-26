@@ -5,7 +5,7 @@
  * PURPOSE:         Resource Usage Management Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
- 
+
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
@@ -54,7 +54,7 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN KINTERRUPT_MODE Mode)
 {
     /* Register the routine */
-    ((PKIPCR)KeGetPcr())->InterruptRoutine[Irql] = Handler;
+    KeGetPcr()->InterruptRoutine[Irql] = Handler;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

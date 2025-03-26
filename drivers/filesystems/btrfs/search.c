@@ -27,6 +27,7 @@
 
 #include <initguid.h>
 #include <wdmguid.h>
+#include <ioevent.h>
 
 extern ERESOURCE pdo_list_lock;
 extern LIST_ENTRY pdo_list;
@@ -37,10 +38,29 @@ extern bool shutting_down;
 extern PDEVICE_OBJECT busobj;
 extern tIoUnregisterPlugPlayNotificationEx fIoUnregisterPlugPlayNotificationEx;
 extern ERESOURCE boot_lock;
+extern PDRIVER_OBJECT drvobj;
 
-typedef void (*pnp_callback)(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath);
+typedef void (*pnp_callback)(PUNICODE_STRING devpath);
+
+#ifndef __REACTOS__
+// not in mingw yet
+#ifndef _MSC_VER
+DEFINE_GUID(GUID_IO_VOLUME_FVE_STATUS_CHANGE, 0x062998b2, 0xee1f, 0x4b6a, 0xb8, 0x57, 0xe7, 0x6c, 0xbb, 0xe9, 0xa6, 0xda);
+#endif
+#endif // __REACTOS__
 
 extern PDEVICE_OBJECT master_devobj;
+
+typedef struct {
+    LIST_ENTRY list_entry;
+    PDEVICE_OBJECT devobj;
+    void* notification_entry;
+    UNICODE_STRING devpath;
+    WCHAR buf[1];
+} fve_data;
+
+static LIST_ENTRY fve_data_list = { &fve_data_list, &fve_data_list };
+KSPIN_LOCK fve_data_lock;
 
 static bool fs_ignored(BTRFS_UUID* uuid) {
     UNICODE_STRING path, ignoreus;
@@ -115,12 +135,187 @@ static bool fs_ignored(BTRFS_UUID* uuid) {
     return ret;
 }
 
-static void test_vol(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
-                     PUNICODE_STRING devpath, DWORD disk_num, DWORD part_num, uint64_t length) {
+typedef struct {
+    PIO_WORKITEM work_item;
+    PFILE_OBJECT fileobj;
+    PDEVICE_OBJECT devobj;
+    UNICODE_STRING devpath;
+    WCHAR buf[1];
+} fve_callback_context;
+
+_Function_class_(IO_WORKITEM_ROUTINE)
+static void __stdcall fve_callback(PDEVICE_OBJECT DeviceObject, PVOID con) {
+    fve_callback_context* ctx = con;
+
+    UNUSED(DeviceObject);
+
+    if (volume_arrival(&ctx->devpath, true)) {
+        KIRQL irql;
+        LIST_ENTRY* le;
+        fve_data* d = NULL;
+
+        // volume no longer locked - unregister notification
+
+        KeAcquireSpinLock(&fve_data_lock, &irql);
+
+        le = fve_data_list.Flink;
+        while (le != &fve_data_list) {
+            fve_data* d2 = CONTAINING_RECORD(le, fve_data, list_entry);
+
+            if (d2->devobj == ctx->devobj) {
+                RemoveEntryList(&d2->list_entry);
+                d = d2;
+                break;
+            }
+
+            le = le->Flink;
+        }
+
+        KeReleaseSpinLock(&fve_data_lock, irql);
+
+        if (d) {
+            IoUnregisterPlugPlayNotification(d->notification_entry);
+            ExFreePool(d);
+        }
+    }
+
+    IoFreeWorkItem(ctx->work_item);
+    ExFreePool(ctx);
+}
+
+static NTSTATUS __stdcall event_notification(PVOID NotificationStructure, PVOID Context) {
+    TARGET_DEVICE_REMOVAL_NOTIFICATION* tdrn = NotificationStructure;
+    PDEVICE_OBJECT devobj = Context;
+    PIO_WORKITEM work_item;
+    fve_callback_context* ctx;
+    LIST_ENTRY* le;
+    KIRQL irql;
+
+    if (RtlCompareMemory(&tdrn->Event, &GUID_IO_VOLUME_FVE_STATUS_CHANGE, sizeof(GUID)) != sizeof(GUID))
+        return STATUS_SUCCESS;
+
+    /* The FVE event has trailing data, presumably telling us whether the volume has
+     * been unlocked or whatever, but unfortunately it's undocumented! */
+
+    work_item = IoAllocateWorkItem(master_devobj);
+    if (!work_item) {
+        ERR("out of memory\n");
+        return STATUS_SUCCESS;
+    }
+
+    KeAcquireSpinLock(&fve_data_lock, &irql);
+
+    le = fve_data_list.Flink;
+    while (le != &fve_data_list) {
+        fve_data* d = CONTAINING_RECORD(le, fve_data, list_entry);
+
+        if (d->devobj == devobj) {
+            ctx = ExAllocatePoolWithTag(NonPagedPool, offsetof(fve_callback_context, buf) + d->devpath.Length,
+                                        ALLOC_TAG);
+
+            if (!ctx) {
+                KeReleaseSpinLock(&fve_data_lock, irql);
+                ERR("out of memory\n");
+                IoFreeWorkItem(work_item);
+                return STATUS_SUCCESS;
+            }
+
+            RtlCopyMemory(ctx->buf, d->devpath.Buffer, d->devpath.Length);
+            ctx->devpath.Length = ctx->devpath.MaximumLength = d->devpath.Length;
+
+            KeReleaseSpinLock(&fve_data_lock, irql);
+
+            ctx->devpath.Buffer = ctx->buf;
+
+            ctx->fileobj = tdrn->FileObject;
+            ctx->devobj = devobj;
+            ctx->work_item = work_item;
+
+            IoQueueWorkItem(work_item, fve_callback, DelayedWorkQueue, ctx);
+
+            return STATUS_SUCCESS;
+        }
+
+        le = le->Flink;
+    }
+
+    KeReleaseSpinLock(&fve_data_lock, irql);
+
+    IoFreeWorkItem(work_item);
+
+    return STATUS_SUCCESS;
+}
+
+static void register_fve_callback(PDEVICE_OBJECT devobj, PFILE_OBJECT fileobj,
+                                  PUNICODE_STRING devpath) {
+    NTSTATUS Status;
+    KIRQL irql;
+    LIST_ENTRY* le;
+
+    fve_data* d = ExAllocatePoolWithTag(NonPagedPool, offsetof(fve_data, buf) + devpath->Length, ALLOC_TAG);
+    if (!d) {
+        ERR("out of memory\n");
+        return;
+    }
+
+    d->devpath.Buffer = d->buf;
+    d->devpath.Length = d->devpath.MaximumLength = devpath->Length;
+    RtlCopyMemory(d->devpath.Buffer, devpath->Buffer, devpath->Length);
+
+    KeAcquireSpinLock(&fve_data_lock, &irql);
+
+    le = fve_data_list.Flink;
+    while (le != &fve_data_list) {
+        fve_data* d2 = CONTAINING_RECORD(le, fve_data, list_entry);
+
+        if (d2->devobj == devobj) {
+            KeReleaseSpinLock(&fve_data_lock, irql);
+            ExFreePool(d);
+            return;
+        }
+
+        le = le->Flink;
+    }
+
+    KeReleaseSpinLock(&fve_data_lock, irql);
+
+    Status = IoRegisterPlugPlayNotification(EventCategoryTargetDeviceChange, 0, fileobj, drvobj, event_notification,
+                                            devobj, &d->notification_entry);
+    if (!NT_SUCCESS(Status)) {
+        ERR("IoRegisterPlugPlayNotification returned %08lx\n", Status);
+        return;
+    }
+
+    KeAcquireSpinLock(&fve_data_lock, &irql);
+
+    le = fve_data_list.Flink;
+    while (le != &fve_data_list) {
+        fve_data* d2 = CONTAINING_RECORD(le, fve_data, list_entry);
+
+        if (d2->devobj == devobj) {
+            KeReleaseSpinLock(&fve_data_lock, irql);
+            IoUnregisterPlugPlayNotification(d->notification_entry);
+            ExFreePool(d);
+            return;
+        }
+
+        le = le->Flink;
+    }
+
+    d->devobj = devobj;
+    InsertTailList(&fve_data_list, &d->list_entry);
+
+    KeReleaseSpinLock(&fve_data_lock, irql);
+}
+
+static bool test_vol(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
+                     PUNICODE_STRING devpath, DWORD disk_num, DWORD part_num, uint64_t length,
+                     bool fve_callback) {
     NTSTATUS Status;
     ULONG toread;
     uint8_t* data = NULL;
     uint32_t sector_size;
+    bool ret = true;
 
     TRACE("%.*S\n", (int)(devpath->Length / sizeof(WCHAR)), devpath->Buffer);
 
@@ -195,11 +390,18 @@ static void test_vol(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
                 add_volume_device(sb, devpath, length, disk_num, part_num);
             }
         }
+    } else if (Status == STATUS_FVE_LOCKED_VOLUME) {
+        if (fve_callback)
+            ret = false;
+        else
+            register_fve_callback(DeviceObject, FileObject, devpath);
     }
 
 deref:
     if (data)
         ExFreePool(data);
+
+    return ret;
 }
 
 NTSTATUS remove_drive_letter(PDEVICE_OBJECT mountmgr, PUNICODE_STRING devpath) {
@@ -255,7 +457,7 @@ NTSTATUS remove_drive_letter(PDEVICE_OBJECT mountmgr, PUNICODE_STRING devpath) {
     return Status;
 }
 
-void disk_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
+void disk_arrival(PUNICODE_STRING devpath) {
     PFILE_OBJECT fileobj;
     PDEVICE_OBJECT devobj;
     NTSTATUS Status;
@@ -264,8 +466,6 @@ void disk_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
     DRIVE_LAYOUT_INFORMATION_EX* dli = NULL;
     IO_STATUS_BLOCK iosb;
     GET_LENGTH_INFORMATION gli;
-
-    UNUSED(DriverObject);
 
     ExAcquireResourceSharedLite(&boot_lock, TRUE);
 
@@ -319,7 +519,8 @@ void disk_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
     } else
         TRACE("DeviceType = %lu, DeviceNumber = %lu, PartitionNumber = %lu\n", sdn.DeviceType, sdn.DeviceNumber, sdn.PartitionNumber);
 
-    test_vol(devobj, fileobj, devpath, sdn.DeviceNumber, sdn.PartitionNumber, gli.Length.QuadPart);
+    test_vol(devobj, fileobj, devpath, sdn.DeviceNumber, sdn.PartitionNumber,
+             gli.Length.QuadPart, false);
 
 end:
     ObDereferenceObject(fileobj);
@@ -489,12 +690,13 @@ void remove_volume_child(_Inout_ _Requires_exclusive_lock_held_(_Curr_->child_lo
         ExReleaseResourceLite(&pdode->child_lock);
 }
 
-void volume_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
+bool volume_arrival(PUNICODE_STRING devpath, bool fve_callback) {
     STORAGE_DEVICE_NUMBER sdn;
     PFILE_OBJECT fileobj;
     PDEVICE_OBJECT devobj;
     GET_LENGTH_INFORMATION gli;
     NTSTATUS Status;
+    bool ret = true;
 
     TRACE("%.*S\n", (int)(devpath->Length / sizeof(WCHAR)), devpath->Buffer);
 
@@ -504,12 +706,12 @@ void volume_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
     if (!NT_SUCCESS(Status)) {
         ExReleaseResourceLite(&boot_lock);
         ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
-        return;
+        return false;
     }
 
     // make sure we're not processing devices we've created ourselves
 
-    if (devobj->DriverObject == DriverObject)
+    if (devobj->DriverObject == drvobj)
         goto end;
 
     Status = dev_ioctl(devobj, IOCTL_VOLUME_ONLINE, NULL, 0, NULL, 0, true, NULL);
@@ -575,21 +777,26 @@ void volume_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
         ExReleaseResourceLite(&pdo_list_lock);
     }
 
-    test_vol(devobj, fileobj, devpath, sdn.DeviceNumber, sdn.PartitionNumber, gli.Length.QuadPart);
+    ret = test_vol(devobj, fileobj, devpath, sdn.DeviceNumber, sdn.PartitionNumber,
+                   gli.Length.QuadPart, fve_callback);
 
 end:
     ObDereferenceObject(fileobj);
 
     ExReleaseResourceLite(&boot_lock);
+
+    return ret;
 }
 
-void volume_removal(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
+static void volume_arrival2(PUNICODE_STRING devpath) {
+    volume_arrival(devpath, false);
+}
+
+void volume_removal(PUNICODE_STRING devpath) {
     LIST_ENTRY* le;
     UNICODE_STRING devpath2;
 
     TRACE("%.*S\n", (int)(devpath->Length / sizeof(WCHAR)), devpath->Buffer);
-
-    UNUSED(DriverObject);
 
     devpath2 = *devpath;
 
@@ -643,7 +850,6 @@ void volume_removal(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
 }
 
 typedef struct {
-    PDRIVER_OBJECT DriverObject;
     UNICODE_STRING name;
     pnp_callback func;
     PIO_WORKITEM work_item;
@@ -655,7 +861,7 @@ static void __stdcall do_pnp_callback(PDEVICE_OBJECT DeviceObject, PVOID con) {
 
     UNUSED(DeviceObject);
 
-    context->func(context->DriverObject, &context->name);
+    context->func(&context->name);
 
     if (context->name.Buffer)
         ExFreePool(context->name.Buffer);
@@ -665,7 +871,7 @@ static void __stdcall do_pnp_callback(PDEVICE_OBJECT DeviceObject, PVOID con) {
     ExFreePool(context);
 }
 
-static void enqueue_pnp_callback(PDRIVER_OBJECT DriverObject, PUNICODE_STRING name, pnp_callback func) {
+static void enqueue_pnp_callback(PUNICODE_STRING name, pnp_callback func) {
     PIO_WORKITEM work_item;
     pnp_callback_context* context;
 
@@ -682,8 +888,6 @@ static void enqueue_pnp_callback(PDRIVER_OBJECT DriverObject, PUNICODE_STRING na
         IoFreeWorkItem(work_item);
         return;
     }
-
-    context->DriverObject = DriverObject;
 
     if (name->Length > 0) {
         context->name.Buffer = ExAllocatePoolWithTag(PagedPool, name->Length, ALLOC_TAG);
@@ -710,12 +914,13 @@ static void enqueue_pnp_callback(PDRIVER_OBJECT DriverObject, PUNICODE_STRING na
 _Function_class_(DRIVER_NOTIFICATION_CALLBACK_ROUTINE)
 NTSTATUS __stdcall volume_notification(PVOID NotificationStructure, PVOID Context) {
     DEVICE_INTERFACE_CHANGE_NOTIFICATION* dicn = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
-    PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Context;
+
+    UNUSED(Context);
 
     if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_ARRIVAL, sizeof(GUID)) == sizeof(GUID))
-        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, volume_arrival);
+        enqueue_pnp_callback(dicn->SymbolicLinkName, volume_arrival2);
     else if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_REMOVAL, sizeof(GUID)) == sizeof(GUID))
-        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, volume_removal);
+        enqueue_pnp_callback(dicn->SymbolicLinkName, volume_removal);
 
     return STATUS_SUCCESS;
 }
@@ -723,12 +928,13 @@ NTSTATUS __stdcall volume_notification(PVOID NotificationStructure, PVOID Contex
 _Function_class_(DRIVER_NOTIFICATION_CALLBACK_ROUTINE)
 NTSTATUS __stdcall pnp_notification(PVOID NotificationStructure, PVOID Context) {
     DEVICE_INTERFACE_CHANGE_NOTIFICATION* dicn = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
-    PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Context;
+
+    UNUSED(Context);
 
     if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_ARRIVAL, sizeof(GUID)) == sizeof(GUID))
-        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, disk_arrival);
+        enqueue_pnp_callback(dicn->SymbolicLinkName, disk_arrival);
     else if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_REMOVAL, sizeof(GUID)) == sizeof(GUID))
-        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, volume_removal);
+        enqueue_pnp_callback(dicn->SymbolicLinkName, volume_removal);
 
     return STATUS_SUCCESS;
 }
@@ -903,7 +1109,7 @@ void __stdcall mountmgr_thread(_In_ void* context) {
                 break;
             }
 
-            Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_QUERY_POINTS, &mmp, sizeof(MOUNTMGR_MOUNT_POINTS), mmps2, mmps.Size,
+            Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_QUERY_POINTS, &mmp, sizeof(MOUNTMGR_MOUNT_POINT), mmps2, mmps.Size,
                                false, NULL);
             if (!NT_SUCCESS(Status))
                 ERR("IOCTL_MOUNTMGR_QUERY_POINTS returned %08lx\n", Status);

@@ -23,7 +23,7 @@ IDPROMPTFORDISK DIALOG 0, 0, 260, 120
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Chybějící soubory"
 FONT 8, "MS Shell Dlg"
-BEGIN 
+BEGIN
     LTEXT "Vložte instalační disk výrobce a ujistěte se,\n že je níže zvolena správná jednotka.", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Kopírovat soubory výrobce z:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP

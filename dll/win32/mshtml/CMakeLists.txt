@@ -5,7 +5,10 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(
     -D__WINESRC__
     -D__ROS_LONG64__
-    -DCOM_NO_WINDOWS_H)
+    -DCOM_NO_WINDOWS_H
+    -Dstrcasecmp=_stricmp
+    -Dstrncasecmp=_strnicmp
+)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_idl_headers(mshtml_nsiface_header nsiface.idl)
@@ -99,11 +102,6 @@ add_library(mshtml MODULE
     ${PCH_SKIP_SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
-
-if(MSVC)
-    # error C4028: formal parameter 3 different from declaration
-    remove_target_compile_option(mshtml "/we4028")
-endif()
 
 list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm

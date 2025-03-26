@@ -9,7 +9,6 @@
 #include <asm.inc>
 
 .code
-
 /*******************************************************************************
  * IEEE 754-1985 single precision floating point
  *
@@ -53,7 +52,7 @@
  * FLOATOBJ_SetFloat - implemented, tested
  * FLOATOBJ_SetLong - implemented, tested
  * FLOATOBJ_GetFloat - implemented, tested
- * FLOATOBJ_GetLong - implemented, tested
+ * FLOATOBJ_GetLong - implemented in C
  * FLOATOBJ_Equal - implemented, tested
  * FLOATOBJ_EqualLong - implemented
  * FLOATOBJ_GreaterThan - implemented
@@ -91,6 +90,11 @@ _gef0:
 PUBLIC _gef1
 _gef1:
     .long HEX(40000000), HEX(00000002)
+
+/* extern const FLOATOBJ gef2; */
+PUBLIC _gef2
+_gef2:
+    .long HEX(40000000), HEX(00000003)
 
 /* extern const FLOATOBJ gef16; */
 PUBLIC _gef16
@@ -243,34 +247,6 @@ SetLong0:
 
 	pop ebp						/* Return */
 	ret 8
-
-
-/*******************************************************************************
- * LONG
- * APIENTRY
- * FLOATOBJ_GetLong(IN PFLOATOBJ pf);
- *
- */
-_FLOATOBJ_GetLong@4:
-PUBLIC _FLOATOBJ_GetLong@4
-	push ebp
-	mov ebp, esp
-
-	mov edx, [ebp + PARAM1]		/* Load pf into edx */
-	mov ecx, 32					/* Load (32 - lExp) into ecx */
-	sub ecx, [edx + lExp]
-	jle short GetLong2			/* Check for Overflow */
-
-	mov eax, [edx + lMant]		/* Load mantissa into eax */
-	sar eax, cl					/* Signed shift mantissa according to exponent */
-
-	pop ebp						/* Return */
-	ret 4
-
-GetLong2:
-	xor eax, eax				/* Overflow, return 0 */
-	pop ebp
-	ret 4
 
 
 /******************************************************************************
@@ -838,7 +814,6 @@ PUBLIC _FLOATOBJ_DivLong@8
 	pop ebp
 	ret 8
 
-
 /*******************************************************************************
  * VOID
  * APIENTRY
@@ -936,7 +911,6 @@ AddIs0:
 	pop ebp
 	ret 8
 
-
 /******************************************************************************
  * VOID
  * APIENTRY
@@ -993,7 +967,6 @@ PUBLIC _FLOATOBJ_AddLong@8
 	mov esp, ebp				/* Cleanup and return */
 	pop ebp
 	ret 8
-
 
 /*******************************************************************************
  * VOID
@@ -1091,7 +1064,6 @@ SubIs0:
 	mov dword ptr [eax + lExp], 0
 	pop ebp
 	ret 8
-
 /******************************************************************************
  * VOID
  * APIENTRY

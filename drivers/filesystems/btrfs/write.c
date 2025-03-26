@@ -28,13 +28,14 @@ typedef struct {
 _Function_class_(IO_COMPLETION_ROUTINE)
 static NTSTATUS __stdcall write_data_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID conptr);
 
-static void remove_fcb_extent(fcb* fcb, extent* ext, LIST_ENTRY* rollback);
+static void remove_fcb_extent(fcb* fcb, extent* ext, LIST_ENTRY* rollback) __attribute__((nonnull(1, 2, 3)));
 
 extern tPsUpdateDiskCounters fPsUpdateDiskCounters;
 extern tCcCopyWriteEx fCcCopyWriteEx;
 extern tFsRtlUpdateDiskCounters fFsRtlUpdateDiskCounters;
 extern bool diskacc;
 
+__attribute__((nonnull(1, 2, 4)))
 bool find_data_address_in_chunk(device_extension* Vcb, chunk* c, uint64_t length, uint64_t* address) {
     LIST_ENTRY* le;
     space* s;
@@ -86,6 +87,7 @@ bool find_data_address_in_chunk(device_extension* Vcb, chunk* c, uint64_t length
     return false;
 }
 
+__attribute__((nonnull(1)))
 chunk* get_chunk_from_address(device_extension* Vcb, uint64_t address) {
     LIST_ENTRY* le2;
 
@@ -113,6 +115,7 @@ typedef struct {
     device* device;
 } stripe;
 
+__attribute__((nonnull(1)))
 static uint64_t find_new_chunk_address(device_extension* Vcb, uint64_t size) {
     uint64_t lastaddr;
     LIST_ENTRY* le;
@@ -134,6 +137,7 @@ static uint64_t find_new_chunk_address(device_extension* Vcb, uint64_t size) {
     return lastaddr;
 }
 
+__attribute__((nonnull(1,2)))
 static bool find_new_dup_stripes(device_extension* Vcb, stripe* stripes, uint64_t max_stripe_size, bool full_size) {
     uint64_t devusage = 0xffffffffffffffff;
     space *devdh1 = NULL, *devdh2 = NULL;
@@ -245,6 +249,7 @@ static bool find_new_dup_stripes(device_extension* Vcb, stripe* stripes, uint64_
     return true;
 }
 
+__attribute__((nonnull(1,2)))
 static bool find_new_stripe(device_extension* Vcb, stripe* stripes, uint16_t i, uint64_t max_stripe_size, bool allow_missing, bool full_size) {
     uint64_t k, devusage = 0xffffffffffffffff;
     space* devdh = NULL;
@@ -358,6 +363,7 @@ static bool find_new_stripe(device_extension* Vcb, stripe* stripes, uint16_t i, 
     return true;
 }
 
+__attribute__((nonnull(1,3)))
 NTSTATUS alloc_chunk(device_extension* Vcb, uint64_t flags, chunk** pc, bool full_size) {
     NTSTATUS Status;
     uint64_t max_stripe_size, max_chunk_size, stripe_size, stripe_length, factor;
@@ -546,9 +552,7 @@ NTSTATUS alloc_chunk(device_extension* Vcb, uint64_t flags, chunk** pc, bool ful
         }
     }
 
-    if (type == 0 || type == BLOCK_FLAG_DUPLICATE || type == BLOCK_FLAG_RAID1 || type == BLOCK_FLAG_RAID1C3 || type == BLOCK_FLAG_RAID1C4)
-        factor = 1;
-    else if (type == BLOCK_FLAG_RAID0)
+    if (type == BLOCK_FLAG_RAID0)
         factor = num_stripes;
     else if (type == BLOCK_FLAG_RAID10)
         factor = num_stripes / sub_stripes;
@@ -556,6 +560,8 @@ NTSTATUS alloc_chunk(device_extension* Vcb, uint64_t flags, chunk** pc, bool ful
         factor = num_stripes - 1;
     else if (type == BLOCK_FLAG_RAID6)
         factor = num_stripes - 2;
+    else
+        factor = 1; // SINGLE, DUPLICATE, RAID1, RAID1C3, RAID1C4
 
     if (stripe_size * factor > max_chunk_size)
         stripe_size = max_chunk_size / factor;
@@ -703,6 +709,7 @@ end:
     return Status;
 }
 
+__attribute__((nonnull(1,3,5,8)))
 static NTSTATUS prepare_raid0_write(_Pre_satisfies_(_Curr_->chunk_item->num_stripes>0) _In_ chunk* c, _In_ uint64_t address, _In_reads_bytes_(length) void* data,
                                     _In_ uint32_t length, _In_ write_stripe* stripes, _In_ PIRP Irp, _In_ uint64_t irp_offset, _In_ write_data_context* wtc) {
     uint64_t startoff, endoff;
@@ -832,6 +839,7 @@ static NTSTATUS prepare_raid0_write(_Pre_satisfies_(_Curr_->chunk_item->num_stri
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,3,5,8)))
 static NTSTATUS prepare_raid10_write(_Pre_satisfies_(_Curr_->chunk_item->sub_stripes>0&&_Curr_->chunk_item->num_stripes>=_Curr_->chunk_item->sub_stripes) _In_ chunk* c,
                                      _In_ uint64_t address, _In_reads_bytes_(length) void* data, _In_ uint32_t length, _In_ write_stripe* stripes,
                                      _In_ PIRP Irp, _In_ uint64_t irp_offset, _In_ write_data_context* wtc) {
@@ -971,7 +979,8 @@ static NTSTATUS prepare_raid10_write(_Pre_satisfies_(_Curr_->chunk_item->sub_str
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS add_partial_stripe(device_extension* Vcb, chunk *c, uint64_t address, uint32_t length, void* data) {
+__attribute__((nonnull(1,2,5)))
+static NTSTATUS add_partial_stripe(device_extension* Vcb, chunk* c, uint64_t address, uint32_t length, void* data) {
     NTSTATUS Status;
     LIST_ENTRY* le;
     partial_stripe* ps;
@@ -991,10 +1000,10 @@ static NTSTATUS add_partial_stripe(device_extension* Vcb, chunk *c, uint64_t add
             // update existing entry
 
             RtlCopyMemory(ps->data + address - stripe_addr, data, length);
-            RtlClearBits(&ps->bmp, (ULONG)((address - stripe_addr) / Vcb->superblock.sector_size), length / Vcb->superblock.sector_size);
+            RtlClearBits(&ps->bmp, (ULONG)((address - stripe_addr) >> Vcb->sector_shift), length >> Vcb->sector_shift);
 
             // if now filled, flush
-            if (RtlAreBitsClear(&ps->bmp, 0, (ULONG)((num_data_stripes * c->chunk_item->stripe_length) / Vcb->superblock.sector_size))) {
+            if (RtlAreBitsClear(&ps->bmp, 0, (ULONG)((num_data_stripes * c->chunk_item->stripe_length) >> Vcb->sector_shift))) {
                 Status = flush_partial_stripe(Vcb, c, ps);
                 if (!NT_SUCCESS(Status)) {
                     ERR("flush_partial_stripe returned %08lx\n", Status);
@@ -1026,7 +1035,7 @@ static NTSTATUS add_partial_stripe(device_extension* Vcb, chunk *c, uint64_t add
         goto end;
     }
 
-    ps->bmplen = (ULONG)(num_data_stripes * c->chunk_item->stripe_length) / Vcb->superblock.sector_size;
+    ps->bmplen = (ULONG)(num_data_stripes * c->chunk_item->stripe_length) >> Vcb->sector_shift;
 
     ps->address = stripe_addr;
     ps->bmparr = ExAllocatePoolWithTag(NonPagedPool, (size_t)sector_align(((ps->bmplen / 8) + 1), sizeof(ULONG)), ALLOC_TAG);
@@ -1041,7 +1050,7 @@ static NTSTATUS add_partial_stripe(device_extension* Vcb, chunk *c, uint64_t add
     RtlSetAllBits(&ps->bmp);
 
     RtlCopyMemory(ps->data + address - stripe_addr, data, length);
-    RtlClearBits(&ps->bmp, (ULONG)((address - stripe_addr) / Vcb->superblock.sector_size), length / Vcb->superblock.sector_size);
+    RtlClearBits(&ps->bmp, (ULONG)((address - stripe_addr) >> Vcb->sector_shift), length >> Vcb->sector_shift);
 
     InsertHeadList(le->Blink, &ps->list_entry);
 
@@ -1058,6 +1067,7 @@ typedef struct {
     PFN_NUMBER* pfns;
 } log_stripe;
 
+__attribute__((nonnull(1,2,4,6,10)))
 static NTSTATUS prepare_raid5_write(device_extension* Vcb, chunk* c, uint64_t address, void* data, uint32_t length, write_stripe* stripes, PIRP Irp,
                                     uint64_t irp_offset, ULONG priority, write_data_context* wtc) {
     uint64_t startoff, endoff, parity_start, parity_end;
@@ -1456,6 +1466,7 @@ exit:
     return Status;
 }
 
+__attribute__((nonnull(1,2,4,6,10)))
 static NTSTATUS prepare_raid6_write(device_extension* Vcb, chunk* c, uint64_t address, void* data, uint32_t length, write_stripe* stripes, PIRP Irp,
                                     uint64_t irp_offset, ULONG priority, write_data_context* wtc) {
     uint64_t startoff, endoff, parity_start, parity_end;
@@ -1894,6 +1905,7 @@ exit:
     return Status;
 }
 
+__attribute__((nonnull(1,3,5)))
 NTSTATUS write_data(_In_ device_extension* Vcb, _In_ uint64_t address, _In_reads_bytes_(length) void* data, _In_ uint32_t length, _In_ write_data_context* wtc,
                     _In_opt_ PIRP Irp, _In_opt_ chunk* c, _In_ bool file_write, _In_ uint64_t irp_offset, _In_ ULONG priority) {
     NTSTATUS Status;
@@ -2163,6 +2175,7 @@ prepare_failed:
     return Status;
 }
 
+__attribute__((nonnull(1,4,5)))
 void get_raid56_lock_range(chunk* c, uint64_t address, uint64_t length, uint64_t* lockaddr, uint64_t* locklen) {
     uint64_t startoff, endoff;
     uint16_t startoffstripe, endoffstripe, datastripes;
@@ -2179,6 +2192,7 @@ void get_raid56_lock_range(chunk* c, uint64_t address, uint64_t length, uint64_t
     *locklen = (endoff - startoff) * datastripes;
 }
 
+__attribute__((nonnull(1,3)))
 NTSTATUS write_data_complete(device_extension* Vcb, uint64_t address, void* data, uint32_t length, PIRP Irp, chunk* c, bool file_write, uint64_t irp_offset, ULONG priority) {
     write_data_context wtc;
     NTSTATUS Status;
@@ -2261,6 +2275,7 @@ NTSTATUS write_data_complete(device_extension* Vcb, uint64_t address, void* data
     return Status;
 }
 
+__attribute__((nonnull(2,3)))
 _Function_class_(IO_COMPLETION_ROUTINE)
 static NTSTATUS __stdcall write_data_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID conptr) {
     write_data_stripe* stripe = conptr;
@@ -2304,6 +2319,7 @@ end:
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+__attribute__((nonnull(1)))
 void free_write_data_stripes(write_data_context* wtc) {
     LIST_ENTRY* le;
     PMDL last_mdl = NULL;
@@ -2364,6 +2380,7 @@ void free_write_data_stripes(write_data_context* wtc) {
     }
 }
 
+__attribute__((nonnull(1,2,3)))
 void add_extent(_In_ fcb* fcb, _In_ LIST_ENTRY* prevextle, _In_ __drv_aliasesMem extent* newext) {
     LIST_ENTRY* le = prevextle->Flink;
 
@@ -2381,6 +2398,7 @@ void add_extent(_In_ fcb* fcb, _In_ LIST_ENTRY* prevextle, _In_ __drv_aliasesMem
     InsertTailList(&fcb->extents, &newext->list_entry);
 }
 
+__attribute__((nonnull(1,2,6)))
 NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, uint64_t end_data, PIRP Irp, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     LIST_ENTRY* le;
@@ -2390,15 +2408,15 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
     while (le != &fcb->extents) {
         LIST_ENTRY* le2 = le->Flink;
         extent* ext = CONTAINING_RECORD(le, extent, list_entry);
-        EXTENT_DATA* ed = &ext->extent_data;
-        EXTENT_DATA2* ed2 = NULL;
-        uint64_t len;
 
         if (!ext->ignore) {
-            if (ed->type != EXTENT_TYPE_INLINE)
-                ed2 = (EXTENT_DATA2*)ed->data;
+            EXTENT_DATA* ed = &ext->extent_data;
+            uint64_t len;
 
-            len = ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes;
+            if (ed->type == EXTENT_TYPE_INLINE)
+                len = ed->decoded_size;
+            else
+                len = ((EXTENT_DATA2*)ed->data)->num_bytes;
 
             if (ext->offset < end_data && ext->offset + len > start_data) {
                 if (ed->type == EXTENT_TYPE_INLINE) {
@@ -2414,7 +2432,9 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
 #endif
                         return STATUS_INTERNAL_ERROR;
                     }
-                } else if (ed->type != EXTENT_TYPE_INLINE) {
+                } else {
+                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ed->data;
+
                     if (start_data <= ext->offset && end_data >= ext->offset + len) { // remove all
                         if (ed2->size != 0) {
                             chunk* c;
@@ -2474,7 +2494,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
 
                         if (ext->csum) {
                             if (ed->compression == BTRFS_COMPRESSION_NONE) {
-                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ned2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((ned2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2482,10 +2502,10 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                RtlCopyMemory(newext->csum, (uint8_t*)ext->csum + ((end_data - ext->offset) * Vcb->csum_size / Vcb->superblock.sector_size),
-                                              (ULONG)(ned2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size));
+                                RtlCopyMemory(newext->csum, (uint8_t*)ext->csum + (((end_data - ext->offset) * Vcb->csum_size) >> Vcb->sector_shift),
+                                              (ULONG)((ned2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift));
                             } else {
-                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2493,7 +2513,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                RtlCopyMemory(newext->csum, ext->csum, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size));
+                                RtlCopyMemory(newext->csum, ext->csum, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift));
                             }
                         } else
                             newext->csum = NULL;
@@ -2538,7 +2558,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
 
                         if (ext->csum) {
                             if (ed->compression == BTRFS_COMPRESSION_NONE) {
-                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ned2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((ned2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2546,9 +2566,9 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                RtlCopyMemory(newext->csum, ext->csum, (ULONG)(ned2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size));
+                                RtlCopyMemory(newext->csum, ext->csum, (ULONG)((ned2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift));
                             } else {
-                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2556,7 +2576,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                RtlCopyMemory(newext->csum, ext->csum, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size));
+                                RtlCopyMemory(newext->csum, ext->csum, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift));
                             }
                         } else
                             newext->csum = NULL;
@@ -2643,7 +2663,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
 
                         if (ext->csum) {
                             if (ed->compression == BTRFS_COMPRESSION_NONE) {
-                                newext1->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(neda2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext1->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((neda2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext1->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2652,7 +2672,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                newext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(nedb2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((nedb2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext2->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2662,11 +2682,11 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                RtlCopyMemory(newext1->csum, ext->csum, (ULONG)(neda2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size));
-                                RtlCopyMemory(newext2->csum, (uint8_t*)ext->csum + ((end_data - ext->offset) * Vcb->csum_size / Vcb->superblock.sector_size),
-                                              (ULONG)(nedb2->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size));
+                                RtlCopyMemory(newext1->csum, ext->csum, (ULONG)((neda2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift));
+                                RtlCopyMemory(newext2->csum, (uint8_t*)ext->csum + (((end_data - ext->offset) * Vcb->csum_size) >> Vcb->sector_shift),
+                                              (ULONG)((nedb2->num_bytes * Vcb->csum_size) >> Vcb->sector_shift));
                             } else {
-                                newext1->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext1->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext1->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2675,7 +2695,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                newext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
+                                newext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift), ALLOC_TAG);
                                 if (!newext2->csum) {
                                     ERR("out of memory\n");
                                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2685,8 +2705,8 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, uint64_t start_data, ui
                                     goto end;
                                 }
 
-                                RtlCopyMemory(newext1->csum, ext->csum, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size));
-                                RtlCopyMemory(newext2->csum, ext->csum, (ULONG)(ed2->size * Vcb->csum_size / Vcb->superblock.sector_size));
+                                RtlCopyMemory(newext1->csum, ext->csum, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift));
+                                RtlCopyMemory(newext2->csum, ext->csum, (ULONG)((ed2->size * Vcb->csum_size) >> Vcb->sector_shift));
                             }
                         } else {
                             newext1->csum = NULL;
@@ -2714,7 +2734,8 @@ end:
     return Status;
 }
 
-void add_insert_extent_rollback(LIST_ENTRY* rollback, fcb* fcb, extent* ext) {
+__attribute__((nonnull(1,2,3)))
+static void add_insert_extent_rollback(LIST_ENTRY* rollback, fcb* fcb, extent* ext) {
     rollback_extent* re;
 
     re = ExAllocatePoolWithTag(NonPagedPool, sizeof(rollback_extent), ALLOC_TAG);
@@ -2733,6 +2754,7 @@ void add_insert_extent_rollback(LIST_ENTRY* rollback, fcb* fcb, extent* ext) {
 #pragma warning(push)
 #pragma warning(suppress: 28194)
 #endif
+__attribute__((nonnull(1,3,7)))
 NTSTATUS add_extent_to_fcb(_In_ fcb* fcb, _In_ uint64_t offset, _In_reads_bytes_(edsize) EXTENT_DATA* ed, _In_ uint16_t edsize,
                            _In_ bool unique, _In_opt_ _When_(return >= 0, __drv_aliasesMem) void* csum, _In_ LIST_ENTRY* rollback) {
     extent* ext;
@@ -2776,6 +2798,7 @@ end:
 #pragma warning(pop)
 #endif
 
+__attribute__((nonnull(1, 2, 3)))
 static void remove_fcb_extent(fcb* fcb, extent* ext, LIST_ENTRY* rollback) {
     if (!ext->ignore) {
         rollback_extent* re;
@@ -2797,6 +2820,7 @@ static void remove_fcb_extent(fcb* fcb, extent* ext, LIST_ENTRY* rollback) {
 
 _Requires_lock_held_(c->lock)
 _When_(return != 0, _Releases_lock_(c->lock))
+__attribute__((nonnull(1,2,3,9)))
 bool insert_extent_chunk(_In_ device_extension* Vcb, _In_ fcb* fcb, _In_ chunk* c, _In_ uint64_t start_data, _In_ uint64_t length, _In_ bool prealloc, _In_opt_ void* data,
                          _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback, _In_ uint8_t compression, _In_ uint64_t decoded_size, _In_ bool file_write, _In_ uint64_t irp_offset) {
     uint64_t address;
@@ -2832,7 +2856,7 @@ bool insert_extent_chunk(_In_ device_extension* Vcb, _In_ fcb* fcb, _In_ chunk* 
     ed2->num_bytes = decoded_size;
 
     if (!prealloc && data && !(fcb->inode_item.flags & BTRFS_INODE_NODATASUM)) {
-        ULONG sl = (ULONG)(length / Vcb->superblock.sector_size);
+        ULONG sl = (ULONG)(length >> Vcb->sector_shift);
 
         csum = ExAllocatePoolWithTag(PagedPool, sl * Vcb->csum_size, ALLOC_TAG);
         if (!csum) {
@@ -2855,7 +2879,7 @@ bool insert_extent_chunk(_In_ device_extension* Vcb, _In_ fcb* fcb, _In_ chunk* 
     ExFreePool(ed);
 
     c->used += length;
-    space_list_subtract(c, false, address, length, rollback);
+    space_list_subtract(c, address, length, rollback);
 
     fcb->inode_item.st_blocks += decoded_size;
 
@@ -2881,6 +2905,7 @@ bool insert_extent_chunk(_In_ device_extension* Vcb, _In_ fcb* fcb, _In_ chunk* 
     return true;
 }
 
+__attribute__((nonnull(1,2,5,7,10)))
 static bool try_extend_data(device_extension* Vcb, fcb* fcb, uint64_t start_data, uint64_t length, void* data,
                             PIRP Irp, uint64_t* written, bool file_write, uint64_t irp_offset, LIST_ENTRY* rollback) {
     bool success = false;
@@ -2973,6 +2998,7 @@ static bool try_extend_data(device_extension* Vcb, fcb* fcb, uint64_t start_data
     return false;
 }
 
+__attribute__((nonnull(1)))
 static NTSTATUS insert_chunk_fragmented(fcb* fcb, uint64_t start, uint64_t length, uint8_t* data, bool prealloc, LIST_ENTRY* rollback) {
     LIST_ENTRY* le;
     uint64_t flags = fcb->Vcb->data_flags;
@@ -3029,6 +3055,7 @@ static NTSTATUS insert_chunk_fragmented(fcb* fcb, uint64_t start, uint64_t lengt
     return length == 0 ? STATUS_SUCCESS : STATUS_DISK_FULL;
 }
 
+__attribute__((nonnull(1,4)))
 static NTSTATUS insert_prealloc_extent(fcb* fcb, uint64_t start, uint64_t length, LIST_ENTRY* rollback) {
     LIST_ENTRY* le;
     chunk* c;
@@ -3102,6 +3129,7 @@ end:
     return Status;
 }
 
+__attribute__((nonnull(1,2,5,9)))
 static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, uint64_t start_data, uint64_t length, void* data,
                               PIRP Irp, bool file_write, uint64_t irp_offset, LIST_ENTRY* rollback) {
     NTSTATUS Status;
@@ -3213,6 +3241,7 @@ static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, uint64_t start_da
     return STATUS_DISK_FULL;
 }
 
+__attribute__((nonnull(1,4)))
 NTSTATUS truncate_file(fcb* fcb, uint64_t end, PIRP Irp, LIST_ENTRY* rollback) {
     NTSTATUS Status;
 
@@ -3269,6 +3298,14 @@ NTSTATUS truncate_file(fcb* fcb, uint64_t end, PIRP Irp, LIST_ENTRY* rollback) {
             }
 
             fcb->inode_item.st_blocks += end;
+
+            fcb->inode_item.st_size = end;
+            fcb->inode_item_changed = true;
+            TRACE("setting st_size to %I64x\n", end);
+
+            fcb->Header.AllocationSize.QuadPart = sector_align(fcb->inode_item.st_size, fcb->Vcb->superblock.sector_size);
+            fcb->Header.FileSize.QuadPart = fcb->inode_item.st_size;
+            fcb->Header.ValidDataLength.QuadPart = fcb->inode_item.st_size;
         }
 
         ExFreePool(buf);
@@ -3296,6 +3333,7 @@ NTSTATUS truncate_file(fcb* fcb, uint64_t end, PIRP Irp, LIST_ENTRY* rollback) {
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,6)))
 NTSTATUS extend_file(fcb* fcb, file_ref* fileref, uint64_t end, bool prealloc, PIRP Irp, LIST_ENTRY* rollback) {
     uint64_t oldalloc, newalloc;
     bool cur_inline;
@@ -3438,7 +3476,7 @@ NTSTATUS extend_file(fcb* fcb, file_ref* fileref, uint64_t end, bool prealloc, P
 
                         Status = insert_prealloc_extent(fcb, oldalloc, newalloc - oldalloc, rollback);
 
-                        if (!NT_SUCCESS(Status)) {
+                        if (!NT_SUCCESS(Status) && Status != STATUS_DISK_FULL) {
                             ERR("insert_prealloc_extent returned %08lx\n", Status);
                             return Status;
                         }
@@ -3465,7 +3503,7 @@ NTSTATUS extend_file(fcb* fcb, file_ref* fileref, uint64_t end, bool prealloc, P
                 if (prealloc) {
                     Status = insert_prealloc_extent(fcb, 0, newalloc, rollback);
 
-                    if (!NT_SUCCESS(Status)) {
+                    if (!NT_SUCCESS(Status) && Status != STATUS_DISK_FULL) {
                         ERR("insert_prealloc_extent returned %08lx\n", Status);
                         return Status;
                     }
@@ -3529,6 +3567,7 @@ NTSTATUS extend_file(fcb* fcb, file_ref* fileref, uint64_t end, bool prealloc, P
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,2,5,6,11)))
 static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, uint64_t start_data, uint64_t end_data, void* data, uint64_t* written,
                                        PIRP Irp, bool file_write, uint64_t irp_offset, ULONG priority, LIST_ENTRY* rollback) {
     EXTENT_DATA* ed = &ext->extent_data;
@@ -3557,7 +3596,7 @@ static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, uint64_t start_dat
         }
 
         if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM)) {
-            ULONG sl = (ULONG)(ed2->num_bytes / fcb->Vcb->superblock.sector_size);
+            ULONG sl = (ULONG)(ed2->num_bytes >> fcb->Vcb->sector_shift);
             void* csum = ExAllocatePoolWithTag(PagedPool, sl * fcb->Vcb->csum_size, ALLOC_TAG);
 
             if (!csum) {
@@ -3623,7 +3662,7 @@ static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, uint64_t start_dat
         }
 
         if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM)) {
-            ULONG sl = (ULONG)((end_data - ext->offset) / fcb->Vcb->superblock.sector_size);
+            ULONG sl = (ULONG)((end_data - ext->offset) >> fcb->Vcb->sector_shift);
             void* csum = ExAllocatePoolWithTag(PagedPool, sl * fcb->Vcb->csum_size, ALLOC_TAG);
 
             if (!csum) {
@@ -3713,7 +3752,7 @@ static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, uint64_t start_dat
         }
 
         if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM)) {
-            ULONG sl = (ULONG)(ned2->num_bytes / fcb->Vcb->superblock.sector_size);
+            ULONG sl = (ULONG)(ned2->num_bytes >> fcb->Vcb->sector_shift);
             void* csum = ExAllocatePoolWithTag(PagedPool, sl * fcb->Vcb->csum_size, ALLOC_TAG);
 
             if (!csum) {
@@ -3817,7 +3856,7 @@ static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, uint64_t start_dat
         }
 
         if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM)) {
-            ULONG sl = (ULONG)((end_data - start_data) / fcb->Vcb->superblock.sector_size);
+            ULONG sl = (ULONG)((end_data - start_data) >> fcb->Vcb->sector_shift);
             void* csum = ExAllocatePoolWithTag(PagedPool, sl * fcb->Vcb->csum_size, ALLOC_TAG);
 
             if (!csum) {
@@ -3888,6 +3927,7 @@ static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, uint64_t start_dat
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1, 4)))
 NTSTATUS do_write_file(fcb* fcb, uint64_t start, uint64_t end_data, void* data, PIRP Irp, bool file_write, uint32_t irp_offset, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     LIST_ENTRY *le, *le2;
@@ -3909,10 +3949,12 @@ NTSTATUS do_write_file(fcb* fcb, uint64_t start, uint64_t end_data, void* data, 
 
         if (!ext->ignore) {
             EXTENT_DATA* ed = &ext->extent_data;
-            EXTENT_DATA2* ed2 = ed->type == EXTENT_TYPE_INLINE ? NULL : (EXTENT_DATA2*)ed->data;
             uint64_t len;
 
-            len = ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes;
+            if (ed->type == EXTENT_TYPE_INLINE)
+                len = ed->decoded_size;
+            else
+                len = ((EXTENT_DATA2*)ed->data)->num_bytes;
 
             if (ext->offset + len <= start)
                 goto nextitem;
@@ -3946,6 +3988,7 @@ NTSTATUS do_write_file(fcb* fcb, uint64_t start, uint64_t end_data, void* data, 
                 }
 
                 if (ed->type == EXTENT_TYPE_REGULAR) {
+                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ed->data;
                     uint64_t writeaddr = ed2->address + ed2->offset + start + written - ext->offset;
                     uint64_t write_len = min(len, length);
                     chunk* c;
@@ -3964,8 +4007,8 @@ NTSTATUS do_write_file(fcb* fcb, uint64_t start, uint64_t end_data, void* data, 
 
                     // This shouldn't ever get called - nocow files should always also be nosum.
                     if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM)) {
-                        do_calc_job(fcb->Vcb, (uint8_t*)data + written, (uint32_t)(write_len / fcb->Vcb->superblock.sector_size),
-                                    (uint8_t*)ext->csum + ((start + written - ext->offset) * fcb->Vcb->csum_size / fcb->Vcb->superblock.sector_size));
+                        do_calc_job(fcb->Vcb, (uint8_t*)data + written, (uint32_t)(write_len >> fcb->Vcb->sector_shift),
+                                    (uint8_t*)ext->csum + (((start + written - ext->offset) * fcb->Vcb->csum_size) >> fcb->Vcb->sector_shift));
 
                         ext->inserted = true;
                         extents_changed = true;
@@ -4052,6 +4095,7 @@ nextitem:
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,2,4,5,11)))
 NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void* buf, ULONG* length, bool paging_io, bool no_cache,
                      bool wait, bool deferred_write, bool write_irp, LIST_ENTRY* rollback) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -4184,8 +4228,6 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
 
     if (fcb->ads)
         make_inline = false;
-    else if (fcb->type == BTRFS_TYPE_SYMLINK)
-        make_inline = newlength <= (Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node) - offsetof(EXTENT_DATA, data[0]));
     else
         make_inline = newlength <= fcb->Vcb->options.max_inline;
 
@@ -4241,16 +4283,19 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
                 Status = Irp->IoStatus.Status;
                 goto end;
             } else {
+                /* We have to wait in CcCopyWrite - if we return STATUS_PENDING and add this to the work queue,
+                 * it can result in CcFlushCache being called before the job has run. See ifstest ReadWriteTest. */
+
                 if (fCcCopyWriteEx) {
-                    TRACE("CcCopyWriteEx(%p, %I64x, %lx, %u, %p, %p)\n", FileObject, off64, *length, wait, buf, Irp->Tail.Overlay.Thread);
-                    if (!fCcCopyWriteEx(FileObject, &offset, *length, wait, buf, Irp->Tail.Overlay.Thread)) {
+                    TRACE("CcCopyWriteEx(%p, %I64x, %lx, %u, %p, %p)\n", FileObject, off64, *length, true, buf, Irp->Tail.Overlay.Thread);
+                    if (!fCcCopyWriteEx(FileObject, &offset, *length, true, buf, Irp->Tail.Overlay.Thread)) {
                         Status = STATUS_PENDING;
                         goto end;
                     }
                     TRACE("CcCopyWriteEx finished\n");
                 } else {
-                    TRACE("CcCopyWrite(%p, %I64x, %lx, %u, %p)\n", FileObject, off64, *length, wait, buf);
-                    if (!CcCopyWrite(FileObject, &offset, *length, wait, buf)) {
+                    TRACE("CcCopyWrite(%p, %I64x, %lx, %u, %p)\n", FileObject, off64, *length, true, buf);
+                    if (!CcCopyWrite(FileObject, &offset, *length, true, buf)) {
                         Status = STATUS_PENDING;
                         goto end;
                     }
@@ -4542,6 +4587,7 @@ end:
     return Status;
 }
 
+__attribute__((nonnull(1,2)))
 NTSTATUS write_file(device_extension* Vcb, PIRP Irp, bool wait, bool deferred_write) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     void* buf;
@@ -4616,6 +4662,7 @@ exit:
 
 _Dispatch_type_(IRP_MJ_WRITE)
 _Function_class_(DRIVER_DISPATCH)
+__attribute__((nonnull(1,2)))
 NTSTATUS __stdcall drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     bool top_level;

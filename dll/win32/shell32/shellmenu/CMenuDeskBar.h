@@ -91,46 +91,46 @@ public:
     END_COM_MAP()
 
     // *** IMenuPopup methods ***
-    virtual HRESULT STDMETHODCALLTYPE Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE OnSelect(DWORD dwSelectType);
-    virtual HRESULT STDMETHODCALLTYPE SetSubMenu(IMenuPopup *pmp, BOOL fSet);
+    STDMETHOD(Popup)(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags) override;
+    STDMETHOD(OnSelect)(DWORD dwSelectType) override;
+    STDMETHOD(SetSubMenu)(IMenuPopup *pmp, BOOL fSet) override;
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *phwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *phwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IObjectWithSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, PVOID *ppvSite);
+    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+    STDMETHOD(GetSite)(REFIID riid, PVOID *ppvSite) override;
 
     // *** IBanneredBar methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetIconSize(DWORD iIcon);
-    virtual HRESULT STDMETHODCALLTYPE GetIconSize(DWORD* piIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetBitmap(HBITMAP hBitmap);
-    virtual HRESULT STDMETHODCALLTYPE GetBitmap(HBITMAP* phBitmap);
+    STDMETHOD(SetIconSize)(DWORD iIcon) override;
+    STDMETHOD(GetIconSize)(DWORD* piIcon) override;
+    STDMETHOD(SetBitmap)(HBITMAP hBitmap) override;
+    STDMETHOD(GetBitmap)(HBITMAP* phBitmap) override;
 
     // *** IInitializeObject methods ***
-    virtual HRESULT STDMETHODCALLTYPE Initialize(THIS);
+    STDMETHOD(Initialize)(THIS) override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // *** IInputObjectSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(LPUNKNOWN lpUnknown, BOOL bFocus);
+    STDMETHOD(OnFocusChangeIS)(LPUNKNOWN lpUnknown, BOOL bFocus) override;
 
     // *** IInputObject methods ***
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL bActivating, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO(THIS);
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL bActivating, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)(THIS) override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // *** IDeskBar methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetClient(IUnknown *punkClient);
-    virtual HRESULT STDMETHODCALLTYPE GetClient(IUnknown **ppunkClient);
-    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(LPRECT prc);
+    STDMETHOD(SetClient)(IUnknown *punkClient) override;
+    STDMETHOD(GetClient)(IUnknown **ppunkClient) override;
+    STDMETHOD(OnPosRectChangeDB)(LPRECT prc) override;
 
 private:
     // message handlers

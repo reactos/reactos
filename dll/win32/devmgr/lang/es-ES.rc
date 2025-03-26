@@ -40,6 +40,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "Intervalo de E/S"
+    IDS_COPY "&Copiar"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -82,7 +83,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Los controladores para este dispositivo no están instalados."
     IDS_DEV_HARDWARE_DISABLED "Este dispositivo se ha deshabilitado porque la BIOS no ha proporcionado ningún recurso al dispositivo."
     IDS_DEV_CANT_SHARE_IRQ "Este dispositivo está utilizando un recurso de petición de interrupción (IRQ) que usa otro dispositivo y no puede compartirlo. Cambie la opción conflictiva o desinstale el controlador en tiempo real que causa el conflicto."
-    IDS_DEV_FAILED_ADD "Este dispositivo no está funcionando correctamente porque %1 no funciona."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS no puede instalar los controladores porque no se puede acceder al disco o ubicación en red que contiene los archivos de instalación."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo no está respondiendo a su controlador."
     IDS_DEV_NO_SOFTCONFIG "ReactOS no puede determinar las propiedades de este dispositivo. Consulte la documentación proporcionada por el dispositivo y utilice la pestaña de recursos para establecer la configuración correcta."
@@ -293,14 +294,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Administrador de dispositivos de ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Deshabilitar este dispositivo hará que deje de funcionar.\r\n¿Seguro que quiere deshabilitarlo?"
-  IDS_CONFIRM_UNINSTALL     "Advertencia: Está a punto de desinstalar este dispositivo de su equipo.\r\n¿Seguro que quiere continuar?"
+  IDS_CONFIRM_DISABLE       "Deshabilitar este dispositivo hará que deje de funcionar.\n¿Seguro que quiere deshabilitarlo?"
+  IDS_CONFIRM_UNINSTALL     "Advertencia: Está a punto de desinstalar este dispositivo de su equipo.\n¿Seguro que quiere continuar?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Actualizar controladores..."
   IDS_MENU_ENABLE           "Habilitar"
@@ -311,7 +313,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Propiedades"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Propiedades"
   IDS_TOOLTIP_SCAN          "Buscar cambios de hardware"
@@ -322,7 +324,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Abre el diálogo de propiedades para le selección actual."

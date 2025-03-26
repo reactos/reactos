@@ -164,44 +164,53 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 //
 // Device Node Flags
 //
-#define DNF_PROCESSED                           0x00000001
-#define DNF_STARTED                             0x00000002
-#define DNF_START_FAILED                        0x00000004
-#define DNF_ENUMERATED                          0x00000008
-#define DNF_DELETED                             0x00000010
-#define DNF_MADEUP                              0x00000020
-#define DNF_START_REQUEST_PENDING               0x00000040
-#define DNF_NO_RESOURCE_REQUIRED                0x00000080
-#define DNF_INSUFFICIENT_RESOURCES              0x00000100
-#define DNF_RESOURCE_ASSIGNED                   0x00000200
-#define DNF_RESOURCE_REPORTED                   0x00000400
-#define DNF_HAL_NODE                            0x00000800 // ???
-#define DNF_ADDED                               0x00001000
-#define DNF_ADD_FAILED                          0x00002000
-#define DNF_LEGACY_DRIVER                       0x00004000
-#define DNF_STOPPED                             0x00008000
-#define DNF_WILL_BE_REMOVED                     0x00010000
+
+// this set of flags is relevant for w2k3 and newer
+// w2k has a completely different set of flags
+#define DNF_MADEUP                              0x00000001
+#define DNF_DUPLICATE                           0x00000002
+#define DNF_HAL_NODE                            0x00000004
+#define DNF_REENUMERATE                         0x00000008
+#define DNF_ENUMERATED                          0x00000010
+#define DNF_IDS_QUERIED                         0x00000020
+#define DNF_HAS_BOOT_CONFIG                     0x00000040
+#define DNF_BOOT_CONFIG_RESERVED                0x00000080
+#define DNF_NO_RESOURCE_REQUIRED                0x00000100
+#define DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED 0x00000200
+#define DNF_RESOURCE_REQUIREMENTS_CHANGED       0x00000400
+#define DNF_NON_STOPPED_REBALANCE               0x00000800
+#define DNF_LEGACY_DRIVER                       0x00001000
+#define DNF_HAS_PROBLEM                         0x00002000
+#define DNF_HAS_PRIVATE_PROBLEM                 0x00004000
+#define DNF_HARDWARE_VERIFICATION               0x00008000
+#define DNF_DEVICE_GONE                         0x00010000
 #define DNF_LEGACY_RESOURCE_DEVICENODE          0x00020000
-#define DNF_NOT_CONFIGURED                      0x00040000
-#define DNF_REINSTALL                           0x00080000
-#define DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED 0x00100000 // ???
-#define DNF_DISABLED                            0x00200000
-#define DNF_RESTART_OK                          0x00400000
-#define DNF_NEED_RESTART                        0x00800000
-#define DNF_VISITED                             0x01000000
-#define DNF_ASSIGNING_RESOURCES                 0x02000000
-#define DNF_BEEING_ENUMERATED                   0x04000000
-#define DNF_NEED_ENUMERATION_ONLY               0x08000000
-#define DNF_LOCKED                              0x10000000
-#define DNF_HAS_BOOT_CONFIG                     0x20000000
-#define DNF_BOOT_CONFIG_RESERVED                0x40000000
-#define DNF_HAS_PROBLEM                         0x80000000 // ???
+#define DNF_NEEDS_REBALANCE                     0x00040000
+#define DNF_LOCKED_FOR_EJECT                    0x00080000
+#define DNF_DRIVER_BLOCKED                      0x00100000
+#define DNF_CHILD_WITH_INVALID_ID               0x00200000
+
+// these flags were added in Vista or later
+#define DNF_ASYNC_START_NOT_SUPPORTED           0x00400000
+#define DNF_ASYNC_ENUMERATION_NOT_SUPPORTED     0x00800000
+#define DNF_LOCKED_FOR_REBALANCE                0x01000000
+#define DNF_UNINSTALLED                         0x02000000
+#define DNF_NO_LOWER_DEVICE_FILTERS             0x04000000
+#define DNF_NO_LOWER_CLASS_FILTERS              0x08000000
+#define DNF_NO_SERVICE                          0x10000000
+#define DNF_NO_UPPER_DEVICE_FILTERS             0x20000000
+#define DNF_NO_UPPER_CLASS_FILTERS              0x40000000
+#define DNF_WAITING_FOR_FDO                     0x80000000
 
 //
 // Device Node User Flags
 //
+#define DNUF_WILL_BE_REMOVED                    0x0001
 #define DNUF_DONT_SHOW_IN_UI                    0x0002
+#define DNUF_NEED_RESTART                       0x0004
 #define DNUF_NOT_DISABLEABLE                    0x0008
+#define DNUF_SHUTDOWN_QUERIED                   0x0010
+#define DNUF_SHUTDOWN_SUBTREE_DONE              0x0020
 
 //
 // Internal Option Flags
@@ -269,69 +278,219 @@ typedef enum _BUS_DATA_TYPE
     MaximumBusDataType
 } BUS_DATA_TYPE, *PBUS_DATA_TYPE;
 
+#if defined(NT_PROCESSOR_GROUPS)
+
+typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+enum _IRQ_DEVICE_POLICY_USHORT {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors = 1,
+  IrqPolicyOneCloseProcessor = 2,
+  IrqPolicyAllProcessorsInMachine = 3,
+  IrqPolicyAllProcessorsInGroup = 3,
+  IrqPolicySpecifiedProcessors = 4,
+  IrqPolicySpreadMessagesAcrossAllProcessors = 5};
+
+#else /* defined(NT_PROCESSOR_GROUPS) */
+
+typedef enum _IRQ_DEVICE_POLICY {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors,
+  IrqPolicyOneCloseProcessor,
+  IrqPolicyAllProcessorsInMachine,
+  IrqPolicySpecifiedProcessors,
+  IrqPolicySpreadMessagesAcrossAllProcessors
+} IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+#endif
+
+typedef enum _IRQ_PRIORITY {
+  IrqPriorityUndefined = 0,
+  IrqPriorityLow,
+  IrqPriorityNormal,
+  IrqPriorityHigh
+} IRQ_PRIORITY, *PIRQ_PRIORITY;
+
+#define IO_RESOURCE_PREFERRED             0x01
+#define IO_RESOURCE_DEFAULT               0x02
+#define IO_RESOURCE_ALTERNATIVE           0x08
+
+typedef struct _IO_RESOURCE_DESCRIPTOR {
+  UCHAR Option;
+  UCHAR Type;
+  UCHAR ShareDisposition;
+  UCHAR Spare1;
+  USHORT Flags;
+  USHORT Spare2;
+  union {
+    struct {
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Port;
+    struct {
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Memory;
+    struct {
+      ULONG MinimumVector;
+      ULONG MaximumVector;
+#if defined(NT_PROCESSOR_GROUPS)
+      IRQ_DEVICE_POLICY AffinityPolicy;
+      USHORT Group;
+#else
+      IRQ_DEVICE_POLICY AffinityPolicy;
+#endif
+      IRQ_PRIORITY PriorityPolicy;
+      KAFFINITY TargetedProcessors;
+    } Interrupt;
+    struct {
+      ULONG MinimumChannel;
+      ULONG MaximumChannel;
+    } Dma;
+    struct {
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Generic;
+    struct {
+      ULONG Data[3];
+    } DevicePrivate;
+    struct {
+      ULONG Length;
+      ULONG MinBusNumber;
+      ULONG MaxBusNumber;
+      ULONG Reserved;
+    } BusNumber;
+    struct {
+      ULONG Priority;
+      ULONG Reserved1;
+      ULONG Reserved2;
+    } ConfigData;
+  } u;
+} IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
+
+typedef struct _IO_RESOURCE_LIST {
+  USHORT Version;
+  USHORT Revision;
+  ULONG Count;
+  IO_RESOURCE_DESCRIPTOR Descriptors[1];
+} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
+
+typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
+  ULONG ListSize;
+  INTERFACE_TYPE InterfaceType;
+  ULONG BusNumber;
+  ULONG SlotNumber;
+  ULONG Reserved[3];
+  ULONG AlternativeLists;
+  IO_RESOURCE_LIST List[1];
+} IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
+
 //
 // File Information Classes for NtQueryInformationFile
 //
 typedef enum _FILE_INFORMATION_CLASS
 {
     FileDirectoryInformation = 1,
-    FileFullDirectoryInformation,
-    FileBothDirectoryInformation,
-    FileBasicInformation,
-    FileStandardInformation,
-    FileInternalInformation,
-    FileEaInformation,
-    FileAccessInformation,
-    FileNameInformation,
-    FileRenameInformation,
-    FileLinkInformation,
-    FileNamesInformation,
-    FileDispositionInformation,
-    FilePositionInformation,
-    FileFullEaInformation,
-    FileModeInformation,
-    FileAlignmentInformation,
-    FileAllInformation,
-    FileAllocationInformation,
-    FileEndOfFileInformation,
-    FileAlternateNameInformation,
-    FileStreamInformation,
-    FilePipeInformation,
-    FilePipeLocalInformation,
-    FilePipeRemoteInformation,
-    FileMailslotQueryInformation,
-    FileMailslotSetInformation,
-    FileCompressionInformation,
-    FileObjectIdInformation,
-    FileCompletionInformation,
-    FileMoveClusterInformation,
-    FileQuotaInformation,
-    FileReparsePointInformation,
-    FileNetworkOpenInformation,
-    FileAttributeTagInformation,
-    FileTrackingInformation,
-    FileIdBothDirectoryInformation,
-    FileIdFullDirectoryInformation,
-    FileValidDataLengthInformation,
-    FileShortNameInformation,
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-    FileIoCompletionNotificationInformation,
-    FileIoStatusBlockRangeInformation,
-    FileIoPriorityHintInformation,
-    FileSfioReserveInformation,
-    FileSfioVolumeInformation,
-    FileHardLinkInformation,
-    FileProcessIdsUsingFileInformation,
-    FileNormalizedNameInformation,
-    FileNetworkPhysicalNameInformation,
+    FileFullDirectoryInformation = 2,
+    FileBothDirectoryInformation = 3,
+    FileBasicInformation = 4,
+    FileStandardInformation = 5,
+    FileInternalInformation = 6,
+    FileEaInformation = 7,
+    FileAccessInformation = 8,
+    FileNameInformation = 9,
+    FileRenameInformation = 10,
+    FileLinkInformation = 11,
+    FileNamesInformation = 12,
+    FileDispositionInformation = 13,
+    FilePositionInformation = 14,
+    FileFullEaInformation = 15,
+    FileModeInformation = 16,
+    FileAlignmentInformation = 17,
+    FileAllInformation = 18,
+    FileAllocationInformation = 19,
+    FileEndOfFileInformation = 20,
+    FileAlternateNameInformation = 21,
+    FileStreamInformation = 22,
+    FilePipeInformation = 23,
+    FilePipeLocalInformation = 24,
+    FilePipeRemoteInformation = 25,
+    FileMailslotQueryInformation = 26,
+    FileMailslotSetInformation = 27,
+    FileCompressionInformation = 28,
+    FileObjectIdInformation = 29,
+    FileCompletionInformation = 30,
+    FileMoveClusterInformation = 31,
+    FileQuotaInformation = 32,
+    FileReparsePointInformation = 33,
+    FileNetworkOpenInformation = 34,
+    FileAttributeTagInformation = 35,
+    FileTrackingInformation = 36,
+    FileIdBothDirectoryInformation = 37,
+    FileIdFullDirectoryInformation = 38,
+    FileValidDataLengthInformation = 39,
+    FileShortNameInformation = 40,
+    FileIoCompletionNotificationInformation = 41,
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
+    FileIoStatusBlockRangeInformation = 42,
+    FileIoPriorityHintInformation = 43,
+    FileSfioReserveInformation = 44,
+    FileSfioVolumeInformation = 45,
+    FileHardLinkInformation = 46,
+    FileProcessIdsUsingFileInformation = 47,
+    FileNormalizedNameInformation = 48,
+    FileNetworkPhysicalNameInformation = 49,
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-    FileIdGlobalTxDirectoryInformation,
-    FileIsRemoteDeviceInformation,
-    FileUnusedInformation,
-    FileNumaNodeInformation,
-    FileStandardLinkInformation,
-    FileRemoteProtocolInformation,
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+    FileIdGlobalTxDirectoryInformation = 50,
+    FileIsRemoteDeviceInformation = 51,
+    FileAttributeCacheInformation = 52, // FileUnusedInformation since Windows 8.1
+    FileNumaNodeInformation = 53,
+    FileStandardLinkInformation = 54,
+    FileRemoteProtocolInformation = 55,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+    FileRenameInformationBypassAccessCheck = 56,
+    FileLinkInformationBypassAccessCheck = 57,
+    FileVolumeNameInformation = 58,
+    FileIdInformation = 59,
+    FileIdExtdDirectoryInformation = 60,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(__REACTOS__)
+    FileReplaceCompletionInformation = 61,
+    FileHardLinkFullIdInformation = 62,
+    FileIdExtdBothDirectoryInformation = 63, // Update 1
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
+    FileDispositionInformationEx = 64,
+    FileRenameInformationEx = 65,
+    FileRenameInformationExBypassAccessCheck = 66,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS2) || defined(__REACTOS__)
+    FileDesiredStorageClassInformation = 67,
+    FileStatInformation = 68,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3) || defined(__REACTOS__)
+    FileMemoryPartitionInformation = 69,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4) || defined(__REACTOS__)
+    FileStatLxInformation = 70,
+    FileCaseSensitiveInformation = 71,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5) || defined(__REACTOS__)
+    FileLinkInformationEx = 72,
+    FileLinkInformationExBypassAccessCheck = 73,
+    FileStorageReserveIdInformation = 74,
+    FileCaseSensitiveInformationForceAccessCheck = 75,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11) || defined(__REACTOS__) // 10.0.20150.1000
+    FileKnownFolderInformation = 76,
 #endif
     FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
@@ -595,6 +754,11 @@ typedef struct _FILE_COMPLETION_INFORMATION
     PVOID Key;
 } FILE_COMPLETION_INFORMATION, *PFILE_COMPLETION_INFORMATION;
 
+typedef struct _FILE_IO_COMPLETION_NOTIFICATION_INFORMATION
+{
+    ULONG Flags;
+} FILE_IO_COMPLETION_NOTIFICATION_INFORMATION, *PFILE_IO_COMPLETION_NOTIFICATION_INFORMATION;
+
 typedef struct _FILE_LINK_INFORMATION
 {
     BOOLEAN ReplaceIfExists;
@@ -728,6 +892,11 @@ typedef struct _FILE_PIPE_PEEK_BUFFER
     CHAR Data[1];
 } FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
 
+typedef struct _FILE_MODE_INFORMATION
+{
+    ULONG Mode;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
+
 //
 // I/O Error Log Structures
 //
@@ -815,6 +984,8 @@ typedef struct _IO_CLIENT_EXTENSION
     PVOID ClientIdentificationAddress;
 } IO_CLIENT_EXTENSION, *PIO_CLIENT_EXTENSION;
 
+#define DEVNODE_HISTORY_SIZE 20
+
 //
 // Device Node
 //
@@ -829,7 +1000,7 @@ typedef struct _DEVICE_NODE
     PO_IRP_MANAGER PoIrpManager;
     PNP_DEVNODE_STATE State;
     PNP_DEVNODE_STATE PreviousState;
-    PNP_DEVNODE_STATE StateHistory[20];
+    PNP_DEVNODE_STATE StateHistory[DEVNODE_HISTORY_SIZE];
     ULONG StateHistoryEntry;
     NTSTATUS CompletionStatus;
     PIRP PendingIrp;
@@ -994,7 +1165,7 @@ typedef struct _EFI_DRIVER_ENTRY
 #ifdef NTOS_MODE_USER
 
 //
-// APC Callback for NtCreateFile
+// APC Callback for NtReadFile, NtWriteFile
 //
 typedef VOID
 (NTAPI *PIO_APC_ROUTINE)(

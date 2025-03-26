@@ -211,13 +211,3 @@ LRESULT THEMING_CallOriginalClass (HWND wnd, UINT msg, WPARAM wParam, LPARAM lPa
     WNDPROC oldProc = originalProcs[subclass];
     return CallWindowProcW (oldProc, wnd, msg, wParam, lParam);
 }
-
-/***********************************************************************
- * THEMING_SetSubclassData
- *
- * Update the "refData" value of the subclassed window.
- */
-void THEMING_SetSubclassData (HWND wnd, ULONG_PTR refData)
-{
-    SetPropW (wnd, (LPCWSTR)MAKEINTATOM(atRefDataProp), (HANDLE)refData);
-}

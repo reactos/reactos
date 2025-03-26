@@ -8,7 +8,7 @@ FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON "确定(&O)", IDC_OK, 125, 232, 50, 14
     PUSHBUTTON "取消(&C)", IDC_CANCEL, 178, 232, 50, 14
-    LTEXT "计算机(&M):", IDC_STATIC, 9, 9, 35, 36
+    LTEXT "计算机(&M)：", IDC_STATIC, 9, 9, 35, 36
     LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
     PUSHBUTTON "添加(&A)...", IDC_ADD_SYSTEM, 179, 19, 50, 14
     PUSHBUTTON "删除(&R)", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
@@ -20,10 +20,10 @@ BEGIN
     EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
     LTEXT "秒", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
     GROUPBOX "关闭事件跟踪程序", IDC_STATIC, 5, 114, 224, 114
-    LTEXT "原因:", IDC_STATIC, 16, 130, 27, 8
+    LTEXT "原因：", IDC_STATIC, 16, 130, 27, 8
     CHECKBOX "计划", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
-    LTEXT "注释(&E):", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    LTEXT "注释(&E)：", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
 END
 
@@ -32,11 +32,11 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "ReactOS 关闭计算机实用工具\n\
 \n\
-用法: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+用法：shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
 \n\
     没有参数或 /?    显示此帮助。\n\
-    /i      显示图形用户界面 (GUI)。此选项必须是\n\
+    /i      显示图形用户界面（GUI）。此选项必须是\n\
             第一个。\n\
     /l      只在本地系统上注销。不能与 /m 或 /d 同时使用。\n\
     /s      关闭计算机。\n\
@@ -47,32 +47,32 @@ BEGIN
             同时使用。\n\
     /h      休眠本地计算机。可以与 /f 同时使用 。\n\
     /e      记录计算机意外的关机原因。\n\
-    /m \\\\computer  指定目标计算机 (UNC 路径或 IP 地址)。\n\
+    /m \\\\computer  指定目标计算机（UNC 路径或 IP 地址）。\n\
     /t xxx  设置延时时间为 xxx 秒后关闭计算机。\n\
-            有效范围从 0 开始到 315360000 (10 年)，\n\
+            有效范围从 0 开始到 315360000（10 年），\n\
             默认值为 30。\n\
     /c ""comment""  为关闭或重新启动计算机的原因添加注释。\n\
             允许最大 512 个字符。\n\
     /f      不警告用户强制关闭正在运行的应用程序。如果您\n\
-            不指定任何其他参数，此选项将也注销。\n\
+            不指定任何其他参数，此选项还会执行注销。\n\
     /d [p|u:]xx:yy  给出关闭或重新启动计算机的原因代码\n\
             p 表示关闭或重新启动计算机是有计划的。\n\
             u 表示原因由用户定义。\n\
-            如果 p 和 u 都没有被指定, 不会按照计划关闭或\n\
+            如果 p 和 u 都没有被指定，则不会按照计划关闭或\n\
             重新启动计算机。\n\
-			xx 是主要原因代码 (小于 256 的正整数)。\n\
-			yy 是次要原因代码 (小于 65536 的正整数)。\n"
+			xx 是主要原因代码（小于 256 的正整数）。\n\
+			yy 是次要原因代码（小于 65536 的正整数）。\n"
 
-    IDS_ERROR_SHUTDOWN_REBOOT "错误: 无法同时关闭和重新启动计算机。\n"
-    IDS_ERROR_TIMEOUT "错误: 延时值 %u 超出边界 (0-315360000)。\n"
-    IDS_ERROR_ABORT "错误: 无法中止系统关闭。\n"
-    IDS_ERROR_LOGOFF "错误: 无法注销系统。\n"
-    IDS_ERROR_SHUTDOWN "错误: 无法关闭系统。\n"
-    IDS_ERROR_RESTART "错误: 无法重新启动系统。\n"
-    IDS_ERROR_MAX_COMMENT_LENGTH "错误: 注释长度超过由系统设置的最大限制。\n"
-    IDS_ERROR_HIBERNATE "错误: 无法使系统进入休眠模式。\n"
-    IDS_ERROR_HIBERNATE_LOCAL "错误: 无法远程启动休眠模式。\n"
-    IDS_ERROR_HIBERNATE_ENABLED "错误: 没有启用休眠模式。\n"
+    IDS_ERROR_SHUTDOWN_REBOOT "错误：无法同时关闭和重新启动计算机。\n"
+    IDS_ERROR_TIMEOUT "错误：延时值 %u 超出限制（0-315360000）。\n"
+    IDS_ERROR_ABORT "错误：无法中止系统关闭。\n"
+    IDS_ERROR_LOGOFF "错误：无法注销系统。\n"
+    IDS_ERROR_SHUTDOWN "错误：无法关闭系统。\n"
+    IDS_ERROR_RESTART "错误：无法重新启动系统。\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "错误：注释长度超过由系统设置的最大限制。\n"
+    IDS_ERROR_HIBERNATE "错误：无法使系统进入休眠模式。\n"
+    IDS_ERROR_HIBERNATE_LOCAL "错误：无法远程启动休眠模式。\n"
+    IDS_ERROR_HIBERNATE_ENABLED "错误：没有启用休眠模式。\n"
     IDS_ERROR_DIALOG_CAPTION "远程关机"
     IDS_ERROR_DIALOG_INIT "无法显示图形用户界面。"
 END
@@ -89,14 +89,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_REASON_OTHER "其他"
-    IDS_REASON_HARDWARE_MAINTENANCE "硬件: 维护"
-    IDS_REASON_HARDWARE_INSTALL "硬件: 安装"
-    IDS_REASON_OS_RECOVER "操作系统: 恢复"
-    IDS_REASON_OS_RECONFIGURE "操作系统: 重新配置"
-    IDS_REASON_APP_MAINTENANCE "应用程序: 维护"
-    IDS_REASON_APP_INSTALL "应用程序: 安装"
-    IDS_REASON_APP_UNRESPONSIVE "应用程序: 无响应"
-    IDS_REASON_APP_UNSTABLE "应用程序: 不稳定"
+    IDS_REASON_HARDWARE_MAINTENANCE "硬件：维护"
+    IDS_REASON_HARDWARE_INSTALL "硬件：安装"
+    IDS_REASON_OS_RECOVER "操作系统：恢复"
+    IDS_REASON_OS_RECONFIGURE "操作系统：重新配置"
+    IDS_REASON_APP_MAINTENANCE "应用程序：维护"
+    IDS_REASON_APP_INSTALL "应用程序：安装"
+    IDS_REASON_APP_UNRESPONSIVE "应用程序：无响应"
+    IDS_REASON_APP_UNSTABLE "应用程序：不稳定"
     IDS_REASON_SECURITY "安全问题"
     IDS_REASON_NETWORK "网络连接丢失"
 END

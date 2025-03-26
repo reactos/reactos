@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     pidl handling
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #pragma once
@@ -12,7 +12,7 @@ struct FontPidlEntry
 {
     WORD cb;
     WORD Magic;
-    ULONG Index;        // Informative only
+    ULONG Index;        // Informative only, used for sorting
 
     WCHAR Name[1];
 };

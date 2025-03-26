@@ -1,12 +1,13 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/mspaint/lang/et-EE.rc
- * PURPOSE:     Estonian Language resource file
- * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Estonian resource file
+ * TRANSLATOR:  Copyright 2018 Joann Mõndresku <joannmondresku@gmail.com>
  */
 
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-et-EE.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -40,7 +41,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Lõika\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopeeri\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "K&leebi\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Kl&eebi\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Kustuta &valik\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Pööra valikut", IDM_EDITINVERTSELECTION
         MENUITEM "Vali k&õik\tCtrl+A", IDM_EDITSELECTALL
@@ -75,12 +78,12 @@ BEGIN
     END
     POPUP "&Pilt"
     BEGIN
-        MENUITEM "Pööra/&Peegelda...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Pööra/Pee&gelda...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Venita/Kalluta...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Kärbi", IDM_IMAGECROP
         MENUITEM "&Pööra värvid\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribuudid...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Kustuta pilt\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Ku&stuta pilt\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "&Joonista läbipaistmatult", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Värvid"
@@ -95,6 +98,27 @@ BEGIN
         MENUITEM "&Abi Teemad", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Info", IDM_HELPINFO
+    END
+END
+
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "&Lõika\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopeeri\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Kl&eebi\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Kustuta &valik\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Vali k&õik\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Kopee&ri asukohta...", IDM_EDITCOPYTO
+        MENUITEM "Klee&bi asukohast...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "Pööra/Pee&gelda...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Venita/Kalluta...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Pööra värvid\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -119,6 +143,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -142,26 +170,26 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atribuudid"
 BEGIN
+    LTEXT "&Laius:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Pikkus:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "&Laius:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "&Pikkus:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "Faili &kuupäev:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Faili &suurus:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "&Resolutsioon:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Faili kuupäev:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Faili suurus:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Resolutsioon:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Pole saadaval", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Ühikud", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "&Tollid", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
     AUTORADIOBUTTON "Piksl&id", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Värvid", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "&Mustvalge", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "&Värvid", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "&Värvid", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Tühista", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Vaikimisi", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "V&aikimisi", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
@@ -191,6 +219,17 @@ BEGIN
     PUSHBUTTON "Tühista", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
@@ -198,7 +237,7 @@ BEGIN
     IDS_INFOTITLE "Paint ReactOS'ile"
     IDS_INFOTEXT "On saadaval ""GNU Lesser General Public License"" litsentsi all (LGPL, vaata www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Kas soovid salvesta muudatusi failis %s?"
-    IDS_DEFAULTFILENAME "Nimetu.bmp"
+    IDS_DEFAULTFILENAME "Nimetu"
     IDS_MINIATURETITLE "Miniatuur"
     IDS_TOOLTIP1 "Vaba valik"
     IDS_TOOLTIP2 "Valik"
@@ -219,10 +258,18 @@ BEGIN
     IDS_ALLFILES "Kõik failid"
     IDS_ALLPICTUREFILES "Kõik Pildifailid"
     IDS_FILESIZE "%d baiti"
-    IDS_PRINTRES "%d x %d pikslit meetri kohta"
     IDS_INTNUMBERS "Palun sisesta ainult terviklike numbreid!"
     IDS_PERCENTAGE "Protsent peab 1 ja 500 vahemikus olema."
     IDS_ANGLE "Nurk peab -89 ja 89 vahemikus olema."
     IDS_LOADERRORTEXT "Faili %s ei suudetud laadida."
     IDS_ENLARGEPROMPTTEXT "Pilt lõikelaual on suurem kui digitaalkujutis.\nKas soovid digitaalkujutist suurendada?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

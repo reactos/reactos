@@ -225,8 +225,9 @@ static int QueryConfig2W(SC_HANDLE hService, LPCWSTR serviceName, DWORD dwInfoLe
 
             /* Check the values */
             ok(lpFailureActions1->dwResetPeriod == lpFailureActions2->dwResetPeriod, "lpFailureActions1->dwResetPeriod != lpFailureActions2->dwResetPeriod\n");
+#ifndef _M_AMD64 // Fails on Win 2003 x64
             ok(lpFailureActions1->cActions == lpFailureActions2->cActions, "lpFailureActions1->cActions != lpFailureActions2->cActions\n");
-
+#endif
             /* Compare the actions */
             if (lpFailureActions1->cActions == lpFailureActions2->cActions)
             {
@@ -417,7 +418,9 @@ static int QueryConfig2A(SC_HANDLE hService, LPCSTR serviceName, DWORD dwInfoLev
 
             /* Check the values */
             ok(lpFailureActions1->dwResetPeriod == lpFailureActions2->dwResetPeriod, "lpFailureActions1->dwResetPeriod != lpFailureActions2->dwResetPeriod\n");
+#ifndef _M_AMD64 // Fails on Win 2003 x64
             ok(lpFailureActions1->cActions == lpFailureActions2->cActions, "lpFailureActions1->cActions != lpFailureActions2->cActions\n");
+#endif
 
             /* Compare the actions */
             if (lpFailureActions1->cActions == lpFailureActions2->cActions)

@@ -41,7 +41,8 @@ DceCreateDisplayDC(VOID)
 {
   UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
 
-  co_IntGraphicsCheck(TRUE);
+  if (!co_IntGraphicsCheck(TRUE))
+    KeBugCheckEx(VIDEO_DRIVER_INIT_FAILURE, 0, 0, 0, USER_VERSION);
 
   return IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
 }
@@ -98,7 +99,7 @@ DceAllocDCE(PWND Window OPTIONAL, DCE_TYPE Type)
   }
   DCECount++;
   TRACE("Alloc DCE's! %d\n",DCECount);
-  pDce->hwndCurrent = (Window ? Window->head.h : NULL);
+  pDce->hwndCurrent = (Window ? UserHMGetHandle(Window) : NULL);
   pDce->pwndOrg  = Window;
   pDce->pwndClip = Window;
   pDce->hrgnClip = NULL;
@@ -214,7 +215,7 @@ DceUpdateVisRgn(DCE *Dce, PWND Window, ULONG Flags)
       {
          DcxFlags = Flags & ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
       }
-      RgnVisible = DceGetVisRgn(Parent, DcxFlags, Window->head.h, Flags);
+      RgnVisible = DceGetVisRgn(Parent, DcxFlags, UserHMGetHandle(Window), Flags);
    }
    else if (Window == NULL)
    {
@@ -469,7 +470,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
             {
                DceEmpty = Dce;
             }
-            else if (Dce->hwndCurrent == (Wnd ? Wnd->head.h : NULL) &&
+            else if (Dce->hwndCurrent == (Wnd ? UserHMGetHandle(Wnd) : NULL) &&
                      ((Dce->DCXFlags & DCX_CACHECOMPAREMASK) == DcxFlags))
             {
                UpdateClipOrigin = TRUE;
@@ -488,7 +489,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       }
       if (Dce == NULL) return NULL;
 
-      Dce->hwndCurrent = (Wnd ? Wnd->head.h : NULL);
+      Dce->hwndCurrent = (Wnd ? UserHMGetHandle(Wnd) : NULL);
       Dce->pwndOrg = Dce->pwndClip = Wnd;
    }
    else // If we are here, we are POWNED or having CLASS.
@@ -504,7 +505,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
           if (!(Dce->DCXFlags & DCX_CACHE))
           {
              // Check for Window handle than HDC match for CLASS.
-             if (Dce->hwndCurrent == Wnd->head.h)
+             if (Dce->hwndCurrent == UserHMGetHandle(Wnd))
              {
                 bUpdateVisRgn = FALSE;
                 break;
@@ -545,8 +546,8 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
     * Bump it up! This prevents the random errors in wine dce tests and with
     * proper bits set in DCX_CACHECOMPAREMASK.
     * Reference:
-    *   http://www.reactos.org/archives/public/ros-dev/2008-July/010498.html
-    *   http://www.reactos.org/archives/public/ros-dev/2008-July/010499.html
+    *   https://reactos.org/archives/public/ros-dev/2008-July/010498.html
+    *   https://reactos.org/archives/public/ros-dev/2008-July/010499.html
     */
    RemoveEntryList(&Dce->List);
    InsertHeadList(&LEDce, &Dce->List);
@@ -698,7 +699,7 @@ DceFreeWindowDCE(PWND Window)
   {
      pDCE = CONTAINING_RECORD(ListEntry, DCE, List);
      ListEntry = ListEntry->Flink;
-     if ( pDCE->hwndCurrent == Window->head.h &&
+     if ( pDCE->hwndCurrent == UserHMGetHandle(Window) &&
           !(pDCE->DCXFlags & DCX_DCEEMPTY) )
      {
         if (!(pDCE->DCXFlags & DCX_CACHE)) /* Owned or Class DCE */
@@ -746,7 +747,7 @@ DceFreeWindowDCE(PWND Window)
                * We should change this to TRACE when ReactOS is more stable
                * (for 1.0?).
                */
-              ERR("[%p] GetDC() without ReleaseDC()!\n", Window->head.h);
+              ERR("[%p] GetDC() without ReleaseDC()!\n", UserHMGetHandle(Window));
               DceReleaseDC(pDCE, FALSE);
            }
            pDCE->DCXFlags |= DCX_DCEEMPTY;
@@ -833,7 +834,7 @@ DceResetActiveDCEs(PWND Window)
       ListEntry = ListEntry->Flink;
       if (0 == (pDCE->DCXFlags & (DCX_DCEEMPTY|DCX_INDESTROY)))
       {
-         if (Window->head.h == pDCE->hwndCurrent)
+         if (UserHMGetHandle(Window) == pDCE->hwndCurrent)
          {
             CurrentWindow = Window;
          }
@@ -874,7 +875,7 @@ DceResetActiveDCEs(PWND Window)
             if (NULL != dc->dclevel.prgnClip)
             {
                REGION_bOffsetRgn(dc->dclevel.prgnClip, DeltaX, DeltaY);
-               dc->fs |= DC_FLAG_DIRTY_RAO;
+               dc->fs |= DC_DIRTY_RAO;
             }
             if (NULL != pDCE->hrgnClip)
             {
@@ -973,7 +974,7 @@ HDC APIENTRY
 NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 {
   PWND Wnd=NULL;
-  DECLARE_RETURN(HDC);
+  HDC Ret = NULL;
 
   TRACE("Enter NtUserGetDCEx: hWnd %p, ClipRegion %p, Flags %x.\n",
       hWnd, ClipRegion, Flags);
@@ -981,14 +982,14 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
   {
-      RETURN(NULL);
+      goto Exit; // Return NULL
   }
-  RETURN( UserGetDCEx(Wnd, ClipRegion, Flags));
+  Ret = UserGetDCEx(Wnd, ClipRegion, Flags);
 
-CLEANUP:
-  TRACE("Leave NtUserGetDCEx, ret=%p\n", _ret_);
+Exit:
+  TRACE("Leave NtUserGetDCEx, ret=%p\n", Ret);
   UserLeave();
-  END_CLEANUP;
+  return Ret;
 }
 
 /*
@@ -1021,7 +1022,7 @@ NtUserGetDC(HWND hWnd)
  * Select logical palette into device context.
  * \param	hDC 				handle to the device context
  * \param	hpal				handle to the palette
- * \param	ForceBackground 	If this value is FALSE the logical palette will be copied to the device palette only when the applicatioon
+ * \param	ForceBackground 	If this value is FALSE the logical palette will be copied to the device palette only when the application
  * 								is in the foreground. If this value is TRUE then map the colors in the logical palette to the device
  * 								palette colors in the best way.
  * \return	old palette

@@ -1,5 +1,6 @@
 #pragma once
 
+// Win: ValidateHmenu
 FORCEINLINE PMENU UserGetMenuObject(HMENU hMenu)
 {
    PMENU pMenu = UserGetObject(gHandleTable, hMenu, TYPE_MENU);
@@ -82,6 +83,9 @@ NTSTATUS FASTCALL InitSessionImpl(VOID);
 
 BOOL NTAPI InitMetrics(VOID);
 LONG NTAPI UserGetSystemMetrics(ULONG Index);
+BOOL FASTCALL UserIsDBCSEnabled(VOID);
+BOOL FASTCALL UserIsIMMEnabled(VOID);
+BOOL FASTCALL UserIsCiceroEnabled(VOID);
 
 /*************** KEYBOARD.C ***************/
 
@@ -157,10 +161,18 @@ LRESULT NC_HandleNCRButtonDown( PWND wnd, WPARAM wParam, LPARAM lParam );
 HBRUSH FASTCALL DefWndControlColor(HDC hDC,UINT ctlType);
 BOOL UserDrawSysMenuButton(PWND pWnd, HDC hDC, LPRECT Rect, BOOL Down);
 BOOL UserPaintCaption(PWND pWnd, INT Flags);
+PWND FASTCALL DWP_GetEnabledPopup(PWND pWnd);
 
 /************** LAYERED **************/
 
 BOOL FASTCALL SetLayeredStatus(PWND pWnd, BYTE set);
 BOOL FASTCALL GetLayeredStatus(PWND pWnd);
+
+/************** INPUT CONTEXT **************/
+
+PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData);
+VOID UserFreeInputContext(PVOID Object);
+BOOLEAN UserDestroyInputContext(PVOID Object);
+PVOID AllocInputContextObject(PDESKTOP pDesk, PTHREADINFO pti, SIZE_T Size, PVOID* HandleOwner);
 
 /* EOF */

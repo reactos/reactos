@@ -9,8 +9,8 @@
 // would also need to set the option 'WITH_STL'..
 // For now we just copy the definition here, under a guard..
 #ifndef _NEW
-inline void* operator new (size_t size, void* ptr) throw() { return ptr; }
-inline void operator delete (void* ptr, void* voidptr2) throw() { }
+inline void* operator new (size_t size, void* ptr) noexcept { return ptr; }
+inline void operator delete (void* ptr, void* voidptr2) noexcept { }
 #endif
 
 
@@ -480,6 +480,9 @@ public:
     POSITION AddHead(INARGTYPE element);
     POSITION AddTail(INARGTYPE element);
 
+    void AddHeadList(_In_ const CAtlList<E, ETraits>* plNew);
+    void AddTailList(_In_ const CAtlList<E, ETraits>* plNew);
+
     E RemoveHead();
     E RemoveTail();
 
@@ -493,6 +496,8 @@ public:
         INARGTYPE element,
         _In_opt_ POSITION posStartAfter = NULL) const;
     POSITION FindIndex(_In_ size_t iElement) const;
+
+    void SwapElements(POSITION pos1, POSITION pos2);
 
 private:
     CNode* CreateNode(
@@ -635,6 +640,24 @@ POSITION CAtlList<E, ETraits>::AddTail(INARGTYPE element)
     m_TailNode = Node;
 
     return (POSITION)Node;
+}
+
+template <typename E, class ETraits>
+void CAtlList<E, ETraits>::AddHeadList(_In_ const CAtlList<E, ETraits>* plNew)
+{
+    ATLASSERT(plNew != NULL && plNew != this);
+    POSITION pos = plNew->GetTailPosition();
+    while (pos)
+        AddHead(plNew->GetPrev(pos));
+}
+
+template <typename E, class ETraits>
+void CAtlList<E, ETraits>::AddTailList(_In_ const CAtlList<E, ETraits>* plNew)
+{
+    ATLASSERT(plNew != NULL && plNew != this);
+    POSITION pos = plNew->GetHeadPosition();
+    while (pos)
+        AddTail(plNew->GetNext(pos));
 }
 
 template<typename E, class ETraits>
@@ -809,6 +832,45 @@ POSITION CAtlList< E, ETraits >::FindIndex(_In_ size_t iElement) const
     return (POSITION)Node;
 }
 
+template<typename E, class ETraits>
+void CAtlList< E, ETraits >::SwapElements(POSITION pos1, POSITION pos2)
+{
+    if (pos1 == pos2)
+        return;
+
+
+    CNode *node1 = (CNode *)pos1;
+    CNode *node2 = (CNode *)pos2;
+
+    CNode *tmp = node1->m_Prev;
+    node1->m_Prev = node2->m_Prev;
+    node2->m_Prev = tmp;
+
+    if (node1->m_Prev)
+        node1->m_Prev->m_Next = node1;
+    else
+        m_HeadNode = node1;
+
+    if (node2->m_Prev)
+        node2->m_Prev->m_Next = node2;
+    else
+        m_HeadNode = node2;
+
+    tmp = node1->m_Next;
+    node1->m_Next = node2->m_Next;
+    node2->m_Next = tmp;
+
+    if (node1->m_Next)
+        node1->m_Next->m_Prev = node1;
+    else
+        m_TailNode = node1;
+
+    if (node2->m_Next)
+        node2->m_Next->m_Prev = node2;
+    else
+        m_TailNode = node2;
+}
+
 
 //
 // CAtlist private methods
@@ -865,7 +927,7 @@ typename CAtlList<E, ETraits>::CNode* CAtlList< E, ETraits>::GetFreeNode()
     {
         AtlThrowImp(E_OUTOFMEMORY);
     }
-    
+
     CNode* Node = (CNode*)Block->GetData();
     Node += (m_BlockSize - 1);
     for (int i = m_BlockSize - 1; i >= 0; i--)

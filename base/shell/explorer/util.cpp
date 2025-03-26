@@ -140,48 +140,27 @@ FormatMenuString(IN HMENU hMenu,
     return FALSE;
 }
 
-BOOL
-GetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue)
+BOOL GetRegBool(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN BOOL bDefaultValue)
 {
-    WCHAR szBuffer[MAX_PATH];
-    HKEY hkSubKey;
-    DWORD dwType, dwSize;
-    BOOL Ret = FALSE;
+    return SHRegGetBoolUSValueW(pszSubKey, pszValueName, FALSE, bDefaultValue);
+}
 
-    StringCbCopyW(szBuffer, sizeof(szBuffer),
-                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
-    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
-        return FALSE;
-    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey)))
-        return FALSE;
+BOOL SetRegDword(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN DWORD dwValue)
+{
+    return (SHRegSetUSValueW(pszSubKey, pszValueName, REG_DWORD, &dwValue,
+                             sizeof(dwValue), SHREGSET_FORCE_HKCU) == ERROR_SUCCESS);
+}
 
-    dwSize = sizeof(szBuffer);
-    if (RegOpenKeyExW(hKey,
-                      szBuffer,
-                      0,
-                      KEY_QUERY_VALUE,
-                      &hkSubKey) == ERROR_SUCCESS)
-    {
-        ZeroMemory(szBuffer, sizeof(szBuffer));
+#define REGKEY_ADVANCED L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"
 
-        if (RegQueryValueExW(hkSubKey,
-                             lpValue,
-                             0,
-                             &dwType,
-                             (LPBYTE)szBuffer,
-                             &dwSize) == ERROR_SUCCESS)
-        {
-            if ((dwType == REG_DWORD) && (dwSize == sizeof(DWORD)))
-                Ret = *((PDWORD)szBuffer) != 0;
-            else if (dwSize > 0)
-                Ret = *((PWCHAR)szBuffer) != 0;
-        }
+BOOL GetAdvancedBool(IN LPCWSTR pszValueName, IN BOOL bDefaultValue)
+{
+    return GetRegBool(REGKEY_ADVANCED, pszValueName, bDefaultValue);
+}
 
-        RegCloseKey(hkSubKey);
-    }
-    return Ret;
+BOOL SetAdvancedDword(IN LPCWSTR pszValueName, IN DWORD dwValue)
+{
+    return SetRegDword(REGKEY_ADVANCED, pszValueName, dwValue);
 }
 
 BOOL

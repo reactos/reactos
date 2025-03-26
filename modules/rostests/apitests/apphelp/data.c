@@ -186,7 +186,7 @@ typedef struct rsrc_section_t
     IMAGE_RESOURCE_DIRECTORY version_info_header;
     IMAGE_RESOURCE_DIRECTORY_ENTRY version_lang_id;
     IMAGE_RESOURCE_DATA_ENTRY version_data_entry;
-    
+
     VS_VERSIONINFO version_info;
     STRINGFILEINFO string_file_info;
     STRINGTABLE string_table;
@@ -445,7 +445,7 @@ typedef struct export_section_t
 } export_section_t;
 
 /* This export section is not complete, but the Name RVA is only taken into account */
-static export_section_t export_dir = 
+static export_section_t export_dir =
 {
     {
         0, /* Characteristics */
@@ -792,7 +792,7 @@ void test_create_db_imp(const WCHAR* name, int win10)
     }
 }
 
-static DWORD g_WinVersion;
+DWORD g_WinVersion;
 DWORD get_host_winver(void)
 {
     if (!g_WinVersion)

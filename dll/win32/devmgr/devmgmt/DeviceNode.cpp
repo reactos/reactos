@@ -374,7 +374,7 @@ CDeviceNode::UninstallDevice()
     RemoveDevParams.HwProfile = 0;
 
     //
-    // We probably need to walk all the siblings of this 
+    // We probably need to walk all the siblings of this
     // device and ask if they're happy with the uninstall
     //
 

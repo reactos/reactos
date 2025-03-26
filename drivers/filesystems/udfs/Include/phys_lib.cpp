@@ -600,7 +600,7 @@ UDFTRead(
     IN uint32 LBA,
     OUT PSIZE_T ReadBytes,
     IN uint32 Flags
-    ) 
+    )
 {
     uint32 rLba;
     OSSTATUS RC = STATUS_SUCCESS;
@@ -734,7 +734,7 @@ UDFTReadAsync(
     IN SIZE_T Length,
     IN uint32 LBA,
     OUT PSIZE_T ReadBytes
-    ) 
+    )
 {
     PEXTENT_MAP RelocExtent;
     PEXTENT_MAP RelocExtent_saved;
@@ -899,7 +899,7 @@ UDFPrepareForWriteOperation(
 #ifndef UDF_READ_ONLY_BUILD
 #ifdef UDF_FORMAT_MEDIA
     PUDFFmtState            fms = Vcb->fms;
-#else 
+#else
   #define fms FALSE
 #endif //UDF_FORMAT_MEDIA
 
@@ -919,7 +919,7 @@ UDFPrepareForWriteOperation(
 
     Vcb->VCBFlags |= UDF_VCB_LAST_WRITE;
 
-    if( 
+    if(
 #ifdef _BROWSE_UDF_
        (((Vcb->FsDeviceType != FILE_DEVICE_CD_ROM_FILE_SYSTEM) ||
        !(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_MOUNTED) ||
@@ -1024,7 +1024,7 @@ UDFPrepareForWriteOperation(
 
         // set packet type (VP/FP)
 //        if(opt_partition == PT_VAT15 ||
-//           opt_blank_vat15) 
+//           opt_blank_vat15)
         if(WParams->Byte2.Flags & WParam_LS_V) {
             WParams->LinkSize = 7;
         }
@@ -1081,7 +1081,7 @@ UDFPrepareForWriteOperation(
         // set additional flags for VP
 
         if(Vcb->CDR_Mode) {
-//        if(opt_partition == PT_VAT15) 
+//        if(opt_partition == PT_VAT15)
             WParams->SubHeader.Params.Params1.SubMode = WParam_SubHdr_SubMode1;
         }
         WParams->PageLength = sizeof(GET_WRITE_MODE_USER_OUT)-2;
@@ -1122,7 +1122,7 @@ UDFPrepareForWriteOperation(
             }
         }
 #endif //UDF_FORMAT_MEDIA
-        
+
         // switch to random access mode
         ((PSET_RANDOM_ACCESS_USER_IN)WParams)->RandomAccessMode = Vcb->CDR_Mode ? FALSE : TRUE;
 //        ((PSET_RANDOM_ACCESS_USER_IN)WParams)->RandomAccessMode = (opt_partition != PT_VAT15) ? TRUE : FALSE;
@@ -1155,7 +1155,7 @@ check_dvd_bg_format:
             Vcb->MediaClassEx == CdMediaClass_DVDRAM ||
             Vcb->MRWStatus == DiscInfo_BGF_Interrupted )
                  && (Lba > Vcb->LastLBA)) {
-   
+
             ULONG fLba;
             SIZE_T WrittenBytes;
             ULONG PSz = BCount << Vcb->BlockSizeBits;
@@ -1265,7 +1265,7 @@ retry_1:
         } else {
             UDFPrint(("  no special processing\n"));
         }
-        
+
         return RC;
     }
 #endif //UDF_READ_ONLY_BUILD
@@ -1473,7 +1473,7 @@ bad_rw_seek_recovery:
     /*                    if(Vcb->TrackMap[i].Flags & TrackMap_Use_variation)
                             break;*/
                         Vcb->TrackMap[i].Flags |= TrackMap_Try_variation;
-                        // Try variation. 
+                        // Try variation.
                         if(!(Vcb->TrackMap[i].Flags ^= TrackMap_AllowCopyBit_variated))
                             Vcb->TrackMap[i].Flags ^= TrackMap_CopyBit_variated;
                         if(Vcb->TrackMap[i].Flags & (TrackMap_AllowCopyBit_variated |
@@ -1651,7 +1651,7 @@ UDFReadDiscTrackInfo(
 #ifdef UDF_FORMAT_MEDIA
     PUDFFmtState            fms = Vcb->fms;
 #endif
-    
+
     _SEH2_TRY {
         if(!DiscInfo || !TrackInfoOut)
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
@@ -1659,7 +1659,7 @@ UDFReadDiscTrackInfo(
 MRWRetry_label:
 
         RC = UDFPhSendIOCTL(IOCTL_CDRW_READ_DISC_INFO, DeviceObject,
-                NULL, 0, 
+                NULL, 0,
                 DiscInfo,sizeof(DISC_INFO_BLOCK_USER_OUT), TRUE, NULL);
         if(!OS_SUCCESS(RC)) {
             UDFPrint(("ReadDiskInfo failed. Use default.\n"));
@@ -1682,7 +1682,7 @@ MRWRetry_label:
 #endif //UDF_FORMAT_MEDIA
 
         RC = UDFPhSendIOCTL(IOCTL_CDRW_READ_CAPACITY, DeviceObject,
-                NULL, 0, 
+                NULL, 0,
                 &CapacityBuffer,sizeof(READ_CAPACITY_USER_OUT), TRUE, NULL);
         if(!OS_SUCCESS(RC)) {
             UDFPrint(("ReadCapacity failed.\n"));
@@ -1843,7 +1843,7 @@ MRWRetry_label:
 
         Vcb->LastSession   = DiscInfo->Status.NumOfSes;
         Vcb->LastTrackNum  = DiscInfo->Status.LastTrackNumLastSes;
-        Vcb->FirstTrackNum = DiscInfo->FirstTrackNum;             
+        Vcb->FirstTrackNum = DiscInfo->FirstTrackNum;
         // some devices report LastTrackNum=0 for full disks
         Vcb->LastTrackNum = max(Vcb->LastTrackNum, Vcb->FirstTrackNum);
         if(!Vcb->LastTrackNum) {
@@ -1967,14 +1967,14 @@ MRWRetry_label:
                     Vcb->LastPossibleLBA - Vcb->TrackMap[TrackNumber].FirstLba + 1));
                 TrackInfoOut->TrackLength = Vcb->LastPossibleLBA - Vcb->TrackMap[TrackNumber].FirstLba + 1;
             }
-            Vcb->TrackMap[TrackNumber].LastLba = TrackInfoOut->TrackStartLBA + 
-                                                 TrackInfoOut->TrackLength - 
+            Vcb->TrackMap[TrackNumber].LastLba = TrackInfoOut->TrackStartLBA +
+                                                 TrackInfoOut->TrackLength -
                                             (TrackInfoOut->TrackLength ? 1 : 0);
 
             Vcb->TrackMap[TrackNumber].TrackParam = TrackInfoOut->TrackParam.Flags;
             Vcb->TrackMap[TrackNumber].DataParam = TrackInfoOut->DataParam.Flags;
             Vcb->TrackMap[TrackNumber].NWA_V = TrackInfoOut->NWA_V;
-            if((TrackInfoOut->NextWriteLBA & 0x80000000) || 
+            if((TrackInfoOut->NextWriteLBA & 0x80000000) ||
                (TrackInfoOut->NextWriteLBA < TrackInfoOut->TrackStartLBA)) {
                 if(!(Vcb->TrackMap[TrackNumber].LastLba & 0x8000000)) {
                     UDFPrint(("TrkInfo: set NWA to LastLba (%x)\n", Vcb->TrackMap[TrackNumber].LastLba));
@@ -2116,7 +2116,7 @@ MRWRetry_label:
             if(Vcb->MediaClassEx != CdMediaClass_DVDpRW) {
                 Vcb->NWA = TrackInfoOut->NextWriteLBA;
             } else {
-                Vcb->NWA = 
+                Vcb->NWA =
                     TrackInfoOut->TrackStartLBA + TrackInfoOut->TrackLength - (TrackInfoOut->TrackLength ? 1 : 0);
             }
         }
@@ -2143,7 +2143,7 @@ MRWRetry_label:
                     UDFPrint((" complete MRW state\n"));
 #ifdef _BROWSE_UDF_
                     Vcb->LastPossibleLBA =
-                    Vcb->NWA = 
+                    Vcb->NWA =
                     Vcb->LastLBA =
                     Vcb->TrackMap[TrackNumber].LastLba;
                     goto valid_track_length;
@@ -2178,7 +2178,7 @@ MRWRetry_label:
                 }
             }
             UDFPrint((" set track LastLBA %x\n", Vcb->LastPossibleLBA));
-            Vcb->NWA = 
+            Vcb->NWA =
             Vcb->LastLBA =
             Vcb->TrackMap[TrackNumber].LastLba =
                 Vcb->LastPossibleLBA;
@@ -2189,7 +2189,7 @@ valid_track_length:
             Vcb->TrackMap[TrackNumber-1].Session) &&
            (Vcb->LastSession > 1)) {
             // Note: some devices return negative track length
-            if((Vcb->TrackMap[TrackNumber].LastLba <=  
+            if((Vcb->TrackMap[TrackNumber].LastLba <=
                 Vcb->TrackMap[TrackNumber].FirstLba) ||
                (Vcb->TrackMap[TrackNumber].FirstLba ==
                 Vcb->TrackMap[TrackNumber].NWA)) {
@@ -2429,7 +2429,7 @@ UDFUseStandard(
             try_return(RC = STATUS_NO_MEDIA_IN_DEVICE);
         }
 #endif //UDF_FORMAT_MEDIA
-    
+
         // If even standard read toc does not work, then use default values
         if(!OS_SUCCESS(RC)) {
 
@@ -2477,16 +2477,16 @@ UDFUseStandard(
 #ifdef _CONSOLE
         Vcb->PhDeviceType = FILE_DEVICE_CD_ROM;
 #endif //_CONSOLE
-    
+
         LocalTrackCount = toc->Tracks.Last_TrackSes - toc->Tracks.First_TrackSes + 1;
 //        LocalTocLength = PtrOffset( toc, &(toc->TrackData[LocalTrackCount + 1]) );  /* FIXME ReactOS Assume PtrOffset is not changing it's arguments? */
-      
+
         // Get out if there is an immediate problem with the TOC.
         if(toc->Tracks.First_TrackSes > toc->Tracks.Last_TrackSes) {
             try_return(RC = STATUS_DISK_CORRUPT_ERROR);
         }
 
-#ifdef _BROWSE_UDF_        
+#ifdef _BROWSE_UDF_
         Vcb->LastTrackNum=toc->Tracks.Last_TrackSes;
         Vcb->FirstTrackNum=toc->Tracks.First_TrackSes;
         // some devices report LastTrackNum=0 for full disks
@@ -2524,7 +2524,7 @@ UDFUseStandard(
                 }
             }
         }
-    
+
         OldTrkNum = 0;
         // Scan toc for first & last LBA
         for(TocEntry=0;TocEntry<LocalTrackCount + 1;TocEntry++) {
@@ -2652,7 +2652,7 @@ UDFUseStandard(
 
         Vcb->FirstTrackNum=toc->Tracks.Last_TrackSes;
         Vcb->LastTrackNum=toc->Tracks.First_TrackSes;
-    
+
         // Scan toc for first & last LBA
         for(TocEntry=0;TocEntry<LocalTrackCount + 1;TocEntry++) {
 #define TempMSF toc->TrackData[TocEntry].LBA
@@ -2667,7 +2667,7 @@ UDFUseStandard(
             }
 #undef TempMSF
         }
-    
+
 //        Vcb->LastLBA=PacketVariable2Fixed(Vcb->LastLBA)-2;
         Vcb->LastPossibleLBA = DEFAULT_LAST_LBA_FP_CD;
 #endif //_BROWSE_UDF_
@@ -3019,7 +3019,7 @@ UDFFixFPAddress(
     IN uint32         Lba
     )
 {
-    uint32 i = Vcb->LastReadTrack;    
+    uint32 i = Vcb->LastReadTrack;
     uint32 pk;
     uint32 rel;
 
@@ -3074,16 +3074,16 @@ UDFGetDiskInfo(
     _SEH2_TRY {
         RC = UDFGetBlockSize(DeviceObject, Vcb);
         if(!OS_SUCCESS(RC)) try_return(RC);
-    
-    
+
+
         // Get lower driver signature
         RC = UDFPhSendIOCTL(IOCTL_CDRW_GET_SIGNATURE,DeviceObject,
             ioBuf,sizeof(GET_SIGNATURE_USER_OUT),
             ioBuf,sizeof(GET_SIGNATURE_USER_OUT),
             TRUE,NULL);
-    
+
         if(!OS_SUCCESS(RC)) {
-    
+
             RC = UDFUseStandard(DeviceObject, Vcb);
 #ifdef _BROWSE_UDF_
             if(!NT_SUCCESS(RC) || fms)
@@ -3096,13 +3096,13 @@ UDFGetDiskInfo(
 
         UDFPrint(("UDF: Signature of low driver is : %s \n",
             ((PGET_SIGNATURE_USER_OUT)(ioBuf))->VendorId));
-    
+
         if(!strncmp( (const char *)(&( ((PGET_SIGNATURE_USER_OUT)(ioBuf))->VendorId[0]) ),
             Signature,strlen(Signature) )) {
             UDFPrint(("UDF: *****************************************\n"));
             UDFPrint(("UDF: ********* Our Device Driver Found ******\n"));
             UDFPrint(("UDF: *****************************************\n"));
-    
+
             (Vcb->VCBFlags) |= UDF_VCB_FLAGS_OUR_DEVICE_DRIVER;
 #ifndef _BROWSE_UDF_
             // reset driver
@@ -3537,12 +3537,12 @@ Try_FullToc:
 #endif
 
                 RC = UDFReadAndProcessFullToc(DeviceObject, Vcb);
-    
+
                 if(!OS_SUCCESS(RC)) {
                     RC = UDFUseStandard(DeviceObject,Vcb);
                     if(!OS_SUCCESS(RC)) try_return(RC);
                 }
-    
+
             }
         } else {
 #ifdef _BROWSE_UDF_
@@ -3551,7 +3551,7 @@ GetSignatureFailed:
             RC = UDFUseStandard(DeviceObject, Vcb);
             if(!OS_SUCCESS(RC)) try_return(RC);
         }
-    
+
 try_exit:   NOTHING;
 
     } _SEH2_FINALLY {
@@ -3574,7 +3574,7 @@ try_exit:   NOTHING;
             Vcb->LastPossibleLBA = DEFAULT_LAST_LBA_DVD;
             Vcb->LastLBA = 0;
         }
-        
+
         if((Vcb->LastPossibleLBA & 0x80000000) || (Vcb->LastPossibleLBA < Vcb->LastLBA)) {
             UDFPrint(("UDF: bad LastPossibleLBA %x -> %x\n", Vcb->LastPossibleLBA, Vcb->LastLBA));
             Vcb->LastPossibleLBA = Vcb->LastLBA;

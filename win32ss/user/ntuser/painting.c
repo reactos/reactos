@@ -155,7 +155,7 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
          Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
          do
          {
-            ERR("LOOP it\n");
+            TRACE("LOOP it\n");
             if (Message->Msg.message == WM_SYNCPAINT &&
                 Message->Msg.hwnd == UserHMGetHandle(Wnd))
             {  // Already received so exit out.
@@ -369,14 +369,26 @@ IntSendNCPaint(PWND pWnd, HRGN hRgn)
 VOID FASTCALL
 IntSendChildNCPaint(PWND pWnd)
 {
-    for (pWnd = pWnd->spwndChild; pWnd; pWnd = pWnd->spwndNext)
+    pWnd = pWnd->spwndChild;
+    while (pWnd)
     {
         if ((pWnd->hrgnUpdate == NULL) && (pWnd->state & WNDS_SENDNCPAINT))
         {
+            PWND Next;
             USER_REFERENCE_ENTRY Ref;
+
+            /* Reference, IntSendNCPaint leaves win32k */
             UserRefObjectCo(pWnd, &Ref);
             IntSendNCPaint(pWnd, HRGN_WINDOW);
+
+            /* Make sure to grab next one before dereferencing/freeing */
+            Next = pWnd->spwndNext;
             UserDerefObjectCo(pWnd);
+            pWnd = Next;
+        }
+        else
+        {
+            pWnd = pWnd->spwndNext;
         }
     }
 }
@@ -391,7 +403,7 @@ VOID FASTCALL
 co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 {
    HDC hDC;
-   HWND hWnd = Wnd->head.h;
+   HWND hWnd = UserHMGetHandle(Wnd);
    HRGN TempRegion = NULL;
 
    Wnd->state &= ~WNDS_PAINTNOTPROCESSED;
@@ -506,7 +518,8 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 VOID FASTCALL
 co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 {
-   HWND hWnd = Wnd->head.h;
+   HWND hWnd = UserHMGetHandle(Wnd);
+   USER_REFERENCE_ENTRY Ref;
 
    if ( Wnd->hrgnUpdate != NULL || Wnd->state & WNDS_INTERNALPAINT )
    {
@@ -530,15 +543,15 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
       Wnd->state &= ~WNDS_UPDATEDIRTY;
 
       Wnd->state2 |= WNDS2_WMPAINTSENT;
-      co_IntSendMessage(hWnd, WM_PAINT, 0, 0); 
+
+      UserRefObjectCo(Wnd, &Ref);
+      co_IntSendMessage(hWnd, WM_PAINT, 0, 0);
 
       if (Wnd->state & WNDS_PAINTNOTPROCESSED)
       {
-         USER_REFERENCE_ENTRY Ref;
-         UserRefObjectCo(Wnd, &Ref);
          co_IntPaintWindows(Wnd, RDW_NOCHILDREN, FALSE);
-         UserDerefObjectCo(Wnd);
       }
+      UserDerefObjectCo(Wnd);
    }
 
    // Force flags as a toggle. Fixes msg:test_paint_messages:WmChildPaintNc.
@@ -548,7 +561,7 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    * Update child windows.
    */
 
-   if (!(Flags & RDW_NOCHILDREN)  && 
+   if (!(Flags & RDW_NOCHILDREN)  &&
         (Flags & RDW_ALLCHILDREN) &&
         !UserIsDesktopWindow(Wnd))
    {
@@ -686,6 +699,12 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
       RgnType = NULLREGION;
    }
 
+   /* Nothing to paint, just return */
+   if ((RgnType == NULLREGION && (Flags & RDW_INVALIDATE)) || RgnType == ERROR)
+   {
+      return;
+   }
+
    /*
     * Save current state of pending updates
     */
@@ -814,7 +833,7 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
    if (!(Flags & RDW_NOCHILDREN) &&
        !(Wnd->style & WS_MINIMIZE) &&
          ((Flags & RDW_ALLCHILDREN) || !(Wnd->style & WS_CLIPCHILDREN)))
-   { 
+   {
       PWND Child;
 
       for (Child = Wnd->spwndChild; Child; Child = Child->spwndNext)
@@ -928,7 +947,7 @@ co_UserRedrawWindow(
             if (Window == UserGetDesktopWindow())
             {
                TmpRgn = IntSysCreateRectpRgnIndirect(UpdateRect);
-            }          
+            }
             else
             {
                TmpRgn = IntSysCreateRectpRgn(Window->rcClient.left + UpdateRect->left,
@@ -1418,6 +1437,7 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
    return Ret;
 }
 
+// Win: xxxBeginPaint
 HDC FASTCALL
 IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
 {
@@ -1514,6 +1534,7 @@ IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
    return Ps->hdc;
 }
 
+// Win: xxxEndPaint
 BOOL FASTCALL
 IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
 {
@@ -1536,6 +1557,7 @@ IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
    return TRUE;
 }
 
+// Win: xxxFillWindow
 BOOL FASTCALL
 IntFillWindow(PWND pWndParent,
               PWND pWnd,
@@ -1592,19 +1614,19 @@ IntFillWindow(PWND pWndParent,
 HDC APIENTRY
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 {
-   PWND Window = NULL;
+   PWND Window;
    PAINTSTRUCT Ps;
    NTSTATUS Status;
    HDC hDC;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(HDC);
+   HDC Ret = NULL;
 
    TRACE("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( NULL);
+      goto Cleanup; // Return NULL
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1615,18 +1637,17 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(NULL);
+      goto Cleanup; // Return NULL
    }
 
-   RETURN(hDC);
+   Ret = hDC;
 
-CLEANUP:
+Cleanup:
    if (Window) UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserBeginPaint, ret=%p\n",_ret_);
+   TRACE("Leave NtUserBeginPaint, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
-
+   return Ret;
 }
 
 /*
@@ -1640,17 +1661,17 @@ BOOL APIENTRY
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   PWND Window = NULL;
+   PWND Window;
    PAINTSTRUCT Ps;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserEndPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref); // Here for the exception.
@@ -1667,17 +1688,17 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    _SEH2_END
    if (!NT_SUCCESS(Status))
    {
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
    }
 
-   RETURN(IntEndPaint(Window, &Ps));
+   Ret = IntEndPaint(Window, &Ps);
 
-CLEANUP:
+Cleanup:
    if (Window) UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserEndPaint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserEndPaint, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -1913,26 +1934,21 @@ co_UserGetUpdateRect(PWND Window, PRECT pRect, BOOL bErase)
 INT APIENTRY
 NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
 {
-   DECLARE_RETURN(INT);
    PWND Window;
-   INT ret;
+   INT ret = ERROR;
 
    TRACE("Enter NtUserGetUpdateRgn\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   Window = UserGetWindowObject(hWnd);
+   if (Window)
    {
-      RETURN(ERROR);
+      ret = co_UserGetUpdateRgn(Window, hRgn, bErase);
    }
 
-   ret = co_UserGetUpdateRgn(Window, hRgn, bErase);
-
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetUpdateRgn, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /*
@@ -1948,15 +1964,14 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    PWND Window;
    RECTL Rect;
    NTSTATUS Status;
-   BOOL Ret;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetUpdateRect\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    Ret = co_UserGetUpdateRect(Window, &Rect, bErase);
@@ -1967,16 +1982,14 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       if (!NT_SUCCESS(Status))
       {
          EngSetLastError(ERROR_INVALID_PARAMETER);
-         RETURN(FALSE);
+         Ret = FALSE;
       }
    }
 
-   RETURN(Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetUpdateRect, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -1995,18 +2008,17 @@ NtUserRedrawWindow(
 {
    RECTL SafeUpdateRect;
    PWND Wnd;
-   BOOL Ret;
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status = STATUS_SUCCESS;
    PREGION RgnUpdate = NULL;
-   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserRedrawWindow\n");
    UserEnterExclusive();
 
    if (!(Wnd = UserGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    if (lprcUpdate)
@@ -2024,7 +2036,7 @@ NtUserRedrawWindow(
       if (!NT_SUCCESS(Status))
       {
          EngSetLastError(RtlNtStatusToDosError(Status));
-         RETURN( FALSE);
+         goto Exit; // Return FALSE
       }
    }
 
@@ -2034,7 +2046,7 @@ NtUserRedrawWindow(
    {
       /* RedrawWindow fails only in case that flags are invalid */
       EngSetLastError(ERROR_INVALID_FLAGS);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    /* We can't hold lock on GDI objects while doing roundtrips to user mode,
@@ -2046,7 +2058,7 @@ NtUserRedrawWindow(
        if (!RgnUpdate)
        {
            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-           RETURN(FALSE);
+           goto Exit; // Return FALSE
        }
        REGION_UnlockRgn(RgnUpdate);
    }
@@ -2064,12 +2076,10 @@ NtUserRedrawWindow(
 
    UserDerefObjectCo(Wnd);
 
-   RETURN( Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserRedrawWindow, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
@@ -2164,7 +2174,7 @@ UserDrawCaptionText(
                 (RECTL *)&r,
                  DT_END_ELLIPSIS|DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX|DT_LEFT);
    }
- 
+
    IntGdiSetTextColor(hDc, OldTextColor);
 
    if (hOldFont)
@@ -2348,7 +2358,7 @@ UserRealizePalette(HDC hdc)
          if ( hWndDesktop != hWnd )
          {
             PWND pWnd = UserGetWindowObject(hWndDesktop);
-            ERR("RealizePalette Desktop.");
+            ERR("RealizePalette Desktop.\n");
             hdc = UserGetWindowDC(pWnd);
             IntPaintDesktop(hdc);
             UserReleaseDC(pWnd,hdc,FALSE);
@@ -2593,7 +2603,7 @@ Exit:
 }
 
 /* ValidateRect gets redirected to NtUserValidateRect:
-   http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
+   https://blog.csdn.net/ntdll/article/details/509299 */
 BOOL
 APIENTRY
 NtUserValidateRect(

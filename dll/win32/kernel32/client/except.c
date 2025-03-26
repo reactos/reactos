@@ -104,7 +104,14 @@ PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
     if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
         ExceptionRecord->NumberParameters == 2)
     {
-        DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
+        DbgPrint("Faulting Address: %p\n", (PVOID)ExceptionRecord->ExceptionInformation[1]);
+    }
+
+    /* Trace the wine special error and show the modulename and functionname */
+    if (ExceptionRecord->ExceptionCode == 0x80000100 /* EXCEPTION_WINE_STUB */ &&
+        ExceptionRecord->NumberParameters == 2)
+    {
+        DbgPrint("Missing function: %s!%s\n", (PSZ)ExceptionRecord->ExceptionInformation[0], (PSZ)ExceptionRecord->ExceptionInformation[1]);
     }
 
     _dump_context(ContextRecord);
@@ -482,8 +489,8 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     //
     // Since Windows XP/2003, we have the ReportFault API available.
     // See http://www.clausbrod.de/twiki/pub/Blog/DefinePrivatePublic20070616/reportfault.cpp
-    // and https://msdn.microsoft.com/en-us/library/windows/desktop/bb513616(v=vs.85).aspx
-    // and the legacy ReportFault API: https://msdn.microsoft.com/en-us/library/windows/desktop/bb513615(v=vs.85).aspx
+    // and https://learn.microsoft.com/en-us/windows/win32/wer/using-wer
+    // and the legacy ReportFault API: https://learn.microsoft.com/en-us/windows/win32/api/errorrep/nf-errorrep-reportfault
     //
     // NOTE: Starting Vista+, the fault API is constituted of the WerXXX functions.
     //
@@ -534,7 +541,7 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
      * so that we can give it control over the process being debugged,
      * by passing it the exception.
      *
-     * See https://msdn.microsoft.com/en-us/library/ms809754.aspx
+     * See https://learn.microsoft.com/en-us/previous-versions/ms809754(v=msdn.10)
      * and http://www.debuginfo.com/articles/ntsdwatson.html
      * and https://sourceware.org/ml/gdb-patches/2012-08/msg00893.html
      * for more details.
@@ -690,14 +697,16 @@ Quit:
  */
 VOID
 WINAPI
-RaiseException(IN DWORD dwExceptionCode,
-               IN DWORD dwExceptionFlags,
-               IN DWORD nNumberOfArguments,
-               IN CONST ULONG_PTR *lpArguments OPTIONAL)
+RaiseException(
+    _In_ DWORD dwExceptionCode,
+    _In_ DWORD dwExceptionFlags,
+    _In_ DWORD nNumberOfArguments,
+    _In_opt_ const ULONG_PTR *lpArguments)
 {
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Setup the exception record */
+    RtlZeroMemory(&ExceptionRecord, sizeof(ExceptionRecord));
     ExceptionRecord.ExceptionCode = dwExceptionCode;
     ExceptionRecord.ExceptionRecord = NULL;
     ExceptionRecord.ExceptionAddress = (PVOID)RaiseException;
@@ -719,7 +728,7 @@ RaiseException(IN DWORD dwExceptionCode,
         ExceptionRecord.NumberParameters = nNumberOfArguments;
         RtlCopyMemory(ExceptionRecord.ExceptionInformation,
                       lpArguments,
-                      nNumberOfArguments * sizeof(ULONG));
+                      nNumberOfArguments * sizeof(ULONG_PTR));
     }
 
     /* Better handling of Delphi Exceptions... a ReactOS Hack */
@@ -728,17 +737,6 @@ RaiseException(IN DWORD dwExceptionCode,
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
         DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
         DPRINT1("Exception text: %lx\n", ExceptionRecord.ExceptionInformation[2]);
-    }
-
-    /* Trace the wine special error and show the modulename and functionname */
-    if (dwExceptionCode == 0x80000100 /* EXCEPTION_WINE_STUB */)
-    {
-        /* Numbers of parameter must be equal to two */
-        if (ExceptionRecord.NumberParameters == 2)
-        {
-            DPRINT1("Missing function in   : %s\n", ExceptionRecord.ExceptionInformation[0]);
-            DPRINT1("with the functionname : %s\n", ExceptionRecord.ExceptionInformation[1]);
-        }
     }
 
     /* Raise the exception */

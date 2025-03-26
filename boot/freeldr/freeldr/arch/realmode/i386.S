@@ -140,6 +140,7 @@ pm_entrypoint:
     .long 0 // receives address of PE entry point
     nop
 
+/* FNID_* functions */
 CallbackTable:
     .word Int386
     .word Reboot
@@ -147,6 +148,7 @@ CallbackTable:
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount
     .word PnpBiosGetDeviceNode
+    .word PnpBiosGetDockStationInformation
 
 
     /* 16-bit stack pointer */
@@ -189,7 +191,7 @@ gdt:
 /* GDT table pointer */
 gdtptr:
     .word HEX(27)       /* Limit */
-    .word gdt, 0        /* Base Address */
+    .long OFF(gdt)      /* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:

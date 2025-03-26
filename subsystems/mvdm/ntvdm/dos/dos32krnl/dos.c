@@ -1998,6 +1998,17 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Long FileName Support */
+        case 0x71:
+        {
+            DPRINT1("INT 21h LFN Support, AH = %02Xh, AL = %02Xh NOT IMPLEMENTED!\n",
+                    getAH(), getAL());
+
+            setAL(0); // Some functions expect AL to be 0 when it's not supported.
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+            break;
+        }
+
         /* Unsupported */
         default: // Default:
         {
@@ -2302,7 +2313,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     SysVars->BootDrive = RtlUpcaseUnicodeChar(SharedUserData->NtSystemRoot[0]) - 'A' + 1;
 
     /* Initialize the NUL device driver */
-    SysVars->NullDevice.Link = 0xFFFFFFFF;
+    SysVars->NullDevice.Link = MAXDWORD;
     SysVars->NullDevice.DeviceAttributes = DOS_DEVATTR_NUL | DOS_DEVATTR_CHARACTER;
     // Offset from within the DOS data segment
     SysVars->NullDevice.StrategyRoutine  = DOS_DATA_OFFSET(NullDriverRoutine);
@@ -2380,7 +2391,7 @@ BOOLEAN DosKRNLInitialize(VOID)
 
     /* Initialize the SFT */
     Sft = (PDOS_SFT)FAR_POINTER(SysVars->FirstSft);
-    Sft->Link = 0xFFFFFFFF;
+    Sft->Link = MAXDWORD;
     Sft->NumDescriptors = DOS_SFT_SIZE;
 
     for (i = 0; i < Sft->NumDescriptors; i++)

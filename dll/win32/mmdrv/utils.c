@@ -34,23 +34,23 @@ DWORD TranslateStatus(void)
         case NO_ERROR :
         case ERROR_IO_PENDING :
             return MMSYSERR_NOERROR;
-            
+
         case ERROR_BUSY :
             return MMSYSERR_ALLOCATED;
-            
+
         case ERROR_NOT_SUPPORTED :
         case ERROR_INVALID_FUNCTION :
             return MMSYSERR_NOTSUPPORTED;
-            
+
         case ERROR_NOT_ENOUGH_MEMORY :
             return MMSYSERR_NOMEM;
-            
+
         case ERROR_ACCESS_DENIED :
             return MMSYSERR_BADDEVICEID;
-            
+
         case ERROR_INSUFFICIENT_BUFFER :
             return MMSYSERR_INVALPARAM;
-            
+
         default :
             return MMSYSERR_ERROR;
     };
@@ -85,7 +85,7 @@ MMRESULT OpenDevice(UINT DeviceType, DWORD ID, PHANDLE pDeviceHandle,
 		case AuxDevice :
 			 wsprintf(DeviceName, L"\\\\.%ls%d", AUX_DEVICE_NAME_U + strlen("\\Device"), ID);
 			 break;
-        default : 
+        default :
             DPRINT("No Auido Device Found");
             return MMSYSERR_BADDEVICEID; /* Maybe we should change error code */
     };
@@ -123,14 +123,14 @@ BOOL AddDeviceToList(PDEVICE_LIST* pList, DWORD DeviceType, DWORD CardIndex,
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
-    
+
     pNewDevice->DeviceType = DeviceType;
     pNewDevice->CardIndex = CardIndex;
     lstrcpy(pNewDevice->Name, Name);
     pNewDevice->DeviceInstanceData = NULL;
     pNewDevice->Next = *pList;
     *pList = pNewDevice;
-    
+
     DPRINT("Success!\n");
 
     return TRUE;
@@ -142,7 +142,7 @@ VOID FreeDeviceList()
     PDEVICE_LIST pDevice;
 
     DPRINT("FreeDeviceList()\n");
-    
+
     while (DeviceList)
     {
         pDevice = DeviceList;
@@ -162,45 +162,45 @@ MMRESULT FindDevices()
 //    HKEY DriverKey;
 
     DPRINT("Finding devices\n");
-    
+
 //    DriverKey = OpenParametersKey();
 //  see drvutil.c of MS DDK for how this SHOULD be done...
 
-  
+
     SHORT i;
     HANDLE h;
-    WCHAR DeviceName[SOUND_MAX_DEVICE_NAME]; 
+    WCHAR DeviceName[SOUND_MAX_DEVICE_NAME];
 
-    for (i=0; OpenDevice(WaveOutDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
-    { 
+    for (i=0; OpenDevice(WaveOutDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++)
+    {
         wsprintf(DeviceName, L"WaveOut%d\0", i);
         CloseHandle(h);
         AddDeviceToList(&DeviceList, WaveOutDevice, 0, DeviceName);
     }
 
-    for (i=0; OpenDevice(WaveInDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
-    { 
+    for (i=0; OpenDevice(WaveInDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++)
+    {
         wsprintf(DeviceName, L"WaveIn%d\0", i);
         CloseHandle(h);
         AddDeviceToList(&DeviceList, WaveInDevice, 0, DeviceName);
     }
 
-    for (i=0; OpenDevice(MidiOutDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
-    { 
+    for (i=0; OpenDevice(MidiOutDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++)
+    {
         wsprintf(DeviceName, L"MidiOut%d\0", i);
         CloseHandle(h);
         AddDeviceToList(&DeviceList, MidiOutDevice, 0, DeviceName);
     }
 
-    for (i=0; OpenDevice(MidiInDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
-    { 
+    for (i=0; OpenDevice(MidiInDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++)
+    {
         wsprintf(DeviceName, L"MidiIn%d\0", i);
         CloseHandle(h);
         AddDeviceToList(&DeviceList, MidiInDevice, 0, DeviceName);
     }
 
-    for (i=0; OpenDevice(AuxDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
-    { 
+    for (i=0; OpenDevice(AuxDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++)
+    {
         wsprintf(DeviceName, L"Aux%d\0", i);
         CloseHandle(h);
         AddDeviceToList(&DeviceList, AuxDevice, 0, DeviceName);

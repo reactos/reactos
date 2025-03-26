@@ -22,7 +22,6 @@ CompleteRequest(
 
     ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
 
-
     IoCompleteRequest(Irp, PriorityBoost);
 }
 
@@ -31,70 +30,14 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_KS);
-    if (!Item)
-        return Item;
-
-    RtlZeroMemory(Item, NumberOfBytes);
-    return Item;
+    return ExAllocatePoolZero(PoolType, NumberOfBytes, TAG_KS);
 }
 
 VOID
 FreeItem(
     IN PVOID Item)
 {
-    ExFreePool(Item);
-}
-
-NTSTATUS
-NTAPI
-KspForwardIrpSynchronousCompletion(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PIRP  Irp,
-    IN PVOID  Context)
-{
-    if (Irp->PendingReturned != FALSE)
-    {
-        KeSetEvent ((PKEVENT) Context, IO_NO_INCREMENT, FALSE);
-    }
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-
-NTSTATUS
-KspForwardIrpSynchronous(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-    PDEVICE_EXTENSION DeviceExtension;
-    PKSIDEVICE_HEADER DeviceHeader;
-
-    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
-
-    /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
-
-    /* initialize the notification event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    IoSetCompletionRoutine(Irp, KspForwardIrpSynchronousCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
-
-    /* now call the driver */
-    Status = IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
-    /* did the request complete yet */
-    if (Status == STATUS_PENDING)
-    {
-        /* not yet, lets wait a bit */
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = Irp->IoStatus.Status;
-    }
-    return Status;
+    ExFreePoolWithTag(Item, TAG_KS);
 }
 
 NTSTATUS
@@ -223,5 +166,3 @@ KsGetParent(
     /* return object type */
     return (PVOID)BasicHeader->Parent.KsDevice;
 }
-
-

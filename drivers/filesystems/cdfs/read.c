@@ -63,7 +63,7 @@ __pragma(warning(suppress: 6320))                           \
 #pragma alloc_text(PAGE, CdCommonRead)
 #endif
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
@@ -116,7 +116,7 @@ Return Value:
     BOOLEAN ReleaseFile = TRUE;
 
     CD_IO_CONTEXT LocalIoContext;
-    
+
     PAGED_CODE();
 
     //
@@ -186,9 +186,9 @@ Return Value:
     if (PagingIo) {
 
         CdAcquireFileSharedStarveExclusive( IrpContext, Fcb );
-    
+
     } else {
-        
+
         CdAcquireFileShared( IrpContext, Fcb );
     }
 
@@ -199,13 +199,13 @@ Return Value:
     _SEH2_TRY {
 
         //
-        //  Verify the Fcb.  Allow reads if this is a DASD handle that is 
+        //  Verify the Fcb.  Allow reads if this is a DASD handle that is
         //  dismounting the volume.
         //
 
         if ((TypeOfOpen != UserVolumeOpen) || (NULL == Ccb) ||
             !FlagOn( Ccb->Flags, CCB_FLAG_DISMOUNT_ON_CLOSE))  {
-        
+
             CdVerifyFcbOperation( IrpContext, Fcb );
         }
 
@@ -435,7 +435,7 @@ Return Value:
                 } else if (ReadByteCount != ByteCount) {
 
                     CdMapUserBuffer( IrpContext, &UserBuffer);
-                    
+
                     SafeZeroMemory( IrpContext,
                                     Add2Ptr( UserBuffer,
                                              ByteCount,

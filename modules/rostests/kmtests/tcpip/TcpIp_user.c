@@ -11,12 +11,18 @@
 #include "tcpip.h"
 
 static
-void
+DWORD
 LoadTcpIpTestDriver(void)
 {
+    DWORD Error;
+
     /* Start the special-purpose driver */
-    KmtLoadDriver(L"TcpIp", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"TcpIp", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return Error;
+
+    return ERROR_SUCCESS;
 }
 
 static
@@ -32,7 +38,10 @@ START_TEST(TcpIpTdi)
 {
     DWORD Error;
 
-    LoadTcpIpTestDriver();
+    Error = LoadTcpIpTestDriver();
+    ok_eq_int(Error, 0);
+    if (Error)
+        return;
 
     Error = KmtSendToDriver(IOCTL_TEST_TDI);
     ok_eq_ulong(Error, ERROR_SUCCESS);
@@ -104,7 +113,8 @@ START_TEST(TcpIpConnect)
     Error = KmtSendToDriver(IOCTL_TEST_CONNECT);
     ok_eq_ulong(Error, ERROR_SUCCESS);
 
-    WaitForSingleObject(AcceptThread, INFINITE);
+    Error = WaitForSingleObject(AcceptThread, 10 * 1000);
+    ok(Error == WAIT_OBJECT_0, "AcceptThread timed out\n");
 
     UnloadTcpIpTestDriver();
 

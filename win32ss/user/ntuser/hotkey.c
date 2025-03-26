@@ -7,7 +7,7 @@
  */
 
 /*
- * FIXME: Hotkey notifications are triggered by keyboard input (physical or programatically)
+ * FIXME: Hotkey notifications are triggered by keyboard input (physical or programmatically)
  * and since only desktops on WinSta0 can receive input in seems very wrong to allow
  * windows/threads on destops not belonging to WinSta0 to set hotkeys (receive notifications).
  *     -- Gunnar
@@ -19,14 +19,14 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
 /* GLOBALS *******************************************************************/
 
 /*
- * Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html
- * or http://repo.meh.or.id/Windows/VI20051005.html .
+ * Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html (DEAD_LINK)
+ * or https://web.archive.org/web/20170826161432/http://repo.meh.or.id/Windows/VI20051005.html .
  *
  * NOTE: The (Shift-)F12 keys are used only for the "UserDebuggerHotKey" setting
  * which enables setting a key shortcut which, when pressed, establishes a
  * breakpoint in the code being debugged:
- * see http://technet.microsoft.com/en-us/library/cc786263(v=ws.10).aspx
- * and http://flylib.com/books/en/4.441.1.33/1/ for more details.
+ * see https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc786263(v=ws.10)
+ * and https://flylib.com/books/en/4.441.1.33/1/ for more details.
  * By default the key is VK-F12 on a 101-key keyboard, and is VK_SUBTRACT
  * (hyphen / substract sign) on a 82-key keyboard.
  */
@@ -52,7 +52,7 @@ StartDebugHotKeys(VOID)
     }
     UserRegisterHotKey(PWND_BOTTOM, IDHK_SHIFTF12, MOD_SHIFT, vk);
     UserRegisterHotKey(PWND_BOTTOM, IDHK_F12, 0, vk);
-    TRACE("Start up the debugger hotkeys!! If you see this you eneabled debugprints. Congrats!\n");
+    TRACE("Start up the debugger hotkeys!! If you see this you enabled debugprints. Congrats!\n");
 }
 
 /*
@@ -305,9 +305,9 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
 
 
 /*
- * DefWndGetHotKey
+ * DefWndGetHotKey --- GetHotKey message support
  *
- * GetHotKey message support
+ * Win: DWP_GetHotKey
  */
 UINT FASTCALL
 DefWndGetHotKey(PWND pWnd)
@@ -332,9 +332,9 @@ DefWndGetHotKey(PWND pWnd)
 }
 
 /*
- * DefWndSetHotKey
+ * DefWndSetHotKey --- SetHotKey message support
  *
- * SetHotKey message support
+ * Win: DWP_SetHotKey
  */
 INT FASTCALL
 DefWndSetHotKey(PWND pWnd, WPARAM wParam)

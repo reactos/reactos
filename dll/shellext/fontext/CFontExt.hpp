@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt definition
- * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen <mark.jansen@reactos.org>
  *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -16,8 +16,6 @@ class CFontExt :
     public IDropTarget
 {
     CComHeapPtr<ITEMIDLIST> m_Folder;
-    CStringW m_LastDetailsFontName;
-    WIN32_FIND_DATAW m_LastDetailsFileData;
 
 public:
 

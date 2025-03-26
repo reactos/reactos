@@ -155,7 +155,7 @@ RunCommand(IN LPCWSTR lpszCommand,
 
 
 ////////////////////  The following comes from MSDN samples  ///////////////////
-// https://msdn.microsoft.com/en-us/library/windows/desktop/dd162826(v=vs.85).aspx
+// https://learn.microsoft.com/en-us/windows/win32/gdi/positioning-objects-on-a-multiple-display-setup
 //
 
 //
@@ -268,7 +268,7 @@ BOOL IsWindowsOS(VOID)
     {
         bIsWindowsOS = TRUE;
     }
-    
+
     return bIsWindowsOS;
 }
 

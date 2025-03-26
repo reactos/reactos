@@ -22,14 +22,14 @@
 // Initialize the GUID instance
 //=====================================
 
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma data_seg(".text")
 #endif
 #define INITGUID
 #include <initguid.h>
 #include <shlguid.h>
 #include "vfdshguid.h"
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma data_seg()
 #endif
 

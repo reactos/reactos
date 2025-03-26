@@ -432,7 +432,6 @@ WndProc(HWND hWnd,
     HFONT oldfont;
     long long slid_samp = 0;
     WCHAR szAppName[100];
-    HICON hIcon;
 
     /* Checking for global pointers to buffer and io audio devices */
     if ((!AUD_IN) || (!AUD_OUT) || (!AUD_BUF))
@@ -598,9 +597,8 @@ WndProc(HWND hWnd,
 
                 case ID_ABOUT:
                     LoadStringW(hInst, IDS_APP_TITLE, szAppName, _countof(szAppName));
-                    hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REACTOS_SNDREC32));
-                    ShellAboutW(hWnd, szAppName, NULL, hIcon);
-                    DestroyIcon(hIcon);
+                    ShellAboutW(hWnd, szAppName, NULL,
+                                LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REACTOS_SNDREC32)));
                     break;
 
                 case ID_FILE_SAVEAS:

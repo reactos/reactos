@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Setup Library
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     NT 5.x family (MS Windows <= 2003, and ReactOS)
  *              operating systems detection code.
- * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2017-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
@@ -22,7 +22,7 @@ typedef struct _NTOS_INSTALLATION
     PCWSTR PathComponent;           // Pointer inside SystemNtPath.Buffer
     ULONG DiskNumber;
     ULONG PartitionNumber;
-    PPARTENTRY PartEntry;
+    PVOLENTRY Volume; // PVOLINFO
     WCHAR InstallationName[MAX_PATH];
     WCHAR VendorName[MAX_PATH];
     // CHAR Data[ANYSIZE_ARRAY];
@@ -30,14 +30,14 @@ typedef struct _NTOS_INSTALLATION
 
 // EnumerateNTOSInstallations
 PGENERIC_LIST
+NTAPI
 CreateNTOSInstallationsList(
-    IN PPARTLIST List);
+    _In_ PPARTLIST PartList);
 
-/*
- * FindSubStrI(PCWSTR str, PCWSTR strSearch) :
- *    Searches for a sub-string 'strSearch' inside 'str', similarly to what
- *    wcsstr(str, strSearch) does, but ignores the case during the comparisons.
- */
-PCWSTR FindSubStrI(PCWSTR str, PCWSTR strSearch);
+PCWSTR
+NTAPI
+FindSubStrI(
+    _In_ PCWSTR str,
+    _In_ PCWSTR strSearch);
 
 /* EOF */

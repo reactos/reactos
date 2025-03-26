@@ -27,7 +27,7 @@
         ok_dec(((SOCKADDR_IN *)(sockaddr))->sin_zero[_i], 0);           \
 } while (0)
 
-CHAR LocalAddress[sizeof("255.255.255.255")];
+static CHAR LocalAddress[sizeof("255.255.255.255")];
 
 static
 VOID

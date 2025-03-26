@@ -30,7 +30,7 @@ Abstract:
 #pragma alloc_text(PAGE, CdFastUnlockSingle)
 #endif
 
-
+
 NTSTATUS
 CdCommonLockControl (
     _Inout_ PIRP_CONTEXT IrpContext,
@@ -136,7 +136,7 @@ Return Value:
     return Status;
 }
 
-
+
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastLock (
@@ -288,7 +288,7 @@ Return Value:
     return Results;
 }
 
-
+
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockSingle (
@@ -336,7 +336,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     IoStatus->Information = 0;
 
     //
@@ -431,7 +431,7 @@ Return Value:
     return Results;
 }
 
-
+
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAll (
@@ -470,7 +470,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     IoStatus->Information = 0;
 
     //
@@ -556,7 +556,7 @@ Return Value:
     return Results;
 }
 
-
+
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAllByKey (
@@ -598,7 +598,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     IoStatus->Information = 0;
 
     //

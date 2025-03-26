@@ -80,7 +80,7 @@ NpCommonSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
                                          &IoStack->Parameters.SetSecurity.SecurityInformation,
                                          IoStack->Parameters.SetSecurity.SecurityDescriptor,
                                          &TempSecurityDescriptor,
-                                         TRUE,
+                                         PagedPool,
                                          IoGetFileObjectGenericMapping());
     if (!NT_SUCCESS(Status)) return Status;
 

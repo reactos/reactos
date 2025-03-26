@@ -147,7 +147,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
 
     /*
      * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
-     * Load/Unload symbols. Make sure it isn't a software breakpoints as those
+     * Load/Unload symbols. Make sure it isn't a software breakpoint as those
      * are handled by KdpReport.
      */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
@@ -318,7 +318,6 @@ KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
                 IN PCONTEXT Context,
                 IN KPROCESSOR_MODE PreviousMode)
 {
-#ifdef _WINKD_
     /*
      * Determine if this is a valid debug service call and make sure that
      * it isn't a software breakpoint
@@ -335,8 +334,4 @@ KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
         /* We don't have to handle it */
         return FALSE;
     }
-#else
-    /* KDBG has its own mechanism for ignoring user mode exceptions */
-    return FALSE;
-#endif
 }

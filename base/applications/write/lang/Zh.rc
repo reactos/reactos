@@ -1,7 +1,8 @@
 /*
- * Simplified Chinese language support
+ * Chinese language support
  *
- * Copyright (C) 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
+ * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
+ * Translation sync to Wine by 2021 Aobi Chan CL <eason066.at.gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,12 +21,16 @@
 
 #include "resources.h"
 
-/* Chinese text is encoded in UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
     IDS_FAILED, "启动写字板失败"
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+{
+    IDS_FAILED, "啟動 Wordpad 時失敗"
 }

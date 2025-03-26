@@ -4,6 +4,6 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded "A(z) '%s' állományt, vagy valamelyik összetevõjét nem sikerült megnyitni"
-    IDS_MissingEntry "Hiányzó bejegyzés: %s\nIn A Következõ állomány nem tölthetõ be: %s"
+    IDS_DllNotLoaded "A LoadLibrary nem tudta betölteni a következőt: '%s'"
+    IDS_MissingEntry "Hiányzó belépési pont: %s\nItt: %s"
 END

@@ -258,7 +258,7 @@ int attribute_align_arg mpg123_par(mpg123_pars *mp, enum mpg123_parms key, long 
 		break;
 		case MPG123_FREEFORMAT_SIZE:
 			mp->freeformat_framesize = val;
-		break; 
+		break;
 		default:
 			ret = MPG123_BAD_PARAM;
 	}
@@ -290,7 +290,7 @@ int attribute_align_arg mpg123_getpar(mpg123_pars *mp, enum mpg123_parms key, lo
 			if(val) *val = mp->flags;
 		break;
 		case MPG123_FORCE_RATE:
-			if(val) 
+			if(val)
 #ifdef NO_NTOM
 			*val = 0;
 #else
@@ -350,7 +350,7 @@ int attribute_align_arg mpg123_getpar(mpg123_pars *mp, enum mpg123_parms key, lo
 		break;
 		case MPG123_FREEFORMAT_SIZE:
 			*val = mp->freeformat_framesize;
-		break; 
+		break;
 		default:
 			ret = MPG123_BAD_PARAM;
 	}

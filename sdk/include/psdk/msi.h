@@ -604,6 +604,10 @@ MsiEnumClientsW(
 
 #define     MsiEnumClients WINELIB_NAME_AW(MsiEnumClients)
 
+UINT WINAPI MsiEnumClientsExA(_In_ LPCSTR szComponent, _In_opt_ LPCSTR szUserSid, _In_ DWORD dwContext, _In_ DWORD dwProductIndex, _Out_opt_ CHAR szProductBuf[39], _Out_opt_ MSIINSTALLCONTEXT* pdwInstalledContext, _Out_opt_ LPSTR szSid, _Inout_opt_ LPDWORD pcchSid);
+UINT WINAPI MsiEnumClientsExW(_In_ LPCWSTR szComponent, _In_opt_ LPCWSTR szUserSid, _In_ DWORD dwContext, _In_ DWORD dwProductIndex, _Out_opt_ WCHAR szProductBuf[39], _Out_opt_ MSIINSTALLCONTEXT* pdwInstalledContext, _Out_opt_ LPWSTR szSid, _Inout_opt_ LPDWORD pcchSid);
+#define     MsiEnumClientsEx WINELIB_NAME_AW(MsiEnumClientsEx)
+
 UINT WINAPI MsiOpenPackageA(_In_ LPCSTR, _Out_ MSIHANDLE*);
 UINT WINAPI MsiOpenPackageW(_In_ LPCWSTR, _Out_ MSIHANDLE*);
 #define     MsiOpenPackage WINELIB_NAME_AW(MsiOpenPackage)
@@ -834,6 +838,10 @@ MsiGetComponentPathW(
 
 #define MsiGetComponentPath WINELIB_NAME_AW(MsiGetComponentPath)
 
+INSTALLSTATE WINAPI MsiGetComponentPathExA(LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
+INSTALLSTATE WINAPI MsiGetComponentPathExW(LPCWSTR, LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, LPWSTR, LPDWORD);
+#define MsiGetComponentPathEx WINELIB_NAME_AW(MsiGetComponentPathEx)
+
 INSTALLSTATE WINAPI MsiQueryFeatureStateA(_In_ LPCSTR, _In_ LPCSTR);
 INSTALLSTATE WINAPI MsiQueryFeatureStateW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define MsiQueryFeatureState WINELIB_NAME_AW(MsiQueryFeatureState)
@@ -1056,7 +1064,7 @@ MsiGetUserInfoW(
 
 #define MsiGetUserInfo WINELIB_NAME_AW(MsiGetUserInfo)
 
-UINT WINAPI MsiProvidedComponentA(LPCSTR, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
+UINT WINAPI MsiProvideComponentA(LPCSTR, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
 UINT WINAPI MsiProvideComponentW(LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPWSTR, LPDWORD);
 #define MsiProvideComponent WINELIB_NAME_AW(MsiProvideComponent)
 
@@ -1343,6 +1351,10 @@ MsiSourceListAddMediaDiskW(
   _In_opt_ LPCWSTR);
 
 #define     MsiSourceListAddMediaDisk WINELIB_NAME_AW(MsiSourceListAddMediaDisk)
+
+UINT WINAPI MsiSourceListForceResolutionA(const CHAR*, const CHAR*, DWORD);
+UINT WINAPI MsiSourceListForceResolutionW(const WCHAR*, const WCHAR*, DWORD);
+#define     MsiSourceListForceResolution WINELIB_NAME_AW(MsiSourceListForceResolution)
 
 UINT
 WINAPI

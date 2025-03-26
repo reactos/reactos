@@ -1,12 +1,13 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/sq-AL.rc
- * PURPOSE:     AL-Albanian Language resource file
- * TRANSLATORS: Ardit Dani
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Albanian resource file
+ * TRANSLATOR:  Copyright 2013 Ardit Dani (ard1t) <ardit.dani@gmail.com>
  */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-sq-AL.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -35,18 +36,20 @@ BEGIN
     END
     POPUP "&Modifiko"
     BEGIN
-        MENUITEM "&v\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Undo\tCtrl+Z", IDM_EDITUNDO
         MENUITEM "&Perserit\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Prej\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Pre&j\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopjo\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Ngjit\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Fshi perzgjedhjen\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Kthe perzgjedhjen", IDM_EDITINVERTSELECTION
-        MENUITEM "Perzgjedh te gjitha\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopjo tek...", IDM_EDITCOPYTO
-        MENUITEM "Ngjit nga...", IDM_EDITPASTEFROM
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "&Fshi perzgjedhjen\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Kth&e perzgjedhjen", IDM_EDITINVERTSELECTION
+        MENUITEM "Perzgjedh te gjith&a\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "K&opjo tek...", IDM_EDITCOPYTO
+        MENUITEM "N&gjit nga...", IDM_EDITPASTEFROM
     END
     POPUP "Shiko"
     BEGIN
@@ -76,11 +79,11 @@ BEGIN
     POPUP "&Imazhe"
     BEGIN
         MENUITEM "Rrotullu/&Pamjen...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&&Streq/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Streq/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Copto", IDM_IMAGECROP
         MENUITEM "&Inverto ngjyrat\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atributet...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Fshi foton\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Fshi foton\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Vizato errët", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "Ngjyrat"
@@ -95,6 +98,27 @@ BEGIN
         MENUITEM "Ndihmë me temë", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Informacion", IDM_HELPINFO
+    END
+END
+
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "Pre&j\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopjo\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Ngjit\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "&Fshi perzgjedhjen\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Perzgjedh te gjith&a\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "K&opjo tek...", IDM_EDITCOPYTO
+        MENUITEM "N&gjit nga...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "Rrotullu/&Pamjen...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Streq/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Inverto ngjyrat\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -119,6 +143,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -142,26 +170,26 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atributet"
 BEGIN
+    LTEXT "&Gjerësi:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Lartësi:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Gjerësi:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "Lartësi:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "File &data:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "File &mase:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "&Resolucioni:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "File data:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "File mase:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Resolucioni:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Jo në dispozicion", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Jo në dispozicion", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Jo në dispozicion", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Njësitë", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "&Inq", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
     AUTORADIOBUTTON "&Pixels", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Ngjyrat", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "&Bardh e Zi", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Ngjyrat", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "&Ngjyrat", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Anulo", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Parazgjedhur", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "&Parazgjedhur", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
@@ -191,6 +219,17 @@ BEGIN
     PUSHBUTTON "Anulo", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
@@ -198,7 +237,7 @@ BEGIN
     IDS_INFOTITLE "Paint për ReactOS"
     IDS_INFOTEXT "Ësht i disponueshme nën GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "A doni të ruani ndryshimet tek %s?"
-    IDS_DEFAULTFILENAME "Unnamed.bmp"
+    IDS_DEFAULTFILENAME "Unnamed"
     IDS_MINIATURETITLE "Miniaturë"
     IDS_TOOLTIP1 "Zgjedhje e lire"
     IDS_TOOLTIP2 "Zgjedhje"
@@ -219,10 +258,18 @@ BEGIN
     IDS_ALLFILES "All Files"
     IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bytes"
-    IDS_PRINTRES "%d x %d pixels per meter"
     IDS_INTNUMBERS "Ju lutem shkruani numra integrale vetëm!"
     IDS_PERCENTAGE "Përqindja duhet të jetë në mes 1 dhe 500."
     IDS_ANGLE "Këndi duhet të jetë në mes -89 dhe 89."
     IDS_LOADERRORTEXT "Dokumenti %s nuk mund te ngarkohej."
     IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

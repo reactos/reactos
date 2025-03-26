@@ -1,15 +1,18 @@
 /*
- *      Updated by Saibamen (July, 2015)
- *      Updated by BlackDragonDv (January, 2018)
- *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (August, 2020)
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2018 Kamil Smoliński <blackdragondev85@gmail.com>
+ *              Copyright 2021-2024 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
@@ -28,8 +31,8 @@ BEGIN
     BEGIN
         POPUP "&Widok", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -42,7 +45,7 @@ BEGIN
         END
         MENUITEM "&Odśwież", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "W&klej", FCIDM_SHVIEW_INSERT
+        MENUITEM "Wkl&ej", FCIDM_SHVIEW_INSERT
         MENUITEM "Wklej s&krót", FCIDM_SHVIEW_INSERTLINK
     END
 END
@@ -94,31 +97,38 @@ BEGIN
     END
 END
 
+IDM_DVSELECT MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Se&lect", 0
+    END
+END
+
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Wybierz folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", 1, 80, 170, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Anuluj", 2, 134, 170, 50, 14, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+    DEFPUSHBUTTON "OK", IDOK, 80, 170, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Anuluj", IDCANCEL, 134, 170, 50, 14
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Wybierz katalog"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Katalog:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Utwórz katalog", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Anuluj", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 156, 174, 50, 14
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -127,28 +137,28 @@ CAPTION "Komunikat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Tak", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Tak na &wszystkie", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Nie", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Anuluj", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Tak na &wszystkie", IDC_YESTOALL, 92, 69, 65, 14
+    PUSHBUTTON "&Nie", IDNO, 162, 69, 53, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 275, 198
+IDD_ABOUT DIALOGEX 20, 20, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "%s - informacje"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
-    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
-    LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
+    LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
-    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
     LTEXT "Ta kopia systemu ReactOS jest zarejestrowana na:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
-    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
-    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
     LTEXT "Zainstalowana pamięć fizyczna:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
@@ -173,9 +183,9 @@ BEGIN
     LTEXT "Wpisz nazwę programu, folderu, dokumentu lub zasobu internetowego, a zostanie on otwarty przez system ReactOS.", 12289, 36, 11, 185, 24
     LTEXT "&Otwórz:", 12305, 7, 44, 25, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 43, 184, 100
-    DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Anuluj", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Przeglądaj...", 12288, 170, 70, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 116, 70, 50, 14
+    PUSHBUTTON "&Przeglądaj...", 12288, 170, 70, 50, 14
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -198,7 +208,7 @@ BEGIN
     LTEXT "Klawisz &skrótu:", IDC_SHORTCUT_KEY, 7, 117, 68, 10
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "U&ruchom:", IDC_SHORTCUT_RUN, 7, 136, 68, 10
-    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "K&omentarz:", IDC_SHORTCUT_COMMENT, 7, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Znajdź element docelowy...", IDC_SHORTCUT_FIND, 7, 172, 96, 14, ES_LEFT
@@ -228,19 +238,19 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
     LTEXT "Typ:", 14004, 8, 40, 42, 10
-    CONTROL "Katalog", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 73, 40, 155, 12
+    CONTROL "Katalog", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Lokalizacja:", 14008, 8, 56, 55, 10
-    EDITTEXT 14009, 73, 56, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Rozmiar:", 14010, 8, 72, 55, 10
-    EDITTEXT 14011, 73, 72, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Rozmiar na dysku:", 140101, 8, 88, 60, 10
-    EDITTEXT 14012, 73, 88, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Na dysku:", 140101, 8, 88, 55, 10
+    EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Zawiera:", 14026, 8, 104, 55, 10
-    EDITTEXT 14027, 73, 104, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Utworzony:", 14014, 8, 128, 55, 12
-    EDITTEXT 14015, 73, 128, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Utworzony:", 14014, 8, 128, 55, 10
+    EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atrybuty:", 14020, 8, 152, 46, 10
     AUTOCHECKBOX "&Tylko do odczytu", 14021, 58, 151, 70, 10
@@ -249,7 +259,7 @@ BEGIN
     PUSHBUTTON "Zaawa&nsowane...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
-IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 225
+IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -257,54 +267,54 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Typ pliku:", 14004, 8, 35, 50, 10
+    LTEXT "Typ:", 14004, 8, 35, 42, 10
     CONTROL "Plik", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
-    LTEXT "Otwierany za pomocą:", 14006, 8, 48, 40, 16
-    ICON "", 14025, 88, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Zmień...", 14024, 178, 50, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    EDITTEXT 14007, 58, 48, 115, 16, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    LTEXT "Program:", 14006, 8, 53, 50, 10
+    ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
+    PUSHBUTTON "&Zmień...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Lokalizacja:", 14008, 8, 75, 45, 10
-    EDITTEXT 14009, 73, 75, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Rozmiar:", 14010, 8, 91, 45, 10
-    EDITTEXT 14011, 73, 91, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Rozmiar na dysku:", 140112, 8, 107, 60, 10
-    EDITTEXT 14012, 73, 107, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Na dysku:", 140112, 8, 107, 45, 10
+    EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Utworzony:", 14014, 8, 131, 45, 10
-    EDITTEXT 14015, 73, 131, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Zmodyfikowany:", 14016, 8, 147, 60, 10
-    EDITTEXT 14017, 73, 147, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT 14015, 58, 131, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Zmieniony:", 14016, 8, 147, 45, 10
+    EDITTEXT 14017, 58, 147, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Ostatnio użyty:", 14018, 8, 163, 60, 10
-    EDITTEXT 14019, 73, 163, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atrybuty:", 14020, 8, 189, 45, 10
     AUTOCHECKBOX "&Tylko do odczytu", 14021, 58, 188, 70, 10
     AUTOCHECKBOX "&Ukryty", 14022, 130, 188, 36, 10
     AUTOCHECKBOX "&Archiwalny", 14023, 181, 188, 49, 10
-    PUSHBUTTON "Zaawa&nsowane...", 14028, 168, 205, 67, 14, WS_TABSTOP
+    PUSHBUTTON "Zaawa&nsowane...", 14028, 168, 205, 67, 14
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Wersja"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Wersja pliku: ", 14000, 10, 10, 55, 10
+    LTEXT "Wersja pliku:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Opis: ", 14002, 10, 27, 45, 10
+    LTEXT "Opis:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Prawa autorskie: ", 14004, 10, 46, 66, 10
+    LTEXT "Prawa autorskie:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Pozostałe informacje o wersji: ", 14006, 6, 70, 222, 115
-    LTEXT "Nazwa elementu: ", 14007, 13, 82, 58, 10
-    LTEXT "Wartość: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Pozostałe informacje o wersji", 14006, 6, 70, 222, 115
+    LTEXT "Nazwa elementu:", 14007, 13, 82, 58, 10
+    LTEXT "Wartość:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -328,42 +338,42 @@ BEGIN
     LTEXT "Pojemność:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "Napęd %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "Oczyszczanie &dysku", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "Kompresuj dysk, aby zaoszczędzić miejsce na dysku", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyspieszyć\nwyszukiwanie plików", 14012, 8, 205, 230, 17, WS_DISABLED | BS_MULTILINE
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
+    CTEXT "Napęd %c", 14009, 95, 162, 50, 10
+    PUSHBUTTON "Oczyszczanie &dysku", 14010, 160, 159, 70, 15
+    LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    CHECKBOX "Kompresuj dysk, aby zaoszczędzić miejsce na dysku", 14011, 8, 190, 222, 10, WS_DISABLED
+    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyspieszyć\nwyszukiwanie plików", 14012, 8, 204, 230, 17, WS_DISABLED | BS_MULTILINE
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Narzędzia"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Sprawdzanie błędów", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 22, 21, 20
     LTEXT "Ta opcja sprawdzi wolumin w poszukiwaniu błędów.", -1, 40, 22, 190, 17
-    PUSHBUTTON "&Sprawdź...", 14000, 130, 43, 100, 14, WS_TABSTOP
+    PUSHBUTTON "&Sprawdź...", 14000, 130, 43, 100, 14
     GROUPBOX "Defragmentacja", -1, 5, 69, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 86, 21, 20
     LTEXT "Ta opcja dokona defragmentacji plików woluminu.", -1, 40, 86, 190, 17
-    PUSHBUTTON "&Defragmentuj...", 14001, 130, 107, 100, 14, WS_TABSTOP
+    PUSHBUTTON "&Defragmentuj...", 14001, 130, 107, 100, 14
     GROUPBOX "&Kopia zapasowa", -1, 5, 133, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Ta opcja wykona kopię zapasową plików tego woluminu.", -1, 40, 150, 190, 17
-    PUSHBUTTON "Wykonaj kopię zapasową...", 14002, 130, 171, 100, 14, WS_TABSTOP
+    PUSHBUTTON "Wykonaj kopię zapasową...", 14002, 130, 171, 100, 14
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Sprzęt"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Uruchom jako"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -374,26 +384,26 @@ BEGIN
     CHECKBOX "Następujący użytkownik:", 14002, 10, 101, 97, 10
     LTEXT "Nazwa użytkownika:", -1, 20, 119, 74, 10
     COMBOBOX 14003, 95, 116, 80, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 116, 30, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 116, 30, 14
     LTEXT "Hasło:", -1, 20, 144, 53, 10
     EDITTEXT 14005, 95, 141, 80, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 141, 30, 14, WS_TABSTOP
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-    PUSHBUTTON "Anuluj", 14008, 122, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14006, 180, 141, 30, 14
+    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
+    PUSHBUTTON "Anuluj", 14008, 122, 170, 60, 14
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Właściwości Kosza"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Ustawienia dla wybranej lokalizacji", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Rozmiar niestandardowy", 14001, 20, 90, 100, 10, WS_TABSTOP
+    RADIOBUTTON "&Rozmiar niestandardowy", 14001, 20, 90, 100, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "R&ozmiar maksymalny (MB):", -1, 20, 105, 90, 10
     RADIOBUTTON "Nie przenoś plików do &Kosza. Usuń pliki natychmiast", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Wyświetl okno dialogowe potwierdzające usuwanie", 14004, 20, 155, 180, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Wyświetl okno dialogowe potwierdzające usuwanie", 14004, 20, 155, 180, 10
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -412,59 +422,59 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 206, 236, 50, 14
 END
 
-IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 231
+IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Zadania", -1, 7, 7, 249, 37
-    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 18, 21, 20
-    AUTORADIOBUTTON "Pokaż popularne zadania w &katalogach", IDC_FOLDER_OPTIONS_COMMONTASKS, 41, 18, 180, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Użyj klasycznych katalogów systemu &ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 41, 29, 180, 10
-    GROUPBOX "Przeglądanie katalogów", -1, 7, 51, 249, 38, WS_TABSTOP
-    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 63, 21, 20
-    AUTORADIOBUTTON "Otwórz każdy katalog w tym &samym oknie", IDC_FOLDER_OPTIONS_SAMEWINDOW, 41, 63, 180, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", IDC_FOLDER_OPTIONS_OWNWINDOW, 41, 74, 180, 10
-    GROUPBOX "Działanie przycisków myszki", -1, 7, 96, 249, 60
-    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 108, 21, 20
-    AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", IDC_FOLDER_OPTIONS_SINGLECLICK, 41, 108, 214, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Dwukrotne kliknięcie by otworzyć (pojedyncze by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 41, 141, 210, 10
-    AUTORADIOBUTTON "Podkreśl tytuły ikon zgodnych z używ&aną przeglądarką", IDC_FOLDER_OPTIONS_ULBROWSER, 54, 119, 189, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po ich wskazaniu", IDC_FOLDER_OPTIONS_ULPOINT, 54, 130, 151, 10
-    PUSHBUTTON "Przywróć &domyślne", IDC_FOLDER_OPTIONS_RESTORE, 167, 164, 90, 14, WS_TABSTOP
+    GROUPBOX "Zadania", -1, 7, 10, 249, 40
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
+    AUTORADIOBUTTON "Pokaż popularne zadania w &katalogach", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Użyj klasycznych katalogów systemu &ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    GROUPBOX "Przeglądanie katalogów", -1, 7, 60, 249, 40, WS_TABSTOP
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Otwórz każdy katalog w tym &samym oknie", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
+    GROUPBOX "Działanie przycisków myszki", -1, 7, 110, 249, 64
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Dwukrotne kliknięcie by otworzyć (pojedyncze by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10 //FIXME: accelerator collision &D
+    AUTORADIOBUTTON "Podkreśl tytuły ikon zgodnych z używ&aną przeglądarką", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po ich wskazaniu", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    PUSHBUTTON "Przywróć &domyślne", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14 //FIXME: accelerator collision &D
 END
 
-IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 274, 231
+IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Widok"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Widoki folderu", -1, 10, 5, 256, 55
-    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Widok, którego używasz dla tego folderu (taki jak Szczegóły lub Kafelki), możesz zastosować do wszystkich folderów.", -1, 56, 14, 202, 20
-    PUSHBUTTON "Zastosuj do w&szystkich folderów", IDC_VIEW_APPLY_TO_ALL, 56, 35, 111, 14, WS_TABSTOP
-    PUSHBUTTON "&Resetuj wszystkie foldery", IDC_VIEW_RESET_ALL, 171, 35, 88, 14, WS_TABSTOP
-    LTEXT "Ustawienia zaawansowane:", -1, 10, 70, 100, 10
-    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 1, 80, 256, 120
-    PUSHBUTTON "Przywróć &domyślne", IDC_VIEW_RESTORE_DEFAULTS, 196, 210, 70, 14, WS_TABSTOP
+    GROUPBOX "Widoki folderu", -1, 7, 10, 249, 60
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
+    LTEXT "Widok, którego używasz dla tego folderu (taki jak Szczegóły lub Kafelki), możesz zastosować do wszystkich folderów.", -1, 40, 20, 213, 20
+    PUSHBUTTON "Zastosuj do w&szystkich folderów", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14
+    PUSHBUTTON "&Resetuj wszystkie foldery", IDC_VIEW_RESET_ALL, 135, 50, 115, 14
+    LTEXT "Ustawienia zaawansowane:", -1, 7, 80, 100, 10
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
+    PUSHBUTTON "Przywróć &domyślne", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14
 END
 
-IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
+IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Typy plików"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Zarejestrowane &typy plików:", -1, 7, 8, 110, 8
-    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 18, 251, 115
-    PUSHBUTTON "&Nowy", IDC_FILETYPES_NEW, 154, 140, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Usuń", IDC_FILETYPES_DELETE, 208, 140, 50, 14, WS_TABSTOP
-    GROUPBOX "Szczegóły dla rozszerzenia '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 165, 251, 80
-    LTEXT "Otwierane za pomocą:", -1, 14, 178, 75, 16
-    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 89, 178, 10, 10
-    LTEXT "Nazwa Aplikacji", IDC_FILETYPES_APPNAME, 107, 178, 80, 14
-    PUSHBUTTON "Z&mień", IDC_FILETYPES_CHANGE, 191, 175, 60, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 14, 196, 230, 24
-    PUSHBUTTON "Zaawa&nsowane", IDC_FILETYPES_ADVANCED, 191, 227, 60, 14, WS_TABSTOP
+    LTEXT "Zarejestrowane &typy plików:", -1, 7, 10, 180, 10
+    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 99
+    PUSHBUTTON "&Nowy", IDC_FILETYPES_NEW, 140, 123, 55, 14
+    PUSHBUTTON "&Usuń", IDC_FILETYPES_DELETE, 200, 123, 55, 14
+    GROUPBOX "Szczegóły dla rozszerzenia '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 249, 70
+    LTEXT "Otwierane za pomocą:", -1, 12, 153, 73, 10
+    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
+    LTEXT "", IDC_FILETYPES_APPNAME, 100, 153, 80, 10
+    PUSHBUTTON "Z&mień", IDC_FILETYPES_CHANGE, 191, 153, 60, 14
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 160, 40
+    PUSHBUTTON "Zaawa&nsowane", IDC_FILETYPES_ADVANCED, 191, 188, 60, 14
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -494,9 +504,23 @@ CAPTION "Wylogowywanie z systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Czy na pewno chcesz się wylogować?", -1, 35, 16, 146, 8
-    DEFPUSHBUTTON "&Wyloguj", IDOK, 41, 39, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 95, 39, 50, 14
+    LTEXT "Czy na pewno chcesz się wylogować?", -1, 49, 15, 132, 8
+    DEFPUSHBUTTON "&Wyloguj", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 99, 38, 43, 14
+END
+
+IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 278, 122
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 278, 122
+    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 245, 1, 32, 26
+    PUSHBUTTON "&Przełącz użytkownika", IDC_SWITCH_USER_BUTTON, 86, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
+    PUSHBUTTON "&Wyloguj", IDC_LOG_OFF_BUTTON, 169, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Anuluj", IDCANCEL, 232, 103, 40, 12, WS_GROUP | BS_FLAT
+    LTEXT "Wylogowywanie z systemu ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 232, 19
+    CTEXT "Przełącz użytkownika", IDC_SWITCH_USER_STATIC, 52, 70, 90, 11
+    CTEXT "Wyloguj", IDC_LOG_OFF_STATIC, 155, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -519,7 +543,7 @@ BEGIN
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 31, 212, 20
     GROUPBOX "Akcje", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Wybierz akcję do &wykonania:", 1005, 14, 54, 202, 10, WS_GROUP
-    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
+    CONTROL "", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "&Monituj za każdym razem, aby wybrać akcję", 1006, 14, 177, 202, 10
     PUSHBUTTON "&Przywróć domyślne", 1008, 108, 197, 110, 14, WS_DISABLED
 END
@@ -622,8 +646,8 @@ CAPTION "Zmienianie Ikony"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Szukaj ikon w pliku:", -1, 7, 7, 179, 10
-    PUSHBUTTON "Przeglądaj...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "Przeglądaj...", IDC_BUTTON_PATH, 135, 17, 50, 14
     LTEXT "Wybierz ikonę z poniższej listy:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
@@ -694,7 +718,7 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 160, 40, 60, 14
 END
 
-IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
+IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 220
 CAPTION "Dostosowywanie"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
@@ -703,16 +727,16 @@ BEGIN
     LTEXT "&Użyj tego typu folderu jako szablonu:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Z&astosuj ten szablon także do wszystkich podfolderów", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Obrazy folderów", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    GROUPBOX "Obrazy folderów", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
     LTEXT "Dla widoku miniatur możesz umieścić na tym folderze obraz, który będzie przypominał o zawartości folderu.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "&Wybierz obraz...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Przywróć domyślny", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    PUSHBUTTON "&Wybierz obraz...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
+    PUSHBUTTON "&Przywróć domyślny", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
     LTEXT "Podgląd:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Ikony folderów", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "Dla wszystkich widoków z wyjątkiem widoku miniatur możesz zmienić standardową ikonę ""folderu"" na inną.", IDC_STATIC, 15, 180, 210, 25
-    ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Z&mień ikonę...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    GROUPBOX "Ikony folderów", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
+    LTEXT "Dla wszystkich widoków z wyjątkiem widoku miniatur możesz zmienić standardową ikonę ""folderu"" na inną.", IDC_STATIC, 15, 175, 210, 25
+    ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
+    PUSHBUTTON "Z&mień ikonę...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
@@ -771,8 +795,8 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Wersja %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Duże Ikony"
-    IDS_VIEW_SMALL "&Małe Ikony"
+    IDS_VIEW_LARGE "&Duże ikony"
+    IDS_VIEW_SMALL "&Małe ikony"
     IDS_VIEW_LIST "&Lista"
     IDS_VIEW_DETAILS "&Szczegóły"
     IDS_SELECT "Zaznacz"
@@ -790,6 +814,7 @@ BEGIN
     IDS_DISCONNECT "Odłącz"
     IDS_OPENFILELOCATION "O&twórz lokalizację pliku"
     IDS_SENDTO_MENU "Wyślij d&o"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Błąd przenoszenia pliku lub folderu"
     IDS_COPYERRORTITLE "Błąd kopiowania pliku lub folderu"
@@ -798,7 +823,11 @@ BEGIN
     IDS_COPYERRORSAME "Nie można skopiować  '%s': Nazwy plików źródłowego i docelowego są takie same."
     IDS_MOVEERRORSUBFOLDER "Nie można przenieść  '%s': Folder docelowy jest podfolderem folderu źródłowego."
     IDS_COPYERRORSUBFOLDER "Nie można skopiować  '%s': Folder docelowy jest podfolderem folderu źródłowego."
+    IDS_MOVEERROR "Nie można przenieść '%s': %s"
+    IDS_COPYERROR "Nie można skopiować '%s': %s"
 
+    IDS_CREATEFILE_DENIED "Nie można utworzyć pliku %1"
+    IDS_CREATEFILE_CAPTION "Błąd podczas tworzenia pliku"
     IDS_CREATEFOLDER_DENIED "Nie można utworzyć folderu '%1'"
     IDS_CREATEFOLDER_CAPTION "Nie można utworzyć folderu"
     IDS_DELETEITEM_CAPTION "Potwierdź usunięcie pliku"
@@ -826,17 +855,26 @@ BEGIN
     IDS_RESTART_PROMPT "Czy chcesz ponownie uruchomić system?"
     IDS_SHUTDOWN_TITLE "Zamknij system"
     IDS_SHUTDOWN_PROMPT "Czy chcesz zamknąć system?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatuj dysk lokalny"
     IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.\nWybierz przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby zamknąć."
     IDS_FORMAT_COMPLETE "Formatowanie zakończone."
+
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Nie można sformatować tego dysku"
+    IDS_NO_FORMAT "Nie można sformatować tego dysku! Zawiera ważne pliki systemowe wymagane do uruchamiania i pracy systemu ReactOS."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Nie można wyświetlić okna Uruchom (błąd wewnętrzny)"
     IDS_RUNDLG_BROWSE_ERROR "Nie można wyświetlić okna Przeglądaj (błąd wewnętrzny)"
     IDS_RUNDLG_BROWSE_CAPTION "Przeglądanie"
     IDS_RUNDLG_BROWSE_FILTER "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
+
+    /* Shortcut property sheet */
+    IDS_SHORTCUT_RUN_NORMAL "Normalne okno"
+    IDS_SHORTCUT_RUN_MIN "Zminimalizowane"
+    IDS_SHORTCUT_RUN_MAX "Zmaksymalizowane"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Start\\Programy"
@@ -869,6 +907,7 @@ BEGIN
     IDS_NETWORKPLACE "Moje miejsca sieciowe"
 
     IDS_NEWFOLDER "Nowy folder"
+    IDS_NEWITEMFORMAT "Nowy %s"
 
     IDS_DRIVE_FIXED "Dysk lokalny"
     IDS_DRIVE_CDROM "Stacja dysków CD"
@@ -885,10 +924,12 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autorzy"
     IDS_SHELL_ABOUT_BACK "< &Wstecz"
-    FCIDM_SHVIEW_NEW "&Nowy"
+    FCIDM_SHVIEW_NEW "&Nowy" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Folder"
     FCIDM_SHVIEW_NEWLINK "&Skrót"
     IDS_FOLDER_OPTIONS "Opcje folderów"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Lokalizacja kosza"
     IDS_RECYCLEBIN_DISKSPACE "Pozostało wolnego miejsca"
     IDS_EMPTY_BITBUCKET "Opróżnij Kosz"
@@ -902,6 +943,9 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Nie można pokazać właściwości (kod błędu: %lu)."
     IDS_CANTDISCONNECT "Nie można odłączyć (kod błędu: %lu)."
     IDS_NONE "(brak)"
+
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
@@ -955,17 +999,20 @@ BEGIN
     IDS_FILE_TYPES "Typy plików"
     IDS_COLUMN_EXTENSION "Rozszerzenia"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "Plik %s"
-
     IDS_BYTES_FORMAT "bajtów"
     IDS_UNKNOWN_APP "Nieznana aplikacja"
     IDS_EXE_DESCRIPTION "Opis:"
 
     IDS_MENU_EMPTY "(Puste)"
-    IDS_OBJECTS "%d Obiektów"
-    IDS_OBJECTS_SELECTED "%d Zaznaczonych obiektów"
+    IDS_OBJECTS "Elementów: %d"
+    IDS_OBJECTS_SELECTED "Zaznaczonych elementów: %d"
+
+    IDS_SEARCH_BROWSEITEM "Przeglądaj..."
+
+    IDS_TITLE_MYCOMP "Mój komputer"
+    IDS_TITLE_MYNET "Moje miejsca sieciowe"
+    IDS_TITLE_BIN_1 "Kosz (pełny)"
+    IDS_TITLE_BIN_0 "Kosz (pusty)"
 
     IDS_ADVANCED_FOLDER "Pliki i Foldery"
     IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"
@@ -986,6 +1033,16 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Pokaż Panel sterowania w oknie Mój komputer"
     IDS_ADVANCED_SHOW_COMP_COLOR "Pokaż zaszyfrowane lub skompresowane pliki NTFS w kolorze"
     IDS_ADVANCED_SHOW_INFO_TIP "Pokaż podręczny opis elementów folderów i pulpitu"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Wyświetl polecenie Ulubione"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Wyświetl polecenie Wyloguj"
+    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Rozwiń polecenie Panel sterowania"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Rozwiń polecenie Moje dokumenty"
+    IDS_ADVANCED_EXPAND_PRINTERS "Rozwiń polecenie Drukarki"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "Rozwiń polecenie Moje obrazy"
+    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Rozwiń polecenie Połączenia sieciowe"
+    IDS_ADVANCED_DISPLAY_RUN "Wyświetl polecenie Uruchom"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Wyświetl polecenie Narzędzia administracyjne"
+    IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Zaawansowane"
     IDS_NEWEXT_ADVANCED_RIGHT "&Zaawansowane >>"
@@ -1014,4 +1071,10 @@ BEGIN
     IDS_MOVEBUTTON "Przenieś"
 
     IDS_SYSTEMFOLDER "Folder systemowy"
+
+    /* For IDD_LOG_OFF_FANCY */
+    IDS_LOG_OFF_DESC "Zamyka programy i kończy sesję systemu ReactOS."
+    IDS_SWITCH_USER_DESC "Umożliwia innemu użytkownikowi zalogowanie się, podczas gdy Twoje programy i pliki są otwarte.\r\n\r\n(Możesz także przełączać użytkowników naciskając klawisze logo + L.)"
+    IDS_LOG_OFF_TITLE "Wyloguj"
+    IDS_SWITCH_USER_TITLE "Przełącz użytkownika"
 END

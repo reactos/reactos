@@ -40,10 +40,10 @@ BEGIN
     LTEXT "Короче", -1, 60, 50, 30, 10
     LTEXT "Дольше", -1, 165, 50, 30, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 50, 70, 17
-    PUSHBUTTON "&OK", IDOK, 120, 79, 50, 15
-    PUSHBUTTON "&Отмена", IDCANCEL, 177, 79, 50, 15
+    DEFPUSHBUTTON "OK", IDOK, 120, 79, 50, 15
+    PUSHBUTTON "Отмена", IDCANCEL, 177, 79, 50, 15
     LTEXT "&Выберите, как долго следует удерживать нажатой кнопку мыши или трекбола для того, чтобы сработало залипание.", -1, 60, 15, 170, 30
-    ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+    ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -91,8 +91,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Название сохраняемой схемы указателей мыши:", -1, 5, 5, 190, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 18, 190, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "&OK", IDOK, 90, 45, 50, 15
-    PUSHBUTTON "&Отмена", IDCANCEL, 145, 45, 50, 15
+    DEFPUSHBUTTON "OK", IDOK, 90, 45, 50, 15
+    PUSHBUTTON "Отмена", IDCANCEL, 145, 45, 50, 15
 END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
@@ -118,7 +118,7 @@ BEGIN
     ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 15, 134, 15, 15
     CONTROL "", IDC_SLIDER_POINTER_TRAIL, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 82, 146, 70, 17
     CHECKBOX "&Скрывать указатель во время ввода с клавиатуры", IDC_CHECK_HIDE_POINTER, 44, 164, 190, 20
-    ICON IDI_MOUSE_SPEED, IDC_ICON_HIDE_POINTER, 15, 167, 15, 15
+    ICON IDI_MOUSE_HIDE, IDC_ICON_HIDE_POINTER, 15, 167, 15, 15
     CHECKBOX "Обозначать поло&жение указателя при нажатии CTRL",
              IDC_CHECK_SHOW_POINTER, 44, 197, 186, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_POINTER, IDC_ICON_SHOW_POINTER, 15, 194, 15, 15

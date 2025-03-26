@@ -1,4 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Compatibility Layer Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -7,17 +13,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "相容性"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
-    LTEXT "如果您有問題在 ReactOS 中運行此程式，選擇 ReactOS 應報告給應用程式的作業系統。\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "如果您在 ReactOS 中執行此程式時出現問題，選擇 ReactOS 應報告給應用程式的作業系統。\n請注意，這個功能仍在開發中。", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "相容模式", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "用相容模式運行這個程式:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "以相容模式執行這個程式：", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "顯示設定", -1, 7, 99, 210, 61, BS_GROUPBOX
-    CHECKBOX "以 256 色運行", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "在 640 x 480 螢幕解析度運行", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "禁用視覺主題", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    PUSHBUTTON "編輯相容模式...(&D)", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    CHECKBOX "以 256 色執行", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "以 640 x 480 螢幕解析度執行", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "停用視覺主題", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    PUSHBUTTON "編輯相容模式(&D)...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
     LTEXT "",IDC_ENABLED_LAYERS,7,185,210,21
-    CONTROL "Learn more about <A>program compatibility</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+    CONTROL "了解更多<A>程式相容性</A>的詳情。", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 309, 134
@@ -32,13 +38,13 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "確定(&O)",IDOK,174,114,60,14
     PUSHBUTTON      "取消(&C)",IDCANCEL,240,114,60,14
-    LTEXT           "Available modes",-1,6,6,52,8
-    LTEXT           "Selected modes",-1,168,6,51,8
+    LTEXT           "可用的模式",-1,6,6,52,8
+    LTEXT           "已選擇的模式",-1,168,6,51,8
 END
 
 STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "相容性"
-    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+    IDS_FAILED_NETWORK "相容模式無法在這個應用程式執行，因為程式位於網路磁碟機內。"
+    IDS_FAILED_PROTECTED "相容模式無法在這個應用程式執行，因為程式是 ReactOS 的一部分。"
 END

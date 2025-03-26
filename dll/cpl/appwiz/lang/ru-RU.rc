@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Этот мастер поможет создать ярлык для локальных или\nсетевых программ, файлов, папок, компьютеров или\nИнтернет-адресов.", -1, 120, 15, 200, 30
     LTEXT "Выберите местоположение элемента:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
+    EDITTEXT IDC_LINK_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Обзор...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Щелкните ""Далее"" для продолжения.", -1, 120, 97, 162, 10
 END
@@ -61,8 +61,8 @@ BEGIN
     CONTROL "ReactOS не может найти Wine Gecko пакет, который необходим для приложений с поддержкой HTML, чтобы работать правильно. ReactOS может автоматически загрузить и установить его для вас.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Отмена", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 144, 76, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 200, 76, 50, 14
 END
 
 STRINGTABLE
@@ -85,5 +85,6 @@ BEGIN
     IDS_NO_MEMORY "Невозможно выделить память."
     IDS_NO_DIRECTORY "Не указано ни одного каталога!"
     IDS_INVALID_PATH "Указанный путь неверен!"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_INVALID_NAME "Заданное имя ярлыка содержит символы, недопустимые в именах файлов, или имеет слишком большую длину."
+    IDS_BROWSE_FOR_TARGET "Укажите объект для ярлыка:"
 END

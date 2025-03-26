@@ -73,7 +73,7 @@ static bool __is_regular_file(_STLP_fd fd) {
   BY_HANDLE_FILE_INFORMATION info;
 
   // Return true if the file handle isn't a directory.
-  return GetFileInformationByHandle(fd, &info) && 
+  return GetFileInformationByHandle(fd, &info) &&
          ((info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0);
 }
 

@@ -1,4 +1,10 @@
-/* French translation by Pierre Schweitzer */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATORS: Copyright 2007-2009 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -37,6 +43,19 @@ BEGIN
         MENUITEM "Aide", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "&À propos", IDM_ABOUT
+    END
+END
+
+IDM_EVENTWR_CTX MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Ouvrir le journal d'événements...", IDM_OPEN_EVENTLOG
+        MENUITEM "Enregistrer le journal d'événements &sous...", IDM_SAVE_EVENTLOG
+        MENUITEM SEPARATOR
+        MENUITEM "&Effacer tous les événements", IDM_CLEAR_EVENTS
+        MENUITEM "&Renommer\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Paramètres du journal...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -87,9 +106,9 @@ BEGIN
     LTEXT "&Description :", IDC_STATIC, 8, 65, 45, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "Données :", IDC_DETAILS_STATIC, 8, 140, 35, 8
-    CONTROL "&Octets", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 50, 140, 34, 8
-    CONTROL "&Mots", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 88, 140, 34, 8
+    LTEXT "Données :", IDC_DETAILS_STATIC, 8, 140, 35, 8//FIXME: add accel
+    AUTORADIOBUTTON "&Octets", IDC_BYTESRADIO, 50, 140, 34, 8
+    AUTORADIOBUTTON "&Mots", IDC_WORDRADIO, 88, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -104,13 +123,16 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "&Fichier journal :", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Taille :", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "&Taille :", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Créé le :", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "&Créé le :", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modifié le :", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "M&odifié le :", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Dernier accès le :", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "De&rnier accès le :", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Taille de journal", IDC_STATIC, 7, 106, 238, 99
     LTEXT "Taille &maximale du journal :", IDC_STATIC, 17, 122, 88, 8
@@ -119,13 +141,13 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 150, 119, 10, 14
     LTEXT "Ko", IDC_STATIC, 160, 122, 20, 8
     LTEXT "Lorsque la taille maximale du journal est atteinte :", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "Remplacer les événements si &nécessaire", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Remplacer les é&vénements datant de plus de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 155, 10
+    AUTORADIOBUTTON "Remplacer les événements si &nécessaire", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Remplacer les é&vénements datant de plus de", IDC_OVERWRITE_OLDER_THAN, 17, 168, 155, 10
+    AUTORADIOBUTTON "Ne &pas remplacer les événements\n(nettoyage manuel du journal)", IDC_NO_OVERWRITE, 17, 180, 133, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 175, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 210, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 210, 165, 10, 14
     LTEXT "jours", IDC_STATIC, 215, 168, 20, 8
-    CONTROL "Ne &pas remplacer les événements\n(nettoyage manuel du journal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 133, 20
     PUSHBUTTON "Paramètres par &défaut", IDC_RESTOREDEFAULTS, 156, 183, 80, 14
     AUTOCHECKBOX "Utiliser une connection à &basse vitesse", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Effacer le journal", ID_CLEARLOG, 180, 213, 65, 14
@@ -146,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Voulez-vous enregistrer ce journal d'événements avant de l'effacer ?"
     IDS_RESTOREDEFAULTS "Voulez-vous vraiment réinitialiser tous les paramètres pour ce journal aux valeurs par défaut ?"
     IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant.\n\nLes informations suivantes font partie de l'événement :\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -153,13 +177,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "Visionneuse d'événements ReactOS\n\
 \n\
-EventVwr [nom ordinateur] [/l:<fichier journal>] [/?]\n\
+EventVwr [nom ordinateur] [/L:<fichier journal>] [/?]\n\
 \n\
 ""nom ordinateur"" : Spécifie l'ordinateur distant auquel se connecter\n\
 \tpour récupérer les événements à afficher. Si aucun nom n'est spécifié,\n\
 \tl'ordinateur local est utilisé.\n\
 \n\
-/l:<fichier journal> : Spécifie quel fichier journal ouvrir.\n\
+/L:<fichier journal> : Spécifie quel fichier journal ouvrir.\n\
 \tSeuls les fichiers au format .evt (NT ≤ 5.2) sont supportés.\n\
 \n\
 /? : Affiche ce message d'aide.\n\
@@ -198,7 +222,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Type d'événement :          %s\r\n\
+    IDS_COPY "\
+Type d'événement :          %s\r\n\
 Source de l'événement :     %s\r\n\
 Catégorie de l'événement :  %s\r\n\
 ID de l'événement :         %s\r\n\

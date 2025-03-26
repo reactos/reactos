@@ -6,7 +6,9 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
+#if !defined(_CRT_NON_CONFORMING_SWPRINTFS)
 #define _CRT_NON_CONFORMING_SWPRINTFS
+#endif
 
 #include <wine/test.h>
 

@@ -33,7 +33,7 @@ extern "C" {
 #endif
 }
 
-
+
 extern "C" {
 
 _Must_inspect_result_

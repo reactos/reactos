@@ -23,7 +23,7 @@ using namespace std::tr1;
 class UnorderedTest : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE(UnorderedTest);
-#if !defined (STLPORT) 
+#if !defined (STLPORT)
   CPPUNIT_IGNORE;
 #endif
   CPPUNIT_TEST(uset);
@@ -320,7 +320,7 @@ void UnorderedTest::hash_policy()
 
 void UnorderedTest::buckets()
 {
-#if defined (STLPORT) 
+#if defined (STLPORT)
   unordered_set<int> int_uset;
 
   CPPUNIT_ASSERT( int_uset.bucket_count() < int_uset.max_bucket_count() );

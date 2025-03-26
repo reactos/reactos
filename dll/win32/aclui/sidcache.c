@@ -176,11 +176,18 @@ OpenLSAPolicyHandle(IN LPWSTR SystemName,
     LSA_OBJECT_ATTRIBUTES LsaObjectAttributes = {0};
     LSA_UNICODE_STRING LsaSystemName, *psn;
     NTSTATUS Status;
+    SIZE_T NameLength;
 
     if (SystemName != NULL && SystemName[0] != L'\0')
     {
+        NameLength = wcslen(SystemName);
+        if (NameLength > UNICODE_STRING_MAX_CHARS)
+        {
+            return FALSE;
+        }
+
         LsaSystemName.Buffer = SystemName;
-        LsaSystemName.Length = wcslen(SystemName) * sizeof(WCHAR);
+        LsaSystemName.Length = NameLength * sizeof(WCHAR);
         LsaSystemName.MaximumLength = LsaSystemName.Length + sizeof(WCHAR);
         psn = &LsaSystemName;
     }

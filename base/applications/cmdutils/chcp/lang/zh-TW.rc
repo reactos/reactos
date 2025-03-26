@@ -1,14 +1,20 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Change CodePage Command
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    STRING_CHCP_HELP "顯示或設定活動的內碼表。\n\n\
+    STRING_CHCP_HELP "顯示或設定作用中的內碼表。\n\n\
 CHCP [nnn]\n\n\
-  nnn   指定活動的內碼表。\n\n\
-不帶參數執行 CHCP 將會顯示當前活動的內碼表。\n"
-    STRING_CHCP_ERROR1 "活動內碼表：%u\n"
-    STRING_CHCP_ERROR4 "無效內碼表\n"
+  nnn   指定要啟用的內碼表。\n\n\
+不帶參數執行 CHCP 將會顯示目前啟用中的內碼表。\n"
+    STRING_CHCP_ERROR1 "啟用中的內碼表：%u\n"
+    STRING_CHCP_ERROR4 "無效的內碼表\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "無效的參數格式 - %s\n"
-END 
+END

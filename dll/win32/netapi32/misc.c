@@ -301,6 +301,14 @@ NetpNtStatusToApiStatus(
             ApiStatus = NERR_BadUsername;
             break;
 
+        case STATUS_USER_EXISTS:
+            ApiStatus = NERR_UserExists;
+            break;
+
+        case STATUS_GROUP_EXISTS:
+            ApiStatus = NERR_GroupExists;
+            break;
+
         case STATUS_PASSWORD_RESTRICTION:
             ApiStatus = NERR_PasswordTooShort;
             break;

@@ -42,7 +42,7 @@ VOID
 ClasspCleanupDisableMcn(
     IN PFILE_OBJECT_EXTENSION FsContext
     );
-
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, ClassCreateClose)
 #pragma alloc_text(PAGE, ClasspCreateClose)
@@ -118,7 +118,7 @@ Return Value:
     return status;
 }
 
-
+
 NTSTATUS
 ClasspCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
@@ -291,7 +291,7 @@ Return Value:
     return status;
 }
 
-
+
 VOID
 ClasspCleanupProtectedLocks(
     IN PFILE_OBJECT_EXTENSION FsContext
@@ -429,7 +429,7 @@ ClasspCleanupProtectedLocks(
     return;
 }
 
-
+
 VOID
 ClasspCleanupDisableMcn(
     IN PFILE_OBJECT_EXTENSION FsContext

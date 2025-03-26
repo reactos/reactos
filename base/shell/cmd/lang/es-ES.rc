@@ -101,9 +101,9 @@ CTTY device\n\n\
             CON normalmente es el dispositivo estándar de E/S predeterminado.\n\n\
 Para devolver el control a la consola estándar, escriba: CTTY CON en el\n\
 dispositivo auxiliar."
-    STRING_DATE_HELP1 "\nIntroduce la nueva fecha (mm%cdd%cyyyy): "
-    STRING_DATE_HELP2 "\nIntroduce la nueva fecha (dd%cmm%cyyyy): "
-    STRING_DATE_HELP3 "\nIntroduce la nueva fecha (yyyy%cmm%cdd): "
+    STRING_DATE_HELP1 "Introduce la nueva fecha (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Introduce la nueva fecha (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Introduce la nueva fecha (yyyy%cmm%cdd): "
     STRING_DATE_HELP4 "Muestra o cambia la fecha.\n\n\
 DATE [/T][date]\n\n\
   /T    Sólo la muestra\n\n\
@@ -174,10 +174,10 @@ ajustes previos anteponiendo a cualquier modificador - (hyphen)--por ejemplo, /-
     STRING_DIR_HELP2 " El volumen en la unidad %c es %s\n"
     STRING_DIR_HELP3 " El volumen en la unidad %c no tiene etiqueta.\n"
     STRING_DIR_HELP4 " El volumen Serial Number is %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Total de archivos mostrados:\n%16i archivo(s)% 14s bytes\n"
-    STRING_DIR_HELP6 "%16i Directorio(s)% 15s bytes libres\n"
+    STRING_DIR_HELP5 "\n     Total de archivos mostrados:\n%16i archivo(s)    %14s bytes\n"
+    STRING_DIR_HELP6 "%16i Directorio(s) %14s bytes libres\n"
     STRING_DIR_HELP7 "\n Directorio %s\n\n"
-    STRING_DIR_HELP8 "%16i archivo(s)% 14s bytes\n"
+    STRING_DIR_HELP8 "%16i archivo(s)    %14s bytes\n"
     STRING_DIRSTACK_HELP1 "Almacena el directorio actual para usarlo por el comando,\n\
 entonces cambia al directorio especificado.\n\n\
 PUSHD [ruta | ..]\n\n\
@@ -247,7 +247,8 @@ comando           Especifica el comando a ejecutar si se cumple la condición.\n
 string1==string2  Especifica una condición verdadera si las cadenas de texto coinciden.\n\
 EXIST archivo     Especifica una condición verdadera si existe el archivo especificado.\n\
 DEFINED variable  Especifica una condición verdadera si la variable está definida.\n"
-    STRING_LOCALE_HELP1 "La hora actual es"
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "La hora actual es: "
     STRING_MKDIR_HELP "Crea un directorio.\n\n\
 MKDIR [unidad:]ruta\nMD [unidad:]ruta"
     STRING_MKLINK_HELP "Creates a filesystem link object.\n\n\
@@ -298,7 +299,7 @@ PAUSE [mensaje]"
     STRING_PROMPT_HELP1 "Cambia el símbolo de comandos.\n\n\
 PROMPT [texto]\n\n\
   texto   Epecifica un nuevo símbolo de comandos.\n\n\
-El símbolo de comandos puede hacerce con carácteres normales y los siguientes\n\
+El símbolo de comandos puede hacerse con carácteres normales y los siguientes\n\
 códigos especiales:\n\n\
   $A   & (Signo y)\n\
   $B   | (Linea horizontal)\n\
@@ -341,35 +342,6 @@ Note que no puede especificar una nueva unidad en el destino o ruta. Usa\n\
 el comando MOVE para este propósito.\n"
     STRING_REN_HELP2 "    %lu archivos renombrados.\n"
     STRING_REN_HELP3 "    %lu archivos renombrados.\n"
-    STRING_REPLACE_HELP1 "Reemplaza archivos.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Especifica el archivo o archivos de origen.\n\
-  [drive2:][path2]         Especifica el nombre de la carpeta donde se\n\
-                           reemplacen los archivos.\n\
-  /A                       Añade nuevos archivos al directorio destino. No\n\
-                           se puede usar con las opciones /S o /U.\n\
-  /P                       Pregunta para confirmación antes de reemplazar un\n\
-                           archivo o añadir un archivo origen.\n\
-  /R                       Reemplaza todos los archivos solo lectura y los\n\
-                           archivos no protegidos.\n\
-  /S                       Reemplaza todos los archivos en todos los\n\
-                           subdirectorios\n\
-                           del directorio destino. No se puede usar con la opción /A\n\
-  /W                       Espera que insertes un disco antes de empezar.\n\
-  /U                       Reemplaza (actualiza) solo los archivos que son más\n\
-                           antiguos que los de origen. No se puede usar con\n\
-                           la opción /A.\n"
-    STRING_REPLACE_HELP2 "Ruta de origen requerida\n"
-    STRING_REPLACE_HELP3 "No se han reemplazado archivos\n"
-    STRING_REPLACE_HELP4 "Se han reemplazado %lu archivo(s)\n"
-    STRING_REPLACE_HELP5 "Reemplazando %s\n"
-    STRING_REPLACE_HELP6 "Reemplazar %s\n"
-    STRING_REPLACE_HELP7 "No se han añadido archivos\n"
-    STRING_REPLACE_HELP8 "%lu archivo(s) añadidos\n"
-    STRING_REPLACE_HELP9 "Añadir %s (S/N)? "
-    STRING_REPLACE_HELP10 "Reemplazar %s (S/N)? "
-    STRING_REPLACE_HELP11 "Añadiendo %s\n"
     STRING_SHIFT_HELP "Cambia la posición de los parámetros remplazables en un\n\
 archivo por lotes.\n\n\
 SHIFT [ABAJO]"
@@ -448,7 +420,7 @@ lista de los créditos."
  la Fundación de Software Libre; tanto en la versión 2 de la Licencia, o\n\
  (según tu elección) cualquier otra posterior.\n"
     STRING_VERSION_HELP5 "\nManda los informes de bugs a <ros-dev@reactos.org>.\n\
-Actualizaciones disponibles en: http://www.reactos.org"
+Actualizaciones disponibles en: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersión de FreeDOS escrita por:\n"
     STRING_VERSION_HELP7 "\nVersión de ReactOS escrita por:\n"
     STRING_VOL_HELP1 " El volumen en la unidad %c es %s\n"
@@ -463,7 +435,7 @@ MIN           minimiza la ventana\n\
 MAX           maximiza la ventana\n\
 RESTORE       restaura la ventana"
     STRING_WINDOW_HELP2 "Cambia el aspecto de la ventana de la consola.\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        Título de la ventana en la que realizar las acciónes\n\
 /POS          Especifica la posición y dimensión de la ventana\n\
@@ -484,23 +456,23 @@ title         Nuevo título\n"
     STRING_CMD_ERROR3 "No se puede redirigir el archivo %s\n"
     STRING_CMD_ERROR4 "Ejecutando %s...\n"
     STRING_CMD_ERROR5 "Ejecutando cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "¡Mismos colores! (El color de frente y de fondo no pueden ser el mismo)"
-    STRING_COLOR_ERROR2 "Error en la especificación del color"
+    STRING_COLOR_ERROR1 "¡Mismos colores! (El color de frente y de fondo no pueden ser el mismo)\n"
+    STRING_COLOR_ERROR2 "Error en la especificación del color\n"
     STRING_CONSOLE_ERROR "Error desconocido: %d\n"
     STRING_COPY_ERROR1 "Error: No se puede abrir el origen - %s!\n"
     STRING_COPY_ERROR2 "Error: ¡No se puede copiar sobre si mismo!\n"
     STRING_COPY_ERROR3 "¡Error escribiendo destino!\n"
     STRING_COPY_ERROR4 "Error: ¡No implementado aún!\n"
-    STRING_DATE_ERROR "Fecha incorrecta."
+    STRING_DATE_ERROR "Fecha incorrecta.\n"
     STRING_DEL_ERROR5 "¡El archivo %s va a ser borrado!"
     STRING_DEL_ERROR6 "¿Estás seguro (S/N)? "
     STRING_DEL_ERROR7 "Borrando: %s\n"
     STRING_ERROR_ERROR1 "¡Error desconocido! Códige de error: 0x%lx\n"
     STRING_ERROR_ERROR2 "Error de sintaxsis"
-    STRING_FOR_ERROR1 "Falta 'in' para la declaración."
-    STRING_FOR_ERROR2 "No se encontraron las parénteris."
-    STRING_FOR_ERROR3 "Falta 'do'."
-    STRING_FOR_ERROR4 "No hay comando después de 'do'."
+    STRING_FOR_ERROR1 "Falta 'in' para la declaración.\n"
+    STRING_FOR_ERROR2 "No se encontraron las parénteris.\n"
+    STRING_FOR_ERROR3 "Falta 'do'.\n"
+    STRING_FOR_ERROR4 "No hay comando después de 'do'.\n"
     STRING_FREE_ERROR1 "Unidad errónea."
     STRING_FREE_ERROR2 "Sin etiqueta"
     STRING_GOTO_ERROR1 "No se especifico etiqueta para GOTO\n"
@@ -509,10 +481,10 @@ title         Nuevo título\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[Correcto]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
-    STRING_REN_ERROR1 "MoveFile() falló. Error: %lu\n"
-    STRING_TIME_ERROR1 "Hora incorrecta."
-    STRING_TYPE_ERROR1 "Opción incorrecta '/%s'\n"
-    STRING_WINDOW_ERROR1 "Ventana no encontrada"
+    STRING_REN_ERROR "MoveFile() falló. Error: %lu\n"
+    STRING_TIME_ERROR "Hora incorrecta.\n"
+    STRING_TYPE_ERROR "Opción incorrecta '/%s'\n"
+    STRING_WINDOW_ERROR "Ventana no encontrada\n"
     STRING_ERROR_PARAMETERF_ERROR "Formato del parámetro incorrecto - %c\n"
     STRING_ERROR_INVALID_SWITCH "Parámetro incorrecto - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Demasiados parámetros - %s\n"
@@ -526,24 +498,25 @@ title         Nuevo título\n"
     STRING_ERROR_CANNOTPIPE "¡Error!  ¡No se puede apilar!  ¡No se puede abrir el archivo temporal!\n"
     STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ... "
     STRING_ERROR_DRIVER_NOT_READY "La unidad no está lista"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Argumento no válido - %s\n"
-    STRING_REPLACE_ERROR2 "Ruta no encontrada - %s\n"
-    STRING_REPLACE_ERROR3 "La sintaxis del nombre de archivo, carpeta o volúmen es incorrecta.\n"
-    STRING_REPLACE_ERROR4 "Combinación de parámetros incorrecta\n"
-    STRING_REPLACE_ERROR5 "Acceso denegado - %s\n"
-    STRING_REPLACE_ERROR6 "No se han encontrado archivos - %s\n"
-    STRING_REPLACE_ERROR7 "Error extendido 32\n"
     STRING_CMD_INFOLINE "  Consola de comandos de ReactOS                Escribe HELP para ver la ayuda  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versión %s %s]\n"
     STRING_CMD_SHELLINFO "\nIntérprete de comandos de ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Funcionando en: "
     STRING_VERSION_RUNVER "%s [Versión %d.%d.%d] %s"
     STRING_COPY_FILE "        %d archivo(s) copiado(s)\n"
     STRING_DELETE_WIPE "Borrado"
-    STRING_FOR_ERROR "Se ha especificado una variable errónea."
-    STRING_SCREEN_COL "Valor de columna no válido"
-    STRING_SCREEN_ROW "Valor de fila no válido"
+    STRING_FOR_ERROR "Se ha especificado una variable errónea.\n"
+    STRING_SCREEN_COL "Valor de columna no válido\n"
+    STRING_SCREEN_ROW "Valor de fila no válido\n"
     STRING_TIMER_TIME "El temporizador %d es %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Enlace simbólico creado para %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Enlace duro creado para %s <<===>> %s\n"

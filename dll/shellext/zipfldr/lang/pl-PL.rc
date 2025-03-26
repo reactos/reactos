@@ -77,6 +77,9 @@ BEGIN
     IDS_CANTCREATEZIP "Nie można utworzyć folderu skompresowanego '%s' (kod błędu: %d)."
     IDS_CANTREADFILE "Błąd podczas czytania pliku '%s'."
     IDS_EXTRACTING "Trwa wyodrębnianie..."
+    IDS_CANTEXTRACTFILE "Nie można wyodrębnić pliku '%1'."
+    IDS_DECOMPRESSERROR "Nieobsługiwana metoda kompresji %d. Czy chcesz kontynuować?"
+    IDS_UNKNOWNERROR "Nieznany błąd 0x%08x."
 
     IDS_WIZ_TITLE "Kreator wyodrębniania"
     IDS_WIZ_DEST_TITLE "Wybierz miejsce docelowe"

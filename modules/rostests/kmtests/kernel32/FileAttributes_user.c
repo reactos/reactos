@@ -15,9 +15,12 @@ START_TEST(FileAttributes)
     PCWSTR FileName = L"\\\\.\\Global\\GLOBALROOT\\Device\\Kmtest-kernel32\\Somefile";
     BOOL Ret;
     DWORD Attributes;
+    DWORD Error;
 
-    KmtLoadDriver(L"kernel32", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"kernel32", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     /* Set read-only attribute */
     KmtSendUlongToDriver(IOCTL_EXPECT_SET_ATTRIBUTES, FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_NORMAL);

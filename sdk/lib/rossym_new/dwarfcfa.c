@@ -453,19 +453,19 @@ int dwarfregunwind(Dwarf *d, ulong pc, ulong fde, DwarfExpr *cfa, PROSSYM_REGIST
             registers->Registers[i] = registers->Registers[r[i].reg];
             break;
         case RuleRegOff: {
-            BOOLEAN success = 
+            BOOLEAN success =
                 RosSymCallbacks.MemGetProc
-                (d->pe->fd, 
+                (d->pe->fd,
                  &registers->Registers[i],
                  r[i].offset + registers->Registers[r[i].reg],
-                 d->addrsize);            
+                 d->addrsize);
             if (!success) return -1;
         } break;
         case RuleCfaOffset:
         {
-            BOOLEAN success = 
+            BOOLEAN success =
                 RosSymCallbacks.MemGetProc
-                (d->pe->fd, 
+                (d->pe->fd,
                  &registers->Registers[i],
                  r[i].offset + cfaLocation,
                  d->addrsize);
@@ -484,7 +484,7 @@ int dwarfregunwind(Dwarf *d, ulong pc, ulong fde, DwarfExpr *cfa, PROSSYM_REGIST
         RosSymCallbacks.MemGetProc
             (d->pe->fd, &cfaSpace[i], cfaLocation + (i * 4), d->addrsize);
     }
-    werrstr("CFA(%x) [%08x, %08x, %08x, %08x]", 
+    werrstr("CFA(%x) [%08x, %08x, %08x, %08x]",
             cfaLocation, cfaSpace[0], cfaSpace[1], cfaSpace[2], cfaSpace[3]);
 
     return 0;

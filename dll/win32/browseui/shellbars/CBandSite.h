@@ -61,62 +61,62 @@ public:
     ~CBandSiteBase();
 
     // *** IBandSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown *punk);
-    virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD *pdwBandID);
-    virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
-    virtual HRESULT STDMETHODCALLTYPE SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState);
-    virtual HRESULT STDMETHODCALLTYPE RemoveBand(DWORD dwBandID);
-    virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, void **ppv);
-    virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(const BANDSITEINFO *pbsinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(BANDSITEINFO *pbsinfo);
+    STDMETHOD(AddBand)(IUnknown *punk) override;
+    STDMETHOD(EnumBands)(UINT uBand, DWORD *pdwBandID) override;
+    STDMETHOD(QueryBand)(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName) override;
+    STDMETHOD(SetBandState)(DWORD dwBandID, DWORD dwMask, DWORD dwState) override;
+    STDMETHOD(RemoveBand)(DWORD dwBandID) override;
+    STDMETHOD(GetBandObject)(DWORD dwBandID, REFIID riid, void **ppv) override;
+    STDMETHOD(SetBandSiteInfo)(const BANDSITEINFO *pbsinfo) override;
+    STDMETHOD(GetBandSiteInfo)(BANDSITEINFO *pbsinfo) override;
 
     // *** IWinEventHandler methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
+    STDMETHOD(OnWinEvent)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult) override;
+    STDMETHOD(IsWindowOwner)(HWND hWnd) override;
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IDeskBarClient methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetDeskBarSite(IUnknown *punkSite);
-    virtual HRESULT STDMETHODCALLTYPE SetModeDBC(DWORD dwMode);
-    virtual HRESULT STDMETHODCALLTYPE UIActivateDBC(DWORD dwState);
-    virtual HRESULT STDMETHODCALLTYPE GetSize(DWORD dwWhich, LPRECT prc);
+    STDMETHOD(SetDeskBarSite)(IUnknown *punkSite) override;
+    STDMETHOD(SetModeDBC)(DWORD dwMode) override;
+    STDMETHOD(UIActivateDBC)(DWORD dwState) override;
+    STDMETHOD(GetSize)(DWORD dwWhich, LPRECT prc) override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IInputObject methods ***
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL fActivate, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)() override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // *** IInputObjectSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(struct IUnknown *paramC, int param10);
+    STDMETHOD(OnFocusChangeIS)(struct IUnknown *paramC, int param10) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistStream methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
     // *** IDropTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragLeave();
-    virtual HRESULT STDMETHODCALLTYPE Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHOD(DragEnter)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragOver)(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragLeave)() override;
+    STDMETHOD(Drop)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
 
     // *** IBandSiteHelper methods ***
-    virtual HRESULT STDMETHODCALLTYPE LoadFromStreamBS(IStream *, const GUID &, void **);
-    virtual HRESULT STDMETHODCALLTYPE SaveToStreamBS(IUnknown *, IStream *);
+    STDMETHOD(LoadFromStreamBS)(IStream *, const GUID &, void **) override;
+    STDMETHOD(SaveToStreamBS)(IUnknown *, IStream *) override;
 
 private:
     UINT _GetBandID(struct BandObject *Band);

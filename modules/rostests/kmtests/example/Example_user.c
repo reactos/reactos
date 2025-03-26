@@ -15,6 +15,7 @@ START_TEST(Example)
     SYSTEM_INFO SystemInfo;
     MY_STRUCT MyStruct[2] = { { 123, ":D" }, { 0 } };
     DWORD Length = sizeof MyStruct;
+    DWORD Error;
 
     trace("Message from user-mode\n");
 
@@ -26,9 +27,10 @@ START_TEST(Example)
     KmtRunKernelTest("Example");
 
     /* now start the special-purpose driver */
-    KmtLoadDriver(L"Example", FALSE);
-    trace("After Entry\n");
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"Example", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
     trace("After Create\n");
 
     ok(KmtSendToDriver(IOCTL_NOTIFY) == ERROR_SUCCESS, "\n");

@@ -63,7 +63,7 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
             pdcDst->dclevel.prgnMeta = IntSysCreateRectpRgn(0, 0, 0, 0);
             IntGdiCombineRgn(pdcDst->dclevel.prgnMeta, pdcSrc->dclevel.prgnMeta, NULL, RGN_COPY);
         }
-        pdcDst->fs |= DC_FLAG_DIRTY_RAO;
+        pdcDst->fs |= DC_DIRTY_RAO;
     }
 }
 
@@ -109,7 +109,7 @@ IntGdiCleanDC(HDC hDC)
         REGION_Delete(dc->prgnAPI);
     dc->prgnRao = dc->prgnAPI = NULL;
 
-    dc->fs |= DC_FLAG_DIRTY_RAO;
+    dc->fs |= DC_DIRTY_RAO;
 
     DC_UnlockDc(dc);
 

@@ -521,7 +521,7 @@ basic_filebuf<_CharT, _Traits>::_M_underflow_aux() {
 
     _M_ext_buf_end += __n;
 
-    // If external buffer is empty there is nothing to do. 
+    // If external buffer is empty there is nothing to do.
     if (_M_ext_buf == _M_ext_buf_end) {
       this->setg(0, 0, 0);
       return traits_type::eof();

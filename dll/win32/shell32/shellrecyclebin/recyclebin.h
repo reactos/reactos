@@ -17,37 +17,56 @@ extern "C" {
 #include <shellapi.h>
 #include <objbase.h>
 
-#define ANY_SIZE 1
+#define RECYCLEBINMAXDRIVECOUNT 26
 
 /* Structures used by the API Interface */
 
-typedef struct _DELETED_FILE_DETAILS_A
+typedef UINT RECYCLEBINFILESIZETYPE;
+
+typedef struct _RECYCLEBINFILEIDENTITY
 {
-    FILETIME      LastModification;
-    FILETIME      DeletionTime;
-    ULARGE_INTEGER FileSize;
-    ULARGE_INTEGER PhysicalFileSize;
-    DWORD         Attributes;
-    CHAR          FileName[ANY_SIZE];
-} DELETED_FILE_DETAILS_A, *PDELETED_FILE_DETAILS_A;
-typedef struct _DELETED_FILE_DETAILS_W
+    FILETIME DeletionTime;
+    LPCWSTR RecycledFullPath; /* "C:\Recycled\Dc1.ext" etc. */
+} RECYCLEBINFILEIDENTITY, *PRECYCLEBINFILEIDENTITY;
+
+typedef struct _RECYCLEBINSTRING
 {
-    FILETIME      LastModification;
-    FILETIME      DeletionTime;
-    ULARGE_INTEGER FileSize;
-    ULARGE_INTEGER PhysicalFileSize;
-    DWORD         Attributes;
-    WCHAR         FileName[ANY_SIZE];
-} DELETED_FILE_DETAILS_W, *PDELETED_FILE_DETAILS_W;
-#ifdef UNICODE
-#define DELETED_FILE_DETAILS  DELETED_FILE_DETAILS_W
-#define PDELETED_FILE_DETAILS PDELETED_FILE_DETAILS_W
-#else
-#define DELETED_FILE_DETAILS  DELETED_FILE_DETAILS_A
-#define PDELETED_FILE_DETAILS PDELETED_FILE_DETAILS_A
-#endif
+    LPCWSTR String;
+    LPWSTR Alloc;
+} RECYCLEBINSTRING, *PRECYCLEBINSTRING;
+
+typedef struct _DELETED_FILE_INFO
+{
+    FILETIME LastModification;
+    FILETIME DeletionTime;
+    RECYCLEBINFILESIZETYPE FileSize;
+    DWORD Attributes;
+    RECYCLEBINSTRING OriginalFullPath;
+    RECYCLEBINSTRING RecycledFullPath;
+} DELETED_FILE_INFO, *PDELETED_FILE_INFO;
+
+/* Distinct handle type for deleted file/folder */
+DECLARE_HANDLE(HDELFILE);
+#define IRecycleBinFileFromHDELFILE(hDF) ( (IRecycleBinFile*)(hDF) )
 
 /* API Interface */
+
+static inline void
+FreeRecycleBinString(PRECYCLEBINSTRING pRBS)
+{
+    SHFree(pRBS->Alloc);
+    pRBS->String = pRBS->Alloc = NULL;
+}
+
+static inline void
+InitializeRecycleBinStringRef(PRECYCLEBINSTRING pRBS, LPCWSTR String)
+{
+    pRBS->String = String;
+    pRBS->Alloc = NULL;
+}
+
+EXTERN_C HRESULT
+GetRecycleBinPathFromDriveNumber(UINT Drive, LPWSTR Path);
 
 /* Function called for each deleted file in the recycle bin
  * Context: value given by the caller of the EnumerateRecycleBin function
@@ -55,7 +74,7 @@ typedef struct _DELETED_FILE_DETAILS_W
  * Returning FALSE stops the enumeration.
  * Remarks: the handle must be closed with the CloseRecycleBinHandle function
  */
-typedef BOOL (WINAPI *PENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context, IN HANDLE hDeletedFile);
+typedef BOOL (CALLBACK *PENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context, IN HDELFILE hDeletedFile);
 
 /* Closes a file deleted handle.
  * hDeletedFile: the handle to close
@@ -64,7 +83,7 @@ typedef BOOL (WINAPI *PENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context, IN HANDL
  */
 BOOL WINAPI
 CloseRecycleBinHandle(
-    IN HANDLE hDeletedFile);
+    IN HDELFILE hDeletedFile);
 
 /* Moves a file to the recycle bin.
  * FileName: the name of the file to move the recycle bin
@@ -82,14 +101,14 @@ DeleteFileToRecycleBinW(
 #define DeleteFileToRecycleBin DeleteFileToRecycleBinA
 #endif
 
-/* Moves a file to the recycle bin.
+/* Deletes a file in the recycle bin.
  * hDeletedFile: handle of the deleted file to delete
  * Returns TRUE if operation succeeded, FALSE otherwise.
  * Remark: The handle is obtained in the PENUMERATE_RECYCLEBIN_CALLBACK callback
  */
 BOOL WINAPI
-DeleteFileHandleToRecycleBin(
-    IN HANDLE hDeletedFile);
+DeleteFileInRecycleBin(
+    IN HDELFILE hDeletedFile);
 
 /* Removes all elements contained in a recycle bin
  * pszRoot: the name of the drive containing the recycle bin
@@ -131,42 +150,14 @@ EnumerateRecycleBinW(
 #define EnumerateRecycleBin EnumerateRecycleBinA
 #endif
 
-/* Gets details about a deleted file
- * hDeletedFile: handle of the deleted file to get details about
- * BufferSize: size of the 'FileDetails' buffer, in bytes
- * FileDetails: if the function succeeded, contains details about the deleted file
- * RequiredSize: contains the minimal buffer size required to get file information details
- * Returns TRUE if operation succeeded, FALSE otherwise.
- * Remark: The handle is obtained in the PENUMERATE_RECYCLEBIN_CALLBACK callback
- */
-BOOL WINAPI
-GetDeletedFileDetailsA(
-    IN HANDLE hDeletedFile,
-    IN DWORD BufferSize,
-    IN OUT PDELETED_FILE_DETAILS_A FileDetails OPTIONAL,
-    OUT LPDWORD RequiredSize OPTIONAL);
-BOOL WINAPI
-GetDeletedFileDetailsW(
-    IN HANDLE hDeletedFile,
-    IN DWORD BufferSize,
-    IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
-    OUT LPDWORD RequiredSize OPTIONAL);
-#ifdef UNICODE
-#define GetDeletedFileDetails GetDeletedFileDetailsW
-#else
-#define GetDeletedFileDetails GetDeletedFileDetailsA
-#endif
+EXTERN_C HDELFILE
+GetRecycleBinFileHandle(
+    IN LPCWSTR pszRoot OPTIONAL,
+    IN const RECYCLEBINFILEIDENTITY *pFI);
 
-/* Get details about a whole recycle bin
- * pszVolume:
- * pulTotalItems:
- * pulTotalSize
- */
-BOOL WINAPI
-GetRecycleBinDetails(
-    IN LPCWSTR pszVolume OPTIONAL,
-    OUT ULARGE_INTEGER *pulTotalItems,
-    OUT ULARGE_INTEGER *pulTotalSize);
+EXTERN_C BOOL
+RemoveFromRecycleBinDatabase(
+    IN const RECYCLEBINFILEIDENTITY *pFI);
 
 /* Restores a deleted file
  * hDeletedFile: handle of the deleted file to restore
@@ -174,14 +165,12 @@ GetRecycleBinDetails(
  * Remarks: if the function succeeds, the handle is not valid anymore.
  */
 BOOL WINAPI
-RestoreFile(
-    IN HANDLE hDeletedFile);
+RestoreFileFromRecycleBin(
+    IN HDELFILE hDeletedFile);
 
 /* COM interface */
 
-#undef INTERFACE
 #define INTERFACE IRecycleBinFile
-
 DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
 {
     BEGIN_INTERFACE
@@ -192,6 +181,8 @@ DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
     /* IRecycleBinFile methods */
+    STDMETHOD(IsEqualIdentity)(THIS_ const RECYCLEBINFILEIDENTITY *pFI) PURE;
+    STDMETHOD(GetInfo)(THIS_ PDELETED_FILE_INFO pInfo) PURE;
     STDMETHOD(GetLastModificationTime)(THIS_ FILETIME *pLastModificationTime) PURE;
     STDMETHOD(GetDeletionTime)(THIS_ FILETIME *pDeletionTime) PURE;
     STDMETHOD(GetFileSize)(THIS_ ULARGE_INTEGER *pFileSize) PURE;
@@ -200,13 +191,13 @@ DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
     STDMETHOD(GetFileName)(THIS_ SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) PURE;
     STDMETHOD(Delete)(THIS) PURE;
     STDMETHOD(Restore)(THIS) PURE;
+    STDMETHOD(RemoveFromDatabase)(THIS) PURE;
 
     END_INTERFACE
 };
-
 #undef INTERFACE
-#define INTERFACE IRecycleBinEnumList
 
+#define INTERFACE IRecycleBinEnumList
 DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
 {
     BEGIN_INTERFACE
@@ -217,16 +208,15 @@ DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
     /* IRecycleBinEnumList methods */
-    STDMETHOD(Next)(THIS_ DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched);
+    STDMETHOD(Next)(THIS_ DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched) PURE;
     STDMETHOD(Skip)(THIS_ DWORD celt) PURE;
     STDMETHOD(Reset)(THIS) PURE;
 
     END_INTERFACE
 };
-
 #undef INTERFACE
-#define INTERFACE IRecycleBin
 
+#define INTERFACE IRecycleBin
 DECLARE_INTERFACE_(IRecycleBin, IUnknown)
 {
     BEGIN_INTERFACE
@@ -237,12 +227,14 @@ DECLARE_INTERFACE_(IRecycleBin, IUnknown)
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
     /* IRecycleBin methods */
-    STDMETHOD(DeleteFile)(THIS_ LPCWSTR szFileName);
-    STDMETHOD(EmptyRecycleBin)(THIS);
-    STDMETHOD(EnumObjects)(THIS_ IRecycleBinEnumList **ppEnumList);
+    STDMETHOD(DeleteFile)(THIS_ LPCWSTR szFileName) PURE;
+    STDMETHOD(EmptyRecycleBin)(THIS) PURE;
+    STDMETHOD(EnumObjects)(THIS_ IRecycleBinEnumList **ppEnumList) PURE;
+    STDMETHOD(GetDirectory)(THIS_ LPWSTR szPath) PURE;
 
     END_INTERFACE
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRecycleBinFile;
 EXTERN_C const IID IID_IRecycleBinEnumList;
@@ -255,6 +247,10 @@ EXTERN_C const IID IID_IRecycleBin;
     (This)->lpVtbl->AddRef(This)
 #define IRecycleBinFile_Release(This) \
     (This)->lpVtbl->Release(This)
+#define IRecycleBinFile_IsEqualIdentity(This, pFI) \
+    (This)->lpVtbl->IsEqualIdentity(This, pFI)
+#define IRecycleBinFile_GetInfo(This, pInfo) \
+    (This)->lpVtbl->GetInfo(This, pInfo)
 #define IRecycleBinFile_GetLastModificationTime(This, pLastModificationTime) \
     (This)->lpVtbl->GetLastModificationTime(This, pLastModificationTime)
 #define IRecycleBinFile_GetDeletionTime(This, pDeletionTime) \
@@ -271,6 +267,8 @@ EXTERN_C const IID IID_IRecycleBin;
     (This)->lpVtbl->Delete(This)
 #define IRecycleBinFile_Restore(This) \
     (This)->lpVtbl->Restore(This)
+#define IRecycleBinFile_RemoveFromDatabase(This) \
+    (This)->lpVtbl->RemoveFromDatabase(This)
 
 #define IRecycleBinEnumList_QueryInterface(This, riid, ppvObject) \
     (This)->lpVtbl->QueryInterface(This, riid, ppvObject)
@@ -297,12 +295,19 @@ EXTERN_C const IID IID_IRecycleBin;
     (This)->lpVtbl->EmptyRecycleBin(This)
 #define IRecycleBin_EnumObjects(This, ppEnumList) \
     (This)->lpVtbl->EnumObjects(This, ppEnumList)
+#define IRecycleBin_GetDirectory(This, szPath) \
+    (This)->lpVtbl->GetDirectory(This, szPath)
 #endif
 
-HRESULT WINAPI
+EXTERN_C HRESULT
 GetDefaultRecycleBin(
     IN LPCWSTR pszVolume OPTIONAL,
     OUT IRecycleBin **pprb);
+
+/* Recycle Bin shell folder internal API */
+void CRecycleBin_NotifyRecycled(LPCWSTR OrigPath, const WIN32_FIND_DATAW *pFind,
+                                const RECYCLEBINFILEIDENTITY *pFI);
+
 
 #ifdef __cplusplus
 }

@@ -1,9 +1,9 @@
 /* FontSub by Katayama Hirofumi MZ
- * 
+ *
  * To the extent possible under law, the person who associated CC0 with
  * FontSub has waived all copyright and related or neighboring rights
  * to FontSub.
- * 
+ *
  * You should have received a copy of the CC0 legalcode along with this
  * work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
@@ -20,14 +20,14 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME "fontsub.exe"
 #include <reactos/version.rc>
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 1 ICON "fontsub.ico"
 
 2 BITMAP "up.bmp"
 3 BITMAP "down.bmp"
 4 BITMAP "nil.bmp"
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
@@ -50,8 +50,14 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

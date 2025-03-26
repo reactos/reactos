@@ -18,9 +18,6 @@
 #include <debug.h>
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
-ULONG ObpAccessProtectCloseBit = MAXIMUM_ALLOWED;
-
-#define TAG_OB_HANDLE 'dHbO'
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -450,7 +447,8 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
         if (ObjectQuota)
         {
             /* We have a quota, get the charges */
-            PagedPoolCharge = ObjectQuota->PagedPoolCharge;
+            PagedPoolCharge = ObjectQuota->PagedPoolCharge +
+                              ObjectQuota->SecurityDescriptorCharge;
             NonPagedPoolCharge = ObjectQuota->NonPagedPoolCharge;
         }
         else
@@ -460,14 +458,19 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
             NonPagedPoolCharge = ObjectType->TypeInfo.DefaultNonPagedPoolCharge;
         }
 
-        /* Charge the quota */
-        ObjectHeader->QuotaBlockCharged = (PVOID)1;
-        DPRINT("FIXME: Should charge: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
-#if 0
-            PsChargeSharedPoolQuota(PsGetCurrentProcess(),
-                                    PagedPoolCharge,
-                                    NonPagedPoolCharge);
-#endif
+        /* Is this the system process? */
+        if (PsGetCurrentProcess() == PsInitialSystemProcess)
+        {
+            /* It is, don't do anything */
+            ObjectHeader->QuotaBlockCharged = OBP_SYSTEM_PROCESS_QUOTA;
+        }
+        else
+        {
+            /* Charge the quota */
+            ObjectHeader->QuotaBlockCharged = PsChargeSharedPoolQuota(PsGetCurrentProcess(),
+                                                                      PagedPoolCharge,
+                                                                      NonPagedPoolCharge);
+        }
 
         /* Check if we don't have a quota block */
         if (!ObjectHeader->QuotaBlockCharged) return STATUS_QUOTA_EXCEEDED;
@@ -726,7 +729,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     }
 
     /* The callback allowed us to close it, but does the handle itself? */
-    if ((HandleEntry->ObAttributes & OBJ_PROTECT_CLOSE) &&
+    if ((HandleEntry->GrantedAccess & ObpAccessProtectCloseBit) &&
         !(IgnoreHandleProtection))
     {
         /* It doesn't, are we from user mode? */
@@ -1644,8 +1647,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         if (OpenReason == ObCreateHandle)
         {
             /* Check if we need to audit the privileges */
-            if ((AuxData->PrivilegeSet) &&
-                (AuxData->PrivilegeSet->PrivilegeCount))
+            if ((AuxData->PrivilegesUsed) &&
+                (AuxData->PrivilegesUsed->PrivilegeCount))
             {
                 /* Do the audit */
 #if 0
@@ -1653,7 +1656,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                                             &AccessState->
                                             SubjectSecurityContext,
                                             GrantedAccess,
-                                            AuxData->PrivilegeSet,
+                                            AuxData->PrivilegesUsed,
                                             TRUE,
                                             ExGetPreviousMode());
 #endif

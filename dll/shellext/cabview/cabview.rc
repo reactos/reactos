@@ -1,0 +1,75 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Main resource file
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ */
+
+#include <windef.h>
+#include <winuser.h>
+
+#include "resource.h"
+
+IDI_FOLDER ICON "res/folder.ico"
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Cabinet Shell Extension"
+#define REACTOS_STR_INTERNAL_NAME     "cabview"
+#define REACTOS_STR_ORIGINAL_FILENAME "cabview.dll"
+#include <reactos/version.rc>
+
+#include <reactos/manifest_dll.rc>
+
+IDR_FOLDER REGISTRY "res/cabview.rgs"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/et-EE.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HI_IN
+    #include "lang/hi-IN.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/sv-SE.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

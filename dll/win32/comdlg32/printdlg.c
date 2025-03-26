@@ -1171,10 +1171,7 @@ static BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name, PRINT_PTRA *PrintStru
 	        CheckRadioButton(hDlg, rad1, rad3, rad3);
 	}
 
-	/* Collate pages
-	 *
-	 * FIXME: The ico3 is not displayed for some reason. I don't know why.
-	 */
+	/* Collate pages */
 	if (lppd->Flags & PD_COLLATE) {
             SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
 				(LPARAM)PrintStructures->hCollateIcon);
@@ -1378,10 +1375,7 @@ static BOOL PRINTDLG_ChangePrinterW(HWND hDlg, WCHAR *name,
 	        CheckRadioButton(hDlg, rad1, rad3, rad3);
 	}
 
-	/* Collate pages
-	 *
-	 * FIXME: The ico3 is not displayed for some reason. I don't know why.
-	 */
+	/* Collate pages */
 	if (lppd->Flags & PD_COLLATE) {
             SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
 				(LPARAM)PrintStructures->hCollateIcon);

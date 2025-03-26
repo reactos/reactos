@@ -1,5 +1,5 @@
 #ifndef _LIBGEN_H_
-/* 
+/*
  * libgen.h
  *
  * $Id: libgen.h,v 1.2 2007/06/23 07:34:15 dannysmith Exp $
@@ -14,7 +14,7 @@
 #define _LIBGEN_H_
 
 /* All the headers include this file. */
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifdef __cplusplus
 extern "C" {

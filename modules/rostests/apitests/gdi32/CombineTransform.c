@@ -93,7 +93,17 @@ GetMaxValue(unsigned int Parameter, unsigned int Field)
 void Test_CombineTransform()
 {
     XFORM xform1, xform2, xform3;
+    BOOL IsWin64;
+#ifndef _WIN64
     BOOL IsWow64;
+#endif
+
+    // TODO: Check results for ARM/ARM64
+#ifdef _WIN64
+    IsWin64 = TRUE;
+#else
+    IsWin64 = (IsWow64Process(GetCurrentProcess(), &IsWow64) && IsWow64);
+#endif
 
     /* Test NULL paramters */
     set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
@@ -154,7 +164,7 @@ void Test_CombineTransform()
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
     ok_xform(xform3, 8.0, -2.0, 2.25, 0.0, -670.0, -340.0);
 
-    if (IsWow64Process(GetCurrentProcess(), &IsWow64) && IsWow64)
+    if (IsWin64)
     {
         ok_flt(GetMaxValue(0, 0), 4294967296.0);
         ok_flt(GetMaxValue(0, 1), 4294967296.0);
@@ -218,7 +228,7 @@ void Test_CombineTransform()
 
     xform1.eM11 = (FLOAT)18446746000000000000.0;
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-    ok_long(*(DWORD*)&xform3.eM11, IsWow64 ? 0x7f800000 : 0x7f800001);
+    ok_long(*(DWORD*)&xform3.eM11, IsWin64 ? 0x7f800000 : 0x7f800001);
 
     /* zero matrix + 1 invalid */
     set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -237,7 +247,7 @@ void Test_CombineTransform()
     set_xform(&xform1, 0.0, geIND, 0.0, 0.0, 0.0, 0.0);
     set_xform(&xform2, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-    ok_xform(xform3, IsWow64 ? geIND : 0.000000, IsWow64 ? geIND : -1.500000, geIND, geIND, 0.0, 0.0);
+    ok_xform(xform3, IsWin64 ? geIND : 0.000000, IsWin64 ? geIND : -1.500000, geIND, geIND, 0.0, 0.0);
 }
 
 void Test_CombineTransform_Inval(float eInval, float eOut)

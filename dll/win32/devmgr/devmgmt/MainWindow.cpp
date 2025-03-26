@@ -36,15 +36,15 @@ static const MENU_HINT MainMenuHintTable[] =
     { IDM_SCAN_HARDWARE, IDS_HINT_SCAN },
     { IDM_ENABLE_DRV, IDS_HINT_ENABLE },
     { IDM_DISABLE_DRV, IDS_HINT_DISABLE },
-    { IDM_UPDATE_DRV, IDS_HINT_UPDATE },  
+    { IDM_UPDATE_DRV, IDS_HINT_UPDATE },
     { IDM_UNINSTALL_DRV, IDS_HINT_UNINSTALL },
     { IDM_ADD_HARDWARE, IDS_HINT_ADD },
 
     // View Menu
-    { IDM_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE},
-    { IDM_DEVBYCONN, IDS_HINT_DEV_BY_CONN},
-    { IDM_RESBYTYPE, IDS_HINT_RES_BY_TYPE},
-    { IDM_RESBYCONN, IDS_HINT_RES_BY_TYPE},
+    { IDM_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE },
+    { IDM_DEVBYCONN, IDS_HINT_DEV_BY_CONN },
+    { IDM_RESBYTYPE, IDS_HINT_RES_BY_TYPE },
+    { IDM_RESBYCONN, IDS_HINT_RES_BY_CONN },
     { IDM_SHOWHIDDEN, IDS_HINT_SHOW_HIDDEN },
 
     { IDM_ABOUT, IDS_HINT_ABOUT }
@@ -175,14 +175,14 @@ CDeviceManager::Initialize(_In_z_ LPCTSTR lpCaption,
                                      this);
     }
 
-    // Return creation result 
+    // Return creation result
     return !!(m_hMainWnd);
 }
 
 void
 CDeviceManager::Uninitialize(void)
 {
-    // Unregister the window class 
+    // Unregister the window class
     UnregisterClassW(m_szMainWndClass, g_hThisInstance);
 }
 
@@ -191,7 +191,7 @@ CDeviceManager::Run(void)
 {
     MSG Msg;
 
-    // Pump the message queue 
+    // Pump the message queue
     while (GetMessageW(&Msg, NULL, 0, 0 ) != 0)
     {
         TranslateMessage(&Msg);
@@ -515,7 +515,7 @@ CDeviceManager::OnNotify(_In_ LPARAM lParam)
 
         case NM_DBLCLK:
         {
-            m_DeviceView->DisplayPropertySheet();
+            Ret = m_DeviceView->OnDoubleClick(NmHdr);
             break;
         }
 
@@ -653,16 +653,13 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
         {
             CAtlStringW szAppName;
             CAtlStringW szAppAuthors;
-            HICON hIcon;
 
             if (!szAppName.LoadStringW(g_hThisInstance, IDS_APPNAME))
                 szAppName = L"ReactOS Device Manager";
             if (!szAppAuthors.LoadStringW(g_hThisInstance, IDS_APP_AUTHORS))
                 szAppAuthors = L"";
-            hIcon = LoadIconW(g_hThisInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
-            ShellAboutW(m_hMainWnd, szAppName, szAppAuthors, hIcon);
-            if (hIcon)
-                DestroyIcon(hIcon);
+            ShellAboutW(m_hMainWnd, szAppName, szAppAuthors,
+                        LoadIconW(g_hThisInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON)));
 
             // Set focus back to the treeview
             m_DeviceView->SetFocus();

@@ -57,8 +57,7 @@ IDI_SHUTDOWN_ICON ICON "resources/4394.ico"
 IDI_PLAY_ICON ICON "resources/play.ico"
 IDI_STOP_ICON ICON "resources/stop.ico"
 
-/* Bitmaps */
-IDB_SPEAKIMG BITMAP "resources/speaker.bmp"
+IDI_SPEAKIMG ICON "resources/speaker.ico"
 
 #include <reactos/manifest_hosted.rc>
 
@@ -133,6 +132,9 @@ IDB_SPEAKIMG BITMAP "resources/speaker.bmp"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

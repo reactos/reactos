@@ -1,10 +1,10 @@
 
-#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # no optimization
-    add_compile_options(/Ob0 /Od)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(/Ox /Ob2 /Ot /Oy /GT)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(/Ox /Ob2 /Ot /Oy)
+    # Avoid spam in clang-cl as it doesn't support /GT
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        add_compile_options(/GT)
+    endif()
 elseif(OPTIMIZE STREQUAL "1")
     add_compile_options(/O1)
 elseif(OPTIMIZE STREQUAL "2")
@@ -12,9 +12,9 @@ elseif(OPTIMIZE STREQUAL "2")
 elseif(OPTIMIZE STREQUAL "3")
     add_compile_options(/Ot /Ox /GS-)
 elseif(OPTIMIZE STREQUAL "4")
-    add_compile_options(/Os /Ox /GS-)
+    add_compile_options(/Ob0 /Od)
 elseif(OPTIMIZE STREQUAL "5")
-    add_compile_options(/Gy /Ob2 /Os /Ox /GS-)
+    add_compile_options(/Ob2 /Os /Ox /GS-)
 endif()
 
 # Always use string pooling: this helps reducing the binaries size since a lot
@@ -22,25 +22,31 @@ endif()
 # helper macros. Note also that GCC builds use string pooling by default.
 add_compile_options(/GF)
 
-# Enable function level linking and comdat folding
-add_compile_options(/Gy)
+# Enable function level linking and comdat folding (only C/C++, not ASM!)
+add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Gy>)
 add_link_options(/OPT:REF /OPT:ICF)
 
 if(ARCH STREQUAL "i386")
     add_definitions(/DWIN32 /D_WINDOWS)
 endif()
 
-add_definitions(/Dinline=__inline /D__STDC__=1)
+add_definitions(/D__STDC__=1)
+
+# Enable correct values of __cplusplus macro for newer standards
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
 
 # Ignore any "standard" include paths, and do not use any default CRT library.
-if(NOT USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/X /Zl)
 endif()
 
 # Disable buffer security checks by default.
 add_compile_options(/GS-)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(ARCH STREQUAL "amd64")
+        add_compile_options(-mcx16) # Generate CMPXCHG16B
+    endif()
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
 endif()
 
@@ -48,16 +54,11 @@ endif()
 # default for older compilers. See CORE-6507
 if(ARCH STREQUAL "i386")
     # Clang's IA32 means i386, which doesn't have cmpxchg8b
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_options(-march=${OARCH})
     else()
         add_compile_options(/arch:IA32)
     endif()
-endif()
-
-# CLang default to -fno-common from version 11 onward. We are not rady for this now
-if (USE_CLANG_CL)
-    add_compile_options(-fcommon)
 endif()
 
 # VS 12+ requires /FS when used in parallel compilations
@@ -71,7 +72,9 @@ add_compile_options(/Zc:threadSafeInit-)
 # HACK: Disable use of __CxxFrameHandler4 on VS 16.3+ (x64 only)
 # See https://developercommunity.visualstudio.com/content/problem/746534/visual-c-163-runtime-uses-an-unsupported-api-for-u.html
 if(ARCH STREQUAL "amd64" AND MSVC_VERSION GREATER 1922)
-    add_compile_options(/d2FH4-)
+    if (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_options(/d2FH4-)
+    endif()
     add_link_options(/d2:-FH4-)
 endif()
 
@@ -90,16 +93,31 @@ add_compile_options(/wd4244 /wd4290 /wd4800 /wd4200 /wd4214)
 # FIXME: Temporarily disable C4018 until we fix more of the others. CORE-10113
 add_compile_options(/wd4018)
 
+# Allow all warnings on msbuild/VS IDE
+if (MSVC_IDE)
+    set(ALLOW_WARNINGS TRUE)
+endif()
+
+# On x86 Debug builds, if it's not Clang-CL or msbuild, treat all warnings as errors
+if ((ARCH STREQUAL "i386") AND (CMAKE_BUILD_TYPE STREQUAL "Debug") AND (CMAKE_C_COMPILER_ID STREQUAL "MSVC") AND (NOT MSVC_IDE))
+    set(TREAT_ALL_WARNINGS_AS_ERRORS=TRUE)
+endif()
+
+# Define ALLOW_WARNINGS=TRUE on the cmake/configure command line to bypass errors
+if (ALLOW_WARNINGS)
+    # Nothing
+elseif (TREAT_ALL_WARNINGS_AS_ERRORS)
+    add_compile_options(/WX)
+else()
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
 # - C4020: too many actual parameters
 # - C4022: pointer type mismatch for parameter
 # - C4028: formal parameter different from declaration
 # - C4047: different level of indirection
-# - TODO: C4090: different 'modifier' qualifiers (for C programs only;
+# - C4090: different 'modifier' qualifiers (for C programs only;
 #          for C++ programs, the compiler error C2440 is issued)
 # - C4098: void function returning a value
-# - C4101: unreferenced local variable
 # - C4113: parameter lists differ
 # - C4129: unrecognized escape sequence
 # - C4133: incompatible types - from '<x> *' to '<y> *'
@@ -113,34 +131,47 @@ add_compile_options(/wd4018)
 # - C4700: uninitialized variable usage
 # - C4715: 'function': not all control paths return a value
 # - C4716: function must return a value
-add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
+add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4090 /we4098 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
 
+# - C4101: unreferenced local variable
 # - C4189: local variable initialized but not referenced
-# Not in Release mode
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(/we4189)
+# Not in Release mode, msbuild generator doesn't like CMAKE_BUILD_TYPE
+if(MSVC_IDE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(/we4101 /we4189)
+endif()
+
 endif()
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
 add_compile_options(/w14115)
 
-if(USE_CLANG_CL)
-    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc;-Wno-multichar;-Wno-char-subscripts;-Wno-microsoft-enum-forward-reference;-Wno-pragma-pack;-Wno-microsoft-anon-tag;-Wno-parentheses-equality;-Wno-unknown-pragmas>")
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc>")
+    add_compile_options(
+        -Wno-unknown-warning-option
+        -Wno-multichar
+        -Wno-char-subscripts
+        -Wno-microsoft-enum-forward-reference
+        -Wno-pragma-pack
+        -Wno-microsoft-anon-tag
+        -Wno-parentheses-equality
+        -Wno-unknown-pragmas
+        -Wno-ignored-pragmas
+        -Wno-ignored-pragma-intrinsic
+        -Wno-microsoft-exception-spec
+    )
 endif()
 
 # Debugging
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(NOT (_PREFAST_ OR _VS_ANALYZE_))
-        add_compile_options(/Zi)
-    endif()
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_definitions("/D NDEBUG")
+if(NOT (_PREFAST_ OR _VS_ANALYZE_))
+    add_compile_options($<$<CONFIG:Debug>:/Zi>)
 endif()
+add_compile_definitions($<$<CONFIG:Release>:NDEBUG=>)
 
 # Hotpatchable images
 if(ARCH STREQUAL "i386")
-    if(NOT USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
         add_compile_options(/hotpatch)
     endif()
     set(_hotpatch_link_flag "/FUNCTIONPADMIN:5")
@@ -187,20 +218,24 @@ if(MSVC_IDE)
     add_definitions(/DLANGUAGE_EN_US)
 else()
     set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo <OBJECT> <SOURCE>")
-    if(ARCH STREQUAL "arm")
-        set(CMAKE_ASM_COMPILE_OBJECT
-            "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
-            "<CMAKE_ASM_COMPILER> -nologo -o <OBJECT> <OBJECT>.tmp")
+endif()
+
+if(MSVC_VERSION GREATER_EQUAL 1936)
+    set(_quiet_flag "/quiet")
+endif()
+
+# We don't put <INCLUDES> <DEFINES> <FLAGS> because this is handled in add_asm_files macro
+if (NOT MSVC_IDE)
+    if(ARCH STREQUAL "arm" OR ARCH STREQUAL "arm64")
+        set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> -nologo -o <OBJECT> <SOURCE>")
     else()
-        set(CMAKE_ASM_COMPILE_OBJECT
-            "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
-            "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
+        set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> /nologo ${_quiet_flag} /Cp /Fo <OBJECT> /c /Ta <SOURCE>")
     endif()
 endif()
 
 if(_VS_ANALYZE_)
-    message("VS static analysis enabled!")
-    add_compile_options(/analyze)
+    message("-- VS static analysis enabled!")
+    add_compile_options(/analyze:WX-)
 elseif(_PREFAST_)
     message("PREFAST enabled!")
     set(CMAKE_C_COMPILE_OBJECT "prefast <CMAKE_C_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <INCLUDES> <FLAGS> <DEFINES> /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
@@ -214,48 +249,60 @@ elseif(_PREFAST_)
 endif()
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
-set(CMAKE_ASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
+set(CMAKE_ASM_MASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_RC_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
-set(CMAKE_ASM_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
+set(CMAKE_ASM_MASM_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
 function(set_entrypoint _module _entrypoint)
     if(${_entrypoint} STREQUAL "0")
-        add_target_link_flags(${_module} "/NOENTRY")
+        target_link_options(${_module} PRIVATE "/NOENTRY")
     elseif(ARCH STREQUAL "i386")
         set(_entrysymbol ${_entrypoint})
         if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
         endif()
-        add_target_link_flags(${_module} "/ENTRY:${_entrysymbol}")
+        target_link_options(${_module} PRIVATE "/ENTRY:${_entrysymbol}")
     else()
-        add_target_link_flags(${_module} "/ENTRY:${_entrypoint}")
+        target_link_options(${_module} PRIVATE "/ENTRY:${_entrypoint}")
     endif()
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
     string(TOUPPER ${SUBSYSTEM} _subsystem)
     if(ARCH STREQUAL "amd64")
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},5.02")
+        target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},5.02")
     elseif(ARCH STREQUAL "arm")
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},6.02")
+        target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},6.02")
+    elseif(ARCH STREQUAL "arm64")
+        target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},6.02")
     else()
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},5.01")
+        target_link_options(${MODULE} PRIVATE "/SUBSYSTEM:${_subsystem},5.01")
     endif()
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)
-    add_target_link_flags(${MODULE} "/BASE:${IMAGE_BASE}")
+    target_link_options(${MODULE} PRIVATE "/BASE:${IMAGE_BASE}")
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
-        add_target_link_flags(${MODULE} "/DLL")
-    elseif(${TYPE} STREQUAL "kernelmodedriver")
-        # Disable linker warning 4078 (multiple sections found with different attributes) for INIT section use
-        add_target_link_flags(${MODULE} "/DRIVER /SECTION:INIT,ERWD")
-    elseif(${TYPE} STREQUAL "wdmdriver")
-        add_target_link_flags(${MODULE} "/DRIVER:WDM /SECTION:INIT,ERWD")
+    # Set the PE image version numbers from the NT OS version ReactOS is based on
+    target_link_options(${MODULE} PRIVATE "/VERSION:5.01")
+
+    if((TYPE STREQUAL win32dll) OR (TYPE STREQUAL win32ocx) OR (TYPE STREQUAL cpl))
+        target_link_options(${MODULE} PRIVATE /DLL)
+    elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        # Mark INIT section as Executable Read Write Discardable
+        target_link_options(${MODULE} PRIVATE /SECTION:INIT,ERWD)
+
+        if(TYPE STREQUAL kernelmodedriver)
+            target_link_options(${MODULE} PRIVATE /DRIVER)
+        elseif(TYPE STREQUAL wdmdriver)
+            target_link_options(${MODULE} PRIVATE /DRIVER:WDM)
+        elseif (TYPE STREQUAL kernel)
+            # Mark .rsrc section as non-disposable non-pageable, as bugcheck code needs to access it
+            target_link_options(${MODULE} PRIVATE /SECTION:.rsrc,!DP)
+        endif()
     endif()
 
     if(RUNTIME_CHECKS)
@@ -263,12 +310,6 @@ function(set_module_type_toolchain MODULE TYPE)
     endif()
 
 endfunction()
-
-if(ARCH STREQUAL "arm")
-    set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -nologo -o <OBJECT> <SOURCE>")
-else()
-    set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <SOURCE>")
-endif()
 
 function(add_delay_importlibs _module)
     get_target_property(_module_type ${_module} TYPE)
@@ -281,7 +322,7 @@ function(add_delay_importlibs _module)
         if(NOT _ext)
             set(_ext ".dll")
         endif()
-        add_target_link_flags(${_module} "/DELAYLOAD:${_basename}${_ext}")
+        target_link_options(${_module} PRIVATE "/DELAYLOAD:${_basename}${_ext}")
         target_link_libraries(${_module} "lib${_basename}")
     endforeach()
     target_link_libraries(${_module} delayimp)
@@ -291,22 +332,23 @@ function(fixup_load_config _target)
     # msvc knows how to generate a load_config so no hacks here
 endfunction()
 
-function(generate_import_lib _libname _dllname _spec_file)
+function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_arg)
 
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
+    set(_asm_impalias_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_impalias.asm)
 
-    # Generate the def and asm stub files
+    # Generate the def, asm stub and alias files
     add_custom_command(
-        OUTPUT ${_asm_stubs_file} ${_def_file}
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        OUTPUT ${_asm_stubs_file} ${_def_file} ${_asm_impalias_file}
+        COMMAND native-spec2def --ms ${__version_arg} ${__dbg_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} -i=${_asm_impalias_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Compile the generated asm stub file
-    if(ARCH STREQUAL "arm")
-        set(_asm_stub_command ${CMAKE_ASM_COMPILER} -nologo -o ${_asm_stubs_file}.obj ${_asm_stubs_file})
+    if(ARCH STREQUAL "arm" OR ARCH STREQUAL "arm64")
+        set(_asm_stub_command ${CMAKE_ASM_MASM_COMPILER} -nologo -o ${_asm_stubs_file}.obj ${_asm_stubs_file})
     else()
-        set(_asm_stub_command ${CMAKE_ASM_COMPILER} /nologo /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file})
+        set(_asm_stub_command ${CMAKE_ASM_MASM_COMPILER} /nologo ${_quiet_flag} /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file})
     endif()
     add_custom_command(
         OUTPUT ${_asm_stubs_file}.obj
@@ -329,7 +371,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     # By giving the import lib as an object input, LIB extracts the relevant object files and make a new library.
     # This allows us to treat the implib as a regular static library
     set_source_files_properties(${_libfile_tmp} PROPERTIES EXTERNAL_OBJECT TRUE)
-    add_library(${_libname} STATIC ${_libfile_tmp})
+    add_library(${_libname} STATIC ${_libfile_tmp} ${_asm_impalias_file})
 
     set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
 endfunction()
@@ -340,14 +382,17 @@ if(ARCH STREQUAL "amd64")
     add_definitions(/D__x86_64)
     set(SPEC2DEF_ARCH x86_64)
 elseif(ARCH STREQUAL "arm")
-    add_definitions(/D__arm__)
     set(SPEC2DEF_ARCH arm)
+elseif(ARCH STREQUAL "arm64")
+    add_definitions(/D__arm64__)
+    set(SPEC2DEF_ARCH arm64)
 else()
     set(SPEC2DEF_ARCH i386)
 endif()
+
 function(spec2def _dllname _spec_file)
 
-    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY;WITH_DBG;NO_DBG" "VERSION" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -363,16 +408,25 @@ function(spec2def _dllname _spec_file)
 
     if(__spec2def_VERSION)
         set(__version_arg "--version=0x${__spec2def_VERSION}")
+    else()
+        set(__version_arg "--version=${DLL_EXPORT_VERSION}")
+    endif()
+
+    if(__spec2def_WITH_DBG OR (DBG AND NOT __spec2def_NO_DBG))
+        set(__dbg_arg "--dbg")
     endif()
 
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${__dbg_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
+    # Do not use precompiled headers for the stub file
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
     if(__spec2def_ADD_IMPORTLIB)
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} "${__version_arg}" "${__dbg_arg}")
         if(__spec2def_NO_PRIVATE_WARNINGS)
             set_property(TARGET lib${_file} APPEND PROPERTY STATIC_LIBRARY_OPTIONS /ignore:4104)
         endif()
@@ -386,15 +440,15 @@ endmacro()
 # PSEH workaround
 set(PSEH_LIB "pseh")
 
-# Use a full path for the x86 version of ml when using x64 VS.
-# It's not a problem when using the DDK/WDK because, in x64 mode,
-# both the x86 and x64 versions of ml are available.
-if((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCToolsInstallDir}))
-    set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/HostX86/x86/ml.exe)
-elseif((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCINSTALLDIR}))
-    set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
-elseif(ARCH STREQUAL "arm")
-    set(CMAKE_ASM16_COMPILER armasm.exe)
+# Setup MASM/ML for compiling 16-bit x86 ASM code on x86 or non-x86 ports.
+if(NOT ARCH STREQUAL "i386")
+    if((MSVC_VERSION LESS_EQUAL 1900) AND (DEFINED ENV{VCINSTALLDIR}))
+        set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
+    elseif(DEFINED ENV{VCToolsInstallDir})
+        set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/Host$ENV{VSCMD_ARG_HOST_ARCH}/x86/ml.exe)
+    else()
+        set(CMAKE_ASM16_COMPILER ml.exe)
+    endif()
 else()
     set(CMAKE_ASM16_COMPILER ml.exe)
 endif()
@@ -406,7 +460,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
     get_defines(_defines)
     get_includes(_includes)
 
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")
@@ -417,11 +471,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
         COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_includes} ${_defines} /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
         DEPENDS ${_asm_file})
 
-    if(ARCH STREQUAL "arm")
-        set(_asm16_command ${CMAKE_ASM16_COMPILER} -nologo -o ${_object_file} ${_temp_file})
-    else()
-        set(_asm16_command ${CMAKE_ASM16_COMPILER} /nologo /Cp /Fo${_object_file} /c /Ta ${_temp_file})
-    endif()
+    set(_asm16_command ${CMAKE_ASM16_COMPILER} /nologo ${_quiet_flag} /Cp /Fo${_object_file} /c /Ta ${_temp_file})
 
     add_custom_command(
         OUTPUT ${_object_file}
@@ -442,15 +492,17 @@ function(allow_warnings __module)
 endfunction()
 
 macro(add_asm_files _target)
-    if(MSVC_IDE)
-        get_defines(_directory_defines)
-        get_includes(_directory_includes)
-        get_directory_property(_defines COMPILE_DEFINITIONS)
-        foreach(_source_file ${ARGN})
+    get_defines(_directory_defines)
+    get_includes(_directory_includes)
+    get_directory_property(_defines COMPILE_DEFINITIONS)
+    foreach(_source_file ${ARGN})
+        get_filename_component(_extension ${_source_file} EXT)
+        if (("${_extension}" STREQUAL ".asm") OR ("${_extension}" STREQUAL ".inc"))
+            list(APPEND ${_target} ${_source_file})
+        else()
             get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
             get_filename_component(_source_file_full_path ${_source_file} ABSOLUTE)
-            set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.tmp)
-            set(_object_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.obj)
+            set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.asm)
             get_source_file_property(_defines_semicolon_list ${_source_file_full_path} COMPILE_DEFINITIONS)
             unset(_source_file_defines)
             foreach(_define ${_defines_semicolon_list})
@@ -458,21 +510,13 @@ macro(add_asm_files _target)
                     list(APPEND _source_file_defines -D${_define})
                 endif()
             endforeach()
-            if(ARCH STREQUAL "arm")
-                set(_pp_asm_compile_command ${CMAKE_ASM_COMPILER} -nologo -o ${_object_file} ${_preprocessed_asm_file})
-            else()
-                set(_pp_asm_compile_command ${CMAKE_ASM_COMPILER} /nologo /Cp /Fo${_object_file} /c /Ta ${_preprocessed_asm_file})
-            endif()
             add_custom_command(
-                OUTPUT ${_preprocessed_asm_file} ${_object_file}
-                COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_source_file_full_path} > ${_preprocessed_asm_file} && ${_pp_asm_compile_command}
+                OUTPUT ${_preprocessed_asm_file}
+                COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_source_file_full_path} > ${_preprocessed_asm_file}
                 DEPENDS ${_source_file_full_path})
-            set_source_files_properties(${_object_file} PROPERTIES EXTERNAL_OBJECT TRUE)
-            list(APPEND ${_target} ${_object_file})
-        endforeach()
-    else()
-        list(APPEND ${_target} ${ARGN})
-    endif()
+            list(APPEND ${_target} ${_preprocessed_asm_file})
+        endif()
+    endforeach()
 endmacro()
 
 function(add_linker_script _target _linker_script_file)
@@ -486,7 +530,7 @@ function(add_linker_script _target _linker_script_file)
         OUTPUT ${_generated_file}
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_file_full_path}" "${_generated_file}"
         DEPENDS ${_file_full_path})
-    set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "ASM" GENERATED TRUE)
+    set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "ASM_MASM" GENERATED TRUE)
     add_asm_files(${_target}_linker_file ${_generated_file})
 
     # Generate the C module containing extra sections specifications and layout,
@@ -504,7 +548,7 @@ function(add_linker_script _target _linker_script_file)
 
     # Create the additional linker response file.
     set(_generated_file "${_generated_file_path_prefix}.rsp")
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")
@@ -528,8 +572,8 @@ function(add_linker_script _target _linker_script_file)
             message(FATAL_ERROR "Generating pre-processed linker options for target '${_target}' failed with error ${linker_rsp_result}.")
         endif()
         # file(STRINGS ${_generated_file} linker_options NEWLINE_CONSUME)
-        string(REGEX REPLACE "[\r\n]+" " " linker_options "${linker_options}")
-        add_target_link_flags(${_target} ${linker_options})
+        string(REGEX REPLACE "[\r\n]+" ";" linker_options "${linker_options}")
+        target_link_options(${_target} PRIVATE ${linker_options})
     else()
         # Generate at compile-time a linker response file and append it
         # to the linker command-line.
@@ -542,8 +586,8 @@ function(add_linker_script _target _linker_script_file)
         set_source_files_properties(${_generated_file} PROPERTIES GENERATED TRUE)
         # add_custom_target("${_target}_${_file_name}" ALL DEPENDS ${_generated_file})
         # add_dependencies(${_target} "${_target}_${_file_name}")
-        add_target_link_flags(${_target} "@${_generated_file}")
-        add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
+        target_link_options(${_target} PRIVATE "@${_generated_file}")
+        set_property(TARGET ${_target} APPEND PROPERTY LINK_DEPENDS ${_file_full_path})
     endif()
 endfunction()
 

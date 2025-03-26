@@ -6,10 +6,12 @@
 extern void func_CreateService(void);
 extern void func_DuplicateTokenEx(void);
 extern void func_eventlog(void);
+extern void func_Hash(void);
 extern void func_HKEY_CLASSES_ROOT(void);
 extern void func_IsTextUnicode(void);
 extern void func_LockServiceDatabase(void);
 extern void func_QueryServiceConfig2(void);
+extern void func_RegCreateKeyEx(void);
 extern void func_RegEnumKey(void);
 extern void func_RegEnumValueW(void);
 extern void func_RegOpenKeyExW(void);
@@ -26,10 +28,12 @@ const struct test winetest_testlist[] =
     { "CreateService", func_CreateService },
     { "DuplicateTokenEx", func_DuplicateTokenEx },
     { "eventlog_supp", func_eventlog },
+    { "Hash", func_Hash },
     { "HKEY_CLASSES_ROOT", func_HKEY_CLASSES_ROOT },
     { "IsTextUnicode" , func_IsTextUnicode },
     { "LockServiceDatabase" , func_LockServiceDatabase },
     { "QueryServiceConfig2", func_QueryServiceConfig2 },
+    { "RegCreateKeyEx", func_RegCreateKeyEx },
     { "RegEnumKey", func_RegEnumKey },
     { "RegEnumValueW", func_RegEnumValueW },
     { "RegQueryInfoKey", func_RegQueryInfoKey },

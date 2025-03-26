@@ -1,8 +1,8 @@
 #pragma once
 
-/* 
- * FIXME: This does not work if we have more than 24 IRQs (ie. more than one 
- * I/O APIC) 
+/*
+ * FIXME: This does not work if we have more than 24 IRQs (ie. more than one
+ * I/O APIC)
  */
 #define IRQL2VECTOR(irql)   (IRQ2VECTOR(PROFILE_LEVEL - (irql)))
 
@@ -183,7 +183,7 @@ typedef struct _MP_CONFIGURATION_INTLOCAL
 #include <poppack.h>
 
 #define MP_APIC_ALL	0xFF
-  
+
 #define CPU_FLAG_ENABLED         1  /* Processor is available */
 #define CPU_FLAG_BSP             2  /* Processor is the bootstrap processor */
 

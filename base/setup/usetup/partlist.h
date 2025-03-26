@@ -28,19 +28,6 @@
 
 // #include "../lib/utils/partlist.h"
 
-typedef enum _FORMATMACHINESTATE
-{
-    Start,
-    FormatSystemPartition,
-    FormatInstallPartition,
-    FormatOtherPartition,
-    FormatDone,
-    // CheckSystemPartition,
-    // CheckInstallPartition,
-    // CheckOtherPartition,
-    // CheckDone
-} FORMATMACHINESTATE, *PFORMATMACHINESTATE;
-
 typedef struct _PARTLIST_UI
 {
     PPARTLIST List;
@@ -71,10 +58,22 @@ typedef struct _PARTLIST_UI
 
 
 VOID
-GetPartTypeStringFromPartitionType(
-    IN UCHAR partitionType,
-    OUT PCHAR strPartType,
-    IN ULONG cchPartType);
+GetPartitionTypeString(
+    IN PPARTENTRY PartEntry,
+    OUT PSTR strBuffer,
+    IN ULONG cchBuffer);
+
+VOID
+PartitionDescription(
+    IN PPARTENTRY PartEntry,
+    OUT PSTR strBuffer,
+    IN SIZE_T cchBuffer);
+
+VOID
+DiskDescription(
+    IN PDISKENTRY DiskEntry,
+    OUT PSTR strBuffer,
+    IN SIZE_T cchBuffer);
 
 VOID
 InitPartitionListUi(
@@ -87,15 +86,12 @@ InitPartitionListUi(
     IN SHORT Bottom);
 
 VOID
-ScrollDownPartitionList(
-    IN PPARTLIST_UI ListUi);
-
-VOID
-ScrollUpPartitionList(
-    IN PPARTLIST_UI ListUi);
-
-VOID
 DrawPartitionList(
     IN PPARTLIST_UI ListUi);
+
+VOID
+ScrollUpDownPartitionList(
+    _In_ PPARTLIST_UI ListUi,
+    _In_ BOOLEAN Direction);
 
 /* EOF */

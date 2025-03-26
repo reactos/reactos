@@ -37,6 +37,16 @@ SetupStartService(LPCWSTR lpServiceName, BOOL bWait);
 HINF hSysSetupInf = INVALID_HANDLE_VALUE;
 ADMIN_INFO AdminInfo;
 
+typedef struct _DLG_DATA
+{
+    HBITMAP hLogoBitmap;
+    HBITMAP hBarBitmap;
+    HWND hWndBarCtrl;
+    DWORD BarCounter;
+    DWORD BarWidth;
+    DWORD BarHeight;
+} DLG_DATA, *PDLG_DATA;
+
 /* FUNCTIONS ****************************************************************/
 
 static VOID
@@ -111,7 +121,8 @@ CreateShortcut(
     LPCWSTR pszCommand,
     LPCWSTR pszDescription,
     INT iIconNr,
-    LPCWSTR pszWorkingDir)
+    LPCWSTR pszWorkingDir,
+    LPCWSTR pszArgs)
 {
     DWORD dwLen;
     LPWSTR Ptr;
@@ -160,7 +171,7 @@ CreateShortcut(
     /* Create the shortcut */
     return SUCCEEDED(CreateShellLink(szPath,
                                      pszCommand,
-                                     L"",
+                                     pszArgs,
                                      pszWorkingDir,
                                      /* Special value to indicate no icon */
                                      (iIconNr != -1 ? pszCommand : NULL),
@@ -169,7 +180,13 @@ CreateShortcut(
 }
 
 
-static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR pszFolder)
+static BOOL
+CreateShortcutsFromSection(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ HINF hinf,
+    _In_ LPWSTR pszSection,
+    _In_ LPCWSTR pszFolder)
 {
     INFCONTEXT Context;
     DWORD dwFieldCount;
@@ -178,12 +195,17 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
     WCHAR szName[MAX_PATH];
     WCHAR szDescription[MAX_PATH];
     WCHAR szDirectory[MAX_PATH];
+    WCHAR szArgs[MAX_PATH];
 
     if (!SetupFindFirstLine(hinf, pszSection, NULL, &Context))
         return FALSE;
 
     do
     {
+        pNotify->Progress++;
+
+        SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)pNotify);
+
         dwFieldCount = SetupGetFieldCount(&Context);
         if (dwFieldCount < 3)
             continue;
@@ -203,16 +225,26 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
         if (dwFieldCount < 5 || !SetupGetStringFieldW(&Context, 5, szDirectory, ARRAYSIZE(szDirectory), NULL))
             szDirectory[0] = L'\0';
 
+        if (dwFieldCount < 6 || !SetupGetStringFieldW(&Context, 6, szArgs, ARRAYSIZE(szArgs), NULL))
+            szArgs[0] = L'\0';
+
         wcscat(szName, L".lnk");
 
-        CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr, szDirectory);
+        CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr, szDirectory, szArgs);
+
+        SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)pNotify);
 
     } while (SetupFindNextLine(&Context, &Context));
 
     return TRUE;
 }
 
-static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
+static BOOL
+CreateShortcuts(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ HINF hinf,
+    _In_ LPCWSTR szSection)
 {
     INFCONTEXT Context;
     WCHAR szPath[MAX_PATH];
@@ -242,13 +274,97 @@ static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
         if (FAILED(SHGetFolderPathAndSubDirW(NULL, csidl|CSIDL_FLAG_CREATE, (HANDLE)-1, SHGFP_TYPE_DEFAULT, szFolder, szPath)))
             continue;
 
-        CreateShortcutsFromSection(hinf, szFolderSection, szPath);
+        CreateShortcutsFromSection(pItemsData, pNotify, hinf, szFolderSection, szPath);
 
     } while (SetupFindNextLine(&Context, &Context));
 
     CoUninitialize();
 
     return TRUE;
+}
+
+static LONG
+CountShortcuts(
+    _In_ HINF hinf,
+    _In_ LPCWSTR szSection)
+{
+    INFCONTEXT Context;
+    WCHAR szFolderSection[MAX_PATH];
+    LONG Steps = 0;
+
+    if (!SetupFindFirstLine(hinf, szSection, NULL, &Context))
+        return FALSE;
+
+    do
+    {
+        if (SetupGetFieldCount(&Context) < 2)
+            continue;
+
+        if (!SetupGetStringFieldW(&Context, 0, szFolderSection, ARRAYSIZE(szFolderSection), NULL))
+            continue;
+
+        Steps += SetupGetLineCountW(hinf, szFolderSection);
+    } while (SetupFindNextLine(&Context, &Context));
+
+    return Steps;
+}
+
+VOID
+InstallStartMenuItems(
+    _In_ PITEMSDATA pItemsData)
+{
+    HINF hShortcutsInf1 = INVALID_HANDLE_VALUE;
+    HINF hShortcutsInf2 = INVALID_HANDLE_VALUE;
+    LONG Steps = 0;
+    DWORD LastError = 0;
+    REGISTRATIONNOTIFY Notify;
+
+    ZeroMemory(&Notify, sizeof(Notify));
+
+    hShortcutsInf1 = SetupOpenInfFileW(L"shortcuts.inf",
+                                      NULL,
+                                      INF_STYLE_WIN4,
+                                      NULL);
+    if (hShortcutsInf1 == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("Failed to open shortcuts.inf");
+        return;
+    }
+
+    hShortcutsInf2 = SetupOpenInfFileW(L"rosapps_shortcuts.inf",
+                                       NULL,
+                                       INF_STYLE_WIN4,
+                                       NULL);
+
+    Steps = CountShortcuts(hShortcutsInf1, L"ShortcutFolders");
+    if (hShortcutsInf2 != INVALID_HANDLE_VALUE)
+        Steps += CountShortcuts(hShortcutsInf2, L"ShortcutFolders");
+
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 1, (LPARAM)Steps);
+
+    if (!CreateShortcuts(pItemsData, &Notify, hShortcutsInf1, L"ShortcutFolders"))
+    {
+        DPRINT1("CreateShortcuts() failed");
+        goto done;
+    }
+
+    if (hShortcutsInf2 != INVALID_HANDLE_VALUE)
+    {
+        if (!CreateShortcuts(pItemsData, &Notify, hShortcutsInf2, L"ShortcutFolders"))
+        {
+            DPRINT1("CreateShortcuts(rosapps) failed");
+            goto done;
+        }
+    }
+
+done:
+    if (hShortcutsInf2 != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hShortcutsInf2);
+
+    if (hShortcutsInf1 != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hShortcutsInf1);
+
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 1, LastError);
 }
 
 static VOID
@@ -365,7 +481,7 @@ InstallSysSetupInfComponents(VOID)
                                       ARRAYSIZE(szNameBuffer),
                                       NULL))
             {
-                FatalError("Error while trying to get component name \n");
+                FatalError("Error while trying to get component name\n");
                 return FALSE;
             }
 
@@ -375,11 +491,11 @@ InstallSysSetupInfComponents(VOID)
                                       ARRAYSIZE(szSectionBuffer),
                                       NULL))
             {
-                FatalError("Error while trying to get component install section \n");
+                FatalError("Error while trying to get component install section\n");
                 return FALSE;
             }
 
-            DPRINT("Trying to execute install section '%S' from '%S' \n", szSectionBuffer, szNameBuffer);
+            DPRINT("Trying to execute install section '%S' from '%S'\n", szSectionBuffer, szNameBuffer);
 
             hComponentInf = SetupOpenInfFileW(szNameBuffer,
                                               NULL,
@@ -420,7 +536,11 @@ InstallSysSetupInfComponents(VOID)
 
 
 BOOL
-RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
+RegisterTypeLibraries(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ HINF hinf,
+    _In_ LPCWSTR szSection)
 {
     INFCONTEXT InfContext;
     BOOL res;
@@ -457,7 +577,16 @@ RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
         p = PathAddBackslash(szPath);
         wcscpy(p, szName);
 
-        hmod = LoadLibraryW(szName);
+        if (pItemsData && pNotify)
+        {
+            pNotify->Progress++;
+            pNotify->CurrentItem = szName;
+
+            DPRINT("RegisterTypeLibraries: Start step %ld\n", pNotify->Progress);
+            SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)pNotify);
+        }
+
+        hmod = LoadLibraryW(szPath);
         if (hmod == NULL)
         {
             FatalError("LoadLibraryW failed\n");
@@ -465,6 +594,12 @@ RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
         }
 
         __wine_register_resources(hmod);
+
+        if (pItemsData && pNotify)
+        {
+            DPRINT("RegisterTypeLibraries: End step %ld\n", pNotify->Progress);
+            SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)pNotify);
+        }
 
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
@@ -476,7 +611,9 @@ EnableUserModePnpManager(VOID)
 {
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hService = NULL;
+    SERVICE_STATUS_PROCESS ServiceStatus;
     BOOL bRet = FALSE;
+    DWORD BytesNeeded, WaitTime;
 
     hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCManager == NULL)
@@ -488,7 +625,7 @@ EnableUserModePnpManager(VOID)
 
     hService = OpenServiceW(hSCManager,
                             L"PlugPlay",
-                            SERVICE_CHANGE_CONFIG | SERVICE_START);
+                            SERVICE_CHANGE_CONFIG | SERVICE_START | SERVICE_QUERY_STATUS);
     if (hService == NULL)
     {
         DPRINT1("Unable to open PlugPlay service\n");
@@ -514,6 +651,35 @@ EnableUserModePnpManager(VOID)
         goto cleanup;
     }
 
+    while (TRUE)
+    {
+        bRet = QueryServiceStatusEx(hService,
+                                    SC_STATUS_PROCESS_INFO,
+                                    (LPBYTE)&ServiceStatus,
+                                    sizeof(ServiceStatus),
+                                    &BytesNeeded);
+        if (!bRet)
+        {
+            DPRINT1("QueryServiceStatusEx() failed for PlugPlay service (error 0x%x)\n", GetLastError());
+            goto cleanup;
+        }
+
+        if (ServiceStatus.dwCurrentState != SERVICE_START_PENDING)
+            break;
+
+        WaitTime = ServiceStatus.dwWaitHint / 10;
+        if (WaitTime < 1000) WaitTime = 1000;
+        else if (WaitTime > 10000) WaitTime = 10000;
+        Sleep(WaitTime);
+    };
+
+    if (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
+    {
+        bRet = FALSE;
+        DPRINT1("Failed to start PlugPlay service\n");
+        goto cleanup;
+    }
+
     bRet = TRUE;
 
 cleanup:
@@ -524,6 +690,70 @@ cleanup:
     return bRet;
 }
 
+static VOID
+AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
+{
+    INT xOld, yOld, cxOld, cyOld;
+    INT xNew, yNew, cxNew, cyNew;
+    INT cxLabel, cyLabel, dyLabel;
+    RECT rc, rcBar, rcLabel, rcWnd;
+    BITMAP bmLogo, bmBar;
+    DWORD style, exstyle;
+    HWND hwndLogo = GetDlgItem(hwndDlg, IDC_ROSLOGO);
+    HWND hwndBar = GetDlgItem(hwndDlg, IDC_BAR);
+    HWND hwndLabel = GetDlgItem(hwndDlg, IDC_STATUSLABEL);
+
+    /* This adjustment is for CJK only */
+    switch (PRIMARYLANGID(GetUserDefaultLangID()))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            break;
+
+        default:
+            return;
+    }
+
+    if (!GetObjectW(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
+        !GetObjectW(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
+    {
+        return;
+    }
+
+    GetWindowRect(hwndBar, &rcBar);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcBar, 2);
+    dyLabel = bmLogo.bmHeight - rcBar.top;
+
+    GetWindowRect(hwndLabel, &rcLabel);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcLabel, 2);
+    cxLabel = rcLabel.right - rcLabel.left;
+    cyLabel = rcLabel.bottom - rcLabel.top;
+
+    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
+    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
+    MoveWindow(hwndLabel, rcLabel.left, rcLabel.top + dyLabel, cxLabel, cyLabel, TRUE);
+
+    GetWindowRect(hwndDlg, &rcWnd);
+    xOld = rcWnd.left;
+    yOld = rcWnd.top;
+    cxOld = rcWnd.right - rcWnd.left;
+    cyOld = rcWnd.bottom - rcWnd.top;
+
+    GetClientRect(hwndDlg, &rc);
+    SetRect(&rc, 0, 0, bmLogo.bmWidth, rc.bottom - rc.top); /* new client size */
+
+    style = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_STYLE);
+    exstyle = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_EXSTYLE);
+    AdjustWindowRectEx(&rc, style, FALSE, exstyle);
+
+    cxNew = rc.right - rc.left;
+    cyNew = (rc.bottom - rc.top) + dyLabel;
+    xNew = xOld - (cxNew - cxOld) / 2;
+    yNew = yOld - (cyNew - cyOld) / 2;
+    MoveWindow(hwndDlg, xNew, yNew, cxNew, cyNew, TRUE);
+}
+
 static INT_PTR CALLBACK
 StatusMessageWindowProc(
     IN HWND hwndDlg,
@@ -531,17 +761,113 @@ StatusMessageWindowProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
+    PDLG_DATA pDlgData;
     UNREFERENCED_PARAMETER(wParam);
+
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+
+    /* pDlgData is required for each case except WM_INITDIALOG */
+    if (uMsg != WM_INITDIALOG && pDlgData == NULL) return FALSE;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
+            BITMAP bm;
             WCHAR szMsg[256];
 
+            /* Allocate pDlgData */
+            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
+            if (pDlgData)
+            {
+                /* Set pDlgData to GWLP_USERDATA, so we can get it for new messages */
+                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+
+                /* Load bitmaps */
+                pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
+                                                    MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
+                                                    0, 0, LR_DEFAULTCOLOR);
+
+                pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
+                                                IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
+                pDlgData->BarWidth = bm.bmWidth;
+                pDlgData->BarHeight = bm.bmHeight;
+
+                if (pDlgData->hLogoBitmap && pDlgData->hBarBitmap)
+                {
+                    if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                    {
+                        DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
+                    }
+
+                    /* Get the animation bar control */
+                    pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
+                }
+            }
+
+            /* Get and set status text */
             if (!LoadStringW(hDllInstance, IDS_STATUS_INSTALL_DEV, szMsg, ARRAYSIZE(szMsg)))
                 return FALSE;
             SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szMsg);
+
+            AdjustStatusMessageWindow(hwndDlg, pDlgData);
+            return TRUE;
+        }
+
+        case WM_TIMER:
+        {
+            if (pDlgData->hBarBitmap)
+            {
+                /*
+                 * Default rotation bar image width is 413 (same as logo)
+                 * We can divide 413 by 7 without remainder
+                 */
+                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
+                InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
+                UpdateWindow(pDlgData->hWndBarCtrl);
+            }
+            return TRUE;
+        }
+
+        case WM_DRAWITEM:
+        {
+            LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
+
+            if (lpDis->CtlID != IDC_BAR)
+            {
+                return FALSE;
+            }
+
+            if (pDlgData->hBarBitmap)
+            {
+                HDC hdcMem;
+                HGDIOBJ hOld;
+                DWORD off = pDlgData->BarCounter;
+                DWORD iw = pDlgData->BarWidth;
+                DWORD ih = pDlgData->BarHeight;
+
+                hdcMem = CreateCompatibleDC(lpDis->hDC);
+                hOld = SelectObject(hdcMem, pDlgData->hBarBitmap);
+                BitBlt(lpDis->hDC, off, 0, iw - off, ih, hdcMem, 0, 0, SRCCOPY);
+                BitBlt(lpDis->hDC, 0, 0, off, ih, hdcMem, iw - off, 0, SRCCOPY);
+                SelectObject(hdcMem, hOld);
+                DeleteDC(hdcMem);
+                return TRUE;
+            }
+            return FALSE;
+        }
+
+        case WM_DESTROY:
+        {
+            if (pDlgData->hBarBitmap)
+            {
+                KillTimer(hwndDlg, IDT_BAR);
+            }
+
+            DeleteObject(pDlgData->hLogoBitmap);
+            DeleteObject(pDlgData->hBarBitmap);
+            HeapFree(GetProcessHeap(), 0, pDlgData);
             return TRUE;
         }
     }
@@ -552,7 +878,7 @@ static DWORD WINAPI
 ShowStatusMessageThread(
     IN LPVOID lpParameter)
 {
-    HWND hWnd, hItem;
+    HWND hWnd;
     MSG Msg;
     UNREFERENCED_PARAMETER(lpParameter);
 
@@ -565,12 +891,6 @@ ShowStatusMessageThread(
         return 0;
 
     ShowWindow(hWnd, SW_SHOW);
-
-    hItem = GetDlgItem(hWnd, IDC_STATUSPROGRESS);
-    if (hItem)
-    {
-        PostMessage(hItem, PBM_SETMARQUEE, TRUE, 40);
-    }
 
     /* Message loop for the Status window */
     while (GetMessage(&Msg, NULL, 0, 0))
@@ -648,7 +968,7 @@ IsConsoleBoot(VOID)
         pwszNextOption = wcschr(pwszCurrentOption, L' ');
         if (pwszNextOption)
             *pwszNextOption = L'\0';
-        if (wcsicmp(pwszCurrentOption, L"CONSOLE") == 0)
+        if (_wcsicmp(pwszCurrentOption, L"CONSOLE") == 0)
         {
             DPRINT("Found %S. Switching to console boot\n", pwszCurrentOption);
             bConsoleBoot = TRUE;
@@ -663,6 +983,61 @@ cleanup:
     if (pwszSystemStartOptions)
         HeapFree(GetProcessHeap(), 0, pwszSystemStartOptions);
     return bConsoleBoot;
+}
+
+extern VOID
+EnableVisualTheme(
+    _In_opt_ HWND hwndParent,
+    _In_opt_ PCWSTR ThemeFile);
+
+/**
+ * @brief
+ * Pre-process unattended file to apply early settings.
+ *
+ * @param[in]   IsInstall
+ * TRUE if this is ReactOS installation, invoked from InstallReactOS(),
+ * FALSE if this is run as part of LiveCD, invoked form InstallLiveCD().
+ **/
+static VOID
+PreprocessUnattend(
+    _In_ BOOL IsInstall)
+{
+    WCHAR szPath[MAX_PATH];
+    WCHAR szValue[MAX_PATH];
+    BOOL bDefaultThemesOff;
+
+    if (IsInstall)
+    {
+        /* See also wizard.c!ProcessSetupInf()
+         * Retrieve the path of the setup INF */
+        GetSystemDirectoryW(szPath, _countof(szPath));
+        wcscat(szPath, L"\\$winnt$.inf");
+    }
+    else
+    {
+        /* See also userinit/livecd.c!RunLiveCD() */
+        GetWindowsDirectoryW(szPath, _countof(szPath));
+        wcscat(szPath, L"\\unattend.inf");
+    }
+
+    /*
+     * Apply initial default theming
+     */
+
+    /* Check whether to use the classic theme (TRUE) instead of the default theme */
+    bDefaultThemesOff = FALSE;
+    if (GetPrivateProfileStringW(L"Shell", L"DefaultThemesOff", L"no", szValue, _countof(szValue), szPath) && *szValue)
+        bDefaultThemesOff = (_wcsicmp(szValue, L"yes") == 0);
+
+    if (!bDefaultThemesOff)
+    {
+        /* Retrieve the complete path to a .theme (or for ReactOS, a .msstyles) file */
+        if (!GetPrivateProfileStringW(L"Shell", L"CustomDefaultThemeFile", NULL, szValue, _countof(szValue), szPath) || !*szValue)
+            bDefaultThemesOff = TRUE; // None specified, fall back to the classic theme.
+    }
+
+    /* Enable the chosen theme, or use the classic theme */
+    EnableVisualTheme(NULL, bDefaultThemesOff ? NULL : szValue);
 }
 
 static BOOL
@@ -687,7 +1062,7 @@ CommonInstall(VOID)
         goto Exit;
     }
 
-    if(!InstallSysSetupInfComponents())
+    if (!InstallSysSetupInfComponents())
     {
         FatalError("InstallSysSetupInfComponents() failed!\n");
         goto Exit;
@@ -718,7 +1093,6 @@ CommonInstall(VOID)
     bResult = TRUE;
 
 Exit:
-
     if (bResult == FALSE)
     {
         SetupCloseInfFile(hSysSetupInf);
@@ -742,6 +1116,7 @@ InstallLiveCD(VOID)
     PROCESS_INFORMATION ProcessInformation;
     BOOL bRes;
 
+    PreprocessUnattend(FALSE);
     if (!CommonInstall())
         goto error;
 
@@ -770,7 +1145,7 @@ InstallLiveCD(VOID)
             DPRINT1("SetupInstallFromInfSectionW failed!\n");
         }
 
-        RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+        RegisterTypeLibraries(NULL, NULL, hSysSetupInf, L"TypeLibraries");
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -849,19 +1224,19 @@ HotkeyThread(LPVOID Parameter)
     DPRINT("HotkeyThread start\n");
 
     hotkey = GlobalAddAtomW(L"Setup Shift+F10 Hotkey");
-
     if (!RegisterHotKey(NULL, hotkey, MOD_SHIFT, VK_F10))
         DPRINT1("RegisterHotKey failed with %lu\n", GetLastError());
 
-    while (GetMessage(&msg, NULL, 0, 0))
+    while (GetMessageW(&msg, NULL, 0, 0))
     {
         if (msg.hwnd == NULL && msg.message == WM_HOTKEY && msg.wParam == hotkey)
         {
+            WCHAR CmdLine[] = L"cmd.exe"; // CreateProcess can modify this buffer.
             STARTUPINFOW si = { sizeof(si) };
             PROCESS_INFORMATION pi;
 
-            if (CreateProcessW(L"cmd.exe",
-                               NULL,
+            if (CreateProcessW(NULL,
+                               CmdLine,
                                NULL,
                                NULL,
                                FALSE,
@@ -1193,9 +1568,7 @@ InstallReactOS(VOID)
     HANDLE token;
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
-    HINF hShortcutsInf;
     HANDLE hHotkeyThread;
-    BOOL ret;
 
     InitializeSetupActionLog(FALSE);
     LogItem(NULL, L"Installing ReactOS");
@@ -1261,60 +1634,15 @@ InstallReactOS(VOID)
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
 
+    PreprocessUnattend(TRUE);
     if (!CommonInstall())
         return 0;
-
-    /* Install the TCP/IP protocol driver */
-    ret = InstallNetworkComponent(L"MS_TCPIP");
-    if (!ret && GetLastError() != ERROR_FILE_NOT_FOUND)
-    {
-        DPRINT("InstallNetworkComponent() failed with error 0x%lx\n", GetLastError());
-    }
-    else
-    {
-        /* Start the TCP/IP protocol driver */
-        SetupStartService(L"Tcpip", FALSE);
-        SetupStartService(L"Dhcp", FALSE);
-        SetupStartService(L"Dnscache", FALSE);
-    }
 
     InstallWizard();
 
     InstallSecurity();
 
     SetAutoAdminLogon();
-
-    hShortcutsInf = SetupOpenInfFileW(L"shortcuts.inf",
-                                      NULL,
-                                      INF_STYLE_WIN4,
-                                      NULL);
-    if (hShortcutsInf == INVALID_HANDLE_VALUE)
-    {
-        FatalError("Failed to open shortcuts.inf");
-        return 0;
-    }
-
-    if (!CreateShortcuts(hShortcutsInf, L"ShortcutFolders"))
-    {
-        FatalError("CreateShortcuts() failed");
-        return 0;
-    }
-
-    SetupCloseInfFile(hShortcutsInf);
-
-    hShortcutsInf = SetupOpenInfFileW(L"rosapps_shortcuts.inf",
-                                       NULL,
-                                       INF_STYLE_WIN4,
-                                       NULL);
-    if (hShortcutsInf != INVALID_HANDLE_VALUE)
-    {
-        if (!CreateShortcuts(hShortcutsInf, L"ShortcutFolders"))
-        {
-            FatalError("CreateShortcuts(rosapps) failed");
-            return 0;
-        }
-        SetupCloseInfFile(hShortcutsInf);
-    }
 
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);

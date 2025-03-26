@@ -16,11 +16,22 @@ HKCR,"CLSID\%CLSID_InternetExplorer%\LocalServer32",,,"""%16422%\Internet Explor
 HKCR,"CLSID\%CLSID_InternetExplorer%\ProgID",,,"InternetExplorer.Application.1"
 HKCR,"CLSID\%CLSID_InternetExplorer%\VersionIndependentProgID",,,"InternetExplorer.Application"
 
-HKCR,"CLSID\%CLSID_Internet%\DefaultIcon",,,"shdoclc.dll,-190"
-HKCR,"CLSID\%CLSID_Internet%\Shell",,,"OpenHomePage"
-HKCR,"CLSID\%CLSID_Internet%\Shell\OpenHomePage",,,"Open &Home Page"
-HKCR,"CLSID\%CLSID_Internet%\Shell\OpenHomePage\Command",,,"""%16422%\Internet Explorer\iexplore.exe"""
-HKCR,"CLSID\%CLSID_Internet%\ShellFolder",,2,"0x24"
+; FIXME: Implement CLSID_Internet in ieframe.dll (see CORE-18625)
+; https://git.reactos.org/?p=reactos.git;a=blob;f=modules/rostests/apitests/com/ieframe.c;hb=bf2cec186cc7655e062ec0e53ccfac860bcae70d#l35
+HKCR,"CLSID\%CLSID_Internet%",,,"Internet Browser"
+HKCR,"CLSID\%CLSID_Internet%","InfoTip",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-881"
+HKCR,"CLSID\%CLSID_Internet%","LocalizedString",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-880"
+HKCR,"CLSID\%CLSID_Internet%\DefaultIcon",,0x00020000,"%SystemRoot%\system32\shell32.dll,-512"
+; FIXME: should be "OpenHomePage" action
+HKCR,"CLSID\%CLSID_Internet%\Shell",,,"open"
+HKCR,"CLSID\%CLSID_Internet%\Shell\open",,,""
+HKCR,"CLSID\%CLSID_Internet%\Shell\open\Command",,,"rundll32.exe url,OpenURL https://google.com"
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","",,"@%SystemRoot%\system32\shell32.dll,-512"
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","Attributes",0x10001,0x24
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","HideAsDeletePerUser",,""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","HideFolderVerbs",,""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","HideOnDesktopPerUser",,""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","WantsParseDisplayName",,""
 
 HKCR,"CLSID\%CLSID_InternetExplorerManager%\LocalServer32",,,"""%16422%\Internet Explorer\iexplore.exe"" -startmanager"
 

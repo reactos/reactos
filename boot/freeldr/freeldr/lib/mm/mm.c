@@ -303,3 +303,8 @@ PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(PFN_NUMBER *NoEntries)
     return RealPageLookupTable;
 }
 
+PFN_NUMBER
+MmGetLoaderPagesSpanned(VOID)
+{
+    return LoaderPagesSpanned;
+}

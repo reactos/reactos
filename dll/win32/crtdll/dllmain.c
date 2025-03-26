@@ -29,14 +29,10 @@ extern void __getmainargs( int *argc, char ***argv, char ***envp,
 
 /* EXTERNAL PROTOTYPES ********************************************************/
 
-extern int BlockEnvToEnvironA(void);
-extern int BlockEnvToEnvironW(void);
+BOOL crt_process_init(void);
+
 extern void FreeEnvironment(char **environment);
 
-extern unsigned int _osver;
-extern unsigned int _winminor;
-extern unsigned int _winmajor;
-extern unsigned int _winver;
 
 unsigned int CRTDLL__basemajor_dll = 0;
 unsigned int CRTDLL__baseminor_dll = 0;
@@ -48,8 +44,6 @@ unsigned int CRTDLL__osmode_dll = 0;
 unsigned int CRTDLL__osversion_dll = 0;
 int _fileinfo_dll;
 
-extern char* _acmdln;        /* pointer to ascii command line */
-extern wchar_t* _wcmdln;     /* pointer to wide character command line */
 #undef _environ
 extern char** _environ;      /* pointer to environment block */
 extern char** __initenv;     /* pointer to initial environment block */
@@ -112,40 +106,12 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         CRTDLL__osmode_dll      = 1; /* FIXME */
         CRTDLL__osversion_dll   = (version & 0xFFFF);
 
-        _winmajor = (_osver >> 8) & 0xFF;
-        _winminor = _osver & 0xFF;
-        _winver = (_winmajor << 8) + _winminor;
-        _osver = (_osver >> 16) & 0xFFFF;
-
-        /* create tls stuff */
-        if (!msvcrt_init_tls())
-          return FALSE;
-
-        if (BlockEnvToEnvironA() < 0)
-            return FALSE;
-
-        if (BlockEnvToEnvironW() < 0)
+        if (!crt_process_init())
         {
-            FreeEnvironment(_environ);
+            ERR("crt_init() failed!\n");
             return FALSE;
         }
 
-        _acmdln = _strdup(GetCommandLineA());
-        _wcmdln = _wcsdup(GetCommandLineW());
-
-        /* Initialization of the WINE code */
-        msvcrt_init_mt_locks();
-        //if(!msvcrt_init_locale()) {
-            //msvcrt_free_mt_locks();
-           // msvcrt_free_tls_mem();
-            //return FALSE;
-        //}
-        //msvcrt_init_math();
-        msvcrt_init_io();
-        //msvcrt_init_console();
-        //msvcrt_init_args();
-        //msvcrt_init_signals();
-        _setmbcp(_MB_CP_LOCALE);
         TRACE("Attach done\n");
         break;
     case DLL_THREAD_ATTACH:

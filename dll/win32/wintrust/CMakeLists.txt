@@ -17,6 +17,11 @@ add_library(wintrust MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust.def)
 
+if(MSVC)
+    # Disable warning C4090: 'function': different 'const' qualifiers
+    target_compile_options(wintrust PRIVATE /wd4090)
+endif()
+
 set_module_type(wintrust win32dll)
 target_link_libraries(wintrust wine ${PSEH_LIB})
 # FIXME: imagehlp should be delay-imported. See CORE-6504

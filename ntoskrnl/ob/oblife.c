@@ -110,13 +110,12 @@ ObpDeallocateObject(IN PVOID Object)
             }
 
             /* Return the quota */
-            DPRINT("FIXME: Should return quotas: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
-#if 0
-            PsReturnSharedPoolQuota(ObjectHeader->QuotaBlockCharged,
-                                    PagedPoolCharge,
-                                    NonPagedPoolCharge);
-#endif
-
+            if (Header->QuotaBlockCharged != OBP_SYSTEM_PROCESS_QUOTA)
+            {
+                PsReturnSharedPoolQuota(Header->QuotaBlockCharged,
+                                        PagedPoolCharge,
+                                        NonPagedPoolCharge);
+            }
         }
     }
 
@@ -635,7 +634,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     {
         /* Use default tag and non-paged pool */
         PoolType = NonPagedPool;
-        Tag = 'TjbO';
+        Tag = TAG_OBJECT_TYPE;
     }
     else
     {
@@ -870,24 +869,112 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Queries the name info size of a given resource object.
+ * The function loops through all the parent directories
+ * of the object and computes the name size.
+ *
+ * @param[in] ObjectHeader
+ * A pointer to an object header, of which name and
+ * directory info are to be retrieved.
+ *
+ * @return
+ * Returns the name info size that is pointed by the
+ * given object by the caller of this function. If
+ * an object does not have a name or no directories,
+ * it returns 0.
+ */
+static
+ULONG
+ObpQueryNameInfoSize(
+    _In_ POBJECT_HEADER ObjectHeader)
+{
+    ULONG NameSize = 0;
+    POBJECT_DIRECTORY ParentDirectory;
+    POBJECT_HEADER_NAME_INFO NameInfo;
+    PAGED_CODE();
+
+    /* Get the name info */
+    NameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    if (!NameInfo)
+    {
+        return 0;
+    }
+
+    /* Get the parent directory from the object name too */
+    ParentDirectory = NameInfo->Directory;
+    if (!ParentDirectory)
+    {
+        return 0;
+    }
+
+    /* Take into account the name size of this object and loop for all parent directories */
+    NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR) + NameInfo->Name.Length;
+    for (;;)
+    {
+        /* Get the name info from the parent directory */
+        NameInfo = OBJECT_HEADER_TO_NAME_INFO(
+            OBJECT_TO_OBJECT_HEADER(ParentDirectory));
+        if (!NameInfo)
+        {
+            /* Stop looking if this is the last one */
+            break;
+        }
+
+        /* Get the parent directory */
+        ParentDirectory = NameInfo->Directory;
+        if (!ParentDirectory)
+        {
+            /* This is the last directory, stop looking */
+            break;
+        }
+
+        /*
+         * Take into account the size of this name info,
+         * keep looking for other parent directories.
+         */
+        NameSize += sizeof(OBJ_NAME_PATH_SEPARATOR) + NameInfo->Name.Length;
+    }
+
+    /* Include the size of the object name information as well as the NULL terminator */
+    NameSize += sizeof(OBJECT_NAME_INFORMATION) + sizeof(UNICODE_NULL);
+    return NameSize;
+}
+
 NTSTATUS
 NTAPI
-ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
-                OUT POBJECT_TYPE_INFORMATION ObjectTypeInfo,
-                IN ULONG Length,
-                OUT PULONG ReturnLength)
+ObQueryTypeInfo(
+    _In_ POBJECT_TYPE ObjectType,
+    _Out_writes_bytes_to_(Length, *ReturnLength)
+        POBJECT_TYPE_INFORMATION ObjectTypeInfo,
+    _In_ ULONG Length,
+    _Out_ PULONG ReturnLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PWSTR InfoBuffer;
 
+    /* The string of the object type name has to be NULL-terminated */
+    ASSERT(ObjectType->Name.MaximumLength >= ObjectType->Name.Length + sizeof(UNICODE_NULL));
+
     /* Enter SEH */
     _SEH2_TRY
     {
-        /* Set return length aligned to 4-byte boundary */
+        /*
+         * Set return length aligned to 4-byte or 8-byte boundary. Windows has a bug
+         * where the returned length pointer is always aligned to a 4-byte boundary.
+         * If one were to allocate a pool of memory in kernel mode to retrieve all
+         * the object types info with this return length, Windows will bugcheck with
+         * BAD_POOL_HEADER in 64-bit upon you free the said allocated memory.
+         *
+         * More than that, Windows uses MaximumLength for the calculation of the returned
+         * length and MaximumLength does not always guarantee the name type is NULL-terminated
+         * leading the ObQueryTypeInfo function to overrun the buffer.
+         */
         *ReturnLength += sizeof(*ObjectTypeInfo) +
-                         ALIGN_UP(ObjectType->Name.MaximumLength, ULONG);
+                         ALIGN_UP(ObjectType->Name.Length + sizeof(UNICODE_NULL), ULONG_PTR);
 
-        /* Check if thats too much though. */
+        /* Check if that is too much */
         if (Length < *ReturnLength)
         {
             _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
@@ -1036,6 +1123,7 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
         /* Release the Capture Info, we don't need it */
         ObpFreeObjectCreateInformation(ObjectCreateInfo);
         if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
+        return Status;
     }
 
     /* We failed, so release the Buffer */
@@ -1093,8 +1181,8 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Check if we've already created the directory of types */
     if (ObpTypeDirectoryObject)
     {
-        /* Acquire the directory lock */
-        ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
+        /* Lock the lookup context */
+        ObpAcquireLookupContextLock(&Context, ObpTypeDirectoryObject);
 
         /* Do the lookup */
         if (ObpLookupEntryDirectory(ObpTypeDirectoryObject,
@@ -1159,7 +1247,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
         /* Set the hard-coded key and object count */
         LocalObjectType->TotalNumberOfObjects = 1;
-        LocalObjectType->Key = 'TjbO';
+        LocalObjectType->Key = TAG_OBJECT_TYPE;
     }
     else
     {
@@ -1584,8 +1672,9 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 }
 
                 /* Copy name information */
-                BasicInfo->NameInfoSize = 0; /* FIXME*/
-                BasicInfo->TypeInfoSize = 0; /* FIXME*/
+                BasicInfo->NameInfoSize = ObpQueryNameInfoSize(ObjectHeader);
+                BasicInfo->TypeInfoSize = sizeof(OBJECT_TYPE_INFORMATION) + ObjectType->Name.Length +
+                                          sizeof(UNICODE_NULL);
 
                 /* Check if this is a symlink */
                 if (ObjectHeader->Type == ObpSymbolicLinkObjectType)
@@ -1849,9 +1938,17 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
                                                    NULL);
                 if (NT_SUCCESS(Status))
                 {
-                    /* FIXME: Missng locks */
-                    /* Set its session ID */
+                    /* Setup a lookup context */
+                    OBP_LOOKUP_CONTEXT LookupContext;
+                    ObpInitializeLookupContext(&LookupContext);
+
+                    /* Set the directory session ID */
+                    ObpAcquireDirectoryLockExclusive(Directory, &LookupContext);
                     Directory->SessionId = PsGetCurrentProcessSessionId();
+                    ObpReleaseDirectoryLock(Directory, &LookupContext);
+
+                    /* We're done, release the context and dereference the directory */
+                    ObpReleaseLookupContext(&LookupContext);
                     ObDereferenceObject(Directory);
                 }
             }

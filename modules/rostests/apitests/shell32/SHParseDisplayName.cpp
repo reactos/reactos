@@ -52,8 +52,8 @@ struct test_data Tests[] =
     {__LINE__, L"\\\\?\\", NULL, 0, E_INVALIDARG, 0},
     /* Tests for the shell: protocol */
     {__LINE__, L"shell:", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
-    {__LINE__, L"shell::", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},   
-    {__LINE__, L"shell:::", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},   
+    {__LINE__, L"shell::", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
+    {__LINE__, L"shell:::", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
     {__LINE__, L"shell:::{", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
     {__LINE__, L"shell:fail", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
     {__LINE__, L"shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
@@ -63,6 +63,8 @@ struct test_data Tests[] =
     {__LINE__, L"shell:personal", NULL, CSIDL_MYDOCUMENTS, S_OK, T_PRE_VISTA},
     {__LINE__, L"shell:programs", NULL, CSIDL_PROGRAMS, S_OK, T_PRE_VISTA},
     {__LINE__, L"shell:programfiles", NULL, CSIDL_PROGRAM_FILES, S_OK, T_PRE_VISTA},
+    {__LINE__, L"shell:windows\\system32", NULL, CSIDL_SYSTEM, S_OK, T_PRE_VISTA},
+    {__LINE__, L"shell:windows\\fonts", NULL, CSIDL_FONTS, S_OK, T_PRE_VISTA},
     /* The following tests are confusing. They don't work for SHParseDisplayName but work on psfDesktop->ParseDisplayName */
     {__LINE__, L"shell:desktop", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
     {__LINE__, L"shell:windows",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
@@ -70,6 +72,8 @@ struct test_data Tests[] =
     {__LINE__, L"shell:personal",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
     {__LINE__, L"shell:programs",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
     {__LINE__, L"shell:programfiles",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    {__LINE__, L"shell:windows\\system32", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    {__LINE__, L"shell:windows\\fonts", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
     /* Tests for CInternet */
     {__LINE__, L"aa:", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
     {__LINE__, L"garbage:", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
@@ -87,8 +91,8 @@ struct test_data Tests[] =
     {__LINE__, L"ftp://ftp.gnu.org/gnu/octave/", L"ftp://ftp.gnu.org/gnu/octave/", 0, S_OK, T_VISTA_PLUS},
     /* Tests for CRegFolder */
     {__LINE__, L"::", NULL, 0, CO_E_CLASSSTRING, 0},
-    {__LINE__, L"::{", NULL, 0, CO_E_CLASSSTRING, 0},  
-    {__LINE__, L"::{ ", NULL, 0, CO_E_CLASSSTRING, 0},  
+    {__LINE__, L"::{", NULL, 0, CO_E_CLASSSTRING, 0},
+    {__LINE__, L"::{ ", NULL, 0, CO_E_CLASSSTRING, 0},
     {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
     {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D} ", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
     {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}a", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},

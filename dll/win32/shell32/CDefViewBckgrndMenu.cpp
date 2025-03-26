@@ -31,19 +31,19 @@ class CDefViewBckgrndMenu :
         HRESULT Initialize(IShellFolder* psf);
 
         // IContextMenu
-        virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-        virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-        virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+        STDMETHOD(QueryContextMenu)(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+        STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpcmi) override;
+        STDMETHOD(GetCommandString)(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen) override;
 
         // IContextMenu2
-        virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+        STDMETHOD(HandleMenuMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
         // IContextMenu3
-        virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+        STDMETHOD(HandleMenuMsg2)(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) override;
 
         // IObjectWithSite
-        virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-        virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+        STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+        STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
         BEGIN_COM_MAP(CDefViewBckgrndMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
@@ -70,7 +70,7 @@ BOOL CDefViewBckgrndMenu::_bIsDesktopBrowserMenu()
 
     /* Get a pointer to the shell browser */
     CComPtr<IShellView> psv;
-    HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+    HRESULT hr = IUnknown_QueryService(m_site, SID_SFolderView, IID_PPV_ARG(IShellView, &psv));
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
@@ -133,8 +133,8 @@ CDefViewBckgrndMenu::SetSite(IUnknown *pUnkSite)
     return S_OK;
 }
 
-HRESULT 
-WINAPI 
+HRESULT
+WINAPI
 CDefViewBckgrndMenu::GetSite(REFIID riid, void **ppvSite)
 {
     if (!m_site)
@@ -152,12 +152,12 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
     UINT cIds = 0;
 
     /* This is something the implementations of IContextMenu should never really do.
-       However CDefViewBckgrndMenu is more or less an overengineering result, its code could really be part of the 
+       However CDefViewBckgrndMenu is more or less an overengineering result, its code could really be part of the
        CDefView. Given this, I think that abusing the interface here is not that bad since only CDefView is the ony
-       user of this class. Here we need to do two things to keep things as simple as possible. 
+       user of this class. Here we need to do two things to keep things as simple as possible.
        First we want the menu part added by the shell folder to be the first to add so as to make as few id translations
-       as possible. Second, we want to add the default part of the background menu without shifted ids, so as 
-       to let the CDefView fill some parts like filling the arrange modes or checking the view mode. In order 
+       as possible. Second, we want to add the default part of the background menu without shifted ids, so as
+       to let the CDefView fill some parts like filling the arrange modes or checking the view mode. In order
        for that to work we need to save idCmdFirst because our caller will pass id offsets to InvokeCommand.
        This makes it impossible to concatenate the CDefViewBckgrndMenu with other menus since it abuses IContextMenu
        but as stated above, its sole user is CDefView and should really be that way. */
@@ -256,10 +256,6 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     case FCIDM_SHVIEW_SMALLICON:
     case FCIDM_SHVIEW_LISTVIEW:
     case FCIDM_SHVIEW_REPORTVIEW:
-    case 0x30: /* FIX IDS in resource files */
-    case 0x31:
-    case 0x32:
-    case 0x33:
     case FCIDM_SHVIEW_AUTOARRANGE:
     case FCIDM_SHVIEW_SNAPTOGRID:
     case FCIDM_SHVIEW_REFRESH:
@@ -269,7 +265,7 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
         /* Get a pointer to the shell browser */
         CComPtr<IShellView> psv;
-        HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+        HRESULT hr = IUnknown_QueryService(m_site, SID_SFolderView, IID_PPV_ARG(IShellView, &psv));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 

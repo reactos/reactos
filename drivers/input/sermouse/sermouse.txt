@@ -8,10 +8,10 @@
 
    Data packet format:
      Data packet is 3 byte packet. It is send to the computer every time mouse
-     state changes (mouse moves or keys are pressed/released). 
+     state changes (mouse moves or keys are pressed/released).
          D7      D6      D5      D4      D3      D2      D1      D0
      1.  X       1       LB      RB      Y7      Y6      X7      X6
-     2.  X       0       X5      X4      X3      X2      X1      X0      
+     2.  X       0       X5      X4      X3      X2      X1      X0
      3.  X       0       Y5      Y4      Y3      Y2      Y1      Y0
 
      Note: The bit marked with X is 0 if the mouse received with 7 databits
@@ -19,10 +19,10 @@
      bit format for receiving. In this case X gets value 1. The safest thing
      to get everything working is to use 7 databits and 1 stopbit when
      receiving mouse information (and if you are making mouse then send out
-     7 databits and 2 stop bits). 
+     7 databits and 2 stop bits).
      The byte marked with 1. is send first, then the others. The bit D6 in
      the first byte is used for synchronizing the software to mouse packets
-     if it goes out of sync. 
+     if it goes out of sync.
 
       LB is the state of the left button (1 means pressed down)
       RB is the state of the right button (1 means pressed down)
@@ -40,7 +40,7 @@
    example Logitech Pilot mouse and others). The original protocol supports
    only two buttons, but logitech as added third button to some of their
    mouse models. To make this possible logitech has made one extension to
-   the protocol. 
+   the protocol.
    I have not seen any documentation about the exact documents, but here is
    what I have found out: The information of the third button state is sent
    using one extra byte which is send after the normal packet when needed.
@@ -68,9 +68,9 @@
      LB is left button state (0 = pressed, 1 = released)
      CB is center button state (0 = pressed, 1 = released)
      RB is right button state (0 = pressed, 1 = released)
-     X7-X0 movement in X direction since last packet in signed byte 
+     X7-X0 movement in X direction since last packet in signed byte
            format (-128..+127), positive direction right
-     Y7-Y0 movement in Y direction since last packet in signed byte 
+     Y7-Y0 movement in Y direction since last packet in signed byte
            format (-128..+127), positive direction up
      X7'-X0' movement in X direction since sending of X7-X0 packet in
              signed byte format (-128..+127), positive direction right

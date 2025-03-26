@@ -66,35 +66,35 @@ public:
     ~CUserNotification();
 
     // IUserNotification
-    virtual HRESULT STDMETHODCALLTYPE SetBalloonInfo(
+    STDMETHOD(SetBalloonInfo)(
         IN LPCWSTR pszTitle,
         IN LPCWSTR pszText,
-        IN DWORD dwInfoFlags);
+        IN DWORD dwInfoFlags) override;
 
-    virtual HRESULT STDMETHODCALLTYPE SetBalloonRetry(
+    STDMETHOD(SetBalloonRetry)(
         IN DWORD dwShowTime,  // Time intervals in milliseconds
         IN DWORD dwInterval,
-        IN UINT cRetryCount);
+        IN UINT cRetryCount) override;
 
-    virtual HRESULT STDMETHODCALLTYPE SetIconInfo(
+    STDMETHOD(SetIconInfo)(
         IN HICON hIcon,
-        IN LPCWSTR pszToolTip);
+        IN LPCWSTR pszToolTip) override;
 
     // Blocks until the notification times out.
-    virtual HRESULT STDMETHODCALLTYPE Show(
+    STDMETHOD(Show)(
         IN IQueryContinue* pqc,
-        IN DWORD dwContinuePollInterval);
+        IN DWORD dwContinuePollInterval) override;
 
-    virtual HRESULT STDMETHODCALLTYPE PlaySound(
-        IN LPCWSTR pszSoundName);
+    STDMETHOD(PlaySound)(
+        IN LPCWSTR pszSoundName) override;
 
 #if 0
     // IUserNotification2
     // Blocks until the notification times out.
-    virtual HRESULT STDMETHODCALLTYPE Show(
+    STDMETHOD(Show)(
         IN IQueryContinue* pqc,
         IN DWORD dwContinuePollInterval,
-        IN IUserNotificationCallback* pSink);
+        IN IUserNotificationCallback* pSink) override;
 #endif
 
     DECLARE_REGISTRY_RESOURCEID(IDR_USERNOTIFICATION)

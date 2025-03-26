@@ -1,10 +1,10 @@
 /*
  *    Translated by Caemyr - Olaf Siejka (May, 2011)
  *    Use ReactOS forum PM or IRC to contact me
- *    http://www.reactos.org
+ *    https://reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
- *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (August, 2020) 
+ *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -33,7 +33,7 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Zamknij", IDM_FILE_CLOSE
     END
-    POPUP "&Edytuj", FCIDM_MENU_EDIT
+    POPUP "&Edycja", FCIDM_MENU_EDIT
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
     END
@@ -50,7 +50,7 @@ BEGIN
             MENUITEM "&Ulubione\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Multimedia", IDM_EXPLORERBAR_MEDIA
             MENUITEM "&Historia\tCtrl+H", IDM_EXPLORERBAR_HISTORY
-            MENUITEM "&Katalogi", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "&Foldery", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
@@ -102,7 +102,7 @@ BEGIN
     MENUITEM "&Zamknij pasek narzędzi", IDM_BAND_CLOSE
 END
 
-IDM_POPUPMENU MENUEX DISCARDABLE
+IDM_POPUPMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -113,7 +113,7 @@ BEGIN
         END
         MENUITEM "&Otwórz folder", IDM_OPEN_FOLDER
         MENUITEM "Pokaż &tekst", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */
@@ -154,7 +154,7 @@ BEGIN
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
     LTEXT "Szu&kaj w:", -1, 10, 75, 500, 10
-    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
+    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY, 10, 85, 200, 200
 
     DEFPUSHBUTTON "Wy&szukaj", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Zatrzymaj", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
@@ -271,7 +271,7 @@ BEGIN
     9553 "Pokazuje pasek Wyszukiwania."
     9554 "Pokazuje pasek Ulubionych."
     9555 "Pokazuje pasek Historii."
-    9557 "Pokazuje pasek Katalogów."
+    9557 "Pokazuje pasek folderów."
     9559 "Pokazuje pasek Multimediów."
 END
 
@@ -302,11 +302,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL "Foldery"
-END
-
-STRINGTABLE
-BEGIN
+    IDS_ADDRESSMENUTEXT "&Adres"
     IDS_HISTORYTEXT "&Historia\tCtrl+H"
 END
 

@@ -1,5 +1,11 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation improved by Aobi Chan CL 2020 (eason066@gmail.com) */
+/* 
+ * PROJECT:     ReactOS DiskPart
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2020-2022 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -10,44 +16,99 @@ BEGIN
     IDS_APP_USAGE "\n磁碟分區實用工具\n\n\
 Usage: DISKPART [/S 檔名] [/T 逾時] [/?]\n\n\
 /S <檔名>\t執行指定的指令碼。\n\
-/T <逾時>\t逾時秒數，防止 DiskPart 使用重疊。\n\
-/?\t\t顯示此說明訊息。\n\n"
+/T <逾時>\t逾時秒數，防止 DiskPart 在使用時發生交疊。\n\
+/?\t\t顯示這個說明訊息。\n\n"
     IDS_APP_LICENSE "根據 GNU GPLv2 許可\n"
     IDS_APP_CURR_COMPUTER "在電腦: %s\n\n"
-    IDS_APP_LEAVING "\n正在離開 DiskPart ...\n"
+    IDS_APP_LEAVING "\n正在退出 DiskPart...\n"
     IDS_APP_PROMPT "DISKPART> "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ACTIVE_FAIL "\nDiskPart 無法把標記磁碟分割為使用中。\n請確認磁碟分割是有效的。\n"
+    IDS_ACTIVE_SUCCESS "\nDiskPart 已標記磁碟分割為使用中。\n"
+    IDS_ACTIVE_ALREADY "\n目前的磁碟分割已經標記為使用中。\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CLEAN_FAIL "\nDiskPart 無法清理磁碟。\n這個磁碟上的資料可能是無法恢復的。\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart 成功清理磁碟。\n"
+    IDS_CLEAN_SYSTEM "\n已選擇的磁碟是您的電腦操作所必要的，所以無法清理。\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CREATE_PARTITION_FAIL "\nDiskPart 無法建立指定的磁碟分割。\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart 成功建立指定的磁碟分割。\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart 無法刪除指定的磁碟分割。\n請確認已選擇的磁碟分割能夠正確地刪除。\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart 成功刪除指定的磁碟分割。\n"
 END
 
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "磁碟"
+    IDS_DETAIL_INFO_DISK_ID "磁碟識別碼: %08lx\n"
     IDS_DETAIL_INFO_TYPE "類型"
     IDS_DETAIL_INFO_STATUS "狀態"
-    IDS_DETAIL_INFO_PATH "路徑"
-    IDS_DETAIL_INFO_TARGET "目標"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH   "路徑      : %hu\n"
+    IDS_DETAIL_INFO_TARGET "目標      : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun 識別碼: %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "位置路徑"
-    IDS_DETAIL_INFO_CURR_RO_STATE "當前的唯讀狀態"
+    IDS_DETAIL_INFO_CURR_RO_STATE "目前的唯讀狀態"
     IDS_DETAIL_INFO_RO "唯讀模式"
     IDS_DETAIL_INFO_BOOT_DSK "啟動磁碟"
     IDS_DETAIL_INFO_PAGE_FILE_DSK "頁面檔案磁碟"
     IDS_DETAIL_INFO_HIBER_FILE_DSK "休眠檔案磁碟"
     IDS_DETAIL_INFO_CRASH_DSK "損毀傾印磁碟"
     IDS_DETAIL_INFO_CLST_DSK "叢集磁碟"
+    IDS_DETAIL_PARTITION_NUMBER "磁碟分割 %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "類型          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "已隱藏        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "使用中        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "位移 (位元組) : %I64u\n"
+    IDS_DETAIL_NO_DISKS "\n沒有磁碟附加到這個磁碟區。\n"
+    IDS_DETAIL_NO_VOLUME "\n沒有磁碟區與這個磁碟分割有關聯。\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FILESYSTEMS_CURRENT "目前的檔案系統\n"
+    IDS_FILESYSTEMS_FORMATTING "可用於格式化的檔案系統\n"
+    IDS_FILESYSTEMS_TYPE "類型    : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "叢集大小: %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_FORMAT_STRING "%-11.11s - %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INACTIVE_FAIL "\nDiskPart 無法把磁碟分割標記為非使用中。\n請確認磁碟分割是有效的。\n"
+    IDS_INACTIVE_SUCCESS "\nDiskPart 已標記磁碟分割為非使用中。\n"
+    IDS_INACTIVE_ALREADY "\n目前的磁碟分割已經標記為非使用中。\n"
 END
 
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "\n  磁碟 ###   狀態      大小     可用    Dyn  Gpt\n"
+    IDS_LIST_DISK_HEAD "  磁碟 ###   狀態      大小     可用    Dyn  Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
-    IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
-    IDS_LIST_PARTITION_HEAD "\n     分區           類型          大小     偏移量\n"
+    IDS_LIST_DISK_FORMAT "%c 磁碟 %-3lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
+    IDS_LIST_PARTITION_HEAD "  分區 ###       類型          大小     偏移量\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c 磁碟分割 %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\n沒有可列出分區的磁碟。\n請選擇一個磁碟，再試一次。\n\n"
-    IDS_LIST_VOLUME_HEAD "  磁碟區 ###  Ltr  標籤\n"
+    IDS_LIST_VOLUME_HEAD "  磁碟區 ###  Ltr  標籤         FS     類型        大小     狀態     資訊\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "%c 磁碟區 %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -60,15 +121,26 @@ END
 /* Select command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\n目前沒有選擇磁碟。\nP請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_DISK "\n磁碟 %lu 是所選的磁碟。\n\n"
+    IDS_SELECT_NO_DISK "\n目前沒有選擇磁碟。\n請選擇一個磁碟，然後再試一次。\n\n"
+    IDS_SELECT_DISK "\n磁碟 %lu 現在是所選擇的磁碟。\n\n"
     IDS_SELECT_DISK_INVALID "\n無效的磁碟。\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
     IDS_SELECT_NO_PARTITION "\n目前選擇的磁碟沒有磁碟分割。\n請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_PARTITION "\n磁碟分割 %lu 是所選的磁碟分割。\n\n"
+    IDS_SELECT_PARTITION "\n磁碟分割 %lu 現在是所選擇的磁碟分割。\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\n沒有選擇要設定磁碟分割的磁碟。\n請選擇一個磁碟，然後再試一次。\n\n"
     IDS_SELECT_PARTITION_INVALID "\n無效的磁碟分割。\n\n"
     IDS_SELECT_NO_VOLUME "\n目前沒有選擇磁碟區。\n請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_VOLUME "\n磁碟區 %lu 是所選的磁碟區。\n\n"
+    IDS_SELECT_VOLUME "\n磁碟區 %lu 現在是所選擇的磁碟區。\n\n"
+    IDS_SELECT_VOLUME_INVALID "\n無效的磁碟區。\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SETID_FAIL "\nDiskPart 無法更改磁碟類型。\n"
+    IDS_SETID_SUCCESS "\n成功更改磁碟類型。\n"
+    IDS_SETID_INVALID_FORMAT "\n磁碟類型的格式是無效的。\n"
+    IDS_SETID_INVALID_TYPE "\n無效的磁碟類型。\n"
 END
 
 /* Disk Status */
@@ -87,308 +159,90 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "為此命令指定的參數是無效的。\n有關命令類型的詳細資訊:"
+    IDS_MSG_ARG_SYNTAX_ERROR "您為這個命令指定的引數是無效的。\n有關命令類型的詳細資訊:"
 END
 
 /* Help Command Descripions */
 STRINGTABLE
 BEGIN
-    IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- 所選將磁碟分割標記為活動。\n"
-    IDS_HELP_CMD_DESC_ADD "ADD\t\t- 將映象添加到一個簡單磁碟區。\n"
-    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- 為所選的磁碟區分配一個磁碟區代號或裝入點。\n"
-    IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- 附加的虛擬磁碟檔案。\n"
-    IDS_HELP_CMD_DESC_ATTRIBUTES "ATTRIBUTES\t- 操縱磁碟區或磁碟的屬性。\n"
-    IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- 啟用和停用基本磁碟區的自動裝入。\n"
-    IDS_HELP_CMD_DESC_BREAK "BREAK\t\t- 中斷一個鏡像組。\n"
-    IDS_HELP_CMD_DESC_CLEAN "CLEAN\t\t- 清除配置資訊或所有資訊，關閉\n\t\t 磁碟。\n"
-    IDS_HELP_CMD_DESC_COMPACT "COMPACT\t\t- 嘗試減少檔案的物理大小。\n"
-    IDS_HELP_CMD_DESC_CONVERT "CONVERT\t\t- 不同的磁碟格式之間進行轉換。\n"
-    IDS_HELP_CMD_DESC_CREATE "CREATE\t\t- 新增磁碟區、 分區或虛擬磁碟。\n"
-    IDS_HELP_CMD_DESC_DELETE "DELETE\t\t- 刪除物件。\n"
-    IDS_HELP_CMD_DESC_DETACH "DETACH\t\t- 分離一個虛擬磁碟檔案。\n"
-    IDS_HELP_CMD_DESC_DETAIL "DETAIL\t\t- 提供物件的詳細資訊。\n"
-    IDS_HELP_CMD_DESC_EXIT "EXIT\t\t- 退出 DiskPart。\n"
-    IDS_HELP_CMD_DESC_EXPAND "EXPAND\t\t- 擴充虛擬磁碟上的最大可用空間。\n"
-    IDS_HELP_CMD_DESC_EXTEND "EXTEND\t\t- 擴展磁碟區。\n"
-    IDS_HELP_CMD_DESC_FS "FILESYSTEMS\t- 顯示磁碟區上目前及受支援的檔案系統。\n"
-    IDS_HELP_CMD_DESC_FORMAT "FORMAT\t\t- 格式化所選的磁碟區或磁碟分割。\n"
-    IDS_HELP_CMD_DESC_GPT "GPT\t\t- 將屬性分配給所選的 GPT 分區。\n"
-    IDS_HELP_CMD_DESC_HELP "HELP\t\t- 顯示命令的列表。\n"
-    IDS_HELP_CMD_DESC_IMPORT "IMPORT\t\t- 匯入磁碟組。\n"
-    IDS_HELP_CMD_DESC_INACTIVE "INACTIVE\t- 將所選磁碟分割標記為非活動狀態。\n"
-    IDS_HELP_CMD_DESC_LIST "LIST\t\t- 顯示物件的列表。\n"
-    IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- 合併子磁碟與其父系。\n"
-    IDS_HELP_CMD_DESC_OFFLINE "OFFLINE\t\t- 把目前標記為連線的物件設成離線。\n"
-    IDS_HELP_CMD_DESC_ONLINE "ONLINE\t\t- 把目前標記為離線的物件設成連線。\n"
-    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- 重新整理選取封裝中所有磁碟的狀態，\n\t\t  嘗試在無效封裝中的磁碟復原，並重新同步具有過時網狀\n\t\t  磁碟區或同位檢查資料的鏡像磁碟區與 RAID5 磁碟區。\n"
-    IDS_HELP_CMD_DESC_REM "REM\t\t- 無反應。這用來註解指令碼。\n"
-    IDS_HELP_CMD_DESC_REMOVE "REMOVE\t\t- 刪除磁碟區代號或裝載點指派。\n"
-    IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- 修復失敗的成員與 RAID 5 磁碟區。\n"
-    IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- 重新掃描電腦，查找磁碟和磁碟區。\n"
-    IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- 在簡單磁碟區下放置一個保存磁碟分割。\n"
-    IDS_HELP_CMD_DESC_SAN "SAN\t\t- 顯示或設定當前引導 OS 的 SAN 策略。\n"
-    IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- 轉移重點到另一個物件。\n"
-    IDS_HELP_CMD_DESC_SETID "SETID\t\t- 更改分區類型。\n"
-    IDS_HELP_CMD_DESC_SHRINK "SHRINK\t\t- 減小所選磁碟區的大小。\n"
-    IDS_HELP_CMD_DESC_UNIQUEID "UNIQUEID\t- 顯示或設定 GUID 分區表 (GPT) 的標識符\n\t\t  或主開機記錄 (MBR) 磁碟的簽名。"
+    IDS_HELP_ACTIVE                    "將所選的磁碟分割標記為使用中。\n"
+    IDS_HELP_ADD                       "新增一個鏡像到一個簡單磁碟區。\n"
+    IDS_HELP_ASSIGN                    "分配一個磁碟機代號或掛接點到所選的磁碟區。\n"
+    IDS_HELP_ATTACH                    "附加的虛擬磁碟檔案。\n"
+    IDS_HELP_ATTRIBUTES                "操縱磁碟區或磁碟的屬性。\n"
+    IDS_HELP_AUTOMOUNT                 "啟用和停用基本磁碟區的自動裝入。\n"
+    IDS_HELP_BREAK                     "中斷一個鏡像組。\n"
+    IDS_HELP_CLEAN                     "清除磁碟上的設定資訊或所有資訊。\n"
+    IDS_HELP_COMPACT                   "嘗試減少檔案的物理大小。\n"
+    IDS_HELP_CONVERT                   "轉換不同的磁碟格式。\n"
+
+    IDS_HELP_CREATE                    "建立一個磁碟區、磁碟分割或虛擬磁碟。\n"
+    IDS_HELP_CREATE_PARTITION          "建立一個磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "建立一個 EFI 系統磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "建立一個延伸磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "建立一個邏輯磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "建立一個 MSR 磁碟分割。\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "建立一個主要磁碟分割。\n"
+    IDS_HELP_CREATE_VOLUME             "建立一個磁碟區。\n"
+    IDS_HELP_CREATE_VDISK              "建立一個虛擬磁碟檔案。\n"
+
+    IDS_HELP_DELETE                    "刪除一個物件。\n"
+    IDS_HELP_DELETE_DISK               "刪除一個磁碟。\n"
+    IDS_HELP_DELETE_PARTITION          "刪除一個磁碟分割。\n"
+    IDS_HELP_DELETE_VOLUME             "刪除一個磁碟區。\n"
+
+    IDS_HELP_DETACH                    "中斷連結虛擬磁碟檔案。\n"
+
+    IDS_HELP_DETAIL                    "提供一個物件的詳細資訊。\n"
+    IDS_HELP_DETAIL_DISK               "列印磁碟的詳細資訊。\n"
+    IDS_HELP_DETAIL_PARTITION          "列印磁碟分割的詳細資訊。\n"
+    IDS_HELP_DETAIL_VOLUME             "列印出磁碟區的詳細資訊。\n"
+
+    IDS_HELP_EXIT                      "結束 DiskPart。\n"
+    IDS_HELP_EXPAND                    "延伸虛擬磁碟上的最大可用空間。\n"
+    IDS_HELP_EXTEND                    "延伸一個磁碟區。\n"
+    IDS_HELP_FILESYSTEMS               "顯示磁碟區上目前及支援的檔案系統。\n"
+    IDS_HELP_FORMAT                    "格式化所選的磁碟區或磁碟分割。\n"
+    IDS_HELP_GPT                       "分配屬性給所選的 GPT 磁碟分割。\n"
+    IDS_HELP_HELP                      "顯示命令列表。\n"
+    IDS_HELP_IMPORT                    "匯入磁碟群組。\n"
+    IDS_HELP_INACTIVE                  "將所選的磁碟分割標記為非使用中。\n"
+
+    IDS_HELP_LIST                      "顯示物件的列表。\n"
+    IDS_HELP_LIST_DISK                 "列出磁碟。\n"
+    IDS_HELP_LIST_PARTITION            "列出磁碟分割。\n"
+    IDS_HELP_LIST_VOLUME               "列出磁碟區。\n"
+    IDS_HELP_LIST_VDISK                "列出虛擬磁碟檔案。\n"
+
+    IDS_HELP_MERGE                     "合併子磁碟與其父系。\n"
+    IDS_HELP_OFFLINE                   "把目前標記為連線的物件設為離線。\n"
+    IDS_HELP_ONLINE                    "把目前標記為離線的物件設為連線。\n"
+    IDS_HELP_RECOVER                   "重新整理所選封裝中所有磁碟的狀態，\n              嘗試復原在無效封裝中的磁碟，並重新同步具有過時網狀\n              磁碟區或同位檢查資料的鏡像磁碟區和 RAID5 磁碟區。\n"
+    IDS_HELP_REM                       "不做任何事。這是用來註解指令碼。\n"
+    IDS_HELP_REMOVE                    "移除磁碟區代號或掛接點的分配。\n"
+    IDS_HELP_REPAIR                    "以失敗的成員修復 RAID 5 磁碟區。\n"
+    IDS_HELP_RESCAN                    "重新掃描電腦，查找磁碟和磁碟區。\n"
+    IDS_HELP_RETAIN                    "在簡單磁碟區下放置一個保存磁碟分割。\n"
+    IDS_HELP_SAN                       "顯示或設定目前開機 OS 的 SAN 原則。\n"
+
+    IDS_HELP_SELECT                    "轉移焦點到另一個物件。\n"
+    IDS_HELP_SELECT_DISK               "轉移焦點到磁碟。\n"
+    IDS_HELP_SELECT_PARTITION          "轉移焦點到磁碟分割。\n"
+    IDS_HELP_SELECT_VOLUME             "轉移焦點到磁碟區。\n"
+    IDS_HELP_SELECT_VDISK              "轉移焦點到虛擬磁碟。\n"
+
+    IDS_HELP_SETID                     "更改磁碟分割類型。\n"
+    IDS_HELP_SHRINK                    "縮小所選磁碟區的大小。\n"
+
+    IDS_HELP_UNIQUEID                  "顯示或設定 GUID 分割表格 (GPT) 的識別碼\n              或磁碟的主開機記錄 (MBR) 簽章。\n"
+    IDS_HELP_UNIQUEID_DISK             "顯示或設定 GUID 分割表格 (GPT) 的識別碼\n              或磁碟的主開機記錄 (MBR) 簽章。\n"
 END
 
 /* Common Error Messages */
 STRINGTABLE
 BEGIN
-    IDS_ERROR_MSG_NO_SCRIPT "錯誤開始的指令碼: %s\n"
-    IDS_ERROR_MSG_BAD_ARG "錯誤處理參數: %s\n"
+    IDS_ERROR_MSG_NO_SCRIPT "開啟指令碼時發生錯誤: %s\n"
+    IDS_ERROR_MSG_BAD_ARG "處理引數時發生錯誤: %s\n"
     IDS_ERROR_INVALID_ARGS "無效的參數\n"
-END
-
-/* Active help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ACTIVE "\n\
-<請在此處新增活動命令說明文字>\n\n"
-END
-
-/* Add help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ADD "\n\
-<請在此處新增命令說明文字>\n\n"
-END
-
-/* Assign help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ASSIGN "\n\
-<請在此處新增指定命令說明文字>\n\n"
-END
-
-/* Attach help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ATTACH "\n\
-<請在此處新增附加命令說明文字>\n\n"
-END
-
-/* Attributes Command Messages */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ATTRIBUTES "\n\
-<請在此處新增屬性命令說明文字>\n\n"
-END
-
-/* Automount help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_AUTOMOUNT "\n\
-<請在此處新增自動掛載命令說明文字>\n\n"
-END
-
-/* Break help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_BREAK "\n\
-<請在此處新增中斷命令說明文字>\n\n"
-END
-
-/* Clean help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_CLEAN "\n\
-<請在此處新增清理命令說明文字>\n\n"
-END
-
-/* Compact help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_COMPACT "\n\
-<請在此處新增緊湊的命令說明文字>\n\n"
-END
-
-/* Convert help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_CONVERT "\n\
-<請在此處新增轉換命令說明文字>\n\n"
-END
-
-/* Convert help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_CREATE "\n\
-<請在此處新增建立命令說明文字>\n\n"
-END
-
-/* Delete help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_DELETE "\n\
-<請在此處新增刪除命令說明文字>\n\n"
-END
-
-/* Delete help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_DETAIL "\n\
-<請在此處新增詳細命令說明文字>\n\n"
-END
-
-/* Detach help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_DETACH "\n\
-<請在此處新增分離命令說明文字>\n\n"
-END
-
-/* Expand help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_EXPAND "\n\
-<請在此處新增擴展命令說明文字>\n\n"
-END
-
-/* Extend help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_EXTEND "\n\
-<請在此處新增擴展命令說明文字>\n\n"
-END
-
-/* Filesystems help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_FILESYSTEMS "\n\
-<請在此處新增檔案系統命令說明文字>\n\n"
-END
-
-/* Format help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_FORMAT "\n\
-<請在此處新增格式命令說明文字>\n\n"
-END
-
-/* GPT help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_GPT "\n\
-<請在此處新增 GPT 命令說明文字>\n\n"
-END
-
-/* Help help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_HELP "\n\
-<請在此處新增說明命令說明文字>\n\n"
-END
-
-/* Import help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_IMPORT "\n\
-<請在此處新增匯入命令說明文字>\n\n"
-END
-
-/* Inactive help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_INACTIVE "\n\
-<請在此處新增處於非活動狀態的命令說明文字>\n\n"
-END
-
-/* List help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_LIST "\n\
-<請在此處新增列表命令說明文字>\n\n"
-END
-
-/* Merge help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_MERGE "\n\
-<請在此處新增合併命令說明文字>\n\n"
-END
-
-/* Offline help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_OFFLINE "\n\
-<請在此處新增離線命令說明文字>\n\n"
-END
-
-/* Online help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ONLINE "\n\
-<請在此處新增連線命令說明文字>\n\n"
-END
-
-/* Recover help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_RECOVER "\n\
-<請在此處新增恢復命令說明文字>\n\n"
-END
-
-/* Remove help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_REMOVE "\n\
-<請在此處新增刪除命令說明文字>\n\n"
-END
-
-/* Repair help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_REPAIR "\n\
-<請在此處新增修復命令說明文字>\n\n"
-END
-
-/* Rescan help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_RESCAN "\n\
-<請在此處新增重新掃描命令說明文字>\n\n"
-END
-
-/* Retain help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_RETAIN "\n\
-<請在此處新增保留命令說明文字>\n\n"
-END
-
-/* San help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SAN "\n\
-<請在此處新增 SAN 命令說明文字>\n\n"
-END
-
-/* Select help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SELECT "\n\
-<請在此處新增選擇命令說明文字>\n\n"
-END
-
-/* Setid help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SETID "\n\
-<請在此處新增 SETID 命令說明文字>\n\n"
-END
-
-/* Setid help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SHRINK "\n\
-<請在此處新增收縮命令說明文字>\n\n"
-END
-
-/* Uniqueid help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_UNIQUEID "\n\
-<請在此處新增 UNIQUEID 命令說明文字>\n\n"
+    IDS_ERROR_NO_MEDIUM "沒有媒體在裝置中。\n"
 END

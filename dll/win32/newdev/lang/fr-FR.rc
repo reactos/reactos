@@ -93,4 +93,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Options de recherche et d'installation"
     IDS_SEARCHDRV_TITLE "Recherche..."
     IDS_INSTALLDRV_TITLE "Installation..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Veuillez sélectionner le dossier contenant les pilotes correspondant à ce matériel."
 END

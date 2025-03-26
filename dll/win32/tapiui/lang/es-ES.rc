@@ -155,7 +155,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Acceder a números de llamada l&ocales:", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Utiliza los botones a continuación para introducir los pasos de marcado para las llamadas internacionales. Introduce esos pasos en el orden exacto como aparecen en tu tarjeta telefónica. Para hacer llamadas locales sin usar una tarjeta telefónica, déjalo en blanco.", 2000, 7, 40, 238, 24
+    LTEXT "Usa los botones a continuación para introducir los pasos de marcado para las llamadas internacionales. Introdúcelos en el orden exacto como aparecen en tu tarjeta telefónica. Para hacer llamadas locales sin tarjeta telefónica déjalo vacío.", 2000, 7, 40, 238, 24
     LTEXT "Pasos de marcado de la tarjeta t&elefónica:", -1, 7, 72, 238, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Mover &Arriba", 1022, 195, 83, 50, 14

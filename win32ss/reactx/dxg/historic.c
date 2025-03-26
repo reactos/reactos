@@ -18,7 +18,7 @@
 * The function DxDxgGenericThunk redirects DirectX calls to other functions.
 *
 * @param ULONG_PTR ulIndex
-* The functions we want redirct
+* The functions we want to redirect
 *
 * @param ULONG_PTR ulHandle
 * Unknown

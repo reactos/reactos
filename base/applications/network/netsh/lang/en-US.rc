@@ -1,0 +1,43 @@
+/*
+ * PROJECT:     ReactOS NetSh
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     English (United States) resource file
+ * TRANSLATOR:  Copyright 2023 Eric Kohl <eric.kohl@reactos.org>
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/* Basic application information */
+STRINGTABLE
+BEGIN
+    IDS_APP_USAGE "\nUsage: netsh [-a AliasFile] [-c Context] [-r RemoteMachine] \
+\n             [Command | -f ScriptFile]\n"
+    IDS_INVALID_COMMAND "The following command was not found: %ls.\n"
+    IDS_OPEN_FAILED     "The file %ls could not be openend.\n"
+    IDS_INVALID_SYNTAX  "The syntax supplied for this command is not valid. Check help for the correct syntax.\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_HEADER "\nThe following commands are available:\n"
+    IDS_SUBCONTEXT_HEADER "\nThe following sub-contexts are available:\n"
+    IDS_HLP_UP             "Goes up one context level."
+    IDS_HLP_UP_EX          "Syntax: ..\n\n        Goes up one context level.\n\n"
+    IDS_HLP_EXIT           "Exits the program."
+    IDS_HLP_EXIT_EX        "Syntax: exit\n\n        Exits the program.\n\n"
+    IDS_HLP_HELP           "Displays a list of commands."
+    IDS_HLP_HELP_EX        "Syntax: help\n\n        Displays a list of commands.\n\n"
+
+    IDS_HLP_ADD_HELPER     "Installs a helper DLL."
+    IDS_HLP_ADD_HELPER_EX  "Syntax: add helper <dll file name>\n\n        Installs the specified helper DLL in netsh.\n\n"
+
+    IDS_HLP_DEL_HELPER     "Removes a helper DLL."
+    IDS_HLP_DEL_HELPER_EX  "Syntax: delete helper <dll file name>\n\n        Removes the specified helper DLL from netsh.\n\n"
+
+    IDS_HLP_SHOW_HELPER    "Lists all the top-level helpers."
+    IDS_HLP_SHOW_HELPER_EX "Syntax: show helper\n\n        Lists all the top-level helpers.\n\n"
+
+    IDS_HLP_GROUP_ADD      "Adds a configuration entry to a list of entries."
+    IDS_HLP_GROUP_DELETE   "Deletes a configuration entry from a list of entries."
+    IDS_HLP_GROUP_SHOW     "Displays information."
+END

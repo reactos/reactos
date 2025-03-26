@@ -1,4 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Subst Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -6,16 +12,17 @@ STRINGTABLE
 BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "參數個數不正確 - %s\n"
     IDS_INVALID_PARAMETER "參數個數不正確 - %s\n"
-    IDS_INVALID_PARAMETER2 "無效參數 - %s\n"
-    IDS_PATH_NOT_FOUND "Path not found - %s\n"
-    IDS_ACCESS_DENIED "Access denied - %s\n"
-    IDS_DRIVE_ALREADY_SUBSTED "驅動器已經運行過 SUBST\n"
+    IDS_INVALID_PARAMETER2 "無效的參數 - %s\n"
+    IDS_PATH_NOT_FOUND "找不到路徑 - %s\n"
+    IDS_ACCESS_DENIED "存取被拒 - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "磁碟機已經執行過 SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "操作失敗！錯誤碼 0x%x：%s\n"
-    IDS_USAGE "將一個路徑用驅動器號關聯。\n\n\
-SUBST [驅動器1: [驅動器2:]路徑]\n\
-SUBST 驅動器1: /D\n\n\
-  驅動器1:          指定一個您想要關聯到一個路徑的虛擬驅動器。\n\
-  [驅動器2:]路徑    指定一個您想要關聯到一個虛擬驅動器的物理驅動器和路徑。\n\
-  /D                刪除一個虛擬驅動器。\n\n\
-執行不帶參數的 SUBST 將會顯示當前虛擬驅動器的列表。\n"
+    IDS_USAGE "建立一個路徑與磁碟機代號間的關聯。\n\n\
+SUBST [磁碟機1: [磁碟機2:]路徑]\n\
+SUBST 磁碟機1: /D\n\n\
+  磁碟機1:          指定一個您想要關聯到指定路徑的虛擬磁碟機。\n\
+  [磁碟機2:]路徑    指定一個您想要關聯到指定虛擬磁碟機的\n\
+                    物理磁碟機和路徑。\n\
+  /D                刪除一個虛擬磁碟機。\n\n\
+執行不帶參數的 SUBST 將會顯示目前的虛擬磁碟機的列表。\n"
 END

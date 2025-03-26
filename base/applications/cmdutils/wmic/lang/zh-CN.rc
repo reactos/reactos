@@ -4,8 +4,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-    STRING_CMDLINE_NOT_SUPPORTED, "错误: 不支持的命令行\n"
-    STRING_ALIAS_NOT_FOUND, "错误: 未找到别名\n"
-    STRING_INVALID_QUERY, "错误: 无效的查询\n"
-    STRING_INVALID_PATH, "错误: PATH 中存在无效的语法\n"
+    STRING_CMDLINE_NOT_SUPPORTED, "错误：不支持的命令行\n"
+    STRING_ALIAS_NOT_FOUND, "错误：未找到别名\n"
+    STRING_INVALID_QUERY, "错误：无效的查询\n"
+    STRING_INVALID_PATH, "错误：PATH 中存在无效的语法\n"
 }

@@ -85,6 +85,9 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
 
 HRESULT STDMETHODCALLTYPE CMenuSite::EnumBands(UINT uBand, DWORD* pdwBandID)
 {
+    if (uBand == -1ul)
+        return GetBandCount();
+
     if (uBand != 0)
         return E_FAIL;
 
@@ -246,7 +249,8 @@ HRESULT STDMETHODCALLTYPE CMenuSite::SetDeskBarSite(IUnknown *punkSite)
         m_DeskBand = NULL;
         m_WinEventHandler = NULL;
         m_hWndBand = NULL;
-        m_hWnd = NULL;
+        if (m_hWnd)
+            DestroyWindow();
         m_DeskBarSite = NULL;
     }
 

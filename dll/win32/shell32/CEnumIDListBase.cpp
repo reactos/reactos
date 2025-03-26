@@ -96,33 +96,6 @@ BOOL CEnumIDListBase::DeleteList()
     return TRUE;
 }
 
-/**************************************************************************
- *  HasItemWithCLSID()
- */
-BOOL CEnumIDListBase::HasItemWithCLSID(LPITEMIDLIST pidl)
-{
-    ENUMLIST *pCur;
-    IID *ptr = _ILGetGUIDPointer(pidl);
-
-    if (ptr)
-    {
-        REFIID refid = *ptr;
-        pCur = mpFirst;
-
-        while(pCur)
-        {
-            LPGUID curid = _ILGetGUIDPointer(pCur->pidl);
-            if (curid && IsEqualGUID(*curid, refid))
-            {
-                return TRUE;
-            }
-            pCur = pCur->pNext;
-        }
-    }
-
-    return FALSE;
-}
-
 HRESULT CEnumIDListBase::AppendItemsFromEnumerator(IEnumIDList* pEnum)
 {
     LPITEMIDLIST pidl;
@@ -172,9 +145,15 @@ HRESULT WINAPI CEnumIDListBase::Next(
 
     for(i = 0; i < celt; i++)
     { if(!mpCurrent)
+      { hr = S_FALSE;
         break;
+      }
 
       temp = ILClone(mpCurrent->pidl);
+      if (!temp)
+      { hr = i ? S_FALSE : E_OUTOFMEMORY;
+        break;
+      }
       rgelt[i] = temp;
       mpCurrent = mpCurrent->pNext;
     }

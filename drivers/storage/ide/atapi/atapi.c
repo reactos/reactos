@@ -245,7 +245,7 @@ IdeMediaStatus(
     );
 
 
-
+
 BOOLEAN
 NTAPI
 IssueIdentify(
@@ -630,7 +630,7 @@ Return Value:
 
 } // end IssueIdentify()
 
-
+
 BOOLEAN
 NTAPI
 SetDriveParameters(
@@ -727,7 +727,7 @@ Return Value:
 
 } // end SetDriveParameters()
 
-
+
 BOOLEAN
 NTAPI
 AtapiResetController(
@@ -899,7 +899,7 @@ Return Value:
 } // end AtapiResetController()
 
 
-
+
 ULONG
 NTAPI
 MapError(
@@ -1483,7 +1483,7 @@ AtapiHwInitializeChanger (
 }
 
 
-
+
 BOOLEAN
 NTAPI
 FindDevices(
@@ -1846,7 +1846,7 @@ atapiIssueId:
 
 } // end FindDevices()
 
-
+
 ULONG
 NTAPI
 AtapiParseArgumentString(
@@ -2099,7 +2099,7 @@ ContinueSearch:
 
 
 
-
+
 
 ULONG
 NTAPI
@@ -2569,7 +2569,7 @@ retryIdentifier:
 
 
 
-
+
 BOOLEAN
 NTAPI
 FindBrokenController(
@@ -2706,7 +2706,7 @@ Return Value:
     return FALSE;
 } // end FindBrokenController
 
-
+
 ULONG
 NTAPI
 AtapiFindNativeModeController(
@@ -3008,7 +3008,7 @@ setStatusAndExit:
 
 } // end AtapiFindNativeModeController()
 
-
+
 ULONG
 NTAPI
 AtapiFindPCIController(
@@ -3354,7 +3354,7 @@ setStatusAndExit:
 
 } // end AtapiFindPCIController()
 
-
+
 ULONG
 NTAPI
 Atapi2Scsi(
@@ -3405,7 +3405,7 @@ Atapi2Scsi(
     return bytesAdjust >> 1;
 }
 
-
+
 VOID
 NTAPI
 AtapiCallBack(
@@ -3478,7 +3478,7 @@ AtapiCallBack(
     AtapiInterrupt(HwDeviceExtension);
 }
 
-
+
 BOOLEAN
 NTAPI
 AtapiInterrupt(
@@ -4337,7 +4337,7 @@ CompleteRequest:
 
 } // end AtapiInterrupt()
 
-
+
 ULONG
 NTAPI
 IdeSendSmartCommand(
@@ -4493,7 +4493,7 @@ Return Value:
 
 } // end IdeSendSmartCommand()
 
-
+
 ULONG
 NTAPI
 IdeReadWrite(
@@ -4737,7 +4737,7 @@ Return Value:
 } // end IdeReadWrite()
 
 
-
+
 ULONG
 NTAPI
 IdeVerify(
@@ -4907,7 +4907,7 @@ Return Value:
 
 } // end IdeVerify()
 
-
+
 VOID
 NTAPI
 Scsi2Atapi(
@@ -4975,7 +4975,7 @@ Return Value:
 }
 
 
-
+
 ULONG
 NTAPI
 AtapiSendCommand(
@@ -5805,7 +5805,7 @@ Return Value:
 
 
 
-
+
 BOOLEAN
 NTAPI
 AtapiStartIo(
@@ -6171,7 +6171,7 @@ Return Value:
 
 } // end AtapiStartIo()
 
-
+
 ULONG
 NTAPI
 DriverEntry(
@@ -6327,7 +6327,7 @@ Return Value:
 } // end DriverEntry()
 
 
-
+
 LONG
 NTAPI
 AtapiStringCmp (
@@ -6375,7 +6375,7 @@ AtapiStringCmp (
     return 0;
 }
 
-
+
 VOID
 NTAPI
 AtapiZeroMemory(
@@ -6390,7 +6390,7 @@ AtapiZeroMemory(
     }
 }
 
-
+
 VOID
 NTAPI
 AtapiHexToString (
@@ -6441,7 +6441,7 @@ AtapiHexToString (
 }
 
 
-
+
 PSCSI_REQUEST_BLOCK
 NTAPI
 BuildMechanismStatusSrb (
@@ -6487,7 +6487,7 @@ BuildMechanismStatusSrb (
     return srb;
 }
 
-
+
 PSCSI_REQUEST_BLOCK
 NTAPI
 BuildRequestSenseSrb (

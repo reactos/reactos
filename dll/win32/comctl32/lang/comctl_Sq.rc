@@ -3,7 +3,7 @@
  *
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Eric Kohl
- * Translator : Ardit Dani : 2013
+ * Translator: 2013 Ardit Dani
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -90,9 +90,9 @@ BEGIN
   DEFPUSHBUTTON "&Mbyll",     IDCANCEL,320,6,70,14
   PUSHBUTTON    "R&eseto",     IDC_RESET_BTN,320,23,70,14
   PUSHBUTTON    "&Ndihmë",      IDC_HELP_BTN,320,40,70,14
-  PUSHBUTTON    "Leviz lart",   IDC_MOVEUP_BTN,320,74,70,14
-  PUSHBUTTON    "Leviz poshte", IDC_MOVEDN_BTN,320,91,70,14
-  LTEXT         "Butona te pranishem:", -1,4,5,120,10
+  PUSHBUTTON    "&Leviz lart",   IDC_MOVEUP_BTN,320,74,70,14
+  PUSHBUTTON    "Leviz &poshte", IDC_MOVEDN_BTN,320,91,70,14
+  LTEXT         "&Butona te pranishem:", -1,4,5,120,10
   LISTBOX       IDC_AVAILBTN_LBOX,5,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
   PUSHBUTTON    "&Shto ->",    IDOK, 132, 42, 55, 14
   PUSHBUTTON    "<- &Hiq", IDC_REMOVE_BTN,132,62,55,14

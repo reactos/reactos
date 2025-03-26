@@ -19,7 +19,11 @@ extern PEXT2_GLOBAL Ext2Global;
 
 /* DEFINITIONS *************************************************************/
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2PnpCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp,
@@ -38,7 +42,11 @@ Ext2PnpCompletionRoutine (
 /* FUNCTIONS *************************************************************/
 
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2PnpCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,

@@ -417,7 +417,7 @@ SendRequest(
 
     closeTcpFile(TcpCC);
 
-    DPRINT("DeviceIoControl: %ld\n", ((Success != FALSE) ? 0 : GetLastError()));
+    DPRINT("DeviceIoControl: %ld\n", (Success ? NO_ERROR : GetLastError()));
 
     if (!Success)
         return WSAEINVAL;

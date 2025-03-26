@@ -63,7 +63,7 @@ IoQueueWorkItemEx(
     newContext->WorkItemRoutineEx = WorkerRoutine;
     newContext->Context = Context;
 
-    IoQueueWorkItem(IoWorkItem, IopWorkItemExCallback, QueueType, Context);
+    IoQueueWorkItem(IoWorkItem, IopWorkItemExCallback, QueueType, newContext);
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

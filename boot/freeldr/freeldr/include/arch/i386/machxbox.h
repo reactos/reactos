@@ -51,14 +51,16 @@ VOID XboxPrepareForReactOS(VOID);
 VOID XboxMemInit(VOID);
 PFREELDR_MEMORY_DESCRIPTOR XboxMemGetMemoryMap(ULONG *MemoryMapSize);
 
-VOID XboxDiskInit(BOOLEAN Init);
 BOOLEAN XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOLEAN XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
 ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);
 
 TIMEINFO* XboxGetTime(VOID);
 
-PCONFIGURATION_COMPONENT_DATA XboxHwDetect(VOID);
+PCONFIGURATION_COMPONENT_DATA
+XboxHwDetect(
+    _In_opt_ PCSTR Options);
+
 VOID XboxHwIdle(VOID);
 
 VOID XboxSetLED(PCSTR Pattern);

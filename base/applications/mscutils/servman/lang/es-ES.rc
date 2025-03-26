@@ -283,7 +283,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "OPCIONES DE CREACIÓN:\r\nNOTA: El nombre de la opción incluye el signo igual.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (por defecto = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (por defecto = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (por defecto = normal)\r\n group= <LoadOrderGroup>\r\n E= <yes|no>\r\n depend= <Dependencies( separadas por / (barra inclinada))>\r\n obj= <AccountName|ObjectName>\r\n       (por defecto = LocalSystem)\r\n password= <contraseña>\r\n"
+    IDS_HELP_OPTIONS "OPCIONES DE CREACIÓN:\nNOTA: El nombre de la opción incluye el signo igual.\n type= <own|share|interact|kernel|filesys|rec>\n       (por defecto = own)\n start= <boot|system|auto|demand|disabled>\n       (por defecto = demand)\n error= <normal|severe|critical|ignore>\n       (por defecto = normal)\n group= <LoadOrderGroup>\n E= <yes|no>\n depend= <Dependencies( separadas por / (barra inclinada))>\n obj= <AccountName|ObjectName>\n       (por defecto = LocalSystem)\n password= <contraseña>\n"
 END
 
 /* Hints */

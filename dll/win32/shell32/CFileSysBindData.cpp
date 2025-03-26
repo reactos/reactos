@@ -38,8 +38,8 @@ public:
     ~CFileSysBindData();
 
     // *** IFileSystemBindData methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetFindData(const WIN32_FIND_DATAW *pfd);
-    virtual HRESULT STDMETHODCALLTYPE GetFindData(WIN32_FIND_DATAW *pfd);
+    STDMETHOD(SetFindData)(const WIN32_FIND_DATAW *pfd) override;
+    STDMETHOD(GetFindData)(WIN32_FIND_DATAW *pfd) override;
 
 DECLARE_NOT_AGGREGATABLE(CFileSysBindData)
 DECLARE_PROTECT_FINAL_CONSTRUCT()

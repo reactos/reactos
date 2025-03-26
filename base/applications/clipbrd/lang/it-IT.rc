@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Clipboard Viewer
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Implementation of Italian language for Clipboard Viewer
- * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL

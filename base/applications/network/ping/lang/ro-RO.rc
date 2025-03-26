@@ -1,7 +1,9 @@
 /*
- * FILE:        base/applications/network/ping/lang/ro-RO.rc
- * PURPOSE:     Romanian translations for ReactOS Ping Command
- * TRANSLATORS: Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Ping Command
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -22,7 +24,7 @@ Opțiuni:\n\
     -f            Indicator de prevenție a fragmentării pachetelor (valabil\n\
                   doar pentru IPv4).\n\
     -i TDV        Timp de valabilitate.\n\
-    -v TDS        Tip de serviciu (valabil doar pentru IPv4. Această opțiune\n\
+    -v TDS        Tip de serviciu (valabil doar pentru IPv4. Această setare\n\
                   nu este de actualitate și nu va avea efect asupra câmpului\n\
                   tipului de serviciu din antetul unui pachet IP).\n\
     -w expirare   Limita temporală pentru răspuns, în milisecunde.\n\

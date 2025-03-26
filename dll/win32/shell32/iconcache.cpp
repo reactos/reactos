@@ -1,21 +1,9 @@
 /*
- *    shell icon cache (SIC)
- *
- * Copyright 1998, 1999 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Shell Icon Cache (SIC)
+ * COPYRIGHT:   Copyright 1998, 1999 Juergen Schmied
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -39,6 +27,9 @@ static HDPA        sic_hdpa = 0;
 
 static HIMAGELIST ShellSmallIconList;
 static HIMAGELIST ShellBigIconList;
+INT ShellSmallIconSize = 0;
+INT ShellLargeIconSize = 0;
+INT ShellIconBPP = 0; // Bits Per Pixel
 
 namespace
 {
@@ -50,6 +41,48 @@ CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_SicCS") }
 };
 CRITICAL_SECTION SHELL32_SicCS = { &critsect_debug, -1, 0, 0, 0, 0 };
+}
+
+// Load metric value from registry
+static INT
+SIC_GetMetricsValue(
+    _In_ PCWSTR pszValueName,
+    _In_ INT nDefaultValue)
+{
+    WCHAR szValue[64];
+    DWORD cbValue = sizeof(szValue);
+    DWORD error = SHGetValueW(HKEY_CURRENT_USER, L"Control Panel\\Desktop\\WindowMetrics",
+                              pszValueName, NULL, szValue, &cbValue);
+    if (error)
+        return nDefaultValue;
+    szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+    return _wtoi(szValue);
+}
+
+static INT
+SIC_GetLargeIconSize(VOID)
+{
+    // NOTE: Shell icon size is always square
+    INT nDefaultSize = GetSystemMetrics(SM_CXICON);
+    INT nIconSize = SIC_GetMetricsValue(L"Shell Icon Size", nDefaultSize);
+    return (nIconSize > 0) ? nIconSize : nDefaultSize;
+}
+
+static INT
+SIC_GetSmallIconSize(VOID)
+{
+    // NOTE: Shell icon size is always square
+    INT nDefaultSize = GetSystemMetrics(SM_CXSMICON);
+    INT nIconSize = SIC_GetMetricsValue(L"Shell Small Icon Size", nDefaultSize);
+    return (nIconSize > 0) ? nIconSize : nDefaultSize;
+}
+
+static INT
+SIC_GetIconBPP(VOID) // Bits Per Pixel
+{
+    INT nDefaultBPP = SHGetCurColorRes();
+    INT nIconBPP = SIC_GetMetricsValue(L"Shell Icon BPP", nDefaultBPP);
+    return (nIconBPP > 0) ? nIconBPP : nDefaultBPP;
 }
 
 /*****************************************************************************
@@ -71,10 +104,10 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
     if (e1->dwSourceIndex != e2->dwSourceIndex)
       return (e1->dwSourceIndex < e2->dwSourceIndex) ? -1 : 1;
 
-    if ((e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT)) 
+    if ((e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT))
       return ((e1->dwFlags & GIL_FORSHORTCUT) < (e2->dwFlags & GIL_FORSHORTCUT)) ? -1 : 1;
-  
-    return wcsicmp(e1->sSourceFile,e2->sSourceFile);
+
+    return _wcsicmp(e1->sSourceFile,e2->sSourceFile);
 }
 
 /* declare SIC_LoadOverlayIcon() */
@@ -89,7 +122,7 @@ static int SIC_LoadOverlayIcon(int icon_idx);
  * FIXME: This should go to the ImageList implementation!
  */
 static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
-{    
+{
     ICONINFO ShortcutIconInfo, TargetIconInfo;
     HICON ShortcutIcon = NULL, TargetIcon;
     BITMAP TargetBitmapInfo, ShortcutBitmapInfo;
@@ -106,7 +139,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
      * We will write over the source bitmaps to get the final ones */
     if (! GetIconInfo(SourceIcon, &TargetIconInfo))
         return NULL;
-    
+
     /* Is it possible with the ImageList implementation? */
     if(!TargetIconInfo.hbmColor)
     {
@@ -114,7 +147,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
         FIXME("1bpp icon wants its overlay!\n");
         goto fail;
     }
-        
+
     if(!GetObjectW(TargetIconInfo.hbmColor, sizeof(BITMAP), &TargetBitmapInfo))
     {
         goto fail;
@@ -122,10 +155,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
 
     /* search for the shortcut icon only once */
     if (s_imgListIdx == -1)
-        s_imgListIdx = SIC_LoadOverlayIcon(- IDI_SHELL_SHORTCUT);
-                           /* FIXME should use icon index 29 instead of the
-                              resource id, but not all icons are present yet
-                              so we can't use icon indices */
+        s_imgListIdx = SIC_LoadOverlayIcon(IDI_SHELL_SHORTCUT - 1);
 
     if (s_imgListIdx != -1)
     {
@@ -140,7 +170,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
     {
         goto fail;
     }
-    
+
     /* Is it possible with the ImageLists ? */
     if(!ShortcutIconInfo.hbmColor)
     {
@@ -148,7 +178,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
         FIXME("Should draw 1bpp overlay!\n");
         goto fail;
     }
-    
+
     if(!GetObjectW(ShortcutIconInfo.hbmColor, sizeof(BITMAP), &ShortcutBitmapInfo))
     {
         goto fail;
@@ -191,7 +221,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
         PVOID bits;
         PULONG pixel;
         INT i, j;
-        
+
         /* Find if the source bitmap has an alpha channel */
         if(TargetBitmapInfo.bmBitsPixel != 32) add_alpha = FALSE;
         else
@@ -202,21 +232,21 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
             lpbmi->bmiHeader.biHeight = TargetBitmapInfo.bmHeight;
             lpbmi->bmiHeader.biPlanes = 1;
             lpbmi->bmiHeader.biBitCount = 32;
-            
+
             bits = HeapAlloc(GetProcessHeap(), 0, TargetBitmapInfo.bmHeight * TargetBitmapInfo.bmWidthBytes);
-            
+
             if(!bits) goto fail;
-            
+
             if(!GetDIBits(TargetDC, TargetIconInfo.hbmColor, 0, TargetBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
             {
                 ERR("GetBIBits failed!\n");
                 HeapFree(GetProcessHeap(), 0, bits);
                 goto fail;
             }
-            
+
             i = j = 0;
             pixel = (PULONG)bits;
-            
+
             for(i=0; i<TargetBitmapInfo.bmHeight; i++)
             {
                 for(j=0; j<TargetBitmapInfo.bmWidth; j++)
@@ -228,25 +258,25 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
             }
             HeapFree(GetProcessHeap(), 0, bits);
         }
-        
+
         /* Allocate the bits */
         bits = HeapAlloc(GetProcessHeap(), 0, ShortcutBitmapInfo.bmHeight*ShortcutBitmapInfo.bmWidthBytes);
         if(!bits) goto fail;
-        
+
         ZeroMemory(buffer, sizeof(buffer));
         lpbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         lpbmi->bmiHeader.biWidth = ShortcutBitmapInfo.bmWidth;
         lpbmi->bmiHeader.biHeight = ShortcutBitmapInfo.bmHeight;
         lpbmi->bmiHeader.biPlanes = 1;
         lpbmi->bmiHeader.biBitCount = 32;
-        
+
         if(!GetDIBits(TargetDC, ShortcutIconInfo.hbmColor, 0, ShortcutBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
         {
             ERR("GetBIBits failed!\n");
             HeapFree(GetProcessHeap(), 0, bits);
             goto fail;
         }
-        
+
         pixel = (PULONG)bits;
         /* Remove alpha channel component or make it totally opaque */
         for(i=0; i<ShortcutBitmapInfo.bmHeight; i++)
@@ -257,10 +287,10 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
                 else *pixel++ &= 0x00FFFFFF;
             }
         }
-        
+
         /* GetDIBits return BI_BITFIELDS with masks set to 0, and SetDIBits fails when masks are 0. The irony... */
         lpbmi->bmiHeader.biCompression = BI_RGB;
-        
+
         /* Set the bits again */
         if(!SetDIBits(TargetDC, ShortcutIconInfo.hbmColor, 0, ShortcutBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
         {
@@ -389,14 +419,15 @@ leave:
  */
 static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
 {
-    HICON hiconLarge=0;
-    HICON hiconSmall=0;
+    HICON hiconLarge = NULL, hiconSmall = NULL;
     UINT ret;
 
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellLargeIconSize, ShellLargeIconSize,
+                         &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellSmallIconSize, ShellSmallIconSize,
+                         &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
 
-    if ( !hiconLarge ||  !hiconSmall)
+    if (!hiconLarge || !hiconSmall)
     {
         WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
         if(hiconLarge) DestroyIcon(hiconLarge);
@@ -484,9 +515,6 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
 BOOL SIC_Initialize(void)
 {
     HICON hSm = NULL, hLg = NULL;
-    INT cx_small, cy_small;
-    INT cx_large, cy_large;
-    HDC hDC;
     INT bpp;
     DWORD ilMask;
     BOOL result = FALSE;
@@ -505,16 +533,10 @@ BOOL SIC_Initialize(void)
         return FALSE;
     }
 
-    hDC = CreateICW(L"DISPLAY", NULL, NULL, NULL);
-    if (!hDC)
-    {
-        ERR("Failed to create information context (error %d)\n", GetLastError());
-        goto end;
-    }
+    ShellSmallIconSize = SIC_GetSmallIconSize();
+    ShellLargeIconSize = SIC_GetLargeIconSize();
 
-    bpp = GetDeviceCaps(hDC, BITSPIXEL);
-    DeleteDC(hDC);
-
+    bpp = ShellIconBPP = SIC_GetIconBPP(); // Bits Per Pixel
     if (bpp <= 4)
         ilMask = ILC_COLOR4;
     else if (bpp <= 8)
@@ -530,39 +552,23 @@ BOOL SIC_Initialize(void)
 
     ilMask |= ILC_MASK;
 
-    cx_small = GetSystemMetrics(SM_CXSMICON);
-    cy_small = GetSystemMetrics(SM_CYSMICON);
-    cx_large = GetSystemMetrics(SM_CXICON);
-    cy_large = GetSystemMetrics(SM_CYICON);
-
-    ShellSmallIconList = ImageList_Create(cx_small,
-                                          cy_small,
-                                          ilMask,
-                                          100,
-                                          100);
+    ShellSmallIconList = ImageList_Create(ShellSmallIconSize, ShellSmallIconSize, ilMask, 100, 100);
     if (!ShellSmallIconList)
     {
         ERR("Failed to create the small icon list.\n");
         goto end;
     }
 
-    ShellBigIconList = ImageList_Create(cx_large,
-                                        cy_large,
-                                        ilMask,
-                                        100,
-                                        100);
+    ShellBigIconList = ImageList_Create(ShellLargeIconSize, ShellLargeIconSize, ilMask, 100, 100);
     if (!ShellBigIconList)
     {
         ERR("Failed to create the big icon list.\n");
         goto end;
     }
-    
+
     /* Load the document icon, which is used as the default if an icon isn't found. */
-    hSm = (HICON)LoadImageW(shell32_hInstance,
-                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON,
-                            cx_small,
-                            cy_small,
+    hSm = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON, ShellSmallIconSize, ShellSmallIconSize,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hSm)
     {
@@ -570,11 +576,8 @@ BOOL SIC_Initialize(void)
         goto end;
     }
 
-    hLg = (HICON)LoadImageW(shell32_hInstance,
-                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON,
-                            cx_large,
-                            cy_large,
+    hLg = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON, ShellLargeIconSize, ShellLargeIconSize,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hLg)
     {
@@ -592,15 +595,15 @@ BOOL SIC_Initialize(void)
         ERR("Failed to add IDI_SHELL_DOCUMENT icon to cache.\n");
         goto end;
     }
-    
+
     /* Everything went fine */
     result = TRUE;
-    
+
 end:
     /* The image list keeps a copy of the icons, we must destroy them */
     if(hSm) DestroyIcon(hSm);
     if(hLg) DestroyIcon(hLg);
-    
+
     /* Clean everything if something went wrong */
     if(!result)
     {
@@ -654,40 +657,20 @@ void SIC_Destroy(void)
  */
 static int SIC_LoadOverlayIcon(int icon_idx)
 {
-    WCHAR buffer[1024], wszIdx[8];
-    HKEY hKeyShellIcons;
-    LPCWSTR iconPath;
+    WCHAR buffer[1024];
+    LPWSTR iconPath;
     int iconIdx;
-
-    static const WCHAR wszShellIcons[] = {
-        'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
-        'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-        'E','x','p','l','o','r','e','r','\\','S','h','e','l','l',' ','I','c','o','n','s',0
-    };
-    static const WCHAR wszNumFmt[] = {'%','d',0};
 
     iconPath = swShell32Name;    /* default: load icon from shell32.dll */
     iconIdx = icon_idx;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszShellIcons, 0, KEY_READ, &hKeyShellIcons) == ERROR_SUCCESS)
+    if (HLM_GetIconW(icon_idx, buffer, _countof(buffer), &iconIdx))
     {
-        DWORD count = sizeof(buffer);
-
-        swprintf(wszIdx, wszNumFmt, icon_idx);
-
-        /* read icon path and index */
-        if (RegQueryValueExW(hKeyShellIcons, wszIdx, NULL, NULL, (LPBYTE)buffer, &count) == ERROR_SUCCESS)
-        {
-        LPWSTR p = wcschr(buffer, ',');
-
-        if (p)
-            *p++ = 0;
-
         iconPath = buffer;
-        iconIdx = _wtoi(p);
-        }
-
-        RegCloseKey(hKeyShellIcons);
+    }
+    else
+    {
+        WARN("Failed to load icon with index %d, using default one\n", icon_idx);
     }
 
     if (!sic_hdpa)
@@ -1035,6 +1018,9 @@ HRESULT WINAPI SHDefExtractIconW(LPCWSTR pszIconFile, int iIndex, UINT uFlags,
     UINT ret;
     HICON hIcons[2];
     WARN("%s %d 0x%08x %p %p %d, semi-stub\n", debugstr_w(pszIconFile), iIndex, uFlags, phiconLarge, phiconSmall, nIconSize);
+
+    if (!nIconSize)
+        nIconSize = MAKELONG(GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CXSMICON));
 
     ret = PrivateExtractIconsW(pszIconFile, iIndex, nIconSize, nIconSize, hIcons, NULL, 2, LR_DEFAULTCOLOR);
     /* FIXME: deal with uFlags parameter which contains GIL_ flags */

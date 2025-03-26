@@ -1,4 +1,10 @@
-/* Russian language resource file (Dmitry Chapyshev, 2007-06-21) */
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2014-2015 Kudratov Olimjon <olim98@bk.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -12,6 +18,12 @@ BEGIN
     IDS_ERROR_NOMEM "Недостаточно памяти для выполнения операции."
     IDS_ERROR_NOFONT "%1 не является корректным файлом шрифта."
     IDS_ERROR_NOCLASS "Невозможно инициализировать класс окна."
+    IDS_ERROR_ISINSTALLED "Этот шрифт уже установлен!" 
+    IDS_ERROR_FONTCPY "Не удалось скопировать файл шрифта!"
+    IDS_ERROR_OPENKEY "Не удалось открыть ключ реестра для шрифтов!"
+    IDS_ERROR_REGISTER "Не удалось зарегистрировать новый шрифт!"
+    IDS_SUCCESS "Успех"
+    IDS_COMPLETED "Установка шрифта завершена."
     IDS_FILTER_LIST "Все поддерживаемые шрифты (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Файлы шрифтов (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType шрифты (*.ttf)\0*.ttf\0\

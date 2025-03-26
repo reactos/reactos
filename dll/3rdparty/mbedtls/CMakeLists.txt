@@ -9,6 +9,7 @@ list(APPEND SOURCE
     aes.c
     aesni.c
     arc4.c
+    #aria.c
     asn1parse.c
     asn1write.c
     #base64.c
@@ -17,6 +18,8 @@ list(APPEND SOURCE
     camellia.c
     ccm.c
     #certs.c
+    #chacha20.c
+    #chachapoly.c
     cipher.c
     cipher_wrap.c
     #cmac.c
@@ -33,6 +36,7 @@ list(APPEND SOURCE
     #error.c
     gcm.c
     #havege.c
+    #hkdf.c
     hmac_drbg.c
     #md2.c
     #md4.c
@@ -41,6 +45,7 @@ list(APPEND SOURCE
     md_wrap.c
     #memory_buffer_alloc.c
     #net_sockets.c
+    #nist_kw.c
     oid.c
     padlock.c
     #pem.c
@@ -52,6 +57,8 @@ list(APPEND SOURCE
     pk_wrap.c
     #pkwrite.c
     platform.c
+    platform_util.c
+    #poly1305.c
     ripemd160.c
     rsa.c
     rsa_internal.c
@@ -95,6 +102,8 @@ add_cd_file(TARGET mbedtls DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
     target_compile_options(mbedtls PRIVATE -Wno-pointer-sign -Wno-unused-function)
-elseif(USE_CLANG_CL)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(mbedtls PRIVATE -Wno-tautological-constant-compare)
 endif()

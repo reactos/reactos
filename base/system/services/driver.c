@@ -179,7 +179,7 @@ ScmGetDriverStatus(PSERVICE lpService,
                                    &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtOpenDirectoryObject() failed!\n");
+        DPRINT1("NtOpenDirectoryObject() failed\n");
         return RtlNtStatusToDosError(Status);
     }
 

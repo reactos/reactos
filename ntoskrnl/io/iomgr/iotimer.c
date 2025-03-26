@@ -39,7 +39,7 @@ IopTimerDispatch(IN PKDPC Dpc,
     PIO_TIMER Timer;
     ULONG i;
 
-    /* Check if any Timers are actualyl enabled as of now */
+    /* Check if any Timers are actually enabled as of now */
     if (IopTimerCount)
     {
         /* Lock the Timers */

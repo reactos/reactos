@@ -155,7 +155,7 @@ VfatFormat(
         PartitionInfo.RewritePartition = FALSE;
         PartitionInfo.RecognizedPartition = FALSE;
     }
-    
+
     /* If it already has a FAT FS, we'll use that type.
      * If it doesn't, we will determine the FAT type based on size and offset */
     if (PartitionInfo.PartitionType != PARTITION_FAT_12 &&
@@ -174,7 +174,7 @@ VfatFormat(
         else if (PartitionInfo.StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
         {
             /* Partition starts below the 8.4GB boundary ==> CHS partition */
-            
+
             if (PartitionInfo.PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
             {
                 /* FAT16 CHS partition (partition size < 32MB) */
@@ -194,7 +194,7 @@ VfatFormat(
         else
         {
             /* Partition starts above the 8.4GB boundary ==> LBA partition */
-            
+
             if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
             {
                 /* FAT16 LBA partition (partition size < 512MB) */

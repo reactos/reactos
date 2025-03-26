@@ -295,13 +295,16 @@ IKsDevice_PnpStartDevice(
     DPRINT("IKsDevice_PnpStartDevice DeviceHeader %p\n", DeviceHeader);
 
     /* first forward irp to lower device object */
-    Status = KspForwardIrpSynchronous(DeviceObject, Irp);
+    if (!IoForwardIrpSynchronously(DeviceHeader->KsDevice.NextDeviceObject, Irp))
+    {
+        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    }
+    Status = Irp->IoStatus.Status;
 
     /* check for success */
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NextDevice object failed to start with %x\n", Status);
-        Irp->IoStatus.Status = Status;
         CompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
@@ -459,13 +462,8 @@ IKsDevice_Pnp(
             }
 
             /* pass the irp down the driver stack */
-            Status = KspForwardIrpSynchronous(DeviceObject, Irp);
-
-            DPRINT("Next Device: Status %x\n", Status);
-
-            Irp->IoStatus.Status = Status;
-            CompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
         }
 
         case IRP_MN_REMOVE_DEVICE:
@@ -482,15 +480,9 @@ IKsDevice_Pnp(
             }
 
             /* pass the irp down the driver stack */
-            Status = KspForwardIrpSynchronous(DeviceObject, Irp);
-
-            DPRINT("Next Device: Status %x\n", Status);
-
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
             /* FIXME delete device resources */
-
-
-            Irp->IoStatus.Status = Status;
-            CompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
         case IRP_MN_QUERY_INTERFACE:
@@ -518,23 +510,14 @@ IKsDevice_Pnp(
             }
 
             /* pass the irp down the driver stack */
-            Status = KspForwardIrpSynchronous(DeviceObject, Irp);
-
-            DPRINT1("IRP_MN_QUERY_INTERFACE Next Device: Status %x\n", Status);
-            Irp->IoStatus.Status = Status;
-            CompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
             /* pass the irp down the driver stack */
-            Status = KspForwardIrpSynchronous(DeviceObject, Irp);
-
-            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS Next Device: Status %x\n", Status);
-
-            //Irp->IoStatus.Status = Status;
-            CompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
         }
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
         {
@@ -550,22 +533,14 @@ IKsDevice_Pnp(
        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
        {
             /* pass the irp down the driver stack */
-            Status = KspForwardIrpSynchronous(DeviceObject, Irp);
-
-            DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS Next Device: Status %x\n", Status);
-
-            Irp->IoStatus.Status = Status;
-            CompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
        }
        default:
-          DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
-          /* pass the irp down the driver stack */
-          Status = KspForwardIrpSynchronous(DeviceObject, Irp);
-
-          Irp->IoStatus.Status = Status;
-          CompleteRequest(Irp, IO_NO_INCREMENT);
-          return Status;
+            DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
+            /* pass the irp down the driver stack */
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
     }
 }
 

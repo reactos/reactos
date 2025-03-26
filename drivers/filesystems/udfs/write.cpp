@@ -464,7 +464,7 @@ UDFCommonWrite(
         // WARNING !!! we should not flush data beyond valid data length
         if ( NonBufferedIo &&
             !PagingIo &&
-             NtReqFcb->SectionObject.DataSectionObject && 
+             NtReqFcb->SectionObject.DataSectionObject &&
              TruncatedLength &&
              (ByteOffset.QuadPart < NtReqFcb->CommonFCBHeader.FileSize.QuadPart)) {
 
@@ -1048,7 +1048,7 @@ NTAPI
 UDFDeferredWriteCallBack(
     IN PVOID Context1,          // Should be PtrIrpContext
     IN PVOID Context2           // Should be Irp
-    )          
+    )
 {
     UDFPrint(("UDFDeferredWriteCallBack\n"));
     // We should typically simply post the request to our internal
@@ -1109,19 +1109,19 @@ UDFPurgeCacheEx_(
 #ifndef USE_CcCopyWrite_TO_ZERO
                 *((PULONG)&Offset0) &= ~(PAGE_SIZE-1);
                 MmPrint(("    CcFlushCache(s) Offs %I64x, Len %x\n", Offset0, Off_l));
-                CcFlushCache( SectionObject, (PLARGE_INTEGER)&Offset0, Off_l, NULL ); 
+                CcFlushCache( SectionObject, (PLARGE_INTEGER)&Offset0, Off_l, NULL );
 #else //USE_CcCopyWrite_TO_ZERO
                 // ...|ddddd000000000000|....
                 //          |<- PgLen ->|
                 PgLen = PAGE_SIZE - Off_l; /*(*((PULONG)&Offset) & (PAGE_SIZE-1))*/
-                // 
+                //
                 if(PgLen > Length)
                     PgLen = (ULONG)Length;
 
                 MmPrint(("    ZeroCache (CcWrite) Offs %I64x, Len %x\n", Offset, PgLen));
 #ifdef DBG
                 if(FileObject && Vcb) {
-                    
+
                     ASSERT(CanWait);
 #endif //DBG
                     if (PgLen) {
@@ -1135,7 +1135,7 @@ UDFPurgeCacheEx_(
                 } else {
                     MmPrint(("    Can't use CcWrite to zero cache\n"));
                 }
-#endif //DBG 
+#endif //DBG
 #endif //USE_CcCopyWrite_TO_ZERO
             }
             VDL = NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart;
@@ -1199,7 +1199,7 @@ UDFPurgeCacheEx_(
                 } else {
                     CcPurgeCacheSection(SectionObject, (PLARGE_INTEGER)&Offset,
                                                 PURGE_BLOCK_SZ, FALSE);
-    /* 
+    /*
                     NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart += PURGE_BLOCK_SZ;
                     ASSERT(NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart <=
                            NtReqFcb->CommonFCBHeader.FileSize.QuadPart);

@@ -20,11 +20,30 @@
 
 #pragma once
 
-#define WINE_FILEVERSION_MAJOR         5
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+
+/* Version from Windows Server 2003 SP2 */
+
+#define WINE_FILEVERSION_MAJOR         6
 #define WINE_FILEVERSION_MINOR         0
-#define WINE_FILEVERSION_BUILD      3900
-#define WINE_FILEVERSION_PLATFORMID 6975
+#define WINE_FILEVERSION_BUILD      3790
+#define WINE_FILEVERSION_PLATFORMID 3959
 
 /* FIXME: when libs/wpp gets fixed to support concatenation we can remove
  * this and define it in version.rc */
-#define WINE_FILEVERSION_STR "5.0.3900.6975"
+#define WINE_FILEVERSION_STR "6.0.3790.3959"
+
+#else
+
+/* Version from Windows Vista RTM */
+
+#define WINE_FILEVERSION_MAJOR         6
+#define WINE_FILEVERSION_MINOR         0
+#define WINE_FILEVERSION_BUILD      6000
+#define WINE_FILEVERSION_PLATFORMID 16386
+
+/* FIXME: when libs/wpp gets fixed to support concatenation we can remove
+ * this and define it in version.rc */
+#define WINE_FILEVERSION_STR "6.0.6000.16386"
+
+#endif // NTDDI_VERSION

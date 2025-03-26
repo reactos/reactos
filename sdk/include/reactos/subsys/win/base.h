@@ -23,6 +23,14 @@ VOID
 NTAPI
 BaseSetProcessCreateNotify(IN BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc);
 
+#define NLS_SIZEOF_ACE_AND_SIDS(n) \
+    (FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + \
+     FIELD_OFFSET(SID, SubAuthority) + (n)*RTL_FIELD_SIZE(SID, SubAuthority))
+
+/* Minimal size for the security descriptors of the "\NLS\NlsSection*" sections */
+#define NLS_SECTION_SECURITY_DESCRIPTOR_SIZE \
+    (sizeof(SECURITY_DESCRIPTOR) + sizeof(ACL) + NLS_SIZEOF_ACE_AND_SIDS(1))
+
 typedef struct _NLS_USER_INFO
 {
     WCHAR sLanguage[80];

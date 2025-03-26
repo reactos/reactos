@@ -23,17 +23,17 @@ public:
     }
 
     // *** IExplorerCommand methods ***
-    STDMETHODIMP GetTitle(IShellItemArray *psiItemArray, LPWSTR *ppszName)
+    STDMETHODIMP GetTitle(IShellItemArray *psiItemArray, PWSTR *ppszName)
     {
         CStringW Title(MAKEINTRESOURCEW(IDS_MENUITEM));
         return SHStrDup(Title, ppszName);
     }
-    STDMETHODIMP GetIcon(IShellItemArray *psiItemArray, LPWSTR *ppszIcon)
+    STDMETHODIMP GetIcon(IShellItemArray *psiItemArray, PWSTR *ppszIcon)
     {
         CStringW IconName = L"zipfldr.dll,-1";
         return SHStrDup(IconName, ppszIcon);
     }
-    STDMETHODIMP GetToolTip(IShellItemArray *psiItemArray, LPWSTR *ppszInfotip)
+    STDMETHODIMP GetToolTip(IShellItemArray *psiItemArray, PWSTR *ppszInfotip)
     {
         CStringW HelpText(MAKEINTRESOURCEW(IDS_HELPTEXT));
         return SHStrDup(HelpText, ppszInfotip);

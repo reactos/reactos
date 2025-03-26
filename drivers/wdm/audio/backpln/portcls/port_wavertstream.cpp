@@ -8,39 +8,17 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
-class CPortWaveRTStreamInit : public IPortWaveRTStreamInit
+class CPortWaveRTStreamInit : public CUnknownImpl<IPortWaveRTStreamInit>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortWaveRTStreamInit;
     CPortWaveRTStreamInit(IUnknown *OuterUnknown) {}
     virtual ~CPortWaveRTStreamInit() {}
-
-protected:
-    LONG m_Ref;
 
 };
 
@@ -62,7 +40,6 @@ CPortWaveRTStreamInit::QueryInterface(
     }
     return STATUS_UNSUCCESSFUL;
 }
-
 
 PMDL
 NTAPI
@@ -175,7 +152,6 @@ CPortWaveRTStreamInit::GetPhysicalPageAddress(
 
     return Result;
 }
-
 
 NTSTATUS
 NewPortWaveRTStream(

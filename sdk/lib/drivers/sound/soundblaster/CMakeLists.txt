@@ -1,8 +1,4 @@
 
-add_definitions(
-    -D__NTDRIVER__
-    -DKERNEL)
-
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/sound)
 
 list(APPEND SOURCE

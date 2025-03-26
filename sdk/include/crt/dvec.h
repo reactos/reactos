@@ -14,7 +14,7 @@
 #include <emmintrin.h>
 #include <assert.h>
 #include <fvec.h>
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 

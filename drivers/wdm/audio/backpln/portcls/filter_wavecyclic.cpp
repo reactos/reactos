@@ -8,33 +8,14 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
-class CPortFilterWaveCyclic : public IPortFilterWaveCyclic
+class CPortFilterWaveCyclic : public CUnknownImpl<IPortFilterWaveCyclic>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortFilterWaveCyclic;
     CPortFilterWaveCyclic(IUnknown *OuterUnknown){}
     virtual ~CPortFilterWaveCyclic(){}
@@ -44,7 +25,6 @@ protected:
     IPortPinWaveCyclic ** m_Pins;
     SUBDEVICE_DESCRIPTOR * m_Descriptor;
     ISubdevice * m_SubDevice;
-    LONG m_Ref;
 };
 
 NTSTATUS
@@ -100,7 +80,7 @@ CPortFilterWaveCyclic::NewIrpTarget(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (m_Pins[ConnectDetails->PinId] && 
+    if (m_Pins[ConnectDetails->PinId] &&
         (m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount == m_Descriptor->Factory.Instances[ConnectDetails->PinId].MaxFilterInstanceCount))
     {
         // release existing instance
@@ -148,7 +128,7 @@ CPortFilterWaveCyclic::DeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
         DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
-        
+
         Irp->IoStatus.Status = STATUS_NOT_FOUND;
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -329,7 +309,6 @@ CPortFilterWaveCyclic::Init(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortFilterWaveCyclic::FreePin(
@@ -349,8 +328,7 @@ CPortFilterWaveCyclic::FreePin(
     return STATUS_UNSUCCESSFUL;
 }
 
-
-NTSTATUS 
+NTSTATUS
 NewPortFilterWaveCyclic(
     OUT IPortFilterWaveCyclic ** OutFilter)
 {
@@ -368,4 +346,3 @@ NewPortFilterWaveCyclic(
 
     return STATUS_SUCCESS;
 }
-

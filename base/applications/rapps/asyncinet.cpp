@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Async Internet operation using WinINet
- * COPYRIGHT:   Copyright 2020 He Yang            (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2020 He Yang (1160386205@qq.com)
  */
 
 #include "rapps.h"
@@ -140,7 +140,7 @@ BOOL AsyncInetCancel(pASYNCINET AsyncInet) // mark as cancelled (this will send 
             return TRUE;
         }
     }
-    
+
     return FALSE;
 }
 
@@ -172,7 +172,7 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
             bResult = TRUE;
         }
         // otherwise (AsyncInet->bCleanUp == TRUE)
-        // AsyncInetAcquire will return FALSE. 
+        // AsyncInetAcquire will return FALSE.
         // In this case, any thread should no longer use this AsyncInet
 
         LeaveCriticalSection(&(AsyncInet->CriticalSection));
@@ -194,7 +194,7 @@ VOID AsyncInetRelease(pASYNCINET AsyncInet) // try to decrease refcnt by 1
         {
             bCleanUp = TRUE;
         }
-        
+
         LeaveCriticalSection(&(AsyncInet->CriticalSection));
 
         if (bCleanUp)

@@ -47,7 +47,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire av J Brown\nÖversätt av Ronny K Svensson\n\nCardLib version 1.0."
+    IDS_SOL_ABOUT "Solitaire av J Brown; Översätt av Ronny K Svensson\nCardLib version 1.0"
     IDS_SOL_QUIT "Avsluta nuvarande spel?"
     IDS_SOL_WIN "Grattis, du vann!"
     IDS_SOL_DEAL "Ge igen?"
@@ -63,6 +63,7 @@ BEGIN
     BEGIN
         MENUITEM "&Ge\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Kortlek...", IDM_GAME_DECK
         MENUITEM "&Alternativ...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

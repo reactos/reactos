@@ -171,7 +171,11 @@ static inline BOOL navigation_visible(HHInfo *info)
 }
 
 /* Loads a string from the resource file */
+#ifdef __REACTOS__
+LPWSTR HH_LoadString(DWORD dwID)
+#else
 static LPWSTR HH_LoadString(DWORD dwID)
+#endif
 {
     LPWSTR string = NULL;
     LPCWSTR stringresource;
@@ -1620,12 +1624,20 @@ static BOOL HH_CreateHelpWindow(HHInfo *info)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = sizeof(LONG_PTR);
     wcex.hInstance      = hhctrl_hinstance;
+#ifdef __REACTOS__
+    wcex.hIcon          = LoadIconW(hhctrl_hinstance, MAKEINTRESOURCEW(IDI_HHICON));
+#else
     wcex.hIcon          = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+#endif
     wcex.hCursor        = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_MENU + 1);
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = windowClassW;
+#ifdef __REACTOS__
+    wcex.hIconSm        = NULL;
+#else
     wcex.hIconSm        = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+#endif
 
     RegisterClassExW(&wcex);
 

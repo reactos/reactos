@@ -107,7 +107,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
     }
     mpz_clear(zz);
     mpf_clear(ff);
-    _sntprintf(buffer, SIZEOF(calc.buffer), _T("%hs"), temp);
+    StringCchPrintf(buffer, size, _T("%hs"), temp);
 }
 
 void convert_text2number_2(calc_number_t *a)

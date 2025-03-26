@@ -7,8 +7,10 @@
 #include <objbase.h>
 #else
 #define IUnknown void
-#if !defined(NT_BUILD_ENVIRONMENT) && !defined(_WINNT_)
-        #define CO_E_NOTINITIALIZED 0x800401F0L
+#if !defined(NT_BUILD_ENVIRONMENT) && !defined(WINNT)
+  #ifndef CO_E_NOTINITIALIZED /* Avoid conflict warning with _HRESULT_TYPEDEF_(0x800401F0L) in winerror.h */
+  #define CO_E_NOTINITIALIZED 0x800401F0L
+  #endif
 #endif
 #endif
 

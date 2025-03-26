@@ -39,7 +39,7 @@ BOOL GetArgument(WCHAR* arg, int argc, WCHAR* argv[])
 
     for (i = 1; i < argc; i++)
     {
-        if (wcsicmp(argv[i], arg) == 0)
+        if (_wcsicmp(argv[i], arg) == 0)
             return TRUE;
     }
 
@@ -97,7 +97,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
             pTokenInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
             if (pTokenInfo == NULL)
             {
-                wprintf(L"ERROR: not enough memory to allocate the token structure.\r\n");
+                wprintf(L"ERROR: not enough memory to allocate the token structure.\n");
                 exit(1);
             }
         }
@@ -107,7 +107,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
                                  dwLength,
                                  &dwLength))
         {
-            wprintf(L"ERROR 0x%x: could not get token information.\r\n", GetLastError());
+            wprintf(L"ERROR 0x%x: could not get token information.\n", GetLastError());
             WhoamiFree(pTokenInfo);
             exit(1);
         }
@@ -158,11 +158,11 @@ WhoamiTable *WhoamiAllocTable(UINT Rows, UINT Cols)
                                     HEAP_ZERO_MEMORY,
                                     sizeof(WhoamiTable) + sizeof(LPWSTR) * Rows * Cols);
 
-    // wprintf(L"DEBUG: Allocating %dx%d elem table for printing.\r\n\r\n", Rows, Cols);
+    // wprintf(L"DEBUG: Allocating %dx%d elem table for printing.\n\n", Rows, Cols);
 
     if (!pTable)
     {
-        wprintf(L"ERROR: Not enough memory for displaying the table.");
+        wprintf(L"ERROR: Not enough memory for displaying the table.\n");
         exit(1);
     }
 
@@ -205,7 +205,7 @@ void WhoamiPrintTable(WhoamiTable *pTable)
 
     if (!pTable)
     {
-        wprintf(L"ERROR: The table passed for display is empty.");
+        wprintf(L"ERROR: The table passed for display is empty.\n");
         exit(1);
     }
 
@@ -367,7 +367,7 @@ void WhoamiPrintTable(WhoamiTable *pTable)
             WhoamiFree(pTable->Content[i * pTable->Cols + j]);
 
     WhoamiFree(pTable);
-    
+
     if (PrintFormat != csv)
         HeapFree(GetProcessHeap(), 0, ColLength);
 }
@@ -698,7 +698,7 @@ int wmain(int argc, WCHAR* argv[])
     /* first things first-- let's detect and manage both printing modifiers (/fo and /nh) */
     for (i = 1; i < argc; i++)
     {
-        if (wcsicmp(argv[i], L"/nh") == 0)
+        if (_wcsicmp(argv[i], L"/nh") == 0)
         {
             NoHeaderArgCount++;
 
@@ -713,7 +713,7 @@ int wmain(int argc, WCHAR* argv[])
 
     for (i = 1; i < argc; i++)
     {
-        if (wcsicmp(argv[i], L"/fo") == 0)
+        if (_wcsicmp(argv[i], L"/fo") == 0)
         {
             if ((i + 1) < argc)
             {
@@ -721,14 +721,14 @@ int wmain(int argc, WCHAR* argv[])
 
                 PrintFormatArgCount++;
 
-                if (wcsicmp(argv[i + 1], L"table") == 0 && PrintFormat != table)
+                if (_wcsicmp(argv[i + 1], L"table") == 0 && PrintFormat != table)
                 {
                     PrintFormat = table;
                     // wprintf(L"Changed to table format\n");
                     BlankArgument(i, argv);
                     BlankArgument(i + 1, argv);
                 }
-                else if (wcsicmp(argv[i + 1], L"list") == 0 && PrintFormat != list)
+                else if (_wcsicmp(argv[i + 1], L"list") == 0 && PrintFormat != list)
                 {
                     PrintFormat = list;
                     // wprintf(L"Changed to list format\n");
@@ -743,7 +743,7 @@ int wmain(int argc, WCHAR* argv[])
                         return 1;
                     }
                 }
-                else if (wcsicmp(argv[i + 1], L"csv") == 0 && PrintFormat != csv)
+                else if (_wcsicmp(argv[i + 1], L"csv") == 0 && PrintFormat != csv)
                 {
                     PrintFormat = csv;
                     // wprintf(L"Changed to csv format\n");
@@ -751,14 +751,14 @@ int wmain(int argc, WCHAR* argv[])
                     BlankArgument(i + 1, argv);
                 }
                 /* /nh or /fo after /fo isn't parsed as a value */
-                else if (wcsicmp(argv[i + 1], L"/nh") == 0 || wcsicmp(argv[i + 1], L"/fo") == 0
+                else if (_wcsicmp(argv[i + 1], L"/nh") == 0 || _wcsicmp(argv[i + 1], L"/fo") == 0
 
                 /* same goes for the other named options, not ideal, but works */
-                         || wcsicmp(argv[i + 1], L"/priv") == 0
-                         || wcsicmp(argv[i + 1], L"/groups") == 0
-                         || wcsicmp(argv[i + 1], L"/user") == 0
-                         || wcsicmp(argv[i + 1], L"/all") == 0
-                         || wcsicmp(argv[i + 1], L"") == 0)
+                         || _wcsicmp(argv[i + 1], L"/priv") == 0
+                         || _wcsicmp(argv[i + 1], L"/groups") == 0
+                         || _wcsicmp(argv[i + 1], L"/user") == 0
+                         || _wcsicmp(argv[i + 1], L"/all") == 0
+                         || _wcsicmp(argv[i + 1], L"") == 0)
                 {
                     goto FoValueExpected;
                 }
@@ -806,13 +806,13 @@ int wmain(int argc, WCHAR* argv[])
     if (argc == 2)
     {
         /* now let's try to parse the triumvirate of simpler, single (1) arguments... plus help */
-        if (wcsicmp(argv[1], L"/?") == 0)
+        if (_wcsicmp(argv[1], L"/?") == 0)
         {
             wprintf(WhoamiLoadRcString(IDS_HELP));
             return 0;
         }
 
-        else if (wcsicmp(argv[1], L"/upn") == 0)
+        else if (_wcsicmp(argv[1], L"/upn") == 0)
         {
             LPWSTR UserBuffer = WhoamiGetUser(NameUserPrincipal);
 
@@ -829,7 +829,7 @@ int wmain(int argc, WCHAR* argv[])
             }
         }
 
-        else if (wcsicmp(argv[1], L"/fqdn") == 0)
+        else if (_wcsicmp(argv[1], L"/fqdn") == 0)
         {
             LPWSTR UserBuffer = WhoamiGetUser(NameFullyQualifiedDN);
 
@@ -846,7 +846,7 @@ int wmain(int argc, WCHAR* argv[])
             }
         }
 
-        else if (wcsicmp(argv[1], L"/logonid") == 0)
+        else if (_wcsicmp(argv[1], L"/logonid") == 0)
         {
             return WhoamiLogonId();
         }
@@ -858,11 +858,11 @@ int wmain(int argc, WCHAR* argv[])
     /* sometimes is just easier to whitelist for lack of a better method */
     for (i=1; i<argc; i++)
     {
-        if ((wcsicmp(argv[i], L"/user") != 0) &&
-            (wcsicmp(argv[i], L"/groups") != 0) &&
-            (wcsicmp(argv[i], L"/priv") != 0) &&
-            (wcsicmp(argv[i], L"/all") != 0) &&
-            (wcsicmp(argv[i], L"") != 0))
+        if ((_wcsicmp(argv[i], L"/user") != 0) &&
+            (_wcsicmp(argv[i], L"/groups") != 0) &&
+            (_wcsicmp(argv[i], L"/priv") != 0) &&
+            (_wcsicmp(argv[i], L"/all") != 0) &&
+            (_wcsicmp(argv[i], L"") != 0))
         {
             wprintf(WhoamiLoadRcString(IDS_ERROR_INVALIDARG), argv[i]);
             return 1;

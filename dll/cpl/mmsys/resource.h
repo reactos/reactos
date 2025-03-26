@@ -66,7 +66,7 @@
 #define IDC_SAVEAS_BTN            5033
 #define IDC_DELETE_BTN            5034
 
-#define IDB_SPEAKIMG  4624
+#define IDI_SPEAKIMG  4624
 #define IDC_SPEAKIMG  4625
 #define IDC_MUTE_ICON 4626
 

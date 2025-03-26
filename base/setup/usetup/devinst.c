@@ -39,20 +39,25 @@ typedef struct
 /* FUNCTIONS ****************************************************************/
 
 static BOOLEAN
-ResetDevice(
-    IN LPCWSTR DeviceId)
+AreDriversLoaded(
+    IN PCWSTR DeviceId)
 {
-    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, DeviceId);
-    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
-    if (!NT_SUCCESS(Status))
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance, DeviceId);
+    PlugPlayData.Operation = PNP_GET_DEVICE_STATUS;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus, &PlugPlayData, sizeof(PlugPlayData));
+    if (NT_SUCCESS(Status))
     {
-        DPRINT1("NtPlugPlayControl() failed with status 0x%08x\n", Status);
+        return (_Bool)((PlugPlayData.DeviceStatus & DN_DRIVER_LOADED) &&
+                       !(PlugPlayData.DeviceStatus & DN_HAS_PROBLEM));
+    }
+    else
+    {
         return FALSE;
     }
-    return TRUE;
 }
 
 static BOOLEAN
@@ -80,6 +85,10 @@ InstallDriver(
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
+
+    /* First check if the driver needs any action at all */
+    if (AreDriversLoaded(DeviceId))
+        return TRUE;
 
     /* Check if we know the hardware */
     if (!SpInfFindFirstLine(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
@@ -190,8 +199,17 @@ InstallDriver(
                            (wcslen(Driver) + 1) * sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {
-        /* Restart the device, so it will use the driver we registered */
-        deviceInstalled = ResetDevice(DeviceId);
+        /* We've registered the driver, time to start a device */
+        PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ControlData;
+        RtlInitUnicodeString(&ControlData.DeviceInstance, DeviceId);
+
+        Status = NtPlugPlayControl(PlugPlayControlStartDevice, &ControlData, sizeof(ControlData));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtPlugPlayControl() failed with status 0x%08x\n", Status);
+        }
+
+        deviceInstalled = NT_SUCCESS(Status);
     }
 
     INF_FreeData(Driver);

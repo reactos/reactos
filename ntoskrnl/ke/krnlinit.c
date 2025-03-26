@@ -19,8 +19,7 @@
 USHORT KeProcessorArchitecture;
 USHORT KeProcessorLevel;
 USHORT KeProcessorRevision;
-ULONG KeFeatureBits;
-KAFFINITY KeActiveProcessors = 1;
+ULONG64 KeFeatureBits;
 
 /* System call count */
 ULONG KiServiceLimit = NUMBER_OF_SYSCALLS;
@@ -31,12 +30,9 @@ PLOADER_PARAMETER_BLOCK KeLoaderBlock;
 /* PRCB Array */
 PKPRCB KiProcessorBlock[MAXIMUM_PROCESSORS];
 
-/* Number of processors */
-CCHAR KeNumberProcessors = 0;
-
 /* NUMA Node Support */
 KNODE KiNode0;
-PKNODE KeNodeBlock[1];
+PKNODE KeNodeBlock[1] = { &KiNode0 };
 UCHAR KeNumberNodes = 1;
 UCHAR KeProcessNodeSeed;
 
@@ -60,7 +56,7 @@ KSPIN_LOCK IopDatabaseLock;
 KSPIN_LOCK IopCompletionLock;
 KSPIN_LOCK NtfsStructLock;
 KSPIN_LOCK AfdWorkQueueSpinLock;
-KSPIN_LOCK KiTimerTableLock[16];
+KSPIN_LOCK KiTimerTableLock[LOCK_QUEUE_TIMER_TABLE_LOCKS];
 KSPIN_LOCK KiReverseStallIpiLock;
 
 /* FUNCTIONS *****************************************************************/
@@ -251,11 +247,14 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     Prcb->LockQueue[LockQueueUnusedSpare16].Next = NULL;
     Prcb->LockQueue[LockQueueUnusedSpare16].Lock = NULL;
 
-    /* Loop timer locks */
+    /* Loop timer locks (shared amongst all CPUs) */
     for (i = 0; i < LOCK_QUEUE_TIMER_TABLE_LOCKS; i++)
     {
-        /* Initialize the lock and setup the Queued Spinlock */
-        KeInitializeSpinLock(&KiTimerTableLock[i]);
+        /* Setup the Queued Spinlock (done only once by the boot CPU) */
+        if (!Number)
+            KeInitializeSpinLock(&KiTimerTableLock[i]);
+
+        /* Initialize the lock */
         Prcb->LockQueue[LockQueueTimerTableLock + i].Next = NULL;
         Prcb->LockQueue[LockQueueTimerTableLock + i].Lock =
             &KiTimerTableLock[i];

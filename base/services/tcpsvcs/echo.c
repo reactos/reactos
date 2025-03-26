@@ -20,7 +20,7 @@ EchoIncomingPackets(SOCKET sock)
     INT readBytes;
     INT retVal;
 
-    do 
+    do
     {
         readBytes = recv(sock, readBuffer, RECV_BUF, 0);
         if (readBytes > 0)

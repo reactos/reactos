@@ -89,9 +89,11 @@ static void COMDLG32_FR_HandleWMCommand(HWND hDlgWnd, COMDLG32_FR_Data *pData, i
 {
 	DWORD flag;
 
+#ifndef __REACTOS__
 	pData->user_fr.fra->Flags &= ~FR_MASK;	/* Clear return flags */
 	if(pData->fr.Flags & FR_WINE_REPLACE)	/* Replace always goes down... */
 		pData->user_fr.fra->Flags |= FR_DOWN;
+#endif
 
 	if(NotifyCode == BN_CLICKED)
         {
@@ -100,6 +102,11 @@ static void COMDLG32_FR_HandleWMCommand(HWND hDlgWnd, COMDLG32_FR_Data *pData, i
 		case IDOK: /* Find Next */
 			if(GetDlgItemTextA(hDlgWnd, edt1, pData->fr.lpstrFindWhat, pData->fr.wFindWhatLen) > 0)
                         {
+#ifdef __REACTOS__
+				pData->user_fr.fra->Flags &= ~FR_MASK;	/* Clear return flags */
+				if(pData->fr.Flags & FR_WINE_REPLACE)	/* Replace always goes down... */
+					pData->user_fr.fra->Flags |= FR_DOWN;
+#endif
 				pData->user_fr.fra->Flags |= COMDLG32_FR_GetFlags(hDlgWnd) | FR_FINDNEXT;
                                 if(pData->fr.Flags & FR_WINE_UNICODE)
                                 {
@@ -116,6 +123,11 @@ static void COMDLG32_FR_HandleWMCommand(HWND hDlgWnd, COMDLG32_FR_Data *pData, i
 			break;
 
 		case IDCANCEL:
+#ifdef __REACTOS__
+			pData->user_fr.fra->Flags &= ~FR_MASK;	/* Clear return flags */
+			if(pData->fr.Flags & FR_WINE_REPLACE)	/* Replace always goes down... */
+				pData->user_fr.fra->Flags |= FR_DOWN;
+#endif
 			pData->user_fr.fra->Flags |= COMDLG32_FR_GetFlags(hDlgWnd) | FR_DIALOGTERM;
 			SendMessageA(pData->fr.hwndOwner, FindReplaceMessage, 0, (LPARAM)pData->user_fr.fra);
 		        DestroyWindow(hDlgWnd);
@@ -133,6 +145,11 @@ Replace:
                         {
 				pData->fr.lpstrReplaceWith[0] = 0; /* In case the next GetDlgItemText Fails */
 				GetDlgItemTextA(hDlgWnd, edt2, pData->fr.lpstrReplaceWith, pData->fr.wReplaceWithLen);
+#ifdef __REACTOS__
+				pData->user_fr.fra->Flags &= ~FR_MASK;	/* Clear return flags */
+				if(pData->fr.Flags & FR_WINE_REPLACE)	/* Replace always goes down... */
+					pData->user_fr.fra->Flags |= FR_DOWN;
+#endif
 				pData->user_fr.fra->Flags |= COMDLG32_FR_GetFlags(hDlgWnd) | flag;
                                 if(pData->fr.Flags & FR_WINE_UNICODE)
                                 {
@@ -153,6 +170,11 @@ Replace:
 			break;
 
 		case pshHelp:
+#ifdef __REACTOS__
+			pData->user_fr.fra->Flags &= ~FR_MASK;	/* Clear return flags */
+			if(pData->fr.Flags & FR_WINE_REPLACE)	/* Replace always goes down... */
+				pData->user_fr.fra->Flags |= FR_DOWN;
+#endif
 			pData->user_fr.fra->Flags |= COMDLG32_FR_GetFlags(hDlgWnd);
 			SendMessageA(pData->fr.hwndOwner, HelpMessage, (WPARAM)hDlgWnd, (LPARAM)pData->user_fr.fra);
 			break;

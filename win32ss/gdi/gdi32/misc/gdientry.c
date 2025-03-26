@@ -96,8 +96,8 @@ WINAPI
 DdFlip(LPDDHAL_FLIPDATA Flip)
 {
     /* Note :
-    * See http://msdn2.microsoft.com/en-us/library/ms794213.aspx and
-    * http://msdn2.microsoft.com/en-us/library/ms792675.aspx
+    * See http://msdn2.microsoft.com/en-us/library/ms794213.aspx (DEAD_LINK) and
+    * http://msdn2.microsoft.com/en-us/library/ms792675.aspx (DEAD_LINK)
     */
 
     HANDLE hSurfaceCurrentLeft = NULL;
@@ -1924,7 +1924,7 @@ DdGetDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
         LPPALETTEENTRY pColorTable)
 {
     /* Call win32k directly */
-    return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
+    return NtGdiDdGetDC((HANDLE)pSurfaceLocal->hDDSurface, pColorTable);
 }
 
 /*
@@ -2078,7 +2078,6 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
                                hdc,
                                lpGammaRamp);
 }
-
 
 
 

@@ -653,7 +653,6 @@ SpiProcessCompletedRequest(
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     LONG Result;
     PIRP Irp;
-    //ULONG SequenceNumber;
 
     Srb = SrbInfo->Srb;
     Irp = Srb->OriginalRequest;
@@ -681,10 +680,25 @@ SpiProcessCompletedRequest(
     }
 
     /* Flush adapter if needed */
-    if (SrbInfo->BaseOfMapRegister)
+    if (SrbInfo->BaseOfMapRegister && SrbInfo->ScatterGather)
     {
-        /* TODO: Implement */
-        ASSERT(FALSE);
+        ULONG transferLen = 0;
+        BOOLEAN isWrite = !!(Srb->SrbFlags & SRB_FLAGS_DATA_OUT);
+        ULONG i;
+
+        for (i = 0;
+             i < SrbInfo->NumberOfMapRegisters && transferLen < Srb->DataTransferLength;
+             i++)
+        {
+            transferLen += SrbInfo->ScatterGather[i].Length;
+        }
+
+        IoFlushAdapterBuffers(DeviceExtension->AdapterObject,
+                              Irp->MdlAddress,
+                              SrbInfo->BaseOfMapRegister,
+                              Srb->DataBuffer,
+                              transferLen,
+                              isWrite);
     }
 
     /* Clear the request */
@@ -718,8 +732,16 @@ SpiProcessCompletedRequest(
     /* Scatter/gather */
     if (Srb->SrbFlags & SRB_FLAGS_SGLIST_FROM_POOL)
     {
-        /* TODO: Implement */
-        ASSERT(FALSE);
+        ExFreePoolWithTag(SrbInfo->ScatterGather, TAG_SCSIPORT);
+        SrbInfo->ScatterGather = NULL;
+    }
+
+    /* Free Map Registers */
+    if (SrbInfo->NumberOfMapRegisters)
+    {
+        IoFreeMapRegisters(DeviceExtension->AdapterObject,
+                           SrbInfo->BaseOfMapRegister,
+                           SrbInfo->NumberOfMapRegisters);
     }
 
     /* Acquire spinlock (we're freeing SrbExtension) */

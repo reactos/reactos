@@ -35,6 +35,7 @@ _scwprintf(
 
 /*
  * Test the Thread to verify and validate it. Hard to the core tests are required.
+ * Win: PtiFromThreadId
  */
 PTHREADINFO
 FASTCALL
@@ -75,19 +76,27 @@ IntTID2PTI(HANDLE id)
    return pti;
 }
 
+/**
+ * @see https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc976564%28v=technet.10%29
+ */
 DWORD
 FASTCALL
-UserGetLanguageToggle(VOID)
+UserGetLanguageToggle(
+    _In_ PCWSTR pszType,
+    _In_ DWORD dwDefaultValue)
 {
     NTSTATUS Status;
-    DWORD dwValue = 0;
+    DWORD dwValue = dwDefaultValue;
+    WCHAR szBuff[4];
 
-    Status = RegReadUserSetting(L"Keyboard Layout\\Toggle", L"Layout Hotkey", REG_SZ, &dwValue, sizeof(dwValue));
+    Status = RegReadUserSetting(L"Keyboard Layout\\Toggle", pszType, REG_SZ, szBuff, sizeof(szBuff));
     if (NT_SUCCESS(Status))
     {
-        dwValue = atoi((char *)&dwValue);
-        TRACE("Layout Hotkey %d\n",dwValue);
+        szBuff[RTL_NUMBER_OF(szBuff) - 1] = UNICODE_NULL;
+        dwValue = _wtoi(szBuff);
     }
+
+    TRACE("%ls: %lu\n", pszType, dwValue);
     return dwValue;
 }
 
@@ -97,7 +106,7 @@ UserGetLanguageID(VOID)
 {
   HANDLE KeyHandle;
   OBJECT_ATTRIBUTES ObAttr;
-//  http://support.microsoft.com/kb/324097
+//  https://learn.microsoft.com/en-us/troubleshoot/windows-server/setup-upgrade-and-drivers/use-language-id-identify-language-pack
   ULONG Ret = MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT);
   PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
   ULONG Size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH*sizeof(WCHAR);
@@ -232,6 +241,7 @@ NtUserGetThreadState(
    DWORD Routine)
 {
    DWORD_PTR ret = 0;
+   PTHREADINFO pti;
 
    TRACE("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
@@ -243,10 +253,12 @@ NtUserGetThreadState(
        UserEnterExclusive();
    }
 
+   pti = PsGetCurrentThreadWin32Thread();
+
    switch (Routine)
    {
       case THREADSTATE_GETTHREADINFO:
-         GetW32ThreadInfo();
+         ret = TRUE;
          break;
       case THREADSTATE_FOCUSWINDOW:
          ret = (DWORD_PTR)IntGetThreadFocusWindow();
@@ -255,10 +267,10 @@ NtUserGetThreadState(
          /* FIXME: Should use UserEnterShared */
          ret = (DWORD_PTR)IntGetCapture();
          break;
-      case THREADSTATE_PROGMANWINDOW:
+      case THREADSTATE_PROGMANWINDOW: /* FIXME: Delete this HACK */
          ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hProgmanWindow;
          break;
-      case THREADSTATE_TASKMANWINDOW:
+      case THREADSTATE_TASKMANWINDOW: /* FIXME: Delete this HACK */
          ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow;
          break;
       case THREADSTATE_ACTIVEWINDOW:
@@ -293,12 +305,8 @@ NtUserGetThreadState(
          break;
 
       case THREADSTATE_UPTIMELASTREAD:
-         {
-           PTHREADINFO pti;
-           pti = PsGetCurrentThreadWin32Thread();
-           pti->pcti->timeLastRead = EngGetTickCount32();
-           break;
-         }
+         pti->pcti->timeLastRead = EngGetTickCount32();
+         break;
 
       case THREADSTATE_GETINPUTSTATE:
          ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);
@@ -313,7 +321,33 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_GETMESSAGEEXTRAINFO:
          ret = (DWORD_PTR)MsqGetMessageExtraInfo();
-        break;
+         break;
+      case THREADSTATE_DEFAULTIMEWINDOW:
+         if (pti->spwndDefaultIme)
+            ret = (ULONG_PTR)UserHMGetHandle(pti->spwndDefaultIme);
+         break;
+      case THREADSTATE_DEFAULTINPUTCONTEXT:
+         if (pti->spDefaultImc)
+             ret = (ULONG_PTR)UserHMGetHandle(pti->spDefaultImc);
+         break;
+      case THREADSTATE_CHANGEBITS:
+         ret = pti->pcti->fsChangeBits;
+         break;
+      case THREADSTATE_IMECOMPATFLAGS:
+         ret = pti->ppi->dwImeCompatFlags;
+         break;
+      case THREADSTATE_OLDKEYBOARDLAYOUT:
+         ret = (ULONG_PTR)pti->hklPrev;
+         break;
+      case THREADSTATE_ISWINLOGON:
+         ret = (gpidLogon == PsGetCurrentProcessId());
+         break;
+      case THREADSTATE_UNKNOWN_0x10:
+         FIXME("stub\n");
+         break;
+      case THREADSTATE_CHECKCONIME:
+         ret = (IntTID2PTI(UlongToHandle(pti->rpdesk->dwConsoleThreadId)) == pti);
+         break;
    }
 
    TRACE("Leave NtUserGetThreadState, ret=%lu\n", ret);
@@ -378,8 +412,7 @@ NtUserGetGUIThreadInfo(
    PDESKTOP Desktop;
    PUSER_MESSAGE_QUEUE MsgQueue;
    PTHREADINFO W32Thread, pti;
-
-   DECLARE_RETURN(BOOLEAN);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetGUIThreadInfo\n");
    UserEnterShared();
@@ -388,13 +421,13 @@ NtUserGetGUIThreadInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    if(SafeGui.cbSize != sizeof(GUITHREADINFO))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    if (idThread)
@@ -402,12 +435,12 @@ NtUserGetGUIThreadInfo(
       pti = PsGetCurrentThreadWin32Thread();
 
       // Validate Tread ID
-      W32Thread = IntTID2PTI((HANDLE)(DWORD_PTR)idThread);
+      W32Thread = IntTID2PTI(UlongToHandle(idThread));
 
       if ( !W32Thread )
       {
           EngSetLastError(ERROR_ACCESS_DENIED);
-          RETURN( FALSE);
+          goto Exit; // Return FALSE
       }
 
       Desktop = W32Thread->rpdesk;
@@ -416,14 +449,14 @@ NtUserGetGUIThreadInfo(
       if ( !Desktop || Desktop != pti->rpdesk )
       {
           EngSetLastError(ERROR_ACCESS_DENIED);
-          RETURN( FALSE);
+          goto Exit; // Return FALSE
       }
 
       if ( W32Thread->MessageQueue )
         MsgQueue = W32Thread->MessageQueue;
       else
       {
-        if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+        MsgQueue = Desktop->ActiveMessageQueue;
       }
    }
    else
@@ -433,7 +466,7 @@ NtUserGetGUIThreadInfo(
       if(!MsgQueue)
       {
         EngSetLastError(ERROR_ACCESS_DENIED);
-        RETURN( FALSE);
+        goto Exit; // Return FALSE
       }
    }
 
@@ -486,15 +519,15 @@ NtUserGetGUIThreadInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserGetGUIThreadInfo, ret=%u\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetGUIThreadInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 
@@ -508,7 +541,6 @@ NtUserGetGuiResources(
    PPROCESSINFO W32Process;
    NTSTATUS Status;
    DWORD Ret = 0;
-   DECLARE_RETURN(DWORD);
 
    TRACE("Enter NtUserGetGuiResources\n");
    UserEnterShared();
@@ -523,7 +555,7 @@ NtUserGetGuiResources(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( 0);
+      goto Exit; // Return 0
    }
 
    W32Process = (PPROCESSINFO)Process->Win32Process;
@@ -531,7 +563,7 @@ NtUserGetGuiResources(
    {
       ObDereferenceObject(Process);
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN( 0);
+      goto Exit; // Return 0
    }
 
    switch(uiFlags)
@@ -555,12 +587,10 @@ NtUserGetGuiResources(
 
    ObDereferenceObject(Process);
 
-   RETURN( Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetGuiResources, ret=%lu\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetGuiResources, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 VOID FASTCALL
@@ -723,8 +753,6 @@ void UserDbgAssertThreadInfo(BOOL showCaller)
     ASSERT(pci->ulClientDelta == DesktopHeapGetUserDelta());
     if (pti->pcti && pci->pDeskInfo)
         ASSERT(pci->pClientThreadInfo == (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta));
-    //if (pti->pcti && IsListEmpty(&pti->SentMessagesListHead))
-    //    ASSERT((pti->pcti->fsChangeBits & QS_SENDMESSAGE) == 0);
     if (pti->KeyboardLayout)
         ASSERT(pci->hKL == pti->KeyboardLayout->hkl);
     if(pti->rpdesk != NULL)

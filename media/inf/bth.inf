@@ -55,12 +55,19 @@ HKLM,"System\CurrentControlSet\services\FreeBT\Parameters","FreeBTEnable",0x1000
 [FreeBT.Files]
 fbtusb.sys
 
-;---------------------------------------------------------------;
+;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS="ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 BTUSB.DeviceDesc="Generic USB Bluetooth Radio"
 BluetoothClassName="Bluetooth Radios"
+
+[Strings.0404]
+BTUSB.DeviceDesc="標準 USB 藍牙無線電"
+BluetoothClassName="藍牙無線電"
 
 [Strings.0405]
 BTUSB.DeviceDesc="Obecný USB Bluetooth vysílač"
@@ -71,29 +78,32 @@ BTUSB.DeviceDesc="USB-Treiber für Bluetooth-Funkgerät"
 BluetoothClassName="Bluetooth Funkgeräte"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB genérica"
 BluetoothClassName="Radios Bluetooth"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 BTUSB.DeviceDesc="Standardowy odbiornik radiowy Bluetooth na USB"
 BluetoothClassName="Odbiorniki radiowe Bluetooth"
 
 [Strings.0418]
-ReactOS="Echipa ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB generic"
 BluetoothClassName="Radiouri Bluetooth"
 
 [Strings.0419]
-ReactOS="Команда ReactOS"
 BTUSB.DeviceDesc="Стандартный USB Bluetooth радиомодуль"
 BluetoothClassName="Радиомодули Bluetooth"
 
 [Strings.041f]
-ReactOS="ReactOS Takımı"
-BTUSB.DeviceDesc="Umûmî USB Bluetooth Radyo"
+BTUSB.DeviceDesc="Genel USB Bluetooth Radyo"
 BluetoothClassName="Bluetooth Radyoları"
 
 [Strings.0804]
 BTUSB.DeviceDesc="通用 USB 蓝牙无线电"
+
+[Strings.0816]
+BTUSB.DeviceDesc="Rádio Bluetooth USB genérico"
+BluetoothClassName="Rádios Bluetooth"
+
+[Strings.0C04]
+BTUSB.DeviceDesc="標準 USB 藍牙無線電"
+BluetoothClassName="藍牙無線電"

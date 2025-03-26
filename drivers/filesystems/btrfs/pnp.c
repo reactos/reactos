@@ -17,170 +17,14 @@
 
 #include "btrfs_drv.h"
 
-struct pnp_context;
-
-typedef struct {
-    struct pnp_context* context;
-    PIRP Irp;
-    IO_STATUS_BLOCK iosb;
-    NTSTATUS Status;
-    device* dev;
-} pnp_stripe;
-
-typedef struct {
-    KEVENT Event;
-    NTSTATUS Status;
-    LONG left;
-    pnp_stripe* stripes;
-} pnp_context;
-
 extern ERESOURCE pdo_list_lock;
 extern LIST_ENTRY pdo_list;
-
-_Function_class_(IO_COMPLETION_ROUTINE)
-static NTSTATUS __stdcall pnp_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID conptr) {
-    pnp_stripe* stripe = conptr;
-    pnp_context* context = (pnp_context*)stripe->context;
-
-    UNUSED(DeviceObject);
-
-    stripe->Status = Irp->IoStatus.Status;
-
-    InterlockedDecrement(&context->left);
-
-    if (context->left == 0)
-        KeSetEvent(&context->Event, 0, false);
-
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-static NTSTATUS send_disks_pnp_message(device_extension* Vcb, UCHAR minor) {
-    pnp_context context;
-    ULONG num_devices, i;
-    NTSTATUS Status;
-    LIST_ENTRY* le;
-
-    RtlZeroMemory(&context, sizeof(pnp_context));
-    KeInitializeEvent(&context.Event, NotificationEvent, false);
-
-    num_devices = (ULONG)min(0xffffffff, Vcb->superblock.num_devices);
-
-    context.stripes = ExAllocatePoolWithTag(NonPagedPool, sizeof(pnp_stripe) * num_devices, ALLOC_TAG);
-    if (!context.stripes) {
-        ERR("out of memory\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlZeroMemory(context.stripes, sizeof(pnp_stripe) * num_devices);
-
-    i = 0;
-    le = Vcb->devices.Flink;
-
-    while (le != &Vcb->devices) {
-        PIO_STACK_LOCATION IrpSp;
-        device* dev = CONTAINING_RECORD(le, device, list_entry);
-
-        if (dev->devobj) {
-            context.stripes[i].context = (struct pnp_context*)&context;
-
-            context.stripes[i].Irp = IoAllocateIrp(dev->devobj->StackSize, false);
-
-            if (!context.stripes[i].Irp) {
-                uint64_t j;
-
-                ERR("IoAllocateIrp failed\n");
-
-                for (j = 0; j < i; j++) {
-                    if (context.stripes[j].dev->devobj) {
-                        IoFreeIrp(context.stripes[j].Irp);
-                    }
-                }
-                ExFreePool(context.stripes);
-
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            IrpSp = IoGetNextIrpStackLocation(context.stripes[i].Irp);
-            IrpSp->MajorFunction = IRP_MJ_PNP;
-            IrpSp->MinorFunction = minor;
-            IrpSp->FileObject = dev->fileobj;
-
-            context.stripes[i].Irp->UserIosb = &context.stripes[i].iosb;
-
-            IoSetCompletionRoutine(context.stripes[i].Irp, pnp_completion, &context.stripes[i], true, true, true);
-
-            context.stripes[i].Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-            context.stripes[i].dev = dev;
-
-            context.left++;
-        }
-
-        le = le->Flink;
-    }
-
-    if (context.left == 0) {
-        Status = STATUS_SUCCESS;
-        goto end;
-    }
-
-    for (i = 0; i < num_devices; i++) {
-        if (context.stripes[i].Irp) {
-            IoCallDriver(context.stripes[i].dev->devobj, context.stripes[i].Irp);
-        }
-    }
-
-    KeWaitForSingleObject(&context.Event, Executive, KernelMode, false, NULL);
-
-    Status = STATUS_SUCCESS;
-
-    for (i = 0; i < num_devices; i++) {
-        if (context.stripes[i].Irp) {
-            if (context.stripes[i].Status != STATUS_SUCCESS)
-                Status = context.stripes[i].Status;
-        }
-    }
-
-end:
-    for (i = 0; i < num_devices; i++) {
-        if (context.stripes[i].Irp) {
-            IoFreeIrp(context.stripes[i].Irp);
-        }
-    }
-
-    ExFreePool(context.stripes);
-
-    return Status;
-}
-
-static NTSTATUS pnp_cancel_remove_device(PDEVICE_OBJECT DeviceObject) {
-    device_extension* Vcb = DeviceObject->DeviceExtension;
-    NTSTATUS Status;
-
-    ExAcquireResourceSharedLite(&Vcb->tree_lock, true);
-
-    ExAcquireResourceExclusiveLite(&Vcb->fileref_lock, true);
-
-    if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->open_count > 0 || has_open_children(Vcb->root_fileref))) {
-        Status = STATUS_ACCESS_DENIED;
-        goto end;
-    }
-
-    Status = send_disks_pnp_message(Vcb, IRP_MN_CANCEL_REMOVE_DEVICE);
-    if (!NT_SUCCESS(Status)) {
-        WARN("send_disks_pnp_message returned %08lx\n", Status);
-        goto end;
-    }
-
-end:
-    ExReleaseResourceLite(&Vcb->fileref_lock);
-    ExReleaseResourceLite(&Vcb->tree_lock);
-
-    return STATUS_SUCCESS;
-}
 
 NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     device_extension* Vcb = DeviceObject->DeviceExtension;
     NTSTATUS Status;
+
+    // We might be going away imminently - do a flush so we're not caught out
 
     ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
 
@@ -188,15 +32,6 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         ExReleaseResourceLite(&Vcb->tree_lock);
         return STATUS_ACCESS_DENIED;
     }
-
-    Status = send_disks_pnp_message(Vcb, IRP_MN_QUERY_REMOVE_DEVICE);
-    if (!NT_SUCCESS(Status)) {
-        WARN("send_disks_pnp_message returned %08lx\n", Status);
-        ExReleaseResourceLite(&Vcb->tree_lock);
-        return Status;
-    }
-
-    Vcb->removing = true;
 
     if (Vcb->need_write && !Vcb->readonly) {
         Status = do_write(Vcb, Irp);
@@ -212,24 +47,12 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     ExReleaseResourceLite(&Vcb->tree_lock);
 
-    if (Vcb->open_files == 0)
-        uninit(Vcb);
-
-    return STATUS_SUCCESS;
+    return STATUS_UNSUCCESSFUL;
 }
 
 static NTSTATUS pnp_remove_device(PDEVICE_OBJECT DeviceObject) {
     device_extension* Vcb = DeviceObject->DeviceExtension;
     NTSTATUS Status;
-
-    ExAcquireResourceSharedLite(&Vcb->tree_lock, true);
-
-    Status = send_disks_pnp_message(Vcb, IRP_MN_REMOVE_DEVICE);
-
-    if (!NT_SUCCESS(Status))
-        WARN("send_disks_pnp_message returned %08lx\n", Status);
-
-    ExReleaseResourceLite(&Vcb->tree_lock);
 
     if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
         Status = FsRtlNotifyVolumeEvent(Vcb->root_file, FSRTL_VOLUME_DISMOUNT);
@@ -255,6 +78,8 @@ NTSTATUS pnp_surprise_removal(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     device_extension* Vcb = DeviceObject->DeviceExtension;
 
     TRACE("(%p, %p)\n", DeviceObject, Irp);
+
+    UNUSED(Irp);
 
     if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
         ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
@@ -363,6 +188,19 @@ static NTSTATUS bus_pnp(bus_device_extension* bde, PIRP Irp) {
     bool handled = false;
 
     switch (IrpSp->MinorFunction) {
+        case IRP_MN_START_DEVICE:
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+        case IRP_MN_REMOVE_DEVICE:
+            Status = STATUS_SUCCESS;
+            handled = true;
+            break;
+
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+            Status = STATUS_UNSUCCESSFUL;
+            handled = true;
+            break;
+
         case IRP_MN_QUERY_CAPABILITIES:
             Status = bus_query_capabilities(Irp);
             handled = true;
@@ -649,7 +487,7 @@ NTSTATUS __stdcall drv_pnp(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     switch (IrpSp->MinorFunction) {
         case IRP_MN_CANCEL_REMOVE_DEVICE:
-            Status = pnp_cancel_remove_device(DeviceObject);
+            Status = STATUS_SUCCESS;
             break;
 
         case IRP_MN_QUERY_REMOVE_DEVICE:

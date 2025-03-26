@@ -5,14 +5,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Выберите нужные раскладки для каждого языка ввода из списка. Для изменения списка служат кнопки ""Добавить"" и ""Удалить"".", -1, 9, 6, 238, 17
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 28, 237, 109
-    PUSHBUTTON "Ус&тановить по умолчанию", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "&Добавить...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Удалить", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Параметры", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Параметры клавиатуры...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    GROUPBOX "&Язык ввода по умолчанию", -1, 5, 5, 246, 55
+    LTEXT "Выберите один из установленных языков ввода, который будет использоваться при загрузке компьютера.", -1, 15, 15, 230, 23
+    COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Ус&тановленные службы", -1, 5, 65, 246, 125
+    LTEXT "Выберите нужные раскладки для каждого языка ввода из списка. Для изменения списка служат кнопки ""Добавить"" и ""Удалить"".", -1, 15, 78, 230, 25
+    CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
+    PUSHBUTTON "&Добавить...", IDC_ADD_BUTTON, 175, 105, 70, 14
+    PUSHBUTTON "&Удалить", IDC_REMOVE_BUTTON, 175, 125, 70, 14
+    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 145, 70, 14
+    GROUPBOX "Параметры", -1, 5, 195, 245, 30
+    PUSHBUTTON "Я&зыковая панель...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "&Параметры клавиатуры...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
@@ -38,7 +42,7 @@ BEGIN
     RTEXT "&Сочетание клавиш", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
     PUSHBUTTON "См&ена сочетания клавиш...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
-    DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
+    DEFPUSHBUTTON "ОК", IDOK, 66, 140, 70, 14
     PUSHBUTTON "Отмена", IDCANCEL, 146, 140, 70, 14
 END
 
@@ -48,10 +52,10 @@ CAPTION "Добавление языка ввода"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Язык ввода:", -1, 7, 7, 61, 10
-    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Раскладка клавиатуры:", -1, 7, 36, 170, 10
-    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "ОК", IDOK, 116, 68, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 169, 68, 50, 14
 END
 
@@ -83,8 +87,8 @@ BEGIN
     LTEXT "Язык ввода:", -1, 7, 7, 61, 8
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
     LTEXT "&Раскладка клавиатуры:", -1, 7, 21, 170, 10
-    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 114, 53, 52, 14
+    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "ОК", IDOK, 114, 53, 52, 14
     PUSHBUTTON "Отмена", IDCANCEL, 169, 53, 52, 14
 END
 
@@ -106,7 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "Alt слева+Shift"
     IDS_SWITCH_BET_INLANG "Переключение между языками ввода"
-    IDS_REBOOT_NOW, "Перезагрузить сейчас?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE
@@ -194,15 +198,15 @@ BEGIN
     IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT "Японская система ввода (MS-IME2002)"
     IDS_KANNADA_LAYOUT "Каннада"
     IDS_KAZAKH_LAYOUT "Казахская"
-    IDS_KOREAN_LAYOUT "Корейский"
+    IDS_KOREAN_LAYOUT "Корейская"
     IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT "Корейская система ввода (MS-IME98)"
     IDS_KYRGYZ_CYRILLIC_LAYOUT "Киргизская (кириллица)"
     IDS_LATIN_AMERICAN_LAYOUT "Латиноамериканская"
     IDS_LATVIAN_LAYOUT "Латышская"
-    IDS_LATVIAN_QWERTY_LAYOUT "Латвийская (QWERTY)"
+    IDS_LATVIAN_QWERTY_LAYOUT "Латышская (QWERTY)"
     IDS_LITHUANIAN_LAYOUT "Литовская"
     IDS_LITHUANIAN_IBM_LAYOUT "Литовская IBM"
-    IDS_FYRO_MACEDONIAN_LAYOUT "Македонский (FYROM)"
+    IDS_FYRO_MACEDONIAN_LAYOUT "Македонская (FYROM)"
     IDS_MALAYALAM_LAYOUT "Малаялам"
     IDS_MARATHI_LAYOUT "Маратхи"
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Монгольская (кириллица)"
@@ -211,8 +215,8 @@ BEGIN
     IDS_POLISH_214_LAYOUT "Польская (214)"
     IDS_POLISH_LAYOUT "Польская (программистская)"
     IDS_PORTUGUESE_LAYOUT "Португальская"
-    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT "Португальская (Бразильская ABNT)"
-    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT "Португальская (Бразилия)"
+    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT "Португальская (Бразилия ABNT)"
+    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT "Португальская (Бразилия ABNT2)"
     IDS_PUNJABI_LAYOUT "Пенджабская"
     IDS_ROMANIAN_LEGACY_LAYOUT "Румынская (традиционная)"
     IDS_ROMANIAN_STANDARD_LAYOUT "Румынская (стандартная)"
@@ -242,7 +246,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Украинская"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Украинская (студенческая)"
     IDS_UNITED_KINGDOM_LAYOUT "Британская"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "США - по Двораку"
+    IDS_UNITED_STATES_DVORAK_LAYOUT "США - по Двораку"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "США - по Двораку для левой руки"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "США - по Двораку для правой руки"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "США - международная"

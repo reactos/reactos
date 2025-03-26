@@ -47,7 +47,6 @@ typedef unsigned int (__stdcall typeof(ImeEnumRegisterWord))(int (__stdcall *)(c
 typedef int (__stdcall typeof(ImeSetCompositionString))(void *, unsigned int, const void *, unsigned int, const void *, unsigned int);
 typedef unsigned int (__stdcall typeof(ImeConversionList))(void *, const __typeof_wchar *, struct tagCANDIDATELIST *, unsigned int, unsigned int);
 typedef int (__stdcall typeof(ImeProcessKey))(void *, unsigned int, __typeof_longptr, unsigned char *);
-typedef unsigned int (__stdcall typeof(ImeGetRegisterWordStyle))(unsigned int, struct tagSTYLEBUFW *);
 typedef unsigned int (__stdcall typeof(ImeGetImeMenuItems))(void *, unsigned int, unsigned int, struct tagIMEMENUITEMINFOW *, struct tagIMEMENUITEMINFOW *, unsigned int);
 typedef struct _xmlDoc * (__cdecl typeof(xsltApplyStylesheet))(struct _xsltStylesheet *, struct _xmlDoc *, const char **);
 typedef struct _xmlDoc * (__cdecl typeof(xsltApplyStylesheetUser))(struct _xsltStylesheet *, struct _xmlDoc *, const char **, const char *, struct _iobuf *, struct _xsltTransformContext *);

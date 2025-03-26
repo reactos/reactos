@@ -106,8 +106,8 @@ NTSTATUS
 NTAPI
 NtCreatePagingFile(
     _In_ PUNICODE_STRING FileName,
-    _In_ PLARGE_INTEGER InitialSize,
-    _In_ PLARGE_INTEGER MaxiumSize,
+    _In_ PLARGE_INTEGER MinimumSize,
+    _In_ PLARGE_INTEGER MaximumSize,
     _In_ ULONG Reserved
 );
 
@@ -346,8 +346,8 @@ NTSTATUS
 NTAPI
 ZwCreatePagingFile(
     _In_ PUNICODE_STRING FileName,
-    _In_ PLARGE_INTEGER InitialSize,
-    _In_ PLARGE_INTEGER MaxiumSize,
+    _In_ PLARGE_INTEGER MinimumSize,
+    _In_ PLARGE_INTEGER MaximumSize,
     _In_ ULONG Reserved
 );
 

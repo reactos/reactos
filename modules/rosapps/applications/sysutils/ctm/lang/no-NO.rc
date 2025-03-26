@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
    IDS_APP_TITLE           "Konsoll oppgavebehandler av Aleksey Bragin <aleksey@reactos.org>"
 
@@ -11,7 +11,7 @@ BEGIN
    IDS_COLUMN_PID          "PID  "
    IDS_COLUMN_CPU          "Prosesor"
    IDS_COLUMN_MEM          "Minnebruk"
-   IDS_COLUMN_MEM_UNIT		"KB"
+   IDS_COLUMN_MEM_UNIT     "KB"
    IDS_COLUMN_PF           "Page Faults"
 
    IDS_IDLE_PROCESS        "System Idle Process"

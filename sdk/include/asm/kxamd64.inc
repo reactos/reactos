@@ -12,7 +12,7 @@ MACRO(GENERATE_EXCEPTION_FRAME)
     /* Allocate a KEXCEPTION_FRAME on the stack */
     /* -8 because the last field is the return address */
     sub rsp, KEXCEPTION_FRAME_LENGTH - 8
-    .allocstack KEXCEPTION_FRAME_LENGTH - 8
+    .allocstack (KEXCEPTION_FRAME_LENGTH - 8)
 
     /* Save non-volatiles in KEXCEPTION_FRAME */
     mov [rsp + ExRbp], rbp

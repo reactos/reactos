@@ -1162,7 +1162,7 @@ LocationsEnumProc(GEOID gId)
     WCHAR loc[MAX_STR_SIZE];
     INT index;
 
-    if (GetGeoInfoW(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
+    if (GetGeoInfoW(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, GetThreadLocale()) == 0)
         return TRUE;
 
     index = (INT)SendMessageW(hGeoList,
@@ -1196,7 +1196,7 @@ CreateLocationsList(HWND hWnd)
                 GEO_FRIENDLYNAME,
                 loc,
                 MAX_STR_SIZE,
-                LANG_SYSTEM_DEFAULT);
+                GetThreadLocale());
 
     SendMessageW(hGeoList,
                  CB_SELECTSTRING,
@@ -1349,9 +1349,6 @@ CustomizeLocalePropertySheet(
 {
     PROPSHEETPAGEW PsPage[NUM_SHEETS + 1];
     PROPSHEETHEADERW psh;
-    WCHAR Caption[MAX_STR_SIZE];
-
-    LoadStringW(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -1359,7 +1356,7 @@ CustomizeLocalePropertySheet(
     psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCE(IDC_CPLICON);
-    psh.pszCaption = Caption;
+    psh.pszCaption = MAKEINTRESOURCE(IDS_CUSTOMIZE_TITLE);
     psh.nPages = (sizeof(PsPage) / sizeof(PROPSHEETPAGE)) - 1;
     psh.nStartPage = 0;
     psh.ppsp = PsPage;

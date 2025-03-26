@@ -70,8 +70,13 @@ list(APPEND SOURCE
 
 add_executable(ncftp ${SOURCE} ncftp.rc)
 set_module_type(ncftp win32cui)
-target_compile_definitions(ncftp PRIVATE HAVE_UTIME_H HAVE_UNISTD_H)
-if(NOT MSVC)
+target_compile_definitions(ncftp PRIVATE
+    HAVE_UTIME_H
+    HAVE_UNISTD_H
+    _CRT_DECLARE_NONSTDC_NAMES=1
+    strcasecmp=_stricmp
+)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(ncftp PRIVATE -Wno-unused-but-set-variable)
 endif()
 add_importlibs(ncftp advapi32 user32 ws2_32 msvcrt kernel32)

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <ws2spi.h>
 #include <nspapi.h>
-#include <windef.h>
 #include <winuser.h>
 #include <windns.h>
 #include <guiddef.h>
@@ -716,7 +715,7 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     PCHAR nameServiceA = NULL;
     PCHAR nameProtoA = NULL;
     INT res = WSANO_RECOVERY;
-    
+
     if (!data->hostnameW)
     {
         res = WSANO_RECOVERY;

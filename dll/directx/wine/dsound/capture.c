@@ -846,6 +846,12 @@ static HRESULT IDirectSoundCaptureBufferImpl_Create(
         wfex->nAvgBytesPerSec, wfex->nBlockAlign,
         wfex->wBitsPerSample, wfex->cbSize);
 
+        /* Do some sanity checks for 'recording' SamplesPerSec value */
+        if (wfex->nSamplesPerSec > 100000)
+            wfex->nSamplesPerSec = 100000;
+        if (wfex->nSamplesPerSec < 5000)
+            wfex->nSamplesPerSec = 5000;
+
     device->pwfx = DSOUND_CopyFormat(wfex);
     if ( device->pwfx == NULL ) {
 	*ppobj = NULL;

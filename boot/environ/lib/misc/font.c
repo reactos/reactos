@@ -65,7 +65,7 @@ BfLoadFontFile (
 
     /* Zero it out */
     RtlZeroMemory(DeferredFont, sizeof(*DeferredFont));
-    
+
     /* Allocate a copy for the file path */
     FontPathSize = sizeof(WCHAR) * wcslen(FontPath) + sizeof(UNICODE_NULL);
     DeferredFont->FontPath = (PWCHAR)BlMmAllocateHeap(FontPathSize);
@@ -74,7 +74,7 @@ BfLoadFontFile (
         BfiFreeDeferredFontFile(DeferredFont);
         return STATUS_NO_MEMORY;
     }
-    
+
     /* Allocate a copy for the device */
     DeferredFont->Device = BlMmAllocateHeap(Device->Size);
     if (!DeferredFont->Device)
@@ -113,7 +113,7 @@ BfLoadDeferredFontFiles (
     {
         /* Get the font */
         DeferredFont = CONTAINING_RECORD(NextEntry, BL_DEFERRED_FONT_FILE, ListEntry);
-        
+
         /* Move to the next entry and remove this one */
         NextEntry = NextEntry->Flink;
         RemoveEntryList(&DeferredFont->ListEntry);

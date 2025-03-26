@@ -175,23 +175,16 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                                     TotalBytesCopied));
             UnlockBuffers( RecvReq->BufferArray,
                            RecvReq->BufferCount, FALSE );
-            if (FCB->Overread && FCB->LastReceiveStatus == STATUS_SUCCESS)
-            {
-                /* Overread after a graceful disconnect so complete with an error */
-                Status = STATUS_FILE_CLOSED;
-            }
-            else
-            {
-                /* Unexpected disconnect by the remote host or initial read after a graceful disconnect */
-                Status = FCB->LastReceiveStatus;
-            }
+
+            /* Unexpected disconnect by the remote host or graceful disconnect */
+            Status = FCB->LastReceiveStatus;
+
             NextIrp->IoStatus.Status = Status;
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
             if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
             (void)IoSetCancelRoutine(NextIrp, NULL);
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-            FCB->Overread = TRUE;
         }
     } else {
         /* Kick the user that receive would be possible now */
@@ -492,7 +485,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
             return UnlockAndMaybeComplete(FCB, Status, Irp, Irp->IoStatus.Information);
         }
-        else if (!(RecvReq->AfdFlags & AFD_OVERLAPPED) && 
+        else if (!(RecvReq->AfdFlags & AFD_OVERLAPPED) &&
                 ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking)))
         {
             AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
@@ -519,7 +512,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     Status = ReceiveActivity( FCB, Irp );
 
     if( Status == STATUS_PENDING &&
-        !(RecvReq->AfdFlags & AFD_OVERLAPPED) && 
+        !(RecvReq->AfdFlags & AFD_OVERLAPPED) &&
         ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking))) {
         AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
@@ -772,7 +765,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         return UnlockAndMaybeComplete(FCB, Status, Irp, Irp->IoStatus.Information);
     }
-    else if (!(RecvReq->AfdFlags & AFD_OVERLAPPED) && 
+    else if (!(RecvReq->AfdFlags & AFD_OVERLAPPED) &&
             ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking)))
     {
         AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));

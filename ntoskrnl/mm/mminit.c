@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/mm/mminit.c
@@ -16,8 +16,6 @@
 #include "ARM3/miarm.h"
 
 /* GLOBALS *******************************************************************/
-
-VOID NTAPI MiInitializeUserPfnBitmap(VOID);
 
 BOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
@@ -70,6 +68,8 @@ MiInitSystemMemoryAreas(VOID)
     // Create all the static memory areas.
     //
 
+    MmLockAddressSpace(MmGetKernelAddressSpace());
+
 #ifdef _M_AMD64
     // Reserved range FFFF800000000000 - FFFFF68000000000
     MiCreateArm3StaticMemoryArea((PVOID)MI_REAL_SYSTEM_RANGE_START, PTE_BASE - MI_REAL_SYSTEM_RANGE_START, FALSE);
@@ -120,6 +120,8 @@ MiInitSystemMemoryAreas(VOID)
     // KUSER_SHARED_DATA
     MiCreateArm3StaticMemoryArea((PVOID)KI_USER_SHARED_DATA, PAGE_SIZE, FALSE);
 #endif /* _X86_ */
+
+    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
 CODE_SEG("INIT")
@@ -214,12 +216,17 @@ MmInitSystem(IN ULONG Phase,
     /* Initialize the kernel address space */
     ASSERT(Phase == 1);
 
+#ifdef NEWCC
     InitializeListHead(&MiSegmentList);
     ExInitializeFastMutex(&MiGlobalPageOperation);
     KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
     // Until we're fully demand paged, we can do things the old way through
     // the balance manager
+    // CcInitView will override this...
     MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
+#else
+    KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
+#endif
 
     MmKernelAddressSpace = &PsIdleProcess->Vm;
 
@@ -230,7 +237,6 @@ MmInitSystem(IN ULONG Phase,
     MiDbgDumpAddressSpace();
 
     MmInitGlobalKernelPageDirectory();
-    MiInitializeUserPfnBitmap();
     MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
     MmInitializeRmapList();
     MmInitSectionImplementation();

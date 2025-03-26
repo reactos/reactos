@@ -10,6 +10,7 @@
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WS03SP1
 
+#define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>

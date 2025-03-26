@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-HAL_AMLI_BAD_IO_ADDRESS_LIST HalALMIBadIOAddressList[] =
+HAL_AMLI_BAD_IO_ADDRESS_LIST HalAMLIBadIOAddressList[] =
 {
     { 0x0000, 0x10, 1, NULL }, // DMA controller
     { 0x0020, 0x02, 0, NULL }, // Programmable Interrupt Controller (8259A)
@@ -58,59 +58,59 @@ HaliQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
                            OUT PULONG ReturnedLength)
 {
 #define REPORT_THIS_CASE(X) case X: DPRINT1("Unhandled case: %s\n", #X); break
-	switch (InformationClass)
-	{
-		REPORT_THIS_CASE(HalInstalledBusInformation);
-		REPORT_THIS_CASE(HalProfileSourceInformation);
-		REPORT_THIS_CASE(HalInformationClassUnused1);
-		REPORT_THIS_CASE(HalPowerInformation);
-		REPORT_THIS_CASE(HalProcessorSpeedInformation);
-		REPORT_THIS_CASE(HalCallbackInformation);
-		REPORT_THIS_CASE(HalMapRegisterInformation);
-		REPORT_THIS_CASE(HalMcaLogInformation);
-		case HalFrameBufferCachingInformation:
-		{
+    switch (InformationClass)
+    {
+        REPORT_THIS_CASE(HalInstalledBusInformation);
+        REPORT_THIS_CASE(HalProfileSourceInformation);
+        REPORT_THIS_CASE(HalInformationClassUnused1);
+        REPORT_THIS_CASE(HalPowerInformation);
+        REPORT_THIS_CASE(HalProcessorSpeedInformation);
+        REPORT_THIS_CASE(HalCallbackInformation);
+        REPORT_THIS_CASE(HalMapRegisterInformation);
+        REPORT_THIS_CASE(HalMcaLogInformation);
+        case HalFrameBufferCachingInformation:
+        {
             /* FIXME: TODO */
             return STATUS_NOT_IMPLEMENTED;
-		}
-		REPORT_THIS_CASE(HalDisplayBiosInformation);
-		REPORT_THIS_CASE(HalProcessorFeatureInformation);
-		REPORT_THIS_CASE(HalNumaTopologyInterface);
-		REPORT_THIS_CASE(HalErrorInformation);
-		REPORT_THIS_CASE(HalCmcLogInformation);
-		REPORT_THIS_CASE(HalCpeLogInformation);
-		REPORT_THIS_CASE(HalQueryMcaInterface);
-		case HalQueryAMLIIllegalIOPortAddresses:
-		{
-			ULONG Size = sizeof(HalALMIBadIOAddressList);
-			NTSTATUS Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        REPORT_THIS_CASE(HalDisplayBiosInformation);
+        REPORT_THIS_CASE(HalProcessorFeatureInformation);
+        REPORT_THIS_CASE(HalNumaTopologyInterface);
+        REPORT_THIS_CASE(HalErrorInformation);
+        REPORT_THIS_CASE(HalCmcLogInformation);
+        REPORT_THIS_CASE(HalCpeLogInformation);
+        REPORT_THIS_CASE(HalQueryMcaInterface);
+        case HalQueryAMLIIllegalIOPortAddresses:
+        {
+            ULONG Size = sizeof(HalAMLIBadIOAddressList);
+            NTSTATUS Status = STATUS_INFO_LENGTH_MISMATCH;
 
-			if (BufferSize >= Size)
-			{
-				RtlCopyMemory(Buffer, HalALMIBadIOAddressList, Size);
-				Status = STATUS_SUCCESS;
-			}
+            if (BufferSize >= Size)
+            {
+                RtlCopyMemory(Buffer, HalAMLIBadIOAddressList, Size);
+                Status = STATUS_SUCCESS;
+            }
 
-			*ReturnedLength = Size;
-			KeFlushWriteBuffer();
-			return Status;
-		}
+            *ReturnedLength = Size;
+            KeFlushWriteBuffer();
+            return Status;
+        }
 
-		REPORT_THIS_CASE(HalQueryMaxHotPlugMemoryAddress);
-		REPORT_THIS_CASE(HalPartitionIpiInterface);
-		REPORT_THIS_CASE(HalPlatformInformation);
-		REPORT_THIS_CASE(HalQueryProfileSourceList);
-		REPORT_THIS_CASE(HalInitLogInformation);
-		REPORT_THIS_CASE(HalFrequencyInformation);
-		REPORT_THIS_CASE(HalProcessorBrandString);
-		REPORT_THIS_CASE(HalHypervisorInformation);
-		REPORT_THIS_CASE(HalPlatformTimerInformation);
-		REPORT_THIS_CASE(HalAcpiAuditInformation);
-	}
+        REPORT_THIS_CASE(HalQueryMaxHotPlugMemoryAddress);
+        REPORT_THIS_CASE(HalPartitionIpiInterface);
+        REPORT_THIS_CASE(HalPlatformInformation);
+        REPORT_THIS_CASE(HalQueryProfileSourceList);
+        REPORT_THIS_CASE(HalInitLogInformation);
+        REPORT_THIS_CASE(HalFrequencyInformation);
+        REPORT_THIS_CASE(HalProcessorBrandString);
+        REPORT_THIS_CASE(HalHypervisorInformation);
+        REPORT_THIS_CASE(HalPlatformTimerInformation);
+        REPORT_THIS_CASE(HalAcpiAuditInformation);
+    }
 #undef REPORT_THIS_CASE
 
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS

@@ -21,8 +21,8 @@ BEGIN
     IDS_REINSTALLDRV "По&вторно слагане на драйвера..."
     IDS_PROPERTIES "&Свойства"
     IDS_UPDATEDRV "Об&новаване на водача..."
-    IDS_REBOOT "&Презапуск на компютъра..."
-    IDS_NOTAVAILABLE "Неналично"
+    IDS_REBOOT "&Рестартиране на компютъра..."
+    IDS_NOTAVAILABLE "Не е намерено"
     IDS_NOTDIGITALLYSIGNED "Без цифров подпис"
     IDS_NODRIVERS "Не са нужни или не са заредени водачи за това устройство."
     IDS_RESOURCE_COLUMN "Resource type"
@@ -31,6 +31,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O range"
+    IDS_COPY "За&помняне"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -73,22 +74,22 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Водачите за това устройство не са сложени."
     IDS_DEV_HARDWARE_DISABLED "Устройството е изключено, понеже БИОСът му не му е дал никакви ресурси."
     IDS_DEV_CANT_SHARE_IRQ "Това устройство ползва заявка за прекъсване (IRQ), която се ползва от друго устройство и не може да бъде споделена.\nТрябва да смените спорната настройка или да махнете водача за реално време, причиняващ неразбирателството."
-    IDS_DEV_FAILED_ADD "Това устройство не работи правилно, понеже %1 не работи правилно."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "РеактОС не може да сложи водачите за устройството, понеже няма достъп до устройството или мрежовото местоположение, което съдържа нужните файлове."
     IDS_DEV_TRANSLATION_FAILED "Устройството не отговаря на своя водач (драйвер)."
     IDS_DEV_NO_SOFTCONFIG "РеактОС не може да определи настройките на устройството. Вижте документацията на устройството и използвайте подпрозореца ""Ресурси"" за да го настроите."
     IDS_DEV_BIOS_TABLE "Системният фърмуер на компютъра ви не съдържа достатъчно сведения за правилната настройка и употреба на това устройство.\nЗа да го използвате, свтржете се с производителя на компютъра си, за да се получите обновление на фърмуера или БИОСа."
     IDS_DEV_IRQ_TRANSLATION_FAILED "Това устройство подава заявка за прекъсване на PCI, но е настроено за прекъсване на ISA (или наопаки).\nИзползвате програмата за системна настройка на компютъра, за да пренастроите прекъсването за това устройство."
     IDS_DEV_FAILED_DRIVER_ENTRY "РеактОС не може да подготви водача за това оборудване."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "РеактОС не може да зареди водача за това оборудване, понеже предишно изпълнение на водача на устройството е все още в паметта."
-    IDS_DEV_DRIVER_FAILED_LOAD "РеактОС не може да зареди водача за това оборудване. Водачът може да е повреден или да липсва."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "РеактОС не може да това устройство, понеже предишно изпълнение на водача на устройството е все още в паметта."
+    IDS_DEV_DRIVER_FAILED_LOAD "РеактОС не може да зареди това устройство. То може да е повредено или да липсва."
     IDS_DEV_DRIVER_SERVICE_KEY_INVALID "РеактОС не получава достъп до устройството, понеже сведенията за облужващият му ключ в регистъра липсват или са записани грешно."
     IDS_DEV_LEGACY_SERVICE_NO_DEVICES "РеактОС е заредил успешно водача за устройството но не може да намери самото устройство."
     IDS_DEV_DUPLICATE_DEVICE "РеактОС не може да зареди водача за това оборудване, понеже вече има такъв водач, изпълняван от уредбата."
     IDS_DEV_FAILED_POST_START "РеактОС е изключил това устройство, понеже е докладвало за нередности."
     IDS_DEV_HALTED "Приложение или услуга е изключила това устройство."
     IDS_DEV_PHANTOM "Понастоящем, устройството не е закачено за компютъра."
-    IDS_DEV_SYSTEM_SHUTDOWN "РеактОС не може да получи достъп до това устройство, понеже работната уредба се изключва."
+    IDS_DEV_SYSTEM_SHUTDOWN "РеактОС не може да получи достъп до това устройство, понеже системата се изключва."
     IDS_DEV_HELD_FOR_EJECT "РеактОС не може да използва това устройство, защото е било приготвено за безопасно откачане, но не е било откачено."
     IDS_DEV_DRIVER_BLOCKED "Софтуерът за това устройство не е бил пуснат, понеже е известно, че има ядове с РеактОС. Свържете се с производителя на оборудването за нов водач."
     IDS_DEV_REGISTRY_TOO_LARGE "РеактОС не успя да пусне новите устройства, понеже системният рой е твърде голям (надхвърля ограничението по размер на регистъра)."
@@ -227,7 +228,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Resource settings:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -285,14 +286,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Device Manager"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\nDo you really want to disable it?"
+  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\nDo you want to continue?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Update driver software..."
   IDS_MENU_ENABLE           "Enable"
@@ -303,7 +305,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Properties"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Properties"
   IDS_TOOLTIP_SCAN          "Scan for hardware changes"
@@ -314,7 +316,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
@@ -323,7 +325,7 @@ BEGIN
   IDS_HINT_DISABLE      " Disables the selected device."
   IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
   IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
+  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer."
   IDS_HINT_ABOUT        " About ReactOS Device Manager."
   IDS_HINT_EXIT         " Exits the program."
 

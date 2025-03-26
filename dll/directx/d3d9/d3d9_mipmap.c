@@ -151,7 +151,7 @@ DWORD WINAPI D3D9MipMap_SetLOD(LPDIRECT3DTEXTURE9 iface, DWORD LODNew)
 * @name IDirect3DTexture9::GetLOD
 * @implemented
 *
-* The function D3D9MipMap_GetLOD returns the number 
+* The function D3D9MipMap_GetLOD returns the number
 * max LODs for the specified texture, if it's managed.
 *
 * @param LPDIRECT3DTEXTURE9 iface
@@ -296,7 +296,7 @@ HRESULT CreateD3D9MipMap(DIRECT3DDEVICE9_INT* pDevice, UINT Width, UINT Height, 
     InitDirect3DBaseTexture9(&pThisTexture->BaseTexture, (IDirect3DBaseTexture9Vtbl*)&D3D9MipMap_Vtbl, Usage, Levels, Format, Pool, pDevice, RT_EXTERNAL);
 
     pThisTexture->lpVtbl = &D3D9MipMap_Vtbl;
-    
+
     pThisTexture->Usage = Usage;
     pThisTexture->dwWidth = Width;
     pThisTexture->dwHeight = Height;

@@ -179,7 +179,7 @@ typedef enum
 
 // FILE_RECORD_END seems to follow AttributeEnd in every file record starting with $Quota.
 // No clue what data is being represented here.
-#define FILE_RECORD_END              0x11477982 
+#define FILE_RECORD_END              0x11477982
 
 #define NTFS_FILE_MFT                0
 #define NTFS_FILE_MFTMIRR            1
@@ -223,8 +223,12 @@ typedef enum
 #define NTFS_FILE_TYPE_HIDDEN     0x2
 #define NTFS_FILE_TYPE_SYSTEM     0x4
 #define NTFS_FILE_TYPE_ARCHIVE    0x20
+#define NTFS_FILE_TYPE_TEMPORARY  0x100
+#define NTFS_FILE_TYPE_SPARSE     0x200
 #define NTFS_FILE_TYPE_REPARSE    0x400
 #define NTFS_FILE_TYPE_COMPRESSED 0x800
+#define NTFS_FILE_TYPE_OFFLINE    0x1000
+#define NTFS_FILE_TYPE_ENCRYPTED  0x4000
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
 
 /* Indexed Flag in Resident attributes - still somewhat speculative */
@@ -932,6 +936,9 @@ BOOLEAN
 NtfsFCBIsCompressed(PNTFS_FCB Fcb);
 
 BOOLEAN
+NtfsFCBIsEncrypted(PNTFS_FCB Fcb);
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb);
 
 VOID
@@ -975,7 +982,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,
                      PNTFS_FCB pFCB,
-                     ULONG Type, 
+                     ULONG Type,
                      PCWSTR Name,
                      ULONG NameLength,
                      PVOID * Data);
@@ -1157,7 +1164,7 @@ ReadVCN(PDEVICE_EXTENSION Vcb,
         ULONG count,
         PVOID buffer);
 
-NTSTATUS 
+NTSTATUS
 FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
                          PNTFS_RECORD_HEADER Record);
 
@@ -1276,8 +1283,10 @@ NtfsSetVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 /* ntfs.c */
 
+CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject);

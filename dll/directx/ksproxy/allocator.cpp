@@ -109,8 +109,8 @@ CKsAllocator::QueryInterface(
     return E_NOINTERFACE;
 }
 
-CKsAllocator::CKsAllocator() : m_Ref(0), 
-                               m_hAllocator(0), 
+CKsAllocator::CKsAllocator() : m_Ref(0),
+                               m_hAllocator(0),
                                m_Mode(KsAllocatorMode_User),
                                m_Notify(0),
                                m_Allocated(0),

@@ -25,6 +25,15 @@
 #include <objbase.h>
 #include <shtypes.h>
 
+#ifndef _SHLWAPI_
+#define LWSTDAPI_(type)  EXTERN_C DECLSPEC_IMPORT type WINAPI
+#define LWSTDAPIV_(type) EXTERN_C DECLSPEC_IMPORT type STDAPIVCALLTYPE
+#else
+#define LWSTDAPI_(type)  type WINAPI
+#define LWSTDAPIV_(type) type STDAPIVCALLTYPE
+#endif
+#define LWSTDAPI         LWSTDAPI_(HRESULT)
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
@@ -644,6 +653,32 @@ typedef enum
     ASSOCENUM_NONE
 } ASSOCENUM;
 
+typedef enum
+{
+    FTA_None                  = 0x00000000,
+    FTA_Exclude               = 0x00000001,
+    FTA_Show                  = 0x00000002,
+    FTA_HasExtension          = 0x00000004,
+    FTA_NoEdit                = 0x00000008,
+    FTA_NoRemove              = 0x00000010,
+    FTA_NoNewVerb             = 0x00000020,
+    FTA_NoEditVerb            = 0x00000040,
+    FTA_NoRemoveVerb          = 0x00000080,
+    FTA_NoEditDesc            = 0x00000100,
+    FTA_NoEditIcon            = 0x00000200,
+    FTA_NoEditDflt            = 0x00000400,
+    FTA_NoEditVerbCmd         = 0x00000800,
+    FTA_NoEditVerbExe         = 0x00001000,
+    FTA_NoDDE                 = 0x00002000,
+    FTA_NoEditMIME            = 0x00008000,
+    FTA_OpenIsSafe            = 0x00010000,
+    FTA_AlwaysUnsafe          = 0x00020000,
+    FTA_NoRecentDocs          = 0x00100000,
+    FTA_SafeForElevation      = 0x00200000, /* Win8+ */
+    FTA_AlwaysUseDirectInvoke = 0x00400000  /* Win8+ */
+} FILETYPEATTRIBUTEFLAGS;
+DEFINE_ENUM_FLAG_OPERATORS(FILETYPEATTRIBUTEFLAGS)
+
 typedef struct IQueryAssociations *LPQUERYASSOCIATIONS;
 
 #define INTERFACE IQueryAssociations
@@ -894,20 +929,20 @@ PathCreateFromUrlW(
 
 HRESULT WINAPI PathCreateFromUrlAlloc(_In_ LPCWSTR pszUrl, _Outptr_ LPWSTR* pszPath, DWORD dwReserved);
 
-BOOL WINAPI PathFileExistsA(_In_ LPCSTR);
-BOOL WINAPI PathFileExistsW(_In_ LPCWSTR);
+BOOL WINAPI PathFileExistsA(_In_ LPCSTR pszPath);
+BOOL WINAPI PathFileExistsW(_In_ LPCWSTR pszPath);
 #define PathFileExists WINELIB_NAME_AW(PathFileExists)
 
-BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR,DWORD*);
-BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR,DWORD*);
+BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath,DWORD* dwAttr);
+BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath,DWORD* dwAttr);
 #define PathFileExistsAndAttributes WINELIB_NAME_AW(PathFileExistsAndAttributes)
 
-LPSTR  WINAPI PathFindExtensionA(_In_ LPCSTR);
-LPWSTR WINAPI PathFindExtensionW(_In_ LPCWSTR);
+LPSTR  WINAPI PathFindExtensionA(_In_ LPCSTR pszPath);
+LPWSTR WINAPI PathFindExtensionW(_In_ LPCWSTR pszPath);
 #define PathFindExtension WINELIB_NAME_AW(PathFindExtension)
 
-LPSTR  WINAPI PathFindFileNameA(_In_ LPCSTR);
-LPWSTR WINAPI PathFindFileNameW(_In_ LPCWSTR);
+LPSTR  WINAPI PathFindFileNameA(_In_ LPCSTR pszPath);
+LPWSTR WINAPI PathFindFileNameW(_In_ LPCWSTR pszPath);
 #define PathFindFileName WINELIB_NAME_AW(PathFindFileName)
 
 LPSTR  WINAPI PathFindNextComponentA(_In_ LPCSTR);
@@ -918,12 +953,12 @@ BOOL WINAPI PathFindOnPathA(_Inout_updates_(MAX_PATH) LPSTR, _In_opt_ LPCSTR*);
 BOOL WINAPI PathFindOnPathW(_Inout_updates_(MAX_PATH) LPWSTR, _In_opt_ LPCWSTR*);
 #define PathFindOnPath WINELIB_NAME_AW(PathFindOnPath)
 
-LPSTR  WINAPI PathGetArgsA(_In_ LPCSTR);
-LPWSTR WINAPI PathGetArgsW(_In_ LPCWSTR);
+LPSTR  WINAPI PathGetArgsA(_In_ LPCSTR pszPath);
+LPWSTR WINAPI PathGetArgsW(_In_ LPCWSTR pszPath);
 #define PathGetArgs WINELIB_NAME_AW(PathGetArgs)
 
-UINT WINAPI PathGetCharTypeA(_In_ UCHAR);
-UINT WINAPI PathGetCharTypeW(_In_ WCHAR);
+UINT WINAPI PathGetCharTypeA(_In_ UCHAR ch);
+UINT WINAPI PathGetCharTypeW(_In_ WCHAR ch);
 #define PathGetCharType WINELIB_NAME_AW(PathGetCharType)
 
 int WINAPI PathGetDriveNumberA(_In_ LPCSTR);
@@ -1632,16 +1667,16 @@ LPSTR  WINAPI StrRStrIA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_ LPCSTR);
 LPWSTR WINAPI StrRStrIW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ LPCWSTR);
 #define StrRStrI WINELIB_NAME_AW(StrRStrI)
 
-int WINAPI StrSpnA(_In_ LPCSTR, _In_ LPCSTR);
-int WINAPI StrSpnW(_In_ LPCWSTR, _In_ LPCWSTR);
+int WINAPI StrSpnA(_In_ LPCSTR psz, _In_ LPCSTR pszSet);
+int WINAPI StrSpnW(_In_ LPCWSTR psz, _In_ LPCWSTR pszSet);
 #define StrSpn WINELIB_NAME_AW(StrSpn)
 
-LPSTR  WINAPI StrStrA(_In_ LPCSTR, _In_ LPCSTR);
-LPWSTR WINAPI StrStrW(_In_ LPCWSTR, _In_ LPCWSTR);
+LPSTR  WINAPI StrStrA(_In_ LPCSTR pszFirst, _In_ LPCSTR pszSrch);
+LPWSTR WINAPI StrStrW(_In_ LPCWSTR pszFirst, _In_ LPCWSTR pszSrch);
 #define StrStr WINELIB_NAME_AW(StrStr)
 
-LPSTR  WINAPI StrStrIA(_In_ LPCSTR, _In_ LPCSTR);
-LPWSTR WINAPI StrStrIW(_In_ LPCWSTR, _In_ LPCWSTR);
+LPSTR  WINAPI StrStrIA(_In_ LPCSTR pszFirst, _In_ LPCSTR pszSrch);
+LPWSTR WINAPI StrStrIW(_In_ LPCWSTR pszFirst, _In_ LPCWSTR pszSrch);
 #define StrStrI WINELIB_NAME_AW(StrStrI)
 
 LPWSTR WINAPI StrStrNW(_In_ LPCWSTR, _In_ LPCWSTR, UINT);
@@ -1871,6 +1906,14 @@ SHCreateStreamOnFileEx(
 
 HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 
+#ifndef _SHLWAPI_
+LWSTDAPI IStream_Reset(_In_ struct IStream*);
+#if !defined(IStream_Read) && defined(__cplusplus)
+LWSTDAPI IStream_Read(_In_ struct IStream*, _Out_ void*, _In_ ULONG);
+LWSTDAPI IStream_Write(_In_ struct IStream*, _In_ const void*, _In_ ULONG);
+#endif
+#endif
+
 #endif /* NO_SHLWAPI_STREAM */
 
 #ifndef NO_SHLWAPI_SHARED
@@ -1907,6 +1950,8 @@ SHFreeShared(
 
 #endif /* NO_SHLWAPI_SHARED */
 
+INT WINAPI GetMenuPosFromID(_In_ HMENU hMenu, _In_ UINT uID);
+
 /* SHAutoComplete flags */
 #define SHACF_DEFAULT               0x00000000
 #define SHACF_FILESYSTEM            0x00000001
@@ -1941,10 +1986,10 @@ HRESULT WINAPI SHReleaseThreadRef(void);
 BOOL
 WINAPI
 SHCreateThread(
-  _In_ LPTHREAD_START_ROUTINE,
-  _In_opt_ void*,
-  _In_ DWORD,
-  _In_opt_ LPTHREAD_START_ROUTINE);
+  _In_ LPTHREAD_START_ROUTINE pfnThreadProc,
+  _In_opt_ void* pData,
+  _In_ DWORD flags,
+  _In_opt_ LPTHREAD_START_ROUTINE pfnCallback);
 
 BOOL WINAPI SHSkipJunction(_In_opt_ struct IBindCtx*, _In_ const CLSID*);
 
@@ -2003,8 +2048,8 @@ HRESULT
 WINAPI
 SHGetViewStatePropertyBag(
   _In_opt_ PCIDLIST_ABSOLUTE pidl,
-  _In_opt_ LPWSTR bag_name,
-  DWORD flags,
+  _In_opt_ LPCWSTR bag_name,
+  _In_ DWORD flags,
   _In_ REFIID riid,
   _Outptr_ void **ppv);
 
@@ -2090,7 +2135,10 @@ QISearch(
 #define OFFSETOFCLASS(base, derived) \
     ((DWORD)(DWORD_PTR)(static_cast<base*>((derived*)8))-8)
 
-#include <poppack.h> 
+#define QITABENTMULTI(Cthis, Ifoo, Iimpl) { &IID_##Ifoo, OFFSETOFCLASS(Iimpl, Cthis) }
+#define QITABENT(Cthis, Ifoo) QITABENTMULTI(Cthis, Ifoo, Ifoo)
+
+#include <poppack.h>
 
 #ifdef __cplusplus
 } /* extern "C" */

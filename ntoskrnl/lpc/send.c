@@ -449,11 +449,6 @@ NtRequestPort(IN HANDLE PortHandle,
     PLPCP_MESSAGE Message;
 
     PAGED_CODE();
-    LPCTRACE(LPC_SEND_DEBUG,
-             "Handle: %p. Message: %p. Type: %lx\n",
-             PortHandle,
-             LpcRequest,
-             LpcpGetMessageType(LpcRequest));
 
     /* Check if the call comes from user mode */
     if (PreviousMode != KernelMode)
@@ -475,6 +470,12 @@ NtRequestPort(IN HANDLE PortHandle,
         /* Access the LpcRequest directly */
         CapturedLpcRequest = *LpcRequest;
     }
+
+    LPCTRACE(LPC_SEND_DEBUG,
+             "Handle: %p. Message: %p. Type: %lx\n",
+             PortHandle,
+             LpcRequest,
+             LpcpGetMessageType(&CapturedLpcRequest));
 
     /* Get the message type */
     MessageType = CapturedLpcRequest.u2.s2.Type | LPC_DATAGRAM;
@@ -709,15 +710,10 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     PLPCP_DATA_INFO DataInfo;
 
     PAGED_CODE();
-    LPCTRACE(LPC_SEND_DEBUG,
-             "Handle: %p. Messages: %p/%p. Type: %lx\n",
-             PortHandle,
-             LpcRequest,
-             LpcReply,
-             LpcpGetMessageType(LpcRequest));
 
     /* Check if the thread is dying */
-    if (Thread->LpcExitThreadCalled) return STATUS_THREAD_IS_TERMINATING;
+    if (Thread->LpcExitThreadCalled)
+        return STATUS_THREAD_IS_TERMINATING;
 
     /* Check for user mode access */
     if (PreviousMode != KernelMode)
@@ -756,6 +752,13 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
             return Status;
         }
     }
+
+    LPCTRACE(LPC_SEND_DEBUG,
+             "Handle: %p. Messages: %p/%p. Type: %lx\n",
+             PortHandle,
+             LpcRequest,
+             LpcReply,
+             LpcpGetMessageType(&CapturedLpcRequest));
 
     /* This flag is undocumented. Remove it before continuing */
     CapturedLpcRequest.u2.s2.Type &= ~0x4000;

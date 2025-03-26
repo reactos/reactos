@@ -94,10 +94,10 @@
 
 #ifdef USE_REACTOS_DDK
  #define ULONGIO_PTR     ULONG_PTR
- #define CRNT_ILK_TYPE   
+ #define CRNT_ILK_TYPE
  #define CRNT_ILK_PTYPE
- #define REGRTL_STR_PTYPE  
-#else 
+ #define REGRTL_STR_PTYPE
+#else
  #define ULONG_PTR       ULONG
  #define ULONGIO_PTR     ULONG
  #define CRNT_ILK_TYPE   (PVOID)

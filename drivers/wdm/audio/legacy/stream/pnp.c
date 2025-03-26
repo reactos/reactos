@@ -353,7 +353,15 @@ StreamClassStartDevice(
 
 
     /* First forward the request to lower attached device object */
-    Status = ForwardIrpSynchronous(DeviceObject, Irp);
+    if (IoForwardIrpSynchronously(DeviceExtension->LowerDeviceObject, Irp))
+    {
+        Status = Irp->IoStatus.Status;
+    }
+    else
+    {
+        Status = STATUS_UNSUCCESSFUL;
+    }
+
     if (!NT_SUCCESS(Status))
     {
         /* Failed to start lower devices */

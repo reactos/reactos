@@ -47,6 +47,7 @@ WINE_DECLARE_DEBUG_CHANNEL(pidl);
 
 #ifdef __REACTOS__
 #include <comctl32_undoc.h>
+#include <shlwapi_undoc.h>
 #else
 /* FIXME: !!! move CREATEMRULIST and flags to header file !!! */
 /*        !!! it is in both here and comctl32undoc.c      !!! */
@@ -195,11 +196,196 @@ typedef BOOL (WINAPI *GetOpenFileNameProc)(OPENFILENAMEW *ofn);
     return ret;
 }
 
+#ifdef __REACTOS__
+BOOL SHELL_GlobalCounterChanged(LONG *pCounter, SHELL_GCOUNTER_DECLAREPARAMETERS(handle, id))
+{
+    LONG count = SHELL_GlobalCounterGet(SHELL_GCOUNTER_PARAMETERS(handle, id));
+    if (*pCounter == count)
+        return FALSE;
+    *pCounter = count;
+    return TRUE;
+}
+
+EXTERN_C void SHELL32_GetDefaultShellState(LPSHELLSTATE pss);
+EXTERN_C BOOL SHELL32_ReadRegShellState(PREGSHELLSTATE prss);
+EXTERN_C LSTATUS SHELL32_WriteRegShellState(PREGSHELLSTATE prss);
+SHELL_GCOUNTER_DEFINE_GUID(SHGCGUID_ShellState, 0x7cb834f0, 0x527b, 0x11d2, 0x9d, 0x1f, 0x00, 0x00, 0xf8, 0x05, 0xca, 0x57);
+SHELL_GCOUNTER_DEFINE_HANDLE(g_hShellState);
+#define SHELL_GCOUNTER_SHELLSTATE SHELL_GCOUNTER_PARAMETERS(g_hShellState, GLOBALCOUNTER_SHELLSETTINGSCHANGED)
+static LONG g_ShellStateCounter = 0;
+static UINT g_CachedSSF = 0;
+static REGSHELLSTATE g_ShellState;
+enum { ssf_autocheckselect = 0x00800000, ssf_iconsonly = 0x01000000,
+       ssf_showtypeoverlay = 0x02000000, ssf_showstatusbar = 0x04000000 };
+#endif //__REACTOS__
+
 /*************************************************************************
  * SHGetSetSettings				[SHELL32.68]
  */
 VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
 {
+#ifdef __REACTOS__
+    const DWORD inverted = SSF_SHOWEXTENSIONS;
+    LPSHELLSTATE gpss = &g_ShellState.ss;
+    HKEY hKeyAdv;
+
+    if (!SHELL_GlobalCounterIsInitialized(g_hShellState))
+    {
+        SHELL_GlobalCounterCreate(&SHGCGUID_ShellState, g_hShellState);
+    }
+
+    if (!lpss)
+    {
+        SHELL_GlobalCounterIncrement(SHELL_GCOUNTER_SHELLSTATE);
+        return;
+    }
+
+    hKeyAdv = SHGetShellKey(SHKEY_Root_HKCU | SHKEY_Key_Explorer, L"Advanced", bSet);
+    if (!hKeyAdv && bSet)
+        return;
+
+#define SSF_STRUCTONLY (SSF_NOCONFIRMRECYCLE | SSF_DOUBLECLICKINWEBVIEW | SSF_DESKTOPHTML | \
+                        SSF_WIN95CLASSIC | SSF_SORTCOLUMNS | SSF_STARTPANELON)
+#define SHGSS_GetSetStruct(getsetmacro) \
+    do { \
+        getsetmacro(fNoConfirmRecycle, SSF_NOCONFIRMRECYCLE); \
+        getsetmacro(fDoubleClickInWebView, SSF_DOUBLECLICKINWEBVIEW); \
+        getsetmacro(fDesktopHTML, SSF_DESKTOPHTML); \
+        getsetmacro(fWin95Classic, SSF_WIN95CLASSIC); \
+        getsetmacro(lParamSort, SSF_SORTCOLUMNS); \
+        getsetmacro(iSortDirection, SSF_SORTCOLUMNS); \
+        getsetmacro(fStartPanelOn, SSF_STARTPANELON); \
+    } while (0)
+#define SHGSS_GetSetAdv(getsetmacro) \
+    do { \
+        getsetmacro(L"HideFileExt", fShowExtensions, SSF_SHOWEXTENSIONS); \
+        getsetmacro(L"ShowCompColor", fShowCompColor, SSF_SHOWCOMPCOLOR); \
+        getsetmacro(L"DontPrettyPath", fDontPrettyPath, SSF_DONTPRETTYPATH); \
+        getsetmacro(L"ShowAttribCol", fShowAttribCol, SSF_SHOWATTRIBCOL); \
+        getsetmacro(L"MapNetDrvBtn", fMapNetDrvBtn, SSF_MAPNETDRVBUTTON); \
+        getsetmacro(L"ShowInfoTip", fShowInfoTip, SSF_SHOWINFOTIP); \
+        getsetmacro(L"HideIcons", fHideIcons, SSF_HIDEICONS); \
+        getsetmacro(L"WebView", fWebView, SSF_WEBVIEW); \
+        getsetmacro(L"Filter", fFilter, SSF_FILTER); \
+        getsetmacro(L"ShowSuperHidden", fShowSuperHidden, SSF_SHOWSUPERHIDDEN); \
+        getsetmacro(L"NoNetCrawling", fNoNetCrawling, SSF_NONETCRAWLING); \
+        getsetmacro(L"SeparateProcess", fSepProcess, SSF_SEPPROCESS); \
+        getsetmacro(L"AutoCheckSelect", fAutoCheckSelect, ssf_autocheckselect); \
+        getsetmacro(L"IconsOnly", fIconsOnly, ssf_iconsonly); \
+        getsetmacro(L"ShowTypeOverlay", fShowTypeOverlay, ssf_showtypeoverlay); \
+        getsetmacro(L"ShowStatusBar", fShowStatusBar, ssf_showstatusbar); \
+    } while (0)
+
+    if (bSet)
+    {
+        DWORD changed = 0;
+        if (dwMask & ~g_CachedSSF)
+        {
+            SHELLSTATE tempstate;
+            SHGetSetSettings(&tempstate, dwMask, FALSE); // Read entries that are not in g_CachedSSF
+        }
+
+#define SHGSS_WriteAdv(name, value, SSF) \
+    do { \
+        DWORD val = (value), cb = sizeof(DWORD); \
+        if (SHSetValueW(hKeyAdv, NULL, (name), REG_DWORD, &val, cb) == ERROR_SUCCESS) \
+        { \
+            ++changed; \
+        } \
+    } while (0)
+#define SHGSS_SetAdv(name, field, SSF) \
+    do { \
+        if ((dwMask & (SSF)) && gpss->field != lpss->field) \
+        { \
+            const DWORD bitval = (gpss->field = lpss->field); \
+            SHGSS_WriteAdv((name), ((SSF) & inverted) ? !bitval : !!bitval, (SSF)); \
+        } \
+    } while (0)
+#define SHGSS_SetStruct(field, SSF) \
+    do { \
+        if ((dwMask & (SSF)) && gpss->field != lpss->field) \
+        { \
+            gpss->field = lpss->field; \
+            ++changed; \
+        } \
+    } while (0)
+
+        if ((dwMask & SSF_SHOWALLOBJECTS) && gpss->fShowAllObjects != lpss->fShowAllObjects)
+        {
+            gpss->fShowAllObjects = lpss->fShowAllObjects;
+            SHGSS_WriteAdv(L"Hidden", lpss->fShowAllObjects ? 1 : 2, SSF_SHOWALLOBJECTS);
+        }
+        SHGSS_SetStruct(fShowSysFiles, SSF_SHOWSYSFILES);
+        SHGSS_GetSetAdv(SHGSS_SetAdv);
+        SHGSS_GetSetStruct(SHGSS_SetStruct);
+        if (changed)
+        {
+            if ((dwMask & SSF_SHOWSUPERHIDDEN) && (DLL_EXPORT_VERSION) < _WIN32_WINNT_VISTA)
+            {
+                // This is probably a Windows bug but write this alternative name just in case someone reads it
+                DWORD val = gpss->fShowSuperHidden != FALSE;
+                SHSetValueW(hKeyAdv, NULL, L"SuperHidden", REG_DWORD, &val, sizeof(val));
+            }
+            SHELL32_WriteRegShellState(&g_ShellState); // Write the new SHELLSTATE
+            SHGetSetSettings(NULL, 0, TRUE); // Invalidate counter
+            SHSendMessageBroadcastW(WM_SETTINGCHANGE, 0, (LPARAM)L"ShellState"); // Notify everyone
+        }
+    }
+    else
+    {
+        DWORD read = 0, data, cb, dummy = 0;
+        if (SHELL_GlobalCounterChanged(&g_ShellStateCounter, SHELL_GCOUNTER_SHELLSTATE))
+            g_CachedSSF = 0;
+
+#define SHGSS_ReadAdv(name, SSF) ( \
+    (g_CachedSSF & (SSF)) != (SSF) && (cb = sizeof(DWORD)) != 0 && \
+    SHQueryValueEx(hKeyAdv, (name), NULL, NULL, &data, &cb) == ERROR_SUCCESS && \
+    cb == sizeof(DWORD) && (read |= (SSF)) != 0 )
+#define SHGSS_GetFieldHelper(field, SSF, src, dst, cachevar) \
+    do { \
+        if (dwMask & (SSF)) \
+        { \
+            (dst)->field = (src)->field; \
+            cachevar |= (SSF); \
+        } \
+    } while (0)
+#define SHGSS_CacheField(field, SSF) SHGSS_GetFieldHelper(field, (SSF), &rss.ss, gpss, read)
+#define SHGSS_GetField(field, SSF) SHGSS_GetFieldHelper(field, (SSF), gpss, lpss, dummy)
+#define SHGSS_GetAdv(name, field, SSF) \
+    do { \
+        if (SHGSS_ReadAdv((name), (SSF))) \
+            gpss->field = ((SSF) & inverted) ? data == FALSE : data != FALSE; \
+        SHGSS_GetFieldHelper(field, (SSF), gpss, lpss, read); \
+    } while (0)
+
+        if (SHGSS_ReadAdv(L"Hidden", SSF_SHOWALLOBJECTS | SSF_SHOWSYSFILES))
+        {
+            gpss->fShowAllObjects = data == 1;
+            gpss->fShowSysFiles = data > 1;
+        }
+        SHGSS_GetField(fShowAllObjects, SSF_SHOWALLOBJECTS);
+        SHGSS_GetField(fShowSysFiles, SSF_SHOWSYSFILES);
+        SHGSS_GetSetAdv(SHGSS_GetAdv);
+        if (dwMask & ~(read | g_CachedSSF))
+        {
+            REGSHELLSTATE rss;
+            if (SHELL32_ReadRegShellState(&rss))
+            {
+                SHGSS_GetSetStruct(SHGSS_CacheField); // Copy the requested items to gpss
+            }
+            else
+            {
+                SHELL32_GetDefaultShellState(gpss);
+                read = 0; // The advanced items we read are no longer valid in gpss
+                g_CachedSSF = SSF_STRUCTONLY;
+            }
+        }
+        SHGSS_GetSetStruct(SHGSS_GetField); // Copy requested items from gpss to output
+        g_CachedSSF |= read;
+    }
+    if (hKeyAdv)
+        RegCloseKey(hKeyAdv);
+#else
   if(bSet)
   {
     FIXME("%p 0x%08x TRUE\n", lpss, dwMask);
@@ -208,6 +394,7 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
   {
     SHGetSettings((LPSHELLFLAGSTATE)lpss,dwMask);
   }
+#endif //__REACTOS__
 }
 
 /*************************************************************************
@@ -220,6 +407,17 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
  */
 VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 {
+#ifdef __REACTOS__
+    SHELLSTATE ss;
+    SHGetSetSettings(&ss, dwMask & ~(SSF_SORTCOLUMNS | SSF_FILTER), FALSE);
+    *lpsfs = *(LPSHELLFLAGSTATE)&ss;
+    if (dwMask & SSF_HIDEICONS)
+        lpsfs->fHideIcons = ss.fHideIcons;
+    if (dwMask & ssf_autocheckselect)
+        lpsfs->fAutoCheckSelect = ss.fAutoCheckSelect;
+    if (dwMask & ssf_iconsonly)
+        lpsfs->fIconsOnly = ss.fIconsOnly;
+#else
 	HKEY	hKey;
 	DWORD	dwData;
 	DWORD	dwDataSize = sizeof (DWORD);
@@ -263,7 +461,7 @@ VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 	  }
 	}
 	RegCloseKey (hKey);
-
+#endif //__REACTOS__
 	TRACE("-- 0x%04x\n", *(WORD*)lpsfs);
 }
 
@@ -630,6 +828,8 @@ SignalFileOpen (PCIDLIST_ABSOLUTE pidl)
     return FALSE;
 }
 
+#ifndef __REACTOS__
+
 /*************************************************************************
  * SHADD_get_policy - helper function for SHAddToRecentDocs
  *
@@ -671,6 +871,7 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
     return ret;
 }
 
+#endif // __REACTOS__
 
 /*************************************************************************
  * SHADD_compare_mru - helper function for SHAddToRecentDocs
@@ -809,11 +1010,10 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
 void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 {
 #ifdef __REACTOS__
-    static const WCHAR szExplorerKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer";
     INT ret;
     WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[80];
     WCHAR szPath[MAX_PATH];
-    DWORD cbBuffer, data[64], datalen, type;
+    DWORD cbBuffer;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
     HKEY hExplorerKey;
@@ -829,25 +1029,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     TRACE("%04x %p\n", uFlags, pv);
 
     /* check policy */
-    ret = SHADD_get_policy("NoRecentDocsHistory", &type, data, &datalen);
-    if (ret > 0 && ret != ERROR_FILE_NOT_FOUND)
-    {
-        ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
-    }
-    else if (ret == ERROR_SUCCESS)
-    {
-        if (!(type == REG_DWORD || (type == REG_BINARY && datalen == 4)))
-        {
-            ERR("Error policy data for \"NoRecentDocsHistory\" not formatted correctly, type=%d, len=%d\n",
-                type, datalen);
-            return;
-        }
-
-        TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
-        /* now test the actual policy value */
-        if (data[0] != 0)
-            return;
-    }
+    ret = SHRestricted(REST_NORECENTDOCSHISTORY);
+    TRACE("policy value for NoRecentDocsHistory = %08x\n", ret);
+    if (ret != 0)
+        return;
 
     /* store to szTargetPath */
     szTargetPath[0] = 0;
@@ -884,7 +1069,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     TRACE("Users Recent dir %S\n", szLinkDir);
 
     /* open Explorer key */
-    error = RegCreateKeyExW(HKEY_CURRENT_USER, szExplorerKey, 0, NULL, 0,
+    error = RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                            0, NULL, 0,
                             KEY_READ | KEY_WRITE, NULL, &hExplorerKey, NULL);
     if (error)
     {
@@ -1613,17 +1799,6 @@ BOOL WINAPI DAD_ShowDragImage(BOOL bShow)
     return FALSE;
 }
 
-static const WCHAR szwCabLocation[] = {
-  'S','o','f','t','w','a','r','e','\\',
-  'M','i','c','r','o','s','o','f','t','\\',
-  'W','i','n','d','o','w','s','\\',
-  'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-  'E','x','p','l','o','r','e','r','\\',
-  'C','a','b','i','n','e','t','S','t','a','t','e',0
-};
-
-static const WCHAR szwSettings[] = { 'S','e','t','t','i','n','g','s',0 };
-
 /*************************************************************************
  * ReadCabinetState				[SHELL32.651] NT 4.0
  *
@@ -1632,17 +1807,18 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 {
 	HKEY hkey = 0;
 	DWORD type, r;
+	C_ASSERT(sizeof(*cs) == FIELD_OFFSET(CABINETSTATE, fMenuEnumFilter) + sizeof(UINT));
 
 	TRACE("%p %d\n", cs, length);
 
 	if( (cs == NULL) || (length < (int)sizeof(*cs))  )
 		return FALSE;
 
-	r = RegOpenKeyW( HKEY_CURRENT_USER, szwCabLocation, &hkey );
+	r = RegOpenKeyW( HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState", &hkey );
 	if( r == ERROR_SUCCESS )
 	{
 		type = REG_BINARY;
-		r = RegQueryValueExW( hkey, szwSettings,
+		r = RegQueryValueExW( hkey, L"Settings",
 			NULL, &type, (LPBYTE)cs, (LPDWORD)&length );
 		RegCloseKey( hkey );
 
@@ -1652,6 +1828,10 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 	if ( (r != ERROR_SUCCESS) || (cs->cLength < sizeof(*cs)) ||
 		(cs->cLength != length) )
 	{
+		SHELLSTATE shellstate;
+		shellstate.fWin95Classic = FALSE;
+		SHGetSetSettings(&shellstate, SSF_WIN95CLASSIC, FALSE);
+
 		TRACE("Initializing shell cabinet settings\n");
 		memset(cs, 0, sizeof(*cs));
 		cs->cLength          = sizeof(*cs);
@@ -1661,11 +1841,11 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 		cs->fNotShell        = FALSE;
 		cs->fSimpleDefault   = TRUE;
 		cs->fDontShowDescBar = FALSE;
-		cs->fNewWindowMode   = FALSE;
+		cs->fNewWindowMode   = shellstate.fWin95Classic;
 		cs->fShowCompColor   = FALSE;
 		cs->fDontPrettyNames = FALSE;
 		cs->fAdminsCreateCommonGroups = TRUE;
-		cs->fMenuEnumFilter  = 96;
+		cs->fMenuEnumFilter  = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
 	}
 
 	return TRUE;
@@ -1685,16 +1865,19 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
 	if( cs == NULL )
 		return FALSE;
 
-	r = RegCreateKeyExW( HKEY_CURRENT_USER, szwCabLocation, 0,
+	r = RegCreateKeyExW( HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState", 0,
 		 NULL, 0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
 	if( r == ERROR_SUCCESS )
 	{
-		r = RegSetValueExW( hkey, szwSettings, 0,
+		r = RegSetValueExW( hkey, L"Settings", 0,
 			REG_BINARY, (LPBYTE) cs, cs->cLength);
 
 		RegCloseKey( hkey );
 	}
 
+#ifdef __REACTOS__
+	/* TODO: if (r==ERROR_SUCCESS) Increment GLOBALCOUNTER_FOLDERSETTINGSCHANGE */
+#endif
 	return (r==ERROR_SUCCESS);
 }
 
@@ -1727,7 +1910,7 @@ HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
  * The SHLoadOLE was called when OLE32.DLL was being loaded to transfer all the
  * information from the shell32 "mini-COM" to ole32.dll.
  *
- * See http://blogs.msdn.com/oldnewthing/archive/2004/07/05/173226.aspx for a
+ * See https://devblogs.microsoft.com/oldnewthing/20040705-00/?p=38573 for a
  * detailed description.
  *
  * Under wine ole32.dll is always loaded as it is imported by shlwapi.dll which is
@@ -1911,8 +2094,14 @@ DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
  */
 BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
 {
-    TRACE("GUIDFromStringA() stub\n");
-    return FALSE;
+    ANSI_STRING ansi_str;
+    WCHAR szWide[40];
+    UNICODE_STRING guid_str = { 0, sizeof(szWide), szWide };
+    if (*str != '{')
+        return FALSE;
+    RtlInitAnsiString(&ansi_str, str);
+    return !RtlAnsiStringToUnicodeString(&guid_str, &ansi_str, FALSE) &&
+           !RtlGUIDFromString(&guid_str, guid);
 }
 
 /*************************************************************************
@@ -1921,7 +2110,8 @@ BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
 BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 {
     UNICODE_STRING guid_str;
-
+    if (!str || *str != L'{')
+        return FALSE;
     RtlInitUnicodeString(&guid_str, str);
     return !RtlGUIDFromString(&guid_str, guid);
 }
@@ -1929,19 +2119,63 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 /*************************************************************************
  *      PathIsTemporaryA    [SHELL32.713]
  */
+#ifdef __REACTOS__
+/** @see https://undoc.airesoft.co.uk/shell32.dll/PathIsTemporaryA.php */
+BOOL WINAPI PathIsTemporaryA(_In_ LPCSTR Str)
+#else
 BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+#endif
 {
+#ifdef __REACTOS__
+    WCHAR szWide[MAX_PATH];
+
+    TRACE("(%s)\n", debugstr_a(Str));
+
+    SHAnsiToUnicode(Str, szWide, _countof(szWide));
+    return PathIsTemporaryW(szWide);
+#else
     FIXME("(%s)stub\n", debugstr_a(Str));
     return FALSE;
+#endif
 }
 
 /*************************************************************************
  *      PathIsTemporaryW    [SHELL32.714]
  */
+#ifdef __REACTOS__
+/** @see https://undoc.airesoft.co.uk/shell32.dll/PathIsTemporaryW.php */
+BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str)
+#else
 BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
+#endif
 {
+#ifdef __REACTOS__
+    WCHAR szLongPath[MAX_PATH], szTempPath[MAX_PATH];
+    DWORD attrs;
+    LPCWSTR pszTarget = Str;
+
+    TRACE("(%s)\n", debugstr_w(Str));
+
+    attrs = GetFileAttributesW(Str);
+    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_TEMPORARY))
+        return TRUE;
+
+    if (!GetTempPathW(_countof(szTempPath), szTempPath) ||
+        !GetLongPathNameW(szTempPath, szTempPath, _countof(szTempPath)))
+    {
+        return FALSE;
+    }
+
+    if (GetLongPathNameW(Str, szLongPath, _countof(szLongPath)))
+        pszTarget = szLongPath;
+
+    return (PathIsEqualOrSubFolder(szTempPath, pszTarget) ||
+            PathIsEqualOrSubFolder(UlongToPtr(CSIDL_INTERNET_CACHE), pszTarget) ||
+            PathIsEqualOrSubFolder(UlongToPtr(CSIDL_CDBURN_AREA), pszTarget));
+#else
     FIXME("(%s)stub\n", debugstr_w(Str));
     return FALSE;
+#endif
 }
 
 typedef struct _PSXA
@@ -2021,7 +2255,6 @@ HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_if
  */
 HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, LPDATAOBJECT pDataObj)
 {
-    static const WCHAR szPropSheetSubKey[] = {'s','h','e','l','l','e','x','\\','P','r','o','p','e','r','t','y','S','h','e','e','t','H','a','n','d','l','e','r','s',0};
     WCHAR szHandler[64];
     DWORD dwHandlerLen;
     WCHAR szClsidHandler[39];
@@ -2044,7 +2277,7 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
     if (lRet != ERROR_SUCCESS)
         return NULL;
 
-    lRet = RegOpenKeyExW(hkBase, szPropSheetSubKey, 0, KEY_ENUMERATE_SUB_KEYS, &hkPropSheetHandlers);
+    lRet = RegOpenKeyExW(hkBase, L"shellex\\PropertySheetHandlers", 0, KEY_ENUMERATE_SUB_KEYS, &hkPropSheetHandlers);
     RegCloseKey(hkBase);
     if (lRet == ERROR_SUCCESS)
     {
@@ -2286,6 +2519,22 @@ INT WINAPI SHHandleUpdateImage(PCIDLIST_ABSOLUTE pidlExtra)
 
 BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWSTR szPage)
 {
+    LPITEMIDLIST pidl = NULL;
+    switch (dwType)
+    {
+        case SHOP_FILEPATH:
+            pidl = ILCreateFromPathW(szObject);
+            break;
+    }
+    if (pidl)
+    {
+        SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_INVOKEIDLIST, hwnd, L"properties",
+                                  NULL, szPage, NULL, SW_SHOWNORMAL, NULL, pidl };
+        BOOL result = ShellExecuteExW(&sei);
+        ILFree(pidl);
+        return result;
+    }
+
     FIXME("%p, 0x%08x, %s, %s - stub\n", hwnd, dwType, debugstr_w(szObject), debugstr_w(szPage));
 
     return TRUE;
@@ -2316,8 +2565,6 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
     const WCHAR *basename;
     WCHAR *dst_basename;
     int i=2;
-    static const WCHAR lnkformat[] = {'%','s','.','l','n','k',0};
-    static const WCHAR lnkformatnum[] = {'%','s',' ','(','%','d',')','.','l','n','k',0};
 
     TRACE("(%s, %s, %p, %p, 0x%08x)\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
           pszName, pfMustCopy, uFlags);
@@ -2349,11 +2596,11 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
     dst_basename = pszName + strlenW(pszName);
 
-    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, lnkformat, basename);
+    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s.lnk", basename);
 
     while (GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
     {
-        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, lnkformatnum, basename, i);
+        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s (%d).lnk", basename, i);
         i++;
     }
 
@@ -2362,9 +2609,15 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
 HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD dwType)
 {
+#ifdef __REACTOS__
+    if (SHELL_OsIsUnicode())
+        return SHStartNetConnectionDialogW(hwnd, (LPCWSTR)pszRemoteName, dwType);
+    return SHStartNetConnectionDialogA(hwnd, pszRemoteName, dwType);
+#else
     FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_a(pszRemoteName), dwType);
 
     return S_OK;
+#endif
 }
 /*************************************************************************
  *              SHSetLocalizedName (SHELL32.@)
@@ -2829,3 +3082,26 @@ SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
 
     return hr;
 }
+
+#ifdef __REACTOS__
+/*************************************************************************
+ *  SHLimitInputCombo [SHELL32.748]
+ *
+ * Sets limits on valid characters for a combobox control.
+ * This function works like SHLimitInputEdit, but the target is a combobox
+ * instead of a textbox.
+ */
+HRESULT WINAPI
+SHLimitInputCombo(HWND hWnd, IShellFolder *psf)
+{
+    HWND hwndEdit;
+
+    TRACE("%p %p\n", hWnd, psf);
+
+    hwndEdit = GetTopWindow(hWnd);
+    if (!hwndEdit)
+        return E_FAIL;
+
+    return SHLimitInputEdit(hwndEdit, psf);
+}
+#endif

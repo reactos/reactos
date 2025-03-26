@@ -2,8 +2,8 @@
  * PROJECT:         ReactOS VGA display driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/drivers/displays/vga/main/enable.c
- * PURPOSE:         
- * PROGRAMMERS:     
+ * PURPOSE:
+ * PROGRAMMERS:
  */
 
 #include <vgaddi.h>
@@ -281,7 +281,6 @@ DrvEnablePDEV(IN DEVMODEW *DM,
     return (DHPDEV) PDev;
 }
 
-
 //    DrvCompletePDEV
 //  DESCRIPTION
 //    Called after initialization of PDEV is complete.  Supplies
@@ -293,7 +292,6 @@ DrvCompletePDEV(IN DHPDEV PDev,
 {
     ((PPDEV) PDev)->GDIDevHandle = Dev; // Handle to the DC
 }
-
 
 BOOL APIENTRY
 DrvAssertMode(IN DHPDEV DPev,
@@ -324,7 +322,7 @@ DrvAssertMode(IN DHPDEV DPev,
     else
     {
         /* Go back to last known mode */
-        DPRINT( "ppdev: %x, KMDriver: %x", ppdev, ppdev->KMDriver );
+        DPRINT("ppdev: %p, KMDriver: %p\n", ppdev, ppdev->KMDriver);
         if (EngDeviceIoControl(ppdev->KMDriver, IOCTL_VIDEO_RESET_DEVICE, NULL, 0, NULL, 0, &returnedDataLength))
         {
             /* Failed to go back to mode */
@@ -334,7 +332,6 @@ DrvAssertMode(IN DHPDEV DPev,
     }
     return TRUE;
 }
-
 
 VOID APIENTRY
 DrvDisablePDEV(IN DHPDEV PDev)
@@ -351,7 +348,6 @@ DrvDisablePDEV(IN DHPDEV PDev)
     DPRINT("Freeing PDEV\n");
     EngFreeMem(PDev);
 }
-
 
 VOID APIENTRY
 DrvDisableSurface(IN DHPDEV PDev)
@@ -375,7 +371,7 @@ DrvDisableSurface(IN DHPDEV PDev)
     /* free any pending saved screen bit blocks */
 #if 0
     pSSB = pdsurf->ssbList;
-    while (pSSB != (PSAVED_SCREEN_BITS) NULL)
+    while (pSSB != NULL)
     {
         /* Point to the next saved screen bits block */
         pSSBNext = (PSAVED_SCREEN_BITS) pSSB->pvNextSSB;
@@ -388,7 +384,6 @@ DrvDisableSurface(IN DHPDEV PDev)
     EngDeleteSurface((HSURF) ppdev->SurfHandle);
     /* EngFreeMem(pdsurf); */ /* free the surface */
 }
-
 
 static VOID
 InitSavedBits(IN PPDEV ppdev)
@@ -429,7 +424,6 @@ InitSavedBits(IN PPDEV ppdev)
     ppdev->BitsSaved = FALSE;
 }
 
-
 HSURF APIENTRY
 DrvEnableSurface(IN DHPDEV PDev)
 {
@@ -450,7 +444,7 @@ DrvEnableSurface(IN DHPDEV PDev)
 
     /* dhsurf is of type DEVSURF, which is the drivers specialized surface type */
     dhsurf = (DHSURF)EngAllocMem(0, sizeof(DEVSURF), ALLOC_TAG);
-    if (dhsurf == (DHSURF) 0)
+    if (dhsurf == NULL)
         goto error_done;
 
     pdsurf = (PDEVSURF) dhsurf;
@@ -485,7 +479,7 @@ DrvEnableSurface(IN DHPDEV PDev)
     } BANKING CODE UNIMPLEMENTED */
 
     if ((hsurf = EngCreateDeviceSurface(dhsurf, ppdev->sizeSurf, BMF_4BPP)) ==
-        (HSURF)0)
+        NULL)
     {
         /* Call to EngCreateDeviceSurface failed */
         DPRINT("EngCreateDeviceSurface call failed\n");
@@ -513,9 +507,8 @@ error_clean:
     EngFreeMem(dhsurf);
 
 error_done:
-    return (HSURF)0;
+    return NULL;
 }
-
 
 ULONG APIENTRY
 DrvGetModes(IN HANDLE Driver,

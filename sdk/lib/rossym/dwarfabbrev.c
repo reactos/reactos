@@ -2,11 +2,10 @@
  * Dwarf abbreviation parsing code.
  *
  * The convention here is that calling dwarfgetabbrevs relinquishes
- * access to any abbrevs returned previously.  Will have to add 
+ * access to any abbrevs returned previously.  Will have to add
  * explicit reference counting if this turns out not to be acceptable.
  */
 
-#define NTOSAPI
 #include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"

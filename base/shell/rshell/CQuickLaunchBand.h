@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CQuickLaunchBand.h
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
- * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ * COPYRIGHT:   Copyright Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 #pragma once
 
@@ -18,19 +17,20 @@ class CQuickLaunchBand :
     public CComCoClass<CQuickLaunchBand, &CLSID_QuickLaunchBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
-    public IDeskBand,    
+    public IDeskBand,
     public IPersistStream,
     public IWinEventHandler,
     public IOleCommandTarget,
     public IContextMenu
 {
     HWND m_hWndBro;
-    CComPtr<IUnknown> m_punkISFB;   
+    CComPtr<IUnknown> m_punkISFB;
 
-    public:
-
+public:
     CQuickLaunchBand();
     virtual ~CQuickLaunchBand();
+
+    STDMETHOD(ContainsWindow)(IN HWND hWnd);
 
 // ATL construct
 
@@ -38,121 +38,88 @@ class CQuickLaunchBand :
 
 // IObjectWithSite
 
-    virtual STDMETHODIMP GetSite(
+    STDMETHOD(GetSite)(
         IN  REFIID riid,
-        OUT void   **ppvSite
-    );
+        OUT void   **ppvSite) override;
 
-    virtual STDMETHODIMP SetSite(
-        IN IUnknown *pUnkSite
-    );
- 
+    STDMETHOD(SetSite)(IN IUnknown *pUnkSite) override;
+
 // IDeskBand
 
-    virtual STDMETHODIMP GetWindow(
-        OUT HWND *phwnd
-    );    
+    STDMETHOD(GetWindow)(OUT HWND *phwnd) override;
 
-    virtual STDMETHODIMP ContextSensitiveHelp(
-        IN BOOL fEnterMode
-    );    
+    STDMETHOD(ContextSensitiveHelp)(IN BOOL fEnterMode) override;
 
-    virtual STDMETHODIMP ShowDW(
-        IN BOOL bShow
-    );    
+    STDMETHOD(ShowDW)(IN BOOL bShow) override;
 
-    virtual STDMETHODIMP CloseDW(
-        IN DWORD dwReserved
-    );    
+    STDMETHOD(CloseDW)(IN DWORD dwReserved) override;
 
-    virtual STDMETHODIMP ResizeBorderDW(
+    STDMETHOD(ResizeBorderDW)(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
-        BOOL fReserved
-    );    
+        BOOL fReserved) override;
 
-    virtual STDMETHODIMP GetBandInfo(
+    STDMETHOD(GetBandInfo)(
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
-        IN OUT DESKBANDINFO *pdbi
-    );   
+        IN OUT DESKBANDINFO *pdbi) override;
 
 // IPersistStream
 
-    virtual STDMETHODIMP GetClassID(
-        OUT CLSID *pClassID
-    );
+    STDMETHOD(GetClassID)(OUT CLSID *pClassID) override;
 
-    virtual STDMETHODIMP GetSizeMax(
-        OUT ULARGE_INTEGER *pcbSize
-    );
+    STDMETHOD(GetSizeMax)(OUT ULARGE_INTEGER *pcbSize) override;
 
-    virtual STDMETHODIMP IsDirty();
+    STDMETHOD(IsDirty)() override;
 
-    virtual STDMETHODIMP Load(
-        IN IStream *pStm
-    );
+    STDMETHOD(Load)(IN IStream *pStm) override;
 
-    virtual STDMETHODIMP Save(
+    STDMETHOD(Save)(
         IN IStream *pStm,
-        IN BOOL    fClearDirty
-    );
+        IN BOOL    fClearDirty) override;
 
-// IWinEventHandler   
+// IWinEventHandler
 
-    virtual STDMETHODIMP ContainsWindow(
-        IN HWND hWnd
-    );
+    STDMETHOD(OnWinEvent)(
+        HWND hWnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam,
+        LRESULT *theResult) override;
 
-    virtual STDMETHODIMP OnWinEvent(
-        HWND hWnd, 
-        UINT uMsg, 
-        WPARAM wParam, 
-        LPARAM lParam, 
-        LRESULT *theResult
-    );
-
-    virtual STDMETHODIMP IsWindowOwner(
-        HWND hWnd
-    );
+    STDMETHOD(IsWindowOwner)(HWND hWnd) override;
 
 // IOleCommandTarget
 
-    virtual STDMETHODIMP Exec(
+    STDMETHOD(Exec)(
         IN const GUID *pguidCmdGroup,
         IN DWORD nCmdID,
         IN DWORD nCmdexecopt,
         IN VARIANT *pvaIn,
-        IN OUT VARIANT *pvaOut
-    );
+        IN OUT VARIANT *pvaOut) override;
 
-    virtual STDMETHODIMP QueryStatus(
+    STDMETHOD(QueryStatus)(
         IN const GUID *pguidCmdGroup,
         IN ULONG cCmds,
         IN OUT OLECMD prgCmds[],
-        IN OUT OLECMDTEXT *pCmdText
-    );
+        IN OUT OLECMDTEXT *pCmdText) override;
 
 // IContextMenu
-    virtual STDMETHODIMP GetCommandString(
+    STDMETHOD(GetCommandString)(
         UINT_PTR idCmd,
         UINT uFlags,
         UINT *pwReserved,
         LPSTR pszName,
-        UINT cchMax
-    );
+        UINT cchMax) override;
 
-    virtual STDMETHODIMP InvokeCommand(
-        LPCMINVOKECOMMANDINFO pici
-    );
+    STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO pici) override;
 
-    virtual STDMETHODIMP QueryContextMenu(
+    STDMETHOD(QueryContextMenu)(
         HMENU hmenu,
         UINT indexMenu,
         UINT idCmdFirst,
         UINT idCmdLast,
-        UINT uFlags
-    );
+        UINT uFlags) override;
 
 //*****************************************************************************************************
 
@@ -169,5 +136,5 @@ class CQuickLaunchBand :
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    END_COM_MAP()    
+    END_COM_MAP()
 };

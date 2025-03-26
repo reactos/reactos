@@ -25,6 +25,7 @@ ATOM AtomQOS;           // Window DDE Quality of Service atom.
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
 ATOM gaGuiConsoleWndClass;
+ATOM AtomImeLevel;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -55,6 +56,7 @@ InitUserAtoms(VOID)
 
     AtomDDETrack = IntAddGlobalAtom(L"SysDT", TRUE);
     AtomQOS      = IntAddGlobalAtom(L"SysQOS", TRUE);
+    AtomImeLevel = IntAddGlobalAtom(L"SysIMEL", TRUE);
 
     /*
      * FIXME: AddPropW uses the global kernel atom table, thus leading to conflicts if we use
@@ -78,8 +80,6 @@ InitUserImpl(VOID)
 {
     NTSTATUS Status;
     HKEY hKey;
-
-    ExInitializeResourceLite(&UserLock);
 
     if (!UserCreateHandleTable())
     {
@@ -110,10 +110,6 @@ InitUserImpl(VOID)
 
     return STATUS_SUCCESS;
 }
-
-NTSTATUS
-NTAPI
-InitVideo(VOID);
 
 NTSTATUS
 NTAPI
@@ -199,15 +195,19 @@ NtUserInitialize(
     /* Save the EPROCESS of CSRSS */
     InitCsrProcess(/*PsGetCurrentProcess()*/);
 
-// Initialize Power Request List (use hPowerRequestEvent).
+    /* Initialize Power Request List */
+    Status = IntInitWin32PowerManagement(hPowerRequestEvent);
+    if (!NT_SUCCESS(Status))
+    {
+        UserLeave();
+        return Status;
+    }
+
 // Initialize Media Change (use hMediaRequestEvent).
 
-// InitializeGreCSRSS();
-// {
-//    Startup DxGraphics.
-//    calls ** UserGetLanguageID() and sets it **.
-//    Enables Fonts drivers, Initialize Font table & Stock Fonts.
-// }
+    /* Initialize various GDI stuff (DirectX, fonts, language ID etc.) */
+    if (!InitializeGreCSRSS())
+        return STATUS_UNSUCCESSFUL;
 
     /* Initialize USER */
     Status = UserInitialize();
@@ -238,12 +238,14 @@ VOID FASTCALL CleanupUserImpl(VOID)
     ExDeleteResourceLite(&UserLock);
 }
 
+// Win: EnterSharedCrit
 VOID FASTCALL UserEnterShared(VOID)
 {
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&UserLock, TRUE);
 }
 
+// Win: EnterCrit
 VOID FASTCALL UserEnterExclusive(VOID)
 {
     ASSERT_NOGDILOCKS();
@@ -252,6 +254,7 @@ VOID FASTCALL UserEnterExclusive(VOID)
     gptiCurrent = PsGetCurrentThreadWin32Thread();
 }
 
+// Win: LeaveCrit
 VOID FASTCALL UserLeave(VOID)
 {
     ASSERT_NOGDILOCKS();

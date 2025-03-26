@@ -7,6 +7,8 @@
  */
 
 #include <win32k.h>
+#include <unaligned.h>
+
 DBG_DEFAULT_CHANNEL(UserClass);
 
 static PWSTR ControlsList[] =
@@ -34,7 +36,7 @@ static NTSTATUS IntDeregisterClassAtom(IN RTL_ATOM Atom);
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
 {
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
+  { ((PWSTR)WC_DESKTOP),
     CS_GLOBALCLASS|CS_DBLCLKS,
     NULL, // Use User32 procs
     sizeof(ULONG)*2,
@@ -43,19 +45,19 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     FNID_DESKTOP,
     ICLS_DESKTOP
   },
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8003))),
+  { ((PWSTR)WC_SWITCH),
     CS_VREDRAW|CS_HREDRAW|CS_SAVEBITS,
     NULL, // Use User32 procs
-    sizeof(LONG),
+    sizeof(LONG_PTR), // See user32_apitest GetClassInfo, 0: Pointer to ALTTABINFO
     (HICON)OCR_NORMAL,
     NULL,
     FNID_SWITCH,
     ICLS_SWITCH
   },
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8000))),
+  { ((PWSTR)WC_MENU),
     CS_DBLCLKS|CS_SAVEBITS|CS_DROPSHADOW,
     NULL, // Use User32 procs
-    sizeof(LONG),
+    16, // See user32_apitest GetClassInfo, PopupMenuWndProcW
     (HICON)OCR_NORMAL,
     (HBRUSH)(COLOR_MENU + 1),
     FNID_MENU,
@@ -81,7 +83,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     ICLS_TOOLTIPS
   },
 #endif
-  { ((PWSTR)((ULONG_PTR)(WORD)(0x8004))), // IconTitle is here for now...
+  { ((PWSTR)WC_ICONTITLE), // IconTitle is here for now...
     0,
     NULL, // Use User32 procs
     0,
@@ -152,32 +154,35 @@ ProbeAndCaptureUnicodeStringOrAtom(
     __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING ustrCopy;
 
     /* Default to NULL */
-    pustrOut->Buffer = NULL;
+    RtlInitEmptyUnicodeString(pustrOut, NULL, 0);
 
     _SEH2_TRY
     {
         ProbeForRead(pustrUnsafe, sizeof(UNICODE_STRING), 1);
 
+        ustrCopy = *pustrUnsafe;
+
         /* Validate the string */
-        if ((pustrUnsafe->Length & 1) || (pustrUnsafe->Buffer == NULL))
+        if ((ustrCopy.Length & 1) || (ustrCopy.Buffer == NULL))
         {
             /* This is not legal */
             _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
         }
 
         /* Check if this is an atom */
-        if (IS_ATOM(pustrUnsafe->Buffer))
+        if (IS_ATOM(ustrCopy.Buffer))
         {
             /* Copy the atom, length is 0 */
             pustrOut->MaximumLength = pustrOut->Length = 0;
-            pustrOut->Buffer = pustrUnsafe->Buffer;
+            pustrOut->Buffer = ustrCopy.Buffer;
         }
         else
         {
             /* Get the length, maximum length includes zero termination */
-            pustrOut->Length = pustrUnsafe->Length;
+            pustrOut->Length = ustrCopy.Length;
             pustrOut->MaximumLength = pustrOut->Length + sizeof(WCHAR);
 
             /* Allocate a buffer */
@@ -190,8 +195,8 @@ ProbeAndCaptureUnicodeStringOrAtom(
             }
 
             /* Copy the string and zero terminate it */
-            ProbeForRead(pustrUnsafe->Buffer, pustrOut->Length, 1);
-            RtlCopyMemory(pustrOut->Buffer, pustrUnsafe->Buffer, pustrOut->Length);
+            ProbeForRead(ustrCopy.Buffer, pustrOut->Length, 1);
+            RtlCopyMemory(pustrOut->Buffer, ustrCopy.Buffer, pustrOut->Length);
             pustrOut->Buffer[pustrOut->Length / sizeof(WCHAR)] = L'\0';
         }
     }
@@ -1352,9 +1357,17 @@ IntGetAtomFromStringOrAtom(
     }
     else
     {
-        ASSERT(IS_ATOM(ClassName->Buffer));
-        *Atom = (RTL_ATOM)((ULONG_PTR)ClassName->Buffer);
-        Ret = TRUE;
+        if (ClassName->Buffer)
+        {
+            *Atom = (RTL_ATOM)((ULONG_PTR)ClassName->Buffer);
+            Ret = TRUE;
+        }
+        else
+        {
+            *Atom = 0;
+            EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
+            Ret = FALSE;
+        }
     }
 
     return Ret;
@@ -1854,11 +1867,37 @@ IntSetClassMenuName(IN PCLS Class,
     return Ret;
 }
 
+static inline
+ULONG_PTR
+IntGetSetClassLongPtr(PCLS Class, ULONG Index, ULONG_PTR NewValue, ULONG Size)
+{
+    PVOID Address = (PUCHAR)(&Class[1]) + Index;
+    ULONG_PTR OldValue;
+
+#ifdef _WIN64
+    if (Size == sizeof(LONG))
+    {
+        /* Values might be unaligned */
+        OldValue = ReadUnalignedU32(Address);
+        WriteUnalignedU32(Address, NewValue);
+    }
+    else
+#endif
+    {
+        /* Values might be unaligned */
+        OldValue = ReadUnalignedUlongPtr(Address);
+        WriteUnalignedUlongPtr(Address, NewValue);
+    }
+
+    return OldValue;
+}
+
 ULONG_PTR
 UserSetClassLongPtr(IN PCLS Class,
                     IN INT Index,
                     IN ULONG_PTR NewLong,
-                    IN BOOL Ansi)
+                    IN BOOL Ansi,
+                    IN ULONG Size)
 {
     ULONG_PTR Ret = 0;
 
@@ -1869,30 +1908,22 @@ UserSetClassLongPtr(IN PCLS Class,
 
     if (Index >= 0)
     {
-        PULONG_PTR Data;
-
         TRACE("SetClassLong(%d, %x)\n", Index, NewLong);
 
-        if (((ULONG)Index + sizeof(ULONG_PTR)) < (ULONG)Index ||
-            ((ULONG)Index + sizeof(ULONG_PTR)) > (ULONG)Class->cbclsExtra)
+        if (((ULONG)Index + Size) < (ULONG)Index ||
+            ((ULONG)Index + Size) > (ULONG)Class->cbclsExtra)
         {
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
         }
 
-        Data = (PULONG_PTR)((ULONG_PTR)(Class + 1) + Index);
-
-        /* FIXME: Data might be a unaligned pointer! Might be a problem on
-                  certain architectures, maybe using RtlCopyMemory is a
-                  better choice for those architectures! */
-        Ret = *Data;
-        *Data = NewLong;
+        Ret = IntGetSetClassLongPtr(Class, Index, NewLong, Size);
 
         /* Update the clones */
         Class = Class->pclsClone;
         while (Class != NULL)
         {
-            *(PULONG_PTR)((ULONG_PTR)(Class + 1) + Index) = NewLong;
+            IntGetSetClassLongPtr(Class, Index, NewLong, Size);
             Class = Class->pclsNext;
         }
 
@@ -2572,10 +2603,11 @@ InvalidParameter:
 }
 
 ULONG_PTR APIENTRY
-NtUserSetClassLong(HWND hWnd,
+IntNtUserSetClassLongPtr(HWND hWnd,
                    INT Offset,
                    ULONG_PTR dwNewLong,
-                   BOOL Ansi)
+                   BOOL Ansi,
+                   ULONG Size)
 {
     PPROCESSINFO pi;
     PWND Window;
@@ -2644,7 +2676,8 @@ InvalidParameter:
             Ret = UserSetClassLongPtr(Window->pcls,
                                       Offset,
                                       dwNewLong,
-                                      Ansi);
+                                      Ansi,
+                                      Size);
             switch(Offset)
             {
                case GCLP_HICONSM:
@@ -2667,6 +2700,32 @@ Cleanup:
 
     return Ret;
 }
+
+ULONG_PTR
+APIENTRY
+NtUserSetClassLong(
+    _In_ HWND hWnd,
+    _In_ INT Offset,
+    _In_ ULONG dwNewLong,
+    _In_ BOOL Ansi)
+{
+    return IntNtUserSetClassLongPtr(hWnd, Offset, dwNewLong, Ansi, sizeof(LONG));
+}
+
+#ifdef _WIN64
+
+ULONG_PTR
+APIENTRY
+NtUserSetClassLongPtr(
+    _In_ HWND hWnd,
+    _In_ INT Offset,
+    _In_ ULONG_PTR dwNewLong,
+    _In_ BOOL Ansi)
+{
+    return IntNtUserSetClassLongPtr(hWnd, Offset, dwNewLong, Ansi, sizeof(LONG_PTR));
+}
+
+#endif // _WIN64
 
 WORD
 APIENTRY

@@ -33,6 +33,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O tartomány"
+    IDS_COPY "&Másolás"
 END
 
 STRINGTABLE
@@ -74,7 +75,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Az eszközhöz nincsenek illesztőprogramok telepítve."
     IDS_DEV_HARDWARE_DISABLED "Az eszköz le van tiltva, mivel a BIOS-a nem adott neki erőforrást."
     IDS_DEV_CANT_SHARE_IRQ "Ez az eszköz egy olyan megszakítást (IRQ) igényel, amit egy másik eszköz használ és nem osztható meg.\nMódosítsa az ütköző beállításokat vagy távolítsa el az ütközést okozó valós módú illesztőprogramot."
-    IDS_DEV_FAILED_ADD "Ez az eszköz nem tud megfelelően működni, mivel a(z) %1 sem működik megfelelően."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "A ReactOS nem tudja feltelepíteni az eszköz illesztőprogramjait, mivel a telepítő fájlokat tartalmazó meghajtó vagy hálózati hely nem elérhető."
     IDS_DEV_TRANSLATION_FAILED "Ez az eszköz nem válaszol a illesztőprogramjának."
     IDS_DEV_NO_SOFTCONFIG "A ReactOS nem tudja meghatározni a beállításokat ehhez az eszközhöz. Olvassa át a hozzá kapott dokumentációt és az erőforrások fülön végezze el a beállításokat."
@@ -227,7 +228,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Erőforrás beállítások:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -285,14 +286,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Eszközkezelő"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Az eszköz letiltás után nem fog működni.\r\nBiztosan letiltja?"
-  IDS_CONFIRM_UNINSTALL     "Figyelem: arra készül hogy eltávolítsa ezt az eszközt a rendszerből.\r\nFolytatni szeretné?"
+  IDS_CONFIRM_DISABLE       "Az eszköz letiltás után nem fog működni.\nBiztosan letiltja?"
+  IDS_CONFIRM_UNINSTALL     "Figyelem: arra készül hogy eltávolítsa ezt az eszközt a rendszerből.\nFolytatni szeretné?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Illesztőprogram frissítése..."
   IDS_MENU_ENABLE           "Engedélyezés"
@@ -303,7 +305,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Tulajdonságok"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Tulajdonságok"
   IDS_TOOLTIP_SCAN          "Hardverváltozások keresése"
@@ -314,7 +316,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Az aktuális kijelölés tulajdonságainak megnyitása."

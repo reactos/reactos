@@ -366,6 +366,7 @@ WdmAudDeviceControl(
         case IOCTL_RESET_STREAM:
             return WdmAudResetStream(DeviceObject, Irp, DeviceInfo);
         case IOCTL_GETPOS:
+            return WdmAudGetPosition(DeviceObject, Irp, DeviceInfo);
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:

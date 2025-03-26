@@ -2,29 +2,76 @@
  * Regedit child window
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright (C) 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
+#include <shldisp.h>
+#include <shlguid.h>
 
 ChildWnd* g_pChildWnd;
-static int last_split;
-HBITMAP SizingPattern = 0;
-HBRUSH  SizingBrush = 0;
+static int last_split = -1;
+HBITMAP SizingPattern;
+HBRUSH  SizingBrush;
 WCHAR Suggestions[256];
+
+static HRESULT WINAPI DummyEnumStringsQI(LPVOID This, REFIID riid, void**ppv)
+{
+    if (ppv)
+        *ppv = NULL;
+    if (IsEqualIID(riid, &IID_IEnumString) || IsEqualIID(riid, &IID_IUnknown))
+    {
+        *ppv = This;
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI DummyEnumStringsAddRefRelease(LPVOID This)
+{
+    return 1;
+}
+
+static HRESULT WINAPI DummyEnumStringsNext(LPVOID This, ULONG celt, LPWSTR *parr, ULONG *pceltFetched)
+{
+    if (pceltFetched)
+        *pceltFetched = 0;
+    return S_FALSE;
+}
+
+static HRESULT WINAPI DummyEnumStringsSkip(LPVOID This, ULONG celt)
+{
+    return S_OK;
+}
+
+static HRESULT WINAPI DummyEnumStringsReset(LPVOID This)
+{
+    return S_OK;
+}
+
+static HRESULT WINAPI DummyEnumStringsClone(LPVOID This, void**ppv)
+{
+    return E_NOTIMPL;
+}
+
+struct DummyEnumStringsVtbl {
+    LPVOID QI, AddRef, Release, Next, Skip, Reset, Clone;
+} g_DummyEnumStringsVtbl = {
+    &DummyEnumStringsQI,
+    &DummyEnumStringsAddRefRelease,
+    &DummyEnumStringsAddRefRelease,
+    &DummyEnumStringsNext,
+    &DummyEnumStringsSkip,
+    &DummyEnumStringsReset,
+    &DummyEnumStringsClone
+};
+
+struct DummyEnumStrings {
+    struct DummyEnumStringsVtbl *lpVtbl;
+} g_DummyEnumStrings = {
+    &g_DummyEnumStringsVtbl
+};
 
 extern LPCWSTR get_root_key_name(HKEY hRootKey)
 {
@@ -38,6 +85,13 @@ extern LPCWSTR get_root_key_name(HKEY hRootKey)
     return L"UNKNOWN HKEY, PLEASE REPORT";
 }
 
+static INT ClampSplitBarX(HWND hWnd, INT x)
+{
+    RECT rc;
+    GetClientRect(hWnd, &rc);
+    return min(max(x, SPLIT_MIN), rc.right - SPLIT_MIN);
+}
+
 extern void ResizeWnd(int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(4);
@@ -45,15 +99,22 @@ extern void ResizeWnd(int cx, int cy)
     const int nButtonWidth = 44;
     const int nButtonHeight = 22;
     int cyEdge = GetSystemMetrics(SM_CYEDGE);
-    const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE;
-    SetRect(&rt, 0, 0, cx, cy);
+    const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS;
+
     cy = 0;
-    if (hStatusBar != NULL)
+    if (IsWindowVisible(hStatusBar))
     {
         GetWindowRect(hStatusBar, &rs);
         cy = rs.bottom - rs.top;
     }
+
     GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
+
+    GetClientRect(g_pChildWnd->hWnd, &rt);
+    RedrawWindow(g_pChildWnd->hWnd, &rt, NULL, RDW_INVALIDATE | RDW_NOCHILDREN);
+
+    g_pChildWnd->nSplitPos = ClampSplitBarX(g_pChildWnd->hWnd, g_pChildWnd->nSplitPos);
+
     cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH / 2;
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, NULL,
@@ -91,7 +152,7 @@ static void draw_splitbar(HWND hWnd, int x)
 {
     RECT rt;
     HGDIOBJ OldObj;
-    HDC hdc = GetDC(hWnd);
+    HDC hdc = GetDCEx(hWnd, NULL, DCX_CACHE);
 
     if(!SizingPattern)
     {
@@ -102,7 +163,10 @@ static void draw_splitbar(HWND hWnd, int x)
     {
         SizingBrush = CreatePatternBrush(SizingPattern);
     }
-    GetClientRect(hWnd, &rt);
+
+    GetWindowRect(g_pChildWnd->hTreeWnd, &rt);
+    MapWindowPoints(NULL, hWnd, (POINT *)&rt, sizeof(rt) / sizeof(POINT));
+
     rt.left = x - SPLIT_WIDTH/2;
     rt.right = x + SPLIT_WIDTH/2+1;
     OldObj = SelectObject(hdc, SizingBrush);
@@ -111,11 +175,8 @@ static void draw_splitbar(HWND hWnd, int x)
     ReleaseDC(hWnd, hdc);
 }
 
-/*******************************************************************************
- * finish_splitbar [internal]
- *
- * make the splitbar invisible and resize the windows
- * (helper for ChildWndProc)
+/**
+ * make the splitbar invisible and resize the windows (helper for ChildWndProc)
  */
 static void finish_splitbar(HWND hWnd, int x)
 {
@@ -126,6 +187,7 @@ static void finish_splitbar(HWND hWnd, int x)
     GetClientRect(hWnd, &rt);
     g_pChildWnd->nSplitPos = x;
     ResizeWnd(rt.right, rt.bottom);
+    InvalidateRect(hWnd, &rt, FALSE); // HACK: See CORE-19576
     ReleaseCapture();
 }
 
@@ -144,6 +206,7 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
     size_t i;
     HKEY hOtherKey, hSubKey;
     BOOL bFound;
+    const REGSAM regsam = KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE;
 
     memset(pszSuggestions, 0, iSuggestionsLength * sizeof(*pszSuggestions));
     iSuggestionsLength--;
@@ -157,13 +220,13 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
 
             /* Check default key */
             if (QueryStringValue(hRootKey, pszKeyPath, NULL,
-                                 szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
+                                 szBuffer, ARRAY_SIZE(szBuffer)) == ERROR_SUCCESS)
             {
                 /* Sanity check this key; it cannot be empty, nor can it be a
                  * loop back */
                 if ((szBuffer[0] != L'\0') && _wcsicmp(szBuffer, pszKeyPath))
                 {
-                    if (RegOpenKeyW(hRootKey, szBuffer, &hOtherKey) == ERROR_SUCCESS)
+                    if (RegOpenKeyExW(hRootKey, szBuffer, 0, regsam, &hOtherKey) == ERROR_SUCCESS)
                     {
                         lstrcpynW(pszSuggestions, L"HKCR\\", (int) iSuggestionsLength);
                         i = wcslen(pszSuggestions);
@@ -177,7 +240,7 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
                         RegCloseKey(hOtherKey);
 
                         bFound = TRUE;
-                        wcscpy(szLastFound, szBuffer);
+                        StringCbCopyW(szLastFound, sizeof(szLastFound), szBuffer);
                         pszKeyPath = szLastFound;
                     }
                 }
@@ -186,10 +249,10 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
         while(bFound && (iSuggestionsLength > 0));
 
         /* Check CLSID key */
-        if (RegOpenKeyW(hRootKey, pszKeyPath, &hSubKey) == ERROR_SUCCESS)
+        if (RegOpenKeyExW(hRootKey, pszKeyPath, 0, regsam, &hSubKey) == ERROR_SUCCESS)
         {
             if (QueryStringValue(hSubKey, L"CLSID", NULL, szBuffer,
-                                 COUNT_OF(szBuffer)) == ERROR_SUCCESS)
+                                 ARRAY_SIZE(szBuffer)) == ERROR_SUCCESS)
             {
                 lstrcpynW(pszSuggestions, L"HKCR\\CLSID\\", (int)iSuggestionsLength);
                 i = wcslen(pszSuggestions);
@@ -204,8 +267,20 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
             RegCloseKey(hSubKey);
         }
     }
+    else if ((hRootKey == HKEY_CURRENT_USER || hRootKey == HKEY_LOCAL_MACHINE) && *pszKeyPath)
+    {
+        LPCWSTR rootstr = hRootKey == HKEY_CURRENT_USER ? L"HKLM" : L"HKCU";
+        hOtherKey = hRootKey == HKEY_CURRENT_USER ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+        if (RegOpenKeyExW(hOtherKey, pszKeyPath, 0, regsam, &hSubKey) == ERROR_SUCCESS)
+        {
+            int cch;
+            RegCloseKey(hSubKey);
+            cch = _snwprintf(pszSuggestions, iSuggestionsLength, L"%s\\%s", rootstr, pszKeyPath);
+            if (cch <= 0 || cch > iSuggestionsLength)
+                pszSuggestions[0] = UNICODE_NULL;
+        }
+    }
 }
-
 
 LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -218,7 +293,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     case WM_KEYUP:
         if (wParam == VK_RETURN)
         {
-            GetWindowTextW(hwnd, s_szNode, COUNT_OF(s_szNode));
+            GetWindowTextW(hwnd, s_szNode, ARRAY_SIZE(s_szNode));
             SelectNode(g_pChildWnd->hTreeWnd, s_szNode);
         }
         break;
@@ -229,7 +304,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 VOID
-UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
+UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone)
 {
     LPCWSTR keyPath, rootName;
     LPWSTR fullPath;
@@ -251,28 +326,29 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
 
     if (keyPath)
     {
-        RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
+        RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath, bSelectNone);
         rootName = get_root_key_name(hRootKey);
         cbFullPath = (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR);
-        fullPath = HeapAlloc(GetProcessHeap(), 0, cbFullPath);
+        fullPath = malloc(cbFullPath);
         if (fullPath)
         {
             /* set (correct) the address bar text */
-            if (keyPath[0] != L'\0')
-                swprintf(fullPath, L"%s%s%s", rootName, keyPath[0]==L'\\'?L"":L"\\", keyPath);
+            if (keyPath[0] != UNICODE_NULL)
+                StringCbPrintfW(fullPath, cbFullPath, L"%s%s%s", rootName,
+                                ((keyPath[0] == L'\\') ? L"" : L"\\"), keyPath);
             else
-                fullPath = wcscpy(fullPath, rootName);
-             
+                StringCbCopyW(fullPath, cbFullPath, rootName);
+
             SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
             SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
-            HeapFree(GetProcessHeap(), 0, fullPath);
+            free(fullPath);
 
             /* disable hive manipulation items temporarily (enable only if necessary) */
             EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") != 0 ||
-                _wcsicmp(rootName, L"HKEY_USERS") != 0)
+            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") == 0 ||
+                _wcsicmp(rootName, L"HKEY_USERS") == 0)
             {
                 /*
                  * enable the unload menu item if at the root, otherwise
@@ -288,15 +364,11 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
     }
 }
 
-/*******************************************************************************
+/**
+ * PURPOSE: Processes messages for the child windows.
  *
- *  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes messages for the child windows.
- *
- *  WM_COMMAND  - process the application menu
- *  WM_DESTROY  - post a quit message and return
- *
+ * WM_COMMAND - process the application menu
+ * WM_DESTROY - post a quit message and return
  */
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -311,9 +383,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HFONT hFont;
         WCHAR buffer[MAX_PATH];
         DWORD style;
+        IAutoComplete *pAutoComplete;
 
         /* Load "My Computer" string */
-        LoadStringW(hInst, IDS_MY_COMPUTER, buffer, COUNT_OF(buffer));
+        LoadStringW(hInst, IDS_MY_COMPUTER, buffer, ARRAY_SIZE(buffer));
 
         g_pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
         if (!g_pChildWnd) return 0;
@@ -322,7 +395,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->nSplitPos = 190;
         g_pChildWnd->hWnd = hWnd;
 
-        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+        /* ES_AUTOHSCROLL style enables horizontal scrolling and shrinking */
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL;
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
@@ -335,6 +409,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hArrowIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_ARROW),
                                                     IMAGE_ICON, 12, 12, 0);
         SendMessageW(g_pChildWnd->hAddressBtnWnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_pChildWnd->hArrowIcon);
+
+        if (SUCCEEDED(CoCreateInstance(&CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, &IID_IAutoComplete, (void**)&pAutoComplete)))
+        {
+            IAutoComplete_Init(pAutoComplete, g_pChildWnd->hAddressBarWnd, (IUnknown*)&g_DummyEnumStrings, NULL, NULL);
+            IAutoComplete_Release(pAutoComplete);
+        }
 
         GetClientRect(hWnd, &rc);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
@@ -379,6 +459,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             }
         }
         goto def;
+
     case WM_DESTROY:
         DestroyListView(g_pChildWnd->hListWnd);
         DestroyTreeView(g_pChildWnd->hTreeWnd);
@@ -388,15 +469,16 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd = NULL;
         PostQuitMessage(0);
         break;
+
     case WM_LBUTTONDOWN:
     {
-        RECT rt;
-        int x = (short)LOWORD(lParam);
-        GetClientRect(hWnd, &rt);
-        if (x>=g_pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<g_pChildWnd->nSplitPos+SPLIT_WIDTH/2+1)
+        INT x = (SHORT)LOWORD(lParam);
+        if (x >= g_pChildWnd->nSplitPos - SPLIT_WIDTH / 2 &&
+            x <  g_pChildWnd->nSplitPos + SPLIT_WIDTH / 2 + 1)
         {
-            last_split = g_pChildWnd->nSplitPos;
-            draw_splitbar(hWnd, last_split);
+            x = ClampSplitBarX(hWnd, x);
+            draw_splitbar(hWnd, x);
+            last_split = x;
             SetCapture(hWnd);
         }
         break;
@@ -406,12 +488,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_RBUTTONDOWN:
         if (GetCapture() == hWnd)
         {
-            finish_splitbar(hWnd, LOWORD(lParam));
+            INT x = (SHORT)LOWORD(lParam);
+            x = ClampSplitBarX(hWnd, x);
+            finish_splitbar(hWnd, x);
         }
         break;
 
     case WM_CAPTURECHANGED:
-        if (GetCapture()==hWnd && last_split>=0)
+        if (GetCapture() == hWnd && last_split >= 0)
             draw_splitbar(hWnd, last_split);
         break;
 
@@ -432,35 +516,13 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_MOUSEMOVE:
         if (GetCapture() == hWnd)
         {
-            HDC hdc;
-            RECT rt;
-            HGDIOBJ OldObj;
-            int x = LOWORD(lParam);
-            if(!SizingPattern)
+            INT x = (SHORT)LOWORD(lParam);
+            x = ClampSplitBarX(hWnd, x);
+            if (last_split != x)
             {
-                const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
-                SizingPattern = CreateBitmap(8, 8, 1, 1, Pattern);
-            }
-            if(!SizingBrush)
-            {
-                SizingBrush = CreatePatternBrush(SizingPattern);
-            }
-
-            GetClientRect(hWnd, &rt);
-            x = (SHORT) min(max(x, SPLIT_MIN), rt.right - SPLIT_MIN);
-            if(last_split != x)
-            {
-                rt.left = last_split-SPLIT_WIDTH/2;
-                rt.right = last_split+SPLIT_WIDTH/2+1;
-                hdc = GetDC(hWnd);
-                OldObj = SelectObject(hdc, SizingBrush);
-                PatBlt(hdc, rt.left, rt.top, rt.right - rt.left, rt.bottom - rt.top, PATINVERT);
+                draw_splitbar(hWnd, last_split);
                 last_split = x;
-                rt.left = x-SPLIT_WIDTH/2;
-                rt.right = x+SPLIT_WIDTH/2+1;
-                PatBlt(hdc, rt.left, rt.top, rt.right - rt.left, rt.bottom - rt.top, PATINVERT);
-                SelectObject(hdc, OldObj);
-                ReleaseDC(hWnd, hdc);
+                draw_splitbar(hWnd, last_split);
             }
         }
         break;
@@ -472,19 +534,16 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         break;
 
-    case WM_TIMER:
-        break;
-
     case WM_NOTIFY:
         if (g_pChildWnd == NULL) break;
-                
+
         if (((LPNMHDR)lParam)->idFrom == TREE_WINDOW)
         {
             if (!TreeWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
             {
                 goto def;
             }
-            
+
             return Result;
         }
         else
@@ -502,7 +561,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             {
                 goto def;
             }
-        }        
+        }
         break;
 
     case WM_CONTEXTMENU:
@@ -603,7 +662,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 TreeView_GetItem(g_pChildWnd->hTreeWnd, &item);
 
                 /* Set the Expand/Collapse menu item appropriately */
-                LoadStringW(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, COUNT_OF(buffer));
+                LoadStringW(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, ARRAY_SIZE(buffer));
                 memset(&mii, 0, sizeof(mii));
                 mii.cbSize = sizeof(mii);
                 mii.fMask = MIIM_STRING | MIIM_STATE | MIIM_ID;
@@ -632,18 +691,26 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
                     /* Come up with suggestions */
                     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, NULL, &hRootKey);
-                    SuggestKeys(hRootKey, keyPath, Suggestions, COUNT_OF(Suggestions));
+                    SuggestKeys(hRootKey, keyPath, Suggestions, ARRAY_SIZE(Suggestions));
                     if (Suggestions[0])
                     {
                         AppendMenu(hContextMenu, MF_SEPARATOR, 0, NULL);
 
-                        LoadStringW(hInst, IDS_GOTO_SUGGESTED_KEY, resource, COUNT_OF(resource));
+                        LoadStringW(hInst, IDS_GOTO_SUGGESTED_KEY, resource, ARRAY_SIZE(resource));
 
                         s = Suggestions;
                         wID = ID_TREE_SUGGESTION_MIN;
                         while(*s && (wID <= ID_TREE_SUGGESTION_MAX))
                         {
-                            _snwprintf(buffer, COUNT_OF(buffer), resource, s);
+                            WCHAR *path = s, buf[MAX_PATH];
+                            if (hRootKey == HKEY_CURRENT_USER || hRootKey == HKEY_LOCAL_MACHINE)
+                            {
+                                // Windows 10 only displays the root name
+                                LPCWSTR next = PathFindNextComponentW(s);
+                                if (next > s)
+                                    lstrcpynW(path = buf, s, min(next - s, _countof(buf)));
+                            }
+                            _snwprintf(buffer, ARRAY_SIZE(buffer), resource, path);
 
                             memset(&mii, 0, sizeof(mii));
                             mii.cbSize = sizeof(mii);
@@ -656,7 +723,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                         }
                     }
                 }
-                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd/*g_pChildWnd->hWnd*/, NULL);
+                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
             }
         }
         break;
@@ -667,7 +734,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             ResizeWnd(LOWORD(lParam), HIWORD(lParam));
         }
-        /* fall through */
+        break;
+
     default:
 def:
         return DefWindowProcW(hWnd, message, wParam, lParam);

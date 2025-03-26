@@ -1,5 +1,9 @@
 PROJECT(SHELL)
 
+if(DBG)
+    add_definitions(-D_DEBUG=1) # CORE-17505
+endif()
+
 list(APPEND SOURCE
     appbar.cpp
     desktop.cpp
@@ -18,6 +22,7 @@ list(APPEND SOURCE
     taskswnd.cpp
     tbsite.cpp
     trayclock.cpp
+    traydeskbtn.cpp
     trayntfy.cpp
     trayprop.cpp
     traywnd.cpp

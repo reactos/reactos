@@ -1,4 +1,4 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE
 BEGIN
@@ -100,9 +100,9 @@ Dispositivo CTTY\n\n\
             CON geralmente é o dispositivo de E/S predefinido.\n\n\
 Para atribuir o controle à consola predefinida, digite: CTTY CON no dispositivo\n\
 auxiliar."
-    STRING_DATE_HELP1 "\nInsira uma nova data (mm%cdd%cyyyy):"
-    STRING_DATE_HELP2 "\nInsira uma nova data (dd%cmm%cyyyy):"
-    STRING_DATE_HELP3 "\nInsira uma nova data (aaaa%cmm%cdd):"
+    STRING_DATE_HELP1 "Insira uma nova data (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Insira uma nova data (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Insira uma nova data (aaaa%cmm%cdd): "
     STRING_DATE_HELP4 "Apresenta ou define a data.\n\n\
 DATE [/T][data]\n\n\
   /T       Apresenta a data actual\n\n\
@@ -178,7 +178,7 @@ parâmetro - por exemplo, /-W.\n"
     STRING_DIR_HELP3 " Volume na unidade %c não tem rótulo.\n"
     STRING_DIR_HELP4 " Número de série do volume é %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Total de ficheiros listados:\n%16i ficheiro(s) %14s bytes\n"
-    STRING_DIR_HELP6 "%16i Dir(s) %15s bytes livres\n"
+    STRING_DIR_HELP6 "%16i Dir(s)      %14s bytes livres\n"
     STRING_DIR_HELP7 "\n Diretório de %s\n\n"
     STRING_DIR_HELP8 "%16i ficheiro(s) %14s bytes\n"
     STRING_DIRSTACK_HELP1 "Armazena o directório actual para uso pelo comando POPD, de\n\
@@ -207,7 +207,7 @@ Digite ECHO sem um parâmetro para apresentar a configuração ECHO actual."
                  sairá do CMD.EXE.\n\
    ExitCode      Especifica um número. Se /B for especificado, define esse\n\
                  número no ERRORLEVEL. Se sair do CMD.EXE define o código de\n\
-                 saida do processo." 
+                 saida do processo."
      STRING_FOR_HELP1 "Executa um comando especificado para cada ficheiro num conjunto de ficheiros.\n\n\
 FOR  %variável IN (conjunto) DO comando [parâmetros]\n\
 FOR /L %variável IN (início, etapa, fim)DO comando [parâmetros]\n\
@@ -244,9 +244,9 @@ GOTO etiqueta\n\n\
 Digite uma etiqueta numa linha isolada, começando por dois pontos.\n"
     STRING_IF_HELP1 "Executa processamento condicional em programas batch.\n\n\
   IF [NOT] ERRORLEVEL número comando\n\
-  IF [NOT] string1==string2 comando \n\
-  IF [NOT] EXIST ficheiro comando \n\
-  IF [NOT] DEFINED variável comando \n\n\
+  IF [NOT] string1==string2 comando\n\
+  IF [NOT] EXIST ficheiro comando\n\
+  IF [NOT] DEFINED variável comando\n\n\
 NOT                Especifica que o CMD deve executar o comando apenas se\n\
                    a condição é falsa\n\
 ERRORLEVEL número  Especifica uma condição verdadeira se a última execução\n\
@@ -260,9 +260,10 @@ EXIST ficheiro     Especifica uma condição verdadeira se o nome do ficheiro\n\
                    especificado existir.\n\
 DEFINED variável   Especifica uma condição verdadeira se a variável especificada\n\
                    for definida.\n"
-    STRING_LOCALE_HELP1 "A hora actual é"
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "A hora actual é: "
     STRING_MKDIR_HELP "Cria um directório.\n\n\
-MKDIR [unidade:] caminho \nMD [unidade:] caminho"
+MKDIR [unidade:] caminho\nMD [unidade:] caminho"
     STRING_MKLINK_HELP "Cria uma ligação simbólica.\n\n\
 MKLINK [/D | /H | /J] Ligação Destino\n\n\
   /D        Cria uma ligação simbólica de directório. A predefinição é\n\
@@ -355,34 +356,6 @@ Observe que não pode especificar uma nova unidade ou caminho para o seu destino
 o comando MOVE para esse propósito.\n"
     STRING_REN_HELP2 "%lu ficheiro renomeado\n"
     STRING_REN_HELP3 "%lu ficheiros renomeados\n"
-    STRING_REPLACE_HELP1 "Substitui ficheiros.\n\n\
-REPLACE [unidade1:][caminho1]ficheiro [unidade2:][caminho2][/A][/P][/R][/W]\n\
-REPLACE [unidade1:][caminho1]ficheiro [unidade2:][caminho2][/P][/R][/S][/W][/U]\n\n\
-  [unidade1:] [caminho1] ficheiro\n\
-                   Especifica o ficheiro ou ficheiros de origem.\n\
-  [unidade2:] [caminho2]\n\
-                   Especifica o directório onde os ficheiros devem ser\n\
-                   substituídos.\n\
-  /A               Adiciona novos ficheiros ao directório de destino.\n\
-                   Não pode usar com as opções /S ou /U.\n\
-  /P               Solicita confirmação antes de substituir ou adicionar\n\
-                   um ficheiro.\n\
-  /R               Substitui ficheiros só de leitura e ficheiros desprotegidos\n\
-  /S               Substitui os ficheiros em todos os subdiretórios do\n\
-                   directório de destino. Não é possível usar com a opção /A\n\
-  /W               Espera que insira um disco antes de começar.\n\
-  /U               Substitui (atualiza) apenas os ficheiros mais antigos que os\n\
-                   arquivos fonte. Não é possível usar com a opção /A.\n"
-    STRING_REPLACE_HELP2 "Caminho de origem obrigatório\n"
-    STRING_REPLACE_HELP3 "Nenhum ficheiro substituído\n"
-    STRING_REPLACE_HELP4 "%lu ficheiro(s) substituído(s)\n"
-    STRING_REPLACE_HELP5 "A substituir %s\n"
-    STRING_REPLACE_HELP6 "Substitua %s\n"
-    STRING_REPLACE_HELP7 "Nenhum ficheiro adicionado\n"
-    STRING_REPLACE_HELP8 "%lu ficheiro(s) adicionado(s)\n"
-    STRING_REPLACE_HELP9 "Adicionar %s (S/N)?"
-    STRING_REPLACE_HELP10 "Substituir %s (S/N)?"
-    STRING_REPLACE_HELP11 "A adicionar %s\n"
     STRING_SHIFT_HELP "Altera a posição dos parâmetros substituíveis num arquivo em batch.\n\n\
 SHIFT [DOWN] "
     STRING_SCREEN_HELP "move o cursor e opcionalmente imprime o texto\n\n\
@@ -418,10 +391,10 @@ TIME [/ T] [hora]\n\n\
   /T Apenas apresenta a hora\n\n\
 Digite TIME sem parâmetros para apresentar a definição de hora actual e um prompt\n\
 para digitar nova hora. Pressione ENTER para manter a mesma hora.\n"
-    STRING_TIME_HELP2 "Digite o novo horário:"
+    STRING_TIME_HELP2 "Digite o novo horário: "
     STRING_TIMER_HELP1 "Tempo Decorrido %d msegs\n"
     STRING_TIMER_HELP2 "Decorrido %02d%c%02d%c%02d%c%02d\n"
-    STRING_TIMER_HELP3 "permite o uso de dez cronômetros.\n\n\
+    STRING_TIMER_HELP3 "Permite o uso de dez cronômetros.\n\n\
 TIMER  [ON|OFF] [/S][/n][/Fn]\n\n\
   ON          inicia a contagem do cronômetro (LIGADO)\n\
   OFF         termina a contagem do cronômetro (DESLIGADO)\n\
@@ -461,7 +434,7 @@ lista de créditos. "
  Fundação para o Software Livre; a versão 2 da Licença ou\n\
  (à sua escolha) qualquer versão posterior.\n"
     STRING_VERSION_HELP5 "\nEnvie relatórios de bug para <ros-dev@reactos.org>.\n\
-As actualizações estão disponíveis em: http://www.reactos.org"
+As actualizações estão disponíveis em: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersão do FreeDOS escrita por:\n"
     STRING_VERSION_HELP7 "\nReactOS versão escrita por:\n"
     STRING_VOL_HELP1 "O volume na unidade %c é %s\n"
@@ -497,23 +470,23 @@ título      Novo título\n"
     STRING_CMD_ERROR3 "Não é possível redirecionar para o ficheiro %s\n"
     STRING_CMD_ERROR4 "A executar %s ...\n"
     STRING_CMD_ERROR5 "A executar cmdexit.bat ...\n"
-    STRING_COLOR_ERROR1 "Erro nas mesmas cores! (O fundo e o primeiro plano não podem ser da mesma cor)"
-    STRING_COLOR_ERROR2 "Erro na especificação da cor"
+    STRING_COLOR_ERROR1 "Erro nas mesmas cores! (O fundo e o primeiro plano não podem ser da mesma cor)\n"
+    STRING_COLOR_ERROR2 "Erro na especificação da cor\n"
     STRING_CONSOLE_ERROR "Erro desconhecido: %d\n"
     STRING_COPY_ERROR1 "Erro: Não é possível abrir o código - %s!\n"
     STRING_COPY_ERROR2 "Erro: Não é possível copiar para si mesmo!\n"
     STRING_COPY_ERROR3 "Erro ao escrever destino!\n"
     STRING_COPY_ERROR4 "Erro: ainda não implementado!\n"
-    STRING_DATE_ERROR "Data inválida."
+    STRING_DATE_ERROR "Data inválida.\n"
     STRING_DEL_ERROR5 "O ficheiro %s será eliminado!"
     STRING_DEL_ERROR6 "Tem a certeza? (S/N)"
     STRING_DEL_ERROR7 "Excluindo: %s\n"
     STRING_ERROR_ERROR1 "Erro desconhecido! Código do erro: 0x%lx\n"
     STRING_ERROR_ERROR2 "Erro de sintaxe"
-    STRING_FOR_ERROR1 "Falta 'em' na declaração."
-    STRING_FOR_ERROR2 "nenhum colchete encontrado."
-    STRING_FOR_ERROR3 "falta 'do'."
-    STRING_FOR_ERROR4 "nenhum comando depois de 'do'."
+    STRING_FOR_ERROR1 "Falta 'em' na declaração.\n"
+    STRING_FOR_ERROR2 "nenhum colchete encontrado.\n"
+    STRING_FOR_ERROR3 "falta 'do'.\n"
+    STRING_FOR_ERROR4 "nenhum comando depois de 'do'.\n"
     STRING_FREE_ERROR1 "Unidade inválida"
     STRING_FREE_ERROR2 "sem etiqueta"
     STRING_GOTO_ERROR1 "Nenhum rótulo especificado para GOTO\n"
@@ -522,10 +495,10 @@ título      Novo título\n"
     STRING_MD_ERROR2 "O caminho para a nova pasta não existe.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Erro]\n"
-    STRING_REN_ERROR1 "MoveFile () falhou. Erro: %lu\n"
-    STRING_TIME_ERROR1 "Horário inválido."
-    STRING_TYPE_ERROR1 "Opção inválida '/%s'\n"
-    STRING_WINDOW_ERROR1 "Janela não encontrada"
+    STRING_REN_ERROR "MoveFile () falhou. Erro: %lu\n"
+    STRING_TIME_ERROR "Horário inválido.\n"
+    STRING_TYPE_ERROR "Opção inválida '/%s'\n"
+    STRING_WINDOW_ERROR "Janela não encontrada\n"
     STRING_ERROR_PARAMETERF_ERROR "Formato de parâmetro incorrecto - %c\n"
     STRING_ERROR_INVALID_SWITCH "Chave inválida - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Muitos parâmetros - %s\n"
@@ -539,25 +512,26 @@ título      Novo título\n"
     STRING_ERROR_CANNOTPIPE "Erro! Não é possível enviar! Não é possível abrir o ficheiro temporário!\n"
     STRING_ERROR_D_PAUSEMSG "Pressione qualquer tecla para continuar..."
     STRING_ERROR_DRIVER_NOT_READY "A unidade não está pronta"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variável de ambiente '%s' não está definida\n"
-    STRING_REPLACE_ERROR1 "Opção inválida - %s\n"
-    STRING_REPLACE_ERROR2 "Caminho não encontrado - %s\n"
-    STRING_REPLACE_ERROR3 "O nome do ficheiro, nome do directório ou sintaxe do rótulo do volume está incorrecto.\n"
-    STRING_REPLACE_ERROR4 "Combinação de parâmetro inválida\n"
-    STRING_REPLACE_ERROR5 "Acesso negado - %s\n"
-    STRING_REPLACE_ERROR6 "Nenhum ficheiro encontrado - %s\n"
-    STRING_REPLACE_ERROR7 "Erro estendido 32\n"
     STRING_CMD_INFOLINE "Tipo de prompt de comando do ReactOS HELP = Ajuda"
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versão %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Intérprete de linha de comando\nVersão %s %s"
     STRING_VERSION_RUNNING_ON "Em execução em:"
     STRING_VERSION_RUNVER "%s [Versão %d.%d.%d] %s"
     STRING_COPY_FILE "%d ficheiro(s) copiado(s)\n"
     STRING_DELETE_WIPE "eliminado"
-    STRING_FOR_ERROR "especificação de variável incorrecta."
-    STRING_SCREEN_COL "valor inválido para col"
-    STRING_SCREEN_ROW "valor inválido para linha"
-    STRING_TIMER_TIME "Timer %d é %s:"
+    STRING_FOR_ERROR "especificação de variável incorrecta.\n"
+    STRING_SCREEN_COL "valor inválido para col\n"
+    STRING_SCREEN_ROW "valor inválido para linha\n"
+    STRING_TIMER_TIME "Timer %d é %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Link simbólico criado para %s << === >> %s\n"
     STRING_MKLINK_CREATED_HARD "Hard link criado para %s << === >> %s\n"
     STRING_MKLINK_CREATED_JUNCTION "Junção criada para %s << === >> %s\n"
@@ -567,4 +541,4 @@ título      Novo título\n"
     STRING_EXPECTED_CLOSE_PAREN "Esperado ')'.\n"
     STRING_EXPECTED_NUMBER_OR_VARIABLE "Esperado numero ou nome da variável.\n"
     STRING_SYNTAX_COMMAND_INCORRECT "A sintaxe do comando está incorrecta.\n"
-END    
+END

@@ -38,13 +38,16 @@
 #define DPRINT_HEAP         15  // messages in a bottle
 #define DBG_CHANNELS_COUNT  16
 
-#if DBG && !defined(_M_ARM)
+#if DBG
 
-    VOID    DebugInit(IN ULONG_PTR FrLdrSectionId);
+    VOID
+    DebugInit(
+        _In_ PCSTR DebugString);
+
     ULONG   DbgPrint(const char *Format, ...);
     VOID    DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...);
     VOID    DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
-    VOID    DebugDisableScreenPort();
+    VOID    DebugDisableScreenPort(VOID);
     VOID    DbgParseDebugChannels(PCHAR Value);
 
     #define ERR_LEVEL      0x1
@@ -82,7 +85,7 @@
     //
     // You may have as many BREAKPOINT()'s as you like but you may only
     // have up to four of any of the others.
-#define    BREAKPOINT()                __asm__ ("int $3");
+#define    BREAKPOINT()                __debugbreak()
 void    INSTRUCTION_BREAKPOINT1(unsigned long addr);
 void    MEMORY_READWRITE_BREAKPOINT1(unsigned long addr);
 void    MEMORY_WRITE_BREAKPOINT1(unsigned long addr);
@@ -114,17 +117,20 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
     #define UNIMPLEMENTED
 
-    #define DebugInit(FrLdrSectionId)
+    #define DebugInit(DebugString)
     #define BugCheck(fmt, ...)
     #define DbgDumpBuffer(mask, buf, len)
+    #define DebugDisableScreenPort()
     #define DbgParseDebugChannels(val)
 
 #endif // DBG
 
+DECLSPEC_NORETURN
 void
 NTAPI
 FrLdrBugCheck(ULONG BugCode);
 
+DECLSPEC_NORETURN
 VOID
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
@@ -140,6 +146,9 @@ enum _FRLDR_BUGCHECK_CODES
     MISSING_HARDWARE_REQUIREMENTS,
     FREELDR_IMAGE_CORRUPTION,
     MEMORY_INIT_FAILURE,
+#ifdef UEFIBOOT
+    EXIT_BOOTSERVICES_FAILURE,
+#endif
 };
 
 extern char *BugCodeStrings[];

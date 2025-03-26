@@ -73,6 +73,7 @@
 
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
+#define IDM_NOTIFYITBARDIRTY             0xA239 /* Arbitrary id */
 
 /* User-installed explorer band IDs according to API Monitor traces */
 #define IDM_EXPLORERBAND_BEGINCUSTOM     0xA240
@@ -98,7 +99,6 @@
 #define IDR_INTERNETTOOLBAR      136
 #define IDR_GLOBALFOLDERSETTINGS 137
 #define IDR_REGTREEOPTIONS       138
-#define IDR_EXPLORERBAND         139
 #define IDR_PROGRESSDIALOG       140
 #define IDR_AUTOCOMPLETE         141
 #define IDR_ACLISTISF            142
@@ -109,6 +109,7 @@
 #define IDR_FINDFOLDER           147
 #define IDR_USERASSIST           148
 #define IDR_SHELLTASKSCHEDULER   149
+#define IDR_ACLHISTORY           150
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
@@ -123,7 +124,7 @@
 #define IDS_SEARCHLABEL          12897
 #define IDS_STANDARD_TOOLBAR     12624
 #define IDS_ADDRESSBANDLABEL     12902
-#define IDS_FOLDERSLABEL         12919
+#define IDS_ADDRESSMENUTEXT      13137
 #define IDS_HISTORYTEXT          13169
 #define IDS_UP                   58434
 #define IDS_BACK                 58689
@@ -175,6 +176,11 @@
 #define IDS_SEARCH_FOLDER       9234
 #define IDS_SEARCH_RESULTS      30520
 #define IDS_SEARCH_OPEN_FOLDER  40960
+#define IDC_STATUSBAR           40961
 
 #define IDS_PARSE_ADDR_ERR_TITLE 9600
 #define IDS_PARSE_ADDR_ERR_TEXT  9601
+
+#define COL_NAME_INDEX      0
+#define COL_LOCATION_INDEX  1
+#define COL_RELEVANCE_INDEX 2

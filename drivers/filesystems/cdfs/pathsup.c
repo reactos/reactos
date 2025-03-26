@@ -127,7 +127,7 @@ CdUpdatePathEntryFromRawPathEntry (
 #pragma alloc_text(PAGE, CdUpdatePathEntryName)
 #endif
 
-
+
 VOID
 CdLookupPathEntry (
     _In_ PIRP_CONTEXT IrpContext,
@@ -202,7 +202,7 @@ Return Value:
                                               &CompoundPathEntry->PathEntry );
 }
 
-
+
 BOOLEAN
 CdLookupNextPathEntry (
     _In_ PIRP_CONTEXT IrpContext,
@@ -289,7 +289,7 @@ Return Value:
     //  Now update the path entry with the values from the on-disk
     //  structure.
     //
-        
+
     return CdUpdatePathEntryFromRawPathEntry( IrpContext,
                                               PathEntry->Ordinal + 1,
                                               TRUE,
@@ -297,7 +297,7 @@ Return Value:
                                               PathEntry );
 }
 
-_Success_(return != FALSE)
+_Success_(return != FALSE)
 BOOLEAN
 CdFindPathEntry (
     _In_ PIRP_CONTEXT IrpContext,
@@ -475,7 +475,7 @@ Return Value:
     return Found;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -521,7 +521,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Map the new block and set the enumeration context to this
     //  point.  Allocate an auxilary buffer if necessary.
@@ -628,7 +628,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -663,7 +663,7 @@ Arguments:
 
 Return Value:
 
-    TRUE  if updated ok,  
+    TRUE  if updated ok,
     FALSE if we've hit the end of the pathtable - zero name length && PT size is a multiple
           of blocksize.  This is a workaround for some Video CDs.  Win 9x works around this.
 
@@ -676,31 +676,31 @@ Return Value:
     ULONG RemainingDataLength;
 
     PAGED_CODE();
-    
+
     //
     //  Check for a name length of zero.  This is the first byte of the record,
-    //  and there must be at least one byte remaining in the buffer else we 
+    //  and there must be at least one byte remaining in the buffer else we
     //  wouldn't be here (caller would have spotted buffer end).
     //
-    
+
     PathEntry->DirNameLen = CdRawPathIdLen( IrpContext, RawPathEntry );
-    
+
     if (0 == PathEntry->DirNameLen) {
 
         //
-        //  If we are in the last block,  and the path table size (ie last block) is a 
+        //  If we are in the last block,  and the path table size (ie last block) is a
         //  multiple of block size,  then we will consider this the end of the path table
         //  rather than raising an error.  Workaround for NTI Cd Maker video CDs which
         //  round path table length to blocksize multiple.  In all other cases we consider
         //  a zero length name to be corruption.
         //
-        
-        if ( PathContext->LastDataBlock && 
+
+        if ( PathContext->LastDataBlock &&
              (0 == BlockOffset( IrpContext->Vcb, PathContext->DataLength)))  {
-        
+
             return FALSE;
         }
-        
+
         CdRaiseStatus( IrpContext, STATUS_DISK_CORRUPT_ERROR );
     }
 
@@ -708,7 +708,7 @@ Return Value:
     //  Check if we should verify the path entry.  If we are not in the last
     //  data block then there is nothing to check.
     //
-    
+
     if (PathContext->LastDataBlock && VerifyBounds) {
 
         //
@@ -748,7 +748,7 @@ Return Value:
     //
     //  We know we can safely access all of the fields of the raw path table at
     //  this point.
-    
+
     //
     //  Bias the disk offset by the number of logical blocks
     //
@@ -772,7 +772,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -935,7 +935,7 @@ Return Value:
                                    PathEntry->DirNameLen );
 
         NT_ASSERT( Status == STATUS_SUCCESS );
-        __analysis_assert( Status == STATUS_SUCCESS );        
+        __analysis_assert( Status == STATUS_SUCCESS );
         PathEntry->CdDirName.FileName.Length = (USHORT) Length;
 
     } else {

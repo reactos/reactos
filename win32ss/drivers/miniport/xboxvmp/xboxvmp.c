@@ -61,18 +61,21 @@ XboxVmpFindAdapter(
     OUT PUCHAR Again)
 {
     PXBOXVMP_DEVICE_EXTENSION XboxVmpDeviceExtension;
-    VIDEO_ACCESS_RANGE AccessRanges[3];
     VP_STATUS Status;
+    /* 3 access ranges: for MMIO, VRAM, and Indirect memory access IO ports */
+    VIDEO_ACCESS_RANGE AccessRanges[3];
     USHORT VendorId = 0x10DE; /* NVIDIA Corporation */
     USHORT DeviceId = 0x02A0; /* NV2A XGPU */
+    ULONG Slot = 0;
 
     TRACE_(IHVVIDEO, "XboxVmpFindAdapter\n");
 
     XboxVmpDeviceExtension = (PXBOXVMP_DEVICE_EXTENSION)HwDeviceExtension;
 
-    Status = VideoPortGetAccessRanges(HwDeviceExtension, 0, NULL, 3, AccessRanges,
-                                      &VendorId, &DeviceId, NULL);
-
+    VideoPortZeroMemory(&AccessRanges, sizeof(AccessRanges));
+    Status = VideoPortGetAccessRanges(HwDeviceExtension, 0, NULL,
+                                      RTL_NUMBER_OF(AccessRanges), AccessRanges,
+                                      &VendorId, &DeviceId, &Slot);
     if (Status == NO_ERROR)
     {
         XboxVmpDeviceExtension->PhysControlStart = AccessRanges[0].RangeStart;

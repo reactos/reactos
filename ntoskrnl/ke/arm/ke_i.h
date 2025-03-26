@@ -9,19 +9,19 @@
 //
 // First, cleanup after any previous invocation
 //
-#undef _1 
-#undef _2 
-#undef _3 
-#undef _4 
-#undef _5 
-#undef _6 
-#undef _7 
-#undef _8 
-#undef _9 
-#undef a 
-#undef b 
-#undef c 
-#undef d 
+#undef _1
+#undef _2
+#undef _3
+#undef _4
+#undef _5
+#undef _6
+#undef _7
+#undef _8
+#undef _9
+#undef a
+#undef b
+#undef c
+#undef d
 #undef e
 #undef f
 #undef _10

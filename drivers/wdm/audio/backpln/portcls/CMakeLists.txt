@@ -56,7 +56,7 @@ add_library(portcls MODULE
     portcls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(portcls PRIVATE "-Wno-missing-braces")
 endif()
 

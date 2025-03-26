@@ -2,14 +2,14 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Jasný"
-1001, "Temný"
+1000, "Světlé"
+1001, "Tmavé"
 }
 
 STRINGTABLE
 {
-2000, "Modern Jasný"
-2001, "Modern Temný"
+2000, "Modern světlé"
+2001, "Modern tmavé"
 }
 
 STRINGTABLE

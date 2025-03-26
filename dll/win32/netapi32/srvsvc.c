@@ -663,9 +663,6 @@ NetSessionEnum(
     if (level > 2 && level != 10 && level != 502)
         return ERROR_INVALID_LEVEL;
 
-    if (UncClientName == NULL || username == NULL)
-        return ERROR_INVALID_PARAMETER;
-
     *bufptr = NULL;
     *entriesread = 0;
 

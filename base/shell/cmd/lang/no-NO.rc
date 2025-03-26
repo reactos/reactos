@@ -98,9 +98,9 @@ CTTY device\n\n\
             CON is usually the default standard I/O device.\n\n\
 To return control to the standard console, type: CTTY CON on the auxiliary\n\
 device."
-    STRING_DATE_HELP1 "\nSkriv inn ny dato (mm%cdd%cyyyy): "
-    STRING_DATE_HELP2 "\nSkriv inn ny dato (dd%cmm%cyyyy): "
-    STRING_DATE_HELP3 "\nSkriv inn ny dato (yyyy%cmm%cdd): "
+    STRING_DATE_HELP1 "Skriv inn ny dato (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Skriv inn ny dato (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Skriv inn ny dato (yyyy%cmm%cdd): "
     STRING_DATE_HELP4 "Vis eller endre datoen.\n\n\
 DATO [/T][dato]\n\n\
   /T    Vis bare\n\n\
@@ -170,10 +170,10 @@ forhåndsinnstilte brytere ved å sette en bindestrek (-) foran, for eksempel, /
     STRING_DIR_HELP2 " Volumet i stasjon %c er %s\n"
     STRING_DIR_HELP3 " Volumet i stasjon %c er uten navn.\n"
     STRING_DIR_HELP4 " Volumserienummeret er %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Totalt filer listet:\n%16i fil(er)% 14s byte\n"
-    STRING_DIR_HELP6 "%16i mappe(r)% 15s byte ledig\n"
+    STRING_DIR_HELP5 "\n     Totalt filer listet:\n%16i fil(er)  %14s byte\n"
+    STRING_DIR_HELP6 "%16i mappe(r) %14s byte ledig\n"
     STRING_DIR_HELP7 "\n mappe av %s\n\n"
-    STRING_DIR_HELP8 "%16i fil(er)% 14s byte\n"
+    STRING_DIR_HELP8 "%16i fil(er)  %14s byte\n"
     STRING_DIRSTACK_HELP1 "Lagrer gjeldende mappe for bruk av POPD kommando, og\n\
 endrer deretter til spesifisert mappe.\n\n\
 PUSHD [mappe | ..]\n\n\
@@ -243,7 +243,8 @@ streng1==streng2  Angir et oppfylt vilkår hvis tekststrengene er like\n\
 EXIST filnavn     Angir et oppfylt vilkår hvis spesifisert filnavn eksisterer.\n\
 DEFINED variabel  Angir et oppfylt vilkår hvis spesifisert variabel er\n\
                   definert.\n"
-    STRING_LOCALE_HELP1 "gjeldende tid er"
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "Gjeldende tid er: "
     STRING_MKDIR_HELP "Oppretter en mappe.\n\n\
 MKDIR [stasjon:]mappe\nMD [stasjon:]mappe"
     STRING_MKLINK_HELP "Creates a filesystem link object.\n\n\
@@ -334,34 +335,6 @@ NB; du kan ikke spesifisere en ny destinasjon for filen/mappen. Bruk\n\
 MOVE kommando for det formålet.\n"
     STRING_REN_HELP2 "    %lu fil endret navn\n"
     STRING_REN_HELP3 "    %lu filer endret navn\n"
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Specifies the source file or files.\n\
-  [drive2:][path2]         Specifies the directory where files are to be\n\
-                           replaced.\n\
-  /A                       Adds new files to destination directory. Cannot\n\
-                           use with /S or /U switches.\n\
-  /P                       Prompts for confirmation before replacing a file or\n\
-                           adding a source file.\n\
-  /R                       Replaces read-only files as well as unprotected\n\
-                           files.\n\
-  /S                       Replaces files in all subdirectories of the\n\
-                           destination directory. Cannot use with the /A\n\
-                           switch.\n\
-  /W                       Waits for you to insert a disk before beginning.\n\
-  /U                       Replaces (updates) only files that are older than\n\
-                           source files. Cannot use with the /A switch.\n"
-    STRING_REPLACE_HELP2 "Source path required\n"
-    STRING_REPLACE_HELP3 "No files replaced\n"
-    STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
-    STRING_REPLACE_HELP5 "Replacing %s\n"
-    STRING_REPLACE_HELP6 "Replace %s\n"
-    STRING_REPLACE_HELP7 "No files added\n"
-    STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
-    STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "Endre posisjon for erstattelig parameter i et satsvis fil.\n\n\
 SHIFT [NED]"
     STRING_SCREEN_HELP "flytt markør og potensielt skriv ut tekst\n\n\
@@ -438,7 +411,7 @@ liste av anerkjennelser."
   Lisens som utgivelses av Free Software Foundation; enten versjon 2 av\n\
   Lisens, eller (ved din mulighet) andre nyere versjon.\n"
     STRING_VERSION_HELP5 "\nSend bug rapporter til <ros-dev@reactos.org>.\n\
-oppdateringer er tilgjengelig her: http://www.reactos.org"
+oppdateringer er tilgjengelig her: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS versjon skrevet av:\n"
     STRING_VERSION_HELP7 "\nReactOS versjon skrevet av:\n"
     STRING_VOL_HELP1 " Volumet i stasjon %c er %s\n"
@@ -474,23 +447,23 @@ tittel        ny tittel\n"
     STRING_CMD_ERROR3 "Kan ikke videreføre til fil %s\n"
     STRING_CMD_ERROR4 "Kjører %s...\n"
     STRING_CMD_ERROR5 "Kjører cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "Samme farge feil! (Bakgrunn og forgrunn kan ikke ha samme farge)"
-    STRING_COLOR_ERROR2 "Feil i farge spesifikasjon"
+    STRING_COLOR_ERROR1 "Samme farge feil! (Bakgrunn og forgrunn kan ikke ha samme farge)\n"
+    STRING_COLOR_ERROR2 "Feil i farge spesifikasjon\n"
     STRING_CONSOLE_ERROR "Ukjent feil: %d\n"
     STRING_COPY_ERROR1 "Feil: kan ikke åpne kilden - %s!\n"
     STRING_COPY_ERROR2 "Feil: kan ikke kopiere til seg selv!\n"
     STRING_COPY_ERROR3 "Feil ved skriving til destinasjon!\n"
     STRING_COPY_ERROR4 "Feil: Ikke implementert enda!\n"
-    STRING_DATE_ERROR "Ugyldig dato."
+    STRING_DATE_ERROR "Ugyldig dato.\n"
     STRING_DEL_ERROR5 "Filen %s vil bli slettet! "
     STRING_DEL_ERROR6 "Er du sikker (J/N)? "
     STRING_DEL_ERROR7 "Sletter: %s\n"
     STRING_ERROR_ERROR1 "Ukjent feil! Feilkode: 0x%lx\n"
     STRING_ERROR_ERROR2 "Syntaks feil"
-    STRING_FOR_ERROR1 "'in' tapt i FOR kommando."
-    STRING_FOR_ERROR2 "ingen brakett funnet."
-    STRING_FOR_ERROR3 "'gjøre' tapt."
-    STRING_FOR_ERROR4 "ingen kommando etter 'gjøre'."
+    STRING_FOR_ERROR1 "'in' tapt i FOR kommando.\n"
+    STRING_FOR_ERROR2 "ingen brakett funnet.\n"
+    STRING_FOR_ERROR3 "'gjøre' tapt.\n"
+    STRING_FOR_ERROR4 "ingen kommando etter 'gjøre'.\n"
     STRING_FREE_ERROR1 "Ugyldig driver"
     STRING_FREE_ERROR2 "utmerket"
     STRING_GOTO_ERROR1 "Ingen merke spesifisert for GOTO\n"
@@ -499,10 +472,10 @@ tittel        ny tittel\n"
     STRING_MD_ERROR2 "Stien til den nye mappen eksisterer ikke.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Feil]\n"
-    STRING_REN_ERROR1 "MoveFile() mislykkes. Feil: %lu\n"
-    STRING_TIME_ERROR1 "Ugyldig tid."
-    STRING_TYPE_ERROR1 "Ugyldig alternativ '/%s'\n"
-    STRING_WINDOW_ERROR1 "Vinduet ble ikke funnet"
+    STRING_REN_ERROR "MoveFile() mislykkes. Feil: %lu\n"
+    STRING_TIME_ERROR "Ugyldig tid.\n"
+    STRING_TYPE_ERROR "Ugyldig alternativ '/%s'\n"
+    STRING_WINDOW_ERROR "Vinduet ble ikke funnet\n"
     STRING_ERROR_PARAMETERF_ERROR "Parameter format ikke riktig - %c\n"
     STRING_ERROR_INVALID_SWITCH "Ugyldig bryter  - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "For mange parametere - %s\n"
@@ -516,24 +489,25 @@ tittel        ny tittel\n"
     STRING_ERROR_CANNOTPIPE "Feil! Kan ikke bruke datakanal! Kan ikke åpne midlertidig fil!\n"
     STRING_ERROR_D_PAUSEMSG "Trykk en tast for å fortsette . . . "
     STRING_ERROR_DRIVER_NOT_READY "Stasjonen er ikke klar"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
-    STRING_REPLACE_ERROR2 "Mappen ble ikke funnet - %s\n"
-    STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
-    STRING_REPLACE_ERROR4 "Invalid parameter combination\n"
-    STRING_REPLACE_ERROR5 "Tilgang nektet - %s\n"
-    STRING_REPLACE_ERROR6 "Ingen filer ble funnet - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versjon %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Kommandotolk\nVersjon %s %s"
     STRING_VERSION_RUNNING_ON "Kjører på: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file(r) kopiert\n"
     STRING_DELETE_WIPE "slettet"
-    STRING_FOR_ERROR "ugyldig variabel spesifikasjon."
-    STRING_SCREEN_COL "ugyldig verdi for kolonne"
-    STRING_SCREEN_ROW "ugyldig verdi for rad"
+    STRING_FOR_ERROR "ugyldig variabel spesifikasjon.\n"
+    STRING_SCREEN_COL "ugyldig verdi for kolonne\n"
+    STRING_SCREEN_ROW "ugyldig verdi for rad\n"
     STRING_TIMER_TIME "Stoppeklokke %d er %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Symbolic link created for %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Hard link created for %s <<===>> %s\n"

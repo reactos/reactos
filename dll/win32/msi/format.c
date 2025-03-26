@@ -34,8 +34,8 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
-#include "wine/unicode.h"
+#include "winemsi_s.h"
+#include "wine/exception.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -54,7 +54,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define left_type(x) (x & 0xF0)
 
-typedef struct _tagFORMAT
+struct format
 {
     MSIPACKAGE *package;
     MSIRECORD *record;
@@ -64,9 +64,9 @@ typedef struct _tagFORMAT
     BOOL propfailed;
     BOOL groupfailed;
     int groups;
-} FORMAT;
+};
 
-typedef struct _tagFORMSTR
+struct form_str
 {
     struct list entry;
     int n;
@@ -74,54 +74,54 @@ typedef struct _tagFORMSTR
     int type;
     BOOL propfound;
     BOOL nonprop;
-} FORMSTR;
+};
 
-typedef struct _tagSTACK
+struct stack
 {
     struct list items;
-} STACK;
+};
 
-static STACK *create_stack(void)
+static struct stack *create_stack(void)
 {
-    STACK *stack = msi_alloc(sizeof(STACK));
+    struct stack *stack = malloc(sizeof(*stack));
     list_init(&stack->items);
     return stack;
 }
 
-static void free_stack(STACK *stack)
+static void free_stack(struct stack *stack)
 {
     while (!list_empty(&stack->items))
     {
-        FORMSTR *str = LIST_ENTRY(list_head(&stack->items), FORMSTR, entry);
+        struct form_str *str = LIST_ENTRY(list_head(&stack->items), struct form_str, entry);
         list_remove(&str->entry);
-        msi_free(str);
+        free(str);
     }
 
-    msi_free(stack);
+    free(stack);
 }
 
-static void stack_push(STACK *stack, FORMSTR *str)
+static void stack_push(struct stack *stack, struct form_str *str)
 {
     list_add_head(&stack->items, &str->entry);
 }
 
-static FORMSTR *stack_pop(STACK *stack)
+static struct form_str *stack_pop(struct stack *stack)
 {
-    FORMSTR *ret;
+    struct form_str *ret;
 
     if (list_empty(&stack->items))
         return NULL;
 
-    ret = LIST_ENTRY(list_head(&stack->items), FORMSTR, entry);
+    ret = LIST_ENTRY(list_head(&stack->items), struct form_str, entry);
     list_remove(&ret->entry);
     return ret;
 }
 
-static FORMSTR *stack_find(STACK *stack, int type)
+static struct form_str *stack_find(struct stack *stack, int type)
 {
-    FORMSTR *str;
+    struct form_str *str;
 
-    LIST_FOR_EACH_ENTRY(str, &stack->items, FORMSTR, entry)
+    LIST_FOR_EACH_ENTRY(str, &stack->items, struct form_str, entry)
     {
         if (str->type == type)
             return str;
@@ -130,22 +130,22 @@ static FORMSTR *stack_find(STACK *stack, int type)
     return NULL;
 }
 
-static FORMSTR *stack_peek(STACK *stack)
+static struct form_str *stack_peek(struct stack *stack)
 {
-    return LIST_ENTRY(list_head(&stack->items), FORMSTR, entry);
+    return LIST_ENTRY(list_head(&stack->items), struct form_str, entry);
 }
 
-static LPCWSTR get_formstr_data(FORMAT *format, FORMSTR *str)
+static const WCHAR *get_formstr_data(struct format *format, struct form_str *str)
 {
     return &format->deformatted[str->n];
 }
 
-static WCHAR *dup_formstr( FORMAT *format, FORMSTR *str, int *ret_len )
+static WCHAR *dup_formstr( struct format *format, struct form_str *str, int *ret_len )
 {
     WCHAR *val;
 
     if (!str->len) return NULL;
-    if ((val = msi_alloc( (str->len + 1) * sizeof(WCHAR) )))
+    if ((val = malloc( (str->len + 1) * sizeof(WCHAR) )))
     {
         memcpy( val, get_formstr_data(format, str), str->len * sizeof(WCHAR) );
         val[str->len] = 0;
@@ -154,128 +154,128 @@ static WCHAR *dup_formstr( FORMAT *format, FORMSTR *str, int *ret_len )
     return val;
 }
 
-static WCHAR *deformat_index( FORMAT *format, FORMSTR *str, int *ret_len )
+static WCHAR *deformat_index( struct format *format, struct form_str *str, int *ret_len )
 {
     WCHAR *val, *ret;
     DWORD len;
     int field;
 
-    if (!(val = msi_alloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(val = malloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
     lstrcpynW(val, get_formstr_data(format, str), str->len + 1);
-    field = atoiW( val );
-    msi_free( val );
+    field = wcstol( val, NULL, 10 );
+    free( val );
 
     if (MSI_RecordIsNull( format->record, field ) ||
         MSI_RecordGetStringW( format->record, field, NULL, &len )) return NULL;
 
     len++;
-    if (!(ret = msi_alloc( len * sizeof(WCHAR) ))) return NULL;
+    if (!(ret = malloc( len * sizeof(WCHAR) ))) return NULL;
     ret[0] = 0;
     if (MSI_RecordGetStringW( format->record, field, ret, &len ))
     {
-        msi_free( ret );
+        free( ret );
         return NULL;
     }
     *ret_len = len;
     return ret;
 }
 
-static WCHAR *deformat_property( FORMAT *format, FORMSTR *str, int *ret_len )
+static WCHAR *deformat_property( struct format *format, struct form_str *str, int *ret_len )
 {
     WCHAR *prop, *ret;
     DWORD len = 0;
     UINT r;
 
-    if (!(prop = msi_alloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(prop = malloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
     lstrcpynW( prop, get_formstr_data(format, str), str->len + 1 );
 
     r = msi_get_property( format->package->db, prop, NULL, &len );
     if (r != ERROR_SUCCESS && r != ERROR_MORE_DATA)
     {
-        msi_free( prop );
+        free( prop );
         return NULL;
     }
     len++;
-    if ((ret = msi_alloc( len * sizeof(WCHAR) )))
+    if ((ret = malloc( len * sizeof(WCHAR) )))
         msi_get_property( format->package->db, prop, ret, &len );
-    msi_free( prop );
+    free( prop );
     *ret_len = len;
     return ret;
 }
 
-static WCHAR *deformat_component( FORMAT *format, FORMSTR *str, int *ret_len )
+static WCHAR *deformat_component( struct format *format, struct form_str *str, int *ret_len )
 {
     WCHAR *key, *ret;
     MSICOMPONENT *comp;
 
-    if (!(key = msi_alloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(key = malloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
     lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
 
     if (!(comp = msi_get_loaded_component( format->package, key )))
     {
-        msi_free( key );
+        free( key );
         return NULL;
     }
     if (comp->Action == INSTALLSTATE_SOURCE)
         ret = msi_resolve_source_folder( format->package, comp->Directory, NULL );
     else
-        ret = strdupW( msi_get_target_folder( format->package, comp->Directory ) );
+        ret = wcsdup( msi_get_target_folder( format->package, comp->Directory ) );
 
-    if (ret) *ret_len = strlenW( ret );
+    if (ret) *ret_len = lstrlenW( ret );
     else *ret_len = 0;
-    msi_free( key );
+    free( key );
     return ret;
 }
 
-static WCHAR *deformat_file( FORMAT *format, FORMSTR *str, BOOL shortname, int *ret_len )
+static WCHAR *deformat_file( struct format *format, struct form_str *str, BOOL shortname, int *ret_len )
 {
     WCHAR *key, *ret = NULL;
     const MSIFILE *file;
     DWORD len = 0;
 
-    if (!(key = msi_alloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(key = malloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
     lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
 
     if (!(file = msi_get_loaded_file( format->package, key ))) goto done;
     if (!shortname)
     {
-        if ((ret = strdupW( file->TargetPath ))) len = strlenW( ret );
+        if ((ret = wcsdup( file->TargetPath ))) len = lstrlenW( ret );
         goto done;
     }
-    if ((len = GetShortPathNameW(file->TargetPath, NULL, 0)) <= 0)
+    if (!(len = GetShortPathNameW(file->TargetPath, NULL, 0)))
     {
-        if ((ret = strdupW( file->TargetPath ))) len = strlenW( ret );
+        if ((ret = wcsdup( file->TargetPath ))) len = lstrlenW( ret );
         goto done;
     }
     len++;
-    if ((ret = msi_alloc( len * sizeof(WCHAR) )))
+    if ((ret = malloc( len * sizeof(WCHAR) )))
         len = GetShortPathNameW( file->TargetPath, ret, len );
 
 done:
-    msi_free( key );
+    free( key );
     *ret_len = len;
     return ret;
 }
 
-static WCHAR *deformat_environment( FORMAT *format, FORMSTR *str, int *ret_len )
+static WCHAR *deformat_environment( struct format *format, struct form_str *str, int *ret_len )
 {
     WCHAR *key, *ret = NULL;
     DWORD len;
 
-    if (!(key = msi_alloc((str->len + 1) * sizeof(WCHAR)))) return NULL;
+    if (!(key = malloc((str->len + 1) * sizeof(WCHAR)))) return NULL;
     lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
 
     if ((len = GetEnvironmentVariableW( key, NULL, 0 )))
     {
         len++;
-        if ((ret = msi_alloc( len * sizeof(WCHAR) )))
+        if ((ret = malloc( len * sizeof(WCHAR) )))
             *ret_len = GetEnvironmentVariableW( key, ret, len );
     }
-    msi_free( key );
+    free( key );
     return ret;
 }
 
-static WCHAR *deformat_literal( FORMAT *format, FORMSTR *str, BOOL *propfound,
+static WCHAR *deformat_literal( struct format *format, struct form_str *str, BOOL *propfound,
                                 int *type, int *len )
 {
     LPCWSTR data = get_formstr_data(format, str);
@@ -300,7 +300,7 @@ static WCHAR *deformat_literal( FORMAT *format, FORMSTR *str, BOOL *propfound,
     {
         if (str->len != 1)
             replaced = NULL;
-        else if ((replaced = msi_alloc( sizeof(WCHAR) )))
+        else if ((replaced = malloc( sizeof(WCHAR) )))
         {
             *replaced = 0;
             *len = 0;
@@ -341,24 +341,23 @@ static WCHAR *deformat_literal( FORMAT *format, FORMSTR *str, BOOL *propfound,
 
 static WCHAR *build_default_format( const MSIRECORD *record )
 {
-    static const WCHAR fmt[] = {'%','i',':',' ','[','%','i',']',' ',0};
     int i, count = MSI_RecordGetFieldCount( record );
     WCHAR *ret, *tmp, buf[26];
     DWORD size = 1;
 
-    if (!(ret = msi_alloc( sizeof(*ret) ))) return NULL;
+    if (!(ret = malloc( sizeof(*ret) ))) return NULL;
     ret[0] = 0;
 
     for (i = 1; i <= count; i++)
     {
-        size += sprintfW( buf, fmt, i, i );
-        if (!(tmp = msi_realloc( ret, size * sizeof(*ret) )))
+        size += swprintf( buf, ARRAY_SIZE(buf), L"%d: [%d] ", i, i );
+        if (!(tmp = realloc( ret, size * sizeof(*ret) )))
         {
-            msi_free( ret );
+            free( ret );
             return NULL;
         }
         ret = tmp;
-        strcatW( ret, buf );
+        lstrcatW( ret, buf );
     }
     return ret;
 }
@@ -390,10 +389,10 @@ static BOOL format_is_literal(WCHAR x)
     return (format_is_alpha(x) || format_is_number(x));
 }
 
-static int format_lex(FORMAT *format, FORMSTR **out)
+static int format_lex(struct format *format, struct form_str **out)
 {
     int type, len = 1;
-    FORMSTR *str;
+    struct form_str *str;
     LPCWSTR data;
     WCHAR ch;
 
@@ -402,7 +401,7 @@ static int format_lex(FORMAT *format, FORMSTR **out)
     if (!format->deformatted)
         return FORMAT_NULL;
 
-    *out = msi_alloc_zero(sizeof(FORMSTR));
+    *out = calloc(1, sizeof(**out));
     if (!*out)
         return FORMAT_FAIL;
 
@@ -474,10 +473,10 @@ static int format_lex(FORMAT *format, FORMSTR **out)
     return type;
 }
 
-static FORMSTR *format_replace( FORMAT *format, BOOL propfound, BOOL nonprop,
-                                int oldsize, int type, WCHAR *replace, int len )
+static struct form_str *format_replace( struct format *format, BOOL propfound, BOOL nonprop,
+                                        int oldsize, int type, WCHAR *replace, int len )
 {
-    FORMSTR *ret;
+    struct form_str *ret;
     LPWSTR str, ptr;
     DWORD size = 0;
     int n;
@@ -495,13 +494,13 @@ static FORMSTR *format_replace( FORMAT *format, BOOL propfound, BOOL nonprop,
 
     if (size <= 1)
     {
-        msi_free(format->deformatted);
+        free(format->deformatted);
         format->deformatted = NULL;
         format->len = 0;
         return NULL;
     }
 
-    str = msi_alloc(size * sizeof(WCHAR));
+    str = malloc(size * sizeof(WCHAR));
     if (!str)
         return NULL;
 
@@ -523,7 +522,7 @@ static FORMSTR *format_replace( FORMAT *format, BOOL propfound, BOOL nonprop,
     ptr = &format->deformatted[format->n + oldsize];
     memcpy(&str[n], ptr, (lstrlenW(ptr) + 1) * sizeof(WCHAR));
 
-    msi_free(format->deformatted);
+    free(format->deformatted);
     format->deformatted = str;
     format->len = size - 1;
 
@@ -534,7 +533,7 @@ static FORMSTR *format_replace( FORMAT *format, BOOL propfound, BOOL nonprop,
     if (!replace)
         return NULL;
 
-    ret = msi_alloc_zero(sizeof(FORMSTR));
+    ret = calloc(1, sizeof(*ret));
     if (!ret)
         return NULL;
 
@@ -547,12 +546,12 @@ static FORMSTR *format_replace( FORMAT *format, BOOL propfound, BOOL nonprop,
     return ret;
 }
 
-static WCHAR *replace_stack_group( FORMAT *format, STACK *values,
+static WCHAR *replace_stack_group( struct format *format, struct stack *values,
                                    BOOL *propfound, BOOL *nonprop,
                                    int *oldsize, int *type, int *len )
 {
     WCHAR *replaced;
-    FORMSTR *content, *node;
+    struct form_str *content, *node;
     int n;
 
     *nonprop = FALSE;
@@ -561,7 +560,7 @@ static WCHAR *replace_stack_group( FORMAT *format, STACK *values,
     node = stack_pop(values);
     n = node->n;
     *oldsize = node->len;
-    msi_free(node);
+    free(node);
 
     while ((node = stack_pop(values)))
     {
@@ -573,10 +572,10 @@ static WCHAR *replace_stack_group( FORMAT *format, STACK *values,
         if (node->propfound)
             *propfound = TRUE;
 
-        msi_free(node);
+        free(node);
     }
 
-    content = msi_alloc_zero(sizeof(FORMSTR));
+    content = calloc(1, sizeof(*content));
     content->n = n;
     content->len = *oldsize;
     content->type = FORMAT_LITERAL;
@@ -584,7 +583,7 @@ static WCHAR *replace_stack_group( FORMAT *format, STACK *values,
     if (!format->groupfailed && (*oldsize == 2 ||
         (format->propfailed && !*nonprop)))
     {
-        msi_free(content);
+        free(content);
         return NULL;
     }
     else if (format->deformatted[content->n + 1] == '{' &&
@@ -609,7 +608,7 @@ static WCHAR *replace_stack_group( FORMAT *format, STACK *values,
 
     replaced = dup_formstr( format, content, len );
     *type = content->type;
-    msi_free(content);
+    free(content);
 
     if (format->groups == 0)
         format->propfailed = FALSE;
@@ -617,12 +616,12 @@ static WCHAR *replace_stack_group( FORMAT *format, STACK *values,
     return replaced;
 }
 
-static WCHAR *replace_stack_prop( FORMAT *format, STACK *values,
+static WCHAR *replace_stack_prop( struct format *format, struct stack *values,
                                   BOOL *propfound, BOOL *nonprop,
                                   int *oldsize, int *type, int *len )
 {
     WCHAR *replaced;
-    FORMSTR *content, *node;
+    struct form_str *content, *node;
     int n;
 
     *propfound = FALSE;
@@ -632,7 +631,7 @@ static WCHAR *replace_stack_prop( FORMAT *format, STACK *values,
     n = node->n;
     *oldsize = node->len;
     *type = stack_peek(values)->type;
-    msi_free(node);
+    free(node);
 
     while ((node = stack_pop(values)))
     {
@@ -642,10 +641,10 @@ static WCHAR *replace_stack_prop( FORMAT *format, STACK *values,
             stack_peek(values) && node->type != *type)
             *type = FORMAT_LITERAL;
 
-        msi_free(node);
+        free(node);
     }
 
-    content = msi_alloc_zero(sizeof(FORMSTR));
+    content = calloc(1, sizeof(*content));
     content->n = n + 1;
     content->len = *oldsize - 2;
     content->type = *type;
@@ -673,14 +672,14 @@ static WCHAR *replace_stack_prop( FORMAT *format, STACK *values,
         content->len += 2;
         replaced = dup_formstr( format, content, len );
     }
-    msi_free(content);
+    free(content);
     return replaced;
 }
 
-static UINT replace_stack(FORMAT *format, STACK *stack, STACK *values)
+static UINT replace_stack(struct format *format, struct stack *stack, struct stack *values)
 {
     WCHAR *replaced = NULL;
-    FORMSTR *beg, *top, *node;
+    struct form_str *beg, *top, *node;
     BOOL propfound = FALSE, nonprop = FALSE, group = FALSE;
     int type, n, len = 0, oldsize = 0;
 
@@ -700,7 +699,7 @@ static UINT replace_stack(FORMAT *format, STACK *stack, STACK *values)
 
     format->n = n;
     beg = format_replace( format, propfound, nonprop, oldsize, type, replaced, len );
-    msi_free(replaced);
+    free(replaced);
     if (!beg)
         return ERROR_SUCCESS;
 
@@ -725,7 +724,7 @@ static UINT replace_stack(FORMAT *format, STACK *stack, STACK *values)
             if (beg->propfound)
                 top->propfound = TRUE;
 
-            msi_free(beg);
+            free(beg);
             return ERROR_SUCCESS;
         }
     }
@@ -754,14 +753,14 @@ static BOOL verify_format(LPWSTR data)
     return TRUE;
 }
 
-static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
+static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                                       WCHAR** data, DWORD *len,
                                       MSIRECORD* record)
 {
-    FORMAT format;
-    FORMSTR *str = NULL;
-    STACK *stack, *temp;
-    FORMSTR *node;
+    struct format format;
+    struct form_str *str = NULL;
+    struct stack *stack, *temp;
+    struct form_str *node;
     int type;
 
     if (!ptr)
@@ -771,10 +770,10 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         return ERROR_SUCCESS;
     }
 
-    *data = strdupW(ptr);
+    *data = wcsdup(ptr);
     *len = lstrlenW(ptr);
 
-    ZeroMemory(&format, sizeof(FORMAT));
+    ZeroMemory(&format, sizeof(format));
     format.package = package;
     format.record = record;
     format.deformatted = *data;
@@ -829,7 +828,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
     *data = format.deformatted;
     *len = format.len;
 
-    msi_free(str);
+    free(str);
     free_stack(stack);
     free_stack(temp);
 
@@ -865,7 +864,7 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
         {
             deformat_string_internal(package, MSI_RecordGetString(record, i), &deformated, &len, NULL);
             MSI_RecordSetStringW(record_deformated, i, deformated);
-            msi_free(deformated);
+            free(deformated);
         }
     }
 
@@ -893,60 +892,50 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
     *size = len;
     msiobj_release(&record_deformated->hdr);
 end:
-    msi_free( format );
-    msi_free( deformated );
+    free( format );
+    free( deformated );
     return rc;
 }
 
-UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord, 
-                              LPWSTR szResult, LPDWORD sz )
+UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord, WCHAR *szResult, DWORD *sz )
 {
     UINT r = ERROR_INVALID_HANDLE;
     MSIPACKAGE *package;
     MSIRECORD *record;
 
-    TRACE("%d %d %p %p\n", hInstall, hRecord, szResult, sz);
+    TRACE( "%lu, %lu, %p, %p\n", hInstall, hRecord, szResult, sz );
+
+    record = msihandle2msiinfo(hRecord, MSIHANDLETYPE_RECORD);
+    if (!record)
+        return ERROR_INVALID_HANDLE;
 
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
-        HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
-        BSTR value = NULL;
-        awstring wstr;
+        LPWSTR value = NULL;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (remote_package)
+        if ((remote = msi_get_remote(hInstall)))
         {
-            hr = IWineMsiRemotePackage_FormatRecord( remote_package, hRecord,
-                                                     &value );
-            if (FAILED(hr))
-                goto done;
-
-            wstr.unicode = TRUE;
-            wstr.str.w = szResult;
-            r = msi_strcpy_to_awstring( value, SysStringLen(value), &wstr, sz );
-
-done:
-            IWineMsiRemotePackage_Release( remote_package );
-            SysFreeString( value );
-
-            if (FAILED(hr))
+            __TRY
             {
-                if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                    return HRESULT_CODE(hr);
-
-                return ERROR_FUNCTION_FAILED;
+                r = remote_FormatRecord(remote, (struct wire_record *)&record->count, &value);
             }
+            __EXCEPT(rpc_filter)
+            {
+                r = GetExceptionCode();
+            }
+            __ENDTRY
 
+            if (!r)
+                r = msi_strncpyW(value, -1, szResult, sz);
+
+            midl_user_free(value);
+            msiobj_release(&record->hdr);
             return r;
         }
     }
 
-    record = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
-
-    if (!record)
-        return ERROR_INVALID_HANDLE;
     if (!sz)
     {
         msiobj_release( &record->hdr );
@@ -963,52 +952,63 @@ done:
     return r;
 }
 
-UINT WINAPI MsiFormatRecordA( MSIHANDLE hInstall, MSIHANDLE hRecord,
-                              LPSTR szResult, LPDWORD sz )
+UINT WINAPI MsiFormatRecordA(MSIHANDLE hinst, MSIHANDLE hrec, char *buf, DWORD *sz)
 {
-    UINT r;
-    DWORD len, save;
+    MSIPACKAGE *package;
+    MSIRECORD *rec;
     LPWSTR value;
+    DWORD len;
+    UINT r;
 
-    TRACE("%d %d %p %p\n", hInstall, hRecord, szResult, sz);
+    TRACE( "%lu, %lu, %p, %p\n", hinst, hrec, buf, sz );
 
-    if (!hRecord)
+    rec = msihandle2msiinfo(hrec, MSIHANDLETYPE_RECORD);
+    if (!rec)
         return ERROR_INVALID_HANDLE;
 
-    if (!sz)
+    package = msihandle2msiinfo(hinst, MSIHANDLETYPE_PACKAGE);
+    if (!package)
     {
-        if (szResult)
-            return ERROR_INVALID_PARAMETER;
-        else
-            return ERROR_SUCCESS;
+        LPWSTR value = NULL;
+        MSIHANDLE remote;
+
+        if ((remote = msi_get_remote(hinst)))
+        {
+            __TRY
+            {
+                r = remote_FormatRecord(remote, (struct wire_record *)&rec->count, &value);
+            }
+            __EXCEPT(rpc_filter)
+            {
+                r = GetExceptionCode();
+            }
+            __ENDTRY
+
+            if (!r)
+                r = msi_strncpyWtoA(value, -1, buf, sz, TRUE);
+
+            midl_user_free(value);
+            msiobj_release(&rec->hdr);
+            return r;
+        }
     }
 
-    r = MsiFormatRecordW( hInstall, hRecord, NULL, &len );
+    r = MSI_FormatRecordW(package, rec, NULL, &len);
     if (r != ERROR_SUCCESS)
         return r;
 
-    value = msi_alloc(++len * sizeof(WCHAR));
+    value = malloc(++len * sizeof(WCHAR));
     if (!value)
-        return ERROR_OUTOFMEMORY;
-
-    r = MsiFormatRecordW( hInstall, hRecord, value, &len );
-    if (r != ERROR_SUCCESS)
         goto done;
 
-    save = len + 1;
-    len = WideCharToMultiByte(CP_ACP, 0, value, len + 1, NULL, 0, NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, value, len, szResult, *sz, NULL, NULL);
+    r = MSI_FormatRecordW(package, rec, value, &len);
+    if (!r)
+        r = msi_strncpyWtoA(value, len, buf, sz, FALSE);
 
-    if (szResult && len > *sz)
-    {
-        if (*sz) szResult[*sz - 1] = '\0';
-        r = ERROR_MORE_DATA;
-    }
-
-    *sz = save - 1;
-
+    free(value);
 done:
-    msi_free(value);
+    msiobj_release(&rec->hdr);
+    if (package) msiobj_release(&package->hdr);
     return r;
 }
 
@@ -1024,7 +1024,7 @@ DWORD deformat_string( MSIPACKAGE *package, const WCHAR *fmt, WCHAR **data )
 
     MSI_RecordSetStringW( rec, 0, fmt );
     MSI_FormatRecordW( package, rec, NULL, &len );
-    if (!(*data = msi_alloc( ++len * sizeof(WCHAR) )))
+    if (!(*data = malloc( ++len * sizeof(WCHAR) )))
     {
         msiobj_release( &rec->hdr );
         return 0;

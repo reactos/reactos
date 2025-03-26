@@ -32,6 +32,7 @@ const WDFFUNC *WdfFunctions_01017 = (WDFFUNC *)(&WdfVersion.Functions);
 // PWDF_DRIVER_GLOBALS WdfDriverGlobals = &((PFX_DRIVER_GLOBALS)&WdfDriverGlobalsVal)->Public;
 WDF_BIND_INFO WdfBindInfo = {0};
 PWDF_DRIVER_GLOBALS WdfDriverGlobals;
+extern FxLibraryGlobalsType FxLibraryGlobals;
 
 #define  KMDF_DEFAULT_NAME   "Wdf01000"
 
@@ -61,6 +62,8 @@ RosInitWdf()
 	WdfBindInfo.FuncCount = WdfVersion.FuncCount;
 	WdfBindInfo.FuncTable = (WDFFUNC *)(&WdfVersion.Functions);
 	fxDriverGlobals->WdfBindInfo = &WdfBindInfo;
+	FxLibraryGlobals.OsVersionInfo.dwMajorVersion = 5;
+	FxLibraryGlobals.OsVersionInfo.dwMinorVersion = 1;
 }
 
 void

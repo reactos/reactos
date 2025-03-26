@@ -11,7 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Otomatis &Urutkan", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "Sejajarkan dengan &Kisi", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -32,12 +32,12 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Otomatis &Urutkan", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "Sejajarkan dengan &Kisi", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Segarkan", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Segarkan", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Tempel", FCIDM_SHVIEW_INSERT
-        MENUITEM "Tempel Pintasan", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Te&mpel", FCIDM_SHVIEW_INSERT
+        MENUITEM "Tempel &pintasan", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -88,31 +88,38 @@ BEGIN
     END
 END
 
+IDM_DVSELECT MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Se&lect", 0
+    END
+END
+
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Jelajah Folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Batal", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+    DEFPUSHBUTTON "OK", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Batal", IDCANCEL, 125, 175, 60, 15
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Jelajah Folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Folder:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Buat Folder Baru", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Batal", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 156, 174, 50, 14
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -121,28 +128,28 @@ CAPTION "Pesan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Ya", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Ya &ke semua", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Tidak", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Batal", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Ya &ke semua", IDC_YESTOALL, 92, 69, 65, 14
+    PUSHBUTTON "&Tidak", IDNO, 162, 69, 53, 14
+    PUSHBUTTON "Batal", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 275, 198
+IDD_ABOUT DIALOGEX 20, 20, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tentang %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
-    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
-    LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
+    LTEXT "Hak Cipta 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Tim ReactOS\0", IDC_STATIC, 105, 75, 53, 10
-    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
     LTEXT "Versi ReactOS ini terdaftar kepada:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
-    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
-    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
     LTEXT "Memori fisik yang terpasang:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
@@ -167,9 +174,9 @@ BEGIN
     LTEXT "Ketikkan nama program, folder, dokumen, atau sumber Internet dan ReactOS akan membukanya.", 12289, 36, 11, 185, 18
     LTEXT "&Buka:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
-    DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14, WS_TABSTOP
-    PUSHBUTTON "Batal", IDCANCEL, 98, 70, 59, 14, WS_TABSTOP
-    PUSHBUTTON "&Jelajah...", 12288, 160, 70, 59, 14, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14
+    PUSHBUTTON "Batal", IDCANCEL, 98, 70, 59, 14
+    PUSHBUTTON "&Jelajah...", 12288, 160, 70, 59, 14
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -192,7 +199,7 @@ BEGIN
     LTEXT "&Tombol pintasan:", IDC_SHORTCUT_KEY, 8, 117, 68, 10
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "&Jalankan:", IDC_SHORTCUT_RUN, 8, 136, 68, 10
-    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "K&omentar:", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Cari Target...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
@@ -202,13 +209,13 @@ END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Properti yang Diperpanjang"
+CAPTION "Properti Tingkat Lanjut"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Pilih properti tingkat lanjut yang diinginkan untuk pintasan ini.", -1, 5, 30, 210, 10
     CHECKBOX "Jalankan dengan kredensial yang berbeda", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
-    LTEXT "Opsi ini memungkinkan Anda untuk menjalankan pintasan ini sebagai pengguna lain, atau sebagai zanda sendiri sambil melindungi komputer dan data Anda dari aktivitas program yang tanpa izin.", -1, 50, 60, 175, 40
+    LTEXT "Opsi ini memungkinkan Anda untuk menjalankan pintasan ini sebagai pengguna lain, atau sebagai anda sendiri sambil melindungi komputer dan data Anda dari aktivitas program yang tanpa izin.", -1, 50, 60, 175, 40
     CHECKBOX "Jalankan di ruang memori yang terpisah", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Batal", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
@@ -237,10 +244,10 @@ BEGIN
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atribut:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 151, 70, 10
-    AUTOCHECKBOX "&Tersembunyi", 14022, 126, 151, 70, 10
-    AUTOCHECKBOX "&Arsip", 14023, 181, 151, 70, 10
-    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 151, 68, 10
+    AUTOCHECKBOX "&Tersembunyi", 14022, 126, 151, 55, 10
+    AUTOCHECKBOX "&Arsip", 14023, 181, 151, 59, 10
+    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -276,29 +283,29 @@ BEGIN
     AUTOCHECKBOX "&Hanya-baca", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "&Tersembunyi", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "&Arsip", 14023, 181, 188, 49, 10
-    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 180, 185, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 180, 185, 50, 14
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Versi"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Versi berkas: ", 14000, 10, 10, 55, 10
+    LTEXT "Versi berkas:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Deskripsi: ", 14002, 10, 27, 45, 10
+    LTEXT "Deskripsi:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Hak cipta: ", 14004, 10, 46, 66, 10
+    LTEXT "Hak cipta:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Informasi versi lain: ", 14006, 6, 70, 222, 115
-    LTEXT "Nama butir: ", 14007, 13, 82, 50, 10
-    LTEXT "Nilai: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Informasi versi lain", 14006, 6, 70, 222, 115
+    LTEXT "Nama butir:", 14007, 13, 82, 50, 10
+    LTEXT "Nilai:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Umum"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -322,42 +329,42 @@ BEGIN
     LTEXT "Kapasitas:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "Drive %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "&Pembersihan disk", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "kompres drive untuk menyimpan ruang disk", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Izinkan Layanan Pengindeksan untuk mengindeks disk ini agar lebih cepat mencari berkas", 14012, 8, 205, 222, 10, WS_DISABLED
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
+    CTEXT "Drive %c", 14009, 95, 162, 50, 10
+    PUSHBUTTON "&Pembersihan disk", 14010, 160, 159, 70, 15
+    LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    CHECKBOX "kompres drive untuk menyimpan ruang disk", 14011, 8, 190, 222, 10, WS_DISABLED
+    CHECKBOX "Izinkan Layanan Pengindeksan untuk mengindeks disk ini agar lebih cepat mencari berkas", 14012, 8, 204, 222, 10, WS_DISABLED
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Alat"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Pemeriksaan kesalahan", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Opsi ini akan memeriksa kesalahan\nvolume.", -1, 40, 25, 160, 20
-    PUSHBUTTON "Cek Sekarang...", 14000, 130, 45, 90, 15, WS_TABSTOP
+    LTEXT "Opsi ini akan memeriksa kesalahan volume.", -1, 40, 25, 160, 20
+    PUSHBUTTON "Cek Sekarang...", 14000, 130, 45, 90, 15
     GROUPBOX "Defragmentasi", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Opsi ini akan men-defragmen berkas dalam volume", -1, 40, 85, 160, 20
-    PUSHBUTTON "Defragmen Sekarang...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    LTEXT "Opsi ini akan men-defragmen berkas dalam volume.", -1, 40, 85, 160, 20
+    PUSHBUTTON "Defragmen Sekarang...", 14001, 130, 105, 90, 15
     GROUPBOX "Cadangkan", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Opsi ini akan mencadangkan berkas dalam volume.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Cadangkan Sekarang...", 14002, 130, 170, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Cadangkan Sekarang...", 14002, 130, 170, 90, 15
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Perangkat Keras"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Jalankan Sebagai"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -368,26 +375,26 @@ BEGIN
     CHECKBOX "Pengguna berikut:", 14002, 10, 100, 90, 10
     LTEXT "Nama pengguna:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14
     LTEXT "Kata Sandi:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-    PUSHBUTTON "Batal", 14008, 122, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14006, 180, 140, 30, 14
+    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
+    PUSHBUTTON "Batal", 14008, 122, 170, 60, 14
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Properti Tampungan Daur Ulang"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Pengaturan untuk lokasi yang dipilih", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Ukuran khusus:", 14001, 20, 90, 80, 10, WS_TABSTOP
+    RADIOBUTTON "&Ukuran khusus:", 14001, 20, 90, 80, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "Ukur&an maksimal (MB):", -1, 20, 105, 74, 10
     RADIOBUTTON "Jangan pindahkan berkas ke Tampungan Dau&r Ulang. Hapus segera.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Tampilkan dialog konfirmasi penghapusan", 14004, 20, 155, 140, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Tampilkan dialog konfirmasi penghapusan", 14004, 20, 155, 140, 10
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -406,59 +413,59 @@ BEGIN
     PUSHBUTTON "Batal", IDCANCEL, 206, 236, 50, 14
 END
 
-IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
+IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Umum"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Tugas", -1, 7, 10, 249, 45
-    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
-    AUTORADIOBUTTON "Tampilkan tugas umum di &folder", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Gunakan folder kla&sik ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
-    GROUPBOX "Jelajah folder", -1, 7, 60, 249, 45, WS_TABSTOP
+    GROUPBOX "Tugas", -1, 7, 10, 249, 40
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
+    AUTORADIOBUTTON "Tampilkan tugas umum di &folder", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Gunakan folder kla&sik ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    GROUPBOX "Jelajah folder", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "Buka setiap folder di jendela yang sa&ma", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Buka setiap folder di jen&dela sendiri", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
-    GROUPBOX "Klik item sebagai berikut", -1, 7, 110, 249, 76
+    AUTORADIOBUTTON "Buka setiap folder di jendela yang sa&ma", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Buka setiap folder di jen&dela sendiri", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
+    GROUPBOX "Klik item sebagai berikut", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "S&atu klik untuk membuka butir (arahkan untuk pilih)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "D&ua klik untuk membuka butir (satu klik untuk pilih)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 172, 170, 10
-    AUTORADIOBUTTON "Garis bawahi judul ikon yang konsisten dengan browser saya", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 203, 16, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Garis bawahi judul ikon hanya ketika saya &mengarahkan ke judul tersebut", IDC_FOLDER_OPTIONS_ULPOINT, 50, 152, 203, 16
-    PUSHBUTTON "&Kembalikan asal", IDC_FOLDER_OPTIONS_RESTORE, 167, 190, 90, 14, WS_TABSTOP
+    AUTORADIOBUTTON "S&atu klik untuk membuka butir (arahkan untuk pilih)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "D&ua klik untuk membuka butir (satu klik untuk pilih)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    AUTORADIOBUTTON "Garis bawahi judul ikon sesuai dengan &browser saya", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Garis bawahi judul ikon hanya saat m&engarahkan kursor", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    PUSHBUTTON "&Kembalikan asal", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14
 END
 
-IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
+IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Tampilan"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Tampilan folder", -1, 7, 10, 249, 60
-    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Anda bisa menerapkan (baik Rinci maupun Ubin) yang\nanda gunakan untuk folder ini ke semua folder.", -1, 60, 20, 180, 20
-    PUSHBUTTON "&Terapkan ke Semua Folder", IDC_VIEW_APPLY_TO_ALL, 60, 50, 90, 14, WS_TABSTOP
-    PUSHBUTTON "&Reset Semua Folder", IDC_VIEW_RESET_ALL, 150, 50, 75, 14, WS_TABSTOP
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
+    LTEXT "Anda bisa menerapkan (baik Rinci maupun Ubin) yang anda gunakan untuk folder ini ke semua folder.", -1, 40, 20, 213, 20
+    PUSHBUTTON "&Terapkan ke Semua Folder", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14
+    PUSHBUTTON "&Reset Semua Folder", IDC_VIEW_RESET_ALL, 135, 50, 115, 14
     LTEXT "Pengaturan tingkat lanjut:", -1, 7, 80, 100, 10
-    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "&Kembalikan asal", IDC_VIEW_RESTORE_DEFAULTS, 177, 215, 80, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
+    PUSHBUTTON "&Kembalikan asal", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14
 END
 
-IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
+IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Jenis Berkas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Jenis berkas &terdaftar:", -1, 7, 10, 180, 10
-    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
-    PUSHBUTTON "&Baru", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
-    PUSHBUTTON "&Hapus", IDC_FILETYPES_DELETE, 200, 140, 55, 14, WS_TABSTOP
-    GROUPBOX "Rincian untuk ekstensi '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 249, 70
-    LTEXT "Buka dengan:", -1, 12, 180, 40, 10
-    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
-    LTEXT "Appname", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
-    PUSHBUTTON "&Ganti...", IDC_FILETYPES_CHANGE, 200, 180, 52, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 40
-    PUSHBUTTON "Tin&gkat Lanjut", IDC_FILETYPES_ADVANCED, 200, 215, 52, 14, WS_TABSTOP
+    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 99
+    PUSHBUTTON "&Baru", IDC_FILETYPES_NEW, 140, 123, 55, 14
+    PUSHBUTTON "&Hapus", IDC_FILETYPES_DELETE, 200, 123, 55, 14
+    GROUPBOX "Rincian untuk ekstensi '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 249, 70
+    LTEXT "Buka dengan:", -1, 12, 153, 48, 10
+    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
+    LTEXT "", IDC_FILETYPES_APPNAME, 100, 153, 80, 10
+    PUSHBUTTON "&Ganti...", IDC_FILETYPES_CHANGE, 200, 153, 52, 14
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 160, 40
+    PUSHBUTTON "Tin&gkat Lanjut", IDC_FILETYPES_ADVANCED, 200, 188, 52, 14
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -488,9 +495,23 @@ CAPTION "Keluar ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Anda yakin ingin keluar?", -1, 49, 15, 131, 8
+    LTEXT "Anda yakin ingin keluar?", -1, 49, 15, 132, 8
     DEFPUSHBUTTON "&Keluar", IDOK, 49, 38, 43, 14
     PUSHBUTTON "Batal", IDCANCEL, 99, 38, 43, 14
+END
+
+IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
+    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
+    PUSHBUTTON "&Ganti Pengguna", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Keluar", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Cancel", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
+    LTEXT "Keluar ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
+    CTEXT "Ganti Pengguna", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Keluar", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -513,7 +534,7 @@ BEGIN
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 33, 212, 200
     GROUPBOX "Tindakan", -1, 7, 48, 212, 146
     AUTORADIOBUTTON "Pilih &Tindakan untuk menjalankan:", 1005, 14, 57, 202, 10, WS_GROUP
-    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 24, 69, 192, 107
+    CONTROL "", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 24, 69, 192, 107
     AUTORADIOBUTTON "Anjurkan saya setiap waktu untuk &memilih tindakan", 1006, 14, 180, 202, 10
     PUSHBUTTON "&Kembalikan Asal", 1008, 108, 197, 110, 14, WS_DISABLED
 END
@@ -616,8 +637,8 @@ CAPTION "Ganti Ikon"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Cari ikon di berkas ini:", -1, 7, 7, 179, 10
-    PUSHBUTTON "Jelajah...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "Jelajah...", IDC_BUTTON_PATH, 135, 17, 50, 14
     LTEXT "Pilih ikon dari daftar di bawah ini:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
@@ -662,7 +683,7 @@ BEGIN
     PUSHBUTTON "&Baru...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
     PUSHBUTTON "&Edit...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
     PUSHBUTTON "&Hapus", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Jadikan Asli", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    PUSHBUTTON "&Jadikan Asal", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
     AUTOCHECKBOX "&Konfirmasikan buka setelah mengunduh", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
     AUTOCHECKBOX "&Selalu tampilkan ekstensi", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
     AUTOCHECKBOX "&Jelajah di jendela yang sama", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
@@ -685,7 +706,7 @@ BEGIN
     PUSHBUTTON "Batal", IDCANCEL, 160, 40, 60, 14
 END
 
-IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
+IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 220
 CAPTION "Sesuaikan"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
@@ -694,16 +715,16 @@ BEGIN
     LTEXT "Gunakan jenis &folder ini sebagai template:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Juga terapkan ke semua &subfolder", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Gambar folder", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    GROUPBOX "Gambar folder", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
     LTEXT "Untuk tampilan Gambar Kecil, Anda dapat meletakkan gambar di folder ini untuk mengingatkan Anda tentang konten.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "&Pilih Gambar...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Kembalikan asal", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    PUSHBUTTON "&Pilih Gambar...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
+    PUSHBUTTON "&Kembalikan asal", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
     LTEXT "Pratinjau:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Ikon folder", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "Untuk semua tampilan kecuali Gambar Kecil, Anda dapat mengubah ikon ""folder"" standar menjadi ikon lain.", IDC_STATIC, 15, 180, 210, 25
-    ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Ganti &Ikon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    GROUPBOX "Ikon folder", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
+    LTEXT "Untuk semua tampilan kecuali Gambar Kecil, Anda dapat mengubah ikon ""folder"" standar menjadi ikon lain.", IDC_STATIC, 15, 175, 210, 25
+    ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
+    PUSHBUTTON "Ganti &Ikon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
@@ -781,6 +802,7 @@ BEGIN
     IDS_DISCONNECT "Putuskan"
     IDS_OPENFILELOCATION "&Buka lokasi berkas"
     IDS_SENDTO_MENU "Kiri&m Ke"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Kesalahan memindahkan Berkas atau Folder"
     IDS_COPYERRORTITLE "Kesalahan menyalin Berkas atau Folder"
@@ -789,7 +811,11 @@ BEGIN
     IDS_COPYERRORSAME "Tidak bisa menyalin '%s': Nama berkas asal dan tujuan sama."
     IDS_MOVEERRORSUBFOLDER "Tidak bisa memindahkan '%s': Folder tujuan merupakan subfolder dari folder asal."
     IDS_COPYERRORSUBFOLDER "Tidak bisa menyalin '%s': Folder tujuan merupakan subfolder dari folder asal."
+    IDS_MOVEERROR "Tidak bisa memindah '%s': %s"
+    IDS_COPYERROR "Tidak bisa menyalin '%s': %s"
 
+    IDS_CREATEFILE_DENIED "Tidak bisa membuat berkas %1"
+    IDS_CREATEFILE_CAPTION "Kesalahan membuat berkas"
     IDS_CREATEFOLDER_DENIED "Tidak bisa membuat folder folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Tidak bisa membuat folder"
     IDS_DELETEITEM_CAPTION "Konfirmasi Penghapusan Berkas"
@@ -817,17 +843,26 @@ BEGIN
     IDS_RESTART_PROMPT "Anda ingin memulai ulang sistem?"
     IDS_SHUTDOWN_TITLE "Nonaktifkan"
     IDS_SHUTDOWN_PROMPT "Anda ingin menonaktifkan?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Disk Lokal"
     IDS_FORMAT_WARNING "PERINGATAN: Memformat akan menghapus SELURUH data dalam disk.\nUntuk memformat disk, klik OK. untuk keluar, klik BATAL."
     IDS_FORMAT_COMPLETE "Format Selesai."
+
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Tidak bisa memformat volume ini"
+    IDS_NO_FORMAT "Volume ini tidak bisa diformat! Volume ini berisi berkas sistem yang penting agar ReactOS dapat berjalan."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Tidak bisa menampilkan kotak dialog Jalankan Berkas (kesalahan internal)"
     IDS_RUNDLG_BROWSE_ERROR "Tidak bisa menampilkan kotak dialog Jelajah (kesalahan internal)"
     IDS_RUNDLG_BROWSE_CAPTION "Jelajah"
     IDS_RUNDLG_BROWSE_FILTER "Berkas Eksekusi (*.exe)\0*.exe\0Semua Berkas (*.*)\0*.*\0"
+
+    /* Shortcut property sheet */
+    IDS_SHORTCUT_RUN_NORMAL "Jendela Normal"
+    IDS_SHORTCUT_RUN_MIN "Minimized"
+    IDS_SHORTCUT_RUN_MAX "Maximized"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Mulai\\Program"
@@ -860,6 +895,7 @@ BEGIN
     IDS_NETWORKPLACE "Tempat Jaringan Saya"
 
     IDS_NEWFOLDER "Folder Baru"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Disk Lokal"
     IDS_DRIVE_CDROM "CD Drive"
@@ -876,10 +912,12 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "Peng&arang"
     IDS_SHELL_ABOUT_BACK "< Kem&bali"
-    FCIDM_SHVIEW_NEW "Baru"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Folder Baru"
     FCIDM_SHVIEW_NEWLINK "&Tautan Baru"
     IDS_FOLDER_OPTIONS "Opsi Folder"
+    IDS_TASKBAR_OPTIONS "Taskbar dan Menu Mulai"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Sesuaikan Menu Mulai dan bilah tugas, seperti beberapa jenis butir yang ingin ditampilkan."
     IDS_RECYCLEBIN_LOCATION "Lokasi Tampungan Daur Ulang"
     IDS_RECYCLEBIN_DISKSPACE "Ruang Tersedia"
     IDS_EMPTY_BITBUCKET "Kosongkan Tampungan Daur Ulang"
@@ -893,6 +931,9 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Tidak bisa menampilkan properti (Kode Kesalahan: %lu)."
     IDS_CANTDISCONNECT "Tidak bisa memutuskan (Kode Kesalahan: %lu)."
     IDS_NONE "(Tidak ada)"
+
+    IDS_EXPAND "&Perluas"
+    IDS_COLLAPSE "&Persempit"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
@@ -946,10 +987,6 @@ BEGIN
     IDS_FILE_TYPES "Jenis Berkas"
     IDS_COLUMN_EXTENSION "Ekstensi"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "Berkas %s"
-
     IDS_BYTES_FORMAT "byte"
     IDS_UNKNOWN_APP "Aplikasi tidak diketahui"
     IDS_EXE_DESCRIPTION "Deskripsi:"
@@ -957,6 +994,13 @@ BEGIN
     IDS_MENU_EMPTY "(Kosong)"
     IDS_OBJECTS "%d Obyek"
     IDS_OBJECTS_SELECTED "%d Obyek terpilih"
+
+    IDS_SEARCH_BROWSEITEM "Jelajah..."
+
+    IDS_TITLE_MYCOMP "Komputer Saya"
+    IDS_TITLE_MYNET "Tempat Jaringan Saya"
+    IDS_TITLE_BIN_1 "Tampungan Daur Ulang (penuh)"
+    IDS_TITLE_BIN_0 "Tampungan Daur Ulang (kosong)"
 
     IDS_ADVANCED_FOLDER "Berkas dan Folder"
     IDS_ADVANCED_NET_CRAWLER "Cari otomatis folder dan printer jaringan"
@@ -977,6 +1021,16 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Tampilkan Panel Kontrol pada Komputer Saya"
     IDS_ADVANCED_SHOW_COMP_COLOR "Tampilkan file NTFS terenkripsi atau dikompresi dalam warna"
     IDS_ADVANCED_SHOW_INFO_TIP "Tampilkan deskrisi popup untuk butir folder dan desktop"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Tampilkan Favorit"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Tampilkan Log Off"
+    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Perluas Panel Kontrol"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Perluas Dokumen Saya"
+    IDS_ADVANCED_EXPAND_PRINTERS "Perluas Printer"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "Perluas Gambar Saya"
+    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Perluas Sambungan Jaringan"
+    IDS_ADVANCED_DISPLAY_RUN "Tampilkan Jalankan"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Tampilkan Alat Administratif"
+    IDS_ADVANCED_SMALL_START_MENU "Tampilkan Ikon Kecil dalam Menu mulai"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Tin&gkat lanjut"
     IDS_NEWEXT_ADVANCED_RIGHT "Tin&gkat lanjut >>"
@@ -993,7 +1047,7 @@ BEGIN
     IDS_EDITING_ACTION "Edit tindakan untuk jenis: "
     IDS_NO_ICONS "Berkas '%s' tidak berisi ikon.\n\nPilih ikon dari daftar atau pilih berkas yang berbeda."
     IDS_FILE_NOT_FOUND "Berkas '%s' tidak ditemukan."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_LINK_INVALID "Butir '%s' yang menjadi rujukan pintasan telah diubah atau dipindah, sehingga pintasan ini tidak akan bekerja semestinya."
     IDS_COPYTOMENU "Salin ke &folder..."
     IDS_COPYTOTITLE "Pilih tempat dimana anda ingin menyalin '%s'. Kemudian klik tombol Salin."
     IDS_COPYITEMS "Salin Item"
@@ -1004,4 +1058,10 @@ BEGIN
     IDS_MOVEBUTTON "Pindahkan"
 
     IDS_SYSTEMFOLDER "Folder Sistem"
+
+    /* For IDD_LOG_OFF_FANCY */
+    IDS_LOG_OFF_DESC "Menutup semua program dan mengakhiri sesi ReactOS anda."
+    IDS_SWITCH_USER_DESC "Memungkinkan pengguna lain masuk saat program dan Berkas anda masih terbuka.\r\n\r\n(Anda bisa mengganti pengguna dengan menekan tombol logo Windows + L.)"
+    IDS_LOG_OFF_TITLE "Keluar"
+    IDS_SWITCH_USER_TITLE "Ganti Pengguna"
 END

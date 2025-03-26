@@ -142,7 +142,7 @@ SetMapMode(
     /* Handle METADC16 here, since we don't have a DCATTR. */
     if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
     {
-        return GetAndSetDCDWord(hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
+        return METADC_SetMapMode(hdc, iMode);
     }
 
     /* Get the DC attribute */
@@ -157,7 +157,7 @@ SetMapMode(
     if ((iMode != pdcattr->iMapMode) || (iMode == MM_ISOTROPIC))
     {
         pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-        return GetAndSetDCDWord(hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
+        return GetAndSetDCDWord(hdc, GdiGetSetMapMode, iMode, EMR_SETMAPMODE, 0, 0 );
     }
 
     return pdcattr->iMapMode;
@@ -323,11 +323,11 @@ ModifyWorldTransform(
 
     if (dwMode == MWT_SET)
     {
-       HANDLE_METADC(BOOL, SetWorldTransform, FALSE, hdc, pxform);
+       HANDLE_EMETAFDC(BOOL, SetWorldTransform, FALSE, hdc, pxform);
     }
     else
     {
-       HANDLE_METADC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
+       HANDLE_EMETAFDC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
     }
 
     /* Get the DC attribute */
@@ -470,7 +470,7 @@ SetViewportExtEx(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, SetViewportExtEx, FALSE, hdc, nXExtent, nYExtent, lpSize);
+    HANDLE_METADC(BOOL, SetViewportExtEx, FALSE, hdc, nXExtent, nYExtent);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -537,7 +537,7 @@ SetWindowOrgEx(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, SetWindowOrgEx, FALSE, hdc, X, Y, lpPoint);
+    HANDLE_METADC(BOOL, SetWindowOrgEx, FALSE, hdc, X, Y);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -589,7 +589,7 @@ SetWindowExtEx(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, SetWindowExtEx, FALSE, hdc, nXExtent, nYExtent, lpSize);
+    HANDLE_METADC(BOOL, SetWindowExtEx, FALSE, hdc, nXExtent, nYExtent);
 
     /* Get the DC attr */
     pdcattr = GdiGetDcAttr(hdc);
@@ -660,7 +660,7 @@ SetViewportOrgEx(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, SetViewportOrgEx, FALSE, hdc, X, Y, lpPoint);
+    HANDLE_METADC(BOOL, SetViewportOrgEx, FALSE, hdc, X, Y);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -707,7 +707,7 @@ ScaleViewportExtEx(
     _In_ INT yDenom,
     _Out_ LPSIZE lpSize)
 {
-    HANDLE_METADC(BOOL, ScaleViewportExtEx, FALSE, hdc, xNum, xDenom, yNum, yDenom, lpSize);
+    HANDLE_METADC(BOOL, ScaleViewportExtEx, FALSE, hdc, xNum, xDenom, yNum, yDenom);
 
     if (!GdiGetDcAttr(hdc))
     {
@@ -731,7 +731,7 @@ ScaleWindowExtEx(
     _In_ INT yDenom,
     _Out_ LPSIZE lpSize)
 {
-    HANDLE_METADC(BOOL, ScaleWindowExtEx, FALSE, hdc, xNum, xDenom, yNum, yDenom, lpSize);
+    HANDLE_METADC(BOOL, ScaleWindowExtEx, FALSE, hdc, xNum, xDenom, yNum, yDenom);
 
     if (!GdiGetDcAttr(hdc))
     {
@@ -863,7 +863,7 @@ OffsetViewportOrgEx(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, OffsetViewportOrgEx, FALSE, hdc, nXOffset, nYOffset, lpPoint);
+    HANDLE_METADC16(BOOL, OffsetViewportOrgEx, FALSE, hdc, nXOffset, nYOffset);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -895,6 +895,9 @@ OffsetViewportOrgEx(
         pdcattr->ptlViewportOrg.x += nXOffset;
         pdcattr->ptlViewportOrg.y += nYOffset;
     }
+
+    HANDLE_EMETAFDC(BOOL, SetViewportOrgEx, FALSE, hdc, pdcattr->ptlViewportOrg.x, pdcattr->ptlViewportOrg.y);
+
     return TRUE;
 
 //    return  NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
@@ -914,7 +917,7 @@ OffsetWindowOrgEx(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, OffsetWindowOrgEx, FALSE, hdc, nXOffset, nYOffset, lpPoint);
+    HANDLE_METADC16(BOOL, OffsetWindowOrgEx, FALSE, hdc, nXOffset, nYOffset);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -946,6 +949,9 @@ OffsetWindowOrgEx(
         pdcattr->ptlWindowOrg.y += nYOffset;
         pdcattr->lWindowOrgx += nXOffset;
     }
+
+    HANDLE_EMETAFDC(BOOL, SetWindowOrgEx, FALSE, hdc, pdcattr->ptlWindowOrg.x, pdcattr->ptlWindowOrg.y);
+
     return TRUE;
 
 //    return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);

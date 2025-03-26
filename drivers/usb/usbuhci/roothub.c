@@ -195,13 +195,13 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
     PortControl.PortEnableDisableChange = 1;
     WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
 
-    if (UhciExtension->HcFlavor == UHCI_VIA &&
-        UhciExtension->HcFlavor == UHCI_VIA_x01 &&
-        UhciExtension->HcFlavor == UHCI_VIA_x02 &&
-        UhciExtension->HcFlavor == UHCI_VIA_x03 &&
+    if (UhciExtension->HcFlavor == UHCI_VIA ||
+        UhciExtension->HcFlavor == UHCI_VIA_x01 ||
+        UhciExtension->HcFlavor == UHCI_VIA_x02 ||
+        UhciExtension->HcFlavor == UHCI_VIA_x03 ||
         UhciExtension->HcFlavor == UHCI_VIA_x04)
     {
-        DPRINT("UhciRHPortResetComplete: Via chip. FIXME\n");
+        DPRINT1("UhciRHPortResetComplete: Via chip. FIXME\n");
         DbgBreakPoint();
         return;
     }
@@ -241,7 +241,7 @@ UhciRHSetFeaturePortResetWorker(IN PUHCI_EXTENSION UhciExtension,
     RegPacket.UsbPortRequestAsyncCallback(UhciExtension,
                                           10, // TimerValue
                                           pPort,
-                                          sizeof(pPort),
+                                          sizeof(*pPort),
                                           UhciRHPortResetComplete);
 }
 
@@ -266,10 +266,10 @@ UhciRHSetFeaturePortReset(IN PVOID uhciExtension,
 
     UhciExtension->ResetPortMask = ResetPortMask | PortBit;
 
-    if (UhciExtension->HcFlavor == UHCI_VIA &&
-        UhciExtension->HcFlavor == UHCI_VIA_x01 &&
-        UhciExtension->HcFlavor == UHCI_VIA_x02 &&
-        UhciExtension->HcFlavor == UHCI_VIA_x03 &&
+    if (UhciExtension->HcFlavor == UHCI_VIA ||
+        UhciExtension->HcFlavor == UHCI_VIA_x01 ||
+        UhciExtension->HcFlavor == UHCI_VIA_x02 ||
+        UhciExtension->HcFlavor == UHCI_VIA_x03 ||
         UhciExtension->HcFlavor == UHCI_VIA_x04)
     {
         DPRINT1("UhciRHSetFeaturePortReset: Via chip. FIXME\n");

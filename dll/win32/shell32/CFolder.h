@@ -27,23 +27,23 @@ public:
     HRESULT Initialize(LPITEMIDLIST idlist);
 
     // *** Folder methods ***
-    virtual HRESULT STDMETHODCALLTYPE get_Title(BSTR *pbs);
-    virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_ParentFolder(Folder **ppsf);
-    virtual HRESULT STDMETHODCALLTYPE Items(FolderItems **ppid);
-    virtual HRESULT STDMETHODCALLTYPE ParseName(BSTR bName, FolderItem **ppid);
-    virtual HRESULT STDMETHODCALLTYPE NewFolder(BSTR bName, VARIANT vOptions);
-    virtual HRESULT STDMETHODCALLTYPE MoveHere(VARIANT vItem, VARIANT vOptions);
-    virtual HRESULT STDMETHODCALLTYPE CopyHere(VARIANT vItem, VARIANT vOptions);
-    virtual HRESULT STDMETHODCALLTYPE GetDetailsOf(VARIANT vItem, int iColumn, BSTR *pbs);
+    STDMETHOD(get_Title)(BSTR *pbs) override;
+    STDMETHOD(get_Application)(IDispatch **ppid) override;
+    STDMETHOD(get_Parent)(IDispatch **ppid) override;
+    STDMETHOD(get_ParentFolder)(Folder **ppsf) override;
+    STDMETHOD(Items)(FolderItems **ppid) override;
+    STDMETHOD(ParseName)(BSTR bName, FolderItem **ppid) override;
+    STDMETHOD(NewFolder)(BSTR bName, VARIANT vOptions) override;
+    STDMETHOD(MoveHere)(VARIANT vItem, VARIANT vOptions) override;
+    STDMETHOD(CopyHere)(VARIANT vItem, VARIANT vOptions) override;
+    STDMETHOD(GetDetailsOf)(VARIANT vItem, int iColumn, BSTR *pbs) override;
 
     // *** Folder2 methods ***
-    virtual HRESULT STDMETHODCALLTYPE get_Self(FolderItem **ppfi);
-    virtual HRESULT STDMETHODCALLTYPE get_OfflineStatus(LONG *pul);
-    virtual HRESULT STDMETHODCALLTYPE Synchronize();
-    virtual HRESULT STDMETHODCALLTYPE get_HaveToShowWebViewBarricade(VARIANT_BOOL *pbHaveToShowWebViewBarricade);
-    virtual HRESULT STDMETHODCALLTYPE DismissedWebViewBarricade();
+    STDMETHOD(get_Self)(FolderItem **ppfi) override;
+    STDMETHOD(get_OfflineStatus)(LONG *pul) override;
+    STDMETHOD(Synchronize)() override;
+    STDMETHOD(get_HaveToShowWebViewBarricade)(VARIANT_BOOL *pbHaveToShowWebViewBarricade) override;
+    STDMETHOD(DismissedWebViewBarricade)() override;
 
 DECLARE_NOT_AGGREGATABLE(CFolder)
 DECLARE_PROTECT_FINAL_CONSTRUCT()

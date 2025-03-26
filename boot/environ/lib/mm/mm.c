@@ -22,8 +22,8 @@ ULONG MmDescriptorCallTreeCount;
 
 NTSTATUS
 TrpGenerateMappingTracker (
-    _In_ PVOID VirtualAddress, 
-    _In_ ULONG Flags, 
+    _In_ PVOID VirtualAddress,
+    _In_ ULONG Flags,
     _In_ LARGE_INTEGER PhysicalAddress,
     _In_ ULONGLONG Size
     )
@@ -50,7 +50,7 @@ TrpGenerateMappingTracker (
         InsertTailList(ListHead, &Descriptor->ListEntry);
         goto Quickie;
     }
-     
+
     /* Otherwise, go to the last descriptor */
     NextDescriptor = CONTAINING_RECORD(NextEntry,
                                        BL_MEMORY_DESCRIPTOR,
@@ -540,7 +540,7 @@ BlMmTranslateVirtualAddress (
 NTSTATUS
 BlpMmInitialize (
     _In_ PBL_MEMORY_DATA MemoryData,
-    _In_ BL_TRANSLATION_TYPE TranslationType, 
+    _In_ BL_TRANSLATION_TYPE TranslationType,
     _In_ PBL_LIBRARY_PARAMETERS LibraryParameters
     )
 {

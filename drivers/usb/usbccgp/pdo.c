@@ -231,7 +231,15 @@ USBCCGP_PdoHandleQueryId(
         //
         // handle query device id
         //
-        Status = USBCCGP_SyncForwardIrp(PDODeviceExtension->NextDeviceObject, Irp);
+        if (IoForwardIrpSynchronously(PDODeviceExtension->NextDeviceObject, Irp))
+        {
+            Status = Irp->IoStatus.Status;
+        }
+        else
+        {
+            Status = STATUS_UNSUCCESSFUL;
+        }
+
         if (NT_SUCCESS(Status))
         {
             //
@@ -761,7 +769,8 @@ USBCCGP_PDOSelectConfiguration(
     Entry = NULL;
     do
     {
-        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x Length %lu InterfaceInformation->Length %lu\n", PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, Length, InterfaceInformation->Length);
+        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x Length %lu InterfaceInformation->Length %lu\n", 
+               PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, Length, InterfaceInformation->Length);
         ASSERT(InterfaceInformation->Length);
         //
         // search for the interface in the local interface list

@@ -18,7 +18,6 @@ GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
     FILETIME AccessTime;
     SYSTEMTIME SysTime, LocalTime;
     UINT Length;
-    TIME_ZONE_INFORMATION TimeInfo;
 
     hFile = CreateFileW(pFullPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (!hFile)
@@ -31,13 +30,10 @@ GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
     }
     CloseHandle(hFile);
 
-    if(!GetTimeZoneInformation(&TimeInfo))
-        return FALSE;
-
     if (!FileTimeToSystemTime(&AccessTime, &SysTime))
         return FALSE;
 
-    if (!SystemTimeToTzSpecificLocalTime(&TimeInfo, &SysTime, &LocalTime))
+    if (!SystemTimeToTzSpecificLocalTime(NULL, &SysTime, &LocalTime))
         return FALSE;
 
     Length = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &LocalTime, NULL, szTime, szTimeSize);
@@ -188,7 +184,7 @@ DisplayPageSetDeviceDetails(HWND * hDlgCtrls, LPCGUID classGUID, LPGUID * device
                 SendMessageW(hDlgCtrls[1], WM_SETTEXT, 0, (LPARAM)szText);
 
             /* FIXME
-             * we currently enumerate only the first adapter 
+             * we currently enumerate only the first adapter
              */
             EnumerateDrivers(&hDlgCtrls[2], hInfo, &InfoData);
             break;
@@ -367,7 +363,7 @@ DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rect;
     PDXDIAG_CONTEXT pContext = (PDXDIAG_CONTEXT)GetWindowLongPtr(hDlg, DWLP_USER);
-    switch (message) 
+    switch (message)
     {
         case WM_INITDIALOG:
         {

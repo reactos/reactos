@@ -150,7 +150,6 @@ BOOL
 DeleteUserProfile(
     _In_ HWND hwndDlg)
 {
-    WCHAR szTitle[64], szRawText[128], szCookedText[256];
     HWND hwndListView;
     LVITEM Item;
     INT iSelected;
@@ -179,14 +178,12 @@ DeleteUserProfile(
     if (pProfileData->dwRefCount != 0)
         return FALSE;
 
-    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE_TITLE, szTitle, ARRAYSIZE(szTitle));
-    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE, szRawText, ARRAYSIZE(szRawText));
-    swprintf(szCookedText, szRawText, pProfileData->pszFullName);
-
-    if (MessageBoxW(hwndDlg,
-                    szCookedText,
-                    szTitle,
-                    MB_ICONQUESTION | MB_YESNO) == IDYES)
+    if (ResourceMessageBox(hApplet,
+                           hwndDlg,
+                           MB_ICONQUESTION | MB_YESNO,
+                           IDS_USERPROFILE_CONFIRM_DELETE_TITLE,
+                           IDS_USERPROFILE_CONFIRM_DELETE,
+                           pProfileData->pszFullName) == IDYES)
     {
         /* FIXME: Delete the profile here! */
         return TRUE;
@@ -781,7 +778,7 @@ OnNotify(
     _In_ NMHDR *nmhdr)
 {
     LPNMLISTVIEW pNMLV;
-    
+
     if (nmhdr->idFrom == IDC_USERACCOUNT_LINK && nmhdr->code == NM_CLICK)
     {
         ShellExecuteW(hwndDlg, NULL, L"usrmgr.cpl", NULL, NULL, 0);
@@ -791,19 +788,19 @@ OnNotify(
         switch(nmhdr->code)
         {
             case LVN_ITEMCHANGED:
-                UpdateButtonState(hwndDlg, nmhdr->hwndFrom);            
+                UpdateButtonState(hwndDlg, nmhdr->hwndFrom);
                 break;
-            
+
             case NM_DBLCLK:
                 ChangeUserProfileType(hwndDlg);
                 break;
-                
+
             case LVN_DELETEITEM:
-                pNMLV = (LPNMLISTVIEW)nmhdr;            
+                pNMLV = (LPNMLISTVIEW)nmhdr;
                 if (pNMLV->lParam != 0)
-                    HeapFree(GetProcessHeap(), 0, (LPVOID)pNMLV->lParam);                
+                    HeapFree(GetProcessHeap(), 0, (LPVOID)pNMLV->lParam);
                 break;
-        }        
+        }
     }
 }
 
@@ -820,7 +817,7 @@ UserProfileDlgProc(HWND hwndDlg,
         case WM_INITDIALOG:
             OnInitUserProfileDialog(hwndDlg);
             return TRUE;
-    
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {

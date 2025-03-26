@@ -340,8 +340,6 @@ i8042StartPacket(
 
 DRIVER_DISPATCH ForwardIrpAndForget;
 
-DRIVER_DISPATCH ForwardIrpAndWait;
-
 NTSTATUS
 DuplicateUnicodeString(
 	IN ULONG Flags,

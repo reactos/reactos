@@ -42,7 +42,7 @@ NpReadAlias(
 {
     PNPFS_QUERY_VALUE_CONTEXT QueryContext = Context;
     PWSTR CurrentString;
-    USHORT Length;
+    SIZE_T Length;
     PNPFS_ALIAS CurrentAlias;
     UNICODE_STRING TempString;
     PUNICODE_STRING CurrentTargetName;

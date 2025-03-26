@@ -42,6 +42,9 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+    IDS_INTERNET "Интернет браузер"
+    IDS_INTERNET_DESCRIPTION "Открывает веб-браузер для поиска и отображения информации и веб-узлов в Интернете."
+
     IDS_TB_BACK             "Назад"
     IDS_TB_FORWARD          "Вперед"
     IDS_TB_STOP             "Остановить"

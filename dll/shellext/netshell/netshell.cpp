@@ -17,7 +17,7 @@ public:
 };
 
 BEGIN_OBJECT_MAP(ObjectMap)
-    OBJECT_ENTRY(CLSID_ConnectionFolder, CNetworkConnections)
+    OBJECT_ENTRY(CLSID_NetworkConnections, CNetworkConnections)
     OBJECT_ENTRY(CLSID_ConnectionManager, CNetConnectionManager)
     OBJECT_ENTRY(CLSID_LanConnectionUi, CNetConnectionPropertyUi)
     OBJECT_ENTRY(CLSID_ConnectionTray, CLanStatus)

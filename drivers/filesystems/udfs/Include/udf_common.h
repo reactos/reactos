@@ -151,7 +151,7 @@ typedef struct _UDFVolumeControlBlock {
     ULONG SystemCacheGran;
 
     //---------------
-    // 
+    //
     //---------------
 
     // Eject Request waiter
@@ -545,7 +545,7 @@ typedef struct _UDFData {
     //  IOCTL requests ...
     PDEVICE_OBJECT              UDFDeviceObject;
     PDEVICE_OBJECT              UDFDeviceObject_CD;
-    PDEVICE_OBJECT              UDFDeviceObject_HDD; 
+    PDEVICE_OBJECT              UDFDeviceObject_HDD;
     PDEVICE_OBJECT              UDFDeviceObject_TAPE;
     PDEVICE_OBJECT              UDFDeviceObject_OTHER;
     PDEVICE_OBJECT              UDFFilterDeviceObject;

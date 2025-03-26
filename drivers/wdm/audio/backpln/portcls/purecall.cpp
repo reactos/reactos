@@ -8,20 +8,12 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 extern "C" {
-  void 
+  void
 	  __cxa_pure_virtual()
   {
     // put error handling here
 
     DbgBreakPoint();
-
   }
 }
-

@@ -1193,6 +1193,12 @@ GreGetObjectOwner(HGDIOBJ hobj)
 {
     ULONG ulIndex, ulOwner;
 
+    if (hobj == NULL)
+    {
+        DPRINT("GreGetObjectOwner: invalid NULL handle\n");
+        return GDI_OBJ_HMGR_RESTRICTED;
+    }
+
     /* Get the handle index */
     ulIndex = GDI_HANDLE_GET_INDEX(hobj);
 
@@ -1474,6 +1480,40 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
 
     /* Calculate the new handle */
     pobj->hHmgr = (HGDIOBJ)((ULONG_PTR)pobj->hHmgr | GDI_HANDLE_STOCK_MASK);
+
+    /* Return the new handle */
+    *phObj = pobj->hHmgr;
+
+    /* Dereference the handle */
+    GDIOBJ_vDereferenceObject(pobj);
+
+    return TRUE;
+}
+
+BOOL
+NTAPI
+GDIOBJ_ConvertFromStockObj(HGDIOBJ *phObj)
+{
+    PENTRY pentry;
+    POBJ pobj;
+
+    /* Reference the handle entry */
+    pentry = ENTRY_ReferenceEntryByHandle(*phObj, 0);
+    if (!pentry)
+    {
+        DPRINT1("GDIOBJ: Requested handle 0x%p is not valid.\n", *phObj);
+        return FALSE;
+    }
+
+    /* Update the entry */
+    pentry->FullUnique &= ~GDI_ENTRY_STOCK_MASK;
+    pentry->ObjectOwner.ulObj = PtrToUlong(PsGetCurrentProcessId());
+
+    /* Get the pointer to the BASEOBJECT */
+    pobj = pentry->einfo.pobj;
+
+    /* Calculate the new handle */
+    pobj->hHmgr = (HGDIOBJ)((ULONG_PTR)pobj->hHmgr & ~GDI_HANDLE_STOCK_MASK);
 
     /* Return the new handle */
     *phObj = pobj->hHmgr;

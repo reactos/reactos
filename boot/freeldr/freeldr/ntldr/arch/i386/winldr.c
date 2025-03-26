@@ -10,6 +10,7 @@
 
 #include <freeldr.h>
 #include <ndk/asm.h>
+#include <internal/i386/intrin_i.h>
 #include "../../winldr.h"
 
 #include <debug.h>
@@ -64,81 +65,6 @@ typedef struct
 #define TYPE_CODE   (0x10 | DESCRIPTOR_CODE | DESCRIPTOR_EXECUTE_READ)
 #define TYPE_DATA   (0x10 | DESCRIPTOR_READ_WRITE)
 
-FORCEINLINE
-PKGDTENTRY
-KiGetGdtEntry(
-    IN PVOID pGdt,
-    IN USHORT Selector)
-{
-    return (PKGDTENTRY)((ULONG_PTR)pGdt + (Selector & ~RPL_MASK));
-}
-
-FORCEINLINE
-VOID
-KiSetGdtDescriptorBase(
-    IN OUT PKGDTENTRY Entry,
-    IN ULONG32 Base)
-{
-    Entry->BaseLow = (USHORT)(Base & 0xffff);
-    Entry->HighWord.Bytes.BaseMid = (UCHAR)((Base >> 16) & 0xff);
-    Entry->HighWord.Bytes.BaseHi  = (UCHAR)((Base >> 24) & 0xff);
-    // Entry->BaseUpper = (ULONG)(Base >> 32);
-}
-
-FORCEINLINE
-VOID
-KiSetGdtDescriptorLimit(
-    IN OUT PKGDTENTRY Entry,
-    IN ULONG Limit)
-{
-    if (Limit < 0x100000)
-    {
-        Entry->HighWord.Bits.Granularity = 0;
-    }
-    else
-    {
-        Limit >>= 12;
-        Entry->HighWord.Bits.Granularity = 1;
-    }
-    Entry->LimitLow = (USHORT)(Limit & 0xffff);
-    Entry->HighWord.Bits.LimitHi = ((Limit >> 16) & 0x0f);
-}
-
-VOID
-KiSetGdtEntryEx(
-    IN OUT PKGDTENTRY Entry,
-    IN ULONG32 Base,
-    IN ULONG Limit,
-    IN UCHAR Type,
-    IN UCHAR Dpl,
-    IN BOOLEAN Granularity,
-    IN UCHAR SegMode) // 0: 16-bit, 1: 32-bit, 2: 64-bit
-{
-    KiSetGdtDescriptorBase(Entry, Base);
-    KiSetGdtDescriptorLimit(Entry, Limit);
-    Entry->HighWord.Bits.Type = (Type & 0x1f);
-    Entry->HighWord.Bits.Dpl  = (Dpl & 0x3);
-    Entry->HighWord.Bits.Pres = (Type != 0); // Present, must be 1 when the GDT entry is valid.
-    Entry->HighWord.Bits.Sys  = 0;           // System
-    Entry->HighWord.Bits.Reserved_0  = 0;    // LongMode = !!(SegMode & 1);
-    Entry->HighWord.Bits.Default_Big = !!(SegMode & 2);
-    Entry->HighWord.Bits.Granularity |= !!Granularity; // The flag may have been already set by KiSetGdtDescriptorLimit().
-    // Entry->MustBeZero = 0;
-}
-
-FORCEINLINE
-VOID
-KiSetGdtEntry(
-    IN OUT PKGDTENTRY Entry,
-    IN ULONG32 Base,
-    IN ULONG Limit,
-    IN UCHAR Type,
-    IN UCHAR Dpl,
-    IN UCHAR SegMode) // 0: 16-bit, 1: 32-bit, 2: 64-bit
-{
-    KiSetGdtEntryEx(Entry, Base, Limit, Type, Dpl, FALSE, SegMode);
-}
-
 #if 0
 VOID
 DumpGDTEntry(ULONG_PTR Base, ULONG Selector)
@@ -191,7 +117,7 @@ MempAllocatePageTables(VOID)
     // Max number of entries = MaxPageNum >> 10
     // FIXME: This is a number to describe ALL physical memory
     // and windows doesn't expect ALL memory mapped...
-    NumPageTables = TotalPagesInLookupTable >> 10;
+    NumPageTables = MmGetTotalPagesInLookupTable() >> 10;
 
     TRACE("NumPageTables = %d\n", NumPageTables);
 
@@ -212,7 +138,7 @@ MempAllocatePageTables(VOID)
     if (Buffer + (TotalSize - NumPageTables*MM_PAGE_SIZE) !=
         PhysicalPageTablesBuffer)
     {
-        TRACE("There was a problem allocating two adjacent blocks of memory!");
+        TRACE("There was a problem allocating two adjacent blocks of memory!\n");
     }
 
     if (Buffer == NULL || PhysicalPageTablesBuffer == NULL)
@@ -254,7 +180,7 @@ static
 VOID
 MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 {
-    //Print(L"Creating PDE Entry %X\n", Entry);
+    //TRACE("Creating PDE Entry %X\n", Entry);
 
     // Identity mapping
     *PhysicalPT = (PHARDWARE_PTE)&PhysicalPageTablesBuffer[PhysicalPageTables*MM_PAGE_SIZE];
@@ -297,7 +223,7 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
         // We cannot map this as it requires more than 1 PDE
         // and in fact it's not possible at all ;)
         //
-        //Print(L"skipping...\n");
+        //TRACE("skipping...\n");
         return TRUE;
     }
 
@@ -319,12 +245,12 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
         }
 
         PhysicalPT[Page & 0x3ff].PageFrameNumber = Page;
-        PhysicalPT[Page & 0x3ff].Valid = (Page != 0);
+        PhysicalPT[Page & 0x3ff].Valid = 1;
         PhysicalPT[Page & 0x3ff].Write = (Page != 0);
 
         if (KernelMapping)
         {
-             if (KernelPT[Page & 0x3ff].Valid) WARN("xxx already mapped \n");
+            if (KernelPT[Page & 0x3ff].Valid) WARN("KernelPT already mapped\n");
             KernelPT[Page & 0x3ff].PageFrameNumber = Page;
             KernelPT[Page & 0x3ff].Valid = (Page != 0);
             KernelPT[Page & 0x3ff].Write = (Page != 0);
@@ -503,7 +429,8 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 
 VOID
-WinLdrSetProcessorContext(void)
+WinLdrSetProcessorContext(
+    _In_ USHORT OperatingSystemVersion)
 {
     GDTIDT GdtDesc, IdtDesc, OldIdt;
     PKGDTENTRY    pGdt;
@@ -600,15 +527,19 @@ WinLdrSetProcessorContext(void)
      * Longhorn/Vista reports LimitLow == 0x0fff == MM_PAGE_SIZE - 1, whereas
      * Windows 7+ uses larger sizes there (not aligned on a page boundary).
      */
-#if 1
-    /* Server 2003 way */
-    KiSetGdtEntryEx(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, 0x1,
-                    TYPE_DATA, DPL_SYSTEM, TRUE, 2);
-#else
-    /* Vista+ way */
-    KiSetGdtEntry(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, MM_PAGE_SIZE - 1,
-                  TYPE_DATA, DPL_SYSTEM, 2);
-#endif
+    if (OperatingSystemVersion < _WIN32_WINNT_VISTA)
+    {
+        /* Server 2003 way */
+        KiSetGdtEntryEx(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, 0x1,
+                        TYPE_DATA, DPL_SYSTEM, TRUE, 2);
+    }
+    else
+    {
+        /* Vista+ way */
+        KiSetGdtEntry(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, MM_PAGE_SIZE - 1,
+                      TYPE_DATA, DPL_SYSTEM, 2);
+    }
+
     // DumpGDTEntry(GdtDesc.Base, KGDT_R0_PCR);
 
     /* KGDT_R3_TEB (0x38) Thread Environment Block Selector (Ring 3) */

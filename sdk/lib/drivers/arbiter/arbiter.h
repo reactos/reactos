@@ -1,50 +1,53 @@
 /*
- * PROJECT:         ReactOS Kernel
- * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:            lib/drivers/arbiter/arbiter.h
- * PURPOSE:         Hardware Resources Arbiter Library
- * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * PROJECT:     ReactOS Kernel&Driver SDK
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hardware Resources Arbiter Library
+ * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */
 
-#ifndef _ARBITER_H
-#define _ARBITER_H
+#pragma once
+
+#define ARBITER_SIGNATURE  'sbrA'
+#define TAG_ARBITER        'MbrA'
+#define TAG_ARB_ALLOCATION 'AbrA'
+#define TAG_ARB_RANGE      'RbrA'
 
 typedef struct _ARBITER_ORDERING
 {
-    ULONGLONG Start;
-    ULONGLONG End;
+    UINT64 Start;
+    UINT64 End;
 } ARBITER_ORDERING, *PARBITER_ORDERING;
 
 typedef struct _ARBITER_ORDERING_LIST
 {
-    USHORT Count;
-    USHORT Maximum;
+    UINT16 Count;
+    UINT16 Maximum;
     PARBITER_ORDERING Orderings;
 } ARBITER_ORDERING_LIST, *PARBITER_ORDERING_LIST;
 
 typedef struct _ARBITER_ALTERNATIVE
 {
-    ULONGLONG Minimum;
-    ULONGLONG Maximum;
-    ULONG Length;
-    ULONG Alignment;
-    LONG Priority;
-    ULONG Flags;
+    UINT64 Minimum;
+    UINT64 Maximum;
+    UINT32 Length;
+    UINT32 Alignment;
+    INT32 Priority;
+    UINT32 Flags;
     PIO_RESOURCE_DESCRIPTOR Descriptor;
-    ULONG Reserved[3];
+    UINT32 Reserved[3];
 } ARBITER_ALTERNATIVE, *PARBITER_ALTERNATIVE;
 
 typedef struct _ARBITER_ALLOCATION_STATE
 {
-    ULONGLONG Start;
-    ULONGLONG End;
-    ULONGLONG CurrentMinimum;
-    ULONGLONG CurrentMaximum;
+    UINT64 Start;
+    UINT64 End;
+    UINT64 CurrentMinimum;
+    UINT64 CurrentMaximum;
     PARBITER_LIST_ENTRY Entry;
     PARBITER_ALTERNATIVE CurrentAlternative;
-    ULONG AlternativeCount;
+    UINT32 AlternativeCount;
     PARBITER_ALTERNATIVE Alternatives;
-    USHORT Flags;
+    UINT16 Flags;
     UCHAR RangeAttributes;
     UCHAR RangeAvailableAttributes;
     ULONG_PTR WorkSpace;
@@ -55,27 +58,27 @@ typedef struct _ARBITER_INSTANCE *PARBITER_INSTANCE;
 typedef NTSTATUS
 (NTAPI * PARB_UNPACK_REQUIREMENT)(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _Out_ PULONGLONG OutMinimumAddress,
-    _Out_ PULONGLONG OutMaximumAddress,
-    _Out_ PULONG OutLength,
-    _Out_ PULONG OutAlignment
+    _Out_ PUINT64 OutMinimumAddress,
+    _Out_ PUINT64 OutMaximumAddress,
+    _Out_ PUINT32 OutLength,
+    _Out_ PUINT32 OutAlignment
 );
 
 typedef NTSTATUS
 (NTAPI * PARB_PACK_RESOURCE)(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _In_ ULONGLONG Start,
+    _In_ UINT64 Start,
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor
 );
 
 typedef NTSTATUS
 (NTAPI * PARB_UNPACK_RESOURCE)(
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor,
-    _Out_ PULONGLONG Start,
-    _Out_ PULONG OutLength
+    _Out_ PUINT64 Start,
+    _Out_ PUINT32 OutLength
 );
 
-typedef LONG
+typedef INT32
 (NTAPI * PARB_SCORE_REQUIREMENT)(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor
 );
@@ -176,7 +179,7 @@ typedef NTSTATUS
 
 typedef struct _ARBITER_INSTANCE
 {
-    ULONG Signature;
+    UINT32 Signature;
     PKEVENT MutexEvent;
     PCWSTR Name;
     CM_RESOURCE_TYPE ResourceType;
@@ -184,9 +187,9 @@ typedef struct _ARBITER_INSTANCE
     PRTL_RANGE_LIST PossibleAllocation;
     ARBITER_ORDERING_LIST OrderingList;
     ARBITER_ORDERING_LIST ReservedList;
-    LONG ReferenceCount;
+    INT32 ReferenceCount;
     PARBITER_INTERFACE Interface;
-    ULONG AllocationStackMaxSize;
+    UINT32 AllocationStackMaxSize;
     PARBITER_ALLOCATION_STATE AllocationStack;
     PARB_UNPACK_REQUIREMENT UnpackRequirement;
     PARB_PACK_RESOURCE PackResource;
@@ -221,6 +224,7 @@ typedef NTSTATUS
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor
 );
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbInitializeArbiterInstance(
@@ -231,5 +235,3 @@ ArbInitializeArbiterInstance(
     _In_ PCWSTR OrderName,
     _In_ PARB_TRANSLATE_ORDERING TranslateOrderingFunction
 );
-
-#endif  /* _ARBITER_H */

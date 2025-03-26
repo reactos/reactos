@@ -94,10 +94,15 @@ TestIrpHandler(
         {
             PREPARSE_DATA_BUFFER Reparse;
 
-            Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolWithTag(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
+            Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolZero(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
             Reparse = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
 
-            RtlZeroMemory(Reparse, MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+            if (!Reparse)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Finish;
+            }
+
             Reparse->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
             Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
             Reparse->MountPointReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
@@ -109,31 +114,41 @@ TestIrpHandler(
         else if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR) &&
             IoStack->FileObject->FileName.Buffer[1] == 'S')
         {
+            PREPARSE_DATA_BUFFER Reparse;
+
             if (IoStack->Flags & SL_STOP_ON_SYMLINK)
             {
                 Status = STATUS_STOPPED_ON_SYMLINK;
+                goto Finish;
             }
-            else
+
+            Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolZero(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
+            Reparse = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+
+            if (!Reparse)
             {
-                PREPARSE_DATA_BUFFER Reparse;
-
-                Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolWithTag(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
-                Reparse = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
-
-                RtlZeroMemory(Reparse, MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-                Reparse->ReparseTag = IO_REPARSE_TAG_SYMLINK;
-                Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
-                Reparse->SymbolicLinkReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
-                Reparse->SymbolicLinkReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
-                RtlCopyMemory(Reparse->SymbolicLinkReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
-                Irp->IoStatus.Information = IO_REPARSE_TAG_SYMLINK;
-                Status = STATUS_REPARSE;
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Finish;
             }
+
+            Reparse->ReparseTag = IO_REPARSE_TAG_SYMLINK;
+            Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
+            Reparse->SymbolicLinkReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
+            Reparse->SymbolicLinkReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
+            RtlCopyMemory(Reparse->SymbolicLinkReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
+            Irp->IoStatus.Information = IO_REPARSE_TAG_SYMLINK;
+            Status = STATUS_REPARSE;
         }
         else
         {
-            Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Fcb), 'FwrI');
-            RtlZeroMemory(Fcb, sizeof(*Fcb));
+            Fcb = ExAllocatePoolZero(NonPagedPool, sizeof(*Fcb), 'FwrI');
+            
+            if (!Fcb)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Finish;
+            }
+
             ExInitializeFastMutex(&Fcb->HeaderMutex);
             FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
             Fcb->Header.AllocationSize.QuadPart = 0;
@@ -157,6 +172,7 @@ TestIrpHandler(
         Status = STATUS_SUCCESS;
     }
 
+Finish:
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 

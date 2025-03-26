@@ -10,16 +10,16 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Свойства", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Сведения об адаптере", -1, 7, 56, 237, 75
-    LTEXT "Тип микросхем:", -1, 13, 68, 58, 8
-    LTEXT "", IDC_CHIPTYPE, 90, 68, 150, 8, SS_NOPREFIX
-    LTEXT "Тип конвертера DAC:", -1, 13, 80, 80, 8
-    LTEXT "", IDC_DACTYPE, 90, 80, 150, 8, SS_NOPREFIX
-    LTEXT "Объем памяти:", -1, 13, 92, 58, 8
-    LTEXT "", IDC_MEMORYSIZE, 90, 92, 150, 8, SS_NOPREFIX
-    LTEXT "Строка контроллера:", -1, 13, 104, 80, 8
-    LTEXT "", IDC_ADAPTERSTRING, 90, 104, 150, 8, SS_NOPREFIX
-    LTEXT "Сведения о BIOS:", -1, 13, 116, 67, 8
-    LTEXT "", IDC_BIOSINFORMATION, 90, 116, 150, 8, SS_NOPREFIX
+    LTEXT "Тип микросхем:", -1, 13, 68, 75, 8
+    LTEXT "", IDC_CHIPTYPE, 94, 68, 147, 8, SS_NOPREFIX
+    LTEXT "Тип конвертера DAC:", -1, 13, 80, 75, 8
+    LTEXT "", IDC_DACTYPE, 94, 80, 147, 8, SS_NOPREFIX
+    LTEXT "Объем памяти:", -1, 13, 92, 75, 8
+    LTEXT "", IDC_MEMORYSIZE, 94, 92, 147, 8, SS_NOPREFIX
+    LTEXT "Строка контроллера:", -1, 13, 104, 75, 8
+    LTEXT "", IDC_ADAPTERSTRING, 94, 104, 147, 8, SS_NOPREFIX
+    LTEXT "Сведения о BIOS:", -1, 13, 116, 75, 8
+    LTEXT "", IDC_BIOSINFORMATION, 94, 116, 147, 8, SS_NOPREFIX
     PUSHBUTTON "&Список всех режимов...", IDC_LISTALLMODES, 7, 139, 95, 14
 END
 
@@ -45,4 +45,5 @@ BEGIN
     IDS_16BPP "Высокое (16 бит)"
     IDS_24BPP "Самое высокое (24 бита)"
     IDS_32BPP "Самое высокое (32 бита)"
+    IDS_NOTAVAIL "Нет данных"
 END

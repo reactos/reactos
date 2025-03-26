@@ -3,10 +3,12 @@ list(APPEND SOURCE
     CreateService.c
     DuplicateTokenEx.c
     eventlog.c
+    Hash.c
     HKEY_CLASSES_ROOT.c
     IsTextUnicode.c
     LockServiceDatabase.c
     QueryServiceConfig2.c
+    RegCreateKeyEx.c
     RegEnumKey.c
     RegEnumValueW.c
     RegOpenKeyExW.c

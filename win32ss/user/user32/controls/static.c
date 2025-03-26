@@ -158,7 +158,7 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
             SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
                           SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
-	
+
     }
     return hOldBitmap;
 }
@@ -327,7 +327,7 @@ static BOOL hasTextStyle( DWORD style )
         case SS_OWNERDRAW:
             return TRUE;
     }
-    
+
     return FALSE;
 }
 
@@ -611,12 +611,21 @@ static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
   if (font) SelectObject( hdc, oldFont );
 }
 
+static BOOL CALLBACK STATIC_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int cx, int cy)
+{
+    RECT rc;
+
+    SetRect(&rc, 0, 0, cx, cy);
+    DrawTextW(hdc, (LPCWSTR)lp, -1, &rc, (UINT)wp);
+    return TRUE;
+}
+
 static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 {
     RECT rc;
     HBRUSH hBrush;
     HFONT hFont, hOldFont = NULL;
-    WORD wFormat;
+    UINT format;
     INT len, buf_size;
     WCHAR *text;
 
@@ -625,23 +634,23 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     switch (style & SS_TYPEMASK)
     {
     case SS_LEFT:
-	wFormat = DT_LEFT | DT_EXPANDTABS | DT_WORDBREAK;
+	format = DT_LEFT | DT_EXPANDTABS | DT_WORDBREAK;
 	break;
 
     case SS_CENTER:
-	wFormat = DT_CENTER | DT_EXPANDTABS | DT_WORDBREAK;
+	format = DT_CENTER | DT_EXPANDTABS | DT_WORDBREAK;
 	break;
 
     case SS_RIGHT:
-	wFormat = DT_RIGHT | DT_EXPANDTABS | DT_WORDBREAK;
+	format = DT_RIGHT | DT_EXPANDTABS | DT_WORDBREAK;
 	break;
 
     case SS_SIMPLE:
-        wFormat = DT_LEFT | DT_SINGLELINE;
+        format = DT_LEFT | DT_SINGLELINE;
 	break;
 
     case SS_LEFTNOWORDWRAP:
-        wFormat = DT_LEFT | DT_EXPANDTABS;
+        format = DT_LEFT | DT_EXPANDTABS;
 	break;
 
     default:
@@ -649,25 +658,25 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     }
 
     if (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_RIGHT)
-        wFormat = DT_RIGHT | (wFormat & ~(DT_LEFT | DT_CENTER));
+        format = DT_RIGHT | (format & ~(DT_LEFT | DT_CENTER));
 
     if (style & SS_NOPREFIX)
-        wFormat |= DT_NOPREFIX;
+        format |= DT_NOPREFIX;
     else if (GetWindowLongW(hwnd, UISTATE_GWL_OFFSET) & UISF_HIDEACCEL) // ReactOS r30727
-        wFormat |= DT_HIDEPREFIX;
+        format |= DT_HIDEPREFIX;
 
     if ((style & SS_TYPEMASK) != SS_SIMPLE)
     {
         if (style & SS_CENTERIMAGE)
-            wFormat |= DT_SINGLELINE | DT_VCENTER;
+            format |= DT_SINGLELINE | DT_VCENTER;
         if (style & SS_EDITCONTROL)
-            wFormat |= DT_EDITCONTROL;
+            format |= DT_EDITCONTROL;
         if (style & SS_ENDELLIPSIS)
-            wFormat |= DT_SINGLELINE | DT_END_ELLIPSIS;
+            format |= DT_SINGLELINE | DT_END_ELLIPSIS;
         if (style & SS_PATHELLIPSIS)
-            wFormat |= DT_SINGLELINE | DT_PATH_ELLIPSIS;
+            format |= DT_SINGLELINE | DT_PATH_ELLIPSIS;
         if (style & SS_WORDELLIPSIS)
-            wFormat |= DT_SINGLELINE | DT_WORD_ELLIPSIS;
+            format |= DT_SINGLELINE | DT_WORD_ELLIPSIS;
     }
 
     if ((hFont = (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET )))
@@ -706,7 +715,14 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     }
     else
     {
-        DrawTextW( hdc, text, -1, &rc, wFormat );
+        UINT flags = DST_COMPLEX;
+        if (style & WS_DISABLED)
+            flags |= DSS_DISABLED;
+        DrawStateW(hdc, hBrush, STATIC_DrawTextCallback,
+                   (LPARAM)text, (WPARAM)format,
+                   rc.left, rc.top,
+                   rc.right - rc.left, rc.bottom - rc.top,
+                   flags);
     }
 
 no_TextOut:

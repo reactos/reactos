@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS browseui
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     IShellTaskScheduler implementation
- * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 #pragma once
@@ -18,10 +18,10 @@ public:
     ~CShellTaskScheduler();
 
     // *** IShellTaskScheduler methods ***
-    STDMETHODIMP AddTask(IRunnableTask *pTask, REFGUID rtoid, DWORD_PTR lParam, DWORD dwPriority);
-    STDMETHODIMP RemoveTasks(REFGUID rtoid, DWORD_PTR lParam, BOOL fWaitIfRunning);
-    virtual UINT STDMETHODCALLTYPE CountTasks(REFGUID rtoid);
-    STDMETHODIMP Status(DWORD dwReleaseStatus, DWORD dwThreadTimeout);
+    STDMETHODIMP AddTask(IRunnableTask *pTask, REFGUID rtoid, DWORD_PTR lParam, DWORD dwPriority) override;
+    STDMETHODIMP RemoveTasks(REFGUID rtoid, DWORD_PTR lParam, BOOL fWaitIfRunning) override;
+    STDMETHODIMP_(UINT) CountTasks(REFGUID rtoid) override;
+    STDMETHODIMP Status(DWORD dwReleaseStatus, DWORD dwThreadTimeout) override;
 
 public:
 

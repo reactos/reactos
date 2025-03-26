@@ -649,7 +649,7 @@ WSPCloseSocket(IN SOCKET Handle,
 
     if(!NT_SUCCESS(Status))
     {
-        ERR("NtCreateEvent failed: 0x%08x", Status);
+        ERR("NtCreateEvent failed: 0x%08x\n", Status);
         return SOCKET_ERROR;
     }
 
@@ -664,7 +664,7 @@ WSPCloseSocket(IN SOCKET Handle,
         if (Status)
         {
             if (lpErrno) *lpErrno = Status;
-            ERR("WSHNotify failed. Error 0x%#x", Status);
+            ERR("WSHNotify failed. Error 0x%#x\n", Status);
             NtClose(SockEvent);
             return SOCKET_ERROR;
         }
@@ -1495,22 +1495,25 @@ WSPAccept(
     ListenReceiveData = (PAFD_RECEIVED_ACCEPT_DATA)ReceiveBuffer;
 
     /* If this is non-blocking, make sure there's something for us to accept */
-    FD_ZERO(&ReadSet);
-    FD_SET(Socket->Handle, &ReadSet);
-    Timeout.tv_sec=0;
-    Timeout.tv_usec=0;
-
-    if (WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, lpErrno) == SOCKET_ERROR)
+    if (Socket->SharedData->NonBlocking)
     {
-        NtClose(SockEvent);
-        return SOCKET_ERROR;
-    }
+        FD_ZERO(&ReadSet);
+        FD_SET(Socket->Handle, &ReadSet);
+        Timeout.tv_sec=0;
+        Timeout.tv_usec=0;
 
-    if (ReadSet.fd_array[0] != Socket->Handle)
-    {
-        NtClose(SockEvent);
-        if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
-        return SOCKET_ERROR;
+        if (WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, lpErrno) == SOCKET_ERROR)
+        {
+            NtClose(SockEvent);
+            return SOCKET_ERROR;
+        }
+
+        if (ReadSet.fd_array[0] != Socket->Handle)
+        {
+            NtClose(SockEvent);
+            if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
+            return SOCKET_ERROR;
+        }
     }
 
     /* Send IOCTL */
@@ -1782,6 +1785,7 @@ WSPAccept(
 
     AcceptSocketInfo->SharedData->State = SocketConnected;
     AcceptSocketInfo->SharedData->ConnectTime = GetCurrentTimeInSeconds();
+    AcceptSocketInfo->SharedData->NonBlocking = Socket->SharedData->NonBlocking;
 
     /* Return Address in SOCKADDR FORMAT */
     if( SocketAddress )
@@ -2513,7 +2517,12 @@ WSPIoctl(IN  SOCKET Handle,
                     *((PVOID *)lpvOutBuffer) = WSPGetAcceptExSockaddrs;
                     cbRet = sizeof(PVOID);
                     Errno = NO_ERROR;
-                    Ret = NO_ERROR;
+                    /* See CORE-14966 and associated commits.
+                     * Original line below was 'Ret = NO_ERROR:'.
+                     * This caused winetest ws2_32:sock to hang.
+                     * This new Ret value allows the test to complete. */
+                    ERR("SIO_GET_EXTENSION_FUNCTION_POINTER UNIMPLEMENTED\n");
+                    Ret = SOCKET_ERROR;
                 }
                 else
                 {
@@ -3181,7 +3190,7 @@ WSPStringToAddress(IN LPWSTR AddressString,
                 /* move over the dot to next ip part */
                 (*bp)++;
             }
-            
+
             /* check dots count */
             if (numdots != 3)
             {

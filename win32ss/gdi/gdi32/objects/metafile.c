@@ -17,19 +17,15 @@
  */
 BOOL
 WINAPI
-GdiIsPlayMetafileDC(HDC hDC)
+GdiIsPlayMetafileDC(HDC hdc)
 {
-#if 0
-    PLDC pLDC = GdiGetLDC(hDC);
-    if ( pLDC )
+    PDC_ATTR pdcattr = GdiGetDcAttr(hdc);
+
+    if ( pdcattr )
     {
-        if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
+        return !!( pdcattr->ulDirty_ & DC_PLAYMETAFILE );
     }
     return FALSE;
-#else
-    UNIMPLEMENTED;
-    return FALSE;
-#endif
 }
 
 /*
@@ -49,17 +45,13 @@ GdiIsMetaFileDC(HDC hdc)
 
     if (ulObjType == GDILoObjType_LO_ALTDC_TYPE)
     {
-#if 0
         PLDC pLDC = GdiGetLDC(hdc);
         if ( !pLDC )
         {
             SetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
-        if ( pLDC->iType == LDC_EMFLDC) return TRUE;
-        return FALSE;
-#endif
-        return TRUE;
+        return !!( pLDC->iType == LDC_EMFLDC );
     }
 
     return FALSE;
@@ -70,29 +62,26 @@ GdiIsMetaFileDC(HDC hdc)
  */
 BOOL
 WINAPI
-GdiIsMetaPrintDC(HDC hDC)
+GdiIsMetaPrintDC(HDC hdc)
 {
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+    ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
+
+    if ( hType != GDILoObjType_LO_DC_TYPE )
     {
-        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+        if ( hType == GDILoObjType_LO_METADC16_TYPE )
             return FALSE;
         else
         {
-            PLDC pLDC = GdiGetLDC(hDC);
+            PLDC pLDC = GdiGetLDC(hdc);
             if ( !pLDC )
             {
                 SetLastError(ERROR_INVALID_HANDLE);
                 return FALSE;
             }
-            if ( pLDC->Flags & LDC_META_PRINT) return TRUE;
+            return !!( pLDC->Flags & LDC_META_PRINT );
         }
     }
     return FALSE;
-#else
-    UNIMPLEMENTED;
-    return FALSE;
-#endif
 }
 
 // NOTE: I wanna use GdiCreateLocalMetaFilePict and GdiConvertMetaFilePict

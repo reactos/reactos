@@ -18,9 +18,11 @@ list(APPEND SOURCE
     GetDriveType.c
     GetModuleFileName.c
     GetVolumeInformation.c
+    InitOnce.c
     interlck.c
     IsDBCSLeadByteEx.c
     JapaneseCalendar.c
+    LCMapString.c
     LoadLibraryExW.c
     lstrcpynW.c
     lstrlen.c
@@ -35,6 +37,7 @@ list(APPEND SOURCE
     SystemFirmware.c
     TerminateProcess.c
     TunnelCache.c
+    UEFIFirmware.c
     WideCharToMultiByte.c)
 
 list(APPEND PCH_SKIP_SOURCE

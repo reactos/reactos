@@ -62,114 +62,22 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-CODE_SEG("INIT")
-USHORT
-NTAPI
-NameToOrdinal(IN PCHAR Name,
-              IN PVOID DllBase,
-              IN ULONG NumberOfNames,
-              IN PULONG NameTable,
-              IN PUSHORT OrdinalTable)
+static CODE_SEG("INIT")
+NTSTATUS
+PspLookupSystemDllEntryPoint(
+    _In_ PCSTR Name,
+    _Out_ PVOID* EntryPoint)
 {
-    ULONG Mid;
-    LONG Ret;
-
-    /* Fail if no names */
-    if (!NumberOfNames) return -1;
-
-    /* Do binary search */
-    Mid = NumberOfNames >> 1;
-    Ret = strcmp(Name, (PCHAR)((ULONG_PTR)DllBase + NameTable[Mid]));
-
-    /* Check if we found it */
-    if (!Ret) return OrdinalTable[Mid];
-
-    /* We didn't. Check if we only had one name to check */
-    if (NumberOfNames == 1) return -1;
-
-    /* Check if we should look up or down */
-    if (Ret < 0)
-    {
-        /* Loop down */
-        NumberOfNames = Mid;
-    }
-    else
-    {
-        /* Look up, update tables */
-        NameTable = &NameTable[Mid + 1];
-        OrdinalTable = &OrdinalTable[Mid + 1];
-        NumberOfNames -= (Mid - 1);
-    }
-
-    /* Call us recursively */
-    return NameToOrdinal(Name, DllBase, NumberOfNames, NameTable, OrdinalTable);
+    /* Call the internal API */
+    return RtlpFindExportedRoutineByName(PspSystemDllBase,
+                                         Name,
+                                         EntryPoint,
+                                         NULL,
+                                         STATUS_PROCEDURE_NOT_FOUND);
 }
 
-CODE_SEG("INIT")
+static CODE_SEG("INIT")
 NTSTATUS
-NTAPI
-LookupEntryPoint(IN PVOID DllBase,
-                 IN PCHAR Name,
-                 OUT PVOID *EntryPoint)
-{
-    PULONG NameTable;
-    PUSHORT OrdinalTable;
-    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    ULONG ExportSize;
-    CHAR Buffer[64];
-    USHORT Ordinal;
-    PULONG ExportTable;
-
-    /* Get the export directory */
-    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
-                                                   TRUE,
-                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
-                                                   &ExportSize);
-
-    /* Validate the name and copy it */
-    if (strlen(Name) > sizeof(Buffer) - 2) return STATUS_INVALID_PARAMETER;
-    strcpy(Buffer, Name);
-
-    /* Setup name tables */
-    NameTable = (PULONG)((ULONG_PTR)DllBase +
-                         ExportDirectory->AddressOfNames);
-    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
-                             ExportDirectory->AddressOfNameOrdinals);
-
-    /* Get the ordinal */
-    Ordinal = NameToOrdinal(Buffer,
-                            DllBase,
-                            ExportDirectory->NumberOfNames,
-                            NameTable,
-                            OrdinalTable);
-
-    /* Make sure the ordinal is valid */
-    if (Ordinal >= ExportDirectory->NumberOfFunctions)
-    {
-        /* It's not, fail */
-        return STATUS_PROCEDURE_NOT_FOUND;
-    }
-
-    /* Resolve the address and write it */
-    ExportTable = (PULONG)((ULONG_PTR)DllBase +
-                           ExportDirectory->AddressOfFunctions);
-    *EntryPoint = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
-    return STATUS_SUCCESS;
-}
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-PspLookupSystemDllEntryPoint(IN PCHAR Name,
-                             IN PVOID *EntryPoint)
-{
-    /* Call the LDR Routine */
-    return LookupEntryPoint(PspSystemDllBase, Name, EntryPoint);
-}
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
 PspLookupKernelUserEntryPoints(VOID)
 {
     NTSTATUS Status;
@@ -288,7 +196,7 @@ PsLocateSystemDll(VOID)
     /* Locate and open NTDLL to determine ImageBase and LdrStartup */
     InitializeObjectAttributes(&ObjectAttributes,
                                &PsNtDllPathName,
-                               0,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenFile(&FileHandle,
@@ -304,8 +212,8 @@ PsLocateSystemDll(VOID)
     }
 
     /* Check if the image is valid */
-    Status = MmCheckSystemImage(FileHandle, TRUE);
-    if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
+    Status = MmCheckSystemImage(FileHandle);
+    if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH || Status == STATUS_INVALID_IMAGE_PROTECT)
     {
         /* Raise a hard error */
         HardErrorParameters = (ULONG_PTR)&PsNtDllPathName;

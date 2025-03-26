@@ -60,12 +60,30 @@ CRrReadCache(
 DWORD
 __stdcall
 R_ResolverFlushCache(
-    _In_ DNSRSLVR_HANDLE pwszServerName)
+    _In_ DNSRSLVR_HANDLE pszServerName)
 {
     DPRINT("R_ResolverFlushCache(%S)\n",
-           pwszServerName);
+           pszServerName);
 
     return DnsIntCacheFlush(CACHE_FLUSH_NON_HOSTS_FILE_ENTRIES);
+}
+
+
+/* Function: 0x05 */
+DWORD
+__stdcall
+R_ResolverFlushCacheEntry(
+    _In_ DNSRSLVR_HANDLE pszServerName,
+    _In_ LPCWSTR pszName,
+    _In_ WORD wType)
+{
+    DPRINT("R_ResolverFlushCacheEntry(%S %S %x)\n",
+           pszServerName, pszName, wType);
+
+    if (pszName == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    return DnsIntFlushCacheEntry(pszName, wType);
 }
 
 

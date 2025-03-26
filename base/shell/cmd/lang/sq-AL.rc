@@ -1,4 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
  * DATE OF TR:  29-11-2013
 */
 
@@ -102,9 +102,9 @@ CTTY device\n\n\
             CON is usually the default standard I/O device.\n\n\
 To return control to the standard console, type: CTTY CON on the auxiliary\n\
 device."
-    STRING_DATE_HELP1 "\nShkruani datën e re (mm%cdd%cyyyy): "
-    STRING_DATE_HELP2 "\nShkruani datën e re (dd%cmm%cyyyy): "
-    STRING_DATE_HELP3 "\nShkruani datën e re (yyyy%cmm%cdd): "
+    STRING_DATE_HELP1 "Shkruani datën e re (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Shkruani datën e re (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Shkruani datën e re (yyyy%cmm%cdd): "
     STRING_DATE_HELP4 "Shfaq ose ndrysho datën.\n\n\
 DATE [/T][datë]\n\n\
   /T    vetëm shfaq\n\n\
@@ -174,10 +174,10 @@ ndryshimet prezente duke vënë përpara një ndryshim me - (hyphen)--për shemb
     STRING_DIR_HELP2 " Volumi në drive %c is %s\n"
     STRING_DIR_HELP3 " Volumi në drive %c has no label.\n"
     STRING_DIR_HELP4 " Volumi Serial dhe Numberi është %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Lista e dokumentave total:\n%16i File(s)% 14s bytes\n"
-    STRING_DIR_HELP6 "%16i Dir(s)% 15s bytes free\n"
+    STRING_DIR_HELP5 "\n     Lista e dokumentave total:\n%16i File(s) %14s bytes\n"
+    STRING_DIR_HELP6 "%16i Dir(s)  %14s bytes free\n"
     STRING_DIR_HELP7 "\n Directory of %s\n\n"
-    STRING_DIR_HELP8 "%16i File(s)% 14s bytes\n"
+    STRING_DIR_HELP8 "%16i File(s) %14s bytes\n"
     STRING_DIRSTACK_HELP1 "Ndryshimet mund të jenë paraprakisht në variablin e mjedisit DIRCMD\n\
 dhe skedes specifike.\n\n\
 PUSHD [rrugë | ..]\n\n\
@@ -248,7 +248,8 @@ string1==string2  Përcakton një kusht të vërtetë nëse vargjet e specifikua
 EXIST filename    Përcakton një kusht të vërtetë, nëse ekziston dokumenti i specifikuar.\n\
 DEFINED variable  Përcakton një kusht të vërtetë nëse variabli është specifikuar\n\
                   dhe karakterizuar.\n"
-    STRING_LOCALE_HELP1 "Koha e tanishme është"
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "Koha e tanishme është: "
     STRING_MKDIR_HELP "Krijon një skedë.\n\n\
 MKDIR [drive:]rrugë\nMD [drive:]rrugë"
     STRING_MKLINK_HELP "Krijon një lidhje objekti në dokumentat e sistemit.\n\n\
@@ -339,34 +340,6 @@ Vini re se ju nuk mund të specifikoni një drive të ri ose rrugën për në de
 komandën MOVE për këtë qëllim.\n"
     STRING_REN_HELP2 "    %lu dokumenti u rimërua\n"
     STRING_REN_HELP3 "    %lu dokumenti u rimërua\n"
-    STRING_REPLACE_HELP1 "zëvendëson dokumentat.\n\n\
-REPLACE [drive1:][rrugë1]emri [drive2:][rrugë2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][rrugë1]emri [drive2:][rrugë2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][rrugë1]emri Specifikon e dokumentit ose dokumentëve.\n\
-  [drive2:][rrugë2]         Specifikon directorine ku dokumentet do të\n\
-                           zëvendësohen.\n\
-  /A                       Shton dokumente të reja tek directoria e destinacionit. Nuk\n\
-                           përdoret me /S ose /U.\n\
-  /P                       Shfaw konfirmimim para se të zëvendësosh një dokument apo\n\
-                           shtimit të burimit të dokumentit.\n\
-  /R                       Zëvendëso dokumentat vetëm-lexohet, si dhe dokumentet e\n\
-                           pambrojtur.\n\
-  /S                       Zëvendëson dokumentet në të gjitha nën-direktoritë e\n\
-                           directorite. Nuk mund të përdorë me/A\n\
-                           parametra.\n\
-  /W                       Pret për ju për të futur një disk para fillimit të.\n\
-  /U                       Zëvendëso (update) vetem dokumenta që janë më të vjetër se\n\
-                           dokumentat e burimit. Nuk mund ta përdorësh me /A.\n"
-    STRING_REPLACE_HELP2 "Rruga e Burimi kërkohet\n"
-    STRING_REPLACE_HELP3 "Nuk zëvendësohen dokumentat\n"
-    STRING_REPLACE_HELP4 "%lu dokumenta(t) zëvendësohen\n"
-    STRING_REPLACE_HELP5 "Zëvendësohen %s\n"
-    STRING_REPLACE_HELP6 "Zëvendësoh %s\n"
-    STRING_REPLACE_HELP7 "S'ka dokumentat te shtuar\n"
-    STRING_REPLACE_HELP8 "%lu dokumenta(t) u shtuan\n"
-    STRING_REPLACE_HELP9 "Shto %s (P/J)? "
-    STRING_REPLACE_HELP10 "Zëvendëso %s (P/J)? "
-    STRING_REPLACE_HELP11 "Shtim %s\n"
     STRING_SHIFT_HELP "Ndryshon pozitën e parametrave në një dokument batch.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "lëvizin kursorin opsionale dhe printoni tekstin\n\n\
@@ -402,7 +375,7 @@ për një të re.  Kliko ENTER të mbash të njëjtë orë.\n"
     STRING_TIME_HELP2 "Shkruaj orën e re: "
     STRING_TIMER_HELP1 "Kaluar %d milisekonda\n"
     STRING_TIMER_HELP2 "Kaluar %02d%c%02d%c%02d%c%02d\n"
-    STRING_TIMER_HELP3 "të lejojë përdorimin e dhjetë kronometrave.\n\n\
+    STRING_TIMER_HELP3 "Të lejojë përdorimin e dhjetë kronometrave.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          Nis kronometrin\n\
   OFF         Ndalo kronometrin\n\
@@ -444,7 +417,7 @@ por PA ASNJË GARANCI; madje edhe pa garancinë e shprehur të\n\
  Free Software Foundation; ose version 2 të Liçenses, ose\n\
  (në opsionin tuaj) çfarëdo versioni të mëvonshëm.\n"
     STRING_VERSION_HELP5 "\nDërgo raportime të metash në<ros-dev@reactos.org>.\n\
-Updates janë në dispozicion në: http://www.reactos.org"
+Updates janë në dispozicion në: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersion FreeDOS shkruar nga:\n"
     STRING_VERSION_HELP7 "\nVersion FreeDOS shkruar nga:\n"
     STRING_VOL_HELP1 " Volumi është drive %c është %s\n"
@@ -452,14 +425,14 @@ Updates janë në dispozicion në: http://www.reactos.org"
     STRING_VOL_HELP3 " Numri Serial i Volumit është %04X-%04X\n"
     STRING_VOL_HELP4 "Shfaq etiketa e volumeve të diskut, nëse ekzistojne.\n\nVOL [drive:]"
     STRING_WINDOW_HELP1 "ndrysho aspektin e dritares se konsolit\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['titulli']\n\n\
 /POS          specifikojë vendosje e dritares dhe dimensionet\n\
 MIN           minimizo dritaren\n\
 MAX           rrit dritaren\n\
 RESTORE       riktheni dritaren"
     STRING_WINDOW_HELP2 "ndrysho aspektin e dritares se konsolit\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        dritare ku mund te kryesh veprime\n\
 /POS          specifikojë vendosje e dritares dhe dimensionet\n\
@@ -480,23 +453,23 @@ title         titull i ri\n"
     STRING_CMD_ERROR3 "Nuk mund të përcjellim në dokument %s\n"
     STRING_CMD_ERROR4 "Fillo %s...\n"
     STRING_CMD_ERROR5 "Fillo cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "Error i njëta ngjyra! (Historiku dhe prioritetit nuk mund të jetë ngjyrë të njëjtë)"
-    STRING_COLOR_ERROR2 "Gabim në specifikim ngjyra"
+    STRING_COLOR_ERROR1 "Error i njëta ngjyra! (Historiku dhe prioritetit nuk mund të jetë ngjyrë të njëjtë)\n"
+    STRING_COLOR_ERROR2 "Gabim në specifikim ngjyra\n"
     STRING_CONSOLE_ERROR "Error i paditur: %d\n"
     STRING_COPY_ERROR1 "Error: Nuk mund të hapni burim - %s!\n"
     STRING_COPY_ERROR2 "Error: Nuk mund të kopjoni mbi veten!\n"
     STRING_COPY_ERROR3 "Gabim gjatë shkrimit në destinacion!\n"
     STRING_COPY_ERROR4 "Error: Akoma nuk është implementuar!\n"
-    STRING_DATE_ERROR "Date Invalid."
+    STRING_DATE_ERROR "Date Invalid.\n"
     STRING_DEL_ERROR5 "Dokumenti %s do të fshihet! "
     STRING_DEL_ERROR6 "Jeni të sigurtë (P/J)? "
     STRING_DEL_ERROR7 "Fshini: %s\n"
     STRING_ERROR_ERROR1 "Error i paditur! Kodi error: 0x%lx\n"
     STRING_ERROR_ERROR2 "Error sintaksi"
-    STRING_FOR_ERROR1 "'Në' humbur për në deklaratë."
-    STRING_FOR_ERROR2 "Nuk gjenden kllapat."
-    STRING_FOR_ERROR3 "'bëj' i humbur."
-    STRING_FOR_ERROR4 "asnjë komandë pas 'do'."
+    STRING_FOR_ERROR1 "'Në' humbur për në deklaratë.\n"
+    STRING_FOR_ERROR2 "Nuk gjenden kllapat.\n"
+    STRING_FOR_ERROR3 "'bëj' i humbur.\n"
+    STRING_FOR_ERROR4 "asnjë komandë pas 'do'.\n"
     STRING_FREE_ERROR1 "Drive Invalid"
     STRING_FREE_ERROR2 "E paetiketuar"
     STRING_GOTO_ERROR1 "Nuk ka etiketa specifikuar për GOTO\n"
@@ -505,10 +478,10 @@ title         titull i ri\n"
     STRING_MD_ERROR2 "Rruga për tek skeda e re nuk ekziston.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
-    STRING_REN_ERROR1 "MoveFile() dështoj. Error: %lu\n"
-    STRING_TIME_ERROR1 "Ora invalide."
-    STRING_TYPE_ERROR1 "Opsion invalid '/%s'\n"
-    STRING_WINDOW_ERROR1 "Dritaria nuk i gjend"
+    STRING_REN_ERROR "MoveFile() dështoj. Error: %lu\n"
+    STRING_TIME_ERROR "Ora invalide.\n"
+    STRING_TYPE_ERROR "Opsion invalid '/%s'\n"
+    STRING_WINDOW_ERROR "Dritaria nuk i gjend\n"
     STRING_ERROR_PARAMETERF_ERROR "Parametrat e formanit nuk jane te sakta - %c\n"
     STRING_ERROR_INVALID_SWITCH "Qeles invalid - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Shumë parametra - %s\n"
@@ -522,24 +495,25 @@ title         titull i ri\n"
     STRING_ERROR_CANNOTPIPE "Error!  Nuk mund të pipoj!  Nuk mund të hape dokumentet e perkohshem!\n"
     STRING_ERROR_D_PAUSEMSG "Shtypni një buton për të vazhduar . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive nuk është gati"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Qeles invalid - %s\n"
-    STRING_REPLACE_ERROR2 "Rruga nuk u gjet - %s\n"
-    STRING_REPLACE_ERROR3 "Dokumenti, emri i direktorise, ose syntaksi i etiketes volumetrike eshte gabim.\n"
-    STRING_REPLACE_ERROR4 "Kombimi i parametrave invalid\n"
-    STRING_REPLACE_ERROR5 "Refuzot hyrja - %s\n"
-    STRING_REPLACE_ERROR6 "Nuk u gjet dokumenti - %s\n"
-    STRING_REPLACE_ERROR7 "Error i zgjatur 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versioni %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Interpretuesi i komandave\nVersioni %s %s"
     STRING_VERSION_RUNNING_ON "Funksionon në: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file(s) copied\n"
     STRING_DELETE_WIPE "spastruar"
-    STRING_FOR_ERROR "specifikimi i varibleve i keq."
-    STRING_SCREEN_COL "vlere invalide për col"
-    STRING_SCREEN_ROW "vlere invalide për row"
+    STRING_FOR_ERROR "specifikimi i varibleve i keq.\n"
+    STRING_SCREEN_COL "vlere invalide për col\n"
+    STRING_SCREEN_ROW "vlere invalide për row\n"
     STRING_TIMER_TIME "kohëmatës %d is %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Link i krijuar simbolik për %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Krijus linku i forte për %s <<===>> %s\n"

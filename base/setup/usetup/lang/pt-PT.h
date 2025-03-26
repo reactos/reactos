@@ -220,7 +220,7 @@ static MUI_ENTRY ptPTIntroPageEntries[] =
     {
         6,
         15,
-        "Fa\207a c\242pia de segur\306n\207 dos seus dados ou teste num computador",
+        "Fa\207a c\242pia de seguran\207a dos seus dados ou teste num computador",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -734,7 +734,7 @@ static MUI_ENTRY ptPTFlushPageEntries[] =
     {
         10,
         6,
-        "O sistema est\240 a certificar que todos os dados est\306 a ser",
+        "O sistema est\240 a certificar que todos os dados est\306o a ser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -937,59 +937,6 @@ static MUI_ENTRY ptPTSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY ptPTBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "O instalador n\306o pode instalar o ger\210nciador de inicializa\207\306o no disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "r\241gido do computador.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Por favor insira uma disquete formatada na unidade A: e",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "pressione ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER=Continuar  F3=Sair",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY ptPTSelectPartitionEntries[] =
 {
     {
@@ -1009,7 +956,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         6,
         8,
-        "n\306o-particionados neste computador.",
+        "n\306o particionados neste computador.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1037,8 +984,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Para criar uma  parti\207\306o prim\240ria, pressione P.",
-//        "\x07  Para criar uma parti\207\306o no espa\207o n\306o particionado, pressione C.",
+        "\x07  Para criar uma parti\207\306o prim\240ria/l\242gica, pressione C.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1052,13 +998,6 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Para criar uma parti\207\3060 l\242gica, pressione L.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Para excluir a parti\207\306o seleccionada, pressione D.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1104,7 +1043,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         6,
         16,
-        "formato não suportado pelo ReactOS.",
+        "formato n\306o suportado pelo ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1146,7 +1085,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         8,
         28,
-        "   à lista de selec\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
+        "   \205 lista de sele\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1188,7 +1127,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = Continuar   ESC = Cancelar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1326,7 +1265,7 @@ static MUI_ENTRY ptPTFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "O instalador ir\240 formatar a parti\207\306o. Para continuar, pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1336,6 +1275,37 @@ static MUI_ENTRY ptPTFormatPartitionEntries[] =
         0,
         "ENTER=Continuar  F3=Sair",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ptPTCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador est\240 a verificar a parti\207\306o seleccionada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Por favor, aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -1358,7 +1328,7 @@ static MUI_ENTRY ptPTInstallDirectoryEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 copiar os arquivos para a parti\207\306o seleccionada.",
+        "O instalador ir\240 copiar os ficheiros para a parti\207\306o seleccionada.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1424,7 +1394,7 @@ static MUI_ENTRY ptPTFileCopyEntries[] =
     {
         0,
         13,
-        "arquivos do ReactOS para a pasta de instala\207\306o.",
+        "ficheiros do ReactOS para a pasta de instala\207\306o.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1450,7 +1420,7 @@ static MUI_ENTRY ptPTFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY ptPTBootLoaderEntries[] =
+static MUI_ENTRY ptPTBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1462,35 +1432,35 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o",
+        "Por favor seleccione a unidade onde instalar o gestor de arranque:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (MBR e VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (MBR e VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (apenas VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (apenas VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         14,
-        "Instalar o ger\210nciador de inicializa\207\306o numa disquete",
+        "Instalar o gestor de arranque numa disquete",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "Saltar a instala\207\306o do ger\210nciador de inicializa\207\306o",
+        "Saltar a instala\207\306o do gestor de arranque",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1507,6 +1477,83 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY ptPTBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador ir\240 configurar o gestor de arranque.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "A instalar o programa de arranque no disco de instala\207\306o. Por favor aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ptPTBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador ir\240 configurar o gestor de arranque.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Por favor insira uma disquete formatada na unidade A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "e pressione ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER=Continuar  F3=Sair",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY ptPTKeyboardSettingsEntries[] =
@@ -1647,7 +1694,7 @@ static MUI_ENTRY ptPTPrepareCopyEntries[] =
     {
         6,
         8,
-        "O instalador est\240 a preparar o computador para copiar os arquivos",
+        "O instalador est\240 a preparar o computador para copiar os ficheiros",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1661,7 +1708,7 @@ static MUI_ENTRY ptPTPrepareCopyEntries[] =
     {
         0,
         0,
-        "A montar a lista de arquivos a serem copiados...",
+        "A montar a lista de ficheiros a serem copiados...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1686,7 +1733,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         16,
-        "Seleccione um sistema de arquivos para a nova parti\207\306o na lista abaixo.",
+        "Seleccione um sistema de ficheiros para a nova parti\207\306o na lista abaixo.",
         0
     },
     {
@@ -1698,7 +1745,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         18,
-        "sistema de arquivos de arquivos desejado e pressione ENTER.",
+        "sistema de ficheiros desejado e pressione ENTER.",
         0
     },
     {
@@ -1755,7 +1802,7 @@ static MUI_ENTRY ptPTDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Para retornar \205 tela anterior sem excluir",
+        "\x07  Para retornar \205 ecr\306 anterior sem excluir",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1830,8 +1877,23 @@ MUI_ERROR ptPTErrorEntries[] =
         "F3=Sair  ENTER=Continuar"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Falha ao criar os caminhos para o direct\242rio de instala\207\306o do ReactOS!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "N\306o pode excluir a parti\207\306o que cont\202m a fonte de instala\207\306o!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "N\306o pode instalar o ReactOS dentro do direct\242rio de origem da instala\207\306o!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
         // ERROR_NO_HDD
-        "N\306o foi poss\241vel localizar um disco r\241digo.\n",
+        "N\306o foi poss\241vel localizar um disco r\241gido.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1841,17 +1903,17 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_LOAD_TXTSETUPSIF
-        "N\306o foi poss\241vel carregar o arquivo TXTSETUP.SIF.\n",
+        "N\306o foi poss\241vel carregar o ficheiro TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CORRUPT_TXTSETUPSIF
-        "O arquivos TXTSETUP.SIF est\240 corrompido.\n",
+        "O ficheiro TXTSETUP.SIF est\240 corrompido.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "O arquivo TXTSETUP.SIF est\240 com a assinatura incorrecta.\n",
+        "O ficheiro TXTSETUP.SIF est\240 com a assinatura incorrecta.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1904,13 +1966,6 @@ MUI_ERROR ptPTErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Pode excluir um espa\207o n\306o particionado!\n"
-        "\n"
-        "  * Pressione qualquer tecla para continuar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Erro ao instalar o c\242digo de inicializa\207\306o %S na parti\207\306o do sistema.",
         "ENTER=Reiniciar"
@@ -1932,12 +1987,12 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_IMPORT_HIVE,
-        "N\306o foi poss\241vel importar o arquivo de estrutura.",
+        "N\306o foi poss\241vel importar o ficheiro de estrutura.",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_FIND_REGISTRY
-        "N\306o foi poss\241vel encontrar os arquivos do registo.",
+        "N\306o foi poss\241vel encontrar os ficheiros do registo.",
         "ENTER=Reiniciar"
     },
     {
@@ -1952,12 +2007,12 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_INVALID_CABINET_INF,
-        "O arquivo cab n\306o cont\202m um arquivo inf v\240lido.\n",
+        "O arquivo cab n\306o cont\202m um ficheiro inf v\240lido.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_MISSING,
-        "N\306o foi poss\241vel econtrar o arquivo cab.\n",
+        "N\306o foi poss\241vel encontrar o arquivo cab.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1967,7 +2022,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_COPY_QUEUE,
-        "N\306o foi poss\241vel abrir a lista de arquivos para c\242pia.\n",
+        "N\306o foi poss\241vel abrir a lista de ficheiros para c\242pia.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1978,13 +2033,13 @@ MUI_ERROR ptPTErrorEntries[] =
     {
         // ERROR_TXTSETUP_SECTION,
         "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
-        "arquivo TXTSETUP.SIF.\n",
+        "ficheiro TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_SECTION,
         "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
-        "arquivo cab.\n",
+        "ficheiro cab.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -2046,7 +2101,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "A instalação n\306o consegue formatar a parti\207\306o:\n"
+        "A instala\207\306o n\306o consegue formatar a parti\207\306o:\n"
         " %S\n"
         "\n"
         "ENTER = Reiniciar o computador"
@@ -2124,6 +2179,10 @@ MUI_PAGE ptPTPages[] =
         ptPTFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ptPTCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ptPTDeletePartitionEntries
     },
@@ -2144,8 +2203,8 @@ MUI_PAGE ptPTPages[] =
         ptPTKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        ptPTBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        ptPTBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2160,8 +2219,12 @@ MUI_PAGE ptPTPages[] =
         ptPTSuccessPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        ptPTBootPageEntries
+        BOOTLOADER_INSTALL_PAGE,
+        ptPTBootLoaderInstallPageEntries
+    },
+    {
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        ptPTBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2178,26 +2241,28 @@ MUI_STRING ptPTStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER=Instalar  P=Criar Part. Prim\240ria E=Criar Part. Estendida  F3=Sair"},
+    "   ENTER = Instalar  Criar parti\207\306o C = Prim\240ria  E = Estendida  F3 = Sair"},
     {STRING_INSTALLCREATELOGICAL,
-    "   ENTER = Instalar   L = Criar Parti\207\306o L\242gica   F3 = Sair"},
+    "   ENTER = Instalar  C = Criar parti\207\306o L\242gica  F3 = Sair"},
     {STRING_INSTALLDELETEPARTITION,
-    "   ENTER=Instalar  D=Apagar parti\207\306o  F3 = Sair"},
+    "   ENTER = Instalar  D = Apagar parti\207\306o  F3 = Sair"},
     {STRING_DELETEPARTITION,
-     "   D = Apagar Parti\207\306o   F3 = Sair"},
+     "   D = Apagar parti\207\306o   F3 = Sair"},
     {STRING_PARTITIONSIZE,
     "Tamanho da nova parti\207\306o:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Seleccionou criar uma parti\207\306o prim\240ria"},
 //    "Voc\210 solicitou a cria\207\306o de uma nova parti\207\306o em"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Seleccionou criar uma parti\207\306o estendida"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Seleccionou criar uma parti\207\306o l\242gica"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Por favor, insira o tamanho da nova parti\207\306o em megabytes (MB)."},
     {STRING_CREATEPARTITION,
     "   ENTER=Criar parti\207\306o  ESC=Cancelar  F3=Sair"},
+    {STRING_NEWPARTITION,
+    "O instalador criou uma nova parti\207\306o em"},
     {STRING_PARTFORMAT,
     "Esta parti\207\306o ser\240 formatada logo em seguida."},
     {STRING_NONFORMATTEDPART,
@@ -2208,8 +2273,6 @@ MUI_STRING ptPTStrings[] =
     "A nova parti\207\306o ainda n\306o est\240 formatada."},
     {STRING_INSTALLONPART,
     "O instalador instala o ReactOS na parti\207\306o"},
-    {STRING_CHECKINGPART,
-    "O instalador est\240 a verificar a parti\207\306o seleccionada."},
     {STRING_CONTINUE,
     "ENTER=Continuar"},
     {STRING_QUITCONTINUE,
@@ -2217,15 +2280,15 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER=Reiniciar"},
     {STRING_DELETING,
-     "   A apagar arquivo: %S"},
+     "   A apagar o ficheiro: %S"},
     {STRING_MOVING,
-     "   A mover arquivo: %S to: %S"},
+     "   A mover o ficheiro: %S para: %S"},
     {STRING_RENAMING,
-     "   A renomear arquivo: %S to: %S"},
+     "   A renomear o ficheiro: %S para: %S"},
     {STRING_COPYING,
-    "   A Copiar arquivo: %S"},
+    "   A Copiar o ficheiro: %S"},
     {STRING_SETUPCOPYINGFILES,
-    "O instalador est\240 a copiar os arquivos..."},
+    "O instalador est\240 a copiar os ficheiros..."},
     {STRING_REGHIVEUPDATE,
     "  A actualizar a estrutura do registo..."},
     {STRING_IMPORTFILE,
@@ -2237,7 +2300,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   A actualizar as configura\207\344es do teclado..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   A adicionar as informa\207\344es de localiza\207\306o no registo..."},
+    "   A adicionar as informa\207\344es de localiza\207\306o..."},
     {STRING_DONE,
     "   Pronto..."},
     {STRING_REBOOTCOMPUTER2,
@@ -2245,47 +2308,35 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTPROGRESSBAR,
     " O computador ir\240 reiniciar em %li segundo(s)... "},
     {STRING_CONSOLEFAIL1,
-    "N\306o foi poss\241vel abrir o console\r\n\r\n"},
+    "N\306o foi poss\241vel abrir a consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "A causa mais com\243m \202 a utiliza\207\306o de um teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Os teclados USB ainda n\306o s\306o completamente suportados\r\n"},
-    {STRING_FORMATTINGDISK,
-    "O instalador est\240 a formatar o disco"},
+    {STRING_FORMATTINGPART,
+    "O instalador est\240 a formatar a parti\207\306o..."},
     {STRING_CHECKINGDISK,
-    "O instalador est\240 a verificar o disco"},
+    "O instalador est\240 a verificar o disco..."},
     {STRING_FORMATDISK1,
-    " Formatar a parti\207\306o utilizando o sistema de arquivos %S (R\240pido) "},
+    " Formatar a parti\207\306o utilizando o sistema de ficheiros %S (R\240pido) "},
     {STRING_FORMATDISK2,
-    " Formatar a parti\207\306o utilizando o sistema de arquivos %S "},
+    " Formatar a parti\207\306o utilizando o sistema de ficheiros %S "},
     {STRING_KEEPFORMAT,
-    " Manter o sistema de arquivos actual (sem altera\207\344es) "},
-    {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE_1,
-    "em %I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "em %I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "em Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sTipo %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "O instalador criou uma nova parti\207\306o em"},
+    " Manter o sistema de ficheiros actual (sem altera\207\344es) "},
+    {STRING_HDDISK1,
+    "%s."},
+    {STRING_HDDISK2,
+    "em %s."},
+    {STRING_PARTTYPE,
+    "Tipo 0x%02x"},
+    {STRING_HDDINFO1,
+    // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]"},
+    {STRING_HDDINFO2,
+    // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu [%s]"
+    "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) [%s]"},
     {STRING_UNPSPACE,
-    "    %sEspa\207o n\306o particionado%s            %6lu %s"},
+    "Espa\207o n\306o particionado"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

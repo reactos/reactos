@@ -12,10 +12,62 @@
 #include <asm.inc>
 .code64
 
+EXTERN __chkstk:PROC
+
+// DWORD_PTR
+// call_method(
+//     void *func, // rcx
+//     int nb_args, // edx
+//     const DWORD_PTR *args );
 PUBLIC call_method
-call_method:
-    int 2ch
+FUNC call_method
+    push rbp
+    .PUSHREG rbp
+    push rsi
+    .PUSHREG rsi
+    push rdi
+    .PUSHREG rdi
+    mov rbp, rsp
+    .SETFRAME rbp, 0
+    .ENDPROLOG
+
+    // We need at least space for 4 parameters (home space)
+    mov rax, 4
+    cmp rdx, rax
+    cmovg rax, rdx
+
+    // Allocate dynamic stack space (aligned to 16 bytes)
+    lea rax, [rax * 8 + 15]
+    and rax, HEX(0FFFFFFFFFFFFFFF0)
+    call __chkstk
+    sub rsp, rax
+
+    // Save  function pointer in rax
+    mov rax, rcx
+
+    // Copy parameters to the stack
+    mov rcx, rdx
+    mov rdi, rsp
+    mov rsi, r8
+    rep movsq
+
+    // Set up parameter registers for the call
+    mov rcx, qword ptr [rsp + 0]
+    mov rdx, qword ptr [rsp + 8]
+    mov r8, qword ptr [rsp + 16]
+    mov r9, qword ptr [rsp + 24]
+    movq xmm0, qword ptr [rsp + 0]
+    movq xmm1, qword ptr [rsp + 8]
+    movq xmm2, qword ptr [rsp + 16]
+    movq xmm3, qword ptr [rsp + 24]
+    call rax
+
+    lea rsp, [rbp]
+    pop rdi
+    pop rsi
+    pop rbp
     ret
+ENDFUNC
 
 PUBLIC call_double_method
 call_double_method:

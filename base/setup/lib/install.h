@@ -27,11 +27,13 @@ PrepareCopyInfFile(
 #endif
 
 BOOLEAN // ERROR_NUMBER
+NTAPI
 PrepareFileCopy(
     IN OUT PUSETUP_DATA pSetupData,
     IN PFILE_COPY_STATUS_ROUTINE StatusRoutine OPTIONAL);
 
 BOOLEAN
+NTAPI
 DoFileCopy(
     IN OUT PUSETUP_DATA pSetupData,
     IN PSP_FILE_CALLBACK_W MsgHandler,

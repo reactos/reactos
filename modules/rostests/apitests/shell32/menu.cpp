@@ -32,7 +32,7 @@ class CDummyWindow : public CUnknownBase<IOleWindow>
 {
 protected:
     HWND m_hwnd;
-    
+
     const QITAB* GetQITab()
     {
         static const QITAB tab[] = {{ &IID_IOleWindow, OFFSETOFCLASS(IOleWindow, CDummyWindow) }, {0}};
@@ -90,7 +90,7 @@ void test_CShellMenu_params()
     HWND hwndOwner;
     DWORD menuFlagss;
     IShellFolder *shellFolder;
-    
+
     if (!CreateCShellMenu(&shellMenu, &dockingMenu, &menuWithSite))
     {
         skip("failed to create CShellMenuObject\n");
@@ -113,7 +113,7 @@ void test_CShellMenu_params()
     hResult = dockingMenu->GetWindow(&hwndToolbar);
     test_HRES(hResult, E_FAIL, "GetWindow should fail");
 
-    hResult = shellMenu->GetMenu(&hmenu, &hwndOwner, &menuFlagss);  
+    hResult = shellMenu->GetMenu(&hmenu, &hwndOwner, &menuFlagss);
     test_HRES(hResult, E_FAIL, "GetMenu should fail");
 
     hmenu = CreatePopupMenu();
@@ -128,7 +128,7 @@ void test_CShellMenu_params()
     hResult = shellMenu->SetMenu(NULL, NULL, 0);
     test_S_OK(hResult, "SetMenu failed");
 
-    hResult = shellMenu->GetMenu(&hmenu, &hwndOwner, &menuFlagss);  
+    hResult = shellMenu->GetMenu(&hmenu, &hwndOwner, &menuFlagss);
     test_S_OK(hResult, "GetMenu failed");
     ok (hmenu == NULL, "Got a menu\n");
 
@@ -140,7 +140,7 @@ void test_CShellMenu_params()
 
     hResult = shellMenu->SetShellFolder(shellFolder, NULL, 0, 0);
     test_S_OK(hResult, "SetShellFolder failed");
- 
+
     hResult = shellMenu->SetShellFolder(NULL, NULL, 0, 0);
     test_HRES(hResult, E_INVALIDARG, "SetShellFolder should fail");
 
@@ -219,7 +219,7 @@ protected:
     int m_iCallback;
     struct _test_info *m_results;
     int m_testsCount;
-    
+
     const QITAB* GetQITab()
     {
         static const QITAB tab[] = {{ &IID_IShellMenuCallback, OFFSETOFCLASS(IShellMenuCallback, CMenuCallback) }, {0}};
@@ -245,8 +245,8 @@ public:
    {
        /*trace ("callback type %d\n", uMsg);*/
 
-       /* 
-        * it seems callback 0x10000000 is called for every item added so 
+       /*
+        * it seems callback 0x10000000 is called for every item added so
         * we will ignore consecutive callbacks of this type
         * Note: this callback is invoked by shell32.dll!CMenuSFToolbar::_FilterPidl
         */
@@ -267,7 +267,7 @@ public:
        ok(psmd != NULL, "Got NULL psmd\n");
        ok(m_iTest == result->iTest, "Wrong test number (%d not %d)\n", m_iTest, result->iTest);
        ok(result->uMsg == uMsg, "%d: Got wrong uMsg (%d instead of %d)\n", m_iCallback, uMsg, result->uMsg);
-           
+
        if(uMsg == SMC_CREATE)
        {
            ok(psmd->dwFlags == 0, "wrong dwFlags\n");
@@ -276,7 +276,7 @@ public:
            ok(psmd->hwnd == 0, "wrong hwnd\n");
            ok(psmd->punk != NULL, "punk is null\n");
        }
-       
+
        if (uMsg == SMC_GETSFOBJECT)
        {
            ok(psmd->psf != 0, "wrong dwFlags\n");
@@ -298,7 +298,7 @@ void test_CShellMenu_callbacks(IShellFolder *shellFolder, HMENU hmenu)
         CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, GetModuleHandle(NULL), NULL);
     CDummyWindow* dummyWindow = new CDummyWindow(hWndParent);
     ShowWindow(hWndParent, SW_SHOW);
-    
+
     if (!CreateCShellMenu(&shellMenu, &dockingMenu, &menuWithSite))
     {
         skip("failed to create CShellMenuObject\n");
@@ -335,7 +335,7 @@ void test_CShellMenu_callbacks(IShellFolder *shellFolder, HMENU hmenu)
     test_S_OK(hResult, "SetShellFolder failed");
 
     callback->SetTest(3);
-    hResult = shellMenu->SetMenu(hmenu, hWndParent, SMSET_TOP);    
+    hResult = shellMenu->SetMenu(hmenu, hWndParent, SMSET_TOP);
     test_S_OK(hResult, "SetMenu failed");
 
     hResult = menuWithSite->SetSite(dummyWindow);
@@ -343,7 +343,7 @@ void test_CShellMenu_callbacks(IShellFolder *shellFolder, HMENU hmenu)
 
     callback->SetTest(4);
     hResult = dockingMenu->ShowDW(TRUE);
-    test_HRES(hResult, S_FALSE, "ShowDW failed");    
+    test_HRES(hResult, S_FALSE, "ShowDW failed");
 }
 
 void test_CShellMenu_with_DeskBar(IShellFolder *shellFolder, HMENU hmenu)
@@ -366,9 +366,9 @@ void test_CShellMenu_with_DeskBar(IShellFolder *shellFolder, HMENU hmenu)
         skip("failed to create MenuBandSite object\n");
         return;
     }
-    
+
     /* Create the popup menu */
-    hResult = shellMenu->Initialize(NULL, 0, ANCESTORDEFAULT, SMINIT_TOPLEVEL|SMINIT_VERTICAL); 
+    hResult = shellMenu->Initialize(NULL, 0, ANCESTORDEFAULT, SMINIT_TOPLEVEL|SMINIT_VERTICAL);
     test_S_OK(hResult, "Initialize failed");
     hResult = shellMenu->SetMenu( hmenu, NULL, SMSET_TOP);
     test_S_OK(hResult, "SetMenu failed");
@@ -386,7 +386,7 @@ void test_CShellMenu_with_DeskBar(IShellFolder *shellFolder, HMENU hmenu)
 
     /* Ensure that the created windows are correct */
     hResult = dockingMenu->GetWindow(&hWndToolbar);
-    test_S_OK(hResult, "GetWindow failed");    
+    test_S_OK(hResult, "GetWindow failed");
     ok(hWndToolbar != NULL, "GetWindow should return a window\n");
 
     hResult = menuPopup->GetWindow(&hWndToplevel);

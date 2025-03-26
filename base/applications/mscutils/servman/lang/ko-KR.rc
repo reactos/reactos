@@ -282,7 +282,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "옵션 생성:\r\n참고: 옵션 이름은 등호를 포함합니다.\r\n 타입= <own|share|interact|kernel|filesys|rec>\r\n       (기본 = own)\r\n 시작= <boot|system|auto|demand|disabled>\r\n       (기본 = demand) \r\n 에러= <normal|severe|critical|ignore>\r\n       (기본 = normal)\r\n 그룹= <LoadOrderGroup>\r\n tag= <yes|no>\r\n 종속성= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (기본 = LocalSystem)\r\n password= <password>\r\n"
+    IDS_HELP_OPTIONS "옵션 생성:\n참고: 옵션 이름은 등호를 포함합니다.\n 타입= <own|share|interact|kernel|filesys|rec>\n       (기본 = own)\n 시작= <boot|system|auto|demand|disabled>\n       (기본 = demand)\n 에러= <normal|severe|critical|ignore>\n       (기본 = normal)\n 그룹= <LoadOrderGroup>\n tag= <yes|no>\n 종속성= <Dependencies(separated by / (forward slash))>\n obj= <AccountName|ObjectName>\n       (기본 = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */

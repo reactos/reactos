@@ -56,7 +56,7 @@ _tmain(int argc, TCHAR *argv[])
 		ofc.lpstrFilter = FILEOPEN_FILTER;
 		ofc.nFilterIndex = 1;
 		ofc.lpstrTitle = FILEOPEN_TITLE;
-		ofc.Flags = OFN_FILEMUSTEXIST | OFN_LONGNAMES | OFN_PATHMUSTEXIST;
+		ofc.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_LONGNAMES | OFN_PATHMUSTEXIST;
 		ofc.lpstrDefExt = FILEOPEN_DEFEXT;
 		ofc.lpstrFile = FileName;
 		ofc.nMaxFile = sizeof(FileName) / sizeof(TCHAR);

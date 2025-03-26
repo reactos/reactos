@@ -15,12 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* UTF-8 */
-#pragma code_page(65001)
+/* translation by Zahar Hodoley (mail: zaharh@mail.ru) */
 
-STRINGTABLE LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
 BEGIN
-
 
 /* MMSYS errors */
 MMSYSERR_NOERROR, 		"Нет ошибки."
@@ -127,5 +127,3 @@ MCIERR_SEQ_PORTUNSPECIFIED, 	"В системе не указан текущий
 MCIERR_SEQ_TIMER, 		"Все таймеры мультимедиа используются другими приложениями. Закройте одно из этих приложений и попробуйте заново."
 
 END
-
-/* translation by Zahar Hodoley (mail: zaharh@mail.ru) */

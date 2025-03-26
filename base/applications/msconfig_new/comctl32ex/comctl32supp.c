@@ -28,7 +28,7 @@ HRESULT GetComCtl32Version(OUT PDWORD pdwMajor, OUT PDWORD pdwMinor, OUT PDWORD 
      */
 
     /*
-     * See: https://msdn.microsoft.com/en-us/library/windows/desktop/hh298349(v=vs.85).aspx
+     * See: https://learn.microsoft.com/en-us/windows/win32/controls/common-control-versions
      * and: http://www.geoffchappell.com/studies/windows/shell/comctl32/history/
      * for the possible version values to be returned.
      */

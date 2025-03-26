@@ -18,6 +18,8 @@ extern KSPIN_LOCK KiReverseStallIpiLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+#ifndef _M_AMD64
+
 VOID
 NTAPI
 KiIpiGenericCallTarget(IN PKIPI_CONTEXT PacketContext,
@@ -167,7 +169,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
     if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST))
     {
-#ifdef _M_ARM
+#if defined(_M_ARM) || defined(_M_AMD64)
         DbgBreakPoint();
 #else
         (void)InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
@@ -270,3 +272,5 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
     KeLowerIrql(OldIrql);
     return Status;
 }
+
+#endif // !_M_AMD64

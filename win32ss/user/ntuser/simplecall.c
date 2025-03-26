@@ -114,13 +114,21 @@ NtUserCallNoParam(DWORD Routine)
             break;
         }
 
+        case NOPARAM_ROUTINE_GETIMESHOWSTATUS:
+            Result = !!gfIMEShowStatus;
+            break;
+
         /* this is a ReactOS only case and is needed for gui-on-demand */
         case NOPARAM_ROUTINE_ISCONSOLEMODE:
             Result = (ScreenDeviceContext == NULL);
             break;
 
         case NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING:
-            gpsi->dwSRVIFlags |= SRVINFO_IMM32; // Always set.
+            if (UserIsIMMEnabled())
+                gpsi->dwSRVIFlags |= SRVINFO_IMM32;
+            else
+                gpsi->dwSRVIFlags &= ~SRVINFO_IMM32;
+
             Result = TRUE; // Always return TRUE.
             break;
 
@@ -512,28 +520,28 @@ NtUserCallTwoParam(
             Ret = 0;
             Window = UserGetWindowObject(hwnd);
             if (!Window)
-            {
                 break;
-            }
-            if (MsqIsHung(Window->head.pti, MSQ_HUNG))
+
+            if (gpqForeground && !fAltTab)
             {
-                // TODO: Make the window ghosted and activate.
-                break;
-            }
-            if (fAltTab)
-            {
-                if (Window->style & WS_MINIMIZE)
+                PWND pwndActive = gpqForeground->spwndActive;
+                if (pwndActive && !(pwndActive->ExStyle & WS_EX_TOPMOST))
                 {
-                    UserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+                    co_WinPosSetWindowPos(pwndActive, HWND_BOTTOM, 0, 0, 0, 0,
+                                          SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
+                                          SWP_ASYNCWINDOWPOS);
                 }
-                /* bring window to top and activate */
-                co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
-                                      SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING |
-                                      SWP_NOOWNERZORDER | SWP_ASYNCWINDOWPOS);
-            }
-            else
-            {
+
                 UserSetActiveWindow(Window);
+                break;
+            }
+
+            co_IntSetForegroundWindowMouse(Window);
+
+            if (fAltTab && (Window->style & WS_MINIMIZE))
+            {
+                MSG msg = { UserHMGetHandle(Window), WM_SYSCOMMAND, SC_RESTORE, 0 };
+                MsqPostMessage(Window->head.pti, &msg, FALSE, QS_POSTMESSAGE, 0, 0);
             }
             break;
         }
@@ -660,6 +668,10 @@ NtUserCallHwndLock(
             co_IntUpdateWindows(Window, RDW_ALLCHILDREN, FALSE);
             Ret = TRUE;
             break;
+
+        case HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD:
+            IntCheckImeShowStatusInThread(Window);
+            break;
     }
 
     UserDerefObjectCo(Window);
@@ -694,7 +706,7 @@ NtUserCallHwndOpt(
     return hWnd;
 }
 
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserCallHwnd(
     HWND hWnd,
@@ -715,7 +727,7 @@ NtUserCallHwnd(
                 return 0;
             }
 
-            HelpId = (DWORD)(DWORD_PTR)UserGetProp(Window, gpsi->atomContextHelpIdProp, TRUE);
+            HelpId = HandleToUlong(UserGetProp(Window, gpsi->atomContextHelpIdProp, TRUE));
 
             UserLeave();
             return HelpId;
@@ -743,6 +755,17 @@ NtUserCallHwnd(
             UserLeave();
             return FALSE;
         }
+
+        case HWND_ROUTINE_DWP_GETENABLEDPOPUP:
+        {
+            PWND pWnd;
+            UserEnterShared();
+            pWnd = UserGetWindowObject(hWnd);
+            if (pWnd)
+                pWnd = DWP_GetEnabledPopup(pWnd);
+            UserLeave();
+            return (DWORD_PTR)pWnd;
+        }
     }
 
     STUB;
@@ -761,7 +784,14 @@ NtUserCallHwndParam(
     switch (Routine)
     {
         case HWNDPARAM_ROUTINE_KILLSYSTEMTIMER:
-            return IntKillTimer(UserGetWindowObject(hWnd), (UINT_PTR)Param, TRUE);
+        {
+            DWORD ret;
+
+            UserEnterExclusive();
+            ret = IntKillTimer(UserGetWindowObject(hWnd), (UINT_PTR)Param, TRUE);
+            UserLeave();
+            return ret;
+        }
 
         case HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID:
         {
@@ -798,9 +828,10 @@ NtUserCallHwndParam(
             UserRefObjectCo(pWnd, &Ref);
 
             if (pWnd->head.pti->ppi == PsGetCurrentProcessWin32Process() &&
-                pWnd->cbwndExtra == DLGWINDOWEXTRA &&
+                pWnd->cbwndExtra >= DLGWINDOWEXTRA &&
                 !(pWnd->state & WNDS_SERVERSIDEWINDOWPROC))
             {
+                pWnd->DialogPointer = (PVOID)Param;
                 if (Param)
                 {
                     if (!pWnd->fnid) pWnd->fnid = FNID_DIALOG;
@@ -883,6 +914,10 @@ NtUserCallHwndParamLock(
 
     switch (Routine)
     {
+        case TWOPARAM_ROUTINE_IMESHOWSTATUSCHANGE:
+            Ret = IntBroadcastImeShowStatusChange(Window, !!Param);
+            break;
+
         case TWOPARAM_ROUTINE_VALIDATERGN:
         {
             PREGION Rgn = REGION_LockRgn((HRGN)Param);

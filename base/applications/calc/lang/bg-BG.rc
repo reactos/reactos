@@ -1,24 +1,22 @@
 /* Превод на Български/ Bulgarian translation
- * http://www.reactos.org/wiki/Bulgarian_translation
- * FILE: base/applications/calc/lang/bg-BG.rc
- * Недовършен / Incomplete
+ * https://reactos.org/wiki/Bulgarian_translation
  */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 
-IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
+IDD_DIALOG_SCIENTIFIC DIALOGEX CW_USEDEFAULT16, 0, 316, 163
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изчислителят на РеактОС"
+CAPTION "Калкулатор"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "", IDC_STATIC, 5 ,14, 141, 20
-    CONTROL "Шстн", IDC_RADIO_HEX, "Button", BS_AUTORADIOBUTTON, 8, 21, 30, 10
-    CONTROL "Дстн", IDC_RADIO_DEC, "Button", BS_AUTORADIOBUTTON, 41, 21, 30, 10
-    CONTROL "Осм", IDC_RADIO_OCT, "Button", BS_AUTORADIOBUTTON, 74, 21, 30, 10
-    CONTROL "Двоич", IDC_RADIO_BIN, "Button", BS_AUTORADIOBUTTON, 107, 21, 30, 10
+    AUTORADIOBUTTON "Шстн", IDC_RADIO_HEX, 8, 21, 30, 10
+    AUTORADIOBUTTON "Дстн", IDC_RADIO_DEC, 41, 21, 30, 10
+    AUTORADIOBUTTON "Осм", IDC_RADIO_OCT, 74, 21, 30, 10
+    AUTORADIOBUTTON "Двоич", IDC_RADIO_BIN, 107, 21, 30, 10
     GROUPBOX "", IDC_STATIC, 5, 34, 84, 20
     CONTROL "Обр", IDC_CHECK_INV, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 41, 26, 10
     CONTROL "Хип", IDC_CHECK_HYP, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 49, 41, 29, 10
@@ -135,17 +133,13 @@ BEGIN
     PUSHBUTTON "Дроб", IDC_BUTTON_F, 286, 140, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     GROUPBOX "", IDC_STATIC, 147, 14, 163, 20
-    CONTROL "ЧДума", IDC_RADIO_QWORD, "Button", BS_AUTORADIOBUTTON |
-            NOT WS_VISIBLE, 150, 21, 38, 10
-    CONTROL "ДДума", IDC_RADIO_DWORD, "Button", BS_AUTORADIOBUTTON |
-            NOT WS_VISIBLE, 190, 21, 38, 10
-    CONTROL "Дума", IDC_RADIO_WORD, "Button", BS_AUTORADIOBUTTON |
-            NOT WS_VISIBLE, 230, 21, 38, 10
-    CONTROL "Байт", IDC_RADIO_BYTE, "Button", BS_AUTORADIOBUTTON |
-            NOT WS_VISIBLE, 270, 21, 38, 10
-    CONTROL "Градуси", IDC_RADIO_DEG, "Button", BS_AUTORADIOBUTTON, 150, 21, 45, 10
-    CONTROL "Радиани", IDC_RADIO_RAD, "Button", BS_AUTORADIOBUTTON, 204, 21, 45, 10
-    CONTROL "Градове", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
+    AUTORADIOBUTTON "ЧДума", IDC_RADIO_QWORD, 150, 21, 38, 10, NOT WS_VISIBLE
+    AUTORADIOBUTTON "ДДума", IDC_RADIO_DWORD, 190, 21, 38, 10, NOT WS_VISIBLE
+    AUTORADIOBUTTON "Дума", IDC_RADIO_WORD, 230, 21, 38, 10, NOT WS_VISIBLE
+    AUTORADIOBUTTON "Байт", IDC_RADIO_BYTE, 270, 21, 38, 10, NOT WS_VISIBLE
+    AUTORADIOBUTTON "Градуси", IDC_RADIO_DEG, 150, 21, 45, 10
+    AUTORADIOBUTTON "Радиани", IDC_RADIO_RAD, 204, 21, 45, 10
+    AUTORADIOBUTTON "Градиани", IDC_RADIO_GRAD, 258, 21, 45, 10
     PUSHBUTTON "C", IDC_BUTTON_CANC, 267, 38, 43, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 222, 38, 43, 18, BS_CENTER | BS_VCENTER |
@@ -156,9 +150,9 @@ BEGIN
     DEFPUSHBUTTON "", IDC_BUTTON_FOCUS, 0, 0, 5, 5, NOT WS_VISIBLE
 END
 
-IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
+IDD_DIALOG_STANDARD DIALOGEX CW_USEDEFAULT16, 0, 169, 128
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изчислителян на РеактОС"
+CAPTION "Калкулатор"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -221,9 +215,9 @@ BEGIN
     DEFPUSHBUTTON "", IDC_BUTTON_FOCUS, 0, 0, 5, 5, NOT WS_VISIBLE
 END
 
-IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
+IDD_DIALOG_CONVERSION DIALOGEX CW_USEDEFAULT16, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изчислителят на РеактОС"
+CAPTION "Калкулатор"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -315,8 +309,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
@@ -331,7 +325,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Градуси\tF2", IDM_VIEW_DEG, CHECKED
         MENUITEM "Радиани\tF3", IDM_VIEW_RAD, CHECKED
-        MENUITEM "Градове\tF4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Градиани\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Разделяне на хилядите", IDM_VIEW_GROUP, CHECKED
     END
@@ -339,7 +333,7 @@ BEGIN
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calculator", IDM_HELP_ABOUT
     END
 END
 
@@ -347,8 +341,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
@@ -372,7 +366,7 @@ BEGIN
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calculator", IDM_HELP_ABOUT
     END
 END
 
@@ -380,8 +374,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
@@ -395,7 +389,7 @@ BEGIN
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calculator", IDM_HELP_ABOUT
     END
 END
 
@@ -410,7 +404,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "Изчислителят на РеактОС"
+    IDS_CALC_NAME "Калкулатор за ReactOS"
     IDS_AUTHOR "Написано от Carlo Bramini"
 END
 
@@ -419,7 +413,7 @@ STRINGTABLE
 BEGIN
     IDS_CONV_ANGLE "Ъгъл"
     IDS_CONV_AREA "Площ"
-    IDS_CONV_CONSUMPTION "Потребление (двигатели)"
+    IDS_CONV_CONSUMPTION "Разход (двигатели)"
     IDS_CONV_CURRENCY "Парични единици"
     IDS_CONV_ENERGY "Енергия"
     IDS_CONV_LENGTH "Дължина"
@@ -435,10 +429,10 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Minute of arc"
-    IDS_ANGLE_ARCSECONDS "Second of arc"
+    IDS_ANGLE_ARCMINUTES "Минути от arc"
+    IDS_ANGLE_ARCSECONDS "Секунди от arc"
     IDS_ANGLE_DEGREES "Градуси"
-    IDS_ANGLE_GRADIANS "Гради"
+    IDS_ANGLE_GRADIANS "Градиани"
     IDS_ANGLE_RADIANS "Радиани"
 END
 
@@ -486,7 +480,7 @@ STRINGTABLE
 BEGIN
     IDS_CONSUMPTION_KM_PER_L "Километри/литър"
     IDS_CONSUMPTION_L_PER_100_KM "Литри/100 километра"
-    IDS_CONSUMPTION_MILES_GALLON_UK "Мили/галон (ОК)"
+    IDS_CONSUMPTION_MILES_GALLON_UK "Мили/галон (ВБ)"
     IDS_CONSUMPTION_MILES_GALLON_US "Мили/галон (САЩ)"
 END
 
@@ -510,7 +504,7 @@ BEGIN
     IDS_CURRENCY_LITHUANIAN_LITAS "Lithuanian litas"
     IDS_CURRENCY_LUXEMBOURG_FRANC "Люксембургски франк"
     IDS_CURRENCY_MALTESE_LIRA "Малтийска лира"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO "Португалско ескудо"
+    IDS_CURRENCY_PORTUGUESE_ESCUDO "Португалско ескудо"
     IDS_CURRENCY_SLOVAK_KORUNA "Словашка крона"
     IDS_CURRENCY_SLOVENIAN_TOLAR "Словенси толар"
     IDS_CURRENCY_SPANISH_PESETA "Испанска песета"
@@ -710,6 +704,6 @@ BEGIN
     IDS_WEIGHT_STONES "Камъни"
     IDS_WEIGHT_TAMLUNG "Tamlung"
     IDS_WEIGHT_TONNES "Тонове"
-    IDS_WEIGHT_TONS_UK "Тонове (ОК)"
+    IDS_WEIGHT_TONS_UK "Тонове (ВБ)"
     IDS_WEIGHT_TONS_US "Тонове (САЩ)"
 END

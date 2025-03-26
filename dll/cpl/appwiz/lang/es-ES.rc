@@ -5,6 +5,7 @@
  * COPYRIGHT:   Javier Remacha 2007-12-22
  *              Ismael Ferreras Morezuelas 2014-12-30
  *              Julio Carchi Ruiz 2018-10-19
+ *              Julen Urizar Compains 2021-08-08
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -35,7 +36,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Este asistente le ayudará a crear accesos directos a programas locales o en red, archivos, carpetas, equipos, o direcciones de Internet.", -1, 120, 15, 200, 30
     LTEXT "Escriba la ubicación del elemento:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
+    EDITTEXT IDC_LINK_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Examinar...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Presione Siguiente para continuar.", -1, 120, 97, 162, 10
 END
@@ -70,8 +71,8 @@ BEGIN
     CONTROL "ReactOS no pudo encontrar el paquete de Wine Gecko, necesario para que las aplicaciones con HTML embebido funcionen correctamente.\n\nReactOS puede ayudar a descargarlo de forma automática y fácil.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 144, 76, 50, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 200, 76, 50, 14
 END
 
 STRINGTABLE
@@ -94,5 +95,6 @@ BEGIN
     IDS_NO_MEMORY "No se pudo asignar memoria"
     IDS_NO_DIRECTORY "No se ha especificado directorio alguno"
     IDS_INVALID_PATH "La ruta proporcionada es inválida"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_INVALID_NAME "El nombre del acceso directo que has introducido contiene o bien caracteres inválidos, o su nombre es demasiado largo."
+    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
 END

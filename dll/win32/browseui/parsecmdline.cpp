@@ -225,10 +225,11 @@ static LPITEMIDLIST _GetDocumentsPidl()
 /*************************************************************************
 * SHExplorerParseCmdLine		[BROWSEUI.107]
 */
+// Returns FALSE, TRUE or an address.
 extern "C"
 UINT_PTR
 WINAPI
-SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
+SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
 {
     WCHAR   strField[MAX_PATH];
     WCHAR   strDir[MAX_PATH];
@@ -246,20 +247,19 @@ SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
             PathStripToRootW(strDir);
             pInfo->pidlPath = ILCreateFromPathW(strDir);
         }
-        return (LONG_PTR)(pInfo->pidlPath);
+        return (UINT_PTR)pInfo->pidlPath;
     }
 
     PCWSTR strNextArg = _FindFirstField(strFieldArray);
 
-    BOOL hasNext = TRUE;
+    BOOL hasNext = _ReadNextArg(&strNextArg, strField, _countof(strField));
 
-    hasNext = _ReadNextArg(&strNextArg, strField, _countof(strField));
     while (TRUE)
     {
         // Basic flags-only params first
         if (!StrCmpIW(strField, L"/N"))
         {
-            pInfo->dwFlags |= SH_EXPLORER_CMDLINE_FLAG_N | SH_EXPLORER_CMDLINE_FLAG_ONE;
+            pInfo->dwFlags |= SH_EXPLORER_CMDLINE_FLAG_NEWWND | SH_EXPLORER_CMDLINE_FLAG_NOREUSE;
             TRACE("CmdLine Parser: Parsed %S flag. dwFlags=%08lx\n", strField, pInfo->dwFlags);
         }
         else if (!StrCmpIW(strField, L"/S"))
@@ -317,9 +317,6 @@ SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
             // The window should be rooted
 
             TRACE("CmdLine Parser: Found %S flag\n", strField);
-
-            if (!pInfo->pidlPath)
-                return FALSE;
 
             if (!hasNext)
                 return FALSE;
@@ -405,7 +402,8 @@ SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
                     // The path could not be parsed into an ID List,
                     // so pass it on as a plain string.
 
-                    PWSTR field = StrDupW(strField);
+                    PWSTR field;
+                    SHStrDupW(strField, &field);
                     pInfo->strPath = field;
                     if (field)
                     {
@@ -413,7 +411,6 @@ SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
                         TRACE("CmdLine Parser: Parsed target path. dwFlags=%08lx, strPath=%S\n", pInfo->dwFlags, field);
                     }
                 }
-
             }
         }
 

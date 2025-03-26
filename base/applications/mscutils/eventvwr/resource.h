@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Resources header.
+ * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Copyright 2008-2016 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
 #pragma once
 
 /* Icon IDs */
@@ -79,6 +88,7 @@
 #define IDM_SAVE_SETTINGS       32784
 #define IDM_HELP                32785
 #define IDM_ABOUT               32786
+#define IDM_EVENTWR_CTX         32787
 
 
 /* String IDs */
@@ -95,6 +105,8 @@
 #define IDS_CLEAREVENTS_MSG             110
 #define IDS_EVENTSTRINGIDNOTFOUND       111
 #define IDS_RESTOREDEFAULTS             112
+#define IDS_CONTFROMBEGINNING           113
+#define IDS_CONTFROMEND                 114
 
 #define IDS_USAGE                       120
 #define IDS_EVENTLOGFILE                121

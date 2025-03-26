@@ -14,6 +14,8 @@ endif()
 # Dwarf based builds (no rsym)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(NO_ROSSYM TRUE)
+elseif(NOT ARCH STREQUAL "i386")
+    set(NO_ROSSYM TRUE)
 elseif(NOT DEFINED NO_ROSSYM)
     set(NO_ROSSYM FALSE)
 endif()
@@ -39,24 +41,104 @@ if(STACK_PROTECTOR)
 endif()
 
 # Compiler Core
-add_compile_options(-pipe -fms-extensions -fno-strict-aliasing)
+# note: -fno-common is default since GCC 10
+add_compile_options(-pipe -fms-extensions -fno-strict-aliasing -fno-common)
+
+# A long double is 64 bits
+add_compile_options(-mlong-double-64)
 
 # Prevent GCC from searching any of the default directories.
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
-add_compile_options(-mstackrealign)
-
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    add_compile_options("-Wno-unknown-pragmas")
     add_compile_options(-fno-aggressive-loop-optimizations)
     if (DBG)
         add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
     endif()
-else()
+
+    # Disable all math intrinsics. The reason is that these are implicitly declared
+    # extern by GCC, which causes inline functions to generate global symbols.
+    # And since GCC is retarded, these symbols are not marked as weak, so they
+    # conflict with each other in multiple compilation units.
+    add_compile_options(-fno-builtin-acosf)
+    add_compile_options(-fno-builtin-acosl)
+    add_compile_options(-fno-builtin-asinf)
+    add_compile_options(-fno-builtin-asinl)
+    add_compile_options(-fno-builtin-atan2f)
+    add_compile_options(-fno-builtin-atan2l)
+    add_compile_options(-fno-builtin-atanf)
+    add_compile_options(-fno-builtin-atanl)
+    add_compile_options(-fno-builtin-ceilf)
+    add_compile_options(-fno-builtin-ceill)
+    add_compile_options(-fno-builtin-coshf)
+    add_compile_options(-fno-builtin-coshl)
+    add_compile_options(-fno-builtin-cosf)
+    add_compile_options(-fno-builtin-cosl)
+    add_compile_options(-fno-builtin-expf)
+    add_compile_options(-fno-builtin-expl)
+    add_compile_options(-fno-builtin-fabsf)
+    add_compile_options(-fno-builtin-fabsl)
+    add_compile_options(-fno-builtin-floorf)
+    add_compile_options(-fno-builtin-floorl)
+    add_compile_options(-fno-builtin-fmodf)
+    add_compile_options(-fno-builtin-fmodl)
+    add_compile_options(-fno-builtin-frexpf)
+    add_compile_options(-fno-builtin-frexpl)
+    add_compile_options(-fno-builtin-hypotf)
+    add_compile_options(-fno-builtin-hypotl)
+    add_compile_options(-fno-builtin-ldexpf)
+    add_compile_options(-fno-builtin-ldexpl)
+    add_compile_options(-fno-builtin-logf)
+    add_compile_options(-fno-builtin-logl)
+    add_compile_options(-fno-builtin-log10f)
+    add_compile_options(-fno-builtin-log10l)
+    add_compile_options(-fno-builtin-modff)
+    add_compile_options(-fno-builtin-modfl)
+    add_compile_options(-fno-builtin-powf)
+    add_compile_options(-fno-builtin-powl)
+    add_compile_options(-fno-builtin-sinhf)
+    add_compile_options(-fno-builtin-sinhl)
+    add_compile_options(-fno-builtin-sinf)
+    add_compile_options(-fno-builtin-sinl)
+    add_compile_options(-fno-builtin-sqrtf)
+    add_compile_options(-fno-builtin-sqrtl)
+    add_compile_options(-fno-builtin-tanhf)
+    add_compile_options(-fno-builtin-tanhl)
+    add_compile_options(-fno-builtin-tanf)
+    add_compile_options(-fno-builtin-tanl)
+    add_compile_options(-fno-builtin-feraiseexcept)
+    add_compile_options(-fno-builtin-feupdateenv)
+
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
+        add_compile_options(-fno-builtin-ceil)
+        add_compile_options(-fno-builtin-ceilf)
+        add_compile_options(-fno-builtin-cos)
+        add_compile_options(-fno-builtin-floor)
+        add_compile_options(-fno-builtin-floorf)
+        add_compile_options(-fno-builtin-pow)
+        add_compile_options(-fno-builtin-sin)
+        add_compile_options(-fno-builtin-sincos)
+        add_compile_options(-fno-builtin-sqrt)
+        add_compile_options(-fno-builtin-sqrtf)
+    endif()
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
+        add_compile_options(-fno-builtin-erf)
+        add_compile_options(-fno-builtin-erff)
+    endif()
+
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
     add_compile_options(-Wno-pragma-pack)
     add_compile_options(-fno-associative-math)
-    add_compile_options(-fcommon)
+
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
+        # disable "libcall optimization"
+        # see https://mudongliang.github.io/2020/12/02/undefined-reference-to-stpcpy.html
+        add_compile_options(-fno-builtin-stpcpy)
+    endif()
+
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
@@ -83,26 +165,27 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # Tuning
-if(ARCH STREQUAL "i386")
-    add_compile_options(-march=${OARCH} -mtune=${TUNE})
-else()
-    add_compile_options(-march=${OARCH})
-endif()
+add_compile_options(-march=${OARCH} -mtune=${TUNE})
 
 # Warnings, errors
-if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
+if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
     add_compile_options(-Werror)
 endif()
 
 add_compile_options(-Wall -Wpointer-arith)
-add_compile_options(-Wno-char-subscripts -Wno-multichar -Wno-unused-value)
-add_compile_options(-Wno-unused-const-variable)
-add_compile_options(-Wno-unused-local-typedefs)
-add_compile_options(-Wno-deprecated)
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-Wno-maybe-uninitialized)
-endif()
+# Disable some overzealous warnings
+add_compile_options(
+    -Wno-unknown-warning-option
+    -Wno-char-subscripts
+    -Wno-multichar
+    -Wno-unused-value
+    -Wno-unused-const-variable
+    -Wno-unused-local-typedefs
+    -Wno-deprecated
+    -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
+    -Wno-maybe-uninitialized
+)
 
 if(ARCH STREQUAL "amd64")
     add_compile_options(-Wno-format)
@@ -113,10 +196,15 @@ endif()
 # Optimizations
 # FIXME: Revisit this to see if we even need these levels
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O2 -DNDEBUG)
+    add_compile_options(-O2 -DNDEBUG=)
+    add_compile_options(-Wno-unused-variable)
+    add_compile_options(-Wno-unused-but-set-variable)
 else()
     if(OPTIMIZE STREQUAL "1")
-        add_compile_options(-Os -ftracer)
+        add_compile_options(-Os)
+        if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+            add_compile_options(-ftracer)
+        endif()
     elseif(OPTIMIZE STREQUAL "2")
         add_compile_options(-Os)
     elseif(OPTIMIZE STREQUAL "3")
@@ -138,7 +226,7 @@ if(LTCG)
 endif()
 
 if(ARCH STREQUAL "i386")
-    add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer)
+    add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer -mstackrealign)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_options(-mpreferred-stack-boundary=3 -fno-set-stack-executable)
     endif()
@@ -147,22 +235,26 @@ if(ARCH STREQUAL "i386")
         add_compile_options(-momit-leaf-frame-pointer)
     endif()
 elseif(ARCH STREQUAL "amd64")
-    add_compile_options(-mpreferred-stack-boundary=4)
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-mpreferred-stack-boundary=4)
+    endif()
     add_compile_options(-Wno-error)
 endif()
 
 # Other
 if(ARCH STREQUAL "amd64")
+    add_compile_options(-mcx16) # Generate CMPXCHG16
     add_definitions(-U_X86_ -UWIN32)
 elseif(ARCH STREQUAL "arm")
     add_definitions(-U_UNICODE -UUNICODE)
     add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
 
-add_definitions(-D_inline=__inline)
-
 # Fix build with GLIBCXX + our c++ headers
 add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
+
+# Fix build with UCRT headers
+add_definitions(-D_CRT_SUPPRESS_RESTRICT)
 
 # Alternative arch name
 if(ARCH STREQUAL "amd64")
@@ -185,27 +277,34 @@ if(SEPARATE_DBG)
     else()
         set(SYMBOL_FILE <TARGET>)
     endif()
-    set(OBJCOPY ${CMAKE_OBJCOPY})
+
+    if (NOT NO_ROSSYM)
+        get_target_property(RSYM native-rsym IMPORTED_LOCATION)
+        set(strip_debug "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
+    else()
+        set(strip_debug "${CMAKE_STRIP} --strip-debug <TARGET>")
+    endif()
+
     set(CMAKE_C_LINK_EXECUTABLE
         "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
-        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
-        "${OBJCOPY} --strip-debug <TARGET>")
+        "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        ${strip_debug})
     set(CMAKE_CXX_LINK_EXECUTABLE
         "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
-        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
-        "${OBJCOPY} --strip-debug <TARGET>")
+        "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        ${strip_debug})
     set(CMAKE_C_CREATE_SHARED_LIBRARY
         "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
-        "${OBJCOPY} --strip-debug <TARGET>")
+        "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        ${strip_debug})
     set(CMAKE_CXX_CREATE_SHARED_LIBRARY
         "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
-        "${OBJCOPY} --strip-debug <TARGET>")
+        "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        ${strip_debug})
     set(CMAKE_RC_CREATE_SHARED_LIBRARY
         "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
-        "${OBJCOPY} --strip-debug <TARGET>")
+        "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        ${strip_debug})
 elseif(NO_ROSSYM)
     # Dwarf-based build
     message(STATUS "Generating a dwarf-based build (no rsym)")
@@ -238,7 +337,7 @@ set(CMAKE_C_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_CXX_CREATE_SHARED_MODULE ${CMAKE_CXX_CREATE_SHARED_LIBRARY})
 set(CMAKE_RC_CREATE_SHARED_MODULE ${CMAKE_RC_CREATE_SHARED_LIBRARY})
 
-set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup,--gc-sections")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup,--gc-sections")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
@@ -248,45 +347,64 @@ set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> 
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-if (CLANG)
-    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER_TARGET}-gcc)
+
+if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(RC_PREPROCESSOR_TARGET "--preprocessor-arg=--target=${CMAKE_C_COMPILER_TARGET}")
 else()
-    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER})
+    set(RC_PREPROCESSOR_TARGET "")
 endif()
 
-set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${GCC_EXECUTABLE} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
+# We have to pass args to windres. one... by... one...
+set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor=\"${CMAKE_C_COMPILER}\" ${RC_PREPROCESSOR_TARGET} --preprocessor-arg=-E --preprocessor-arg=-nostdinc --preprocessor-arg=-xc-header --preprocessor-arg=-MMD --preprocessor-arg=-MF --preprocessor-arg=<DEPFILE> --preprocessor-arg=-MT --preprocessor-arg=<OBJECT>")
 
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-        add_target_link_flags(${MODULE} "-Wl,-entry,0")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,0")
     elseif(ARCH STREQUAL "i386")
         set(_entrysymbol _${ENTRYPOINT})
         if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
         endif()
-        add_target_link_flags(${MODULE} "-Wl,-entry,${_entrysymbol}")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${_entrysymbol}")
     else()
-        add_target_link_flags(${MODULE} "-Wl,-entry,${ENTRYPOINT}")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${ENTRYPOINT}")
     endif()
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
-    add_target_link_flags(${MODULE} "-Wl,--subsystem,${SUBSYSTEM}:5.01")
+    target_link_options(${MODULE} PRIVATE "-Wl,--subsystem,${SUBSYSTEM}:5.01")
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)
-    add_target_link_flags(${MODULE} "-Wl,--image-base,${IMAGE_BASE}")
+    target_link_options(${MODULE} PRIVATE "-Wl,--image-base,${IMAGE_BASE}")
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
-        add_target_link_flags(${MODULE} "-Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000")
+    # Set the PE image version numbers from the NT OS version ReactOS is based on
+    target_link_options(${MODULE} PRIVATE
+        -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
+
+    if(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        target_link_options(${MODULE} PRIVATE -Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000)
+
         if(${TYPE} STREQUAL "wdmdriver")
-            add_target_link_flags(${MODULE} "-Wl,--wdmdriver")
+            target_link_options(${MODULE} PRIVATE "-Wl,--wdmdriver")
         endif()
-        #Disabled due to LD bug: ROSBE-154
-        #add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
+
+        # Place INIT &.rsrc section at the tail of the module, before .reloc
+        add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
+
+        # Fixup section characteristics
+        #  - Remove flags that LD overzealously puts (alignment flag, Initialized flags for code sections)
+        #  - INIT section is made discardable
+        #  - .rsrc is made read-only and discardable
+        #  - PAGE & .edata sections are made pageable.
+        add_custom_command(TARGET ${MODULE} POST_BUILD
+            COMMAND native-pefixup --${TYPE} $<TARGET_FILE:${MODULE}>)
+
+        # Believe it or not, cmake doesn't do that
+        set_property(TARGET ${MODULE} APPEND PROPERTY LINK_DEPENDS $<TARGET_PROPERTY:native-pefixup,IMPORTED_LOCATION>)
     endif()
 endfunction()
 
@@ -308,16 +426,16 @@ endif()
 
 function(fixup_load_config _target)
     add_custom_command(TARGET ${_target} POST_BUILD
-        COMMAND native-pefixup "$<TARGET_FILE:${_target}>"
+        COMMAND native-pefixup --loadconfig "$<TARGET_FILE:${_target}>"
         COMMENT "Patching in LOAD_CONFIG"
         DEPENDS native-pefixup)
 endfunction()
 
-function(generate_import_lib _libname _dllname _spec_file)
+function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_arg)
     # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def ${__version_arg} ${__dbg_arg} -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # With this, we let DLLTOOL create an import library
@@ -367,7 +485,7 @@ endfunction()
 
 function(spec2def _dllname _spec_file)
 
-    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY;WITH_DBG;NO_DBG" "VERSION" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -383,13 +501,22 @@ function(spec2def _dllname _spec_file)
 
     if(__spec2def_VERSION)
         set(__version_arg "--version=0x${__spec2def_VERSION}")
+    else()
+        set(__version_arg "--version=${DLL_EXPORT_VERSION}")
+    endif()
+
+    if(__spec2def_WITH_DBG OR (DBG AND NOT __spec2def_NO_DBG))
+        set(__dbg_arg "--dbg")
     endif()
 
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${__dbg_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+
+    # Do not use precompiled headers for the stub file
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
     if(__spec2def_ADD_IMPORTLIB)
         set(_extraflags)
@@ -397,7 +524,7 @@ function(spec2def _dllname _spec_file)
             set(_extraflags --no-private-warnings)
         endif()
 
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags} "${__version_arg}" "${__dbg_arg}")
     endif()
 endfunction()
 
@@ -435,14 +562,43 @@ function(allow_warnings __module)
     #target_compile_options(${__module} PRIVATE "-Wno-error")
 endfunction()
 
+function(convert_asm_file _source_file _target_file)
+    get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
+    get_filename_component(_source_file_full_path ${_source_file} ABSOLUTE)
+    set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/${_target_file})
+    add_custom_command(
+        OUTPUT ${_preprocessed_asm_file}
+        COMMAND native-asmpp ${_source_file_full_path} > ${_preprocessed_asm_file}
+        DEPENDS native-asmpp ${_source_file_full_path})
+
+endfunction()
+
+function(convert_asm_files)
+    foreach(_source_file ${ARGN})
+        convert_asm_file(${_source_file} ${_source_file}.s)
+    endforeach()
+endfunction()
+
 macro(add_asm_files _target)
-    list(APPEND ${_target} ${ARGN})
+    foreach(_source_file ${ARGN})
+        get_filename_component(_extension ${_source_file} EXT)
+        get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
+        if (${_extension} STREQUAL ".asm")
+            convert_asm_file(${_source_file} ${_source_file}.s)
+            list(APPEND ${_target} ${CMAKE_CURRENT_BINARY_DIR}/${_source_file}.s)
+        elseif (${_extension} STREQUAL ".inc")
+            convert_asm_file(${_source_file} ${_source_file}.h)
+            list(APPEND ${_target} ${CMAKE_CURRENT_BINARY_DIR}/${_source_file}.h)
+        else()
+            list(APPEND ${_target} ${_source_file})
+        endif()
+    endforeach()
 endmacro()
 
 function(add_linker_script _target _linker_script_file)
     get_filename_component(_file_full_path ${_linker_script_file} ABSOLUTE)
-    add_target_link_flags(${_target} "-Wl,-T,${_file_full_path}")
-    add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
+    target_link_options(${_target} PRIVATE "-Wl,-T,${_file_full_path}")
+    set_property(TARGET ${_target} APPEND PROPERTY LINK_DEPENDS ${_file_full_path})
 endfunction()
 
 # Manage our C++ options
@@ -453,31 +609,43 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 # We disable exceptions, unless said so
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
-# G++ shipped with ROSBE uses sjlj exceptions. Tell Clang it is so
-if (CLANG)
+# G++ shipped with ROSBE uses sjlj exceptions on i386. Tell Clang it is so
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND ARCH STREQUAL "i386")
     add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
 endif()
 
 # Find default G++ libraries
-if (CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER_TARGET}-g++)
 else()
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER})
+endif()
+
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libwinpthread.a OUTPUT_VARIABLE LIBWINPTHREAD_LOCATION)
+if(LIBWINPTHREAD_LOCATION MATCHES "mingw32")
+    add_library(libwinpthread STATIC IMPORTED)
+    string(STRIP ${LIBWINPTHREAD_LOCATION} LIBWINPTHREAD_LOCATION)
+    message(STATUS "Using libwinpthread from ${LIBWINPTHREAD_LOCATION}")
+    set_target_properties(libwinpthread PROPERTIES IMPORTED_LOCATION ${LIBWINPTHREAD_LOCATION})
+    # libwinpthread needs kernel32 imports, a CRT and msvcrtex
+    target_link_libraries(libwinpthread INTERFACE libkernel32 libmsvcrt msvcrtex)
+else()
+    add_library(libwinpthread INTERFACE)
 endif()
 
 add_library(libgcc STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
 string(STRIP ${LIBGCC_LOCATION} LIBGCC_LOCATION)
 set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
-# libgcc needs kernel32 imports, a CRT and msvcrtex
-target_link_libraries(libgcc INTERFACE libkernel32 libmsvcrt msvcrtex)
+# libgcc needs kernel32 and winpthread (an appropriate CRT must be linked manually)
+target_link_libraries(libgcc INTERFACE libwinpthread libkernel32)
 
 add_library(libsupc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
 string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
-# libsupc++ requires libgcc
-target_link_libraries(libsupc++ INTERFACE libgcc)
+# libsupc++ requires libgcc and stdc++compat
+target_link_libraries(libsupc++ INTERFACE libgcc stdc++compat)
 
 add_library(libmingwex STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
@@ -491,11 +659,10 @@ execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VA
 string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
 set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
 # libstdc++ requires libsupc++ and mingwex provided by GCC
-target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex)
+target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex oldnames)
 # this is for our SAL annotations
 target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
 
 # Create our alias libraries
 add_library(cppstl ALIAS libstdc++)
-add_library(cpprt ALIAS libsupc++)
 

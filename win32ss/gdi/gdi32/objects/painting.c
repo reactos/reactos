@@ -29,7 +29,7 @@ MoveToEx(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, MoveTo, FALSE, hdc, x, y, ppt);
+    HANDLE_METADC(BOOL, MoveTo, FALSE, hdc, x, y);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -265,7 +265,7 @@ PolyBezier(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
-    HANDLE_METADC(BOOL, PolyBezier, FALSE, hdc, apt, cpt);
+    HANDLE_EMETAFDC(BOOL, PolyBezier, FALSE, hdc, apt, cpt);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
@@ -283,7 +283,7 @@ PolyBezierTo(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
-    HANDLE_METADC(BOOL, PolyBezierTo, FALSE, hdc, apt, cpt);
+    HANDLE_EMETAFDC(BOOL, PolyBezierTo, FALSE, hdc, apt, cpt);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
@@ -302,7 +302,7 @@ PolyDraw(
     _In_reads_(cpt) const BYTE *aj,
     _In_ INT cpt)
 {
-    HANDLE_METADC(BOOL, PolyDraw, FALSE, hdc, apt, aj, cpt);
+    HANDLE_EMETAFDC(BOOL, PolyDraw, FALSE, hdc, apt, aj, cpt);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
@@ -356,7 +356,7 @@ PolylineTo(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
-    HANDLE_METADC(BOOL, PolylineTo, FALSE, hdc, apt, cpt);
+    HANDLE_EMETAFDC(BOOL, PolylineTo, FALSE, hdc, apt, cpt);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
@@ -397,7 +397,7 @@ PolyPolyline(
     if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
         return FALSE;
 
-    HANDLE_METADC(BOOL, PolyPolyline, FALSE, hdc, apt, asz, csz);
+    HANDLE_EMETAFDC(BOOL, PolyPolyline, FALSE, hdc, apt, asz, csz);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
@@ -461,9 +461,9 @@ BitBlt(
         return PatBlt(hdcDest, xDest, yDest, cx, cy, dwRop);
     }
 
-    /* For meta DCs we use StretchBlt */
+    /* For meta DCs we use StretchBlt via emfdc.c */
     HANDLE_METADC(BOOL,
-                  StretchBlt,
+                  BitBlt,
                   FALSE,
                   hdcDest,
                   xDest,
@@ -473,8 +473,6 @@ BitBlt(
                   hdcSrc,
                   xSrc,
                   ySrc,
-                  cx,
-                  cy,
                   dwRop);
 
     if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
@@ -494,7 +492,7 @@ PatBlt(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL, PatBlt, FALSE, hdc, nXLeft, nYLeft, nWidth, nHeight, dwRop);
+    HANDLE_EMETAFDC(BOOL, PatBlt, FALSE, hdc, nXLeft, nYLeft, nWidth, nHeight, dwRop);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
@@ -686,7 +684,7 @@ MaskBlt(
     _In_ INT yMask,
     _In_ DWORD dwRop)
 {
-    HANDLE_METADC(BOOL,
+    HANDLE_EMETAFDC(BOOL,
                   MaskBlt,
                   FALSE,
                   hdcDest,
@@ -737,7 +735,7 @@ PlgBlt(
     _In_ INT xMask,
     _In_ INT yMask)
 {
-    HANDLE_METADC(BOOL,
+    HANDLE_EMETAFDC(BOOL,
                   PlgBlt,
                   FALSE,
                   hdcDest,
@@ -785,7 +783,7 @@ GdiAlphaBlend(
 
     if (GDI_HANDLE_GET_TYPE(hdcSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
 
-    HANDLE_METADC(BOOL,
+    HANDLE_EMETAFDC(BOOL,
                   AlphaBlend,
                   FALSE,
                   hdcDst,
@@ -835,7 +833,7 @@ GdiTransparentBlt(
     _In_ INT cySrc,
     _In_ UINT crTransparent)
 {
-    HANDLE_METADC(BOOL,
+    HANDLE_EMETAFDC(BOOL,
                   TransparentBlt,
                   FALSE,
                   hdcDst,
@@ -868,7 +866,9 @@ GdiGradientFill(
     _In_ ULONG nCount,
     _In_ ULONG ulMode)
 {
-    HANDLE_METADC(BOOL, GradientFill, FALSE, hdc, pVertex, nVertex, pMesh, nCount, ulMode);
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) return TRUE;
+
+    HANDLE_EMETAFDC(BOOL, GradientFill, FALSE, hdc, pVertex, nVertex, pMesh, nCount, ulMode);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 

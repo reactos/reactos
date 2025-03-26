@@ -88,7 +88,7 @@ DrvEnableDirectDraw(
             break;
 	 }
 
-	 if (pCallBacks !=NULL)
+	 if (pCallBacks != NULL)
 	 {
 		 memset(pCallBacks,0,sizeof(DD_CALLBACKS));
 
@@ -101,7 +101,7 @@ DrvEnableDirectDraw(
          pCallBacks->dwFlags = DDHAL_CB32_CANCREATESURFACE | DDHAL_CB32_CREATESURFACE;
 	 }
 
-	 if (pSurfaceCallBacks !=NULL)
+	 if (pSurfaceCallBacks != NULL)
 	 {
 		 memset(pSurfaceCallBacks,0,sizeof(DD_SURFACECALLBACKS));
 
@@ -114,7 +114,7 @@ DrvEnableDirectDraw(
         // pSurfaceCallBacks->dwFlags = DDHAL_SURFCB32_DESTROYSURFACE | DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_BLT ;
 	 }
 
-	 if (pPaletteCallBacks !=NULL)
+	 if (pPaletteCallBacks != NULL)
 	 {
 		 memset(pPaletteCallBacks,0,sizeof(DD_PALETTECALLBACKS));
 		 /* FILL pPaletteCallBacks with hal stuff */

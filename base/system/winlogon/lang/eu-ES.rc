@@ -1,0 +1,67 @@
+/*
+ * PROJECT:     ReactOS Winlogon
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Itzali Ordenagailua"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ahora es seguro apagar el equipo.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Berrabiarazi", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Error del Interfaz de Usuario"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "La DLL %s del interfaz de Logon dió un error al cargar.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Contacte con el administrador de su sistema para sustituir la DLL, ó reinstale la DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Berrabiarazi", 1, 80, 91, 68, 14
+END
+
+IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
+CAPTION "Itzali Sistema"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
+    LTEXT "Se ha iniciado el apagado del sistema. Por favor, guarda todo tu trabajo y cierra la sesión. Se perderá todo el trabajo no guardado.", -1, 38, 7, 135, 40
+    LTEXT "El sistema se apagará en:", -1, 38, 50, 90, 8
+    LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
+    LTEXT "Mensaje:", -1, 38, 65, 135, 8
+    EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Preparando las conexiones de red..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Aplicando los parámetros de configuración..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Ejecutando los scripts de inicio..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Ejecutando los scripts de apagado..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Aplicando su configuración personal..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Ejecutando los scripts de fin de sesión..."
+    IDS_RUNNINGLOGONSCRIPTS "Ejecutando los scripts de inicio de sesión..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Cargando su configuración personal..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Cerrando las conexiones de red..."
+    IDS_REACTOSISRESTARTING "Restarting..."
+    IDS_REACTOSISSHUTTINGDOWN "Itzaltzen..."
+    IDS_PREPARETOSTANDBY "Preparando para entrar en estado de espera (Standby)..."
+    IDS_PREPARETOHIBERNATE "Preparando para hibernar..."
+    IDS_SAVEYOURSETTINGS "Gordetzen zure pertsonal konfigurazioa..."
+    IDS_REACTOSISSTARTINGUP "Itzaron, ReactOS hasi da..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d egunak"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "!Winlogon falló al activar el shell de usuario!"
+END

@@ -692,6 +692,7 @@ CoRegisterChannelHook(
 
 typedef enum tagCOWAIT_FLAGS
 {
+    COWAIT_DEFAULT        = 0x00000000,
     COWAIT_WAITALL        = 0x00000001,
     COWAIT_ALERTABLE      = 0x00000002,
     COWAIT_INPUTAVAILABLE = 0x00000004

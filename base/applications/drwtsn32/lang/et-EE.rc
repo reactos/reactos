@@ -10,5 +10,5 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "ReactOS'i krahhi teavitaja"
-    IDS_USER_ALERT_MESSAGE "Rakendus %ls jooksis kokku. Informatsioon selle krahhi kohta on salvestatud asukohta:\r\n\r\n%ls"
+    IDS_USER_ALERT_MESSAGE "Rakendus %ls jooksis kokku. Informatsioon selle krahhi kohta on salvestatud asukohta:\n\n%ls"
 END

@@ -43,14 +43,14 @@ class CDefViewDual :
         }
 
         // *** IShellFolderViewDual methods ***
-        virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **app) override
+        STDMETHOD(get_Application)(IDispatch **app) override
         {
             if (!app) return E_INVALIDARG;
 
             return CShellDispatch_Constructor(IID_IDispatch, (LPVOID*)app);
         }
 
-        virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **parent) override
+        STDMETHOD(get_Parent)(IDispatch **parent) override
         {
             if (!parent) return E_INVALIDARG;
             *parent = NULL;
@@ -58,7 +58,7 @@ class CDefViewDual :
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE get_Folder(Folder **folder) override
+        STDMETHOD(get_Folder)(Folder **folder) override
         {
             if (!folder) return E_INVALIDARG;
             *folder = NULL;
@@ -66,7 +66,7 @@ class CDefViewDual :
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE SelectedItems(FolderItems **items) override
+        STDMETHOD(SelectedItems)(FolderItems **items) override
         {
             if (!items) return E_INVALIDARG;
             *items = NULL;
@@ -74,7 +74,7 @@ class CDefViewDual :
             return E_NOTIMPL;
         }
 
-        virtual  HRESULT STDMETHODCALLTYPE get_FocusedItem(FolderItem **item) override
+        STDMETHOD(get_FocusedItem)(FolderItem **item) override
         {
             if (!item) return E_INVALIDARG;
             *item = NULL;
@@ -82,44 +82,44 @@ class CDefViewDual :
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE SelectItem(VARIANT *item, int flags) override
+        STDMETHOD(SelectItem)(VARIANT *item, int flags) override
         {
             FIXME("CDefViewDual::SelectItem is UNIMPLEMENTED (%p, %p, %i)\n", this, item, flags);
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE PopupItemMenu(FolderItem *item, VARIANT vx, VARIANT vy, BSTR *command) override
+        STDMETHOD(PopupItemMenu)(FolderItem *item, VARIANT vx, VARIANT vy, BSTR *command) override
         {
             FIXME("CDefViewDual::PopupItemMenu is UNIMPLEMENTED (%p, %p, %s, %s, %p)\n", this, item, wine_dbgstr_variant(&vx), wine_dbgstr_variant(&vy), command);
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE get_Script(IDispatch **script) override
+        STDMETHOD(get_Script)(IDispatch **script) override
         {
             FIXME("CDefViewDual::get_Script is UNIMPLEMENTED (%p, %p)\n", this, script);
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE get_ViewOptions(long *options) override
+        STDMETHOD(get_ViewOptions)(long *options) override
         {
             FIXME("CDefViewDual::get_ViewOptions is UNIMPLEMENTED (%p, %p)\n", this, options);
             return E_NOTIMPL;
         }
 
         // *** IShellFolderViewDual2 methods ***
-        virtual HRESULT STDMETHODCALLTYPE get_CurrentViewMode(UINT *mode) override
+        STDMETHOD(get_CurrentViewMode)(UINT *mode) override
         {
             FIXME("CDefViewDual::get_CurrentViewMode is UNIMPLEMENTED (%p, %p)\n", this, mode);
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE put_CurrentViewMode(UINT mode) override
+        STDMETHOD(put_CurrentViewMode)(UINT mode) override
         {
             FIXME("CDefViewDual::put_CurrentViewMode is UNIMPLEMENTED (%p, %u)\n", this, mode);
             return E_NOTIMPL;
         }
 
-        virtual HRESULT STDMETHODCALLTYPE SelectItemRelative(int relative) override
+        STDMETHOD(SelectItemRelative)(int relative) override
         {
             FIXME("CDefViewDual::SelectItemRelative is UNIMPLEMENTED (%p, %i)\n", this, relative);
             return E_NOTIMPL;

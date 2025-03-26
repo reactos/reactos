@@ -21,22 +21,15 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_WDMAUD);
-    if (!Item)
-        return Item;
-
-    RtlZeroMemory(Item, NumberOfBytes);
-    return Item;
+    return ExAllocatePoolZero(PoolType, NumberOfBytes, TAG_WDMAUD);
 }
 
 VOID
 FreeItem(
     IN PVOID Item)
 {
-    ExFreePool(Item);
+    ExFreePoolWithTag(Item, TAG_WDMAUD);
 }
-
-
 
 ULONG
 GetSysAudioDeviceCount(
@@ -62,7 +55,6 @@ GetSysAudioDeviceCount(
     return Count;
 }
 
-
 NTSTATUS
 SetIrpIoStatus(
     IN PIRP Irp,
@@ -72,8 +64,8 @@ SetIrpIoStatus(
     Irp->IoStatus.Information = Length;
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
 
+    return Status;
 }
 
 ULONG
@@ -186,7 +178,6 @@ ReadKeyValue(
     return PartialInformation;
 }
 
-
 NTSTATUS
 CompareProductName(
     IN HANDLE hSubKey,
@@ -248,8 +239,6 @@ CompareProductName(
     return STATUS_SUCCESS;
 }
 
-
-
 NTSTATUS
 FindProductName(
     IN LPWSTR PnpName,
@@ -274,7 +263,7 @@ FindProductName(
 
 
     /* initialize key attributes */
-    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF, NULL, NULL);
 
     /* open the key */
     Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
@@ -324,7 +313,7 @@ FindProductName(
         RtlInitUnicodeString(&SubKeyName, SubKey);
 
         /* initialize key attributes */
-        InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, hKey, NULL);
+        InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF, hKey, NULL);
 
         /* open the sub key */
         Status = ZwOpenKey(&hSubKey, GENERIC_READ, &ObjectAttributes);
@@ -431,5 +420,4 @@ OpenDevice(
     }
 
     return Status;
-
 }

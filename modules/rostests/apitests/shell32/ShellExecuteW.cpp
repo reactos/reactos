@@ -47,7 +47,7 @@ START_TEST(ShellExecuteW)
     ret = (INT)(UINT_PTR)hInstance;
     ok(ret > 31, "TEST #1: ret:%d, LastError: %ld\n", ret, GetLastError());
     trace("TEST #1 ret: %d.\n", ret);
-    if (hInstance) 
+    if (hInstance)
     {
         Sleep(WAIT_SLEEP);
         // Terminate Window
@@ -73,7 +73,7 @@ START_TEST(ShellExecuteW)
     ret = (INT)(UINT_PTR)hInstance;
     ok(ret > 31, "TEST #3: ret:%d, LastError: %ld\n", ret, GetLastError());
     trace("TEST #3 ret: %d.\n", ret);
-    if (hInstance) 
+    if (hInstance)
     {
         Sleep(WAIT_SLEEP);
         // Terminate Window

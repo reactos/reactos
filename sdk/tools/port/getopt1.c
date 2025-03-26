@@ -16,7 +16,7 @@
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
-
+
 #include "getopt.h"
 #include "getopt_int.h"
 
@@ -60,7 +60,7 @@ _getopt_long_only_r (int argc, char **argv, const char *options,
 			     1, d, 0);
 }
 
-
+
 #ifdef TEST
 
 #include <stdio.h>

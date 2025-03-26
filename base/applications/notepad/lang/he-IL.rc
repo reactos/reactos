@@ -8,6 +8,7 @@ BEGIN
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
     "^O", CMD_OPEN
     "^P", CMD_PRINT
     "^S", CMD_SAVE
@@ -15,6 +16,7 @@ BEGIN
     "^X", CMD_CUT
     "^Z", CMD_UNDO
     VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F3, CMD_SEARCH_PREV, VIRTKEY, SHIFT
     VK_F5, CMD_TIME_DATE, VIRTKEY
 END
 
@@ -23,6 +25,7 @@ BEGIN
     POPUP "&קובץ"
     BEGIN
         MENUITEM "&חדש\tCtrl+N", CMD_NEW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&פתח...\tCtrl+O", CMD_OPEN
         MENUITEM "&שמור\tCtrl+S", CMD_SAVE
         MENUITEM "שמור &בשם...", CMD_SAVE_AS
@@ -83,8 +86,8 @@ BEGIN
     LTEXT "&Tray:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12
     GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
     LTEXT "L&eft:", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
@@ -124,20 +127,27 @@ EXSTYLE WS_EX_LAYOUTRTL
 FONT 8, "MS Shell Dlg"
 CAPTION "מעבר אל שורה"
 BEGIN
-    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "מספר שורה:", 0x155, 3, 12, 43, 11, WS_CHILD | WS_TABSTOP | ES_NUMBER
-    DEFPUSHBUTTON "אישור", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-    PUSHBUTTON "ביטול", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    LTEXT "מספר שורה:", 0x155, 3, 12, 43, 11
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
+    DEFPUSHBUTTON "אישור", IDOK, 75, 30, 40, 15
+    PUSHBUTTON "ביטול", IDCANCEL, 120, 30, 40, 15
+END
+
+DIALOG_PRINTING DIALOG 0, 0, 160, 100
+CAPTION "Now printing"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "עמוד %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    PUSHBUTTON "ביטול", IDCANCEL, 50, 75, 60, 20
 END
 
 STRINGTABLE
 BEGIN
-    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
-    STRING_PAGESETUP_FOOTERVALUE "עמוד &s" /* FIXME */
-    STRING_PAGESETUP_LEFTVALUE "20 מ""מ" /* FIXME */
-    STRING_PAGESETUP_RIGHTVALUE "20 מ""מ" /* FIXME */
-    STRING_PAGESETUP_TOPVALUE "25 מ""מ" /* FIXME */
-    STRING_PAGESETUP_BOTTOMVALUE "25 מ""מ" /* FIXME */
+    STRING_PAGESETUP_HEADERVALUE "&f"
+    STRING_PAGESETUP_FOOTERVALUE "עמוד &p"
     STRING_NOTEPAD "פנקס רשימות"
     STRING_ERROR "שגיאה"
     STRING_WARNING "אזהרה"
@@ -145,14 +155,14 @@ BEGIN
     STRING_UNTITLED "ללא שם"
     STRING_ALL_FILES "כל הקבצים (*.*)"
     STRING_TEXT_FILES_TXT "קבצי טקסט (*.txt)"
-    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n\
 Please use a different editor."
-    STRING_NOTEXT "You didn't enter any text. \
+    STRING_NOTEXT "You didn't enter any text.\
 \nPlease type something and try again"
-    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
-Do you want to create a new file ?"
-    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
-Would you like to save the changes ?"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n\
+Do you want to create a new file?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n\
+Would you like to save the changes?"
     STRING_NOTFOUND "'%s' לא נמצא."
     STRING_OUT_OF_MEMORY "Not enough memory to complete this \
 task.\nClose one or more applications to increase the amount of\nfree memory."
@@ -161,11 +171,19 @@ task.\nClose one or more applications to increase the amount of\nfree memory."
     STRING_UNICODE "יוניקוד"
     STRING_UNICODE_BE "Unicode (big endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "חלונות (CR + LF)"
     STRING_LF "יוניקס (LF)"
     STRING_CR "מקינטוש (CR)"
     STRING_LINE_COLUMN "שורה %d, עמודה %d"
     STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_DEFAULTFONT "Lucida Console"
+    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
+    STRING_NOWPRINTING "Now printing page..."
+    STRING_PRINTCANCELING "The print job is being canceled..."
+    STRING_PRINTCOMPLETE "Printing is successfully done."
+    STRING_PRINTCANCELED "Printing has been canceled."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Text Document"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

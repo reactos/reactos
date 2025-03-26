@@ -244,21 +244,18 @@ typedef struct _PCI_TYPE0_CFG_CYCLE_BITS
     } u;
 } PCI_TYPE0_CFG_CYCLE_BITS, *PPCI_TYPE0_CFG_CYCLE_BITS;
 
-typedef struct _PCI_TYPE1_CFG_CYCLE_BITS
+typedef union _PCI_TYPE1_CFG_CYCLE_BITS
 {
-    union
+    struct
     {
-        struct
-        {
-            ULONG Reserved1:2;
-            ULONG RegisterNumber:6;
-            ULONG FunctionNumber:3;
-            ULONG DeviceNumber:5;
-            ULONG BusNumber:8;
-            ULONG Reserved2:8;
-        } bits;
-        ULONG AsULONG;
-    } u;
+        ULONG InUse:2;
+        ULONG RegisterNumber:6;
+        ULONG FunctionNumber:3;
+        ULONG DeviceNumber:5;
+        ULONG BusNumber:8;
+        ULONG Reserved2:8;
+    };
+    ULONG AsULONG;
 } PCI_TYPE1_CFG_CYCLE_BITS, *PPCI_TYPE1_CFG_CYCLE_BITS;
 
 typedef struct _ARRAY
@@ -282,6 +279,7 @@ extern PCI_CONFIG_HANDLER PCIConfigHandler;
 extern PCI_CONFIG_HANDLER PCIConfigHandlerType1;
 extern PCI_CONFIG_HANDLER PCIConfigHandlerType2;
 
+CODE_SEG("INIT")
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
 HalpQueryPciRegistryInfo(
@@ -395,17 +393,33 @@ HalpAssignPCISlotResources(
     IN OUT PCM_RESOURCE_LIST *pAllocatedResources
 );
 
+CODE_SEG("INIT")
+ULONG
+HalpPhase0GetPciDataByOffset(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER PciSlot,
+    _Out_writes_bytes_all_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
+
+CODE_SEG("INIT")
+ULONG
+HalpPhase0SetPciDataByOffset(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER PciSlot,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
+
 /* NON-LEGACY */
 
 ULONG
 NTAPI
-HalpGetSystemInterruptVector_Acpi(
-    ULONG BusNumber,
-    ULONG BusInterruptLevel,
-    ULONG BusInterruptVector,
-    PKIRQL Irql,
-    PKAFFINITY Affinity
-);
+HalpGetRootInterruptVector(
+    _In_ ULONG BusInterruptLevel,
+    _In_ ULONG BusInterruptVector,
+    _Out_ PKIRQL Irql,
+    _Out_ PKAFFINITY Affinity);
 
 ULONG
 NTAPI
@@ -413,24 +427,24 @@ HalpGetCmosData(
     _In_ ULONG BusNumber,
     _In_ ULONG SlotNumber,
     _Out_writes_bytes_(Length) PVOID Buffer,
-    _In_ ULONG Length
-);
+    _In_ ULONG Length);
 
 ULONG
 NTAPI
 HalpSetCmosData(
-    IN ULONG BusNumber,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Length
-);
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePciBus(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePciStubs(
@@ -470,6 +484,7 @@ HalpFindBusAddressTranslation(
     IN BOOLEAN NextBus
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpRegisterPciDebuggingDeviceInfo(
@@ -556,35 +571,32 @@ HaliReferenceHandlerForConfigSpace(
 ULONG
 NTAPI
 HalpNoBusData(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _In_ PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 ULONG
 NTAPI
 HalpcGetCmosData(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 ULONG
 NTAPI
 HalpcSetCmosData(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 BOOLEAN
 NTAPI

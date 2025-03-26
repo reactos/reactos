@@ -25,18 +25,13 @@
 
 #include <string.h>
 #include <limits.h>
-
-#ifdef HAVE_CTYPE_H
 #include <ctype.h>
-#endif
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
+
 #ifdef LIBXML_ICONV_ENABLED
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#endif
+
 #include <libxml/encoding.h>
 #include <libxml/xmlmemory.h>
 #ifdef LIBXML_HTML_ENABLED
@@ -47,6 +42,20 @@
 
 #include "buf.h"
 #include "enc.h"
+
+#ifdef LIBXML_ICU_ENABLED
+#include <unicode/ucnv.h>
+/* Size of pivot buffer, same as icu/source/common/ucnv.cpp CHUNK_SIZE */
+#define ICU_PIVOT_BUF_SIZE 1024
+typedef struct _uconv_t uconv_t;
+struct _uconv_t {
+  UConverter *uconv; /* for conversion between an encoding and UTF-16 */
+  UConverter *utf8; /* for conversion between UTF-8 and UTF-16 */
+  UChar      pivot_buf[ICU_PIVOT_BUF_SIZE];
+  UChar      *pivot_source;
+  UChar      *pivot_target;
+};
+#endif
 
 static xmlCharEncodingHandlerPtr xmlUTF16LEHandler = NULL;
 static xmlCharEncodingHandlerPtr xmlUTF16BEHandler = NULL;
@@ -76,7 +85,7 @@ static int xmlLittleEndian = 1;
 
 /**
  * xmlEncodingErrMemory:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle an out of memory condition
  */
@@ -170,7 +179,7 @@ closeIcuConverter(uconv_t *conv)
  * Returns 0 if success, or -1 otherwise
  * The value of @inlen after return is the number of octets consumed
  *     if the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of octets consumed.
+ * The value of @outlen after return is the number of octets produced.
  */
 static int
 asciiToUTF8(unsigned char* out, int *outlen,
@@ -217,7 +226,7 @@ asciiToUTF8(unsigned char* out, int *outlen,
  * Returns 0 if success, -2 if the transcoding fails, or -1 otherwise
  * The value of @inlen after return is the number of octets consumed
  *     if the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of octets consumed.
+ * The value of @outlen after return is the number of octets produced.
  */
 static int
 UTF8Toascii(unsigned char* out, int *outlen,
@@ -301,7 +310,7 @@ UTF8Toascii(unsigned char* out, int *outlen,
  * Returns the number of bytes written if success, or -1 otherwise
  * The value of @inlen after return is the number of octets consumed
  *     if the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of octets consumed.
+ * The value of @outlen after return is the number of octets produced.
  */
 int
 isolat1ToUTF8(unsigned char* out, int *outlen,
@@ -373,6 +382,11 @@ UTF8ToUTF8(unsigned char* out, int *outlen,
     if (len < 0)
 	return(-1);
 
+    /*
+     * FIXME: Conversion functions must assure valid UTF-8, so we have
+     * to check for UTF-8 validity. Preferably, this converter shouldn't
+     * be used at all.
+     */
     memcpy(out, inb, len);
 
     *outlen = len;
@@ -396,7 +410,7 @@ UTF8ToUTF8(unsigned char* out, int *outlen,
            or -1 otherwise
  * The value of @inlen after return is the number of octets consumed
  *     if the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of octets consumed.
+ * The value of @outlen after return is the number of octets produced.
  */
 int
 UTF8Toisolat1(unsigned char* out, int *outlen,
@@ -496,13 +510,18 @@ UTF16LEToUTF8(unsigned char* out, int *outlen,
 {
     unsigned char* outstart = out;
     const unsigned char* processed = inb;
-    unsigned char* outend = out + *outlen;
+    unsigned char* outend;
     unsigned short* in = (unsigned short*) inb;
     unsigned short* inend;
     unsigned int c, d, inlen;
     unsigned char *tmp;
     int bits;
 
+    if (*outlen == 0) {
+        *inlenb = 0;
+        return(0);
+    }
+    outend = out + *outlen;
     if ((*inlenb % 2) == 1)
         (*inlenb)--;
     inlen = *inlenb / 2;
@@ -517,7 +536,7 @@ UTF16LEToUTF8(unsigned char* out, int *outlen,
 	    in++;
 	}
         if ((c & 0xFC00) == 0xD800) {    /* surrogates */
-	    if (in >= inend) {           /* (in > inend) shouldn't happens */
+	    if (in >= inend) {           /* handle split mutli-byte characters */
 		break;
 	    }
 	    if (xmlLittleEndian) {
@@ -734,38 +753,39 @@ UTF16BEToUTF8(unsigned char* out, int *outlen,
 {
     unsigned char* outstart = out;
     const unsigned char* processed = inb;
-    unsigned char* outend = out + *outlen;
+    unsigned char* outend;
     unsigned short* in = (unsigned short*) inb;
     unsigned short* inend;
     unsigned int c, d, inlen;
     unsigned char *tmp;
     int bits;
 
+    if (*outlen == 0) {
+        *inlenb = 0;
+        return(0);
+    }
+    outend = out + *outlen;
     if ((*inlenb % 2) == 1)
         (*inlenb)--;
     inlen = *inlenb / 2;
     inend= in + inlen;
-    while (in < inend) {
+    while ((in < inend) && (out - outstart + 5 < *outlen)) {
 	if (xmlLittleEndian) {
 	    tmp = (unsigned char *) in;
 	    c = *tmp++;
-	    c = c << 8;
-	    c = c | (unsigned int) *tmp;
+	    c = (c << 8) | (unsigned int) *tmp;
 	    in++;
 	} else {
 	    c= *in++;
 	}
         if ((c & 0xFC00) == 0xD800) {    /* surrogates */
-	    if (in >= inend) {           /* (in > inend) shouldn't happens */
-		*outlen = out - outstart;
-		*inlenb = processed - inb;
-	        return(-2);
+	    if (in >= inend) {           /* handle split mutli-byte characters */
+                break;
 	    }
 	    if (xmlLittleEndian) {
 		tmp = (unsigned char *) in;
 		d = *tmp++;
-		d = d << 8;
-		d = d | (unsigned int) *tmp;
+		d = (d << 8) | (unsigned int) *tmp;
 		in++;
 	    } else {
 		d= *in++;
@@ -1388,6 +1408,9 @@ xmlNewCharEncodingHandler(const char *name,
 /**
  * xmlInitCharEncodingHandlers:
  *
+ * DEPRECATED: This function will be made private. Call xmlInitParser to
+ * initialize the library.
+ *
  * Initialize the char encoding support, it registers the default
  * encoding supported.
  * NOTE: while public, this function usually doesn't need to be called
@@ -1448,6 +1471,11 @@ xmlInitCharEncodingHandlers(void) {
 /**
  * xmlCleanupCharEncodingHandlers:
  *
+ * DEPRECATED: This function will be made private. Call xmlCleanupParser
+ * to free global state but see the warnings there. xmlCleanupParser
+ * should be only called once at program exit. In most cases, you don't
+ * have call cleanup functions at all.
+ *
  * Cleanup the memory allocated for the char encoding support, it
  * unregisters all the encoding handlers and the aliases.
  */
@@ -1483,16 +1511,25 @@ xmlRegisterCharEncodingHandler(xmlCharEncodingHandlerPtr handler) {
     if ((handler == NULL) || (handlers == NULL)) {
         xmlEncodingErr(XML_I18N_NO_HANDLER,
 		"xmlRegisterCharEncodingHandler: NULL handler !\n", NULL);
-	return;
+        goto free_handler;
     }
 
     if (nbCharEncodingHandler >= MAX_ENCODING_HANDLERS) {
         xmlEncodingErr(XML_I18N_EXCESS_HANDLER,
 	"xmlRegisterCharEncodingHandler: Too many handler registered, see %s\n",
 	               "MAX_ENCODING_HANDLERS");
-	return;
+        goto free_handler;
     }
     handlers[nbCharEncodingHandler++] = handler;
+    return;
+
+free_handler:
+    if (handler != NULL) {
+        if (handler->name != NULL) {
+            xmlFree(handler->name);
+        }
+        xmlFree(handler);
+    }
 }
 
 /**
@@ -1718,6 +1755,10 @@ xmlFindCharEncodingHandler(const char *name) {
     } else if ((icv_in != (iconv_t) -1) || icv_out != (iconv_t) -1) {
 	    xmlEncodingErr(XML_ERR_INTERNAL_ERROR,
 		    "iconv : problems with filters for '%s'\n", name);
+	    if (icv_in != (iconv_t) -1)
+		iconv_close(icv_in);
+	    else
+		iconv_close(icv_out);
     }
 #endif /* LIBXML_ICONV_ENABLED */
 #ifdef LIBXML_ICU_ENABLED
@@ -1784,7 +1825,7 @@ xmlFindCharEncodingHandler(const char *name) {
  * @cd:		iconv converter data structure
  * @out:  a pointer to an array of bytes to store the result
  * @outlen:  the length of @out
- * @in:  a pointer to an array of ISO Latin 1 chars
+ * @in:  a pointer to an array of input bytes
  * @inlen:  the length of @in
  *
  * Returns 0 if success, or
@@ -1795,7 +1836,7 @@ xmlFindCharEncodingHandler(const char *name) {
  *
  * The value of @inlen after return is the number of octets consumed
  *     as the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of octets consumed.
+ * The value of @outlen after return is the number of octets produced.
  */
 static int
 xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
@@ -1803,7 +1844,7 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
     size_t icv_inlen, icv_outlen;
     const char *icv_in = (const char *) in;
     char *icv_out = (char *) out;
-    int ret;
+    size_t ret;
 
     if ((out == NULL) || (outlen == NULL) || (inlen == NULL) || (in == NULL)) {
         if (outlen != NULL) *outlen = 0;
@@ -1811,10 +1852,13 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
     }
     icv_inlen = *inlen;
     icv_outlen = *outlen;
-    ret = iconv(cd, (ICONV_CONST char **) &icv_in, &icv_inlen, &icv_out, &icv_outlen);
+    /*
+     * Some versions take const, other versions take non-const input.
+     */
+    ret = iconv(cd, (void *) &icv_in, &icv_inlen, &icv_out, &icv_outlen);
     *inlen -= icv_inlen;
     *outlen -= icv_outlen;
-    if ((icv_inlen != 0) || (ret == -1)) {
+    if ((icv_inlen != 0) || (ret == (size_t) -1)) {
 #ifdef EILSEQ
         if (errno == EILSEQ) {
             return -2;
@@ -1851,7 +1895,7 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
  * @toUnicode : non-zero if toUnicode. 0 otherwise.
  * @out:  a pointer to an array of bytes to store the result
  * @outlen:  the length of @out
- * @in:  a pointer to an array of ISO Latin 1 chars
+ * @in:  a pointer to an array of input bytes
  * @inlen:  the length of @in
  * @flush: if true, indicates end of input
  *
@@ -1863,7 +1907,7 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
  *
  * The value of @inlen after return is the number of octets consumed
  *     as the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of octets consumed.
+ * The value of @outlen after return is the number of octets produced.
  */
 static int
 xmlUconvWrapper(uconv_t *cd, int toUnicode, unsigned char *out, int *outlen,
@@ -1912,6 +1956,25 @@ xmlUconvWrapper(uconv_t *cd, int toUnicode, unsigned char *out, int *outlen,
  *									*
  ************************************************************************/
 
+/**
+ * xmlEncInputChunk:
+ * @handler:  encoding handler
+ * @out:  a pointer to an array of bytes to store the result
+ * @outlen:  the length of @out
+ * @in:  a pointer to an array of input bytes
+ * @inlen:  the length of @in
+ * @flush:  flush (ICU-related)
+ *
+ * Returns 0 if success, or
+ *     -1 by lack of space, or
+ *     -2 if the transcoding fails (for *in is not valid utf8 string or
+ *        the result of transformation can't fit into the encoding we want), or
+ *     -3 if there the last byte can't form a single output char.
+ *
+ * The value of @inlen after return is the number of octets consumed
+ *     as the return value is 0, else unpredictable.
+ * The value of @outlen after return is the number of octets produced.
+ */
 static int
 xmlEncInputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
                  int *outlen, const unsigned char *in, int *inlen, int flush) {
@@ -1920,6 +1983,8 @@ xmlEncInputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
 
     if (handler->input != NULL) {
         ret = handler->input(out, outlen, in, inlen);
+        if (ret > 0)
+           ret = 0;
     }
 #ifdef LIBXML_ICONV_ENABLED
     else if (handler->iconv_in != NULL) {
@@ -1941,7 +2006,25 @@ xmlEncInputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
     return(ret);
 }
 
-/* Returns -4 if no output function was found. */
+/**
+ * xmlEncOutputChunk:
+ * @handler:  encoding handler
+ * @out:  a pointer to an array of bytes to store the result
+ * @outlen:  the length of @out
+ * @in:  a pointer to an array of input bytes
+ * @inlen:  the length of @in
+ *
+ * Returns 0 if success, or
+ *     -1 by lack of space, or
+ *     -2 if the transcoding fails (for *in is not valid utf8 string or
+ *        the result of transformation can't fit into the encoding we want), or
+ *     -3 if there the last byte can't form a single output char.
+ *     -4 if no output function was found.
+ *
+ * The value of @inlen after return is the number of octets consumed
+ *     as the return value is 0, else unpredictable.
+ * The value of @outlen after return is the number of octets produced.
+ */
 static int
 xmlEncOutputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
                   int *outlen, const unsigned char *in, int *inlen) {
@@ -1949,6 +2032,8 @@ xmlEncOutputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
 
     if (handler->output != NULL) {
         ret = handler->output(out, outlen, in, inlen);
+        if (ret > 0)
+           ret = 0;
     }
 #ifdef LIBXML_ICONV_ENABLED
     else if (handler->iconv_out != NULL) {
@@ -1958,7 +2043,7 @@ xmlEncOutputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
 #ifdef LIBXML_ICU_ENABLED
     else if (handler->uconv_out != NULL) {
         ret = xmlUconvWrapper(handler->uconv_out, 0, out, outlen, in, inlen,
-                              TRUE);
+                              1);
     }
 #endif /* LIBXML_ICU_ENABLED */
     else {
@@ -2054,7 +2139,7 @@ xmlCharEncFirstLineInt(xmlCharEncodingHandler *handler, xmlBufferPtr out,
      */
     if (ret == -3) ret = 0;
     if (ret == -1) ret = 0;
-    return(ret);
+    return(written ? written : ret);
 }
 
 /**
@@ -2112,7 +2197,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
     toconv = xmlBufUse(in);
     if (toconv == 0)
         return (0);
-    written = xmlBufAvail(out) - 1; /* count '\0' */
+    written = xmlBufAvail(out);
     /*
      * echo '<?xml version="1.0" encoding="UCS4"?>' | wc -c => 38
      * 45 chars should be sufficient to reach the end of the encoding
@@ -2130,7 +2215,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
     }
     if (toconv * 2 >= written) {
         xmlBufGrow(out, toconv * 2);
-        written = xmlBufAvail(out) - 1;
+        written = xmlBufAvail(out);
     }
     if (written > 360)
         written = 360;
@@ -2184,7 +2269,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
      */
     if (ret == -3) ret = 0;
     if (ret == -1) ret = 0;
-    return(ret);
+    return(c_out ? c_out : ret);
 }
 
 /**
@@ -2222,13 +2307,9 @@ xmlCharEncInput(xmlParserInputBufferPtr input, int flush)
     if ((toconv > 64 * 1024) && (flush == 0))
         toconv = 64 * 1024;
     written = xmlBufAvail(out);
-    if (written > 0)
-        written--; /* count '\0' */
     if (toconv * 2 >= written) {
         xmlBufGrow(out, toconv * 2);
         written = xmlBufAvail(out);
-        if (written > 0)
-            written--; /* count '\0' */
     }
     if ((written > 128 * 1024) && (flush == 0))
         written = 128 * 1024;
@@ -2394,7 +2475,7 @@ xmlCharEncOutput(xmlOutputBufferPtr output, int init)
 {
     int ret;
     size_t written;
-    size_t writtentot = 0;
+    int writtentot = 0;
     size_t toconv;
     int c_in;
     int c_out;
@@ -2410,8 +2491,6 @@ xmlCharEncOutput(xmlOutputBufferPtr output, int init)
 retry:
 
     written = xmlBufAvail(out);
-    if (written > 0)
-        written--; /* count '\0' */
 
     /*
      * First specific handling of the initialization call
@@ -2427,7 +2506,7 @@ retry:
 	xmlGenericError(xmlGenericErrorContext,
 		"initialized encoder\n");
 #endif
-        return(0);
+        return(c_out);
     }
 
     /*
@@ -2435,12 +2514,12 @@ retry:
      */
     toconv = xmlBufUse(in);
     if (toconv == 0)
-        return (0);
+        return (writtentot);
     if (toconv > 64 * 1024)
         toconv = 64 * 1024;
     if (toconv * 4 >= written) {
         xmlBufGrow(out, toconv * 4);
-        written = xmlBufAvail(out) - 1;
+        written = xmlBufAvail(out);
     }
     if (written > 256 * 1024)
         written = 256 * 1024;
@@ -2515,7 +2594,7 @@ retry:
                              "&#%d;", cur);
             xmlBufShrink(in, len);
             xmlBufGrow(out, charrefLen * 4);
-            c_out = xmlBufAvail(out) - 1;
+            c_out = xmlBufAvail(out);
             c_in = charrefLen;
             ret = xmlEncOutputChunk(output->encoder, xmlBufEnd(out), &c_out,
                                     charref, &c_in);
@@ -2540,7 +2619,7 @@ retry:
             goto retry;
 	}
     }
-    return(ret);
+    return(writtentot ? writtentot : ret);
 }
 #endif
 
@@ -2569,7 +2648,6 @@ xmlCharEncOutFunc(xmlCharEncodingHandler *handler, xmlBufferPtr out,
     int written;
     int writtentot = 0;
     int toconv;
-    int output = 0;
 
     if (handler == NULL) return(-1);
     if (out == NULL) return(-1);
@@ -2621,8 +2699,6 @@ retry:
         }
         ret = -3;
     }
-
-    if (ret >= 0) output += ret;
 
     /*
      * Attempt to handle error cases
@@ -2705,7 +2781,7 @@ retry:
             goto retry;
 	}
     }
-    return(ret);
+    return(writtentot ? writtentot : ret);
 }
 
 /**
@@ -2721,6 +2797,9 @@ xmlCharEncCloseFunc(xmlCharEncodingHandler *handler) {
     int ret = 0;
     int tofree = 0;
     int i, handler_in_list = 0;
+
+    /* Avoid unused variable warning if features are disabled. */
+    (void) handler_in_list;
 
     if (handler == NULL) return(-1);
     if (handler->name == NULL) return(-1);
@@ -2865,7 +2944,7 @@ xmlByteConsumed(xmlParserCtxtPtr ctxt) {
 static int
 UTF8ToISO8859x(unsigned char* out, int *outlen,
               const unsigned char* in, int *inlen,
-              unsigned char const *xlattable) {
+              const unsigned char* const xlattable) {
     const unsigned char* outstart = out;
     const unsigned char* inend;
     const unsigned char* instart = in;
@@ -3055,7 +3134,7 @@ static unsigned short const xmlunicodetable_ISO8859_2 [128] = {
     0x0159, 0x016f, 0x00fa, 0x0171, 0x00fc, 0x00fd, 0x0163, 0x02d9,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_2 [48 + 6 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_2 [48 + 6 * 64] = {
     "\x00\x00\x01\x05\x02\x04\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3104,7 +3183,7 @@ static unsigned short const xmlunicodetable_ISO8859_3 [128] = {
     0x011d, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x016d, 0x015d, 0x02d9,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_3 [48 + 7 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_3 [48 + 7 * 64] = {
     "\x04\x00\x01\x06\x02\x05\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3157,7 +3236,7 @@ static unsigned short const xmlunicodetable_ISO8859_4 [128] = {
     0x00f8, 0x0173, 0x00fa, 0x00fb, 0x00fc, 0x0169, 0x016b, 0x02d9,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_4 [48 + 6 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_4 [48 + 6 * 64] = {
     "\x00\x00\x01\x05\x02\x03\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3206,7 +3285,7 @@ static unsigned short const xmlunicodetable_ISO8859_5 [128] = {
     0x0458, 0x0459, 0x045a, 0x045b, 0x045c, 0x00a7, 0x045e, 0x045f,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_5 [48 + 6 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_5 [48 + 6 * 64] = {
     "\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x02\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3255,7 +3334,7 @@ static unsigned short const xmlunicodetable_ISO8859_6 [128] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_6 [48 + 5 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_6 [48 + 5 * 64] = {
     "\x02\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x03\x04\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3300,7 +3379,7 @@ static unsigned short const xmlunicodetable_ISO8859_7 [128] = {
     0x03c8, 0x03c9, 0x03ca, 0x03cb, 0x03cc, 0x03cd, 0x03ce, 0x0000,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_7 [48 + 7 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_7 [48 + 7 * 64] = {
     "\x04\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x05\x06"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3353,7 +3432,7 @@ static unsigned short const xmlunicodetable_ISO8859_8 [128] = {
     0x05e8, 0x05e9, 0x05ea, 0x0000, 0x0000, 0x200e, 0x200f, 0x0000,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_8 [48 + 7 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_8 [48 + 7 * 64] = {
     "\x02\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3406,7 +3485,7 @@ static unsigned short const xmlunicodetable_ISO8859_9 [128] = {
     0x00f8, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x0131, 0x015f, 0x00ff,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_9 [48 + 5 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_9 [48 + 5 * 64] = {
     "\x00\x00\x01\x02\x03\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3451,7 +3530,7 @@ static unsigned short const xmlunicodetable_ISO8859_10 [128] = {
     0x00f8, 0x0173, 0x00fa, 0x00fb, 0x00fc, 0x00fd, 0x00fe, 0x0138,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_10 [48 + 7 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_10 [48 + 7 * 64] = {
     "\x00\x00\x01\x06\x02\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3504,7 +3583,7 @@ static unsigned short const xmlunicodetable_ISO8859_11 [128] = {
     0x0e58, 0x0e59, 0x0e5a, 0x0e5b, 0x0000, 0x0000, 0x0000, 0x0000,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_11 [48 + 6 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_11 [48 + 6 * 64] = {
     "\x04\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3553,7 +3632,7 @@ static unsigned short const xmlunicodetable_ISO8859_13 [128] = {
     0x0173, 0x0142, 0x015b, 0x016b, 0x00fc, 0x017c, 0x017e, 0x2019,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_13 [48 + 7 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_13 [48 + 7 * 64] = {
     "\x00\x00\x01\x04\x06\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3606,7 +3685,7 @@ static unsigned short const xmlunicodetable_ISO8859_14 [128] = {
     0x00f8, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x00fd, 0x0177, 0x00ff,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_14 [48 + 10 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_14 [48 + 10 * 64] = {
     "\x00\x00\x01\x09\x04\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3671,7 +3750,7 @@ static unsigned short const xmlunicodetable_ISO8859_15 [128] = {
     0x00f8, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x00fd, 0x00fe, 0x00ff,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_15 [48 + 6 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_15 [48 + 6 * 64] = {
     "\x00\x00\x01\x05\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3720,7 +3799,7 @@ static unsigned short const xmlunicodetable_ISO8859_16 [128] = {
     0x0171, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x0119, 0x021b, 0x00ff,
 };
 
-static unsigned char const xmltranscodetable_ISO8859_16 [48 + 9 * 64] = {
+static const unsigned char xmltranscodetable_ISO8859_16 [48 + 9 * 64] = {
     "\x00\x00\x01\x08\x02\x03\x00\x00\x07\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -3914,5 +3993,3 @@ xmlRegisterCharEncodingHandlersISO8859x (void) {
 #endif
 #endif
 
-#define bottom_encoding
-#include "elfgcchack.h"

@@ -1,9 +1,9 @@
 /*
  *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
  *    Use ReactOS forum PM or IRC to contact me
- *    http://www.reactos.org
+ *    https://reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011) 
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -21,7 +21,7 @@ BEGIN
     PUSHBUTTON "D&odaj", 1013, 7, 187, 70, 14
     PUSHBUTTON "&Edytuj", 1016, 81, 187, 70, 14
     PUSHBUTTON "&Usuń", 1014, 154, 187, 70, 14
-    AUTOCHECKBOX "&Jeżeli numer nie działa, użyj kolejego", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Jeżeli numer nie działa, użyj kolejnego", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Przenieś sprawdzony numer na początek listy", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 122, 245, 60, 14
     PUSHBUTTON "Anuluj", 2, 188, 245, 60, 14
@@ -47,7 +47,7 @@ CAPTION "Błędy grupowania linii"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "Jedna lub więcej dodatkowych linii nie została połączona. ", 1033, 37, 8, 216, 20
+    LTEXT "Jedna lub więcej dodatkowych linii nie została połączona.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
     AUTOCHECKBOX "&Nie używaj tej/tych linii w przyszłości", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Akceptuj", 1, 135, 242, 60, 14
@@ -236,7 +236,7 @@ BEGIN
     LTEXT "&Hasło:", 1112, 8, 79, 88, 8
     EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
@@ -259,7 +259,7 @@ BEGIN
     LTEXT "&Domena:", 1110, 9, 99, 91, 8
     EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
@@ -282,7 +282,7 @@ BEGIN
     LTEXT "&Domena:", 1110, 10, 100, 92, 8
     EDITTEXT 1102, 104, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 11, 116, 247, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
@@ -306,7 +306,7 @@ BEGIN
     LTEXT "&Hasło:", 1112, 10, 81, 92, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
@@ -492,7 +492,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Oddzwanianie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Niektóre serwery oferują możliwość oddzwonienia do ciebie, w celu redukcji twoich opłat za połączenie. Określ czy chcesz skorzystać z Oddzwaniania.  (Oddzwanianie nie działa w przypadku połączeń z Wirtualnymi Sieciami Prywatnymi (VPN).)", 1043, 8, 4, 219, 43
+    LTEXT "Niektóre serwery oferują możliwość oddzwonienia do ciebie, w celu redukcji twoich opłat za połączenie. Określ czy chcesz skorzystać z Oddzwaniania. (Oddzwanianie nie działa w przypadku połączeń z Wirtualnymi Sieciami Prywatnymi (VPN).)", 1043, 8, 4, 219, 43
     AUTORADIOBUTTON "&Bez Oddzwaniania", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Pytaj mnie podczas próby połączenia, gdy serwer oferuje odddzwanianie", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
     AUTORADIOBUTTON "&Oddzwanianie zawsze włączone, w przypadku połączeń z numerami z listy:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
@@ -711,7 +711,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kreator konfiguracji połaczenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wpisz numer telefoniczny poniżej. ", -1, 7, 4, 306, 14
+    LTEXT "Wpisz numer telefoniczny poniżej.", -1, 7, 4, 306, 14
     LTEXT "&Numer telefoniczny:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "Prawdopodobnie będzie trzeba użyć cyfry ""1"", numeru kierunkowego, albo obydwu. Jeśli nie jesteś pewien, wypróbuj żądany numer na swoim telefonie. Jeśli usłyszysz sygnał modemu, numer jest poprawny.", -1, 20, 50, 291, 53
@@ -1280,7 +1280,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kreator konfiguracji połączenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wprowadź nazwę usługi w pole poniżej. Jeśli zostawisz je puste, ReactOS automagicznie wykryje i skonfiguruje tą usługę podczas łączenia.", -1, 10, 7, 301, 25
+    LTEXT "Wprowadź nazwę usługi w pole poniżej. Jeśli zostawisz je puste, ReactOS automagicznie wykryje i skonfiguruje tę usługę podczas łączenia.", -1, 10, 7, 301, 25
     LTEXT "&Nazwa Usługi (opcjonalnie):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1411,7 +1411,7 @@ BEGIN
     LTEXT "&Hasło:", 1112, 11, 81, 90, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
@@ -1440,7 +1440,7 @@ BEGIN
     LTEXT "&Domena:", 1110, 10, 104, 92, 8
     EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
-    AUTOCHECKBOX "&Zapisz tą nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Zapisz tę nazwę użytkownika i hasło dla następujących użytkowników:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Tylko &ja", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Każdy kto używa tego komputera", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
@@ -1765,7 +1765,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wybierz użytkowników, którym chcesz zezwolić na łączenie się z tym komputerem.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
+    LTEXT "Wybierz użytkowników, którym chcesz zezwolić na łączenie się z tym komputerem. Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
     LTEXT "&Użytkownicy, którzy mogą się połączyć:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Dodaj", 7044, 10, 122, 65, 14, WS_GROUP
@@ -1857,7 +1857,7 @@ BEGIN
     206 "Czy rozłączyć z %1?\0"
     207 "Plik o nazwie %1 już istnieje. Czy chcesz go nadpisać?\0"
     208 "W skrypcie znajdują się błędy składni. Czy chcesz przejrzeć komunikaty o błędach?\0"
-    209 "'%1' jest teraz połączony.  \0"
+    209 "'%1' jest teraz połączony.\0"
     210 "Naciśnij prawy przycisk myszki na Monitorze Sieci Dial-Up w zasobniku systemowym, aby rozłączyć się lub sprawdzić stan twojego połączenia.\0"
     212 "Połączenie udane.\0"
     213 "Wybrana metoda uwierzytelniania własnego musi zostać uaktywniona we Właściwościach.\0"
@@ -1865,7 +1865,7 @@ BEGIN
     215 "Skrót połączenia Dial-up(*.rnk)\0"
     216 "*.rnk\0"
     217 "Utwórz skrót połączenia Dial-Up\0"
-    218 "Połączenie z %1 nieudane.  Ponowne połączenie w toku...\0"
+    218 "Połączenie z %1 nieudane. Ponowne połączenie w toku...\0"
     219 "Nie można uzyskać informacji o ramkach.\0"
     220 "Nie można uzyskać informacji o portach.\0"
     221 "Nie można uzyskać informacji o projekcji.\0"
@@ -2167,7 +2167,7 @@ BEGIN
     585 "Jak się nazywa usługa za pośrednictwem której łączysz się z Internetem?\0"
     586 "Wpisz adres IP komputera-serwera w sieci prywatnej.\0"
     587 "Ustawienia Zaawansowane\0"
-    588 "Nazwa wpisu rozpoczyna się od kropki lub zawiera niedozwolone znaki. \nWybierz inną nazwę.\0"
+    588 "Nazwa wpisu rozpoczyna się od kropki lub zawiera niedozwolone znaki.\nWybierz inną nazwę.\0"
     589 "Właściwości\0"
     1512 "Port komunikacyjny\0"
     1523 " kanał\0"
@@ -2241,7 +2241,7 @@ BEGIN
     1595 "Protokół Point-to-Point Protocol w sieci Ethernet (PPPoE)\0"
     1596 "Typ połączenia &szerokopasmowego do utworzenia:\0"
     1611 "Połączenie szerokopasmowe\0"
-    1612 "Zostało wybrane użycie klucza wstępnego, ale nie został on wprowadzony. \nWprowadzić klucz wstępny.\0"
+    1612 "Zostało wybrane użycie klucza wstępnego, ale nie został on wprowadzony.\nWprowadzić klucz wstępny.\0"
     1613 "Nie można wysłać danych do uwierzytelnienia\0"
     1634 "Z powodu wyłączenia usługi Instrumentacji Zarządzania Windows (WMI), nie może wyświetlić właściwości tego połączenia albo sieci lokalnej.\n\nAby uzyskać dostęp do właściwości, musisz wpierw uruchomić usługę WMI.\0"
     1635 "ReactOS nie może wyświetlić właściwości tego połączenia. Informacja w Instrumentacji Zarządzania Windows (WMI) może być uszkodzona. Aby to poprawić, użyj Odtwarzania Systemu, by odtworzyć ReactOS z wcześniejszego momentu (punktu odtwarzania).\0"
@@ -2296,37 +2296,37 @@ BEGIN
     7321 "Musisz wprowadzić nazwę logowania nowego użytkownika albo nacisnąć Anuluj.\0"
     7322 "Wprowadzone hasło jest zbyt krótkie.\0"
     7323 "Oba wprowadzone hasła nie są identyczne. Proszę je poprawić.\0"
-    7324 "Wystąpił błąd wewnętrzny.  \0"
+    7324 "Wystąpił błąd wewnętrzny.\0"
     7325 "Widok listy\0"
-    7326 "Wystąpił błąd podczas przesyłania wprowadzonych zmian do bazy danych użytkownika lokalnego.  \0"
-    7327 "Nie masz dostatecznych przywilejów by dodać użytkownika do lokalnej systemowej bazy danych.  \0"
+    7326 "Wystąpił błąd podczas przesyłania wprowadzonych zmian do bazy danych użytkownika lokalnego.\0"
+    7327 "Nie masz dostatecznych przywilejów by dodać użytkownika do lokalnej systemowej bazy danych.\0"
     7328 "Użytkownik, którego chcesz stworzyć, już istnieje w lokalnej bazie danych użytkowników.\0"
     7329 "Użytkownik nie został dodany do lokalnej bazy danych użytkowników, dlatego, że jego hasło zostało odrzucone.\0"
     7330 "Nie można przeładować systemowej bazy danych użytkowników z powodu błędu wewnętrznego.\0"
-    7331 "Wystąpił błąd wewnętrzny:  Handle lokalnej bazy danych użytkowników jest uszkodzony.\0"
+    7331 "Wystąpił błąd wewnętrzny: Handle lokalnej bazy danych użytkowników jest uszkodzony.\0"
     7332 "Nie można załadować zasobów potrzebnych do wyświetlenia zakładki Użytkownicy.\0"
-    7333 "Wystąpił błąd wewnęytrzny podczas odwracania zmian, uczynionych w lokalnej bazie danych użytkowników.  \0"
+    7333 "Wystąpił błąd wewnęytrzny podczas odwracania zmian, uczynionych w lokalnej bazie danych użytkowników.\0"
     7334 "Dojście do bazy danych urządzeniach jest uszkodzone.\0"
     7335 "Nie udało się załadować zasobów, niezbędnych do wyświetlenia zakładki Ogólne.\0"
-    7336 "Wystąpił błąd podczas zapisywania zmian jakie dokonane zostały w Urządzeniach/VPN.  \0"
+    7336 "Wystąpił błąd podczas zapisywania zmian jakie dokonane zostały w Urządzeniach/VPN.\0"
     7337 "Wystąpił błąd wewnętrzny.\0"
     7338 "Wystąpił błąd wewnętrzny: dojście do bazy danych komponentów sieci jest uszkodzone.\0"
-    7339 "Wystąpił błąd wewnętrzny.  \0"
+    7339 "Wystąpił błąd wewnętrzny.\0"
     7340 "Wystąpił błąd pocdczas zapisywania zmian, uczynionych w komponentach sieci.\0"
     7341 "Wystąpił błąd wewnętrzny.\0"
-    7342 "Nie można zapisać zmian dokonanych w protokole TCP/IP.  \0"
-    7343 "Nie można zapisać zmian dokonanych w protokole IPX.  \0"
+    7342 "Nie można zapisać zmian dokonanych w protokole TCP/IP.\0"
+    7343 "Nie można zapisać zmian dokonanych w protokole IPX.\0"
     7344 "Nie można wyświetlić właściwości protokołu TCP/IP.\0"
     7345 "Nie można wyświetlić właściwości protokołu IPX.\0"
-    7346 "Nie można załadować właściwości TCP/IP z systemu.  \0"
-    7347 "Nie można załadować właściwości protokołu IPX z systemu.  \0"
+    7346 "Nie można załadować właściwości TCP/IP z systemu.\0"
+    7347 "Nie można załadować właściwości protokołu IPX z systemu.\0"
     7348 "Usługa płączenia przychodzące jest zależna od usługi Routing i dostęp zdalny, której nie można uruchomić. Więcej informacji znajdziesz w logach Zdarzeń Systemowych.\0"
     7349 "Nie można zezwolić na edycję komponentów sieci w danej chwili, gdyż właśnie są modyfikowane przez kogoś innego.\0"
-    7350 "Nowo wprowadzony użytkownik nie został dodany do lokalnej bazy danych użytkowników dlatego, że jego nazwa albo hasło nie było zgodne z wymaganiami systemu (było zbyt duże, za małe, albo źle sformułowane).  \0"
-    7351 "System nie może usunąć wybranego użytkownika.  \0"
+    7350 "Nowo wprowadzony użytkownik nie został dodany do lokalnej bazy danych użytkowników dlatego, że jego nazwa albo hasło nie było zgodne z wymaganiami systemu (było zbyt duże, za małe, albo źle sformułowane).\0"
+    7351 "System nie może usunąć wybranego użytkownika.\0"
     7352 "Nie można usunąć wybranego komponentu sieci, ponieważ jest on obecnie używany.\0"
     7353 "Ostrzeżenie o połączeniu przychodzącym\0"
-    7354 "Każdy skasowany użytkownik zostanie trwale usunięty z systemu, nawet jeśli naciśniesz później Anuluj. Czy na pewno chcesz trwale usunąć %s? \0"
+    7354 "Każdy skasowany użytkownik zostanie trwale usunięty z systemu, nawet jeśli naciśniesz później Anuluj. Czy na pewno chcesz trwale usunąć %s?\0"
     7355 "Masz zamiar się przełączyć na konsolę zarządzania systemem. Te okno właściwości Połączeń przychodzących zostanie zamknięte a wszystkie dokonane zmiany - zapisane w systemie. Czy kontynuować?\0"
     7356 "Twoja Maska Podsieci uległa zmianie. Po bicie zerowym w Masce mogą nastąpić wyłącznie bity zerowe. Na przykład, Maska, wyrażona w zapisie dziesiętnym jako 255.255.0.0, jest prawidłowa, ale 255.0.255.0 już nie.\n\0"
     7357 "Uprawnienia Użytkowników\0"
@@ -2349,7 +2349,7 @@ BEGIN
     7377 "Którego urządzenia chcesz użyć w tym połączeniu?\0"
     7378 "Nie ma obecnie żadnych urządzeń zainstalowanych, które byłyby w stanie przyjąć połączenia przychodzące.\0"
     7379 "Ostrzeżenie o nowym połączeniu przychodzącym\0"
-    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tą maszynę tak by akceptowała połączenia przychodzące.  Anulować zmiany i włączyć tą konsolę?\n\0"
+    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tę maszynę tak by akceptowała połączenia przychodzące. Anulować zmiany i włączyć tę konsolę?\n\0"
     7381 "Przydziel &numer adresu automagicznie\0"
     7382 "Przydziel n&umer adresu automagicznie\0"
     7383 "Połączenia przychodzące nie mogą używać adresów IPX o numerach 00000000 lub FFFFFFFF. Proszę zmienić przydzielone numery adresów albo ustawić automagiczne przydzielanie numerów.\0"

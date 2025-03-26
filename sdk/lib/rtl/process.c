@@ -93,7 +93,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
                                          PAGE_READWRITE);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to reserve 1MB of space \n");
+            DPRINT1("Failed to reserve 1MB of space\n");
             return Status;
         }
     }

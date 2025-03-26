@@ -100,7 +100,7 @@ c_1252.nls   = 1,,,,,,,2,,,,1,2
 cdfs.sys     = 1,,,,,,x,4,,,,1,4
 cdrom.sys    = 1,,,,,,x,4,,,,1,4
 classpnp.sys = 1,,,,,,,4,,,,1,4
-isapnp.sys   = 1,,,,,,,4,,,,1,4
+isapnp.sys   = 1,,,,,,x,4,,,,1,4
 kdcom.dll    = 1,,,,,,,2,,,,1,2
 kdvbox.dll   = 1,,,,,,,2,,,,1,2
 disk.sys     = 1,,,,,,x,4,,,,1,4
@@ -168,12 +168,14 @@ PCI\CC_0C0300 = usbuhci
 PCI\CC_0C0310 = usbohci
 PCI\CC_0C0320 = usbehci
 USB\Class_08&SubClass_06&Prot_50 = usbstor
+USB\Class_08&SubClass_05&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid,{4D36E96B-E325-11CE-BFC1-08002BE10318}
 USB\COMPOSITE = usbccgp
 GenDisk = disk,{4D36E967-E325-11CE-BFC1-08002BE10318}
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
 *PNP0303 = i8042prt,{4D36E96B-E325-11CE-BFC1-08002BE10318}
+*PNP030B = i8042prt,{4D36E96B-E325-11CE-BFC1-08002BE10318}
 *nEC1F00 = inport,{4D36E96F-E325-11CE-BFC1-08002BE10318}
 ROOT\SWENUM = swenum
 
@@ -214,8 +216,7 @@ Cabinet=reactos.cab
 DefaultPath = \ReactOS
 SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
 ;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
-;SetupDebugOptions = "/DEBUG /DEBUGPORT=BOCHS"
-OsLoadOptions = "/NOGUIBOOT /NODEBUG"
+OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"
 
 [NLS]
 AnsiCodepage     = c_1252.nls
@@ -228,24 +229,30 @@ DefaultLanguage  = 00000409
 pci_up = "Standard PC Uniprocessor"
 ;pci_mp = "Standard PC Multiprocessor"
 acpi_up = "ACPI PC Uniprocessor"
-;acpi_mp = "ACPI PC Multiprocessor"
+acpi_mp = "ACPI PC Multiprocessor"
+apic_up = "Standard APIC PC Uniprocessor"
+aacpi_up = "ACPI APIC PC Uniprocessor"
 xbox = "Original Xbox (x86 based)"
 pc98_up = "NEC PC-98 Uniprocessor"
 
 [Computer.NTamd64]
 x64_up = "Standard x64 Uniprocessor"
+x64_mp = "Standard x64 Multiprocessor"
 
 [Map.Computer.NTx86]
 ;<id> = <pnp id string>
 pci_up = "PC UP"
 ;pci_mp = "PC MP"
 acpi_up = "ACPI UP"
-;acpi_mp = "ACPI MP"
+acpi_mp = "ACPI MP"
+apic_up = "APIC UP"
+aacpi_up = "AAPIC UP"
 xbox = "Xbox"
 pc98_up = "NEC PC-98 UP"
 
 [Map.Computer.NTamd64]
-x64_up = "ACPI UP"
+x64_up = "X64 UP"
+x64_mp = "X64 MP"
 
 [Files.pci_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
@@ -259,13 +266,22 @@ hal.dll      = 1,,,,,,,2,,,,1,2
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
-;[Files.acpi_mp]
-;ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
-;halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
+[Files.acpi_mp]
+ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
+halmacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
+
+[Files.apic_up]
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+halapic.dll  = 1,,,,,,,2,,,hal.dll,1,2
+
+[Files.aacpi_up]
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+halaacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
 [Files.xbox]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halxbox.dll  = 1,,,,,,,2,,,hal.dll,1,2
+vfatfs.sys   = 1,,,,,,,4,,,,1,4
 
 [Files.pc98_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
@@ -275,33 +291,37 @@ halpc98.dll  = 1,,,,,,,2,,,hal.dll,1,2
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 hal.dll      = 1,,,,,,,2,,,,1,2
 
+[Files.x64_mp]
+ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
+halmp.dll    = 1,,,,,,,2,,,hal.dll,1,2
+
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<width>,<height>,<bpp>
-vga              = "VGA Display (640x480x4)",,Vga,640,480,4
-vbe_640x480x8    = "VESA Display (640x480x8)",,VBE,640,480,8
-vbe_640x480x16   = "VESA Display (640x480x16)",,VBE,640,480,16
-vbe_640x480x24   = "VESA Display (640x480x24)",,VBE,640,480,24
-vbe_640x480x32   = "VESA Display (640x480x32)",,VBE,640,480,32
-vbe_800x600x8    = "VESA Display (800x600x8)",,VBE,800,600,8
-vbe_800x600x16   = "VESA Display (800x600x16)",,VBE,800,600,16
-vbe_800x600x24   = "VESA Display (800x600x24)",,VBE,800,600,24
-vbe              = "VESA Display (800x600x32)",,VBE,800,600,32
-vbe_1024x768x8   = "VESA Display (1024x768x8)",,VBE,1024,768,8
-vbe_1024x768x16  = "VESA Display (1024x768x16)",,VBE,1024,768,16
-vbe_1024x768x24  = "VESA Display (1024x768x24)",,VBE,1024,768,24
-vbe_1024x768x32  = "VESA Display (1024x768x32)",,VBE,1024,768,32
-vbe_1152x864x8   = "VESA Display (1152x864x8)",,VBE,1152,864,8
-vbe_1152x864x16  = "VESA Display (1152x864x16)",,VBE,1152,864,16
-vbe_1152x864x24  = "VESA Display (1152x864x24)",,VBE,1152,864,24
-vbe_1152x864x32  = "VESA Display (1152x864x32)",,VBE,1152,864,32
-vbe_1280x1024x8  = "VESA Display (1280x1024x8)",,VBE,1280,1024,8
-vbe_1280x1024x16 = "VESA Display (1280x1024x16)",,VBE,1280,1024,16
-vbe_1280x1024x24 = "VESA Display (1280x1024x24)",,VBE,1280,1024,24
-vbe_1280x1024x32 = "VESA Display (1280x1024x32)",,VBE,1280,1024,32
-vbe_1600x1200x8  = "VESA Display (1600x1200x8)",,VBE,1600,1200,8
-vbe_1600x1200x16 = "VESA Display (1600x1200x16)",,VBE,1600,1200,16
-vbe_1600x1200x24 = "VESA Display (1600x1200x24)",,VBE,1600,1200,24
-vbe_1600x1200x32 = "VESA Display (1600x1200x32)",,VBE,1600,1200,32
+vga              = "VGA Display (640x480x4)",,VgaSave,640,480,4
+vbe_640x480x8    = "VESA Display (640x480x8)",,vga,640,480,8
+vbe_640x480x16   = "VESA Display (640x480x16)",,vga,640,480,16
+vbe_640x480x24   = "VESA Display (640x480x24)",,vga,640,480,24
+vbe_640x480x32   = "VESA Display (640x480x32)",,vga,640,480,32
+vbe_800x600x8    = "VESA Display (800x600x8)",,vga,800,600,8
+vbe_800x600x16   = "VESA Display (800x600x16)",,vga,800,600,16
+vbe_800x600x24   = "VESA Display (800x600x24)",,vga,800,600,24
+vbe              = "VESA Display (800x600x32)",,vga,800,600,32
+vbe_1024x768x8   = "VESA Display (1024x768x8)",,vga,1024,768,8
+vbe_1024x768x16  = "VESA Display (1024x768x16)",,vga,1024,768,16
+vbe_1024x768x24  = "VESA Display (1024x768x24)",,vga,1024,768,24
+vbe_1024x768x32  = "VESA Display (1024x768x32)",,vga,1024,768,32
+vbe_1152x864x8   = "VESA Display (1152x864x8)",,vga,1152,864,8
+vbe_1152x864x16  = "VESA Display (1152x864x16)",,vga,1152,864,16
+vbe_1152x864x24  = "VESA Display (1152x864x24)",,vga,1152,864,24
+vbe_1152x864x32  = "VESA Display (1152x864x32)",,vga,1152,864,32
+vbe_1280x1024x8  = "VESA Display (1280x1024x8)",,vga,1280,1024,8
+vbe_1280x1024x16 = "VESA Display (1280x1024x16)",,vga,1280,1024,16
+vbe_1280x1024x24 = "VESA Display (1280x1024x24)",,vga,1280,1024,24
+vbe_1280x1024x32 = "VESA Display (1280x1024x32)",,vga,1280,1024,32
+vbe_1600x1200x8  = "VESA Display (1600x1200x8)",,vga,1600,1200,8
+vbe_1600x1200x16 = "VESA Display (1600x1200x16)",,vga,1600,1200,16
+vbe_1600x1200x24 = "VESA Display (1600x1200x24)",,vga,1600,1200,24
+vbe_1600x1200x32 = "VESA Display (1600x1200x32)",,vga,1600,1200,32
 xbox             = "Original Xbox NV2A Framebuffer (640x480x32)",,XboxVmp,640,480,32
 
 [Map.Display]
@@ -550,13 +570,13 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00020401 = kbda3.dll
 00020402 = kbdbgt.dll
 00030402 = kbdbga.dll
-00040402 = kbdbgm.dll
+00040402 = kbdbu.dll
 00000405 = kbdcz.dll
 00010405 = kbdcz1.dll
 00000406 = kbdda.dll
 00000407 = kbdgr.dll
 00000807 = kbdsg.dll
-00010407 = kbdgrist.dll
+00010407 = kbdgr1.dll
 00020407 = kbdgneo.dll
 00030407 = kbdgerg.dll
 00000408 = kbdhe.dll
@@ -570,7 +590,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00030409 = kbdusl.dll
 00040409 = kbdusr.dll
 00050409 = kbdusa.dll
-0000040A = kbdes.dll
+0000040A = kbdsp.dll
 0000080A = kbdla.dll
 0000040B = kbdfi.dll
 0000040C = kbdfr.dll
@@ -580,8 +600,8 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000040E = kbdhu.dll
 0000040F = kbdic.dll
 00000410 = kbdit.dll
-00000411 = kbdja.dll
-00000412 = kbdko.dll
+00000411 = kbdjpn.dll
+00000412 = kbdkor.dll
 00000413 = kbdne.dll
 00000813 = kbdbe.dll
 00000414 = kbdno.dll
@@ -595,8 +615,8 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000041A = kbdcr.dll
 0000081A = kbdycl.dll
 00000C1A = kbdycc.dll
-0000041B = kbdsk.dll
-0001041B = kbdsk1.dll
+0000041B = kbdsl.dll
+0001041B = kbdsl1.dll
 0000041C = kbdal.dll
 0000041D = kbdsw.dll
 0000041E = kbdth0.dll

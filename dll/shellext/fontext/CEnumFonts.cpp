@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CEnumFonts implementation
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "precomp.h"
@@ -36,9 +36,10 @@ public:
     // *** IEnumIDList methods ***
     STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched)
     {
-        if (!pceltFetched || !rgelt)
+        if (!rgelt || (!pceltFetched && celt != 1))
             return E_POINTER;
 
+        HRESULT hr = S_OK;
         ULONG Fetched = 0;
 
         while (celt)
@@ -48,15 +49,25 @@ public:
             if (m_Index < g_FontCache->Size())
             {
                 CStringW Name = g_FontCache->Name(m_Index);
-                rgelt[Fetched] = _ILCreate(Name, m_Index);
-
+                LPITEMIDLIST item = _ILCreate(Name, m_Index);
+                if (!item)
+                {
+                    hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
+                    break;
+                }
+                rgelt[Fetched] = item;
                 m_Index++;
                 Fetched++;
             }
+            else
+            {
+                hr = S_FALSE;
+            }
         }
 
-        *pceltFetched = Fetched;
-        return Fetched ? S_OK : S_FALSE;
+        if (pceltFetched)
+            *pceltFetched = Fetched;
+        return hr;
     }
     STDMETHODIMP Skip(ULONG celt)
     {
@@ -77,7 +88,7 @@ public:
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumFonts)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
-    
+
     BEGIN_COM_MAP(CEnumFonts)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
     END_COM_MAP()

@@ -48,8 +48,13 @@ Test_strlen(PFN_STRLEN pstrlen)
     eflags = __readeflags();
     __writeeflags(eflags | EFLAGS_DF);
     len = pstrlen(teststr + 4);
-    eflags = __readeflags();
-    ok((eflags & EFLAGS_DF) != 0, "Direction flag in ELFAGS was changed.");
+
+#ifdef _M_AMD64
+    ok((__readeflags() & EFLAGS_DF) != 0, "Direction flag in ELFAGS was changed.\n");
+#else
+    ok((__readeflags() & EFLAGS_DF) == 0, "Direction flag in ELFAGS was not changed.\n");
+#endif
+    __writeeflags(eflags);
 
     /* Only test this for the exported versions, intrinsics might do it
        differently. It's up to us to not do fishy stuff! Also crtdll does

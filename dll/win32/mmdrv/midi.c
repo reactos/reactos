@@ -22,36 +22,36 @@
 typedef struct _LOCALMIDIHDR {
     OVERLAPPED          Ovl;
     DWORD               BytesReturned;
-    struct _LOCALMIDIHDR *lpNext;       
-    BOOL                Done;           
-    PVOID               pClient;        
-  //  MIDI_DD_INPUT_DATA  MidiData;       
+    struct _LOCALMIDIHDR *lpNext;
+    BOOL                Done;
+    PVOID               pClient;
+  //  MIDI_DD_INPUT_DATA  MidiData;
     BYTE                ExtraData[LOCAL_DATA_SIZE - sizeof(ULONG)];
-                                        
+
 } LOCALMIDIHDR, *PLOCALMIDIHDR;
 
 #define LOCAL_MIDI_BUFFERS 8
 
 typedef struct {
-    
+
     BOOL                fMidiInStarted;
-    DWORD               dwMsg;         
-    DWORD               dwCurData;     
-    BYTE                status;        
-    BOOLEAN             fSysex;        
-    BOOLEAN             Bad;           
-    BYTE                bBytesLeft;    
-    BYTE                bBytePos;      
-    DWORD               dwCurTime;     
-    DWORD               dwMsgTime;     
-                                       
-                                       
-    PLOCALMIDIHDR       DeviceQueue;   
-                                       
-    LOCALMIDIHDR                       
+    DWORD               dwMsg;
+    DWORD               dwCurData;
+    BYTE                status;
+    BOOLEAN             fSysex;
+    BOOLEAN             Bad;
+    BYTE                bBytesLeft;
+    BYTE                bBytePos;
+    DWORD               dwCurTime;
+    DWORD               dwMsgTime;
+
+
+    PLOCALMIDIHDR       DeviceQueue;
+
+    LOCALMIDIHDR
     Bufs[LOCAL_MIDI_BUFFERS];
-                                       
-                                       
+
+
 } LOCALMIDIDATA, *PLOCALMIDIDATA;
 
 
@@ -104,31 +104,31 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
 {
     PMIDIALLOC pClient = NULL;
     MMRESULT Result = MMSYSERR_NOERROR;
-    
+
     // Check ID?
     DPRINT("OpenMidiDevice()\n");
-    
+
     switch(DeviceType)
     {
         case MidiOutDevice :
             pClient = (PMIDIALLOC) HeapAlloc(Heap, 0, sizeof(MIDIALLOC));
             if ( pClient ) memset(pClient, 0, sizeof(MIDIALLOC));
             break;
-        
+
         case MidiInDevice :
             pClient = (PMIDIALLOC) HeapAlloc(Heap, 0, sizeof(MIDIALLOC) + sizeof(LOCALMIDIDATA));
 			if ( pClient ) memset(pClient, 0, sizeof(MIDIALLOC) + sizeof(LOCALMIDIDATA));
             break;
     };
-    
+
     if ( !pClient )
         return MMSYSERR_NOMEM;
-    
-	if (DeviceType == MidiInDevice) 
+
+	if (DeviceType == MidiInDevice)
 	{
         int i;
         pClient->Mid = (PLOCALMIDIDATA)(pClient + 1);
-        for (i = 0 ;i < LOCAL_MIDI_BUFFERS ; i++) 
+        for (i = 0 ;i < LOCAL_MIDI_BUFFERS ; i++)
 		{
             pClient->Mid->Bufs[i].pClient = pClient;
         }
@@ -139,52 +139,52 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
     pClient->dwInstance = ((LPMIDIOPENDESC)Param1)->dwInstance;
     pClient->hMidi = ((LPMIDIOPENDESC)Param1)->hMidi;
     pClient->dwFlags = Param2;
-    
+
     Result = OpenDevice(DeviceType, ID, &pClient->DeviceHandle, (GENERIC_READ | GENERIC_WRITE));
-    
+
     if ( Result != MMSYSERR_NOERROR )
     {
         // cleanup
         return Result;
     }
-    
+
     pClient->Event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    
+
     if ( !pClient->Event )
     {
         // cleanup
         return MMSYSERR_NOMEM;
     }
 
-	if (DeviceType == MidiInDevice) 
+	if (DeviceType == MidiInDevice)
 	{
 
         pClient->AuxEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
-        if (pClient->AuxEvent1 == NULL) 
-		{
-            // cleanup
-            return MMSYSERR_NOMEM;
-        }
-        
-		pClient->AuxEvent2 = CreateEvent(NULL, FALSE, FALSE, NULL);
-        if (pClient->AuxEvent2 == NULL) 
+        if (pClient->AuxEvent1 == NULL)
 		{
             // cleanup
             return MMSYSERR_NOMEM;
         }
 
-        
+		pClient->AuxEvent2 = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (pClient->AuxEvent2 == NULL)
+		{
+            // cleanup
+            return MMSYSERR_NOMEM;
+        }
+
+
         // TaskCreate
-        
-        
+
+
        WaitForSingleObject(pClient->AuxEvent2, INFINITE);
     }
 
     PMIDIALLOC *pUserHandle;
     pUserHandle = (PMIDIALLOC*) User;
     *pUserHandle = pClient;
-    
-    // callback    
+
+    // callback
 
     return MMSYSERR_NOERROR;
 }
@@ -196,7 +196,7 @@ static DWORD WriteMidi(PBYTE pData, ULONG Length, PMIDIALLOC pClient)
     DWORD BytesReturned;
 
     DPRINT("IOCTL_MIDI_PLAY == %d [%x]\n", IOCTL_MIDI_PLAY, IOCTL_MIDI_PLAY);
-    
+
     if ( !DeviceIoControl(pClient->DeviceHandle, IOCTL_MIDI_PLAY, (PVOID)pData,
                           Length, NULL, 0, &BytesReturned, NULL))
         return TranslateStatus();
@@ -298,17 +298,17 @@ APIENTRY DWORD midMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 APIENTRY DWORD modMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWORD Param2)
 {
     DPRINT("modMessage\n");
-    
+
     switch(Message)
     {
         case MODM_GETNUMDEVS:
             DPRINT("MODM_GETNUMDEVS == %d\n", (int)GetDeviceCount(MidiOutDevice));
             return GetDeviceCount(MidiOutDevice);
-        
+
         case MODM_GETDEVCAPS:
             DPRINT("MODM_GETDEVCAPS");
             return GetDeviceCapabilities(ID, MidiOutDevice, (LPBYTE)Param1, (DWORD)Param2);
-            
+
         case MODM_OPEN :
             return OpenMidiDevice(MidiOutDevice, ID, User, Param1, Param2);
 
@@ -351,7 +351,7 @@ APIENTRY DWORD modMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWO
         case MODM_CACHEDRUMPATCHES:
             DPRINT("MODM_CACHEDRUMPATCHES");
             return MMSYSERR_NOTSUPPORTED;
-            
+
     };
 
     return MMSYSERR_NOTSUPPORTED;

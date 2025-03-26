@@ -22,10 +22,17 @@ list(APPEND SOURCE
     volpropsheet.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
-    guid.c)
+    guid.c
+    ${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs/crc32c.c)
+
+if((ARCH STREQUAL "i386") OR (ARCH STREQUAL "amd64"))
+    list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs/crc32c.S)
+    add_asm_files(btrfs_asm ${ASM_SOURCE})
+endif()
 
 add_library(shellbtrfs MODULE
     ${SOURCE}
+    ${btrfs_asm}
     ${PCH_SKIP_SOURCE}
     shellbtrfs.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shellbtrfs.def)

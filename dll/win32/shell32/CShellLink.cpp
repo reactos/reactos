@@ -6,7 +6,7 @@
  *      Copyright 2009  Andrew Hill
  *      Copyright 2013  Dominik Hornung
  *      Copyright 2017  Hermes Belusca-Maito
- *      Copyright 2018  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *      Copyright 2018-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,13 +40,13 @@
  * as well as its interface.
  *
  * General introduction about "Shell Links" (MSDN):
- *   https://msdn.microsoft.com/en-us/library/windows/desktop/bb776891(v=vs.85).aspx
+ *   https://learn.microsoft.com/en-us/windows/win32/shell/links
  *
  *
  * Details of the file format:
  *
  * - Official MSDN documentation "[MS-SHLLINK]: Shell Link (.LNK) Binary File Format":
- *   https://msdn.microsoft.com/en-us/library/dd871305.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/16cb4ca1-9339-4d0c-a68d-bf1d6cc0f943
  *
  * - Forensics:
  *   http://forensicswiki.org/wiki/LNK
@@ -55,8 +55,8 @@
  *   https://github.com/libyal/liblnk/blob/master/documentation/Windows%20Shortcut%20File%20(LNK)%20format.asciidoc
  *
  * - List of possible shell link header flags (SHELL_LINK_DATA_FLAGS enumeration):
- *   https://msdn.microsoft.com/en-us/library/windows/desktop/bb762540(v=vs.85).aspx
- *   https://msdn.microsoft.com/en-us/library/dd891314.aspx
+ *   https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-shell_link_data_flags
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/ae350202-3ba9-4790-9e9e-98935f4ee5af
  *
  *
  * In addition to storing its target by using a PIDL, a shell link file also
@@ -66,12 +66,12 @@
  *
  * - The first and oldest one (from NewShell/WinNT4) is the "LinkInfo" structure,
  *   stored in a serialized manner at the beginning of the shell link file:
- *   https://msdn.microsoft.com/en-us/library/dd871404.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/6813269d-0cc8-4be2-933f-e96e8e3412dc
  *   The official API for manipulating this is located in LINKINFO.DLL .
  *
  * - The second, more recent one, is an extra binary block appended to the
  *   extra-data list of the shell link file: this is the "TrackerDataBlock":
- *   https://msdn.microsoft.com/en-us/library/dd891376.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/df8e3748-fba5-4524-968a-f72be06d71fc
  *   Its purpose is for link tracking, and works in coordination with the
  *   "Distributed Link Tracking" service ('TrkWks' client, 'TrkSvr' server).
  *   See a detailed explanation at:
@@ -84,12 +84,12 @@
  * The philosophy of this approach is explained in detail inside the MSDN article
  * "Application Resiliency: Unlock the Hidden Features of Windows Installer"
  * (by Michael Sanford), here:
- *   https://msdn.microsoft.com/en-us/library/aa302344.aspx
+ *   https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/aa302344(v=msdn.10)
  *
  * This functionality is implemented by adding a binary "Darwin" data block
  * of type "EXP_DARWIN_LINK", signature EXP_DARWIN_ID_SIG == 0xA0000006,
  * to the shell link file:
- *   https://msdn.microsoft.com/en-us/library/dd871369.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/48f8a4c4-99fe-4787-a39f-b1367103eba8
  * or, this could be done more simply by specifying a special link target path
  * with the IShellLink::SetPath() function. Defining the following GUID:
  *   SHELL32_AdvtShortcutComponent = "::{9db1186e-40df-11d1-aa8c-00c04fb67863}:"
@@ -104,12 +104,12 @@
  * older technology introduced in Internet Explorer 3 (and now obsolete since
  * Internet Explorer 7), called "MS Internet Component Download (MSICD)", see
  * this MSDN introductory article:
- *   https://msdn.microsoft.com/en-us/library/aa741198(v=vs.85).aspx
+ *   https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa741198(v=vs.85)
  * and leveraged in Internet Explorer 4 with "Software Update Channels", see:
- *   https://msdn.microsoft.com/en-us/library/aa740931(v=vs.85).aspx
+ *   https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa740931(v=vs.85)
  * Applications supporting this technology could present shell links having
  * a special target, see subsection "Modifying the Shortcut" in the article:
- *   https://msdn.microsoft.com/en-us/library/aa741201(v=vs.85).aspx#pub_shor
+ *   https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa741201(v=vs.85)#pub_shor
  *
  * Similarly as for the MSI shortcuts, these MSICD shortcuts are created by
  * specifying a special link target path with the IShellLink::SetPath() function,
@@ -129,7 +129,7 @@
  * a different signature EXP_LOGO3_ID_SIG == 0xA0000007 . Such shell links are
  * called "Logo3" shortcuts. They were evoked in this user comment in "The Old
  * New Thing" blog:
- *   https://blogs.msdn.microsoft.com/oldnewthing/20121210-00/?p=5883#comment-1025083
+ *   https://web.archive.org/web/20190110073640/https://blogs.msdn.microsoft.com/oldnewthing/20121210-00/?p=5883#comment-1025083
  *
  * The shell exports the API 'SoftwareUpdateMessageBox' (in shdocvw.dll) that
  * displays a message when an update for an application supporting this
@@ -214,6 +214,22 @@ static LPWSTR __inline strdupW(LPCWSTR src)
     if (dest)
         wcscpy(dest, src);
     return dest;
+}
+
+static BOOL PathEnvSubstIsDirectory(LPCWSTR pszPath)
+{
+    // Note: Don't call SHExpandEnvironmentStringsW here, we need the required length
+    WCHAR szStack[MAX_PATH];
+    DWORD cch = ExpandEnvironmentStringsW(pszPath, szStack, _countof(szStack));
+    if (cch <= _countof(szStack))
+        return cch && PathIsDirectory(szStack);
+
+    PWSTR szHeap = (PWSTR)SHAlloc(cch);
+    if (!szHeap)
+        return FALSE;
+    BOOL bResult = ExpandEnvironmentStringsW(pszPath, szHeap, cch) && PathIsDirectory(szHeap);
+    SHFree(szHeap);
+    return bResult;
 }
 
 // TODO: Use it for constructor & destructor too
@@ -528,7 +544,7 @@ static BOOL Stream_LoadVolume(LOCAL_VOLUME_INFO *vol, CShellLink::volume_info *v
     INT len = vol->dwSize - vol->dwVolLabelOfs;
 
     LPSTR label = (LPSTR)vol;
-    label += vol->dwVolLabelOfs;
+    label += vol->dwVolLabelOfs; // FIXME: 0x14 Unicode
     MultiByteToWideChar(CP_ACP, 0, label, len, volume->label, _countof(volume->label));
 
     return TRUE;
@@ -579,7 +595,7 @@ static HRESULT Stream_LoadLocation(IStream *stm,
     /* if there's a local path, load it */
     DWORD n = loc->dwLocalPathOfs;
     if (n && n < loc->dwTotalSize)
-        *path = Stream_LoadPath(&p[n], loc->dwTotalSize - n);
+        *path = Stream_LoadPath(&p[n], loc->dwTotalSize - n); // FIXME: Unicode offset (if present)
 
     TRACE("type %d serial %08x name %s path %s\n", volume->type,
           volume->serial, debugstr_w(volume->label), debugstr_w(*path));
@@ -746,6 +762,22 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
     if (FAILED(hr)) // FIXME: Should we fail?
         return hr;
 
+    LPEXP_SPECIAL_FOLDER pSpecial = (LPEXP_SPECIAL_FOLDER)SHFindDataBlock(m_pDBList, EXP_SPECIAL_FOLDER_SIG);
+    if (pSpecial && pSpecial->cbSize == sizeof(*pSpecial) && ILGetSize(m_pPidl) > pSpecial->cbOffset)
+    {
+        if (LPITEMIDLIST folder = SHCloneSpecialIDList(NULL, pSpecial->idSpecialFolder, FALSE))
+        {
+            LPITEMIDLIST pidl = ILCombine(folder, (LPITEMIDLIST)((char*)m_pPidl + pSpecial->cbOffset));
+            if (pidl)
+            {
+                ILFree(m_pPidl);
+                m_pPidl = pidl;
+                TRACE("Replaced pidl base with CSIDL %u up to %ub.\n", pSpecial->idSpecialFolder, pSpecial->cbOffset);
+            }
+            ILFree(folder);
+        }
+    }
+
     if (TRACE_ON(shell))
     {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
@@ -784,16 +816,24 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
  */
 static HRESULT Stream_WriteString(IStream* stm, LPCWSTR str)
 {
-    USHORT len = wcslen(str) + 1; // FIXME: Possible overflows?
+    SIZE_T length;
+    USHORT len;
     DWORD count;
 
+    length = wcslen(str) + 1;
+    if (length > MAXUSHORT)
+    {
+        return E_INVALIDARG;
+    }
+
+    len = (USHORT)length;
     HRESULT hr = stm->Write(&len, sizeof(len), &count);
     if (FAILED(hr))
         return hr;
 
-    len *= sizeof(WCHAR);
+    length *= sizeof(WCHAR);
 
-    hr = stm->Write(str, len, &count);
+    hr = stm->Write(str, (ULONG)length, &count);
     if (FAILED(hr))
         return hr;
 
@@ -810,7 +850,7 @@ static HRESULT Stream_WriteString(IStream* stm, LPCWSTR str)
  *        Figure out how Windows deals with unicode paths here.
  */
 static HRESULT Stream_WriteLocationInfo(IStream* stm, LPCWSTR path,
-        CShellLink::volume_info *volume)
+        CShellLink::volume_info *volume) // FIXME: Write Unicode strings
 {
     LOCAL_VOLUME_INFO *vol;
     LOCATION_INFO *loc;
@@ -873,14 +913,31 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
 
     m_Header.dwSize = sizeof(m_Header);
     m_Header.clsid = CLSID_ShellLink;
+    m_Header.dwReserved3 = m_Header.dwReserved2 = m_Header.wReserved1 = 0;
+
+    /* Store target attributes */
+    WIN32_FIND_DATAW wfd = {};
+    WCHAR FsTarget[MAX_PATH];
+    if (GetPath(FsTarget, _countof(FsTarget), NULL, 0) == S_OK && PathFileExistsW(FsTarget))
+    {
+        HANDLE hFind = FindFirstFileW(FsTarget, &wfd);
+        if (hFind != INVALID_HANDLE_VALUE)
+            FindClose(hFind);
+    }
+    m_Header.dwFileAttributes = wfd.dwFileAttributes;
+    m_Header.ftCreationTime = wfd.ftCreationTime;
+    m_Header.ftLastAccessTime = wfd.ftLastAccessTime;
+    m_Header.ftLastWriteTime = wfd.ftLastWriteTime;
+    m_Header.nFileSizeLow = wfd.nFileSizeLow;
 
     /*
      * Reset the flags: keep only the flags related to data blocks as they were
      * already set in accordance by the different mutator member functions.
      * The other flags will be determined now by the presence or absence of data.
      */
-    m_Header.dwFlags &= (SLDF_RUN_WITH_SHIMLAYER | SLDF_RUNAS_USER |
-                         SLDF_RUN_IN_SEPARATE | SLDF_HAS_DARWINID |
+    UINT NT6SimpleFlags = LOBYTE(GetVersion()) > 6 ? (0x00040000 | 0x00400000 | 0x00800000 | 0x02000000) : 0;
+    m_Header.dwFlags &= (SLDF_RUN_WITH_SHIMLAYER | SLDF_RUNAS_USER | SLDF_RUN_IN_SEPARATE |
+                         SLDF_HAS_DARWINID | SLDF_FORCE_NO_LINKINFO | NT6SimpleFlags |
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
                          SLDF_HAS_LOGO3ID |
 #endif
@@ -892,7 +949,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
 
     if (m_pPidl)
         m_Header.dwFlags |= SLDF_HAS_ID_LIST;
-    if (m_sPath)
+    if (m_sPath && *m_sPath && !(m_Header.dwFlags & SLDF_FORCE_NO_LINKINFO))
         m_Header.dwFlags |= SLDF_HAS_LINK_INFO;
     if (m_sDescription && *m_sDescription)
         m_Header.dwFlags |= SLDF_HAS_NAME;
@@ -928,7 +985,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
         }
     }
 
-    if (m_sPath)
+    if (m_Header.dwFlags & SLDF_HAS_LINK_INFO)
     {
         hr = Stream_WriteLocationInfo(stm, m_sPath, &volume);
         if (FAILED(hr))
@@ -1069,7 +1126,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN
           this, pszFile, cchMaxPath, pfd, fFlags, debugstr_w(m_sPath));
 
     /* Allocate a temporary UNICODE buffer */
-    pszFileW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchMaxPath * sizeof(WCHAR));
+    pszFileW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, max(cchMaxPath, MAX_PATH) * sizeof(WCHAR));
     if (!pszFileW)
         return E_OUTOFMEMORY;
 
@@ -1690,18 +1747,10 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(LPWSTR pszIconPath, INT cc
 static HRESULT SHELL_PidlGetIconLocationW(PCIDLIST_ABSOLUTE pidl,
         UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
-    LPCITEMIDLIST pidlLast;
-    CComPtr<IShellFolder> psf;
-
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
     CComPtr<IExtractIconW> pei;
-    hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IExtractIconW, &pei));
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(NULL, pidl, IID_PPV_ARG(IExtractIconW, &pei));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-
     hr = pei->GetIconLocation(uFlags, pszIconFile, cchMax, piIndex, pwFlags);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -1743,6 +1792,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
     }
     else
     {
+        // TODO: If GetIconLocation succeeded, why are we setting GIL_NOTFILENAME? And are we not PERINSTANCE?
         *pwFlags = GIL_NOTFILENAME | GIL_PERCLASS;
     }
 
@@ -2178,108 +2228,6 @@ HRESULT CShellLink::SetAdvertiseInfo(LPCWSTR str)
     return S_OK;
 }
 
-/*
- * Since the real PathResolve (from Wine) is unimplemented at the moment,
- * we use this local implementation, until a better one is written (using
- * code parts of the SHELL_xxx helpers in Wine's shellpath.c).
- */
-static BOOL HACKISH_PathResolve(
-    IN OUT PWSTR pszPath,
-    IN PZPCWSTR dirs OPTIONAL,
-    IN UINT fFlags)
-{
-    // FIXME: This is unimplemented!!!
-#if 0
-    return PathResolve(pszPath, dirs, fFlags);
-#else
-    BOOL Success = FALSE;
-    USHORT i;
-    LPWSTR fname = NULL;
-    WCHAR szPath[MAX_PATH];
-
-    /* First, search for a valid existing path */
-
-    // NOTE: See also: SHELL_FindExecutable()
-
-    /*
-     * List of extensions searched for, by PathResolve with the flag
-     * PRF_TRYPROGRAMEXTENSIONS == PRF_EXECUTABLE | PRF_VERIFYEXISTS set,
-     * according to MSDN: https://msdn.microsoft.com/en-us/library/windows/desktop/bb776478(v=vs.85).aspx
-     */
-    static PCWSTR Extensions[] = {L".pif", L".com", L".bat", L".cmd", L".lnk", L".exe", NULL};
-    #define LNK_EXT_INDEX   4   // ".lnk" has index 4 in the array above
-
-    /*
-     * Start at the beginning of the list if PRF_EXECUTABLE is set, otherwise
-     * just use the last element 'NULL' (no extension checking).
-     */
-    i = ((fFlags & PRF_EXECUTABLE) ? 0 : _countof(Extensions) - 1);
-    for (; i < _countof(Extensions); ++i)
-    {
-        /* Ignore shell links ".lnk" if needed */
-        if ((fFlags & PRF_DONTFINDLNK) && (i == LNK_EXT_INDEX))
-            continue;
-
-        Success = (SearchPathW(NULL, pszPath, Extensions[i],
-                               _countof(szPath), szPath, NULL) != 0);
-        if (!Success)
-        {
-            ERR("SearchPathW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
-        }
-        else
-        {
-            ERR("SearchPathW(pszPath = '%S', szPath = '%S') succeeded\n", pszPath, szPath);
-            break;
-        }
-    }
-
-    if (!Success)
-    {
-        ERR("SearchPathW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
-
-        /* We failed, try with PathFindOnPath, as explained by MSDN */
-        // Success = PathFindOnPathW(pszPath, dirs);
-        StringCchCopyW(szPath, _countof(szPath), pszPath);
-        Success = PathFindOnPathW(szPath, dirs);
-        if (!Success)
-        {
-            ERR("PathFindOnPathW(pszPath = '%S') failed\n", pszPath);
-
-            /* We failed again, fall back to building a possible non-existing path */
-            if (!GetFullPathNameW(pszPath, _countof(szPath), szPath, &fname))
-            {
-                ERR("GetFullPathNameW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
-                return FALSE;
-            }
-
-            Success = PathFileExistsW(szPath);
-            if (!Success)
-                ERR("PathFileExistsW(szPath = '%S') failed. Error code: %lu\n", szPath, GetLastError());
-
-            /******************************************************/
-            /* Question: Why this line is needed only for files?? */
-            if (fname && (_wcsicmp(pszPath, fname) == 0))
-                *szPath = L'\0';
-            /******************************************************/
-        }
-        else
-        {
-            ERR("PathFindOnPathW(pszPath = '%S' ==> '%S') succeeded\n", pszPath, szPath);
-        }
-    }
-
-    /* Copy back the results to the caller */
-    StringCchCopyW(pszPath, MAX_PATH, szPath);
-
-    /*
-     * Since the called functions always checked whether the file path existed,
-     * we do not need to redo a final check: we can use instead the cached
-     * result in 'Success'.
-     */
-    return ((fFlags & PRF_VERIFYEXISTS) ? Success : TRUE);
-#endif
-}
-
 HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
 {
     HRESULT hr = S_OK;
@@ -2309,14 +2257,21 @@ HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
             /* This failed, try to resolve the path, then create a simple PIDL */
 
             StringCchCopyW(szPath, _countof(szPath), pszFile);
-            // FIXME: Because PathResolve is unimplemented, we use our hackish implementation!
-            HACKISH_PathResolve(szPath, NULL, PRF_TRYPROGRAMEXTENSIONS);
+            PathResolveW(szPath, NULL, PRF_TRYPROGRAMEXTENSIONS);
 
-            pidlNew = SHSimpleIDListFromPathW(szPath);
-            /******************************************************/
-            /* Question: Why this line is needed only for files?? */
-            hr = (*szPath ? S_OK : E_INVALIDARG); // S_FALSE
-            /******************************************************/
+            if (PathIsFileSpecW(szPath))
+            {
+                hr = E_INVALIDARG;
+                szPath[0] = 0;
+            }
+            else
+            {
+                hr = S_OK;
+                pidlNew = SHSimpleIDListFromPathW(szPath);
+                // NOTE: Don't make it failed here even if pidlNew was NULL.
+                // We don't fail on purpose even if SHSimpleIDListFromPathW returns NULL.
+                // This behaviour has been verified with tests.
+            }
         }
     }
     // else if (!pidl && !pszFile) { pidlNew = NULL; hr = S_OK; }
@@ -2535,14 +2490,11 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetFlags(DWORD *pdwFlags)
 
 HRESULT STDMETHODCALLTYPE CShellLink::SetFlags(DWORD dwFlags)
 {
-#if 0 // FIXME!
+    if (m_Header.dwFlags == dwFlags)
+        return S_FALSE;
     m_Header.dwFlags = dwFlags;
     m_bDirty = TRUE;
     return S_OK;
-#else
-    FIXME("\n");
-    return E_NOTIMPL;
-#endif
 }
 
 /**************************************************************************
@@ -2623,13 +2575,12 @@ HRESULT STDMETHODCALLTYPE CShellLink::QueryContextMenu(HMENU hMenu, UINT indexMe
     if (!InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii))
         return E_FAIL;
 
-    UNREFERENCED_PARAMETER(indexMenu);
-
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
 }
 
 HRESULT CShellLink::DoOpenFileLocation()
 {
+    // TODO: SHOpenFolderAndSelectItems
     WCHAR szParams[MAX_PATH + 64];
     StringCbPrintfW(szParams, sizeof(szParams), L"/select,%s", m_sPath);
 
@@ -2656,10 +2607,10 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     // as the parent window handle... ?
     /* FIXME: get using interface set from IObjectWithSite?? */
     // NOTE: We might need an extended version of Resolve that provides us with paths...
-    HRESULT hr = Resolve(lpici->hwnd, 0);
+    HRESULT hr = Resolve(lpici->hwnd, (lpici->fMask & CMIC_MASK_FLAG_NO_UI) ? SLR_NO_UI : 0);
     if (FAILED(hr))
     {
-        TRACE("failed to resolve component with error 0x%08x", hr);
+        TRACE("failed to resolve component error 0x%08x\n", hr);
         return hr;
     }
 
@@ -2679,61 +2630,67 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 
 HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 {
-    HRESULT hr;
-    LPWSTR args = NULL;
-    LPWSTR path = strdupW(m_sPath);
+    LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
+    const BOOL unicode = IsUnicode(*lpici);
 
-    if ( lpici->cbSize == sizeof(CMINVOKECOMMANDINFOEX) &&
-        (lpici->fMask & CMIC_MASK_UNICODE) )
+    CStringW args;
+    if (m_sArgs)
+        args = m_sArgs;
+
+    if (unicode)
     {
-        LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
-        SIZE_T len = 2;
-
-        if (m_sArgs)
-            len += wcslen(m_sArgs);
-        if (iciex->lpParametersW)
-            len += wcslen(iciex->lpParametersW);
-
-        args = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        *args = 0;
-        if (m_sArgs)
-            wcscat(args, m_sArgs);
-        if (iciex->lpParametersW)
+        if (!StrIsNullOrEmpty(iciex->lpParametersW))
         {
-            wcscat(args, L" ");
-            wcscat(args, iciex->lpParametersW);
+            args += L' ';
+            args += iciex->lpParametersW;
         }
     }
-    else if (m_sArgs != NULL)
+    else
     {
-        args = strdupW(m_sArgs);
+        CComHeapPtr<WCHAR> pszParams;
+        if (!StrIsNullOrEmpty(lpici->lpParameters) && __SHCloneStrAtoW(&pszParams, lpici->lpParameters))
+        {
+            args += L' ';
+            args += pszParams;
+        }
     }
 
-    SHELLEXECUTEINFOW sei;
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
+    WCHAR dir[MAX_PATH];
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
+    sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE | SEE_MASK_DOENVSUBST |
                (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
-    sei.lpFile = path;
+    sei.lpDirectory = m_sWorkDir;
+    if (m_pPidl)
+    {
+        sei.lpIDList = m_pPidl;
+        sei.fMask |= SEE_MASK_INVOKEIDLIST;
+    }
+    else
+    {
+        sei.lpFile = m_sPath;
+        if (!(m_Header.dwFlags & SLDF_HAS_EXP_SZ))
+        {
+            sei.fMask &= ~SEE_MASK_DOENVSUBST; // The link does not want to expand lpFile
+            if (m_sWorkDir && ExpandEnvironmentStringsW(m_sWorkDir, dir, _countof(dir)) <= _countof(dir))
+                sei.lpDirectory = dir;
+        }
+    }
+    sei.lpParameters = args;
     sei.lpClass = m_sLinkPath;
     sei.nShow = m_Header.nShowCommand;
-    sei.lpDirectory = m_sWorkDir;
-    sei.lpParameters = args;
-    sei.lpVerb = L"open";
+    if (lpici->nShow != SW_SHOWNORMAL && lpici->nShow != SW_SHOW)
+        sei.nShow = lpici->nShow; // Allow invoker to override .lnk show mode
 
-    // HACK for ShellExecuteExW
-    if (m_sPath && wcsstr(m_sPath, L".cpl"))
-        sei.lpVerb = L"cplopen";
-
-    if (ShellExecuteExW(&sei))
-        hr = S_OK;
-    else
-        hr = E_FAIL;
-
-    HeapFree(GetProcessHeap(), 0, args);
-    HeapFree(GetProcessHeap(), 0, path);
-
-    return hr;
+    // Use the invoker specified working directory if the link did not specify one
+    if (StrIsNullOrEmpty(sei.lpDirectory) || !PathEnvSubstIsDirectory(sei.lpDirectory))
+    {
+        LPCSTR pszDirA = lpici->lpDirectory;
+        if (unicode && !StrIsNullOrEmpty(iciex->lpDirectoryW))
+            sei.lpDirectory = iciex->lpDirectoryW;
+        else if (pszDirA && SHAnsiToUnicode(pszDirA, dir, _countof(dir)))
+            sei.lpDirectory = dir;
+    }
+    return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::GetCommandString(UINT_PTR idCmd, UINT uType, UINT* pwReserved, LPSTR pszName, UINT cchMax)
@@ -2780,54 +2737,44 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
     return FALSE;
 }
 
-/**************************************************************************
-* SH_GetTargetTypeByPath
-*
-* Function to get target type by passing full path to it
-*/
-LPWSTR SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath)
+static void GetTypeDescriptionByPath(PCWSTR pszFullPath, DWORD fAttributes, PWSTR szBuf, UINT cchBuf)
 {
-    LPCWSTR pwszExt;
-    static WCHAR wszBuf[MAX_PATH];
+    if (fAttributes == INVALID_FILE_ATTRIBUTES && !PathFileExistsAndAttributesW(pszFullPath, &fAttributes))
+        fAttributes = 0;
 
-    /* Get file information */
     SHFILEINFOW fi;
-    if (!SHGetFileInfoW(lpcwFullPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
+    if (!SHGetFileInfoW(pszFullPath, fAttributes, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
     {
-        ERR("SHGetFileInfoW failed for %ls (%lu)\n", lpcwFullPath, GetLastError());
-        fi.szTypeName[0] = L'\0';
-        fi.hIcon = NULL;
+        ERR("SHGetFileInfoW failed for %ls (%lu)\n", pszFullPath, GetLastError());
+        fi.szTypeName[0] = UNICODE_NULL;
     }
 
-    pwszExt = PathFindExtensionW(lpcwFullPath);
+    BOOL fFolder = (fAttributes & FILE_ATTRIBUTE_DIRECTORY);
+    LPCWSTR pwszExt = fFolder ? L"" : PathFindExtensionW(pszFullPath);
     if (pwszExt[0])
     {
         if (!fi.szTypeName[0])
-        {
-            /* The file type is unknown, so default to string "FileExtension File" */
-            size_t cchRemaining = 0;
-            LPWSTR pwszEnd = NULL;
-
-            StringCchPrintfExW(wszBuf, _countof(wszBuf), &pwszEnd, &cchRemaining, 0, L"%s ", pwszExt + 1);
-        }
+            StringCchPrintfW(szBuf, cchBuf, L"%s", pwszExt + 1);
         else
-        {
-            /* Update file type */
-            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s (%s)", fi.szTypeName, pwszExt);
-        }
+            StringCchPrintfW(szBuf, cchBuf, L"%s (%s)", fi.szTypeName, pwszExt);
     }
-
-    return wszBuf;
+    else
+    {
+        StringCchPrintfW(szBuf, cchBuf, L"%s", fi.szTypeName);
+    }
 }
 
 BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
 {
     TRACE("CShellLink::OnInitDialog(hwnd %p hwndFocus %p lParam %p)\n", hwndDlg, hwndFocus, lParam);
 
+    Resolve(0, SLR_NO_UI | SLR_NOUPDATE | SLR_NOSEARCH | SLR_NOTRACK);
+
     TRACE("m_sArgs: %S sComponent: %S m_sDescription: %S m_sIcoPath: %S m_sPath: %S m_sPathRel: %S sProduct: %S m_sWorkDir: %S\n", m_sArgs, sComponent, m_sDescription,
           m_sIcoPath, m_sPath, m_sPathRel, sProduct, m_sWorkDir);
 
     m_bInInit = TRUE;
+    UINT darwin = m_Header.dwFlags & (SLDF_HAS_DARWINID);
 
     /* Get file information */
     // FIXME! FIXME! Shouldn't we use m_sIcoPath, m_Header.nIconIndex instead???
@@ -2849,9 +2796,17 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     else
         ERR("ExtractIconW failed %ls %u\n", m_sIcoPath, m_Header.nIconIndex);
 
+    if (!SHGetFileInfoW(m_sLinkPath, 0, &fi, sizeof(fi), SHGFI_DISPLAYNAME))
+        fi.szDisplayName[0] = UNICODE_NULL;
+    SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TEXT, fi.szDisplayName);
+
     /* Target type */
     if (m_sPath)
-        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, SH_GetTargetTypeByPath(m_sPath));
+    {
+        WCHAR buf[MAX_PATH];
+        GetTypeDescriptionByPath(m_sPath, m_Header.dwFileAttributes, buf, _countof(buf));
+        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, buf);
+    }
 
     /* Target location */
     if (m_sPath)
@@ -2865,7 +2820,8 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     /* Target path */
     if (m_sPath)
     {
-        WCHAR newpath[2*MAX_PATH] = L"\0";
+        WCHAR newpath[MAX_PATH * 2];
+        newpath[0] = UNICODE_NULL;
         if (wcschr(m_sPath, ' '))
             StringCchPrintfExW(newpath, _countof(newpath), NULL, NULL, 0, L"\"%ls\"", m_sPath);
         else
@@ -2887,6 +2843,82 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     if (m_sDescription)
         SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_COMMENT_EDIT, m_sDescription);
 
+    /* Hot key */
+    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_KEY_HOTKEY, HKM_SETHOTKEY, m_Header.wHotKey, 0);
+
+    /* Run */
+    const WORD runstrings[] = { IDS_SHORTCUT_RUN_NORMAL, IDS_SHORTCUT_RUN_MIN, IDS_SHORTCUT_RUN_MAX };
+    const DWORD runshowcmd[] = { SW_SHOWNORMAL, SW_SHOWMINNOACTIVE, SW_SHOWMAXIMIZED };
+    HWND hRunCombo = GetDlgItem(hwndDlg, IDC_SHORTCUT_RUN_COMBO);
+    for (UINT i = 0; i < _countof(runstrings); ++i)
+    {
+        WCHAR buf[MAX_PATH];
+        if (!LoadStringW(shell32_hInstance, runstrings[i], buf, _countof(buf)))
+            break;
+
+        int index = SendMessageW(hRunCombo, CB_ADDSTRING, 0, (LPARAM)buf);
+        if (index < 0)
+            continue;
+        SendMessageW(hRunCombo, CB_SETITEMDATA, index, runshowcmd[i]);
+        if (!i || m_Header.nShowCommand == runshowcmd[i])
+            SendMessageW(hRunCombo, CB_SETCURSEL, index, 0);
+    }
+
+    BOOL disablecontrols = FALSE;
+    if (darwin)
+    {
+        disablecontrols = TRUE;
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_FIND), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_CHANGE_ICON), FALSE);
+    }
+    else
+    {
+        WCHAR path[MAX_PATH * 2];
+        path[0] = UNICODE_NULL;
+        HRESULT hr = GetPath(path, _countof(path), NULL, SLGP_RAWPATH);
+        if (FAILED(hr))
+            hr = GetPath(path, _countof(path), NULL, 0);
+#if DBG
+        if (GetKeyState(VK_CONTROL) < 0) // Allow inspection of PIDL parsing path
+        {
+            hr = S_OK;
+            path[0] = UNICODE_NULL;
+        }
+#endif
+        if (hr != S_OK)
+        {
+            disablecontrols = TRUE;
+            LPITEMIDLIST pidl;
+            if (GetIDList(&pidl) == S_OK)
+            {
+                path[0] = UNICODE_NULL;
+                SHGetNameAndFlagsW(pidl, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, path, _countof(path), NULL);
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, path);
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TARGET_TEXT, path);
+                ILRemoveLastID(pidl);
+                path[0] = UNICODE_NULL;
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_START_IN_EDIT, path);
+                SHGetNameAndFlagsW(pidl, SHGDN_NORMAL, path, _countof(path), NULL);
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION_EDIT, path);
+                ILFree(pidl);
+            }
+            EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_ADVANCED), FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_START_IN_EDIT), FALSE);
+        }
+        else
+        {
+            ASSERT(FAILED(hr) || !(path[0] == ':' && path[1] == ':' && path[2] == '{'));
+        }
+    }
+
+    HWND hWndTarget = GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT);
+    EnableWindow(hWndTarget, !disablecontrols);
+    PostMessage(hWndTarget, EM_SETSEL, 0, -1); // Fix caret bug when first opening the tab [CORE-20016]
+
+    /* auto-completion */
+    SHAutoComplete(hWndTarget, SHACF_DEFAULT);
+    SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_START_IN_EDIT), SHACF_DEFAULT);
+
     m_bInInit = FALSE;
 
     return TRUE;
@@ -2898,10 +2930,6 @@ void CShellLink::OnCommand(HWND hwndDlg, int id, HWND hwndCtl, UINT codeNotify)
     {
         case IDC_SHORTCUT_FIND:
             SHOpenFolderAndSelectItems(m_pPidl, 0, NULL, 0);
-            ///
-            /// FIXME
-            /// open target directory
-            ///
             return;
 
         case IDC_SHORTCUT_CHANGE_ICON:
@@ -2946,7 +2974,7 @@ void CShellLink::OnCommand(HWND hwndDlg, int id, HWND hwndCtl, UINT codeNotify)
             return;
         }
     }
-    if (codeNotify == EN_CHANGE)
+    if (codeNotify == EN_CHANGE || codeNotify == CBN_SELCHANGE)
     {
         if (!m_bInInit)
             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -2980,7 +3008,7 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
             PathUnquoteSpacesW(unquoted);
 
         WCHAR *pwszExt = PathFindExtensionW(unquoted);
-        if (!wcsicmp(pwszExt, L".lnk"))
+        if (!_wcsicmp(pwszExt, L".lnk"))
         {
             // FIXME load localized error msg
             MessageBoxW(hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR);
@@ -3003,6 +3031,14 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
             SetArguments(L"\0");
 
         HeapFree(GetProcessHeap(), 0, unquoted);
+
+        m_Header.wHotKey = (WORD)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_KEY_HOTKEY, HKM_GETHOTKEY, 0, 0);
+
+        int index = (int)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETCURSEL, 0, 0);
+        if (index != CB_ERR)
+        {
+            m_Header.nShowCommand = (UINT)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETITEMDATA, index, 0);
+        }
 
         TRACE("This %p m_sLinkPath %S\n", this, m_sLinkPath);
         Save(m_sLinkPath, TRUE);
@@ -3069,17 +3105,15 @@ CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 HRESULT STDMETHODCALLTYPE CShellLink::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPage(IDD_SHORTCUT_PROPERTIES, SH_ShellLinkDlgProc, (LPARAM)this, NULL);
-    if (hPage == NULL)
-    {
-        ERR("failed to create property sheet page\n");
-        return E_FAIL;
-    }
-
-    if (!pfnAddPage(hPage, lParam))
-        return E_FAIL;
-
-    return S_OK;
+    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPageEx(IDD_SHORTCUT_PROPERTIES, SH_ShellLinkDlgProc,
+                                                        (LPARAM)this, NULL, &PropSheetPageLifetimeCallback<CShellLink>);
+    HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    else
+        AddRef(); // For PropSheetPageLifetimeCallback
+    enum { CShellLink_PageIndex_Shortcut = 0 };
+    return 1 + CShellLink_PageIndex_Shortcut; // Make this page the default (one-based)
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam)
@@ -3115,20 +3149,9 @@ HRESULT STDMETHODCALLTYPE CShellLink::DragEnter(IDataObject *pDataObject,
     if (*pdwEffect == DROPEFFECT_NONE)
         return S_OK;
 
-    LPCITEMIDLIST pidlLast;
-    CComPtr<IShellFolder> psf;
-
-    HRESULT hr = SHBindToParent(m_pPidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
-
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(NULL, m_pPidl, IID_PPV_ARG(IDropTarget, &m_DropTarget));
     if (SUCCEEDED(hr))
-    {
-        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IDropTarget, &m_DropTarget));
-
-        if (SUCCEEDED(hr))
-            hr = m_DropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
-        else
-            *pdwEffect = DROPEFFECT_NONE;
-    }
+        hr = m_DropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
     else
         *pdwEffect = DROPEFFECT_NONE;
 
@@ -3199,11 +3222,21 @@ HICON CShellLink::CreateShortcutIcon(LPCWSTR wszIconPath, INT IconIndex)
 {
     const INT cx = GetSystemMetrics(SM_CXICON), cy = GetSystemMetrics(SM_CYICON);
     const COLORREF crMask = GetSysColor(COLOR_3DFACE);
+    WCHAR wszLnkIcon[MAX_PATH];
+    int lnk_idx;
     HDC hDC;
     HIMAGELIST himl = ImageList_Create(cx, cy, ILC_COLOR32 | ILC_MASK, 1, 1);
-    HICON hIcon = NULL, hNewIcon = NULL;
-    HICON hShortcut = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT),
-                                        IMAGE_ICON, cx, cy, 0);
+    HICON hIcon = NULL, hNewIcon = NULL, hShortcut;
+
+    if (HLM_GetIconW(IDI_SHELL_SHORTCUT - 1, wszLnkIcon, _countof(wszLnkIcon), &lnk_idx))
+    {
+        ::ExtractIconExW(wszLnkIcon, lnk_idx, &hShortcut, NULL, 1);
+    }
+    else
+    {
+        hShortcut = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT),
+                                      IMAGE_ICON, cx, cy, 0);
+    }
 
     ::ExtractIconExW(wszIconPath, IconIndex, &hIcon, NULL, 1);
     if (!hIcon || !hShortcut || !himl)

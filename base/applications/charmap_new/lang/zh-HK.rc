@@ -1,0 +1,30 @@
+/*
+ * PROJECT:      ReactOS Character Map
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Chinese (Hong Kong) resource file
+ * TRANSLATORS:  Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:   Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDD_CHARMAP DIALOGEX 6, 6, 290, 224
+FONT 9, "新細明體", 0, 0
+STYLE WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX
+CAPTION "ReactOS 字元對應表"
+BEGIN
+    LTEXT "字體：", IDC_STATIC, 6, 7, 24, 9
+    COMBOBOX IDC_FONTCOMBO, 28, 5, 150, 210, WS_CHILD | WS_VISIBLE |
+            WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+    LTEXT "待複製字元：", IDC_STATIC, 6, 188, 66, 9
+    CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
+    DEFPUSHBUTTON "選擇", IDC_SELECT, 194, 186, 44, 13
+    PUSHBUTTON "複製", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ABOUT "關於(&B)..."
+    IDS_TITLE "字元對應表"
+END

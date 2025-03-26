@@ -5659,7 +5659,12 @@ static void test_tiff_color_formats(void)
 
         image = load_image(buf, sizeof(buf), TRUE, FALSE);
         if (!td[i].format)
+#ifdef __REACTOS__
+            ok(!image || (((GetVersion() & 0xFF) < 6) &&
+               (i == 19 || i == 20)),
+#else
             ok(!image,
+#endif
                "%u: (%d,%d,%d) TIFF image loading should have failed\n", i, td[i].photometric, td[i].samples, td[i].bps);
         else
             ok(image != NULL || broken(!image) /* XP */, "%u: failed to load TIFF image data (%d,%d,%d)\n",
@@ -5672,7 +5677,20 @@ static void test_tiff_color_formats(void)
 
         status = GdipGetImagePixelFormat(image, &format);
         expect(Ok, status);
+#ifdef __REACTOS__
+        ok(format == td[i].format || (((GetVersion() & 0xFF) < 6) &&
+           ((i == 0 && format == 0) ||
+            (i == 1 && format == 0) ||
+            (i == 5 && format == 0) ||
+            (i == 6 && format == 0) ||
+            (i == 13 && format == 0) ||
+            (i == 19 && format == PixelFormat32bppARGB) ||
+            (i == 20 && format == PixelFormat32bppARGB) ||
+            (i == 21 && format == PixelFormat32bppARGB) ||
+            (i == 22 && format == PixelFormat32bppARGB))),
+#else
         ok(format == td[i].format,
+#endif
            "%u: expected %#x, got %#x\n", i, td[i].format, format);
 
         GdipDisposeImage(image);

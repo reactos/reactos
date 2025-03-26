@@ -1,17 +1,17 @@
 
 // This file is part of hhpcomp, a free HTML Help Project (*.hhp) compiler.
 // Copyright (C) 2015  Benedikt Freisen
-// 
+//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -56,7 +56,11 @@ int main(int argc, char** argv)
     string absolute_name = replace_backslashes(real_path(argv[1]));
     int prefixlen = absolute_name.find_last_of('/');
     clog << prefixlen << endl;
-    chdir(absolute_name.substr(0, prefixlen).c_str());  // change to the project file's directory
+    if (chdir(absolute_name.substr(0, prefixlen).c_str()) == -1)  // change to the project file's directory
+    {
+        cerr << "chdir: working directory couldn't be changed" << endl;
+        exit(0);
+    }
     hhp_reader project_file(absolute_name);
 
     struct chmcFile chm;

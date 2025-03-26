@@ -84,7 +84,7 @@ static BOOL SdbpMatchFileAttributes(PDB pdb, TAGID matching_file, PATTRINFO attr
                     break;
                 case TAG_TYPE_STRINGREF:
                     lpval = SdbGetStringTagPtr(pdb, child);
-                    if (!lpval || wcsicmp(attr->lpattr, lpval))
+                    if (!lpval || _wcsicmp(attr->lpattr, lpval))
                         return FALSE;
                     break;
                 case TAG_TYPE_QWORD:
@@ -474,7 +474,7 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
     RtlInitBuffer(&DosApplicationName.ByteBuffer, (PUCHAR)DosPathBuffer, sizeof(DosPathBuffer));
     if (!NT_SUCCESS(RtlEnsureBufferSize(RTL_SKIP_BUFFER_COPY, &DosApplicationName.ByteBuffer, DosApplicationName.String.MaximumLength)))
     {
-        SHIM_ERR("Failed to convert allocate buffer.");
+        SHIM_ERR("Failed to convert allocate buffer.\n");
         goto Cleanup;
     }
     /* Update the internal buffer to contain the string */
@@ -485,7 +485,7 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
 
     if (!NT_SUCCESS(RtlNtPathNameToDosPathName(0, &DosApplicationName, &PathType, NULL)))
     {
-        SHIM_ERR("Failed to convert %S to DOS Path.", path);
+        SHIM_ERR("Failed to convert %S to DOS Path.\n", path);
         goto Cleanup;
     }
 
@@ -494,7 +494,7 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
     file_name = wcsrchr(DosApplicationName.String.Buffer, '\\');
     if (!file_name)
     {
-        SHIM_ERR("Failed to find Exe name in %wZ.", &DosApplicationName.String);
+        SHIM_ERR("Failed to find Exe name in %wZ.\n", &DosApplicationName.String);
         goto Cleanup;
     }
 
@@ -519,7 +519,7 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
         name = SdbFindFirstTag(pdb, iter, TAG_NAME);
         /* If this is a malformed DB, (no TAG_NAME), we should not crash. */
         foundName = SdbGetStringTagPtr(pdb, name);
-        if (foundName && !wcsicmp(foundName, file_name))
+        if (foundName && !_wcsicmp(foundName, file_name))
         {
             /* Get information about executable required to match it with database entry */
             if (!attribs)

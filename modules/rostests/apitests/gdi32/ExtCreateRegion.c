@@ -31,7 +31,7 @@ InitXFORM(
 void Test_ExtCreateRegion_Parameters()
 {
     hrgn = ExtCreateRegion(NULL, 1, pRgnData);
-    ok(hrgn != NULL, "ExtCreateRegion failed \n");
+    ok(hrgn != NULL, "ExtCreateRegion failed\n");
 }
 #endif // 0
 

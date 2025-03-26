@@ -59,6 +59,7 @@ static const addon_info_t addons_info[] = {
 static const addon_info_t *addon;
 
 static HWND install_dialog = NULL;
+static CRITICAL_SECTION csLock;
 static IBinding *download_binding = NULL;
 
 static WCHAR GeckoUrl[] = L"https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi";
@@ -260,8 +261,12 @@ static HRESULT WINAPI InstallCallback_OnStartBinding(IBindStatusCallback *iface,
         DWORD dwReserved, IBinding *pib)
 {
     set_status(IDS_DOWNLOADING);
+
     IBinding_AddRef(pib);
+
+    EnterCriticalSection(&csLock);
     download_binding = pib;
+    LeaveCriticalSection(&csLock);
 
     return S_OK;
 }
@@ -294,10 +299,12 @@ static HRESULT WINAPI InstallCallback_OnProgress(IBindStatusCallback *iface, ULO
 static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
         HRESULT hresult, LPCWSTR szError)
 {
+    EnterCriticalSection(&csLock);
     if(download_binding) {
         IBinding_Release(download_binding);
         download_binding = NULL;
     }
+    LeaveCriticalSection(&csLock);
 
     if(FAILED(hresult)) {
         if(hresult == E_ABORT)
@@ -314,9 +321,7 @@ static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
 static HRESULT WINAPI InstallCallback_GetBindInfo(IBindStatusCallback *iface,
         DWORD* grfBINDF, BINDINFO* pbindinfo)
 {
-    /* FIXME */
-    *grfBINDF = 0;
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI InstallCallback_OnDataAvailable(IBindStatusCallback *iface, DWORD grfBSCF,
@@ -353,7 +358,9 @@ static DWORD WINAPI download_proc(PVOID arg)
 {
     WCHAR message[256];
     WCHAR tmp_dir[MAX_PATH], tmp_file[MAX_PATH];
-    HRESULT hres;
+    HRESULT hres, hrCoInit;
+
+    hrCoInit = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     GetTempPathW(sizeof(tmp_dir)/sizeof(WCHAR), tmp_dir);
     GetTempFileNameW(tmp_dir, NULL, 0, tmp_file);
@@ -383,14 +390,25 @@ static DWORD WINAPI download_proc(PVOID arg)
 
     DeleteFileW(tmp_file);
     PostMessageW(install_dialog, WM_COMMAND, IDCANCEL, 0);
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
+
     return 0;
 }
 
 static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    HWND hwndProgress, hwndInstallButton;
     switch(msg) {
     case WM_INITDIALOG:
-        ShowWindow(GetDlgItem(hwnd, ID_DWL_PROGRESS), SW_HIDE);
+        hwndProgress = GetDlgItem(hwnd, ID_DWL_PROGRESS);
+
+        /* CORE-5737: Move focus before SW_HIDE */
+        if (hwndProgress == GetFocus())
+            SendMessageW(hwnd, WM_NEXTDLGCTL, 0, FALSE);
+
+        ShowWindow(hwndProgress, SW_HIDE);
         install_dialog = hwnd;
         return TRUE;
 
@@ -400,17 +418,27 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     case WM_COMMAND:
         switch(wParam) {
         case IDCANCEL:
+            EnterCriticalSection(&csLock);
             if(download_binding) {
                 IBinding_Abort(download_binding);
             }
             else {
                 EndDialog(hwnd, 0);
             }
+            LeaveCriticalSection(&csLock);
             return FALSE;
 
         case ID_DWL_INSTALL:
             ShowWindow(GetDlgItem(hwnd, ID_DWL_PROGRESS), SW_SHOW);
-            EnableWindow(GetDlgItem(hwnd, ID_DWL_INSTALL), 0);
+
+            /* CORE-17550: Never leave focus on a disabled control (Old/New/Thing p.228) */
+            hwndInstallButton = GetDlgItem(hwnd, ID_DWL_INSTALL);
+            if (hwndInstallButton == GetFocus())
+            {
+                SendMessageW(hwnd, WM_NEXTDLGCTL, 0, FALSE);
+            }
+            EnableWindow(hwndInstallButton, FALSE);
+
             CloseHandle( CreateThread(NULL, 0, download_proc, NULL, 0, NULL));
             return FALSE;
         }
@@ -427,6 +455,8 @@ BOOL install_addon(addon_t addon_type, HWND hwnd_parent)
 
     addon = addons_info + addon_type;
 
+    InitializeCriticalSection(&csLock);
+
     /*
      * Try to find addon .msi file in following order:
      * - directory stored in $dir_config_key value of HKCU/Wine/Software/$config_key key
@@ -434,6 +464,8 @@ BOOL install_addon(addon_t addon_type, HWND hwnd_parent)
      */
     if (install_from_registered_dir() == INSTALL_NEXT)
         DialogBoxW(hApplet, addon->dialog_template, hwnd_parent, installer_proc);
+
+    DeleteCriticalSection(&csLock);
 
     return TRUE;
 }

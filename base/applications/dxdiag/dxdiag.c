@@ -18,7 +18,7 @@ HWND hTabCtrlWnd;
 // http://www.catch22.net/software/winspy
 // Copyright (c) 2002 by J Brown
 //
- 
+
 //
 //	Copied from uxtheme.h
 //  If you have this new header, then delete these and
@@ -29,7 +29,7 @@ HWND hTabCtrlWnd;
 #define ETDT_USETABTEXTURE  0x00000004
 #define ETDT_ENABLETAB      (ETDT_ENABLE  | ETDT_USETABTEXTURE)
 
-// 
+//
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 
 //
@@ -44,7 +44,7 @@ BOOL EnableDialogTheme(HWND hwnd)
 
     if(hUXTheme)
     {
-        fnEnableThemeDialogTexture = 
+        fnEnableThemeDialogTexture =
             (ETDTProc)GetProcAddress(hUXTheme, "EnableThemeDialogTexture");
 
         if(fnEnableThemeDialogTexture)
@@ -249,9 +249,9 @@ DxDiagWndProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
                CurSel++;
 
                /* enable/disable next button */
-               EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NEXT), 
+               EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NEXT),
                             (CurSel != TabCtrl_GetItemCount(hTabCtrlWnd) - 1));
-               
+
                /* switch to next tab */
                SendMessageW(hTabCtrlWnd, TCM_SETCURSEL, CurSel, 0L);
 
@@ -280,7 +280,7 @@ DxDiagWndProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
                INT CurSel = TabCtrl_GetCurSel(hTabCtrlWnd);
 
                /* enable/disable next button */
-               EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NEXT), 
+               EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NEXT),
                             (CurSel != TabCtrl_GetItemCount(hTabCtrlWnd) - 1));
 
                 TabCtrl_OnSelChange(pContext);
@@ -310,8 +310,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     InitCommonControlsEx(&InitControls);
 
     hInst = hInstance;
- 
+
     DialogBox(hInst, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL, DxDiagWndProc);
-  
+
     return 0;
 }

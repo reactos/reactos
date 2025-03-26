@@ -1,3 +1,14 @@
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2005 Kevin Schnabel (FooDerGrosse) <kevin_schnabel@gmx.de>
+ *              Copyright 2008 Fabian Maurer <dark_shadow@gmx.at>
+ *              Copyright 2008 Matthias Kupfer <mkupfer@reactos.org>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2014 Zehnvor <sixlivezehn@googlemail.com>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -22,7 +33,7 @@ BEGIN
     STRING_UNKNOW_ARG "Unbekanntes Argument: %s\n"
     STRING_DRIVE_PARM "Benötigter Laufwerksparameter fehlt.\n\n"
     STRING_ERROR_DRIVE_TYPE "Konnte den Laufwerkstyp nicht erhalten"
-    STRING_INSERT_DISK "Legen Sie eine neue Diskette in Laufwerk %C: ein\nund betätigen Sie die Eingabetaste, wenn das Laufwerk\nbereit ist."
+    STRING_INSERT_DISK "Legen Sie eine neue Diskette in Laufwerk %C: ein\nund drücken Sie ENTER, wenn das Laufwerk bereit ist."
     STRING_NO_VOLUME "Kann Medium nicht abfragen"
     STRING_NO_VOLUME_SIZE "Kann Mediengröße nicht abfragen"
     STRING_FILESYSTEM "Der Typ des Dateisystems ist %s.\n"
@@ -35,7 +46,7 @@ BEGIN
     STRING_CREATE_FSYS "Erzeuge Dateisystem-Strukturen.\n"
     STRING_FMT_COMPLETE "Formatierung abgeschlossen.\n"
     STRING_VOL_COMPRESS "Medium unterstützt keine Kompression.\n"
-    STRING_ENTER_LABEL "Datenträgerbezeichnung (11 Zeichen, Eingabetaste für keine)? "
+    STRING_ENTER_LABEL "Datenträgerbezeichnung (11 Zeichen, ENTER für keine)? "
     STRING_NO_LABEL "Konnte Datenträger nicht benennen"
     STRING_FREE_SPACE "\n%I64d Bytes Speicherkapazität.\n%I64d Bytes freier Speicher.\n"
     STRING_SERIAL_NUMBER "\nDatenträger-Seriennummer ist %04X-%04X\n"

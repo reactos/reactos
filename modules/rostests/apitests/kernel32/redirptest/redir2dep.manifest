@@ -5,9 +5,9 @@
               <assemblyIdentity
                   type="win32"
                   name="redirtest2"
-                  version="0.2.2.2" 
+                  version="0.2.2.2"
                   processorArchitecture="x86"
                   />
           </dependentAssembly>
-  </dependency>  
+  </dependency>
 </assembly>

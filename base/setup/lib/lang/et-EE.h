@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS etEELayouts[] =
 {
-    { L"0425", L"00000425" },
-    { NULL, NULL }
+    { 0x0425, 0x00000425 },
+    { 0, 0 }
 };

@@ -261,7 +261,7 @@ Ext2OpenDevice( PEXT2_FILESYS    Ext2Sys,
 NTSTATUS
 Ext2CloseDevice( PEXT2_FILESYS  Ext2Sys);
 
-NTSTATUS 
+NTSTATUS
 Ext2ReadDisk( PEXT2_FILESYS  Ext2Sys,
               ULONGLONG      Offset,
               ULONG          Length,

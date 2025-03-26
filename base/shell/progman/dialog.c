@@ -69,7 +69,7 @@ DIALOG_Browse(HWND hWnd, LPCWSTR lpszzFilter, LPWSTR lpstrFile, INT nMaxFile)
     openfilename.lpstrFile         = lpstrFile;
     openfilename.nMaxFile          = nMaxFile;
     openfilename.lpstrInitialDir   = szDir;
-    openfilename.Flags             = 0;
+    openfilename.Flags             = OFN_EXPLORER;
     openfilename.lpstrDefExt       = L"exe";
     openfilename.lpstrCustomFilter = NULL;
     openfilename.nMaxCustFilter    = 0;

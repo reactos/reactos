@@ -47,8 +47,11 @@
  * Data structure
  */
 
-
+#ifdef __REACTOS__
+typedef struct FileOpenDlgInfos
+#else
 typedef struct
+#endif
 {
     LPOPENFILENAMEW ofnInfos;
     BOOL unicode;
@@ -94,6 +97,11 @@ typedef struct
 
     BOOL ole_initialized;
     LPITEMIDLIST places[5];
+#ifdef __REACTOS__
+    LPVOID pvCWD; /* ICurrentWorkingDirectory */
+    LPVOID pvDropDown; /* IAutoCompleteDropDown */
+    LPVOID pvACList; /* IACList2 */
+#endif
 } FileOpenDlgInfos;
 
 /***********************************************************************

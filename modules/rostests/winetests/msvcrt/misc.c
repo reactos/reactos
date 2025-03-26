@@ -20,30 +20,12 @@
 
 #include "wine/test.h"
 #include <errno.h>
+#include <fcntl.h>
+#include <io.h>
 #include <stdio.h>
 #include <math.h>
-#include "msvcrt.h"
 #include <process.h>
-
-static inline float __port_infinity(void)
-{
-    static const unsigned __inf_bytes = 0x7f800000;
-    return *(const float *)&__inf_bytes;
-}
-#ifdef __REACTOS__
-#undef INFINITY
-#endif
-#define INFINITY __port_infinity()
-
-static inline float __port_nan(void)
-{
-    static const unsigned __nan_bytes = 0x7fc00000;
-    return *(const float *)&__nan_bytes;
-}
-#ifdef __REACTOS__
-#undef NAN
-#endif
-#define NAN __port_nan()
+#include <versionhelpers.h>
 
 static inline BOOL almost_equal(double d1, double d2) {
     if(d1-d2>-1e-30 && d1-d2<1e-30)
@@ -51,16 +33,19 @@ static inline BOOL almost_equal(double d1, double d2) {
     return FALSE;
 }
 
+/* MS' "long double" is an 80 bit FP that takes 12 bytes*/
+struct uld { ULONG lo, hi, exp; };
+
 static int (__cdecl *prand_s)(unsigned int *);
-static int (__cdecl *pI10_OUTPUT)(long double, int, int, void*);
-static int (__cdecl *pstrerror_s)(char *, MSVCRT_size_t, int);
+static int (__cdecl *pI10_OUTPUT)(struct uld, int, int, void*);
+static int (__cdecl *pstrerror_s)(char *, size_t, int);
 static int (__cdecl *p_get_doserrno)(int *);
 static int (__cdecl *p_get_errno)(int *);
 static int (__cdecl *p_set_doserrno)(int);
 static int (__cdecl *p_set_errno)(int);
 static void (__cdecl *p__invalid_parameter)(const wchar_t*,
         const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
-static void (__cdecl *p_qsort_s)(void*, MSVCRT_size_t, MSVCRT_size_t,
+static void (__cdecl *p_qsort_s)(void*, size_t, size_t,
         int (__cdecl*)(void*, const void*, const void*), void*);
 static double (__cdecl *p_atan)(double);
 static double (__cdecl *p_exp)(double);
@@ -115,7 +100,7 @@ typedef struct _I10_OUTPUT_data {
 } I10_OUTPUT_data;
 
 typedef struct _I10_OUTPUT_test {
-    long double d;
+    struct uld d;
     int size;
     int flags;
 
@@ -126,63 +111,62 @@ typedef struct _I10_OUTPUT_test {
 
 static const I10_OUTPUT_test I10_OUTPUT_tests[] = {
     /* arg3 = 0 */
-    { 0.0, 10, 0, {0, ' ', 1, "0"}, 1, "" },
-    { 1.0, 10, 0, {1, ' ', 1, "1"}, 1, "000000009" },
-    { -1.0, 10, 0, {1, '-', 1, "1"}, 1, "000000009" },
-    { 1.23, 10, 0, {1, ' ', 3, "123"}, 1, "0000009" },
-    { 1e13, 10, 0, {14, ' ', 1, "1"}, 1, "000000009" },
-    { 1e30, 30, 0, {31, ' ', 21, "100000000000000001988"}, 1, "" },
-    { 1e-13, 10, 0, {-12, ' ', 1, "1"}, 1, "000000000" },
-    { 0.25, 10, 0, {0, ' ', 2, "25"}, 1, "00000000" },
-    { 1.0000001, 10, 0, {1, ' ', 8, "10000001"}, 1, "00" },
+    { { 0x00000000, 0x00000000, 0x0000 /* 0.0 */ }, 10, 0, {0, ' ', 1, "0"}, 1, "" },
+    { { 0x00000000, 0x80000000, 0x3fff /* 1.0 */ }, 10, 0, {1, ' ', 1, "1"}, 1, "000000009" },
+    { { 0x00000000, 0x80000000, 0xbfff /* -1.0 */ }, 10, 0, {1, '-', 1, "1"}, 1, "000000009" },
+    { { 0x0a3d7000, 0x9d70a3d7, 0x3fff /* 1.23 */ }, 10, 0, {1, ' ', 3, "123"}, 1, "0000009" },
+    { { 0x00000000, 0x9184e72a, 0x402a /* 1e13 */ }, 10, 0, {14, ' ', 1, "1"}, 1, "000000009" },
+    { { 0x04675000, 0xc9f2c9cd, 0x4062 /* 1e30 */ }, 30, 0, {31, ' ', 21, "100000000000000001988"}, 1, "" },
+    { { 0x4bb41000, 0xe12e1342, 0x3fd3 /* 1e-13 */ }, 10, 0, {-12, ' ', 1, "1"}, 1, "000000000" },
+    { { 0x00000000, 0x80000000, 0x3ffd /* 0.25 */ }, 10, 0, {0, ' ', 2, "25"}, 1, "00000000" },
+    { { 0xbf94d800, 0x800000d6, 0x3fff /* 1.0000001 */ }, 10, 0, {1, ' ', 8, "10000001"}, 1, "00" },
+    { { 0x00000000, 0x80000000, 0x7fff /* +inf */ }, 10, 0, {1, ' ', 5, "1#INF"}, 0, "" },
+    { { 0x00000000, 0x80000000, 0xffff /* -inf */ }, 10, 0, {1, '-', 5, "1#INF"}, 0, "" },
+    { { 0x00000001, 0x80000000, 0x7fff /* snan */ }, 10, 0, {1, ' ', 6, "1#SNAN"}, 0, "" },
+    { { 0x00000001, 0x80000000, 0xffff /* snan */ }, 10, 0, {1, '-', 6, "1#SNAN"}, 0, "" },
+    { { 0x00000000, 0xc0000000, 0x7fff /* qnan */ }, 10, 0, {1, ' ', 6, "1#QNAN"}, 0, "" },
+    { { 0x00000000, 0x40000000, 0xffff /* qnan */ }, 10, 0, {1, '-', 6, "1#QNAN"}, 0, "" },
     /* arg3 = 1 */
-    { 0.0, 10, 1, {0, ' ', 1, "0"}, 1, "" },
-    { 1.0, 10, 1, {1, ' ', 1, "1"}, 1, "0000000009" },
-    { -1.0, 10, 1, {1, '-', 1, "1"}, 1, "0000000009" },
-    { 1.23, 10, 1, {1, ' ', 3, "123"}, 1, "00000009" },
-    { 1e13, 10, 1, {14, ' ', 1, "1"}, 1, "00000000000000000009" },
-    { 1e30, 30, 1, {31, ' ', 21, "100000000000000001988"}, 1, "" },
-    { 1e-13, 10, 1, {0, ' ', 1, "0"}, 1, "" },
-    { 1e-7, 10, 1, {-6, ' ', 1, "1"}, 1, "09" },
-    { 0.25, 10, 1, {0, ' ', 2, "25"}, 1, "00000000" },
-    { 1.0000001, 10, 1, {1, ' ', 8, "10000001"}, 1, "000" },
+    { { 0x00000000, 0x00000000, 0x0000 /* 0 */ }, 10, 1, {0, ' ', 1, "0"}, 1, "" },
+    { { 0x00000000, 0x80000000, 0x3fff /* 1 */ }, 10, 1, {1, ' ', 1, "1"}, 1, "0000000009" },
+    { { 0x00000000, 0x80000000, 0xbfff /* -1 */ }, 10, 1, {1, '-', 1, "1"}, 1, "0000000009" },
+    { { 0x0a3d7000, 0x9d70a3d7, 0x3fff /* 1.23 */ }, 10, 1, {1, ' ', 3, "123"}, 1, "00000009" },
+    { { 0x00000000, 0x9184e72a, 0x402a /* 1e13 */ }, 10, 1, {14, ' ', 1, "1"}, 1, "00000000000000000009" },
+    { { 0x04675000, 0xc9f2c9cd, 0x4062 /* 1e30 */ }, 30, 1, {31, ' ', 21, "100000000000000001988"}, 1, "" },
+    { { 0x4bb41000, 0xe12e1342, 0x3fd3 /* 1e-13 */ }, 10, 1, {0, ' ', 1, "0"}, 1, "" },
+    { { 0xe57a4000, 0xd6bf94d5, 0x3fe7 /* 1e-7 */ }, 10, 1, {-6, ' ', 1, "1"}, 1, "09" },
+    { { 0x00000000, 0x80000000, 0x3ffd /* 0.25 */ }, 10, 1, {0, ' ', 2, "25"}, 1, "00000000" },
+    { { 0xbf94d800, 0x800000d6, 0x3fff /* 1.0000001 */ }, 10, 1, {1, ' ', 8, "10000001"}, 1, "000" },
+    { { 0x00000000, 0x80000000, 0x7fff /* +inf */ }, 10, 1, {1, ' ', 5, "1#INF"}, 0, "" },
+    { { 0x00000000, 0x80000000, 0xffff /* -inf */ }, 10, 1, {1, '-', 5, "1#INF"}, 0, "" },
+    { { 0x00000001, 0x80000000, 0x7fff /* snan */ }, 10, 1, {1, ' ', 6, "1#SNAN"}, 0, "" },
+    { { 0x00000000, 0xc0000000, 0x7fff /* qnan */ }, 10, 1, {1, ' ', 6, "1#QNAN"}, 0, "" },
+    { { 0x00000000, 0x40000000, 0x7fff /* qnan */ }, 10, 1, {1, ' ', 6, "1#QNAN"}, 0, "" },
     /* too small buffer */
-    { 0.0, 0, 0, {0, ' ', 1, "0"}, 1, "" },
-    { 0.0, 0, 1, {0, ' ', 1, "0"}, 1, "" },
-    { 123.0, 2, 0, {3, ' ', 2, "12"}, 1, "" },
-    { 123.0, 0, 0, {0, ' ', 1, "0"}, 1, "" },
-    { 123.0, 2, 1, {3, ' ', 3, "123"}, 1, "09" },
-    { 0.99, 1, 0, {1, ' ', 1, "1"}, 1, "" },
-    { 1264567.0, 2, 0, {7, ' ', 2, "13"}, 1, "" },
-    { 1264567.0, 2, 1, {7, ' ', 7, "1264567"}, 1, "00" },
-    { 1234567891.0, 2, 1, {10, ' ', 10, "1234567891"}, 1, "09" }
+    { { 0x00000000, 0x00000000, 0x0000 /* 0 */ }, 0, 0, {0, ' ', 1, "0"}, 1, "" },
+    { { 0x00000000, 0x00000000, 0x0000 /* 0 */ }, 0, 1, {0, ' ', 1, "0"}, 1, "" },
+    { { 0x00000000, 0xf6000000, 0x4005 /* 123 */ }, 2, 0, {3, ' ', 2, "12"}, 1, "" },
+    { { 0x00000000, 0xf6000000, 0x4005 /* 123 */ }, 0, 0, {0, ' ', 1, "0"}, 1, "" },
+    { { 0x00000000, 0xf6000000, 0x4005 /* 123 */ }, 2, 1, {3, ' ', 3, "123"}, 1, "09" },
+    { { 0x0a3d7000, 0xfd70a3d7, 0x3ffe /* 0.99 */ }, 1, 0, {1, ' ', 1, "1"}, 1, "" },
+    { { 0x00000000, 0x9a5db800, 0x4013 /* 1264567.0 */ }, 2, 0, {7, ' ', 2, "13"}, 1, "" },
+    { { 0x00000000, 0x9a5db800, 0x4013 /* 1264567.0 */ }, 2, 1, {7, ' ', 7, "1264567"}, 1, "00" },
+    { { 0x00000000, 0x932c05a6, 0x401d /* 1234567891.0 */ }, 2, 1, {10, ' ', 10, "1234567891"}, 1, "09" }
 };
 
 static void test_I10_OUTPUT(void)
 {
     I10_OUTPUT_data out;
-    int i, j = sizeof(long double), ret;
+    int i, j, ret;
 
     if(!pI10_OUTPUT) {
         win_skip("I10_OUTPUT not available\n");
         return;
     }
-    if (j != 12)
-        trace("sizeof(long double) = %d on this machine\n", j);
 
     for(i=0; i<ARRAY_SIZE(I10_OUTPUT_tests); i++) {
         memset(out.str, '#', sizeof(out.str));
-
-        if (sizeof(long double) == 12)
-            ret = pI10_OUTPUT(I10_OUTPUT_tests[i].d, I10_OUTPUT_tests[i].size, I10_OUTPUT_tests[i].flags, &out);
-        else {
-            /* MS' "long double" is an 80 bit FP that takes 12 bytes*/
-            typedef struct { ULONG x80[3]; } uld; /* same calling convention */
-            union { long double ld; uld ld12; } fp80;
-            int (__cdecl *pI10_OUTPUT12)(uld, int, int, void*) = (void*)pI10_OUTPUT;
-            fp80.ld = I10_OUTPUT_tests[i].d;
-            ret = pI10_OUTPUT12(fp80.ld12, I10_OUTPUT_tests[i].size, I10_OUTPUT_tests[i].flags, &out);
-        }
+        ret = pI10_OUTPUT(I10_OUTPUT_tests[i].d, I10_OUTPUT_tests[i].size, I10_OUTPUT_tests[i].flags, &out);
         ok(ret == I10_OUTPUT_tests[i].ret, "%d: ret = %d\n", i, ret);
         ok(out.pos == I10_OUTPUT_tests[i].out.pos, "%d: out.pos = %hd\n", i, out.pos);
         ok(out.sign == I10_OUTPUT_tests[i].out.sign, "%d: out.size = %c\n", i, out.sign);
@@ -231,7 +215,7 @@ static void test_strerror_s(void)
     memset(buf, 'X', sizeof(buf));
     ret = pstrerror_s(buf, 1, 0);
     ok(ret == 0, "Expected strerror_s to return 0, got %d\n", ret);
-    ok(strlen(buf) == 0, "Expected output buffer to be null terminated\n");
+    ok(buf[0] == 0, "Expected output buffer to be null terminated\n");
 
     memset(buf, 'X', sizeof(buf));
     ret = pstrerror_s(buf, 2, 0);
@@ -261,7 +245,7 @@ static void test__get_doserrno(void)
     errno = EBADF;
     ret = p_get_doserrno(NULL);
     ok(ret == EINVAL, "Expected _get_doserrno to return EINVAL, got %d\n", ret);
-    ok(_doserrno == ERROR_INVALID_CMM, "Expected _doserrno to be ERROR_INVALID_CMM, got %d\n", _doserrno);
+    ok(_doserrno == ERROR_INVALID_CMM, "Expected _doserrno to be ERROR_INVALID_CMM, got %ld\n", _doserrno);
     ok(errno == EBADF, "Expected errno to be EBADF, got %d\n", errno);
 
     _doserrno = ERROR_INVALID_CMM;
@@ -308,19 +292,19 @@ static void test__set_doserrno(void)
     ret = p_set_doserrno(ERROR_FILE_NOT_FOUND);
     ok(ret == 0, "Expected _set_doserrno to return 0, got %d\n", ret);
     ok(_doserrno == ERROR_FILE_NOT_FOUND,
-       "Expected _doserrno to be ERROR_FILE_NOT_FOUND, got %d\n", _doserrno);
+       "Expected _doserrno to be ERROR_FILE_NOT_FOUND, got %ld\n", _doserrno);
 
     _doserrno = ERROR_INVALID_CMM;
     ret = p_set_doserrno(-1);
     ok(ret == 0, "Expected _set_doserrno to return 0, got %d\n", ret);
     ok(_doserrno == -1,
-       "Expected _doserrno to be -1, got %d\n", _doserrno);
+       "Expected _doserrno to be -1, got %ld\n", _doserrno);
 
     _doserrno = ERROR_INVALID_CMM;
     ret = p_set_doserrno(0xdeadbeef);
     ok(ret == 0, "Expected _set_doserrno to return 0, got %d\n", ret);
     ok(_doserrno == 0xdeadbeef,
-       "Expected _doserrno to be 0xdeadbeef, got %d\n", _doserrno);
+       "Expected _doserrno to be 0xdeadbeef, got %ld\n", _doserrno);
 }
 
 static void test__set_errno(void)
@@ -349,21 +333,42 @@ static void test__set_errno(void)
     ok(errno == 0xdeadbeef, "Expected errno to be 0xdeadbeef, got %d\n", errno);
 }
 
-static void test__popen_child(void)
+static void test__popen_child(int fd)
 {
     /* don't execute any tests here */
     /* ExitProcess is used to set return code of _pclose */
     printf("child output\n");
+    if ((HANDLE)_get_osfhandle(fd) != INVALID_HANDLE_VALUE)
+        ExitProcess(1);
     ExitProcess(0x37);
+}
+
+static void test__popen_read_child(void)
+{
+    char buf[1024], *rets;
+
+    rets = fgets(buf, sizeof(buf), stdin);
+    if (strcmp(buf, "child-to-parent\n") != 0)
+        ExitProcess(1);
+
+    rets = fgets(buf, sizeof(buf), stdin);
+    if (rets)
+        ExitProcess(2);
+    ExitProcess(3);
 }
 
 static void test__popen(const char *name)
 {
     FILE *pipe;
-    char buf[1024];
-    int ret;
+    char *tempf, buf[1024];
+    int ret, fd;
 
-    sprintf(buf, "\"%s\" misc popen", name);
+    tempf = _tempnam(".", "wne");
+    ok(tempf != NULL, "_tempnam failed\n");
+    fd = _open(tempf, _O_CREAT | _O_WRONLY);
+    ok(fd != -1, "open failed\n");
+
+    sprintf(buf, "\"%s\" misc popen %d", name, fd);
     pipe = _popen(buf, "r");
     ok(pipe != NULL, "_popen failed with error: %d\n", errno);
 
@@ -372,12 +377,32 @@ static void test__popen(const char *name)
 
     ret = _pclose(pipe);
     ok(ret == 0x37, "_pclose returned %x, expected 0x37\n", ret);
+    _close(fd);
+    _unlink(tempf);
+    free(tempf);
 
     errno = 0xdeadbeef;
     ret = _pclose((FILE*)0xdeadbeef);
     ok(ret == -1, "_pclose returned %x, expected -1\n", ret);
     if(p_set_errno)
         ok(errno == EBADF, "errno = %d\n", errno);
+
+    sprintf(buf, "\"%s\" misc popen_read", name);
+    pipe = _popen(buf, "w");
+    ok(pipe != NULL, "_popen failed with error: %d\n", errno);
+
+    ret = fputs("child-to-parent\n", pipe);
+    ok(ret != EOF, "fputs returned %x\n", ret);
+
+#ifdef __REACTOS__
+    if (IsReactOS())
+    {
+        skip("Skipping _pclose, because it hangs on reactos\n");
+        return;
+    }
+#endif
+    ret = _pclose(pipe);
+    ok(ret == 0x3, "_pclose returned %x, expected 0x3\n", ret);
 }
 
 static void test__invalid_parameter(void)
@@ -510,8 +535,35 @@ static void test_qsort_s(void)
         ok(tab[i] == i, "data sorted incorrectly on position %d: %d\n", i, tab[i]);
 }
 
+static int eq_nan(UINT64 ai, double b)
+{
+    UINT64 bi = *(UINT64*)&b;
+    UINT64 mask;
+
+#if defined(__i386__)
+    mask = 0xFFFFFFFF00000000ULL;
+#else
+    mask = ~0;
+#endif
+
+    ok((ai & mask) == (bi & mask), "comparing %s and %s\n",
+            wine_dbgstr_longlong(ai), wine_dbgstr_longlong(bi));
+    return (ai & mask) == (bi & mask);
+}
+
+static int eq_nanf(DWORD ai, float b)
+{
+    DWORD bi = *(DWORD*)&b;
+    ok(ai == bi, "comparing %08lx and %08lx\n", ai, bi);
+    return ai == bi;
+}
+
 static void test_math_functions(void)
 {
+    static const UINT64 test_nan_i = 0xFFF0000123456780ULL;
+    static const DWORD test_nanf_i = 0xFF801234;
+    double test_nan = *(double*)&test_nan_i;
+    float test_nanf = *(float*)&test_nanf_i;
     double ret;
 
     errno = 0xdeadbeef;
@@ -544,6 +596,13 @@ static void test_math_functions(void)
     errno = 0xdeadbeef;
     p_exp(INFINITY);
     ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+
+    ok(eq_nan(test_nan_i | (1ULL << 51), cosh(test_nan)), "cosh not preserving nan\n");
+    ok(eq_nan(test_nan_i | (1ULL << 51), sinh(test_nan)), "sinh not preserving nan\n");
+    ok(eq_nan(test_nan_i | (1ULL << 51), tanh(test_nan)), "tanh not preserving nan\n");
+    ok(eq_nanf(test_nanf_i | (1 << 22), coshf(test_nanf)), "coshf not preserving nan\n");
+    ok(eq_nanf(test_nanf_i | (1 << 22), sinhf(test_nanf)), "sinhf not preserving nan\n");
+    ok(eq_nanf(test_nanf_i | (1 << 22), tanhf(test_nanf)), "tanhf not preserving nan\n");
 }
 
 static void __cdecl test_thread_func(void *end_thread_type)
@@ -572,38 +631,51 @@ static void test_thread_handle_close(void)
     ok(hThread != INVALID_HANDLE_VALUE, "_beginthread failed (%d)\n", errno);
     WaitForSingleObject(hThread, INFINITE);
     ret = CloseHandle(hThread);
-    ok(!ret, "ret = %d\n", ret);
+    ok(!ret, "ret = %ld\n", ret);
 
     hThread = (HANDLE)_beginthread(test_thread_func, 0, (void*)1);
     ok(hThread != INVALID_HANDLE_VALUE, "_beginthread failed (%d)\n", errno);
     WaitForSingleObject(hThread, INFINITE);
     ret = CloseHandle(hThread);
-    ok(!ret, "ret = %d\n", ret);
+    ok(!ret, "ret = %ld\n", ret);
 
     hThread = (HANDLE)_beginthread(test_thread_func, 0, (void*)2);
     ok(hThread != INVALID_HANDLE_VALUE, "_beginthread failed (%d)\n", errno);
     Sleep(150);
     ret = WaitForSingleObject(hThread, INFINITE);
-    ok(ret == WAIT_OBJECT_0, "ret = %d\n", ret);
+    ok(ret == WAIT_OBJECT_0, "ret = %ld\n", ret);
     ret = CloseHandle(hThread);
-    ok(ret, "ret = %d\n", ret);
+    ok(ret, "ret = %ld\n", ret);
 
     hThread = (HANDLE)_beginthread(test_thread_func, 0, (void*)3);
     ok(hThread != INVALID_HANDLE_VALUE, "_beginthread failed (%d)\n", errno);
     Sleep(150);
     ret = WaitForSingleObject(hThread, INFINITE);
-    ok(ret == WAIT_OBJECT_0, "ret = %d\n", ret);
+    ok(ret == WAIT_OBJECT_0, "ret = %ld\n", ret);
     ret = CloseHandle(hThread);
-    ok(ret, "ret = %d\n", ret);
+    ok(ret, "ret = %ld\n", ret);
 
     /* _beginthreadex: handle is not closed on _endthread */
     hThread = (HANDLE)_beginthreadex(NULL,0, test_thread_func_ex, NULL, 0, NULL);
     ok(hThread != NULL, "_beginthreadex failed (%d)\n", errno);
     Sleep(150);
     ret = WaitForSingleObject(hThread, INFINITE);
-    ok(ret == WAIT_OBJECT_0, "ret = %d\n", ret);
+    ok(ret == WAIT_OBJECT_0, "ret = %ld\n", ret);
     ret = CloseHandle(hThread);
-    ok(ret, "ret = %d\n", ret);
+    ok(ret, "ret = %ld\n", ret);
+}
+
+static void test_thread_suspended(void)
+{
+    HANDLE hThread;
+    DWORD ret;
+
+    hThread = (HANDLE)_beginthreadex(NULL, 0, test_thread_func_ex, NULL, CREATE_SUSPENDED, NULL);
+    ok(hThread != NULL, "_beginthreadex failed (%d)\n", errno);
+    ret = ResumeThread(hThread);
+    ok(ret == 1, "suspend count = %ld\n", ret);
+    ret = WaitForSingleObject(hThread, 200);
+    ok(ret == WAIT_OBJECT_0, "ret = %ld\n", ret);
 }
 
 static int __cdecl _lfind_s_comp(void *ctx, const void *l, const void *r)
@@ -683,8 +755,10 @@ START_TEST(misc)
 
     arg_c = winetest_get_mainargs(&arg_v);
     if(arg_c >= 3) {
-        if(!strcmp(arg_v[2], "popen"))
-            test__popen_child();
+        if (!strcmp(arg_v[2], "popen_read"))
+            test__popen_read_child();
+        else if(arg_c == 4 && !strcmp(arg_v[2], "popen"))
+            test__popen_child(atoi(arg_v[3]));
         else
             ok(0, "invalid argument '%s'\n", arg_v[2]);
 
@@ -703,5 +777,6 @@ START_TEST(misc)
     test_qsort_s();
     test_math_functions();
     test_thread_handle_close();
+    test_thread_suspended();
     test__lfind_s();
 }

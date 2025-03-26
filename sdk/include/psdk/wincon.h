@@ -119,8 +119,8 @@ extern "C" {
 /*
  * Read input flags
  */
-#define CONSOLE_READ_KEEPEVENT          0x0001
-#define CONSOLE_READ_CONTINUE           0x0002
+#define CONSOLE_READ_NOREMOVE           0x0001
+#define CONSOLE_READ_NOWAIT             0x0002
 
 /*
  * Event types
@@ -246,12 +246,9 @@ typedef struct _KEY_EVENT_RECORD {
         CHAR  AsciiChar;
     } uChar;
     DWORD dwControlKeyState;
-}
-#ifdef __GNUC__
-/* gcc's alignment is not what win32 expects */
-PACKED
-#endif
-KEY_EVENT_RECORD, *PKEY_EVENT_RECORD;
+} KEY_EVENT_RECORD, *PKEY_EVENT_RECORD;
+
+C_ASSERT(FIELD_OFFSET(KEY_EVENT_RECORD, uChar) == 0xA);
 
 typedef struct _MOUSE_EVENT_RECORD {
     COORD dwMousePosition;

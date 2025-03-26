@@ -12,6 +12,7 @@
 typedef struct _LIC_CONTEXT
 {
     HICON hIcon;
+    HICON hIconSm;
 } LIC_CONTEXT, *PLIC_CONTEXT;
 
 
@@ -23,16 +24,20 @@ OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
     PCSTR LicenseText;
 
     pLicInfo->hIcon = LoadImage(hApplet,
-                                MAKEINTRESOURCE(IDI_CPLSYSTEM),
+                                MAKEINTRESOURCE(IDI_LICENSE),
                                 IMAGE_ICON,
-                                16,
-                                16,
-                                0);
+                                GetSystemMetrics(SM_CXICON),
+                                GetSystemMetrics(SM_CYICON),
+                                LR_DEFAULTCOLOR);
+    pLicInfo->hIconSm = LoadImage(hApplet,
+                                  MAKEINTRESOURCE(IDI_LICENSE),
+                                  IMAGE_ICON,
+                                  GetSystemMetrics(SM_CXSMICON),
+                                  GetSystemMetrics(SM_CYSMICON),
+                                  LR_DEFAULTCOLOR);
 
-    SendMessage(hDlg,
-                WM_SETICON,
-                ICON_SMALL,
-                (LPARAM)pLicInfo->hIcon);
+    SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)pLicInfo->hIcon);
+    SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)pLicInfo->hIconSm);
 
     /* Load license from resource */
     if (!(hResInfo = FindResource(hApplet,
@@ -86,7 +91,12 @@ LicenceDlgProc(HWND hDlg,
         case WM_DESTROY:
             if (pLicInfo)
             {
-                DestroyIcon(pLicInfo->hIcon);
+                if (pLicInfo->hIconSm)
+                    DestroyIcon(pLicInfo->hIconSm);
+
+                if (pLicInfo->hIcon)
+                    DestroyIcon(pLicInfo->hIcon);
+                    
                 HeapFree(GetProcessHeap(), 0, pLicInfo);
             }
             break;

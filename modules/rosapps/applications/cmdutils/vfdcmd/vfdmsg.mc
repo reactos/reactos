@@ -11,6 +11,11 @@
 ;#ifndef _VFDMSG_H_
 ;#define _VFDMSG_H_
 ;
+;/*
+; __REACTOS__:
+; - Removed Japanese language.
+; + Added a second blank line between some entries.
+;*/
 
 MessageIdTypedef=DWORD
 LanguageNames=(English=0x409:MSG0409)
@@ -1161,6 +1166,7 @@ of the shell extension.
 .
 
 
+;// __REACTOS__: s/read only/read-only/.
 MessageId=
 SymbolicName=MSG_HELP_OPEN
 Language=English
@@ -1226,7 +1232,7 @@ If the target drive does not have a drive letter, this command also
 assigns a local drive letter (see '%1!s!HELP LINK') using the first
 available letter.
 
-Read only files, NTFS encrypted/compressed files and ZIP compressed
+Read-only files, NTFS encrypted/compressed files and ZIP compressed
 image files (such as WinImage IMZ file) cannot be mounted directly
 and must be opened in RAM mode.
 
@@ -1360,6 +1366,7 @@ The SAVE command always fails if the target is a ZIP compressed file.
 .
 
 
+;// __REACTOS__: s/read only/read-only/.
 MessageId=
 SymbolicName=MSG_HELP_PROTECT
 Language=English
@@ -1374,7 +1381,7 @@ OPTIONS:
             The trailing ':' is optional.
             The drive 0 is used if not specified.
 
-  /ON       Enables the drive write protect - the drive becomes read only.
+  /ON       Enables the drive write protect - the drive becomes read-only.
 
   /OFF      Disables the drive write protect - the drive becomes writable.
 

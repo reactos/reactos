@@ -251,11 +251,17 @@ FdoScanAdapter(
             /* Scan all logical units */
             for (UINT8 lun = 0; lun < PortExtension->MaxLunCount; lun++)
             {
+                PSCSI_PORT_LUN_EXTENSION lunExt;
+
+                /* Skip invalid lun values */
+                if (lun >= PortExtension->PortConfig->MaximumNumberOfLogicalUnits)
+                    continue;
+
                 // try to find an existing device
-                PSCSI_PORT_LUN_EXTENSION lunExt = GetLunByPath(PortExtension,
-                                                               pathId,
-                                                               targetId,
-                                                               lun);
+                lunExt = GetLunByPath(PortExtension,
+                                      pathId,
+                                      targetId,
+                                      lun);
 
                 if (lunExt)
                 {
@@ -318,12 +324,10 @@ FdoScanAdapter(
                     /* Clear the "in scan" flag */
                     lunExt->Flags &= ~SCSI_PORT_SCAN_IN_PROGRESS;
 
-                    DPRINT("FdoScanAdapter(): Found device of type %d at bus %d tid %d lun %d\n",
-                        InquiryData->DeviceType, pathId, targetId, lun);
+                    DPRINT1("Found device of type %d at controller %d bus %d tid %d lun %d, PDO: %p\n",
+                        InquiryData->DeviceType, PortExtension->PortNumber, pathId, targetId, lun, lunPDO);
 
                     InsertTailList(&currentBus->LunsListHead, &lunExt->LunEntry);
-
-                    DPRINT1("SCSIPORT: created lun device: %p Status: %x\n", lunPDO, status);
 
                     totalLUNs++;
                     currentBus->LogicalUnitsCount++;
@@ -705,6 +709,51 @@ FdoHandleDeviceRelations(
     return IoCallDriver(PortExtension->Common.LowerDevice, Irp);
 }
 
+static
+NTSTATUS
+FdoHandleQueryCompatibleId(
+    _Inout_ PZZWSTR* PwIds)
+{
+    static WCHAR GenScsiAdapterId[] = L"GEN_SCSIADAPTER";
+    PWCHAR Ids = *PwIds, NewIds;
+    ULONG Length = 0;
+
+    if (Ids)
+    {
+        /* Calculate the length of existing MULTI_SZ value line by line */
+        while (*Ids)
+        {
+            Ids += wcslen(Ids) + 1;
+        }
+        Length = Ids - *PwIds;
+        Ids = *PwIds;
+    }
+
+    /* New MULTI_SZ with added identifier and finalizing zeros */
+    NewIds = ExAllocatePoolZero(PagedPool,
+                                Length * sizeof(WCHAR) + sizeof(GenScsiAdapterId) + sizeof(UNICODE_NULL),
+                                TAG_SCSIPORT);
+    if (!NewIds)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (Length)
+    {
+        RtlCopyMemory(NewIds, Ids, Length * sizeof(WCHAR));
+    }
+    RtlCopyMemory(&NewIds[Length], GenScsiAdapterId, sizeof(GenScsiAdapterId));
+
+    /* Finally replace identifiers */
+    if (Ids)
+    {
+        ExFreePool(Ids);
+    }
+    *PwIds = NewIds;
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 FdoDispatchPnp(
     _In_ PDEVICE_OBJECT DeviceObject,
@@ -731,6 +780,17 @@ FdoDispatchPnp(
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
             return FdoHandleDeviceRelations(portExt, Irp);
+        }
+        case IRP_MN_QUERY_ID:
+        {
+            if (ioStack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
+            {
+                Irp->IoStatus.Information = 0;
+                IoForwardIrpSynchronously(portExt->Common.LowerDevice, Irp);
+                status = FdoHandleQueryCompatibleId((PZZWSTR*)&Irp->IoStatus.Information);
+                break;
+            }
+            // otherwise fall through the default case
         }
         default:
         {

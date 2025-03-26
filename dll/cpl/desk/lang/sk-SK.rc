@@ -8,7 +8,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "&Theme:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -20,34 +20,34 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Pozadie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74, 0
+    CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Vyberte obrázok, ktorý chcete použiť ako pozadie pracovnej plochy", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Vyberte obrázok, ktorý chcete použiť ako pozadie pracovnej plochy:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "&Tapeta na plochu:" for the backport, because that doesn't overflow the length of the IDC_BACKGROUND_LIST below and therefore looks better
     PUSHBUTTON "&Prehľadávať...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Farba...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "&Umiestnenie", IDC_STATIC, 188, 128, 55, 9
+    LTEXT "&Umiestnenie:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Šetrič obrazovky"
-FONT 8, "MS Shell Dlg", 0, 0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 70, WS_EX_STATICEDGE
+    CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     GROUPBOX "Šetrič o&brazovky", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Nastavenie", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
     PUSHBUTTON "&Ukážka", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "&Počkať", IDC_WAITTEXT, 14, 125, 20, 9
-    EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
+    LTEXT "&Počkať", IDC_WAITTEXT, 14, 125, 23, 9
+    EDITTEXT IDC_SCREENS_TIMEDELAY, 38, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "minút", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Pri obnovení chrániť &heslom", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "Napájani&e monitora", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 58, 123, 12, 13
+    LTEXT "minút", IDC_MINTEXT, 72, 125, 26, 9
+    AUTOCHECKBOX "Pri obnovení chrániť &heslom", IDC_SCREENS_USEPASSCHK, 108, 120, 117, 19
+    GROUPBOX "Napájanie monitora", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Ak chcete upraviť nastavenie napájania monitora a ušetriť energiu, kliknite na tlačidlo Napájanie.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "N&apájanie...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
@@ -58,13 +58,13 @@ CAPTION "Vzhľad"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "&Visual Style:", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Farebná schéma", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "&Farebná schéma:", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "Size:", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel (and translate?). I used "Si&ze:" for the backport, because &S is in use
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efekty...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -81,7 +81,7 @@ BEGIN
     LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "P&oložka", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Veľkosť", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
@@ -109,24 +109,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekty"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Používať nasledovný efekt prechodu pre ponuky a názvy tlačidiel",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "&Používať nasledovný efekt prechodu pre ponuky a názvy tlačidiel:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Používať &veľké ikony", IDC_EFFAPPEARANCE_LARGEICONS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Zobrazovať tiene pod ponukami", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Zobrazovať &obsah okna počas presúvania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Skrývať podčiarknuté písmená (klávesové skratky) až do stlačenia klávesu Alt",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Používať &veľké ikony", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "&Zobrazovať tiene pod ponukami", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "Zobrazovať &obsah okna počas presúvania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "&Skrývať podčiarknuté písmená (klávesové skratky) až do stlačenia klávesu Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Zrušiť", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
@@ -136,10 +129,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nastavenie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ťahaním zoraďte ikony podľa fyzického rozmiestnenia monitorov.", -1, 3, 3, 240, 20
+    CONTROL "", IDC_RESOLUTION_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
+    LTEXT "Ťahaním zoraďte ikony podľa fyzického rozmiestnenia monitorov.", IDC_SETTINGS_MONTEXT, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
-    LTEXT "&Monitor", 1820, 3, 107, 70, 9
+    LTEXT "&Monitor:", 1820, 3, 107, 70, 9
     LTEXT "<Nie je>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "&Rozlíšenie obrazovky", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
@@ -152,20 +146,37 @@ BEGIN
     PUSHBUTTON "&Spresniť...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
 END
 
+IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 224, 202
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
+    AUTOCHECKBOX "My &Documents", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "My &Network Places", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&My Computer", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Internet Browser", IDC_ICONS_INTERNET, 116, 28, 100, 12
+    CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
+            LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
+            6, 60, 212, 56
+    PUSHBUTTON "C&hange Icon...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
+    PUSHBUTTON "Re&store Default", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
+END
+
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Všeobecné"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Display", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Veľkosť písma", -1, 14, 20, 222, 9
+    LTEXT "Veľkosť písma:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Veľkosť písma:" for the backport. 2k3sp2 does now use "&DPI setting:" here. Feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilita", -1, 7, 67, 237, 97
-    LTEXT "Niektoré programy nemusia pracovať správne, ak po zmene nastavení farieb nereštartujete počítač.\r\n\nPo zmene nastavení farieb", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Reštartovať počítač pred použitím nových nastavení farieb.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Použiť &nové nastavenia farieb bez reštartovania.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "&Opýtať sa pred použitím nových nastavení farieb.", IDC_ASKME_RB, 14, 146, 228, 10
+    LTEXT "Niektoré programy nemusia pracovať správne, ak po zmene nastavení farieb nereštartujete počítač.\n\nPo zmene nastavení farieb", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Reštartovať počítač pred použitím nových nastavení farieb", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "Použiť &nové nastavenia farieb bez reštartovania", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "&Opýtať sa pred použitím nových nastavení farieb", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
@@ -208,6 +219,11 @@ STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Štandardná"
     IDS_CLEARTYPEEFFECT "FreeType Antialiased"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DESKTOP_ITEMS "Desktop Items"
 END
 
 STRINGTABLE
@@ -280,7 +296,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Nastavenia zobrazenia" // obrazovky ?
+    IDS_DISPLAY_SETTINGS "Nastavenia zobrazenia"//FIXME: Harmonize! I used "Nastavenia obrazovky" for the backport. It is one letter shorter and some native speaker suggested to consider that translation beforehand. It is also what is used in IDS_CPLDESCRIPTION
     IDS_APPLY_FAILED "Nepodarilo sa aplikovať nové nastavenia..."
     IDS_APPLY_NEEDS_RESTART "Je potrebné reštartovať počítač, aby sa prejavili zmeny."
     IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."

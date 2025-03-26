@@ -179,14 +179,14 @@ InstallSoftwareDeviceInterfaceInf(IN LPWSTR InfName,
 
 VOID
 WINAPI
-StreamingDeviceSetupW(IN HWND hwnd, 
-                     IN HINSTANCE hinst, 
-                     IN LPWSTR lpszCmdLine, 
+StreamingDeviceSetupW(IN HWND hwnd,
+                     IN HINSTANCE hinst,
+                     IN LPWSTR lpszCmdLine,
                      IN int nCmdShow)
 {
     DWORD Length, dwResult;
     LPWSTR pCmdLine;
-    LPWSTR pStr; 
+    LPWSTR pStr;
     GUID Guids[2];
     WCHAR DevicePath[MAX_PATH];
     HRESULT hResult;

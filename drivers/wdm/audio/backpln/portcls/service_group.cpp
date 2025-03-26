@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 VOID
@@ -29,27 +26,10 @@ typedef struct
     IN PSERVICESINK pServiceSink;
 }GROUP_ENTRY, *PGROUP_ENTRY;
 
-class CServiceGroup : public IServiceGroup
+class CServiceGroup : public CUnknownImpl<IServiceGroup>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
 
     IMP_IServiceGroup;
     CServiceGroup(IUnknown * OuterUnknown);
@@ -65,17 +45,11 @@ protected:
     KSPIN_LOCK m_Lock;
 
     friend VOID NTAPI IServiceGroupDpc(IN struct _KDPC  *Dpc, IN PVOID  DeferredContext, IN PVOID  SystemArgument1, IN PVOID  SystemArgument2);
-
-    LONG m_Ref;
-
 };
-
-
 
 //---------------------------------------------------------------
 // IUnknown methods
 //
-
 
 NTSTATUS
 NTAPI

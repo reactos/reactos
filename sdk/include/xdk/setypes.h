@@ -131,7 +131,35 @@ typedef struct _SE_IMPERSONATION_STATE {
 #define UNPROTECTED_DACL_SECURITY_INFORMATION (0x20000000L)
 #define UNPROTECTED_SACL_SECURITY_INFORMATION (0x10000000L)
 
+/* Auto inherit ACE flags */
+#define SEF_DACL_AUTO_INHERIT               0x01
+#define SEF_SACL_AUTO_INHERIT               0x02
+#define SEF_DEFAULT_DESCRIPTOR_FOR_OBJECT   0x04
+#define SEF_AVOID_PRIVILEGE_CHECK           0x08
+#define SEF_AVOID_OWNER_CHECK               0x10
+#define SEF_DEFAULT_OWNER_FROM_PARENT       0x20
+#define SEF_DEFAULT_GROUP_FROM_PARENT       0x40
+#define SEF_MACL_NO_WRITE_UP                0x100
+#define SEF_MACL_NO_READ_UP                 0x200
+#define SEF_MACL_NO_EXECUTE_UP              0x400
+#define SEF_AI_USE_EXTRA_PARAMS             0x800
+#define SEF_AVOID_OWNER_RESTRICTION         0x1000
+#define SEF_MACL_VALID_FLAGS (SEF_MACL_NO_WRITE_UP | SEF_MACL_NO_READ_UP | SEF_MACL_NO_EXECUTE_UP)
+
 $endif (_WDMDDK_ || _WINNT_)
+
+$if (_WINNT_)
+
+/* Privilege token filtering flags */
+#define DISABLE_MAX_PRIVILEGE 0x1
+#define SANDBOX_INERT         0x2
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define LUA_TOKEN             0x4
+#define WRITE_RESTRICTED      0x8
+#endif
+
+$endif (_WINNT_)
+
 $if (_WDMDDK_)
 
 typedef enum _SECURITY_OPERATION_CODE {
@@ -675,6 +703,10 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 #define NETWORKSERVICE_LUID  {0x3e4, 0x0}
 #define IUSER_LUID           {0x3e3, 0x0}
 
+/* Logon session reference flags */
+
+#define SEP_LOGON_SESSION_TERMINATION_NOTIFY   0x0001
+
 typedef struct _ACE_HEADER {
   $UCHAR AceType;
   $UCHAR AceFlags;
@@ -733,6 +765,24 @@ typedef struct _ACCESS_DENIED_ACE {
   $ULONG SidStart;
 } ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
 
+typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  $ULONG Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  $ULONG SidStart;
+} ACCESS_ALLOWED_OBJECT_ACE, *PACCESS_ALLOWED_OBJECT_ACE;
+
+typedef struct _ACCESS_DENIED_OBJECT_ACE {
+  ACE_HEADER  Header;
+  ACCESS_MASK Mask;
+  $ULONG Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  $ULONG SidStart;
+} ACCESS_DENIED_OBJECT_ACE, *PACCESS_DENIED_OBJECT_ACE;
+
 typedef struct _SYSTEM_AUDIT_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
@@ -750,6 +800,10 @@ typedef struct _SYSTEM_MANDATORY_LABEL_ACE {
   ACCESS_MASK Mask;
   $ULONG SidStart;
 } SYSTEM_MANDATORY_LABEL_ACE, *PSYSTEM_MANDATORY_LABEL_ACE;
+
+/* Object ACE flags */
+#define ACE_OBJECT_TYPE_PRESENT           0x00000001
+#define ACE_INHERITED_OBJECT_TYPE_PRESENT 0x00000002
 
 #define SYSTEM_MANDATORY_LABEL_NO_WRITE_UP   0x1
 #define SYSTEM_MANDATORY_LABEL_NO_READ_UP    0x2

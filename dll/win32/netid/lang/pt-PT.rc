@@ -14,17 +14,17 @@ BEGIN
     LTEXT "O ReactOS utiliza as seguintes informações para identificar o computador na rede.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Descrição do computador:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Nome completo do computador:", IDC_STATIC, 7, 68, 85, 9
+    LTEXT "Nome completo do computador:", IDC_STATIC, 7, 64, 85, 18
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Grupo de trabalho:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Para utilizar o ""Assistente de identificação de rede"" para efectuar a adesão a um domínio e criar uma conta de utilizador local, clique em ""ID de rede""", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "&ID de rede", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT "Para alterar o nome a este computador ou escolher um domínio, clique em ""Alterar"".", IDC_STATIC, 7, 149, 170, 17
+    LTEXT "Para alterar o nome a este computador ou alterar o respectivo domínio ou grupo de trabalho, clique em ""Alterar"".", IDC_STATIC, 7, 149, 170, 24
     PUSHBUTTON "&Alterar...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
-    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
+    LTEXT "As alterações só terão efeito após reiniciar o computador.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -71,20 +71,20 @@ BEGIN
     4 "Alterar o nome do computador"
     5 "Grupo de trabalho:"
     6 "Domínio:"
-    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal ReactOS name. You must use ReactOS DNS server for non-standard names."
-    8 "The domain name ""%1"" is not properly formatted. Periods (.) are used to separate domains. Each domain is limited to 63 characters. Example: domain-1.reactos.org."
-    10 "The new computer name ""%1"" is too long. The name may not be longer than 63 characters."
-    11 "The new computer name entered is not properly formatted. Standard names may contain letters (a-z, A-Z), numbers (0-9), and hyphens (-), but no spaces or periods (.). The name may not consist entirely of digits."
+    7 "O nome de domínio ""%1"" não está em conformidade com as especificações do Serviço de Nomes de Domínio da Internet, embora seja um nome ReactOS legal. Deve usar o servidor DNS ReactOS para nomes não padrão."
+    8 "O nome de domínio ""%1"" não está formatado correctamente. Pontos (.) são usados para separar domínios. Cada domínio é limitado a 63 caracteres. Exemplo: domínio-1.reactos.org."
+    10 "O novo nome do computador ""%1"" é muito longo. O nome não pode ter mais de 63 caracteres."
+    11 "O novo nome de computador inserido não está formatado correctamente. Os nomes padrão podem conter letras (az, AZ), números (0-9) e hifens (-), mas sem espaços ou pontos (.). O nome não pode consistir inteiramente de dígitos."
     22 "Bem-vindo ao grupo de trabalho %1."
     23 "Bem-vindo ao domínio %1."
     24 "Tem de reiniciar o computador para que as alterações entrem em vigor."
     25 "Pode alterar o nome e a participação deste computador em domínios. Tais alterações podem afectar o acesso aos recursos da rede."
-    1021 "Nota: Somente administradores podem alterar a identificação deste computador."
+    1021 "Nota: Sómente administradores podem alterar a identificação deste computador."
     1022 "Nota: A identificação do computador não pode ser alterada porque:"
-    1029 "The new computer name ""%1"" is a number. The name may not be a number."
+    1029 "O novo nome do computador ""%1"" é um número. O nome não pode ser um número."
     1030 "O novo nome do computador ""%1"" contém caracteres que não são permitidos. Caracteres que não são permitidos incluem ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / e ?"
-    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
-    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
+    1031 "O primeiro domínio do nome de domínio ""%1"" é um número. O primeiro domínio não pode ser um número."
+    1032 "O nome de domínio ""%1"" contém caracteres que não são permitidos. Os nomes DNS padrão podem conter letras (az, AZ), números (0-9) e hifens, mas não espaços. Pontos (.) são usados como separador de domínios . Exemplo: domínio-1.reactos.org."
     3210 "&Detalhes >>"
     3220 "<< &Detalhes"
     4000 "Informação"

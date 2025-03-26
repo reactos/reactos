@@ -554,7 +554,7 @@ GetConsoleDisplayMode(LPDWORD lpModeFlags)
 
 /*
  * @implemented (Undocumented)
- * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
+ * @note See https://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 DWORD
 WINAPI
@@ -721,7 +721,7 @@ GetCurrentConsoleFont(IN HANDLE hConsoleOutput,
 
 /*
  * @implemented (Undocumented)
- * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
+ * @note See https://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 DWORD
 WINAPI
@@ -907,7 +907,7 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
 
 /*
  * @implemented (Undocumented)
- * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
+ * @note See https://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 BOOL
 WINAPI
@@ -1032,7 +1032,7 @@ SetConsoleMenuClose(BOOL bEnable)
 
 /*
  * @implemented (Undocumented)
- * @note See http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844
+ * @note See http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844 (DEAD_LINK)
  *       Usage example: https://github.com/harbour/core/commit/d79a1b7b812cbde6ddf718ebfd6939a24f633e52
  */
 BOOL
@@ -1375,8 +1375,6 @@ AllocConsole(VOID)
     ULONG AppNameLength = 128 * sizeof(WCHAR);
     ULONG CurDirLength  = (MAX_PATH + 1) * sizeof(WCHAR);
 
-    LCID lcid;
-
     RtlEnterCriticalSection(&ConsoleLock);
 
     if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
@@ -1427,8 +1425,8 @@ AllocConsole(VOID)
         /* Initialize Console Ctrl Handling */
         InitializeCtrlHandling();
 
-        /* Sets the current console locale for this thread */
-        SetTEBLangID(lcid);
+        /* Sync the current thread's LangId with the console's one */
+        SetTEBLangID();
     }
 
 Quit:
@@ -2042,26 +2040,26 @@ AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
         NtCurrentPeb()->ProcessParameters->ConsoleFlags = TRUE;
         return TRUE;
     }
-    
+
     if (NrCtrlHandlers == NrAllocatedHandlers)
     {
         NewCtrlHandlers = RtlAllocateHeap(RtlGetProcessHeap(),
                                           0,
                                           (NrCtrlHandlers + 4) * sizeof(PHANDLER_ROUTINE));
-        if (NewCtrlHandlers == NULL)   
+        if (NewCtrlHandlers == NULL)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
-        
+
         memmove(NewCtrlHandlers, CtrlHandlers, sizeof(PHANDLER_ROUTINE) * NrCtrlHandlers);
-        
+
         if (NrAllocatedHandlers > 1) RtlFreeHeap(RtlGetProcessHeap(), 0, CtrlHandlers);
-        
+
         CtrlHandlers = NewCtrlHandlers;
         NrAllocatedHandlers += 4;
     }
-    
+
     ASSERT(NrCtrlHandlers < NrAllocatedHandlers);
 
     CtrlHandlers[NrCtrlHandlers++] = HandlerRoutine;
@@ -2500,6 +2498,9 @@ SetConsoleOutputCP(UINT wCodePageID)
         return FALSE;
     }
 
+    /* Sync the current thread's LangId with the console's one */
+    SetTEBLangID();
+
     return TRUE;
 }
 
@@ -2676,9 +2677,7 @@ AttachConsole(DWORD dwProcessId)
 {
     BOOL Success;
     CONSOLE_START_INFO ConsoleStartInfo;
-
     DWORD dummy;
-    LCID lcid;
 
     RtlEnterCriticalSection(&ConsoleLock);
 
@@ -2711,8 +2710,8 @@ AttachConsole(DWORD dwProcessId)
         /* Initialize Console Ctrl Handling */
         InitializeCtrlHandling();
 
-        /* Sets the current console locale for this thread */
-        SetTEBLangID(lcid);
+        /* Sync the current thread's LangId with the console's one */
+        SetTEBLangID();
     }
 
 Quit:
@@ -3031,13 +3030,109 @@ SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknow
     return FALSE;
 }
 
+static BOOL
+IntRegisterConsoleIME(
+    _In_ HWND hWnd,
+    _In_ DWORD dwThreadId,
+    _In_opt_ SIZE_T cbDesktop,
+    _In_opt_ PWSTR pDesktop,
+    _Out_opt_ PDWORD pdwAttachToThreadId)
+{
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_REGISTERCONSOLEIME RegisterConsoleIME = &ApiMessage.Data.RegisterConsoleIME;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    if (!cbDesktop || !pDesktop)
+    {
+        pDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
+        cbDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Length;
+    }
+
+    cbDesktop = min(cbDesktop, (MAX_PATH + 1) * sizeof(WCHAR));
+
+    RegisterConsoleIME->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    RegisterConsoleIME->hWnd = hWnd;
+    RegisterConsoleIME->dwThreadId = dwThreadId;
+    RegisterConsoleIME->cbDesktop = cbDesktop;
+
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, cbDesktop);
+    if (!CaptureBuffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            pDesktop,
+                            cbDesktop,
+                            (PVOID*)&RegisterConsoleIME->pDesktop);
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepRegisterConsoleIME),
+                        sizeof(*RegisterConsoleIME));
+
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    if (pdwAttachToThreadId)
+    {
+        _SEH2_TRY
+        {
+            *pdwAttachToThreadId = RegisterConsoleIME->dwAttachToThreadId;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            BaseSetLastNTError(STATUS_ACCESS_VIOLATION);
+            _SEH2_YIELD(return FALSE);
+        }
+        _SEH2_END;
+    }
+
+    return TRUE;
+}
+
+static BOOL
+IntUnregisterConsoleIME(
+    _In_ DWORD dwThreadId)
+{
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_UNREGISTERCONSOLEIME UnregisterConsoleIME = &ApiMessage.Data.UnregisterConsoleIME;
+
+    UnregisterConsoleIME->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    UnregisterConsoleIME->dwThreadId = dwThreadId;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepUnregisterConsoleIME),
+                        sizeof(*UnregisterConsoleIME));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/* This function is called by CONIME.EXE */
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-RegisterConsoleIME(HWND hWnd, LPDWORD ThreadId)
+RegisterConsoleIME(
+    _In_ HWND hWnd,
+    _Out_opt_ LPDWORD pdwAttachToThreadId)
 {
-    STUB;
-    return FALSE;
+    return IntRegisterConsoleIME(hWnd,
+                                 GetCurrentThreadId(),
+                                 0,
+                                 NULL,
+                                 pdwAttachToThreadId);
 }
 
 BOOL
@@ -3058,15 +3153,57 @@ SetConsoleOS2OemFormat(BOOL bUnknown)
     return FALSE;
 }
 
+/* This function is called by CONIME.EXE */
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
 UnregisterConsoleIME(VOID)
 {
-    STUB;
-    return FALSE;
+    return IntUnregisterConsoleIME(GetCurrentThreadId());
 }
 
+/**
+ * @brief
+ * Internal helper function used to synchronize the current
+ * thread's language ID with the one from the console.
+ **/
+VOID
+SetTEBLangID(VOID)
+{
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETLANGID LangIdRequest = &ApiMessage.Data.LangIdRequest;
+
+    /* Retrieve the "best-suited" language ID corresponding
+     * to the active console output code page. */
+    LangIdRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetLangId),
+                        sizeof(*LangIdRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        /*
+         * No best console language ID: keep the current thread's one.
+         * Since this internal function only modifies an optional setting,
+         * don't set any last error, as it could otherwise mess with the
+         * main last error set by the caller.
+         */
+        return;
+    }
+
+    /*
+     * We succeeded, set the current thread's language ID by
+     * modifying its locale -- Windows <= 2003 does not have
+     * the concept of a separate thread UI language.
+     * Ignore the returned value.
+     */
+    if (!SetThreadLocale(MAKELCID(LangIdRequest->LangId, SORT_DEFAULT)))
+    {
+        DPRINT1("SetTEBLangID: Could not set thread locale to console lang ID %lu\n",
+                LangIdRequest->LangId);
+    }
+}
 
 static
 BOOL

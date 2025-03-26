@@ -47,7 +47,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Kabal"
-    IDS_SOL_ABOUT "Kabal av J Brown\n\nCardLib versjon 1.0."
+    IDS_SOL_ABOUT "Kabal av J Brown\nCardLib versjon 1.0"
     IDS_SOL_QUIT "Slutt nåværende spill?"
     IDS_SOL_WIN "Gratulerer, du vant!!"
     IDS_SOL_DEAL "Del ut igjen?"
@@ -63,6 +63,7 @@ BEGIN
     BEGIN
         MENUITEM "&Del ut\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "Kort&stokk...", IDM_GAME_DECK
         MENUITEM "&Valg...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

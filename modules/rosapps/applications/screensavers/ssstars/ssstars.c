@@ -198,7 +198,7 @@ static void InitGL(HBITMAP hStarTex)
     glEnable( GL_LIGHTING );
     // enable lighting for front
     glLightModeli( GL_FRONT, GL_TRUE );
-    // material have diffuse and ambient lighting 
+    // material have diffuse and ambient lighting
     glColorMaterial( GL_FRONT, GL_AMBIENT_AND_DIFFUSE );
     // enable color
     glEnable( GL_COLOR_MATERIAL );

@@ -1,0 +1,67 @@
+/* Translation and UTF-8 Conversion by Gabriel Aguiar(fgsoftware1) <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (July, 2021) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Ficheiro"
+    BEGIN
+        MENUITEM "&Abrir...", CMD_OPEN
+        MENUITEM "Guardar &como...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "S&air", CMD_EXIT
+    END
+    POPUP "&Editar"
+    BEGIN
+        MENUITEM "&Apagar\tDel", CMD_DELETE
+    END
+    POPUP "&Ecrã"
+    BEGIN
+        MENUITEM "&Automático", CMD_AUTOMATIC
+    END
+    POPUP "&Ajuda"
+    BEGIN
+        MENUITEM "&Ajuda", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Sobre", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Visualizador da área de transferência"
+    STRING_CLIPFILE  "Elemento da área de transferência"
+    STRING_DELETE_MSG "Apagar conteúdos da área de transferência?"
+    STRING_DELETE_TITLE "Limpar área de transferência"
+    STRING_FORMAT_NT "Ficheiros da área de transferência para ReactOS (*.clp)"
+    STRING_FORMAT_GEN "Ficheiros da área de transferência (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Formato desconhecido"
+    STRING_CF_TEXT "Texto"
+    STRING_CF_BITMAP "Bitmap"
+    STRING_CF_OEMTEXT "Texto OEM"
+    STRING_CF_UNICODETEXT "Texto unicode"
+    STRING_CF_DIB "DIB Bitmap"
+    STRING_CF_LOCALE "Dados locais"
+    STRING_CF_ENHMETAFILE "Ficheiro meta melhorado"
+    STRING_CF_METAFILEPICT "Ficheiro meta"
+    STRING_CF_PALETTE "Palete de cores"
+    STRING_CF_DIBV5 "DIB Bitmap (Version 5)"
+    STRING_CF_SYLK "Formato de ligação simbólica"
+    STRING_CF_DIF "Formato de intercâmbio de dados"
+    STRING_CF_HDROP "Apagar dados"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "A área de transferência contém dados num formato não suportado"
+    ERROR_INVALID_FILE_FORMAT "O ficheiro seleccionado nao é válido"
+END

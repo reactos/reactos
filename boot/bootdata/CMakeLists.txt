@@ -6,10 +6,8 @@ add_subdirectory(packages)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/txtsetup.sif DESTINATION reactos NO_CAB FOR bootcd regtest)
 
 add_custom_target(converted_caroots_inf DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf
-                   COMMAND native-utf16le "${CMAKE_CURRENT_SOURCE_DIR}/caroots.inf" "${CMAKE_CURRENT_BINARY_DIR}/caroots.inf"
-                   DEPENDS native-utf16le ${CMAKE_CURRENT_SOURCE_DIR}/caroots.inf)
-add_cd_file(TARGET converted_caroots_inf FILE ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf DESTINATION reactos NO_CAB FOR all)
+utf16le_convert(${CMAKE_CURRENT_SOURCE_DIR}/caroots.inf ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf)
+add_cd_file(TARGET converted_caroots_inf FILE ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
 
 add_registry_inf(
     hivecls.inf
@@ -45,9 +43,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/welcome_config/)
     foreach(_file ${I18N_FILES})
         set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/welcome_config/${_file})
         set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/welcome_config/${_file})
-        add_custom_command(OUTPUT "${_converted_file}"
-                           COMMAND native-utf16le "${_source_file}" "${_converted_file}"
-                           DEPENDS native-utf16le "${_source_file}")
+        utf16le_convert(${_source_file} ${_converted_file})
         add_cd_file(TARGET converted_welcome_i18n_files FILE ${_converted_file} DESTINATION bootcd/reactos/welcome NO_CAB NAME_ON_CD ${_file} FOR hybridcd)
         list(APPEND _converted_welcome_i18n_files ${_converted_file})
     endforeach(_file)
@@ -83,6 +79,7 @@ add_livecd_shortcut("Device Manager" devmgmt.exe "Profiles/All Users/Start Menu/
 add_livecd_shortcut("Event Viewer" eventvwr.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
 add_livecd_shortcut("Service Manager" servman.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
 add_livecd_shortcut("System Configuration" msconfig.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
+add_livecd_shortcut("Accessibility Utility Manager" utilman.exe "Profiles/All Users/Start Menu/Programs/Accessories/Accessibility")
 add_livecd_shortcut("Magnify" magnify.exe "Profiles/All Users/Start Menu/Programs/Accessories/Accessibility")
 add_livecd_shortcut("On-Screen Keyboard" osk.exe "Profiles/All Users/Start Menu/Programs/Accessories/Accessibility")
 add_livecd_shortcut("Remote Desktop Connection" mstsc.exe "Profiles/All Users/Start Menu/Programs/Accessories/Communications")

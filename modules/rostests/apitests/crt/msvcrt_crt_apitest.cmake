@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE_MSVCRT
+    fpcontrol.c
 #    _CrtCheckMemory.c
 #    _CrtDbgBreak.c
 #    _CrtDbgReport.c
@@ -168,13 +169,9 @@ list(APPEND SOURCE_MSVCRT
 #    _chsize_s
 #    _chvalidator
 #    _chvalidator_l
-#    _clearfp.c
 #    _close.c
 #    _commit.c
 #    _commode
-#    _control87.c
-#    _controlfp.c
-#    _controlfp_s.c
 #    _copysign.c
 #    _cprintf.c
 #    _cprintf_l
@@ -552,7 +549,7 @@ list(APPEND SOURCE_MSVCRT
 #    _mbsncat_s_l
 #    _mbsnccnt.c
 #    _mbsnccnt_l
-#    _mbsncmp.c
+    _mbsncmp.c
 #    _mbsncmp_l
 #    _mbsncoll.c
 #    _mbsncoll_l
@@ -588,7 +585,7 @@ list(APPEND SOURCE_MSVCRT
 #    _mbsspn_l
 #    _mbsspnp.c
 #    _mbsspnp_l
-#    _mbsstr.c
+    _mbsstr.c
 #    _mbsstr_l
 #    _mbstok.c
 #    _mbstok_l
@@ -665,7 +662,6 @@ list(APPEND SOURCE_MSVCRT
 #    _searchenv.c
 #    _searchenv_s.c
 #    _set_SSE2_enable
-#    _set_controlfp
 #    _set_doserrno.c
 #    _set_errno.c
 #    _set_error_mode.c
@@ -717,7 +713,6 @@ list(APPEND SOURCE_MSVCRT
 #    _stat.c
 #    _stat64.c
 #    _stati64.c
-#    _statusfp.c
 #    _strcmpi.c
 #    _strcoll_l
 #    _strdate.c
@@ -986,7 +981,7 @@ list(APPEND SOURCE_MSVCRT
 #    _wstrdate_s
 #    _wstrtime.c
 #    _wstrtime_s
-#    _wsystem.c
+    _wsystem.c
 #    _wtempnam.c
 #    _wtempnam_dbg
 #    _wtmpnam.c
@@ -1022,7 +1017,7 @@ list(APPEND SOURCE_MSVCRT
 #    bsearch_s
 #    btowc.c
 #    calloc.c
-#    ceil.c
+    ceil.c
 #    clearerr.c
 #    clearerr_s
 #    clock.c
@@ -1033,7 +1028,7 @@ list(APPEND SOURCE_MSVCRT
 #    div.c
 #    exit.c
 #    exp.c
-#    fabs.c
+    fabs.c
 #    fclose.c
 #    feof.c
 #    ferror.c
@@ -1043,7 +1038,7 @@ list(APPEND SOURCE_MSVCRT
 #    fgets.c
 #    fgetwc.c
 #    fgetws.c
-#    floor.c
+    floor.c
 #    fmod.c
 #    fopen.c
 #    fopen_s.c
@@ -1142,7 +1137,7 @@ list(APPEND SOURCE_MSVCRT
 #    qsort_s
 #    raise.c
 #    rand.c
-#    rand_s.c
+    rand_s.c
 #    realloc.c
 #    remove.c
 #    rename.c
@@ -1194,7 +1189,7 @@ list(APPEND SOURCE_MSVCRT
 #    swprintf_s.c
 #    swscanf.c
 #    swscanf_s.c
-#    system.c
+    system.c
 #    tan.c
 #    tanh.c
 #    time.c
@@ -1261,6 +1256,7 @@ list(APPEND SOURCE_MSVCRT
 #    wprintf_s.c
 #    wscanf.c
 #    wscanf_s.c
+    crtdata.c
     static_construct.cpp
     static_init.c
 )
@@ -1371,6 +1367,12 @@ elseif(ARCH STREQUAL "amd64")
     #    sinf.c
     #    sqrtf.c
     )
+elseif(ARCH STREQUAL "arm")
+    list(APPEND SOURCE_MSVCRT
+        __rt_div.c
+        __fto64.c
+        __64tof.c
+    )
 endif()
 
 # Startup code doesn't go together well with the static CRT... too much __imp_
@@ -1396,6 +1398,10 @@ target_link_libraries(msvcrt_crt_apitest wine ${PSEH_LIB})
 set_module_type(msvcrt_crt_apitest win32cui)
 add_importlibs(msvcrt_crt_apitest msvcrt kernel32 ntdll)
 add_rostests_file(TARGET msvcrt_crt_apitest)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(msvcrt_crt_apitest PRIVATE -Wno-format)
+endif()
 
 spec2def(msvcrt_crt_dll_startup.dll dll_startup.spec)
 add_library(msvcrt_crt_dll_startup MODULE

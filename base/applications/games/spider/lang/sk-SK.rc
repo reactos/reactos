@@ -49,7 +49,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Pavúčí solitér" //Spider
-    IDS_SPI_ABOUT "Pavúčí solitér od Gregor Schneider\n\nCardLib verzia 1.0"
+    IDS_SPI_ABOUT "Pavúčí solitér od Gregor Schneider\nCardLib verzia 1.0"
     IDS_SPI_QUIT "Naozaj chcete skončiť aktuálnu hru?"
     IDS_SPI_WIN "Blahoželám, vyhrali ste!"
     IDS_SPI_DEAL "Rozdať znova?"

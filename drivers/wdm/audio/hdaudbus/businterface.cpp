@@ -61,7 +61,7 @@ HDA_TransferCodecVerbs(
 }
 
 NTSTATUS
-NTAPI 
+NTAPI
 HDA_AllocateCaptureDmaEngine(
     IN PVOID _context,
     IN UCHAR CodecAddress,

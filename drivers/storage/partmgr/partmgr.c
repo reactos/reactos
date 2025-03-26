@@ -114,6 +114,84 @@ PartMgrConvertLayoutToExtended(
     return layoutEx;
 }
 
+/**
+ * @brief
+ * Detects whether a disk is a "super-floppy", i.e. an unpartitioned
+ * disk with only a valid VBR, as reported by IoReadPartitionTable()
+ * and IoWritePartitionTable():
+ * only one single partition starting at offset zero and spanning the
+ * whole disk, without hidden sectors, whose type is FAT16 non-bootable.
+ *
+ * Accessing \Device\HarddiskN\Partition0 or Partition1 on such disks
+ * returns the same data.
+ *
+ * @note
+ * - Requires partitioning lock held.
+ * - Uses the cached disk partition layout.
+ **/
+static
+CODE_SEG("PAGE")
+BOOLEAN
+PartMgrIsDiskSuperFloppy(
+    _In_ PFDO_EXTENSION FdoExtension)
+{
+    PPARTITION_INFORMATION_EX PartitionInfo;
+
+    PAGED_CODE();
+
+    ASSERT(FdoExtension->LayoutValid && FdoExtension->LayoutCache);
+
+    /* We must be MBR and have only one partition */
+    ASSERT(FdoExtension->DiskData.PartitionStyle == FdoExtension->LayoutCache->PartitionStyle);
+    if (FdoExtension->DiskData.PartitionStyle != PARTITION_STYLE_MBR)
+        return FALSE;
+    if (FdoExtension->LayoutCache->PartitionCount != 1)
+        return FALSE;
+
+    /* Get the single partition entry */
+    PartitionInfo = FdoExtension->LayoutCache->PartitionEntry;
+    ASSERT(FdoExtension->DiskData.PartitionStyle == PartitionInfo->PartitionStyle);
+
+    /* The single partition must start at the beginning of the disk */
+    if (!(PartitionInfo->StartingOffset.QuadPart == 0 &&
+          PartitionInfo->Mbr.HiddenSectors == 0))
+    {
+        return FALSE;
+    }
+
+    /* The disk signature is usually set to 1; warn in case it's not */
+    ASSERT(FdoExtension->DiskData.Mbr.Signature == FdoExtension->LayoutCache->Mbr.Signature);
+    if (FdoExtension->DiskData.Mbr.Signature != 1)
+    {
+        WARN("Super-Floppy disk %lu signature %08x != 1!\n",
+             FdoExtension->DiskData.DeviceNumber, FdoExtension->DiskData.Mbr.Signature);
+    }
+
+    /* The partition must be recognized and report as FAT16 non-bootable */
+    if ((PartitionInfo->Mbr.RecognizedPartition != TRUE) ||
+        (PartitionInfo->Mbr.PartitionType != PARTITION_FAT_16) ||
+        (PartitionInfo->Mbr.BootIndicator != FALSE))
+    {
+        WARN("Super-Floppy disk %lu does not return default settings!\n"
+             "    RecognizedPartition = %s, expected TRUE\n"
+             "    PartitionType = 0x%02x, expected 0x04 (PARTITION_FAT_16)\n"
+             "    BootIndicator = %s, expected FALSE\n",
+             FdoExtension->DiskData.DeviceNumber,
+             PartitionInfo->Mbr.RecognizedPartition ? "TRUE" : "FALSE",
+             PartitionInfo->Mbr.PartitionType,
+             PartitionInfo->Mbr.BootIndicator ? "TRUE" : "FALSE");
+    }
+
+    /* The partition and disk sizes should agree */
+    if (PartitionInfo->PartitionLength.QuadPart != FdoExtension->DiskData.DiskSize)
+    {
+        WARN("PartitionLength = %I64u is different from DiskSize = %I64u\n",
+             PartitionInfo->PartitionLength.QuadPart, FdoExtension->DiskData.DiskSize);
+    }
+
+    return TRUE;
+}
+
 static
 CODE_SEG("PAGE")
 VOID
@@ -262,12 +340,15 @@ PartMgrUpdatePartitionDevices(
                                        pdoNumber,
                                        NewLayout->PartitionStyle,
                                        &partitionDevice);
-
         if (!NT_SUCCESS(status))
         {
             partEntry->PartitionNumber = 0;
             continue;
         }
+
+        // mark partition as removable if parent device is removable
+        if (FdoExtension->LowerDevice->Characteristics & FILE_REMOVABLE_MEDIA)
+            partitionDevice->Characteristics |= FILE_REMOVABLE_MEDIA;
 
         totalPartitions++;
 
@@ -300,7 +381,7 @@ PartMgrUpdatePartitionDevices(
         }
         else
         {
-            // insert in the beginning
+            // insert at the beginning
             partExt->ListEntry.Next = FdoExtension->PartitionList.Next;
             FdoExtension->PartitionList.Next = &partExt->ListEntry;
         }
@@ -311,7 +392,15 @@ PartMgrUpdatePartitionDevices(
     FdoExtension->EnumeratedPartitionsTotal = totalPartitions;
 }
 
-// requires partitioning lock held
+/**
+ * @brief
+ * Retrieves the disk partition layout from the given disk FDO.
+ *
+ * If the disk layout cache is valid, just return it; otherwise,
+ * read the partition table layout from disk and update the cache.
+ *
+ * @note    Requires partitioning lock held.
+ **/
 static
 CODE_SEG("PAGE")
 NTSTATUS
@@ -329,22 +418,29 @@ PartMgrGetDriveLayout(
 
     PDRIVE_LAYOUT_INFORMATION_EX layoutEx = NULL;
     NTSTATUS status = IoReadPartitionTableEx(FdoExtension->LowerDevice, &layoutEx);
-
     if (!NT_SUCCESS(status))
-    {
         return status;
-    }
 
     if (FdoExtension->LayoutCache)
-    {
         ExFreePool(FdoExtension->LayoutCache);
-    }
 
     FdoExtension->LayoutCache = layoutEx;
     FdoExtension->LayoutValid = TRUE;
 
-    *DriveLayout = layoutEx;
+    FdoExtension->DiskData.PartitionStyle = layoutEx->PartitionStyle;
+    if (FdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        FdoExtension->DiskData.Mbr.Signature = layoutEx->Mbr.Signature;
+        // FdoExtension->DiskData.Mbr.Checksum = geometryEx.Partition.Mbr.CheckSum;
+    }
+    else
+    {
+        FdoExtension->DiskData.Gpt.DiskId = layoutEx->Gpt.DiskId;
+    }
 
+    FdoExtension->IsSuperFloppy = PartMgrIsDiskSuperFloppy(FdoExtension);
+
+    *DriveLayout = layoutEx;
     return status;
 }
 
@@ -363,7 +459,7 @@ FdoIoctlDiskGetDriveGeometryEx(
     // as disk.sys doesn't really know about the partition table on a disk
 
     PDISK_GEOMETRY_EX_INTERNAL geometryEx = Irp->AssociatedIrp.SystemBuffer;
-    size_t outBufferLength = ioStack->Parameters.DeviceIoControl.OutputBufferLength;
+    ULONG outBufferLength = ioStack->Parameters.DeviceIoControl.OutputBufferLength;
     NTSTATUS status;
 
     status = IssueSyncIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
@@ -489,7 +585,6 @@ FdoIoctlDiskGetDriveLayout(
 
     PDRIVE_LAYOUT_INFORMATION_EX layoutEx;
     NTSTATUS status = PartMgrGetDriveLayout(FdoExtension, &layoutEx);
-
     if (!NT_SUCCESS(status))
     {
         PartMgrReleaseLayoutLock(FdoExtension);
@@ -599,6 +694,14 @@ FdoIoctlDiskSetDriveLayout(
 
     PartMgrAcquireLayoutLock(FdoExtension);
 
+    // If the current disk is super-floppy but the user changes
+    // the number of partitions to > 1, fail the call.
+    if (FdoExtension->IsSuperFloppy && (layoutEx->PartitionCount > 1))
+    {
+        PartMgrReleaseLayoutLock(FdoExtension);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
     // this in fact updates the bus relations
     PartMgrUpdatePartitionDevices(FdoExtension, layoutEx);
 
@@ -621,6 +724,8 @@ FdoIoctlDiskSetDriveLayout(
 
             part->PartitionNumber = layoutEx->PartitionEntry[i].PartitionNumber;
         }
+
+        FdoExtension->IsSuperFloppy = PartMgrIsDiskSuperFloppy(FdoExtension);
     }
     else
     {
@@ -686,6 +791,16 @@ FdoIoctlDiskSetDriveLayoutEx(
 
     PartMgrAcquireLayoutLock(FdoExtension);
 
+    // If the current disk is super-floppy but the user changes either
+    // the disk type or the number of partitions to > 1, fail the call.
+    if (FdoExtension->IsSuperFloppy &&
+        ((layoutEx->PartitionStyle != PARTITION_STYLE_MBR) ||
+         (layoutEx->PartitionCount > 1)))
+    {
+        PartMgrReleaseLayoutLock(FdoExtension);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
     // if partition count is 0, it's the same as IOCTL_DISK_CREATE_DISK
     if (layoutEx->PartitionCount == 0)
     {
@@ -730,6 +845,8 @@ FdoIoctlDiskSetDriveLayoutEx(
         }
         FdoExtension->LayoutCache = layoutEx;
         FdoExtension->LayoutValid = TRUE;
+
+        FdoExtension->IsSuperFloppy = PartMgrIsDiskSuperFloppy(FdoExtension);
     }
     else
     {
@@ -830,8 +947,8 @@ FdoHandleStartDevice(
     _In_ PFDO_EXTENSION FdoExtension,
     _In_ PIRP Irp)
 {
-    // obtain the disk device number
-    // this is not expected to change thus not in PartMgrRefreshDiskData
+    // Obtain the disk device number.
+    // It is not expected to change, thus not in PartMgrRefreshDiskData().
     STORAGE_DEVICE_NUMBER deviceNumber;
     NTSTATUS status = IssueSyncIoControlRequest(IOCTL_STORAGE_GET_DEVICE_NUMBER,
                                                 FdoExtension->LowerDevice,
@@ -847,25 +964,22 @@ FdoHandleStartDevice(
 
     FdoExtension->DiskData.DeviceNumber = deviceNumber.DeviceNumber;
 
-    // register the disk interface
-    // partmgr.sys from Windows 8.1 also registers a mysterious GUID_DEVINTERFACE_HIDDEN_DISK here
+    // Register the disk interface.
+    // partmgr.sys from Windows 8.1 also registers a mysterious GUID_DEVINTERFACE_HIDDEN_DISK here.
     UNICODE_STRING interfaceName;
     status = IoRegisterDeviceInterface(FdoExtension->PhysicalDiskDO,
                                        &GUID_DEVINTERFACE_DISK,
                                        NULL,
                                        &interfaceName);
-
     if(!NT_SUCCESS(status))
     {
         ERR("Failed to register GUID_DEVINTERFACE_DISK, status %x\n", status);
         return status;
     }
 
+    INFO("Disk interface %wZ\n", &interfaceName);
     FdoExtension->DiskInterfaceName = interfaceName;
     status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
-
-    INFO("Disk interface %wZ\n", &interfaceName);
-
     if (!NT_SUCCESS(status))
     {
         RtlFreeUnicodeString(&interfaceName);
@@ -875,7 +989,13 @@ FdoHandleStartDevice(
     return status;
 }
 
-// requires partitioning lock held
+/**
+ * @brief
+ * Refreshes all the cached disk FDO data.
+ * The geometry of the disk and its partition layout cache is updated.
+ *
+ * @note    Requires partitioning lock held.
+ **/
 static
 CODE_SEG("PAGE")
 NTSTATUS
@@ -896,9 +1016,7 @@ PartMgrRefreshDiskData(
                                        sizeof(geometryEx),
                                        FALSE);
     if (!NT_SUCCESS(status))
-    {
         return status;
-    }
 
     FdoExtension->DiskData.DiskSize = geometryEx.DiskSize.QuadPart;
     FdoExtension->DiskData.BytesPerSector = geometryEx.Geometry.BytesPerSector;
@@ -907,20 +1025,7 @@ PartMgrRefreshDiskData(
     PDRIVE_LAYOUT_INFORMATION_EX layoutEx = NULL;
     status = PartMgrGetDriveLayout(FdoExtension, &layoutEx);
     if (!NT_SUCCESS(status))
-    {
         return status;
-    }
-
-    FdoExtension->DiskData.PartitionStyle = layoutEx->PartitionStyle;
-    if (FdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_MBR)
-    {
-        FdoExtension->DiskData.Mbr.Signature = layoutEx->Mbr.Signature;
-        // FdoExtension->DiskData.Mbr.Checksum = geometryEx.Partition.Mbr.CheckSum;
-    }
-    else
-    {
-        FdoExtension->DiskData.Gpt.DiskId = layoutEx->Gpt.DiskId;
-    }
 
     return STATUS_SUCCESS;
 }
@@ -953,8 +1058,8 @@ FdoHandleDeviceRelations(
 
         INFO("Partition style %u\n", FdoExtension->DiskData.PartitionStyle);
 
-        // PartMgrAcquireLayoutLock calls PartMgrGetDriveLayout inside
-        // so we're sure here that it returns only cached layout
+        // PartMgrRefreshDiskData() calls PartMgrGetDriveLayout() inside
+        // so we're sure here that it returns only the cached layout.
         PDRIVE_LAYOUT_INFORMATION_EX layoutEx;
         PartMgrGetDriveLayout(FdoExtension, &layoutEx);
 
@@ -1017,17 +1122,6 @@ FdoHandleRemoveDevice(
 {
     PAGED_CODE();
 
-    for (PSINGLE_LIST_ENTRY curEntry = FdoExtension->PartitionList.Next;
-         curEntry != NULL;
-         curEntry = curEntry->Next)
-    {
-        PPARTITION_EXTENSION partExt = CONTAINING_RECORD(curEntry,
-                                                         PARTITION_EXTENSION,
-                                                         ListEntry);
-
-        ASSERT(partExt->DeviceRemoved);
-    }
-
     if (FdoExtension->DiskInterfaceName.Buffer)
     {
         IoSetDeviceInterfaceState(&FdoExtension->DiskInterfaceName, FALSE);
@@ -1088,14 +1182,20 @@ PartMgrAddDevice(
 
     PAGED_CODE();
 
+    /*
+     * Create the disk FDO. Use FILE_DEVICE_MASS_STORAGE type (or any other
+     * one that is NOT FILE_DEVICE_[DISK|VIRTUAL_DISK|CD_ROM|TAPE]), so that
+     * IoCreateDevice() doesn't automatically create a VPB for this device,
+     * even if we will later want this device to inherit the type of the
+     * underlying PDO which can have any of the types mentioned above.
+     */
     NTSTATUS status = IoCreateDevice(DriverObject,
                                      sizeof(FDO_EXTENSION),
-                                     0,
-                                     FILE_DEVICE_BUS_EXTENDER,
+                                     NULL,
+                                     FILE_DEVICE_MASS_STORAGE,
                                      FILE_AUTOGENERATED_DEVICE_NAME | FILE_DEVICE_SECURE_OPEN,
                                      FALSE,
                                      &deviceObject);
-
     if (!NT_SUCCESS(status))
     {
         ERR("Failed to create FDO 0x%x\n", status);
@@ -1108,21 +1208,22 @@ PartMgrAddDevice(
     deviceExtension->IsFDO = TRUE;
     deviceExtension->DeviceObject = deviceObject;
     deviceExtension->LowerDevice = IoAttachDeviceToDeviceStack(deviceObject, PhysicalDeviceObject);
+    if (!deviceExtension->LowerDevice)
+    {
+        // The attachment failed
+        IoDeleteDevice(deviceObject);
+        return STATUS_DEVICE_REMOVED;
+    }
     deviceExtension->PhysicalDiskDO = PhysicalDeviceObject;
     KeInitializeEvent(&deviceExtension->SyncEvent, SynchronizationEvent, TRUE);
 
-    // the the attaching failed
-    if (!deviceExtension->LowerDevice)
-    {
-        IoDeleteDevice(deviceObject);
+    // Update now the device type with the actual underlying device type
+    deviceObject->DeviceType = deviceExtension->LowerDevice->DeviceType;
 
-        return STATUS_DEVICE_REMOVED;
-    }
     deviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
 
-    // device is initialized
+    // The device is initialized
     deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-
     return STATUS_SUCCESS;
 }
 

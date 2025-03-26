@@ -4,8 +4,8 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_CMDLINE_NOT_SUPPORTED, "Yanlışlık: Komut yatacı desteklenmiyor\n"
-    STRING_ALIAS_NOT_FOUND, "Yanlışlık: Başka ad bulunamadı\n"
-    STRING_INVALID_QUERY, "Yanlışlık: Geçersiz sorgu\n"
+    STRING_CMDLINE_NOT_SUPPORTED, "Hata: Komut yatacı desteklenmiyor\n"
+    STRING_ALIAS_NOT_FOUND, "Hata: Başka ad bulunamadı\n"
+    STRING_INVALID_QUERY, "Hata: Geçersiz sorgu\n"
     STRING_INVALID_PATH, "YOL için geçersiz söz dizimi.\n"
 }

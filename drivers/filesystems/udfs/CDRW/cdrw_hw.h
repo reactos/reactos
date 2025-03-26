@@ -159,7 +159,7 @@ typedef union _CDB {
                 UCHAR Reserved : 4;
             } Fields;
         } Byte2;
-         
+
         UCHAR Reserved2[3];
         UCHAR Start_TrackSes;
         UCHAR AllocationLength[2];
@@ -582,7 +582,7 @@ typedef union _CDB {
         } Byte2;
         UCHAR Reserved1 [2];
         UCHAR TrackNum;
-        UCHAR Reserved2 [6];  
+        UCHAR Reserved2 [6];
 
     } CLOSE_TRACK_SESSION, *PCLOSE_TRACK_SESSION;
 
@@ -1697,7 +1697,7 @@ typedef PREAD_TOC_FULL_TOC  PREAD_TOC_PMA;
 typedef struct _READ_TOC_ATIP {
     UCHAR Length[2];
     UCHAR Reserved[2];
-    
+
 #define ATIP_SpeedRef_Mask  0x07
 #define ATIP_SpeedRef_2X    0x01
 #define ATIP_WritingPower_Mask  0x07
@@ -2164,7 +2164,7 @@ typedef struct _EVENT_STAT_EXT_REQ_BLOCK {
     } Byte0;
 
 #define EventStat_ExtrnReqStatus_Mask         0x0f
-#define EventStat_ExtrnReqStatus_Ready        0x00 
+#define EventStat_ExtrnReqStatus_Ready        0x00
 #define EventStat_ExtrnReqStatus_OtherPrevent 0x01
 
     union {
@@ -2264,8 +2264,8 @@ typedef struct _EVENT_STAT_DEV_BUSY_BLOCK {
 
 // Define mode disc info block.
 
-typedef struct _DISC_INFO_BLOCK {        // 
-    UCHAR DataLength [2];        
+typedef struct _DISC_INFO_BLOCK {        //
+    UCHAR DataLength [2];
 
 #define DiscInfo_Disk_Mask          0x03
 #define DiscInfo_Disk_Empty         0x00
@@ -2338,8 +2338,8 @@ typedef struct _DISC_INFO_BLOCK {        //
 
 } DISC_INFO_BLOCK, *PDISC_INFO_BLOCK;
 
-typedef struct _DISC_INFO_TRACK_BLOCK {        // 
-    UCHAR DataLength [2];        
+typedef struct _DISC_INFO_TRACK_BLOCK {        //
+    UCHAR DataLength [2];
 
     UCHAR Reserved: 5;
     UCHAR InfoType: 3;
@@ -2349,11 +2349,11 @@ typedef struct _DISC_INFO_TRACK_BLOCK {        //
     UCHAR NumOfTracks[2];
     UCHAR MaxNumOfAppendableTracks[2];
     UCHAR NumOfAppendableTracks[2];
-    
+
 } DISC_INFO_TRACK_BLOCK, *PDISC_INFO_TRACK_BLOCK;
 
-typedef struct _DISC_INFO_POW_BLOCK {        // 
-    UCHAR DataLength [2];        
+typedef struct _DISC_INFO_POW_BLOCK {        //
+    UCHAR DataLength [2];
 
     UCHAR Reserved: 5;
     UCHAR InfoType: 3;
@@ -2362,7 +2362,7 @@ typedef struct _DISC_INFO_POW_BLOCK {        //
     UCHAR RemainingPOWReplacements[4];
     UCHAR RemainingPOWMapEntries[4];
     UCHAR RemainingPOWUpdates[4];
-    
+
 } DISC_INFO_POW_BLOCK, *PDISC_INFO_POW_BLOCK;
 
 // Define track info block.
@@ -2377,7 +2377,7 @@ typedef struct _DISC_INFO_POW_BLOCK {        //
 #define Trk_QSubChan_Type_AllowCpy         0x02
 
 typedef struct _TRACK_INFO_BLOCK {
-    UCHAR DataLength [2];        
+    UCHAR DataLength [2];
     UCHAR TrackNum;
     UCHAR SesNum;
     UCHAR Reserved0;
@@ -2685,7 +2685,7 @@ typedef struct _MODE_WRITE_PARAMS_PAGE {        // 0x05
     } Byte4;
 
     UCHAR LinkSize;
-    UCHAR Reserved3;    
+    UCHAR Reserved3;
 
     union {
         UCHAR Flags;
@@ -2795,7 +2795,7 @@ typedef struct _MODE_CD_PARAMS_PAGE {         // 0x0D
     UCHAR PageCode : 6;
     UCHAR Reserved : 1;
     UCHAR PageSavable : 1;
-    
+
     UCHAR PageLength;                       // 0x06
     UCHAR Reserved1;
 
@@ -2834,7 +2834,7 @@ typedef struct _MODE_CD_AUDIO_CONTROL_PAGE {         // 0x0E
     UCHAR PageCode : 6;
     UCHAR Reserved1: 1;
     UCHAR PageSavable : 1;
-    
+
     UCHAR PageLength;                       // 0x0E
 
 #define CdAudio_SOTC        0x02
@@ -2863,7 +2863,7 @@ typedef struct _MODE_POWER_CONDITION_PAGE {         // 0x1A
     UCHAR PageCode : 6;
     UCHAR Reserved1: 1;
     UCHAR PageSavable : 1;
-    
+
     UCHAR PageLength;                       // 0x0A
     UCHAR Reserved2;
 
@@ -2890,7 +2890,7 @@ typedef struct _MODE_FAIL_REPORT_PAGE {         // 0x1C
     UCHAR PageCode : 6;
     UCHAR Reserved1: 1;
     UCHAR PageSavable : 1;
-    
+
     UCHAR PageLength;                       // 0x0A
 
 #define FailReport_LogErr       0x01
@@ -2929,7 +2929,7 @@ typedef struct _MODE_TIMEOUT_AND_PROTECT_PAGE {         // 0x1D
     UCHAR PageCode : 6;
     UCHAR Reserved1: 1;
     UCHAR PageSavable : 1;
-    
+
     UCHAR PageLength;                       // 0x08
 
     UCHAR Reserved2[2];
@@ -2992,8 +2992,8 @@ typedef struct _MODE_CAPABILITIES_PAGE2 {   // 0x2A
 
     UCHAR PageLength;
 
-#define DevCap_read_cd_r          0x01 // reserved in 1.2 
-#define DevCap_read_cd_rw         0x02 // reserved in 1.2 
+#define DevCap_read_cd_r          0x01 // reserved in 1.2
+#define DevCap_read_cd_rw         0x02 // reserved in 1.2
 #define DevCap_method2            0x04
 #define DevCap_read_dvd_rom       0x08
 #define DevCap_read_dvd_r         0x10
@@ -3002,23 +3002,23 @@ typedef struct _MODE_CAPABILITIES_PAGE2 {   // 0x2A
 #define DevCap_read_dvd           (DevCap_read_dvd_rom | DevCap_read_dvd_r | DevCap_read_dvd_ram)
 
     UCHAR ReadCap;            // DevCap_*_read              //  0x02
-/*    UCHAR cd_r_read         : 1; // reserved in 1.2 
-    UCHAR cd_rw_read        : 1; // reserved in 1.2 
+/*    UCHAR cd_r_read         : 1; // reserved in 1.2
+    UCHAR cd_rw_read        : 1; // reserved in 1.2
     UCHAR method2           : 1;
     UCHAR dvd_rom           : 1;
     UCHAR dvd_r_read        : 1;
     UCHAR dvd_ram_read      : 1;
     UCHAR Reserved2            : 2;*/
 
-#define DevCap_write_cd_r         0x01 // reserved in 1.2 
-#define DevCap_write_cd_rw        0x02 // reserved in 1.2 
+#define DevCap_write_cd_r         0x01 // reserved in 1.2
+#define DevCap_write_cd_rw        0x02 // reserved in 1.2
 #define DevCap_test_write         0x04
 #define DevCap_write_dvd_r        0x10
 #define DevCap_write_dvd_ram      0x20
 
     UCHAR WriteCap;            // DevCap_*_write            //  0x03
-/*    UCHAR cd_r_write        : 1; // reserved in 1.2 
-    UCHAR cd_rw_write        : 1; // reserved in 1.2 
+/*    UCHAR cd_r_write        : 1; // reserved in 1.2
+    UCHAR cd_rw_write        : 1; // reserved in 1.2
     UCHAR test_write        : 1;
     UCHAR reserved3a        : 1;
     UCHAR dvd_r_write       : 1;
@@ -3083,16 +3083,16 @@ typedef struct _MODE_CAPABILITIES_PAGE2 {   // 0x2A
 
 #define DevCap_separate_volume    0x01
 #define DevCap_separate_mute      0x02
-#define DevCap_disc_present       0x04          // reserved in 1.2 
-#define DevCap_sw_slot_select     0x08          // reserved in 1.2 
-#define DevCap_change_side_cap    0x10 
+#define DevCap_disc_present       0x04          // reserved in 1.2
+#define DevCap_sw_slot_select     0x08          // reserved in 1.2
+#define DevCap_change_side_cap    0x10
 #define DevCap_rw_leadin_read     0x20
 
     UCHAR Capabilities3;                                    //  0x07
 /*    UCHAR separate_volume   : 1;
     UCHAR separate_mute     : 1;
-    UCHAR disc_present      : 1;  // reserved in 1.2 
-    UCHAR sss               : 1;  // reserved in 1.2 
+    UCHAR disc_present      : 1;  // reserved in 1.2
+    UCHAR sss               : 1;  // reserved in 1.2
     UCHAR Reserved7         : 4;*/
 
     UCHAR MaximumSpeedSupported[2];                         //  0x08
@@ -3221,7 +3221,7 @@ typedef struct _SET_STREAMING_PERFORMANCE_DESCRIPTOR {
     UCHAR ReadTime[4];  // ms
 
     UCHAR WriteSize[4]; // KBytes
-    UCHAR WriteTime[4]; // ms    
+    UCHAR WriteTime[4]; // ms
 
 } SET_STREAMING_PERFORMANCE_DESCRIPTOR, *PSET_STREAMING_PERFORMANCE_DESCRIPTOR;
 
@@ -3297,7 +3297,7 @@ typedef struct _FEATURE_LIST_HEADER {
     UCHAR    CurrentProfile[2];
 } FEATURE_LIST_HEADER, *PFEATURE_LIST_HEADER;
 
-// Profile List Feature 
+// Profile List Feature
 
 
 // Profile list descriptor format

@@ -201,13 +201,13 @@ VOID
 FlushConnectQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
 
 VOID
-FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+FlushReceiveQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
 
 VOID
-FlushSendQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+FlushSendQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
 
 VOID
-FlushShutdownQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status, const BOOLEAN interlocked);
+FlushShutdownQueue(PCONNECTION_ENDPOINT Connection, const NTSTATUS Status);
 
 VOID
 FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status);

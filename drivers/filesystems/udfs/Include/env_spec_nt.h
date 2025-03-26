@@ -41,7 +41,7 @@ InterlockedExchangeAdd(PLONG addr, LONG i) {
     return Old;
 }
 
-#define DeviceIoControl(h, ctlc, ib, is, ob, os, r, ov)  MyDeviceIoControl(h, ctlc, ib, is, ob, os, r, ov)  
+#define DeviceIoControl(h, ctlc, ib, is, ob, os, r, ov)  MyDeviceIoControl(h, ctlc, ib, is, ob, os, r, ov)
 
 BOOLEAN
 MyDeviceIoControl(
@@ -162,7 +162,7 @@ EnvFileSetPointer(
     );
 
 extern "C"
-NTSTATUS 
+NTSTATUS
 EnvFileDeleteW(
     PWCHAR fName
     );

@@ -12,6 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
+#include <pseh/pseh2.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
@@ -669,7 +671,7 @@ ScServiceDispatcher(HANDLE hPipe,
                         break;
 
                     default:
-                        TRACE("Command %lu received", ControlPacket->dwControl);
+                        TRACE("Command %lu received\n", ControlPacket->dwControl);
                         dwError = ScControlService(lpService, ControlPacket);
                         break;
                 }

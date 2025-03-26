@@ -2,7 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,8 @@
  */
 
 #include "setupapi_private.h"
+
+#include <pseh/pseh2.h>
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
@@ -88,7 +90,7 @@ static void SETUPDI_GuidToString(const GUID *guid, LPWSTR guidStr)
         guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
 }
 
-static DWORD
+DWORD
 GetErrorCodeFromCrCode(const IN CONFIGRET cr)
 {
   switch (cr)
@@ -725,13 +727,12 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
         LPCWSTR MachineName,
         PVOID Reserved)
 {
-    WCHAR szKeyName[40];
-    HKEY hClassesKey = INVALID_HANDLE_VALUE;
+    GUID CurrentClassGuid;
     HKEY hClassKey;
-    DWORD dwLength;
     DWORD dwIndex;
-    LONG lError;
     DWORD dwGuidListIndex = 0;
+    HMACHINE hMachine = NULL;
+    CONFIGRET cr;
 
     TRACE("%s(0x%lx %p %lu %p %s %p)\n", __FUNCTION__, Flags, ClassGuidList,
         ClassGuidListSize, RequiredSize, debugstr_w(MachineName), Reserved);
@@ -747,39 +748,36 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
         return FALSE;
     }
 
-    hClassesKey = SetupDiOpenClassRegKeyExW(NULL,
-                                            KEY_ENUMERATE_SUB_KEYS,
-                                            DIOCR_INSTALLER,
-                                            MachineName,
-                                            Reserved);
-    if (hClassesKey == INVALID_HANDLE_VALUE)
+    if (MachineName)
     {
-        return FALSE;
+        cr = CM_Connect_MachineW(MachineName, &hMachine);
+        if (cr != CR_SUCCESS)
+        {
+            SetLastError(GetErrorCodeFromCrCode(cr));
+            return FALSE;
+        }
     }
 
     for (dwIndex = 0; ; dwIndex++)
     {
-        dwLength = 40;
-        lError = RegEnumKeyExW(hClassesKey,
-                               dwIndex,
-                               szKeyName,
-                               &dwLength,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL);
-        TRACE("RegEnumKeyExW() returns %d\n", lError);
-        if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
+        cr = CM_Enumerate_Classes_Ex(dwIndex,
+                                     &CurrentClassGuid,
+                                     0,
+                                     hMachine);
+        if (cr == CR_SUCCESS)
         {
-            TRACE("Key name: %s\n", debugstr_w(szKeyName));
-
-            if (RegOpenKeyExW(hClassesKey,
-                              szKeyName,
-                              0,
-                              KEY_QUERY_VALUE,
-                              &hClassKey))
+            TRACE("Guid: %s\n", debugstr_guid(&CurrentClassGuid));
+            if (CM_Open_Class_Key_ExW(&CurrentClassGuid,
+                                       NULL,
+                                       KEY_QUERY_VALUE,
+                                       RegDisposition_OpenExisting,
+                                       &hClassKey,
+                                       CM_OPEN_CLASS_KEY_INSTALLER,
+                                       hMachine) != CR_SUCCESS)
             {
-                RegCloseKey(hClassesKey);
+                SetLastError(GetErrorCodeFromCrCode(cr));
+                if (hMachine)
+                    CM_Disconnect_Machine(hMachine);
                 return FALSE;
             }
 
@@ -823,27 +821,20 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
             RegCloseKey(hClassKey);
 
-            TRACE("Guid: %s\n", debugstr_w(szKeyName));
             if (dwGuidListIndex < ClassGuidListSize)
             {
-                if (szKeyName[0] == '{' && szKeyName[37] == '}')
-                {
-                    szKeyName[37] = 0;
-                }
-                TRACE("Guid: %p\n", &szKeyName[1]);
-
-                UuidFromStringW(&szKeyName[1],
-                                &ClassGuidList[dwGuidListIndex]);
+                ClassGuidList[dwGuidListIndex] = CurrentClassGuid;
             }
 
             dwGuidListIndex++;
         }
 
-        if (lError != ERROR_SUCCESS)
+        if (cr != ERROR_SUCCESS)
             break;
     }
 
-    RegCloseKey(hClassesKey);
+    if (hMachine)
+        CM_Disconnect_Machine(hMachine);
 
     if (RequiredSize != NULL)
         *RequiredSize = dwGuidListIndex;
@@ -1592,6 +1583,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     DEVINST RootDevInst;
     DEVINST DevInst;
     WCHAR GenInstanceId[MAX_DEVICE_ID_LEN];
+    DWORD dwFlags;
 
     TRACE("%s(%p %s %s %s %p %x %p)\n", __FUNCTION__, DeviceInfoSet, debugstr_w(DeviceName),
         debugstr_guid(ClassGuid), debugstr_w(DeviceDescription),
@@ -1641,12 +1633,15 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
         return FALSE;
     }
 
+    dwFlags = CM_CREATE_DEVINST_PHANTOM;
+    if (CreationFlags & DICD_GENERATE_ID)
+        dwFlags |= CM_CREATE_DEVINST_GENERATE_ID;
+
     /* Create the new device instance */
     cr = CM_Create_DevInst_ExW(&DevInst,
                                (DEVINSTID)DeviceName,
                                RootDevInst,
-                               (CreationFlags & DICD_GENERATE_ID) ?
-                                     CM_CREATE_DEVINST_GENERATE_ID : 0,
+                               dwFlags,
                                set->hMachine);
     if (cr != CR_SUCCESS)
     {
@@ -3410,7 +3405,7 @@ BOOL WINAPI IntSetupDiSetDeviceRegistryPropertyAW(
                 hKey, PropertyMap[Property].nameA, 0,
                     PropertyMap[Property].regType, PropertyBuffer,
                     PropertyBufferSize);
-        } 
+        }
         else
         {
             l = RegSetValueExW(
@@ -5435,7 +5430,7 @@ SetupDiInstallDevice(
             SetLastError(ERROR_GEN_FAILURE);
             goto cleanup;
         }
-        ConfigFlags |= DNF_DISABLED;
+        ConfigFlags |= CONFIGFLAG_FAILEDINSTALL;
         Result = SetupDiSetDeviceRegistryPropertyW(
             DeviceInfoSet,
             DeviceInfoData,
@@ -5609,7 +5604,11 @@ SetupDiInstallDevice(
         NULL,
         NULL);
     if (!Result)
-        goto cleanup;
+    {
+        if (GetLastError() != ERROR_SECTION_NOT_FOUND)
+            goto cleanup;
+        SetLastError(ERROR_SUCCESS);
+    }
     if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
         RebootRequired = TRUE;
 
@@ -6143,6 +6142,166 @@ SetupDiRestartDevices(
     devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
 
     cr = CM_Enable_DevNode_Ex(devInfo->dnDevInst, 0, set->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiGetCustomDevicePropertyA (SETUPAPI.@)
+ */
+BOOL
+WINAPI
+SetupDiGetCustomDevicePropertyA(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData,
+    IN PCSTR CustomPropertyName,
+    IN DWORD Flags,
+    OUT PDWORD PropertyRegDataType OPTIONAL,
+    OUT PBYTE PropertyBuffer,
+    IN DWORD PropertyBufferSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *deviceInfo;
+    DWORD ConfigFlags = 0, PropertySize;
+    CONFIGRET cr;
+
+    TRACE("%s(%p %p %s 0x%lx %p %p %lu %p)\n", __FUNCTION__, DeviceInfoSet, DeviceInfoData,
+        CustomPropertyName, Flags, PropertyRegDataType, PropertyBuffer, PropertyBufferSize, RequiredSize);
+
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA)
+            || !DeviceInfoData->Reserved)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (Flags & ~DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+    if (deviceInfo->set != set)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (Flags & DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        ConfigFlags |= CM_CUSTOMDEVPROP_MERGE_MULTISZ;
+    }
+
+    PropertySize = PropertyBufferSize;
+    cr = CM_Get_DevInst_Custom_Property_ExA(deviceInfo->dnDevInst,
+                                            CustomPropertyName,
+                                            PropertyRegDataType,
+                                            PropertyBuffer,
+                                            &PropertySize,
+                                            ConfigFlags,
+                                            set->hMachine);
+    if ((cr == CR_SUCCESS) || (cr == CR_BUFFER_SMALL))
+    {
+        if (RequiredSize)
+            *RequiredSize = PropertySize;
+    }
+
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiGetCustomDevicePropertyW (SETUPAPI.@)
+ */
+BOOL
+WINAPI
+SetupDiGetCustomDevicePropertyW(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData,
+    IN PCWSTR CustomPropertyName,
+    IN DWORD Flags,
+    OUT PDWORD PropertyRegDataType OPTIONAL,
+    OUT PBYTE PropertyBuffer,
+    IN DWORD PropertyBufferSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *deviceInfo;
+    DWORD ConfigFlags = 0, PropertySize;
+    CONFIGRET cr;
+
+    TRACE("%s(%p %p %s 0x%lx %p %p %lu %p)\n", __FUNCTION__, DeviceInfoSet, DeviceInfoData,
+        debugstr_w(CustomPropertyName), Flags, PropertyRegDataType, PropertyBuffer, PropertyBufferSize, RequiredSize);
+
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA)
+            || !DeviceInfoData->Reserved)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (Flags & ~DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+    if (deviceInfo->set != set)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (Flags & DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        ConfigFlags |= CM_CUSTOMDEVPROP_MERGE_MULTISZ;
+    }
+
+    PropertySize = PropertyBufferSize;
+    cr = CM_Get_DevInst_Custom_Property_ExW(deviceInfo->dnDevInst,
+                                            CustomPropertyName,
+                                            PropertyRegDataType,
+                                            PropertyBuffer,
+                                            &PropertySize,
+                                            ConfigFlags,
+                                            set->hMachine);
+    if ((cr == CR_SUCCESS) || (cr == CR_BUFFER_SMALL))
+    {
+        if (RequiredSize)
+            *RequiredSize = PropertySize;
+    }
+
     if (cr != CR_SUCCESS)
     {
         SetLastError(GetErrorCodeFromCrCode(cr));

@@ -23,6 +23,9 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&İçindekiler"
     IDS_INDEX        "&Dizin"
     IDS_SEARCH       "&Ara"
@@ -39,7 +42,7 @@ BEGIN
     IDTB_STOP        "Dur"
     IDTB_REFRESH     "Yenile"
     IDTB_BACK        "Geri"
-    IDTB_HOME        "Ev"
+    IDTB_HOME        "Ana sayfa"
     IDTB_SYNC        "Eşitle"
     IDTB_PRINT       "Yazdır"
     IDTB_OPTIONS     "Seçenekler"
@@ -75,12 +78,12 @@ MENU_WEBBROWSER MENU
         MENUITEM "&Yazdır...", IDTB_PRINT
         MENUITEM "Y&enile", IDTB_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler", MIID_PROPERTIES
+        MENUITEM "&Özellikler", MIID_PROPERTIES
     }
     POPUP ""
     {
         MENUITEM "&Kes", MIID_CUT
-        MENUITEM "&Çoğalt", MIID_COPY
+        MENUITEM "&Kopyala", MIID_COPY
         MENUITEM "Yapıştır", MIID_PASTE
         MENUITEM "&Tümünü Seç", MIID_SELECTALL
         MENUITEM "&Yazdır", IDTB_PRINT

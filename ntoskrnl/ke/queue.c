@@ -446,7 +446,7 @@ KeRundownQueue(IN PKQUEUE Queue)
 
     /* Get the Dispatcher Lock */
     OldIrql = KiAcquireDispatcherLock();
- 
+
     /* Check if the list is empty */
     FirstEntry = Queue->EntryListHead.Flink;
     if (FirstEntry == &Queue->EntryListHead)
@@ -459,13 +459,13 @@ KeRundownQueue(IN PKQUEUE Queue)
         /* Remove this entry */
         RemoveEntryList(&Queue->EntryListHead);
     }
- 
+
     /* Loop the list */
     while (!IsListEmpty(&Queue->ThreadListHead))
     {
         /* Get the next entry */
         NextEntry = Queue->ThreadListHead.Flink;
- 
+
         /* Get the associated thread */
         Thread = CONTAINING_RECORD(NextEntry, KTHREAD, QueueListEntry);
 
@@ -478,7 +478,7 @@ KeRundownQueue(IN PKQUEUE Queue)
 
     /* Release the dispatcher lock */
     KiReleaseDispatcherLockFromSynchLevel();
- 
+
     /* Exit the dispatcher and return the first entry (if any) */
     KiExitDispatcher(OldIrql);
     return FirstEntry;

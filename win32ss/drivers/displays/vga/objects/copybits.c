@@ -2,8 +2,8 @@
  * PROJECT:         ReactOS VGA display driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/drivers/displays/vga/objects/copybits.c
- * PURPOSE:         
- * PROGRAMMERS:     
+ * PURPOSE:
+ * PROGRAMMERS:
  */
 
 #include <vgaddi.h>

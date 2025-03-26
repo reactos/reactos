@@ -32,7 +32,7 @@ typedef enum _SOCKET_STATE
     SocketClosed
 } SOCKET_STATE, *PSOCKET_STATE;
 
-/* 
+/*
  * Shared Socket Information.
  * It's called shared because we send it to Kernel-Mode for safekeeping
  */
@@ -318,20 +318,20 @@ SockCancelIo(IN SOCKET Handle);
 
 INT
 WSPAPI
-SockGetInformation(IN PSOCKET_INFORMATION Socket, 
-                   IN ULONG AfdInformationClass, 
+SockGetInformation(IN PSOCKET_INFORMATION Socket,
+                   IN ULONG AfdInformationClass,
                    IN PVOID ExtraData OPTIONAL,
                    IN ULONG ExtraDataSize,
                    IN OUT PBOOLEAN Boolean OPTIONAL,
-                   IN OUT PULONG Ulong OPTIONAL, 
+                   IN OUT PULONG Ulong OPTIONAL,
                    IN OUT PLARGE_INTEGER LargeInteger OPTIONAL);
 
 INT
 WSPAPI
-SockSetInformation(IN PSOCKET_INFORMATION Socket, 
-                   IN ULONG AfdInformationClass, 
+SockSetInformation(IN PSOCKET_INFORMATION Socket,
+                   IN ULONG AfdInformationClass,
                    IN PBOOLEAN Boolean OPTIONAL,
-                   IN PULONG Ulong OPTIONAL, 
+                   IN PULONG Ulong OPTIONAL,
                    IN PLARGE_INTEGER LargeInteger OPTIONAL);
 
 INT
@@ -381,10 +381,10 @@ NtStatusToSocketError(IN NTSTATUS Status);
 
 INT
 WSPAPI
-SockSocket(INT AddressFamily, 
-           INT SocketType, 
-           INT Protocol, 
-           LPGUID ProviderId, 
+SockSocket(INT AddressFamily,
+           INT SocketType,
+           INT Protocol,
+           LPGUID ProviderId,
            GROUP g,
            DWORD dwFlags,
            DWORD ProviderFlags,
@@ -445,15 +445,15 @@ typedef VOID
 INT
 WSPAPI
 SockLoadHelperDll(
-    PWSTR TransportName, 
-    PWINSOCK_MAPPING Mapping, 
+    PWSTR TransportName,
+    PWINSOCK_MAPPING Mapping,
     PHELPER_DATA *HelperDllData
 );
 
 INT
 WSPAPI
 SockLoadTransportMapping(
-    PWSTR TransportName, 
+    PWSTR TransportName,
     PWINSOCK_MAPPING *Mapping
 );
 
@@ -465,10 +465,10 @@ SockLoadTransportList(
 
 BOOL
 WSPAPI
-SockIsTripleInMapping(IN PWINSOCK_MAPPING Mapping, 
+SockIsTripleInMapping(IN PWINSOCK_MAPPING Mapping,
                       IN INT AddressFamily,
                       OUT PBOOLEAN AfMatch,
-                      IN INT SocketType, 
+                      IN INT SocketType,
                       OUT PBOOLEAN SockMatch,
                       IN INT Protocol,
                       OUT PBOOLEAN ProtoMatch);
@@ -486,25 +486,25 @@ SockEventSelectHelper(IN PSOCKET_INFORMATION Socket,
                       IN WSAEVENT EventObject,
                       IN LONG Events);
 
-BOOLEAN 
+BOOLEAN
 WSPAPI
 SockCheckAndReferenceAsyncThread(VOID);
 
-BOOLEAN 
+BOOLEAN
 WSPAPI
 SockCheckAndInitAsyncSelectHelper(VOID);
 
-INT 
+INT
 WSPAPI
-SockGetTdiName(PINT AddressFamily, 
-               PINT SocketType, 
+SockGetTdiName(PINT AddressFamily,
+               PINT SocketType,
                PINT Protocol,
                LPGUID ProviderId,
-               GROUP Group, 
-               DWORD Flags, 
-               PUNICODE_STRING TransportName, 
-               PVOID *HelperDllContext, 
-               PHELPER_DATA *HelperDllData, 
+               GROUP Group,
+               DWORD Flags,
+               PUNICODE_STRING TransportName,
+               PVOID *HelperDllContext,
+               PHELPER_DATA *HelperDllData,
                PDWORD Events);
 
 INT
@@ -565,17 +565,17 @@ WSPAddressToString(
 INT
 WSPAPI
 WSPAsyncSelect(
-    IN  SOCKET s, 
-    IN  HWND hWnd, 
-    IN  UINT wMsg, 
-    IN  LONG lEvent, 
+    IN  SOCKET s,
+    IN  HWND hWnd,
+    IN  UINT wMsg,
+    IN  LONG lEvent,
     OUT LPINT lpErrno);
 
 INT
 WSPAPI WSPBind(
     IN  SOCKET s,
-    IN  CONST SOCKADDR *name, 
-    IN  INT namelen, 
+    IN  CONST SOCKADDR *name,
+    IN  INT namelen,
     OUT LPINT lpErrno);
 
 INT
@@ -617,9 +617,9 @@ WSPDuplicateSocket(
 INT
 WSPAPI
 WSPEnumNetworkEvents(
-    IN  SOCKET s, 
-    IN  WSAEVENT hEventObject, 
-    OUT LPWSANETWORKEVENTS lpNetworkEvents, 
+    IN  SOCKET s,
+    IN  WSAEVENT hEventObject,
+    OUT LPWSANETWORKEVENTS lpNetworkEvents,
     OUT LPINT lpErrno);
 
 INT
@@ -643,17 +643,17 @@ WSPGetOverlappedResult(
 INT
 WSPAPI
 WSPGetPeerName(
-    IN      SOCKET s, 
-    OUT     LPSOCKADDR name, 
-    IN OUT  LPINT namelen, 
+    IN      SOCKET s,
+    OUT     LPSOCKADDR name,
+    IN OUT  LPINT namelen,
     OUT     LPINT lpErrno);
 
 BOOL
 WSPAPI
 WSPGetQOSByName(
-    IN      SOCKET s, 
-    IN OUT  LPWSABUF lpQOSName, 
-    OUT     LPQOS lpQOS, 
+    IN      SOCKET s,
+    IN OUT  LPWSABUF lpQOSName,
+    OUT     LPQOS lpQOS,
     OUT     LPINT lpErrno);
 
 INT

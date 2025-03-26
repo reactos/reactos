@@ -38,7 +38,7 @@ int ConnectToReactOSWebsite(SOCKET sck)
     sa.sin_port = htons(80);
 
     SCKTEST(connect(sck, (struct sockaddr *)&sa, sizeof(sa)));
-    
+
     return 1;
 }
 
@@ -60,6 +60,6 @@ int GetRequestAndWait(SOCKET sck)
     FD_SET(sck, &readable);
 
     SCKTEST(select(0, &readable, NULL, NULL, NULL));
-    
+
     return 1;
 }

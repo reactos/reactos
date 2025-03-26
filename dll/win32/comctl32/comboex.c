@@ -30,7 +30,6 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(comboex);
 
@@ -632,14 +631,14 @@ static INT COMBOEX_InsertItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW const *ci
     if (item->mask & CBEIF_TEXT) {
 	INT len = 0;
 
-        if (is_textW(cit->pszText)) len = strlenW (cit->pszText);
+        if (is_textW(cit->pszText)) len = lstrlenW (cit->pszText);
 	if (len > 0) {
             item->pszText = Alloc ((len + 1)*sizeof(WCHAR));
 	    if (!item->pszText) {
 		Free(item);
 		return -1;
 	    }
-	    strcpyW (item->pszText, cit->pszText);
+	    lstrcpyW (item->pszText, cit->pszText);
 	}
 	else if (cit->pszText == LPSTR_TEXTCALLBACKW)
 	    item->pszText = LPSTR_TEXTCALLBACKW;
@@ -765,11 +764,11 @@ static BOOL COMBOEX_SetItemW (COMBOEX_INFO *infoPtr, const COMBOBOXEXITEMW *cit)
 	INT len = 0;
 
 	COMBOEX_FreeText(item);
-        if (is_textW(cit->pszText)) len = strlenW(cit->pszText);
+        if (is_textW(cit->pszText)) len = lstrlenW(cit->pszText);
 	if (len > 0) {
             item->pszText = Alloc ((len + 1)*sizeof(WCHAR));
 	    if (!item->pszText) return FALSE;
-	    strcpyW(item->pszText, cit->pszText);
+	    lstrcpyW(item->pszText, cit->pszText);
 	} else if (cit->pszText == LPSTR_TEXTCALLBACKW)
 	    item->pszText = LPSTR_TEXTCALLBACKW;
         item->cchTextMax = cit->cchTextMax;
@@ -1404,7 +1403,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
     str = COMBOEX_GetText(infoPtr, item);
     if (!str) str = nil;
 
-    len = strlenW (str);
+    len = lstrlenW (str);
     GetTextExtentPoint32W (dis->hDC, str, len, &txtsize);
 
     if (dis->itemAction & (ODA_SELECT | ODA_DRAWENTIRE)) {

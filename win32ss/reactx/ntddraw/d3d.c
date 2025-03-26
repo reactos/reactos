@@ -14,8 +14,9 @@
  */
 
 #include <win32k.h>
-#include <debug.h>
 
+// #define NDEBUG
+#include <debug.h>
 
 /*++
 * @name NtGdiDdCanCreateD3DBuffer
@@ -54,7 +55,6 @@
 * the correct struct is LPDDHAL_CANCREATESURFACEDATA.
 *
 *--*/
-
 DWORD
 APIENTRY
 NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
@@ -64,11 +64,11 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
 
     if (pfnDdCanCreateD3DBuffer == NULL)
     {
-        DPRINT1("Warring no pfnDdCanCreateD3DBuffer");
+        DPRINT1("Warning: no pfnDdCanCreateD3DBuffer\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys DdCanCreateD3DBuffer");
+    DPRINT("Calling dxg.sys pfnDdCanCreateD3DBuffer\n");
     return pfnDdCanCreateD3DBuffer(hDirectDraw,puCanCreateSurfaceData);
 }
 
@@ -112,7 +112,7 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
 * Do not forget LPD3DNTHAL_CONTEXTCREATEDATA is typecast of LPD3DHAL_CONTEXTCREATEDATA and thuse two struct are different size,
 * the correct struct is LPD3DHAL_CONTEXTCREATEDATA.
 *--*/
-BOOL 
+BOOL
 APIENTRY
 NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
                       HANDLE hSurfColor,
@@ -123,11 +123,11 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
 
     if (pfnD3dContextCreate == NULL)
     {
-		DPRINT1("Warning: no pfnD3dContextCreate");
+        DPRINT1("Warning: no pfnD3dContextCreate\n");
         return FALSE;
     }
 
-	DPRINT1("Calling dxg.sys D3dContextCreate");
+    DPRINT("Calling dxg.sys pfnD3dContextCreate\n");
     return pfnD3dContextCreate(hDirectDrawLocal, hSurfColor, hSurfZ, pdcci);
 }
 
@@ -135,7 +135,7 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
 * @name NtGdiD3dContextDestroy
 * @implemented
 *
-* The Function NtGdiD3dContextDestroy destorys the context data we got from NtGdiD3dContextCreate
+* The Function NtGdiD3dContextDestroy destroys the context data we got from NtGdiD3dContextCreate
 * It redirects to dxg.sys in windows XP/2003,  dxkrnl.sys in vista and is fully implemented 
 * in win32k.sys in windows 2000 and below
 *
@@ -158,11 +158,11 @@ NtGdiD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData)
 
     if ( pfnD3dContextDestroy == NULL)
     {
-		DPRINT1("Warning: no pfnD3dContextDestroy");
+        DPRINT1("Warning: no pfnD3dContextDestroy\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys D3dContextDestroy");
+    DPRINT("Calling dxg.sys pfnD3dContextDestroy\n");
     return pfnD3dContextDestroy(pContextDestroyData);
 }
 
@@ -196,11 +196,11 @@ NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
 
     if (pfnD3dContextDestroyAll == NULL)
     {
-		DPRINT1("Warning: no pfnD3dContextDestroyAll");
+        DPRINT1("Warning: no pfnD3dContextDestroyAll\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys D3dContextDestroyAll");
+    DPRINT("Calling dxg.sys pfnD3dContextDestroyAll\n");
     return pfnD3dContextDestroyAll(pdcad);
 }
 
@@ -271,11 +271,11 @@ NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
 
     if (pfnDdCreateD3DBuffer == NULL)
     {
-        DPRINT1("Warning: no pfnDdCreateD3DBuffer");
+        DPRINT1("Warning: no pfnDdCreateD3DBuffer\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys DdCreateD3DBuffer");
+    DPRINT("Calling dxg.sys pfnDdCreateD3DBuffer\n");
     return pfnDdCreateD3DBuffer(hDirectDraw, hSurface,
                                 puSurfaceDescription, puSurfaceGlobalData,
                                 puSurfaceLocalData, puSurfaceMoreData,
@@ -289,15 +289,16 @@ DWORD
 APIENTRY
 NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
 {
-    PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer = (PGD_DXDDDESTROYD3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdDestroyD3DBuffer].pfn;  
-    
+    PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer =
+        (PGD_DXDDDESTROYD3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdDestroyD3DBuffer].pfn;
+
     if (pfnDdDestroyD3DBuffer == NULL)
     {
-        DPRINT1("Warning: no pfnDdDestroyD3DBuffer");
+        DPRINT1("Warning: no pfnDdDestroyD3DBuffer\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdDestroyD3DBuffer");
+    DPRINT("Calling dxg.sys pfnDdDestroyD3DBuffer\n");
     return pfnDdDestroyD3DBuffer(hSurface);
 }
 
@@ -314,18 +315,18 @@ NtGdiD3dDrawPrimitives2(HANDLE hCmdBuf,
                         FLATPTR *pfpVidMemVtx,
                         DWORD *pdwSizeVtx)
 {
-    PGD_D3DDRAWPRIMITIVES2 pfnD3dDrawPrimitives2  = (PGD_D3DDRAWPRIMITIVES2)gpDxFuncs[DXG_INDEX_DxD3dDrawPrimitives2].pfn;  
-    
+    PGD_D3DDRAWPRIMITIVES2 pfnD3dDrawPrimitives2 =
+        (PGD_D3DDRAWPRIMITIVES2)gpDxFuncs[DXG_INDEX_DxD3dDrawPrimitives2].pfn;
+
     if (pfnD3dDrawPrimitives2 == NULL)
     {
-		DPRINT1("Warning: no pfnD3dDrawPrimitives2");
+        DPRINT1("Warning: no pfnD3dDrawPrimitives2\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys D3dDrawPrimitives2");
+    DPRINT("Calling dxg.sys pfnD3dDrawPrimitives2\n");
     return pfnD3dDrawPrimitives2(hCmdBuf,hVBuf,pded,pfpVidMemCmd,pdwSizeCmd,pfpVidMemVtx,pdwSizeVtx);
 }
-
 
 /************************************************************************/
 /* NtGdiD3dValidateTextureStageState                                    */
@@ -335,15 +336,15 @@ APIENTRY
 NtGdiDdLockD3D(HANDLE hSurface,
                PDD_LOCKDATA puLockData)
 {
-    PGD_DXDDLOCKD3D pfnDdLockD3D  = (PGD_DXDDLOCKD3D)gpDxFuncs[DXG_INDEX_DxDdLockD3D].pfn;  
-    
+    PGD_DXDDLOCKD3D pfnDdLockD3D = (PGD_DXDDLOCKD3D)gpDxFuncs[DXG_INDEX_DxDdLockD3D].pfn;
+
     if (pfnDdLockD3D == NULL)
     {
-		DPRINT1("Warning: no pfnDdLockD3D");
+        DPRINT1("Warning: no pfnDdLockD3D\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdLockD3D");
+    DPRINT("Calling dxg.sys pfnDdLockD3D\n");
     return pfnDdLockD3D(hSurface, puLockData);
 }
 
@@ -354,15 +355,16 @@ DWORD
 APIENTRY
 NtGdiD3dValidateTextureStageState(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData)
 {
-    PGD_D3DVALIDATETEXTURESTAGESTATE pfnD3dValidateTextureStageState = (PGD_D3DVALIDATETEXTURESTAGESTATE)gpDxFuncs[DXG_INDEX_DxD3dValidateTextureStageState].pfn;  
-   
+    PGD_D3DVALIDATETEXTURESTAGESTATE pfnD3dValidateTextureStageState =
+        (PGD_D3DVALIDATETEXTURESTAGESTATE)gpDxFuncs[DXG_INDEX_DxD3dValidateTextureStageState].pfn;
+
     if (pfnD3dValidateTextureStageState == NULL)
     {
-		DPRINT1("Warning: no pfnD3dValidateTextureStageState");
+        DPRINT1("Warning: no pfnD3dValidateTextureStageState\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys D3dValidateTextureStageState");
+    DPRINT("Calling dxg.sys pfnD3dValidateTextureStageState\n");
     return pfnD3dValidateTextureStageState(pData);
 }
 
@@ -375,18 +377,13 @@ NtGdiDdUnlockD3D(HANDLE hSurface,
                  PDD_UNLOCKDATA puUnlockData)
 {
     PGD_DXDDUNLOCKD3D pfnDdUnlockD3D = (PGD_DXDDUNLOCKD3D)gpDxFuncs[DXG_INDEX_DxDdUnlockD3D].pfn;
-   
+
     if (pfnDdUnlockD3D == NULL)
     {
-		DPRINT1("Warning: no pfnDdUnlockD3D");
+        DPRINT1("Warning: no pfnDdUnlockD3D\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDdUnlockD3D");
+    DPRINT("Calling dxg.sys pfnDdUnlockD3D\n");
     return pfnDdUnlockD3D(hSurface, puUnlockData);
-
 }
-
-
-
-

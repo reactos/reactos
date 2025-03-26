@@ -473,42 +473,26 @@ void ME_ReleaseStyle(ME_Style *s)
     ME_DestroyStyle(s);
 }
 
-ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor)
+ME_Style *style_get_insert_style( ME_TextEditor *editor, ME_Cursor *cursor )
 {
-  if (ME_IsSelection(editor))
-  {
+    ME_Style *style;
     ME_Cursor *from, *to;
+    ME_Run *prev;
 
-    ME_GetSelection(editor, &from, &to);
-    ME_AddRefStyle(from->pRun->member.run.style);
-    return from->pRun->member.run.style;
-  }
-  if (editor->pBuffer->pCharStyle) {
-    ME_AddRefStyle(editor->pBuffer->pCharStyle);
-    return editor->pBuffer->pCharStyle;
-  }
-  else
-  {
-    ME_Cursor *pCursor = &editor->pCursors[nCursor];
-    ME_DisplayItem *pRunItem = pCursor->pRun;
-    ME_DisplayItem *pPrevItem = NULL;
-    if (pCursor->nOffset) {
-      ME_Run *pRun = &pRunItem->member.run;
-      ME_AddRefStyle(pRun->style);
-      return pRun->style;
-    }
-    pPrevItem = ME_FindItemBack(pRunItem, diRunOrParagraph);
-    if (pPrevItem->type == diRun)
+    if (ME_IsSelection( editor ))
     {
-      ME_AddRefStyle(pPrevItem->member.run.style);
-      return pPrevItem->member.run.style;
+        ME_GetSelection( editor, &from, &to );
+        style = from->run->style;
     }
+    else if (editor->pBuffer->pCharStyle)
+        style = editor->pBuffer->pCharStyle;
+    else if (!cursor->nOffset && (prev = run_prev( cursor->run )))
+        style = prev->style;
     else
-    {
-      ME_AddRefStyle(pRunItem->member.run.style);
-      return pRunItem->member.run.style;
-    }
-  }
+        style = cursor->run->style;
+
+    ME_AddRefStyle( style );
+    return style;
 }
 
 void ME_SaveTempStyle(ME_TextEditor *editor, ME_Style *style)
@@ -552,5 +536,5 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
     }
     ScriptFreeCache( &def->script_cache );
     ME_ReleaseStyle( style );
-    ME_MarkAllForWrapping( editor );
+    editor_mark_rewrap_all( editor );
 }

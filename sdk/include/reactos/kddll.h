@@ -9,13 +9,13 @@ typedef ULONG KDSTATUS;
 NTSTATUS
 NTAPI
 KdDebuggerInitialize0(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 NTSTATUS
 NTAPI
 KdDebuggerInitialize1(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 KDSTATUS

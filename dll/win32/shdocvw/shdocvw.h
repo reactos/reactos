@@ -46,8 +46,24 @@ extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid,
 /**********************************************************************
  * Dll lifetime tracking declaration for shdocvw.dll
  */
+#ifdef __REACTOS__
+# ifdef __cplusplus
+EXTERN_C
+# else
+extern
+# endif
+LONG SHDOCVW_refCount;
+#else
 extern LONG SHDOCVW_refCount DECLSPEC_HIDDEN;
+#endif
 static inline void SHDOCVW_LockModule(void) { InterlockedIncrement( &SHDOCVW_refCount ); }
 static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_refCount ); }
+
+#ifdef __REACTOS__
+#include "resource.h"
+#include "objects.h"
+#define ARRAY_SIZE(array) _countof(array)
+EXTERN_C HINSTANCE instance;
+#endif // def __REACTOS__
 
 #endif /* __WINE_SHDOCVW_H */

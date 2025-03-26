@@ -54,7 +54,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "ソリティア"
-    IDS_SOL_ABOUT "J Brown によるソリティア\n\nCardLib バージョン 1.0。"
+    IDS_SOL_ABOUT "J Brown によるソリティア\nCardLib バージョン 1.0"
     IDS_SOL_QUIT "現在のゲームを終了しますか?"
     IDS_SOL_WIN "おめでとう、あなたの勝ちです!"
     IDS_SOL_DEAL "もう一度カードを配りますか?"
@@ -70,6 +70,7 @@ BEGIN
     BEGIN
         MENUITEM "カードを配る(&D)\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "カードの装飾(&C)...", IDM_GAME_DECK
         MENUITEM "オプション(&O)...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

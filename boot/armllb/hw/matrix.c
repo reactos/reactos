@@ -23,18 +23,18 @@ UCHAR KeyMatrix[8][8] =
 };
 
 /* FUNCTIONS ******************************************************************/
- 
+
 CHAR
 NTAPI
 LlbKeypadGetChar(VOID)
 {
     UCHAR ScanCode;
     UCHAR Col, Row;
-    
+
     ScanCode = LlbHwKbdRead();
     Col = ScanCode >> 4;
     Row = ScanCode & 0xF;
-    
+
     /* Return the ASCII character */
     return KeyMatrix[Col][Row];
 }

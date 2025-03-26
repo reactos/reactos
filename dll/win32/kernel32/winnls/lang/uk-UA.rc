@@ -165,7 +165,7 @@ BEGIN
 
     52936 "52936 (HZ-GB2312 Китайська спрощена)"
     54936 "54936 (GB18030 Китайська спрощена)"
-    
+
     /* Locations */
     2+NLSRC_OFFSET "Antigua and Barbuda"
     3+NLSRC_OFFSET "Afghanistan"

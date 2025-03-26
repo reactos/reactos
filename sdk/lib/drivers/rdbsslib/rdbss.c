@@ -4047,7 +4047,7 @@ RxCommonWrite(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Are we writting to EOF? */
+    /* Are we writing to EOF? */
     WriteToEof = ((ByteOffset.LowPart == FILE_WRITE_TO_END_OF_FILE) && (ByteOffset.HighPart == -1));
     /* FIXME: validate length/offset */
 
@@ -7846,7 +7846,7 @@ RxPrepareToReparseSymbolicLink(
     if (!SymbolicLinkEmbeddedInOldPath)
     {
         /* Excepted if DELETE is the only flag specified, then, open has to succeed
-         * See: https://msdn.microsoft.com/en-us/library/windows/hardware/ff554649(v=vs.85).aspx (remarks)
+         * See: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/rxprocs/nf-rxprocs-rxpreparetoreparsesymboliclink (remarks)
          */
         if (BooleanFlagOn(RxContext->Create.NtCreateParameters.DesiredAccess, DELETE) &&
             BooleanFlagOn(RxContext->Create.NtCreateParameters.DesiredAccess, ~DELETE))

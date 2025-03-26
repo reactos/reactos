@@ -49,7 +49,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Pająk"
-    IDS_SPI_ABOUT "Pasjans - Pająk, autor: Gregor Schneider\n\nCardLib wersja 1.0"
+    IDS_SPI_ABOUT "Pasjans - Pająk, autor: Gregor Schneider\nCardLib wersja 1.0"
     IDS_SPI_QUIT "Czy na pewno chcesz zakończyć?"
     IDS_SPI_WIN "Gratulacje, wygrałeś(aś)!"
     IDS_SPI_DEAL "Rozdać ponownie?"

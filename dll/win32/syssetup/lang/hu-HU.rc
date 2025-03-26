@@ -30,7 +30,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Kérjük válasszon egy kiadást:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "&Kiadások:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 135, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Kiadási információk", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Leírás:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -55,16 +55,16 @@ CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Adjon egy nevet a számítógépnek, ami nem több mint 15 betű. Ha hálózaton van, akkor ennek a névnek egyedinek kell lennie.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Adjon egy nevet a számítógépnek, ami nem több mint 15 betű. Ha hálózaton van, akkor ennek a névnek egyedinek kell lennie.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Számítógépnév:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "A telepítő létrehoz egy felhasználói fiókot, a Rendszergazdát. Ezzel a fiókkal teljes joga van a számítógépe felett.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Adjon meg egy jelszót, ami nem több mint 127 karakter.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "A telepítő létrehoz egy felhasználói fiókot, a Rendszergazdát. Ezzel a fiókkal teljes joga van a számítógépe felett.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Adjon meg egy jelszót, ami nem több mint 127 karakter.", IDC_STATIC, 54, 87, 241, 8
     LTEXT "&Jelszó:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Megerősítés:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -74,10 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "A rendszer területi beállításait érdemes a használni kívánt nyelvhez igazítani.\nA felhasználói területi beállítások határozzák meg hogy a számok, pénznemek és dátumok hogyan jelennek meg.", IDC_STATIC, 53, 7, 253, 24
-    LTEXT "", IDC_LOCALETEXT, 53, 35, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 35, 250, 16
     LTEXT "A rendszer vagy felhasználói területi beállítások megváltoztatásához kattintson a Testreszabás gombra.", IDC_STATIC, 53, 56, 184, 16
     PUSHBUTTON "Te&streszabás...", IDC_CUSTOMLOCALE, 245, 57, 60, 14
+    LTEXT "", IDC_STATIC, 53, 79, 250, 1, SS_ETCHEDHORZ
     LTEXT "A billentyűzetkiosztás határozza meg a karaktereket,\namelyek megjelennek gépeléskor.", IDC_STATIC, 53, 86, 253, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 102, 250, 16
     LTEXT "A billentyűzetkiosztás megváltoztatásához kattintson\na Testreszabás gombra.", IDC_STATIC, 53, 116, 230, 16
     PUSHBUTTON "Test&reszabás...", IDC_CUSTOMLAYOUT, 245, 122, 60, 14
 END
@@ -90,10 +92,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Dátum és idő", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Időzóna", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Automatikus átállás a nyári időszámításra", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Automatikus átállás a nyári időszámításra", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -109,9 +111,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Komponensek regisztrálása", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -134,13 +139,14 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Kérem várjon..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -172,10 +178,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Meg kell adnia egy számítógép nevet és a rendszergazda jelszavát."
     IDS_LOCALETITLE "Területi beállítások"
     IDS_LOCALESUBTITLE "Beállíthatja, hogy a ReactOS milyen területi és nyelvi beállításokkal működjön."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Dátum és idő"
     IDS_DATETIMESUBTITLE "Beállíthatja a számítógép dátumát és óráját."
-    IDS_PROCESSTITLE "Összetevők regisztrálása"
-    IDS_PROCESSSUBTITLE "Kérem várjon..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Megjelenés"
     IDS_THEMESELECTIONSUBTITLE "Válassza ki a kívánt témát."
 END
@@ -184,7 +192,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS telepítő"
     IDS_UNKNOWN_ERROR "Hiba lépett fel, de nem tudni annak okát."
-    IDS_REGISTERING_COMPONENTS "Komponensek regisztrálása..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary hiba: "
     IDS_GETPROCADDR_FAILED "GetProcAddr hiba: "
     IDS_REGSVR_FAILED "DllRegisterServer hiba: "

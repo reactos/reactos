@@ -60,7 +60,7 @@ of this change is that a mapping of a small files takes a bit more than 1/4
 of the size in nonpaged kernel space as it did previously.
 
 When we need other threads that may be competing for the same page fault to
-wait, we have a mechanism seperate from PageOps for dealing with that, which
+wait, we have a mechanism separate from PageOps for dealing with that, which
 was suggested by Travis Geiselbrecht after a conversation I had with Alex
 Ionescu.  That mechanism is the MM_WAIT_ENTRY, which is the all-ones SWAPENTRY.
 
@@ -112,6 +112,7 @@ _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
     //DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 }
 
+#ifdef NEWCC
 /*
 
 MiFlushMappedSection
@@ -265,7 +266,6 @@ This deletes a segment entirely including its page map.
 It must have been unmapped in every address space.
 
  */
-
 VOID
 NTAPI
 MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
@@ -603,6 +603,7 @@ _MiMapViewOfSegment(PMMSUPPORT AddressSpace,
 
     return STATUS_SUCCESS;
 }
+#endif
 
 /*
 
@@ -642,7 +643,7 @@ MiFreeSegmentPage(PMM_SECTION_SEGMENT Segment,
                 OldPage,
                 FileOffset->QuadPart,
                 Segment,
-                MmGetReferenceCountPage(OldPage),
+                MmGetReferenceCountPageWithoutLock(OldPage),
                 Entry,
                 IS_DIRTY_SSE(Entry) ? "true" : "false");
 
@@ -708,6 +709,7 @@ MmFreeCacheSectionPage(PVOID Context,
     }
 }
 
+#ifdef NEWCC
 NTSTATUS
 NTAPI
 MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
@@ -840,5 +842,6 @@ MmUnmapCacheViewInSystemSpace (IN PVOID MappedBase)
 
     return Status;
 }
+#endif /* NEWCC */
 
 /* EOF */

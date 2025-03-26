@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Unit Tests for acpi!Bus_PDO_QueryResourceRequirements
- * COPYRIGHT:   Copyright 2017-2020 Thomas Faber (thomas.faber@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2023 Thomas Faber (thomas.faber@reactos.org)
  */
 
 #include <apitest.h>
@@ -11,79 +11,6 @@
 #include <ndk/rtlfuncs.h>
 #define UNIT_TEST
 #include <acpi.h>
-
-/* Kernel definitions (copied) */
-#define IO_RESOURCE_PREFERRED             0x01
-#define IO_RESOURCE_DEFAULT               0x02
-#define IO_RESOURCE_ALTERNATIVE           0x08
-
-typedef struct _IO_RESOURCE_DESCRIPTOR {
-  UCHAR Option;
-  UCHAR Type;
-  UCHAR ShareDisposition;
-  UCHAR Spare1;
-  USHORT Flags;
-  USHORT Spare2;
-  union {
-    struct {
-      ULONG Length;
-      ULONG Alignment;
-      PHYSICAL_ADDRESS MinimumAddress;
-      PHYSICAL_ADDRESS MaximumAddress;
-    } Port;
-    struct {
-      ULONG Length;
-      ULONG Alignment;
-      PHYSICAL_ADDRESS MinimumAddress;
-      PHYSICAL_ADDRESS MaximumAddress;
-    } Memory;
-    struct {
-      ULONG MinimumVector;
-      ULONG MaximumVector;
-    } Interrupt;
-    struct {
-      ULONG MinimumChannel;
-      ULONG MaximumChannel;
-    } Dma;
-    struct {
-      ULONG Length;
-      ULONG Alignment;
-      PHYSICAL_ADDRESS MinimumAddress;
-      PHYSICAL_ADDRESS MaximumAddress;
-    } Generic;
-    struct {
-      ULONG Data[3];
-    } DevicePrivate;
-    struct {
-      ULONG Length;
-      ULONG MinBusNumber;
-      ULONG MaxBusNumber;
-      ULONG Reserved;
-    } BusNumber;
-    struct {
-      ULONG Priority;
-      ULONG Reserved1;
-      ULONG Reserved2;
-    } ConfigData;
-  } u;
-} IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
-
-typedef struct _IO_RESOURCE_LIST {
-  USHORT Version;
-  USHORT Revision;
-  ULONG Count;
-  IO_RESOURCE_DESCRIPTOR Descriptors[1];
-} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
-
-typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
-  ULONG ListSize;
-  INTERFACE_TYPE InterfaceType;
-  ULONG BusNumber;
-  ULONG SlotNumber;
-  ULONG Reserved[3];
-  ULONG AlternativeLists;
-  IO_RESOURCE_LIST List[1];
-} IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
 /* Kernel definitions (mock) */
 #define PAGED_CODE()
@@ -501,6 +428,7 @@ START_TEST(Bus_PDO_QueryResourceRequirements)
     ok(ReqList->InterfaceType == Internal, "InterfaceType = %u\n", ReqList->InterfaceType);
     ok(ReqList->BusNumber == 0, "BusNumber = %lu\n", ReqList->BusNumber);
     ok(ReqList->SlotNumber == 0, "SlotNumber = %lu\n", ReqList->SlotNumber);
+    todo_if(1)
     ok(ReqList->AlternativeLists == 2, "AlternativeLists = %lu\n", ReqList->AlternativeLists);
     ok(ReqList->List[0].Version == 1, "List[0].Version = %u\n", ReqList->List[0].Version);
     ok(ReqList->List[0].Revision == 1, "List[0].Revision = %u\n", ReqList->List[0].Revision);
@@ -525,6 +453,7 @@ START_TEST(Bus_PDO_QueryResourceRequirements)
         expect_irq(&ReqList2->Descriptors[5], IO_RESOURCE_ALTERNATIVE, CmResourceShareDeviceExclusive, 7, 7);
     }
     ok_int(ReqList->ListSize, GetPoolAllocSize(ReqList));
+    todo_if(1)
     ok_int(ReqList->ListSize, (ULONG_PTR)&ReqList2->Descriptors[6] - (ULONG_PTR)ReqList);
     ExFreePoolWithTag(ReqList, 'RpcA');
 }

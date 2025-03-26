@@ -8,6 +8,7 @@ list(APPEND SOURCE
     directory.c
     env.c
     error.c
+    exception.c
     file.c
     info.c
     large_int.c
@@ -21,26 +22,29 @@ list(APPEND SOURCE
     rtlbitmap.c
     rtlstr.c
     string.c
+    testlist.c
+    threadpool.c
     time.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE
-        exception.c
         generated.c)
 endif()
 
-list(APPEND PCH_SKIP_SOURCE
-    testlist.c)
-
 add_executable(ntdll_winetest
-    ${SOURCE}
-    ${PCH_SKIP_SOURCE})
+    ${SOURCE})
 
-if(USE_CLANG_CL OR (NOT MSVC))
+target_link_libraries(ntdll_winetest pseh)
+
+if(MSVC AND ARCH STREQUAL "amd64")
+    # warning C4334: '<<': result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+    target_compile_options(ntdll_winetest PRIVATE /wd4334)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ntdll_winetest PRIVATE "-Wno-format")
 endif()
 
 set_module_type(ntdll_winetest win32cui)
 add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
-add_pch(ntdll_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET ntdll_winetest)

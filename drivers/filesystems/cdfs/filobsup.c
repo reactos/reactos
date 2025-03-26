@@ -187,7 +187,7 @@ Return Value:
 
         *Fcb = FileObject->FsContext;
         *Ccb = FileObject->FsContext2;
-        
+
 #ifdef _MSC_VER
 #pragma warning( suppress: 4213 )
 #endif
@@ -201,7 +201,7 @@ Return Value:
     return TypeOfOpen;
 }
 
-
+
 TYPE_OF_OPEN
 CdFastDecodeFileObject (
     _In_ PFILE_OBJECT FileObject,

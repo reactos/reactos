@@ -5,7 +5,7 @@
  * PROGRAMMERS:
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 
 ULONG gMonitorCount = 0;
 HDC ghdcMonitor = 0;

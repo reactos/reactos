@@ -93,4 +93,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Выберите настройки поиска и установки"
     IDS_SEARCHDRV_TITLE "Поиск..."
     IDS_INSTALLDRV_TITLE "Установка..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Выберите папку, содержащую подходящие драйверы для этого оборудования."
 END

@@ -55,7 +55,6 @@ USBSTOR_SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     //
     IoSetCompletionRoutine(Irp, USBSTOR_SyncForwardIrpCompletionRoutine, &Event, TRUE, TRUE, TRUE);
 
-
     //
     // call driver
     //
@@ -101,12 +100,10 @@ USBSTOR_GetBusInterface(
     ASSERT(DeviceObject);
     ASSERT(BusInterface);
 
-
     //
     // initialize event
     //
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
 
     //
     // create irp
@@ -194,7 +191,6 @@ USBSTOR_SyncUrbRequest(
     //
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-
     //
     // get next stack location
     //
@@ -252,22 +248,9 @@ AllocateItem(
     IN ULONG ItemSize)
 {
     //
-    // allocate item
+    // allocate, zero and return item
     //
-    PVOID Item = ExAllocatePoolWithTag(PoolType, ItemSize, USB_STOR_TAG);
-
-    if (Item)
-    {
-        //
-        // zero item
-        //
-        RtlZeroMemory(Item, ItemSize);
-    }
-
-    //
-    // return element
-    //
-    return Item;
+    return ExAllocatePoolZero(PoolType, ItemSize, USB_STOR_TAG);
 }
 
 VOID
@@ -332,7 +315,6 @@ USBSTOR_ClassRequest(
     //
     return Status;
 }
-
 
 NTSTATUS
 USBSTOR_GetMaxLUN(

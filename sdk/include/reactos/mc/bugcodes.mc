@@ -292,7 +292,7 @@ Severity=Success
 Facility=System
 SymbolicName=CREATE_DELETE_LOCK_NOT_LOCKED
 Language=English
-The thread reaper was handed a thread to reap, but the thread's process'
+CREATE_DELETE_LOCK_NOT_LOCKED
 .
 
 MessageId=0x15
@@ -1596,6 +1596,14 @@ Facility=System
 SymbolicName=POWER_FAILURE_SIMULATE
 Language=English
 POWER_FAILURE_SIMULATE
+.
+
+MessageId=0xE7
+Severity=Success
+Facility=System
+SymbolicName=INVALID_FLOATING_POINT_STATE
+Language=English
+INVALID_FLOATING_POINT_STATE
 .
 
 MessageId=0xE8

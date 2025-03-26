@@ -151,7 +151,7 @@ CScanningTunner::put_TuneRequest(
     ILocator *pLocator;
     IDVBTLocator *pDVBTLocator;
     HRESULT hr;
-    
+
 
     OutputDebugStringW(L"CScanningTunner::put_TuneRequest\n");
 

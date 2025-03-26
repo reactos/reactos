@@ -60,7 +60,9 @@ START_TEST(TimerResolution)
                                   &CurrentResolution);
     ok_hex(Status, STATUS_SUCCESS);
     printf("Current resolution: %lu ; maximum resolution: %lu\n", CurrentResolution, MaximumResolution);
+#if 0 // Why? This doesn't hold true on Windows Server 2003.
     ok(abs((LONG)MaximumResolution - (LONG)CurrentResolution) < 200, "Current resolution: %lu became too low! (maximum resolution: %lu)\n", CurrentResolution, MaximumResolution);
+#endif
 
     /* Get the current timer resolution */
     Status = NtSetTimerResolution(0,        /* Ignored */

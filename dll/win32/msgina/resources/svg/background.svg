@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="312"
+   height="198"
+   viewBox="0 0 82.549998 52.387501"
+   version="1.1"
+   id="svg919"
+   inkscape:version="1.0.1 (1.0.1+r74)"
+   sodipodi:docname="Background.svg"
+   inkscape:export-filename="/home/splitwirez/Documents/Art/GUI Mockups/Other Software/ReactOS-LautusTurnOffDialog/Background/v6/PNG/Background.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs913">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1559">
+      <stop
+         style="stop-color:#1d1d1d;stop-opacity:1"
+         offset="0"
+         id="stop1555" />
+      <stop
+         style="stop-color:#232323;stop-opacity:1"
+         offset="0.5"
+         id="stop1561" />
+      <stop
+         style="stop-color:#303030;stop-opacity:1"
+         offset="1"
+         id="stop1557" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1533">
+      <stop
+         style="stop-color:#305067;stop-opacity:1"
+         offset="0"
+         id="stop1529" />
+      <stop
+         style="stop-color:#9badb5;stop-opacity:1"
+         offset="0.25"
+         id="stop1551" />
+      <stop
+         style="stop-color:#fcfcfc;stop-opacity:1"
+         offset="0.5"
+         id="stop1537" />
+      <stop
+         style="stop-color:#9badb5;stop-opacity:1"
+         offset="0.75"
+         id="stop1553" />
+      <stop
+         style="stop-color:#305067;stop-opacity:1"
+         offset="1"
+         id="stop1531" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1559"
+       id="linearGradient1523"
+       x1="0.13229166"
+       y1="0.1322915"
+       x2="0.13229166"
+       y2="11.509375"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1533"
+       id="linearGradient1535"
+       x1="-5.5511151e-17"
+       y1="11.641665"
+       x2="82.550003"
+       y2="11.641665"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1559"
+       id="linearGradient1543"
+       gradientUnits="userSpaceOnUse"
+       x1="0.13229141"
+       y1="11.509373"
+       x2="0.13229141"
+       y2="0.13229024"
+       gradientTransform="translate(2.4262432e-7,40.745833)" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="177.13935"
+     inkscape:cy="125.85454"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer2"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1600"
+     inkscape:window-height="838"
+     inkscape:window-x="1280"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata916">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Body"
+     sodipodi:insensitive="true">
+    <rect
+       style="display:inline;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:0.264582;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1545"
+       width="82.550003"
+       height="52.387501"
+       x="0"
+       y="3.5527137e-15" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Header"
+     style="display:inline">
+    <rect
+       style="fill:url(#linearGradient1535);fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1527"
+       width="82.550003"
+       height="0.52916664"
+       x="1.3490337e-07"
+       y="11.641665" />
+    <g
+       id="g1591">
+      <rect
+         style="fill:url(#linearGradient1523);fill-opacity:1;stroke:#2a2a2a;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect1515"
+         width="82.285416"
+         height="11.377083"
+         x="0.13229166"
+         y="0.1322915" />
+      <rect
+         style="fill:#5a5a5a;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+         id="rect1525"
+         width="82.020836"
+         height="0.26458332"
+         x="0.26458332"
+         y="11.112499" />
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="Footer"
+     sodipodi:insensitive="true">
+    <rect
+       style="display:inline;fill:url(#linearGradient1543);fill-opacity:1;stroke:#2a2a2a;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1539"
+       width="82.285416"
+       height="11.377083"
+       x="0.13229097"
+       y="40.878124" />
+    <rect
+       style="display:inline;fill:#5a5a5a;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect1541"
+       width="82.020836"
+       height="0.26458332"
+       x="0.26458424"
+       y="41.010414" />
+  </g>
+</svg>

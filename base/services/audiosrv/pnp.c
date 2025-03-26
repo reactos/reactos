@@ -1,9 +1,8 @@
 /*
- * PROJECT:          ReactOS
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/pnp.c
- * PURPOSE:          Audio Service Plug and Play
- * COPYRIGHT:        Copyright 2007 Andrew Greenwood
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Audio Service Plug and Play
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood
  */
 
 #include "audiosrv.h"
@@ -14,6 +13,9 @@
 #include <setupapi.h>
 #include <ks.h>
 #include <ksmedia.h>
+
+#define NDEBUG
+#include <debug.h>
 
 static HDEVNOTIFY device_notification_handle = NULL;
 
@@ -42,8 +44,6 @@ ProcessExistingDevices(VOID)
                                       NULL,
                                       NULL);
 
-/*    printf("%s:\n", ClassString); */
-
     interface_data.cbSize = sizeof(interface_data);
     interface_data.Reserved = 0;
 
@@ -60,7 +60,7 @@ ProcessExistingDevices(VOID)
 
     if ( ! detail_data )
     {
-        logmsg("ProcessExistingDevices() failed to allocate detail_data\n");
+        DPRINT("failed to allocate detail_data\n");
         return TRUE;
     }
 
@@ -143,7 +143,7 @@ RegisterForDeviceNotifications(VOID)
                                    DEVICE_NOTIFY_ALL_INTERFACE_CLASSES*/);
     if (!device_notification_handle)
     {
-        logmsg("RegisterDeviceNotification() failed with error %d\n", GetLastError());
+        DPRINT("failed with error %d\n", GetLastError());
     }
 
     return ( device_notification_handle != NULL );

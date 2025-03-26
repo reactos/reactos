@@ -104,7 +104,7 @@ send_gdb_packet(_In_ const CHAR* Buffer)
     return finish_gdb_packet();
 }
 
-ULONG 
+ULONG
 send_gdb_partial_binary(
     _In_ const VOID* Buffer,
     _In_ size_t Length)
@@ -136,7 +136,7 @@ send_gdb_partial_binary(
     return Sent;
 }
 
-void 
+void
 send_gdb_partial_memory(
     _In_ const VOID* Buffer,
     _In_ size_t Length)
@@ -172,7 +172,7 @@ gdb_send_debug_io(
     CHAR gdb_out[3];
     CHAR* ptr = String->Buffer;
     USHORT Length = String->Length;
-    
+
     gdb_out[2] = '\0';
 
     start_gdb_packet();

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Boot Video Driver for NEC PC-98 series
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Arch-specific header file
- * COPYRIGHT:   Copyright 2020 Dmitry Borisov (di.sean@protonmail.com)
+ * COPYRIGHT:   Copyright 2020 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #pragma once
@@ -21,7 +21,6 @@ extern ULONG_PTR FrameBuffer;
 /* PROTOTYPES *****************************************************************/
 
 VOID
-NTAPI
 DisplayCharacter(
     _In_ CHAR Character,
     _In_ ULONG Left,
@@ -30,18 +29,15 @@ DisplayCharacter(
     _In_ ULONG BackColor);
 
 VOID
-NTAPI
 DoScroll(
     _In_ ULONG Scroll);
 
 VOID
-NTAPI
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count);
 
 VOID
-NTAPI
 PreserveRow(
     _In_ ULONG CurrentTop,
     _In_ ULONG TopDelta,

@@ -1,20 +1,9 @@
 /*
- * Copyright (C) 2004 Filip Navara
- * Copyright (C) 2004 Eric Kohl
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Thai resource file
+ * TRANSLATORS: Copyright 2004 Filip Navara
+ *              Copyright 2004 Eric Kohl
  */
 
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
@@ -49,7 +38,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Description:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -74,16 +63,16 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Type a name for your computer that is 15 characters or less. If you are on a network, your computer name must be unique.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Type a name for your computer that is 15 characters or less. If you are on a network, your computer name must be unique.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Computer Name:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Setup will create a user account on your computer called Administrator. You can use this account if you need full access to your computer.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Type an Administrator Password that is 127 characters or less.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Setup will create a user account on your computer called Administrator. You can use this account if you need full access to your computer.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Type an Administrator Password that is 127 characters or less.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -93,11 +82,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "The system locale should match the language of the applications you want to use. The user locale controls how numbers, currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "To change system or user locale settings, click Customize.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&Customize...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "The keyboard layout controls the characters that appear when you type.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "To change the keyboard layout, click Customize.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "C&ustomize...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -110,10 +100,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Date and Time:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Timezone:", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -129,9 +119,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Registering components", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -154,13 +147,14 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Please wait..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -192,10 +186,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "You must provide a name and an Administrator Password for your computer."
     IDS_LOCALETITLE "Regional settings"
     IDS_LOCALESUBTITLE "You can customize ReactOS for different regions and languages."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Date and Time"
     IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
-    IDS_PROCESSTITLE "Registering Components"
-    IDS_PROCESSSUBTITLE "Please wait..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
@@ -204,7 +200,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_UNKNOWN_ERROR "Unknown error"
-    IDS_REGISTERING_COMPONENTS "Registering components..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary failed: "
     IDS_GETPROCADDR_FAILED "GetProcAddr failed: "
     IDS_REGSVR_FAILED "DllRegisterServer failed: "
@@ -226,7 +221,7 @@ BEGIN
     IDS_WZD_NAME "Setup cannot continue until you enter your name."
     IDS_WZD_SETCOMPUTERNAME "Setup failed to set the computer name."
     IDS_WZD_COMPUTERNAME "Setup cannot continue until you enter the name of your computer."
-    IDS_WZD_PASSWORDEMPTY "You must enter a password !"
+    IDS_WZD_PASSWORDEMPTY "You must enter a password!"
     IDS_WZD_PASSWORDMATCH "The passwords you entered do not match. Please enter the desired password again."
     IDS_WZD_PASSWORDCHAR "The password you entered contains invalid characters. Please enter a cleaned password."
     IDS_WZD_LOCALTIME "Setup was unable to set the local time."
@@ -262,7 +257,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."

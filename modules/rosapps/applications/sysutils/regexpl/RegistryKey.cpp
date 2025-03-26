@@ -489,7 +489,7 @@ const TCHAR * CRegistryKey::GetValueTypeName(DWORD dwType)
 	case REG_RESOURCE_REQUIREMENTS_LIST:
 		return _T("REG_RESOURCE_REQUIREMENTS_LIST");
 	default:
-		return _T("Unkown Type");
+		return _T("Unknown Type");
 	}
 }
 

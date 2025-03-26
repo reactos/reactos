@@ -72,7 +72,7 @@ LlbFwVideoGetDisplaySize(OUT PULONG Width,
     /* Query static settings */
     *Width = LlbHwGetScreenWidth() / 8;
     *Height = LlbHwGetScreenHeight() / 16;
-    
+
     /* Depth is always 16 bpp */
     *Depth = 16;
 }
@@ -92,7 +92,7 @@ LlbFwVideoPutChar(IN INT c,
 {
     ULONG Color, BackColor;
     PUSHORT Buffer;
-    
+
     /* Convert EGA index to color used by hardware */
     Color = LlbHwVideoCreateColor(ColorPalette[Attr & 0xF][0],
                                   ColorPalette[Attr & 0xF][1],
@@ -100,10 +100,10 @@ LlbFwVideoPutChar(IN INT c,
     BackColor = LlbHwVideoCreateColor(ColorPalette[Attr >> 4][0],
                                       ColorPalette[Attr >> 4][1],
                                       ColorPalette[Attr >> 4][2]);
-                                      
+
     /* Compute buffer address */
     Buffer = (PUSHORT)LlbHwGetFrameBuffer() + (LlbHwGetScreenWidth() * (Y * 16)) + (X * 8);
-                                      
+
     /* Draw it */
     LlbVideoDrawChar(c, Buffer, Color, BackColor);
 }

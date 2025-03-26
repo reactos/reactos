@@ -8,6 +8,8 @@
 
 #include "samsrv.h"
 
+#include <pseh/pseh2.h>
+
 /* GLOBALS *****************************************************************/
 
 static HANDLE SamKeyHandle = NULL;

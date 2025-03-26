@@ -194,7 +194,7 @@ static void* OperatorNew( size_t s ) {
     using_alloc_set = true;
     bool inserted = alloc_set().insert(p).second;
     // Suppress warning about unused variable.
-    inserted; 
+    inserted;
     EH_ASSERT(inserted);
     using_alloc_set = false;
   }

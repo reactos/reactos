@@ -1,7 +1,7 @@
 
 list(APPEND SOURCE
     container.c
-    provider
+    provider.c
     testlist.c)
 
 add_executable(dxdiagn_winetest ${SOURCE})

@@ -286,7 +286,6 @@ static BOOL
 GetColor(HWND hwndDlg, GLOBALS* g, INT nButton)
 {
     CHOOSECOLOR cc;
-    COLORREF crCustom[16] = { 0 };
     COLORREF crColor;
     INT ID = 0;
     INT ColorIndex = 0;
@@ -317,7 +316,7 @@ GetColor(HWND hwndDlg, GLOBALS* g, INT nButton)
     cc.hwndOwner = hwndDlg;
     cc.hInstance = NULL;
     cc.rgbResult = crColor;
-    cc.lpCustColors = crCustom;
+    cc.lpCustColors = g->crCustom;
     cc.Flags = CC_ANYCOLOR | CC_FULLOPEN | CC_RGBINIT;
     cc.lCustData = 0;
     cc.lpfnHook = NULL;

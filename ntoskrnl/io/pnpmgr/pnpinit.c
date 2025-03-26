@@ -14,12 +14,6 @@
 
 /* GLOBALS ********************************************************************/
 
-typedef struct _IOPNP_DEVICE_EXTENSION
-{
-    PWCHAR CompatibleIdList;
-    ULONG CompatibleIdListSize;
-} IOPNP_DEVICE_EXTENSION, *PIOPNP_DEVICE_EXTENSION;
-
 PUNICODE_STRING PiInitGroupOrderTable;
 USHORT PiInitGroupOrderTableCount;
 INTERFACE_TYPE PnpDefaultInterfaceType;
@@ -412,7 +406,7 @@ IopInitializePlugPlayServices(VOID)
 
     /* Create the root PDO */
     Status = IoCreateDevice(IopRootDriverObject,
-                            sizeof(IOPNP_DEVICE_EXTENSION),
+                            0,
                             NULL,
                             FILE_DEVICE_CONTROLLER,
                             0,
@@ -431,30 +425,31 @@ IopInitializePlugPlayServices(VOID)
     IopRootDeviceNode = PipAllocateDeviceNode(Pdo);
 
     /* Set flags */
-    IopRootDeviceNode->Flags |= DNF_STARTED + DNF_PROCESSED + DNF_ENUMERATED +
-                                DNF_MADEUP + DNF_NO_RESOURCE_REQUIRED +
-                                DNF_ADDED;
+    IopRootDeviceNode->Flags |= DNF_MADEUP | DNF_ENUMERATED |
+                                DNF_IDS_QUERIED | DNF_NO_RESOURCE_REQUIRED;
 
     /* Create instance path */
-    RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
-                           REGSTR_VAL_ROOT_DEVNODE);
+    if (!RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath, REGSTR_VAL_ROOT_DEVNODE))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
 
-    /* Call the add device routine */
-    IopRootDriverObject->DriverExtension->AddDevice(IopRootDriverObject,
-                                                    IopRootDeviceNode->PhysicalDeviceObject);
+    PnpRootInitializeDevExtension();
+
+    PiSetDevNodeState(IopRootDeviceNode, DeviceNodeStarted);
 
     /* Initialize PnP-Event notification support */
     Status = IopInitPlugPlayEvents();
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Report the device to the user-mode pnp manager */
-    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                              &IopRootDeviceNode->InstancePath);
-
     /* Initialize the Bus Type GUID List */
     PnpBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
     RtlZeroMemory(PnpBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
     ExInitializeFastMutex(&PnpBusTypeGuidList->Lock);
+
+    /* Initialize PnP root relations (this is a syncronous operation) */
+    PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 
     /* Launch the firmware mapper */
     Status = IopUpdateRootKey();
@@ -464,7 +459,7 @@ IopInitializePlugPlayServices(VOID)
     NtClose(KeyHandle);
 
     /* Initialize PnP root relations (this is a syncronous operation) */
-    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumRootDevices, NULL, NULL);
+    PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 
     /* We made it */
     return STATUS_SUCCESS;

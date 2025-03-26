@@ -115,7 +115,7 @@ typedef enum _CONSRV_API_NUMBER
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
 
 //
-// See http://msdn.microsoft.com/en-us/library/windows/desktop/bb773359(v=vs.85).aspx
+// See https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-nt_console_props
 //
 typedef struct _CONSOLE_PROPERTIES
 {
@@ -859,6 +859,12 @@ typedef struct _CONSOLE_SETINPUTOUTPUTCP
     HANDLE EventHandle;
 } CONSOLE_SETINPUTOUTPUTCP, *PCONSOLE_SETINPUTOUTPUTCP;
 
+typedef struct _CONSOLE_GETLANGID
+{
+    HANDLE ConsoleHandle;
+    LANGID LangId;
+} CONSOLE_GETLANGID, *PCONSOLE_GETLANGID;
+
 typedef struct _CONSOLE_GETKBDLAYOUTNAME
 {
     HANDLE ConsoleHandle;
@@ -887,6 +893,22 @@ typedef struct _CONSOLE_REGISTERVDM
     COORD  VDMBufferSize;
     PVOID  VDMBuffer;
 } CONSOLE_REGISTERVDM, *PCONSOLE_REGISTERVDM;
+
+typedef struct _CONSOLE_REGISTERCONSOLEIME
+{
+    HANDLE ConsoleHandle;
+    HWND hWnd;
+    DWORD dwThreadId;
+    DWORD cbDesktop;
+    LPWSTR pDesktop;
+    DWORD dwAttachToThreadId;
+} CONSOLE_REGISTERCONSOLEIME, *PCONSOLE_REGISTERCONSOLEIME;
+
+typedef struct _CONSOLE_UNREGISTERCONSOLEIME
+{
+    HANDLE ConsoleHandle;
+    DWORD dwThreadId;
+} CONSOLE_UNREGISTERCONSOLEIME, *PCONSOLE_UNREGISTERCONSOLEIME;
 
 typedef struct _CONSOLE_API_MESSAGE
 {
@@ -991,10 +1013,15 @@ typedef struct _CONSOLE_API_MESSAGE
         /* Input and Output Code Pages; keyboard */
         CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
         CONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest;
+        CONSOLE_GETLANGID LangIdRequest;
         CONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest;
 
         /* Virtual DOS Machine */
         CONSOLE_REGISTERVDM RegisterVDMRequest;
+
+        /* Console IME */
+        CONSOLE_REGISTERCONSOLEIME RegisterConsoleIME;
+        CONSOLE_UNREGISTERCONSOLEIME UnregisterConsoleIME;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 

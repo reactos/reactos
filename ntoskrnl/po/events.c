@@ -76,12 +76,12 @@ PopGetSysButtonCompletion(
         if (SysButton & SYS_BUTTON_LID) DbgPrint(" LID");
         if (SysButton == 0) DbgPrint(" WAKE");
         DbgPrint(" )\n");
-        
+
         if (SysButton & SYS_BUTTON_POWER)
         {
             /* FIXME: Read registry for the action we should perform here */
             DPRINT1("Initiating shutdown after power button event\n");
-            
+
             ZwShutdownSystem(ShutdownNoReboot);
         }
     }
@@ -159,6 +159,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
     BOOLEAN Arrival;
     ULONG Caps;
     NTSTATUS Status;
+    POP_POLICY_DEVICE_TYPE DeviceType = (POP_POLICY_DEVICE_TYPE)(ULONG_PTR)Context;
 
     DPRINT("PopAddRemoveSysCapsCallback(%p %p)\n",
         NotificationStructure, Context);
@@ -174,6 +175,12 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
         Arrival = FALSE;
     else
         return STATUS_INVALID_PARAMETER;
+
+    if (Arrival && DeviceType == PolicyDeviceBattery)
+    {
+        PopCapabilities.SystemBatteriesPresent = TRUE;
+        return STATUS_SUCCESS;
+    }
 
     if (Arrival)
     {

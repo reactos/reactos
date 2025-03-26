@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Tek Pencere Kipi", IDM_SWITCHVIEW
+        MENUITEM "&Tek Pencere Modu", IDM_SWITCHVIEW
     END
     POPUP "&Aygıt"
     BEGIN

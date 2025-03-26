@@ -34,7 +34,7 @@ typedef struct _RDBSS_DATA
     PEPROCESS OurProcess;
     CACHE_MANAGER_CALLBACKS CacheManagerCallbacks;
 #if (_WIN32_WINNT < 0x0600)
-    CACHE_MANAGER_CALLBACKS CacheManagerNoOpCallbacks; 
+    CACHE_MANAGER_CALLBACKS CacheManagerNoOpCallbacks;
 #endif
     ERESOURCE Resource;
 } RDBSS_DATA;

@@ -62,7 +62,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   DWORD  dwInternal1;
   DWORD  dwUnused1[9];
   LPDDHAL_CALLBACKS  lpDDCBtmp;
-  LPDDRAWI_DDRAWSURFACE_INT  dsList;   // list of all created directdraw surface, it is a pointer list    
+  LPDDRAWI_DDRAWSURFACE_INT  dsList;   // list of all created directdraw surface, it is a pointer list
   LPDDRAWI_DDRAWPALETTE_INT  palList;
   LPDDRAWI_DDRAWCLIPPER_INT  clipperList;
   LPDDRAWI_DIRECTDRAW_GBL  lp16DD;    // pointer to it self (DDRAWI_DIRECTDRAW_GBL)
@@ -75,7 +75,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   DDCOLORKEY  ddckCKSrcOverlay;
   VIDMEMINFO  vmiData;
   LPVOID  lpDriverHandle;
-  LPDDRAWI_DIRECTDRAW_LCL  lpExclusiveOwner;  // which local directdraw comobject is in Exclusive mode and own this  
+  LPDDRAWI_DIRECTDRAW_LCL  lpExclusiveOwner;  // which local directdraw comobject is in Exclusive mode and own this
   DWORD  dwModeIndex;
   DWORD  dwModeIndexOrig;
   DWORD  dwNumFourCC;
@@ -118,7 +118,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   ULONG_PTR  lpD3DExtendedCaps;
   DWORD  dwDOSBoxEvent;
   RECT  rectDesktop;
-  char  cDriverName[MAX_DRIVER_NAME];   // driver name, if we send in CreateDirectDraw(NULL, ...) this will be fill in the name "display" 
+  char  cDriverName[MAX_DRIVER_NAME];   // driver name, if we send in CreateDirectDraw(NULL, ...) this will be fill in the name "display"
   ULONG_PTR   lpD3DHALCallbacks3;
   DWORD  dwNumZPixelFormats;
   LPDDPIXELFORMAT  lpZPixelFormats;
@@ -270,8 +270,8 @@ typedef struct _DDRAWI_DDRAWSURFACE_GBL {
 } DDRAWI_DDRAWSURFACE_GBL;
 
 The following informations might be incorrectly
-I am using logic thinking since the info does 
-not exists in MSDN so I am drawing clue how 
+I am using logic thinking since the info does
+not exists in MSDN so I am drawing clue how
 previews stuffs works that are document in MSDN/DDK
 
 follow struct should exists ???

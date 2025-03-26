@@ -597,7 +597,7 @@ INetCfg_fnRelease(
     INetCfgImpl * This = (INetCfgImpl*)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    if (!refCount) 
+    if (!refCount)
     {
         CoTaskMemFree (This);
     }
@@ -674,7 +674,7 @@ ApplyOrCancelChanges(
                 if (bApply)
                 {
                     INetCfgComponentControl_ApplyRegistryChanges(pHead->pNCCC);
-                    //FIXME 
+                    //FIXME
                     // implement INetCfgPnpReconfigCallback and pass it to
                     //INetCfgComponentControl_ApplyPnpChanges(pHead->pNCCC, NULL);
                 }
@@ -845,7 +845,7 @@ INetCfg_fnQueryNetCfgClass(
     REFIID riid,
     void **ppvObject)
 {
-    return E_FAIL;
+    return INetCfgClass_Constructor((IUnknown *)iface, riid, ppvObject, pguidClass, iface);
 }
 
 static const INetCfgVtbl vt_NetCfg =

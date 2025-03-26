@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0051.c";
-int perfect;
 
 LONG Echo(LONG Value) { return Value; }
 

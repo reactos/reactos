@@ -39,15 +39,21 @@
 #define IDB_TASKBARPROP_NOLOCK_GROUP_NOQL   151
 #define IDB_TASKBARPROP_LOCK_NOGROUP_NOQL   152
 #define IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL 153
-#define IDB_SYSTRAYPROP_SHOW_SECONDS        154
-#define IDB_SYSTRAYPROP_HIDE_SECONDS        155
+#define IDB_SYSTRAYPROP_SHOW_SECONDS_NODESK 154
+#define IDB_SYSTRAYPROP_HIDE_SECONDS_NODESK 155
 #define IDB_STARTMENU                       158
 #define IDB_STARTPREVIEW                    170
 #define IDB_STARTPREVIEW_CLASSIC            171
-#define IDB_SYSTRAYPROP_HIDE_CLOCK          180
-#define IDB_SYSTRAYPROP_HIDE_NOCLOCK        181
-#define IDB_SYSTRAYPROP_SHOW_CLOCK          182
-#define IDB_SYSTRAYPROP_SHOW_NOCLOCK        183
+#define IDB_SYSTRAYPROP_HIDE_CLOCK_NODESK   180
+#define IDB_SYSTRAYPROP_HIDE_NOCLOCK_NODESK 181
+#define IDB_SYSTRAYPROP_SHOW_CLOCK_NODESK   182
+#define IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK 183
+#define IDB_SYSTRAYPROP_SHOW_SECONDS_DESK   184
+#define IDB_SYSTRAYPROP_HIDE_SECONDS_DESK   185
+#define IDB_SYSTRAYPROP_HIDE_CLOCK_DESK     186
+#define IDB_SYSTRAYPROP_HIDE_NOCLOCK_DESK   187
+#define IDB_SYSTRAYPROP_SHOW_CLOCK_DESK     188
+#define IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK   189
 
 /*******************************************************************************\
 |*                                Menu Resources                               *|
@@ -87,6 +93,7 @@
 #define IDD_CLASSICSTART_CUSTOMIZE    9
 #define IDD_FILENAME_WARNING          20
 #define IDD_TASKBARPROP_STARTMENU     205
+#define IDD_TASKBARPROP_NOTIFY        206
 #define IDD_MODERNSTART_ADVANCED      1036
 #define IDD_MODERNSTART_GENERAL       1037
 
@@ -102,25 +109,36 @@
 #define IDS_HELP_COMMAND                   732
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
 #define IDS_RESTORE_ALL                    811
+#define IDS_TRAYWND_UNDO_CASCADE           812
+#define IDS_TRAYWND_UNDO_TILE              813
+#define IDS_TRAYDESKBTN_TOOLTIP            814
+
+/* These values must be synchronized with shell32 */
+#define IDS_ADVANCED_DISPLAY_FAVORITES              30466
+#define IDS_ADVANCED_DISPLAY_LOG_OFF                30467
+#define IDS_ADVANCED_EXPAND_CONTROL_PANEL           30468
+#define IDS_ADVANCED_EXPAND_MY_DOCUMENTS            30469
+#define IDS_ADVANCED_EXPAND_PRINTERS                30470
+#define IDS_ADVANCED_EXPAND_MY_PICTURES             30472
+#define IDS_ADVANCED_EXPAND_NET_CONNECTIONS         30473
+#define IDS_ADVANCED_DISPLAY_RUN                    30474
+#define IDS_ADVANCED_DISPLAY_ADMINTOOLS             30476
+#define IDS_ADVANCED_SMALL_START_MENU               30477
 
 /*******************************************************************************\
 |*                              Control Resources                              *|
 \*******************************************************************************/
 
 /* Taskbar Page */
-#define IDC_TASKBARPROP_FIRST_CMD            1000
-#define IDC_TASKBARPROP_HIDEICONS            1000
-#define IDC_TASKBARPROP_ICONCUST             1007
-#define IDC_TASKBARPROP_ONTOP                1101
-#define IDC_TASKBARPROP_HIDE                 1102
-#define IDC_TASKBARPROP_CLOCK                1103
-#define IDC_TASKBARPROP_GROUP                1104
-#define IDC_TASKBARPROP_LOCK                 1105
-#define IDC_TASKBARPROP_SECONDS              1106
-#define IDC_TASKBARPROP_SHOWQL               1107
-#define IDC_TASKBARPROP_LAST_CMD             1107
-#define IDC_TASKBARPROP_TASKBARBITMAP        1111
-#define IDC_TASKBARPROP_NOTIFICATIONBITMAP   1112
+#define IDC_TASKBARPROP_FIRST_CMD            1114
+#define IDC_TASKBARPROP_ONTOP                1114
+#define IDC_TASKBARPROP_HIDE                 1115
+#define IDC_TASKBARPROP_GROUP                1116
+#define IDC_TASKBARPROP_LOCK                 1117
+#define IDC_TASKBARPROP_SHOWQL               1118
+#define IDC_TASKBARPROP_SMALLICONS           1119
+#define IDC_TASKBARPROP_LAST_CMD             1119
+#define IDC_TASKBARPROP_TASKBARBITMAP        1120
 
 /* Startmenu Page */
 #define IDC_TASKBARPROP_STARTMENUCLASSICCUST 1130
@@ -132,9 +150,19 @@
 #define IDC_TASKBARPROP_STARTMENU_BITMAP     1134
 #define IDC_STARTBTN                         1140
 
+/* Notification Area Page */
+#define IDC_TASKBARPROP_NOTIFY_FIRST_CMD     1000
+#define IDC_TASKBARPROP_HIDEICONS            1000
+#define IDC_TASKBARPROP_ICONCUST             1007
+#define IDC_TASKBARPROP_CLOCK                1103
+#define IDC_TASKBARPROP_SECONDS              1106
+#define IDC_TASKBARPROP_NOTIFICATIONBITMAP   1112
+#define IDC_TASKBARPROP_DESKTOP              1113
+#define IDC_TASKBARPROP_NOTIFY_LAST_CMD      1113
+
 /* Customize Notifications Dialog */
 #define IDC_TASKBARPROP_NOTIREST             1402
-#define IDC_NOTIFICATION_LIST                1005 
+#define IDC_NOTIFICATION_LIST                1005
 #define IDC_NOTIFICATION_BEHAVIOUR           1006
 
 /* Customize classic start menu dialog */
@@ -180,8 +208,6 @@
 #define IDMA_RESTORE_OPEN 416
 #define IDMA_MINIMIZE_ALL 419
 
-#define ID_SHELL_CMD_FIRST              0xF
-#define ID_SHELL_CMD_LAST               0x7FEF
 #define ID_SHELL_CMD_PROPERTIES         (401)
 #define ID_SHELL_CMD_OPEN_ALL_USERS     (402)
 #define ID_SHELL_CMD_EXPLORE_ALL_USERS  (403)
@@ -195,3 +221,5 @@
 #define ID_SHELL_CMD_CUST_NOTIF         (411)
 #define ID_SHELL_CMD_ADJUST_DAT         (412)
 #define ID_SHELL_CMD_RESTORE_ALL        (413)
+#define ID_SHELL_CMD_FIRST              ID_SHELL_CMD_PROPERTIES
+#define ID_SHELL_CMD_LAST               ID_SHELL_CMD_RESTORE_ALL

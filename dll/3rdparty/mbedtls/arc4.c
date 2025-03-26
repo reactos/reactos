@@ -1,7 +1,7 @@
 /*
  *  An implementation of the ARCFOUR algorithm
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  The ARCFOUR algorithm was publicly disclosed on 94/09.
@@ -60,6 +58,7 @@
 #if defined(MBEDTLS_ARC4_C)
 
 #include "mbedtls/arc4.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
@@ -74,11 +73,6 @@
 
 #if !defined(MBEDTLS_ARC4_ALT)
 
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
-}
-
 void mbedtls_arc4_init( mbedtls_arc4_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_arc4_context ) );
@@ -89,7 +83,7 @@ void mbedtls_arc4_free( mbedtls_arc4_context *ctx )
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_arc4_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_arc4_context ) );
 }
 
 /*

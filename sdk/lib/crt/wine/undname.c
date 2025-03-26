@@ -19,14 +19,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define __WINE_DEBUG_CHANNEL__
-#include <precomp.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "msvcrt.h"
 
-#include <internal/wine/msvcrt.h>
-#include <internal/wine/cppexcept.h>
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
+
+#ifdef __REACTOS__
+#define MSVCRT_atoi atoi
+#define MSVCRT_isdigit isdigit
+#define MSVCRT_sprintf sprintf
+#endif
 
 /* TODO:
  * - document a bit (grammar + functions)
@@ -199,8 +205,7 @@ static BOOL str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
             c = '>';
             if (i < a->start) c = '-';
             else if (i >= a->num) c = '}';
-            /* This check is as useless as the unused-but-set gcc warning that we want to silence here */
-            if (c != 0) TRACE("%p\t%d%c %s\n", a, i, c, debugstr_a(a->elts[i]));
+            TRACE("%p\t%d%c %s\n", a, i, c, debugstr_a(a->elts[i]));
         }
     }
 
@@ -231,7 +236,7 @@ static char* str_array_get_ref(struct array* cref, unsigned idx)
  * Helper for printf type of command (only %s and %c are implemented) 
  * while dynamically allocating the buffer
  */
-static char* str_printf(struct parsed_symbol* sym, const char* format, ...)
+static char* WINAPIV str_printf(struct parsed_symbol* sym, const char* format, ...)
 {
     va_list      args;
     unsigned int len = 1, i, sz;
@@ -880,7 +885,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
                     goto done;
                 if (modifier)
                     modifier = str_printf(sym, "%s %s", modifier, ptr_modif);
-                else if(ptr_modif[0])
+                else if(ptr_modif)
                     modifier = str_printf(sym, " %s", ptr_modif);
                 if (!get_calling_convention(*sym->current++,
                             &call_conv, &exported,

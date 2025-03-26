@@ -122,14 +122,6 @@ init_client(void)
     inaddr_any.s_addr = INADDR_ANY;
     bootp_packet_handler = do_packet;
 
-    if (PipeInit() == INVALID_HANDLE_VALUE)
-    {
-        DbgPrint("DHCPCSVC: PipeInit() failed!\n");
-        AdapterStop();
-        ApiFree();
-        return 0; // FALSE
-    }
-
     return 1; // TRUE
 }
 
@@ -1069,22 +1061,52 @@ void
 state_panic(void *ipp)
 {
 	struct interface_info *ip = ipp;
-        PDHCP_ADAPTER Adapter = AdapterFindInfo(ip);
+	uint16_t address_low;
+	int i;
+    IPAddr IpAddress;
+    ULONG Buffer[20];
+    ULONG BufferSize;
+    DWORD ret;
+    PDHCP_ADAPTER Adapter = AdapterFindInfo(ip);
 
 	note("No DHCPOFFERS received.");
 
-        if (!Adapter->NteContext)
-        {
-            /* Generate an automatic private address */
-            DbgPrint("DHCPCSVC: Failed to receive a response from a DHCP server. An automatic private address will be assigned.\n");
+    if (!Adapter->NteContext)
+    {
+        /* Generate an automatic private address */
+        DbgPrint("DHCPCSVC: Failed to receive a response from a DHCP server. An automatic private address will be assigned.\n");
 
-            /* FIXME: The address generation code sucks */
-            AddIPAddress(htonl(0xA9FE0000 | (rand() % 0xFFFF)), //169.254.X.X
-                         htonl(0xFFFF0000), //255.255.0.0
-                         Adapter->IfMib.dwIndex,
-                         &Adapter->NteContext,
-                         &Adapter->NteInstance);
+        /* FIXME: The address generation code sucks */
+        srand(0);
+
+        for (;;)
+        {
+            address_low = rand();
+            for (i = 0; i < ip->hw_address.hlen; i++)
+                address_low += ip->hw_address.haddr[i];
+
+            IpAddress = htonl(0xA9FE0000 | address_low);  // 169.254.X.X
+
+            /* Send an ARP request to check if the IP address is already in use */
+            BufferSize = sizeof(Buffer);
+            ret = SendARP(IpAddress,
+                          IpAddress,
+                          Buffer,
+                          &BufferSize);
+            DH_DbgPrint(MID_TRACE,("DHCPCSVC: SendARP returned %lu\n", ret));
+            if (ret != 0)
+            {
+                /* The IP address is not in use */
+                DH_DbgPrint(MID_TRACE,("DHCPCSVC: Using automatic private address\n"));
+                AddIPAddress(IpAddress,
+                             htonl(0xFFFF0000), // 255.255.0.0
+                             Adapter->IfMib.dwIndex,
+                             &Adapter->NteContext,
+                             &Adapter->NteInstance);
+                return;
+            }
         }
+    }
 }
 
 void

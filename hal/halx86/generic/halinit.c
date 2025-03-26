@@ -54,12 +54,14 @@ HalInitializeProcessor(
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
     /* Update the interrupt affinity and processor mask */
-    InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
+    InterlockedBitTestAndSetAffinity(&HalpActiveProcessors, ProcessorNumber);
+    InterlockedBitTestAndSetAffinity(&HalpDefaultInterruptAffinity, ProcessorNumber);
 
-    /* Register routines for KDCOM */
-    HalpRegisterKdSupportFunctions();
+    if (ProcessorNumber == 0)
+    {
+        /* Register routines for KDCOM */
+        HalpRegisterKdSupportFunctions();
+    }
 }
 
 /*
@@ -72,6 +74,7 @@ HalInitSystem(IN ULONG BootPhase,
               IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
+    NTSTATUS Status;
 
     /* Check the boot phase */
     if (BootPhase == 0)
@@ -97,7 +100,11 @@ HalInitSystem(IN ULONG BootPhase,
         }
 
         /* Initialize ACPI */
-        HalpSetupAcpiPhase0(LoaderBlock);
+        Status = HalpSetupAcpiPhase0(LoaderBlock);
+        if (!NT_SUCCESS(Status))
+        {
+            KeBugCheckEx(ACPI_BIOS_ERROR, Status, 0, 0, 0);
+        }
 
         /* Initialize the PICs */
         HalpInitializePICs(TRUE);
@@ -137,9 +144,8 @@ HalInitSystem(IN ULONG BootPhase,
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
 
-#ifdef _M_AMD64
+        /* Initialize Phase 0 of the x86 emulator */
         HalInitializeBios(0, LoaderBlock);
-#endif
     }
     else if (BootPhase == 1)
     {
@@ -149,9 +155,8 @@ HalInitSystem(IN ULONG BootPhase,
         /* Do some HAL-specific initialization */
         HalpInitPhase1();
 
-#ifdef _M_AMD64
+        /* Initialize Phase 1 of the x86 emulator */
         HalInitializeBios(1, LoaderBlock);
-#endif
     }
 
     /* All done, return */

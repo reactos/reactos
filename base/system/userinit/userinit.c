@@ -281,7 +281,7 @@ StartShell(VOID)
                         }
                         else
                         {
-                            WARN("Alternate shell in Safe Mode required but not specified.");
+                            WARN("Alternate shell in Safe Mode required but not specified.\n");
                         }
                     }
                 }

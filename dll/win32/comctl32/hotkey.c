@@ -221,7 +221,7 @@ HOTKEY_SetRules(HOTKEY_INFO *infoPtr, WORD invComb, WORD invMod)
 {
     infoPtr->InvComb = invComb;
     infoPtr->InvMod = invMod;
-    TRACE("(infoPtr=%p) Invalid Modifers: 0x%x, If Invalid: 0x%x\n", infoPtr,
+    TRACE("(infoPtr=%p) Invalid Modifiers: 0x%x, If Invalid: 0x%x\n", infoPtr,
           infoPtr->InvComb, infoPtr->InvMod);
 }
 

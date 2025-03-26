@@ -14,7 +14,7 @@ private:
     SP_DEVINFO_DATA m_DevinfoData;
     DEVINST m_DevInst;
     HDEVINFO m_hDevInfo;
-    
+
     ULONG m_Status;
     ULONG m_ProblemNumber;
     int m_OverlayImage;

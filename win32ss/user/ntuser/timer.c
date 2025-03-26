@@ -17,12 +17,16 @@ static LIST_ENTRY TimersListHead;
 static LONG TimeLast = 0;
 
 /* Windows 2000 has room for 32768 window-less timers */
-#define NUM_WINDOW_LESS_TIMERS   32768
+/* These values give timer IDs [256,32767], same as on Windows */
+#define MAX_WINDOW_LESS_TIMER_ID  (32768 - 1)
+#define NUM_WINDOW_LESS_TIMERS    (32768 - 256)
+
+#define HINTINDEX_BEGIN_VALUE   0
 
 static PFAST_MUTEX    Mutex;
 static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
-static ULONG          HintIndex = 1;
+static ULONG          HintIndex = HINTINDEX_BEGIN_VALUE;
 
 ERESOURCE TimerLock;
 
@@ -57,7 +61,7 @@ CreateTimer(VOID)
   Ret = UserCreateObject(gHandleTable, NULL, NULL, &Handle, TYPE_TIMER, sizeof(TIMER));
   if (Ret)
   {
-     Ret->head.h = Handle;
+     UserHMSetHandle(Ret, Handle);
      InsertTailList(&TimersListHead, &Ret->ptmrList);
   }
 
@@ -76,11 +80,12 @@ RemoveTimer(PTIMER pTmr)
      RemoveEntryList(&pTmr->ptmrList);
      if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM))) // System timers are reusable.
      {
-        UINT_PTR IDEvent;
+        ULONG ulBitmapIndex;
 
-        IDEvent = NUM_WINDOW_LESS_TIMERS - pTmr->nID;
+        ASSERT(pTmr->nID <= MAX_WINDOW_LESS_TIMER_ID);
+        ulBitmapIndex = (ULONG)(MAX_WINDOW_LESS_TIMER_ID - pTmr->nID);
         IntLockWindowlessTimerBitmap();
-        RtlClearBit(&WindowLessTimersBitMap, IDEvent);
+        RtlClearBit(&WindowLessTimersBitMap, ulBitmapIndex);
         IntUnlockWindowlessTimerBitmap();
      }
      UserDereferenceObject(pTmr);
@@ -181,7 +186,8 @@ IntSetTimer( PWND Window,
                   INT Type)
 {
   PTIMER pTmr;
-  UINT Ret = IDEvent;
+  UINT_PTR Ret = IDEvent;
+  ULONG ulBitmapIndex;
   LARGE_INTEGER DueTime;
   DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 
@@ -219,18 +225,18 @@ IntSetTimer( PWND Window,
   {
       IntLockWindowlessTimerBitmap();
 
-      IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
-
-      if (IDEvent == (UINT_PTR) -1)
+      ulBitmapIndex = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
+      HintIndex = (ulBitmapIndex + 1) % NUM_WINDOW_LESS_TIMERS;
+      if (ulBitmapIndex == ULONG_MAX)
       {
          IntUnlockWindowlessTimerBitmap();
          ERR("Unable to find a free window-less timer id\n");
          EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
-         ASSERT(FALSE);
          return 0;
       }
 
-      IDEvent = NUM_WINDOW_LESS_TIMERS - IDEvent;
+      ASSERT(ulBitmapIndex < NUM_WINDOW_LESS_TIMERS);
+      IDEvent = MAX_WINDOW_LESS_TIMER_ID - ulBitmapIndex;
       Ret = IDEvent;
 
       IntUnlockWindowlessTimerBitmap();
@@ -411,7 +417,7 @@ PostTimerMessages(PWND Window)
           (pTmr->pti == pti) &&
           ((pTmr->pWnd == Window) || (Window == NULL)) )
         {
-           Msg.hwnd    = (pTmr->pWnd) ? pTmr->pWnd->head.h : 0;
+           Msg.hwnd    = (pTmr->pWnd ? UserHMGetHandle(pTmr->pWnd) : NULL);
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
@@ -613,7 +619,7 @@ InitTimerImpl(VOID)
 
    RtlInitializeBitMap(&WindowLessTimersBitMap,
                        WindowLessTimersBitMapBuffer,
-                       BitmapBytes * 8);
+                       NUM_WINDOW_LESS_TIMERS);
 
    /* Yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
@@ -635,19 +641,18 @@ NtUserSetTimer
 )
 {
    PWND Window = NULL;
-   DECLARE_RETURN(UINT_PTR);
+   UINT_PTR ret;
 
    TRACE("Enter NtUserSetTimer\n");
    UserEnterExclusive();
    if (hWnd) Window = UserGetWindowObject(hWnd);
+
+   ret = IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND);
+
    UserLeave();
+   TRACE("Leave NtUserSetTimer, ret=%u\n", ret);
 
-   RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
-
-CLEANUP:
-   TRACE("Leave NtUserSetTimer, ret=%u\n", _ret_);
-
-   END_CLEANUP;
+   return ret;
 }
 
 
@@ -660,18 +665,18 @@ NtUserKillTimer
 )
 {
    PWND Window = NULL;
-   DECLARE_RETURN(BOOL);
+   BOOL ret;
 
    TRACE("Enter NtUserKillTimer\n");
    UserEnterExclusive();
    if (hWnd) Window = UserGetWindowObject(hWnd);
+
+   ret = IntKillTimer(Window, uIDEvent, FALSE);
+
    UserLeave();
 
-   RETURN(IntKillTimer(Window, uIDEvent, FALSE));
-
-CLEANUP:
-   TRACE("Leave NtUserKillTimer, ret=%i\n", _ret_);
-   END_CLEANUP;
+   TRACE("Leave NtUserKillTimer, ret=%i\n", ret);
+   return ret;
 }
 
 
@@ -684,15 +689,17 @@ NtUserSetSystemTimer(
    TIMERPROC lpTimerFunc
 )
 {
-   DECLARE_RETURN(UINT_PTR);
+    UINT_PTR ret;
 
-   TRACE("Enter NtUserSetSystemTimer\n");
+    UserEnterExclusive();
+    TRACE("Enter NtUserSetSystemTimer\n");
 
-   RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM));
+    ret = IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM);
 
-CLEANUP:
-   TRACE("Leave NtUserSetSystemTimer, ret=%u\n", _ret_);
-   END_CLEANUP;
+    UserLeave();
+
+    TRACE("Leave NtUserSetSystemTimer, ret=%u\n", ret);
+    return ret;
 }
 
 BOOL

@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Mode Utility
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -27,12 +33,12 @@ Rata de repetiție la menținerea unei taste apăsate:\n\
     IDS_QUERY_PRINTER_FOUND "Depistat dispozitiv de imprimare - %s\n"
     IDS_QUERY_PARALLEL_FOUND "Depistat dispozitiv la portul paralel - %s\n"
     IDS_QUERY_DOSDEV_FOUND "Depistat dispozitiv de tip DOS - %s\n"
-    // IDS_QUERY_MISC_FOUND "Found other device - %s\n"
+    // IDS_QUERY_MISC_FOUND "A fost găsit alt dispozitiv - %s\n"
 
-    // IDS_QUERY_DEVICE_FOUND "Found %s device - %s\n"
+    // IDS_QUERY_DEVICE_FOUND "A fost găsit dispozitivul %s - %s\n"
     // IDS_SERIAL  "serial"
-    // IDS_PRINTER "parallel"
-    // IDS_OTHER   "other"
+    // IDS_PRINTER "paralel"
+    // IDS_OTHER   "altul"
 END
 
 STRINGTABLE
@@ -75,6 +81,7 @@ BEGIN
     IDS_ERROR_TIMEOUT_SET_DEVICE "Eșec la stabilirea perioadei de expirare pentru dispozitivul %s:\n"
     IDS_ERROR_INVALID_PARITY_BITS "EROARE: Valoare eronată pentru biții de paritate %d:\n"
     IDS_ERROR_INVALID_STOP_BITS "EROARE: Valoare eronată pentru biții delimitori %d:\n"
-    IDS_ERROR_NO_MEMORY "ERAORE: Nu există suficientă memorie.\n"
+    IDS_ERROR_NO_MEMORY "EROARE: Nu există suficientă memorie.\n"
     IDS_ERROR_SCREEN_LINES_COL "Ecranul nu poate fi stabilit cu numărul de linii sau coloane specificate.\n"
+    IDS_ERROR_INVALID_CODEPAGE "Pagina de cod specificată nu e validă.\n"
 END

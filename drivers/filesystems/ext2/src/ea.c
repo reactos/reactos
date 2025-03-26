@@ -262,7 +262,7 @@ Ext2QueryEa (
 
 				// Link FullEa and LastFullEa together
 				if (LastFullEa)
-					LastFullEa->NextEntryOffset = (ULONG)((PCHAR)FullEa - 
+					LastFullEa->NextEntryOffset = (ULONG)((PCHAR)FullEa -
                                                           (PCHAR)LastFullEa);
 
 				LastFullEa = FullEa;

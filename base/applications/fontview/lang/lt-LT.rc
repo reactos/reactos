@@ -1,4 +1,9 @@
-/* Translation by Vytis "CMan" Girdžijauskas (cman@cman.us) */
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Lithuanian resource file
+ * TRANSLATOR:  Copyright 2008 Vytis Girdžijauskas (CMan) <cman@cman.us>
+ */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
@@ -12,6 +17,12 @@ BEGIN
     IDS_ERROR_NOMEM "Užduočiai užbaigti, nepakanka atminties."
     IDS_ERROR_NOFONT "%1 nėra teisinga šrifto byla."
     IDS_ERROR_NOCLASS "Nepavyko inicijuoti lango klasės."
+    IDS_ERROR_ISINSTALLED "This font is already installed!" 
+    IDS_ERROR_FONTCPY "Failed to copy the font file!"
+    IDS_ERROR_OPENKEY "Failed to open the fonts registry key!"
+    IDS_ERROR_REGISTER "Failed to register the new font!"
+    IDS_SUCCESS "Success"
+    IDS_COMPLETED "Font installation completed."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

@@ -29,6 +29,7 @@ list(APPEND SOURCE
     cor.idl
     cordebug.idl
 #   crtrow.idl
+    ctffunc.idl
     ctxtcall.idl
 #   dbccmd.idl
 #   dbcses.idl
@@ -44,6 +45,7 @@ list(APPEND SOURCE
     docobjectservice.idl
     downloadmgr.idl
     drmexternals.idl
+    dxgiformat.idl
 #   dyngraph.idl
     endpointvolume.idl
     exdisp.idl

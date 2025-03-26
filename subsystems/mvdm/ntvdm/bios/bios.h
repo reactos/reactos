@@ -33,8 +33,8 @@
 /*
  * BIOS Data Area at 0040:XXXX
  *
- * See: http://webpages.charter.net/danrollins/techhelp/0093.HTM
- * and: http://www.bioscentral.com/misc/bda.htm
+ * See: http://www.techhelpmanual.com/93-rom_bios_variables.html
+ * and: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
  * for more information.
  */
 typedef struct
@@ -111,7 +111,7 @@ C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x100);
 /*
  * User Data Area at 0050:XXXX
  *
- * See: http://helppc.netcore2k.net/table/memory-map
+ * See: https://helppc.netcore2k.net/table/memory-map
  * for more information.
  */
 typedef struct

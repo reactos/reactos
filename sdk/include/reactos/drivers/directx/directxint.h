@@ -117,7 +117,7 @@ typedef struct _EDD_SURFACE
 
 typedef struct _EDD_DIRECTDRAW_GLOBAL
 {
-/* 0x000 */    PVOID dhpdev;           // 0x000 <-- verified to match Windows XP, dhpdev, the drv hPDev --> 
+/* 0x000 */    PVOID dhpdev;           // 0x000 <-- verified to match Windows XP, dhpdev, the drv hPDev -->
 /* 0x004 */    DWORD dwReserved1;
 /* 0x008 */    DWORD dwReserved2;
 /* 0x00C */    LPDDVIDEOPORTCAPS lpDDVideoPortCaps;                    // 0x00C <-- verified to match Win2k3
@@ -139,7 +139,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x024 */    ULONG unk_024;
 
 /* 0x028 */    LARGE_INTEGER   llAssertModeTimeout;                    /* 0x028 <-- verified to match Windows XP, llAssertModeTimeout, it
-                                                                          using regkey 
+                                                                          using regkey
                                                                           HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI
                                                                           Specifies how long a DirectDraw application can keep a graphics-device frame-buffer locked
                                                                           in second, if this value are set to 0 it disable directdraw acclatrions.
@@ -152,7 +152,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x03C */    PDWORD pdwFourCC;                                       // 0x03C <-- verified to match Windows XP, pdwFourCC
 /* 0x040 */    DD_HALINFO ddHalInfo;                                   // 0x040 <-- verified to match Windows XP, ddHalInfo
 /* 0x1E0 */    ULONG unk_1e0[17];                                      // DxApi interface (size 0x44)
-/* 0x224 */    ULONG unk_224;                                          // 
+/* 0x224 */    ULONG unk_224;                                          //
 /* 0x228 */    ULONG unk_228[14];                                      // AGP interface (size 0x38)
 /* 0x260 */    DDKERNELCAPS ddKernelCaps;                              // 0x260 <-- verified to match Windows Server 2003
 /* 0x26C */    DD_MORECAPS ddMoreCaps;                                 // 0x26C <-- verified to match Windows Server 2003
@@ -180,7 +180,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x5B8 */    PKEVENT pAssertModeEvent;
 /* 0x5BC */    EDD_SURFACE *peSurfaceCurrent;
 /* 0x5C0 */    EDD_SURFACE *peSurfacePrimary;
-/* 0x5C4 */    BOOL bSuspended;                             // 0x5C4 <-- verified to match Windows XP, tells dxg to use driver's own api or return error code instead 
+/* 0x5C4 */    BOOL bSuspended;                             // 0x5C4 <-- verified to match Windows XP, tells dxg to use driver's own api or return error code instead
 /* 0x5C8 */    ULONG unk_5c8[12];
 /* 0x5F8 */    RECTL rcbounds;
 /* 0x608 */    ULONG unk_608;

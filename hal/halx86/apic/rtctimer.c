@@ -6,68 +6,75 @@
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:      https://wiki.osdev.org/RTC
  *                  https://forum.osdev.org/viewtopic.php?f=13&t=20825&start=0
- *                  http://www.bioscentral.com/misc/cmosmap.htm
+ *                  https://web.archive.org/web/20240119203005/http://www.bioscentral.com/misc/cmosmap.htm
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#include "apicp.h"
+#include <smp.h>
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
-const UCHAR HalpClockVector = 0xD1;
-BOOLEAN HalpClockSetMSRate;
-UCHAR HalpNextMSRate;
-UCHAR HalpCurrentRate = 9;  /* Initial rate  9: 128 Hz / 7.8 ms */
-ULONG HalpCurrentTimeIncrement;
-static UCHAR RtcMinimumClockRate = 8;  /* Minimum rate  8: 256 Hz / 3.9 ms */
-static UCHAR RtcMaximumClockRate = 12; /* Maximum rate 12: 16 Hz / 62.5 ms */
+static const UCHAR RtcMinimumClockRate = 6;  /* Minimum rate  6: 1024 Hz / 0.97 ms */
+static const UCHAR RtcMaximumClockRate = 10; /* Maximum rate 10: 64 Hz / 15.6 ms */
+static UCHAR HalpCurrentClockRate = 10;  /* Initial rate  10: 64 Hz / 15.6 ms */
+static ULONG HalpCurrentTimeIncrement;
+static ULONG HalpMinimumTimeIncrement;
+static ULONG HalpMaximumTimeIncrement;
+static ULONG HalpCurrentFractionalIncrement;
+static ULONG HalpRunningFraction;
+static BOOLEAN HalpSetClockRate;
+static UCHAR HalpNextClockRate;
 
 /*!
-    \brief Converts the CMOS RTC rate into the time increment in 100ns intervals.
+    \brief Converts the CMOS RTC rate into the time increment in 0.1ns intervals.
 
-    Rate Freqency Interval (ms)  Result
-    -------------------------------------
+    Rate Frequency Interval (ms) Precise increment (0.1ns)
+    ------------------------------------------------------
      0   disabled
-     1   32768      0.03052          305
-     2   16384      0.06103          610
-     3    8192      0.12207         1221
-     4    4096      0.24414         2441
-     5    2048      0.48828         4883
-     6    1024      0.97656         9766
-     7     512      1.95313        19531
-     8     256      3.90625        39063
-     9     128      7.8125         78125
-    10      64     15.6250        156250
-    11      32     31.25          312500
-    12      16     62.5           625000
-    13       8    125            1250000
-    14       4    250            2500000
-    15       2    500            5000000
+     1   32768      0.03052            305,175
+     2   16384      0.06103            610,351
+     3    8192      0.12207          1,220,703
+     4    4096      0.24414          2,441,406
+     5    2048      0.48828          4,882,812
+     6    1024      0.97656          9,765,625 <- minimum
+     7     512      1.95313         19,531,250
+     8     256      3.90625         39,062,500
+     9     128      7.8125          78,125,000
+    10      64     15.6250         156,250,000 <- maximum / default
+    11      32     31.25           312,500,000
+    12      16     62.5            625,000,000
+    13       8    125            1,250,000,000
+    14       4    250            2,500,000,000
+    15       2    500            5,000,000,000
 
 */
 FORCEINLINE
 ULONG
-RtcClockRateToIncrement(UCHAR Rate)
+RtcClockRateToPreciseIncrement(UCHAR Rate)
 {
     /* Calculate frequency */
-    ULONG Freqency = 32768 >> (Rate - 1);
+    ULONG Frequency = 32768 >> (Rate - 1);
 
-    /* Calculate interval in 100ns interval: Interval = (1 / Frequency) * 10000000
-       This formula will round properly, instead of truncating. */
-    return (10000000 + (Freqency/2)) / Freqency;
+    /* Calculate interval in 0.1ns interval: Interval = (1 / Frequency) * 10,000,000,000 */
+    return 10000000000ULL / Frequency;
 }
 
 VOID
 RtcSetClockRate(UCHAR ClockRate)
 {
     UCHAR RegisterA;
+    ULONG PreciseIncrement;
 
     /* Update the global values */
-    HalpCurrentRate = ClockRate;
-    HalpCurrentTimeIncrement = RtcClockRateToIncrement(ClockRate);
+    HalpCurrentClockRate = ClockRate;
+    PreciseIncrement = RtcClockRateToPreciseIncrement(ClockRate);
+    HalpCurrentTimeIncrement = PreciseIncrement / 1000;
+    HalpCurrentFractionalIncrement = PreciseIncrement % 1000;
 
     /* Acquire CMOS lock */
     HalpAcquireCmosSpinLock();
@@ -113,15 +120,20 @@ HalpInitializeClock(VOID)
     HalpReleaseCmosSpinLock();
 
     /* Set initial rate */
-    RtcSetClockRate(HalpCurrentRate);
+    RtcSetClockRate(HalpCurrentClockRate);
 
     /* Restore interrupt state */
     __writeeflags(EFlags);
 
-    /* Notify the kernel about the maximum and minimum increment */
-    KeSetTimeIncrement(RtcClockRateToIncrement(RtcMaximumClockRate),
-                       RtcClockRateToIncrement(RtcMinimumClockRate));
+    /* Calculate minumum and maximum increment */
+    HalpMinimumTimeIncrement = RtcClockRateToPreciseIncrement(RtcMinimumClockRate) / 1000;
+    HalpMaximumTimeIncrement = RtcClockRateToPreciseIncrement(RtcMaximumClockRate) / 1000;
 
+    /* Notify the kernel about the maximum and minimum increment */
+    KeSetTimeIncrement(HalpMaximumTimeIncrement, HalpMinimumTimeIncrement);
+
+    /* Enable the timer interrupt */
+    HalEnableSystemInterrupt(APIC_CLOCK_VECTOR, CLOCK_LEVEL, Latched);
 
     DPRINT1("Clock initialized\n");
 }
@@ -141,10 +153,13 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 #endif
 
     /* Start the interrupt */
-    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, HalpClockVector, &Irql))
+    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, APIC_CLOCK_VECTOR, &Irql))
     {
         /* Spurious, just end the interrupt */
+#ifdef _M_IX86
         KiEoiHelper(TrapFrame);
+#endif
+        return;
     }
 
     /* Read register C, so that the next interrupt can happen */
@@ -153,25 +168,62 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Save increment */
     LastIncrement = HalpCurrentTimeIncrement;
 
+    /* Check if the running fraction has accounted for 100 ns */
+    HalpRunningFraction += HalpCurrentFractionalIncrement;
+    if (HalpRunningFraction >= 1000)
+    {
+        LastIncrement++;
+        HalpRunningFraction -= 1000;
+    }
+
     /* Check if someone changed the time rate */
-    if (HalpClockSetMSRate)
+    if (HalpSetClockRate)
     {
         /* Set new clock rate */
-        RtcSetClockRate(HalpNextMSRate);
+        RtcSetClockRate(HalpNextClockRate);
 
         /* We're done */
-        HalpClockSetMSRate = FALSE;
+        HalpSetClockRate = FALSE;
     }
+
+    /* Send the clock IPI to all other CPUs */
+    HalpBroadcastClockIpi(CLOCK_IPI_VECTOR);
 
     /* Update the system time -- on x86 the kernel will exit this trap  */
     KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+
+    /* End the interrupt */
+    KiEndInterrupt(Irql, TrapFrame);
 }
 
 VOID
 FASTCALL
-HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+HalpClockIpiHandler(IN PKTRAP_FRAME TrapFrame)
 {
-    __debugbreak();
+    KIRQL Irql;
+
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+#ifdef _M_AMD64
+    /* This is for debugging */
+    TrapFrame->ErrorCode = 0xc10c4;
+#endif
+
+    /* Start the interrupt */
+    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, CLOCK_IPI_VECTOR, &Irql))
+    {
+        /* Spurious, just end the interrupt */
+#ifdef _M_IX86
+        KiEoiHelper(TrapFrame);
+#endif
+        return;
+    }
+
+    /* Call the kernel to update runtimes */
+    KeUpdateRunTime(TrapFrame, Irql);
+
+    /* End the interrupt */
+    KiEndInterrupt(Irql, TrapFrame);
 }
 
 ULONG
@@ -179,18 +231,21 @@ NTAPI
 HalSetTimeIncrement(IN ULONG Increment)
 {
     UCHAR Rate;
+    ULONG NextIncrement;
 
     /* Lookup largest value below given Increment */
-    for (Rate = RtcMinimumClockRate; Rate <= RtcMaximumClockRate; Rate++)
+    for (Rate = RtcMinimumClockRate; Rate < RtcMaximumClockRate; Rate++)
     {
         /* Check if this is the largest rate possible */
-        if (RtcClockRateToIncrement(Rate + 1) > Increment) break;
+        NextIncrement = RtcClockRateToPreciseIncrement(Rate + 1) / 1000;
+        if (NextIncrement > Increment)
+            break;
     }
 
     /* Set the rate and tell HAL we want to change it */
-    HalpNextMSRate = Rate;
-    HalpClockSetMSRate = TRUE;
+    HalpNextClockRate = Rate;
+    HalpSetClockRate = TRUE;
 
     /* Return the real increment */
-    return RtcClockRateToIncrement(Rate);
+    return RtcClockRateToPreciseIncrement(Rate) / 1000;
 }

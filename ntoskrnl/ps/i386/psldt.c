@@ -34,7 +34,7 @@ PspDeleteVdmObjects(PEPROCESS Process)
     UNIMPLEMENTED;
 
     /* Free VDM objects */
-    ExFreePoolWithTag(Process->VdmObjects, '  eK');
+    ExFreePoolWithTag(Process->VdmObjects, TAG_KERNEL);
     Process->VdmObjects = NULL;
 }
 

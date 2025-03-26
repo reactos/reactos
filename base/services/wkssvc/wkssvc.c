@@ -37,12 +37,16 @@ static WCHAR ServiceName[] = L"lanmanworkstation";
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
 
+OSVERSIONINFOW VersionInfo;
+HANDLE LsaHandle = NULL;
+ULONG LsaAuthenticationPackage = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 static VOID
 UpdateServiceStatus(DWORD dwState)
 {
-    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwServiceType = SERVICE_WIN32_SHARE_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
     ServiceStatus.dwControlsAccepted = 0;
     ServiceStatus.dwWin32ExitCode = 0;
@@ -64,6 +68,85 @@ UpdateServiceStatus(DWORD dwState)
                      &ServiceStatus);
 }
 
+
+static
+DWORD
+ServiceInit(VOID)
+{
+    LSA_STRING ProcessName = RTL_CONSTANT_STRING("Workstation");
+    LSA_STRING PackageName = RTL_CONSTANT_STRING(MSV1_0_PACKAGE_NAME);
+    LSA_OPERATIONAL_MODE Mode;
+    HANDLE hThread;
+    NTSTATUS Status;
+
+    ERR("ServiceInit()\n");
+
+    /* Get the OS version */
+    VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
+    GetVersionExW(&VersionInfo);
+
+    InitWorkstationInfo();
+
+    Status = LsaRegisterLogonProcess(&ProcessName,
+                                     &LsaHandle,
+                                     &Mode);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaRegisterLogonProcess() failed! (Status 0x%08lx)\n", Status);
+        return 1;
+    }
+
+    Status = LsaLookupAuthenticationPackage(LsaHandle,
+                                            &PackageName,
+                                            &LsaAuthenticationPackage);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaLookupAuthenticationPackage() failed! (Status 0x%08lx)\n", Status);
+        return 1;
+    }
+
+    hThread = CreateThread(NULL,
+                           0,
+                           (LPTHREAD_START_ROUTINE)RpcThreadRoutine,
+                           NULL,
+                           0,
+                           NULL);
+
+    if (!hThread)
+    {
+        ERR("Can't create PortThread\n");
+        return GetLastError();
+    }
+    else
+        CloseHandle(hThread);
+
+    /* Report a running workstation service */
+    SetServiceBits(ServiceStatusHandle,
+                   SV_TYPE_WORKSTATION,
+                   TRUE,
+                   TRUE);
+
+    return ERROR_SUCCESS;
+}
+
+
+static
+VOID
+ServiceShutdown(VOID)
+{
+    NTSTATUS Status;
+
+    ERR("ServiceShutdown()\n");
+
+    Status = LsaDeregisterLogonProcess(LsaHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaDeRegisterLogonProcess() failed! (Status 0x%08lx)\n", Status);
+        return;
+    }
+}
+
+
 static DWORD WINAPI
 ServiceControlHandler(DWORD dwControl,
                       DWORD dwEventType,
@@ -79,6 +162,7 @@ ServiceControlHandler(DWORD dwControl,
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             /* Stop listening to incoming RPC messages */
             RpcMgmtStopServerListening(NULL);
+            ServiceShutdown();
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -103,6 +187,7 @@ ServiceControlHandler(DWORD dwControl,
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             /* Stop listening to incoming RPC messages */
             RpcMgmtStopServerListening(NULL);
+            ServiceShutdown();
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -110,37 +195,6 @@ ServiceControlHandler(DWORD dwControl,
             TRACE("  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
-}
-
-
-static
-DWORD
-ServiceInit(VOID)
-{
-    HANDLE hThread;
-
-    hThread = CreateThread(NULL,
-                           0,
-                           (LPTHREAD_START_ROUTINE)RpcThreadRoutine,
-                           NULL,
-                           0,
-                           NULL);
-
-    if (!hThread)
-    {
-        ERR("Can't create PortThread\n");
-        return GetLastError();
-    }
-    else
-        CloseHandle(hThread);
-
-    /* Report a running workstation service */
-    SetServiceBits(ServiceStatusHandle,
-                   SV_TYPE_WORKSTATION,
-                   TRUE,
-                   TRUE);
-
-    return ERROR_SUCCESS;
 }
 
 

@@ -197,7 +197,7 @@ _Locale_name_hint* _Locale_impl::insert_ctype_facets(const char* &name, char *bu
         wct  = new ctype_byname<wchar_t>(__lwct);
       }
       _STLP_UNWIND(_STLP_PRIV __release_ctype(__lwct));
-      
+
       _Locale_codecvt *__lwcvt = _STLP_PRIV __acquire_codecvt(name, buf, hint, &__err_code);
       if (__lwcvt) {
         _STLP_TRY {
@@ -478,7 +478,7 @@ _Locale_name_hint* _Locale_impl::insert_monetary_facets(const char* &name, char 
           wpunct  = new moneypunct_byname<wchar_t, false>(__wmon);
         }
         _STLP_UNWIND(_STLP_PRIV __release_monetary(__wmon));
-      
+
         _Locale_monetary *__wimon = _STLP_PRIV __acquire_monetary(name, buf, hint, &__err_code);
         if (!__wimon) {
           delete wpunct;

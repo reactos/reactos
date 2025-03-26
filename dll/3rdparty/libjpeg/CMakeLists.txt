@@ -10,6 +10,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
+spec2def(libjpeg.dll libjpeg.spec ADD_IMPORTLIB)
+
 list(APPEND SOURCE
     jaricom.c
     jcapimin.c
@@ -59,7 +61,7 @@ list(APPEND SOURCE
     jmemnobs.c
     precomp.h)
 
-add_library(libjpeg MODULE ${SOURCE})
+add_library(libjpeg MODULE ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/libjpeg.def)
 set_module_type(libjpeg win32dll)
 add_importlibs(libjpeg msvcrt kernel32)
 add_pch(libjpeg precomp.h SOURCE)

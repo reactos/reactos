@@ -39,7 +39,7 @@ Test_VeryLongTests(void)
                 win_skip("No test directory available\n");
                 return;
             }
-	
+
             break;
         }
     }
@@ -129,7 +129,7 @@ Test_LongTests(void)
                 win_skip("No test directory available\n");
                 return;
             }
-	
+
             break;
         }
     }
@@ -217,7 +217,7 @@ Test_ShortTests(void)
                 win_skip("No test directory available\n");
                 return;
             }
-	
+
             break;
         }
     }

@@ -180,14 +180,16 @@
 #define HAVE_LONGLONG 1
 
 #ifndef _WIN32
+#if !defined(__arm__) && !defined(__aarch64__)
     #define VA_LIST_IS_ARRAY 1
+#endif
 #endif
 
 #ifdef _WIN32
     #define uid_t int
     #define gid_t int
     #define nlink_t unsigned long
-    
+
     #ifdef _MSC_VER
         #define mode_t int
     #endif

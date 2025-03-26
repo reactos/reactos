@@ -28,6 +28,7 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 BOOL ScmInitialize = FALSE;
 BOOL ScmShutdown = FALSE;
 BOOL ScmLiveSetup = FALSE;
+BOOL ScmSetupInProgress = FALSE;
 static HANDLE hScmShutdownEvent = NULL;
 static HANDLE hScmSecurityServicesEvent = NULL;
 
@@ -55,6 +56,7 @@ CheckForLiveCD(VOID)
     WCHAR CommandLine[MAX_PATH];
     HKEY hSetupKey;
     DWORD dwSetupType;
+    DWORD dwSetupInProgress;
     DWORD dwType;
     DWORD dwSize;
     DWORD dwError;
@@ -103,8 +105,30 @@ CheckForLiveCD(VOID)
     /* Check for the '-mini' option */
     if (wcsstr(CommandLine, L" -mini") != NULL)
     {
-        DPRINT1("Running on LiveCD!\n");
+        DPRINT1("Running on LiveCD\n");
         ScmLiveSetup = TRUE;
+    }
+
+    /* Read the SystemSetupInProgress value */
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hSetupKey,
+                               L"SystemSetupInProgress",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)&dwSetupInProgress,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS ||
+        dwType != REG_DWORD ||
+        dwSize != sizeof(DWORD) ||
+        dwSetupType == 0)
+    {
+        goto done;
+    }
+
+    if (dwSetupInProgress == 1)
+    {
+        DPRINT1("ReactOS Setup currently in progress!\n");
+        ScmSetupInProgress = TRUE;
     }
 
 done:
@@ -189,9 +213,9 @@ ScmWaitForLsa(VOID)
     }
     else
     {
-        DPRINT("Wait for the LSA server!\n");
+        DPRINT("Wait for the LSA server\n");
         WaitForSingleObject(hEvent, INFINITE);
-        DPRINT("LSA server running!\n");
+        DPRINT("LSA server running\n");
         CloseHandle(hEvent);
     }
 
@@ -206,7 +230,7 @@ ShutdownHandlerRoutine(DWORD dwCtrlType)
 
     if (dwCtrlType & (CTRL_SHUTDOWN_EVENT | CTRL_LOGOFF_EVENT))
     {
-        DPRINT1("Shutdown event received!\n");
+        DPRINT1("Shutdown event received\n");
         ScmShutdown = TRUE;
 
         ScmAutoShutdownServices();
@@ -254,7 +278,7 @@ wWinMain(HINSTANCE hInstance,
         DPRINT1("SERVICES: Failed to create the start event\n");
         goto done;
     }
-    DPRINT("SERVICES: Created start event with handle %p.\n", hScmStartEvent);
+    DPRINT("SERVICES: Created start event with handle %p\n", hScmStartEvent);
 
     /* Create the auto-start complete event */
     hScmAutoStartCompleteEvent = CreateEventW(NULL, TRUE, FALSE, SCM_AUTOSTARTCOMPLETE_EVENT);
@@ -263,7 +287,7 @@ wWinMain(HINSTANCE hInstance,
         DPRINT1("SERVICES: Failed to create the auto-start complete event\n");
         goto done;
     }
-    DPRINT("SERVICES: created auto-start complete event with handle %p.\n", hScmAutoStartCompleteEvent);
+    DPRINT("SERVICES: created auto-start complete event with handle %p\n", hScmAutoStartCompleteEvent);
 
     /* Create the shutdown event */
     hScmShutdownEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
@@ -316,7 +340,7 @@ wWinMain(HINSTANCE hInstance,
     dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("SERVICES: Failed to acquire the service start lock (Error %lu)\n", dwError);
+        DPRINT1("SERVICES: Failed to acquire service start lock (Error %lu)\n", dwError);
         goto done;
     }
 
@@ -326,7 +350,7 @@ wWinMain(HINSTANCE hInstance,
     /* Signal start event */
     SetEvent(hScmStartEvent);
 
-    DPRINT("SERVICES: Initialized.\n");
+    DPRINT("SERVICES: Initialized\n");
 
     /* Register event handler (used for system shutdown) */
     SetConsoleCtrlHandler(ShutdownHandlerRoutine, TRUE);
@@ -351,7 +375,7 @@ wWinMain(HINSTANCE hInstance,
     /* Initialization finished */
     ScmInitialize = FALSE;
 
-    DPRINT("SERVICES: Running.\n");
+    DPRINT("SERVICES: Running\n");
 
     /* Wait until the shutdown event gets signaled */
     WaitForSingleObject(hScmShutdownEvent, INFINITE);
@@ -378,7 +402,7 @@ done:
     if (hScmStartEvent != NULL)
         CloseHandle(hScmStartEvent);
 
-    DPRINT("SERVICES: Finished.\n");
+    DPRINT("SERVICES: Finished\n");
 
     ExitThread(0);
     return 0;

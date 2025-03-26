@@ -1045,7 +1045,7 @@ Severity=Warning
 Facility=System
 SymbolicName=STATUS_DEVICE_DOOR_OPEN
 Language=English
-The device has indicated that it's door is open. Further operations require it closed and secured.
+The device has indicated that its door is open. Further operations require it closed and secured.
 .
 
 MessageId=0x1
@@ -4100,7 +4100,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_WMI_READ_ONLY
 Language=English
-The WMI data item or data block is read only.
+The WMI data item or data block is read-only.
 .
 
 MessageId=0x2c7
@@ -4369,7 +4369,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_FAILED_DRIVER_ENTRY
 Language=English
-The driver was not loaded because it failed it's initialization call.
+The driver was not loaded because it failed its initialization call.
 .
 
 MessageId=0x366

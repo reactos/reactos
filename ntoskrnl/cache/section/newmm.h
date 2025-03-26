@@ -3,26 +3,8 @@
 #include <internal/arch/mm.h>
 
 /* TYPES *********************************************************************/
-
-#define PFN_FROM_SSE(E)          ((PFN_NUMBER)((E) >> PAGE_SHIFT))
-#define IS_SWAP_FROM_SSE(E)      ((E) & 0x00000001)
-#define MM_IS_WAIT_PTE(E)        \
-    (IS_SWAP_FROM_SSE(E) && SWAPENTRY_FROM_SSE(E) == MM_WAIT_ENTRY)
-#define MAKE_PFN_SSE(P)          ((ULONG_PTR)((P) << PAGE_SHIFT))
-#define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
-#define MAKE_SWAP_SSE(S)         (((ULONG_PTR)(S) << 1) | 0x1)
-#define DIRTY_SSE(E)             ((E) | 2)
-#define CLEAN_SSE(E)             ((E) & ~2)
-#define IS_DIRTY_SSE(E)          ((E) & 2)
-#define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
-#define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFC) >> 2)
-#define MAX_SHARE_COUNT          0x3FF
-#define MAKE_SSE(P, C)           ((ULONG_PTR)((P) | ((C) << 2)))
-
 #define MM_SEGMENT_FINALIZE (0x40000000)
 
-#define RMAP_SEGMENT_MASK ~((ULONG_PTR)0xff)
-#define RMAP_IS_SEGMENT(x) (((ULONG_PTR)(x) & RMAP_SEGMENT_MASK) == RMAP_SEGMENT_MASK)
 
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #define MAX(x,y) (((x)>(y))?(x):(y))
@@ -34,16 +16,6 @@
      ((Consumer) == MC_CACHE))
 
 #define SEC_CACHE                           (0x20000000)
-
-#define MiWaitForPageEvent(Process,Address) do {                         \
-    DPRINT("MiWaitForPageEvent %p:%p #\n", Process, Address);            \
-    KeWaitForSingleObject(&MmWaitPageEvent, 0, KernelMode, FALSE, NULL); \
-} while(0)
-
-#define MiSetPageEvent(Process,Address) do {              \
-    DPRINT("MiSetPageEvent %p:%p #\n",Process, (PVOID)(Address));  \
-    KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE); \
-} while(0)
 
 /* We store 8 bits of location with a page association */
 #define ENTRIES_PER_ELEMENT 256
@@ -96,7 +68,7 @@ typedef struct _MM_REQUIRED_RESOURCES
 
 NTSTATUS
 NTAPI
-MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
+MmCreateCacheSection(PSECTION *SectionObject,
                      ACCESS_MASK DesiredAccess,
                      POBJECT_ATTRIBUTES ObjectAttributes,
                      PLARGE_INTEGER UMaximumSize,
@@ -123,25 +95,6 @@ VOID
 NTAPI
 MiInitializeSectionPageTable(PMM_SECTION_SEGMENT Segment);
 
-NTSTATUS
-NTAPI
-_MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
-                              PLARGE_INTEGER Offset,
-                              ULONG_PTR Entry,
-                              const char *file,
-                              int line);
-
-ULONG_PTR
-NTAPI
-_MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
-                              PLARGE_INTEGER Offset,
-                              const char *file,
-                              int line);
-
-#define MmSetPageEntrySectionSegment(S,O,E) _MmSetPageEntrySectionSegment(S,O,E,__FILE__,__LINE__)
-
-#define MmGetPageEntrySectionSegment(S,O) _MmGetPageEntrySectionSegment(S,O,__FILE__,__LINE__)
-
 typedef VOID (NTAPI *FREE_SECTION_PAGE_FUN)(
     PMM_SECTION_SEGMENT Segment,
     PLARGE_INTEGER Offset);
@@ -150,12 +103,6 @@ VOID
 NTAPI
 MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
                                FREE_SECTION_PAGE_FUN FreePage);
-
-/* Yields a lock */
-PMM_SECTION_SEGMENT
-NTAPI
-MmGetSectionAssociation(PFN_NUMBER Page,
-                        PLARGE_INTEGER Offset);
 
 NTSTATUS
 NTAPI
@@ -268,22 +215,6 @@ MmPageOutDeleteMapping(PVOID Context,
                        PVOID Address);
 
 VOID
-NTAPI
-_MmLockSectionSegment(PMM_SECTION_SEGMENT Segment,
-                      const char *file,
-                      int line);
-
-#define MmLockSectionSegment(x) _MmLockSectionSegment(x,__FILE__,__LINE__)
-
-VOID
-NTAPI
-_MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment,
-                        const char *file,
-                        int line);
-
-#define MmUnlockSectionSegment(x) _MmUnlockSectionSegment(x,__FILE__,__LINE__)
-
-VOID
 MmFreeCacheSectionPage(PVOID Context,
                        MEMORY_AREA* MemoryArea,
                        PVOID Address,
@@ -386,7 +317,7 @@ MiSwapInSectionPage(PMMSUPPORT AddressSpace,
 
 NTSTATUS
 NTAPI
-MmExtendCacheSection(PROS_SECTION_OBJECT Section,
+MmExtendCacheSection(PSECTION Section,
                      PLARGE_INTEGER NewSize,
                      BOOLEAN ExtendFile);
 

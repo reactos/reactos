@@ -79,6 +79,7 @@ extern "C" {
 #define MEM_EXECUTE_OPTION_VALID_FLAGS                      0x3F
 
 #ifndef NTOS_MODE_USER
+
 //
 // Virtual Memory Flags
 //
@@ -100,11 +101,13 @@ extern "C" {
 #define SEC_NOCACHE                                         0x10000000
 #define SEC_WRITECOMBINE                                    0x40000000
 #define SEC_LARGE_PAGES                                     0x80000000
-#else
+
+#else // NTOS_MODE_USER
+
 #define SEC_BASED                                           0x200000
 
 //
-// Section Inherit Flags for NtCreateSection
+// Section Inherit Flags for NtMapViewOfSection
 //
 typedef enum _SECTION_INHERIT
 {
@@ -139,7 +142,8 @@ typedef enum _POOL_TYPE
     PagedPoolCacheAlignedSession,
     NonPagedPoolCacheAlignedMustSSession
 } POOL_TYPE;
-#endif
+
+#endif // NTOS_MODE_USER
 
 //
 // Memory Manager Page Lists
@@ -208,7 +212,6 @@ typedef enum _MI_VAD_TYPE
 } MI_VAD_TYPE, *PMI_VAD_TYPE;
 
 #ifdef NTOS_MODE_USER
-
 //
 // Virtual Memory Counters
 //
@@ -624,19 +627,6 @@ typedef struct _SEGMENT_OBJECT
 } SEGMENT_OBJECT, *PSEGMENT_OBJECT;
 
 //
-// Section Object
-//
-typedef struct _SECTION_OBJECT
-{
-    PVOID StartingVa;
-    PVOID EndingVa;
-    PVOID Parent;
-    PVOID LeftChild;
-    PVOID RightChild;
-    PSEGMENT_OBJECT Segment;
-} SECTION_OBJECT, *PSECTION_OBJECT;
-
-//
 // Generic Address Range Structure
 //
 typedef struct _ADDRESS_RANGE
@@ -682,7 +672,7 @@ typedef struct _MM_AVL_TABLE
 } MM_AVL_TABLE, *PMM_AVL_TABLE;
 
 //
-// Virtual Adress List used in VADs
+// Virtual Address List used in VADs
 //
 typedef struct _MMADDRESS_LIST
 {
@@ -844,6 +834,21 @@ typedef struct _MMWSLENTRY
     ULONG_PTR VirtualPageNumber: MM_PAGE_FRAME_NUMBER_SIZE;
 } MMWSLENTRY, *PMMWSLENTRY;
 
+typedef struct _MMWSLE_FREE_ENTRY
+{
+    ULONG MustBeZero:1;
+#ifdef _WIN64
+    ULONG PreviousFree: 31;
+    LONG NextFree;
+#define MMWSLE_PREVIOUS_FREE_MASK 0x7FFFFFFF
+#else
+    ULONG PreviousFree: 11;
+#define MMWSLE_PREVIOUS_FREE_MASK 0x7FF
+#define MMWSLE_PREVIOUS_FREE_JUMP 0x800
+    LONG NextFree: 20;
+#endif
+} MMWSLE_FREE_ENTRY, *PMMWSLE_FREE_ENTRY;
+
 typedef struct _MMWSLE
 {
     union
@@ -851,6 +856,7 @@ typedef struct _MMWSLE
         PVOID VirtualAddress;
         ULONG_PTR Long;
         MMWSLENTRY e1;
+        MMWSLE_FREE_ENTRY Free;
     } u1;
 } MMWSLE, *PMMWSLE;
 
@@ -876,8 +882,19 @@ typedef struct _MMWSL
     PVOID HighestPermittedHashAddress;
     ULONG NumberOfImageWaiters;
     ULONG VadBitMapHint;
+#ifndef _M_AMD64
     USHORT UsedPageTableEntries[768];
     ULONG CommittedPageTables[24];
+#else
+    VOID* HighestUserAddress;
+    ULONG MaximumUserPageTablePages;
+    ULONG MaximumUserPageDirectoryPages;
+    ULONG* CommittedPageTables;
+    ULONG NumberOfCommittedPageDirectories;
+    ULONG* CommittedPageDirectories;
+    ULONG NumberOfCommittedPageDirectoryParents;
+    ULONGLONG CommittedPageDirectoryParents[1];
+#endif
 } MMWSL, *PMMWSL;
 
 //

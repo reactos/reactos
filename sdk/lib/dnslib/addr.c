@@ -47,15 +47,15 @@ FamilyInfo_GetForFamily(IN WORD AddressFamily)
         case AF_INET:
             /* Return IPv4 Family Info */
             return &AddrFamilyTable[0];
-        
+
         case AF_INET6:
             /* Return IPv6 Family Info */
             return &AddrFamilyTable[1];
-        
+
         case AF_ATM:
             /* Return ATM Family Info */
             return &AddrFamilyTable[2];
-        
+
         default:
             /* Invalid family */
             return NULL;

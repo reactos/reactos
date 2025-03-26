@@ -23,6 +23,9 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Sisällys"
     IDS_INDEX        "&Hakemisto"
     IDS_SEARCH       "&Etsi"

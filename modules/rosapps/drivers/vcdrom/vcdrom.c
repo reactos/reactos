@@ -559,7 +559,7 @@ VcdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
          * FSD performing initial reads for mouting FS)
          */
         Stack = IoGetCurrentIrpStackLocation(Irp);
-        if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) && 
+        if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) &&
             !BooleanFlagOn(Stack->Flags, SL_OVERRIDE_VERIFY_VOLUME))
         {
             Status = ViVerifyVolume(DeviceObject, Irp);
@@ -687,7 +687,7 @@ ViGetDriveGeometry(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     /* No geometry if volume is to be verified */
     Stack = IoGetCurrentIrpStackLocation(Irp);
-    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) && 
+    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) &&
         !BooleanFlagOn(Stack->Flags, SL_OVERRIDE_VERIFY_VOLUME))
     {
         return ViVerifyVolume(DeviceObject, Irp);
@@ -727,7 +727,7 @@ ViCheckVerify(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     /* Do we have to verify? */
     Stack = IoGetCurrentIrpStackLocation(Irp);
-    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) && 
+    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) &&
         !BooleanFlagOn(Stack->Flags, SL_OVERRIDE_VERIFY_VOLUME))
     {
         return ViSetIoStatus(STATUS_VERIFY_REQUIRED, 0, Irp);
@@ -809,7 +809,7 @@ ViReadToc(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     /* No TOC if we have to verify */
     Stack = IoGetCurrentIrpStackLocation(Irp);
-    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) && 
+    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) &&
         !BooleanFlagOn(Stack->Flags, SL_OVERRIDE_VERIFY_VOLUME))
     {
         return ViVerifyVolume(DeviceObject, Irp);
@@ -852,7 +852,7 @@ ViReadTocEx(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     /* No TOC if we have to verify */
     Stack = IoGetCurrentIrpStackLocation(Irp);
-    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) && 
+    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) &&
         !BooleanFlagOn(Stack->Flags, SL_OVERRIDE_VERIFY_VOLUME))
     {
         return ViVerifyVolume(DeviceObject, Irp);
@@ -873,7 +873,7 @@ ViReadTocEx(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* Validate the input buffer - see cdrom_new */
     TocEx = Irp->AssociatedIrp.SystemBuffer;
     if ((TocEx->Reserved1 != 0) || (TocEx->Reserved2 != 0) ||
-        (TocEx->Reserved3 != 0)) 
+        (TocEx->Reserved3 != 0))
     {
         return ViSetIoStatus(STATUS_INVALID_PARAMETER, 0, Irp);
     }
@@ -927,7 +927,7 @@ ViGetLastSession(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     /* No last session if we have to verify */
     Stack = IoGetCurrentIrpStackLocation(Irp);
-    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) && 
+    if (BooleanFlagOn(DeviceObject->Flags, DO_VERIFY_VOLUME) &&
         !BooleanFlagOn(Stack->Flags, SL_OVERRIDE_VERIFY_VOLUME))
     {
         return ViVerifyVolume(DeviceObject, Irp);

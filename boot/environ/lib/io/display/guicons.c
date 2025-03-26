@@ -427,7 +427,7 @@ ConsoleGraphicalEnable (
 
 NTSTATUS
 ConsoleGraphicalGetGraphicalResolution (
-    _In_ PBL_GRAPHICS_CONSOLE Console, 
+    _In_ PBL_GRAPHICS_CONSOLE Console,
     _In_ PBL_DISPLAY_MODE DisplayMode
     )
 {
@@ -445,7 +445,7 @@ ConsoleGraphicalGetGraphicalResolution (
 
 NTSTATUS
 ConsoleGraphicalGetOriginalResolution (
-    _In_ PBL_GRAPHICS_CONSOLE Console, 
+    _In_ PBL_GRAPHICS_CONSOLE Console,
     _In_ PBL_DISPLAY_MODE DisplayMode
     )
 {

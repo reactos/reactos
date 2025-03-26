@@ -17,7 +17,7 @@ NTAPI
 LlbHwGetScreenWidth(
     VOID
 );
- 
+
 ULONG
 NTAPI
 LlbHwGetScreenHeight(
@@ -55,7 +55,7 @@ NTAPI
 LlbHwGetTmr0Base(
     VOID
 );
- 
+
 ULONG
 NTAPI
 LlbHwGetUartBase(
@@ -67,7 +67,7 @@ NTAPI
 LlbHwGetSerialUart(
     VOID
 );
- 
+
 VOID
 NTAPI
 LlbHwUartSendChar(

@@ -128,6 +128,8 @@ IntWinStaObjectDelete(
 
     RtlDestroyAtomTable(WinSta->AtomTable);
 
+    UserAssignmentUnlock((PVOID*)&WinSta->spklList);
+
     return STATUS_SUCCESS;
 }
 
@@ -263,6 +265,12 @@ co_IntInitializeDesktopGraphics(VOID)
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
     PDESKTOP pdesk;
 
+    if (PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE) != DISP_CHANGE_SUCCESSFUL)
+    {
+        ERR("PDEVOBJ_lChangeDisplaySettings() failed.\n");
+        return FALSE;
+    }
+
     ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
     if (NULL == ScreenDeviceContext)
     {
@@ -285,11 +293,11 @@ co_IntInitializeDesktopGraphics(VOID)
     InitMetrics();
 
     /* Set new size of the monitor */
-    UserUpdateMonitorSize((HDEV)gppdevPrimary);
+    UserUpdateMonitorSize((HDEV)gpmdev->ppdevGlobal);
 
     /* Update the SERVERINFO */
-    gpsi->aiSysMet[SM_CXSCREEN] = gppdevPrimary->gdiinfo.ulHorzRes;
-    gpsi->aiSysMet[SM_CYSCREEN] = gppdevPrimary->gdiinfo.ulVertRes;
+    gpsi->aiSysMet[SM_CXSCREEN] = gpmdev->ppdevGlobal->gdiinfo.ulHorzRes;
+    gpsi->aiSysMet[SM_CYSCREEN] = gpmdev->ppdevGlobal->gdiinfo.ulVertRes;
     gpsi->Planes        = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
     gpsi->BitsPixel     = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
     gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
@@ -311,7 +319,7 @@ co_IntInitializeDesktopGraphics(VOID)
     gpsi->ptCursor.y = gpsi->aiSysMet[SM_CYSCREEN] / 2;
 
     /* Attach monitor */
-    UserAttachMonitor((HDEV)gppdevPrimary);
+    UserAttachMonitor((HDEV)gpmdev->ppdevGlobal);
 
     /* Setup the cursor */
     co_IntLoadDefaultCursors();
@@ -326,6 +334,22 @@ co_IntInitializeDesktopGraphics(VOID)
     pdesk = IntGetActiveDesktop();
     ASSERT(pdesk);
     co_IntShowDesktop(pdesk, gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN], TRUE);
+
+    /* HACK: display wallpaper on all secondary displays */
+    {
+        PGRAPHICS_DEVICE pGraphicsDevice;
+        UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
+        UNICODE_STRING DisplayName;
+        HDC hdc;
+        ULONG iDevNum;
+
+        for (iDevNum = 1; (pGraphicsDevice = EngpFindGraphicsDevice(NULL, iDevNum)) != NULL; iDevNum++)
+        {
+            RtlInitUnicodeString(&DisplayName, pGraphicsDevice->szWinDeviceName);
+            hdc = IntGdiCreateDC(&DriverName, &DisplayName, NULL, NULL, FALSE);
+            IntPaintDesktop(hdc);
+        }
+    }
 
     return TRUE;
 }
@@ -371,6 +395,18 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
     return TRUE;
 }
 
+// Win: _GetProcessWindowStation
+PWINSTATION_OBJECT FASTCALL
+IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
+{
+    PWINSTATION_OBJECT pWinSta;
+    PPROCESSINFO ppi = GetW32ProcessInfo();
+    HWINSTA hWinSta = ppi->hwinsta;
+    if (phWinSta)
+        *phWinSta = hWinSta;
+    IntValidateWindowStationHandle(hWinSta, UserMode, 0, &pWinSta, 0);
+    return pWinSta;
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

@@ -170,7 +170,7 @@ HTREEITEM Tree_Item_Copy(HWND hTree, HTREEITEM hSourceItem, HTREEITEM hParent, H
     tvis.itemex.pszText    = label;
     tvis.itemex.cchTextMax = MAX_VALUE_NAME;
     TreeView_GetItem(hTree, &tvis.itemex);
-        
+
     // 2- Now, copy to destination.
     tvis.hParent          = hParent;
     tvis.hInsertAfter     = hInsertAfter;

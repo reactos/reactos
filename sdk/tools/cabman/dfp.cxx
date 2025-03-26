@@ -1031,7 +1031,7 @@ ULONG CDFParser::PerformFileCopy()
     char ch;
     char SrcName[PATH_MAX];
     char DstName[PATH_MAX];
-    char InfLine[PATH_MAX];
+    char InfLine[PATH_MAX*2+1]; // To hold: GetFileName(SrcName) "=" DstName
     char Options[128];
     char BaseFilename[PATH_MAX];
 
@@ -1076,7 +1076,7 @@ ULONG CDFParser::PerformFileCopy()
     }
 
     // options (it may be empty)
-    SkipSpaces ();
+    SkipSpaces();
 
     if (CurrentToken != TokenEnd)
     {
@@ -1133,12 +1133,13 @@ ULONG CDFParser::PerformFileCopy()
     switch (Status)
     {
         case CAB_STATUS_SUCCESS:
-            sprintf(InfLine, "%s=%s", GetFileName(SrcName).c_str(), DstName);
+            snprintf(InfLine, _countof(InfLine) - 1,
+                     "%s=%s", GetFileName(SrcName).c_str(), DstName);
             WriteInfLine(InfLine);
             break;
 
         case CAB_STATUS_CANNOT_OPEN:
-            if (strstr(Options,"optional"))
+            if (strstr(Options, "optional"))
             {
                 Status = CAB_STATUS_SUCCESS;
                 printf("Optional file skipped (does not exist): %s.\n", SrcName);

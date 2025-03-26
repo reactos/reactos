@@ -55,6 +55,14 @@
 # define __ASM_FUNC_TYPE(name) ".type " name ",@function"
 #endif
 
+#if !defined(__GNUC__) && !defined(__clang__)
+# define __ASM_BLOCK_BEGIN(name) void __asm_dummy_##name(void) {
+# define __ASM_BLOCK_END         }
+#else
+# define __ASM_BLOCK_BEGIN(name)
+# define __ASM_BLOCK_END
+#endif
+
 /* ReactOS */
 #if defined(_MSC_VER)
 # define __ASM_DEFINE_FUNC(name,code)

@@ -109,7 +109,7 @@ LONG copy_servername_from_name(LPCWSTR name, LPWSTR target)
 
     FIXME("found %s\n", debugstr_wn(server, serverlen));
 
-    if (serverlen > MAX_COMPUTERNAME_LENGTH) return -serverlen;
+    if (serverlen > MAX_COMPUTERNAME_LENGTH) return -(LONG)serverlen;
 
     if (target)
     {

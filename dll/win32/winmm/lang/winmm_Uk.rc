@@ -16,10 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* UTF-8 */
-#pragma code_page(65001)
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+STRINGTABLE
 BEGIN
 
 /* MMSYS errors */

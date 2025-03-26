@@ -13,7 +13,12 @@ add_definitions(
     -D_SHELL32_
     -D_WINE)
 
+if(DBG)
+    add_definitions(-D_DEBUG=1) # CORE-17505
+endif()
+
 list(APPEND SOURCE
+    brfolder.cpp
     CActiveDesktop.cpp
     CActiveDesktop.h
     CIDLDataObj.cpp
@@ -26,7 +31,7 @@ list(APPEND SOURCE
     dialogs/filedefext.cpp
     dialogs/filetypes.cpp
     dialogs/folder_options.cpp
-    dialogs/fprop.cpp
+    dialogs/item_prop.cpp
     dialogs/general.cpp
     dialogs/recycler_prop.cpp
     dialogs/view.cpp
@@ -35,7 +40,9 @@ list(APPEND SOURCE
     CExtractIcon.cpp
     folders.cpp
     iconcache.cpp
+    propsheet.cpp
     shell32.cpp
+    utils.cpp
     CShellItem.cpp
     CShellLink.cpp
     CFolderOptions.cpp
@@ -53,11 +60,13 @@ list(APPEND SOURCE
     droptargets/CexeDropHandler.cpp
     droptargets/CFSDropTarget.cpp
     droptargets/CRecyclerDropTarget.cpp
+    shldataobject.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp
     CFileSysBindData.cpp
     CDefView.cpp
+    CDefViewUtil.cpp
     CDefViewDual.cpp
     CDefViewBckgrndMenu.cpp
     stubs.cpp
@@ -67,8 +76,8 @@ list(APPEND SOURCE
     COpenWithMenu.cpp
     CNewMenu.cpp
     CSendToMenu.cpp
-    CCopyToMenu.cpp
-    CMoveToMenu.cpp
+    CCopyMoveToMenu.cpp
+    CCopyAsPathMenu.cpp
     CShellDispatch.cpp
     CFolder.cpp
     CFolderItems.cpp
@@ -76,7 +85,6 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     wine/appbar.c
-    wine/brsfolder.c
     wine/classes.c
     wine/clipboard.c
     wine/control.c
@@ -111,8 +119,8 @@ add_typelib(shell32_shldisp.idl)
 set_source_files_properties(shell32.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
 
 set_module_type(shell32 win32dll UNICODE)
-target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin cpprt atl_classes)
-add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool.drv winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs)
+target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin cpprt atl_classes oldnames)
+add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool.drv winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs netapi32 secur32)
 add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi msvcrt kernel32 ntdll)
 add_dependencies(shell32 stdole2) # shell32_shldisp.tlb needs stdole2.tlb
 add_pch(shell32 precomp.h "${PCH_SKIP_SOURCE}")

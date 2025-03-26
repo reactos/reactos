@@ -1,0 +1,241 @@
+/* Translation by Gabriel Aguiar <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (August, 2021) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+/* Basic application information */
+STRINGTABLE
+BEGIN
+    IDS_APP_HEADER "Particionamento de disco de ReactOS"
+    IDS_APP_USAGE "\nInterpretador de particionamento de disco.\n\n\
+Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
+/S filename\tRuns the given script.\n\
+/T timeout\tTimeout in seconds to prevent DiskPart usage overlap.\n\
+/?\t\tDisplay this help message.\n\n"
+    IDS_APP_LICENSE "Licenciado sob GNU GPLv2\n"
+    IDS_APP_CURR_COMPUTER "Nome do computador: %s\n\n"
+    IDS_APP_LEAVING "\nA sair de particionamento de disco...\n"
+    IDS_APP_PROMPT "DISKPART> "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ACTIVE_FAIL "\nDiskPart was unable to mark the partition active.\nMake sure the partition is valid.\n"
+    IDS_ACTIVE_SUCCESS "\nDiskPart marked the current partition as active.\n"
+    IDS_ACTIVE_ALREADY "\nThe current partition is already marked as active.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CLEAN_FAIL "\nDiskPart was unable to clean the disk.\nThe data on this disk may be unrecoverable.\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart succeeded in cleaning the disk.\n"
+    IDS_CLEAN_SYSTEM "\nThe selected disk is neccessary to the operation of your computer, and may not be cleaned.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart failed to delete the selected partition.\nPlease make sure the selected partition is valid to delete.\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart successfully deleted the selected partition.\n"
+END
+
+/* Disk Information Labels */
+STRINGTABLE
+BEGIN
+    IDS_DETAIL_INFO_DISK_ID "Disco ID: %08lx\n"
+    IDS_DETAIL_INFO_TYPE "Tipo"
+    IDS_DETAIL_INFO_STATUS "Estado"
+    IDS_DETAIL_INFO_PATH   "Caminho : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Alvo    : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "LUN ID  : %hu\n"
+    IDS_DETAIL_INFO_LOC_PATH "Caminho de localização"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Estado actual somente de leitura"
+    IDS_DETAIL_INFO_RO "Apenas leitura"
+    IDS_DETAIL_INFO_BOOT_DSK "Disco de inicializaçã"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Ficheiro de paginação de disco"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "Ficheiro de hibernação de disco"
+    IDS_DETAIL_INFO_CRASH_DSK "Despejo de memória de disco"
+    IDS_DETAIL_INFO_CLST_DSK "Disco em cluster"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
+    IDS_DETAIL_NO_DISKS "\nThere are no disks attached to this volume.\n"
+    IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
+    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
+    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_FORMAT_STRING "%-11.11s - %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INACTIVE_FAIL "\nDiskPart was unable to mark the partition inactive.\nMake sure the partition is valid.\n"
+    IDS_INACTIVE_SUCCESS "\nDiskPart marked the current partition as inactive.\n"
+    IDS_INACTIVE_ALREADY "\nThe current partition is already marked as inactive.\n"
+END
+
+/* Detail header titles */
+STRINGTABLE
+BEGIN
+    IDS_LIST_DISK_HEAD "  Disco ##  Estado      Tamanho    Livre    Dyn  Gpt\n"
+    IDS_LIST_DISK_LINE "  --------  ----------  ---------  -------  ---  ---\n"
+    IDS_LIST_DISK_FORMAT "%c Disco %-3lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
+    IDS_LIST_PARTITION_HEAD "  Partição  ###  Tipo     Tamanho    deslocamento\n"
+    IDS_LIST_PARTITION_LINE "  -------------  -------  ---------  -------\n"
+    IDS_LIST_PARTITION_FORMAT "%c Partição %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nSem discos para listar Partições.\nPor favor seleccione um disco e tente novamente.\n\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
+END
+
+/* RESCAN command string */
+STRINGTABLE
+BEGIN
+    IDS_RESCAN_START "\nPor favor espere enquando o particionamento de disco faz uma varredura à sua configuração...\n"
+    IDS_RESCAN_END "\nO particionamento de disco acabou de fazer a varredura à sua configuração.\n\n"
+END
+
+/* Select command strings */
+STRINGTABLE
+BEGIN
+    IDS_SELECT_NO_DISK "\nNenhum disco actualmente está seleccionado.\nPor favor seleccione um disco e tente novamente.\n\n"
+    IDS_SELECT_DISK "\nDisco %lu é o disco que está actualmente seleccionado.\n\n"
+    IDS_SELECT_DISK_INVALID "\nDisco inválido.\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_NO_PARTITION "\nNenhuma partição seleccionada actualmente.\nPor favor seleccione um disco e tente novamente.\n\n"
+    IDS_SELECT_PARTITION "\nPartição %lu é agora a partição seleccionada.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nNão há disco para selectionar partições.\nPor favor seleccione um disco e tente novamente.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
+    IDS_SELECT_NO_VOLUME "\nNenhum volume actualmente seleccionado.\nPor favor seleccione um disco e tente novamente.\n\n"
+    IDS_SELECT_VOLUME "\nVolume %lu é agora o volume seleccionado.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SETID_FAIL "\nDiskPart was unable to change the partition type.\n"
+    IDS_SETID_SUCCESS "\nThe partition type was changed successfully.\n"
+    IDS_SETID_INVALID_FORMAT "\nThe format of the partition type is invalid.\n"
+    IDS_SETID_INVALID_TYPE "\nThe partition type is invalid.\n"
+END
+
+/* Disk Status */
+STRINGTABLE
+BEGIN
+    IDS_STATUS_YES "Sim"
+    IDS_STATUS_NO "Não"
+    IDS_STATUS_DISK_HEALTHY "Saudável"
+    IDS_STATUS_DISK_SICK "Ruim"
+    IDS_STATUS_UNAVAILABLE "Indisponivél"
+    IDS_STATUS_ONLINE "Activo"
+    IDS_STATUS_OFFLINE "Inactivo"
+    IDS_STATUS_NO_MEDIA "sem disco"
+END
+
+/* CMD Messages for commands */
+STRINGTABLE
+BEGIN
+    IDS_MSG_ARG_SYNTAX_ERROR "Os argumentos especificados para esse comando não são válidos.\nPara mais informção sobre esse comando:"
+END
+
+/* Help Command Descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_ACTIVE                    "Marca a partição seleccionada como activa.\n"
+    IDS_HELP_ADD                       "Duplica o volume.\n"
+    IDS_HELP_ASSIGN                    "Define a letra da partição seleccionada.\n"
+    IDS_HELP_ATTACH                    "Anexa um ficheiro de disco virtual.\n"
+    IDS_HELP_ATTRIBUTES                "Manipula o volume ou os atributo do disco.\n"
+    IDS_HELP_AUTOMOUNT                 "Activa ou desactiva a montagem automática de discos.\n"
+    IDS_HELP_BREAK                     "Quebrar duplição.\n"
+    IDS_HELP_CLEAN                     "Apagar a informção de configuração, or toda a informção, desliga\n              o disco.\n"
+    IDS_HELP_COMPACT                   "Tenta reduzir o tamanho físico do ficheiro.\n"
+    IDS_HELP_CONVERT                   "Converter entre diferentes formatos.\n"
+
+    IDS_HELP_CREATE                    "Criar volume,partição ou disco virtual.\n"
+    IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "Create an EFI system partition.\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "Create an extended partition.\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "Create a logical drive.\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "Create an MSR partition.\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "Create a primary partition.\n"
+    IDS_HELP_CREATE_VOLUME             "Create a volume.\n"
+    IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
+
+    IDS_HELP_DELETE                    "Apaga um objecto.\n"
+    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
+    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
+    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+
+    IDS_HELP_DETACH                    "Ejecta um disco virtual.\n"
+
+    IDS_HELP_DETAIL                    "Fornece detalhes sobre um objecto.\n"
+    IDS_HELP_DETAIL_DISK               "Print disk details.\n"
+    IDS_HELP_DETAIL_PARTITION          "Print partition details.\n"
+    IDS_HELP_DETAIL_VOLUME             "Print volume details.\n"
+
+    IDS_HELP_EXIT                      "Sair do particionamento de disco.\n"
+    IDS_HELP_EXPAND                    "Aumentar o tamanho do disco virtual.\n"
+    IDS_HELP_EXTEND                    "Estender um volume.\n"
+    IDS_HELP_FILESYSTEMS               "Mostra sistemas de ficheiros actuais e suportados no volume.\n"
+    IDS_HELP_FORMAT                    "Formatar volume ou partição.\n"
+    IDS_HELP_GPT                       "Definir atributos da partição GPT actualmente seleccionada.\n"
+    IDS_HELP_HELP                      "Mostra a lista de comandos.\n"
+    IDS_HELP_IMPORT                    "Importar grupo de discos.\n"
+    IDS_HELP_INACTIVE                  "Maracr a partição seleccionada como inactiva.\n"
+
+    IDS_HELP_LIST                      "Mostra lista de objectos.\n"
+    IDS_HELP_LIST_DISK                 "List disks.\n"
+    IDS_HELP_LIST_PARTITION            "List partitions.\n"
+    IDS_HELP_LIST_VOLUME               "List volumes.\n"
+    IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
+
+    IDS_HELP_MERGE                     "Mescla um disco filho com seus pais.\n"
+    IDS_HELP_OFFLINE                   "Marca como offline um objecto que está actualmente online.\n"
+    IDS_HELP_ONLINE                    "Marca como online um objecto que está actualmente offline.\n"
+    IDS_HELP_RECOVER                   "Actualiza o estado de todos os discos no pacote inválido,\n              e ressincroniza volumes espelhados e volumes RAID5\n              que possuem encadeamento obsoleto ou dados de paridade\n."
+    IDS_HELP_REM                       "Não faz nada. Isso é usado para comentar scripts.\n"
+    IDS_HELP_REMOVE                    "Remove a letra da unidade.\n"
+    IDS_HELP_REPAIR                    "Repara um volume RAID-5 com um membro com falha.\n"
+    IDS_HELP_RESCAN                    "Verifique novamente o computador em busca de discos e volumes.\n"
+    IDS_HELP_RETAIN                    "Coloca uma partição retida sob um volume simples.\n"
+    IDS_HELP_SAN                       "Mostra ou define a política de SAN para o sistema operacional actualmente inicializado.\n"
+
+    IDS_HELP_SELECT                    "Muda o foco para um objecto.\n"
+    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
+    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
+    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
+    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+
+    IDS_HELP_SETID                     "Muda o tipo de partição.\n"
+    IDS_HELP_SHRINK                    "Reduzir o tamanho do volume seleccionado.\n"
+
+    IDS_HELP_UNIQUEID                  "Mostra ou define o identificador da tabela de partição GUID (GPT)\n              ou assinatura do master boot recorder (MBR) de um disco.\n"
+    IDS_HELP_UNIQUEID_DISK             "Mostra ou define o identificador da tabela de partição GUID (GPT)\n              ou assinatura do master boot recorder (MBR) de um disco.\n"
+END
+
+/* Common Error Messages */
+STRINGTABLE
+BEGIN
+    IDS_ERROR_MSG_NO_SCRIPT "Erro ao abrir o script: %s\n"
+    IDS_ERROR_MSG_BAD_ARG "Erro ao processar o argumento: %s\n"
+    IDS_ERROR_INVALID_ARGS "Argumento inválido\n"
+    IDS_ERROR_NO_MEDIUM "No medium in device.\n"
+END

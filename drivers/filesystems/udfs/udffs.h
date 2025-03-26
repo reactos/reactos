@@ -107,10 +107,8 @@
 // Common include files - should be in the include dir of the MS supplied IFS Kit
 #ifndef _CONSOLE
 extern "C" {
-#pragma pack(push, 8)
 #include "ntifs.h"
 #include "ntifs_ex.h"
-#pragma pack(pop)
 }
 #endif //_CONSOLE
 
@@ -228,14 +226,14 @@ extern CCHAR   DefLetter[];
 #endif
 #define UDFPrintErr(Args) KdPrint(Args)
 
-// 
+//
 #if !defined(UDF_DBG) && !defined(PRINT_ALWAYS)
 
 #ifndef _CONSOLE
 #define UDFAcquireResourceExclusive(Resource,CanWait)  \
-    (ExAcquireResourceExclusiveLite((Resource),(CanWait))) 
+    (ExAcquireResourceExclusiveLite((Resource),(CanWait)))
 #define UDFAcquireResourceShared(Resource,CanWait) \
-    (ExAcquireResourceSharedLite((Resource),(CanWait))) 
+    (ExAcquireResourceSharedLite((Resource),(CanWait)))
 // a convenient macro (must be invoked in the context of the thread that acquired the resource)
 #define UDFReleaseResource(Resource)    \
     (ExReleaseResourceForThreadLite((Resource), ExGetCurrentResourceThread()))
@@ -259,9 +257,9 @@ extern CCHAR   DefLetter[];
 
 #endif //_CONSOLE
 
-#define UDF_CHECK_PAGING_IO_RESOURCE(NTReqFCB) 
-#define UDF_CHECK_EXVCB_RESOURCE(Vcb) 
-#define UDF_CHECK_BITMAP_RESOURCE(Vcb) 
+#define UDF_CHECK_PAGING_IO_RESOURCE(NTReqFCB)
+#define UDF_CHECK_EXVCB_RESOURCE(Vcb)
+#define UDF_CHECK_BITMAP_RESOURCE(Vcb)
 
 
 #else //UDF_DBG
@@ -298,7 +296,7 @@ extern CCHAR   DefLetter[];
 
 #define UDF_CHECK_PAGING_IO_RESOURCE(NTReqFCB) \
     ASSERT(!ExIsResourceAcquiredExclusiveLite(&(NTReqFCB->PagingIoResource))); \
-    ASSERT(!ExIsResourceAcquiredSharedLite(&(NTReqFCB->PagingIoResource))); 
+    ASSERT(!ExIsResourceAcquiredSharedLite(&(NTReqFCB->PagingIoResource)));
 
 #define UDF_CHECK_EXVCB_RESOURCE(Vcb) \
     ASSERT( ExIsResourceAcquiredExclusiveLite(&(Vcb->VCBResource)) );
@@ -371,7 +369,7 @@ extern CCHAR   DefLetter[];
 
 #define UDF_FILE_PROTECT                                (0x00000300)
 //#define UDF_FILE_PROTECT_                                (0x0000030x)
-    
+
 #define SystemAllocatePool(hernya,size) ExAllocatePoolWithTag(hernya, size, 'Snwd')
 #define SystemFreePool(addr) ExFreePool((PVOID)(addr))
 

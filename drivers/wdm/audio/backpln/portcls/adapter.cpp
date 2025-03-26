@@ -11,10 +11,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 //
@@ -96,7 +93,7 @@ PcAddAdapterDevice(
     // check if the DeviceExtensionSize is provided
     if ( DeviceExtensionSize < PORT_CLASS_DEVICE_EXTENSION_SIZE )
     {
-        // driver does not need a device extension 
+        // driver does not need a device extension
         if ( DeviceExtensionSize != 0 )
         {
             // DeviceExtensionSize must be zero
@@ -201,7 +198,6 @@ cleanup:
     // delete created fdo
     IoDeleteDevice(fdo);
 
-
     return status;
 }
 
@@ -278,7 +274,7 @@ PcRegisterSubdevice(
     {
         // FIXME
         // check if reference string with that name already exists
-        
+
         Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
                                            &SubDeviceDescriptor->Interfaces[Index],
                                            &RefName,

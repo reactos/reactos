@@ -4,6 +4,11 @@
 
 #include "arch/ke.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* INTERNAL KERNEL TYPES ****************************************************/
 
 typedef struct _WOW64_PROCESS
@@ -98,7 +103,7 @@ extern BOOLEAN ExCmosClockIsSane;
 extern USHORT KeProcessorArchitecture;
 extern USHORT KeProcessorLevel;
 extern USHORT KeProcessorRevision;
-extern ULONG KeFeatureBits;
+extern ULONG64 KeFeatureBits;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
@@ -132,8 +137,7 @@ extern LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
 extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
-extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
-extern ULONG_PTR KiIdleSummary;
+extern KAFFINITY KiIdleSummary;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -142,7 +146,6 @@ extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
 extern BOOLEAN KiTimeAdjustmentEnabled;
 extern LONG KiTickOffset;
-extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
 extern ULONG KiDPCTimeout;
 extern PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch;
@@ -152,8 +155,7 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 
 /* MACROS *************************************************************************/
 
-#define AFFINITY_MASK(Id) KiMask32Array[Id]
-#define PRIORITY_MASK(Id) KiMask32Array[Id]
+#define PRIORITY_MASK(Priority) (1UL << (Priority))
 
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
 #define TIMER_OR_EVENT_TYPE 0x7L
@@ -300,6 +302,13 @@ KiCompleteTimer(
     IN PKSPIN_LOCK_QUEUE LockQueue
 );
 
+CODE_SEG("INIT")
+VOID
+NTAPI
+KeStartAllProcessors(
+    VOID
+);
+
 /* gmutex.c ********************************************************************/
 
 VOID
@@ -370,7 +379,7 @@ UCHAR
 NTAPI
 KeFindNextRightSetAffinity(
     IN UCHAR Number,
-    IN ULONG Set
+    IN KAFFINITY Set
 );
 
 VOID
@@ -724,10 +733,12 @@ KeQueryValuesProcess(IN PKPROCESS Process,
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KeInitSystem(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KeInitExceptions(VOID);
@@ -736,10 +747,13 @@ VOID
 NTAPI
 KeInitInterrupts(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeBugCheck(VOID);
 
+DECLSPEC_NORETURN
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSystemStartup(
@@ -869,21 +883,6 @@ KiContinue(
     IN PKTRAP_FRAME TrapFrame
 );
 
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit(
-    IN PKTRAP_FRAME TrapFrame,
-    IN NTSTATUS Status
-);
-
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit2(
-    IN PKTRAP_FRAME TrapFrame
-);
-
 #ifndef _M_AMD64
 VOID
 FASTCALL
@@ -900,6 +899,7 @@ KiChainedDispatch(
     IN PKINTERRUPT Interrupt
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeMachineType(
@@ -917,6 +917,7 @@ KiSetupStackAndInitializeKernel(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitSpinLocks(
@@ -924,6 +925,7 @@ KiInitSpinLocks(
     IN CCHAR Number
 );
 
+CODE_SEG("INIT")
 LARGE_INTEGER
 NTAPI
 KiComputeReciprocal(
@@ -931,6 +933,7 @@ KiComputeReciprocal(
     OUT PUCHAR Shift
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitSystem(
@@ -959,9 +962,20 @@ KiCallbackReturn(
     IN NTSTATUS Status
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitMachineDependent(VOID);
+
+VOID
+NTAPI
+KxFreezeExecution(
+    VOID);
+
+VOID
+NTAPI
+KxThawExecution(
+    VOID);
 
 BOOLEAN
 NTAPI
@@ -972,16 +986,27 @@ VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable);
 
+KCONTINUE_STATUS
+NTAPI
+KxSwitchKdProcessor(
+    _In_ ULONG ProcessorIndex);
+
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Acquires_nonreentrant_lock_(*LockHandle->Lock)
+_Acquires_exclusive_lock_(*LockHandle->Lock)
 VOID
 FASTCALL
 KeAcquireQueuedSpinLockAtDpcLevel(
-    IN OUT PKSPIN_LOCK_QUEUE LockQueue
+    _Inout_ PKSPIN_LOCK_QUEUE LockQueue
 );
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Releases_nonreentrant_lock_(*LockHandle->Lock)
+_Releases_exclusive_lock_(*LockHandle->Lock)
 VOID
 FASTCALL
 KeReleaseQueuedSpinLockFromDpcLevel(
-    IN OUT PKSPIN_LOCK_QUEUE LockQueue
+    _Inout_ PKSPIN_LOCK_QUEUE LockQueue
 );
 
 VOID
@@ -999,9 +1024,14 @@ KiSaveProcessorControlState(
 VOID
 NTAPI
 KiSaveProcessorState(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame
-);
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
+VOID
+NTAPI
+KiRestoreProcessorState(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame);
 
 VOID
 FASTCALL
@@ -1015,8 +1045,8 @@ KiQuantumEnd(
     VOID
 );
 
+DECLSPEC_NORETURN
 VOID
-FASTCALL
 KiIdleLoop(
     VOID
 );
@@ -1031,14 +1061,14 @@ KiSystemFatalException(
 
 PVOID
 NTAPI
-KiPcToFileHeader(IN PVOID Eip,
+KiPcToFileHeader(IN PVOID Pc,
                  OUT PLDR_DATA_TABLE_ENTRY *LdrEntry,
                  IN BOOLEAN DriversOnly,
                  OUT PBOOLEAN InKernel);
 
 PVOID
 NTAPI
-KiRosPcToUserFileHeader(IN PVOID Eip,
+KiRosPcToUserFileHeader(IN PVOID Pc,
                         OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
 
 PCHAR
@@ -1048,5 +1078,51 @@ KeBugCheckUnicodeToAnsi(
     OUT PCHAR Ansi,
     IN ULONG Length
 );
+
+#ifdef CONFIG_SMP
+ULONG
+NTAPI
+KiFindIdealProcessor(
+    _In_ KAFFINITY ProcessorSet,
+    _In_ UCHAR OriginalIdealProcessor);
+#endif // CONFIG_SMP
+
+#ifdef __cplusplus
+} // extern "C"
+
+namespace ntoskrnl
+{
+
+/* Like std::lock_guard, but for a Queued Spinlock */
+template <KSPIN_LOCK_QUEUE_NUMBER n>
+class KiQueuedSpinLockGuard
+{
+private:
+    KIRQL m_OldIrql;
+public:
+
+    _Requires_lock_not_held_(n)
+    _Acquires_lock_(n)
+    _IRQL_raises_(DISPATCH_LEVEL)
+    explicit KiQueuedSpinLockGuard()
+    {
+        m_OldIrql = KeAcquireQueuedSpinLock(n);
+    }
+
+    _Requires_lock_held_(n)
+    _Releases_lock_(n)
+    ~KiQueuedSpinLockGuard()
+    {
+        KeReleaseQueuedSpinLock(n, m_OldIrql);
+    }
+
+private:
+    KiQueuedSpinLockGuard(KiQueuedSpinLockGuard const&) = delete;
+    KiQueuedSpinLockGuard& operator=(KiQueuedSpinLockGuard const&) = delete;
+};
+
+}
+
+#endif
 
 #include "ke_x.h"

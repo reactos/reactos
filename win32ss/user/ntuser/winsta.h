@@ -11,18 +11,16 @@
 #define WSS_DYING         (16)
 #define WSS_REALSHUTDOWN  (32)
 
+// See also: https://reactos.org/wiki/Techwiki:Win32k/WINDOWSTATION
 typedef struct _WINSTATION_OBJECT
 {
     DWORD dwSessionId;
 
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
-    HANDLE ShellWindow;
-    HANDLE ShellListView;
 
-    ULONG Flags;
-    struct _DESKTOP* ActiveDesktop;
-
+    ULONG          Flags;
+    struct tagKL*  spklList;
     PTHREADINFO    ptiClipLock;
     PTHREADINFO    ptiDrawingClipboard;
     PWND           spwndClipOpen;
@@ -40,39 +38,28 @@ typedef struct _WINSTATION_OBJECT
     LUID           luidUser;
     PVOID          psidUser;
 
+    /* ReactOS-specific */
+    struct _DESKTOP* ActiveDesktop;
+    HANDLE         ShellWindow;
+    HANDLE         ShellListView;
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
+
+#ifndef _WIN64
+C_ASSERT(offsetof(WINSTATION_OBJECT, Flags) == 0x10);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spklList) == 0x14);
+C_ASSERT(offsetof(WINSTATION_OBJECT, ptiClipLock) == 0x18);
+C_ASSERT(offsetof(WINSTATION_OBJECT, ptiDrawingClipboard) == 0x1c);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spwndClipOpen) == 0x20);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spwndClipViewer) == 0x24);
+C_ASSERT(offsetof(WINSTATION_OBJECT, spwndClipOwner) == 0x28);
+#endif
 
 extern WINSTATION_OBJECT *InputWindowStation;
 extern HANDLE gpidLogon;
 extern HWND hwndSAS;
 extern UNICODE_STRING gustrWindowStationsDir;
 
-#define WINSTA_READ       STANDARD_RIGHTS_READ     | \
-                          WINSTA_ENUMDESKTOPS      | \
-                          WINSTA_ENUMERATE         | \
-                          WINSTA_READATTRIBUTES    | \
-                          WINSTA_READSCREEN
-
-#define WINSTA_WRITE      STANDARD_RIGHTS_WRITE    | \
-                          WINSTA_ACCESSCLIPBOARD   | \
-                          WINSTA_CREATEDESKTOP     | \
-                          WINSTA_WRITEATTRIBUTES
-
-#define WINSTA_EXECUTE    STANDARD_RIGHTS_EXECUTE  | \
-                          WINSTA_ACCESSGLOBALATOMS | \
-                          WINSTA_EXITWINDOWS
-
-#define WINSTA_ACCESS_ALL STANDARD_RIGHTS_REQUIRED | \
-                          WINSTA_ACCESSCLIPBOARD   | \
-                          WINSTA_ACCESSGLOBALATOMS | \
-                          WINSTA_CREATEDESKTOP     | \
-                          WINSTA_ENUMDESKTOPS      | \
-                          WINSTA_ENUMERATE         | \
-                          WINSTA_EXITWINDOWS       | \
-                          WINSTA_READATTRIBUTES    | \
-                          WINSTA_READSCREEN        | \
-                          WINSTA_WRITEATTRIBUTES
-
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID);
@@ -119,9 +106,11 @@ IntCreateWindowStation(
     DWORD Unknown5,
     DWORD Unknown6);
 
+PWINSTATION_OBJECT FASTCALL IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL);
 BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 
 BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
 VOID FASTCALL IntEndDesktopGraphics(VOID);
 BOOL FASTCALL CheckWinstaAttributeAccess(ACCESS_MASK);
+
 /* EOF */

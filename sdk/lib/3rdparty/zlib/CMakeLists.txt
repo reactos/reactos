@@ -31,9 +31,13 @@ list(APPEND MINIZIP_SOURCE
     contrib/minizip/zip.c
     contrib/minizip/zip.h)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-Wno-deprecated-non-prototype)
+endif()
 
 if(CMAKE_CROSSCOMPILING)
     add_library(zlib ${SOURCE} ${SOLO_SOURCE})
+    target_link_libraries(zlib oldnames)
     target_include_directories(zlib PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
     add_library(zlib_solo ${SOLO_SOURCE})
     target_compile_definitions(zlib_solo PRIVATE Z_SOLO)

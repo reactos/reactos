@@ -69,8 +69,8 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     else
     {
         /* Make sure the KCB is locked exclusive */
-        if (!(CmpIsKcbLockedExclusive(Kcb)) &&
-            !(CmpTryToConvertKcbSharedToExclusive(Kcb)))
+        if (!CmpIsKcbLockedExclusive(Kcb) &&
+            !CmpTryToConvertKcbSharedToExclusive(Kcb))
         {
             /* We need the exclusive lock */
             return SearchNeedExclusiveLock;
@@ -79,8 +79,8 @@ CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
         /* Select the value list as our cell, and get the actual list array */
         CellToRelease = ChildList->ValueList;
         *CellData = (PCELL_DATA)HvGetCell(Hive, CellToRelease);
-        if (!(*CellData)) return SearchFail;
-        
+        if (!*CellData) return SearchFail;
+
         /* FIXME: Here we would cache the value */
 
         /* Return the cell to be released */
@@ -229,7 +229,7 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
         if (SearchResult != SearchSuccess)
         {
             /* We either failed or need the exclusive lock */
-            ASSERT((SearchResult == SearchFail) || !(CmpIsKcbLockedExclusive(Kcb)));
+            ASSERT((SearchResult == SearchFail) || !CmpIsKcbLockedExclusive(Kcb));
             ASSERT(Cell == HCELL_NIL);
             return SearchResult;
         }
@@ -260,7 +260,7 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
             if (SearchResult != SearchSuccess)
             {
                 /* We either failed or need the exclusive lock */
-                ASSERT((SearchResult == SearchFail) || !(CmpIsKcbLockedExclusive(Kcb)));
+                ASSERT((SearchResult == SearchFail) || !CmpIsKcbLockedExclusive(Kcb));
                 ASSERT(Cell == HCELL_NIL);
                 return SearchResult;
             }
@@ -552,7 +552,7 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 }
 
                 /* Sanity check */
-                ASSERT((IsSmall ? (Size <= CM_KEY_VALUE_SMALL) : TRUE));
+                ASSERT(IsSmall ? (Size <= CM_KEY_VALUE_SMALL) : TRUE);
 
                 /* Make sure we have a valid buffer */
                 if (Buffer)
@@ -658,7 +658,7 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 }
 
                 /* Sanity check */
-                ASSERT((IsSmall ? (Size <= CM_KEY_VALUE_SMALL) : TRUE));
+                ASSERT(IsSmall ? (Size <= CM_KEY_VALUE_SMALL) : TRUE);
 
                 /* Make sure we have a valid buffer */
                 if (Buffer)
@@ -719,32 +719,32 @@ CmpCompareNewValueDataAgainstKCBCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     if (Kcb->Flags & KEY_SYM_LINK)
     {
         /* We need the exclusive lock */
-        if (!(CmpIsKcbLockedExclusive(Kcb)) &&
-            !(CmpTryToConvertKcbSharedToExclusive(Kcb)))
+        if (!CmpIsKcbLockedExclusive(Kcb) &&
+            !CmpTryToConvertKcbSharedToExclusive(Kcb))
         {
             /* We need the exclusive lock */
             return SearchNeedExclusiveLock;
         }
-        
+
         /* Otherwise, get the key node */
         KeyNode = (PCM_KEY_NODE)HvGetCell(Kcb->KeyHive, Kcb->KeyCell);
         if (!KeyNode) return SearchFail;
-        
+
         /* Cleanup the KCB cache */
         CmpCleanUpKcbValueCache(Kcb);
-        
+
         /* Sanity checks */
-        ASSERT(!(CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList)));
+        ASSERT(!CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList));
         ASSERT(!(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND));
-        
+
         /* Set the value cache */
         Kcb->ValueCache.Count = KeyNode->ValueList.Count;
         Kcb->ValueCache.ValueList = KeyNode->ValueList.List;
-        
+
         /* Release the cell */
         HvReleaseCell(Kcb->KeyHive, Kcb->KeyCell);
     }
-    
+
     /* Do the search */
     SearchResult = CmpFindValueByNameFromCache(Kcb,
                                                ValueName,
@@ -765,7 +765,7 @@ CmpCompareNewValueDataAgainstKCBCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         /* Sanity check */
         ASSERT(Value);
-        
+
         /* First of all, check if the key size and type matches */
         if ((Type == Value->Type) &&
             (DataSize == (Value->DataLength & ~CM_KEY_VALUE_SPECIAL_SIZE)))
@@ -795,7 +795,7 @@ CmpCompareNewValueDataAgainstKCBCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
                     goto Quickie;
                 }
             }
-            
+
             /* Now check the data size */
             if (DataSize)
             {
@@ -810,7 +810,7 @@ CmpCompareNewValueDataAgainstKCBCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 /* It's equal */
                 CompareResult = 0;
             }
-            
+
             /* Now check if the compare wasn't equal */
             if (CompareResult != DataSize) SearchResult = SearchFail;
         }
@@ -824,10 +824,10 @@ CmpCompareNewValueDataAgainstKCBCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
 Quickie:
     /* Release the value cell */
     if (ValueCellToRelease) HvReleaseCell(Kcb->KeyHive, ValueCellToRelease);
-    
+
     /* Free the buffer */
     if (BufferAllocated) CmpFree(Buffer, 0);
-    
+
     /* Free the cell */
     if (CellToRelease) HvReleaseCell(Kcb->KeyHive, CellToRelease);
 

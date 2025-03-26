@@ -40,6 +40,9 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+    IDS_INTERNET "Penjelajah Internet"
+    IDS_INTERNET_DESCRIPTION "Buka Penjelajah web dan tampilkan informasi pada Internet."
+
     IDS_TB_BACK             "Kembali"
     IDS_TB_FORWARD          "Maju"
     IDS_TB_STOP             "Berhenti"

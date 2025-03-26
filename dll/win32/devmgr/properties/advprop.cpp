@@ -413,7 +413,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                                                  pnmv->iItem,
                                                  pnmv->iSubItem,
                                                  szDriverPath,
-                                                 MAX_PATH);
+                                                 _countof(szDriverPath));
 
                             UpdateDriverVersionInfoDetails(hwndDlg,
                                                            szDriverPath);
@@ -952,6 +952,8 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
             {
                 case SPDRP_CAPABILITIES:
                     index = 0;
+                    swprintf(dap->szTemp, L"%08lx", dwValue);
+                    SetListViewText(hwndListView, index++, dap->szTemp);
                     if (dwValue & CM_DEVCAP_LOCKSUPPORTED)
                         SetListViewText(hwndListView, index++, L"CM_DEVCAP_LOCKSUPPORTED");
                     if (dwValue & CM_DEVCAP_EJECTSUPPORTED)
@@ -976,6 +978,8 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
 
                 case SPDRP_CONFIGFLAGS:
                     index = 0;
+                    swprintf(dap->szTemp, L"%08lx", dwValue);
+                    SetListViewText(hwndListView, index++, dap->szTemp);
                     if (dwValue & CONFIGFLAG_DISABLED)
                         SetListViewText(hwndListView, index++, L"CONFIGFLAG_DISABLED");
                     if (dwValue & CONFIGFLAG_REMOVED)
@@ -1035,6 +1039,8 @@ DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
                              dap->hMachine);
 
     index = 0;
+    swprintf(dap->szTemp, L"%08lx", dwStatus);
+    SetListViewText(hwndListView, index++, dap->szTemp);
     if (dwStatus & DN_ROOT_ENUMERATED)
         SetListViewText(hwndListView, index++, L"DN_ROOT_ENUMERATED");
     if (dwStatus & DN_DRIVER_LOADED)
@@ -1101,9 +1107,6 @@ DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
         SetListViewText(hwndListView, index++, L"DN_NO_SHOW_IN_DM");
     if (dwStatus & DN_BOOT_LOG_PROB)
         SetListViewText(hwndListView, index++, L"DN_BOOT_LOG_PROB");
-
-//    swprintf(dap->szTemp, L"0x%08x", dwStatus);
-//    SetListViewText(hwndListView, 0, dap->szTemp);
 }
 
 
@@ -1152,6 +1155,9 @@ DisplayCsFlags(IN PDEVADVPROP_INFO dap,
                             dap->hMachine);
 
     index = 0;
+    swprintf(dap->szTemp, L"%08lx", dwValue);
+    SetListViewText(hwndListView, index++, dap->szTemp);
+
     if (dwValue & CSCONFIGFLAG_DISABLED)
         SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DISABLED");
 
@@ -1891,6 +1897,31 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
     {
         switch (uMsg)
         {
+            case WM_CONTEXTMENU:
+            {
+                if ((HWND)wParam == GetDlgItem(hwndDlg, IDC_DETAILSPROPVALUE))
+                {
+                    WCHAR szColName[255];
+
+                    if (!LoadStringW(hDllInstance, IDS_COPY, szColName, _countof(szColName)))
+                        break;
+
+                    INT nSelectedItems = ListView_GetSelectedCount((HWND)wParam);
+                    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+                    HMENU hPopup = CreatePopupMenu();
+
+                    AppendMenuW(hPopup, MF_STRING, IDS_MENU_COPY, szColName);
+
+                    if (nSelectedItems <= 0)
+                        EnableMenuItem(hPopup, IDS_MENU_COPY, MF_BYCOMMAND | MF_GRAYED);
+
+                    TrackPopupMenu(hPopup, TPM_LEFTALIGN, pt.x, pt.y, 0, hwndDlg, NULL);
+                    DestroyMenu(hPopup);
+                    Ret = TRUE;
+                }
+                break;
+            }
+
             case WM_COMMAND:
             {
                 switch (LOWORD(wParam))
@@ -1903,6 +1934,52 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                                                     GetDlgItem(hwndDlg, IDC_DETAILSPROPVALUE));
                         }
                         break;
+
+                    case IDS_MENU_COPY:
+                    {
+                        HWND hwndListView = GetDlgItem(hwndDlg, IDC_DETAILSPROPVALUE);
+                        INT nSelectedItems = ListView_GetSelectedCount(hwndListView);
+                        INT nSelectedId = ListView_GetSelectionMark(hwndListView);
+
+                        if (nSelectedId < 0 || nSelectedItems <= 0)
+                            break;
+
+                        HGLOBAL hGlobal;
+                        LPWSTR pszBuffer;
+                        SIZE_T cchSize = MAX_PATH + 1;
+
+                        hGlobal = GlobalAlloc(GHND, cchSize * sizeof(WCHAR));
+                        if (!hGlobal)
+                            break;
+                        pszBuffer = (LPWSTR)GlobalLock(hGlobal);
+                        if (!pszBuffer)
+                        {
+                            GlobalFree(hGlobal);
+                            break;
+                        }
+
+                        ListView_GetItemText(hwndListView,
+                                             nSelectedId, 0,
+                                             pszBuffer,
+                                             cchSize);
+                        /* Ensure NULL-termination */
+                        pszBuffer[cchSize - 1] = UNICODE_NULL;
+
+                        GlobalUnlock(hGlobal);
+
+                        if (OpenClipboard(NULL))
+                        {
+                            EmptyClipboard();
+                            SetClipboardData(CF_UNICODETEXT, hGlobal);
+                            CloseClipboard();
+                            Ret = TRUE;
+                        }
+                        else
+                        {
+                            GlobalFree(hGlobal);
+                        }
+                        break;
+                    }
                 }
                 break;
             }
@@ -2218,9 +2295,9 @@ GetParentNode:
         DeviceInfoData = &dap->DeviceInfoData;
     }
 
-    dap->HasDriverPage = FALSE;
-    dap->HasResourcePage = FALSE;
-    dap->HasPowerPage = FALSE;
+    dap->HasDriverPage = TRUE;
+    dap->HasResourcePage = TRUE;
+    dap->HasPowerPage = TRUE;
     if (IsDriverInstalled(DeviceInfoData->DevInst,
                           dap->hMachine,
                           &bDrvInstalled) &&
@@ -2240,11 +2317,12 @@ GetParentNode:
             {
                 /* zero the flags */
                 InstallParams.Flags = 0;
+                InstallParams.FlagsEx = 0;
             }
 
             dap->HasDriverPage = !(InstallParams.Flags & DI_DRIVERPAGE_ADDED);
             dap->HasResourcePage = !(InstallParams.Flags & DI_RESOURCEPAGE_ADDED);
-            dap->HasPowerPage = !(InstallParams.Flags & DI_FLAGSEX_POWERPAGE_ADDED);
+            dap->HasPowerPage = !(InstallParams.FlagsEx & DI_FLAGSEX_POWERPAGE_ADDED);
         }
     }
 

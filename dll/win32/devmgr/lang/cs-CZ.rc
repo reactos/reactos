@@ -36,6 +36,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "Rozsah I/O"
+    IDS_COPY "&Kopírovat"
 END
 
 /* puvodni anglicke error messages prevzaty z: http://www.z123.org/techsupport/medm.htm */
@@ -78,7 +79,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Ovladače tohoto zařízení nejsou naintalovány."
     IDS_DEV_HARDWARE_DISABLED "Toto zařízení je vypnuto, protože mu BIOS nepřiřadil žádné zdroje."
     IDS_DEV_CANT_SHARE_IRQ "Toto zařízení využívá IRQ, které je využíváno jiným zařízením a nemůže být sdíleno.\nJe potřeba změnit konfliktní nastavení nebo odebrat ovladač způsobující konflikt."
-    IDS_DEV_FAILED_ADD "Toto zařízení nepracuje správně, protože %1 nepracuje správně."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS nemůže nainstalovat ovladače tohoto zařízení, protože nemá přístup na disk nebo síťové umístění, na kterém se nacházejí instalační soubory."
     IDS_DEV_TRANSLATION_FAILED "Toto zařízení neodpovídá svému ovladači."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nedokáže určit nastavení tohoto zařízení. Konzultujte manuál, který byl přibalen k zařízení a použijte záložku ""Zdroje"" k vybrání nastavení."
@@ -231,7 +232,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Nastavení prostředků:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -289,14 +290,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Správce zařízení ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Zakázáním tohoto zařízení dojde k ukončení jeho činnosti.\r\nOpravdu si jej přejete zakázat?"
-  IDS_CONFIRM_UNINSTALL     "Varování: Chystáte se odebrat toto zařízení ze systému.\r\nPřejete si pokračovat?"
+  IDS_CONFIRM_DISABLE       "Zakázáním tohoto zařízení dojde k ukončení jeho činnosti.\nOpravdu si jej přejete zakázat?"
+  IDS_CONFIRM_UNINSTALL     "Varování: Chystáte se odebrat toto zařízení ze systému.\nPřejete si pokračovat?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Aktualizovat software ovladače..."
   IDS_MENU_ENABLE           "Povolit"
@@ -307,7 +309,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Vlastnosti"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Vlastnosti"
   IDS_TOOLTIP_SCAN          "Vyhledat změny hardwaru"
@@ -318,7 +320,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Otevře seznam vlastností pro vybrané zařízení."

@@ -155,7 +155,7 @@ CGridView::UpdateCellCoordinates(
     )
 {
     // Go through all the cells and calculate
-    // their coordinates within the grid 
+    // their coordinates within the grid
     for (int y = 0; y < m_yNumCells; y++)
     for (int x = 0; x < m_xNumCells; x++)
     {
@@ -262,7 +262,6 @@ VOID
 CGridView::OnVScroll(_In_ INT Value,
                      _In_ INT Pos)
 {
-    
     INT PrevScrollPosition = m_ScrollPosition;
 
     switch (Value)

@@ -4,6 +4,28 @@
 [Version]
 Signature = "$Windows NT$"
 
+[System Access]
+; Password Options
+MinimumPasswordAge = 0
+MaximumPasswordAge = 42
+MinimumPasswordLength = 0
+PasswordComplexity = 0
+PasswordHistorySize = 0
+RequireLogonToChangePassword = 0
+ClearTextPassword = 0
+
+; Lockout Options
+LockoutBadCount = 0
+;ResetLockoutCount = 30
+;LockoutDuration = 30
+
+; Account Options
+LSAAnonymousLookup = 0
+;EnableAdminAccount = 0
+EnableGuestAccount = 0
+;NewAdministratorName =
+;NewGuestName =
+
 [Application Log]
 MaximumLogSize = 16384
 AuditLogRetentionPeriod = 0
@@ -36,7 +58,7 @@ AuditLogonEvents = 1;
 SeAssignPrimaryTokenPrivilege = *S-1-5-19, *S-1-5-20
 SeAuditPrivilege = *S-1-5-19, *S-1-5-20
 SeBackupPrivilege = *S-1-5-32-544, *S-1-5-32-551
-SeBatchLogonRight = 
+SeBatchLogonRight =
 SeChangeNotifyPrivilege = *S-1-1-0, *S-1-5-32-544, *S-1-5-32-545, *S-1-5-32-547, *S-1-5-32-551
 SeCreateGlobalPrivilege = *S-1-5-6, *S-1-5-32-544
 SeCreatePagefilePrivilege = *S-1-5-32-544
@@ -106,6 +128,12 @@ SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "來賓"
 SceInfUsers = "使用者"
 
+[Strings.0405]
+SceInfAuthUsers = "Autentizovaní uživatelé"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Host"
+SceInfUsers = "Uživatelé"
+
 [Strings.0407]
 SceInfAuthUsers = "Authentifizierte Benutzer"
 SceInfInteractive = "INTERAKTIV"
@@ -136,6 +164,12 @@ SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "Гость"
 SceInfUsers = "Пользователи"
 
+[Strings.041b]
+SceInfAuthUsers = "Autentizovaní používatelia"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Hosť"
+SceInfUsers = "Používatelia"
+
 [Strings.041c]
 SceInfAuthUsers = "Përdorues vërtetuar"
 SceInfInteractive = "INTERAKTIVE"
@@ -144,9 +178,15 @@ SceInfUsers = "Përdoruesit"
 
 [Strings.041f]
 SceInfAuthUsers = "Kimliği Doğrulanmış Kullanıcılar"
-SceInfInteractive = "ETKLİEŞİMLİ"
+SceInfInteractive = "ETKİLEŞİMLİ"
 SceInfGuest = "Konuk"
 SceInfUsers = "Kullanıcılar"
+
+[Strings.048f]
+SceInfAuthUsers = "Aŭtentikigitaj uzantoj"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Gasto"
+SceInfUsers = "Uzantoj"
 
 [Strings.0804]
 SceInfAuthUsers = "经过身份验证的用户"
@@ -159,3 +199,9 @@ SceInfAuthUsers = "Utilizadores autenticados"
 SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "Convidado"
 SceInfUsers = "Utilizadores"
+
+[Strings.0c04]
+SceInfAuthUsers = "經過身份驗證的使用者"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "來賓"
+SceInfUsers = "使用者"

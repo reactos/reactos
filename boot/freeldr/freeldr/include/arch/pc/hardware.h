@@ -20,17 +20,48 @@
 
 #pragma once
 
-#define CONFIG_CMD(bus, dev_fn, where) \
-    (0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
-
 #define TAG_HW_RESOURCE_LIST    'lRwH'
 #define TAG_HW_DISK_CONTEXT     'cDwH'
+
+/*
+ * These aren't defined in the ioaccess.h header.
+ * Because of that we manually define the symbols we need to make use of I/O ports.
+ */
+#define READ_PORT_BUFFER_UCHAR(port, buffer, count)   __inbytestring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_USHORT(port, buffer, count)  __inwordstring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_ULONG(port, buffer, count)   __indwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count)  __outbytestring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_USHORT(port, buffer, count) __outwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_ULONG(port, buffer, count)  __outdwordstring(H2I(port), buffer, count)
 
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */
 VOID StallExecutionProcessor(ULONG Microseconds);
 VOID HalpCalibrateStallExecution(VOID);
+
+/* PCI Type 1 Ports */
+#define PCI_TYPE1_ADDRESS_PORT      (PULONG)0xCF8
+#define PCI_TYPE1_DATA_PORT         0xCFC
+
+/* PCI Type 1 Configuration Register */
+typedef struct _PCI_TYPE1_CFG_BITS
+{
+    union
+    {
+        struct
+        {
+            ULONG RegisterNumber:8;
+            ULONG FunctionNumber:3;
+            ULONG DeviceNumber:5;
+            ULONG BusNumber:8;
+            ULONG Reserved:7;
+            ULONG Enable:1;
+        } bits;
+
+        ULONG AsULONG;
+    } u;
+} PCI_TYPE1_CFG_BITS, *PPCI_TYPE1_CFG_BITS;
 
 typedef
 PCM_PARTIAL_RESOURCE_LIST
@@ -53,6 +84,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                 PCONFIGURATION_COMPONENT_DATA BusKey);
 
 /* hwacpi.c */
+PVOID FindAcpiTable(VOID);
 VOID DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* hwapm.c */
@@ -67,6 +99,7 @@ ULONG __cdecl PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
                   ULONG *NodeCount);
 ULONG __cdecl PnpBiosGetDeviceNode(UCHAR *NodeId,
              UCHAR *NodeBuffer);
+ULONG __cdecl PnpBiosGetDockStationInformation(UCHAR *DockingStationInfo);
 
 /* i386pxe.S */
 USHORT __cdecl PxeCallApi(USHORT Segment, USHORT Offset, USHORT Service, VOID* Parameter);

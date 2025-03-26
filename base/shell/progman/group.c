@@ -72,7 +72,7 @@ CleanupUxTheme(VOID)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Taken from WinSpy++ 1.7
-// http://www.catch22.net/software/winspy
+// https://www.catch22.net/projects/winspy/
 // Copyright (c) 2002 by J Brown
 //
 
@@ -376,7 +376,7 @@ ATOM GROUP_RegisterGroupWinClass(VOID)
     wndClass.cbWndExtra    = sizeof(LONG_PTR);
     wndClass.hInstance     = Globals.hInstance;
     wndClass.hIcon         = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_GROUP_ICON));
-    wndClass.hCursor       = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+    wndClass.hCursor       = LoadCursorW(NULL, IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszMenuName  = NULL;
     wndClass.lpszClassName = STRING_GROUP_WIN_CLASS_NAME;

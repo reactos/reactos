@@ -9,13 +9,15 @@
 #ifndef RTL_H
 #define RTL_H
 
-/* We're a core NT DLL, we don't import syscalls */
+/* We are a core NT DLL, we don't import syscalls */
 #define _INC_SWPRINTF_INL_
 #undef __MSVCRT__
 
 /* C Headers */
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifndef _BLDR_
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
@@ -43,11 +45,18 @@
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
+#else
+
+#include <ndk/rtlfuncs.h>
+
+#endif /* _BLDR_ */
+
 /* Internal RTL header */
 #include "rtlp.h"
 
 /* Use intrinsics for x86 and x64 */
 #if defined(_M_IX86) || defined(_M_AMD64)
+#ifndef InterlockedCompareExchange
 #define InterlockedCompareExchange _InterlockedCompareExchange
 #define InterlockedIncrement _InterlockedIncrement
 #define InterlockedDecrement _InterlockedDecrement
@@ -55,6 +64,7 @@
 #define InterlockedExchange _InterlockedExchange
 #define InterlockedBitTestAndSet _interlockedbittestandset
 #define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#endif
 #endif
 
 #endif /* RTL_H */

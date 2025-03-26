@@ -35,6 +35,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O shtrirje"
+    IDS_COPY "&Kopjo"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -77,7 +78,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Komanduesit për këtë pajisje nuk janë instaluar."
     IDS_DEV_HARDWARE_DISABLED "Kjo pajisje është me aftësi të kufizuara, sepse BIOS për pajisjen nuk jep asnjë burimeve."
     IDS_DEV_CANT_SHARE_IRQ "Kjo pajisje po përdorur një kërkesë interrupt (IRQ) e burimeve që është në përdorim nga një tjetër pajisje dhe nuk mund të ndahet.\nJu duhet të ndryshoni vendosjen konfliktuale ose hiqni menyren-reale e komanduesit që shkakton konfliktin."
-    IDS_DEV_FAILED_ADD "Kjo pajisje nuk punon si duhet për shkak %1 nuk është duke punuar si duhet."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS nuk mund të instaloni komanduesin për këtë pajisje, sepse ajo nuk mund të hyje ne driverin apo vendin e rrjetit që ka dokumentat e instalimit në të."
     IDS_DEV_TRANSLATION_FAILED "Kjo pajisje nuk i përgjigjer komanduesit të saj."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nuk mund të përcaktojë parametrat për këtë pajisje. Konsultoni dokumentacionin që erdhi me këtë pajisje dhe të përdorin tabelen e Burimeve për të vendosur konfigurimin."
@@ -230,7 +231,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Konfigurime Burimesh:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -288,14 +289,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Device Manager"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\nDo you really want to disable it?"
+  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\nDo you want to continue?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Update driver software..."
   IDS_MENU_ENABLE           "Enable"
@@ -306,7 +308,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Properties"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Properties"
   IDS_TOOLTIP_SCAN          "Scan for hardware changes"
@@ -317,7 +319,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
@@ -326,7 +328,7 @@ BEGIN
   IDS_HINT_DISABLE      " Disables the selected device."
   IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
   IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
+  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer."
   IDS_HINT_ABOUT        " About ReactOS Device Manager."
   IDS_HINT_EXIT         " Exits the program."
 

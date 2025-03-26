@@ -10,6 +10,7 @@ list(APPEND SOURCE
     csystray.cpp
     stobject.cpp
     hotplug.cpp
+    mouse.cpp
     power.cpp
     volume.cpp
     precomp.h)

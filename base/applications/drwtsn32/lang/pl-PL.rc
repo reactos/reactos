@@ -9,5 +9,5 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Raportowanie błędu ReactOS"
-    IDS_USER_ALERT_MESSAGE "Aplikacja %ls została zamknięta z powodu błędu. Informacje o tym błędzie zostały zapisane w:\r\n\r\n%ls"
+    IDS_USER_ALERT_MESSAGE "Aplikacja %ls została zamknięta z powodu błędu. Informacje o tym błędzie zostały zapisane w:\n\n%ls"
 END

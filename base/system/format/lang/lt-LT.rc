@@ -1,4 +1,10 @@
-/* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Lithuanian resource file
+ * TRANSLATORS: Copyright 2008 Vytis Girdžijauskas <cman@cman.us>
+ *              Copyright 2011 Edijs Kolesnikovics <terminedijs@yahoo.com>
+ */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 

@@ -22,7 +22,7 @@ audio_waveout::init_(void)
     status = WAVEOUT_NOTREADY;
 }
 
-void 
+void
 audio_waveout::alloc_buffers_mem_(unsigned int buffs, float secs)
 {
     unsigned int onebuf_size = 0, tot_size = 0;
@@ -35,7 +35,7 @@ audio_waveout::alloc_buffers_mem_(unsigned int buffs, float secs)
         delete[] wave_headers;
 
     /* Calcs size of the buffers */
-    onebuf_size = (unsigned int)((float)aud_info.byte_rate() * secs); 
+    onebuf_size = (unsigned int)((float)aud_info.byte_rate() * secs);
     tot_size = onebuf_size * buffs;
     /* Allocs memory for the audio buffers */
     main_buffer = new BYTE[tot_size];
@@ -48,7 +48,7 @@ audio_waveout::alloc_buffers_mem_(unsigned int buffs, float secs)
     mb_size = tot_size;
 }
 
-void 
+void
 audio_waveout::init_headers_(void)
 {
     /* If there is no memory for memory or headers, simply return */
@@ -80,7 +80,7 @@ audio_waveout::init_headers_(void)
     }
 }
 
-void 
+void
 audio_waveout::prep_headers_(void)
 {
     MMRESULT err;
@@ -105,7 +105,7 @@ audio_waveout::prep_headers_(void)
     }
 }
 
-void 
+void
 audio_waveout::unprep_headers_(void)
 {
     MMRESULT err;
@@ -130,7 +130,7 @@ audio_waveout::unprep_headers_(void)
     }
 }
 
-void 
+void
 audio_waveout::free_buffers_mem_(void)
 {
     /* Frees memory */
@@ -144,7 +144,7 @@ audio_waveout::free_buffers_mem_(void)
     wave_headers = 0;
 }
 
-void 
+void
 audio_waveout::open(void)
 {
     MMRESULT err;
@@ -214,7 +214,7 @@ audio_waveout::open(void)
     status = WAVEOUT_READY;
 }
 
-void 
+void
 audio_waveout::play(void)
 {
     MMRESULT err;
@@ -268,7 +268,7 @@ audio_waveout::play(void)
     }
 }
 
-void 
+void
 audio_waveout::pause(void)
 {
     MMRESULT err;
@@ -288,7 +288,7 @@ audio_waveout::pause(void)
     }
 }
 
-void 
+void
 audio_waveout::stop(void)
 {
     MMRESULT err;
@@ -344,7 +344,7 @@ audio_waveout::close(void)
     free_buffers_mem_();
 }
 
-DWORD WINAPI 
+DWORD WINAPI
 audio_waveout::playing_procedure(LPVOID arg)
 {
     MSG msg;

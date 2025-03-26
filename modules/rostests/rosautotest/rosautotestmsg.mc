@@ -8,7 +8,8 @@ Error=0x3:STATUS_SEVERITY_ERROR)
 FacilityNames=(System=0x0:FACILITY_SYSTEM Application=0xFFF)
 
 LanguageNames=(English=0x409:MSG00409
-               Polish=0x415:MSG00415)
+               Polish=0x415:MSG00415
+               Romanian=0x418:MSG00418)
 
 MessageId=1
 Severity=Informational
@@ -20,6 +21,9 @@ ReactOS Automatic Testing Utility is started.
 Language=Polish
 Uruchomiono narzędzie automatycznych testów systemu ReactOS.
 .
+Language=Romanian
+Utilitarul de testare automată ReactOS a fost pornit.
+.
 
 MessageId=2
 Severity=Success
@@ -30,5 +34,8 @@ ReactOS Automatic Testing Utility is successful.
 .
 Language=Polish
 Narzędzie automatycznych testów systemu ReactOS pomyślnie zakończyło działanie.
+.
+Language=Romanian
+Utilitarul de testare automată ReactOS a avut succes.
 .
 

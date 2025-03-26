@@ -117,7 +117,7 @@ class audio_waveout
                 return (unsigned int)65535;
             else if (aud_info.bits() == 8)
                 return (unsigned int)255;
-            else 
+            else
                 return 0;
         }
 
@@ -134,7 +134,7 @@ class audio_waveout
                 svalue = (unsigned int)abs(*((short *)(main_buffer + aud_info.bytes_in_samples(nsamp))));
             else if (aud_info.bits() == 8)
                svalue = (unsigned int)((ptrdiff_t) *(main_buffer + aud_info.bytes_in_samples(nsamp)));
-            else 
+            else
                 svalue = 0;
 
             return svalue;

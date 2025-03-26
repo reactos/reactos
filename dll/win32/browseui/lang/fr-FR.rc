@@ -111,7 +111,7 @@ BEGIN
     MENUITEM "&Fermer la barre d'outils", IDM_BAND_CLOSE
 END
 
-IDM_POPUPMENU MENUEX DISCARDABLE
+IDM_POPUPMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -122,7 +122,7 @@ BEGIN
         END
         MENUITEM "&Ouvrir le dossier", IDM_OPEN_FOLDER
         MENUITEM "&Afficher le texte", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */
@@ -163,7 +163,7 @@ BEGIN
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
     LTEXT "&Chercher dans :", -1, 10, 75, 500, 10
-    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
+    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY, 10, 85, 200, 200
 
     DEFPUSHBUTTON "Che&rcher", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Arrêter", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
@@ -311,11 +311,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL "Dossiers"
-END
-
-STRINGTABLE
-BEGIN
+    IDS_ADDRESSMENUTEXT "&Address"
     IDS_HISTORYTEXT "&Historique\tCtrl+H"
 END
 
@@ -333,7 +329,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Aller vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Home|Map Drive|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers||"
+    IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Déplacer vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Accueil|Connecter|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers||"
 END
 
 STRINGTABLE

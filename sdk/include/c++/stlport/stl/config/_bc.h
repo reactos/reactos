@@ -45,7 +45,7 @@
 #  pragma defineonoption _CPPUNWIND -xd
 #  define _STLP_NO_EXCEPTION_HEADER
 #  define _STLP_DONT_USE_EXCEPTIONS
-#endif 
+#endif
 
 #if (__BORLANDC__ >= 0x560) && (__BORLANDC__ < 0x570)
 #  define _USE_OLD_RW_STL
@@ -53,7 +53,7 @@
 
 #if (__BORLANDC__ >= 0x560)
 #  if !defined (__BUILDING_STLPORT)
-#    define NOWINBASEINTERLOCK  
+#    define NOWINBASEINTERLOCK
 #  endif
 #  define _STLP_LANG_INVARIANT_DEFINED
 #endif

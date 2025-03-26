@@ -424,7 +424,7 @@ BaseComputeProcessDllPath(IN LPWSTR FullPath,
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager");
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SafeDllSearchMode");
     OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&KeyName, OBJ_CASE_INSENSITIVE);
-    KEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+    CHAR PartialInfoBuffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + sizeof(ULONG)];
     HANDLE KeyHandle;
     NTSTATUS Status;
     ULONG ResultLength;
@@ -461,15 +461,16 @@ BaseComputeProcessDllPath(IN LPWSTR FullPath,
             Status = NtQueryValueKey(KeyHandle,
                                      &ValueName,
                                      KeyValuePartialInformation,
-                                     &PartialInfo,
-                                     sizeof(PartialInfo),
+                                     PartialInfoBuffer,
+                                     sizeof(PartialInfoBuffer),
                                      &ResultLength);
             if (NT_SUCCESS(Status))
             {
                 /* Read the value if the size is OK */
-                if (ResultLength == sizeof(PartialInfo))
+                if (ResultLength == sizeof(PartialInfoBuffer))
                 {
-                    CurrentDirPlacement = *(PULONG)PartialInfo.Data;
+                    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)PartialInfoBuffer;
+                    CurrentDirPlacement = *(PULONG)PartialInfo->Data;
                 }
             }
 
@@ -2320,7 +2321,7 @@ GetSystemDirectoryW(OUT LPWSTR lpBuffer,
         RtlCopyMemory(lpBuffer,
                       BaseWindowsSystemDirectory.Buffer,
                       BaseWindowsSystemDirectory.Length);
-        lpBuffer[BaseWindowsSystemDirectory.Length / sizeof(WCHAR)] = ANSI_NULL;
+        lpBuffer[BaseWindowsSystemDirectory.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
         ReturnLength = BaseWindowsSystemDirectory.Length;
     }
@@ -2404,7 +2405,7 @@ GetSystemWindowsDirectoryW(OUT LPWSTR lpBuffer,
         RtlCopyMemory(lpBuffer,
                       BaseWindowsDirectory.Buffer,
                       BaseWindowsDirectory.Length);
-        lpBuffer[BaseWindowsDirectory.Length / sizeof(WCHAR)] = ANSI_NULL;
+        lpBuffer[BaseWindowsDirectory.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
         ReturnLength = BaseWindowsDirectory.Length;
     }

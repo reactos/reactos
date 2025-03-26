@@ -102,8 +102,9 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                 DotPos = Index;
         }
 
-        /* Copy name (6 valid characters max) */
-        for (Index = 0; Index < DotPos && Context->NameLength < 6; Index++)
+        /* Copy name. OEM string length can't exceed 6. */
+        UCHAR OemSizeLeft = 6;
+        for (Index = 0; (Index < DotPos) && OemSizeLeft; Index++)
         {
             Char = Name->Buffer[Index];
 
@@ -115,8 +116,17 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                 else if (Char >= L'a' && Char <= L'z')
                     Char = RtlpUpcaseUnicodeChar(Char);
 
+                /* Beware of MB OEM codepage */
+                if (NlsMbOemCodePageTag && HIBYTE(NlsUnicodeToMbOemTable[Char]))
+                {
+                    if (OemSizeLeft < 2)
+                        break;
+                    OemSizeLeft--;
+                }
+
                 Context->NameBuffer[Context->NameLength] = Char;
-                ++Context->NameLength;
+                Context->NameLength++;
+                OemSizeLeft--;
             }
         }
 

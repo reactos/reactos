@@ -11,6 +11,7 @@
 
 /* GLOBALS ********************************************************************/
 
+DATA_SEG("PAGECONS")
 const VIDEOMODE VideoModes[] =
 {
     {640, 480, GRAPH_HF_31KHZ, GDC2_CLOCK1_5MHZ, GDC2_CLOCK2_5MHZ,
@@ -18,7 +19,8 @@ const VIDEOMODE VideoModes[] =
      {0, 80, 12, 2, 4, 4, 6, 480, 37}, {0, 80, 12, 2, 4, 132, 6, 480, 37}}
 };
 
-static VIDEO_ACCESS_RANGE LegacyRangeList[] =
+DATA_SEG("PAGECONS")
+const VIDEO_ACCESS_RANGE LegacyRangeList[] =
 {
     { {{0x60,  0}}, 0x00000001, 1, 1, 1, 0 },
     { {{0x62,  0}}, 0x00000001, 1, 1, 1, 0 },
@@ -72,7 +74,7 @@ Pc98VidFindAdapter(
 
     Status = VideoPortVerifyAccessRanges(DeviceExtension,
                                          RTL_NUMBER_OF(LegacyRangeList),
-                                         LegacyRangeList);
+                                         (PVIDEO_ACCESS_RANGE)LegacyRangeList);
     if (Status != NO_ERROR)
     {
         VideoDebugPrint((Error, "%s() Resource conflict was found\n", __FUNCTION__));
@@ -193,7 +195,15 @@ Pc98VidGetVideoChildDescriptor(
     return ERROR_NO_MORE_DEVICES;
 }
 
+#if defined(_MSC_VER)
+/*
+ * Avoid C2983 error for MSVC 2015. There is no such thing
+ * as DRIVER_INITIALIZE for video miniport drivers.
+ */
+#pragma alloc_text(INIT, DriverEntry)
+#else
 CODE_SEG("INIT")
+#endif
 ULONG
 NTAPI
 DriverEntry(
@@ -228,7 +238,7 @@ DriverEntry(
         InitData.HwGetVideoChildDescriptor = Pc98VidGetVideoChildDescriptor;
     }
 
-    InitData.HwLegacyResourceList = LegacyRangeList;
+    InitData.HwLegacyResourceList = (PVIDEO_ACCESS_RANGE)LegacyRangeList;
     InitData.HwLegacyResourceCount = RTL_NUMBER_OF(LegacyRangeList);
 
     InitData.AdapterInterfaceType = Isa;

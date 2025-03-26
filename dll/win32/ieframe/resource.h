@@ -55,6 +55,9 @@
 #define ID_BROWSE_GOTOFAV_FIRST        2000
 #define ID_BROWSE_GOTOFAV_MAX          65000
 
+#define IDS_INTERNET                   880
+#define IDS_INTERNET_DESCRIPTION       881
+
 #define IDS_TB_BACK                    1100
 #define IDS_TB_FORWARD                 1101
 #define IDS_TB_STOP                    1102

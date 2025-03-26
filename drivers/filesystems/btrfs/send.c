@@ -1988,7 +1988,7 @@ static bool try_clone_edr(send_context* context, send_ext* se, EXTENT_DATA_REF* 
                             uint64_t clone_offset = tp.item->key.offset + ed2->offset - seed2->offset;
                             uint64_t clone_len = min(context->lastinode.size - se->offset, ed2->num_bytes);
 
-                            if (clone_offset % context->Vcb->superblock.sector_size == 0 && clone_len % context->Vcb->superblock.sector_size == 0) {
+                            if ((clone_offset & (context->Vcb->superblock.sector_size - 1)) == 0 && (clone_len & (context->Vcb->superblock.sector_size - 1)) == 0) {
                                 ULONG pos = context->datalen;
 
                                 send_command(context, BTRFS_SEND_CMD_CLONE);
@@ -2323,7 +2323,7 @@ static NTSTATUS flush_extents(send_context* context, traverse_ptr* tp1, traverse
                     }
                 }
 
-                skip_start = addr % context->Vcb->superblock.sector_size;
+                skip_start = addr & (context->Vcb->superblock.sector_size - 1);
                 addr -= skip_start;
 
                 if (context->lastinode.flags & BTRFS_INODE_NODATASUM)
@@ -2331,7 +2331,7 @@ static NTSTATUS flush_extents(send_context* context, traverse_ptr* tp1, traverse
                 else {
                     uint32_t len;
 
-                    len = (uint32_t)sector_align(length + skip_start, context->Vcb->superblock.sector_size) / context->Vcb->superblock.sector_size;
+                    len = (uint32_t)sector_align(length + skip_start, context->Vcb->superblock.sector_size) >> context->Vcb->sector_shift;
 
                     csum = ExAllocatePoolWithTag(PagedPool, len * context->Vcb->csum_size, ALLOC_TAG);
                     if (!csum) {
@@ -2410,7 +2410,7 @@ static NTSTATUS flush_extents(send_context* context, traverse_ptr* tp1, traverse
             else {
                 uint32_t len;
 
-                len = (uint32_t)(ed2->size / context->Vcb->superblock.sector_size);
+                len = (uint32_t)(ed2->size >> context->Vcb->sector_shift);
 
                 csum = ExAllocatePoolWithTag(PagedPool, len * context->Vcb->csum_size, ALLOC_TAG);
                 if (!csum) {

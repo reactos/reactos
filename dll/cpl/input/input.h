@@ -16,6 +16,7 @@
 #include <setupapi.h>
 #include <strsafe.h>
 #include <cpl.h>
+#include <imm32_undoc.h>
 
 #include "resource.h"
 
@@ -28,6 +29,7 @@ typedef struct
 } APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;
+extern BOOL g_bRebootNeeded;
 
 // Character Count of a layout ID like "00000409"
 #define CCH_LAYOUT_ID    8
@@ -40,6 +42,7 @@ extern HINSTANCE hApplet;
 /* settings_page.c */
 INT_PTR CALLBACK
 SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL EnableProcessPrivileges(LPCWSTR lpPrivilegeName, BOOL bEnable);
 
 /* advanced_settings_page.c */
 INT_PTR CALLBACK
@@ -80,5 +83,7 @@ DWORDfromString(const WCHAR *pszString)
 
     return wcstoul(pszString, &pszEnd, 16);
 }
+
+VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName);
 
 #endif /* _INPUT_H */

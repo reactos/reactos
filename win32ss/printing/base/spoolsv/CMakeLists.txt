@@ -22,11 +22,20 @@ list(APPEND SOURCE
     rpcstubs.c
     spoolfile.c
     xcv.c
-    ${CMAKE_CURRENT_BINARY_DIR}/winspool_s.c)
+    ${CMAKE_CURRENT_BINARY_DIR}/winspool_s.c
+    ${CMAKE_CURRENT_BINARY_DIR}/spoolsv_stubs.c)
 
-add_executable(spoolsv ${SOURCE} spoolsv.rc)
+add_executable(spoolsv
+    ${SOURCE}
+    spoolsv.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/spoolsv.def)
 
-if(USE_CLANG_CL)
+set_target_properties(spoolsv
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(spoolsv PRIVATE "-Wno-cast-calling-convention")
 endif()
 

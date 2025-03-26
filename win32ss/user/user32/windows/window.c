@@ -148,34 +148,6 @@ RtlFreeLargeString(
     }
 }
 
-DWORD
-FASTCALL
-RtlGetExpWinVer( HMODULE hModule )
-{
-    DWORD dwMajorVersion = 3;  // Set default to Windows 3.10.
-    DWORD dwMinorVersion = 10;
-    PIMAGE_NT_HEADERS pinth;
-
-    if ( hModule && !((ULONG_PTR)hModule >> 16))
-    {
-        pinth = RtlImageNtHeader( hModule );
-        if ( pinth )
-        {
-            dwMajorVersion = pinth->OptionalHeader.MajorSubsystemVersion;
-
-            if ( dwMajorVersion == 1 )
-            {
-                dwMajorVersion = 3;
-            }
-            else
-            {
-                dwMinorVersion = pinth->OptionalHeader.MinorSubsystemVersion;
-            }
-        }
-    }
-    return MAKELONG(MAKEWORD(dwMinorVersion, dwMajorVersion), 0);
-}
-
 HWND WINAPI
 User32CreateWindowEx(DWORD dwExStyle,
                      LPCSTR lpClassName,
@@ -645,7 +617,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 BOOL WINAPI
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
-    return NtUserEndDeferWindowPosEx(hWinPosInfo, 0);
+    return NtUserEndDeferWindowPosEx(hWinPosInfo, FALSE);
 }
 
 
@@ -701,7 +673,7 @@ User32EnumWindows(HDESK hDesktop,
                                  hWndparent,
                                  bChildren,
                                  dwThreadId,
-                                 lParam,
+                                 dwCount,
                                  NULL,
                                  &dwCount);
     if (!NT_SUCCESS(Status))
@@ -729,7 +701,7 @@ User32EnumWindows(HDESK hDesktop,
                                  hWndparent,
                                  bChildren,
                                  dwThreadId,
-                                 lParam,
+                                 dwCount,
                                  pHwnd,
                                  &dwCount);
     if (!NT_SUCCESS(Status))
@@ -1169,9 +1141,19 @@ GetWindow(HWND hWnd,
                     FoundWnd = DesktopPtrToUser(FoundWnd->spwndNext);
                 break;
 
-            default:
-                Wnd = NULL;
+            case GW_ENABLEDPOPUP:
+            {
+                PWND pwndPopup = (PWND)NtUserCallHwnd(hWnd, HWND_ROUTINE_DWP_GETENABLEDPOPUP);
+                if (pwndPopup)
+                    FoundWnd = DesktopPtrToUser(pwndPopup);
                 break;
+            }
+
+            default:
+            {
+                UserSetLastError(ERROR_INVALID_GW_COMMAND);
+                break;
+            }
         }
 
         if (FoundWnd != NULL)
@@ -1549,9 +1531,8 @@ IsWindow(HWND hWnd)
     PWND Wnd = ValidateHwndNoErr(hWnd);
     if (Wnd != NULL)
     {
-        if (Wnd->state & WNDS_DESTROYED ||
-            Wnd->state2 & WNDS2_INDESTROY)
-           return FALSE;
+        if (Wnd->state & WNDS_DESTROYED)
+            return FALSE;
         return TRUE;
     }
 
@@ -1875,22 +1856,7 @@ InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 BOOL WINAPI
 IsHungAppWindow(HWND hwnd)
 {
-    PWND Window;
-    UNICODE_STRING ClassName;
-    WCHAR szClass[16];
-    static const UNICODE_STRING GhostClass = RTL_CONSTANT_STRING(L"Ghost");
-
-    /* Ghost is a hung window */
-    RtlInitEmptyUnicodeString(&ClassName, szClass, sizeof(szClass));
-    Window = ValidateHwnd(hwnd);
-    if (Window && Window->fnid == FNID_GHOST &&
-        NtUserGetClassName(hwnd, FALSE, &ClassName) &&
-        RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE))
-    {
-        return TRUE;
-    }
-
-    return (NtUserQueryWindow(hwnd, QUERY_WINDOW_ISHUNG) != 0);
+    return !!NtUserQueryWindow(hwnd, QUERY_WINDOW_ISHUNG);
 }
 
 /*
@@ -1990,7 +1956,7 @@ ScrollWindowEx(HWND hWnd,
 {
     if (flags & SW_SMOOTHSCROLL)
     {
-       FIXME("SW_SMOOTHSCROLL not supported.");
+       FIXME("SW_SMOOTHSCROLL not supported.\n");
        // Fall through....
     }
     return NtUserScrollWindowEx(hWnd,

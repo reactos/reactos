@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Telefon ve Modem Seçenekleri"
     IDS_CPLSYSTEMDESCRIPTION "Telefon arama kurallarınızı ve modem ayarlarınızı yapılandırır."

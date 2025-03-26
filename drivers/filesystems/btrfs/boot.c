@@ -33,10 +33,6 @@ extern PDRIVER_OBJECT drvobj;
 BTRFS_UUID boot_uuid; // initialized to 0
 uint64_t boot_subvol = 0;
 
-#ifndef _MSC_VER
-NTSTATUS RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString, const WCHAR* pszFormat, ...); // not in mingw
-#endif
-
 // Not in any headers? Windbg knows about it though.
 #define DOE_START_PENDING 0x10
 
@@ -50,20 +46,7 @@ typedef struct {
     ULONG ExtensionFlags;
 } DEVOBJ_EXTENSION2;
 
-typedef enum {
-    system_root_unknown,
-    system_root_partition,
-    system_root_btrfs
-} system_root_type;
-
-typedef struct {
-    uint32_t disk_num;
-    uint32_t partition_num;
-    BTRFS_UUID uuid;
-    system_root_type type;
-} system_root;
-
-static void get_system_root(system_root* sr) {
+static bool get_system_root() {
     NTSTATUS Status;
     HANDLE h;
     UNICODE_STRING us, target;
@@ -73,8 +56,6 @@ static void get_system_root(system_root* sr) {
 
     static const WCHAR system_root[] = L"\\SystemRoot";
     static const WCHAR boot_device[] = L"\\Device\\BootDevice";
-    static const WCHAR arc_prefix[] = L"\\ArcName\\multi(0)disk(0)rdisk(";
-    static const WCHAR arc_middle[] = L")partition(";
     static const WCHAR arc_btrfs_prefix[] = L"\\ArcName\\btrfs(";
 
     us.Buffer = (WCHAR*)system_root;
@@ -86,7 +67,7 @@ static void get_system_root(system_root* sr) {
         Status = ZwOpenSymbolicLinkObject(&h, GENERIC_READ, &objatt);
         if (!NT_SUCCESS(Status)) {
             ERR("ZwOpenSymbolicLinkObject returned %08lx\n", Status);
-            return;
+            return false;
         }
 
         target.Length = target.MaximumLength = 0;
@@ -95,19 +76,19 @@ static void get_system_root(system_root* sr) {
         if (Status != STATUS_BUFFER_TOO_SMALL) {
             ERR("ZwQuerySymbolicLinkObject returned %08lx\n", Status);
             NtClose(h);
-            return;
+            return false;
         }
 
         if (retlen == 0) {
             NtClose(h);
-            return;
+            return false;
         }
 
         target.Buffer = ExAllocatePoolWithTag(NonPagedPool, retlen, ALLOC_TAG);
         if (!target.Buffer) {
             ERR("out of memory\n");
             NtClose(h);
-            return;
+            return false;
         }
 
         target.Length = target.MaximumLength = (USHORT)retlen;
@@ -117,7 +98,7 @@ static void get_system_root(system_root* sr) {
             ERR("ZwQuerySymbolicLinkObject returned %08lx\n", Status);
             NtClose(h);
             ExFreePool(target.Buffer);
-            return;
+            return false;
         }
 
         NtClose(h);
@@ -140,85 +121,33 @@ static void get_system_root(system_root* sr) {
             break;
     }
 
-    sr->type = system_root_unknown;
-
-    if (target.Length >= sizeof(arc_prefix) - sizeof(WCHAR) &&
-        RtlCompareMemory(target.Buffer, arc_prefix, sizeof(arc_prefix) - sizeof(WCHAR)) == sizeof(arc_prefix) - sizeof(WCHAR)) {
-        WCHAR* s = &target.Buffer[(sizeof(arc_prefix) / sizeof(WCHAR)) - 1];
-        ULONG left = ((target.Length - sizeof(arc_prefix)) / sizeof(WCHAR)) + 1;
-
-        if (left == 0 || s[0] < '0' || s[0] > '9') {
-            ExFreePool(target.Buffer);
-            return;
-        }
-
-        sr->disk_num = 0;
-
-        while (left > 0 && s[0] >= '0' && s[0] <= '9') {
-            sr->disk_num *= 10;
-            sr->disk_num += s[0] - '0';
-            s++;
-            left--;
-        }
-
-        if (left <= (sizeof(arc_middle) / sizeof(WCHAR)) - 1 ||
-            RtlCompareMemory(s, arc_middle, sizeof(arc_middle) - sizeof(WCHAR)) != sizeof(arc_middle) - sizeof(WCHAR)) {
-            ExFreePool(target.Buffer);
-            return;
-        }
-
-        s = &s[(sizeof(arc_middle) / sizeof(WCHAR)) - 1];
-        left -= (sizeof(arc_middle) / sizeof(WCHAR)) - 1;
-
-        if (left == 0 || s[0] < '0' || s[0] > '9') {
-            ExFreePool(target.Buffer);
-            return;
-        }
-
-        sr->partition_num = 0;
-
-        while (left > 0 && s[0] >= '0' && s[0] <= '9') {
-            sr->partition_num *= 10;
-            sr->partition_num += s[0] - '0';
-            s++;
-            left--;
-        }
-
-        sr->type = system_root_partition;
-    } else if (target.Length >= sizeof(arc_btrfs_prefix) - sizeof(WCHAR) &&
+    if (target.Length >= sizeof(arc_btrfs_prefix) - sizeof(WCHAR) &&
         RtlCompareMemory(target.Buffer, arc_btrfs_prefix, sizeof(arc_btrfs_prefix) - sizeof(WCHAR)) == sizeof(arc_btrfs_prefix) - sizeof(WCHAR)) {
         WCHAR* s = &target.Buffer[(sizeof(arc_btrfs_prefix) / sizeof(WCHAR)) - 1];
-#ifdef __REACTOS__
-        unsigned int i;
-#endif // __REACTOS__
 
-#ifndef __REACTOS__
         for (unsigned int i = 0; i < 16; i++) {
-#else
-        for (i = 0; i < 16; i++) {
-#endif // __REACTOS__
             if (*s >= '0' && *s <= '9')
-                sr->uuid.uuid[i] = (*s - '0') << 4;
+                boot_uuid.uuid[i] = (*s - '0') << 4;
             else if (*s >= 'a' && *s <= 'f')
-                sr->uuid.uuid[i] = (*s - 'a' + 0xa) << 4;
+                boot_uuid.uuid[i] = (*s - 'a' + 0xa) << 4;
             else if (*s >= 'A' && *s <= 'F')
-                sr->uuid.uuid[i] = (*s - 'A' + 0xa) << 4;
+                boot_uuid.uuid[i] = (*s - 'A' + 0xa) << 4;
             else {
                 ExFreePool(target.Buffer);
-                return;
+                return false;
             }
 
             s++;
 
             if (*s >= '0' && *s <= '9')
-                sr->uuid.uuid[i] |= *s - '0';
+                boot_uuid.uuid[i] |= *s - '0';
             else if (*s >= 'a' && *s <= 'f')
-                sr->uuid.uuid[i] |= *s - 'a' + 0xa;
+                boot_uuid.uuid[i] |= *s - 'a' + 0xa;
             else if (*s >= 'A' && *s <= 'F')
-                sr->uuid.uuid[i] |= *s - 'A' + 0xa;
+                boot_uuid.uuid[i] |= *s - 'A' + 0xa;
             else {
                 ExFreePool(target.Buffer);
-                return;
+                return false;
             }
 
             s++;
@@ -226,7 +155,7 @@ static void get_system_root(system_root* sr) {
             if (i == 3 || i == 5 || i == 7 || i == 9) {
                 if (*s != '-') {
                     ExFreePool(target.Buffer);
-                    return;
+                    return false;
                 }
 
                 s++;
@@ -235,63 +164,17 @@ static void get_system_root(system_root* sr) {
 
         if (*s != ')') {
             ExFreePool(target.Buffer);
-            return;
+            return false;
         }
 
-        sr->type = system_root_btrfs;
+        ExFreePool(target.Buffer);
+
+        return true;
     }
 
     ExFreePool(target.Buffer);
-}
 
-static void change_symlink(uint32_t disk_num, uint32_t partition_num, BTRFS_UUID* uuid) {
-    NTSTATUS Status;
-    UNICODE_STRING us, us2;
-    WCHAR symlink[60], target[(sizeof(BTRFS_VOLUME_PREFIX) / sizeof(WCHAR)) + 36], *w;
-#ifdef __REACTOS__
-    unsigned int i;
-#endif
-
-    us.Buffer = symlink;
-    us.Length = 0;
-    us.MaximumLength = sizeof(symlink);
-
-    Status = RtlUnicodeStringPrintf(&us, L"\\Device\\Harddisk%u\\Partition%u", disk_num, partition_num);
-    if (!NT_SUCCESS(Status)) {
-        ERR("RtlUnicodeStringPrintf returned %08lx\n", Status);
-        return;
-    }
-
-    Status = IoDeleteSymbolicLink(&us);
-    if (!NT_SUCCESS(Status))
-        ERR("IoDeleteSymbolicLink returned %08lx\n", Status);
-
-    RtlCopyMemory(target, BTRFS_VOLUME_PREFIX, sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR));
-
-    w = &target[(sizeof(BTRFS_VOLUME_PREFIX) / sizeof(WCHAR)) - 1];
-
-#ifndef __REACTOS__
-    for (unsigned int i = 0; i < 16; i++) {
-#else
-    for (i = 0; i < 16; i++) {
-#endif
-        *w = hex_digit(uuid->uuid[i] >> 4); w++;
-        *w = hex_digit(uuid->uuid[i] & 0xf); w++;
-
-        if (i == 3 || i == 5 || i == 7 || i == 9) {
-            *w = L'-';
-            w++;
-        }
-    }
-
-    *w = L'}';
-
-    us2.Buffer = target;
-    us2.Length = us2.MaximumLength = sizeof(target);
-
-    Status = IoCreateSymbolicLink(&us, &us2);
-    if (!NT_SUCCESS(Status))
-        ERR("IoCreateSymbolicLink returned %08lx\n", Status);
+    return false;
 }
 
 static void mountmgr_notification(BTRFS_UUID* uuid) {
@@ -302,9 +185,6 @@ static void mountmgr_notification(BTRFS_UUID* uuid) {
     ULONG mmtnlen;
     MOUNTMGR_TARGET_NAME* mmtn;
     WCHAR* w;
-#ifdef __REACTOS__
-    unsigned int i;
-#endif
 
     RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
     Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &FileObject, &mountmgr);
@@ -327,11 +207,7 @@ static void mountmgr_notification(BTRFS_UUID* uuid) {
 
     w = &mmtn->DeviceName[(sizeof(BTRFS_VOLUME_PREFIX) / sizeof(WCHAR)) - 1];
 
-#ifndef __REACTOS__
     for (unsigned int i = 0; i < 16; i++) {
-#else
-    for (i = 0; i < 16; i++) {
-#endif
         *w = hex_digit(uuid->uuid[i] >> 4); w++;
         *w = hex_digit(uuid->uuid[i] & 0xf); w++;
 
@@ -457,162 +333,52 @@ void boot_add_device(DEVICE_OBJECT* pdo) {
     mountmgr_notification(&pdode->uuid);
 }
 
-/* If booting from Btrfs, Windows will pass the device object for the raw partition to
- * mount_vol - which is no good to us, as we only use the \Device\Btrfs{} devices we
- * create so that RAID works correctly.
- * At the time check_system_root gets called, \SystemRoot is a symlink to the ARC device,
- * e.g. \ArcName\multi(0)disk(0)rdisk(0)partition(1)\Windows. We can't change the symlink,
- * as it gets clobbered by IopReassignSystemRoot shortly afterwards, and we can't touch
- * the \ArcName symlinks as they haven't been created yet. Instead, we need to change the
- * symlink \Device\HarddiskX\PartitionY, which is what the ArcName symlink will shortly
- * point to.
- */
-void __stdcall check_system_root(PDRIVER_OBJECT DriverObject, PVOID Context, ULONG Count) {
-    system_root sr;
+void check_system_root() {
     LIST_ENTRY* le;
-    bool done = false;
     PDEVICE_OBJECT pdo_to_add = NULL;
-    volume_child* boot_vc = NULL;
 
-    TRACE("(%p, %p, %lu)\n", DriverObject, Context, Count);
+    TRACE("()\n");
 
     // wait for any PNP notifications in progress to finish
     ExAcquireResourceExclusiveLite(&boot_lock, TRUE);
     ExReleaseResourceLite(&boot_lock);
 
-    get_system_root(&sr);
+    if (!get_system_root())
+        return;
 
-    if (sr.type == system_root_partition) {
-        TRACE("system boot partition is disk %u, partition %u\n", sr.disk_num, sr.partition_num);
+    ExAcquireResourceSharedLite(&pdo_list_lock, true);
 
-        ExAcquireResourceSharedLite(&pdo_list_lock, true);
+    le = pdo_list.Flink;
+    while (le != &pdo_list) {
+        pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
 
-        le = pdo_list.Flink;
-        while (le != &pdo_list) {
-            LIST_ENTRY* le2;
-            pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
+        if (RtlCompareMemory(&pdode->uuid, &boot_uuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
+            if (!pdode->vde)
+                pdo_to_add = pdode->pdo;
+            else if (pdode->vde->device && !(pdode->vde->device->Flags & DO_SYSTEM_BOOT_PARTITION)) { // AddDevice has beaten us to it
+                NTSTATUS Status;
 
-            ExAcquireResourceSharedLite(&pdode->child_lock, true);
+                pdode->vde->device->Flags |= DO_SYSTEM_BOOT_PARTITION;
+                pdode->pdo->Flags |= DO_SYSTEM_BOOT_PARTITION;
 
-            le2 = pdode->children.Flink;
+                Status = IoSetDeviceInterfaceState(&pdode->vde->bus_name, false);
+                if (!NT_SUCCESS(Status))
+                    ERR("IoSetDeviceInterfaceState returned %08lx\n", Status);
 
-            while (le2 != &pdode->children) {
-                volume_child* vc = CONTAINING_RECORD(le2, volume_child, list_entry);
-
-                if (vc->disk_num == sr.disk_num && vc->part_num == sr.partition_num) {
-                    change_symlink(sr.disk_num, sr.partition_num, &pdode->uuid);
-                    done = true;
-
-                    vc->boot_volume = true;
-                    boot_uuid = pdode->uuid;
-
-                    if (!pdode->vde)
-                        pdo_to_add = pdode->pdo;
-
-                    boot_vc = vc;
-
-                    break;
-                }
-
-                le2 = le2->Flink;
+                Status = IoSetDeviceInterfaceState(&pdode->vde->bus_name, true);
+                if (!NT_SUCCESS(Status))
+                    ERR("IoSetDeviceInterfaceState returned %08lx\n", Status);
             }
 
-            if (done) {
-                le2 = pdode->children.Flink;
-
-                while (le2 != &pdode->children) {
-                    volume_child* vc = CONTAINING_RECORD(le2, volume_child, list_entry);
-
-                    /* On Windows 7 we need to clear the DO_SYSTEM_BOOT_PARTITION flag of
-                    * all of our underlying partition objects - otherwise IopMountVolume
-                    * will bugcheck with UNMOUNTABLE_BOOT_VOLUME when it tries and fails
-                    * to mount one. */
-                    if (vc->devobj) {
-                        PDEVICE_OBJECT dev = vc->devobj;
-
-                        ObReferenceObject(dev);
-
-                        while (dev) {
-                            PDEVICE_OBJECT dev2 = IoGetLowerDeviceObject(dev);
-
-                            dev->Flags &= ~DO_SYSTEM_BOOT_PARTITION;
-
-                            ObDereferenceObject(dev);
-
-                            dev = dev2;
-                        }
-                    }
-
-                    le2 = le2->Flink;
-                }
-
-                ExReleaseResourceLite(&pdode->child_lock);
-
-                break;
-            }
-
-            ExReleaseResourceLite(&pdode->child_lock);
-
-            le = le->Flink;
+            break;
         }
 
-        ExReleaseResourceLite(&pdo_list_lock);
-    } else if (sr.type == system_root_btrfs) {
-        boot_uuid = sr.uuid;
-
-        ExAcquireResourceSharedLite(&pdo_list_lock, true);
-
-        le = pdo_list.Flink;
-        while (le != &pdo_list) {
-            pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
-
-            if (RtlCompareMemory(&pdode->uuid, &sr.uuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
-                if (!pdode->vde)
-                    pdo_to_add = pdode->pdo;
-
-                break;
-            }
-
-            le = le->Flink;
-        }
-
-        ExReleaseResourceLite(&pdo_list_lock);
+        le = le->Flink;
     }
 
-    if (boot_vc) {
-        NTSTATUS Status;
-        UNICODE_STRING name;
+    ExReleaseResourceLite(&pdo_list_lock);
 
-        /* On Windows 8, mountmgr!MountMgrFindBootVolume returns the first volume in its database
-         * with the DO_SYSTEM_BOOT_PARTITION flag set. We've cleared the bit on the underlying devices,
-         * but as it caches it we need to disable and re-enable the volume so mountmgr receives a PNP
-         * notification to refresh its list. */
-
-        static const WCHAR prefix[] = L"\\??";
-
-        name.Length = name.MaximumLength = boot_vc->pnp_name.Length + sizeof(prefix) - sizeof(WCHAR);
-
-        name.Buffer = ExAllocatePoolWithTag(PagedPool, name.MaximumLength, ALLOC_TAG);
-        if (!name.Buffer)
-            ERR("out of memory\n");
-        else {
-            RtlCopyMemory(name.Buffer, prefix, sizeof(prefix) - sizeof(WCHAR));
-            RtlCopyMemory(&name.Buffer[(sizeof(prefix) / sizeof(WCHAR)) - 1], boot_vc->pnp_name.Buffer, boot_vc->pnp_name.Length);
-
-            Status = IoSetDeviceInterfaceState(&name, false);
-            if (!NT_SUCCESS(Status))
-                ERR("IoSetDeviceInterfaceState returned %08lx\n", Status);
-
-            Status = IoSetDeviceInterfaceState(&name, true);
-            if (!NT_SUCCESS(Status))
-                ERR("IoSetDeviceInterfaceState returned %08lx\n", Status);
-
-            ExFreePool(name.Buffer);
-        }
-    }
-
-    if (sr.type == system_root_btrfs || boot_vc)
-        check_boot_options();
+    check_boot_options();
 
     // If our FS depends on volumes that aren't there when we do our IoRegisterPlugPlayNotification calls
     // in DriverEntry, bus_query_device_relations won't get called until it's too late. We need to do our

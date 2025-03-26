@@ -291,7 +291,7 @@ START_TEST(RtlMemory)
                         1, 1,                0x12,
                         8, HalfSize / 8,     0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0,
                         1, 7,                0x12, 0);
-                        
+
     ok_bool_true(RtlEqualMemory((PVOID)1, (PVOID)2, 0),
                  "RtlEqualMemory returned");
     ok_bool_true(RtlEqualMemory(Buffer, Buffer + HalfSize - 7, HalfSize - 8),

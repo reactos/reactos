@@ -64,7 +64,7 @@ DWORD getAvailableModes(
                         EngAllocMem(0, modes.NumModes *
                                     modes.ModeInformationLength, ALLOC_TAG);
 
-    if (*modeInformation == (PVIDEO_MODE_INFORMATION) NULL)
+    if (*modeInformation == NULL)
     {
         /* couldn't allocate buffer */
         return 0;
@@ -81,7 +81,7 @@ DWORD getAvailableModes(
     {
         /* failed to query modes */
         EngFreeMem(*modeInformation);
-        *modeInformation = (PVIDEO_MODE_INFORMATION) NULL;
+        *modeInformation = NULL;
 
         return 0;
     }
@@ -139,7 +139,7 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
 
     ppdev->sizeSurf.cx = 640;
     ppdev->sizeSurf.cy = 480;
-    ppdev->ModeNum = 12;
+    ppdev->ModeNum = 2;
 
     /* Set the mode that was requested */
     if (EngDeviceIoControl(ppdev->KMDriver,

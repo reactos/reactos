@@ -70,7 +70,7 @@ public:
 #ifndef __REACTOS__
 		UINT			idCmd,
 #else
-        UINT_PTR		idCmd,
+		UINT_PTR		idCmd,
 #endif
 		UINT			uFlags,
 		UINT			*reserved,

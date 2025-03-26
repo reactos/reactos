@@ -1,14 +1,14 @@
 /*
  * PROJECT:         ReactOS Win32 Base API
- * LICENSE:         See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/client/sysinfo.c
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         System Information Functions
- * PROGRAMMERS:     Emanuele Aliberti
+ * COPYRIGHT:       Emanuele Aliberti
  *                  Christoph von Wittich
  *                  Thomas Weidenmueller
  *                  Gunnar Andre Dalsnes
  *                  Stanislav Motylkov (x86corez@gmail.com)
  *                  Mark Jansen (mark.jansen@reactos.org)
+ *                  Copyright 2023 Ratin Gao <ratin@knsoft.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -78,11 +78,12 @@ GetSystemInfoInternal(IN PSYSTEM_BASIC_INFORMATION BasicInfo,
 
 static
 UINT
-BaseQuerySystemFirmware(IN DWORD FirmwareTableProviderSignature,
-                        IN DWORD FirmwareTableID,
-                        OUT PVOID pFirmwareTableBuffer,
-                        IN DWORD BufferSize,
-                        IN SYSTEM_FIRMWARE_TABLE_ACTION Action)
+BaseQuerySystemFirmware(
+    _In_ DWORD FirmwareTableProviderSignature,
+    _In_ DWORD FirmwareTableID,
+    _Out_writes_bytes_to_opt_(BufferSize, return) PVOID pFirmwareTableBuffer,
+    _In_ DWORD BufferSize,
+    _In_ SYSTEM_FIRMWARE_TABLE_ACTION Action)
 {
     SYSTEM_FIRMWARE_TABLE_INFORMATION* SysFirmwareInfo;
     ULONG Result = 0, ReturnedSize;
@@ -150,13 +151,13 @@ GetSystemInfo(IN LPSYSTEM_INFO lpSystemInfo)
                                       sizeof(BasicInfo),
                                       0);
     if (!NT_SUCCESS(Status)) return;
-                                  
+
     Status = NtQuerySystemInformation(SystemProcessorInformation,
                                       &ProcInfo,
                                       sizeof(ProcInfo),
                                       0);
     if (!NT_SUCCESS(Status)) return;
-    
+
     GetSystemInfoInternal(&BasicInfo, &ProcInfo, lpSystemInfo);
 }
 
@@ -214,13 +215,13 @@ GetNativeSystemInfo(IN LPSYSTEM_INFO lpSystemInfo)
                                            sizeof(BasicInfo),
                                            0);
     if (!NT_SUCCESS(Status)) return;
-                                  
+
     Status = RtlGetNativeSystemInformation(SystemProcessorInformation,
                                            &ProcInfo,
                                            sizeof(ProcInfo),
                                            0);
     if (!NT_SUCCESS(Status)) return;
-    
+
     GetSystemInfoInternal(&BasicInfo, &ProcInfo, lpSystemInfo);
 }
 
@@ -413,60 +414,96 @@ GetNumaAvailableMemoryNode(IN UCHAR Node,
     return TRUE;
 }
 
-/*
- * @unimplemented
- */
+_Success_(return > 0)
 DWORD
 WINAPI
-GetFirmwareEnvironmentVariableW(IN LPCWSTR lpName,
-                                IN LPCWSTR lpGuid,
-                                IN PVOID pValue,
-                                IN DWORD nSize)
-{
-    STUB;
-    return 0;
-}
+GetFirmwareEnvironmentVariableExW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize,
+    _Out_opt_ PDWORD pdwAttribubutes);
 
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-SetFirmwareEnvironmentVariableW(IN LPCWSTR lpName,
-                                IN LPCWSTR lpGuid,
-                                IN PVOID pValue,
-                                IN DWORD nSize)
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
+_Success_(return > 0)
 DWORD
 WINAPI
-GetFirmwareEnvironmentVariableA(IN LPCSTR lpName,
-                                IN LPCSTR lpGuid,
-                                IN PVOID pValue,
-                                IN DWORD nSize)
-{
-    STUB;
-    return 0;
-}
+GetFirmwareEnvironmentVariableExA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize,
+    _Out_opt_ PDWORD pdwAttribubutes);
 
-/*
- * @unimplemented
- */
 BOOL
 WINAPI
-SetFirmwareEnvironmentVariableA(IN LPCSTR lpName,
-                                IN LPCSTR lpGuid,
-                                IN PVOID pValue,
-                                IN DWORD nSize)
+SetFirmwareEnvironmentVariableExW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize,
+    _In_ DWORD dwAttributes);
+
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableExA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize,
+    _In_ DWORD dwAttributes);
+
+_Success_(return > 0)
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize)
 {
-    STUB;
-    return 0;
+    return GetFirmwareEnvironmentVariableExW(lpName, lpGuid, pBuffer, nSize, NULL);
+}
+
+_Success_(return > 0)
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize)
+{
+    return GetFirmwareEnvironmentVariableExA(lpName, lpGuid, pBuffer, nSize, NULL);
+}
+
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize)
+{
+    return SetFirmwareEnvironmentVariableExW(lpName,
+                                             lpGuid,
+                                             pValue,
+                                             nSize,
+                                             VARIABLE_ATTRIBUTE_NON_VOLATILE);
+}
+
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize)
+{
+    return SetFirmwareEnvironmentVariableExA(lpName,
+                                             lpGuid,
+                                             pValue,
+                                             nSize,
+                                             VARIABLE_ATTRIBUTE_NON_VOLATILE);
 }
 
 /**
@@ -474,7 +511,7 @@ SetFirmwareEnvironmentVariableA(IN LPCSTR lpName,
  * @implemented
  *
  * Obtains firmware table identifiers.
- * https://msdn.microsoft.com/en-us/library/windows/desktop/ms724259(v=vs.85).aspx
+ * https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-enumsystemfirmwaretables
  *
  * @param FirmwareTableProviderSignature
  * Can be either ACPI, FIRM, or RSMB.
@@ -498,13 +535,14 @@ SetFirmwareEnvironmentVariableA(IN LPCSTR lpName,
  */
 UINT
 WINAPI
-EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
-                         OUT PVOID pFirmwareTableBuffer,
-                         IN DWORD BufferSize)
+EnumSystemFirmwareTables(
+    _In_ DWORD FirmwareTableProviderSignature,
+    _Out_writes_bytes_to_opt_(BufferSize, return) PVOID pFirmwareTableEnumBuffer,
+    _In_ DWORD BufferSize)
 {
     return BaseQuerySystemFirmware(FirmwareTableProviderSignature,
                                    0,
-                                   pFirmwareTableBuffer,
+                                   pFirmwareTableEnumBuffer,
                                    BufferSize,
                                    SystemFirmwareTable_Enumerate);
 }
@@ -514,7 +552,7 @@ EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
  * @implemented
  *
  * Obtains the firmware table data.
- * https://msdn.microsoft.com/en-us/library/windows/desktop/ms724379(v=vs.85).aspx
+ * https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemfirmwaretable
  *
  * @param FirmwareTableProviderSignature
  * Can be either ACPI, FIRM, or RSMB.
@@ -545,10 +583,11 @@ EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
  */
 UINT
 WINAPI
-GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
-                       IN DWORD FirmwareTableID,
-                       OUT PVOID pFirmwareTableBuffer,
-                       IN DWORD BufferSize)
+GetSystemFirmwareTable(
+    _In_ DWORD FirmwareTableProviderSignature,
+    _In_ DWORD FirmwareTableID,
+    _Out_writes_bytes_to_opt_(BufferSize, return) PVOID pFirmwareTableBuffer,
+    _In_ DWORD BufferSize)
 {
     return BaseQuerySystemFirmware(FirmwareTableProviderSignature,
                                    FirmwareTableID,

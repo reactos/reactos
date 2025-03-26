@@ -3,7 +3,7 @@
 #define NDEBUG
 #include <debug.h>
 
-PeSect *pesection(Pe *pe, const char *name) 
+PeSect *pesection(Pe *pe, const char *name)
 {
 	int i;
 	ANSI_STRING WantName;
@@ -13,7 +13,7 @@ PeSect *pesection(Pe *pe, const char *name)
 		PANSI_STRING AnsiString = ANSI_NAME_STRING(&pe->sect[i]);
 		if (WantName.Length == AnsiString->Length &&
 			!memcmp(AnsiString->Buffer, name, WantName.Length)) {
-			werrstr("Found %s (%d) @ %x (%x)\n", name, i, 
+			werrstr("Found %s (%d) @ %x (%x)\n", name, i,
 				   ((PCHAR)pe->imagebase)+pe->sect[i].VirtualAddress,
 				   pe->sect[i].SizeOfRawData);
 			return &pe->sect[i];
@@ -81,7 +81,7 @@ loadmemsection(Pe *pe, char *name, DwarfBlock *b)
 	PCHAR DataSource = ((char *)pe->fd) + s->VirtualAddress;
 	werrstr("Copying to %x from %x (%x)\n", DataSource, b->data, b->len);
 	RtlCopyMemory(b->data, DataSource, s->SizeOfRawData);
-	
+
 	return s->SizeOfRawData;
 }
 
@@ -115,11 +115,11 @@ ulong pefindrva(struct _IMAGE_SECTION_HEADER *SectionHeaders, int NumberOfSectio
 	werrstr("Finding RVA for Physical %x\n", TargetPhysical);
 	for (i = 0; i < NumberOfSections; i++) {
 		werrstr("Section %d name %s Raw %x Virt %x\n",
-			   i, 
-			   ANSI_NAME_STRING(&SectionHeaders[i])->Buffer, 
+			   i,
+			   ANSI_NAME_STRING(&SectionHeaders[i])->Buffer,
 			   SectionHeaders[i].PointerToRawData,
 			   SectionHeaders[i].VirtualAddress);
-		if (TargetPhysical >= SectionHeaders[i].PointerToRawData && 
+		if (TargetPhysical >= SectionHeaders[i].PointerToRawData &&
 			TargetPhysical < SectionHeaders[i].PointerToRawData + SectionHeaders[i].SizeOfRawData) {
 			werrstr("RVA %x\n", TargetPhysical - SectionHeaders[i].PointerToRawData + SectionHeaders[i].VirtualAddress);
 			return TargetPhysical - SectionHeaders[i].PointerToRawData + SectionHeaders[i].VirtualAddress;

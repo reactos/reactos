@@ -210,7 +210,6 @@ BOOL playTestTone()
 	return TRUE;
 }
 
-
 BOOL CALLBACK DSEnumProc(LPGUID lpGUID, LPCTSTR lpszDesc, LPCTSTR lpszDrvName, LPVOID lpContext)
 {
 	LPGUID* pGUID = (LPGUID*)lpContext;
@@ -311,7 +310,6 @@ BOOL setCurrentChannelConfig()
 	if (guid) {
 		LocalFree(guid);
 	}
-
 
 	return FALSE;
 }
@@ -414,7 +412,6 @@ BOOL getDeviceInterfaceDetail(const GUID* category, CMIDEV* pDev)
 	}
 
 	return TRUE;
-
 }
 
 BOOL getDriverData(CMIDEV* pDev)
@@ -545,7 +542,6 @@ void updateChannelBoxes(HWND hWnd)
 	}
 }
 
-
 BOOL setDlgItems(HWND hWnd)
 {
 	HWND hWndItem;
@@ -626,7 +622,6 @@ BOOL setDlgItems(HWND hWnd)
 	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CENTER2MIC),  BM_SETCHECK, (cmiData.enableCenter2Mic    ? BST_CHECKED : BST_UNCHECKED), 0);
 	SendMessage(GetDlgItem(hWndChild[0], IDC_NOROUTE_MIC),    BM_SETCHECK, (!cmiData.enableCenter2Mic   ? BST_CHECKED : BST_UNCHECKED), 0);
 
-
 	return TRUE;
 }
 
@@ -687,7 +682,7 @@ BOOL initDialog(HWND hWnd)
 			PrintLastError("TabCtrl_InsertItem()");
 			return FALSE;
 		}
-		hWndChild[i] = CreateDialogParam(hInst, MAKEINTRESOURCE(tabsResource[i]), hWndTab, (DLGPROC)TabDlgProc, 0);
+		hWndChild[i] = CreateDialogParam(hInst, MAKEINTRESOURCE(tabsResource[i]), hWndTab, TabDlgProc, 0);
 	}
 
 	hURLFont = CreateFont(20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, VARIABLE_PITCH | FF_SWISS, "MS Shell Dlg");
@@ -753,7 +748,7 @@ void openURL(int control)
 	ShellExecute(hWndMain, "open", buffer, NULL, NULL, SW_SHOWNORMAL);
 }
 
-LRESULT CALLBACK TabDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK TabDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch(msg) {
 		case WM_COMMAND:
@@ -777,7 +772,7 @@ LRESULT CALLBACK TabDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if ( (GetDlgItem(hWndChild[3], IDC_URL1) == (HANDLE)lParam) || (GetDlgItem(hWndChild[3], IDC_URL2) == (HANDLE)lParam) ) {
 				SetTextColor((HDC)wParam, 0xFF0000);
 				SetBkMode((HDC)wParam, TRANSPARENT);
-				return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
+				return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
 			}
 	}
 
@@ -804,7 +799,7 @@ void printUsage()
 
 void deleteDriverFiles() {
 	TCHAR SysDir[MAX_PATH];
-	unsigned int len;
+	size_t len;
 	if (GetSystemDirectory(SysDir, sizeof(SysDir))==0) {
 		PrintLastError("GetSystemDirectory()");
 		return;
@@ -822,7 +817,6 @@ void deleteDriverFiles() {
 		MoveFileEx(SysDir, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
 	}
 }
-
 
 void performUninstall() {
 	deleteDriverFiles();
@@ -931,7 +925,6 @@ void InitURLControl()
 	if (RegisterClassEx(&wce) == 0) {
 		PrintLastError("RegisterClassEx()");
 	}
-
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)

@@ -152,12 +152,12 @@ ResFindDirectoryEntry (
 
 NTSTATUS
 ResFindDataEntryFromImage (
-    _In_opt_ PVOID ImageBase, 
+    _In_opt_ PVOID ImageBase,
     _In_opt_ ULONG ImageSize,
     _In_ USHORT DirectoryId,
-    _In_ PUSHORT EntryId, 
+    _In_ PUSHORT EntryId,
     _In_ PWCHAR Name,
-    _Out_ PIMAGE_RESOURCE_DATA_ENTRY *DataEntryOut, 
+    _Out_ PIMAGE_RESOURCE_DATA_ENTRY *DataEntryOut,
     _Out_ PVOID* ResourceOut
     )
 {
@@ -445,7 +445,7 @@ BlResourceFindMessage (
             (MsgId <= MsgData->Blocks[j].HighId))
         {
             /* Get the first entry */
-            MsgEntry = (PMESSAGE_RESOURCE_ENTRY)((ULONG_PTR)MsgData + 
+            MsgEntry = (PMESSAGE_RESOURCE_ENTRY)((ULONG_PTR)MsgData +
                                                  MsgData->Blocks[j].OffsetToEntries);
 
             /* Loop till we find the right one */

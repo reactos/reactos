@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
-IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 120
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "展開先を選んで下さい"
 FONT 9, "MS UI Gothic", 400, 0, 0x0
@@ -16,20 +16,20 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
     PUSHBUTTON      "参照...",IDC_BROWSE,189,42,54,14
     PUSHBUTTON      "パスワード",IDC_PASSWORD,189,66,54,14
-    LTEXT           "展開するには '次へ' をクリック",IDC_STATUSTEXT,86,114,80,8
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    LTEXT           "展開するには「次へ」をクリックして下さい",IDC_STATUSTEXT,86,93,156,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,105,157,6
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
-IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 120
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "展開完了"
 FONT 9, "MS UI Gothic", 400, 0, 0x0
 BEGIN
     LTEXT           "ファイルは次のディレクトリに展開されました:",IDC_STATIC,86,12,157,18
     LTEXT           "%s",IDC_DESTDIR,86,36,157,8
-    CONTROL         "展開したファイルを表示",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,81,10
-    LTEXT           "完了をクリックして下さい。",IDC_STATIC,86,84,84,8
+    CONTROL         "展開したファイルを表示",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,156,10
+    LTEXT           "完了をクリックして下さい。",IDC_STATIC,86,84,153,8
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
@@ -76,6 +76,9 @@ BEGIN
     IDS_CANTCREATEZIP "圧縮フォルダ '%s' を作るのに失敗しました (エラーコード: %d) 。"
     IDS_CANTREADFILE "ファイル '%s' が読めません。"
     IDS_EXTRACTING "展開中..."
+    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
+    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
+    IDS_UNKNOWNERROR "Unknown error 0x%08x."
 
     IDS_WIZ_TITLE "展開ウィザード"
     IDS_WIZ_DEST_TITLE "展開先を選んで下さい"

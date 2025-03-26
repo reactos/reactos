@@ -63,7 +63,7 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
             else
             {
                /*
-                  From MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx).
+                  From MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx (DEAD_LINK)).
                   For all entries except the last, the value of NextEntryOffset must be greater
                   than zero and must fall on a ULONG boundary.
                */
@@ -350,7 +350,7 @@ int _tmain(int argc, _TCHAR* argv[])
          printf("8.) Test : *********************\n");
 
          /* Here WinEaBuffer->NextEntryOffset test : STATUS_SUCCESS when NextEntryOffset=0 else STATUS_EA_LIST_INCONSISTENT when NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC then ErrorOffset 28 */
-         /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
+         /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx (DEAD_LINK)). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = TEST_BUFFER_LEN;
@@ -384,7 +384,7 @@ int _tmain(int argc, _TCHAR* argv[])
          printf("9.) Test : *********************\n");
 
          /* Here WinEaBuffer->NextEntryOffset test wrong strlen: STATUS_SUCCESS NextEntryOffset=0 & NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC */
-         /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
+         /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx (DEAD_LINK)). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = TEST_BUFFER_LEN;
@@ -418,7 +418,7 @@ int _tmain(int argc, _TCHAR* argv[])
          printf("10.) Test : *********************\n");
 
          /* Here WinEaBuffer->NextEntryOffset test wrong strlen: STATUS_SUCCESS NextEntryOffset=0 & NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC */
-         /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
+         /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx (DEAD_LINK)). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = TEST_BUFFER_LEN;

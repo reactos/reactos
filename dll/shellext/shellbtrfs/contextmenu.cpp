@@ -1643,11 +1643,7 @@ static void reflink_copy2(const wstring& srcfn, const wstring& destdir, const ws
     }
 }
 
-#ifdef __REACTOS__
-extern "C" {
-#endif
-
-void CALLBACK ReflinkCopyW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
+extern "C" void CALLBACK ReflinkCopyW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     vector<wstring> args;
 
     command_line_to_args(lpszCmdLine, args);
@@ -1720,7 +1716,3 @@ void CALLBACK ReflinkCopyW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int n
         }
     }
 }
-
-#ifdef __REACTOS__
-} /* extern "C" */
-#endif

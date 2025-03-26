@@ -55,32 +55,6 @@ typedef struct _DESKTOP
 #define DT_GWL_PROCESSID 0
 #define DT_GWL_THREADID  4
 
-#define DESKTOP_READ       STANDARD_RIGHTS_READ      | \
-                           DESKTOP_ENUMERATE         | \
-                           DESKTOP_READOBJECTS
-
-#define DESKTOP_WRITE       STANDARD_RIGHTS_WRITE    | \
-                            DESKTOP_CREATEMENU       | \
-                            DESKTOP_CREATEWINDOW     | \
-                            DESKTOP_HOOKCONTROL      | \
-                            DESKTOP_JOURNALPLAYBACK  | \
-                            DESKTOP_JOURNALRECORD    | \
-                            DESKTOP_WRITEOBJECTS
-
-#define DESKTOP_EXECUTE     STANDARD_RIGHTS_EXECUTE  | \
-                            DESKTOP_SWITCHDESKTOP
-
-#define DESKTOP_ALL_ACCESS  STANDARD_RIGHTS_REQUIRED | \
-                            DESKTOP_CREATEMENU       | \
-                            DESKTOP_CREATEWINDOW     | \
-                            DESKTOP_ENUMERATE        | \
-                            DESKTOP_HOOKCONTROL      | \
-                            DESKTOP_JOURNALPLAYBACK  | \
-                            DESKTOP_JOURNALRECORD    | \
-                            DESKTOP_READOBJECTS      | \
-                            DESKTOP_SWITCHDESKTOP    | \
-                            DESKTOP_WRITEOBJECTS
-
 extern PDESKTOP gpdeskInputDesktop;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
@@ -94,6 +68,7 @@ typedef struct _SHELL_HOOK_WINDOW
   HWND hWnd;
 } SHELL_HOOK_WINDOW, *PSHELL_HOOK_WINDOW;
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitDesktopImpl(VOID);
@@ -229,6 +204,8 @@ static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,
                  IN SIZE_T Bytes)
 {
+    /* Desktop heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
     return RtlAllocateHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            Bytes);
@@ -238,6 +215,8 @@ static __inline BOOL
 DesktopHeapFree(IN PDESKTOP Desktop,
                 IN PVOID lpMem)
 {
+    /* Desktop heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
     return RtlFreeHeap(Desktop->pheapDesktop,
                        HEAP_NO_SERIALIZE,
                        lpMem);
@@ -257,6 +236,9 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
 #else
     SIZE_T PrevSize;
     PVOID pNew;
+
+    /* Desktop heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
 
     PrevSize = RtlSizeHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,

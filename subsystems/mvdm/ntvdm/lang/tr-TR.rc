@@ -5,14 +5,14 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_CAPTURE_MOUSE, "&Fare İmlecini Yakala"
-    IDS_RELEASE_MOUSE, "Fa&re İmlecini Bırak"
+    IDS_RELEASE_MOUSE, "&Fare İmlecini Bırak"
     IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
 STRINGTABLE
 BEGIN
     IDS_VDM_DUMPMEM_TXT ,   "&Bellek Dökümünü Al (Metin)"
-    IDS_VDM_DUMPMEM_BIN ,   "B&ellek Dökümünü Al (İkili)"
+    IDS_VDM_DUMPMEM_BIN ,   "&Bellek Dökümünü Al (İkili Kod)"
     IDS_VDM_MOUNT_FLOPPY,   "%d <%s> Sürücüsüne Bir Disket Ekle..."
     IDS_VDM_EJECT_FLOPPY,   "%d Sürücüsünden Disketi Çıkar"
     IDS_VDM_QUIT        ,   "&ReactOS VDM'den Çık"

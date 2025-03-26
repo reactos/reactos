@@ -37,3 +37,6 @@
 struct opaque_auth _null_auth;
 fd_set svc_fdset;
 int svc_maxfd = -1;
+
+SVCXPRT **__svc_xports;
+int __svc_maxrec;

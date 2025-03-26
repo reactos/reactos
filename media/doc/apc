@@ -1,13 +1,13 @@
   APC
-  
+
    Asynchronous procedure call
-   
+
    An APC is a Kernel-defined control object representing a procedure
    that is called asynchronously. APCs are thread-context dependent; that
    is, they are queued to a particular thread for execution.
-   
+
    There are three different kinds of APCs in NT:
-   
+
    User APCs are used by certain asynchronous NT system services to allow
    user-mode applications or protected subsystems to synchronize the
    execution of a thread with the completion of an operation or the
@@ -17,12 +17,12 @@
    program. Specifically, they can only be executed when an application
    or protected subsystem has called a wait service and has enabled
    alerts to occur, or if it has called the test-alert service.
-   
+
    Kernel APCs are normal kernel-mode APCs. They are much like a normal
    user APC except that they are executable by default. That is, they are
    enabled except when the thread is already executing a Kernel APC.
    (Note that a special Kernel APC always preempts these.)
-   
+
    Special Kernel APCs cannot be blocked except by running at a raised
    IRQL. They are executed at APC_LEVEL IRQL (see IDT), in kernel mode.
    These types of APCs are used by the system to force a thread to

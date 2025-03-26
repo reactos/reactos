@@ -8,7 +8,9 @@
  *   CSH 15/08-2003 Created
  */
 
+#ifndef _USETUP_PCH_
 #include "usetup.h"
+#endif
 
 #define Z_SOLO
 #include <zlib.h>
@@ -136,6 +138,8 @@ typedef struct _CFDATA
 
 /* FUNCTIONS ****************************************************************/
 
+#if !defined(_INC_MALLOC) && !defined(_INC_STDLIB)
+
 /* Needed by zlib, but we don't want the dependency on the CRT */
 void *__cdecl
 malloc(size_t size)
@@ -154,6 +158,8 @@ calloc(size_t nmemb, size_t size)
 {
     return (void *)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, nmemb * size);
 }
+
+#endif // !_INC_MALLOC && !_INC_STDLIB
 
 
 /* Codecs */
@@ -628,6 +634,7 @@ CabinetOpen(
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     UNICODE_STRING FileName;
+    USHORT StringLength;
     NTSTATUS NtStatus;
 
     if (CabinetContext->FileOpen)
@@ -732,11 +739,14 @@ CabinetOpen(
            the same directory as the current */
         wcscpy(CabinetContext->CabinetPrev, CabinetContext->CabinetName);
         RemoveFileName(CabinetContext->CabinetPrev);
-        CabinetNormalizePath(CabinetContext->CabinetPrev, 256);
+        CabinetNormalizePath(CabinetContext->CabinetPrev, sizeof(CabinetContext->CabinetPrev));
         RtlInitAnsiString(&astring, (LPSTR)Buffer);
-        ustring.Length = wcslen(CabinetContext->CabinetPrev);
-        ustring.Buffer = CabinetContext->CabinetPrev + ustring.Length;
-        ustring.MaximumLength = sizeof(CabinetContext->CabinetPrev) - ustring.Length;
+
+        /* Initialize ustring with the remaining buffer */
+        StringLength = (USHORT)wcslen(CabinetContext->CabinetPrev) * sizeof(WCHAR);
+        ustring.Buffer = CabinetContext->CabinetPrev + StringLength;
+        ustring.MaximumLength = sizeof(CabinetContext->CabinetPrev) - StringLength;
+        ustring.Length = 0;
         RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
         Buffer += astring.Length + 1;
 
@@ -762,9 +772,12 @@ CabinetOpen(
         RemoveFileName(CabinetContext->CabinetNext);
         CabinetNormalizePath(CabinetContext->CabinetNext, 256);
         RtlInitAnsiString(&astring, (LPSTR)Buffer);
-        ustring.Length = wcslen(CabinetContext->CabinetNext);
-        ustring.Buffer = CabinetContext->CabinetNext + ustring.Length;
-        ustring.MaximumLength = sizeof(CabinetContext->CabinetNext) - ustring.Length;
+
+        /* Initialize ustring with the remaining buffer */
+        StringLength = (USHORT)wcslen(CabinetContext->CabinetNext) * sizeof(WCHAR);
+        ustring.Buffer = CabinetContext->CabinetNext + StringLength;
+        ustring.MaximumLength = sizeof(CabinetContext->CabinetNext) - StringLength;
+        ustring.Length = 0;
         RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
         Buffer += astring.Length + 1;
 
@@ -974,6 +987,7 @@ CabinetExtractFile(
     PCFFOLDER CurrentFolder;
     LARGE_INTEGER MaxDestFileSize;
     LONG InputLength, OutputLength;
+    SIZE_T StringLength;
     char Chunk[512];
 
     if (wcscmp(Search->Cabinet, CabinetContext->CabinetName) != 0)
@@ -1032,8 +1046,9 @@ CabinetExtractFile(
     {
         RtlInitAnsiString(&AnsiString, Search->File->FileName);
         wcscpy(DestName, CabinetContext->DestPath);
-        UnicodeString.MaximumLength = sizeof(DestName) - wcslen(DestName) * sizeof(WCHAR);
-        UnicodeString.Buffer = DestName + wcslen(DestName);
+        StringLength = wcslen(DestName);
+        UnicodeString.MaximumLength = sizeof(DestName) - (USHORT)StringLength * sizeof(WCHAR);
+        UnicodeString.Buffer = DestName + StringLength;
         UnicodeString.Length = 0;
         RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
 
@@ -1089,6 +1104,48 @@ CabinetExtractFile(
             }
         }
 
+        if (!ConvertDosDateTimeToFileTime(Search->File->FileDate,
+                                          Search->File->FileTime,
+                                          &FileTime))
+        {
+            DPRINT1("DosDateTimeToFileTime() failed\n");
+            Status = CAB_STATUS_CANNOT_WRITE;
+            goto CloseDestFile;
+        }
+
+        NtStatus = NtQueryInformationFile(DestFile,
+                                          &IoStatusBlock,
+                                          &FileBasic,
+                                          sizeof(FILE_BASIC_INFORMATION),
+                                          FileBasicInformation);
+        if (!NT_SUCCESS(NtStatus))
+        {
+            DPRINT("NtQueryInformationFile() failed (%x)\n", NtStatus);
+        }
+        else
+        {
+            memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
+
+            NtStatus = NtSetInformationFile(DestFile,
+                                            &IoStatusBlock,
+                                            &FileBasic,
+                                            sizeof(FILE_BASIC_INFORMATION),
+                                            FileBasicInformation);
+            if (!NT_SUCCESS(NtStatus))
+            {
+                DPRINT("NtSetInformationFile() failed (%x)\n", NtStatus);
+            }
+        }
+
+        SetAttributesOnFile(Search->File, DestFile);
+
+        /* Nothing more to do for 0 sized files */
+        if (Search->File->FileSize == 0)
+        {
+            Status = CAB_STATUS_SUCCESS;
+            goto CloseDestFile;
+        }
+
         MaxDestFileSize.QuadPart = Search->File->FileSize;
         NtStatus = NtCreateSection(&DestFileSection,
                                    SECTION_ALL_ACCESS,
@@ -1124,40 +1181,6 @@ CabinetExtractFile(
         }
 
         CurrentDestBuffer = DestFileBuffer;
-        if (!ConvertDosDateTimeToFileTime(Search->File->FileDate,
-                                          Search->File->FileTime,
-                                          &FileTime))
-        {
-            DPRINT1("DosDateTimeToFileTime() failed\n");
-            Status = CAB_STATUS_CANNOT_WRITE;
-            goto UnmapDestFile;
-        }
-
-        NtStatus = NtQueryInformationFile(DestFile,
-                                          &IoStatusBlock,
-                                          &FileBasic,
-                                          sizeof(FILE_BASIC_INFORMATION),
-                                          FileBasicInformation);
-        if (!NT_SUCCESS(NtStatus))
-        {
-            DPRINT("NtQueryInformationFile() failed (%x)\n", NtStatus);
-        }
-        else
-        {
-            memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
-
-            NtStatus = NtSetInformationFile(DestFile,
-                                            &IoStatusBlock,
-                                            &FileBasic,
-                                            sizeof(FILE_BASIC_INFORMATION),
-                                            FileBasicInformation);
-            if (!NT_SUCCESS(NtStatus))
-            {
-                DPRINT("NtSetInformationFile() failed (%x)\n", NtStatus);
-            }
-        }
-
-        SetAttributesOnFile(Search->File, DestFile);
     }
 
     /* Call extract event handler */
@@ -1237,7 +1260,8 @@ CabinetExtractFile(
             DPRINT("Cannot uncompress block\n");
             if (Status == CS_NOMEMORY)
                 Status = CAB_STATUS_NOMEMORY;
-            Status = CAB_STATUS_INVALID_CAB;
+            else
+                Status = CAB_STATUS_INVALID_CAB;
             goto UnmapDestFile;
         }
 

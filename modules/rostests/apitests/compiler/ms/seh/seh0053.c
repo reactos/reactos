@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "seh0053.c";
-int perfect;
 
 #define BLUE 0
 #define RED 1

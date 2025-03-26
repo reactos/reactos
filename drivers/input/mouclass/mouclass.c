@@ -4,7 +4,7 @@
  * FILE:            drivers/mouclass/mouclass.c
  * PURPOSE:         Mouse class driver
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "mouclass.h"
@@ -221,21 +221,21 @@ ReadRegistryEntries(
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
-	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[0].Name = L"ConnectMultiplePorts";
 	Parameters[0].EntryContext = &DriverExtension->ConnectMultiplePorts;
 	Parameters[0].DefaultType = REG_DWORD;
 	Parameters[0].DefaultData = &DefaultConnectMultiplePorts;
 	Parameters[0].DefaultLength = sizeof(ULONG);
 
-	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[1].Name = L"MouseDataQueueSize";
 	Parameters[1].EntryContext = &DriverExtension->DataQueueSize;
 	Parameters[1].DefaultType = REG_DWORD;
 	Parameters[1].DefaultData = &DefaultDataQueueSize;
 	Parameters[1].DefaultLength = sizeof(ULONG);
 
-	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[2].Name = L"PointerDeviceBaseName";
 	Parameters[2].EntryContext = &DriverExtension->DeviceBaseName;
 	Parameters[2].DefaultType = REG_SZ;
@@ -243,7 +243,7 @@ ReadRegistryEntries(
 	Parameters[2].DefaultLength = 0;
 
 	Status = RtlQueryRegistryValues(
-		RTL_REGISTRY_ABSOLUTE,
+		RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
 		ParametersRegistryKey.Buffer,
 		Parameters,
 		NULL,
@@ -297,7 +297,7 @@ CreateClassDeviceObject(
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 	DeviceNameU.Length = 0;
 	DeviceNameU.MaximumLength =
-		wcslen(L"\\Device\\") * sizeof(WCHAR)    /* "\Device\" */
+		(USHORT)wcslen(L"\\Device\\") * sizeof(WCHAR)    /* "\Device\" */
 		+ DriverExtension->DeviceBaseName.Length /* "PointerClass" */
 		+ 4 * sizeof(WCHAR)                      /* Id between 0 and 9999 */
 		+ sizeof(UNICODE_NULL);                  /* Final NULL char */
@@ -808,11 +808,19 @@ ClassPnp(
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	IO_STATUS_BLOCK Iosb;
 	NTSTATUS Status;
-	
+
 	switch (IrpSp->MinorFunction)
 	{
 		case IRP_MN_START_DEVICE:
-		    Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+			}
+			else
+			{
+				Status = STATUS_UNSUCCESSFUL;
+			}
+
 			if (NT_SUCCESS(Status))
 			{
 				InitializeObjectAttributes(&ObjectAttributes,
@@ -835,7 +843,7 @@ ClassPnp(
 			Irp->IoStatus.Status = Status;
 			IoCompleteRequest(Irp, IO_NO_INCREMENT);
 			return Status;
-			
+
 		case IRP_MN_STOP_DEVICE:
 			if (DeviceExtension->FileHandle)
 			{
@@ -844,7 +852,7 @@ ClassPnp(
 			}
 			Status = STATUS_SUCCESS;
 			break;
-            
+
         case IRP_MN_REMOVE_DEVICE:
             if (DeviceExtension->FileHandle)
 			{

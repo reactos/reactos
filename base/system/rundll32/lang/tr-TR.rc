@@ -1,6 +1,13 @@
-/* TRANSLATORS: 2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/*
+ * PROJECT:     ReactOS rundll32
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2014 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
 STRINGTABLE
 BEGIN
     IDS_DllNotLoaded "LoadLibrary, ""%s""'yi yüklemede başarısız oldu."

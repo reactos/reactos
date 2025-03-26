@@ -6,7 +6,7 @@
 #define USE_CUSTOM_ADDRESSEDITBOX 1
 #define USE_CUSTOM_BANDPROXY 1
 #define USE_CUSTOM_BRANDBAND 1
-#define USE_CUSTOM_EXPLORERBAND 1
+#define USE_CUSTOM_EXPLORERBAND 0 // Moved to shdocvw.dll
 #define USE_CUSTOM_SEARCHBAND 1
 #define USE_CUSTOM_INTERNETTOOLBAR 1
 
@@ -24,3 +24,4 @@ HRESULT CTravelLog_CreateInstance(REFIID riid, void **ppv);
 HRESULT CBaseBar_CreateInstance(REFIID riid, void **ppv, BOOL vertical);
 HRESULT CBaseBarSite_CreateInstance(REFIID riid, void **ppv, BOOL bVertical);
 HRESULT CToolsBand_CreateInstance(REFIID riid, void **ppv);
+HRESULT IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cchBuf, SFGAOF *rgfInOut);

@@ -1,6 +1,6 @@
 
-spec2def(win32u_vista.spec win32u_vista.spec ADD_IMPORTLIB)
-add_asm_files(win32u_vista_asm win32u_vista.S)
+spec2def(win32u_vista.dll win32u_vista.spec ADD_IMPORTLIB)
+add_asm_files(win32u_vista_asm sys-stubs.S)
 
 add_library(win32u_vista MODULE
     main.c
@@ -9,3 +9,8 @@ add_library(win32u_vista MODULE
 
 set_module_type(win32u_vista module)
 add_dependencies(win32u_vista psdk)
+add_rostests_file(TARGET win32u_vista)
+
+if (STACK_PROTECTOR)
+    target_compile_options(win32u_vista PRIVATE -fno-stack-protector)
+endif()

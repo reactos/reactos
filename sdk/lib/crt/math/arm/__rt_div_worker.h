@@ -1,21 +1,35 @@
 /*
- * COPYRIGHT:       BSD - See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS CRT library
- * FILE:            lib/sdk/crt/math/arm/__rt_div_worker.h
- * PURPOSE:         Implementation of __rt_udiv
- * PROGRAMMER:      Timo Kreuzer
- * REFERENCE:       http://research.microsoft.com/pubs/70645/tr-2008-141.pdf
- *                  http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/crt/md/arm/_div10.s.htm
- *                  http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/crt/md/arm/_udiv.c.htm
+ * PROJECT:     ReactOS CRT library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Implementation of __rt_div_worker
+ * COPYRIGHT:   Copyright 2015 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2021 Roman Masanin <36927roma@gmail.com>
+ */
+
+/*
+ * See also:
+ * http://research.microsoft.com/pubs/70645/tr-2008-141.pdf
+ * https://web.archive.org/web/20100110044008/http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/crt/md/arm/_div10.s.htm
+ * https://github.com/bawoodruff/BeagleBoard/blob/2731e3174af6daefe4a287a6be82e5ff9c46c99a/OS/BootLoader/Runtime/_udiv.c
+ * https://github.com/bawoodruff/BeagleBoard/blob/2731e3174af6daefe4a287a6be82e5ff9c46c99a/OS/BootLoader/Runtime/arm/_udivsi3.s
+ * https://github.com/bawoodruff/BeagleBoard/blob/2731e3174af6daefe4a287a6be82e5ff9c46c99a/OS/BootLoader/Runtime/arm/divide.s
+ * https://github.com/qemu/edk2/blob/e3c7db50cac9125607df49d5873991df6df11eae/ArmPkg/Library/CompilerIntrinsicsLib/Arm/uldiv.asm
+ * https://github.com/jmonesti/qemu-4.1.1/blob/55fb6a81039a62174c2763759324c43a67d752a1/roms/ipxe/src/arch/arm32/libgcc/lldivmod.S
  */
 
 #ifdef _USE_64_BITS_
 typedef unsigned long long UINT3264;
 typedef long long INT3264;
+typedef struct
+{
+    unsigned long long quotient; /* to be returned in R0,R1 */
+    unsigned long long modulus;  /* to be returned in R2,R3 */
+} RETURN_TYPE;
 #define _CountLeadingZeros _CountLeadingZeros64
 #else
 typedef unsigned int UINT3264;
 typedef int INT3264;
+typedef unsigned long long RETURN_TYPE; /* to be returned in R0,R1 */
 #endif
 
 __forceinline
@@ -25,27 +39,28 @@ __brkdiv0(void)
     __emit(0xDEF9);
 }
 
-typedef struct _ARM_DIVRESULT
+typedef union _ARM_DIVRESULT
 {
-    UINT3264 quotient; /* to be returned in R0 */
-    UINT3264 modulus;  /* to be returned in R1 */
+    RETURN_TYPE raw_data;
+    struct
+    {
+        UINT3264 quotient;
+        UINT3264 modulus;
+    } data;
 } ARM_DIVRESULT;
 
-#ifndef _USE_64_BITS_
-__forceinline
-#endif
-void
+RETURN_TYPE
 __rt_div_worker(
-    ARM_DIVRESULT *result,
     UINT3264 divisor,
     UINT3264 dividend)
 {
+    ARM_DIVRESULT result;
     UINT3264 shift;
     UINT3264 mask;
     UINT3264 quotient;
 #ifdef _SIGNED_DIV_
-    int dividend_sign;
-    int divisor_sign;
+    int dividend_sign = 0;
+    int divisor_sign = 0;
 #endif // _SIGNED_DIV_
 
     if (divisor == 0)
@@ -70,9 +85,13 @@ __rt_div_worker(
 
     if (divisor > dividend)
     {
-        result->quotient = 0;
-        result->modulus = divisor;
-        return;
+        result.data.quotient = 0;
+#ifdef _SIGNED_DIV_
+        if (dividend_sign)
+            dividend = -(INT3264)dividend;
+#endif // _SIGNED_DIV_
+        result.data.modulus = dividend;
+        return result.raw_data;
     }
 
     /* Get the difference in count of leading zeros between dividend and divisor */
@@ -110,7 +129,7 @@ __rt_div_worker(
     }
 #endif // _SIGNED_DIV_
 
-    result->quotient = quotient;
-    result->modulus = dividend;
-    return;
+    result.data.quotient = quotient;
+    result.data.modulus = dividend;
+    return result.raw_data;
 }

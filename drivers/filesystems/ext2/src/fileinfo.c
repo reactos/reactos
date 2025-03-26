@@ -10,8 +10,13 @@
 /* INCLUDES *****************************************************************/
 
 #include "ext2fs.h"
-#include <linux/ext4.h>
+#ifdef __REACTOS__
+#include "linux/ext4.h"
 #include "linux/ext4_xattr.h"
+#else
+#include "linux\ext4.h"
+#include "linux\ext4_xattr.h"
+#endif
 
 /* GLOBALS ***************************************************************/
 
@@ -750,7 +755,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
             if (AllocationSize.QuadPart > Fcb->Header.AllocationSize.QuadPart) {
 
-                Status = Ext2ExpandFile(IrpContext, Vcb, Mcb, &AllocationSize); 
+                Status = Ext2ExpandFile(IrpContext, Vcb, Mcb, &AllocationSize);
                 Fcb->Header.AllocationSize = AllocationSize;
                 NotifyFilter = FILE_NOTIFY_CHANGE_SIZE;
                 SetLongFlag(Fcb->Flags, FCB_ALLOC_IN_SETINFO);
@@ -1169,7 +1174,7 @@ Ext2ExpandFile(
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-	/* expandind file extents */ 
+	/* expandind file extents */
     if (INODE_HAS_EXTENT(&Mcb->Inode)) {
 
         status = Ext2ExpandExtent(IrpContext, Vcb, Mcb, Start, End, Size);

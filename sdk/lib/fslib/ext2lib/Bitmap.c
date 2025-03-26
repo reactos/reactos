@@ -226,7 +226,7 @@ bool ext2_write_inode_bitmap(PEXT2_FILESYS fs)
         return false;
 
     nbytes = (size_t) ((EXT2_INODES_PER_GROUP(fs->ext2_sb)+7) / 8);
-    
+
     bitmap_block = (char *)RtlAllocateHeap(RtlGetProcessHeap(), 0, fs->blocksize);
     if (!bitmap_block) return false;
 
@@ -249,7 +249,7 @@ bool ext2_write_inode_bitmap(PEXT2_FILESYS fs)
             retval = NT_SUCCESS(Ext2WriteDisk(
                     fs,
                     ((ULONGLONG)blk * fs->blocksize),
-                    fs->blocksize, 
+                    fs->blocksize,
                     (unsigned char *)bitmap_block));
 
             if (!retval)
@@ -407,7 +407,7 @@ bool read_bitmaps(PEXT2_FILESYS fs, int do_inode, int do_block)
             {
                 retval = NT_SUCCESS(Ext2ReadDisk(
                             fs,
-                            ((ULONGLONG)blk * fs->blocksize), 
+                            ((ULONGLONG)blk * fs->blocksize),
                             block_nbytes,
                             (unsigned char *) block_bitmap));
 
@@ -436,8 +436,8 @@ bool read_bitmaps(PEXT2_FILESYS fs, int do_inode, int do_block)
             if (blk)
             {
                 retval = NT_SUCCESS(Ext2ReadDisk(
-                    fs, ((LONGLONG)blk * fs->blocksize), 
-                    inode_nbytes, 
+                    fs, ((LONGLONG)blk * fs->blocksize),
+                    inode_nbytes,
                     (unsigned char *)inode_bitmap));
 
                 if (!retval)
@@ -461,7 +461,7 @@ bool read_bitmaps(PEXT2_FILESYS fs, int do_inode, int do_block)
     }
 
     return true;
-    
+
 cleanup:
 
     if (do_block)

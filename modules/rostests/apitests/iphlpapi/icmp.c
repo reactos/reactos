@@ -106,7 +106,7 @@ test_IcmpSendEcho(void)
 
     ReplySize = sizeof(ICMP_ECHO_REPLY);
     SetLastError(0xDEADBEEF);
-    bRet = IcmpSendEcho(hIcmp, ipaddr, SendData, sizeof(SendData), 
+    bRet = IcmpSendEcho(hIcmp, ipaddr, SendData, sizeof(SendData),
         NULL, ReplyBuffer, ReplySize, 5000);
 
     ok(!bRet, "IcmpSendEcho succeeded unexpectedly\n");
@@ -117,7 +117,7 @@ test_IcmpSendEcho(void)
 
     ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
     SetLastError(0xDEADBEEF);
-    bRet = IcmpSendEcho(hIcmp, ipaddr, SendData, sizeof(SendData), 
+    bRet = IcmpSendEcho(hIcmp, ipaddr, SendData, sizeof(SendData),
         NULL, ReplyBuffer, ReplySize, 5000);
 
     ok(bRet, "IcmpSendEcho failed unexpectedly: %lu\n", GetLastError());

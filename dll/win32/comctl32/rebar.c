@@ -84,7 +84,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
-#include "wine/unicode.h"
 #include "winuser.h"
 #include "winnls.h"
 #include "commctrl.h"
@@ -280,6 +279,9 @@ static const char * const band_stylename[] = {
     "RBBS_VARIABLEHEIGHT",     /* 0040 */
     "RBBS_GRIPPERALWAYS",      /* 0080 */
     "RBBS_NOGRIPPER",          /* 0100 */
+    "RBBS_USECHEVRON",         /* 0200 */
+    "RBBS_HIDETITLE",          /* 0400 */
+    "RBBS_TOPALIGN",           /* 0800 */
     NULL };
 
 static const char * const band_maskname[] = {
@@ -295,50 +297,52 @@ static const char * const band_maskname[] = {
     "RBBIM_IDEALSIZE",     /*    0x00000200 */
     "RBBIM_LPARAM",        /*    0x00000400 */
     "RBBIM_HEADERSIZE",    /*    0x00000800 */
+    "RBBIM_CHEVRONLOCATION", /*  0x00001000 */
+    "RBBIM_CHEVRONSTATE",  /*    0x00002000 */
     NULL };
 
-
-static CHAR line[200];
 
 static const WCHAR themeClass[] = { 'R','e','b','a','r',0 };
 
 static CHAR *
-REBAR_FmtStyle( UINT style)
+REBAR_FmtStyle(char *buffer, UINT style)
 {
     INT i = 0;
 
-    *line = 0;
+    *buffer = 0;
     while (band_stylename[i]) {
 	if (style & (1<<i)) {
-	    if (*line != 0) strcat(line, " | ");
-	    strcat(line, band_stylename[i]);
+	    if (*buffer) strcat(buffer, " | ");
+	    strcat(buffer, band_stylename[i]);
 	}
 	i++;
     }
-    return line;
+    return buffer;
 }
 
 
 static CHAR *
-REBAR_FmtMask( UINT mask)
+REBAR_FmtMask(char *buffer, UINT mask)
 {
     INT i = 0;
 
-    *line = 0;
+    *buffer = 0;
     while (band_maskname[i]) {
 	if (mask & (1<<i)) {
-	    if (*line != 0) strcat(line, " | ");
-	    strcat(line, band_maskname[i]);
+	    if (*buffer) strcat(buffer, " | ");
+	    strcat(buffer, band_maskname[i]);
 	}
 	i++;
     }
-    return line;
+    return buffer;
 }
 
 
 static VOID
 REBAR_DumpBandInfo(const REBARBANDINFOW *pB)
 {
+    char buff[300];
+
     if( !TRACE_ON(rebar) ) return;
     TRACE("band info: ");
     if (pB->fMask & RBBIM_ID)
@@ -348,9 +352,9 @@ REBAR_DumpBandInfo(const REBARBANDINFOW *pB)
         TRACE(", clrF=0x%06x, clrB=0x%06x", pB->clrFore, pB->clrBack);
     TRACE("\n");
 
-    TRACE("band info: mask=0x%08x (%s)\n", pB->fMask, REBAR_FmtMask(pB->fMask));
+    TRACE("band info: mask=0x%08x (%s)\n", pB->fMask, REBAR_FmtMask(buff, pB->fMask));
     if (pB->fMask & RBBIM_STYLE)
-	TRACE("band info: style=0x%08x (%s)\n", pB->fStyle, REBAR_FmtStyle(pB->fStyle));
+	TRACE("band info: style=0x%08x (%s)\n", pB->fStyle, REBAR_FmtStyle(buff, pB->fStyle));
     if (pB->fMask & (RBBIM_SIZE | RBBIM_IDEALSIZE | RBBIM_HEADERSIZE | RBBIM_LPARAM )) {
 	TRACE("band info:");
 	if (pB->fMask & RBBIM_SIZE)
@@ -372,6 +376,7 @@ REBAR_DumpBandInfo(const REBARBANDINFOW *pB)
 static VOID
 REBAR_DumpBand (const REBAR_INFO *iP)
 {
+    char buff[300];
     REBAR_BAND *pB;
     UINT i;
 
@@ -397,10 +402,9 @@ REBAR_DumpBand (const REBAR_INFO *iP)
 	if (pB->fMask & RBBIM_COLORS)
             TRACE(" clrF=0x%06x clrB=0x%06x", pB->clrFore, pB->clrBack);
 	TRACE("\n");
-	TRACE("band # %u: mask=0x%08x (%s)\n", i, pB->fMask, REBAR_FmtMask(pB->fMask));
+	TRACE("band # %u: mask=0x%08x (%s)\n", i, pB->fMask, REBAR_FmtMask(buff, pB->fMask));
 	if (pB->fMask & RBBIM_STYLE)
-	    TRACE("band # %u: style=0x%08x (%s)\n",
-		  i, pB->fStyle, REBAR_FmtStyle(pB->fStyle));
+	    TRACE("band # %u: style=0x%08x (%s)\n", i, pB->fStyle, REBAR_FmtStyle(buff, pB->fStyle));
 	TRACE("band # %u: xHeader=%u",
 	      i, pB->cxHeader);
 	if (pB->fMask & (RBBIM_SIZE | RBBIM_IDEALSIZE | RBBIM_LPARAM )) {
@@ -1306,8 +1310,8 @@ static int REBAR_SetBandsHeight(const REBAR_INFO *infoPtr, INT iBeginBand, INT i
     REBAR_BAND *lpBand;
     int yMaxHeight = 0;
     int yPos = yStart;
-    int row = REBAR_GetBand(infoPtr, iBeginBand)->iRow;
-    int i;
+    int row, i;
+
     for (i = iBeginBand; i < iEndBand; i = next_visible(infoPtr, i))
     {
         lpBand = REBAR_GetBand(infoPtr, i);
@@ -1315,6 +1319,8 @@ static int REBAR_SetBandsHeight(const REBAR_INFO *infoPtr, INT iBeginBand, INT i
         yMaxHeight = max(yMaxHeight, lpBand->cyMinBand);
     }
     TRACE("Bands [%d; %d) height: %d\n", iBeginBand, iEndBand, yMaxHeight);
+
+    row = iBeginBand < iEndBand ? REBAR_GetBand(infoPtr, iBeginBand)->iRow : 0;
 
     for (i = iBeginBand; i < iEndBand; i = next_visible(infoPtr, i))
     {
@@ -2154,7 +2160,7 @@ REBAR_HandleUDDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     }
     else
     {
-        /* Place the band in the prexisting row the mouse is hovering over */
+        /* Place the band in the preexisting row the mouse is hovering over */
         iRowBegin = first_visible(infoPtr);
         while(iRowBegin < infoPtr->uNumBands)
         {
@@ -2542,10 +2548,15 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, INT iIndex, const REBARBANDINFOW *lprbbi,
 
     /* initialize band */
     memset(lpBand, 0, sizeof(*lpBand));
+#ifdef __REACTOS__
+    lpBand->clrFore = infoPtr->clrText == CLR_NONE ? CLR_DEFAULT : infoPtr->clrText;
+    lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? CLR_DEFAULT : infoPtr->clrBk;
+#else
     lpBand->clrFore = infoPtr->clrText == CLR_NONE ? infoPtr->clrBtnText :
                                                      infoPtr->clrText;
     lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? infoPtr->clrBtnFace :
                                                    infoPtr->clrBk;
+#endif
     lpBand->iImage = -1;
 
     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);

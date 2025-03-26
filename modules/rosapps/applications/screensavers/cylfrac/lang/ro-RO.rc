@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Fractal cilindri (animație de inactivitate)"
     IDS_TITLE       "Despre"

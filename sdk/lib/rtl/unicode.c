@@ -101,7 +101,7 @@ RtlAnsiStringToUnicodeString(
 
     if (NlsMbCodePageTag == FALSE)
     {
-        Length = AnsiSource->Length * 2 + sizeof(WCHAR);
+        Length = (AnsiSource->Length + 1) * sizeof(WCHAR);
     }
     else
     {
@@ -519,16 +519,24 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
     /* If multi-byte code page present */
     if (NlsMbOemCodePageTag)
     {
-        USHORT Offset = 0;
+        USHORT Offset;
 
         OemChar = NlsUnicodeToMbOemTable[*Char];
 
         /* If character has Lead Byte */
-        if (NlsOemLeadByteInfo[HIBYTE(OemChar)])
-            Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
+        Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
+        if (Offset)
+        {
+            /* Use DBCS table */
+            UnicodeChar = NlsOemLeadByteInfo[Offset + LOBYTE(OemChar)];
+        }
+        else
+        {
+            UnicodeChar = NlsOemToUnicodeTable[OemChar];
+        }
 
-        /* Receive Unicode character from the table */
-        UnicodeChar = RtlpUpcaseUnicodeChar(NlsOemToUnicodeTable[LOBYTE(OemChar) + Offset]);
+        /* Upcase */
+        UnicodeChar = RtlpUpcaseUnicodeChar(UnicodeChar);
 
         /* Receive OEM character from the table */
         OemChar = NlsUnicodeToMbOemTable[UnicodeChar];
@@ -544,7 +552,10 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
 
     /* Not valid character, failed */
     if (OemChar == NlsOemDefaultChar)
+    {
+        DPRINT1("\\u%04x is not valid for OEM\n", *Char);
         return FALSE;
+    }
 
     *Char = UnicodeChar;
 
@@ -1345,7 +1356,7 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
         }
     }
 
-    if (NlsMbCodePageTag)
+    if (NlsMbCodePageTag && pf && (*pf & IS_TEXT_UNICODE_DBCS_LEADBYTE))
     {
         for (i = 0; i < len; i++)
         {
@@ -1367,8 +1378,7 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
             else
                 weight = 1;
 
-            if (pf && (*pf & IS_TEXT_UNICODE_DBCS_LEADBYTE))
-                out_flags |= IS_TEXT_UNICODE_DBCS_LEADBYTE;
+            out_flags |= IS_TEXT_UNICODE_DBCS_LEADBYTE;
         }
     }
 
@@ -1773,14 +1783,18 @@ RtlHashUnicodeString(
  *
  * NOTES
  *  Same as RtlUnicodeStringToOemString but doesn't write terminating null
- *  Does a partial copy if the dest buffer is too small
  */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlUnicodeStringToCountedOemString(
-    IN OUT POEM_STRING OemDest,
-    IN PCUNICODE_STRING UniSource,
-    IN BOOLEAN AllocateDestinationString)
+    _When_(AllocateDestinationString, _Out_ _At_(DestinationString->Buffer, __drv_allocatesMem(Mem)))
+    _When_(!AllocateDestinationString, _Inout_)
+        POEM_STRING OemDest,
+    _In_ PCUNICODE_STRING UniSource,
+    _In_ BOOLEAN AllocateDestinationString)
 {
     NTSTATUS Status;
     ULONG Length;
@@ -2211,6 +2225,53 @@ RtlCompareUnicodeString(
 /*
  * @implemented
  */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+LONG
+NTAPI
+RtlCompareUnicodeStrings(
+    _In_reads_(String1Length) PCWCH String1,
+    _In_ SIZE_T String1Length,
+    _In_reads_(String2Length) PCWCH String2,
+    _In_ SIZE_T String2Length,
+    _In_ BOOLEAN CaseInSensitive)
+{
+    LONG Result = 0;
+    SIZE_T MinStringLength = min(String1Length, String2Length);
+    SIZE_T Index;
+
+    if (CaseInSensitive)
+    {
+        for (Index = 0; Index < MinStringLength; Index++)
+        {
+            WCHAR Char1 = RtlpUpcaseUnicodeChar(String1[Index]);
+            WCHAR Char2 = RtlpUpcaseUnicodeChar(String2[Index]);
+            Result = Char1 - Char2;
+            if (Result != 0)
+            {
+                return Result;
+            }
+        }
+    }
+    else
+    {
+        for (Index = 0; Index < MinStringLength; Index++)
+        {
+            Result = String1[Index] - String2[Index];
+            if (Result != 0)
+            {
+                return Result;
+            }
+        }
+    }
+
+    return String1Length - String2Length;
+}
+
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 RtlCopyString(
@@ -2221,7 +2282,7 @@ RtlCopyString(
     PCHAR p1, p2;
 
     /* Check if there was no source given */
-    if(!SourceString)
+    if (!SourceString)
     {
         /* Simply return an empty string */
         DestinationString->Length = 0;
@@ -2260,7 +2321,7 @@ RtlCopyUnicodeString(
 {
     ULONG SourceLength;
 
-    if(SourceString == NULL)
+    if (!SourceString)
     {
         DestinationString->Length = 0;
     }
@@ -2416,7 +2477,7 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
         Destination->Length += Length;
 
         /* append terminating '\0' if enough space */
-        if(Destination->MaximumLength > Destination->Length)
+        if (Destination->MaximumLength > Destination->Length)
         {
             DestBuffer[Length / sizeof(WCHAR)] = UNICODE_NULL;
         }

@@ -1,9 +1,10 @@
 /*
- * PROJECT:     System setup
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/syssetup/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for syssetup
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Yaroslav Kibysh
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010-2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2018-2021 Yaroslav Kibysh <yanet.prod@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -38,7 +39,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Будь ласка, виберіть тип продукту:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "Тип &продукту:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Інформація про продукт", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Опис:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -63,16 +64,16 @@ CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Введіть ім'я Вашого комп'ютера довжиною до 15 символів. Якщо Ви працюєте в мережі, ім'я Вашого комп'ютера має бути унікальним.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Введіть ім'я Вашого комп'ютера довжиною до 15 символів. Якщо Ви працюєте в мережі, ім'я Вашого комп'ютера має бути унікальним.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "&Ім'я комп'ютера:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 156, 35, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Програма встановлення створить обліковий запис користувача 'Адміністратор', який дає повні права доступу до Вашого комп'ютера.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Введіть пароль адміністратора довжиною до 127 символів.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Пароль адміністратора:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "Пі&дтвердження:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Програма встановлення створить обліковий запис користувача 'Адміністратор', який дає повні права доступу до Вашого комп'ютера.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Введіть пароль адміністратора довжиною до 127 символів.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "&Пароль адміністратора:", IDC_STATIC, 54, 104, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 156, 101, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Пі&дтвердження:", IDC_STATIC, 54, 123, 99, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 156, 120, 139, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -82,11 +83,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Мова системи має відповідати мові додатків, які ви хочете використовувати. Мова користувача задає формат виведення чисел, грошових одиниць і дат.", IDC_STATIC, 53, 5, 253, 27
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Для зміни мови системи або мови користувача натисніть ""Налаштувати"".", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "На&лаштувати...", IDC_CUSTOMLOCALE, 240, 57, 57, 14
+    LTEXT "", IDC_STATIC, 53, 81, 246, 1, SS_ETCHEDHORZ
     LTEXT "Розкладка клавіатури визначає символи, що вводяться при натисненні клавіш.", IDC_STATIC, 53, 84, 253, 18
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 250, 16
     LTEXT "Для зміни розкладки клавіатури натисніть ""Налаштувати"".", IDC_STATIC, 53, 126, 184, 18
     PUSHBUTTON "Нал&аштувати...", IDC_CUSTOMLAYOUT, 240, 122, 57, 14
 END
@@ -99,10 +101,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Дата й час", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Часовий пояс", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Автомати&чне переведення годинника на літний/зимовий час", IDC_AUTODAYLIGHT, 53, 124, 219, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Автомати&чне переведення годинника на літний/зимовий час", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -118,9 +120,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Реєстрація компонентів", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -143,13 +148,14 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Зачекайте..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -181,10 +187,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Ви маєте вказати ім'я та пароль адміністратора Вашого комп'ютера."
     IDS_LOCALETITLE "Регіональні налаштування"
     IDS_LOCALESUBTITLE "Ви можете налаштувати ReactOS для різних регіонів і мов."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Дата та час"
     IDS_DATETIMESUBTITLE "Встановіть правильні дату і час для Вашого комп'ютера."
-    IDS_PROCESSTITLE "Реєстрація компонентів"
-    IDS_PROCESSSUBTITLE "Зачекайте, будь ласка..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Зовнішній вигляд"
     IDS_THEMESELECTIONSUBTITLE "Виберіть тему, яку ви вважаєте за краще"
 END
@@ -193,7 +201,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Встановлення ReactOS"
     IDS_UNKNOWN_ERROR "Невідома помилка"
-    IDS_REGISTERING_COMPONENTS "Реєстрація компонентів..."
     IDS_LOADLIBRARY_FAILED "Помилка LoadLibrary: "
     IDS_GETPROCADDR_FAILED "Помилка GetProcAddr: "
     IDS_REGSVR_FAILED "Помилка DllRegisterServer: "
@@ -215,7 +222,7 @@ BEGIN
     IDS_WZD_NAME "Для продовження встановлення необхідно ввести ваше ім'я."
     IDS_WZD_SETCOMPUTERNAME "Програмі інсталяції не вдалося встановити ім'я комп'ютера."
     IDS_WZD_COMPUTERNAME "Для продовження встановлення необхідно ввести ім'я комп'ютера."
-    IDS_WZD_PASSWORDEMPTY "Ви маєте ввести пароль !"
+    IDS_WZD_PASSWORDEMPTY "Ви маєте ввести пароль!"
     IDS_WZD_PASSWORDMATCH "Паролі, які ви ввели, не співпадають. Будь ласка введіть потрібний пароль знову."
     IDS_WZD_PASSWORDCHAR "Пароль, який ви ввели, містить заборонені символи. Будь ласка введіть інший пароль."
     IDS_WZD_LOCALTIME "Програмі інсталяції не вдалося встановити місцевий час."

@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 PVOID
@@ -79,4 +76,3 @@ PcNewMiniport(
     DPRINT("PcNewMiniport Status %x\n", Status);
     return Status;
 }
-

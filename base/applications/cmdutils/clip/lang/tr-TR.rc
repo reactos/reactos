@@ -5,7 +5,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nKullanım bilgisi için ""CLIP /?"" yazınız.\n"
-    IDS_HELP "\nKomut yatacı izlencelerinin çıktısını panoya yönlendirir.\n\n\
+    IDS_HELP "\nKomut satırı programlarının çıktısını panoya yönlendirir.\n\n\
 CLIP [/?]\n\n\
     /?  Bu yardım iletisini göster.\n"
 END

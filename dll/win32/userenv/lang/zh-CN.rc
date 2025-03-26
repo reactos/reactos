@@ -1,7 +1,7 @@
 /* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+/* Improved by Luke Luo (njlyf2011@hotmail.com) */
 
-/* ATTENTION: If there is no special situation, please DO NOT change 
+/* ATTENTION: If there is no special situation, please DO NOT change
 English folder names into Chinese, or it may cause problems in the system. */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -19,9 +19,9 @@ BEGIN
     IDS_RECENT "Recent"
     IDS_SENDTO "SendTo"
     IDS_TEMPLATES "Templates"
-    IDS_STARTMENU "「开始」菜单"
-    IDS_PROGRAMS "「开始」菜单\\程序"
-    IDS_STARTUP "「开始」菜单\\程序\\启动"
+    IDS_STARTMENU "“开始”菜单"
+    IDS_PROGRAMS "“开始”菜单\\程序"
+    IDS_STARTUP "“开始”菜单\\程序\\启动"
     IDS_LOCALSETTINGS "Local Settings"
     IDS_LOCALAPPDATA "Local Settings\\Application Data"
     IDS_TEMP "Local Settings\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */

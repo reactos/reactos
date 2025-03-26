@@ -224,11 +224,7 @@ static void test_LoadIconWithScaleDown(void)
     pLoadIconWithScaleDown = (void *)GetProcAddress(hinst, "LoadIconWithScaleDown");
     if (!pLoadIconMetric || !pLoadIconWithScaleDown)
     {
-#ifdef __REACTOS__
-        skip("LoadIconMetric or pLoadIconWithScaleDown not exported by name\n");
-#else
         win_skip("LoadIconMetric or pLoadIconWithScaleDown not exported by name\n");
-#endif
         FreeLibrary(hinst);
         return;
     }

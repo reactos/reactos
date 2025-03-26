@@ -42,12 +42,20 @@ void CFolderItemVerb::Init(IContextMenu* menu, BSTR name)
 HRESULT STDMETHODCALLTYPE CFolderItemVerb::get_Application(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
+
+    if (ppid)
+        *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItemVerb::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
+
+    if (ppid)
+        *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
@@ -83,13 +91,7 @@ CFolderItemVerbs::~CFolderItemVerbs()
 
 HRESULT CFolderItemVerbs::Init(LPITEMIDLIST idlist)
 {
-    CComPtr<IShellFolder> folder;
-    LPCITEMIDLIST child;
-    HRESULT hr = SHBindToParent(idlist, IID_PPV_ARG(IShellFolder, &folder), &child);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = folder->GetUIObjectOf(NULL, 1, &child, IID_IContextMenu, NULL, (PVOID*)&m_contextmenu);
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(NULL, idlist, IID_PPV_ARG(IContextMenu, &m_contextmenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

@@ -361,12 +361,52 @@ static WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
     return PARSER_get_dest_dir( &context );
 }
 
+struct extract_cab_ctx
+{
+    const WCHAR *src;
+    const WCHAR *dst;
+};
 
-#ifndef __REACTOS__
-static void (WINAPI *pExtractFiles)( LPSTR, LPSTR, DWORD, DWORD, DWORD, DWORD );
-#else
-static void (WINAPI *pExtractFiles)( LPSTR, LPSTR, DWORD, LPSTR, LPVOID, DWORD );
-#endif
+static UINT WINAPI extract_cab_cb( void *arg, UINT message, UINT_PTR param1, UINT_PTR param2 )
+{
+    struct extract_cab_ctx *ctx = arg;
+
+    switch (message)
+    {
+    case SPFILENOTIFY_FILEINCABINET:
+    {
+        FILE_IN_CABINET_INFO_W *info = (FILE_IN_CABINET_INFO_W *)param1;
+        const WCHAR *filename;
+
+        if ((filename = strrchrW( info->NameInCabinet, '\\' )))
+            filename++;
+        else
+            filename = info->NameInCabinet;
+
+        if (lstrcmpiW( filename, ctx->src ))
+            return FILEOP_SKIP;
+ 
+        strcpyW( info->FullTargetName, ctx->dst );
+        return FILEOP_DOIT;
+    }
+    case SPFILENOTIFY_FILEEXTRACTED:
+    {
+        const FILEPATHS_W *paths = (const FILEPATHS_W *)param1;
+        return paths->Win32Error;
+    }
+    case SPFILENOTIFY_NEEDNEWCABINET:
+    {
+        const CABINET_INFO_W *info = (const CABINET_INFO_W *)param1;
+        strcpyW( (WCHAR *)param2, info->CabinetPath );
+        return ERROR_SUCCESS;
+    }
+    case SPFILENOTIFY_CABINETINFO:
+        return 0;
+    default:
+        FIXME("Unexpected message %#x.\n", message);
+        return 0;
+    }
+}
 
 /***********************************************************************
  *            extract_cabinet_file
@@ -379,111 +419,23 @@ static BOOL extract_cabinet_file( const WCHAR *cabinet, const WCHAR *root,
 #ifndef __REACTOS__
     static const WCHAR extW[] = {'.','c','a','b',0};
 #endif
-    static HMODULE advpack;
-
-    char *cab_path, *cab_file;
-    int len = strlenW( cabinet );
+    static const WCHAR backslashW[] = {'\\',0};
+    WCHAR path[MAX_PATH];
+    struct extract_cab_ctx ctx = {src, dst};
 
 #ifdef __REACTOS__
     TRACE("extract_cabinet_file(cab = '%s' ; root = '%s' ; src = '%s' ; dst = '%s')\n",
           debugstr_w(cabinet), debugstr_w(root), debugstr_w(src), debugstr_w(dst));
 #else
+    int len = strlenW( cabinet );
     /* make sure the cabinet file has a .cab extension */
     if (len <= 4 || strcmpiW( cabinet + len - 4, extW )) return FALSE;
 #endif
-    if (!pExtractFiles)
-    {
-        if (!advpack && !(advpack = LoadLibraryA( "advpack.dll" )))
-        {
-            ERR( "could not load advpack.dll\n" );
-            return FALSE;
-        }
-        if (!(pExtractFiles = (void *)GetProcAddress( advpack, "ExtractFiles" )))
-        {
-            ERR( "could not find ExtractFiles in advpack.dll\n" );
-            return FALSE;
-        }
-    }
+    strcpyW(path, root);
+    strcatW(path, backslashW);
+    strcatW(path, cabinet);
 
-    if (!(cab_path = strdupWtoA( root ))) return FALSE;
-    len = WideCharToMultiByte( CP_ACP, 0, cabinet, -1, NULL, 0, NULL, NULL );
-    if (!(cab_file = HeapAlloc( GetProcessHeap(), 0, strlen(cab_path) + len + 1 )))
-    {
-        HeapFree( GetProcessHeap(), 0, cab_path );
-        return FALSE;
-    }
-    strcpy( cab_file, cab_path );
-    if (cab_file[0] && cab_file[strlen(cab_file)-1] != '\\') strcat( cab_file, "\\" );
-    WideCharToMultiByte( CP_ACP, 0, cabinet, -1, cab_file + strlen(cab_file), len, NULL, NULL );
-    FIXME( "awful hack: extracting cabinet %s\n", debugstr_a(cab_file) );
-
-#ifdef __REACTOS__
-    {
-    BOOL Success;
-    char *src_file;
-    const WCHAR *src_fileW;
-    WCHAR TempPath[MAX_PATH];
-
-    /* Retrieve the temporary path */
-    if (!GetTempPathW(ARRAYSIZE(TempPath), TempPath))
-    {
-        ERR("GetTempPathW error\n");
-        HeapFree( GetProcessHeap(), 0, cab_file );
-        return FALSE;
-    }
-
-    /* Build the real path to where the file will be extracted */
-    HeapFree( GetProcessHeap(), 0, cab_path );
-    if (!(cab_path = strdupWtoA( TempPath )))
-    {
-        HeapFree( GetProcessHeap(), 0, cab_file );
-        return FALSE;
-    }
-
-    /* Build the file list */
-    src_fileW = strrchrW(src, '\\'); // Find where the filename starts.
-    if (src_fileW) ++src_fileW;
-    else src_fileW = src;
-    /* Convert to ANSI */
-    if (!(src_file = strdupWtoA( src_fileW )))
-    {
-        HeapFree( GetProcessHeap(), 0, cab_file );
-        HeapFree( GetProcessHeap(), 0, cab_path );
-        return FALSE;
-    }
-
-    /* Prepare for the move operation */
-    /* Build the full path to the extracted file, that will be renamed */
-    if (!(src = HeapAlloc( GetProcessHeap(), 0, (strlenW(TempPath) + 1 + strlenW(src_fileW) + 1) * sizeof(WCHAR) )))
-    {
-        HeapFree( GetProcessHeap(), 0, src_file );
-        HeapFree( GetProcessHeap(), 0, cab_file );
-        HeapFree( GetProcessHeap(), 0, cab_path );
-        return FALSE;
-    }
-    concat_W( (WCHAR*)src, NULL, TempPath, src_fileW );
-
-    TRACE("pExtractFiles(cab_file = '%s' ; cab_path = '%s', src_file = '%s')\n",
-          debugstr_a(cab_file), debugstr_a(cab_path), debugstr_a(src_file));
-
-    /* Extract to temporary folder */
-    pExtractFiles( cab_file, cab_path, 0, src_file, NULL, 0 );
-    HeapFree( GetProcessHeap(), 0, src_file );
-    HeapFree( GetProcessHeap(), 0, cab_file );
-    HeapFree( GetProcessHeap(), 0, cab_path );
-
-    /* Move to destination, overwriting the original file if needed */
-    TRACE("Renaming src = '%s' to dst = '%s')\n", debugstr_w(src), debugstr_w(dst));
-    Success = MoveFileExW( src, dst , MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED );
-    HeapFree( GetProcessHeap(), 0, (WCHAR*)src );
-    return Success;
-    }
-#else
-    pExtractFiles( cab_file, cab_path, 0, 0, 0, 0 );
-    HeapFree( GetProcessHeap(), 0, cab_file );
-    HeapFree( GetProcessHeap(), 0, cab_path );
-    return CopyFileW( src, dst, FALSE /*FIXME*/ );
-#endif
+    return SetupIterateCabinetW( path, 0, extract_cab_cb, &ctx );
 }
 
 
@@ -1493,7 +1445,7 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                 if (op->src_tag)
                 {
                     if (extract_cabinet_file( op->src_tag, op->src_root,
-                                              paths.Source, paths.Target )) break;
+                                              op->src_file, paths.Target )) break;
                 }
                 paths.Win32Error = GetLastError();
                 op_result = handler( context, SPFILENOTIFY_COPYERROR,

@@ -273,6 +273,14 @@ GetComputerIdentifier(
         return FALSE;
     }
 
+#ifdef _M_AMD64
+    /* On x64 we are l33t and use the MP config by default (except when we use KDBG, which is broken) */
+#ifndef KDBG
+    ComputerIdentifier = L"X64 MP";
+#else
+    ComputerIdentifier = L"X64 UP";
+#endif
+#else
     if (IsAcpiComputer())
     {
         if (pFullInfo->SubKeys == 1)
@@ -299,6 +307,7 @@ GetComputerIdentifier(
             ComputerIdentifier = L"PC MP";
         }
     }
+#endif
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pFullInfo);
 
@@ -776,33 +785,29 @@ CreateDisplayDriverList(
 
 BOOLEAN
 ProcessComputerFiles(
-    IN HINF InfFile,
-    IN PGENERIC_LIST List,
-    OUT PWSTR* AdditionalSectionName)
+    _In_ HINF InfFile,
+    _In_ PCWSTR ComputerType,
+    _Out_ PWSTR* AdditionalSectionName)
 {
-    PGENERIC_LIST_ENTRY Entry;
     static WCHAR SectionName[128];
 
-    DPRINT("ProcessComputerFiles() called\n");
+    DPRINT("ProcessComputerFiles(%S) called\n", ComputerType);
 
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    RtlStringCchPrintfW(SectionName, ARRAYSIZE(SectionName),
-                        L"Files.%s", ((PGENENTRY)GetListEntryData(Entry))->Id);
+    RtlStringCchPrintfW(SectionName, _countof(SectionName),
+                        L"Files.%s", ComputerType);
     *AdditionalSectionName = SectionName;
+
+    // TODO: More things to do?
 
     return TRUE;
 }
 
 BOOLEAN
 ProcessDisplayRegistry(
-    IN HINF InfFile,
-    IN PGENERIC_LIST List)
+    _In_ HINF InfFile,
+    _In_ PCWSTR DisplayType)
 {
     NTSTATUS Status;
-    PGENERIC_LIST_ENTRY Entry;
     INFCONTEXT Context;
     PCWSTR Buffer;
     PCWSTR ServiceName;
@@ -813,15 +818,9 @@ ProcessDisplayRegistry(
     HANDLE KeyHandle;
     WCHAR RegPath[255];
 
-    DPRINT("ProcessDisplayRegistry() called\n");
+    DPRINT("ProcessDisplayRegistry(%S) called\n", DisplayType);
 
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    if (!SpInfFindFirstLine(InfFile, L"Display",
-                            ((PGENENTRY)GetListEntryData(Entry))->Id,
-                            &Context))
+    if (!SpInfFindFirstLine(InfFile, L"Display", DisplayType, &Context))
     {
         DPRINT1("SpInfFindFirstLine() failed\n");
         return FALSE;
@@ -889,6 +888,17 @@ ProcessDisplayRegistry(
     Status = NtOpenKey(&KeyHandle,
                        KEY_SET_VALUE,
                        &ObjectAttributes);
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        /* Try without Hardware Profile part */
+        RtlStringCchPrintfW(RegPath, ARRAYSIZE(RegPath),
+                            L"System\\CurrentControlSet\\Services\\%s\\Device0",
+                            ServiceName);
+        RtlInitUnicodeString(&KeyName, RegPath);
+        Status = NtOpenKey(&KeyHandle,
+                           KEY_SET_VALUE,
+                           &ObjectAttributes);
+    }
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -915,7 +925,7 @@ ProcessDisplayRegistry(
         return FALSE;
     }
 
-    Height = wcstoul(Buffer, 0, 0);
+    Height = wcstoul(Buffer, NULL, 10);
     Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"DefaultSettings.YResolution",
                                    REG_DWORD,
@@ -935,7 +945,7 @@ ProcessDisplayRegistry(
         return FALSE;
     }
 
-    Bpp = wcstoul(Buffer, 0, 0);
+    Bpp = wcstoul(Buffer, NULL, 10);
     Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"DefaultSettings.BitsPerPel",
                                    REG_DWORD,
@@ -957,24 +967,13 @@ ProcessDisplayRegistry(
 
 BOOLEAN
 ProcessLocaleRegistry(
-    IN PGENERIC_LIST List)
+    _In_ PCWSTR LanguageId)
 {
-    PGENERIC_LIST_ENTRY Entry;
-    PCWSTR LanguageId;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
-
     HANDLE KeyHandle;
     NTSTATUS Status;
-
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    LanguageId = ((PGENENTRY)GetListEntryData(Entry))->Id;
-    if (LanguageId == NULL)
-        return FALSE;
 
     DPRINT("LanguageId: %S\n", LanguageId);
 
@@ -1249,7 +1248,7 @@ CreateKeyboardLayoutList(
 
         uIndex++;
 
-    } while (LayoutsList[uIndex].LangID != NULL);
+    } while (LayoutsList[uIndex].LangID != 0);
 
     /* Check whether some keyboard layouts have been found */
     /* FIXME: Handle this case */
@@ -1266,32 +1265,29 @@ CreateKeyboardLayoutList(
 
 BOOLEAN
 ProcessKeyboardLayoutRegistry(
-    IN PGENERIC_LIST List,
-    IN PCWSTR LanguageId)
+    _In_ PCWSTR pszLayoutId,
+    _In_ PCWSTR LanguageId)
 {
-    PGENERIC_LIST_ENTRY Entry;
-    PCWSTR LayoutId;
+    KLID LayoutId;
     const MUI_LAYOUTS* LayoutsList;
-    MUI_LAYOUTS NewLayoutsList[20];
+    MUI_LAYOUTS NewLayoutsList[20]; // HACK: Hardcoded fixed size "20" is a hack. Please verify against lang/*.h
     ULONG uIndex;
     ULONG uOldPos = 0;
 
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    LayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
-    if (LayoutId == NULL)
+    LayoutId = (KLID)(pszLayoutId ? wcstoul(pszLayoutId, NULL, 16) : 0);
+    if (LayoutId == 0)
         return FALSE;
 
     LayoutsList = MUIGetLayoutsList(LanguageId);
 
-    if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) == 0)
+    /* If the keyboard layout is already at the top of the list, we are done */
+    if (LayoutsList[0].LayoutID == LayoutId)
         return TRUE;
 
-    for (uIndex = 1; LayoutsList[uIndex].LangID != NULL; uIndex++)
+    /* Otherwise, move it up to the top of the list */
+    for (uIndex = 1; LayoutsList[uIndex].LangID != 0; ++uIndex)
     {
-        if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
+        if (LayoutsList[uIndex].LayoutID == LayoutId)
         {
             uOldPos = uIndex;
             continue;
@@ -1301,8 +1297,8 @@ ProcessKeyboardLayoutRegistry(
         NewLayoutsList[uIndex].LayoutID = LayoutsList[uIndex].LayoutID;
     }
 
-    NewLayoutsList[uIndex].LangID    = NULL;
-    NewLayoutsList[uIndex].LayoutID  = NULL;
+    NewLayoutsList[uIndex].LangID    = 0;
+    NewLayoutsList[uIndex].LayoutID  = 0;
     NewLayoutsList[uOldPos].LangID   = LayoutsList[0].LangID;
     NewLayoutsList[uOldPos].LayoutID = LayoutsList[0].LayoutID;
     NewLayoutsList[0].LangID         = LayoutsList[uOldPos].LangID;
@@ -1322,12 +1318,20 @@ ProcessKeyboardLayoutFiles(
 
 BOOLEAN
 SetGeoID(
-    IN PCWSTR Id)
+    _In_ GEOID GeoId)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
     HANDLE KeyHandle;
+    /*
+     * Buffer big enough to hold the NULL-terminated string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
+     */
+    WCHAR Value[sizeof("4294967295")];
+
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", GeoId);
+    ASSERT(NT_SUCCESS(Status));
 
     RtlInitUnicodeString(&Name,
                          L".DEFAULT\\Control Panel\\International\\Geo");
@@ -1336,9 +1340,9 @@ SetGeoID(
                                OBJ_CASE_INSENSITIVE,
                                GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_SET_VALUE,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -1350,22 +1354,21 @@ SetGeoID(
                            &Name,
                            0,
                            REG_SZ,
-                           (PVOID)Id,
-                           (wcslen(Id) + 1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value) + 1) * sizeof(WCHAR));
     NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtSetValueKey() failed (Status = %lx)\n", Status);
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
     return TRUE;
 }
 
-
 BOOLEAN
 SetDefaultPagefile(
-    IN WCHAR Drive)
+    _In_ WCHAR Drive)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;

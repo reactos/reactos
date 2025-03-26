@@ -1,4 +1,9 @@
 
+add_definitions(
+    -D__WINESRC__
+    -Dstrcasecmp=_stricmp
+)
+
 list(APPEND SOURCE
     devinst.c
     dialog.c
@@ -17,6 +22,6 @@ target_link_libraries(setupapi_winetest uuid)
 add_importlibs(setupapi_winetest advapi32 setupapi user32 shell32 msvcrt kernel32 ntdll)
 add_rostests_file(TARGET setupapi_winetest)
 
-if (NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(setupapi_winetest PRIVATE -Wno-format-overflow)
 endif()

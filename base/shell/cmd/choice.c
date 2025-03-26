@@ -282,7 +282,7 @@ loop:
         case GC_KEYREAD:
             TRACE ("GC_KEYREAD\n");
             TRACE ("elapsed %d msecs\n", GetTickCount () - clk);
-            TRACE ("read %c", Ch);
+            TRACE ("read %c\n", Ch);
             if ((val=IsKeyInString(lpOptions,Ch,bCaseSensitive))==-1)
             {
                 Beep (440, 50);

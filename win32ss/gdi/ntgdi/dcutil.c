@@ -328,7 +328,7 @@ DCU_SetDcUndeletable(HDC  hDC)
         return;
     }
 
-    dc->fs |= DC_FLAG_PERMANENT;
+    dc->fs |= DC_PERMANANT;
     DC_UnlockDc(dc);
     return;
 }
@@ -430,7 +430,7 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
         return 0;
     }
 
-    wRet = dc->fs & DC_FLAG_DIRTY_RAO; // FIXME: Wrong flag!
+    wRet = dc->fs & DC_DIRTY_RAO; // FIXME: Wrong flag!
 
     /* Info in "Undocumented Windows" is slightly confusing. */
     DPRINT("DC %p, Flags %04x\n", hDC, Flags);
@@ -438,11 +438,11 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
     if (Flags & DCHF_INVALIDATEVISRGN)
     {
         /* hVisRgn has to be updated */
-        dc->fs |= DC_FLAG_DIRTY_RAO;
+        dc->fs |= DC_DIRTY_RAO;
     }
     else if (Flags & DCHF_VALIDATEVISRGN || 0 == Flags)
     {
-        //dc->fs &= ~DC_FLAG_DIRTY_RAO;
+        //dc->fs &= ~DC_DIRTY_RAO;
     }
 
     DC_UnlockDc(dc);
@@ -492,7 +492,7 @@ NtGdiGetDCDword(
             SafeResult = pdcattr->lBreakExtra;
             break;
 
-        case GdiGerCharBreak:
+        case GdiGetCharBreak:
             SafeResult = pdcattr->cBreak;
             break;
 
@@ -729,7 +729,7 @@ NtGdiGetBoundsRect(
        else
        {
           RECTL rcRgn;
-          if (pdc->fs & DC_FLAG_DIRTY_RAO) CLIPPING_UpdateGCRegion(pdc);
+          if (pdc->fs & DC_DIRTY_RAO) CLIPPING_UpdateGCRegion(pdc);
           if(!REGION_GetRgnBox(pdc->prgnRao, &rcRgn))
           {
              REGION_GetRgnBox(pdc->prgnVis, &rcRgn);
@@ -743,7 +743,7 @@ NtGdiGetBoundsRect(
           DPRINT("    r %d b %d\n",rc.right,rc.bottom);
           ret = DCB_SET;
        }
-       IntDPtoLP( pdc, &rc, 2 );
+       IntDPtoLP(pdc, (PPOINTL)&rc, 2);
        DPRINT("rc1 l %d t %d\n",rc.left,rc.top);
        DPRINT("    r %d b %d\n",rc.right,rc.bottom);
     }
@@ -838,7 +838,7 @@ NtGdiSetBoundsRect(
         RECTL_vMakeWellOrdered(&rcl);
 
         if (!(flags & DCB_WINDOWMGR))
-        {           
+        {
            IntLPtoDP( pdc, (POINT *)&rcl, 2 );
            RECTL_bUnionRect(&pdc->erclBoundsApp, &pdc->erclBoundsApp, &rcl);
         }

@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Console Utilities Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Console/terminal paging functionality.
- * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
- *              Copyright 2017-2018 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2017-2021 Hermes Belusca-Maito
+ *              Copyright 2021 Katayama Hirofumi MZ
  */
 
 /**
@@ -26,31 +26,61 @@
 extern "C" {
 #endif
 
-
 // #include <wincon.h>
 
+struct _CON_PAGER;
+
+typedef BOOL
+(__stdcall *CON_PAGER_LINE_FN)(
+    IN OUT struct _CON_PAGER *Pager,
+    IN PCTCH line,
+    IN DWORD cch);
+
+/* Flags for CON_PAGER */
+#define CON_PAGER_EXPAND_TABS   (1 << 0)
+#define CON_PAGER_EXPAND_FF     (1 << 1)
+// Whether or not the pager will cache the line if it's incomplete (not NEWLINE-terminated).
+#define CON_PAGER_CACHE_INCOMPLETE_LINE (1 << 2)
 
 typedef struct _CON_PAGER
 {
+    /* Console screen properties */
     PCON_SCREEN Screen;
+    DWORD PageColumns;
+    DWORD PageRows;
 
-    // TODO: Add more properties. Maybe those extra parameters
-    // of PAGE_PROMPT could go there?
+    /* Paging parameters */
+    CON_PAGER_LINE_FN PagerLine; /* The line function */
+    DWORD dwFlags;  /* The CON_PAGER_... flags */
+    LONG  nTabWidth;
+    DWORD ScrollRows;
 
-    /* Used to count number of lines since last pause */
-    DWORD LineCount;
+    /* Data buffer */
+    PCTCH  CachedLine;    /* Cached line, HeapAlloc'ated */
+    SIZE_T cchCachedLine; /* Its length (number of characters) */
+    SIZE_T ich;           /* The current index of character in TextBuff (a user-provided source buffer) */
+
+    /* Paging state */
+    PCTCH  CurrentLine;   /* Pointer to the current line (either within a user-provided source buffer, or to CachedLine) */
+    SIZE_T ichCurr;       /* The current index of character in CurrentLine */
+    SIZE_T iEndLine;      /* End (length) of CurrentLine */
+    DWORD  nSpacePending; /* Pending spaces for TAB expansion */
+    DWORD iColumn;  /* The current index of column */
+    DWORD iLine;    /* The physical output line count of screen */
+    DWORD lineno;   /* The logical line number */
 } CON_PAGER, *PCON_PAGER;
 
 #define INIT_CON_PAGER(pScreen)     {(pScreen), 0}
 
-#define InitializeConPager(pPager, pScreen) \
+#define InitializeConPager(pPager, pScreen)  \
 do { \
-    (pPager)->Screen = (pScreen);   \
-    (pPager)->LineCount = 0;        \
+    ZeroMemory((pPager), sizeof(*(pPager))); \
+    (pPager)->Screen = (pScreen);            \
 } while (0)
 
 
-typedef BOOL (__stdcall *PAGE_PROMPT)(
+typedef BOOL
+(__stdcall *PAGE_PROMPT)(
     IN PCON_PAGER Pager,
     IN DWORD Done,
     IN DWORD Total);

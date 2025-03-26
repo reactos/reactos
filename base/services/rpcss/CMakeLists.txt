@@ -2,7 +2,7 @@
 add_rpc_files(server
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine/epm.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine/irot.idl)
-    
+
 
 list(APPEND SOURCE
     epmp.c
@@ -16,7 +16,7 @@ list(APPEND SOURCE
 include_directories(${REACTOS_BINARY_DIR}/sdk/include/reactos/wine)
 add_executable(rpcss ${SOURCE} rpcss.rc)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(rpcss PRIVATE "-Wno-cast-calling-convention")
 endif()
 

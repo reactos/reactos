@@ -15,7 +15,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOLEAN ObpCaseInsensitive = TRUE;
+ULONG ObpCaseInsensitive = TRUE;
 POBJECT_DIRECTORY ObpRootDirectoryObject;
 POBJECT_DIRECTORY ObpTypeDirectoryObject;
 
@@ -58,7 +58,7 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                   sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
 
         /* Allocate the ACL */
-        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, 'lcaD');
+        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, TAG_DACL);
         if (Dacl == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -117,7 +117,7 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                   sizeof(ACE) + RtlLengthSid(SeLocalSystemSid);
 
         /* Allocate the ACL */
-        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, 'lcaD');
+        Dacl = ExAllocatePoolWithTag(PagedPool, AclSize, TAG_DACL);
         if (Dacl == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -168,7 +168,7 @@ ObpFreeDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
     ASSERT(NT_SUCCESS(Status));
     ASSERT(DaclPresent);
     ASSERT(Dacl != NULL);
-    ExFreePoolWithTag(Dacl, 'lcaD');
+    ExFreePoolWithTag(Dacl, TAG_DACL);
 }
 
 CODE_SEG("INIT")
@@ -259,7 +259,7 @@ ObpCreateDosDevicesDirectory(VOID)
      * DosDevices directory \?? , for backward compatibility with
      * Windows NT-2000 systems.
      */
-    RtlCreateUnicodeString(&LinkName, L"\\DosDevices");
+    RtlInitUnicodeString(&LinkName, L"\\DosDevices");
     RtlInitUnicodeString(&RootName, (PCWSTR)&ObpDosDevicesShortNameRoot);
     InitializeObjectAttributes(&ObjectAttributes,
                                &LinkName,
@@ -321,11 +321,9 @@ ObpDeleteNameCheck(IN PVOID Object)
          (ObjectNameInfo->Directory) &&
          !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
     {
-        /* Setup a lookup context */
+        /* Setup a lookup context and lock it */
         ObpInitializeLookupContext(&Context);
-
-        /* Lock the directory */
-        ObpAcquireDirectoryLockExclusive(ObjectNameInfo->Directory, &Context);
+        ObpAcquireLookupContextLock(&Context, ObjectNameInfo->Directory);
 
         /* Do the lookup */
         Object = ObpLookupEntryDirectory(ObjectNameInfo->Directory,
@@ -352,7 +350,7 @@ ObpDeleteNameCheck(IN PVOID Object)
                     ObpDeleteSymbolicLinkName(Object);
                 }
 
-                /* Check if the kernel exclusive is set */
+                /* Check if the kernel exclusive flag is set */
                 ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
                 if ((ObjectNameInfo) &&
                     (ObjectNameInfo->QueryReferences & OB_FLAG_KERNEL_EXCLUSIVE))
@@ -843,8 +841,8 @@ ParseFromRoot:
                 /* Check if we are inserting an object */
                 if (InsertObject)
                 {
-                    /* Lock the directory */
-                    ObpAcquireDirectoryLockExclusive(Directory, LookupContext);
+                    /* Lock the lookup context */
+                    ObpAcquireLookupContextLock(LookupContext, Directory);
                 }
             }
 

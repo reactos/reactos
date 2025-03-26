@@ -39,6 +39,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O range"
+    IDS_COPY "Копі&ювати"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -81,7 +82,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Драйвери для цього пристрою не встановлені."
     IDS_DEV_HARDWARE_DISABLED "Цей пристрій вимкнено, оскільки BIOS не виділив для пристрою ресурсів."
     IDS_DEV_CANT_SHARE_IRQ "Цей пристрій використувує ресурс Запиту Переривань (IRQ), який використовується іншим пристроєм та не може бути спільним.\nВи повинні змінити конфліктуючі налаштування або видалити драйвер реального режиму, що спричинює конфлікт."
-    IDS_DEV_FAILED_ADD "Цей пристрій працює неправильно, оскільки %1 працює неправильно."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS не може встановити драйвери для цього пристрою, оскільки не має доступу до диску чи мережного ресурсу, які містять файли установки."
     IDS_DEV_TRANSLATION_FAILED "Цей пристрій не відповідає його драйверу."
     IDS_DEV_NO_SOFTCONFIG "ReactOS не може визначити налаштуванн для цього пристрою. Зверніться до документації пристрою, і використовуйте вкладку Ресурси для налаштування конфігурації."
@@ -234,7 +235,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Resource settings:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -292,14 +293,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Device Manager"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\nDo you really want to disable it?"
+  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\nDo you want to continue?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Update driver software..."
   IDS_MENU_ENABLE           "Enable"
@@ -310,7 +312,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Properties"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Properties"
   IDS_TOOLTIP_SCAN          "Scan for hardware changes"
@@ -321,7 +323,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
@@ -330,7 +332,7 @@ BEGIN
   IDS_HINT_DISABLE      " Disables the selected device."
   IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
   IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
+  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer."
   IDS_HINT_ABOUT        " About ReactOS Device Manager."
   IDS_HINT_EXIT         " Exits the program."
 

@@ -24,7 +24,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -39,7 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 /* below is the query interface to a table */
 
-typedef struct tagMSIINSERTVIEW
+struct insert_view
 {
     MSIVIEW          view;
     MSIVIEW         *table;
@@ -47,11 +46,11 @@ typedef struct tagMSIINSERTVIEW
     BOOL             bIsTemp;
     MSIVIEW         *sv;
     column_info     *vals;
-} MSIINSERTVIEW;
+};
 
 static UINT INSERT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
 {
-    MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
+    struct insert_view *iv = (struct insert_view *)view;
 
     TRACE("%p %d %d %p\n", iv, row, col, val );
 
@@ -80,7 +79,7 @@ MSIRECORD *msi_query_merge_record( UINT fields, const column_info *vl, MSIRECORD
         switch( vl->val->type )
         {
         case EXPR_SVAL:
-            TRACE("field %d -> %s\n", i, debugstr_w(vl->val->u.sval));
+            TRACE( "field %lu -> %s\n", i, debugstr_w(vl->val->u.sval) );
             MSI_RecordSetStringW( merged, i, vl->val->u.sval );
             break;
         case EXPR_IVAL:
@@ -107,7 +106,7 @@ err:
 /* checks to see if the column order specified in the INSERT query
  * matches the column order of the table
  */
-static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
+static BOOL columns_in_order(struct insert_view *iv, UINT col_count)
 {
     LPCWSTR a, b;
     UINT i;
@@ -117,7 +116,7 @@ static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
         iv->sv->ops->get_column_info(iv->sv, i, &a, NULL, NULL, NULL);
         iv->table->ops->get_column_info(iv->table, i, &b, NULL, NULL, NULL);
 
-        if (strcmpW( a, b )) return FALSE;
+        if (wcscmp( a, b )) return FALSE;
     }
     return TRUE;
 }
@@ -125,7 +124,7 @@ static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
 /* rearranges the data in the record to be inserted based on column order,
  * and pads the record for any missing columns in the INSERT query
  */
-static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
+static UINT arrange_record(struct insert_view *iv, MSIRECORD **values)
 {
     MSIRECORD *padded;
     UINT col_count, val_count;
@@ -141,7 +140,7 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
     /* check to see if the columns are arranged already
      * to avoid unnecessary copying
      */
-    if (col_count == val_count && msi_columns_in_order(iv, col_count))
+    if (col_count == val_count && columns_in_order(iv, col_count))
         return ERROR_SUCCESS;
 
     padded = MSI_CreateRecord(col_count);
@@ -161,7 +160,7 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
             if (r != ERROR_SUCCESS)
                 goto err;
 
-            if (!strcmpW( a, b ))
+            if (!wcscmp( a, b ))
             {
                 MSI_RecordCopyField(*values, colidx, padded, i);
                 break;
@@ -177,7 +176,7 @@ err:
     return r;
 }
 
-static BOOL row_has_null_primary_keys(MSIINSERTVIEW *iv, MSIRECORD *row)
+static BOOL row_has_null_primary_keys(struct insert_view *iv, MSIRECORD *row)
 {
     UINT r, i, col_count, type;
 
@@ -204,7 +203,7 @@ static BOOL row_has_null_primary_keys(MSIINSERTVIEW *iv, MSIRECORD *row)
 
 static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
-    MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
+    struct insert_view *iv = (struct insert_view *)view;
     UINT r, row = -1, col_count = 0;
     MSIVIEW *sv;
     MSIRECORD *values = NULL;
@@ -232,7 +231,7 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( !values )
         goto err;
 
-    r = msi_arrange_record( iv, &values );
+    r = arrange_record( iv, &values );
     if( r != ERROR_SUCCESS )
         goto err;
 
@@ -252,7 +251,7 @@ err:
 
 static UINT INSERT_close( struct tagMSIVIEW *view )
 {
-    MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
+    struct insert_view *iv = (struct insert_view *)view;
     MSIVIEW *sv;
 
     TRACE("%p\n", iv);
@@ -266,7 +265,7 @@ static UINT INSERT_close( struct tagMSIVIEW *view )
 
 static UINT INSERT_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *cols )
 {
-    MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
+    struct insert_view *iv = (struct insert_view *)view;
     MSIVIEW *sv;
 
     TRACE("%p %p %p\n", iv, rows, cols );
@@ -281,7 +280,7 @@ static UINT INSERT_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 static UINT INSERT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
                                     UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
-    MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
+    struct insert_view *iv = (struct insert_view *)view;
     MSIVIEW *sv;
 
     TRACE("%p %d %p %p %p %p\n", iv, n, name, type, temporary, table_name );
@@ -295,7 +294,7 @@ static UINT INSERT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *na
 
 static UINT INSERT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRECORD *rec, UINT row)
 {
-    MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
+    struct insert_view *iv = (struct insert_view *)view;
 
     TRACE("%p %d %p\n", iv, eModifyMode, rec );
 
@@ -304,7 +303,7 @@ static UINT INSERT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRE
 
 static UINT INSERT_delete( struct tagMSIVIEW *view )
 {
-    MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
+    struct insert_view *iv = (struct insert_view *)view;
     MSIVIEW *sv;
 
     TRACE("%p\n", iv );
@@ -313,23 +312,16 @@ static UINT INSERT_delete( struct tagMSIVIEW *view )
     if( sv )
         sv->ops->delete( sv );
     msiobj_release( &iv->db->hdr );
-    msi_free( iv );
+    free( iv );
 
     return ERROR_SUCCESS;
 }
 
-static UINT INSERT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-
 static const MSIVIEWOPS insert_ops =
 {
     INSERT_fetch_int,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -341,8 +333,6 @@ static const MSIVIEWOPS insert_ops =
     INSERT_get_column_info,
     INSERT_modify,
     INSERT_delete,
-    INSERT_find_matching_rows,
-    NULL,
     NULL,
     NULL,
     NULL,
@@ -361,7 +351,7 @@ static UINT count_column_info( const column_info *ci )
 UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
                         column_info *columns, column_info *values, BOOL temp )
 {
-    MSIINSERTVIEW *iv = NULL;
+    struct insert_view *iv = NULL;
     UINT r;
     MSIVIEW *tv = NULL, *sv = NULL;
 
@@ -383,7 +373,7 @@ UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
         return r;
     }
 
-    iv = msi_alloc_zero( sizeof *iv );
+    iv = calloc( 1, sizeof *iv );
     if( !iv )
         return ERROR_FUNCTION_FAILED;
 

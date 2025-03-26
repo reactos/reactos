@@ -18,7 +18,7 @@
 D3D9Cursor* CreateD3D9Cursor(struct _Direct3DDevice9_INT* pBaseDevice, struct _Direct3DSwapChain9_INT* pSwapChain)
 {
     D3D9Cursor* pCursor;
-    
+
     if (FAILED(AlignedAlloc((LPVOID*)&pCursor, sizeof(D3D9Cursor))))
     {
         DPRINT1("Failed to allocate D3D9Cursor");

@@ -1,26 +1,14 @@
 /*
- *  Notepad (dialog.h)
- *
- *  Copyright 1998 Marcel Baur <mbaur@g26.ethz.ch>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:    ReactOS Notepad
+ * LICENSE:    LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:    Providing a Windows-compatible simple text editor for ReactOS
+ * COPYRIGHT:  Copyright 1998,99 Marcel Baur <mbaur@g26.ethz.ch>
  */
 
 #pragma once
 
 VOID DIALOG_FileNew(VOID);
+VOID DIALOG_FileNewWindow(VOID);
 VOID DIALOG_FileOpen(VOID);
 BOOL DIALOG_FileSave(VOID);
 BOOL DIALOG_FileSaveAs(VOID);
@@ -38,13 +26,14 @@ VOID DIALOG_EditTimeDate(VOID);
 VOID DIALOG_EditWrap(VOID);
 
 VOID DIALOG_Search(VOID);
-VOID DIALOG_SearchNext(VOID);
+VOID DIALOG_SearchNext(BOOL bDown);
 VOID DIALOG_Replace(VOID);
 VOID DIALOG_GoTo(VOID);
 
 VOID DIALOG_SelectFont(VOID);
 
 VOID DIALOG_ViewStatusBar(VOID);
+VOID DIALOG_StatusBarAlignParts(VOID);
 VOID DIALOG_StatusBarUpdateCaretPos(VOID);
 
 VOID DIALOG_HelpContents(VOID);
@@ -65,5 +54,7 @@ BOOL FileExists(LPCTSTR szFilename);
 BOOL HasFileExtension(LPCTSTR szFilename);
 BOOL DoCloseFile(VOID);
 VOID DoOpenFile(LPCTSTR szFileName);
-VOID DoCreateStatusBar(VOID);
+VOID DoShowHideStatusBar(VOID);
 VOID DoCreateEditWindow(VOID);
+void UpdateWindowCaption(BOOL clearModifyAlert);
+VOID WaitCursor(BOOL bBegin);

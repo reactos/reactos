@@ -18,26 +18,24 @@
 /* Define to enable the alias command, and aliases.*/
 #define FEATURE_ALIASES
 
-
 /* Define to enable history */
 #define FEATURE_HISTORY
 
 /*Define to enable history wrap (4nt's style)*/
 #define WRAP_HISTORY
 
-
 /* Define one of these to enable filename completion */
 //#define FEATURE_UNIX_FILENAME_COMPLETION
 #define FEATURE_4NT_FILENAME_COMPLETION
 
-
 /* Define to enable the directory stack */
 #define FEATURE_DIRECTORY_STACK
-
 
 /* Define to activate redirections and piping */
 #define FEATURE_REDIRECTION
 
+/* Define to enable dynamic switching of TRACE output in console */
+#define FEATURE_DYNAMIC_TRACE
 
 /* Define one of these to select the used locale. */
 /*  (date and time formats etc.) used in DATE, TIME, */
@@ -72,7 +70,6 @@
 #define INCLUDE_CMD_PROMPT
 #define INCLUDE_CMD_RMDIR
 #define INCLUDE_CMD_RENAME
-#define INCLUDE_CMD_REPLACE
 #define INCLUDE_CMD_SCREEN
 #define INCLUDE_CMD_SET
 #define INCLUDE_CMD_START

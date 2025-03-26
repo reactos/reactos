@@ -1,0 +1,45 @@
+/*
+ * PROJECT:     ReactOS welcome/autorun application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS - Ongi etorri"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Ongi etorri ReactOS-en sistema eragile.\n\nKlikatu nahi baduzun eskerrako aukerak."
+    IDS_FONTNAME "Tahoma"
+    IDS_CHECKTEXT "&Erakutsi lehioa hau berriro"
+    IDS_CLOSETEXT "&Irten"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "&ReactOS Instalatu"
+    IDS_TOPIC_BUTTON1 "&CD esploratu"
+    IDS_TOPIC_BUTTON2 "&Irten"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "ReactOS Instalatu"
+    IDS_TOPIC_TITLE1 "CD esploratu"
+    IDS_TOPIC_TITLE2 "Irten"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "ReactOS-en Instalazio berria sortu zure ordenagailuan edo eguneratu instalazioa baduzu."
+    IDS_TOPIC_DESC1 "CD esploratu nabigatzailekin."
+    IDS_TOPIC_DESC2 "Klik egiten Irten programa honetan irtetzeko."
+END

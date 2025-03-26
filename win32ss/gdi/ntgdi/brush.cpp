@@ -4,7 +4,7 @@
  * PURPOSE:           BRUSH class implementation
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  *
- * REFERENCES:        http://support.microsoft.com/kb/kbview/108497
+ * REFERENCES:        https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/108497
  */
 
 #include "brush.hpp"
@@ -73,6 +73,17 @@ BRUSH::~BRUSH(
     if ((this->pStyle != NULL) && !(this->flAttrs & BR_IS_DEFAULTSTYLE))
     {
         ExFreePoolWithTag(this->pStyle, GDITAG_PENSTYLE);
+    }
+}
+
+VOID
+BRUSH::vReleaseAttribute(VOID)
+{
+    if (this->pBrushAttr != &this->BrushAttr)
+    {
+        this->BrushAttr = *this->pBrushAttr;
+        GdiPoolFree(GetBrushAttrPool(), this->pBrushAttr);
+        this->pBrushAttr = &this->BrushAttr;
     }
 }
 
@@ -543,7 +554,22 @@ NtGdiSetBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    FIXME("NtGdiSetBrushAttributes is unimplemented\n");
+    PBRUSH pbr;
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertToStockObj((HGDIOBJ*)&hbr))
+        {
+            pbr = BRUSH::LockAny(hbr);
+            if (pbr == NULL)
+            {
+                ERR("Failed to lock brush %p\n", hbr);
+                return NULL;
+            }
+            pbr->vReleaseAttribute();
+            pbr->vUnlock();
+            return hbr;
+        }
+    }
     return NULL;
 }
 
@@ -554,7 +580,25 @@ NtGdiClearBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    FIXME("NtGdiClearBrushAttributes is unimplemented\n");
+    PBRUSH pbr;
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertFromStockObj((HGDIOBJ*)&hbr))
+        {
+            pbr = BRUSH::LockAny(hbr);
+            if (pbr == NULL)
+            {
+                ERR("Failed to lock brush %p\n", hbr);
+                return NULL;
+            }
+            if (!pbr->bAllocateBrushAttr())
+            {
+                ERR("Failed to allocate brush attribute\n");
+            }
+            pbr->vUnlock();
+            return hbr;
+        }
+    }
     return NULL;
 }
 

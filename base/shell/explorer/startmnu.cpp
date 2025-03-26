@@ -23,7 +23,8 @@
 HRESULT
 UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
                 IN HBITMAP hbmBanner  OPTIONAL,
-                IN BOOL bSmallIcons)
+                IN BOOL bSmallIcons,
+                IN BOOL bRefresh)
 {
     CComPtr<IBanneredBar> pbb;
     HRESULT hRet;
@@ -35,6 +36,11 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
 
         /* Update the icon size */
         hRet = pbb->SetIconSize(bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
+    }
+
+    if (bRefresh)
+    {
+        FIXME("Refresh the Start menu with communicating with SHELL32\n");
     }
 
     return hRet;
@@ -97,9 +103,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
 
-    UpdateStartMenu(pMp,
-                    hbmBanner,
-                    bSmallIcons);
+    UpdateStartMenu(pMp, hbmBanner, bSmallIcons, FALSE);
 
     *ppMenuBand = pMb.Detach();
 

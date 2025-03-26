@@ -9,6 +9,8 @@
 #include <ndk/pstypes.h>
 #include <ndk/rtlfuncs.h>
 
+#include <pseh/pseh2.h>
+
 /* XP does not have these functions */
 static DWORD (WINAPI *pFlsAlloc)(PFLS_CALLBACK_FUNCTION);
 static BOOL (WINAPI *pFlsFree)(DWORD);

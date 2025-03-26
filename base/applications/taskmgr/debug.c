@@ -1,24 +1,9 @@
 /*
- *  ReactOS Task Manager
- *
- *  debug.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *                2005         Klemens Friedl <frik85@reactos.at>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Process Debugging
+ * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
+ *              Copyright 2005 Klemens Friedl <frik85@reactos.at>
  */
 
 #include "precomp.h"
@@ -42,21 +27,21 @@ void ProcessPage_OnDebug(void)
     if (dwProcessId == 0)
         return;
 
-    LoadStringW(hInst, IDS_MSG_WARNINGDEBUG, szTemp, ARRAYSIZE(szTemp));
-    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, ARRAYSIZE(szTempA));
+    LoadStringW(hInst, IDS_MSG_WARNINGDEBUG, szTemp, _countof(szTemp));
+    LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, _countof(szTempA));
 
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO | MB_ICONWARNING) != IDYES)
+    if (!ConfirmMessageBox(hMainWnd, szTemp, szTempA, MB_YESNO | MB_ICONWARNING))
     {
-        GetLastErrorText(strErrorText, ARRAYSIZE(strErrorText));
-        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, ARRAYSIZE(szTemp));
+        GetLastErrorText(strErrorText, _countof(strErrorText));
+        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, _countof(szTemp));
         MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK | MB_ICONSTOP);
         return;
     }
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug", 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
     {
-        GetLastErrorText(strErrorText, ARRAYSIZE(strErrorText));
-        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, ARRAYSIZE(szTemp));
+        GetLastErrorText(strErrorText, _countof(strErrorText));
+        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, _countof(szTemp));
         MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK | MB_ICONSTOP);
         return;
     }
@@ -64,8 +49,8 @@ void ProcessPage_OnDebug(void)
     dwDebuggerSize = sizeof(strDebugger);
     if (RegQueryValueExW(hKey, L"Debugger", NULL, NULL, (LPBYTE)strDebugger, &dwDebuggerSize) != ERROR_SUCCESS)
     {
-        GetLastErrorText(strErrorText, ARRAYSIZE(strErrorText));
-        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, ARRAYSIZE(szTemp));
+        GetLastErrorText(strErrorText, _countof(strErrorText));
+        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, _countof(szTemp));
         MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK | MB_ICONSTOP);
         RegCloseKey(hKey);
         return;
@@ -76,8 +61,8 @@ void ProcessPage_OnDebug(void)
     hDebugEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     if (!hDebugEvent)
     {
-        GetLastErrorText(strErrorText, ARRAYSIZE(strErrorText));
-        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, ARRAYSIZE(szTemp));
+        GetLastErrorText(strErrorText, _countof(strErrorText));
+        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, _countof(szTemp));
         MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK | MB_ICONSTOP);
         return;
     }
@@ -89,8 +74,8 @@ void ProcessPage_OnDebug(void)
     si.cb = sizeof(si);
     if (!CreateProcessW(NULL, strDebugPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
-        GetLastErrorText(strErrorText, ARRAYSIZE(strErrorText));
-        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, ARRAYSIZE(szTemp));
+        GetLastErrorText(strErrorText, _countof(strErrorText));
+        LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, _countof(szTemp));
         MessageBoxW(hMainWnd, strErrorText, szTemp, MB_OK | MB_ICONSTOP);
     }
     else

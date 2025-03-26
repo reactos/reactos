@@ -11,25 +11,32 @@
 #include <stdlib.h>
 
 #ifdef __clang__
-#define _rotl __function_rotl
-#define _rotr __function_rotr
-#define _lrotl __function_lrotl
-#define _lrotr __function_lrotr
+#  define _rotl __function_rotl
+#  define _rotr __function_rotr
+#  define _lrotl __function_lrotl
+#  define _lrotr __function_lrotr
 #elif defined(_MSC_VER)
-#pragma function(_rotr, _rotl, _rotr, _lrotl, _lrotr)
+#  pragma function(_rotr, _rotl, _rotr, _lrotl, _lrotr)
 #endif
 
 #if defined (__clang__) && !defined(_MSC_VER)
-#define ASM_ALIAS __asm__
+#  ifdef _M_IX86
+unsigned int _rotr( unsigned int value, int shift ) __asm__("__rotr");
+unsigned long _lrotr(unsigned long value, int shift) __asm__("__lrotr");
+unsigned int _rotl( unsigned int value, int shift ) __asm__("__rotl");
+unsigned long _lrotl( unsigned long value, int shift ) __asm__("__lrotl");
+#  else
+unsigned int _rotr( unsigned int value, int shift ) __asm__("_rotr");
+unsigned long _lrotr(unsigned long value, int shift) __asm__("_lrotr");
+unsigned int _rotl( unsigned int value, int shift ) __asm__("_rotl");
+unsigned long _lrotl( unsigned long value, int shift ) __asm__("_lrotl");
+#  endif
 #else
-#define ASM_ALIAS(x)
+unsigned int _rotr( unsigned int value, int shift );
+unsigned long _lrotr(unsigned long value, int shift);
+unsigned int _rotl( unsigned int value, int shift );
+unsigned long _lrotl( unsigned long value, int shift );
 #endif
-
-unsigned int _rotr( unsigned int value, int shift ) ASM_ALIAS("__rotr");
-unsigned long _lrotr(unsigned long value, int shift) ASM_ALIAS("__lrotr");
-unsigned int _rotl( unsigned int value, int shift ) ASM_ALIAS("__rotl");
-unsigned long _lrotl( unsigned long value, int shift ) ASM_ALIAS("__lrotl");
-
 /*
  * @implemented
  */

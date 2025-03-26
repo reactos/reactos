@@ -40,7 +40,7 @@ DWORD WINAPI D3d9GetAvailDriverMemory(LPD3D9_GETAVAILDRIVERMEMORYDATA pData)
             Data.DDSCaps.dwCaps |= DDSCAPS_TEXTURE | DDSCAPS_3DDEVICE;
 
         if (pData->dwTextureType & D3D9_TEXTURETYPE_BACKBUFFER)
-            Data.DDSCaps.dwCaps |= DDSCAPS_ZBUFFER;        
+            Data.DDSCaps.dwCaps |= DDSCAPS_ZBUFFER;
 
         Ret = OsThunkDdGetAvailDriverMemory(pData->pUnknown6BC->hDirectDrawLocal, (DD_GETAVAILDRIVERMEMORYDATA*)&Data);
         pData->dwFree = Data.dwFree;

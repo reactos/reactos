@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmlazy.c
- * PURPOSE:         Configuration Manager - Internal Registry APIs
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Configuration Manager - Internal Registry APIs
+ * PROGRAMMERS: Alex Ionescu <alex.ionescu@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -23,7 +22,7 @@ BOOLEAN CmpLazyFlushPending;
 BOOLEAN CmpForceForceFlush;
 BOOLEAN CmpHoldLazyFlush = TRUE;
 ULONG CmpLazyFlushIntervalInSeconds = 5;
-static ULONG CmpLazyFlushHiveCount = 7;
+ULONG CmpLazyFlushHiveCount = 7;
 ULONG CmpLazyFlushCount = 1;
 LONG CmpFlushStarveWriters;
 
@@ -61,7 +60,7 @@ CmpDoFlushNextHive(_In_  BOOLEAN ForceFlush,
         if (!(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH) &&
             (CmHive->FlushCount != CmpLazyFlushCount))
         {
-            /* Great sucess! */
+            /* Great success! */
             Result = TRUE;
 
             /* One less to flush */
@@ -81,7 +80,7 @@ CmpDoFlushNextHive(_In_  BOOLEAN ForceFlush,
                 DPRINT("Flushing: %wZ\n", &CmHive->FileFullPath);
                 DPRINT("Handle: %p\n", CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
                 Status = HvSyncHive(&CmHive->Hive);
-                if(!NT_SUCCESS(Status))
+                if (!NT_SUCCESS(Status))
                 {
                     /* Let them know we failed */
                     DPRINT1("Failed to flush %wZ on handle %p (status 0x%08lx)\n",
@@ -93,9 +92,9 @@ CmpDoFlushNextHive(_In_  BOOLEAN ForceFlush,
                 CmHive->FlushCount = CmpLazyFlushCount;
             }
         }
-        else if ((CmHive->Hive.DirtyCount) &&
-                 (!(CmHive->Hive.HiveFlags & HIVE_VOLATILE)) &&
-                 (!(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH)))
+        else if (CmHive->Hive.DirtyCount &&
+                 !(CmHive->Hive.HiveFlags & HIVE_VOLATILE) &&
+                 !(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH))
         {
             /* Use another lazy flusher for this hive */
             ASSERT(CmHive->FlushCount == CmpLazyFlushCount);
@@ -146,7 +145,7 @@ CmpLazyFlushDpcRoutine(IN PKDPC Dpc,
 {
     /* Check if we should queue the lazy flush worker */
     DPRINT("Flush pending: %s, Holding lazy flush: %s.\n", CmpLazyFlushPending ? "yes" : "no", CmpHoldLazyFlush ? "yes" : "no");
-    if ((!CmpLazyFlushPending) && (!CmpHoldLazyFlush))
+    if (!CmpLazyFlushPending && !CmpHoldLazyFlush)
     {
         CmpLazyFlushPending = TRUE;
         ExQueueWorkItem(&CmpLazyWorkItem, DelayedWorkQueue);
@@ -161,7 +160,7 @@ CmpLazyFlush(VOID)
     PAGED_CODE();
 
     /* Check if we should set the lazy flush timer */
-    if ((!CmpNoWrite) && (!CmpHoldLazyFlush))
+    if (!CmpNoWrite && !CmpHoldLazyFlush)
     {
         /* Do it */
         DueTime.QuadPart = Int32x32To64(CmpLazyFlushIntervalInSeconds,
@@ -262,9 +261,14 @@ CmpCmdInit(IN BOOLEAN SetupBoot)
     /* Testing: Force Lazy Flushing */
     CmpHoldLazyFlush = FALSE;
 
-    /* Setup the hive list if this is not a Setup boot */
+    /* Setup the system hives list if this is not a Setup boot */
     if (!SetupBoot)
         CmpInitializeHiveList();
+
+    /* Now that the system hives are loaded, if we are in PE mode,
+     * all other hives will be loaded with full access */
+    if (CmpMiniNTBoot)
+        CmpShareSystemHives = FALSE;
 }
 
 NTSTATUS
@@ -401,7 +405,7 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
          (Status == STATUS_ACCOUNT_EXPIRED) ||
          (Status == STATUS_ACCOUNT_DISABLED) ||
          (Status == STATUS_ACCOUNT_RESTRICTION)) &&
-        (ImpersonationContext))
+        ImpersonationContext)
     {
         /* We failed due to an account/security error, impersonate SYSTEM */
         Status = SeImpersonateClientEx(ImpersonationContext, NULL);

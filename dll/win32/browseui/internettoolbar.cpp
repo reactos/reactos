@@ -29,10 +29,10 @@ toolbar, and address band for an explorer window
 
 interface IAugmentedShellFolder : public IShellFolder
 {
-    virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetNameSpaceID(LPCITEMIDLIST, LPGUID) = 0;
-    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace(ULONG, LPGUID, IShellFolder **) = 0;
-    virtual HRESULT STDMETHODCALLTYPE EnumNameSpace(ULONG, PULONG) = 0;
+    STDMETHOD(AddNameSpace)(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) PURE;
+    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST, LPGUID) PURE;
+    STDMETHOD(QueryNameSpace)(ULONG, LPGUID, IShellFolder **) PURE;
+    STDMETHOD(EnumNameSpace)(ULONG, PULONG) PURE;
 };
 
 #endif
@@ -74,6 +74,19 @@ TODO:
 */
 
 extern HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder);
+
+struct ITBARSTATE
+{
+    static const UINT SIG = ('R' << 0) | ('O' << 8) | ('S' << 16) | (('i' ^ 't' ^ 'b') << 24);
+    UINT cbSize;
+    UINT Signature; // Note: Windows has something else here (12 bytes)
+    UINT StdToolbar : 1;
+    UINT Addressbar : 1;
+    UINT Linksbar : 1;
+    UINT Throbber : 1; // toastytech.com/files/throboff.html
+    UINT Menubar : 1; // ..\Explorer\Advanced\AlwaysShowMenus for NT6?
+    // Note: Windows 8/10 stores the Ribbon state in ..\Explorer\Ribbon
+};
 
 HRESULT IUnknown_RelayWinEvent(IUnknown * punk, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
@@ -147,28 +160,29 @@ public:
     ~CDockSite();
     HRESULT Initialize(IUnknown *containedBand, CInternetToolbar *browser, HWND hwnd, int bandID, int flags);
     HRESULT GetRBBandInfo(REBARBANDINFOW &bandInfo);
+    IUnknown* GetContainedBand() const { return fContainedBand.p; } // Not ref. counted
 private:
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IDockingWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetBorderDW(IUnknown* punkObj, LPRECT prcBorder);
-    virtual HRESULT STDMETHODCALLTYPE RequestBorderSpaceDW(IUnknown* punkObj, LPCBORDERWIDTHS pbw);
-    virtual HRESULT STDMETHODCALLTYPE SetBorderSpaceDW(IUnknown* punkObj, LPCBORDERWIDTHS pbw);
+    STDMETHOD(GetBorderDW)(IUnknown* punkObj, LPRECT prcBorder) override;
+    STDMETHOD(RequestBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
+    STDMETHOD(SetBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
 
     // *** IInputObjectSite specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
+    STDMETHOD(OnFocusChangeIS)(IUnknown *punkObj, BOOL fSetFocus) override;
 
     // *** IOleCommandTarget specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
-        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
-        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds,
+        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID,
+        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
 BEGIN_COM_MAP(CDockSite)
     COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
@@ -250,11 +264,11 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
         bandInfo.fStyle |= RBBS_BREAK;
     if (fDeskBandInfo.dwModeFlags & DBIMF_TOPALIGN)
         bandInfo.fStyle |= RBBS_TOPALIGN;
-    if (fFlags & ITF_NOGRIPPER || fToolbar->fLocked)
+    if ((fFlags & ITF_NOGRIPPER) || fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_NOGRIPPER;
     if (fFlags & ITF_NOTITLE)
         bandInfo.fStyle |= RBBS_HIDETITLE;
-    if (fFlags & ITF_GRIPPERALWAYS && !fToolbar->fLocked)
+    if ((fFlags & ITF_GRIPPERALWAYS) && !fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_GRIPPERALWAYS;
     if (fFlags & ITF_FIXEDSIZE)
         bandInfo.fStyle |= RBBS_FIXEDSIZE;
@@ -274,7 +288,7 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
     bandInfo.cyMaxChild = fDeskBandInfo.ptMaxSize.y;
     bandInfo.cyIntegral = fDeskBandInfo.ptIntegral.y;
     bandInfo.cxIdeal = fDeskBandInfo.ptActual.x;
-    bandInfo.lParam = reinterpret_cast<LPARAM>(this);
+    bandInfo.lParam = reinterpret_cast<LPARAM>(static_cast<CDockSite*>(this));
     return S_OK;
 }
 
@@ -396,7 +410,7 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
 
     if (ppsfFavorites)
         *ppsfFavorites = NULL;
-    
+
     if (ppidl)
         *ppidl = NULL;
 
@@ -515,7 +529,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
 
         if (FAILED(hResult))
             return hResult;
-            
+
         fFavoritesMenu = newMenu;
     }
 
@@ -608,14 +622,13 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
 CInternetToolbar::CInternetToolbar()
 {
     fMainReBar = NULL;
-    fLocked = false;
     fMenuBandWindow = NULL;
     fNavigationWindow = NULL;
     fMenuCallback = new CComObject<CMenuCallback>();
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
-
-    fMenuCallback->AddRef();
+    pSettings = NULL;
+    fIgnoreChanges = FALSE;
 }
 
 CInternetToolbar::~CInternetToolbar()
@@ -628,6 +641,31 @@ void CInternetToolbar::AddDockItem(IUnknown *newItem, int bandID, int flags)
 
     newSite = new CComObject<CDockSite>;
     newSite->Initialize(newItem, this, fMainReBar, bandID, flags);
+}
+
+HRESULT CInternetToolbar::EnumBands(UINT Index, int *pBandId, IUnknown **ppUnkBand)
+{
+    REBARBANDINFOW rbbi;
+    rbbi.cbSize = sizeof(rbbi);
+    rbbi.fMask = RBBIM_ID | RBBIM_LPARAM;
+    rbbi.cch = 0;
+    if (!::SendMessageW(fMainReBar, RB_GETBANDINFOW, Index, (LPARAM)&rbbi))
+        return HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS);
+    *pBandId = rbbi.wID;
+    if (!rbbi.lParam)
+        return E_UNEXPECTED;
+    *ppUnkBand = ((CDockSite*)(rbbi.lParam))->GetContainedBand(); // Not ref. counted
+    return *ppUnkBand ? S_OK : S_FALSE;
+}
+
+HRESULT CInternetToolbar::QIBand(int BandID, REFIID riid, void **ppv)
+{
+    IUnknown *pUnk; // Not ref. counted
+    int temp = (UINT) SendMessageW(fMainReBar, RB_IDTOINDEX, BandID, 0);
+    if (EnumBands(temp, &temp, &pUnk) == S_OK)
+        return pUnk->QueryInterface(riid, ppv);
+    *ppv = NULL;
+    return E_NOINTERFACE;
 }
 
 HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
@@ -666,7 +704,7 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
     hResult = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &menubar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    
+
     hResult = fMenuCallback->QueryInterface(IID_PPV_ARG(IShellMenuCallback, &callback));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -713,36 +751,39 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
 HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
 {
+    if (locked != !!pSettings->fLocked)
+    {
+        pSettings->fLocked = (BOOL)locked;
+        pSettings->Save();
+        RefreshLockedToolbarState();
+    }
+    return S_OK;
+}
+
+void CInternetToolbar::RefreshLockedToolbarState()
+{
     REBARBANDINFOW                          rebarBandInfo;
     int                                     bandCount;
     CDockSite                               *dockSite;
-    HRESULT                                 hResult;
 
-    if (locked != fLocked)
+    rebarBandInfo.cbSize = sizeof(rebarBandInfo);
+    rebarBandInfo.fMask = RBBIM_STYLE | RBBIM_LPARAM;
+    bandCount = (int)SendMessage(fMainReBar, RB_GETBANDCOUNT, 0, 0);
+    for (INT x  = 0; x < bandCount; x++)
     {
-        fLocked = locked;
-        rebarBandInfo.cbSize = sizeof(rebarBandInfo);
-        rebarBandInfo.fMask = RBBIM_STYLE | RBBIM_LPARAM;
-        bandCount = (int)SendMessage(fMainReBar, RB_GETBANDCOUNT, 0, 0);
-        for (INT x  = 0; x < bandCount; x++)
+        SendMessage(fMainReBar, RB_GETBANDINFOW, x, (LPARAM)&rebarBandInfo);
+        dockSite = reinterpret_cast<CDockSite *>(rebarBandInfo.lParam);
+        if (dockSite != NULL)
         {
-            SendMessage(fMainReBar, RB_GETBANDINFOW, x, (LPARAM)&rebarBandInfo);
-            dockSite = reinterpret_cast<CDockSite *>(rebarBandInfo.lParam);
-            if (dockSite != NULL)
-            {
-                rebarBandInfo.fStyle &= ~(RBBS_NOGRIPPER | RBBS_GRIPPERALWAYS);
-                if (dockSite->fFlags & CDockSite::ITF_NOGRIPPER || fLocked)
-                    rebarBandInfo.fStyle |= RBBS_NOGRIPPER;
-                if (dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS && !fLocked)
-                    rebarBandInfo.fStyle |= RBBS_GRIPPERALWAYS;
-                SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
-            }
+            rebarBandInfo.fStyle &= ~(RBBS_NOGRIPPER | RBBS_GRIPPERALWAYS);
+            if ((dockSite->fFlags & CDockSite::ITF_NOGRIPPER) || pSettings->fLocked)
+                rebarBandInfo.fStyle |= RBBS_NOGRIPPER;
+            if ((dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS) && !pSettings->fLocked)
+                rebarBandInfo.fStyle |= RBBS_GRIPPERALWAYS;
+            SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
         }
-        hResult = ReserveBorderSpace(0);
-
-        // TODO: refresh view menu?
     }
-    return S_OK;
+    ReserveBorderSpace(0);
 }
 
 HRESULT CInternetToolbar::SetState(const GUID *pguidCmdGroup, long commandID, OLECMD* pcmd)
@@ -892,30 +933,16 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
             return hResult;
     }
 
-    if (fMenuBar)
+    // TODO: Why should showing the IDockingWindow change all bands? Related to CORE-17236 and CORE-19659.
+    int id;
+    IUnknown *pUnk;
+    for (UINT i = 0; SUCCEEDED(EnumBands(i, &id, &pUnk)); ++i)
     {
-        hResult = IUnknown_ShowDW(fMenuBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
-
-    if (fControlsBar)
-    {
-        hResult = IUnknown_ShowDW(fControlsBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
-    if (fNavigationBar)
-    {
-        hResult = IUnknown_ShowDW(fNavigationBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
-    if (fLogoBar)
-    {
-        hResult = IUnknown_ShowDW(fLogoBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
+        if (!pUnk)
+            continue;
+        BOOL visible = fShow && IsBandVisible(id) != S_FALSE;
+        hResult = IUnknown_ShowDW(pUnk, visible);
+        FAILED_UNEXPECTEDLY(hResult);
     }
     return S_OK;
 }
@@ -970,13 +997,13 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
     ::GetWindowRect(fMainReBar, &availableBorderSpace);
     neededBorderSpace.left = 0;
     neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
-    if (!fLocked)
+    if (!pSettings->fLocked)
         neededBorderSpace.top += 3;
     neededBorderSpace.right = 0;
     neededBorderSpace.bottom = 0;
 
     CComPtr<IDockingWindowSite> dockingWindowSite;
-    
+
     HRESULT hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -1000,6 +1027,14 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetClassID(CLSID *pClassID)
     return S_OK;
 }
 
+HRESULT CInternetToolbar::SetDirty()
+{
+    if (fIgnoreChanges)
+        return S_OK;
+    IUnknown_Exec(fSite, CGID_ShellBrowser, IDM_NOTIFYITBARDIRTY, 0, NULL, NULL);
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CInternetToolbar::IsDirty()
 {
     return E_NOTIMPL;
@@ -1007,12 +1042,35 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::IsDirty()
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::Load(IStream *pStm)
 {
-    return E_NOTIMPL;
+    fIgnoreChanges = TRUE;
+    HRESULT hr = InitNew();
+    ITBARSTATE state;
+    if (SUCCEEDED(hr))
+    {
+        hr = S_FALSE;
+        ULONG cb = sizeof(state);
+        if (pStm->Read(&state, cb, &cb) == S_OK && state.Signature == state.SIG)
+        {
+            SetBandVisibility(ITBBID_MENUBAND, state.Menubar);
+            SetBandVisibility(ITBBID_TOOLSBAND, state.StdToolbar);
+            SetBandVisibility(ITBBID_ADDRESSBAND, state.Addressbar);
+            //SetBandVisibility(ITBBID_?, state.Linksbar);
+            //SetBandVisibility(ITBBID_?, state.Throbber);
+            hr = S_OK;
+        }
+    }
+    fIgnoreChanges = FALSE;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::Save(IStream *pStm, BOOL fClearDirty)
 {
-    return E_NOTIMPL;
+    ITBARSTATE state = { sizeof(state), state.SIG };
+    state.Menubar = IsBandVisible(ITBBID_MENUBAND) == S_OK;
+    state.StdToolbar = IsBandVisible(ITBBID_TOOLSBAND) == S_OK;
+    state.Addressbar = IsBandVisible(ITBBID_ADDRESSBAND) == S_OK;
+    state.Linksbar = FALSE;
+    return pStm->Write(&state, sizeof(state), NULL);
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetSizeMax(ULARGE_INTEGER *pcbSize)
@@ -1037,7 +1095,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = IUnknown_GetWindow(menuBar, &fMenuBandWindow);
     fMenuBar.Attach(menuBar.Detach());                  // transfer the ref count
 
-    // FIXME: The ros Rebar does not properly support fixed-size items such as the brandband,
+    // FIXME: The ROS Rebar does not properly support fixed-size items such as the brandband,
     // and it will put them in their own row, sized to take up the whole row.
 #if 0
     /* Create and attach the brand/logo to the rebar */
@@ -1079,22 +1137,32 @@ HRESULT CInternetToolbar::IsBandVisible(int BandID)
     return (bandInfo.fStyle & RBBS_HIDDEN) ? S_FALSE : S_OK;
 }
 
-HRESULT CInternetToolbar::ToggleBandVisibility(int BandID)
+HRESULT CInternetToolbar::SetBandVisibility(int BandID, int Show)
 {
     int index = (int)SendMessage(fMainReBar, RB_IDTOINDEX, BandID, 0);
+    REBARBANDINFOW bandInfo = {sizeof(REBARBANDINFOW), RBBIM_STYLE | RBBIM_CHILD};
+    if (!SendMessage(fMainReBar, RB_GETBANDINFOW, index, (LPARAM)&bandInfo))
+        return E_FAIL;
 
-    REBARBANDINFOW bandInfo = {sizeof(REBARBANDINFOW), RBBIM_STYLE};
-    SendMessage(fMainReBar, RB_GETBANDINFOW, index, (LPARAM)&bandInfo);
-
-    if (bandInfo.fStyle & RBBS_HIDDEN)
+    if (Show < 0)
+        bandInfo.fStyle ^= RBBS_HIDDEN; // Toggle
+    else if (Show)
         bandInfo.fStyle &= ~RBBS_HIDDEN;
     else
         bandInfo.fStyle |= RBBS_HIDDEN;
 
+    bandInfo.fMask &= ~RBBIM_CHILD;
+    ::ShowWindow(bandInfo.hwndChild, (bandInfo.fStyle & RBBS_HIDDEN) ? SW_HIDE : SW_SHOW); // CORE-17236
     SendMessage(fMainReBar, RB_SETBANDINFOW, index, (LPARAM)&bandInfo);
 
     ReserveBorderSpace(0);
+    SetDirty();
     return S_OK;
+}
+
+HRESULT CInternetToolbar::ToggleBandVisibility(int BandID)
+{
+    return SetBandVisibility(BandID, -1);
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGroup,
@@ -1135,7 +1203,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                     break;
                 case ITID_TOOLBARLOCKED:    // lock toolbars
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
-                    if (fLocked)
+                    if (pSettings->fLocked)
                         prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 default:
@@ -1174,7 +1242,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::Exec(const GUID *pguidCmdGroup, DWOR
                 // run customize
                 return S_OK;
             case ITID_TOOLBARLOCKED:
-                return LockUnlockToolbars(!fLocked);
+                return LockUnlockToolbars(!pSettings->fLocked);
         }
     }
     return E_FAIL;
@@ -1304,6 +1372,13 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetBitmapSize(long *paramC)
 HRESULT STDMETHODCALLTYPE CInternetToolbar::SendToolbarMsg(const GUID *pguidCmdGroup, UINT uMsg,
     WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
+    if (fToolbarWindow)
+    {
+        LRESULT res = ::SendMessageW(fToolbarWindow, uMsg, wParam, lParam);
+        if (result)
+            *result = res;
+        return S_OK;
+    }
     return E_NOTIMPL;
 }
 
@@ -1345,6 +1420,9 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
             return hResult;
         if (ownerWindow == NULL)
             return E_FAIL;
+
+        // Get settings from owner window
+        ::SendMessageW(ownerWindow, BWM_GETSETTINGSPTR, 0, (LPARAM)&pSettings);
 
         // create dock container
         fSite = pUnkSite;
@@ -1443,8 +1521,14 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::AddBand(IUnknown *punk)
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (uBand == ~0ul)
+        return ::SendMessage(fMainReBar, RB_GETBANDCOUNT, 0, 0);
+    int id;
+    IUnknown *pUnkUnused;
+    HRESULT hr = EnumBands(uBand, &id, &pUnkUnused);
+    if (SUCCEEDED(hr))
+        *pdwBandID = id;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryBand(DWORD dwBandID,
@@ -1522,7 +1606,7 @@ LRESULT CInternetToolbar::OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
 LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    IUnknown_Exec(fSite, CGID_Explorer, 0x1c, 1, NULL, NULL); 
+    IUnknown_Exec(fSite, CGID_Explorer, 0x1c, 1, NULL, NULL);
     return 1;
 }
 
@@ -1546,7 +1630,7 @@ LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, H
     }
     return 1;
 }
-    
+
 LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled)
 {
     CComPtr<IBrowserService>                browserService;
@@ -1672,7 +1756,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     RBHITTESTINFO                           hitTestInfo;
     REBARBANDINFOW                          rebarBandInfo;
     int                                     bandID;
-    BOOL                                    goButtonChecked;
+    CComPtr<IAddressBand>                   pAddress;
 
     clickLocation.x = LOWORD(lParam);
     clickLocation.y = HIWORD(lParam);
@@ -1681,6 +1765,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SendMessage(fMainReBar, RB_HITTEST, 0, (LPARAM)&hitTestInfo);
     if (hitTestInfo.iBand == -1)
         return 0;
+
     rebarBandInfo.cbSize = sizeof(rebarBandInfo);
     rebarBandInfo.fMask = RBBIM_ID;
     SendMessage(fMainReBar, RB_GETBANDINFOW, hitTestInfo.iBand, (LPARAM)&rebarBandInfo);
@@ -1706,6 +1791,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         case ITBBID_ADDRESSBAND:    // navigation band
             DeleteMenu(contextMenu, IDM_TOOLBARS_CUSTOMIZE, MF_BYCOMMAND);
             DeleteMenu(contextMenu, IDM_TOOLBARS_TEXTLABELS, MF_BYCOMMAND);
+            QIBand(ITBBID_ADDRESSBAND, IID_PPV_ARG(IAddressBand, &pAddress));
+            pSettings->fShowGoButton = CAddressBand::IsGoButtonVisible(pAddress);
             break;
         default:
             break;
@@ -1717,9 +1804,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, IsBandVisible(ITBBID_ADDRESSBAND) == S_OK);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, fLocked);
-    goButtonChecked = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, goButtonChecked);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, pSettings->fLocked);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, pSettings->fShowGoButton);
 
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
@@ -1735,7 +1821,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         case IDM_TOOLBARS_LINKSBAR: // links
             break;
         case IDM_TOOLBARS_LOCKTOOLBARS: // lock the toolbars
-            LockUnlockToolbars(!fLocked);
+            LockUnlockToolbars(!pSettings->fLocked);
             break;
         case IDM_TOOLBARS_CUSTOMIZE:    // customize
             SendMessage(fToolbarWindow, TB_CUSTOMIZE, 0, 0);
@@ -1840,7 +1926,7 @@ LRESULT CInternetToolbar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     bHandled = FALSE;
-    if (fLocked)
+    if (pSettings->fLocked)
         return 0;
 
     if (wParam & MK_CONTROL)
@@ -1849,10 +1935,10 @@ LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     fSizing = TRUE;
 
     DWORD msgp = GetMessagePos();
-    
+
     fStartPosition.x = GET_X_LPARAM(msgp);
     fStartPosition.y = GET_Y_LPARAM(msgp);
-    
+
     RECT rc;
     GetWindowRect(&rc);
 
@@ -1917,4 +2003,28 @@ LRESULT CInternetToolbar::OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam
         return 0;
 
     return lres;
+}
+
+LRESULT CInternetToolbar::OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    /* Refresh toolbar locked state */
+    RefreshLockedToolbarState();
+
+    return 0;
+}
+
+HRESULT CInternetToolbar::GetStream(UINT StreamFor, DWORD Stgm, IStream **ppS)
+{
+    WCHAR path[MAX_PATH];
+    LPCWSTR subkey = NULL;
+    switch (StreamFor)
+    {
+    case ITBARSTREAM_SHELLBROWSER: subkey = L"ShellBrowser"; break;
+    case ITBARSTREAM_WEBBROWSER: subkey = L"WebBrowser"; break;
+    case ITBARSTREAM_EXPLORER: subkey = L"Explorer"; break;
+    default: return E_INVALIDARG;
+    }
+    wsprintfW(path, L"Software\\Microsoft\\Internet Explorer\\Toolbar\\%s", subkey);
+    *ppS = SHOpenRegStream2W(HKEY_CURRENT_USER, path, L"RosITBarLayout", Stgm); // ROS prefix until we figure out the correct format
+    return *ppS ? S_OK : E_FAIL;
 }

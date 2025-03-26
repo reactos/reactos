@@ -100,4 +100,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Choose search and install options"
     IDS_SEARCHDRV_TITLE "Searching..."
     IDS_INSTALLDRV_TITLE "Installing..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing proper drivers for this hardware."
 END

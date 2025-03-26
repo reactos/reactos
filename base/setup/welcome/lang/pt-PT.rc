@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Cria uma nova instalação do ReactOS no seu computador ou actualizar uma instalação já existente."
-    IDS_TOPIC_DESC1 "Exibe os arquivos contidos no CD."
-    IDS_TOPIC_DESC2 "Clique para fechar este aplicativo."
+    IDS_TOPIC_DESC0 "Cria uma nova instalação do ReactOS no seu computador ou actualizar uma já existente."
+    IDS_TOPIC_DESC1 "Mostra os arquivos contidos no CD."
+    IDS_TOPIC_DESC2 "Clique para fechar esta aplicação."
 END

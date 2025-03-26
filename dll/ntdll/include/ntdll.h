@@ -43,9 +43,6 @@
 /* Internal NTDLL */
 #include "ntdllp.h"
 
-/* CSRSS Headers */
-#include <csr/csr.h>
-
 /* PSEH */
 #include <pseh/pseh2.h>
 

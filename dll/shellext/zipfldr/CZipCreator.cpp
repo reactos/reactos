@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Create a zip file
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
- *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -12,7 +12,7 @@
 #include "minizip/iowin32.h"
 #include <process.h>
 
-static CStringW DoGetZipName(LPCWSTR filename)
+static CStringW DoGetZipName(PCWSTR filename)
 {
     WCHAR szPath[MAX_PATH];
     StringCbCopyW(szPath, sizeof(szPath), filename);
@@ -34,14 +34,7 @@ static CStringW DoGetZipName(LPCWSTR filename)
     return ret;
 }
 
-static CStringA DoGetAnsiName(LPCWSTR filename)
-{
-    CHAR buf[MAX_PATH];
-    WideCharToMultiByte(CP_ACP, 0, filename, -1, buf, _countof(buf), NULL, NULL);
-    return buf;
-}
-
-static CStringW DoGetBaseName(LPCWSTR filename)
+static CStringW DoGetBaseName(PCWSTR filename)
 {
     WCHAR szBaseName[MAX_PATH];
     StringCbCopyW(szBaseName, sizeof(szBaseName), filename);
@@ -51,7 +44,7 @@ static CStringW DoGetBaseName(LPCWSTR filename)
 }
 
 static CStringA
-DoGetNameInZip(const CStringW& basename, const CStringW& filename)
+DoGetNameInZip(const CStringW& basename, const CStringW& filename, UINT nCodePage)
 {
     CStringW basenameI = basename, filenameI = filename;
     basenameI.MakeUpper();
@@ -65,11 +58,11 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 
     ret.Replace(L'\\', L'/');
 
-    return DoGetAnsiName(ret);
+    return CStringA(CW2AEX<MAX_PATH>(ret, nCodePage));
 }
 
 static BOOL
-DoReadAllOfFile(LPCWSTR filename, CSimpleArray<BYTE>& contents,
+DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
                 zip_fileinfo *pzi)
 {
     contents.RemoveAll();
@@ -124,7 +117,7 @@ DoReadAllOfFile(LPCWSTR filename, CSimpleArray<BYTE>& contents,
 }
 
 static void
-DoAddFilesFromItem(CSimpleArray<CStringW>& files, LPCWSTR item)
+DoAddFilesFromItem(CSimpleArray<CStringW>& files, PCWSTR item)
 {
     if (!PathIsDirectoryW(item))
     {
@@ -208,7 +201,7 @@ BOOL CZipCreator::runThread(CZipCreator *pCreator)
     return FALSE;
 }
 
-void CZipCreator::DoAddItem(LPCWSTR pszFile)
+void CZipCreator::DoAddItem(PCWSTR pszFile)
 {
     // canonicalize path
     WCHAR szPath[MAX_PATH];
@@ -247,7 +240,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
         CStringW strText;
-        strText.Format(IDS_NOFILES, static_cast<LPCWSTR>(m_items[0]));
+        strText.Format(IDS_NOFILES, static_cast<PCWSTR>(m_items[0]));
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
         return CZCERR_NOFILES;
@@ -266,7 +259,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
         CStringW strText;
-        strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName), err);
+        strText.Format(IDS_CANTCREATEZIP, static_cast<PCWSTR>(strZipName), err);
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
         return err;
@@ -279,6 +272,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     int err = 0;
     CStringW strTarget, strBaseName = DoGetBaseName(m_items[0]);
+    UINT nCodePage = GetZipCodePage(FALSE);
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         const CStringW& strFile = files[iFile];
@@ -298,8 +292,8 @@ unsigned CZipCreatorImpl::JustDoIt()
             // TODO: crc = ...;
         }
 
-        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile);
-        err = zipOpenNewFileInZip3_64(zf,
+        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
+        err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
                                       NULL,
@@ -315,6 +309,8 @@ unsigned CZipCreatorImpl::JustDoIt()
                                       Z_DEFAULT_STRATEGY,
                                       password,
                                       crc,
+                                      MINIZIP_COMPATIBLE_VERSION,
+                                      (nCodePage == CP_UTF8 ? MINIZIP_UTF8_FLAG : 0),
                                       zip64);
         if (err)
         {
@@ -347,9 +343,9 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         CStringW strText;
         if (err < 0)
-            strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName), err);
+            strText.Format(IDS_CANTCREATEZIP, static_cast<PCWSTR>(strZipName), err);
         else
-            strText.Format(IDS_CANTREADFILE, static_cast<LPCWSTR>(strTarget));
+            strText.Format(IDS_CANTREADFILE, static_cast<PCWSTR>(strTarget));
 
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
     }

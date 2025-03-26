@@ -29,40 +29,296 @@
 #define NDEBUG
 #include <debug.h>
 
-/* HELPERS FOR PARTITION TYPES **********************************************/
+/* HELPERS FOR DISK AND PARTITION DESCRIPTIONS ******************************/
 
 VOID
-GetPartTypeStringFromPartitionType(
-    IN UCHAR partitionType,
-    OUT PCHAR strPartType,
-    IN ULONG cchPartType)
+GetPartitionTypeString(
+    IN PPARTENTRY PartEntry,
+    OUT PSTR strBuffer,
+    IN ULONG cchBuffer)
 {
-    /* Determine partition type */
-
-    if (IsContainerPartition(partitionType))
+    if (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED)
     {
-        RtlStringCchCopyA(strPartType, cchPartType, MUIGetString(STRING_EXTENDED_PARTITION));
+        RtlStringCchCopyA(strBuffer, cchBuffer,
+                          MUIGetString(STRING_FORMATUNUSED));
     }
-    else if (partitionType == PARTITION_ENTRY_UNUSED)
+    else if (IsContainerPartition(PartEntry->PartitionType))
     {
-        RtlStringCchCopyA(strPartType, cchPartType, MUIGetString(STRING_FORMATUNUSED));
+        RtlStringCchCopyA(strBuffer, cchBuffer,
+                          MUIGetString(STRING_EXTENDED_PARTITION));
     }
     else
     {
-        UINT i;
-
         /* Do the table lookup */
-        for (i = 0; i < ARRAYSIZE(PartitionTypes); i++)
+        PCSTR Description = LookupPartitionTypeString(PartEntry->DiskEntry->DiskStyle,
+                                                      &PartEntry->PartitionType);
+        if (Description)
         {
-            if (partitionType == PartitionTypes[i].Type)
-            {
-                RtlStringCchCopyA(strPartType, cchPartType, PartitionTypes[i].Description);
-                return;
-            }
+            RtlStringCchCopyA(strBuffer, cchBuffer, Description);
+            return;
         }
 
         /* We are here because the partition type is unknown */
-        RtlStringCchCopyA(strPartType, cchPartType, MUIGetString(STRING_FORMATUNKNOWN));
+        if (cchBuffer > 0) *strBuffer = '\0';
+    }
+
+    if ((cchBuffer > 0) && (*strBuffer == '\0'))
+    {
+        RtlStringCchPrintfA(strBuffer, cchBuffer,
+                            MUIGetString(STRING_PARTTYPE),
+                            PartEntry->PartitionType);
+    }
+}
+
+VOID
+PrettifySize1(
+    IN OUT PULONGLONG Size,
+    OUT PCSTR* Unit)
+{
+    ULONGLONG DiskSize = *Size;
+
+    if (DiskSize >= 10 * GB) /* 10 GB */
+    {
+        DiskSize = RoundingDivide(DiskSize, GB);
+        *Unit = MUIGetString(STRING_GB);
+    }
+    else
+    {
+        DiskSize = RoundingDivide(DiskSize, MB);
+        if (DiskSize == 0)
+            DiskSize = 1;
+        *Unit = MUIGetString(STRING_MB);
+    }
+
+    *Size = DiskSize;
+}
+
+VOID
+PrettifySize2(
+    IN OUT PULONGLONG Size,
+    OUT PCSTR* Unit)
+{
+    ULONGLONG PartSize = *Size;
+
+#if 0
+    if (PartSize >= 10 * GB) /* 10 GB */
+    {
+        PartSize = RoundingDivide(PartSize, GB);
+        *Unit = MUIGetString(STRING_GB);
+    }
+    else
+#endif
+    if (PartSize >= 10 * MB) /* 10 MB */
+    {
+        PartSize = RoundingDivide(PartSize, MB);
+        *Unit = MUIGetString(STRING_MB);
+    }
+    else
+    {
+        PartSize = RoundingDivide(PartSize, KB);
+        *Unit = MUIGetString(STRING_KB);
+    }
+
+    *Size = PartSize;
+}
+
+VOID
+PartitionDescription(
+    IN PPARTENTRY PartEntry,
+    OUT PSTR strBuffer,
+    IN SIZE_T cchBuffer)
+{
+    PSTR pBuffer = strBuffer;
+    size_t cchBufferSize = cchBuffer;
+    ULONGLONG PartSize;
+    PCSTR Unit;
+    PVOLINFO VolInfo = (PartEntry->Volume ? &PartEntry->Volume->Info : NULL);
+
+    /* Get the partition size */
+    PartSize = GetPartEntrySizeInBytes(PartEntry);
+    PrettifySize2(&PartSize, &Unit);
+
+    if (PartEntry->IsPartitioned == FALSE)
+    {
+        /* Unpartitioned space: Just display the description and size */
+        RtlStringCchPrintfExA(pBuffer, cchBufferSize,
+                              &pBuffer, &cchBufferSize, 0,
+                              "     %s%-.30s",
+                              PartEntry->LogicalPartition ? "  " : "", // Optional indentation
+                              MUIGetString(STRING_UNPSPACE));
+
+        RtlStringCchPrintfA(pBuffer, cchBufferSize,
+                            "%*s%6I64u %s",
+                            38 - min(strlen(strBuffer), 38), "", // Indentation
+                            PartSize,
+                            Unit);
+        return;
+    }
+
+//
+// NOTE: This could be done with the next case.
+//
+    if ((PartEntry->DiskEntry->DiskStyle == PARTITION_STYLE_MBR) &&
+        IsContainerPartition(PartEntry->PartitionType))
+    {
+        /* Extended partition container: Just display the partition's type and size */
+        RtlStringCchPrintfExA(pBuffer, cchBufferSize,
+                              &pBuffer, &cchBufferSize, 0,
+                              "     %-.30s",
+                              MUIGetString(STRING_EXTENDED_PARTITION));
+
+        RtlStringCchPrintfA(pBuffer, cchBufferSize,
+                            "%*s%6I64u %s",
+                            38 - min(strlen(strBuffer), 38), "", // Indentation
+                            PartSize,
+                            Unit);
+        return;
+    }
+
+    /*
+     * Not an extended partition container.
+     */
+
+    /* Drive letter and partition number */
+    RtlStringCchPrintfExA(pBuffer, cchBufferSize,
+                          &pBuffer, &cchBufferSize, 0,
+                          "%c%c %c %s(%lu) ",
+                          !(VolInfo && VolInfo->DriveLetter) ? '-' : (CHAR)VolInfo->DriveLetter,
+                          !(VolInfo && VolInfo->DriveLetter) ? '-' : ':',
+                          PartEntry->BootIndicator ? '*' : ' ',
+                          PartEntry->LogicalPartition ? "  " : "", // Optional indentation
+                          PartEntry->PartitionNumber);
+
+    /*
+     * If the volume's file system is recognized, display the volume label
+     * (if any) and the file system name. Otherwise, display the partition
+     * type if it's not a new partition.
+     */
+    if (VolInfo && IsFormatted(VolInfo))
+    {
+        size_t cchLabelSize = 0;
+        if (*VolInfo->VolumeLabel)
+        {
+            RtlStringCchPrintfExA(pBuffer, cchBufferSize,
+                                  &pBuffer, &cchLabelSize, 0,
+                                  "\"%-.11S\" ",
+                                  VolInfo->VolumeLabel);
+            cchLabelSize = cchBufferSize - cchLabelSize; // Actual length of the label part.
+            cchBufferSize -= cchLabelSize; // And reset cchBufferSize to what it should be.
+        }
+
+        // TODO: Group this part together with the similar one
+        // from below once the strings are in the same encoding...
+        RtlStringCchPrintfExA(pBuffer, cchBufferSize,
+                              &pBuffer, &cchBufferSize, 0,
+                              "[%-.*S]",
+                              /* The minimum length can be at most 11 since
+                               * cchLabelSize can be at most == 11 + 3 == 14 */
+                              25 - min(cchLabelSize, 25),
+                              VolInfo->FileSystem);
+    }
+    else
+    {
+        CHAR PartTypeString[32];
+        PCSTR PartType = PartTypeString;
+
+        if (PartEntry->New)
+        {
+            /* Use this description if the partition is new (and thus, not formatted) */
+            PartType = MUIGetString(STRING_UNFORMATTED);
+        }
+        else
+        {
+            /* If the partition is not new but its file system is not recognized
+             * (or is not formatted), use the partition type description. */
+            GetPartitionTypeString(PartEntry,
+                                   PartTypeString,
+                                   ARRAYSIZE(PartTypeString));
+            PartType = PartTypeString;
+        }
+        if (!PartType || !*PartType)
+        {
+            PartType = MUIGetString(STRING_FORMATUNKNOWN);
+        }
+
+        // TODO: Group this part together with the similar one
+        // from above once the strings are in the same encoding...
+        RtlStringCchPrintfExA(pBuffer, cchBufferSize,
+                              &pBuffer, &cchBufferSize, 0,
+                              "[%-.*s]",
+                              25,
+                              PartType);
+    }
+
+    /* Show the remaining free space only if a FS is mounted */
+    // FIXME: We don't support that yet!
+#if 0
+    if (VolInfo && *VolInfo->FileSystem)
+    {
+        RtlStringCchPrintfA(pBuffer, cchBufferSize,
+                            "%*s%6I64u %s (%6I64u %s %s)",
+                            38 - min(strlen(strBuffer), 38), "", // Indentation
+                            PartSize,
+                            Unit,
+                            PartFreeSize,
+                            Unit,
+                            "free");
+    }
+    else
+#endif
+    {
+        RtlStringCchPrintfA(pBuffer, cchBufferSize,
+                            "%*s%6I64u %s",
+                            38 - min(strlen(strBuffer), 38), "", // Indentation
+                            PartSize,
+                            Unit);
+    }
+}
+
+VOID
+DiskDescription(
+    IN PDISKENTRY DiskEntry,
+    OUT PSTR strBuffer,
+    IN SIZE_T cchBuffer)
+{
+    ULONGLONG DiskSize;
+    PCSTR Unit;
+
+    /* Get the disk size */
+    DiskSize = GetDiskSizeInBytes(DiskEntry);
+    PrettifySize1(&DiskSize, &Unit);
+
+    //
+    // FIXME: We *MUST* use TXTSETUP.SIF strings from section "DiskDriverMap" !!
+    //
+    if (DiskEntry->DriverName.Length > 0)
+    {
+        RtlStringCchPrintfA(strBuffer, cchBuffer,
+                            MUIGetString(STRING_HDDINFO1),
+                            DiskSize,
+                            Unit,
+                            DiskEntry->DiskNumber,
+                            DiskEntry->Port,
+                            DiskEntry->Bus,
+                            DiskEntry->Id,
+                            &DiskEntry->DriverName,
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
+                                                                          "RAW");
+    }
+    else
+    {
+        RtlStringCchPrintfA(strBuffer, cchBuffer,
+                            MUIGetString(STRING_HDDINFO2),
+                            DiskSize,
+                            Unit,
+                            DiskEntry->DiskNumber,
+                            DiskEntry->Port,
+                            DiskEntry->Bus,
+                            DiskEntry->Id,
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
+                                                                          "RAW");
     }
 }
 
@@ -166,96 +422,20 @@ PrintPartitionData(
     IN PDISKENTRY DiskEntry,
     IN PPARTENTRY PartEntry)
 {
-    CHAR LineBuffer[128];
     COORD coPos;
     ULONG Written;
     USHORT Width;
     USHORT Height;
-    LARGE_INTEGER PartSize;
-    PCSTR Unit;
     UCHAR Attribute;
-    CHAR PartTypeString[32];
-    PCSTR PartType = PartTypeString;
+    CHAR LineBuffer[100];
+
+    PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
 
     Width = ListUi->Right - ListUi->Left - 1;
     Height = ListUi->Bottom - ListUi->Top - 2;
 
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Top + 1 + ListUi->Line;
-
-    /* Get the partition size */
-    PartSize.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-#if 0
-    if (PartSize.QuadPart >= 10 * GB) /* 10 GB */
-    {
-        PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, GB);
-        Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    if (PartSize.QuadPart >= 10 * MB) /* 10 MB */
-    {
-        PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, MB);
-        Unit = MUIGetString(STRING_MB);
-    }
-    else
-    {
-        PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, KB);
-        Unit = MUIGetString(STRING_KB);
-    }
-
-    if (PartEntry->IsPartitioned == FALSE)
-    {
-        sprintf(LineBuffer,
-                MUIGetString(STRING_UNPSPACE),
-                PartEntry->LogicalPartition ? "  " : "",
-                PartEntry->LogicalPartition ? "" : "  ",
-                PartSize.u.LowPart,
-                Unit);
-    }
-    else
-    {
-        /* Determine partition type */
-        PartTypeString[0] = '\0';
-        if (PartEntry->New != FALSE)
-        {
-            PartType = MUIGetString(STRING_UNFORMATTED);
-        }
-        else if (PartEntry->IsPartitioned != FALSE)
-        {
-            GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
-                                               PartTypeString,
-                                               ARRAYSIZE(PartTypeString));
-            PartType = PartTypeString;
-        }
-
-        if (strcmp(PartType, MUIGetString(STRING_FORMATUNKNOWN)) == 0)
-        {
-            sprintf(LineBuffer,
-                    MUIGetString(STRING_HDDINFOUNK5),
-                    (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                    (PartEntry->DriveLetter == 0) ? '-' : ':',
-                    PartEntry->BootIndicator ? '*' : ' ',
-                    PartEntry->LogicalPartition ? "  " : "",
-                    PartEntry->PartitionType,
-                    PartEntry->LogicalPartition ? "" : "  ",
-                    PartSize.u.LowPart,
-                    Unit);
-        }
-        else
-        {
-            sprintf(LineBuffer,
-                    "%c%c %c %s%-24s%s     %6lu %s",
-                    (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                    (PartEntry->DriveLetter == 0) ? '-' : ':',
-                    PartEntry->BootIndicator ? '*' : ' ',
-                    PartEntry->LogicalPartition ? "  " : "",
-                    PartType,
-                    PartEntry->LogicalPartition ? "" : "  ",
-                    PartSize.u.LowPart,
-                    Unit);
-        }
-    }
 
     Attribute = (ListUi->CurrentDisk == DiskEntry &&
                  ListUi->CurrentPartition == PartEntry) ?
@@ -302,66 +482,19 @@ PrintDiskData(
 {
     PPARTENTRY PrimaryPartEntry, LogicalPartEntry;
     PLIST_ENTRY PrimaryEntry, LogicalEntry;
-    CHAR LineBuffer[128];
     COORD coPos;
     ULONG Written;
     USHORT Width;
     USHORT Height;
-    ULARGE_INTEGER DiskSize;
-    PCSTR Unit;
+    CHAR LineBuffer[100];
+
+    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
 
     Width = ListUi->Right - ListUi->Left - 1;
     Height = ListUi->Bottom - ListUi->Top - 2;
 
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Top + 1 + ListUi->Line;
-
-    DiskSize.QuadPart = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    if (DiskSize.QuadPart >= 10 * GB) /* 10 GB */
-    {
-        DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, GB);
-        Unit = MUIGetString(STRING_GB);
-    }
-    else
-    {
-        DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, MB);
-        if (DiskSize.QuadPart == 0)
-            DiskSize.QuadPart = 1;
-        Unit = MUIGetString(STRING_MB);
-    }
-
-    //
-    // FIXME: We *MUST* use TXTSETUP.SIF strings from section "DiskDriverMap" !!
-    //
-    if (DiskEntry->DriverName.Length > 0)
-    {
-        sprintf(LineBuffer,
-                MUIGetString(STRING_HDINFOPARTSELECT_1),
-                DiskSize.u.LowPart,
-                Unit,
-                DiskEntry->DiskNumber,
-                DiskEntry->Port,
-                DiskEntry->Bus,
-                DiskEntry->Id,
-                &DiskEntry->DriverName,
-                DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                              "RAW");
-    }
-    else
-    {
-        sprintf(LineBuffer,
-                MUIGetString(STRING_HDINFOPARTSELECT_2),
-                DiskSize.u.LowPart,
-                Unit,
-                DiskEntry->DiskNumber,
-                DiskEntry->Port,
-                DiskEntry->Bus,
-                DiskEntry->Id,
-                DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                              "RAW");
-    }
 
     if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
@@ -541,7 +674,7 @@ DrawPartitionList(
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xDA, // '+',
+                                CharUpperLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -552,7 +685,7 @@ DrawPartitionList(
     if (ListUi->Offset == 0)
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xC4, // '-',
+                                    CharHorizontalLine, // '-',
                                     Width,
                                     coPos,
                                     &Written);
@@ -560,19 +693,23 @@ DrawPartitionList(
     else
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xC4, // '-',
+                                    CharHorizontalLine, // '-',
                                     Width - 4,
                                     coPos,
                                     &Written);
-        coPos.X = ListUi->Right - 5;
-        WriteConsoleOutputCharacterA(StdOutput,
-                                     "(\x18)", // "(up)"
-                                     3,
-                                     coPos,
-                                     &Written);
+        {
+            CHAR szBuff[] = "(.)"; // "(up)"
+            szBuff[1] = CharUpArrow;
+            coPos.X = ListUi->Right - 5;
+            WriteConsoleOutputCharacterA(StdOutput,
+                                         szBuff,
+                                         3,
+                                         coPos,
+                                         &Written);
+        }
         coPos.X = ListUi->Right - 2;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xC4, // '-',
+                                    CharHorizontalLine, // '-',
                                     2,
                                     coPos,
                                     &Written);
@@ -582,7 +719,7 @@ DrawPartitionList(
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xBF, // '+',
+                                CharUpperRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -593,14 +730,14 @@ DrawPartitionList(
         coPos.X = ListUi->Left;
         coPos.Y = i;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xB3, // '|',
+                                    CharVerticalLine, // '|',
                                     1,
                                     coPos,
                                     &Written);
 
         coPos.X = ListUi->Right;
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xB3, //'|',
+                                    CharVerticalLine, //'|',
                                     1,
                                     coPos,
                                     &Written);
@@ -610,7 +747,7 @@ DrawPartitionList(
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xC0, // '+',
+                                CharLowerLeftCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -621,7 +758,7 @@ DrawPartitionList(
     if (LastLine - ListUi->Offset <= Height)
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xC4, // '-',
+                                    CharHorizontalLine, // '-',
                                     Width,
                                     coPos,
                                     &Written);
@@ -629,19 +766,23 @@ DrawPartitionList(
     else
     {
         FillConsoleOutputCharacterA(StdOutput,
-                                    0xC4, // '-',
+                                    CharHorizontalLine, // '-',
                                     Width - 4,
                                     coPos,
                                     &Written);
-        coPos.X = ListUi->Right - 5;
-        WriteConsoleOutputCharacterA(StdOutput,
-                                     "(\x19)", // "(down)"
-                                     3,
-                                     coPos,
-                                     &Written);
+        {
+            CHAR szBuff[] = "(.)"; // "(down)"
+            szBuff[1] = CharDownArrow;
+            coPos.X = ListUi->Right - 5;
+            WriteConsoleOutputCharacterA(StdOutput,
+                                         szBuff,
+                                         3,
+                                         coPos,
+                                         &Written);
+        }
        coPos.X = ListUi->Right - 2;
        FillConsoleOutputCharacterA(StdOutput,
-                                   0xC4, // '-',
+                                   CharHorizontalLine, // '-',
                                    2,
                                    coPos,
                                    &Written);
@@ -651,7 +792,7 @@ DrawPartitionList(
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xD9, // '+',
+                                CharLowerRightCorner, // '+',
                                 1,
                                 coPos,
                                 &Written);
@@ -670,28 +811,22 @@ DrawPartitionList(
     }
 }
 
+/**
+ * @param[in]   Direction
+ * TRUE or FALSE to scroll to the next (down) or previous (up) entry, respectively.
+ **/
 VOID
-ScrollDownPartitionList(
-    IN PPARTLIST_UI ListUi)
+ScrollUpDownPartitionList(
+    _In_ PPARTLIST_UI ListUi,
+    _In_ BOOLEAN Direction)
 {
-    PPARTENTRY NextPart = GetNextPartition(ListUi->List, ListUi->CurrentPartition);
-    if (NextPart)
+    PPARTENTRY PartEntry =
+        (Direction ? GetNextPartition
+                   : GetPrevPartition)(ListUi->List, ListUi->CurrentPartition);
+    if (PartEntry)
     {
-        ListUi->CurrentPartition = NextPart;
-        ListUi->CurrentDisk = NextPart->DiskEntry;
-        DrawPartitionList(ListUi);
-    }
-}
-
-VOID
-ScrollUpPartitionList(
-    IN PPARTLIST_UI ListUi)
-{
-    PPARTENTRY PrevPart = GetPrevPartition(ListUi->List, ListUi->CurrentPartition);
-    if (PrevPart)
-    {
-        ListUi->CurrentPartition = PrevPart;
-        ListUi->CurrentDisk = PrevPart->DiskEntry;
+        ListUi->CurrentPartition = PartEntry;
+        ListUi->CurrentDisk = PartEntry->DiskEntry;
         DrawPartitionList(ListUi);
     }
 }

@@ -36,7 +36,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wine/unicode.h"
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
@@ -432,6 +431,10 @@ STATUSBAR_GetParts (const STATUS_INFO *infoPtr, INT num_parts, INT parts[])
 
     TRACE("(%d)\n", num_parts);
     if (parts) {
+#ifdef __REACTOS__
+        if (num_parts > infoPtr->numParts)
+            num_parts = infoPtr->numParts;
+#endif
 	for (i = 0; i < num_parts; i++) {
 	    parts[i] = infoPtr->parts[i].x;
 	}
@@ -500,10 +503,10 @@ STATUSBAR_GetTextW (STATUS_INFO *infoPtr, INT nPart, LPWSTR buf)
     if (part->style & SBT_OWNERDRAW)
 	result = (LRESULT)part->text;
     else {
-	result = part->text ? strlenW (part->text) : 0;
+	result = part->text ? lstrlenW (part->text) : 0;
 	result |= (part->style << 16);
 	if (part->text && buf)
-	    strcpyW (buf, part->text);
+	    lstrcpyW (buf, part->text);
     }
     return result;
 }
@@ -526,7 +529,7 @@ STATUSBAR_GetTextLength (STATUS_INFO *infoPtr, INT nPart)
 	part = &infoPtr->parts[nPart];
 
     if ((~part->style & SBT_OWNERDRAW) && part->text)
-	result = strlenW(part->text);
+	result = lstrlenW(part->text);
     else
 	result = 0;
 
@@ -750,16 +753,16 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
 	    if (!ntext) return FALSE;
             MultiByteToWideChar( CP_ACP, 0, atxt, -1, ntext, len );
 	} else if (text) {
-	    ntext = Alloc( (strlenW(text) + 1)*sizeof(WCHAR) );
+	    ntext = Alloc( (lstrlenW(text) + 1)*sizeof(WCHAR) );
 	    if (!ntext) return FALSE;
-	    strcpyW (ntext, text);
+	    lstrcpyW (ntext, text);
 	} else ntext = 0;
 
 	/* replace nonprintable characters with spaces */
 	if (ntext) {
 	    idx = ntext;
 	    while (*idx) {
-	        if(!isprintW(*idx))
+	        if(!iswprint(*idx))
 	            *idx = ' ';
 	        idx++;
 	    }
@@ -940,11 +943,11 @@ STATUSBAR_WMCreate (HWND hwnd, const CREATESTRUCTA *lpCreate)
     
     OpenThemeData (hwnd, themeClass);
 
-    if (lpCreate->lpszName && (len = strlenW ((LPCWSTR)lpCreate->lpszName)))
+    if (lpCreate->lpszName && (len = lstrlenW ((LPCWSTR)lpCreate->lpszName)))
     {
         infoPtr->parts[0].text = Alloc ((len + 1)*sizeof(WCHAR));
         if (!infoPtr->parts[0].text) goto create_fail;
-        strcpyW (infoPtr->parts[0].text, (LPCWSTR)lpCreate->lpszName);
+        lstrcpyW (infoPtr->parts[0].text, (LPCWSTR)lpCreate->lpszName);
     }
 
     dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
@@ -993,12 +996,12 @@ STATUSBAR_WMGetText (const STATUS_INFO *infoPtr, INT size, LPWSTR buf)
     if (!(infoPtr->parts[0].text))
         return 0;
 
-    len = strlenW (infoPtr->parts[0].text);
+    len = lstrlenW (infoPtr->parts[0].text);
 
     if (!size)
         return len;
     else if (size > len) {
-        strcpyW (buf, infoPtr->parts[0].text);
+        lstrcpyW (buf, infoPtr->parts[0].text);
 	return len;
     }
     else {
@@ -1079,10 +1082,10 @@ STATUSBAR_WMSetText (const STATUS_INFO *infoPtr, LPCSTR text)
     Free (part->text);
     part->text = 0;
 
-    if (text && (len = strlenW((LPCWSTR)text))) {
+    if (text && (len = lstrlenW((LPCWSTR)text))) {
         part->text = Alloc ((len+1)*sizeof(WCHAR));
         if (!part->text) return FALSE;
-        strcpyW (part->text, (LPCWSTR)text);
+        lstrcpyW (part->text, (LPCWSTR)text);
     }
 
     InvalidateRect(infoPtr->Self, &part->bound, FALSE);
@@ -1116,6 +1119,10 @@ STATUSBAR_WMSize (STATUS_INFO *infoPtr, WORD flags)
     y = parent_rect.bottom - infoPtr->height;
     MoveWindow (infoPtr->Self, x, y, width, infoPtr->height, TRUE);
     STATUSBAR_SetPartBounds (infoPtr);
+#ifdef __REACTOS__
+    parent_rect = infoPtr->parts[infoPtr->numParts - 1].bound;
+    InvalidateRect(infoPtr->Self, &parent_rect, TRUE);
+#endif
     return TRUE;
 }
 

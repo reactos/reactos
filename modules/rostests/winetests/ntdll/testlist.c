@@ -23,6 +23,7 @@ extern void func_rtl(void);
 extern void func_rtlbitmap(void);
 extern void func_rtlstr(void);
 extern void func_string(void);
+extern void func_threadpool(void);
 extern void func_time(void);
 
 const struct test winetest_testlist[] =
@@ -32,9 +33,7 @@ const struct test winetest_testlist[] =
     { "directory", func_directory },
     { "env", func_env },
     { "error", func_error },
-#ifdef _M_IX86
     { "exception", func_exception },
-#endif
     { "file", func_file },
 #ifdef _M_IX86
     { "generated", func_generated },
@@ -51,6 +50,7 @@ const struct test winetest_testlist[] =
     { "rtlbitmap", func_rtlbitmap },
     { "rtlstr", func_rtlstr },
     { "string", func_string },
+    { "threadpool", func_threadpool},
     { "time", func_time },
     { 0, 0 }
 };

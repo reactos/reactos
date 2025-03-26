@@ -163,9 +163,9 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         /* GUI Information */
         StringCchCopyNW(pSharedInfo->FaceName, ARRAYSIZE(pSharedInfo->FaceName),
                         GuiData->GuiInfo.FaceName, ARRAYSIZE(GuiData->GuiInfo.FaceName));
+        pSharedInfo->FontWeight = GuiData->GuiInfo.FontWeight;
         pSharedInfo->FontFamily = GuiData->GuiInfo.FontFamily;
         pSharedInfo->FontSize   = GuiData->GuiInfo.FontSize;
-        pSharedInfo->FontWeight = GuiData->GuiInfo.FontWeight;
         pSharedInfo->FullScreen = GuiData->GuiInfo.FullScreen;
         pSharedInfo->AutoPosition   = GuiData->GuiInfo.AutoPosition;
         pSharedInfo->WindowPosition = GuiData->GuiInfo.WindowOrigin;
@@ -250,8 +250,8 @@ Quit:
 /*
  * Function for dealing with the undocumented message and structure used by
  * Windows' console.dll for setting console info.
- * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c
- * and http://www.scn.rain.com/~neighorn/PDF/MSBugPaper.pdf
+ * See https://web.archive.org/web/20220808235525/https://www.catch22.net/assets/files/source/files/setconsoleinfo.c
+ * and https://dl.packetstormsecurity.net/papers/win/MSBugPaper.pdf
  * for more information.
  */
 VOID
@@ -312,28 +312,29 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
 
         // TODO: Check that GuiData->hWindow == pConInfo->hWnd
 
-        /* Retrieve terminal informations */
-
         /* Console information */
 
         /*
          * Apply the settings
          */
 
-        /* Set the console informations */
+        /* Refresh the additional TrueType fonts cache now,
+         * as ConSrvApplyUserSettings() could change the output
+         * code page and trigger a font change in the terminal. */
+        RefreshTTFontCache();
+
+        /* Apply the generic console settings */
         ConSrvApplyUserSettings(Console, pConInfo);
 
-        /* Set the terminal informations */
+        /* Set the terminal settings */
 
-        /* Refresh the additional TrueType fonts cache and change the font */
-        RefreshTTFontCache();
+        /* Now, attempt to change the font to what the user specified */
         InitFonts(GuiData,
                   pConInfo->FaceName,
+                  pConInfo->FontWeight,
                   pConInfo->FontFamily,
                   pConInfo->FontSize,
-                  pConInfo->FontWeight);
-       // HACK, needed because changing font may change the size of the window
-       /**/TermResizeTerminal(Console);/**/
+                  0, FALSE);
 
         /* Move the window to the user's values */
         GuiData->GuiInfo.AutoPosition = !!pConInfo->AutoPosition;

@@ -101,10 +101,11 @@ HalpGetCmosData(
 
 ULONG
 NTAPI
-HalpSetCmosData(IN ULONG BusNumber,
-                IN ULONG SlotNumber,
-                IN PVOID Buffer,
-                IN ULONG Length)
+HalpSetCmosData(
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length)
 {
     PUCHAR Ptr = (PUCHAR)Buffer;
     ULONG Address = SlotNumber;

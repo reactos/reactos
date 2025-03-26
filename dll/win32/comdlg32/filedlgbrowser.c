@@ -41,6 +41,9 @@
 #include "servprov.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
+#ifdef __REACTOS__
+EXTERN_C HRESULT DoUpdateAutoCompleteWithCWD(const FileOpenDlgInfos *info, LPCITEMIDLIST pidl);
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
@@ -143,6 +146,9 @@ static void COMDLG32_UpdateCurrentDir(const FileOpenDlgInfos *fodInfos)
         if (SUCCEEDED(res))
             SetCurrentDirectoryW(wszCurrentDir);
     }
+#ifdef __REACTOS__
+    DoUpdateAutoCompleteWithCWD(fodInfos, fodInfos->ShellInfos.pidlAbsCurrent);
+#endif
     
     IShellFolder_Release(psfDesktop);
 }

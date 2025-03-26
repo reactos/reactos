@@ -109,7 +109,7 @@ Returns:
     m_LockObject = LockObject;
 }
 
-
+
 _Must_inspect_result_
 NTSTATUS
 FxIrpQueue::InsertTailRequest(
@@ -162,7 +162,7 @@ Returns:
     return Status;
 }
 
-
+
 _Must_inspect_result_
 NTSTATUS
 FxIrpQueue::InsertHeadRequest(
@@ -214,7 +214,7 @@ Returns:
     return Status;
 }
 
-
+
 MdIrp
 FxIrpQueue::GetNextRequest(
     __out PMdIoCsqIrpContext* pCsqContext
@@ -234,7 +234,7 @@ Routine Description:
     return RemoveNextIrpFromQueue(NULL, pCsqContext);
 }
 
-
+
 _Must_inspect_result_
 NTSTATUS
 FxIrpQueue::GetNextRequest(

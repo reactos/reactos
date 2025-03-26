@@ -22,11 +22,12 @@
 #include "shellbars.h"
 
 #include <browseui_undoc.h>
+#include <shlwapi_undoc.h>
 
 /* The menu consists of 3 parts. The first is loaded from the resources,
    the second is populated with the classes of the CATID_DeskBand comcat
    and the third part consists of the entries for each CISFBand in the band side.
-   The first 5 ids are reserved for the resource menu, the following ids will be 
+   The first 5 ids are reserved for the resource menu, the following ids will be
    for the CATID_DeskBand classes and the rest for the CISFBands.
    The ids for the CISFBand menu items are not continuous, in this range
    each menu id is calculated by adding the band id to the last id for the CATID_DeskBand range */
@@ -58,10 +59,9 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
     WCHAR wszBandGUID[MAX_PATH];
     WCHAR wRegKey[MAX_PATH];
     UINT cBands;
-    DWORD dwDataSize;
     CATID category = CATID_DeskBand;
     HMENU hmenuToolbars;
-    DWORD dwRead;
+    DWORD dwRead, dwDataSize;
     CComPtr<IEnumGUID> pEnumGUID;
     HRESULT hr;
 
@@ -97,8 +97,26 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
 
         /* Get the band name */
         StringCchPrintfW(wRegKey, MAX_PATH, L"CLSID\\%s", wszBandGUID);
-        dwDataSize = MAX_PATH;
-        SHGetValue(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
+        HKEY hKey;
+        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            hr = SHLoadRegUIStringW(hKey, L"MenuTextPUI", wszBandName, _countof(wszBandName));
+            if (FAILED_UNEXPECTEDLY(hr))
+            {
+                hr = SHLoadRegUIStringW(hKey, L"MenuText", wszBandName, _countof(wszBandName));
+                if (FAILED_UNEXPECTEDLY(hr))
+                {
+                    hr = SHLoadRegUIStringW(hKey, NULL, wszBandName, _countof(wszBandName));
+                    FAILED_UNEXPECTEDLY(hr);
+                }
+            }
+            RegCloseKey(hKey);
+        }
+        else
+        {
+            dwDataSize = sizeof(wszBandName);
+            SHGetValueW(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
+        }
 
         /* Insert it */
         InsertMenu(hmenuToolbars, cBands, MF_BYPOSITION, m_ComCatGuids.GetSize() + FIRST_COMCAT_MENU_ID, wszBandName);
@@ -330,7 +348,7 @@ UINT CBandSiteMenu::_GetBandIdForBuiltinISFBand(UINT uID)
 HRESULT STDMETHODCALLTYPE CBandSiteMenu::SetOwner(IUnknown *pOwner)
 {
     TRACE("CBandSiteMenu::SetOwner(%p, %p)\n", this, pOwner);
-    
+
     /* Cache the menu that will be merged every time QueryContextMenu is called */
     _CreateMenuPart();
 
@@ -384,7 +402,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
             CheckMenuItem(hmenuToolbars, menuID + idCmdFirst, MF_CHECKED);
     }
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1)); 
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1));
 }
 
 HRESULT CBandSiteMenu::_ShowToolbarError(HRESULT hRet)

@@ -3,20 +3,13 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#include <crtdefs.h>
+#include <corecrt.h>
+#include <intrin.h>
 
 #ifndef _INC_CRTDBG
 #define _INC_CRTDBG
 
 #pragma pack(push,_CRT_PACKING)
-
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,10 +82,6 @@ extern "C" {
     size_t lTotalCount;
   } _CrtMemState;
 
-#ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(expr) extern char (*static_assert(void)) [(expr) ? 1 : -1]
-#endif
-
 
 // Debug reporting functions
 
@@ -101,9 +90,10 @@ extern "C" {
     int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...);
     int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...);
 
+    int __cdecl _CrtDbgReportV(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, va_list arglist);
+    int __cdecl _CrtDbgReportWV(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, va_list arglist);
+
 #endif
-
-
 
 
 // Assertion and error reporting
@@ -133,10 +123,12 @@ extern "C" {
 
     #define _RPTF0(rptno,msg)
     #define _RPTFN(rptno,msg,...)
-  
+
     #define _RPTFW0(rptno,msg)
     #define _RPTFWN(rptno,msg,...)
 
+    #define _CrtSetReportMode(t,f) ((int)0)
+    #define _CrtSetReportFile(t,f) ((_HFILE)0)
 
 #else // _DEBUG
 
@@ -170,9 +162,12 @@ extern "C" {
 
     #define _RPTF0(rptno,msg)       _RPT_BASE(rptno, __FILE__, __LINE__, NULL, "%s", msg)
     #define _RPTFN(rptno,msg,...)   _RPT_BASE(rptno, __FILE__, __LINE__, NULL, msg, __VA_ARGS__)
-  
+
     #define _RPTFW0(rptno,msg)      _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", msg)
     #define _RPTFWN(rptno,msg,...)  _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, msg, __VA_ARGS__)
+
+    int __cdecl _CrtSetReportMode(int reportType, int reportMode);
+    _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile);
 
 #endif
 
@@ -243,8 +238,6 @@ extern "C" {
 #define _CrtGetReportHook() ((_CRT_REPORT_HOOK)0)
 #define _CrtSetReportHook2(t,f) ((int)0)
 #define _CrtSetReportHookW2(t,f) ((int)0)
-#define _CrtSetReportMode(t,f) ((int)0)
-#define _CrtSetReportFile(t,f) ((_HFILE)0)
 
 #define _CrtSetBreakAlloc(a) ((long)0)
 #define _CrtSetAllocHook(f) ((_CRT_ALLOC_HOOK)0)

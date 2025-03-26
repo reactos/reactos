@@ -2,4 +2,4 @@
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-@ stdcall RouteTheCall(ptr ptr wstr long)
+@ stdcall RouteTheCallW(ptr ptr wstr long)

@@ -33,6 +33,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 DECLSPEC_HIDDEN HINSTANCE shlwapi_hInstance = 0;
 DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 
+#ifdef __REACTOS__
+extern CRITICAL_SECTION g_csBagCacheLock;
+VOID FreeViewStatePropertyBagCache(VOID);
+#endif
+
 /*************************************************************************
  * SHLWAPI {SHLWAPI}
  *
@@ -62,9 +67,16 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
             DisableThreadLibraryCalls(hinstDLL);
 	    shlwapi_hInstance = hinstDLL;
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
+#ifdef __REACTOS__
+	    InitializeCriticalSection(&g_csBagCacheLock);
+#endif
 	    break;
 	  case DLL_PROCESS_DETACH:
             if (fImpLoad) break;
+#ifdef __REACTOS__
+	    FreeViewStatePropertyBagCache();
+	    DeleteCriticalSection(&g_csBagCacheLock);
+#endif
 	    if (SHLWAPI_ThreadRef_index != TLS_OUT_OF_INDEXES) TlsFree(SHLWAPI_ThreadRef_index);
 	    break;
 	}

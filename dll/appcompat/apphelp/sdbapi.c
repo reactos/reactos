@@ -414,7 +414,7 @@ BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length)
     UNICODE_STRING GuidString_u;
     if (NT_SUCCESS(RtlStringFromGUID(Guid, &GuidString_u)))
     {
-        HRESULT hr = StringCchCopyNW(GuidString, Length, GuidString_u.Buffer, GuidString_u.Length / 2);
+        HRESULT hr = StringCchCopyNW(GuidString, Length, GuidString_u.Buffer, GuidString_u.Length / sizeof(WCHAR));
         RtlFreeUnicodeString(&GuidString_u);
         return SUCCEEDED(hr);
     }
@@ -553,7 +553,7 @@ TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag
         if (tmp != TAGID_NULL)
         {
             LPCWSTR name = SdbGetStringTagPtr(pdb, tmp);
-            if (name && !wcsicmp(name, find_name))
+            if (name && !_wcsicmp(name, find_name))
                 return iter;
         }
         iter = SdbFindNextTag(pdb, root, iter);

@@ -40,7 +40,12 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #ifdef __REACTOS__
+
+#include <shlobj.h>
+#include <shlwapi_undoc.h>
+
 int WINAPI IsNetDrive(int drive);
+
 #else
 
 /* Get a function pointer from a DLL handle */
@@ -886,25 +891,28 @@ LPWSTR WINAPI PathRemoveBackslashW( LPWSTR lpszPath )
  * RETURNS
  *  Nothing.
  */
-VOID WINAPI PathRemoveBlanksA(LPSTR lpszPath)
+void WINAPI PathRemoveBlanksA(LPSTR pszPath)
 {
-  TRACE("(%s)\n", debugstr_a(lpszPath));
+    LPSTR start, first;
 
-  if(lpszPath && *lpszPath)
-  {
-    LPSTR start = lpszPath;
+    TRACE("(%s)\n", debugstr_a(pszPath));
 
-    while (*lpszPath == ' ')
-      lpszPath = CharNextA(lpszPath);
+    if (!pszPath || !*pszPath)
+        return;
 
-    while(*lpszPath)
-      *start++ = *lpszPath++;
+    start = first = pszPath;
 
-    if (start != lpszPath)
-      while (start[-1] == ' ')
-        start--;
+    while (*pszPath == ' ')
+        pszPath = CharNextA(pszPath);
+
+    while (*pszPath)
+        *start++ = *pszPath++;
+
+    if (start != first)
+        while (start[-1] == ' ')
+            start--;
+
     *start = '\0';
-  }
 }
 
 /*************************************************************************
@@ -912,25 +920,28 @@ VOID WINAPI PathRemoveBlanksA(LPSTR lpszPath)
  *
  * See PathRemoveBlanksA.
  */
-VOID WINAPI PathRemoveBlanksW(LPWSTR lpszPath)
+void WINAPI PathRemoveBlanksW(LPWSTR pszPath)
 {
-  TRACE("(%s)\n", debugstr_w(lpszPath));
+    LPWSTR start, first;
 
-  if(lpszPath && *lpszPath)
-  {
-    LPWSTR start = lpszPath;
+    TRACE("(%s)\n", debugstr_w(pszPath));
 
-    while (*lpszPath == ' ')
-      lpszPath++;
+    if (!pszPath || !*pszPath)
+        return;
 
-    while(*lpszPath)
-      *start++ = *lpszPath++;
+    start = first = pszPath;
 
-    if (start != lpszPath)
-      while (start[-1] == ' ')
-        start--;
+    while (*pszPath == ' ')
+        pszPath++;
+
+    while (*pszPath)
+        *start++ = *pszPath++;
+
+    if (start != first)
+        while (start[-1] == ' ')
+            start--;
+
     *start = '\0';
-  }
 }
 
 /*************************************************************************
@@ -1127,17 +1138,33 @@ BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath,DWORD dwWhich)
   if (dwWhich)
   {
     LPCWSTR szExt = PathFindExtensionW(lpszPath);
+#ifndef __REACTOS__
     if (!*szExt || dwWhich & 0x40)
+#else
+    if (!*szExt || dwWhich & WHICH_OPTIONAL)
+#endif
     {
       size_t iChoose = 0;
       int iLen = lstrlenW(lpszPath);
       if (iLen > (MAX_PATH - 5))
         return FALSE;
+#ifndef __REACTOS__
       while ( (dwWhich & 0x1) && pszExts[iChoose][0] )
+#else
+      while (pszExts[iChoose][0])
+#endif
       {
+#ifdef __REACTOS__
+        if (dwWhich & 0x1)
+        {
+        if (GetFileAttributes(lpszPath) != FILE_ATTRIBUTE_DIRECTORY)
+#endif
         lstrcpyW(lpszPath + iLen, pszExts[iChoose]);
         if (PathFileExistsW(lpszPath))
           return TRUE;
+#ifdef __REACTOS__
+        }
+#endif
         iChoose++;
         dwWhich >>= 1;
       }
@@ -2228,7 +2255,7 @@ BOOL WINAPI PathIsUNCA(LPCSTR lpszPath)
  * considered UNC, while on Windows Vista+ this is not the case anymore.
  */
 // #ifdef __REACTOS__
-#if (WINVER >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
 #else
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
@@ -2251,7 +2278,7 @@ BOOL WINAPI PathIsUNCW(LPCWSTR lpszPath)
  * considered UNC, while on Windows Vista+ this is not the case anymore.
  */
 // #ifdef __REACTOS__
-#if (WINVER >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
 #else
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
@@ -4040,31 +4067,23 @@ LPCWSTR WINAPI PathFindSuffixArrayW(LPCWSTR lpszSuffix, LPCWSTR *lppszArray, int
  * NOTES
  *  A decorations form is "path[n].ext" where "n" is an optional decimal number.
  */
-VOID WINAPI PathUndecorateA(LPSTR lpszPath)
+void WINAPI PathUndecorateA(LPSTR pszPath)
 {
-  TRACE("(%s)\n",debugstr_a(lpszPath));
+  char *ext, *skip;
 
-  if (lpszPath)
-  {
-    LPSTR lpszExt = PathFindExtensionA(lpszPath);
-    if (lpszExt > lpszPath && lpszExt[-1] == ']')
-    {
-      LPSTR lpszSkip = lpszExt - 2;
-      if (*lpszSkip == '[')
-        lpszSkip++;  /* [] (no number) */
-      else
-        while (lpszSkip > lpszPath && isdigit(lpszSkip[-1]))
-          lpszSkip--;
-      if (lpszSkip > lpszPath && lpszSkip[-1] == '[' && lpszSkip[-2] != '\\')
-      {
-        /* remove the [n] */
-        lpszSkip--;
-        while (*lpszExt)
-          *lpszSkip++ = *lpszExt++;
-        *lpszSkip = '\0';
-      }
-    }
-  }
+  TRACE("(%s)\n", debugstr_a(pszPath));
+
+  if (!pszPath) return;
+
+  ext = PathFindExtensionA(pszPath);
+  if (ext == pszPath || ext[-1] != ']') return;
+
+  skip = ext - 2;
+  while (skip > pszPath && '0' <= *skip && *skip <= '9')
+      skip--;
+
+  if (skip > pszPath && *skip == '[' && skip[-1] != '\\')
+      memmove(skip, ext, strlen(ext) + 1);
 }
 
 /*************************************************************************
@@ -4072,31 +4091,23 @@ VOID WINAPI PathUndecorateA(LPSTR lpszPath)
  *
  * See PathUndecorateA.
  */
-VOID WINAPI PathUndecorateW(LPWSTR lpszPath)
+void WINAPI PathUndecorateW(LPWSTR pszPath)
 {
-  TRACE("(%s)\n",debugstr_w(lpszPath));
+  WCHAR *ext, *skip;
 
-  if (lpszPath)
-  {
-    LPWSTR lpszExt = PathFindExtensionW(lpszPath);
-    if (lpszExt > lpszPath && lpszExt[-1] == ']')
-    {
-      LPWSTR lpszSkip = lpszExt - 2;
-      if (*lpszSkip == '[')
-        lpszSkip++; /* [] (no number) */
-      else
-        while (lpszSkip > lpszPath && isdigitW(lpszSkip[-1]))
-          lpszSkip--;
-      if (lpszSkip > lpszPath && lpszSkip[-1] == '[' && lpszSkip[-2] != '\\')
-      {
-        /* remove the [n] */
-        lpszSkip--;
-        while (*lpszExt)
-          *lpszSkip++ = *lpszExt++;
-        *lpszSkip = '\0';
-      }
-    }
-  }
+  TRACE("(%s)\n", debugstr_w(pszPath));
+
+  if (!pszPath) return;
+
+  ext = PathFindExtensionW(pszPath);
+  if (ext == pszPath || ext[-1] != ']') return;
+
+  skip = ext - 2;
+  while (skip > pszPath && '0' <= *skip && *skip <= '9')
+      skip--;
+
+  if (skip > pszPath && *skip == '[' && skip[-1] != '\\')
+      memmove(skip, ext, (wcslen(ext) + 1) * sizeof(WCHAR));
 }
 
 /*************************************************************************
@@ -4293,6 +4304,7 @@ HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR lpszFile, LPWSTR lpszPath, DWORD 
   return E_FAIL;
 }
 
+#ifndef __REACTOS__ /* Defined in <shlwapi_undoc.h> */
 #define PATH_CHAR_CLASS_LETTER      0x00000001
 #define PATH_CHAR_CLASS_ASTERIX     0x00000002
 #define PATH_CHAR_CLASS_DOT         0x00000004
@@ -4306,6 +4318,7 @@ HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR lpszFile, LPWSTR lpszPath, DWORD 
 
 #define PATH_CHAR_CLASS_INVALID     0x00000000
 #define PATH_CHAR_CLASS_ANY         0xffffffff
+#endif
 
 static const DWORD SHELL_charclass[] =
 {

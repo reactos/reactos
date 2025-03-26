@@ -238,7 +238,7 @@ NdisMFreeSharedMemory(
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-    
+
   /* Call FreeCommonBuffer synchronously if we are at PASSIVE_LEVEL */
   if (KeGetCurrentIrql() == PASSIVE_LEVEL)
   {
@@ -314,7 +314,7 @@ NdisMAllocateSharedMemoryPassive(
 
   if (Memory->Adapter->DriverHandle->MiniportCharacteristics.AllocateCompleteHandler)
       Memory->Adapter->DriverHandle->MiniportCharacteristics.AllocateCompleteHandler(
-             Memory->Adapter->MiniportAdapterContext, Memory->VirtualAddress, 
+             Memory->Adapter->MiniportAdapterContext, Memory->VirtualAddress,
              &Memory->PhysicalAddress, Memory->Length, Memory->Context);
 
   IoFreeWorkItem(Memory->WorkItem);

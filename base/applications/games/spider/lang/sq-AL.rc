@@ -49,7 +49,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Merimange"
-    IDS_SPI_ABOUT "Merimanga Solitare Nga Gregor Schneider\n\nCardLib versioni 1.0"
+    IDS_SPI_ABOUT "Merimanga Solitare Nga Gregor Schneider\nCardLib versioni 1.0"
     IDS_SPI_QUIT "Dil nga Loja?"
     IDS_SPI_WIN "Urime, keni fituar!"
     IDS_SPI_DEAL "Fillo Perseri?"

@@ -44,3 +44,4 @@
 #define KEY_VALUE_TAG 'vkCT'
 #define HEADER_TAG 'rhCT'
 #define REG_STR_TAG 'srCT'
+#define DEVICE_OBJ_SECURITY_TAG 'eSeD'

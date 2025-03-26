@@ -6,15 +6,15 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "\nBir WLAN bağdaştırıcısı yapılandır.\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
-\t-c SSID\t\tYüklü bir SSID'ye bağlar.\n\
+\t-c SSID\t\tBelirtilen bir SSID'ye bağlanır.\n\
 \t-w WEP\t\tKullanılacak bir WEP anahtarı belirtir.\n\
 \t-a\t\tPlansız varış ağını belirtir.\n\
 \t-d\t\tŞimdiki AP'den bağlantıyı keser.\n\
 \t-s\t\tTarar ve alandaki erişim noktalarının bir\n\
-\t\t\tdizelgesini görüntüler.\n\n\
-Değişkensiz geçme şimdiki WLAN bağlantısı üzerine bilgi yazdıracak.\n"
+\t\t\ttablosunu görüntüler.\n\n\
+Şimdiki WLAN bağlantısı üzerine bilgi verir.\n"
     IDS_NO_NETWORK "Alanda bir ağ bulunmadı.\n"
-    IDS_NO_WLAN_ADAPTER "Dizgede bir WLAN bağdaştırıcısı arayamaz.\n"
+    IDS_NO_WLAN_ADAPTER "Sistem, bir WLAN bağdaştırıcısı bulamıyor.\n"
     IDS_SUCCESS "İşlem başarıyla bitirildi.\n"
     IDS_WLAN_DISCONNECT "\nWLAN bağlantısı kesildi.\n"
     IDS_MSG_WEP_ENABLED "WEP etkin: %s\n"

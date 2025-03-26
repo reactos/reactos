@@ -944,59 +944,6 @@ static MUI_ENTRY elGRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY elGRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \233\234 \243\247\246\250\234\345 \244\230 \234\232\241\230\253\230\251\253\343\251\234\240 \253\246\244 bootloader",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\251\253\246 \251\241\242\236\250\346 \233\345\251\241\246 \253\246\254 \254\247\246\242\246\232\240\251\253\343 \251\230\252",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "\217\230\250\230\241\230\242\351 \234\240\251\341\232\234\253\234 \243\240\230 \233\240\230\243\246\250\255\340\243\342\244\236 \233\240\251\241\342\253\230 \251\253\246 A: \241\230\240",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "\247\230\253\343\251\253\234 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   ENTER = \221\254\244\342\256\234\240\230   F3 = \200\247\246\256\351\250\236\251\236",
-        TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY elGRSelectPartitionEntries[] =
 {
     {
@@ -1037,8 +984,7 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  èò´„©´ú C ö†ò §ò õû£†¶¨®ö„©ú´ú ‚§ò §‚¶ õ†ò£‚®†©£ò.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1052,13 +998,6 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  \217\230\253\343\251\253\234 D \232\240\230 \244\230 \233\240\230\232\250\341\257\234\253\234 \342\244\230 \254\247\341\250\256\246\244 \233\240\230\243\342\250\240\251\243\230.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1326,7 +1265,7 @@ static MUI_ENTRY elGRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "\206 \234\232\241\230\253\341\251\253\230\251\236 \253\351\250\230 \237\230 \233\240\230\243\246\250\255\351\251\234\240 \253\246 \233\240\230\243\342\250\240\251\243\230 \217\230\253\343\251\253\234 ENTER \232\240\230 \244\230 \251\254\244\234\256\345\251\234\253\234.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1336,6 +1275,37 @@ static MUI_ENTRY elGRFormatPartitionEntries[] =
         0,
         "   ENTER = \221\254\244\342\256\234\240\230   F3 = \200\247\246\256\351\250\236\251\236",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY elGRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \234\242\342\232\256\234\240 \253\351\250\230 \253\246 \234\247\240\242\234\232\243\342\244\246 partition.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -1450,7 +1420,7 @@ static MUI_ENTRY elGRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY elGRBootLoaderEntries[] =
+static MUI_ENTRY elGRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1462,7 +1432,7 @@ static MUI_ENTRY elGRBootLoaderEntries[] =
     {
         6,
         8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \232\250\341\255\234\240 \253\246\244 boot loader",
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \232\250\341\255\234\240 \253\246\244 bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1507,6 +1477,83 @@ static MUI_ENTRY elGRBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY elGRBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \232\250\341\255\234\240 \253\246\244 bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY elGRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \232\250\341\255\234\240 \253\246\244 bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "\217\230\250\230\241\230\242\351 \234\240\251\341\232\234\253\234 \243\240\230 \233\240\230\243\246\250\255\340\243\342\244\236 \233\240\251\241\342\253\230 \251\253\246 A: \241\230\240",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "\247\230\253\343\251\253\234 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   ENTER = \221\254\244\342\256\234\240\230   F3 = \200\247\246\256\351\250\236\251\236",
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY elGRKeyboardSettingsEntries[] =
@@ -1905,13 +1952,6 @@ MUI_ERROR elGRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "\203\234 \243\247\246\250\234\345\253\234 \244\230 \233\240\230\232\250\341\257\234\253\234 \342\244\230\244 \243\236 \233\240\230\243\246\250\255\340\243\342\244\246 \256\351\250\246 \233\345\251\241\246\254!\n"
-        "\n"
-        "  * \217\230\253\343\251\253\234 \246\247\246\240\246\233\343\247\246\253\234 \247\242\343\241\253\250\246 \232\240\230 \244\230 \251\254\244\234\256\345\251\234\253\234.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Setup failed to install the %S bootcode on the system partition.",
         "ENTER = \204\247\230\244\234\241\241\345\244\236\251\236 \254\247\246\242\246\232\240\251\253\343"
@@ -2000,7 +2040,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
+        "Setup failed to add codepage to the registry.\n"
         "ENTER = \204\247\230\244\234\241\241\345\244\236\251\236 \254\247\246\242\246\232\240\251\253\343"
     },
     {
@@ -2117,6 +2157,10 @@ MUI_PAGE elGRPages[] =
         elGRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        elGRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         elGRDeletePartitionEntries
     },
@@ -2137,8 +2181,8 @@ MUI_PAGE elGRPages[] =
         elGRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        elGRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        elGRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2153,8 +2197,12 @@ MUI_PAGE elGRPages[] =
         elGRSuccessPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        elGRBootPageEntries
+        BOOTLOADER_INSTALL_PAGE,
+        elGRBootLoaderInstallPageEntries
+    },
+    {
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        elGRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2171,27 +2219,28 @@ MUI_STRING elGRStrings[] =
     {STRING_PLEASEWAIT,
      "   \217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Ñö°ò´·©´ò©û   C = Éû£†¶¨®öÂò Partition   F3 = Äß¶ÆÈ®û©û"},
+     "   ENTER = Install   C = Create Primary   E = Create Extended   F3 = Quit"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Install   C = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = \204\232\241\230\253\341\251\253\230\251\236   D = \203\240\230\232\250\230\255\343 Partition   F3 = \200\247\246\256\351\250\236\251\236"},
     {STRING_DELETEPARTITION,
      "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "\213\342\232\234\237\246\252 \253\246\254 \244\342\246\254 partition:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
 //     "Ñß†¢‚•ò´ú §ò õû£†¶¨®ö„©ú´ú ‚§ò §‚¶ partition on"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "\217\230\250\230\241\230\242\351 \233\351\251\253\234 \253\246 \243\342\232\234\237\246\252 \253\246\254 partition \251\234 megabytes."},
     {STRING_CREATEPARTITION,
      "   ENTER = \203\236\243\240\246\254\250\232\345\230 Partition   ESC = \200\241\347\250\340\251\236   F3 = \200\247\246\256\351\250\236\251\236"},
+    {STRING_NEWPARTITION,
+    "\206 \234\232\241\230\253\341\251\253\230\251\236 \233\236\243\240\246\347\250\232\236\251\234 \342\244\230 \244\342\246 partition \251\253\246"},
     {STRING_PARTFORMAT,
     "\200\254\253\346 \253\246 Partition \237\230 \233\240\230\243\246\250\255\340\237\234\345 \243\234\253\341."},
     {STRING_NONFORMATTEDPART,
@@ -2202,8 +2251,6 @@ MUI_STRING elGRStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup install ReactOS onto Partition"},
-    {STRING_CHECKINGPART,
-    "\206 \234\232\241\230\253\341\251\253\230\251\236 \234\242\342\232\256\234\240 \253\351\250\230 \253\246 \234\247\240\242\234\232\243\342\244\246 partition."},
     {STRING_CONTINUE,
     "ENTER = \221\254\244\342\256\234\240\230"},
     {STRING_QUITCONTINUE,
@@ -2231,7 +2278,7 @@ MUI_STRING elGRStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   \202\345\244\234\253\230\240 \230\244\230\244\342\340\251\236 \253\340\244 \250\254\237\243\345\251\234\340\244 \233\240\341\253\230\245\236\252 \247\242\236\241\253\250\246\242\246\232\345\246\254..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   Adding codepage information..."},
     {STRING_DONE,
     "   \216\242\246\241\242\236\250\351\237\236\241\234..."},
     {STRING_REBOOTCOMPUTER2,
@@ -2244,42 +2291,30 @@ MUI_STRING elGRStrings[] =
     "The most common cause of this is using an USB keyboard\r\n"},
     {STRING_CONSOLEFAIL3,
     "\222\230 USB \247\242\236\241\253\250\246\242\346\232\240\230 \233\234\244 \234\345\244\230\240 \247\242\343\250\340\252 \254\247\246\251\253\236\250\240\235\346\243\234\244\230 \230\241\346\243\230\r\n"},
-    {STRING_FORMATTINGDISK,
-    "\206 \234\232\241\230\253\341\251\253\230\251\236 \233\240\230\243\246\250\255\351\244\234\240 \253\246 \233\345\251\241\246 \251\230\252"},
+    {STRING_FORMATTINGPART,
+    "Setup is formatting the partition..."},
     {STRING_CHECKINGDISK,
-    "\206 \234\232\241\230\253\341\251\253\230\251\236 \234\242\342\232\256\234\240 \253\246 \233\345\251\241\246 \251\230\252"},
+    "Setup is checking the disk..."},
     {STRING_FORMATDISK1,
     " \203\240\230\243\346\250\255\340\251\236 \253\246\254 partition \340\252 %S \251\347\251\253\236\243\230 \230\250\256\234\345\340\244 (\232\250\343\232\246\250\236 \233\240\230\243\346\250\255\340\251\236) "},
     {STRING_FORMATDISK2,
     " \203\240\230\243\346\250\255\340\251\236 \253\246\254 partition \340\252 %S \251\347\251\253\236\243\230 \230\250\256\234\345\340\244 "},
     {STRING_KEEPFORMAT,
     " \214\230 \247\230\250\230\243\234\345\244\234\240 \253\246 \251\347\251\253\236\243\230 \230\250\256\234\345\340\244 \340\252 \342\256\234\240 (\241\230\243\345\230 \230\242\242\230\232\343) "},
-    {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  \221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  \221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE_1,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "\221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "\251\253\246 \251\241\242\236\250\346 \233\345\251\241\246 %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  \221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  \221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "\206 \234\232\241\230\253\341\251\253\230\251\236 \233\236\243\240\246\347\250\232\236\251\234 \342\244\230 \244\342\246 partition \251\253\246"},
+    {STRING_HDDISK1,
+    "%s."},
+    {STRING_HDDISK2,
+    "\251\253\246: %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO1,
+    // "\221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s \221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDDINFO2,
+    // "\221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s \221\241\242\236\250\346\252 \233\345\251\241\246\252 %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_UNPSPACE,
-    "    %sUnpartitioned space%s            %6lu %s"},
+    "Unpartitioned space"},
     {STRING_MAXSIZE,
     "MB (\243\234\232. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

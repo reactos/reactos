@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dll/win32/ws2_32_new/src/send.c
+ * FILE:        dll/win32/ws2_32/src/send.c
  * PURPOSE:     Socket Sending Support.
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
@@ -31,7 +31,7 @@ send(IN SOCKET s,
     LPWSATHREADID ThreadId;
     WSABUF Buffers;
     DWORD BytesSent;
-    DPRINT("sendto: %lx, %lx, %lx, %p\n", s, flags, len, buf);
+    DPRINT("send: %lx, %lx, %lx, %p\n", s, flags, len, buf);
 
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickPrologTid(&ThreadId)) == ERROR_SUCCESS)
@@ -154,7 +154,7 @@ WSASend(IN SOCKET s,
     INT Status;
     INT ErrorCode;
     LPWSATHREADID ThreadId;
-    DPRINT("WSARecvFrom: %lx, %lx, %lx, %p\n", s, dwFlags, dwBufferCount, lpBuffers);
+    DPRINT("WSASend: %lx, %lx, %lx, %p\n", s, dwFlags, dwBufferCount, lpBuffers);
 
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickPrologTid(&ThreadId)) == ERROR_SUCCESS)

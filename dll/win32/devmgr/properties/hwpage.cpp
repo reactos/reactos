@@ -963,7 +963,7 @@ HardwareDlgProc(IN HWND hwndDlg,
             {
                 /* zero hpd pointer in window data, because it can be used later (WM_DESTROY has not to be last message) */
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)NULL);
-                
+
                 /* free devices list */
                 FreeDevicesList(hpd);
 
@@ -1030,8 +1030,8 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
        failure cases! */
     hpd = (PHARDWARE_PAGE_DATA)HeapAlloc(GetProcessHeap(),
                                          HEAP_ZERO_MEMORY,
-                                         FIELD_OFFSET(HARDWARE_PAGE_DATA,
-                                                      ClassDevInfo[uNumberOfGuids]));
+                                         DYNAMIC_FIELD_OFFSET(HARDWARE_PAGE_DATA,
+                                                              ClassDevInfo[uNumberOfGuids]));
     if (hpd != NULL)
     {
         HWND hWnd;

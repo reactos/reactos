@@ -180,7 +180,7 @@ public:
         wchar_t ret = (wchar_t)-1;
         switch (encoding)
         {
-            case detect: // if still unknwon
+            case detect: // if still unknown
                 encoding = utf8; // assume utf8 as default
             case utf8:
                 unsigned char c, tmp;

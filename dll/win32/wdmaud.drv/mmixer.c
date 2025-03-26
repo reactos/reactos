@@ -451,7 +451,7 @@ WdmAudGetControlDetails(
 
 MMRESULT
 WdmAudGetWaveOutCapabilities(
-    IN ULONG DeviceId, 
+    IN ULONG DeviceId,
     LPWAVEOUTCAPSW Capabilities)
 {
     if (MMixerWaveOutCapabilities(&MixerContext, DeviceId, Capabilities) == MM_STATUS_SUCCESS)
@@ -463,7 +463,7 @@ WdmAudGetWaveOutCapabilities(
 
 MMRESULT
 WdmAudGetWaveInCapabilities(
-    IN ULONG DeviceId, 
+    IN ULONG DeviceId,
     LPWAVEINCAPSW Capabilities)
 {
     if (MMixerWaveInCapabilities(&MixerContext, DeviceId, Capabilities) == MM_STATUS_SUCCESS)
@@ -776,8 +776,148 @@ WdmAudGetWavePositionByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time)
 {
-    /* FIXME */
+    PSOUND_DEVICE SoundDevice;
+    MMDEVICE_TYPE DeviceType;
+    MIXER_STATUS Status;
+    MMRESULT Result;
+    DWORD Position;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT(Result == MMSYSERR_NOERROR);
+
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        Status = MMixerGetWavePosition(&MixerContext, SoundDeviceInstance->Handle, &Position);
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* Store position */
+            Time->wType = TIME_BYTES;
+            Time->u.cb = Position;
+
+            /* Completed successfully */
+            return MMSYSERR_NOERROR;
+        }
+    }
     return MMSYSERR_NOTSUPPORTED;
+}
+
+MMRESULT
+WdmAudGetVolumeByMMixer(
+    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    _In_ DWORD DeviceId,
+    _Out_ PDWORD pdwVolume)
+{
+    MMRESULT Result;
+    MIXERLINE MixLine;
+    MIXERCONTROL MixControl;
+    MIXERLINECONTROLS MixLineControls;
+    MIXERCONTROLDETAILS MixControlDetails;
+    MIXERCONTROLDETAILS_UNSIGNED MixControlDetailsU[2]; // For 2 (stereo) channels
+
+    MixLine.cbStruct = sizeof(MixLine);
+    MixLine.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
+
+    /* Get line info */
+    Result = WdmAudGetLineInfo(SoundDeviceInstance->Handle,
+                               DeviceId,
+                               &MixLine,
+                               MIXER_OBJECTF_MIXER | MIXER_GETLINEINFOF_COMPONENTTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    MixLineControls.cbStruct = sizeof(MixLineControls);
+    MixLineControls.dwLineID = MixLine.dwLineID;
+    MixLineControls.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
+    MixLineControls.cControls = 1;
+    MixLineControls.cbmxctrl = sizeof(MixControl);
+    MixLineControls.pamxctrl = &MixControl;
+
+    /* Get line controls */
+    Result = WdmAudGetLineControls(SoundDeviceInstance->Handle,
+                                   DeviceId,
+                                   &MixLineControls,
+                                   MIXER_OBJECTF_MIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    MixControlDetails.cbStruct = sizeof(MixControlDetails);
+    MixControlDetails.dwControlID = MixControl.dwControlID;
+    MixControlDetails.cChannels = MixLine.cChannels;
+    MixControlDetails.cMultipleItems = 0;
+    MixControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+    MixControlDetails.paDetails = MixControlDetailsU;
+
+    /* Get volume control details */
+    Result = WdmAudGetControlDetails(SoundDeviceInstance->Handle,
+                                     DeviceId,
+                                     &MixControlDetails,
+                                     MIXER_OBJECTF_MIXER);
+    if (MMSUCCESS(Result))
+        *pdwVolume = MAKELONG(LOWORD(MixControlDetailsU[0].dwValue), HIWORD(MixControlDetailsU[1].dwValue));
+
+    return Result;
+}
+
+MMRESULT
+WdmAudSetVolumeByMMixer(
+    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    _In_ DWORD DeviceId,
+    _In_ DWORD dwVolume)
+{
+    MMRESULT Result;
+    MIXERLINE MixLine;
+    MIXERCONTROL MixControl;
+    MIXERLINECONTROLS MixLineControls;
+    MIXERCONTROLDETAILS MixControlDetails;
+    MIXERCONTROLDETAILS_UNSIGNED MixControlDetailsU[2]; // For 2 (stereo) channels
+
+    MixLine.cbStruct = sizeof(MixLine);
+    MixLine.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
+
+    /* Get line info */
+    Result = WdmAudGetLineInfo(SoundDeviceInstance->Handle,
+                               DeviceId,
+                               &MixLine,
+                               MIXER_OBJECTF_MIXER | MIXER_GETLINEINFOF_COMPONENTTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    MixLineControls.cbStruct = sizeof(MixLineControls);
+    MixLineControls.dwLineID = MixLine.dwLineID;
+    MixLineControls.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
+    MixLineControls.cControls = 1;
+    MixLineControls.cbmxctrl = sizeof(MixControl);
+    MixLineControls.pamxctrl = &MixControl;
+
+    /* Get line controls */
+    Result = WdmAudGetLineControls(SoundDeviceInstance->Handle,
+                                   DeviceId,
+                                   &MixLineControls,
+                                   MIXER_OBJECTF_MIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    /* Convert volume level to be set */
+    MixControlDetailsU[0].dwValue = LOWORD(dwVolume); // Left channel
+    MixControlDetailsU[1].dwValue = HIWORD(dwVolume); // Right channel
+
+    MixControlDetails.cbStruct = sizeof(MixControlDetails);
+    MixControlDetails.dwControlID = MixControl.dwControlID;
+    MixControlDetails.cChannels = MixLine.cChannels;
+    MixControlDetails.cMultipleItems = 0;
+    MixControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+    MixControlDetails.paDetails = MixControlDetailsU;
+
+    /* Set volume control details */
+    Result = WdmAudSetControlDetails(SoundDeviceInstance->Handle,
+                                     DeviceId,
+                                     &MixControlDetails,
+                                     MIXER_OBJECTF_MIXER);
+    return Result;
 }
 
 static
@@ -789,16 +929,16 @@ CommitWaveBufferApc(PVOID ApcContext,
     DWORD dwErrorCode;
     PSOUND_OVERLAPPED Overlap;
     KSSTREAM_HEADER* lpHeader;
-    
+
     dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
     Overlap = (PSOUND_OVERLAPPED)IoStatusBlock;
     lpHeader = Overlap->CompletionContext;
 
     /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode, 
+    Overlap->OriginalCompletionRoutine(dwErrorCode,
         lpHeader->DataUsed, &Overlap->Standard);
 
-    HeapFree(GetProcessHeap(), 0, lpHeader);                
+    HeapFree(GetProcessHeap(), 0, lpHeader);
 }
 
 MMRESULT
@@ -848,22 +988,22 @@ WdmAudCommitWaveBufferByMMixer(
         lpHeader->DataUsed = Length;
     }
 
-    Status = NtDeviceIoControlFile(SoundDeviceInstance->Handle, 
-                                   NULL, 
-                                   CommitWaveBufferApc, 
-                                   NULL, 
-                                   (PIO_STATUS_BLOCK)Overlap, 
+    Status = NtDeviceIoControlFile(SoundDeviceInstance->Handle,
+                                   NULL,
+                                   CommitWaveBufferApc,
+                                   NULL,
+                                   (PIO_STATUS_BLOCK)Overlap,
                                    IoCtl,
-                                   NULL, 
-                                   0, 
-                                   lpHeader, 
+                                   NULL,
+                                   0,
+                                   lpHeader,
                                    sizeof(KSSTREAM_HEADER));
-        
+
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtDeviceIoControlFile() failed with status %08lx\n", Status);
         return MMSYSERR_ERROR;
     }
-    
+
     return MMSYSERR_NOERROR;
 }

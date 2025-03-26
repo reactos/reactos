@@ -288,8 +288,8 @@ BOOL GetDeviceData(LPD3D9_DEVICEDATA pDeviceData)
     pDeviceData->DriverCaps.NumSupportedQueries = NumQueries;
     if (NumQueries > 0)
         pDeviceData->DriverCaps.pSupportedQueriesList = pD3dQueryList;
-    
-    HeapFree(GetProcessHeap(), 0, pD3dZStencilFormatList); 
+
+    HeapFree(GetProcessHeap(), 0, pD3dZStencilFormatList);
 
     return TRUE;
 }
@@ -490,7 +490,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
 
                 ResetGetDriverInfo2Data((DD_GETDRIVERINFO2DATA*)&DriverCaps8, D3DGDI2_TYPE_GETD3DCAPS8, sizeof(D3DCAPS8));
                 PrepareDriverInfoData(&DrvInfo, &DriverCaps8, sizeof(D3DCAPS8));
-                
+
                 if (FALSE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo) ||
                     S_OK != DrvInfo.ddRVal ||
                     DrvInfo.dwActualSize != sizeof(D3DCAPS8))
@@ -513,7 +513,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
 
             ResetGetDriverInfo2Data((DD_GETDRIVERINFO2DATA*)&DriverCaps9, D3DGDI2_TYPE_GETD3DCAPS9, sizeof(D3DCAPS9));
             PrepareDriverInfoData(&DrvInfo, &DriverCaps9, sizeof(D3DCAPS9));
-            
+
             if (FALSE == OsThunkDdGetDriverInfo(pUnknown6BC->hDirectDrawLocal, &DrvInfo) ||
                 S_OK != DrvInfo.ddRVal ||
                 DrvInfo.dwActualSize != sizeof(D3DCAPS9))
@@ -767,7 +767,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
     pGblDriverData->dwNumClipVertices = D3dDriverData.dwNumClipVertices;
 
     /* GUID_D3DExtendedCaps */
-    {     
+    {
         DrvInfo.dwSize = sizeof(DD_GETDRIVERINFODATA);
         DrvInfo.guidInfo = GUID_D3DExtendedCaps;
         DrvInfo.dwExpectedSize = sizeof(D3DHAL_D3DEXTENDEDCAPS);
@@ -839,10 +839,10 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
     {
         HMONITOR hMonitor;
         MONITORINFO MonitorInfo;
-        
+
         memset(&MonitorInfo, 0, sizeof(MONITORINFO));
         MonitorInfo.cbSize = sizeof(MONITORINFO);
-        
+
         hMonitor = GetAdapterMonitor(lpszDeviceName);
         if (TRUE == GetMonitorInfoA(hMonitor, &MonitorInfo))
         {

@@ -38,6 +38,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O ulatus"
+    IDS_COPY "&Kopeeri"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -80,7 +81,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Draiverid selle seadme jaoks ei ole installitud."
     IDS_DEV_HARDWARE_DISABLED "See seade on keelatud, sest BIOS ei andnud sellele ühtegi ressursi."
     IDS_DEV_CANT_SHARE_IRQ "See seade kasutab IRQ ressursi, mis on teise seadme poolt kasutuses ja ei saa jagada.\nTe peate muutma konflikteeriva sätte või eemaldama reealajas draiveri mis põhjustab seda konflikti."
-    IDS_DEV_FAILED_ADD "See seade ei tööta korralikult, sest %1 ei tööta korralikult."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS ei saa installida draivereid selle seadme jaoks, sest juurdepääs kettale või võrgukohale kus paigalduse failid asuvad puudub."
     IDS_DEV_TRANSLATION_FAILED "See seade ei reageeri draiverile."
     IDS_DEV_NO_SOFTCONFIG "ReactOS ei saanud määrata seadistada seda seadet. Uuri dokumentatsiooni, mis kaasnes seadmega ja kasuta ressursi vahekaarti selle seadistamiseks."
@@ -233,7 +234,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Ressursisätted:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -291,14 +292,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Seadmehaldur"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Selle seadme keelamine põhjustab selle töötamise lakkamise.\r\nKas soovite kindlasti seda keelata?"
-  IDS_CONFIRM_UNINSTALL     "Hoiatus: Hakkate seda seadet süsteemist desinstallima.\r\nKas soovite jätkata?"
+  IDS_CONFIRM_DISABLE       "Selle seadme keelamine põhjustab selle töötamise lakkamise.\nKas soovite kindlasti seda keelata?"
+  IDS_CONFIRM_UNINSTALL     "Hoiatus: Hakkate seda seadet süsteemist desinstallima.\nKas soovite jätkata?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Draiveritarkvara värskendamine..."
   IDS_MENU_ENABLE           "Luba"
@@ -309,7 +311,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Atribuudid"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Atribuudid"
   IDS_TOOLTIP_SCAN          "Otsi riistvaramuudatusi"
@@ -320,7 +322,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Avab antud valike atribuudilehe."
@@ -329,7 +331,7 @@ BEGIN
   IDS_HINT_DISABLE      " Keelab valitud seadme."
   IDS_HINT_UPDATE       " Käivitab valitud seadme jaoks draiveritarkvara värskendamise viisardi."
   IDS_HINT_UNINSTALL    " Desinstallib valitud seadme draiveri."
-  IDS_HINT_ADD          " Lisage arvutisse pärandseade (mitteisehäälestuv)." 
+  IDS_HINT_ADD          " Lisage arvutisse pärandseade (mitteisehäälestuv)."
   IDS_HINT_ABOUT        " Teave programmi ReactOS Seadmehaldur kohta."
   IDS_HINT_EXIT         " Väljub programmist."
 

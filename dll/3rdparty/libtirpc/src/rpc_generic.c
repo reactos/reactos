@@ -641,7 +641,7 @@ void freenetbuf(struct netbuf *nbuf)
 #ifdef __REACTOS__
 PCSTR
 WSAAPI
-inet_ntop(INT af, PVOID src, PSTR dst, size_t cnt)
+inet_ntop(INT af, const VOID *src, PSTR dst, size_t cnt)
 {
 	struct in_addr in;
 	char *text_addr;

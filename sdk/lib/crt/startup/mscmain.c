@@ -14,7 +14,7 @@
 
 #if defined(_M_IX86)
 #pragma comment(linker, "/alternatename:__RTC_Initialize=__RTC_NoInitialize")
-#elif defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM)
+#elif defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
 #pragma comment(linker, "/alternatename:_RTC_Initialize=_RTC_NoInitialize")
 #else
 #error Unsupported platform

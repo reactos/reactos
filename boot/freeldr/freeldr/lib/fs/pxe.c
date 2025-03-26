@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 2011  Hervé Poussineau
+ *  Copyright (C) 2011  HervÃ© Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ static ULONG _FileSize = 0;
 static ULONG _FilePosition = 0;
 static ULONG _PacketPosition = 0;
 static UCHAR _Packet[1024]; // Should be a value which can be transferred well in one packet over the network
-static UCHAR* _CachedFile = NULL;
 static ULONG _CachedLength = 0;
 
 static PPXE
@@ -95,7 +94,7 @@ BOOLEAN CallPxe(UINT16 Service, PVOID Parameter)
     if (Service != PXENV_TFTP_READ)
     {
         // HACK: this delay shouldn't be necessary
-        KeStallExecutionProcessor(100 * 1000); // 100 ms
+        StallExecutionProcessor(100 * 1000); // 100 ms
         TRACE("PxeCall(0x%x, %p)\n", Service, Parameter);
     }
 
@@ -127,11 +126,6 @@ static ARC_STATUS PxeClose(ULONG FileId)
         return EIO;
 
     _OpenFile = NO_FILE;
-    if (_CachedFile)
-    {
-        FrLdrTempFree(_CachedFile, TAG_PXE_FILE);
-        _CachedFile = NULL;
-    }
     return ESUCCESS;
 }
 
@@ -161,10 +155,18 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (OpenMode != OpenReadOnly)
         return EACCES;
 
-    /* Retrieve the path length without NULL terminator */
-    PathLen = (Path ? min(strlen(Path), sizeof(_OpenFileName) - 1) : 0);
+    /* Skip leading path separator, if any, so as to ensure that
+     * we always lookup the file at the root of the TFTP server's
+     * file space ("virtual root"), even if the server doesn't
+     * support this, and NOT from the root of the file system. */
+    if (*Path == '\\' || *Path == '/')
+        ++Path;
 
-    /* Lowercase the path and always use slashes as separators */
+    /* Retrieve the path length without NULL terminator */
+    PathLen = min(strlen(Path), sizeof(_OpenFileName) - 1);
+
+    /* Lowercase the path and always use slashes as separators,
+     * for supporting TFTP servers on POSIX systems */
     for (i = 0; i < PathLen; i++)
     {
         if (Path[i] == '\\')
@@ -186,11 +188,6 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     }
 
     _FileSize = sizeData.FileSize;
-    if (_FileSize < 1024 * 1024)
-    {
-        _CachedFile = FrLdrTempAlloc(_FileSize, TAG_PXE_FILE);
-        // Don't check for allocation failure, we support _CachedFile == NULL
-    }
     _CachedLength = 0;
 
     RtlZeroMemory(&openData, sizeof(openData));
@@ -199,14 +196,7 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     openData.PacketSize = sizeof(_Packet);
 
     if (!CallPxe(PXENV_TFTP_OPEN, &openData))
-    {
-        if (_CachedFile)
-        {
-            FrLdrTempFree(_CachedFile, TAG_PXE_FILE);
-            _CachedFile = NULL;
-        }
         return ENOENT;
-    }
 
     _FilePosition = 0;
     _PacketPosition = 0;
@@ -236,10 +226,7 @@ static ARC_STATUS PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
             i = N;
         else
             i = _CachedLength - _FilePosition;
-        if (_CachedFile)
-            RtlCopyMemory(Buffer, _CachedFile + _FilePosition, i);
-        else
-            RtlCopyMemory(Buffer, _Packet + _FilePosition - _PacketPosition, i);
+        RtlCopyMemory(Buffer, _Packet + _FilePosition - _PacketPosition, i);
         _FilePosition += i;
         Buffer = (UCHAR*)Buffer + i;
         *Count += i;
@@ -249,8 +236,6 @@ static ARC_STATUS PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 
         if (!CallPxe(PXENV_TFTP_READ, &readData))
             return EIO;
-        if (_CachedFile)
-            RtlCopyMemory(_CachedFile + _CachedLength, _Packet, readData.BufferSize);
         _PacketPosition = _CachedLength;
         _CachedLength += readData.BufferSize;
     }
@@ -268,7 +253,7 @@ static ARC_STATUS PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMo
     if (Position->HighPart != 0 || SeekMode != SeekAbsolute)
         return EINVAL;
 
-    if (!_CachedFile && Position->LowPart < _FilePosition)
+    if (Position->LowPart < _FilePosition)
     {
         // Close and reopen the file to go to position 0
         if (PxeClose(FileId) != ESUCCESS)
@@ -286,10 +271,6 @@ static ARC_STATUS PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMo
     {
         if (!CallPxe(PXENV_TFTP_READ, &readData))
             return EIO;
-        if (_CachedFile)
-        {
-            RtlCopyMemory(_CachedFile + _CachedLength, _Packet, readData.BufferSize);
-        }
         _PacketPosition = _CachedLength;
         _CachedLength += readData.BufferSize;
     }

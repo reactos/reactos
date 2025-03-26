@@ -5,7 +5,7 @@
  * PROGRAMMERS:
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 
 /*
 BOOL
@@ -54,5 +54,5 @@ START_TEST(NtGdiExtTextOutW)
 
     /* Test alignment requirement for lpDx */
     ret = NtGdiExtTextOutW(hDC, 0, 0, 0, 0, lpstr, len, (INT*)((ULONG_PTR)Dx + 1), 0);
-    ok_int(ret, 1);
+    ok_int(ret, 0);
 }

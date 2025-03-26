@@ -276,17 +276,20 @@ DateTimePageProc(HWND hwndDlg,
             FillMonthsComboBox(GetDlgItem(hwndDlg,
                                           IDC_MONTHCB));
 
-            SetTimer(hwndDlg, ID_TIMER, 1000, NULL);
-
             /* Set range and current year */
             SendMessageW(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETRANGE, 0, MAKELONG ((short) 9999, (short) 1900));
             SendMessageW(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETPOS, 0, MAKELONG( (short) st.wYear, 0));
 
             pOldWndProc = (WNDPROC)SetWindowLongPtrW(GetDlgItem(hwndDlg, IDC_TIMEPICKER), GWLP_WNDPROC, (LONG_PTR)DTPProc);
+
+            SetTimer(hwndDlg, ID_TIMER, 1000 - st.wMilliseconds, NULL);
             break;
 
         case WM_TIMER:
             SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEPICKER), DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM) &st);
+
+            // Reset timeout.
+            SetTimer(hwndDlg, ID_TIMER, 1000 - st.wMilliseconds, NULL);
             break;
 
         case WM_COMMAND:
@@ -347,6 +350,8 @@ DateTimePageProc(HWND hwndDlg,
                             SendDlgItemMessageW(hwndDlg, IDC_CLOCKWND, CLM_STOPCLOCK,
                                                 0, 0);
 
+                            // TODO: Set the clock to the input time.
+
                             /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
@@ -377,11 +382,12 @@ DateTimePageProc(HWND hwndDlg,
 
                         case PSN_APPLY:
                             SetLocalSystemTime(hwndDlg);
-                            SetTimer(hwndDlg, ID_TIMER, 1000, NULL);
 
                             /* Tell the clock to start ticking */
                             SendDlgItemMessageW(hwndDlg, IDC_CLOCKWND, CLM_STARTCLOCK,
                                                 0, 0);
+
+                            SetTimer(hwndDlg, ID_TIMER, 1000 - st.wMilliseconds, NULL);
                             return TRUE;
                     }
                     break;

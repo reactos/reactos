@@ -319,7 +319,7 @@ NetGetJoinInformation(
     _Out_ LPWSTR *lpNameBuffer,
     _Out_ PNETSETUP_JOIN_STATUS BufferType)
 {
-    NET_API_STATUS status;
+    NET_API_STATUS status = NERR_Success;
 
     TRACE("NetGetJoinInformation(%s %p %p)\n",
           debugstr_w(lpServer), lpNameBuffer, BufferType);
@@ -327,6 +327,9 @@ NetGetJoinInformation(
     if (lpNameBuffer == NULL || BufferType == NULL)
         return ERROR_INVALID_PARAMETER;
 
+    /* Disabled because of CORE-17679 */
+#if 0
+    *lpNameBuffer = NULL;
     RpcTryExcept
     {
         status = NetrGetJoinInformation((LPWSTR)lpServer,
@@ -338,6 +341,10 @@ NetGetJoinInformation(
         status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+#endif
+
+    *lpNameBuffer = NULL;
+    *BufferType = NetSetupUnknownStatus;
 
     return status;
 }
@@ -856,7 +863,6 @@ NetValidateName(
 }
 
 
-#if 0
 NET_API_STATUS
 WINAPI
 NetWkstaGetInfo(
@@ -878,7 +884,7 @@ NetWkstaGetInfo(
     {
         status = NetrWkstaGetInfo(servername,
                                   level,
-                                  (LPWKSTA_INFO)bufptr);
+                                  (LPWKSTA_INFO*)bufptr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -888,7 +894,6 @@ NetWkstaGetInfo(
 
     return status;
 }
-#endif
 
 
 NET_API_STATUS
@@ -1037,6 +1042,7 @@ NetWkstaTransportEnum(
 
     return status;
 }
+#endif
 
 
 NET_API_STATUS
@@ -1051,8 +1057,8 @@ NetWkstaUserEnum(
     _Inout_ LPDWORD resumehandle)
 {
     WKSTA_USER_ENUM_STRUCT UserEnumInfo;
-    WKSTA_USER_INFO_0_CONTAINER Container0;
-    WKSTA_USER_INFO_1_CONTAINER Container1;
+//    WKSTA_USER_INFO_0_CONTAINER Container0;
+//    WKSTA_USER_INFO_1_CONTAINER Container1;
     NET_API_STATUS status;
 
     TRACE("NetWkstaUserEnum(%s, %d, %p, %d, %p, %p, %p)\n", debugstr_w(servername),
@@ -1062,15 +1068,19 @@ NetWkstaUserEnum(
     switch (level)
     {
         case 0:
-            UserEnumInfo.WkstaUserInfo.Level0 = &Container0;
-            Container0.EntriesRead = 0;
-            Container0.Buffer = NULL;
+//            UserEnumInfo.WkstaUserInfo.Level0 = &Container0;
+//            Container0.EntriesRead = 0;
+//            Container0.Buffer = NULL;
+            UserEnumInfo.WkstaUserInfo.Level0.EntriesRead = 0;
+            UserEnumInfo.WkstaUserInfo.Level0.Buffer = NULL;
             break;
 
         case 1:
-            UserEnumInfo.WkstaUserInfo.Level1 = &Container1;
-            Container1.EntriesRead = 0;
-            Container1.Buffer = NULL;
+//            UserEnumInfo.WkstaUserInfo.Level1 = &Container1;
+//            Container1.EntriesRead = 0;
+//            Container1.Buffer = NULL;
+            UserEnumInfo.WkstaUserInfo.Level1.EntriesRead = 0;
+            UserEnumInfo.WkstaUserInfo.Level1.Buffer = NULL;
             break;
 
         default:
@@ -1089,13 +1099,17 @@ NetWkstaUserEnum(
             switch (level)
             {
                 case 0:
-                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level0->Buffer;
-                    *entriesread = UserEnumInfo.WkstaUserInfo.Level0->EntriesRead;
+//                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level0->Buffer;
+//                    *entriesread = UserEnumInfo.WkstaUserInfo.Level0->EntriesRead;
+                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level0.Buffer;
+                    *entriesread = UserEnumInfo.WkstaUserInfo.Level0.EntriesRead;
                     break;
 
                 case 1:
-                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level1->Buffer;
-                    *entriesread = UserEnumInfo.WkstaUserInfo.Level1->EntriesRead;
+//                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level1->Buffer;
+//                    *entriesread = UserEnumInfo.WkstaUserInfo.Level1->EntriesRead;
+                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level1.Buffer;
+                    *entriesread = UserEnumInfo.WkstaUserInfo.Level1.EntriesRead;
                     break;
             }
         }
@@ -1113,16 +1127,16 @@ NetWkstaUserEnum(
 NET_API_STATUS
 WINAPI
 NetWkstaUserGetInfo(
-    LPWSTR reserved,
+    _In_ LPWSTR reserved,
     _In_ DWORD level,
-    _Out_ PBYTE *bufptr)
+    _Out_ LPBYTE *bufptr)
 {
     NET_API_STATUS status;
 
     TRACE("NetWkstaUserGetInfo(%s, %d, %p)\n",
           debugstr_w(reserved), level, bufptr);
 
-    if (reserved != NULL)
+    if (reserved != NULL || bufptr == NULL)
         return ERROR_INVALID_PARAMETER;
 
     *bufptr = NULL;
@@ -1131,7 +1145,7 @@ NetWkstaUserGetInfo(
     {
         status = NetrWkstaUserGetInfo(NULL,
                                       level,
-                                      (LPWKSTA_USER_INFO)bufptr);
+                                      (LPWKSTA_USER_INFO*)bufptr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1141,13 +1155,12 @@ NetWkstaUserGetInfo(
 
     return status;
 }
-#endif
 
 
 NET_API_STATUS
 WINAPI
 NetWkstaUserSetInfo(
-    LPWSTR reserved,
+    _In_ LPWSTR reserved,
     _In_ DWORD level,
     _In_ LPBYTE buf,
     _Out_ LPDWORD parm_err)

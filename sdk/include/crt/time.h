@@ -7,7 +7,7 @@
 #ifndef _TIME_H_
 #define _TIME_H_
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifndef _WIN32
 #error Only Win32 target is supported!
@@ -60,14 +60,6 @@ extern "C" {
 #endif
 #else
   typedef unsigned int size_t;
-#endif
-#endif
-
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
 #endif
 #endif
 

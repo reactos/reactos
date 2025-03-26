@@ -100,9 +100,9 @@ CTTY device\n\n\
             CON is usually the default standard I/O device.\n\n\
 To return control to the standard console, type: CTTY CON on the auxiliary\n\
 device."
-    STRING_DATE_HELP1 "\nMasukkan tanggal baru (mm%cdd%cyyyy): "
-    STRING_DATE_HELP2 "\nMasukkan tanggal baru (dd%cmm%cyyyy): "
-    STRING_DATE_HELP3 "\nMasukkan tanggal baru (yyyy%cmm%cdd): "
+    STRING_DATE_HELP1 "Masukkan tanggal baru (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Masukkan tanggal baru (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Masukkan tanggal baru (yyyy%cmm%cdd): "
     STRING_DATE_HELP4 "Menampilkan atau menyetel tanggal.\n\n\
 DATE [/T][date]\n\n\
   /T    hanya menampilkan\n\n\
@@ -172,10 +172,10 @@ preset dengan mengawali setiap saklar dengan - (minus)--contohnya, /-W.\n"
     STRING_DIR_HELP2 " Volume di drive %c adalah %s\n"
     STRING_DIR_HELP3 " Volume di drive %c tidak berlabel.\n"
     STRING_DIR_HELP4 " Nomor Seri Volume adalah %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Total File Didaftar:\n%16i File% 14s byte\n"
-    STRING_DIR_HELP6 "%16i Dir% 15s byte tersisa\n"
+    STRING_DIR_HELP5 "\n     Total File Didaftar:\n%16i File %14s byte\n"
+    STRING_DIR_HELP6 "%16i Dir  %14s byte tersisa\n"
     STRING_DIR_HELP7 "\n Direktori %s\n\n"
-    STRING_DIR_HELP8 "%16i File% 14s byte\n"
+    STRING_DIR_HELP8 "%16i File %14s byte\n"
     STRING_DIRSTACK_HELP1 "Menyimpan direktori sekarang untuk digunakan oleh perintah POPD, lalu\n\
 mengubah ke direktori yang ditetapkan.\n\n\
 PUSHD [path | ..]\n\n\
@@ -245,7 +245,8 @@ string1==string2  Menetapkan kondisi benar jika string teks yang ditetapkan\n\
                   sama.\n\
 EXIST filename    Menetapkan kondisi benar jika nama file ada.\n\
 DEFINED variable  Menetapkan kondisi benar jika variabel didefinisikan.\n"
-    STRING_LOCALE_HELP1 "Waktu saat ini"
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "Waktu saat ini: "
     STRING_MKDIR_HELP "Membuat direktori.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
     STRING_MKLINK_HELP "Creates a filesystem link object.\n\n\
@@ -336,34 +337,6 @@ Mohon dicatat bahwa anda tidak dapat menetapkan drive baru atau path untuk\n\
 tujuan anda. Gunakan perintah MOVE untuk keperluan itu.\n"
     STRING_REN_HELP2 "    %lu file diganti nama\n"
     STRING_REN_HELP3 "    %lu file diganti nama\n"
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Specifies the source file or files.\n\
-  [drive2:][path2]         Specifies the directory where files are to be\n\
-                           replaced.\n\
-  /A                       Adds new files to destination directory. Cannot\n\
-                           use with /S or /U switches.\n\
-  /P                       Prompts for confirmation before replacing a file or\n\
-                           adding a source file.\n\
-  /R                       Replaces read-only files as well as unprotected\n\
-                           files.\n\
-  /S                       Replaces files in all subdirectories of the\n\
-                           destination directory. Cannot use with the /A\n\
-                           switch.\n\
-  /W                       Waits for you to insert a disk before beginning.\n\
-  /U                       Replaces (updates) only files that are older than\n\
-                           source files. Cannot use with the /A switch.\n"
-    STRING_REPLACE_HELP2 "Source path required\n"
-    STRING_REPLACE_HELP3 "No files replaced\n"
-    STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
-    STRING_REPLACE_HELP5 "Replacing %s\n"
-    STRING_REPLACE_HELP6 "Replace %s\n"
-    STRING_REPLACE_HELP7 "No files added\n"
-    STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
-    STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "Mengubah posisi parameter yang bisa diganti dalam file batch.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "memindahkan kursor dan secara opsional mencetak teks\n\n\
@@ -399,7 +372,7 @@ meminta yang baru.  Tekan ENTER untuk membiarkan jam tetap sama.\n"
     STRING_TIME_HELP2 "Masukkan jam baru: "
     STRING_TIMER_HELP1 "Berlalu %d mdetik\n"
     STRING_TIMER_HELP2 "Berlalu %02d%c%02d%c%02d%c%02d\n"
-    STRING_TIMER_HELP3 "mengijinkan penggunaan sepuluh stopwatch.\n\n\
+    STRING_TIMER_HELP3 "Mengijinkan penggunaan sepuluh stopwatch.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          menyetel stopwatch ON\n\
   OFF         menyetel stopwatch OFF\n\
@@ -439,7 +412,7 @@ untuk daftar penghargaan."
     STRING_VERSION_HELP4 "\n Program ini adalah software bebas; anda dapat mendistribusikan dan/atau\n\
  mengubahnya di bawah ketentuan lisensi GNU General Public License sebagaimana dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\n"
     STRING_VERSION_HELP5 "\nKirim laporan bug ke <ros-dev@reactos.org>.\n\
-Pemutakiran tersedia di: http://www.reactos.org"
+Pemutakiran tersedia di: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersi FreeDOS ditulis oleh:\n"
     STRING_VERSION_HELP7 "\nVersi ReactOS ditulis oleh:\n"
     STRING_VOL_HELP1 " Volume dalam drive %c adalah %s\n"
@@ -447,14 +420,14 @@ Pemutakiran tersedia di: http://www.reactos.org"
     STRING_VOL_HELP3 " Nomor Seri Volume adalah %04X-%04X\n"
     STRING_VOL_HELP4 "Menampilkan label dan nomor seri volume disk, jika ada.\n\nVOL [drive:]"
     STRING_WINDOW_HELP1 "mengubah aspek jendela konsol\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 /POS          menetapkan penempatan dan dimensi jendela\n\
 MIN           mengecilkan jendela\n\
 MAX           memaksimalkan jendela\n\
 RESTORE       mengembalikan jendela"
     STRING_WINDOW_HELP2 "mengubah aspek jendela konsol\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        tile jendela yang melakukan aksi\n\
 /POS          menetapkan penempatan dan dimensi jendela\n\
@@ -475,23 +448,23 @@ title         judul baru\n"
     STRING_CMD_ERROR3 "Tidak bisa mengalihkan ke file %s\n"
     STRING_CMD_ERROR4 "Menjalankan %s...\n"
     STRING_CMD_ERROR5 "Menjalankan cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "Warna sama salah! (Latar belakang dan latar depan tidak bisa berwarna sama)"
-    STRING_COLOR_ERROR2 "Kesalahan dalam spesifikasi warna"
+    STRING_COLOR_ERROR1 "Warna sama salah! (Latar belakang dan latar depan tidak bisa berwarna sama)\n"
+    STRING_COLOR_ERROR2 "Kesalahan dalam spesifikasi warna\n"
     STRING_CONSOLE_ERROR "Kesalahan tidak dikenal: %d\n"
     STRING_COPY_ERROR1 "Salah: Tidak dapat membuka sumber - %s!\n"
     STRING_COPY_ERROR2 "Salah: Tidak dapat mengcopy ke dirinya sendiri!\n"
     STRING_COPY_ERROR3 "Kesalahan menulis tujuan!\n"
     STRING_COPY_ERROR4 "Salah: Belum diimplementasikan!\n"
-    STRING_DATE_ERROR "Tanggal tidak benar."
+    STRING_DATE_ERROR "Tanggal tidak benar.\n"
     STRING_DEL_ERROR5 "File %s akan dihapus! "
     STRING_DEL_ERROR6 "Anda yakin (Y/N)? "
     STRING_DEL_ERROR7 "Menghapus: %s\n"
     STRING_ERROR_ERROR1 "Kesalahan tidak dikenal! Kode kesalahan: 0x%lx\n"
     STRING_ERROR_ERROR2 "Sintaks salah"
-    STRING_FOR_ERROR1 "'in' kurang dalam pernyataan for."
-    STRING_FOR_ERROR2 "tidak ada kurung ditemukan."
-    STRING_FOR_ERROR3 "'do' hilang."
-    STRING_FOR_ERROR4 "tidak ada perintah setelah 'do'."
+    STRING_FOR_ERROR1 "'in' kurang dalam pernyataan for.\n"
+    STRING_FOR_ERROR2 "tidak ada kurung ditemukan.\n"
+    STRING_FOR_ERROR3 "'do' hilang.\n"
+    STRING_FOR_ERROR4 "tidak ada perintah setelah 'do'.\n"
     STRING_FREE_ERROR1 "Drive tidak benar"
     STRING_FREE_ERROR2 "tak berlabel"
     STRING_GOTO_ERROR1 "Tidak ada label ditetapkan untuk GOTO\n"
@@ -500,10 +473,10 @@ title         judul baru\n"
     STRING_MD_ERROR2 "Path ke folder baru tidak ada.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Salah]\n"
-    STRING_REN_ERROR1 "MoveFile() gagal. Kesalahan: %lu\n"
-    STRING_TIME_ERROR1 "Jam tidak benar."
-    STRING_TYPE_ERROR1 "Opsi tidak benar '/%s'\n"
-    STRING_WINDOW_ERROR1 "Jendela tidak ditemukan"
+    STRING_REN_ERROR "MoveFile() gagal. Kesalahan: %lu\n"
+    STRING_TIME_ERROR "Jam tidak benar.\n"
+    STRING_TYPE_ERROR "Opsi tidak benar '/%s'\n"
+    STRING_WINDOW_ERROR "Jendela tidak ditemukan\n"
     STRING_ERROR_PARAMETERF_ERROR "Format parameter tidak benar - %c\n"
     STRING_ERROR_INVALID_SWITCH "Saklar tidak benar - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Terlalu banyak parameter - %s\n"
@@ -517,24 +490,25 @@ title         judul baru\n"
     STRING_ERROR_CANNOTPIPE "Salah!  Tidak bisa melakukan pipe!  Tidak bisa membuka file temporal!\n"
     STRING_ERROR_D_PAUSEMSG "Tekan tombol untuk melanjutkan . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive tidak siap"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variabel lingkungan '%s' tidak terdefinisi\n"
-    STRING_REPLACE_ERROR1 "Saklar perintah tidak valid - %s\n"
-    STRING_REPLACE_ERROR2 "Alamat file/direktori tidak ditemukan - %s\n"
-    STRING_REPLACE_ERROR3 "Sintaks nama file, direktori, atau label volume tidak benar.\n"
-    STRING_REPLACE_ERROR4 "Kombinasi parameter tidak valid\n"
-    STRING_REPLACE_ERROR5 "Akses ditolak - %s\n"
-    STRING_REPLACE_ERROR6 "No files found - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versi %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpreter Baris Perintah ReactOS\nVersi %s %s"
     STRING_VERSION_RUNNING_ON "Berjalan pada: "
     STRING_VERSION_RUNVER "%s [Versi %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file di-copy\n"
     STRING_DELETE_WIPE "dihapus"
-    STRING_FOR_ERROR "spesifikasi variabel tidak baik."
-    STRING_SCREEN_COL "Nilai untuk kolom tidak benar"
-    STRING_SCREEN_ROW "Nilai untuk baris tidak benar"
+    STRING_FOR_ERROR "spesifikasi variabel tidak baik.\n"
+    STRING_SCREEN_COL "Nilai untuk kolom tidak benar\n"
+    STRING_SCREEN_ROW "Nilai untuk baris tidak benar\n"
     STRING_TIMER_TIME "Timer %d adalah %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Symbolic link created for %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Hard link created for %s <<===>> %s\n"

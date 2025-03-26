@@ -24,6 +24,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
+    IDS_DEFTITLE     "HTML Help"
+#endif
     IDS_CONTENTS     "&Contents"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Search"

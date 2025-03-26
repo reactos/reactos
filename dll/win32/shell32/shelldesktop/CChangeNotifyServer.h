@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <shlwapi_undoc.h> // for SHCreateWorkerWindowW
+
 /////////////////////////////////////////////////////////////////////////////
 // CChangeNotifyServer is a delivery worker window that is managed by CDesktopBrowser.
 // The process of CChangeNotifyServer is same as the process of CDesktopBrowser.
@@ -89,3 +91,13 @@ typedef struct HANDBAG
 #define HANDBAG_MAGIC 0xFACEB00C
 
 HRESULT CChangeNotifyServer_CreateInstance(REFIID riid, void **ppv);
+
+#define WORKER_STYLE (WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN)
+#define WORKER_EXSTYLE WS_EX_TOOLWINDOW
+
+typedef CWinTraits<WORKER_STYLE, WORKER_EXSTYLE> CWorkerTraits;
+
+inline HWND SHCreateDefaultWorkerWindow(VOID)
+{
+    return SHCreateWorkerWindowW(NULL, NULL, WORKER_EXSTYLE, WORKER_STYLE, NULL, 0);
+}

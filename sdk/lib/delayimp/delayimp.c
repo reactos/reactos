@@ -77,7 +77,7 @@ __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
     dli.dlp.fImportByName = !IMAGE_SNAP_BY_ORDINAL(pINT[index].u1.Ordinal);
     if (dli.dlp.fImportByName)
     {
-        /* u1.AdressOfData points to a IMAGE_IMPORT_BY_NAME struct */
+        /* u1.AddressOfData points to a IMAGE_IMPORT_BY_NAME struct */
         PIMAGE_IMPORT_BY_NAME piibn = PFromRva((RVA)pINT[index].u1.AddressOfData);
         dli.dlp.szProcName = (LPCSTR)&piibn->Name;
     }

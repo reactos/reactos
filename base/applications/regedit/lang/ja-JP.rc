@@ -2,27 +2,69 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 BEGIN
+    "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
     VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F4, ID_ADDRESS_FOCUS, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
-/* Menus */
-
-IDC_REGEDIT MENU
+/* Command-line strings */
+STRINGTABLE
 BEGIN
-    POPUP "ファイル(&F)"
-    BEGIN
-        MENUITEM "レジストリ エディタの終了(&X)", ID_REGISTRY_EXIT
-    END
-    POPUP "ヘルプ(&H)"
-    BEGIN
-        MENUITEM "バージョン情報(&A)", ID_HELP_ABOUT
-    END
+    STRING_USAGE "使い方:\n\
+  regedit [オプション] [ファイル名] [reg_key]\n\n\
+オプション:\n\
+  [オプションなし]   このプログラムのグラフィカルなバージョンを起動します。\n\
+  /L:system.dat  変更する system.dat ファイルの場所です。\n\
+                 他のスイッチと互換です。無視されます。\n\
+  /R:user.dat    変更する user.dat ファイルの場所です。\n\
+                 他のスイッチと互換です。無視されます。\n\
+  /C             レジストリファイルの内容をインポートします。\n\
+  /D             指定したレジストリキーを削除します。\n\
+  /E             指定したレジストリキーの内容をファイルにエクスポートします。\n\
+                 キーが未指定のときはレジストリ全体がエクスポートされます。\n\
+  /S             サイレントモード。メッセージが表示されません。\n\
+  /V             上級者向けモードでGUIを起動します。無視されます。\n\
+  /?             この情報を表示して終了します。\n\
+  [ファイル名]   インポートされるレジストリ情報を含むファイルの場所です。\n\
+                 [/E] と一緒に使うと、このオプションは、エクスポートされる\n\
+                 ファイルの場所です\n\
+  [reg_key]      変更されるレジストリーキーです。\n\
+\n\
+使用例:\n\
+  regedit ""import.reg""\n\
+  regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
+  regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
+    STRING_INVALID_SWITCH "regedit: 無効または認識されないスイッチ [%1]\n"
+    STRING_HELP "ヘルプを表示するには ""regedit /?"" と入力ください。\n"
+    STRING_NO_FILENAME "regedit: ファイル名が未指定です。\n"
+    STRING_NO_REG_KEY "regedit: 除去するレジストリーキーが未指定です。\n"
+    STRING_FILE_NOT_FOUND "regedit: ファイル '%1' は見つかりませんでした。\n"
+    STRING_CANNOT_OPEN_FILE "regedit: ファイル '%1' が開けません。.\n"
+    STRING_UNHANDLED_ACTION "regedit: ハンドルされないアクションです。\n"
+    STRING_OUT_OF_MEMORY "regedit: メモリー不足です! (%1!S!, 行 %2!u!)\n"
+    STRING_INVALID_HEX "regedit: 不正な16進数の値です。\n"
+    STRING_CSV_HEX_ERROR "regedit: 16進数のデータを変換できません。不正な値が '%1' で見つかりました。\n"
+    STRING_ESCAPE_SEQUENCE "regedit: 認識されないエスケープシーケンスです [\\%1!c!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: 未サポートのレジストリデータの種類です [0x%1!x!]\n"
+    STRING_UNEXPECTED_EOL "regedit: 予期しない行の終わりです。'%1'\n"
+    STRING_UNRECOGNIZED_LINE "regedit: 行 '%1' は認識されません。\n"
+    STRING_SETVALUE_FAILED "regedit: レジストリ値 '%1' を '%2' に追加できませんでした。\n"
+    STRING_OPEN_KEY_FAILED "regedit: レジストリキー '%1' を開けませんでした。\n"
+    STRING_UNSUPPORTED_TYPE "regedit: 未サポートのレジストリデータの種類 [0x%1!x!] が '%2' で見つかりました。\n"
+    STRING_EXPORT_AS_BINARY "regedit: レジストリ値 '%1' がバイナリデータでエクスポートされます。\n"
+    STRING_INVALID_SYSTEM_KEY "regedit: 不正なシステムキーです [%1]\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: '%1' をエクスポートできません。指定されたレジストリキーが見つかりません。\n"
+    STRING_DELETE_FAILED "regedit: レジストリキー '%1' を削除できません。\n"
+    STRING_UNKNOWN_TYPE "未知の種類"
+    STRING_INVALID_LINE_SYNTAX, "regedit: 無効な文法の行があります。\n"
 END
+
+/* Menus */
 
 IDR_REGEDIT_MENU MENU
 BEGIN
@@ -31,8 +73,8 @@ BEGIN
         MENUITEM "インポート(&I)...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "エクスポート(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "ハイブの読み込み...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "ハイブのアンロード...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "ハイブの読み込み(&L)...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "ハイブのアンロード(&U)...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ネットワーク レジストリへの接続(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "ネットワーク レジストリの切断(&D)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -74,7 +116,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "最新の情報に更新(&R)\tF5", ID_VIEW_REFRESH
     END
-    POPUP "お気に入り(&F)"
+    POPUP "お気に入り(&A)"
     BEGIN
         MENUITEM "お気に入りに追加(&A)", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "お気に入りの削除(&R)", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
@@ -143,7 +185,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "切り取り(&C)", ID_HEXEDIT_CUT
+        MENUITEM "切り取り(&T)", ID_HEXEDIT_CUT
         MENUITEM "コピー(&C)", ID_HEXEDIT_COPY
         MENUITEM "貼り付け(&P)", ID_HEXEDIT_PASTE
         MENUITEM "削除(&D)", ID_HEXEDIT_DELETE
@@ -155,7 +197,7 @@ END
 /* Dialogs */
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "文字列の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -168,7 +210,7 @@ BEGIN
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "複数行文字列の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -182,7 +224,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "バイナリ値の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -195,7 +237,7 @@ BEGIN
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "DWORD 値の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -211,7 +253,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "リソース リスト"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -222,40 +264,139 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "リソース"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "割り込み:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "メモリ:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "ポート:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "デバイス特有のデータ:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "使用用途", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "未定", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "共有", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "デバイス専用", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "ドライバ専用", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "ｲﾝﾀｰﾌｪｲｽの種類:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "バス番号:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "バージョン:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "リビジョン:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
-    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+    PUSHBUTTON "データ(&D)...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+END
+
+IDD_EDIT_REQUIREMENTS_LIST DIALOGEX 32, 24, 220, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Requirements List"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_REQUIREMENTS_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 200, 66
+    RTEXT "Interface Type:", IDC_STATIC, 10, 80, 62, 8
+    LTEXT "", IDC_REQINTERFACETYPE, 77, 80, 76, 8
+    RTEXT "Bus Number:", IDC_STATIC, 10, 90, 62, 8
+    LTEXT "", IDC_REQBUSNUMBER, 77, 90, 76, 8
+    RTEXT "Slot Type:", IDC_STATIC, 10, 100, 62, 8
+    LTEXT "", IDC_REQSLOTNUMBER, 77, 100, 76, 8
+    DEFPUSHBUTTON "OK", IDOK, 62, 115, 50, 14
+    PUSHBUTTON "Show...", IDC_SHOW_REQUIREMENT, 118, 115, 50, 14, WS_DISABLED
+END
+
+IDD_EDIT_REQUIREMENTS_PORT DIALOGEX 32, 24, 158, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Port"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    RTEXT "Type:", IDC_STATIC, 10, 10, 61, 8
+    LTEXT "", IDC_REQ_PORT_TYPE, 77, 10, 76, 8
+    RTEXT "Length:", IDC_STATIC, 10, 20, 61, 8
+    LTEXT "", IDC_REQ_PORT_LENGTH, 77, 20, 76, 8
+    RTEXT "Alignment:", IDC_STATIC, 10, 30, 61, 8
+    LTEXT "", IDC_REQ_PORT_ALIGN, 77, 30, 76, 8
+    RTEXT "Minimum Address:", IDC_STATIC, 10, 40, 61, 8
+    LTEXT "", IDC_REQ_PORT_MIN, 77, 40, 76, 8
+    RTEXT "Maximum Address:", IDC_STATIC, 10, 50, 61, 8
+    LTEXT "", IDC_REQ_PORT_MAX, 77, 50, 76, 8
+    RTEXT "Share Disposition:", IDC_STATIC, 10, 60, 61, 8
+    LTEXT "", IDC_REQ_PORT_SHARE, 77, 60, 76, 8
+    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternative", IDC_REQ_PORT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferred", IDC_REQ_PORT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
+END
+
+IDD_EDIT_REQUIREMENTS_MEMORY DIALOGEX 32, 24, 158, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Memory"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    RTEXT "Access:", IDC_STATIC, 10, 10, 61, 8
+    LTEXT "", IDC_REQ_MEMORY_ACCESS, 77, 10, 76, 8
+    RTEXT "Length:", IDC_STATIC, 10, 20, 61, 8
+    LTEXT "", IDC_REQ_MEMORY_LENGTH, 77, 20, 76, 8
+    RTEXT "Alignment:", IDC_STATIC, 10, 30, 61, 8
+    LTEXT "", IDC_REQ_MEMORY_ALIGN, 77, 30, 76, 8
+    RTEXT "Minimum Address:", IDC_STATIC, 10, 40, 61, 8
+    LTEXT "", IDC_REQ_MEMORY_MIN, 77, 40, 76, 8
+    RTEXT "Maximum Address:", IDC_STATIC, 10, 50, 61, 8
+    LTEXT "", IDC_REQ_MEMORY_MAX, 77, 50, 76, 8
+    RTEXT "Share Disposition:", IDC_STATIC, 10, 60, 61, 8
+    LTEXT "", IDC_REQ_MEMORY_SHARE, 77, 60, 76, 8
+    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternative", IDC_REQ_MEMORY_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferred", IDC_REQ_MEMORY_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
+END
+
+IDD_EDIT_REQUIREMENTS_INT DIALOGEX 32, 24, 158, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Interrupt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    RTEXT "Type:", IDC_STATIC, 10, 10, 61, 8
+    LTEXT "", IDC_REQ_INT_TYPE, 77, 10, 76, 8
+    RTEXT "Minimum Vector:", IDC_STATIC, 10, 20, 61, 8
+    LTEXT "", IDC_REQ_INT_MIN, 77, 20, 76, 8
+    RTEXT "Maximum Vector:", IDC_STATIC, 10, 30, 61, 8
+    LTEXT "", IDC_REQ_INT_MAX, 77, 30, 76, 8
+    RTEXT "Share Disposition:", IDC_STATIC, 10, 40, 61, 8
+    LTEXT "", IDC_REQ_INT_SHARE, 77, 40, 76, 8
+    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternative", IDC_REQ_INT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferred", IDC_REQ_INT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
+END
+
+IDD_EDIT_REQUIREMENTS_DMA DIALOGEX 32, 24, 158, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "DMA"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    RTEXT "Minimum Channel:", IDC_STATIC, 10, 10, 61, 8
+    LTEXT "", IDC_REQ_DMA_MIN, 77, 10, 76, 8
+    RTEXT "Maximum Channel:", IDC_STATIC, 10, 20, 61, 8
+    LTEXT "", IDC_REQ_DMA_MAX, 77, 20, 76, 8
+    RTEXT "Share Disposition:", IDC_STATIC, 10, 30, 61, 8
+    LTEXT "", IDC_REQ_DMA_SHARE, 77, 30, 76, 8
+    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternative", IDC_REQ_DMA_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferred", IDC_REQ_DMA_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
 /* String Tables */
@@ -276,45 +417,45 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "レジストリ全体で使用するコマンドです。"
-    ID_EDIT_MENU "値やキーを編集するコマンドです。"
-    ID_VIEW_MENU "レジストリ ウィンドウをカスタマイズするコマンドです。"
-    ID_FAVOURITES_MENU "頻繁に使用されるキーにアクセスするコマンドです。"
-    ID_HELP_MENU "ヘルプとレジストリ エディタのバージョン情報を表示するコマンドです。"
-    ID_EDIT_NEW_MENU "新しいキーや値を作成するコマンドです。"
+    ID_REGISTRY_MENU "レジストリ全体で使用するコマンドです"
+    ID_EDIT_MENU "値やキーを編集するコマンドです"
+    ID_VIEW_MENU "レジストリ ウィンドウをカスタマイズするコマンドです"
+    ID_FAVOURITES_MENU "頻繁に使用されるキーにアクセスするコマンドです"
+    ID_HELP_MENU "ヘルプとレジストリ エディタのバージョン情報を表示するコマンドです"
+    ID_EDIT_NEW_MENU "新しいキーや値を作成するコマンドです"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "値のデータを変更します。"
-    ID_EDIT_NEW_KEY "新しいキーを追加します。"
-    ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します。"
-    ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します。"
-    ID_EDIT_NEW_DWORDVALUE "新しい DWORD 値を追加します。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします。"
-    ID_REGISTRY_EXPORTREGISTRYFILE "レジストリの一部または全体をテキスト ファイルにエクスポートします。"
-    ID_REGISTRY_LOADHIVE "ハイブ ファイルをレジストリに読み込みます。"
-    ID_REGISTRY_UNLOADHIVE "レジストリからハイブをアンロードします。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "リモート コンピュータのレジストリに接続します。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "リモート コンピュータのレジストリを切断します。"
-    ID_REGISTRY_PRINT "レジストリの一部または全体を印刷します。"
-/*    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます。" */
-    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します。"
+    ID_EDIT_MODIFY "値のデータを変更します"
+    ID_EDIT_NEW_KEY "新しいキーを追加します"
+    ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します"
+    ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します"
+    ID_EDIT_NEW_DWORDVALUE "新しい DWORD 値を追加します"
+    ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします"
+    ID_REGISTRY_EXPORTREGISTRYFILE "レジストリの一部または全体をテキスト ファイルにエクスポートします"
+    ID_REGISTRY_LOADHIVE "ハイブ ファイルをレジストリに読み込みます"
+    ID_REGISTRY_UNLOADHIVE "レジストリからハイブをアンロードします"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "リモート コンピュータのレジストリに接続します"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "リモート コンピュータのレジストリを切断します"
+    ID_REGISTRY_PRINT "レジストリの一部または全体を印刷します"
+//    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます"
+    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "レジストリ エディタを終了します。"
-    ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します。"
-    ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します。"
-    ID_VIEW_STATUSBAR "ステータス バーの表示/非表示を切り替えます。"
-    ID_VIEW_SPLIT "2つのパネルの境界の位置を変更します。"
-    ID_VIEW_REFRESH "ウィンドウの内容を最新の情報に更新します。"
-    ID_EDIT_DELETE "選択範囲を削除します。"
-    ID_EDIT_RENAME "名前を変更します。"
-    ID_EDIT_COPYKEYNAME "選択されたキー名をクリップボードにコピーします。"
-    ID_EDIT_FIND "キー、値、データの中のテキストを検索します。"
-    ID_EDIT_FINDNEXT "前回と同じ条件で次の項目を検索します。"
+    ID_REGISTRY_EXIT "レジストリ エディタを終了します"
+    ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します"
+    ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します"
+    ID_VIEW_STATUSBAR "ステータス バーの表示/非表示を切り替えます"
+    ID_VIEW_SPLIT "2つのパネルの境界の位置を変更します"
+    ID_VIEW_REFRESH "ウィンドウの内容を最新の情報に更新します"
+    ID_EDIT_DELETE "選択範囲を削除します"
+    ID_EDIT_RENAME "名前を変更します"
+    ID_EDIT_COPYKEYNAME "選択されたキー名をクリップボードにコピーします"
+    ID_EDIT_FIND "キー、値、データの中のテキストを検索します"
+    ID_EDIT_FINDNEXT "前回と同じ条件で次の項目を検索します"
 END
 
 STRINGTABLE
@@ -361,12 +502,14 @@ BEGIN
     IDS_FLT_REGFILE "登録ファイル"
     IDS_FLT_REGFILES "登録ファイル (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES "レジストリ ハイブ ファイル (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
     IDS_FLT_REGEDIT4 "Win9x/NT4 登録ファイル (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "すべてのファイル (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
+    IDS_FLT_TXTFILES "テキスト ファイル (*.txt)"
+    IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
 STRINGTABLE
@@ -410,40 +553,40 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Bus Number"
-    IDS_INTERFACE "Interface"
-    IDS_DMA_CHANNEL "Channel"
-    IDS_DMA_PORT "Port"
-    IDS_INTERRUPT_VECTOR "Vector"
-    IDS_INTERRUPT_LEVEL "Level"
-    IDS_INTERRUPT_AFFINITY "Affinity"
-    IDS_INTERRUPT_TYPE "Type"
-    IDS_MEMORY_ADDRESS "Physical Address"
-    IDS_MEMORY_LENGTH "Length"
-    IDS_MEMORY_ACCESS "Access"
-    IDS_PORT_ADDRESS "Physical Address"
-    IDS_PORT_LENGTH "Length"
-    IDS_PORT_ACCESS "Access"
-    IDS_SPECIFIC_RESERVED1 "Reserved 1"
-    IDS_SPECIFIC_RESERVED2 "Reserved 2"
-    IDS_SPECIFIC_DATASIZE "Data Size"
+    IDS_BUSNUMBER "バス番号"
+    IDS_INTERFACE "インターフェイス"
+    IDS_DMA_CHANNEL "チャンネル"
+    IDS_DMA_PORT "ポート"
+    IDS_INTERRUPT_VECTOR "ベクター"
+    IDS_INTERRUPT_LEVEL "レベル"
+    IDS_INTERRUPT_AFFINITY "アフィニティ"
+    IDS_INTERRUPT_TYPE "種類"
+    IDS_MEMORY_ADDRESS "物理アドレス"
+    IDS_MEMORY_LENGTH "長さ"
+    IDS_MEMORY_ACCESS "アクセス"
+    IDS_PORT_ADDRESS "物理アドレス"
+    IDS_PORT_LENGTH "長さ"
+    IDS_PORT_ACCESS "アクセス"
+    IDS_SPECIFIC_RESERVED1 "予約済み 1"
+    IDS_SPECIFIC_RESERVED2 "予約済み 2"
+    IDS_SPECIFIC_DATASIZE "データサイズ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO "Port"
-    IDS_PORT_MEMORY_IO "Memory"
+    IDS_PORT_PORT_IO "ポート"
+    IDS_PORT_MEMORY_IO "メモリ"
     IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY "Read Only"
-    IDS_MEMORY_WRITE_ONLY "Write Only"
-    IDS_MEMORY_READ_WRITE "Read / Write"
+    IDS_MEMORY_READ_ONLY "読み込みのみ"
+    IDS_MEMORY_WRITE_ONLY "書き込みのみ"
+    IDS_MEMORY_READ_WRITE "読み書き可能"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED "Undefined"
-    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_UNDEFINED "未定義"
+    IDS_BUS_INTERNAL "内部"
     IDS_BUS_ISA "ISA"
     IDS_BUS_EISA "EISA"
     IDS_BUS_MICROCHANNEL "MicroChannel"
@@ -455,11 +598,41 @@ BEGIN
     IDS_BUS_CBUS "C-Bus"
     IDS_BUS_MPIBUS "MPI-Bus"
     IDS_BUS_MPSABUS "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PROCESSORINTERNAL "内部プロセッサ"
+    IDS_BUS_INTERNALPOWERBUS "内部 Power Bus"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
+    IDS_BUS_UNKNOWNTYPE "未知のインターフェイスの種類"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FIELD_KEY_NAME "キー名:"
+    IDS_FIELD_CLASS_NAME "クラス名:"
+    IDS_NO_CLASS_NAME "<クラスなし>"
+    IDS_NULL_TIMESTAMP "<なし>"
+    IDS_FIELD_NAME "  名前:"
+    IDS_FIELD_TYPE "  種類:"
+    IDS_FIELD_DATA "  データ:"
+    IDS_FIELD_LASTWRITE "最終書き込み時刻:"
+    IDS_UNKNOWN "<未知>"
+    IDS_VALUE_INDEX "値 %d"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_REQALTERNATIVELIST "Alternative List"
+    IDS_REQRESOURCELIST "Resource List"
+    IDS_REQDESCRIPTOR "Descriptor"
+    IDS_REQDEVICETYPE "Device Type"
+    IDS_TYPE_PORT "Port"
+    IDS_TYPE_INTERRUPT "Interrupt"
+    IDS_TYPE_MEMORY "Memory"
+    IDS_TYPE_DMA "DMA"
+    IDS_SHARE_DEVICE_EXCLUSIVE "Device Exclusive"
+    IDS_SHARE_DRIVER_EXCLUSIVE "Driver Exclusive"
+    IDS_SHARE_SHARED "Shared"
+    IDS_SHARE_UNDETERMINED "Undetermined"
 END
 
 /*****************************************************************/
@@ -467,12 +640,12 @@ END
 /* Dialogs */
 
 IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_BORDER
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "エクスポート範囲", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "すべて(&A)", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 100, 11
-    CONTROL "選択された部分(&E)", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "すべて(&A)", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "選択された部分(&E)", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
@@ -505,7 +678,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 7, 114, 50, 14
-    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
+    CONTROL "", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
             WS_TABSTOP, 7, 20, 150, 90
     LTEXT "お気に入りの選択:", IDC_STATIC, 7, 7, 99, 12
 END
@@ -538,15 +711,6 @@ CAPTION "検索"
 FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "キャンセル(&C)", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "キャンセル", IDCANCEL, 93, 29, 45, 14
     LTEXT "レジストリの検索中...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます。"
- *    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します。"
- *END
- */

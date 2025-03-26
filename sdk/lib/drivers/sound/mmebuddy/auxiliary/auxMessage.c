@@ -45,6 +45,24 @@ auxMessage(
                                                    Parameter2);
             break;
         }
+
+        case AUXDM_GETVOLUME:
+        {
+            Result = MmeGetVolume(AUX_DEVICE_TYPE,
+                                  DeviceId,
+                                  PrivateHandle,
+                                  Parameter1);
+            break;
+        }
+
+        case AUXDM_SETVOLUME:
+        {
+            Result = MmeSetVolume(AUX_DEVICE_TYPE,
+                                  DeviceId,
+                                  PrivateHandle,
+                                  Parameter1);
+            break;
+        }
     }
 
     SND_TRACE(L"auxMessage returning MMRESULT %d\n", Result);

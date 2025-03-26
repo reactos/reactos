@@ -97,9 +97,12 @@ START_TEST(FindFile)
     const INT TestCount = sizeof(Tests) / sizeof(Tests[0]);
     INT i;
     WCHAR ExpressionBuffer[MAX_PATH];
+    DWORD Error;
 
-    KmtLoadDriver(L"kernel32", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"kernel32", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     for (i = 0; i < TestCount; i++)
     {

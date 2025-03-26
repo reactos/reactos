@@ -19,7 +19,7 @@ DefaultDestDir = 12
 %USB\COMPOSITE.DeviceDesc% = usbccgp_Inst,USB\COMPOSITE
 %USB\CLASS_09.DeviceDesc% = usbhub_Inst,USB\CLASS_09
 
-;----------------------- GENERIC USB HUB DRIVER -------------------------
+;------------------------ GENERIC USB HUB DRIVER ------------------------
 
 [usbhub_Inst.NT]
 CopyFiles = usbhub_CopyFiles.NT
@@ -37,7 +37,7 @@ ErrorControl  = 1
 ServiceBinary = %12%\usbhub.sys
 LoadOrderGroup = Base
 
-;----------------------- COMMON GENERIC PARENT DRIVER -------------------------
+;----------------------- COMMON GENERIC PARENT DRIVER -------------------
 
 [usbccgp_Inst.NT]
 CopyFiles = usbccgp_CopyFiles.NT
@@ -58,16 +58,18 @@ LoadOrderGroup = Base
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
 
+; Localizable
 GenericMfg = "(Generic USB Hubs)"
 USB\COMPOSITE.DeviceDesc = "USB Composite Device"
 USB\CLASS_09.DeviceDesc = "Generic USB Hub"
 
-; Spanish
-[Strings.0C0A]
-GenericMfg = "(Concentrador raíz USB estándar)"
-USB\CLASS_09.DeviceDesc = "Concentrador raíz USB estándar"
+[Strings.0404]
+GenericMfg = "(標準 USB 集線器)"
+USB\COMPOSITE.DeviceDesc = "USB 複合裝置"
+USB\CLASS_09.DeviceDesc = "標準 USB 集線器"
 
 [Strings.0405]
 GenericMfg = "(Obecné USB rozbočovače)"
@@ -77,6 +79,10 @@ USB\CLASS_09.DeviceDesc = "Obecný USB rozbočovač"
 [Strings.0407]
 GenericMfg = "(Generischer USB-Hub)"
 USB\CLASS_09.DeviceDesc = "Generischer USB-Hub"
+
+[Strings.0C0A]
+GenericMfg = "(Concentrador raíz USB estándar)"
+USB\CLASS_09.DeviceDesc = "Concentrador raíz USB estándar"
 
 [Strings.0a]
 GenericMfg = "(Concentrador raíz USB estándar)"
@@ -91,7 +97,6 @@ GenericMfg = "(標準 USBハブ)"
 USB\CLASS_09.DeviceDesc = "標準 USBハブ"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowy koncentrator USB)"
 USB\COMPOSITE.DeviceDesc = "Urządzenie kompozytowe USB"
 USB\CLASS_09.DeviceDesc = "Standardowy koncentrator USB"
@@ -101,13 +106,11 @@ GenericMfg = "(Hub USB padrão)"
 USB\CLASS_09.DeviceDesc = "Hub USB padrão"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 GenericMfg = "(cuplatori generici USB)"
 USB\COMPOSITE.DeviceDesc = "Dispozitiv USB compus"
 USB\CLASS_09.DeviceDesc = "Cuplator USB generic"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартный USB хаб)"
 USB\COMPOSITE.DeviceDesc = "USB составное устройство"
 USB\CLASS_09.DeviceDesc = "Стандартный USB хаб"
@@ -117,14 +120,11 @@ GenericMfg = "(Generický rozbočovač USB)"
 USB\CLASS_09.DeviceDesc = "Generický rozbočovač USB"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-
-GenericMfg = "(Umûmî USB Göbekleri)"
+GenericMfg = "(Genel USB Göbekleri)"
 USB\COMPOSITE.DeviceDesc = "USB Bileşik Aygıt"
-USB\CLASS_09.DeviceDesc = "Umûmî USB Göbeği"
+USB\CLASS_09.DeviceDesc = "Genel USB Göbeği"
 
 [Strings.0422]
-ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартні USB-хаби)"
 USB\COMPOSITE.DeviceDesc = "Композитний пристрій USB"
 USB\CLASS_09.DeviceDesc = "Стандартний USB-хаб"
@@ -137,3 +137,12 @@ USB\CLASS_09.DeviceDesc = "Standartinis USB šakotuvas"
 GenericMfg = "(通用 USB 集线器)"
 USB\COMPOSITE.DeviceDesc = "USB 聚合设备"
 USB\CLASS_09.DeviceDesc = "通用 USB 集线器"
+
+[Strings.0816]
+GenericMfg = "(Hub USB padrão)"
+USB\CLASS_09.DeviceDesc = "Hub USB padrão"
+
+[Strings.0C04]
+GenericMfg = "(標準 USB 集線器)"
+USB\COMPOSITE.DeviceDesc = "USB 複合裝置"
+USB\CLASS_09.DeviceDesc = "標準 USB 集線器"

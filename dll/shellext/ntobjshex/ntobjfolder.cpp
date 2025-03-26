@@ -1,9 +1,8 @@
 /*
- * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/ntobjshex/ntobjfolder.cpp
- * PURPOSE:     NT Object Namespace shell extension
- * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+ * PROJECT:     NT Object Namespace shell extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     NT Object Namespace folder class implementation
+ * COPYRIGHT:   Copyright 2015-2017 David Quintana <gigaherz@gmail.com>
  */
 
 #include "precomp.h"
@@ -62,32 +61,36 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolderExtractIcon::GetIconLocation(
 
     switch (entry->objectType)
     {
-    case DIRECTORY_OBJECT:
-    case SYMBOLICLINK_OBJECT:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -((uFlags & GIL_OPENICON) ? IDI_NTOBJECTDIROPEN : IDI_NTOBJECTDIR);
-        *pwFlags = flags;
-        return S_OK;
-    case DEVICE_OBJECT:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -IDI_NTOBJECTDEVICE;
-        *pwFlags = flags;
-        return S_OK;
-    case PORT_OBJECT:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -IDI_NTOBJECTPORT;
-        *pwFlags = flags;
-        return S_OK;
-    case KEY_OBJECT:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -IDI_REGISTRYKEY;
-        *pwFlags = flags;
-        return S_OK;
-    default:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -IDI_NTOBJECTITEM;
-        *pwFlags = flags;
-        return S_OK;
+        case DIRECTORY_OBJECT:
+        case SYMBOLICLINK_OBJECT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -((uFlags & GIL_OPENICON) ? IDI_NTOBJECTDIROPEN : IDI_NTOBJECTDIR);
+            *pwFlags = flags;
+            return S_OK;
+
+        case DEVICE_OBJECT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_NTOBJECTDEVICE;
+            *pwFlags = flags;
+            return S_OK;
+
+        case PORT_OBJECT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_NTOBJECTPORT;
+            *pwFlags = flags;
+            return S_OK;
+
+        case KEY_OBJECT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_REGISTRYKEY;
+            *pwFlags = flags;
+            return S_OK;
+
+        default:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_NTOBJECTITEM;
+            *pwFlags = flags;
+            return S_OK;
     }
 }
 
@@ -171,7 +174,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ResolveSymLink(
     hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &pidl, NULL);
     if (FAILED(hr))
         return hr;
-    
+
     *fullPidl = pidl;
 
     DumpIdList(pidl);
@@ -193,7 +196,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::InternalBindToObject(
     {
         return ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, (HKEY) NULL, IID_PPV_ARG(IShellFolder, ppsfChild));
     }
-    
+
     return ShellObjectCreatorInit<CNtObjectFolder>(fullPidl, path, IID_PPV_ARG(IShellFolder, ppsfChild));
 }
 
@@ -223,15 +226,17 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDefaultColumnState(
 {
     switch (iColumn)
     {
-    case NTOBJECT_COLUMN_NAME:
-        *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
-        return S_OK;
-    case NTOBJECT_COLUMN_TYPE:
-        *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
-        return S_OK;
-    case NTOBJECT_COLUMN_LINKTARGET:
-        *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT | SHCOLSTATE_SLOW;
-        return S_OK;
+        case NTOBJECT_COLUMN_NAME:
+            *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
+            return S_OK;
+
+        case NTOBJECT_COLUMN_TYPE:
+            *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
+            return S_OK;
+
+        case NTOBJECT_COLUMN_LINKTARGET:
+            *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT | SHCOLSTATE_SLOW;
+            return S_OK;
     }
 
     return E_INVALIDARG;
@@ -321,75 +326,83 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
         switch (iColumn)
         {
-        case NTOBJECT_COLUMN_NAME:
-            psd->fmt = LVCFMT_LEFT;
-
-            MakeStrRetFromString(info->entryName, info->entryNameLength, &(psd->str));
-            return S_OK;
-        case NTOBJECT_COLUMN_TYPE:
-            psd->fmt = LVCFMT_LEFT;
-
-            if (info->objectType < 0)
+            case NTOBJECT_COLUMN_NAME:
             {
-                NtPidlTypeData * td = (NtPidlTypeData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+                psd->fmt = LVCFMT_LEFT;
 
-                if (td->typeNameLength > 0)
-                    MakeStrRetFromString(td->typeName, td->typeNameLength, &(psd->str));
-                else
-                    MakeStrRetFromString(L"Unknown", &(psd->str));
+                MakeStrRetFromString(info->entryName, info->entryNameLength, &(psd->str));
+                return S_OK;
             }
-            else
-                MakeStrRetFromString(ObjectTypeNames[info->objectType], &(psd->str));
-            return S_OK;
-        case NTOBJECT_COLUMN_LINKTARGET:
-        {
-            psd->fmt = LVCFMT_LEFT;
 
-            if (info->objectType == SYMBOLICLINK_OBJECT)
+            case NTOBJECT_COLUMN_TYPE:
             {
-                WCHAR wbLink[MAX_PATH] = { 0 };
-                UNICODE_STRING link;
-                RtlInitEmptyUnicodeString(&link, wbLink, sizeof(wbLink));
+                psd->fmt = LVCFMT_LEFT;
 
-                HRESULT hr = GetNTObjectSymbolicLinkTarget(m_NtPath, info->entryName, &link);
-
-                if (!FAILED_UNEXPECTEDLY(hr) && link.Length > 0)
+                if (info->objectType < 0)
                 {
-                    MakeStrRetFromString(link.Buffer, link.Length, &(psd->str));
-                    return S_OK;
+                    NtPidlTypeData * td = (NtPidlTypeData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+
+                    if (td->typeNameLength > 0)
+                        MakeStrRetFromString(td->typeName, td->typeNameLength, &(psd->str));
+                    else
+                        MakeStrRetFromString(L"Unknown", &(psd->str));
                 }
+                else
+                    MakeStrRetFromString(ObjectTypeNames[info->objectType], &(psd->str));
+                return S_OK;
             }
 
-            MakeStrRetFromString(L"", &(psd->str));
-            return S_OK;
-        }
+            case NTOBJECT_COLUMN_LINKTARGET:
+            {
+                psd->fmt = LVCFMT_LEFT;
+
+                if (info->objectType == SYMBOLICLINK_OBJECT)
+                {
+                    WCHAR wbLink[MAX_PATH] = { 0 };
+                    UNICODE_STRING link;
+                    RtlInitEmptyUnicodeString(&link, wbLink, sizeof(wbLink));
+
+                    HRESULT hr = GetNTObjectSymbolicLinkTarget(m_NtPath, info->entryName, &link);
+
+                    if (!FAILED_UNEXPECTEDLY(hr) && link.Length > 0)
+                    {
+                        MakeStrRetFromString(link.Buffer, link.Length, &(psd->str));
+                        return S_OK;
+                    }
+                }
+
+                MakeStrRetFromString(L"", &(psd->str));
+                return S_OK;
+            }
         }
     }
     else
     {
         switch (iColumn)
         {
-        case NTOBJECT_COLUMN_NAME:
-            psd->fmt = LVCFMT_LEFT;
-            psd->cxChar = 30;
+            case NTOBJECT_COLUMN_NAME:
+                psd->fmt = LVCFMT_LEFT;
+                psd->cxChar = 30;
 
-            // TODO: Make localizable
-            MakeStrRetFromString(L"Object Name", &(psd->str));
-            return S_OK;
-        case NTOBJECT_COLUMN_TYPE:
-            psd->fmt = LVCFMT_LEFT;
-            psd->cxChar = 20;
+                // TODO: Make localizable
+                MakeStrRetFromString(L"Object Name", &(psd->str));
+                return S_OK;
 
-            // TODO: Make localizable
-            MakeStrRetFromString(L"Object Type", &(psd->str));
-            return S_OK;
-        case NTOBJECT_COLUMN_LINKTARGET:
-            psd->fmt = LVCFMT_LEFT;
-            psd->cxChar = 30;
+            case NTOBJECT_COLUMN_TYPE:
+                psd->fmt = LVCFMT_LEFT;
+                psd->cxChar = 20;
 
-            // TODO: Make localizable
-            MakeStrRetFromString(L"Symlink Target", &(psd->str));
-            return S_OK;
+                // TODO: Make localizable
+                MakeStrRetFromString(L"Object Type", &(psd->str));
+                return S_OK;
+
+            case NTOBJECT_COLUMN_LINKTARGET:
+                psd->fmt = LVCFMT_LEFT;
+                psd->cxChar = 30;
+
+                // TODO: Make localizable
+                MakeStrRetFromString(L"Symlink Target", &(psd->str));
+                return S_OK;
         }
     }
 
@@ -403,18 +416,20 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::MapColumnToSCID(
     static const GUID storage = PSGUID_STORAGE;
     switch (iColumn)
     {
-    case NTOBJECT_COLUMN_NAME:
-        pscid->fmtid = storage;
-        pscid->pid = PID_STG_NAME;
-        return S_OK;
-    case NTOBJECT_COLUMN_TYPE:
-        pscid->fmtid = storage;
-        pscid->pid = PID_STG_STORAGETYPE;
-        return S_OK;
-    case NTOBJECT_COLUMN_LINKTARGET:
-        pscid->fmtid = GUID_NtObjectColumns;
-        pscid->pid = NTOBJECT_COLUMN_LINKTARGET;
-        return S_OK;
+        case NTOBJECT_COLUMN_NAME:
+            pscid->fmtid = storage;
+            pscid->pid = PID_STG_NAME;
+            return S_OK;
+
+        case NTOBJECT_COLUMN_TYPE:
+            pscid->fmtid = storage;
+            pscid->pid = PID_STG_STORAGETYPE;
+            return S_OK;
+
+        case NTOBJECT_COLUMN_LINKTARGET:
+            pscid->fmtid = GUID_NtObjectColumns;
+            pscid->pid = NTOBJECT_COLUMN_LINKTARGET;
+            return S_OK;
     }
     return E_INVALIDARG;
 }
@@ -441,15 +456,34 @@ HRESULT CNtObjectFolder::CompareIDs(LPARAM lParam, const NtPidlEntry * first, co
 
     switch (column)
     {
-    case NTOBJECT_COLUMN_NAME:
-        return CompareName(lParam, first, second);
+        case NTOBJECT_COLUMN_NAME:
+            return CompareName(lParam, first, second);
 
-    case NTOBJECT_COLUMN_TYPE:
-        return MAKE_COMPARE_HRESULT(second->objectType - first->objectType);
+        case NTOBJECT_COLUMN_TYPE:
+            return MAKE_COMPARE_HRESULT(second->objectType - first->objectType);
 
-    case NTOBJECT_COLUMN_LINKTARGET:
-        // Can't sort by link target yet
-        return E_INVALIDARG;
+        case NTOBJECT_COLUMN_LINKTARGET:
+        {
+            if (first->objectType != SYMBOLICLINK_OBJECT && second->objectType != SYMBOLICLINK_OBJECT)
+                return CompareName(lParam, first, second);
+
+            if (first->objectType != SYMBOLICLINK_OBJECT || second->objectType != SYMBOLICLINK_OBJECT)
+                return first->objectType != SYMBOLICLINK_OBJECT ? S_GREATERTHAN : S_LESSTHAN;
+
+            WCHAR wbLink1[MAX_PATH] = { 0 }, wbLink2[MAX_PATH] = { 0 };
+            UNICODE_STRING firstLink, secondLink;
+            RtlInitEmptyUnicodeString(&firstLink, wbLink1, sizeof(wbLink1));
+
+            if (FAILED_UNEXPECTEDLY(GetNTObjectSymbolicLinkTarget(m_NtPath, first->entryName, &firstLink)))
+                return E_INVALIDARG;
+
+            RtlInitEmptyUnicodeString(&secondLink, wbLink2, sizeof(wbLink2));
+
+            if (FAILED_UNEXPECTEDLY(GetNTObjectSymbolicLinkTarget(m_NtPath, second->entryName, &secondLink)))
+                return E_INVALIDARG;
+
+            return MAKE_COMPARE_HRESULT(RtlCompareUnicodeString(&firstLink, &secondLink, TRUE));
+        }
     }
 
     DbgPrint("Unsupported sorting mode.\n");
@@ -482,8 +516,13 @@ BOOL CNtObjectFolder::IsFolder(const NtPidlEntry * info)
 
 HRESULT CNtObjectFolder::GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry)
 {
-    NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
+    if (!pcidl)
+    {
+        DbgPrint("PCIDL is NULL\n");
+        return E_INVALIDARG;
+    }
 
+    NtPidlEntry * entry = (NtPidlEntry*) &(pcidl->mkid);
     if (entry->cb < sizeof(NtPidlEntry))
     {
         DbgPrint("PCIDL too small %l (required %l)\n", entry->cb, sizeof(NtPidlEntry));

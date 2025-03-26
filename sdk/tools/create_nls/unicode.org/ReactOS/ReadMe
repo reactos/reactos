@@ -1,7 +1,5 @@
-To applay these patch 
+To apply these patches:
 
-copy MAPPINGS/VENDORS/MICSFT/PC/CP861.TXT 
+copy MAPPINGS/VENDORS/MICSFT/PC/CP861.TXT
 to here and rename it to ibmcp861.txt
-and applay the patch ibm861.patch to ibmcp861.txt
-
-
+and apply the patch ibm861.patch to ibmcp861.txt

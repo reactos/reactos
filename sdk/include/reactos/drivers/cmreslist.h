@@ -40,8 +40,8 @@ CmiGetNextPartialDescriptor(
     if (PartialDescriptor->Type == CmResourceTypeDeviceSpecific)
     {
         /* Add the size of the variable section as well */
-        NextDescriptor = (PVOID)((ULONG_PTR)NextDescriptor +
-                                 PartialDescriptor->u.DeviceSpecificData.DataSize);
+        NextDescriptor = (PCM_PARTIAL_RESOURCE_DESCRIPTOR)((ULONG_PTR)NextDescriptor +
+                         PartialDescriptor->u.DeviceSpecificData.DataSize);
         ASSERT(NextDescriptor >= PartialDescriptor + 1);
     }
 

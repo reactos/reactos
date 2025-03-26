@@ -396,9 +396,9 @@ NTAPI
 NtQuerySystemEnvironmentValueEx(
     _In_ PUNICODE_STRING VariableName,
     _In_ LPGUID VendorGuid,
-    _In_ PVOID Value,
+    _Out_opt_ PVOID Value,
     _Inout_ PULONG ReturnLength,
-    _Inout_ PULONG Attributes
+    _Out_opt_ PULONG Attributes
 );
 
 __kernel_entry
@@ -550,17 +550,18 @@ NTAPI
 NtSetSystemEnvironmentValueEx(
     _In_ PUNICODE_STRING VariableName,
     _In_ LPGUID VendorGuid,
-    _In_ PVOID Value,
-    _Inout_ PULONG ReturnLength,
-    _Inout_ PULONG Attributes
+    _In_reads_bytes_opt_(ValueLength) PVOID Value,
+    _In_ ULONG ValueLength,
+    _In_ ULONG Attributes
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    _In_ PVOID SystemInformation,
+    _In_reads_bytes_(SystemInformationLength) PVOID SystemInformation,
     _In_ ULONG SystemInformationLength
 );
 
@@ -1000,8 +1001,8 @@ NTSTATUS
 NTAPI
 ZwSetSystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    _In_ PVOID SystemInformation,
-    _In_ SIZE_T SystemInformationLength
+    _In_reads_bytes_(SystemInformationLength) PVOID SystemInformation,
+    _In_ ULONG SystemInformationLength
 );
 
 #ifdef NTOS_MODE_USER

@@ -1,9 +1,8 @@
 /*
- * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/ntobjshex/regfolder.cpp
- * PURPOSE:     NT Object Namespace shell extension
- * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+ * PROJECT:     NT Object Namespace shell extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     System Registry folder class implementation
+ * COPYRIGHT:   Copyright 2015-2017 David Quintana <gigaherz@gmail.com>
  */
 
 #include "precomp.h"
@@ -64,22 +63,25 @@ HRESULT STDMETHODCALLTYPE CRegistryFolderExtractIcon::GetIconLocation(
 
     switch (entry->entryType)
     {
-    case REG_ENTRY_KEY:
-    case REG_ENTRY_ROOT:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -IDI_REGISTRYKEY;
-        *pwFlags = flags;
-        return S_OK;
-    case REG_ENTRY_VALUE:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -IDI_REGISTRYVALUE;
-        *pwFlags = flags;
-        return S_OK;
-    default:
-        GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
-        *piIndex = -IDI_NTOBJECTITEM;
-        *pwFlags = flags;
-        return S_OK;
+        case REG_ENTRY_KEY:
+        case REG_ENTRY_ROOT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_REGISTRYKEY;
+            *pwFlags = flags;
+            return S_OK;
+
+        case REG_ENTRY_VALUE:
+        case REG_ENTRY_VALUE_WITH_CONTENT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_REGISTRYVALUE;
+            *pwFlags = flags;
+            return S_OK;
+
+        default:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_NTOBJECTITEM;
+            *pwFlags = flags;
+            return S_OK;
     }
 }
 
@@ -93,7 +95,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolderExtractIcon::Extract(
     return SHDefExtractIconW(pszFile, nIconIndex, 0, phiconLarge, phiconSmall, nIconSize);
 }
 
-// CRegistryFolder 
+// CRegistryFolder
 
 CRegistryFolder::CRegistryFolder()
 {
@@ -160,15 +162,17 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDefaultColumnState(
 {
     switch (iColumn)
     {
-    case REGISTRY_COLUMN_NAME:
-        *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
-        return S_OK;
-    case REGISTRY_COLUMN_TYPE:
-        *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
-        return S_OK;
-    case REGISTRY_COLUMN_VALUE:
-        *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT | SHCOLSTATE_SLOW;
-        return S_OK;
+        case REGISTRY_COLUMN_NAME:
+            *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
+            return S_OK;
+
+        case REGISTRY_COLUMN_TYPE:
+            *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
+            return S_OK;
+
+        case REGISTRY_COLUMN_VALUE:
+            *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT | SHCOLSTATE_SLOW;
+            return S_OK;
     }
 
     return E_INVALIDARG;
@@ -264,83 +268,91 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
         switch (iColumn)
         {
-        case REGISTRY_COLUMN_NAME:
-            psd->fmt = LVCFMT_LEFT;
-
-            if (info->entryNameLength > 0)
+            case REGISTRY_COLUMN_NAME:
             {
-                return MakeStrRetFromString(info->entryName, info->entryNameLength, &(psd->str));
-            }
-            return MakeStrRetFromString(L"(Default)", &(psd->str));
+                psd->fmt = LVCFMT_LEFT;
 
-        case REGISTRY_COLUMN_TYPE:
-            psd->fmt = LVCFMT_LEFT;
-
-            if (info->entryType == REG_ENTRY_ROOT)
-            {
-                return MakeStrRetFromString(L"Key", &(psd->str));
-            }
-
-            if (info->entryType == REG_ENTRY_KEY)
-            {
-                if (info->contentsLength > 0)
+                if (info->entryNameLength > 0)
                 {
-                    PWSTR td = (PWSTR)(((PBYTE)info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+                    return MakeStrRetFromString(info->entryName, info->entryNameLength, &(psd->str));
+                }
+                return MakeStrRetFromString(L"(Default)", &(psd->str));
+            }
 
-                    return MakeStrRetFromString(td, info->contentsLength, &(psd->str));
+            case REGISTRY_COLUMN_TYPE:
+            {
+                psd->fmt = LVCFMT_LEFT;
+
+                if (info->entryType == REG_ENTRY_ROOT)
+                {
+                    return MakeStrRetFromString(L"Key", &(psd->str));
                 }
 
-                return MakeStrRetFromString(L"Key", &(psd->str));
+                if (info->entryType == REG_ENTRY_KEY)
+                {
+                    if (info->contentsLength > 0)
+                    {
+                        PWSTR td = (PWSTR)(((PBYTE)info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+
+                        return MakeStrRetFromString(td, info->contentsLength, &(psd->str));
+                    }
+
+                    return MakeStrRetFromString(L"Key", &(psd->str));
+                }
+
+                return MakeStrRetFromString(RegistryTypeNames[info->contentType], &(psd->str));
             }
 
-            return MakeStrRetFromString(RegistryTypeNames[info->entryType], &(psd->str));
-
-        case REGISTRY_COLUMN_VALUE:
-            psd->fmt = LVCFMT_LEFT;
-
-            PCWSTR strValueContents;
-
-            hr = FormatContentsForDisplay(info, m_hRoot, m_NtPath, &strValueContents);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (hr == S_FALSE)
+            case REGISTRY_COLUMN_VALUE:
             {
-                return MakeStrRetFromString(L"(Empty)", &(psd->str));
+                psd->fmt = LVCFMT_LEFT;
+
+                PCWSTR strValueContents;
+
+                hr = FormatContentsForDisplay(info, m_hRoot, m_NtPath, &strValueContents);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+
+                if (hr == S_FALSE)
+                {
+                    return MakeStrRetFromString(L"(Empty)", &(psd->str));
+                }
+
+                hr = MakeStrRetFromString(strValueContents, &(psd->str));
+
+                CoTaskMemFree((PVOID)strValueContents);
+
+                return hr;
             }
-
-            hr = MakeStrRetFromString(strValueContents, &(psd->str));
-
-            CoTaskMemFree((PVOID)strValueContents);
-
-            return hr;
         }
     }
     else
     {
         switch (iColumn)
         {
-        case REGISTRY_COLUMN_NAME:
-            psd->fmt = LVCFMT_LEFT;
-            psd->cxChar = 30;
+            case REGISTRY_COLUMN_NAME:
+                psd->fmt = LVCFMT_LEFT;
+                psd->cxChar = 30;
 
-            // TODO: Make localizable
-            MakeStrRetFromString(L"Object Name", &(psd->str));
-            return S_OK;
-        case REGISTRY_COLUMN_TYPE:
-            psd->fmt = LVCFMT_LEFT;
-            psd->cxChar = 20;
+                // TODO: Make localizable
+                MakeStrRetFromString(L"Object Name", &(psd->str));
+                return S_OK;
 
-            // TODO: Make localizable
-            MakeStrRetFromString(L"Content Type", &(psd->str));
-            return S_OK;
-        case REGISTRY_COLUMN_VALUE:
-            psd->fmt = LVCFMT_LEFT;
-            psd->cxChar = 20;
+            case REGISTRY_COLUMN_TYPE:
+                psd->fmt = LVCFMT_LEFT;
+                psd->cxChar = 20;
 
-            // TODO: Make localizable
-            MakeStrRetFromString(L"Value", &(psd->str));
-            return S_OK;
+                // TODO: Make localizable
+                MakeStrRetFromString(L"Content Type", &(psd->str));
+                return S_OK;
+
+            case REGISTRY_COLUMN_VALUE:
+                psd->fmt = LVCFMT_LEFT;
+                psd->cxChar = 20;
+
+                // TODO: Make localizable
+                MakeStrRetFromString(L"Value", &(psd->str));
+                return S_OK;
         }
     }
 
@@ -354,18 +366,20 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::MapColumnToSCID(
     static const GUID storage = PSGUID_STORAGE;
     switch (iColumn)
     {
-    case REGISTRY_COLUMN_NAME:
-        pscid->fmtid = storage;
-        pscid->pid = PID_STG_NAME;
-        return S_OK;
-    case REGISTRY_COLUMN_TYPE:
-        pscid->fmtid = storage;
-        pscid->pid = PID_STG_STORAGETYPE;
-        return S_OK;
-    case REGISTRY_COLUMN_VALUE:
-        pscid->fmtid = storage;
-        pscid->pid = PID_STG_CONTENTS;
-        return S_OK;
+        case REGISTRY_COLUMN_NAME:
+            pscid->fmtid = storage;
+            pscid->pid = PID_STG_NAME;
+            return S_OK;
+
+        case REGISTRY_COLUMN_TYPE:
+            pscid->fmtid = storage;
+            pscid->pid = PID_STG_STORAGETYPE;
+            return S_OK;
+
+        case REGISTRY_COLUMN_VALUE:
+            pscid->fmtid = storage;
+            pscid->pid = PID_STG_CONTENTS;
+            return S_OK;
     }
     return E_INVALIDARG;
 }
@@ -392,15 +406,44 @@ HRESULT CRegistryFolder::CompareIDs(LPARAM lParam, const RegPidlEntry * first, c
 
     switch (column)
     {
-    case REGISTRY_COLUMN_NAME:
-        return CompareName(lParam, first, second);
+        case REGISTRY_COLUMN_NAME:
+            return CompareName(lParam, first, second);
 
-    case REGISTRY_COLUMN_TYPE:
-        return MAKE_COMPARE_HRESULT(second->contentType - first->contentType);
+        case REGISTRY_COLUMN_TYPE:
+        {
+            if (first->entryType != second->entryType)
+                return MAKE_COMPARE_HRESULT(second->entryType - first->entryType);
 
-    case REGISTRY_COLUMN_VALUE:
-        // Can't sort by link target yet
-        return E_INVALIDARG;
+            if (first->entryType == REG_ENTRY_KEY)
+            {
+                if (first->contentsLength == 0 || second->contentsLength == 0)
+                    return (first->contentsLength == 0) ? S_GREATERTHAN : S_LESSTHAN;
+
+                PWSTR firstKey = (PWSTR)(((PBYTE)first) + FIELD_OFFSET(RegPidlEntry, entryName) + first->entryNameLength + sizeof(WCHAR));
+                PWSTR secondKey = (PWSTR)(((PBYTE)second) + FIELD_OFFSET(RegPidlEntry, entryName) + second->entryNameLength + sizeof(WCHAR));
+                return MAKE_COMPARE_HRESULT(lstrcmpW(firstKey, secondKey));
+            }
+
+            return CompareName(lParam, first, second);
+        }
+
+        case REGISTRY_COLUMN_VALUE:
+        {
+            PCWSTR firstContent, secondContent;
+
+            if (FAILED_UNEXPECTEDLY(FormatContentsForDisplay(first, m_hRoot, m_NtPath, &firstContent)))
+                return E_INVALIDARG;
+
+            if (FAILED_UNEXPECTEDLY(FormatContentsForDisplay(second, m_hRoot, m_NtPath, &secondContent)))
+                return E_INVALIDARG;
+
+            hr = MAKE_COMPARE_HRESULT(lstrcmpW(firstContent, secondContent));
+
+            CoTaskMemFree((LPVOID)firstContent);
+            CoTaskMemFree((LPVOID)secondContent);
+
+            return hr;
+        }
     }
 
     DbgPrint("Unsupported sorting mode.\n");
@@ -426,8 +469,13 @@ BOOL CRegistryFolder::IsFolder(const RegPidlEntry * info)
 
 HRESULT CRegistryFolder::GetInfoFromPidl(LPCITEMIDLIST pcidl, const RegPidlEntry ** pentry)
 {
-    RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
+    if (!pcidl)
+    {
+        DbgPrint("PCIDL is NULL\n");
+        return E_INVALIDARG;
+    }
 
+    RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
     if (entry->cb < sizeof(RegPidlEntry))
     {
         DbgPrint("PCIDL too small %l (required %l)\n", entry->cb, sizeof(RegPidlEntry));
@@ -448,99 +496,105 @@ HRESULT CRegistryFolder::FormatValueData(DWORD contentType, PVOID td, DWORD cont
 {
     switch (contentType)
     {
-    case 0:
-    {
-        PCWSTR strTodo = L"";
-        DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
-        PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
-        StringCbCopyW(strValue, bufferLength, strTodo);
-        *strContents = strValue;
-        return S_OK;
-    }
-    case REG_SZ:
-    case REG_EXPAND_SZ:
-    {
-        PWSTR strValue = (PWSTR)CoTaskMemAlloc(contentsLength + sizeof(WCHAR));
-        StringCbCopyNW(strValue, contentsLength + sizeof(WCHAR), (LPCWSTR)td, contentsLength);
-        *strContents = strValue;
-        return S_OK;
-    }
-    case REG_MULTI_SZ:
-    {
-        PCWSTR separator = L" "; // To match regedit
-        size_t sepChars = wcslen(separator);
-        int strings = 0;
-        int stringChars = 0;
-
-        PCWSTR strData = (PCWSTR)td;
-        while (*strData)
+        case REG_NONE:
         {
-            size_t len = wcslen(strData);
-            stringChars += len;
-            strData += len + 1; // Skips null-terminator
-            strings++;
+            PCWSTR strTodo = L"";
+            DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
+            StringCbCopyW(strValue, bufferLength, strTodo);
+            *strContents = strValue;
+            return S_OK;
         }
 
-        int cch = stringChars + (strings - 1) * sepChars + 1;
-
-        PWSTR strValue = (PWSTR)CoTaskMemAlloc(cch * sizeof(WCHAR));
-
-        strValue[0] = 0;
-
-        strData = (PCWSTR)td;
-        while (*strData)
+        case REG_SZ:
+        case REG_EXPAND_SZ:
         {
-            StrCatW(strValue, strData);
-            strData += wcslen(strData) + 1;
-            if (*strData)
-                StrCatW(strValue, separator);
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(contentsLength + sizeof(WCHAR));
+            StringCbCopyNW(strValue, contentsLength + sizeof(WCHAR), (LPCWSTR)td, contentsLength);
+            *strContents = strValue;
+            return S_OK;
         }
 
-        *strContents = strValue;
-        return S_OK;
-    }
-    case REG_DWORD:
-    {
-        DWORD bufferLength = 64 * sizeof(WCHAR);
-        PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
-        StringCbPrintfW(strValue, bufferLength, L"0x%08x (%d)",
-            *(DWORD*)td, *(DWORD*)td);
-        *strContents = strValue;
-        return S_OK;
-    }
-    case REG_QWORD:
-    {
-        DWORD bufferLength = 64 * sizeof(WCHAR);
-        PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
-        StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%lld)",
-            *(LARGE_INTEGER*)td, ((LARGE_INTEGER*)td)->QuadPart);
-        *strContents = strValue;
-        return S_OK;
-    }
-    case REG_BINARY:
-    {
-        DWORD bufferLength = (contentsLength * 3 + 1) * sizeof(WCHAR);
-        PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
-        PWSTR strTemp = strValue;
-        PBYTE data = (PBYTE)td;
-        for (DWORD i = 0; i < contentsLength; i++)
+        case REG_MULTI_SZ:
         {
-            StringCbPrintfW(strTemp, bufferLength, L"%02x ", data[i]);
-            strTemp += 3;
-            bufferLength -= 3;
+            PCWSTR separator = L" "; // To match regedit
+            size_t sepChars = wcslen(separator);
+            int strings = 0;
+            int stringChars = 0;
+
+            PCWSTR strData = (PCWSTR)td;
+            while (*strData)
+            {
+                size_t len = wcslen(strData);
+                stringChars += len;
+                strData += len + 1; // Skips null-terminator
+                strings++;
+            }
+
+            int cch = stringChars + (strings - 1) * sepChars + 1;
+
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(cch * sizeof(WCHAR));
+
+            strValue[0] = 0;
+
+            strData = (PCWSTR)td;
+            while (*strData)
+            {
+                StrCatW(strValue, strData);
+                strData += wcslen(strData) + 1;
+                if (*strData)
+                    StrCatW(strValue, separator);
+            }
+
+            *strContents = strValue;
+            return S_OK;
         }
-        *strContents = strValue;
-        return S_OK;
-    }
-    default:
-    {
-        PCWSTR strFormat = L"<Unimplemented value type %d>";
-        DWORD bufferLength = (wcslen(strFormat) + 15) * sizeof(WCHAR);
-        PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
-        StringCbPrintfW(strValue, bufferLength, strFormat, contentType);
-        *strContents = strValue;
-        return S_OK;
-    }
+
+        case REG_DWORD:
+        {
+            DWORD bufferLength = 64 * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
+            StringCbPrintfW(strValue, bufferLength, L"0x%08x (%d)",
+                *(DWORD*)td, *(DWORD*)td);
+            *strContents = strValue;
+            return S_OK;
+        }
+
+        case REG_QWORD:
+        {
+            DWORD bufferLength = 64 * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
+            StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%lld)",
+                *(LARGE_INTEGER*)td, ((LARGE_INTEGER*)td)->QuadPart);
+            *strContents = strValue;
+            return S_OK;
+        }
+
+        case REG_BINARY:
+        {
+            DWORD bufferLength = (contentsLength * 3 + 1) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
+            PWSTR strTemp = strValue;
+            PBYTE data = (PBYTE)td;
+            for (DWORD i = 0; i < contentsLength; i++)
+            {
+                StringCbPrintfW(strTemp, bufferLength, L"%02x ", data[i]);
+                strTemp += 3;
+                bufferLength -= 3;
+            }
+            *strContents = strValue;
+            return S_OK;
+        }
+
+        default:
+        {
+            PCWSTR strFormat = L"<Unimplemented value type %d>";
+            DWORD bufferLength = (wcslen(strFormat) + 15) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
+            StringCbPrintfW(strValue, bufferLength, strFormat, contentType);
+            *strContents = strValue;
+            return S_OK;
+        }
     }
 }
 

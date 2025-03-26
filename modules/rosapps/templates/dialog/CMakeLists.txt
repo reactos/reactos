@@ -9,8 +9,8 @@ list(APPEND SOURCE
 
 add_executable(template_dialog ${SOURCE} dialog.rc)
 set_module_type(template_dialog win32cui)
-if(NOT MSVC)
-    target_compile_options(template_dialog PRIVATE "-Wno-unused-but-set-variable")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(template_dialog PRIVATE -Wno-unused-but-set-variable)
 endif()
 add_importlibs(template_dialog user32 gdi32 comctl32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET template_dialog DESTINATION reactos/system32 FOR all)

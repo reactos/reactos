@@ -4,7 +4,7 @@
 #ifndef _INC_MATH
 #define _INC_MATH
 
-#include "crtdefs.h"
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 
@@ -57,7 +57,21 @@ typedef double double_t;
 #define HUGE_VALD ((double)INFINITY)
 #define HUGE_VALF ((float)INFINITY)
 #define HUGE_VALL ((long double)INFINITY)
-#define NAN       ((float)(INFINITY * 0.0F))
+#ifndef _UCRT_NEGATIVE_NAN
+// This operation creates a negative NAN adding a - to make it positive
+#ifdef _MSC_VER
+#define NAN        (-(float)(INFINITY * 0.0F))
+#else
+#define NAN        (__builtin_nanf(""))
+#endif
+#else
+// Keep this for backwards compatibility
+#ifdef _MSC_VER
+#define NAN        ((float)(INFINITY * 0.0F))
+#else
+#define NAN        (-__builtin_nanf(""))
+#endif
+#endif
 
 #define _DENORM  (-2)
 #define _FINITE  (-1)
@@ -99,6 +113,15 @@ _Check_return_ _CRT_JIT_INTRINSIC double __cdecl sqrt(_In_ double x);
 _Check_return_ double __cdecl tan(_In_ double x);
 _Check_return_ double __cdecl tanh(_In_ double x);
 
+#if defined(_MSC_VER) && !defined(__clang__)
+/* Prevent the compiler from generating calls to _CIatan2 */
+#pragma function(atan2)
+#ifdef _M_AMD64
+/* Prevent the compiler from generating calls to __vdecl_xxx */
+#pragma function(cos,pow,sin,tan)
+#endif
+#endif
+
 #ifndef _CRT_MATHERR_DEFINED
 #define _CRT_MATHERR_DEFINED
 int __CRTDECL _matherr(_Inout_ struct _exception *exception);
@@ -139,6 +162,10 @@ _Check_return_ _CRTIMP int __cdecl _set_SSE2_enable(_In_ int flag);
 _Check_return_ _CRTIMP float __cdecl _nextafterf(_In_ float x, _In_ float y);
 _Check_return_ _CRTIMP int __cdecl _isnanf(_In_ float x);
 _Check_return_ _CRTIMP int __cdecl _fpclassf(_In_ float x);
+#if defined(_MSC_VER) && !defined(__clang__)
+/* Prevent the compiler from generating calls to __vdecl_floor2 */
+#pragma function(floor)
+#endif
 #endif
 
 #if defined(__x86_64) || defined(_M_AMD64) || \
@@ -156,7 +183,9 @@ _Check_return_ __CRT_INLINE float __CRTDECL ldexpf(_In_ float x, _In_ int y) { r
 _Check_return_ __CRT_INLINE long double __CRTDECL tanl(_In_ long double x) { return (tan((double)x)); }
 #endif
 
-#if defined(__ia64__) || defined(_M_IA64) || \
+#if defined(_CRTBLD)
+_Check_return_ float __cdecl fabsf(_In_ float x);
+#elif defined(__ia64__) || defined(_M_IA64) || \
     defined(__arm__) || defined(_M_ARM)  || \
     defined(__arm64__) || defined(_M_ARM64)
 _Check_return_ _CRT_JIT_INTRINSIC _CRTIMP float __cdecl fabsf(_In_ float x);
@@ -164,39 +193,40 @@ _Check_return_ _CRT_JIT_INTRINSIC _CRTIMP float __cdecl fabsf(_In_ float x);
 _Check_return_ __CRT_INLINE float __CRTDECL fabsf(_In_ float x) { return ((float)fabs((double)x)); }
 #endif /* _M_IA64 || _M_ARM || _M_ARM64 */
 
-#if defined(_CRTBLD) || \
-    defined(__x86_64) || defined(_M_AMD64) || \
-    defined(__ia64__) || defined(_M_IA64) || \
-    defined(__arm__) || defined(_M_ARM)  || \
-    defined(__arm64__) || defined(_M_ARM64)
-_Check_return_ _CRTIMP float __cdecl _chgsignf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl _copysignf(_In_ float x, _In_ float y);
-_Check_return_ _CRTIMP float __cdecl _hypotf(_In_ float x, _In_ float y);
-_Check_return_ _CRTIMP float __cdecl acosf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl asinf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl atanf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl atan2f(_In_ float x, _In_ float y);
-_Check_return_ _CRTIMP float __cdecl ceilf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl cosf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl coshf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl expf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl floorf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl fmodf(_In_ float x, _In_ float y);
-_Check_return_ _CRTIMP float __cdecl logf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl log10f(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl modff(_In_ float x, _Out_ float *y);
-_Check_return_ _CRTIMP float __cdecl powf(_In_ float b, _In_ float e);
-_Check_return_ _CRTIMP float __cdecl sinf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl sinhf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl sqrtf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl tanf(_In_ float x);
-_Check_return_ _CRTIMP float __cdecl tanhf(_In_ float x);
-#else
-#if defined(_MSC_VER) && (defined(_M_AMD64) || defined(_M_ARM))
+_Check_return_ float __cdecl _chgsignf(_In_ float x);
+_Check_return_ float __cdecl _copysignf(_In_ float x, _In_ float y);
+_Check_return_ float __cdecl _hypotf(_In_ float x, _In_ float y);
+_Check_return_ float __cdecl acosf(_In_ float x);
+_Check_return_ float __cdecl asinf(_In_ float x);
+_Check_return_ float __cdecl atanf(_In_ float x);
+_Check_return_ float __cdecl atan2f(_In_ float x, _In_ float y);
+_Check_return_ float __cdecl ceilf(_In_ float x);
+_Check_return_ float __cdecl cosf(_In_ float x);
+_Check_return_ float __cdecl coshf(_In_ float x);
+_Check_return_ float __cdecl expf(_In_ float x);
+_Check_return_ float __cdecl floorf(_In_ float x);
+_Check_return_ float __cdecl fmodf(_In_ float x, _In_ float y);
+_Check_return_ float __cdecl logf(_In_ float x);
+_Check_return_ float __cdecl log10f(_In_ float x);
+_Check_return_ float __cdecl modff(_In_ float x, _Out_ float *y);
+_Check_return_ float __cdecl powf(_In_ float b, _In_ float e);
+_Check_return_ float __cdecl sinf(_In_ float x);
+_Check_return_ float __cdecl sinhf(_In_ float x);
+_Check_return_ float __cdecl sqrtf(_In_ float x);
+_Check_return_ float __cdecl tanf(_In_ float x);
+_Check_return_ float __cdecl tanhf(_In_ float x);
+
+#if defined(_MSC_VER) && !defined(__clang__)
 /* Make sure intrinsics don't get in our way */
-#pragma warning(suppress:4164) /* intrinsic not declared */
-#pragma function(acosf,asinf,atanf,atan2f,ceilf,cosf,coshf,expf,floorf,fmodf,logf,log10f,log10f,powf,sinf,sinhf,sqrtf,tanf,tanhf)
+#if defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
+#pragma function(acosf,asinf,atanf,atan2f,ceilf,cosf,coshf,expf,floorf,fmodf,logf,log10f,powf,sinf,sinhf,sqrtf,tanf,tanhf)
+#endif /* defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64) */
+#if (_MSC_VER >= 1920)
+#pragma function(_hypotf)
+#endif
 #endif /* _MSC_VER */
+
+#if !defined(_CRTBLD)
 _Check_return_ __CRT_INLINE float _chgsignf(_In_ float x) { return (float)_chgsign((double)x); }
 _Check_return_ __CRT_INLINE float _copysignf(_In_ float x, _In_ float y) { return (float)_copysign((double)x, (double)y); }
 _Check_return_ __CRT_INLINE float _hypotf(_In_ float x, _In_ float y) { return (float)_hypot((double)x, (double)y); }
@@ -219,7 +249,8 @@ _Check_return_ __CRT_INLINE float sinhf(_In_ float x) { return (float)sinh((doub
 _Check_return_ __CRT_INLINE float sqrtf(_In_ float x) { return (float)sqrt((double)x); }
 _Check_return_ __CRT_INLINE float tanf(_In_ float x) { return (float)tan((double)x); }
 _Check_return_ __CRT_INLINE float tanhf(_In_ float x) { return (float)tanh((double)x); }
-#endif
+#endif /* !defined(_CRTBLD) */
+
 _Check_return_ __CRT_INLINE double hypot(_In_ double x, _In_ double y) { return _hypot(x, y); }
 _Check_return_ __CRT_INLINE float hypotf(_In_ float x, _In_ float y) { return _hypotf(x, y); }
 _Check_return_ __CRT_INLINE float frexpf(_In_ float x, _Out_ int *y) { return ((float)frexp((double)x,y)); }
@@ -252,6 +283,14 @@ _Check_return_ __CRT_INLINE long double ldexpl(_In_ long double x, _In_ int y) {
 _Check_return_ __CRT_INLINE long double modfl(_In_ long double x, _Out_ long double *y) { return (long double)modf((double)x, (double *)y); }
 
 /* Support for some functions, not exported in MSVCRT */
+#if (_MSC_VER >= 1929) && !defined(__clang__)
+_Check_return_ long lrint(_In_ double x);
+_Check_return_ long lrintf(_In_ float x);
+_Check_return_ long lrintl(_In_ long double x);
+#pragma function(lrint, lrintf, lrintl)
+#endif
+
+#ifndef _CRTBLD
 _Check_return_ __CRT_INLINE double round(_In_ double x) { return (x < 0) ? ceil(x - 0.5f) : floor(x + 0.5); }
 _Check_return_ __CRT_INLINE float roundf(_In_ float x) { return (x < 0) ? ceilf(x - 0.5f) : floorf(x + 0.5); }
 _Check_return_ __CRT_INLINE long double roundl(_In_ long double x) { return (x < 0) ? ceill(x - 0.5f) : floorl(x + 0.5); }
@@ -270,6 +309,11 @@ _Check_return_ __CRT_INLINE long lrintl(_In_ long double x) { return (long)((x <
 _Check_return_ __CRT_INLINE long long llrint(_In_ double x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE long long llrintf(_In_ float x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 _Check_return_ __CRT_INLINE long long llrintl(_In_ long double x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
+#ifdef _MSC_VER
+#define log2 _log2 // nasty hack, see CORE-18255
+#endif
+_Check_return_ __CRT_INLINE double log2(_In_ double x) { return log(x) / log(2); }
+#endif /* !_CRTBLD */
 
 #ifndef NO_OLDNAMES /* !__STDC__ */
 

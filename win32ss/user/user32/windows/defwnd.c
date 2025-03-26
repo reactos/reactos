@@ -1,15 +1,12 @@
 /*
- *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            win32ss/user/user32/windows/defwnd.c
  * PURPOSE:         Window management
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *      06-06-2001  CSH  Created
+ * PROGRAMMER:      2001 Casper S. Hornstrup <chorns@users.sourceforge.net>
  */
 
 #include <user32.h>
+#include <immdev.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
@@ -160,7 +157,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_RESTORE:
       case SC_CLOSE:
       case SC_HOTKEY:
-        NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+        NtUserMessageCall(hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
         return 0;
 
       default:
@@ -169,13 +166,12 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   if (ISITHOOKED(WH_CBT))
   {
-     NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+     NtUserMessageCall(hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
      if (lResult) return 0;
   }
 
   switch (wParam & 0xfff0)
     {
-
       case SC_VSCROLL:
       case SC_HSCROLL:
         {
@@ -338,8 +334,11 @@ User32DefWindowProc(HWND hWnd,
             HMENU menu = GetSystemMenu(hWnd, FALSE);
             ERR("WM_POPUPSYSTEMMENU\n");
             if (menu)
+            {
+                SetForegroundWindow(hWnd);
                 TrackPopupMenu(menu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_SYSTEM_MENU,
                                LOWORD(lParam), HIWORD(lParam), 0, hWnd, NULL);
+            }
             return 0;
         }
 
@@ -386,11 +385,11 @@ User32DefWindowProc(HWND hWnd,
             {
                 if (bUnicode)
                 {
-                    SendMessageW(GetParent(hWnd), Msg, wParam, lParam);
+                    SendMessageW(GetParent(hWnd), Msg, (WPARAM)hWnd, lParam);
                 }
                 else
                 {
-                    SendMessageA(GetParent(hWnd), WM_CONTEXTMENU, wParam, lParam);
+                    SendMessageA(GetParent(hWnd), Msg, (WPARAM)hWnd, lParam);
                 }
             }
             else
@@ -543,22 +542,27 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_INPUTLANGCHANGEREQUEST:
         {
-            HKL NewHkl;
+            HKL hNewKL;
+            HWND hwndFocus;
 
-            if(wParam & INPUTLANGCHANGE_BACKWARD
-               && wParam & INPUTLANGCHANGE_FORWARD)
-            {
+            if ((wParam & INPUTLANGCHANGE_BACKWARD) && (wParam & INPUTLANGCHANGE_FORWARD))
                 return FALSE;
+
+            hwndFocus = GetFocus();
+            if (hwndFocus && hwndFocus != hWnd &&
+                GetClassLongPtrW(hWnd, GCW_ATOM) != (ULONG_PTR)WC_DIALOG)
+            {
+                return SendMessageW(hwndFocus, Msg, wParam, lParam);
             }
 
-            //FIXME: What to do with INPUTLANGCHANGE_SYSCHARSET ?
+            if (wParam & INPUTLANGCHANGE_FORWARD)
+                hNewKL = (HKL)UlongToHandle(HKL_NEXT);
+            else if (wParam & INPUTLANGCHANGE_BACKWARD)
+                hNewKL = (HKL)UlongToHandle(HKL_PREV);
+            else
+                hNewKL = (HKL)lParam;
 
-            if(wParam & INPUTLANGCHANGE_BACKWARD) NewHkl = (HKL) HKL_PREV;
-            else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = (HKL) HKL_NEXT;
-            else NewHkl = (HKL) lParam;
-
-            NtUserActivateKeyboardLayout(NewHkl, 0);
-
+            NtUserActivateKeyboardLayout(hNewKL, KLF_SETFORPROCESS);
             return TRUE;
         }
 
@@ -609,7 +613,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Flags & UISF_ACTIVE)
             {
-                WARN("WM_CHANGEUISTATE does not yet support UISF_ACTIVE!\n");
+                WARN("WM_CHANGEUISTATE does not yet support UISF_ACTIVE\n");
             }
 
             if (Action == UIS_INITIALIZE)
@@ -691,7 +695,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Flags & UISF_ACTIVE)
             {
-                WARN("WM_UPDATEUISTATE does not yet support UISF_ACTIVE!\n");
+                WARN("WM_UPDATEUISTATE does not yet support UISF_ACTIVE\n");
             }
 
             if (Action == UIS_INITIALIZE)
@@ -797,7 +801,7 @@ User32DefWindowProc(HWND hWnd,
 GoSS:
         {
             LRESULT lResult;
-            NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
+            NtUserMessageCall(hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
             return lResult;
         }
     }
@@ -948,16 +952,16 @@ RealDefWindowProcA(HWND hWnd,
             LONG size, i;
             unsigned char lead = 0;
             char *buf = NULL;
-            HIMC himc = ImmGetContext( hWnd );
+            HIMC himc = IMM_FN(ImmGetContext)( hWnd );
 
             if (himc)
             {
-                if ((size = ImmGetCompositionStringA( himc, GCS_RESULTSTR, NULL, 0 )))
+                if ((size = IMM_FN(ImmGetCompositionStringA)( himc, GCS_RESULTSTR, NULL, 0 )))
                 {
                     if (!(buf = HeapAlloc( GetProcessHeap(), 0, size ))) size = 0;
-                    else size = ImmGetCompositionStringA( himc, GCS_RESULTSTR, buf, size );
+                    else size = IMM_FN(ImmGetCompositionStringA)( himc, GCS_RESULTSTR, buf, size );
                 }
-                ImmReleaseContext( hWnd, himc );
+                IMM_FN(ImmReleaseContext)( hWnd, himc );
 
                 for (i = 0; i < size; i++)
                 {
@@ -984,26 +988,42 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
-        {
-            HWND hwndIME;
-
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
-            if (hwndIME)
-                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
-            break;
-        }
-
         case WM_IME_SETCONTEXT:
+NormalImeMsgHandling:
         {
             HWND hwndIME;
 
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
-            if (hwndIME)
-                Result = ImmIsUIMessageA(hwndIME, Msg, wParam, lParam);
+            if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+            {
+                TRACE("This thread's IME is disabled\n");
+                break;
+            }
+
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+            {
+                ERR("hwndIME was NULL\n");
+                break;
+            }
+
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, FALSE);
+                break;
+            }
+
+            Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
 
-        /* fall through */
+        case WM_IME_SYSTEM:
+        {
+            if (wParam == 4)
+                break;
+
+            goto NormalImeMsgHandling;
+        }
+
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
     }
@@ -1043,9 +1063,9 @@ RealDefWindowProcW(HWND hWnd,
                {
                   SCROLLINFO si = {sizeof si, SIF_ALL, 0, 100, 0, 0, 0};
                   if (Wnd->style & WS_HSCROLL)
-                     SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
+                     SetScrollInfo(hWnd, SB_HORZ, &si, FALSE);
                   if (Wnd->style & WS_VSCROLL)
-                     SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
+                     SetScrollInfo(hWnd, SB_VERT, &si, FALSE);
                }
             }
 
@@ -1147,16 +1167,16 @@ RealDefWindowProcW(HWND hWnd,
         {
             LONG size, i;
             WCHAR *buf = NULL;
-            HIMC himc = ImmGetContext( hWnd );
+            HIMC himc = IMM_FN(ImmGetContext)( hWnd );
 
             if (himc)
             {
-                if ((size = ImmGetCompositionStringW( himc, GCS_RESULTSTR, NULL, 0 )))
+                if ((size = IMM_FN(ImmGetCompositionStringW)( himc, GCS_RESULTSTR, NULL, 0 )))
                 {
                     if (!(buf = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) ))) size = 0;
-                    else size = ImmGetCompositionStringW( himc, GCS_RESULTSTR, buf, size * sizeof(WCHAR) );
+                    else size = IMM_FN(ImmGetCompositionStringW)( himc, GCS_RESULTSTR, buf, size * sizeof(WCHAR) );
                 }
-                ImmReleaseContext( hWnd, himc );
+                IMM_FN(ImmReleaseContext)( hWnd, himc );
 
                 for (i = 0; i < size / sizeof(WCHAR); i++)
                     SendMessageW( hWnd, WM_IME_CHAR, buf[i], 1 );
@@ -1169,23 +1189,40 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
         case WM_IME_CONTROL:
+        case WM_IME_SETCONTEXT:
+NormalImeMsgHandling:
         {
             HWND hwndIME;
 
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
-            if (hwndIME)
-                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
+            if (GetWin32ClientInfo()->dwTIFlags & TIF_DISABLEIME)
+            {
+                TRACE("This thread's IME is disabled\n");
+                break;
+            }
+
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
+            if (!hwndIME)
+            {
+                ERR("hwndIME was NULL\n");
+                break;
+            }
+
+            if (hwndIME == hWnd)
+            {
+                ImeWndProc_common(hwndIME, Msg, wParam, lParam, TRUE);
+                break;
+            }
+
+            Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
-        case WM_IME_SETCONTEXT:
+        case WM_IME_SYSTEM:
         {
-            HWND hwndIME;
+            if (wParam == 4)
+                break;
 
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
-            if (hwndIME)
-                Result = ImmIsUIMessageW(hwndIME, Msg, wParam, lParam);
-            break;
+            goto NormalImeMsgHandling;
         }
 
         default:
@@ -1197,10 +1234,7 @@ RealDefWindowProcW(HWND hWnd,
 }
 
 LRESULT WINAPI
-DefWindowProcA(HWND hWnd,
-	       UINT Msg,
-	       WPARAM wParam,
-	       LPARAM lParam)
+DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
@@ -1227,7 +1261,7 @@ DefWindowProcA(HWND hWnd,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       ERR("Got exception in hooked DefWindowProcA!\n");
+       ERR("Got exception in hooked DefWindowProcA\n");
    }
    _SEH2_END;
 
@@ -1237,10 +1271,7 @@ DefWindowProcA(HWND hWnd,
 }
 
 LRESULT WINAPI
-DefWindowProcW(HWND hWnd,
-	       UINT Msg,
-	       WPARAM wParam,
-	       LPARAM lParam)
+DefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
@@ -1267,7 +1298,7 @@ DefWindowProcW(HWND hWnd,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       ERR("Got exception in hooked DefWindowProcW!\n");
+       ERR("Got exception in hooked DefWindowProcW\n");
    }
    _SEH2_END;
 

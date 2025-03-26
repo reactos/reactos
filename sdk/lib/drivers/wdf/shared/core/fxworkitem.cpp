@@ -64,7 +64,7 @@ FxWorkItem::FxWorkItem(
    MarkDisposeOverride(ObjectDoNotLock);
 }
 
-
+
 FxWorkItem::~FxWorkItem(
     VOID
     )

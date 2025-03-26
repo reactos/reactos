@@ -149,3 +149,26 @@ SetupVerifyInfFileW(
     return FALSE;
 }
 
+BOOL WINAPI
+SetupDiSetDriverInstallParamsA(
+    _In_ HDEVINFO DeviceInfoSet,
+    _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+    _In_ PSP_DRVINFO_DATA_A DriverInfoData,
+    _In_ PSP_DRVINSTALL_PARAMS DriverInstallParams)
+{
+    FIXME("Stub %p %p %p %p\n", DeviceInfoSet, DeviceInfoData, DriverInfoData, DriverInstallParams);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+BOOL WINAPI
+SetupDiSetDriverInstallParamsW(
+    _In_ HDEVINFO DeviceInfoSet,
+    _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+    _In_ PSP_DRVINFO_DATA_W DriverInfoData,
+    _In_ PSP_DRVINSTALL_PARAMS DriverInstallParams)
+{
+    FIXME("Stub %p %p %p %p\n", DeviceInfoSet, DeviceInfoData, DriverInfoData, DriverInstallParams);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}

@@ -41,7 +41,6 @@ MiInitializeSessionWsSupport(VOID)
 {
     /* Initialize the list heads */
     InitializeListHead(&MiSessionWsList);
-    InitializeListHead(&MmWorkingSetExpansionHead);
 }
 
 BOOLEAN
@@ -365,26 +364,23 @@ MiDereferenceSession(VOID)
     {
         /* No more references left, kill the session completely */
         MiDereferenceSessionFinal();
+        return;
     }
 
-    /* Check if tis is the session leader or the last process in the session */
-    if ((Process->Vm.Flags.SessionLeader) || (ReferenceCount == 0))
+    /* Check if this is the session leader */
+    if (Process->Vm.Flags.SessionLeader)
     {
         /* Get the global session address before we kill the session mapping */
         SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
 
         /* Delete all session PDEs and flush the TB */
-        RtlZeroMemory(MiAddressToPde(MmSessionBase),
-                      BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
+        //RtlZeroMemory(MiAddressToPde(MmSessionBase),
+        //              BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
         KeFlushEntireTb(FALSE, FALSE);
 
-        /* Is this the session leader? */
-        if (Process->Vm.Flags.SessionLeader)
-        {
-            /* Clean up the references here. */
-            ASSERT(Process->Session == NULL);
-            MiReleaseProcessReferenceToSessionDataPage(SessionGlobal);
-        }
+        /* Clean up the references here. */
+        ASSERT(Process->Session == NULL);
+        MiReleaseProcessReferenceToSessionDataPage(SessionGlobal);
     }
 
     /* Reset the current process' session flag */
@@ -481,7 +477,7 @@ MiSessionInitializeWorkingSetList(VOID)
 
     /* Fill out the two pointers */
     MmSessionSpace->Vm.VmWorkingSetList = WorkingSetList;
-    MmSessionSpace->Wsle = (PMMWSLE)WorkingSetList->UsedPageTableEntries;
+    MmSessionSpace->Wsle = (PMMWSLE)((&WorkingSetList->VadBitMapHint) + 1);
 
     /* Get the PDE for the working set, and check if it's already allocated */
     PointerPde = MiAddressToPde(WorkingSetList);
@@ -908,7 +904,7 @@ MmSessionDelete(IN ULONG SessionId)
 
     /* Remove one reference count */
     KeEnterCriticalRegion();
-    /* FIXME: Do it */
+    MiDereferenceSession();
     KeLeaveCriticalRegion();
 
     /* All done */

@@ -101,7 +101,7 @@
 102 stdcall SHCoCreateInstance(wstr ptr long ptr ptr)
 103 stdcall SignalFileOpen(ptr)
 104 stdcall OpenAs_RunDLLW(long long wstr long)
-105 stdcall Activate_RunDLL(long ptr ptr ptr)
+105 stdcall Activate_RunDLL(ptr ptr wstr long)
 106 stdcall AppCompat_RunDLLW(ptr ptr wstr long)
 107 stdcall CheckEscapesA(str long)
 108 stdcall CheckEscapesW(wstr long)
@@ -200,7 +200,7 @@
 201 stdcall -noname SHDesktopMessageLoop(ptr)
 202 stub -noname DDEHandleViewFolderNotify
 203 stdcall -noname AddCommasW(long wstr)
-204 stdcall -noname ShortSizeFormatW(double)
+204 stdcall -noname ShortSizeFormatW(long ptr)
 205 stdcall -noname Printer_LoadIconsW(wstr ptr ptr)
 206 stdcall ExtractAssociatedIconA(long str ptr)
 207 stdcall ExtractAssociatedIconExA(long str long long)
@@ -232,7 +232,7 @@
 233 stdcall -noname SHGetUserPicturePathW(wstr long ptr)
 234 stdcall -noname SHSetUserPicturePathW(wstr long ptr)
 235 stdcall -noname SHOpenEffectiveToken(ptr)
-236 stdcall -noname SHTestTokenPrivilegeW(ptr ptr)
+236 stdcall -noname SHTestTokenPrivilegeW(ptr wstr)
 237 stdcall -noname SHShouldShowWizards(ptr)
 238 stdcall InternalExtractIconListW(ptr wstr ptr)
 239 stdcall PathIsSlowW(wstr long)
@@ -242,7 +242,7 @@
 243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx
 244 stdcall -noname SHSettingsChanged(ptr ptr)
 245 stdcall SHTestTokenMembership(ptr ptr)
-246 stub -noname SHInvokePrivilegedFunctionW
+246 stdcall -noname SHInvokePrivilegedFunctionW(wstr ptr ptr)
 247 stub -noname SHGetActiveConsoleSessionId
 248 stdcall -noname SHGetUserSessionId(ptr)
 249 stdcall -noname PathParseIconLocation(wstr) PathParseIconLocationW
@@ -261,10 +261,10 @@
 262 stdcall PrintersGetCommand_RunDLL(ptr ptr wstr long)
 263 stdcall PrintersGetCommand_RunDLLA(ptr ptr str long)
 264 stdcall PrintersGetCommand_RunDLLW(ptr ptr wstr long)
-265 stdcall RealShellExecuteA(ptr str str str str str str str long ptr)
-266 stdcall RealShellExecuteExA(ptr str str str str str str str long ptr long)
-267 stdcall RealShellExecuteExW(ptr str str str str str str str long ptr long)
-268 stdcall RealShellExecuteW(ptr wstr wstr wstr wstr wstr wstr wstr long ptr)
+265 stdcall RealShellExecuteA(ptr str str str str ptr str ptr long ptr)
+266 stdcall RealShellExecuteExA(ptr str str str str ptr str ptr long ptr long)
+267 stdcall RealShellExecuteExW(ptr wstr wstr wstr wstr ptr wstr ptr long ptr long)
+268 stdcall RealShellExecuteW(ptr wstr wstr wstr wstr ptr wstr ptr long ptr)
 269 stdcall RegenerateUserEnvironment(ptr long)
 270 stdcall SHAddToRecentDocs(long ptr)
 271 stdcall SHAppBarMessage(long ptr)
@@ -280,6 +280,7 @@
 281 stdcall SHCreateProcessAsUserW(ptr)
 282 stdcall SHCreateQueryCancelAutoPlayMoniker(ptr)
 283 stdcall SHCreateShellItem(ptr ptr ptr ptr)
+@ stdcall -version=0x600+ SHCreateShellItemArrayFromDataObject(ptr ptr ptr)
 284 stdcall SHEmptyRecycleBinA(long str long)
 285 stdcall SHEmptyRecycleBinW(long wstr long)
 286 stub SHEnableServiceObject
@@ -306,6 +307,7 @@
 307 stdcall SHGetFolderPathW(long long long long ptr)
 308 stdcall SHGetIconOverlayIndexA(str long)
 309 stdcall SHGetIconOverlayIndexW(wstr long)
+@ stdcall -version=0x600+ SHGetIDListFromObject(ptr ptr)
 310 stdcall SHGetInstanceExplorer(long)
 311 stdcall SHGetMalloc(ptr)
 312 stdcall SHGetNewLinkInfo(str str ptr long long) SHGetNewLinkInfoA
@@ -316,7 +318,7 @@
 317 stdcall SHGetSpecialFolderLocation(long long ptr)
 318 stdcall SHGetSpecialFolderPathA(long ptr long long)
 319 stdcall SHGetSpecialFolderPathW(long ptr long long)
-320 stdcall SHGetUnreadMailCountW (long wstr long ptr wstr long)
+320 stdcall SHGetUnreadMailCountW(ptr wstr ptr ptr ptr long)
 321 stdcall SHHelpShortcuts_RunDLL(long long long long) SHHelpShortcuts_RunDLLA
 322 stdcall SHHelpShortcuts_RunDLLA(long long long long)
 323 stdcall SHHelpShortcuts_RunDLLW(long long long long)
@@ -353,7 +355,7 @@
 354 stdcall SheShortenPathW(wstr long)
 355 stdcall ShellAboutA(long str str long)
 356 stdcall ShellAboutW(long wstr wstr long)
-357 stdcall ShellExec_RunDLL(ptr ptr wstr long)
+357 stdcall ShellExec_RunDLL(ptr ptr str long) ShellExec_RunDLLA
 358 stdcall ShellExec_RunDLLA(ptr ptr str long)
 359 stdcall ShellExec_RunDLLW(ptr ptr wstr long)
 360 stdcall ShellExecuteA(long str str str str long)
@@ -444,13 +446,13 @@
 723 stdcall -noname SHCreateSessionKey(long ptr)
 724 stdcall -noname SHIsTempDisplayMode()
 725 stdcall -noname GetFileDescriptor(ptr long long wstr)
-726 stdcall -noname CopyStreamUI(ptr ptr ptr)
+726 stdcall -noname CopyStreamUI(ptr ptr ptr int64)
 727 stdcall SHGetImageList(long ptr ptr)
 730 stdcall RestartDialogEx(long wstr long long)
 731 stdcall -noname -stub SHRegisterDarwinLink(long long long)
 732 stdcall -noname SHReValidateDarwinCache()
 733 stdcall -noname CheckDiskSpace()
-740 stub -noname SHCreateFileDataObject
+740 stdcall -noname SHCreateFileDataObject(ptr long ptr ptr ptr)
 743 stdcall SHCreateFileExtractIconW(wstr long ptr ptr)
 744 stub -noname Create_IEnumUICommand
 745 stub -noname Create_IUIElement
@@ -459,7 +461,7 @@
 749 stdcall -noname -version=0x501-0x502 SHGetShellStyleHInstance()
 750 stdcall -noname SHGetAttributesFromDataObject(ptr long ptr ptr)
 751 stub -noname SHSimulateDropOnClsid
-752 stdcall -noname SHGetComputerDisplayNameW(long long long long)
+752 stdcall -noname SHGetComputerDisplayNameW(wstr long ptr long)
 753 stdcall -noname CheckStagingArea()
 754 stub -noname SHLimitInputEditWithFlags
 755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)

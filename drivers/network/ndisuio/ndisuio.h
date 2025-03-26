@@ -24,11 +24,11 @@ typedef struct _NDISUIO_ADAPTER_CONTEXT
 
     /* NDIS binding information */
     NDIS_HANDLE BindingHandle;
-    
+
     /* Reference count information */
     ULONG OpenCount;
     LIST_ENTRY OpenEntryList;
-    
+
     /* NDIS pools */
     NDIS_HANDLE PacketPoolHandle;
     NDIS_HANDLE BufferPoolHandle;
@@ -36,7 +36,7 @@ typedef struct _NDISUIO_ADAPTER_CONTEXT
     /* Receive packet list */
     LIST_ENTRY PacketList;
     KEVENT PacketReadEvent;
-    
+
     /* Mac options */
     ULONG MacOptions;
 
@@ -54,10 +54,10 @@ typedef struct _NDISUIO_OPEN_ENTRY
 {
     /* File object */
     PFILE_OBJECT FileObject;
-    
+
     /* Tracks how this adapter was opened (write-only or read-write) */
     BOOLEAN WriteOnly;
-    
+
     /* List entry */
     LIST_ENTRY ListEntry;
 } NDISUIO_OPEN_ENTRY, *PNDISUIO_OPEN_ENTRY;
@@ -66,7 +66,7 @@ typedef struct _NDISUIO_PACKET_ENTRY
 {
     /* Length of data at the end of the struct */
     ULONG PacketLength;
-    
+
     /* Entry on the packet list */
     LIST_ENTRY ListEntry;
 

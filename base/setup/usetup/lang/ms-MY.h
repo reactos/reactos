@@ -927,59 +927,6 @@ static MUI_ENTRY msMYSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY msMYBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Persediaan tidak dapat memasang bootloader pada komputer",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "cakera keras anda",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Sila sisipkan cakera liut diformatkan dalam pemacu A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "dan tekan ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Teruskan   F3 = Keluar",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY msMYSelectPartitionEntries[] =
 {
     {
@@ -1020,14 +967,14 @@ static MUI_ENTRY msMYSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tekan P untuk mencipta partition yang utama.",
+        "\x07  Tekan C untuk mencipta partition yang utama/logik.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Tekan E untuk mencipta partition yang berpanjangan.",
+        "\x07  Tekan E untuk mencipta partition yang lanjutan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1301,7 +1248,7 @@ static MUI_ENTRY msMYFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Persediaan sekarang akan format partition. Tekan ENTER untuk teruskan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1310,6 +1257,37 @@ static MUI_ENTRY msMYFormatPartitionEntries[] =
         0,
         0,
         "ENTER = Teruskan   F3 = Keluar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY msMYCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Persediaan kini sedang menyemak sekatan yang dipilih.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Sila tunggu...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1425,7 +1403,7 @@ static MUI_ENTRY msMYFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY msMYBootLoaderEntries[] =
+static MUI_ENTRY msMYBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1437,7 +1415,7 @@ static MUI_ENTRY msMYBootLoaderEntries[] =
     {
         6,
         8,
-        "Persediaan sedang memasang boot loader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1465,7 +1443,7 @@ static MUI_ENTRY msMYBootLoaderEntries[] =
     {
         8,
         15,
-        "Langkau memasang boot loader.",
+        "Langkau memasang bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1482,6 +1460,83 @@ static MUI_ENTRY msMYBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY msMYBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Persediaan sedang memasang bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY msMYBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Persediaan sedang memasang bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Sila sisipkan cakera liut diformatkan dalam pemacu A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "dan tekan ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Teruskan   F3 = Keluar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY msMYKeyboardSettingsEntries[] =
@@ -1873,13 +1928,6 @@ MUI_ERROR msMYErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Anda tidak boleh menghapuskan ruang cakera yang tiada partition!\n"
-        "\n"
-        "  * Tekan sebarang kunci untuk meneruskan.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Persediaan gagal memasang bootcode %S pada partition sistem.",
         "ENTER = Memulakan semula komputer"
@@ -2086,6 +2134,10 @@ MUI_PAGE msMYPages[] =
         msMYFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        msMYCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         msMYDeletePartitionEntries
     },
@@ -2106,8 +2158,8 @@ MUI_PAGE msMYPages[] =
         msMYKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        msMYBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        msMYBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2122,8 +2174,12 @@ MUI_PAGE msMYPages[] =
         msMYSuccessPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        msMYBootPageEntries
+        BOOTLOADER_INSTALL_PAGE,
+        msMYBootLoaderInstallPageEntries
+    },
+    {
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        msMYBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2140,25 +2196,27 @@ MUI_STRING msMYStrings[] =
     {STRING_PLEASEWAIT,
      "   Sila tunggu..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Pasang   P = Mencipta Utama   E = Mencipta Dilanjutkan   F3 = Keluar"},
+     "   ENTER = Pasang   C = Mencipta Utama   E = Mencipta Dilanjutkan   F3 = Keluar"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Pasang   L = Mencipta Partition Logik   F3 = Keluar"},
+     "   ENTER = Pasang   C = Mencipta Partition Logik   F3 = Keluar"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Pasang   D = Menghapuskan Partition   F3 = Keluar"},
     {STRING_DELETEPARTITION,
      "   D = Menghapuskan Partition   F3 = Keluar"},
     {STRING_PARTITIONSIZE,
      "Saiz partition yang baru:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Anda telah memilih untuk mencipta partition yang utama padanya"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Anda telah memilih untuk mencipta partition yang lanjut padanya"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Anda telah memilih untuk mencipta partition yang logik padanya"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Sila masukkan saiz partition yang baru dalam megabait."},
     {STRING_CREATEPARTITION,
      "   ENTER = Mencipta Partition   ESC = Batalkan   F3 = Keluar"},
+    {STRING_NEWPARTITION,
+    "Persediaan yang dicipta partition yang baru di"},
     {STRING_PARTFORMAT,
     "Partition ini akan diformat seterusnya."},
     {STRING_NONFORMATTEDPART,
@@ -2169,8 +2227,6 @@ MUI_STRING msMYStrings[] =
     "Partition baru tidak diformat lagi."},
     {STRING_INSTALLONPART,
     "Persediaan memasang ReactOS ke Partition"},
-    {STRING_CHECKINGPART,
-    "Persediaan kini sedang menyemak sekatan yang dipilih."},
     {STRING_CONTINUE,
     "ENTER = Teruskan"},
     {STRING_QUITCONTINUE,
@@ -2198,7 +2254,7 @@ MUI_STRING msMYStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Mengemaskini seting susun atur papan kekunci..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Menambah maklumat codepage untuk pendaftaran..."},
+    "   Menambah maklumat codepage..."},
     {STRING_DONE,
     "   Siap..."},
     {STRING_REBOOTCOMPUTER2,
@@ -2211,42 +2267,30 @@ MUI_STRING msMYStrings[] =
     "Punca paling biasa ini menggunakan papan kekunci yang USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Papan kekunci USB tidak disokong sepenuhnya lagi\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Persediaan sedang format cakera"},
+    {STRING_FORMATTINGPART,
+    "Persediaan sedang format partition..."},
     {STRING_CHECKINGDISK,
-    "Persediaan sedang menyemak cakera"},
+    "Persediaan sedang menyemak cakera..."},
     {STRING_FORMATDISK1,
     " Format partition seperti sistem fail %S (format ringkas) "},
     {STRING_FORMATDISK2,
     " Format partition seperti sistem fail %S "},
     {STRING_KEEPFORMAT,
     " Memastikan sistem fail semasa (tiada perubahan) "},
-    {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE_1,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Persediaan yang dicipta partition yang baru di"},
+    {STRING_HDDISK1,
+    "%s."},
+    {STRING_HDDISK2,
+    "on %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO1,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDDINFO2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_UNPSPACE,
-    "    %sRuang unpartitioned%s           %6lu %s"},
+    "Ruang unpartitioned"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

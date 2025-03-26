@@ -1,0 +1,27 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "Das Format des RunEx oder RunOnceEx Eintrags %1 war ungültig. Eine senkrechte Linie ('|') hinter dem Funktionsnamen ist erforderlich und der Funktionsname muss WinMain()-Parameter unterstützen."
+    IDS_LOADERROR "Beim Laden von %1 ist ein Fehler aufgetreten. Die Datei wurde möglicherweise nicht installiert oder ist beschädigt worden."
+    IDS_CALLERROR "Beim Aufruf der Funktion %1 in %2 ist ein Fehler oder eine Ausnahme aufgetreten."
+    IDS_INCORRECTFORMAT "Das Format des folgenden RunEx- oder RunOnceEx-Befehls ist falsch: %1. Der Shell-Ausführungsbefehl muss mit || beginnen."
+    IDS_NOEXPORT "Die Funktion %1 in der Datei %2 kann nicht aufgerufen werden, da sie nicht existiert oder nicht exportiert wird."
+    IDS_EXECUTEERROR "Bei der Ausführung von %1 ist ein Fehler oder eine Ausnahme aufgetreten."
+    IDS_NOFUNCTION "Die Funktion %1 in der Datei %2 kann nicht gefunden werden."
+    IDS_NODEPENDENCY "Die Abhängigkeitsdatei %1 kann nicht geladen werden."
+    IDS_SETUPERROR "Beim Einrichten von %1 ist ein Fehler aufgetreten. Dieser Fehler wurde protokolliert, die Installation wird fortgesetzt."
+    IDS_INCOMPLETE "Die vorherige Installation einer Anwendung wurde nicht abgeschlossen.\n\nMelden Sie sich mit einem Administratorkonto an, um die Installation abzuschließen."
+    IDS_SETUP "ReactOS Setup"
+    IDS_SERVICEERROR "Einige Dienste konnten nicht gestartet werden. Ihr System muss neu gestartet werden um die Dienste zu starten."
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS richtet nun die folgenden Elemente ein:", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

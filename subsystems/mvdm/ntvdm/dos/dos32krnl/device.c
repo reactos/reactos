@@ -378,7 +378,7 @@ PDOS_DEVICE_NODE DosCreateDeviceEx(WORD Attributes, PCHAR DeviceName, WORD Priva
 
     /* Fill the header with data */
     DriverHeader = SEG_OFF_TO_PTR(Segment, 0);
-    DriverHeader->Link = 0xFFFFFFFF;
+    DriverHeader->Link = MAXDWORD;
     DriverHeader->DeviceAttributes = Attributes;
     DriverHeader->StrategyRoutine = sizeof(DOS_DRIVER);
     DriverHeader->InterruptRoutine = sizeof(DOS_DRIVER) + sizeof(StrategyRoutine);

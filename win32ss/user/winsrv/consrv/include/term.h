@@ -35,6 +35,8 @@
     (Console)->TermIFace.Vtbl->GetLargestConsoleWindowSize(&(Console)->TermIFace, (pSize))
 #define TermSetPalette(Console, PaletteHandle, PaletteUsage) \
     (Console)->TermIFace.Vtbl->SetPalette(&(Console)->TermIFace, (PaletteHandle), (PaletteUsage))
+#define TermSetCodePage(Console, CodePage) \
+    (Console)->TermIFace.Vtbl->SetCodePage(&(Console)->TermIFace, (CodePage))
 #define TermShowMouseCursor(Console, Show) \
     (Console)->TermIFace.Vtbl->ShowMouseCursor(&(Console)->TermIFace, (Show))
 

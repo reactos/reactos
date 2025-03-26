@@ -27,7 +27,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#ifndef _USETUP_PCH_
 #include "usetup.h"
+#endif
 
 #define NDEBUG
 #include <debug.h>
@@ -995,11 +997,14 @@ Quit:
 
 /* GLOBALS *******************************************************************/
 
-pSpFileQueueOpen   SpFileQueueOpen   = SetupOpenFileQueue;
-pSpFileQueueClose  SpFileQueueClose  = SetupCloseFileQueue;
-pSpFileQueueCopy   SpFileQueueCopy   = SetupQueueCopyWithCab;
-pSpFileQueueDelete SpFileQueueDelete = SetupQueueDeleteW;
-pSpFileQueueRename SpFileQueueRename = SetupQueueRenameW;
-pSpFileQueueCommit SpFileQueueCommit = SetupCommitFileQueueW;
+SPFILE_EXPORTS SpFileExports =
+{
+    SetupOpenFileQueue,
+    SetupCloseFileQueue,
+    SetupQueueCopyWithCab,
+    SetupQueueDeleteW,
+    SetupQueueRenameW,
+    SetupCommitFileQueueW
+};
 
 /* EOF */

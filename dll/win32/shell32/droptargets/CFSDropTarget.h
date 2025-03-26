@@ -35,12 +35,13 @@ class CFSDropTarget :
         HWND m_hwndSite;
         DWORD m_grfKeyState;
         DWORD m_dwDefaultEffect;
+        DWORD m_AllowedEffects;
         CComPtr<IUnknown> m_site;
 
         BOOL _QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
         HRESULT _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
         HRESULT _CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
-        BOOL _GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
+        BOOL _GetUniqueFileName(LPCWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
         static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
         HRESULT _GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect, DWORD dwAvailableEffects);
         HRESULT _RepositionItems(IShellFolderView *psfv, IDataObject *pDataObject, POINTL pt);
@@ -51,14 +52,14 @@ class CFSDropTarget :
         HRESULT Initialize(LPWSTR PathTarget);
 
         // IDropTarget
-        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragLeave();
-        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        STDMETHOD(DragEnter)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+        STDMETHOD(DragOver)(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+        STDMETHOD(DragLeave)() override;
+        STDMETHOD(Drop)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
 
         // IObjectWithSite
-        virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-        virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+        STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+        STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
         DECLARE_NOT_AGGREGATABLE(CFSDropTarget)
 
@@ -75,7 +76,7 @@ struct _DoDropData {
     CFSDropTarget *This;
     IStream *pStream;
     DWORD dwKeyState;
-    POINTL pt; 
+    POINTL pt;
     DWORD pdwEffect;
 };
 

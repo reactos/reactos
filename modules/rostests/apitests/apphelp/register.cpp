@@ -77,7 +77,8 @@ BOOL (WINAPI *pSdbRegisterDatabaseEx)(LPCWSTR pszDatabasePath, DWORD dwDatabaseT
 BOOL (WINAPI *pSdbUnregisterDatabase)(REFGUID pguidDB);
 
 
-BOOL IsUserAdmin()
+extern "C"
+BOOL IsUserAdmin(VOID)
 {
     BOOL Result;
     SID_IDENTIFIER_AUTHORITY NtAuthority = { SECURITY_NT_AUTHORITY };
@@ -90,7 +91,7 @@ BOOL IsUserAdmin()
                                       &AdministratorsGroup);
     if (Result)
     {
-        if (!CheckTokenMembership( NULL, AdministratorsGroup, &Result))
+        if (!CheckTokenMembership(NULL, AdministratorsGroup, &Result))
             Result = FALSE;
         FreeSid(AdministratorsGroup);
     }

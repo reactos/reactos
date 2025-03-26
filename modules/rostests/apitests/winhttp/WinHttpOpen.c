@@ -87,7 +87,7 @@ START_TEST(WinHttpOpen)
     HMODULE ModuleHandle;
     HINTERNET InternetHandle;
     BOOL Success;
-    
+
     ok(!IsWinsockLoaded(), "Winsock loaded on startup\n");
     ok(!IsWinsockInitialized(), "Winsock initialized on startup\n");
     ok(!IsWininetLoaded(), "Wininet loaded on startup\n");

@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright (C) 2009 Tony Wasserka
  *
@@ -17,10 +20,9 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -137,8 +139,10 @@ HRESULT map_view_of_file(const WCHAR *filename, void **buffer, DWORD *length)
     return S_OK;
 
 error:
-    CloseHandle(hmapping);
-    CloseHandle(hfile);
+    if (hmapping)
+        CloseHandle(hmapping);
+    if (hfile != INVALID_HANDLE_VALUE)
+        CloseHandle(hfile);
     return HRESULT_FROM_WIN32(GetLastError());
 }
 

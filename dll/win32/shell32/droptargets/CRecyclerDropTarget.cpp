@@ -46,6 +46,7 @@ class CRecyclerDropTarget :
             if (!lpdf)
             {
                 ERR("Error locking global\n");
+                ReleaseStgMedium(&medium);
                 return E_FAIL;
             }
 
@@ -65,6 +66,7 @@ class CRecyclerDropTarget :
                 hr = E_FAIL;
             }
 
+            GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
 
             return hr;
@@ -100,15 +102,14 @@ class CRecyclerDropTarget :
         }
 
     public:
-
         CRecyclerDropTarget()
         {
             fAcceptFmt = FALSE;
             cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
         }
 
-        HRESULT WINAPI DragEnter(IDataObject *pDataObject,
-                                            DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+        STDMETHODIMP
+        DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override
         {
             TRACE("Recycle bin drag over (%p)\n", this);
             /* The recycle bin accepts pretty much everything, and sets a CSIDL flag. */
@@ -118,7 +119,8 @@ class CRecyclerDropTarget :
             return S_OK;
         }
 
-        HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+        STDMETHODIMP
+        DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override
         {
             TRACE("(%p)\n", this);
 
@@ -130,7 +132,8 @@ class CRecyclerDropTarget :
             return S_OK;
         }
 
-        HRESULT WINAPI DragLeave()
+        STDMETHODIMP
+        DragLeave() override
         {
             TRACE("(%p)\n", this);
 
@@ -139,12 +142,10 @@ class CRecyclerDropTarget :
             return S_OK;
         }
 
-        HRESULT WINAPI Drop(IDataObject *pDataObject,
-                                       DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+        STDMETHODIMP
+        Drop(IDataObject *pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override
         {
             TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
-
-            /* TODO: pdwEffect should be read and make the drop object be permanently deleted in the move case (shift held) */
 
             FORMATETC fmt;
             TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
@@ -155,7 +156,7 @@ class CRecyclerDropTarget :
             {
                 DWORD fMask = 0;
 
-                if ((dwKeyState & MK_SHIFT) == MK_SHIFT)
+                if ((grfKeyState & MK_SHIFT) == MK_SHIFT)
                     fMask |= CMIC_MASK_SHIFT_DOWN;
 
                 _DoDeleteAsync(pDataObject, fMask);

@@ -25,7 +25,7 @@ INT_PTR CALLBACK CustomizeNotifyIconsProc(HWND hwnd, UINT Message, WPARAM wParam
     switch(Message)
     {
         case WM_INITDIALOG:
-        
+
         return TRUE;
         case WM_COMMAND:
            switch(LOWORD(wParam))

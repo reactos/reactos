@@ -407,8 +407,16 @@ static HRESULT WINAPI Host_DisconnectObject(IHost *iface, IDispatch *Object)
 
 static HRESULT WINAPI Host_Sleep(IHost *iface, LONG Time)
 {
+#ifdef __REACTOS__
+    UNREFERENCED_PARAMETER(iface);
+    if (Time < 0)
+        return E_INVALIDARG;
+    Sleep(Time);
+    return S_OK;
+#else
     WINE_FIXME("(%d)\n", Time);
     return E_NOTIMPL;
+#endif
 }
 
 static HRESULT WINAPI Host_ConnectObject(IHost *iface, IDispatch *Object, BSTR Prefix)

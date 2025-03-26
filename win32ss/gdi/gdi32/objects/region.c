@@ -1086,20 +1086,22 @@ int
 WINAPI
 SetMetaRgn(HDC hDC)
 {
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
-        return NtGdiSetMetaRgn(hDC);
-#if 0
-    PLDC pLDC = GdiGetLDC(hDC);
-    if ( pLDC && GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC )
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDILoObjType_LO_DC_TYPE)
     {
-        if (pLDC->iType == LDC_EMFLDC || EMFDRV_SetMetaRgn(hDC))
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( pLDC && GDI_HANDLE_GET_TYPE(hDC) != GDILoObjType_LO_METADC16_TYPE )
         {
-            return NtGdiSetMetaRgn(hDC);
+            if (pLDC->iType == LDC_EMFLDC && !EMFDC_SetMetaRgn( pLDC ))
+            {
+                return ERROR;
+            }
         }
         else
+        {
             SetLastError(ERROR_INVALID_HANDLE);
+            return ERROR;
+        }
     }
-#endif
-    return ERROR;
+    return NtGdiSetMetaRgn(hDC);
 }
 

@@ -1731,13 +1731,8 @@ static void call_virtual_unwind( int testnum, const struct unwind_test *test )
 
             if (j == rsp)  /* rsp is special */
             {
-#ifndef __REACTOS__
                 ok( !ctx_ptr.u2.IntegerContext[j],
                     "%u/%u: rsp should not be set in ctx_ptr\n", testnum, i );
-#else
-                ok(!ctx_ptr.IntegerContext[j],
-                   "%u/%u: rsp should not be set in ctx_ptr\n", testnum, i);
-#endif // __REACTOS__
 
                 ok( context.Rsp == (ULONG64)fake_stack + test->results[i].regs[k][1],
                     "%u/%u: register rsp wrong %p/%p\n",
@@ -1745,11 +1740,7 @@ static void call_virtual_unwind( int testnum, const struct unwind_test *test )
                 continue;
             }
 
-#ifndef __REACTOS__
             if (ctx_ptr.u2.IntegerContext[j])
-#else
-            if (ctx_ptr.IntegerContext[j])
-#endif // __REACTOS__
             {
                 ok( k < nb_regs, "%u/%u: register %s should not be set to %lx\n",
                     testnum, i, reg_names[j], *(&context.Rax + j) );
@@ -1961,7 +1952,6 @@ static void test_restore_context(void)
         fltsave = &buf.Xmm6;
         for (i = 0; i < 10; i++)
         {
-#ifndef __REACTOS__
             ok(fltsave[i].Part[0] == ctx.u.FltSave.XmmRegisters[i + 6].Low,
                 "longjmp failed for Xmm%d, expected %lx, got %lx\n", i + 6,
                 fltsave[i].Part[0], ctx.u.FltSave.XmmRegisters[i + 6].Low);
@@ -1969,15 +1959,6 @@ static void test_restore_context(void)
             ok(fltsave[i].Part[1] == ctx.u.FltSave.XmmRegisters[i + 6].High,
                 "longjmp failed for Xmm%d, expected %lx, got %lx\n", i + 6,
                 fltsave[i].Part[1], ctx.u.FltSave.XmmRegisters[i + 6].High);
-#else
-            ok(fltsave[i].Part[0] == ctx.FltSave.XmmRegisters[i + 6].Low,
-               "longjmp failed for Xmm%d, expected %lx, got %lx\n", i + 6,
-               fltsave[i].Part[0], ctx.FltSave.XmmRegisters[i + 6].Low);
-
-            ok(fltsave[i].Part[1] == ctx.FltSave.XmmRegisters[i + 6].High,
-               "longjmp failed for Xmm%d, expected %lx, got %lx\n", i + 6,
-               fltsave[i].Part[1], ctx.FltSave.XmmRegisters[i + 6].High);
-#endif
         }
     }
     else
@@ -2171,14 +2152,9 @@ static void test___C_specific_handler(void)
     rec.ExceptionFlags = 2; /* EH_UNWINDING */
     frame = 0x1234;
     memset(&dispatch, 0, sizeof(dispatch));
-#ifndef __REACTOS__
     dispatch.ImageBase = (ULONG_PTR)GetModuleHandleA(NULL);
     dispatch.ControlPc = dispatch.ImageBase + 0x200;
-#else
-    dispatch.ImageBase = GetModuleHandleA(NULL);
-    dispatch.ControlPc = (ULONG_PTR)dispatch.ImageBase + 0x200;
-#endif
-     dispatch.HandlerData = &scope_table;
+    dispatch.HandlerData = &scope_table;
     dispatch.ContextRecord = &context;
     scope_table.Count = 1;
     scope_table.ScopeRecord[0].BeginAddress = 0x200;
@@ -2712,7 +2688,7 @@ START_TEST(exception)
     HMODULE hmsvcrt = LoadLibraryA("msvcrt.dll");
 #endif
 
-#ifdef __REACTOS__
+#if defined(__REACTOS__) && !defined(_M_AMD64)
     if (!winetest_interactive &&
         !strcmp(winetest_platform, "windows"))
     {

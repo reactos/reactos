@@ -1,7 +1,55 @@
 #include <precomp.h>
 
+#include <pseh/pseh2.h>
+
 #define NDEBUG
 #include <debug.h>
+
+/* Copied from win32ss/gdi/eng/surface.c */
+ULONG
+FASTCALL
+BitmapFormat(ULONG cBits, ULONG iCompression)
+{
+    switch (iCompression)
+    {
+        case BI_RGB:
+            /* Fall through */
+        case BI_BITFIELDS:
+            if (cBits <= 1) return BMF_1BPP;
+            if (cBits <= 4) return BMF_4BPP;
+            if (cBits <= 8) return BMF_8BPP;
+            if (cBits <= 16) return BMF_16BPP;
+            if (cBits <= 24) return BMF_24BPP;
+            if (cBits <= 32) return BMF_32BPP;
+            return 0;
+
+        case BI_RLE4:
+            return BMF_4RLE;
+
+        case BI_RLE8:
+            return BMF_8RLE;
+
+        default:
+            return 0;
+    }
+}
+
+/* Copied from win32ss/gdi/eng/surface.c */
+UCHAR
+gajBitsPerFormat[11] =
+{
+    0, /*  0: unused */
+    1, /*  1: BMF_1BPP */
+    4, /*  2: BMF_4BPP */
+    8, /*  3: BMF_8BPP */
+   16, /*  4: BMF_16BPP */
+   24, /*  5: BMF_24BPP */
+   32, /*  6: BMF_32BPP */
+    4, /*  7: BMF_4RLE */
+    8, /*  8: BMF_8RLE */
+    0, /*  9: BMF_JPEG */
+    0, /* 10: BMF_PNG */
+};
 
 // From Yuan, ScanLineSize = (Width * bitcount + 31)/32
 #define WIDTH_BYTES_ALIGN32(cx, bpp) ((((cx) * (bpp) + 31) & ~31) >> 3)
@@ -207,34 +255,36 @@ CreateDIBSection(
     HBITMAP hBitmap = NULL;
     PVOID bmBits = NULL;
 
-    pConvertedInfo = ConvertBitmapInfo(BitmapInfo, Usage, &ConvertedInfoSize,
-    FALSE);
-
+    pConvertedInfo = ConvertBitmapInfo(BitmapInfo,
+                                       Usage,
+                                       &ConvertedInfoSize,
+                                       FALSE);
     if (pConvertedInfo)
     {
         // Verify header due to converted may == info.
         if (pConvertedInfo->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
         {
-            if (pConvertedInfo->bmiHeader.biCompression == BI_JPEG
-                || pConvertedInfo->bmiHeader.biCompression == BI_PNG)
+            if (pConvertedInfo->bmiHeader.biCompression == BI_JPEG ||
+                pConvertedInfo->bmiHeader.biCompression == BI_PNG)
             {
                 SetLastError(ERROR_INVALID_PARAMETER);
                 return NULL;
             }
         }
-        bmBits = Bits;
-        hBitmap = NtGdiCreateDIBSection(hDC, hSection, dwOffset, pConvertedInfo, Usage,
-            ConvertedInfoSize, 0, // fl
-            0, // dwColorSpace
-            &bmBits);
+        hBitmap = NtGdiCreateDIBSection(hDC,
+                                        hSection,
+                                        dwOffset,
+                                        pConvertedInfo,
+                                        Usage,
+                                        ConvertedInfoSize,
+                                        0, // fl
+                                        0, // dwColorSpace
+                                        &bmBits);
+        if (!hBitmap)
+            bmBits = NULL;
 
         if (BitmapInfo != pConvertedInfo)
             RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
-
-        if (!hBitmap)
-        {
-            bmBits = NULL;
-        }
     }
 
     if (Bits)
@@ -575,6 +625,9 @@ SetDIBits(
     INT LinesCopied = 0;
     BOOL newDC = FALSE;
 
+    if (fuColorUse != DIB_RGB_COLORS && fuColorUse != DIB_PAL_COLORS)
+        return 0;
+
     if (!lpvBits || (GDI_HANDLE_GET_TYPE(hBitmap) != GDI_OBJECT_TYPE_BITMAP))
         return 0;
 
@@ -582,6 +635,16 @@ SetDIBits(
     {
         if (lpbmi->bmiHeader.biCompression == BI_JPEG
             || lpbmi->bmiHeader.biCompression == BI_PNG)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+    }
+
+    if (lpbmi->bmiHeader.biCompression == BI_BITFIELDS)
+    {
+        DWORD *masks = (DWORD *)lpbmi->bmiColors;
+        if (!masks[0] || !masks[1] || !masks[2])
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             return 0;
@@ -664,8 +727,29 @@ SetDIBitsToDevice(
     UINT cjBmpScanSize = 0;
     BOOL Hit = FALSE;
     PVOID pvSafeBits = (PVOID) Bits;
+    UINT bmiHeight;
+    BOOL top_down;
+    INT src_y = 0;
+    ULONG iFormat, cBitsPixel, cjBits, cjWidth;
+
+    #define MaxScanLines 1000
+    #define MaxHeight 2000
+    #define MaxSourceHeight 2000
+    #define IS_ALIGNED(Pointer, Alignment) \
+        (((ULONG_PTR)(void *)(Pointer)) % (Alignment) == 0)
 
     if (!ScanLines || !lpbmi || !Bits)
+        return 0;
+
+    DPRINT("ScanLines %d Height %d Width %d biHeight %d biWidth %d\n"
+           "    lpbmi '%p' ColorUse '%d' SizeImage '%d' StartScan %d\n"
+           "    biCompression '%d' biBitCount '%d'\n",
+           ScanLines, Height, Width, lpbmi->bmiHeader.biHeight,
+           lpbmi->bmiHeader.biWidth, lpbmi, ColorUse,
+           lpbmi->bmiHeader.biSizeImage, StartScan,
+           lpbmi->bmiHeader.biCompression, lpbmi->bmiHeader.biBitCount);
+
+    if (lpbmi->bmiHeader.biWidth < 0)
         return 0;
 
     if (ColorUse && ColorUse != DIB_PAL_COLORS && ColorUse != DIB_PAL_COLORS + 1)
@@ -674,6 +758,91 @@ SetDIBitsToDevice(
     pConvertedInfo = ConvertBitmapInfo(lpbmi, ColorUse, &ConvertedInfoSize, FALSE);
     if (!pConvertedInfo)
         return 0;
+
+    if (ScanLines > MaxScanLines)
+    {
+        LinesCopied = 0;
+        goto Exit;
+    }
+
+    bmiHeight = abs(pConvertedInfo->bmiHeader.biHeight);
+    top_down = (pConvertedInfo->bmiHeader.biHeight < 0);
+    if ((StartScan > bmiHeight) && (ScanLines > bmiHeight))
+    {
+        DPRINT("Returning ScanLines of '%d'\n", ScanLines);
+        LinesCopied = ScanLines;
+        goto Exit;
+    }
+
+    if (pConvertedInfo->bmiHeader.biHeight == 0)
+    {
+        LinesCopied = 0;
+        goto Exit;
+    }
+
+    if (!IS_ALIGNED(Bits, 2) && (ScanLines > Height))
+    {
+        LinesCopied = 0;
+        goto Exit;
+    }
+
+    /* Below code modeled after Wine's nulldrv_SetDIBitsToDevice */
+    if (StartScan <= YSrc + bmiHeight)
+    {
+        if ((pConvertedInfo->bmiHeader.biCompression == BI_RLE8) ||
+            (pConvertedInfo->bmiHeader.biCompression == BI_RLE4))
+        {
+            StartScan = 0;
+            ScanLines = bmiHeight;
+        }
+        else
+        {
+            if (StartScan >= bmiHeight)
+            {
+                LinesCopied = 0;
+                goto Exit;
+            }
+            if (!top_down && ScanLines > bmiHeight - StartScan)
+            {
+                ScanLines = bmiHeight - StartScan;
+            }
+            src_y = StartScan + ScanLines - (YSrc + Height);
+            if (!top_down)
+            {
+                /* get rid of unnecessary lines */
+                if ((src_y < 0 || src_y >= (INT)ScanLines) &&
+                    pConvertedInfo->bmiHeader.biCompression != BI_BITFIELDS)
+                {
+                    LinesCopied = ScanLines;
+                    goto Exit;
+                }
+                if (YDest >= 0)
+                {
+                    LinesCopied = ScanLines + StartScan;
+                    ScanLines -= src_y;
+                }
+                else
+                {
+                    LinesCopied = ScanLines - src_y;
+                }
+            }
+            else if (src_y < 0 || src_y >= (INT)ScanLines)
+            {
+                if (lpbmi->bmiHeader.biHeight < 0 &&
+                    StartScan > MaxScanLines)
+                {
+                    ScanLines = lpbmi->bmiHeader.biHeight - StartScan;
+                }
+                DPRINT("Returning ScanLines of '%d'\n", ScanLines);
+                LinesCopied = ScanLines;
+                goto Exit;
+            }
+            else
+            {
+                LinesCopied = ScanLines;
+            }
+        }
+    }
 
     HANDLE_METADC(INT,
                   SetDIBitsToDevice,
@@ -740,12 +909,19 @@ SetDIBitsToDevice(
         {
             Hit = TRUE;
         }
-        _SEH2_END
+        _SEH2_END;
 
         if (Hit)
         {
             // We don't die, we continue on with a allocated safe pointer to kernel
             // space.....
+
+            if (!IS_ALIGNED(Bits, 2)) // If both Read Exception and mis-aligned
+            {
+                LinesCopied = 0;
+                goto Exit;
+            }
+
             DPRINT1("SetDIBitsToDevice fail to read BitMapInfo: %p or Bits: %p & Size: %u\n",
                 pConvertedInfo, Bits, cjBmpScanSize);
         }
@@ -754,9 +930,58 @@ SetDIBitsToDevice(
 
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID) & pDc_Attr))
     {
+        DPRINT1("SetDIBitsToDevice called on invalid DC %p (not owned?)\n", hdc);
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        LinesCopied = 0;
+        goto Exit;
     }
+
+    /* Calculation of ScanLines for NtGdiSetDIBitsToDeviceInternal */
+    if (YDest >= 0)
+    {
+        ScanLines = min(abs(Height), ScanLines);
+        if (YSrc > 0)
+            ScanLines += YSrc;
+    }
+    else
+    {
+         ScanLines = min(ScanLines,
+                         abs(pConvertedInfo->bmiHeader.biHeight) - StartScan);
+    }
+
+    if (YDest >= 0 && YSrc > 0 && bmiHeight <= MaxHeight)
+    {
+        ScanLines += YSrc;
+    }
+
+    /* Find Format from lpbmi which is now pConvertedInfo */
+    iFormat = BitmapFormat(pConvertedInfo->bmiHeader.biBitCount,
+                           pConvertedInfo->bmiHeader.biCompression);
+
+    /* Get bits per pixel from the format */
+    cBitsPixel = gajBitsPerFormat[iFormat];
+
+    cjWidth = WIDTH_BYTES_ALIGN32(pConvertedInfo->bmiHeader.biWidth, cBitsPixel);
+
+    /* Calculate the correct bitmap size in bytes */
+    if (!NT_SUCCESS(RtlULongMult(cjWidth, max(ScanLines, LinesCopied), &cjBits)))
+    {
+        DPRINT1("Overflow calculating size: cjWidth %lu, ScanLines %lu\n",
+                cjWidth, max(ScanLines, LinesCopied));
+        goto Exit;
+    }
+
+    /* Make sure the buffer is large enough */
+    if (pConvertedInfo->bmiHeader.biSizeImage < cjBits)
+    {
+        DPRINT("Buffer is too small, required: %lu, got %lu\n",
+               cjBits, pConvertedInfo->bmiHeader.biSizeImage);
+        if (pConvertedInfo->bmiHeader.biCompression == BI_RGB)
+        {
+            pConvertedInfo->bmiHeader.biSizeImage = cjBits;
+        }
+    }
+
     /*
      if ( !pDc_Attr || // DC is Public
      ColorUse == DIB_PAL_COLORS ||
@@ -764,12 +989,47 @@ SetDIBitsToDevice(
      (pConvertedInfo->bmiHeader.biCompression == BI_JPEG ||
      pConvertedInfo->bmiHeader.biCompression  == BI_PNG )) )*/
     {
-        LinesCopied = NtGdiSetDIBitsToDeviceInternal(hdc, XDest, YDest, Width, Height, XSrc, YSrc,
-            StartScan, ScanLines, (LPBYTE) pvSafeBits, (LPBITMAPINFO) pConvertedInfo, ColorUse,
+        LinesCopied = NtGdiSetDIBitsToDeviceInternal(hdc, XDest, YDest,
+            Width, Height, XSrc, YSrc,
+            StartScan, ScanLines, (LPBYTE) pvSafeBits,
+            (LPBITMAPINFO) pConvertedInfo, ColorUse,
             cjBmpScanSize, ConvertedInfoSize,
             TRUE,
             NULL);
     }
+
+    if (bmiHeight > MaxScanLines)
+    {
+        LinesCopied = ScanLines;
+    }
+
+    if (YDest < 0)
+    {
+        if (top_down)
+            LinesCopied = ScanLines;
+        else
+            LinesCopied = ScanLines - src_y;
+    }
+
+    if (pConvertedInfo->bmiHeader.biCompression == BI_RLE8 ||
+        pConvertedInfo->bmiHeader.biCompression == BI_RLE4)
+    {
+        LinesCopied = bmiHeight;
+    }
+
+    if (pConvertedInfo->bmiHeader.biHeight < 0)
+    {
+        if (pConvertedInfo->bmiHeader.biHeight < -MaxSourceHeight || 
+            (YDest >= 0 && src_y < -ScanLines))
+        {
+            LinesCopied = ScanLines + src_y;
+        }
+        else
+        {
+            LinesCopied = ScanLines;
+        }
+    }
+
 Exit:
     if (Bits != pvSafeBits)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
@@ -809,57 +1069,27 @@ StretchDIBits(
     BOOL Hit = FALSE;
 
     DPRINT("StretchDIBits %p : %p : %u\n", lpBits, lpBitsInfo, iUsage);
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-        return MFDRV_StretchBlt( hdc,
-                XDest,
-                YDest,
-                nDestWidth,
-                nDestHeight,
-                XSrc,
-                YSrc,
-                nSrcWidth,
-                nSrcHeight,
-                lpBits,
-                lpBitsInfo,
-                iUsage,
-                dwRop);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return 0;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_StretchBlt(hdc,
-                        XDest,
-                        YDest,
-                        nDestWidth,
-                        nDestHeight,
-                        XSrc,
-                        YSrc,
-                        nSrcWidth,
-                        nSrcHeight,
-                        lpBits,
-                        lpBitsInfo,
-                        iUsage,
-                        dwRop);
-            }
-            return 0;
-        }
-    }
-#endif
+
+    HANDLE_METADC( int,
+                   StretchDIBits,
+                   0,
+                   hdc,
+                   XDest,
+                   YDest,
+                   nDestWidth,
+                   nDestHeight,
+                   XSrc,
+                   YSrc,
+                   nSrcWidth,
+                   nSrcHeight,
+                   lpBits,
+                   lpBitsInfo,
+                   iUsage,
+                   dwRop );
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return 0;
 
-    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize,
-        FALSE);
+    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize, FALSE);
     if (!pConvertedInfo)
     {
         return 0;
@@ -895,8 +1125,10 @@ StretchDIBits(
 
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID) & pDc_Attr))
     {
+        DPRINT1("StretchDIBits called on invalid DC %p (not owned?)\n", hdc);
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        LinesCopied = 0;
+        goto Exit;
     }
     /*
      if ( !pDc_Attr ||
@@ -905,11 +1137,24 @@ StretchDIBits(
      (pConvertedInfo->bmiHeader.biCompression == BI_JPEG ||
      pConvertedInfo->bmiHeader.biCompression  == BI_PNG )) )*/
     {
-        LinesCopied = NtGdiStretchDIBitsInternal(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc,
-            YSrc, nSrcWidth, nSrcHeight, pvSafeBits, pConvertedInfo, (DWORD) iUsage, dwRop,
-            ConvertedInfoSize, cjBmpScanSize,
-            NULL);
+        LinesCopied = NtGdiStretchDIBitsInternal( hdc,
+                                                  XDest,
+                                                  YDest,
+                                                  nDestWidth,
+                                                  nDestHeight,
+                                                  XSrc,
+                                                  YSrc,
+                                                  nSrcWidth,
+                                                  nSrcHeight,
+                                                  pvSafeBits,
+                                                  pConvertedInfo,
+                                                  (DWORD) iUsage,
+                                                  dwRop,
+                                                  ConvertedInfoSize,
+                                                  cjBmpScanSize,
+                                                  NULL );
     }
+Exit:
     if (pvSafeBits)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
     if (lpBitsInfo != pConvertedInfo)
@@ -919,61 +1164,45 @@ StretchDIBits(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
 GetBitmapAttributes(HBITMAP hbm)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    if ( GDI_HANDLE_IS_STOCKOBJ(hbm) )
+    {
+        return SC_BB_STOCKOBJ;
+    }
     return 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP
 WINAPI
 SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if ( dwFlags & ~SC_BB_STOCKOBJ )
+    {
+        return NULL;
+    }
+    return NtGdiSetBitmapAttributes( hbm, dwFlags );
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP
 WINAPI
 ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if ( dwFlags & ~SC_BB_STOCKOBJ )
+    {
+        return NULL;
+    }
+    return NtGdiClearBitmapAttributes( hbm, dwFlags );;
 }
 
-/*
- * @unimplemented
- *
- */
-HBITMAP
-WINAPI
-GdiConvertBitmapV5(
-    HBITMAP in_format_BitMap,
-    HBITMAP src_BitMap,
-    INT bpp,
-    INT unuse)
-{
-    /* FIXME guessing the prototypes */
-
-    /*
-     * it have create a new bitmap with desired in format,
-     * then convert it src_bitmap to new format
-     * and return it as HBITMAP
-     */
-
-    return FALSE;
-}
 

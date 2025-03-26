@@ -8,7 +8,6 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "services.exe"
 #include <reactos/version.rc>
 
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -50,6 +49,9 @@
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

@@ -13,18 +13,58 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/manifest_hosted.rc>
 
-IDI_APPICON ICON "res/main.ico"
+IDI_APP_ICON ICON "res/main.ico"
 IDI_BMP_ICON ICON "res/bmp.ico"
 IDI_PNG_ICON ICON "res/png.ico"
 
-IDB_PREVICON BITMAP "res/prev.bmp"
-IDB_NEXTICON BITMAP "res/next.bmp"
-IDB_ZOOMPICON BITMAP "res/zoomp.bmp"
-IDB_ZOOMMICON BITMAP "res/zoomm.bmp"
-IDB_SAVEICON BITMAP "res/save.bmp"
-IDB_PRINTICON BITMAP "res/print.bmp"
-IDB_ROT1ICON BITMAP "res/rot1.bmp"
-IDB_ROT2ICON BITMAP "res/rot2.bmp"
+IDC_HANDDRAG CURSOR "res/handdrag.cur"
+
+IDB_PREV_PIC   BITMAP "res/prev.bmp"
+IDB_NEXT_PIC   BITMAP "res/next.bmp"
+IDB_BEST_FIT   BITMAP "res/best_fit.bmp"
+IDB_REAL_SIZE  BITMAP "res/real_size.bmp"
+IDB_SLIDE_SHOW BITMAP "res/slide_show.bmp"
+IDB_ZOOM_IN    BITMAP "res/zoomp.bmp"
+IDB_ZOOM_OUT   BITMAP "res/zoomm.bmp"
+IDB_ROT_CLOCKW BITMAP "res/rot1.bmp"
+IDB_ROT_COUNCW BITMAP "res/rot2.bmp"
+IDB_ROT_CWSAVE  BITMAP "res/rot1save.bmp"
+IDB_ROT_CCWSAVE BITMAP "res/rot2save.bmp"
+IDB_DELETE     BITMAP "res/delete.bmp"
+IDB_PRINT      BITMAP "res/print.bmp"
+IDB_SAVEAS     BITMAP "res/save.bmp"
+IDB_MODIFY     BITMAP "res/modify.bmp"
+IDB_HELP_TOC   BITMAP "res/help_toc.bmp"
+
+IDR_ACCELERATOR ACCELERATORS
+BEGIN
+    VK_LEFT,     IDC_PREV_PIC,   VIRTKEY
+    VK_RIGHT,    IDC_NEXT_PIC,   VIRTKEY
+    "B",         IDC_BEST_FIT,   VIRTKEY, CONTROL
+    "A",         IDC_REAL_SIZE,  VIRTKEY, CONTROL
+    VK_F11,      IDC_SLIDE_SHOW, VIRTKEY
+    VK_RETURN,   IDC_TOGGLEFULLSCREEN, VIRTKEY, ALT
+    VK_ADD,      IDC_INCTIMER,   VIRTKEY, SHIFT
+    VK_OEM_PLUS, IDC_INCTIMER,   VIRTKEY, SHIFT
+    VK_OEM_MINUS,IDC_DECTIMER,   VIRTKEY, SHIFT
+    VK_SUBTRACT, IDC_DECTIMER,   VIRTKEY, SHIFT
+    VK_ADD,      IDC_ZOOM_IN,    VIRTKEY
+    VK_ADD,      IDC_ZOOM_IN,    VIRTKEY, CONTROL
+    VK_OEM_PLUS, IDC_ZOOM_IN,    VIRTKEY
+    VK_OEM_PLUS, IDC_ZOOM_IN,    VIRTKEY, CONTROL
+    VK_SUBTRACT, IDC_ZOOM_OUT,   VIRTKEY
+    VK_SUBTRACT, IDC_ZOOM_OUT,   VIRTKEY, CONTROL
+    VK_OEM_MINUS,IDC_ZOOM_OUT,   VIRTKEY
+    VK_OEM_MINUS,IDC_ZOOM_OUT,   VIRTKEY, CONTROL
+    "K",         IDC_ROT_CLOCKW, VIRTKEY, CONTROL
+    "L",         IDC_ROT_COUNCW, VIRTKEY, CONTROL
+    VK_DELETE,   IDC_DELETE,     VIRTKEY
+    "P",         IDC_PRINT,      VIRTKEY, CONTROL
+    "S",         IDC_SAVEAS,     VIRTKEY, CONTROL
+    "E",         IDC_MODIFY,     VIRTKEY, CONTROL
+    VK_F1,       IDC_HELP_TOC,   VIRTKEY
+    VK_ESCAPE,   IDC_ENDSLIDESHOW, VIRTKEY
+END
 
 /* UTF-8 */
 #pragma code_page(65001)
@@ -40,6 +80,9 @@ IDB_ROT2ICON BITMAP "res/rot2.bmp"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_EO_AA
+    #include "lang/eo-AA.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
@@ -88,6 +131,9 @@ IDB_ROT2ICON BITMAP "res/rot2.bmp"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

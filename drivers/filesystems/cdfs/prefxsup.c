@@ -47,7 +47,7 @@ CdInsertNameLink (
 #pragma alloc_text(PAGE, CdRemovePrefix)
 #endif
 
-
+
 VOID
 CdInsertPrefix (
     _In_ PIRP_CONTEXT IrpContext,
@@ -202,7 +202,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdRemovePrefix (
     _In_ PIRP_CONTEXT IrpContext,
@@ -228,9 +228,9 @@ Return Value:
 
 {
     PAGED_CODE();
-    
+
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Start with the short name prefix entry.
     //
@@ -282,7 +282,7 @@ Return Value:
     return;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
@@ -456,7 +456,7 @@ Return Value:
     }
 }
 
-
+
 //
 //  Local support routine
 //
@@ -559,7 +559,7 @@ Return Value:
     return NULL;
 }
 
-
+
 //
 //  Local support routine
 //

@@ -1,0 +1,74 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Mostra ou modifica as listas de controle de acesso (ACLs) de ficheiros\n\n\
+CACLS nome-ficheiro [/T] [/E] [/C] [/G utilizador:perm] [/R utilizador [...]]\n\
+                   [/P utilizador:perm [...]] [/D utilizador [...]]\n\
+   nome-ficheiro     Mostra ACLs.\n\
+   /T               Altera ACLs de ficheiros especificados\n\
+                    na pasta actual e em todas as subpastas.\n\
+   /E               Edita ACL em vez de substituí-la.\n\
+   /C               Continua ao encontrar erros de acesso negado.\n\
+   /G utilizador:perm  Concede os direitos de acesso ao utilizador especificado.\n\
+                    Perm pode ser: R  Ler\n\
+                              W  Gravar\n\
+                              C  Alterar (gravar)\n\
+                              F  Controle total\n\
+   /R utilizador       Revoga os direitos de acesso do utilizador especificado\n\
+                    (válido somente com /E).\n\
+   /P utilizador:perm  Substitui os direitos de acesso do utilizador especificado.\n\
+                    Perm pode ser: N  Nenhum\n\
+                              R  Ler\n\
+                              W  Gravar\n\
+                              C  Alterar (gravar)\n\
+                              F  Controle total\n\
+   /D utilizador       Nega o acesso ao utilizador especificado.\n\
+Caracteres curinga podem ser usados para especificar mais de um ficheiro\n\
+num comando.\n\
+Pode especificar mais de um utilizador num comando.\n\n\
+Abreviaçäes:\n\
+   CI - Herança de recipiente.\n\
+        O ACE será herdado pelas pastas.\n\
+   OI - Herança de objeto.\n\
+        O ACE será herdado pelos ficheiros.\n\
+   IO - Somente herança.\n\
+        O ACE não se aplica ao ficheiro/pasta actual.\n"
+    IDS_ABBR_CI "(CI)"
+    IDS_ABBR_OI "(OI)"
+    IDS_ABBR_IO "(IO)"
+    IDS_ABBR_FULL "F"
+    IDS_ABBR_READ "R"
+    IDS_ABBR_WRITE "W"
+    IDS_ABBR_CHANGE "C"
+    IDS_ABBR_NONE "N"
+    IDS_ALLOW ""
+    IDS_DENY "(DENY)"
+    IDS_SPECIAL_ACCESS "(special access:)"
+    IDS_GENERIC_READ "GENERIC_READ"
+    IDS_GENERIC_WRITE "GENERIC_WRITE"
+    IDS_GENERIC_EXECUTE "GENERIC_EXECUTE"
+    IDS_GENERIC_ALL "GENERIC_ALL"
+    IDS_FILE_GENERIC_EXECUTE "FILE_GENERIC_EXECUTE"
+    IDS_FILE_GENERIC_READ "FILE_GENERIC_READ"
+    IDS_FILE_GENERIC_WRITE "FILE_GENERIC_WRITE"
+    IDS_FILE_READ_DATA "FILE_READ_DATA"
+    IDS_FILE_WRITE_DATA "FILE_WRITE_DATA"
+    IDS_FILE_APPEND_DATA "FILE_APPEND_DATA"
+    IDS_FILE_READ_EA "FILE_READ_EA"
+    IDS_FILE_WRITE_EA "FILE_WRITE_EA"
+    IDS_FILE_EXECUTE "FILE_EXECUTE"
+    IDS_FILE_DELETE_CHILD "FILE_DELETE_CHILD"
+    IDS_FILE_READ_ATTRIBUTES "FILE_READ_ATTRIBUTES"
+    IDS_FILE_WRITE_ATTRIBUTES "FILE_WRITE_ATTRIBUTES"
+    IDS_MAXIMUM_ALLOWED "MAXIMUM_ALLOWED"
+    IDS_ACCESS_SYSTEM_SECURITY "ACCESS_SYSTEM_SECURITY"
+    IDS_SPECIFIC_RIGHTS_ALL "SPECIFIC_RIGHTS_ALL"
+    IDS_STANDARD_RIGHTS_REQUIRED "STANDARD_RIGHTS_REQUIRED"
+    IDS_SYNCHRONIZE "SYNCHRONIZE"
+    IDS_WRITE_OWNER "WRITE_OWNER"
+    IDS_WRITE_DAC "WRITE_DAC"
+    IDS_READ_CONTROL "READ_CONTROL"
+    IDS_DELETE "DELETE"
+    IDS_STANDARD_RIGHTS_ALL "STANDARD_RIGHTS_ALL"
+END

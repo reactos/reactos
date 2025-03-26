@@ -336,7 +336,7 @@ HRESULT BtrfsPropSheet::load_file_list() {
     totalsize = allocsize = sparsesize = 0;
 
     for (i = 0; i < num_files; i++) {
-        if (DragQueryFileW((HDROP)stgm.hGlobal, i, fn, sizeof(fn) / sizeof(MAX_PATH))) {
+        if (DragQueryFileW((HDROP)stgm.hGlobal, i, fn, sizeof(fn) / sizeof(WCHAR))) {
             HRESULT hr;
 
             hr = check_file(fn, i, num_files, &sv);
@@ -435,11 +435,11 @@ void BtrfsPropSheet::set_cmdline(const wstring& cmdline) {
                     OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
 
     if (h == INVALID_HANDLE_VALUE)
-        return;
+        throw last_error(GetLastError());
 
     Status = NtQueryInformationFile(h, &iosb, &fai, sizeof(FILE_ACCESS_INFORMATION), FileAccessInformation);
     if (!NT_SUCCESS(Status))
-        return;
+        throw ntstatus_error(Status);
 
     if (fai.AccessFlags & FILE_READ_ATTRIBUTES)
         can_change_perms = fai.AccessFlags & WRITE_DAC;
@@ -453,7 +453,10 @@ void BtrfsPropSheet::set_cmdline(const wstring& cmdline) {
 
     Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info));
 
-    if (NT_SUCCESS(Status) && !bii2.top) {
+    if (!NT_SUCCESS(Status))
+        throw ntstatus_error(Status);
+
+    if (!bii2.top) {
         LARGE_INTEGER filesize;
 
         subvol = bii2.subvol;
@@ -594,6 +597,16 @@ void BtrfsPropSheet::change_inode_flag(HWND hDlg, uint64_t flag, UINT state) {
         flags_set = ~flag;
     }
 
+    if (flags & BTRFS_INODE_NODATACOW && flags_set & BTRFS_INODE_NODATACOW) {
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS), false);
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS_TYPE), false);
+    } else {
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS), true);
+        EnableWindow(GetDlgItem(hDlg, IDC_COMPRESS_TYPE), flags & BTRFS_INODE_COMPRESS && flags_set & BTRFS_INODE_COMPRESS);
+    }
+
+    EnableWindow(GetDlgItem(hDlg, IDC_NODATACOW), !(flags & BTRFS_INODE_COMPRESS) || !(flags_set & BTRFS_INODE_COMPRESS));
+
     flags_changed = true;
 
     SendMessageW(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
@@ -701,7 +714,7 @@ void BtrfsPropSheet::apply_changes(HWND hDlg) {
         num_files = DragQueryFileW((HDROP)stgm.hGlobal, 0xFFFFFFFF, nullptr, 0);
 
         for (i = 0; i < num_files; i++) {
-            if (DragQueryFileW((HDROP)stgm.hGlobal, i, fn, sizeof(fn) / sizeof(MAX_PATH))) {
+            if (DragQueryFileW((HDROP)stgm.hGlobal, i, fn, sizeof(fn) / sizeof(WCHAR))) {
                 apply_changes_file(hDlg, fn);
             }
         }
@@ -740,7 +753,7 @@ void BtrfsPropSheet::set_size_on_disk(HWND hwndDlg) {
     if (cr != old_text)
         SetDlgItemTextW(hwndDlg, IDC_COMPRESSION_RATIO, cr.c_str());
 
-    uint64_t extent_size = (allocsize - sparsesize - sizes[0]) / sector_size;
+    uint64_t extent_size = (allocsize - sparsesize - sizes[0]) / (sector_size == 0 ? 4096 : sector_size);
 
     if (num_extents == 0 || extent_size <= 1)
         ratio = 0.0f;
@@ -750,7 +763,6 @@ void BtrfsPropSheet::set_size_on_disk(HWND hwndDlg) {
     wstring_sprintf(frag, frag_format, ratio);
 
     GetDlgItemTextW(hwndDlg, IDC_FRAGMENTATION, old_text, sizeof(old_text) / sizeof(WCHAR));
-
 
     if (frag != old_text)
         SetDlgItemTextW(hwndDlg, IDC_FRAGMENTATION, frag.c_str());
@@ -813,7 +825,7 @@ static INT_PTR CALLBACK SizeDetailsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPara
             {
                 BtrfsPropSheet* bps = (BtrfsPropSheet*)lParam;
 
-                SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)bps);
+                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)bps);
 
                 bps->update_size_details_dialog(hwndDlg);
 
@@ -832,7 +844,7 @@ static INT_PTR CALLBACK SizeDetailsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPara
 
             case WM_TIMER:
             {
-                BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+                BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
                 if (bps) {
                     bps->update_size_details_dialog(hwndDlg);
@@ -853,18 +865,18 @@ static INT_PTR CALLBACK SizeDetailsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPara
 
 static void set_check_box(HWND hwndDlg, ULONG id, uint64_t min, uint64_t max) {
     if (min && max) {
-        SendDlgItemMessage(hwndDlg, id, BM_SETCHECK, BST_CHECKED, 0);
+        SendDlgItemMessageW(hwndDlg, id, BM_SETCHECK, BST_CHECKED, 0);
     } else if (!min && !max) {
-        SendDlgItemMessage(hwndDlg, id, BM_SETCHECK, BST_UNCHECKED, 0);
+        SendDlgItemMessageW(hwndDlg, id, BM_SETCHECK, BST_UNCHECKED, 0);
     } else {
         LONG_PTR style;
 
-        style = GetWindowLongPtr(GetDlgItem(hwndDlg, id), GWL_STYLE);
+        style = GetWindowLongPtrW(GetDlgItem(hwndDlg, id), GWL_STYLE);
         style &= ~BS_AUTOCHECKBOX;
         style |= BS_AUTO3STATE;
-        SetWindowLongPtr(GetDlgItem(hwndDlg, id), GWL_STYLE, style);
+        SetWindowLongPtrW(GetDlgItem(hwndDlg, id), GWL_STYLE, style);
 
-        SendDlgItemMessage(hwndDlg, id, BM_SETCHECK, BST_INDETERMINATE, 0);
+        SendDlgItemMessageW(hwndDlg, id, BM_SETCHECK, BST_INDETERMINATE, 0);
     }
 }
 
@@ -880,7 +892,7 @@ void BtrfsPropSheet::open_as_admin(HWND hwndDlg) {
     GetModuleFileNameW(module, modfn, sizeof(modfn) / sizeof(WCHAR));
 
     for (i = 0; i < num_files; i++) {
-        if (DragQueryFileW((HDROP)stgm.hGlobal, i, fn, sizeof(fn) / sizeof(MAX_PATH))) {
+        if (DragQueryFileW((HDROP)stgm.hGlobal, i, fn, sizeof(fn) / sizeof(WCHAR))) {
             wstring t;
             SHELLEXECUTEINFOW sei;
 
@@ -993,15 +1005,20 @@ void BtrfsPropSheet::init_propsheet(HWND hwndDlg) {
     set_check_box(hwndDlg, IDC_NODATACOW, min_flags & BTRFS_INODE_NODATACOW, max_flags & BTRFS_INODE_NODATACOW);
     set_check_box(hwndDlg, IDC_COMPRESS, min_flags & BTRFS_INODE_COMPRESS, max_flags & BTRFS_INODE_COMPRESS);
 
+    if (min_flags & BTRFS_INODE_NODATACOW || max_flags & BTRFS_INODE_NODATACOW)
+        EnableWindow(GetDlgItem(hwndDlg, IDC_COMPRESS), false);
+    else if (min_flags & BTRFS_INODE_COMPRESS || max_flags & BTRFS_INODE_COMPRESS)
+        EnableWindow(GetDlgItem(hwndDlg, IDC_NODATACOW), false);
+
     comptype = GetDlgItem(hwndDlg, IDC_COMPRESS_TYPE);
 
-    while (SendMessage(comptype, CB_GETCOUNT, 0, 0) > 0) {
-        SendMessage(comptype, CB_DELETESTRING, 0, 0);
+    while (SendMessageW(comptype, CB_GETCOUNT, 0, 0) > 0) {
+        SendMessageW(comptype, CB_DELETESTRING, 0, 0);
     }
 
     if (min_compression_type != max_compression_type) {
-        SendMessage(comptype, CB_ADDSTRING, 0, (LPARAM)L"");
-        SendMessage(comptype, CB_SETCURSEL, 0, 0);
+        SendMessageW(comptype, CB_ADDSTRING, 0, (LPARAM)L"");
+        SendMessageW(comptype, CB_SETCURSEL, 0, 0);
     }
 
     i = 0;
@@ -1011,13 +1028,13 @@ void BtrfsPropSheet::init_propsheet(HWND hwndDlg) {
         if (!load_string(module, comp_types[i], t))
             throw last_error(GetLastError());
 
-        SendMessage(comptype, CB_ADDSTRING, 0, (LPARAM)t.c_str());
+        SendMessageW(comptype, CB_ADDSTRING, 0, (LPARAM)t.c_str());
 
         i++;
     }
 
     if (min_compression_type == max_compression_type) {
-        SendMessage(comptype, CB_SETCURSEL, min_compression_type, 0);
+        SendMessageW(comptype, CB_SETCURSEL, min_compression_type, 0);
         compress_type = min_compression_type;
     }
 
@@ -1087,12 +1104,12 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
         switch (uMsg) {
             case WM_INITDIALOG:
             {
-                PROPSHEETPAGE* psp = (PROPSHEETPAGE*)lParam;
+                PROPSHEETPAGEW* psp = (PROPSHEETPAGEW*)lParam;
                 BtrfsPropSheet* bps = (BtrfsPropSheet*)psp->lParam;
 
                 EnableThemeDialogTexture(hwndDlg, ETDT_ENABLETAB);
 
-                SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)bps);
+                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)bps);
 
                 bps->init_propsheet(hwndDlg);
 
@@ -1101,7 +1118,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
 
             case WM_COMMAND:
             {
-                BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+                BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
                 if (bps && !bps->readonly) {
                     switch (HIWORD(wParam)) {
@@ -1256,7 +1273,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                     break;
 
                     case PSN_APPLY: {
-                        BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+                        BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
                         bps->apply_changes(hwndDlg);
                         SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
@@ -1269,7 +1286,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                             PNMLINK pNMLink = (PNMLINK)lParam;
 
                             if (pNMLink->item.iLink == 0)
-                                DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_SIZE_DETAILS), hwndDlg, SizeDetailsDlgProc, GetWindowLongPtr(hwndDlg, GWLP_USERDATA));
+                                DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_SIZE_DETAILS), hwndDlg, SizeDetailsDlgProc, GetWindowLongPtrW(hwndDlg, GWLP_USERDATA));
                         }
                         break;
                     }
@@ -1278,7 +1295,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
 
             case WM_TIMER:
             {
-                BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+                BtrfsPropSheet* bps = (BtrfsPropSheet*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
                 if (bps) {
                     bps->set_size_on_disk(hwndDlg);
@@ -1299,7 +1316,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
 
 HRESULT __stdcall BtrfsPropSheet::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) {
     try {
-        PROPSHEETPAGE psp;
+        PROPSHEETPAGEW psp;
         HPROPSHEETPAGE hPage;
         INITCOMMONCONTROLSEX icex;
 
@@ -1315,15 +1332,15 @@ HRESULT __stdcall BtrfsPropSheet::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPAR
         psp.dwSize = sizeof(psp);
         psp.dwFlags = PSP_USEREFPARENT | PSP_USETITLE;
         psp.hInstance = module;
-        psp.pszTemplate = MAKEINTRESOURCE(IDD_PROP_SHEET);
+        psp.pszTemplate = MAKEINTRESOURCEW(IDD_PROP_SHEET);
         psp.hIcon = 0;
-        psp.pszTitle = MAKEINTRESOURCE(IDS_PROP_SHEET_TITLE);
+        psp.pszTitle = MAKEINTRESOURCEW(IDS_PROP_SHEET_TITLE);
         psp.pfnDlgProc = (DLGPROC)PropSheetDlgProc;
         psp.pcRefParent = (UINT*)&objs_loaded;
         psp.pfnCallback = nullptr;
         psp.lParam = (LPARAM)this;
 
-        hPage = CreatePropertySheetPage(&psp);
+        hPage = CreatePropertySheetPageW(&psp);
 
         if (hPage) {
             if (pfnAddPage(hPage, lParam)) {
@@ -1353,6 +1370,7 @@ void CALLBACK ShowPropSheetW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int
         BtrfsPropSheet bps;
         PROPSHEETPAGEW psp;
         PROPSHEETHEADERW psh;
+        INITCOMMONCONTROLSEX icex;
         wstring title;
 
         set_dpi_aware();
@@ -1360,6 +1378,12 @@ void CALLBACK ShowPropSheetW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int
         load_string(module, IDS_STANDALONE_PROPSHEET_TITLE, title);
 
         bps.set_cmdline(lpszCmdLine);
+
+        icex.dwSize = sizeof(icex);
+        icex.dwICC = ICC_LINK_CLASS;
+
+        if (!InitCommonControlsEx(&icex))
+            throw string_error(IDS_INITCOMMONCONTROLSEX_FAILED);
 
         psp.dwSize = sizeof(psp);
         psp.dwFlags = PSP_USETITLE;
@@ -1381,7 +1405,8 @@ void CALLBACK ShowPropSheetW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int
         psh.nPages = 1;
         psh.ppsp = &psp;
 
-        PropertySheetW(&psh);
+        if (PropertySheetW(&psh) < 0)
+            throw last_error(GetLastError());
     } catch (const exception& e) {
         error_message(hwnd, e.what());
     }

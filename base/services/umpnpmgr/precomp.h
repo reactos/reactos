@@ -4,7 +4,7 @@
  * FILE:             base/services/umpnpmgr/install.c
  * PURPOSE:          Device installer
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
- *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   HervÃ© Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
 
@@ -39,6 +39,20 @@ typedef struct
     WCHAR DeviceIds[ANYSIZE_ARRAY];
 } DeviceInstallParams;
 
+typedef struct
+{
+    LIST_ENTRY ListEntry;
+    PWSTR pszName;
+} NOTIFY_ENTRY, *PNOTIFY_ENTRY;
+
+/* event.c */
+
+DWORD
+WINAPI
+PnpEventThread(
+    LPVOID lpParameter);
+
+
 /* install.c */
 
 extern HANDLE hUserToken;
@@ -61,6 +75,8 @@ DeviceInstallThread(
 
 /* rpcserver.c */
 
+extern LIST_ENTRY NotificationListHead;
+
 DWORD
 WINAPI
 RpcServerThread(
@@ -72,6 +88,7 @@ RpcServerThread(
 extern HKEY hEnumKey;
 extern HKEY hClassKey;
 extern BOOL g_IsUISuppressed;
+extern BOOL g_ShuttingDown;
 
 BOOL
 GetSuppressNewUIValue(VOID);

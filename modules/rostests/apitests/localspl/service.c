@@ -73,7 +73,7 @@ _DoDLLInjection()
     do
     {
         // Check if this is the spooler server process.
-        if (wcsicmp(pe.szExeFile, L"spoolsv.exe") != 0)
+        if (_wcsicmp(pe.szExeFile, L"spoolsv.exe") != 0)
             continue;
 
         // Open a handle to the process.
@@ -161,6 +161,14 @@ START_TEST(service)
 {
     int argc;
     char** argv;
+
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:service because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
 
     SERVICE_TABLE_ENTRYW ServiceTable[] =
     {

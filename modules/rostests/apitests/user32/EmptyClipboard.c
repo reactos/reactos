@@ -7,9 +7,9 @@
 
 #include "precomp.h"
 
-HWND hWnd1, hWnd2;
+static HWND hWnd1, hWnd2;
 
-CRITICAL_SECTION CritSect;
+static CRITICAL_SECTION CritSect;
 
 /* FIXME: test for HWND_TOP, etc...*/
 static int get_iwnd(HWND hWnd)
@@ -94,7 +94,7 @@ static DWORD WINAPI ClipThread(PVOID Parameter)
     return 0;
 }
 
-MSG_ENTRY EmptyClipboard_chain[]={
+static MSG_ENTRY EmptyClipboard_chain[]={
     {1,WM_DESTROYCLIPBOARD, MARKER, 0},
     {1,WM_DESTROYCLIPBOARD, SENT},
     {1,WM_DESTROYCLIPBOARD, MARKER, 1},

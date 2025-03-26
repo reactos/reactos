@@ -30,7 +30,7 @@ BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "Por favor escolha uma opção de produto:", IDC_STATIC, 35, 7, 230, 12
     LTEXT "&Opções de produto:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Informação de produto", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Descrição:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
@@ -55,16 +55,16 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Digite um nome para o seu computador com 15 caracteres ou menos. Se está numa rede, o nome do computador terá de ser exclusivo.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Digite um nome para o seu computador com 15 caracteres ou menos. Se está numa rede, o nome do computador terá de ser exclusivo.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "Nome do &Computador:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "A instalação vai criar uma conta chamada Administrator. Pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Digite uma palavra-passe para o administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Palavra-passe do &Administrador:", IDC_STATIC, 54, 104, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirme a palavra-passe:", IDC_STATIC, 54, 123, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "A instalação vai criar uma conta chamada Administrador. Pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Digite uma senha de administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Senha do &Administrador:", IDC_STATIC, 54, 104, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfirme sua senha:", IDC_STATIC, 54, 123, 90, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
@@ -73,12 +73,13 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 50, 7, 253, 35
-    LTEXT "", IDC_LOCALETEXT, 50, 29, 250, 16
+    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 50, 7, 253, 25
+    LTEXT "%s", IDC_LOCALETEXT, 50, 36, 250, 16
     LTEXT "Para alterar a localização do sistema, clique em Personalizar.", IDC_STATIC, 50, 60, 196, 8
     PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
+    LTEXT "", IDC_STATIC, 50, 79, 249, 1, SS_ETCHEDHORZ
     LTEXT "O tipo de teclado controla os caracteres que aparecem quando digita.", IDC_STATIC, 50, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 50, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 50, 100, 250, 16
     LTEXT "Para alterar o tipo do teclado, clique em Personalizar.", IDC_STATIC, 50, 126, 184, 8
     PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
@@ -91,10 +92,10 @@ BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Data e Hora:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Fuso Horário:", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Ajustar o relógio automaticamente para o horário de &verão", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Ajustar o relógio automaticamente para o horário de &verão", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -110,9 +111,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "A registar componentes", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "A instalar itens do menu iniciar", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Guardando as configurações", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "A remover ficheiros temporários", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -135,13 +139,14 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Por favor aguarde..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -150,16 +155,16 @@ CAPTION "Definições avançadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Frequencia de amostragem:", -1, 27, 35, 90, 8
+    RTEXT "&Frequência de amostragem:", -1, 27, 35, 90, 8
     LTEXT "Relatórios por segundo", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Detecção da roda:", -1, 27, 55, 90, 8
-    COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 120, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Tamanho da memória intermédia:", -1, 27, 75, 90, 8
     LTEXT "pacotes", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
-    AUTOCHECKBOX "&Inicialização rápida", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    AUTOCHECKBOX "&Iniciação rápida", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
     PUSHBUTTON "&Predefinições", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
 END
 
@@ -167,16 +172,18 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Agradecimentos"
     IDS_ACKSUBTITLE "Os ombros nos quais o ReactOS se apoia e informações de licença"
-    IDS_OWNERTITLE "Personalize seu Software"
-    IDS_OWNERSUBTITLE "A Instalação utiliza esta informação para personalizar o ReactOS."
+    IDS_OWNERTITLE "Personalize o seu Software"
+    IDS_OWNERSUBTITLE "A Instalação utiliza estas informações para personalizar o ReactOS."
     IDS_COMPUTERTITLE "Nome do computador e palavra-passe do administrador"
     IDS_COMPUTERSUBTITLE "Deve fornecer um nome e palavra-passe de administrador para o seu computador."
     IDS_LOCALETITLE "Configurações Regionais"
     IDS_LOCALESUBTITLE "Pode personalizar o ReactOS para diferentes regiões e línguas."
+    IDS_LOCALETEXT "Os padrões e formatos são definidos como %s, e o local é definido como %s."
+    IDS_LAYOUTTEXT "O método e idioma de entrada de texto padrão é: Estilo de teclado %s"
     IDS_DATETIMETITLE "Data e Hora"
     IDS_DATETIMESUBTITLE "Definir a data e a hora correctas para o seu computador."
-    IDS_PROCESSTITLE "A registar componentes"
-    IDS_PROCESSSUBTITLE "Por favor aguarde..."
+    IDS_PROCESSTITLE "Finalizando a instalação."
+    IDS_PROCESSSUBTITLE "Aguarde enquanto a Instalação conclui as etapas finais."
     IDS_THEMESELECTIONTITLE "Aparência"
     IDS_THEMESELECTIONSUBTITLE "Seleccione o tema perferido."
 END
@@ -185,7 +192,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Instalação do ReactOS"
     IDS_UNKNOWN_ERROR "Erro Desconhecido"
-    IDS_REGISTERING_COMPONENTS "A registar componentes..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary falhou: "
     IDS_GETPROCADDR_FAILED "GetProcAddr falhou: "
     IDS_REGSVR_FAILED "DllRegisterServer falhou: "
@@ -198,7 +204,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_ADMINISTRATOR_NAME "Administrador"
     IDS_MACHINE_OWNER_NAME "Proprietário"
 END
 
@@ -221,15 +227,15 @@ END
 /* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMFILES "%SystemDrive%\\Arquivos de programas"
-    IDS_COMMONFILES "Arquivos comuns"
+    IDS_PROGRAMFILES "%SystemDrive%\\Ficheiros de programas"
+    IDS_COMMONFILES "Ficheiros comuns"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DETECTIONDISABLED "Detecção desabilitada"
-    IDS_LOOKFORWHEEL "A detectar o roda do rato"
-    IDS_ASSUMEPRESENT "Assume roda está presente"
+    IDS_LOOKFORWHEEL "Detectar a roda do rato"
+    IDS_ASSUMEPRESENT "Assumir que roda está presente"
 END
 
 STRINGTABLE
@@ -246,7 +252,7 @@ BEGIN
     IDS_PRODUCTSUBTITLE "Pode escolher uma opção de produto que afecta o comportamento do sistema."
     IDS_PRODUCTSERVERNAME "Servidor ReactOS"
     IDS_PRODUCTWORKSTATIONNAME "Estação de trabalho ReactOS"
-    IDS_PRODUCTSERVERINFO "O sistema será reconhecido como um servidor. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" são independentes de ""Meus documentos""."
-    IDS_PRODUCTWORKSTATIONINFO "O sistema será reconhecido como uma estação de trabalho. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" estão em ""Meus documentos""."
-    IDS_DEFAULT "(Default)"
+    IDS_PRODUCTSERVERINFO "O sistema será reconhecido como um servidor. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" serão independentes de ""Meus documentos""."
+    IDS_PRODUCTWORKSTATIONINFO "O sistema será reconhecido como uma estação de trabalho. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" ficarão em ""Meus documentos""."
+    IDS_DEFAULT "(Padrão)"
 END

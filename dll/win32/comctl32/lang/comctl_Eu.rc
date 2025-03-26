@@ -1,0 +1,101 @@
+/*
+ * Top level resource file for Common Controls
+ *
+ * Copyright 1999 Bertho Stultiens
+ * Copyright 1999 Eric Kohl
+ * Copyright 2021 Julen Urizar Compains
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_CLOSE    "Itxi"
+}
+
+STRINGTABLE
+{
+    IDM_TODAY    "Gaur:"
+    IDM_GOTODAY  "Gaur izan"
+}
+
+STRINGTABLE
+{
+    IDS_SEPARATOR "Berezgailu"
+}
+
+STRINGTABLE
+{
+    HKY_NONE "Inor"
+}
+
+STRINGTABLE
+{
+    IDS_BUTTON_YES    "&Bai"
+    IDS_BUTTON_NO     "&Ez"
+    IDS_BUTTON_RETRY  "&Reintentar"
+    IDS_BUTTON_OK     "OK"
+    IDS_BUTTON_CANCEL "Cancelar"
+    IDS_BUTTON_CLOSE  "&Itxi"
+}
+
+IDD_PROPSHEET DIALOG 0, 0, 220, 140
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+CAPTION "%s propietateak"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  DEFPUSHBUTTON "Ados",     IDOK,4,122,50,14, WS_TABSTOP | WS_GROUP
+  PUSHBUTTON    "Utzi", IDCANCEL,58,122,50,14
+  PUSHBUTTON    "&Aplikatu", IDC_APPLY_BUTTON,112,122,50,14,WS_DISABLED
+  PUSHBUTTON    "Laguntza",   IDHELP,166,122,50,14,WS_TABSTOP|WS_GROUP
+  CONTROL       "",       IDC_TABCONTROL,"SysTabControl32",WS_CLIPSIBLINGS|WS_GROUP|WS_TABSTOP|TCS_MULTILINE,4,4,212,114
+END
+
+
+IDD_WIZARD DIALOG 0, 0, 290, 159
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+CAPTION "Asistentea"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  PUSHBUTTON    "< &Atzera", IDC_BACK_BUTTON,56,138,55,14
+  DEFPUSHBUTTON "&Aurrera >", IDC_NEXT_BUTTON,111,138,55,14
+  DEFPUSHBUTTON "Amaitu",  IDC_FINISH_BUTTON,111,138,55,14
+  PUSHBUTTON    "Utzi",  IDCANCEL,173,138,55,14
+  PUSHBUTTON    "Lagun&tza",    IDHELP,235,138,55,14,WS_GROUP
+  LTEXT         "",        IDC_SUNKEN_LINE,7,129,278,1,SS_SUNKEN
+  CONTROL       "",        IDC_TABCONTROL,"SysTabControl32",WS_CLIPSIBLINGS | WS_DISABLED,7,7,258,5
+  LTEXT	        "",        IDC_SUNKEN_LINEHEADER,0,35,290,1,SS_LEFT | SS_SUNKEN | WS_CHILD | WS_VISIBLE
+END
+
+
+IDD_TBCUSTOMIZE DIALOG 10, 20, 395, 125
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Tresnaren-barra pertsonalizatu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  DEFPUSHBUTTON "&Itxi",     IDCANCEL,320,6,70,14
+  PUSHBUTTON    "B&errezarri",     IDC_RESET_BTN,320,23,70,14
+  PUSHBUTTON    "Lagun&tza",      IDC_HELP_BTN,320,40,70,14
+  PUSHBUTTON    "&Igo",   IDC_MOVEUP_BTN,320,74,70,14
+  PUSHBUTTON    "&Jaitsi", IDC_MOVEDN_BTN,320,91,70,14
+  LTEXT         "Era%bilgarri botoiak:", -1,4,5,120,10
+  LISTBOX       IDC_AVAILBTN_LBOX,5,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+  PUSHBUTTON    "&Gehitu ->",    IDOK, 132, 42, 55, 14
+  PUSHBUTTON    "<- &Ezabatu", IDC_REMOVE_BTN,132,62,55,14
+  LTEXT         "&Barrako botoiak:", -1,194,5,120,10
+  LISTBOX       IDC_TOOLBARBTN_LBOX, 194,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+END

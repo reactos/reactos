@@ -42,8 +42,8 @@ MmMapPhysicalAddress (
 
 BOOLEAN
 MmArchTranslateVirtualAddress (
-    _In_ PVOID VirtualAddress, 
-    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress, 
+    _In_ PVOID VirtualAddress,
+    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress,
     _Out_opt_ PULONG CachingFlags
     )
 {

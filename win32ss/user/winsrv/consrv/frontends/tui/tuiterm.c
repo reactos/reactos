@@ -4,7 +4,7 @@
  * FILE:            win32ss/user/winsrv/consrv/frontends/tui/tuiterm.c
  * PURPOSE:         TUI Terminal Front-End - Virtual Consoles...
  * PROGRAMMERS:     David Welch
- *                  Gé van Geldorp
+ *                  GÃ© van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -26,7 +26,41 @@
 #include <debug.h>
 
 
-/* GLOBALS ********************************************************************/
+/* CAB FILE STRUCTURES ******************************************************/
+
+typedef struct _CFHEADER
+{
+    ULONG Signature;        // File signature 'MSCF' (CAB_SIGNATURE)
+    ULONG Reserved1;        // Reserved field
+    ULONG CabinetSize;      // Cabinet file size
+    ULONG Reserved2;        // Reserved field
+    ULONG FileTableOffset;  // Offset of first CFFILE
+    ULONG Reserved3;        // Reserved field
+    USHORT Version;         // Cabinet version (CAB_VERSION)
+    USHORT FolderCount;     // Number of folders
+    USHORT FileCount;       // Number of files
+    USHORT Flags;           // Cabinet flags (CAB_FLAG_*)
+    USHORT SetID;           // Cabinet set id
+    USHORT CabinetNumber;   // Zero-based cabinet number
+} CFHEADER, *PCFHEADER;
+
+typedef struct _CFFILE
+{
+    ULONG FileSize;         // Uncompressed file size in bytes
+    ULONG FileOffset;       // Uncompressed offset of file in the folder
+    USHORT FileControlID;   // File control ID (CAB_FILE_*)
+    USHORT FileDate;        // File date stamp, as used by DOS
+    USHORT FileTime;        // File time stamp, as used by DOS
+    USHORT Attributes;      // File attributes (CAB_ATTRIB_*)
+    /* After this is the NULL terminated filename */
+    // CHAR FileName[ANYSIZE_ARRAY];
+} CFFILE, *PCFFILE;
+
+#define CAB_SIGNATURE       0x4643534D // "MSCF"
+#define CAB_VERSION         0x0103
+
+
+/* GLOBALS ******************************************************************/
 
 #define ConsoleOutputUnicodeToAnsiChar(Console, dChar, sWChar) \
 do { \
@@ -374,8 +408,222 @@ TuiConsoleThread(PVOID Param)
     return 0;
 }
 
+static BOOLEAN
+TuiSetConsoleOutputCP(
+    IN HANDLE hNtConddHandle,
+    IN UINT CodePage)
+{
+    static UINT LastLoadedCodepage = 0;
+    UNICODE_STRING FontFile = RTL_CONSTANT_STRING(L"\\SystemRoot\\vgafonts.cab");
+    CHAR FontName[20];
+
+    NTSTATUS Status;
+    HANDLE FileHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    // ULONG ReadCP;
+    PUCHAR FontBitField = NULL;
+
+    /* CAB-specific data */
+    HANDLE FileSectionHandle;
+    PUCHAR FileBuffer = NULL;
+    SIZE_T FileSize = 0;
+    PCFHEADER CabFileHeader;
+    union
+    {
+        PCFFILE CabFile;
+        PVOID Buffer;
+    } Data;
+    PCFFILE FoundFile = NULL;
+    PSTR FileName;
+    USHORT Index;
+
+    if (CodePage == LastLoadedCodepage)
+        return TRUE;
+
+    /*
+     * Open the *uncompressed* fonts archive file.
+     */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FontFile,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: Cannot open '%wZ' (0x%lx)\n", &FontFile, Status);
+        return FALSE;
+    }
+
+    /*
+     * Load it.
+     */
+    Status = NtCreateSection(&FileSectionHandle,
+                             SECTION_ALL_ACCESS,
+                             0, 0,
+                             PAGE_READONLY,
+                             SEC_COMMIT,
+                             FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateSection failed (0x%lx)\n", Status);
+        goto Exit;
+    }
+
+    Status = NtMapViewOfSection(FileSectionHandle,
+                                NtCurrentProcess(),
+                                (PVOID*)&FileBuffer,
+                                0, 0, NULL,
+                                &FileSize,
+                                ViewUnmap,
+                                0,
+                                PAGE_READONLY);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtMapViewOfSection failed (0x%lx)\n", Status);
+        goto Exit;
+    }
+
+    /* Wrap in SEH to protect against ill-formed file */
+    _SEH2_TRY
+    {
+        DPRINT("Cabinet file '%wZ' opened and mapped to 0x%p\n",
+               &FontFile, FileBuffer);
+
+        CabFileHeader = (PCFHEADER)FileBuffer;
+
+        /* Validate the CAB file */
+        if (FileSize <= sizeof(CFHEADER) ||
+            CabFileHeader->Signature != CAB_SIGNATURE ||
+            CabFileHeader->Version != CAB_VERSION ||
+            CabFileHeader->FolderCount == 0 ||
+            CabFileHeader->FileCount == 0 ||
+            CabFileHeader->FileTableOffset < sizeof(CFHEADER))
+        {
+            DPRINT1("Cabinet file '%wZ' has an invalid header\n", &FontFile);
+            Status = STATUS_UNSUCCESSFUL;
+            _SEH2_YIELD(goto Exit);
+        }
+
+        /*
+         * Find the font file within the archive.
+         */
+        RtlStringCbPrintfA(FontName, sizeof(FontName),
+                           "%u-8x8.bin", CodePage);
+
+        /* Read the file table, find the file of interest and the end of the table */
+        Data.CabFile = (PCFFILE)(FileBuffer + CabFileHeader->FileTableOffset);
+        for (Index = 0; Index < CabFileHeader->FileCount; ++Index)
+        {
+            FileName = (PSTR)(Data.CabFile + 1);
+
+            if (!FoundFile)
+            {
+                // Status = RtlCharToInteger(FileName, 0, &ReadCP);
+                // if (NT_SUCCESS(Status) && (ReadCP == CodePage))
+                if (_stricmp(FontName, FileName) == 0)
+                {
+                    /* We've got the correct file. Save the offset and
+                     * loop through the rest of the file table to find
+                     * the position, where the actual data starts. */
+                    FoundFile = Data.CabFile;
+                }
+            }
+
+            /* Move to the next file (go past the filename NULL terminator) */
+            Data.CabFile = (PCFFILE)(strchr(FileName, 0) + 1);
+        }
+
+        if (!FoundFile)
+        {
+            DPRINT("File '%S' not found in cabinet '%wZ'\n",
+                   FontName, &FontFile);
+            Status = STATUS_OBJECT_NAME_NOT_FOUND;
+            _SEH2_YIELD(goto Exit);
+        }
+
+        /*
+         * Extract the font file.
+         */
+        /* Verify the font file size; we only support a fixed 256-char 8-bit font */
+        if (FoundFile->FileSize != 256 * 8)
+        {
+            DPRINT1("File of size %lu is not of the expected size %lu\n",
+                    FoundFile->FileSize, 256 * 8);
+            Status = STATUS_INVALID_BUFFER_SIZE;
+            _SEH2_YIELD(goto Exit);
+        }
+
+        FontBitField = RtlAllocateHeap(RtlGetProcessHeap(), 0, FoundFile->FileSize);
+        if (!FontBitField)
+        {
+            DPRINT1("ExAllocatePoolWithTag(%lu) failed\n", FoundFile->FileSize);
+            Status = STATUS_NO_MEMORY;
+            _SEH2_YIELD(goto Exit);
+        }
+
+        /* 8 = Size of a CFFOLDER structure (see cabman). As we don't need
+         * the values of that structure, just increase the offset here. */
+        Data.Buffer = (PVOID)((ULONG_PTR)Data.Buffer + 8); // sizeof(CFFOLDER);
+        Data.Buffer = (PVOID)((ULONG_PTR)Data.Buffer + FoundFile->FileOffset);
+
+        /* Data.Buffer now points to the actual data of the RAW font */
+        RtlCopyMemory(FontBitField, Data.Buffer, FoundFile->FileSize);
+        Status = STATUS_SUCCESS;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("TuiSetConsoleOutputCP - Caught an exception, Status = 0x%08lx\n", Status);
+    }
+    _SEH2_END;
+
+    /*
+     * Load the font.
+     */
+    if (NT_SUCCESS(Status))
+    {
+        ASSERT(FoundFile);
+        ASSERT(FontBitField);
+        Status = NtDeviceIoControlFile(hNtConddHandle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_CONSOLE_LOADFONT,
+                                       FontBitField,
+                                       FoundFile->FileSize,
+                                       NULL,
+                                       0);
+    }
+
+    if (FontBitField)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FontBitField);
+
+Exit:
+    if (FileBuffer)
+        NtUnmapViewOfSection(NtCurrentProcess(), FileBuffer);
+
+    if (FileSectionHandle)
+        NtClose(FileSectionHandle);
+
+    NtClose(FileHandle);
+
+    if (NT_SUCCESS(Status))
+        LastLoadedCodepage = CodePage;
+
+    return NT_SUCCESS(Status);
+}
+
 static BOOL
-TuiInit(DWORD OemCP)
+TuiInit(IN UINT OemCP)
 {
     BOOL Success;
     CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
@@ -417,9 +665,7 @@ TuiInit(DWORD OemCP)
         return FALSE;
     }
 
-    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_LOADFONT,
-                         &OemCP, sizeof(OemCP), NULL, 0,
-                         &BytesReturned, NULL))
+    if (!TuiSetConsoleOutputCP(ConsoleDeviceHandle, OemCP))
     {
         DPRINT1("Failed to load the font for codepage %d\n", OemCP);
         /* Let's suppose the font is good enough to continue */
@@ -881,6 +1127,25 @@ TuiSetPalette(IN OUT PFRONTEND This,
     return TRUE;
 }
 
+static BOOL NTAPI
+TuiSetCodePage(IN OUT PFRONTEND This,
+               UINT CodePage)
+{
+    // PTUI_CONSOLE_DATA TuiData = This->Context;
+
+    // TODO: Verify that the console is the visible one.
+    // Only then can we change the output code page font.
+
+    if (!TuiSetConsoleOutputCP(ConsoleDeviceHandle, CodePage))
+    {
+        DPRINT1("Failed to load the font for codepage %d\n", CodePage);
+        /* Let's suppose the font is good enough to continue */
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static ULONG NTAPI
 TuiGetDisplayMode(IN OUT PFRONTEND This)
 {
@@ -945,6 +1210,7 @@ static FRONTEND_VTBL TuiVtbl =
     TuiGetLargestConsoleWindowSize,
     TuiGetSelectionInfo,
     TuiSetPalette,
+    TuiSetCodePage,
     TuiGetDisplayMode,
     TuiSetDisplayMode,
     TuiShowMouseCursor,

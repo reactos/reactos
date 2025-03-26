@@ -100,7 +100,7 @@ function(add_asm16_bin _target _binary_file _base_address)
     ##
     ## All this part is the same as CreateBootSectorTarget
     ##
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")
@@ -112,11 +112,10 @@ function(add_asm16_bin _target _binary_file _base_address)
         COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_concatenated_asm_file} > ${_preprocessed_asm_file}
         DEPENDS ${_concatenated_asm_file})
 
-    if(ARCH STREQUAL "arm")
-        set(_pp_asm16_compile_command ${CMAKE_ASM16_COMPILER} -nologo -o ${_object_file} ${_preprocessed_asm_file})
-    else()
-        set(_pp_asm16_compile_command ${CMAKE_ASM16_COMPILER} /nologo /Cp /Fo${_object_file} /c /Ta ${_preprocessed_asm_file})
+    if(MSVC_VERSION GREATER_EQUAL 1936)
+        set(_quiet_flag "/quiet")
     endif()
+    set(_pp_asm16_compile_command ${CMAKE_ASM16_COMPILER} /nologo ${_quiet_flag} /Cp /Fo${_object_file} /c /Ta ${_preprocessed_asm_file})
 
     add_custom_command(
         OUTPUT ${_object_file}

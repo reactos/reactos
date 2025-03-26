@@ -30,33 +30,18 @@
 static HWND parent_wnd, child1_wnd, child2_wnd;
 static INT notify_format;
 static BOOL notify_query_received;
-static WCHAR test_w[] = {'t', 'e', 's', 't', 0};
-static CHAR test_a[] = {'t', 'e', 's', 't', 0};
+static const CHAR test_a[] = "test";
+static const WCHAR test_w[] = L"test";
 /* Double zero so that it's safe to cast it to WCHAR * */
-static CHAR te_a[] = {'t', 'e', 0, 0};
-static WCHAR empty_w[] = {0};
-static CHAR empty_a[] = {0};
-static CHAR large_a[] = "You should have received a copy of the GNU Lesser General Public License along with this ...";
-static WCHAR large_w[] =
-{
-    'Y', 'o', 'u', ' ', 's', 'h', 'o', 'u', 'l', 'd', ' ', 'h', 'a', 'v', 'e', ' ', 'r', 'e', 'c', 'e', 'i', 'v', 'e',
-    'd', ' ', 'a', ' ', 'c', 'o', 'p', 'y', ' ', 'o', 'f', ' ', 't', 'h', 'e', ' ', 'G', 'N', 'U', ' ', 'L', 'e', 's',
-    's', 'e', 'r', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 'l', ' ', 'P', 'u', 'b', 'l', 'i', 'c', ' ', 'L', 'i', 'c', 'e',
-    'n', 's', 'e', ' ', 'a', 'l', 'o', 'n', 'g', ' ', 'w', 'i', 't', 'h', ' ', 't', 'h', 'i', 's', ' ', '.', '.', '.', 0
-};
-static WCHAR large_truncated_65_w[65] =
-{
-    'Y', 'o', 'u', ' ', 's', 'h', 'o', 'u', 'l', 'd', ' ', 'h', 'a', 'v', 'e', ' ', 'r', 'e', 'c', 'e', 'i', 'v',
-    'e', 'd', ' ', 'a', ' ', 'c', 'o', 'p', 'y', ' ', 'o', 'f', ' ', 't', 'h', 'e', ' ', 'G', 'N', 'U', ' ', 'L',
-    'e', 's', 's', 'e', 'r', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 'l', ' ', 'P', 'u', 'b', 'l', 'i', 'c', 0
-};
-static WCHAR large_truncated_80_w[80] =
-{
-    'Y', 'o', 'u', ' ', 's', 'h', 'o', 'u', 'l', 'd', ' ', 'h', 'a', 'v', 'e', ' ', 'r', 'e', 'c', 'e',
-    'i', 'v', 'e', 'd', ' ', 'a', ' ', 'c', 'o', 'p', 'y', ' ', 'o', 'f', ' ', 't', 'h', 'e', ' ', 'G',
-    'N', 'U', ' ', 'L', 'e', 's', 's', 'e', 'r', ' ', 'G', 'e', 'n', 'e', 'r', 'a', 'l', ' ', 'P', 'u',
-    'b', 'l', 'i', 'c', ' ', 'L', 'i', 'c', 'e', 'n', 's', 'e', ' ', 'a', 'l', 'o', 'n', 'g', ' ', 'w'
-};
+static const CHAR te_a[] = {'t', 'e', 0, 0};
+static const CHAR large_a[] =
+    "You should have received a copy of the GNU Lesser General Public License along with this ...";
+static const WCHAR large_w[] =
+    L"You should have received a copy of the GNU Lesser General Public License along with this ...";
+static const WCHAR large_truncated_65_w[65] =
+    L"You should have received a copy of the GNU Lesser General Public";
+static const WCHAR large_truncated_80_w[80] =
+    L"You should have received a copy of the GNU Lesser General Public License along w";
 static WCHAR buffer[64];
 
 /* Text field conversion test behavior flags. */
@@ -96,26 +81,26 @@ static struct notify_test_info
 struct notify_test_send
 {
     /* Data sent to pager */
-    WCHAR *send_text;
+    const WCHAR *send_text;
     INT send_text_size;
     INT send_text_max;
     /* Data expected by parent of pager */
-    void *expect_text;
+    const void *expect_text;
 };
 
 struct notify_test_receive
 {
     /* Data sent to pager */
-    WCHAR *send_text;
+    const WCHAR *send_text;
     INT send_text_size;
     INT send_text_max;
     /* Data for parent to write */
-    CHAR *write_pointer;
-    CHAR *write_text;
+    const CHAR *write_pointer;
+    const CHAR *write_text;
     INT write_text_size;
     INT write_text_max;
     /* Data when message returned */
-    void *return_text;
+    const void *return_text;
     INT return_text_max;
 };
 
@@ -145,69 +130,69 @@ static const struct notify_test_send test_dont_convert_send_data[] =
 
 static const struct notify_test_receive test_convert_receive_data[] =
 {
-    {empty_w, sizeof(empty_w), ARRAY_SIZE(buffer), NULL, test_a, sizeof(test_a), -1, test_w, ARRAY_SIZE(buffer)},
-    {empty_w, sizeof(empty_w), ARRAY_SIZE(buffer), test_a, NULL, 0, -1, test_w, ARRAY_SIZE(buffer)},
-    {NULL, sizeof(empty_w), ARRAY_SIZE(buffer), test_a, NULL, 0, -1, NULL, ARRAY_SIZE(buffer)},
-    {empty_w, sizeof(empty_w), ARRAY_SIZE(buffer), large_a, NULL, 0, -1, large_truncated_65_w, ARRAY_SIZE(buffer)},
-    {empty_w, sizeof(empty_w), ARRAY_SIZE(buffer), empty_a, 0, 0, 1, empty_w, 1},
+    {L"", sizeof(L""), ARRAY_SIZE(buffer), NULL, test_a, sizeof(test_a), -1, test_w, ARRAY_SIZE(buffer)},
+    {L"", sizeof(L""), ARRAY_SIZE(buffer), test_a, NULL, 0, -1, test_w, ARRAY_SIZE(buffer)},
+    {NULL, sizeof(L""), ARRAY_SIZE(buffer), test_a, NULL, 0, -1, NULL, ARRAY_SIZE(buffer)},
+    {L"", sizeof(L""), ARRAY_SIZE(buffer), large_a, NULL, 0, -1, large_truncated_65_w, ARRAY_SIZE(buffer)},
+    {L"", sizeof(L""), ARRAY_SIZE(buffer), "", 0, 0, 1, L"", 1},
 };
 
 static const struct notify_test_receive test_dont_convert_receive_data[] =
 {
-    {empty_w, sizeof(empty_w), ARRAY_SIZE(buffer), NULL, test_a, sizeof(test_a), -1, test_a, ARRAY_SIZE(buffer)},
-    {empty_w, sizeof(empty_w), ARRAY_SIZE(buffer), test_a, NULL, 0, -1, test_a, ARRAY_SIZE(buffer)},
+    {L"", sizeof(L""), ARRAY_SIZE(buffer), NULL, test_a, sizeof(test_a), -1, test_a, ARRAY_SIZE(buffer)},
+    {L"", sizeof(L""), ARRAY_SIZE(buffer), test_a, NULL, 0, -1, test_a, ARRAY_SIZE(buffer)},
 };
 
 static const struct notify_test_tooltip
 {
     /* Data for parent to write */
-    CHAR *write_sztext;
+    const CHAR *write_sztext;
     INT write_sztext_size;
-    CHAR *write_lpsztext;
+    const CHAR *write_lpsztext;
     HMODULE write_hinst;
     /* Data when message returned */
-    WCHAR *return_sztext;
+    const WCHAR *return_sztext;
     INT return_sztext_size;
-    WCHAR *return_lpsztext;
+    const WCHAR *return_lpsztext;
     HMODULE return_hinst;
     /* Data expected by parent */
-    CHAR *expect_sztext;
+    const CHAR *expect_sztext;
     /* Data send to parent */
-    WCHAR *send_sztext;
+    const WCHAR *send_sztext;
     INT send_sztext_size;
-    WCHAR *send_lpsztext;
+    const WCHAR *send_lpsztext;
 } test_tooltip_data[] =
 {
-    {NULL, 0, NULL, NULL, empty_w, -1, empty_w},
+    {NULL, 0, NULL, NULL, L"", -1, L""},
     {test_a, sizeof(test_a), NULL, NULL, test_w, -1, test_w},
     {test_a, sizeof(test_a), test_a, NULL, test_w, -1, test_w},
-    {test_a, sizeof(test_a), (CHAR *)1, (HMODULE)0xdeadbeef, empty_w, -1, (WCHAR *)1, (HMODULE)0xdeadbeef},
+    {test_a, sizeof(test_a), (CHAR *)1, (HMODULE)0xdeadbeef, L"", -1, (WCHAR *)1, (HMODULE)0xdeadbeef},
     {test_a, sizeof(test_a), test_a, (HMODULE)0xdeadbeef, test_w, -1, test_w, (HMODULE)0xdeadbeef},
     {NULL, 0, test_a, NULL, test_w, -1, test_w},
     {test_a, 2, test_a, NULL, test_w, -1, test_w},
     {NULL, 0, NULL, NULL, test_w, -1, test_w, NULL, test_a, test_w, sizeof(test_w)},
-    {NULL, 0, NULL, NULL, empty_w, -1, empty_w, NULL, empty_a, NULL, 0, test_w},
+    {NULL, 0, NULL, NULL, L"", -1, L"", NULL, "", NULL, 0, test_w},
     {NULL, 0, large_a, NULL, large_truncated_80_w, sizeof(large_truncated_80_w), large_w}
 };
 
 static const struct notify_test_datetime_format
 {
     /* Data send to parent */
-    WCHAR *send_pszformat;
+    const WCHAR *send_pszformat;
     /* Data expected by parent */
-    CHAR *expect_pszformat;
+    const CHAR *expect_pszformat;
     /* Data for parent to write */
-    CHAR *write_szdisplay;
+    const CHAR *write_szdisplay;
     INT write_szdisplay_size;
-    CHAR *write_pszdisplay;
+    const CHAR *write_pszdisplay;
     /* Data when message returned */
-    WCHAR *return_szdisplay;
+    const WCHAR *return_szdisplay;
     INT return_szdisplay_size;
-    WCHAR *return_pszdisplay;
+    const WCHAR *return_pszdisplay;
 } test_datetime_format_data[] =
 {
     {test_w, test_a},
-    {NULL, NULL, NULL, 0, test_a, empty_w, -1, test_w},
+    {NULL, NULL, NULL, 0, test_a, L"", -1, test_w},
     {NULL, NULL, test_a, sizeof(test_a), NULL, test_w, -1, test_w},
     {NULL, NULL, test_a, 2, test_a, (WCHAR *)te_a, -1, test_w},
     {NULL, NULL, NULL, 0, large_a, NULL, 0, large_w}
@@ -624,7 +609,7 @@ static void notify_generic_text_handler(CHAR **text, INT *text_max)
         send_data = (notify_test_info.test_id == CONVERT_SEND ? test_convert_send_data : test_dont_convert_send_data)
                     + notify_test_info.sub_test_id;
         if (notify_test_info.flags & ZERO_SEND)
-            ok(!lstrcmpA(*text, empty_a), "Code 0x%08x test 0x%08x sub test %d expect empty text, got %s\n",
+            ok(!*text[0], "Code 0x%08x test 0x%08x sub test %d expect empty text, got %s\n",
                notify_test_info.unicode, notify_test_info.test_id, notify_test_info.sub_test_id, *text);
         else if (notify_test_info.flags & CONVERT_SEND)
             ok(!lstrcmpA(send_data->expect_text, *text), "Code 0x%08x test 0x%08x sub test %d expect %s, got %s\n",
@@ -658,12 +643,12 @@ static void notify_generic_text_handler(CHAR **text, INT *text_max)
         else if(notify_test_info.unicode == HDN_GETDISPINFOW)
             *text = heap_strdup(receive_data->write_pointer);
         else
-            *text = receive_data->write_pointer;
+            *text = (char *)receive_data->write_pointer;
         if (text_max && receive_data->write_text_max != -1) *text_max = receive_data->write_text_max;
         break;
     }
     case SEND_EMPTY_IF_NULL:
-        ok(!lstrcmpA(*text, empty_a), "Code 0x%08x test 0x%08x sub test %d expect empty text, got %s\n",
+        ok(!*text[0], "Code 0x%08x test 0x%08x sub test %d expect empty text, got %s\n",
            notify_test_info.unicode, notify_test_info.test_id, notify_test_info.sub_test_id, *text);
         break;
     case DONT_SEND_EMPTY_IF_NULL:
@@ -682,7 +667,7 @@ static void notify_tooltip_handler(NMTTDISPINFOA *nm)
         ok(!lstrcmpA(data->expect_sztext, nm->szText), "Sub test %d expect %s, got %s\n", notify_test_info.sub_test_id,
            data->expect_sztext, nm->szText);
     if (data->write_sztext) memcpy(nm->szText, data->write_sztext, data->write_sztext_size);
-    if (data->write_lpsztext) nm->lpszText = data->write_lpsztext;
+    if (data->write_lpsztext) nm->lpszText = (char *)data->write_lpsztext;
     if (data->write_hinst) nm->hinst = data->write_hinst;
 }
 
@@ -1025,8 +1010,9 @@ static void test_notify_generic_text_helper(HWND pager, const struct generic_tex
             if (data->return_text)
             {
                 if (para->flags & CONVERT_RECEIVE)
-                    ok(!lstrcmpW(data->return_text, *para->text), "Code 0x%08x sub test %d expect %s, got %s\n",
-                       para->code_unicode, i, wine_dbgstr_w((WCHAR *)data->return_text), wine_dbgstr_w(*para->text));
+                    ok(!wcsncmp(data->return_text, *para->text, *para->text_max),
+                       "Code 0x%08x sub test %d expect %s, got %s\n", para->code_unicode, i,
+                       wine_dbgstr_w((WCHAR *)data->return_text), wine_dbgstr_w(*para->text));
                 else
                     ok(!lstrcmpA(data->return_text, (CHAR *)*para->text), "Code 0x%08x sub test %d expect %s, got %s\n",
                        para->code_unicode, i, (CHAR *)data->return_text, (CHAR *)*para->text);
@@ -1106,8 +1092,8 @@ static void test_wm_notify_header(HWND pager)
     HD_TEXTFILTERW hdtf = {0};
 
     hdi.mask = HDI_TEXT | HDI_FILTER;
-    hdi.pszText = test_w;
-    hdtf.pszText = test_w;
+    hdi.pszText = (WCHAR *)test_w;
+    hdtf.pszText = (WCHAR *)test_w;
     nmh.pitem = &hdi;
     nmh.pitem->pvFilter = &hdtf;
     send_notify(pager, HDN_BEGINDRAG, HDN_BEGINDRAG, (LPARAM)&nmh, TRUE);
@@ -1142,7 +1128,7 @@ static void test_wm_notify_tooltip(HWND pager)
 
         memset(&nmttdi, 0, sizeof(nmttdi));
         if (data->send_sztext) memcpy(nmttdi.szText, data->send_sztext, data->send_sztext_size);
-        if (data->send_lpsztext) nmttdi.lpszText = data->send_lpsztext;
+        if (data->send_lpsztext) nmttdi.lpszText = (WCHAR *)data->send_lpsztext;
         send_notify(pager, TTN_GETDISPINFOW, TTN_GETDISPINFOA, (LPARAM)&nmttdi, FALSE);
         if (data->return_sztext)
         {

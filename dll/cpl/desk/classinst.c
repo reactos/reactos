@@ -25,6 +25,7 @@ DisplayClassInstaller(
     TCHAR ServiceName[MAX_SERVICE_NAME_LEN];
     TCHAR DeviceName[12];
     SP_DRVINFO_DETAIL_DATA DriverInfoDetailData;
+    DISPLAY_DEVICE DisplayDevice;
     HKEY hDriverKey = INVALID_HANDLE_VALUE; /* SetupDiOpenDevRegKey returns INVALID_HANDLE_VALUE in case of error! */
     HKEY hSettingsKey = NULL;
     HKEY hServicesKey = NULL;
@@ -244,6 +245,10 @@ DisplayClassInstaller(
     }
 
     /* FIXME: install OpenGLSoftwareSettings section */
+
+    /* Reenumerate display devices ; this will rescan for potential new devices */
+    DisplayDevice.cb = sizeof(DISPLAY_DEVICE);
+    EnumDisplayDevices(NULL, 0, &DisplayDevice, 0);
 
     rc = ERROR_SUCCESS;
 

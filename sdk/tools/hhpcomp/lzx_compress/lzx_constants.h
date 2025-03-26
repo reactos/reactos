@@ -17,7 +17,7 @@
     --------------------------------------
     The above lines apply to the lzxcomp library as a whole.  This file,
     lzx_constants.h, however, is probably uncopyrightable, and in any
-    case I explicitly place it in the public domain. 
+    case I explicitly place it in the public domain.
 
     Matthew T. Russotto
 */

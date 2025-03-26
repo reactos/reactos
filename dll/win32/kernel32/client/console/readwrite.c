@@ -681,8 +681,8 @@ IntWriteConsole(IN HANDLE hConsoleOutput,
     /* Release the capture buffer if needed */
     if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Retrieve the results */
-    if (Success)
+    /* Retrieve the results. NOTE: lpNumberOfCharsWritten optional since Vista+ */
+    if (Success && lpNumberOfCharsWritten)
     {
         _SEH2_TRY
         {
@@ -695,7 +695,7 @@ IntWriteConsole(IN HANDLE hConsoleOutput,
         }
         _SEH2_END;
     }
-    else
+    else if (!Success)
     {
         BaseSetLastNTError(ApiMessage.Status);
     }
@@ -1222,7 +1222,7 @@ PeekConsoleInputW(IN HANDLE hConsoleInput,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
-                              CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE,
+                              CONSOLE_READ_NOREMOVE | CONSOLE_READ_NOWAIT,
                               TRUE);
 }
 
@@ -1242,7 +1242,7 @@ PeekConsoleInputA(IN HANDLE hConsoleInput,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
-                              CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE,
+                              CONSOLE_READ_NOREMOVE | CONSOLE_READ_NOWAIT,
                               FALSE);
 }
 

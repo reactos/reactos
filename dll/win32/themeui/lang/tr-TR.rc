@@ -7,8 +7,8 @@ BEGIN
     IDS_GOLIVE "Yeşil Zeytin" //Spruce
     IDS_HCONTRAST_1 "Yüksek Karşıtlık 1"
     IDS_HCONTRAST_2 "Yüksek Karşıtlık 2"
-    IDS_HCONTRAST_BLACK "Yüksek Karşıtlık Kara"
-    IDS_HCONTRAST_WHITE "Yüksek Karşıtlık Ak"
+    IDS_HCONTRAST_BLACK "Beyaz Temelli Yüksek Karşıtlık"
+    IDS_HCONTRAST_WHITE "Siyah Temelli Yüksek Karşıtlık"
     IDS_LILAC "Leylak"
     IDS_MAPLE "Akçaağaç"
     IDS_MARINE "Deniz"
@@ -16,8 +16,8 @@ BEGIN
     IDS_PUMPKIN "Kabak"
     IDS_RAIN "Yağmurlu Gün"
     IDS_RWB "Red, White, and Blue"
-    IDS_CLASSIC "ReactOS Kökleşik"
-    IDS_STANDARD "ReactOS Ölçünlü"
+    IDS_CLASSIC "ReactOS Klasik"
+    IDS_STANDARD "ReactOS Standart"
     IDS_ROSE "Gül"
     IDS_SAND "Kum" //Desert
     IDS_SLATE "Kayağan Taş"
@@ -30,6 +30,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_SIZE_NORMAL "Normal"
-    IDS_SIZE_LARGE "Large"
-    IDS_SIZE_XLARGE "Extra Large"
+    IDS_SIZE_LARGE "Büyük"
+    IDS_SIZE_XLARGE "Daha da Büyük"
 END

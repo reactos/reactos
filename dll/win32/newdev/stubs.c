@@ -66,7 +66,7 @@ DiShowUpdateDevice(
         SetLastError(ERROR_INVALID_FLAGS);
         return FALSE;
     }
- 
+
     UNIMPLEMENTED;
     SetLastError(ERROR_GEN_FAILURE);
     return FALSE;

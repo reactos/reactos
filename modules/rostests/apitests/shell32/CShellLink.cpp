@@ -148,7 +148,7 @@ static WCHAR evVar[MAX_PATH];
         ok(hr == expectedHr,
            "IShellLink::GetPath(%d), flags 0x%lx, got hr = 0x%lx, expected 0x%lx\n",
             i, flags, hr, expectedHr);
-        ok(wcsicmp(wPathOut, expectedPathOut) == 0,
+        ok(_wcsicmp(wPathOut, expectedPathOut) == 0,
            "IShellLink::GetPath(%d), flags 0x%lx, in %S, got %S, expected %S\n",
            i, flags, testDef->pathIn, wPathOut, expectedPathOut);
     }
@@ -296,7 +296,7 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     ok(iIcon == 0, "IShellLink::GetIconLocation(%d) returned %d, expected %d\n", i, iIcon, 0);
 
     /* Try to grab the IExtractIconW interface */
-    hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei)); 
+    hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei));
     ok(hr == S_OK, "IShellLink::QueryInterface(IExtractIconW)(%d) failed, hr = 0x%lx\n", i, hr);
     if (!pei)
     {

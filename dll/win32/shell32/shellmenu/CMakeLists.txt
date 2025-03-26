@@ -4,6 +4,10 @@ add_definitions(
     -DUNICODE
     -D_UNICODE)
 
+if(DBG)
+    add_definitions(-D_DEBUG=1) # CORE-17505
+endif()
+
 list(APPEND SOURCE
     CMenuBand.cpp
     CMenuDeskBar.cpp

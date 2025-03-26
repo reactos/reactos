@@ -31,6 +31,8 @@
 #error _pctype should not be defined
 #endif
 
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 unsigned int __lc_codepage = 0;
 int MSVCRT___lc_collate_cp = 0;
 LCID MSVCRT___lc_handle[LC_MAX - LC_MIN + 1] = { 0 };
@@ -632,7 +634,7 @@ unsigned int CDECL ___lc_codepage_func(void)
 /*********************************************************************
  *      ___lc_collate_cp_func (MSVCRT.@)
  */
-int CDECL ___lc_collate_cp_func(void)
+unsigned int CDECL ___lc_collate_cp_func(void)
 {
     return get_locinfo()->lc_collate_cp;
 }

@@ -25,6 +25,8 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#define FCW_ADDRESSBAR 9 // GetControlWindow/IsControlWindowShown
+
 // Name is IETHREADPARAM according to symbols / mangled function names
 #ifdef _WIN64
 typedef struct IEThreadParamBlock
@@ -60,7 +62,7 @@ typedef struct IEThreadParamBlock
     UCHAR gap108[24];
     DWORD dword120;
     DWORD dword124;
-    IUnknown*                       offsetF8; // 0x128 instance explorer
+    IUnknown*                       pExplorerInstance; // 0x128 instance explorer
     UCHAR byteflags_130;
 } IE_THREAD_PARAM_BLOCK, * PIE_THREAD_PARAM_BLOCK;
 #else
@@ -90,7 +92,7 @@ typedef struct IEThreadParamBlock
     char                            offsetA4[0xD8-0xA4];    // unknown contents -- 0xA4..0xD8
     LONG                            offsetD8;
     char                            offsetDC[0xF8-0xDC];    // unknown contents -- 0xDC..0xF8
-    IUnknown                      * offsetF8;        // instance explorer
+    IUnknown                      * pExplorerInstance;        // instance explorer
     LONG                            offsetFC;        // unknown contents
 } IE_THREAD_PARAM_BLOCK, *PIE_THREAD_PARAM_BLOCK;
 #endif
@@ -98,19 +100,22 @@ typedef struct IEThreadParamBlock
 typedef struct ExplorerCommandLineParseResults
 {
     LPWSTR                  strPath;
+    // TODO: PIDLIST_ABSOLUTE?
     LPITEMIDLIST            pidlPath;
     DWORD                   dwFlags;
     int                     nCmdShow;
-    DWORD                           offset10;
-    DWORD                           offset14;
-    DWORD                           offset18;
-    DWORD                           offset1C;
+    DWORD                   offset10_18;
+    DWORD                   offset14_1C;
+    DWORD                   offset18_20;
+    DWORD                   offset1C_24;
+    // TODO: PIDLIST_ABSOLUTE?
     LPITEMIDLIST            pidlRoot;
     CLSID                   clsid;
     GUID                    guidInproc;
+    // TODO: 'ULONG                   Padding[0x100];'?
 } EXPLORER_CMDLINE_PARSE_RESULTS, *PEXPLORER_CMDLINE_PARSE_RESULTS;
 
-#define SH_EXPLORER_CMDLINE_FLAG_ONE      0x00000001
+#define SH_EXPLORER_CMDLINE_FLAG_NEWWND   0x00000001
 #define SH_EXPLORER_CMDLINE_FLAG_S        0x00000002
 // unknown/unused                         0x00000004
 #define SH_EXPLORER_CMDLINE_FLAG_E        0x00000008
@@ -124,7 +129,7 @@ typedef struct ExplorerCommandLineParseResults
 // unknown/unused                         0x00000800
 #define SH_EXPLORER_CMDLINE_FLAG_NOUI     0x00001000
 // unknown/unused                         0x00002000
-#define SH_EXPLORER_CMDLINE_FLAG_N        0x00004000
+#define SH_EXPLORER_CMDLINE_FLAG_NOREUSE  0x00004000 // Don't use IShellWindows
 // unknown/unused                         0x00008000
 // unknown/unused                         0x00010000
 #define SH_EXPLORER_CMDLINE_FLAG_SEPARATE 0x00020000
@@ -143,8 +148,8 @@ typedef struct ExplorerCommandLineParseResults
 void WINAPI InitOCHostClass(long param8);
 long WINAPI SHOpenFolderWindow(PIE_THREAD_PARAM_BLOCK parameters);
 void WINAPI SHCreateSavedWindows(void);
-BOOL WINAPI SHCreateFromDesktop(PEXPLORER_CMDLINE_PARSE_RESULTS parseResults);
-UINT_PTR WINAPI SHExplorerParseCmdLine(PEXPLORER_CMDLINE_PARSE_RESULTS pParseResults);
+BOOL WINAPI SHCreateFromDesktop(_In_ PEXPLORER_CMDLINE_PARSE_RESULTS parseResults);
+UINT_PTR WINAPI SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo);
 void WINAPI UEMRegisterNotify(long param8, long paramC);
 HRESULT WINAPI SHCreateBandForPidl(LPCITEMIDLIST param8, IUnknown *paramC, BOOL param10);
 HRESULT WINAPI SHPidlFromDataObject(IDataObject *param8, long *paramC, long param10, FILEDESCRIPTORW *param14);

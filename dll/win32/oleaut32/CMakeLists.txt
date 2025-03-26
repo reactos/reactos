@@ -49,10 +49,16 @@ add_library(oleaut32 MODULE
     oleaut32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
+if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    # Disable warning C4267: 'initializing': conversion from 'size_t' to 'BYTE', possible loss of data
+    target_compile_options(oleaut32 PRIVATE /wd4146 /wd4267)
+endif()
+
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)
-target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB})
+target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB} oldnames)
 add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_pch(oleaut32 precomp.h "${PCH_SKIP_SOURCE}")

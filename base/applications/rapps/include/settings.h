@@ -1,5 +1,5 @@
 #pragma once
-#include <windef.h>
+
 #include <wininet.h>
 
 struct SETTINGS_INFO
@@ -9,6 +9,7 @@ struct SETTINGS_INFO
     BOOL bLogEnabled;
     WCHAR szDownloadDir[MAX_PATH];
     BOOL bDelInstaller;
+    BOOL bSmallIcons;
     /* Window Pos */
     BOOL Maximized;
     INT Left;

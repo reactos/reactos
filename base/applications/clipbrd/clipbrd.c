@@ -32,7 +32,7 @@ static void SaveClipboardToFile(void)
     sfn.lpstrFilter = szFilterMask;
     sfn.lpstrFile = szFileName;
     sfn.nMaxFile = ARRAYSIZE(szFileName);
-    sfn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    sfn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
     sfn.lpstrDefExt = L"clp";
 
     if (!GetSaveFileNameW(&sfn))
@@ -248,13 +248,11 @@ static int OnCommand(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case CMD_ABOUT:
         {
-            HICON hIcon;
             WCHAR szTitle[MAX_STRING_LEN];
 
-            hIcon = LoadIconW(Globals.hInstance, MAKEINTRESOURCE(CLIPBRD_ICON));
             LoadStringW(Globals.hInstance, STRING_CLIPBOARD, szTitle, ARRAYSIZE(szTitle));
-            ShellAboutW(Globals.hMainWnd, szTitle, NULL, hIcon);
-            DeleteObject(hIcon);
+            ShellAboutW(Globals.hMainWnd, szTitle, NULL,
+                        LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(CLIPBRD_ICON)));
             break;
         }
 
@@ -357,6 +355,13 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
                 GlobalFree(hglb);
             }
+            break;
+        }
+
+        case CF_HDROP:
+        {
+            GetClientRect(hWnd, &rc);
+            HDropFromClipboard(hdc, &rc);
             break;
         }
 

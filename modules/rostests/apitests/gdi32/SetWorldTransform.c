@@ -63,7 +63,9 @@ void Test_SetWorldTransform()
     xform.eM22 = 1;
     ok(xform.eM12 != (FLOAT)1.0, "xform.eM12 shouldn't be 1.0\n");
     ok(xform.eM21 != (FLOAT)1.0, "xform.eM21 shouldn't be 1.0\n");
+#if 0 // FIXME: x86 uses 80 bits internally, so the result doesn't reflect the actual FLOAT result
     ok(xform.eM12 * xform.eM21 != (FLOAT)1.0, "xform.eM12 * xform.eM21 shouldn't be 1.0\n");
+#endif
     result = SetWorldTransform(hdc, &xform);
     ok(result == 0, "SetWorldTransform should fail\n");
 
@@ -82,7 +84,9 @@ void Test_SetWorldTransform()
     xform.eM22 = 1.17549435e-38f;
     ok(xform.eM11 != (FLOAT)0.0, "xform.eM11 shouldn't be 0.0\n");
     ok(xform.eM22 != (FLOAT)0.0, "xform.eM22 shouldn't be 0.0\n");
+#if 0 // FIXME: x86 uses 80 bits internally, so the result doesn't reflect the actual FLOAT result
     ok(xform.eM11 * xform.eM22 != (FLOAT)0.0, "xform.eM12 * xform.eM21 shouldn't be 0.0\n");
+#endif
     result = SetWorldTransform(hdc, &xform);
     ok(result == 1, "SetWorldTransform should succeed\n");
 

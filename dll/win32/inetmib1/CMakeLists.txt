@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(inetmib1.dll inetmib1.spec)
 
 list(APPEND SOURCE
-    main.c 
+    main.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetmib1_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetmib1.def)
 

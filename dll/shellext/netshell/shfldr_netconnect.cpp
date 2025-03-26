@@ -2,30 +2,11 @@
  * PROJECT:     ReactOS Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     CNetworkConnections Shell Folder
- * COPYRIGHT:   Copyright 2008 Johannes Anderwald (johannes.anderwald@reactos.org)
- */
-
-/*
- * Network Connections Shell Folder
- *
- * Copyright 2008       Johannes Anderwald <johannes.anderwald@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * COPYRIGHT:   Copyright 2008 Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
 #include "precomp.h"
+#include <shellfolderutils.h>
 
 #define MAX_PROPERTY_SHEET_PAGE (10)
 
@@ -119,11 +100,26 @@ HRESULT WINAPI CNetworkConnections::BindToStorage(
 /**************************************************************************
 * 	ISF_NetConnect_fnCompareIDs
 */
-
 HRESULT WINAPI CNetworkConnections::CompareIDs(
                LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    return E_NOTIMPL;
+    const UINT colcount = NETCONNECTSHELLVIEWCOLUMNS;
+
+    if (ILGetNext(pidl1) || ILGetNext(pidl2))
+        return E_NOTIMPL; // FIXME: Can the connection folder have subfolders?
+
+    if (lParam & SHCIDS_CANONICALONLY)
+    {
+        PNETCONIDSTRUCT p1 = ILGetConnData(pidl1);
+        PNETCONIDSTRUCT p2 = ILGetConnData(pidl2);
+        if (p1 && p2)
+        {
+            int res = memcmp(&p1->guidId, &p2->guidId, sizeof(GUID));
+            return MAKE_COMPARE_HRESULT(res);
+        }
+    }
+    IShellFolder2 *psf = static_cast<IShellFolder2*>(this);
+    return ShellFolderImpl_CompareItemIDs<colcount, -1>(psf, lParam, (PCUITEMID_CHILD)pidl1, (PCUITEMID_CHILD)pidl2);
 }
 
 /**************************************************************************
@@ -160,6 +156,7 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
                UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
     //IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    // FIXME: Why are these reporting SFGAO_FILESYSTEM and SFGAO_FILESYSANCESTOR?
     HRESULT hr = S_OK;
     static const DWORD dwNetConnectAttributes = SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
@@ -175,6 +172,9 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
 
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
+
+    if (cidl > 1)
+        *rgfInOut &= ~SFGAO_HASPROPSHEET;
 
     if (cidl == 0)
     {
@@ -256,7 +256,7 @@ HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD
     PWCHAR pwchName = ILGetConnName(pidl);
     if (!pwchName)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_INVALIDARG;
     }
 
@@ -290,9 +290,12 @@ HRESULT WINAPI CNetworkConnections::SetNameOf (
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    *pPidlOut = ILCreateNetConnectItem(pCon);
-    if (*pPidlOut == NULL)
-        return E_FAIL;
+    if (pPidlOut)
+    {
+        *pPidlOut = ILCreateNetConnectItem(pCon);
+        if (*pPidlOut == NULL)
+            return E_FAIL;
+    }
 
     return S_OK;
 }
@@ -363,17 +366,17 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
         case COLUMN_STATUS:
             switch(pdata->Status)
             {
-                case NCS_HARDWARE_DISABLED: 
+                case NCS_HARDWARE_DISABLED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_NON_OPERATIONAL);
-                case NCS_DISCONNECTED: 
+                case NCS_DISCONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_UNREACHABLE);
-                case NCS_MEDIA_DISCONNECTED: 
+                case NCS_MEDIA_DISCONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_DISCONNECTED);
-                case NCS_CONNECTING: 
+                case NCS_CONNECTING:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTING);
-                case NCS_CONNECTED: 
+                case NCS_CONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTED);
-                default: 
+                default:
                     return SHSetStrRet(&psd->str, "");
             }
             break;
@@ -473,7 +476,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -511,7 +514,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     if (pdata->Status == NCS_CONNECTED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_DEFAULT);
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
@@ -542,7 +545,7 @@ ShowNetConnectionStatus(
     PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -627,19 +630,30 @@ ShowNetConnectionProperties(
 */
 HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    UINT CmdId;
+    UINT CmdId = LOWORD(lpcmi->lpVerb) + IDS_NET_ACTIVATE;
 
     /* We should get this when F2 is pressed in explorer */
-    if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
-        lpcmi->lpVerb = MAKEINTRESOURCEA(IDS_NET_RENAME);
-
-    if (HIWORD(lpcmi->lpVerb) || LOWORD(lpcmi->lpVerb) > 7)
+    if (!IS_INTRESOURCE(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
+    {
+        CmdId = IDS_NET_RENAME;
+    }
+    else if (!IS_INTRESOURCE(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "properties"))
+    {
+        CmdId = IDS_NET_PROPERTIES;
+    }
+    else if ((UINT_PTR)lpcmi->lpVerb == FCIDM_SHVIEW_RENAME) // DefView accelerator
+    {
+        CmdId = IDS_NET_RENAME;
+    }
+    else if ((UINT_PTR)lpcmi->lpVerb == FCIDM_SHVIEW_PROPERTIES) // DefView accelerator
+    {
+        CmdId = IDS_NET_PROPERTIES;
+    }
+    else if (!IS_INTRESOURCE(lpcmi->lpVerb) || LOWORD(lpcmi->lpVerb) > 7)
     {
         FIXME("Got invalid command\n");
         return E_NOTIMPL;
     }
-
-    CmdId = LOWORD(lpcmi->lpVerb) + IDS_NET_ACTIVATE;
 
     switch(CmdId)
     {
@@ -647,7 +661,7 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         {
             HRESULT hr;
             CComPtr<IShellView> psv;
-            hr = IUnknown_QueryService(m_pUnknown, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+            hr = IUnknown_QueryService(m_pUnknown, SID_SFolderView, IID_PPV_ARG(IShellView, &psv));
             if (SUCCEEDED(hr))
             {
                 SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
@@ -758,7 +772,7 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
     PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -791,7 +805,7 @@ HRESULT WINAPI CNetworkConnections::GetClassID(CLSID *lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = CLSID_ConnectionFolder;
+    *lpClassId = CLSID_NetworkConnections;
 
     return S_OK;
 }
@@ -832,7 +846,7 @@ HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
     PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 

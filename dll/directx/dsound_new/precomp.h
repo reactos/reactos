@@ -15,8 +15,6 @@
 #include <dsconf.h>
 #include <vfwmsgs.h>
 #include <setupapi.h>
-#define YDEBUG
-#include <debug.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include <limits.h>
@@ -24,6 +22,8 @@
 
 #include "resource.h"
 
+// #define NDEBUG
+#include <debug.h>
 
 /* factory method */
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
@@ -34,7 +34,6 @@ typedef struct
     REFIID riid;
     LPFNCREATEINSTANCE lpfnCI;
 } INTERFACE_TABLE;
-
 
 typedef struct tagFILTERINFO
 {
@@ -68,12 +67,11 @@ extern LPFILTERINFO RootInfo;
 
 /* classfactory.c */
 
-IClassFactory * 
+IClassFactory *
 IClassFactory_fnConstructor(
-    LPFNCREATEINSTANCE lpfnCI, 
-    PLONG pcRefDll, 
+    LPFNCREATEINSTANCE lpfnCI,
+    PLONG pcRefDll,
     REFIID riidInst);
-
 
 /* devicelist.c */
 
@@ -83,12 +81,12 @@ EnumAudioDeviceInterfaces(
 
 BOOL
 FindDeviceByGuid(
-    LPCGUID pGuidSrc, 
+    LPCGUID pGuidSrc,
     LPFILTERINFO *Filter);
 
 BOOL
 FindDeviceByMappedId(
-    IN ULONG DeviceID, 
+    IN ULONG DeviceID,
     LPFILTERINFO *Filter,
     BOOL bPlayback);
 
@@ -106,7 +104,6 @@ NewDirectSound(
     IUnknown* pUnkOuter,
     REFIID riid,
     LPVOID* ppvObject);
-
 
 /* misc.c */
 
@@ -136,7 +133,6 @@ CreateCompatiblePin(
     OUT LPWAVEFORMATEX WaveFormatOut,
     OUT PHANDLE hPin);
 
-
 DWORD
 SyncOverlappedDeviceIoControl(
     IN  HANDLE Handle,
@@ -152,7 +148,6 @@ PrimaryDirectSoundBuffer_Write(
     LPDIRECTSOUNDBUFFER8 iface,
     LPVOID Buffer,
     DWORD  BufferSize);
-
 
 DWORD
 OpenPin(
@@ -229,6 +224,7 @@ NewSecondarySoundBuffer(
     LPDIRECTSOUNDBUFFER8 PrimaryBuffer);
 
 /* property.c */
+
 HRESULT
 CALLBACK
 NewKsPropertySet(
@@ -245,8 +241,8 @@ NewDirectSoundCapture(
     REFIID riid,
     LPVOID* ppvObject);
 
-
 /* capturebuffer.c */
+
 HRESULT
 NewDirectSoundCaptureBuffer(
     LPDIRECTSOUNDCAPTUREBUFFER8 *OutBuffer,
@@ -254,6 +250,7 @@ NewDirectSoundCaptureBuffer(
     LPCDSCBUFFERDESC lpcDSBufferDesc);
 
 /* notify.c */
+
 VOID
 DoNotifyPositionEvents(
     LPDIRECTSOUNDNOTIFY iface,

@@ -130,14 +130,7 @@ HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl,
                                          REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
-
-    PCITEMID_CHILD pidlLast;
-    CComPtr<IShellFolder> pFolder;
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlLast);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = pFolder->GetUIObjectOf(hwnd, 1, &pidlLast, riid, NULL, ppvOut);
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(hwnd, pidl, riid, ppvOut);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -244,6 +237,7 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     {
         CStringW strNone(MAKEINTRESOURCEW(IDS_NONE));
         AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, strNone);
+        ++idCmd;
     }
 
     return idCmd - idCmdFirst;
@@ -294,6 +288,9 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
+    if (uFlags & (CMF_NOVERBS | CMF_VERBSONLY))
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst);
+
     HMENU hSubMenu = CreateMenu();
     if (!hSubMenu)
     {
@@ -323,7 +320,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     m_hSubMenu = hSubMenu;
     DestroyMenu(hOldSubMenu);
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cItems);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst + cItems);
 }
 
 STDMETHODIMP

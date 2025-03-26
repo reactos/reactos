@@ -71,6 +71,17 @@ typedef struct _PDEV
 #define ALLOC_TAG	'FUBF'
 
 
+BOOL APIENTRY
+DrvEnableDirectDraw(
+    DHPDEV dhpdev,
+    DD_CALLBACKS *pCallbacks,
+    DD_SURFACECALLBACKS *pSurfaceCallbacks,
+    DD_PALETTECALLBACKS *pPaletteCallbacks);
+
+VOID APIENTRY
+DrvDisableDirectDraw(
+    DHPDEV dhpdev);
+
 DHPDEV APIENTRY
 DrvEnablePDEV(
    IN DEVMODEW *pdm,

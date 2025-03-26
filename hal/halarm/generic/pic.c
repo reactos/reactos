@@ -92,13 +92,13 @@ UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
 VOID
 HalpInitializeInterrupts(VOID)
 {
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPCR Pcr = KeGetPcr();
 
     /* Fill out the IRQL mappings */
     RtlCopyMemory(Pcr->IrqlTable, HalpIrqlTable, sizeof(Pcr->IrqlTable));
     RtlCopyMemory(Pcr->IrqlMask, HalpMaskTable, sizeof(Pcr->IrqlMask));
 }
-    
+
 /* IRQL MANAGEMENT ************************************************************/
 
 /*
@@ -108,7 +108,7 @@ ULONG
 HalGetInterruptSource(VOID)
 {
     ULONG InterruptStatus;
-    
+
     /* Get the interrupt status, and return the highest bit set */
     InterruptStatus = READ_REGISTER_ULONG(VIC_INT_STATUS);
     return 31 - _clz(InterruptStatus);
@@ -134,11 +134,11 @@ KeRaiseIrqlToDpcLevel(VOID)
 {
     PKPCR Pcr = KeGetPcr();
     KIRQL CurrentIrql;
-    
+
     /* Save and update IRQL */
     CurrentIrql = Pcr->Irql;
     Pcr->Irql = DISPATCH_LEVEL;
-    
+
 #ifdef IRQL_DEBUG
     /* Validate correct raise */
     if (CurrentIrql > DISPATCH_LEVEL) KeBugCheck(IRQL_NOT_GREATER_OR_EQUAL);
@@ -157,11 +157,11 @@ KeRaiseIrqlToSynchLevel(VOID)
 {
     PKPCR Pcr = KeGetPcr();
     KIRQL CurrentIrql;
-    
+
     /* Save and update IRQL */
     CurrentIrql = Pcr->Irql;
     Pcr->Irql = SYNCH_LEVEL;
-    
+
 #ifdef IRQL_DEBUG
     /* Validate correct raise */
     if (CurrentIrql > SYNCH_LEVEL)
@@ -187,17 +187,17 @@ FASTCALL
 KfRaiseIrql(IN KIRQL NewIrql)
 {
     ARM_STATUS_REGISTER Flags;
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPCR Pcr = KeGetPcr();
     KIRQL CurrentIrql;
     ULONG InterruptMask;
-    
+
     /* Disable interrupts */
     Flags = KeArmStatusRegisterGet();
     _disable();
 
     /* Read current IRQL */
     CurrentIrql = Pcr->Irql;
-    
+
 #ifdef IRQL_DEBUG
     /* Validate correct raise */
     if (CurrentIrql > NewIrql)
@@ -209,17 +209,17 @@ KfRaiseIrql(IN KIRQL NewIrql)
 #endif
     /* Clear interrupts associated to the old IRQL */
     WRITE_REGISTER_ULONG(VIC_INT_CLEAR, 0xFFFFFFFF);
-    
+
     /* Set the new interrupt mask */
     InterruptMask = Pcr->IrqlTable[NewIrql];
     WRITE_REGISTER_ULONG(VIC_INT_ENABLE, InterruptMask);
 
     /* Set new IRQL */
     Pcr->Irql = NewIrql;
-    
+
     /* Restore interrupt state */
     if (!Flags.IrqDisable) _enable();
-    
+
     /* Return old IRQL */
     return CurrentIrql;
 }
@@ -232,13 +232,13 @@ FASTCALL
 KfLowerIrql(IN KIRQL NewIrql)
 {
     ARM_STATUS_REGISTER Flags;
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPCR Pcr = KeGetPcr();
     ULONG InterruptMask;
 
     /* Disableinterrupts */
     Flags = KeArmStatusRegisterGet();
     _disable();
-    
+
 #ifdef IRQL_DEBUG
     /* Validate correct lower */
     if (OldIrql > Pcr->Irql)
@@ -251,11 +251,11 @@ KfLowerIrql(IN KIRQL NewIrql)
 
     /* Clear interrupts associated to the old IRQL */
     WRITE_REGISTER_ULONG(VIC_INT_CLEAR, 0xFFFFFFFF);
-    
+
     /* Set the new interrupt mask */
     InterruptMask = Pcr->IrqlTable[NewIrql];
     WRITE_REGISTER_ULONG(VIC_INT_ENABLE, InterruptMask);
-    
+
     /* Save the new IRQL and restore interrupt state */
     Pcr->Irql = NewIrql;
     if (!Flags.IrqDisable) _enable();

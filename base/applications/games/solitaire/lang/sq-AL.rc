@@ -56,7 +56,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire nga J Brown\n\nCardLib version 1.0."
+    IDS_SOL_ABOUT "Solitaire nga J Brown\nCardLib version 1.0"
     IDS_SOL_QUIT "Largohu Nga Loja?"
     IDS_SOL_WIN "Urime, keni fituar!"
     IDS_SOL_DEAL "Fillo Perseri?"
@@ -72,6 +72,7 @@ BEGIN
     BEGIN
         MENUITEM "&Ndaj Letrat\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "Pa&ko...", IDM_GAME_DECK
         MENUITEM "&Opsione...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -6,7 +6,7 @@
  * This file is part of the w32api package.
  *
  * Contributors:
- *   Created by Hervé Poussineau <hpoussin@reactos.org>
+ *   Created by HervÃ© Poussineau <hpoussin@reactos.org>
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *
@@ -201,29 +201,29 @@ typedef enum
 
 typedef IDE_CHANNEL_STATE
 (NTAPI *PCIIDE_CHANNEL_ENABLED)(
-  IN PVOID DeviceExtension,
-  IN ULONG Channel);
+    _In_ PVOID DeviceExtension,
+    _In_ ULONG Channel);
 
 typedef BOOLEAN
 (NTAPI *PCIIDE_SYNC_ACCESS_REQUIRED)(
-  IN PVOID DeviceExtension);
+    _In_ PVOID DeviceExtension);
 
 typedef NTSTATUS
 (NTAPI *PCIIDE_TRANSFER_MODE_SELECT_FUNC)(
-  IN PVOID DeviceExtension,
-  IN OUT PPCIIDE_TRANSFER_MODE_SELECT XferMode);
+    _In_ PVOID DeviceExtension,
+    _Inout_ PPCIIDE_TRANSFER_MODE_SELECT XferMode);
 
 typedef ULONG
 (NTAPI *PCIIDE_USEDMA_FUNC)(
-  IN PVOID DeviceExtension,
-  IN PUCHAR CdbCommand,
-  IN PUCHAR Slave);
+    _In_ PVOID DeviceExtension,
+    _In_ PUCHAR CdbCommand,
+    _In_ PUCHAR Slave);
 
 typedef NTSTATUS
 (NTAPI *PCIIDE_UDMA_MODES_SUPPORTED)(
-  IN IDENTIFY_DATA IdentifyData,
-  OUT PULONG BestXferMode,
-  OUT PULONG CurrentXferMode);
+    _In_ IDENTIFY_DATA IdentifyData,
+    _Out_ PULONG BestXferMode,
+    _Out_ PULONG CurrentXferMode);
 
 typedef struct _IDE_CONTROLLER_PROPERTIES
 {
@@ -243,30 +243,31 @@ typedef struct _IDE_CONTROLLER_PROPERTIES
 
 typedef NTSTATUS
 (NTAPI *PCONTROLLER_PROPERTIES)(
-  IN PVOID DeviceExtension,
-  IN PIDE_CONTROLLER_PROPERTIES ControllerProperties);
+    _In_ PVOID DeviceExtension,
+    _In_ PIDE_CONTROLLER_PROPERTIES ControllerProperties);
 
+CODE_SEG("PAGE")
 NTSTATUS NTAPI
 PciIdeXInitialize(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PUNICODE_STRING RegistryPath,
-  IN PCONTROLLER_PROPERTIES HwGetControllerProperties,
-  IN ULONG ExtensionSize);
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath,
+    _In_ PCONTROLLER_PROPERTIES HwGetControllerProperties,
+    _In_ ULONG ExtensionSize);
 
 NTSTATUS NTAPI
 PciIdeXGetBusData(
-  IN PVOID DeviceExtension,
-  IN PVOID Buffer,
-  IN ULONG ConfigDataOffset,
-  IN ULONG BufferLength);
+    _In_ PVOID DeviceExtension,
+    _Out_writes_bytes_all_(BufferLength) PVOID Buffer,
+    _In_ ULONG ConfigDataOffset,
+    _In_ ULONG BufferLength);
 
 NTSTATUS NTAPI
 PciIdeXSetBusData(
-  IN PVOID DeviceExtension,
-  IN PVOID Buffer,
-  IN PVOID DataMask,
-  IN ULONG ConfigDataOffset,
-  IN ULONG BufferLength);
+    _In_ PVOID DeviceExtension,
+    _In_reads_bytes_(BufferLength) PVOID Buffer,
+    _In_reads_bytes_(BufferLength) PVOID DataMask,
+    _In_ ULONG ConfigDataOffset,
+    _In_ ULONG BufferLength);
 
 /* Bit field values for
  * PCIIDE_TRANSFER_MODE_SELECT.DeviceTransferModeSupported and

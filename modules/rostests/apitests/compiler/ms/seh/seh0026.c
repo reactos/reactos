@@ -8,7 +8,6 @@
 #include "seh.h"
 
 char test[] = "SEH0026.c";
-int perfect;
 
 void dojump(jmp_buf JumpBuffer, PLONG Counter) {
   try {

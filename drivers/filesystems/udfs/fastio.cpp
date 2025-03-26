@@ -60,7 +60,7 @@ UDFFastIoCheckIfPossible(
     ASSERT(Ccb);
     Fcb = Ccb->Fcb;
     ASSERT(Fcb);
-    
+
     // Validate that this is a fast-IO request to a regular file.
     // The UDF FSD for example, will not allow fast-IO requests
     // to volume objects, or to directories.
@@ -79,13 +79,13 @@ UDFFastIoCheckIfPossible(
     }
 */
     IoLength.QuadPart = Length;
-    
+
     // The FSD can determine the checks that it needs to perform.
     // Typically, a FSD will check whether there exist any byte-range
     // locks that would prevent a fast-IO operation from proceeding.
-    
+
     // ... (FSD specific checks go here).
-    
+
     if (CheckForReadOperation) {
         // The following routine is exported by the FSRTL
         // package and it returns TRUE if the read operation should be
@@ -104,7 +104,7 @@ UDFFastIoCheckIfPossible(
                               FileOffset, &IoLength, LockKey, FileObject,
                               PsGetCurrentProcess());
     }
-    
+
     MmPrint(("    UDFFastIoCheckIfPossible() %s\n", ReturnedStatus ? "TRUE" : "FALSE"));
     return(ReturnedStatus);
 //    return FALSE;
@@ -223,7 +223,7 @@ try_exit: NOTHING;
             IoStatus->Information = 0;
         }
     } _SEH2_END;
-    
+
     FsRtlExitFileSystem();
 
     return(ReturnedStatus);
@@ -280,7 +280,7 @@ UDFFastIoQueryStdInfo(
 //            NtReqFcb = Fcb->NTRequiredFCB;
             //Fcb->Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
 
-/*                
+/*
             if (!(Fcb->FCBFlags & UDF_FCB_PAGE_FILE)) {
                 // Acquire the MainResource shared.
                 UDF_CHECK_PAGING_IO_RESOURCE(NtReqFcb);
@@ -302,7 +302,7 @@ UDFFastIoQueryStdInfo(
         } _SEH2_END;
 //try_exit: NOTHING;
     } _SEH2_FINALLY {
-/*        
+/*
         if (MainResourceAcquired) {
             UDFReleaseResource(&(NtReqFcb->MainResource));
             MainResourceAcquired = FALSE;
@@ -315,7 +315,7 @@ UDFFastIoQueryStdInfo(
             IoStatus->Information = 0;
         }
     } _SEH2_END;
-    
+
     FsRtlExitFileSystem();
 
     return(ReturnedStatus);
@@ -344,7 +344,7 @@ UDFFastIoAcqCreateSec(
     )
 {
     PtrUDFNTRequiredFCB NtReqFcb = (PtrUDFNTRequiredFCB)(FileObject->FsContext);
-    
+
     MmPrint(("  AcqForCreateSection()\n"));
     // Acquire the MainResource exclusively for the file stream
     if(!ExIsResourceAcquiredExclusiveLite(&(NtReqFcb->MainResource)) ||
@@ -388,7 +388,7 @@ UDFFastIoRelCreateSec(
     IN PFILE_OBJECT FileObject)
 {
     PtrUDFNTRequiredFCB NtReqFcb = (PtrUDFNTRequiredFCB)(FileObject->FsContext);
-    
+
     MmPrint(("  RelFromCreateSection()\n"));
 
     NtReqFcb->AcqSectionCount--;
@@ -664,7 +664,7 @@ try_exit: NOTHING;
             IoStatus->Information = 0;
         }
     } _SEH2_END;
-    
+
     FsRtlExitFileSystem();
 
     return(ReturnedStatus);
@@ -704,16 +704,16 @@ IN PDEVICE_OBJECT           DeviceObject)
     _SEH2_TRY {
 
         _SEH2_TRY {
-    
+
             // See description in UDFFastIoRead() before filling-in the
             // stub here.
             NOTHING;
-    
-    
+
+
         } __except (UDFExceptionFilter(PtrIrpContext, GetExceptionInformation())) {
-    
+
             RC = UDFExceptionHandler(PtrIrpContext, NULL);
-    
+
             UDFLogEvent(UDF_ERROR_INTERNAL_ERROR, RC);
 
         }
@@ -723,7 +723,7 @@ IN PDEVICE_OBJECT           DeviceObject)
     } _SEH2_FINALLY {
 
     }
-    
+
     FsRtlExitFileSystem();
 
     return(ReturnedStatus);
@@ -760,15 +760,15 @@ IN PDEVICE_OBJECT               DeviceObject)
     _SEH2_TRY {
 
         _SEH2_TRY {
-    
+
             // See description in UDFFastIoRead() before filling-in the
             // stub here.
             NOTHING;
-        
+
         } __except (UDFExceptionFilter(PtrIrpContext, GetExceptionInformation())) {
-    
+
             RC = UDFExceptionHandler(PtrIrpContext, NULL);
-    
+
             UDFLogEvent(UDF_ERROR_INTERNAL_ERROR, RC);
 
         }
@@ -778,7 +778,7 @@ IN PDEVICE_OBJECT               DeviceObject)
     } _SEH2_FINALLY {
 
     }
-    
+
     FsRtlExitFileSystem();
 
     return(ReturnedStatus);
@@ -819,15 +819,15 @@ UDFFastIoPrepareMdlWrite(
     _SEH2_TRY {
 
         _SEH2_TRY {
-    
+
             // See description in UDFFastIoRead() before filling-in the
             // stub here.
             NOTHING;
-        
+
         } __except (UDFExceptionFilter(PtrIrpContext, GetExceptionInformation())) {
-    
+
             RC = UDFExceptionHandler(PtrIrpContext, NULL);
-    
+
             UDFLogEvent(UDF_ERROR_INTERNAL_ERROR, RC);
 
         }
@@ -837,7 +837,7 @@ UDFFastIoPrepareMdlWrite(
     } _SEH2_FINALLY {
 
     }
-    
+
     FsRtlExitFileSystem();
 
     return(ReturnedStatus);
@@ -875,15 +875,15 @@ IN PDEVICE_OBJECT               DeviceObject)
     _SEH2_TRY {
 
         _SEH2_TRY {
-    
+
             // See description in UDFFastIoRead() before filling-in the
             // stub here.
             NOTHING;
-        
+
         } __except (UDFExceptionFilter(PtrIrpContext, GetExceptionInformation())) {
-    
+
             RC = UDFExceptionHandler(PtrIrpContext, NULL);
-    
+
             UDFLogEvent(UDF_ERROR_INTERNAL_ERROR, RC);
 
         }
@@ -893,7 +893,7 @@ IN PDEVICE_OBJECT               DeviceObject)
     } _SEH2_FINALLY {
 
     }
-    
+
     FsRtlExitFileSystem();
 
     return(ReturnedStatus);
@@ -1048,7 +1048,7 @@ UDFFastIoAcqCcFlush(
 
     // Acquire appropriate resources that will allow correct synchronization
     // with a flush call (and avoid deadlock).
-    
+
 #define NtReqFcb ((PtrUDFNTRequiredFCB)(FileObject->FsContext))
 
 //    UDFAcquireResourceExclusive(&(NtReqFcb->MainResource), TRUE);

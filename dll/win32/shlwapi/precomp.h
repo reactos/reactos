@@ -20,13 +20,16 @@
 #include <wingdi.h>
 #include <wincon.h>
 #include <winternl.h>
-#define NO_SHLWAPI_STREAM
 #define NO_SHLWAPI_USER
 #include <shlwapi.h>
 #include <shlobj.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+
+#ifdef __REACTOS__
+EXTERN_C HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt);
+#endif
 
 #include "resource.h"
 

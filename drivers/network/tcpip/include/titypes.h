@@ -29,44 +29,26 @@
 }
 
 /*
- * VOID LockObject(PVOID Object, PKIRQL OldIrql)
+ * VOID LockObject(PVOID Object)
  */
-#define LockObject(Object, Irql)                         \
-{                                                        \
-    ReferenceObject(Object);                             \
-    KeAcquireSpinLock(&((Object)->Lock), Irql);          \
-    memcpy(&(Object)->OldIrql, Irql, sizeof(KIRQL));     \
-}
+#define LockObject(Object) do                                   \
+{                                                               \
+    ReferenceObject(Object);                                    \
+    KeEnterCriticalRegion();                                    \
+    ExAcquireResourceExclusiveLite(&(Object)->Resource, TRUE);  \
+} while(0)
 
 /*
- * VOID LockObjectAtDpcLevel(PVOID Object)
+ * VOID UnlockObject(PVOID Object)
  */
-#define LockObjectAtDpcLevel(Object)                     \
-{                                                        \
-    ReferenceObject(Object);                             \
-    KeAcquireSpinLockAtDpcLevel(&((Object)->Lock));      \
-    (Object)->OldIrql = DISPATCH_LEVEL;                  \
-}
-
-/*
- * VOID UnlockObject(PVOID Object, KIRQL OldIrql)
- */
-#define UnlockObject(Object, OldIrql)                       \
+#define UnlockObject(Object) do                             \
 {                                                           \
-    KeReleaseSpinLock(&((Object)->Lock), OldIrql);          \
+    ExReleaseResourceLite(&(Object)->Resource);             \
+    KeLeaveCriticalRegion();                                \
     DereferenceObject(Object);                              \
-}
+} while(0)
 
-/*
- * VOID UnlockObjectFromDpcLevel(PVOID Object)
- */
-#define UnlockObjectFromDpcLevel(Object)                    \
-{                                                           \
-    KeReleaseSpinLockFromDpcLevel(&((Object)->Lock));       \
-    DereferenceObject(Object);                              \
-}
-
-
+#define ASSERT_TCPIP_OBJECT_LOCKED(Object) ASSERT(ExIsResourceAcquiredExclusiveLite(&(Object)->Resource))
 
 #include <ip.h>
 
@@ -131,8 +113,7 @@ typedef struct _ADDRESS_FILE {
     LIST_ENTRY ListEntry;                 /* Entry on list */
     LONG RefCount;                        /* Reference count */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
-    KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
-    KIRQL OldIrql;                        /* Currently not used */
+    ERESOURCE Resource;                   /* Resource to manipulate this structure */
     IP_ADDRESS Address;                   /* Address of this address file */
     USHORT Family;                        /* Address family */
     USHORT Protocol;                      /* Protocol number */
@@ -142,7 +123,6 @@ typedef struct _ADDRESS_FILE {
     UINT DF;                              /* Don't fragment */
     UINT BCast;                           /* Receive broadcast packets */
     UINT HeaderIncl;                      /* Include header in RawIP packets */
-    WORK_QUEUE_ITEM WorkItem;             /* Work queue item handle */
     DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine for delete request */
     PVOID Context;                        /* Delete request context */
     DATAGRAM_SEND_ROUTINE Send;           /* Routine to send a datagram */
@@ -262,8 +242,7 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ListEntry;       /* Entry on list */
     LONG RefCount;              /* Reference count */
     OBJECT_FREE_ROUTINE Free;   /* Routine to use to free resources for the object */
-    KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
-    KIRQL OldIrql;              /* The old irql is stored here for use in HandleSignalledConnection */
+    ERESOURCE Resource;         /* The lock protecting this structure */
     PVOID ClientContext;        /* Pointer to client context information */
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
 
@@ -275,10 +254,11 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ShutdownRequest;/* Queued shutdown requests */
 
     LIST_ENTRY PacketQueue;    /* Queued received packets waiting to be processed */
-    
+
     /* Disconnect Timer */
     KTIMER DisconnectTimer;
     KDPC DisconnectDpc;
+    PIO_WORKITEM DisconnectWorkItem;
 
     /* Socket state */
     BOOLEAN SendShutdown;

@@ -27,17 +27,15 @@
 extern "C" {
 #endif	// __cplusplus
 
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning(push,3)
 #endif
 #include <ntddk.h>
 #include <ntdddisk.h>
 #include <ntverp.h>
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning(pop)
-#endif
 
-#ifdef _MSC_VER
 // disable unwanted (and trivial) warnings :
 //	4054 - type cast from a function pointer to a data pointer
 //	4201 - anonymous structure
@@ -178,6 +176,8 @@ typedef struct _MOUNTMGR_MOUNT_POINTS {
 } MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;
 
 #endif	// (VER_PRODUCTBUILD < 2195)
+
+// __REACTOS__: NTAPI added on some functions in this file, vfddrv.h and some *.c.
 
 #if (VER_PRODUCTBUILD < 2600)
 //

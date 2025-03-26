@@ -58,12 +58,18 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/sefuncs.h>
 #include <ndk/vftypes.h>
+
 #undef TEXT
 #define TEXT(s) L##s
+
+#define _IN_KERNEL_
 #include <regstr.h>
+
 #include <ntstrsafe.h>
 #include <ntpoapi.h>
+#define ENABLE_INTSAFE_SIGNED_FUNCTIONS
 #include <ntintsafe.h>
+#undef ENABLE_INTSAFE_SIGNED_FUNCTIONS
 
 /* C Headers */
 #include <stdlib.h>
@@ -82,13 +88,19 @@
 #define NOEXTAPI
 #include <windbgkd.h>
 #include <wdbgexts.h>
-#ifdef KDBG
-#define KdDebuggerInitialize0 KdpDebuggerInitialize0
-#define KdDebuggerInitialize1 KdpDebuggerInitialize1
-#define KdSendPacket KdpSendPacket
-#define KdReceivePacket KdpReceivePacket
-#endif
 #include <kddll.h>
+#ifdef KDBG
+    /* Define new names for these exports also present in KDBG */
+    #define KdD0Transition          KdbgD0Transition
+    #define KdD3Transition          KdbgD3Transition
+    #define KdSave                  KdbgSave
+    #define KdRestore               KdbgRestore
+    #define KdSendPacket            KdbgSendPacket
+    #define KdReceivePacket         KdbgReceivePacket
+    /* And reload the definitions with these new names */
+    #undef _KDDLL_
+    #include <kddll.h>
+#endif
 #ifdef __ROS_ROSSYM__
 #include <reactos/rossym.h>
 #endif
@@ -121,5 +133,12 @@ C_ASSERT(MAX_WIN32_PATH == MAX_PATH);
 #include <reactos/probe.h>
 #include "internal/probe.h"
 #include "resource.h"
+
+/* Internal Ps alignment probing header */
+#include "internal/ps_i.h"
+
+#ifdef _MSC_VER
+# pragma section("INITDATA", read,write,discard)
+#endif
 
 #endif /* _NTOSKRNL_PCH */

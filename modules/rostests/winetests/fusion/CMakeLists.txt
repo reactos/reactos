@@ -10,7 +10,7 @@ add_executable(fusion_winetest ${SOURCE})
 
 target_compile_definitions(fusion_winetest PRIVATE USE_WINE_TODOS)
 
-if (NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(fusion_winetest PRIVATE -Wno-format-overflow)
 endif()
 

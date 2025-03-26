@@ -1,11 +1,11 @@
 
 #idl files support
 if(ARCH STREQUAL "i386")
-    set(IDL_FLAGS -m32 --win32)
+    set(IDL_FLAGS -m32 --win32 -b i386-x-y)
 elseif(ARCH STREQUAL "amd64")
-    set(IDL_FLAGS -m64 --win64)
+    set(IDL_FLAGS -m64 --win64 -b amd64-x-y)
 else()
-    set(IDL_FLAGS "")
+    set(IDL_FLAGS -b ${ARCH}-x-y)
 endif()
 
 function(add_typelib)
@@ -105,14 +105,13 @@ endfunction()
 
 function(generate_idl_iids)
     foreach(IDL_FILE ${ARGN})
-        get_filename_component(FILE ${IDL_FILE} NAME)
         get_includes(INCLUDES)
         get_defines(DEFINES)
         get_filename_component(NAME ${IDL_FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
             COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -u -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE}
-            DEPENDS ${IDL_FILE_FULL} native-widl
+            DEPENDS ${IDL_FILE} native-widl
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach()
 endfunction()
@@ -135,7 +134,7 @@ function(add_idl_reg_script IDL_FILE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res
         COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -r -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res ${IDL_FILE}
-        DEPENDS ${IDL_FILE_FULL} native-widl
+        DEPENDS ${IDL_FILE} native-widl
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res PROPERTIES
         GENERATED TRUE EXTERNAL_OBJECT TRUE)

@@ -1,7 +1,7 @@
 /*
- * msvfw32 (Simplified and Traditional Chinese Resources)
+ * msvfw32 (Chinese Resources)
  *
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Copyright 2005 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +16,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
-
-/* Chinese text is encoded in UTF-8 */
-#pragma code_page(65001)
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -59,13 +59,13 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    IDS_FULLFRAMES "全幀(未壓縮)"
+    IDS_FULLFRAMES "完整影格（未壓縮）"
 }
 
 ICM_CHOOSE_COMPRESSOR DIALOGEX  36, 24, 210, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "視頻壓縮"
-FONT 9, "宋体"
+CAPTION "視訊壓縮"
+FONT 9, "新細明體"
 {
     DEFPUSHBUTTON "確定",IDOK,154,2,52,14
     PUSHBUTTON "取消",IDCANCEL,154,18,52,14
@@ -73,18 +73,18 @@ FONT 9, "宋体"
     LTEXT "壓縮器(&C):",-1,9,6,135,8
     COMBOBOX IDC_COMP_LIST,9,16,135,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
-    PUSHBUTTON "配置(&F)...",IDC_CONFIGURE,154,36,52,14
+    PUSHBUTTON "設定(&F)...",IDC_CONFIGURE,154,36,52,14
     PUSHBUTTON "關於(&A)...",IDC_ABOUT,154,52,52,14
 
     SCROLLBAR IDC_QUALITY_SCROLL,9,44,135,10,WS_TABSTOP
 
-    LTEXT "壓縮質量(&Q):",IDC_QUALITY_TXT,9,34,135,8
+    LTEXT "壓縮品質(&Q):",IDC_QUALITY_TXT,9,34,135,8
 
-    CONTROL "關鍵幀/每(&K)",IDC_KEYFRAME_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,86,12
+    CONTROL "畫面間隔(&K)",IDC_KEYFRAME_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,86,12
     EDITTEXT IDC_KEYFRAME,98,60,22,12
-    LTEXT "幀",IDC_KEYFRAME_FRAMES,123,62,26,10
+    LTEXT "影格數",IDC_KEYFRAME_FRAMES,123,62,26,10
 
-    CONTROL "數據速度(&D)",IDC_DATARATE_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,86,12
+    CONTROL "資料速率(&D)",IDC_DATARATE_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,86,12
     EDITTEXT IDC_DATARATE,98,76,22,12
     LTEXT "KB/sec",IDC_DATARATE_KB,123,78,26,10
 }

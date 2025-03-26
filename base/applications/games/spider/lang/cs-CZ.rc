@@ -40,7 +40,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider"
-    IDS_SPI_ABOUT "Spider Solitaire vytvořil Gregor Schneider\n\nCardLib verze 1.0"
+    IDS_SPI_ABOUT "Spider Solitaire vytvořil Gregor Schneider\nCardLib verze 1.0"
     IDS_SPI_QUIT "Ukončit hru?"
     IDS_SPI_WIN "Gratulace k výhře!"
     IDS_SPI_DEAL "Rozdat znovu?"

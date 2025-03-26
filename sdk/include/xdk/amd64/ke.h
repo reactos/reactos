@@ -116,7 +116,11 @@ FORCEINLINE
 KIRQL
 KeRaiseIrqlToSynchLevel(VOID)
 {
+#ifdef CONFIG_SMP
     return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+#else
+    return KfRaiseIrql(2); // SYNCH_LEVEL = DISPATCH_LEVEL
+#endif
 }
 
 FORCEINLINE
@@ -272,8 +276,8 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
       M128A Xmm13;
       M128A Xmm14;
       M128A Xmm15;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
+    } DUMMYSTRUCTNAME DECLSPEC_ALIGN(16);
+  } DUMMYUNIONNAME DECLSPEC_ALIGN(16);
   M128A VectorRegister[26];
   ULONG64 VectorControl;
   ULONG64 DebugControl;

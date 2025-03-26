@@ -182,7 +182,7 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Informationen, die Sie suchen immer noch nicht gefunden? Hier sind einige zusätzliche Dinge, die Sie tun können:", IDC_STATIC, 5, 0, 300, 10
+    LTEXT "Information noch nicht gefunden? Hier sind einige zusätzliche Dinge, die Sie tun können:", IDC_STATIC, 5, 0, 300, 10
     PUSHBUTTON "Systeminformationen...", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
     LTEXT "Zeigt zusätzliche Systeminformationen an", IDC_STATIC, 90, 23, 300, 10
     PUSHBUTTON "Außer Kraft setzen...", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED

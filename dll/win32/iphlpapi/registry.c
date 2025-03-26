@@ -84,7 +84,7 @@ PVOID QueryRegistryValue(HANDLE RegHandle, PWCHAR ValueName, LPDWORD RegistryTyp
             HeapFree(GetProcessHeap(), 0, ReadValue);
         }
         else break;
-        
+
         ReadValue = HeapAlloc(GetProcessHeap(), 0, *Length);
         if (!ReadValue) return NULL;
     }
@@ -104,7 +104,7 @@ PVOID QueryRegistryValue(HANDLE RegHandle, PWCHAR ValueName, LPDWORD RegistryTyp
 PWCHAR TerminateReadString(PWCHAR String, DWORD Length)
 {
     PWCHAR TerminatedString;
-    
+
     TerminatedString = HeapAlloc(GetProcessHeap(), 0, Length + sizeof(WCHAR));
     if (TerminatedString == NULL)
         return NULL;
@@ -112,7 +112,7 @@ PWCHAR TerminateReadString(PWCHAR String, DWORD Length)
     memcpy(TerminatedString, String, Length);
 
     TerminatedString[Length / sizeof(WCHAR)] = UNICODE_NULL;
-    
+
     return TerminatedString;
 }
 
@@ -120,7 +120,7 @@ PWCHAR QueryRegistryValueString( HANDLE RegHandle, PWCHAR ValueName )
 {
     PWCHAR String, TerminatedString;
     DWORD Type, Length;
-    
+
     String = QueryRegistryValue(RegHandle, ValueName, &Type, &Length);
     if (!String) return NULL;
     if (Type != REG_SZ)
@@ -129,11 +129,11 @@ PWCHAR QueryRegistryValueString( HANDLE RegHandle, PWCHAR ValueName )
         //HeapFree(GetProcessHeap(), 0, String);
         //return NULL;
     }
-    
+
     TerminatedString = TerminateReadString(String, Length);
     HeapFree(GetProcessHeap(), 0, String);
     if (!TerminatedString) return NULL;
-    
+
     return TerminatedString;
 }
 
@@ -145,7 +145,7 @@ PWCHAR *QueryRegistryValueStringMulti( HANDLE RegHandle, PWCHAR ValueName ) {
     PWCHAR String, TerminatedString, Tmp;
     PWCHAR *Table;
     DWORD Type, Length, i, j;
-    
+
     String = QueryRegistryValue(RegHandle, ValueName, &Type, &Length);
     if (!String) return NULL;
     if (Type != REG_MULTI_SZ)
@@ -154,33 +154,33 @@ PWCHAR *QueryRegistryValueStringMulti( HANDLE RegHandle, PWCHAR ValueName ) {
         //HeapFree(GetProcessHeap(), 0, String);
         //return NULL;
     }
-    
+
     TerminatedString = TerminateReadString(String, Length);
     HeapFree(GetProcessHeap(), 0, String);
     if (!TerminatedString) return NULL;
 
     for (Tmp = TerminatedString, i = 0; *Tmp; Tmp++, i++) while (*Tmp) Tmp++;
-    
+
     Table = HeapAlloc(GetProcessHeap(), 0, (i + 1) * sizeof(PWCHAR));
     if (!Table)
     {
         HeapFree(GetProcessHeap(), 0, TerminatedString);
         return NULL;
     }
-    
+
     for (Tmp = TerminatedString, j = 0; *Tmp; Tmp++, j++)
     {
         PWCHAR Orig = Tmp;
-        
+
         for (i = 0; *Tmp; i++, Tmp++);
-        
+
         Table[j] = HeapAlloc(GetProcessHeap(), 0, i * sizeof(WCHAR));
         memcpy(Table[j], Orig, i * sizeof(WCHAR));
     }
-    
+
     Table[j] = NULL;
-    
+
     HeapFree(GetProcessHeap(), 0, TerminatedString);
-    
+
     return Table;
 }

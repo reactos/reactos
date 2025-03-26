@@ -98,12 +98,13 @@ LdrpMakeCookie(VOID)
  */
 NTSTATUS
 NTAPI
-LdrUnlockLoaderLock(IN ULONG Flags,
-                    IN ULONG Cookie OPTIONAL)
+LdrUnlockLoaderLock(
+    _In_ ULONG Flags,
+    _In_opt_ ULONG_PTR Cookie)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("LdrUnlockLoaderLock(%x %x)\n", Flags, Cookie);
+    DPRINT("LdrUnlockLoaderLock(%x %Ix)\n", Flags, Cookie);
 
     /* Check for valid flags */
     if (Flags & ~LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
@@ -170,9 +171,10 @@ LdrUnlockLoaderLock(IN ULONG Flags,
  */
 NTSTATUS
 NTAPI
-LdrLockLoaderLock(IN ULONG Flags,
-                  OUT PULONG Disposition OPTIONAL,
-                  OUT PULONG_PTR Cookie OPTIONAL)
+LdrLockLoaderLock(
+    _In_ ULONG Flags,
+    _Out_opt_ PULONG Disposition,
+    _Out_opt_ PULONG_PTR Cookie)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN InInit = LdrpInLdrInit;
@@ -307,13 +309,14 @@ LdrLockLoaderLock(IN ULONG Flags,
 NTSTATUS
 NTAPI
 DECLSPEC_HOTPATCH
-LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
-           IN PULONG DllCharacteristics OPTIONAL,
-           IN PUNICODE_STRING DllName,
-           OUT PVOID *BaseAddress)
+LdrLoadDll(
+    _In_opt_ PWSTR SearchPath,
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_ PVOID *BaseAddress)
 {
     WCHAR StringBuffer[MAX_PATH];
-    UNICODE_STRING DllString1, DllString2;
+    UNICODE_STRING StaticString, DynamicString;
     BOOLEAN RedirectedDll = FALSE;
     NTSTATUS Status;
     ULONG_PTR Cookie;
@@ -321,32 +324,10 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
     PTEB Teb = NtCurrentTeb();
 
     /* Initialize the strings */
-    RtlInitEmptyUnicodeString(&DllString1, StringBuffer, sizeof(StringBuffer));
-    RtlInitEmptyUnicodeString(&DllString2, NULL, 0);
+    RtlInitEmptyUnicodeString(&StaticString, StringBuffer, sizeof(StringBuffer));
+    RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
 
-    /* Check if the SxS Assemblies specify another file */
-    Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      DllName,
-                                                      &LdrApiDefaultExtension,
-                                                      &DllString1,
-                                                      &DllString2,
-                                                      &DllName,
-                                                      NULL,
-                                                      NULL,
-                                                      NULL);
-
-    /* Check success */
-    if (NT_SUCCESS(Status))
-    {
-        /* Let Ldrp know */
-        RedirectedDll = TRUE;
-    }
-    else if (Status != STATUS_SXS_KEY_NOT_FOUND)
-    {
-        /* Unrecoverable SxS failure; did we get a string? */
-        if (DllString2.Buffer) RtlFreeUnicodeString(&DllString2);
-        return Status;
-    }
+    Status = LdrpApplyFileNameRedirection(DllName, &LdrApiDefaultExtension, &StaticString, &DynamicString, &DllName, &RedirectedDll);
 
     /* Lock the loader lock */
     LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, NULL, &Cookie);
@@ -424,12 +405,13 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
         LdrpTopLevelDllBeingLoaded = OldTldDll;
 
         /* Release the lock */
-        LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+        LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
     }
     _SEH2_END;
 
     /* Do we have a redirect string? */
-    if (DllString2.Buffer) RtlFreeUnicodeString(&DllString2);
+    if (DynamicString.Buffer)
+        RtlFreeUnicodeString(&DynamicString);
 
     /* Return */
     return Status;
@@ -440,8 +422,9 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
  */
 NTSTATUS
 NTAPI
-LdrFindEntryForAddress(PVOID Address,
-                       PLDR_DATA_TABLE_ENTRY *Module)
+LdrFindEntryForAddress(
+    _In_ PVOID Address,
+    _Out_ PLDR_DATA_TABLE_ENTRY *Module)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -519,15 +502,16 @@ LdrFindEntryForAddress(PVOID Address,
  */
 NTSTATUS
 NTAPI
-LdrGetDllHandleEx(IN ULONG Flags,
-                  IN PWSTR DllPath OPTIONAL,
-                  IN PULONG DllCharacteristics OPTIONAL,
-                  IN PUNICODE_STRING DllName,
-                  OUT PVOID *DllHandle OPTIONAL)
+LdrGetDllHandleEx(
+    _In_ ULONG Flags,
+    _In_opt_ PWSTR DllPath,
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_opt_ PVOID *DllHandle)
 {
     NTSTATUS Status;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    UNICODE_STRING RedirectName, DllString1, RawDllName;
+    UNICODE_STRING RedirectName, DynamicString, RawDllName;
     PUNICODE_STRING pRedirectName, CompareName;
     PWCHAR p1, p2, p3;
     BOOLEAN Locked, RedirectedDll;
@@ -535,7 +519,7 @@ LdrGetDllHandleEx(IN ULONG Flags,
     ULONG LoadFlag, Length;
 
     /* Initialize the strings */
-    RtlInitEmptyUnicodeString(&DllString1, NULL, 0);
+    RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     RtlInitEmptyUnicodeString(&RawDllName, NULL, 0);
     RedirectName = *DllName;
     pRedirectName = &RedirectName;
@@ -568,31 +552,12 @@ LdrGetDllHandleEx(IN ULONG Flags,
         Locked = TRUE;
     }
 
-    /* Check if the SxS Assemblies specify another file */
-    Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      pRedirectName,
-                                                      &LdrApiDefaultExtension,
-                                                      NULL,
-                                                      &DllString1,
-                                                      &pRedirectName,
-                                                      NULL,
-                                                      NULL,
-                                                      NULL);
-
-    /* Check success */
-    if (NT_SUCCESS(Status))
+    Status = LdrpApplyFileNameRedirection(
+        pRedirectName, &LdrApiDefaultExtension, NULL, &DynamicString, &pRedirectName, &RedirectedDll);
+    if (!NT_SUCCESS(Status))
     {
-        /* Let Ldrp know */
-        RedirectedDll = TRUE;
-    }
-    else if (Status != STATUS_SXS_KEY_NOT_FOUND)
-    {
-        /* Unrecoverable SxS failure */
+        DPRINT1("LdrpApplyFileNameRedirection FAILED: (Status 0x%x)\n", Status);
         goto Quickie;
-    }
-    else
-    {
-        ASSERT(pRedirectName == &RedirectName);
     }
 
     /* Set default failure code */
@@ -776,7 +741,7 @@ Quickie:
     }
 
     /* Free string if needed */
-    if (DllString1.Buffer) RtlFreeUnicodeString(&DllString1);
+    if (DynamicString.Buffer) RtlFreeUnicodeString(&DynamicString);
 
     /* Free the raw DLL Name if needed */
     if (RawDllName.Buffer)
@@ -789,7 +754,7 @@ Quickie:
     /* Release lock */
     if (Locked)
     {
-        LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS,
+        LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS,
                             Cookie);
     }
 
@@ -802,10 +767,11 @@ Quickie:
  */
 NTSTATUS
 NTAPI
-LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
-                IN PULONG DllCharacteristics OPTIONAL,
-                IN PUNICODE_STRING DllName,
-                OUT PVOID *DllHandle)
+LdrGetDllHandle(
+    _In_opt_ PWSTR DllPath,
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_ PVOID *DllHandle)
 {
     /* Call the newer API */
     return LdrGetDllHandleEx(LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT,
@@ -820,10 +786,11 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
  */
 NTSTATUS
 NTAPI
-LdrGetProcedureAddress(IN PVOID BaseAddress,
-                       IN PANSI_STRING Name,
-                       IN ULONG Ordinal,
-                       OUT PVOID *ProcedureAddress)
+LdrGetProcedureAddress(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress)
 {
     /* Call the internal routine and tell it to execute DllInit */
     return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
@@ -834,10 +801,11 @@ LdrGetProcedureAddress(IN PVOID BaseAddress,
  */
 NTSTATUS
 NTAPI
-LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
-                              IN PLDR_CALLBACK Callback,
-                              IN PVOID CallbackContext,
-                              OUT PUSHORT ImageCharacteristics)
+LdrVerifyImageMatchesChecksum(
+    _In_ HANDLE FileHandle,
+    _In_ PLDR_CALLBACK Callback,
+    _In_ PVOID CallbackContext,
+    _Out_ PUSHORT ImageCharacteristics)
 {
     FILE_STANDARD_INFORMATION FileStandardInfo;
     PIMAGE_IMPORT_DESCRIPTOR ImportData;
@@ -976,18 +944,19 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
 
 NTSTATUS
 NTAPI
-LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
-                                   IN ULONG Reserved,
-                                   OUT PRTL_PROCESS_MODULES ModuleInformation,
-                                   IN ULONG Size,
-                                   OUT PULONG ReturnedSize OPTIONAL)
+LdrQueryProcessModuleInformationEx(
+    _In_opt_ ULONG ProcessId,
+    _Reserved_ ULONG Reserved,
+    _Out_writes_bytes_to_(Size, *ReturnedSize) PRTL_PROCESS_MODULES ModuleInformation,
+    _In_ ULONG Size,
+    _Out_opt_ PULONG ReturnedSize)
 {
     PLIST_ENTRY ModuleListHead, InitListHead;
     PLIST_ENTRY Entry, InitEntry;
     PLDR_DATA_TABLE_ENTRY Module, InitModule;
     PRTL_PROCESS_MODULE_INFORMATION ModulePtr = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG UsedSize = sizeof(ULONG);
+    ULONG UsedSize = FIELD_OFFSET(RTL_PROCESS_MODULES, Modules);
     ANSI_STRING AnsiString;
     PCHAR p;
 
@@ -1104,9 +1073,10 @@ LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
  */
 NTSTATUS
 NTAPI
-LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
-                                 IN ULONG Size,
-                                 OUT PULONG ReturnedSize OPTIONAL)
+LdrQueryProcessModuleInformation(
+    _Out_writes_bytes_to_(Size, *ReturnedSize) PRTL_PROCESS_MODULES ModuleInformation,
+    _In_ ULONG Size,
+    _Out_opt_ PULONG ReturnedSize)
 {
     /* Call Ex version of the API */
     return LdrQueryProcessModuleInformationEx(0, 0, ModuleInformation, Size, ReturnedSize);
@@ -1117,9 +1087,10 @@ LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
  */
 NTSTATUS
 NTAPI
-LdrEnumerateLoadedModules(IN BOOLEAN ReservedFlag,
-                          IN PLDR_ENUM_CALLBACK EnumProc,
-                          IN PVOID Context)
+LdrEnumerateLoadedModules(
+    _Reserved_ ULONG ReservedFlag,
+    _In_ PLDR_ENUM_CALLBACK EnumProc,
+    _In_opt_ PVOID Context)
 {
     PLIST_ENTRY ListHead, ListEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -1155,28 +1126,24 @@ LdrEnumerateLoadedModules(IN BOOLEAN ReservedFlag,
         /* Break if we were asked to stop enumeration */
         if (Stop)
         {
-            /* Release loader lock */
-            Status = LdrUnlockLoaderLock(0, Cookie);
-
-            /* Reset any successful status to STATUS_SUCCESS, but leave
-               failure to the caller */
-            if (NT_SUCCESS(Status))
-                Status = STATUS_SUCCESS;
-
-            /* Return any possible failure status */
-            return Status;
+            break;
         }
 
         /* Advance to the next module */
         ListEntry = ListEntry->Flink;
     }
 
-    /* Release loader lock, it must succeed this time */
+    /* Release loader lock */
     Status = LdrUnlockLoaderLock(0, Cookie);
     ASSERT(NT_SUCCESS(Status));
 
-    /* Return success */
-    return STATUS_SUCCESS;
+    /* Reset any successful status to STATUS_SUCCESS,
+     * but leave failure to the caller */
+    if (NT_SUCCESS(Status))
+        Status = STATUS_SUCCESS;
+
+    /* Return any possible failure status */
+    return Status;
 }
 
 /*
@@ -1184,7 +1151,8 @@ LdrEnumerateLoadedModules(IN BOOLEAN ReservedFlag,
  */
 NTSTATUS
 NTAPI
-LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
+LdrDisableThreadCalloutsForDll(
+    _In_ PVOID BaseAddress)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     NTSTATUS Status;
@@ -1234,8 +1202,9 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
  */
 NTSTATUS
 NTAPI
-LdrAddRefDll(IN ULONG Flags,
-             IN PVOID BaseAddress)
+LdrAddRefDll(
+    _In_ ULONG Flags,
+    _In_ PVOID BaseAddress)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1310,7 +1279,7 @@ quickie:
     }
 
     /* Release the lock if needed */
-    if (Locked) LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    if (Locked) LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
     return Status;
 }
 
@@ -1319,7 +1288,8 @@ quickie:
  */
 NTSTATUS
 NTAPI
-LdrUnloadDll(IN PVOID BaseAddress)
+LdrUnloadDll(
+    _In_ PVOID BaseAddress)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PPEB Peb = NtCurrentPeb();
@@ -1527,6 +1497,11 @@ LdrUnloadDll(IN PVOID BaseAddress)
             DPRINT1("LDR: Unmapping [%ws]\n", LdrEntry->BaseDllName.Buffer);
         }
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+        /* Send shutdown notification */
+        LdrpSendDllNotifications(CurrentEntry, LDR_DLL_NOTIFICATION_REASON_UNLOADED);
+#endif
+
         /* Check if this is a .NET executable */
         CorImageData = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                     TRUE,
@@ -1549,9 +1524,6 @@ LdrUnloadDll(IN PVOID BaseAddress)
 
         /* Unload the alternate resource module, if any */
         LdrUnloadAlternateResourceModule(CurrentEntry->DllBase);
-
-        /* FIXME: Send shutdown notification */
-        //LdrpSendDllNotifications(CurrentEntry, 2, LdrpShutdownInProgress);
 
         /* Check if a Hotpatch is active */
         if (LdrEntry->PatchInformation)
@@ -1595,10 +1567,11 @@ RtlDllShutdownInProgress(VOID)
  */
 PIMAGE_BASE_RELOCATION
 NTAPI
-LdrProcessRelocationBlock(IN ULONG_PTR Address,
-                          IN ULONG Count,
-                          IN PUSHORT TypeOffset,
-                          IN LONG_PTR Delta)
+LdrProcessRelocationBlock(
+    _In_ ULONG_PTR Address,
+    _In_ ULONG Count,
+    _In_ PUSHORT TypeOffset,
+    _In_ LONG_PTR Delta)
 {
     return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
@@ -1611,8 +1584,9 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
  */
 NTSTATUS
 NTAPI
-LdrLoadAlternateResourceModule(IN PVOID Module,
-                               IN PWSTR Buffer)
+LdrLoadAlternateResourceModule(
+    _In_ PVOID Module,
+    _In_ PWSTR Buffer)
 {
     /* Is MUI Support enabled? */
     if (!LdrAlternateResourcesEnabled()) return STATUS_SUCCESS;
@@ -1626,7 +1600,8 @@ LdrLoadAlternateResourceModule(IN PVOID Module,
  */
 BOOLEAN
 NTAPI
-LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
+LdrUnloadAlternateResourceModule(
+    _In_ PVOID BaseAddress)
 {
     ULONG_PTR Cookie;
 
@@ -1640,7 +1615,7 @@ LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
     }
 
     /* Release the loader lock */
-    LdrUnlockLoaderLock(1, Cookie);
+    LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
 
     /* All done */
     return TRUE;
@@ -1670,6 +1645,25 @@ LdrSetAppCompatDllRedirectionCallback(
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+LdrInitShimEngineDynamic(IN PVOID BaseAddress)
+{
+    ULONG_PTR Cookie;
+    NTSTATUS Status = LdrLockLoaderLock(0, NULL, &Cookie);
+    if (NT_SUCCESS(Status))
+    {
+        if (!g_pShimEngineModule)
+        {
+            g_pShimEngineModule = BaseAddress;
+            LdrpGetShimEngineInterface();
+        }
+        LdrUnlockLoaderLock(0, Cookie);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /* EOF */

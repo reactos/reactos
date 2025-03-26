@@ -1,12 +1,14 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/pt-PT.rc
- * PURPOSE:    Portuguese Language resource file
- * TRANSLATOR: Manuel D V Silva
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2009 Manuel D V Silva (mds) <manueldulcidio@gmail.com>
+ *              Copyright 2023 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-pt-PT.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -17,19 +19,19 @@ BEGIN
         MENUITEM "&Guardar\tCtrl+G", IDM_FILESAVE
         MENUITEM "Guardar &como...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Scaner ou Câmera...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Pré-visualizar", IDM_FILEPAGEVIEW
+        MENUITEM "Configurar página...", IDM_FILEPAGESETUP
+        MENUITEM "Imprimir...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Enviar para...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Definir como fundo (Mosaico)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Definir como fundo (Centrado)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Definir como fundo (Esticado)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Recente", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILEEXIT
     END
@@ -41,9 +43,11 @@ BEGIN
         MENUITEM "Cor&tar\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Co&lar\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Limpar &seleção\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "&Inverter seleção", IDM_EDITINVERTSELECTION
-        MENUITEM "Selecionar &tudo\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Limpar &selecção\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Inverter selecção", IDM_EDITINVERTSELECTION
+        MENUITEM "Seleccionar &tudo\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiar para...", IDM_EDITCOPYTO
         MENUITEM "Colar &de...", IDM_EDITPASTEFROM
@@ -57,7 +61,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Zoom"
         BEGIN
-            POPUP "User defined"
+            POPUP "Personalizado"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -68,8 +72,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid\tCtrl+M", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Mostrar grelha\tCtrl+M", IDM_VIEWSHOWGRID
+            MENUITEM "Mostrar miniatura", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "&Ver mapa de bits\tCtrl+B", IDM_VIEWFULLSCREEN
     END
@@ -87,14 +91,35 @@ BEGIN
     BEGIN
         MENUITEM "&Editar cores...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Palete moderna", IDM_COLORSMODERNPALETTE
+        MENUITEM "Palete antiga", IDM_COLORSOLDPALETTE
     END
     POPUP "&Ajuda"
     BEGIN
         MENUITEM "&Tópicos da Ajuda", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Acerca do Paint", IDM_HELPINFO
+    END
+END
+
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "Cor&tar\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Co&lar\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Limpar &selecção\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Seleccionar &tudo\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "C&opiar para...", IDM_EDITCOPYTO
+        MENUITEM "Colar &de...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "I&nverter/rodar...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Redimensionar/Torcer...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Inverter cores\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -119,6 +144,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -142,23 +171,23 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atributos"
 BEGIN
+    LTEXT "&Largura:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Altura:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "&Largura:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "Altura:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "Data do arquivo:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Tamanho do arquivo:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Data do ficheiro:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Tamanho no disco:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Resolução:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "não disponível", IDD_ATTRIBUTESTEXT6, 80, 5, 90, 10
+    LTEXT "não disponível", IDD_ATTRIBUTESTEXT7, 80, 15, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 80, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Unidades", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "P&olegadas", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
     AUTORADIOBUTTON "Pi&xels", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Cores", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "Preto e &branco", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Co&res", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "Co&res", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 170, 24, 48, 14
     PUSHBUTTON "&Predefinição", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
@@ -167,9 +196,9 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Esticar e inclinar imagem"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Esticar", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "Horizontal:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -178,17 +207,28 @@ BEGIN
     LTEXT "Vertical:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Inclinar", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "Horizontal:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "graus", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
     LTEXT "Vertical:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    LTEXT "graus", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 170, 24, 48, 14
+END
+
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Tipos de letra"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
 END
 
 STRINGTABLE
@@ -198,10 +238,10 @@ BEGIN
     IDS_INFOTITLE "Paint para ReactOS"
     IDS_INFOTEXT "Disponível sob a licença GNU Lesser General Public License (LGPL, visite www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Pretende guardar as alterações a %s?"
-    IDS_DEFAULTFILENAME "Imagem.bmp"
-    IDS_MINIATURETITLE "Miniature"
-    IDS_TOOLTIP1 "Selecionar forma livre"
-    IDS_TOOLTIP2 "Selecionar"
+    IDS_DEFAULTFILENAME "Imagem"
+    IDS_MINIATURETITLE "Miniatura"
+    IDS_TOOLTIP1 "Seleccionar forma livre"
+    IDS_TOOLTIP2 "Seleccionar"
     IDS_TOOLTIP3 "Borracha/Apagar cor"
     IDS_TOOLTIP4 "Preencher com cor"
     IDS_TOOLTIP5 "Escolher cor"
@@ -210,19 +250,27 @@ BEGIN
     IDS_TOOLTIP8 "Pincel"
     IDS_TOOLTIP9 "Aerógrafo"
     IDS_TOOLTIP10 "Texto"
-    IDS_TOOLTIP11 "Linnha"
+    IDS_TOOLTIP11 "Linha"
     IDS_TOOLTIP12 "Curva"
     IDS_TOOLTIP13 "Retângulo"
     IDS_TOOLTIP14 "Polígono"
     IDS_TOOLTIP15 "Elipse"
     IDS_TOOLTIP16 "Retângulo arredondado"
-    IDS_ALLFILES "Todos os arquivos"
-    IDS_ALLPICTUREFILES "All Picture Files"
+    IDS_ALLFILES "Todos os ficheiros"
+    IDS_ALLPICTUREFILES "Todos os ficheiros de imagem"
     IDS_FILESIZE "%d bytes"
-    IDS_PRINTRES "%d x %d pixels per meter"
-    IDS_INTNUMBERS "Please enter integral numbers only!"
-    IDS_PERCENTAGE "The percentage must be between 1 and 500."
-    IDS_ANGLE "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT "The file %s could not be loaded."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_INTNUMBERS "Por favor, introduza apenas números inteiros!"
+    IDS_PERCENTAGE "A percentagem deve estar entre 1 e 500."
+    IDS_ANGLE "O ângulo deve estar entre -89 e 89."
+    IDS_LOADERRORTEXT "O ficheiro %s não pôde ser carregado."
+    IDS_ENLARGEPROMPTTEXT "A imagem na área de transferência é maior que o bitmap.\nDeseja ampliar o bitmap?"
+    IDS_BOLD "Negrito"
+    IDS_ITALIC "Itálico"
+    IDS_UNDERLINE "Sublinhado"
+    IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

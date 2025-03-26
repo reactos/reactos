@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
 /*
  * Actions dealing with files:
  *
@@ -37,7 +36,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
-#include "wine/debug.h"
 #include "fdi.h"
 #include "msi.h"
 #include "msidefs.h"
@@ -46,11 +44,211 @@
 #include "winreg.h"
 #include "shlwapi.h"
 #include "patchapi.h"
-#include "wine/unicode.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *action )
+BOOL msi_get_temp_file_name( MSIPACKAGE *package, const WCHAR *tmp_path, const WCHAR *prefix, WCHAR *tmp_filename )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = GetTempFileNameW( tmp_path, prefix, 0, tmp_filename );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+HANDLE msi_create_file( MSIPACKAGE *package, const WCHAR *filename, DWORD access, DWORD sharing, DWORD creation,
+                        DWORD flags )
+{
+    HANDLE handle;
+    msi_disable_fs_redirection( package );
+    handle = CreateFileW( filename, access, sharing, NULL, creation, flags, NULL );
+    msi_revert_fs_redirection( package );
+    return handle;
+}
+
+static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, BOOL fail_if_exists )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = CopyFileW( src, dst, fail_if_exists );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+BOOL msi_delete_file( MSIPACKAGE *package, const WCHAR *filename )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = DeleteFileW( filename );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+static BOOL create_directory( MSIPACKAGE *package, const WCHAR *path )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = CreateDirectoryW( path, NULL );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+BOOL msi_remove_directory( MSIPACKAGE *package, const WCHAR *path )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = RemoveDirectoryW( path );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+BOOL msi_set_file_attributes( MSIPACKAGE *package, const WCHAR *filename, DWORD attrs )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = SetFileAttributesW( filename, attrs );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+DWORD msi_get_file_attributes( MSIPACKAGE *package, const WCHAR *path )
+{
+    DWORD attrs;
+    msi_disable_fs_redirection( package );
+    attrs = GetFileAttributesW( path );
+    msi_revert_fs_redirection( package );
+    return attrs;
+}
+
+HANDLE msi_find_first_file( MSIPACKAGE *package, const WCHAR *filename, WIN32_FIND_DATAW *data )
+{
+    HANDLE handle;
+    msi_disable_fs_redirection( package );
+    handle = FindFirstFileW( filename, data );
+    msi_revert_fs_redirection( package );
+    return handle;
+}
+
+BOOL msi_find_next_file( MSIPACKAGE *package, HANDLE handle, WIN32_FIND_DATAW *data )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = FindNextFileW( handle, data );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+BOOL msi_move_file( MSIPACKAGE *package, const WCHAR *from, const WCHAR *to, DWORD flags )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = MoveFileExW( from, to, flags );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+static BOOL apply_filepatch( MSIPACKAGE *package, const WCHAR *patch, const WCHAR *old, const WCHAR *new )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = ApplyPatchToFileW( patch, old, new, 0 );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+DWORD msi_get_file_version_info( MSIPACKAGE *package, const WCHAR *path, DWORD buflen, BYTE *buffer )
+{
+    DWORD size, handle;
+    msi_disable_fs_redirection( package );
+    if (buffer) size = GetFileVersionInfoW( path, 0, buflen, buffer );
+    else size = GetFileVersionInfoSizeW( path, &handle );
+    msi_revert_fs_redirection( package );
+    return size;
+}
+
+VS_FIXEDFILEINFO *msi_get_disk_file_version( MSIPACKAGE *package, const WCHAR *filename )
+{
+    VS_FIXEDFILEINFO *ptr, *ret;
+    DWORD version_size;
+    UINT size;
+    void *version;
+
+    if (!(version_size = msi_get_file_version_info( package, filename, 0, NULL ))) return NULL;
+    if (!(version = malloc( version_size ))) return NULL;
+
+    msi_get_file_version_info( package, filename, version_size, version );
+
+    if (!VerQueryValueW( version, L"\\", (void **)&ptr, &size ))
+    {
+        free( version );
+        return NULL;
+    }
+
+    if (!(ret = malloc( size )))
+    {
+        free( version );
+        return NULL;
+    }
+
+    memcpy( ret, ptr, size );
+    free( version );
+    return ret;
+}
+
+DWORD msi_get_disk_file_size( MSIPACKAGE *package, const WCHAR *filename )
+{
+    DWORD size;
+    HANDLE file;
+    file = msi_create_file( package, filename, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, 0 );
+    if (file == INVALID_HANDLE_VALUE) return INVALID_FILE_SIZE;
+    size = GetFileSize( file, NULL );
+    CloseHandle( file );
+    return size;
+}
+
+/* Recursively create all directories in the path. */
+BOOL msi_create_full_path( MSIPACKAGE *package, const WCHAR *path )
+{
+    BOOL ret = TRUE;
+    WCHAR *new_path;
+    int len;
+
+    if (!(new_path = malloc( (wcslen( path ) + 1) * sizeof(WCHAR) ))) return FALSE;
+    lstrcpyW( new_path, path );
+
+    while ((len = lstrlenW( new_path )) && new_path[len - 1] == '\\')
+    new_path[len - 1] = 0;
+
+    while (!create_directory( package, new_path ))
+    {
+        WCHAR *slash;
+        DWORD last_error = GetLastError();
+        if (last_error == ERROR_ALREADY_EXISTS) break;
+        if (last_error != ERROR_PATH_NOT_FOUND)
+        {
+            ret = FALSE;
+            break;
+        }
+        if (!(slash = wcsrchr( new_path, '\\' )))
+        {
+            ret = FALSE;
+            break;
+        }
+        len = slash - new_path;
+        new_path[len] = 0;
+        if (!msi_create_full_path( package, new_path ))
+        {
+            ret = FALSE;
+            break;
+        }
+        new_path[len] = '\\';
+    }
+    free( new_path );
+    return ret;
+}
+
+static void file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *action )
 {
     MSIRECORD *uirow;
 
@@ -78,11 +276,24 @@ static BOOL is_obsoleted_by_patch( MSIPACKAGE *package, MSIFILE *file )
 {
     if (!list_empty( &package->patches ) && file->disk_id < MSI_INITIAL_MEDIA_TRANSFORM_DISKID)
     {
-        if (!msi_get_property_int( package->db, szInstalled, 0 )) return FALSE;
+        if (!msi_get_property_int( package->db, L"Installed", 0 )) return FALSE;
         return TRUE;
     }
     if (is_registered_patch_media( package, file->disk_id )) return TRUE;
     return FALSE;
+}
+
+static BOOL file_hash_matches( MSIPACKAGE *package, MSIFILE *file )
+{
+    UINT r;
+    MSIFILEHASHINFO hash;
+
+    hash.dwFileHashInfoSize = sizeof(hash);
+    r = msi_get_filehash( package, file->TargetPath, &hash );
+    if (r != ERROR_SUCCESS)
+        return FALSE;
+
+    return !memcmp( &hash, &file->hash, sizeof(hash) );
 }
 
 static msi_file_state calculate_install_state( MSIPACKAGE *package, MSIFILE *file )
@@ -94,7 +305,7 @@ static msi_file_state calculate_install_state( MSIPACKAGE *package, MSIFILE *fil
     DWORD size;
 
     comp->Action = msi_get_component_action( package, comp );
-    if (!comp->Enabled || comp->Action != INSTALLSTATE_LOCAL || (comp->assembly && comp->assembly->installed))
+    if (!comp->Enabled || comp->Action != INSTALLSTATE_LOCAL)
     {
         TRACE("skipping %s (not scheduled for install)\n", debugstr_w(file->File));
         return msifs_skipped;
@@ -104,15 +315,14 @@ static msi_file_state calculate_install_state( MSIPACKAGE *package, MSIFILE *fil
         TRACE("skipping %s (obsoleted by patch)\n", debugstr_w(file->File));
         return msifs_skipped;
     }
-    if ((msi_is_global_assembly( comp ) && !comp->assembly->installed) ||
-        GetFileAttributesW( file->TargetPath ) == INVALID_FILE_ATTRIBUTES)
+    if (msi_get_file_attributes( package, file->TargetPath ) == INVALID_FILE_ATTRIBUTES)
     {
         TRACE("installing %s (missing)\n", debugstr_w(file->File));
         return msifs_missing;
     }
     if (file->Version)
     {
-        if ((file_version = msi_get_disk_file_version( file->TargetPath )))
+        if ((file_version = msi_get_disk_file_version( package, file->TargetPath )))
         {
             if (msi_compare_file_versions( file_version, file->Version ) < 0)
             {
@@ -130,10 +340,10 @@ static msi_file_state calculate_install_state( MSIPACKAGE *package, MSIFILE *fil
                       HIWORD(file_version->dwFileVersionLS), LOWORD(file_version->dwFileVersionLS));
                 state = msifs_present;
             }
-            msi_free( file_version );
+            free( file_version );
             return state;
         }
-        else if ((font_version = msi_font_version_from_file( file->TargetPath )))
+        else if ((font_version = msi_get_font_file_version( package, file->TargetPath )))
         {
             if (msi_compare_font_versions( font_version, file->Version ) < 0)
             {
@@ -147,18 +357,18 @@ static msi_file_state calculate_install_state( MSIPACKAGE *package, MSIFILE *fil
                       debugstr_w(file->File), debugstr_w(file->Version), debugstr_w(font_version));
                 state = msifs_present;
             }
-            msi_free( font_version );
+            free( font_version );
             return state;
         }
     }
-    if ((size = msi_get_disk_file_size( file->TargetPath )) != file->FileSize)
+    if ((size = msi_get_disk_file_size( package, file->TargetPath )) != file->FileSize)
     {
-        TRACE("overwriting %s (old size %u new size %u)\n", debugstr_w(file->File), size, file->FileSize);
+        TRACE("overwriting %s (old size %lu new size %d)\n", debugstr_w(file->File), size, file->FileSize);
         return msifs_overwrite;
     }
     if (file->hash.dwFileHashInfoSize)
     {
-        if (msi_file_hash_matches( file ))
+        if (file_hash_matches( package, file ))
         {
             TRACE("keeping %s (hash match)\n", debugstr_w(file->File));
             return msifs_hashmatch;
@@ -191,15 +401,15 @@ static void schedule_install_files(MSIPACKAGE *package)
     }
 }
 
-static UINT copy_file(MSIFILE *file, LPWSTR source)
+static UINT copy_file_attributes( MSIPACKAGE *package, MSIFILE *file, WCHAR *source )
 {
     BOOL ret;
 
-    ret = CopyFileW(source, file->TargetPath, FALSE);
+    ret = copy_file( package, source, file->TargetPath, FALSE );
     if (!ret)
         return GetLastError();
 
-    SetFileAttributesW(file->TargetPath, FILE_ATTRIBUTE_NORMAL);
+    msi_set_file_attributes( package, file->TargetPath, FILE_ATTRIBUTE_NORMAL );
     return ERROR_SUCCESS;
 }
 
@@ -209,7 +419,7 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
 
     TRACE("Copying %s to %s\n", debugstr_w(source), debugstr_w(file->TargetPath));
 
-    gle = copy_file(file, source);
+    gle = copy_file_attributes( package, file, source );
     if (gle == ERROR_SUCCESS)
         return gle;
 
@@ -220,9 +430,9 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
     }
     else if (gle == ERROR_ACCESS_DENIED)
     {
-        SetFileAttributesW(file->TargetPath, FILE_ATTRIBUTE_NORMAL);
+        msi_set_file_attributes( package, file->TargetPath, FILE_ATTRIBUTE_NORMAL );
 
-        gle = copy_file(file, source);
+        gle = copy_file_attributes( package, file, source );
         TRACE("Overwriting existing file: %d\n", gle);
     }
     if (gle == ERROR_SHARING_VIOLATION || gle == ERROR_USER_MAPPED_FILE)
@@ -232,20 +442,20 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
 
         TRACE("file in use, scheduling rename operation\n");
 
-        if (!(pathW = strdupW( file->TargetPath ))) return ERROR_OUTOFMEMORY;
-        if ((p = strrchrW(pathW, '\\'))) *p = 0;
-        len = strlenW( pathW ) + 16;
-        if (!(tmpfileW = msi_alloc(len * sizeof(WCHAR))))
+        if (!(pathW = wcsdup( file->TargetPath ))) return ERROR_OUTOFMEMORY;
+        if ((p = wcsrchr(pathW, '\\'))) *p = 0;
+        len = lstrlenW( pathW ) + 16;
+        if (!(tmpfileW = malloc(len * sizeof(WCHAR))))
         {
-            msi_free( pathW );
+            free( pathW );
             return ERROR_OUTOFMEMORY;
         }
-        if (!GetTempFileNameW( pathW, szMsi, 0, tmpfileW )) tmpfileW[0] = 0;
-        msi_free( pathW );
+        if (!GetTempFileNameW( pathW, L"msi", 0, tmpfileW )) tmpfileW[0] = 0;
+        free( pathW );
 
-        if (CopyFileW(source, tmpfileW, FALSE) &&
-            MoveFileExW(file->TargetPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT) &&
-            MoveFileExW(tmpfileW, file->TargetPath, MOVEFILE_DELAY_UNTIL_REBOOT))
+        if (copy_file( package, source, tmpfileW, FALSE ) &&
+            msi_move_file( package, file->TargetPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT ) &&
+            msi_move_file( package, tmpfileW, file->TargetPath, MOVEFILE_DELAY_UNTIL_REBOOT ))
         {
             package->need_reboot_at_end = 1;
             gle = ERROR_SUCCESS;
@@ -256,13 +466,13 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
             WARN("failed to schedule rename operation: %d)\n", gle);
             DeleteFileW( tmpfileW );
         }
-        msi_free(tmpfileW);
+        free(tmpfileW);
     }
 
     return gle;
 }
 
-static UINT msi_create_directory( MSIPACKAGE *package, const WCHAR *dir )
+static UINT create_folder( MSIPACKAGE *package, const WCHAR *dir )
 {
     MSIFOLDER *folder;
     const WCHAR *install_path;
@@ -273,7 +483,7 @@ static UINT msi_create_directory( MSIPACKAGE *package, const WCHAR *dir )
     folder = msi_get_loaded_folder( package, dir );
     if (folder->State == FOLDER_STATE_UNINITIALIZED)
     {
-        msi_create_full_path( install_path );
+        msi_create_full_path( package, install_path );
         folder->State = FOLDER_STATE_CREATED;
     }
     return ERROR_SUCCESS;
@@ -287,7 +497,7 @@ static MSIFILE *find_file( MSIPACKAGE *package, UINT disk_id, const WCHAR *filen
     {
         if (file->disk_id == disk_id &&
             file->state != msifs_installed &&
-            !strcmpiW( filename, file->File )) return file;
+            !wcsicmp( filename, file->File )) return file;
     }
     return NULL;
 }
@@ -309,9 +519,9 @@ static BOOL installfiles_cb(MSIPACKAGE *package, LPCWSTR filename, DWORD action,
 
         if (!msi_is_global_assembly( file->Component ))
         {
-            msi_create_directory( package, file->Component->Directory );
+            create_folder( package, file->Component->Directory );
         }
-        *path = strdupW( file->TargetPath );
+        *path = wcsdup( file->TargetPath );
         *attrs = file->Attributes;
         *(MSIFILE **)user = file;
     }
@@ -334,19 +544,19 @@ WCHAR *msi_resolve_file_source( MSIPACKAGE *package, MSIFILE *file )
     p = msi_resolve_source_folder( package, file->Component->Directory, NULL );
     path = msi_build_directory_name( 2, p, file->ShortName );
 
-    if (file->LongName && GetFileAttributesW( path ) == INVALID_FILE_ATTRIBUTES)
+    if (file->LongName && msi_get_file_attributes( package, path ) == INVALID_FILE_ATTRIBUTES)
     {
-        msi_free( path );
+        free( path );
         path = msi_build_directory_name( 2, p, file->LongName );
     }
-    msi_free( p );
+    free( p );
     TRACE("file %s source resolves to %s\n", debugstr_w(file->File), debugstr_w(path));
     return path;
 }
 
 /*
  * ACTION_InstallFiles()
- * 
+ *
  * For efficiency, this is done in two passes:
  * 1) Correct all the TargetPaths and determine what files are to be installed.
  * 2) Extract Cabinets and copy files.
@@ -357,14 +567,19 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     UINT rc = ERROR_SUCCESS;
     MSIFILE *file;
 
+    msi_set_sourcedir_props(package, FALSE);
+
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"InstallFiles");
+
     schedule_install_files(package);
-    mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
+    mi = calloc(1, sizeof(MSIMEDIAINFO));
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
         BOOL is_global_assembly = msi_is_global_assembly( file->Component );
 
-        msi_file_update_ui( package, file, szInstallFiles );
+        file_update_ui( package, file, L"InstallFiles" );
 
         rc = msi_load_media_info( package, file->Sequence, mi );
         if (rc != ERROR_SUCCESS)
@@ -376,7 +591,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
         if (file->state != msifs_hashmatch &&
             file->state != msifs_skipped &&
-            (file->state != msifs_present || !msi_get_property_int( package->db, szInstalled, 0 )) &&
+            (file->state != msifs_present || !msi_get_property_int( package->db, L"Installed", 0 )) &&
             (rc = ready_media( package, file->IsCompressed, mi )))
         {
             ERR("Failed to ready media for %s\n", debugstr_w(file->File));
@@ -413,18 +628,18 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
             if (!is_global_assembly)
             {
-                msi_create_directory(package, file->Component->Directory);
+                create_folder(package, file->Component->Directory);
             }
             rc = copy_install_file(package, file, source);
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Failed to copy %s to %s (%u)\n", debugstr_w(source), debugstr_w(file->TargetPath), rc);
                 rc = ERROR_INSTALL_FAILURE;
-                msi_free(source);
+                free(source);
                 goto done;
             }
             if (!is_global_assembly) file->state = msifs_installed;
-            msi_free(source);
+            free(source);
         }
         else if (!is_global_assembly && file->state != msifs_installed &&
                  !(file->Attributes & msidbFileAttributesPatchAdded))
@@ -433,22 +648,6 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             rc = ERROR_INSTALL_FAILURE;
             goto done;
         }
-    }
-    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
-    {
-        MSICOMPONENT *comp = file->Component;
-
-        if (!msi_is_global_assembly( comp ) || comp->assembly->installed ||
-            (file->state != msifs_missing && file->state != msifs_overwrite)) continue;
-
-        rc = msi_install_assembly( package, comp );
-        if (rc != ERROR_SUCCESS)
-        {
-            ERR("Failed to install assembly\n");
-            rc = ERROR_INSTALL_FAILURE;
-            break;
-        }
-        file->state = msifs_installed;
     }
 
 done:
@@ -462,7 +661,7 @@ static MSIFILEPATCH *find_filepatch( MSIPACKAGE *package, UINT disk_id, const WC
 
     LIST_FOR_EACH_ENTRY( patch, &package->filepatches, MSIFILEPATCH, entry )
     {
-        if (!patch->extracted && patch->disk_id == disk_id && !strcmpW( key, patch->File->File ))
+        if (!patch->extracted && patch->disk_id == disk_id && !wcscmp( key, patch->File->File ))
             return patch;
     }
     return NULL;
@@ -490,7 +689,7 @@ static BOOL patchfiles_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
         }
 
         patch->path = msi_create_temp_file( package->db );
-        *path = strdupW( patch->path );
+        *path = wcsdup( patch->path );
         *attrs = patch->File->Attributes;
         *(MSIFILEPATCH **)user = patch;
     }
@@ -508,23 +707,23 @@ static UINT patch_file( MSIPACKAGE *package, MSIFILEPATCH *patch )
     WCHAR *tmpfile = msi_create_temp_file( package->db );
 
     if (!tmpfile) return ERROR_INSTALL_FAILURE;
-    if (ApplyPatchToFileW( patch->path, patch->File->TargetPath, tmpfile, 0 ))
+    if (apply_filepatch( package, patch->path, patch->File->TargetPath, tmpfile ))
     {
-        DeleteFileW( patch->File->TargetPath );
-        MoveFileW( tmpfile, patch->File->TargetPath );
+        msi_delete_file( package, patch->File->TargetPath );
+        msi_move_file( package, tmpfile, patch->File->TargetPath, 0 );
     }
     else
     {
-        WARN("failed to patch %s: %08x\n", debugstr_w(patch->File->TargetPath), GetLastError());
+        WARN( "failed to patch %s: %#lx\n", debugstr_w(patch->File->TargetPath), GetLastError() );
         r = ERROR_INSTALL_FAILURE;
     }
     DeleteFileW( patch->path );
     DeleteFileW( tmpfile );
-    msi_free( tmpfile );
+    free( tmpfile );
     return r;
 }
 
-static UINT patch_assembly( MSIPACKAGE *package, MSIASSEMBLY *assembly, MSIFILEPATCH *patch )
+UINT msi_patch_assembly( MSIPACKAGE *package, MSIASSEMBLY *assembly, MSIFILEPATCH *patch )
 {
     UINT r = ERROR_FUNCTION_FAILED;
     IAssemblyName *name;
@@ -536,36 +735,36 @@ static UINT patch_assembly( MSIPACKAGE *package, MSIASSEMBLY *assembly, MSIFILEP
     while ((IAssemblyEnum_GetNextAssembly( iter, NULL, &name, 0 ) == S_OK))
     {
         WCHAR *displayname, *path;
-        UINT len = 0;
+        DWORD len = 0;
         HRESULT hr;
 
         hr = IAssemblyName_GetDisplayName( name, NULL, &len, 0 );
-        if (hr != E_NOT_SUFFICIENT_BUFFER || !(displayname = msi_alloc( len * sizeof(WCHAR) )))
+        if (hr != E_NOT_SUFFICIENT_BUFFER || !(displayname = malloc( len * sizeof(WCHAR) )))
             break;
 
         hr = IAssemblyName_GetDisplayName( name, displayname, &len, 0 );
         if (FAILED( hr ))
         {
-            msi_free( displayname );
+            free( displayname );
             break;
         }
 
         if ((path = msi_get_assembly_path( package, displayname )))
         {
-            if (!CopyFileW( path, patch->File->TargetPath, FALSE ))
+            if (!copy_file( package, path, patch->File->TargetPath, FALSE ))
             {
-                ERR("Failed to copy file %s -> %s (%u)\n", debugstr_w(path),
-                    debugstr_w(patch->File->TargetPath), GetLastError() );
-                msi_free( path );
-                msi_free( displayname );
+                ERR( "failed to copy file %s -> %s (%lu)\n", debugstr_w(path),
+                     debugstr_w(patch->File->TargetPath), GetLastError() );
+                free( path );
+                free( displayname );
                 IAssemblyName_Release( name );
                 break;
             }
             r = patch_file( package, patch );
-            msi_free( path );
+            free( path );
         }
 
-        msi_free( displayname );
+        free( displayname );
         IAssemblyName_Release( name );
         if (r == ERROR_SUCCESS) break;
     }
@@ -582,7 +781,10 @@ UINT ACTION_PatchFiles( MSIPACKAGE *package )
 
     TRACE("%p\n", package);
 
-    mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"PatchFiles");
+
+    mi = calloc( 1, sizeof(MSIMEDIAINFO) );
 
     TRACE("extracting files\n");
 
@@ -632,26 +834,13 @@ UINT ACTION_PatchFiles( MSIPACKAGE *package )
     {
         MSICOMPONENT *comp = patch->File->Component;
 
-        if (!patch->path) continue;
+        if (msi_is_global_assembly( comp ) || !patch->path) continue;
 
-        if (msi_is_global_assembly( comp ))
-            rc = patch_assembly( package, comp->assembly, patch );
-        else
-            rc = patch_file( package, patch );
-
+        rc = patch_file( package, patch );
         if (rc && !(patch->Attributes & msidbPatchAttributesNonVital))
         {
             ERR("Failed to apply patch to file: %s\n", debugstr_w(patch->File->File));
             break;
-        }
-
-        if (msi_is_global_assembly( comp ))
-        {
-            if ((rc = msi_install_assembly( package, comp )))
-            {
-                ERR("Failed to install patched assembly\n");
-                break;
-            }
         }
     }
 
@@ -662,21 +851,21 @@ done:
 
 #define is_dot_dir(x) ((x[0] == '.') && ((x[1] == 0) || ((x[1] == '.') && (x[2] == 0))))
 
-typedef struct
+struct file_list
 {
     struct list entry;
     LPWSTR sourcename;
     LPWSTR destname;
     LPWSTR source;
     LPWSTR dest;
-} FILE_LIST;
+};
 
-static BOOL msi_move_file(LPCWSTR source, LPCWSTR dest, int options)
+static BOOL move_file( MSIPACKAGE *package, const WCHAR *source, const WCHAR *dest, int options )
 {
     BOOL ret;
 
-    if (GetFileAttributesW(source) == FILE_ATTRIBUTE_DIRECTORY ||
-        GetFileAttributesW(dest) == FILE_ATTRIBUTE_DIRECTORY)
+    if (msi_get_file_attributes( package, source ) == FILE_ATTRIBUTE_DIRECTORY ||
+        msi_get_file_attributes( package, dest ) == FILE_ATTRIBUTE_DIRECTORY)
     {
         WARN("Source or dest is directory, not moving\n");
         return FALSE;
@@ -685,20 +874,20 @@ static BOOL msi_move_file(LPCWSTR source, LPCWSTR dest, int options)
     if (options == msidbMoveFileOptionsMove)
     {
         TRACE("moving %s -> %s\n", debugstr_w(source), debugstr_w(dest));
-        ret = MoveFileExW(source, dest, MOVEFILE_REPLACE_EXISTING);
+        ret = msi_move_file( package, source, dest, MOVEFILE_REPLACE_EXISTING );
         if (!ret)
         {
-            WARN("MoveFile failed: %d\n", GetLastError());
+            WARN( "msi_move_file failed: %lu\n", GetLastError() );
             return FALSE;
         }
     }
     else
     {
         TRACE("copying %s -> %s\n", debugstr_w(source), debugstr_w(dest));
-        ret = CopyFileW(source, dest, FALSE);
+        ret = copy_file( package, source, dest, FALSE );
         if (!ret)
         {
-            WARN("CopyFile failed: %d\n", GetLastError());
+            WARN( "copy_file failed: %lu\n", GetLastError() );
             return FALSE;
         }
     }
@@ -706,16 +895,17 @@ static BOOL msi_move_file(LPCWSTR source, LPCWSTR dest, int options)
     return TRUE;
 }
 
-static LPWSTR wildcard_to_file(LPWSTR wildcard, LPWSTR filename)
+static WCHAR *wildcard_to_file( const WCHAR *wildcard, const WCHAR *filename )
 {
-    LPWSTR path, ptr;
+    const WCHAR *ptr;
+    WCHAR *path;
     DWORD dirlen, pathlen;
 
-    ptr = strrchrW(wildcard, '\\');
+    ptr = wcsrchr(wildcard, '\\');
     dirlen = ptr - wildcard + 1;
 
     pathlen = dirlen + lstrlenW(filename) + 1;
-    path = msi_alloc(pathlen * sizeof(WCHAR));
+    if (!(path = malloc(pathlen * sizeof(WCHAR)))) return NULL;
 
     lstrcpynW(path, wildcard, dirlen + 1);
     lstrcatW(path, filename);
@@ -723,37 +913,37 @@ static LPWSTR wildcard_to_file(LPWSTR wildcard, LPWSTR filename)
     return path;
 }
 
-static void free_file_entry(FILE_LIST *file)
+static void free_file_entry(struct file_list *file)
 {
-    msi_free(file->source);
-    msi_free(file->dest);
-    msi_free(file);
+    free(file->source);
+    free(file->dest);
+    free(file);
 }
 
-static void free_list(FILE_LIST *list)
+static void free_list(struct file_list *list)
 {
     while (!list_empty(&list->entry))
     {
-        FILE_LIST *file = LIST_ENTRY(list_head(&list->entry), FILE_LIST, entry);
+        struct file_list *file = LIST_ENTRY(list_head(&list->entry), struct file_list, entry);
 
         list_remove(&file->entry);
         free_file_entry(file);
     }
 }
 
-static BOOL add_wildcard(FILE_LIST *files, LPWSTR source, LPWSTR dest)
+static BOOL add_wildcard( struct file_list *files, const WCHAR *source, WCHAR *dest )
 {
-    FILE_LIST *new, *file;
-    LPWSTR ptr, filename;
+    struct file_list *new, *file;
+    WCHAR *ptr, *filename;
     DWORD size;
 
-    new = msi_alloc_zero(sizeof(FILE_LIST));
+    new = calloc(1, sizeof(*new));
     if (!new)
         return FALSE;
 
-    new->source = strdupW(source);
-    ptr = strrchrW(dest, '\\') + 1;
-    filename = strrchrW(new->source, '\\') + 1;
+    new->source = wcsdup(source);
+    ptr = wcsrchr(dest, '\\') + 1;
+    filename = wcsrchr(new->source, '\\') + 1;
 
     new->sourcename = filename;
 
@@ -763,7 +953,7 @@ static BOOL add_wildcard(FILE_LIST *files, LPWSTR source, LPWSTR dest)
         new->destname = new->sourcename;
 
     size = (ptr - dest) + lstrlenW(filename) + 1;
-    new->dest = msi_alloc(size * sizeof(WCHAR));
+    new->dest = malloc(size * sizeof(WCHAR));
     if (!new->dest)
     {
         free_file_entry(new);
@@ -779,9 +969,9 @@ static BOOL add_wildcard(FILE_LIST *files, LPWSTR source, LPWSTR dest)
         return TRUE;
     }
 
-    LIST_FOR_EACH_ENTRY(file, &files->entry, FILE_LIST, entry)
+    LIST_FOR_EACH_ENTRY(file, &files->entry, struct file_list, entry)
     {
-        if (strcmpW( source, file->source ) < 0)
+        if (wcscmp( source, file->source ) < 0)
         {
             list_add_before(&file->entry, &new->entry);
             return TRUE;
@@ -792,25 +982,25 @@ static BOOL add_wildcard(FILE_LIST *files, LPWSTR source, LPWSTR dest)
     return TRUE;
 }
 
-static BOOL move_files_wildcard(LPWSTR source, LPWSTR dest, int options)
+static BOOL move_files_wildcard( MSIPACKAGE *package, const WCHAR *source, WCHAR *dest, int options )
 {
     WIN32_FIND_DATAW wfd;
     HANDLE hfile;
     LPWSTR path;
     BOOL res;
-    FILE_LIST files, *file;
+    struct file_list files, *file;
     DWORD size;
 
-    hfile = FindFirstFileW(source, &wfd);
+    hfile = msi_find_first_file( package, source, &wfd );
     if (hfile == INVALID_HANDLE_VALUE) return FALSE;
 
     list_init(&files.entry);
 
-    for (res = TRUE; res; res = FindNextFileW(hfile, &wfd))
+    for (res = TRUE; res; res = msi_find_next_file( package, hfile, &wfd ))
     {
         if (is_dot_dir(wfd.cFileName)) continue;
 
-        path = wildcard_to_file(source, wfd.cFileName);
+        path = wildcard_to_file( source, wfd.cFileName );
         if (!path)
         {
             res = FALSE;
@@ -818,7 +1008,7 @@ static BOOL move_files_wildcard(LPWSTR source, LPWSTR dest, int options)
         }
 
         add_wildcard(&files, path, dest);
-        msi_free(path);
+        free(path);
     }
 
     /* no files match the wildcard */
@@ -826,9 +1016,9 @@ static BOOL move_files_wildcard(LPWSTR source, LPWSTR dest, int options)
         goto done;
 
     /* only the first wildcard match gets renamed to dest */
-    file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
-    size = (strrchrW(file->dest, '\\') - file->dest) + lstrlenW(file->destname) + 2;
-    file->dest = msi_realloc(file->dest, size * sizeof(WCHAR));
+    file = LIST_ENTRY(list_head(&files.entry), struct file_list, entry);
+    size = (wcsrchr(file->dest, '\\') - file->dest) + lstrlenW(file->destname) + 2;
+    file->dest = realloc(file->dest, size * sizeof(WCHAR));
     if (!file->dest)
     {
         res = FALSE;
@@ -836,17 +1026,17 @@ static BOOL move_files_wildcard(LPWSTR source, LPWSTR dest, int options)
     }
 
     /* file->dest may be shorter after the reallocation, so add a NULL
-     * terminator.  This is needed for the call to strrchrW, as there will no
+     * terminator.  This is needed for the call to wcsrchr, as there will no
      * longer be a NULL terminator within the bounds of the allocation in this case.
      */
     file->dest[size - 1] = '\0';
-    lstrcpyW(strrchrW(file->dest, '\\') + 1, file->destname);
+    lstrcpyW(wcsrchr(file->dest, '\\') + 1, file->destname);
 
     while (!list_empty(&files.entry))
     {
-        file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
+        file = LIST_ENTRY(list_head(&files.entry), struct file_list, entry);
 
-        msi_move_file(file->source, file->dest, options);
+        move_file( package, file->source, file->dest, options );
 
         list_remove(&file->entry);
         free_file_entry(file);
@@ -862,8 +1052,8 @@ done:
 
 void msi_reduce_to_long_filename( WCHAR *filename )
 {
-    WCHAR *p = strchrW( filename, '|' );
-    if (p) memmove( filename, p + 1, (strlenW( p + 1 ) + 1) * sizeof(WCHAR) );
+    WCHAR *p = wcschr( filename, '|' );
+    if (p) memmove( filename, p + 1, (lstrlenW( p + 1 ) + 1) * sizeof(WCHAR) );
 }
 
 static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
@@ -902,27 +1092,27 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
 
     if (!sourcename)
     {
-        if (GetFileAttributesW(sourcedir) == INVALID_FILE_ATTRIBUTES)
+        if (msi_get_file_attributes( package, sourcedir ) == INVALID_FILE_ATTRIBUTES)
             goto done;
 
-        source = strdupW(sourcedir);
+        source = wcsdup(sourcedir);
         if (!source)
             goto done;
     }
     else
     {
         size = lstrlenW(sourcedir) + lstrlenW(sourcename) + 2;
-        source = msi_alloc(size * sizeof(WCHAR));
+        source = malloc(size * sizeof(WCHAR));
         if (!source)
             goto done;
 
         lstrcpyW(source, sourcedir);
         if (source[lstrlenW(source) - 1] != '\\')
-            lstrcatW(source, szBackSlash);
+            lstrcatW(source, L"\\");
         lstrcatW(source, sourcename);
     }
 
-    wildcards = strchrW(source, '*') || strchrW(source, '?');
+    wildcards = wcschr(source, '*') || wcschr(source, '?');
 
     if (MSI_RecordIsNull(rec, 4))
     {
@@ -930,18 +1120,18 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
         {
             WCHAR *p;
             if (sourcename)
-                destname = strdupW(sourcename);
-            else if ((p = strrchrW(sourcedir, '\\')))
-                destname = strdupW(p + 1);
+                destname = wcsdup(sourcename);
+            else if ((p = wcsrchr(sourcedir, '\\')))
+                destname = wcsdup(p + 1);
             else
-                destname = strdupW(sourcedir);
+                destname = wcsdup(sourcedir);
             if (!destname)
                 goto done;
         }
     }
     else
     {
-        destname = strdupW(MSI_RecordGetString(rec, 4));
+        destname = wcsdup(MSI_RecordGetString(rec, 4));
         if (destname) msi_reduce_to_long_filename(destname);
     }
 
@@ -950,30 +1140,30 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
         size = lstrlenW(destname);
 
     size += lstrlenW(destdir) + 2;
-    dest = msi_alloc(size * sizeof(WCHAR));
+    dest = malloc(size * sizeof(WCHAR));
     if (!dest)
         goto done;
 
     lstrcpyW(dest, destdir);
     if (dest[lstrlenW(dest) - 1] != '\\')
-        lstrcatW(dest, szBackSlash);
+        lstrcatW(dest, L"\\");
 
     if (destname)
         lstrcatW(dest, destname);
 
-    if (GetFileAttributesW(destdir) == INVALID_FILE_ATTRIBUTES)
+    if (msi_get_file_attributes( package, destdir ) == INVALID_FILE_ATTRIBUTES)
     {
-        if (!msi_create_full_path(destdir))
+        if (!msi_create_full_path( package, destdir ))
         {
-            WARN("failed to create directory %u\n", GetLastError());
+            WARN( "failed to create directory %lu\n", GetLastError() );
             goto done;
         }
     }
 
     if (!wildcards)
-        msi_move_file(source, dest, options);
+        move_file( package, source, dest, options );
     else
-        move_files_wildcard(source, dest, options);
+        move_files_wildcard( package, source, dest, options );
 
 done:
     uirow = MSI_CreateRecord( 9 );
@@ -983,24 +1173,24 @@ done:
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
-    msi_free(sourcedir);
-    msi_free(destdir);
-    msi_free(destname);
-    msi_free(source);
-    msi_free(dest);
+    free(sourcedir);
+    free(destdir);
+    free(destname);
+    free(source);
+    free(dest);
 
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_MoveFiles( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','M','o','v','e','F','i','l','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"MoveFiles");
+
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `MoveFile`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -1016,14 +1206,14 @@ static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const
 
     if (MSI_RecordIsNull( row, 4 ))
     {
-        len = strlenW( src ) + 1;
-        if (!(dst_name = msi_alloc( len * sizeof(WCHAR)))) return NULL;
-        strcpyW( dst_name, strrchrW( src, '\\' ) + 1 );
+        len = lstrlenW( src ) + 1;
+        if (!(dst_name = malloc( len * sizeof(WCHAR)))) return NULL;
+        lstrcpyW( dst_name, wcsrchr( src, '\\' ) + 1 );
     }
     else
     {
         MSI_RecordGetStringW( row, 4, NULL, &len );
-        if (!(dst_name = msi_alloc( ++len * sizeof(WCHAR) ))) return NULL;
+        if (!(dst_name = malloc( ++len * sizeof(WCHAR) ))) return NULL;
         MSI_RecordGetStringW( row, 4, dst_name, &len );
         msi_reduce_to_long_filename( dst_name );
     }
@@ -1031,15 +1221,15 @@ static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const
     if (MSI_RecordIsNull( row, 5 ))
     {
         WCHAR *p;
-        dst_path = strdupW( src );
-        p = strrchrW( dst_path, '\\' );
+        dst_path = wcsdup( src );
+        p = wcsrchr( dst_path, '\\' );
         if (p) *p = 0;
     }
     else
     {
         const WCHAR *dst_key = MSI_RecordGetString( row, 5 );
 
-        dst_path = strdupW( msi_get_target_folder( package, dst_key ) );
+        dst_path = wcsdup( msi_get_target_folder( package, dst_key ) );
         if (!dst_path)
         {
             /* try a property */
@@ -1047,17 +1237,17 @@ static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const
             if (!dst_path)
             {
                 FIXME("Unable to get destination folder, try AppSearch properties\n");
-                msi_free( dst_name );
+                free( dst_name );
                 return NULL;
             }
         }
     }
 
     dst = msi_build_directory_name( 2, dst_path, dst_name );
-    msi_create_full_path( dst_path );
+    msi_create_full_path( package, dst_path );
 
-    msi_free( dst_name );
-    msi_free( dst_path );
+    free( dst_name );
+    free( dst_path );
     return dst;
 }
 
@@ -1104,14 +1294,12 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     }
 
     TRACE("Duplicating file %s to %s\n", debugstr_w(file->TargetPath), debugstr_w(dest));
-
-    if (!CopyFileW( file->TargetPath, dest, TRUE ))
+    if (!copy_file( package, file->TargetPath, dest, TRUE ))
     {
-        WARN("Failed to copy file %s -> %s (%u)\n",
-             debugstr_w(file->TargetPath), debugstr_w(dest), GetLastError());
+        WARN( "failed to copy file %s -> %s (%lu)\n",
+              debugstr_w(file->TargetPath), debugstr_w(dest), GetLastError() );
     }
-
-    FIXME("We should track these duplicate files as well\n");   
+    FIXME("We should track these duplicate files as well\n");
 
     uirow = MSI_CreateRecord( 9 );
     MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString( row, 1 ) );
@@ -1120,19 +1308,19 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
-    msi_free(dest);
+    free(dest);
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','D','u','p','l','i','c','a','t','e','F','i','l','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"DuplicateFiles");
+
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `DuplicateFile`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -1184,10 +1372,9 @@ static UINT ITERATE_RemoveDuplicateFiles( MSIRECORD *row, LPVOID param )
     }
 
     TRACE("Removing duplicate %s of %s\n", debugstr_w(dest), debugstr_w(file->TargetPath));
-
-    if (!DeleteFileW( dest ))
+    if (!msi_delete_file( package, dest ))
     {
-        WARN("Failed to delete duplicate file %s (%u)\n", debugstr_w(dest), GetLastError());
+        WARN( "failed to delete duplicate file %s (%lu)\n", debugstr_w(dest), GetLastError() );
     }
 
     uirow = MSI_CreateRecord( 9 );
@@ -1196,19 +1383,19 @@ static UINT ITERATE_RemoveDuplicateFiles( MSIRECORD *row, LPVOID param )
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
-    msi_free(dest);
+    free(dest);
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_RemoveDuplicateFiles( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','D','u','p','l','i','c','a','t','e','F','i','l','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
-    rc = MSI_DatabaseOpenViewW( package->db, query, &view );
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"RemoveDuplicateFiles");
+
+    rc = MSI_DatabaseOpenViewW( package->db, L"SELECT * FROM `DuplicateFile`", &view );
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -1283,13 +1470,13 @@ static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
     size = 0;
-    if ((filename = strdupW( MSI_RecordGetString(row, 3) )))
+    if ((filename = wcsdup( MSI_RecordGetString(row, 3) )))
     {
         msi_reduce_to_long_filename( filename );
         size = lstrlenW( filename );
     }
     size += lstrlenW(dir) + 2;
-    path = msi_alloc(size * sizeof(WCHAR));
+    path = malloc(size * sizeof(WCHAR));
     if (!path)
     {
         ret = ERROR_OUTOFMEMORY;
@@ -1303,12 +1490,12 @@ static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
         lstrcatW(path, filename);
 
         TRACE("Deleting misc file: %s\n", debugstr_w(path));
-        DeleteFileW(path);
+        msi_delete_file( package, path );
     }
     else
     {
         TRACE("Removing misc directory: %s\n", debugstr_w(dir));
-        RemoveDirectoryW(dir);
+        msi_remove_directory( package, dir );
     }
 
 done:
@@ -1318,9 +1505,9 @@ done:
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
-    msi_free(filename);
-    msi_free(path);
-    msi_free(dir);
+    free(filename);
+    free(path);
+    free(dir);
     return ret;
 }
 
@@ -1340,15 +1527,15 @@ static void remove_folder( MSIFOLDER *folder )
 
 UINT ACTION_RemoveFiles( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','R','e','m','o','v','e','F','i','l','e','`',0};
     MSIQUERY *view;
     MSICOMPONENT *comp;
     MSIFILE *file;
     UINT r;
 
-    r = MSI_DatabaseOpenViewW(package->db, query, &view);
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"RemoveFiles");
+
+    r = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `RemoveFile`", &view);
     if (r == ERROR_SUCCESS)
     {
         r = MSI_IterateRecords(view, NULL, ITERATE_RemoveFiles, package);
@@ -1363,7 +1550,7 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         VS_FIXEDFILEINFO *ver;
 
         comp = file->Component;
-        msi_file_update_ui( package, file, szRemoveFiles );
+        file_update_ui( package, file, L"RemoveFiles" );
 
         comp->Action = msi_get_component_action( package, comp );
         if (comp->Action != INSTALLSTATE_ABSENT || comp->Installed == INSTALLSTATE_SOURCE)
@@ -1380,14 +1567,14 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
 
         if (file->Version)
         {
-            ver = msi_get_disk_file_version( file->TargetPath );
+            ver = msi_get_disk_file_version( package, file->TargetPath );
             if (ver && msi_compare_file_versions( ver, file->Version ) > 0)
             {
                 TRACE("newer version detected, not removing file\n");
-                msi_free( ver );
+                free( ver );
                 continue;
             }
-            msi_free( ver );
+            free( ver );
         }
 
         if (file->state == msifs_installed)
@@ -1395,10 +1582,10 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
 
         TRACE("removing %s\n", debugstr_w(file->File) );
 
-        SetFileAttributesW( file->TargetPath, FILE_ATTRIBUTE_NORMAL );
-        if (!DeleteFileW( file->TargetPath ))
+        msi_set_file_attributes( package, file->TargetPath, FILE_ATTRIBUTE_NORMAL );
+        if (!msi_delete_file( package, file->TargetPath ))
         {
-            WARN("failed to delete %s (%u)\n",  debugstr_w(file->TargetPath), GetLastError());
+            WARN( "failed to delete %s (%lu)\n",  debugstr_w(file->TargetPath), GetLastError() );
         }
         file->state = msifs_missing;
 
@@ -1424,7 +1611,7 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         else
         {
             MSIFOLDER *folder = msi_get_loaded_folder( package, comp->Directory );
-            remove_folder( folder );
+            if (folder) remove_folder( folder );
         }
     }
     return ERROR_SUCCESS;

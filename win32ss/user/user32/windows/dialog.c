@@ -36,9 +36,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define DF_END  0x0001
 #define DF_DIALOGACTIVE 0x4000 // ReactOS
-#define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
 #define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
-#define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
 #define GET_LONG(ptr) (*(const LONG *)(ptr))
@@ -141,7 +139,7 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
        return NULL;
     }
 
-    dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
+    dlgInfo = pWindow->DialogPointer;
 
     if (!dlgInfo && create)
     {
@@ -151,7 +149,7 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
                 return NULL;
 
             dlgInfo->idResult = IDOK;
-            SETDLGINFO( hWnd, dlgInfo );
+            NtUserxSetDialogPointer( hWnd, dlgInfo );
        }
        else
        {
@@ -159,13 +157,6 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
        }
     }
 
-    if (dlgInfo)
-    {
-        if (!(pWindow->state & WNDS_DIALOGWINDOW))
-        {
-           NtUserxSetDialogPointer( hWnd, dlgInfo );
-        }
-    }
     return dlgInfo;
 }
 
@@ -1258,7 +1249,8 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
         }
         case WM_NCDESTROY:
 //// ReactOS
-            if ((dlgInfo = (DIALOGINFO *)SetWindowLongPtrW( hwnd, DWLP_ROS_DIALOGINFO, 0 )))
+            dlgInfo = DIALOG_get_info(hwnd, FALSE);
+            if (dlgInfo != NULL)
             {
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
@@ -2304,25 +2296,18 @@ GetNextDlgGroupItem(
     {
         if (!IsChild (hDlg, hCtl)) return 0;
         /* Make sure hwndCtrl is a top-level child */
-
     }
     else
     {
         /* No ctrl specified -> start from the beginning */
         if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
-        /* MSDN is wrong. fPrevious does not result in the last child */
-
-        /* No ctrl specified -> start from the beginning */
-        if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
-
-        /* MSDN is wrong. fPrevious does not result in the last child */
+        /* MSDN is wrong. bPrevious does not result in the last child */
 
         /* Maybe that first one is valid.  If so then we don't want to skip it*/
         if ((GetWindowLongPtrW( hCtl, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
         {
             return hCtl;
         }
-
     }
 
     /* Always go forward around the group and list of controls; for the
@@ -2632,13 +2617,25 @@ IsDialogMessageW(
              if (!(dlgCode & DLGC_WANTARROWS))
              {
                  BOOL fPrevious = (lpMsg->wParam == VK_LEFT || lpMsg->wParam == VK_UP);
-                 HWND hwndNext = GetNextDlgGroupItem( hDlg, lpMsg->hwnd, fPrevious );
-                 if (hwndNext && SendMessageW( hwndNext, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg ) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
+
+                 /* Skip STATIC elements when arrow-moving through a list of controls */
+                 HWND hwndNext, hwndFirst = lpMsg->hwnd;
+                 for (hwndNext = GetNextDlgGroupItem(hDlg, hwndFirst, fPrevious);
+                      hwndNext && hwndFirst != hwndNext;
+                      hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious))
+                  {
+                      if (!(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC))
+                          break;
+                  }
+
+                 if (hwndNext &&
+                     ((SendMessageW(hwndNext, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg) &
+                       (DLGC_BUTTON | DLGC_RADIOBUTTON)) == (DLGC_BUTTON | DLGC_RADIOBUTTON)))
                  {
                      SetFocus( hwndNext );
                      if ((GetWindowLongW( hwndNext, GWL_STYLE ) & BS_TYPEMASK) == BS_AUTORADIOBUTTON &&
                          SendMessageW( hwndNext, BM_GETCHECK, 0, 0 ) != BST_CHECKED)
-                         SendMessageW( hwndNext, BM_CLICK, 1, 0 );
+                         SendMessageW(hwndNext, BM_CLICK, 0, 0);
                  }
                  else
                      SendMessageW( hDlg, WM_NEXTDLGCTL, (WPARAM)hwndNext, 1 );

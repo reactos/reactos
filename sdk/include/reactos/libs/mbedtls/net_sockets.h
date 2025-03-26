@@ -1,10 +1,26 @@
 /**
  * \file net_sockets.h
  *
- * \brief Network communication functions
+ * \brief   Network sockets abstraction layer to integrate Mbed TLS into a
+ *          BSD-style sockets API.
+ *
+ *          The network sockets module provides an example integration of the
+ *          Mbed TLS library into a BSD sockets implementation. The module is
+ *          intended to be an example of how Mbed TLS can be integrated into a
+ *          networking stack, as well as to be Mbed TLS's network integration
+ *          for its supported platforms.
+ *
+ *          The module is intended only to be used with the Mbed TLS library and
+ *          is not intended to be used by third party application software
+ *          directly.
+ *
+ *          The supported platforms are as follows:
+ *              * Microsoft Windows and Windows CE
+ *              * POSIX/Unix platforms including Linux, OS X
+ *
  */
 /*
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -45,8 +61,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_NET_SOCKETS_H
 #define MBEDTLS_NET_SOCKETS_H
@@ -73,11 +87,16 @@
 #define MBEDTLS_ERR_NET_UNKNOWN_HOST                      -0x0052  /**< Failed to get an IP address for the given hostname. */
 #define MBEDTLS_ERR_NET_BUFFER_TOO_SMALL                  -0x0043  /**< Buffer is too small to hold the data. */
 #define MBEDTLS_ERR_NET_INVALID_CONTEXT                   -0x0045  /**< The context is invalid, eg because it was free()ed. */
+#define MBEDTLS_ERR_NET_POLL_FAILED                       -0x0047  /**< Polling the net context failed. */
+#define MBEDTLS_ERR_NET_BAD_INPUT_DATA                    -0x0049  /**< Input invalid. */
 
 #define MBEDTLS_NET_LISTEN_BACKLOG         10 /**< The backlog that listen() should use. */
 
 #define MBEDTLS_NET_PROTO_TCP 0 /**< The TCP transport protocol */
 #define MBEDTLS_NET_PROTO_UDP 1 /**< The UDP transport protocol */
+
+#define MBEDTLS_NET_POLL_READ  1 /**< Used in \c mbedtls_net_poll to check for pending data  */
+#define MBEDTLS_NET_POLL_WRITE 2 /**< Used in \c mbedtls_net_poll to check if write possible */
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,7 +109,7 @@ extern "C" {
  * (eg two file descriptors for combined IPv4 + IPv6 support, or additional
  * structures for hand-made UDP demultiplexing).
  */
-typedef struct
+typedef struct mbedtls_net_context
 {
     int fd;             /**< The underlying file descriptor                 */
 }
@@ -132,6 +151,7 @@ int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host, const char 
  *
  * \return         0 if successful, or one of:
  *                      MBEDTLS_ERR_NET_SOCKET_FAILED,
+ *                      MBEDTLS_ERR_NET_UNKNOWN_HOST,
  *                      MBEDTLS_ERR_NET_BIND_FAILED,
  *                      MBEDTLS_ERR_NET_LISTEN_FAILED
  *
@@ -151,6 +171,8 @@ int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char 
  *                  can be NULL if client_ip is null
  *
  * \return          0 if successful, or
+ *                  MBEDTLS_ERR_NET_SOCKET_FAILED,
+ *                  MBEDTLS_ERR_NET_BIND_FAILED,
  *                  MBEDTLS_ERR_NET_ACCEPT_FAILED, or
  *                  MBEDTLS_ERR_NET_BUFFER_TOO_SMALL if buf_size is too small,
  *                  MBEDTLS_ERR_SSL_WANT_READ if bind_fd was set to
@@ -159,6 +181,33 @@ int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char 
 int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
                         mbedtls_net_context *client_ctx,
                         void *client_ip, size_t buf_size, size_t *ip_len );
+
+/**
+ * \brief          Check and wait for the context to be ready for read/write
+ *
+ * \note           The current implementation of this function uses
+ *                 select() and returns an error if the file descriptor
+ *                 is \c FD_SETSIZE or greater.
+ *
+ * \param ctx      Socket to check
+ * \param rw       Bitflag composed of MBEDTLS_NET_POLL_READ and
+ *                 MBEDTLS_NET_POLL_WRITE specifying the events
+ *                 to wait for:
+ *                 - If MBEDTLS_NET_POLL_READ is set, the function
+ *                   will return as soon as the net context is available
+ *                   for reading.
+ *                 - If MBEDTLS_NET_POLL_WRITE is set, the function
+ *                   will return as soon as the net context is available
+ *                   for writing.
+ * \param timeout  Maximal amount of time to wait before returning,
+ *                 in milliseconds. If \c timeout is zero, the
+ *                 function returns immediately. If \c timeout is
+ *                 -1u, the function blocks potentially indefinitely.
+ *
+ * \return         Bitmask composed of MBEDTLS_NET_POLL_READ/WRITE
+ *                 on success or timeout, or a negative return code otherwise.
+ */
+int mbedtls_net_poll( mbedtls_net_context *ctx, uint32_t rw, uint32_t timeout );
 
 /**
  * \brief          Set the socket blocking
@@ -221,16 +270,21 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len );
  *                 'timeout' seconds. If no error occurs, the actual amount
  *                 read is returned.
  *
+ * \note           The current implementation of this function uses
+ *                 select() and returns an error if the file descriptor
+ *                 is \c FD_SETSIZE or greater.
+ *
  * \param ctx      Socket
  * \param buf      The buffer to write to
  * \param len      Maximum length of the buffer
  * \param timeout  Maximum number of milliseconds to wait for data
  *                 0 means no timeout (wait forever)
  *
- * \return         the number of bytes received,
- *                 or a non-zero error code:
- *                 MBEDTLS_ERR_SSL_TIMEOUT if the operation timed out,
+ * \return         The number of bytes received if successful.
+ *                 MBEDTLS_ERR_SSL_TIMEOUT if the operation timed out.
  *                 MBEDTLS_ERR_SSL_WANT_READ if interrupted by a signal.
+ *                 Another negative error code (MBEDTLS_ERR_NET_xxx)
+ *                 for other failures.
  *
  * \note           This function will block (until data becomes available or
  *                 timeout is reached) even if the socket is set to

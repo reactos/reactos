@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS api tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for SHCreateDataObject
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "shelltest.h"
@@ -64,7 +64,7 @@ static void TestAdviseAndCanonical(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUI
 
 
 #define ok_wstri(x, y) \
-    ok(wcsicmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
+    ok(_wcsicmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
 static void TestHIDA(PVOID pData, SIZE_T Size, LPCWSTR ExpectRoot, LPCWSTR ExpectPath1, LPCWSTR ExpectPath2)
 {

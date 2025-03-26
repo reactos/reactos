@@ -33,39 +33,27 @@ AddReactOSArcDiskInfo(
 // ARC Component Configuration Routines
 //
 VOID
-NTAPI
-FldrSetIdentifier(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-    IN PCHAR IdentifierString
-);
-
-VOID
-NTAPI
 FldrSetConfigurationData(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-    IN ULONG Size
-);
+    _Inout_ PCONFIGURATION_COMPONENT_DATA ComponentData,
+    _In_ PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    _In_ ULONG Size);
 
 VOID
-NTAPI
 FldrCreateSystemKey(
-    OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
-);
+    _Out_ PCONFIGURATION_COMPONENT_DATA* SystemNode,
+    _In_ PCSTR IdentifierString);
 
 VOID
-NTAPI
 FldrCreateComponentKey(
-    IN PCONFIGURATION_COMPONENT_DATA SystemKey,
-    IN CONFIGURATION_CLASS Class,
-    IN CONFIGURATION_TYPE Type,
-    IN IDENTIFIER_FLAG Flags,
-    IN ULONG Key,
-    IN ULONG Affinity,
-    IN PCHAR IdentifierString,
-    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-    IN ULONG Size,
-    OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
-);
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemNode,
+    _In_ CONFIGURATION_CLASS Class,
+    _In_ CONFIGURATION_TYPE Type,
+    _In_ IDENTIFIER_FLAG Flags,
+    _In_ ULONG Key,
+    _In_ ULONG Affinity,
+    _In_ PCSTR IdentifierString,
+    _In_ PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    _In_ ULONG Size,
+    _Out_ PCONFIGURATION_COMPONENT_DATA* ComponentKey);
 
 /* EOF */

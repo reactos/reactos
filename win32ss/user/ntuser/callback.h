@@ -76,3 +76,13 @@ BOOL FASTCALL co_IntSetWndIcons(VOID);
 VOID FASTCALL co_IntDeliverUserAPC(VOID);
 VOID FASTCALL co_IntSetupOBM(VOID);
 BOOL FASTCALL IntMsgCreateStructW(PWND,CREATESTRUCTW*,CREATESTRUCTW*,PVOID*,PVOID*);
+
+DWORD
+APIENTRY
+co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID);
+
+BOOL
+APIENTRY
+co_ClientImmLoadLayout(
+    _In_ HKL hKL,
+    _Inout_ PIMEINFOEX pImeInfoEx);

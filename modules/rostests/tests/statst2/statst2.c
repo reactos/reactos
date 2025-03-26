@@ -100,7 +100,7 @@ LRESULT CALLBACK WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 
 	case WM_DRAWITEM:
 		{
-			LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+			LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
 			DrawText ( lpDrawItem->hDC, "SS_DRAWITEM test successful!", 28, &(lpDrawItem->rcItem), 0 );
 		}
 		break;

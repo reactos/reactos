@@ -7,7 +7,7 @@ DriverVer=11/19/2010,6.1.7601.17514
 PnPLockdown=1
 
 [SourceDisksFiles]
-hdaudbus.sys 		= 3426
+hdaudbus.sys = 3426
 
 [DestinationDirs]
 DefaultDestDir = 12 ; windows\system32\drivers
@@ -39,7 +39,6 @@ HKR,Interrupt Management,,0x00000010
 HKR,Interrupt Management\MessageSignaledInterruptProperties,,0x00000010
 HKR,Interrupt Management\MessageSignaledInterruptProperties,MSISupported,0x00010001,1
 
-
 ;-------------- Service installation
 [HDAudio_Device.NT.Services]
 AddService = HDAudBus, 0x00000002, HDAudio_Service_Inst
@@ -58,8 +57,6 @@ hdaudbus.sys=SignatureAttributes.DRM
 
 [SignatureAttributes.DRM]
 DRMLevel=1300
-
-
 
 [Strings]
 DiskId1 = "ReactOS UAA Bus Driver for High Definition Audio. Installation Disk #1"
@@ -80,9 +77,9 @@ UNKNOWNFG = "Nieznane urządzenie na High Definition Audio Bus"
 HDAudioBUS = "Wewnętrzna magistrala High Definition Audio"
 
 [Strings.0418]
-DiskId1 = "Modúl-pilot ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
+DiskId1 = "Driver ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
 HDAudio.DeviceDesc = "Dispozitiv de control audio de înaltă definiție"
-HDAudBus.SVCDESC = "Modúl-pilot ReactOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
+HDAudBus.SVCDESC = "Driver ReactOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
 AUDIOFG = "Dispozitiv audio pe magistrala audio de înaltă definiție"
 MODEMFG = "Dispozitiv modem pe magistrala audio de înaltă definiție"
 UNKNOWNFG = "Dispozitiv nespecificat pe magistrala audio de înaltă definiție"
@@ -104,3 +101,12 @@ AUDIOFG = "HDA 总线上的音频设备"
 MODEMFG = "HDA 总线上的 Modem 设备"
 UNKNOWNFG = "HDA 总线上的未知设备"
 HDAudioBUS = "内部 HDA 总线"
+
+[Strings.0a]
+DiskId1 = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad. Disco de instalación 1"
+HDAudio.DeviceDesc = "Controlador de Audio de Alta Fidelidad"
+HDAudBus.SVCDESC = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad"
+AUDIOFG = "Dispositivo de Audio en el Bus de Audio de Alta Fidelidad"
+MODEMFG = "Dispositivo Modem en el Bus de Audio de Alta Fidelidad"
+UNKNOWNFG = "Dispositivo desconocido en el Bus de Audio de Alta Fidelidad"
+HDAudioBUS = "Bus Interno de Audio de Alta Fidelidad"

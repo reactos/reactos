@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS enTTLayouts[] =
 {
-    { L"2C09", L"00000409" },
-    { NULL, NULL }
+    { 0x2C09, 0x00000409 },
+    { 0, 0 }
 };

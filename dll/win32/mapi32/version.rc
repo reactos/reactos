@@ -27,7 +27,6 @@
 
 #include "wine/wine_common_ver.rc"
 
-
 /* UTF-8 */
 #pragma code_page(65001)
 

@@ -24,7 +24,7 @@ REM         * 4 - SB Pro II
 REM         * 6 - SB 16/AWE 32/32/64
 REM
 REM     NOTE: To disable Sound Blaster support, simply place an invalid
-REM     I/O Port Address (e.g. SET BLASTER=A0). However, if SET BLASTER is 
+REM     I/O Port Address (e.g. SET BLASTER=A0). However, if SET BLASTER is
 REM     not specified in this file, then the default values (A220 I7 D1 H5 T6)
 REM     will be used instead.
 SET BLASTER=A220 I7 D1 H5 T6

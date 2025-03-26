@@ -29,9 +29,6 @@ extern "C" {
 //
 
 
-#define SYNCH_LEVEL DISPATCH_LEVEL
-
-
 //
 // CPU Vendors
 //
@@ -281,6 +278,7 @@ typedef enum
 //
 // PRCB Flags
 //
+#define PRCB_MINOR_VERSION      1
 #define PRCB_MAJOR_VERSION      1
 #define PRCB_BUILD_DEBUG        1
 #define PRCB_BUILD_UNIPROCESSOR 2
@@ -301,6 +299,16 @@ typedef enum
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
 #define KSEG0_BASE              0x80000000
+
+//
+// Synchronization-level IRQL
+//
+#define SYNCH_LEVEL             DISPATCH_LEVEL
+
+//
+// Double fault stack size
+//
+#define DOUBLE_FAULT_STACK_SIZE 0x3000
 
 //
 // Number of pool lookaside lists per pool in the PRCB

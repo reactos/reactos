@@ -21,8 +21,13 @@
 
 extern char __ImageBase;
 #ifdef __GNUC__
-/* .text/.data/.rdata, .edata and .bss */
-#define FREELDR_SECTION_COUNT 3
+  #ifdef _M_AMD64
+    /* .text/.data/.rdata, and .bss */
+    #define FREELDR_SECTION_COUNT 2
+  #else
+    /* .text/.data/.rdata, .edata and .bss */
+    #define FREELDR_SECTION_COUNT 3
+  #endif
 #else
 #ifdef _M_AMD64
 /* .text, .rdata/.edata, .pdata and .data/.bss */
@@ -46,7 +51,12 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SIZE    4096
 #define MM_PAGE_MASK    0xFFF
 #define MM_PAGE_SHIFT    12
-#define MM_MAX_PAGE        0xFFFFF
+#if defined(_X86PAE_)
+#define MM_MAX_PAGE        0x3FFFFFF /* 26 bits for the PFN */
+#else
+#define MM_MAX_PAGE        0xFFFFF /* 20 bits for the PFN */
+#endif
+#define MM_MAX_PAGE_LOADER 0xFFFFF /* 4 GB flat address range */
 
 #define MM_SIZE_TO_PAGES(a)  \
     ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
@@ -58,7 +68,8 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SIZE    4096
 #define MM_PAGE_MASK    0xFFF
 #define MM_PAGE_SHIFT    12
-#define MM_MAX_PAGE     0x3FFFF /* freeldr only maps 1 GB */
+#define MM_MAX_PAGE        0xFFFFFFFFF /* 36 bits for the PFN */
+#define MM_MAX_PAGE_LOADER 0x3FFFF /* on x64 freeldr only maps 1 GB */
 
 #define MM_SIZE_TO_PAGES(a)  \
     ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
@@ -107,7 +118,7 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, PFN_NUMBER TotalPageCou
 VOID MmSetMemoryType(PVOID MemoryAddress, SIZE_T MemorySize, TYPE_OF_MEMORY NewType); // Use with EXTREME caution!
 
 PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(PFN_NUMBER *NoEntries);            // Returns a pointer to the memory mapping table and a number of entries in it
-
+PFN_NUMBER MmGetTotalPagesInLookupTable(VOID);
 
 //BOOLEAN    MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
 BOOLEAN    MmInitializeMemoryManager(VOID);
@@ -118,12 +129,14 @@ VOID    MmFreeMemory(PVOID MemoryPointer);
 PVOID    MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 PVOID    MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 
+PFN_NUMBER MmGetHighestPhysicalPage(VOID);
+PFN_NUMBER MmGetLoaderPagesSpanned(VOID);
+ULONG MmGetBiosMemoryMap(_Out_ PFREELDR_MEMORY_DESCRIPTOR *MemoryMap);
+
 /* Heap */
 #define DEFAULT_HEAP_SIZE (1024 * 1024)
 #define TEMP_HEAP_SIZE (32 * 1024 * 1024)
 
-extern PVOID FrLdrDefaultHeap;
-extern PVOID FrLdrTempHeap;
 extern SIZE_T FrLdrImageSize;
 
 PVOID
@@ -158,34 +171,17 @@ FrLdrHeapFreeEx(
     PVOID Pointer,
     ULONG Tag);
 
-FORCEINLINE
 PVOID
-FrLdrHeapAlloc(SIZE_T MemorySize, ULONG Tag)
-{
-    return FrLdrHeapAllocateEx(FrLdrDefaultHeap, MemorySize, Tag);
-}
+FrLdrHeapAlloc(SIZE_T MemorySize, ULONG Tag);
 
-FORCEINLINE
 VOID
-FrLdrHeapFree(PVOID MemoryPointer, ULONG Tag)
-{
-    FrLdrHeapFreeEx(FrLdrDefaultHeap, MemoryPointer, Tag);
-}
+FrLdrHeapFree(PVOID MemoryPointer, ULONG Tag);
 
-FORCEINLINE
 PVOID
 FrLdrTempAlloc(
     _In_ SIZE_T Size,
-    _In_ ULONG Tag)
-{
-    return FrLdrHeapAllocateEx(FrLdrTempHeap, Size, Tag);
-}
+    _In_ ULONG Tag);
 
-FORCEINLINE
 VOID
 FrLdrTempFree(
-    PVOID Allocation, ULONG Tag)
-{
-    FrLdrHeapFreeEx(FrLdrTempHeap, Allocation, Tag);
-}
-
+    PVOID Allocation, ULONG Tag);

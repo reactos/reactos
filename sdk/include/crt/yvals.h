@@ -7,10 +7,8 @@
 #define _YVALS
 
 #include <_mingw.h>
-/* TODO, don't include crtdef.h.  */
-#include <crtdefs.h>
 
-#pragma pack(push,_CRT_PACKING)
+#pragma pack(push,8)
 
 #define _CPPLIB_VER 405
 #define __PURE_APPDOMAIN_GLOBAL

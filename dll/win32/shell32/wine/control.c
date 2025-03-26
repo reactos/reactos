@@ -2,6 +2,7 @@
  *
  * Copyright 2001 Eric Pouech
  * Copyright 2008 Owen Rudge
+ * Copyright 2022 Raymond Czerny
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,12 +29,16 @@
 #define NO_SHLWAPI_REG
 #include <shlwapi.h>
 #include <shellapi.h>
+#define COBJMACROS
+#include <shlobj.h>
+#include <shobjidl.h>
 #include <wine/debug.h>
+#include <wine/unicode.h>
 
 #include <strsafe.h>
 
 #include "cpanel.h"
-#include "wine/unicode.h"
+#include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 
@@ -697,20 +702,17 @@ static void Control_RegisterRegistryApplets(HWND hWnd, CPanel *panel, HKEY hkey_
 
 static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
+    static const WCHAR wszRegPath[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls";
     HANDLE		h;
     WIN32_FIND_DATAW	fd;
     WCHAR		buffer[MAX_PATH];
-    static const WCHAR wszAllCpl[] = {'*','.','c','p','l',0};
-    static const WCHAR wszRegPath[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t',
-            '\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
-            '\\','C','o','n','t','r','o','l',' ','P','a','n','e','l','\\','C','p','l','s',0};
     WCHAR *p;
 
     /* first add .cpl files in the system directory */
     GetSystemDirectoryW( buffer, MAX_PATH );
     p = buffer + strlenW(buffer);
     *p++ = '\\';
-    lstrcpyW(p, wszAllCpl);
+    lstrcpyW(p, L"*.cpl");
 
     if ((h = FindFirstFileW(buffer, &fd)) != INVALID_HANDLE_VALUE) {
         do {
@@ -730,14 +732,137 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 #else
 static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
+    /* NOTE: If Explorer shell is not available, use ReactOS's alternative file browser instead */
     ShellExecuteW(NULL,
                   L"open",
-                  L"explorer.exe",
+                  GetShellWindow() ? L"explorer.exe" : L"filebrowser.exe",
                   L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
                   NULL,
                   SW_SHOWDEFAULT);
 }
 #endif
+
+#ifdef __REACTOS__
+
+/** Structure for in and out data when
+ *  search for the cpl dialog of first instance
+ */
+typedef struct tagAppDlgFindData
+{
+    PCWSTR    szAppFile;  /**< Full path to applet library as search parameter */
+    UINT_PTR  sAppletNo;  /**< Number of applet in a system control library as search parameter */
+    ATOM      aCPLName;   /**< to read window property 'CPLName' */
+    ATOM      aCPLFlags;  /**< to read window property 'CPLFlags'*/
+    HWND      hRunDLL;    /**< to skip self instance */
+    HWND      hDlgResult; /**< Returned dialog handle or NULL if not found */
+} AppDlgFindData;
+
+/**
+ * Callback function to search applet dialog
+ * @param hwnd A handle to a top-level window.
+ * @param lParam Pointer of AppDlgFindData
+ * @return TRUE: continue enumeration, FALSE: stop enumeration
+ */
+static BOOL CALLBACK
+Control_EnumWinProc(
+    _In_ HWND   hwnd,
+    _In_ LPARAM lParam)
+{
+    AppDlgFindData* pData = (AppDlgFindData*)lParam;
+    UINT_PTR sAppletNo;
+    HANDLE hRes;
+    WCHAR szAppFile[MAX_PATH];
+
+    if (pData->hRunDLL == hwnd)
+        return TRUE; /* Skip self instance */
+
+    sAppletNo = (UINT_PTR)GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLFlags));
+    if (sAppletNo != pData->sAppletNo)
+        return TRUE; /* Continue enumeration */
+
+    hRes = GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLName));
+    GlobalGetAtomNameW((ATOM)HandleToUlong(hRes), szAppFile, _countof(szAppFile));
+    if (wcscmp(szAppFile, pData->szAppFile) == 0)
+    {
+        HWND hDialog = GetLastActivePopup(hwnd);
+        if (IsWindow(hDialog))
+        {
+            pData->hDlgResult = hDialog;
+            return FALSE; /* Stop enumeration */
+        }
+    }
+
+    return TRUE; /* Continue enumeration */
+}
+
+/**
+ * This function makes the system control applet accessible via the taskbar.
+ *
+ * @param applet
+ * Pointer of system control applet.
+ *
+ * @param index
+ * Number of applet in a system control library.
+ */
+static void
+Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
+{
+    HICON hSmallIcon;
+    ITaskbarList* pTaskbar = NULL;
+
+    /* Try to add a taskbar button only if the applet's parent window is the desktop */
+    if (GetParent(applet->hWnd) != NULL)
+    {
+        return;
+    }
+
+    SetWindowTextW(applet->hWnd, applet->info[index].name);
+
+    /* Set large icon for the taskbar button */
+    if (applet->info[index].icon)
+    {
+        SendMessageW(applet->hWnd, WM_SETICON, ICON_BIG, (LPARAM)applet->info[index].icon);
+    }
+
+    /* Try loading the small icon for the taskbar button */
+    hSmallIcon = (HICON)LoadImageW(applet->hModule,
+                                   MAKEINTRESOURCEW(applet->info[index].idIcon),
+                                   IMAGE_ICON,
+                                   GetSystemMetrics(SM_CXSMICON),
+                                   GetSystemMetrics(SM_CYSMICON),
+                                   0);
+    if (hSmallIcon)
+    {
+        SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hSmallIcon);
+    }
+    else
+    {
+        if (applet->info[index].icon)
+        {
+            SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)applet->info[index].icon);
+        }
+    }
+
+    /* Add button to the taskbar */
+    ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
+
+    /* Activate the corresponding button in the taskbar */
+    CoInitialize(NULL);
+    if (CoCreateInstance(&CLSID_TaskbarList,
+                         NULL, CLSCTX_INPROC_SERVER,
+                         &IID_ITaskbarList,
+                         (LPVOID*)&pTaskbar) == S_OK)
+    {
+        if (ITaskbarList_HrInit(pTaskbar) == S_OK)
+        {
+            ITaskbarList_ActivateTab(pTaskbar, applet->hWnd);
+        }
+        ITaskbarList_Release(pTaskbar);
+    }
+    CoUninitialize();
+}
+
+#endif /* __REACTOS__ */
 
 static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
    /* forms to parse:
@@ -749,6 +874,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     *   "a path\foo.cpl"
     */
 {
+#ifndef __REACTOS__
     LPWSTR	buffer;
     LPWSTR	beg = NULL;
     LPWSTR	end;
@@ -828,10 +954,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     applet = Control_LoadApplet(hWnd, buffer, panel);
     if (applet)
     {
-#ifdef __REACTOS__
-    ULONG_PTR cookie;
-    BOOL bActivated;
-#endif
         /* we've been given a textual parameter (or none at all) */
         if (sp == -1) {
             while ((++sp) != applet->count) {
@@ -847,23 +969,201 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             sp = 0;
         }
 
-#ifdef __REACTOS__
-        bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
-#endif
-
         if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
             applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
 
         Control_UnloadApplet(applet);
-
-#ifdef __REACTOS__
-    if (bActivated)
-        DeactivateActCtx(0, cookie);
-#endif
-
     }
 
     HeapFree(GetProcessHeap(), 0, buffer);
+#else
+    LPWSTR	buffer;
+    LPWSTR       ptr;
+    signed 	sp = -1;
+    LPCWSTR	extraPmts = L"";
+    BOOL        quoted = FALSE;
+    CPlApplet *applet;
+    LPCWSTR pchFirstComma = NULL, pchSecondComma = NULL;
+    LPCWSTR pchLastUnquotedSpace = NULL;
+    LPWSTR wszDialogBoxName;
+    int i = 0;
+    SIZE_T nLen = lstrlenW(wszCmd);
+
+    buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
+    wszDialogBoxName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*wszDialogBoxName) * (nLen + 1));
+    if (wszDialogBoxName == NULL || buffer == NULL)
+    {
+        if (buffer != NULL)
+            HeapFree(GetProcessHeap(), 0, buffer);
+        if (wszDialogBoxName != NULL)
+            HeapFree(GetProcessHeap(), 0, wszDialogBoxName);
+        return;
+    }
+
+    /* Search for unquoted commas and spaces. */
+    for (i = 0; i < nLen; i++)
+    {
+        if (quoted && wszCmd[i] != L'"')
+            continue;
+        switch (wszCmd[i])
+        {
+            case L'"':
+                quoted = !quoted;
+                break;
+            case L',':
+                if (!pchFirstComma) 
+                    pchFirstComma = &wszCmd[i];
+                else if (!pchSecondComma) 
+                    pchSecondComma = &wszCmd[i];
+                break;
+            case L' ': 
+                pchLastUnquotedSpace = &wszCmd[i];
+                break;
+        }
+    }
+
+    /* If no unquoted commas are found, parameters are either space separated, or the entire string
+     * is a CPL path. */
+    if (!pchFirstComma)
+    {
+        /* An unquoted space was found in the string. Assume the last word is the dialog box
+         * name/number. */
+        if (pchLastUnquotedSpace)
+        {
+            int nSpaces = 0;
+
+            while (pchLastUnquotedSpace[nSpaces] == L' ')
+                nSpaces++;
+
+            StringCchCopyNW(buffer, nLen + 1, wszCmd, pchLastUnquotedSpace - wszCmd);
+            StringCchCopyW(wszDialogBoxName, nLen + 1, pchLastUnquotedSpace + nSpaces);
+        }
+        /* No parameters were passed, the entire string is the CPL path. */
+        else
+        {
+            StringCchCopyW(buffer, nLen + 1, wszCmd);
+        }
+    }
+    /* If an unquoted comma was found, there are at least two parts of the string:
+     * - the CPL path
+     * - either a dialog box number preceeded by @, or a dialog box name.
+     * If there was a second unqoted comma, there is another part of the string:
+     * - the rest of the parameters. */
+    else
+    {
+        /* If there was no second unquoted comma in the string, the CPL path ends at thes
+          * null terminator. */
+        if (!pchSecondComma)
+            pchSecondComma = wszCmd + nLen;
+
+        StringCchCopyNW(buffer, nLen + 1, wszCmd, pchFirstComma - wszCmd);
+        StringCchCopyNW(wszDialogBoxName,
+                        nLen + 1,
+                        pchFirstComma + 1,
+                        pchSecondComma - pchFirstComma - 1);
+
+        if (pchSecondComma != wszCmd + nLen)
+        {
+            extraPmts = pchSecondComma + 1;
+        }
+    }
+
+    /* Remove the quotes from both buffers. */
+    while ((ptr = StrChrW(buffer, '"')))
+        memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+
+    while ((ptr = StrChrW(wszDialogBoxName, '"')))
+        memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+
+    if (wszDialogBoxName[0] == L'@')
+    {
+        sp = _wtoi(wszDialogBoxName + 1);
+    }
+
+    TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
+
+    applet = Control_LoadApplet(hWnd, buffer, panel);
+    if (applet)
+    {
+        ULONG_PTR cookie;
+        BOOL bActivated;
+        ATOM aCPLName;
+        ATOM aCPLFlags;
+        ATOM aCPLPath;
+        AppDlgFindData findData;
+        
+        /* we've been given a textual parameter (or none at all) */
+        if (sp == -1) 
+        {
+            while ((++sp) != applet->count) 
+            {
+                TRACE("sp %d, name %s\n", sp, debugstr_w(applet->info[sp].name));
+
+                if (StrCmpIW(wszDialogBoxName, applet->info[sp].name) == 0)
+                    break;
+            }
+        }
+
+        if (sp >= applet->count && (wszDialogBoxName[0] == L'\0' || wszDialogBoxName[0] == L'@'))
+        {
+            sp = 0;
+        }
+
+        bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
+
+        if (sp < applet->count)
+        {
+            aCPLPath = GlobalFindAtomW(applet->cmd);
+            if (!aCPLPath)
+                aCPLPath = GlobalAddAtomW(applet->cmd);
+
+            aCPLName = GlobalFindAtomW(L"CPLName");
+            if (!aCPLName)
+                aCPLName = GlobalAddAtomW(L"CPLName");
+
+            aCPLFlags = GlobalFindAtomW(L"CPLFlags");
+            if (!aCPLFlags)
+                aCPLFlags = GlobalAddAtomW(L"CPLFlags");
+
+            findData.szAppFile = applet->cmd;
+            findData.sAppletNo = (UINT_PTR)(sp + 1);
+            findData.aCPLName = aCPLName;
+            findData.aCPLFlags = aCPLFlags;
+            findData.hRunDLL = applet->hWnd;
+            findData.hDlgResult = NULL;
+            // Find the dialog of this applet in the first instance.
+            // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
+            EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
+            if (findData.hDlgResult)
+            {
+                BringWindowToTop(findData.hDlgResult);
+            }
+            else
+            {
+                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
+                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
+                Control_ShowAppletInTaskbar(applet, sp);
+
+                if (extraPmts[0] == L'\0' ||
+                    !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
+                {
+                    applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+                }
+
+                RemovePropW(applet->hWnd, applet->cmd);
+                GlobalDeleteAtom(aCPLPath);
+            }
+        }
+
+        Control_UnloadApplet(applet);
+
+        if (bActivated)
+            DeactivateActCtx(0, cookie);
+    }
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, wszDialogBoxName);
+#endif
 }
 
 /*************************************************************************
@@ -944,7 +1244,12 @@ void WINAPI RunDll_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
  * hMod("DeskCp16.Dll"), pFunc("CplApplet"), 0, 1, 0xc, 0
  *
  */
+#ifndef __REACTOS__
 DWORD WINAPI CallCPLEntry16(HMODULE hMod, FARPROC pFunc, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
+#else
+DECLARE_HANDLE(FARPROC16);
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6)
+#endif
 {
     FIXME("(%p, %p, %08x, %08x, %08x, %08x): stub.\n", hMod, pFunc, dw3, dw4, dw5, dw6);
     return 0x0deadbee;

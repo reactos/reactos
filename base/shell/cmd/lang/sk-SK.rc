@@ -104,9 +104,9 @@ CTTY device\n\n\
             CON is usually the default standard I/O device.\n\n\
 To return control to the standard console, type: CTTY CON on the auxiliary\n\
 device."
-    STRING_DATE_HELP1 "\nZadajte nový dátum (mm%cdd%crrrr): "
-    STRING_DATE_HELP2 "\nZadajte nový dátum (dd%cmm%crrrr): "
-    STRING_DATE_HELP3 "\nZadajte nový dátum (rrrr%cmm%cdd): "
+    STRING_DATE_HELP1 "Zadajte nový dátum (mm%cdd%crrrr): "
+    STRING_DATE_HELP2 "Zadajte nový dátum (dd%cmm%crrrr): "
+    STRING_DATE_HELP3 "Zadajte nový dátum (rrrr%cmm%cdd): "
     STRING_DATE_HELP4 "Zobrazí alebo nastaví dátum.\n\n\
 DATE [/T][date]\n\n\
   /T    display only\n\n\
@@ -127,7 +127,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
   /S    Delete file from all sub directory\n\
   /A    Select files to be deleted based on attributes.\n\
         attributes\n\
-        R     Read Only files\n\
+        R     Read-only files\n\
         S     System files\n\
         A     Archiveable files\n\
         H     Hidden Files\n\
@@ -176,10 +176,10 @@ preset switches by prefixing any switch with - (hyphen)--for example, /-W.\n"
     STRING_DIR_HELP2 " Volume in drive %c is %s\n"
     STRING_DIR_HELP3 " Volume in drive %c has no label.\n"
     STRING_DIR_HELP4 " Volume Serial Number is %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Total Files Listed:\n%16i File(s)% 14s bytes\n"
-    STRING_DIR_HELP6 "%16i Dir(s)% 15s bytes free\n"
+    STRING_DIR_HELP5 "\n     Total Files Listed:\n%16i File(s) %14s bytes\n"
+    STRING_DIR_HELP6 "%16i Dir(s)  %14s bytes free\n"
     STRING_DIR_HELP7 "\n Directory of %s\n\n"
-    STRING_DIR_HELP8 "%16i File(s)% 14s bytes\n"
+    STRING_DIR_HELP8 "%16i File(s) %14s bytes\n"
     STRING_DIRSTACK_HELP1 "Stores the current directory for use by the POPD command, then\n\
 changes to the specified directory.\n\n\
 PUSHD [path | ..]\n\n\
@@ -250,7 +250,8 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST filename    Specifies a true condition if the specified filename exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
-    STRING_LOCALE_HELP1 "Aktuálny čas je"
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "Aktuálny čas je: "
     STRING_MKDIR_HELP "Creates a directory.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
     STRING_MKLINK_HELP "Creates a filesystem link object.\n\n\
@@ -341,34 +342,6 @@ Note that you cannot specify a new drive or path for your destination. Use\n\
 the MOVE command for that purpose.\n"
     STRING_REN_HELP2 "    %lu file renamed\n"
     STRING_REN_HELP3 "    %lu files renamed\n"
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Specifies the source file or files.\n\
-  [drive2:][path2]         Specifies the directory where files are to be\n\
-                           replaced.\n\
-  /A                       Adds new files to destination directory. Cannot\n\
-                           use with /S or /U switches.\n\
-  /P                       Prompts for confirmation before replacing a file or\n\
-                           adding a source file.\n\
-  /R                       Replaces read-only files as well as unprotected\n\
-                           files.\n\
-  /S                       Replaces files in all subdirectories of the\n\
-                           destination directory. Cannot use with the /A\n\
-                           switch.\n\
-  /W                       Waits for you to insert a disk before beginning.\n\
-  /U                       Replaces (updates) only files that are older than\n\
-                           source files. Cannot use with the /A switch.\n"
-    STRING_REPLACE_HELP2 "Source path required\n"
-    STRING_REPLACE_HELP3 "No files replaced\n"
-    STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
-    STRING_REPLACE_HELP5 "Replacing %s\n"
-    STRING_REPLACE_HELP6 "Replace %s\n"
-    STRING_REPLACE_HELP7 "No files added\n"
-    STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
-    STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "Changes the position of replaceable parameters in a batch file.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "move cursor and optionally print text\n\n\
@@ -404,7 +377,7 @@ for a new one.  Press ENTER to keep the same time.\n"
     STRING_TIME_HELP2 "Zadajte nový čas: "
     STRING_TIMER_HELP1 "Elapsed %d msecs\n"
     STRING_TIMER_HELP2 "Elapsed %02d%c%02d%c%02d%c%02d\n"
-    STRING_TIMER_HELP3 "allow the use of ten stopwatches.\n\n\
+    STRING_TIMER_HELP3 "Allow the use of ten stopwatches.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          set stopwatch ON\n\
   OFF         set stopwatch OFF\n\
@@ -446,7 +419,7 @@ listing of credits."
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version.\n"
     STRING_VERSION_HELP5 "\nHlásenia o chybách zasielajte na <ros-dev@reactos.org>.\n\
-Aktualizácie sú dostupné na: http://www.reactos.org"
+Aktualizácie sú dostupné na: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS version written by:\n"
     STRING_VERSION_HELP7 "\nReactOS version written by:\n"
     STRING_VOL_HELP1 " Volume in drive %c is %s\n"
@@ -454,14 +427,14 @@ Aktualizácie sú dostupné na: http://www.reactos.org"
     STRING_VOL_HELP3 " Volume Serial Number is %04X-%04X\n"
     STRING_VOL_HELP4 "Displays the disk volume label and serial number, if they exist.\n\nVOL [drive:]"
     STRING_WINDOW_HELP1 "change console window aspect\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 /POS          specify window placement and dimensions\n\
 MIN           minimalizovať okno\n\
 MAX           maximalizujte okno\n\
 RESTORE       obnoviť okno"
     STRING_WINDOW_HELP2 "change console window aspect\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        tile of window on which perform actions\n\
 /POS          specify window placement and dimensions\n\
@@ -482,23 +455,23 @@ title         new title\n"
     STRING_CMD_ERROR3 "Can't redirect to file %s\n"
     STRING_CMD_ERROR4 "Running %s...\n"
     STRING_CMD_ERROR5 "Running cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "Same colors error! (Background and foreground can't be the same color)"
-    STRING_COLOR_ERROR2 "Error in color specification"
+    STRING_COLOR_ERROR1 "Same colors error! (Background and foreground can't be the same color)\n"
+    STRING_COLOR_ERROR2 "Error in color specification\n"
     STRING_CONSOLE_ERROR "Neznáma chyba: %d\n"
     STRING_COPY_ERROR1 "Chyba: Cannot open source - %s!\n"
     STRING_COPY_ERROR2 "Chyba: Can't copy onto itself!\n"
     STRING_COPY_ERROR3 "Error writing destination!\n"
     STRING_COPY_ERROR4 "Chyba: Zatiaľ neimplementované!\n"
-    STRING_DATE_ERROR "Neplatný dátum."
+    STRING_DATE_ERROR "Neplatný dátum.\n"
     STRING_DEL_ERROR5 "The file %s will be deleted! "
     STRING_DEL_ERROR6 "Ste si istý (Y/N)? "
     STRING_DEL_ERROR7 "Deleting: %s\n"
     STRING_ERROR_ERROR1 "Neznáma chyba! Kód chyby: 0x%lx\n"
     STRING_ERROR_ERROR2 "Syntax error"
-    STRING_FOR_ERROR1 "'in' missing in for statement."
-    STRING_FOR_ERROR2 "no brackets found."
-    STRING_FOR_ERROR3 "'do' missing."
-    STRING_FOR_ERROR4 "no command after 'do'."
+    STRING_FOR_ERROR1 "'in' missing in for statement.\n"
+    STRING_FOR_ERROR2 "no brackets found.\n"
+    STRING_FOR_ERROR3 "'do' missing.\n"
+    STRING_FOR_ERROR4 "no command after 'do'.\n"
     STRING_FREE_ERROR1 "Invalid drive"
     STRING_FREE_ERROR2 "unlabeled"
     STRING_GOTO_ERROR1 "No label specified for GOTO\n"
@@ -507,10 +480,10 @@ title         new title\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Chyba]\n"
-    STRING_REN_ERROR1 "MoveFile() failed. Error: %lu\n"
-    STRING_TIME_ERROR1 "Neplatný čas."
-    STRING_TYPE_ERROR1 "Invalid option '/%s'\n"
-    STRING_WINDOW_ERROR1 "Okno sa nenašlo"
+    STRING_REN_ERROR "MoveFile() failed. Error: %lu\n"
+    STRING_TIME_ERROR "Neplatný čas.\n"
+    STRING_TYPE_ERROR "Invalid option '/%s'\n"
+    STRING_WINDOW_ERROR "Okno sa nenašlo\n"
     STRING_ERROR_PARAMETERF_ERROR "Parameter format not correct - %c\n"
     STRING_ERROR_INVALID_SWITCH "Neplatný prepínač - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Príliš veľa parametrov - %s\n"
@@ -524,24 +497,25 @@ title         new title\n"
     STRING_ERROR_CANNOTPIPE "Chyba!  Cannot pipe!  Cannot open temporary file!\n"
     STRING_ERROR_D_PAUSEMSG "Pokračujte stlačením ľubovoľného klávesu ... "
     STRING_ERROR_DRIVER_NOT_READY "Jednotka nie je pripravená"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Neplatný prepínač - %s\n"
-    STRING_REPLACE_ERROR2 "Cesta sa nenašla - %s\n"
-    STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
-    STRING_REPLACE_ERROR4 "Invalid parameter combination\n"
-    STRING_REPLACE_ERROR5 "Prístup zamietnutý - %s\n"
-    STRING_REPLACE_ERROR6 "Žiadne súbory sa nenašli - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Verzia %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpréter príkazového riadku systému ReactOS\nVerzia %s %s"
     STRING_VERSION_RUNNING_ON "Running on: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d súbor(ov) skopírovaný(ch)\n"
     STRING_DELETE_WIPE "wiped"
-    STRING_FOR_ERROR "bad variable specification."
-    STRING_SCREEN_COL "neplatná hodnota pre stĺpec"
-    STRING_SCREEN_ROW "neplatná hodnota pre riadok"
+    STRING_FOR_ERROR "bad variable specification.\n"
+    STRING_SCREEN_COL "neplatná hodnota pre stĺpec\n"
+    STRING_SCREEN_ROW "neplatná hodnota pre riadok\n"
     STRING_TIMER_TIME "Timer %d is %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Symbolic link created for %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Hard link created for %s <<===>> %s\n"

@@ -1,0 +1,149 @@
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Прикажи или измени листе за управљање приступима фајловима.\n\
+              (access control lists ACLs)\n\n\
+CACLS имефајла [/T] [/E] [/C] [/G корисник:дозвола [...]] [/R корисник [...]]\n\
+               [/P корисник:дозвола [...]] [/D корисник [...]]\n\
+   имефајла             Прикажи листе приступа.\n\
+   /T                   Измени листе приступа задатих фајлова у\n\
+                        текућем и свим поддиректоријумима.\n\
+   /E                   Измени постојећу листу приступа уместо да је замениш.\n\
+   /C                   Настави након грешке о забрањеном приступу.\n\
+   /G корисник:дозвола  Додели наведена права корисничког приступа.\n\
+                        Дозвола може бити:  R  Читање\n\
+                                            W  Писање\n\
+                                            C  Измена (писање)\n\
+                                            F  Потпуно управљање\n\
+   /R корисник          Повуци дозволе приступа наведеног корисника\n\
+                        (исправно једино уз /E).\n\
+   /P корисник:дозвола  Замени дозволе приступа наведеног корисника.\n\
+                        Дозвола може бити:  N  Без приступа\n\
+                                            R  Читање\n\
+                                            W  Писање\n\
+                                            C  Измена (писање)\n\
+                                            F  Потпуно управљање\n\
+   /D корисник          Онемогући приступ наведеном кориснику.\n\
+У команди се могу користити џокер знаци ради задавања више од једног фајла.\n\
+У команди се може навести више од једног корисника.\n\n\
+Скраћенице:\n\
+   CI - Наслеђивање по контејнерима (Container Inherit).\n\
+        Нови упис (ACE) наслеђују директоријуми.\n\
+   OI - Наслеђивање по објекту (Object Inherit).\n\
+        Нови упис (ACE) наслеђују фајлови.\n\
+   IO - Само наслеђивање (Inherit Only).\n\
+        Упис не важи за текући фајл/директоријум.\n"
+    IDS_ABBR_CI "(CI)"
+    IDS_ABBR_OI "(OI)"
+    IDS_ABBR_IO "(IO)"
+    IDS_ABBR_FULL "F"
+    IDS_ABBR_READ "R"
+    IDS_ABBR_WRITE "W"
+    IDS_ABBR_CHANGE "C"
+    IDS_ABBR_NONE "N"
+    IDS_ALLOW ""
+    IDS_DENY "(DENY)"
+    IDS_SPECIAL_ACCESS "(special access:)"
+    IDS_GENERIC_READ "GENERIC_READ"
+    IDS_GENERIC_WRITE "GENERIC_WRITE"
+    IDS_GENERIC_EXECUTE "GENERIC_EXECUTE"
+    IDS_GENERIC_ALL "GENERIC_ALL"
+    IDS_FILE_GENERIC_EXECUTE "FILE_GENERIC_EXECUTE"
+    IDS_FILE_GENERIC_READ "FILE_GENERIC_READ"
+    IDS_FILE_GENERIC_WRITE "FILE_GENERIC_WRITE"
+    IDS_FILE_READ_DATA "FILE_READ_DATA"
+    IDS_FILE_WRITE_DATA "FILE_WRITE_DATA"
+    IDS_FILE_APPEND_DATA "FILE_APPEND_DATA"
+    IDS_FILE_READ_EA "FILE_READ_EA"
+    IDS_FILE_WRITE_EA "FILE_WRITE_EA"
+    IDS_FILE_EXECUTE "FILE_EXECUTE"
+    IDS_FILE_DELETE_CHILD "FILE_DELETE_CHILD"
+    IDS_FILE_READ_ATTRIBUTES "FILE_READ_ATTRIBUTES"
+    IDS_FILE_WRITE_ATTRIBUTES "FILE_WRITE_ATTRIBUTES"
+    IDS_MAXIMUM_ALLOWED "MAXIMUM_ALLOWED"
+    IDS_ACCESS_SYSTEM_SECURITY "ACCESS_SYSTEM_SECURITY"
+    IDS_SPECIFIC_RIGHTS_ALL "SPECIFIC_RIGHTS_ALL"
+    IDS_STANDARD_RIGHTS_REQUIRED "STANDARD_RIGHTS_REQUIRED"
+    IDS_SYNCHRONIZE "SYNCHRONIZE"
+    IDS_WRITE_OWNER "WRITE_OWNER"
+    IDS_WRITE_DAC "WRITE_DAC"
+    IDS_READ_CONTROL "READ_CONTROL"
+    IDS_DELETE "DELETE"
+    IDS_STANDARD_RIGHTS_ALL "STANDARD_RIGHTS_ALL"
+END
+
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_LATIN
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Prikaži ili izmeni liste za upravljanje pristupima fajlovima.\n\
+              (access control lists ACLs)\n\n\
+CACLS imefajla [/T] [/E] [/C] [/G korisnik:dozvola [...]] [/R korisnik [...]]\n\
+               [/P korisnik:dozvola [...]] [/D korisnik [...]]\n\
+   imefajla             Prikaži liste pristupa.\n\
+   /T                   Izmeni liste pristupa zadatih fajlova u\n\
+                        tekućem i svim poddirektorijumima.\n\
+   /E                   Izmeni postojeću listu pristupa umesto da je zameniš.\n\
+   /C                   Nastavi nakon greške o zabranjenom pristupu.\n\
+   /G korisnik:dozvola  Dodeli navedena prava korisničkog pristupa.\n\
+                        Dozvola može biti:  R  Čitanje\n\
+                                            W  Pisanje\n\
+                                            C  Izmena (pisanje)\n\
+                                            F  Potpuno upravljanje\n\
+   /R korisnik          Povuci dozvole pristupa navedenog korisnika\n\
+                        (ispravno jedino uz /E).\n\
+   /P korisnik:dozvola  Zameni dozvole pristupa navedenog korisnika.\n\
+                        Dozvola može biti:  N  Bez pristupa\n\
+                                            R  Čitanje\n\
+                                            W  Pisanje\n\
+                                            C  Izmena (pisanje)\n\
+                                            F  Potpuno upravljanje\n\
+   /D korisnik          Onemogući pristup navedenom korisniku.\n\
+U komandi se mogu koristiti džoker znaci radi zadavanja više od jednog fajla.\n\
+U komandi se može navesti više od jednog korisnika.\n\n\
+Skraćenice:\n\
+   CI - Nasleđivanje po kontejnerima (Container Inherit).\n\
+        Novi upis (ACE) nasleđuju direktorijumi.\n\
+   OI - Nasleđivanje po objektu (Object Inherit).\n\
+        Novi upis (ACE) nasleđuju fajlovi.\n\
+   IO - Samo nasleđivanje (Inherit Only).\n\
+        Upis ne važi za tekući fajl/direktorijum.\n"
+    IDS_ABBR_CI "(CI)"
+    IDS_ABBR_OI "(OI)"
+    IDS_ABBR_IO "(IO)"
+    IDS_ABBR_FULL "F"
+    IDS_ABBR_READ "R"
+    IDS_ABBR_WRITE "W"
+    IDS_ABBR_CHANGE "C"
+    IDS_ABBR_NONE "N"
+    IDS_ALLOW ""
+    IDS_DENY "(DENY)"
+    IDS_SPECIAL_ACCESS "(special access:)"
+    IDS_GENERIC_READ "GENERIC_READ"
+    IDS_GENERIC_WRITE "GENERIC_WRITE"
+    IDS_GENERIC_EXECUTE "GENERIC_EXECUTE"
+    IDS_GENERIC_ALL "GENERIC_ALL"
+    IDS_FILE_GENERIC_EXECUTE "FILE_GENERIC_EXECUTE"
+    IDS_FILE_GENERIC_READ "FILE_GENERIC_READ"
+    IDS_FILE_GENERIC_WRITE "FILE_GENERIC_WRITE"
+    IDS_FILE_READ_DATA "FILE_READ_DATA"
+    IDS_FILE_WRITE_DATA "FILE_WRITE_DATA"
+    IDS_FILE_APPEND_DATA "FILE_APPEND_DATA"
+    IDS_FILE_READ_EA "FILE_READ_EA"
+    IDS_FILE_WRITE_EA "FILE_WRITE_EA"
+    IDS_FILE_EXECUTE "FILE_EXECUTE"
+    IDS_FILE_DELETE_CHILD "FILE_DELETE_CHILD"
+    IDS_FILE_READ_ATTRIBUTES "FILE_READ_ATTRIBUTES"
+    IDS_FILE_WRITE_ATTRIBUTES "FILE_WRITE_ATTRIBUTES"
+    IDS_MAXIMUM_ALLOWED "MAXIMUM_ALLOWED"
+    IDS_ACCESS_SYSTEM_SECURITY "ACCESS_SYSTEM_SECURITY"
+    IDS_SPECIFIC_RIGHTS_ALL "SPECIFIC_RIGHTS_ALL"
+    IDS_STANDARD_RIGHTS_REQUIRED "STANDARD_RIGHTS_REQUIRED"
+    IDS_SYNCHRONIZE "SYNCHRONIZE"
+    IDS_WRITE_OWNER "WRITE_OWNER"
+    IDS_WRITE_DAC "WRITE_DAC"
+    IDS_READ_CONTROL "READ_CONTROL"
+    IDS_DELETE "DELETE"
+    IDS_STANDARD_RIGHTS_ALL "STANDARD_RIGHTS_ALL"
+END

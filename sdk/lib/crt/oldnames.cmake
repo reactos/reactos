@@ -17,7 +17,12 @@ if(NOT MSVC)
     _add_library(oldnames STATIC EXCLUDE_FROM_ALL ${LIBRARY_PRIVATE_DIR}/oldnames.a)
     set_target_properties(oldnames PROPERTIES LINKER_LANGUAGE "C")
 else()
-    add_asm_files(oldnames_asm oldnames-msvcrt.S)
+    add_asm_files(oldnames_asm oldnames-common.S oldnames-msvcrt.S)
     add_library(oldnames ${oldnames_asm})
     set_target_properties(oldnames PROPERTIES LINKER_LANGUAGE "C")
 endif()
+
+target_compile_definitions(oldnames INTERFACE
+    _CRT_DECLARE_NONSTDC_NAMES=1 # This must be set to 1
+    _CRT_NONSTDC_NO_DEPRECATE
+)

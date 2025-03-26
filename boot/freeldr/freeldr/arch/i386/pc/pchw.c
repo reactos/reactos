@@ -2,7 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 2003, 2004  Eric Kohl
- *  Copyright (C) 2009  Hervé Poussineau
+ *  Copyright (C) 2009  HervÃ© Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -223,18 +223,19 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         Ptr = GetInt1eTable();
 
         /* Set 'Identifier' value */
-        sprintf(Identifier, "FLOPPY%d", FloppyNumber + 1);
+        RtlStringCbPrintfA(Identifier, sizeof(Identifier), "FLOPPY%d", FloppyNumber + 1);
 
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                sizeof(CM_FLOPPY_DEVICE_DATA);
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor! Ignoring remaining floppy peripherals. (FloppyNumber = %u)\n",
+                FloppyNumber);
             return;
         }
 
-        memset(PartialResourceList, 0, Size);
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 1;
@@ -288,9 +289,9 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
         ERR("Failed to allocate resource descriptor\n");
         return NULL;
     }
-    memset(PartialResourceList, 0, Size);
 
     /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 3;
@@ -332,7 +333,6 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-    TRACE("Created key: DiskController\\0\n");
 
     if (FloppyCount)
         DetectBiosFloppyPeripheral(ControllerKey);
@@ -374,7 +374,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -394,7 +394,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         {
             Int13Drives[i].DriveSelect = DriveNumber;
             Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
-            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
+            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.SectorsPerTrack;
             Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
 
@@ -402,7 +402,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                   DriveNumber,
                   Geometry.Cylinders - 1,
                   Geometry.Heads - 1,
-                  Geometry.Sectors,
+                  Geometry.SectorsPerTrack,
                   Geometry.BytesPerSector);
         }
     }
@@ -413,7 +413,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
-        PCHAR Identifier;
+        PCSTR Identifier;
 
         DriveNumber = 0x80 + i;
 

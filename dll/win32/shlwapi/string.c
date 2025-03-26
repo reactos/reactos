@@ -883,7 +883,7 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
  *  the string is treated as a decimal string. A leading '-' is ignored for
  *  hexadecimal numbers.
  */
-BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, LPINT lpiRet)
+BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
   LONGLONG li;
   BOOL bRes;
@@ -967,7 +967,7 @@ BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
  *
  * See StrToIntExA.
  */
-BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, LPINT lpiRet)
+BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
   LONGLONG li;
   BOOL bRes;
@@ -1068,6 +1068,10 @@ LPSTR WINAPI StrDupA(LPCSTR lpszStr)
 
   TRACE("(%s)\n",debugstr_a(lpszStr));
 
+#ifdef __REACTOS__
+  if (!lpszStr)
+    return NULL;
+#endif
   iLen = lpszStr ? strlen(lpszStr) + 1 : 1;
   lpszRet = LocalAlloc(LMEM_FIXED, iLen);
 
@@ -1093,6 +1097,10 @@ LPWSTR WINAPI StrDupW(LPCWSTR lpszStr)
 
   TRACE("(%s)\n",debugstr_w(lpszStr));
 
+#ifdef __REACTOS__
+  if (!lpszStr)
+    return NULL;
+#endif
   iLen = (lpszStr ? strlenW(lpszStr) + 1 : 1) * sizeof(WCHAR);
   lpszRet = LocalAlloc(LMEM_FIXED, iLen);
 
@@ -1627,8 +1635,14 @@ HRESULT WINAPI StrRetToStrW(LPSTRRET lpStrRet, const ITEMIDLIST *pidl, LPWSTR *p
   switch (lpStrRet->uType)
   {
   case STRRET_WSTR:
+#ifdef __REACTOS__
+    hRet = lpStrRet->u.pOleStr ? S_OK : E_FAIL;
+    *ppszName = lpStrRet->u.pOleStr;
+    lpStrRet->u.pOleStr = NULL; /* Windows does this, presumably in case someone calls SHFree */
+#else
     hRet = SHStrDupW(lpStrRet->u.pOleStr, ppszName);
     CoTaskMemFree(lpStrRet->u.pOleStr);
+#endif
     break;
 
   case STRRET_CSTR:
@@ -2878,6 +2892,9 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
     WCHAR *dllname = NULL;
     HMODULE hmod = NULL;
     HRESULT hr = E_FAIL;
+#ifdef __REACTOS__
+    WCHAR szExpanded[512];
+#endif
 
     TRACE("(%s %p %08x %p)\n", debugstr_w(src), dst, dst_len, reserved);
 
@@ -2886,6 +2903,13 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
         WCHAR *index_str;
         int index;
 
+#ifdef __REACTOS__
+        if (wcschr(src, '%') != NULL)
+        {
+            ExpandEnvironmentStringsW(src, szExpanded, ARRAY_SIZE(szExpanded));
+            src = szExpanded;
+        }
+#endif
         dst[0] = 0;
         dllname = StrDupW(src + 1);
         index_str = strchrW(dllname, ',');

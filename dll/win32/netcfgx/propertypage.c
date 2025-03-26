@@ -594,13 +594,11 @@ BuildParameterArray(
                     dwDefaultMin = 0UL;
                     dwDefaultMax = 65535UL; // MAX_WORD;
                 }
-#if 0
                 else if (ParamArray->Array[dwIndex].Type == DWORD_TYPE)
                 {
                     dwDefaultMin = 0UL;
                     dwDefaultMax = 4294967295UL; //MAX_DWORD;
                 }
-#endif
 
                 if (ParamArray->Array[dwIndex].Type == INT_TYPE ||
                     ParamArray->Array[dwIndex].Type == LONG_TYPE)

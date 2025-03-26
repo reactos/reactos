@@ -1,6 +1,10 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <precomp.h>
 
+#if (_MSC_VER >= 1920)
+#pragma function(ldiv)
+#endif
+
 /*
  * @implemented
  */

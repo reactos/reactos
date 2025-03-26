@@ -1,8 +1,8 @@
 /*
- * COPYRIGHT:       BSD - See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS CRT library
- * PURPOSE:         Implementation of fabsf
- * PROGRAMMER:      Timo Kreuzer
+ * PROJECT:     ReactOS CRT library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Portable implementation of fabsf
+ * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 #include <math.h>
@@ -13,6 +13,20 @@ __cdecl
 fabsf(
     _In_ float x)
 {
-    return (float)fabs((double)x);
-}
+    /* Load the value as uint */
+    unsigned int u32 = *(unsigned int*)&x;
 
+    /* Clear the sign bit */
+    u32 &= ~(1 << 31);
+
+    /* Check for NAN */
+    if (u32 > 0x7F800000)
+    {
+        /* Set error bit */
+        *(unsigned int*)&x |= 0x00400000;
+        return x;
+    }
+
+    /* Convert back to float */
+    return *(float*)&u32;
+}

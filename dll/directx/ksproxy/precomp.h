@@ -52,7 +52,7 @@ typedef struct {
 
 IClassFactory *
 CClassFactory_fnConstructor(
-    LPFNCREATEINSTANCE lpfnCI, 
+    LPFNCREATEINSTANCE lpfnCI,
     PLONG pcRefDll,
     IID * riidInst);
 
@@ -189,7 +189,7 @@ CKsAllocator_Constructor(
 HRESULT
 WINAPI
 CMediaSample_Constructor(
-    IMemAllocator* Allocator, 
+    IMemAllocator* Allocator,
     BYTE* pBuffer,
     ULONG BufferSize,
     REFIID riid,

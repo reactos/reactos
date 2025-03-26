@@ -531,7 +531,7 @@ CommandHelp(
     {
         for (cmdptr = Commands; cmdptr->name != NULL; cmdptr++)
         {
-            if (!stricmp(param, cmdptr->name))
+            if (!_stricmp(param, cmdptr->name))
             {
                 if (cmdptr->help != NULL)
                 {
@@ -1026,7 +1026,7 @@ ReadCommand(
             {
                 /* If this character insertion will cause screen scrolling,
                  * adjust the saved origin of the command prompt. */
-                tempscreen = strlen(str + current) + curx;
+                tempscreen = (USHORT)strlen(str + current) + curx;
                 if ((tempscreen % State->maxx) == (State->maxx - 1) &&
                     (tempscreen / State->maxx) + cury == (State->maxy - 1))
                 {
@@ -1122,7 +1122,7 @@ DoCommand(
                 break;
             }
 
-            if (stricmp(com, cmdptr->name) == 0)
+            if (_stricmp(com, cmdptr->name) == 0)
             {
                 cmdptr->func(State, rest);
                 break;

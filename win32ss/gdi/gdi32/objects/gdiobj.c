@@ -206,7 +206,7 @@ GetObjectW(
             break;
 
         case GDI_OBJECT_TYPE_BRUSH:
-            if (!lpBuffer || !cbSize) return sizeof(LOGBRUSH);
+            if (!lpBuffer) return sizeof(LOGBRUSH);
             break;
 
         case GDI_OBJECT_TYPE_BITMAP:
@@ -265,10 +265,11 @@ GetObjectW(
                 (dwType == GDI_OBJECT_TYPE_BRUSH) ||
                 (dwType == GDI_OBJECT_TYPE_COLORSPACE) ||
                 ( (dwType == GDI_OBJECT_TYPE_EXTPEN) &&
-                    ( (cbSize >= sizeof(EXTLOGPEN)) || (cbSize == 0) ) ) ||
+                    ( (cbSize >= sizeof(EXTLOGPEN)))) ||
                 ( (dwType == GDI_OBJECT_TYPE_BITMAP) && (cbSize >= sizeof(BITMAP)) ))
             {
-                SetLastError(ERROR_NOACCESS);
+                if (cbSize)
+                    SetLastError(ERROR_NOACCESS);
             }
         }
     }
@@ -320,17 +321,18 @@ DeleteObject(HGDIOBJ hObject)
         return FALSE;
 
     /* Check if this is a stock object */
-    if ((DWORD_PTR)hObject & GDI_HANDLE_STOCK_MASK)
+    if (GDI_HANDLE_IS_STOCKOBJ(hObject))
     {
         /* Ignore the attempt to delete a stock object */
-        DPRINT("Trying to delete system object 0x%p\n", hObject);
+        DPRINT1("Trying to delete system object 0x%p\n", hObject);
         return TRUE;
     }
 
     /* If we have any METAFILE objects, we need to check them */
     if (gcClientObj > 0)
     {
-        METADC_DeleteObject(hObject);
+        DPRINT("Going Glue\n");
+        METADC_RosGlueDeleteObject(hObject);
     }
 
     /* Switch by object type */
@@ -349,16 +351,7 @@ DeleteObject(HGDIOBJ hObject)
 
         case GDILoObjType_LO_REGION_TYPE:
             return DeleteRegion(hObject);
-#if 0
-        case GDI_OBJECT_TYPE_METADC:
-            return MFDRV_DeleteObject( hObject );
-        case GDI_OBJECT_TYPE_EMF:
-        {
-            PLDC pLDC = GdiGetLDC(hObject);
-            if ( !pLDC ) return FALSE;
-            return EMFDRV_DeleteObject( hObject );
-        }
-#endif
+
         case GDILoObjType_LO_BRUSH_TYPE:
         case GDILoObjType_LO_PEN_TYPE:
         case GDILoObjType_LO_EXTPEN_TYPE:

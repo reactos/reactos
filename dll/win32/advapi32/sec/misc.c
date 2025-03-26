@@ -98,7 +98,7 @@ CheckNtMartaPresent(VOID)
 #if DBG
         else
         {
-            ERR("Failed to initialize ntmarta.dll! Error: 0x%x", ErrorCode);
+            ERR("Failed to initialize ntmarta.dll! Error: 0x%x\n", ErrorCode);
         }
 #endif
     }

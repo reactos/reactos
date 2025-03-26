@@ -73,7 +73,11 @@ XboxGetSerialPort(ULONG Index, PULONG Irq)
 
 extern
 VOID
-DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetSerialPort, ULONG Count);
+DetectSerialPorts(
+    _In_opt_ PCSTR Options,
+    _Inout_ PCONFIGURATION_COMPONENT_DATA BusKey,
+    _In_ GET_SERIAL_PORT MachGetSerialPort,
+    _In_ ULONG Count);
 
 VOID
 XboxGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
@@ -91,13 +95,10 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
-    //EXTENDED_GEOMETRY ExtGeometry;
     GEOMETRY Geometry;
     ULONG Size;
 
-    //
-    // Initialize returned size
-    //
+    /* Initialize returned size */
     *pSize = 0;
 
     /* Set 'Configuration Data' value */
@@ -106,11 +107,11 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
-        ERR("Failed to allocate a full resource descriptor\n");
+        ERR("Failed to allocate resource descriptor\n");
         return NULL;
     }
 
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -125,13 +126,11 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     DiskGeometry = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
 
     /* Get the disk geometry */
-    //ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
-
     if (XboxDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
         DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
         DiskGeometry->NumberOfCylinders = Geometry.Cylinders;
-        DiskGeometry->SectorsPerTrack = Geometry.Sectors;
+        DiskGeometry->SectorsPerTrack = Geometry.SectorsPerTrack;
         DiskGeometry->NumberOfHeads = Geometry.Heads;
     }
     else
@@ -147,9 +146,7 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
           DiskGeometry->SectorsPerTrack,
           DiskGeometry->BytesPerSector);
 
-    //
-    // Return configuration data
-    //
+    /* Return configuration data */
     *pSize = Size;
     return PartialResourceList;
 }
@@ -157,7 +154,6 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 static VOID
 DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
-    CHAR Buffer[80];
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -166,8 +162,6 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     if (FrameBufferSize == 0)
         return;
 
-    strcpy(Buffer, "NV2A Framebuffer");
-
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
@@ -175,9 +169,9 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
         ERR("Failed to allocate resource descriptor\n");
         return;
     }
-    memset(PartialResourceList, 0, Size);
 
     /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -193,20 +187,21 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     FldrCreateComponentKey(BusKey,
                            ControllerClass,
                            DisplayController,
-                           0x0,
-                           0x0,
+                           Output | ConsoleOut,
+                           0,
                            0xFFFFFFFF,
-                           Buffer,
+                           "NV2A Framebuffer",
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-
-    TRACE("Created key: DisplayController\\0\n");
 }
 
 static
 VOID
-DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
+DetectIsaBios(
+    _In_opt_ PCSTR Options,
+    _Inout_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Out_ ULONG *BusNumber)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCONFIGURATION_COMPONENT_DATA BusKey;
@@ -218,12 +213,12 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
-        TRACE("Failed to allocate resource descriptor\n");
+        ERR("Failed to allocate resource descriptor\n");
         return;
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 0;
@@ -232,8 +227,8 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
-                           0x0,
-                           0x0,
+                           0,
+                           0,
                            0xFFFFFFFF,
                            "ISA",
                            PartialResourceList,
@@ -245,7 +240,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(SystemKey, BusKey);
-    DetectSerialPorts(BusKey, XboxGetSerialPort, MAX_XBOX_COM_PORTS);
+    DetectSerialPorts(Options, BusKey, XboxGetSerialPort, MAX_XBOX_COM_PORTS);
     DetectDisplayController(BusKey);
 
     /* FIXME: Detect more ISA devices */
@@ -268,7 +263,8 @@ XboxGetFloppyCount(VOID)
 }
 
 PCONFIGURATION_COMPONENT_DATA
-XboxHwDetect(VOID)
+XboxHwDetect(
+    _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;
     ULONG BusNumber = 0;
@@ -276,15 +272,14 @@ XboxHwDetect(VOID)
     TRACE("DetectHardware()\n");
 
     /* Create the 'System' key */
-    FldrCreateSystemKey(&SystemKey);
-    FldrSetIdentifier(SystemKey, "Original Xbox (PC/AT like)");
+    FldrCreateSystemKey(&SystemKey, "Original Xbox (PC/AT like)");
 
     GetHarddiskConfigurationData = XboxGetHarddiskConfigurationData;
     FindPciBios = XboxFindPciBios;
 
     /* TODO: Build actual xbox's hardware configuration tree */
     DetectPciBios(SystemKey, &BusNumber);
-    DetectIsaBios(SystemKey, &BusNumber);
+    DetectIsaBios(Options, SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");
     return SystemKey;
@@ -301,29 +296,40 @@ VOID XboxHwIdle(VOID)
 VOID
 MachInit(const char *CmdLine)
 {
+    PCI_TYPE1_CFG_BITS PciCfg1;
     ULONG PciId;
-
-    memset(&MachVtbl, 0, sizeof(MACHVTBL));
 
     /* Check for Xbox by identifying device at PCI 0:0:0, if it's
      * 0x10DE/0x02A5 then we're running on an Xbox */
-    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0));
-    PciId = READ_PORT_ULONG((PULONG)0xCFC);
+
+    /* Select Host to PCI bridge */
+    PciCfg1.u.bits.Enable = 1;
+    PciCfg1.u.bits.BusNumber = 0;
+    PciCfg1.u.bits.DeviceNumber = 0;
+    PciCfg1.u.bits.FunctionNumber = 0;
+    /* Select register VendorID & DeviceID */
+    PciCfg1.u.bits.RegisterNumber = 0x00;
+    PciCfg1.u.bits.Reserved = 0;
+
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+    PciId = READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
     if (PciId != 0x02A510DE)
     {
-        ERR("This is not original Xbox!\n");
+        ERR("This is not an original Xbox!\n");
 
         /* Disable and halt the CPU */
         _disable();
         __halt();
 
-        while (TRUE);
+        while (TRUE)
+            NOTHING;
     }
 
     /* Set LEDs to red before anything is initialized */
     XboxSetLED("rrrr");
 
     /* Setup vtbl */
+    RtlZeroMemory(&MachVtbl, sizeof(MachVtbl));
     MachVtbl.ConsPutChar = XboxConsPutChar;
     MachVtbl.ConsKbHit = XboxConsKbHit;
     MachVtbl.ConsGetCh = XboxConsGetCh;
@@ -368,9 +374,8 @@ XboxPrepareForReactOS(VOID)
 {
     /* On Xbox, prepare video and disk support */
     XboxVideoPrepareForReactOS();
-    XboxDiskInit(FALSE);
     DiskStopFloppyMotor();
-    
+
     /* Turn off debug messages to screen */
     DebugDisableScreenPort();
 }

@@ -1,29 +1,10 @@
 /*
- *  ReactOS Win32 Applications
- *  Copyright (C) 2007 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * PROJECT:         ReactOS Event Log Viewer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/eventvwr.c
- * PURPOSE:         Event Log Viewer main file
- * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
- *                  Eric Kohl
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Event Log Viewer main file.
+ * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Copyright 2008-2016 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include "eventvwr.h"
@@ -32,6 +13,8 @@
 #include <sddl.h> // For ConvertSidToStringSidW
 #include <shellapi.h>
 #include <shlwapi.h>
+
+#include <pseh/pseh2.h>
 
 // #include "resource.h"
 
@@ -50,8 +33,8 @@ static const LPCWSTR SystemLogs[] =
 };
 
 /* MessageFile message buffer size */
-#define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10                             // NOTE: Used by evtdetctl.c
-#define EVENT_MESSAGE_FILE_BUFFER       1024*10
+#define EVENT_MESSAGE_EVENTTEXT_BUFFER  (1024*10)                           // NOTE: Used by evtdetctl.c
+#define EVENT_MESSAGE_FILE_BUFFER       (1024*10)
 #define EVENT_DLL_SEPARATOR             L";"
 #define EVENT_CATEGORY_MESSAGE_FILE     L"CategoryMessageFile"
 #define EVENT_MESSAGE_FILE              L"EventMessageFile"
@@ -363,116 +346,135 @@ Quit:
 BOOL
 LoadSettings(int nDefCmdShow)
 {
-    HKEY hKeyEventVwr;
     LONG Result;
-    DWORD dwSize;
-    DWORD dwType;
-    DWORD Value;
-    UNICODE_STRING ValueU;
+    HKEY hKeyEventVwr;
+    DWORD dwType, cbData;
     WCHAR buffer[100];
 
     /* Load the default values */
+    Settings.bSaveSettings = TRUE;
     Settings.bShowDetailsPane = TRUE;
     Settings.bShowGrid = FALSE;
-    Settings.bSaveSettings = TRUE;
     Settings.bNewestEventsFirst = TRUE;
     Settings.nVSplitPos = 250; /* Splitter default positions */
     Settings.nHSplitPos = 250;
     ZeroMemory(&Settings.wpPos, sizeof(Settings.wpPos));
     Settings.wpPos.length = sizeof(Settings.wpPos);
-    Settings.wpPos.rcNormalPosition.left = CW_USEDEFAULT;
-    Settings.wpPos.rcNormalPosition.top  = CW_USEDEFAULT;
-    Settings.wpPos.rcNormalPosition.right  = CW_USEDEFAULT;
-    Settings.wpPos.rcNormalPosition.bottom = CW_USEDEFAULT;
+    SetRect(&Settings.wpPos.rcNormalPosition,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
+    Settings.wpPos.showCmd = nDefCmdShow; // SW_SHOWNORMAL;
 
-    /* Try to create/open the Event Viewer user key */
-    if (RegCreateKeyExW(HKEY_CURRENT_USER,
-                        EVNTVWR_PARAM_KEY,
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_READ | KEY_WRITE,
-                        NULL,
-                        &hKeyEventVwr,
-                        NULL) != ERROR_SUCCESS)
+    /* Try to open the Event Viewer user key */
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      EVNTVWR_PARAM_KEY,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKeyEventVwr) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
-    // Result = RegQueryValueExW(hKeyEventVwr, L"Filter", NULL, &dwType, (LPBYTE)&szFilter, &dwSize); // REG_SZ
-    // Result = RegQueryValueExW(hKeyEventVwr, L"Find", NULL, &dwType, (LPBYTE)&szFind, &dwSize); // REG_SZ
-    // Result = RegQueryValueExW(hKeyEventVwr, L"Module", NULL, &dwType, (LPBYTE)&szModule, &dwSize); // REG_SZ
+    // Result = RegQueryValueExW(hKeyEventVwr, L"Filter", NULL, &dwType, (LPBYTE)&szFilter, &cbData); // REG_SZ
+    // Result = RegQueryValueExW(hKeyEventVwr, L"Find", NULL, &dwType, (LPBYTE)&szFind, &cbData); // REG_SZ
+    // Result = RegQueryValueExW(hKeyEventVwr, L"Module", NULL, &dwType, (LPBYTE)&szModule, &cbData); // REG_SZ
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"DetailsPane", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"SaveSettings", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bSaveSettings = !!(DWORD)_wtoi(buffer);
         }
-        Settings.bShowDetailsPane = !!Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bSaveSettings = !!*(PDWORD)buffer;
+        }
     }
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"ShowGrid", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"DetailsPane", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bShowDetailsPane = !!(DWORD)_wtoi(buffer);
         }
-        Settings.bShowGrid = !!Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bShowDetailsPane = !!*(PDWORD)buffer;
+        }
     }
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"SortOrder", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"ShowGrid", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bShowGrid = !!(DWORD)_wtoi(buffer);
         }
-        Settings.bNewestEventsFirst = !!Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bShowGrid = !!*(PDWORD)buffer;
+        }
+    }
+
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"SortOrder", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
+    {
+        if (dwType == REG_SZ)
+        {
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.bNewestEventsFirst = !!(DWORD)_wtoi(buffer);
+        }
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.bNewestEventsFirst = !!*(PDWORD)buffer;
+        }
     }
 
     /* Retrieve the splitter positions */
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"VSplitPos", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"VSplitPos", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.nVSplitPos = (DWORD)_wtoi(buffer);
         }
-        Settings.nVSplitPos = Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.nVSplitPos = *(PDWORD)buffer;
+        }
     }
 
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"HSplitPos", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"HSplitPos", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if (Result == ERROR_SUCCESS)
     {
         if (dwType == REG_SZ)
         {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
+            buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+            Settings.nHSplitPos = (DWORD)_wtoi(buffer);
         }
-        Settings.nHSplitPos = Value;
+        else if (dwType == REG_DWORD && cbData == sizeof(DWORD))
+        {
+            Settings.nHSplitPos = *(PDWORD)buffer;
+        }
     }
 
     /* Retrieve the geometry of the main window */
-    dwSize = sizeof(buffer);
-    Result = RegQueryValueExW(hKeyEventVwr, L"Window", NULL, &dwType, (LPBYTE)buffer, &dwSize);
-    if ((Result != ERROR_SUCCESS) || (dwType != REG_SZ))
+    cbData = sizeof(buffer);
+    Result = RegQueryValueExW(hKeyEventVwr, L"Window", NULL, &dwType, (LPBYTE)buffer, &cbData);
+    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ))
+        buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+    else
         buffer[0] = UNICODE_NULL;
 
     if (swscanf(buffer, L"%d %d %d %d %d",
@@ -483,24 +485,9 @@ LoadSettings(int nDefCmdShow)
                 &Settings.wpPos.showCmd) != 5)
     {
         /* Parsing failed, use defaults */
-        Settings.wpPos.rcNormalPosition.left = CW_USEDEFAULT;
-        Settings.wpPos.rcNormalPosition.top  = CW_USEDEFAULT;
-        Settings.wpPos.rcNormalPosition.right  = CW_USEDEFAULT;
-        Settings.wpPos.rcNormalPosition.bottom = CW_USEDEFAULT;
+        SetRect(&Settings.wpPos.rcNormalPosition,
+                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
         Settings.wpPos.showCmd = nDefCmdShow; // SW_SHOWNORMAL;
-    }
-
-    dwSize = sizeof(Value);
-    Result = RegQueryValueExW(hKeyEventVwr, L"SaveSettings", NULL, &dwType, (LPBYTE)&Value, &dwSize);
-    if ((Result == ERROR_SUCCESS) && (dwType == REG_SZ || dwType == REG_DWORD))
-    {
-        if (dwType == REG_SZ)
-        {
-            ValueU.Buffer = (PWSTR)&Value;
-            ValueU.Length = ValueU.MaximumLength = dwSize;
-            RtlUnicodeStringToInteger(&ValueU, 10, &Value);
-        }
-        Settings.bSaveSettings = !!Value;
     }
 
     RegCloseKey(hKeyEventVwr);
@@ -520,7 +507,7 @@ SaveSettings(VOID)
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
-                        KEY_READ | KEY_WRITE,
+                        KEY_SET_VALUE,
                         NULL,
                         &hKeyEventVwr,
                         NULL) != ERROR_SUCCESS)
@@ -560,7 +547,7 @@ SaveSettings(VOID)
                     Settings.wpPos.rcNormalPosition.bottom,
                     Settings.wpPos.showCmd);
 
-    dwSize = (DWORD)(wcslen(buffer) * sizeof(WCHAR));
+    dwSize = (DWORD)((wcslen(buffer) + 1) * sizeof(WCHAR));
     RegSetValueExW(hKeyEventVwr, L"Window", 0, REG_SZ, (LPBYTE)buffer, dwSize);
 
 Quit:
@@ -872,7 +859,7 @@ GetMessageStringFromDllList(
     szMessageDllList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbLength);
     if (!szMessageDllList)
         return NULL;
-    RtlCopyMemory(szMessageDllList, lpMessageDllList, cbLength);
+    CopyMemory(szMessageDllList, lpMessageDllList, cbLength);
 
     /* Loop through the list of message DLLs */
     szDll = wcstok(szMessageDllList, EVENT_DLL_SEPARATOR);
@@ -921,7 +908,7 @@ ApplyParameterStringsToMessage(
 {
     /*
      * This code is heavily adapted from the MSDN example:
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/bb427356.aspx
+     * https://learn.microsoft.com/en-us/windows/win32/eventlog/querying-for-event-source-messages
      * with bugs removed.
      */
 
@@ -1363,7 +1350,7 @@ AllocAndCopyMultiStr(IN PCWSTR MultiStr OPTIONAL)
     pStr = HeapAlloc(GetProcessHeap(), 0, Length * sizeof(WCHAR));
     // NOTE: If we failed allocating the string, then fall back into no filter!
     if (pStr)
-        RtlCopyMemory(pStr, MultiStr, Length * sizeof(WCHAR));
+        CopyMemory(pStr, MultiStr, Length * sizeof(WCHAR));
 
     return pStr;
 }
@@ -1403,7 +1390,7 @@ AllocEventLogFilter(// IN PCWSTR FilterName,
 
     /* Copy the list of event logs */
     EventLogFilter->NumOfEventLogs = NumOfEventLogs;
-    RtlCopyMemory(EventLogFilter->EventLogs, EventLogs, NumOfEventLogs * sizeof(PEVENTLOG));
+    CopyMemory(EventLogFilter->EventLogs, EventLogs, NumOfEventLogs * sizeof(PEVENTLOG));
 
     /* Initialize the filter reference count */
     EventLogFilter->ReferenceCount = 1;
@@ -1525,8 +1512,8 @@ GetExpandedFilePathName(
             lpFullFileName[1] = L'$';
 
         /* Prepend the computer name */
-        RtlMoveMemory(lpFullFileName + 2 + wcslen(ComputerName) + 1,
-                      lpFullFileName, dwLength * sizeof(WCHAR) - (2 + wcslen(ComputerName) + 1) * sizeof(WCHAR));
+        MoveMemory(lpFullFileName + 2 + wcslen(ComputerName) + 1,
+                   lpFullFileName, dwLength * sizeof(WCHAR) - (2 + wcslen(ComputerName) + 1) * sizeof(WCHAR));
         lpFullFileName[0] = L'\\';
         lpFullFileName[1] = L'\\';
         wcsncpy(lpFullFileName + 2, ComputerName, wcslen(ComputerName));
@@ -1716,7 +1703,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         {
             if (iswdigit(lpMsgBuf[2]))
             {
-                RtlMoveMemory(lpMsgBuf, lpMsgBuf+1, ((szStringArray + cch) - lpMsgBuf - 1) * sizeof(WCHAR));
+                MoveMemory(lpMsgBuf, lpMsgBuf+1, ((szStringArray + cch) - lpMsgBuf - 1) * sizeof(WCHAR));
             }
         }
 
@@ -1949,7 +1936,7 @@ FilterByString(IN PCWSTR FilterString, // This is a multi-string
         pStr = FilterString;
         while (*pStr)
         {
-            if (wcsicmp(pStr, String) == 0)
+            if (_wcsicmp(pStr, String) == 0)
             {
                 /* We have a match, break the loop */
                 break;
@@ -1991,6 +1978,7 @@ EnumEventsThread(IN LPVOID lpParameter)
     BOOL bResult = TRUE; /* Read succeeded */
     HANDLE hProcessHeap = GetProcessHeap();
     PSID pLastSid = NULL;
+    INT nItems;
 
     UINT uStep = 0, uStepAt = 0, uPos = 0;
 
@@ -2010,10 +1998,11 @@ EnumEventsThread(IN LPVOID lpParameter)
     SYSTEMTIME time;
     LVITEMW lviEventItem;
 
+    EnableEventDetailsButtons(hwndEventDetails, FALSE);
+
     /* Save the current event log filter globally */
     EventLogFilter_AddRef(EventLogFilter);
     ActiveFilter = EventLogFilter;
-
 
     /** HACK!! **/
     EventLog = EventLogFilter->EventLogs[0];
@@ -2051,7 +2040,7 @@ EnumEventsThread(IN LPVOID lpParameter)
         // (EventLogFilter->NumOfEventLogs > 1)
         MessageBoxW(hwndMainWindow,
                     L"Many-logs filtering is not implemented yet!!",
-                    L"Event Log",
+                    szTitle,
                     MB_OK | MB_ICONINFORMATION);
     }
 
@@ -2215,7 +2204,7 @@ EnumEventsThread(IN LPVOID lpParameter)
             StringCbPrintfW(szCategoryID, sizeof(szCategoryID), L"%u", pEvlrTmp->EventCategory);
 
             g_RecordPtrs[dwCurrentRecord] = HeapAlloc(hProcessHeap, 0, pEvlrTmp->Length);
-            RtlCopyMemory(g_RecordPtrs[dwCurrentRecord], pEvlrTmp, pEvlrTmp->Length);
+            CopyMemory(g_RecordPtrs[dwCurrentRecord], pEvlrTmp, pEvlrTmp->Length);
 
             lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
             lviEventItem.iItem = 0;
@@ -2276,6 +2265,8 @@ Quit:
     /* All events loaded */
 
 Cleanup:
+    nItems = ListView_GetItemCount(hwndListView);
+    EnableEventDetailsButtons(hwndEventDetails, (nItems > 0));
 
     ShowWindow(hwndStatusProgress, SW_HIDE);
     SendMessageW(hwndListView, LVM_PROGRESS, 0, FALSE);
@@ -2703,7 +2694,7 @@ MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_EVENTVWR));
-    wcex.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+    wcex.hCursor = LoadCursorW(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1); // COLOR_WINDOW + 1
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDM_EVENTVWR);
     wcex.lpszClassName = EVENTVWR_WNDCLASS;
@@ -2968,7 +2959,7 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
         for (lpcName = 0; lpcName < ARRAYSIZE(SystemLogs); ++lpcName)
         {
             /* Check whether the log name is part of the system logs */
-            if (wcsicmp(LogName, SystemLogs[lpcName]) == 0)
+            if (_wcsicmp(LogName, SystemLogs[lpcName]) == 0)
             {
                 hRootNode = htiSystemLogs;
                 break;
@@ -2980,7 +2971,7 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
                                 2, 3, (LPARAM)EventLogFilter);
 
         /* Try to get the default event log: "Application" */
-        if ((hItemDefault == NULL) && (wcsicmp(LogName, SystemLogs[0]) == 0))
+        if ((hItemDefault == NULL) && (_wcsicmp(LogName, SystemLogs[0]) == 0))
         {
             hItemDefault = hItem;
         }
@@ -3050,6 +3041,22 @@ InitInstance(HINSTANCE hInstance)
     HIMAGELIST hSmall;
     LVCOLUMNW lvc = {0};
     WCHAR szTemp[256];
+    INT iColumn;
+    static const struct
+    {
+        WORD width;
+        WORD uID;
+    } columnItems[] =
+    {
+        { 90, IDS_COLUMNTYPE },
+        { 70, IDS_COLUMNDATE },
+        { 70, IDS_COLUMNTIME },
+        { 150, IDS_COLUMNSOURCE },
+        { 100, IDS_COLUMNCATEGORY },
+        { 60, IDS_COLUMNEVENT },
+        { 120, IDS_COLUMNUSER },
+        { 100, IDS_COLUMNCOMPUTER },
+    };
 
     /* Create the main window */
     rs = Settings.wpPos.rcNormalPosition;
@@ -3193,69 +3200,13 @@ InitInstance(HINSTANCE hInstance)
 
     /* Now set up the listview with its columns */
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-    lvc.cx = 90;
-    LoadStringW(hInstance,
-                IDS_COLUMNTYPE,
-                szTemp,
-                ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 0, &lvc);
-
-    lvc.cx = 70;
-    LoadStringW(hInstance,
-                IDS_COLUMNDATE,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 1, &lvc);
-
-    lvc.cx = 70;
-    LoadStringW(hInstance,
-                IDS_COLUMNTIME,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 2, &lvc);
-
-    lvc.cx = 150;
-    LoadStringW(hInstance,
-                IDS_COLUMNSOURCE,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 3, &lvc);
-
-    lvc.cx = 100;
-    LoadStringW(hInstance,
-                IDS_COLUMNCATEGORY,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 4, &lvc);
-
-    lvc.cx = 60;
-    LoadStringW(hInstance,
-                IDS_COLUMNEVENT,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 5, &lvc);
-
-    lvc.cx = 120;
-    LoadStringW(hInstance,
-                IDS_COLUMNUSER,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 6, &lvc);
-
-    lvc.cx = 100;
-    LoadStringW(hInstance,
-                IDS_COLUMNCOMPUTER,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
-    ListView_InsertColumn(hwndListView, 7, &lvc);
+    for (iColumn = 0; iColumn < ARRAYSIZE(columnItems); ++iColumn)
+    {
+        lvc.cx = columnItems[iColumn].width;
+        LoadStringW(hInstance, columnItems[iColumn].uID, szTemp, ARRAYSIZE(szTemp));
+        ListView_InsertColumn(hwndListView, iColumn, &lvc);
+    }
 
     /* Initialize the save Dialog */
     ZeroMemory(&sfn, sizeof(sfn));
@@ -3268,8 +3219,8 @@ InitInstance(HINSTANCE hInstance)
     sfn.hInstance       = hInstance;
     sfn.lpstrFilter     = szSaveFilter;
     sfn.lpstrInitialDir = NULL;
-    sfn.Flags           = OFN_HIDEREADONLY | OFN_SHAREAWARE;
-    sfn.lpstrDefExt     = NULL;
+    sfn.Flags           = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_SHAREAWARE;
+    sfn.lpstrDefExt     = L"evt";
 
     ShowWindow(hwndMainWindow, Settings.wpPos.showCmd);
     UpdateWindow(hwndMainWindow);
@@ -3379,16 +3330,44 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         if ( (pnmv->uChanged  & LVIF_STATE) && /* The state has changed */
                              (pnmv->uNewState & LVIS_SELECTED) /* The item has been (de)selected */ )
                         {
-                            if (hwndEventDetails)
-                                SendMessageW(hwndEventDetails, EVT_DISPLAY, 0, 0);
+                            if (!hwndEventDetails)
+                                break;
+
+                            /* Verify the index of selected item */
+                            if (pnmv->iItem == -1)
+                            {
+                                MessageBoxW(hWnd,
+                                            L"No selected items!",
+                                            szTitle,
+                                            MB_OK | MB_ICONERROR);
+                                break;
+                            }
+                            SendMessageW(hwndEventDetails, EVT_DISPLAY, 0, (LPARAM)pnmv->iItem);
                         }
                         break;
                     }
 
+#ifdef LVN_ITEMACTIVATE
+                    case LVN_ITEMACTIVATE:
+                    {
+                        /* Get the index of the single focused selected item */
+                        LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
+                        INT iItem = lpnmitem->iItem;
+                        if (iItem != -1)
+                            SendMessageW(hWnd, WM_COMMAND, IDM_EVENT_DETAILS, (LPARAM)iItem);
+                        break;
+                    }
+#else // LVN_ITEMACTIVATE
                     case NM_DBLCLK:
                     case NM_RETURN:
-                        SendMessageW(hWnd, WM_COMMAND, IDM_EVENT_DETAILS, 0);
+                    {
+                        /* Get the index of the single focused selected item */
+                        INT iItem = ListView_GetNextItem(hwndListView, -1, LVNI_FOCUSED | LVNI_SELECTED);
+                        if (iItem != -1)
+                            SendMessageW(hWnd, WM_COMMAND, IDM_EVENT_DETAILS, (LPARAM)iItem);
                         break;
+                    }
+#endif // LVN_ITEMACTIVATE
                 }
             }
             else if (hdr->hwndFrom == hwndTreeView)
@@ -3531,22 +3510,14 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
 
                 case IDM_LIST_NEWEST:
-                {
-                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_NEWEST, MF_BYCOMMAND);
-                    if (!Settings.bNewestEventsFirst)
-                    {
-                        Settings.bNewestEventsFirst = TRUE;
-                        Refresh(GetSelectedFilter(NULL));
-                    }
-                    break;
-                }
-
                 case IDM_LIST_OLDEST:
                 {
-                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_OLDEST, MF_BYCOMMAND);
-                    if (Settings.bNewestEventsFirst)
+                    BOOL bNewest = (LOWORD(wParam) == IDM_LIST_NEWEST);
+                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, LOWORD(wParam), MF_BYCOMMAND);
+
+                    if (bNewest != Settings.bNewestEventsFirst)
                     {
-                        Settings.bNewestEventsFirst = FALSE;
+                        Settings.bNewestEventsFirst = bNewest;
                         Refresh(GetSelectedFilter(NULL));
                     }
                     break;
@@ -3554,16 +3525,35 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDM_EVENT_DETAILS:
                 {
-                    // LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
-                    PEVENTLOGFILTER EventLogFilter = GetSelectedFilter(NULL);
-                    if (/*lpnmitem->iItem != -1 &&*/ EventLogFilter)
+                    INT iItem;
+                    PEVENTLOGFILTER EventLogFilter;
+
+                    /* Get the index of the single focused selected item */
+                    iItem = ListView_GetNextItem(hwndListView, -1, LVNI_FOCUSED | LVNI_SELECTED);
+                    if (iItem == -1)
                     {
+                        /**
+                        // FIXME: Reenable this check once menu items are
+                        // correctly disabled when no event is selected, etc.
+                        MessageBoxW(hWnd,
+                                    L"No selected items!",
+                                    szTitle,
+                                    MB_OK | MB_ICONERROR);
+                        **/
+                        break;
+                    }
+
+                    EventLogFilter = GetSelectedFilter(NULL);
+                    if (EventLogFilter)
+                    {
+                        EVENTDETAIL_INFO DetailInfo = {EventLogFilter, iItem};
+
                         EventLogFilter_AddRef(EventLogFilter);
                         DialogBoxParamW(hInst,
                                         MAKEINTRESOURCEW(IDD_EVENTDETAILS_DLG),
                                         hWnd,
                                         EventDetails,
-                                        (LPARAM)EventLogFilter);
+                                        (LPARAM)&DetailInfo);
                         EventLogFilter_Release(EventLogFilter);
                     }
                     break;
@@ -3614,22 +3604,20 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDM_ABOUT:
                 {
-                    HICON hIcon;
                     WCHAR szCopyright[MAX_LOADSTRING];
 
-                    hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_EVENTVWR));
                     LoadStringW(hInst, IDS_COPYRIGHT, szCopyright, ARRAYSIZE(szCopyright));
-                    ShellAboutW(hWnd, szTitle, szCopyright, hIcon);
-                    DeleteObject(hIcon);
+                    ShellAboutW(hWnd, szTitle, szCopyright,
+                                LoadIconW(hInst, MAKEINTRESOURCEW(IDI_EVENTVWR)));
                     break;
                 }
 
                 case IDM_HELP:
-                    MessageBoxW(hwndMainWindow,
+                    MessageBoxW(hWnd,
                                 L"Help not implemented yet!",
-                                L"Event Log",
+                                szTitle,
                                 MB_OK | MB_ICONINFORMATION);
-                                break;
+                    break;
 
                 case IDM_EXIT:
                     DestroyWindow(hWnd);
@@ -3671,11 +3659,38 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITMENUPOPUP:
             lParam = lParam;
             break;
+#endif
 
         case WM_CONTEXTMENU:
-            lParam = lParam;
+        {
+            RECT rc;
+            HTREEITEM hItem;
+            TVHITTESTINFO hInfo = {0};
+
+            INT xPos = GET_X_LPARAM(lParam);
+            INT yPos = GET_Y_LPARAM(lParam);
+
+            GetWindowRect(hwndTreeView, &rc);
+            hInfo.pt.x = xPos - rc.left;
+            hInfo.pt.y = yPos - rc.top;
+
+            hItem = TreeView_HitTest(hwndTreeView, &hInfo);
+            if (hItem)
+            {
+                TreeView_SelectItem(hwndTreeView, hItem);
+
+                if (TreeView_GetParent(hwndTreeView, hItem))
+                {
+                    HMENU hCtxMenu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDM_EVENTWR_CTX)), 0);
+
+                    DWORD dwCmdID = TrackPopupMenuEx(hCtxMenu,
+                                                     TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD,
+                                                     xPos, yPos, hWnd, NULL);
+                    SendMessageW(hWnd, WM_COMMAND, (WPARAM)dwCmdID, (LPARAM)hwndTreeView);
+                }
+            }
             break;
-#endif
+        }
 
         case WM_SETCURSOR:
         {
@@ -3895,7 +3910,7 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
         /* By default, it is 604800 (secs) == 7 days. On Server, the retention is zeroed out. */
         dwRetention = 0;
     }
-    /* Convert in days, rounded up */    
+    /* Convert in days, rounded up */
     if (dwRetention != INFINITE)
         dwRetention = (dwRetention + 24*3600 - 1) / (24*3600);
 
@@ -4023,7 +4038,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     LONG Result;
     DWORD dwMaxSize = 0, dwRetention = 0;
     HKEY hLogKey;
-    WCHAR *KeyPath;    
+    WCHAR *KeyPath;
     SIZE_T cbKeyPath;
 
     if (!EventLog->Permanent)
@@ -4054,7 +4069,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
                    0,
                    REG_DWORD,
                    (LPBYTE)&dwMaxSize,
-                   sizeof(dwMaxSize));    
+                   sizeof(dwMaxSize));
 
     if (IsDlgButtonChecked(hDlg, IDC_OVERWRITE_AS_NEEDED) == BST_CHECKED)
         dwRetention = 0;
@@ -4069,7 +4084,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
                    REG_DWORD,
                    (LPBYTE)&dwRetention,
                    sizeof(dwRetention));
-    
+
     RegCloseKey(hLogKey);
 }
 
@@ -4100,14 +4115,14 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
-            {                
+            {
                 case PSN_APPLY:
                     PropSheet_UnChanged(GetParent(hDlg), hDlg);
                     SavePropertiesDlg(hDlg, EventLog);
                     return (INT_PTR)TRUE;
             }
             break;
-                        
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -4126,7 +4141,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
                     return (INT_PTR)TRUE;
                 }
-                
+
                 case IDC_EDIT_EVENTS_AGE:
                 case IDC_EDIT_MAXLOGSIZE:
                     if (HIWORD(wParam) == EN_CHANGE)
@@ -4134,7 +4149,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         PropSheet_Changed(GetParent(hDlg), hDlg);
                     }
                     return (INT_PTR)TRUE;
-                    
+
                 case IDC_OVERWRITE_AS_NEEDED:
                 {
                     CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_OVERWRITE_AS_NEEDED);
@@ -4161,7 +4176,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_Changed(GetParent(hDlg), hDlg);
                     return (INT_PTR)TRUE;
                 }
-                
+
                 case IDC_RESTOREDEFAULTS:
                 {
                     LoadStringW(hInst, IDS_RESTOREDEFAULTS, szText, _countof(szText));
@@ -4182,7 +4197,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDHELP:
                     MessageBoxW(hDlg,
                                 L"Help not implemented yet!",
-                                L"Event Log",
+                                szTitle,
                                 MB_OK | MB_ICONINFORMATION);
                     return (INT_PTR)TRUE;
 
@@ -4269,8 +4284,8 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
         {
             LONG_PTR dwStyle;
-            INT sbVXSize, sbHYSize;
             RECT rcWnd, rect;
+            INT iEventItem;
 
             hWndDetailsCtrl = CreateEventDetailsCtrl(hInst, hDlg, lParam);
             if (!hWndDetailsCtrl)
@@ -4281,11 +4296,12 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             /* Create a size grip if the dialog has a sizing border */
             GetClientRect(hDlg, &rcWnd);
-            dwStyle  = GetWindowLongPtrW(hDlg, GWL_STYLE);
-            sbVXSize = GetSystemMetrics(SM_CXVSCROLL);
-            sbHYSize = GetSystemMetrics(SM_CYHSCROLL);
+            dwStyle = GetWindowLongPtrW(hDlg, GWL_STYLE);
             if (dwStyle & WS_THICKFRAME /* == WS_SIZEBOX */)
             {
+                INT sbVXSize = GetSystemMetrics(SM_CXVSCROLL);
+                INT sbHYSize = GetSystemMetrics(SM_CYHSCROLL);
+
                 hWndGrip = CreateWindowW(WC_SCROLLBARW,
                                          NULL,
                                          WS_CHILD | WS_VISIBLE | /**/ WS_CLIPSIBLINGS | /**/ SBS_SIZEGRIP | SBS_SIZEBOXBOTTOMRIGHTALIGN,
@@ -4331,8 +4347,9 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             cxOld = rcWnd.right - rcWnd.left;
             cyOld = rcWnd.bottom - rcWnd.top;
 
-            /* Show event info on dialog control */
-            SendMessageW(hWndDetailsCtrl, EVT_DISPLAY, 0, 0);
+            /* Show event info in dialog control */
+            iEventItem = (lParam != 0 ? ((PEVENTDETAIL_INFO)lParam)->iEventItem : 0);
+            SendMessageW(hWndDetailsCtrl, EVT_DISPLAY, 0, (LPARAM)iEventItem);
 
             // SetWindowPos(hWndDetailsCtrl, NULL,
                          // 0, 0,
@@ -4370,7 +4387,7 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDHELP:
                     MessageBoxW(hDlg,
                                 L"Help not implemented yet!",
-                                L"Event Log",
+                                szTitle,
                                 MB_OK | MB_ICONINFORMATION);
                     return (INT_PTR)TRUE;
 

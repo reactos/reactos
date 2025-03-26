@@ -15,9 +15,9 @@
 /* GLOBALS *******************************************************************/
 
 BOOLEAN CmpAllocInited;
-KGUARDED_MUTEX CmpAllocBucketLock, CmpDelayAllocBucketLock;
-
+KGUARDED_MUTEX CmpAllocBucketLock;
 LIST_ENTRY CmpFreeKCBListHead;
+
 KGUARDED_MUTEX CmpDelayAllocBucketLock;
 LIST_ENTRY CmpFreeDelayItemsListHead;
 
@@ -176,6 +176,9 @@ SearchKcbList:
             /* Now go back and search the list */
             goto SearchKcbList;
         }
+
+        /* Release the allocation lock */
+        KeReleaseGuardedMutex(&CmpAllocBucketLock);
     }
 
     /* Allocate a KCB only */
@@ -249,16 +252,14 @@ SearchList:
             /* Clear the KCB pointer */
             Entry->Kcb = NULL;
         }
-    }
-    else
-    {
-        /* Release the lock */
-        KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
-        return NULL;
+
+        /* Do the search again */
+        goto SearchList;
     }
 
-    /* Do the search again */
-    goto SearchList;
+    /* Release the lock */
+    KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
+    return NULL;
 }
 
 VOID

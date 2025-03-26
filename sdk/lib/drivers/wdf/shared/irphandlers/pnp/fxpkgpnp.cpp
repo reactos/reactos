@@ -343,7 +343,7 @@ FxPkgPnp::Dispose(
     return FxPackage::Dispose(); // __super call
 }
 
-
+
 _Must_inspect_result_
 NTSTATUS
 FxPkgPnp::Initialize(

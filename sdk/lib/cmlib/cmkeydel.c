@@ -26,7 +26,7 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
     ULONG i;
 
     /* Get the cell data for our target */
-    CellData = HvGetCell(Hive, Cell);
+    CellData = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
     if (!CellData) return FALSE;
 
     /* Check if sanity checks requested */
@@ -63,8 +63,8 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
         HvMarkCellDirty(Hive, CellData->Security, FALSE);
 
         /* Get the security data and release it */
-        SecurityData = HvGetCell(Hive, CellData->Security);
-        if (!SecurityData) ASSERT(FALSE);
+        SecurityData = (PCM_KEY_SECURITY)HvGetCell(Hive, CellData->Security);
+        ASSERT(SecurityData);
         HvReleaseCell(Hive, CellData->Security);
 
         /* Mark the security links dirty too */
@@ -81,7 +81,7 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
 
         /* Get the list data itself, and release it */
         ListData = HvGetCell(Hive, CellData->ValueList.List);
-        if (!ListData) ASSERT(FALSE);
+        ASSERT(ListData);
         HvReleaseCell(Hive, CellData->ValueList.List);
 
         /* Loop all values */
@@ -127,8 +127,8 @@ CmpFreeKeyBody(IN PHHIVE Hive,
     PCM_KEY_NODE CellData;
 
     /* Get the key node */
-    CellData = HvGetCell(Hive, Cell);
-    if (!CellData) ASSERT(FALSE);
+    CellData = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+    ASSERT(CellData);
 
     /* Check if we can delete the child cells */
     if (!(CellData->Flags & KEY_HIVE_EXIT))
@@ -169,8 +169,8 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
     CmpMarkKeyDirty(Hive, Cell, TRUE);
 
     /* Get the target node and release it */
-    CellData = HvGetCell(Hive, Cell);
-    if (!CellData) ASSERT(FALSE);
+    CellData = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+    ASSERT(CellData);
     HvReleaseCell(Hive, Cell);
 
     /* Make sure we don't have subkeys */
@@ -184,8 +184,8 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
         if (!Result) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Get the parent node and release it */
-        ParentData = HvGetCell(Hive, CellData->Parent);
-        if (!ParentData) ASSERT(FALSE);
+        ParentData = (PCM_KEY_NODE)HvGetCell(Hive, CellData->Parent);
+        ASSERT(ParentData);
         HvReleaseCell(Hive, CellData->Parent);
 
         /* Check if the parent node has no more subkeys */
@@ -206,14 +206,15 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
         {
             /* Get the value list and release it */
             ListData = HvGetCell(Hive, CellData->ValueList.List);
-            if (!ListData) ASSERT(FALSE);
+            ASSERT(ListData);
             HvReleaseCell(Hive, CellData->ValueList.List);
 
             /* Loop every value */
             for (i = 0; i < CellData->ValueList.Count; i++)
             {
                 /* Free it */
-                if (!CmpFreeValue(Hive, ListData->u.KeyList[i])) ASSERT(FALSE);
+                Result = CmpFreeValue(Hive, ListData->u.KeyList[i]);
+                ASSERT(Result);
             }
 
             /* Free the value list */

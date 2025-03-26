@@ -82,7 +82,7 @@ MACRO(SAVE_CPU_REGS)
     push eax
 ENDM
 
-/* Set by each exception handler to the address of the description text */
+/* Set by each exception handler to the index of the description text */
 i386ExceptionIndex:
     .long   0
 
@@ -142,6 +142,7 @@ TRAP_STUB _i386AlignmentCheck, 17
 TRAP_STUB _i386MachineCheck, 18
 TRAP_STUB _i386SimdFloatError, 19
 
+#if DBG
 /************************************************************************
  * DEBUGGING SUPPORT FUNCTIONS
  ************************************************************************/
@@ -176,5 +177,6 @@ BREAKPOINT_TEMPLATE _MEMORY_WRITE_BREAKPOINT3, HEX(0f0ffffff), HEX(001000330)
 BREAKPOINT_TEMPLATE _INSTRUCTION_BREAKPOINT4, HEX(00fffffff), HEX(0000003c0)
 BREAKPOINT_TEMPLATE _MEMORY_READWRITE_BREAKPOINT4, HEX(00fffffff), HEX(0300003c0)
 BREAKPOINT_TEMPLATE _MEMORY_WRITE_BREAKPOINT4, HEX(00fffffff), HEX(0100003c0)
+#endif // DBG
 
 END

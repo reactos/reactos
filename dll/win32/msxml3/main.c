@@ -380,8 +380,6 @@ static void init_char_encoders(void)
     };
     int i;
 
-    xmlInitCharEncodingHandlers();
-
     for (i = 0; i < ARRAY_SIZE(encoder); i++)
     {
         if (!xmlFindCharEncodingHandler(encoder[i].encoding))

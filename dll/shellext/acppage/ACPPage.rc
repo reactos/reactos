@@ -52,6 +52,9 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif
@@ -87,6 +90,9 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

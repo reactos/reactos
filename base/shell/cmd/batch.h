@@ -29,7 +29,7 @@ typedef struct _BATCH_CONTEXT
     char    *mem;       /* batchfile content in memory */
     DWORD   memsize;    /* size of batchfile */
     DWORD   mempos;     /* current position to read from */
-    BOOL    memfree;    /* true if it need to be freed when exitbatch is called */	
+    BOOL    memfree;    /* true if it need to be freed when exitbatch is called */
     TCHAR BatchFilePath[MAX_PATH];
     LPTSTR params;
     LPTSTR raw_params;  /* Holds the raw params given by the input */

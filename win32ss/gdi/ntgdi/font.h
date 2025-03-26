@@ -23,19 +23,45 @@ typedef struct _FONT_ENTRY_COLL_MEM
     FONT_ENTRY_MEM *Entry;
 } FONT_ENTRY_COLL_MEM, *PFONT_ENTRY_COLL_MEM;
 
+#include <pshpack1.h> /* We don't like padding for these structures for hashing */
+
+typedef struct _FONT_ASPECT
+{
+    _ANONYMOUS_UNION union {
+        WORD EmuBoldItalic;
+        struct {
+            BYTE Bold;
+            BYTE Italic;
+        } Emu;
+    } DUMMYUNIONNAME;
+    WORD RenderMode;
+} FONT_ASPECT, *PFONT_ASPECT;
+
+typedef struct _FONT_CACHE_HASHED
+{
+    INT GlyphIndex;
+    FT_Face Face;
+    LONG lfHeight;
+    LONG lfWidth;
+    _ANONYMOUS_UNION union {
+        DWORD AspectValue;
+        FONT_ASPECT Aspect;
+    } DUMMYUNIONNAME;
+    FT_Matrix matTransform;
+} FONT_CACHE_HASHED, *PFONT_CACHE_HASHED;
+
+#include <poppack.h>
+
 typedef struct _FONT_CACHE_ENTRY
 {
     LIST_ENTRY ListEntry;
-    int GlyphIndex;
-    FT_Face Face;
     FT_BitmapGlyph BitmapGlyph;
-    int Height;
-    int Width;
-    int Escapement;
-    FT_Render_Mode RenderMode;
-    MATRIX mxWorldToDevice;
+    DWORD dwHash;
+    FONT_CACHE_HASHED Hashed;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
 
+C_ASSERT(FIELD_OFFSET(FONT_CACHE_ENTRY, Hashed) % sizeof(DWORD) == 0); /* for hashing */
+C_ASSERT(sizeof(FONT_CACHE_HASHED) % sizeof(DWORD) == 0); /* for hashing */
 
 /*
  * FONTSUBST_... --- constants for font substitutes

@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = System
 ClassGUID  = {4D36E97D-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 12/7/2005,1.00
+DriverVer  = 12/07/2005,1.00
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -87,10 +87,11 @@ AddService = green, 0x00000002, green_Service_Inst
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+ReactOSMfg = "(ReactOS Project)"
 
+; Localizable
 GREEN.DriverDesc = "VT100 server emulator"
-
-ReactOSMfg = "(ReactOS Team)"
 KEYBOARD.DeviceDesc = "Keyboard for remote console"
 SCREEN.DeviceDesc = "Screen for remote console"

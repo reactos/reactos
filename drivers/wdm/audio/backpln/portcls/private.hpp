@@ -111,7 +111,7 @@ NTSTATUS
 NewPortPinWaveCyclic(
     OUT IPortPinWaveCyclic ** OutPin);
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterWavePci(
     OUT IPortFilterWavePci ** OutFilter);
 
@@ -132,7 +132,7 @@ GetWavePciMiniport(
     PPORTWAVEPCI Port);
 
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterDMus(
     OUT PPORTFILTERDMUS * OutFilter);
 
@@ -143,13 +143,13 @@ NewPortPinDMus(
 
 VOID
 GetDMusMiniport(
-    IN IPortDMus * iface, 
+    IN IPortDMus * iface,
     IN PMINIPORTDMUS * Miniport,
     IN PMINIPORTMIDI * MidiMiniport);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterWaveRT(
     OUT IPortFilterWaveRT ** OutFilter);
 
@@ -177,7 +177,7 @@ NewPortWaveRT(
 
 #endif
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterTopology(
     OUT IPortFilterTopology ** OutFilter);
 
@@ -438,5 +438,38 @@ typedef struct
     IIrpTarget * Target;
     PKSOBJECT_CREATE_ITEM CreateItem;
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
+
+template<typename... Interfaces>
+class CUnknownImpl : public Interfaces...
+{
+private:
+    volatile LONG m_Ref;
+protected:
+    CUnknownImpl() :
+        m_Ref(0)
+    {
+    }
+    virtual ~CUnknownImpl()
+    {
+    }
+public:
+    STDMETHODIMP_(ULONG) AddRef()
+    {
+        ULONG Ref = InterlockedIncrement(&m_Ref);
+        ASSERT(Ref < 0x10000);
+        return Ref;
+    }
+    STDMETHODIMP_(ULONG) Release()
+    {
+        ULONG Ref = InterlockedDecrement(&m_Ref);
+        ASSERT(Ref < 0x10000);
+        if (!Ref)
+        {
+            delete this;
+            return 0;
+        }
+        return Ref;
+    }
+};
 
 #endif /* PORTCLS_PRIVATE_H */

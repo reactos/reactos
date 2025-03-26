@@ -1,0 +1,7 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_FAIL_INIT "Falha ao iniciar a biblioteca do Gestor de utilitários! O código de erro é %lu."
+    IDS_FAIL_INIT_TITLE "Falha na inicialização"
+END

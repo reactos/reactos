@@ -132,7 +132,7 @@ HdlspPutString(IN PUCHAR String)
                 /* Add the modified char to the temporary buffer */
                 *Dest++ = Char;
             }
-            
+
             /* Check the next char */
             String++;
         }
@@ -450,8 +450,15 @@ HdlspDispatch(IN HEADLESS_CMD Command,
 
         case HeadlessCmdGetLine:
             break;
+
         case HeadlessCmdStartBugCheck:
+        {
+            HeadlessGlobals->InBugCheck = TRUE;
+            HeadlessGlobals->ProcessingCmd = FALSE;
+            Status = STATUS_SUCCESS;
             break;
+        }
+
         case HeadlessCmdDoBugCheckProcessing:
             break;
 
@@ -518,7 +525,10 @@ HdlspDispatch(IN HEADLESS_CMD Command,
         }
 
         case HeadlessCmdSendBlueScreenData:
+            // TODO: Send XML description of bugcheck.
+            // InputBuffer points to the BugCheckCode.
             break;
+
         case HeadlessCmdQueryGUID:
             break;
 
@@ -598,7 +608,7 @@ HeadlessDispatch(IN HEADLESS_CMD Command,
     }
 
     /* Do the real work */
-    return HdlspDispatch(Command, 
+    return HdlspDispatch(Command,
                          InputBuffer,
                          InputBufferSize,
                          OutputBuffer,

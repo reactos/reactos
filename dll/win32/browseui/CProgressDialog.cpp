@@ -44,6 +44,7 @@
 
 CProgressDialog::CProgressDialog()
 {
+    this->hwnd = NULL;
     this->lines[0]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
     this->lines[1]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
     this->lines[2]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
@@ -176,7 +177,7 @@ static INT_PTR CALLBACK dialog_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             This->isCancelled = FALSE;
 
             SetTimer(hwnd, ID_3SECONDS, 3 * 1000, NULL);
-            
+
             SetEvent(params->hEvent);
             return TRUE;
         }
@@ -217,11 +218,11 @@ static INT_PTR CALLBACK dialog_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             EnterCriticalSection(&This->cs);
             if (This->progressClock[29].ullMark != 0ull) {
                 // We have enough info to take a guess
-                ULONGLONG sizeDiff = This->progressClock[This->clockHand].ullMark - 
+                ULONGLONG sizeDiff = This->progressClock[This->clockHand].ullMark -
                                      This->progressClock[(This->clockHand + 29) % 30].ullMark;
-                DWORD     timeDiff = This->progressClock[This->clockHand].dwTime - 
+                DWORD     timeDiff = This->progressClock[This->clockHand].dwTime -
                                      This->progressClock[(This->clockHand + 29) % 30].dwTime;
-                DWORD      runDiff = This->progressClock[This->clockHand].dwTime - 
+                DWORD      runDiff = This->progressClock[This->clockHand].dwTime -
                                      This->dwStartTime;
                 ULONGLONG sizeLeft = This->ullTotal - This->progressClock[This->clockHand].ullMark;
 
@@ -250,8 +251,8 @@ static DWORD WINAPI dialog_thread(LPVOID lpParameter)
 
     hwnd = CreateDialogParamW(_AtlBaseModule.GetResourceInstance(),
                               MAKEINTRESOURCEW(IDD_PROGRESS_DLG),
-                              params->hwndParent, 
-                              dialog_proc, 
+                              params->hwndParent,
+                              dialog_proc,
                              (LPARAM)params);
 
     while (GetMessageW(&msg, NULL, 0, 0) > 0)
@@ -359,7 +360,7 @@ BOOL WINAPI CProgressDialog::HasUserCancelled()
 }
 
 HRESULT WINAPI CProgressDialog::SetProgress64(ULONGLONG ullCompleted, ULONGLONG ullTotal)
-{    
+{
     HWND hwnd;
 
     EnterCriticalSection(&this->cs);
@@ -411,7 +412,7 @@ HRESULT WINAPI CProgressDialog::SetLine(DWORD dwLineNum, LPCWSTR pwzLine, BOOL b
 }
 
 HRESULT WINAPI CProgressDialog::SetCancelMsg(LPCWSTR pwzMsg, LPCVOID reserved)
-{    
+{
     HWND hwnd;
 
     if (reserved)

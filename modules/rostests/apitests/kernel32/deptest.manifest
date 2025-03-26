@@ -6,10 +6,10 @@
               <assemblyIdentity
                   type="win32"
                   name="dep1"
-                  version="0.4.4.0" 
+                  version="0.4.4.0"
                   processorArchitecture="x86"
                   />
           </dependentAssembly>
-  </dependency>  
+  </dependency>
   <file name="deptest.dll"/>
 </assembly>

@@ -1,78 +1,79 @@
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/libxslt
+ACLOCAL_AMFLAGS = -I m4
 
-AM_CFLAGS = $(LIBXML_CFLAGS)
-
-lib_LTLIBRARIES = libxslt.la
-
-xsltincdir = $(includedir)/libxslt
-
-xsltinc_HEADERS = 			\
-	xslt.h				\
-	xsltutils.h			\
-	pattern.h			\
-	templates.h			\
-	variables.h			\
-	keys.h				\
-	numbersInternals.h		\
-	extensions.h			\
-	extra.h				\
-	functions.h			\
-	namespaces.h			\
-	imports.h			\
-	attributes.h			\
-	documents.h			\
-	preproc.h			\
-	transform.h			\
-	security.h			\
-	xsltInternals.h			\
-	xsltexports.h			\
-	xsltlocale.h
-nodist_xsltinc_HEADERS = 		\
-	xsltconfig.h
-
-libxslt_la_SOURCES = 			\
-	attrvt.c			\
-	xslt.c				\
-	xsltlocale.c			\
-	xsltutils.c			\
-	pattern.c			\
-	templates.c			\
-	variables.c			\
-	keys.c				\
-	numbers.c			\
-	extensions.c			\
-	extra.c				\
-	functions.c			\
-	namespaces.c			\
-	imports.c			\
-	attributes.c			\
-	documents.c			\
-	preproc.c			\
-	transform.c			\
-	security.c			\
-	win32config.h			\
-	xsltwin32config.h.in		\
-	libxslt.h
-nodist_libxslt_la_SOURCES =		\
-	xsltwin32config.h
-
-if USE_VERSION_SCRIPT
-LIBXSLT_VERSION_SCRIPT = $(VERSION_SCRIPT_FLAGS)$(srcdir)/libxslt.syms
-else
-LIBXSLT_VERSION_SCRIPT =
+SUBDIRS = libxslt libexslt xsltproc doc tests
+if WITH_PYTHON
+SUBDIRS += python
 endif
 
-libxslt_la_LIBADD = $(LIBXML_LIBS) $(EXTRA_LIBS) $(M_LIBS)
-libxslt_la_LDFLAGS =					\
-		$(LIBXSLT_VERSION_SCRIPT)		\
-		-version-info $(LIBXSLT_VERSION_INFO)
+DIST_SUBDIRS = libxslt libexslt xsltproc python doc tests
 
-man_MANS = libxslt.3
+confexecdir=$(libdir)
+confexec_DATA = xsltConf.sh
 
-EXTRA_DIST = $(man_MANS) trio.h triodef.h libxslt.syms
+bin_SCRIPTS = xslt-config
 
-xsltproc: all
-	@(cd ../xsltproc ; $(MAKE))
+dist-hook: cleanup
+	touch $(distdir)/doc/*.xml
+	touch $(distdir)/doc/EXSLT/*.xml
+	touch $(distdir)/libxslt/*.syms
+	(cd $(srcdir) ; tar -cf - win32 vms examples) | (cd $(distdir); tar xf -)
 
-install-exec-hook:
-	$(MKDIR_P) "$(DESTDIR)$(libdir)/libxslt-plugins"
+EXTRA_DIST = xsltConf.sh.in \
+             FEATURES TODO Copyright \
+	     CMakeLists.txt config.h.cmake.in libxslt-config.cmake.in libxslt-config.cmake.cmake.in
+
+## We create xsltConf.sh here and not from configure because we want
+## to get the paths expanded correctly.  Macros like srcdir are given
+## the value NONE in configure if the user doesn't specify them (this
+## is an autoconf feature, not a bug).
+
+xsltConf.sh: xsltConf.sh.in Makefile
+## Use sed and then mv to avoid problems if the user interrupts.
+	sed -e 's?\@XSLT_LIBDIR\@?$(XSLT_LIBDIR)?g' \
+	    -e 's?\@XSLT_INCLUDEDIR\@?$(XSLT_INCLUDEDIR)?g' \
+	    -e 's?\@VERSION\@?$(VERSION)?g' \
+	    -e 's?\@XSLT_LIBS\@?$(XSLT_LIBS) $(EXTRA_LIBS)?g' \
+	    -e 's?\@XSLT_PRIVATE_LIBS\@?$(XSLT_PRIVATE_LIBS)?g' \
+	       < $(srcdir)/xsltConf.sh.in > xsltConf.tmp \
+	&& mv xsltConf.tmp xsltConf.sh
+
+CLEANFILES = xsltConf.sh
+
+check-local: tests
+
+dummy:
+
+tests: dummy
+	@echo '## Running the regression test suite'
+	@(cd tests ; $(MAKE) -s tests)
+	@(cd xsltproc ; $(MAKE) -s tests)
+if WITH_PYTHON
+	@cd python && $(MAKE) tests
+endif
+
+valgrind:
+	@echo '## Running the regression tests under Valgrind'
+	@echo '## Go get a cup of coffee it is gonna take a while ...'
+	@(cd tests ; $(MAKE) CHECKER='libtool --mode=execute valgrind -q --leak-check=full' tests)
+	@(cd xsltproc ; $(MAKE) CHECKER='libtool --mode=execute valgrind -q --leak-check=full' tests)
+
+cleanup:
+	-@(find . -name .\#\* -exec rm {} \;)
+
+cleantar:
+	@(rm -f libxslt*.tar.gz)
+
+rpm: cleantar
+	@(unset CDPATH ; $(MAKE) dist && rpmbuild -ta $(distdir).tar.gz)
+
+
+pkgconfigdir=$(libdir)/pkgconfig
+pkgconfig_DATA = libxslt.pc libexslt.pc
+
+cmakedir = $(libdir)/cmake/libxslt
+dist_cmake_DATA = FindGcrypt.cmake
+cmake_DATA = libxslt-config.cmake
+
+m4datadir = $(datadir)/aclocal
+dist_m4data_DATA = libxslt.m4
+

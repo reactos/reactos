@@ -41,14 +41,14 @@ typedef enum _INBV_DISPLAY_STATE
 typedef
 BOOLEAN
 (NTAPI *INBV_RESET_DISPLAY_PARAMETERS)(
-    ULONG Cols,
-    ULONG Rows
+    _In_ ULONG Cols,
+    _In_ ULONG Rows
 );
 
 typedef
 VOID
 (NTAPI *INBV_DISPLAY_STRING_FILTER)(
-    PCHAR *Str
+    _Inout_ PCHAR* String
 );
 
 #endif

@@ -18,9 +18,11 @@ extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
 extern void func_GetVolumeInformation(void);
+extern void func_InitOnce(void);
 extern void func_interlck(void);
 extern void func_IsDBCSLeadByteEx(void);
 extern void func_JapaneseCalendar(void);
+extern void func_LCMapString(void);
 extern void func_LoadLibraryExW(void);
 extern void func_lstrcpynW(void);
 extern void func_lstrlen(void);
@@ -35,6 +37,7 @@ extern void func_SetUnhandledExceptionFilter(void);
 extern void func_SystemFirmware(void);
 extern void func_TerminateProcess(void);
 extern void func_TunnelCache(void);
+extern void func_UEFIFirmware(void);
 extern void func_WideCharToMultiByte(void);
 
 const struct test winetest_testlist[] =
@@ -53,9 +56,11 @@ const struct test winetest_testlist[] =
     { "GetDriveType",                func_GetDriveType },
     { "GetModuleFileName",           func_GetModuleFileName },
     { "GetVolumeInformation",        func_GetVolumeInformation },
+    { "InitOnce",                    func_InitOnce },
     { "interlck",                    func_interlck },
     { "IsDBCSLeadByteEx",            func_IsDBCSLeadByteEx },
     { "JapaneseCalendar",            func_JapaneseCalendar },
+    { "LCMapString",                 func_LCMapString },
     { "LoadLibraryExW",              func_LoadLibraryExW },
     { "lstrcpynW",                   func_lstrcpynW },
     { "lstrlen",                     func_lstrlen },
@@ -70,6 +75,7 @@ const struct test winetest_testlist[] =
     { "SystemFirmware",              func_SystemFirmware },
     { "TerminateProcess",            func_TerminateProcess },
     { "TunnelCache",                 func_TunnelCache },
+    { "UEFIFirmware",                func_UEFIFirmware },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
     { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { 0, 0 }

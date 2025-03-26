@@ -15,8 +15,10 @@ static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
-int gLanguageToggleKeyState = 0;
-DWORD gdwLanguageToggleKey = 0;
+INT gLanguageToggleKeyState = 0;
+DWORD gdwLanguageToggleKey = 1;
+INT gLayoutToggleKeyState = 0;
+DWORD gdwLayoutToggleKey = 2;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -635,7 +637,7 @@ NtUserGetAsyncKeyState(INT Key)
 
     TRACE("Enter NtUserGetAsyncKeyState\n");
 
-    if (Key >= 0x100)
+    if (Key >= 0x100 || Key < 0)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         ERR("Invalid parameter Key\n");
@@ -791,6 +793,92 @@ cleanup:
         UserReleaseDC(pWnd, hdc, FALSE);
 }
 
+/* Find the next/previous keyboard layout of the same/different language */
+static PKL FASTCALL
+IntGetNextKL(
+    _In_ PKL pKL,
+    _In_ BOOL bNext,
+    _In_ BOOL bSameLang)
+{
+    PKL pFirstKL = pKL;
+    LANGID LangID = LOWORD(pKL->hkl);
+
+    do
+    {
+        pKL = (bNext ? pKL->pklNext : pKL->pklPrev);
+
+        if (!(pKL->dwKL_Flags & KL_UNLOAD) && bSameLang == (LangID == LOWORD(pKL->hkl)))
+            return pKL;
+    } while (pKL != pFirstKL);
+
+    return pFirstKL;
+}
+
+/* Perform layout toggle by [Left Alt]+Shift or Ctrl+Shift */
+static VOID
+IntLanguageToggle(
+    _In_ PUSER_MESSAGE_QUEUE pFocusQueue,
+    _In_ BOOL bSameLang,
+    _In_ INT nKeyState)
+{
+    PWND pWnd = pFocusQueue->spwndFocus;
+    HWND hWnd;
+    WPARAM wParam = 0;
+    PTHREADINFO pti;
+    PKL pkl;
+
+    if (!pWnd)
+        pWnd = pFocusQueue->spwndActive;
+    if (!pWnd)
+        return;
+
+    pti = pWnd->head.pti;
+    pkl = pti->KeyboardLayout;
+
+    if (nKeyState == INPUTLANGCHANGE_FORWARD)
+        pkl = IntGetNextKL(pkl, TRUE, bSameLang);
+    else if (nKeyState == INPUTLANGCHANGE_BACKWARD)
+        pkl = IntGetNextKL(pkl, FALSE, bSameLang);
+
+    if (gSystemFS & pkl->dwFontSigs)
+        wParam |= INPUTLANGCHANGE_SYSCHARSET;
+
+    hWnd = UserHMGetHandle(pWnd);
+    UserPostMessage(hWnd, WM_INPUTLANGCHANGEREQUEST, wParam, (LPARAM)pkl->hkl);
+}
+
+/* Check Language Toggle by [Left Alt]+Shift or Ctrl+Shift */
+static BOOL
+IntCheckLanguageToggle(
+    _In_ PUSER_MESSAGE_QUEUE pFocusQueue,
+    _In_ BOOL bIsDown,
+    _In_ WORD wVk,
+    _Inout_ PINT pKeyState)
+{
+    if (bIsDown) /* Toggle key combination is pressed? */
+    {
+        if (wVk == VK_LSHIFT)
+            *pKeyState = INPUTLANGCHANGE_FORWARD;
+        else if (wVk == VK_RSHIFT)
+            *pKeyState = INPUTLANGCHANGE_BACKWARD;
+        else if (!wVk && IS_KEY_DOWN(gafAsyncKeyState, VK_LSHIFT))
+            *pKeyState = INPUTLANGCHANGE_FORWARD;
+        else if (!wVk && IS_KEY_DOWN(gafAsyncKeyState, VK_RSHIFT))
+            *pKeyState = INPUTLANGCHANGE_BACKWARD;
+        else
+            return FALSE;
+    }
+    else
+    {
+        if (*pKeyState == 0)
+            return FALSE;
+
+        IntLanguageToggle(pFocusQueue, (pKeyState == &gLayoutToggleKeyState), *pKeyState);
+        *pKeyState = 0;
+    }
+    return TRUE;
+}
+
 /*
  * UserSendKeyboardInput
  *
@@ -808,9 +896,23 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     BOOL bWasSimpleDown = FALSE, bPostMsg = TRUE, bIsSimpleDown;
     MSG Msg;
     static BOOL bMenuDownRecently = FALSE;
+    BOOL bLangToggled = FALSE;
 
     /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
     wSimpleVk = IntSimplifyVk(wVk);
+
+    if (PRIMARYLANGID(gusLanguageID) == LANG_JAPANESE)
+    {
+        /* Japanese special! */
+        if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+        {
+            if (wSimpleVk == VK_OEM_ATTN)
+                wSimpleVk = VK_CAPITAL;
+            else if (wSimpleVk == VK_OEM_COPY)
+                wSimpleVk = VK_OEM_FINISH;
+        }
+    }
+
     bWasSimpleDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
 
     /* Update key without shifts */
@@ -891,6 +993,41 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         (wVk == VK_ESCAPE || wVk == VK_TAB))
     {
        TRACE("Alt-Tab/Esc Pressed wParam %x\n",wVk);
+    }
+
+    /*
+     * Check Language/Layout Toggle by [Left Alt]+Shift or Ctrl+Shift.
+     * @see https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc976564%28v=technet.10%29
+     */
+    if (gdwLanguageToggleKey == 1 || gdwLanguageToggleKey == 2)
+    {
+        if (wSimpleVk == VK_SHIFT) /* Shift key is pressed or released */
+        {
+            UINT targetKey = ((gdwLanguageToggleKey == 1) ? VK_LMENU : VK_CONTROL);
+            if (IS_KEY_DOWN(gafAsyncKeyState, targetKey))
+                bLangToggled = IntCheckLanguageToggle(pFocusQueue, bIsDown, wVk, &gLanguageToggleKeyState);
+        }
+        else if ((wSimpleVk == VK_MENU && gdwLanguageToggleKey == 1) ||
+                 (wSimpleVk == VK_CONTROL && gdwLanguageToggleKey == 2))
+        {
+            if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+                bLangToggled = IntCheckLanguageToggle(pFocusQueue, bIsDown, 0, &gLanguageToggleKeyState);
+        }
+    }
+    if (!bLangToggled && (gdwLayoutToggleKey == 1 || gdwLayoutToggleKey == 2))
+    {
+        if (wSimpleVk == VK_SHIFT) /* Shift key is pressed or released */
+        {
+            UINT targetKey = ((gdwLayoutToggleKey == 1) ? VK_LMENU : VK_CONTROL);
+            if (IS_KEY_DOWN(gafAsyncKeyState, targetKey))
+                IntCheckLanguageToggle(pFocusQueue, bIsDown, wVk, &gLayoutToggleKeyState);
+        }
+        else if ((wSimpleVk == VK_MENU && gdwLayoutToggleKey == 1) ||
+                 (wSimpleVk == VK_CONTROL && gdwLayoutToggleKey == 2))
+        {
+            if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+                IntCheckLanguageToggle(pFocusQueue, bIsDown, 0, &gLayoutToggleKeyState);
+        }
     }
 
     if (bIsDown && wVk == VK_SNAPSHOT)
@@ -1020,8 +1157,11 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         }
         else
         {
-            wVk = pKbdInput->wVk & 0xFF;
+            wVk = pKbdInput->wVk;
         }
+
+        /* Remove all virtual key flags (KBDEXT, KBDMULTIVK, KBDSPECIAL, KBDNUMPAD) */
+        wVk &= 0xFF;
     }
 
     /* If time is given, use it */
@@ -1105,7 +1245,7 @@ UserProcessKeyboardInput(
         if (wVk & KBDEXT)
             KbdInput.dwFlags |= KEYEVENTF_EXTENDEDKEY;
         //
-        // Based on wine input:test_Input_blackbox this is okay. It seems the 
+        // Based on wine input:test_Input_blackbox this is okay. It seems the
         // bit did not get set and more research is needed. Now the right
         // shift works.
         //
@@ -1158,9 +1298,18 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 
     if (!pti->KeyboardLayout)
     {
-       pti->KeyboardLayout = W32kGetDefaultKeyLayout();
-       pti->pClientInfo->hKL = pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL;
-       pKbdTbl = pti->KeyboardLayout ? pti->KeyboardLayout->spkf->pKbdTbl : NULL;
+        PKL pDefKL = W32kGetDefaultKeyLayout();
+        UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pDefKL);
+        if (pDefKL)
+        {
+            pti->pClientInfo->hKL = pDefKL->hkl;
+            pKbdTbl = pDefKL->spkf->pKbdTbl;
+        }
+        else
+        {
+            pti->pClientInfo->hKL = NULL;
+            pKbdTbl = NULL;
+        }
     }
     else
        pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
@@ -1341,6 +1490,7 @@ NtUserToUnicodeEx(
     PWCHAR pwszBuff = NULL;
     INT i, iRet = 0;
     PKL pKl = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("Enter NtUserSetKeyboardState\n");
 
@@ -1390,16 +1540,34 @@ NtUserToUnicodeEx(
         pKl = pti->KeyboardLayout;
     }
 
-    iRet = IntToUnicodeEx(wVirtKey,
-                          wScanCode,
-                          afKeyState,
-                          pwszBuff,
-                          cchBuff,
-                          wFlags,
-                          pKl ? pKl->spkf->pKbdTbl : NULL);
+    if (pKl)
+    {
+        iRet = IntToUnicodeEx(wVirtKey,
+                            wScanCode,
+                            afKeyState,
+                            pwszBuff,
+                            cchBuff,
+                            wFlags,
+                            pKl->spkf->pKbdTbl);
 
-    MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
+        if (iRet)
+        {
+            Status = MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
+        }
+    }
+    else
+    {
+        ERR("No keyboard layout ?!\n");
+        Status = STATUS_INVALID_HANDLE;
+    }
+
     ExFreePoolWithTag(pwszBuff, TAG_STRING);
+
+    if (!NT_SUCCESS(Status))
+    {
+        iRet = 0;
+        SetLastNtError(Status);
+    }
 
     UserLeave();
     TRACE("Leave NtUserSetKeyboardState, ret=%i\n", iRet);

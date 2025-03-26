@@ -1,0 +1,44 @@
+/*
+ * PROJECT:     Lunar Theme
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2022 Wu Haotian <rigoligo03@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+1000, "ReactOS"
+}
+
+STRINGTABLE
+{
+2000, "Lunar ReactOS"
+}
+
+STRINGTABLE
+{
+3000, "一般"
+3001, "大字体"
+3002, "特大字体"
+}
+
+STRINGTABLE
+{
+4000, "一般"
+4001, "大字体"
+4002, "特大字体"
+}
+
+STRINGTABLE
+{
+5000, "Lunar"
+5001, "视觉样式"
+5002, "ReactOS 基金会"
+5003, "Cernodile & Illen，基于 Lautus 主题"
+5004, "以 GNU/GPL 2.0 在 2019 年发行"
+5005, "https://reactos.org/"
+5006, "版本 1.1"
+5007, "ReactOS 视觉样式"
+}

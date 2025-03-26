@@ -33,7 +33,7 @@ static const GFRI_ENTRY AdditionalTestEntriesJapanese[] =
 {
     {
         /* MS Gothic & MS UI Gothic & MS PGothic */
-        L"msgothic.ttc", TRUE, 
+        L"msgothic.ttc", TRUE,
         {
             0xFF2D, 0xFF33, 0x0020, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0x0020,
             0x0026, 0x0020, 0x004D, 0x0053, 0x0020, 0x0055, 0x0049, 0x0020,

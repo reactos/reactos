@@ -15,8 +15,10 @@ START_TEST(CcPinMappedData)
     DWORD Ret;
     ULONG TestId;
 
-    KmtLoadDriver(L"CcPinMappedData", FALSE);
-    KmtOpenDriver();
+    Ret = KmtLoadAndOpenDriver(L"CcPinMappedData", FALSE);
+    ok_eq_int(Ret, ERROR_SUCCESS);
+    if (Ret)
+        return;
 
     /* 1 basic test */
     for (TestId = 0; TestId < 5; ++TestId)

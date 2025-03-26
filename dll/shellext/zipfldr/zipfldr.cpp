@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     zipfldr entrypoint
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -48,7 +49,7 @@ static void init_zlib()
 }
 
 static BOOL
-CreateEmptyFile(LPCWSTR pszFile)
+CreateEmptyFile(PCWSTR pszFile)
 {
     HANDLE hFile;
     hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
@@ -62,7 +63,7 @@ CreateEmptyFile(LPCWSTR pszFile)
 }
 
 static HRESULT
-CreateSendToZip(LPCWSTR pszSendTo)
+CreateSendToZip(PCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
 
@@ -80,10 +81,32 @@ CreateSendToZip(LPCWSTR pszSendTo)
 }
 
 static HRESULT
-GetDefaultUserSendTo(LPWSTR pszPath)
+GetDefaultUserSendTo(PWSTR pszPath)
 {
     return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
                             SHGFP_TYPE_DEFAULT, pszPath);
+}
+
+UINT GetZipCodePage(BOOL bUnZip)
+{
+    WCHAR szValue[16];
+    DWORD dwType, cbValue = sizeof(szValue);
+    UINT nDefaultCodePage = (bUnZip ? CP_ACP : CP_UTF8);
+
+    LONG error = SHGetValueW(HKEY_CURRENT_USER, L"Software\\ReactOS",
+                             (bUnZip ? L"UnZipCodePage" : L"ZipCodePage"),
+                             &dwType, szValue, &cbValue);
+    if (error != ERROR_SUCCESS)
+        return nDefaultCodePage;
+
+    if (cbValue == sizeof(DWORD) && (dwType == REG_DWORD || dwType == REG_BINARY))
+        return *(DWORD*)szValue;
+
+    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+        return nDefaultCodePage;
+
+    szValue[_countof(szValue) - 1] = UNICODE_NULL;
+    return (UINT)wcstol(szValue, NULL, 0);
 }
 
 EXTERN_C
@@ -151,16 +174,17 @@ STDAPI DllUnregisterServer()
 
 EXTERN_C
 BOOL WINAPI
-RouteTheCall(
-    IN HWND hWndOwner,
-    IN HINSTANCE hInstance,
-    IN LPCSTR lpStringArg,
-    IN INT Show)
+RouteTheCallW(IN HWND hWndOwner, IN HINSTANCE hInstance, IN PCWSTR lpStringArg, IN INT Show)
 {
     CStringW path = lpStringArg;
     PathRemoveBlanksW(path.GetBuffer());
     path.ReleaseBuffer();
     path = L"\"" + path + L"\"";
-    ShellExecuteW(NULL, L"open", L"explorer.exe", path.GetString(), NULL, SW_SHOWNORMAL);
+
+    WCHAR app[MAX_PATH];
+    GetWindowsDirectoryW(app, _countof(app));
+    PathAppendW(app, L"explorer.exe");
+
+    ShellExecuteW(NULL, L"open", app, path.GetString(), NULL, Show ? Show : SW_SHOWNORMAL);
     return TRUE;
 }

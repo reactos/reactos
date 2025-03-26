@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 NTSTATUS
@@ -89,7 +86,6 @@ HandleNecessaryPropertyInstances(
     }
 
     Result = (PULONG)Data;
-
 
     // check if the miniport supports the IPinCount interface
     Status = SubDevice->PinCount(Pin->PinId, &FilterNecessary, &FilterCurrent, &FilterPossible, &GlobalCurrent, &GlobalPossible);

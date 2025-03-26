@@ -4,11 +4,11 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Bir sürücünün veyâ bir yolun dizin yapısını görmelik olarak görüntüler.\n\n\
+    IDS_USAGE "Bir sürücünün veya bir yolun dizin yapısını ağaç formunda görüntüler.\n\n\
 TREE [sürücü:][yol] [/F] [/A]\n\n\
-\t/F   Tüm dizinlerde kütüklerin adlarını görüntüle.\n\
-\t/A   Genişletilmiş damgaların yerine ASCII kullan.\n"
+\t/F   Tüm dizinlerde dosyaların adlarını görüntüler.\n\
+\t/A   Genişletilmiş karakter tablosu yerine ASCII kullanır.\n"
     IDS_NO_SUBDIRECTORIES "Bir alt dizin yok"
-    IDS_FOLDER_PATH "Dizin YOL Dizelgesi\n"
-    IDS_VOL_SERIAL "Birim dizilik numarası %x:%x\n"
+    IDS_FOLDER_PATH "Dizin YOL Tablosu\n"
+    IDS_VOL_SERIAL "Birimin seri numarası %x:%x\n"
 END

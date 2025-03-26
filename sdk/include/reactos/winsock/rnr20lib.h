@@ -225,7 +225,7 @@ Dns_NSPGetServiceClassInfo(
     IN OUT LPWSASERVICECLASSINFOW lpServiceClassInfo
 );
 
-INT 
+INT
 WINAPI
 Dns_NSPLookupServiceBegin(
     LPGUID lpProviderId,
@@ -248,7 +248,7 @@ INT
 WINAPI
 Dns_NSPLookupServiceEnd(IN HANDLE hLookup);
 
-INT 
+INT
 WINAPI
 Dns_NSPStartup(
     IN LPGUID lpProviderId,

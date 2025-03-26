@@ -48,8 +48,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason)
     {
+#ifndef __REACTOS__
     case DLL_WINE_PREATTACH:
         return FALSE;
+#endif
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         instance = hinstDLL;

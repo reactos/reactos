@@ -41,8 +41,12 @@ target_compile_definitions(classpnp PRIVATE
     CLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFER_SIZE=512
     CLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512)
 
-if(GCC)
-    target_compile_options(classpnp PRIVATE -Wno-unused-but-set-variable -Wno-pointer-to-int-cast -Wno-switch)
+if(NOT MSVC)
+    target_compile_options(classpnp PRIVATE -Wno-pointer-to-int-cast -Wno-switch)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(classpnp PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 set_module_type(classpnp kernelmodedriver)

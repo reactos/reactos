@@ -21,7 +21,7 @@
  * FILE:            dll/win32/msgina/msgina.c
  * PURPOSE:         ReactOS Logon GINA DLL
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "msgina.h"
@@ -141,7 +141,7 @@ ChooseGinaUI(VOID)
         NextOption = wcschr(CurrentOption, L' ');
         if (NextOption)
             *NextOption = L'\0';
-        if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
+        if (_wcsicmp(CurrentOption, L"CONSOLE") == 0)
         {
             TRACE("Found %S. Switching to console boot\n", CurrentOption);
             ConsoleBoot = TRUE;
@@ -531,7 +531,7 @@ WlxActivateUserShell(
 
     /* Get the path of userinit */
     rc = RegOpenKeyExW(
-        HKEY_LOCAL_MACHINE, 
+        HKEY_LOCAL_MACHINE,
         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
         0,
         KEY_QUERY_VALUE,
@@ -866,7 +866,7 @@ CreateProfile(
         goto cleanup;
     }
 
-    *pgContext->pAuthenticationId = Stats.AuthenticationId; 
+    *pgContext->pAuthenticationId = Stats.AuthenticationId;
     pgContext->pMprNotifyInfo->pszUserName = DuplicationString(UserName);
     pgContext->pMprNotifyInfo->pszDomain = DuplicationString(Domain);
     pgContext->pMprNotifyInfo->pszPassword = DuplicationString(Password);

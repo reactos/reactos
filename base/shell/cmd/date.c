@@ -44,7 +44,7 @@ static WORD awMonths[2][13] =
 
 
 static VOID
-PrintDateString (VOID)
+PromptDateString(VOID)
 {
     switch (nDateFormat)
     {
@@ -204,7 +204,10 @@ INT cmd_date(LPTSTR param)
     }
 
     if (nDateString == -1)
-        ConOutPrintf(_T("%s"), GetDateString());
+    {
+        ConOutResPuts(STRING_DATE_NOW);
+        ConOutPrintf(_T("%s\n"), GetDateString());
+    }
 
     if (!bPrompt)
     {
@@ -216,7 +219,7 @@ INT cmd_date(LPTSTR param)
     {
         if (nDateString == -1)
         {
-            PrintDateString();
+            PromptDateString();
             ConInString(szDate, ARRAYSIZE(szDate));
 
             TRACE("\'%s\'\n", debugstr_aw(szDate));

@@ -2,432 +2,607 @@
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Test for SHChangeNotify
- * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2020-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-// NOTE: This test program closes the Explorer cabinets before tests.
+// NOTE: This testcase requires shell32_apitest_sub.exe.
 
 #include "shelltest.h"
-#include <shlwapi.h>
-#include <stdio.h>
-#include "SHChangeNotify.h"
+#include "shell32_apitest_sub.h"
+#include <assert.h>
 
-#define DONT_SEND 0x24242424
+#define NUM_STEP        8
+#define NUM_CHECKS      12
+#define INTERVAL        0
+#define MAX_EVENT_TYPE  6
 
-static HWND s_hwnd = NULL;
-static const WCHAR s_szName[] = L"SHChangeNotify testcase";
-static WCHAR s_szSubProgram[MAX_PATH];
+static HWND s_hMainWnd = NULL, s_hSubWnd = NULL;
+static WCHAR s_szSubProgram[MAX_PATH]; // shell32_apitest_sub.exe
+static HANDLE s_hThread = NULL;
+static INT s_iStage = -1, s_iStep = -1;
+static BYTE s_abChecks[NUM_CHECKS] = { 0 }; // Flags for testing
+static BOOL s_bGotUpdateDir = FALSE; // Got SHCNE_UPDATEDIR?
 
-typedef void (*ACTION)(void);
-
-typedef struct TEST_ENTRY
+static BOOL DoCreateFile(LPCWSTR pszFileName)
 {
-    INT line;
-    DWORD event;
-    LPCVOID item1;
-    LPCVOID item2;
-    LPCSTR pattern;
-    ACTION action;
-    LPCWSTR path1;
-    LPCWSTR path2;
-} TEST_ENTRY;
-
-static BOOL
-DoCreateEmptyFile(LPCWSTR pszFileName)
-{
-    FILE *fp = _wfopen(pszFileName, L"wb");
-    fclose(fp);
-    return fp != NULL;
+    HANDLE hFile = ::CreateFileW(pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ::CloseHandle(hFile);
+    return hFile != INVALID_HANDLE_VALUE;
 }
 
-static void
-DoAction1(void)
+static void DoDeleteDirectory(LPCWSTR pszDir)
 {
-    ok_int(CreateDirectoryW(s_dir2, NULL), TRUE);
+    WCHAR szPath[MAX_PATH];
+    ZeroMemory(szPath, sizeof(szPath));
+    StringCchCopyW(szPath, _countof(szPath), pszDir); // Double-NULL terminated
+    SHFILEOPSTRUCTW FileOp = { NULL, FO_DELETE, szPath, NULL, FOF_NOCONFIRMATION | FOF_SILENT };
+    SHFileOperation(&FileOp);
 }
 
-static void
-DoAction2(void)
+static INT GetEventType(LONG lEvent)
 {
-    ok_int(RemoveDirectoryW(s_dir2), TRUE);
-}
-
-static void
-DoAction3(void)
-{
-    ok_int(MoveFileExW(s_dir2, s_dir3, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING), TRUE);
-}
-
-static void
-DoAction4(void)
-{
-    ok_int(DoCreateEmptyFile(s_file1), TRUE);
-}
-
-static void
-DoAction5(void)
-{
-    ok_int(MoveFileExW(s_file1, s_file2, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING), TRUE);
-}
-
-static void
-DoAction6(void)
-{
-    ok_int(DeleteFileW(s_file2), TRUE);
-}
-
-static void
-DoAction7(void)
-{
-    DeleteFileW(s_file1);
-    DeleteFileW(s_file2);
-    ok_int(RemoveDirectoryW(s_dir3), TRUE);
-}
-
-static void
-DoAction8(void)
-{
-    BOOL ret = RemoveDirectoryW(s_dir1);
-    ok(ret, "RemoveDirectoryW failed. GetLastError() == %ld\n", GetLastError());
-}
-
-static const TEST_ENTRY s_TestEntriesMode0[] =
-{
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, NULL, DoAction1, NULL, NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "00001000", NULL, s_dir2, L""},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "00001000", DoAction2, s_dir2, L""},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "00010000", DoAction1, s_dir2, L""},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "00000001", NULL, s_dir2, s_dir3},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "00000001", DoAction3, s_dir2, s_dir3},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "01000000", NULL, s_file1, L""},
-    {__LINE__, SHCNE_CREATE, s_file1, s_file2, "01000000", NULL, s_file1, s_file2},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "01000000", DoAction4, s_file1, L""},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "10000000", NULL, s_file1, s_file2},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "10000000", DoAction5, s_file1, s_file2},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "10000000", NULL, s_file1, s_file2},
-    {__LINE__, SHCNE_UPDATEITEM, s_file1, NULL, "00000010", NULL, s_file1, L""},
-    {__LINE__, SHCNE_UPDATEITEM, s_file2, NULL, "00000010", NULL, s_file2, L""},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "00100000", NULL, s_file1, L""},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "00100000", NULL, s_file2, L""},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "00100000", DoAction6, s_file2, L""},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "00100000", NULL, s_file2, L""},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "00100000", NULL, s_file1, L""},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "00001000", NULL, s_dir2, L""},
-    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "00001000", DoAction7, s_dir3, L""},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "00001000", NULL, s_dir1, L""},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "00001000", DoAction8, s_dir1, L""},
-};
-
-#define s_TestEntriesMode1 s_TestEntriesMode0
-#define s_TestEntriesMode2 s_TestEntriesMode0
-
-static const TEST_ENTRY s_TestEntriesMode3[] =
-{
-    {__LINE__, DONT_SEND, s_dir2, NULL, NULL, DoAction1, NULL, NULL},
-    {__LINE__, DONT_SEND, s_dir2, NULL, "00001000", DoAction2, s_dir2, L""},
-    {__LINE__, DONT_SEND, s_dir2, NULL, "00010000", DoAction1, s_dir2, L""},
-    {__LINE__, DONT_SEND, s_dir2, s_dir3, "00000001", DoAction3, s_dir2, s_dir3},
-    {__LINE__, DONT_SEND, s_file1, NULL, "01000000", DoAction4, s_file1, L""},
-    {__LINE__, DONT_SEND, s_file1, s_file2, "10000000", DoAction5, s_file1, s_file2},
-    {__LINE__, DONT_SEND, s_file2, NULL, "00100000", DoAction6, s_file2, L""},
-    {__LINE__, DONT_SEND, s_dir3, NULL, "00001000", DoAction7, s_dir3, L""},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_MKDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-};
-
-static const TEST_ENTRY s_TestEntriesMode4[] =
-{
-    {__LINE__, DONT_SEND, s_dir2, NULL, NULL, DoAction1, NULL, NULL},
-    {__LINE__, DONT_SEND, s_dir2, NULL, "00001000", DoAction2, s_dir2, L""},
-    {__LINE__, DONT_SEND, s_dir2, NULL, "00010000", DoAction1, s_dir2, L""},
-    {__LINE__, DONT_SEND, s_dir2, s_dir3, "00000001", DoAction3, s_dir2, s_dir3},
-    {__LINE__, DONT_SEND, s_file1, NULL, "01000000", DoAction4, s_file1, L""},
-    {__LINE__, DONT_SEND, s_file1, s_file2, "10000000", DoAction5, s_file1, s_file2},
-    {__LINE__, DONT_SEND, s_file2, NULL, "00100000", DoAction6, s_file2, L""},
-    {__LINE__, DONT_SEND, s_dir3, NULL, "00001000", DoAction7, s_dir3, L""},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_MKDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-};
-
-static const TEST_ENTRY s_TestEntriesMode5[] =
-{
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "00000000", DoAction1, NULL, NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "00000000", DoAction2, NULL, NULL},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "00000000", DoAction1, NULL, NULL},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "00000000", DoAction3, NULL, NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, s_file2, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "00000000", DoAction4, NULL, NULL},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "00000000", DoAction5, NULL, NULL},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file1, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file1, s_file2, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file2, s_file1, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, s_file1, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, s_file2, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "00000000", DoAction6, NULL, NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir1, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir2, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir3, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir1, s_dir2, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir1, s_dir3, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir2, s_dir1, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir2, s_dir3, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir3, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir3, NULL, "00000000", DoAction7, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir1, NULL, "00000000", NULL, NULL, NULL},
-    {__LINE__, SHCNE_INTERRUPT | SHCNE_RMDIR, s_dir1, NULL, "00000000", DoAction8, NULL, NULL},
-};
-
-LPCSTR PatternFromFlags(DWORD flags)
-{
-    static char s_buf[TYPE_RENAMEFOLDER + 1 + 1];
-    DWORD i;
-    for (i = 0; i <= TYPE_RENAMEFOLDER; ++i)
+    switch (lEvent)
     {
-        s_buf[i] = (char)('0' + !!(flags & (1 << i)));
+        case SHCNE_CREATE:          return 0;
+        case SHCNE_DELETE:          return 1;
+        case SHCNE_RENAMEITEM:      return 2;
+        case SHCNE_MKDIR:           return 3;
+        case SHCNE_RMDIR:           return 4;
+        case SHCNE_RENAMEFOLDER:    return 5;
+        C_ASSERT(5 + 1 == MAX_EVENT_TYPE);
+        default:                    return -1;
     }
-    s_buf[i] = 0;
-    return s_buf;
 }
 
-static BOOL
-DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
-{
-    pszPath1[0] = pszPath2[0] = 0;
+#define FILE_1  L"_TESTFILE_1_.txt"
+#define FILE_2  L"_TESTFILE_2_.txt"
+#define DIR_1   L"_TESTDIR_1_"
+#define DIR_2   L"_TESTDIR_2_"
 
-    WCHAR szText[MAX_PATH * 2];
-    szText[0] = 0;
-    if (FILE *fp = fopen(TEMP_FILE, "rb"))
+static WCHAR s_szDir1[MAX_PATH];
+static WCHAR s_szDir1InDir1[MAX_PATH];
+static WCHAR s_szDir2InDir1[MAX_PATH];
+static WCHAR s_szFile1InDir1InDir1[MAX_PATH];
+static WCHAR s_szFile1InDir1[MAX_PATH];
+static WCHAR s_szFile2InDir1[MAX_PATH];
+
+static void DoDeleteFilesAndDirs(void)
+{
+    ::DeleteFileW(s_szFile1InDir1);
+    ::DeleteFileW(s_szFile2InDir1);
+    ::DeleteFileW(s_szFile1InDir1InDir1);
+    DoDeleteDirectory(s_szDir1InDir1);
+    DoDeleteDirectory(s_szDir2InDir1);
+    DoDeleteDirectory(s_szDir1);
+}
+
+static void TEST_Quit(void)
+{
+    CloseHandle(s_hThread);
+    s_hThread = NULL;
+
+    PostMessageW(s_hSubWnd, WM_COMMAND, IDNO, 0); // Finish
+    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE); // Close sub-windows
+
+    DoDeleteFilesAndDirs();
+}
+
+static void DoBuildFilesAndDirs(void)
+{
+    WCHAR szPath1[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szPath1, CSIDL_PERSONAL, FALSE); // My Documents
+    PathAppendW(szPath1, DIR_1);
+    StringCchCopyW(s_szDir1, _countof(s_szDir1), szPath1);
+
+    PathAppendW(szPath1, DIR_1);
+    StringCchCopyW(s_szDir1InDir1, _countof(s_szDir1InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, DIR_2);
+    StringCchCopyW(s_szDir2InDir1, _countof(s_szDir2InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, DIR_1);
+    PathAppendW(szPath1, FILE_1);
+    StringCchCopyW(s_szFile1InDir1InDir1, _countof(s_szFile1InDir1InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, FILE_1);
+    StringCchCopyW(s_szFile1InDir1, _countof(s_szFile1InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, FILE_2);
+    StringCchCopyW(s_szFile2InDir1, _countof(s_szFile2InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+#define TRACE_PATH(path) trace(#path ": %ls\n", path)
+    TRACE_PATH(s_szDir1);
+    TRACE_PATH(s_szDir1InDir1);
+    TRACE_PATH(s_szFile1InDir1);
+    TRACE_PATH(s_szFile1InDir1InDir1);
+    TRACE_PATH(s_szFile2InDir1);
+#undef TRACE_PATH
+
+    DoDeleteFilesAndDirs();
+
+    ::CreateDirectoryW(s_szDir1, NULL);
+    ok_int(!!PathIsDirectoryW(s_szDir1), TRUE);
+
+    DoDeleteDirectory(s_szDir1InDir1);
+    ok_int(!PathIsDirectoryW(s_szDir1InDir1), TRUE);
+}
+
+static void DoTestEntry(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+
+    szPath1[0] = szPath2[0] = 0;
+    SHGetPathFromIDListW(pidl1, szPath1);
+    SHGetPathFromIDListW(pidl2, szPath2);
+
+    trace("(0x%lX, '%ls', '%ls')\n", lEvent, szPath1, szPath2);
+
+    if (lEvent == SHCNE_UPDATEDIR)
     {
-        fread(szText, 1, sizeof(szText), fp);
-        fclose(fp);
+        trace("Got SHCNE_UPDATEDIR\n");
+        s_bGotUpdateDir = TRUE;
+        return;
     }
 
-    LPWSTR pch = wcschr(szText, L'|');
-    if (pch == NULL)
-        return FALSE;
+    INT iEventType = GetEventType(lEvent);
+    if (iEventType < 0)
+        return;
+
+    assert(iEventType < MAX_EVENT_TYPE);
+
+    INT i = 0;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, L"") == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szDir2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile1InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile1InDir1InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, L"") == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szDir2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile1InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile1InDir1InDir1) == 0) << iEventType;
+    assert(i == NUM_CHECKS);
+}
+
+static LPCSTR StringFromChecks(void)
+{
+    static char s_sz[2 * NUM_CHECKS + 1];
+
+    char *pch = s_sz;
+    for (INT i = 0; i < NUM_CHECKS; ++i)
+    {
+        WCHAR sz[3];
+        StringCchPrintfW(sz, _countof(sz), L"%02X", s_abChecks[i]);
+        *pch++ = sz[0];
+        *pch++ = sz[1];
+    }
+
+    assert((pch - s_sz) + 1 == sizeof(s_sz));
 
     *pch = 0;
-    lstrcpynW(pszPath1, szText, MAX_PATH);
-    lstrcpynW(pszPath2, pch + 1, MAX_PATH);
-    return TRUE;
+    return s_sz;
 }
 
-static void
-DoTestEntry(const TEST_ENTRY *entry)
+struct TEST_ANSWER
 {
-    if (entry->action)
-    {
-        (*entry->action)();
-    }
+    INT lineno;
+    LPCSTR answer;
+};
 
-    if (entry->event != DONT_SEND)
-    {
-        SHChangeNotify(entry->event, SHCNF_PATHW | SHCNF_FLUSH, entry->item1, entry->item2);
-    }
-    else
-    {
-        SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
-    }
-
-    DWORD flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
-    LPCSTR pattern = PatternFromFlags(flags);
-
-    if (entry->pattern)
-    {
-        ok(lstrcmpA(pattern, entry->pattern) == 0 ||
-           lstrcmpA(pattern, "00000100") == 0, // SHCNE_UPDATEDIR
-           "Line %d: pattern mismatch '%s'\n", entry->line, pattern);
-    }
-
-    SendMessageW(s_hwnd, WM_SET_PATHS, 0, 0);
-    Sleep(50);
-
-    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
-    szPath1[0] = szPath2[0] = 0;
-    BOOL bOK = DoGetPaths(szPath1, szPath2);
-
-    if (lstrcmpA(pattern, "00000100") == 0) // SHCNE_UPDATEDIR
-    {
-        if (entry->path1)
-            ok(bOK && lstrcmpiW(s_dir1, szPath1) == 0,
-               "Line %d: path1 mismatch '%S' (%d)\n", entry->line, szPath1, bOK);
-        if (entry->path2)
-            ok(bOK && lstrcmpiW(L"", szPath2) == 0,
-               "Line %d: path2 mismatch '%S' (%d)\n", entry->line, szPath2, bOK);
-    }
-    else
-    {
-        if (entry->path1)
-            ok(bOK && lstrcmpiW(entry->path1, szPath1) == 0,
-               "Line %d: path1 mismatch '%S' (%d)\n", entry->line, szPath1, bOK);
-        if (entry->path2)
-            ok(bOK && lstrcmpiW(entry->path2, szPath2) == 0,
-               "Line %d: path2 mismatch '%S' (%d)\n", entry->line, szPath2, bOK);
-    }
-
-    SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
-}
-
-static BOOL
-DoInit(void)
+static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
 {
-    DoInitPaths();
+    assert(0 <= iStep);
+    assert(iStep < NUM_STEP);
 
-    CreateDirectoryW(s_dir1, NULL);
+    assert(0 <= iStage);
+    assert(iStage < NUM_STAGE);
 
-    // close Explorer before tests
-    INT i, nCount = 50;
-    for (i = 0; i < nCount; ++i)
+    if (s_bGotUpdateDir)
     {
-        HWND hwnd = FindWindowW(L"CabinetWClass", NULL);
-        if (hwnd == NULL)
-            break;
-
-        PostMessage(hwnd, WM_CLOSE, 0, 0);
-        Sleep(100);
-    }
-    if (i == nCount)
-        skip("Unable to close Explorer cabinet\n");
-
-    return PathIsDirectoryW(s_dir1);
-}
-
-static void
-DoEnd(HWND hwnd)
-{
-    DeleteFileW(s_file1);
-    DeleteFileW(s_file2);
-    RemoveDirectoryW(s_dir3);
-    RemoveDirectoryW(s_dir2);
-    RemoveDirectoryW(s_dir1);
-    DeleteFileA(TEMP_FILE);
-
-    SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
-}
-
-static BOOL
-GetSubProgramPath(void)
-{
-    GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
-    PathRemoveFileSpecW(s_szSubProgram);
-    PathAppendW(s_szSubProgram, L"shell-notify.exe");
-
-    if (!PathFileExistsW(s_szSubProgram))
-    {
-        PathRemoveFileSpecW(s_szSubProgram);
-        PathAppendW(s_szSubProgram, L"testdata\\shell-notify.exe");
-
-        if (!PathFileExistsW(s_szSubProgram))
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
-static void
-JustDoIt(INT nMode)
-{
-    trace("nMode: %d\n", nMode);
-    SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
-
-    if (!DoInit())
-    {
-        skip("Unable to initialize.\n");
+        ok_int(TRUE, TRUE);
         return;
     }
 
-    WCHAR szParams[8];
-    wsprintfW(szParams, L"%u", nMode);
-
-    HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, szParams, NULL, SW_SHOWNORMAL);
-    if ((INT_PTR)hinst <= 32)
-    {
-        skip("Unable to run shell-notify.exe.\n");
-        return;
-    }
-
-    for (int i = 0; i < 15; ++i)
-    {
-        s_hwnd = FindWindowW(s_szName, s_szName);
-        if (s_hwnd)
-            break;
-
-        Sleep(50);
-    }
-
-    if (!s_hwnd)
-    {
-        skip("Unable to find window.\n");
-        return;
-    }
-
-    switch (nMode)
+    LPCSTR answer = NULL;
+    INT lineno;
+    switch (iStage)
     {
         case 0:
         case 1:
-        case 2:
-            for (size_t i = 0; i < _countof(s_TestEntriesMode0); ++i)
-            {
-                DoTestEntry(&s_TestEntriesMode0[i]);
-            }
-            break;
         case 3:
-            for (size_t i = 0; i < _countof(s_TestEntriesMode3); ++i)
+        case 6:
+        case 9:
+        {
+            static const TEST_ANSWER c_answers[] =
             {
-                DoTestEntry(&s_TestEntriesMode3[i]);
-            }
+                { __LINE__, "000000010000010000000000" }, // 0
+                { __LINE__, "000000040000000000000400" }, // 1
+                { __LINE__, "000000000200020000000000" }, // 2
+                { __LINE__, "000000000000080000000000" }, // 3
+                { __LINE__, "000000000001010000000000" }, // 4
+                { __LINE__, "000000000002020000000000" }, // 5
+                { __LINE__, "000000000000000020000000" }, // 6
+                { __LINE__, "000010000000100000000000" }, // 7
+            };
+            C_ASSERT(_countof(c_answers) == NUM_STEP);
+            lineno = c_answers[iStep].lineno;
+            answer = c_answers[iStep].answer;
             break;
+        }
+        case 2:
         case 4:
-            for (size_t i = 0; i < _countof(s_TestEntriesMode4); ++i)
-            {
-                DoTestEntry(&s_TestEntriesMode4[i]);
-            }
-            break;
         case 5:
-            for (size_t i = 0; i < _countof(s_TestEntriesMode5); ++i)
+        case 7:
+        {
+            static const TEST_ANSWER c_answers[] =
             {
-                DoTestEntry(&s_TestEntriesMode5[i]);
+                { __LINE__, "000000000000000000000000" }, // 0
+                { __LINE__, "000000000000000000000000" }, // 1
+                { __LINE__, "000000000000000000000000" }, // 2
+                { __LINE__, "000000000000000000000000" }, // 3
+                { __LINE__, "000000000000000000000000" }, // 4
+                { __LINE__, "000000000000000000000000" }, // 5
+                { __LINE__, "000000000000000000000000" }, // 6
+                { __LINE__, "000000000000000000000000" }, // 7
+            };
+            C_ASSERT(_countof(c_answers) == NUM_STEP);
+            lineno = c_answers[iStep].lineno;
+            answer = c_answers[iStep].answer;
+            break;
+        }
+        case 8:
+        {
+            static const TEST_ANSWER c_answers[] =
+            {
+                { __LINE__, "000000010000010000000000" }, // 0
+                { __LINE__, "000000040000000000000400" }, // 1
+                { __LINE__, "000000000200020000000000" }, // 2
+                { __LINE__, "000000000000080000000000" }, // 3
+                { __LINE__, "000000000001010000000000" }, // 4 // Recursive case
+                { __LINE__, "000000000002020000000000" }, // 5 // Recursive case
+                { __LINE__, "000000000000000020000000" }, // 6
+                { __LINE__, "000010000000100000000000" }, // 7
+            };
+            C_ASSERT(_countof(c_answers) == NUM_STEP);
+            lineno = c_answers[iStep].lineno;
+            answer = c_answers[iStep].answer;
+            if (iStep == 4 || iStep == 5) // Recursive cases
+            {
+                if (lstrcmpA(checks, "000000000000000000000000") == 0)
+                {
+                    trace("Warning! Recursive cases...\n");
+                    answer = "000000000000000000000000";
+                }
             }
             break;
+        }
+        default:
+        {
+            assert(0);
+            break;
+        }
     }
 
-    DoEnd(s_hwnd);
+    ok(lstrcmpA(checks, answer) == 0,
+       "Line %d: '%s' vs '%s' at Stage %d, Step %d\n", lineno, checks, answer, iStage, iStep);
+}
 
-    for (int i = 0; i < 15; ++i)
+static DWORD WINAPI StageThreadFunc(LPVOID arg)
+{
+    BOOL ret;
+
+    trace("Stage %d\n", s_iStage);
+
+    // 0: Create file1 in dir1
+    s_iStep = 0;
+    trace("Step %d\n", s_iStep);
+    SHChangeNotify(0, SHCNF_PATHW | SHCNF_FLUSH, NULL, NULL);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DoCreateFile(s_szFile1InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1, 0);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 1: Rename file1 as file2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = MoveFileW(s_szFile1InDir1, s_szFile2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1, s_szFile2InDir1);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 2: Delete file2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DeleteFileW(s_szFile2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile2InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 3: Create dir1 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = CreateDirectoryExW(s_szDir1, s_szDir1InDir1, NULL);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir1InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 4: Create file1 in dir1 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DoCreateFile(s_szFile1InDir1InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 5: Delete file1 in dir1 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DeleteFileW(s_szFile1InDir1InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 6: Rename dir1 as dir2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = ::MoveFileW(s_szDir1InDir1, s_szDir2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW | SHCNF_FLUSH, s_szDir1InDir1, s_szDir2InDir1);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 7: Remove dir2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = RemoveDirectoryW(s_szDir2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir2InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 8: Finish
+    ++s_iStep;
+    assert(s_iStep == NUM_STEP);
+    C_ASSERT(NUM_STEP == 8);
+    if (s_iStage + 1 < NUM_STAGE)
     {
-        s_hwnd = FindWindowW(s_szName, s_szName);
-        if (!s_hwnd)
+        ::PostMessage(s_hSubWnd, WM_COMMAND, IDRETRY, 0); // Next stage
+    }
+    else
+    {
+        // Finish
+        ::PostMessage(s_hSubWnd, WM_COMMAND, IDNO, 0);
+        ::PostMessage(s_hMainWnd, WM_COMMAND, IDNO, 0);
+    }
+
+    s_iStep = -1;
+
+    return 0;
+}
+
+// WM_COPYDATA
+static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
+{
+    if (pCopyData->dwData != 0xBEEFCAFE)
+        return FALSE;
+
+    LPBYTE pbData = (LPBYTE)pCopyData->lpData;
+    LPBYTE pb = pbData;
+
+    LONG cbTotal = pCopyData->cbData;
+    assert(cbTotal >= LONG(sizeof(LONG) + sizeof(DWORD) + sizeof(DWORD)));
+
+    LONG lEvent = *(LONG*)pb;
+    pb += sizeof(lEvent);
+
+    DWORD cbPidl1 = *(DWORD*)pb;
+    pb += sizeof(cbPidl1);
+
+    DWORD cbPidl2 = *(DWORD*)pb;
+    pb += sizeof(cbPidl2);
+
+    LPITEMIDLIST pidl1 = NULL;
+    if (cbPidl1)
+    {
+        pidl1 = (LPITEMIDLIST)CoTaskMemAlloc(cbPidl1);
+        CopyMemory(pidl1, pb, cbPidl1);
+        pb += cbPidl1;
+    }
+
+    LPITEMIDLIST pidl2 = NULL;
+    if (cbPidl2)
+    {
+        pidl2 = (LPITEMIDLIST)CoTaskMemAlloc(cbPidl2);
+        CopyMemory(pidl2, pb, cbPidl2);
+        pb += cbPidl2;
+    }
+
+    assert((pb - pbData) == cbTotal);
+
+    DoTestEntry(lEvent, pidl1, pidl2);
+
+    CoTaskMemFree(pidl1);
+    CoTaskMemFree(pidl2);
+
+    return TRUE;
+}
+
+static LRESULT CALLBACK
+MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_CREATE:
+            s_hMainWnd = hwnd;
+            return 0;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDYES: // Start testing
+                {
+                    s_iStage = 0;
+                    s_bGotUpdateDir = FALSE;
+                    s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
+                    if (!s_hThread)
+                    {
+                        skip("!s_hThread\n");
+                        DestroyWindow(hwnd);
+                    }
+                    break;
+                }
+                case IDRETRY: // New stage
+                {
+                    ::CloseHandle(s_hThread);
+                    ++s_iStage;
+                    s_bGotUpdateDir = FALSE;
+                    s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
+                    if (!s_hThread)
+                    {
+                        skip("!s_hThread\n");
+                        DestroyWindow(hwnd);
+                    }
+                    break;
+                }
+                case IDNO: // Quit
+                {
+                    s_iStage = -1;
+                    DestroyWindow(hwnd);
+                    break;
+                }
+            }
             break;
 
-        Sleep(50);
+        case WM_COPYDATA:
+            if (s_iStage < 0 || s_iStep < 0)
+                break;
+
+            OnCopyData(hwnd, (HWND)wParam, (COPYDATASTRUCT*)lParam);
+            break;
+
+        case WM_DESTROY:
+            ::PostQuitMessage(0);
+            break;
+
+        default:
+            return ::DefWindowProcW(hwnd, uMsg, wParam, lParam);
     }
+    return 0;
+}
+
+static BOOL TEST_Init(void)
+{
+    if (!FindSubProgram(s_szSubProgram, _countof(s_szSubProgram)))
+    {
+        skip("shell32_apitest_sub.exe not found\n");
+        return FALSE;
+    }
+
+    // close the SUB_CLASSNAME windows
+    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE);
+
+    // Execute sub program
+    HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, L"---", NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hinst <= 32)
+    {
+        skip("Unable to run shell32_apitest_sub.exe.\n");
+        return FALSE;
+    }
+
+    // prepare for files and dirs
+    DoBuildFilesAndDirs();
+
+    // Register main window
+    WNDCLASSW wc = { 0, MainWndProc };
+    wc.hInstance = GetModuleHandleW(NULL);
+    wc.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+    wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wc.lpszClassName = MAIN_CLASSNAME;
+    if (!RegisterClassW(&wc))
+    {
+        skip("RegisterClassW failed\n");
+        return FALSE;
+    }
+
+    // Create main window
+    HWND hwnd = CreateWindowW(MAIN_CLASSNAME, MAIN_CLASSNAME, WS_OVERLAPPEDWINDOW,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
+                              NULL, NULL, GetModuleHandleW(NULL), NULL);
+    if (!hwnd)
+    {
+        skip("CreateWindowW failed\n");
+        return FALSE;
+    }
+    ::ShowWindow(hwnd, SW_SHOWNORMAL);
+    ::UpdateWindow(hwnd);
+
+    // Find sub-window
+    s_hSubWnd = DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, FALSE, FALSE);
+    if (!s_hSubWnd)
+    {
+        skip("Unable to find sub-program window.\n");
+        return FALSE;
+    }
+
+    // Start testing
+    SendMessageW(s_hSubWnd, WM_COMMAND, IDYES, 0);
+
+    return TRUE;
+}
+
+static void TEST_Main(void)
+{
+    if (!TEST_Init())
+    {
+        skip("Unable to start testing.\n");
+        TEST_Quit();
+        return;
+    }
+
+    // Message loop
+    MSG msg;
+    while (GetMessageW(&msg, NULL, 0, 0))
+    {
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
+    }
+
+    TEST_Quit();
 }
 
 START_TEST(SHChangeNotify)
 {
-    if (!GetSubProgramPath())
-    {
-        skip("shell-notify.exe not found\n");
-    }
+    trace("Please close all Explorer windows before testing.\n");
+    trace("Please don't operate your PC while testing.\n");
 
-    JustDoIt(0);
-    JustDoIt(1);
-    JustDoIt(2);
-    JustDoIt(3);
-    JustDoIt(4);
-    JustDoIt(5);
+    DWORD dwOldTick = GetTickCount();
+    TEST_Main();
+    DWORD dwNewTick = GetTickCount();
+
+    DWORD dwTick = dwNewTick - dwOldTick;
+    trace("SHChangeNotify: Total %lu.%lu sec\n", (dwTick / 1000), (dwTick / 100 % 10));
 }

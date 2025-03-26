@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* GLOBAL VARIABLES *********************************************************/
 
 extern RTL_TIME_ZONE_INFORMATION ExpTimeZoneInfo;
@@ -11,8 +16,10 @@ extern POBJECT_TYPE ExEventPairObjectType;
 extern POBJECT_TYPE _ExEventObjectType, _ExSemaphoreObjectType;
 extern FAST_MUTEX ExpEnvironmentLock;
 extern ERESOURCE ExpFirmwareTableResource;
+extern ERESOURCE ExpTimeRefreshLock;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 extern BOOLEAN ExpIsWinPEMode;
+extern ULONG ExpResourceTimeoutCount;
 extern LIST_ENTRY ExpSystemResourcesList;
 extern ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 extern ULONG ExpUnicodeCaseTableDataOffset;
@@ -63,38 +70,41 @@ extern PEPROCESS ExpDebuggerProcessAttach;
 extern PEPROCESS ExpDebuggerProcessKill;
 extern ULONG_PTR ExpDebuggerPageIn;
 
-VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
+VOID
+NTAPI
+ExpDebuggerWorker(
+    _In_ PVOID Context);
 
 #ifdef _WIN64
-#define HANDLE_LOW_BITS (PAGE_SHIFT - 4)
-#define HANDLE_HIGH_BITS (PAGE_SHIFT - 3)
+#define HANDLE_LOW_BITS     (PAGE_SHIFT - 4)
+#define HANDLE_HIGH_BITS    (PAGE_SHIFT - 3)
 #else
-#define HANDLE_LOW_BITS (PAGE_SHIFT - 3)
-#define HANDLE_HIGH_BITS (PAGE_SHIFT - 2)
+#define HANDLE_LOW_BITS     (PAGE_SHIFT - 3)
+#define HANDLE_HIGH_BITS    (PAGE_SHIFT - 2)
 #endif
-#define HANDLE_TAG_BITS (2)
-#define HANDLE_INDEX_BITS (HANDLE_LOW_BITS + 2*HANDLE_HIGH_BITS)
-#define KERNEL_FLAG_BITS (sizeof(PVOID)*8 - HANDLE_INDEX_BITS - HANDLE_TAG_BITS)
+#define HANDLE_TAG_BITS     2
+#define HANDLE_INDEX_BITS   (HANDLE_LOW_BITS + 2 * HANDLE_HIGH_BITS)
+#define KERNEL_FLAG_BITS    (sizeof(ULONG_PTR) * 8 - HANDLE_INDEX_BITS - HANDLE_TAG_BITS)
 
 typedef union _EXHANDLE
 {
-     struct
-     {
-         ULONG_PTR TagBits:     HANDLE_TAG_BITS;
-         ULONG_PTR Index:       HANDLE_INDEX_BITS;
-         ULONG_PTR KernelFlag : KERNEL_FLAG_BITS;
-     };
-     struct
-     {
-         ULONG_PTR TagBits2:    HANDLE_TAG_BITS;
-         ULONG_PTR LowIndex:    HANDLE_LOW_BITS;
-         ULONG_PTR MidIndex:    HANDLE_HIGH_BITS;
-         ULONG_PTR HighIndex:   HANDLE_HIGH_BITS;
-         ULONG_PTR KernelFlag2: KERNEL_FLAG_BITS;
-     };
-     HANDLE GenericHandleOverlay;
-     ULONG_PTR Value;
-     ULONG AsULONG;
+    struct
+    {
+        ULONG_PTR TagBits:      HANDLE_TAG_BITS;
+        ULONG_PTR Index:        HANDLE_INDEX_BITS;
+        ULONG_PTR KernelFlag:   KERNEL_FLAG_BITS;
+    };
+    struct
+    {
+        ULONG_PTR TagBits2:     HANDLE_TAG_BITS;
+        ULONG_PTR LowIndex:     HANDLE_LOW_BITS;
+        ULONG_PTR MidIndex:     HANDLE_HIGH_BITS;
+        ULONG_PTR HighIndex:    HANDLE_HIGH_BITS;
+        ULONG_PTR KernelFlag2:  KERNEL_FLAG_BITS;
+    };
+    HANDLE GenericHandleOverlay;
+    ULONG_PTR Value;
+    ULONG AsULONG;
 } EXHANDLE, *PEXHANDLE;
 
 typedef struct _ETIMER
@@ -125,12 +135,12 @@ typedef struct _HARDERROR_USER_PARAMETERS
 
 #define MAX_FAST_REFS           7
 
-#define ExAcquireRundownProtection                      _ExAcquireRundownProtection
-#define ExReleaseRundownProtection                      _ExReleaseRundownProtection
-#define ExInitializeRundownProtection                   _ExInitializeRundownProtection
-#define ExWaitForRundownProtectionRelease               _ExWaitForRundownProtectionRelease
-#define ExRundownCompleted                              _ExRundownCompleted
-#define ExGetPreviousMode                               KeGetPreviousMode
+#define ExAcquireRundownProtection          _ExAcquireRundownProtection
+#define ExReleaseRundownProtection          _ExReleaseRundownProtection
+#define ExInitializeRundownProtection       _ExInitializeRundownProtection
+#define ExWaitForRundownProtectionRelease   _ExWaitForRundownProtectionRelease
+#define ExRundownCompleted                  _ExRundownCompleted
+#define ExGetPreviousMode                   KeGetPreviousMode
 
 
 //
@@ -153,9 +163,9 @@ typedef struct _HARDERROR_USER_PARAMETERS
 #define MAX_MID_INDEX       (MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 #define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
-#define ExpChangeRundown(x, y, z) (ULONG_PTR)InterlockedCompareExchangePointer(&x->Ptr, (PVOID)y, (PVOID)z)
-#define ExpChangePushlock(x, y, z) InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
-#define ExpSetRundown(x, y) InterlockedExchangePointer(&x->Ptr, (PVOID)y)
+#define ExpChangeRundown(x, y, z)   (ULONG_PTR)InterlockedCompareExchangePointer(&(x)->Ptr, (PVOID)(y), (PVOID)(z))
+#define ExpChangePushlock(x, y, z)  InterlockedCompareExchangePointer((PVOID*)(x), (PVOID)(y), (PVOID)(z))
+#define ExpSetRundown(x, y)         InterlockedExchangePointer(&(x)->Ptr, (PVOID)(y))
 
 NTSTATUS
 NTAPI
@@ -185,6 +195,7 @@ C_ASSERT(RTL_FIELD_SIZE(UUID_CACHED_VALUES_STRUCT, GuidInit) == RTL_FIELD_SIZE(U
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpWin32kInit(VOID);
@@ -199,6 +210,7 @@ Phase1Initialization(
     IN PVOID Context
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializePushLocks(VOID);
@@ -209,6 +221,7 @@ ExRefreshTimeZoneInformation(
     IN PLARGE_INTEGER SystemBootTime
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializeWorkerThreads(VOID);
@@ -217,10 +230,12 @@ VOID
 NTAPI
 ExSwapinWorkerThreads(IN BOOLEAN AllowSwap);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitLookasideLists(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExInitializeSystemLookasideList(
@@ -232,18 +247,22 @@ ExInitializeSystemLookasideList(
     IN PLIST_ENTRY ListHead
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeCallbacks(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpUuidInitialization(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExLuidInitialization(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializeExecutive(
@@ -255,38 +274,47 @@ VOID
 NTAPI
 ExShutdownSystem(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeEventImplementation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeKeyedEventImplementation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeEventPairImplementation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeSemaphoreImplementation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeMutantImplementation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeTimerImplementation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeProfileImplementation(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpResourceInitialization(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExInitPoolLookasidePointers(VOID);
@@ -426,6 +454,7 @@ typedef BOOLEAN
     ULONG_PTR Context
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializeHandleTables(
@@ -1483,10 +1512,26 @@ ExTimerRundown(
 
 VOID
 NTAPI
+ExUnlockUserBuffer(PMDL Mdl);
+
+NTSTATUS
+NTAPI
+ExLockUserBuffer(
+    PVOID BaseAddress,
+    ULONG Length,
+    KPROCESSOR_MODE AccessMode,
+    LOCK_OPERATION Operation,
+    PVOID *MappedSystemVa,
+    PMDL *OutMdl);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
 HeadlessInit(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 XIPInit(
@@ -1511,5 +1556,17 @@ XIPInit(
 #define InterlockedCompareExchangeSizeT(Destination, Exchange, Comperand) \
    (SIZE_T)InterlockedCompareExchangePointer((PVOID*)(Destination), (PVOID)(SIZE_T)(Exchange), (PVOID)(SIZE_T)(Comperand))
 
+#ifdef _WIN64
+#define InterlockedExchangeSizeT(Target, Value) \
+    (SIZE_T)InterlockedExchange64((PLONG64)(Target), (LONG64)(Value))
+#else
+#define InterlockedExchangeSizeT(Target, Value) \
+    (SIZE_T)InterlockedExchange((PLONG)(Target), (LONG)(Value))
+#endif
+
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
    (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

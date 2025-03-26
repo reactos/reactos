@@ -39,7 +39,7 @@ void exit(int exitcode)
 #endif
   WARN("exit(%d) called\n",exitcode);
   _cexit();
-#if 0 
+#if 0
   hmscoree = GetModuleHandleW(mscoreeW);
 
   if (hmscoree)

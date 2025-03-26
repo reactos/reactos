@@ -10,7 +10,11 @@
 /* INCLUDES *****************************************************************/
 
 #include "ext2fs.h"
+#ifdef __REACTOS__
 #include "linux/ext4.h"
+#else
+#include "linux\ext4.h"
+#endif
 
 /* GLOBALS ***************************************************************/
 
@@ -686,7 +690,7 @@ Ext2LoadBlock (IN PEXT2_VCB Vcb,
             fini_bh(&bh);
     } _SEH2_END;
 
-    return rc; 
+    return rc;
 }
 
 
@@ -858,6 +862,68 @@ Ext2ZeroBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
 }
 
 
+#ifdef __REACTOS__
+#define SIZE_256K 0x40000
+
+BOOLEAN
+Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
+                IN PEXT2_VCB            Vcb,
+                IN LONGLONG             Offset,
+                IN ULONG                Size,
+                IN PVOID                Buf )
+{
+    BOOLEAN     rc;
+
+    while (Size) {
+
+        PBCB        Bcb;
+        PVOID       Buffer;
+        ULONG       Length;
+
+        Length = (ULONG)Offset & (SIZE_256K - 1);
+        Length = SIZE_256K - Length;
+        if (Size < Length)
+            Length = Size;
+
+        if ( !CcPreparePinWrite(
+                    Vcb->Volume,
+                    (PLARGE_INTEGER) (&Offset),
+                    Length,
+                    FALSE,
+                    PIN_WAIT | PIN_EXCLUSIVE,
+                    &Bcb,
+                    &Buffer )) {
+
+            DEBUG(DL_ERR, ( "Ext2SaveBuffer: failed to PinLock offset %I64xh ...\n", Offset));
+            return FALSE;
+        }
+
+        _SEH2_TRY {
+
+            RtlCopyMemory(Buffer, Buf, Length);
+            CcSetDirtyPinnedData(Bcb, NULL );
+            SetFlag(Vcb->Volume->Flags, FO_FILE_MODIFIED);
+
+            rc = Ext2AddVcbExtent(Vcb, Offset, (LONGLONG)Length);
+            if (!rc) {
+                DbgBreak();
+                Ext2Sleep(100);
+                rc = Ext2AddVcbExtent(Vcb, Offset, (LONGLONG)Length);
+            }
+
+        } _SEH2_FINALLY {
+            CcUnpinData(Bcb);
+        } _SEH2_END;
+
+        Buf = (PUCHAR)Buf + Length;
+        Offset = Offset + Length;
+        Size = Size - Length;
+    }
+
+    return rc;
+}
+#else
+
 BOOLEAN
 Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
                 IN PEXT2_VCB            Vcb,
@@ -868,7 +934,7 @@ Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
     struct buffer_head *bh = NULL;
     BOOLEAN             rc = 0;
 
-    _SEH2_TRY {
+    __try {
 
         while (size) {
 
@@ -890,23 +956,23 @@ Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
             if (!bh) {
                 DEBUG(DL_ERR, ("Ext2SaveBuffer: can't load block %I64u\n", block));
                 DbgBreak();
-                _SEH2_LEAVE;
+                __leave;
             }
 
             if (!buffer_uptodate(bh)) {
 	            int err = bh_submit_read(bh);
 	            if (err < 0) {
 		            DEBUG(DL_ERR, ("Ext2SaveBuffer: bh_submit_read failed: %d\n", err));
-		            _SEH2_LEAVE;
+		            __leave;
 	            }
             }
 
-            _SEH2_TRY {
+            __try {
                 RtlCopyMemory(bh->b_data + delta, buf, len);
                 mark_buffer_dirty(bh);
-            } _SEH2_FINALLY {
+            } __finally {
                 fini_bh(&bh);
-            } _SEH2_END;
+            }
 
             buf = (PUCHAR)buf + len;
             offset = offset + len;
@@ -915,15 +981,16 @@ Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
 
         rc = TRUE;
 
-    } _SEH2_FINALLY {
+    } __finally {
 
         if (bh)
             fini_bh(&bh);
 
-    } _SEH2_END;
+    }
 
     return rc;
 }
+#endif
 
 
 VOID
@@ -1352,7 +1419,7 @@ repeat:
             }
 
             if ((gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) ||
-                (ext4_used_dirs_count(sb, gd) << 8 < 
+                (ext4_used_dirs_count(sb, gd) << 8 <
                  ext4_free_inodes_count(sb, gd)) ) {
                 Group = i + 1;
                 break;
@@ -1437,7 +1504,7 @@ repeat:
 
             /* this group is 100% cocucpied */
             fini_bh(&gb);
- 
+
             i = GroupHint;
 
             /*
@@ -1461,7 +1528,7 @@ repeat:
                     break;
                 }
 
-                fini_bh(&gb);                
+                fini_bh(&gb);
             }
         }
 

@@ -86,7 +86,7 @@ PrintRawJob(PWINPRINT_HANDLE pHandle, PWSTR pwszPrinterAndJob)
 Cleanup:
     if (pBuffer)
         DllFreeSplMem(pBuffer);
-    
+
     if (bStartedDoc)
         EndDocPrinter(hPrintMonitor);
 

@@ -4,7 +4,8 @@
  * FILE:            base/system/winlogon/sas.c
  * PURPOSE:         Secure Attention Sequence
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
+ *                  Arnav Bhatt (arnavbhatt288@gmail.com)
  * UPDATE HISTORY:
  *                  Created 28/03/2004
  */
@@ -44,6 +45,12 @@ typedef struct tagLOGOFF_SHUTDOWN_DATA
 static BOOL ExitReactOSInProgress = FALSE;
 
 LUID LuidNone = {0, 0};
+
+typedef struct tagLOGON_SOUND_DATA
+{
+    HANDLE UserToken;
+    BOOL IsStartup;
+} LOGON_SOUND_DATA, *PLOGON_SOUND_DATA;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -250,127 +257,58 @@ PlaySoundRoutine(
     BOOL Ret = FALSE;
 
     hLibrary = LoadLibraryW(L"winmm.dll");
-    if (hLibrary)
+    if (!hLibrary)
+        return FALSE;
+
+    waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
+    Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
+
+    _SEH2_TRY
     {
-        waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
         if (waveOutGetNumDevs)
         {
             NumDevs = waveOutGetNumDevs();
             if (!NumDevs)
             {
                 if (!bLogon)
-                {
-                    Beep(500, 500);
-                }
-                FreeLibrary(hLibrary);
-                return FALSE;
+                    Beep(440, 125);
+                _SEH2_LEAVE;
             }
         }
 
-        Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
         if (Play)
-        {
             Ret = Play(FileName, NULL, Flags);
-        }
-        FreeLibrary(hLibrary);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("WL: Exception while playing sound '%S', Status 0x%08lx\n",
+            FileName ? FileName : L"(n/a)", _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    FreeLibrary(hLibrary);
 
     return Ret;
 }
 
+static
 DWORD
 WINAPI
 PlayLogonSoundThread(
-    IN LPVOID lpParameter)
+    _In_ LPVOID lpParameter)
 {
-    BYTE TokenUserBuffer[256];
-    PTOKEN_USER pTokenUser = (TOKEN_USER*)TokenUserBuffer;
-    ULONG Length;
-    HKEY hKey;
-    WCHAR wszBuffer[MAX_PATH] = {0};
-    WCHAR wszDest[MAX_PATH];
-    DWORD dwSize = sizeof(wszBuffer), dwType;
+    PLOGON_SOUND_DATA SoundData = (PLOGON_SOUND_DATA)lpParameter;
     SERVICE_STATUS_PROCESS Info;
-    UNICODE_STRING SidString;
-    NTSTATUS Status;
+    DWORD dwSize;
     ULONG Index = 0;
     SC_HANDLE hSCManager, hService;
-
-    //
-    // FIXME: Isn't it possible to *JUST* impersonate the current user
-    // *AND* open its HKCU??
-    //
-
-    /* Get SID of current user */
-    Status = NtQueryInformationToken((HANDLE)lpParameter,
-                                     TokenUser,
-                                     TokenUserBuffer,
-                                     sizeof(TokenUserBuffer),
-                                     &Length);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("NtQueryInformationToken failed: %x!\n", Status);
-        return 0;
-    }
-
-    /* Convert SID to string */
-    RtlInitEmptyUnicodeString(&SidString, wszBuffer, sizeof(wszBuffer));
-    Status = RtlConvertSidToUnicodeString(&SidString, pTokenUser->User.Sid, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("RtlConvertSidToUnicodeString failed: %x!\n", Status);
-        return 0;
-    }
-
-    /* Build path to logon sound registry key.
-       Note: We can't use HKCU here, because Winlogon is owned by SYSTEM user */
-    if (FAILED(StringCbCopyW(wszBuffer + SidString.Length/sizeof(WCHAR),
-                             sizeof(wszBuffer) - SidString.Length,
-                             L"\\AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current")))
-    {
-        /* SID is too long. Should not happen. */
-        ERR("StringCbCopyW failed!\n");
-        return 0;
-    }
-
-    /* Open registry key and query sound path */
-    if (RegOpenKeyExW(HKEY_USERS, wszBuffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKeyExW(%ls) failed!\n", wszBuffer);
-        return 0;
-    }
-
-    if (RegQueryValueExW(hKey, NULL, NULL, &dwType,
-                      (LPBYTE)wszBuffer, &dwSize) != ERROR_SUCCESS ||
-        (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
-    {
-        ERR("RegQueryValueExW failed!\n");
-        RegCloseKey(hKey);
-        return 0;
-    }
-
-    RegCloseKey(hKey);
-
-    if (!wszBuffer[0])
-    {
-        /* No sound has been set */
-        ERR("No sound has been set\n");
-        return 0;
-    }
-
-    /* Expand environment variables */
-    if (!ExpandEnvironmentStringsW(wszBuffer, wszDest, MAX_PATH))
-    {
-        ERR("ExpandEnvironmentStringsW failed!\n");
-        return 0;
-    }
 
     /* Open the service manager */
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
         ERR("OpenSCManager failed (%x)\n", GetLastError());
-        return 0;
+        goto Cleanup;
     }
 
     /* Open the wdmaud service */
@@ -380,7 +318,7 @@ PlayLogonSoundThread(
         /* The service is not installed */
         TRACE("Failed to open wdmaud service (%x)\n", GetLastError());
         CloseServiceHandle(hSCManager);
-        return 0;
+        goto Cleanup;
     }
 
     /* Wait for wdmaud to start */
@@ -406,106 +344,85 @@ PlayLogonSoundThread(
     if (Info.dwCurrentState != SERVICE_RUNNING)
     {
         WARN("wdmaud has not started!\n");
-        return 0;
+        goto Cleanup;
     }
 
     /* Sound subsystem is running. Play logon sound. */
-    TRACE("Playing logon sound: %ls\n", wszDest);
-    PlaySoundRoutine(wszDest, TRUE, SND_FILENAME);
+    TRACE("Playing %s sound\n", SoundData->IsStartup ? "startup" : "logon");
+    if (!ImpersonateLoggedOnUser(SoundData->UserToken))
+    {
+        ERR("ImpersonateLoggedOnUser failed (%x)\n", GetLastError());
+    }
+    else
+    {
+        PlaySoundRoutine(SoundData->IsStartup ? L"SystemStart" : L"WindowsLogon",
+                         TRUE,
+                         SND_ALIAS | SND_NODEFAULT);
+        RevertToSelf();
+    }
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, SoundData);
     return 0;
 }
 
 static
 VOID
 PlayLogonSound(
-    IN OUT PWLSESSION Session)
+    _In_ PWLSESSION Session)
 {
+    PLOGON_SOUND_DATA SoundData;
     HANDLE hThread;
 
-    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session->UserToken, 0, NULL);
-    if (hThread)
-        CloseHandle(hThread);
+    SoundData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGON_SOUND_DATA));
+    if (!SoundData)
+        return;
+
+    SoundData->UserToken = Session->UserToken;
+    SoundData->IsStartup = IsFirstLogon(Session);
+
+    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, SoundData, 0, NULL);
+    if (!hThread)
+    {
+        HeapFree(GetProcessHeap(), 0, SoundData);
+        return;
+    }
+    CloseHandle(hThread);
 }
 
-static BOOL
-AllowWinstaAccess(PWLSESSION Session)
+static
+VOID
+PlayLogoffShutdownSound(
+    _In_ PWLSESSION Session,
+    _In_ BOOL bShutdown)
 {
-    BOOL bSuccess = FALSE;
-    DWORD dwIndex;
-    DWORD dwLength = 0;
-    PTOKEN_GROUPS ptg = NULL;
-    PSID psid;
-    TOKEN_STATISTICS Stats;
-    DWORD cbStats;
-    DWORD ret;
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+        return;
 
-    // Get required buffer size and allocate the TOKEN_GROUPS buffer.
+    /* NOTE: Logoff and shutdown sounds play synchronously */
+    PlaySoundRoutine(bShutdown ? L"SystemExit" : L"WindowsLogoff",
+                     FALSE,
+                     SND_ALIAS | SND_NODEFAULT);
 
-    if (!GetTokenInformation(Session->UserToken,
-                             TokenGroups,
-                             ptg,
-                             0,
-                             &dwLength))
-    {
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-            return FALSE;
+    RevertToSelf();
+}
 
-        ptg = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
-        if (ptg == NULL)
-            return FALSE;
-    }
+static
+BOOL
+PlayEventSound(
+    _In_ PWLSESSION Session,
+    _In_ LPCWSTR EventName)
+{
+    BOOL bRet;
 
-    // Get the token group information from the access token.
-    if (!GetTokenInformation(Session->UserToken,
-                             TokenGroups,
-                             ptg,
-                             dwLength,
-                             &dwLength))
-    {
-        goto Cleanup;
-    }
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+        return FALSE;
 
-    // Loop through the groups to find the logon SID.
+    bRet = PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_ASYNC | SND_NODEFAULT);
 
-    for (dwIndex = 0; dwIndex < ptg->GroupCount; dwIndex++)
-    {
-        if ((ptg->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID)
-            == SE_GROUP_LOGON_ID)
-        {
-            psid = ptg->Groups[dwIndex].Sid;
-            break;
-        }
-    }
+    RevertToSelf();
 
-    dwLength = GetLengthSid(psid);
-
-    if (!GetTokenInformation(Session->UserToken,
-                             TokenStatistics,
-                             &Stats,
-                             sizeof(TOKEN_STATISTICS),
-                             &cbStats))
-    {
-        WARN("Couldn't get Authentication id from user token!\n");
-        goto Cleanup;
-    }
-
-    AddAceToWindowStation(Session->InteractiveWindowStation, psid);
-
-    ret = SetWindowStationUser(Session->InteractiveWindowStation,
-                               &Stats.AuthenticationId,
-                               psid,
-                               dwLength);
-    TRACE("SetWindowStationUser returned 0x%x\n", ret);
-
-    bSuccess = TRUE;
-
-Cleanup:
-
-    // Free the buffer for the token groups.
-    if (ptg != NULL)
-        HeapFree(GetProcessHeap(), 0, (LPVOID)ptg);
-
-    return bSuccess;
+    return bRet;
 }
 
 static
@@ -632,7 +549,12 @@ HandleLogon(
         goto cleanup;
     }
 
-    AllowWinstaAccess(Session);
+    /* Allow winsta and desktop access for this session */
+    if (!AllowAccessOnSession(Session))
+    {
+        WARN("WL: AllowAccessOnSession() failed to give winsta & desktop access for this session\n");
+        goto cleanup;
+    }
 
     /* Connect remote resources */
     RestoreAllConnections(Session);
@@ -656,6 +578,9 @@ HandleLogon(
     /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
 
+    /* NOTE: The logon timestamp has to be set after calling PlayLogonSound
+     * to correctly detect the startup event (first logon) */
+    SetLogonTimestamp(Session);
     ret = TRUE;
 
 cleanup:
@@ -725,7 +650,7 @@ LogoffShutdownThread(
     }
 
     /* Cancel all the user connections */
-    WNetClearConnections(0);
+    WNetClearConnections(NULL);
 
     if (LSData->Session->UserToken)
         RevertToSelf();
@@ -893,8 +818,8 @@ DestroyLogoffSecurityAttributes(
 static
 NTSTATUS
 HandleLogoff(
-    IN OUT PWLSESSION Session,
-    IN UINT Flags)
+    _Inout_ PWLSESSION Session,
+    _In_ DWORD wlxAction)
 {
     PLOGOFF_SHUTDOWN_DATA LSData;
     PSECURITY_ATTRIBUTES psa;
@@ -909,7 +834,13 @@ HandleLogoff(
         ERR("Failed to allocate mem for thread data\n");
         return STATUS_NO_MEMORY;
     }
-    LSData->Flags = Flags;
+
+    LSData->Flags = EWX_LOGOFF;
+    if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
+    {
+        LSData->Flags |= EWX_FORCE;
+    }
+
     LSData->Session = Session;
 
     Status = CreateLogoffSecurityAttributes(&psa);
@@ -949,7 +880,7 @@ HandleLogoff(
 
     SwitchDesktop(Session->WinlogonDesktop);
 
-    // TODO: Play logoff sound!
+    PlayLogoffShutdownSound(Session, WLX_SHUTTINGDOWN(wlxAction));
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
@@ -1046,7 +977,12 @@ HandleShutdown(
     BOOLEAN Old;
 
     // SwitchDesktop(Session->WinlogonDesktop);
-    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
+
+    /* If the system is rebooting, show the appropriate string */
+    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISRESTARTING);
+    else
+        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
     /* Prepare data for shutdown thread */
     LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
@@ -1162,13 +1098,14 @@ DoGenericAction(
             break;
         case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
         case WLX_SAS_ACTION_SHUTDOWN: /* 0x05 */
+        case WLX_SAS_ACTION_FORCE_LOGOFF: /* 0x09 */
         case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
         case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
             if (Session->LogonState != STATE_LOGGED_OFF)
             {
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
-                if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
+                if (!NT_SUCCESS(HandleLogoff(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
                     break;
@@ -1338,38 +1275,40 @@ UnregisterHotKeys(
     return TRUE;
 }
 
+static
 BOOL
-WINAPI
-HandleMessageBeep(UINT uType)
+HandleMessageBeep(
+    _In_ PWLSESSION Session,
+    _In_ UINT uType)
 {
     LPWSTR EventName;
 
-    switch(uType)
+    switch (uType)
     {
-    case 0xFFFFFFFF:
-        EventName = NULL;
-        break;
-    case MB_OK:
-        EventName = L"SystemDefault";
-        break;
-    case MB_ICONASTERISK:
-        EventName = L"SystemAsterisk";
-        break;
-    case MB_ICONEXCLAMATION:
-        EventName = L"SystemExclamation";
-        break;
-    case MB_ICONHAND:
-        EventName = L"SystemHand";
-        break;
-    case MB_ICONQUESTION:
-        EventName = L"SystemQuestion";
-        break;
-    default:
-        WARN("Unhandled type %d\n", uType);
-        EventName = L"SystemDefault";
+        case 0xFFFFFFFF:
+            EventName = NULL;
+            break;
+        case MB_OK:
+            EventName = L"SystemDefault";
+            break;
+        case MB_ICONASTERISK:
+            EventName = L"SystemAsterisk";
+            break;
+        case MB_ICONEXCLAMATION:
+            EventName = L"SystemExclamation";
+            break;
+        case MB_ICONHAND:
+            EventName = L"SystemHand";
+            break;
+        case MB_ICONQUESTION:
+            EventName = L"SystemQuestion";
+            break;
+        default:
+            WARN("Unhandled type %d\n", uType);
+            EventName = L"SystemDefault";
     }
 
-    return PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+    return PlayEventSound(Session, EventName);
 }
 
 static
@@ -1440,7 +1379,7 @@ SASWindowProc(
             {
                 case LN_MESSAGE_BEEP:
                 {
-                    return HandleMessageBeep(lParam);
+                    return HandleMessageBeep(Session, lParam);
                 }
                 case LN_SHELL_EXITED:
                 {

@@ -401,7 +401,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             {
                 /* Get Mapping Registers  */
                 // case 0x00: // TODO: NOT IMPLEMENTED
- 
+
                 /* Set Mapping Registers */
                 // case 0x01: // TODO: NOT IMPLEMENTED
 
@@ -423,7 +423,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                     break;
                 }
             }
-            
+
             break;
         }
 

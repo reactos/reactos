@@ -38,7 +38,7 @@ KernelGetProcAddress(
     return RC;
 
   RtlInitAnsiString(&aname, ProcName);
-  
+
 //  RC = LdrGetProcedureAddress(h, &aname, 0, ProcAddr);
   return RC;
 } */
@@ -573,8 +573,8 @@ NTSTATUS EnvFileDeleteW(PWCHAR Name) {
                  FILE_SHARE_WRITE,
                  FILE_NON_DIRECTORY_FILE | FILE_OPEN_FOR_BACKUP_INTENT
              );
-    
-    
+
+
     if ( !NT_SUCCESS(Status) ) {
         return Status;
     }

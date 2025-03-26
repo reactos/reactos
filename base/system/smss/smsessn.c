@@ -26,7 +26,7 @@ typedef struct _SMP_SESSION
 RTL_CRITICAL_SECTION SmpSessionListLock;
 LIST_ENTRY SmpSessionListHead;
 ULONG SmpNextSessionId;
-ULONG SmpNextSessionIdScanMode;
+BOOLEAN SmpNextSessionIdScanMode;
 BOOLEAN SmpDbgSsLoaded;
 HANDLE SmpSessionsObjectDirectory;
 
@@ -55,7 +55,7 @@ SmpCheckDuplicateMuSessionId(IN ULONG MuSessionId)
             FoundDuplicate = TRUE;
             break;
         }
-        
+
         /* Keep going */
         NextEntry = NextEntry->Flink;
     }
@@ -134,13 +134,13 @@ SmpAllocateSessionId(IN PSMP_SUBSYSTEM Subsystem,
     if (SmpNextSessionIdScanMode)
     {
         /* Break if it happened */
-        DbgPrint("SMSS: SessionId's Wrapped\n");
-        DbgBreakPoint();
+        UNIMPLEMENTED_DBGBREAK("SMSS: SessionId's Wrapped\n");
     }
     else
     {
         /* Detect it for next time */
-        if (!SmpNextSessionId) SmpNextSessionIdScanMode = 1;
+        if (!SmpNextSessionId)
+            SmpNextSessionIdScanMode = TRUE;
     }
 
     /* Allocate a session structure */

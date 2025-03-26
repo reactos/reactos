@@ -21,6 +21,8 @@
 
 #include "precomp.h"
 
+#define BALLOON_MAXWIDTH 340
+
 struct InternalIconData : NOTIFYICONDATA
 {
     // Must keep a separate copy since the original is unioned with uTimeout.
@@ -163,6 +165,7 @@ public:
     BOOL RemoveButton(IN CONST NOTIFYICONDATA *iconData);
     VOID ResizeImagelist();
     bool SendNotifyCallback(InternalIconData* notifyItem, UINT uMsg);
+    void RefreshToolbarMetrics(BOOL bForceRefresh);
 
 private:
     LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -214,8 +217,10 @@ public:
     LRESULT OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
+    // *** IOleWindow methods ***
 
-    HRESULT WINAPI GetWindow(HWND* phwnd)
+    STDMETHODIMP
+    GetWindow(HWND* phwnd) override
     {
         if (!phwnd)
             return E_INVALIDARG;
@@ -223,7 +228,8 @@ public:
         return S_OK;
     }
 
-    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    STDMETHODIMP
+    ContextSensitiveHelp(BOOL fEnterMode) override
     {
         return E_NOTIMPL;
     }
@@ -369,7 +375,7 @@ bool CIconWatcher::AddIconToWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 bool CIconWatcher::RemoveIconFromWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 {
     EnterCriticalSection(&m_ListLock);
-        
+
     IconWatcherData *Icon;
     Icon = GetListEntry(iconData, NULL, true);
 
@@ -617,19 +623,19 @@ void CBalloonQueue::Show(Info& info)
 
     // TODO: NIF_REALTIME, NIIF_NOSOUND, other Vista+ flags
 
-    const int index = IndexOf(info.pSource);
+    m_current = info.pSource;
     RECT rc;
-    m_toolbar->GetItemRect(index, &rc);
+    m_toolbar->GetItemRect(IndexOf(m_current), &rc);
     m_toolbar->ClientToScreen(&rc);
     const WORD x = (rc.left + rc.right) / 2;
     const WORD y = (rc.top + rc.bottom) / 2;
 
     m_tooltips->SetTitle(info.szInfoTitle, info.uIcon);
     m_tooltips->TrackPosition(x, y);
+    m_tooltips->SetMaxTipWidth(BALLOON_MAXWIDTH);
     m_tooltips->UpdateTipText(m_hwndParent, reinterpret_cast<LPARAM>(m_toolbar->m_hWnd), info.szInfo);
     m_tooltips->TrackActivate(m_hwndParent, reinterpret_cast<LPARAM>(m_toolbar->m_hWnd));
 
-    m_current = info.pSource;
     int timeout = info.uTimeout;
     if (timeout < MinTimeout) timeout = MinTimeout;
     if (timeout > MaxTimeout) timeout = MaxTimeout;
@@ -717,7 +723,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     InternalIconData * notifyItem;
     WCHAR text[] = L"";
 
-    TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s", 
+    TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s\n",
         iconData->uID, iconData->hWnd,
         (iconData->uFlags & NIF_ICON) ? " ICON" : "",
         (iconData->uFlags & NIF_STATE) ? " STATE" : "",
@@ -727,7 +733,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index >= 0)
     {
-        TRACE("Icon %d from hWnd %08x ALREADY EXISTS!", iconData->uID, iconData->hWnd);
+        TRACE("Icon %d from hWnd %08x ALREADY EXISTS!\n", iconData->uID, iconData->hWnd);
         return FALSE;
     }
 
@@ -764,7 +770,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
             if (iIcon < 0)
             {
                 notifyItem->hIcon = NULL;
-                TRACE("Shared icon requested, but HICON not found!!!");
+                TRACE("Shared icon requested, but HICON not found!!!\n");
             }
             tbBtn.iBitmap = iIcon;
         }
@@ -816,13 +822,13 @@ BOOL CNotifyToolbar::SwitchVersion(_In_ CONST NOTIFYICONDATA *iconData)
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index < 0)
     {
-        WARN("Icon %d from hWnd %08x DOES NOT EXIST!", iconData->uID, iconData->hWnd);
+        WARN("Icon %d from hWnd %08x DOES NOT EXIST!\n", iconData->uID, iconData->hWnd);
         return FALSE;
     }
 
     if (iconData->uVersion != 0 && iconData->uVersion != NOTIFYICON_VERSION)
     {
-        WARN("Tried to set the version of icon %d from hWnd %08x, to an unknown value %d. Vista+ program?", iconData->uID, iconData->hWnd, iconData->uVersion);
+        WARN("Tried to set the version of icon %d from hWnd %08x, to an unknown value %d. Vista+ program?\n", iconData->uID, iconData->hWnd, iconData->uVersion);
         return FALSE;
     }
 
@@ -901,7 +907,7 @@ BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
             }
             else
             {
-                TRACE("Shared icon requested, but HICON not found!!! IGNORING!");
+                TRACE("Shared icon requested, but HICON not found!!! IGNORING!\n");
             }
         }
         else
@@ -942,7 +948,7 @@ BOOL CNotifyToolbar::RemoveButton(_In_ CONST NOTIFYICONDATA *iconData)
 {
     InternalIconData * notifyItem;
 
-    TRACE("Removing icon %d from hWnd %08x", iconData->uID, iconData->hWnd);
+    TRACE("Removing icon %d from hWnd %08x\n", iconData->uID, iconData->hWnd);
 
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index < 0)
@@ -1231,7 +1237,10 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
         TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
         CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
 
-    SubclassWindow(CToolbar::Create(hWndParent, styles));
+    // HACK & FIXME: CORE-18016
+    HWND hwnd = CToolbar::Create(hWndParent, styles);
+    m_hWnd = NULL;
+    SubclassWindow(hwnd);
 
     // Force the toolbar tooltips window to always show tooltips even if not foreground
     HWND tooltipsWnd = (HWND)SendMessageW(TB_GETTOOLTIPS);
@@ -1242,20 +1251,35 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
 
     SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
-    m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);        
+    m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
     SetImageList(m_ImageList);
 
-    TBMETRICS tbm = {sizeof(tbm)};
-    tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING | TBMF_PAD;
-    tbm.cxPad = 1;
-    tbm.cyPad = 1;
-    tbm.cxBarPad = 1;
-    tbm.cyBarPad = 1;
-    tbm.cxButtonSpacing = 1;
-    tbm.cyButtonSpacing = 1;
-    SetMetrics(&tbm);
+    RefreshToolbarMetrics(TRUE);
 
     SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
+}
+
+void CNotifyToolbar::RefreshToolbarMetrics(BOOL bForceRefresh = FALSE)
+{
+    // Toolbar metrics only needs to be refreshed for the automatic setting and first launch
+    if (g_TaskbarSettings.eCompactTrayIcons == TrayIconsMode::TIM_Default ||
+        bForceRefresh)
+    {
+        TBMETRICS tbm = {sizeof(tbm)};
+        tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING | TBMF_PAD;
+        tbm.cxPad = 1;
+        tbm.cyPad = 1;
+        if (!g_TaskbarSettings.UseCompactTrayIcons())
+        {
+            tbm.cxPad = GetSystemMetrics(SM_CXSMICON) / 2;
+            tbm.cyPad = GetSystemMetrics(SM_CYSMICON) / 2;
+        }
+        tbm.cxBarPad = 1;
+        tbm.cyBarPad = 1;
+        tbm.cxButtonSpacing = 1;
+        tbm.cyButtonSpacing = 1;
+        SetMetrics(&tbm);
+    }
 }
 
 /*
@@ -1291,7 +1315,7 @@ LRESULT CSysPagerWnd::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     HWND hWndTop = GetAncestor(m_hWnd, GA_ROOT);
 
     m_Balloons.Create(hWndTop, TTS_NOPREFIX | TTS_BALLOON | TTS_CLOSE);
-        
+
     TOOLINFOW ti = { 0 };
     ti.cbSize = TTTOOLINFOW_V1_SIZE;
     ti.uFlags = TTF_TRACK | TTF_IDISHWND;
@@ -1379,7 +1403,7 @@ BOOL CSysPagerWnd::NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconDa
 void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
 {
     /* Get the ideal height or width */
-#if 0 
+#if 0
     /* Unfortunately this doens't work correctly in ros */
     Toolbar.GetIdealSize(!IsHorizontal, size);
 
@@ -1394,11 +1418,19 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
     INT columns = 0;
     INT cyButton = GetSystemMetrics(SM_CYSMICON) + 2;
     INT cxButton = GetSystemMetrics(SM_CXSMICON) + 2;
+    if (!g_TaskbarSettings.UseCompactTrayIcons())
+    {
+        cyButton = MulDiv(GetSystemMetrics(SM_CYSMICON), 3, 2);
+        cxButton = MulDiv(GetSystemMetrics(SM_CXSMICON), 3, 2);
+    }
     int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
     if (IsHorizontal)
     {
-        rows = max(size->cy / cyButton, 1);
+        if (!g_TaskbarSettings.UseCompactTrayIcons())
+            rows = max(size->cy / MulDiv(cyButton, 3, 2), 1);
+        else
+            rows = max(size->cy / cyButton, 1);
         columns = (VisibleButtonCount + rows - 1) / rows;
     }
     else
@@ -1504,6 +1536,7 @@ LRESULT CSysPagerWnd::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
         INT yOff = (szClient.cy - szBar.cy) / 2;
 
         Toolbar.SetWindowPos(NULL, xOff, yOff, szBar.cx, szBar.cy, SWP_NOZORDER);
+        Toolbar.RefreshToolbarMetrics();
     }
     return Ret;
 }

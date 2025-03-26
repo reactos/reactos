@@ -18,13 +18,23 @@ list(APPEND COMMON_SOURCE
     example/GuardedMemory.c
     rtl/RtlAvlTree.c
     rtl/RtlException.c
-    rtl/RtlIntSafe.c
+    ../apitests/rtl/RtlIntSafe.c
     rtl/RtlMemory.c
     rtl/RtlRegistry.c
     rtl/RtlSplayTree.c
     rtl/RtlStack.c
     rtl/RtlStrSafe.c
     rtl/RtlUnicodeString.c)
+
+if(ARCH STREQUAL "i386")
+
+elseif(ARCH STREQUAL "amd64")
+    add_asm_files(kmtest_common_asm ../apitests/rtl/amd64/RtlCaptureContext-asm.s)
+    list(APPEND COMMON_SOURCE
+        ../apitests/rtl/amd64/RtlCaptureContext.c
+        ${kmtest_common_asm}
+    )
+endif()
 
 #
 # kmtest_drv.sys driver
@@ -70,10 +80,12 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
     ntos_io/IoVolume.c
+    ntos_kd/KdSystemDebugControl.c
     ntos_ke/KeApc.c
     ntos_ke/KeDevQueue.c
     ntos_ke/KeDpc.c
     ntos_ke/KeEvent.c
+    ntos_ke/KeFloatPointState.c
     ntos_ke/KeGuardedMutex.c
     ntos_ke/KeIrql.c
     ntos_ke/KeMutex.c
@@ -87,6 +99,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_mm/ZwCreateSection.c
     ntos_mm/ZwMapViewOfSection.c
     ntos_ob/ObHandle.c
+    ntos_ob/ObQuery.c
     ntos_ob/ObReference.c
     ntos_ob/ObSecurity.c
     ntos_ob/ObSymbolicLink.c
@@ -94,9 +107,12 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ob/ObTypes.c
     ntos_ob/ObWait.c
     ntos_ps/PsNotify.c
+    ntos_ps/PsQuota.c
     ntos_se/SeHelpers.c
     ntos_se/SeInheritance.c
+    ntos_se/SeLogonSession.c
     ntos_se/SeQueryInfoToken.c
+    ntos_se/SeTokenFiltering.c
     rtl/RtlIsValidOemCharacter.c
     rtl/RtlRangeList.c
     ${COMMON_SOURCE}
@@ -149,6 +165,7 @@ list(APPEND KMTEST_SOURCE
     ntos_io/IoCreateFile_user.c
     ntos_io/IoDeviceObject_user.c
     ntos_io/IoReadWrite_user.c
+    ntos_kd/NtSystemDebugControl.c
     ntos_mm/MmMapLockedPagesSpecifyCache_user.c
     ntos_mm/NtCreateSection_user.c
     ntos_po/PoIrp_user.c

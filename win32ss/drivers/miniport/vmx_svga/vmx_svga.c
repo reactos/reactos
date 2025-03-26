@@ -9,7 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "precomp.h"
-#include "debug.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -89,7 +91,7 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
 {
     VP_STATUS Status;
     PHW_DEVICE_EXTENSION DeviceExtension = HwDeviceExtension;
-    DPRINT1("VMX searching for adapter\n");
+    DPRINT("VMX searching for adapter\n");
 
     /* Zero out the fields */
     VideoPortZeroMemory(DeviceExtension, sizeof(HW_DEVICE_EXTENSION));
@@ -104,7 +106,7 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
 
     /* Initialize the device extension and find the adapter */
     Status = VmxInitDevice(DeviceExtension);
-    DPRINT1("Init status: %lx\n", Status);
+    DPRINT("Init status: %lx\n", Status);
     if (Status != NO_ERROR) return ERROR_DEV_NOT_EXIST;
 
     /* Save this adapter extension */
@@ -249,7 +251,7 @@ DriverEntry(IN PVOID Context1,
     VIDEO_HW_INITIALIZATION_DATA InitData;
 
     /* Zero initialization structure and array of extensions, one per screen */
-    DPRINT1("VMX-SVGAII Loading...\n");
+    DPRINT("VMX-SVGAII Loading...\n");
     VideoPortZeroMemory(VmxDeviceExtensionArray, sizeof(VmxDeviceExtensionArray));
     VideoPortZeroMemory(&InitData, sizeof(InitData));
 

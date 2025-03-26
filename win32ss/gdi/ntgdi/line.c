@@ -11,6 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(GdiLine);
+
 // Some code from the WINE project source (www.winehq.com)
 
 VOID FASTCALL
@@ -24,14 +26,14 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
     /* Get BRUSH from current pen. */
     pbrLine = dc->dclevel.pbrLine;
     ASSERT(pbrLine);
-    
+
     lWidth = 0;
 
     // Setup bounds
     bounds.left = bounds.top = INT_MAX;
     bounds.right = bounds.bottom = INT_MIN;
 
-    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || (pbrLine->lWidth > 1))
+    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || pbrLine->lWidth > 1)
     {
         /* Windows uses some heuristics to estimate the distance from the point that will be painted */
         lWidth = pbrLine->lWidth + 2;
@@ -55,7 +57,7 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
         rect.top    = points->y - lWidth;
         rect.right  = points->x + lWidth + 1;
         rect.bottom = points->y + lWidth + 1;
-        RECTL_bUnionRect(&bounds, &bounds, &rect);        
+        RECTL_bUnionRect(&bounds, &bounds, &rect);
         points++;
     }
 
@@ -152,8 +154,12 @@ IntGdiLineTo(DC  *dc,
     PBRUSH pbrLine;
     RECTL     Bounds;
     POINT     Points[2];
-    PDC_ATTR pdcattr = dc->pdcattr;
+    PDC_ATTR  pdcattr;
+    PPATH     pPath;
+
     ASSERT_DC_PREPARED(dc);
+
+    pdcattr = dc->pdcattr;
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
@@ -199,15 +205,45 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            Ret = IntEngLineTo(&psurf->SurfObj,
-                               (CLIPOBJ *)&dc->co,
-                               &dc->eboLine.BrushObject,
-                               Points[0].x, Points[0].y,
-                               Points[1].x, Points[1].y,
-                               &Bounds,
-                               ROP2_TO_MIX(pdcattr->jROP2));
-        }
+            if (IntIsEffectiveWidePen(pbrLine))
+            {
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
 
+                /* Begin a path */
+                pPath = PATH_CreatePath(2);
+                dc->dclevel.flPath |= DCPATH_ACTIVE;
+                dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+                IntGetCurrentPositionEx(dc, &pPath->pos);
+                IntLPtoDP(dc, &pPath->pos, 1);
+
+                PATH_MoveTo(dc, pPath);
+                PATH_LineTo(dc, XEnd, YEnd);
+
+                /* Close the path */
+                pPath->state = PATH_Closed;
+                dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+                /* Actually stroke a path */
+                Ret = PATH_StrokePath(dc, pPath);
+
+                /* Clear the path */
+                PATH_UnlockPath(pPath);
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
+            }
+            else
+            {
+                Ret = IntEngLineTo(&psurf->SurfObj,
+                                   (CLIPOBJ *)&dc->co,
+                                   &dc->eboLine.BrushObject,
+                                   Points[0].x, Points[0].y,
+                                   Points[1].x, Points[1].y,
+                                   &Bounds,
+                                   ROP2_TO_MIX(pdcattr->jROP2));
+            }
+        }
     }
 
     if (Ret)
@@ -298,6 +334,7 @@ IntGdiPolyline(DC      *dc,
     BOOL Ret = TRUE;
     LONG i;
     PDC_ATTR pdcattr = dc->pdcattr;
+    PPATH pPath;
 
     if (!dc->dclevel.pSurface)
     {
@@ -331,13 +368,46 @@ IntGdiPolyline(DC      *dc,
                AddPenLinesBounds(dc, Count, Points);
             }
 
-            Ret = IntEngPolyline(&psurf->SurfObj,
-                                 (CLIPOBJ *)&dc->co,
-                                 &dc->eboLine.BrushObject,
-                                 Points,
-                                 Count,
-                                 ROP2_TO_MIX(pdcattr->jROP2));
+            if (IntIsEffectiveWidePen(pbrLine))
+            {
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
 
+                /* Begin a path */
+                pPath = PATH_CreatePath(Count);
+                dc->dclevel.flPath |= DCPATH_ACTIVE;
+                dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+                pPath->pos = pt[0];
+                IntLPtoDP(dc, &pPath->pos, 1);
+
+                PATH_MoveTo(dc, pPath);
+                for (i = 1; i < Count; ++i)
+                {
+                    PATH_LineTo(dc, pt[i].x, pt[i].y);
+                }
+
+                /* Close the path */
+                pPath->state = PATH_Closed;
+                dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+                /* Actually stroke a path */
+                Ret = PATH_StrokePath(dc, pPath);
+
+                /* Clear the path */
+                PATH_UnlockPath(pPath);
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
+            }
+            else
+            {
+                Ret = IntEngPolyline(&psurf->SurfObj,
+                                     (CLIPOBJ *)&dc->co,
+                                     &dc->eboLine.BrushObject,
+                                     Points,
+                                     Count,
+                                     ROP2_TO_MIX(pdcattr->jROP2));
+            }
             EngFreeMem(Points);
         }
         else
@@ -444,7 +514,7 @@ NtGdiLineTo(HDC  hDC,
     rcLockRect.right = XEnd;
     rcLockRect.bottom = YEnd;
 
-    IntLPtoDP(dc, &rcLockRect, 2);
+    IntLPtoDP(dc, (PPOINT)&rcLockRect, 2);
 
     /* The DCOrg is in device coordinates */
     rcLockRect.left += dc->ptlDCOrig.x;
@@ -463,9 +533,9 @@ NtGdiLineTo(HDC  hDC,
 }
 
 // FIXME: This function is completely broken
+static
 BOOL
-APIENTRY
-NtGdiPolyDraw(
+GdiPolyDraw(
     IN HDC hdc,
     IN LPPOINT lppt,
     IN LPBYTE lpbTypes,
@@ -499,15 +569,11 @@ NtGdiPolyDraw(
     line_pts_old = NULL;
     bzr_pts = NULL;
 
-    _SEH2_TRY
     {
-        ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
-        ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
-
         if (PATH_IsPathOpen(dc->dclevel))
         {
            result = PATH_PolyDraw(dc, (const POINT *)lppt, (const BYTE *)lpbTypes, cCount);
-           _SEH2_LEAVE;
+           goto Cleanup;
         }
 
         /* Check for valid point types */
@@ -527,7 +593,7 @@ NtGdiPolyDraw(
                    break;
                }
            default:
-               _SEH2_LEAVE;
+               goto Cleanup;
            }
         }
 
@@ -536,7 +602,7 @@ NtGdiPolyDraw(
         if (line_pts == NULL)
         {
             result = FALSE;
-            _SEH2_LEAVE;
+            goto Cleanup;
         }
 
         num_pts = 1;
@@ -571,7 +637,7 @@ NtGdiPolyDraw(
                       space = size * 2;
                       line_pts_old = line_pts;
                       line_pts = ExAllocatePoolWithTag(PagedPool, space * sizeof(POINT), TAG_SHAPE);
-                      if (!line_pts) _SEH2_LEAVE;
+                      if (!line_pts) goto Cleanup;
                       RtlCopyMemory(line_pts, line_pts_old, space_old * sizeof(POINT));
                       ExFreePoolWithTag(line_pts_old, TAG_SHAPE);
                       line_pts_old = NULL;
@@ -591,11 +657,8 @@ NtGdiPolyDraw(
         IntGdiMoveToEx( dc, line_pts[num_pts - 1].x, line_pts[num_pts - 1].y, NULL );
         result = TRUE;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
+
+Cleanup:
 
     if (line_pts != NULL)
     {
@@ -615,6 +678,78 @@ NtGdiPolyDraw(
     DC_UnlockDc(dc);
 
     return result;
+}
+
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiPolyDraw(
+    _In_ HDC hdc,
+    _In_reads_(cpt) LPPOINT ppt,
+    _In_reads_(cpt) LPBYTE pjAttr,
+    _In_ ULONG cpt)
+{
+    PBYTE pjBuffer;
+    PPOINT pptSafe;
+    PBYTE pjSafe;
+    SIZE_T cjSizePt;
+    BOOL bResult;
+
+    if (cpt == 0)
+    {
+        ERR("cpt is 0\n");
+        return FALSE;
+    }
+
+    /* Validate that cpt isn't too large */
+    if (cpt > ((MAXULONG - cpt) / sizeof(*ppt)))
+    {
+        ERR("cpt is too large\n", cpt);
+        return FALSE;
+    }
+
+    /* Calculate size for a buffer */
+    cjSizePt = cpt * sizeof(*ppt);
+    ASSERT(cjSizePt + cpt > cjSizePt);
+
+    /* Allocate a buffer for all data */
+    pjBuffer = ExAllocatePoolWithTag(PagedPool, cjSizePt + cpt, TAG_SHAPE);
+    if (pjBuffer == NULL)
+    {
+        ERR("Failed to allocate buffer\n");
+        return FALSE;
+    }
+
+    pptSafe = (PPOINT)pjBuffer;
+    pjSafe = pjBuffer + cjSizePt;
+
+    _SEH2_TRY
+    {
+        ProbeArrayForRead(ppt, sizeof(*ppt), cpt, sizeof(ULONG));
+        ProbeArrayForRead(pjAttr, sizeof(*pjAttr), cpt, sizeof(BYTE));
+
+        /* Copy the arrays */
+        RtlCopyMemory(pptSafe, ppt, cjSizePt);
+        RtlCopyMemory(pjSafe, pjAttr, cpt);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        bResult = FALSE;
+        goto Cleanup;
+    }
+    _SEH2_END;
+
+    /* Call the internal function */
+    bResult = GdiPolyDraw(hdc, pptSafe, pjSafe, cpt);
+
+Cleanup:
+
+    /* Free the buffer */
+    ExFreePoolWithTag(pjBuffer, TAG_SHAPE);
+
+    return bResult;
 }
 
 /*

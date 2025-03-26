@@ -42,7 +42,7 @@ IntLastInputTick(BOOL bUpdate)
 /*
  * DoTheScreenSaver
  *
- * Check if scrensaver should be started and sends message to SAS window
+ * Check if screensaver should be started and sends message to SAS window
  */
 VOID FASTCALL
 DoTheScreenSaver(VOID)
@@ -475,6 +475,7 @@ IsRemoveAttachThread(PTHREADINFO pti)
     return Ret;
 }
 
+// Win: zzzAttachThreadInput
 NTSTATUS FASTCALL
 UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 {
@@ -763,7 +764,7 @@ NtUserSendInput(
                     uRet++;
                 break;
             case INPUT_HARDWARE:
-                FIXME("INPUT_HARDWARE not supported!");
+                FIXME("INPUT_HARDWARE not supported!\n");
                 break;
             default:
                 ERR("SendInput(): Invalid input type: 0x%x\n", SafeInput.type);

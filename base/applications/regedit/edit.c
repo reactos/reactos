@@ -2,20 +2,7 @@
  * Registry editing UI functions.
  *
  * Copyright (C) 2003 Dimitrie O. Paun
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -37,6 +24,8 @@ static DWORD dwordValueData;
 static PCM_RESOURCE_LIST resourceValueData;
 static INT fullResourceIndex = -1;
 static DWORD valueDataLen;
+static PIO_RESOURCE_REQUIREMENTS_LIST requirementsValueData;
+static INT requirementsIndex = -1;
 static EDIT_MODE dwordEditMode = EDIT_MODE_HEX;
 
 void error(HWND hwnd, INT resId, ...)
@@ -49,14 +38,14 @@ void error(HWND hwnd, INT resId, ...)
 
     hInstance = GetModuleHandle(0);
 
-    if (!LoadStringW(hInstance, IDS_ERROR, title, COUNT_OF(title)))
-        wcscpy(title, L"Error");
+    if (!LoadStringW(hInstance, IDS_ERROR, title, ARRAY_SIZE(title)))
+        StringCbCopyW(title, sizeof(title), L"Error");
 
-    if (!LoadStringW(hInstance, resId, errfmt, COUNT_OF(errfmt)))
-        wcscpy(errfmt, L"Unknown error string!");
+    if (!LoadStringW(hInstance, resId, errfmt, ARRAY_SIZE(errfmt)))
+        StringCbCopyW(errfmt, sizeof(errfmt), L"Unknown error string!");
 
     va_start(ap, resId);
-    _vsnwprintf(errstr, COUNT_OF(errstr), errfmt, ap);
+    _vsnwprintf(errstr, ARRAY_SIZE(errstr), errfmt, ap);
     va_end(ap);
 
     MessageBoxW(hwnd, errstr, title, MB_OK | MB_ICONERROR);
@@ -65,8 +54,8 @@ void error(HWND hwnd, INT resId, ...)
 static void error_code_messagebox(HWND hwnd, DWORD error_code)
 {
     WCHAR title[256];
-    if (!LoadStringW(hInst, IDS_ERROR, title, COUNT_OF(title)))
-        wcscpy(title, L"Error");
+    if (!LoadStringW(hInst, IDS_ERROR, title, ARRAY_SIZE(title)))
+        StringCbCopyW(title, sizeof(title), L"Error");
     ErrorMessageBox(hwnd, title, error_code);
 }
 
@@ -80,14 +69,14 @@ void warning(HWND hwnd, INT resId, ...)
 
     hInstance = GetModuleHandle(0);
 
-    if (!LoadStringW(hInstance, IDS_WARNING, title, COUNT_OF(title)))
-        wcscpy(title, L"Warning");
+    if (!LoadStringW(hInstance, IDS_WARNING, title, ARRAY_SIZE(title)))
+        StringCbCopyW(title, sizeof(title), L"Warning");
 
-    if (!LoadStringW(hInstance, resId, errfmt, COUNT_OF(errfmt)))
-        wcscpy(errfmt, L"Unknown error string!");
+    if (!LoadStringW(hInstance, resId, errfmt, ARRAY_SIZE(errfmt)))
+        StringCbCopyW(errfmt, sizeof(errfmt), L"Unknown error string!");
 
     va_start(ap, resId);
-    _vsnwprintf(errstr, COUNT_OF(errstr), errfmt, ap);
+    StringCbVPrintfW(errstr, sizeof(errstr), errfmt, ap);
     va_end(ap);
 
     MessageBoxW(hwnd, errstr, title, MB_OK | MB_ICONSTOP);
@@ -111,7 +100,7 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, stringValueData);
@@ -161,7 +150,6 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     return FALSE;
 }
 
-
 INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WCHAR* valueData;
@@ -180,7 +168,7 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, stringValueData);
@@ -229,7 +217,6 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
     return FALSE;
 }
 
-
 LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC oldwndproc;
@@ -241,7 +228,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_CHAR:
         if (dwordEditMode == EDIT_MODE_DEC)
         {
-            if (isdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
+            if (isdigit((int)wParam & 0xff) || iscntrl((int)wParam & 0xff))
             {
                 break;
             }
@@ -252,7 +239,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
         }
         else if (dwordEditMode == EDIT_MODE_HEX)
         {
-            if (isxdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
+            if (isxdigit((int)wParam & 0xff) || iscntrl((int)wParam & 0xff))
             {
                 break;
             }
@@ -269,7 +256,6 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
     return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
-
 
 INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -300,11 +286,11 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
-        swprintf(ValueString, L"%lx", dwordValueData);
+        StringCbPrintfW(ValueString, sizeof(ValueString), L"%lx", dwordValueData);
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
         SendMessage(GetDlgItem(hwndDlg, IDC_VALUE_DATA), EM_SETSEL, 0, -1);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -327,7 +313,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         }
                     }
                 }
-                swprintf(ValueString, L"%lx", Value);
+                StringCbPrintfW(ValueString, sizeof(ValueString), L"%lx", Value);
                 SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
                 return TRUE;
             }
@@ -347,7 +333,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         }
                     }
                 }
-                swprintf(ValueString, L"%lu", Value);
+                StringCbPrintfW(ValueString, sizeof(ValueString), L"%lu", Value);
                 SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
                 return TRUE;
             }
@@ -384,7 +370,6 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
     return FALSE;
 }
 
-
 INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hwndValue;
@@ -402,7 +387,7 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         else
         {
             WCHAR buffer[255];
-            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+            LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
@@ -417,7 +402,7 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         case IDOK:
             if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
             {
-                len = (UINT) HexEdit_GetBufferSize(hwndValue);
+                len = (UINT)HexEdit_GetBufferSize(hwndValue);
                 if (len > 0 && binValueData)
                     binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
                 else
@@ -434,7 +419,6 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     }
     return FALSE;
 }
-
 
 static BOOL CreateResourceColumns(HWND hwnd)
 {
@@ -456,13 +440,13 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = (rc.right - rc.left) / 2;
-    LoadStringW(hInst, IDS_DMA_CHANNEL, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_DMA_CHANNEL, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
     lvC.cx = (rc.right - rc.left) - lvC.cx;
-    LoadStringW(hInst, IDS_DMA_PORT, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_DMA_PORT, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
@@ -476,23 +460,23 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_INTERRUPT_VECTOR, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_VECTOR, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_INTERRUPT_LEVEL, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_LEVEL, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
-    LoadStringW(hInst, IDS_INTERRUPT_AFFINITY, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_AFFINITY, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 3;
     lvC.cx = (rc.right - rc.left) - 3 * width;
-    LoadStringW(hInst, IDS_INTERRUPT_TYPE, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERRUPT_TYPE, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 3, &lvC) == -1)
         return FALSE;
 
@@ -506,18 +490,18 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_MEMORY_ADDRESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_MEMORY_ADDRESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_MEMORY_LENGTH, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_MEMORY_LENGTH, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
     lvC.cx = (rc.right - rc.left) - 2 * width;
-    LoadStringW(hInst, IDS_MEMORY_ACCESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_MEMORY_ACCESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
@@ -531,18 +515,18 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_PORT_ADDRESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_PORT_ADDRESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_PORT_LENGTH, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_PORT_LENGTH, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
     lvC.cx = (rc.right - rc.left) - 2 * width;
-    LoadStringW(hInst, IDS_PORT_ACCESS, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_PORT_ACCESS, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
@@ -555,18 +539,18 @@ static BOOL CreateResourceColumns(HWND hwnd)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = width;
-    LoadStringW(hInst, IDS_SPECIFIC_RESERVED1, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_SPECIFIC_RESERVED1, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
-    LoadStringW(hInst, IDS_SPECIFIC_RESERVED2, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_SPECIFIC_RESERVED2, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 2;
     lvC.cx = (rc.right - rc.left) - 2 * width;
-    LoadStringW(hInst, IDS_SPECIFIC_DATASIZE, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_SPECIFIC_DATASIZE, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
         return FALSE;
 
@@ -659,7 +643,6 @@ GetInterfaceType(INTERFACE_TYPE InterfaceType,
 //    wcscpy(pBuffer, lpInterfaceType);
 }
 
-
 static VOID
 ParseResources(HWND hwnd)
 {
@@ -686,7 +669,7 @@ ParseResources(HWND hwnd)
     SetDlgItemTextW(hwnd, IDC_INTERFACETYPE, buffer);
 
     /* Busnumber */
-    SetDlgItemInt(hwnd, IDC_BUSNUMBER, (UINT)pFullDescriptor->BusNumber, FALSE);
+    SetDlgItemInt(hwnd, IDC_BUSNUMBER, (UINT)pFullDescriptor->BusNumber, TRUE);
 
     /* Version */
     SetDlgItemInt(hwnd, IDC_VERSION, (UINT)pPartialResourceList->Version, FALSE);
@@ -725,9 +708,9 @@ ParseResources(HWND hwnd)
                     ListView_SetItemText(hwndLV, iItem, 1, buffer);
 
                     if (pDescriptor->Flags & CM_RESOURCE_PORT_IO)
-                        LoadStringW(hInst, IDS_PORT_PORT_IO, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_PORT_PORT_IO, buffer, ARRAY_SIZE(buffer));
                     else
-                        LoadStringW(hInst, IDS_PORT_MEMORY_IO, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_PORT_MEMORY_IO, buffer, ARRAY_SIZE(buffer));
                     ListView_SetItemText(hwndLV, iItem, 2, buffer);
                 }
                 break;
@@ -756,9 +739,9 @@ ParseResources(HWND hwnd)
                     ListView_SetItemText(hwndLV, iItem, 2, buffer);
 
                     if (pDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
-                        LoadStringW(hInst, IDS_INTERRUPT_EDGE_SENSITIVE, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_INTERRUPT_EDGE_SENSITIVE, buffer, ARRAY_SIZE(buffer));
                     else
-                        LoadStringW(hInst, IDS_INTERRUPT_LEVEL_SENSITIVE, buffer, COUNT_OF(buffer));
+                        LoadStringW(hInst, IDS_INTERRUPT_LEVEL_SENSITIVE, buffer, ARRAY_SIZE(buffer));
 
                     ListView_SetItemText(hwndLV, iItem, 3, buffer);
                 }
@@ -791,15 +774,15 @@ ParseResources(HWND hwnd)
                     switch (pDescriptor->Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY))
                     {
                         case CM_RESOURCE_MEMORY_READ_ONLY:
-                            LoadStringW(hInst, IDS_MEMORY_READ_ONLY, buffer, COUNT_OF(buffer));
+                            LoadStringW(hInst, IDS_MEMORY_READ_ONLY, buffer, ARRAY_SIZE(buffer));
                             break;
 
                         case CM_RESOURCE_MEMORY_WRITE_ONLY:
-                            LoadStringW(hInst, IDS_MEMORY_WRITE_ONLY, buffer, COUNT_OF(buffer));
+                            LoadStringW(hInst, IDS_MEMORY_WRITE_ONLY, buffer, ARRAY_SIZE(buffer));
                             break;
 
                         default:
-                            LoadStringW(hInst, IDS_MEMORY_READ_WRITE, buffer, COUNT_OF(buffer));
+                            LoadStringW(hInst, IDS_MEMORY_READ_WRITE, buffer, ARRAY_SIZE(buffer));
                             break;
                     }
 
@@ -857,7 +840,6 @@ ParseResources(HWND hwnd)
     }
 }
 
-
 static BOOL
 OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
 {
@@ -914,7 +896,6 @@ OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
     return FALSE;
 }
 
-
 static INT_PTR CALLBACK modify_resource_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
@@ -961,13 +942,13 @@ static BOOL CreateResourceListColumns(HWND hWndListView)
     /* Load the column labels from the resource file. */
     lvC.iSubItem = 0;
     lvC.cx = (rc.right - rc.left) / 2;
-    LoadStringW(hInst, IDS_BUSNUMBER, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_BUSNUMBER, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hWndListView, 0, &lvC) == -1)
         return FALSE;
 
     lvC.iSubItem = 1;
     lvC.cx = (rc.right - rc.left) - lvC.cx;
-    LoadStringW(hInst, IDS_INTERFACE, szText, COUNT_OF(szText));
+    LoadStringW(hInst, IDS_INTERFACE, szText, ARRAY_SIZE(szText));
     if (ListView_InsertColumn(hWndListView, 1, &lvC) == -1)
         return FALSE;
 
@@ -1035,7 +1016,6 @@ OnResourceListNotify(HWND hwndDlg, NMHDR *phdr)
     return FALSE;
 }
 
-
 static INT_PTR CALLBACK modify_resource_list_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
@@ -1068,6 +1048,476 @@ static INT_PTR CALLBACK modify_resource_list_dlgproc(HWND hwndDlg, UINT uMsg, WP
     return FALSE;
 }
 
+static BOOL
+CreateRequirementsListColumns(HWND hWndListView)
+{
+    WCHAR szText[80];
+    RECT rc;
+    LVCOLUMN lvC;
+
+    ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT);
+
+    GetClientRect(hWndListView, &rc);
+
+    /* Create columns. */
+    lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvC.pszText = szText;
+    lvC.fmt = LVCFMT_LEFT;
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = (rc.right - rc.left) / 4;
+    LoadStringW(hInst, IDS_REQALTERNATIVELIST, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    lvC.cx = (rc.right - rc.left) / 4;
+    LoadStringW(hInst, IDS_REQRESOURCELIST, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 1, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 2;
+    lvC.cx = (rc.right - rc.left) / 4;
+    LoadStringW(hInst, IDS_REQDESCRIPTOR, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 2, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 3;
+    lvC.cx = (rc.right - rc.left) - (3 * ((rc.right - rc.left) / 4));
+    LoadStringW(hInst, IDS_REQDEVICETYPE, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 3, &lvC) == -1)
+        return FALSE;
+
+    return TRUE;
+}
+
+static VOID
+GetResourceType(UCHAR ResourceType,
+                LPWSTR pBuffer,
+                DWORD dwLength)
+{
+    switch (ResourceType)
+    {
+        case CmResourceTypePort:
+            LoadStringW(hInst, IDS_TYPE_PORT, pBuffer, dwLength);
+            break;
+
+        case CmResourceTypeInterrupt:
+            LoadStringW(hInst, IDS_TYPE_INTERRUPT, pBuffer, dwLength);
+            break;
+
+        case CmResourceTypeMemory:
+            LoadStringW(hInst, IDS_TYPE_MEMORY, pBuffer, dwLength);
+            break;
+
+        case CmResourceTypeDma:
+            LoadStringW(hInst, IDS_TYPE_DMA, pBuffer, dwLength);
+            break;
+
+        default:
+            wsprintf(pBuffer, L"Unknown %u", ResourceType);
+            break;
+    }
+}
+
+static VOID
+GetShareDisposition(
+    UCHAR ShareDisposition,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    switch (ShareDisposition)
+    {
+        case CmResourceShareUndetermined:
+            LoadStringW(hInst, IDS_SHARE_UNDETERMINED, pBuffer, dwLength);
+            break;
+
+        case CmResourceShareDeviceExclusive:
+            LoadStringW(hInst, IDS_SHARE_DEVICE_EXCLUSIVE, pBuffer, dwLength);
+            break;
+
+        case CmResourceShareDriverExclusive:
+            LoadStringW(hInst, IDS_SHARE_DRIVER_EXCLUSIVE, pBuffer, dwLength);
+            break;
+
+        case CmResourceShareShared:
+            LoadStringW(hInst, IDS_SHARE_SHARED, pBuffer, dwLength);
+            break;
+    }
+}
+
+static VOID
+GetPortType(
+    USHORT Flags,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    if ((Flags & CM_RESOURCE_PORT_IO) == CM_RESOURCE_PORT_IO)
+    {
+        LoadStringW(hInst, IDS_PORT_PORT_IO, pBuffer, dwLength);
+    }
+    else if ((Flags & CM_RESOURCE_PORT_IO) == CM_RESOURCE_PORT_MEMORY)
+    {
+        LoadStringW(hInst, IDS_PORT_MEMORY_IO, pBuffer, dwLength);
+    }
+}
+
+static VOID
+GetMemoryAccess(
+    USHORT Flags,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    if ((Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY)) == CM_RESOURCE_MEMORY_READ_WRITE)
+    {
+        LoadStringW(hInst, IDS_MEMORY_READ_WRITE, pBuffer, dwLength);
+    }
+    else if ((Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY)) == CM_RESOURCE_MEMORY_READ_ONLY)
+    {
+        LoadStringW(hInst, IDS_MEMORY_READ_ONLY, pBuffer, dwLength);
+    }
+    else if ((Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY)) == CM_RESOURCE_MEMORY_WRITE_ONLY)
+    {
+        LoadStringW(hInst, IDS_MEMORY_WRITE_ONLY, pBuffer, dwLength);
+    }
+}
+
+static VOID
+GetInterruptType(
+    USHORT Flags,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    if ((Flags & CM_RESOURCE_INTERRUPT_LEVEL_LATCHED_BITS) == CM_RESOURCE_INTERRUPT_LATCHED)
+    {
+        LoadStringW(hInst, IDS_INTERRUPT_EDGE_SENSITIVE, pBuffer, dwLength);
+    }
+    else
+    {
+        LoadStringW(hInst, IDS_INTERRUPT_LEVEL_SENSITIVE, pBuffer, dwLength);
+    }
+}
+
+static VOID
+AddRequirementsToList(HWND hwndDlg, HWND hwnd)
+{
+    PIO_RESOURCE_LIST pResourceList;
+    PIO_RESOURCE_DESCRIPTOR pDescriptor; 
+    WCHAR buffer[80];
+    LVITEMW item;
+    ULONG i, j, index;
+    INT iItem;
+
+    index = 0;
+    pResourceList = &requirementsValueData->List[0];
+    for (i = 0; i < requirementsValueData->AlternativeLists; i++)
+    {
+        for (j = 0; j < pResourceList->Count; j++)
+        {
+            pDescriptor = &pResourceList->Descriptors[j];
+
+            wsprintf(buffer, L"%lu", i + 1);
+
+            item.mask = LVIF_TEXT | LVIF_PARAM;
+            item.iItem = index;
+            item.iSubItem = 0;
+            item.state = 0;
+            item.stateMask = 0;
+            item.pszText = buffer;
+            item.cchTextMax = (int)wcslen(item.pszText);
+            item.lParam = (LPARAM)pDescriptor;
+
+            iItem = ListView_InsertItem(hwnd, &item);
+            if (iItem != -1)
+            {
+                wsprintf(buffer, L"%lu", j + 1);
+                ListView_SetItemText(hwnd, iItem, 1, buffer);
+                wsprintf(buffer, L"%lu", 1);
+                ListView_SetItemText(hwnd, iItem, 2, buffer);
+
+                GetResourceType(pDescriptor->Type, buffer, 80);
+                ListView_SetItemText(hwnd, iItem, 3, buffer);
+            }
+
+            index++;
+        }
+
+
+        pResourceList = (PIO_RESOURCE_LIST)(pResourceList->Descriptors + pResourceList->Count);
+    }
+
+    GetInterfaceType(requirementsValueData->InterfaceType, buffer, 80);
+    SetDlgItemTextW(hwndDlg, IDC_REQINTERFACETYPE, buffer);
+    SetDlgItemInt(hwndDlg, IDC_REQBUSNUMBER, (UINT)requirementsValueData->BusNumber, TRUE);
+    SetDlgItemInt(hwndDlg, IDC_REQSLOTNUMBER, (UINT)requirementsValueData->SlotNumber, FALSE);
+}
+
+static INT_PTR CALLBACK show_requirements_port_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+
+        GetPortType(pDescriptor->Flags, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_TYPE, Buffer);
+
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Port.Length);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_LENGTH, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Port.Alignment);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_ALIGN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Port.MinimumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Port.MinimumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_MIN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Port.MaximumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Port.MaximumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_PORT_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_PORT_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK show_requirements_memory_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+
+        GetMemoryAccess(pDescriptor->Flags, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_ACCESS, Buffer);
+
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Memory.Length);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_LENGTH, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Memory.Alignment);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_ALIGN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Memory.MinimumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Memory.MinimumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_MIN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Memory.MaximumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Memory.MaximumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_MEMORY_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_MEMORY_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK show_requirements_interrupt_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+
+        GetInterruptType(pDescriptor->Flags, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_TYPE, Buffer);
+
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Interrupt.MinimumVector);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_MIN, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Interrupt.MaximumVector);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_INT_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_INT_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK show_requirements_dma_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Dma.MinimumChannel);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_DMA_MIN, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Dma.MaximumChannel);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_DMA_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_DMA_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_DMA_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_DMA_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static VOID
+ShowRequirement(HWND hwndDlg)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor; 
+    LVITEMW item;
+
+    if (requirementsIndex == -1)
+        return;
+
+    item.mask = LVIF_PARAM;
+    item.iItem = requirementsIndex;
+    item.iSubItem = 0;
+    ListView_GetItem(GetDlgItem(hwndDlg, IDC_REQUIREMENTS_LIST), &item);
+
+    pDescriptor = (PIO_RESOURCE_DESCRIPTOR)item.lParam; 
+    if (pDescriptor)
+    {
+        switch (pDescriptor->Type)
+        {
+        case CmResourceTypePort:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_PORT), hwndDlg, show_requirements_port_dlgproc, (LPARAM)pDescriptor);
+            break;
+        case CmResourceTypeMemory:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_MEMORY), hwndDlg, show_requirements_memory_dlgproc, (LPARAM)pDescriptor);
+            break;
+        case CmResourceTypeInterrupt:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_INT), hwndDlg, show_requirements_interrupt_dlgproc, (LPARAM)pDescriptor);
+            break;
+        case CmResourceTypeDma:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_DMA), hwndDlg, show_requirements_dma_dlgproc, (LPARAM)pDescriptor);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+static BOOL
+OnRequirementsListNotify(HWND hwndDlg, NMHDR *phdr)
+{
+    LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)phdr;
+
+    switch (phdr->idFrom)
+    {
+        case IDC_REQUIREMENTS_LIST:
+            switch(phdr->code)
+            {
+                case NM_CLICK:
+                    requirementsIndex = lpnmlv->iItem;
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_SHOW_REQUIREMENT), (lpnmlv->iItem != -1));
+                    break;
+
+                case NM_DBLCLK:
+                    if (lpnmlv->iItem != -1)
+                    {
+                        requirementsIndex = lpnmlv->iItem;
+                        ShowRequirement(hwndDlg);
+                    }
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+static INT_PTR CALLBACK modify_requirements_list_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        CreateRequirementsListColumns(GetDlgItem(hwndDlg, IDC_REQUIREMENTS_LIST));
+        AddRequirementsToList(hwndDlg, GetDlgItem(hwndDlg, IDC_REQUIREMENTS_LIST));
+        return FALSE;
+
+    case WM_NOTIFY:
+        return OnRequirementsListNotify(hwndDlg, (NMHDR *)lParam);
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_SHOW_REQUIREMENT:
+            if (requirementsIndex != -1)
+                ShowRequirement(hwndDlg);
+            break;
+        case IDOK:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDCANCEL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
 {
@@ -1121,7 +1571,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         {
             if (stringValueData)
             {
-                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)stringValueData, (DWORD) (wcslen(stringValueData) + 1) * sizeof(WCHAR));
+                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)stringValueData, (DWORD)(wcslen(stringValueData) + 1) * sizeof(WCHAR));
             }
             else
             {
@@ -1225,7 +1675,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
 
-                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
+                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD)buflen);
                 HeapFree(GetProcessHeap(), 0, lines);
             }
             else
@@ -1309,6 +1759,34 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         {
         }
     }
+    else if (EditBin == FALSE && type == REG_RESOURCE_REQUIREMENTS_LIST)
+    {
+        if (valueDataLen > 0)
+        {
+            requirementsValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen + sizeof(ULONG));
+            if (requirementsValueData == NULL)
+            {
+                error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+                goto done;
+            }
+
+            lRet = RegQueryValueExW(hKey, valueName, 0, 0, (LPBYTE)requirementsValueData, &valueDataLen);
+            if (lRet != ERROR_SUCCESS)
+            {
+                error(hwnd, IDS_BAD_VALUE, valueName);
+                goto done;
+            }
+
+        }
+        else
+        {
+            requirementsValueData = NULL;
+        }
+
+        if (DialogBoxW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_LIST), hwnd, modify_requirements_list_dlgproc) == IDOK)
+        {
+        }
+    }
     else if ((EditBin != FALSE) || (type == REG_NONE) || (type == REG_BINARY))
     {
         if(valueDataLen > 0)
@@ -1359,6 +1837,10 @@ done:
         HeapFree(GetProcessHeap(), 0, stringValueData);
     stringValueData = NULL;
 
+    if (requirementsValueData)
+        HeapFree(GetProcessHeap(), 0, requirementsValueData);
+    requirementsValueData = NULL;
+
     return result;
 }
 
@@ -1394,7 +1876,7 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     dwIndex = 0;
     do
     {
-        cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
+        cbName = ARRAY_SIZE(szSubKey);
         lResult = RegEnumKeyExW(hSrcKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
         if (lResult == ERROR_SUCCESS)
         {
@@ -1409,8 +1891,8 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     dwIndex = 0;
     do
     {
-        cbName = sizeof(szValueName) / sizeof(szValueName[0]);
-        cbData = sizeof(szValueData) / sizeof(szValueData[0]);
+        cbName = ARRAY_SIZE(szValueName);
+        cbData = ARRAY_SIZE(szValueData);
         lResult = RegEnumValueW(hSrcKey, dwIndex++, szValueName, &cbName, NULL, &dwType, szValueData, &cbData);
         if (lResult == ERROR_SUCCESS)
         {
@@ -1467,8 +1949,8 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCWSTR keyPath)
         return FALSE;
     }
 
-    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, COUNT_OF(caption));
-    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_ONE, msg, COUNT_OF(msg));
+    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, ARRAY_SIZE(caption));
+    LoadStringW(hInst, IDS_QUERY_DELETE_KEY_ONE, msg, ARRAY_SIZE(msg));
 
     if (MessageBoxW(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) != IDYES)
         goto done;
@@ -1491,6 +1973,7 @@ LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName)
     LPCWSTR s;
     LPWSTR lpNewSubKey = NULL;
     LONG Ret = 0;
+    SIZE_T cbNewSubKey;
 
     if (!lpSubKey)
         return Ret;
@@ -1499,11 +1982,12 @@ LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName)
     if (s)
     {
         s++;
-        lpNewSubKey = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (s - lpSubKey + wcslen(lpNewName) + 1) * sizeof(WCHAR));
+        cbNewSubKey = (s - lpSubKey + wcslen(lpNewName) + 1) * sizeof(WCHAR);
+        lpNewSubKey = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cbNewSubKey);
         if (lpNewSubKey != NULL)
         {
-            memcpy(lpNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(WCHAR));
-            wcscpy(lpNewSubKey + (s - lpSubKey), lpNewName);
+            StringCbCopyNW(lpNewSubKey, cbNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(WCHAR));
+            StringCbCatW(lpNewSubKey, cbNewSubKey, lpNewName);
             lpNewName = lpNewSubKey;
         }
         else
@@ -1566,7 +2050,7 @@ LONG QueryStringValue(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR p
     }
 
     cbData = (dwBufferLen - 1) * sizeof(*pszBuffer);
-    lResult = RegQueryValueExW(hKey, lpValueName, NULL, &dwType, (LPBYTE) pszBuffer, &cbData);
+    lResult = RegQueryValueExW(hKey, lpValueName, NULL, &dwType, (LPBYTE)pszBuffer, &cbData);
     if (lResult != ERROR_SUCCESS)
         goto done;
     if (dwType != REG_SZ)

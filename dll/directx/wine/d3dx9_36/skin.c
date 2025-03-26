@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Skin Info operations specific to D3DX9.
  *
@@ -19,10 +22,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -95,7 +97,7 @@ static ULONG WINAPI d3dx9_skin_info_Release(ID3DXSkinInfo *iface)
             HeapFree(GetProcessHeap(), 0, skin->bones[i].vertices);
             HeapFree(GetProcessHeap(), 0, skin->bones[i].weights);
         }
-        if (skin->bones) HeapFree(GetProcessHeap(), 0, skin->bones);
+        HeapFree(GetProcessHeap(), 0, skin->bones);
         HeapFree(GetProcessHeap(), 0, skin);
     }
 
@@ -301,9 +303,33 @@ static D3DXMATRIX * WINAPI d3dx9_skin_info_GetBoneOffsetMatrix(ID3DXSkinInfo *if
 
 static HRESULT WINAPI d3dx9_skin_info_Clone(ID3DXSkinInfo *iface, ID3DXSkinInfo **skin_info)
 {
-    FIXME("iface %p, skin_info %p stub!\n", iface, skin_info);
+    struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
+    unsigned int i;
+    HRESULT hr;
 
-    return E_NOTIMPL;
+    TRACE("iface %p, skin_info %p.\n", iface, skin_info);
+
+    if (FAILED(hr = D3DXCreateSkinInfo(skin->num_vertices, skin->vertex_declaration, skin->num_bones, skin_info)))
+        return hr;
+
+    for (i = 0; i < skin->num_bones; ++i)
+    {
+        struct bone *current_bone = &skin->bones[i];
+
+        if (current_bone->name && FAILED(hr = (*skin_info)->lpVtbl->SetBoneName(*skin_info, i, current_bone->name)))
+            break;
+        if (FAILED(hr = (*skin_info)->lpVtbl->SetBoneOffsetMatrix(*skin_info, i, &current_bone->transform)))
+            break;
+        if (current_bone->vertices && current_bone->weights
+                && FAILED(hr = (*skin_info)->lpVtbl->SetBoneInfluence(*skin_info, i, current_bone->num_influences,
+                current_bone->vertices, current_bone->weights)))
+            break;
+    }
+
+    if (FAILED(hr))
+        (*skin_info)->lpVtbl->Release(*skin_info);
+
+    return hr;
 }
 
 static HRESULT WINAPI d3dx9_skin_info_Remap(ID3DXSkinInfo *iface, DWORD num_vertices, DWORD *vertex_remap)
@@ -574,24 +600,4 @@ HRESULT WINAPI D3DXCreateSkinInfoFVF(DWORD num_vertices, DWORD fvf, DWORD num_bo
         return hr;
 
     return D3DXCreateSkinInfo(num_vertices, declaration, num_bones, skin_info);
-}
-
-HRESULT create_dummy_skin(ID3DXSkinInfo **iface)
-{
-    static const D3DVERTEXELEMENT9 empty_declaration = D3DDECL_END();
-    struct d3dx9_skin_info *object = NULL;
-
-    object = HeapAlloc(GetProcessHeap(), 0, sizeof(*object));
-    if (!object) return E_OUTOFMEMORY;
-
-    object->ID3DXSkinInfo_iface.lpVtbl = &d3dx9_skin_info_vtbl;
-    object->ref = 1;
-    object->num_vertices = 0;
-    object->num_bones = 0;
-    object->vertex_declaration[0] = empty_declaration;
-    object->fvf = 0;
-    object->bones = NULL;
-
-    *iface = &object->ID3DXSkinInfo_iface;
-    return D3D_OK;
 }

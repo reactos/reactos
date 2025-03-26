@@ -29,7 +29,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
-extern HINSTANCE DSM_hinstance;
+TW_UINT16 DSM_twCC;
+activeDS *activeSources;
+HINSTANCE DSM_hinstance;
 
 BOOL WINAPI DllMain (HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 {

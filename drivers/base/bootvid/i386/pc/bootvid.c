@@ -1,9 +1,16 @@
+/*
+ * PROJECT:     ReactOS Boot Video Driver for VGA-compatible cards
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Main file
+ * COPYRIGHT:   Copyright 2007 Alex Ionescu <alex.ionescu@reactos.org>
+ *              Copyright 2019 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
 #include "precomp.h"
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static BOOLEAN
-NTAPI
 VgaInterpretCmdStream(
     _In_ PUSHORT CmdStream)
 {
@@ -169,7 +176,6 @@ VgaInterpretCmdStream(
 }
 
 static BOOLEAN
-NTAPI
 VgaIsPresent(VOID)
 {
     UCHAR OrgGCAddr, OrgReadMap, OrgBitMask;
@@ -354,9 +360,6 @@ VgaIsPresent(VOID)
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-/*
- * @implemented
- */
 BOOLEAN
 NTAPI
 VidInitialize(
@@ -461,9 +464,6 @@ VidInitialize(
     return TRUE;
 }
 
-/*
- * @implemented
- */
 VOID
 NTAPI
 VidResetDisplay(

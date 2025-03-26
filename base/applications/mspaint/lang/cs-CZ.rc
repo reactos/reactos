@@ -1,12 +1,14 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/cs-CZ.rc
- * PURPOSE:    Czech Language resource file
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2009-2010 Radek Liška aka Black_Fox <radekliska@gmail.com>
+ *              Copyright 2011 Kamil Horníček <kamil.hornicek@reactos.org>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-cs-CZ.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -35,18 +37,20 @@ BEGIN
     END
     POPUP "Úpr&avy"
     BEGIN
-        MENUITEM "Zpět\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Znovu\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Zpět\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Z&novu\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Vyjmout\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopírovat\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Vložit\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Vymazat výběr\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertovat výběr", IDM_EDITINVERTSELECTION
+        MENUITEM "Vyjmou&t\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopírovat\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Vložit\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Vy&mazat výběr\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Invertovat výběr", IDM_EDITINVERTSELECTION
         MENUITEM "Vybrat v&še\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopírovat do...", IDM_EDITCOPYTO
-        MENUITEM "Vložit z...", IDM_EDITPASTEFROM
+        MENUITEM "Kopírovat &do...", IDM_EDITCOPYTO
+        MENUITEM "V&ložit z...", IDM_EDITPASTEFROM
     END
     POPUP "&Zobrazit"
     BEGIN
@@ -75,13 +79,13 @@ BEGIN
     END
     POPUP "&Obrázek"
     BEGIN
-        MENUITEM "Překlopit nebo otočit...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Oříznout", IDM_IMAGECROP
-        MENUITEM "Inverovat barvy\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Atributy...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Vymazat obrázek", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Kreslit neprůhledně", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Překlopit nebo otočit...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Oříznout", IDM_IMAGECROP
+        MENUITEM "&Inverovat barvy\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Atributy...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Vy&mazat obrázek", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Kreslit neprůhledně", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Barvy"
     BEGIN
@@ -95,6 +99,27 @@ BEGIN
         MENUITEM "Témata nápovědy", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&O programu...", IDM_HELPINFO
+    END
+END
+
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "Vyjmou&t\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopírovat\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Vložit\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Vy&mazat výběr\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Vybrat v&še\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Kopírovat &do...", IDM_EDITCOPYTO
+        MENUITEM "V&ložit z...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "&Překlopit nebo otočit...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Inverovat barvy\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -119,6 +144,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -142,26 +171,26 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atributy"
 BEGIN
+    LTEXT "Šíř&ka:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Výška:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Šířka:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "Výška:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "Datum změny:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Velikost souboru:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Rozlišení:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Nedostupné", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "Nedostupné", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Nedostupné", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "Datum změny:", IDD_ATTRIBUTESTEXT3, 10, 5, 64, 10
+    LTEXT "Velikost souboru:", IDD_ATTRIBUTESTEXT4, 10, 15, 64, 10
+    LTEXT "Rozlišení:", IDD_ATTRIBUTESTEXT5, 10, 25, 64, 10
+    LTEXT "Nedostupné", IDD_ATTRIBUTESTEXT6, 77, 5, 90, 10
+    LTEXT "Nedostupné", IDD_ATTRIBUTESTEXT7, 77, 15, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 77, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Jednotka", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "Palce", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "Centimetry", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
-    AUTORADIOBUTTON "Pixely", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    AUTORADIOBUTTON "P&alce", IDD_ATTRIBUTESRB1, 12, 69, 40, 10, WS_GROUP
+    AUTORADIOBUTTON "Centi&metry", IDD_ATTRIBUTESRB2, 55, 69, 54, 10
+    AUTORADIOBUTTON "&Pixely", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Barvy", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "Černobílé", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Barvy", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "Č&ernobílé", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "&Barvy", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Storno", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Výchozí", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "Výc&hozí", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
@@ -191,6 +220,17 @@ BEGIN
     PUSHBUTTON "Storno", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Malování"
@@ -198,7 +238,7 @@ BEGIN
     IDS_INFOTITLE "ReactOS Malování"
     IDS_INFOTEXT "Dostupné pod licencí GNU Lesser General Public License (LGPL, viz. www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložit provedené změny v %s?"
-    IDS_DEFAULTFILENAME "Bez názvu.bmp"
+    IDS_DEFAULTFILENAME "Bez názvu"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Volný výběr"
     IDS_TOOLTIP2 "Výběr"
@@ -219,10 +259,18 @@ BEGIN
     IDS_ALLFILES "Všechny soubory"
     IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bajtů"
-    IDS_PRINTRES "%d x %d pixelů na metr"
     IDS_INTNUMBERS "Zadávejte pouze celá čísla!"
     IDS_PERCENTAGE "Měřítko musí být mezi 1 a 500."
     IDS_ANGLE "Úhel musí být -89 a 89."
     IDS_LOADERRORTEXT "Soubor %s nemohl být načten."
     IDS_ENLARGEPROMPTTEXT "Obrázek ve schránce je větší než bitmapa.\nChcete bitmapu zvětšit?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

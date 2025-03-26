@@ -179,7 +179,7 @@ BOOL CheckAgainstNTFS(PNTFSBootSector Sector)
 
     /* Check cluster size */
     ClusterSize = Sector->BytesPerSector * Sector->SectorsPerCluster;
-    if (ClusterSize != 512 && ClusterSize != 1024 && 
+    if (ClusterSize != 512 && ClusterSize != 1024 &&
         ClusterSize != 2048 && ClusterSize != 4096 &&
         ClusterSize != 8192 && ClusterSize != 16384 &&
         ClusterSize != 32768 && ClusterSize != 65536)

@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Телефон і модем"
     IDS_CPLSYSTEMDESCRIPTION "Настройка правил набору номера та інших параметрів модема."

@@ -25,7 +25,7 @@ static int get_iwnd(HWND hWnd)
 static LRESULT CALLBACK TestProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int iwnd = get_iwnd(hwnd);
-    
+
     if(message > WM_USER || !iwnd || message == WM_GETICON)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -99,9 +99,9 @@ void Test_Messages()
     DrawThemeParentBackground(hWnd1, hdc, NULL);
     FlushMessages();
     COMPARE_CACHE(empty_chain);
-    
+
     memset(&rc, 0, sizeof(rc));
-    
+
     DrawThemeParentBackground(hWnd2, hdc, &rc);
     FlushMessages();
     COMPARE_CACHE(draw_parent_chain);
@@ -186,7 +186,10 @@ void Test_Params()
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
     hr = DrawThemeParentBackground(hWnd2, hdc, NULL);
-    ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    if (IsThemeActive())
+        ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    else
+        skip("Theme not active\n");
 
     ReleaseDC(hWnd1, hdc);
     hdc = GetDC(hWnd2);
@@ -196,7 +199,10 @@ void Test_Params()
     ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
 
     hr = DrawThemeParentBackground(hWnd2, hdc, NULL);
-    ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    if (IsThemeActive())
+        ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    else
+        skip("Theme not active\n");
     ReleaseDC(hWnd2, hdc);
 
 

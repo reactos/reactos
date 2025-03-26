@@ -382,7 +382,7 @@ UserClipboardRelease(PWND pWindow)
     if (!pWinStaObj)
         return;
 
-    co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERALLFORMATS, 0, 0);
+    co_IntSendMessage(UserHMGetHandle(pWinStaObj->spwndClipOwner), WM_RENDERALLFORMATS, 0, 0);
 
     /* If the window being destroyed is the current clipboard owner... */
     if (pWindow == pWinStaObj->spwndClipOwner)
@@ -400,9 +400,9 @@ UserClipboardRelease(PWND pWindow)
         pWinStaObj->fClipboardChanged = FALSE;
         if (pWinStaObj->spwndClipViewer)
         {
-            TRACE("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", pWinStaObj->spwndClipViewer->head.h);
+            TRACE("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", UserHMGetHandle(pWinStaObj->spwndClipViewer));
             // For 32-bit applications this message is sent as a notification
-            co_IntSendMessageNoWait(pWinStaObj->spwndClipViewer->head.h, WM_DRAWCLIPBOARD, 0, 0);
+            co_IntSendMessageNoWait(UserHMGetHandle(pWinStaObj->spwndClipViewer), WM_DRAWCLIPBOARD, 0, 0);
         }
     }
 
@@ -572,9 +572,9 @@ UserCloseClipboard(VOID)
         pWinStaObj->fClipboardChanged = FALSE;
         if (pWinStaObj->spwndClipViewer)
         {
-            TRACE("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", pWinStaObj->spwndClipViewer->head.h);
+            TRACE("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", UserHMGetHandle(pWinStaObj->spwndClipViewer));
             // For 32-bit applications this message is sent as a notification
-            co_IntSendMessageNoWait(pWinStaObj->spwndClipViewer->head.h, WM_DRAWCLIPBOARD, 0, 0);
+            co_IntSendMessageNoWait(UserHMGetHandle(pWinStaObj->spwndClipViewer), WM_DRAWCLIPBOARD, 0, 0);
         }
     }
 
@@ -610,7 +610,7 @@ NtUserGetOpenClipboardWindow(VOID)
         goto cleanup;
 
     if (pWinStaObj->spwndClipOpen)
-        hWnd = pWinStaObj->spwndClipOpen->head.h;
+        hWnd = UserHMGetHandle(pWinStaObj->spwndClipOpen);
 
     ObDereferenceObject(pWinStaObj);
 
@@ -643,7 +643,7 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
             pWinStaObj->spwndClipViewer = UserGetWindowObject(hWndNewNext);
 
         if (pWinStaObj->spwndClipViewer)
-            bRet = (BOOL)co_IntSendMessage(pWinStaObj->spwndClipViewer->head.h, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, (LPARAM)hWndNewNext);
+            bRet = (BOOL)co_IntSendMessage(UserHMGetHandle(pWinStaObj->spwndClipViewer), WM_CHANGECBCHAIN, (WPARAM)hWndRemove, (LPARAM)hWndNewNext);
     }
 
     ObDereferenceObject(pWinStaObj);
@@ -697,9 +697,9 @@ UserEmptyClipboard(VOID)
 
     if (pWinStaObj->spwndClipOwner)
     {
-        TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p\n", pWinStaObj->spwndClipOwner->head.h);
+        TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p\n", UserHMGetHandle(pWinStaObj->spwndClipOwner));
         // For 32-bit applications this message is sent as a notification
-        co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_DESTROYCLIPBOARD, 0, 0);
+        co_IntSendMessage(UserHMGetHandle(pWinStaObj->spwndClipOwner), WM_DESTROYCLIPBOARD, 0, 0);
     }
 
     pWinStaObj->spwndClipOwner = pWinStaObj->spwndClipOpen;
@@ -786,7 +786,7 @@ NtUserGetClipboardOwner(VOID)
         goto cleanup;
 
     if (pWinStaObj->spwndClipOwner)
-        hWnd = pWinStaObj->spwndClipOwner->head.h;
+        hWnd = UserHMGetHandle(pWinStaObj->spwndClipOwner);
 
     ObDereferenceObject(pWinStaObj);
 
@@ -809,7 +809,7 @@ NtUserGetClipboardViewer(VOID)
         goto cleanup;
 
     if (pWinStaObj->spwndClipViewer)
-        hWnd = pWinStaObj->spwndClipViewer->head.h;
+        hWnd = UserHMGetHandle(pWinStaObj->spwndClipViewer);
 
     ObDereferenceObject(pWinStaObj);
 
@@ -966,7 +966,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
     {
         /* Send WM_RENDERFORMAT message */
         pWinStaObj->fInDelayedRendering = TRUE;
-        co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERFORMAT, (WPARAM)uSourceFmt, 0);
+        co_IntSendMessage(UserHMGetHandle(pWinStaObj->spwndClipOwner), WM_RENDERFORMAT, (WPARAM)uSourceFmt, 0);
         pWinStaObj->fInDelayedRendering = FALSE;
 
         /* Data should be in clipboard now */
@@ -1133,7 +1133,7 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
     /* Return previous viewer. New viever window should
        send messages to rest of the chain */
     if (pWinStaObj->spwndClipViewer)
-        hWndNext = pWinStaObj->spwndClipViewer->head.h;
+        hWndNext = UserHMGetHandle(pWinStaObj->spwndClipViewer);
 
     /* Set new viewer window */
     pWinStaObj->spwndClipViewer = pWindow;
@@ -1142,9 +1142,9 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
     pWinStaObj->fClipboardChanged = FALSE;
     if (pWinStaObj->spwndClipViewer)
     {
-        TRACE("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", pWinStaObj->spwndClipViewer->head.h);
+        TRACE("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", UserHMGetHandle(pWinStaObj->spwndClipViewer));
         // For 32-bit applications this message is sent as a notification
-        co_IntSendMessageNoWait(pWinStaObj->spwndClipViewer->head.h, WM_DRAWCLIPBOARD, 0, 0);
+        co_IntSendMessageNoWait(UserHMGetHandle(pWinStaObj->spwndClipViewer), WM_DRAWCLIPBOARD, 0, 0);
     }
 
 cleanup:

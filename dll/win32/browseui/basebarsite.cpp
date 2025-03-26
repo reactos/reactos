@@ -75,56 +75,56 @@ private:
     HRESULT InsertBar(IUnknown *newBar);
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IInputObject methods ***
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL fActivate, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)() override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // *** IWinEventHandler methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(
-        HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
+    STDMETHOD(OnWinEvent)(
+        HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult) override;
+    STDMETHOD(IsWindowOwner)(HWND hWnd) override;
 
     // *** IInputObjectSite specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
+    STDMETHOD(OnFocusChangeIS)(IUnknown *punkObj, BOOL fSetFocus) override;
 
     // *** IDeskBarClient methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetDeskBarSite(IUnknown *punkSite);
-    virtual HRESULT STDMETHODCALLTYPE SetModeDBC(DWORD dwMode);
-    virtual HRESULT STDMETHODCALLTYPE UIActivateDBC(DWORD dwState);
-    virtual HRESULT STDMETHODCALLTYPE GetSize(DWORD dwWhich, LPRECT prc);
+    STDMETHOD(SetDeskBarSite)(IUnknown *punkSite) override;
+    STDMETHOD(SetModeDBC)(DWORD dwMode) override;
+    STDMETHOD(UIActivateDBC)(DWORD dwState) override;
+    STDMETHOD(GetSize)(DWORD dwWhich, LPRECT prc) override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
-        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
-        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds,
+        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID,
+        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IBandSite specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown *punk);
-    virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD *pdwBandID);
-    virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState,
-        LPWSTR pszName, int cchName);
-    virtual HRESULT STDMETHODCALLTYPE SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState);
-    virtual HRESULT STDMETHODCALLTYPE RemoveBand(DWORD dwBandID);
-    virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, void **ppv);
-    virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(const BANDSITEINFO *pbsinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(BANDSITEINFO *pbsinfo);
+    STDMETHOD(AddBand)(IUnknown *punk) override;
+    STDMETHOD(EnumBands)(UINT uBand, DWORD *pdwBandID) override;
+    STDMETHOD(QueryBand)(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState,
+        LPWSTR pszName, int cchName) override;
+    STDMETHOD(SetBandState)(DWORD dwBandID, DWORD dwMask, DWORD dwState) override;
+    STDMETHOD(RemoveBand)(DWORD dwBandID) override;
+    STDMETHOD(GetBandObject)(DWORD dwBandID, REFIID riid, void **ppv) override;
+    STDMETHOD(SetBandSiteInfo)(const BANDSITEINFO *pbsinfo) override;
+    STDMETHOD(GetBandSiteInfo)(BANDSITEINFO *pbsinfo) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistStream methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
     // message handlers
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -323,7 +323,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
     // RECT                                    newBounds;
     HRESULT                                 hResult;
     LRESULT                                 result;
-    
+
     hResult = S_OK;
     if (uMsg == WM_NOTIFY)
     {
@@ -339,7 +339,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
                     hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
                     GetClientRect(&newBounds);
                     hResult = deskBar->OnPosRectChangeDB(&newBounds);
-                    
+
 #endif
                     break;
                 case NM_CUSTOMDRAW:
@@ -375,20 +375,18 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
 {
     CComPtr<IOleWindow>                     oleWindow;
     HWND                                    ownerWindow;
-    HRESULT                                 hResult;  
+    HRESULT                                 hResult;
     DWORD                                   dwBandID;
-    
+
     if (punkSite == NULL)
     {
-
-        TRACE("Destroying site \n");
+        TRACE("Destroying site\n");
         /* Cleanup our bands */
-        while(SUCCEEDED(EnumBands(-1, &dwBandID)) && dwBandID)
+        for (UINT i = EnumBands(-1, NULL); i;)
         {
-            hResult = EnumBands(0, &dwBandID);
-            if(FAILED_UNEXPECTEDLY(hResult))
-                continue;
-            RemoveBand(dwBandID);
+            hResult = EnumBands(--i, &dwBandID);
+            if (!FAILED_UNEXPECTEDLY(hResult))
+                RemoveBand(dwBandID);
         }
         fDeskBarSite = NULL;
     }
@@ -426,7 +424,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
         /* Create close toolbar and imagelist */
         toolbarWnd = CreateWindowW(TOOLBARCLASSNAMEW, NULL,
             WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-            TBSTYLE_FLAT | TBSTYLE_TRANSPARENT | TBSTYLE_TOOLTIPS | 
+            TBSTYLE_FLAT | TBSTYLE_TRANSPARENT | TBSTYLE_TOOLTIPS |
             CCS_NOMOVEY | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER
             , 0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
 
@@ -440,7 +438,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
         DeleteObject(hBmp);
 
         SendMessage(toolbarWnd, TB_SETIMAGELIST, 0, (LPARAM)toolImageList);
-        
+
         /* Add button to toolbar */
         closeBtn.iBitmap = MAKELONG(1, 0);
         closeBtn.idCommand = IDM_BASEBAR_CLOSE;
@@ -535,13 +533,11 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
     REBARBANDINFO bandInfo;
 
+    if (uBand == -1ul)
+        return (HRESULT)SendMessage(RB_GETBANDCOUNT, 0, 0);
     if (pdwBandID == NULL)
         return E_INVALIDARG;
-    if (uBand == 0xffffffff)
-    {
-        *pdwBandID = (DWORD)SendMessage(RB_GETBANDCOUNT, 0, 0);
-        return S_OK;
-    }
+
     if (!SUCCEEDED(GetInternalBandInfo(uBand, &bandInfo)))
         return E_INVALIDARG;
     *pdwBandID = bandInfo.wID;
@@ -565,7 +561,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::RemoveBand(DWORD dwBandID)
     HRESULT                         hr;
     CBarInfo                        *pInfo;
     CComPtr<IObjectWithSite>        pSite;
-    CComPtr<IDeskBand>              pDockWnd;
+    CComPtr<IDockingWindow>         pDockWnd;
     DWORD                           index;
 
     // Retrieve the right index of the coolbar knowing the id
@@ -580,19 +576,14 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::RemoveBand(DWORD dwBandID)
     if (!pInfo)
         return E_INVALIDARG;
 
-    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IDeskBand, &pDockWnd));
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        return E_NOINTERFACE;
-    }
-    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pSite));
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        return E_NOINTERFACE;
-    }
     /* Windows sends a CloseDW before setting site to NULL */
-    pDockWnd->CloseDW(0);
-    pSite->SetSite(NULL);
+    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &pDockWnd));
+    if (SUCCEEDED(hr))
+        pDockWnd->CloseDW(0);
+
+    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pSite));
+    if (SUCCEEDED(hr))
+        pSite->SetSite(NULL);
 
     // Delete the band from rebar
     if (!SendMessage(RB_DELETEBAND, index, 0))
@@ -714,7 +705,8 @@ LRESULT CBaseBarSite::OnCustomDraw(LPNMCUSTOMDRAW pnmcd)
                 REBARBANDINFO info;
                 WCHAR wszTitle[MAX_PATH];
                 DWORD index;
-                RECT rt;
+                UINT pad = GetSystemMetrics(SM_CXEDGE), leftpad = max(pad * 2, 4);
+                UINT btnw = 20, btnh = 18, btnarea = 1 + btnw + 1;
                 HFONT newFont, oldFont;
 
                 index = SendMessage(RB_IDTOINDEX, fCurrentActiveBar->fBandID , 0);
@@ -722,20 +714,22 @@ LRESULT CBaseBarSite::OnCustomDraw(LPNMCUSTOMDRAW pnmcd)
                 ZeroMemory(wszTitle, sizeof(wszTitle));
                 DrawEdge(pnmcd->hdc, &pnmcd->rc, EDGE_ETCHED, BF_BOTTOM);
                 // We also resize our close button
-                ::SetWindowPos(toolbarWnd, HWND_TOP, pnmcd->rc.right - 22, 0, 20, 18, SWP_SHOWWINDOW);
+                ::SetWindowPos(toolbarWnd, HWND_TOP, pnmcd->rc.right - btnarea, 0, btnw, btnh, SWP_SHOWWINDOW);
                 // Draw the text
                 info.cch = MAX_PATH;
                 info.lpText = wszTitle;
-                rt = pnmcd->rc;
-                rt.right -= 24;
-                rt.left += 2;
+                RECT rt = pnmcd->rc;
+                rt.right -= btnarea;
+                rt.left += leftpad;
                 rt.bottom -= 1;
                 if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(index, &info, RBBIM_TEXT)))
                     return CDRF_SKIPDEFAULT;
                 newFont = GetTitleFont();
                 if (newFont)
                     oldFont = (HFONT)SelectObject(pnmcd->hdc, newFont);
+                COLORREF orgclrtxt = SetTextColor(pnmcd->hdc, GetSysColor(COLOR_BTNTEXT));
                 DrawText(pnmcd->hdc, info.lpText, -1, &rt, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
+                SetTextColor(pnmcd->hdc, orgclrtxt);
                 SelectObject(pnmcd->hdc, oldFont);
                 DeleteObject(newFont);
                 return CDRF_SKIPDEFAULT;
@@ -770,15 +764,11 @@ HRESULT CBaseBarSite::FindBandByGUID(REFGUID pGuid, DWORD *pdwBandID)
 {
     DWORD                       numBands;
     DWORD                       i;
-    HRESULT                     hr;
     REBARBANDINFO               bandInfo;
     CBarInfo                    *realInfo;
 
-    hr = EnumBands(-1, &numBands);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return E_FAIL;
-
-    for(i = 0; i < numBands; i++)
+    numBands = EnumBands(-1, NULL);
+    for (i = 0; i < numBands; i++)
     {
         if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(i, &bandInfo)))
             return E_FAIL;

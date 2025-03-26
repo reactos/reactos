@@ -1,6 +1,6 @@
-; UDF filesystem driver
+; UDF Filesystem driver
 [AddReg]
-HKLM,"SYSTEM\CurrentControlSet\Services\Udfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Udfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Udfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Udfs","ImagePath",0x00020000,"system32\drivers\udfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Udfs","Start",0x00010001,0x00000003

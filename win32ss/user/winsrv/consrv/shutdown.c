@@ -16,7 +16,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static void 
+static void
 NotifyConsoleProcessForShutdown(IN PCSR_PROCESS CsrProcess,
                                 IN PCONSOLE_PROCESS_DATA ProcessData,
                                 IN ULONG Flags)
@@ -25,7 +25,7 @@ NotifyConsoleProcessForShutdown(IN PCSR_PROCESS CsrProcess,
              CsrProcess, Flags, CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread);
 
     /* Send a log-off event. In reality this should be way more complex */
-    ConSrvConsoleCtrlEventTimeout(CTRL_LOGOFF_EVENT, ProcessData, 
+    ConSrvConsoleCtrlEventTimeout(CTRL_LOGOFF_EVENT, ProcessData,
                                   ShutdownSettings.WaitToKillAppTimeout);
 }
 
@@ -49,7 +49,7 @@ NonConsoleProcessShutdown(IN PCSR_PROCESS Process,
         /* Terminate this process */
 #if DBG
         WCHAR buffer[MAX_PATH];
-        if (!GetProcessImageFileNameW(Process->ProcessHandle, buffer, MAX_PATH))
+        if (!GetProcessImageFileNameW(Process->ProcessHandle, buffer, ARRAYSIZE(buffer)))
         {
             DPRINT1("Terminating process %x\n", Process->ClientId.UniqueProcess);
         }
@@ -58,7 +58,6 @@ NonConsoleProcessShutdown(IN PCSR_PROCESS Process,
             DPRINT1("Terminating process %x (%S)\n", Process->ClientId.UniqueProcess, buffer);
         }
 #endif
-
         NtTerminateProcess(Process->ProcessHandle, 0);
         WaitForSingleObject(Process->ProcessHandle, ShutdownSettings.ProcessTerminateTimeout);
     }
@@ -67,7 +66,7 @@ NonConsoleProcessShutdown(IN PCSR_PROCESS Process,
     return CsrShutdownCsrProcess;
 }
 
-// NOTE: See http://blogs.msdn.com/b/ntdebugging/archive/2007/06/09/how-windows-shuts-down.aspx
+// NOTE: See https://web.archive.org/web/20150629001832/http://blogs.msdn.com/b/ntdebugging/archive/2007/06/09/how-windows-shuts-down.aspx
 ULONG
 NTAPI
 ConsoleClientShutdown(IN PCSR_PROCESS CsrProcess,

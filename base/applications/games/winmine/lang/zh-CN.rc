@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "新游戏(&N)\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "允许问号标记(&M)", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "初学者(&B)", IDM_BEGINNER
         MENUITEM "高级(&A)", IDM_ADVANCED

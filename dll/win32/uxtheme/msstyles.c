@@ -920,8 +920,19 @@ HBITMAP MSSTYLES_LoadBitmap (PTHEME_CLASS tc, LPCWSTR lpFilename, BOOL* hasAlpha
     }
     /* Not found? Load from resources */
     img = HeapAlloc (GetProcessHeap(), 0, sizeof (THEME_IMAGE));
+#ifdef ENABLE_PNG_SUPPORT
+    if (MSSTYLES_TryLoadPng(tc->hTheme, szFile, TEXT(L"IMAGE"), &img->image)) // ...as PNG...
+    {
+        prepare_png_alpha(img->image, hasAlpha);
+    }
+    else // ...or, failing that, as BMP
+    {
+#endif /* ENABLE_PNG_SUPPORT */
     img->image = LoadImageW(tc->hTheme, szFile, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
     prepare_alpha (img->image, hasAlpha);
+#ifdef ENABLE_PNG_SUPPORT
+    }
+#endif /* ENABLE_PNG_SUPPORT */
     img->hasAlpha = *hasAlpha;
     /* ...and stow away for later reuse. */
     lstrcpyW (img->name, szFile);

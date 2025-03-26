@@ -8,36 +8,21 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
-class CRegistryKey : public IRegistryKey
+class CRegistryKey : public CUnknownImpl<IRegistryKey>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-
     IMP_IRegistryKey;
-    CRegistryKey(IUnknown * OuterUnknown, HANDLE hKey, BOOL CanDelete) : m_hKey(hKey), m_Deleted(FALSE), m_CanDelete(CanDelete), m_Ref(0){}
+    CRegistryKey(IUnknown * OuterUnknown, HANDLE hKey, BOOL CanDelete) :
+        m_hKey(hKey),
+        m_Deleted(FALSE),
+        m_CanDelete(CanDelete)
+    {
+    }
     virtual ~CRegistryKey();
 
 protected:
@@ -45,7 +30,6 @@ protected:
     HANDLE m_hKey;
     BOOL m_Deleted;
     BOOL m_CanDelete;
-    LONG m_Ref;
 };
 
 CRegistryKey::~CRegistryKey()
@@ -56,7 +40,6 @@ CRegistryKey::~CRegistryKey()
          ZwClose(m_hKey);
     }
 }
-
 
 NTSTATUS
 NTAPI

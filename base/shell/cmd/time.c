@@ -157,7 +157,7 @@ INT cmd_time(LPTSTR param)
             SYSTEMTIME st;
             GetLocalTime(&st);
             FormatTime(szTime, &st);
-            ConOutPuts(szTime);
+            ConOutPrintf(_T("%s\n"), szTime);
             freep(arg);
             return 0;
         }
@@ -168,8 +168,8 @@ INT cmd_time(LPTSTR param)
 
     if (nTimeString == -1)
     {
-        ConOutResPrintf(STRING_LOCALE_HELP1);
-        ConOutPrintf(_T(": %s\n"), GetTimeString());
+        ConOutResPuts(STRING_TIME_NOW);
+        ConOutPrintf(_T("%s\n"), GetTimeString());
     }
 
     while (TRUE)
@@ -202,7 +202,7 @@ INT cmd_time(LPTSTR param)
             nTimeString = -1;
         }
 
-        ConErrResPuts(STRING_TIME_ERROR1);
+        ConErrResPuts(STRING_TIME_ERROR);
         nErrorLevel = 1;
     }
 

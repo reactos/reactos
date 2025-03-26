@@ -37,11 +37,11 @@ public:
 	virtual HRESULT WINAPI InitializeFromBitmap(LPSHDRAGIMAGE pshdi, IDataObject *pDataObject);
 	virtual HRESULT WINAPI InitializeFromWindow(HWND hwnd, POINT *ppt, IDataObject *pDataObject);
 
-	virtual HRESULT WINAPI DragEnter (HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect);
-	virtual HRESULT WINAPI DragLeave();
-	virtual HRESULT WINAPI DragOver(POINT *ppt, DWORD dwEffect);
-	virtual HRESULT WINAPI Drop(IDataObject* pDataObject, POINT* ppt, DWORD dwEffect);
-	virtual HRESULT WINAPI Show(BOOL fShow);
+	STDMETHOD(DragEnter)(HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect) override;
+	STDMETHOD(DragLeave)() override;
+	STDMETHOD(DragOver)(POINT *ppt, DWORD dwEffect) override;
+	STDMETHOD(Drop)(IDataObject* pDataObject, POINT* ppt, DWORD dwEffect) override;
+	STDMETHOD(Show)(BOOL fShow) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_DRAGDROPHELPER)
 DECLARE_NOT_AGGREGATABLE(CDropTargetHelper)

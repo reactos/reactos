@@ -303,77 +303,12 @@ end:
     return Status;
 }
 
-NTSTATUS vol_query_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_set_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_flush_buffers(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS vol_query_volume_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_set_volume_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_cleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    Irp->IoStatus.Information = 0;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS vol_directory_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_file_system_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_lock_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
 static NTSTATUS vol_query_device_name(volume_device_extension* vde, PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PMOUNTDEV_NAME name;
+
+    if (IrpSp->FileObject && IrpSp->FileObject->FsContext)
+        return STATUS_INVALID_PARAMETER;
 
     if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_NAME)) {
         Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
@@ -877,39 +812,19 @@ NTSTATUS vol_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
             return vol_get_disk_extents(vde, Irp);
 
         default: { // pass ioctl through if only one child device
-            ULONG code = IrpSp->Parameters.DeviceIoControl.IoControlCode;
             NTSTATUS Status = vol_ioctl_passthrough(vde, Irp);
-
-#ifdef __REACTOS__
-            &code;
-#endif
+#ifdef _DEBUG
+            ULONG code = IrpSp->Parameters.DeviceIoControl.IoControlCode;
 
             if (NT_SUCCESS(Status))
                 TRACE("passing through ioctl %lx (returning %08lx)\n", code, Status);
             else
                 WARN("passing through ioctl %lx (returning %08lx)\n", code, Status);
+#endif
 
             return Status;
         }
     }
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_shutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
-
-    return STATUS_INVALID_DEVICE_REQUEST;
-}
-
-NTSTATUS vol_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
 
     return STATUS_INVALID_DEVICE_REQUEST;
 }
@@ -953,7 +868,7 @@ NTSTATUS __stdcall pnp_removal(PVOID NotificationStructure, PVOID Context) {
         TRACE("GUID_TARGET_DEVICE_QUERY_REMOVE\n");
 
         if (pdode->vde && pdode->vde->mounted_device)
-            return pnp_query_remove_device(pdode->vde->mounted_device, NULL);
+            pnp_query_remove_device(pdode->vde->mounted_device, NULL);
     }
 
     return STATUS_SUCCESS;

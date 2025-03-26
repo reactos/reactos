@@ -28,7 +28,7 @@ GENERIC_MAPPING IopCompletionMapping =
 static const INFORMATION_CLASS_INFO IoCompletionInfoClass[] =
 {
      /* IoCompletionBasicInformation */
-    ICI_SQ_SAME(sizeof(IO_COMPLETION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY),
+    IQS_SAME(IO_COMPLETION_BASIC_INFORMATION, ULONG, ICIF_QUERY),
 };
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -395,6 +395,7 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
                                          IoCompletionInfoClass,
                                          sizeof(IoCompletionInfoClass) /
                                          sizeof(IoCompletionInfoClass[0]),
+                                         ICIF_PROBE_READ_WRITE,
                                          IoCompletionInformation,
                                          IoCompletionInformationLength,
                                          ResultLength,

@@ -600,6 +600,9 @@ BaseInitializeContext(IN PCONTEXT Context,
     /* Set the EFLAGS */
     Context->EFlags = 0x3000 | EFLAGS_INTERRUPT_MASK; /* IOPL 3 */
 
+    /* Set MXCSR */
+    Context->MxCsr = INITIAL_MXCSR;
+
     if (ContextType == 1)      /* For Threads */
     {
         Context->Rip = (ULONG_PTR)BaseThreadStartup;

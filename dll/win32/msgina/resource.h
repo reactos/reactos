@@ -42,6 +42,7 @@
 
 #define IDD_SHUTDOWN             1800
 #define IDD_SHUTDOWN_FANCY       1900
+#define IDD_SHUTDOWN_FANCY_LONG  1901
 #define IDD_SHUTDOWN_REASON      2000
 
 #define IDC_SHUTDOWN_ACTION      2001
@@ -51,26 +52,38 @@
 #define IDC_REASON_DESCRIPTION   2005
 #define IDC_REASON_COMMENT       2006
 
-#define IDC_BUTTON_SLEEP         1901
-#define IDC_BUTTON_SHUTDOWN      1902
-#define IDC_BUTTON_REBOOT        1903
+#define IDC_TURN_OFF_STATIC      3001
+#define IDC_HIBERNATE_STATIC     3002
+#define IDC_SLEEP_STATIC         3003
+#define IDC_SHUTDOWN_STATIC      3004
+#define IDC_RESTART_STATIC       3005
+
+#define IDC_BUTTON_SHUTDOWN      1901
+#define IDC_BUTTON_REBOOT        1902
+#define IDC_BUTTON_SLEEP         1903
+#define IDC_BUTTON_HIBERNATE     1904
 
 #define IDD_LEGALNOTICE          2100
 #define IDC_LEGALNOTICE_TEXT     2101
 
 #define IDC_ROSLOGO              1007
 #define IDC_BAR                  1008
+#define IDC_DLG_BG               1009
+#define IDC_ROSLOGO_WHITE        1010
 
 
-#define IDI_ROSLOGO         20000
-#define IDI_BAR             20001
+#define IDI_ROSLOGO              20000
+#define IDI_BAR                  20001
+#define IDI_ROSLOGO_FLAG         20002
+#define IDI_DLG_BG               20003
+#define IDB_IMAGE_STRIP          20004
 
-#define IDI_NOT_CONNECTED 13
-#define IDI_LOGOFF        21
-#define IDI_SHUTDOWN      22
-#define IDI_KEYBOARD      109
-#define IDI_HARDWARE      110
-#define IDI_LOCKICON      115
+#define IDI_NOT_CONNECTED            13
+#define IDI_LOGOFF                   21
+#define IDI_SHUTDOWN                 22
+#define IDI_KEYBOARD                 109
+#define IDI_HARDWARE                 110
+#define IDI_LOCKICON                 115
 
 #define IDS_LOGGEDOUTSAS         40000
 #define IDS_LOCKEDSAS            40001
@@ -98,14 +111,20 @@
 #define IDS_INVALIDWORKSTATION   40023
 #define IDS_ACCOUNTRESTRICTION   40024
 
-#define IDS_SHUTDOWN_SHUTDOWN         50000
-#define IDS_SHUTDOWN_LOGOFF           50001
+#define IDS_SHUTDOWN_LOGOFF           50000
+#define IDS_SHUTDOWN_SHUTDOWN         50001
 #define IDS_SHUTDOWN_RESTART          50002
 #define IDS_SHUTDOWN_SLEEP            50003
 #define IDS_SHUTDOWN_HIBERNATE        50004
 /* Shut down descriptions */
-#define IDS_SHUTDOWN_SHUTDOWN_DESC    50005
-#define IDS_SHUTDOWN_LOGOFF_DESC      50006
+#define IDS_SHUTDOWN_LOGOFF_DESC      50005
+#define IDS_SHUTDOWN_SHUTDOWN_DESC    50006
 #define IDS_SHUTDOWN_RESTART_DESC     50007
 #define IDS_SHUTDOWN_SLEEP_DESC       50008
 #define IDS_SHUTDOWN_HIBERNATE_DESC   50009
+
+/* Emergency log off and restart */
+#define IDS_EMERGENCYLOGOFFTITLE      50010
+#define IDS_EMERGENCYLOGOFF           50011
+#define IDS_EMERGENCYRESTARTTITLE     50012
+#define IDS_EMERGENCYRESTART          50013

@@ -205,7 +205,7 @@ _STLP_IMPORT_DECLSPEC void _STLP_STDCALL OutputDebugStringA(const char* lpOutput
  * to avoid macro definition conflict. */
 #  if !defined (_WIN64)
 /* Under 32 bits platform we rely on a simple InterlockedExchange call. */
-#    if defined (__cplusplus) && defined(__BUILDING_STLPORT)
+#    if defined (__cplusplus)
 /* We do not define this function if we are not in a C++ translation unit just
  * because of the 'inline' keyword portability issue it would introduce. We will
  * have to fix it the day we need this function for a C translation unit.

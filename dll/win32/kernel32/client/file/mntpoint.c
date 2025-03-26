@@ -61,7 +61,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
     {
         if (NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 1] == L':')
         {
-            NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2] = _toupper(NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2]);
+            NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2] = towupper(NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2]);
         }
     }
 
@@ -206,7 +206,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
             /* Make a string of it, to easy the checks */
             SymbolicLink.Length = MountPoints->MountPoints[CurrentMntPt].SymbolicLinkNameLength;
             SymbolicLink.MaximumLength = SymbolicLink.Length;
-            SymbolicLink.Buffer = (PVOID)((ULONG_PTR)&MountPoints->MountPoints[CurrentMntPt] + MountPoints->MountPoints[CurrentMntPt].SymbolicLinkNameOffset);
+            SymbolicLink.Buffer = (PVOID)((ULONG_PTR)MountPoints + MountPoints->MountPoints[CurrentMntPt].SymbolicLinkNameOffset);
             /* If that's a NT volume name (GUID form), keep it! */
             if (MOUNTMGR_IS_NT_VOLUME_NAME(&SymbolicLink))
             {
@@ -362,7 +362,7 @@ BasepGetVolumeNameFromReparsePoint(IN LPCWSTR lpszMountPoint,
 
     /* Copy the link target */
     RtlCopyMemory(lpszVolumeName,
-                  &ReparseBuffer->MountPointReparseBuffer.PathBuffer[ReparseBuffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR)], 
+                  &ReparseBuffer->MountPointReparseBuffer.PathBuffer[ReparseBuffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR)],
                   ReparseBuffer->MountPointReparseBuffer.SubstituteNameLength);
     /* Make it DOS valid */
     Old = lpszVolumeName[1];
@@ -452,7 +452,7 @@ BasepGetVolumeNameForVolumeMountPoint(IN LPCWSTR lpszMountPoint,
         if (!Ret)
         {
             /* It was a DOS volume as UNC name, so fail and zero output */
-            if (MountPoint.Length == 14 && MountPoint.Buffer[0] == '\\' && MountPoint.Buffer[1] == '\\' && 
+            if (MountPoint.Length == 14 && MountPoint.Buffer[0] == '\\' && MountPoint.Buffer[1] == '\\' &&
                 (MountPoint.Buffer[2] == '.' || MountPoint.Buffer[2] == '?') && MountPoint.Buffer[3] == L'\\' &&
                 MountPoint.Buffer[5] == ':')
             {

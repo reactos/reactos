@@ -12,8 +12,8 @@
 
 DBG_DEFAULT_CHANNEL(EngDev);
 
-PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
-PGRAPHICS_DEVICE gpVgaGraphicsDevice;
+static PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
+static PGRAPHICS_DEVICE gpVgaGraphicsDevice;
 
 static PGRAPHICS_DEVICE gpGraphicsDeviceFirst = NULL;
 static PGRAPHICS_DEVICE gpGraphicsDeviceLast = NULL;
@@ -32,130 +32,400 @@ InitDeviceImpl(VOID)
     return STATUS_SUCCESS;
 }
 
+static
 BOOLEAN
-EngpPopulateDeviceModeList(
-    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
-    _In_ PDEVMODEW pdmDefault)
+EngpHasVgaDriver(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
 {
-    PWSTR pwsz;
-    PLDEVOBJ pldev;
-    PDEVMODEINFO pdminfo;
-    PDEVMODEW pdm, pdmEnd;
-    ULONG i, cModes = 0;
-    BOOLEAN bModeMatch = FALSE;
+    WCHAR awcDeviceKey[256], awcServiceName[100];
+    PWSTR lastBkSlash;
+    NTSTATUS Status;
+    ULONG cbValue;
+    HKEY hkey;
 
-    ASSERT(pGraphicsDevice->pdevmodeInfo == NULL);
-    ASSERT(pGraphicsDevice->pDevModeList == NULL);
-
-    pwsz = pGraphicsDevice->pDiplayDrivers;
-
-    /* Loop through the driver names
-     * This is a REG_MULTI_SZ string */
-    for (; *pwsz; pwsz += wcslen(pwsz) + 1)
+    /* Open the key for the adapters */
+    Status = RegOpenKey(L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO", &hkey);
+    if (!NT_SUCCESS(Status))
     {
-        /* Try to load the display driver */
-        TRACE("Trying driver: %ls\n", pwsz);
-        pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
-        if (!pldev)
-        {
-            ERR("Could not load driver: '%ls'\n", pwsz);
-            continue;
-        }
-
-        /* Get the mode list from the driver */
-        pdminfo = LDEVOBJ_pdmiGetModes(pldev, pGraphicsDevice->DeviceObject);
-        if (!pdminfo)
-        {
-            ERR("Could not get mode list for '%ls'\n", pwsz);
-            continue;
-        }
-
-        /* Attach the mode info to the device */
-        pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
-        pGraphicsDevice->pdevmodeInfo = pdminfo;
-
-        /* Loop all DEVMODEs */
-        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
-        for (pdm = pdminfo->adevmode;
-             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
-             pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
-        {
-            /* Count this DEVMODE */
-            cModes++;
-
-            /* Some drivers like the VBox driver don't fill the dmDeviceName
-               with the name of the display driver. So fix that here. */
-            RtlStringCbCopyW(pdm->dmDeviceName, sizeof(pdm->dmDeviceName), pwsz);
-        }
-
-        // FIXME: release the driver again until it's used?
-    }
-
-    if (!pGraphicsDevice->pdevmodeInfo || cModes == 0)
-    {
-        ERR("No devmodes\n");
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key: 0x%08lx\n", Status);
         return FALSE;
     }
 
-    /* Allocate an index buffer */
-    pGraphicsDevice->cDevModes = cModes;
-    pGraphicsDevice->pDevModeList = ExAllocatePoolWithTag(PagedPool,
-                                                          cModes * sizeof(DEVMODEENTRY),
-                                                          GDITAG_GDEVICE);
-    if (!pGraphicsDevice->pDevModeList)
+    /* Read the name of the device key */
+    cbValue = sizeof(awcDeviceKey);
+    Status = RegQueryValue(hkey, pGraphicsDevice->szNtDeviceName, REG_SZ, awcDeviceKey, &cbValue);
+    ZwClose(hkey);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("No devmode list\n");
+        ERR("Could not read '%S' registry value: 0x%08lx\n", Status);
         return FALSE;
     }
 
-    TRACE("Looking for mode %lux%lux%lu(%lu Hz)\n",
-        pdmDefault->dmPelsWidth,
-        pdmDefault->dmPelsHeight,
-        pdmDefault->dmBitsPerPel,
-        pdmDefault->dmDisplayFrequency);
-
-    /* Loop through all DEVMODEINFOs */
-    for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
-         pdminfo;
-         pdminfo = pdminfo->pdmiNext)
+    /* Replace 'DeviceN' by 'Video' */
+    lastBkSlash = wcsrchr(awcDeviceKey, L'\\');
+    if (!lastBkSlash)
     {
-        /* Calculate End of the DEVMODEs */
-        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
+        ERR("Invalid registry key '%S'\n", lastBkSlash);
+        return FALSE;
+    }
+    if (!NT_SUCCESS(RtlStringCchCopyW(lastBkSlash + 1,
+                                      ARRAYSIZE(awcDeviceKey) - (lastBkSlash + 1 - awcDeviceKey),
+                                      L"Video")))
+    {
+        ERR("Failed to add 'Video' to registry key '%S'\n", awcDeviceKey);
+        return FALSE;
+    }
 
-        /* Loop through the DEVMODEs */
-        for (pdm = pdminfo->adevmode;
-             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
-             pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+    /* Open device key */
+    Status = RegOpenKey(awcDeviceKey, &hkey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open %S registry key: 0x%08lx\n", awcDeviceKey, Status);
+        return FALSE;
+    }
+
+    /* Read service name */
+    cbValue = sizeof(awcServiceName);
+    Status = RegQueryValue(hkey, L"Service", REG_SZ, awcServiceName, &cbValue);
+    ZwClose(hkey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not read Service registry value in %S: 0x%08lx\n", awcDeviceKey, Status);
+        return FALSE;
+    }
+
+    /* Device is using VGA driver if service name is 'VGASave' (case insensitive) */
+    return (_wcsicmp(awcServiceName, L"VGASave") == 0);
+}
+
+/*
+ * Add a device to gpGraphicsDeviceFirst/gpGraphicsDeviceLast list (if not already present).
+ */
+_Requires_lock_held_(ghsemGraphicsDeviceList)
+static
+VOID
+EngpLinkGraphicsDevice(
+    _In_ PGRAPHICS_DEVICE pToAdd)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+
+    TRACE("EngLinkGraphicsDevice(%p)\n", pToAdd);
+
+    /* Search if device is not already linked */
+    for (pGraphicsDevice = gpGraphicsDeviceFirst;
+         pGraphicsDevice;
+         pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
+    {
+        if (pGraphicsDevice == pToAdd)
+            return;
+    }
+
+    pToAdd->pNextGraphicsDevice = NULL;
+    if (gpGraphicsDeviceLast)
+        gpGraphicsDeviceLast->pNextGraphicsDevice = pToAdd;
+    gpGraphicsDeviceLast = pToAdd;
+    if (!gpGraphicsDeviceFirst)
+        gpGraphicsDeviceFirst = pToAdd;
+}
+
+/*
+ * Remove a device from gpGraphicsDeviceFirst/gpGraphicsDeviceLast list.
+ */
+_Requires_lock_held_(ghsemGraphicsDeviceList)
+static
+VOID
+EngpUnlinkGraphicsDevice(
+    _In_ PGRAPHICS_DEVICE pToDelete)
+{
+    PGRAPHICS_DEVICE pPrevGraphicsDevice = NULL;
+    PGRAPHICS_DEVICE pGraphicsDevice = gpGraphicsDeviceFirst;
+
+    TRACE("EngpUnlinkGraphicsDevice('%S')\n", pToDelete->szNtDeviceName);
+
+    while (pGraphicsDevice)
+    {
+        if (pGraphicsDevice != pToDelete)
         {
-            TRACE("    %S has mode %lux%lux%lu(%lu Hz)\n",
-                  pdm->dmDeviceName,
-                  pdm->dmPelsWidth,
-                  pdm->dmPelsHeight,
-                  pdm->dmBitsPerPel,
-                  pdm->dmDisplayFrequency);
-            /* Compare with the default entry */
-            if (!bModeMatch &&
-                pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
-                pdm->dmPelsWidth == pdmDefault->dmPelsWidth &&
-                pdm->dmPelsHeight == pdmDefault->dmPelsHeight)
+            /* Keep current device */
+            pPrevGraphicsDevice = pGraphicsDevice;
+            pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice;
+        }
+        else
+        {
+            /* At first, link again associated VGA Device */
+            if (pGraphicsDevice->pVgaDevice)
+                EngpLinkGraphicsDevice(pGraphicsDevice->pVgaDevice);
+
+            /* We need to remove current device */
+            pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice;
+
+            /* Unlink chain */
+            if (!pPrevGraphicsDevice)
+                gpGraphicsDeviceFirst = pToDelete->pNextGraphicsDevice;
+            else
+                pPrevGraphicsDevice->pNextGraphicsDevice = pToDelete->pNextGraphicsDevice;
+            if (gpGraphicsDeviceLast == pToDelete)
+                gpGraphicsDeviceLast = pPrevGraphicsDevice;
+        }
+    }
+}
+
+NTSTATUS
+EngpUpdateGraphicsDeviceList(VOID)
+{
+    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
+    WCHAR awcDeviceName[20], awcWinDeviceName[20];
+    UNICODE_STRING ustrDeviceName;
+    WCHAR awcBuffer[256];
+    NTSTATUS Status;
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    BOOLEAN bFoundNewDevice = FALSE;
+    ULONG cbValue;
+    HKEY hkey;
+
+    /* Open the key for the adapters */
+    Status = RegOpenKey(L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO", &hkey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key:0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Read the name of the VGA adapter */
+    cbValue = sizeof(awcDeviceName);
+    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
+    if (NT_SUCCESS(Status))
+    {
+        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
+        ERR("VGA adapter = %lu\n", iVGACompatible);
+    }
+
+    /* Get the maximum number of adapters */
+    if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
+    {
+        ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
+    }
+
+    TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
+
+    /* Loop through all adapters */
+    for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
+    {
+        /* Create the adapter's key name */
+        swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
+
+        /* Create the display device name */
+        swprintf(awcWinDeviceName, L"\\\\.\\DISPLAY%lu", iDevNum + 1);
+        RtlInitUnicodeString(&ustrDeviceName, awcWinDeviceName);
+
+        /* Check if the device exists already */
+        pGraphicsDevice = EngpFindGraphicsDevice(&ustrDeviceName, iDevNum);
+        if (pGraphicsDevice != NULL)
+        {
+            continue;
+        }
+
+        /* Read the reg key name */
+        cbValue = sizeof(awcBuffer);
+        Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("failed to query the registry path:0x%lx\n", Status);
+            continue;
+        }
+
+        /* Initialize the driver for this device */
+        pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
+        if (!pGraphicsDevice) continue;
+
+        /* Check if this is a VGA compatible adapter */
+        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
+        {
+            /* Save this as the VGA adapter */
+            if (!gpVgaGraphicsDevice || !EngpHasVgaDriver(gpVgaGraphicsDevice))
             {
-                pGraphicsDevice->iDefaultMode = i;
-                pGraphicsDevice->iCurrentMode = i;
-                TRACE("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
-                if (pdm->dmDisplayFrequency == pdmDefault->dmDisplayFrequency)
-                {
-                    /* Uh oh, even the display frequency matches. */
-                    bModeMatch = TRUE;
-                }
+                gpVgaGraphicsDevice = pGraphicsDevice;
+                TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
             }
+        }
+        bFoundNewDevice = TRUE;
 
-            /* Initialize the entry */
-            pGraphicsDevice->pDevModeList[i].dwFlags = 0;
-            pGraphicsDevice->pDevModeList[i].pdm = pdm;
-            i++;
+        /* Set the first one as primary device */
+        if (!gpPrimaryGraphicsDevice || EngpHasVgaDriver(gpPrimaryGraphicsDevice))
+        {
+            gpPrimaryGraphicsDevice = pGraphicsDevice;
+            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
         }
     }
-    return TRUE;
+
+    /* Close the device map registry key */
+    ZwClose(hkey);
+
+    /* Can we link VGA device to primary device? */
+    if (gpPrimaryGraphicsDevice &&
+        gpVgaGraphicsDevice &&
+        gpPrimaryGraphicsDevice != gpVgaGraphicsDevice &&
+        !gpPrimaryGraphicsDevice->pVgaDevice)
+    {
+        /* Yes. Remove VGA device from global list, and attach it to primary device */
+        TRACE("Linking VGA device %S to primary device %S\n", gpVgaGraphicsDevice->szNtDeviceName, gpPrimaryGraphicsDevice->szNtDeviceName);
+        EngpUnlinkGraphicsDevice(gpVgaGraphicsDevice);
+        gpPrimaryGraphicsDevice->pVgaDevice = gpVgaGraphicsDevice;
+    }
+
+    if (bFoundNewDevice && gbBaseVideo)
+    {
+        PGRAPHICS_DEVICE pToDelete;
+
+        /* Lock list */
+        EngAcquireSemaphore(ghsemGraphicsDeviceList);
+
+        /* Remove every device from linked list, except base-video one */
+        pGraphicsDevice = gpGraphicsDeviceFirst;
+        while (pGraphicsDevice)
+        {
+            if (!EngpHasVgaDriver(pGraphicsDevice))
+            {
+                /* Not base-video device. Remove it */
+                pToDelete = pGraphicsDevice;
+                TRACE("Removing non-base-video device %S (%S)\n", pToDelete->szWinDeviceName, pToDelete->szNtDeviceName);
+
+                EngpUnlinkGraphicsDevice(pGraphicsDevice);
+                pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice;
+
+                /* Free memory */
+                ExFreePoolWithTag(pToDelete->pDiplayDrivers, GDITAG_DRVSUP);
+                ExFreePoolWithTag(pToDelete, GDITAG_GDEVICE);
+            }
+            else
+            {
+                pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice;
+            }
+        }
+
+        /* Unlock list */
+        EngReleaseSemaphore(ghsemGraphicsDeviceList);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/* Open display settings registry key
+ * Returns NULL in case of error. */
+static HKEY
+EngpGetRegistryHandleFromDeviceMap(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
+    HKEY hKey;
+    WCHAR szDeviceKey[256];
+    ULONG cbSize;
+    NTSTATUS Status;
+
+    /* Open the device map registry key */
+    Status = RegOpenKey(KEY_VIDEO, &hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key: status 0x%08x\n", Status);
+        return NULL;
+    }
+
+    /* Query the registry path */
+    cbSize = sizeof(szDeviceKey);
+    RegQueryValue(hKey,
+                  pGraphicsDevice->szNtDeviceName,
+                  REG_SZ,
+                  szDeviceKey,
+                  &cbSize);
+    ZwClose(hKey);
+
+    /* Open the registry key */
+    Status = RegOpenKey(szDeviceKey, &hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open registry key '%S': status 0x%08x\n", szDeviceKey, Status);
+        return NULL;
+    }
+
+    return hKey;
+}
+
+NTSTATUS
+EngpGetDisplayDriverParameters(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _Out_ PDEVMODEW pdm)
+{
+    HKEY hKey;
+    NTSTATUS Status;
+    RTL_QUERY_REGISTRY_TABLE DisplaySettingsTable[] =
+    {
+#define READ(field, str) \
+        { \
+            NULL, \
+            RTL_QUERY_REGISTRY_DIRECT, \
+            L ##str, \
+            &pdm->field, \
+            REG_NONE, NULL, 0 \
+        },
+    READ(dmBitsPerPel, "DefaultSettings.BitsPerPel")
+    READ(dmPelsWidth, "DefaultSettings.XResolution")
+    READ(dmPelsHeight, "DefaultSettings.YResolution")
+    READ(dmDisplayFlags, "DefaultSettings.Flags")
+    READ(dmDisplayFrequency, "DefaultSettings.VRefresh")
+    READ(dmPanningWidth, "DefaultSettings.XPanning")
+    READ(dmPanningHeight, "DefaultSettings.YPanning")
+    READ(dmDisplayOrientation, "DefaultSettings.Orientation")
+    READ(dmDisplayFixedOutput, "DefaultSettings.FixedOutput")
+    READ(dmPosition.x, "Attach.RelativeX")
+    READ(dmPosition.y, "Attach.RelativeY")
+#undef READ
+        {0}
+    };
+
+    hKey = EngpGetRegistryHandleFromDeviceMap(pGraphicsDevice);
+    if (!hKey)
+        return STATUS_UNSUCCESSFUL;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                    (PWSTR)hKey,
+                                    DisplaySettingsTable,
+                                    NULL,
+                                    NULL);
+
+    ZwClose(hKey);
+    return Status;
+}
+
+DWORD
+EngpGetDisplayDriverAccelerationLevel(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    HKEY hKey;
+    DWORD dwAccelerationLevel = 0;
+    RTL_QUERY_REGISTRY_TABLE DisplaySettingsTable[] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"Acceleration.Level",
+            &dwAccelerationLevel,
+            REG_NONE, NULL, 0
+        },
+        {0}
+    };
+
+    hKey = EngpGetRegistryHandleFromDeviceMap(pGraphicsDevice);
+    if (!hKey)
+        return 0;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                           (PWSTR)hKey,
+                           DisplaySettingsTable,
+                           NULL,
+                           NULL);
+    ZwClose(hKey);
+
+    return dwAccelerationLevel;
 }
 
 extern VOID
@@ -190,7 +460,7 @@ VideoPortCallout(
             if (CallbackParams->Param == TRUE)
             {
                 /* Re-enable the display */
-                UserRefreshDisplay(gppdevPrimary);
+                UserRefreshDisplay(gpmdev->ppdevGlobal);
             }
             else
             {
@@ -227,8 +497,7 @@ NTAPI
 EngpRegisterGraphicsDevice(
     _In_ PUNICODE_STRING pustrDeviceName,
     _In_ PUNICODE_STRING pustrDiplayDrivers,
-    _In_ PUNICODE_STRING pustrDescription,
-    _In_ PDEVMODEW pdmDefault)
+    _In_ PUNICODE_STRING pustrDescription)
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVICE_OBJECT pDeviceObject;
@@ -242,9 +511,9 @@ EngpRegisterGraphicsDevice(
     TRACE("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 
     /* Allocate a GRAPHICS_DEVICE structure */
-    pGraphicsDevice = ExAllocatePoolWithTag(PagedPool,
-                                            sizeof(GRAPHICS_DEVICE),
-                                            GDITAG_GDEVICE);
+    pGraphicsDevice = ExAllocatePoolZero(PagedPool,
+                                         sizeof(GRAPHICS_DEVICE),
+                                         GDITAG_GDEVICE);
     if (!pGraphicsDevice)
     {
         ERR("ExAllocatePoolWithTag failed\n");
@@ -289,7 +558,20 @@ EngpRegisterGraphicsDevice(
     // TODO: Set flags according to the results.
     // if (Win32kCallbacks.bACPI)
     // if (Win32kCallbacks.DualviewFlags & ???)
-    // Win32kCallbacks.pPhysDeviceObject;
+    pGraphicsDevice->PhysDeviceHandle = Win32kCallbacks.pPhysDeviceObject;
+
+    /* FIXME: Enumerate children monitor devices for this video adapter
+     *
+     * - Force the adapter to re-enumerate its monitors:
+     *   IoSynchronousInvalidateDeviceRelations(pdo, BusRelations)
+     *
+     * - Retrieve all monitor PDOs from VideoPrt:
+     *   EngDeviceIoControl(0x%p, IOCTL_VIDEO_ENUM_MONITOR_PDO)
+     *
+     * - Initialize these fields and structures accordingly:
+     *   pGraphicsDevice->dwMonCnt
+     *   pGraphicsDevice->pvMonDev[0..dwMonCnt-1]
+     */
 
     /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
@@ -327,32 +609,11 @@ EngpRegisterGraphicsDevice(
                   pustrDescription->Length);
     pGraphicsDevice->pwszDescription[pustrDescription->Length/sizeof(WCHAR)] = 0;
 
-    /* Initialize the pdevmodeInfo list and default index  */
-    pGraphicsDevice->pdevmodeInfo = NULL;
-    pGraphicsDevice->iDefaultMode = 0;
-    pGraphicsDevice->iCurrentMode = 0;
-
-    // FIXME: initialize state flags
-    pGraphicsDevice->StateFlags = 0;
-
-    /* Create the mode list */
-    pGraphicsDevice->pDevModeList = NULL;
-    if (!EngpPopulateDeviceModeList(pGraphicsDevice, pdmDefault))
-    {
-        ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
-        return NULL;
-    }
-
     /* Lock loader */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
 
     /* Insert the device into the global list */
-    pGraphicsDevice->pNextGraphicsDevice = NULL;
-    if (gpGraphicsDeviceLast)
-        gpGraphicsDeviceLast->pNextGraphicsDevice = pGraphicsDevice;
-    gpGraphicsDeviceLast = pGraphicsDevice;
-    if (!gpGraphicsDeviceFirst)
-        gpGraphicsDeviceFirst = pGraphicsDevice;
+    EngpLinkGraphicsDevice(pGraphicsDevice);
 
     /* Increment the device number */
     giDevNum++;
@@ -361,6 +622,17 @@ EngpRegisterGraphicsDevice(
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
     TRACE("Prepared %lu modes for %ls\n", pGraphicsDevice->cDevModes, pGraphicsDevice->pwszDescription);
 
+    /* HACK: already in graphic mode; display wallpaper on this new display */
+    if (ScreenDeviceContext)
+    {
+        UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
+        UNICODE_STRING DisplayName;
+        HDC hdc;
+        RtlInitUnicodeString(&DisplayName, pGraphicsDevice->szWinDeviceName);
+        hdc = IntGdiCreateDC(&DriverName, &DisplayName, NULL, NULL, FALSE);
+        IntPaintDesktop(hdc);
+    }
+
     return pGraphicsDevice;
 }
 
@@ -368,21 +640,20 @@ PGRAPHICS_DEVICE
 NTAPI
 EngpFindGraphicsDevice(
     _In_opt_ PUNICODE_STRING pustrDevice,
-    _In_ ULONG iDevNum,
-    _In_ DWORD dwFlags)
+    _In_ ULONG iDevNum)
 {
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG i;
-    TRACE("EngpFindGraphicsDevice('%wZ', %lu, 0x%lx)\n",
-           pustrDevice, iDevNum, dwFlags);
+    TRACE("EngpFindGraphicsDevice('%wZ', %lu)\n",
+           pustrDevice, iDevNum);
 
     /* Lock list */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
 
     if (pustrDevice && pustrDevice->Buffer)
     {
-        /* Loop through the list of devices */
+        /* Find specified video adapter by name */
         for (pGraphicsDevice = gpGraphicsDeviceFirst;
              pGraphicsDevice;
              pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
@@ -394,10 +665,21 @@ EngpFindGraphicsDevice(
                 break;
             }
         }
+
+        if (pGraphicsDevice)
+        {
+            /* Validate selected monitor number */
+#if 0
+            if (iDevNum >= pGraphicsDevice->dwMonCnt)
+                pGraphicsDevice = NULL;
+#else
+            /* FIXME: dwMonCnt not initialized, see EngpRegisterGraphicsDevice */
+#endif
+        }
     }
     else
     {
-        /* Loop through the list of devices */
+        /* Select video adapter by device number */
         for (pGraphicsDevice = gpGraphicsDeviceFirst, i = 0;
              pGraphicsDevice && i < iDevNum;
              pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice, i++);

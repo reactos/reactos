@@ -29,7 +29,7 @@
 #define DECLSPEC_IMPORT
 #include <ntifs.h>
 
-
+
 /*!
  * @brief Cancel routine that is installed on any IRP that this library manages
  *
@@ -80,7 +80,7 @@ IopCsqCancelRoutine(
     Csq->CsqCompleteCanceledIrp(Csq, Irp);
 }
 
-
+
 /*!
  * @brief Set up a CSQ struct to initialize the queue
  *
@@ -121,7 +121,7 @@ IoCsqInitialize(
     return STATUS_SUCCESS;
 }
 
-
+
 /*!
  * @brief Set up a CSQ struct to initialize the queue (extended version)
  *
@@ -161,7 +161,7 @@ IoCsqInitializeEx(
     return STATUS_SUCCESS;
 }
 
-
+
 /*!
  * @brief Insert an IRP into the CSQ
  *
@@ -182,7 +182,7 @@ IoCsqInsertIrp(
     IoCsqInsertIrpEx(Csq, Irp, Context, 0);
 }
 
-
+
 /*!
  * @brief Insert an IRP into the CSQ, with additional tracking context
  *
@@ -307,7 +307,7 @@ IoCsqInsertIrpEx(
     return Retval;
 }
 
-
+
 /*!
  * @brief Remove anb IRP from the queue
  *

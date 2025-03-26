@@ -8,14 +8,14 @@ BEGIN
 /u -	Kiszolgáló regisztrációjának megszüntetése\n\
 /s -	Néma üzemmód, üzenetek megjelenítése nélkül\n\
 /c -	Parancssori kimenet\n\
-/i -	DllInstall meghívása a következõ [parancssor] átadásával; /u hívással használva a dll eltávolítása\n\
+/i -	DllInstall meghívása a következő [parancssor] átadásával; /u hívással használva a dll eltávolítása\n\
 /n -	Ne hívja meg a DllRegisterServer függvényt; ezt a beállítást a /i kapcsolóval együtt kell használni"
     IDS_NoDllSpecified "Nincs megadva DLL név."
-    IDS_InvalidFlag "Meghatároztlan belépési pont: %s"
-    IDS_SwitchN_NoI "Meghatározatlan belépési pont: /n csak az /i kapcsolóval használható."
-    IDS_DllNotLoaded "Hiba a LoadLibrary('%s') függvényben.\nA visszaadott kód: 0x%08x."
-    IDS_MissingEntry "A(z) %s betöltõdése megtörtént, de nem található a következõ belépési pont: %s.\n\n\
-A(z) %s -t nem lehet hozzáadni, vagy a(z) %s egy érvénytelen változata van a memóriában. Használja a PView-et hogy megkeresse és eltávolítsa azt."
-    IDS_FailureMessage "A(z) %s sikertelen a következõben: %s.\nA visszaadott kód: 0x%08x"
-    IDS_SuccessMessage "A(z) %s sikerült a következõben: %s."
+    IDS_InvalidFlag "Érvénytelen paraméter: %s"
+    IDS_SwitchN_NoI "Érvénytelen paraméter: /n csak az /i kapcsolóval használható."
+    IDS_DllNotLoaded "LoadLibrary('%s') sikertelen.\nVisszatérési érték a GetLastError-ból: 0x%08x."
+    IDS_MissingEntry "A(z) %s betöltődött, de nem található a következő belépési pont: %s.\n\n\
+A(z) %s lehet hogy nincs exportálva, vagy a(z) %s egy hibás változata van a memóriában. Használja a PView-et hogy megkeresse és eltávolítsa azt."
+    IDS_FailureMessage "A(z) %s sikertelen a következőben: %s.\nA visszaadott kód: 0x%08x"
+    IDS_SuccessMessage "A(z) %s sikerült a következőben: %s."
 END

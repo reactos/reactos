@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command 
+ * PROJECT:         ReactOS net command
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 
@@ -22,6 +22,8 @@
 #include <lm.h>
 #include <ndk/rtlfuncs.h>
 
+#include <strsafe.h>
+
 #include <conutils.h>
 
 #include <net_msg.h>
@@ -37,6 +39,10 @@ VOID
 PrintPadding(
     WCHAR chr,
     INT nPaddedLength);
+
+DWORD
+TranslateAppMessage(
+    DWORD dwMessage);
 
 VOID
 PrintMessageString(
@@ -78,6 +84,7 @@ INT cmdHelp(INT argc, WCHAR **argv);
 INT cmdHelpMsg(INT argc, WCHAR **argv);
 INT cmdLocalGroup(INT argc, WCHAR **argv);
 INT cmdPause(INT argc, WCHAR **argv);
+INT cmdSession(INT argc, WCHAR **argv);
 INT cmdShare(INT argc, WCHAR **argv);
 INT cmdStart(INT argc, WCHAR **argv);
 INT cmdStatistics(INT argc, WCHAR **argv);

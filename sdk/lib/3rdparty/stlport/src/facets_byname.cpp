@@ -418,7 +418,7 @@ codecvt_byname<wchar_t, char, mbstate_t>::do_length(state_type&         state,
     __count += chars_read;
     from += chars_read;
   }
-  return int(__count); 
+  return int(__count);
 }
 
 int

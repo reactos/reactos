@@ -75,18 +75,11 @@ STDAPI DllUnregisterServer()
     return S_OK;
 }
 
-struct CCoInit
-{
-    CCoInit() { hres = CoInitialize(NULL); }
-    ~CCoInit() { if (SUCCEEDED(hres)) { CoUninitialize(); } }
-    HRESULT hres;
-};
-
 EXTERN_C
 BOOL WINAPI GetExeFromLnk(PCWSTR pszLnk, PWSTR pszExe, size_t cchSize)
 {
     CCoInit init;
-    if (FAILED_UNEXPECTEDLY(init.hres))
+    if (FAILED_UNEXPECTEDLY(init.hr))
         return FALSE;
 
     CComPtr<IShellLinkW> spShellLink;

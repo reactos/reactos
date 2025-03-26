@@ -10,7 +10,7 @@
  *
  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
- * MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE AUTHORS AND
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE AUTHORS AND
  * CONTRIBUTORS ACCEPT NO RESPONSIBILITY IN ANY CONCEIVABLE MANNER.
  *
  *************************************************************************
@@ -98,10 +98,7 @@
 # include <stdarg.h>
 #endif
 #include <stddef.h>
-
-#if defined( HAVE_ERRNO_H ) || defined( __VMS )
 #include <errno.h>
-#endif
 
 #ifndef NULL
 # define NULL 0

@@ -1797,23 +1797,18 @@ static void test_NtQueryKey(void)
     ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
     pRtlFreeUnicodeString(&str);
 
-    if (!winetest_interactive)
-        skip("ROSTESTS-198: Causes an assert in Cm.\n");
-    else
-    {
-        status = pNtQueryKey(subkey, KeyCachedInformation, &cached_info, sizeof(cached_info), &len);
-        ok(status == STATUS_SUCCESS, "NtQueryKey Failed: 0x%08x\n", status);
+    status = pNtQueryKey(subkey, KeyCachedInformation, &cached_info, sizeof(cached_info), &len);
+    ok(status == STATUS_SUCCESS, "NtQueryKey Failed: 0x%08x\n", status);
 
-        if (status == STATUS_SUCCESS)
-        {
-            ok(len == sizeof(cached_info), "got unexpected length %d\n", len);
-            ok(cached_info.SubKeys == 1, "cached_info.SubKeys = %u\n", cached_info.SubKeys);
-            ok(cached_info.MaxNameLen == 24, "cached_info.MaxNameLen = %u\n", cached_info.MaxNameLen);
-            ok(cached_info.Values == 1, "cached_info.Values = %u\n", cached_info.Values);
-            ok(cached_info.MaxValueNameLen == 6, "cached_info.MaxValueNameLen = %u\n", cached_info.MaxValueNameLen);
-            ok(cached_info.MaxValueDataLen == 4, "cached_info.MaxValueDataLen = %u\n", cached_info.MaxValueDataLen);
-            ok(cached_info.NameLength == 22, "cached_info.NameLength = %u\n", cached_info.NameLength);
-        }
+    if (status == STATUS_SUCCESS)
+    {
+        ok(len == sizeof(cached_info), "got unexpected length %d\n", len);
+        ok(cached_info.SubKeys == 1, "cached_info.SubKeys = %u\n", cached_info.SubKeys);
+        ok(cached_info.MaxNameLen == 24, "cached_info.MaxNameLen = %u\n", cached_info.MaxNameLen);
+        ok(cached_info.Values == 1, "cached_info.Values = %u\n", cached_info.Values);
+        ok(cached_info.MaxValueNameLen == 6, "cached_info.MaxValueNameLen = %u\n", cached_info.MaxValueNameLen);
+        ok(cached_info.MaxValueDataLen == 4, "cached_info.MaxValueDataLen = %u\n", cached_info.MaxValueDataLen);
+        ok(cached_info.NameLength == 22, "cached_info.NameLength = %u\n", cached_info.NameLength);
     }
 
     status = pNtDeleteKey(subkey2);

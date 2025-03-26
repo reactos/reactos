@@ -22,7 +22,7 @@ ULONG RemotePacketId  = INITIAL_PACKET_ID;
  * \param Buffer Pointer to the packet data.
  * \param Length Length of data in bytes.
  * \return The calculated checksum.
- * \sa http://www.vista-xp.co.uk/forums/technical-reference-library/2540-basics-debugging.html
+ * \sa http://www.vista-xp.co.uk/forums/technical-reference-library/2540-basics-debugging.html (DEAD_LINK)
  */
 ULONG
 NTAPI

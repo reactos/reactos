@@ -936,59 +936,6 @@ static MUI_ENTRY svSESuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY svSEBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup misslyckades med att installera bootloadern p\206 datorns",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "h\206rddisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Var god s\204tt in en formatterad floppy-disk i l\204sare A: och",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "tryck p\206 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   ENTER = Forts\204tt   F3 = Avbryt",
-        TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY svSESelectPartitionEntries[] =
 {
     {
@@ -1029,28 +976,21 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Tryck C f”r att skapa en ny partition.",
+        "\x07  Tryck C f\224r att skapa en prim\344r/logisk partition.",
+//        "\x07  Tryck C f\224r att skapa en ny partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Tryck E f\224r att skapa en ut\224kad partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tryck D f\224r att ta bort en befintlig partititon.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1318,7 +1258,7 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Partitionen kommer nu att formaters Tryck ENTER f\224r att forts\204tta.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1328,6 +1268,37 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
         0,
         "   ENTER = Forts\204tt   F3 = Avsluta",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY svSECheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup unders\224ker nu den valda partitionen.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Var v\204nlig v\204nta...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -1442,7 +1413,7 @@ static MUI_ENTRY svSEFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY svSEBootLoaderEntries[] =
+static MUI_ENTRY svSEBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1454,7 +1425,7 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installerar boot-loadern",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1499,6 +1470,83 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY svSEBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup installerar boot-loadern.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY svSEBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup installerar boot-loadern.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Var god s\204tt in en formatterad floppy-disk i l\204sare A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "och tryck p\206 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   ENTER = Forts\204tt   F3 = Avbryt",
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY svSEKeyboardSettingsEntries[] =
@@ -1890,13 +1938,6 @@ MUI_ERROR svSEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Du kan inte ta bort opartitionerrat diskutrymme!\n"
-        "\n"
-        "  * Tryck valfri tangent f\224r att forts\204tta.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Setup misslyckades att installera %S bootkoden p\206 systempartitionen.",
         "ENTER = Starta om datorn"
@@ -2110,6 +2151,10 @@ MUI_PAGE svSEPages[] =
         svSEFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        svSECheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         svSEDeletePartitionEntries
     },
@@ -2130,8 +2175,8 @@ MUI_PAGE svSEPages[] =
         svSEKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        svSEBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        svSEBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2146,8 +2191,12 @@ MUI_PAGE svSEPages[] =
         svSESuccessPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        svSEBootPageEntries
+        BOOTLOADER_INSTALL_PAGE,
+        svSEBootLoaderInstallPageEntries
+    },
+    {
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        svSEBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2164,27 +2213,28 @@ MUI_STRING svSEStrings[] =
     {STRING_PLEASEWAIT,
      "   Var v\204nlig v\204nta..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Installera   C = Skapa Partition   F3 = Avsluta"},
+     "   ENTER = Installera   C = Skapa Prim\344r Partition   E = Skapa Ut\224kad Partition   F3 = Avsluta"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Installera   C = Skapa Logisk Partition   F3 = Avsluta"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installera   D = Ta bort Partition   F3 = Avsluta"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Ta bort Partition   F3 = Avsluta"},
     {STRING_PARTITIONSIZE,
      "Storlek p\206 den nya partitionen:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
 //     "Du har valt att skapa en ny partition p†"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "V\204nligen skriv in storleken av den nya partitionen i megabytes."},
     {STRING_CREATEPARTITION,
      "   ENTER = Skapa Partition   ESC = Avbryt   F3 = Avsluta"},
+    {STRING_NEWPARTITION,
+    "Setup skapade en ny partition p\206"},
     {STRING_PARTFORMAT,
     "Denna Partition kommer att bli formaterad h\204rn\204st."},
     {STRING_NONFORMATTEDPART,
@@ -2195,8 +2245,6 @@ MUI_STRING svSEStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installerar ReactOS till Partitionen"},
-    {STRING_CHECKINGPART,
-    "Setup unders\224ker nu den valda partitionen."},
     {STRING_CONTINUE,
     "ENTER = Forts\204tt"},
     {STRING_QUITCONTINUE,
@@ -2224,7 +2272,7 @@ MUI_STRING svSEStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Uppdaterar tangentbordslayoutinst\204llningar..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   L\204gger till information om codepage till registret..."},
+    "   L\204gger till information om codepage..."},
     {STRING_DONE,
     "   F\204rdigt..."},
     {STRING_REBOOTCOMPUTER2,
@@ -2237,42 +2285,30 @@ MUI_STRING svSEStrings[] =
     "Den vanligaste orsaken till detta \204r att ett USB tangentbord anv\204nds\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB tangentbord \204r itne helt st\224tt \204n\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Setup formaterar din disk"},
+    {STRING_FORMATTINGPART,
+    "Setup formaterar partitionen..."},
     {STRING_CHECKINGDISK,
-    "Setup under\224ker din disk"},
+    "Setup unders\224ker disken..."},
     {STRING_FORMATDISK1,
     " Formaterar partition som %S filsystem (snabbformatering) "},
     {STRING_FORMATDISK2,
     " Formaterar partition som %S filsystem "},
     {STRING_KEEPFORMAT,
     " Beh\206ll nuvarande filsystem (inga f\224r\204ndringar) "},
-    {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  H\206rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  H\206rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE_1,
-    "on %I64u %s  H\206rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "on %I64u %s  H\206rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "H\206rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "p\206 H\206rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sTyp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  H\206rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  H\206rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Setup skapade en ny partition p\206"},
+    {STRING_HDDISK1,
+    "%s."},
+    {STRING_HDDISK2,
+    "p\206 %s."},
+    {STRING_PARTTYPE,
+    "Typ 0x%02x"},
+    {STRING_HDDINFO1,
+    // "H\206rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s H\206rddisk %lu (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]"},
+    {STRING_HDDINFO2,
+    // "H\206rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s H\206rddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_UNPSPACE,
-    "    %sOpartitionerat utrymme%s            %6lu %s"},
+    "Opartitionerat utrymme"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

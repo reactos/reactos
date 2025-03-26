@@ -228,7 +228,7 @@ ConsoleEventThread(LPVOID Parameter)
                                  InputRecords,
                                  ARRAYSIZE(InputRecords),
                                  &NumRecords,
-                                 CONSOLE_READ_CONTINUE))
+                                 CONSOLE_READ_NOWAIT))
         {
             DWORD LastError = GetLastError();
             DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, NumRecords, LastError);

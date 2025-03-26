@@ -50,11 +50,13 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     UNICODE_STRING CapturedObjectName, *ObjectName;
+#if DBG
+    UNICODE_STRING CapturedPortName;
+#endif
     PLPCP_PORT_OBJECT Port;
     HANDLE Handle;
 
     PAGED_CODE();
-    LPCTRACE(LPC_CREATE_DEBUG, "Name: %wZ\n", ObjectAttributes->ObjectName);
 
     RtlInitEmptyUnicodeString(&CapturedObjectName, NULL, 0);
 
@@ -70,10 +72,7 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
             ProbeForRead(ObjectAttributes, sizeof(*ObjectAttributes), sizeof(ULONG));
             ObjectName = ((volatile OBJECT_ATTRIBUTES*)ObjectAttributes)->ObjectName;
             if (ObjectName)
-            {
-                ProbeForRead(ObjectName, sizeof(*ObjectName), 1);
-                CapturedObjectName = *(volatile UNICODE_STRING*)ObjectName;
-            }
+                CapturedObjectName = ProbeForReadUnicodeString(ObjectName);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -84,13 +83,24 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     }
     else
     {
-        if (ObjectAttributes->ObjectName)
-            CapturedObjectName = *(ObjectAttributes->ObjectName);
+        ObjectName = ObjectAttributes->ObjectName;
+        if (ObjectName)
+            CapturedObjectName = *ObjectName;
     }
 
-    /* Normalize the buffer pointer in case we don't have a name */
+    /* Normalize the buffer pointer in case we don't have
+     * a name, for initializing an unconnected port. */
     if (CapturedObjectName.Length == 0)
         CapturedObjectName.Buffer = NULL;
+
+#if DBG
+    /* Capture the port name for DPRINT only - ObCreateObject does its
+     * own capture. As it is used only for debugging, ignore any failure;
+     * the string is zeroed out in such case. */
+    ProbeAndCaptureUnicodeString(&CapturedPortName, PreviousMode, ObjectName);
+    LPCTRACE(LPC_CREATE_DEBUG, "Name: %wZ\n", &CapturedPortName);
+    ReleaseCapturedUnicodeString(&CapturedPortName, PreviousMode);
+#endif
 
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,

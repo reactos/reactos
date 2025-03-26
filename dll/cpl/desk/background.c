@@ -37,18 +37,6 @@ typedef enum
     PLACEMENT_VALUE_FILL      = 10
 } PLACEMENT_VALUE;
 
-/* The values in these macros are dependent on the
- * layout of the monitor image and they must be adjusted
- * if that image will be changed.
- */
-#define MONITOR_LEFT        20
-#define MONITOR_TOP         8
-#define MONITOR_RIGHT       140
-#define MONITOR_BOTTOM      92
-
-#define MONITOR_WIDTH       (MONITOR_RIGHT-MONITOR_LEFT)
-#define MONITOR_HEIGHT      (MONITOR_BOTTOM-MONITOR_TOP)
-
 typedef struct
 {
     BOOL bWallpaper; /* Is this background a wallpaper */
@@ -74,11 +62,9 @@ typedef struct _BACKGROUND_DATA
 
     int listViewItemCount;
 
-    HBITMAP hBitmap;
-    int cxSource;
-    int cySource;
-
     ULONG_PTR gdipToken;
+
+    DESKTOP_DATA desktopData;
 } BACKGROUND_DATA, *PBACKGROUND_DATA;
 
 GLOBAL_DATA g_GlobalData;
@@ -169,6 +155,9 @@ GdipGetSupportedFileExtensions(VOID)
 
     for (i = 0; i < num; ++i)
     {
+        if (!lstrcmpiW(codecInfo[i].FilenameExtension, L"*.ico"))
+            continue;
+
         StringCbCatW(lpBuffer, size, codecInfo[i].FilenameExtension);
         if (i < (num - 1))
         {
@@ -468,7 +457,6 @@ InitBackgroundDialog(HWND hwndDlg, PBACKGROUND_DATA pData)
     HKEY regKey;
     TCHAR szBuffer[3];
     DWORD bufferSize = sizeof(szBuffer);
-    BITMAP bitmap;
 
     AddListViewItems(hwndDlg, pData);
 
@@ -489,15 +477,6 @@ InitBackgroundDialog(HWND hwndDlg, PBACKGROUND_DATA pData)
 
     SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
     pData->placementSelection = PLACEMENT_CENTER;
-
-    pData->hBitmap = (HBITMAP) LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    if (pData->hBitmap != NULL)
-    {
-        GetObject(pData->hBitmap, sizeof(BITMAP), &bitmap);
-
-        pData->cxSource = bitmap.bmWidth;
-        pData->cySource = bitmap.bmHeight;
-    }
 
     /* Load the default settings from the registry */
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_QUERY_VALUE, &regKey) != ERROR_SUCCESS)
@@ -822,7 +801,7 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PBACKGROUND_DATA pData)
     };
 
     hDC = CreateCompatibleDC(draw->hDC);
-    hOldObj = SelectObject(hDC, pData->hBitmap);
+    hOldObj = SelectObject(hDC, g_GlobalData.hMonitorBitmap);
 
     if (pData->backgroundItems[pData->backgroundSelection].bWallpaper == FALSE)
     {
@@ -997,12 +976,12 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PBACKGROUND_DATA pData)
 
     GdiTransparentBlt(draw->hDC,
                       draw->rcItem.left, draw->rcItem.top,
-                      draw->rcItem.right-draw->rcItem.left+1,
-                      draw->rcItem.bottom-draw->rcItem.top+1,
+                      draw->rcItem.right - draw->rcItem.left + 1,
+                      draw->rcItem.bottom - draw->rcItem.top + 1,
                       hDC,
                       0, 0,
-                      pData->cxSource, pData->cySource,
-                      0xFF00FF);
+                      g_GlobalData.bmMonWidth, g_GlobalData.bmMonHeight,
+                      MONITOR_ALPHA);
 
     SelectObject(hDC, hOldObj);
     DeleteDC(hDC);
@@ -1166,6 +1145,39 @@ SetDesktopBackColor(HWND hwndDlg, PBACKGROUND_DATA pData)
     RegCloseKey(hKey);
 }
 
+static VOID
+OnCustomButton(HWND hwndDlg, PBACKGROUND_DATA pData)
+{
+    HPROPSHEETPAGE hpsp[1] = {0};
+    PROPSHEETHEADER psh = {sizeof(psh)};
+    PROPSHEETPAGE psp = {sizeof(psp)};
+
+    psh.dwFlags = PSH_NOAPPLYNOW;
+    psh.hwndParent = GetParent(hwndDlg);
+    psh.hInstance = hApplet;
+    psh.pszCaption = MAKEINTRESOURCE(IDS_DESKTOP_ITEMS);
+    psh.phpage = hpsp;
+
+    psp.dwFlags = PSP_DEFAULT;
+    psp.hInstance = hApplet;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_DESKTOP_GENERAL);
+    psp.pfnDlgProc = DesktopPageProc;
+    psp.lParam = (LPARAM)&pData->desktopData;
+
+    hpsp[0] = CreatePropertySheetPage(&psp);
+    if (!hpsp[0])
+        return;
+
+    psh.nPages++;
+
+    if (PropertySheet(&psh) > 0)
+    {
+        if (SaveDesktopSettings(&pData->desktopData))
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+    }
+}
+
+
 INT_PTR CALLBACK
 BackgroundPageProc(HWND hwndDlg,
                    UINT uMsg,
@@ -1188,6 +1200,7 @@ BackgroundPageProc(HWND hwndDlg,
             gdipStartup.SuppressExternalCodecs = FALSE;
             GdiplusStartup(&pData->gdipToken, &gdipStartup, NULL);
             InitBackgroundDialog(hwndDlg, pData);
+            InitDesktopSettings(&pData->desktopData);
             break;
 
         case WM_COMMAND:
@@ -1217,6 +1230,11 @@ BackgroundPageProc(HWND hwndDlg,
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         }
                         break;
+
+                    case IDC_DESKTOP_CUSTOM:
+                        if (command == BN_CLICKED)
+                            OnCustomButton(hwndDlg, pData);
+                        break;
                 }
             } break;
 
@@ -1244,6 +1262,8 @@ BackgroundPageProc(HWND hwndDlg,
                             SetWallpaper(pData);
                         if (pData->bClrBackgroundChanged)
                             SetDesktopBackColor(hwndDlg, pData);
+                        if (pData->desktopData.bSettingsChanged)
+                            SetDesktopSettings(&pData->desktopData);
                         SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)_T(""));
                         return TRUE;
 
@@ -1265,7 +1285,6 @@ BackgroundPageProc(HWND hwndDlg,
             if (pData->pWallpaperBitmap != NULL)
                 DibFreeImage(pData->pWallpaperBitmap);
 
-            DeleteObject(pData->hBitmap);
             GdiplusShutdown(pData->gdipToken);
             HeapFree(GetProcessHeap(), 0, pData);
             break;

@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+extern void KiInvalidSystemThreadStartupExit(void);
+extern void KiUserThreadStartupExit(void);
+extern void KiServiceExit3(void);
+
 typedef struct _KUINIT_FRAME
 {
     KSWITCH_FRAME CtxSwitchFrame;
@@ -98,8 +102,11 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         /* Terminate the Exception Handler List */
         TrapFrame->ExceptionFrame = 0;
 
-        /* We return to ... */
-        StartFrame->Return = (ULONG64)KiServiceExit2;
+        /* KiThreadStartup returns to KiUserThreadStartupExit */
+        StartFrame->Return = (ULONG64)KiUserThreadStartupExit;
+
+        /* KiUserThreadStartupExit returns to KiServiceExit3 */
+        InitFrame->ExceptionFrame.Return = (ULONG64)KiServiceExit3;
     }
     else
     {
@@ -121,13 +128,13 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         /* No NPX State */
         Thread->NpxState = 0xA;
 
-        /* We have no return address! */
-        StartFrame->Return = 0;
+        /* This must never return! */
+        StartFrame->Return = (ULONG64)KiInvalidSystemThreadStartupExit;
     }
 
     /* Set up the Context Switch Frame */
     CtxSwitchFrame->Return = (ULONG64)KiThreadStartup;
-    CtxSwitchFrame->ApcBypass = FALSE;
+    CtxSwitchFrame->ApcBypass = TRUE;
 
     StartFrame->P1Home = (ULONG64)StartRoutine;
     StartFrame->P2Home = (ULONG64)StartContext;
@@ -183,6 +190,9 @@ KiSwapContextResume(
                      (ULONG_PTR)OldThread->InitialStack,
                      0);
     }
+
+    /* Old thread os no longer busy */
+    OldThread->SwapBusy = FALSE;
 
     /* Kernel APCs may be pending */
     if (NewThread->ApcState.KernelApcPending)

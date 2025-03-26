@@ -1,53 +1,53 @@
 /*
- * PROJECT: ReactOS system setup
- * FILE:    dll/win32/syssetup/lang/ro-RO.rc
- * PURPOSE: Romanian Language File for system setup
- * TRANSLATORS:
- *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la etapa secundă de instalare ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Acest asistent va finaliza instalarea ReactOS. În cele ce urmează asistentul va culege niște informații despre calculator pentru a instala ReactOS corect.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Acest expert va finaliza instalarea ReactOS. În cele ce urmează expertul va culege niște informații despre calculator pentru a instala ReactOS corect.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Echipa ReactOS aduce mulțumiri următoarelor proiecte FOSS ce au fost utilizate la crearea ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS este oferit sub licența GPL, astfel reutilizarea sau redistribuția sa (sau a părților sale componente), cere respectarea licenței GPL.", IDC_STATIC, 15, 110, 234, 19
     PUSHBUTTON "Afișează &GPL", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Setup"
+CAPTION "Configurare ReactOS"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
-    LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
-    LTEXT "Description:", IDC_STATIC, 20, 65, 70, 10
+    LTEXT "Alegeți o opțiune de produs:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Opțiuni de p&rodus:", IDC_STATIC, 5, 32, 85, 10
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Informații despre produs", IDC_STATIC, 5, 50, 305, 85
+    LTEXT "Descriere:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -60,55 +60,56 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrieți un nume pentru calculator de maxim 15 de caractere. Dacă sunteți într-o rețea, numele calculatorului trebuie să fie unic în acea rețea.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Scrieți un nume pentru calculator de maxim 15 de caractere. Dacă sunteți într-o rețea, numele calculatorului trebuie să fie unic în acea rețea.", IDC_STATIC, 54, 7, 241, 24
     LTEXT "N&ume calculator:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Asistentul va crea un cont de utilizator cu numele Administrator. Îl puteți folosi când veți avea nevoie de control complet asupra calculatorului.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Introduceți o parolă pentru contul Administrator de maxim 127 caractere.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Parolă Administrator:", IDC_STATIC, 54, 104, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Confirmare parolă:", IDC_STATIC, 54, 123, 105, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "Expertul va crea un cont de utilizator cu numele Administrator. Îl puteți folosi când veți avea nevoie de control complet asupra calculatorului.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "Introduceți o parolă pentru contul Administrator de maxim 127 caractere.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "&Parolă Administrator:", IDC_STATIC, 54, 104, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "&Confirmare parolă:", IDC_STATIC, 54, 123, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Localizarea regională trebuie să se potrivească cu limba aplicațiilor utilizate. De ea depinde cum vor apărea numerele, valutele și data.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Modificați configurația de localizare a sistemului.", IDC_STATIC, 53, 60, 186, 8
-    PUSHBUTTON "&Configurare…", IDC_CUSTOMLOCALE, 230, 57, 70, 14
-    LTEXT "Configurări și localizări pentru tastatură, aranjamente ale caracterelor asociate tastelor la dactilografiere, și alte servicii de text.", IDC_STATIC, 53, 82, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Configurați aranjamentele de tastatură.", IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "Config&urare…", IDC_CUSTOMLAYOUT, 230, 122, 70, 14
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "Modificați setarea de localizare a sistemului.", IDC_STATIC, 53, 60, 186, 8
+    PUSHBUTTON "Seta&re…", IDC_CUSTOMLOCALE, 230, 57, 70, 14
+    LTEXT "", IDC_STATIC, 53, 78, 246, 1, SS_ETCHEDHORZ
+    LTEXT "Setări și localizări pentru tastatură, aranjamente ale caracterelor asociate tastelor la dactilografiere, și alte servicii de text.", IDC_STATIC, 53, 82, 253, 20
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "Setați aranjamentele de tastatură.", IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "S&etare…", IDC_CUSTOMLAYOUT, 230, 122, 70, 14
 END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Dată și oră:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 220, 17, 74, 14
     LTEXT "Fus orar:", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Aj&ustează ora automat la schimbarea fusului orar", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 241, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Aj&ustează ora automat la schimbarea fusului orar", IDC_AUTODAYLIGHT, 53, 124, 230, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -116,23 +117,26 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Componente în curs de înregistrare", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Instalarea elementelor din meniul de pornire", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Salvarea setărilor", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Ștergerea fișierelor temporare", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Sfârșit de instalare ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Instalarea ReactOS a fost finalizată cu succes.\nDupă apasarea butonului „Sfârșit”, calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Instalarea ReactOS a fost finalizată cu succes.\nDupă apasarea butonului Sfârșit, calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Dacă aveți vreun CD introdus în calculator, scoateți-l. Pentru a reporni calculatorul, apăsați „Sfârșit”.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Dacă aveți vreun CD introdus în calculator, scoateți-l. Pentru a reporni calculatorul, apăsați Sfârșit.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -144,13 +148,14 @@ BEGIN
     DEFPUSHBUTTON "Î&nchide", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Așteptați…"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -168,33 +173,34 @@ BEGIN
     LTEXT "pachete", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
-    AUTOCHECKBOX "Inițiere &rapidă", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    AUTOCHECKBOX "Inițializare &rapidă", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
     PUSHBUTTON "I&mplicite", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE "Conștientizări"
-    IDS_ACKSUBTITLE "Contribuții aduse și informații despre licență"
+    IDS_ACKTITLE "Mulțumiri"
+    IDS_ACKSUBTITLE "Contribuții aduse ReactOS și informații despre licență"
     IDS_OWNERTITLE "Personalizare sistem"
-    IDS_OWNERSUBTITLE "Prelevare informații pentru a personaliza sistemul de operare"
+    IDS_OWNERSUBTITLE "Instalatorul folosește aceste in formații despre dvs. pentru a personaliza ReactOS"
     IDS_COMPUTERTITLE "Nume calculator și parolă pentru contul Administrator"
     IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru contul Administrator"
     IDS_LOCALETITLE "Particularizări regionale"
     IDS_LOCALESUBTITLE "Particularizare sistem pentru anumite regiuni sau limbi"
+    IDS_LOCALETEXT "Standardele și formatele sunt setate pe %s și locațioa e setată pe %s."
+    IDS_LAYOUTTEXT "Limba și metoda implicită de introducere a textului sunt: dispunerea tastaturii %s"
     IDS_DATETIMETITLE "Dată și oră"
     IDS_DATETIMESUBTITLE "Stabilire dată și oră corectă pentru calculator"
-    IDS_PROCESSTITLE "Înregistrare componente"
-    IDS_PROCESSSUBTITLE "Așteptați…"
+    IDS_PROCESSTITLE "Se termină instalarea"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Aspect"
     IDS_THEMESELECTIONSUBTITLE "Selectați tema preferată"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Asistent de instalare ReactOS"
+    IDS_REACTOS_SETUP "Expert de instalare ReactOS"
     IDS_UNKNOWN_ERROR "Eroare necunoscută"
-    IDS_REGISTERING_COMPONENTS "Componente în curs de înregistrare…"
     IDS_LOADLIBRARY_FAILED "LoadLibrary a eșuat: "
     IDS_GETPROCADDR_FAILED "GetProcAddr a eșuat: "
     IDS_REGSVR_FAILED "DllRegisterServer a eșuat: "
@@ -213,13 +219,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME "Continuarea nu este posibilă fără un nume."
-    IDS_WZD_SETCOMPUTERNAME "Eșec în instituirea numelui de calculator."
-    IDS_WZD_COMPUTERNAME "Continuarea nu este posibilă fără un nume de calculator."
+    IDS_WZD_NAME "Instalatorul nu poate continua până când nu vă introduceți numele."
+    IDS_WZD_SETCOMPUTERNAME "Instalatorul nu a putut seta un nume de calculator."
+    IDS_WZD_COMPUTERNAME "Instalatorul nu poate constinua până când nu se introduce un nume pentru calculator."
     IDS_WZD_PASSWORDEMPTY "Trebuie să introduceți o parolă!"
-    IDS_WZD_PASSWORDMATCH "Mostrele pentru parolă nu se potrivesc. Încercați să reintroduceți parolele."
-    IDS_WZD_PASSWORDCHAR "Parola introdusă de dumneavoastră conține caractere invalide. încercați rescrierea parolei."
-    IDS_WZD_LOCALTIME "Eșec la instituirea orei locale."
+    IDS_WZD_PASSWORDMATCH "Parolele introduse nu se potrivesc. Încercați să reintroduceți parolele."
+    IDS_WZD_PASSWORDCHAR "Parola introdusă de dumneavoastră conține caractere invalide. Încercați rescrierea parolei."
+    IDS_WZD_LOCALTIME "Instalatorul nu a putut seta ora locală."
 END
 
 STRINGTABLE
@@ -238,12 +244,12 @@ STRINGTABLE
 BEGIN
     IDS_DETECTIONDISABLED "Detecție dezactivată"
     IDS_LOOKFORWHEEL "Caută rotiță"
-    IDS_ASSUMEPRESENT "Consideră roatiță prezentă"
+    IDS_ASSUMEPRESENT "Consideră rotița prezentă"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CLASSIC "Classic"
+    IDS_CLASSIC "Clasic"
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
     IDS_MIZU "Mizu"
@@ -251,11 +257,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
-    IDS_DEFAULT "(Default)"
+    IDS_PRODUCTTITLE "Opțiuni de produs"
+    IDS_PRODUCTSUBTITLE "Puteți alege o opțiune de produs care afectează comportamentul sistemului."
+    IDS_PRODUCTSERVERNAME "Server ReactOS"
+    IDS_PRODUCTWORKSTATIONNAME "Stație de lucru ReactOS"
+    IDS_PRODUCTSERVERINFO "Sistemul va fi recunoscut ca un server. Folderele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" vor fi independente de ""Documentele mele""."
+    IDS_PRODUCTWORKSTATIONINFO "Sistemul va fi recunoscut ca o stație de lucru. Folderele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" sunt în ""Documentele mele""."
+    IDS_DEFAULT "(Implicit)"
 END

@@ -89,6 +89,8 @@ CmpFileRead(IN PHHIVE RegistryHive,
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwReadFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
                         Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
+    /* We do synchronous I/O for simplicity - see CmpOpenHiveFiles. */
+    ASSERT(Status != STATUS_PENDING);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
@@ -117,26 +119,42 @@ CmpFileWrite(IN PHHIVE RegistryHive,
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwWriteFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
                          Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
+    /* We do synchronous I/O for simplicity - see CmpOpenHiveFiles.
+     * Windows optimizes here by starting an async write for each 64k chunk,
+     * then waiting for all writes to complete at once.
+     */
+    ASSERT(Status != STATUS_PENDING);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
 BOOLEAN
 NTAPI
-CmpFileSetSize(IN PHHIVE RegistryHive,
-               IN ULONG FileType,
-               IN ULONG FileSize,
-               IN ULONG OldFileSize)
+CmpFileSetSize(
+    _In_ PHHIVE RegistryHive,
+    _In_ ULONG FileType,
+    _In_ ULONG FileSize,
+    _In_ ULONG OldFileSize)
 {
     PCMHIVE CmHive = (PCMHIVE)RegistryHive;
     HANDLE HiveHandle = CmHive->FileHandles[FileType];
     FILE_END_OF_FILE_INFORMATION EndOfFileInfo;
     FILE_ALLOCATION_INFORMATION FileAllocationInfo;
     IO_STATUS_BLOCK IoStatusBlock;
+    BOOLEAN HardErrors;
     NTSTATUS Status;
 
     /* Just return success if no file is associated with this hive */
     if (HiveHandle == NULL)
+    {
+        DPRINT1("No hive handle associated with the given hive\n");
         return TRUE;
+    }
+
+    /*
+     * Disable hard errors so that we don't deadlock
+     * when touching with the hive files.
+     */
+    HardErrors = IoSetThreadHardErrorMode(FALSE);
 
     EndOfFileInfo.EndOfFile.QuadPart = FileSize;
     Status = ZwSetInformationFile(HiveHandle,
@@ -144,7 +162,12 @@ CmpFileSetSize(IN PHHIVE RegistryHive,
                                   &EndOfFileInfo,
                                   sizeof(FILE_END_OF_FILE_INFORMATION),
                                   FileEndOfFileInformation);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwSetInformationFile failed to set new size of end of file (Status 0x%lx)\n", Status);
+        IoSetThreadHardErrorMode(HardErrors);
+        return FALSE;
+    }
 
     FileAllocationInfo.AllocationSize.QuadPart = FileSize;
     Status = ZwSetInformationFile(HiveHandle,
@@ -152,8 +175,15 @@ CmpFileSetSize(IN PHHIVE RegistryHive,
                                   &FileAllocationInfo,
                                   sizeof(FILE_ALLOCATION_INFORMATION),
                                   FileAllocationInformation);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwSetInformationFile failed to set new of allocation file (Status 0x%lx)\n", Status);
+        IoSetThreadHardErrorMode(HardErrors);
+        return FALSE;
+    }
 
+    /* Reset the hard errors back */
+    IoSetThreadHardErrorMode(HardErrors);
     return TRUE;
 }
 
@@ -178,5 +208,10 @@ CmpFileFlush(IN PHHIVE RegistryHive,
         return TRUE;
 
     Status = ZwFlushBuffersFile(HiveHandle, &IoStatusBlock);
+
+    /* This operation is always synchronous */
+    ASSERT(Status != STATUS_PENDING);
+    ASSERT(Status == IoStatusBlock.Status);
+
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }

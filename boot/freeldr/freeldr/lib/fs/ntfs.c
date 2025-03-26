@@ -1,7 +1,7 @@
 /*
  *  FreeLoader NTFS support
  *  Copyright (C) 2004  Filip Navara  <xnavara@volny.cz>
- *  Copyright (C) 2009-2010  Hervé Poussineau
+ *  Copyright (C) 2009-2010  HervÃ© Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -505,7 +505,7 @@ VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
         AnsiFileName[i] = (CHAR)FileName[i];
     AnsiFileName[i] = 0;
 
-    TRACE("- %s (%x)\n", AnsiFileName, IndexEntry->Data.Directory.IndexedFile);
+    TRACE("- %s (%x)\n", AnsiFileName, (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK));
 }
 #endif
 
@@ -596,7 +596,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
         {
             if (NtfsCompareFileName(FileName, IndexEntry))
             {
-                *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
+                *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
                 FrLdrTempFree(IndexRecord, TAG_NTFS_INDEX_REC);
                 FrLdrTempFree(MftRecord, TAG_NTFS_MFT);
                 return TRUE;
@@ -680,7 +680,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
                     if (NtfsCompareFileName(FileName, IndexEntry))
                     {
                         TRACE("File found\n");
-                        *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
+                        *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
                         FrLdrTempFree(BitmapData, TAG_NTFS_BITMAP);
                         FrLdrTempFree(IndexRecord, TAG_NTFS_INDEX_REC);
                         FrLdrTempFree(MftRecord, TAG_NTFS_MFT);
@@ -718,6 +718,11 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
     TRACE("NtfsLookupFile() FileName = %s\n", FileName);
 
     CurrentMFTIndex = NTFS_FILE_ROOT;
+
+    /* Skip leading path separator, if any */
+    if (*FileName == '\\' || *FileName == '/')
+        ++FileName;
+
     NumberOfPathParts = FsGetNumPathParts(FileName);
     for (i = 0; i < NumberOfPathParts; i++)
     {

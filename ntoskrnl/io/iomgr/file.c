@@ -857,7 +857,7 @@ IopParseDevice(IN PVOID ParseObject,
             }
 
             /* Clear the file object */
-            RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
+            RtlZeroMemory(FileObject, ObjectSize);
 
             /* Check if this is Synch I/O */
             if (OpenPacket->CreateOptions &
@@ -917,6 +917,7 @@ IopParseDevice(IN PVOID ParseObject,
                 /* Make sure the file object knows it has an extension */
                 FileObject->Flags |= FO_FILE_OBJECT_HAS_EXTENSION;
 
+                /* Initialize file object extension */
                 FileObjectExtension = (PFILE_OBJECT_EXTENSION)(FileObject + 1);
                 FileObject->FileObjectExtension = FileObjectExtension;
 
@@ -2107,10 +2108,11 @@ IopQueryNameInternal(IN PVOID ObjectBody,
                 _SEH2_LEAVE;
             }
 
-            /* In such case, zero output */
+            /* In such case, zero the output and reset the status */
             LocalReturnLength = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
             LocalFileInfo->FileNameLength = 0;
             LocalFileInfo->FileName[0] = OBJ_NAME_PATH_SEPARATOR;
+            Status = STATUS_SUCCESS;
         }
         else
         {

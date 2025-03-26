@@ -39,13 +39,14 @@ add_executable(user32_winetest
 
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
-    target_compile_options(user32_winetest PRIVATE /wd4477)
-elseif(GCC)
+    remove_target_compile_option(user32_winetest "/we4477")
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(user32_winetest PRIVATE -Wno-format-overflow)
 endif()
 
 add_pch(user32_winetest precomp.h "${PCH_SKIP_SOURCE}")
-# some tests need to be run from an app compiled as GUI
-set_module_type(user32_winetest win32gui)
+set_module_type(user32_winetest win32cui)
 add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32)
 add_rostests_file(TARGET user32_winetest)

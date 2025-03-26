@@ -83,10 +83,10 @@ MonthCalNotifyControlParent(IN PMONTHCALWND infoPtr,
  */
 static WORD LeapYear(IN WORD Year)
 {
-	return 
+	return
 #ifdef WITH_1752
 		(Year <= 1752) ? !(Year % 4) :
-#endif	       
+#endif
 		!(Year % 4) && ((Year % 100) || !(Year % 400));
 }
 
@@ -237,11 +237,6 @@ MonthCalSetupDayTimer(IN PMONTHCALWND infoPtr)
     uElapse += (59 - (UINT)LocalTime.wSecond) * 1000;
     uElapse += (59 - (UINT)LocalTime.wMinute) * 60 * 1000;
     uElapse += (23 - (UINT)LocalTime.wHour) * 60 * 60 * 1000;
-
-    if (uElapse < USER_TIMER_MINIMUM || uElapse > USER_TIMER_MAXIMUM)
-        uElapse = 1000;
-    else
-        uElapse += 100; /* Add a delay of 0.1 seconds */
 
     /* Setup the new timer */
     if (SetTimer(infoPtr->hSelf,

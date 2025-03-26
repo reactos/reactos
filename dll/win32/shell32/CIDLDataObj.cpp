@@ -28,10 +28,10 @@ public:
     HRESULT WINAPI Initialize(UINT cfmt, const FORMATETC afmt[]);
 
     // *****************
-    virtual HRESULT WINAPI Next(ULONG celt, FORMATETC *rgelt, ULONG *pceltFethed);
-    virtual HRESULT WINAPI Skip(ULONG celt);
-    virtual HRESULT WINAPI Reset();
-    virtual HRESULT WINAPI Clone(LPENUMFORMATETC* ppenum);
+    STDMETHOD(Next)(ULONG celt, FORMATETC *rgelt, ULONG *pceltFethed) override;
+    STDMETHOD(Skip)(ULONG celt) override;
+    STDMETHOD(Reset)() override;
+    STDMETHOD(Clone)(LPENUMFORMATETC* ppenum) override;
 
 BEGIN_COM_MAP(IEnumFORMATETCImpl)
     COM_INTERFACE_ENTRY_IID(IID_IEnumFORMATETC, IEnumFORMATETC)
@@ -133,35 +133,36 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 class CIDLDataObj :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject,
-    public IAsyncOperation 
+    public IAsyncOperation
 {
 private:
     CSimpleArray<FORMATETC> m_Formats;
     CSimpleArray<STGMEDIUM> m_Storage;
     UINT m_cfShellIDList;
     BOOL m_doasync;
+    bool m_FailGetHDrop;
 public:
     CIDLDataObj();
     ~CIDLDataObj();
     HRESULT WINAPI Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx, BOOL bAddAdditionalFormats);
 
     // *** IDataObject methods ***
-    virtual HRESULT WINAPI GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium);
-    virtual HRESULT WINAPI GetDataHere(LPFORMATETC pformatetc, STGMEDIUM *pmedium);
-    virtual HRESULT WINAPI QueryGetData(LPFORMATETC pformatetc);
-    virtual HRESULT WINAPI GetCanonicalFormatEtc(LPFORMATETC pformatectIn, LPFORMATETC pformatetcOut);
-    virtual HRESULT WINAPI SetData(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease);
-    virtual HRESULT WINAPI EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc);
-    virtual HRESULT WINAPI DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
-    virtual HRESULT WINAPI DUnadvise(DWORD dwConnection);
-    virtual HRESULT WINAPI EnumDAdvise(IEnumSTATDATA **ppenumAdvise);
+    STDMETHOD(GetData)(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium) override;
+    STDMETHOD(GetDataHere)(LPFORMATETC pformatetc, STGMEDIUM *pmedium) override;
+    STDMETHOD(QueryGetData)(LPFORMATETC pformatetc) override;
+    STDMETHOD(GetCanonicalFormatEtc)(LPFORMATETC pformatectIn, LPFORMATETC pformatetcOut) override;
+    STDMETHOD(SetData)(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease) override;
+    STDMETHOD(EnumFormatEtc)(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc) override;
+    STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
+    STDMETHOD(DUnadvise)(DWORD dwConnection) override;
+    STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) override;
 
     // *** IAsyncOperation methods ***
-    virtual HRESULT WINAPI SetAsyncMode(BOOL fDoOpAsync);
-    virtual HRESULT WINAPI GetAsyncMode(BOOL *pfIsOpAsync);
-    virtual HRESULT WINAPI StartOperation(IBindCtx *pbcReserved);
-    virtual HRESULT WINAPI InOperation(BOOL *pfInAsyncOp);
-    virtual HRESULT WINAPI EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects);
+    STDMETHOD(SetAsyncMode)(BOOL fDoOpAsync) override;
+    STDMETHOD(GetAsyncMode)(BOOL *pfIsOpAsync) override;
+    STDMETHOD(StartOperation)(IBindCtx *pbcReserved) override;
+    STDMETHOD(InOperation)(BOOL *pfInAsyncOp) override;
+    STDMETHOD(EndOperation)(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects) override;
 
 BEGIN_COM_MAP(CIDLDataObj)
     COM_INTERFACE_ENTRY_IID(IID_IDataObject, IDataObject)
@@ -173,6 +174,7 @@ CIDLDataObj::CIDLDataObj()
 {
     m_cfShellIDList = 0;
     m_doasync = FALSE;
+    m_FailGetHDrop = false;
 }
 
 CIDLDataObj::~CIDLDataObj()
@@ -205,6 +207,15 @@ HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl
     HRESULT hr = SetData(&Format, &medium, TRUE);
     if (!FAILED_UNEXPECTEDLY(hr) && bAddAdditionalFormats)
     {
+        /* The Windows default shell IDataObject::GetData fails with DV_E_CLIPFORMAT if the desktop is present.
+         * Windows does return HDROP in EnumFormatEtc and does not fail until GetData is called.
+         * Failing GetData causes 7-Zip 23.01 to not add its menu to the desktop folder. */
+        for (UINT i = 0; i < cidlx; ++i)
+        {
+            if (ILIsEmpty(apidlx[i]) && ILIsEmpty(pMyPidl))
+                m_FailGetHDrop = true;
+        }
+
         Format.cfFormat = CF_HDROP;
         medium.hGlobal = RenderHDROP((LPITEMIDLIST)pMyPidl, (LPITEMIDLIST*)apidlx, cidlx);
         hr = SetData(&Format, &medium, TRUE);
@@ -245,6 +256,9 @@ HRESULT WINAPI CIDLDataObj::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium
             fmt.dwAspect == pformatetcIn->dwAspect &&
             fmt.tymed == pformatetcIn->tymed)
         {
+            if (m_FailGetHDrop && fmt.cfFormat == CF_HDROP)
+                return DV_E_CLIPFORMAT;
+
             if (pformatetcIn->tymed != TYMED_HGLOBAL)
             {
                 UNIMPLEMENTED;
@@ -355,7 +369,7 @@ HRESULT WINAPI CIDLDataObj::InOperation(BOOL *pfInAsyncOp)
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
-HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync) 
+HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync)
 {
     TRACE("(%p)->()\n", this);
     m_doasync = fDoOpAsync;
@@ -399,4 +413,16 @@ HRESULT WINAPI SHCreateDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIT
         return IDataObject_Constructor(NULL, pidlFolder, apidl, cidl, TRUE, (IDataObject **)ppv);
     }
     return E_FAIL;
+}
+
+/*************************************************************************
+ * SHCreateFileDataObject       [SHELL32.740]
+ *
+ */
+
+HRESULT WINAPI SHCreateFileDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pDataInner, IDataObject** ppDataObj)
+{
+    if (pDataInner)
+        UNIMPLEMENTED;
+    return IDataObject_Constructor(NULL, pidlFolder, apidl, cidl, TRUE, ppDataObj);
 }

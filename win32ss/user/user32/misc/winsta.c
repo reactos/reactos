@@ -104,7 +104,7 @@ CreateWindowStationW(
                                lpwinsta ? &WindowStationName : NULL,
                                OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
                                hWindowStationsDir,
-                               NULL);
+                               lpsa ? lpsa->lpSecurityDescriptor : NULL);
 
     /* Check if the handle should be inheritable */
     if (lpsa && lpsa->bInheritHandle)

@@ -55,7 +55,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire by J Brown\n\nCardLib version 1.0."
+    IDS_SOL_ABOUT "Solitaire by J Brown\nCardLib version 1.0"
     IDS_SOL_QUIT "Quit the current game?"
     IDS_SOL_WIN "Congratulations, you win!"
     IDS_SOL_DEAL "Deal again?"
@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "แ&จกไพ่\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "แ&ต่งไพ่...", IDM_GAME_DECK
         MENUITEM "&ตัวเลือก...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -1,16 +1,13 @@
 /*
  * PROJECT:     ReactOS netstat utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */
 /*
  * TODO:
- * sort function return values.
- * implement -b, -t and -v
+ * implement -b, -t, -v
  * clean up GetIpHostName
- * command line parser needs more work
  */
 
 #include <stdio.h>
@@ -61,10 +58,18 @@ VOID DoFormatMessage(DWORD ErrorCode)
                NULL, ErrorCode, LANG_USER_DEFAULT);
 }
 
+VOID DisplayTableHeader(VOID)
+{
+    ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
+    ConResPuts(StdOut, IDS_DISPLAY_THEADER);
+    if (bDoShowProcessId)
+        ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
+    else
+        ConPuts(StdOut, L"\n");
+}
+
 /*
- *
  * Parse command line parameters and set any options
- *
  */
 BOOL ParseCmdline(int argc, wchar_t* argv[])
 {
@@ -91,6 +96,9 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         // UNIMPLEMENTED.
                         ConPuts(StdErr, L"'b' option is FIXME (Accepted option though unimplemented feature).\n");
                         bDoShowProcName = TRUE;
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+                        bDoShowProcessId = TRUE;
+#endif
                         break;
                     case L'e':
                         bDoShowEthStats = TRUE;
@@ -103,6 +111,12 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         break;
                     case L'p':
                         bDoShowProtoCons = TRUE;
+                        if (i+1 >= argc)
+                        {
+                            DisplayTableHeader();
+                            return TRUE;
+                        }
+
                         Proto = argv[i+1];
                         if (!_wcsicmp(L"IP", Proto))
                             Protocol = IP;
@@ -113,10 +127,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         else if (!_wcsicmp(L"UDP", Proto))
                             Protocol = UDP;
                         else
-                        {
-                            ConResPuts(StdErr, IDS_USAGE);
-                            return FALSE;
-                        }
+                            goto StopParsingAndShowUsageHelp;
                         break;
                     case L'r':
                         bDoShowRouteTable = TRUE;
@@ -133,7 +144,8 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         ConPuts(StdErr, L"'v' option is FIXME (Accepted option though unimplemented feature).\n");
                         bDoDispSeqComp = TRUE;
                         break;
-                    default :
+                    default:
+StopParsingAndShowUsageHelp:
                         ConResPuts(StdErr, IDS_USAGE);
                         return FALSE;
                 }
@@ -146,36 +158,15 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
             else
                 return FALSE;
         }
-//        else
-//        {
-//            ConResPrintf(StdErr, IDS_USAGE);
-//            return FALSE;
-//        }
     }
 
     return TRUE;
 }
 
-/*
- * Display table header
- */
-VOID DisplayTableHeader(VOID)
-{
-    ConResPuts(StdOut, IDS_DISPLAY_THEADER);
-    if (bDoShowProcessId)
-        ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
-    else
-        ConPuts(StdOut, L"\n");
-}
-
-/*
- * Simulate Microsofts netstat utility output
- */
 BOOL DisplayOutput(VOID)
 {
     if (bNoOptions)
     {
-        ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
         return ShowTcpTable();
     }
@@ -211,13 +202,11 @@ BOOL DisplayOutput(VOID)
             case TCP:
                 if (bDoShowProtoStats)
                     ShowTcpStatistics();
-                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
                 return ShowTcpTable();
             case UDP:
                 if (bDoShowProtoStats)
                     ShowUdpStatistics();
-                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
                 return (bDoShowAllCons ? ShowUdpTable() : TRUE);
             default:
@@ -234,7 +223,6 @@ BOOL DisplayOutput(VOID)
     }
     else
     {
-        ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
         if (ShowTcpTable() && bDoShowAllCons)
             ShowUdpTable();
@@ -245,85 +233,76 @@ BOOL DisplayOutput(VOID)
 
 VOID ShowIpStatistics(VOID)
 {
-    PMIB_IPSTATS pIpStats;
+    MIB_IPSTATS IpStats;
     DWORD dwRetVal;
 
-    pIpStats = (MIB_IPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
-
-    if ((dwRetVal = GetIpStatistics(pIpStats)) == NO_ERROR)
+    if ((dwRetVal = GetIpStatistics(&IpStats)) == NO_ERROR)
     {
         ConResPuts(StdOut, IDS_IP4_STAT_HEADER);
-        ConResPrintf(StdOut, IDS_IP_PACK_REC, pIpStats->dwInReceives);
-        ConResPrintf(StdOut, IDS_IP_HEAD_REC_ERROR, pIpStats->dwInHdrErrors);
-        ConResPrintf(StdOut, IDS_IP_ADDR_REC_ERROR, pIpStats->dwInAddrErrors);
-        ConResPrintf(StdOut, IDS_IP_DATAG_FWD, pIpStats->dwForwDatagrams);
-        ConResPrintf(StdOut, IDS_IP_UNKNOWN_PRO_REC, pIpStats->dwInUnknownProtos);
-        ConResPrintf(StdOut, IDS_IP_REC_PACK_DISCARD, pIpStats->dwInDiscards);
-        ConResPrintf(StdOut, IDS_IP_REC_PACK_DELIVER, pIpStats->dwInDelivers);
-        ConResPrintf(StdOut, IDS_IP_OUT_REQUEST, pIpStats->dwOutRequests);
-        ConResPrintf(StdOut, IDS_IP_ROUTE_DISCARD, pIpStats->dwRoutingDiscards);
-        ConResPrintf(StdOut, IDS_IP_DISCARD_OUT_PACK, pIpStats->dwOutDiscards);
-        ConResPrintf(StdOut, IDS_IP_OUT_PACKET_NO_ROUTE, pIpStats->dwOutNoRoutes);
-        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_REQUIRED, pIpStats->dwReasmReqds);
-        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_SUCCESS, pIpStats->dwReasmOks);
-        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_FAILURE, pIpStats->dwReasmFails);
-        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_SUCCESS, pIpStats->dwFragOks);
-        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_FAILURE, pIpStats->dwFragFails);
-        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_CREATE, pIpStats->dwFragCreates);
+        ConResPrintf(StdOut, IDS_IP_PACK_REC, IpStats.dwInReceives);
+        ConResPrintf(StdOut, IDS_IP_HEAD_REC_ERROR, IpStats.dwInHdrErrors);
+        ConResPrintf(StdOut, IDS_IP_ADDR_REC_ERROR, IpStats.dwInAddrErrors);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FWD, IpStats.dwForwDatagrams);
+        ConResPrintf(StdOut, IDS_IP_UNKNOWN_PRO_REC, IpStats.dwInUnknownProtos);
+        ConResPrintf(StdOut, IDS_IP_REC_PACK_DISCARD, IpStats.dwInDiscards);
+        ConResPrintf(StdOut, IDS_IP_REC_PACK_DELIVER, IpStats.dwInDelivers);
+        ConResPrintf(StdOut, IDS_IP_OUT_REQUEST, IpStats.dwOutRequests);
+        ConResPrintf(StdOut, IDS_IP_ROUTE_DISCARD, IpStats.dwRoutingDiscards);
+        ConResPrintf(StdOut, IDS_IP_DISCARD_OUT_PACK, IpStats.dwOutDiscards);
+        ConResPrintf(StdOut, IDS_IP_OUT_PACKET_NO_ROUTE, IpStats.dwOutNoRoutes);
+        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_REQUIRED, IpStats.dwReasmReqds);
+        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_SUCCESS, IpStats.dwReasmOks);
+        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_FAILURE, IpStats.dwReasmFails);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_SUCCESS, IpStats.dwFragOks);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_FAILURE, IpStats.dwFragFails);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_CREATE, IpStats.dwFragCreates);
     }
     else
     {
         DoFormatMessage(dwRetVal);
     }
-
-    HeapFree(GetProcessHeap(), 0, pIpStats);
 }
 
 VOID ShowIcmpStatistics(VOID)
 {
-    PMIB_ICMP pIcmpStats;
+    MIB_ICMP IcmpStats;
     DWORD dwRetVal;
 
-    pIcmpStats = (MIB_ICMP*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
-
-    if ((dwRetVal = GetIcmpStatistics(pIcmpStats)) == NO_ERROR)
+    if ((dwRetVal = GetIcmpStatistics(&IcmpStats)) == NO_ERROR)
     {
         ConResPuts(StdOut, IDS_ICMP4_STAT_HEADER);
         ConResPuts(StdOut, IDS_ICMP_THEADER);
         ConResPrintf(StdOut, IDS_ICMP_MSG,
-            pIcmpStats->stats.icmpInStats.dwMsgs, pIcmpStats->stats.icmpOutStats.dwMsgs);
+            IcmpStats.stats.icmpInStats.dwMsgs, IcmpStats.stats.icmpOutStats.dwMsgs);
         ConResPrintf(StdOut, IDS_ICMP_ERROR,
-            pIcmpStats->stats.icmpInStats.dwErrors, pIcmpStats->stats.icmpOutStats.dwErrors);
+            IcmpStats.stats.icmpInStats.dwErrors, IcmpStats.stats.icmpOutStats.dwErrors);
         ConResPrintf(StdOut, IDS_ICMP_DEST_UNREACH,
-            pIcmpStats->stats.icmpInStats.dwDestUnreachs, pIcmpStats->stats.icmpOutStats.dwDestUnreachs);
+            IcmpStats.stats.icmpInStats.dwDestUnreachs, IcmpStats.stats.icmpOutStats.dwDestUnreachs);
         ConResPrintf(StdOut, IDS_ICMP_TIME_EXCEED,
-            pIcmpStats->stats.icmpInStats.dwTimeExcds, pIcmpStats->stats.icmpOutStats.dwTimeExcds);
+            IcmpStats.stats.icmpInStats.dwTimeExcds, IcmpStats.stats.icmpOutStats.dwTimeExcds);
         ConResPrintf(StdOut, IDS_ICMP_PARAM_PROBLEM,
-            pIcmpStats->stats.icmpInStats.dwParmProbs, pIcmpStats->stats.icmpOutStats.dwParmProbs);
+            IcmpStats.stats.icmpInStats.dwParmProbs, IcmpStats.stats.icmpOutStats.dwParmProbs);
         ConResPrintf(StdOut, IDS_ICMP_SRC_QUENCHES,
-            pIcmpStats->stats.icmpInStats.dwSrcQuenchs, pIcmpStats->stats.icmpOutStats.dwSrcQuenchs);
+            IcmpStats.stats.icmpInStats.dwSrcQuenchs, IcmpStats.stats.icmpOutStats.dwSrcQuenchs);
         ConResPrintf(StdOut, IDS_ICMP_REDIRECT,
-            pIcmpStats->stats.icmpInStats.dwRedirects, pIcmpStats->stats.icmpOutStats.dwRedirects);
+            IcmpStats.stats.icmpInStats.dwRedirects, IcmpStats.stats.icmpOutStats.dwRedirects);
         ConResPrintf(StdOut, IDS_ICMP_ECHO,
-            pIcmpStats->stats.icmpInStats.dwEchos, pIcmpStats->stats.icmpOutStats.dwEchos);
+            IcmpStats.stats.icmpInStats.dwEchos, IcmpStats.stats.icmpOutStats.dwEchos);
         ConResPrintf(StdOut, IDS_ICMP_ECHO_REPLY,
-            pIcmpStats->stats.icmpInStats.dwEchoReps, pIcmpStats->stats.icmpOutStats.dwEchoReps);
+            IcmpStats.stats.icmpInStats.dwEchoReps, IcmpStats.stats.icmpOutStats.dwEchoReps);
         ConResPrintf(StdOut, IDS_ICMP_TIMESTAMP,
-            pIcmpStats->stats.icmpInStats.dwTimestamps, pIcmpStats->stats.icmpOutStats.dwTimestamps);
+            IcmpStats.stats.icmpInStats.dwTimestamps, IcmpStats.stats.icmpOutStats.dwTimestamps);
         ConResPrintf(StdOut, IDS_ICMP_TIMESTAMP_REPLY,
-            pIcmpStats->stats.icmpInStats.dwTimestampReps, pIcmpStats->stats.icmpOutStats.dwTimestampReps);
+            IcmpStats.stats.icmpInStats.dwTimestampReps, IcmpStats.stats.icmpOutStats.dwTimestampReps);
         ConResPrintf(StdOut, IDS_ICMP_ADDRESSS_MASK,
-            pIcmpStats->stats.icmpInStats.dwAddrMasks, pIcmpStats->stats.icmpOutStats.dwAddrMasks);
+            IcmpStats.stats.icmpInStats.dwAddrMasks, IcmpStats.stats.icmpOutStats.dwAddrMasks);
         ConResPrintf(StdOut, IDS_ICMP_ADDRESSS_MASK_REPLY,
-            pIcmpStats->stats.icmpInStats.dwAddrMaskReps, pIcmpStats->stats.icmpOutStats.dwAddrMaskReps);
+            IcmpStats.stats.icmpInStats.dwAddrMaskReps, IcmpStats.stats.icmpOutStats.dwAddrMaskReps);
     }
     else
     {
         DoFormatMessage(dwRetVal);
     }
-
-    HeapFree(GetProcessHeap(), 0, pIcmpStats);
-
 }
 
 VOID ShowTcpStatistics(VOID)
@@ -374,12 +353,12 @@ VOID ShowEthernetStatistics(VOID)
     DWORD dwSize = 0;
     DWORD dwRetVal = 0;
 
-    pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
+    pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
 
     if (GetIfTable(pIfTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
     {
         HeapFree(GetProcessHeap(), 0, pIfTable);
-        pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, dwSize);
 
         if ((dwRetVal = GetIfTable(pIfTable, &dwSize, 0)) == NO_ERROR)
         {
@@ -418,23 +397,22 @@ BOOL ShowTcpTable(VOID)
     CHAR PID[64];
 
     /* Get the table of TCP endpoints */
-    dwSize = sizeof (MIB_TCPTABLE_OWNER_PID);
+    dwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
     /* Should also work when we get new connections between 2 GetTcpTable()
      * calls: */
     do
     {
-        tcpTable = (PMIB_TCPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        tcpTable = (PMIB_TCPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
         error = GetExtendedTcpTable(tcpTable, &dwSize, TRUE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
-        if ( error != NO_ERROR )
+        if (error != NO_ERROR)
             HeapFree(GetProcessHeap(), 0, tcpTable);
     }
-    while  ( error == ERROR_INSUFFICIENT_BUFFER );
+    while (error == ERROR_INSUFFICIENT_BUFFER);
 
     if (error != NO_ERROR)
     {
         ConResPrintf(StdErr, IDS_ERROR_TCP_SNAPSHOT);
         DoFormatMessage(error);
-        HeapFree(GetProcessHeap(), 0, tcpTable);
         return FALSE;
     }
 
@@ -499,7 +477,7 @@ BOOL ShowUdpTable(VOID)
         DoFormatMessage(error);
         return FALSE;
     }
-    udpTable = (PMIB_UDPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+    udpTable = (PMIB_UDPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
     error = GetExtendedUdpTable(udpTable, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error)
     {
@@ -512,7 +490,6 @@ BOOL ShowUdpTable(VOID)
     /* Dump the UDP table */
     for (i = 0; i < udpTable->dwNumEntries; i++)
     {
-
         /* I've split this up so it's easier to follow */
         GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, sizeof(HostIp));
         GetPortName(udpTable->table[i].dwLocalPort, "udp", HostPort, sizeof(HostPort));
@@ -550,7 +527,7 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
     }
     /* Try to translate to a name */
     if ((pServent = getservbyport(Port, Proto)))
-        strcpy(Name, pServent->s_name );
+        strcpy(Name, pServent->s_name);
     else
         sprintf(Name, "%d", htons((WORD)Port));
     return Name;
@@ -610,10 +587,8 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], INT NameLen)
 }
 
 /*
- *
  * Parse command line parameters and set any options
- * Run display output, looping over set intervals if a number is given
- *
+ * Run display output, looping over set interval if a number is given
  */
 int wmain(int argc, wchar_t *argv[])
 {

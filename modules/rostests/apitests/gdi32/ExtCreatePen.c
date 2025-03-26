@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 #define ok_lasterror(err) \
     ok(GetLastError() == err, "expected last error " #err " but got 0x%lx\n", GetLastError());
 

@@ -35,30 +35,30 @@ public:
     ~CExtractIcon();
 
     // IDefaultExtractIconInit
-    virtual HRESULT STDMETHODCALLTYPE SetDefaultIcon(LPCWSTR pszFile, int iIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetFlags(UINT uFlags);
-    virtual HRESULT STDMETHODCALLTYPE SetKey(HKEY hkey);
-    virtual HRESULT STDMETHODCALLTYPE SetNormalIcon(LPCWSTR pszFile, int iIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetOpenIcon(LPCWSTR pszFile, int iIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetShortcutIcon(LPCWSTR pszFile, int iIcon);
+    STDMETHOD(SetDefaultIcon)(LPCWSTR pszFile, int iIcon) override;
+    STDMETHOD(SetFlags)(UINT uFlags) override;
+    STDMETHOD(SetKey)(HKEY hkey) override;
+    STDMETHOD(SetNormalIcon)(LPCWSTR pszFile, int iIcon) override;
+    STDMETHOD(SetOpenIcon)(LPCWSTR pszFile, int iIcon) override;
+    STDMETHOD(SetShortcutIcon)(LPCWSTR pszFile, int iIcon) override;
 
     // IExtractIconW
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-    virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+    STDMETHOD(GetIconLocation)(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags) override;
+    STDMETHOD(Extract)(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) override;
 
     // IExtractIconA
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-    virtual HRESULT STDMETHODCALLTYPE Extract(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+    STDMETHOD(GetIconLocation)(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags) override;
+    STDMETHOD(Extract)(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) override;
 
     // IPersist
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
+    STDMETHOD(IsDirty)() override;
 
     // IPersistFile
-    virtual HRESULT STDMETHODCALLTYPE Load(LPCOLESTR pszFileName, DWORD dwMode);
-    virtual HRESULT STDMETHODCALLTYPE Save(LPCOLESTR pszFileName, BOOL fRemember);
-    virtual HRESULT STDMETHODCALLTYPE SaveCompleted(LPCOLESTR pszFileName);
-    virtual HRESULT STDMETHODCALLTYPE GetCurFile(LPOLESTR *ppszFileName);
+    STDMETHOD(Load)(LPCOLESTR pszFileName, DWORD dwMode) override;
+    STDMETHOD(Save)(LPCOLESTR pszFileName, BOOL fRemember) override;
+    STDMETHOD(SaveCompleted)(LPCOLESTR pszFileName) override;
+    STDMETHOD(GetCurFile)(LPOLESTR *ppszFileName) override;
 
 BEGIN_COM_MAP(CExtractIcon)
     COM_INTERFACE_ENTRY_IID(IID_IDefaultExtractIconInit, IDefaultExtractIconInit)
@@ -345,15 +345,17 @@ HRESULT WINAPI SHCreateDefaultExtractIcon(REFIID riid, void **ppv)
  * Currently (march 2018) our shell does not handle IExtractIconW with an invalid path,
  * so this (wrong) implementation actually works better for us.
  */
-EXTERN_C HRESULT
+EXTERN_C
+HRESULT
 WINAPI
-SHCreateFileExtractIconW(LPCWSTR pszPath,
-                         DWORD dwFileAttributes,
-                         REFIID riid,
-                         void **ppv)
+SHCreateFileExtractIconW(
+    _In_ LPCWSTR pszFile,
+    _In_ DWORD dwFileAttributes,
+    _In_ REFIID riid,
+    _Outptr_ void **ppv)
 {
     SHFILEINFOW shfi;
-    ULONG_PTR firet = SHGetFileInfoW(pszPath, dwFileAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_ICONLOCATION);
+    ULONG_PTR firet = SHGetFileInfoW(pszFile, dwFileAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_ICONLOCATION);
     HRESULT hr = E_FAIL;
     if (firet)
     {
@@ -373,4 +375,3 @@ SHCreateFileExtractIconW(LPCWSTR pszPath,
 
     return hr;
 }
-

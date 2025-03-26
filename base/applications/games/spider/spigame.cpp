@@ -29,7 +29,7 @@ CardStack CreatePlayDeck()
 {
     CardStack newStack;
     int i, colors = 1, num = 0;
-    
+
     switch (dwDifficulty)
     {
         case IDC_DIF_ONECOLOR:
@@ -55,7 +55,7 @@ void NewGame(void)
 {
     int i, j;
     /* First four stack with five, all other with 4 */
-    int covCards = 5; 
+    int covCards = 5;
     CardStack fakeDeck, temp;
 
     SpiderWnd.EmptyStacks();
@@ -65,14 +65,14 @@ void NewGame(void)
     deck.Shuffle();
     fakeDeck.NewDeck();
     fakeDeck.Shuffle();
-    
+
     /* Reset progress value */
     cardsFinished = 0;
 
     /* Deal to each stack */
     for (i = 0; i < NUM_STACKS; i++)
     {
-        temp.Clear();       
+        temp.Clear();
         if (i == NUM_SMALLER_STACKS)
         {
             covCards--;
@@ -85,7 +85,7 @@ void NewGame(void)
         pStack[i]->SetCardStack(temp);
     }
     /* Deal five fake cards to the deck */
-    pDeck->SetCardStack(fakeDeck.Pop(5));  
+    pDeck->SetCardStack(fakeDeck.Pop(5));
 
     SpiderWnd.Redraw();
     fGameStarted = false;
@@ -103,7 +103,7 @@ bool stackLookingGood(const CardStack &mystack, int numChecks)
         if (mystack[i].Suit() != mystack[i + 1].Suit())
         {
             return false;
-        }    
+        }
     }
     return true;
 }
@@ -172,8 +172,8 @@ bool CARDLIBPROC StackDragProc(CardRegion &stackobj, int numDragCards)
 
     stackobj.GetFaceDirection(&numfacedown);
     numcards = stackobj.NumCards();
- 
-    /* Only cards facing up */   
+
+    /* Only cards facing up */
     if (numDragCards <= numcards - numfacedown)
     {
         const CardStack &mystack = stackobj.GetCardStack();
@@ -228,7 +228,7 @@ bool CARDLIBPROC StackDropProc(CardRegion &stackobj, CardStack &dragcards)
     {
         return false;
     }
-    
+
     /* If stack is empty, everything can be dropped */
     if (stackobj.NumCards() != 0)
     {
@@ -245,12 +245,12 @@ bool CARDLIBPROC StackDropProc(CardRegion &stackobj, CardStack &dragcards)
         faceup = stackobj.NumCards() - facedown;
 
         if (faceup + dragcards.NumCards() >= NUM_ONECOLOR_CARDS)
-        {            
+        {
             int i, max = NUM_ONECOLOR_CARDS - dragcards.NumCards() - 1;
 
             /* Dragged cards have been checked to be in order, check stack cards */
             if (mystack[0].Suit() == dragcard.Suit() &&
-                stackLookingGood(mystack, max)) 
+                stackLookingGood(mystack, max))
             {
                 CardStack s = stackobj.GetCardStack();
                 CardStack f;

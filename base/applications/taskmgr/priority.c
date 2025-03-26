@@ -1,24 +1,9 @@
 /*
- *  ReactOS Task Manager
- *
- *  priority.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *                2005         Klemens Friedl <frik85@reactos.at>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Process Priority.
+ * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
+ *              Copyright 2005 Klemens Friedl <frik85@reactos.at>
  */
 
 #include "precomp.h"
@@ -37,7 +22,7 @@ void DoSetPriority(DWORD priority)
 
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
     LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szText, 260);
-    if (MessageBoxW(hMainWnd, szText, szTitle, MB_YESNO|MB_ICONWARNING) != IDYES)
+    if (!ConfirmMessageBox(hMainWnd, szText, szTitle, MB_YESNO|MB_ICONWARNING))
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);

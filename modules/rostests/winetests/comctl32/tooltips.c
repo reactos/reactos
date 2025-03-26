@@ -197,7 +197,7 @@ static void test_customdraw(void) {
                                50, 50,
                                300, 300,
                                NULL, NULL, NULL, 0);
-       ok(parent != NULL, "Creation of main window failed\n");
+       ok(parent != NULL, "%d: Creation of main window failed\n", iterationNumber);
 
        /* Make it show */
        ShowWindow(parent, SW_SHOWNORMAL);
@@ -209,7 +209,7 @@ static void test_customdraw(void) {
                                 CW_USEDEFAULT, CW_USEDEFAULT,
                                 CW_USEDEFAULT, CW_USEDEFAULT,
                                 parent, NULL, GetModuleHandleA(NULL), 0);
-       ok(hwndTip != NULL, "Creation of tooltip window failed\n");
+       ok(hwndTip != NULL, "%d: Creation of tooltip window failed\n", iterationNumber);
 
        /* Set up parms for the wndproc to handle */
        CD_Stages = 0;
@@ -230,7 +230,7 @@ static void test_customdraw(void) {
        toolInfo.lParam = 0xdeadbeef;
        GetClientRect (parent, &toolInfo.rect);
        ret = SendMessageA(hwndTip, TTM_ADDTOOLA, 0, (LPARAM)&toolInfo);
-       ok(ret, "Failed to add the tool.\n");
+       ok(ret, "%d: Failed to add the tool.\n", iterationNumber);
 
        /* Make tooltip appear quickly */
        SendMessageA(hwndTip, TTM_SETDELAYTIME, TTDT_INITIAL, MAKELPARAM(1,0));
@@ -245,23 +245,23 @@ static void test_customdraw(void) {
            /* Check CustomDraw results */
            ok(CD_Stages == expectedResults[iterationNumber].ExpectedCalls ||
               broken(CD_Stages == (expectedResults[iterationNumber].ExpectedCalls & ~TEST_CDDS_POSTPAINT)), /* nt4 */
-              "CustomDraw run %d stages %x, expected %x\n", iterationNumber, CD_Stages,
+              "%d: CustomDraw stages %x, expected %x\n", iterationNumber, CD_Stages,
               expectedResults[iterationNumber].ExpectedCalls);
        }
 
        ret = SendMessageA(hwndTip, TTM_GETCURRENTTOOLA, 0, 0);
-       ok(ret, "Failed to get current tool %#lx.\n", ret);
+       ok(ret, "%d: Failed to get current tool %#lx.\n", iterationNumber, ret);
 
        memset(&toolInfo, 0xcc, sizeof(toolInfo));
        toolInfo.cbSize = sizeof(toolInfo);
        toolInfo.lpszText = NULL;
        toolInfo.lpReserved = (void *)0xdeadbeef;
        SendMessageA(hwndTip, TTM_GETCURRENTTOOLA, 0, (LPARAM)&toolInfo);
-       ok(toolInfo.hwnd == parent, "Unexpected hwnd %p.\n", toolInfo.hwnd);
-       ok(toolInfo.hinst == GetModuleHandleA(NULL), "Unexpected hinst %p.\n", toolInfo.hinst);
-       ok(toolInfo.uId == 0x1234abcd, "Unexpected uId %lx.\n", toolInfo.uId);
-       ok(toolInfo.lParam == 0, "Unexpected lParam %lx.\n", toolInfo.lParam);
-       ok(toolInfo.lpReserved == (void *)0xdeadbeef, "Unexpected lpReserved %p.\n", toolInfo.lpReserved);
+       ok(toolInfo.hwnd == parent, "%d: Unexpected hwnd %p.\n", iterationNumber, toolInfo.hwnd);
+       ok(toolInfo.hinst == GetModuleHandleA(NULL), "%d: Unexpected hinst %p.\n", iterationNumber, toolInfo.hinst);
+       ok(toolInfo.uId == 0x1234abcd, "%d: Unexpected uId %lx.\n", iterationNumber, toolInfo.uId);
+       ok(toolInfo.lParam == 0, "%d: Unexpected lParam %lx.\n", iterationNumber, toolInfo.lParam);
+       ok(toolInfo.lpReserved == (void *)0xdeadbeef, "%d: Unexpected lpReserved %p.\n", iterationNumber, toolInfo.lpReserved);
 
        /* Clean up */
        DestroyWindow(hwndTip);

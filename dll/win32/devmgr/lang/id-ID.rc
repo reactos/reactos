@@ -33,6 +33,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "Rentang I/O"
+    IDS_COPY "&Salin"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -75,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Driver untuk perangkat ini tidak dipasang."
     IDS_DEV_HARDWARE_DISABLED "Perangkat ini dimatikan karena BIOS untuk perangkat ini tidak memberikan sumber dayanya."
     IDS_DEV_CANT_SHARE_IRQ "Perangkat ini menggunakan sumber daya Interrupt Request (IRQ) yang dipakai oleh perangkat lain dan tidak bisa berbagi.\nAnda harus mengubah setelan yang konflik atau menghapus real-mode driver penyebab konflik."
-    IDS_DEV_FAILED_ADD "Perangkat ini tidak bekerja dengan benar karena %1 tidak bekerja dengan baik."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS tidak bisa memasang driver untuk perangkat ini karena ia tidak bisa mengakses drive atau lokasi jaringan di mana berkas setelannya berada di dalamnya."
     IDS_DEV_TRANSLATION_FAILED "Perangkat ini tidak merespon terhadap driver-nya."
     IDS_DEV_NO_SOFTCONFIG "ReactOS tidak bisa memeriksa setelan untuk perangkat ini. Lihat dokumentasi yang terdapat pada perangkat ini dan gunakan tab Sumber Daya untuk menyetel konfigurasi."
@@ -228,7 +229,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Pengaturan sumber daya:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -286,14 +287,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Manajer Perangkat ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Mematikan perangkat ini akan menyebabkan fungsionalitasnya berhenti.\r\nYakin ingin mematikannya?"
-  IDS_CONFIRM_UNINSTALL     "Peringatan: Anda akan mencopot perangkat ini dari sistem anda.\r\nIngin melanjutkan?"
+  IDS_CONFIRM_DISABLE       "Mematikan perangkat ini akan menyebabkan fungsionalitasnya berhenti.\nYakin ingin mematikannya?"
+  IDS_CONFIRM_UNINSTALL     "Peringatan: Anda akan mencopot perangkat ini dari sistem anda.\nIngin melanjutkan?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Perbarui perangkat lunak driver..."
   IDS_MENU_ENABLE           "Hidupkan"
@@ -304,7 +306,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Properti"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Properti"
   IDS_TOOLTIP_SCAN          "Pindai perubahan perangkat keras"
@@ -315,7 +317,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Buka dialog properti untuk pilihan saat ini."
@@ -324,7 +326,7 @@ BEGIN
   IDS_HINT_DISABLE      " Mematikan perangkat terpilih."
   IDS_HINT_UPDATE       " Meluncurkan penuntun Pembaruan Perangkat Lunak Driver untuk perangkat terpilih."
   IDS_HINT_UNINSTALL    " Membongkar driver untuk perangkat terpilih."
-  IDS_HINT_ADD          " Tambahkan perangkat lawas (non-PnP) ke komputer." 
+  IDS_HINT_ADD          " Tambahkan perangkat lawas (non-PnP) ke komputer."
   IDS_HINT_ABOUT        " Tentang Manajer Perangkat ReactOS."
   IDS_HINT_EXIT         " Keluar program."
 

@@ -648,6 +648,7 @@ WINAPI
 SetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                    LPCWSTR lpBuffer)
 {
+    WCHAR szShortName[MAX_COMPUTERNAME_LENGTH + 1];
     BOOL ret1, ret2;
 
     if (!IsValidComputerName(NameType, lpBuffer))
@@ -670,17 +671,19 @@ SetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                                              L"NV Hostname",
                                              lpBuffer);
 
+            RtlStringCchCopyNW(szShortName, ARRAYSIZE(szShortName), lpBuffer, MAX_COMPUTERNAME_LENGTH);
             ret2 = SetComputerNameToRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
                                              L"\\Control\\ComputerName\\ComputerName",
                                              L"ComputerName",
-                                             lpBuffer);
+                                             szShortName);
             return (ret1 && ret2);
 
         case ComputerNamePhysicalNetBIOS:
+            RtlStringCchCopyNW(szShortName, ARRAYSIZE(szShortName), lpBuffer, MAX_COMPUTERNAME_LENGTH);
             return SetComputerNameToRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
                                              L"\\Control\\ComputerName\\ComputerName",
                                              L"ComputerName",
-                                             lpBuffer);
+                                             szShortName);
 
         default:
             SetLastError(ERROR_INVALID_PARAMETER);

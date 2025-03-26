@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cguid.h>          // for GUID_NULL
+#include <pseh/pseh2.h>
 
 namespace ATL
 {
@@ -29,7 +30,12 @@ namespace ATL
 template <class Base, const IID *piid, class T, class Copy, class ThreadModel = CComObjectThreadModel>
 class CComEnum;
 
+#if defined(_WINDLL) | defined(_USRDLL)
 #define DECLARE_CLASSFACTORY_EX(cf) typedef ATL::CComCreator<ATL::CComObjectCached<cf> > _ClassFactoryCreatorClass;
+#else
+// Class factory should not change lock count
+#define DECLARE_CLASSFACTORY_EX(cf) typedef ATL::CComCreator<ATL::CComObjectNoLock<cf>> _ClassFactoryCreatorClass;
+#endif
 #define DECLARE_CLASSFACTORY() DECLARE_CLASSFACTORY_EX(ATL::CComClassFactory)
 #define DECLARE_CLASSFACTORY_SINGLETON(obj) DECLARE_CLASSFACTORY_EX(ATL::CComClassFactorySingleton<obj>)
 
@@ -456,7 +462,7 @@ class CComCreator2
 public:
     static HRESULT WINAPI CreateInstance(void *pv, REFIID riid, LPVOID *ppv)
     {
-        ATLASSERT(ppv != NULL && &riid != NULL);
+        ATLASSERT(ppv != NULL);
 
         if (pv == NULL)
             return T1::CreateInstance(NULL, riid, ppv);
@@ -537,6 +543,40 @@ public:
         return hResult;
     }
 };
+
+
+template <class Base>
+class CComObjectNoLock : public Base
+{
+  public:
+    CComObjectNoLock(void* = NULL)
+    {
+    }
+
+    virtual ~CComObjectNoLock()
+    {
+        this->FinalRelease();
+    }
+
+    STDMETHOD_(ULONG, AddRef)()
+    {
+        return this->InternalAddRef();
+    }
+
+    STDMETHOD_(ULONG, Release)()
+    {
+        ULONG newRefCount = this->InternalRelease();
+        if (newRefCount == 0)
+            delete this;
+        return newRefCount;
+    }
+
+    STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
+    {
+        return this->_InternalQueryInterface(iid, ppvObject);
+    }
+};
+
 
 #define BEGIN_COM_MAP(x)                                                        \
 public:                                                                            \
@@ -662,6 +702,24 @@ public:                                                                         
     class::GetCategoryMap,                                                        \
     class::ObjectMain },
 
+
+
+#define OBJECT_ENTRY_AUTO(clsid, class)                                                                                \
+    ATL::_ATL_OBJMAP_ENTRY __objMap_##class = {                                                                        \
+        &clsid,                                                                                                        \
+        class ::UpdateRegistry,                                                                                        \
+        class ::_ClassFactoryCreatorClass::CreateInstance,                                                             \
+        class ::_CreatorClass::CreateInstance,                                                                         \
+        NULL,                                                                                                          \
+        0,                                                                                                             \
+        class ::GetObjectDescription,                                                                                  \
+        class ::GetCategoryMap,                                                                                        \
+        class ::ObjectMain};                                                                                           \
+    extern "C" _ATLALLOC("ATL$__m") ATL::_ATL_OBJMAP_ENTRY *const __pobjMap_##class = &__objMap_##class;               \
+    OBJECT_ENTRY_PRAGMA(class)
+
+
+
 class CComClassFactory :
     public IClassFactory,
     public CComObjectRootEx<CComGlobalsThreadModel>
@@ -771,6 +829,7 @@ class CComCoClass
 {
 public:
     DECLARE_CLASSFACTORY()
+    //DECLARE_AGGREGATABLE(T)   // This should be here, but gcc...
 
     static LPCTSTR WINAPI GetObjectDescription()
     {

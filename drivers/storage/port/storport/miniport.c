@@ -41,9 +41,9 @@ InitializeConfiguration(
     PortConfig->SlotNumber = SlotNumber;
     PortConfig->AdapterInterfaceType = InitData->AdapterInterfaceType;
 
-    PortConfig->MaximumTransferLength = -1; //SP_UNINITIALIZED_VALUE;
-    PortConfig->DmaChannel = -1; //SP_UNINITIALIZED_VALUE;
-    PortConfig->DmaPort = -1; //SP_UNINITIALIZED_VALUE;
+    PortConfig->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
+    PortConfig->DmaChannel = SP_UNINITIALIZED_VALUE;
+    PortConfig->DmaPort = SP_UNINITIALIZED_VALUE;
 
     PortConfig->InterruptMode = LevelSensitive;
 
@@ -61,11 +61,11 @@ InitializeConfiguration(
     PortConfig->ReceiveEvent = InitData->ReceiveEvent;
     PortConfig->RealModeInitialized = FALSE;
     PortConfig->BufferAccessScsiPortControlled = TRUE;
-    PortConfig->MaximumNumberOfTargets = 128;
+    PortConfig->MaximumNumberOfTargets = SCSI_MAXIMUM_TARGETS_PER_BUS;
 
     PortConfig->SpecificLuExtensionSize = InitData->SpecificLuExtensionSize;
     PortConfig->SrbExtensionSize = InitData->SrbExtensionSize;
-    PortConfig->MaximumNumberOfLogicalUnits = 1;
+    PortConfig->MaximumNumberOfLogicalUnits = SCSI_MAXIMUM_LOGICAL_UNITS;
     PortConfig->WmiDataProvider = TRUE;
 
     PortConfig->NumberOfAccessRanges = InitData->NumberOfAccessRanges;
@@ -82,8 +82,10 @@ InitializeConfiguration(
                       PortConfig->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
     }
 
-    for (i = 0; i < 7; i++)
-        PortConfig->InitiatorBusId[i] = 0xff;
+    for (i = 0; i < RTL_NUMBER_OF(PortConfig->InitiatorBusId); i++)
+    {
+        PortConfig->InitiatorBusId[i] = (CCHAR)SP_UNINITIALIZED_VALUE;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -224,7 +226,7 @@ AssignResourcesToConfiguration(
         }
 
         /* Advance to next CM_FULL_RESOURCE_DESCRIPTOR block in memory. */
-        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptor->PartialResourceList.PartialDescriptors + 
+        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptor->PartialResourceList.PartialDescriptors +
                                                         FullDescriptor->PartialResourceList.Count);
     }
 }

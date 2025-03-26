@@ -59,13 +59,6 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         return E_POINTER;
     }
 
-    FORMATETC fmt;
-    fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
-
     WCHAR szDir[MAX_PATH], szDest[MAX_PATH], szSrc[MAX_PATH];
     SHGetSpecialFolderPathW(NULL, szDir, CSIDL_DESKTOPDIRECTORY, FALSE);
 
@@ -74,24 +67,14 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    STGMEDIUM medium;
-    hr = pDataObject->GetData(&fmt, &medium);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    CDataObjectHIDA pida(pDataObject);
+    if (FAILED_UNEXPECTEDLY(pida.hr()))
+        return pida.hr();
 
-    LPIDA pida = reinterpret_cast<LPIDA>(GlobalLock(medium.hGlobal));
-    if (!pida)
+    LPCITEMIDLIST pidlParent = HIDA_GetPIDLFolder(pida);
+    for (UINT i = 0; i < pida->cidl; ++i)
     {
-        ERR("Error locking global\n");
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    LPBYTE pb = reinterpret_cast<LPBYTE>(pida);
-    LPCITEMIDLIST pidlParent = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[0]);
-    for (UINT i = 1; i <= pida->cidl; ++i)
-    {
-        LPCITEMIDLIST pidlChild = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[i]);
+        LPCITEMIDLIST pidlChild = HIDA_GetPIDLItem(pida, i);
 
         CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlParent, pidlChild));
         if (!pidl)
@@ -103,14 +86,49 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         StringCbCopyW(szDest, sizeof(szDest), szDir);
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
-            CStringW strTitle;
-            strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
+            LPCWSTR pszSourceExt;
+            BOOL bIsLink;
 
-            PathAppendW(szDest, strTitle);
-            PathRemoveExtensionW(szDest);
-            StringCbCatW(szDest, sizeof(szDest), L".lnk");
+            pszSourceExt = PathFindExtensionW(szSrc);
+            bIsLink = ((_wcsicmp(pszSourceExt, L".lnk") == 0) ||
+                       (_wcsicmp(pszSourceExt, L".url") == 0));
 
-            hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
+            if (bIsLink)
+            {
+                PathAppendW(szDest, PathFindFileNameW(szSrc));
+            }
+            else
+            {
+                CStringW strTitle;
+                strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
+
+                PathAppendW(szDest, strTitle);
+                PathRemoveExtensionW(szDest);
+                StringCbCatW(szDest, sizeof(szDest), L".lnk");
+            }
+
+            if (PathFileExistsW(szDest))
+            {
+                CStringW strName(PathFindFileNameW(szDest));
+                PathYetAnotherMakeUniqueName(szDest, szDir, NULL, strName);
+            }
+
+            if (bIsLink)
+            {
+                hr = (CopyFileW(szSrc, szDest, TRUE) ? S_OK : E_FAIL);
+            }
+            else if (PathIsDirectoryW(szSrc) || (_wcsicmp(pszSourceExt, L".zip") == 0))
+            {
+                hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
+            }
+            else
+            {
+                /* Set default working directory for the shortcut */
+                CStringW strWorkingDir(szSrc);
+                PathRemoveFileSpecW(strWorkingDir.GetBuffer());
+
+                hr = CreateShellLink(szDest, szSrc, NULL, NULL, strWorkingDir, NULL, -1, NULL);
+            }
         }
         else
         {
@@ -136,9 +154,6 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         if (FAILED_UNEXPECTEDLY(hr))
             break;
     }
-
-    GlobalUnlock(medium.hGlobal);
-    ReleaseStgMedium(&medium);
 
     return hr;
 }

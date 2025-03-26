@@ -99,7 +99,7 @@ LsarpLookupPrivilegeName(PLUID Value,
             if (NameBuffer == NULL)
                 return STATUS_NO_MEMORY;
 
-            NameBuffer->Length = wcslen(WellKnownPrivileges[Priv].Name) * sizeof(WCHAR);
+            NameBuffer->Length = (USHORT)wcslen(WellKnownPrivileges[Priv].Name) * sizeof(WCHAR);
             NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
 
             NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
@@ -133,7 +133,7 @@ LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
     ULONG Index;
     UINT nLength;
 
-    TRACE("LsarpLookupPrivilegeDisplayName(%p 0x%04hu 0x%04hu %p %p)",
+    TRACE("LsarpLookupPrivilegeDisplayName(%p 0x%04hu 0x%04hu %p %p)\n",
           Name, ClientLanguage, ClientSystemDefaultLanguage, DisplayName, LanguageReturned);
 
     if (Name->Length == 0 || Name->Buffer == NULL)
@@ -354,7 +354,7 @@ LsapLookupAccountRightName(ULONG RightValue,
             if (NameBuffer == NULL)
                 return STATUS_NO_MEMORY;
 
-            NameBuffer->Length = wcslen(WellKnownRights[i].Name) * sizeof(WCHAR);
+            NameBuffer->Length = (USHORT)wcslen(WellKnownRights[i].Name) * sizeof(WCHAR);
             NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
 
             NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);

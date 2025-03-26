@@ -14,6 +14,7 @@ list(APPEND SOURCE
     cmdHelpMsg.c
     cmdLocalGroup.c
     cmdPause.c
+    cmdSession.c
     cmdShare.c
     cmdStart.c
     cmdStatistics.c

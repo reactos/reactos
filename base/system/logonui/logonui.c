@@ -37,6 +37,7 @@ DrawLogoffScreen(HDC hdcMem)
     NT5_CreateLogoffScreen(L"Saving your settings...", hdcMem);
 }
 
+#if 0
 static ULONG
 GetULONG(LPWSTR String)
 {
@@ -81,6 +82,7 @@ GetULONG2(LPWSTR String1, LPWSTR String2, PINT i)
 
     return Value;
 }
+#endif
 
 static BOOL
 ParseCmdline(int argc, WCHAR* argv[])

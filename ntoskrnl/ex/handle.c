@@ -22,6 +22,12 @@ EX_PUSH_LOCK HandleTableListLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+#ifdef _WIN64
+#define strtoulptr strtoull
+#else
+#define strtoulptr strtoul
+#endif
+
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -102,6 +108,7 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
                           IN SIZE_T Size)
 {
     PVOID Buffer;
+    NTSTATUS Status;
 
     /* Do the allocation */
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
@@ -113,7 +120,13 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
         /* Check if we have a process to charge quota */
         if (Process)
         {
-            /* FIXME: Charge quota */
+            /* Charge quota */
+            Status = PsChargeProcessPagedPoolQuota(Process, Size);
+            if (!NT_SUCCESS(Status))
+            {
+                ExFreePoolWithTag(Buffer, TAG_OBJECT_TABLE);
+                return NULL;
+            }
         }
     }
 
@@ -127,6 +140,7 @@ ExpAllocateTablePagedPoolNoZero(IN PEPROCESS Process OPTIONAL,
                                 IN SIZE_T Size)
 {
     PVOID Buffer;
+    NTSTATUS Status;
 
     /* Do the allocation */
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
@@ -135,7 +149,13 @@ ExpAllocateTablePagedPoolNoZero(IN PEPROCESS Process OPTIONAL,
         /* Check if we have a process to charge quota */
         if (Process)
         {
-            /* FIXME: Charge quota */
+            /* Charge quota */
+            Status = PsChargeProcessPagedPoolQuota(Process, Size);
+            if (!NT_SUCCESS(Status))
+            {
+                ExFreePoolWithTag(Buffer, TAG_OBJECT_TABLE);
+                return NULL;
+            }
         }
     }
 
@@ -153,7 +173,8 @@ ExpFreeTablePagedPool(IN PEPROCESS Process OPTIONAL,
     ExFreePoolWithTag(Buffer, TAG_OBJECT_TABLE);
     if (Process)
     {
-        /* FIXME: Release quota */
+        /* Release quota */
+        PsReturnProcessPagedPoolQuota(Process, Size);
     }
 }
 
@@ -248,7 +269,8 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
     ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
     if (Process)
     {
-        /* FIXME: TODO */
+        /* Release the quota it was taking up */
+        PsReturnProcessPagedPoolQuota(Process, sizeof(HANDLE_TABLE));
     }
 }
 
@@ -312,6 +334,7 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     PHANDLE_TABLE HandleTable;
     PHANDLE_TABLE_ENTRY HandleTableTable, HandleEntry;
     ULONG i;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Allocate the table */
@@ -323,7 +346,13 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     /* Check if we have a process */
     if (Process)
     {
-        /* FIXME: Charge quota */
+        /* Charge quota */
+        Status = PsChargeProcessPagedPoolQuota(Process, sizeof(HANDLE_TABLE));
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
+            return NULL;
+        }
     }
 
     /* Clear the table */
@@ -335,6 +364,13 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     {
         /* Failed, free the table */
         ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
+
+        /* Return the quota it was taking up */
+        if (Process)
+        {
+            PsReturnProcessPagedPoolQuota(Process, sizeof(HANDLE_TABLE));
+        }
+
         return NULL;
     }
 
@@ -1284,6 +1320,9 @@ ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
 }
 
 #if DBG && defined(KDBG)
+
+#include <kdbg/kdb.h>
+
 BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
 {
     USHORT i;
@@ -1330,7 +1369,7 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
         }
         else
         {
-            ProcessId = (HANDLE)strtoul(Argv[1], &endptr, 10);
+            ProcessId = (HANDLE)strtoulptr(Argv[1], &endptr, 10);
             if (*endptr != '\0')
             {
                 KdbpPrint("Invalid parameter: %s\n", Argv[1]);
@@ -1459,4 +1498,5 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
 
     return TRUE;
 }
-#endif
+
+#endif // DBG && defined(KDBG)

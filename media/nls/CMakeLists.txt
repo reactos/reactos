@@ -1,119 +1,155 @@
 
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/l_intl.nls DESTINATION reactos/system32 NO_CAB FOR all)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/c_437.nls DESTINATION reactos/system32 NO_CAB FOR all)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/c_1252.nls DESTINATION reactos/system32 NO_CAB FOR all)
+# These files are taken from here
+# https://download.microsoft.com/download/C/F/7/CF713A5E-9FBC-4FD6-9246-275F65C0E498/Windows Supported Code Page Data Files.zip
+# Except for c_1006.txt c_28600.txt c_28604.txt c_28606.txt c_424.txt which were manually created
+list(APPEND GEN_NLS
+    c_037
+    c_10000
+    c_10001
+    c_10002
+    c_10003
+    c_10004
+    c_10005
+    c_10006
+    c_10007
+    c_10008
+    c_10010
+    c_10017
+    c_10021
+    c_10029
+    c_10079
+    c_10081
+    c_10082
+    c_1006
+    c_1026
+    c_1047
+    c_1140
+    c_1141
+    c_1142
+    c_1143
+    c_1144
+    c_1145
+    c_1146
+    c_1147
+    c_1148
+    c_1149
+    c_1250
+    c_1251
+    c_1252
+    c_1253
+    c_1254
+    c_1255
+    c_1256
+    c_1257
+    c_1258
+    c_1361
+    c_20000
+    c_20001
+    c_20002
+    c_20003
+    c_20004
+    c_20005
+    c_20105
+    c_20106
+    c_20107
+    c_20108
+    c_20127
+    c_20261
+    c_20269
+    c_20273
+    c_20277
+    c_20278
+    c_20280
+    c_20284
+    c_20285
+    c_20290
+    c_20297
+    c_20420
+    c_20423
+    c_20424
+    c_20833
+    c_20838
+    c_20866
+    c_20871
+    c_20880
+    c_20905
+    c_20924
+    c_21025
+    c_21027
+    c_21866
+    c_28591
+    c_28592
+    c_28593
+    c_28594
+    c_28595
+    c_28596
+    c_28597
+    c_28598
+    c_28599
+    c_28600
+    c_28603
+    c_28604
+    c_28605
+    c_28606
+    c_29001
+    c_424
+    c_437
+    c_500
+    c_708
+    c_720
+    c_737
+    c_775
+    c_850
+    c_852
+    c_855
+    c_857
+    c_858
+    c_860
+    c_861
+    c_862
+    c_863
+    c_864
+    c_865
+    c_866
+    c_869
+    c_870
+    c_874
+    c_875
+    c_932
+    c_936
+    c_949
+    c_950)
 
+foreach(NLS ${GEN_NLS})
+    add_custom_command(
+        OUTPUT ${NLS}.nls
+        COMMAND native-txt2nls ${CMAKE_CURRENT_SOURCE_DIR}/src/${NLS}.txt ${NLS}.nls
+        DEPENDS native-txt2nls ${CMAKE_CURRENT_SOURCE_DIR}/src/${NLS}.txt)
+
+    # Special case for system ones
+    if ((NLS STREQUAL "c_437") OR (NLS STREQUAL "c_1252"))
+        add_cd_file(TARGET gen_nls FILE ${CMAKE_CURRENT_BINARY_DIR}/${NLS}.nls DESTINATION reactos/system32 NO_CAB FOR all)
+    else()
+        add_cd_file(TARGET gen_nls FILE ${CMAKE_CURRENT_BINARY_DIR}/${NLS}.nls DESTINATION reactos/system32 FOR all)
+    endif()
+endforeach()
+
+list(TRANSFORM GEN_NLS APPEND ".nls")
+list(TRANSFORM GEN_NLS PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
+add_custom_target(gen_nls DEPENDS ${GEN_NLS})
+
+# those ones were manually generated
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/l_intl.nls DESTINATION reactos/system32 NO_CAB FOR all)
 list(APPEND NLS_FILES
-    c_037.nls
-    c_424.nls
-    c_500.nls
-    c_708.nls
-    c_720.nls
-    c_737.nls
-    c_775.nls
-    c_850.nls
-    c_852.nls
-    c_855.nls
     c_856.nls
-    c_857.nls
-    c_858.nls
-    c_860.nls
-    c_861.nls
-    c_862.nls
-    c_863.nls
-    c_864.nls
-    c_865.nls
-    c_866.nls
-    c_869.nls
-    c_870.nls
-    c_874.nls
-    c_875.nls
     c_878.nls
-    c_932.nls
-    c_936.nls
-    c_949.nls
-    c_950.nls
-    c_1006.nls
-    c_1026.nls
-    c_1047.nls
-    c_1140.nls
-    c_1141.nls
-    c_1142.nls
-    c_1143.nls
-    c_1144.nls
-    c_1145.nls
-    c_1146.nls
-    c_1147.nls
-    c_1148.nls
-    c_1149.nls
-    c_1250.nls
-    c_1251.nls
-    c_1253.nls
-    c_1254.nls
-    c_1255.nls
-    c_1256.nls
-    c_1257.nls
-    c_1258.nls
-    c_10000.nls
-    c_10004.nls
-    c_10005.nls
-    c_10006.nls
-    c_10007.nls
-    c_10010.nls
-    c_10017.nls
-    c_10021.nls
-    c_10029.nls
-    c_10079.nls
-    c_10081.nls
-    c_10082.nls
-    c_20105.nls
-    c_20106.nls
-    c_20107.nls
-    c_20108.nls
-    c_20127.nls
-    c_20269.nls
-    c_20273.nls
-    c_20277.nls
-    c_20278.nls
-    c_20280.nls
-    c_20284.nls
-    c_20285.nls
-    c_20290.nls
-    c_20297.nls
-    c_20420.nls
-    c_20423.nls
-    c_20424.nls
-    c_20833.nls
-    c_20838.nls
-    c_20866.nls
-    c_20871.nls
-    c_20880.nls
-    c_20905.nls
-    c_20924.nls
-    c_21025.nls
-    c_21027.nls
-    c_21866.nls
-    c_28591.nls
-    c_28592.nls
-    c_28593.nls
-    c_28594.nls
-    c_28595.nls
-    c_28596.nls
-    c_28597.nls
-    c_28598.nls
-    c_28599.nls
-    c_28600.nls
-    c_28603.nls
-    c_28604.nls
-    c_28605.nls
-    c_28606.nls
-    unicode.nls
+    ctype.nls
     geo.nls
-    sorttbls.nls
+    l_except.nls
     locale.nls
     sortkey.nls
-    ctype.nls
-    l_except.nls)
+    sorttbls.nls
+    unicode.nls)
 
 foreach(item ${NLS_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/system32 FOR all)

@@ -72,7 +72,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(button);
 #define BUTTON_HFONT_GWL_OFFSET  (sizeof(LONG))
 #define HIMAGE_GWL_OFFSET (BUTTON_HFONT_GWL_OFFSET+sizeof(HFONT))
 #define BUTTON_UISTATE_GWL_OFFSET (HIMAGE_GWL_OFFSET+sizeof(HFONT))
-#define NB_EXTRA_BYTES    (BUTTON_UISTATE_GWL_OFFSET+sizeof(LONG))
+#define NB_EXTRA_BYTES    (BUTTON_UISTATE_GWL_OFFSET+sizeof(LONG_PTR))
 
 /* undocumented flags */
 #define BUTTON_NSTATES         0x0F
@@ -532,6 +532,13 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         paint_button( hWnd, btn_type, ODA_FOCUS );
         if (style & BS_NOTIFY)
             BUTTON_NOTIFY_PARENT(hWnd, BN_SETFOCUS);
+#ifdef __REACTOS__
+        if (((btn_type == BS_RADIOBUTTON) || (btn_type == BS_AUTORADIOBUTTON)) &&
+            !(get_button_state(hWnd) & BST_CHECKED))
+        {
+            BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
+        }
+#endif
         break;
 
     case WM_KILLFOCUS:
@@ -1196,7 +1203,11 @@ static void BUTTON_CheckAutoRadioButton( HWND hwnd )
     do
     {
         if (!sibling) break;
+#ifdef __REACTOS__
+        if ((SendMessageW(sibling, WM_GETDLGCODE, 0, 0) & (DLGC_BUTTON | DLGC_RADIOBUTTON)) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
+#else
         if (SendMessageW( sibling, WM_GETDLGCODE, 0, 0 ) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
+#endif
             SendMessageW( sibling, BM_SETCHECK, sibling == hwnd ? BST_CHECKED : BST_UNCHECKED, 0 );
         sibling = GetNextDlgGroupItem( parent, sibling, FALSE );
     } while (sibling != start);

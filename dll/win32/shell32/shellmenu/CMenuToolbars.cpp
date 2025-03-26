@@ -162,7 +162,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         return S_OK;
 
     case CDDS_ITEMPREPAINT:
-        
+
         HWND tlw;
         m_menuBand->_GetTopLevelWindow(&tlw);
 
@@ -246,7 +246,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
             WCHAR text [] = L"8";
 
             // Configure the font to draw with Marlett, keeping the current background color as-is
-            SelectObject(cdraw->nmcd.hdc, m_marlett);
+            HGDIOBJ hFontOld = SelectObject(cdraw->nmcd.hdc, m_marlett);
             SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
 
             // Tweak the alignment by 1 pixel so the menu draws like the Windows start menu.
@@ -255,15 +255,21 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
 
             // The arrow is drawn at the right of the item's rect, aligned vertically.
             DrawTextEx(cdraw->nmcd.hdc, text, 1, &rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
+
+            SelectObject(cdraw->nmcd.hdc, hFontOld);
         }
         *theResult = TRUE;
         return S_OK;
+
+    default:
+        *theResult = 0L;
+        break;
     }
     return S_OK;
 }
 
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
-    m_pager(this, 1),
+    m_pager(WC_PAGESCROLLER, this),
     m_useFlatMenus(FALSE),
     m_disableMouseTrack(FALSE),
     m_timerEnabled(FALSE),
@@ -290,10 +296,11 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
 
 CMenuToolbarBase::~CMenuToolbarBase()
 {
-    ClearToolbar();
-
     if (m_hWnd)
+    {
+        ClearToolbar();
         DestroyWindow();
+    }
 
     if (m_pager.m_hWnd)
         m_pager.DestroyWindow();
@@ -308,6 +315,9 @@ void CMenuToolbarBase::InvalidateDraw()
 
 HRESULT CMenuToolbarBase::ShowDW(BOOL fShow)
 {
+    if (m_hWnd == NULL)
+        return S_FALSE;
+
     ShowWindow(fShow ? SW_SHOW : SW_HIDE);
 
     // Ensure that the right image list is assigned to the toolbar
@@ -398,7 +408,10 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         rc.bottom = 1;
     }
 
-    SubclassWindow(CToolbar::Create(hwndParent, tbStyles, tbExStyles));
+    // HACK & FIXME: CORE-17505
+    HWND toolbar = CToolbar::Create(hwndParent, tbStyles, tbExStyles);
+    m_hWnd = NULL;
+    SubclassWindow(toolbar);
 
     SetWindowTheme(m_hWnd, L"", L"");
 
@@ -420,7 +433,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         m_pager.SubclassWindow(hwndPager);
 
         ::SetParent(m_hWnd, hwndPager);
-        
+
         m_pager.SendMessageW(PGM_SETCHILD, 0, reinterpret_cast<LPARAM>(m_hWnd));
     }
 
@@ -708,7 +721,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* child
 
     if (!GetItemRect(index, &rc))
         return E_FAIL;
-    
+
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
 
@@ -840,7 +853,7 @@ HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex, BOOL isLButton)
 
     GetButton(iIndex, &btn);
 
-    if ((m_initFlags & SMINIT_VERTICAL) 
+    if ((m_initFlags & SMINIT_VERTICAL)
         || m_popupBar
         || m_cancelingPopup)
     {
@@ -1035,7 +1048,7 @@ HRESULT CMenuToolbarBase::AddPlaceholder()
 {
     TBBUTTON tbb = { 0 };
     WCHAR MenuString[128];
-    
+
     LoadStringW(GetModuleHandle(L"shell32.dll"), IDS_MENU_EMPTY, MenuString, _countof(MenuString));
 
     tbb.fsState = 0;
@@ -1163,7 +1176,8 @@ HRESULT  CMenuStaticToolbar::SetMenu(
     m_hwndMenu = hwnd;
     m_dwMenuFlags = dwFlags;
 
-    ClearToolbar();
+    if (IsWindow())
+        ClearToolbar();
 
     return S_OK;
 }
@@ -1244,7 +1258,7 @@ HRESULT CMenuStaticToolbar::OnDeletingButton(const NMTOOLBAR * tb)
 HRESULT CMenuStaticToolbar::InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt)
 {
     CComPtr<IContextMenu> contextMenu;
-    HRESULT hr = m_menuBand->_CallCBWithItemId(iItem, SMC_GETOBJECT, 
+    HRESULT hr = m_menuBand->_CallCBWithItemId(iItem, SMC_GETOBJECT,
         reinterpret_cast<WPARAM>(&IID_IContextMenu), reinterpret_cast<LPARAM>(&contextMenu));
     if (hr != S_OK)
         return hr;
@@ -1309,6 +1323,18 @@ int CALLBACK PidlListSort(void* item1, void* item2, LPARAM lParam)
     return (int)(short)LOWORD(hr);
 }
 
+static BOOL IsPidlPrograms(LPCITEMIDLIST pidlTarget)
+{
+    WCHAR szTarget[MAX_PATH], szPath[MAX_PATH];
+    if (!SHGetPathFromIDListW(pidlTarget, szTarget))
+        return FALSE;
+    SHGetSpecialFolderPathW(NULL, szPath, CSIDL_COMMON_PROGRAMS, FALSE);
+    if (lstrcmpiW(szTarget, szPath) == 0)
+        return TRUE;
+    SHGetSpecialFolderPathW(NULL, szPath, CSIDL_PROGRAMS, FALSE);
+    return (lstrcmpiW(szTarget, szPath) == 0);
+}
+
 HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
 {
     HRESULT hr;
@@ -1347,17 +1373,26 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
 
     DPA_Sort(dpaSort, PidlListSort, (LPARAM) m_shellFolder.p);
 
+    BOOL StartMenuAdminTools = SHRegGetBoolUSValueW(
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        L"StartMenuAdminTools", FALSE, TRUE);
+
+    BOOL bMustHideAdminTools = IsPidlPrograms(m_idList) && !StartMenuAdminTools;
+    TRACE("StartMenuAdminTools: %d\n", StartMenuAdminTools);
+    TRACE("bMustHideAdminTools: %d\n", bMustHideAdminTools);
+
+    WCHAR szAdminTools[MAX_PATH];
+    if (bMustHideAdminTools)
+    {
+        LoadStringW(GetModuleHandleW(L"shell32.dll"), IDS_ADMINISTRATIVETOOLS,
+                    szAdminTools, _countof(szAdminTools));
+    }
+
     for (int i = 0; i<DPA_GetPtrCount(dpaSort);)
     {
-        PWSTR MenuString;
-
-        INT index = 0;
-        INT indexOpen = 0;
-
-        STRRET sr = { STRRET_CSTR, { 0 } };
-
         item = (LPITEMIDLIST)DPA_GetPtr(dpaSort, i);
 
+        STRRET sr = { STRRET_CSTR };
         hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
         if (FAILED_UNEXPECTEDLY(hr))
         {
@@ -1365,9 +1400,18 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
             return hr;
         }
 
+        PWSTR MenuString;
         StrRetToStr(&sr, NULL, &MenuString);
 
-        index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
+        if (bMustHideAdminTools && lstrcmpiW(MenuString, szAdminTools) == 0)
+        {
+            ++i;
+            CoTaskMemFree(MenuString);
+            continue;
+        }
+
+        INT indexOpen = 0;
+        INT index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
 
         LPCITEMIDLIST itemc = item;
 
@@ -1408,7 +1452,8 @@ HRESULT CMenuSFToolbar::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFold
     m_hKey = hKey;
     m_dwMenuFlags = dwFlags;
 
-    ClearToolbar();
+    if (IsWindow())
+        ClearToolbar();
 
     return S_OK;
 }

@@ -8,9 +8,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Ecran gol (animație de inactivitate)"
     IDS_TEXT        "Nu este necesară stabilirea de opțiuni."

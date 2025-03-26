@@ -70,7 +70,7 @@ _Stl_prime<_Dummy>::_S_next_size(size_t __n) {
   size_t __size;
   const size_t* __first = _S_primes(__size);
   const size_t* __last =  __first + __size;
-  const size_t* pos = __lower_bound(__first, __last, __n, 
+  const size_t* pos = __lower_bound(__first, __last, __n,
                                     __less((size_t*)0), __less((size_t*)0), (ptrdiff_t*)0);
   return (pos == __last ? *(__last - 1) : *pos);
 }
@@ -81,7 +81,7 @@ _Stl_prime<_Dummy>::_S_prev_sizes(size_t __n, size_t const*&__begin, size_t cons
   size_t __size;
   __begin = _S_primes(__size);
   const size_t* __last =  __begin + __size;
-  __pos = __lower_bound(__begin, __last, __n, 
+  __pos = __lower_bound(__begin, __last, __n,
                         __less((size_t*)0), __less((size_t*)0), (ptrdiff_t*)0);
 
   if (__pos== __last)

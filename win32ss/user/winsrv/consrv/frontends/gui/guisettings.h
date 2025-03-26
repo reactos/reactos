@@ -16,9 +16,9 @@
 typedef struct _GUI_CONSOLE_INFO
 {
     WCHAR FaceName[LF_FACESIZE];
+    ULONG FontWeight;
     ULONG FontFamily;
     COORD FontSize;
-    ULONG FontWeight;
 
     BOOL  FullScreen;       /* Whether the console is displayed in full-screen or windowed mode */
 //  ULONG HardwareState;    /* _GDI_MANAGED, _DIRECT */

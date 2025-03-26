@@ -36,6 +36,13 @@
 #define LOWORD(l)	((USHORT)((ULONG_PTR)(l)))
 #define HIWORD(l)	((USHORT)(((ULONG_PTR)(l)>>16)&0xFFFF))
 
+VIDEO_ACCESS_RANGE VBEAccessRange[] =
+{
+    { {{0x3b0}}, 0x3bb - 0x3b0 + 1, 1, 1, 0 },
+    { {{0x3c0}}, 0x3df - 0x3c0 + 1, 1, 1, 0 },
+    { {{0xa0000}}, 0x20000, 0, 1, 0 },
+};
+
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
 ULONG NTAPI
@@ -53,6 +60,8 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
    InitData.HwSetPowerState = VBESetPowerState;
    InitData.HwGetVideoChildDescriptor = VBEGetVideoChildDescriptor;
    InitData.HwDeviceExtensionSize = sizeof(VBE_DEVICE_EXTENSION);
+   InitData.HwLegacyResourceList = VBEAccessRange;
+   InitData.HwLegacyResourceCount = ARRAYSIZE(VBEAccessRange);
 
    return VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
@@ -76,6 +85,11 @@ VBEFindAdapter(
    if (VideoPortIsNoVesa())
        return ERROR_DEV_NOT_EXIST;
 
+   if (ConfigInfo->Length < sizeof(VIDEO_PORT_CONFIG_INFO))
+       return ERROR_INVALID_PARAMETER;
+
+   ConfigInfo->VdmPhysicalVideoMemoryAddress = VBEAccessRange[2].RangeStart;
+   ConfigInfo->VdmPhysicalVideoMemoryLength = VBEAccessRange[2].RangeLength;
    return NO_ERROR;
 }
 
@@ -88,12 +102,6 @@ VBEFindAdapter(
 static int
 VBESortModesCallback(PVBE_MODEINFO VbeModeInfoA, PVBE_MODEINFO VbeModeInfoB)
 {
-   VideoPortDebugPrint(Info, "VBESortModesCallback: %dx%dx%d / %dx%dx%d\n",
-      VbeModeInfoA->XResolution, VbeModeInfoA->YResolution,
-      VbeModeInfoA->BitsPerPixel,
-      VbeModeInfoB->XResolution, VbeModeInfoB->YResolution,
-      VbeModeInfoB->BitsPerPixel);
-
    /*
     * FIXME: Until some reasonable method for changing video modes will
     * be available we favor more bits per pixel. It should be changed
@@ -183,6 +191,13 @@ VBEInitialize(PVOID HwDeviceExtension)
    USHORT ModeTemp;
    ULONG CurrentMode;
    PVBE_MODEINFO VbeModeInfo;
+
+   if (VideoPortIsNoVesa())
+   {
+      VBEDeviceExtension->Int10Interface.Version = 0;
+      VBEDeviceExtension->Int10Interface.Size = 0;
+      return FALSE;
+   }
 
    /*
     * Get the Int 10 interface that we will use for allocating real

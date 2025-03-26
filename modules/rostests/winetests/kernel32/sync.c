@@ -2596,6 +2596,14 @@ static void test_apc_deadlock(void)
     char **argv;
     int i;
 
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-371: Skipping kernel32_winetest:sync test_apc_deadlock because it fails on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     winetest_get_mainargs(&argv);
     sprintf(cmdline, "\"%s\" sync apc_deadlock", argv[0]);
     success = CreateProcessA(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);

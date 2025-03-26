@@ -50,26 +50,37 @@ ServiceBinary = %12%\monitor.sys
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 MonitorClassName = "Monitors"
 
 StdMfg = "(Standard monitor types)"
 DefaultMonitor.DeviceDesc = "Default Monitor"
 PnPMonitor.DeviceDesc = "Plug and Play Monitor"
 
+[Strings.0404]
+MonitorClassName = "顯示器"
+
+StdMfg = "(標準顯示器類型)"
+DefaultMonitor.DeviceDesc = "預設顯示器"
+PnPMonitor.DeviceDesc = "隨插即用顯示器"
+
 [Strings.0405]
 MonitorClassName = "Monitory"
+
 StdMfg = "(Obecné monitory)"
 DefaultMonitor.DeviceDesc = "Výchozí monitor"
 PnPMonitor.DeviceDesc = "Plug and Play monitor"
 
 [Strings.0407]
 MonitorClassName = "Monitore"
+
 StdMfg = "(Generische Monitore)"
 PnPMonitor.DeviceDesc = "Plug and Play Monitor"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 MonitorClassName = "Monitores"
 
 StdMfg = "(Monitores genéricos)"
@@ -77,8 +88,6 @@ DefaultMonitor.DeviceDesc = "Monitor predeterminado"
 PnPMonitor.DeviceDesc = "Monitor Plug and Play"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-
 MonitorClassName = "Monitory"
 
 StdMfg = "(Standardowe typy monitorów)"
@@ -86,28 +95,43 @@ DefaultMonitor.DeviceDesc = "Domyślny monitor"
 PnPMonitor.DeviceDesc = "Monitor Plug and Play"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 MonitorClassName = "Ecrane"
+
 StdMfg = "(ecrane de tip standard)"
 DefaultMonitor.DeviceDesc = "Ecran implicit"
 PnPMonitor.DeviceDesc = "Ecran cuplare dinamică (PnP)"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 MonitorClassName = "Мониторы"
+
 StdMfg = "(Стандартные мониторы)"
 DefaultMonitor.DeviceDesc = "Модуль подключения монитора"
 PnPMonitor.DeviceDesc = "Монитор Plug and Play"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-MonitorClassName = "Göstergeçler"
+MonitorClassName = "Monitörler"
 
-StdMfg = "(Ölçünlü Göstergeç Türleri)"
-DefaultMonitor.DeviceDesc = "Ön Tanımlı Göstergeç"
-PnPMonitor.DeviceDesc = "Tak ve Çalıştır Göstergeç"
+StdMfg = "(Standart Monitör Türleri)"
+DefaultMonitor.DeviceDesc = "Varsayılan Monitör"
+PnPMonitor.DeviceDesc = "Tak ve Çalıştır Monitör"
 
 [Strings.0804]
+MonitorClassName = "监视器"
+
 StdMfg = "(标准监视器类型)"
 DefaultMonitor.DeviceDesc = "默认监视器"
 PnPMonitor.DeviceDesc = "即插即用监视器"
+
+[Strings.0816]
+MonitorClassName = "Monitores"
+
+StdMfg = "(Monitores genéricos)"
+DefaultMonitor.DeviceDesc = "Monitor predefinido"
+PnPMonitor.DeviceDesc = "Monitor Plug and Play"
+
+[Strings.0C04]
+MonitorClassName = "顯示器"
+
+StdMfg = "(標準顯示器類型)"
+DefaultMonitor.DeviceDesc = "預設顯示器"
+PnPMonitor.DeviceDesc = "隨插即用顯示器"

@@ -5,14 +5,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Посочете избраните от вас услуги за всеки посочен в списъка език.\nПромяната на списъка става с „Премахване“ и „Добавяне“.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
-    PUSHBUTTON "&Прилагане на подразбираните", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "&Добавяне...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "Пре&махване", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Предпочитания", -1, 7, 185, 240, 36
-    PUSHBUTTON "Настройка на &клавишите...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
+    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
+    COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "&Installed services", -1, 5, 65, 246, 125
+    LTEXT "Посочете избраните от вас услуги за всеки посочен в списъка език. Промяната на списъка става с „Премахване“ и „Добавяне“.", -1, 15, 78, 230, 25
+    CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
+    PUSHBUTTON "&Добавяне...", IDC_ADD_BUTTON, 175, 105, 70, 14
+    PUSHBUTTON "Пре&махване", IDC_REMOVE_BUTTON, 175, 125, 70, 14
+    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 145, 70, 14
+    GROUPBOX "Предпочитания", -1, 5, 195, 245, 30
+    PUSHBUTTON "Language &Bar...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "Настройка на &клавишите...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
@@ -48,9 +52,9 @@ CAPTION "Добавяне език на писане"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Език на &въвеждане:", -1, 7, 7, 90, 10
-    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Клавиатурна подредба/IME:", -1, 7, 36, 110, 10
-    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "Добре", IDOK, 116, 68, 50, 14
     PUSHBUTTON "Отказ", IDCANCEL, 169, 68, 50, 14
 END
@@ -83,7 +87,7 @@ BEGIN
     LTEXT "Език на писане", -1, 7, 7, 55, 8
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
     LTEXT "Клавиатурна подредба/IME:", -1, 7, 21, 110, 10
-    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "Добре", IDOK, 116, 53, 52, 14
     PUSHBUTTON "Отказ", IDCANCEL, 169, 53, 52, 14
 END
@@ -106,7 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT       "Ляв Alt+Shift"
     IDS_SWITCH_BET_INLANG    "Превключване на езиците за въвеждане"
-    IDS_REBOOT_NOW, "Рестартирай сега?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE
@@ -242,7 +246,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Ukrainian"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Ukrainian (Student)"
     IDS_UNITED_KINGDOM_LAYOUT "United Kingdom"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "United States-Dvorak"
+    IDS_UNITED_STATES_DVORAK_LAYOUT "United States-Dvorak"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "United States-Dvorak for left hand"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "United States-Dvorak for right hand"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "United States-International"

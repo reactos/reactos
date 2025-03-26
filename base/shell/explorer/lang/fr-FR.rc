@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATORS: Copyright 2007-2018 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2013-2018 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDM_TRAYWND MENU
@@ -64,20 +72,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Barre des tâches"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Apparence de la barre des tâches", IDC_STATIC, 6, 6, 240, 104
+    GROUPBOX "Apparence de la barre des tâches", IDC_STATIC, 6, 6, 240, 120
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "&Verrouiller la barre des tâches", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "&Cacher a&utomatiquement la barre des tâches", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "Garder la barre des &tâches au-dessus des autres fenêtres", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Grouper les boutons similaires de la barre des tâches", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Montrer la &zone de lancement rapide", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    GROUPBOX "Zone de notification", IDC_STATIC, 6, 114, 240, 98
-    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
-    AUTOCHECKBOX "&Horloge", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
-    AUTOCHECKBOX "Afficher les secondes", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
-    LTEXT "Vous pouvez garder la zone de notification épurée en cachant les icônes sur lesquelles vous n'avez pas cliqué récemment.", IDC_STATIC, 13, 169, 223, 16
-    AUTOCHECKBOX "&Cacher les icônes inactives", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
-    PUSHBUTTON "&Personnaliser...", IDC_TASKBARPROP_ICONCUST, 185, 191, 53, 14
+    AUTOCHECKBOX "U&se small icons", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -85,13 +87,30 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Menu démarrer"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
+    CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "&Menu démarrer", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
     LTEXT "Ce style de menu vous donne un accès rapide à vos dossiers, programmes favoris et à l'outil de recherche.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Personnaliser...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Menu démarrer &classique", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Ce style de menu vous donne l'apparence et les fonctionnalités classiques", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "&Personnaliser...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
+END
+
+IDD_TASKBARPROP_NOTIFY DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Zone de notification"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 6, 229, 24
+    GROUPBOX "Icons", IDC_STATIC, 6, 36, 240, 56
+    LTEXT "Vous pouvez garder la zone de notification épurée en cachant les icônes sur lesquelles vous n'avez pas cliqué récemment.", IDC_STATIC, 13, 48, 223, 16
+    AUTOCHECKBOX "&Cacher les icônes inactives", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
+    PUSHBUTTON "&Personnaliser...", IDC_TASKBARPROP_ICONCUST, 185, 70, 53, 14
+    GROUPBOX "System icons", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "Select which system icons to always show.", IDC_STATIC, 13, 113, 223, 8
+    AUTOCHECKBOX "&Horloge", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
+    AUTOCHECKBOX "Afficher les secondes", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
@@ -125,7 +144,7 @@ BEGIN
     LTEXT            "Pour vider la liste des documents, programmes et sites web récemment accédés, cliquez sur Nettoyer.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Nettoyer", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "&Options avancées du Menu démarrer :", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "&Paramètres du Menu Démarrer", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "&Paramètres du Menu Démarrer", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Annuler", IDCANCEL, 176, 220, 50, 14
 END
@@ -193,6 +212,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Barrre des tâches et menu démarrer"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Barre des tâches et Menu Démarrer"
+    IDS_RESTORE_ALL "&Afficher les fenêtres ouvertes"
+    IDS_TRAYWND_UNDO_CASCADE "Ann&uler cascade"
+    IDS_TRAYWND_UNDO_TILE "Ann&uler mosaïque"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

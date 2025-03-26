@@ -154,6 +154,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 FxPkgFdo::_SystemPowerS0Completion(
     __in MdDeviceObject DeviceObject,
     __in MdIrp OriginalIrp,
@@ -205,6 +206,7 @@ FxPkgFdo::_SystemPowerS0Completion(
 
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 FxPkgFdo::_SystemPowerSxCompletion(
     __in MdDeviceObject DeviceObject,
     __in MdIrp OriginalIrp,
@@ -365,6 +367,7 @@ FxPkgFdo::RaiseDevicePower(
 
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 FxPkgFdo::RaiseDevicePowerCompletion(
     __in MdDeviceObject DeviceObject,
     __in MdIrp OriginalIrp,

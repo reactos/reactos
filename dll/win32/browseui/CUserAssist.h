@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS browseui
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     IUserAssist implementation
- * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 // See https://www.geoffchappell.com/studies/windows/ie/browseui/classes/userassist.htm
 
@@ -19,11 +19,11 @@ public:
     ~CUserAssist();
 
     // *** IUserAssist methods ***
-    STDMETHODIMP FireEvent(GUID const *guid, INT param1, ULONG param2, WPARAM wparam, LPARAM lparam);
+    STDMETHODIMP FireEvent(GUID const *guid, INT param1, ULONG param2, WPARAM wparam, LPARAM lparam) override;
     // FIXME: PVOID should point to undocumented UEMINFO structure.
-    STDMETHODIMP QueryEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr);
-    STDMETHODIMP SetEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr);
-    STDMETHODIMP Enable(BOOL bEnable);
+    STDMETHODIMP QueryEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr) override;
+    STDMETHODIMP SetEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr) override;
+    STDMETHODIMP Enable(BOOL bEnable) override;
 
 public:
 

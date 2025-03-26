@@ -332,6 +332,9 @@ EngCreateBitmap(
     /* Get the handle for the bitmap */
     hbmp = (HBITMAP)psurf->SurfObj.hsurf;
 
+    /* Mark as API bitmap */
+    psurf->flags = API_BITMAP;
+
     /* Set public ownership */
     GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 

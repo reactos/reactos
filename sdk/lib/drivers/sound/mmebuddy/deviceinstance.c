@@ -191,7 +191,7 @@ CreateSoundDeviceInstance(
     }
 
     /* Set up the members of the structure */
-    (*SoundDeviceInstance)->Next = NULL; 
+    (*SoundDeviceInstance)->Next = NULL;
     (*SoundDeviceInstance)->Device = SoundDevice;
     (*SoundDeviceInstance)->Handle = NULL;
     (*SoundDeviceInstance)->Thread = NULL;

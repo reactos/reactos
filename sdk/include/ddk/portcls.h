@@ -333,7 +333,7 @@ typedef struct {
   ULONG FromNodePin;
   ULONG ToNode;
   ULONG ToNodePin;
-} PCCONNECTION_DESCRIPTOR, *PPCCONNECTIONDESCRIPTOR;
+} PCCONNECTION_DESCRIPTOR, *PPCCONNECTION_DESCRIPTOR;
 
 typedef struct {
   ULONG MaxGlobalInstanceCount;
@@ -704,6 +704,16 @@ typedef IUnregisterPhysicalConnection *PUNREGISTERPHYSICALCONNECTION;
     IDmaChannel Interface
 */
 
+/* C++ ABI HACK: IDmaChannel::PhysicalAddress */
+#if defined(__cplusplus) && !defined(_MSC_VER)
+#define DEFINE_ABSTRACT_DMACHANNEL_PhysicalAddress \
+    STDMETHOD_(PHYSICAL_ADDRESS*, PhysicalAddress)( THIS_ PHYSICAL_ADDRESS* pRet ) PURE; \
+    PHYSICAL_ADDRESS PhysicalAddress() { PHYSICAL_ADDRESS tmp; PhysicalAddress(&tmp); return tmp; }
+#else
+#define DEFINE_ABSTRACT_DMACHANNEL_PhysicalAddress \
+    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)( THIS ) PURE
+#endif
+
 #define DEFINE_ABSTRACT_DMACHANNEL() \
     STDMETHOD_(NTSTATUS, AllocateBuffer)( THIS_ \
         IN  ULONG BufferSize, \
@@ -719,7 +729,7 @@ typedef IUnregisterPhysicalConnection *PUNREGISTERPHYSICALCONNECTION;
         IN  ULONG BufferSize) PURE; \
 \
     STDMETHOD_(PVOID, SystemAddress)( THIS ) PURE; \
-    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)( THIS ) PURE; \
+    DEFINE_ABSTRACT_DMACHANNEL_PhysicalAddress; \
     STDMETHOD_(PADAPTER_OBJECT, GetAdapterObject)( THIS ) PURE; \
 \
     STDMETHOD_(void, CopyTo)( THIS_ \
@@ -1432,6 +1442,13 @@ DECLARE_INTERFACE_(IMiniportTopology,IMiniport)
 
 typedef IMiniportTopology *PMINIPORTTOPOLOGY;
 
+#define IMP_IMiniportTopology\
+    IMP_IMiniport;\
+    STDMETHODIMP_(NTSTATUS) Init(\
+        IN PUNKNOWN UnknownAdapter,\
+        IN PRESOURCELIST ResourceList,\
+        IN PPORTTOPOLOGY Port);
+
 /* ===============================================================
     IMiniportWaveCyclicStream Interface
 */
@@ -1625,6 +1642,24 @@ DECLARE_INTERFACE_(IMiniportWavePciStream,IUnknown)
 
 typedef IMiniportWavePciStream *PMINIPORTWAVEPCISTREAM;
 
+#define IMP_IMiniportWavePciStream\
+    STDMETHODIMP_(NTSTATUS) SetFormat(\
+        IN PKSDATAFORMAT DataFormat);\
+    STDMETHODIMP_(NTSTATUS) SetState(\
+        IN KSSTATE State);\
+    STDMETHODIMP_(NTSTATUS) GetPosition(\
+        OUT PULONGLONG Position);\
+    STDMETHODIMP_(NTSTATUS) NormalizePhysicalPosition(\
+        IN OUT PLONGLONG PhysicalPosition);\
+    STDMETHODIMP_(NTSTATUS) GetAllocatorFraming(\
+        OUT PKSALLOCATOR_FRAMING AllocatorFraming);\
+    STDMETHODIMP_(NTSTATUS) RevokeMappings(\
+        IN PVOID FirstTag,\
+        IN PVOID LastTag,\
+        OUT PULONG MappingsRevoked);\
+    STDMETHODIMP_(void) MappingAvailable(void);\
+    STDMETHODIMP_(void) Service(void);
+
 /* ===============================================================
     IMiniportWavePci Interface
 */
@@ -1660,6 +1695,25 @@ DECLARE_INTERFACE_(IMiniportWavePci,IMiniport)
 };
 
 typedef IMiniportWavePci *PMINIPORTWAVEPCI;
+
+#define IMP_IMiniportWavePci\
+    IMP_IMiniport;\
+    STDMETHODIMP_(NTSTATUS) Init(\
+        IN PUNKNOWN UnknownAdapter,\
+        IN PRESOURCELIST ResourceList,\
+        IN PPORTWAVEPCI Port,\
+        OUT PSERVICEGROUP * ServiceGroup);\
+    STDMETHODIMP_(NTSTATUS) NewStream(\
+        OUT PMINIPORTWAVEPCISTREAM *    Stream,\
+        IN PUNKNOWN OuterUnknown   ,\
+        IN POOL_TYPE PoolType,\
+        IN PPORTWAVEPCISTREAM PortStream,\
+        IN ULONG Pin,\
+        IN BOOLEAN Capture,\
+        IN PKSDATAFORMAT DataFormat,\
+        OUT PDMACHANNEL * DmaChannel,\
+        OUT PSERVICEGROUP * ServiceGroup);\
+    STDMETHODIMP_(void) Service(void);
 
 
 #if !defined(DEFINE_ABSTRACT_MINIPORTWAVERTSTREAM)
@@ -2222,6 +2276,25 @@ DEFINE_GUID(IID_IMusicTechnology,
 /* ===============================================================
     IPreFetchOffset Interface
 */
+#undef INTERFACE
+#define INTERFACE IPreFetchOffset
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+DEFINE_GUID(IID_IPreFetchOffset, 0x7000f480L, 0xed44, 0x4e8b, 0xb3, 0x8a, 0x41, 0x2f, 0x8d, 0x7a, 0x50, 0x4d);
+#endif
+
+DECLARE_INTERFACE_(IPreFetchOffset, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(DWORD, SetPreFetchOffset)(THIS_
+      IN ULONG PreFetchOffset) PURE;
+};
+
+#define IMP_IPreFetchOffset \
+    STDMETHODIMP_(DWORD) SetPreFetchOffset(IN ULONG PreFetchOffset);
+    
+typedef IPreFetchOffset *PPREFETCHOFFSET;
 
 /* ===============================================================
     PortCls API Functions

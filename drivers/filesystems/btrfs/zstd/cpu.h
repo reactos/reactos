@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present, Facebook, Inc.
+ * Copyright (c) 2018-2020, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under both the BSD-style license (found in the
@@ -78,7 +78,7 @@ MEM_STATIC ZSTD_cpuid_t ZSTD_cpuid(void) {
       __asm__(
           "pushl %%ebx\n\t"
           "cpuid\n\t"
-          "movl %%ebx, %%eax\n\r"
+          "movl %%ebx, %%eax\n\t"
           "popl %%ebx"
           : "=a"(f7b), "=c"(f7c)
           : "a"(7), "c"(0)

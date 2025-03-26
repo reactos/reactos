@@ -1,4 +1,14 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Swedish resource file
+ * TRANSLATORS: Copyright 2011 Michael Wu (Witch) <im.allergic.2.mailing.lists@gmail.com>
+ *              Copyright 2017 Markus Gothe <nietzsche@lysator.liu.se>
+ */
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-sv-SE.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -27,18 +37,20 @@ BEGIN
     END
     POPUP "&Redigera"
     BEGIN
-        MENUITEM "Ångra\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Göra om\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "Å&ngra\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Göra om\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Klipp ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopiera\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Klistra in\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Ta bort\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertera val", IDM_EDITINVERTSELECTION
+        MENUITEM "Klipp &ut\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiera\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "K&listra in\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Ta &bort\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Invertera val", IDM_EDITINVERTSELECTION
         MENUITEM "&Markera allt\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopiera till...", IDM_EDITCOPYTO
-        MENUITEM "Klistra från...", IDM_EDITPASTEFROM
+        MENUITEM "Ko&piera till...", IDM_EDITCOPYTO
+        MENUITEM "Klistra &från...", IDM_EDITPASTEFROM
     END
     POPUP "&Visa"
     BEGIN
@@ -67,13 +79,13 @@ BEGIN
     END
     POPUP "&Bild"
     BEGIN
-        MENUITEM "Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Beskära", IDM_IMAGECROP
-        MENUITEM "Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Attribut...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Radera bild\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "???Draw opaque", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Beskära", IDM_IMAGECROP
+        MENUITEM "&Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Attribut...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Ra&dera bild\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Draw &opaque", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Färger"
     BEGIN
@@ -87,6 +99,27 @@ BEGIN
         MENUITEM "Innehåll", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "Info", IDM_HELPINFO
+    END
+END
+
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "Klipp &ut\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiera\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "K&listra in\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Ta &bort\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Markera allt\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Ko&piera till...", IDM_EDITCOPYTO
+        MENUITEM "Klistra &från...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "&Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -111,6 +144,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -134,26 +171,26 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Attribut"
 BEGIN
+    LTEXT "&Bredd:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Höjd:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Bredd:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "Höjd:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
     LTEXT "Fildatum:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Filstorlek:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Upplösning:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Ej tillgänglig", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Ej tillgänglig", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Ej tillgänglig", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Enheter", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "tum", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
-    AUTORADIOBUTTON "Pixlar", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    AUTORADIOBUTTON "&tum", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
+    AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "&Pixlar", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Färger", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "Svart och vitt", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Färger", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "&Svart och vitt", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "&Färger", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Standard", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "Stan&dard", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 80
@@ -183,6 +220,17 @@ BEGIN
     PUSHBUTTON "Avbryt", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
@@ -190,7 +238,7 @@ BEGIN
     IDS_INFOTITLE "Paint för ReactOS"
     IDS_INFOTEXT "Tillgänglig under GNU Lesser General Public License (LGPL, se www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Vill du spara ändringarna till %s?"
-    IDS_DEFAULTFILENAME "Namnlös.bmp"
+    IDS_DEFAULTFILENAME "Namnlös"
     IDS_MINIATURETITLE "Miniatyr"
     IDS_TOOLTIP1 "Lasso"
     IDS_TOOLTIP2 "Markering"
@@ -211,10 +259,18 @@ BEGIN
     IDS_ALLFILES "All Files"
     IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bytes"
-    IDS_PRINTRES "%d x %d pixlar per meter"
     IDS_INTNUMBERS "Please enter integral numbers only!"
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT "The file %s could not be loaded."
     IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

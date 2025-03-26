@@ -33,7 +33,7 @@ PFN_NUMBER MmMaximumNonPagedPoolInPages;
 // These numbers describe the discrete equation components of the nonpaged
 // pool sizing algorithm.
 //
-// They are described on http://support.microsoft.com/default.aspx/kb/126402/ja
+// They are described on http://support.microsoft.com/default.aspx/kb/126402/ja (DEAD_LINK)
 // along with the algorithm that uses them, which is implemented later below.
 //
 SIZE_T MmMinimumNonPagedPoolSize = 256 * 1024;
@@ -91,7 +91,7 @@ ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 // The following URLs, valid as of April 23rd, 2008, support this evidence:
 //
 // http://www.cs.miami.edu/~burt/journal/NT/memory.html
-// http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/
+// https://web.archive.org/web/20130412053421/http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/
 //
 PVOID MmNonPagedSystemStart;
 PVOID MmNonPagedPoolStart;
@@ -421,20 +421,14 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Count this descriptor */
         MiNumberDescriptors++;
 
-        /* Check if this is invisible memory */
-        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
-            (Descriptor->MemoryType == LoaderSpecialMemory) ||
-            (Descriptor->MemoryType == LoaderHALCachedMemory) ||
-            (Descriptor->MemoryType == LoaderBBTMemory))
-        {
-            /* Skip this descriptor */
+        /* If this is invisible memory, skip this descriptor */
+        if (MiIsMemoryTypeInvisible(Descriptor->MemoryType))
             continue;
-        }
 
-        /* Check if this is bad memory */
+        /* Check if this isn't bad memory */
         if (Descriptor->MemoryType != LoaderBad)
         {
-            /* Count this in the total of pages */
+            /* Count it in the physical pages */
             MmNumberOfPhysicalPages += (PFN_COUNT)Descriptor->PageCount;
         }
 
@@ -454,12 +448,9 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Check if this is free memory */
-        if ((Descriptor->MemoryType == LoaderFree) ||
-            (Descriptor->MemoryType == LoaderLoadedProgram) ||
-            (Descriptor->MemoryType == LoaderFirmwareTemporary) ||
-            (Descriptor->MemoryType == LoaderOsloaderStack))
+        if (MiIsMemoryTypeFree(Descriptor->MemoryType))
         {
-            /* Count it too free pages */
+            /* Count it in the free pages */
             MiNumberOfFreePages += Descriptor->PageCount;
 
             /* Check if this is the largest memory descriptor */
@@ -801,7 +792,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 Pfn1->u3.e1.CacheAttribute = MiNonCached;
 #if MI_TRACE_PFNS
                 Pfn1->PfnUsage = MI_USAGE_INIT_MEMORY;
-                memcpy(Pfn1->ProcessName, "Initial PDE", 16);
+                MI_SET_PFN_PROCESS_NAME(Pfn1, "Initial PDE");
 #endif
             }
             else
@@ -848,7 +839,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                 Pfn2->u3.e1.CacheAttribute = MiNonCached;
 #if MI_TRACE_PFNS
                                 Pfn2->PfnUsage = MI_USAGE_INIT_MEMORY;
-                                memcpy(Pfn1->ProcessName, "Initial PTE", 16);
+                                MI_SET_PFN_PROCESS_NAME(Pfn2, "Initial PTE");
 #endif
                             }
                         }
@@ -1264,7 +1255,7 @@ MiCreateMemoryEvent(IN PUNICODE_STRING Name,
                  RtlLengthSid(SeWorldSid);
 
     /* Allocate space for the DACL */
-    Dacl = ExAllocatePoolWithTag(PagedPool, DaclLength, 'lcaD');
+    Dacl = ExAllocatePoolWithTag(PagedPool, DaclLength, TAG_DACL);
     if (!Dacl) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Setup the ACL inside it */
@@ -1314,7 +1305,7 @@ MiCreateMemoryEvent(IN PUNICODE_STRING Name,
                            FALSE);
 CleanUp:
     /* Free the DACL */
-    ExFreePoolWithTag(Dacl, 'lcaD');
+    ExFreePoolWithTag(Dacl, TAG_DACL);
 
     /* Check if this is the success path */
     if (NT_SUCCESS(Status))
@@ -2138,6 +2129,9 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
+
+        /* Initalize the Working set list */
+        InitializeListHead(&MmWorkingSetExpansionHead);
 
         /* Initialize critical section timeout value (relative time is negative) */
         MmCriticalSectionTimeout.QuadPart = MmCritsectTimeoutSeconds * (-10000000LL);

@@ -31,7 +31,6 @@ extern PVOID KiArmVectorTable;
 
 /* FUNCTIONS ******************************************************************/
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitMachineDependent(VOID)
@@ -102,7 +101,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         PageDirectory[1] = 0;
         KeInitializeProcess(InitProcess,
                             0,
-                            0xFFFFFFFF,
+                            MAXULONG_PTR,
                             PageDirectory,
                             FALSE);
         InitProcess->QuantumReset = MAXCHAR;
@@ -196,8 +195,8 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->MinorVersion = PCR_MINOR_VERSION;
 
     /* Set the PCRB Version */
-    Pcr->Prcb.MajorVersion = 1;
-    Pcr->Prcb.MinorVersion = 1;
+    Pcr->Prcb.MajorVersion = PRCB_MAJOR_VERSION;
+    Pcr->Prcb.MinorVersion = PRCB_MINOR_VERSION;
 
     /* Set the Build Type */
     Pcr->Prcb.BuildType = 0;
@@ -306,7 +305,6 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 #endif
 }
 
-CODE_SEG("INIT")
 VOID
 KiInitializeMachineType(VOID)
 {
@@ -327,6 +325,7 @@ KiInitializeMachineType(VOID)
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

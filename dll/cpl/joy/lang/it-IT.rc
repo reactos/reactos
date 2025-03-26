@@ -81,5 +81,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Aggiunge, rimuove e configura periferiche di gioco come joystick e gamepad."
     IDS_CONTROLLER "Dispositivo"
     IDS_STATUS "Stato"
-    IDS_NONE "(None)"
+    IDS_NONE "(Nessuno)"
 END

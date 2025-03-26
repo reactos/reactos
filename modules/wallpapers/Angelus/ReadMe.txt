@@ -2,7 +2,7 @@ Angelus' Wallpapers
 ===================
 Forum User "Angelus" (jedi.knight@wanadoo.es)
 Under Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-See forum thread: http://www.reactos.org/forum/viewtopic.php?f=25&t=6153
+See forum thread: https://reactos.org/forum/viewtopic.php?f=25&t=6153
 
 Bliss Series: 1; 2; 3 (Cristal ROS); 4 (DreamBliss)
 -------------
@@ -43,7 +43,7 @@ Sea Series
 ----------
 1 (Golden Sunset): Beautiful sunset in the Atlantic ocean.
 2: Photo taken at Praia do Vilar (Vilar's Beach) in the Barbanza region.
-3 (Red Sunset): Photo taken from Carril, a beautiful village at the port town of Vilagarcía de Arousa.
+3 (Red Sunset): Photo taken from Carril, a beautiful village at the port town of VilagarcÃ­a de Arousa.
 4 (ReactOS Sea): Sunset's photo with some radial blur effect.
 
 Sky Series

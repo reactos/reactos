@@ -19,13 +19,13 @@ LlbHwOmap3SynKpdInitialize(VOID)
 
     /* Set GPIO pin 8 signal on the TWL4030 ON. This powers the keypad backlight */
     LlbHwOmap3TwlWrite1(0x49, 0xA4, 0xC0);
-    
+
     /* Set PENDDIS and COR on the the keypad interrupt controller */
     LlbHwOmap3TwlWrite1(0x4A, 0xE9, 0x06);
 
     /* Only falling edge detection for key pressed */
     LlbHwOmap3TwlWrite1(0x4A, 0xE8, 0x01);
-    
+
     /* Unmask key-pressed events */
     LlbHwOmap3TwlWrite1(0x4A, 0xE4, 0x0E);
 
@@ -46,10 +46,10 @@ LlbHwKbdReady(VOID)
 
     Value = LlbHwOmap3TwlRead1(0x4A, 0xE3);
     if (!Value) return FALSE;
-    
+
     LastState ^= 1;
     if (!LastState) return FALSE;
-    
+
     /* Return whether or not an interrupt is pending */
     return TRUE;
 }
@@ -59,7 +59,7 @@ NTAPI
 LlbHwKbdRead(VOID)
 {
     UCHAR ActiveCol = 0, ActiveRow = 0, col, coldata, row;
-    
+
     for (col = 0; col < 8; col++)
     {
         coldata = LlbHwOmap3TwlRead1(0x4A, 0xDB + col);
@@ -76,7 +76,7 @@ LlbHwKbdRead(VOID)
             }
         }
     }
-    
+
     return ((ActiveCol << 4) | ActiveRow);
 }
 

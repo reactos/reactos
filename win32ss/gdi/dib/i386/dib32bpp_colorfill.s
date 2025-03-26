@@ -10,7 +10,7 @@
 #include <asm.inc>
 
 .code
-/* 
+/*
  * BOOLEAN
  * _cdecl
  * DIB_32BPP_ColorFill(SURFOBJ* pso, RECTL* prcl, ULONG iColor);

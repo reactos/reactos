@@ -7,7 +7,6 @@
  */
 
 #include <win32k.h>
-#include <debug.h>
 
 DWORD
 APIENTRY
@@ -39,10 +38,10 @@ NtGdiDdDDICreateDCFromMemory(D3DKMT_CREATEDCFROMMEMORY *desc)
         { D3DDDIFMT_P8,       8,  BI_RGB,       256, 0x00000000, 0x00000000, 0x00000000 },
     };
 
-    if (!desc) 
+    if (!desc)
         return STATUS_INVALID_PARAMETER;
 
-    if (!desc->pMemory) 
+    if (!desc->pMemory)
         return STATUS_INVALID_PARAMETER;
 
     for (i = 0; i < sizeof(format_info) / sizeof(*format_info); ++i)
@@ -54,7 +53,7 @@ NtGdiDdDDICreateDCFromMemory(D3DKMT_CREATEDCFROMMEMORY *desc)
         }
     }
 
-    if (!format) 
+    if (!format)
         return STATUS_INVALID_PARAMETER;
 
     if (desc->Width > (UINT_MAX & ~3) / (format->bit_count / 8) ||
@@ -109,11 +108,11 @@ DWORD
 APIENTRY
 NtGdiDdDDIDestroyDCFromMemory(const D3DKMT_DESTROYDCFROMMEMORY *desc)
 {
-    if (!desc) 
+    if (!desc)
         return STATUS_INVALID_PARAMETER;
 
-    if (GDI_HANDLE_GET_TYPE(desc->hDc)  != GDI_OBJECT_TYPE_DC ||
-        GDI_HANDLE_GET_TYPE(desc->hBitmap) != GDI_OBJECT_TYPE_BITMAP) 
+    if (GDI_HANDLE_GET_TYPE(desc->hDc) != GDI_OBJECT_TYPE_DC ||
+        GDI_HANDLE_GET_TYPE(desc->hBitmap) != GDI_OBJECT_TYPE_BITMAP)
         return STATUS_INVALID_PARAMETER;
 
     NtGdiDeleteObjectApp(desc->hBitmap);

@@ -1,0 +1,80 @@
+/*
+ * PROJECT:     ReactOS CACLS
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "顯示或修改文件的存取控制串列\n\n\
+CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
+               [/P user:perm [...]] [/D user [...]]\n\
+   filename      顯示 ACLs。\n\
+   /T            更改目前目錄及其所有子目錄\n\
+                 指定文件的 ACL。\n\
+   /E            編輯 ACL 而不替換。\n\
+   /C            在出現拒絕存取錯誤時繼續。\n\
+   /G user:perm  賦予指定使用者存取權限。\n\
+                 perm 可以是: R  讀取\n\
+                              W  寫入\n\
+                              C  更改 (寫入)\n\
+                              F  完全控制\n\
+   /R user       撤銷指定使用者的存取權限 (與 /E 一齊使用時才會有效)。\n\
+   /P user:perm  更改指定使用者的存取權限。\n\
+                 perm 可以是: N  無\n\
+                              R  讀取\n\
+                              W  寫入\n\
+                              C  更改 (寫入)\n\
+                              F  完全控制\n\
+   /D user       拒絕指定使用者的存取。\n\
+在命令中可以使用通配符指定多個檔案。\n\
+您亦可以在命令中指定多個使用者。\n\n\
+縮寫:\n\
+   CI - 容器繼承。\n\
+        ACE會由目錄繼承。\n\
+   OI - 對象繼承。\n\
+        ACE 會由文件繼承。\n\
+   IO - 只繼承。\n\
+        ACE 不適用於目前檔案／目錄。\n"
+    IDS_ABBR_CI "(CI)"
+    IDS_ABBR_OI "(OI)"
+    IDS_ABBR_IO "(IO)"
+    IDS_ABBR_FULL "F"
+    IDS_ABBR_READ "R"
+    IDS_ABBR_WRITE "W"
+    IDS_ABBR_CHANGE "C"
+    IDS_ABBR_NONE "N"
+    IDS_ALLOW ""
+    IDS_DENY "(DENY)"
+    IDS_SPECIAL_ACCESS "(特殊存取:)"
+    IDS_GENERIC_READ "GENERIC_READ"
+    IDS_GENERIC_WRITE "GENERIC_WRITE"
+    IDS_GENERIC_EXECUTE "GENERIC_EXECUTE"
+    IDS_GENERIC_ALL "GENERIC_ALL"
+    IDS_FILE_GENERIC_EXECUTE "FILE_GENERIC_EXECUTE"
+    IDS_FILE_GENERIC_READ "FILE_GENERIC_READ"
+    IDS_FILE_GENERIC_WRITE "FILE_GENERIC_WRITE"
+    IDS_FILE_READ_DATA "FILE_READ_DATA"
+    IDS_FILE_WRITE_DATA "FILE_WRITE_DATA"
+    IDS_FILE_APPEND_DATA "FILE_APPEND_DATA"
+    IDS_FILE_READ_EA "FILE_READ_EA"
+    IDS_FILE_WRITE_EA "FILE_WRITE_EA"
+    IDS_FILE_EXECUTE "FILE_EXECUTE"
+    IDS_FILE_DELETE_CHILD "FILE_DELETE_CHILD"
+    IDS_FILE_READ_ATTRIBUTES "FILE_READ_ATTRIBUTES"
+    IDS_FILE_WRITE_ATTRIBUTES "FILE_WRITE_ATTRIBUTES"
+    IDS_MAXIMUM_ALLOWED "MAXIMUM_ALLOWED"
+    IDS_ACCESS_SYSTEM_SECURITY "ACCESS_SYSTEM_SECURITY"
+    IDS_SPECIFIC_RIGHTS_ALL "SPECIFIC_RIGHTS_ALL"
+    IDS_STANDARD_RIGHTS_REQUIRED "STANDARD_RIGHTS_REQUIRED"
+    IDS_SYNCHRONIZE "SYNCHRONIZE"
+    IDS_WRITE_OWNER "WRITE_OWNER"
+    IDS_WRITE_DAC "WRITE_DAC"
+    IDS_READ_CONTROL "READ_CONTROL"
+    IDS_DELETE "DELETE"
+    IDS_STANDARD_RIGHTS_ALL "STANDARD_RIGHTS_ALL"
+END

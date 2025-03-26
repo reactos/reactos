@@ -26,7 +26,11 @@ CHAR            gDate[] = __DATE__;
 
 /* DEFINITIONS ***********************************************************/
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath   );
@@ -53,8 +57,11 @@ DECLARE_EXIT(journal_exit);
  *           DriverObject = object describing this driver
  * RETURNS:  None
  */
-
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 DriverUnload (IN PDRIVER_OBJECT DriverObject)
 {
 
@@ -100,7 +107,11 @@ DriverUnload (IN PDRIVER_OBJECT DriverObject)
 
 #endif
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2RegistryQueryCallback(
     IN PWSTR ValueName,
     IN ULONG ValueType,
@@ -449,7 +460,11 @@ Ext2EresourceAlignmentChecking()
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 DriverEntry (
     IN PDRIVER_OBJECT   DriverObject,
     IN PUNICODE_STRING  RegistryPath

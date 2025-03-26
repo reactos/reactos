@@ -8,36 +8,14 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
-class CPortWavePci : public IPortWavePci,
-                     public IPortEvents,
-                     public ISubdevice,
-                     public IServiceSink
+class CPortWavePci : public CUnknownImpl<IPortWavePci, IPortEvents, ISubdevice, IServiceSink>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortWavePci;
     IMP_ISubdevice;
     IMP_IPortEvents;
@@ -59,14 +37,12 @@ protected:
     LIST_ENTRY m_EventList;
     KSPIN_LOCK m_EventListLock;
 
-    LONG m_Ref;
-
     friend PDEVICE_OBJECT GetDeviceObjectFromPortWavePci(IPortWavePci* iface);
     friend PMINIPORTWAVEPCI GetWavePciMiniport(PPORTWAVEPCI iface);
 
 };
 
-static GUID InterfaceGuids[3] = 
+static GUID InterfaceGuids[3] =
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -103,7 +79,6 @@ KSPROPERTY_SET WavePciPropertySet[] =
     }
 };
 
-
 //---------------------------------------------------------------
 // IPortEvents
 //
@@ -121,8 +96,6 @@ CPortWavePci::AddEventToEventList(
     InsertTailList(&m_EventList, &EventEntry->ListEntry);
     KeReleaseSpinLock(&m_EventListLock, OldIrql);
 }
-
-
 
 void
 NTAPI
@@ -233,7 +206,7 @@ CPortWavePci::Init(
     PPINCOUNT PinCount;
     PPOWERNOTIFY PowerNotify;
 
-    DPRINT("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n", 
+    DPRINT("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n",
             this, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
@@ -274,12 +247,12 @@ CPortWavePci::Init(
     }
 
    // create the subdevice descriptor
-    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor, 
+    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor,
                                          3,
                                          InterfaceGuids,
-                                         0, 
+                                         0,
                                          NULL,
-                                         2, 
+                                         2,
                                          WavePciPropertySet,
                                          0,
                                          0,
@@ -289,7 +262,6 @@ CPortWavePci::Init(
                                          NULL,
                                          m_pDescriptor);
 
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT("PcCreateSubdeviceDescriptor failed with %x\n", Status);
@@ -298,7 +270,7 @@ CPortWavePci::Init(
     }
 
     // did we get a service group
-   if (ServiceGroup)
+    if (ServiceGroup)
     {
         // store service group in context
         m_ServiceGroup = ServiceGroup;
@@ -347,7 +319,7 @@ CPortWavePci::NewRegistryKey(
     DPRINT("IPortWavePci_fnNewRegistryKey entered\n");
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    return PcNewRegistryKey(OutRegistryKey, 
+    return PcNewRegistryKey(OutRegistryKey,
                             OuterUnknown,
                             RegistryKeyType,
                             DesiredAccess,
@@ -428,7 +400,7 @@ CPortWavePci::NewIrpTarget(
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp, 
+    IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
     NTSTATUS Status;
@@ -528,11 +500,10 @@ CPortWavePci::PinCount(
     }
 
     // FIXME
-    // scan filter descriptor 
-    
+    // scan filter descriptor
+
     return STATUS_UNSUCCESSFUL;
 }
-
 
 NTSTATUS
 NewPortWavePci(
@@ -556,7 +527,6 @@ NewPortWavePci(
     return Status;
 
 }
-
 
 PDEVICE_OBJECT
 GetDeviceObjectFromPortWavePci(

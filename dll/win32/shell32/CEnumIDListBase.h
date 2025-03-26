@@ -27,7 +27,7 @@ class CEnumIDListBase :
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IEnumIDList
 {
-private:
+protected:
 	ENUMLIST				*mpFirst;
 	ENUMLIST				*mpLast;
 	ENUMLIST				*mpCurrent;
@@ -37,13 +37,25 @@ public:
 	BOOL AddToEnumList(LPITEMIDLIST pidl);
 	BOOL DeleteList();
 	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);
-    HRESULT AppendItemsFromEnumerator(IEnumIDList* pEnum);
+	HRESULT AppendItemsFromEnumerator(IEnumIDList* pEnum);
+
+	template <class T> BOOL HasItemWithCLSIDImpl(LPCITEMIDLIST pidl)
+	{
+		const CLSID * const pClsid = static_cast<T*>(this)->GetPidlClsid((PCUITEMID_CHILD)pidl);
+		for (ENUMLIST *pCur = mpFirst; pClsid && pCur; pCur = pCur->pNext)
+		{
+			const CLSID * const pEnumClsid = static_cast<T*>(this)->GetPidlClsid((PCUITEMID_CHILD)pCur->pidl);
+			if (pEnumClsid && IsEqualCLSID(*pClsid, *pEnumClsid))
+				return TRUE;
+		}
+		return FALSE;
+	}
 
 	// *** IEnumIDList methods ***
-	virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched);
-	virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
-	virtual HRESULT STDMETHODCALLTYPE Reset();
-	virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
+	STDMETHOD(Next)(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override;
+	STDMETHOD(Skip)(ULONG celt) override;
+	STDMETHOD(Reset)() override;
+	STDMETHOD(Clone)(IEnumIDList **ppenum) override;
 
 BEGIN_COM_MAP(CEnumIDListBase)
 	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)

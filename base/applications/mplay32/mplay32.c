@@ -1158,7 +1158,7 @@ OpenFileDialog(HWND hwnd, DWORD dwFilterIndex, LPTSTR lpType)
     OpenFileName.lpstrFilter     = szFilter;
     OpenFileName.lpstrFile       = szFile;
     OpenFileName.nMaxFile        = ARRAYSIZE(szFile);
-    OpenFileName.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE;
+    OpenFileName.Flags           = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE;
     OpenFileName.lpstrDefExt     = _T("\0");
     OpenFileName.nFilterIndex = dwFilterIndex;
 
@@ -1439,9 +1439,8 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_ABOUT:
                 {
-                    HICON mplayIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
-                    ShellAbout(hwnd, szAppTitle, NULL, mplayIcon);
-                    DeleteObject(mplayIcon);
+                    ShellAbout(hwnd, szAppTitle, NULL,
+                               LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN)));
                     break;
                 }
 
@@ -1472,7 +1471,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     HANDLE hAccel;
 
     hInstance = hInst;
-    
+
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):

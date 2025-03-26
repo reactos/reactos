@@ -326,7 +326,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileBothDirectoryInformation\n");
 
-            needed = sizeof(FILE_BOTH_DIR_INFORMATION) - sizeof(WCHAR) + de->name.Length;
+            needed = offsetof(FILE_BOTH_DIR_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -366,7 +366,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileDirectoryInformation\n");
 
-            needed = sizeof(FILE_DIRECTORY_INFORMATION) - sizeof(WCHAR) + de->name.Length;
+            needed = offsetof(FILE_DIRECTORY_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -404,7 +404,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileFullDirectoryInformation\n");
 
-            needed = sizeof(FILE_FULL_DIR_INFORMATION) - sizeof(WCHAR) + de->name.Length;
+            needed = offsetof(FILE_FULL_DIR_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -443,7 +443,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileIdBothDirectoryInformation\n");
 
-            needed = sizeof(FILE_ID_BOTH_DIR_INFORMATION) - sizeof(WCHAR) + de->name.Length;
+            needed = offsetof(FILE_ID_BOTH_DIR_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -484,7 +484,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileIdFullDirectoryInformation\n");
 
-            needed = sizeof(FILE_ID_FULL_DIR_INFORMATION) - sizeof(WCHAR) + de->name.Length;
+            needed = offsetof(FILE_ID_FULL_DIR_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -529,7 +529,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileIdExtdDirectoryInformation\n");
 
-            needed = offsetof(FILE_ID_EXTD_DIR_INFORMATION, FileName[0]) + de->name.Length;
+            needed = offsetof(FILE_ID_EXTD_DIR_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -572,7 +572,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileIdExtdBothDirectoryInformation\n");
 
-            needed = offsetof(FILE_ID_EXTD_BOTH_DIR_INFORMATION, FileName[0]) + de->name.Length;
+            needed = offsetof(FILE_ID_EXTD_BOTH_DIR_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -622,7 +622,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             TRACE("FileNamesInformation\n");
 
-            needed = sizeof(FILE_NAMES_INFORMATION) - sizeof(WCHAR) + de->name.Length;
+            needed = offsetof(FILE_NAMES_INFORMATION, FileName) + de->name.Length;
 
             if (needed > *len) {
                 TRACE("buffer overflow - %li > %lu\n", needed, *len);
@@ -639,18 +639,6 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             return STATUS_SUCCESS;
         }
-
-        case FileObjectIdInformation:
-            FIXME("STUB: FileObjectIdInformation\n");
-            return STATUS_NOT_IMPLEMENTED;
-
-        case FileQuotaInformation:
-            FIXME("STUB: FileQuotaInformation\n");
-            return STATUS_NOT_IMPLEMENTED;
-
-        case FileReparsePointInformation:
-            FIXME("STUB: FileReparsePointInformation\n");
-            return STATUS_NOT_IMPLEMENTED;
 
         default:
             WARN("Unknown FileInformationClass %u\n", IrpSp->Parameters.QueryDirectory.FileInformationClass);
@@ -726,6 +714,13 @@ static NTSTATUS next_dir_entry(file_ref* fileref, uint64_t* offset, dir_entry* d
 next:
     if (!dc)
         return STATUS_NO_MORE_FILES;
+
+    if (dc->root_dir && fileref->parent) { // hide $Root dir unless in apparent root, to avoid recursion
+        if (dc->list_entry_index.Flink == &fileref->fcb->dir_children_index)
+            return STATUS_NO_MORE_FILES;
+
+        dc = CONTAINING_RECORD(dc->list_entry_index.Flink, dir_child, list_entry_index);
+    }
 
     de->key = dc->key;
     de->name = dc->name;
@@ -839,7 +834,8 @@ static NTSTATUS query_directory(PIRP Irp) {
             if (FsRtlDoesNameContainWildCards(IrpSp->Parameters.QueryDirectory.FileName)) {
                 has_wildcard = true;
                 specific_file = false;
-            }
+            } else if (!initial)
+                return STATUS_NO_MORE_FILES;
         }
 
         if (ccb->query_string.Buffer)
@@ -1174,7 +1170,7 @@ NTSTATUS __stdcall drv_directory_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_directory_control(DeviceObject, Irp);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
         goto end;
     } else if (!Vcb || Vcb->type != VCB_TYPE_FS) {
         Status = STATUS_INVALID_PARAMETER;

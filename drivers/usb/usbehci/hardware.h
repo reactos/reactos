@@ -117,7 +117,7 @@ typedef union _EHCI_USB_STATUS {
 
 C_ASSERT(sizeof(EHCI_USB_STATUS) == sizeof(ULONG));
 
-#define EHCI_INTERRUPT_MASK  0x3F 
+#define EHCI_INTERRUPT_MASK  0x3F
 
 typedef union _EHCI_INTERRUPT_ENABLE {
   struct {
@@ -165,8 +165,8 @@ typedef union _EHCI_PORT_STATUS_CONTROL {
 C_ASSERT(sizeof(EHCI_PORT_STATUS_CONTROL) == sizeof(ULONG));
 
 /* FRINDEX Frame Index Register */
-#define EHCI_FRINDEX_FRAME_MASK     0x7FF 
-#define EHCI_FRINDEX_INDEX_MASK     0x3FF 
+#define EHCI_FRINDEX_FRAME_MASK     0x7FF
+#define EHCI_FRINDEX_INDEX_MASK     0x3FF
 
 #define EHCI_CONFIG_FLAG_CONFIGURED 1
 
@@ -177,10 +177,10 @@ typedef struct _EHCI_HW_REGISTERS {
   ULONG FrameIndex; // R/W (Writes must be DWord Writes)
   ULONG SegmentSelector; // R/W (Writes must be DWord Writes)
   ULONG PeriodicListBase; // R/W (Writes must be DWord Writes)
-  ULONG AsyncListBase; // Read/Write (Writes must be DWord Writes) 
+  ULONG AsyncListBase; // Read/Write (Writes must be DWord Writes)
   ULONG Reserved[9];
   ULONG ConfigFlag; // R/W
-  EHCI_PORT_STATUS_CONTROL PortControl[15]; // (1-15) RO, R/W, R/WC (field dependent) 
+  EHCI_PORT_STATUS_CONTROL PortControl[15]; // (1-15) RO, R/W, R/WC (field dependent)
 } EHCI_HW_REGISTERS, *PEHCI_HW_REGISTERS;
 
 /* Link Pointer */

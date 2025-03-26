@@ -80,7 +80,7 @@ START_TEST(InternetOpen)
     HMODULE ModuleHandle;
     HINTERNET InternetHandle;
     BOOL Success;
-    
+
     ok(!IsWinsockLoaded(), "Winsock loaded on startup\n");
     ok(!IsWinsockInitialized(), "Winsock initialized on startup\n");
 

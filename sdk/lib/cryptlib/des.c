@@ -5,7 +5,7 @@
  * Copyright 2004 Michael Jung
  * Based on public domain code by Tom St Denis (tomstdenis@iahu.ca)
  * and Dobes Vandermeer.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -22,21 +22,21 @@
  */
 
 /*
- * This file contains code from the LibTomCrypt cryptographic 
+ * This file contains code from the LibTomCrypt cryptographic
  * library written by Tom St Denis (tomstdenis@iahu.ca). LibTomCrypt
  * is in the public domain. The code in this file is tailored to
  * special requirements. Take a look at http://libtomcrypt.org for the
- * original version. 
+ * original version.
  */
 
 #include "tomcrypt.h"
 
-#define EN0 0 
+#define EN0 0
 #define DE1 1
 
 static const ulong32 bytebit[8] =
 {
-    0200, 0100, 040, 020, 010, 04, 02, 01 
+    0200, 0100, 040, 020, 010, 04, 02, 01
 };
 
 static const ulong32 bigbyte[24] =
@@ -46,22 +46,22 @@ static const ulong32 bigbyte[24] =
     0x8000UL,    0x4000UL,    0x2000UL,    0x1000UL,
     0x800UL,     0x400UL,     0x200UL,     0x100UL,
     0x80UL,      0x40UL,      0x20UL,      0x10UL,
-    0x8UL,       0x4UL,       0x2UL,       0x1L 
+    0x8UL,       0x4UL,       0x2UL,       0x1L
 };
 
 /* Use the key schedule specific in the standard (ANSI X3.92-1981) */
 
 static const unsigned char pc1[56] = {
-    56, 48, 40, 32, 24, 16,  8,  0, 57, 49, 41, 33, 25, 17,  
-     9,  1, 58, 50, 42, 34, 26, 18, 10,  2, 59, 51, 43, 35, 
+    56, 48, 40, 32, 24, 16,  8,  0, 57, 49, 41, 33, 25, 17,
+     9,  1, 58, 50, 42, 34, 26, 18, 10,  2, 59, 51, 43, 35,
     62, 54, 46, 38, 30, 22, 14,  6, 61, 53, 45, 37, 29, 21,
-    13,  5, 60, 52, 44, 36, 28, 20, 12,  4, 27, 19, 11,  3 
+    13,  5, 60, 52, 44, 36, 28, 20, 12,  4, 27, 19, 11,  3
 };
 
 static const unsigned char totrot[16] = {
     1,   2,  4,  6,
-    8,  10, 12, 14, 
-    15, 17, 19, 21, 
+    8,  10, 12, 14,
+    15, 17, 19, 21,
     23, 25, 27, 28
 };
 
@@ -1278,7 +1278,7 @@ static const ulong64 des_fp[8][256] = {
   CONST64(0x40404000,0x00004040), CONST64(0x40404010,0x00004040), CONST64(0x40404000,0x40004040), CONST64(0x40404010,0x40004040),
   CONST64(0x40404000,0x00404040), CONST64(0x40404010,0x00404040), CONST64(0x40404000,0x40404040), CONST64(0x40404010,0x40404040)
   }};
-  
+
 
 static void cookey(const ulong32 *raw1, ulong32 *keyout);
 
@@ -1408,7 +1408,7 @@ static void desfunc(ulong32 *block, const ulong32 *keys)
           des_fp[7][byte(right, 3)];
     leftt = (ulong32)(tmp >> 32);
     right = (ulong32)(tmp & 0xFFFFFFFFUL);
-    
+
     block[0] = right;
     block[1] = leftt;
 }

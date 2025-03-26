@@ -5,10 +5,33 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # Enable this again. CORE-17637
+    add_compile_options(-Wunused-result)
+
+    add_compile_options(-Wno-incompatible-pointer-types)
+    add_compile_options(-Wno-missing-braces)
+endif()
+
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+
+list(APPEND RTL_WINE_SOURCE
+    actctx.c
+    timerqueue.c
+    threadpool.c
+)
+set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
+
+if(MSVC)
+    # Silence warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+    set_source_files_properties(${RTL_WINE_SOURCE} PROPERTIES COMPILE_OPTIONS "/wd4267")
+endif()
+
 list(APPEND SOURCE
+    ${RTL_WINE_SOURCE}
+    wine_debug.c
     access.c
     acl.c
-    actctx.c
     appverifier.c
     assert.c
     atom.c
@@ -33,10 +56,11 @@ list(APPEND SOURCE
     heapuser.c
     image.c
     interlck.c
+    largeint.c
+    locale.c
+    luid.c
     memstream.c
     message.c
-    largeint.c
-    luid.c
     network.c
     nls.c
     path.c
@@ -53,20 +77,18 @@ list(APPEND SOURCE
     rxact.c
     sd.c
     security.c
-    slist.c
     sid.c
+    slist.c
     splaytree.c
     sysvol.c
     thread.c
     time.c
     timezone.c
-    timerqueue.c
     trace.c
     unicode.c
     unicodeprefix.c
     vectoreh.c
     version.c
-    wait.c
     workitem.c
     rtl.h)
 
@@ -89,6 +111,8 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE
         bitmap64.c
         byteswap.c
+        amd64/dynfntbl.c
+        amd64/except.c
         amd64/unwind.c
         amd64/stubs.c
         mem.c)
@@ -98,20 +122,11 @@ elseif(ARCH STREQUAL "arm")
         arm/except.c
         byteswap.c
         mem.c)
-elseif(ARCH STREQUAL "powerpc")
-    list(APPEND ASM_SOURCE
-        powerpc/rtlmem.s
-        powerpc/rtlswap.s)
-    list(APPEND SOURCE
-        byteswap.c
-        powerpc/debug.c
-        powerpc/except.c
-        powerpc/interlocked.c
-        powerpc/thread.c)
 endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
+target_link_libraries(rtl PRIVATE pseh)
 add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
 
@@ -119,8 +134,9 @@ list(APPEND SOURCE_VISTA
     condvar.c
     runonce.c
     srw.c
-)
+    utf8.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})
-add_pch(rtl rtl_vista.h SOURCE_VISTA)
+add_pch(rtl_vista rtl_vista.h SOURCE_VISTA)
 add_dependencies(rtl_vista psdk)
+target_link_libraries(rtl_vista PRIVATE pseh)

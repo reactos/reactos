@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/freeldr/disk/scsiport.c
  * PURPOSE:         Interface for SCSI Emulation
- * PROGRAMMERS:     Hervé Poussineau  <hpoussin@reactos.org>
+ * PROGRAMMERS:     HervÃ© Poussineau  <hpoussin@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -15,7 +15,6 @@ DBG_DEFAULT_CHANNEL(SCSIPORT);
 
 #define _SCSIPORT_
 
-#include <ntddk.h>
 #include <srb.h>
 #include <scsi.h>
 #include <ntddscsi.h>
@@ -139,7 +138,11 @@ SpiSendSynchronousSrb(
     while (!(DeviceExtension->InterruptFlags & SCSI_PORT_NEXT_REQUEST_READY))
     {
         KeStallExecutionProcessor(100 * 1000);
-        DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension);
+        if (!DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension))
+        {
+            ExFreePool(Srb);
+            return FALSE;
+        }
     }
 
     DeviceExtension->InterruptFlags &= ~SCSI_PORT_NEXT_REQUEST_READY;
@@ -157,7 +160,11 @@ SpiSendSynchronousSrb(
     while (Srb->SrbFlags & SRB_FLAGS_IS_ACTIVE)
     {
         KeStallExecutionProcessor(100 * 1000);
-        DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension);
+        if (!DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension))
+        {
+            ExFreePool(Srb);
+            return FALSE;
+        }
     }
 
     ret = SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS;
@@ -448,8 +455,10 @@ SpiCreatePortConfig(
         ConfigInfo->AtdiskSecondaryClaimed = FALSE; // FIXME
 
         /* Initiator bus id is not set */
-        for (Bus = 0; Bus < 8; Bus++)
+        for (Bus = 0; Bus < RTL_NUMBER_OF(ConfigInfo->InitiatorBusId); Bus++)
+        {
             ConfigInfo->InitiatorBusId[Bus] = (CCHAR)SP_UNINITIALIZED_VALUE;
+        }
     }
 
     ConfigInfo->NumberOfPhysicalBreaks = 17;
@@ -582,11 +591,17 @@ ScsiPortGetDeviceBase(
 
     /* I/O space */
     if (AddressSpace != 0)
-        return (PVOID)TranslatedAddress.u.LowPart;
+        return (PVOID)(ULONG_PTR)TranslatedAddress.u.LowPart;
 
     // FIXME
+#if 0
+    return MmMapIoSpace(TranslatedAddress,
+                        NumberOfBytes,
+                        FALSE);
+#else
     UNIMPLEMENTED;
-    return (PVOID)IoAddress.LowPart;
+    return (PVOID)(ULONG_PTR)IoAddress.LowPart;
+#endif
 }
 
 PVOID
@@ -631,7 +646,7 @@ ScsiPortGetPhysicalAddress(
     else
     {
         /* Nothing */
-        PhysicalAddress.QuadPart = (LONGLONG)(SP_UNINITIALIZED_VALUE);
+        PhysicalAddress.QuadPart = (LONGLONG)SP_UNINITIALIZED_VALUE;
     }
 
     *Length = BufferLength;
@@ -835,7 +850,8 @@ SpiScanDevice(
     Status = ArcOpen(PartitionName, OpenReadOnly, &FileId);
     if (Status == ESUCCESS)
     {
-        ret = HALDISPATCH->HalIoReadPartitionTable((PDEVICE_OBJECT)FileId, 512, FALSE, &PartitionBuffer);
+        ret = HALDISPATCH->HalIoReadPartitionTable((PDEVICE_OBJECT)(ULONG_PTR)FileId,
+                                                   512, FALSE, &PartitionBuffer);
         if (NT_SUCCESS(ret))
         {
             for (i = 0; i < PartitionBuffer->PartitionCount; i++)
@@ -1618,11 +1634,7 @@ extern char __ImageBase;
 ULONG
 LoadBootDeviceDriver(VOID)
 {
-    PIMAGE_NT_HEADERS NtHeaders;
-    LIST_ENTRY ModuleListHead;
-    PIMAGE_IMPORT_DESCRIPTOR ImportTable;
-    ULONG ImportTableSize;
-    PLDR_DATA_TABLE_ENTRY BootDdDTE, FreeldrDTE;
+    PLDR_DATA_TABLE_ENTRY BootDdDTE;
     CHAR NtBootDdPath[MAX_PATH];
     PVOID ImageBase = NULL;
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
@@ -1634,73 +1646,20 @@ LoadBootDeviceDriver(VOID)
     HalpInitBusHandler();
 #endif
 
-    /* Initialize the loaded module list */
-    InitializeListHead(&ModuleListHead);
-
     /* Create full ntbootdd.sys path */
-    strcpy(NtBootDdPath, FrLdrBootPath);
+    strcpy(NtBootDdPath, FrLdrGetBootPath());
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
-    /* Load file */
-    Success = PeLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
+    /* Load ntbootdd.sys */
+    Success = PeLdrLoadBootImage(NtBootDdPath,
+                                 "ntbootdd.sys",
+                                 ImageBase,
+                                 &BootDdDTE);
     if (!Success)
     {
-        /* That's OK. File simply doesn't exist */
+        /* That's OK, file simply doesn't exist */
         return ESUCCESS;
     }
-
-    /* Allocate a DTE for ntbootdd */
-    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
-                                          "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
-    if (!Success)
-        return EIO;
-
-    /* Add the PE part of freeldr.sys to the list of loaded executables, it
-       contains ScsiPort* exports, imported by ntbootdd.sys */
-    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
-                                          "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
-    if (!Success)
-    {
-        RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
-        return EIO;
-    }
-
-    /* Fix imports */
-    Success = PeLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
-
-    /* Now unlinkt the DTEs, they won't be valid later */
-    RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
-    RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
-
-    if (!Success)
-        return EIO;
-
-    /* Change imports to PA */
-    ImportTable = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(VaToPa(BootDdDTE->DllBase),
-        TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ImportTableSize);
-    for (;(ImportTable->Name != 0) && (ImportTable->FirstThunk != 0);ImportTable++)
-    {
-        PIMAGE_THUNK_DATA ThunkData = (PIMAGE_THUNK_DATA)VaToPa(RVA(BootDdDTE->DllBase, ImportTable->FirstThunk));
-
-        while (((PIMAGE_THUNK_DATA)ThunkData)->u1.AddressOfData != 0)
-        {
-            ThunkData->u1.Function = (ULONG)VaToPa((PVOID)ThunkData->u1.Function);
-            ThunkData++;
-        }
-    }
-
-    /* Relocate image to PA */
-    NtHeaders = RtlImageNtHeader(VaToPa(BootDdDTE->DllBase));
-    if (!NtHeaders)
-        return EIO;
-    Success = (BOOLEAN)LdrRelocateImageWithBias(VaToPa(BootDdDTE->DllBase),
-                                                NtHeaders->OptionalHeader.ImageBase - (ULONG_PTR)BootDdDTE->DllBase,
-                                                "FreeLdr",
-                                                TRUE,
-                                                TRUE, /* in case of conflict still return success */
-                                                FALSE);
-    if (!Success)
-        return EIO;
 
     /* Call the entrypoint */
     EntryPoint = VaToPa(BootDdDTE->EntryPoint);

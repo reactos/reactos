@@ -178,7 +178,7 @@ MmPapAllocateRegionFromMdl (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
     _Out_opt_ PBL_MEMORY_DESCRIPTOR Descriptor,
     _In_ PBL_MEMORY_DESCRIPTOR_LIST CurrentList,
-    _In_ PBL_PA_REQUEST Request, 
+    _In_ PBL_PA_REQUEST Request,
     _In_ BL_MEMORY_TYPE Type
     )
 {
@@ -220,7 +220,7 @@ MmPapAllocateRegionFromMdl (
         FoundDescriptor = CONTAINING_RECORD(NextEntry,
                                             BL_MEMORY_DESCRIPTOR,
                                             ListEntry);
-        
+
         /* See if it matches the request */
         if (MmMdFindSatisfyingRegion(FoundDescriptor,
                                      &LocalDescriptor,
@@ -379,7 +379,7 @@ MmPapAllocateRegionFromMdl (
 NTSTATUS
 MmPaAllocatePages (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
-    _In_ PBL_MEMORY_DESCRIPTOR Descriptor, 
+    _In_ PBL_MEMORY_DESCRIPTOR Descriptor,
     _In_ PBL_MEMORY_DESCRIPTOR_LIST CurrentList,
     _In_ PBL_PA_REQUEST Request,
     _In_ BL_MEMORY_TYPE MemoryType
@@ -442,7 +442,7 @@ MmPapAllocatePhysicalPagesInRange (
     _In_ ULONG Attributes,
     _In_ ULONG Alignment,
     _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
-    _In_opt_ PBL_ADDRESS_RANGE Range, 
+    _In_opt_ PBL_ADDRESS_RANGE Range,
     _In_ ULONG RangeType
     )
 {
@@ -994,7 +994,7 @@ MmPaInitialize (
 }
 
 NTSTATUS
-BlMmAllocatePhysicalPages( 
+BlMmAllocatePhysicalPages(
     _In_ PPHYSICAL_ADDRESS Address,
     _In_ BL_MEMORY_TYPE MemoryType,
     _In_ ULONGLONG PageCount,
@@ -1563,7 +1563,7 @@ MmPaReleaseSelfMapPages (
 NTSTATUS
 MmPaReserveSelfMapPages (
     _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
-    _In_ ULONG Alignment, 
+    _In_ ULONG Alignment,
     _In_ ULONG PageCount
     )
 {
@@ -1624,7 +1624,7 @@ Quickie:
 NTSTATUS
 MmSelectMappingAddress (
     _Out_ PVOID* MappingAddress,
-    _In_ PVOID PreferredAddress, 
+    _In_ PVOID PreferredAddress,
     _In_ ULONGLONG Size,
     _In_ ULONG AllocationAttributes,
     _In_ ULONG Flags,
@@ -1694,7 +1694,7 @@ MmSelectMappingAddress (
         PreferredAddress = (PVOID)((ULONG_PTR)PreferredAddress +
                                    BYTE_OFFSET(PhysicalAddress.QuadPart));
     }
-    
+
 Success:
     /* Return the mapping address and success */
     *MappingAddress = PreferredAddress;

@@ -33,7 +33,12 @@ PVALIDATE_LOCALE pValidateLocale;
 PGET_NLS_SECTION_NAME pGetNlsSectionName;
 PVOID /*PGET_USER_DEFAULT_LANGID*/ pGetUserDefaultLangID;
 PGET_CP_FILE_NAME_FROM_REGISTRY pGetCPFileNameFromRegistry;
-PCREATE_NLS_SECURTY_DESCRIPTOR pCreateNlsSecurityDescriptor;
+
+NTSTATUS
+(WINAPI *pCreateNlsSecurityDescriptor)(
+    _Out_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ SIZE_T DescriptorSize,
+    _In_ ULONG AccessMask);
 
 BASESRV_KERNEL_IMPORTS BaseSrvKernel32Imports[10] =
 {
@@ -161,7 +166,7 @@ CSR_API(BaseSrvNlsCreateSection)
     ULONG LocaleId;
     UNICODE_STRING NlsSectionName;
     PWCHAR NlsFileName;
-    UCHAR SecurityDescriptor[52];
+    UCHAR SecurityDescriptor[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
     OBJECT_ATTRIBUTES ObjectAttributes;
     WCHAR FileNameBuffer[32];
     WCHAR NlsSectionNameBuffer[32];
@@ -273,7 +278,7 @@ CSR_API(BaseSrvNlsCreateSection)
     /* Create an SD for the section object */
     Status = pCreateNlsSecurityDescriptor(&SecurityDescriptor,
                                           sizeof(SecurityDescriptor),
-                                          0x80000000);
+                                          SECTION_MAP_READ);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NLS: CreateNlsSecurityDescriptor FAILED!: %lx\n", Status);

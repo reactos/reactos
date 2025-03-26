@@ -85,7 +85,7 @@ KsecReadMachineSpecificCounters(
 }
 
 /*!
- *  \see http://blogs.msdn.com/b/michael_howard/archive/2005/01/14/353379.aspx
+ *  \see http://blogs.msdn.com/b/michael_howard/archive/2005/01/14/353379.aspx (DEAD_LINK)
  */
 NTSTATUS
 NTAPI

@@ -291,7 +291,8 @@ static VOID
 InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
 {
     LPTSTR lpAdapterName;
-
+    TCHAR lpNA[64];
+    
     This->lpDeviceId = QueryDeskCplString(This->pdtobj,
                                           RegisterClipboardFormat(DESK_EXT_DISPLAYID));
     EnableWindow(GetDlgItem(This->hwndDlg,
@@ -308,28 +309,40 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
         LocalFree((HLOCAL)lpAdapterName);
     }
 
+    LoadString(hInstance,
+               IDS_NOTAVAIL,
+               lpNA,
+               _countof(lpNA));
+
     if (This->DeskExtInterface != NULL)
     {
         SetDlgItemTextW(This->hwndDlg,
                         IDC_CHIPTYPE,
-                        This->DeskExtInterface->ChipType);
+                        *(This->DeskExtInterface->ChipType) ? This->DeskExtInterface->ChipType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_DACTYPE,
-                        This->DeskExtInterface->DacType);
+                        *(This->DeskExtInterface->DacType) ? This->DeskExtInterface->DacType : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_MEMORYSIZE,
-                        This->DeskExtInterface->MemorySize);
+                        *(This->DeskExtInterface->MemorySize) ? This->DeskExtInterface->MemorySize : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_ADAPTERSTRING,
-                        This->DeskExtInterface->AdapterString);
+                        *(This->DeskExtInterface->AdapterString) ? This->DeskExtInterface->AdapterString : lpNA);
         SetDlgItemTextW(This->hwndDlg,
                         IDC_BIOSINFORMATION,
-                        This->DeskExtInterface->BiosString);
+                        *(This->DeskExtInterface->BiosString) ? This->DeskExtInterface->BiosString : lpNA);
 
         This->lpDevModeOnInit = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
     }
     else
+    {
         This->lpDevModeOnInit = NULL;
+        SetDlgItemTextW(This->hwndDlg, IDC_CHIPTYPE, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_DACTYPE, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_MEMORYSIZE, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_ADAPTERSTRING, lpNA);
+        SetDlgItemTextW(This->hwndDlg, IDC_BIOSINFORMATION, lpNA);
+    }
 
     This->lpSelDevMode = This->lpDevModeOnInit;
 }
@@ -422,6 +435,7 @@ DisplayAdapterDlgProc(HWND hwndDlg,
                     SetWindowLongPtr(hwndDlg,
                                      DWLP_MSGRESULT,
                                      ApplyDisplayAdapterChanges(This));
+                    Ret = TRUE;
                     break;
                 }
 

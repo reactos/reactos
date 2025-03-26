@@ -1,0 +1,37 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "ReactOS"
+}
+
+STRINGTABLE
+{
+2000, "Lunar ReactOS"
+}
+
+STRINGTABLE
+{
+3000, "Обычный"
+3001, "Крупный шрифт"
+3002, "Огромный шрифт"
+}
+
+STRINGTABLE
+{
+4000, "Обычный"
+4001, "Крупный шрифт"
+4002, "Огромный шрифт"
+}
+
+STRINGTABLE
+{
+5000, "Lunar"
+5001, "Визуальный Стиль"
+5002, "Команда ReactOS"
+5003, "Cernodile и Illen, основан на Lautus"
+5004, "Выпущен под GNU/GPL 2.0, 2019"
+5005, "https://reactos.org/"
+5006, "1.1"
+5007, "Визуальный стиль для ReactOS"
+}

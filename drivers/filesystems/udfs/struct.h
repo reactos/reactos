@@ -445,7 +445,7 @@ typedef struct _UDFEjectWaitContext {
     KEVENT  StopReq;
     PKEVENT WaiterStopped;
     WORK_QUEUE_ITEM EjectReqWorkQueueItem;
-    
+
     GET_EVENT_USER_OUT EjectReqBuffer;
     UCHAR   PaddingEvt[(0x40 - sizeof(GET_EVENT_USER_OUT)) & 0x0f];
 

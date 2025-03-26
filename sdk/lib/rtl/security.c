@@ -245,14 +245,17 @@ RtlDefaultNpAcl(OUT PACL *pAcl)
     SID_IDENTIFIER_AUTHORITY NtAuthority    = {SECURITY_NT_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
 
+    C_ASSERT(sizeof(ACE) == FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart));
+
     /*
      * Temporary buffer large enough to hold a maximum of two SIDs.
      * An alternative is to call RtlAllocateAndInitializeSid many times...
      */
-    UCHAR SidBuffer[16];
+    UCHAR SidBuffer[FIELD_OFFSET(SID, SubAuthority)
+                    + 2*RTL_FIELD_SIZE(SID, SubAuthority)];
     PSID Sid = (PSID)&SidBuffer;
 
-    ASSERT(RtlLengthRequiredSid(2) == 16);
+    ASSERT(RtlLengthRequiredSid(2) == sizeof(SidBuffer));
 
     /* Initialize the user ACL pointer */
     *pAcl = NULL;
@@ -309,12 +312,9 @@ RtlDefaultNpAcl(OUT PACL *pAcl)
 
     /*
      * Allocate one ACL with 5 ACEs.
-     *
-     * NOTE: sizeof(ACE) == sizeof(ACCESS_ALLOWED_ACE) - sizeof(((ACCESS_ALLOWED_ACE*)NULL)->SidStart)
-     * (see kernel32/client/debugger.c line 54).
      */
     AclSize = sizeof(ACL) +                     // Header
-              5 * sizeof(ACE /*ACCESS_ALLOWED_ACE*/) +  // 5 ACEs:
+              5 * sizeof(ACE) +                 // 5 ACEs:
               RtlLengthRequiredSid(1) +         // LocalSystem
               RtlLengthRequiredSid(2) +         // Administrators
               RtlLengthRequiredSid(1) +         // Anonymous
@@ -672,7 +672,7 @@ RtlNewSecurityGrantedAccess(IN ACCESS_MASK DesiredAccess,
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    /* Check if the SACL right was granted... */
+    /* Check if the SACL right was granted */
     RtlZeroMemory(Privileges, Size);
     if (Granted)
     {

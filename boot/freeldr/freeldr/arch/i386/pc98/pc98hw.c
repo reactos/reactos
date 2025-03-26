@@ -176,7 +176,8 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor! Ignoring remaining floppy peripherals. (FloppyNumber = %u, FloppyCount = %u)\n",
+                FloppyNumber, Pc98GetFloppyCount());
             return;
         }
         RtlZeroMemory(PartialResourceList, Size);
@@ -219,7 +220,6 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
                                PartialResourceList,
                                Size,
                                &PeripheralKey);
-        TRACE("Created key: FloppyDiskPeripheral\\%d\n", FloppyNumber);
     }
 }
 
@@ -305,7 +305,6 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-    TRACE("Created key: DiskController\\0\n");
 
     if (FloppyCount)
         DetectBiosFloppyPeripheral(ControllerKey);
@@ -350,7 +349,7 @@ Pc98GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     {
         DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
         DiskGeometry->NumberOfCylinders = Geometry.Cylinders;
-        DiskGeometry->SectorsPerTrack = Geometry.Sectors;
+        DiskGeometry->SectorsPerTrack = Geometry.SectorsPerTrack;
         DiskGeometry->NumberOfHeads = Geometry.Heads;
     }
     else
@@ -424,7 +423,7 @@ DetectBiosDisks(
         {
             Int13Drives[i].DriveSelect = DriveNumber;
             Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
-            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
+            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.SectorsPerTrack;
             Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
 
@@ -432,7 +431,7 @@ DetectBiosDisks(
                   DriveNumber,
                   Geometry.Cylinders - 1,
                   Geometry.Heads - 1,
-                  Geometry.Sectors,
+                  Geometry.SectorsPerTrack,
                   Geometry.BytesPerSector);
         }
     }
@@ -443,7 +442,7 @@ DetectBiosDisks(
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
-        PCHAR Identifier;
+        PCSTR Identifier;
 
         DriveNumber = 0x80 + i;
 
@@ -462,7 +461,6 @@ DetectBiosDisks(
                                PartialResourceList,
                                Size,
                                &DiskKey);
-        TRACE("Created key: DiskPeripheral\\%d\n", i);
     }
 }
 
@@ -500,7 +498,6 @@ DetectPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
                            PartialResourceList,
                            Size,
                            &PeripheralKey);
-    TRACE("Created key: PointerPeripheral\\0\n");
 }
 
 static VOID
@@ -576,7 +573,6 @@ DetectPointerController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-    TRACE("Created key: PointerController\\0\n");
 
     DetectPointerPeripheral(ControllerKey);
 }
@@ -588,7 +584,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PCM_KEYBOARD_DEVICE_DATA KeyboardData;
     PCONFIGURATION_COMPONENT_DATA PeripheralKey;
-    CHAR Identifier[80];
+    PCSTR Identifier;
     ULONG Size;
     REGS Regs;
     UCHAR KeyboardType = ((*(PUCHAR)MEM_KEYB_TYPE & 0x40) >> 5) |
@@ -635,11 +631,11 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
                                   ((Regs.b.al & 0x01) << 1);
 
     if (KeyboardType == 0)
-        RtlStringCbPrintfA(Identifier, sizeof(Identifier), "PC98_NmodeKEY");
+        Identifier = "PC98_NmodeKEY";
     else if (KeyboardType == 2)
-        RtlStringCbPrintfA(Identifier, sizeof(Identifier), "PC98_106KEY");
+        Identifier = "PC98_106KEY";
     else
-        RtlStringCbPrintfA(Identifier, sizeof(Identifier), "PC98_LaptopKEY");
+        Identifier = "PC98_LaptopKEY";
 
     /* Create controller key */
     FldrCreateComponentKey(ControllerKey,
@@ -652,7 +648,6 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
                            PartialResourceList,
                            Size,
                            &PeripheralKey);
-    TRACE("Created key: KeyboardPeripheral\\0\n");
 }
 
 static VOID
@@ -713,7 +708,6 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-    TRACE("Created key: KeyboardController\\0\n");
 
     DetectKeyboardPeripheral(ControllerKey);
 }
@@ -800,7 +794,6 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-    TRACE("Created key: ParallelController\\0\n");
 }
 
 static VOID
@@ -897,7 +890,6 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
                                PartialResourceList,
                                Size,
                                &ControllerKey);
-        TRACE("Created key: SerialController\\%d\n", ControllerNumber);
 
         ++ControllerNumber;
     }
@@ -962,7 +954,6 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
                                PartialResourceList,
                                Size,
                                &ControllerKey);
-        TRACE("Created key: SerialController\\%d\n", ControllerNumber);
 
         ++ControllerNumber;
     }
@@ -993,7 +984,7 @@ DetectCBusBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
-                           0x0,
+                           0,
                            0,
                            0xFFFFFFFF,
                            "ISA",
@@ -1042,7 +1033,7 @@ DetectNesaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
-                           0x0,
+                           0,
                            0,
                            0xFFFFFFFF,
                            "EISA",
@@ -1094,7 +1085,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     NodeCount &= 0xFF; // needed since some fscked up BIOSes return
     // wrong info (e.g. Mac Virtual PC)
-    // e.g. look: http://my.execpc.com/~geezer/osd/pnp/pnp16.c
+    // e.g. look: https://web.archive.org/web/20080329010332/http://my.execpc.com/~geezer/osd/pnp/pnp16.c
     if (x != 0 || NodeSize == 0 || NodeCount == 0)
     {
         ERR("PnP-BIOS failed to enumerate device nodes\n");
@@ -1113,9 +1104,9 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         ERR("Failed to allocate resource descriptor\n");
         return;
     }
-    RtlZeroMemory(PartialResourceList, Size);
 
     /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -1150,7 +1141,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
             if (PnpBufferSize + DeviceNode->Size > PnpBufferSizeLimit)
             {
-                ERR("Buffer too small! Ignoring remaining device nodes.\n");
+                ERR("Buffer too small! Ignoring remaining device nodes. (i = %d)\n", i);
                 break;
             }
 
@@ -1177,8 +1168,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
-                           0x0,
-                           0x0,
+                           0,
+                           0,
                            0xFFFFFFFF,
                            "PNP BIOS",
                            PartialResourceList,
@@ -1189,7 +1180,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 }
 
 PCONFIGURATION_COMPONENT_DATA
-Pc98HwDetect(VOID)
+Pc98HwDetect(
+    _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;
     ULONG BusNumber = 0;
@@ -1197,8 +1189,7 @@ Pc98HwDetect(VOID)
     TRACE("DetectHardware()\n");
 
     /* Create the 'System' key */
-    FldrCreateSystemKey(&SystemKey);
-    FldrSetIdentifier(SystemKey, "NEC PC-98");
+    FldrCreateSystemKey(&SystemKey, "NEC PC-98");
 
     GetHarddiskConfigurationData = Pc98GetHarddiskConfigurationData;
     FindPciBios = PcFindPciBios;

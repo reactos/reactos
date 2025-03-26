@@ -17,16 +17,22 @@
 #define MAX_STATIC_CS_DEBUG_OBJECTS 64
 
 static RTL_CRITICAL_SECTION RtlCriticalSectionLock;
-static LIST_ENTRY RtlCriticalSectionList;
+static LIST_ENTRY RtlCriticalSectionList = {&RtlCriticalSectionList, &RtlCriticalSectionList};
 static BOOLEAN RtlpCritSectInitialized = FALSE;
 static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[MAX_STATIC_CS_DEBUG_OBJECTS];
 static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
+
 LARGE_INTEGER RtlpTimeout;
+BOOLEAN RtlpTimeoutDisable;
 
 extern BOOLEAN LdrpShutdownInProgress;
 extern HANDLE LdrpShutdownThreadId;
 
 /* FUNCTIONS *****************************************************************/
+
+#define CRITSECT_HAS_DEBUG_INFO(CriticalSection) \
+    (((CriticalSection)->DebugInfo != NULL) && \
+     ((CriticalSection)->DebugInfo != LongToPtr(-1)))
 
 /*++
  * RtlpCreateCriticalSectionSem
@@ -72,7 +78,7 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
             hNewEvent = INVALID_HANDLE_VALUE;
         }
 
-        DPRINT("Created Event: %p \n", hNewEvent);
+        DPRINT("Created Event: %p\n", hNewEvent);
 
         /* Exchange the LockSemaphore field with the new handle, if it is still 0 */
         if (InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
@@ -114,18 +120,12 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     EXCEPTION_RECORD ExceptionRecord;
     BOOLEAN LastChance = FALSE;
 
-    /* Do we have an Event yet? */
-    if (!CriticalSection->LockSemaphore)
-    {
-        RtlpCreateCriticalSectionSem(CriticalSection);
-    }
-
     /* Increase the Debug Entry count */
     DPRINT("Waiting on Critical Section Event: %p %p\n",
             CriticalSection,
             CriticalSection->LockSemaphore);
 
-    if (CriticalSection->DebugInfo)
+    if (CRITSECT_HAS_DEBUG_INFO(CriticalSection))
         CriticalSection->DebugInfo->EntryCount++;
 
     /*
@@ -136,14 +136,19 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         LdrpShutdownThreadId == NtCurrentTeb()->RealClientId.UniqueThread)
     {
         DPRINT("Forcing ownership of critical section %p\n", CriticalSection);
-        CriticalSection->LockCount = 0;
         return STATUS_SUCCESS;
+    }
+
+    /* Do we have an Event yet? */
+    if (!CriticalSection->LockSemaphore)
+    {
+        RtlpCreateCriticalSectionSem(CriticalSection);
     }
 
     for (;;)
     {
         /* Increase the number of times we've had contention */
-        if (CriticalSection->DebugInfo)
+        if (CRITSECT_HAS_DEBUG_INFO(CriticalSection))
             CriticalSection->DebugInfo->ContentionCount++;
 
         /* Check if allocating the event failed */
@@ -153,14 +158,14 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
             Status = NtWaitForKeyedEvent(NULL,
                                          CriticalSection,
                                          FALSE,
-                                         &RtlpTimeout);
+                                         (RtlpTimeoutDisable ? NULL : &RtlpTimeout));
         }
         else
         {
             /* Wait on the Event */
             Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
                                            FALSE,
-                                           &RtlpTimeout);
+                                           (RtlpTimeoutDisable ? NULL : &RtlpTimeout));
         }
 
         /* We have Timed out */
@@ -248,7 +253,7 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 }
 
 /*++
- * RtlpInitDeferedCriticalSection
+ * RtlpInitDeferredCriticalSection
  *
  *     Initializes the Critical Section implementation.
  *
@@ -264,11 +269,8 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *--*/
 VOID
 NTAPI
-RtlpInitDeferedCriticalSection(VOID)
+RtlpInitDeferredCriticalSection(VOID)
 {
-    /* Initialize the Process Critical Section List */
-    InitializeListHead(&RtlCriticalSectionList);
-
     /* Initialize the CS Protecting the List */
     RtlInitializeCriticalSection(&RtlCriticalSectionLock);
 
@@ -367,7 +369,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
     }
     else
     {
-        /* Wine stores a section name pointer in the Flags member */
+        /* HACK for Wine: stores a section name pointer in the Flags member */
         DPRINT("Assuming static: %p inside Process: %p\n",
                DebugInfo,
                NtCurrentTeb()->ClientId.UniqueProcess);
@@ -408,12 +410,12 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     /* Protect List */
     RtlEnterCriticalSection(&RtlCriticalSectionLock);
 
-    if (CriticalSection->DebugInfo)
+    if (CRITSECT_HAS_DEBUG_INFO(CriticalSection))
     {
         /* Remove it from the list */
         RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
 #if 0
-        /* We need to preserve Flags for RtlpFreeDebugInfo */
+        /* HACK for Wine: We need to preserve Flags for RtlpFreeDebugInfo */
         RtlZeroMemory(CriticalSection->DebugInfo, sizeof(RTL_CRITICAL_SECTION_DEBUG));
 #endif
     }
@@ -421,7 +423,7 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     /* Unprotect */
     RtlLeaveCriticalSection(&RtlCriticalSectionLock);
 
-    if (CriticalSection->DebugInfo)
+    if (CRITSECT_HAS_DEBUG_INFO(CriticalSection))
     {
         /* Free it */
         RtlpFreeDebugInfo(CriticalSection->DebugInfo);
@@ -519,6 +521,7 @@ RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
      */
     CriticalSection->OwningThread = Thread;
     CriticalSection->RecursionCount = 1;
+    NtCurrentTeb()->CountOfOwnedCriticalSections++;
     return STATUS_SUCCESS;
 }
 
@@ -547,6 +550,135 @@ RtlInitializeCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 }
 
 /*++
+ * RtlInitializeCriticalSectionEx
+ * @implemented NT6.0
+ *
+ *     Initialises a new critical section.
+ *
+ * Params:
+ *     CriticalSection - Critical section to initialise
+ *
+ *     SpinCount - Spin count for the critical section.
+ *
+ *     Flags - Flags for initialization.
+ *
+ * Returns:
+ *     STATUS_SUCCESS.
+ *
+ * Remarks:
+ *     SpinCount is ignored on single-processor systems.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+RtlInitializeCriticalSectionEx(
+    _Out_ PRTL_CRITICAL_SECTION CriticalSection,
+    _In_ ULONG SpinCount,
+    _In_ ULONG Flags)
+{
+    PRTL_CRITICAL_SECTION_DEBUG CritcalSectionDebugData;
+    ULONG AllowedFlags;
+    ULONG OsVersion;
+
+    /* Remove lower bits from flags */
+    Flags &= RTL_CRITICAL_SECTION_ALL_FLAG_BITS;
+
+    /* These flags generally allowed */
+    AllowedFlags = RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO |
+                   RTL_CRITICAL_SECTION_FLAG_DYNAMIC_SPIN |
+                   RTL_CRITICAL_SECTION_FLAG_STATIC_INIT;
+
+    /* Flags for Windows 7+ (CHECKME) */
+    OsVersion = NtCurrentPeb()->OSMajorVersion << 8 |
+                NtCurrentPeb()->OSMinorVersion;
+    if (OsVersion >= _WIN32_WINNT_WIN7)
+    {
+        AllowedFlags |= RTL_CRITICAL_SECTION_FLAG_RESOURCE_TYPE |
+                        RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO;
+    }
+
+    if (Flags & ~AllowedFlags)
+    {
+        return STATUS_INVALID_PARAMETER_3;
+    }
+
+    if (SpinCount & RTL_CRITICAL_SECTION_ALL_FLAG_BITS)
+    {
+        return STATUS_INVALID_PARAMETER_2;
+    }
+
+    /* First things first, set up the Object */
+    DPRINT("Initializing Critical Section: %p\n", CriticalSection);
+    CriticalSection->LockCount = -1;
+    CriticalSection->RecursionCount = 0;
+    CriticalSection->OwningThread = 0;
+    CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
+    CriticalSection->LockSemaphore = 0;
+
+    if (Flags & RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO)
+    {
+        CriticalSection->DebugInfo = LongToPtr(-1);
+    }
+    else
+    {
+        /* Allocate the Debug Data */
+        CritcalSectionDebugData = RtlpAllocateDebugInfo();
+        DPRINT("Allocated Debug Data: %p inside Process: %p\n",
+               CritcalSectionDebugData,
+               NtCurrentTeb()->ClientId.UniqueProcess);
+
+        if (!CritcalSectionDebugData)
+        {
+            /* This is bad! */
+            DPRINT1("Couldn't allocate Debug Data for: %p\n", CriticalSection);
+            return STATUS_NO_MEMORY;
+        }
+
+        /* Set it up */
+        CritcalSectionDebugData->Type = RTL_CRITSECT_TYPE;
+        CritcalSectionDebugData->ContentionCount = 0;
+        CritcalSectionDebugData->EntryCount = 0;
+        CritcalSectionDebugData->CriticalSection = CriticalSection;
+        CritcalSectionDebugData->Flags = 0;
+        CriticalSection->DebugInfo = CritcalSectionDebugData;
+
+        /*
+         * Add it to the List of Critical Sections owned by the process.
+         * If we've initialized the Lock, then use it. If not, then probably
+         * this is the lock initialization itself, so insert it directly.
+         */
+        if ((CriticalSection != &RtlCriticalSectionLock) && (RtlpCritSectInitialized))
+        {
+            DPRINT("Securely Inserting into ProcessLocks: %p, %p, %p\n",
+                   &CritcalSectionDebugData->ProcessLocksList,
+                   CriticalSection,
+                   &RtlCriticalSectionList);
+
+            /* Protect List */
+            RtlEnterCriticalSection(&RtlCriticalSectionLock);
+
+            /* Add this one */
+            InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
+
+            /* Unprotect */
+            RtlLeaveCriticalSection(&RtlCriticalSectionLock);
+        }
+        else
+        {
+            DPRINT("Inserting into ProcessLocks: %p, %p, %p\n",
+                   &CritcalSectionDebugData->ProcessLocksList,
+                   CriticalSection,
+                   &RtlCriticalSectionList);
+
+            /* Add it directly */
+            InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/*++
  * RtlInitializeCriticalSectionAndSpinCount
  * @implemented NT4
  *
@@ -566,73 +698,12 @@ RtlInitializeCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *--*/
 NTSTATUS
 NTAPI
-RtlInitializeCriticalSectionAndSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
-                                         ULONG SpinCount)
+RtlInitializeCriticalSectionAndSpinCount(
+    _Out_ PRTL_CRITICAL_SECTION CriticalSection,
+    _In_ ULONG SpinCount)
 {
-    PRTL_CRITICAL_SECTION_DEBUG CritcalSectionDebugData;
-
-    /* First things first, set up the Object */
-    DPRINT("Initializing Critical Section: %p\n", CriticalSection);
-    CriticalSection->LockCount = -1;
-    CriticalSection->RecursionCount = 0;
-    CriticalSection->OwningThread = 0;
-    CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
-    CriticalSection->LockSemaphore = 0;
-
-    /* Allocate the Debug Data */
-    CritcalSectionDebugData = RtlpAllocateDebugInfo();
-    DPRINT("Allocated Debug Data: %p inside Process: %p\n",
-           CritcalSectionDebugData,
-           NtCurrentTeb()->ClientId.UniqueProcess);
-
-    if (!CritcalSectionDebugData)
-    {
-        /* This is bad! */
-        DPRINT1("Couldn't allocate Debug Data for: %p\n", CriticalSection);
-        return STATUS_NO_MEMORY;
-    }
-
-    /* Set it up */
-    CritcalSectionDebugData->Type = RTL_CRITSECT_TYPE;
-    CritcalSectionDebugData->ContentionCount = 0;
-    CritcalSectionDebugData->EntryCount = 0;
-    CritcalSectionDebugData->CriticalSection = CriticalSection;
-    CritcalSectionDebugData->Flags = 0;
-    CriticalSection->DebugInfo = CritcalSectionDebugData;
-
-    /*
-     * Add it to the List of Critical Sections owned by the process.
-     * If we've initialized the Lock, then use it. If not, then probably
-     * this is the lock initialization itself, so insert it directly.
-     */
-    if ((CriticalSection != &RtlCriticalSectionLock) && (RtlpCritSectInitialized))
-    {
-        DPRINT("Securely Inserting into ProcessLocks: %p, %p, %p\n",
-               &CritcalSectionDebugData->ProcessLocksList,
-               CriticalSection,
-               &RtlCriticalSectionList);
-
-        /* Protect List */
-        RtlEnterCriticalSection(&RtlCriticalSectionLock);
-
-        /* Add this one */
-        InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
-
-        /* Unprotect */
-        RtlLeaveCriticalSection(&RtlCriticalSectionLock);
-    }
-    else
-    {
-        DPRINT("Inserting into ProcessLocks: %p, %p, %p\n",
-               &CritcalSectionDebugData->ProcessLocksList,
-               CriticalSection,
-               &RtlCriticalSectionList);
-
-        /* Add it directly */
-        InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
-    }
-
-    return STATUS_SUCCESS;
+    SpinCount &= ~RTL_CRITICAL_SECTION_ALL_FLAG_BITS;
+    return RtlInitializeCriticalSectionEx(CriticalSection, SpinCount, 0);
 }
 
 /*++
@@ -715,9 +786,13 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
      */
     if (--CriticalSection->RecursionCount)
     {
+        if (CriticalSection->RecursionCount < 0)
+        {
+            DPRINT1("CRITICAL SECTION MESS: Section %p is not acquired!\n", CriticalSection);
+            return STATUS_UNSUCCESSFUL;
+        }
         /* Someone still owns us, but we are free. This needs to be done atomically. */
         InterlockedDecrement(&CriticalSection->LockCount);
-
     }
     else
     {
@@ -726,6 +801,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
          * See comment above.
          */
         CriticalSection->OwningThread = 0;
+        NtCurrentTeb()->CountOfOwnedCriticalSections--;
 
         /* Was someone wanting us? This needs to be done atomically. */
         if (-1 != InterlockedDecrement(&CriticalSection->LockCount))
@@ -763,8 +839,9 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     if (InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1)
     {
         /* It's ours */
-        CriticalSection->OwningThread =  NtCurrentTeb()->ClientId.UniqueThread;
+        CriticalSection->OwningThread = NtCurrentTeb()->ClientId.UniqueThread;
         CriticalSection->RecursionCount = 1;
+        NtCurrentTeb()->CountOfOwnedCriticalSections++;
         return TRUE;
     }
     else if (CriticalSection->OwningThread == NtCurrentTeb()->ClientId.UniqueThread)

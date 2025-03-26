@@ -32,9 +32,11 @@
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WS03SP1
 
+#define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
+#include <ndk/iotypes.h>
 #include <ndk/kdtypes.h>
 #include <ndk/kefuncs.h>
 #include <ndk/ldrfuncs.h>

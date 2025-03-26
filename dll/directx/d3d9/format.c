@@ -481,7 +481,7 @@ HRESULT CheckDeviceFormat(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT AdapterFormat
 
         if ((dwOperations & MustSupportOperations) == MustSupportOperations)
             return D3D_OK;
-        
+
         if (((dwOperations & MustSupportOperations) | D3DFORMAT_OP_AUTOGENMIPMAP) == MustSupportOperations)
             bSupportedWithAutogen = TRUE;
     }
@@ -548,7 +548,7 @@ HRESULT CheckDepthStencilMatch(LPD3D9_DRIVERCAPS pDriverCaps, D3DFORMAT AdapterF
     {
         return D3DERR_NOTAVAILABLE;
     }
-   
+
     if (DepthStencilFormat != D3DFMT_D16_LOCKABLE &&
         DepthStencilFormat != D3DFMT_D32F_LOCKABLE)
     {

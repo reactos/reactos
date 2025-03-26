@@ -1,12 +1,14 @@
 /*
- * PROJECT:          ReactOS
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/main.c
- * PURPOSE:          Audio Service
- * COPYRIGHT:        Copyright 2007 Andrew Greenwood
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Audio Service
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood
  */
 
 #include "audiosrv.h"
+
+#define NDEBUG
+#include <debug.h>
 
 SERVICE_STATUS_HANDLE service_status_handle;
 SERVICE_STATUS service_status;
@@ -34,19 +36,19 @@ ServiceControlHandler(
     {
         case SERVICE_CONTROL_INTERROGATE :
         {
-            logmsg("* Interrogation\n");
+            DPRINT("* Interrogation\n");
             return NO_ERROR;
         }
 
         case SERVICE_CONTROL_STOP :
         case SERVICE_CONTROL_SHUTDOWN :
         {
-            logmsg("* Service Stop/Shutdown request received\n");
+            DPRINT("* Service Stop/Shutdown request received\n");
 
-            logmsg("Unregistering device notifications\n");
+            DPRINT("Unregistering device notifications\n");
             UnregisterDeviceNotifications();
 
-            logmsg("Destroying audio device list\n");
+            DPRINT("Destroying audio device list\n");
             DestroyAudioDeviceList();
 
             service_status.dwCurrentState = SERVICE_STOP_PENDING;
@@ -57,14 +59,14 @@ ServiceControlHandler(
 
             SetServiceStatus(service_status_handle, &service_status);
 
-            logmsg("* Service stopped\n");
+            DPRINT("* Service stopped\n");
 
             return NO_ERROR;
         }
 
         case SERVICE_CONTROL_DEVICEEVENT :
         {
-            logmsg("* Device Event\n");
+            DPRINT("* Device Event\n");
             return HandleDeviceEvent(dwEventType, lpEventData);
         }
 
@@ -78,16 +80,16 @@ ServiceControlHandler(
 VOID CALLBACK
 ServiceMain(DWORD argc, LPWSTR argv)
 {
-    logmsg("* Service starting\n");
-    logmsg("Registering service control handler...\n");
+    DPRINT("* Service starting\n");
+    DPRINT("Registering service control handler\n");
     service_status_handle = RegisterServiceCtrlHandlerExW(SERVICE_NAME,
                                                           ServiceControlHandler,
                                                           NULL);
 
-    logmsg("Service status handle %d\n", service_status_handle);
+    DPRINT("Service status handle %d\n", service_status_handle);
     if (!service_status_handle)
     {
-        logmsg("Failed to register service control handler\n");
+        DPRINT("Failed to register service control handler\n");
         /* FIXME - we should fail */
     }
 
@@ -103,23 +105,23 @@ ServiceMain(DWORD argc, LPWSTR argv)
     service_status.dwCurrentState = SERVICE_START_PENDING;
     SetServiceStatus(service_status_handle, &service_status);
 
-    logmsg("Creating audio device list\n");
+    DPRINT("Creating audio device list\n");
     /* This creates the audio device list and mutex */
     if (!CreateAudioDeviceList(AUDIO_LIST_MAX_SIZE))
     {
-        logmsg("Failed to create audio device list\n");
+        DPRINT("Failed to create audio device list\n");
         service_status.dwCurrentState = SERVICE_STOPPED;
         service_status.dwWin32ExitCode = -1;
         SetServiceStatus(service_status_handle, &service_status);
         return;
     }
 
-    logmsg("Registering for device notifications\n");
+    DPRINT("Registering for device notifications\n");
     /* We want to know when devices are added/removed */
     if (!RegisterForDeviceNotifications())
     {
         /* FIXME: This is not fatal at present as ROS does not support this */
-        logmsg("Failed to register for device notifications\n");
+        DPRINT("Failed to register for device notifications\n");
 /*
         DestroyAudioDeviceList();
 
@@ -134,11 +136,11 @@ ServiceMain(DWORD argc, LPWSTR argv)
 
     InitializeFakeDevice();
 
-    logmsg("Processing existing devices\n");
+    DPRINT("Processing existing devices\n");
     /* Now find any devices that already exist on the system */
     if (!ProcessExistingDevices())
     {
-        logmsg("Could not process existing devices\n");
+        DPRINT("Could not process existing devices\n");
         UnregisterDeviceNotifications();
         DestroyAudioDeviceList();
 
@@ -148,7 +150,7 @@ ServiceMain(DWORD argc, LPWSTR argv)
         return;
     }
 
-    logmsg("* Service started\n");
+    DPRINT("* Service started\n");
     /* Tell SCM we are now running, and we may be stopped */
     service_status.dwCurrentState = SERVICE_RUNNING;
     service_status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
@@ -163,9 +165,9 @@ int wmain(VOID)
         { NULL, NULL }
     };
 
-    logmsg("Audio Service main()\n");
+    DPRINT("Audio Service main()\n");
     if (!StartServiceCtrlDispatcherW(service_table))
-        logmsg("StartServiceCtrlDispatcher failed\n");
+        DPRINT("StartServiceCtrlDispatcher failed\n");
 
     return 0;
 }

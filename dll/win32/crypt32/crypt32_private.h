@@ -152,7 +152,7 @@ BOOL WINAPI CRYPT_AsnEncodePubKeyInfoNoNull(DWORD dwCertEncodingType,
  */
 HCRYPTPROV WINAPI I_CryptGetDefaultCryptProv(ALG_ID);
 
-HINSTANCE hInstance DECLSPEC_HIDDEN;
+extern HINSTANCE hInstance DECLSPEC_HIDDEN;
 
 void crypt_oid_init(void) DECLSPEC_HIDDEN;
 void crypt_oid_free(void) DECLSPEC_HIDDEN;

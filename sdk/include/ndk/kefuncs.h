@@ -26,7 +26,59 @@ Author:
 #include <ketypes.h>
 #include <section_attribs.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef NTOS_MODE_USER
+
+//
+// Affinity helpers
+//
+FORCEINLINE KAFFINITY AFFINITY_MASK(ULONG Index)
+{
+    ASSERT(Index < sizeof(KAFFINITY) * 8);
+    return (KAFFINITY)1 << Index;
+}
+
+FORCEINLINE BOOLEAN BitScanForwardAffinity(PULONG Index, KAFFINITY Mask)
+{
+#ifdef _WIN64
+    return BitScanForward64(Index, Mask);
+#else
+    return BitScanForward(Index, Mask);
+#endif
+}
+
+FORCEINLINE BOOLEAN BitScanReverseAffinity(PULONG Index, KAFFINITY Mask)
+{
+#ifdef _WIN64
+    return BitScanReverse64(Index, Mask);
+#else
+    return BitScanReverse(Index, Mask);
+#endif
+}
+
+FORCEINLINE BOOLEAN InterlockedBitTestAndSetAffinity(volatile KAFFINITY *Affinity, ULONG Index)
+{
+    ASSERT(Index < sizeof(KAFFINITY) * 8);
+#ifdef _WIN64
+    return InterlockedBitTestAndSet64((PLONG64)Affinity, Index);
+#else
+    return InterlockedBitTestAndSet((PLONG)Affinity, Index);
+#endif
+}
+
+FORCEINLINE BOOLEAN InterlockedBitTestAndResetAffinity(volatile KAFFINITY *Affinity, ULONG Index)
+{
+    ASSERT(Index < sizeof(KAFFINITY) * 8);
+#ifdef _WIN64
+    return InterlockedBitTestAndReset64((PLONG64)Affinity, Index);
+#else
+    return InterlockedBitTestAndReset((PLONG)Affinity, Index);
+#endif
+}
 
 //
 // APC Functions
@@ -245,7 +297,6 @@ KeSignalCallDpcSynchronize(
 // ARC Configuration Functions. Only enabled if you have ARC Support
 //
 #ifdef _ARC_
-CODE_SEG("INIT")
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationNextEntry(
@@ -256,7 +307,6 @@ KeFindConfigurationNextEntry(
     _In_ PCONFIGURATION_COMPONENT_DATA *NextLink
 );
 
-CODE_SEG("INIT")
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationEntry(
@@ -783,4 +833,8 @@ NTAPI
 ZwYieldExecution(
     VOID
 );
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

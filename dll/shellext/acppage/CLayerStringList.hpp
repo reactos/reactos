@@ -28,7 +28,7 @@ public:
         SdbCloseDatabase(m_db);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
+    STDMETHOD(Next)(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override
     {
         if (pceltFetched)
             *pceltFetched = 0;
@@ -58,7 +58,7 @@ public:
         return celt ? S_FALSE : S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt)
+    STDMETHOD(Skip)(ULONG celt) override
     {
         while (m_layer && celt)
         {
@@ -68,7 +68,7 @@ public:
         return celt ? S_FALSE : S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Reset()
+    STDMETHOD(Reset)() override
     {
         m_root = m_layer = TAGID_NULL;
         if (m_db)
@@ -83,7 +83,7 @@ public:
         return E_FAIL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumString **ppenum)
+    STDMETHOD(Clone)(IEnumString **ppenum) override
     {
         return E_NOTIMPL;
     }

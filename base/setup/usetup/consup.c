@@ -417,7 +417,7 @@ CONSOLE_SetUnderlinedTextXY(
 
     coPos.Y++;
     FillConsoleOutputCharacterA(StdOutput,
-                                0xCD,
+                                CharDoubleHorizontalLine,
                                 Length,
                                 coPos,
                                 &Written);
@@ -429,32 +429,26 @@ CONSOLE_SetStatusTextXV(
     IN LPCSTR fmt,
     IN va_list args)
 {
+    INT nLength;
     COORD coPos;
     DWORD Written;
     CHAR Buffer[128];
 
-    vsprintf(Buffer, fmt, args);
+    memset(Buffer, ' ', min(sizeof(Buffer), xScreen));
+    nLength = vsprintf(&Buffer[x], fmt, args);
+    ASSERT(x + nLength < sizeof(Buffer));
+    Buffer[x + nLength] = ' ';
 
     coPos.X = 0;
     coPos.Y = yScreen - 1;
-
     FillConsoleOutputAttribute(StdOutput,
                                BACKGROUND_WHITE,
                                xScreen,
                                coPos,
                                &Written);
-
-    FillConsoleOutputCharacterA(StdOutput,
-                                ' ',
-                                xScreen,
-                                coPos,
-                                &Written);
-
-    coPos.X = x;
-
     WriteConsoleOutputCharacterA(StdOutput,
                                  Buffer,
-                                 (ULONG)strlen(Buffer),
+                                 min(sizeof(Buffer), xScreen),
                                  coPos,
                                  &Written);
 }
@@ -675,12 +669,9 @@ CONSOLE_SetStyledText(
     IN LPCSTR Text)
 {
     COORD coPos;
-    DWORD Length;
 
     coPos.X = x;
     coPos.Y = y;
-
-    Length = (ULONG)strlen(Text);
 
     if (Flags & TEXT_TYPE_STATUS)
     {
@@ -695,11 +686,11 @@ CONSOLE_SetStyledText(
 
     if (Flags & TEXT_ALIGN_CENTER)
     {
-        coPos.X = (xScreen - Length) / 2;
+        coPos.X = (xScreen - (SHORT)strlen(Text)) / 2;
     }
     else if(Flags & TEXT_ALIGN_RIGHT)
     {
-        coPos.X = coPos.X - Length;
+        coPos.X = coPos.X - (SHORT)strlen(Text);
 
         if (Flags & TEXT_PADDING_SMALL)
         {
@@ -814,6 +805,11 @@ CONSOLE_ClearStyledText(
     if (Flags & TEXT_TYPE_STATUS)
     {
         CONSOLE_ClearStatusTextX(coPos.X, Length);
+    }
+    else if (Flags & TEXT_STYLE_UNDERLINE)
+    {
+        CONSOLE_ClearTextXY(coPos.X, coPos.Y, Length);
+        CONSOLE_ClearTextXY(coPos.X, coPos.Y + 1, Length);
     }
     else /* TEXT_TYPE_REGULAR (Default) */
     {

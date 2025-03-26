@@ -26,13 +26,13 @@ CreateMemoryResourceNotification(IN MEMORY_RESOURCE_NOTIFICATION_TYPE Notificati
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hEvent;
     NTSTATUS Status;
-    
+
     if (NotificationType > HighMemoryResourceNotification)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
-    
+
     RtlInitUnicodeString(&EventName,
                          NotificationType ?
                          L"\\KernelObjects\\HighMemoryCondition" :

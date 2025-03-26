@@ -45,8 +45,8 @@
 VOID
 NTAPI
 ExGetCurrentProcessorCounts(
-   PULONG ThreadKernelTime,
-   PULONG TotalCpuTime,
+   PULONG IdleTime,
+   PULONG KernelAndUserTime,
    PULONG ProcessorNumber);
 
 VOID

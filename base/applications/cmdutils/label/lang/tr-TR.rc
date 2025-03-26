@@ -5,16 +5,16 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
 //    STRING_LABEL_HELP "Sürücü etiketini görüntüler ya da değiştirir.\n\nLABEL [sürücü:][etiket]\n"
-    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
-LABEL [drive:][label]\n\n\
-  drive:          Specifies the drive letter of a drive.\n\
-  label           Specifies the label of the drive."
-    STRING_LABEL_TEXT1 "%c sürücüsünde birim %s\n"
+    STRING_LABEL_HELP "Sürücü etiketini görüntüler ya da değiştirir.\n\n\
+LABEL [sürücü:][etiket]\n\n\
+  drive:          Bir sürücünün sürücü harfini belirtir..\n\
+  label           Sürücünün etiketini belirtir."
+    STRING_LABEL_TEXT1 "%c sürücüsünün birim etiketi %s\n"
     STRING_LABEL_TEXT2 "%c sürücüsünde birimin etiketi yok\n"
-    STRING_LABEL_TEXT3 "Birim Dizilik Numarası %04X-%04X\n"
-    STRING_LABEL_TEXT4 "Sürücü etiketi (32 damga, yok için Giriş)? "
-    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
-    STRING_LABEL_OPTIONS "YN"
-    STRING_ERROR_INVALID_DRIVE "Geçersiz sürücü belirtmesi.\n"
-    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+    STRING_LABEL_TEXT3 "Birim Seri Numarası %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Sürücü etiketi (32 karakter, Atlamak için Enter'e tıklayın)? "
+    STRING_LABEL_PROMPT "Mevcut birimi sil (E/H)? "
+    STRING_LABEL_OPTIONS "EH"
+    STRING_ERROR_INVALID_DRIVE "Geçersiz sürücü belirtildi.\n"
+    STRING_ERROR_INVALID_LABEL "Geçersiz birim etiketi\n"
 END

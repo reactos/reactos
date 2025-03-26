@@ -86,7 +86,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
     EndpointProperties = &Endpoint->EndpointProperties;
     TransferType = EndpointProperties->TransferType;
 
-    if (TransferType == USBPORT_TRANSFER_TYPE_BULK || 
+    if (TransferType == USBPORT_TRANSFER_TYPE_BULK ||
         TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
         Endpoint->Flags & ENDPOINT_FLAG_ROOTHUB_EP0)
     {
@@ -108,7 +108,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
         for (ix = 1; *Bandwidth >= EndpointBandwidth; ix++)
         {
-            MinBandwidth = min(MinBandwidth, *Bandwidth); 
+            MinBandwidth = min(MinBandwidth, *Bandwidth);
 
             Bandwidth++;
 
@@ -327,7 +327,7 @@ USBPORT_NukeAllEndpoints(IN PDEVICE_OBJECT FdoDevice)
     KeReleaseSpinLock(&FdoExtension->EndpointListSpinLock, OldIrql);
 }
 
-ULONG 
+ULONG
 NTAPI
 USBPORT_GetEndpointState(IN PUSBPORT_ENDPOINT Endpoint)
 {
@@ -483,9 +483,9 @@ USBPORT_ValidatePipeHandle(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
         CurrentHandle = CONTAINING_RECORD(HandleList,
                                           USBPORT_PIPE_HANDLE,
                                           PipeLink);
-  
+
         HandleList = HandleList->Flink;
-  
+
         if (CurrentHandle == PipeHandle)
             return TRUE;
     }
@@ -778,12 +778,13 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     USBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements = {0};
     PUSBPORT_COMMON_BUFFER_HEADER HeaderBuffer;
     MPSTATUS MpStatus;
-    USBD_STATUS USBDStatus;
+    USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
     NTSTATUS Status;
     KIRQL OldIrql;
     USHORT MaxPacketSize;
     USHORT AdditionalTransaction;
     BOOLEAN IsAllocatedBandwidth;
+    ULONG RetryCount;
 
     DPRINT1("USBPORT_OpenPipe: DeviceHandle - %p, FdoDevice - %p, PipeHandle - %p\n",
            DeviceHandle,
@@ -1074,7 +1075,8 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
                 KeReleaseSpinLock(&Endpoint->EndpointSpinLock,
                                   Endpoint->EndpointOldIrql);
 
-                while (TRUE)
+                /* Wait maximum 1 second for the endpoint to be active */
+                for (RetryCount = 0; RetryCount < 1000; RetryCount++)
                 {
                     KeAcquireSpinLock(&Endpoint->EndpointSpinLock,
                                       &Endpoint->EndpointOldIrql);
@@ -1091,6 +1093,11 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
 
                     USBPORT_Wait(FdoDevice, 1); // 1 msec.
                 }
+                if (State != USBPORT_ENDPOINT_ACTIVE)
+                {
+                    DPRINT1("Timeout State %x\n", State);
+                    USBDStatus = USBD_STATUS_TIMEOUT;
+                }
             }
         }
         else
@@ -1102,10 +1109,6 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
         if (MpStatus)
         {
             USBDStatus = USBD_STATUS_INSUFFICIENT_RESOURCES;
-        }
-        else
-        {
-            USBDStatus = USBD_STATUS_SUCCESS;
         }
     }
 

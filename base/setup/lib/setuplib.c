@@ -22,9 +22,13 @@
 
 /* GLOBALS ******************************************************************/
 
+HANDLE ProcessHeap;
+BOOLEAN IsUnattendedSetup = FALSE;
+
 /* FUNCTIONS ****************************************************************/
 
-VOID
+BOOLEAN
+NTAPI
 CheckUnattendedSetup(
     IN OUT PUSETUP_DATA pSetupData)
 {
@@ -43,7 +47,7 @@ CheckUnattendedSetup(
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
-        return;
+        return IsUnattendedSetup;
     }
 
     /* Load 'unattend.inf' from installation media */
@@ -55,7 +59,7 @@ CheckUnattendedSetup(
     if (UnattendInf == INVALID_HANDLE_VALUE)
     {
         DPRINT("SpInfOpenInfFile() failed\n");
-        return;
+        return IsUnattendedSetup;
     }
 
     /* Open 'Unattend' section */
@@ -104,7 +108,7 @@ CheckUnattendedSetup(
 
     INF_FreeData(Value);
 
-    /* Search for 'DestinationDiskNumber' in the 'Unattend' section */
+    /* Search for 'DestinationDiskNumber' */
     if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
     {
         DPRINT("SpInfFindFirstLine() failed for key 'DestinationDiskNumber'\n");
@@ -119,7 +123,7 @@ CheckUnattendedSetup(
 
     pSetupData->DestinationDiskNumber = (LONG)IntValue;
 
-    /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
+    /* Search for 'DestinationPartitionNumber' */
     if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
     {
         DPRINT("SpInfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
@@ -134,56 +138,47 @@ CheckUnattendedSetup(
 
     pSetupData->DestinationPartitionNumber = (LONG)IntValue;
 
-    /* Search for 'InstallationDirectory' in the 'Unattend' section (optional) */
+    /* Search for 'InstallationDirectory' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
     {
-        /* Get pointer 'InstallationDirectory' key */
-        if (!INF_GetData(&Context, NULL, &Value))
+        if (INF_GetData(&Context, NULL, &Value))
+        {
+            RtlStringCchCopyW(pSetupData->InstallationDirectory,
+                              ARRAYSIZE(pSetupData->InstallationDirectory),
+                              Value);
+            INF_FreeData(Value);
+        }
+        else
         {
             DPRINT("INF_GetData() failed for key 'InstallationDirectory'\n");
-            goto Quit;
         }
-
-        RtlStringCchCopyW(pSetupData->InstallationDirectory,
-                          ARRAYSIZE(pSetupData->InstallationDirectory),
-                          Value);
-
-        INF_FreeData(Value);
     }
 
     IsUnattendedSetup = TRUE;
     DPRINT("Running unattended setup\n");
 
-    /* Search for 'MBRInstallType' in the 'Unattend' section */
-    pSetupData->MBRInstallType = -1;
-    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
+    /* Search for 'BootLoaderLocation' (optional) */
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"BootLoaderLocation", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
-            pSetupData->MBRInstallType = IntValue;
-        }
+            pSetupData->BootLoaderLocation = IntValue;
     }
 
-    /* Search for 'FormatPartition' in the 'Unattend' section */
-    pSetupData->FormatPartition = 0;
+    /* Search for 'FormatPartition' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"FormatPartition", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
             pSetupData->FormatPartition = IntValue;
-        }
     }
 
-    pSetupData->AutoPartition = 0;
+    /* Search for 'AutoPartition' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"AutoPartition", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
             pSetupData->AutoPartition = IntValue;
-        }
     }
 
-    /* Search for LocaleID in the 'Unattend' section */
+    /* Search for 'LocaleID' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"LocaleID", &Context))
     {
         if (INF_GetData(&Context, NULL, &Value))
@@ -193,24 +188,23 @@ CheckUnattendedSetup(
                                 ARRAYSIZE(pSetupData->LocaleID),
                                 L"%08lx", Id);
             INF_FreeData(Value);
-       }
+        }
     }
 
-    /* Search for FsType in the 'Unattend' section */
-    pSetupData->FsType = 0;
+    /* Search for 'FsType' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"FsType", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
             pSetupData->FsType = IntValue;
-        }
     }
 
 Quit:
     SpInfCloseInfFile(UnattendInf);
+    return IsUnattendedSetup;
 }
 
 VOID
+NTAPI
 InstallSetupInfFile(
     IN OUT PUSETUP_DATA pSetupData)
 {
@@ -232,7 +226,7 @@ InstallSetupInfFile(
     IO_STATUS_BLOCK IoStatusBlock;
 #endif
 
-    PINICACHESECTION IniSection;
+    PINI_SECTION IniSection;
     WCHAR PathBuffer[MAX_PATH];
     WCHAR UnattendInfPath[MAX_PATH];
 
@@ -241,35 +235,31 @@ InstallSetupInfFile(
     if (!IniCache)
         return;
 
-    IniSection = IniCacheAppendSection(IniCache, L"SetupParams");
+    IniSection = IniAddSection(IniCache, L"SetupParams");
     if (IniSection)
     {
         /* Key "skipmissingfiles" */
         // RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             // L"\"%s\"", L"WinNt5.2");
-        // IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          // L"Version", PathBuffer);
+        // IniAddKey(IniSection, L"Version", PathBuffer);
     }
 
-    IniSection = IniCacheAppendSection(IniCache, L"Data");
+    IniSection = IniAddSection(IniCache, L"Data");
     if (IniSection)
     {
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\"", IsUnattendedSetup ? L"yes" : L"no");
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"UnattendedInstall", PathBuffer);
+        IniAddKey(IniSection, L"UnattendedInstall", PathBuffer);
 
         // "floppylessbootpath" (yes/no)
 
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\"", L"winnt");
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"ProductType", PathBuffer);
+        IniAddKey(IniSection, L"ProductType", PathBuffer);
 
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\\\"", pSetupData->SourceRootPath.Buffer);
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"SourcePath", PathBuffer);
+        IniAddKey(IniSection, L"SourcePath", PathBuffer);
 
         // "floppyless" ("0")
     }
@@ -349,9 +339,9 @@ Quit:
     Status = OpenAndMapFile(NULL,
                             UnattendInfPath,
                             &UnattendFileHandle,
+                            &FileSize,
                             &SectionHandle,
                             &ViewBase,
-                            &FileSize,
                             FALSE);
     if (!NT_SUCCESS(Status))
     {
@@ -394,27 +384,48 @@ Quit:
 #endif
 }
 
+/**
+ * @brief
+ * Determine the installation source path and isolate its useful
+ * path components (root path and source sub-directory).
+ *
+ * The installation source path is based either on the installer's
+ * image file path, or on the \SystemRoot full path.
+ *
+ * In case the \SystemRoot full path prefixes the image file path,
+ * use the resolved \SystemRoot as the installation source path.
+ * Otherwise, use the image file path.
+ *
+ * The returned strings are allocated with RtlCreateUnicodeString(),
+ * and need to be freed with RtlFreeUnicodeString() after being used.
+ *
+ * Example of output:
+ *   SourcePath: '\Device\CdRom0\I386'
+ *   SourceRootPath: '\Device\CdRom0'
+ *   SourceRootDir: '\I386'
+ **/
 NTSTATUS
 GetSourcePaths(
-    OUT PUNICODE_STRING SourcePath,
-    OUT PUNICODE_STRING SourceRootPath,
-    OUT PUNICODE_STRING SourceRootDir)
+    _Out_ PUNICODE_STRING SourcePath,
+    _Out_ PUNICODE_STRING SourceRootPath,
+    _Out_ PUNICODE_STRING SourceRootDir)
 {
     NTSTATUS Status;
-    HANDLE LinkHandle;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UCHAR ImageFileBuffer[sizeof(UNICODE_STRING) + MAX_PATH * sizeof(WCHAR)];
-    PUNICODE_STRING InstallSourcePath = (PUNICODE_STRING)&ImageFileBuffer;
-    WCHAR SystemRootBuffer[MAX_PATH] = L"";
-    UNICODE_STRING SystemRootPath = RTL_CONSTANT_STRING(L"\\SystemRoot");
     ULONG BufferSize;
     PWCHAR Ptr;
+    HANDLE LinkHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    struct { OBJECT_NAME_INFORMATION; WCHAR Buffer[MAX_PATH]; } ImageFileBuffer;
+    PUNICODE_STRING InstallSourcePath = &ImageFileBuffer.Name;
+    struct { OBJECT_NAME_INFORMATION; WCHAR Buffer[MAX_PATH]; } SystemRootBuffer;
+    PUNICODE_STRING SystemRootPath = &SystemRootBuffer.Name;
+    const UNICODE_STRING SystemRoot = RTL_CONSTANT_STRING(L"\\SystemRoot");
 
-    /* Determine the installation source path via the full path of the installer */
+    /* Retrieve the installer's full image file path */
     RtlInitEmptyUnicodeString(InstallSourcePath,
-                              (PWSTR)((ULONG_PTR)ImageFileBuffer + sizeof(UNICODE_STRING)),
-                              sizeof(ImageFileBuffer) - sizeof(UNICODE_STRING)
-            /* Reserve space for a NULL terminator */ - sizeof(UNICODE_NULL));
+                              ImageFileBuffer.Buffer,
+                              sizeof(ImageFileBuffer.Buffer));
     BufferSize = sizeof(ImageFileBuffer);
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessImageFileName,
@@ -424,74 +435,114 @@ GetSourcePaths(
     // STATUS_INFO_LENGTH_MISMATCH or STATUS_BUFFER_TOO_SMALL ?
     if (!NT_SUCCESS(Status))
         return Status;
+    ASSERT(InstallSourcePath->Length < InstallSourcePath->MaximumLength);
 
-    /* Manually NULL-terminate */
+    /* Go to the beginning of the path component, stop at the separator */
+    Ptr = ImageFileBuffer.Buffer + (InstallSourcePath->Length / sizeof(WCHAR));
+    while ((Ptr > ImageFileBuffer.Buffer) && (*Ptr != OBJ_NAME_PATH_SEPARATOR))
+        --Ptr;
+    /* Strip the trailing file name (at the separator or beginning of buffer)
+     * and manually NULL-terminate */
+    InstallSourcePath->Length = (ULONG_PTR)Ptr - (ULONG_PTR)ImageFileBuffer.Buffer;
     InstallSourcePath->Buffer[InstallSourcePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-    /* Strip the trailing file name */
-    Ptr = wcsrchr(InstallSourcePath->Buffer, OBJ_NAME_PATH_SEPARATOR);
-    if (Ptr)
-        *Ptr = UNICODE_NULL;
-    InstallSourcePath->Length = wcslen(InstallSourcePath->Buffer) * sizeof(WCHAR);
 
 
     /*
-     * Now resolve the full path to \SystemRoot. In case it prefixes
-     * the installation source path determined from the full path of
-     * the installer, we use instead the resolved \SystemRoot as the
-     * installation source path.
-     * Otherwise, we use instead the path from the full installer path.
+     * Now, resolve the \SystemRoot symlink target full path.
+     *
+     * The symlink target path resolution requires reparsing, because it
+     * can reference other symlinks. This is what happens, for example when
+     * booting the installation from a removable hard-disk. We can have:
+     *
+     *          \SystemRoot ---> \Device\Harddisk1\Partition1\ReactOS
+     * and:     \Device\Harddisk1\Partition1 ---> \Device\HarddiskVolume2
+     * etc.
+     * and we wish to resolve \SystemRoot to: \Device\HarddiskVolume2\ReactOS
+     *
+     * We then verify whether it prefixes the image file path obtained
+     * from the step above, which is a fully reparsed path.
+     *
+     * - Using NtOpenSymbolicLinkObject(SYMBOLIC_LINK_QUERY) followed by
+     *   NtQuerySymbolicLinkObject() would only resolve the first symlink
+     *   but not the others (\Device\Harddisk1\Partition1 left as is).
+     *
+     * - Since \SystemRoot has to point to a directory, we try opening
+     *   the directory itself: NtOpenFile(..., FILE_DIRECTORY_FILE).
+     *
+     * - A call to NtQueryInformationFile(FileNameInformation) alone on
+     *   the obtained handle would only retrieve the FS directory name,
+     *   i.e. \ReactOS , but not the whole NT path.
+     *
+     * - We therefore use NtQueryObject(), which allows retrieving the
+     *   full resolved NT path (device name + FS directory name).
      */
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &SystemRootPath,
+                               (PUNICODE_STRING)&SystemRoot,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
-    Status = NtOpenSymbolicLinkObject(&LinkHandle,
-                                      SYMBOLIC_LINK_QUERY,
-                                      &ObjectAttributes);
+    RtlInitEmptyUnicodeString(SystemRootPath,
+                              SystemRootBuffer.Buffer,
+                              sizeof(SystemRootBuffer.Buffer));
+
+    Status = NtOpenFile(&LinkHandle,
+                        SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT
+                            /*| FILE_OPEN_FOR_BACKUP_INTENT*/);
+    if (NT_SUCCESS(Status))
+    {
+        /* Resolve the path and close its handle */
+        Status = NtQueryObject(LinkHandle,
+                               ObjectNameInformation,
+                               &SystemRootBuffer,
+                               sizeof(SystemRootBuffer),
+                               &BufferSize);
+        NtClose(LinkHandle);
+    }
+    /* If any of the calls above failed, try to naively resolve the symlink */
     if (!NT_SUCCESS(Status))
     {
-        /*
-         * We failed at opening the \SystemRoot link (usually due to wrong
-         * access rights). Do not consider this as a fatal error, but use
-         * instead the image file path as the installation source path.
-         */
-        DPRINT1("NtOpenSymbolicLinkObject(%wZ) failed with Status 0x%08lx\n",
-                &SystemRootPath, Status);
-        goto InitPaths;
+        RtlInitEmptyUnicodeString(SystemRootPath,
+                                  SystemRootBuffer.Buffer,
+                                  sizeof(SystemRootBuffer.Buffer));
+
+        Status = NtOpenSymbolicLinkObject(&LinkHandle,
+                                          SYMBOLIC_LINK_QUERY,
+                                          &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            /* Resolve the link and close its handle */
+            Status = NtQuerySymbolicLinkObject(LinkHandle,
+                                               SystemRootPath,
+                                               &BufferSize);
+            NtClose(LinkHandle);
+        }
     }
+    ASSERT(SystemRootPath->Length < SystemRootPath->MaximumLength);
 
-    RtlInitEmptyUnicodeString(&SystemRootPath,
-                              SystemRootBuffer,
-                              sizeof(SystemRootBuffer));
-
-    /* Resolve the link and close its handle */
-    Status = NtQuerySymbolicLinkObject(LinkHandle,
-                                       &SystemRootPath,
-                                       &BufferSize);
-    NtClose(LinkHandle);
-
-    if (!NT_SUCCESS(Status))
-        return Status; // Unexpected error
-
-    /* Check whether the resolved \SystemRoot is a prefix of the image file path */
-    if (RtlPrefixUnicodeString(&SystemRootPath, InstallSourcePath, TRUE))
-    {
-        /* Yes it is, so we use instead SystemRoot as the installation source path */
-        InstallSourcePath = &SystemRootPath;
-    }
-
-
-InitPaths:
     /*
-     * Retrieve the different source path components
+     * If the resolved \SystemRoot is a prefix of the image file path,
+     * use \SystemRoot instead as the installation source path.
+     *
+     * If opening the \SystemRoot link failed (usually due to wrong
+     * access rights), do not consider this as a fatal error, and
+     * use the image file path as the installation source path.
+     */
+    if (NT_SUCCESS(Status) && RtlPrefixUnicodeString(SystemRootPath, InstallSourcePath, TRUE))
+        InstallSourcePath = SystemRootPath;
+
+
+    /*
+     * Retrieve the different source path components.
      */
     RtlCreateUnicodeString(SourcePath, InstallSourcePath->Buffer);
 
-    /* Strip trailing directory */
+    /* Isolate and strip the trailing (source root) directory */
     Ptr = wcsrchr(InstallSourcePath->Buffer, OBJ_NAME_PATH_SEPARATOR);
     if (Ptr)
     {
@@ -620,25 +671,212 @@ LoadSetupInf(
     return ERROR_SUCCESS;
 }
 
+/**
+ * @brief   Find or set the active system partition.
+ **/
+BOOLEAN
+NTAPI
+InitSystemPartition(
+    /**/_In_ PPARTLIST PartitionList,       /* HACK HACK! */
+    /**/_In_ PPARTENTRY InstallPartition,   /* HACK HACK! */
+    /**/_Out_ PPARTENTRY* pSystemPartition, /* HACK HACK! */
+    _In_opt_ PFSVOL_CALLBACK FsVolCallback,
+    _In_opt_ PVOID Context)
+{
+    FSVOL_OP Result;
+    PPARTENTRY SystemPartition;
+    PPARTENTRY OldActivePart;
+
+    /*
+     * If we install on a fixed disk, try to find a supported system
+     * partition on the system. Otherwise if we install on a removable disk
+     * use the install partition as the system partition.
+     */
+    if (InstallPartition->DiskEntry->MediaType == FixedMedia)
+    {
+        SystemPartition = FindSupportedSystemPartition(PartitionList,
+                                                       FALSE,
+                                                       InstallPartition->DiskEntry,
+                                                       InstallPartition);
+        /* Use the original system partition as the old active partition hint */
+        OldActivePart = PartitionList->SystemPartition;
+
+        if ( SystemPartition && PartitionList->SystemPartition &&
+            (SystemPartition != PartitionList->SystemPartition) )
+        {
+            DPRINT1("We are using a different system partition!!\n");
+
+            Result = FsVolCallback(Context,
+                                   ChangeSystemPartition,
+                                   (ULONG_PTR)SystemPartition,
+                                   0);
+            if (Result != FSVOL_DOIT)
+                return FALSE;
+        }
+    }
+    else // if (InstallPartition->DiskEntry->MediaType == RemovableMedia)
+    {
+        SystemPartition = InstallPartition;
+        /* Don't specify any old active partition hint */
+        OldActivePart = NULL;
+    }
+
+    if (!SystemPartition)
+    {
+        FsVolCallback(Context,
+                      FSVOLNOTIFY_PARTITIONERROR,
+                      ERROR_SYSTEM_PARTITION_NOT_FOUND,
+                      0);
+        return FALSE;
+    }
+
+    *pSystemPartition = SystemPartition;
+
+    /*
+     * If the system partition can be created in some
+     * non-partitioned space, create it now.
+     */
+    if (!SystemPartition->IsPartitioned)
+    {
+        /* Automatically create the partition; it will be
+         * formatted later with default parameters */
+        // FIXME: Don't use the whole empty space, but a minimal size
+        // specified from the TXTSETUP.SIF or unattended setup.
+        CreatePartition(PartitionList,
+                        SystemPartition,
+                        0ULL,
+                        0);
+        ASSERT(SystemPartition->IsPartitioned);
+    }
+
+    /* Set it as such */
+    if (!SetActivePartition(PartitionList, SystemPartition, OldActivePart))
+    {
+        DPRINT1("SetActivePartition(0x%p) failed?!\n", SystemPartition);
+        ASSERT(FALSE);
+    }
+
+    /*
+     * In all cases, whether or not we are going to perform a formatting,
+     * we must perform a filesystem check of the system partition.
+     */
+    if (SystemPartition->Volume)
+        SystemPartition->Volume->NeedsCheck = TRUE;
+
+    return TRUE;
+}
+
+
+#define IS_PATH_SEPARATOR(c)    ((c) == L'\\' || (c) == L'/')
+
+/**
+ * @brief
+ * Verify whether the given directory is suitable for ReactOS installation.
+ * Each path component must be a valid 8.3 name.
+ **/
+BOOLEAN
+NTAPI
+IsValidInstallDirectory(
+    _In_ PCWSTR InstallDir)
+{
+    PCWCH p;
+
+    /* As with the NT installer, fail if the path is empty or "\\" */
+    p = InstallDir;
+    if (!*p || (IS_PATH_SEPARATOR(*p) && !*(p + 1)))
+        return FALSE;
+
+    /* The path must contain only valid characters */
+    for (p = InstallDir; *p; ++p)
+    {
+        if (!IS_VALID_INSTALL_PATH_CHAR(*p))
+            return FALSE;
+    }
+
+    /*
+     * Loop over each path component and verify that each is a valid 8.3 name.
+     */
+    for (p = InstallDir; *p;)
+    {
+        PCWSTR Path;
+        SIZE_T Length;
+        UNICODE_STRING Name;
+        BOOLEAN IsNameLegal, SpacesInName;
+
+        /* Skip any first separator */
+        if (IS_PATH_SEPARATOR(*p))
+            ++p;
+
+        /* Now skip past the path component until we reach the next separator */
+        Path = p;
+        while (*p && !IS_PATH_SEPARATOR(*p))
+            ++p;
+        if (p == Path)
+        {
+            /* Succeed if nothing else follows this separator; otherwise
+             * it's a separator and consecutive ones are not supported */
+            return (!*p);
+        }
+
+        /* Calculate the path component length */
+        Length = p - Path;
+
+        /* As with the NT installer, fail for '.' and '..';
+         * RtlIsNameLegalDOS8Dot3() would succeed otherwise */
+        if ((Length == 1 && *Path == '.') || (Length == 2 && *Path == '.' && *(Path + 1) == '.'))
+            return FALSE;
+
+        /* As with the NT installer, allow _only ONE trailing_ dot in
+         * the path component (but not 2 or more), by reducing Length
+         * in that case; RtlIsNameLegalDOS8Dot3() would fail otherwise */
+        if (Length > 1 && *(p - 2) != L'.' && *(p - 1) == L'.')
+            --Length;
+
+        if (Length == 0)
+            return FALSE;
+
+        /* Verify that the path component is a valid 8.3 name */
+        // if (Length > 8+1+3)
+        //     return FALSE;
+        Name.Length = Name.MaximumLength = (USHORT)(Length * sizeof(WCHAR));
+        Name.Buffer = (PWCHAR)Path;
+        SpacesInName = FALSE;
+        IsNameLegal = RtlIsNameLegalDOS8Dot3(&Name, NULL, &SpacesInName);
+
+        /* If it isn't legal or contain spaces, fail */
+        if (!IsNameLegal || SpacesInName)
+        {
+            DPRINT("'%wZ' is %s 8.3 filename %s spaces\n",
+                   &Name,
+                   (IsNameLegal ? "a valid" : "an invalid"),
+                   (SpacesInName ? "with" : "without"));
+            return FALSE;
+        }
+        /* Go to the next path component */
+    }
+
+    return TRUE;
+}
+
+
 NTSTATUS
+NTAPI
 InitDestinationPaths(
-    IN OUT PUSETUP_DATA pSetupData,
-    IN PCWSTR InstallationDir,
-    IN PPARTENTRY PartEntry)    // FIXME: HACK!
+    _Inout_ PUSETUP_DATA pSetupData,
+    _In_ PCWSTR InstallationDir,
+    _In_ PVOLENTRY Volume)
 {
     NTSTATUS Status;
+    PPARTENTRY PartEntry = Volume->PartEntry;
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-    WCHAR PathBuffer[MAX_PATH];
+    WCHAR PathBuffer[RTL_NUMBER_OF_FIELD(VOLINFO, DeviceName) + 1];
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
     /* Create 'pSetupData->DestinationRootPath' string */
     RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
-    Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                     L"\\Device\\Harddisk%lu\\Partition%lu\\",
-                     DiskEntry->DiskNumber,
-                     PartEntry->PartitionNumber);
-
+    Status = RtlStringCchPrintfW(PathBuffer, _countof(PathBuffer),
+                                 L"%s\\", Volume->Info.DeviceName);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);
@@ -778,89 +1016,91 @@ InitDestinationPaths(
 
 // NTSTATUS
 ERROR_NUMBER
+NTAPI
 InitializeSetup(
-    IN OUT PUSETUP_DATA pSetupData,
-    IN ULONG InitPhase)
+    _Inout_ PUSETUP_DATA pSetupData,
+    _In_opt_ PSETUP_ERROR_ROUTINE ErrorRoutine,
+    _In_ PSPFILE_EXPORTS pSpFileExports,
+    _In_ PSPINF_EXPORTS pSpInfExports)
 {
-    if (InitPhase == 0)
+    ERROR_NUMBER Error;
+    NTSTATUS Status;
+
+    IsUnattendedSetup = FALSE;
+    RtlZeroMemory(pSetupData, sizeof(*pSetupData));
+
+    /* Initialize error handling */
+    pSetupData->LastErrorNumber = ERROR_SUCCESS;
+    pSetupData->ErrorRoutine = ErrorRoutine;
+
+    /* Initialize global unicode strings */
+    RtlInitUnicodeString(&pSetupData->SourcePath, NULL);
+    RtlInitUnicodeString(&pSetupData->SourceRootPath, NULL);
+    RtlInitUnicodeString(&pSetupData->SourceRootDir, NULL);
+    RtlInitUnicodeString(&pSetupData->DestinationArcPath, NULL);
+    RtlInitUnicodeString(&pSetupData->DestinationPath, NULL);
+    RtlInitUnicodeString(&pSetupData->DestinationRootPath, NULL);
+    RtlInitUnicodeString(&pSetupData->SystemRootPath, NULL);
+
+    // FIXME: This is only temporary!! Must be removed later!
+    /***/RtlInitUnicodeString(&pSetupData->InstallPath, NULL);/***/
+
+    /* Initialize SpFile and SpInf support */
+    RtlCopyMemory(&SpFileExports, pSpFileExports, sizeof(SpFileExports));
+    RtlCopyMemory(&SpInfExports, pSpInfExports, sizeof(SpInfExports));
+
+    //
+    // TODO: Load and start SetupDD, and ask it for the information
+    //
+
+    /* Get the source path and source root path */
+    Status = GetSourcePaths(&pSetupData->SourcePath,
+                            &pSetupData->SourceRootPath,
+                            &pSetupData->SourceRootDir);
+    if (!NT_SUCCESS(Status))
     {
-        RtlZeroMemory(pSetupData, sizeof(*pSetupData));
-
-        // pSetupData->ComputerList = NULL;
-        // pSetupData->DisplayList  = NULL;
-        // pSetupData->KeyboardList = NULL;
-        // pSetupData->LayoutList   = NULL;
-        // pSetupData->LanguageList = NULL;
-
-        /* Initialize error handling */
-        pSetupData->LastErrorNumber = ERROR_SUCCESS;
-        pSetupData->ErrorRoutine = NULL;
-
-        /* Initialize global unicode strings */
-        RtlInitUnicodeString(&pSetupData->SourcePath, NULL);
-        RtlInitUnicodeString(&pSetupData->SourceRootPath, NULL);
-        RtlInitUnicodeString(&pSetupData->SourceRootDir, NULL);
-        RtlInitUnicodeString(&pSetupData->DestinationArcPath, NULL);
-        RtlInitUnicodeString(&pSetupData->DestinationPath, NULL);
-        RtlInitUnicodeString(&pSetupData->DestinationRootPath, NULL);
-        RtlInitUnicodeString(&pSetupData->SystemRootPath, NULL);
-
-        // FIXME: This is only temporary!! Must be removed later!
-        /***/RtlInitUnicodeString(&pSetupData->InstallPath, NULL);/***/
-
-        //
-        // TODO: Load and start SetupDD, and ask it for the information
-        //
-
-        return ERROR_SUCCESS;
+        DPRINT1("GetSourcePaths() failed (Status 0x%08lx)\n", Status);
+        return ERROR_NO_SOURCE_DRIVE;
     }
-    else
-    if (InitPhase == 1)
+    DPRINT1("SourcePath (1): '%wZ'\n", &pSetupData->SourcePath);
+    DPRINT1("SourceRootPath (1): '%wZ'\n", &pSetupData->SourceRootPath);
+    DPRINT1("SourceRootDir (1): '%wZ'\n", &pSetupData->SourceRootDir);
+
+    /* Set up default values */
+    pSetupData->DestinationDiskNumber = 0;
+    pSetupData->DestinationPartitionNumber = 1;
+    pSetupData->BootLoaderLocation = 2; // Default to "System partition"
+    pSetupData->FormatPartition = 0;
+    pSetupData->AutoPartition = 0;
+    pSetupData->FsType = 0;
+
+    /* Load 'txtsetup.sif' from the installation media */
+    Error = LoadSetupInf(pSetupData);
+    if (Error != ERROR_SUCCESS)
     {
-        ERROR_NUMBER Error;
-        NTSTATUS Status;
-
-        /* Get the source path and source root path */
-        //
-        // NOTE: Sometimes the source path may not be in SystemRoot !!
-        // (and this is the case when using the 1st-stage GUI setup!)
-        //
-        Status = GetSourcePaths(&pSetupData->SourcePath,
-                                &pSetupData->SourceRootPath,
-                                &pSetupData->SourceRootDir);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("GetSourcePaths() failed (Status 0x%08lx)", Status);
-            return ERROR_NO_SOURCE_DRIVE;
-        }
-        /*
-         * Example of output:
-         *   SourcePath: '\Device\CdRom0\I386'
-         *   SourceRootPath: '\Device\CdRom0'
-         *   SourceRootDir: '\I386'
-         */
-        DPRINT1("SourcePath (1): '%wZ'\n", &pSetupData->SourcePath);
-        DPRINT1("SourceRootPath (1): '%wZ'\n", &pSetupData->SourceRootPath);
-        DPRINT1("SourceRootDir (1): '%wZ'\n", &pSetupData->SourceRootDir);
-
-        /* Load 'txtsetup.sif' from the installation media */
-        Error = LoadSetupInf(pSetupData);
-        if (Error != ERROR_SUCCESS)
-        {
-            DPRINT1("LoadSetupInf() failed (Error 0x%lx)", Error);
-            return Error;
-        }
-        DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
-        DPRINT1("SourceRootPath (2): '%wZ'\n", &pSetupData->SourceRootPath);
-        DPRINT1("SourceRootDir (2): '%wZ'\n", &pSetupData->SourceRootDir);
-
-        return ERROR_SUCCESS;
+        DPRINT1("LoadSetupInf() failed (Error 0x%lx)\n", Error);
+        return Error;
     }
+    DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
+    DPRINT1("SourceRootPath (2): '%wZ'\n", &pSetupData->SourceRootPath);
+    DPRINT1("SourceRootDir (2): '%wZ'\n", &pSetupData->SourceRootDir);
+
+    /* Retrieve the target machine architecture type */
+    // FIXME: This should be determined at runtime!!
+    // FIXME: Allow for (pre-)installing on an architecture
+    //        different from the current one?
+#if defined(SARCH_XBOX)
+    pSetupData->ArchType = ARCH_Xbox;
+// #elif defined(SARCH_PC98)
+#else // TODO: Arc, UEFI
+    pSetupData->ArchType = (IsNEC_98 ? ARCH_NEC98x86 : ARCH_PcAT);
+#endif
 
     return ERROR_SUCCESS;
 }
 
 VOID
+NTAPI
 FinishSetup(
     IN OUT PUSETUP_DATA pSetupData)
 {
@@ -911,6 +1151,7 @@ FinishSetup(
  *  Calls SetMountedDeviceValues
  */
 ERROR_NUMBER
+NTAPI
 UpdateRegistry(
     IN OUT PUSETUP_DATA pSetupData,
     /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
@@ -1056,23 +1297,36 @@ DoUpdate:
     {
         /* See the explanation for this test above */
 
+        PGENERIC_LIST_ENTRY Entry;
+        PCWSTR LanguageId; // LocaleID;
+
+        Entry = GetCurrentListEntry(pSetupData->DisplayList);
+        ASSERT(Entry);
+        pSetupData->DisplayType = ((PGENENTRY)GetListEntryData(Entry))->Id;
+        ASSERT(pSetupData->DisplayType);
+
         /* Update display registry settings */
         if (StatusRoutine) StatusRoutine(DisplaySettingsUpdate);
-        if (!ProcessDisplayRegistry(pSetupData->SetupInf, pSetupData->DisplayList))
+        if (!ProcessDisplayRegistry(pSetupData->SetupInf, pSetupData->DisplayType))
         {
             ErrorNumber = ERROR_UPDATE_DISPLAY_SETTINGS;
             goto Cleanup;
         }
 
+        Entry = GetCurrentListEntry(pSetupData->LanguageList);
+        ASSERT(Entry);
+        LanguageId = ((PGENENTRY)GetListEntryData(Entry))->Id;
+        ASSERT(LanguageId);
+
         /* Set the locale */
         if (StatusRoutine) StatusRoutine(LocaleSettingsUpdate);
-        if (!ProcessLocaleRegistry(pSetupData->LanguageList))
+        if (!ProcessLocaleRegistry(/*pSetupData->*/LanguageId))
         {
             ErrorNumber = ERROR_UPDATE_LOCALESETTINGS;
             goto Cleanup;
         }
 
-        /* Add keyboard layouts */
+        /* Add the keyboard layouts for the given language (without user override) */
         if (StatusRoutine) StatusRoutine(KeybLayouts);
         if (!AddKeyboardLayouts(SelectedLanguageId))
         {
@@ -1080,22 +1334,29 @@ DoUpdate:
             goto Cleanup;
         }
 
+        if (!IsUnattendedSetup)
+        {
+            Entry = GetCurrentListEntry(pSetupData->LayoutList);
+            ASSERT(Entry);
+            pSetupData->LayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
+            ASSERT(pSetupData->LayoutId);
+
+            /* Update keyboard layout settings with user-overridden values */
+            // FIXME: Wouldn't it be better to do it all at once
+            // with the AddKeyboardLayouts() step?
+            if (StatusRoutine) StatusRoutine(KeybSettingsUpdate);
+            if (!ProcessKeyboardLayoutRegistry(pSetupData->LayoutId, SelectedLanguageId))
+            {
+                ErrorNumber = ERROR_UPDATE_KBSETTINGS;
+                goto Cleanup;
+            }
+        }
+
         /* Set GeoID */
         if (!SetGeoID(MUIGetGeoID(SelectedLanguageId)))
         {
             ErrorNumber = ERROR_UPDATE_GEOID;
             goto Cleanup;
-        }
-
-        if (!IsUnattendedSetup)
-        {
-            /* Update keyboard layout settings */
-            if (StatusRoutine) StatusRoutine(KeybSettingsUpdate);
-            if (!ProcessKeyboardLayoutRegistry(pSetupData->LayoutList, SelectedLanguageId))
-            {
-                ErrorNumber = ERROR_UPDATE_KBSETTINGS;
-                goto Cleanup;
-            }
         }
 
         /* Add codepage information to registry */
@@ -1142,6 +1403,33 @@ Cleanup:
     }
 
     return ErrorNumber;
+}
+
+
+/* ENTRY-POINT ***************************************************************/
+
+/* Declared in ndk/umfuncs.h */
+NTSTATUS
+NTAPI
+LdrDisableThreadCalloutsForDll(
+    _In_ PVOID BaseAddress);
+
+BOOL
+NTAPI
+DllMain(
+    _In_ HINSTANCE hDll,
+    _In_ ULONG dwReason,
+    _In_opt_ PVOID pReserved)
+{
+    UNREFERENCED_PARAMETER(pReserved);
+
+    if (dwReason == DLL_PROCESS_ATTACH)
+    {
+        LdrDisableThreadCalloutsForDll(hDll);
+        ProcessHeap = RtlGetProcessHeap();
+    }
+
+    return TRUE;
 }
 
 /* EOF */

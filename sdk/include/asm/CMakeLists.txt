@@ -16,6 +16,8 @@ elseif(ARCH STREQUAL "amd64")
     set(_filename ksamd64.inc)
 elseif(ARCH STREQUAL "arm")
     set(_filename ksarm.h)
+elseif(ARCH STREQUAL "arm64")
+    set(_filename ksarm64.h)
 endif()
 
 add_custom_command(

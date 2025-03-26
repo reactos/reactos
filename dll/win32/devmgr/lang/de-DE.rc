@@ -33,6 +33,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "E/A-Bereich"
+    IDS_COPY "&Kopieren"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -75,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Die Treiber für dieses Gerät sind nicht installiert."
     IDS_DEV_HARDWARE_DISABLED "Dieses Gerät ist deaktiviert, weil das BIOS für dieses Gerät keine Ressourcen zugeteilt hat."
     IDS_DEV_CANT_SHARE_IRQ "Dieses Gerät benutzt einen Interrupt (IRQ), der bereits von einem anderen Gerät benutzt wird und nicht geteilt werden kann. Sie müssen die kollidierenden Einstellungen ändern, oder den real-mode Treiber entfernen, der den Konflikt verursacht."
-    IDS_DEV_FAILED_ADD "Dieses Gerät arbeitet nicht korrekt, weil %1 nicht korrekt funktioniert."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS kann die Treiber für dieses Gerät nicht installieren, weil auf das (Netz-)Laufwerk, auf dem die Installationsdateien abgelegt sind, nicht zugegriffen werden kann."
     IDS_DEV_TRANSLATION_FAILED "Dieses Gerät reagiert nicht auf seinen Treiber."
     IDS_DEV_NO_SOFTCONFIG "ReactOS kann die Einstellungen für dieses Gerät nicht feststellen. Lesen Sie die Dokumentation, die mit diesem Gerät kam und benutzen Sie den Reiter ""Ressourcen"" umd die Konfiguration vorzunehmen."
@@ -228,7 +229,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Ressourcen-Einstellungen:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -285,14 +286,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Geräte-Manager"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Dieses Gerät zu deaktivieren wird dessen Funktion einstellen.\r\nWollen Sie es wirklich deaktivieren?"
-  IDS_CONFIRM_UNINSTALL     "Warnung: Sie sind dabei, dieses Gerät deinstallieren\r\nMöchten Sie den Vorgang fortsetzen?"
+  IDS_CONFIRM_DISABLE       "Dieses Gerät zu deaktivieren wird dessen Funktion einstellen.\nWollen Sie es wirklich deaktivieren?"
+  IDS_CONFIRM_UNINSTALL     "Warnung: Sie sind dabei, dieses Gerät deinstallieren\nMöchten Sie den Vorgang fortsetzen?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Treibersoftware aktualisieren ..."
   IDS_MENU_ENABLE           "Aktivieren"
@@ -303,7 +305,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Eigenschaften"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Eigenschaften"
   IDS_TOOLTIP_SCAN          "Nach geänderter Hardware suchen"
@@ -314,7 +316,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Öffnet Eigenschaftsdialog für die aktuelle Auswahl."

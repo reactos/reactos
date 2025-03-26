@@ -1,6 +1,12 @@
 #ifndef _WDBGEXTS_
 #define _WDBGEXTS_
 
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum
 {
     DBGKD_SIMULATION_NONE,
@@ -168,98 +174,117 @@ typedef struct _DBGKD_DEBUG_DATA_HEADER64
     ULONG Size;
 } DBGKD_DEBUG_DATA_HEADER64, *PDBGKD_DEBUG_DATA_HEADER64;
 
-typedef union _GCC_ULONG64
+/* Self-documenting type: stores a pointer as a 64-bit quantity */
+#if !defined(_WIN64) && (defined(__GNUC__) || defined(__clang__))
+/* Minimal hackery for GCC/Clang, see commit b9cd3f2d9 (r25845) and de81021ba */
+typedef union _ULPTR64
 {
-    ULONG_PTR Pointer;
-    ULONG64 RealPointer;
-} GCC_ULONG64, *PGCC_ULONG64;
+    ULONG_PTR ptr;
+    ULONG64 ptr64;
+} ULPTR64;
+#else
+// #define ULPTR64 PVOID64
+#define ULPTR64 ULONG64
+#endif
 
 typedef struct _KDDEBUGGER_DATA64
 {
     DBGKD_DEBUG_DATA_HEADER64 Header;
     ULONG64 KernBase;
-    GCC_ULONG64 BreakpointWithStatus;
+    ULPTR64 BreakpointWithStatus;
     ULONG64 SavedContext;
     USHORT ThCallbackStack;
     USHORT NextCallback;
     USHORT FramePointer;
     USHORT PaeEnabled:1;
-    GCC_ULONG64 KiCallUserMode;
+    ULPTR64 KiCallUserMode;
     ULONG64 KeUserCallbackDispatcher;
-    GCC_ULONG64 PsLoadedModuleList;
-    GCC_ULONG64 PsActiveProcessHead;
-    GCC_ULONG64 PspCidTable;
-    GCC_ULONG64 ExpSystemResourcesList;
-    GCC_ULONG64 ExpPagedPoolDescriptor;
-    GCC_ULONG64 ExpNumberOfPagedPools;
-    GCC_ULONG64 KeTimeIncrement;
-    GCC_ULONG64 KeBugCheckCallbackListHead;
-    GCC_ULONG64 KiBugcheckData;
-    GCC_ULONG64 IopErrorLogListHead;
-    GCC_ULONG64 ObpRootDirectoryObject;
-    GCC_ULONG64 ObpTypeObjectType;
-    GCC_ULONG64 MmSystemCacheStart;
-    GCC_ULONG64 MmSystemCacheEnd;
-    GCC_ULONG64 MmSystemCacheWs;
-    GCC_ULONG64 MmPfnDatabase;
-    GCC_ULONG64 MmSystemPtesStart;
-    GCC_ULONG64 MmSystemPtesEnd;
-    GCC_ULONG64 MmSubsectionBase;
-    GCC_ULONG64 MmNumberOfPagingFiles;
-    GCC_ULONG64 MmLowestPhysicalPage;
-    GCC_ULONG64 MmHighestPhysicalPage;
-    GCC_ULONG64 MmNumberOfPhysicalPages;
-    GCC_ULONG64 MmMaximumNonPagedPoolInBytes;
-    GCC_ULONG64 MmNonPagedSystemStart;
-    GCC_ULONG64 MmNonPagedPoolStart;
-    GCC_ULONG64 MmNonPagedPoolEnd;
-    GCC_ULONG64 MmPagedPoolStart;
-    GCC_ULONG64 MmPagedPoolEnd;
-    GCC_ULONG64 MmPagedPoolInformation;
+    ULPTR64 PsLoadedModuleList;
+    ULPTR64 PsActiveProcessHead;
+    ULPTR64 PspCidTable;
+    ULPTR64 ExpSystemResourcesList;
+    ULPTR64 ExpPagedPoolDescriptor;
+    ULPTR64 ExpNumberOfPagedPools;
+    ULPTR64 KeTimeIncrement;
+    ULPTR64 KeBugCheckCallbackListHead;
+    ULPTR64 KiBugcheckData;
+    ULPTR64 IopErrorLogListHead;
+    ULPTR64 ObpRootDirectoryObject;
+    ULPTR64 ObpTypeObjectType;
+    ULPTR64 MmSystemCacheStart;
+    ULPTR64 MmSystemCacheEnd;
+    ULPTR64 MmSystemCacheWs;
+    ULPTR64 MmPfnDatabase;
+    ULPTR64 MmSystemPtesStart;
+    ULPTR64 MmSystemPtesEnd;
+    ULPTR64 MmSubsectionBase;
+    ULPTR64 MmNumberOfPagingFiles;
+    ULPTR64 MmLowestPhysicalPage;
+    ULPTR64 MmHighestPhysicalPage;
+    ULPTR64 MmNumberOfPhysicalPages;
+    ULPTR64 MmMaximumNonPagedPoolInBytes;
+    ULPTR64 MmNonPagedSystemStart;
+    ULPTR64 MmNonPagedPoolStart;
+    ULPTR64 MmNonPagedPoolEnd;
+    ULPTR64 MmPagedPoolStart;
+    ULPTR64 MmPagedPoolEnd;
+    ULPTR64 MmPagedPoolInformation;
     ULONG64 MmPageSize;
-    GCC_ULONG64 MmSizeOfPagedPoolInBytes;
-    GCC_ULONG64 MmTotalCommitLimit;
-    GCC_ULONG64 MmTotalCommittedPages;
-    GCC_ULONG64 MmSharedCommit;
-    GCC_ULONG64 MmDriverCommit;
-    GCC_ULONG64 MmProcessCommit;
-    GCC_ULONG64 MmPagedPoolCommit;
-    GCC_ULONG64 MmExtendedCommit;
-    GCC_ULONG64 MmZeroedPageListHead;
-    GCC_ULONG64 MmFreePageListHead;
-    GCC_ULONG64 MmStandbyPageListHead;
-    GCC_ULONG64 MmModifiedPageListHead;
-    GCC_ULONG64 MmModifiedNoWritePageListHead;
-    GCC_ULONG64 MmAvailablePages;
-    GCC_ULONG64 MmResidentAvailablePages;
-    GCC_ULONG64 PoolTrackTable;
-    GCC_ULONG64 NonPagedPoolDescriptor;
-    GCC_ULONG64 MmHighestUserAddress;
-    GCC_ULONG64 MmSystemRangeStart;
-    GCC_ULONG64 MmUserProbeAddress;
-    GCC_ULONG64 KdPrintCircularBuffer;
-    GCC_ULONG64 KdPrintCircularBufferEnd;
-    GCC_ULONG64 KdPrintWritePointer;
-    GCC_ULONG64 KdPrintRolloverCount;
-    GCC_ULONG64 MmLoadedUserImageList;
-    GCC_ULONG64 NtBuildLab;
-    GCC_ULONG64 KiNormalSystemCall;
-    GCC_ULONG64 KiProcessorBlock;
-    GCC_ULONG64 MmUnloadedDrivers;
-    GCC_ULONG64 MmLastUnloadedDriver;
-    GCC_ULONG64 MmTriageActionTaken;
-    GCC_ULONG64 MmSpecialPoolTag;
-    GCC_ULONG64 KernelVerifier;
-    GCC_ULONG64 MmVerifierData;
-    GCC_ULONG64 MmAllocatedNonPagedPool;
-    GCC_ULONG64 MmPeakCommitment;
-    GCC_ULONG64 MmTotalCommitLimitMaximum;
-    GCC_ULONG64 CmNtCSDVersion;
-    GCC_ULONG64 MmPhysicalMemoryBlock;
-    GCC_ULONG64 MmSessionBase;
-    GCC_ULONG64 MmSessionSize;
-    GCC_ULONG64 MmSystemParentTablePage;
-    GCC_ULONG64 MmVirtualTranslationBase;
+    ULPTR64 MmSizeOfPagedPoolInBytes;
+    ULPTR64 MmTotalCommitLimit;
+    ULPTR64 MmTotalCommittedPages;
+    ULPTR64 MmSharedCommit;
+    ULPTR64 MmDriverCommit;
+    ULPTR64 MmProcessCommit;
+    ULPTR64 MmPagedPoolCommit;
+    ULPTR64 MmExtendedCommit;
+    ULPTR64 MmZeroedPageListHead;
+    ULPTR64 MmFreePageListHead;
+    ULPTR64 MmStandbyPageListHead;
+    ULPTR64 MmModifiedPageListHead;
+    ULPTR64 MmModifiedNoWritePageListHead;
+    ULPTR64 MmAvailablePages;
+    ULPTR64 MmResidentAvailablePages;
+    ULPTR64 PoolTrackTable;
+    ULPTR64 NonPagedPoolDescriptor;
+    ULPTR64 MmHighestUserAddress;
+    ULPTR64 MmSystemRangeStart;
+    ULPTR64 MmUserProbeAddress;
+    ULPTR64 KdPrintCircularBuffer;
+    ULPTR64 KdPrintCircularBufferEnd;
+    ULPTR64 KdPrintWritePointer;
+    ULPTR64 KdPrintRolloverCount;
+    ULPTR64 MmLoadedUserImageList;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+    ULPTR64 NtBuildLab;
+    ULPTR64 KiNormalSystemCall;
+#endif
+
+/* NOTE: Documented as "NT 5.0 hotfix (QFE) addition" */
+#if (NTDDI_VERSION >= NTDDI_WIN2KSP4)
+    ULPTR64 KiProcessorBlock;
+    ULPTR64 MmUnloadedDrivers;
+    ULPTR64 MmLastUnloadedDriver;
+    ULPTR64 MmTriageActionTaken;
+    ULPTR64 MmSpecialPoolTag;
+    ULPTR64 KernelVerifier;
+    ULPTR64 MmVerifierData;
+    ULPTR64 MmAllocatedNonPagedPool;
+    ULPTR64 MmPeakCommitment;
+    ULPTR64 MmTotalCommitLimitMaximum;
+    ULPTR64 CmNtCSDVersion;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+    ULPTR64 MmPhysicalMemoryBlock;
+    ULPTR64 MmSessionBase;
+    ULPTR64 MmSessionSize;
+    ULPTR64 MmSystemParentTablePage;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    ULPTR64 MmVirtualTranslationBase;
     USHORT OffsetKThreadNextProcessor;
     USHORT OffsetKThreadTeb;
     USHORT OffsetKThreadKernelStack;
@@ -281,9 +306,9 @@ typedef struct _KDDEBUGGER_DATA64
     USHORT OffsetPrcbProcStateContext;
     USHORT OffsetPrcbNumber;
     USHORT SizeEThread;
-    GCC_ULONG64 KdPrintCircularBufferPtr;
-    GCC_ULONG64 KdPrintBufferSize;
-    GCC_ULONG64 KeLoaderBlock;
+    ULPTR64 KdPrintCircularBufferPtr;
+    ULPTR64 KdPrintBufferSize;
+    ULPTR64 KeLoaderBlock;
     USHORT SizePcr;
     USHORT OffsetPcrSelfPcr;
     USHORT OffsetPcrCurrentPrcb;
@@ -304,13 +329,55 @@ typedef struct _KDDEBUGGER_DATA64
     USHORT GdtTss;
     USHORT Gdt64R3CmCode;
     USHORT Gdt64R3CmTeb;
-    GCC_ULONG64 IopNumTriageDumpDataBlocks;
-    GCC_ULONG64 IopTriageDumpDataBlocks;
-#if 0 // Longhorn/Vista and later
-    GCC_ULONG64 VfCrashDataBlock;
-    GCC_ULONG64 MmBadPagesDetected;
-    GCC_ULONG64 MmZeroedPageSingleBitErrorsDetected;
+    ULPTR64 IopNumTriageDumpDataBlocks;
+    ULPTR64 IopTriageDumpDataBlocks;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULPTR64 VfCrashDataBlock;
+    ULPTR64 MmBadPagesDetected;
+    ULPTR64 MmZeroedPageSingleBitErrorsDetected;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    ULPTR64 EtwpDebuggerData;
+    USHORT OffsetPrcbContext;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    USHORT OffsetPrcbMaxBreakpoints;
+    USHORT OffsetPrcbMaxWatchpoints;
+    ULONG OffsetKThreadStackLimit;
+    ULONG OffsetKThreadStackBase;
+    ULONG OffsetKThreadQueueListEntry;
+    ULONG OffsetEThreadIrpList;
+    USHORT OffsetPrcbIdleThread;
+    USHORT OffsetPrcbNormalDpcState;
+    USHORT OffsetPrcbDpcStack;
+    USHORT OffsetPrcbIsrStack;
+    USHORT SizeKDPC_STACK_FRAME;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+    USHORT OffsetKPriQueueThreadListHead;
+    USHORT OffsetKThreadWaitReason;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+    USHORT Padding;
+    ULPTR64 PteBase;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    ULPTR64 RetpolineStubFunctionTable;
+    ULONG RetpolineStubFunctionTableSize;
+    ULONG RetpolineStubOffset;
+    ULONG RetpolineStubSize;
 #endif
 } KDDEBUGGER_DATA64, *PKDDEBUGGER_DATA64;
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // _WDBGEXTS_

@@ -112,7 +112,7 @@ PinDataFormatRanges[] =
 #if 0
 const
 KSALLOCATOR_FRAMING_EX
-AllocatorFraming = 
+AllocatorFraming =
 {
     1,
     0,
@@ -214,7 +214,7 @@ Categories[] =
 
 const
 KSNODE_DESCRIPTOR
-NodeDescriptor[] = 
+NodeDescriptor[] =
 {
     {
         NULL, //automation table

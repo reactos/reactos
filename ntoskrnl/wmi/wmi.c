@@ -106,14 +106,28 @@ IoWMISuggestInstanceName(IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
  */
 NTSTATUS
 NTAPI
-IoWMIWriteEvent(IN PVOID WnodeEventItem)
+IoWMIWriteEvent(_Inout_ PVOID WnodeEventItem)
 {
-    DPRINT1("IoWMIWriteEvent() called for WnodeEventItem %p, returning success\n",
-        WnodeEventItem);
+    PWNODE_HEADER Header = WnodeEventItem;
+
+    if(!Header)
+    {
+        DPRINT1("Got NULL Item!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DPRINT1("IoWMIWriteEvent() called for WnodeEventItem %p (Flags = 0x%08lx), returning success\n",
+            WnodeEventItem, Header->Flags);
+
+    if (Header->Flags & WNODE_FLAG_TRACED_GUID)
+    {
+        // Never free WnodeEventItem in this case.
+        DPRINT("IoWMIWriteEvent(): Flags has WNODE_FLAG_TRACED_GUID\n");
+        return STATUS_SUCCESS;
+    }
 
     /* Free the buffer if we are returning success */
-    if (WnodeEventItem != NULL)
-        ExFreePool(WnodeEventItem);
+    ExFreePool(WnodeEventItem);
 
     return STATUS_SUCCESS;
 }
@@ -393,7 +407,7 @@ WmiStartTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-    
+
 NTSTATUS
 NTAPI
 WmiStopTrace(IN PWMI_LOGGER_INFORMATION LoggerInfo)

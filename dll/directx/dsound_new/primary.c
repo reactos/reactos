@@ -154,8 +154,8 @@ HRESULT
 WINAPI
 PrimaryDirectSoundBuffer8Impl_fnGetFormat(
     LPDIRECTSOUNDBUFFER8 iface,
-    LPWAVEFORMATEX pwfxFormat, 
-    DWORD dwSizeAllocated, 
+    LPWAVEFORMATEX pwfxFormat,
+    DWORD dwSizeAllocated,
     LPDWORD pdwSizeWritten)
 {
     DWORD FormatSize;
@@ -308,7 +308,7 @@ PrimaryDirectSoundBuffer8Impl_fnLock(
     DWORD dwBytes,
     LPVOID *ppvAudioPtr1,
     LPDWORD pdwAudioBytes1,
-    LPVOID *ppvAudioPtr2, 
+    LPVOID *ppvAudioPtr2,
     LPDWORD pdwAudioBytes2,
     DWORD dwFlags)
 {
@@ -386,7 +386,7 @@ PrimaryDirectSoundBuffer8Impl_fnSetFormat(
     ASSERT(pcfxFormat->cbSize == 0);
 
 
-    DPRINT("This %p Format: Tag %x nChannels %u nSamplesPerSec %u nAvgBytesPerSec %u nBlockAlign %u wBitsPerSample %u cbSize %u\n", This, 
+    DPRINT("This %p Format: Tag %x nChannels %u nSamplesPerSec %u nAvgBytesPerSec %u nBlockAlign %u wBitsPerSample %u cbSize %u\n", This,
           pcfxFormat->wFormatTag, pcfxFormat->nChannels, pcfxFormat->nSamplesPerSec, pcfxFormat->nAvgBytesPerSec, pcfxFormat->nBlockAlign, pcfxFormat->wBitsPerSample, pcfxFormat->cbSize);
 
     CopyMemory(&This->Format, pcfxFormat, sizeof(WAVEFORMATEX));
@@ -519,7 +519,7 @@ HRESULT
 WINAPI
 PrimaryDirectSoundBuffer8Impl_fnSetFX(
     LPDIRECTSOUNDBUFFER8 iface,
-    DWORD dwEffectsCount, 
+    DWORD dwEffectsCount,
     LPDSEFFECTDESC pDSFXDesc,
     LPDWORD pdwResultCodes)
 {
@@ -532,7 +532,7 @@ WINAPI
 PrimaryDirectSoundBuffer8Impl_fnAcquireResources(
     LPDIRECTSOUNDBUFFER8 iface,
     DWORD dwFlags,
-    DWORD dwEffectsCount, 
+    DWORD dwEffectsCount,
     LPDWORD pdwResultCodes)
 {
     UNIMPLEMENTED;

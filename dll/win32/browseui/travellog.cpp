@@ -60,9 +60,9 @@ public:
     long GetSize() const;
 
     // *** ITravelEntry methods ***
-    virtual HRESULT STDMETHODCALLTYPE Invoke(IUnknown *punk);
-    virtual HRESULT STDMETHODCALLTYPE Update(IUnknown *punk, BOOL fIsLocalAnchor);
-    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPITEMIDLIST *ppidl);
+    STDMETHOD(Invoke)(IUnknown *punk) override;
+    STDMETHOD(Update)(IUnknown *punk, BOOL fIsLocalAnchor) override;
+    STDMETHOD(GetPidl)(LPITEMIDLIST *ppidl) override;
 
 BEGIN_COM_MAP(CTravelEntry)
     COM_INTERFACE_ENTRY_IID(IID_ITravelEntry, ITravelEntry)
@@ -90,17 +90,17 @@ public:
 public:
 
     // *** ITravelLog methods ***
-    virtual HRESULT STDMETHODCALLTYPE AddEntry(IUnknown *punk, BOOL fIsLocalAnchor);
-    virtual HRESULT STDMETHODCALLTYPE UpdateEntry(IUnknown *punk, BOOL fIsLocalAnchor);
-    virtual HRESULT STDMETHODCALLTYPE UpdateExternal(IUnknown *punk, IUnknown *punkHLBrowseContext);
-    virtual HRESULT STDMETHODCALLTYPE Travel(IUnknown *punk, int iOffset);
-    virtual HRESULT STDMETHODCALLTYPE GetTravelEntry(IUnknown *punk, int iOffset, ITravelEntry **ppte);
-    virtual HRESULT STDMETHODCALLTYPE FindTravelEntry(IUnknown *punk, LPCITEMIDLIST pidl, ITravelEntry **ppte);
-    virtual HRESULT STDMETHODCALLTYPE GetToolTipText(IUnknown *punk, int iOffset, int idsTemplate, LPWSTR pwzText, DWORD cchText);
-    virtual HRESULT STDMETHODCALLTYPE InsertMenuEntries(IUnknown *punk, HMENU hmenu, int nPos, int idFirst, int idLast, DWORD dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE Clone(ITravelLog **pptl);
-    virtual DWORD STDMETHODCALLTYPE CountEntries(IUnknown *punk);
-    virtual HRESULT STDMETHODCALLTYPE Revert();
+    STDMETHOD(AddEntry)(IUnknown *punk, BOOL fIsLocalAnchor) override;
+    STDMETHOD(UpdateEntry)(IUnknown *punk, BOOL fIsLocalAnchor) override;
+    STDMETHOD(UpdateExternal)(IUnknown *punk, IUnknown *punkHLBrowseContext) override;
+    STDMETHOD(Travel)(IUnknown *punk, int iOffset) override;
+    STDMETHOD(GetTravelEntry)(IUnknown *punk, int iOffset, ITravelEntry **ppte) override;
+    STDMETHOD(FindTravelEntry)(IUnknown *punk, LPCITEMIDLIST pidl, ITravelEntry **ppte) override;
+    STDMETHOD(GetToolTipText)(IUnknown *punk, int iOffset, int idsTemplate, LPWSTR pwzText, DWORD cchText) override;
+    STDMETHOD(InsertMenuEntries)(IUnknown *punk, HMENU hmenu, int nPos, int idFirst, int idLast, DWORD dwFlags) override;
+    STDMETHOD(Clone)(ITravelLog **pptl) override;
+    STDMETHOD_(DWORD, CountEntries)(IUnknown *punk) override;
+    STDMETHOD(Revert)() override;
 
 BEGIN_COM_MAP(CTravelLog)
     COM_INTERFACE_ENTRY_IID(IID_ITravelLog, ITravelLog)
@@ -167,10 +167,12 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
 
     TRACE("CTravelEntry::Update for IUnknown punk=%p, fIsLocalAnchor=%s\n", punk, fIsLocalAnchor ? "TRUE" : "FALSE");
 
-
-    WCHAR wch[MAX_PATH * 2];
-    GetToolTipText(punk, wch);
-    TRACE("Updating entry with display name: %S\n", wch);
+    if (TRACE_ON(browseui))
+    {
+        WCHAR wch[MAX_PATH * 2];
+        GetToolTipText(punk, wch);
+        TRACE("Updating entry with display name: %S\n", wch);
+    }
 
     ZeroMemory(&windowData, sizeof(WINDOWDATA));
     ILFree(fPIDL);
@@ -198,8 +200,12 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    GetToolTipText(punk, wch);
-    TRACE("Updated entry display name is now: %S\n", wch);
+    if (TRACE_ON(browseui))
+    {
+        WCHAR wch[MAX_PATH * 2];
+        GetToolTipText(punk, wch);
+        TRACE("Updated entry display name is now: %S\n", wch);
+    }
 
     return S_OK;
 }
@@ -279,7 +285,7 @@ HRESULT CTravelLog::FindRelativeEntry(int _offset, CTravelEntry **foundEntry)
     }
     if (curEntry == NULL)
         return E_INVALIDARG;
-    
+
     *foundEntry = curEntry;
 
     TRACE("CTravelLog::FindRelativeEntry for offset %d, returning %p\n", offset, *foundEntry);
@@ -398,7 +404,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
 {
     CTravelEntry                            *destinationEntry;
     HRESULT                                 hResult;
-    
+
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
     if (FAILED(hResult))
         return hResult;

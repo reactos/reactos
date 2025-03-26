@@ -15,6 +15,7 @@
 static LONG CALLBACK SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 
 HINSTANCE hApplet = NULL;
+BOOL g_bRebootNeeded = FALSE;
 
 /* Applets */
 static APPLET Applets[NUM_APPLETS] =
@@ -35,17 +36,42 @@ InitPropSheetPage(PROPSHEETPAGEW *page, WORD idDlg, DLGPROC DlgProc)
     page->pfnDlgProc  = DlgProc;
 }
 
+static BOOL AskForReboot(HWND hwndDlg)
+{
+    WCHAR szText[128], szCaption[64];
+    LoadStringW(hApplet, IDS_REBOOT_NOW, szText, _countof(szText));
+    LoadStringW(hApplet, IDS_LANGUAGE, szCaption, _countof(szCaption));
+    return (MessageBoxW(hwndDlg, szText, szCaption, MB_ICONINFORMATION | MB_YESNO) == IDYES);
+}
+
 static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
-    // NOTE: This callback is needed to set large icon correctly.
-    HICON hIcon;
     switch (uMsg)
     {
         case PSCB_INITIALIZED:
         {
-            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO));
+            /* Set large icon correctly */
+            HICON hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+
+        case PSCB_BUTTONPRESSED:
+        {
+            switch (lParam)
+            {
+                case PSBTN_OK:
+                case PSBTN_APPLYNOW:
+                {
+                    if (g_bRebootNeeded && AskForReboot(hwndDlg))
+                    {
+                        EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
+                        ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+                    }
+                    break;
+                }
+            }
             break;
         }
     }
@@ -58,9 +84,6 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     PROPSHEETPAGEW page[2];
     PROPSHEETHEADERW header;
-    WCHAR szCaption[MAX_STR_LEN];
-
-    LoadStringW(hApplet, IDS_CPLSYSTEMNAME, szCaption, ARRAYSIZE(szCaption));
 
     ZeroMemory(&header, sizeof(header));
 
@@ -68,8 +91,8 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
     header.hwndParent  = hwnd;
     header.hInstance   = hApplet;
-    header.pszIcon     = MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO);
-    header.pszCaption  = szCaption;
+    header.pszIcon     = MAKEINTRESOURCEW(IDI_CPLSYSTEM);
+    header.pszCaption  = MAKEINTRESOURCEW(IDS_CPLSYSTEMNAME);
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;
     header.ppsp        = page;
@@ -90,9 +113,7 @@ LONG CALLBACK
 CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     CPLINFO *CPlInfo;
-    DWORD i;
-
-    i = (DWORD)lParam1;
+    UINT i = (UINT)lParam1;
 
     switch (uMsg)
     {
@@ -103,15 +124,25 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
-            CPlInfo = (CPLINFO*)lParam2;
-            CPlInfo->lData = 0;
-            CPlInfo->idIcon = Applets[i].idIcon;
-            CPlInfo->idName = Applets[i].idName;
-            CPlInfo->idInfo = Applets[i].idDescription;
+            if (i < NUM_APPLETS)
+            {
+                CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = Applets[i].idIcon;
+                CPlInfo->idName = Applets[i].idName;
+                CPlInfo->idInfo = Applets[i].idDescription;
+            }
+            else
+            {
+                return TRUE;
+            }
             break;
 
         case CPL_DBLCLK:
-            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            if (i < NUM_APPLETS)
+                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+            else
+                return TRUE;
             break;
     }
 

@@ -147,7 +147,11 @@ extern "C" {
 #define NM_THEMECHANGED (NM_FIRST-22)
 
 #ifndef CCSIZEOF_STRUCT
+#if defined(__clang__) /* Clang-CL fails without this workaround. See CORE-17547 */
+#define CCSIZEOF_STRUCT(structname,member) (__builtin_offsetof(structname,member) + sizeof(((structname*)0)->member))
+#else
 #define CCSIZEOF_STRUCT(structname,member) (((int)((LPBYTE)(&((structname*)0)->member) - ((LPBYTE)((structname*)0))))+sizeof(((structname*)0)->member))
+#endif
 #endif
 
   typedef struct tagNMTOOLTIPSCREATED {
@@ -218,8 +222,8 @@ extern "C" {
 #define TBN_FIRST (0U-700U)
 #define TBN_LAST (0U-720U)
 
-#define UDN_FIRST (0U-721)
-#define UDN_LAST (0U-740)
+#define UDN_FIRST (0U-721U)
+#define UDN_LAST (0U-740U)
 
 #define MCN_FIRST (0U-750U)
 #define MCN_LAST (0U-759U)
@@ -1776,6 +1780,11 @@ typedef struct tagNMBCDROPDOWN {
 #define TTI_INFO 1
 #define TTI_WARNING 2
 #define TTI_ERROR 3
+#if (_WIN32_WINNT >= 0x0600)
+#define TTI_INFO_LARGE 4
+#define TTI_WARNING_LARGE 5
+#define TTI_ERROR_LARGE 6
+#endif
 
 #define TTM_ACTIVATE (WM_USER+1)
 #define TTM_SETDELAYTIME (WM_USER+3)

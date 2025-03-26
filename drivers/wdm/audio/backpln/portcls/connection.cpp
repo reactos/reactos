@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 extern
@@ -24,37 +21,16 @@ RtlCreateUnicodeString(
     PCWSTR SourceString
 );
 
-
-class CUnregisterPhysicalConnection : public IUnregisterPhysicalConnection
+class CUnregisterPhysicalConnection : public CUnknownImpl<IUnregisterPhysicalConnection>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IUnregisterPhysicalConnection;
 
     CUnregisterPhysicalConnection(IUnknown *OuterUnknown){}
 
     virtual ~CUnregisterPhysicalConnection(){}
-
-protected:
-    LONG m_Ref;
-
 };
 
 NTSTATUS
@@ -195,7 +171,6 @@ RegisterConnection(
         FromString = &SymEntry->SymbolicLink;
     }
 
-
     if (ToUnknown)
     {
         Status = ToUnknown->QueryInterface(IID_ISubdevice, (PVOID*)&ToSubDevice);
@@ -211,7 +186,6 @@ RegisterConnection(
             Status = STATUS_UNSUCCESSFUL;
             goto cleanup;
         }
-
 
         SymEntry = (PSYMBOLICLINK_ENTRY)CONTAINING_RECORD(ToSubDeviceDescriptor->SymbolicLinkList.Flink, SYMBOLICLINK_ENTRY, Entry);
         ToString = &SymEntry->SymbolicLink;
@@ -248,7 +222,6 @@ RegisterConnection(
 
         InsertTailList(&FromSubDeviceDescriptor->PhysicalConnectionList, &FromEntry->Entry);
     }
-
 
     if (ToSubDeviceDescriptor)
     {

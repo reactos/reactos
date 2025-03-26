@@ -39,10 +39,13 @@
 #define HIGH_LEVEL 15
 #elif defined(_IA64_)
 #define HIGH_LEVEL 15
+#elif defined(_ARM64_)
+#define HIGH_LEVEL 15
 #endif
 
 #undef _IRQL_always_function_max_
 #undef _IRQL_always_function_min_
+#undef _IRQL_inout_
 #undef _IRQL_raises_
 #undef _IRQL_requires_
 #undef _IRQL_requires_max_
@@ -71,6 +74,7 @@
 
 #define _IRQL_always_function_max_(irql)    _Pre_ _SA_annotes1(SAL_maxFunctionIrql,irql)
 #define _IRQL_always_function_min_(irql)    _Pre_ _SA_annotes1(SAL_minFunctionIrql,irql)
+#define _IRQL_inout_                        _IRQL_saves_ _IRQL_restores_
 #define _IRQL_raises_(irql)                 _Post_ _SA_annotes1(SAL_raiseIRQL,irql)
 #define _IRQL_requires_(irql)               _Pre_ _SA_annotes1(SAL_IRQL,irql)
 #define _IRQL_requires_max_(irql)           _Pre_ _SA_annotes1(SAL_maxIRQL,irql)

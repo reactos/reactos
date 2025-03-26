@@ -1,4 +1,3 @@
-# Functions exported by Win2003 SP1
 @ stdcall CMP_GetBlockedDriverInfo(wstr ptr long ptr)
 @ stdcall CMP_GetServerSideDeviceInstallFlags(ptr long ptr)
 @ stdcall CMP_Init_Detection(long)
@@ -236,8 +235,8 @@
 @ stdcall SetupCommitFileQueue(long long ptr ptr) SetupCommitFileQueueA
 @ stdcall SetupCommitFileQueueA(long long ptr ptr)
 @ stdcall SetupCommitFileQueueW(long long ptr ptr)
-@ stub SetupConfigureWmiFromInfSectionA
-@ stub SetupConfigureWmiFromInfSectionW
+@ stub -version=0x502+ SetupConfigureWmiFromInfSectionA
+@ stub -version=0x502+ SetupConfigureWmiFromInfSectionW
 @ stdcall SetupCopyErrorA(long str str str str str long long str long ptr)
 @ stdcall SetupCopyErrorW(long wstr wstr wstr wstr wstr long long wstr long ptr)
 @ stdcall SetupCopyOEMInfA(str str long long ptr long ptr ptr)
@@ -291,8 +290,8 @@
 @ stdcall SetupDiEnumDeviceInterfaces(long ptr ptr long ptr)
 @ stdcall SetupDiEnumDriverInfoA(long ptr long long ptr)
 @ stdcall SetupDiEnumDriverInfoW(long ptr long long ptr)
-@ stub SetupDiGetActualModelsSectionA
-@ stub SetupDiGetActualModelsSectionW
+@ stub -version=0x502+ SetupDiGetActualModelsSectionA
+@ stub -version=0x502+ SetupDiGetActualModelsSectionW
 @ stdcall SetupDiGetActualSectionToInstallA(long str str long ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExA(long str ptr str long ptr ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExW(long wstr ptr wstr long ptr ptr ptr)
@@ -314,10 +313,10 @@
 @ stdcall SetupDiGetClassImageListExW(ptr wstr ptr)
 @ stdcall SetupDiGetClassInstallParamsA(ptr ptr ptr long ptr)
 @ stdcall SetupDiGetClassInstallParamsW(ptr ptr ptr long ptr)
-@ stub SetupDiGetClassRegistryPropertyA
-@ stub SetupDiGetClassRegistryPropertyW
-@ stub SetupDiGetCustomDevicePropertyA
-@ stub SetupDiGetCustomDevicePropertyW
+@ stdcall SetupDiGetClassRegistryPropertyA(ptr long ptr ptr long ptr str ptr)
+@ stdcall SetupDiGetClassRegistryPropertyW(ptr long ptr ptr long ptr wstr ptr)
+@ stdcall SetupDiGetCustomDevicePropertyA(ptr ptr str long ptr ptr long ptr)
+@ stdcall SetupDiGetCustomDevicePropertyW(ptr ptr wstr long ptr ptr long ptr)
 @ stdcall SetupDiGetDeviceInfoListClass(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailA(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailW(ptr ptr)
@@ -369,21 +368,21 @@
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
 @ stdcall SetupDiRemoveDevice(ptr ptr)
 @ stdcall SetupDiRemoveDeviceInterface(ptr ptr)
-@ stdcall SetupDiRestartDevices(ptr ptr)
+@ stdcall -version=0x502+ SetupDiRestartDevices(ptr ptr)
 @ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stdcall SetupDiSelectDevice(ptr ptr)
 @ stub SetupDiSelectOEMDrv
 @ stdcall SetupDiSetClassInstallParamsA(ptr ptr ptr long)
 @ stdcall SetupDiSetClassInstallParamsW(ptr ptr ptr long)
-@ stub SetupDiSetClassRegistryPropertyA
-@ stub SetupDiSetClassRegistryPropertyW
+@ stdcall SetupDiSetClassRegistryPropertyA(ptr long ptr long str ptr)
+@ stdcall SetupDiSetClassRegistryPropertyW(ptr long ptr long wstr ptr)
 @ stdcall SetupDiSetDeviceInstallParamsA(ptr ptr ptr)
 @ stdcall SetupDiSetDeviceInstallParamsW(ptr ptr ptr)
 @ stub SetupDiSetDeviceInterfaceDefault
 @ stdcall SetupDiSetDeviceRegistryPropertyA(ptr ptr long ptr long)
 @ stdcall SetupDiSetDeviceRegistryPropertyW(ptr ptr long ptr long)
-@ stub SetupDiSetDriverInstallParamsA
-@ stub SetupDiSetDriverInstallParamsW
+@ stdcall SetupDiSetDriverInstallParamsA(ptr ptr ptr ptr)
+@ stdcall SetupDiSetDriverInstallParamsW(ptr ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDevice(ptr ptr)
 @ stdcall SetupDiSetSelectedDriverA(ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDriverW(ptr ptr ptr)
@@ -476,8 +475,8 @@
 @ stdcall SetupQueryInfFileInformationW(ptr long wstr long ptr)
 @ stdcall SetupQueryInfOriginalFileInformationA(ptr long ptr ptr)
 @ stdcall SetupQueryInfOriginalFileInformationW(ptr long ptr ptr)
-@ stub SetupQueryInfVersionInformationA
-@ stub SetupQueryInfVersionInformationW
+@ stdcall SetupQueryInfVersionInformationA(ptr long str ptr long ptr)
+@ stdcall SetupQueryInfVersionInformationW(ptr long wstr ptr long ptr)
 @ stub SetupQuerySourceListA
 @ stub SetupQuerySourceListW
 @ stdcall SetupQuerySpaceRequiredOnDriveA(long str ptr ptr long)
@@ -565,7 +564,7 @@
 @ stdcall pSetupInstallCatalog(wstr wstr ptr)
 @ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
-@ stub pSetupIsLocalSystem
+@ stub -version=0x502+ pSetupIsLocalSystem
 @ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
 @ stdcall pSetupMalloc(long) MyMalloc

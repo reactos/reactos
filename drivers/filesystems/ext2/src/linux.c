@@ -432,7 +432,7 @@ get_block_bh_mdl(
     sector_t                block,
     unsigned long           size,
     int                     zero
-) 
+)
 {
     PEXT2_VCB Vcb = bdev->bd_priv;
     LARGE_INTEGER offset;
@@ -613,7 +613,7 @@ get_block_bh_pin(
     sector_t                block,
     unsigned long           size,
     int                     zero
-) 
+)
 {
     PEXT2_VCB Vcb = bdev->bd_priv;
     LARGE_INTEGER offset;
@@ -664,7 +664,11 @@ again:
                             FALSE,
                             PIN_WAIT,
                             &bh->b_bcb,
+#ifdef __REACTOS__
                             (PVOID *)&bh->b_data)) {
+#else
+                            &bh->b_data)) {
+#endif
             Ext2Sleep(100);
             goto again;
         }
@@ -674,7 +678,11 @@ again:
                         bh->b_size,
                         PIN_WAIT,
                         &bh->b_bcb,
+#ifdef __REACTOS__
                         (PVOID *)&bh->b_data)) {
+#else
+                        &bh->b_data)) {
+#endif
             Ext2Sleep(100);
             goto again;
         }
@@ -758,7 +766,7 @@ get_block_bh(
     sector_t                block,
     unsigned long           size,
     int                     zero
-) 
+)
 {
     return get_block_bh_mdl(bdev, block, size, zero);
 }
@@ -776,7 +784,7 @@ get_block_bh(
     sector_t                block,
     unsigned long           size,
     int                     zero
-) 
+)
 {
     return get_block_bh_pin(bdev, block, size, zero);
 }

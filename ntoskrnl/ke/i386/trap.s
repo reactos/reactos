@@ -125,6 +125,7 @@ ALIGN 4
 EXTERN @KiInterruptTemplateHandler@8:PROC
 PUBLIC _KiInterruptTemplate
 _KiInterruptTemplate:
+    CFI_STARTPROC
     KiEnterTrap KI_PUSH_FAKE_ERROR_CODE
 PUBLIC _KiInterruptTemplate2ndDispatch
 _KiInterruptTemplate2ndDispatch:
@@ -135,6 +136,7 @@ _KiInterruptTemplateObject:
     jmp eax
 PUBLIC _KiInterruptTemplateDispatch
 _KiInterruptTemplateDispatch:
+    CFI_ENDPROC
 
 EXTERN @KiSystemServiceHandler@8:PROC
 PUBLIC _KiSystemService
@@ -218,4 +220,38 @@ _KiConvertToGuiThread@0:
     /* return to the caller */
     ret
 
+/*
+NTSTATUS
+NTAPI
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes);
+*/
+PUBLIC _KiSystemCallTrampoline@12
+_KiSystemCallTrampoline@12:
+    push ebp
+    mov ebp, esp
+    push esi
+    push edi
+
+    /* Get handler */
+    mov eax, [ebp + 8]
+    /* Get arguments */
+    mov esi, [ebp + 12]
+    /* Get stack bytes */
+    mov ecx, [ebp + 16]
+
+    /* Copy args to the stack */
+    sub esp, ecx
+    mov edi, esp
+    shr ecx, 2
+    rep movsd
+
+    call eax
+
+    pop edi
+    pop esi
+    leave
+
+    ret 12
 END

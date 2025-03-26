@@ -109,6 +109,27 @@ typedef struct _TOKEN_ACCESS_INFORMATION
      SE_GROUP_INTEGRITY_ENABLED)
 
 //
+// Privilege token filtering flags
+//
+#define DISABLE_MAX_PRIVILEGE 0x1
+#define SANDBOX_INERT         0x2
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define LUA_TOKEN             0x4
+#define WRITE_RESTRICTED      0x8
+#endif
+
+//
+// Proxy Class enumeration
+//
+typedef enum _PROXY_CLASS
+{
+    ProxyFull = 0,
+    ProxyService,
+    ProxyTree,
+    ProxyDirectory
+} PROXY_CLASS;
+
+//
 // Audit and Policy Structures
 //
 typedef struct _SEP_AUDIT_POLICY_CATEGORIES
@@ -140,14 +161,57 @@ typedef struct _SEP_AUDIT_POLICY
     };
 } SEP_AUDIT_POLICY, *PSEP_AUDIT_POLICY;
 
+//
+// Security Logon Session References
+//
+typedef struct _SEP_LOGON_SESSION_REFERENCES
+{
+    struct _SEP_LOGON_SESSION_REFERENCES *Next;
+    LUID LogonId;
+    ULONG ReferenceCount;
+    ULONG Flags;
+    PDEVICE_MAP pDeviceMap;
+    LIST_ENTRY TokenList;
+} SEP_LOGON_SESSION_REFERENCES, *PSEP_LOGON_SESSION_REFERENCES;
+
 typedef struct _SE_AUDIT_PROCESS_CREATION_INFO
 {
     POBJECT_NAME_INFORMATION ImageFileName;
 } SE_AUDIT_PROCESS_CREATION_INFO, *PSE_AUDIT_PROCESS_CREATION_INFO;
 
 //
+// Token Audit Data
+//
+typedef struct _SECURITY_TOKEN_AUDIT_DATA
+{
+    ULONG Length;
+    ULONG GrantMask;
+    ULONG DenyMask;
+} SECURITY_TOKEN_AUDIT_DATA, *PSECURITY_TOKEN_AUDIT_DATA;
+
+//
+// Token Proxy Data
+//
+typedef struct _SECURITY_TOKEN_PROXY_DATA
+{
+    ULONG Length;
+    PROXY_CLASS ProxyClass;
+    UNICODE_STRING PathInfo;
+    ULONG ContainerMask;
+    ULONG ObjectMask;
+} SECURITY_TOKEN_PROXY_DATA, *PSECURITY_TOKEN_PROXY_DATA;
+
+//
 // Token and auxiliary data
 //
+// ===================!!!IMPORTANT NOTE!!!=====================
+// ImageFileName, ProcessCid, ThreadCid and CreateMethod field
+// names are taken from Windows Server 2003 SP2 checked build
+// WinDBG debug extensions command purposes (such as !logonsession
+// command respectively). As such names are hardcoded, we have
+// to be compatible with them. THESE FIELD NAMES MUST NOT BE
+// CHANGED!!!
+// ============================================================
 typedef struct _TOKEN
 {
     TOKEN_SOURCE TokenSource;                         /* 0x00 */
@@ -155,8 +219,8 @@ typedef struct _TOKEN
     LUID AuthenticationId;                            /* 0x18 */
     LUID ParentTokenId;                               /* 0x20 */
     LARGE_INTEGER ExpirationTime;                     /* 0x28 */
-    struct _ERESOURCE *TokenLock;                     /* 0x30 */
-    SEP_AUDIT_POLICY  AuditPolicy;                    /* 0x38 */
+    PERESOURCE TokenLock;                             /* 0x30 */
+    SEP_AUDIT_POLICY AuditPolicy;                     /* 0x38 */
     LUID ModifiedId;                                  /* 0x40 */
     ULONG SessionId;                                  /* 0x48 */
     ULONG UserAndGroupCount;                          /* 0x4C */
@@ -176,17 +240,39 @@ typedef struct _TOKEN
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;  /* 0x84 */
     ULONG TokenFlags;                                 /* 0x88 */
     BOOLEAN TokenInUse;                               /* 0x8C */
-    PVOID ProxyData;                                  /* 0x90 */
-    PVOID AuditData;                                  /* 0x94 */
-    LUID OriginatingLogonSession;                     /* 0x98 */
-    ULONG VariablePart;                               /* 0xA0 */
+    PSECURITY_TOKEN_PROXY_DATA ProxyData;             /* 0x90 */
+    PSECURITY_TOKEN_AUDIT_DATA AuditData;             /* 0x94 */
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;       /* 0x98 */
+    LUID OriginatingLogonSession;                     /* 0x9C */
+#if DBG
+    UCHAR ImageFileName[16];                          /* 0xA4 */
+    HANDLE ProcessCid;                                /* 0xB4 */
+    HANDLE ThreadCid;                                 /* 0xB8 */
+    ULONG CreateMethod;                               /* 0xBC */
+#endif
+    ULONG VariablePart;                               /* 0xC0 */
 } TOKEN, *PTOKEN;
 
 typedef struct _AUX_ACCESS_DATA
 {
-    PPRIVILEGE_SET PrivilegeSet;
+    PPRIVILEGE_SET PrivilegesUsed;
     GENERIC_MAPPING GenericMapping;
-    ULONG Reserved;
+    ACCESS_MASK AccessesToAudit;
+    ACCESS_MASK MaximumAuditMask;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    GUID TransactionId;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    PVOID NewSecurityDescriptor;
+    PVOID ExistingSecurityDescriptor;
+    PVOID ParentSecurityDescriptor;
+    VOID (NTAPI *DerefSecurityDescriptor)(PVOID, PVOID);
+    PVOID SDLock;
+    ACCESS_REASONS AccessReasons;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    BOOLEAN GenerateStagingEvents;
+#endif
 } AUX_ACCESS_DATA, *PAUX_ACCESS_DATA;
 
 //

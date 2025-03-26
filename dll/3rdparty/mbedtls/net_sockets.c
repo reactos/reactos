@@ -1,7 +1,7 @@
 /*
  *  TCP/IP or UDP/IP networking functions
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,9 +42,20 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
+
+/* Enable definition of getaddrinfo() even when compiling with -std=c99. Must
+ * be set before config.h, which pulls in glibc's features.h indirectly.
+ * Harmless on other platforms. */
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200112L
+#endif
+
+#if defined(__NetBSD__)
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600 /* sockaddr_storage */
+#endif
+#endif
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
@@ -55,7 +66,8 @@
 #if defined(MBEDTLS_NET_C)
 
 #if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
-    !defined(__APPLE__) && !defined(_WIN32)
+    !defined(__APPLE__) && !defined(_WIN32) && !defined(__QNXNTO__) && \
+    !defined(__HAIKU__)
 #error "This module only works on Unix and Windows, see MBEDTLS_NET_C in config.h"
 #endif
 
@@ -71,6 +83,8 @@
 
 #if (defined(_WIN32) || defined(_WIN32_WCE)) && !defined(EFIX64) && \
     !defined(EFI32)
+
+#define IS_EINTR( ret ) ( ( ret ) == WSAEINTR )
 
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0501)
 #undef _WIN32_WINNT
@@ -110,6 +124,8 @@ static int wsa_init_done = 0;
 #include <netdb.h>
 #include <errno.h>
 
+#define IS_EINTR( ret ) ( ( ret ) == EINTR )
+
 #endif /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */
 
 /* Some MS functions want int and MSVC warns if we pass size_t,
@@ -147,6 +163,31 @@ static int net_prepare( void )
     signal( SIGPIPE, SIG_IGN );
 #endif
 #endif
+    return( 0 );
+}
+
+/*
+ * Return 0 if the file descriptor is valid, an error otherwise.
+ * If for_select != 0, check whether the file descriptor is within the range
+ * allowed for fd_set used for the FD_xxx macros and the select() function.
+ */
+static int check_fd( int fd, int for_select )
+{
+    if( fd < 0 )
+        return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
+
+#if (defined(_WIN32) || defined(_WIN32_WCE)) && !defined(EFIX64) && \
+    !defined(EFI32)
+    (void) for_select;
+#else
+    /* A limitation of select() is that it only works with file descriptors
+     * that are strictly less than FD_SETSIZE. This is a limitation of the
+     * fd_set type. Error out early, because attempting to call FD_SET on a
+     * large file descriptor is a buffer overflow on typical platforms. */
+    if( for_select && fd >= FD_SETSIZE )
+        return( MBEDTLS_ERR_NET_POLL_FAILED );
+#endif
+
     return( 0 );
 }
 
@@ -335,8 +376,9 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
 
     struct sockaddr_storage client_addr;
 
-#if defined(__socklen_t_defined) || defined(_SOCKLEN_T) ||  \
-    defined(_SOCKLEN_T_DECLARED) || defined(__DEFINED_socklen_t)
+#if defined(__socklen_t_defined) || defined(_SOCKLEN_T) || \
+    defined(_SOCKLEN_T_DECLARED) || defined(__DEFINED_socklen_t) || \
+    ( defined(__NetBSD__) && defined(socklen_t) )
     socklen_t n = (socklen_t) sizeof( client_addr );
     socklen_t type_len = (socklen_t) sizeof( type );
 #else
@@ -467,6 +509,73 @@ int mbedtls_net_set_nonblock( mbedtls_net_context *ctx )
 }
 
 /*
+ * Check if data is available on the socket
+ */
+
+int mbedtls_net_poll( mbedtls_net_context *ctx, uint32_t rw, uint32_t timeout )
+{
+    int ret;
+    struct timeval tv;
+
+    fd_set read_fds;
+    fd_set write_fds;
+
+    int fd = ctx->fd;
+
+    ret = check_fd( fd, 1 );
+    if( ret != 0 )
+        return( ret );
+
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+    /* Ensure that memory sanitizers consider read_fds and write_fds as
+     * initialized even on platforms such as Glibc/x86_64 where FD_ZERO
+     * is implemented in assembly. */
+    memset( &read_fds, 0, sizeof( read_fds ) );
+    memset( &write_fds, 0, sizeof( write_fds ) );
+#endif
+#endif
+
+    FD_ZERO( &read_fds );
+    if( rw & MBEDTLS_NET_POLL_READ )
+    {
+        rw &= ~MBEDTLS_NET_POLL_READ;
+        FD_SET( fd, &read_fds );
+    }
+
+    FD_ZERO( &write_fds );
+    if( rw & MBEDTLS_NET_POLL_WRITE )
+    {
+        rw &= ~MBEDTLS_NET_POLL_WRITE;
+        FD_SET( fd, &write_fds );
+    }
+
+    if( rw != 0 )
+        return( MBEDTLS_ERR_NET_BAD_INPUT_DATA );
+
+    tv.tv_sec  = timeout / 1000;
+    tv.tv_usec = ( timeout % 1000 ) * 1000;
+
+    do
+    {
+        ret = select( fd + 1, &read_fds, &write_fds, NULL,
+                      timeout == (uint32_t) -1 ? NULL : &tv );
+    }
+    while( IS_EINTR( ret ) );
+
+    if( ret < 0 )
+        return( MBEDTLS_ERR_NET_POLL_FAILED );
+
+    ret = 0;
+    if( FD_ISSET( fd, &read_fds ) )
+        ret |= MBEDTLS_NET_POLL_READ;
+    if( FD_ISSET( fd, &write_fds ) )
+        ret |= MBEDTLS_NET_POLL_WRITE;
+
+    return( ret );
+}
+
+/*
  * Portable usleep helper
  */
 void mbedtls_net_usleep( unsigned long usec )
@@ -494,8 +603,9 @@ int mbedtls_net_recv( void *ctx, unsigned char *buf, size_t len )
     int ret;
     int fd = ((mbedtls_net_context *) ctx)->fd;
 
-    if( fd < 0 )
-        return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
+    ret = check_fd( fd, 0 );
+    if( ret != 0 )
+        return( ret );
 
     ret = (int) read( fd, buf, len );
 
@@ -525,16 +635,17 @@ int mbedtls_net_recv( void *ctx, unsigned char *buf, size_t len )
 /*
  * Read at most 'len' characters, blocking for at most 'timeout' ms
  */
-int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
-                      uint32_t timeout )
+int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf,
+                              size_t len, uint32_t timeout )
 {
     int ret;
     struct timeval tv;
     fd_set read_fds;
     int fd = ((mbedtls_net_context *) ctx)->fd;
 
-    if( fd < 0 )
-        return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
+    ret = check_fd( fd, 1 );
+    if( ret != 0 )
+        return( ret );
 
     FD_ZERO( &read_fds );
     FD_SET( fd, &read_fds );
@@ -574,8 +685,9 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
     int ret;
     int fd = ((mbedtls_net_context *) ctx)->fd;
 
-    if( fd < 0 )
-        return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
+    ret = check_fd( fd, 0 );
+    if( ret != 0 )
+        return( ret );
 
     ret = (int) write( fd, buf, len );
 

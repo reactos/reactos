@@ -278,7 +278,7 @@ InitNotifications(VOID)
     dwIndex = 0;
     for(;;)
     {
-        dwKeyName = 80 * sizeof(WCHAR);
+        dwKeyName = ARRAYSIZE(szKeyName);
         lError = RegEnumKeyExW(hNotifyKey,
                                dwIndex,
                                szKeyName,
@@ -312,11 +312,8 @@ CallNotificationDll(
     NOTIFICATION_TYPE Type,
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    HKEY hDllKey = NULL;
-    HMODULE hModule = NULL;
+    HMODULE hModule;
     CHAR szFuncBuffer[128];
-    DWORD dwSize;
-    DWORD dwType;
     DWORD dwError = ERROR_SUCCESS;
     PWLX_NOTIFY_HANDLER pNotifyHandler;
 
@@ -338,6 +335,10 @@ CallNotificationDll(
     }
     else
     {
+        HKEY hDllKey;
+        DWORD dwSize;
+        DWORD dwType;
+
         dwError = RegOpenKeyExW(hNotifyKey,
                                 NotificationDll->pszKeyName,
                                 0,
@@ -356,23 +357,32 @@ CallNotificationDll(
                                    &dwType,
                                    (PBYTE)szFuncBuffer,
                                    &dwSize);
-    }
 
-    if (dwError == ERROR_SUCCESS)
-    {
-        hModule = LoadLibraryW(NotificationDll->pszDllName);
-        if (hModule != NULL)
-        {
-            pNotifyHandler = (PWLX_NOTIFY_HANDLER)GetProcAddress(hModule, szFuncBuffer);
-            if (pNotifyHandler != NULL)
-                pNotifyHandler(pInfo);
-
-            FreeLibrary(hModule);
-        }
-    }
-
-    if (hDllKey != NULL)
         RegCloseKey(hDllKey);
+    }
+
+    if (dwError != ERROR_SUCCESS)
+        return;
+
+    hModule = LoadLibraryW(NotificationDll->pszDllName);
+    if (!hModule)
+        return;
+
+    pNotifyHandler = (PWLX_NOTIFY_HANDLER)GetProcAddress(hModule, szFuncBuffer);
+
+    _SEH2_TRY
+    {
+        if (pNotifyHandler)
+            pNotifyHandler(pInfo);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("WL: Exception while running notification %S!%s, Status 0x%08lx\n",
+            NotificationDll->pszDllName, szFuncBuffer, _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    FreeLibrary(hModule);
 }
 
 

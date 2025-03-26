@@ -11,16 +11,16 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Загальні"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Операційна система:", IDC_STATIC, 4, 116, 82, 9
+    LTEXT "Операційна система:", IDC_STATIC, 4, 116, 100, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Версія", IDC_ROSVERSION, 10, 137, 116, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "System Uptime:", IDC_STATIC, 4, 158, 86, 9
-    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
-    LTEXT "Комп'ютер:", IDC_STATIC, 124, 132, 36, 9
+    LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "System Uptime:", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "", IDC_UPTIME, 10, 173, 116, 9
+    LTEXT "Комп'ютер:", IDC_STATIC, 124, 132, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -34,7 +34,7 @@ END
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Обладнання"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Диспетчер пристроїв", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
@@ -50,28 +50,28 @@ BEGIN
     PUSHBUTTON "&Профілі обладнання...", IDC_HARDWARE_PROFILE, 154, 190, 90, 14
 END
 
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Додатково"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Потрібно мати права адміністратора, щоб виконати більшу частину цих змін.", IDC_STATIC, 12, 5, 236, 8
-    GROUPBOX "Швидкодія", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "Візуальні ефекти, використання процесора, оперативної та віртуальної пам'яті.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON "Параметри", IDC_PERFOR, 194, 48, 50, 15
-    GROUPBOX "Профілі користувачів", IDC_STATIC, 6, 75, 244, 48
-    LTEXT "Параметри робочого стола, які стосуються входу до системи.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Параметри", IDC_USERPROFILE, 194, 103, 50, 15
-    GROUPBOX "Завантаження й відновлення", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Завантаження й відновлення системи, налагоджувальна інформація.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON "Параметри", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Налаштування системи", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "Змінні оточення", IDC_ENVVAR, 88, 192, 80, 15
-    PUSHBUTTON "Звіт про помилки", IDC_ERRORREPORT, 170, 192, 80, 15
+    LTEXT "Потрібно мати права адміністратора, щоб виконати більшу частину цих змін.", IDC_STATIC, 12, 5, 236, 17
+    GROUPBOX "Швидкодія", IDC_STATIC, 6, 28, 244, 50
+    LTEXT "Візуальні ефекти, використання процесора, оперативної та віртуальної пам'яті.", IDC_STATIC, 16, 39, 210, 17
+    PUSHBUTTON "Параметри", IDC_PERFOR, 194, 58, 50, 15
+    GROUPBOX "Профілі користувачів", IDC_STATIC, 6, 85, 244, 48
+    LTEXT "Параметри робочого стола, які стосуються входу до системи.", IDC_STATIC, 16, 98, 210, 20
+    PUSHBUTTON "Параметри", IDC_USERPROFILE, 194, 113, 50, 15
+    GROUPBOX "Завантаження й відновлення", IDC_STATIC, 6, 141, 244, 52
+    LTEXT "Завантаження й відновлення системи, налагоджувальна інформація.", IDC_STATIC, 16, 154, 210, 19
+    PUSHBUTTON "Параметри", IDC_STAREC, 194, 172, 50, 15
+    PUSHBUTTON "Налаштування системи", IDC_SYSSETTINGS, 6, 202, 80, 15
+    PUSHBUTTON "Змінні оточення", IDC_ENVVAR, 88, 202, 80, 15
+    PUSHBUTTON "Звіт про помилки", IDC_ERRORREPORT, 170, 202, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Налаштування системи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -133,10 +133,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Копіювати профіль"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Звідки:", IDC_STATIC, 5, 10, 20, 8
-    LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "В:", IDC_STATIC, 5, 30, 20, 8
-    EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
+    LTEXT "Звідки:", IDC_STATIC, 5, 10, 26, 8
+    LTEXT "", IDC_COPYPROFILEFROM, 36, 10, 154, 10
+    LTEXT "В:", IDC_STATIC, 5, 30, 26, 8
+    EDITTEXT IDC_COPYPROFILETO, 36, 30, 154, 12
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 199, 30, 50, 14
 END
@@ -150,8 +150,8 @@ BEGIN
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
     LTEXT "На:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
-    DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 196, 24, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
@@ -160,7 +160,7 @@ CAPTION "Профілі користувачів"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Профілі користувачів містять відомості стосовно облікових записів користувачів. Ви можете створити окремі профілі для кожного з комп'ютерів, на яких ви працюєте, або використовувати один спільний профіль для всіх комп'ютерів.", IDC_STATIC, 40, 11, 204, 39 
+    LTEXT "Профілі користувачів містять відомості стосовно облікових записів користувачів. Ви можете створити окремі профілі для кожного з комп'ютерів, на яких ви працюєте, або використовувати один спільний профіль для всіх комп'ютерів.", IDC_STATIC, 40, 6, 204, 44
     LTEXT "Профілі, які зберігаються на цьому комп'ютері:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -236,7 +236,7 @@ END
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Віртуальна пам'ять"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Диск [мітка тому]", IDC_STATIC, 12, 5, 96, 9
     LTEXT "Файл довантаження (МБ)", IDC_STATIC, 115, 5, 96, 9
@@ -266,17 +266,18 @@ BEGIN
 END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Змінні оточення"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Змінні користувача", IDC_STATIC, 7, 12, 238, 100
+    SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
+    GROUPBOX "Змінні користувача", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Створити...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON "&Змінити...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON "В&идалити", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX "Системні змінні", IDC_STATIC, 7, 116, 238, 100
+    GROUPBOX "Системні змінні", IDC_SYSTEM_VARIABLE_GROUP, 7, 116, 238, 100
     CONTROL "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Створити...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
@@ -286,22 +287,44 @@ BEGIN
     PUSHBUTTON "Скасувати", IDCANCEL, 195, 224, 50, 14
 END
 
-IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_VARIABLE DIALOGEX 10, 15, 372, 71
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Редагування змінної"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Ім'я змінної:", IDC_STATIC, 7, 14, 68, 8
-    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT "&Значення змінної:", IDC_STATIC, 7, 32, 68, 8
-    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 50, 50, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 170, 50, 50, 14
+    SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
+    LTEXT "&Ім'я змінної:", IDC_STATIC, 7, 14, 62, 8
+    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
+    LTEXT "&Значення змінної:", IDC_STATIC, 7, 32, 62, 8
+    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 314, 50, 50, 14
+    PUSHBUTTON "Browse &Directory...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
+    PUSHBUTTON "Browse &Files...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
+END
+
+IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
+CAPTION "Редагування змінної"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    SCROLLBAR IDC_DIALOG_GRIP, 293, 243, 7, 7, SBS_SIZEGRIP
+    CONTROL "", IDC_LIST_VARIABLE_VALUE, "SysListView32", LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
+                LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 10, 10, 224, 208, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&New", IDC_BUTTON_NEW, 242, 10, 50, 14
+    PUSHBUTTON "&Edit", IDC_BUTTON_EDIT, 242, 30, 50, 14
+    PUSHBUTTON "&Browse...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 50, 14
+    PUSHBUTTON "&Delete", IDC_BUTTON_DELETE, 242, 70, 50, 14
+    PUSHBUTTON "Move &Up", IDC_BUTTON_MOVE_UP, 242, 100, 50, 14
+    PUSHBUTTON "Move D&own", IDC_BUTTON_MOVE_DOWN, 242, 120, 50, 14
+    PUSHBUTTON "Edit &text...", IDC_BUTTON_EDIT_TEXT, 242, 150, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 188, 228, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 242, 228, 50, 14
 END
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
 CAPTION "Ліцензійна угода"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | WS_BORDER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
     EDITTEXT IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
@@ -318,7 +341,7 @@ BEGIN
     IDS_PETABYTE "Пб ОЗП"
     IDS_MEGAHERTZ "МГц"
     IDS_GIGAHERTZ "ГГц"
-    IDS_UPTIME_FORMAT "%u Days, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%lu Days, %02lu:%02lu:%02lu"
     IDS_VARIABLE "Змінна"
     IDS_VALUE "Значення"
     IDS_NO_DUMP "(Немає)"
@@ -341,16 +364,18 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Елемент панелі керування"
     IDS_WARNINITIALSIZE "Введіть числове значення для початкового розміру файлу довантаження."
     IDS_WARNMAXIMUMSIZE "Введіть числове значення для максимального розміру файлу довантаження."
-    IDS_WARNINITIALRANGE "Початковий розмір файлу довантаження не повинен бути меншим 2 Мб і не повинен перевищувати об'єм вільного місця на обраному диску."
-    IDS_WARNMAXIMUMRANGE "Максимальний розмір файлу довантаження не повинен бути меншим від початкового та не повинен перевищувати об'єм вільного місця на обраному диску."
-    IDS_PAGEFILE_MB "%u МБ"
+    IDS_WARNINITIALRANGE "The initial paging file size must be between 2 MB and %lu MB on the selected drive."
+    IDS_WARNMAXIMUMRANGE "The maximum paging file size must be larger than or equal to its initial size, and less than %lu MB on the selected drive."
+    IDS_PAGEFILE_MB "%lu МБ"
     IDS_PAGEFILE_NONE "Немає"
     IDS_PAGEFILE_SYSTEM "За вибором системи"
     IDS_INFOREBOOT "Необхідно перезавантажити комп'ютер для застосування нових параметрів."
-    IDS_DEVS "\nКоманда ReactOS\n\nКординатор проекту\n\nОлексій Брагін\n\nКоманда розробників\n\nОлександр Андрійович\nОлексій Брагін\nОлександр Шапошніков\nАмін Халді\nЕндрю Грінвуд\nАндрій Коротаєв\nАрт Єркс\nБенедикт Фрейзен\nКамерон Гутман\nКрістоф фон Віттіх\nКолін Фінк\nДаніель Реймер\nДевід Кінтана\nДмитро Чапишев\nЕрік Коль\nГед Мерфі\nЯніс Адамопулос\nГрегор Брунмар\nГермес Белуска-Маіто\nЕрве Пуссіно\nДжеймс Табор\nДжеффрі Морлан\nЖером Гарду\nЙоганнес Андервальд\nКаміль Хорнічек\nКатаяма Хірофумі MZ\nKJK::Гіперіон\nМаартен Босма\nМагнус Олсен\nМарк Піулахс\nМарк Янсен\nМаттіас Купфер\nМайк Норделл\nПетро Хейтер\nПітер Уорд\nП'єр Швейцер\nСавелій Третьяков\nСтаніслав Метеликів\nСтефан Гінсберг\nСильвен Петреоль\nТомас Блюмель\nТомас Фабер\nТімо Кройцер\nВадим Галянт\n\nАлекс Іонеску\nФіліп Навара\nГуннар Дальнес\nМартін Фукс\nРойс Мітчелл III\nБрендон Тернер\nБрайан Палмер\nКаспер Хорнструп\nДевід Уелч\nЕмануеле Аліберті\nГе ван Гелдорп\nГрегор Аніч\nДжейсон Філбі\nДжес Колін\nМайкл Вірт\nНатан Вудс\nРоберт Дікенсон\nРекс Джоліфф\nVizzini\n\nРеліз-інженери\n\nАмін Халді\nКолін Фінк\nЙоахім Хенце\nТомас Фабер\nZ98\n\nРозробники веб-сайту\n\nКолін Фінк\nJaix Bly\nКлеменс Фрідл\nZ98\n\nДизайнери\n\nMindflyer\nWierd_W\n\nПодяки\n\nвсім хто допоміг проекту\nКоманді Wine\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Підтвердження видалення профілю"
     IDS_HWPROFILE_CONFIRM_DELETE "Ви дійсно хочете видалити профіль обладнання ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "Ім'я вже зайнято."
     IDS_HWPROFILE_PROFILE "Профіль"
     IDS_HWPROFILE_WARNING "Увага"
+    IDS_ENVIRONMENT_WARNING "Any changes that have been done will be discarded and the variable's value will be edited as text."
+    IDS_ENVIRONMENT_WARNING_TITLE "System Properties"
+    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
 END

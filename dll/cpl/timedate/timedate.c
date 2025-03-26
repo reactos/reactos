@@ -89,7 +89,6 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     PROPSHEETHEADER psh;
     PROPSHEETPAGEW psp[3];
-    WCHAR Caption[256];
     LONG Ret = 0;
 
     UNREFERENCED_PARAMETER(uMsg);
@@ -99,15 +98,13 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     if (RegisterMonthCalControl(hApplet) &&
         RegisterClockControl())
     {
-        LoadStringW(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(WCHAR));
-
         ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
         psh.dwSize = sizeof(PROPSHEETHEADERW);
         psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
         psh.hwndParent = hwnd;
         psh.hInstance = hApplet;
         psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON);
-        psh.pszCaption = Caption;
+        psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
         psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGEW);
         psh.nStartPage = 0;
         psh.ppsp = psp;
@@ -134,7 +131,7 @@ CPlApplet(HWND hwndCpl,
           LPARAM lParam1,
           LPARAM lParam2)
 {
-    INT i = (INT)lParam1;
+    UINT i = (UINT)lParam1;
 
     switch (uMsg)
     {
@@ -145,20 +142,26 @@ CPlApplet(HWND hwndCpl,
             return NUM_APPLETS;
 
         case CPL_INQUIRE:
-        {
-            CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-            CPlInfo->lData = 0;
-            CPlInfo->idIcon = Applets[i].idIcon;
-            CPlInfo->idName = Applets[i].idName;
-            CPlInfo->idInfo = Applets[i].idDescription;
-        }
-        break;
+            if (i < NUM_APPLETS)
+            {
+                CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = Applets[i].idIcon;
+                CPlInfo->idName = Applets[i].idName;
+                CPlInfo->idInfo = Applets[i].idDescription;
+            }
+            else
+            {
+                return TRUE;
+            }
+            break;
 
         case CPL_DBLCLK:
-        {
-            Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
-        }
-        break;
+            if (i < NUM_APPLETS)
+                Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
+            else
+                return TRUE;
+            break;
     }
     return FALSE;
 }

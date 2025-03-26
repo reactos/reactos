@@ -40,24 +40,24 @@ APIENTRY DWORD auxMessage(UINT dwId,
 	case AUXDM_GETNUMDEVS:
 		DPRINT("AUXDM_GETNUMDEVS");
 		return GetDeviceCount(AuxDevice);
-		
+
 	case AUXDM_GETVOLUME:
          DPRINT("AUXDM_GETVOLUME");
          Result = AuxGetAudio(dwId, (PBYTE) &Volume, sizeof(Volume));
-         
-         if (Result == MMSYSERR_NOERROR) 
+
+         if (Result == MMSYSERR_NOERROR)
          {
             *(LPDWORD)dwParam1 = (DWORD)MAKELONG(HIWORD(Volume.Left), HIWORD(Volume.Right));
          }
          return Result;
-		
+
 
 	case AUXDM_SETVOLUME:
         DPRINT("AUXDM_SETVOLUME");
-         
+
         Volume.Right = HIWORD(dwParam1) << 16;
         Volume.Left = LOWORD(dwParam1) << 16;
-        
+
         return AuxSetAudio(dwId, (PBYTE)&Volume, sizeof(Volume));
 
 	}
@@ -76,7 +76,7 @@ DWORD AuxGetAudio(DWORD dwID, PBYTE pVolume, DWORD sizeVolume)
     if (Result != MMSYSERR_NOERROR)
          return Result;
 
-    
+
     Result = DeviceIoControl(DeviceHandle, IOCTL_AUX_GET_VOLUME, NULL, 0, (LPVOID)pVolume, sizeVolume,
                            &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
 
@@ -95,8 +95,8 @@ DWORD AuxSetAudio(DWORD dwID, PBYTE pVolume, DWORD sizeVolume)
     Result = OpenDevice(AuxDevice, dwID, &DeviceHandle, GENERIC_READ);
     if (Result != MMSYSERR_NOERROR)
          return Result;
-    
-    Result = DeviceIoControl(DeviceHandle, IOCTL_AUX_SET_VOLUME, (LPVOID)pVolume, sizeVolume, NULL, 0, 
+
+    Result = DeviceIoControl(DeviceHandle, IOCTL_AUX_SET_VOLUME, (LPVOID)pVolume, sizeVolume, NULL, 0,
                            &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
 
 

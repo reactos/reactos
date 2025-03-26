@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS sqALLayouts[] =
 {
-    { L"041C", L"0000041C" },
-    { NULL, NULL }
+    { 0x041C, 0x0000041C },
+    { 0, 0 }
 };

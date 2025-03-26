@@ -8,33 +8,14 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
-class CPortPinDMus : public IPortPinDMus
+class CPortPinDMus : public CUnknownImpl<IPortPinDMus>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortPinDMus;
     IMP_IServiceSink;
     IMP_IMasterClock;
@@ -62,7 +43,6 @@ protected:
     PMINIPORTMIDI m_MidiMiniport;
     PMINIPORTMIDISTREAM m_MidiStream;
 
-
     KSSTATE m_State;
     PKSDATAFORMAT m_Format;
     KSPIN_CONNECT * m_ConnectDetails;
@@ -76,8 +56,6 @@ protected:
     ULONG m_PostCompleted;
 
     ULONG m_LastTag;
-
-    LONG m_Ref;
 };
 
 typedef struct
@@ -142,7 +120,6 @@ CPortPinDMus::GetBuffer(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortPinDMus::PutBuffer(
@@ -165,7 +142,6 @@ CPortPinDMus::SetState(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
 NTSTATUS
 NTAPI
 CPortPinDMus::PutMessage(
@@ -175,7 +151,6 @@ CPortPinDMus::PutMessage(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortPinDMus::ConnectOutput(
@@ -184,7 +159,6 @@ CPortPinDMus::ConnectOutput(
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-
 
 NTSTATUS
 NTAPI
@@ -273,7 +247,6 @@ CPortPinDMus::TransferMidiDataToDMus()
         Event->Event.cbEvent = (USHORT)BufferSize;
         Event->Event.uData.pbData = (PBYTE)Buffer;
 
-
         if (!Root)
             Root = Event;
         else
@@ -294,8 +267,6 @@ CPortPinDMus::TransferMidiDataToDMus()
     DPRINT("Status %x\n", Status);
 }
 
-
-
 VOID
 NTAPI
 CPortPinDMus::RequestService()
@@ -313,6 +284,7 @@ CPortPinDMus::RequestService()
 }
 
 //==================================================================================================================================
+
 NTSTATUS
 NTAPI
 CPortPinDMus::QueryInterface(
@@ -647,4 +619,3 @@ NewPortPinDMus(
 
     return STATUS_SUCCESS;
 }
-

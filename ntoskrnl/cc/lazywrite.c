@@ -29,7 +29,7 @@ ULONG CcLazyWriteIos = 0;
  * - Queue for stuff to be queued after lazy writer is done
  * - Marker for throttling queues
  * - Number of ongoing workers
- * - Three seconds delay for lazy writer 
+ * - Three seconds delay for lazy writer
  * - One second delay for lazy writer
  * - Zero delay for lazy writer
  * - Number of worker threads
@@ -129,6 +129,16 @@ CcWriteBehind(VOID)
         CcLazyWritePages += Count;
         ++CcLazyWriteIos;
         DPRINT("Lazy writer done (%d)\n", Count);
+    }
+
+    /* Make sure we're not throttling writes after this */
+    while (MmAvailablePages < MmThrottleTop)
+    {
+        /* Break if we can't even find one to free */
+        if (!CcRosFreeOneUnusedVacb())
+        {
+            break;
+        }
     }
 }
 

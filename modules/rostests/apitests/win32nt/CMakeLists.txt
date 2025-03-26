@@ -24,7 +24,7 @@ list(APPEND SOURCE
     #ntgdi/NtGdiFlushUserBatch.c
     ntgdi/NtGdiGetBitmapBits.c
     ntgdi/NtGdiGetDIBits.c
-    ntgdi/NtGdiGetFontResourceInfoInternalW.c
+    #ntgdi/NtGdiGetFontResourceInfoInternalW.c
     ntgdi/NtGdiGetRandomRgn.c
     ntgdi/NtGdiGetStockObject.c
     ntgdi/NtGdiIntersectClipRect.c
@@ -52,8 +52,11 @@ list(APPEND SOURCE
 #    ntuser/NtUserEnumDisplayMonitors.c
     ntuser/NtUserEnumDisplaySettings.c
     ntuser/NtUserFindExistingCursorIcon.c
+    ntuser/NtUserGetAsyncKeyState.c
     ntuser/NtUserGetClassInfo.c
 #    ntuser/NtUserGetIconInfo.c
+    ntuser/NtUserGetKeyboardLayoutName.c
+    ntuser/NtUserGetThreadState.c
     ntuser/NtUserGetTitleBarInfo.c
     ntuser/NtUserProcessConnect.c
     ntuser/NtUserRedrawWindow.c
@@ -73,7 +76,7 @@ list(APPEND PCH_SKIP_SOURCE
 add_executable(win32knt_apitest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
-    w32knapi.rc)
+    win32knt.rc)
 
 target_link_libraries(win32knt_apitest ${PSEH_LIB} gditools)
 set_module_type(win32knt_apitest win32cui)
@@ -85,7 +88,7 @@ add_importlibs(win32knt_apitest
     msvcrt
     kernel32
     ntdll)
-add_delay_importlibs(win32knt_apitest win32u)
+add_delay_importlibs(win32knt_apitest win32u imm32)
 add_dependencies(win32knt_apitest xdk)
 add_pch(win32knt_apitest win32nt.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET win32knt_apitest)

@@ -37,9 +37,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(powrprof);
 
 static const WCHAR szPowerCfgSubKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg";
-static const WCHAR szUserPowerConfigSubKey[] = 
+static const WCHAR szUserPowerConfigSubKey[] =
     L"Control Panel\\PowerCfg";
-static const WCHAR szCurrentPowerPolicies[] = 
+static const WCHAR szCurrentPowerPolicies[] =
     L"CurrentPowerPolicy";
 static const WCHAR szPolicies[] = L"Policies";
 static const WCHAR szName[] = L"Name";
@@ -201,7 +201,7 @@ POWRPROF_GetMachinePowerPolicy(LPWSTR szNum, PMACHINE_POWER_POLICY pmachinePwrPo
 
     dwSize = sizeof(MACHINE_POWER_POLICY);
     Err = RegQueryValueExW(hKey, L"Policies", NULL, NULL, (LPBYTE)pmachinePwrPolicy, &dwSize);
-    
+
     if (Err != ERROR_SUCCESS)
     {
         ERR("RegQueryValueExW failed: %d\n", Err);
@@ -510,12 +510,123 @@ PowerGetActiveScheme(HKEY UserRootPowerKey, GUID **polguid)
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+DWORD WINAPI PowerSetActiveScheme(HKEY UserRootPowerKey, GUID *polguid)
+{
+   FIXME("(%p,%s) stub!\n", UserRootPowerKey, wine_dbgstr_guid(polguid));
+   return ERROR_SUCCESS;
+}
+
 DWORD WINAPI
 PowerReadDCValue(HKEY RootPowerKey, const GUID *Scheme, const GUID *SubGroup, const GUID *PowerSettings, PULONG Type, PUCHAR Buffer, DWORD *BufferSize)
 {
    FIXME("(%p,%s,%s,%s,%p,%p,%p) stub!\n", RootPowerKey, debugstr_guid(Scheme), debugstr_guid(SubGroup), debugstr_guid(PowerSettings), Type, Buffer, BufferSize);
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+DWORD WINAPI PowerReadFriendlyName(HKEY RootPowerKey, const GUID *Scheme,
+	const GUID *SubGroup, const GUID *PowerSettings, UCHAR *Buffer,
+	DWORD *BufferSize)
+{
+   FIXME("(%p,%s,%s,%s,%p,%p) stub!\n", RootPowerKey, debugstr_guid(Scheme), debugstr_guid(SubGroup), debugstr_guid(PowerSettings), Buffer, BufferSize);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+POWER_PLATFORM_ROLE WINAPI PowerDeterminePlatformRole(void)
+{
+   FIXME("stub\n");
+   return PlatformRoleDesktop;
+}
+
+POWER_PLATFORM_ROLE WINAPI PowerDeterminePlatformRoleEx(ULONG version)
+{
+    FIXME("%lu stub.\n", version);
+    return PlatformRoleDesktop;
+}
+
+DWORD WINAPI PowerEnumerate(HKEY key, const GUID *scheme, const GUID *subgroup, POWER_DATA_ACCESSOR flags,
+                        ULONG index, UCHAR *buffer, DWORD *buffer_size)
+{
+   FIXME("(%p,%s,%s,%d,%ld,%p,%p) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup),
+                flags, index, buffer, buffer_size);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD WINAPI PowerRegisterSuspendResumeNotification(DWORD flags, HANDLE recipient, PHPOWERNOTIFY handle)
+{
+    FIXME("(0x%08lx,%p,%p) stub!\n", flags, recipient, handle);
+    *handle = (HPOWERNOTIFY)0xdeadbeef;
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerUnregisterSuspendResumeNotification(HPOWERNOTIFY handle)
+{
+    FIXME("(%p) stub!\n", handle);
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerSettingRegisterNotification(const GUID *setting, DWORD flags, HANDLE recipient, PHPOWERNOTIFY handle)
+{
+    FIXME("(%s,0x%08lx,%p,%p) stub!\n", debugstr_guid(setting), flags, recipient, handle);
+    *handle = (PHPOWERNOTIFY)0xdeadbeef;
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerSettingUnregisterNotification(HPOWERNOTIFY handle)
+{
+    FIXME("(%p) stub!\n", handle);
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerWriteACValueIndex(HKEY key, const GUID *scheme, const GUID *subgroup, const GUID *setting, DWORD index)
+{
+   FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting), index);
+   return ERROR_SUCCESS;
+}
+
+#ifdef __REACTOS__
+DWORD WINAPI PowerWriteDCValueIndex(
+   HKEY       key,
+   const GUID *scheme,
+   const GUID *subgroup,
+   const GUID *setting,
+   DWORD      index
+)
+{
+   FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting), index);
+   return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerReadACValueIndex(
+   HKEY       key,
+   const GUID *scheme,
+   const GUID *subgroup,
+   const GUID *setting,
+   LPDWORD    AcValueIndex
+)
+{
+    FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting));
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerReadDCValueIndex(
+    HKEY       key,
+    const GUID *scheme,
+    const GUID *subgroup,
+    const GUID *setting,
+    LPDWORD    DcValuetIndex
+)
+{
+    FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting));
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI
+PowerReadACValue(HKEY RootPowerKey, const GUID *Scheme, const GUID *SubGroup, const GUID *PowerSettings, PULONG Type, PUCHAR Buffer, DWORD *BufferSize)
+{
+   FIXME("(%p,%s,%s,%s,%p,%p,%p) stub!\n", RootPowerKey, debugstr_guid(Scheme), debugstr_guid(SubGroup), debugstr_guid(PowerSettings), Type, Buffer, BufferSize);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+#endif
 
 BOOLEAN WINAPI
 ReadGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)
@@ -734,7 +845,7 @@ WriteProcessorPwrScheme(UINT ID,
 {
     WCHAR Buf[MAX_PATH];
     HKEY hKey;
-    
+
     swprintf(Buf, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg\\ProcessorPolicies\\%i", ID);
 
     if (RegCreateKey(HKEY_LOCAL_MACHINE, Buf, &hKey) != ERROR_SUCCESS)
@@ -824,6 +935,172 @@ CheckPowerActionPolicy(PPOWER_ACTION_POLICY pPAP, SYSTEM_POWER_CAPABILITIES Powe
         SetLastError(ERROR_INVALID_DATA);
         return FALSE;
     };
+}
+
+/**
+ * @brief
+ * Creates a security descriptor for the power
+ * management registry semaphore.
+ *
+ * @param[out] PowrProfSd
+ * A pointer to an allocated security descriptor
+ * for the semaphore.
+ *
+ * @return
+ * Returns TRUE if the function succeeds, otherwise
+ * FALSE is returned.
+ *
+ * @remarks
+ * Authenticated users are only given a subset of specific
+ * rights for the semaphore access, local system and admins
+ * have full power.
+ */
+static BOOLEAN
+CreatePowrProfSemaphoreSecurity(_Out_ PSECURITY_DESCRIPTOR *PowrProfSd)
+{
+    BOOLEAN Success = FALSE;
+    PACL Dacl;
+    ULONG DaclSize, RelSDSize = 0;
+    PSID AuthenticatedUsersSid = NULL, SystemSid = NULL, AdminsSid = NULL;
+    SECURITY_DESCRIPTOR AbsSd;
+    PSECURITY_DESCRIPTOR RelSd = NULL;
+    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_AUTHENTICATED_USER_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &AuthenticatedUsersSid))
+    {
+        return FALSE;
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_LOCAL_SYSTEM_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &SystemSid))
+    {
+        goto Quit;
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0, 0, 0, 0, 0, 0,
+                                  &AdminsSid))
+    {
+        goto Quit;
+    }
+
+    if (!InitializeSecurityDescriptor(&AbsSd, SECURITY_DESCRIPTOR_REVISION))
+    {
+        goto Quit;
+    }
+
+    DaclSize = sizeof(ACL) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AuthenticatedUsersSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(SystemSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AdminsSid);
+
+    Dacl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
+    if (!Dacl)
+    {
+        goto Quit;
+    }
+
+    if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
+    {
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             SYNCHRONIZE | STANDARD_RIGHTS_READ | 0x3,
+                             AuthenticatedUsersSid))
+    {
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             SEMAPHORE_ALL_ACCESS,
+                             SystemSid))
+    {
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             SEMAPHORE_ALL_ACCESS,
+                             AdminsSid))
+    {
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorDacl(&AbsSd, TRUE, Dacl, FALSE))
+    {
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorOwner(&AbsSd, AdminsSid, FALSE))
+    {
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorGroup(&AbsSd, SystemSid, FALSE))
+    {
+        goto Quit;
+    }
+
+    if (!MakeSelfRelativeSD(&AbsSd, NULL, &RelSDSize) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        RelSd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, RelSDSize);
+        if (RelSd == NULL)
+        {
+            goto Quit;
+        }
+
+        if (!MakeSelfRelativeSD(&AbsSd, RelSd, &RelSDSize))
+        {
+            goto Quit;
+        }
+    }
+
+    *PowrProfSd = RelSd;
+    Success = TRUE;
+
+Quit:
+    if (AuthenticatedUsersSid)
+    {
+        FreeSid(AuthenticatedUsersSid);
+    }
+
+    if (SystemSid)
+    {
+        FreeSid(SystemSid);
+    }
+
+    if (AdminsSid)
+    {
+        FreeSid(AdminsSid);
+    }
+
+    if (Dacl)
+    {
+        HeapFree(GetProcessHeap(), 0, Dacl);
+    }
+
+    if (!Success)
+    {
+        if (RelSd)
+        {
+            HeapFree(GetProcessHeap(), 0, RelSd);
+        }
+    }
+
+    return Success;
 }
 
 static VOID
@@ -940,7 +1217,7 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             SetLastError(ERROR_REVISION_MISMATCH);
             return FALSE;
         }
-        
+
 		//Lohnegrim: unneeded
         //if (pPP->mach.MinSleepAc < PowerSystemWorking)
         //{
@@ -1098,6 +1375,8 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         {
             HKEY hKey;
             LONG Err;
+            SECURITY_ATTRIBUTES SecAttrs;
+            PSECURITY_DESCRIPTOR Sd;
 
             DisableThreadLibraryCalls(hinstDLL);
 
@@ -1124,7 +1403,18 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
                 RegCloseKey(hKey);
             }
 
-            PPRegSemaphore = CreateSemaphoreW(NULL, 1, 1, szSemaphoreName);
+            if (!CreatePowrProfSemaphoreSecurity(&Sd))
+            {
+                ERR("Couldn't create POWRPROF semaphore security descriptor!\n");
+                return FALSE;
+            }
+
+            SecAttrs.nLength = sizeof(SECURITY_ATTRIBUTES);
+            SecAttrs.lpSecurityDescriptor = Sd;
+            SecAttrs.bInheritHandle = FALSE;
+
+            PPRegSemaphore = CreateSemaphoreW(&SecAttrs, 1, 1, szSemaphoreName);
+            HeapFree(GetProcessHeap(), 0, Sd);
             if (PPRegSemaphore == NULL)
             {
                 ERR("Couldn't create Semaphore: %d\n", GetLastError());

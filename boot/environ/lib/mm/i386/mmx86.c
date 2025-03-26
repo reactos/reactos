@@ -106,8 +106,8 @@ MmDefZeroVirtualAddressRange (
 
 BOOLEAN
 MmArchTranslateVirtualAddress (
-    _In_ PVOID VirtualAddress, 
-    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress, 
+    _In_ PVOID VirtualAddress,
+    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress,
     _Out_opt_ PULONG CachingFlags
     )
 {
@@ -526,7 +526,7 @@ MmMapPhysicalAddress (
     PhysicalAddressPtr->QuadPart = PhysicalAddress;
     *VirtualAddressPtr = VirtualAddress;
     *SizePtr = Size;
-    
+
     /* Flush the TLB if paging is enabled */
     if (BlMmIsTranslationEnabled())
     {
@@ -545,7 +545,7 @@ Mmx86MapInitStructure (
     )
 {
     NTSTATUS Status;
-    
+
     /* Make a virtual mapping for this physical address */
     Status = MmMapPhysicalAddress(&PhysicalAddress, &VirtualAddress, &Size, 0);
     if (!NT_SUCCESS(Status))
@@ -938,7 +938,7 @@ MmDefInitializeTranslation (
     RtlZeroMemory(MmArchReferencePage, MmArchReferencePageSize);
 
     /* Allocate 4MB worth of self-map pages */
-    Status = MmPaReserveSelfMapPages(&Mmx86SelfMapBase, 
+    Status = MmPaReserveSelfMapPages(&Mmx86SelfMapBase,
                                      (4 * 1024 * 1024) >> PAGE_SHIFT,
                                      (4 * 1024 * 1024) >> PAGE_SHIFT);
     if (!NT_SUCCESS(Status))

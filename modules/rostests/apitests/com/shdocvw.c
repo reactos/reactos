@@ -85,6 +85,14 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_MruLongList),
         {
+            {    0x0,   &IID_IMruDataList },
+            {    0x0,   &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_MruPidlList),
+        {
+            {    0x0,   &IID_IMruPidlList },
             {    0x0,   &IID_IUnknown },
         }
     },

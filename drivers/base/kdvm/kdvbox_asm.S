@@ -17,7 +17,7 @@ FUNC KdVmExchange
     .endprolog
     xchg rax, rcx
     mov edx, HEX(5659)
-    out dx, rax
+    out dx, eax
     ret
 ENDFUNC
 #endif

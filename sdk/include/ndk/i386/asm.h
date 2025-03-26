@@ -27,6 +27,7 @@ Author:
 #ifdef CONFIG_SMP
 #define PCR                                     fs:
 #else
+/* Address at KIP0PCRADDRESS */
 #define PCR                                     ds:[0xFFDFF000]
 #endif
 #endif
@@ -577,8 +578,10 @@ Author:
 #define APC_LEVEL                               0x1
 #define DISPATCH_LEVEL                          0x2
 #define PROFILE_LEVEL                           0x1B
+#define CLOCK1_LEVEL                            0x1C
 #define CLOCK2_LEVEL                            0x1C
 #define IPI_LEVEL                               0x1D
+#define POWER_LEVEL                             0x1E
 #define HIGH_LEVEL                              0x1F
 
 //
@@ -588,9 +591,9 @@ Author:
 #define SYNCH_LEVEL                             DISPATCH_LEVEL
 #else
 #if (NTDDI_VERSION < NTDDI_WS03)
-#define SYNCH_LEVEL                             (IPI_LEVEL - 0x1)
+#define SYNCH_LEVEL                             (IPI_LEVEL - 1)
 #else
-#define SYNCH_LEVEL                             (IPI_LEVEL - 0x2)
+#define SYNCH_LEVEL                             (IPI_LEVEL - 2)
 #endif
 #endif
 

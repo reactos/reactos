@@ -334,7 +334,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
         FileNameAttribute->NameType = NTFS_FILE_NAME_WIN32_AND_DOS;
     else
         FileNameAttribute->NameType = NTFS_FILE_NAME_POSIX;
-    
+
     FileRecord->LinkCount++;
 
     AttributeAddress->Length = ResidentHeaderLength +
@@ -382,7 +382,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
 * Only adding the attribute to the end of the file record is supported; AttributeAddress must
 * be of type AttributeEnd.
 * This could be improved by adding an $ATTRIBUTE_LIST to the file record if there's not enough space.
-* 
+*
 */
 NTSTATUS
 AddIndexAllocation(PNTFS_VCB Vcb,
@@ -430,7 +430,7 @@ AddIndexAllocation(PNTFS_VCB Vcb,
 
     // Set fields of attribute header
     RtlZeroMemory(AttributeAddress, RecordLength);
-    
+
     AttributeAddress->Type = AttributeIndexAllocation;
     AttributeAddress->Length = RecordLength;
     AttributeAddress->IsNonResident = TRUE;
@@ -584,7 +584,7 @@ AddIndexRoot(PNTFS_VCB Vcb,
 *
 * @return
 * STATUS_SUCCESS on success. STATUS_INVALID_PARAMETER if AttrContext describes a resident attribute.
-* STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails or if we fail to allocate a 
+* STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails or if we fail to allocate a
 * buffer for the new data runs.
 * STATUS_INSUFFICIENT_RESOURCES or STATUS_UNSUCCESSFUL if FsRtlAddLargeMcbEntry() fails.
 * STATUS_BUFFER_TOO_SMALL if ConvertLargeMCBToDataRuns() fails.
@@ -592,7 +592,7 @@ AddIndexRoot(PNTFS_VCB Vcb,
 *
 * @remarks
 * Clusters should have been allocated previously with NtfsAllocateClusters().
-* 
+*
 *
 */
 NTSTATUS
@@ -629,7 +629,7 @@ AddRun(PNTFS_VCB Vcb,
             ExRaiseStatus(STATUS_UNSUCCESSFUL);
         }
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) 
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT1("Failed to add LargeMcb Entry!\n");
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -717,8 +717,8 @@ AddRun(PNTFS_VCB Vcb,
                                                      AttrContext->pRecord->NonResident.HighestVCN);
 
     // Write data runs to destination attribute
-    RtlCopyMemory((PVOID)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset), 
-                  RunBuffer, 
+    RtlCopyMemory((PVOID)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset),
+                  RunBuffer,
                   RunBufferSize);
 
     // Update the attribute record in the attribute context
@@ -1121,7 +1121,7 @@ FreeClusters(PNTFS_VCB Vcb,
     ReadAttribute(Vcb, DataContext, 0, (PCHAR)BitmapData, (ULONG)BitmapDataSize);
 
     RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, Vcb->NtfsInfo.ClusterCount);
-    
+
     // free clusters in $BITMAP file
     while (ClustersLeftToFree > 0)
     {
@@ -1161,7 +1161,7 @@ FreeClusters(PNTFS_VCB Vcb,
     ReleaseAttributeContext(DataContext);
     ExFreePoolWithTag(BitmapData, TAG_NTFS);
     ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BitmapRecord);
-    
+
     // Save updated data runs to file record
 
     // Allocate some memory for a new RunBuffer
@@ -1358,7 +1358,7 @@ InternalGetNextAttribute(PFIND_ATTR_CONTXT Context)
             Context->CurrAttr = (PVOID)-1;
             return NULL;
         }
-        
+
         Context->Offset += ((ULONG_PTR)NextAttribute - (ULONG_PTR)Context->CurrAttr);
         Context->CurrAttr = NextAttribute;
 
@@ -1604,7 +1604,7 @@ NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
             PULONGLONG SubNodeVCN = (PULONGLONG)((ULONG_PTR)currentIndexExtry + currentIndexExtry->Length - sizeof(ULONGLONG));
             DbgPrint("    VCN of sub-node: 0x%llx\n", *SubNodeVCN);
         }
-        
+
         CurrentOffset += currentIndexExtry->Length;
         ASSERT(currentIndexExtry->Length);
     }
@@ -1920,16 +1920,16 @@ GetLastClusterInDataRun(PDEVICE_EXTENSION Vcb, PNTFS_ATTR_RECORD Attribute, PULO
     while (1)
     {
         DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-       
+
         if (DataRunOffset != -1)
         {
             // Normal data run.
             DataRunStartLCN = LastLCN + DataRunOffset;
             LastLCN = DataRunStartLCN;
             *LastCluster = LastLCN + DataRunLength - 1;
-        }             
+        }
 
-        if (*DataRun == 0)            
+        if (*DataRun == 0)
             break;
     }
 

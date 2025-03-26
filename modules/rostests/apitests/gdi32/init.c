@@ -99,7 +99,7 @@ BOOL InitStuff(void)
     ghpal = CreatePalette((LOGPALETTE*)&gpal);
     if (!ghpal)
     {
-        printf("failed to create a palette \n");
+        printf("failed to create a palette\n");
         return FALSE;
     }
 
@@ -110,7 +110,7 @@ BOOL InitStuff(void)
         !InitPerBitDepth(24, 8, 8, &ghbmp24, &ghdcDIB24, &ghbmpDIB24, &gpvDIB24) ||
         !InitPerBitDepth(32, 8, 8, &ghbmp32, &ghdcDIB32, &ghbmpDIB32, &gpvDIB32))
     {
-        printf("failed to create objects \n");
+        printf("failed to create objects\n");
         return FALSE;
     }
 

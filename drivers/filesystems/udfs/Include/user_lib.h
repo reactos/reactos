@@ -24,7 +24,7 @@
 #define ODS(sz) OutputDebugString(sz)
 #else
 #define ODS(sz) {}
-#endif 
+#endif
 
 #define arraylen(a)     (sizeof(a)/sizeof(a[0]))
 

@@ -34,13 +34,13 @@ MiniportISR (
 {
     PRTL_ADAPTER adapter = (PRTL_ADAPTER)MiniportAdapterContext;
     ULONG csConfig;
-    
+
     //
     // FIXME: We need to synchronize with this ISR for changes to InterruptPending,
     // LinkChange, MediaState, and LinkSpeedMbps. We can get away with IRQL
     // synchronization on non-SMP machines because we run a DIRQL here.
     //
-    
+
     adapter->InterruptPending |= NICInterruptRecognized(adapter, InterruptRecognized);
     if (!(*InterruptRecognized))
     {
@@ -50,7 +50,7 @@ MiniportISR (
         *QueueMiniportHandleInterrupt = FALSE;
         return;
     }
-    
+
     //
     // We have to check for a special link change interrupt before acknowledging
     //
@@ -63,7 +63,7 @@ MiniportISR (
             NICUpdateLinkStatus(adapter);
         }
     }
-    
+
     //
     // Acknowledge the interrupt and mark the events pending service
     //
@@ -82,11 +82,11 @@ MiniportHandleInterrupt (
     UCHAR command;
     PPACKET_HEADER nicHeader;
     PETH_HEADER ethHeader;
-        
+
     NdisDprAcquireSpinLock(&adapter->Lock);
-    
+
     NDIS_DbgPrint(MAX_TRACE, ("Interrupts pending: 0x%x\n", adapter->InterruptPending));
-    
+
     //
     // Handle a link change
     //
@@ -101,8 +101,8 @@ MiniportHandleInterrupt (
         NdisMIndicateStatusComplete(adapter->MiniportAdapterHandle);
         NdisDprAcquireSpinLock(&adapter->Lock);
         adapter->LinkChange = FALSE;
-    }                            
-    
+    }
+
     //
     // Handle a TX interrupt
     //
@@ -112,7 +112,7 @@ MiniportHandleInterrupt (
         {
             NdisRawReadPortUlong(adapter->IoBase + R_TXSTS0 +
                                  (adapter->DirtyTxDesc * sizeof(ULONG)), &txStatus);
-            
+
             if (!(txStatus & (R_TXS_STATOK | R_TXS_UNDERRUN | R_TXS_ABORTED)))
             {
                 //
@@ -120,10 +120,10 @@ MiniportHandleInterrupt (
                 //
                 break;
             }
-            
+
             NDIS_DbgPrint(MAX_TRACE, ("Transmission for desc %d complete: 0x%x\n",
                                       adapter->DirtyTxDesc, txStatus));
-            
+
             if (txStatus & R_TXS_STATOK)
             {
                 adapter->TransmitOk++;
@@ -139,7 +139,7 @@ MiniportHandleInterrupt (
             adapter->TxFull = FALSE;
         }
     }
-    
+
     //
     // Handle a good RX interrupt
     //
@@ -156,9 +156,9 @@ MiniportHandleInterrupt (
                 adapter->InterruptPending &= ~(R_I_RXOK | R_I_RXERR);
                 break;
             }
-            
+
             adapter->ReceiveOffset %= RECEIVE_BUFFER_SIZE;
-            
+
             NDIS_DbgPrint(MAX_TRACE, ("Looking for a packet at offset 0x%x\n",
                             adapter->ReceiveOffset));
             nicHeader = (PPACKET_HEADER)(adapter->ReceiveBuffer + adapter->ReceiveOffset);
@@ -168,7 +168,7 @@ MiniportHandleInterrupt (
                 // Receive failed
                 //
                 NDIS_DbgPrint(MIN_TRACE, ("Receive failed: 0x%x\n", nicHeader->Status));
-                
+
                 if (nicHeader->Status & RSR_FAE)
                 {
                     adapter->ReceiveAlignmentError++;
@@ -178,13 +178,13 @@ MiniportHandleInterrupt (
                     adapter->ReceiveCrcError++;
                 }
                 adapter->ReceiveError++;
-                
+
                 goto NextPacket;
             }
-            
+
             NDIS_DbgPrint(MAX_TRACE, ("Indicating %d byte packet to NDIS\n",
                            nicHeader->PacketLength - RECV_CRC_LENGTH));
-   
+
             ethHeader = (PETH_HEADER)(nicHeader + 1);
             NdisMEthIndicateReceive(adapter->MiniportAdapterHandle,
                                     NULL,
@@ -194,12 +194,12 @@ MiniportHandleInterrupt (
                                     nicHeader->PacketLength - sizeof(ETH_HEADER) - RECV_CRC_LENGTH,
                                     nicHeader->PacketLength - sizeof(ETH_HEADER) - RECV_CRC_LENGTH);
             adapter->ReceiveOk++;
-            
+
         NextPacket:
             adapter->ReceiveOffset += nicHeader->PacketLength + sizeof(PACKET_HEADER);
             adapter->ReceiveOffset = (adapter->ReceiveOffset + 3) & ~3;
             NdisRawWritePortUshort(adapter->IoBase + R_CAPR, adapter->ReceiveOffset - 0x10);
-            
+
             if (adapter->InterruptPending & (R_I_RXOVRFLW | R_I_FIFOOVR))
             {
                 //
@@ -209,9 +209,9 @@ MiniportHandleInterrupt (
                 adapter->InterruptPending &= ~(R_I_RXOVRFLW | R_I_FIFOOVR);
             }
         }
-        
+
         NdisMEthIndicateReceiveComplete(adapter->MiniportAdapterHandle);
     }
-    
+
     NdisDprReleaseSpinLock(&adapter->Lock);
 }

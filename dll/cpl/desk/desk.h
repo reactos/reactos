@@ -63,8 +63,61 @@ INT AllocAndLoadString(LPTSTR *lpTarget,
 
 ULONG __cdecl DbgPrint(PCCH Format,...);
 
+/*
+ * The values in these macros are dependent on the
+ * layout of the monitor image and they must be adjusted
+ * if that image is changed.
+ */
+#define MONITOR_LEFT        20
+#define MONITOR_TOP         8
+#define MONITOR_RIGHT       140
+#define MONITOR_BOTTOM      92
+
+#define MONITOR_WIDTH       (MONITOR_RIGHT-MONITOR_LEFT)
+#define MONITOR_HEIGHT      (MONITOR_BOTTOM-MONITOR_TOP)
+
+#define MONITOR_ALPHA       0xFF00FF
+
 #define MAX_DESK_PAGES        32
 #define NUM_SPECTRUM_BITMAPS  3
+
+#define NUM_DESKTOP_ICONS  4  /* DesktopIcons array size */
+#define NUM_CHANGE_ICONS   5  /* IconChange array size */
+
+typedef struct
+{
+    BOOL bHideClassic;  /* Hide icon in Classic mode */
+    BOOL bHideNewStart; /* Hide icon in Modern Start menu mode */
+} HIDE_ICON;
+
+typedef struct _ICON_PATH
+{
+    TCHAR szPath[MAX_PATH];
+} ICON_PATH;
+
+typedef struct _ICON_DATA
+{
+    TCHAR szPath[MAX_PATH];
+    TCHAR szTitle[40];
+} ICON_DATA;
+
+typedef struct _DESKTOP_DATA
+{
+    BOOL bSettingsChanged;
+    HIDE_ICON optIcons[NUM_DESKTOP_ICONS];
+    BOOL bHideChanged[NUM_DESKTOP_ICONS];
+    BOOL bIconChanged[NUM_CHANGE_ICONS];
+    ICON_PATH Icon[NUM_CHANGE_ICONS];
+    ICON_PATH DefIcon[NUM_CHANGE_ICONS];
+
+    BOOL bLocalSettingsChanged;
+    BOOL bLocalHideIcon[NUM_DESKTOP_ICONS];
+    BOOL bLocalHideChanged[NUM_DESKTOP_ICONS];
+    BOOL bLocalIconChanged[NUM_CHANGE_ICONS];
+    ICON_DATA LocalIcon[NUM_CHANGE_ICONS];
+    HIMAGELIST hLocalImageList;
+    INT iLocalCurIcon;
+} DESKTOP_DATA, *PDESKTOP_DATA;
 
 /* As slider control can't contain user data, we have to keep an
  * array of RESOLUTION_INFO to have our own associated data.
@@ -106,6 +159,9 @@ typedef struct _GLOBAL_DATA
     COLORREF desktop_color;
     LPCWSTR pwszFile;
     LPCWSTR pwszAction;
+    HBITMAP hMonitorBitmap;
+    LONG bmMonWidth;
+    LONG bmMonHeight;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 extern GLOBAL_DATA g_GlobalData;
@@ -121,6 +177,21 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
 
 INT_PTR CALLBACK
 AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+BOOL
+SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTINGS_ENTRY seNew, OUT PLONG rc);
+
+INT_PTR CALLBACK
+DesktopPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+VOID
+InitDesktopSettings(PDESKTOP_DATA pData);
+
+BOOL
+SaveDesktopSettings(PDESKTOP_DATA pData);
+
+VOID
+SetDesktopSettings(PDESKTOP_DATA pData);
 
 LONG
 RegLoadMUIStringW(IN HKEY hKey,

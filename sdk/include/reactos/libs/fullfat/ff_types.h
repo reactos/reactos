@@ -62,7 +62,7 @@ typedef	unsigned long		FF_T_UINT32;	///< 32 bit unsigned integer.
 typedef	signed long			FF_T_SINT32;	///< 32 bit signed integer.
 
 //---------------- Platform Integer Sizes
-typedef	int					FF_T_INT;		
+typedef	int					FF_T_INT;
 typedef unsigned int		FF_T_UINT;
 typedef signed int			FF_T_SINT;
 

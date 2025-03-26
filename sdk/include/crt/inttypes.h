@@ -8,7 +8,7 @@
 #ifndef _INTTYPES_H_
 #define _INTTYPES_H_
 
-#include <crtdefs.h>
+#include <corecrt.h>
 #include <stdint.h>
 #define __need_wchar_t
 #include <stddef.h>
@@ -25,7 +25,7 @@ typedef struct {
 #if !defined(__cplusplus) || defined(__STDC_FORMAT_MACROS)
 
 /* 7.8.1 Macros for format specifiers
- * 
+ *
  * MS runtime does not yet understand C9x standard "ll"
  * length specifier. It appears to treat "ll" as "l".
  * The non-standard I64 length specifier causes warning in GCC,
@@ -245,7 +245,7 @@ typedef struct {
 #if defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 /*
  * no length modifier for char types prior to C9x
- * MS runtime  scanf appears to treat "hh" as "h" 
+ * MS runtime  scanf appears to treat "hh" as "h"
  */
 
 /* signed char */

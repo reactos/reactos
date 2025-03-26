@@ -80,27 +80,28 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         if (lpvReserved) break;
         msi_dialog_unregister_class();
         msi_free_handle_table();
-        msi_free( gszLogFile );
+        free( gszLogFile );
         release_typelib();
         break;
     }
     return TRUE;
 }
 
-typedef struct tagIClassFactoryImpl {
-    IClassFactory IClassFactory_iface;
-    HRESULT (*create_object)( IUnknown*, LPVOID* );
-} IClassFactoryImpl;
-
-static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+struct class_factory
 {
-    return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+    IClassFactory IClassFactory_iface;
+    HRESULT (*create_object)( IUnknown *, void ** );
+};
+
+static inline struct class_factory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, struct class_factory, IClassFactory_iface);
 }
 
 static HRESULT WINAPI MsiCF_QueryInterface(LPCLASSFACTORY iface,
                 REFIID riid,LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    struct class_factory *This = impl_from_IClassFactory(iface);
 
     TRACE("%p %s %p\n",This,debugstr_guid(riid),ppobj);
 
@@ -129,7 +130,7 @@ static ULONG WINAPI MsiCF_Release(LPCLASSFACTORY iface)
 static HRESULT WINAPI MsiCF_CreateInstance(LPCLASSFACTORY iface,
     LPUNKNOWN pOuter, REFIID riid, LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    struct class_factory *This = impl_from_IClassFactory(iface);
     IUnknown *unk = NULL;
     HRESULT r;
 
@@ -165,9 +166,7 @@ static const IClassFactoryVtbl MsiCF_Vtbl =
     MsiCF_LockServer
 };
 
-static IClassFactoryImpl MsiServer_CF = { { &MsiCF_Vtbl }, create_msiserver };
-static IClassFactoryImpl WineMsiCustomRemote_CF = { { &MsiCF_Vtbl }, create_msi_custom_remote };
-static IClassFactoryImpl WineMsiRemotePackage_CF = { { &MsiCF_Vtbl }, create_msi_remote_package };
+static struct class_factory MsiServer_CF = { { &MsiCF_Vtbl }, create_msiserver };
 
 /******************************************************************
  * DllGetClassObject          [MSI.@]
@@ -179,18 +178,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     if ( IsEqualCLSID (rclsid, &CLSID_MsiInstaller) )
     {
         *ppv = &MsiServer_CF;
-        return S_OK;
-    }
-
-    if ( IsEqualCLSID (rclsid, &CLSID_WineMsiRemoteCustomAction) )
-    {
-        *ppv = &WineMsiCustomRemote_CF;
-        return S_OK;
-    }
-
-    if ( IsEqualCLSID (rclsid, &CLSID_WineMsiRemotePackage) )
-    {
-        *ppv = &WineMsiRemotePackage_CF;
         return S_OK;
     }
 
@@ -229,20 +216,4 @@ HRESULT WINAPI DllGetVersion(DLLVERSIONINFO *pdvi)
 HRESULT WINAPI DllCanUnloadNow(void)
 {
     return dll_count == 0 ? S_OK : S_FALSE;
-}
-
-/***********************************************************************
- *  DllRegisterServer (MSI.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( msi_hInstance );
-}
-
-/***********************************************************************
- *  DllUnregisterServer (MSI.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( msi_hInstance );
 }

@@ -31,6 +31,18 @@ IDI_HOTPLUG_ERR ICON "resources/hotplug/0.ico"
 IDI_HOTPLUG_OK ICON  "resources/hotplug/1.ico"
 
 
+IDI_MOUSE_DISABLED ICON "resources/mouse/disabled.ico"
+IDI_MOUSE_NOBTN ICON "resources/mouse/none.ico"
+IDI_MOUSE_L_ACTIVE ICON "resources/mouse/left_active.ico"
+IDI_MOUSE_L_DOWN ICON "resources/mouse/left_down.ico"
+IDI_MOUSE_R_ACTIVE ICON "resources/mouse/right_active.ico"
+IDI_MOUSE_R_DOWN ICON "resources/mouse/right_down.ico"
+IDI_MOUSE_LR_ACTIVE ICON "resources/mouse/left_right_active.ico"
+IDI_MOUSE_LR_DOWN ICON "resources/mouse/left_right_down.ico"
+IDI_MOUSE_L_ACTIVE_R_DOWN ICON "resources/mouse/left_active_right_down.ico"
+IDI_MOUSE_R_ACTIVE_L_DOWN ICON "resources/mouse/left_down_right_active.ico"
+
+
 IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 
 #include <reactos/manifest_dll.rc>
@@ -59,6 +71,9 @@ IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
@@ -76,6 +91,9 @@ IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

@@ -96,20 +96,20 @@
  *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)
  *        Fixed problems when the screen was scrolled away.
  *
- *    28-September-2007 (Hervé Poussineau)
+ *    28-September-2007 (HervÃ© Poussineau)
  *        Added history possibilities to right key.
  */
 
 #include "precomp.h"
 
 /*
- * See https://technet.microsoft.com/en-us/library/cc978715.aspx
- * and https://technet.microsoft.com/en-us/library/cc940805.aspx
+ * See https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc978715(v=technet.10)
+ * and https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc940805(v=technet.10)
  * to know the differences between those two settings.
- * Values 0x00, 0x0D (carriage return) and 0x20 (space) disable completion.
+ * Values 0x00, 0x0D (carriage return) and >= 0x20 (space) disable completion.
  */
-TCHAR AutoCompletionChar = _T('\t'); // Default is 0x20
-TCHAR PathCompletionChar = _T('\t'); // Default is 0x20
+TCHAR AutoCompletionChar = 0x20; // Disabled by default
+TCHAR PathCompletionChar = 0x20; // Disabled by default
 
 
 SHORT maxx;
@@ -142,7 +142,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
     SHORT orgy;
     SHORT curx;     /*current x/y cursor position*/
     SHORT cury;
-    SHORT tempscreen;
+    SIZE_T tempscreen;
     INT   count;    /*used in some for loops*/
     INT   current = 0;  /*the position of the cursor in the string (str)*/
     INT   charcount = 0;/*chars in the string (str)*/
@@ -218,8 +218,8 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         curx = orgx;
                         cury = orgy;
                         //bContinue=TRUE;
-                        break;
                     }
+                    break;
 
                 case _T('D'):
                     /* delete current history entry */
@@ -232,8 +232,8 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         ConOutPrintf (_T("%s"), str);
                         GetCursorXY (&curx, &cury);
                         //bContinue=TRUE;
-                        break;
                     }
+                    break;
 #endif /*FEATURE_HISTORY*/
 
                 case _T('M'):
@@ -251,8 +251,16 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         str[charcount] = _T('\0');
                         ConOutChar (_T('\n'));
                         bReturn = TRUE;
-                        break;
                     }
+                    break;
+
+                case _T('H'): /* ^H does the same as VK_BACK */
+                    if (dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+                    {
+                        bCharInput = FALSE;
+                        goto DoBackSpace;
+                    }
+                    break;
             }
         }
 
@@ -261,6 +269,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
         switch (ir.Event.KeyEvent.wVirtualKeyCode)
         {
             case VK_BACK:
+            DoBackSpace:
                 /* <BACKSPACE> - delete character to left of cursor */
                 if (current > 0 && charcount > 0)
                 {

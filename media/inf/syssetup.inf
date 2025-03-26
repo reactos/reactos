@@ -51,6 +51,7 @@ AddReg=Classes
 11,,amstream.dll,1
 11,,avifil32.dll,1
 11,,browseui.dll,1
+11,,cabview.dll,1
 11,,comcat.dll,1
 11,,cryptdlg.dll,1
 11,,cryptnet.dll,1
@@ -112,6 +113,7 @@ AddReg=Classes
 11,,stobject.dll,1
 11,,urlmon.dll,3
 11,,vbscript.dll,1
+11,,w32time.dll,1
 11,,windowscodecs.dll,1
 11,,winhttp.dll,1
 11,,wininet.dll,2
@@ -125,6 +127,7 @@ AddReg=Classes
 11,,zipfldr.dll,1
 
 [TypeLibraries]
+riched20.dll
 stdole2.tlb
 stdole32.tlb
 mshtml.tlb
@@ -141,3 +144,19 @@ Control="System\CurrentControlSet\Control"
 
 [Classes]
 HKLM,%CurrentVersion%\Installer,"InstallerLocation",,"%11%"
+HKLM,Software\Microsoft\.NETFramework,InstallRoot,,"%10%\Microsoft.NET\Framework\"
+
+[DestinationDirs]
+IECopy=16422,Internet Explorer
+
+[Finalize] ; Executed by RunOnceEx on first normal boot
+; FIXME: This should be moved to ie.inf,DefaultInstall and executed by [Infs.Always]
+CopyFiles=IECopy
+RegisterDlls=IEReg
+
+[IECopy]
+iexplore.exe,..\iexplore.exe,,0x00002000
+
+[IEReg]
+16422,Internet Explorer,iexplore.exe
+11,,rundll32.exe,,,"advpack.dll,DelNodeRunDLL32 ""%10%\iexplore.exe"""

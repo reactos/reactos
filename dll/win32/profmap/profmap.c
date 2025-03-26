@@ -3,7 +3,7 @@
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:            dll/win32/profmap/profmap.c
  * PURPOSE:         ReactOS User Profile Mapping API
- * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -40,7 +40,7 @@ DllMain(HINSTANCE hinstDll,
 
 /*
  * @unimplemented
- * 
+ *
  * NOTES:
  *   Based on the documentation from:
  *   http://sendmail2.blogspot.com/2012/11/windows-small-business-server-2008_7553.html?view=magazine
@@ -58,7 +58,7 @@ RemapAndMoveUserA(IN LPCSTR pComputer,
 
 /*
  * @unimplemented
- * 
+ *
  * NOTES:
  *   Based on the documentation from:
  *   http://sendmail2.blogspot.com/2012/11/windows-small-business-server-2008_7553.html?view=magazine

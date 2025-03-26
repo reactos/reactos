@@ -20,9 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Chinese text is encoded in UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDM_MAINMENU MENU
@@ -60,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "其他(&X)"
         BEGIN
-            MENUITEM "选中信息(&I)", ID_EDIT_SELECTIONINFO /* 准确性待议 */
+            MENUITEM "选区信息(&I)", ID_EDIT_SELECTIONINFO /* 准确性待议 */
             MENUITEM "文字格式(&F)", ID_EDIT_CHARFORMAT
             MENUITEM "默认格式(&D)", ID_EDIT_DEFCHARFORMAT
             MENUITEM "段落格式(&H)", ID_EDIT_PARAFORMAT

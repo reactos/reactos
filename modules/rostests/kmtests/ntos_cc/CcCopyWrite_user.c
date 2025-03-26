@@ -20,9 +20,12 @@ START_TEST(CcCopyWrite)
     UNICODE_STRING VerySmallFile = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyWrite\\VerySmallFile");
     UNICODE_STRING NormalFile = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyWrite\\NormalFile");
     UNICODE_STRING BehaviourTestFile = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyWrite\\BehaviourTestFile");
+    DWORD Error;
 
-    KmtLoadDriver(L"CcCopyWrite", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"CcCopyWrite", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     InitializeObjectAttributes(&ObjectAttributes, &VerySmallFile, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenFile(&Handle, FILE_ALL_ACCESS, &ObjectAttributes, &IoStatusBlock, 0, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);

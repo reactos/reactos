@@ -127,7 +127,7 @@ static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
             /*
              * Unsupported on PC-AT, they are just ignored
              * and acknowledged as discussed in:
-             * http://stanislavs.org/helppc/keyboard_commands.html
+             * https://stanislavs.org/helppc/keyboard_commands.html
              */
             PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
         }

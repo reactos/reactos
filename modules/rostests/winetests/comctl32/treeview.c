@@ -42,6 +42,8 @@ static BOOL g_get_rect_in_expand;
 static BOOL g_disp_A_to_W;
 static BOOL g_disp_set_stateimage;
 static BOOL g_beginedit_alter_text;
+static const char *g_endedit_overwrite_contents;
+static char *g_endedit_overwrite_ptr;
 static HFONT g_customdraw_font;
 static BOOL g_v6;
 
@@ -1320,7 +1322,19 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
                 break;
               }
 
-            case TVN_ENDLABELEDITA: return TRUE;
+            case TVN_ENDLABELEDITA:
+              {
+                NMTVDISPINFOA *disp = (NMTVDISPINFOA *)lParam;
+                if (disp->item.mask & TVIF_TEXT)
+                {
+                    ok(disp->item.cchTextMax == MAX_PATH, "cchTextMax is %d\n", disp->item.cchTextMax);
+                    if (g_endedit_overwrite_contents)
+                        strcpy(disp->item.pszText, g_endedit_overwrite_contents);
+                    if (g_endedit_overwrite_ptr)
+                        disp->item.pszText = g_endedit_overwrite_ptr;
+                }
+                return TRUE;
+              }
             case TVN_ITEMEXPANDINGA:
               {
                 UINT newmask = pTreeView->itemNew.mask & ~TVIF_CHILDREN;
@@ -1576,7 +1590,7 @@ static void test_itemedit(void)
     DWORD r;
     HWND edit;
     TVITEMA item;
-    CHAR buffA[20];
+    CHAR buffA[500];
     HWND hTree;
 
     hTree = create_treeview_control(0);
@@ -1666,6 +1680,84 @@ static void test_itemedit(void)
 
     GetWindowTextA(edit, buffA, ARRAY_SIZE(buffA));
     ok(!strcmp(buffA, "<edittextaltered>"), "got string %s\n", buffA);
+
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    expect(0, r);
+
+    /* How much text can be typed? */
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
+    ok(IsWindow(edit), "Expected valid handle\n");
+    r = SendMessageA(edit, EM_GETLIMITTEXT, 0, 0);
+    expect(MAX_PATH - 1, r);
+    /* WM_SETTEXT can set more... */
+    memset(buffA, 'a', ARRAY_SIZE(buffA));
+    buffA[ARRAY_SIZE(buffA)-1] = 0;
+    r = SetWindowTextA(edit, buffA);
+    expect(TRUE, r);
+    r = GetWindowTextA(edit, buffA, ARRAY_SIZE(buffA));
+    ok( r == ARRAY_SIZE(buffA) - 1, "got %d\n", r );
+    /* ...but it's trimmed to MAX_PATH chars when editing ends */
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    expect(0, r);
+    item.mask = TVIF_TEXT;
+    item.hItem = hRoot;
+    item.pszText = buffA;
+    item.cchTextMax = ARRAY_SIZE(buffA);
+    r = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+    expect(MAX_PATH - 1, lstrlenA(item.pszText));
+
+    /* We can't get around that MAX_PATH limit by increasing EM_SETLIMITTEXT */
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
+    ok(IsWindow(edit), "Expected valid handle\n");
+    SendMessageA(edit, EM_SETLIMITTEXT, ARRAY_SIZE(buffA)-1, 0);
+    memset(buffA, 'a', ARRAY_SIZE(buffA));
+    buffA[ARRAY_SIZE(buffA)-1] = 0;
+    r = SetWindowTextA(edit, buffA);
+    expect(TRUE, r);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    expect(0, r);
+    item.mask = TVIF_TEXT;
+    item.hItem = hRoot;
+    item.pszText = buffA;
+    item.cchTextMax = ARRAY_SIZE(buffA);
+    r = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+    expect(MAX_PATH - 1, lstrlenA(item.pszText));
+
+    /* Overwriting of pszText contents in TVN_ENDLABELEDIT */
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
+    ok(IsWindow(edit), "Expected valid handle\n");
+    r = SetWindowTextA(edit, "old");
+    expect(TRUE, r);
+    g_endedit_overwrite_contents = "<new_contents>";
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    expect(0, r);
+    g_endedit_overwrite_contents = NULL;
+    item.mask = TVIF_TEXT;
+    item.hItem = hRoot;
+    item.pszText = buffA;
+    item.cchTextMax = ARRAY_SIZE(buffA);
+    r = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+    expect(0, strcmp(item.pszText, "<new_contents>"));
+
+    /* Overwriting of pszText pointer in TVN_ENDLABELEDIT */
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
+    ok(IsWindow(edit), "Expected valid handle\n");
+    r = SetWindowTextA(edit, "old");
+    expect(TRUE, r);
+    g_endedit_overwrite_ptr = (char*) "<new_ptr>";
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    expect(0, r);
+    g_endedit_overwrite_ptr = NULL;
+    item.mask = TVIF_TEXT;
+    item.hItem = hRoot;
+    item.pszText = buffA;
+    item.cchTextMax = ARRAY_SIZE(buffA);
+    r = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+    expect(0, strcmp(item.pszText, "<new_ptr>"));
 
     DestroyWindow(hTree);
 }

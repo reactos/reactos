@@ -326,4 +326,62 @@ SystemFunction012(const BYTE *in,
                   const BYTE *key,
                   LPBYTE out);
 
+NTSTATUS
+NTAPI
+LsaApCallPackage(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID *ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus);
+
+NTSTATUS
+NTAPI
+LsaApCallPackagePassthrough(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID *ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus);
+
+NTSTATUS
+NTAPI
+LsaApCallPackageUntrusted(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID *ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus);
+
+VOID
+NTAPI
+LsaApLogonTerminated(
+    _In_ PLUID LogonId);
+
+NTSTATUS
+NTAPI
+LsaApLogonUserEx2(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ SECURITY_LOGON_TYPE LogonType,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferSize,
+    _Out_ PVOID *ProfileBuffer,
+    _Out_ PULONG ProfileBufferSize,
+    _Out_ PLUID LogonId,
+    _Out_ PNTSTATUS SubStatus,
+    _Out_ PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+    _Out_ PVOID *TokenInformation,
+    _Out_ PUNICODE_STRING *AccountName,
+    _Out_ PUNICODE_STRING *AuthenticatingAuthority,
+    _Out_ PUNICODE_STRING *MachineName,
+    _Out_ PSECPKG_PRIMARY_CRED PrimaryCredentials,
+    _Out_ PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials);
+
 /* EOF */

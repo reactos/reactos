@@ -8,6 +8,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 void
 Test_PageFileSection(void)
 {
@@ -1496,7 +1498,8 @@ static struct _RAW_SIZE_IMAGE_FILE
     IMAGE_SECTION_HEADER data_header;
     IMAGE_SECTION_HEADER zdata_header;
     IMAGE_SECTION_HEADER rsrc_header;
-    BYTE pad[488];
+    IMAGE_SECTION_HEADER bss_header;
+    BYTE pad[448];
     BYTE text_data[0x1200];
     BYTE data_data[0x1200];
     BYTE rsrc_data[0x400];
@@ -1520,7 +1523,7 @@ static struct _RAW_SIZE_IMAGE_FILE
         /* IMAGE_FILE_HEADER */
         {
             IMAGE_FILE_MACHINE_I386, /* Machine */
-            4, /* NumberOfSections */
+            5, /* NumberOfSections */
             0x47EFDF09, /* TimeDateStamp */
             0, /* PointerToSymbolTable */
             0, /* NumberOfSymbols */
@@ -1550,7 +1553,7 @@ static struct _RAW_SIZE_IMAGE_FILE
             4, /* MajorSubsystemVersion */
             0, /* MinorSubsystemVersion */
             0, /* Win32VersionValue */
-            0x5000, /* SizeOfImage */
+            0x6000, /* SizeOfImage */
             0x400, /* SizeOfHeaders */
             0x0, /* CheckSum */
             IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
@@ -1643,6 +1646,21 @@ static struct _RAW_SIZE_IMAGE_FILE
         0, /* NumberOfLinenumbers */
         IMAGE_SCN_MEM_READ |
             IMAGE_SCN_CNT_INITIALIZED_DATA, /* Characteristics */
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        /* PointerToRawData = 0 while SizeOfRawData != 0, CORE-18797 */
+        ".bss", /* Name */
+        { 0x400 }, /* Misc.VirtualSize */
+        0x5000, /* VirtualAddress */
+        0x600, /* SizeOfRawData */
+        0, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ |
+            IMAGE_SCN_CNT_UNINITIALIZED_DATA, /* Characteristics */
     },
     /* fill */
     { 0 },
@@ -1799,6 +1817,10 @@ Test_RawSize(ULONG TestNumber)
             ok_hex(ImageFile->zdata_header.VirtualAddress, RawSizeImageFile.zdata_header.VirtualAddress);
             ok_hex(ImageFile->zdata_header.SizeOfRawData, RawSizeImageFile.zdata_header.SizeOfRawData);
             ok_hex(ImageFile->zdata_header.PointerToRawData, 0);
+
+            /* .bss section is unmodified */
+            ok_hex(ImageFile->bss_header.SizeOfRawData, 0x600);
+            ok_hex(ImageFile->bss_header.PointerToRawData, 0);
 
 #define TEST_BYTE(n, v) \
     StartSeh() \

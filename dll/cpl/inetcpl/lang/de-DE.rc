@@ -19,8 +19,6 @@
  *
  */
 
-#pragma code_page(65001)
-
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -68,7 +66,7 @@ CAPTION "Gespeicherte Browserdaten löschen"
 BEGIN
 
     AUTOCHECKBOX   "&Temporäre Internetdateien\nZwischengespeicherte Kopien von Webseiten, Bildern und Zertifikaten.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "&Cookies\nVon Webseiten auf ihrem Computer gespeicherte Dateien, die Benutzereinstellungen oder Anmeldeinformationen enthalten.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Verlauf\nListe von Webseiten, die Sie aufgerufen haben.",
@@ -78,7 +76,7 @@ BEGIN
     AUTOCHECKBOX   "&Kennwörter\nGespeicherte Kennwörter, die Sie in Formulare eingegeben haben.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "&Abbrechen", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "&Löschen", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "&Löschen", IDOK, 120, 230, 60, 15
 
 END
 
@@ -120,16 +118,16 @@ END
 IDD_CONNECTIONS DIALOG 0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "Connections"
+CAPTION "Verbindungen"
 BEGIN
-    GROUPBOX        "Automatic configuration", IDC_STATIC, 4, 4, 312, 56
-    AUTOCHECKBOX    "Use Web Proxy Auto-Discovery (WPAD)", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
-    AUTOCHECKBOX    "Use Proxy Auto-Config (PAC) script", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
-    LTEXT           "Address:", IDC_STATIC, 10, 42, 40, 14
+    GROUPBOX        "Automatische Konfiguration", IDC_STATIC, 4, 4, 312, 56
+    AUTOCHECKBOX    "Web Proxy Auto-Discovery (WPAD) benutzen", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
+    AUTOCHECKBOX    "Proxy Auto-Config (PAC) Skript benutzen", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
+    LTEXT           "Adresse:", IDC_STATIC, 10, 42, 40, 14
     EDITTEXT        IDC_EDIT_PAC_SCRIPT, 50, 42, 160, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
-    GROUPBOX        "Proxy server", IDC_STATIC, 4, 66, 312, 42
-    AUTOCHECKBOX    "Use a proxy server", IDC_USE_PROXY_SERVER, 10, 76, 200, 14, BS_TOP | BS_MULTILINE
-    LTEXT           "Address:", IDC_STATIC, 10, 90, 40, 14
+    GROUPBOX        "Proxyserver", IDC_STATIC, 4, 66, 312, 42
+    AUTOCHECKBOX    "Proxyserver benutzen", IDC_USE_PROXY_SERVER, 10, 76, 200, 14, BS_TOP | BS_MULTILINE
+    LTEXT           "Adresse:", IDC_STATIC, 10, 90, 40, 14
     EDITTEXT        IDC_EDIT_PROXY_SERVER, 50, 90, 80, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
     LTEXT           "Port:", IDC_STATIC, 140, 90, 30, 14
     EDITTEXT        IDC_EDIT_PROXY_PORT, 170, 90, 40, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED | ES_NUMBER

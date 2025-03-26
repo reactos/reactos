@@ -718,7 +718,7 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (MemoryAllocated)
     {
         /* Free it */
-        ExFreePool(SecurityDescriptor);
+        ExFreePoolWithTag(SecurityDescriptor, TAG_SEC_QUERY);
     }
     else
     {

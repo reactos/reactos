@@ -54,7 +54,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ICMP4_STAT_HEADER "\nStatystyki ICMPv4\n\n"
-    IDS_ICMP_THEADER "                            Odebrano  Wysłano\n"
+    IDS_ICMP_THEADER             "                            Odebrano  Wysłano\n"
     IDS_ICMP_MSG                 "  Komunikaty                      %-11lu %lu\n"
     IDS_ICMP_ERROR               "  Błędy                           %-11lu %lu\n"
     IDS_ICMP_DEST_UNREACH        "  Miejsce docelowe nieosiągalne   %-11lu %lu\n"
@@ -95,18 +95,18 @@ END
 STRINGTABLE
 BEGIN
     IDS_ETHERNET_INTERFACE_STAT     "Statystyki interfejsu\n\n"
-    IDS_ETHERNET_THEADER            "                           Odebrano          Wysłano\n\n"
-    IDS_ETHERNET_BYTES              "  Bajty                               %14lu %15lu\n"
-    IDS_ETHERNET_UNICAST_PACKET     "  Pakiety emisji pojedynczej          %14lu %15lu\n"
-    IDS_ETHERNET_NON_UNICAST_PACKET "  Pakiety inne niż emisji pojedynczej %14lu %15lu\n"
-    IDS_ETHERNET_DISCARD            "  Odrzucone                           %14lu %15lu\n"
-    IDS_ETHERNET_ERROR              "  Błędy                               %14lu %15lu\n"
-    IDS_ETHERNET_UNKNOWN            "  Nieznane protokoły                  %14lu\n"
+    IDS_ETHERNET_THEADER            "                                          Odebrano         Wysłano\n\n"
+    IDS_ETHERNET_BYTES              "Bajty                               %14lu %15lu\n"
+    IDS_ETHERNET_UNICAST_PACKET     "Pakiety emisji pojedynczej          %14lu %15lu\n"
+    IDS_ETHERNET_NON_UNICAST_PACKET "Pakiety inne niż emisji pojedynczej %14lu %15lu\n"
+    IDS_ETHERNET_DISCARD            "Odrzucone                           %14lu %15lu\n"
+    IDS_ETHERNET_ERROR              "Błędy                               %14lu %15lu\n"
+    IDS_ETHERNET_UNKNOWN            "Nieznane protokoły                  %14lu\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_WSA_START "BŁĄD: Procedura WSAStartup() nie powiodła się : %d\n"
+    IDS_ERROR_WSA_START "BŁĄD: Procedura WSAStartup() nie powiodła się: %d\n"
     IDS_ERROR_ROUTE "BŁĄD: Nie można odnaleźć pliku 'route.exe'\n"
     IDS_ERROR_TCP_SNAPSHOT "BŁĄD: Nie powiodło się utworzenie migawki dla punktów końcowych TCP.\n"
     IDS_ERROR_UDP_ENDPOINT "BŁĄD: Nie powiodło się utworzenie migawki dla punktów końcowych UDP.\n"

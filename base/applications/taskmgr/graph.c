@@ -1,23 +1,8 @@
 /*
- *  ReactOS Task Manager
- *
- *  graph.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Performance Graph Meters.
+ * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  */
 
 #include "precomp.h"
@@ -43,7 +28,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
 
     /*
-     * Filter out mouse  & keyboard messages
+     * Filter out mouse & keyboard messages
      */
     /* case WM_APPCOMMAND: */
     case WM_CAPTURECHANGED:
@@ -99,7 +84,6 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_PAINT:
-
         hdc = BeginPaint(hWnd, &ps);
 
         WindowId = GetWindowLongPtrW(hWnd, GWLP_ID);
@@ -118,13 +102,11 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         EndPaint(hWnd, &ps);
-
         return 0;
-
     }
 
     /*
-     * We pass on all non-handled messages
+     * Pass on all non-handled messages
      */
     return CallWindowProcW(OldGraphWndProc, hWnd, message, wParam, lParam);
 }
@@ -163,8 +145,6 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
      * Get the CPU usage
      */
     CpuUsage = PerfDataGetProcessorUsage();
-    if (CpuUsage <= 0)   CpuUsage = 0;
-    if (CpuUsage > 100)  CpuUsage = 100;
 
     wsprintfW(Text, L"%d%%", (int)CpuUsage);
 
@@ -180,8 +160,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     SetTextColor(hDC, crPrevForeground);
 
     /*
-     * Now we have to draw the graph
-     * So first find out how many bars we can fit
+     * Draw the graph. So first find out how many bars we can fit
      */
     nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
     nBarsUsed = (nBars * CpuUsage) / 100;
@@ -194,8 +173,6 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     if (TaskManagerSettings.ShowKernelTimes)
     {
         CpuKernelUsage = PerfDataGetProcessorSystemUsage();
-        if (CpuKernelUsage <= 0)   CpuKernelUsage = 0;
-        if (CpuKernelUsage >= 100) CpuKernelUsage = 100;
         nBarsUsedKernel = (nBars * CpuKernelUsage) / 100;
     }
     else
@@ -204,7 +181,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     }
 
     /*
-     * Now draw the bar graph
+     * Draw the bar graph
      */
     rcBarLeft.left =  ((rcClient.right - rcClient.left) - 33) / 2;
     rcBarLeft.right =  rcBarLeft.left + 16;
@@ -285,7 +262,6 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 
     for (i=0; i<nBarsUsedKernel; i++)
     {
-
         FillSolidRect(hDC, &rcBarLeft, RED);
         FillSolidRect(hDC, &rcBarRight, RED);
 
@@ -294,7 +270,6 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 
         rcBarRight.top -=3;
         rcBarRight.bottom -=3;
-
     }
 
     SelectObject(hDC, hOldFont);
@@ -350,8 +325,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     SetTextColor(hDC, crPrevForeground);
 
     /*
-     * Now we have to draw the graph
-     * So first find out how many bars we can fit
+     * Draw the graph. So first find out how many bars we can fit
      */
     nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
         if (CommitChargeLimit)
@@ -365,7 +339,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     if (nBarsFree > nBars) nBarsFree = nBars;
 
     /*
-     * Now draw the bar graph
+     * Draw the bar graph
      */
     rcBarLeft.left =  ((rcClient.right - rcClient.left) - 33) / 2;
     rcBarLeft.right =  rcBarLeft.left + 16;
@@ -433,17 +407,16 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
     //CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
     /*
-     * Draw the graph background
-     *
-     * Draw the horizontal bars
+     * Draw the graph background and horizontal bars
      */
     for (i=0; i<rcClient.bottom; i++)
     {
         if ((i % 11) == 0)
         {
-            /* FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);  */
+            //FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);
         }
     }
+
     /*
      * Draw the vertical bars
      */
@@ -451,7 +424,7 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
     {
         if ((i % 11) == 0)
         {
-            /* FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);  */
+            //FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);
         }
     }
 

@@ -4,6 +4,11 @@
 
 #include "intrin_i.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 //
 // Thread Dispatcher Header DebugActive Mask
 //
@@ -17,26 +22,113 @@
 #define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
 #define KD_BREAKPOINT_VALUE       0xCC
 
+/* CPUID 1 - ECX flags */
+#define X86_FEATURE_SSE3        0x00000001
+#define X86_FEATURE_SSSE3       0x00000200
+#define X86_FEATURE_SSE4_1      0x00080000
+#define X86_FEATURE_SSE4_2      0x00100000
+#define X86_FEATURE_XSAVE       0x04000000
+#define X86_FEATURE_RDRAND      0x40000000
+
+/* CPUID 1 - EDX flags */
+#define X86_FEATURE_FPU         0x00000001 /* x87 FPU is present */
+#define X86_FEATURE_VME         0x00000002 /* Virtual 8086 Extensions are present */
+#define X86_FEATURE_DBG         0x00000004 /* Debugging extensions are present */
+#define X86_FEATURE_PSE         0x00000008 /* Page Size Extension is present */
+#define X86_FEATURE_TSC         0x00000010 /* Time Stamp Counters are present */
+#define X86_FEATURE_PAE         0x00000040 /* Physical Address Extension is present */
+#define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
+#define X86_FEATURE_APIC        0x00000200 /* APIC is present */
+#define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
+#define X86_FEATURE_MTTR        0x00001000 /* Memory type range registers are present */
+#define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
+#define X86_FEATURE_CMOV        0x00008000 /* "Conditional move" instruction supported */
+#define X86_FEATURE_PAT         0x00010000 /* Page Attribute Table is supported */
+#define X86_FEATURE_DS          0x00200000 /* Debug Store is present */
+#define X86_FEATURE_MMX         0x00800000 /* MMX extension present */
+#define X86_FEATURE_FXSR        0x01000000 /* FXSAVE/FXRSTOR instructions present */
+#define X86_FEATURE_SSE         0x02000000 /* SSE extension present */
+#define X86_FEATURE_SSE2        0x04000000 /* SSE2 extension present */
+#define X86_FEATURE_HT          0x10000000 /* Hyper-Threading present */
+
+/* CPUID 0x80000001 - EDX extended flags */
+#define X86_FEATURE_NX          0x00100000 /* NX support present */
+
 //
-// Macros for getting and setting special purpose registers in portable code
+// One-liners for getting and setting special purpose registers in portable code
 //
-#define KeGetContextPc(Context) \
-    ((Context)->Eip)
+FORCEINLINE
+ULONG_PTR
+KeGetContextPc(PCONTEXT Context)
+{
+    return Context->Eip;
+}
 
-#define KeSetContextPc(Context, ProgramCounter) \
-    ((Context)->Eip = (ProgramCounter))
+FORCEINLINE
+VOID
+KeSetContextPc(PCONTEXT Context, ULONG_PTR ProgramCounter)
+{
+    Context->Eip = ProgramCounter;
+}
 
-#define KeGetTrapFramePc(TrapFrame) \
-    ((TrapFrame)->Eip)
+FORCEINLINE
+ULONG_PTR
+KeGetContextReturnRegister(PCONTEXT Context)
+{
+    return Context->Eax;
+}
 
-#define KiGetLinkedTrapFrame(x) \
-    (PKTRAP_FRAME)((x)->Edx)
+FORCEINLINE
+VOID
+KeSetContextReturnRegister(PCONTEXT Context, ULONG_PTR ReturnValue)
+{
+    Context->Eax = ReturnValue;
+}
 
-#define KeGetContextReturnRegister(Context) \
-    ((Context)->Eax)
+FORCEINLINE
+ULONG_PTR
+KeGetContextFrameRegister(PCONTEXT Context)
+{
+    return Context->Ebp;
+}
 
-#define KeSetContextReturnRegister(Context, ReturnValue) \
-    ((Context)->Eax = (ReturnValue))
+FORCEINLINE
+VOID
+KeSetContextFrameRegister(PCONTEXT Context, ULONG_PTR Frame)
+{
+    Context->Ebp = Frame;
+}
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFramePc(PKTRAP_FRAME TrapFrame)
+{
+    return TrapFrame->Eip;
+}
+
+FORCEINLINE
+PKTRAP_FRAME
+KiGetLinkedTrapFrame(PKTRAP_FRAME TrapFrame)
+{
+    return (PKTRAP_FRAME)TrapFrame->Edx;
+}
+
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFrameStackRegister(PKTRAP_FRAME TrapFrame)
+{
+    if (TrapFrame->PreviousPreviousMode == KernelMode)
+        return TrapFrame->TempEsp;
+    return TrapFrame->HardwareEsp;
+}
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFrameFrameRegister(PKTRAP_FRAME TrapFrame)
+{
+    return TrapFrame->Ebp;
+}
 
 //
 // Macro to get trap and exception frame from a thread stack
@@ -175,6 +267,17 @@ typedef struct _LARGE_IDENTITY_MAP
     PVOID PagesList[30];
 } LARGE_IDENTITY_MAP, *PLARGE_IDENTITY_MAP;
 
+//
+// Floating Point Internal Context Structure
+//
+typedef struct _FLOATING_SAVE_CONTEXT
+{
+    PKTHREAD CurrentThread;
+    KIRQL OldNpxIrql;
+    PFX_SAVE_AREA Buffer;
+    PFX_SAVE_AREA PfxSaveArea;
+} FLOATING_SAVE_CONTEXT, *PFLOATING_SAVE_CONTEXT;
+
 /* Diable interrupts and return whether they were enabled before */
 FORCEINLINE
 BOOLEAN
@@ -291,7 +394,6 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#ifndef CONFIG_SMP
     /* Check if this is the NPX Thread */
     if (KeGetCurrentPrcb()->NpxThread == Thread)
     {
@@ -299,10 +401,18 @@ KiRundownThread(IN PKTHREAD Thread)
         KeGetCurrentPrcb()->NpxThread = NULL;
         Ke386FnInit();
     }
-#else
-    /* Nothing to do */
-#endif
 }
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+KiInitializePcr(IN ULONG ProcessorNumber,
+                IN PKIPCR Pcr,
+                IN PKIDTENTRY Idt,
+                IN PKGDTENTRY Gdt,
+                IN PKTSS Tss,
+                IN PKTHREAD IdleThread,
+                IN PVOID DpcStack);
 
 FORCEINLINE
 VOID
@@ -315,12 +425,13 @@ Ke386SetGdtEntryBase(PKGDTENTRY GdtEntry, PVOID BaseAddress)
 
 FORCEINLINE
 VOID
-KiSetTebBase(PKPCR Pcr, PVOID TebAddress)
+KiSetTebBase(PKPCR Pcr, PNT_TIB TebAddress)
 {
     Pcr->NtTib.Self = TebAddress;
     Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
 }
 
+CODE_SEG("INIT")
 VOID
 FASTCALL
 Ki386InitializeTss(
@@ -329,33 +440,45 @@ Ki386InitializeTss(
     IN PKGDTENTRY Gdt
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetCR0Bits(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiGetCacheInformation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KiIsNpxPresent(
     VOID
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KiIsNpxErrataPresent(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetProcessorType(VOID);
 
-ULONG
+CODE_SEG("INIT")
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID);
+
+#if DBG
+CODE_SEG("INIT")
+VOID
+KiReportCpuFeatures(VOID);
+#endif
 
 VOID
 NTAPI
@@ -387,18 +510,21 @@ Ki386SetupAndExitToV86Mode(
     OUT PTEB VdmTeb
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KeI386VdmInitialize(
     VOID
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableGlobalPage(
     IN ULONG_PTR Context
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableTargetLargePage(
@@ -426,48 +552,56 @@ Ki386EnableCurrentLargePage(
     IN ULONG Cr3
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiI386PentiumLockErrataFixup(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializePAT(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeMTRR(
     IN BOOLEAN FinalCpu
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiAmdK6InitializeMTRR(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiRestoreFastSyscallReturnState(
     VOID
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableDE(
     IN ULONG_PTR Context
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableFxsr(
     IN ULONG_PTR Context
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableXMMIExceptions(
@@ -537,6 +671,31 @@ NTAPI
 KiConvertToGuiThread(
     VOID
 );
+
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiServiceExit(
+    IN PKTRAP_FRAME TrapFrame,
+    IN NTSTATUS Status
+);
+
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiServiceExit2(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+FORCEINLINE
+DECLSPEC_NORETURN
+VOID
+KiExceptionExit(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    KiServiceExit2(TrapFrame);
+}
 
 //
 // Global x86 only Kernel data
@@ -684,71 +843,11 @@ KiDispatchException2Args(IN NTSTATUS Code,
 //
 // Performs a system call
 //
-
-    /*
-     * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
-     * and then calls the function associated with the system call.
-     *
-     * It's done in assembly for two reasons: we need to muck with the stack,
-     * and the call itself restores the stack back for us. The only way to do
-     * this in C is to do manual C handlers for every possible number of args on
-     * the stack, and then have the handler issue a call by pointer. This is
-     * wasteful since it'll basically push the values twice and require another
-     * level of call indirection.
-     *
-     * The ARM kernel currently does this, but it should probably be changed
-     * later to function like this as well.
-     *
-     */
-#ifdef __GNUC__
-FORCEINLINE
 NTSTATUS
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    NTSTATUS Result;
-
-    __asm__ __volatile__
-    (
-        "subl %1, %%esp\n\t"
-        "movl %%esp, %%edi\n\t"
-        "movl %2, %%esi\n\t"
-        "shrl $2, %1\n\t"
-        "rep movsd\n\t"
-        "call *%3\n\t"
-        "movl %%eax, %0"
-        : "=r"(Result)
-        : "c"(StackBytes),
-          "d"(Arguments),
-          "r"(Handler)
-        : "%esp", "%esi", "%edi"
-    );
-    return Result;
-}
-#elif defined(_MSC_VER)
-FORCEINLINE
-NTSTATUS
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    __asm
-    {
-        mov ecx, StackBytes
-        mov esi, Arguments
-        mov eax, Handler
-        sub esp, ecx
-        mov edi, esp
-        shr ecx, 2
-        rep movsd
-        call eax
-    }
-    /* Return with result in EAX */
-}
-#else
-#error Unknown Compiler
-#endif
+NTAPI
+KiSystemCallTrampoline(_In_ PVOID Handler,
+                       _In_ PVOID Arguments,
+                       _In_ ULONG StackBytes);
 
 
 //
@@ -791,11 +890,13 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 //
 // Switches from boot loader to initial kernel stack
 //
+CODE_SEG("INIT")
 FORCEINLINE
+DECLSPEC_NORETURN
 VOID
 KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 {
-    VOID NTAPI KiSystemStartupBootStack(VOID);
+    CODE_SEG("INIT") DECLSPEC_NORETURN VOID NTAPI KiSystemStartupBootStack(VOID);
 
     /* We have to switch to a new stack before continuing kernel initialization */
 #ifdef __GNUC__
@@ -823,6 +924,8 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 #else
 #error Unknown Compiler
 #endif
+
+    UNREACHABLE;
 }
 
 //
@@ -888,5 +991,9 @@ KiGetUserModeStackAddress(void)
 {
     return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
 }
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

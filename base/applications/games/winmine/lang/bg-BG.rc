@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Нов\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "Слагане на &питанка", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "На&чинаещ", IDM_BEGINNER
         MENUITEM "&Напреднал", IDM_ADVANCED

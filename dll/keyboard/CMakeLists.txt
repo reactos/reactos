@@ -10,10 +10,10 @@ list(APPEND _keyboard_layouts
     kbdazel
     kbdbe
     kbdbga
-    kbdbgm
     kbdbgt
     kbdblr
     kbdbr
+    kbdbu
     kbdbur
     kbdcan
     kbdcr
@@ -22,7 +22,6 @@ list(APPEND _keyboard_layouts
     kbdda
     kbddv
     kbdeo
-    kbdes
     kbdest
     kbdfc
     kbdfi
@@ -31,7 +30,7 @@ list(APPEND _keyboard_layouts
     kbdgerg
     kbdgneo
     kbdgr
-    kbdgrist
+    kbdgr1
     kbdhe
     kbdheb
     kbdhu
@@ -43,9 +42,9 @@ list(APPEND _keyboard_layouts
     kbdinmal
     kbdir
     kbdit
-    kbdja
+    kbdjpn
     kbdkaz
-    kbdko
+    kbdkor
     kbdla
     kbdlt1
     kbdlv
@@ -61,8 +60,9 @@ list(APPEND _keyboard_layouts
     kbdru1
     kbdsf
     kbdsg
-    kbdsk
-    kbdsk1
+    kbdsl
+    kbdsl1
+    kbdsp
     kbdsw
     kbdtat
     kbdth0
@@ -99,13 +99,10 @@ foreach(_keyboard_layout ${_keyboard_layouts})
 
     if(MSVC)
         # Merge the .text and .rdata section into the .data section
-        add_target_link_flags(${_keyboard_layout} "/ignore:4254 /SECTION:.data,ER /MERGE:.text=.data /MERGE:.rdata=.data /MERGE:.bss=.data /MERGE:.edata=.data")
+        target_link_options(${_keyboard_layout} PRIVATE "/ignore:4254;/SECTION:.data,ER;/MERGE:.text=.data;/MERGE:.rdata=.data;/MERGE:.bss=.data;/MERGE:.edata=.data")
     else()
         # Use a custom linker script
-        add_target_link_flags(${_keyboard_layout} "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
-
-        # Avoid "universal character names are only valid in C++ and C99" error.
-        set_property(TARGET ${_keyboard_layout} PROPERTY C_STANDARD 99)
+        target_link_options(${_keyboard_layout} PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
     endif()
 
     # dynamic analysis switches

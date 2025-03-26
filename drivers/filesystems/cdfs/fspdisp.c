@@ -22,7 +22,7 @@ Abstract:
 
 #define BugCheckFileId                   (CDFS_BUG_CHECK_FSPDISP)
 
-
+
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFspDispatch (
@@ -238,7 +238,7 @@ Return Value:
 
             } else {
 
-                VolDo->PostedRequestCount -= 1;            
+                VolDo->PostedRequestCount -= 1;
 
                 Entry = NULL;
             }
@@ -250,9 +250,9 @@ Return Value:
             //  the Ex Worker thread.
             //
 
-            if (Entry == NULL) { 
+            if (Entry == NULL) {
 
-                break; 
+                break;
             }
 
             //

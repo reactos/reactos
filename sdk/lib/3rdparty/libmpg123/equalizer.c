@@ -9,7 +9,7 @@
 
 #include "mpg123lib_intern.h"
 
-void do_equalizer(real *bandPtr,int channel, real equalizer[2][32]) 
+void do_equalizer(real *bandPtr,int channel, real equalizer[2][32])
 {
 	int i;
 	for(i=0;i<32;i++)

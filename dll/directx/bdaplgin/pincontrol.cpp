@@ -373,7 +373,7 @@ CBDAPinControl_fnConstructor(
     // release IBaseFilter interface
     PinInfo.pFilter->Release();
 
-    // release IPin 
+    // release IPin
     pPin->Release();
 
     // release IKsObject

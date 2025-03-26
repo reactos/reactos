@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS RAPPS
- * FILE:        base/applications/rapps/lang/sv-SE.rc
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Swedish resource file
- * Translation: Jaix Bly
+ * TRANSLATOR:  Copyright 2011 Jan Blomqvist Kinander (Jaix Bly) <jaixbly@spray.se>
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
@@ -13,7 +13,7 @@ BEGIN
     BEGIN
         MENUITEM "&Inställningar", ID_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "A&vsluta", ID_EXIT
+        MENUITEM "&Avsluta", ID_EXIT
     END
     POPUP "&Program"
     BEGIN
@@ -21,11 +21,11 @@ BEGIN
         MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ändra", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+        MENUITEM "Ta bort från R&egistret", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Uppdatera\tF5", ID_REFRESH
+        MENUITEM "Uppdate&ra\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
     POPUP "Hjälp"
     BEGIN
@@ -36,26 +36,10 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Öppna länk i webläsare", ID_OPEN_LINK
         MENUITEM "&Kopiera länk till urklipp", ID_COPY_LINK
-    END
-END
-
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP "popup"
-    BEGIN
-        MENUITEM "&Installera\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Ändra", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "&Ta bort från Registret", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "&Uppdatera\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -65,26 +49,24 @@ CAPTION "Inställningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Allmänna", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Spara fönsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Uppdatera listan med tillgängliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Logga ur installation och borttagning program", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Nerladding", -1, 4, 65, 240, 51
     LTEXT "Mapp för nerladdningar:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Välj", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Ta bort programinstallerare efter installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    AUTORADIOBUTTON "Use default", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Specified source", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
-    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
-    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    AUTORADIOBUTTON "System proxy settings", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Direct (No proxy)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Proxy", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 225, 64, 10
+    LTEXT "No proxy for", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Standard", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    PUSHBUTTON "Standard", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 181, 245, 60, 14
 END
@@ -101,12 +83,12 @@ BEGIN
     PUSHBUTTON "Avbryt", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Ladda ner %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "Avbryt", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
@@ -116,6 +98,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Installera"
     IDS_TOOLTIP_UNINSTALL "Avinstallera"
     IDS_TOOLTIP_MODIFY "Redigera"
+    IDS_TOOLTIP_SELECT_ALL "Select/Deselect All"
     IDS_TOOLTIP_SETTINGS "Inställingar"
     IDS_TOOLTIP_REFRESH "Uppdatera"
     IDS_TOOLTIP_UPDATE_DB "Update Database"
@@ -187,14 +170,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS programhanterare"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Sök…"
-    IDS_INSTALL "Installera"
-    IDS_UNINSTALL "Avinstallera"
-    IDS_MODIFY "Ändra"
-    IDS_APPS_COUNT "Programantal: %d; Selected: %d"
-    IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!\n\n"
+    IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!"
     IDS_WELCOME_TEXT "Välj en kategori till vänster, och sedan ett program för att installera eller avinstallera.\nReactOS Web sida: "
-    IDS_WELCOME_URL "https://reactos.org/"
+    IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Sök…"
+    IDS_APPS_COUNT "Programantal: %d"
+    IDS_APPS_SELECT_COUNT "; Selected: %d"
     IDS_INSTALLED "Installerat"
     IDS_AVAILABLEFORINST "Tillgängliga for installation"
     IDS_UPDATES "Uppdateringar"
@@ -213,14 +202,18 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
     IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_APP_DISPLAY_DETAILS "Details"
+    IDS_APP_DISPLAY_LIST "List"
+    IDS_APP_DISPLAY_TILE "Tile"
+    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_CFG_SAVE_WINDOW_POS "Spara fönsterposition"
+    IDS_CFG_UPDATE_AVLIST "Uppdatera listan med tillgängliga program vid start"
+    IDS_CFG_LOG_ENABLED "Logga ur installation och borttagning program"
+    IDS_CFG_SMALL_ICONS "Små ikoner"
 END
 
 STRINGTABLE
@@ -269,4 +262,10 @@ BEGIN
     IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
     IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
     IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

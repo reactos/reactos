@@ -8,9 +8,6 @@
 
 #include "wshtcpip.h"
 
-#define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
-#include <windows.h>      /* Declare Windows Headers like you normally would */
-#include <ntndk.h>        /* Declare the NDK Headers */
 #include <iptypes.h>
 #include <wine/list.h>
 
@@ -29,7 +26,7 @@ BOOL AllocAndGetEntityArray(
     ULONG outBufLen, outBufLenNeeded;
     void* outBuf = NULL;
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
-    NTSTATUS Status;
+    DWORD dwError;
     TDIEntityID *pEntities;
 
     /* Set up Request */
@@ -62,7 +59,7 @@ BOOL AllocAndGetEntityArray(
         if (outBuf == NULL)
             break;
 
-        Status = NO_ERROR;
+        dwError = NO_ERROR;
         if (!DeviceIoControl(
                 TcpFile,
                 IOCTL_TCP_QUERY_INFORMATION_EX,
@@ -72,16 +69,18 @@ BOOL AllocAndGetEntityArray(
                 outBufLen,
                 &outBufLenNeeded,
                 NULL))
-            Status = GetLastError();
+        {
+            dwError = GetLastError();
+        }
 
         /* We need TDI_SUCCESS and the outBufLenNeeded must be equal or smaller
            than our buffer (outBufLen). */
-        if (Status != NO_ERROR)
+        if (dwError != NO_ERROR)
         {
             HeapFree(hHeap, 0, outBuf);
             break;
         }
-        /* status = Success; was the buffer large enough? */
+        /* dwError = Success; was the buffer large enough? */
         if (outBufLenNeeded <= outBufLen)
         {
             result = TRUE;
@@ -118,7 +117,7 @@ INT GetIPSNMPInfo(
 {
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
     ULONG BufLenNeeded;
-    
+
     RtlZeroMemory(&inTcpReq, sizeof(inTcpReq));
     inTcpReq.ID.toi_entity = *pEntityID;
     inTcpReq.ID.toi_class = INFO_CLASS_PROTOCOL;
@@ -134,10 +133,10 @@ INT GetIPSNMPInfo(
             &BufLenNeeded,
             NULL))
     {
-        DPRINT("DeviceIoControl (IPSNMPInfo) failed, Status %li!\n", GetLastError());
+        DPRINT("DeviceIoControl (IPSNMPInfo) failed, Error %ld!\n", GetLastError());
         return WSAEFAULT;
-    }    
-   
+    }
+
     return NO_ERROR;
 }
 
@@ -148,7 +147,7 @@ INT GetTdiEntityType(
 {
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
     ULONG BufLenNeeded;
-    
+
     RtlZeroMemory(&inTcpReq, sizeof(inTcpReq));
     inTcpReq.ID.toi_entity = *pEntityID;
     inTcpReq.ID.toi_class = INFO_CLASS_GENERIC;
@@ -164,10 +163,10 @@ INT GetTdiEntityType(
             &BufLenNeeded,
             NULL))
     {
-        DPRINT("DeviceIoControl (TdiEntityType) failed, Status %li!\n", GetLastError());
+        DPRINT("DeviceIoControl (TdiEntityType) failed, Error %ld!\n", GetLastError());
         return WSAEFAULT;
-    }    
-   
+    }
+
     return NO_ERROR;
 }
 
@@ -179,7 +178,7 @@ INT GetIFEntry(
 {
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
     ULONG BufLenNeeded;
-    
+
     RtlZeroMemory(&inTcpReq, sizeof(inTcpReq));
     inTcpReq.ID.toi_entity = *pEntityID;
     inTcpReq.ID.toi_class = INFO_CLASS_PROTOCOL;
@@ -195,10 +194,10 @@ INT GetIFEntry(
             &BufLenNeeded,
             NULL))
     {
-        DPRINT("DeviceIoControl (IFEntry) failed, Status %li!\n", GetLastError());
+        DPRINT("DeviceIoControl (IFEntry) failed, Error %ld!\n", GetLastError());
         return WSAEFAULT;
-    }    
-   
+    }
+
     return NO_ERROR;
 }
 
@@ -229,21 +228,21 @@ WSHIoctl_GetInterfaceList(
     LPINTERFACE_INFO pIntfInfo;
     DWORD outIDCount, i1, iAddr;
     DWORD bCastAddr, outNumberOfBytes;
-    ULONG BufLenNeeded, BufLen, IFEntryLen, TdiType; 
-    HANDLE TcpFile = 0;
+    ULONG BufLenNeeded, BufLen, IFEntryLen, TdiType;
+    HANDLE TcpFile = NULL;
     HANDLE hHeap = GetProcessHeap();
-    DWORD LastErr;
-    INT res = -1;
+    NTSTATUS Status;
+    INT res;
 
     /* Init Interface-ID-List */
     IntfIDList = HeapAlloc(hHeap, 0, sizeof(*IntfIDList));
     list_init(&IntfIDList->entry);
 
     /* open tcp-driver */
-    LastErr = openTcpFile(&TcpFile, FILE_READ_DATA | FILE_WRITE_DATA);
-    if (!NT_SUCCESS(LastErr))
+    Status = openTcpFile(&TcpFile, FILE_READ_DATA | FILE_WRITE_DATA);
+    if (!NT_SUCCESS(Status))
     {
-        res = (INT)LastErr;
+        res = RtlNtStatusToDosError(Status);
         goto cleanup;
     }
 
@@ -263,8 +262,8 @@ WSHIoctl_GetInterfaceList(
         DPRINT("ERROR\n");
         res = ERROR_OUTOFMEMORY;
         goto cleanup;
-    } 
-    
+    }
+
     /* get addresses */
     pEntityID = outEntityID;
     for (i1 = 0; i1 < outIDCount; i1++)
@@ -280,7 +279,7 @@ WSHIoctl_GetInterfaceList(
         res = GetIPSNMPInfo(TcpFile, pEntityID, &outIPSNMPInfo);
         if (res != NO_ERROR)
             goto cleanup;
-       
+
         /* add to array */
         pIntfIDItem = (IntfIDItem*)HeapAlloc(hHeap, 0, sizeof(IntfIDItem));
         list_add_head(&IntfIDList->entry, &pIntfIDItem->entry);
@@ -291,13 +290,13 @@ WSHIoctl_GetInterfaceList(
 
         pEntityID++;
     }
-    
+
     /* Calculate needed size */
     outNumberOfBytes = 0;
     LIST_FOR_EACH_ENTRY(pIntfIDItem, &IntfIDList->entry, struct _IntfIDItem, entry)
     {
         outNumberOfBytes += (pIntfIDItem->numaddr * sizeof(INTERFACE_INFO));
-    }   
+    }
     DPRINT("Buffer size needed: %lu\n", outNumberOfBytes);
     if (outNumberOfBytes > OutputBufferLength)
     {
@@ -307,7 +306,7 @@ WSHIoctl_GetInterfaceList(
         res = WSAEFAULT;
         goto cleanup;
     }
-    
+
     /* Get address info */
     RtlZeroMemory(&inTcpReq1,sizeof(inTcpReq1));
     inTcpReq1.ID.toi_class = INFO_CLASS_PROTOCOL;
@@ -319,7 +318,7 @@ WSHIoctl_GetInterfaceList(
 
         BufLen = sizeof(IPAddrEntry) * pIntfIDItem->numaddr;
         pIntfIDItem->pIPAddrEntry0 = HeapAlloc(hHeap, 0, BufLen);
-        
+
         if (!DeviceIoControl(
                 TcpFile,
                 IOCTL_TCP_QUERY_INFORMATION_EX,
@@ -330,8 +329,7 @@ WSHIoctl_GetInterfaceList(
                 &BufLenNeeded,
                 NULL))
         {
-            LastErr = GetLastError();
-            DPRINT("DeviceIoControl failed, Status %li!\n", LastErr);
+            DPRINT("DeviceIoControl failed, Error %ld!\n", GetLastError());
             res = WSAEFAULT;
             goto cleanup;
         }
@@ -368,21 +366,21 @@ WSHIoctl_GetInterfaceList(
             pIntfInfo->iiFlags = IFF_BROADCAST | IFF_MULTICAST;
             if (pIPAddrEntry->iae_addr == ntohl(INADDR_LOOPBACK))
                 pIntfInfo->iiFlags |= IFF_LOOPBACK;
-            
+
             pIPAddrEntry++;
             pIntfInfo++;
         }
         res = NO_ERROR;
     }
-    
+
     /* Get Interface up/down-state and patch pIntfInfo->iiFlags */
     pEntityID = outEntityID;
-    for (i1 = 0; i1 < outIDCount; i1++)        
-    {           
+    for (i1 = 0; i1 < outIDCount; i1++)
+    {
         res = GetTdiEntityType(TcpFile, pEntityID, &TdiType);
         if (res != NO_ERROR)
             goto cleanup;
-       
+
         if (TdiType != IF_MIB)
         {
             pEntityID++;
@@ -392,7 +390,7 @@ WSHIoctl_GetInterfaceList(
         res = GetIFEntry(TcpFile, pEntityID, pIFEntry, IFEntryLen);
         if (res != NO_ERROR)
             goto cleanup;
-        
+
         /* if network isn't up -> no patch needed */
         if (pIFEntry->if_operstatus < IF_OPER_STATUS_CONNECTING)
         {
@@ -405,7 +403,7 @@ WSHIoctl_GetInterfaceList(
         LIST_FOR_EACH_ENTRY(pIntfIDItem, &IntfIDList->entry, struct _IntfIDItem, entry)
         {
             pIPAddrEntry = pIntfIDItem->pIPAddrEntry0;
-            for (iAddr = 0; iAddr < pIntfIDItem->numaddr; iAddr++) 
+            for (iAddr = 0; iAddr < pIntfIDItem->numaddr; iAddr++)
             {
                 if (pIPAddrEntry->iae_index == pIFEntry->if_index)
                     pIntfInfo->iiFlags |= IFF_UP;
@@ -414,7 +412,7 @@ WSHIoctl_GetInterfaceList(
                 pIntfInfo++;
             }
         }
-        
+
         pEntityID++;
     }
 
@@ -426,8 +424,8 @@ WSHIoctl_GetInterfaceList(
     res = NO_ERROR;
 cleanup:
     DPRINT("WSHIoctl_GetInterfaceList - CLEANUP\n");
-    if (TcpFile != 0)
-        NtClose(TcpFile);
+    if (TcpFile != NULL)
+        closeTcpFile(TcpFile);
     if (pIFEntry != NULL)
         HeapFree(hHeap, 0, pIFEntry);
     LIST_FOR_EACH_ENTRY_SAFE_REV(pIntfIDItem, pIntfIDNext,

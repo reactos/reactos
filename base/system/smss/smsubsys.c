@@ -87,7 +87,7 @@ SmpLocateKnownSubSysByCid(IN PCLIENT_ID ClientId)
             break;
         }
 
-        /* Reset the current pointer and keep earching */
+        /* Reset the current pointer and keep searching */
         Subsystem = NULL;
         NextEntry = NextEntry->Flink;
     }
@@ -123,7 +123,7 @@ SmpLocateKnownSubSysByType(IN ULONG MuSessionId,
             break;
         }
 
-        /* Reset the current pointer and keep earching */
+        /* Reset the current pointer and keep searching */
         Subsystem = NULL;
         NextEntry = NextEntry->Flink;
     }
@@ -145,12 +145,12 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     PSMP_SUBSYSTEM Subsystem, NewSubsystem, KnownSubsystem = NULL;
     HANDLE SubSysProcessId;
     NTSTATUS Status = STATUS_SUCCESS;
-    SB_API_MSG SbApiMsg, SbApiMsg2;
+    SB_API_MSG SbApiMsg;
     RTL_USER_PROCESS_INFORMATION ProcessInformation;
     LARGE_INTEGER Timeout;
     PVOID State;
-    PSB_CREATE_PROCESS_MSG CreateProcess = &SbApiMsg.CreateProcess;
-    PSB_CREATE_SESSION_MSG CreateSession = &SbApiMsg.CreateSession;
+    PSB_CREATE_PROCESS_MSG CreateProcess = &SbApiMsg.u.CreateProcess;
+    PSB_CREATE_SESSION_MSG CreateSession = &SbApiMsg.u.CreateSession;
 
     /* Make sure this is a found subsystem */
     if (Flags & SMP_INVALID_PATH)
@@ -316,13 +316,10 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     else
     {
         /* This is the POSIX or OS/2 subsystem process, copy its information */
-        RtlCopyMemory(&CreateSession->ProcessInfo,
-                      &ProcessInformation,
-                      sizeof(CreateSession->ProcessInfo));
+        CreateSession->ProcessInfo = ProcessInformation;
 
-        /* Not sure these field mean what I think they do -- but clear them */
-        *(PULONGLONG)&CreateSession->ClientId = 0;
-        CreateSession->MuSessionId = 0;
+        CreateSession->DbgSessionId = 0;
+        *(PULONGLONG)&CreateSession->DbgUiClientId = 0;
 
         /* This should find CSRSS because they are POSIX or OS/2 subsystems */
         Subsystem = SmpLocateKnownSubSysByType(MuSessionId,
@@ -372,25 +369,25 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
         }
 
         /* Allocate an internal Session ID for this subsystem */
-        MuSessionId = SmpAllocateSessionId(Subsystem, 0);
-        CreateSession->SessionId = MuSessionId;
+        CreateSession->SessionId = SmpAllocateSessionId(Subsystem, NULL);
 
         /* Send the create session message to the subsystem */
-        SbApiMsg2.ReturnValue = STATUS_SUCCESS;
-        SbApiMsg2.h.u2.ZeroInit = 0;
-        SbApiMsg2.h.u1.s1.DataLength = sizeof(SB_CREATE_SESSION_MSG) + 8;
-        SbApiMsg2.h.u1.s1.TotalLength = sizeof(SB_API_MSG);
+        SbApiMsg.ReturnValue = STATUS_SUCCESS;
+        SbApiMsg.h.u2.ZeroInit = 0;
+        SbApiMsg.h.u1.s1.DataLength = sizeof(SB_CREATE_SESSION_MSG) + 8;
+        SbApiMsg.h.u1.s1.TotalLength = sizeof(SB_API_MSG);
+        SbApiMsg.ApiNumber = SbpCreateSession;
         Status = NtRequestWaitReplyPort(Subsystem->SbApiPort,
-                                        &SbApiMsg2.h,
-                                        &SbApiMsg2.h);
-        if (NT_SUCCESS(Status)) Status = SbApiMsg2.ReturnValue;
+                                        &SbApiMsg.h,
+                                        &SbApiMsg.h);
+        if (NT_SUCCESS(Status)) Status = SbApiMsg.ReturnValue;
         if (!NT_SUCCESS(Status))
         {
             /* Delete the session and handle failure if the LPC call failed */
             SmpDeleteSession(CreateSession->SessionId);
             DPRINT1("SMSS: SmpLoadSubSystem - NtRequestWaitReplyPort Failed with  Status %lx for sessionid %lu\n",
                     Status,
-                    CreateSession->SessionId);
+                    MuSessionId);
             goto Quickie;
         }
     }
@@ -499,7 +496,7 @@ Quickie2:
     if (!NT_SUCCESS(Status))
     {
         RemoveEntryList(&NewSubsystem->Entry);
-        NtSetEvent(NewSubsystem->Event, 0);
+        NtSetEvent(NewSubsystem->Event, NULL);
         SmpDereferenceSubsystem(NewSubsystem);
     }
 
@@ -619,7 +616,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
         }
         if (!NT_SUCCESS(Status))
         {
-            DbgPrint("SMSS: Subsystem execute failed (%wZ)\n", &RegEntry->Value);
+            DPRINT1("SMSS: Subsystem execute failed (%wZ)\n", &RegEntry->Value);
             return Status;
         }
 

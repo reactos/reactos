@@ -944,7 +944,7 @@ DisplayDlgProc(HWND hDlg,
         case WM_DRAWITEM:
         {
             LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
             if(lpDrawItem->CtlID == IDC_COLORIMAGE)
             {
                 HDC hdcMem;

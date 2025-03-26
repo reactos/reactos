@@ -7,9 +7,9 @@
 
 #include "precomp.h"
 
-HWND hWnd1, hWnd2, hWnd3;
-HHOOK hMouseHookLL, hMouseHook;
-int ignore_timer = 0, ignore_mouse = 0, ignore_mousell = 0;
+static HWND hWnd1, hWnd2, hWnd3;
+static HHOOK hMouseHookLL, hMouseHook;
+static int ignore_timer = 0, ignore_mouse = 0, ignore_mousell = 0;
 
 static int get_iwnd(HWND hWnd)
 {
@@ -104,7 +104,7 @@ static void create_test_windows()
     hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");
     ok(hMouseHookLL!=NULL,"failed to set hook\n");
-    
+
     RegisterSimpleClass(TmeTestProc, L"testClass");
 
     hWnd1 = CreateWindowW(L"testClass", L"test", WS_OVERLAPPEDWINDOW,
@@ -164,97 +164,109 @@ DWORD TmeQuery(HWND hwnd)
                                      y*(65535/GetSystemMetrics(SM_CYVIRTUALSCREEN)) , 0,0);
 
 /* the mouse moves over hwnd2 */
-MSG_ENTRY mousemove2_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                              {2, WM_NCHITTEST},
-                              {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                              {2, WM_SETCURSOR},
-                              {1, WM_SETCURSOR},
-                              {2, WM_MOUSEMOVE, POST},
-                               {0,0}};
+static MSG_ENTRY mousemove2_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {2, WM_NCHITTEST},
+    {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {2, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {2, WM_MOUSEMOVE, POST},
+    {0,0}};
 
 /* the mouse hovers hwnd2 */
-MSG_ENTRY mousehover2_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                               {2, WM_NCHITTEST},
-                               {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                               {2, WM_SETCURSOR},
-                               {1, WM_SETCURSOR},
-                               {2, WM_MOUSEMOVE, POST},
-                               {2, WM_SYSTIMER, POST, ID_TME_TIMER},
-                               {2, WM_MOUSEHOVER, POST},
-                                {0,0}};
+static MSG_ENTRY mousehover2_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {2, WM_NCHITTEST},
+    {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {2, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {2, WM_MOUSEMOVE, POST},
+    {2, WM_SYSTIMER, POST, ID_TME_TIMER},
+    {2, WM_MOUSEHOVER, POST},
+    {0,0}};
 
 /* the mouse leaves hwnd2 and moves to hwnd1 */
-MSG_ENTRY mouseleave2to1_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                                  {1, WM_NCHITTEST},
-                                  {1, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                                  {1, WM_SETCURSOR},
-                                  {1, WM_MOUSEMOVE, POST},
-                                  {2, WM_MOUSELEAVE, POST},
-                                   {0,0}};    
+static MSG_ENTRY mouseleave2to1_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {1, WM_NCHITTEST},
+    {1, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {1, WM_SETCURSOR},
+    {1, WM_MOUSEMOVE, POST},
+    {2, WM_MOUSELEAVE, POST},
+    {0,0}};
 
 /* the mouse leaves hwnd2 and moves to hwnd3 */
-MSG_ENTRY mouseleave2to3_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                                  {3, WM_NCHITTEST},
-                                  {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                                  {3, WM_SETCURSOR},
-                                  {1, WM_SETCURSOR},
-                                  {3, WM_MOUSEMOVE, POST},
-                                  {2, WM_MOUSELEAVE, POST},
-                                   {0,0}};
+static MSG_ENTRY mouseleave2to3_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {3, WM_NCHITTEST},
+    {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {3, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {3, WM_MOUSEMOVE, POST},
+    {2, WM_MOUSELEAVE, POST},
+    {0,0}};
 
 /* the mouse hovers hwnd3 */
-MSG_ENTRY mousehover3_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                               {3, WM_NCHITTEST},
-                               {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                               {3, WM_SETCURSOR},
-                               {1, WM_SETCURSOR},
-                               {3, WM_MOUSEMOVE, POST},
-                               {3, WM_SYSTIMER, POST, ID_TME_TIMER},
-                               {3, WM_MOUSEHOVER, POST},
-                                {0,0}};
+static MSG_ENTRY mousehover3_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {3, WM_NCHITTEST},
+    {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {3, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {3, WM_MOUSEMOVE, POST},
+    {3, WM_SYSTIMER, POST, ID_TME_TIMER},
+    {3, WM_MOUSEHOVER, POST},
+    {0,0}};
 
 /* the mouse hovers hwnd3 without moving */
-MSG_ENTRY mousehover3_nomove_chain[]={{3, WM_SYSTIMER, POST, ID_TME_TIMER},
-                                      {3, WM_MOUSEHOVER, POST},
-                                      {0,0}};
+static MSG_ENTRY mousehover3_nomove_chain[]={
+    {3, WM_SYSTIMER, POST, ID_TME_TIMER},
+    {3, WM_MOUSEHOVER, POST},
+    {0,0}};
 
 /* the mouse hovers hwnd3 and the timer is not dispatched */
-MSG_ENTRY mousehover3_droptimer_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                                         {3, WM_NCHITTEST},
-                                         {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                                         {3, WM_SETCURSOR},
-                                         {1, WM_SETCURSOR},
-                                         {3, WM_MOUSEMOVE, POST},
-                                         {3, WM_SYSTIMER, POST, ID_TME_TIMER},
-                                         {0,0}};
+static MSG_ENTRY mousehover3_droptimer_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {3, WM_NCHITTEST},
+    {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {3, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {3, WM_MOUSEMOVE, POST},
+    {3, WM_SYSTIMER, POST, ID_TME_TIMER},
+    {0,0}};
 
 /* the mouse hovers hwnd3 and mouse message is dropped by WH_MOUSE */
-MSG_ENTRY mousehover3_dropmouse_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                                         {3, WM_NCHITTEST},
-                                         {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                                         {3, WM_SYSTIMER, POST, ID_TME_TIMER},
-                                         {3, WM_MOUSEHOVER, POST},
-                                         {0,0}};
+static MSG_ENTRY mousehover3_dropmouse_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {3, WM_NCHITTEST},
+    {3, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {3, WM_SYSTIMER, POST, ID_TME_TIMER},
+    {3, WM_MOUSEHOVER, POST},
+    {0,0}};
 
 /* the mouse hovers hwnd3 and mouse message is dropped by WH_MOUSE_LL */
-MSG_ENTRY mousehover3_dropmousell_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                                         {3, WM_SYSTIMER, POST, ID_TME_TIMER},
-                                         {3, WM_MOUSEHOVER, POST},
-                                         {0,0}};
+static MSG_ENTRY mousehover3_dropmousell_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {3, WM_SYSTIMER, POST, ID_TME_TIMER},
+    {3, WM_MOUSEHOVER, POST},
+    {0,0}};
 
 /* the mouse leaves hwnd3 and moves to hwnd2 and mouse message is dropped by WH_MOUSE */
-MSG_ENTRY mouseleave3to2_dropmouse_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                                            {2, WM_NCHITTEST},
-                                            {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
-                                            {0,0}};
+static MSG_ENTRY mouseleave3to2_dropmouse_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {2, WM_NCHITTEST},
+    {2, WH_MOUSE,HOOK, WM_MOUSEMOVE, HTCLIENT},
+    {0,0}};
 
 /* the mouse leaves hwnd3 and moves to hwnd2 and mouse message is dropped by WH_MOUSE_LL */
-MSG_ENTRY mouseleave3to2_dropmousell_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
-                                             {0,0}};
+static MSG_ENTRY mouseleave3to2_dropmousell_chain[]={
+    {0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
+    {0,0}};
 
 /* after WH_MOUSE drops WM_MOUSEMOVE, WM_MOUSELEAVE is still in the queue */
-MSG_ENTRY mouseleave3_remainging_chain[]={{3, WM_MOUSELEAVE, POST},
-                                          {0,0}};
+static MSG_ENTRY mouseleave3_remainging_chain[]={
+    {3, WM_MOUSELEAVE, POST},
+    {0,0}};
 
 void Test_TrackMouseEvent()
 {
@@ -371,15 +383,15 @@ void Test_TrackMouseEvent()
     FLUSH_MESSAGES(QS_TIMER|QS_MOUSEMOVE, 0);     /* the loop drops WM_SYSTIMER */
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE); /* TME_HOVER is still active  */
     COMPARE_CACHE(mousehover3_droptimer_chain);   /* we get no WM_MOUSEHOVER    */
-    ignore_timer = FALSE; 
-    
+    ignore_timer = FALSE;
+
     /* the mouse hovers hwnd3 and mouse message is dropped by WH_MOUSE_LL */
     ignore_mousell = TRUE;
     MOVE_CURSOR(402,402);
     Sleep(100);
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE);
     FLUSH_MESSAGES(QS_TIMER, QS_MOUSEMOVE);         /* WH_MOUSE_LL drops WM_MOUSEMOVE */
-    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);           
+    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);
     COMPARE_CACHE(mousehover3_dropmousell_chain);   /* we get WM_MOUSEHOVER normaly */
     ignore_mousell = FALSE;
 
@@ -393,7 +405,7 @@ void Test_TrackMouseEvent()
     Sleep(100);
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE);
     FLUSH_MESSAGES(QS_TIMER|QS_MOUSEMOVE, 0);     /* WH_MOUSE drops WM_MOUSEMOVE */
-    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);           
+    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);
     COMPARE_CACHE(mousehover3_dropmouse_chain);   /* we get WM_MOUSEHOVER normaly */
     ignore_mouse = FALSE;
 

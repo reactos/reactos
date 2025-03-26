@@ -8,6 +8,7 @@
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+#define OEMRESOURCE
 
 #include "urlmon_main.h"
 

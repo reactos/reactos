@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactX Diagnosis Application
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/dxdiag/ddtest.c
  * PURPOSE:     ReactX DirectDraw tests
- * COPYRIGHT:   Copyright 2008 Kamil Hornicek
+ * COPYRIGHT:   Copyright 2008 Kamil Horníček
  *
  */
 
@@ -14,7 +13,7 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen);
 VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface);
 VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE lpDDBackBuffer, BOOL Fullscreen, INT *posX, INT *posY, INT *gainX, INT *gainY, RECT *rectDD);
 
-#define TEST_DURATION 10000 
+#define TEST_DURATION 10000
 #define DD_TEST_WIDTH 640
 #define DD_TEST_HEIGHT 480
 #define DD_TEST_STEP 5
@@ -295,7 +294,7 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
         {
             if (msg.message == WM_TIMER)
             {
-                if(msg.wParam == TimerID) 
+                if(msg.wParam == TimerID)
                 {
                     break;
                 }

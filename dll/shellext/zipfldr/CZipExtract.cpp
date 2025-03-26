@@ -3,9 +3,11 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Zip extraction
  * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
+#include <atlpath.h>
 
 class CZipExtract :
     public IZip
@@ -75,6 +77,7 @@ public:
 
         CZipExtract* m_pExtract;
         CStringA* m_pPassword;
+        CStringW m_OldStatus;
 
     public:
         CExtractSettingsPage(CZipExtract* extract, CStringA* password)
@@ -127,6 +130,8 @@ public:
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
             SetWizardButtons(0);
 
+            ::GetWindowTextW(GetDlgItem(IDC_STATUSTEXT), m_OldStatus.GetBuffer(MAX_PATH), MAX_PATH);
+            m_OldStatus.ReleaseBuffer();
             CStringW strExtracting(MAKEINTRESOURCEW(IDS_EXTRACTING));
             SetDlgItemTextW(IDC_STATUSTEXT, strExtracting);
 
@@ -156,6 +161,11 @@ public:
             return TRUE;
         }
 
+        void WizardReset()
+        {
+            SetDlgItemTextW(IDC_STATUSTEXT, m_OldStatus);
+        }
+
         static DWORD WINAPI ExtractEntry(LPVOID lpParam)
         {
             CExtractSettingsPage* pPage = (CExtractSettingsPage*)lpParam;
@@ -175,12 +185,13 @@ public:
                 CWindow Progress(pPage->GetDlgItem(IDC_PROGRESS));
                 Progress.SendMessage(PBM_SETRANGE32, 0, 1);
                 Progress.SendMessage(PBM_SETPOS, 0, 0);
+                pPage->WizardReset();
             }
             SendMessageCallback(pPage->GetParent().m_hWnd, PSM_PRESSBUTTON, PSBTN_NEXT, 0, NULL, NULL);
 
             return 0;
         }
-		
+
         BOOL OnQueryCancel()
         {
             if (m_hExtractionThread != NULL)
@@ -195,7 +206,7 @@ public:
         struct browse_info
         {
             HWND hWnd;
-            LPCWSTR Directory;
+            PCWSTR Directory;
         };
 
         static INT CALLBACK s_BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lp, LPARAM pData)
@@ -322,10 +333,23 @@ public:
     };
 
 
+    /* NOTE: This callback is needed to set large icon correctly. */
+    static INT CALLBACK s_PropSheetCallbackProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+    {
+        if (uMsg == PSCB_INITIALIZED)
+        {
+            HICON hIcon = LoadIconW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDI_ZIPFLDR));
+            CWindow dlg(hwndDlg);
+            dlg.SetIcon(hIcon, TRUE);
+        }
+
+        return 0;
+    }
+
     void runWizard()
     {
         PROPSHEETHEADERW psh = { sizeof(psh), 0 };
-        psh.dwFlags = PSH_WIZARD97 | PSH_HEADER;
+        psh.dwFlags = PSH_WIZARD97 | PSH_HEADER | PSH_USEICONID | PSH_USECALLBACK;
         psh.hInstance = _AtlBaseModule.GetResourceInstance();
 
         CExtractSettingsPage extractPage(this, &m_Password);
@@ -338,10 +362,195 @@ public:
 
         psh.phpage = hpsp;
         psh.nPages = _countof(hpsp);
+        psh.pszIcon = MAKEINTRESOURCE(IDI_ZIPFLDR);
         psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
         psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
+        psh.pfnCallback = s_PropSheetCallbackProc;
 
         PropertySheetW(&psh);
+    }
+
+    eZipExtractError ExtractSingle(
+        HWND hDlg,
+        PCWSTR FullPath,
+        bool is_dir,
+        unz_file_info64* Info,
+        CStringW Name,
+        CStringA Password,
+        bool* bOverwriteAll,
+        const bool* bCancel,
+        int* ErrorCode
+    )
+    {
+        int err;
+        BYTE Buffer[2048];
+        DWORD dwFlags = SHPPFW_DIRCREATE | (is_dir ? SHPPFW_NONE : SHPPFW_IGNOREFILENAME);
+        HRESULT hr = SHPathPrepareForWriteW(hDlg, NULL, FullPath, dwFlags);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            *ErrorCode = hr;
+            return eDirectoryError;
+        }
+        if (is_dir)
+            return eNoError;
+
+        if (Info->flag & MINIZIP_PASSWORD_FLAG)
+        {
+            eZipPasswordResponse Response = eAccept;
+            do
+            {
+                /* If there is a password set, try it */
+                if (!Password.IsEmpty())
+                {
+                    err = unzOpenCurrentFilePassword(uf, Password);
+                    if (err == UNZ_OK)
+                    {
+                        /* Try to read some bytes, because unzOpenCurrentFilePassword does not return failure */
+                        char Buf[10];
+                        err = unzReadCurrentFile(uf, Buf, sizeof(Buf));
+                        unzCloseCurrentFile(uf);
+                        if (err >= UNZ_OK)
+                        {
+                            /* 're'-open the file so that we can begin to extract */
+                            err = unzOpenCurrentFilePassword(uf, Password);
+                            break;
+                        }
+                    }
+                }
+                Response = _CZipAskPassword(hDlg, Name, Password);
+            } while (Response == eAccept);
+
+            if (Response == eSkip)
+            {
+                return eNoError;
+            }
+            else if (Response == eAbort)
+            {
+                return eExtractAbort;
+            }
+        }
+        else
+        {
+            err = unzOpenCurrentFile(uf);
+        }
+
+        if (err != UNZ_OK)
+        {
+            DPRINT1("ERROR, unzOpenCurrentFilePassword: 0x%x\n", err);
+            *ErrorCode = err;
+            return eOpenError;
+        }
+
+        HANDLE hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            DWORD dwErr = GetLastError();
+            if (dwErr == ERROR_FILE_EXISTS)
+            {
+                bool bOverwrite = *bOverwriteAll;
+                if (!*bOverwriteAll)
+                {
+                    eZipConfirmResponse Result = _CZipAskReplace(hDlg, FullPath);
+                    switch (Result)
+                    {
+                    case eYesToAll:
+                        *bOverwriteAll = true;
+                        /* fall through */
+                    case eYes:
+                        bOverwrite = true;
+                        break;
+                    case eNo:
+                        break;
+                    case eCancel:
+                        unzCloseCurrentFile(uf);
+                        return eExtractAbort;
+                    }
+                }
+
+                if (bOverwrite)
+                {
+                    hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile == INVALID_HANDLE_VALUE)
+                    {
+                        dwErr = GetLastError();
+                    }
+                }
+                else
+                {
+                    unzCloseCurrentFile(uf);
+                    return eNoError;
+                }
+            }
+            if (hFile == INVALID_HANDLE_VALUE)
+            {
+                unzCloseCurrentFile(uf);
+                DPRINT1("ERROR, CreateFile: 0x%x (%s)\n", dwErr, *bOverwriteAll ? "Y" : "N");
+                *ErrorCode = dwErr;
+                return eFileError;
+            }
+        }
+
+        do
+        {
+            if (*bCancel)
+            {
+                CloseHandle(hFile);
+                BOOL deleteResult = DeleteFileW(FullPath);
+                if (!deleteResult)
+                    DPRINT1("ERROR, DeleteFile: 0x%x\n", GetLastError());
+                return eExtractAbort;
+            }
+
+            err = unzReadCurrentFile(uf, Buffer, sizeof(Buffer));
+
+            if (err < 0)
+            {
+                DPRINT1("ERROR, unzReadCurrentFile: 0x%x\n", err);
+                break;
+            }
+            else if (err > 0)
+            {
+                DWORD dwWritten;
+                if (!WriteFile(hFile, Buffer, err, &dwWritten, NULL))
+                {
+                    DPRINT1("ERROR, WriteFile: 0x%x\n", GetLastError());
+                    break;
+                }
+                if (dwWritten != (DWORD)err)
+                {
+                    DPRINT1("ERROR, WriteFile: dwWritten:%d err:%d\n", dwWritten, err);
+                    break;
+                }
+            }
+
+        } while (err > 0);
+
+        /* Update Filetime */
+        FILETIME LocalFileTime;
+        DosDateTimeToFileTime((WORD)(Info->dosDate >> 16), (WORD)Info->dosDate, &LocalFileTime);
+        FILETIME FileTime;
+        LocalFileTimeToFileTime(&LocalFileTime, &FileTime);
+        SetFileTime(hFile, &FileTime, &FileTime, &FileTime);
+
+        /* Done */
+        CloseHandle(hFile);
+
+        if (err)
+        {
+            unzCloseCurrentFile(uf);
+            DPRINT1("ERROR, unzReadCurrentFile2: 0x%x\n", err);
+            *ErrorCode = err;
+            return eUnpackError;
+        }
+        else
+        {
+            err = unzCloseCurrentFile(uf);
+            if (err != UNZ_OK)
+            {
+                DPRINT1("ERROR(non-fatal), unzCloseCurrentFile: 0x%x\n", err);
+            }
+        }
+        return eNoError;
     }
 
     bool Extract(HWND hDlg, HWND hProgress, const bool* bCancel)
@@ -368,9 +577,8 @@ public:
         Progress.SendMessage(PBM_SETRANGE32, 0, gi.number_entry);
         Progress.SendMessage(PBM_SETPOS, 0, 0);
 
-        BYTE Buffer[2048];
-        CStringA BaseDirectory = m_Directory;
-        CStringA Name;
+        CStringW BaseDirectory = m_Directory;
+        CStringW Name;
         CStringA Password = m_Password;
         unz_file_info64 Info;
         int CurrentFile = 0;
@@ -385,185 +593,124 @@ public:
 
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
-            char CombinedPath[MAX_PATH * 2] = { 0 };
-            PathCombineA(CombinedPath, BaseDirectory, Name);
-            CStringA FullPath = CombinedPath;
-            FullPath.Replace('/', '\\');    /* SHPathPrepareForWriteA does not handle '/' */
-            DWORD dwFlags = SHPPFW_DIRCREATE | (is_dir ? SHPPFW_NONE : SHPPFW_IGNOREFILENAME);
-            HRESULT hr = SHPathPrepareForWriteA(hDlg, NULL, FullPath, dwFlags);
-            if (FAILED_UNEXPECTEDLY(hr))
-            {
-                Close();
-                return false;
-            }
-            CurrentFile++;
-            if (is_dir)
-                continue;
+            // Build a combined path
+            CPathW FullPath(BaseDirectory);
+            FullPath += Name;
 
-            if (Info.flag & MINIZIP_PASSWORD_FLAG)
-            {
-                eZipPasswordResponse Response = eAccept;
-                do
-                {
-                    /* If there is a password set, try it */
-                    if (!Password.IsEmpty())
-                    {
-                        err = unzOpenCurrentFilePassword(uf, Password);
-                        if (err == UNZ_OK)
-                        {
-                            /* Try to read some bytes, because unzOpenCurrentFilePassword does not return failure */
-                            char Buf[10];
-                            err = unzReadCurrentFile(uf, Buf, sizeof(Buf));
-                            unzCloseCurrentFile(uf);
-                            if (err >= UNZ_OK)
-                            {
-                                /* 're'-open the file so that we can begin to extract */
-                                err = unzOpenCurrentFilePassword(uf, Password);
-                                break;
-                            }
-                        }
-                    }
-                    Response = _CZipAskPassword(hDlg, Name, Password);
-                } while (Response == eAccept);
+            // We use SHPathPrepareForWrite for this path.
+            // SHPathPrepareForWrite will prepare the necessary directories.
+            // Windows and ReactOS SHPathPrepareForWrite do not support '/'.
+            FullPath.m_strPath.Replace(L'/', L'\\');
 
-                if (Response == eSkip)
-                {
-                    Progress.SendMessage(PBM_SETPOS, CurrentFile, 0);
-                    continue;
-                }
-                else if (Response == eAbort)
+        Retry:
+            eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
+            if (Result != eDirectoryError)
+                CurrentFile++;
+            switch (Result)
+            {
+                case eNoError:
+                    break;
+
+                case eExtractAbort:
+                case eUnpackError:
                 {
                     Close();
                     return false;
                 }
-            }
-            else
-            {
-                err = unzOpenCurrentFile(uf);
-            }
 
-            if (err != UNZ_OK)
-            {
-                DPRINT1("ERROR, unzOpenCurrentFilePassword: 0x%x\n", err);
-                Close();
-                return false;
-            }
-
-            HANDLE hFile = CreateFileA(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-            if (hFile == INVALID_HANDLE_VALUE)
-            {
-                DWORD dwErr = GetLastError();
-                if (dwErr == ERROR_FILE_EXISTS)
+                case eDirectoryError:
                 {
-                    bool bOverwrite = bOverwriteAll;
-                    if (!bOverwriteAll)
-                    {
-                        eZipConfirmResponse Result = _CZipAskReplace(hDlg, FullPath);
-                        switch (Result)
-                        {
-                        case eYesToAll:
-                            bOverwriteAll = true;
-                        case eYes:
-                            bOverwrite = true;
-                            break;
-                        case eNo:
-                            break;
-                        case eCancel:
-                            unzCloseCurrentFile(uf);
-                            Close();
-                            return false;
-                        }
-                    }
+                    WCHAR StrippedPath[MAX_PATH] = { 0 };
 
-                    if (bOverwrite)
-                    {
-                        hFile = CreateFileA(FullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-                        if (hFile == INVALID_HANDLE_VALUE)
-                        {
-                            dwErr = GetLastError();
-                        }
-                    }
-                    else
-                    {
-                        unzCloseCurrentFile(uf);
-                        continue;
-                    }
-                }
-                if (hFile == INVALID_HANDLE_VALUE)
-                {
-                    unzCloseCurrentFile(uf);
-                    DPRINT1("ERROR, CreateFileA: 0x%x (%s)\n", dwErr, bOverwriteAll ? "Y" : "N");
-                    Close();
-                    return false;
-                }
-            }
-
-            do
-            {
-                if (*bCancel)
-                {
-                    CloseHandle(hFile);
-                    BOOL deleteResult = DeleteFileA(FullPath);
-                    if (deleteResult == 0)
-                        DPRINT1("ERROR, DeleteFileA: 0x%x\n", GetLastError());
+                    StrCpyNW(StrippedPath, FullPath, _countof(StrippedPath));
+                    if (!is_dir)
+                        PathRemoveFileSpecW(StrippedPath);
+                    PathStripPathW(StrippedPath);
+                    if (ShowExtractError(hDlg, StrippedPath, err, eDirectoryError) == IDRETRY)
+                        goto Retry;
                     Close();
                     return false;
                 }
 
-                err = unzReadCurrentFile(uf, Buffer, sizeof(Buffer));
-
-                if (err < 0)
+                case eFileError:
                 {
-                    DPRINT1("ERROR, unzReadCurrentFile: 0x%x\n", err);
+                    int Result = ShowExtractError(hDlg, FullPath, err, eFileError);
+                    switch (Result)
+                    {
+                    case IDABORT:
+                        Close();
+                        return false;
+                    case IDRETRY:
+                        CurrentFile--;
+                        goto Retry;
+                    case IDIGNORE:
+                        break;
+                    }
                     break;
                 }
-                else if (err > 0)
+
+                case eOpenError:
                 {
-                    DWORD dwWritten;
-                    if (!WriteFile(hFile, Buffer, err, &dwWritten, NULL))
+                    if (err == UNZ_BADZIPFILE &&
+                        Info.compression_method != 0 &&
+                        Info.compression_method != Z_DEFLATED &&
+                        Info.compression_method != Z_BZIP2ED)
                     {
-                        DPRINT1("ERROR, WriteFile: 0x%x\n", GetLastError());
-                        break;
+                        if (ShowExtractError(hDlg, FullPath, Info.compression_method, eOpenError) == IDYES)
+                            break;
                     }
-                    if (dwWritten != (DWORD)err)
-                    {
-                        DPRINT1("ERROR, WriteFile: dwWritten:%d err:%d\n", dwWritten, err);
-                        break;
-                    }
-                }
-
-            } while (err > 0);
-
-            /* Update Filetime */
-            FILETIME LocalFileTime;
-            DosDateTimeToFileTime((WORD)(Info.dosDate >> 16), (WORD)Info.dosDate, &LocalFileTime);
-            FILETIME FileTime;
-            LocalFileTimeToFileTime(&LocalFileTime, &FileTime);
-            SetFileTime(hFile, &FileTime, &FileTime, &FileTime);
-
-            /* Done */
-            CloseHandle(hFile);
-
-            if (err)
-            {
-                unzCloseCurrentFile(uf);
-                DPRINT1("ERROR, unzReadCurrentFile2: 0x%x\n", err);
-                Close();
-                return false;
-            }
-            else
-            {
-                err = unzCloseCurrentFile(uf);
-                if (err != UNZ_OK)
-                {
-                    DPRINT1("ERROR(non-fatal), unzCloseCurrentFile: 0x%x\n", err);
+                    Close();
+                    return false;
                 }
             }
+            if (Result == eNoError && is_dir)
+                continue;
             Progress.SendMessage(PBM_SETPOS, CurrentFile, 0);
         }
 
         Close();
         return true;
+    }
+
+    int ShowExtractError(HWND hDlg, PCWSTR path, int Error, eZipExtractError ErrorType)
+    {
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+        CStringW strErr, strText;
+        PWSTR Win32ErrorString;
+
+        if (ErrorType == eFileError || ErrorType == eOpenError)
+            strText.LoadString(IDS_CANTEXTRACTFILE);
+        else
+            strText.LoadString(GetModuleHandleA("shell32.dll"), 128); // IDS_CREATEFOLDER_DENIED
+
+        strText.FormatMessage(strText.GetString(), path);
+
+        if (ErrorType == eFileError || HRESULT_FACILITY(Error) == FACILITY_WIN32)
+        {
+            if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                               NULL, ErrorType == eFileError ? Error : HRESULT_CODE(Error), 0,
+                               (PWSTR)&Win32ErrorString, 0, NULL) != 0)
+            {
+                strErr.SetString(Win32ErrorString);
+                LocalFree(Win32ErrorString);
+            }
+        }
+        if (ErrorType == eOpenError)
+            strErr.Format(IDS_DECOMPRESSERROR, Error);
+        else if (strErr.GetLength() == 0)
+            strErr.Format(IDS_UNKNOWNERROR, Error);
+
+        strText.Append(L"\r\n\r\n" + strErr);
+
+        UINT mbFlags = MB_ICONWARNING;
+        if (ErrorType == eDirectoryError)
+            mbFlags |= MB_RETRYCANCEL;
+        else if (ErrorType == eFileError)
+            mbFlags |= MB_ABORTRETRYIGNORE;
+        else if (ErrorType == eOpenError)
+            mbFlags |= MB_YESNO;
+
+        return MessageBoxW(hDlg, strText, strTitle, mbFlags);
     }
 };
 

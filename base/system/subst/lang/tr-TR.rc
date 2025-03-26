@@ -10,7 +10,7 @@ BEGIN
     IDS_PATH_NOT_FOUND "Yol bulunamadı - %s\n"
     IDS_ACCESS_DENIED "Erişim engellendi - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Sürücü önceden SUBST edilmiş.\n"
-    IDS_FAILED_WITH_ERRORCODE "Yanlışlık kodu ile başarısız oldu 0x%x: %s\n"
+    IDS_FAILED_WITH_ERRORCODE "Hata kodu ile başarısız oldu 0x%x: %s\n"
     IDS_USAGE "Bir sürücü harfiyle bir yolu ilişkilendirir.\n\n\
 SUBST [sürücü1: [sürücü2:]yol]\n\
 SUBST sürücü1: /D\n\n\

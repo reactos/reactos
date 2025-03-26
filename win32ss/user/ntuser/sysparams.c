@@ -17,6 +17,7 @@ DBG_DEFAULT_CHANNEL(UserSysparams);
 SPIVALUES gspv;
 BOOL gbSpiInitialized = FALSE;
 BOOL g_PaintDesktopVersion = FALSE;
+BOOL g_bWindowSnapEnabled = TRUE;
 
 // HACK! We initialize SPI before we have a proper surface to get this from.
 #define dpi 96
@@ -73,6 +74,7 @@ static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
 static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
 static const WCHAR* VAL_PAINTDESKVER = L"PaintDesktopVersion";
 static const WCHAR* VAL_CARETRATE = L"CursorBlinkRate";
+static const WCHAR* VAL_CARETWIDTH = L"CaretWidth";
 #if (_WIN32_WINNT >= 0x0600)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
@@ -98,8 +100,6 @@ static const WCHAR* KEY_SHOWSNDS = L"Control Panel\\Accessibility\\ShowSounds";
 static const WCHAR* KEY_KDBPREF = L"Control Panel\\Accessibility\\Keyboard Preference";
 static const WCHAR* KEY_SCRREAD = L"Control Panel\\Accessibility\\Blind Access";
 static const WCHAR* VAL_ON = L"On";
-
-
 
 /** Loading the settings ******************************************************/
 
@@ -214,6 +214,19 @@ SpiFixupValues(VOID)
 
 }
 
+/* Is Window Snap enabled? */
+static BOOL IntIsWindowSnapEnabled(VOID)
+{
+    WCHAR szValue[2];
+    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
+                           REG_SZ, szValue, sizeof(szValue)))
+    {
+        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+        return (_wtoi(szValue) != 0);
+    }
+    return TRUE;
+}
+
 static
 VOID
 SpiUpdatePerUserSystemParameters(VOID)
@@ -288,6 +301,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
     gpsi->dtCaretBlink = SpiLoadInt(KEY_DESKTOP, VAL_CARETRATE, 530);
+    gspv.dwCaretWidth = SpiLoadDWord(KEY_DESKTOP, VAL_CARETWIDTH, 1);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
@@ -341,7 +355,10 @@ SpiUpdatePerUserSystemParameters(VOID)
        if (SPITESTPREF(UPM_COMBOBOXANIMATION)) gpsi->PUSIFlags |= PUSIF_COMBOBOXANIMATION;
        if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
     }
-    gdwLanguageToggleKey = UserGetLanguageToggle();
+    gdwLanguageToggleKey = UserGetLanguageToggle(L"Language Hotkey", 1);
+    gdwLayoutToggleKey = UserGetLanguageToggle(L"Layout Hotkey", 2);
+
+    g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
 }
 
 BOOL
@@ -949,7 +966,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             /* Fixup user's structure size */
             metrics->cbSize = sizeof(NONCLIENTMETRICSW);
-            
+
             if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 
@@ -1388,10 +1405,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.bFontSmoothing, fl);
 
         case SPI_SETFONTSMOOTHING:
-            gspv.bFontSmoothing = (uiParam == 2);
+            gspv.bFontSmoothing = !!uiParam;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                SpiStoreSz(KEY_DESKTOP, VAL_FONTSMOOTHING, (uiParam == 2) ? L"2" : L"0");
+                SpiStoreSzInt(KEY_DESKTOP, VAL_FONTSMOOTHING, gspv.bFontSmoothing ? 2 : 0);
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1454,9 +1471,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         }
 
         case SPI_SETLANGTOGGLE:
-            gdwLanguageToggleKey = UserGetLanguageToggle();
+            gdwLayoutToggleKey = UserGetLanguageToggle(L"Layout Hotkey", 2);
+            gdwLanguageToggleKey = UserGetLanguageToggle(L"Language Hotkey", 1);
             return gdwLanguageToggleKey;
-            break;
 
         case SPI_GETWINDOWSEXTENSION:
             ERR("SPI_GETWINDOWSEXTENSION is unimplemented\n");
@@ -1490,7 +1507,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseHoverTime, fl);
 
         case SPI_SETMOUSEHOVERTIME:
-           /* See http://msdn2.microsoft.com/en-us/library/ms724947.aspx
+           /* See https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfoa
             * copy text from it, if some agument why xp and 2003 behovir diffent
             * only if they do not have SP install
             * " Windows Server 2003 and Windows XP: The operating system does not
@@ -1738,7 +1755,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.dwCaretWidth, fl);
 
         case SPI_SETCARETWIDTH:
-            return SpiSetInt(&gspv.dwCaretWidth, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetDWord(&gspv.dwCaretWidth, PtrToUlong(pvParam), KEY_DESKTOP, VAL_CARETWIDTH, fl);
 
         case SPI_GETMOUSECLICKLOCKTIME:
             return SpiGetInt(pvParam, &gspv.dwMouseClickLockTime, fl);

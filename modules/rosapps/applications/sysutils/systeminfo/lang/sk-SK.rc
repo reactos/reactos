@@ -1,10 +1,10 @@
 /* TRANSLATOR :  M rio Kaźm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  07-09-2008
  */
- 
+
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S syst‚m [/U pou§._meno [/P [heslo]]]] [/FO form t] [/NH]\n\n\

@@ -29,9 +29,13 @@
 
 #include <ntstrsafe.h>
 
-
 /* Filesystem headers */
 #include <reactos/rosioctl.h>   // For extra partition IDs
+
+
+#ifndef SPLIBAPI
+#define SPLIBAPI
+#endif
 
 //
 ///* Internal Headers */
@@ -50,7 +54,6 @@
 //#include "cabinet.h"
 //#include "filesup.h"
 //#include "genlist.h"
-
 
 extern HANDLE ProcessHeap;
 

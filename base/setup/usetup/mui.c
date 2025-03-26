@@ -30,6 +30,27 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Special characters */
+CHAR CharBullet                     = 0x07; /* bullet */
+CHAR CharBlock                      = 0xDB; /* block */
+CHAR CharHalfBlock                  = 0xDD; /* half-left block */
+CHAR CharUpArrow                    = 0x18; /* up arrow */
+CHAR CharDownArrow                  = 0x19; /* down arrow */
+CHAR CharHorizontalLine             = 0xC4; /* horizontal line */
+CHAR CharVerticalLine               = 0xB3; /* vertical line */
+CHAR CharUpperLeftCorner            = 0xDA; /* upper left corner */
+CHAR CharUpperRightCorner           = 0xBF; /* upper right corner */
+CHAR CharLowerLeftCorner            = 0xC0; /* lower left corner */
+CHAR CharLowerRightCorner           = 0xD9; /* lower right corner */
+CHAR CharVertLineAndRightHorizLine  = 0xC3; /* |- (vertical line and right horizontal line) */
+CHAR CharLeftHorizLineAndVertLine   = 0xB4; /* -| (left horizontal line and vertical line) */
+CHAR CharDoubleHorizontalLine       = 0xCD; /* double horizontal line (and underline) */
+CHAR CharDoubleVerticalLine         = 0xBA; /* double vertical line */
+CHAR CharDoubleUpperLeftCorner      = 0xC9; /* double upper left corner */
+CHAR CharDoubleUpperRightCorner     = 0xBB; /* double upper right corner */
+CHAR CharDoubleLowerLeftCorner      = 0xC8; /* double lower left corner */
+CHAR CharDoubleLowerRightCorner     = 0xBC; /* double lower right corner */
+
 static
 ULONG
 FindLanguageIndex(VOID)
@@ -140,7 +161,7 @@ MUIClearPage(
         CONSOLE_ClearStyledText(entry[index].X,
                                 entry[index].Y,
                                 entry[index].Flags,
-                                strlen(entry[index].Buffer));
+                                (USHORT)strlen(entry[index].Buffer));
         index++;
     }
 }
@@ -325,6 +346,7 @@ MUIClearText(
     IN INT TextID)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -332,11 +354,25 @@ MUIClearText(
     if (!entry)
         return;
 
-    /* Remove the text by using CONSOLE_ClearTextXY() */
-    CONSOLE_ClearTextXY(
-        entry->X,
-        entry->Y,
-        (ULONG)strlen(entry->Buffer));
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Remove the text by using CONSOLE_ClearTextXY() */
+        CONSOLE_ClearTextXY(
+            entry[Index].X,
+            entry[Index].Y,
+            (USHORT)strlen(entry[Index].Buffer));
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 /**
@@ -366,6 +402,7 @@ MUIClearStyledText(
     IN INT Flags)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -373,12 +410,26 @@ MUIClearStyledText(
     if (!entry)
         return;
 
-    /* Now, begin removing the text by calling CONSOLE_ClearStyledText() */
-    CONSOLE_ClearStyledText(
-        entry->X,
-        entry->Y,
-        Flags,
-        (ULONG)strlen(entry->Buffer));
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Now, begin removing the text by calling CONSOLE_ClearStyledText() */
+        CONSOLE_ClearStyledText(
+            entry[Index].X,
+            entry[Index].Y,
+            Flags,
+            (USHORT)strlen(entry[Index].Buffer));
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 /**
@@ -403,6 +454,7 @@ MUISetText(
     IN INT TextID)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -410,8 +462,22 @@ MUISetText(
     if (!entry)
         return;
 
-    /* Print the text to the console output by calling CONSOLE_SetTextXY() */
-    CONSOLE_SetTextXY(entry->X, entry->Y, entry->Buffer);
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Print the text to the console output by calling CONSOLE_SetTextXY() */
+        CONSOLE_SetTextXY(entry[Index].X, entry[Index].Y, entry[Index].Buffer);
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 /**
@@ -441,6 +507,7 @@ MUISetStyledText(
     IN INT Flags)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -448,8 +515,22 @@ MUISetStyledText(
     if (!entry)
         return;
 
-    /* Print the text to the console output by calling CONSOLE_SetStyledText() */
-    CONSOLE_SetStyledText(entry->X, entry->Y, Flags, entry->Buffer);
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Print the text to the console output by calling CONSOLE_SetStyledText() */
+        CONSOLE_SetStyledText(entry[Index].X, entry[Index].Y, Flags, entry[Index].Buffer);
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 VOID
@@ -464,7 +545,7 @@ SetConsoleCodePage(VOID)
     {
         if (_wcsicmp(ResourceList[lngIndex].LanguageID, SelectedLanguageId) == 0)
         {
-            wCodePage = (UINT) wcstoul(ResourceList[lngIndex].OEMCPage, NULL, 10);
+            wCodePage = ResourceList[lngIndex].OEMCPage;
             SetConsoleOutputCP(wCodePage);
             return;
         }
@@ -472,9 +553,61 @@ SetConsoleCodePage(VOID)
         lngIndex++;
     }
 #else
-    wCodePage = (UINT)wcstoul(MUIGetOEMCodePage(SelectedLanguageId), NULL, 10);
+    wCodePage = MUIGetOEMCodePage(SelectedLanguageId);
     SetConsoleOutputCP(wCodePage);
 #endif
-}
 
-/* EOF */
+    switch (wCodePage)
+    {
+        case 28606: /* Romanian */
+        case 932: /* Japanese */
+            /* Set special characters */
+            CharBullet = 0x07;
+            CharBlock = 0x01;
+            CharHalfBlock = 0x02;
+            CharUpArrow = 0x03;
+            CharDownArrow = 0x04;
+            CharHorizontalLine = 0x05;
+            CharVerticalLine = 0x06;
+            CharUpperLeftCorner = 0x08;
+            CharUpperRightCorner = 0x09;
+            CharLowerLeftCorner = 0x0B;
+            CharLowerRightCorner = 0x0C;
+            CharVertLineAndRightHorizLine = 0x0E;
+            CharLeftHorizLineAndVertLine = 0x0F;
+            CharDoubleHorizontalLine = 0x10;
+            CharDoubleVerticalLine = 0x11;
+            CharDoubleUpperLeftCorner = 0x12;
+            CharDoubleUpperRightCorner = 0x13;
+            CharDoubleLowerLeftCorner = 0x14;
+            CharDoubleLowerRightCorner = 0x15;
+
+            /* FIXME: Enter 640x400 video mode */
+            break;
+
+        default: /* Other codepages */
+            /* Set special characters */
+            CharBullet = 0x07;
+            CharBlock = 0xDB;
+            CharHalfBlock = 0xDD;
+            CharUpArrow = 0x18;
+            CharDownArrow = 0x19;
+            CharHorizontalLine = 0xC4;
+            CharVerticalLine = 0xB3;
+            CharUpperLeftCorner = 0xDA;
+            CharUpperRightCorner = 0xBF;
+            CharLowerLeftCorner = 0xC0;
+            CharLowerRightCorner = 0xD9;
+            CharVertLineAndRightHorizLine = 0xC3;
+            CharLeftHorizLineAndVertLine = 0xB4;
+            CharDoubleHorizontalLine = 0xCD;
+            CharDoubleVerticalLine = 0xBA;
+            CharDoubleUpperLeftCorner = 0xC9;
+            CharDoubleUpperRightCorner = 0xBB;
+            CharDoubleLowerLeftCorner = 0xC8;
+            CharDoubleLowerRightCorner = 0xBC;
+
+            /* FIXME: Enter 720x400 video mode */
+            break;
+    }
+}

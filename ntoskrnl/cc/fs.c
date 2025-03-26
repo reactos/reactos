@@ -10,12 +10,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS   *****************************************************************/
-
-NTSTATUS CcRosInternalFreeVacb(PROS_VACB Vacb);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -48,7 +45,7 @@ NTAPI
 CcGetFileObjectFromBcb (
     IN PVOID Bcb)
 {
-    PINTERNAL_BCB iBcb = (PINTERNAL_BCB)Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
 
@@ -164,6 +161,7 @@ CcPurgeCacheSection (
     IN BOOLEAN UninitializeCacheMaps)
 {
     PROS_SHARED_CACHE_MAP SharedCacheMap;
+    PPRIVATE_CACHE_MAP PrivateCacheMap;
     LONGLONG StartOffset;
     LONGLONG EndOffset;
     LIST_ENTRY FreeList;
@@ -176,14 +174,35 @@ CcPurgeCacheSection (
     CCTRACE(CC_API_DEBUG, "SectionObjectPointer=%p\n FileOffset=%p Length=%lu UninitializeCacheMaps=%d",
         SectionObjectPointer, FileOffset, Length, UninitializeCacheMaps);
 
-    if (UninitializeCacheMaps)
-    {
-        DPRINT1("FIXME: CcPurgeCacheSection not uninitializing private cache maps\n");
-    }
-
+    /* Obtain the shared cache from the section */
     SharedCacheMap = SectionObjectPointer->SharedCacheMap;
     if (!SharedCacheMap)
-        return FALSE;
+    {
+        Success = TRUE;
+        goto purgeMm;
+    }
+
+    if (UninitializeCacheMaps)
+    {
+        /*
+         * We have gotten the acknowledgement that
+         * the caller wants to unintialize the private
+         * cache maps so let's do this. Since we already
+         * have the shared cache map from above, iterate
+         * over that cache's private lists.
+         */
+        while (!IsListEmpty(&SharedCacheMap->PrivateList))
+        {
+            /*
+             * This list is not empty, grab the
+             * private cache map.
+             */
+            PrivateCacheMap = CONTAINING_RECORD(SharedCacheMap->PrivateList.Flink, PRIVATE_CACHE_MAP, PrivateLinks);
+
+            /* Unintialize the private cache now */
+            CcUninitializeCacheMap(PrivateCacheMap->FileObject, NULL, NULL);
+        }
+    }
 
     StartOffset = FileOffset != NULL ? FileOffset->QuadPart : 0;
     if (Length == 0 || FileOffset == NULL)
@@ -260,6 +279,11 @@ CcPurgeCacheSection (
         ASSERT(Refs == 0);
     }
 
+    /* Now make sure that Mm doesn't hold some pages here. */
+purgeMm:
+    if (Success)
+        Success = MmPurgeSegment(SectionObjectPointer, FileOffset, Length);
+
     return Success;
 }
 
@@ -272,8 +296,9 @@ CcSetFileSizes (
     IN PFILE_OBJECT FileObject,
     IN PCC_FILE_SIZES FileSizes)
 {
-    KIRQL oldirql;
+    KIRQL OldIrql;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
+    LARGE_INTEGER OldSectionSize;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileSizes=%p\n",
         FileObject, FileSizes);
@@ -294,7 +319,15 @@ CcSetFileSizes (
     if (SharedCacheMap == NULL)
         return;
 
-    if (FileSizes->AllocationSize.QuadPart < SharedCacheMap->SectionSize.QuadPart)
+    /* Update the relevant fields */
+    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+    OldSectionSize = SharedCacheMap->SectionSize;
+    SharedCacheMap->SectionSize = FileSizes->AllocationSize;
+    SharedCacheMap->FileSize = FileSizes->FileSize;
+    SharedCacheMap->ValidDataLength = FileSizes->ValidDataLength;
+    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+
+    if (FileSizes->AllocationSize.QuadPart < OldSectionSize.QuadPart)
     {
         CcPurgeCacheSection(FileObject->SectionObjectPointer,
                             &FileSizes->AllocationSize,
@@ -303,46 +336,9 @@ CcSetFileSizes (
     }
     else
     {
-        PROS_VACB LastVacb;
-
-        /*
-         * If file (allocation) size has increased, then we need to check whether
-         * it just grows in a single VACB (the last one).
-         * If so, we must mark the VACB as invalid to trigger a read to the
-         * FSD at the next VACB usage, and thus avoid returning garbage
-         */
-
-        /* Check for allocation size and the last VACB */
-        if (SharedCacheMap->SectionSize.QuadPart < FileSizes->AllocationSize.QuadPart &&
-            SharedCacheMap->SectionSize.QuadPart % VACB_MAPPING_GRANULARITY)
-        {
-            LastVacb = CcRosLookupVacb(SharedCacheMap,
-                                       SharedCacheMap->SectionSize.QuadPart);
-            if (LastVacb != NULL)
-            {
-                /* Mark it as invalid */
-                CcRosReleaseVacb(SharedCacheMap, LastVacb, LastVacb->Dirty ? LastVacb->Valid : FALSE, FALSE, FALSE);
-            }
-        }
-
-        /* Check for file size and the last VACB */
-        if (SharedCacheMap->FileSize.QuadPart < FileSizes->FileSize.QuadPart &&
-            SharedCacheMap->FileSize.QuadPart % VACB_MAPPING_GRANULARITY)
-        {
-            LastVacb = CcRosLookupVacb(SharedCacheMap,
-                                       SharedCacheMap->FileSize.QuadPart);
-            if (LastVacb != NULL)
-            {
-                /* Mark it as invalid */
-                CcRosReleaseVacb(SharedCacheMap, LastVacb, LastVacb->Dirty ? LastVacb->Valid : FALSE, FALSE, FALSE);
-            }
-        }
+        /* Extend our section object */
+        MmExtendSection(SharedCacheMap->Section, &SharedCacheMap->SectionSize);
     }
-
-    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
-    SharedCacheMap->SectionSize = FileSizes->AllocationSize;
-    SharedCacheMap->FileSize = FileSizes->FileSize;
-    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
 }
 
 /*

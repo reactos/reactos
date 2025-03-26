@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 IO_COMPLETION_ROUTINE SyncForwardIrpCompletionRoutine;
 
 NTSTATUS
@@ -27,29 +26,6 @@ USBSTOR_SyncForwardIrpCompletionRoutine(
         KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
     }
     return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
-NTAPI
-USBSTOR_SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-    IoSetCompletionRoutine(Irp, USBSTOR_SyncForwardIrpCompletionRoutine, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    if (Status == STATUS_PENDING)
-    {
-        // wait for the request to finish
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
 }
 
 NTSTATUS
@@ -149,14 +125,7 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN ULONG ItemSize)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, ItemSize, USB_STOR_TAG);
-
-    if (Item)
-    {
-        RtlZeroMemory(Item, ItemSize);
-    }
-
-    return Item;
+    return ExAllocatePoolZero(PoolType, ItemSize, USB_STOR_TAG);
 }
 
 VOID

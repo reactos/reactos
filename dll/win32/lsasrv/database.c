@@ -8,6 +8,8 @@
 
 #include "lsasrv.h"
 
+#include <pseh/pseh2.h>
+
 /* GLOBALS *****************************************************************/
 
 static HANDLE SecurityKeyHandle = NULL;

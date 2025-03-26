@@ -67,7 +67,7 @@ Msg_LongModeSupported:
     call writestr
 
     /* Load the GDT */
-    lgdt fword ptr [gdtptr]
+    lgdt lXdtPrefix ds:[gdtptr]
 
     /* Build the startup page tables */
     call BuildPageTables
@@ -116,7 +116,7 @@ gdt:
 /* GDT table pointer */
 gdtptr:
     .word HEX(37)       /* Limit */
-    .long offset gdt    /* Base Address */
+    .long OFF(gdt)      /* Base Address */
 
 
 CheckFor64BitSupport:
@@ -265,7 +265,7 @@ RealModeEntryPoint:
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
-    ljmp16 0, offset InRealMode
+    ljmp16 0, InRealMode
 
 InRealMode:
 
@@ -314,9 +314,8 @@ ExitToLongMode:
     mov word ptr ds:[stack16], sp
 
     /* Set PAE and PGE: 10100000b */
-    // mov eax, cr4
-    // or eax, HEX(00A0)
-    mov eax, HEX(00A0)
+    mov eax, cr4
+    or eax, HEX(00A0)
     mov cr4, eax
 
     /* Point cr3 at the PML4 */
@@ -352,6 +351,7 @@ LongModeEntryPoint:
     int HEX(16)
     jmp Reboot
 
+/* FNID_* functions */
 CallbackTable:
     .word Int386
     .word Reboot
@@ -359,6 +359,7 @@ CallbackTable:
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount
     .word PnpBiosGetDeviceNode
+    .word PnpBiosGetDockStationInformation
 
     /* 16-bit stack pointer */
 stack16:

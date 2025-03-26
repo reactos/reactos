@@ -9,6 +9,8 @@
 #include <shlwapi.h>
 #include "resource.h"
 
+#include <pseh/pseh2.h>
+
 static void execute_test(LPCWSTR DllFile)
 {
     WCHAR DllBuffer[MAX_PATH + 20];

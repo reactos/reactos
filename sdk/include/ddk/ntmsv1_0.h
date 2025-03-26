@@ -1,0 +1,47 @@
+#ifndef _NTMSV1_0_
+#define _NTMSV1_0_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct _MSV1_0_ENUMUSERS_REQUEST
+{
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+} MSV1_0_ENUMUSERS_REQUEST, *PMSV1_0_ENUMUSERS_REQUEST;
+
+typedef struct _MSV1_0_ENUMUSERS_RESPONSE
+{
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+    ULONG NumberOfLoggedOnUsers;
+    PLUID LogonIds;
+    PULONG EnumHandles;
+} MSV1_0_ENUMUSERS_RESPONSE, *PMSV1_0_ENUMUSERS_RESPONSE;
+
+typedef struct _MSV1_0_GETUSERINFO_REQUEST
+{
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+    LUID LogonId;
+} MSV1_0_GETUSERINFO_REQUEST, *PMSV1_0_GETUSERINFO_REQUEST;
+
+typedef struct _MSV1_0_GETUSERINFO_RESPONSE
+{
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+    PSID UserSid;
+    UNICODE_STRING UserName;
+    UNICODE_STRING LogonDomainName;
+    UNICODE_STRING LogonServer;
+    SECURITY_LOGON_TYPE LogonType;
+} MSV1_0_GETUSERINFO_RESPONSE, *PMSV1_0_GETUSERINFO_RESPONSE;
+
+typedef struct _MSV1_0_RELOGON_REQUEST
+{
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+    UNICODE_STRING LogonServer;
+} MSV1_0_RELOGON_REQUEST, *PMSV1_0_RELOGON_REQUEST;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _NTMSV1_0_ */

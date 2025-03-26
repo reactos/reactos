@@ -16,107 +16,114 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * The required-regitem design is based on the research by Geoff Chappell
+ * https://www.geoffchappell.com/studies/windows/shell/shell32/classes/regfolder.htm
  */
 
 #include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
-                                              HWND         hwnd,
-                                              IDataObject  *pdtobj,
-                                              UINT         uMsg,
-                                              WPARAM       wParam,
-                                              LPARAM       lParam)
+#define DEFAULTSORTORDERINDEX 0x80 // The default for registry items according to Geoff Chappell
+
+static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, HWND hwnd, UINT cidl,
+                                                  PCUITEMID_CHILD_ARRAY apidl, IShellFolder *psf, IContextMenu **ppcm);
+
+static inline UINT GetRegItemCLSIDOffset(PIDLTYPE type)
 {
-    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
-        return S_OK;
-
-    PIDLIST_ABSOLUTE pidlFolder;
-    PUITEMID_CHILD *apidl;
-    UINT cidl;
-    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    if (_ILIsMyComputer(apidl[0]))
-    {
-        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
-                                          L"open",
-                                          L"rundll32.exe",
-                                          L"shell32.dll,Control_RunDLL sysdm.cpl",
-                                          NULL,
-                                          SW_SHOWNORMAL))
-        {
-            hr = E_FAIL;
-        }
-    }
-    else if (_ILIsDesktop(apidl[0]))
-    {
-        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
-                                          L"open",
-                                          L"rundll32.exe",
-                                          L"shell32.dll,Control_RunDLL desk.cpl",
-                                          NULL,
-                                          SW_SHOWNORMAL))
-        {
-            hr = E_FAIL;
-        }
-    }
-    else if (_ILIsNetHood(apidl[0]))
-    {
-        // FIXME path!
-        if (32 >= (UINT_PTR)ShellExecuteW(NULL,
-                                          L"open",
-                                          L"explorer.exe",
-                                          L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
-                                          NULL,
-                                          SW_SHOWDEFAULT))
-        {
-            hr = E_FAIL;
-        }
-    }
-    else if (_ILIsBitBucket(apidl[0]))
-    {
-        /* FIXME: detect the drive path of bitbucket if appropiate */
-        if (!SH_ShowRecycleBinProperties(L'C'))
-            hr = E_FAIL;
-    }
-
-    SHFree(pidlFolder);
-    _ILFreeaPidl(apidl, cidl);
-
-    return hr;
+    return type == PT_CONTROLS_NEWREGITEM ? 14 : 4;
 }
 
-HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
-                                            HWND hwnd,
-                                            UINT cidl,
-                                            PCUITEMID_CHILD_ARRAY apidl,
-                                            IShellFolder *psf,
-                                            IContextMenu **ppcm)
+static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, BYTE order = 0)
 {
-    HKEY hKeys[10];
-    UINT cKeys = 0;
-
-    GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
-    if (pGuid)
+#if 1 // FIXME: CControlPanelFolder is not ready for this yet
+    if (type == PT_CONTROLS_NEWREGITEM)
+        type = PT_CONTROLS_OLDREGITEM;
+#endif
+    const UINT offset = GetRegItemCLSIDOffset(type);
+    const UINT cb = offset + sizeof(CLSID), cbTotal = cb + sizeof(WORD);
+    LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbTotal);
+    if (pidl)
     {
-        LPOLESTR pwszCLSID;
-        WCHAR key[60];
-
-        wcscpy(key, L"CLSID\\");
-        HRESULT hr = StringFromCLSID(*pGuid, &pwszCLSID);
-        if (hr == S_OK)
-        {
-            wcscpy(&key[6], pwszCLSID);
-            AddClassKeyToArray(key, hKeys, &cKeys);
-        }
+        ZeroMemory(pidl, cbTotal); // Note: This also initializes the terminator WORD
+        pidl->mkid.cb = cb;
+        pidl->mkid.abID[0] = type;
+        pidl->mkid.abID[1] = order;
+        *(CLSID*)(SIZE_T(pidl) + offset) = clsid;
     }
-    AddClassKeyToArray(L"Folder", hKeys, &cKeys);
-
-    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
+    return pidl;
 }
+
+static LPITEMIDLIST CreateRegItem(PIDLTYPE type, LPCWSTR clsidstr)
+{
+    CLSID clsid;
+    return SUCCEEDED(CLSIDFromString(clsidstr, &clsid)) ? CreateRegItem(type, clsid) : NULL;
+}
+
+HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
+{
+    WCHAR xriid[CHARS_IN_GUID];
+    StringFromGUID2(*riid, xriid, _countof(xriid));
+    return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
+}
+
+static DWORD SHELL_QueryCLSIDValue(_In_ REFCLSID clsid, _In_opt_ LPCWSTR SubKey, _In_opt_ LPCWSTR Value, _In_opt_ PVOID pData, _In_opt_ PDWORD pSize)
+{
+    WCHAR Path[MAX_PATH];
+    wcscpy(Path, L"CLSID\\");
+    StringFromGUID2(clsid, Path + 6, 39);
+    if (SubKey)
+    {
+        wcscpy(Path + 6 + 38, L"\\");
+        wcscpy(Path + 6 + 39, SubKey);
+    }
+    return RegGetValueW(HKEY_CLASSES_ROOT, Path, Value, RRF_RT_ANY, NULL, pData, pSize);
+}
+
+static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
+{
+    return SHELL_QueryCLSIDValue(clsid, L"ShellFolder", Value, NULL, NULL) == ERROR_SUCCESS;
+}
+
+struct CRegFolderInfo
+{
+    const REGFOLDERINFO *m_pInfo;
+
+    void InitializeFolderInfo(const REGFOLDERINFO *pInfo)
+    {
+        m_pInfo = pInfo;
+    }
+
+    const CLSID* IsRegItem(LPCITEMIDLIST pidl) const
+    {
+        if (pidl && pidl->mkid.cb >= sizeof(WORD) + 1 + 1 + sizeof(GUID))
+        {
+            if (pidl->mkid.abID[0] == m_pInfo->PidlType)
+                return (CLSID*)(SIZE_T(pidl) + GetCLSIDOffset());
+            if (pidl->mkid.abID[0] == PT_CONTROLS_OLDREGITEM)
+                return (CLSID*)(SIZE_T(pidl) + GetRegItemCLSIDOffset(PT_CONTROLS_OLDREGITEM));
+        }
+        if (const IID* pIID = _ILGetGUIDPointer(pidl))
+        {
+            FIXME("Unexpected GUID PIDL type %#x\n", pidl->mkid.abID[0]);
+            return pIID; // FIXME: Remove this when all folders have been fixed
+        }
+        return NULL;
+    }
+
+    LPITEMIDLIST CreateItem(size_t i) const
+    {
+        const REQUIREDREGITEM &item = GetAt(i);
+        return CreateRegItem(GetPidlType(), item.clsid, item.Order);
+    }
+
+    LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
+    UINT GetCLSIDOffset() const { return GetRegItemCLSIDOffset(m_pInfo->PidlType); }
+    PIDLTYPE GetPidlType() const { return m_pInfo->PidlType; }
+    UINT GetRequiredItemsCount() const { return m_pInfo->Count; }
+    const REQUIREDREGITEM& GetAt(size_t i) const { return m_pInfo->Items[i]; }
+};
 
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
@@ -140,24 +147,10 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     if (!riid)
         return E_FAIL;
 
-    /* my computer and other shell extensions */
-    static const WCHAR fmt[] = { 'C', 'L', 'S', 'I', 'D', '\\',
-                                 '{', '%', '0', '8', 'l', 'x', '-', '%', '0', '4', 'x', '-', '%', '0', '4', 'x', '-',
-                                 '%', '0', '2', 'x', '%', '0', '2', 'x', '-', '%', '0', '2', 'x', '%', '0', '2', 'x',
-                                 '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '}', 0
-                               };
-    WCHAR xriid[50];
-
-    swprintf(xriid, fmt,
-             riid->Data1, riid->Data2, riid->Data3,
-             riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-             riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
+    /* Choose a correct icon for Recycle Bin (full or empty) */
     const WCHAR* iconname = NULL;
     if (_ILIsBitBucket(pidl))
     {
-        static const WCHAR szFull[] = {'F','u','l','l',0};
-        static const WCHAR szEmpty[] = {'E','m','p','t','y',0};
         CComPtr<IEnumIDList> EnumIDList;
         CoInitialize(NULL);
 
@@ -175,72 +168,95 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         if (SUCCEEDED(hr) && (hr = EnumIDList->Next(1, &pidl, &itemcount)) == S_OK)
         {
             CoTaskMemFree(pidl);
-            iconname = szFull;
+            iconname = L"Full";
         } else {
-            iconname = szEmpty;
+            iconname = L"Empty";
         }
     }
 
-    if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))
+    /* Prepare registry path for loading icons of My Computer and other shell extensions */
+    WCHAR KeyName[MAX_PATH];
+
+    hr = FormatGUIDKey(KeyName, _countof(KeyName),
+                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s",
+                       riid);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    /* Load icon for the current user */
+    BOOL ret = HCU_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
+    if (!ret)
     {
+        /* Failed, load default system-wide icon */
+        hr = FormatGUIDKey(KeyName, _countof(KeyName), L"CLSID\\%s", riid);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        ret = HCR_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
+    }
+
+    if (ret)
+    {
+        /* Success, set loaded icon */
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
     else
     {
-        if (IsEqualGUID(*riid, CLSID_MyComputer))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
-        else if (IsEqualGUID(*riid, CLSID_MyDocuments))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
-        else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
-        else
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
+        /* Everything has failed, set blank paper icon */
+        WARN("Failed to load an icon for the item, setting blank icon\n");
+        initIcon->SetNormalIcon(swShell32Name, IDI_SHELL_DOCUMENT - 1);
     }
 
     return initIcon->QueryInterface(iid, ppvOut);
 }
 
 class CRegFolderEnum :
-    public CEnumIDListBase
+    public CEnumIDListBase,
+    public CRegFolderInfo
 {
+    SHCONTF m_SHCTF;
     public:
-        CRegFolderEnum();
-        ~CRegFolderEnum();
-        HRESULT Initialize(LPCWSTR lpszEnumKeyName, DWORD dwFlags);
-        HRESULT AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath);
+        HRESULT Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF, DWORD dwFlags);
+        HRESULT AddItemsFromKey(IShellFolder *pSF, HKEY hkey_root, LPCWSTR szRepPath);
+
+        const CLSID* GetPidlClsid(PCUITEMID_CHILD pidl) { return IsRegItem(pidl); }
+        BOOL HasItemWithCLSID(LPCITEMIDLIST pidl) { return HasItemWithCLSIDImpl<CRegFolderEnum>(pidl); }
 
         BEGIN_COM_MAP(CRegFolderEnum)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
         END_COM_MAP()
 };
 
-CRegFolderEnum::CRegFolderEnum()
+HRESULT CRegFolderEnum::Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF, DWORD dwFlags)
 {
-}
-
-CRegFolderEnum::~CRegFolderEnum()
-{
-}
-
-HRESULT CRegFolderEnum::Initialize(LPCWSTR lpszEnumKeyName, DWORD dwFlags)
-{
-    WCHAR KeyName[MAX_PATH];
-    static const WCHAR KeyNameFormat[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace";
-
+    InitializeFolderInfo(pInfo);
+    m_SHCTF = (SHCONTF)dwFlags;
     if (!(dwFlags & SHCONTF_FOLDERS))
         return S_OK;
 
-    HRESULT hr = StringCchPrintfW(KeyName, MAX_PATH, KeyNameFormat, lpszEnumKeyName);
+    WCHAR KeyName[MAX_PATH];
+    HRESULT hr = StringCchPrintfW(KeyName, _countof(KeyName),
+                                  L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace",
+                                  pInfo->pszEnumKeyName);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    AddItemsFromKey(HKEY_LOCAL_MACHINE, KeyName);
-    AddItemsFromKey(HKEY_CURRENT_USER, KeyName);
-
+    // First add the required items and then the items from the registry
+    SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(m_SHCTF, TRUE);
+    for (size_t i = 0; i < GetRequiredItemsCount(); ++i)
+    {
+        LPITEMIDLIST pidl = CreateItem(i);
+        if (pidl && SHELL_IncludeItemInFolderEnum(pSF, pidl, query, m_SHCTF))
+            AddToEnumList(pidl);
+        else
+            ILFree(pidl);
+    }
+    AddItemsFromKey(pSF, HKEY_LOCAL_MACHINE, KeyName);
+    AddItemsFromKey(pSF, HKEY_CURRENT_USER, KeyName);
     return S_OK;
 }
 
-HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
+HRESULT CRegFolderEnum::AddItemsFromKey(IShellFolder *pSF, HKEY hkey_root, LPCWSTR szRepPath)
 {
     WCHAR name[MAX_PATH];
     HKEY hkey;
@@ -262,54 +278,82 @@ HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
 
         if (*name == '{')
         {
-            LPITEMIDLIST pidl = _ILCreateGuidFromStrW(name);
-
-            if (pidl)
-                AddToEnumList(pidl);
+            if (LPITEMIDLIST pidl = CreateRegItem(GetPidlType(), name))
+            {
+                SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(m_SHCTF, TRUE);
+                if (SHELL_IncludeItemInFolderEnum(pSF, pidl, query, m_SHCTF) && !HasItemWithCLSID(pidl))
+                    AddToEnumList(pidl);
+                else
+                    ILFree(pidl);
+            }
         }
     }
-
     RegCloseKey(hkey);
 
     return S_OK;
 }
 
+/*
+ * These columns try to map to CFSFolder's columns because the CDesktopFolder
+ * displays CFSFolder and CRegFolder items in the same view.
+ */
+enum REGFOLDERCOLUMNINDEX
+{
+    COL_NAME = SHFSF_COL_NAME,
+    COL_TYPE = SHFSF_COL_TYPE,
+    COL_INFOTIP = SHFSF_COL_COMMENT,
+    REGFOLDERCOLUMNCOUNT = max(COL_INFOTIP, COL_TYPE) + 1
+};
+
 class CRegFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellFolder2
+    public IShellFolder2,
+    public CRegFolderInfo
 {
     private:
-        GUID m_guid;
-        CAtlStringW m_rootPath;
-        CAtlStringW m_enumKeyName;
+        IShellFolder *m_pOuterFolder; // Not ref-counted
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
         HRESULT GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
+        BOOL _IsInNameSpace(_In_ LPCITEMIDLIST pidl);
+
     public:
         CRegFolder();
         ~CRegFolder();
-        HRESULT WINAPI Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName);
+        HRESULT WINAPI Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot);
+
+        const REQUIREDREGITEM* IsRequiredItem(LPCITEMIDLIST pidl) const
+        {
+            const CLSID* const pCLSID = IsRegItem(pidl);
+            for (size_t i = 0; pCLSID && i < GetRequiredItemsCount(); ++i)
+            {
+                const REQUIREDREGITEM &item = GetAt(i);
+                if (item.clsid == *pCLSID)
+                    return &item;
+            }
+            return NULL;
+        }
 
         // IShellFolder
-        virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes);
-        virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
-        virtual HRESULT WINAPI BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
-        virtual HRESULT WINAPI CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
-        virtual HRESULT WINAPI GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
-        virtual HRESULT WINAPI GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
-        virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
+        STDMETHOD(ParseDisplayName)(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override;
+        STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override;
+        STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(BindToStorage)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(CompareIDs)(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override;
+        STDMETHOD(CreateViewObject)(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(GetAttributesOf)(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override;
+        STDMETHOD(GetUIObjectOf)(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut) override;
+        STDMETHOD(GetDisplayNameOf)(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override;
+        STDMETHOD(SetNameOf)(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut) override;
 
         /* ShellFolder2 */
-        virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
-        virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
-        virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
-        virtual HRESULT WINAPI GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags);
-        virtual HRESULT WINAPI GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv);
-        virtual HRESULT WINAPI GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
-        virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);
+        STDMETHOD(GetDefaultSearchGUID)(GUID *pguid) override;
+        STDMETHOD(EnumSearches)(IEnumExtraSearch **ppenum) override;
+        STDMETHOD(GetDefaultColumn)(DWORD dwRes, ULONG *pSort, ULONG *pDisplay) override;
+        STDMETHOD(GetDefaultColumnState)(UINT iColumn, DWORD *pcsFlags) override;
+        STDMETHOD(GetDetailsEx)(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv) override;
+        STDMETHOD(GetDetailsOf)(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd) override;
+        STDMETHOD(MapColumnToSCID)(UINT column, SHCOLUMNID *pscid) override;
 
         DECLARE_NOT_AGGREGATABLE(CRegFolder)
 
@@ -329,17 +373,10 @@ CRegFolder::~CRegFolder()
 {
 }
 
-HRESULT WINAPI CRegFolder::Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName)
+HRESULT WINAPI CRegFolder::Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot)
 {
-    memcpy(&m_guid, pGuid, sizeof(m_guid));
-
-    m_rootPath = lpszPath;
-    if (!m_rootPath)
-        return E_OUTOFMEMORY;
-
-    m_enumKeyName = lpszEnumKeyName;
-    if (!m_enumKeyName)
-        return E_OUTOFMEMORY;
+    InitializeFolderInfo(pInit->pInfo);
+    m_pOuterFolder = pInit->psfOuter;
 
     m_pidlRoot.Attach(ILClone(pidlRoot));
     if (!m_pidlRoot)
@@ -366,58 +403,86 @@ HRESULT CRegFolder::GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttrib
     }
 
     /* In any case, links can be created */
-    if (*pdwAttributes == NULL)
-    {
-        *pdwAttributes |= (dwAttributes & SFGAO_CANLINK);
-    }
+    *pdwAttributes |= (dwAttributes & SFGAO_CANLINK);
     return S_OK;
+}
+
+BOOL CRegFolder::_IsInNameSpace(_In_ LPCITEMIDLIST pidl)
+{
+    CLSID clsid = *_ILGetGUIDPointer(pidl);
+    if (IsEqualGUID(clsid, CLSID_Printers))
+        return TRUE;
+    if (IsEqualGUID(clsid, CLSID_NetworkConnections))
+        return TRUE;
+    FIXME("Check registry\n");
+    return TRUE;
 }
 
 HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
         ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
 {
-    LPITEMIDLIST pidl;
-
-    if (!lpszDisplayName || !ppidl)
+    if (!ppidl)
         return E_INVALIDARG;
 
-    *ppidl = 0;
+    *ppidl = NULL;
 
-    if (pchEaten)
-        *pchEaten = 0;
+    if (!lpszDisplayName)
+        return E_INVALIDARG;
 
-    UINT cch = wcslen(lpszDisplayName);
-    if (cch < 39 || lpszDisplayName[0] != L':' || lpszDisplayName[1] != L':')
-        return E_FAIL;
-
-    pidl = _ILCreateGuidFromStrW(lpszDisplayName + 2);
-    if (pidl == NULL)
-        return E_FAIL;
-
-    if (cch < 41)
+    if (lpszDisplayName[0] != L':' || lpszDisplayName[1] != L':')
     {
-        *ppidl = pidl;
+        FIXME("What should we do here?\n");
+        return E_FAIL;
+    }
+
+    LPWSTR pch, pchNextOfComma = NULL;
+    for (pch = &lpszDisplayName[2]; *pch && *pch != L'\\'; ++pch)
+    {
+        if (*pch == L',' && !pchNextOfComma)
+            pchNextOfComma = pch + 1;
+    }
+
+    CLSID clsid;
+    if (!GUIDFromStringW(&lpszDisplayName[2], &clsid))
+        return CO_E_CLASSSTRING;
+
+    if (pchNextOfComma)
+    {
+        FIXME("Delegate folder\n");
+        return E_FAIL;
+    }
+
+    CComHeapPtr<ITEMIDLIST> pidlTemp(CreateRegItem(GetPidlType(), clsid));
+    if (!pidlTemp)
+        return E_OUTOFMEMORY;
+
+    if (!_IsInNameSpace(pidlTemp) && !(BindCtx_GetMode(pbc, 0) & STGM_CREATE))
+        return E_INVALIDARG;
+
+    *ppidl = pidlTemp.Detach();
+
+    if (!*pch)
+    {
         if (pdwAttributes && *pdwAttributes)
-        {
             GetGuidItemAttributes(*ppidl, pdwAttributes);
-        }
-    }
-    else
-    {
-        HRESULT hr = SHELL32_ParseNextElement(this, hwndOwner, pbc, &pidl, lpszDisplayName + 41, pchEaten, pdwAttributes);
-        if (SUCCEEDED(hr))
-        {
-            *ppidl = pidl;
-        }
-        return hr;
+
+        return S_OK;
     }
 
-    return S_OK;
+    HRESULT hr = SHELL32_ParseNextElement(this, hwndOwner, pbc, ppidl, pch + 1, pchEaten,
+                                          pdwAttributes);
+    if (FAILED(hr))
+    {
+        ILFree(*ppidl);
+        *ppidl = NULL;
+    }
+    return hr;
 }
 
 HRESULT WINAPI CRegFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CRegFolderEnum>(m_enumKeyName, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+    return ShellObjectCreatorInit<CRegFolderEnum>(m_pInfo, m_pOuterFolder, dwFlags,
+                                                  IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 HRESULT WINAPI CRegFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
@@ -475,14 +540,10 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
 
     /* Guid folders come first compared to everything else */
     /* And Drives come before folders in My Computer */
-    if (_ILIsMyComputer(m_pidlRoot))
-    {
+    if (GetPidlType() == PT_COMPUTER_REGITEM)
         return MAKE_COMPARE_HRESULT(clsid1 ? 1 : -1);
-    }
     else
-    {
         return MAKE_COMPARE_HRESULT(clsid1 ? -1 : 1);
-    }
 }
 
 HRESULT WINAPI CRegFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
@@ -503,7 +564,7 @@ HRESULT WINAPI CRegFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
         if (_ILIsSpecialFolder(*apidl))
             GetGuidItemAttributes(*apidl, rgfInOut);
         else
-            ERR("Got an unkown pidl here!\n");
+            ERR("Got unknown pidl\n");
         apidl++;
         cidl--;
     }
@@ -537,7 +598,7 @@ HRESULT WINAPI CRegFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
             return E_FAIL;
         }
 
-        hr = CGuidItemContextMenu_CreateInstance(m_pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), (IContextMenu**)&pObj);
+        hr = CRegItemContextMenu_CreateInstance(m_pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), (IContextMenu**)&pObj);
     }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
@@ -560,32 +621,32 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 
     if (!pidl || !pidl->mkid.cb)
     {
-        if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
+        if (IS_SHGDN_FOR_PARSING(dwFlags))
         {
-            LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+            if (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)
+            {
+                TRACE("GDNO returning INFOLDER instead of %#x\n", GET_SHGDN_RELATION(dwFlags));
+            }
+            LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((2 + 38 + 1) * sizeof(WCHAR));
             if (!pszPath)
                 return E_OUTOFMEMORY;
-
             /* parsing name like ::{...} */
             pszPath[0] = ':';
             pszPath[1] = ':';
-            SHELL32_GUIDToStringW(m_guid, &pszPath[2]);
-
+            SHELL32_GUIDToStringW(m_pInfo->clsid, &pszPath[2]);
             strRet->uType = STRRET_WSTR;
             strRet->pOleStr = pszPath;
-
             return S_OK;
         }
         else
         {
             BOOL bRet;
             WCHAR wstrName[MAX_PATH+1];
-            bRet = HCR_GetClassNameW(m_guid, wstrName, MAX_PATH);
+            bRet = HCR_GetClassNameW(m_pInfo->clsid, wstrName, MAX_PATH);
             if (!bRet)
                 return E_FAIL;
 
             return SHSetStrRet(strRet, wstrName);
-
         }
     }
 
@@ -593,7 +654,7 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
     GUID const *clsid = _ILGetGUIDPointer (pidl);
 
     /* First of all check if we need to query the name from the child item */
-    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING && 
+    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING &&
         GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL)
     {
         int bWantsForParsing = FALSE;
@@ -631,7 +692,8 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
     }
 
     /* Allocate the buffer for the result */
-    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+    SIZE_T cchPath = MAX_PATH + 1;
+    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc(cchPath * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
 
@@ -639,18 +701,41 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 
     if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
     {
-        wcscpy(pszPath, m_rootPath);
-        PWCHAR pItemName = &pszPath[wcslen(pszPath)];
+        SIZE_T pathlen = 0;
+        PWCHAR pItemName = pszPath; // GET_SHGDN_RELATION(dwFlags) == SHGDN_INFOLDER
+        if (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)
+        {
+            hr = StringCchCopyW(pszPath, cchPath, GetParsingPath());
+            if (SUCCEEDED(hr))
+            {
+                pathlen = wcslen(pszPath);
+                pItemName = &pszPath[pathlen];
+                if (pathlen)
+                {
+                    if (++pathlen < cchPath)
+                        *pItemName++ = L'\\';
+                    else
+                        hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+                }
+            }
+        }
 
-        /* parsing name like ::{...} */
-        pItemName[0] = ':';
-        pItemName[1] = ':';
-        SHELL32_GUIDToStringW (*clsid, &pItemName[2]);
+        if (SUCCEEDED(hr) && pathlen + 2 + 38 + 1 < cchPath)
+        {
+            /* parsing name like ::{...} */
+            pItemName[0] = L':';
+            pItemName[1] = L':';
+            SHELL32_GUIDToStringW(*clsid, &pItemName[2]);
+        }
+        else
+        {
+            hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        }
     }
     else
     {
         /* user friendly name */
-        if (!HCR_GetClassNameW (*clsid, pszPath, MAX_PATH))
+        if (!HCR_GetClassNameW(*clsid, pszPath, cchPath))
             hr = E_FAIL;
     }
 
@@ -670,34 +755,35 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 HRESULT WINAPI CRegFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
         LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
-    GUID const *clsid = _ILGetGUIDPointer (pidl);
-    LPOLESTR pStr;
-    HRESULT hr;
+    GUID const *clsid = IsRegItem(pidl);
     WCHAR szName[100];
+
+    if (!lpName || (*lpName && IsIllegalFsFileName(lpName))) // Note: Must allow empty name
+        return E_INVALIDARG;
 
     if (!clsid)
     {
         ERR("Pidl is not reg item!\n");
         return E_FAIL;
     }
+    FormatGUIDKey(szName, _countof(szName), L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", clsid);
 
-    hr = StringFromCLSID(*clsid, &pStr);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
-
+    BOOL bEmpty = StrIsNullOrEmpty(lpName); // Empty resets to the default name
     DWORD cbData = (wcslen(lpName) + 1) * sizeof(WCHAR);
-    LONG res = SHSetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, lpName, cbData);
-
-    CoTaskMemFree(pStr);
+    LONG res = bEmpty ? SHDeleteValueW(HKEY_CURRENT_USER, szName, NULL)
+                      : SHSetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, lpName, cbData);
 
     if (res == ERROR_SUCCESS)
     {
-        *pPidlOut = ILClone(pidl);
-        return S_OK;
+        HRESULT hr = pPidlOut ? SHILClone(pidl, pPidlOut) : S_OK; // Copy the PIDL before SHChangeNotify
+        PIDLIST_ABSOLUTE pidlAbs;
+        if (SUCCEEDED(SHELL_CreateAbsolutePidl(m_pOuterFolder, pidl, &pidlAbs)))
+        {
+            SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_IDLIST, pidlAbs, NULL);
+            ILFree(pidlAbs);
+        }
+        return hr;
     }
-
     return E_FAIL;
 }
 
@@ -724,7 +810,7 @@ HRESULT WINAPI CRegFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pD
 
 HRESULT WINAPI CRegFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    if (iColumn >= 2)
+    if (iColumn >= REGFOLDERCOLUMNCOUNT)
         return E_INVALIDARG;
     *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
     return S_OK;
@@ -740,6 +826,12 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
     if (!psd)
         return E_INVALIDARG;
 
+    if (!pidl)
+    {
+        TRACE("CRegFolder has no column info\n");
+        return E_INVALIDARG;
+    }
+
     GUID const *clsid = _ILGetGUIDPointer (pidl);
 
     if (!clsid)
@@ -748,19 +840,13 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         return E_INVALIDARG;
     }
 
-    if (iColumn >= 3)
-    {
-        /* Return an empty string when we area asked for a column we don't support. 
-           Only  the regfolder is supposed to do this as it supports less columns compared to other folder
-           and its contents are supposed to be presented alongside items that support more columns. */
-        return SHSetStrRet(&psd->str, "");
-    }
-
     switch(iColumn)
     {
-        case 0:        /* name */
+        case COL_NAME:
             return GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        case 1:        /* comments */
+        case COL_TYPE:
+            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
+        case COL_INFOTIP:
             HKEY hKey;
             if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
                 return SHSetStrRet(&psd->str, "");
@@ -770,8 +856,11 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
             RegCloseKey(hKey);
             return S_OK;
-        case 2:        /* type */
-            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
+        default:
+            /* Return an empty string when we area asked for a column we don't support.
+               Only  the regfolder is supposed to do this as it supports less columns compared to other folder
+               and its contents are supposed to be presented alongside items that support more columns. */
+            return SHSetStrRet(&psd->str, "");
     }
     return E_FAIL;
 }
@@ -781,8 +870,87 @@ HRESULT WINAPI CRegFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
     return E_NOTIMPL;
 }
 
-/* In latest windows version this is exported but it takes different arguments! */
-HRESULT CRegFolder_CreateInstance(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName, REFIID riid, void **ppv)
+static HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
+                                                     UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    return ShellObjectCreatorInit<CRegFolder>(pGuid, pidlRoot, lpszPath, lpszEnumKeyName, riid, ppv);
+    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
+        return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
+
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    const CLSID* pCLSID;
+    CRegFolder *pRegFolder = static_cast<CRegFolder*>(psf);
+    const REQUIREDREGITEM* pRequired = pRegFolder->IsRequiredItem(apidl[0]);
+    if (pRequired && pRequired->pszCpl)
+    {
+        WCHAR buf[MAX_PATH];
+        wsprintfW(buf, L"%hs", const_cast<LPCSTR>(pRequired->pszCpl));
+        hr = SHELL_ExecuteControlPanelCPL(hwnd, buf) ? S_OK : E_FAIL;
+    }
+#if 0 // Should never happen, CDesktopFolder.cpp handles this
+    else if (_ILIsDesktop(pidlFolder) && _ILIsDesktop(apidl[0]))
+    {
+        hr = SHELL_ExecuteControlPanelCPL(hwnd, L"desk.cpl") ? S_OK : E_FAIL;
+    }
+#endif
+    else if ((pCLSID = pRegFolder->IsRegItem(apidl[0])) != NULL)
+    {
+        if (CLSID_MyDocuments != *pCLSID)
+        {
+            hr = SHELL32_ShowShellExtensionProperties(pCLSID, pdtobj);
+        }
+        else
+        {
+            FIXME("ROS MyDocs must implement IShellPropSheetExt\n");
+            hr = S_FALSE; // Just display the filesystem properties
+        }
+    }
+    else
+    {
+        hr = S_FALSE; // Tell the caller to run the default action
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+    return hr;
+}
+
+static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, HWND hwnd, UINT cidl,
+                                                  PCUITEMID_CHILD_ARRAY apidl, IShellFolder *psf, IContextMenu **ppcm)
+{
+    HKEY hKeys[3];
+    UINT cKeys = 0;
+
+    const GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
+    if (pGuid)
+    {
+        WCHAR key[sizeof("CLSID\\") + 38];
+        wcscpy(key, L"CLSID\\");
+        StringFromGUID2(*pGuid, &key[6], 39);
+        AddClassKeyToArray(key, hKeys, &cKeys);
+    }
+
+    // FIXME: CRegFolder should be aggregated by its outer folder and should
+    // provide the attributes for all required non-registry folders.
+    // It currently does not so we have to ask the outer folder ourself so
+    // that we get the correct attributes for My Computer etc.
+    CComPtr<IShellFolder> pOuterSF;
+    SHBindToObject(NULL, pidlFolder, IID_PPV_ARG(IShellFolder, &pOuterSF));
+
+    SFGAOF att = (psf && cidl) ? SHGetAttributes(pOuterSF ? pOuterSF.p : psf, apidl[0], SFGAO_FOLDER) : 0;
+    if ((att & SFGAO_FOLDER) && (!pGuid || !HasCLSIDShellFolderValue(*pGuid, L"HideFolderVerbs")))
+        AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+
+    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
+}
+
+/* In latest windows version this is exported but it takes different arguments! */
+HRESULT CRegFolder_CreateInstance(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot, REFIID riid, void **ppv)
+{
+    return ShellObjectCreatorInit<CRegFolder>(pInit, pidlRoot, riid, ppv);
 }

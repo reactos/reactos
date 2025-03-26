@@ -657,7 +657,7 @@ GetModuleFileNameW(HINSTANCE hModule,
     } _SEH2_END
 
     /* Release the loader lock */
-    LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
 
     return Length / sizeof(WCHAR);
 }
@@ -677,7 +677,7 @@ GetModuleHandleForUnicodeString(PUNICODE_STRING ModuleName)
     if (NT_SUCCESS(Status)) return Module;
 
     /* If not, then the path should be computed */
-    DllPath = BaseComputeProcessDllPath(NULL, 0);
+    DllPath = BaseComputeProcessDllPath(NULL, NULL);
     if (!DllPath)
     {
         Status = STATUS_NO_MEMORY;

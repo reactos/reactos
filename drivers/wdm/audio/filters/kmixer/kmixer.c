@@ -8,7 +8,7 @@
 
 #include "kmixer.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 NTSTATUS
@@ -72,7 +72,6 @@ KMix_AddDevice(
     /* initialize device extension */
     RtlZeroMemory(DeviceExtension, sizeof(KMIXER_DEVICE_EXT));
 
-
     Status = KMixAllocateDeviceHeader(DeviceExtension);
     if (!NT_SUCCESS(Status))
     {
@@ -97,7 +96,6 @@ cleanup:
     IoDeleteDevice(DeviceObject);
     return Status;
 }
-
 
 NTSTATUS
 NTAPI

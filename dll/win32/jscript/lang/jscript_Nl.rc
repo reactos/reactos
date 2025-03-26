@@ -18,8 +18,6 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Fout bij het omzetten van het object naar een primitief type"

@@ -1,8 +1,15 @@
+/*
+ * PROJECT:     ReactOS Attrib Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Norwegian resource file
+ * TRANSLATORS: Copyright 2006 Lars Martin Hambro (LMH1) <lars_martin4@hotmail.com>
+ *              Copyright 2007 Frode Lillerud (Scalpel78) <frode@enkelt.no>
+ */
+
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Viser eller endrer filattributtene.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
        [/S [/D]]\n\n\
@@ -17,5 +24,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
   /D  Bearbeider også mapper.\n\n\
 Skriv ATTRIB uten parametere for å vise attributtene til alle filer.\n"
     STRING_CONSOLE_ERROR "Ukjent feil: %d\n"
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Ugyldig parameter format - %s\n"
 END

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS browseui
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     IUserAssist implementation
- * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ * COPYRIGHT:   Copyright 2020 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 // See http://www.geoffchappell.com/studies/windows/ie/browseui/interfaces/iuserassist.htm
 

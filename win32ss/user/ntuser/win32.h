@@ -25,6 +25,7 @@
 #define W32PF_OLELOADED               0x00100000
 #define W32PF_SCREENSAVER             0x00200000
 #define W32PF_IDLESCREENSAVER         0x00400000
+#define W32PF_DISABLEIME              0x00800000
 #define W32PF_ICONTITLEREGISTERED     0x10000000
 #define W32PF_DPIAWARE                0x20000000
 // ReactOS
@@ -52,14 +53,8 @@ extern HANDLE hModuleWin;    // This Win32k Instance.
 extern struct _CLS *SystemClassList;
 extern BOOL RegisteredSysClasses;
 
-#include <pshpack1.h>
-// FIXME: Move to ntuser.h
-typedef struct _TL
-{
-    struct _TL* next;
-    PVOID pobj;
-    PVOID pfnFree;
-} TL, *PTL;
+struct _TL;
+typedef struct _TL *PTL;
 
 typedef struct _W32THREAD
 {
@@ -75,6 +70,12 @@ typedef struct _W32THREAD
     PVOID pUMPDObj;
 } W32THREAD, *PW32THREAD;
 
+struct tagIMC;
+
+/*
+ * THREADINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/THREADINFO
+ */
 #ifdef __cplusplus
 typedef struct _THREADINFO : _W32THREAD
 {
@@ -126,6 +127,10 @@ typedef struct _THREADINFO
     INT                 iCursorLevel;
     /* Last message cursor position */
     POINT               ptLast;
+    /* Input context-related */
+    struct _WND*        spwndDefaultIme;
+    struct tagIMC*      spDefaultImc;
+    HKL                 hklPrev;
 
     INT                 cEnterCount;
     /* Queue of messages posted to the queue. */
@@ -153,11 +158,10 @@ typedef struct _THREADINFO
     ULONG cExclusiveLocks;
 #if DBG
     USHORT acExclusiveLockCount[GDIObjTypeTotal + 1];
+    UINT cRefObjectCo;
 #endif
 #endif // __cplusplus
 } THREADINFO;
-
-#include <poppack.h>
 
 
 #define IntReferenceThreadInfo(pti) \
@@ -201,8 +205,9 @@ typedef struct _W32HEAP_USER_MAPPING
 
 
 /*
- Information from STARTUPINFOW, psdk/winbase.h.
- Set from PsGetCurrentProcess()->Peb->ProcessParameters.
+ * Information from STARTUPINFOW, psdk/winbase.h.
+ * Set from PsGetCurrentProcess()->Peb->ProcessParameters.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/PROCESSINFO
 */
 typedef struct tagUSERSTARTUPINFO
 {
@@ -237,6 +242,10 @@ typedef struct _W32PROCESS
 
 #define CLIBS 32
 
+/*
+ * PROCESSINFO structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/PROCESSINFO
+ */
 #ifdef __cplusplus
 typedef struct _PROCESSINFO : _W32PROCESS
 {

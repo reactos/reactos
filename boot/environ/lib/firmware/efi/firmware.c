@@ -367,8 +367,8 @@ Quickie:
 
 NTSTATUS
 EfiOpenProtocol (
-    _In_ EFI_HANDLE Handle, 
-    _In_ EFI_GUID *Protocol, 
+    _In_ EFI_HANDLE Handle,
+    _In_ EFI_GUID *Protocol,
     _Outptr_ PVOID* Interface
     )
 {
@@ -971,7 +971,7 @@ EfiGetMemoryMap (
 
 NTSTATUS
 EfiFreePages (
-    _In_ ULONG Pages, 
+    _In_ ULONG Pages,
     _In_ EFI_PHYSICAL_ADDRESS PhysicalAddress
     )
 {
@@ -1295,7 +1295,7 @@ EfiGopGetFrameBuffer (
 NTSTATUS
 EfiGopGetCurrentMode (
     _In_ EFI_GRAPHICS_OUTPUT_PROTOCOL *GopInterface,
-    _Out_ UINTN* Mode, 
+    _Out_ UINTN* Mode,
     _Out_ EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Information
     )
 {
@@ -2256,7 +2256,7 @@ LoopAgain:
         MmMdFreeDescriptor(Descriptor);
         goto Quickie;
     }
-    
+
     /* Add it back as free memory */
     Status = MmMdAddDescriptorToList(MemoryMap,
                                      Descriptor,

@@ -296,7 +296,7 @@ SerialPnpStartDevice(
 	/* Write an entry value under HKLM\HARDWARE\DeviceMap\SERIALCOMM */
 	/* This step is not mandatory, so don't exit in case of error */
 	RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\DeviceMap\\SERIALCOMM");
-	InitializeObjectAttributes(&objectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+	InitializeObjectAttributes(&objectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 	Status = ZwCreateKey(&hKey, KEY_SET_VALUE, &objectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
 	if (NT_SUCCESS(Status))
 	{
@@ -328,6 +328,7 @@ SerialPnp(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	ULONG MinorFunction;
 	PIO_STACK_LOCATION Stack;
 	ULONG_PTR Information = 0;
@@ -367,15 +368,24 @@ SerialPnp(
 		{
 			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
-			ASSERT(((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState == dsStopped);
-
 			/* Call lower driver */
-			Status = ForwardIrpAndWait(DeviceObject, Irp);
-			if (NT_SUCCESS(Status))
-				Status = SerialPnpStartDevice(
-					DeviceObject,
-					Stack->Parameters.StartDevice.AllocatedResources,
-					Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+			DeviceExtension = DeviceObject->DeviceExtension;
+			Status = STATUS_UNSUCCESSFUL;
+
+			ASSERT(DeviceExtension->PnpState == dsStopped);
+
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+				if (NT_SUCCESS(Status))
+				{
+					Status = SerialPnpStartDevice(
+						DeviceObject,
+						Stack->Parameters.StartDevice.AllocatedResources,
+						Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+				}
+			}
+
 			break;
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* (optional) 0x7 */

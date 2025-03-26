@@ -89,7 +89,7 @@ FindDatatype(const PLOCAL_PRINT_PROCESSOR pPrintProcessor, PCWSTR pwszDatatype)
 
     for (i = 0; i < pPrintProcessor->dwDatatypeCount; i++)
     {
-        if (wcsicmp(pCurrentDatatype->pName, pwszDatatype) == 0)
+        if (_wcsicmp(pCurrentDatatype->pName, pwszDatatype) == 0)
             return TRUE;
 
         ++pCurrentDatatype;
@@ -113,7 +113,7 @@ FindPrintProcessor(PCWSTR pwszName)
     {
         pPrintProcessor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_PROCESSOR, Entry);
 
-        if (wcsicmp(pPrintProcessor->pwszName, pwszName) == 0)
+        if (_wcsicmp(pPrintProcessor->pwszName, pwszName) == 0)
             return pPrintProcessor;
     }
 
@@ -148,7 +148,7 @@ InitializePrintProcessorList(void)
 
     // Initialize an empty list for our Print Processors.
     InitializeListHead(&_PrintProcessorList);
-    
+
     // Prepare the path to the Print Processor directory.
     if (!LocalGetPrintProcessorDirectory(NULL, (PWSTR)wszCurrentEnvironment, 1, (PBYTE)wszPrintProcessorPath, sizeof(wszPrintProcessorPath), &cchPrintProcessorPath))
     {

@@ -55,7 +55,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire door J Brown\n\nCardLib versie 1.0."
+    IDS_SOL_ABOUT "Solitaire door J Brown\nCardLib versie 1.0"
     IDS_SOL_QUIT "Het huidige spel afsluiten?"
     IDS_SOL_WIN "Gefeliciteerd, u heeft gewonnen!"
     IDS_SOL_DEAL "Nogmaals spelen?"
@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "&Delen\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Kaarten...", IDM_GAME_DECK
         MENUITEM "&Opties...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

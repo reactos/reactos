@@ -15,7 +15,11 @@
 
 /* DEFINES ********************************************************************/
 
-/* Basic Memory Management */
+/*
+ * Basic Memory Management
+ */
+#define NULL32  ((ULONG)0)
+
 #define MEM_ALIGN_DOWN(ptr, align)  (PVOID)((ULONG_PTR)(ptr) & ~((align) - 1l))
 #define MEM_ALIGN_UP(ptr, align)    MEM_ALIGN_DOWN((ULONG_PTR)(ptr) + (align) - 1l, (align))
 
@@ -35,7 +39,9 @@ C_ASSERT(0x100000 <= MAX_ADDRESS);  // A minimum of 1 MB is required for PC emul
 
 #define ARRAY_INDEX(ptr, array) ((ULONG)(((ULONG_PTR)(ptr) - (ULONG_PTR)(array)) / sizeof(*array)))
 
-/* BCD-Binary conversion */
+/*
+ * BCD-Binary conversion
+ */
 
 FORCEINLINE
 USHORT
@@ -71,6 +77,11 @@ BCD_TO_BINARY(USHORT Value)
     return Result;
 }
 
+
+/*
+ * Emulator state
+ */
+
 enum
 {
     EMULATOR_EXCEPTION_DIVISION_BY_ZERO,
@@ -93,6 +104,7 @@ enum
 extern FAST486_STATE EmulatorContext;
 extern LPVOID  BaseAddress;
 extern BOOLEAN VdmRunning;
+
 
 /* FUNCTIONS ******************************************************************/
 

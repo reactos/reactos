@@ -932,59 +932,6 @@ static MUI_ENTRY heILSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY heILBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\207\211\231\227\204 \217\220\205\213\204 \214\222 \214\205\207\232\200\204 \214\204\220\216 \232\200 \217\211\227\232\204\214 \204\214\205\213\211 \204\220\211\200 \204\220\227\232\204\204",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\212\201\231\207\216\201",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        ".ENTER \225\207\214\205 :A \217\220\205\213\214 \214\207\232\205\200\216 \217\205\210\211\214\227\232 \221\220\213\204 \204\231\227\201\201",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY heILSelectPartitionEntries[] =
 {
     {
@@ -1025,7 +972,7 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  .\232\211\231\200\230 \204\226\211\207\216 \230\205\226\211\214 \211\203\213 P \225\207\214",
+        "\x07  .\232\211\202\205\214/\232\211\231\200\230 \204\226\211\207\216 \230\205\226\211\214 \211\203\213 C \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1039,13 +986,6 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  .\232\211\202\205\214 \204\226\211\207\216 \230\205\226\211\214 \211\203\213 L \225\207\214",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  .\232\216\211\211\227 \204\226\211\207\216 \227\205\207\216\214 \211\203\213 D \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1313,7 +1253,7 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         ".\212\211\231\216\204\214 \211\203\213 ENTER \225\207\214 .\204\226\211\207\216\204 \232\200 \214\207\232\200\232 \205\211\231\213\222 \204\220\227\232\204\204",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1322,6 +1262,37 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
         0,
         0,
         "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY heILCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        ".\204\230\207\201\220\231 \204\226\211\207\216\204 \232\200 \232\227\203\205\201 \205\211\231\213\222 \204\220\227\232\204\204 \232\211\220\213\232",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "...\217\211\232\216\204\214 \200\220",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1437,7 +1408,7 @@ static MUI_ENTRY heILFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY heILBootLoaderEntries[] =
+static MUI_ENTRY heILBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1449,7 +1420,7 @@ static MUI_ENTRY heILBootLoaderEntries[] =
     {
         6,
         8,
-        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1494,6 +1465,76 @@ static MUI_ENTRY heILBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY heILBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY heILBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        ".ENTER \225\207\214\205 :A \217\220\205\213\214 \214\207\232\205\200\216 \217\205\210\211\214\227\232 \221\220\213\204 \204\231\227\201\201",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY heILKeyboardSettingsEntries[] =
@@ -1884,13 +1925,6 @@ MUI_ERROR heILErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "!\204\226\227\205\216 \200\214\231 \227\221\211\203 \207\210\231 \227\205\207\216\214 \217\232\211\220 \200\214\n"
-        "\n"
-        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  ",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         ".\232\213\230\222\216\204 \232\226\211\207\216 \214\222 %S \230\205\201\222 \214\205\207\232\200 \203\205\227 \232\220\227\232\204\201 \204\231\214\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
         "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
@@ -2103,6 +2137,10 @@ MUI_PAGE heILPages[] =
         heILFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        heILCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         heILDeletePartitionEntries
     },
@@ -2123,8 +2161,8 @@ MUI_PAGE heILPages[] =
         heILKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        heILBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        heILBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2139,8 +2177,12 @@ MUI_PAGE heILPages[] =
         heILSuccessPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        heILBootPageEntries
+        BOOTLOADER_INSTALL_PAGE,
+        heILBootLoaderInstallPageEntries
+    },
+    {
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        heILBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2157,25 +2199,27 @@ MUI_STRING heILStrings[] =
     {STRING_PLEASEWAIT,
      "   ...\217\211\232\216\204\214 \200\220"},
     {STRING_INSTALLCREATEPARTITION,
-     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \232\201\207\230\205\216 \230\205\226 = E  \232\211\231\200\230 \230\205\226 = P  \217\227\232\204 = ENTER"},
+     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \232\201\207\230\205\216 \230\205\226 = E  \232\211\231\200\230 \230\205\226 = C  \217\227\232\204 = ENTER"},
     {STRING_INSTALLCREATELOGICAL,
-     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \232\211\202\205\214 \204\226\211\207\216 \230\205\226 = L  \217\227\232\204 = ENTER"},
+     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \232\211\202\205\214 \204\226\211\207\216 \230\205\226 = C  \217\227\232\204 = ENTER"},
     {STRING_INSTALLDELETEPARTITION,
      "   \204\220\227\232\204 \214\205\210\211\201 = F3  \204\226\211\207\216 \227\207\216 = D  \217\227\232\204 = ENTER"},
     {STRING_DELETEPARTITION,
      "   \204\220\227\232\204 \214\205\210\211\201 = F3  \204\226\211\207\216 \227\207\216 = D"},
     {STRING_PARTITIONSIZE,
      ":\204\231\203\207 \204\226\211\207\216 \214\231 \214\203\205\202"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "\214\222 \232\211\230\227\211\222 \204\226\211\207\216 \230\205\226\211\214 \232\230\207\201"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "\214\222 \232\201\207\230\205\216 \204\226\211\207\216 \230\205\226\211\214 \232\230\207\201"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "\214\222 \232\211\202\205\214 \204\226\211\207\216 \230\205\226\211\214 \232\230\207\201"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     ".\215\211\232\201-\204\202\216\201 \204\231\203\207\204 \204\226\211\207\216\204 \214\231 \214\203\205\202\204 \232\200 \203\214\227\204 \204\231\227\201\201"},
     {STRING_CREATEPARTITION,
      "   \204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \204\226\211\207\216 \230\205\226 = ENTER"},
+    {STRING_NEWPARTITION,
+    "\214\222 \204\231\203\207 \204\226\211\207\216 \204\230\226\211 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_PARTFORMAT,
     ".\212\231\216\204\201 \214\207\232\205\200\232 \232\200\206\204 \204\226\211\207\216\204"},
     {STRING_NONFORMATTEDPART,
@@ -2186,8 +2230,6 @@ MUI_STRING heILStrings[] =
     ".\232\214\207\232\205\200\216 \200\214 \217\211\211\203\222 \204\231\203\207\204 \204\226\211\207\216\204"},
     {STRING_INSTALLONPART,
     "\204\226\211\207\216 \214\222 ReactOS \232\200 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232"},
-    {STRING_CHECKINGPART,
-    ".\204\230\207\201\220\231 \204\226\211\207\216\204 \232\200 \232\227\203\205\201 \205\211\231\213\222 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_CONTINUE,
     "\212\231\216\204 = ENTER"},
     {STRING_QUITCONTINUE,
@@ -2215,7 +2257,7 @@ MUI_STRING heILStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   ...\232\203\214\227\216\204 \232\230\205\226\232 \232\205\230\203\202\204 \232\200 \217\213\203\222\216"},
     {STRING_CODEPAGEINFOUPDATE,
-    "   ...\215\205\231\211\230\214 codepage \222\203\211\216 \223\211\221\205\216"},
+    "   ...codepage \222\203\211\216 \223\211\221\205\216"},
     {STRING_DONE,
     "   ...\215\211\211\221\216"},
     {STRING_REBOOTCOMPUTER2,
@@ -2228,46 +2270,30 @@ MUI_STRING heILStrings[] =
     "USB \232\203\214\227\216\201 \231\205\216\211\231 \200\205\204 \204\206 \214\231 \204\226\205\224\220 \211\213\204 \204\201\211\221\204\r\n"},
     {STRING_CONSOLEFAIL3,
     "\200\214\216 \217\224\205\200\201 \232\205\213\216\232\220 \200\214 \217\211\211\203\222 USB \232\205\203\214\227\216\r\n"},
-    {STRING_FORMATTINGDISK,
-    "\217\220\205\213\204 \232\200 \232\214\207\232\200\216 \204\220\227\232\204\204 \232\211\220\213\232"},
+    {STRING_FORMATTINGPART,
+    "Setup is formatting the partition..."},
     {STRING_CHECKINGDISK,
-    "\217\220\205\213\204 \232\200 \232\227\203\205\201 \204\220\227\232\204\204 \232\211\220\213\232"},
+    "Setup is checking the disk..."},
     {STRING_FORMATDISK1,
     " (\230\211\204\216 \214\205\207\232\200) %S \215\211\226\201\227 \232\213\230\222\216 \215\222 \204\226\211\207\216 \214\205\207\232\200 "},
     {STRING_FORMATDISK2,
     " %S \215\211\226\201\227 \232\213\230\222\216 \215\222 \204\226\211\207\216 \214\205\207\232\200 "},
     {STRING_KEEPFORMAT,
     " (\211\205\220\211\231 \200\214\214( \232\211\207\213\205\220 \215\211\226\201\227 \232\213\230\222\216 \232\230\200\231\204 "},
-    {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE_1,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTZEROED_2,
-    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTEXISTS_2,
-    // "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "\214\222 \204\231\203\207 \204\226\211\207\216 \204\230\226\211 \204\220\227\232\204\204 \232\211\220\213\232"},
+    {STRING_HDDISK1,
+    "%s."},
+    {STRING_HDDISK2,
+    "on %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO1,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDDINFO2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_UNPSPACE,
-    "    %sUnpartitioned space%s            %6lu %s"},
+    "Unpartitioned space"},
     {STRING_MAXSIZE,
     "\216\"\201 (\216\227\221. ul% \216\"\201)"},
     {STRING_EXTENDED_PARTITION,

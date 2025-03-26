@@ -120,96 +120,96 @@ public:
     void OnDestroy(HWND hwndDlg);
 
     // IPersistFile
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pclsid);
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(LPCOLESTR pszFileName, DWORD dwMode);
-    virtual HRESULT STDMETHODCALLTYPE Save(LPCOLESTR pszFileName, BOOL fRemember);
-    virtual HRESULT STDMETHODCALLTYPE SaveCompleted(LPCOLESTR pszFileName);
-    virtual HRESULT STDMETHODCALLTYPE GetCurFile(LPOLESTR *ppszFileName);
+    STDMETHOD(GetClassID)(CLSID *pclsid) override;
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(LPCOLESTR pszFileName, DWORD dwMode) override;
+    STDMETHOD(Save)(LPCOLESTR pszFileName, BOOL fRemember) override;
+    STDMETHOD(SaveCompleted)(LPCOLESTR pszFileName) override;
+    STDMETHOD(GetCurFile)(LPOLESTR *ppszFileName) override;
 
     // IPersistStream
-    // virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pclsid);
-    // virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *stm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *stm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    // STDMETHOD(GetClassID)(CLSID *pclsid) override;
+    // STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *stm) override;
+    STDMETHOD(Save)(IStream *stm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
     // IShellLinkA
-    virtual HRESULT STDMETHODCALLTYPE GetPath(LPSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAA *pfd, DWORD fFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetIDList(PIDLIST_ABSOLUTE *ppidl);
-    virtual HRESULT STDMETHODCALLTYPE SetIDList(PCIDLIST_ABSOLUTE pidl);
-    virtual HRESULT STDMETHODCALLTYPE GetDescription(LPSTR pszName, INT cchMaxName);
-    virtual HRESULT STDMETHODCALLTYPE SetDescription(LPCSTR pszName);
-    virtual HRESULT STDMETHODCALLTYPE GetWorkingDirectory(LPSTR pszDir, INT cchMaxPath);
-    virtual HRESULT STDMETHODCALLTYPE SetWorkingDirectory(LPCSTR pszDir);
-    virtual HRESULT STDMETHODCALLTYPE GetArguments(LPSTR pszArgs, INT cchMaxPath);
-    virtual HRESULT STDMETHODCALLTYPE SetArguments(LPCSTR pszArgs);
-    virtual HRESULT STDMETHODCALLTYPE GetHotkey(WORD *pwHotkey);
-    virtual HRESULT STDMETHODCALLTYPE SetHotkey(WORD wHotkey);
-    virtual HRESULT STDMETHODCALLTYPE GetShowCmd(INT *piShowCmd);
-    virtual HRESULT STDMETHODCALLTYPE SetShowCmd(INT iShowCmd);
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(LPSTR pszIconPath, INT cchIconPath, INT *piIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetIconLocation(LPCSTR pszIconPath, INT iIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetRelativePath(LPCSTR pszPathRel, DWORD dwReserved);
-    virtual HRESULT STDMETHODCALLTYPE Resolve(HWND hwnd, DWORD fFlags);
-    virtual HRESULT STDMETHODCALLTYPE SetPath(LPCSTR pszFile);
+    STDMETHOD(GetPath)(LPSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAA *pfd, DWORD fFlags) override;
+    STDMETHOD(GetIDList)(PIDLIST_ABSOLUTE *ppidl) override;
+    STDMETHOD(SetIDList)(PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHOD(GetDescription)(LPSTR pszName, INT cchMaxName) override;
+    STDMETHOD(SetDescription)(LPCSTR pszName) override;
+    STDMETHOD(GetWorkingDirectory)(LPSTR pszDir, INT cchMaxPath) override;
+    STDMETHOD(SetWorkingDirectory)(LPCSTR pszDir) override;
+    STDMETHOD(GetArguments)(LPSTR pszArgs, INT cchMaxPath) override;
+    STDMETHOD(SetArguments)(LPCSTR pszArgs) override;
+    STDMETHOD(GetHotkey)(WORD *pwHotkey) override;
+    STDMETHOD(SetHotkey)(WORD wHotkey) override;
+    STDMETHOD(GetShowCmd)(INT *piShowCmd) override;
+    STDMETHOD(SetShowCmd)(INT iShowCmd) override;
+    STDMETHOD(GetIconLocation)(LPSTR pszIconPath, INT cchIconPath, INT *piIcon) override;
+    STDMETHOD(SetIconLocation)(LPCSTR pszIconPath, INT iIcon) override;
+    STDMETHOD(SetRelativePath)(LPCSTR pszPathRel, DWORD dwReserved) override;
+    STDMETHOD(Resolve)(HWND hwnd, DWORD fFlags) override;
+    STDMETHOD(SetPath)(LPCSTR pszFile) override;
 
     // IShellLinkW
-    virtual HRESULT STDMETHODCALLTYPE GetPath(LPWSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAW *pfd, DWORD fFlags);
-    // virtual HRESULT STDMETHODCALLTYPE GetIDList(PIDLIST_ABSOLUTE *ppidl);
-    // virtual HRESULT STDMETHODCALLTYPE SetIDList(PCIDLIST_ABSOLUTE pidl);
-    virtual HRESULT STDMETHODCALLTYPE GetDescription(LPWSTR pszName, INT cchMaxName);
-    virtual HRESULT STDMETHODCALLTYPE SetDescription(LPCWSTR pszName);
-    virtual HRESULT STDMETHODCALLTYPE GetWorkingDirectory(LPWSTR pszDir, INT cchMaxPath);
-    virtual HRESULT STDMETHODCALLTYPE SetWorkingDirectory(LPCWSTR pszDir);
-    virtual HRESULT STDMETHODCALLTYPE GetArguments(LPWSTR pszArgs, INT cchMaxPath);
-    virtual HRESULT STDMETHODCALLTYPE SetArguments(LPCWSTR pszArgs);
-    // virtual HRESULT STDMETHODCALLTYPE GetHotkey(WORD *pwHotkey);
-    // virtual HRESULT STDMETHODCALLTYPE SetHotkey(WORD wHotkey);
-    // virtual HRESULT STDMETHODCALLTYPE GetShowCmd(INT *piShowCmd);
-    // virtual HRESULT STDMETHODCALLTYPE SetShowCmd(INT iShowCmd);
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(LPWSTR pszIconPath, INT cchIconPath, INT *piIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetIconLocation(LPCWSTR pszIconPath, INT iIcon);
-    virtual HRESULT STDMETHODCALLTYPE SetRelativePath(LPCWSTR pszPathRel, DWORD dwReserved);
-    // virtual HRESULT STDMETHODCALLTYPE Resolve(HWND hwnd, DWORD fFlags);
-    virtual HRESULT STDMETHODCALLTYPE SetPath(LPCWSTR pszFile);
+    STDMETHOD(GetPath)(LPWSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAW *pfd, DWORD fFlags) override;
+    // STDMETHOD(GetIDList)(PIDLIST_ABSOLUTE *ppidl) override;
+    // STDMETHOD(SetIDList)(PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHOD(GetDescription)(LPWSTR pszName, INT cchMaxName) override;
+    STDMETHOD(SetDescription)(LPCWSTR pszName) override;
+    STDMETHOD(GetWorkingDirectory)(LPWSTR pszDir, INT cchMaxPath) override;
+    STDMETHOD(SetWorkingDirectory)(LPCWSTR pszDir) override;
+    STDMETHOD(GetArguments)(LPWSTR pszArgs, INT cchMaxPath) override;
+    STDMETHOD(SetArguments)(LPCWSTR pszArgs) override;
+    // STDMETHOD(GetHotkey)(WORD *pwHotkey) override;
+    // STDMETHOD(SetHotkey)(WORD wHotkey) override;
+    // STDMETHOD(GetShowCmd)(INT *piShowCmd) override;
+    // STDMETHOD(SetShowCmd)(INT iShowCmd) override;
+    STDMETHOD(GetIconLocation)(LPWSTR pszIconPath, INT cchIconPath, INT *piIcon) override;
+    STDMETHOD(SetIconLocation)(LPCWSTR pszIconPath, INT iIcon) override;
+    STDMETHOD(SetRelativePath)(LPCWSTR pszPathRel, DWORD dwReserved) override;
+    // STDMETHOD(Resolve)(HWND hwnd, DWORD fFlags) override;
+    STDMETHOD(SetPath)(LPCWSTR pszFile) override;
 
     // IShellLinkDataList
-    virtual HRESULT STDMETHODCALLTYPE AddDataBlock(void *pDataBlock);
-    virtual HRESULT STDMETHODCALLTYPE CopyDataBlock(DWORD dwSig, void **ppDataBlock);
-    virtual HRESULT STDMETHODCALLTYPE RemoveDataBlock(DWORD dwSig);
-    virtual HRESULT STDMETHODCALLTYPE GetFlags(DWORD *pdwFlags);
-    virtual HRESULT STDMETHODCALLTYPE SetFlags(DWORD dwFlags);
+    STDMETHOD(AddDataBlock)(void *pDataBlock) override;
+    STDMETHOD(CopyDataBlock)(DWORD dwSig, void **ppDataBlock) override;
+    STDMETHOD(RemoveDataBlock)(DWORD dwSig) override;
+    STDMETHOD(GetFlags)(DWORD *pdwFlags) override;
+    STDMETHOD(SetFlags)(DWORD dwFlags) override;
 
     // IExtractIconA
-    virtual HRESULT STDMETHODCALLTYPE Extract(PCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, PSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+    STDMETHOD(Extract)(PCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) override;
+    STDMETHOD(GetIconLocation)(UINT uFlags, PSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags) override;
 
     // IExtractIconW
-    virtual HRESULT STDMETHODCALLTYPE Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+    STDMETHOD(Extract)(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) override;
+    STDMETHOD(GetIconLocation)(UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags) override;
 
     // IShellExtInit
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID) override;
 
     // IContextMenu
-    virtual HRESULT STDMETHODCALLTYPE QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT STDMETHODCALLTYPE InvokeCommand(LPCMINVOKECOMMANDINFO lpici);
-    virtual HRESULT STDMETHODCALLTYPE GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax);
+    STDMETHOD(QueryContextMenu)(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+    STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici) override;
+    STDMETHOD(GetCommandString)(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax) override;
 
     // IShellPropSheetExt
-    virtual HRESULT STDMETHODCALLTYPE AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-    virtual HRESULT STDMETHODCALLTYPE ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
+    STDMETHOD(AddPages)(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) override;
+    STDMETHOD(ReplacePage)(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam) override;
 
     // IObjectWithSite
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *punk);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID iid, void **ppvSite);
+    STDMETHOD(SetSite)(IUnknown *punk) override;
+    STDMETHOD(GetSite)(REFIID iid, void **ppvSite) override;
 
     // IDropTarget
-    virtual HRESULT STDMETHODCALLTYPE DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragLeave();
-    virtual HRESULT STDMETHODCALLTYPE Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHOD(DragEnter)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragOver)(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragLeave)() override;
+    STDMETHOD(Drop)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_SHELLLINK)
 DECLARE_NOT_AGGREGATABLE(CShellLink)

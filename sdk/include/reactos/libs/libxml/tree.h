@@ -177,11 +177,11 @@ typedef enum {
     XML_NAMESPACE_DECL=		18,
     XML_XINCLUDE_START=		19,
     XML_XINCLUDE_END=		20
-#ifdef LIBXML_DOCB_ENABLED
-   ,XML_DOCB_DOCUMENT_NODE=	21
-#endif
+    /* XML_DOCB_DOCUMENT_NODE=	21 */ /* removed */
 } xmlElementType;
 
+/* For backward compatibility */
+#define XML_DOCB_DOCUMENT_NODE 21
 
 /**
  * xmlNotation:
@@ -443,7 +443,7 @@ struct _xmlAttr {
     struct _xmlDoc  *doc;	/* the containing document */
     xmlNs           *ns;        /* pointer to the associated namespace */
     xmlAttributeType atype;     /* the attribute type if validating */
-    void            *psvi;	/* for type/PSVI informations */
+    void            *psvi;	/* for type/PSVI information */
 };
 
 /**
@@ -502,7 +502,7 @@ struct _xmlNode {
     xmlChar         *content;   /* the content */
     struct _xmlAttr *properties;/* properties list */
     xmlNs           *nsDef;     /* namespace definitions on this node */
-    void            *psvi;	/* for type/PSVI informations */
+    void            *psvi;	/* for type/PSVI information */
     unsigned short   line;	/* line number */
     unsigned short   extra;	/* extra data for XPath/XSLT */
 };
@@ -578,7 +578,7 @@ struct _xmlDoc {
     int             charset;    /* Internal flag for charset handling,
 				   actually an xmlCharEncoding */
     struct _xmlDict *dict;      /* dict used to allocate names or NULL */
-    void           *psvi;	/* for type/PSVI informations */
+    void           *psvi;	/* for type/PSVI information */
     int             parseFlags;	/* set of xmlParserOption used to parse the
 				   document */
     int             properties;	/* set of xmlDocProperties for this document
@@ -659,7 +659,7 @@ struct _xmlDOMWrapCtxt {
     defined(LIBXML_SCHEMAS_ENABLED) || defined(LIBXML_DEBUG_ENABLED) || \
     defined (LIBXML_HTML_ENABLED) || defined(LIBXML_SAX1_ENABLED) || \
     defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || \
-    defined(LIBXML_DOCB_ENABLED) || defined(LIBXML_LEGACY_ENABLED)
+    defined(LIBXML_LEGACY_ENABLED)
 XMLPUBFUN int XMLCALL
 		xmlValidateNCName	(const xmlChar *value,
 					 int space);
@@ -763,6 +763,7 @@ XMLPUBFUN xmlDtdPtr XMLCALL
 XMLPUBFUN void XMLCALL
 		xmlFreeDtd		(xmlDtdPtr cur);
 #ifdef LIBXML_LEGACY_ENABLED
+XML_DEPRECATED
 XMLPUBFUN xmlNsPtr XMLCALL
 		xmlNewGlobalNs		(xmlDocPtr doc,
 					 const xmlChar *href,

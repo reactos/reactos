@@ -2,7 +2,7 @@
  *                         Runtime Library Functions                          *
  ******************************************************************************/
 
-$if (_WDMDDK_)
+$if (_WDMDDK_ || _WINNT_)
 #define FAST_FAIL_LEGACY_GS_VIOLATION           0
 #define FAST_FAIL_VTGUARD_CHECK_FAILURE         1
 #define FAST_FAIL_STACK_COOKIE_CHECK_FAILURE    2
@@ -21,6 +21,9 @@ $if (_WDMDDK_)
 #define FAST_FAIL_INVALID_JUMP_BUFFER           18
 #define FAST_FAIL_MRDATA_MODIFIED               19
 #define FAST_FAIL_INVALID_FAST_FAIL_CODE        0xFFFFFFFF
+
+$endif(_WDMDDK_ || _WINNT_)
+$if (_WDMDDK_)
 
 DECLSPEC_NORETURN
 FORCEINLINE
@@ -673,6 +676,14 @@ RtlFindNextForwardRunClear(
   _In_ ULONG FromIndex,
   _Out_ PULONG StartingRunIndex);
 
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindNextForwardRunSet(
+  _In_ PRTL_BITMAP BitMapHeader,
+  _In_ ULONG FromIndex,
+  _Out_ PULONG StartingRunIndex);
+
 _Success_(return != -1)
 _Must_inspect_result_
 NTSYSAPI
@@ -821,7 +832,13 @@ RtlSetDaclSecurityDescriptor(
   _In_opt_ PACL Dacl,
   _In_opt_ BOOLEAN DaclDefaulted);
 
-#if defined(_AMD64_)
+//
+// These functions are really bad and shouldn't be used.
+// They have no type checking and can easily overwrite the target
+// variable or only set half of it.
+// Use Read/WriteUnalignedU16/U32/U64 from reactos/unaligned.h instead.
+//
+#if defined(_AMD64_) || defined(_M_AMD64) || defined(_X86) || defined(_M_IX86)
 
 /* VOID
  * RtlStoreUlong(
@@ -853,7 +870,7 @@ RtlSetDaclSecurityDescriptor(
  *    PUSHORT SourceAddress);
  */
 #define RtlRetrieveUshort(DestAddress,SrcAddress) \
-    *(USHORT UNALIGNED *)(DestAddress) = *(USHORT)(SrcAddress)
+    *(USHORT*)(DestAddress) = *(USHORT UNALIGNED *)(SrcAddress)
 
 /* VOID
  * RtlRetrieveUlong(
@@ -861,7 +878,7 @@ RtlSetDaclSecurityDescriptor(
  *    PULONG SourceAddress);
  */
 #define RtlRetrieveUlong(DestAddress,SrcAddress) \
-    *(ULONG UNALIGNED *)(DestAddress) = *(PULONG)(SrcAddress)
+    *(ULONG*)(DestAddress) = *(ULONG UNALIGNED *)(SrcAddress)
 
 #else
 
@@ -919,7 +936,7 @@ RtlSetDaclSecurityDescriptor(
         *((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
     }
 
-#endif /* defined(_AMD64_) */
+#endif /* defined(_AMD64_) || defined(_M_AMD64) || defined(_X86) || defined(_M_IX86) */
 
 #ifdef _WIN64
 /* VOID
@@ -932,8 +949,7 @@ RtlSetDaclSecurityDescriptor(
 #define RtlStoreUlongPtr(Address,Value) RtlStoreUlong(Address,Value)
 #endif /* _WIN64 */
 
-_Success_(return!=FALSE)
-_Must_inspect_result_
+_Success_(return != FALSE)
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -1716,7 +1732,6 @@ RtlSecondsSince1980ToTime(
   _Out_ PLARGE_INTEGER Time);
 
 _Success_(return != 0)
-_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI

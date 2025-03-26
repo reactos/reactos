@@ -5,7 +5,6 @@
  * COPYRIGHT:   Copyright 1998-2003 Brian Palmer <brianp@sginet.com>
  */
 
-#ifndef _M_ARM
 #include <freeldr.h>
 
 #define RGB_MAX                 64
@@ -18,17 +17,22 @@ PVOID VideoAllocateOffScreenBuffer(VOID)
 {
     ULONG BufferSize;
 
-    if (VideoOffScreenBuffer != NULL)
-    {
-        MmFreeMemory(VideoOffScreenBuffer);
-        VideoOffScreenBuffer = NULL;
-    }
+    VideoFreeOffScreenBuffer();
 
     BufferSize = MachVideoGetBufferSize();
 
     VideoOffScreenBuffer = MmAllocateMemoryWithType(BufferSize, LoaderFirmwareTemporary);
 
     return VideoOffScreenBuffer;
+}
+
+VOID VideoFreeOffScreenBuffer(VOID)
+{
+    if (!VideoOffScreenBuffer)
+        return;
+
+    MmFreeMemory(VideoOffScreenBuffer);
+    VideoOffScreenBuffer = NULL;
 }
 
 VOID VideoCopyOffScreenBufferToVRAM(VOID)
@@ -168,4 +172,3 @@ VOID VideoFadeOut(ULONG ColorCount)
     }
 }
 
-#endif

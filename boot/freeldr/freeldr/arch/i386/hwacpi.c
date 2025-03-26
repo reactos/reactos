@@ -25,6 +25,11 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 
 BOOLEAN AcpiPresent = FALSE;
 
+BOOLEAN IsAcpiPresent(VOID)
+{
+    return AcpiPresent;
+}
+
 static PRSDP_DESCRIPTOR
 FindAcpiBios(VOID)
 {
@@ -49,6 +54,20 @@ FindAcpiBios(VOID)
     return NULL;
 }
 
+PVOID
+FindAcpiTable(VOID)
+{
+    PRSDP_DESCRIPTOR Rsdp = FindAcpiBios();
+    if (!Rsdp)
+        return NULL;
+
+    PVOID OutputPointer = (Rsdp->revision > 1 && Rsdp->xsdt_physical_address) ?
+            (PVOID)((ULONG_PTR)Rsdp->xsdt_physical_address) : 
+            (PVOID)((ULONG_PTR)Rsdp->rsdt_physical_address);
+
+    TRACE("ACPI table at 0x%p\n", OutputPointer);
+    return OutputPointer;
+}
 
 VOID
 DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
@@ -75,14 +94,13 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         PartialResourceList =
             FrLdrHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize,
                            TAG_HW_RESOURCE_LIST);
-
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
             return;
         }
 
-        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
+        RtlZeroMemory(PartialResourceList, sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
         PartialResourceList->Version = 0;
         PartialResourceList->Revision = 0;
         PartialResourceList->Count = 1;
@@ -95,16 +113,11 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Fill the table */
         AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
 
-        if (Rsdp->revision > 0)
-        {
-            TRACE("ACPI >1.0, using XSDT address\n");
+        TRACE("ACPI %s1.0, using %cSDT address\n", Rsdp->revision > 1 ? ">" : "", Rsdp->revision > 1 ? 'X' : 'R');
+        if (Rsdp->revision > 1 && Rsdp->xsdt_physical_address)
             AcpiBiosData->RSDTAddress.QuadPart = Rsdp->xsdt_physical_address;
-        }
         else
-        {
-            TRACE("ACPI 1.0, using RSDT address\n");
             AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
-        }
 
         AcpiBiosData->Count = PcBiosMapCount;
         memcpy(AcpiBiosData->MemoryMap, PcBiosMemoryMap,
@@ -117,8 +130,8 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         FldrCreateComponentKey(SystemKey,
                                AdapterClass,
                                MultiFunctionAdapter,
-                               0x0,
-                               0x0,
+                               0,
+                               0,
                                0xFFFFFFFF,
                                "ACPI BIOS",
                                PartialResourceList,

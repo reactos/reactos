@@ -6,7 +6,9 @@ add_definitions(
     -D__WINESRC__
     -D__ROS_LONG64__
     -D_WINE
-    -D_CRYPT32_)
+    -D_CRYPT32_
+    -Dstrncasecmp=_strnicmp
+)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB)
@@ -47,8 +49,9 @@ add_library(crypt32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
 
 if(MSVC)
-    # error C4312: 'type cast': conversion from 'unsigned int' to 'void *' of greater size
-    remove_target_compile_option(crypt32 "/we4312")
+    # Disable warning C4090: 'function': different 'const' qualifiers
+    # Disable warning C4312: 'type cast': conversion from 'unsigned int' to 'void *' of greater size
+    target_compile_options(crypt32 PRIVATE /wd4090 /wd4312)
 endif()
 
 set_module_type(crypt32 win32dll)

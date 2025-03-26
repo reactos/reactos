@@ -92,7 +92,7 @@ KsRegisterWorker(
     PKSIWORKER KsWorker;
 
 
-    if (WorkQueueType != CriticalWorkQueue && 
+    if (WorkQueueType != CriticalWorkQueue &&
         WorkQueueType != DelayedWorkQueue &&
         WorkQueueType != HyperCriticalWorkQueue)
     {
@@ -278,6 +278,6 @@ KsQueueWorkItem(
     }
     /* release lock */
     KeReleaseSpinLock(&KsWorker->Lock, OldIrql);
-    
+
     return STATUS_SUCCESS;
 }

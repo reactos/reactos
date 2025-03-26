@@ -30,7 +30,7 @@ IopCleanupAfterException(IN PFILE_OBJECT FileObject,
                          IN PKEVENT LocalEvent OPTIONAL)
 {
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p \n", Irp, FileObject);
+    IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p\n", Irp, FileObject);
 
     if (Irp)
     {
@@ -76,7 +76,7 @@ IopFinalizeAsynchronousIo(IN NTSTATUS SynchStatus,
 {
     NTSTATUS FinalStatus = SynchStatus;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. Status: %lx \n", Irp, SynchStatus);
+    IOTRACE(IO_API_DEBUG, "IRP: %p. Status: %lx\n", Irp, SynchStatus);
 
     /* Make sure the IRP was completed, but returned pending */
     if (FinalStatus == STATUS_PENDING)
@@ -129,7 +129,7 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
     PVOID NormalContext = NULL;
     KIRQL OldIrql;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p \n",
+    IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p\n",
             Irp, DeviceObject, FileObject);
 
     /* Queue the IRP */
@@ -148,6 +148,8 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
         if (Status != STATUS_PENDING)
         {
             /* Complete it ourselves */
+            NormalRoutine = NULL;
+            NormalContext = NULL;
             ASSERT(!Irp->PendingReturned);
             KeRaiseIrql(APC_LEVEL, &OldIrql);
             IopCompleteRequest(&Irp->Tail.Apc,
@@ -220,7 +222,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
 
     PAGED_CODE();
 
-    IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
+    IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx\n",
             DeviceHandle, IoControlCode, IsDevIoCtl);
 
     /* Get the access type */
@@ -285,7 +287,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                        &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Can't use an I/O completion port and an APC in the same time */
+    /* Can't use an I/O completion port and an APC at the same time */
     if ((FileObject->CompletionContext) && (UserApcRoutine))
     {
         /* Fail */
@@ -293,7 +295,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Check if we from user mode */
+    /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
         /* Get the access mask */
@@ -527,7 +529,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                     Irp->AssociatedIrp.SystemBuffer =
                         ExAllocatePoolWithQuotaTag(PoolType,
                                                    BufferLength,
-                                                   TAG_SYS_BUF);
+                                                   TAG_IOBUF);
 
                     /* Check if we got a buffer */
                     if (InputBuffer)
@@ -574,7 +576,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                     Irp->AssociatedIrp.SystemBuffer =
                         ExAllocatePoolWithQuotaTag(PoolType,
                                                    InputBufferLength,
-                                                   TAG_SYS_BUF);
+                                                   TAG_IOBUF);
 
                     /* Copy into the System Buffer */
                     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
@@ -662,7 +664,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
+    IOTRACE(IO_API_DEBUG, "Handle: %p. CTL: %lx. Type: %lx\n",
             FileObject, InformationClass, File);
 
     /* Reference the object */
@@ -1150,7 +1152,7 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p\n",
             FileObject, Mdl, Offset);
 
     /* Is the write originating from Cc? */
@@ -1205,7 +1207,7 @@ IoPageRead(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p\n",
             FileObject, Mdl, Offset);
 
     /* Get the Device Object */
@@ -1322,7 +1324,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Class: %lx. Length: %lx \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Class: %lx. Length: %lx\n",
             FileObject, FileInformationClass, Length);
 
     /* Reference the object */
@@ -1673,6 +1675,14 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Can't use an I/O completion port and an APC at the same time */
+    if ((FileObject->CompletionContext) && (ApcRoutine))
+    {
+        /* Fail */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check if we have an event handle */
     if (EventHandle)
     {
@@ -1791,6 +1801,14 @@ NtLockFile(IN HANDLE FileHandle,
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Can't use an I/O completion port and an APC at the same time */
+        if ((FileObject->CompletionContext) && (ApcRoutine))
+        {
+            /* Fail */
+            ObDereferenceObject(FileObject);
+            return STATUS_INVALID_PARAMETER;
+        }
+
         /* Must have either FILE_READ_DATA or FILE_WRITE_DATA access */
         if (!(HandleInformation.GrantedAccess &
             (FILE_WRITE_DATA | FILE_READ_DATA)))
@@ -2029,7 +2047,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                 AuxBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                                   CapturedFileName.Length +
                                                   sizeof(UNICODE_STRING),
-                                                  TAG_SYSB);
+                                                  TAG_IOBUF);
                 RtlCopyMemory((PVOID)((ULONG_PTR)AuxBuffer +
                                       sizeof(UNICODE_STRING)),
                               CapturedFileName.Buffer,
@@ -2046,7 +2064,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free buffer and return the exception code */
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -2082,7 +2100,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
         return Status;
     }
 
@@ -2090,7 +2108,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->CompletionContext != NULL && ApcRoutine != NULL)
     {
         ObDereferenceObject(FileObject);
-        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -2107,7 +2125,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
             ObDereferenceObject(FileObject);
             return Status;
         }
@@ -2125,7 +2143,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         {
             if (Event) ObDereferenceObject(Event);
             ObDereferenceObject(FileObject);
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
             return Status;
         }
 
@@ -2158,19 +2176,23 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     /* Check if this is buffered I/O */
     if (DeviceObject->Flags & DO_BUFFERED_IO)
     {
-        /* Allocate a buffer */
-        Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                                Length,
-                                                                TAG_SYSB);
-        if (!Irp->AssociatedIrp.SystemBuffer)
+        /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
+        _SEH2_TRY
+        {
+            /* Allocate a buffer */
+            Irp->AssociatedIrp.SystemBuffer =
+                ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Allocating failed, clean up and return the exception code */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
 
             /* Return the exception code */
-            return STATUS_INSUFFICIENT_RESOURCES;
+            return _SEH2_GetExceptionCode();
         }
+        _SEH2_END;
 
         /* Set the buffer and flags */
         Irp->UserBuffer = FileInformation;
@@ -2490,14 +2512,12 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2640,6 +2660,8 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
@@ -2737,6 +2759,14 @@ NtReadFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
             }
 
             /* Perform additional checks for non-cached file access */
@@ -2950,14 +2980,12 @@ NtReadFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Enter SEH */
+            /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
             _SEH2_TRY
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
-                    ExAllocatePoolWithTag(NonPagedPool,
-                                          Length,
-                                          TAG_SYSB);
+                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -3014,10 +3042,8 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_READ_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
@@ -3255,14 +3281,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
 
         /* Copy the data into it */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
@@ -3482,6 +3506,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
@@ -3676,13 +3702,13 @@ NtUnlockFile(IN HANDLE FileHandle,
     StackPtr->MinorFunction = IRP_MN_UNLOCK_SINGLE;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
-        LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(LARGE_INTEGER),
-                                            TAG_LOCK);
+        LocalLength = ExAllocatePoolWithQuotaTag(NonPagedPool,
+                                                 sizeof(LARGE_INTEGER),
+                                                 TAG_LOCK);
 
         /* Set the length */
         *LocalLength = CapturedLength;
@@ -3790,6 +3816,14 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
             }
 
             /* Perform additional checks for non-cached file access */
@@ -4019,14 +4053,12 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Enter SEH */
+            /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
             _SEH2_TRY
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
-                    ExAllocatePoolWithTag(NonPagedPool,
-                                          Length,
-                                          TAG_SYSB);
+                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
 
                 /* Copy the data into it */
                 RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
@@ -4082,10 +4114,8 @@ NtWriteFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_WRITE_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
@@ -4257,8 +4287,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     /* This is to be handled by the kernel, not by FSD */
     else if (FsInformationClass == FileFsDriverPathInformation)
     {
-        PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo;
+        _SEH2_VOLATILE PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo = NULL;
 
+        /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
         _SEH2_TRY
         {
             /* Allocate our local structure */
@@ -4268,7 +4299,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             RtlCopyMemory(DriverPathInfo, FsInformation, Length);
 
             /* Is the driver in the IO path? */
-            Status = IopGetDriverPathInformation(FileObject, DriverPathInfo, Length);
+            Status = IopGetDriverPathInformation(FileObject,
+                                                 (PFILE_FS_DRIVER_PATH_INFORMATION)DriverPathInfo,
+                                                 Length);
             /* We failed, don't continue execution */
             if (!NT_SUCCESS(Status))
             {
@@ -4347,14 +4380,12 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -4530,14 +4561,12 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
 
         /* Copy the data into it */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FsInformation, Length);

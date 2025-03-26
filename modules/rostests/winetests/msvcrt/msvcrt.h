@@ -64,9 +64,9 @@ typedef unsigned __int64 MSVCRT_size_t;
 typedef __int64 MSVCRT_intptr_t;
 typedef unsigned __int64 MSVCRT_uintptr_t;
 #else
-typedef unsigned long MSVCRT_size_t;
-typedef long MSVCRT_intptr_t;
-typedef unsigned long MSVCRT_uintptr_t;
+typedef unsigned int MSVCRT_size_t;
+typedef int MSVCRT_intptr_t;
+typedef unsigned int MSVCRT_uintptr_t;
 #endif
 typedef unsigned int   MSVCRT__dev_t;
 typedef int MSVCRT__off_t;

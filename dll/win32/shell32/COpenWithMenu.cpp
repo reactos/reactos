@@ -31,6 +31,56 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
+static SIZE_T PathGetAppFromCommandLine(LPCWSTR pszIn, LPWSTR pszOut, SIZE_T cchMax)
+{
+    SIZE_T count = 0;
+    WCHAR stop = ' ';
+    if (pszIn[0] == '"')
+        stop = *(pszIn++);
+
+    for (LPCWSTR pwszSrc = pszIn; *pwszSrc && *pwszSrc != stop; ++pwszSrc)
+    {
+        if (++count >= cchMax)
+            return 0;
+        *(pszOut++) = *pwszSrc;
+    }
+    *pszOut = UNICODE_NULL;
+    return count;
+}
+
+HRESULT SHELL32_GetDllFromRundll32CommandLine(LPCWSTR pszCmd, LPWSTR pszOut, SIZE_T cchMax)
+{
+    WCHAR szDll[MAX_PATH + 100];
+    if (!PathGetAppFromCommandLine(pszCmd, szDll, _countof(szDll)))
+        return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+
+    PWSTR pszName = PathFindFileNameW(szDll);
+    if (_wcsicmp(pszName, L"rundll32") && _wcsicmp(pszName, L"rundll32.exe"))
+        return E_UNEXPECTED;
+
+    PCWSTR pszDllStart = pszCmd + (pszName - szDll) + lstrlenW(pszName);
+
+    if (*pszDllStart == '\"')
+        ++pszDllStart; // Skip possible end quote of ..\rundll32.exe" foo.dll,func
+    while (*pszDllStart <= ' ' && *pszDllStart)
+        ++pszDllStart;
+    if (PathGetAppFromCommandLine(pszDllStart, szDll, _countof(szDll)))
+    {
+        BOOL quoted = *pszDllStart == '\"';
+        PWSTR pszComma = szDll + lstrlenW(szDll);
+        while (!quoted && pszComma > szDll && *pszComma != ',' && *pszComma != '\\' && *pszComma != '/')
+            --pszComma;
+        SIZE_T cch = pszComma - szDll;
+        if (cch <= cchMax && (quoted || *pszComma == ','))
+        {
+            *pszComma = UNICODE_NULL;
+            lstrcpynW(pszOut, szDll, cchMax);
+            return S_OK;
+        }
+    }
+    return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+}
+
 class COpenWithList
 {
     public:
@@ -78,7 +128,7 @@ class COpenWithList
 
         SApp *AddInternal(LPCWSTR pwszFilename);
         static BOOL LoadInfo(SApp *pApp);
-        static VOID GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd);
+        static BOOL GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd);
         BOOL LoadProgIdList(HKEY hKey, LPCWSTR pwszExt);
         static HANDLE OpenMRUList(HKEY hKey);
         BOOL LoadMRUList(HKEY hKey);
@@ -110,7 +160,7 @@ COpenWithList::~COpenWithList()
 
 BOOL COpenWithList::Load()
 {
-    HKEY hKey;
+    HKEY hKey, hKeyApp;
     WCHAR wszName[256], wszBuf[100];
     DWORD i = 0, cchName, dwSize;
     SApp *pApp;
@@ -131,18 +181,38 @@ BOOL COpenWithList::Load()
 
         if (pApp)
         {
-            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\shell\\open\\command", wszName);
-            dwSize = sizeof(pApp->wszCmd);
-            if (RegGetValueW(hKey, wszBuf, L"", RRF_RT_REG_SZ, NULL, pApp->wszCmd, &dwSize) != ERROR_SUCCESS)
+            if (RegOpenKeyW(hKey, wszName, &hKeyApp) == ERROR_SUCCESS)
             {
-                ERR("Failed to add app %ls\n", wszName);
-                pApp->bHidden = TRUE;
+                if ((RegQueryValueExW(hKeyApp, L"NoOpenWith", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS) &&
+                    (RegQueryValueExW(hKeyApp, L"NoStartPage", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS))
+                {
+                    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\shell\\open\\command", wszName);
+                    dwSize = sizeof(pApp->wszCmd);
+                    if (RegGetValueW(hKey, wszBuf, L"", RRF_RT_REG_SZ, NULL, pApp->wszCmd, &dwSize) != ERROR_SUCCESS)
+                    {
+                        ERR("Failed to add app %ls\n", wszName);
+                        pApp->bHidden = TRUE;
+                    }
+                    else
+                    {
+                        TRACE("App added %ls\n", pApp->wszCmd);
+                    }
+                }
+                else
+                {
+                    pApp->bHidden = TRUE;
+                }
+                RegCloseKey(hKeyApp);
             }
             else
-                TRACE("App added %ls\n", pApp->wszCmd);
+            {
+                pApp->bHidden = TRUE;
+            }
         }
         else
+        {
             ERR("AddInternal failed\n");
+        }
     }
 
     RegCloseKey(hKey);
@@ -155,7 +225,7 @@ COpenWithList::SApp *COpenWithList::Add(LPCWSTR pwszPath)
 
     if (pApp)
     {
-        StringCbPrintfW(pApp->wszCmd, sizeof(pApp->wszCmd), L"\"%s\" %%1", pwszPath);
+        StringCbPrintfW(pApp->wszCmd, sizeof(pApp->wszCmd), L"\"%s\" \"%%1\"", pwszPath);
         SaveApp(pApp);
     }
 
@@ -184,7 +254,7 @@ BOOL COpenWithList::SaveApp(SApp *pApp)
 COpenWithList::SApp *COpenWithList::Find(LPCWSTR pwszFilename)
 {
     for (UINT i = 0; i < m_cApp; ++i)
-        if (wcsicmp(m_pApp[i].wszFilename, pwszFilename) == 0)
+        if (_wcsicmp(m_pApp[i].wszFilename, pwszFilename) == 0)
             return &m_pApp[i];
     return NULL;
 }
@@ -197,6 +267,12 @@ LPCWSTR COpenWithList::GetName(SApp *pApp)
         {
             WARN("Failed to load %ls info\n", pApp->wszFilename);
             StringCbCopyW(pApp->wszName, sizeof(pApp->wszName), pApp->wszFilename);
+
+            WCHAR wszPath[MAX_PATH];
+            if (!GetPathFromCmd(wszPath, pApp->wszCmd))
+            {
+                return NULL;
+            }
         }
     }
 
@@ -211,7 +287,17 @@ HICON COpenWithList::GetIcon(SApp *pApp)
         WCHAR wszPath[MAX_PATH];
 
         GetPathFromCmd(wszPath, pApp->wszCmd);
-        ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1);
+        if (!ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1))
+        {
+            SHFILEINFO fi;
+            /* FIXME: Ideally we should include SHGFI_USEFILEATTRIBUTES because we already
+            ** know the file has no icons but SHGetFileInfo is broken in that case (CORE-19122).
+            ** Without SHGFI_USEFILEATTRIBUTES we needlessly hit the disk again but it will
+            ** return the correct default .exe icon.
+            */
+            SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICON|SHGFI_SMALLICON|SHGFI_SHELLICONSIZE);
+            pApp->hIcon = fi.hIcon;
+        }
     }
 
     TRACE("%ls icon: %p\n", pApp->wszFilename, pApp->hIcon);
@@ -301,6 +387,7 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     WCHAR wszBuf[100];
     WCHAR *pResult;
     WCHAR wszPath[MAX_PATH];
+    BOOL success = FALSE;
 
     GetPathFromCmd(wszPath, pApp->wszCmd);
     TRACE("LoadInfo %ls\n", wszPath);
@@ -342,7 +429,8 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
 
     /* Query name */
     swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
-    if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen))
+    success = VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen) && (cchLen > 1);
+    if (success)
         StringCchCopyNW(pApp->wszName, _countof(pApp->wszName), pResult, cchLen);
     else
         ERR("Cannot get app name\n");
@@ -353,31 +441,29 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen))
         StringCchCopyNW(pApp->wszManufacturer, _countof(pApp->wszManufacturer), pResult, cchLen);*/
     HeapFree(GetProcessHeap(), 0, pBuf);
-    return TRUE;
+    return success;
 }
 
-VOID COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
+BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 {
-    WCHAR wszBuf[MAX_PATH], *pwszDest = wszBuf;
+    WCHAR wszBuf[MAX_PATH];
 
     /* Remove arguments */
-    if (pwszCmd[0] == '"')
-    {
-        for(LPCWSTR pwszSrc = pwszCmd + 1; *pwszSrc && *pwszSrc != '"'; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
-    else
-    {
-        for(LPCWSTR pwszSrc = pwszCmd; *pwszSrc && *pwszSrc != ' '; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
+    if (!PathGetAppFromCommandLine(pwszCmd, wszBuf, _countof(wszBuf)))
+        return FALSE;
 
-    *pwszDest = 0;
+    /* Replace rundll32.exe with the dll path */
+    SHELL32_GetDllFromRundll32CommandLine(pwszCmd, wszBuf, _countof(wszBuf));
 
-    /* Expand evn vers and optionally search for path */
+    /* Expand env. vars and optionally search for path */
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
     if (!PathFileExists(pwszAppPath))
-        SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+    {
+        UINT cch = SearchPathW(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+        if (!cch || cch >= MAX_PATH)
+            return FALSE;
+    }
+    return TRUE;
 }
 
 BOOL COpenWithList::LoadRecommended(LPCWSTR pwszFilePath)
@@ -605,7 +691,7 @@ VOID COpenWithList::LoadRecommendedFromHKCU(LPCWSTR pwszExt)
         LoadMRUList(hKey);
         LoadProgIdList(hKey, pwszExt);
 
-        /* Handle "Aplication" value */
+        /* Handle "Application" value */
         DWORD cbBuf = sizeof(wszBuf);
         if (RegGetValueW(hKey, NULL, L"Application", RRF_RT_REG_SZ, NULL, wszBuf, &cbBuf) == ERROR_SUCCESS)
         {
@@ -677,7 +763,7 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
     /* Create file extension key */
     if (RegCreateKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, NULL, 0, KEY_READ|KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
     {
-        ERR("Cannot open ext key");
+        ERR("Can't open ext key\n");
         return FALSE;
     }
 
@@ -732,7 +818,22 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
 
     /* Copy static verbs from Classes\Applications key */
     /* FIXME: SHCopyKey does not copy the security attributes of the keys */
+    /* FIXME: Windows does not actually copy the verb keys */
+    /* FIXME: Should probably delete any existing DelegateExecute/DropTarget/DDE verb information first */
     LSTATUS Result = SHCopyKeyW(hSrcKey, NULL, hDestKey, 0);
+#ifdef __REACTOS__
+    // FIXME: When OpenWith is used to set a new default on Windows, the FileExts key
+    // is changed to force this association. ROS does not support this. The best
+    // we can do is to try to set the verb we (incorrectly) copied as the new default.
+    HKEY hAppKey;
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Applications\\%s", pApp->wszFilename);
+    if (Result == ERROR_SUCCESS && !RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hAppKey))
+    {
+        if (HCR_GetDefaultVerbW(hAppKey, NULL, wszBuf, _countof(wszBuf)) && *wszBuf)
+            RegSetString(hDestKey, NULL, wszBuf, REG_SZ);
+        RegCloseKey(hAppKey);
+    }
+#endif // __REACTOS__
     RegCloseKey(hDestKey);
     RegCloseKey(hSrcKey);
     RegCloseKey(hKey);
@@ -831,7 +932,7 @@ BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
             return TRUE;
         else if (dReturnValue == -1)
         {
-            ERR("IsNoOpen failed to load the dialog box.");
+            ERR("IsNoOpen failed to load dialog box\n");
             return TRUE;
         }
     }
@@ -842,6 +943,7 @@ BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
 VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
 {
     LPCWSTR pwszName = m_pAppList->GetName(pApp);
+    if (!pwszName) return;
     HICON hIcon = m_pAppList->GetIcon(pApp);
 
     TRACE("AddApp Cmd %ls Name %ls\n", pApp->wszCmd, pwszName);
@@ -855,7 +957,7 @@ VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
         tvins.hParent = tvins.hInsertAfter = m_hOther;
 
     tvins.item.mask = TVIF_TEXT|TVIF_PARAM;
-    tvins.item.pszText = (LPWSTR)pwszName;
+    tvins.item.pszText = const_cast<LPWSTR>(pwszName);
     tvins.item.lParam = (LPARAM)pApp;
 
     if (hIcon)
@@ -882,7 +984,7 @@ VOID COpenWithDialog::Browse()
     ofn.lStructSize  = sizeof(OPENFILENAMEW);
     ofn.hInstance = shell32_hInstance;
     ofn.hwndOwner = m_hDialog;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     ofn.nMaxFile = (sizeof(wszPath) / sizeof(WCHAR));
     ofn.lpstrFile = wszPath;
     ofn.lpstrInitialDir = L"%programfiles%";
@@ -1009,8 +1111,12 @@ VOID COpenWithDialog::Accept()
     if (pApp)
     {
         /* Set programm as default handler */
-        if (SendDlgItemMessage(m_hDialog, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+        if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED)
+        {
             m_pAppList->SetDefaultHandler(pApp, m_pInfo->pcszFile);
+            // FIXME: Update DefaultIcon registry
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
+        }
 
         /* Execute program */
         if (m_pInfo->oaifInFlags & OAIF_EXEC)
@@ -1169,6 +1275,7 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
 {
     MENUITEMINFOW mii;
     LPCWSTR pwszName = m_pAppList->GetName((COpenWithList::SApp*)pApp);
+    if (!pwszName) return;
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
@@ -1176,8 +1283,7 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
     mii.wID = m_idCmdLast;
-    mii.dwTypeData = (LPWSTR)pwszName;
-    mii.cch = wcslen(mii.dwTypeData);
+    mii.dwTypeData = const_cast<LPWSTR>(pwszName);
     mii.dwItemData = (ULONG_PTR)pApp;
 
     HICON hIcon = m_pAppList->GetIcon((COpenWithList::SApp*)pApp);
@@ -1190,6 +1296,12 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
     if (InsertMenuItemW(m_hSubMenu, -1, TRUE, &mii))
         m_idCmdLast++;
 }
+
+static const CMVERBMAP g_VerbMap[] =
+{
+    { "openas", 0 },
+    { NULL }
+};
 
 HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     HMENU hMenu,
@@ -1214,7 +1326,7 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
     m_hSubMenu = NULL;
 
-    /* If we are going to be default item, we shouldn't be submenu */
+    /* We can only be a submenu if we are not the default */
     if (DefaultPos != -1)
     {
         /* Load applications list */
@@ -1253,13 +1365,14 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
 
     mii.fType = MFT_STRING;
     mii.dwTypeData = (LPWSTR)wszName;
-    mii.cch = wcslen(wszName);
-
     mii.fState = MFS_ENABLED;
     if (DefaultPos == -1)
+    {
         mii.fState |= MFS_DEFAULT;
+        indexMenu = 0;
+    }
 
-    if (!InsertMenuItemW(hMenu, DefaultPos + 1, TRUE, &mii))
+    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
         return E_FAIL;
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - m_idCmdFirst + 1);
@@ -1268,14 +1381,19 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
 HRESULT WINAPI
 COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
+    const SIZE_T idChooseApp = m_idCmdLast;
     HRESULT hr = E_FAIL;
 
     TRACE("This %p idFirst %u idLast %u idCmd %u\n", this, m_idCmdFirst, m_idCmdLast, m_idCmdFirst + LOWORD(lpici->lpVerb));
 
-    if (HIWORD(lpici->lpVerb) == 0 && m_idCmdFirst + LOWORD(lpici->lpVerb) <= m_idCmdLast)
+    if (!IS_INTRESOURCE(lpici->lpVerb) && SHELL_MapContextMenuVerbToCmdId(lpici, g_VerbMap) == 0)
+        goto DoChooseApp;
+
+    if (IS_INTRESOURCE(lpici->lpVerb) && m_idCmdFirst + LOWORD(lpici->lpVerb) <= m_idCmdLast)
     {
-        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdLast)
+        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == idChooseApp)
         {
+DoChooseApp:
             OPENASINFO info;
             LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
 
@@ -1311,8 +1429,12 @@ HRESULT WINAPI
 COpenWithMenu::GetCommandString(UINT_PTR idCmd, UINT uType,
                                 UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
-    FIXME("%p %lu %u %p %p %u\n", this,
+    TRACE("%p %lu %u %p %p %u\n", this,
           idCmd, uType, pwReserved, pszName, cchMax );
+
+    const SIZE_T idChooseApp = m_idCmdLast;
+    if (m_idCmdFirst + idCmd == idChooseApp)
+        return SHELL_GetCommandStringImpl(0, uType, pszName, cchMax, g_VerbMap);
 
     return E_NOTIMPL;
 }
@@ -1332,53 +1454,33 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                           IDataObject *pdtobj,
                           HKEY hkeyProgID)
 {
-    STGMEDIUM medium;
-    FORMATETC fmt;
-    HRESULT hr;
-    LPIDA pida;
     LPCITEMIDLIST pidlFolder2;
     LPCITEMIDLIST pidlChild;
-    LPCITEMIDLIST pidl;
-    LPCWSTR pwszExt;
 
     TRACE("This %p\n", this);
 
     if (pdtobj == NULL)
         return E_INVALIDARG;
 
-    fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
-
-    hr = pdtobj->GetData(&fmt, &medium);
-
-    if (FAILED(hr))
+    CDataObjectHIDA pida(pdtobj);
+    if (FAILED(pida.hr()))
     {
-        ERR("pdtobj->GetData failed with 0x%x\n", hr);
-        return hr;
+        ERR("pdtobj->GetData failed with 0x%x\n", pida.hr());
+        return pida.hr();
     }
 
-    pida = (LPIDA)GlobalLock(medium.hGlobal);
     ASSERT(pida->cidl >= 1);
 
-    pidlFolder2 = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
-    pidlChild = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
+    pidlFolder2 = HIDA_GetPIDLFolder(pida);
+    pidlChild = HIDA_GetPIDLItem(pida, 0);
 
     if (!_ILIsValue(pidlChild))
     {
         TRACE("pidl is not a file\n");
-        GlobalUnlock(medium.hGlobal);
-        ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
-    pidl = ILCombine(pidlFolder2, pidlChild);
-
-    GlobalUnlock(medium.hGlobal);
-    ReleaseStgMedium(&medium);
-
+    CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlFolder2, pidlChild));
     if (!pidl)
     {
         ERR("no mem\n");
@@ -1387,15 +1489,13 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
 
     if (!SHGetPathFromIDListW(pidl, m_wszPath))
     {
-        SHFree((void*)pidl);
         ERR("SHGetPathFromIDListW failed\n");
         return E_FAIL;
     }
 
-    SHFree((void*)pidl);
     TRACE("szPath %s\n", debugstr_w(m_wszPath));
 
-    pwszExt = PathFindExtensionW(m_wszPath);
+    LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
     if (PathIsExeW(pwszExt) || !_wcsicmp(pwszExt, L".lnk"))
     {
         TRACE("file is a executable or shortcut\n");

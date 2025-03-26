@@ -11,13 +11,15 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(GdiClipRgn);
+
 VOID
 FASTCALL
 IntGdiReleaseRaoRgn(PDC pDC)
 {
     INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-    pDC->fs |= DC_FLAG_DIRTY_RAO;
+    pDC->fs |= DC_DIRTY_RAO;
     Entry->Flags |= GDI_ENTRY_VALIDATE_VIS; // Need to validate Vis.
 }
 
@@ -75,7 +77,7 @@ GdiSelectVisRgn(
        return;
     }
 
-    dc->fs |= DC_FLAG_DIRTY_RAO;
+    dc->fs |= DC_DIRTY_RAO;
 
     ASSERT(dc->prgnVis != NULL);
     ASSERT(prgn != NULL);
@@ -234,7 +236,7 @@ IntGdiExtSelectClipRect(
         {
            Ret = IntSelectClipRgn( dc, NULL, RGN_COPY);
 
-           if (dc->fs & DC_FLAG_DIRTY_RAO)
+           if (dc->fs & DC_DIRTY_RAO)
                CLIPPING_UpdateGCRegion(dc);
 
            if (Ret) // Copy? Return Vis complexity.
@@ -260,7 +262,7 @@ IntGdiExtSelectClipRect(
 
         Ret = IntSelectClipRgn( dc, prgn, fnMode);
 
-        if (dc->fs & DC_FLAG_DIRTY_RAO)
+        if (dc->fs & DC_DIRTY_RAO)
             CLIPPING_UpdateGCRegion(dc);
 
         if (Ret) // In this case NtGdiExtSelectClipRgn tests pass.
@@ -295,7 +297,7 @@ IntGdiExtSelectClipRgn(
         {
             DPRINT("IntGdiExtSelectClipRgn A %d\n",Ret);
             // Update the Rao, it must be this way for now.
-            if (dc->fs & DC_FLAG_DIRTY_RAO)
+            if (dc->fs & DC_DIRTY_RAO)
                 CLIPPING_UpdateGCRegion(dc);
 
             Ret = REGION_Complexity( dc->prgnRao ? dc->prgnRao : dc->prgnVis );
@@ -376,7 +378,7 @@ GdiGetClipBox(
     }
 
     /* Update RAO region if necessary */
-    if (pdc->fs & DC_FLAG_DIRTY_RAO)
+    if (pdc->fs & DC_DIRTY_RAO)
         CLIPPING_UpdateGCRegion(pdc);
 
     /* Check if we have a RAO region (intersection of API and VIS region) */
@@ -560,7 +562,7 @@ NtGdiOffsetClipRgn(
         apt[0].y = 0;
         apt[1].x = xOffset;
         apt[1].y = yOffset;
-        IntLPtoDP(pdc, &apt, 2);
+        IntLPtoDP(pdc, apt, 2);
 
         /* Offset the clip region */
         if (!REGION_bOffsetRgn(pdc->dclevel.prgnClip,
@@ -577,7 +579,7 @@ NtGdiOffsetClipRgn(
         }
 
         /* Mark the RAO region as dirty */
-        pdc->fs |= DC_FLAG_DIRTY_RAO;
+        pdc->fs |= DC_DIRTY_RAO;
     }
     else
     {
@@ -656,7 +658,7 @@ NtGdiRectVisible(
         return FALSE;
     }
 
-    if (dc->fs & DC_FLAG_DIRTY_RAO)
+    if (dc->fs & DC_DIRTY_RAO)
         CLIPPING_UpdateGCRegion(dc);
 
     prgn = dc->prgnRao ? dc->prgnRao : dc->prgnVis;
@@ -765,7 +767,7 @@ CLIPPING_UpdateGCRegion(PDC pDC)
 
         REGION_bOffsetRgn(pDC->prgnVis, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
 
-        pDC->fs &= ~DC_FLAG_DIRTY_RAO;
+        pDC->fs &= ~DC_DIRTY_RAO;
         UpdateVisRgn(pDC);
         return;
     }
@@ -776,16 +778,16 @@ CLIPPING_UpdateGCRegion(PDC pDC)
         pDC->prgnAPI = NULL;
     }
 
-    if (pDC->prgnRao)
-        REGION_Delete(pDC->prgnRao);
-
-    pDC->prgnRao = IntSysCreateRectpRgn(0,0,0,0);
-
-    ASSERT(pDC->prgnRao);
-
     if (pDC->dclevel.prgnMeta || pDC->dclevel.prgnClip)
     {
         pDC->prgnAPI = IntSysCreateRectpRgn(0,0,0,0);
+        if (!pDC->prgnAPI)
+        {
+            /* Best we can do here. Better than crashing. */
+            ERR("Failed to allocate prgnAPI! Expect drawing issues!\n");
+            return;
+        }
+
         if (!pDC->dclevel.prgnMeta)
         {
             REGION_bCopy(pDC->prgnAPI,
@@ -802,6 +804,17 @@ CLIPPING_UpdateGCRegion(PDC pDC)
                                     pDC->dclevel.prgnClip,
                                     pDC->dclevel.prgnMeta);
         }
+    }
+
+    if (pDC->prgnRao)
+        REGION_Delete(pDC->prgnRao);
+
+    pDC->prgnRao = IntSysCreateRectpRgn(0,0,0,0);
+    if (!pDC->prgnRao)
+    {
+        /* Best we can do here. Better than crashing. */
+        ERR("Failed to allocate prgnRao! Expect drawing issues!\n");
+        return;
     }
 
     if (pDC->prgnAPI)
@@ -823,7 +836,7 @@ CLIPPING_UpdateGCRegion(PDC pDC)
                   &pDC->prgnRao->rdh.rcBound,
                   sizeof(RECTL));
 
-    pDC->fs &= ~DC_FLAG_DIRTY_RAO;
+    pDC->fs &= ~DC_DIRTY_RAO;
     UpdateVisRgn(pDC);
 
     // pDC->co should be used. Example, CLIPOBJ_cEnumStart uses XCLIPOBJ to build

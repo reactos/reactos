@@ -1150,7 +1150,7 @@ int MDIMainFrame::Command(int id, int code)
 #ifdef _DEBUG
 		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("http://localhost")));
 #else
-		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("http://www.reactos.org")));
+		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("https://reactos.org")));
 #endif
 		break;
 

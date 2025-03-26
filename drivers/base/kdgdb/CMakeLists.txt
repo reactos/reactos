@@ -10,9 +10,11 @@ list(APPEND SOURCE
     utils.c
     kdgdb.h)
 
-# TODO: AMD64, ARM...
+# TODO: ARM...
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE i386_sup.c)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND SOURCE amd64_sup.c)
 endif()
 
 add_library(kdcom MODULE
@@ -20,7 +22,7 @@ add_library(kdcom MODULE
     kdgdb.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 
-set_module_type(kdcom module IMAGEBASE 0x00010000)
+set_module_type(kdcom kerneldll ENTRYPOINT 0)
 set_subsystem(kdcom native)
 add_importlibs(kdcom ntoskrnl hal)
 target_link_libraries(kdcom cportlib)

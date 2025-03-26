@@ -1,24 +1,9 @@
 /*
- *  ReactOS Task Manager
- *
- *  affinity.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *                2005         Klemens Friedl <frik85@reactos.at>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Processor Affinity.
+ * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
+ *              Copyright 2005 Klemens Friedl <frik85@reactos.at>
  */
 
 #include "precomp.h"
@@ -51,8 +36,8 @@ void ProcessPage_OnSetAffinity(void)
 
     hProcessAffinityHandle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_SET_INFORMATION, FALSE, dwProcessId);
     if (!hProcessAffinityHandle) {
-        GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(WCHAR));
-        LoadStringW(hInst, IDS_MSG_ACCESSPROCESSAFF, szTitle, sizeof(szTitle) / sizeof(WCHAR));
+        GetLastErrorText(strErrorText, _countof(strErrorText));
+        LoadStringW(hInst, IDS_MSG_ACCESSPROCESSAFF, szTitle, _countof(szTitle));
         MessageBoxW(hMainWnd, strErrorText, szTitle, MB_OK|MB_ICONSTOP);
         return;
     }
@@ -80,23 +65,23 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
          * the number of CPUs present in the system
          */
         if (!GetProcessAffinityMask(hProcessAffinityHandle, &dwProcessAffinityMask, &dwSystemAffinityMask))    {
-            GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(WCHAR));
+            GetLastErrorText(strErrorText, _countof(strErrorText));
             EndDialog(hDlg, 0);
-            LoadStringW(hInst, IDS_MSG_ACCESSPROCESSAFF, szTitle, sizeof(szTitle) / sizeof(WCHAR));
+            LoadStringW(hInst, IDS_MSG_ACCESSPROCESSAFF, szTitle, _countof(szTitle));
             MessageBoxW(hMainWnd, strErrorText, szTitle, MB_OK|MB_ICONSTOP);
         }
 
-        for (nCpu=0; nCpu<sizeof(dwCpuTable) / sizeof(dwCpuTable[0]); nCpu++) {
+        for (nCpu = 0; nCpu < _countof(dwCpuTable); nCpu++) {
             /*
              * Enable a checkbox for each processor present in the system
              */
-            if (dwSystemAffinityMask & (1 << nCpu))
+            if (dwSystemAffinityMask & ((ULONG_PTR)1 << nCpu))
                 EnableWindow(GetDlgItem(hDlg, dwCpuTable[nCpu]), TRUE);
             /*
              * Check each checkbox that the current process
              * has affinity with
              */
-            if (dwProcessAffinityMask & (1 << nCpu))
+            if (dwProcessAffinityMask & ((ULONG_PTR)1 << nCpu))
                 CheckDlgButton(hDlg, dwCpuTable[nCpu], BST_CHECKED);
         }
 
@@ -118,13 +103,13 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
          * to adjust the process affinity mask
          */
         if (LOWORD(wParam) == IDOK) {
-            for (nCpu=0; nCpu<sizeof(dwCpuTable) / sizeof(dwCpuTable[0]); nCpu++) {
+            for (nCpu = 0; nCpu < _countof(dwCpuTable); nCpu++) {
                 /*
                  * First we have to create a mask out of each
                  * checkbox that the user checked.
                  */
                 if (IsDlgButtonChecked(hDlg, dwCpuTable[nCpu]))
-                    dwProcessAffinityMask |= (1 << nCpu);
+                    dwProcessAffinityMask |= ((ULONG_PTR)1 << nCpu);
             }
 
             /*
@@ -134,8 +119,8 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
              * of it's cpu time.
              */
             if (!dwProcessAffinityMask) {
-                LoadStringW(hInst, IDS_MSG_PROCESSONEPRO, strErrorText, sizeof(strErrorText) / sizeof(WCHAR));
-                LoadStringW(hInst, IDS_MSG_INVALIDOPTION, szTitle, sizeof(szTitle) / sizeof(WCHAR));
+                LoadStringW(hInst, IDS_MSG_PROCESSONEPRO, strErrorText, _countof(strErrorText));
+                LoadStringW(hInst, IDS_MSG_INVALIDOPTION, szTitle, _countof(szTitle));
                 MessageBoxW(hDlg, strErrorText, szTitle, MB_OK|MB_ICONSTOP);
                 return TRUE;
             }
@@ -144,9 +129,9 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
              * Try to set the process affinity
              */
             if (!SetProcessAffinityMask(hProcessAffinityHandle, dwProcessAffinityMask)) {
-                GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(WCHAR));
+                GetLastErrorText(strErrorText, _countof(strErrorText));
                 EndDialog(hDlg, LOWORD(wParam));
-                LoadStringW(hInst, IDS_MSG_ACCESSPROCESSAFF, szTitle, sizeof(szTitle) / sizeof(WCHAR));
+                LoadStringW(hInst, IDS_MSG_ACCESSPROCESSAFF, szTitle, _countof(szTitle));
                 MessageBoxW(hMainWnd, strErrorText, szTitle, MB_OK|MB_ICONSTOP);
             }
 

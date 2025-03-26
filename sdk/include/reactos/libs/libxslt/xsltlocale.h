@@ -32,7 +32,7 @@
 typedef locale_t xsltLocale;
 typedef xmlChar xsltLocaleChar;
 
-#elif defined(_WIN32) && !defined(__CYGWIN__)
+#elif defined(_WIN32)
 
 /*
  * XSLT_LOCALE_WINAPI:

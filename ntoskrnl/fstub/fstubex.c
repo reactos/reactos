@@ -41,6 +41,7 @@ typedef struct _EFI_PARTITION_HEADER
     ULONG SizeOfPartitionEntry;  // 84
     ULONG PartitionEntryCRC32;   // 88
 } EFI_PARTITION_HEADER, *PEFI_PARTITION_HEADER;
+C_ASSERT(sizeof(EFI_PARTITION_HEADER) == 92);
 #include <poppack.h>
 
 typedef struct _EFI_PARTITION_ENTRY
@@ -52,6 +53,7 @@ typedef struct _EFI_PARTITION_ENTRY
     ULONGLONG Attributes;  // 48
     WCHAR Name[0x24];      // 56
 } EFI_PARTITION_ENTRY, *PEFI_PARTITION_ENTRY;
+C_ASSERT(sizeof(EFI_PARTITION_ENTRY) == 128);
 
 typedef struct _PARTITION_TABLE_ENTRY
 {
@@ -66,7 +68,9 @@ typedef struct _PARTITION_TABLE_ENTRY
     ULONG SectorCountBeforePartition;
     ULONG PartitionSectorCount;
 } PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
+C_ASSERT(sizeof(PARTITION_TABLE_ENTRY) == 16);
 
+#include <pshpack1.h>
 typedef struct _MASTER_BOOT_RECORD
 {
     UCHAR MasterBootRecordCodeAndData[0x1B8]; // 0
@@ -75,6 +79,8 @@ typedef struct _MASTER_BOOT_RECORD
     PARTITION_TABLE_ENTRY PartitionTable[4];  // 446
     USHORT MasterBootRecordMagic;             // 510
 } MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
+C_ASSERT(sizeof(MASTER_BOOT_RECORD) == 512);
+#include <poppack.h>
 
 /* Partition entry size (bytes) - FIXME: It's hardcoded as Microsoft does, but according to specs, it shouldn't be */
 #define PARTITION_ENTRY_SIZE 128
@@ -1852,7 +1858,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
 
     PAGED_CODE();
 
-    /* Get loader block. If it's null, we come to late */
+    /* Get loader block. If it's null, we come too late */
     if (!IopLoaderBlock)
     {
         return STATUS_TOO_LATE;
@@ -1865,14 +1871,16 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
     }
 
     /* Init some useful stuff:
-     * Get arc disks information
-     * Check whether we have a single disk
+     * Get ARC disks information
+     * Check whether we have a single disk on the machine
      * Check received structure size (extended or not?)
      * Init boot strings (system/boot)
      * Finaly, get disk count
      */
     ArcDiskInformation = IopLoaderBlock->ArcDiskInformation;
-    SingleDisk = IsListEmpty(&(ArcDiskInformation->DiskSignatureListHead));
+    SingleDisk = (ArcDiskInformation->DiskSignatureListHead.Flink->Flink ==
+                 &ArcDiskInformation->DiskSignatureListHead);
+
     IsBootDiskInfoEx = (Size >= sizeof(BOOTDISK_INFORMATION_EX));
     RtlInitAnsiString(&ArcBootString, IopLoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&ArcSystemString, IopLoaderBlock->ArcHalDeviceName);
@@ -1914,7 +1922,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                                             NULL,
                                             0,
                                             &DiskGeometry,
-                                            sizeof(DISK_GEOMETRY),
+                                            sizeof(DiskGeometry),
                                             FALSE,
                                             &Event,
                                             &IoStatusBlock);
@@ -1955,7 +1963,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
             DiskGeometry.BytesPerSector = 512;
         }
 
-        /* Now, for each arc disk, try to find the matching */
+        /* Now, for each ARC disk, try to find the matching */
         for (NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
              NextEntry != &ArcDiskInformation->DiskSignatureListHead;
              NextEntry = NextEntry->Flink)
@@ -1963,7 +1971,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
             ArcDiskSignature = CONTAINING_RECORD(NextEntry,
                                                  ARC_DISK_SIGNATURE,
                                                  ListEntry);
-            /* If they matches, ie
+            /* If they match, i.e.
              * - There's only one disk for both BIOS and detected
              * - Signatures are matching
              * - This is MBR
@@ -1973,7 +1981,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                 (IopVerifyDiskSignature(DriveLayout, ArcDiskSignature, &Signature))) &&
                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
             {
-                /* Create arc name */
+                /* Create ARC name */
                 sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskSignature->ArcName);
                 RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
 
@@ -1995,7 +2003,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         Signature = DriveLayout->Mbr.Signature;
                     }
 
-                    /* Create partial arc name */
+                    /* Create partial ARC name */
                     sprintf(ArcBuffer, "%spartition(%lu)", ArcDiskSignature->ArcName, PartitionNumber);
                     RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
 
@@ -2023,7 +2031,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                                                             NULL,
                                                             0,
                                                             &PartitionInformation,
-                                                            sizeof(PARTITION_INFORMATION_EX),
+                                                            sizeof(PartitionInformation),
                                                             FALSE,
                                                             &Event,
                                                             &IoStatusBlock);
@@ -2094,7 +2102,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                                                             NULL,
                                                             0,
                                                             &PartitionInformation,
-                                                            sizeof(PARTITION_INFORMATION_EX),
+                                                            sizeof(PartitionInformation),
                                                             FALSE,
                                                             &Event,
                                                             &IoStatusBlock);
@@ -2147,7 +2155,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
             }
         }
 
-        /* Finally, release drive layout structure */
+        /* Finally, release drive layout */
         ExFreePool(DriveLayout);
     }
 
@@ -2524,7 +2532,7 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
                                                          FALSE,
                                                          DriveLayout->PartitionCount,
                                                          DriveLayout->PartitionEntry);
-                    /* If it succeed, also update backup table */
+                    /* If it succeeded, also update backup table */
                     if (NT_SUCCESS(Status))
                     {
                         Status = FstubWritePartitionTableEFI(Disk,

@@ -15,8 +15,10 @@ START_TEST(CcMapData)
     DWORD Ret;
     ULONG TestId;
 
-    KmtLoadDriver(L"CcMapData", FALSE);
-    KmtOpenDriver();
+    Ret = KmtLoadAndOpenDriver(L"CcMapData", FALSE);
+    ok_eq_int(Ret, ERROR_SUCCESS);
+    if (Ret)
+        return;
 
     /* 3 tests for offset
      * 1 test for BCB

@@ -173,7 +173,7 @@ SmpParseToken(IN PUNICODE_STRING Input,
     Length = 0;
     while (Length < InputLength)
     {
-        if (*p > L' ' ) break;
+        if (*p > L' ') break;
         ++p;
         Length += sizeof(WCHAR);
     }
@@ -191,7 +191,7 @@ SmpParseToken(IN PUNICODE_STRING Input,
         pp = p;
         while (Length < InputLength)
         {
-            if (*pp <= L' ' ) break;
+            if (*pp <= L' ') break;
             ++pp;
             Length += sizeof(WCHAR);
         }
@@ -200,7 +200,7 @@ SmpParseToken(IN PUNICODE_STRING Input,
         TokenLength = (ULONG_PTR)pp - (ULONG_PTR)p;
         while (Length < InputLength)
         {
-            if (*pp > L' ' ) break;
+            if (*pp > L' ') break;
             ++pp;
             Length += sizeof(WCHAR);
         }

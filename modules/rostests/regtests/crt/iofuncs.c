@@ -47,7 +47,7 @@ struct _testData
 
 void Test_ofuncs()
 {
-    int i;    
+    int i;
     char* buf = NULL;
 
     /* Test exponential format */
@@ -60,15 +60,15 @@ void Test_ofuncs()
     for (i = 0; i < sizeof(ECVTTESTDATA)/sizeof(ECVTTESTDATA[0]); i++)
     {
         sprintf(buf, "%-+.*E", ECVTTESTDATA[i].prec, ECVTTESTDATA[i].val);
-        ok(!strcmp(buf, ECVTTESTDATA[i].exp), 
-            "sprintf exp test %d failed: got %s, expected %s\n", 
+        ok(!strcmp(buf, ECVTTESTDATA[i].exp),
+            "sprintf exp test %d failed: got %s, expected %s\n",
             i, buf, ECVTTESTDATA[i].exp);
     }
     for (i = 0; i < sizeof(ECVTTESTDATA)/sizeof(ECVTTESTDATA[0]); i++)
     {
         sprintf(buf, "%-+.*E", ECVTTESTDATA[i].prec + 2, ECVTTESTDATA[i].val);
-        ok(!strcmp(buf, ECVTTESTDATA[i].exp2), 
-            "sprintf exp +2 prec test %d failed: got %s, expected %s\n", 
+        ok(!strcmp(buf, ECVTTESTDATA[i].exp2),
+            "sprintf exp +2 prec test %d failed: got %s, expected %s\n",
             i, buf, ECVTTESTDATA[i].exp2);
     }
 

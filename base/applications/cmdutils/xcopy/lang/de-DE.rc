@@ -4,7 +4,7 @@ STRINGTABLE
 {
     STRING_INVPARMS, "Falsche Parameteranzahl -  xcopy /? zeigt Hilfe an\n"
     STRING_INVPARM,  "Unbekannter Parameter '%1' - xcopy /? zeigt Hilfe an\n"
-    STRING_PAUSE,    "Eingabetaste betätigen, um mit dem Kopieren zu beginnen\n"
+    STRING_PAUSE,    "ENTER betätigen, um mit dem Kopieren zu beginnen\n"
     STRING_SIMCOPY,  "%1!d! Datei(en) würden kopiert\n"
     STRING_COPY,     "%1!d! Datei(en) kopiert\n"
     STRING_QISDIR,   "Ist '%1' eine Datei oder ein Verzeichnis\n\
@@ -26,7 +26,7 @@ STRINGTABLE
 \n\
 Syntax:\n\
 XCOPY Quelle [Ziel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
-\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y] [/K]\n\
 \n\
 Mit:\n\
 \n\

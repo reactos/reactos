@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     FAT filesystem driver for FreeLoader
  * COPYRIGHT:   Copyright 1998-2003 Brian Palmer (brianp@sginet.com)
- *              Copyright 2009 Hervé Poussineau
+ *              Copyright 2009 HervÃ© Poussineau
  *              Copyright 2019 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
@@ -668,7 +668,8 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
         // See if the file name matches either the short or long name
         //
         if (((strlen(FileName) == strlen(LfnNameBuffer)) && (_stricmp(FileName, LfnNameBuffer) == 0)) ||
-            ((strlen(FileName) == strlen(ShortNameBuffer)) && (_stricmp(FileName, ShortNameBuffer) == 0)))        {
+            ((strlen(FileName) == strlen(ShortNameBuffer)) && (_stricmp(FileName, ShortNameBuffer) == 0)))
+        {
             //
             // We found the entry, now fill in the FAT_FILE_INFO struct
             //
@@ -702,7 +703,6 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
         //
         RtlZeroMemory(ShortNameBuffer, 13 * sizeof(UCHAR));
         RtlZeroMemory(LfnNameBuffer, 261 * sizeof(UCHAR));
-        continue;
     }
 
     return FALSE;
@@ -785,6 +785,9 @@ ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, PFAT_FILE_INFO
 
     RtlZeroMemory(FatFileInfoPointer, sizeof(FAT_FILE_INFO));
 
+    /* Skip leading path separator, if any */
+    if (*FileName == '\\' || *FileName == '/')
+        ++FileName;
     //
     // Figure out how many sub-directories we are nested in
     //
@@ -930,7 +933,7 @@ PUCHAR FatGetFatSector(PFAT_VOLUME_INFO Volume, UINT32 FatSectorNumber)
 
         for (i = 0; i < SectorsToRead; i++)
         {
-            Volume->FatCacheIndex[CacheIndex + i] = SectorNumAbsolute + i; 
+            Volume->FatCacheIndex[CacheIndex + i] = SectorNumAbsolute + i;
         }
 
         TRACE("FAT cache miss: read sector 0x%x from disk\n", SectorNumAbsolute);
@@ -1128,7 +1131,7 @@ BOOLEAN FatReadClusterChain(PFAT_VOLUME_INFO Volume, UINT32 StartClusterNumber, 
 
     TRACE("FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer);
 
-    ASSERT(NumberOfClusters > 0);        
+    ASSERT(NumberOfClusters > 0);
 
     while (FatReadAdjacentClusters(Volume, StartClusterNumber, ClustersLeft, Buffer, &ClustersRead, &NextClusterNumber))
     {
@@ -1341,7 +1344,7 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
         ASSERT(!FAT_IS_END_CLUSTER(FatFileInfo->CurrentCluster));
 
         //
-        // Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
+        // Now do the read and update BytesRead & FilePointer
         //
         if (!FatReadPartialCluster(Volume, FatFileInfo->CurrentCluster, 0, BytesToRead, Buffer))
         {
@@ -1352,8 +1355,6 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
             *BytesRead += BytesToRead;
         }
         FatFileInfo->FilePointer += BytesToRead;
-        BytesToRead -= BytesToRead;
-        Buffer = (PVOID)((ULONG_PTR)Buffer + BytesToRead);
     }
 
     return TRUE;
@@ -1371,7 +1372,7 @@ BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG 
     //
     // Seek to right position
     //
-    Position.QuadPart = (ULONGLONG)SectorNumber * 512;
+    Position.QuadPart = (ULONGLONG)SectorNumber * Volume->BytesPerSector;
     Status = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
@@ -1382,8 +1383,8 @@ BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG 
     //
     // Read data
     //
-    Status = ArcRead(Volume->DeviceId, Buffer, SectorCount * 512, &Count);
-    if (Status != ESUCCESS || Count != SectorCount * 512)
+    Status = ArcRead(Volume->DeviceId, Buffer, SectorCount * Volume->BytesPerSector, &Count);
+    if (Status != ESUCCESS || Count != SectorCount * Volume->BytesPerSector)
     {
         TRACE("FatReadVolumeSectors() Failed to read\n");
         return FALSE;
@@ -1549,6 +1550,16 @@ const DEVVTBL FatFuncTable =
     L"fastfat",
 };
 
+const DEVVTBL FatXFuncTable =
+{
+    FatClose,
+    FatGetFileInformation,
+    FatOpen,
+    FatRead,
+    FatSeek,
+    L"vfatfs",
+};
+
 const DEVVTBL* FatMount(ULONG DeviceId)
 {
     PFAT_VOLUME_INFO Volume;
@@ -1636,5 +1647,5 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     // Return success
     //
     TRACE("FatMount(%lu) success\n", DeviceId);
-    return &FatFuncTable;
+    return (ISFATX(Volume->FatType) ? &FatXFuncTable : &FatFuncTable);
 }

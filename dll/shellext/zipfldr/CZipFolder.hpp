@@ -3,11 +3,19 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main class
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-
-EXTERN_C HRESULT WINAPI SHCreateFileExtractIconW(LPCWSTR pszPath, DWORD dwFileAttributes, REFIID riid, void **ppv);
-
+enum FOLDERCOLUMN
+{
+    COL_NAME = 0,
+    COL_TYPE,
+    COL_COMPRSIZE,
+    COL_PASSWORD,
+    COL_SIZE,
+    COL_RATIO,
+    COL_DATE_MOD,
+};
 
 struct FolderViewColumns
 {
@@ -17,7 +25,7 @@ struct FolderViewColumns
     int fmt;
 };
 
-static FolderViewColumns g_ColumnDefs[] = 
+static FolderViewColumns g_ColumnDefs[] =
 {
     { IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   25, LVCFMT_LEFT },
     { IDS_COL_TYPE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   20, LVCFMT_LEFT },
@@ -41,7 +49,7 @@ class CZipFolder :
     public IZip
 {
     CStringW m_ZipFile;
-    CStringA m_ZipDir;
+    CStringW m_ZipDir;
     CComHeapPtr<ITEMIDLIST> m_CurDir;
     unzFile m_UnzipFile;
 
@@ -87,8 +95,11 @@ public:
     }
     STDMETHODIMP GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
     {
-        UNIMPLEMENTED;
-        return E_NOTIMPL;
+        if (pSort)
+            *pSort = COL_NAME;
+        if (pDisplay)
+            *pDisplay = COL_NAME;
+        return S_OK;
     }
     STDMETHODIMP GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
     {
@@ -103,7 +114,7 @@ public:
         return E_NOTIMPL;
     }
     // Adapted from CFileDefExt::GetFileTimeString
-    BOOL _GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult)
+    BOOL _GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UINT cchResult)
     {
         SYSTEMTIME st;
 
@@ -111,7 +122,7 @@ public:
             return FALSE;
 
         size_t cchRemaining = cchResult;
-        LPWSTR pwszEnd = pwszResult;
+        PWSTR pwszEnd = pwszResult;
         int cchWritten = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, pwszEnd, cchRemaining);
         if (cchWritten)
             --cchWritten; // GetDateFormatW returns count with terminating zero
@@ -158,33 +169,33 @@ public:
         bool isDir = zipEntry->ZipType == ZIP_PIDL_DIRECTORY;
         switch (iColumn)
         {
-        case 0: /* Name, ReactOS specific? */
+        case COL_NAME:
             return GetDisplayNameOf(pidl, 0, &psd->str);
-        case 1: /* Type */
+        case COL_TYPE:
         {
-            SHFILEINFOA shfi;
+            SHFILEINFOW shfi;
             DWORD dwAttributes = isDir ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
-            ULONG_PTR firet = SHGetFileInfoA(zipEntry->Name, dwAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME);
+            ULONG_PTR firet = SHGetFileInfoW(zipEntry->Name, dwAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME);
             if (!firet)
                 return E_FAIL;
             return SHSetStrRet(&psd->str, shfi.szTypeName);
         }
-        case 2: /* Compressed size */
-        case 4: /* Size */
+        case COL_COMPRSIZE:
+        case COL_SIZE:
         {
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
 
-            ULONG64 Size = iColumn == 2 ? zipEntry->CompressedSize : zipEntry->UncompressedSize;
+            ULONG64 Size = iColumn == COL_COMPRSIZE ? zipEntry->CompressedSize : zipEntry->UncompressedSize;
             if (!StrFormatByteSizeW(Size, Buffer, _countof(Buffer)))
                 return E_FAIL;
             return SHSetStrRet(&psd->str, Buffer);
         }
-        case 3: /* Password */
+        case COL_PASSWORD:
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
             return SHSetStrRet(&psd->str, _AtlBaseModule.GetResourceInstance(), zipEntry->Password ? IDS_YES : IDS_NO);
-        case 5: /* Ratio */
+        case COL_RATIO:
         {
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
@@ -195,7 +206,7 @@ public:
             StringCchPrintfW(Buffer, _countof(Buffer), L"%d%%", ratio);
             return SHSetStrRet(&psd->str, Buffer);
         }
-        case 6: /* Date */
+        case COL_DATE_MOD:
         {
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
@@ -230,7 +241,7 @@ public:
     {
         if (riid == IID_IShellFolder)
         {
-            CStringA newZipDir = m_ZipDir;
+            CStringW newZipDir = m_ZipDir;
             PCUIDLIST_RELATIVE curpidl = pidl;
             while (curpidl->mkid.cb)
             {
@@ -240,7 +251,7 @@ public:
                     return E_FAIL;
                 }
                 newZipDir += zipEntry->Name;
-                newZipDir += '/';
+                newZipDir += L'/';
 
                 curpidl = ILGetNext(curpidl);
             }
@@ -266,7 +277,7 @@ public:
         if (zipEntry1->ZipType != zipEntry2->ZipType)
             result = zipEntry1->ZipType - zipEntry2->ZipType;
         else
-            result = stricmp(zipEntry1->Name, zipEntry2->Name);
+            result = _wcsicmp(zipEntry1->Name, zipEntry2->Name);
 
         if (!result && zipEntry1->ZipType == ZIP_PIDL_DIRECTORY)
         {
@@ -383,7 +394,6 @@ public:
             ici.lpVerb = MAKEINTRESOURCEA(wParam);
             return spContextMenu->InvokeCommand(&ici);
         }
-        case DFM_INVOKECOMMANDEX:
         case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
             return S_FALSE;
         }
@@ -396,14 +406,8 @@ public:
             const ZipPidlEntry* zipEntry = _ZipFromIL(*apidl);
             if (zipEntry)
             {
-                CComHeapPtr<WCHAR> pathW;
-
-                int len = MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, NULL, 0);
-                pathW.Allocate(len);
-                MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, pathW, len);
-
                 DWORD dwAttributes = (zipEntry->ZipType == ZIP_PIDL_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
-                return SHCreateFileExtractIconW(pathW, dwAttributes, riid, ppvOut);
+                return SHCreateFileExtractIconW(zipEntry->Name, dwAttributes, riid, ppvOut);
             }
         }
         else if (riid == IID_IContextMenu && cidl >= 0)
@@ -448,7 +452,7 @@ public:
         if (!zipEntry)
             return E_FAIL;
 
-        return SHSetStrRet(strRet, (LPCSTR)zipEntry->Name);
+        return SHSetStrRet(strRet, zipEntry->Name);
     }
     STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
     {
@@ -483,7 +487,7 @@ public:
         case GCS_VERBA:
             return StringCchCopyA(pszName, cchMax, EXTRACT_VERBA);
         case GCS_VERBW:
-            return StringCchCopyW((LPWSTR)pszName, cchMax, EXTRACT_VERBW);
+            return StringCchCopyW((PWSTR)pszName, cchMax, EXTRACT_VERBW);
         case GCS_HELPTEXTA:
         {
             CStringA helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
@@ -492,7 +496,7 @@ public:
         case GCS_HELPTEXTW:
         {
             CStringW helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
-            return StringCchCopyW((LPWSTR)pszName, cchMax, helpText);
+            return StringCchCopyW((PWSTR)pszName, cchMax, helpText);
         }
         case GCS_VALIDATEA:
         case GCS_VALIDATEW:
@@ -620,12 +624,12 @@ public:
     // *** IPersist methods ***
     STDMETHODIMP GetClassID(CLSID *lpClassId)
     {
-        DbgPrint("%s\n", __FUNCTION__);
-        return E_NOTIMPL;
+        *lpClassId = CLSID_ZipFolderStorageHandler;
+        return S_OK;
     }
 
 
-    STDMETHODIMP Initialize(PCWSTR zipFile, PCSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
+    STDMETHODIMP Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
     {
         m_ZipFile = zipFile;
         m_ZipDir = zipDir;

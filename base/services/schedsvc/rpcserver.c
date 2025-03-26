@@ -121,8 +121,6 @@ NetrJobAdd(
     /* Calculate the next start time */
     CalculateNextStartTime(pJob);
 
-    /* Insert the job into the start list */
-    InsertJobIntoStartList(&StartListHead, pJob);
 #if 0
     DumpStartList(&StartListHead);
 #endif
@@ -169,8 +167,6 @@ NetrJobDel(
 
         if ((CurrentJob->JobId >= MinJobId) && (CurrentJob->JobId <= MaxJobId))
         {
-            /* Remove the job from the start list */
-            RemoveEntryList(&CurrentJob->StartEntry);
 #if 0
             DumpStartList(&StartListHead);
 #endif

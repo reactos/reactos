@@ -1,13 +1,14 @@
 /*
- * Αρχική έκδοση - Ημιτελής.
- * Ελληνική μετάφραση - Απόστολος Αλεξιάδης
+ * PROJECT:     ReactOS Attrib Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Greek resource file
+ * TRANSLATORS: Copyright 2008 Apostolos Alexiadis <djapal@gmail.com>
  */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Προβολή ή αλλαγή των χαρακτηριστικών των αρχείων.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
@@ -22,5 +23,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
   /D  Επεξεργασία καταλόγων επίσης.\n\n\
 Πληκτρολογήστε ATTRIB χωρίς παράμετρο, για να εμφανιστούν τα χαρακτηριστικά όλων των αρχείων.\n"
     STRING_CONSOLE_ERROR "Άγνωστο σφάλμα: %d\n"
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Μη έγκυρο φορμά παραμέτρου - %s\n"
 END

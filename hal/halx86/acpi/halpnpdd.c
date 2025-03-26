@@ -9,6 +9,10 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+
+#include <initguid.h>
+#include <wdmguid.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -153,7 +157,23 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    IN PINTERFACE Interface,
                    OUT PULONG Length)
 {
-    UNIMPLEMENTED;
+    if (IsEqualIID(InterfaceType, &GUID_ACPI_REGS_INTERFACE_STANDARD))
+    {
+        DPRINT1("HalpQueryInterface(GUID_ACPI_REGS_INTERFACE_STANDARD) is UNIMPLEMENTED\n");
+    }
+    else if (IsEqualIID(InterfaceType, &GUID_ACPI_PORT_RANGES_INTERFACE_STANDARD))
+    {
+        DPRINT1("HalpQueryInterface(GUID_ACPI_PORT_RANGES_INTERFACE_STANDARD) is UNIMPLEMENTED\n");
+    }
+    else
+    {
+        DPRINT1("HalpQueryInterface({%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}) is UNIMPLEMENTED\n",
+                InterfaceType->Data1, InterfaceType->Data2, InterfaceType->Data3,
+                InterfaceType->Data4[0], InterfaceType->Data4[1],
+                InterfaceType->Data4[2], InterfaceType->Data4[3],
+                InterfaceType->Data4[4], InterfaceType->Data4[5],
+                InterfaceType->Data4[6], InterfaceType->Data4[7]);
+    }
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -304,7 +324,7 @@ HalpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
         Capabilities->UniqueID = TRUE;
         Capabilities->SilentInstall = TRUE;
 
-        /* Fill out the adress */
+        /* Fill out the address */
         Capabilities->Address = InterfaceTypeUndefined;
         Capabilities->UINumber = InterfaceTypeUndefined;
 
@@ -561,10 +581,6 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
     switch (IdType)
     {
         case BusQueryDeviceID:
-            /* HACK */
-            Id = L"Root\\ACPI_HAL";
-            break;
-
         case BusQueryHardwareIDs:
 
             /* This is our hardware ID */
@@ -676,11 +692,26 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
             default:
 
                 DPRINT("Other IRP: %lx\n", Minor);
-                Status = Irp->IoStatus.Status;
+                Status = STATUS_NOT_SUPPORTED;
                 break;
         }
 
-        /* Nowhere for the IRP to go since we also own the PDO */
+        /* What happpened? */
+        if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
+        {
+            /* Set the IRP status, unless this isn't understood */
+            if (Status != STATUS_NOT_SUPPORTED)
+            {
+                Irp->IoStatus.Status = Status;
+            }
+
+            /* Pass it on */
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(FdoExtension->AttachedDeviceObject, Irp);
+        }
+
+        /* Otherwise, we failed, so set the status and complete the request */
+        DPRINT1("IRP failed with status: %lx\n", Status);
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;

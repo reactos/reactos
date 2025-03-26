@@ -1,10 +1,10 @@
 /*
- * PROJECT: ReactOS Applications Manager (RAPPS)
- * FILE:    base/applications/rapps/lang/ro-RO.rc
- * PURPOSE: Romanian Translation for RAPPS
- * TRANSLATORS:
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
- *          Bișoc George (fraizeraust99 at gmail dot com)
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2017-2018 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -19,108 +19,91 @@ BEGIN
     END
     POPUP "&Programe"
     BEGIN
-        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modifică", ID_MODIFY
+        MENUITEM "&Instalare\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Dezinstalare\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Modificare", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Elimină din registru", ID_REGREMOVE
+        MENUITEM "&Eliminare din registru", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "Împ&rospătează\tF5", ID_REFRESH
+        MENUITEM "Împ&rospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Actualizare a bazei de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…\tF1", ID_HELP, GRAYED
-        MENUITEM "&Despre…", ID_ABOUT
+        MENUITEM "&Ajutor\tF1", ID_HELP, GRAYED
+        MENUITEM "&Despre", ID_ABOUT
     END
 END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
-        MENUITEM "&Deschide în navigator", ID_OPEN_LINK
-        MENUITEM "&Copiază în memorie", ID_COPY_LINK
-    END
-END
-
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP "popup"
-    BEGIN
-        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modifică", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "&Elimină din registru", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "Împ&rospătează\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "&Actualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Deschidere a legăturii în navigator", ID_OPEN_LINK
+        MENUITEM "&Copiere a legăturii în clipboard", ID_COPY_LINK
     END
 END
 
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Preferințe"
+CAPTION "Setări"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Generale", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Păstrează poziția ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "Actualizea&ză la pornire lista programelor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "Menține j&urnal de instalare/dezinstalare a programelor", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "General", -1, 4, 2, 240, 61
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Descărcări", -1, 4, 65, 240, 51
-    LTEXT "Dosarul pentru descărcări:", -1, 16, 75, 100, 9
+    LTEXT "Folderul pentru descărcări:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
-    PUSHBUTTON "Spe&cificare…", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "Șt&erge aplicația de instalare după instalarea programului", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    PUSHBUTTON "&Răsfoire", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "Se șterge de instalare &după instalarea programului", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Sursa programului", -1, 4, 118, 240, 46
+    AUTORADIOBUTTON "Se folosesc valorile implicite", IDC_SOURCE_DEFAULT, 15, 132, 121, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Sursa specificată", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
-    GROUPBOX "Mandatar", -1, 4, 166, 240, 76
-    CONTROL "Configur&ația mandatar din sistem", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
-    CONTROL "Di&rect (fără mandatar)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
-    CONTROL "Man&datar", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    AUTORADIOBUTTON "Setări proxy de sistem", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Direct (fără proxy)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Proxy", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "excepție pentru", -1, 27, 225, 64, 10
+    LTEXT "excepție pentru", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "I&mplicite", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 116, 245, 60, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 181, 245, 60, 14
+    PUSHBUTTON "Implicit", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare aplicație"
+CAPTION "Instalare a aplicației"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "Instalea&ză de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-    AUTORADIOBUTTON "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 86, 78, 60, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 150, 78, 60, 14
+    AUTORADIOBUTTON "&Instalare de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Descărcare și instalare", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "În curs de descărcare %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
-    PUSHBUTTON "A&nulează", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Revocare", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLTIP_INSTALL "Instalează"
-    IDS_TOOLTIP_UNINSTALL "Dezinstalează"
-    IDS_TOOLTIP_MODIFY "Modifică"
+    IDS_TOOLTIP_INSTALL "Instalare"
+    IDS_TOOLTIP_UNINSTALL "Dezinstalare"
+    IDS_TOOLTIP_MODIFY "Modificare"
+    IDS_TOOLTIP_SELECT_ALL "Selectare/Deselectare Toate"
     IDS_TOOLTIP_SETTINGS "Preferințe"
-    IDS_TOOLTIP_REFRESH "Împrospătează"
-    IDS_TOOLTIP_UPDATE_DB "Actualizează baza de date"
+    IDS_TOOLTIP_REFRESH "Împrospătare"
+    IDS_TOOLTIP_UPDATE_DB "Actualizare baza de date"
     IDS_TOOLTIP_EXIT "Ieșire"
 END
 
@@ -150,7 +133,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nComanda pentru dezinstalare: "
     IDS_INFO_MODIFYPATH "\nComanda pentru modificare: "
     IDS_INFO_INSTALLDATE "\nData de instalare: "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_AINFO_PACKAGE_NAME "\nNumele pachetului: "
 END
 
 STRINGTABLE
@@ -169,7 +152,7 @@ STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "Audio"
     IDS_CAT_DEVEL "Dezvoltare"
-    IDS_CAT_DRIVERS "Modúle-pilot"
+    IDS_CAT_DRIVERS "Drivere"
     IDS_CAT_EDU "Educație"
     IDS_CAT_ENGINEER "Inginerie"
     IDS_CAT_FINANCE "Finanțe"
@@ -182,47 +165,57 @@ BEGIN
     IDS_CAT_SCIENCE "Știință"
     IDS_CAT_TOOLS "Instrumente"
     IDS_CAT_VIDEO "Video"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Teme"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Gestionar de programe"
-    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Căutare…"
-    IDS_INSTALL "Instalează"
-    IDS_UNINSTALL "Dezinstalează"
-    IDS_MODIFY "Modifică"
-    IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
-    IDS_WELCOME_TITLE "Bun venit la gestionarul de programe ReactOS!\n\n"
+    IDS_APPTITLE "Managerul de aplicații ReactOS"
+    IDS_APP_AUTHORS "Marcă înregistrată 2009 Dmitry Chapyshev"
+    IDS_WELCOME_TITLE "Bun venit la Managerul de aplicații ReactOS!"
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
-    IDS_WELCOME_URL "https://reactos.org/"
+    IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Adăugare/Eliminare de programe"
+    IDS_APPWIZ_TEXT1 "Alegeți ""Aplicații"" sau ""Actualizări"" pentru a vedea lista aplicațiilor sau a actualizărilor instalate pe sistem."
+    IDS_APPWIZ_TEXT2 "Pentru a elimina un program sau pentru a-i modifica componentele instalate, selectați-l din listă și faceți clic pe ""Dezinstalare"" sau pe ""Modificare""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Căutare…"
+    IDS_APPS_COUNT "Numărul de programe: %d"
+    IDS_APPS_SELECT_COUNT "; Selectate: %d"
     IDS_INSTALLED "Instalate"
     IDS_AVAILABLEFORINST "Disponibile pentru instalare"
     IDS_UPDATES "Actualizări"
     IDS_APPLICATIONS "Aplicații"
-    IDS_CHOOSE_FOLDER_TEXT "Specificați un dosar destinație pentru descărcări:"
-    IDS_CHOOSE_FOLDER_ERROR "Dosarul specificat nu există. Doriți crearea lui?"
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_CHOOSE_FOLDER_TEXT "Specificați un folder destinație pentru descărcări:"
+    IDS_CHOOSE_FOLDER_ERROR "Folderul specificat nu există. Doriți crearea lui?"
+    IDS_URL_INVALID "Adresa URL specificată de dumneavoastră este fie nevalidă, fie nesuportată. Vă rugăm să o corectați!"
     IDS_APP_REG_REMOVE "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
     IDS_INFORMATION "Informație"
-    IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu poate fi descărcat! Verificați conexiunea de Internet!"
-    IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu au putut fi eliminate!"
-    IDS_UNABLE_TO_INSTALL "Programul de instalare nu poate fi executat!"
-    IDS_UNABLE_TO_QUERY_CERT "Regăsirea informații despre certificat a eșuat.\n\nVreți să continuați oricum?"
+    IDS_UNABLE_TO_DOWNLOAD "Pachetul nu se poate descărca! Adresa nu este găsită!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu se poate descărca! Verificați conexiunea de Internet!"
+    IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu s-au putut elimina!"
+    IDS_UNABLE_TO_INSTALL "Programul de instalare nu se poate executa!"
+    IDS_UNABLE_TO_QUERY_CERT "Imposibil de obținut informații despre certificat.\n\nContinuați oricum?"
     IDS_INTEG_CHECK_TITLE "Integritatea pachetului în verificare…"
-    IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
+    IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Nu se recomandă utilizarea programului."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
-    IDS_UNABLE_TO_WRITE "Eșec la scrierea pe disc. Una din cauze poate fi atingerea limitei de capacitate."
-    IDS_SELECT_ALL "Selectează/Deselectează Toate"
-    IDS_INSTALL_SELECTED "Instalează selecționate"
+    IDS_UNABLE_TO_WRITE "Nu se poate scrie pe disc. Discul poate fi la capacitate maximă."
+    IDS_INSTALL_SELECTED "Instalare aplicații selectate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
     IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"
-    IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_UNABLE_PATH "Formatul căii specificate nu este corect."
+    IDS_APP_DISPLAY_DETAILS "Detalii"
+    IDS_APP_DISPLAY_LIST "Listă"
+    IDS_APP_DISPLAY_TILE "Dale"
+    IDS_NO_SEARCH_RESULTS "Niciun rezultat al căutării"
+    IDS_CFG_SAVE_WINDOW_POS "Salvare a poziției ferestrei"
+    IDS_CFG_UPDATE_AVLIST "Actualizare la pornire a listei programelor disponibile"
+    IDS_CFG_LOG_ENABLED "Menținere a jurnalului de instalare/dezinstalare a programelor"
+    IDS_CFG_SMALL_ICONS "Pictograme mici"
 END
 
 STRINGTABLE
@@ -239,36 +232,42 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Sursă Deschisă"
-    IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_OPENSOURCE "Sursă deschisă"
+    IDS_LICENSE_FREEWARE "Gratuită"
+    IDS_LICENSE_TRIAL "Variantă de încercare/Demonstrație"
 END
 
 STRINGTABLE
 BEGIN
     IDS_LANGUAGE_AVAILABLE_TRANSLATION "Suportă limba respectivă"
     IDS_LANGUAGE_NO_TRANSLATION "Suportă alte limbi"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Suportă limba Engleză"
-    IDS_LANGUAGE_SINGLE "Singura Limbă"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Suportă limba engleză"
+    IDS_LANGUAGE_SINGLE "Singura limbă"
     IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d mult)"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d disponibil)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Aplicații baza de date"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare baza de date…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_DISP "Aplicații pentru baza de date"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare a bazei de date…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizare a bazei de date… (Sursă neoficială)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "Utilizare: "
+    IDS_CMD_NEED_PACKAGE_NAME "Eroare: opțiunea %1 așteaptă unul sau mai multe nume de pachete.\n"
+    IDS_CMD_NEED_FILE_NAME "Eroare: opțiunea %1 așteaptă un nume de fișier.\n"
+    IDS_CMD_NEED_PARAMS "Eroare: opțiunea %1 așteaptă unul sau mai mulți parametri.\n"
+    IDS_CMD_INVALID_OPTION "Eroare: opțiunea de linie de comandă specificată este necunoscută sau nevalidă.\n"
+    IDS_CMD_FIND_RESULT_FOR "Rezultatele căutării pentru %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Nu se poate găsi pachetul %1.\n"
+    IDS_CMD_PACKAGE_INFO "Informații despre pachetul %1:\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Sigur doriți să dezinstalați %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

@@ -27,7 +27,6 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/list.h"
 
@@ -124,7 +123,7 @@ static PDOC_ITEM SYSLINK_AppendDocItem (SYSLINK_INFO *infoPtr, LPCWSTR Text, UIN
 {
     PDOC_ITEM Item;
 
-    textlen = min(textlen, strlenW(Text));
+    textlen = min(textlen, lstrlenW(Text));
     Item = Alloc(FIELD_OFFSET(DOC_ITEM, Text[textlen + 1]));
     if(Item == NULL)
     {
@@ -183,7 +182,7 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
     {
         if(*current == '<')
         {
-            if(!strncmpiW(current, SL_LINKOPEN, ARRAY_SIZE(SL_LINKOPEN)) && (CurrentType == slText))
+            if(!wcsnicmp(current, SL_LINKOPEN, ARRAY_SIZE(SL_LINKOPEN)) && (CurrentType == slText))
             {
                 BOOL ValidParam = FALSE, ValidLink = FALSE;
 
@@ -211,14 +210,14 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
                     
 CheckParameter:
                     /* compare the current position with all known parameters */
-                    if(!strncmpiW(tmp, SL_HREF, ARRAY_SIZE(SL_HREF)))
+                    if(!wcsnicmp(tmp, SL_HREF, ARRAY_SIZE(SL_HREF)))
                     {
                         taglen += 6;
                         ValidParam = TRUE;
                         CurrentParameter = &lpUrl;
                         CurrentParameterLen = &lenUrl;
                     }
-                    else if(!strncmpiW(tmp, SL_ID, ARRAY_SIZE(SL_ID)))
+                    else if(!wcsnicmp(tmp, SL_ID, ARRAY_SIZE(SL_ID)))
                     {
                         taglen += 4;
                         ValidParam = TRUE;
@@ -292,7 +291,7 @@ CheckParameter:
                     }
                 }
             }
-            else if(!strncmpiW(current, SL_LINKCLOSE, ARRAY_SIZE(SL_LINKCLOSE)) && (CurrentType == slLink) && firsttag)
+            else if(!wcsnicmp(current, SL_LINKCLOSE, ARRAY_SIZE(SL_LINKCLOSE)) && (CurrentType == slLink) && firsttag)
             {
                 /* there's a <a...> tag opened, first add the previous text, if present */
                 if(textstart != NULL && textlen > 0 && firsttag > textstart)
@@ -330,7 +329,7 @@ CheckParameter:
                         /* Copy the tag parameters */
                         if(lpID != NULL)
                         {
-                            nc = min(lenId, strlenW(lpID));
+                            nc = min(lenId, lstrlenW(lpID));
                             nc = min(nc, MAX_LINKID_TEXT - 1);
                             Last->u.Link.szID = Alloc((nc + 1) * sizeof(WCHAR));
                             if(Last->u.Link.szID != NULL)
@@ -342,7 +341,7 @@ CheckParameter:
                             Last->u.Link.szID = NULL;
                         if(lpUrl != NULL)
                         {
-                            nc = min(lenUrl, strlenW(lpUrl));
+                            nc = min(lenUrl, lstrlenW(lpUrl));
                             nc = min(nc, L_MAX_URL_LENGTH - 1);
                             Last->u.Link.szUrl = Alloc((nc + 1) * sizeof(WCHAR));
                             if(Last->u.Link.szUrl != NULL)
@@ -408,7 +407,7 @@ CheckParameter:
             /* Copy the tag parameters */
             if(lpID != NULL)
             {
-                nc = min(lenId, strlenW(lpID));
+                nc = min(lenId, lstrlenW(lpID));
                 nc = min(nc, MAX_LINKID_TEXT - 1);
                 Last->u.Link.szID = Alloc((nc + 1) * sizeof(WCHAR));
                 if(Last->u.Link.szID != NULL)
@@ -420,7 +419,7 @@ CheckParameter:
                 Last->u.Link.szID = NULL;
             if(lpUrl != NULL)
             {
-                nc = min(lenUrl, strlenW(lpUrl));
+                nc = min(lenUrl, lstrlenW(lpUrl));
                 nc = min(nc, L_MAX_URL_LENGTH - 1);
                 Last->u.Link.szUrl = Alloc((nc + 1) * sizeof(WCHAR));
                 if(Last->u.Link.szUrl != NULL)
@@ -566,12 +565,12 @@ static BOOL SYSLINK_WrapLine (LPWSTR Text, WCHAR BreakChar, int x, int *LineLen,
 {
     int i;
 
-    for (i = 0; i < nFit; i++) if (Text[i] == '\n') break;
+    for (i = 0; i < nFit; i++) if (Text[i] == '\r' || Text[i] == '\n') break;
 
     if (i == *LineLen) return FALSE;
 
     /* check if we're in the middle of a word */
-    if (Text[i] != '\n' && Text[i] != BreakChar)
+    if (Text[i] != '\r' && Text[i] != '\n' && Text[i] != BreakChar)
     {
         /* search for the beginning of the word */
         while (i && Text[i - 1] != BreakChar) i--;
@@ -654,6 +653,12 @@ static VOID SYSLINK_Render (const SYSLINK_INFO *infoPtr, HDC hdc, PRECT pRect)
             /* skip break characters unless they're the first of the doc item */
             if(tx != Current->Text || x == SL_LEFTMARGIN)
             {
+                if (n && *tx == '\r')
+                {
+                    tx++;
+                    SkipChars++;
+                    n--;
+                }
                 if (n && *tx == '\n')
                 {
                     tx++;
@@ -954,7 +959,7 @@ static LRESULT SYSLINK_SetText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
 
 /***********************************************************************
  *           SYSLINK_SetFocusLink
- * Updates the focus status bits and focusses the specified link.
+ * Updates the focus status bits and focuses the specified link.
  * If no document item is specified, the focus bit will be removed from all links.
  * Returns the previous focused item.
  */

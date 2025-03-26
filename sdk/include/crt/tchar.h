@@ -3,7 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifndef _INC_TCHAR
 #define _INC_TCHAR
@@ -1512,14 +1512,6 @@ extern "C" {
 #define _totlower_l _tolower_l
 
 #define _istlegal(_c) (1)
-
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
 
 #define _strdec(_cpc1,_cpc2) ((_cpc1)>=(_cpc2) ? NULL : (_cpc2)-1)
 #define _strinc(_pc) ((_pc)+1)

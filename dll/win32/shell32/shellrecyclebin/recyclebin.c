@@ -3,16 +3,16 @@
  * LICENSE:     GPL v2 - See COPYING in the top level directory
  * FILE:        lib/recyclebin/recyclebin.c
  * PURPOSE:     Public interface
- * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006-2007 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "recyclebin_private.h"
 
 BOOL WINAPI
 CloseRecycleBinHandle(
-    IN HANDLE hDeletedFile)
+    IN HDELFILE hDeletedFile)
 {
-    IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
+    IRecycleBinFile *rbf = IRecycleBinFileFromHDELFILE(hDeletedFile);
     HRESULT hr;
 
     TRACE("(%p)\n", hDeletedFile);
@@ -90,10 +90,10 @@ cleanup:
 }
 
 BOOL WINAPI
-DeleteFileHandleToRecycleBin(
-    IN HANDLE hDeletedFile)
+DeleteFileInRecycleBin(
+    IN HDELFILE hDeletedFile)
 {
-    IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
+    IRecycleBinFile *rbf = IRecycleBinFileFromHDELFILE(hDeletedFile);
     HRESULT hr;
 
     TRACE("(%p)\n", hDeletedFile);
@@ -231,9 +231,10 @@ EnumerateRecycleBinW(
         }
         else if (!SUCCEEDED(hr))
             goto cleanup;
-        if (!pFnCallback(Context, (HANDLE)prbf))
+        if (!pFnCallback(Context, (HDELFILE)prbf))
         {
-            hr = HRESULT_FROM_WIN32(GetLastError());
+            UINT error = GetLastError();
+            hr = HRESULT_FROM_WIN32(error);
             goto cleanup;
         }
     }
@@ -252,121 +253,56 @@ cleanup:
     return FALSE;
 }
 
-BOOL WINAPI
-GetDeletedFileDetailsA(
-    IN HANDLE hDeletedFile,
-    IN DWORD BufferSize,
-    IN OUT PDELETED_FILE_DETAILS_A FileDetails OPTIONAL,
-    OUT LPDWORD RequiredSize OPTIONAL)
+typedef struct _BBENUMFILECONTEXT
 {
-    PDELETED_FILE_DETAILS_W FileDetailsW = NULL;
-    DWORD BufferSizeW = 0;
+    const RECYCLEBINFILEIDENTITY *pFI;
+    HDELFILE hDelFile;
+} BBENUMFILECONTEXT;
+
+static BOOL CALLBACK
+GetRecycleBinFileHandleCallback(IN PVOID Context, IN HDELFILE hDeletedFile)
+{
+    BBENUMFILECONTEXT *pCtx = (BBENUMFILECONTEXT*)Context;
+    IRecycleBinFile *pRBF = IRecycleBinFileFromHDELFILE(hDeletedFile);
+    if (IRecycleBinFile_IsEqualIdentity(pRBF, pCtx->pFI) == S_OK)
+    {
+        pCtx->hDelFile = hDeletedFile;
+        return FALSE;
+    }
+    CloseRecycleBinHandle(hDeletedFile);
+    return TRUE;
+}
+
+EXTERN_C HDELFILE
+GetRecycleBinFileHandle(
+    IN LPCWSTR pszRoot OPTIONAL,
+    IN const RECYCLEBINFILEIDENTITY *pFI)
+{
+    BBENUMFILECONTEXT context = { pFI, NULL };
+    EnumerateRecycleBinW(pszRoot, GetRecycleBinFileHandleCallback, &context);
+    return context.hDelFile;
+}
+
+EXTERN_C BOOL
+RemoveFromRecycleBinDatabase(
+    IN const RECYCLEBINFILEIDENTITY *pFI)
+{
     BOOL ret = FALSE;
-
-    TRACE("(%p, %lu, %p, %p)\n", hDeletedFile, BufferSize, FileDetails, RequiredSize);
-
-    if (BufferSize >= FIELD_OFFSET(DELETED_FILE_DETAILS_A, FileName))
+    HDELFILE hDelFile = GetRecycleBinFileHandle(NULL, pFI);
+    if (hDelFile)
     {
-        BufferSizeW = FIELD_OFFSET(DELETED_FILE_DETAILS_W, FileName)
-            + (BufferSize - FIELD_OFFSET(DELETED_FILE_DETAILS_A, FileName)) * sizeof(WCHAR);
+        IRecycleBinFile *rbf = IRecycleBinFileFromHDELFILE(hDelFile);
+        ret = SUCCEEDED(IRecycleBinFile_RemoveFromDatabase(rbf));
+        CloseRecycleBinHandle(hDelFile);
     }
-    if (FileDetails && BufferSizeW)
-    {
-        FileDetailsW = HeapAlloc(GetProcessHeap(), 0, BufferSizeW);
-        if (!FileDetailsW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-    }
-
-    ret = GetDeletedFileDetailsW(hDeletedFile, BufferSizeW, FileDetailsW, RequiredSize);
-    if (!ret)
-        goto cleanup;
-
-    if (FileDetails)
-    {
-        CopyMemory(FileDetails, FileDetailsW, FIELD_OFFSET(DELETED_FILE_DETAILS_A, FileName));
-        if (0 == WideCharToMultiByte(CP_ACP, 0, FileDetailsW->FileName, -1, FileDetails->FileName, BufferSize - FIELD_OFFSET(DELETED_FILE_DETAILS_A, FileName), NULL, NULL))
-            goto cleanup;
-    }
-    ret = TRUE;
-
-cleanup:
-    HeapFree(GetProcessHeap(), 0, FileDetailsW);
     return ret;
 }
 
 BOOL WINAPI
-GetDeletedFileDetailsW(
-    IN HANDLE hDeletedFile,
-    IN DWORD BufferSize,
-    IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
-    OUT LPDWORD RequiredSize OPTIONAL)
+RestoreFileFromRecycleBin(
+    IN HDELFILE hDeletedFile)
 {
-    IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
-    HRESULT hr;
-    SIZE_T NameSize, Needed;
-
-    TRACE("(%p, %lu, %p, %p)\n", hDeletedFile, BufferSize, FileDetails, RequiredSize);
-
-    hr = IRecycleBinFile_GetFileName(rbf, 0, NULL, &NameSize);
-    if (!SUCCEEDED(hr))
-        goto cleanup;
-    Needed = FIELD_OFFSET(DELETED_FILE_DETAILS_W, FileName) + NameSize;
-    if (RequiredSize)
-        *RequiredSize = (DWORD)Needed;
-    if (Needed > BufferSize)
-    {
-        hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-        goto cleanup;
-    }
-    hr = IRecycleBinFile_GetFileName(rbf, NameSize, FileDetails->FileName, NULL);
-    if (!SUCCEEDED(hr))
-        goto cleanup;
-    hr = IRecycleBinFile_GetLastModificationTime(rbf, &FileDetails->LastModification);
-    if (!SUCCEEDED(hr))
-        goto cleanup;
-    hr = IRecycleBinFile_GetDeletionTime(rbf, &FileDetails->DeletionTime);
-    if (!SUCCEEDED(hr))
-        goto cleanup;
-    hr = IRecycleBinFile_GetFileSize(rbf, &FileDetails->FileSize);
-    if (!SUCCEEDED(hr))
-        goto cleanup;
-    hr = IRecycleBinFile_GetPhysicalFileSize(rbf, &FileDetails->PhysicalFileSize);
-    if (!SUCCEEDED(hr))
-        goto cleanup;
-    hr = IRecycleBinFile_GetAttributes(rbf, &FileDetails->Attributes);
-    if (!SUCCEEDED(hr))
-        goto cleanup;
-
-cleanup:
-    if (SUCCEEDED(hr))
-        return TRUE;
-    if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-        SetLastError(HRESULT_CODE(hr));
-    else
-        SetLastError(ERROR_GEN_FAILURE);
-    return FALSE;
-}
-
-BOOL WINAPI
-GetRecycleBinDetails(
-    IN LPCWSTR pszVolume OPTIONAL,
-    OUT ULARGE_INTEGER *pulTotalItems,
-    OUT ULARGE_INTEGER *pulTotalSize)
-{
-    pulTotalItems->QuadPart = 0;
-    pulTotalSize->QuadPart = 0;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-BOOL WINAPI
-RestoreFile(
-    IN HANDLE hDeletedFile)
-{
-    IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
+    IRecycleBinFile *rbf = IRecycleBinFileFromHDELFILE(hDeletedFile);
     HRESULT hr;
 
     TRACE("(%p)\n", hDeletedFile);
@@ -381,7 +317,7 @@ RestoreFile(
     return FALSE;
 }
 
-HRESULT WINAPI
+EXTERN_C HRESULT
 GetDefaultRecycleBin(
     IN LPCWSTR pszVolume OPTIONAL,
     OUT IRecycleBin **pprb)
@@ -409,5 +345,19 @@ GetDefaultRecycleBin(
         return hr;
     hr = IUnknown_QueryInterface(pUnk, &IID_IRecycleBin, (void **)pprb);
     IUnknown_Release(pUnk);
+    return hr;
+}
+
+EXTERN_C HRESULT
+GetRecycleBinPathFromDriveNumber(UINT Drive, LPWSTR Path)
+{
+    const WCHAR volume[] = { LOWORD('A' + Drive), ':', '\\', '\0' };
+    IRecycleBin *pRB;
+    HRESULT hr = GetDefaultRecycleBin(volume, &pRB);
+    if (SUCCEEDED(hr))
+    {
+        hr = IRecycleBin_GetDirectory(pRB, Path);
+        IRecycleBin_Release(pRB);
+    }
     return hr;
 }

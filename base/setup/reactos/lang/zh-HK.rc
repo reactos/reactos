@@ -1,0 +1,314 @@
+/*
+ * PROJECT:     ReactOS GUI first stage setup application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+/* Dialogs */
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "歡迎使用 ReactOS 安裝程式精靈", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+under heavy development. It is recommended to use it only for \
+evaluation and testing and not as your daily-usage OS.\n\
+It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Backup your data or test on a secondary computer \
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    AUTORADIOBUTTON "安裝 ReactOS(&I)", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "安裝 ReactOS 的新副本。這個選項不會儲存您的檔案、設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "修復或更新 ReactOS(&U)", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "更新或修復已安裝的 ReactOS 副本。這個選項會儲存您的檔案、設定及程式。只有在 ReactOS 已經安裝在此電腦時才可使用這個選項。", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+END
+
+IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT       "ReactOS 安裝程式可以升級下面其中一個可用的 ReactOS 安裝。如果某個 ReactOS 安裝損毀，安裝程式可以嘗試修復它。", IDC_STATIC, 6, 6, 300, 18
+    CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
+    PUSHBUTTON  "不要升級(&D)", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT       "按［下一步］升級已選擇的 ReactOS 安裝，或按［不要升級］進行全新的 ReactOS 安裝。", IDC_STATIC, 7, 124, 222, 16
+END
+
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "電腦：", IDC_STATIC, 20, 15, 80, 10
+    COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "顯示：", IDC_STATIC, 20, 35, 80, 10
+    COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "鍵盤：", IDC_STATIC, 20, 55, 80, 10
+    COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "按［下一步］設定要安裝的磁碟機。", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "Initialize(&I)", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "建立(&C)", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "Format(&F)", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "刪除(&D)", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "驅動程式(&R)", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "進階選項(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    // LTEXT "點選下一步檢查安裝概要。", IDC_STATIC, 7, 128, 277, 8
+END
+
+IDD_PARTITION DIALOGEX 0, 0, 200, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "建立並格式化磁碟區"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "大小(&S)：", IDC_STATIC, 7, 9, 70, 9
+    EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
+    CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
+    LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
+    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    LTEXT "檔案系統(&F)：", IDC_FS_STATIC, 7, 46, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    PUSHBUTTON "確定", IDOK, 88, 98, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 143, 98, 50, 14
+END
+
+IDD_FORMAT DIALOGEX 0, 0, 200, 83
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Format Partition"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "檔案系統(&F)：", IDC_FS_STATIC, 7, 9, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    PUSHBUTTON "確定", IDOK, 88, 61, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 143, 61, 50, 14
+END
+
+IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced Installation Options"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    EDITTEXT IDC_PATH, 7, 23, 291, 13
+    GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "確定", IDOK, 193, 113, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 248, 113, 50, 14
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "安裝類型：", IDC_STATIC, 18, 5, 74, 11
+    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "安裝來源：", IDC_STATIC, 18, 17, 74, 11
+    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "架構：", IDC_STATIC, 18, 29, 74, 11
+    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "電腦：", IDC_STATIC, 18, 41, 74, 11
+    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "顯示：", IDC_STATIC, 18, 53, 74, 11
+    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "鍵盤：", IDC_STATIC, 18, 65, 74, 11
+    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "目標磁碟區：", IDC_STATIC, 18, 77, 74, 11
+    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "目的地路徑：", IDC_STATIC, 18, 89, 74, 11
+    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    AUTOCHECKBOX "我確定所有的安裝設定正確。\n我亦明白 ReactOS 目前處於 Alpha 測試階段，有可能損壞電腦或導致我的資料損毀。",
+        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
+    LTEXT "請確定所有的安裝設定正確，\n然後按［安裝］，開始安裝程序。", IDC_STATIC, 7, 124, 303, 18
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "安裝檔案...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+END
+
+IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "正在完成 ReactOS 安裝程式"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS 的第一階段安裝已順利完成。", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "當按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "如果光碟機內仍然有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CAPTION "ReactOS 安裝程式"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_DEVICETITLE "設定基本裝置"
+    IDS_DEVICESUBTITLE "指定顯示和鍵盤設定。"
+    IDS_DRIVETITLE "設定安裝磁碟區和系統資料夾"
+    IDS_DRIVESUBTITLE "設定安裝磁碟區，系統資料夾和載入程式。"
+    IDS_SUMMARYTITLE "安裝概要"
+    IDS_SUMMARYSUBTITLE "安裝前列出安裝屬性以供檢查。"
+    IDS_PROCESSTITLE "設定磁碟區，複製檔案並安裝系統"
+    IDS_PROCESSSUBTITLE "建立並格式化磁碟區，複製檔案，安裝並設定載入程式。"
+    IDS_RESTARTTITLE "第一階段安裝完成"
+    IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝。"
+    IDS_ABORTSETUP "ReactOS 尚未完全安裝到您的電腦上。如果您現在結束安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定要結束嗎？"
+    IDS_ABORTSETUP2 "終止安裝？"
+    IDS_NO_TXTSETUP_SIF "找不到「txtsetup.sif」。\n安裝程式無法繼續。"
+    IDS_INSTALLBTN "&Install"
+    IDS_VOLUME_NOFORMAT "Not formatted"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLATION_NAME "名稱"
+    IDS_INSTALLATION_PATH "安裝路徑"
+    IDS_INSTALLATION_VENDOR "廠商名稱"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "名稱"
+    IDS_PARTITION_TYPE "類型"
+    IDS_PARTITION_SIZE "大小"
+    IDS_PARTITION_STATUS "狀態"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BOOTLOADER_NOINST "No installation"
+    IDS_BOOTLOADER_REMOVABLE "Removable media"
+    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
+    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR (Default)"
+    IDS_BOOTLOADER_VBRONLY "僅 VBR"
+END
+
+/* Progress Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
+    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+
+    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+
+    IDS_COPYING  "Copying %s"
+    IDS_MOVING   "Moving %s to %s"
+    IDS_RENAMING "Renaming %s to %s"
+    IDS_DELETING "Deleting %s"
+
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
+    IDS_PREPARE_PARTITIONS "Preparing partitions..."
+    IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
+    IDS_COPYING_FILES "Copying the files..."
+
+    IDS_CREATE_REGISTRY "Creating the registry..."
+    IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
+END
+
+// Note to translators: please refer to the corresponding usetup/lang/*.h translations.
+STRINGTABLE
+BEGIN
+    IDS_REG_DONE "Done"
+    IDS_REG_REGHIVEUPDATE "Updating registry hives"
+    IDS_REG_IMPORTFILE "Importing %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
+    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
+    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
+    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
+    IDS_REG_UNKNOWN "Unknown status %d"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
+alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
+Spaces are not allowed."
+
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
+    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+and only contain letters, digits, dashes and periods. Spaces are not allowed."
+
+    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
+    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+
+    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
+    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+
+    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+
+    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
+on your system or could not create a new one. Without such a partition\n\
+the Setup program cannot install ReactOS.\
+\nClick on OK to return to the partition selection list."
+
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+
+    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
+\nClick on OK to continue Setup.\
+\nClick on CANCEL to quit Setup."
+
+    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+
+    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
+\nClick on OK to continue Setup.\
+\nClick on CANCEL to quit Setup."
+
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
+END

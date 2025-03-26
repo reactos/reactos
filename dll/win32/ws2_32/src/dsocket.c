@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dll/win32/ws2_32_new/src/dsocket.c
+ * FILE:        dll/win32/ws2_32/src/dsocket.c
  * PURPOSE:     Socket Object
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
@@ -142,8 +142,8 @@ WsSockGetSocket(IN SOCKET Handle)
     PWSSOCKET Socket;
 
     /* Let WAH do the translation */
-    if ((Socket = (PWSSOCKET)WahReferenceContextByHandle(WsSockHandleTable,
-                                                         (HANDLE)Handle)))
+    if ((WsSockHandleTable != NULL) &&
+        (Socket = (PWSSOCKET)WahReferenceContextByHandle(WsSockHandleTable, (HANDLE)Handle)))
     {
         return Socket;
     }

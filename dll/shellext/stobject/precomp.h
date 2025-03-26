@@ -33,6 +33,7 @@ extern HINSTANCE g_hInstance;
 #define ID_ICON_VOLUME  (WM_APP + 0x4CB)
 #define ID_ICON_HOTPLUG (WM_APP + 0x4CC)
 #define ID_ICON_POWER   (WM_APP + 0x4CD)
+#define ID_ICON_MOUSE   (WM_APP + 0x4CE)
 
 #define POWER_SERVICE_FLAG    0x00000001
 #define HOTPLUG_SERVICE_FLAG  0x00000002
@@ -73,6 +74,11 @@ extern HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
+
+extern HRESULT STDMETHODCALLTYPE MouseKeys_Init(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE MouseKeys_Shutdown(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE MouseKeys_Update(_In_ CSysTray * pSysTray);
+
 
 #define POWER_TIMER_ID   2
 #define VOLUME_TIMER_ID  3

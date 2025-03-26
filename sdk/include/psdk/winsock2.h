@@ -39,8 +39,8 @@
 #endif
 #endif
 
-#if defined(__LP64__) || (!defined(_M_AMD64) && defined(__WINESRC__))
-#if !defined(__ROS_LONG64__)
+#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
+#ifndef __ROS_LONG64__
 #define __ROS_LONG64__
 #endif
 #endif
@@ -2738,7 +2738,7 @@ typedef struct timeval FAR *LPTIMEVAL;
 #include <poppack.h>
 #endif
 
-/* FIXME : 
+/* FIXME :
 #if(_WIN32_WINNT >= 0x0501)
 #ifdef IPV6STRICT
 #include <wsipv6ok.h>

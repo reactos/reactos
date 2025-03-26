@@ -586,7 +586,7 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     }
     grid_width = grid_height = size;
     bw = (size > 6 ? 3 : (size - 1) / 2);
-    
+
 #if 0
     /* FIXME Pattern brushes not yet implemented in ReactOS */
     {
@@ -632,7 +632,7 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     return TRUE;
 }
 
-BOOL WINAPI AboutProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
+INT_PTR CALLBACK AboutProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
     switch(message){
     case WM_COMMAND:
@@ -652,7 +652,7 @@ static void ReadSettings(HWND hWnd)
 
     pre_solve_delay = SendDlgItemMessage(hWnd, IDC_SLIDER_PRESD, TBM_GETPOS, 0, 0);
     SetDlgItemInt(hWnd, IDC_TEXT_PRESD, pre_solve_delay, FALSE);
-    
+
     post_solve_delay = SendDlgItemMessage(hWnd, IDC_SLIDER_POSTSD, TBM_GETPOS, 0, 0);
     SetDlgItemInt(hWnd, IDC_TEXT_POSTSD, post_solve_delay, FALSE);
 
@@ -684,7 +684,6 @@ LRESULT CALLBACK ScreenSaverProc(
 
             start_timer(hWnd, solve_delay);
             break;
-
         case 3:
             if (!solve_maze(hWnd))
             {
@@ -696,7 +695,6 @@ LRESULT CALLBACK ScreenSaverProc(
                 start_timer(hWnd, post_solve_delay);
             }
             break;
-
         default:
             initialize_maze();
 
@@ -711,14 +709,12 @@ LRESULT CALLBACK ScreenSaverProc(
             break;
         }
         break;
-
     case WM_DESTROY:  // message: window being destroyed
         DeleteObject(hBrushLiving);
         DeleteObject(hBrushDead);
         ReleaseDC(hWnd, hDC);
         break;
-
-    default:          // Passes it on if unproccessed
+    default:          // Passes it on if unprocessed
         return DefScreenSaverProc(hWnd, message, wParam, lParam);
     }
     return 0;
@@ -757,7 +753,7 @@ BOOL WINAPI ScreenSaverConfigureDialog(HWND hWnd, UINT message, WPARAM wparam, L
                     EndDialog(hWnd, TRUE);
                     break;
                 case IDABOUT:
-                    DialogBox(hMainInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hWnd, (DLGPROC)AboutProc);
+                    DialogBox(hMainInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hWnd, AboutProc);
                     break;
             }
         case WM_HSCROLL:

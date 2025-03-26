@@ -207,7 +207,7 @@ EngMapSection(
                                     pSection->cjViewSize,
                                     NULL,
                                     &pSection->cjViewSize,
-                                    0,
+                                    ViewUnmap,
                                     0,
                                     PAGE_READWRITE);
         if (!NT_SUCCESS(Status))

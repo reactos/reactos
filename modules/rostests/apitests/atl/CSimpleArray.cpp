@@ -14,31 +14,31 @@
 #include <atlbase.h>
 #include <atlsimpcoll.h>
 
-struct CCreature
+struct CSimpleCreature
 {
     static int s_nCount;
     static int s_nCopyCount;
-    CCreature()
+    CSimpleCreature()
     {
-        CCreature::s_nCount++;
+        CSimpleCreature::s_nCount++;
     }
-    CCreature(const CCreature& c)
+    CSimpleCreature(const CSimpleCreature& c)
     {
-        CCreature::s_nCount++;
+        CSimpleCreature::s_nCount++;
     }
-    ~CCreature()
+    ~CSimpleCreature()
     {
-        CCreature::s_nCount--;
+        CSimpleCreature::s_nCount--;
     }
-    CCreature& operator=(const CCreature& other)
+    CSimpleCreature& operator=(const CSimpleCreature& other)
     {
-        CCreature::s_nCopyCount++;
+        CSimpleCreature::s_nCopyCount++;
         return *this;
     }
 };
 
-int CCreature::s_nCount = 0;
-int CCreature::s_nCopyCount = 0;
+int CSimpleCreature::s_nCount = 0;
+int CSimpleCreature::s_nCopyCount = 0;
 
 
 START_TEST(CSimpleArray)
@@ -83,60 +83,60 @@ START_TEST(CSimpleArray)
     ok_int(array1[2], 2);
     ok_int(array1[3], 3);
 
-    ok_int(CCreature::s_nCount, 0);
-    ok_int(CCreature::s_nCopyCount, 0);
+    ok_int(CSimpleCreature::s_nCount, 0);
+    ok_int(CSimpleCreature::s_nCopyCount, 0);
 
-    CSimpleArray<CCreature> array2;
+    CSimpleArray<CSimpleCreature> array2;
     {
-        CCreature creature1, creature2;
+        CSimpleCreature creature1, creature2;
 
-        ok_int(CCreature::s_nCount, 2);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 2);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
         array2.Add(creature1);
-        ok_int(CCreature::s_nCount, 3);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 3);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
         array2.Add(creature2);
-        ok_int(CCreature::s_nCount, 4);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 4);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
     }
-    ok_int(CCreature::s_nCount, 2);
-    ok_int(CCreature::s_nCopyCount, 0);
+    ok_int(CSimpleCreature::s_nCount, 2);
+    ok_int(CSimpleCreature::s_nCopyCount, 0);
 
     {
-        CSimpleArray<CCreature> array3(array2), array4, array5;
-        ok_int(CCreature::s_nCount, 4);
-        ok_int(CCreature::s_nCopyCount, 0);
+        CSimpleArray<CSimpleCreature> array3(array2), array4, array5;
+        ok_int(CSimpleCreature::s_nCount, 4);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
 
         array4 = array2;
-        ok_int(CCreature::s_nCount, 6);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 6);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
 
-        CCreature creature1;
-        ok_int(CCreature::s_nCount, 7);
-        ok_int(CCreature::s_nCopyCount, 0);
+        CSimpleCreature creature1;
+        ok_int(CSimpleCreature::s_nCount, 7);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
 
         array4.Add(creature1);
-        ok_int(CCreature::s_nCount, 8);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 8);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
 
         array3 = array4;
-        ok_int(CCreature::s_nCount, 9);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 9);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
 
         array5 = array2;
-        ok_int(CCreature::s_nCount, 11);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 11);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
 
         array5 = array2;
-        ok_int(CCreature::s_nCount, 11);
-        ok_int(CCreature::s_nCopyCount, 0);
+        ok_int(CSimpleCreature::s_nCount, 11);
+        ok_int(CSimpleCreature::s_nCopyCount, 0);
     }
-    ok_int(CCreature::s_nCount, 2);
-    ok_int(CCreature::s_nCopyCount, 0);
+    ok_int(CSimpleCreature::s_nCount, 2);
+    ok_int(CSimpleCreature::s_nCopyCount, 0);
 
     array2.RemoveAll();
-    ok_int(CCreature::s_nCount, 0);
-    ok_int(CCreature::s_nCopyCount, 0);
+    ok_int(CSimpleCreature::s_nCount, 0);
+    ok_int(CSimpleCreature::s_nCopyCount, 0);
 
     array1.RemoveAll();
     ok_int(array1.GetSize(), 0);

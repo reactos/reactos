@@ -56,4 +56,16 @@
 #define IDI_HOTPLUG_ERR           420
 #define IDI_HOTPLUG_OK            421
 
+#define IDI_MOUSE_DISABLED        440
+#define IDI_MOUSE_NOBTN           441
+#define IDI_MOUSE_L_ACTIVE        442
+#define IDI_MOUSE_L_DOWN          443
+#define IDI_MOUSE_R_ACTIVE        444
+#define IDI_MOUSE_R_DOWN          445
+#define IDI_MOUSE_LR_ACTIVE       446
+#define IDI_MOUSE_LR_DOWN         447
+#define IDI_MOUSE_L_ACTIVE_R_DOWN 448
+#define IDI_MOUSE_R_ACTIVE_L_DOWN 449
+
+
 #define IDR_SYSTRAY               11001

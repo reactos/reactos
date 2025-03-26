@@ -5,9 +5,21 @@ HKCR
     }
     NoRemove CLSID
     {
-        '{871C5380-42A0-1069-A2EA-08002B30309D}' = s 'Internet'
+        '{871C5380-42A0-1069-A2EA-08002B30309D}' = s 'Internet Browser'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            Shellex = s ''
+            {
+                ContextMenuHandlers = s ''
+                {
+                    ieframe = s '{871C5380-42A0-1069-A2EA-08002B30309D}'
+                    {
+                    }
+                }
+                MayChangeDefaultMenu = s ''
+                {
+                }
+            }
         }
         '{3C374A40-BAE4-11CF-BF7D-00AA006946EE}' = s 'Microsoft Url History Service'
         {

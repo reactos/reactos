@@ -134,7 +134,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         Context->R6 = ExceptionFrame->R6;
         Context->R7 = ExceptionFrame->R7;
         Context->R8 = ExceptionFrame->R8;
-        Context->R0 = ExceptionFrame->R9;
+        Context->R9 = ExceptionFrame->R9;
         Context->R10 = ExceptionFrame->R10;
         Context->R11 = ExceptionFrame->R11;
         Context->R12 = TrapFrame->R12;

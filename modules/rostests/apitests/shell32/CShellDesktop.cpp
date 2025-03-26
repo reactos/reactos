@@ -198,7 +198,7 @@ VOID TestInitialize(_In_ IShellFolder *psf)
     ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
 
     //crashes in xp, works on win10
-    //hr = ppf2->Initialize(NULL);    
+    //hr = ppf2->Initialize(NULL);
     //ok(hr == S_OK, "hr = %lx\n", hr);
     //hr = ppf2->Initialize((LPCITEMIDLIST)0xdeaddead);
     //ok(hr == S_OK, "hr = %lx\n", hr);

@@ -15,14 +15,19 @@
 
 /* GLOBALS ********************************************************************/
 
-PCHAR SmpSubSystemNames[] =
+#if DBG
+const PCSTR SmpSubSystemNames[] =
 {
     "Unknown",
     "Native",
-    "Windows",
-    "Posix",
-    "OS/2"
+    "Windows GUI",
+    "Windows CUI",
+    NULL,
+    "OS/2 CUI",
+    NULL,
+    "Posix CUI"
 };
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -31,27 +36,28 @@ NTAPI
 SmpSbCreateSession(IN PVOID Reserved,
                    IN PSMP_SUBSYSTEM OtherSubsystem,
                    IN PRTL_USER_PROCESS_INFORMATION ProcessInformation,
-                   IN ULONG MuSessionId,
-                   IN PCLIENT_ID DbgClientId)
+                   IN ULONG DbgSessionId,
+                   IN PCLIENT_ID DbgUiClientId)
 {
     NTSTATUS Status;
-    PSMP_SUBSYSTEM KnownSubsys;
-    SB_API_MSG SbApiMsg;
+    ULONG SubSystemType = ProcessInformation->ImageInformation.SubSystemType;
+    ULONG MuSessionId;
     ULONG SessionId;
-    PSB_CREATE_SESSION_MSG CreateSessionMsg;
+    PSMP_SUBSYSTEM KnownSubsys;
+    SB_API_MSG SbApiMsg = {0};
+    PSB_CREATE_SESSION_MSG CreateSessionMsg = &SbApiMsg.u.CreateSession;
 
     /* Write out the create session message including its initial process */
-    CreateSessionMsg = &SbApiMsg.CreateSession;
     CreateSessionMsg->ProcessInfo = *ProcessInformation;
-    CreateSessionMsg->MuSessionId = MuSessionId;
-    if (DbgClientId)
+    CreateSessionMsg->DbgSessionId = DbgSessionId;
+    if (DbgUiClientId)
     {
-        CreateSessionMsg->ClientId = *DbgClientId;
+        CreateSessionMsg->DbgUiClientId = *DbgUiClientId;
     }
     else
     {
-        CreateSessionMsg->ClientId.UniqueThread = NULL;
-        CreateSessionMsg->ClientId.UniqueProcess = NULL;
+        CreateSessionMsg->DbgUiClientId.UniqueThread = NULL;
+        CreateSessionMsg->DbgUiClientId.UniqueProcess = NULL;
     }
 
     /* Find a subsystem responsible for this session */
@@ -64,10 +70,8 @@ SmpSbCreateSession(IN PVOID Reserved,
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-    /* Find the subsystem we have for this initial process */
-    KnownSubsys = SmpLocateKnownSubSysByType(MuSessionId,
-                                             ProcessInformation->
-                                             ImageInformation.SubSystemType);
+    /* Find the subsystem suitable for this initial process */
+    KnownSubsys = SmpLocateKnownSubSysByType(MuSessionId, SubSystemType);
     if (KnownSubsys)
     {
         /* Duplicate the process handle into the message */
@@ -142,11 +146,22 @@ SmpSbCreateSession(IN PVOID Reserved,
     }
 
     /* If we don't yet have a subsystem, only native images can be launched */
-    if (ProcessInformation->ImageInformation.SubSystemType != IMAGE_SUBSYSTEM_NATIVE)
+    if (SubSystemType != IMAGE_SUBSYSTEM_NATIVE)
     {
         /* Fail */
-        DPRINT1("SMSS: %s SubSystem has not been started.\n",
-                SmpSubSystemNames[ProcessInformation->ImageInformation.SubSystemType]);
+#if DBG
+        PCSTR SubSysName = NULL;
+        CHAR SubSysTypeName[sizeof("Type 0x")+8];
+
+        if (SubSystemType < RTL_NUMBER_OF(SmpSubSystemNames))
+            SubSysName = SmpSubSystemNames[SubSystemType];
+        if (!SubSysName)
+        {
+            SubSysName = SubSysTypeName;
+            sprintf(SubSysTypeName, "Type 0x%08lx", SubSystemType);
+        }
+        DPRINT1("SMSS: %s SubSystem not found (either not started or destroyed).\n", SubSysName);
+#endif
         Status = STATUS_UNSUCCESSFUL;
         NtClose(ProcessInformation->ProcessHandle);
         NtClose(ProcessInformation->ThreadHandle);
@@ -154,8 +169,13 @@ SmpSbCreateSession(IN PVOID Reserved,
     }
 
 #if 0
-    /* This code handles debug applications, but it seems vestigial... */
-    if ((*(ULONGLONG)&CreateSessionMsg.ClientId) && (SmpDbgSsLoaded))
+    /*
+     * This code is part of the LPC-based legacy debugging support for native
+     * applications, implemented with the debug client interface (DbgUi) and
+     * debug subsystem (DbgSs). It is now vestigial since WinXP+ and is here
+     * for informational purposes only.
+     */
+    if ((*(ULONGLONG)&CreateSessionMsg.DbgUiClientId) && SmpDbgSsLoaded)
     {
         Process = RtlAllocateHeap(SmpHeap, SmBaseTag, sizeof(SMP_PROCESS));
         if (!Process)
@@ -168,12 +188,17 @@ SmpSbCreateSession(IN PVOID Reserved,
             return STATUS_NO_MEMORY;
         }
 
-        Process->DbgClientId = CreateSessionMsg->ClientId;
+        Process->DbgUiClientId = CreateSessionMsg->DbgUiClientId;
         Process->ClientId = ProcessInformation->ClientId;
         InsertHeadList(&NativeProcessList, &Process->Entry);
-        DPRINT1("Native Debug App %lx.%lx\n", Process->ClientId.UniqueProcess, Process->ClientId.UniqueThread);
+        DPRINT1("Native Debug App %lx.%lx\n",
+                Process->ClientId.UniqueProcess,
+                Process->ClientId.UniqueThread);
 
-        Status = NtSetInformationProcess(ProcessInformation->ProcessHandle, 7, &SmpDebugPort, 4);
+        Status = NtSetInformationProcess(ProcessInformation->ProcessHandle,
+                                         ProcessDebugPort,
+                                         &SmpDebugPort,
+                                         sizeof(SmpDebugPort));
         ASSERT(NT_SUCCESS(Status));
     }
 #endif

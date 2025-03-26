@@ -74,10 +74,18 @@ MiMapLockedPagesInUserSpace(
         DPRINT1("FIXME: Need to check for large pages\n");
     }
 
+    Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
+    if (!NT_SUCCESS(Status))
+    {
+        Vad = NULL;
+        goto Error;
+    }
+
     /* Allocate a VAD for our mapped region */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
     if (Vad == NULL)
     {
+        PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Error;
     }
@@ -155,7 +163,6 @@ MiMapLockedPagesInUserSpace(
     MiLockProcessWorkingSetUnsafe(Process, Thread);
 
     ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
-
     MiInsertVad((PMMVAD)Vad, &Process->VadRoot);
 
     /* Check if this is uncached */
@@ -248,6 +255,7 @@ MiMapLockedPagesInUserSpace(
 
         /* Acquire a share count */
         Pfn1 = MI_PFN_ELEMENT(PointerPde->u.Hard.PageFrameNumber);
+        DPRINT("Incrementing %p from %p\n", Pfn1, _ReturnAddress());
         OldIrql = MiAcquirePfnLock();
         Pfn1->u2.ShareCount++;
         MiReleasePfnLock(OldIrql);
@@ -274,6 +282,7 @@ Error:
     if (Vad != NULL)
     {
         ExFreePoolWithTag(Vad, 'ldaV');
+        PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
     }
     ExRaiseStatus(Status);
 }
@@ -318,6 +327,7 @@ MiUnmapLockedPagesInUserSpace(
     /* Remove it from the process VAD tree */
     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
     MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
+    PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
 
     /* MiRemoveNode should have removed us if we were the hint */
     ASSERT(Process->VadRoot.NodeHint != Vad);
@@ -330,9 +340,6 @@ MiUnmapLockedPagesInUserSpace(
         ASSERT(MiAddressToPte(PointerPte)->u.Hard.Valid == 1);
         ASSERT(PointerPte->u.Hard.Valid == 1);
 
-        /* Dereference the page */
-        MiDecrementPageTableReferences(BaseAddress);
-
         /* Invalidate it */
         MI_ERASE_PTE(PointerPte);
 
@@ -341,28 +348,17 @@ MiUnmapLockedPagesInUserSpace(
         PageTablePage = PointerPde->u.Hard.PageFrameNumber;
         MiDecrementShareCount(MiGetPfnEntry(PageTablePage), PageTablePage);
 
+        if (MiDecrementPageTableReferences(BaseAddress) == 0)
+        {
+            ASSERT(MiIsPteOnPdeBoundary(PointerPte + 1) || (NumberOfPages == 1));
+            MiDeletePde(PointerPde, Process);
+        }
+
         /* Next page */
         PointerPte++;
         NumberOfPages--;
         BaseAddress = (PVOID)((ULONG_PTR)BaseAddress + PAGE_SIZE);
         MdlPages++;
-
-        /* Moving to a new PDE? */
-        if (PointerPde != MiAddressToPde(BaseAddress))
-        {
-            /* See if we should delete it */
-            KeFlushProcessTb();
-            PointerPde = MiPteToPde(PointerPte - 1);
-            ASSERT(PointerPde->u.Hard.Valid == 1);
-            if (MiQueryPageTableReferences(BaseAddress) == 0)
-            {
-                ASSERT(PointerPde->u.Long != 0);
-                MiDeletePte(PointerPde,
-                            MiPteToAddress(PointerPde),
-                            Process,
-                            NULL);
-            }
-        }
     }
 
     KeFlushProcessTb();
@@ -533,7 +529,7 @@ MmAllocatePagesForMdlEx(IN PHYSICAL_ADDRESS LowAddress,
     else
     {
         //
-        // Conver to internal caching attribute
+        // Convert to internal caching attribute
         //
         CacheAttribute = MiPlatformCacheAttributes[FALSE][CacheType];
     }
@@ -1626,29 +1622,224 @@ MmAdvanceMdl(IN PMDL Mdl,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
-MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
-                                    IN ULONG PoolTag,
-                                    IN PMDL MemoryDescriptorList,
-                                    IN MEMORY_CACHING_TYPE CacheType)
+MmMapLockedPagesWithReservedMapping(
+    _In_ PVOID MappingAddress,
+    _In_ ULONG PoolTag,
+    _In_ PMDL Mdl,
+    _In_ MEMORY_CACHING_TYPE CacheType)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PPFN_NUMBER MdlPages, LastPage;
+    PFN_COUNT PageCount;
+    BOOLEAN IsIoMapping;
+    MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+
+    ASSERT(Mdl->ByteCount != 0);
+
+    // Get the list of pages and count
+    MdlPages = MmGetMdlPfnArray(Mdl);
+    PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Mdl),
+                                               Mdl->ByteCount);
+    LastPage = MdlPages + PageCount;
+
+    // Sanity checks
+    ASSERT((Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA |
+                             MDL_SOURCE_IS_NONPAGED_POOL |
+                             MDL_PARTIAL_HAS_BEEN_MAPPED)) == 0);
+    ASSERT((Mdl->MdlFlags & (MDL_PAGES_LOCKED | MDL_PARTIAL)) != 0);
+
+    // Get the correct cache type
+    IsIoMapping = (Mdl->MdlFlags & MDL_IO_SPACE) != 0;
+    CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
+
+    // Get the first PTE we reserved
+    ASSERT(MappingAddress);
+    PointerPte = MiAddressToPte(MappingAddress) - 2;
+    ASSERT(!PointerPte[0].u.Hard.Valid &&
+           !PointerPte[1].u.Hard.Valid);
+
+    // Verify that the pool tag matches
+    TempPte.u.Long = PoolTag;
+    TempPte.u.Hard.Valid = 0;
+    if (PointerPte[1].u.Long != TempPte.u.Long)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     PTE_MAPPING_ADDRESS_NOT_OWNED, /* Trying to map an address it does not own */
+                     (ULONG_PTR)MappingAddress,
+                     PoolTag,
+                     PointerPte[1].u.Long);
+    }
+
+    // We must have a size, and our helper PTEs must be invalid
+    if (PointerPte[0].u.List.NextEntry < 3)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     PTE_MAPPING_ADDRESS_INVALID, /* Trying to map an invalid address */
+                     (ULONG_PTR)MappingAddress,
+                     PoolTag,
+                     (ULONG_PTR)_ReturnAddress());
+    }
+
+    // If the mapping isn't big enough, fail
+    if (PointerPte[0].u.List.NextEntry - 2 < PageCount)
+    {
+        DPRINT1("Reserved mapping too small. Need %Iu pages, have %Iu\n",
+                        PageCount,
+                        PointerPte[0].u.List.NextEntry - 2);
+        return NULL;
+    }
+    // Skip our two helper PTEs
+    PointerPte += 2;
+
+    // Get the template
+    TempPte = ValidKernelPte;
+    switch (CacheAttribute)
+    {
+        case MiNonCached:
+            // Disable caching
+            MI_PAGE_DISABLE_CACHE(&TempPte);
+            MI_PAGE_WRITE_THROUGH(&TempPte);
+            break;
+
+        case MiWriteCombined:
+            // Enable write combining
+            MI_PAGE_DISABLE_CACHE(&TempPte);
+            MI_PAGE_WRITE_COMBINED(&TempPte);
+            break;
+
+        default:
+            // Nothing to do
+            break;
+    }
+
+    // Loop all PTEs
+    for (; (MdlPages < LastPage) && (*MdlPages != LIST_HEAD); ++MdlPages)
+    {
+        // Write the PTE
+        TempPte.u.Hard.PageFrameNumber = *MdlPages;
+        MI_WRITE_VALID_PTE(PointerPte++, TempPte);
+    }
+
+    // Mark it as mapped
+    ASSERT((Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0);
+    Mdl->MappedSystemVa = MappingAddress;
+    Mdl->MdlFlags |= MDL_MAPPED_TO_SYSTEM_VA;
+
+    // Check if it was partial
+    if (Mdl->MdlFlags & MDL_PARTIAL)
+    {
+        // Write the appropriate flag here too
+        Mdl->MdlFlags |= MDL_PARTIAL_HAS_BEEN_MAPPED;
+    }
+
+    // Return the mapped address
+    return (PVOID)((ULONG_PTR)MappingAddress + Mdl->ByteOffset);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
-MmUnmapReservedMapping(IN PVOID BaseAddress,
-                       IN ULONG PoolTag,
-                       IN PMDL MemoryDescriptorList)
+MmUnmapReservedMapping(
+    _In_ PVOID BaseAddress,
+    _In_ ULONG PoolTag,
+    _In_ PMDL Mdl)
 {
-    UNIMPLEMENTED;
+    PVOID Base;
+    PFN_COUNT PageCount, ExtraPageCount;
+    PPFN_NUMBER MdlPages;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+
+    // Sanity check
+    ASSERT(Mdl->ByteCount != 0);
+    ASSERT(BaseAddress > MM_HIGHEST_USER_ADDRESS);
+
+    // Get base and count information
+    Base = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
+    PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
+
+    // Sanity checks
+    ASSERT((Mdl->MdlFlags & MDL_PARENT_MAPPED_SYSTEM_VA) == 0);
+    ASSERT(PageCount != 0);
+    ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
+
+    // Get the first PTE we reserved
+    PointerPte = MiAddressToPte(BaseAddress) - 2;
+    ASSERT(!PointerPte[0].u.Hard.Valid &&
+           !PointerPte[1].u.Hard.Valid);
+
+    // Verify that the pool tag matches
+    TempPte.u.Long = PoolTag;
+    TempPte.u.Hard.Valid = 0;
+    if (PointerPte[1].u.Long != TempPte.u.Long)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     PTE_UNMAPPING_ADDRESS_NOT_OWNED, /* Trying to unmap an address it does not own */
+                     (ULONG_PTR)BaseAddress,
+                     PoolTag,
+                     PointerPte[1].u.Long);
+    }
+
+    // We must have a size
+    if (PointerPte[0].u.List.NextEntry < 3)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     PTE_MAPPING_ADDRESS_EMPTY, /* Mapping apparently empty */
+                     (ULONG_PTR)BaseAddress,
+                     PoolTag,
+                     (ULONG_PTR)_ReturnAddress());
+    }
+
+    // Skip our two helper PTEs
+    PointerPte += 2;
+
+    // This should be a resident system PTE
+    ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
+    ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
+    ASSERT(PointerPte->u.Hard.Valid == 1);
+
+    // TODO: check the MDL range makes sense with regard to the mapping range
+    // TODO: check if any of them are already zero
+    // TODO: check if any outside the MDL range are nonzero
+    // TODO: find out what to do with extra PTEs
+
+    // Check if the caller wants us to free advanced pages
+    if (Mdl->MdlFlags & MDL_FREE_EXTRA_PTES)
+    {
+        // Get the MDL page array
+        MdlPages = MmGetMdlPfnArray(Mdl);
+
+        /* Number of extra pages stored after the PFN array */
+        ExtraPageCount = MdlPages[PageCount];
+
+        // Do the math
+        PageCount += ExtraPageCount;
+        PointerPte -= ExtraPageCount;
+        ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
+        ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
+
+        // Get the new base address
+        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress -
+                              (ExtraPageCount << PAGE_SHIFT));
+    }
+
+    // Zero the PTEs
+    RtlZeroMemory(PointerPte, PageCount * sizeof(MMPTE));
+
+    // Flush the TLB
+    KeFlushEntireTb(TRUE, TRUE);
+
+    // Remove flags
+    Mdl->MdlFlags &= ~(MDL_MAPPED_TO_SYSTEM_VA |
+                       MDL_PARTIAL_HAS_BEEN_MAPPED |
+                       MDL_FREE_EXTRA_PTES);
 }
 
 /*
@@ -1675,19 +1866,59 @@ MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Probes and locks virtual pages in memory for the specified process.
+ *
+ * @param[in,out] MemoryDescriptorList
+ * Memory Descriptor List (MDL) containing the buffer to be probed and locked.
+ *
+ * @param[in] Process
+ * The process for which the buffer should be probed and locked.
+ *
+ * @param[in] AccessMode
+ * Access mode for probing the pages. Can be KernelMode or UserMode.
+ *
+ * @param[in] LockOperation
+ * The type of the probing and locking operation. Can be IoReadAccess, IoWriteAccess or IoModifyAccess.
+ *
+ * @return
+ * Nothing.
+ *
+ * @see MmProbeAndLockPages
+ *
+ * @remarks Must be called at IRQL <= APC_LEVEL
  */
+_IRQL_requires_max_(APC_LEVEL)
 VOID
 NTAPI
-MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
-                           IN PEPROCESS Process,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN LOCK_OPERATION Operation)
+MmProbeAndLockProcessPages(
+    _Inout_ PMDL MemoryDescriptorList,
+    _In_ PEPROCESS Process,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ LOCK_OPERATION Operation)
 {
-    UNIMPLEMENTED;
-}
+    KAPC_STATE ApcState;
+    BOOLEAN IsAttached = FALSE;
 
+    if (Process != PsGetCurrentProcess())
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        IsAttached = TRUE;
+    }
+
+    /* Protect in try/finally to ensure we detach even if MmProbeAndLockPages() throws an exception */
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(MemoryDescriptorList, AccessMode, Operation);
+    }
+    _SEH2_FINALLY
+    {
+        if (IsAttached)
+            KeUnstackDetachProcess(&ApcState);
+    }
+    _SEH2_END;
+}
 
 /*
  * @unimplemented

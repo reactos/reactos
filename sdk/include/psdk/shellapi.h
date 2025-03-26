@@ -37,7 +37,7 @@ extern "C" {
 #define SEE_MASK_UNICODE	0x00004000
 #define SEE_MASK_NO_CONSOLE	0x00008000
 /*
- * NOTE: The following three flags are undocumented and are not present in the
+ * NOTE: The following 5 flags are undocumented and are not present in the
  * official Windows SDK. However they are used in shobjidl.idl to define some
  * CMIC_MASK_* flags, these ones being mentioned in the MSDN documentation of
  * the CMINVOKECOMMANDINFOEX structure.
@@ -45,9 +45,11 @@ extern "C" {
  * course their values may differ from the real ones, however I have no way
  * of discovering them. If somebody else can verify them, it would be great.
  */
-#define SEE_MASK_HASLINKNAME	0x00010000
-#define SEE_MASK_HASTITLE	0x00020000
-#define SEE_MASK_FLAG_SEPVDM	0x00040000
+#define SEE_MASK_UNKNOWN_0x1000 0x00001000 /* FIXME: Name */
+#define SEE_MASK_HASLINKNAME    0x00010000
+#define SEE_MASK_FLAG_SEPVDM    0x00020000
+#define SEE_MASK_USE_RESERVED   0x00040000
+#define SEE_MASK_HASTITLE       0x00080000
 /* END NOTE */
 #define SEE_MASK_ASYNCOK	0x00100000
 #define SEE_MASK_HMONITOR	0x00200000
@@ -55,6 +57,7 @@ extern "C" {
 #define SEE_MASK_NOQUERYCLASSSTORE	0x01000000
 #define SEE_MASK_WAITFORINPUTIDLE	0x02000000
 #define SEE_MASK_FLAG_LOG_USAGE	0x04000000
+#define SEE_MASK_FLAG_HINST_IS_SITE 0x08000000
 
 #define ABM_NEW	0
 #define ABM_REMOVE	1
@@ -66,6 +69,7 @@ extern "C" {
 #define ABM_GETAUTOHIDEBAR	7
 #define ABM_SETAUTOHIDEBAR	8
 #define ABM_WINDOWPOSCHANGED	9
+#define ABM_SETSTATE            10
 #define ABN_STATECHANGE		0
 #define ABN_POSCHANGED		1
 #define ABN_FULLSCREENAPP	2
@@ -634,6 +638,12 @@ DoEnvironmentSubstW(
     _Inout_updates_(cchSrc) LPWSTR pszSrc,
     UINT cchSrc);
 
+HRESULT WINAPI
+SHSetUnreadMailCountW(
+    _In_ PCWSTR pszMailAddress,
+    _In_ DWORD dwCount,
+    _In_ PCWSTR pszShellExecuteCommand);
+
 #if (_WIN32_IE >= 0x0601)
 BOOL
 WINAPI
@@ -641,6 +651,22 @@ SHTestTokenMembership(
     _In_opt_ HANDLE hToken,
     _In_ ULONG ulRID);
 #endif
+
+HRESULT WINAPI
+SHEnumerateUnreadMailAccountsW(
+    _In_opt_ HKEY hKeyUser,
+    _In_ DWORD dwIndex,
+    _Out_writes_(cchMailAddress) PWSTR pszMailAddress,
+    _In_ INT cchMailAddress);
+
+HRESULT WINAPI
+SHGetUnreadMailCountW(
+    _In_opt_ HKEY hKeyUser,
+    _In_opt_ PCWSTR pszMailAddress,
+    _Out_opt_ PDWORD pdwCount,
+    _Inout_opt_ PFILETIME pFileTime,
+    _Out_writes_opt_(cchShellExecuteCommand) PWSTR pszShellExecuteCommand,
+    _In_ INT cchShellExecuteCommand);
 
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE

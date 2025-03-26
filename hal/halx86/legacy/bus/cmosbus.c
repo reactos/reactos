@@ -1,45 +1,58 @@
 /*
- * PROJECT:         ReactOS HAL
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/legacy/bus/cmosbus.c
- * PURPOSE:
- * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
+ * PROJECT:     ReactOS HAL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     CMOS bus data handlers
+ * COPYRIGHT:   Copyright 2023 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
-#define NDEBUG
-#include <debug.h>
-
-/* GLOBALS ********************************************************************/
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 ULONG
 NTAPI
-HalpcGetCmosData(IN PBUS_HANDLER BusHandler,
-                 IN PBUS_HANDLER RootHandler,
-                 IN ULONG SlotNumber,
-                 IN PVOID Buffer,
-                 IN ULONG Offset,
-                 IN ULONG Length)
+HalpcGetCmosData(
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length)
 {
-    UNIMPLEMENTED_DBGBREAK("CMOS GetData\n");
-    return 0;
+    UNREFERENCED_PARAMETER(RootHandler);
+
+    /* CMOS reads do not support offsets */
+    if (Offset != 0)
+        return 0;
+
+    return HalpGetCmosData(BusHandler->BusNumber,
+                           SlotNumber,
+                           Buffer,
+                           Length);
 }
 
 ULONG
 NTAPI
-HalpcSetCmosData(IN PBUS_HANDLER BusHandler,
-                 IN PBUS_HANDLER RootHandler,
-                 IN ULONG SlotNumber,
-                 IN PVOID Buffer,
-                 IN ULONG Offset,
-                 IN ULONG Length)
+HalpcSetCmosData(
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length)
 {
-    UNIMPLEMENTED_DBGBREAK("CMOS SetData\n");
-    return 0;
+    UNREFERENCED_PARAMETER(RootHandler);
+
+    /* CMOS writes do not support offsets */
+    if (Offset != 0)
+        return 0;
+
+    return HalpSetCmosData(BusHandler->BusNumber,
+                           SlotNumber,
+                           Buffer,
+                           Length);
 }
 
 /* EOF */

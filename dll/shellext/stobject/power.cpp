@@ -29,12 +29,14 @@ typedef struct _PWRSCHEMECONTEXT
 CString  g_strTooltip;
 static HICON g_hIconBattery = NULL;
 
+#define HOUR_IN_SECS    3600
+#define MIN_IN_SECS     60
 
 /*++
 * @name Quantize
-* 
+*
 * This function quantizes the mentioned quantity to nearest level.
-* 
+*
 * @param p
 *        Should be a quantity in percentage.
 *
@@ -78,6 +80,7 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
 {
     SYSTEM_POWER_STATUS PowerStatus;
     HICON hBatIcon;
+    UINT uiHour, uiMin;
     UINT index = -1;
 
     if (!GetSystemPowerStatus(&PowerStatus) ||
@@ -90,10 +93,16 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
     }
 
     if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
+        (PowerStatus.BatteryLifePercent == BATTERY_PERCENTAGE_UNKNOWN))
+    {
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_BATTCAP_ERR));
+        g_strTooltip.LoadStringW(IDS_PWR_UNKNOWN_REMAINING);
+    }
+    else if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
         ((PowerStatus.BatteryFlag & BATTERY_FLAG_CHARGING) == BATTERY_FLAG_CHARGING))
     {
         index = Quantize(PowerStatus.BatteryLifePercent);
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index])); 
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index]));
         g_strTooltip.Format(IDS_PWR_CHARGING, PowerStatus.BatteryLifePercent);
     }
     else if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
@@ -101,7 +110,25 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
     {
         index = Quantize(PowerStatus.BatteryLifePercent);
         hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(br_icons[index]));
-        g_strTooltip.Format(IDS_PWR_PERCENT_REMAINING, PowerStatus.BatteryLifePercent);
+
+        if (PowerStatus.BatteryLifeTime != BATTERY_UNKNOWN_TIME)
+        {
+            uiHour = PowerStatus.BatteryLifeTime / HOUR_IN_SECS;
+            uiMin = (PowerStatus.BatteryLifeTime % HOUR_IN_SECS) / MIN_IN_SECS;
+
+            if (uiHour != 0)
+            {
+                g_strTooltip.Format(IDS_PWR_HOURS_REMAINING, uiHour, uiMin, PowerStatus.BatteryLifePercent);
+            }
+            else
+            {
+                g_strTooltip.Format(IDS_PWR_MINUTES_REMAINING, uiMin, PowerStatus.BatteryLifePercent);
+            }
+        }
+        else
+        {
+            g_strTooltip.Format(IDS_PWR_PERCENT_REMAINING, PowerStatus.BatteryLifePercent);
+        }
     }
     else
     {
@@ -113,7 +140,7 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
 }
 
 HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray)
-{ 
+{
     TRACE("Power_Init\n");
     g_hIconBattery = DynamicLoadIcon(g_hInstance);
 
@@ -213,7 +240,7 @@ ShowPowerSchemesPopupMenu(
 
     SetForegroundWindow(pSysTray->GetHWnd());
     GetCursorPos(&pt);
-    
+
     id = TrackPopupMenuEx(PowerSchemeContext.hPopup,
                           TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN,
                           pt.x,

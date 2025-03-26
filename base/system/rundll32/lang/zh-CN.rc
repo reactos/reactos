@@ -4,6 +4,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded "LoadLibrary 无法加载 '%s'"
+    IDS_DllNotLoaded "LoadLibrary 无法加载“%s”"
     IDS_MissingEntry "缺少入口点：%s\n在 %s 中"
 END

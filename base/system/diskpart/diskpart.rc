@@ -8,14 +8,22 @@
 #define REACTOS_STR_ORIGINAL_COPYRIGHT "(C) 2011 Lee Schroeder"
 #include <reactos/version.rc>
 
+#include <diskpart_msg.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"

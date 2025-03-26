@@ -36,9 +36,9 @@
 
 /**************** HARD DRIVES -- VHD FIXED DISK FORMAT SUPPORT ****************/
 
-// http://citrixblogger.org/2008/12/01/dynamic-vhd-walkthrough/
-// http://www.microsoft.com/en-us/download/details.aspx?id=23850
-// https://projects.honeynet.org/svn/sebek/virtualization/qebek/trunk/block/vpc.c
+// https://web.archive.org/web/20160131080555/http://citrixblogger.org/2008/12/01/dynamic-vhd-walkthrough/
+// https://www.microsoft.com/en-us/download/details.aspx?id=23850
+// https://projects.honeynet.org/svn/sebek/virtualization/qebek/trunk/block/vpc.c (DEAD_LINK)
 // https://git.virtualopensystems.com/trescca/qemu/raw/40645c7bfd7c4d45381927e1e80081fa827c368a/block/vpc.c
 // https://gitweb.gentoo.org/proj/qemu-kvm.git/tree/block/vpc.c?h=qemu-kvm-0.12.4-gentoo&id=827dccd6740639c64732418539bf17e6e4c99d77
 
@@ -186,7 +186,7 @@ static DISK_GEO DiskGeometryList[] =
     {2880, 36, 2, 80, 6},
 };
 
-BOOLEAN
+static BOOLEAN
 MountFDI(IN PDISK_IMAGE DiskImage,
          IN HANDLE hFile)
 {
@@ -242,7 +242,7 @@ MountFDI(IN PDISK_IMAGE DiskImage,
 // Secondary Master Drive, Secondary Slave Drive.
 static DISK_IMAGE XDCHardDrive[4];
 
-BOOLEAN
+static BOOLEAN
 MountHDD(IN PDISK_IMAGE DiskImage,
          IN HANDLE hFile)
 {
@@ -525,26 +525,13 @@ MountDisk(IN DISK_TYPE DiskType,
 
     /* Try to open the file */
     SetLastError(0); // For debugging purposes
-    if (ReadOnly)
-    {
-        hFile = CreateFileW(FileName,
-                            GENERIC_READ,
-                            FILE_SHARE_READ,
-                            NULL,
-                            OPEN_EXISTING,
-                            FILE_ATTRIBUTE_NORMAL,
-                            NULL);
-    }
-    else
-    {
-        hFile = CreateFileW(FileName,
-                            GENERIC_READ | GENERIC_WRITE,
-                            0, // No sharing access
-                            NULL,
-                            OPEN_EXISTING,
-                            FILE_ATTRIBUTE_NORMAL,
-                            NULL);
-    }
+    hFile = CreateFileW(FileName,
+                        GENERIC_READ | (ReadOnly ? 0 : GENERIC_WRITE),
+                        (ReadOnly ? FILE_SHARE_READ : 0),
+                        NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
     DPRINT1("File '%S' opening %s ; GetLastError() = %u\n",
             FileName, hFile != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
 
@@ -638,13 +625,19 @@ VOID DiskCtrlCleanup(VOID)
 {
     ULONG DiskNumber;
 
-    /* Unmount all the floppy disk drives */
+    /* Unmount all the present floppy disk drives */
     for (DiskNumber = 0; DiskNumber < DiskMountInfo[FLOPPY_DISK].NumDisks; ++DiskNumber)
-        UnmountDisk(FLOPPY_DISK, DiskNumber);
+    {
+        if (IsDiskPresent(&DiskMountInfo[FLOPPY_DISK].DiskArray[DiskNumber]))
+            UnmountDisk(FLOPPY_DISK, DiskNumber);
+    }
 
-    /* Unmount all the hard disk drives */
+    /* Unmount all the present hard disk drives */
     for (DiskNumber = 0; DiskNumber < DiskMountInfo[HARD_DISK].NumDisks; ++DiskNumber)
-        UnmountDisk(HARD_DISK, DiskNumber);
+    {
+        if (IsDiskPresent(&DiskMountInfo[HARD_DISK].DiskArray[DiskNumber]))
+            UnmountDisk(HARD_DISK, DiskNumber);
+    }
 }
 
 /* EOF */

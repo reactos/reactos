@@ -85,6 +85,7 @@ FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     PNOTIFY_CHANGE NotifyChange;
     PREAL_NOTIFY_SYNC RealNotifySync;
+    BOOLEAN PoolQuotaCharged;
     PSECURITY_SUBJECT_CONTEXT _SEH2_VOLATILE SubjectContext = NULL;
 
     /* Get the NOTIFY_CHANGE struct and reset it */
@@ -165,15 +166,38 @@ FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
                /* If we have a buffer length, but no buffer then allocate one */
                if (Buffer == NULL)
                {
-                   PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, BufferLength);
-                   Buffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE, BufferLength, TAG_FS_NOTIFICATIONS);
-                   NotifyChange->AllocatedBuffer = Buffer;
-               }
+                   /* Assume we haven't charged quotas */
+                   PoolQuotaCharged = FALSE;
 
-               /* Copy data in that buffer */
-               RtlCopyMemory(Buffer, NotifyChange->Buffer, NotifyChange->DataLength);
-               NotifyChange->ThisBufferLength = BufferLength;
-               NotifyChange->Buffer = Buffer;
+                   _SEH2_TRY
+                   {
+                       /* Charge quotas */
+                       PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, BufferLength);
+                       PoolQuotaCharged = TRUE;
+
+                       /* Allocate buffer */
+                       Buffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE, BufferLength, TAG_FS_NOTIFICATIONS);
+                       NotifyChange->AllocatedBuffer = Buffer;
+
+                       /* Copy data in that buffer */
+                       RtlCopyMemory(Buffer, NotifyChange->Buffer, NotifyChange->DataLength);
+                       NotifyChange->ThisBufferLength = BufferLength;
+                       NotifyChange->Buffer = Buffer;
+                   }
+                   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                   {
+                       /* Something went wrong, have we charged quotas? */
+                       if (PoolQuotaCharged)
+                       {
+                           /* We did, return quotas */
+                           PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, BufferLength);
+                       }
+
+                       /* And notify immediately */
+                       NotifyChange->Flags |= NOTIFY_IMMEDIATELY;
+                   }
+                   _SEH2_END;
+               }
            }
 
            /* If we have to notify immediately, ensure that any buffer is 0-ed out */
@@ -1322,10 +1346,15 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                         /* If we couldn't find one, then allocate one */
                         if (NotifyChange->Buffer == NULL)
                         {
+                            /* Assign the length buffer */
+                            NotifyChange->ThisBufferLength = NumberOfBytes;
+
+                            /* Assume we have not charged quotas */
                             PoolQuotaCharged = FALSE;
                             _SEH2_TRY
                             {
-                                PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, NumberOfBytes);
+                                /* And charge quotas */
+                                PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, NotifyChange->ThisBufferLength);
                                 PoolQuotaCharged = TRUE;
                                 OutputBuffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
                                                                      NumberOfBytes, TAG_FS_NOTIFICATIONS);
@@ -1337,7 +1366,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                             {
                                 if (PoolQuotaCharged)
                                 {
-                                    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NumberOfBytes);
+                                    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
                                 }
                                 NotifyChange->Flags |= NOTIFY_IMMEDIATELY;
                             }
@@ -1386,7 +1415,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
 
             /* If asking for old name in case of a rename, notify later on,
              * so that we can wait for new name.
-             * http://msdn.microsoft.com/en-us/library/dn392331.aspx
+             * https://learn.microsoft.com/en-us/openspecs/main/ms-openspeclp/3589baea-5b22-48f2-9d43-f5bea4960ddb
              */
             if (Action == FILE_ACTION_RENAMED_OLD_NAME)
             {

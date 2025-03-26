@@ -54,7 +54,7 @@ Beep(IN DWORD dwFreq,
     IO_STATUS_BLOCK IoStatusBlock;
     BEEP_SET_PARAMETERS BeepSetParameters;
     NTSTATUS Status;
-    
+
     //
     // On TS systems, we need to Load Winsta.dll and call WinstationBeepOpen
     // after doing a GetProcAddress for it

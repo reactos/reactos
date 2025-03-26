@@ -106,9 +106,9 @@ CTTY device\n\n\
             CON is usually the default standard I/O device.\n\n\
 To return control to the standard console, type: CTTY CON on the auxiliary\n\
 device."
-    STRING_DATE_HELP1 "\nВведiть нову дату (mm%cdd%cyyyy): "
-    STRING_DATE_HELP2 "\nВведiть нову дату (dd%cmm%cyyyy): "
-    STRING_DATE_HELP3 "\nВведiть нову дату (yyyy%cmm%cdd): "
+    STRING_DATE_HELP1 "Введiть нову дату (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Введiть нову дату (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Введiть нову дату (yyyy%cmm%cdd): "
     STRING_DATE_HELP4 "Вiдображення чи змiна дати.\n\n\
 DATE [/T][дата]\n\n\
   /T    лише вiдображення\n\n\
@@ -181,10 +181,10 @@ DELAY [/m]n\n\n\
     STRING_DIR_HELP2 " Том в пристрої %c має мiтку %s\n"
     STRING_DIR_HELP3 " Том в пристрої %c не має мiтки.\n"
     STRING_DIR_HELP4 " Серiйний номер тому: %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Всього:\n%16i Файл(iв)% 14s байт\n"
-    STRING_DIR_HELP6 "%16i Dir(s)% 15s bytes free\n"
+    STRING_DIR_HELP5 "\n     Всього:\n%16i Файл(iв) %14s байт\n"
+    STRING_DIR_HELP6 "%16i Dir(s)   %14s bytes free\n"
     STRING_DIR_HELP7 "\n Directory of %s\n\n"
-    STRING_DIR_HELP8 "%16i Файл(iв)% 14s байт\n"
+    STRING_DIR_HELP8 "%16i Файл(iв) %14s байт\n"
     STRING_DIRSTACK_HELP1 "Зберiгає поточну директорiю для використання командою POPD, потiм\n\
 замiнює її на вказану.\n\n\
 PUSHD [path | ..]\n\n\
@@ -255,7 +255,8 @@ ERRORLEVEL число  Ця умова є iстинною, якщо код, що
 EXIST iм'я_файлу  Умова є iстинною, якщо файл з вказаним iменем iснує.\n\
 DEFINED змiнна    Ця умова є iстинною, якщо вказана змiнна\n\
                   задана.\n"
-    STRING_LOCALE_HELP1 "Поточний час: "
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "Поточний час: "
     STRING_MKDIR_HELP "Створення каталогу.\n\n\
 MKDIR [диск:]шлях\nMD [диск:]шлях"
     STRING_MKLINK_HELP "Створення об'єкту-посилання файлової системи.\n\n\
@@ -346,33 +347,6 @@ REN [/E /N /P /Q /S /T] старе_iм'я ... нове_iм'я\n\n\
 Для цього використайте команду MOVE.\n"
     STRING_REN_HELP2 "    %lu файл переiменовано\n"
     STRING_REN_HELP3 "    %lu файлiв переiменовано\n"
-    STRING_REPLACE_HELP1 "Замiна файлiв.\n\n\
-REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/A] [/P] [/R] [/W]\n\
-REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [диск1:][шлях1]iм'я_файлу Задає файл(и) для замiни.\n\
-  [диск2:][шлях2]           Задає каталог, в якому будуть замiненi файли\n\
-                            файли.\n\
-  /A                        Додати новi файли в кiнцеву теку. Неможливе\n\
-                            при використаннi ключiв /S чи /U.\n\
-  /P                        Запит на пiдтвердження замiни файлу чи\n\
-                            додавання початкового файлу.\n\
-  /R                        Замiнює також файли лише для читання.\n\
-  /S                        Замiнює файли у всiх пiдкаталогах каталогу\n\
-                            призначення. Неможливе при використаннi\n\
-                            ключа /A.\n\
-  /W                        Чекає поки ви вставите диск перед початком.\n\
-  /U                        Замiнює (оновлює) лише файли, що старiшi нiж\n\
-                            копiйованi. Неможливе при використаннi ключа /A.\n"
-    STRING_REPLACE_HELP2 "Необхiдний шлях джерела\n"
-    STRING_REPLACE_HELP3 "Не замiнено жодних файлiв\n"
-    STRING_REPLACE_HELP4 "%lu файл(iв) замiнено\n"
-    STRING_REPLACE_HELP5 "Замiна %s\n"
-    STRING_REPLACE_HELP6 "Замiнити %s\n"
-    STRING_REPLACE_HELP7 "Не додано жодних файлiв\n"
-    STRING_REPLACE_HELP8 "%lu файл(iв) додано\n"
-    STRING_REPLACE_HELP9 "Додати %s (Y/N)? "
-    STRING_REPLACE_HELP10 "Замiнити %s (Y/N)? "
-    STRING_REPLACE_HELP11 "Додавання %s\n"
     STRING_SHIFT_HELP "Змiна позицiї пiдставлюваних параметрiв для пакетного файлу.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "перемiщення курсора та опцiонально показ тексту\n\n\
@@ -408,7 +382,7 @@ TIME без параметрiв виводить поточний час та з
     STRING_TIME_HELP2 "Введiть новий час: "
     STRING_TIMER_HELP1 "Минуло %d мсек\n"
     STRING_TIMER_HELP2 "Минуло %02d%c%02d%c%02d%c%02d\n"
-    STRING_TIMER_HELP3 "дозволяє використати десять секундомiрiв.\n\n\
+    STRING_TIMER_HELP3 "Дозволяє використати десять секундомiрiв.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          ввiмкнути секундомiр (ON)\n\
   OFF         вимкнути секундомiр (OFF)\n\
@@ -450,7 +424,7 @@ VER [/C][/R][/W]\n\n\
  Free Software Foundation; версiї 2 Лiцензiї, чи\n\
  (на ваш вибiр) будь-якої новiшої версiї.\n"
     STRING_VERSION_HELP5 "\nВiдсилайте звiти про помилки на <ros-dev@reactos.org>.\n\
-Оновлення доступнi на: http://www.reactos.org"
+Оновлення доступнi на: https://reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS-версiя написана:\n"
     STRING_VERSION_HELP7 "\nReactOS-версiя написана:\n"
     STRING_VOL_HELP1 " Том в пристрої %c має мiтку %s\n"
@@ -458,14 +432,14 @@ VER [/C][/R][/W]\n\n\
     STRING_VOL_HELP3 " Серiйний номер тому: %04X-%04X\n"
     STRING_VOL_HELP4 "Виводить мiтку тому та серiйний номер, якщо вони iснують.\n\nVOL [диск:]"
     STRING_WINDOW_HELP1 "змiнює вигляд вiкна консолi\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['заголовок']\n\n\
 /POS          визначає розміри та розмiщення вiкна\n\
 MIN           згортає вiкно\n\
 MAX           розгортає вiкно\n\
 RESTORE       вiдновлює вiкно"
     STRING_WINDOW_HELP2 "змiнює вигляд вiкна консолi\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        заголовок вiкна, вигляд якого треба змiнити\n\
 /POS          визначає розміри та розмiщення вiкна\n\
@@ -486,23 +460,23 @@ title         новий заголовок\n"
     STRING_CMD_ERROR3 "Не можу перенаправити в файл %s\n"
     STRING_CMD_ERROR4 "Запуск %s...\n"
     STRING_CMD_ERROR5 "Запуск cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "Помилка - однаковi кольори! (тло та текст не можуть бути однакового кольору)"
-    STRING_COLOR_ERROR2 "Помилка при вказаннi кольору"
+    STRING_COLOR_ERROR1 "Помилка - однаковi кольори! (тло та текст не можуть бути однакового кольору)\n"
+    STRING_COLOR_ERROR2 "Помилка при вказаннi кольору\n"
     STRING_CONSOLE_ERROR "Невiдома помилка: %d\n"
     STRING_COPY_ERROR1 "Помилка: Неможливо вiдкрити джерело - %s!\n"
     STRING_COPY_ERROR2 "Помилка: Неможливо копiювати в себе!\n"
     STRING_COPY_ERROR3 "Помилка запису призначення!\n"
     STRING_COPY_ERROR4 "Помилка: Ще не реалiзовано!\n"
-    STRING_DATE_ERROR "Невiрна дата."
+    STRING_DATE_ERROR "Невiрна дата.\n"
     STRING_DEL_ERROR5 "Файл %s буде видалений! "
     STRING_DEL_ERROR6 "Ви впевненi (Y/N)? "
     STRING_DEL_ERROR7 "Видалення: %s\n"
     STRING_ERROR_ERROR1 "Невiдома помилка! Код помилки: 0x%lx\n"
     STRING_ERROR_ERROR2 "Синтаксична помилка"
-    STRING_FOR_ERROR1 "'in' вiдсутнє в команді for."
-    STRING_FOR_ERROR2 "дужок не знайдено."
-    STRING_FOR_ERROR3 "'do' вiдсутнє."
-    STRING_FOR_ERROR4 "немає команди пiсля 'do'."
+    STRING_FOR_ERROR1 "'in' вiдсутнє в команді for.\n"
+    STRING_FOR_ERROR2 "дужок не знайдено.\n"
+    STRING_FOR_ERROR3 "'do' вiдсутнє.\n"
+    STRING_FOR_ERROR4 "немає команди пiсля 'do'.\n"
     STRING_FREE_ERROR1 "Невiрний диск"
     STRING_FREE_ERROR2 "не вiдмiчено"
     STRING_GOTO_ERROR1 "Не визначена мiтка для GOTO\n"
@@ -511,10 +485,10 @@ title         новий заголовок\n"
     STRING_MD_ERROR2 "Шлях до нового каталогу не iснує.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Помилка]\n"
-    STRING_REN_ERROR1 "Невдачне виконання MoveFile(). Помилка: %lu\n"
-    STRING_TIME_ERROR1 "Невiрний час."
-    STRING_TYPE_ERROR1 "Невiрний параметр '/%s'\n"
-    STRING_WINDOW_ERROR1 "Вiкно не знайдено"
+    STRING_REN_ERROR "Невдачне виконання MoveFile(). Помилка: %lu\n"
+    STRING_TIME_ERROR "Невiрний час.\n"
+    STRING_TYPE_ERROR "Невiрний параметр '/%s'\n"
+    STRING_WINDOW_ERROR "Вiкно не знайдено\n"
     STRING_ERROR_PARAMETERF_ERROR "Неправильний формат параметра - %c\n"
     STRING_ERROR_INVALID_SWITCH "Невірна опцiя - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Забагато параметрiв - %s\n"
@@ -528,24 +502,25 @@ title         новий заголовок\n"
     STRING_ERROR_CANNOTPIPE "Помилка!  Неможливо використати pipe!  Неможливо вiдкрити тимчасовий файл!\n"
     STRING_ERROR_D_PAUSEMSG "Натиснiть будь-яку клавiшу для продовження . . . "
     STRING_ERROR_DRIVER_NOT_READY "Пристрій не готовий"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Невiрний ключ - %s\n"
-    STRING_REPLACE_ERROR2 "Шлях не знайдено - %s\n"
-    STRING_REPLACE_ERROR3 "Синтаксис iменi файлу, теки чи мiтки диску некоректнi.\n"
-    STRING_REPLACE_ERROR4 "Невiрна комбiнацiя параметрiв\n"
-    STRING_REPLACE_ERROR5 "Немає доступу - %s\n"
-    STRING_REPLACE_ERROR6 "Файли не знайдено - %s\n"
-    STRING_REPLACE_ERROR7 "Розширена помилка 32\n"
     STRING_CMD_INFOLINE "  Командний рядок ReactOS                              Введіть HELP = Допомога  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Версiя %s %s]\n"
     STRING_CMD_SHELLINFO "\nIнтерпретатор командного рядка ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Запущений на: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d файл(iв) скопiйовано\n"
     STRING_DELETE_WIPE "витерто"
-    STRING_FOR_ERROR "невiрна специфiкацiя змiнної."
-    STRING_SCREEN_COL "неправильне значення col"
-    STRING_SCREEN_ROW "неправильне значення row"
+    STRING_FOR_ERROR "невiрна специфiкацiя змiнної.\n"
+    STRING_SCREEN_COL "неправильне значення col\n"
+    STRING_SCREEN_ROW "неправильне значення row\n"
     STRING_TIMER_TIME "Таймер %d - %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Створено символiчне посилання для %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Створено жорстке посилання для %s <<===>> %s\n"

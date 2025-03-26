@@ -505,6 +505,7 @@ NTAPI
 FdoPnp(IN PDEVICE_OBJECT DeviceObject,
        IN PIRP Irp)
 {
+    PFDO_DEVICE_EXTENSION FdoExtension;
     ULONG MinorFunction;
     PIO_STACK_LOCATION Stack;
     ULONG_PTR Information = 0;
@@ -545,15 +546,21 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
         case IRP_MN_START_DEVICE: /* 0x0 */
             DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
-            ASSERT(((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.PnpState == dsStopped);
-
             /* Call lower driver */
-            Status = ForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status))
+            FdoExtension = DeviceObject->DeviceExtension;
+            Status = STATUS_UNSUCCESSFUL;
+
+            ASSERT(FdoExtension->Common.PnpState == dsStopped);
+
+            if (IoForwardIrpSynchronously(FdoExtension->LowerDevice, Irp))
             {
-                Status = FdoStartDevice(DeviceObject,
-                                        Stack->Parameters.StartDevice.AllocatedResources,
-                                        Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = FdoStartDevice(DeviceObject,
+                        Stack->Parameters.StartDevice.AllocatedResources,
+                        Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                }
             }
             break;
 

@@ -161,23 +161,14 @@ done:
 
 BOOL
 WINAPI
-DllMain(
-    HANDLE  hDll,
-    DWORD   dwReason,
-    LPVOID  lpReserved)
-{
-
-    return LpkDllInitialize(hDll,dwReason,lpReserved);
-}
-
-BOOL
-WINAPI
 LpkDllInitialize(
-    HANDLE  hDll,
-    DWORD   dwReason,
-    LPVOID  lpReserved)
+    _In_ HANDLE hDll,
+    _In_ ULONG dwReason,
+    _In_opt_ PVOID pReserved)
 {
-    switch(dwReason)
+    UNREFERENCED_PARAMETER(pReserved);
+
+    switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hDll);

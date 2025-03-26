@@ -18,12 +18,16 @@ function(add_dependency_edge _source _target)
 endfunction()
 
 function(add_dependency_header)
-    file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
+    if(GENERATE_DEPENDENCY_GRAPH)
+        file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
+    endif()
 endfunction()
 
 function(add_dependency_footer)
-    add_dependency_node(ntdll)
-    file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
+    if(GENERATE_DEPENDENCY_GRAPH)
+        add_dependency_node(ntdll)
+        file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
+    endif()
 endfunction()
 
 function(add_message_headers _type)
@@ -36,10 +40,7 @@ function(add_message_headers _type)
         get_filename_component(_file_name ${_file} NAME_WE)
         set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/${_file}) ## ${_file_name}.mc
         set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/${_file})    ## ${_file_name}.mc
-        add_custom_command(
-            OUTPUT "${_converted_file}"
-            COMMAND native-utf16le "${_source_file}" "${_converted_file}" nobom
-            DEPENDS native-utf16le "${_source_file}")
+        utf16le_convert(${_source_file} ${_converted_file} nobom)
         macro_mc(${_flag} ${_converted_file})
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
@@ -78,7 +79,8 @@ function(add_link)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk
         COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk ${_LINK_CMD_LINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${_LINK_PATH}
         DEPENDS native-mkshelllink)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
+    set_source_files_properties(
+        ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
 endfunction()
 
 #
@@ -103,8 +105,6 @@ macro(dir_to_num dir var)
         set(${var} 7)
     elseif(${dir} STREQUAL reactos/bin/testdata)
         set(${var} 8)
-    elseif(${dir} STREQUAL reactos/bin/suppl)
-        set(${var} 80)
     elseif(${dir} STREQUAL reactos/media)
         set(${var} 9)
     elseif(${dir} STREQUAL reactos/Microsoft.NET)
@@ -205,9 +205,7 @@ macro(dir_to_num dir var)
         set(${var} 57)
     elseif(${dir} STREQUAL reactos/winsxs/x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef)
         set(${var} 58)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef)
-        set(${var} 59)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_reactos.newapi_6595b64144ccf1df_1.0.0.0_none_deadbeef)
+    elseif(${dir} STREQUAL reactos/bin/suppl)
         set(${var} 60)
     elseif(${dir} STREQUAL reactos/winsxs/x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
         set(${var} 61)
@@ -221,6 +219,34 @@ macro(dir_to_num dir var)
         set(${var} 65)
     elseif(${dir} STREQUAL reactos/system32/spool/prtprocs/x64)
         set(${var} 66)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef)
+        set(${var} 67)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef)
+        set(${var} 68)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef)
+        set(${var} 69)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
+        set(${var} 71)
+
+    elseif(${dir} STREQUAL reactos/winsxs/arm_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef)
+        set(${var} 72)
+    elseif(${dir} STREQUAL reactos/winsxs/arm_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef)
+        set(${var} 73)
+    elseif(${dir} STREQUAL reactos/winsxs/arm_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef)
+        set(${var} 74)
+    elseif(${dir} STREQUAL reactos/winsxs/arm_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
+        set(${var} 76)
+
+    elseif(${dir} STREQUAL reactos/winsxs/arm64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef)
+        set(${var} 77)
+    elseif(${dir} STREQUAL reactos/winsxs/arm64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef)
+        set(${var} 78)
+    elseif(${dir} STREQUAL reactos/winsxs/arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef)
+        set(${var} 79)
+    elseif(${dir} STREQUAL reactos/winsxs/arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
+        set(${var} 81)
+
+
     else()
         message(FATAL_ERROR "Wrong destination: ${dir}")
     endif()
@@ -251,10 +277,10 @@ function(add_cd_file)
     endif()
 
     # do we add it to all CDs?
-    list(FIND _CD_FOR all __cd)
+    list(FIND _CD_FOR "all" __cd)
     if(NOT __cd EQUAL -1)
-        list(REMOVE_AT _CD_FOR __cd)
-        list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
+        list(REMOVE_ITEM _CD_FOR "all")
+        list(APPEND _CD_FOR "bootcd;livecd;regtest")
     endif()
 
     # do we add it to bootcd?
@@ -536,6 +562,11 @@ function(add_importlibs _module)
     endforeach()
 endfunction()
 
+# Some helper lists
+list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll win32cui win32gui win32dll win32ocx cpl module)
+list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
+list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
+
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
 
@@ -543,38 +574,26 @@ function(set_module_type MODULE TYPE)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
     endif()
 
-    # Add the module to the module group list, if it is defined
-    if(DEFINED CURRENT_MODULE_GROUP)
-        set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
-    endif()
-
-    # Set subsystem. Also take this as an occasion
-    # to error out if someone gave a non existing type
-    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll)
-            OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
-        set(__subsystem native)
-    elseif(${TYPE} STREQUAL win32cui)
-        set(__subsystem console)
-    elseif(${TYPE} STREQUAL win32gui)
-        set(__subsystem windows)
-    elseif(NOT ((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
-            OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
+    # Check this is a type that we know
+    if (NOT TYPE IN_LIST VALID_MODULE_TYPES)
         message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
     endif()
 
     # Set our target property
     set_target_properties(${MODULE} PROPERTIES REACTOS_MODULE_TYPE ${TYPE})
 
-    if(DEFINED __subsystem)
-        set_subsystem(${MODULE} ${__subsystem})
+    # Add the module to the module group list, if it is defined
+    if(DEFINED CURRENT_MODULE_GROUP)
+        set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
     endif()
 
-    # Set the PE image version numbers from the NT OS version ReactOS is based on
-    if(MSVC)
-        add_target_link_flags(${MODULE} "/VERSION:5.01")
-    else()
-        add_target_link_flags(${MODULE} "-Wl,--major-image-version,5 -Wl,--minor-image-version,01")
-        add_target_link_flags(${MODULE} "-Wl,--major-os-version,5 -Wl,--minor-os-version,01")
+    # Set subsystem.
+    if(TYPE IN_LIST NATIVE_MODULE_TYPES)
+        set_subsystem(${MODULE} native)
+    elseif(${TYPE} STREQUAL win32cui)
+        set_subsystem(${MODULE} console)
+    elseif(${TYPE} STREQUAL win32gui)
+        set_subsystem(${MODULE} windows)
     endif()
 
     # Set unicode definitions
@@ -584,70 +603,69 @@ function(set_module_type MODULE TYPE)
 
     # Set entry point
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
-        list(GET __module_ENTRYPOINT 0 __entrypoint)
-        list(LENGTH __module_ENTRYPOINT __length)
-        if(${__length} EQUAL 2)
-            list(GET __module_ENTRYPOINT 1 __entrystack)
-        elseif(NOT ${__length} EQUAL 1)
-            message(FATAL_ERROR "Wrong arguments for ENTRYPOINT parameter of set_module_type : ${__module_ENTRYPOINT}")
-        endif()
-        unset(__length)
+        set_entrypoint(${MODULE} ${__module_ENTRYPOINT})
     elseif(${TYPE} STREQUAL nativecui)
-        set(__entrypoint NtProcessStartup)
-        set(__entrystack 4)
+        set_entrypoint(${MODULE} NtProcessStartup 4)
     elseif(${TYPE} STREQUAL win32cui)
         if(__module_UNICODE)
-            set(__entrypoint wmainCRTStartup)
+            set_entrypoint(${MODULE} wmainCRTStartup)
         else()
-            set(__entrypoint mainCRTStartup)
+            set_entrypoint(${MODULE} mainCRTStartup)
         endif()
     elseif(${TYPE} STREQUAL win32gui)
         if(__module_UNICODE)
-            set(__entrypoint wWinMainCRTStartup)
+            set_entrypoint(${MODULE} wWinMainCRTStartup)
         else()
-            set(__entrypoint WinMainCRTStartup)
+            set_entrypoint(${MODULE} WinMainCRTStartup)
         endif()
     elseif((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl))
-        set(__entrypoint DllMainCRTStartup)
-        set(__entrystack 12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
     elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
-        set(__entrypoint DriverEntry)
-        set(__entrystack 8)
+        set_entrypoint(${MODULE} DriverEntry 8)
     elseif(${TYPE} STREQUAL nativedll)
-        set(__entrypoint DllMain)
-        set(__entrystack 12)
+        set_entrypoint(${MODULE} DllMain 12)
+    elseif(TYPE STREQUAL kernel)
+        set_entrypoint(${MODULE} KiSystemStartup 4)
     elseif(${TYPE} STREQUAL module)
-        set(__entrypoint 0)
-    endif()
-
-    if(DEFINED __entrypoint)
-        if(DEFINED __entrystack)
-            set_entrypoint(${MODULE} ${__entrypoint} ${__entrystack})
-        else()
-            set_entrypoint(${MODULE} ${__entrypoint})
-        endif()
+        set_entrypoint(${MODULE} 0)
     endif()
 
     # Set base address
+    # Use 'IMAGEBASE default' to skip these set_image_base(), especially for win32dll test files
     if(__module_IMAGEBASE)
-        set_image_base(${MODULE} ${__module_IMAGEBASE})
+        if(NOT ${__module_IMAGEBASE} STREQUAL "default")
+            set_image_base(${MODULE} ${__module_IMAGEBASE})
+        endif()
     elseif(${TYPE} STREQUAL win32dll)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})
         else()
             message(STATUS "${MODULE} has no base address")
         endif()
-    elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
-        set_image_base(${MODULE} 0x00010000)
+    elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        # special case for kernel
+        if (TYPE STREQUAL kernel)
+            set_image_base(${MODULE} 0x00400000)
+        else()
+            set_image_base(${MODULE} 0x00010000)
+        endif()
     endif()
 
     # Now do some stuff which is specific to each type
-    if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
+    if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         add_dependencies(${MODULE} bugcodes xdk)
         if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
         endif()
+    endif()
+
+    if(TYPE STREQUAL kernel)
+        # Kernels are executables with exports
+        set_target_properties(${MODULE}
+            PROPERTIES
+            ENABLE_EXPORTS TRUE
+            DEFINE_SYMBOL "")
     endif()
 
     if(${TYPE} STREQUAL win32ocx)
@@ -676,6 +694,13 @@ function(end_module_group)
         add_dependencies(${CURRENT_MODULE_GROUP} ${__module})
     endforeach()
     set(CURRENT_MODULE_GROUP PARENT_SCOPE)
+endfunction()
+
+function(utf16le_convert _in _out)
+    add_custom_command(OUTPUT "${_out}"
+                       COMMAND native-utf16le "${_in}" "${_out}" ${ARGN}
+                       DEPENDS native-utf16le "${_in}")
+    set_source_files_properties("${_out}" PROPERTIES GENERATED TRUE)
 endfunction()
 
 function(preprocess_file __in __out)
@@ -713,16 +738,6 @@ function(get_defines OUTPUT_VAR)
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
 
-if(NOT MSVC)
-    function(add_object_library _target)
-        add_library(${_target} OBJECT ${ARGN})
-    endfunction()
-else()
-    function(add_object_library _target)
-        add_library(${_target} ${ARGN})
-    endfunction()
-endif()
-
 function(add_registry_inf)
     # Add to the inf files list
     foreach(_file ${ARGN})
@@ -745,9 +760,7 @@ function(create_registry_hives)
         file(RELATIVE_PATH _subdir ${CMAKE_SOURCE_DIR} ${_file})
         get_filename_component(_subdir ${_subdir}  DIRECTORY)
         set(_converted_file ${CMAKE_BINARY_DIR}/${_subdir}/${_file_name}_utf16.inf)
-        add_custom_command(OUTPUT ${_converted_file}
-                           COMMAND native-utf16le ${_file} ${_converted_file}
-                           DEPENDS native-utf16le ${_file})
+        utf16le_convert(${_file} ${_converted_file})
         list(APPEND _converted_files ${_converted_file})
     endforeach()
 
@@ -781,7 +794,8 @@ function(create_registry_hives)
     # LiveCD hives
     list(APPEND _livecd_inf_files
         ${_registry_inf}
-        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf)
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/caroots.inf)
     if(SARCH STREQUAL "xbox")
         list(APPEND _livecd_inf_files
             ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst_xbox.inf)
@@ -842,9 +856,7 @@ function(add_driver_inf _module)
     foreach(_file ${ARGN})
         set(_converted_item ${CMAKE_CURRENT_BINARY_DIR}/${_file})
         set(_source_item ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
-        add_custom_command(OUTPUT "${_converted_item}"
-                           COMMAND native-utf16le "${_source_item}" "${_converted_item}"
-                           DEPENDS native-utf16le "${_source_item}")
+        utf16le_convert(${_source_item} ${_converted_item})
         list(APPEND _converted_inf_files ${_converted_item})
     endforeach()
 

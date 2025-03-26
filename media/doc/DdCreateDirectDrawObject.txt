@@ -1,32 +1,32 @@
-DdCreateDirectDrawObject  
+DdCreateDirectDrawObject
 
 When IN HDC is not NULL
 1. we need check the IN HDC is NULL or not
-2. if it not null we need create a directdraw handler 
+2. if it not null we need create a directdraw handler
    and store it to pDirectDrawGlobal->hDD
 3. if the directdraw handle is null return false
-   we did fail to create directdraw HAL 
+   we did fail to create directdraw HAL
 4. if the directdraw handle was not null we return true
-   we did susses to create directdraw HAL 
- 
-When IN HDC is NULL   
+   we did susses to create directdraw HAL
+
+When IN HDC is NULL
 Now we come to if IN HDC is null basic we need create
    a hdc and cashe some data
 1. if internal cache of directdraw handle is not null (pDirectDrawGlobalInternal->hDD)
    we take it and fill to the public directdraw handler (pDirectDrawGlobal->hDD)
    and return susses.
- 
+
 2.  if no internal cache of directdraw handle is found we need create it
     by using CreateDC for tempary HDC that will be cache in the win32k later
- 
-3.  we need check see if we got a tempary HDC or not, if we fail getting tempary 
+
+3.  we need check see if we got a tempary HDC or not, if we fail getting tempary
     HDC return FALSE
- 
+
 4. Now we trying create directdraw handler it being cache to (pDirectDrawGlobalInternal->hDD)
    and it also set same handler to the public (pDirectDrawGlobal->hDD)
 5. if it fails to create directdraw handle return false
-   we did fail to create directdraw HAL 
+   we did fail to create directdraw HAL
 6. if it susses create directdraw handle return true
-   we did susses to create directdraw HAL    
- 
+   we did susses to create directdraw HAL
+
 To create a directdraw handler you need call the NtGdiDdCreateDirectDrawObject with a hdc

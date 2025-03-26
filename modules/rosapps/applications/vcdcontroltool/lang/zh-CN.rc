@@ -1,4 +1,4 @@
-/* Translation has been created by Luo Yufan on 2018-12-17 */
+/* Translation has been improved by Luke Luo 2018-2022 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -24,7 +24,7 @@ BEGIN
     PUSHBUTTON "挂载", IDC_MAINMOUNT, 183, 142, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "弹出", IDC_MAINEJECT, 183, 161, 109, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "重新挂载", IDC_MAINREMOUNT, 242, 142, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "驱动控制 ...", IDC_MAINCONTROL, 183, 105, 109, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "控制驱动程序 ...", IDC_MAINCONTROL, 183, 105, 109, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_MOUNTWINDOW DIALOG 0, 0, 187, 97
@@ -43,7 +43,7 @@ END
 
 IDD_DRIVERWINDOW DIALOG 0, 0, 189, 123
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "虚拟光驱驱动程序控制"
+CAPTION "控制虚拟光驱驱动程序"
 FONT 9, "宋体"
 BEGIN
     PUSHBUTTON "确定", IDC_DRIVEROK, 43, 98, 103, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -58,7 +58,7 @@ STRINGTABLE
 BEGIN
     IDS_DRIVE       "驱动器"
     IDS_MAPPEDIMAGE "已映射的镜像"
-    IDS_NOMOUNTED   "没有镜像被挂载。 最后挂载的是 - %s"
+    IDS_NOMOUNTED   "没有镜像被挂载。最后挂载的是 - %s"
     IDS_NONE        "无"
     IDS_FILTER      "所有被支持的镜像 (*.udf; *.cdfs; *.jo; *.iso; *.rock)\0*.udf;*.cdfs;*.jo;*.iso;*.rock\0"
 END

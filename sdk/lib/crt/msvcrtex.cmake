@@ -2,100 +2,88 @@
 include_directories(include/internal/mingw-w64)
 
 list(APPEND MSVCRTEX_SOURCE
-    startup/crtexe.c
-    startup/wcrtexe.c
-    startup/crt_handler.c
-    startup/crtdll.c
-    startup/_newmode.c
-    startup/wildcard.c
-    startup/tlssup.c
-    startup/mingw_helpers.c
-    startup/natstart.c
-    startup/charmax.c
-    startup/merr.c
-    startup/atonexit.c
-    startup/dllmain.c
-    startup/txtmode.c
-    startup/pesect.c
-    startup/tlsmcrt.c
-    startup/tlsthrd.c
-    startup/tlsmthread.c
-    startup/cinitexe.c
-    startup/gs_support.c
-    startup/dll_argv.c
-    startup/dllargv.c
-    startup/wdllargv.c
-    startup/crt0_c.c
-    startup/crt0_w.c
-    startup/dllentry.c
-    startup/reactos.c
-    misc/dbgrpt.cpp
+    ${CRT_STARTUP_SOURCE}
+    math/sincos.c
     misc/fltused.c
     misc/isblank.c
     misc/iswblank.c
     misc/ofmt_stub.c
     stdio/acrt_iob_func.c)
 
-if(MSVC)
+if(DLL_EXPORT_VERSION LESS 0x600)
     list(APPEND MSVCRTEX_SOURCE
-        startup/threadSafeInit.c)
-else()
+        misc/dbgrpt.cpp
+        stdlib/_invalid_parameter.c
+        stdlib/rand_s.c
+        wstring/mbrtowc.c
+        wstring/wcrtomb.c
+    )
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # Clang performs some optimizations requiring those funtions
     list(APPEND MSVCRTEX_SOURCE
-        startup/pseudo-reloc.c
-        startup/pseudo-reloc-list.c)
+        math/round.c
+        math/roundf.c
+        math/exp2.c
+        math/exp2f.c
+        )
 endif()
 
 if(ARCH STREQUAL "i386")
+    # Clang wants __aulldiv for its optimizations
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
-        math/i386/alldiv_asm.s)
-    list(APPEND MSVCRTEX_SOURCE
-        math/i386/ci.c
-        math/i386/cicos.c
-        math/i386/cilog.c
-        math/i386/cipow.c
-        math/i386/cisin.c
-        math/i386/cisqrt.c)
-    if (GCC AND CLANG)
-        # CLang performs some optimisations requiring those funtions
+        math/i386/alldiv_asm.s
+        math/i386/aulldiv_asm.s
+        )
+    if (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND NOT MSVC)
         list(APPEND MSVCRTEX_ASM_SOURCE
             math/i386/ceilf.S
-            math/i386/exp2_asm.s
             math/i386/floorf.S)
         list(APPEND MSVCRTEX_SOURCE
             math/i386/sqrtf.c)
     endif()
+    if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
+        list(APPEND MSVCRTEX_ASM_SOURCE
+            except/i386/__CxxFrameHandler3.s
+            math/i386/ftoul2_legacy_asm.s)
+        list(APPEND MSVCRTEX_SOURCE
+            except/i386/CxxHandleV8Frame.c)
+    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/amd64/chkstk_ms.s)
+    if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
+        list(APPEND MSVCRTEX_ASM_SOURCE
+            except/amd64/__CxxFrameHandler3.s
+        )
+    endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND MSVCRTEX_SOURCE
         math/arm/__rt_sdiv.c
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
         math/arm/__rt_udiv64_worker.c
+        math/arm/__rt_div_worker.h
+        math/arm/__dtoi64.c
+        math/arm/__dtou64.c
+        math/arm/__stoi64.c
+        math/arm/__stou64.c
+        math/arm/__fto64.h
+        math/arm/__i64tod.c
+        math/arm/__u64tod.c
+        math/arm/__i64tos.c
+        math/arm/__u64tos.c
+        math/arm/__64tof.h
     )
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/arm/chkstk_asm.s
-        math/arm/__dtoi64.s
-        math/arm/__dtou64.s
-        math/arm/__i64tod.s
-        math/arm/__i64tos.s
-        math/arm/__stoi64.s
-        math/arm/__stou64.s
-        math/arm/__u64tod.s
-        math/arm/__u64tos.s
         math/arm/__rt_sdiv64.s
         math/arm/__rt_srsh.s
         math/arm/__rt_udiv64.s
     )
-endif()
-
-if(MSVC)
-    list(APPEND MSVCRTEX_SOURCE startup/mscmain.c)
-else()
-    list(APPEND MSVCRTEX_SOURCE startup/gccmain.c)
 endif()
 
 set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_DLL;_MSVCRTEX_")
@@ -113,7 +101,7 @@ if(MSVC AND (ARCH STREQUAL "i386"))
 endif()
 
 
-if(GCC OR CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(msvcrtex PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-main>)
     if(LTCG)
         target_compile_options(msvcrtex PRIVATE -fno-lto)

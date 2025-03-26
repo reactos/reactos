@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0001.c";
-int perfect;
 
 int main() {
   long Counter;

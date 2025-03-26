@@ -9,6 +9,16 @@
 #define NDEBUG
 #include <debug.h>
 
+/* DECLARATIONS *************************************************************/
+
+#if !defined(CMLIB_HOST) && !defined(_BLDR_)
+VOID
+NTAPI
+CmpLazyFlush(VOID);
+#endif
+
+/* FUNCTIONS *****************************************************************/
+
 static __inline PHCELL CMAPI
 HvpGetCellHeader(
     PHHIVE RegistryHive,
@@ -16,7 +26,7 @@ HvpGetCellHeader(
 {
     PVOID Block;
 
-    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx\n",
+    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive 0x%p, CellIndex 0x%x\n",
              __FUNCTION__, RegistryHive, CellIndex);
 
     ASSERT(CellIndex != HCELL_NIL);
@@ -29,13 +39,13 @@ HvpGetCellHeader(
         ASSERT(CellBlock < RegistryHive->Storage[CellType].Length);
         Block = (PVOID)RegistryHive->Storage[CellType].BlockList[CellBlock].BlockAddress;
         ASSERT(Block != NULL);
-        return (PVOID)((ULONG_PTR)Block + CellOffset);
+        return (PHCELL)((ULONG_PTR)Block + CellOffset);
     }
     else
     {
         ASSERT(HvGetCellType(CellIndex) == Stable);
-        return (PVOID)((ULONG_PTR)RegistryHive->BaseBlock + HBLOCK_SIZE +
-                       CellIndex);
+        return (PHCELL)((ULONG_PTR)RegistryHive->BaseBlock + HBLOCK_SIZE +
+                        CellIndex);
     }
 }
 
@@ -63,13 +73,12 @@ HvIsCellAllocated(IN PHHIVE RegistryHive,
     return FALSE;
 }
 
-PVOID CMAPI
-HvGetCell(
-    PHHIVE RegistryHive,
-    HCELL_INDEX CellIndex)
+PCELL_DATA CMAPI
+HvpGetCellData(
+    _In_ PHHIVE Hive,
+    _In_ HCELL_INDEX CellIndex)
 {
-    ASSERT(CellIndex != HCELL_NIL);
-    return (PVOID)(HvpGetCellHeader(RegistryHive, CellIndex) + 1);
+    return (PCELL_DATA)(HvpGetCellHeader(Hive, CellIndex) + 1);
 }
 
 static __inline LONG CMAPI
@@ -107,7 +116,7 @@ HvMarkCellDirty(
 
     ASSERT(RegistryHive->ReadOnly == FALSE);
 
-    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, HoldingLock %u\n",
+    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive 0x%p, CellIndex 0x%x, HoldingLock %u\n",
              __FUNCTION__, RegistryHive, CellIndex, HoldingLock);
 
     if (HvGetCellType(CellIndex) != Stable)
@@ -119,6 +128,24 @@ HvMarkCellDirty(
     RtlSetBits(&RegistryHive->DirtyVector,
                CellBlock, CellLastBlock - CellBlock);
     RegistryHive->DirtyCount++;
+
+    /*
+     * FIXME: Querying a lazy flush operation is needed to
+     * ensure that the dirty data is being flushed to disk
+     * accordingly. However, this operation has to be done
+     * in a helper like HvMarkDirty that marks specific parts
+     * of the hive as dirty. Since we do not have such kind
+     * of helper we have to perform an eventual lazy flush
+     * when marking cells as dirty here for the moment being,
+     * so that not only we flush dirty data but also write
+     * logs.
+     */
+#if !defined(CMLIB_HOST) && !defined(_BLDR_)
+    if (!(RegistryHive->HiveFlags & HIVE_NOLAZYFLUSH))
+    {
+        CmpLazyFlush();
+    }
+#endif
     return TRUE;
 }
 
@@ -340,7 +367,7 @@ HvAllocateCell(
 
     ASSERT(RegistryHive->ReadOnly == FALSE);
 
-    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, Size %x, %s, Vicinity %08lx\n",
+    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive 0x%p, Size 0x%x, %s, Vicinity 0x%x\n",
              __FUNCTION__, RegistryHive, Size, (Storage == 0) ? "Stable" : "Volatile", Vicinity);
 
     /* Round to 16 bytes multiple. */
@@ -384,7 +411,7 @@ HvAllocateCell(
     FreeCell->Size = -FreeCell->Size;
     RtlZeroMemory(FreeCell + 1, Size - sizeof(HCELL));
 
-    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - CellIndex %08lx\n",
+    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - CellIndex 0x%x\n",
              __FUNCTION__, FreeCellOffset);
 
     return FreeCellOffset;
@@ -404,7 +431,7 @@ HvReallocateCell(
 
     ASSERT(CellIndex != HCELL_NIL);
 
-    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, Size %x\n",
+    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive 0x%p, CellIndex 0x%x, Size 0x%x\n",
              __FUNCTION__, RegistryHive, CellIndex, Size);
 
     Storage = HvGetCellType(CellIndex);
@@ -450,7 +477,7 @@ HvFreeCell(
 
     ASSERT(RegistryHive->ReadOnly == FALSE);
 
-    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx\n",
+    CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive 0x%p, CellIndex 0x%x\n",
              __FUNCTION__, RegistryHive, CellIndex);
 
     Free = HvpGetCellHeader(RegistryHive, CellIndex);

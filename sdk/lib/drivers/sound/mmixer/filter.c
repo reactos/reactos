@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 ULONG
@@ -180,11 +180,6 @@ MMixerGetControlTypeFromTopologyNode(
         /* mux control */
         return MIXERCONTROL_CONTROLTYPE_MUX;
     }
-    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUX))
-    {
-        /* mux control */
-        return MIXERCONTROL_CONTROLTYPE_MUX;
-    }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_STEREO_WIDE))
     {
         /* stero wide control */
@@ -203,7 +198,7 @@ MMixerGetControlTypeFromTopologyNode(
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_SUPERMIX))
     {
         /* supermix control
-         * MIXERCONTROL_CONTROLTYPE_MUTE if KSPROPERTY_AUDIO_MUTE is supported 
+         * MIXERCONTROL_CONTROLTYPE_MUTE if KSPROPERTY_AUDIO_MUTE is supported
          */
         UNIMPLEMENTED;
         return MIXERCONTROL_CONTROLTYPE_VOLUME;

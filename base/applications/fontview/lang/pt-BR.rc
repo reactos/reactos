@@ -1,4 +1,9 @@
-/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Brazilian) resource file
+ * TRANSLATOR:  Copyright 2011 Matheus Macabu <mkbu95@gmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -12,6 +17,12 @@ BEGIN
     IDS_ERROR_NOMEM "Não há memória suficiente para completar a operação."
     IDS_ERROR_NOFONT "O arquivo %1 não é um arquivo de fonte válida."
     IDS_ERROR_NOCLASS "Não foi possível inicializar a janela."
+    IDS_ERROR_ISINSTALLED "This font is already installed!" 
+    IDS_ERROR_FONTCPY "Failed to copy the font file!"
+    IDS_ERROR_OPENKEY "Failed to open the fonts registry key!"
+    IDS_ERROR_REGISTER "Failed to register the new font!"
+    IDS_SUCCESS "Success"
+    IDS_COMPLETED "Font installation completed."
     IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\

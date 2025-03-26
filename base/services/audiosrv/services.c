@@ -1,12 +1,14 @@
 /*
- * PROJECT:          ReactOS
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/services.c
- * PURPOSE:          Audio Service Plug and Play
- * COPYRIGHT:        Copyright 2009 Johannes Anderwald
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Audio Service Plug and Play
+ * COPYRIGHT:   Copyright 2009 Johannes Anderwald
  */
 
 #include "audiosrv.h"
+
+#define NDEBUG
+#include <debug.h>
 
 BOOL
 WaitForService(
@@ -21,7 +23,7 @@ WaitForService(
     {
         if (!QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&Info, sizeof(SERVICE_STATUS_PROCESS), &dwSize))
         {
-            logmsg("QueryServiceStatusEx failed %x\n", GetLastError());
+            DPRINT("QueryServiceStatusEx failed %x\n", GetLastError());
             break;
         }
 
@@ -32,7 +34,7 @@ WaitForService(
 
     } while (Index++ < RetryCount);
 
-    logmsg("Timeout while waiting for service to become ready %p\n", hService);
+    DPRINT("Timeout while waiting for service to become ready %p\n", hService);
 
     return FALSE;
 }
@@ -49,13 +51,13 @@ StartAudioService(
     hService = OpenService(hSCManager, ServiceName, SERVICE_ALL_ACCESS);
     if (!hService)
     {
-        logmsg("Failed to open service %S %x\n", ServiceName, GetLastError());
+        DPRINT("Failed to open service %S %x\n", ServiceName, GetLastError());
         return FALSE;
     }
 
     if (!StartService(hService, 0, NULL))
     {
-        logmsg("Failed to start service %S %x\n", ServiceName, GetLastError());
+        DPRINT("Failed to start service %S %x\n", ServiceName, GetLastError());
         CloseServiceHandle(hService);
         return FALSE;
     }
@@ -71,18 +73,18 @@ StartSystemAudioServices(VOID)
 {
     SC_HANDLE hSCManager;
 
-    logmsg("Starting system audio services\n");
+    DPRINT("Starting system audio services\n");
 
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
-        logmsg("Failed to open service manager %x\n", GetLastError());
+        DPRINT("Failed to open service manager %x\n", GetLastError());
         return FALSE;
     }
 
-    logmsg("Starting sysaudio service\n");
+    DPRINT("Starting sysaudio service\n");
     StartAudioService(hSCManager, L"sysaudio", 20);
-    logmsg("Starting wdmaud service\n");
+    DPRINT("Starting wdmaud service\n");
     StartAudioService(hSCManager, L"wdmaud", 20);
 
     CloseServiceHandle(hSCManager);

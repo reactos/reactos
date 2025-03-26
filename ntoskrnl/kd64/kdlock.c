@@ -92,7 +92,9 @@ KdPollBreakIn(VOID)
         }
         else
         {
+            KIRQL OldIrql;
             /* Try to acquire the lock */
+            KeRaiseIrql(HIGH_LEVEL, &OldIrql);
             if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDebuggerLock))
             {
                 /* Now get a packet */
@@ -110,10 +112,11 @@ KdPollBreakIn(VOID)
                 /* Let go of the port */
                 KdpPortUnlock();
             }
+            KeLowerIrql(OldIrql);
         }
 
-        /* Re-enable interrupts if they were enabled previously */
-        if (Enable) _enable();
+        /* Re-enable interrupts */
+        KeRestoreInterrupts(Enable);
     }
 
     /* Tell the caller to do a break */

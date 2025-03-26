@@ -90,7 +90,10 @@ LoadOrderGroup = PNP Filter
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
+; Non-localizable
+ReactOS = "ReactOS Project"
+
+; Localizable
 PortsClassName = "Serial and parallel ports"
 
 StdMfg = "(Standard ports)"
@@ -118,7 +121,6 @@ StdMfg = "(Standard-Anschlüsse)"
 *PNP0401.DeviceDesc = "ECP Druckeranschluss"
 
 [Strings.0a]
-ReactOS = "Equipo de ReactOS"
 PortsClassName = "Puertos (COM y LPT)"
 
 StdMfg = "(Puertos estándar)"
@@ -126,7 +128,6 @@ StdMfg = "(Puertos estándar)"
 *PNP0501.DeviceDesc = "Puerto de comunicaciones"
 *PNP0400.DeviceDesc = "Puerto de impresora"
 *PNP0401.DeviceDesc = "Puerto de impresora"
-
 
 [Strings.040C]
 PortsClassName = "Ports série et parallèle"
@@ -147,7 +148,6 @@ StdMfg = "(スタンダード ポート)"
 *PNP0401.DeviceDesc = "ECP プリンタ ポート"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
 PortsClassName = "Porty (COM i LPT)"
 
 StdMfg = "(Standardowe porty)"
@@ -166,8 +166,8 @@ StdMfg = "(Tipos de porta padrão)"
 *PNP0401.DeviceDesc = "Porta de impressora ECP"
 
 [Strings.0418]
-ReactOS = "Echipa ReactOS"
 PortsClassName = "Porturi seriale și paralele"
+
 StdMfg = "(port standard)"
 *PNP0500.DeviceDesc = "Port de comunicație serial"
 *PNP0501.DeviceDesc = "Port de comunicație serial"
@@ -175,7 +175,6 @@ StdMfg = "(port standard)"
 *PNP0401.DeviceDesc = "Port de imprimantă ECP"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
 PortsClassName = "Порты (COM и LPT)"
 
 StdMfg = "(Стандартные порты)"
@@ -194,17 +193,15 @@ StdMfg = "(Štandardné porty)"
 *PNP0401.DeviceDesc = "ECP tlačový port"
 
 [Strings.041f]
-ReactOS = "ReactOS Takımı"
-PortsClassName = "Dizilik ve Koşut Girişler"
+PortsClassName = "Seri ve Paralel Bağlantı Noktaları"
 
 StdMfg = "(Ölçünlü Girişler)"
-*PNP0500.DeviceDesc = "Dizilik Bağlantı Girişi"
-*PNP0501.DeviceDesc = "Dizilik Bağlantı Girişi"
-*PNP0400.DeviceDesc = "Ölçünlü LPT Yazıcı Girişi"
-*PNP0401.DeviceDesc = "ECP Yazıcı Girişi"
+*PNP0500.DeviceDesc = "Seri Bağlantı Noktası"
+*PNP0501.DeviceDesc = "Seri Bağlantı Noktası"
+*PNP0400.DeviceDesc = "Standart LPT Yazıcı Bağlantı Noktası"
+*PNP0401.DeviceDesc = "ECP Yazıcı Bağlantı Noktası"
 
 [Strings.0422]
-ReactOS = "Команди ReactOS"
 PortsClassName = "Порти (COM і LPT)"
 
 StdMfg = "(Стандартні порти)"
@@ -228,3 +225,12 @@ StdMfg = "(标准端口)"
 *PNP0501.DeviceDesc = "串行通信端口"
 *PNP0400.DeviceDesc = "标准 LPT 打印机端口"
 *PNP0401.DeviceDesc = "ECP 打印机端口"
+
+[Strings.0816]
+PortsClassName = "Portas (COM & LPT)"
+
+StdMfg = "(Tipos de porta padrão)"
+*PNP0500.DeviceDesc = "Porta de comunicações série"
+*PNP0501.DeviceDesc = "Porta de comunicações série"
+*PNP0400.DeviceDesc = "Porta paralela padrão"
+*PNP0401.DeviceDesc = "Porta de impressora ECP"

@@ -45,8 +45,8 @@ EditDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
 
             ComboBox_SelectString(hwndList, 0, pInput->pLayout->pszName);
+            return TRUE;
         }
-        break;
 
         case WM_COMMAND:
         {

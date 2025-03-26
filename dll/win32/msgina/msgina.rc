@@ -19,7 +19,10 @@ IDI_LOCKICON ICON "resources/115.ico"
 
 /* Bitmaps */
 IDI_ROSLOGO BITMAP "resources/reactos.bmp"
+IDI_ROSLOGO_FLAG BITMAP "resources/reactos_flag.bmp"
 IDI_BAR BITMAP "resources/line.bmp"
+IDI_DLG_BG BITMAP "resources/dlg_bg.bmp"
+IDB_IMAGE_STRIP BITMAP "resources/image_strip.bmp"
 
 /* UTF-8 */
 #pragma code_page(65001)
@@ -87,8 +90,9 @@ IDI_BAR BITMAP "resources/line.bmp"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
+#endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif
-
-

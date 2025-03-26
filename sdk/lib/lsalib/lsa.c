@@ -317,6 +317,7 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
     ConnectInfo.Length = LogonProcessName->Length;
     ConnectInfo.LogonProcessNameBuffer[ConnectInfo.Length] = ANSI_NULL;
     ConnectInfo.CreateContext = TRUE;
+    ConnectInfo.TrustedCaller = CHECK;
 
     Status = ZwConnectPort(LsaHandle,
                            &PortName,

@@ -20,8 +20,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
 {
    IDS_NO_MAPI_CLIENT, "Eroare la trimiterea emailului. Nu aveți un client de email MAPI instalat."

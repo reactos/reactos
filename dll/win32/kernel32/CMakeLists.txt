@@ -10,7 +10,7 @@ add_library(kernel32_shared
     client/shared_utils.c
     client/file/fileutils.c
 )
-
+target_link_libraries(kernel32_shared PRIVATE pseh)
 add_dependencies(kernel32_shared psdk)
 
 list(APPEND SOURCE
@@ -49,7 +49,6 @@ list(APPEND SOURCE
     client/console/history.c
     client/console/init.c
     client/console/readwrite.c
-    client/console/vista.c
     client/file/backup.c
     client/file/cnotify.c
     client/file/copy.c
@@ -86,12 +85,23 @@ list(APPEND SOURCE
     winnls/string/fold.c
     winnls/string/format_msg.c
     winnls/string/japanese.c
-    winnls/string/lang.c
+    winnls/string/locale.c
     winnls/string/lcformat.c
     winnls/string/lstring.c
     winnls/string/nls.c
     winnls/string/sortkey.c
     k32.h)
+
+if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    set_source_files_properties(wine/res.c PROPERTIES COMPILE_OPTIONS "/wd4146")
+
+    # Disable warning C4267: 'initializing': conversion from 'size_t' to 'DWORD', possible loss of data
+    set_source_files_properties(winnls/string/locale.c PROPERTIES COMPILE_OPTIONS "/wd4267")
+else()
+    # Disable warning: 'variable' defined but not used
+    set_source_files_properties(winnls/string/locale.c PROPERTIES COMPILE_OPTIONS "-Wno-unused-variable")
+endif()
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
@@ -120,7 +130,7 @@ set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 set_subsystem(kernel32 console)
 ################# END  HACK #################
 
-target_link_libraries(kernel32 kernel32_shared wine chkstk ${PSEH_LIB})
+target_link_libraries(kernel32 psapi_static kernel32_vista_static kernel32_shared wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)

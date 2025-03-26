@@ -1,30 +1,12 @@
 /*
- *  ReactOS Task Manager
- *
- *  perfdata.h
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Performance Counters
+ * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
+ *              Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  */
 
 #pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
 
@@ -57,9 +39,9 @@ typedef struct _PERFDATA
 
 typedef struct _CMD_LINE_CACHE
 {
-     DWORD idx;
+    DWORD  idx;
     LPWSTR str;
-     ULONG len;
+    ULONG  len;
     struct _CMD_LINE_CACHE* pnext;
 } CMD_LINE_CACHE, *PCMD_LINE_CACHE;
 
@@ -113,8 +95,3 @@ ULONG	PerfDataGetPhysicalMemorySystemCacheK(void);
 ULONG	PerfDataGetSystemHandleCount(void);
 
 ULONG	PerfDataGetTotalThreadCount(void);
-
-
-#ifdef __cplusplus
-};
-#endif

@@ -1,16 +1,11 @@
 /*
  * PROJECT:     Authentication Package DLL
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/msv1_0/lsa.h
- * PURPOSE:     header for lsa.c
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Header for lsa.c
  * COPYRIGHT:   Copyright 2019-2020 Andreas Maier <staubim@quantentunnel.de>
  */
 
-#ifndef _MSV1_0_LSA_H_
-#define _MSV1_0_LSA_H_
-
-// functions we provide to LSA in SpLsaModeInitialize
-extern SECPKG_FUNCTION_TABLE NtlmLsaFn[1];
+#pragma once
 
 NTSTATUS
 NTAPI
@@ -138,5 +133,3 @@ NTAPI
 LsaSpSetExtendedInformation(
     _In_ SECPKG_EXTENDED_INFORMATION_CLASS Class,
     _In_ PSECPKG_EXTENDED_INFORMATION Info);
-
-#endif /* _MSV1_0_LSA_H_ */

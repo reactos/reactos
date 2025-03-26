@@ -33,6 +33,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O range"
+    IDS_COPY "&Copiar"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -75,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Os drivers para este dispositivo não estão instalados."
     IDS_DEV_HARDWARE_DISABLED "Este dispositivo está desativado porque a BIOS para o dispositivo não lhe deu nenhum recurso."
     IDS_DEV_CANT_SHARE_IRQ "Este dispositivo está utilizando um recurso de Requisição de Interrupção (IRQ) que está em uso por outro dispositivo e não pode ser compartilhado.\nVocê pode alterar a configuração conflitante ou remover o driver de modo real que está causando o conflito."
-    IDS_DEV_FAILED_ADD "Este dispositivo não está funcionando corretamente porque %1 não está funcionando corretamente."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "O ReactOS não pode instalar os drivers para este dispositivo porque não consegue acessar o drive ou local de rede que possui os arquivos de configuração."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo não está respondendo ao seu driver."
     IDS_DEV_NO_SOFTCONFIG "O ReactOS não pode determinar as configurações para este dispositivo. Consulte a documentação que veio com este dispositivo e utilize a guia Recursos para definir a configuração."
@@ -286,14 +287,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Device Manager"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\nDo you really want to disable it?"
+  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\nDo you want to continue?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Update driver software..."
   IDS_MENU_ENABLE           "Enable"
@@ -304,7 +306,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Properties"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Properties"
   IDS_TOOLTIP_SCAN          "Scan for hardware changes"
@@ -315,7 +317,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Open property dialog for the current selection."

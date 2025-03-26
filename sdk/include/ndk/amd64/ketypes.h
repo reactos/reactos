@@ -25,15 +25,65 @@ Author:
 //
 
 //
-// KPCR Access for non-IA64 builds
+// Kernel Feature Bits
+// See https://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/kprcb/featurebits.htm?tx=61&ts=0,1400
 //
-//#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
-//#define PCR                     ((volatile KPCR * const)K0IPCR)
-#define PCR ((volatile KPCR * const)__readgsqword(FIELD_OFFSET(KPCR, Self)))
-//#if defined(CONFIG_SMP) || defined(NT_BUILD)
-//#undef  KeGetPcr
-//#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
-//#endif
+#define KF_SMEP                         0x00000001 // Win 6.2
+#define KF_RDTSC                        0x00000002 // From ks386.inc, ksamd64.inc
+#define KF_CR4                          0x00000004 // From ks386.inc, ksamd64.inc
+#define KF_CMOV                         0x00000008
+#define KF_GLOBAL_PAGE                  0x00000010 // From ks386.inc, ksamd64.inc
+#define KF_LARGE_PAGE                   0x00000020 // From ks386.inc, ksamd64.inc
+#define KF_MTRR                         0x00000040
+#define KF_CMPXCHG8B                    0x00000080 // From ks386.inc, ksamd64.inc
+#define KF_MMX                          0x00000100
+#define KF_DTS                          0x00000200 // Win 5.2-6.2
+#define KF_PAT                          0x00000400
+#define KF_FXSR                         0x00000800
+#define KF_FAST_SYSCALL                 0x00001000 // From ks386.inc, ksamd64.inc
+#define KF_XMMI                         0x00002000 // SSE
+#define KF_3DNOW                        0x00004000
+#define KF_AMDK6MTRR                    0x00008000 // Win 5.0-6.1
+#define KF_XSAVEOPT                     0x00008000 // From KF_XSAVEOPT_BIT
+#define KF_XMMI64                       0x00010000 // SSE2
+#define KF_BRANCH                       0x00020000 // From ksamd64.inc, Win 6.1-6.2
+#define KF_00040000                     0x00040000 // Unclear
+#define KF_SSE3                         0x00080000 // Win 6.0+
+#define KF_CMPXCHG16B                   0x00100000 // Win 6.0-6.2
+#define KF_AUTHENTICAMD                 0x00200000 // Win 6.1+
+#define KF_ACNT2                        0x00400000 // Win 6.1+
+#define KF_XSTATE                       0x00800000 // From ksamd64.inc, Win 6.1+
+#define KF_GENUINE_INTEL                0x01000000 // Win 6.1+
+#define KF_02000000                     0x02000000 // Unclear
+#define KF_SLAT                         0x04000000 // Win 6.2+, Intel: EPT supported
+#define KF_VIRT_FIRMWARE_ENABLED        0x08000000 // Win 6.2+
+#define KF_RDWRFSGSBASE                 0x10000000 // From ksamd64.inc KF_RDWRFSGSBASE_BIT (0x1C)
+#define KF_NX_BIT                       0x20000000
+#define KF_NX_DISABLED                  0x40000000
+#define KF_NX_ENABLED                   0x80000000
+#define KF_RDRAND               0x0000000100000000ULL // Win 10.0+
+#define KF_SMAP                 0x0000000200000000ULL // From ksamd64.inc
+#define KF_RDTSCP               0x0000000400000000ULL // Win 10.0+
+#define KF_HUGEPAGE             0x0000002000000000ULL // Win 10.0 1607+
+#define KF_XSAVES               0x0000004000000000ULL // From ksamd64.inc KF_XSAVES_BIT (0x26)
+#define KF_FPU_LEAKAGE          0x0000020000000000ULL // From ksamd64.inc KF_FPU_LEAKAGE_BIT (0x29)
+#define KF_CAT                  0x0000100000000000ULL // From ksamd64.inc KF_CAT_BIT (0x02C)
+#define KF_CET_SS               0x0000400000000000ULL // From ksamd64.inc
+#define KF_SSSE3                0x0000800000000000ULL
+#define KF_SSE4_1               0x0001000000000000ULL
+#define KF_SSE4_2               0x0002000000000000ULL
+
+#define KF_XSAVEOPT_BIT                 15 // From ksamd64.inc (0x0F -> 0x8000)
+#define KF_XSTATE_BIT                   23 // From ksamd64.inc (0x17 -> 0x800000)
+#define KF_RDWRFSGSBASE_BIT             28 // From ksamd64.inc (0x1C -> 0x10000000)
+#define KF_XSAVES_BIT                   38 // From ksamd64.inc (0x26 -> 0x4000000000)
+#define KF_FPU_LEAKAGE_BIT              41 // From ksamd64.inc (0x29 -> 0x20000000000)
+#define KF_CAT_BIT                      44 // From ksamd64.inc (0x2C -> 0x100000000000)
+
+//
+// Double fault stack size
+//
+#define DOUBLE_FAULT_STACK_SIZE 0x2000
 
 //
 // CPU Vendors
@@ -77,6 +127,21 @@ typedef enum
 #define KGDT64_SYS_TSS          0x0040
 #define KGDT64_R3_CMTEB         0x0050
 #define KGDT64_R0_LDT           0x0060
+
+//
+// CR0
+//
+#define CR0_PE                  0x00000001
+#define CR0_MP                  0x00000002
+#define CR0_EM                  0x00000004
+#define CR0_TS                  0x00000008
+#define CR0_ET                  0x00000010
+#define CR0_NE                  0x00000020
+#define CR0_WP                  0x00010000
+#define CR0_AM                  0x00040000
+#define CR0_NW                  0x20000000
+#define CR0_CD                  0x40000000
+#define CR0_PG                  0x80000000
 
 //
 // CR4
@@ -125,11 +190,15 @@ typedef enum
 #define EFLAGS_TF               0x100L
 #define EFLAGS_INTERRUPT_MASK   0x200L
 #define EFLAGS_DF               0x400L
+#define EFLAGS_IOPL             0x3000L
 #define EFLAGS_NESTED_TASK      0x4000L
+//#define EFLAGS_NF               0x4000
+#define EFLAGS_RF               0x10000
 #define EFLAGS_V86_MASK         0x20000
 #define EFLAGS_ALIGN_CHECK      0x40000
 #define EFLAGS_VIF              0x80000
 #define EFLAGS_VIP              0x100000
+#define EFLAGS_ID               0x200000
 #define EFLAGS_USER_SANITIZE    0x3F4DD7
 #define EFLAG_SIGN              0x8000
 #define EFLAG_ZERO              0x4000
@@ -189,7 +258,7 @@ typedef enum
 #define MSR_GS_SWAP             0xC0000102
 #define MSR_MCG_STATUS          0x017A
 #define MSR_AMD_ACCESS          0x9C5A203A
-#define MSR_IA32_MISC_ENABLE    0x01A0
+#define MSR_IA32_MISC_ENABLE    0x000001A0
 #define MSR_LAST_BRANCH_FROM    0x01DB
 #define MSR_LAST_BRANCH_TO      0x01DC
 #define MSR_LAST_EXCEPTION_FROM 0x01DD
@@ -236,8 +305,24 @@ typedef enum
 #define IPI_SYNCH_REQUEST       16
 
 //
+// Flags for KPRCB::IpiFrozen
+//
+// Values shown with !ipi extension in WinDbg:
+// 0 = [Running], 1 = [Unknown], 2 = [Frozen], 3 = [Thaw], 4 = [Freeze Owner]
+// 5 = [Target Freeze], 6-15 = [Unknown]
+// 0x20 = [Active] (flag)
+//
+#define IPI_FROZEN_STATE_RUNNING 0
+#define IPI_FROZEN_STATE_FROZEN 2
+#define IPI_FROZEN_STATE_THAW 3
+#define IPI_FROZEN_STATE_OWNER 4
+#define IPI_FROZEN_STATE_TARGET_FREEZE 5
+#define IPI_FROZEN_FLAG_ACTIVE 0x20
+
+//
 // PRCB Flags
 //
+#define PRCB_MINOR_VERSION      1
 #define PRCB_MAJOR_VERSION      1
 #define PRCB_BUILD_DEBUG        1
 #define PRCB_BUILD_UNIPROCESSOR 2
@@ -252,6 +337,8 @@ typedef enum
 //
 // HAL Variables
 //
+#define PRIMARY_VECTOR_BASE     0x30
+#define MAXIMUM_IDTVECTOR       0xFF
 #define INITIAL_STALL_COUNT     100
 #define MM_HAL_VA_START         0xFFFFFFFFFFC00000ULL /* This is Vista+ */
 #define MM_HAL_VA_END           0xFFFFFFFFFFFFFFFFULL
@@ -272,13 +359,20 @@ typedef enum
 //
 #define KSEG0_BASE 0xfffff80000000000ULL
 
+#define NMI_STACK_SIZE 0x2000
+#define ISR_STACK_SIZE 0x6000
+
+/* Number of bytes reserved for syscall parameters */
+#define MAX_SYSCALL_PARAM_SIZE (16 * 8)
+
 //
 // Synchronization-level IRQL
 //
-#define SYNCH_LEVEL 12
-
-#define NMI_STACK_SIZE 0x2000
-#define ISR_STACK_SIZE 0x6000
+#ifndef CONFIG_SMP
+#define SYNCH_LEVEL             DISPATCH_LEVEL
+#else
+#define SYNCH_LEVEL             (IPI_LEVEL - 2)
+#endif
 
 //
 // Number of pool lookaside lists per pool in the PRCB
@@ -551,7 +645,6 @@ typedef struct _REQUEST_MAILBOX
 //
 // Processor Region Control Block
 //
-#pragma pack(push,4)
 typedef struct _KPRCB
 {
     ULONG MxCsr;
@@ -845,6 +938,12 @@ typedef struct _KPRCB
     CACHE_DESCRIPTOR Cache[5];
     ULONG CacheCount;
 #endif
+#ifdef __REACTOS__
+#if  (NTDDI_VERSION < NTDDI_WINBLUE)
+    // On Win 8.1+ the FeatureBits field is extended to 64 bits
+    ULONG FeatureBitsHigh;
+#endif
+#endif
 } KPRCB, *PKPRCB;
 
 //
@@ -892,7 +991,6 @@ typedef struct _KIPCR
     ULONG ContextSwitches;
 
 } KIPCR, *PKIPCR;
-#pragma pack(pop)
 
 //
 // TSS Definition
@@ -997,6 +1095,15 @@ typedef struct _UCALLOUT_FRAME
     ULONG ApiNumber;
     MACHINE_FRAME MachineFrame;
 } UCALLOUT_FRAME, *PUCALLOUT_FRAME; // size = 0x0058
+
+//
+// User side APC dispatcher frame
+//
+typedef struct _UAPC_FRAME
+{
+    CONTEXT Context;
+    MACHINE_FRAME MachineFrame;
+} UAPC_FRAME, *PUAPC_FRAME;
 
 //
 // Stack frame layout for KiUserExceptionDispatcher

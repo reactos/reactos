@@ -319,7 +319,7 @@ write(
 
 BOOL
 Privilege(
-    LPTSTR pszPrivilege, 
+    LPTSTR pszPrivilege,
     BOOL bEnable
     )
 {
@@ -502,7 +502,7 @@ my_open(
     swprintf(deviceNameBuffer, L"%ws\\", fn);
     UDFPrint(("my_open: %S\n", fn));
     i = sizeof(FSNameBuffer)/sizeof(FSNameBuffer[0]);
-    if(GetVolumeInformationW(deviceNameBuffer, NULL, 0, 
+    if(GetVolumeInformationW(deviceNameBuffer, NULL, 0,
         &returned, &returned, &returned, FSNameBuffer, i)) {
         UDFPrint(("my_open: FS: %S\n", FSNameBuffer));
         if(!wcscmp(FSNameBuffer, L"Unknown")) {
@@ -788,7 +788,7 @@ udf_get_sizes(
     return(OS_SUCCESS(RC));
 }
 #endif //LIBUDFFMT
-    
+
 #include "string_lib.cpp"
 
 #ifdef _BROWSE_UDF_
@@ -991,7 +991,7 @@ ExAllocatePool(
         LastThreadPool = i;
 
     ReleaseMutex(MemLock);
-        
+
     return HeapAlloc(ThreadPoolList[i].HeapHandle, HEAP_NO_SERIALIZE, Size);
 
 } // end ExAllocatePool()

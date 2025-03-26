@@ -10,6 +10,7 @@
 #include <winreg.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <shlwapi.h>
 #include <atlbase.h>
 #include <atlcom.h>
 

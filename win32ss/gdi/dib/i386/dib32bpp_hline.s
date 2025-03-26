@@ -20,7 +20,7 @@ _DIB_32BPP_HLine:
                   mov     [esp+8], edi
                   mov     edi, [esp+28]
                   mov     eax, [ecx+36]
-                  mov     ebx, [esp+24]      // ebx =  LONG x2 
+                  mov     ebx, [esp+24]      // ebx =  LONG x2
                   imul    eax, edi
                   mov     edi, [ecx+32]
                   sub     ebx, edx            // cx  = (x2 - x1) ;
@@ -30,9 +30,9 @@ _DIB_32BPP_HLine:
                   cld
                   mov     eax, [esp+32]
                   mov     edi, [esp]
-                  test    edi, 3             // Align to fullword boundary 
+                  test    edi, 3             // Align to fullword boundary
                   jnz     short _save_rest
-                  mov     ecx, ebx           // Setup count of fullwords to fill 
+                  mov     ecx, ebx           // Setup count of fullwords to fill
                   rep stosd
 
                   mov     ebx, [esp+4]
@@ -42,9 +42,9 @@ _DIB_32BPP_HLine:
 _save_rest:
                   stosw
                   ror     eax, 16
-                  mov     ecx, ebx           // Setup count of fullwords to fill 
+                  mov     ecx, ebx           // Setup count of fullwords to fill
                   dec     ecx
-                  rep stosd                  // The actual fill 
+                  rep stosd                  // The actual fill
                   shr     eax, 16
                   stosw
 

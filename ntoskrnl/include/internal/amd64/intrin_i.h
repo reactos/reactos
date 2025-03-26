@@ -81,16 +81,6 @@ static __inline__ __attribute__((always_inline)) void __sldt(void *Destination)
 	__asm__ __volatile__("sldt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __ldmxcsr(unsigned long *Source)
-{
-	__asm__ __volatile__("ldmxcsr %0" : : "m"(*Source));
-}
-
-static __inline__ __attribute__((always_inline)) void __stmxcsr(unsigned long *Destination)
-{
-	__asm__ __volatile__("stmxcsr %0" : : "m"(*Destination) : "memory");
-}
-
 static __inline__ __attribute__((always_inline)) void __ltr(unsigned short Source)
 {
 	__asm__ __volatile__("ltr %0" : : "rm"(Source));
@@ -101,6 +91,10 @@ static __inline__ __attribute__((always_inline)) void __str(unsigned short *Dest
 	__asm__ __volatile__("str %0" : : "m"(*Destination) : "memory");
 }
 
+static __inline__ __attribute__((always_inline)) void __swapgs(void)
+{
+	__asm__ __volatile__("swapgs" : : : "memory");
+}
 
 #elif defined(_MSC_VER)
 
@@ -116,6 +110,7 @@ void __ltr(unsigned short Source);
 
 void __str(unsigned short *Destination);
 
+void __swapgs(void);
 
 #else
 #error Unknown compiler for inline assembler

@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Şimdiki anabilgisayarın adını yazdır.\n\nhostname"
+    IDS_USAGE "Şimdiki anabilgisayarın adını yazdırır.\n\nhostname"
     IDS_NOSET "hostname -s desteklenmiyor."
-    IDS_ERROR "Win32 yanlışlığı"
+    IDS_ERROR "Win32 hatası"
 END

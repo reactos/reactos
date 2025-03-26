@@ -52,7 +52,7 @@ VOID
 KeMemoryBarrier(VOID)
 {
   LONG Barrier, *Dummy = &Barrier;
-  UNREFERENCED_LOCAL_VARIABLE(Dummy);
+  (VOID)Dummy;
 
 #if defined(__GNUC__)
   __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
@@ -283,8 +283,6 @@ typedef struct _CONTEXT {
 } CONTEXT;
 #include "poppack.h"
 
-#define KeGetPcr()                      PCR
-
 #define PCR_MINOR_VERSION 1
 #define PCR_MAJOR_VERSION 1
 
@@ -324,6 +322,18 @@ typedef struct _KPCR {
   ULONG SecondLevelCacheSize;
   ULONG HalReserved[16];
 } KPCR, *PKPCR;
+
+/* NOTE: This macro is not exposed in the DDK/WDK for _M_IX86.
+ * If it were, this would be its definition. */
+#if 0
+// #define KeGetPcr()      ((PKPCR)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
+FORCEINLINE
+PKPCR
+KeGetPcr(VOID)
+{
+    return (PKPCR)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr));
+}
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 _CRT_DEPRECATE_TEXT("KeGetCurrentProcessorNumber is deprecated. Use KeGetCurrentProcessorNumberEx or KeGetCurrentProcessorIndex instead.")

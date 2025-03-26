@@ -247,7 +247,7 @@ IKsFilterFactory_fnInitialize(
     This->FilterFactory.FilterDescriptor = AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
     if (!This->FilterFactory.FilterDescriptor)
     {
-        DPRINT("out of memory");
+        DPRINT1("Out of memory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     RtlMoveMemory((PVOID)This->FilterFactory.FilterDescriptor, (PVOID)Descriptor, sizeof(KSFILTER_DESCRIPTOR));
@@ -751,4 +751,3 @@ KsFilterFactoryUpdateCacheData(
     /* done */
     return Status;
 }
-

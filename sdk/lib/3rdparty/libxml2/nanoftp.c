@@ -6,7 +6,6 @@
 
 #ifdef TESTING
 #define STANDALONE
-#define HAVE_STDLIB_H
 #define HAVE_UNISTD_H
 #define HAVE_SYS_SOCKET_H
 #define HAVE_NETINET_IN_H
@@ -19,10 +18,9 @@
 
 #ifdef LIBXML_FTP_ENABLED
 #include <string.h>
-
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
+#include <errno.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -41,9 +39,6 @@
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -55,9 +50,6 @@
 #endif
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
 #endif
 
 #include <libxml/xmlmemory.h>
@@ -75,7 +67,7 @@
 #endif
 
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(_WIN32)
 #include <wsockcompat.h>
 #endif
 
@@ -158,7 +150,7 @@ int have_ipv6(void) {
 
 /**
  * xmlFTPErrMemory:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle an out of memory condition
  */
@@ -172,7 +164,7 @@ xmlFTPErrMemory(const char *extra)
  * xmlNanoFTPInit:
  *
  * Initialize the FTP protocol layer.
- * Currently it just checks for proxy informations,
+ * Currently it just checks for proxy information,
  * and get the hostname
  */
 
@@ -218,7 +210,7 @@ xmlNanoFTPInit(void) {
 /**
  * xmlNanoFTPCleanup:
  *
- * Cleanup the FTP protocol layer. This cleanup proxy informations.
+ * Cleanup the FTP protocol layer. This cleanup proxy information.
  */
 
 void
@@ -250,7 +242,7 @@ xmlNanoFTPCleanup(void) {
  * @passwd:  the proxy password
  * @type:  the type of proxy 1 for using SITE, 2 for USER a@b
  *
- * Setup the FTP proxy informations.
+ * Setup the FTP proxy information.
  * This can also be done by using ftp_proxy ftp_proxy_user and
  * ftp_proxy_password environment variables.
  */
@@ -412,7 +404,7 @@ xmlNanoFTPUpdateURL(void *ctx, const char *URL) {
  * (Re)Initialize the FTP Proxy context by parsing the URL and finding
  * the protocol host port it indicates.
  * Should be like ftp://myproxy/ or ftp://myproxy:3128/
- * A NULL URL cleans up proxy informations.
+ * A NULL URL cleans up proxy information.
  */
 
 void
@@ -1251,8 +1243,7 @@ xmlNanoFTPConnectTo(const char *server, int port) {
 	xmlNanoFTPFreeCtxt(ctxt);
 	return(NULL);
     }
-    if (port != 0)
-	ctxt->port = port;
+    ctxt->port = port;
     res = xmlNanoFTPConnect(ctxt);
     if (res < 0) {
 	xmlNanoFTPFreeCtxt(ctxt);
@@ -1268,7 +1259,7 @@ xmlNanoFTPConnectTo(const char *server, int port) {
  *
  * Tries to change the remote directory
  *
- * Returns -1 incase of error, 1 if CWD worked, 0 if it failed
+ * Returns -1 in case of error, 1 if CWD worked, 0 if it failed
  */
 
 int
@@ -1317,7 +1308,7 @@ xmlNanoFTPCwd(void *ctx, const char *directory) {
  *
  * Tries to delete an item (file or directory) from server
  *
- * Returns -1 incase of error, 1 if DELE worked, 0 if it failed
+ * Returns -1 in case of error, 1 if DELE worked, 0 if it failed
  */
 
 int
@@ -1367,7 +1358,7 @@ xmlNanoFTPDele(void *ctx, const char *file) {
  * Try to open a data connection to the server. Currently only
  * passive mode is supported.
  *
- * Returns -1 incase of error, 0 otherwise
+ * Returns -1 in case of error, 0 otherwise
  */
 
 SOCKET
@@ -1540,7 +1531,7 @@ xmlNanoFTPGetConnection(void *ctx) {
  *
  * Close the data connection from the server
  *
- * Returns -1 incase of error, 0 otherwise
+ * Returns -1 in case of error, 0 otherwise
  */
 
 int
@@ -1591,7 +1582,7 @@ xmlNanoFTPCloseConnection(void *ctx) {
  *
  * Parse at most one entry from the listing.
  *
- * Returns -1 incase of error, the length of data parsed otherwise
+ * Returns -1 in case of error, the length of data parsed otherwise
  */
 
 static int
@@ -1719,7 +1710,7 @@ xmlNanoFTPParseList(const char *list, ftpListCallback callback, void *userData) 
  * Do a listing on the server. All files info are passed back
  * in the callbacks.
  *
- * Returns -1 incase of error, 0 otherwise
+ * Returns -1 in case of error, 0 otherwise
  */
 
 int
@@ -1894,7 +1885,7 @@ xmlNanoFTPGetSocket(void *ctx, const char *filename) {
  * Fetch the given file from the server. All data are passed back
  * in the callbacks. The last callback has a size of 0 block.
  *
- * Returns -1 incase of error, 0 otherwise
+ * Returns -1 in case of error, 0 otherwise
  */
 
 int
@@ -2024,7 +2015,7 @@ xmlNanoFTPOpen(const char *URL) {
  *
  * Close the connection and both control and transport
  *
- * Returns -1 incase of error, 0 otherwise
+ * Returns -1 in case of error, 0 otherwise
  */
 
 int
@@ -2115,5 +2106,3 @@ int main(int argc, char **argv) {
 }
 #endif /* STANDALONE */
 #endif /* LIBXML_FTP_ENABLED */
-#define bottom_nanoftp
-#include "elfgcchack.h"

@@ -342,14 +342,13 @@ ConDllInitialize(IN ULONG Reason,
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     BOOLEAN InServerProcess = FALSE;
     CONSRV_API_CONNECTINFO ConnectInfo;
-    LCID lcid;
 
     if (Reason != DLL_PROCESS_ATTACH)
     {
         if ((Reason == DLL_THREAD_ATTACH) && IsConsoleApp())
         {
-            /* Sets the current console locale for the new thread */
-            SetTEBLangID(lcid);
+            /* Sync the new thread's LangId with the console's one */
+            SetTEBLangID();
         }
         else if (Reason == DLL_PROCESS_DETACH)
         {
@@ -522,8 +521,8 @@ ConDllInitialize(IN ULONG Reason,
 
         InputWaitHandle = ConnectInfo.ConsoleStartInfo.InputWaitHandle;
 
-        /* Sets the current console locale for this thread */
-        SetTEBLangID(lcid);
+        /* Sync the current thread's LangId with the console's one */
+        SetTEBLangID();
     }
 
     DPRINT("Console setup: 0x%p, 0x%p, 0x%p, 0x%p\n",

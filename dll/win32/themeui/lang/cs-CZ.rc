@@ -1,10 +1,18 @@
+/*
+ * PROJECT:     Theme UI Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2014 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     IDS_BRICK "Cihla"
     IDS_EGGPLANT "Lilek"
-    IDS_GOLIVE "Zelená oliva" //Spruce
+    IDS_GOLIVE "Zelená oliva"
     IDS_HCONTRAST_1 "Vysoký kontrast 1"
     IDS_HCONTRAST_2 "Vysoký kontrast 2"
     IDS_HCONTRAST_BLACK "Vysoký kontrast černá"
@@ -15,11 +23,11 @@ BEGIN
     IDS_PLUM "Švestka"
     IDS_PUMPKIN "Dýně"
     IDS_RAIN "Deštivý den"
-    IDS_RWB "Red, White, and Blue"
-    IDS_CLASSIC "ReactOS Classic"
-    IDS_STANDARD "ReactOS Standard"
+    IDS_RWB "Červená, bílá a modrá"
+    IDS_CLASSIC "ReactOS klasický"
+    IDS_STANDARD "ReactOS standardní"
     IDS_ROSE "Růže"
-    IDS_SAND "Písek" //Desert
+    IDS_SAND "Písek"
     IDS_SLATE "Břidlice"
     IDS_SKY "Nebe"
     IDS_STORM "Bouře"
@@ -29,7 +37,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SIZE_NORMAL "Normal"
-    IDS_SIZE_LARGE "Large"
-    IDS_SIZE_XLARGE "Extra Large"
+    IDS_SIZE_NORMAL "Normální"
+    IDS_SIZE_LARGE "Velká"
+    IDS_SIZE_XLARGE "Velmi velká"
 END

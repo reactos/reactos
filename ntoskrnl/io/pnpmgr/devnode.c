@@ -70,6 +70,8 @@ PipAllocateDeviceNode(
         PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     }
 
+    DPRINT("Allocated devnode 0x%p\n", DeviceNode);
+
     /* Return the node */
     return DeviceNode;
 }
@@ -98,6 +100,32 @@ PiInsertDevNode(
     }
     KeReleaseSpinLock(&IopDeviceTreeLock, oldIrql);
     DeviceNode->Level = ParentNode->Level + 1;
+
+    DPRINT("Inserted devnode 0x%p to parent 0x%p\n", DeviceNode, ParentNode);
+}
+
+PNP_DEVNODE_STATE
+PiSetDevNodeState(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PNP_DEVNODE_STATE NewState)
+{
+    KIRQL oldIrql;
+
+    KeAcquireSpinLock(&IopDeviceTreeLock, &oldIrql);
+
+    PNP_DEVNODE_STATE prevState = DeviceNode->State;
+    if (prevState != NewState)
+    {
+        DeviceNode->State = NewState;
+        DeviceNode->PreviousState = prevState;
+        DeviceNode->StateHistory[DeviceNode->StateHistoryEntry++] = prevState;
+        DeviceNode->StateHistoryEntry %= DEVNODE_HISTORY_SIZE;
+    }
+
+    KeReleaseSpinLock(&IopDeviceTreeLock, oldIrql);
+
+    DPRINT("%wZ Changed state 0x%x => 0x%x\n", &DeviceNode->InstancePath, prevState, NewState);
+    return prevState;
 }
 
 VOID
@@ -302,9 +330,11 @@ IopFreeDeviceNode(
     KIRQL OldIrql;
     PDEVICE_NODE PrevSibling = NULL;
 
-    /* All children must be deleted before a parent is deleted */
-    ASSERT(!DeviceNode->Child);
     ASSERT(DeviceNode->PhysicalDeviceObject);
+    /* All children must be deleted before a parent is deleted */
+    ASSERT(DeviceNode->Child == NULL);
+    /* This is the only state where we are allowed to remove the node */
+    ASSERT(DeviceNode->State == DeviceNodeRemoved);
     /* No notifications should be registered for this device */
     ASSERT(IsListEmpty(&DeviceNode->TargetDeviceNotify));
 

@@ -3,7 +3,7 @@
  *    xxrogers@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
- *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2020) 
+ *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -48,10 +48,10 @@ BEGIN
     LTEXT "Krótko", -1, 35, 50, 30, 10
     LTEXT "Długo", -1, 140, 50, 30, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
-    PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
-    PUSHBUTTON "&Anuluj", IDCANCEL, 175, 75, 50, 15
+    DEFPUSHBUTTON "Ok", IDOK, 120, 75, 50, 15
+    PUSHBUTTON "Anuluj", IDCANCEL, 175, 75, 50, 15
     LTEXT "&Dopasuj czas potrzebny do przytrzymania wciśniętego przycisku myszy lub urządzenia wskazującego przed „zablokowaniem” kliknięcia.", -1, 60, 15, 170, 30
-    ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+    ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
@@ -99,8 +99,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Zapisz ten schemat kursorów jako:", -1, 5, 5, 144, 9
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 14
-    PUSHBUTTON "&Anuluj", IDCANCEL, 115, 45, 50, 14
+    DEFPUSHBUTTON "Ok", IDOK, 60, 45, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 115, 45, 50, 14
 END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
@@ -126,7 +126,7 @@ BEGIN
     ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 15, 115, 15, 15
     CONTROL "", IDC_SLIDER_POINTER_TRAIL, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 130, 70, 17
     CHECKBOX "&Ukryj wskaźnik podczas pisania", IDC_CHECK_HIDE_POINTER, 60, 150, 130, 10
-    ICON IDI_MOUSE_SPEED, IDC_ICON_HIDE_POINTER, 15, 145, 15, 15
+    ICON IDI_MOUSE_HIDE, IDC_ICON_HIDE_POINTER, 15, 145, 15, 15
     CHECKBOX "Pokaż lokalizację wskaźnika po naciśnięciu klawisza &CTRL",
              IDC_CHECK_SHOW_POINTER, 60, 175, 170, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_POINTER, IDC_ICON_SHOW_POINTER, 15, 170, 15, 15

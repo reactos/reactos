@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     Fraginator
+ * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_MAIN DIALOGEX 0, 0, 375, 103
@@ -16,13 +24,13 @@ BEGIN
     PUSHBUTTON      "I&eșire",IDC_QUIT,322,51,45,15
     CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
                     WS_BORDER,7,7,78,58
-    LTEXT           "Alegeți o unitate:",-1,78,40,73,8
+    LTEXT           "Alegeți un disc:",-1,78,40,73,8
     LTEXT           "Alegeți o acțiune:",-1,159,40,73,8
     CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
                     0x1,7,71,320,10
     CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
                     SS_SUNKEN | WS_GROUP,7,86,359,10
-    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,115,8
+    LTEXT           "Sunt o maimuță, ascultați-mă cum fac eeK",IDC_WISECRACKS,78,15,115,8
     LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
     LTEXT           "Prioritate proces:",-1,241,40,73,8
 END
@@ -44,7 +52,7 @@ BEGIN
                     SS_SUNKEN
     LTEXT           "(mărime disc, cluster-i)",IDC_DISKSIZECLUSTERS,83,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Total cluster-i",-1,7,73,75,8
+    LTEXT           "Total clustere",-1,7,73,75,8
     LTEXT           "(mărime cluster)",IDC_DISKCLUSTERSIZE,83,84,117,10,
                     SS_SUNKEN
     LTEXT           "Dimensiune cluster",-1,7,84,75,8

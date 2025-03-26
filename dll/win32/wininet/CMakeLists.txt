@@ -9,7 +9,7 @@ add_definitions(
 add_definitions(
     -D__WINESRC__
     -D_WINE
-    -Dclose=_close)
+    -D__ROS_LONG64__)
 
 spec2def(wininet.dll wininet.spec ADD_IMPORTLIB)
 
@@ -38,6 +38,11 @@ add_library(wininet MODULE
     $<TARGET_OBJECTS:wininet_inflate>
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
+
+if(MSVC)
+    # Disable warning C4090: 'function': different 'const' qualifiers
+    target_compile_options(wininet PRIVATE /wd4090)
+endif()
 
 set_module_type(wininet win32dll)
 target_link_libraries(wininet wine ${PSEH_LIB} oldnames)

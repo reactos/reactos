@@ -6,7 +6,7 @@
  * It's an extension to C library on Windows CE platform.
  * For example, HAVE_STDIO_H definition indicates there are
  * following files available:
- * stdio.h - from Windows CE / Windows Mobile SDK 
+ * stdio.h - from Windows CE / Windows Mobile SDK
  * wce_stdio.h - from WCELIBCEX library
  */
 

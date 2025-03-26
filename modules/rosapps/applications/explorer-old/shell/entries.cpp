@@ -456,7 +456,7 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 
 
  // local replacement implementation for SHBindToParent()
- // (derived from http://www.geocities.com/SiliconValley/2060/articles/shell-helpers.html)
+ // (derived from https://web.archive.org/web/20021105062620/http://www.geocities.com/SiliconValley/2060/articles/shell-helpers.html)
 static HRESULT my_SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, VOID** ppv, LPCITEMIDLIST* ppidlLast)
 {
 	HRESULT hr;

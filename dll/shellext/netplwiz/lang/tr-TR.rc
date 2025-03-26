@@ -1,0 +1,28 @@
+/*
+ * PROJECT:     ReactOS Network Places Wizard
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_DISCONNECTDRIVES DIALOGEX 0, 0, 300, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ağ Sürücülerinin Bağlantısını Kes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Bağlantısını kesmek istediğiniz ağ sürücülerini seçin ve ardından Tamam'a tıklayın.", -1, 7, 7, 286, 8
+    LTEXT "&Ağ Sürücüleri:", -1, 7, 23, 286, 8
+    CONTROL "", IDC_CONNECTEDDRIVELIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SINGLESEL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 31, 286, 140
+    PUSHBUTTON "TAMAM", ID_OK, 189, 179, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 243, 179, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DIALOG_CAPTION "Ağ Sürücüsünün Bağlantısını Kes"
+    IDS_DRIVE_LETTER "Sürücü Harfi"
+    IDS_NETWORK_PATH "Ağ Yolu"
+    IDS_NO_DRIVES "Bağlantısı kesilecek ağ sürücünüz yok."
+END

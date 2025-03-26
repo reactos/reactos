@@ -21,6 +21,7 @@ add_library(usrmgr MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/usrmgr.def)
 
 set_module_type(usrmgr cpl UNICODE)
+target_link_libraries(usrmgr wine)
 add_importlibs(usrmgr advapi32 user32 gdi32 comctl32 netapi32 msvcrt kernel32 ntdll)
 add_pch(usrmgr usrmgr.h SOURCE)
 add_cd_file(TARGET usrmgr DESTINATION reactos/system32 FOR all)

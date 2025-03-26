@@ -75,7 +75,7 @@ START_TEST(ExSequencedList)
     ExInitializeSListHead(ListHead);
     CheckSListHeader(ListHead, NULL, 0);
     TestSListFunctionalExports(ListHead, Entries, pSpinLock);
-    
+
     KeLowerIrql(Irql);
     ExFreePoolWithTag(Buffer, 'TLqS');
 #endif

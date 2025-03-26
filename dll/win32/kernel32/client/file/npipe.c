@@ -76,7 +76,7 @@ NpGetUserNamep(HANDLE hNamedPipe,
 
         /* Restore the thread token */
         Status = NtSetInformationThread(NtCurrentThread(), ThreadImpersonationToken,
-                                        &hToken, sizeof(HANDLE));
+                                        &hToken, sizeof(hToken));
         /* We cannot fail closing the thread token! */
         if (!CloseHandle(hToken))
         {
@@ -169,7 +169,7 @@ CreatePipe(PHANDLE hReadPipe,
 
     /* Create the named pipe */
     Status = NtCreateNamedPipeFile(&ReadPipeHandle,
-                                   GENERIC_READ |FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                                   GENERIC_READ | FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
                                    &ObjectAttributes,
                                    &StatusBlock,
                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -296,7 +296,7 @@ CreateNamedPipeW(LPCWSTR lpName,
 
     /* Always case insensitive, check if we got extra attributes */
     Attributes = OBJ_CASE_INSENSITIVE;
-    if(lpSecurityAttributes)
+    if (lpSecurityAttributes)
     {
         /* We did; get the security descriptor */
         SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
@@ -790,13 +790,13 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
 
         /* Set the Read Mode */
         Settings.ReadMode = (*lpMode & PIPE_READMODE_MESSAGE) ?
-                            FILE_PIPE_MESSAGE_MODE: FILE_PIPE_BYTE_STREAM_MODE;
+                            FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
 
         /* Send the changes to the Driver */
         Status = NtSetInformationFile(hNamedPipe,
                                       &Iosb,
                                       &Settings,
-                                      sizeof(FILE_PIPE_INFORMATION),
+                                      sizeof(Settings),
                                       FilePipeInformation);
         if (!NT_SUCCESS(Status))
         {
@@ -816,7 +816,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
             Status = NtQueryInformationFile(hNamedPipe,
                                             &Iosb,
                                             &RemoteSettings,
-                                            sizeof(FILE_PIPE_REMOTE_INFORMATION),
+                                            sizeof(RemoteSettings),
                                             FilePipeRemoteInformation);
             if (!NT_SUCCESS(Status))
             {
@@ -839,7 +839,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
         Status = NtSetInformationFile(hNamedPipe,
                                       &Iosb,
                                       &RemoteSettings,
-                                      sizeof(FILE_PIPE_REMOTE_INFORMATION),
+                                      sizeof(RemoteSettings),
                                       FilePipeRemoteInformation);
         if (!NT_SUCCESS(Status))
         {
@@ -1017,7 +1017,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
         Status = NtQueryInformationFile(hNamedPipe,
                                         &StatusBlock,
                                         &PipeInfo,
-                                        sizeof(FILE_PIPE_INFORMATION),
+                                        sizeof(PipeInfo),
                                         FilePipeInformation);
         if (!NT_SUCCESS(Status))
         {
@@ -1029,14 +1029,14 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
         *lpState |= ((PipeInfo.ReadMode != FILE_PIPE_BYTE_STREAM_MODE) ? PIPE_READMODE_MESSAGE : PIPE_READMODE_BYTE);
     }
 
-    if(lpCurInstances != NULL)
+    if (lpCurInstances != NULL)
     {
         FILE_PIPE_LOCAL_INFORMATION LocalInfo;
 
         Status = NtQueryInformationFile(hNamedPipe,
                                         &StatusBlock,
                                         &LocalInfo,
-                                        sizeof(FILE_PIPE_LOCAL_INFORMATION),
+                                        sizeof(LocalInfo),
                                         FilePipeLocalInformation);
         if (!NT_SUCCESS(Status))
         {
@@ -1054,7 +1054,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
         Status = NtQueryInformationFile(hNamedPipe,
                                         &StatusBlock,
                                         &RemoteInfo,
-                                        sizeof(FILE_PIPE_REMOTE_INFORMATION),
+                                        sizeof(RemoteInfo),
                                         FilePipeRemoteInformation);
         if (!NT_SUCCESS(Status))
         {
@@ -1112,7 +1112,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
     ANSI_STRING UserNameA;
     BOOL Ret;
 
-    if(lpUserName != NULL)
+    if (lpUserName != NULL)
     {
         UserNameW.MaximumLength = (USHORT)nMaxUserNameSize * sizeof(WCHAR);
         UserNameW.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UserNameW.MaximumLength);
@@ -1174,7 +1174,7 @@ GetNamedPipeInfo(HANDLE hNamedPipe,
     Status = NtQueryInformationFile(hNamedPipe,
                                     &StatusBlock,
                                     &PipeLocalInformation,
-                                    sizeof(FILE_PIPE_LOCAL_INFORMATION),
+                                    sizeof(PipeLocalInformation),
                                     FilePipeLocalInformation);
     if (!NT_SUCCESS(Status))
     {
@@ -1185,7 +1185,7 @@ GetNamedPipeInfo(HANDLE hNamedPipe,
     if (lpFlags != NULL)
     {
         *lpFlags = (PipeLocalInformation.NamedPipeEnd == FILE_PIPE_SERVER_END) ? PIPE_SERVER_END : PIPE_CLIENT_END;
-        *lpFlags |= (PipeLocalInformation.NamedPipeType == 1) ? PIPE_TYPE_MESSAGE : PIPE_TYPE_BYTE;
+        *lpFlags |= (PipeLocalInformation.NamedPipeType == FILE_PIPE_MESSAGE_TYPE) ? PIPE_TYPE_MESSAGE : PIPE_TYPE_BYTE;
     }
 
     if (lpOutBufferSize != NULL)

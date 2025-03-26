@@ -47,9 +47,6 @@ typedef struct _ATTACHINFO
 
 extern PATTACHINFO gpai;
 
-/* Keyboard layout undocumented flags */
-#define KLF_UNLOAD 0x20000000
-
 /* Key States */
 #define KS_DOWN_BIT      0x80
 #define KS_LOCK_BIT      0x01
@@ -59,7 +56,7 @@ extern PATTACHINFO gpai;
 #define LP_DO_NOT_CARE_BIT (1<<25) // For GetKeyNameText
 
 /* General */
-NTSTATUS NTAPI InitInputImpl(VOID);
+CODE_SEG("INIT") NTSTATUS NTAPI InitInputImpl(VOID);
 VOID NTAPI RawInputThreadMain(VOID);
 BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
 NTSTATUS FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
@@ -68,15 +65,17 @@ VOID FASTCALL DoTheScreenSaver(VOID);
 #define ThreadHasInputAccess(W32Thread) (TRUE)
 
 /* Keyboard */
-NTSTATUS NTAPI InitKeyboardImpl(VOID);
+CODE_SEG("INIT") NTSTATUS NTAPI InitKeyboardImpl(VOID);
 VOID NTAPI UserInitKeyboard(HANDLE hKeyboardDevice);
 PKL W32kGetDefaultKeyLayout(VOID);
 VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
 PKL NTAPI UserHklToKbl(HKL hKl);
 BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
-extern int gLanguageToggleKeyState;
+extern INT gLanguageToggleKeyState;
 extern DWORD gdwLanguageToggleKey;
+extern INT gLayoutToggleKeyState;
+extern DWORD gdwLayoutToggleKey;
 
 /* Mouse */
 WORD FASTCALL UserGetMouseButtonsState(VOID);
@@ -85,6 +84,7 @@ BOOL NTAPI UserSendMouseInput(MOUSEINPUT *pMouseInput, BOOL bInjected);
 
 /* IMM */
 UINT FASTCALL IntImmProcessKey(PUSER_MESSAGE_QUEUE, PWND, UINT, WPARAM, LPARAM);
+VOID FASTCALL IntFreeImeHotKeys(VOID);
 
 extern DWORD gSystemFS;
 extern UINT gSystemCPCharSet; 

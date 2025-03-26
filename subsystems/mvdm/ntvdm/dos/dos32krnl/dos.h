@@ -119,20 +119,29 @@ typedef struct _DOS_INPUT_BUFFER
     CHAR Buffer[ANYSIZE_ARRAY];
 } DOS_INPUT_BUFFER, *PDOS_INPUT_BUFFER;
 
+/**
+ * @struct DOS_FIND_FILE_BLOCK
+ * Data block returned in the DTA (Disk Transfer Area) by the
+ * INT 21h, AH=4Eh "Find First File" and the INT 21h, AH=4Fh "Find Next File"
+ * functions.
+ *
+ * @see demFileFindFirst(), demFileFindNext()
+ **/
 typedef struct _DOS_FIND_FILE_BLOCK
 {
+    /* The 21 first bytes (0x00 to 0x14 included) are reserved */
     CHAR DriveLetter;
     CHAR Pattern[11];
     UCHAR AttribMask;
-    DWORD Unused;
-    HANDLE SearchHandle;
+    DWORD Unused;           // FIXME: We must NOT store a Win32 handle here!
+    HANDLE SearchHandle;    // Instead we should use an ID and helpers to map it to Win32.
 
     /* The following part of the structure is documented */
     UCHAR Attributes;
     WORD FileTime;
     WORD FileDate;
     DWORD FileSize;
-    CHAR FileName[13];
+    _Null_terminated_ CHAR FileName[13];
 } DOS_FIND_FILE_BLOCK, *PDOS_FIND_FILE_BLOCK;
 
 // http://www.ctyme.com/intr/rb-3023.htm
@@ -279,8 +288,8 @@ typedef struct _BIOS_DATA
  *
  * NOTE: For compatibility with some programs (including virii), PrevInt13 should
  * be at 0070:00B4, see for more details:
- * http://repo.hackerzvoice.net/depot_madchat/vxdevl/vdat/tuvd0001.htm
- * http://vxheaven.org/lib/vsm01.html
+ * http://repo.hackerzvoice.net/depot_madchat/vxdevl/vdat/tuvd0001.htm (DEAD_LINK)
+ * https://web.archive.org/web/20150407182047/http://vxheaven.org/lib/vsm01.html
  */
     BYTE Padding0[0xB0 - /*FIELD_OFFSET(BIOS_DATA, StartupCode)*/ 20];
     DWORD RomBiosInt13;                         // 0xb0

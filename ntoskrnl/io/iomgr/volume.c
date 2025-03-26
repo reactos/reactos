@@ -9,13 +9,13 @@
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
+/* GLOBALS *******************************************************************/
 
 ERESOURCE IopDatabaseResource;
 LIST_ENTRY IopDiskFileSystemQueueHead, IopNetworkFileSystemQueueHead;
@@ -1097,7 +1097,7 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
     ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Check if that driver is already registered (successive calls)
-     * See MSDN note: http://msdn.microsoft.com/en-us/library/ff548499%28v=vs.85%29.aspx
+     * See MSDN note: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ioregisterfsregistrationchange
      */
     if (!IsListEmpty(&IopFsNotifyChangeQueueHead))
     {
@@ -1276,13 +1276,15 @@ IoSetSystemPartition(IN PUNICODE_STRING VolumeNameString)
  */
 NTSTATUS
 NTAPI
-IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
-                        OUT PUNICODE_STRING DosName)
+IoVolumeDeviceToDosName(
+    _In_ PVOID VolumeDeviceObject,
+    _Out_ _When_(return==0, _At_(DosName->Buffer, __drv_allocatesMem(Mem)))
+        PUNICODE_STRING DosName)
 {
-    PIRP Irp;
+    NTSTATUS Status;
     ULONG Length;
     KEVENT Event;
-    NTSTATUS Status;
+    PIRP Irp;
     PFILE_OBJECT FileObject;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -1290,10 +1292,10 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
     MOUNTMGR_VOLUME_PATHS VolumePath;
     PMOUNTMGR_VOLUME_PATHS VolumePathPtr;
     /*
-     * This variable with be required to query device name.
+     * This variable is used to query the device name.
      * It's based on MOUNTDEV_NAME (mountmgr.h).
-     * Doing it that way will prevent dyn memory allocation.
-     * Device name won't be longer.
+     * Doing it this way prevents memory allocation.
+     * The device name won't be longer.
      */
     struct
     {
@@ -1303,10 +1305,11 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
 
     PAGED_CODE();
 
-    /* First step, getting device name */
+    /* First, retrieve the corresponding device name */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                        VolumeDeviceObject, NULL, 0,
+                                        VolumeDeviceObject,
+                                        NULL, 0,
                                         &DeviceName, sizeof(DeviceName),
                                         FALSE, &Event, &IoStatusBlock);
     if (!Irp)
@@ -1320,15 +1323,12 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatusBlock.Status;
     }
-
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    /* Now that we have the device name, we can query the MountMgr
-     * So, get its device object first.
-     */
+    /* Retrieve the MountMgr controlling device */
     RtlInitUnicodeString(&MountMgrDevice, MOUNTMGR_DEVICE_NAME);
     Status = IoGetDeviceObjectPointer(&MountMgrDevice, FILE_READ_ATTRIBUTES,
                                       &FileObject, &DeviceObject);
@@ -1337,16 +1337,17 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
         return Status;
     }
 
-    /* Then, use the proper IOCTL to query the DOS name */
+    /* Now, query the MountMgr for the DOS path */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH,
-                                        DeviceObject, &DeviceName, sizeof(DeviceName),
+                                        DeviceObject,
+                                        &DeviceName, sizeof(DeviceName),
                                         &VolumePath, sizeof(VolumePath),
                                         FALSE, &Event, &IoStatusBlock);
     if (!Irp)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto DereferenceFO;
+        goto Quit;
     }
 
     Status = IoCallDriver(DeviceObject, Irp);
@@ -1356,41 +1357,37 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
         Status = IoStatusBlock.Status;
     }
 
-    /* Only tolerated failure here is buffer too small, which is
-     * expected.
-     */
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    /* The only tolerated failure here is buffer too small, which is expected */
+    if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_OVERFLOW))
     {
-        goto DereferenceFO;
+        goto Quit;
     }
 
-    /* Compute needed size to store DOS name.
-     * Even if MOUNTMGR_VOLUME_PATHS allows bigger
-     * name lengths than MAXUSHORT, we can't use
-     * them, because we have to return this in an UNICODE_STRING
-     * that stores length on USHORT.
-     */
-    Length = VolumePath.MultiSzLength + sizeof(VolumePath);
+    /* Compute the needed size to store the DOS path.
+     * Even if MOUNTMGR_VOLUME_PATHS allows bigger name lengths
+     * than MAXUSHORT, we can't use them, because we have to return
+     * this in an UNICODE_STRING that stores length in a USHORT. */
+    Length = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + VolumePath.MultiSzLength;
     if (Length > MAXUSHORT)
     {
         Status = STATUS_INVALID_BUFFER_SIZE;
-        goto DereferenceFO;
+        goto Quit;
     }
 
-    /* Reallocate memory, even in case of success, because
-     * that's the buffer that will be returned to caller
-     */
-    VolumePathPtr = ExAllocatePoolWithTag(PagedPool, Length, 'D2d ');
+    /* Allocate the buffer, even in case of success,
+     * because it is returned to the caller */
+    VolumePathPtr = ExAllocatePoolWithTag(PagedPool, Length, TAG_DEV2DOS);
     if (!VolumePathPtr)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto DereferenceFO;
+        goto Quit;
     }
 
-    /* Requery DOS path with proper size */
+    /* Re-query the DOS path with the proper size */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH,
-                                        DeviceObject, &DeviceName, sizeof(DeviceName),
+                                        DeviceObject,
+                                        &DeviceName, sizeof(DeviceName),
                                         VolumePathPtr, Length,
                                         FALSE, &Event, &IoStatusBlock);
     if (!Irp)
@@ -1405,31 +1402,30 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatusBlock.Status;
     }
-
     if (!NT_SUCCESS(Status))
     {
         goto ReleaseMemory;
     }
 
-    /* Set output string */
-    DosName->Length = (USHORT)VolumePathPtr->MultiSzLength;
-    DosName->MaximumLength = (USHORT)VolumePathPtr->MultiSzLength + sizeof(UNICODE_NULL);
-    /* Our MOUNTMGR_VOLUME_PATHS will be used as output buffer */
+    /* Set the output string. Discount the last two
+     * NUL-terminators from the multi-string length. */
+    DosName->Length = (USHORT)VolumePathPtr->MultiSzLength - 2 * sizeof(UNICODE_NULL);
+    DosName->MaximumLength = DosName->Length + sizeof(UNICODE_NULL);
+    /* Recycle our MOUNTMGR_VOLUME_PATHS as the output buffer
+     * and move the NUL-terminated string to the beginning */
     DosName->Buffer = (PWSTR)VolumePathPtr;
-    /* Move name at the begin, RtlMoveMemory is OK with overlapping */
-    RtlMoveMemory(DosName->Buffer, VolumePathPtr->MultiSz, VolumePathPtr->MultiSzLength);
+    RtlMoveMemory(DosName->Buffer, VolumePathPtr->MultiSz, DosName->Length);
     DosName->Buffer[DosName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-    /* DON'T release buffer, just dereference FO, and return success */
+    /* Don't release the buffer, just dereference the FO and return success */
     Status = STATUS_SUCCESS;
-    goto DereferenceFO;
+    goto Quit;
 
 ReleaseMemory:
-    ExFreePoolWithTag(VolumePathPtr, 'D2d ');
+    ExFreePoolWithTag(VolumePathPtr, TAG_DEV2DOS);
 
-DereferenceFO:
+Quit:
     ObDereferenceObject(FileObject);
-
     return Status;
 }
 

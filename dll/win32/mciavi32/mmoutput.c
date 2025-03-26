@@ -398,6 +398,15 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
 
 	mmioAscend(wma->hFile, &mmckInfo, 0);
     }
+
+#ifdef __REACTOS__
+    /* Empty file */
+    if (alb.numVideoFrames == 0) {
+        WARN("NumVideoFrames: %u, Empty or possibly corrupt video file");
+        return FALSE;
+    }
+#endif
+
     if (alb.numVideoFrames != wma->dwPlayableVideoFrames) {
 	WARN("AVI header says %d frames, we found %d video frames, reducing playable frames\n",
 	     wma->dwPlayableVideoFrames, alb.numVideoFrames);
@@ -613,6 +622,13 @@ double MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC)
 
     if (wma->dwCurrVideoFrame != wma->dwCachedFrame)
     {
+#ifdef __REACTOS__
+        if (wma->dwCurrVideoFrame >= wma->dwPlayableVideoFrames) {
+            ERR("Invalid frame requested. Current : %u Total Playable %u\n", wma->dwCurrVideoFrame, wma->dwPlayableVideoFrames);
+            return 0;
+        }
+#endif
+
         if (!wma->lpVideoIndex[wma->dwCurrVideoFrame].dwOffset)
 	    return 0;
 

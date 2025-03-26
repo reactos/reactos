@@ -372,7 +372,7 @@ KspCreateDeviceReference(
         DeviceEntry = (PBUS_DEVICE_ENTRY)CONTAINING_RECORD(Entry, BUS_DEVICE_ENTRY, Entry);
 
         /* check if name matches */
-        if (!wcsicmp(DeviceEntry->DeviceName, DeviceName))
+        if (!_wcsicmp(DeviceEntry->DeviceName, DeviceName))
         {
             /* item already exists */
             ItemExists = TRUE;
@@ -1941,7 +1941,7 @@ KsServiceBusEnumCreateRequest(
         DeviceEntry = (PBUS_DEVICE_ENTRY)CONTAINING_RECORD(Entry, BUS_DEVICE_ENTRY, Entry);
 
         /* check if name matches */
-        if (!wcsicmp(DeviceEntry->DeviceName, IoStack->FileObject->FileName.Buffer + 1))
+        if (!_wcsicmp(DeviceEntry->DeviceName, IoStack->FileObject->FileName.Buffer + 1))
         {
             /* item already exists */
             ItemExists = TRUE;
@@ -1968,7 +1968,7 @@ KsServiceBusEnumCreateRequest(
             Status =  KspDoReparseForIrp(Irp, DeviceEntry);
             DPRINT("REPARSE Irp %p '%wZ'\n", Irp, &IoStack->FileObject->FileName);
 
-            Irp->IoStatus.Status = Status; 
+            Irp->IoStatus.Status = Status;
             Irp->IoStatus.Information = IO_REPARSE;
             return Status;
         }
@@ -2165,7 +2165,6 @@ KsServiceBusEnumPnpRequest(
         else if (IoStack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS && IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
         {
             /* handle target device relations */
-            ASSERT(IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation);
             ASSERT(Irp->IoStatus.Information == 0);
 
             /* allocate device relation */

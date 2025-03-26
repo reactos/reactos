@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/ldt.c
- * PURPOSE:         LDT managment
+ * PURPOSE:         LDT management
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)

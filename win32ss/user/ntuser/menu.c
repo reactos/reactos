@@ -11,6 +11,8 @@ DBG_DEFAULT_CHANNEL(UserMenu);
 
 /* INTERNAL ******************************************************************/
 
+BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags); /* draw.c */
+
 HFONT ghMenuFont = NULL;
 HFONT ghMenuFontBold = NULL;
 static SIZE MenuCharSize;
@@ -56,9 +58,7 @@ BOOL fInEndMenu = FALSE;
 #define MII_STATE_MASK (MFS_GRAYED|MFS_CHECKED|MFS_HILITE|MFS_DEFAULT)
 
 #define IS_SYSTEM_MENU(MenuInfo)  \
-	(!((MenuInfo)->fFlags & MNF_POPUP) && ((MenuInfo)->fFlags & MNF_SYSMENU))
-
-#define IS_BITMAP_ITEM(flags) (MF_BITMAP == MENU_ITEM_TYPE(flags))
+	(!!((MenuInfo)->fFlags & MNF_SYSMENU))
 
 #define IS_MAGIC_BITMAP(id) ((id) && ((INT_PTR)(id) < 12) && ((INT_PTR)(id) >= -1))
 #define IS_STRING_ITEM(flags) (MF_STRING == MENU_ITEM_TYPE(flags))
@@ -347,7 +347,7 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
          /* Remove all menu items */
          IntDestroyMenu( Menu, bRecurse);
 
-         ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
+         ret = UserDeleteObject(UserHMGetHandle(Menu), TYPE_MENU);
          TRACE("IntDestroyMenuObject %d\n",ret);
          return ret;
       }
@@ -903,7 +903,7 @@ IntGetMenuInfo(PMENU Menu, PROSMENUINFO lpmi)
      lpmi->dwArrowsOn = Menu->dwArrowsOn;
 
      lpmi->fFlags = Menu->fFlags;
-     lpmi->Self = Menu->head.h;
+     lpmi->Self = UserHMGetHandle(Menu);
      lpmi->TimeToHide = Menu->TimeToHide;
      lpmi->Wnd = Menu->hWnd;
    }
@@ -991,7 +991,7 @@ IntGetMenuItemInfo(PMENU Menu, /* UNUSED PARAM!! */
    }
    if(lpmii->fMask & MIIM_SUBMENU)
    {
-      lpmii->hSubMenu = MenuItem->spSubMenu ? MenuItem->spSubMenu->head.h : NULL;
+      lpmii->hSubMenu = (MenuItem->spSubMenu ? UserHMGetHandle(MenuItem->spSubMenu) : NULL);
    }
 
    if ((lpmii->fMask & MIIM_STRING) ||
@@ -1366,7 +1366,7 @@ void FASTCALL MENU_InitSysMenuPopup(PMENU menu, DWORD style, DWORD clsStyle, LON
 
     gray = !(style & WS_THICKFRAME) || (style & (WS_MAXIMIZE | WS_MINIMIZE));
     IntEnableMenuItem( menu, SC_SIZE, (gray ? MF_GRAYED : MF_ENABLED) );
-    gray = ((style & WS_MAXIMIZE) != 0);
+    gray = ((style & (WS_MAXIMIZE | WS_MINIMIZE)) != 0);
     IntEnableMenuItem( menu, SC_MOVE, (gray ? MF_GRAYED : MF_ENABLED) );
     gray = !(style & WS_MINIMIZEBOX) || (style & WS_MINIMIZE);
     IntEnableMenuItem( menu, SC_MINIMIZE, (gray ? MF_GRAYED : MF_ENABLED) );
@@ -2186,14 +2186,14 @@ static void MENU_DrawScrollArrows(PMENU lppop, HDC hdc)
     rect.right = lppop->cxMenu;
     rect.bottom = arrow_bitmap_height;
     FillRect(hdc, &rect, IntGetSysColorBrush(COLOR_MENU));
-    DrawFrameControl(hdc, &rect, DFC_MENU, (lppop->iTop ? 0 : DFCS_INACTIVE)|DFCS_MENUARROWUP);
+    UITOOLS95_DrawFrameMenu(hdc, &rect, (lppop->iTop ? 0 : DFCS_INACTIVE) | DFCS_MENUARROWUP);
 
     rect.top = lppop->cyMenu - arrow_bitmap_height;
     rect.bottom = lppop->cyMenu;
     FillRect(hdc, &rect, IntGetSysColorBrush(COLOR_MENU));
     if (!(lppop->iTop < lppop->iMaxTop - (MENU_GetMaxPopupHeight(lppop) - 2 * arrow_bitmap_height)))
        Flags = DFCS_INACTIVE;
-    DrawFrameControl(hdc, &rect, DFC_MENU, Flags|DFCS_MENUARROWDOWN);
+    UITOOLS95_DrawFrameMenu(hdc, &rect, Flags | DFCS_MENUARROWDOWN);
 }
 
 /***********************************************************************
@@ -2308,7 +2308,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             RECT rectTemp;
             RtlCopyMemory(&rectTemp, &rect, sizeof(RECT));
             rectTemp.left = rectTemp.right - UserGetSystemMetrics(SM_CXMENUCHECK);
-            DrawFrameControl(hdc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
+            UITOOLS95_DrawFrameMenu(hdc, &rectTemp, DFCS_MENUARROW);
         }
         return;
     }
@@ -2452,9 +2452,9 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
                 RECT r;
                 r = rect;
                 r.right = r.left + check_bitmap_width;
-                DrawFrameControl( hdc, &r, DFC_MENU,
-                                 (lpitem->fType & MFT_RADIOCHECK) ?
-                                 DFCS_MENUBULLET : DFCS_MENUCHECK);
+                UITOOLS95_DrawFrameMenu(hdc, &r,
+                                        (lpitem->fType & MFT_RADIOCHECK) ?
+                                        DFCS_MENUBULLET : DFCS_MENUCHECK);
                 checked = TRUE;
             }
         }
@@ -2475,7 +2475,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             RECT rectTemp;
             RtlCopyMemory(&rectTemp, &rect, sizeof(RECT));
             rectTemp.left = rectTemp.right - check_bitmap_width;
-            DrawFrameControl(hdc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
+            UITOOLS95_DrawFrameMenu(hdc, &rectTemp, DFCS_MENUARROW);
         }
         rect.left += 4;
         if( !((Menu->fFlags & MNS_STYLE_MASK) & MNS_NOCHECK))
@@ -2992,17 +2992,15 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     /* We are off the right side of the screen */
     if (x + width > monitor->rcMonitor.right)
     {
-        if ((x - width) < monitor->rcMonitor.left || x >= monitor->rcMonitor.right)
-            x = monitor->rcMonitor.right - width;
-        else
-            x -= width;
+        /* Position menu at right edge of the screen */
+        x = monitor->rcMonitor.right - width;
     }
 
     /* We are off the left side of the screen */
     if (x < monitor->rcMonitor.left)
     {
-        /* Re-orient the menu around the x-axis */
-        x += width;
+        /* Position menu at left edge of the screen */
+        x = 0;
 
         if (x < monitor->rcMonitor.left || x >= monitor->rcMonitor.right || bIsPopup)
             x = monitor->rcMonitor.left;
@@ -3023,7 +3021,14 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
         if ((y - height) < monitor->rcMonitor.top || y >= monitor->rcMonitor.bottom)
             y = monitor->rcMonitor.bottom - height;
         else
-            y -= height;
+        {
+            INT adjHgt = y + UserGetSystemMetrics(SM_CYMENUSIZE) +
+                         2 * UserGetSystemMetrics(SM_CYDLGFRAME);
+            if (adjHgt >= monitor->rcMonitor.bottom)
+                y -= height;
+            else
+                y = adjHgt - height;
+        }
     }
 
     if (pExclude)
@@ -3282,17 +3287,20 @@ static void FASTCALL MENU_HideSubPopups(PWND pWndOwner, PMENU Menu,
       {
           PWND pWnd;
           if (!VerifyMenu(Item->spSubMenu)) return;
-          pWnd = ValidateHwndNoErr(Item->spSubMenu->hWnd);
           MENU_HideSubPopups(pWndOwner, Item->spSubMenu, FALSE, wFlags);
           MENU_SelectItem(pWndOwner, Item->spSubMenu, NO_SELECTED_ITEM, SendMenuSelect, NULL);
           TRACE("M_HSP top p hm %p  pWndOwner IDMenu %p\n",top_popup_hmenu,pWndOwner->IDMenu);
-          co_UserDestroyWindow(pWnd);
+          pWnd = ValidateHwndNoErr(Item->spSubMenu->hWnd);
+          if (pWnd != NULL)
+          {
+              co_UserDestroyWindow(pWnd);
+          }
 
           /* Native returns handle to destroyed window */
           if (!(wFlags & TPM_NONOTIFY))
           {
              co_IntSendMessage( UserHMGetHandle(pWndOwner), WM_UNINITMENUPOPUP, (WPARAM)UserHMGetHandle(Item->spSubMenu),
-                                 MAKELPARAM(0, IS_SYSTEM_MENU(Item->spSubMenu)) );
+                                 MAKELPARAM(0, IS_SYSTEM_MENU(Item->spSubMenu) ? MF_SYSMENU : 0));
           }
           ////
           // Call WM_UNINITMENUPOPUP FIRST before destroy!!
@@ -3391,7 +3399,7 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   }
   Item->fState |= MF_MOUSESELECT;
 
-  if (IS_SYSTEM_MENU(Menu))
+  if (IS_SYSTEM_MENU(Menu) && !(Menu->fFlags & MNF_POPUP))
   {
       MENU_InitSysMenuPopup(Item->spSubMenu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 
@@ -3555,7 +3563,9 @@ static BOOL FASTCALL MENU_ButtonDown(MTRACKER* pmt, PMENU PtMenu, UINT Flags)
   {
       UINT id = 0;
       PITEM item;
-      if (IS_SYSTEM_MENU(PtMenu))
+      
+      // Special check for the icon system menu
+      if (IS_SYSTEM_MENU(PtMenu) && !(PtMenu->fFlags & MNF_POPUP))
       {
          item = PtMenu->rgItems;
       }
@@ -3599,7 +3609,8 @@ static INT FASTCALL MENU_ButtonUp(MTRACKER *pmt, PMENU PtMenu, UINT Flags)
       UINT Id = 0;
       ITEM *item;
       
-      if ( IS_SYSTEM_MENU(PtMenu) )
+      // Special check for the icon system menu
+      if (IS_SYSTEM_MENU(PtMenu) && !(PtMenu->fFlags & MNF_POPUP))
       {
           item = PtMenu->rgItems;
       }
@@ -3683,20 +3694,7 @@ static BOOL FASTCALL MENU_MouseMove(MTRACKER *pmt, PMENU PtMenu, UINT Flags)
   UINT Index = NO_SELECTED_ITEM;
 
   if ( PtMenu )
-  {
-      if (IS_SYSTEM_MENU(PtMenu))
-      {
-          Index = 0;
-          //// ReactOS only HACK: CORE-2338
-          // Windows tracks mouse moves to the system menu but does not open it.
-          // Only keyboard tracking can do that.
-          //
-          TRACE("SystemMenu\n");
-          return TRUE; // Stay inside the Loop!
-      }
-      else
-          MENU_FindItemByCoords( PtMenu, pmt->Pt, &Index );
-  }
+      MENU_FindItemByCoords( PtMenu, pmt->Pt, &Index );
 
   if (Index == NO_SELECTED_ITEM)
   {
@@ -3813,6 +3811,7 @@ static LRESULT FASTCALL MENU_DoNextMenu(MTRACKER* pmt, UINT Vk, UINT wFlags)
               /* switch to the system menu */
               MenuTmp = get_win_sys_menu(hNewWnd);
               if (MenuTmp) hNewMenu = UserHMGetHandle(MenuTmp);
+              else hNewMenu = NULL;
           }
           else
               return FALSE;
@@ -4058,6 +4057,8 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     HWND capture_win;
     PMENU pmMouse;
     BOOL enterIdleSent = FALSE;
+    BOOL firstClick = TRUE;
+    PWND pWnd;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (pti != pwnd->head.pti)
@@ -4118,7 +4119,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                 /* ReactOS Checks */
                 if (!VerifyWnd(mt.OwnerWnd)                            ||
                     !ValidateHwndNoErr(mt.CurrentMenu->hWnd)           ||
-                     pti->MessageQueue->QF_flags & QF_ACTIVATIONCHANGE ||
+                     //pti->MessageQueue->QF_flags & QF_ACTIVATIONCHANGE || // See CORE-17338
                      capture_win != IntGetCapture() ) // Should not happen, but this is ReactOS...
                 {
                    ErrorExit = TRUE; // Do not wait on dead windows, now win test_capture_4 works.
@@ -4183,13 +4184,21 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* fall through */
                 case WM_LBUTTONDBLCLK:
                 case WM_LBUTTONDOWN:
+                {
                     /* If the message belongs to the menu, removes it from the queue */
                     /* Else, end menu tracking */
-                    fRemove = MENU_ButtonDown(&mt, pmMouse, wFlags);
+                    pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
+                    /* Don't remove WM_LBUTTONDBLCLK to allow the closing of a window or program */
+                    if (msg.message == WM_LBUTTONDBLCLK && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
+                        fRemove = FALSE;
+                    else
+                        fRemove = MENU_ButtonDown(&mt, pmMouse, wFlags);
+
                     fInsideMenuLoop = fRemove;
-                    if ( msg.message == WM_LBUTTONDBLCLK ||
-                         msg.message == WM_RBUTTONDBLCLK ) fInsideMenuLoop = FALSE; // Must exit or loop forever!
+                    if (msg.message == WM_RBUTTONDBLCLK)
+                        fInsideMenuLoop = FALSE; // Must exit or loop forever
                     break;
+                }
 
                 case WM_RBUTTONUP:
                     if (!(wFlags & TPM_RIGHTBUTTON)) break;
@@ -4198,12 +4207,22 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* Check if a menu was selected by the mouse */
                     if (pmMouse)
                     {
-                        executedMenuId = MENU_ButtonUp( &mt, pmMouse, wFlags);
-
-                    /* End the loop if executedMenuId is an item ID */
-                    /* or if the job was done (executedMenuId = 0). */
-                        fRemove = (executedMenuId != -1);
-                        fInsideMenuLoop = !fRemove;
+                        pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
+                        /* Exit system menu if system icon is clicked a second time */
+                        if (!firstClick && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
+                        {
+                            fRemove = TRUE;
+                            fInsideMenuLoop = FALSE;
+                        }
+                        else
+                        {
+                            /* End the loop if executedMenuId is an item ID */
+                            /* or if the job was done (executedMenuId = 0). */
+                            executedMenuId = MENU_ButtonUp( &mt, pmMouse, wFlags);
+                            fRemove = (executedMenuId != -1);
+                            fInsideMenuLoop = !fRemove;
+                            firstClick = FALSE;
+                        }
                     }
                     /* No menu was selected by the mouse */
                     /* if the function was called by TrackPopupMenu, continue
@@ -4361,7 +4380,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
               if (!(wFlags & TPM_NONOTIFY))
               {
                  co_IntSendMessage( UserHMGetHandle(mt.OwnerWnd), WM_UNINITMENUPOPUP, (WPARAM)UserHMGetHandle(mt.TopMenu),
-                                 MAKELPARAM(0, IS_SYSTEM_MENU(mt.TopMenu)) );
+                                 MAKELPARAM(0, IS_SYSTEM_MENU(mt.TopMenu) ? MF_SYSMENU : 0));
               }
             }
             MENU_SelectItem( mt.OwnerWnd, mt.TopMenu, NO_SELECTED_ITEM, FALSE, 0 );
@@ -4584,7 +4603,7 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
        /* Send WM_INITMENUPOPUP message only if TPM_NONOTIFY flag is not specified */
        if (!(wFlags & TPM_NONOTIFY))
        {
-          co_IntSendMessage( UserHMGetHandle(pWnd), WM_INITMENUPOPUP, (WPARAM) UserHMGetHandle(menu), 0);
+          co_IntSendMessage( UserHMGetHandle(pWnd), WM_INITMENUPOPUP, (WPARAM) UserHMGetHandle(menu), MAKELPARAM(0, IS_SYSTEM_MENU(menu)));
        }
 
        if (menu->fFlags & MNF_SYSMENU)
@@ -4614,7 +4633,7 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
           if (!(wFlags & TPM_NONOTIFY))
           {
              co_IntSendMessage( UserHMGetHandle(pWnd), WM_UNINITMENUPOPUP, (WPARAM)UserHMGetHandle(menu),
-                                            MAKELPARAM(0, IS_SYSTEM_MENU(menu)) );
+                                            MAKELPARAM(0, IS_SYSTEM_MENU(menu) ? MF_SYSMENU : 0));
           }
        }
     }
@@ -5084,7 +5103,7 @@ IntMenuItemInfo(
    if (!(MenuItem = MENU_FindItem( &Menu, &Item, (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND) )))
    {
       EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
-      return( FALSE);
+      return FALSE;
    }
    if (SetOrGet)
    {
@@ -5094,7 +5113,7 @@ IntMenuItemInfo(
    {
       Ret = IntGetMenuItemInfo(Menu, MenuItem, ItemInfo);
    }
-   return( Ret);
+   return Ret;
 }
 
 BOOL FASTCALL
@@ -5116,20 +5135,20 @@ UserMenuItemInfo(
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
    if ( Size != sizeof(MENUITEMINFOW) && 
         Size != FIELD_OFFSET(MENUITEMINFOW, hbmpItem) &&
         Size != sizeof(ROSMENUITEMINFO) )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( FALSE);
+      return FALSE;
    }
    Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, Size);
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
    /* If this is a pre-0x0500 _WIN32_WINNT MENUITEMINFOW, you can't
       set/get hbmpItem */
@@ -5137,7 +5156,7 @@ UserMenuItemInfo(
          && 0 != (ItemInfo.fMask & MIIM_BITMAP))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( FALSE);
+      return FALSE;
    }
 
    if (!(MenuItem = MENU_FindItem( &Menu, &Item, (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND) )))
@@ -5147,7 +5166,7 @@ UserMenuItemInfo(
          return TRUE;
 
       EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
-      return( FALSE);
+      return FALSE;
    }
 
    if (SetOrGet)
@@ -5163,12 +5182,12 @@ UserMenuItemInfo(
          if (! NT_SUCCESS(Status))
          {
             SetLastNtError(Status);
-            return( FALSE);
+            return FALSE;
          }
       }
    }
 
-   return( Ret);
+   return Ret;
 }
 
 BOOL FASTCALL
@@ -5186,18 +5205,18 @@ UserMenuInfo(
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
    if ( Size < sizeof(MENUINFO) || Size > sizeof(ROSMENUINFO) )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( FALSE);
+      return FALSE;
    }
    Status = MmCopyFromCaller(&MenuInfo, UnsafeMenuInfo, Size);
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
 
    if(SetOrGet)
@@ -5215,12 +5234,12 @@ UserMenuInfo(
          if (! NT_SUCCESS(Status))
          {
             SetLastNtError(Status);
-            return( FALSE);
+            return FALSE;
          }
       }
    }
 
-   return( Res);
+   return Res;
 }
 
 BOOL FASTCALL
@@ -5584,22 +5603,20 @@ NtUserCheckMenuItem(
    UINT uCheck)
 {
    PMENU Menu;
-   DECLARE_RETURN(DWORD);
+   DWORD Ret = (DWORD)-1;
 
    TRACE("Enter NtUserCheckMenuItem\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( (DWORD)-1);
+      Ret = IntCheckMenuItem(Menu, uIDCheckItem, uCheck);
    }
 
-   RETURN( IntCheckMenuItem(Menu, uIDCheckItem, uCheck));
-
-CLEANUP:
-   TRACE("Leave NtUserCheckMenuItem, ret=%lu\n",_ret_);
+   TRACE("Leave NtUserCheckMenuItem, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -5612,22 +5629,20 @@ NtUserDeleteMenu(
    UINT uFlags)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserDeleteMenu\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntRemoveMenuItem(Menu, uPosition, uFlags, TRUE);
    }
 
-   RETURN( IntRemoveMenuItem(Menu, uPosition, uFlags, TRUE));
-
-CLEANUP:
-   TRACE("Leave NtUserDeleteMenu, ret=%i\n",_ret_);
+   TRACE("Leave NtUserDeleteMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -5662,27 +5677,27 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
 {
    PWND Window;
    PMENU Menu;
-   DECLARE_RETURN(HMENU);
+   HMENU Ret = NULL;
 
    TRACE("Enter NtUserGetSystemMenu\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(NULL);
+      goto Exit; // Return NULL
    }
 
    if (!(Menu = IntGetSystemMenu(Window, bRevert)))
    {
-      RETURN(NULL);
+      goto Exit; // Return NULL
    }
 
-   RETURN(Menu->head.h);
+   Ret = UserHMGetHandle(Menu);
 
-CLEANUP:
-   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", _ret_);
+Exit:
+   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -5698,14 +5713,13 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
    BOOL Result = FALSE;
    PWND Window;
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserSetSystemMenu\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    if (hMenu)
@@ -5715,7 +5729,7 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
        */
       if (!(Menu = IntGetMenuObject(hMenu)))
       {
-         RETURN( FALSE);
+         goto Exit; // Return FALSE
       }
 
       Result = IntSetSystemMenu(Window, Menu);
@@ -5723,12 +5737,10 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
    else
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
 
-   RETURN( Result);
-
-CLEANUP:
-   TRACE("Leave NtUserSetSystemMenu, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetSystemMenu, ret=%i\n", Result);
    UserLeave();
-   END_CLEANUP;
+   return Result;
 }
 
 /*
@@ -5741,7 +5753,6 @@ NtUserGetTitleBarInfo(
 {
     PWND WindowObject;
     TITLEBARINFO bartitleinfo;
-    DECLARE_RETURN(BOOLEAN);
     BOOLEAN retValue = TRUE;
 
     TRACE("Enter NtUserGetTitleBarInfo\n");
@@ -5790,12 +5801,9 @@ NtUserGetTitleBarInfo(
         }
     }
 
-    RETURN( retValue );
-
-CLEANUP:
-    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n",_ret_);
+    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n", retValue);
     UserLeave();
-    END_CLEANUP;
+    return retValue;
 }
 
 /*
@@ -5827,26 +5835,26 @@ NtUserDestroyMenu(
    HMENU hMenu)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserDestroyMenu\n");
    UserEnterExclusive();
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
    if (Menu->head.rpdesk != gptiCurrent->rpdesk)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
-   RETURN( IntDestroyMenuObject(Menu, TRUE));
+   Ret = IntDestroyMenuObject(Menu, TRUE);
 
-CLEANUP:
-   TRACE("Leave NtUserDestroyMenu, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserDestroyMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -5859,22 +5867,20 @@ NtUserEnableMenuItem(
    UINT uEnable)
 {
    PMENU Menu;
-   DECLARE_RETURN(UINT);
+   UINT Ret = (UINT)-1;
 
    TRACE("Enter NtUserEnableMenuItem\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN(-1);
+      Ret = IntEnableMenuItem(Menu, uIDEnableItem, uEnable);
    }
 
-   RETURN( IntEnableMenuItem(Menu, uIDEnableItem, uEnable));
-
-CLEANUP:
-   TRACE("Leave NtUserEnableMenuItem, ret=%u\n",_ret_);
+   TRACE("Leave NtUserEnableMenuItem, ret=%u\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -5920,12 +5926,11 @@ NtUserGetMenuBarInfo(
    PWND pWnd;
    HMENU hMenu;
    MENUBARINFO kmbi;
-   BOOL Ret;
+   BOOL Ret = FALSE;
    PPOPUPMENU pPopupMenu;
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status = STATUS_SUCCESS;
    PMENU Menu = NULL;
-   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserGetMenuBarInfo\n");
    UserEnterShared();
@@ -5933,7 +5938,7 @@ NtUserGetMenuBarInfo(
    if (!(pWnd = UserGetWindowObject(hwnd)))
    {
         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-        RETURN(FALSE);
+        goto Cleanup; // Return FALSE
    }
 
    UserRefObjectCo(pWnd, &Ref);
@@ -5948,12 +5953,12 @@ NtUserGetMenuBarInfo(
    {
     case OBJID_CLIENT:
         if (!pWnd->pcls->fnid)
-            RETURN(FALSE);
+            goto Cleanup; // Return FALSE
         if (pWnd->pcls->fnid != FNID_MENU)
         {
             WARN("called on invalid window: %u\n", pWnd->pcls->fnid);
             EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-            RETURN(FALSE);
+            goto Cleanup; // Return FALSE
         }
         // Windows does this! Wine checks for Atom and uses GetWindowLongPtrW.
         hMenu = (HMENU)co_IntSendMessage(hwnd, MN_GETHMENU, 0, 0);
@@ -5962,26 +5967,28 @@ NtUserGetMenuBarInfo(
         {
            if (UserHMGetHandle(pPopupMenu->spmenu) != hMenu)
            {
-              ERR("Window Pop Up hMenu %p not the same as Get hMenu %p!\n",pPopupMenu->spmenu->head.h,hMenu);
+              ERR("Window Pop Up hMenu %p not the same as Get hMenu %p!\n", UserHMGetHandle(pPopupMenu->spmenu), hMenu);
            }
         }
         break;
     case OBJID_MENU:
-        if (pWnd->style & WS_CHILD) RETURN(FALSE);
+        if (pWnd->style & WS_CHILD)
+            goto Cleanup; // Return FALSE
         hMenu = UlongToHandle(pWnd->IDMenu);
         TRACE("GMBI: OBJID_MENU hMenu %p\n",hMenu);
         break;
     case OBJID_SYSMENU:
-        if (!(pWnd->style & WS_SYSMENU)) RETURN(FALSE);
+        if (!(pWnd->style & WS_SYSMENU))
+            goto Cleanup; // Return FALSE
         Menu = IntGetSystemMenu(pWnd, FALSE);
         hMenu = UserHMGetHandle(Menu);
         break;
     default:
-        RETURN(FALSE);
+        goto Cleanup; // Return FALSE
    }
 
    if (!hMenu)
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
 
    _SEH2_TRY
    {
@@ -5997,15 +6004,18 @@ NtUserGetMenuBarInfo(
    if (kmbi.cbSize != sizeof(MENUBARINFO))
    {
        EngSetLastError(ERROR_INVALID_PARAMETER);
-       RETURN(FALSE);
+       goto Cleanup; // Return FALSE
    }
 
-   if (!Menu) Menu = UserGetMenuObject(hMenu);
    if (!Menu)
-       RETURN(FALSE);
+   {
+       Menu = UserGetMenuObject(hMenu);
+       if (!Menu)
+          goto Cleanup; // Return FALSE
+   }
 
    if ((idItem < 0) || ((ULONG)idItem > Menu->cItems))
-       RETURN(FALSE);
+       goto Cleanup; // Return FALSE
 
    if (idItem == 0)
    {
@@ -6050,16 +6060,17 @@ NtUserGetMenuBarInfo(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      Ret = FALSE;
+      goto Cleanup;
    }
 
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
+Cleanup:
    if (pWnd) UserDerefObjectCo(pWnd);
-   TRACE("Leave NtUserGetMenuBarInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetMenuBarInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6073,27 +6084,29 @@ NtUserGetMenuIndex(
    PMENU Menu, SubMenu;
    PITEM MenuItem;
    UINT i;
-   DECLARE_RETURN(UINT);
+   UINT Ret = 0xFFFFFFFF;
 
    TRACE("Enter NtUserGetMenuIndex\n");
    UserEnterShared();
 
    if ( !(Menu = UserGetMenuObject(hMenu)) ||
         !(SubMenu = UserGetMenuObject(hSubMenu)) )
-      RETURN(0xFFFFFFFF);
+      goto Exit; // Return 0xFFFFFFFF
 
    MenuItem = Menu->rgItems;
    for (i = 0; i < Menu->cItems; i++, MenuItem++)
    {
        if (MenuItem->spSubMenu == SubMenu)
-          RETURN(MenuItem->wID);
+       {
+          Ret = MenuItem->wID;
+          break;
+       }
    }
-   RETURN(0xFFFFFFFF);
 
-CLEANUP:
-   TRACE("Leave NtUserGetMenuIndex, ret=%u\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetMenuIndex, ret=%u\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6112,14 +6125,14 @@ NtUserGetMenuItemRect(
    PMENU Menu;
    PITEM MenuItem;
    NTSTATUS Status = STATUS_SUCCESS;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetMenuItemRect\n");
    UserEnterShared();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if ((MenuItem = MENU_FindItem (&Menu, &uItem, MF_BYPOSITION)))
@@ -6130,16 +6143,18 @@ NtUserGetMenuItemRect(
       Rect.bottom = MenuItem->cyItem;
    }
    else
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
 
    if(!hWnd)
    {
        hWnd = Menu->hWnd;
    }
 
-   if (lprcItem == NULL) RETURN( FALSE);
+   if (lprcItem == NULL)
+       goto Exit; // Return FALSE
 
-   if (!(ReferenceWnd = UserGetWindowObject(hWnd))) RETURN( FALSE);
+   if (!(ReferenceWnd = UserGetWindowObject(hWnd)))
+       goto Exit; // Return FALSE
 
    if (Menu->fFlags & MNF_POPUP)
    {
@@ -6170,14 +6185,14 @@ NtUserGetMenuItemRect(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserGetMenuItemRect, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetMenuItemRect, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6192,7 +6207,7 @@ NtUserHiliteMenuItem(
 {
    PMENU Menu;
    PWND Window;
-   DECLARE_RETURN(BOOLEAN);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserHiliteMenuItem\n");
    UserEnterExclusive();
@@ -6200,21 +6215,21 @@ NtUserHiliteMenuItem(
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
-   RETURN( IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite));
+   Ret = IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite);
 
-CLEANUP:
-   TRACE("Leave NtUserHiliteMenuItem, ret=%u\n",_ret_);
+Exit:
+   TRACE("Leave NtUserHiliteMenuItem, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6233,7 +6248,7 @@ NtUserDrawMenuBarTemp(
    PWND Window;
    RECT Rect;
    NTSTATUS Status = STATUS_SUCCESS;
-   DECLARE_RETURN(DWORD);
+   DWORD Ret = 0;
 
    ERR("Enter NtUserDrawMenuBarTemp\n");
    UserEnterExclusive();
@@ -6241,13 +6256,13 @@ NtUserDrawMenuBarTemp(
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      RETURN(0);
+      goto Exit; // Return 0
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-      RETURN(0);
+      goto Exit; // Return 0
    }
 
    _SEH2_TRY
@@ -6264,15 +6279,15 @@ NtUserDrawMenuBarTemp(
    if (Status != STATUS_SUCCESS)
    {
       SetLastNtError(Status);
-      RETURN(0);
+      goto Exit; // Return 0
    }
 
-   RETURN( IntDrawMenuBarTemp(Window, hDC, &Rect, Menu, hFont));
+   Ret = IntDrawMenuBarTemp(Window, hDC, &Rect, Menu, hFont);
 
-CLEANUP:
-   ERR("Leave NtUserDrawMenuBarTemp, ret=%u\n",_ret_);
+Exit:
+   ERR("Leave NtUserDrawMenuBarTemp, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6289,19 +6304,19 @@ NtUserMenuItemFromPoint(
    PWND Window = NULL;
    PITEM mi;
    ULONG i;
-   DECLARE_RETURN(int);
+   int Ret = -1;
 
    TRACE("Enter NtUserMenuItemFromPoint\n");
    UserEnterExclusive();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN( -1);
+      goto Exit; // Return -1
    }
 
    if (!(Window = UserGetWindowObject(Menu->hWnd)))
    {
-      RETURN( -1);
+      goto Exit; // Return -1
    }
 
    X -= Window->rcWindow.left;
@@ -6325,12 +6340,12 @@ NtUserMenuItemFromPoint(
       }
    }
 
-   RETURN( (mi ? i : NO_SELECTED_ITEM));
+   Ret = (mi ? i : NO_SELECTED_ITEM);
 
-CLEANUP:
-   TRACE("Leave NtUserMenuItemFromPoint, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserMenuItemFromPoint, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 
@@ -6379,23 +6394,20 @@ NtUserRemoveMenu(
    UINT uFlags)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserRemoveMenu\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntRemoveMenuItem(Menu, uPosition, uFlags, FALSE);
    }
 
-   RETURN(IntRemoveMenuItem(Menu, uPosition, uFlags, FALSE));
-
-CLEANUP:
-   TRACE("Leave NtUserRemoveMenu, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRemoveMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
-
+   return Ret;
 }
 
 /*
@@ -6409,19 +6421,19 @@ NtUserSetMenu(
 {
    PWND Window;
    BOOL Changed;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenu\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    if (!IntSetMenu(Window, Menu, &Changed))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    // Not minimized and please repaint!!!
@@ -6433,12 +6445,12 @@ NtUserSetMenu(
       UserDerefObjectCo(Window);
    }
 
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserSetMenu, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6450,22 +6462,20 @@ NtUserSetMenuContextHelpId(
    DWORD dwContextHelpId)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenuContextHelpId\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntSetMenuContextHelpId(Menu, dwContextHelpId);
    }
 
-   RETURN(IntSetMenuContextHelpId(Menu, dwContextHelpId));
-
-CLEANUP:
-   TRACE("Leave NtUserSetMenuContextHelpId, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetMenuContextHelpId, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6478,22 +6488,20 @@ NtUserSetMenuDefaultItem(
    UINT fByPos)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenuDefaultItem\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = UserSetMenuDefaultItem(Menu, uItem, fByPos);
    }
 
-   RETURN( UserSetMenuDefaultItem(Menu, uItem, fByPos));
-
-CLEANUP:
-   TRACE("Leave NtUserSetMenuDefaultItem, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetMenuDefaultItem, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6504,22 +6512,20 @@ NtUserSetMenuFlagRtoL(
    HMENU hMenu)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenuFlagRtoL\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntSetMenuFlagRtoL(Menu);
    }
 
-   RETURN(IntSetMenuFlagRtoL(Menu));
-
-CLEANUP:
-   TRACE("Leave NtUserSetMenuFlagRtoL, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetMenuFlagRtoL, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6531,22 +6537,20 @@ NtUserThunkedMenuInfo(
    LPCMENUINFO lpcmi)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserThunkedMenuInfo\n");
    UserEnterExclusive();
 
-   if (!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN(FALSE);
+      Ret = UserMenuInfo(Menu, (PROSMENUINFO)lpcmi, TRUE);
    }
 
-   RETURN(UserMenuInfo(Menu, (PROSMENUINFO)lpcmi, TRUE));
-
-CLEANUP:
-   TRACE("Leave NtUserThunkedMenuInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserThunkedMenuInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -6564,7 +6568,7 @@ NtUserThunkedMenuItemInfo(
    PMENU Menu;
    NTSTATUS Status;
    UNICODE_STRING lstrCaption;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserThunkedMenuItemInfo\n");
    UserEnterExclusive();
@@ -6576,7 +6580,7 @@ NtUserThunkedMenuItemInfo(
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
    }
 
    /* Check if we got a Caption */
@@ -6590,23 +6594,27 @@ NtUserThunkedMenuItemInfo(
       {
          ERR("Failed to capture MenuItem Caption (status 0x%08x)\n",Status);
          SetLastNtError(Status);
-         RETURN(FALSE);
+         goto Cleanup; // Return FALSE
       }
    }
 
-   if (bInsert) RETURN( UserInsertMenuItem(Menu, uItem, fByPosition, lpmii, &lstrCaption));
+   if (bInsert)
+   {
+      Ret = UserInsertMenuItem(Menu, uItem, fByPosition, lpmii, &lstrCaption);
+      goto Cleanup;
+   }
 
-   RETURN( UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption));
+   Ret = UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption);
 
-CLEANUP:
+Cleanup:
    if (lstrCaption.Buffer)
    {
       ReleaseCapturedUnicodeString(&lstrCaption, UserMode);
    }
 
-   TRACE("Leave NtUserThunkedMenuItemInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserThunkedMenuItemInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*

@@ -80,7 +80,11 @@ VOID Pc98VideoPrepareForReactOS(VOID);
 VOID Pc98PrepareForReactOS(VOID);
 TIMEINFO* Pc98GetTime(VOID);
 BOOLEAN Pc98InitializeBootDevices(VOID);
-PCONFIGURATION_COMPONENT_DATA Pc98HwDetect(VOID);
+
+PCONFIGURATION_COMPONENT_DATA
+Pc98HwDetect(
+    _In_opt_ PCSTR Options);
+
 VOID Pc98HwIdle(VOID);
 
 /* pcmem.c */
@@ -147,7 +151,6 @@ UCHAR Pc98GetFloppyCount(VOID);
 PPC98_DISK_DRIVE Pc98DiskDriveNumberToDrive(IN UCHAR DriveNumber);
 
 ULONG Pc98GetBootSectorLoadAddress(IN UCHAR DriveNumber);
-VOID Pc98DiskPrepareForReactOS(VOID);
 
 /* hwdisk.c */
 BOOLEAN PcInitializeBootDevices(VOID);

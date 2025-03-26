@@ -1,4 +1,10 @@
-/* Spanish language file by Javier Remacha <2007-09-21> and Ismael Ferreras Morezuelas <2014-11-07> */
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2007 Javier Remacha <remialdo@gmail.com>
+ *              Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -12,6 +18,12 @@ BEGIN
     IDS_ERROR_NOMEM "No hay memoria suficiente para completar la operación."
     IDS_ERROR_NOFONT "El archivo %1 no es un archivo de fuente válido."
     IDS_ERROR_NOCLASS "No es posible iniciar la clase de ventana."
+    IDS_ERROR_ISINSTALLED "This font is already installed!" 
+    IDS_ERROR_FONTCPY "Failed to copy the font file!"
+    IDS_ERROR_OPENKEY "Failed to open the fonts registry key!"
+    IDS_ERROR_REGISTER "Failed to register the new font!"
+    IDS_SUCCESS "Success"
+    IDS_COMPLETED "Font installation completed."
     IDS_FILTER_LIST "Todas las tipografías (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Tipografía de mapa de bits (*.fon;*.fnt)\0*.fon;*.fnt\0\
 Tipografía TrueType (*.ttf)\0*.ttf\0\

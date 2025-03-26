@@ -1,5 +1,9 @@
 #include <string.h>
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1910 || !defined(_WIN64))
+#pragma function(memmove)
+#endif /* _MSC_VER */
+
 /* NOTE: This code is duplicated in memcpy function */
 void * __cdecl memmove(void *dest,const void *src,size_t count)
 {

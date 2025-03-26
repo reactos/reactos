@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     Keyboard Layout Switcher
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "選項(&P)...", ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&E)", ID_EXIT
+    END
+END

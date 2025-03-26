@@ -6,11 +6,11 @@ we need release directdraw handler the cache or not cache handler
 2. if both cache directdraw handler and public handler is NULL
    then we need return false, fail to release it or it was already release
 
-3. if public directdraw handler is not null we need release it 
-   and return if we susses or not. 
+3. if public directdraw handler is not null we need release it
+   and return if we susses or not.
 
 4. we need check if we need rest the internal cache if public being release
-     
 
-use  NtGdiDdDeleteDirectDrawObject((HANDLE)DirectDrawGlobal->hDD); 
-to release a directdraw handler. 
+
+use  NtGdiDdDeleteDirectDrawObject((HANDLE)DirectDrawGlobal->hDD);
+to release a directdraw handler.

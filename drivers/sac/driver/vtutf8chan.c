@@ -209,7 +209,7 @@ VTUTF8ChannelProcessAttributes(IN PSAC_CHANNEL Channel,
                                        NULL,
                                        0);
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Set blink if needed */
     Status = VTUTF8ChannelAnsiDispatch(Channel,
                                        Attribute & SAC_CELL_FLAG_BLINK ?

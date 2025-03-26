@@ -3344,7 +3344,7 @@ FxPkgPnp::PowerPolicyProcessEventInner(
         }
     }
 }
-
+
 VOID
 FxPkgPnp::PowerPolicyEnterNewState(
     __in WDF_DEVICE_POWER_POLICY_STATE NewState
@@ -3454,7 +3454,7 @@ Return Value:
     }
 }
 
-
+
 /*++
 
 One of the goals of the Driver Framework is to make it really easy to write

@@ -45,7 +45,6 @@
 #include "comctl32.h"
 #include "uxtheme.h"
 #include "vssym32.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 
@@ -216,7 +215,7 @@ static inline int MONTHCAL_MonthDiff(const SYSTEMTIME *left, const SYSTEMTIME *r
 /* January is 1, December is 12 */
 int MONTHCAL_MonthLength(int month, int year)
 {
-  const int mdays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  static const int mdays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   /* Wrap around, this eases handling. Getting length only we shouldn't care
      about year change here cause January and December have
      the same day quantity */
@@ -888,18 +887,18 @@ static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRU
 
   /* draw formatted date string */
   GetDateFormatW(LOCALE_USER_DEFAULT, DATE_YEARMONTH, st, NULL, strW, ARRAY_SIZE(strW));
-  DrawTextW(hdc, strW, strlenW(strW), title, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+  DrawTextW(hdc, strW, lstrlenW(strW), title, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
   GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SYEARMONTH, fmtW, ARRAY_SIZE(fmtW));
   wsprintfW(yearW, fmtyearW, st->wYear);
 
   /* month is trickier as it's possible to have different format pictures, we'll
      test for M, MM, MMM, and MMMM */
-  if (strstrW(fmtW, mmmmW))
+  if (wcsstr(fmtW, mmmmW))
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+st->wMonth-1, monthW, ARRAY_SIZE(monthW));
-  else if (strstrW(fmtW, mmmW))
+  else if (wcsstr(fmtW, mmmW))
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SABBREVMONTHNAME1+st->wMonth-1, monthW, ARRAY_SIZE(monthW));
-  else if (strstrW(fmtW, mmW))
+  else if (wcsstr(fmtW, mmW))
     wsprintfW(monthW, fmtmmW, st->wMonth);
   else
     wsprintfW(monthW, fmtmW, st->wMonth);
@@ -908,7 +907,7 @@ static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRU
   yearoffset = 0;
   while (strW[yearoffset])
   {
-    if (!strncmpW(&strW[yearoffset], yearW, strlenW(yearW)))
+    if (!wcsncmp(&strW[yearoffset], yearW, lstrlenW(yearW)))
         break;
     yearoffset++;
   }
@@ -916,7 +915,7 @@ static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRU
   monthoffset = 0;
   while (strW[monthoffset])
   {
-    if (!strncmpW(&strW[monthoffset], monthW, strlenW(monthW)))
+    if (!wcsncmp(&strW[monthoffset], monthW, lstrlenW(monthW)))
         break;
     monthoffset++;
   }
@@ -933,15 +932,15 @@ static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRU
   infoPtr->calendars[calIdx].titlemonth.left = sz.cx;
 
   /* for right limits use actual string parts lengths */
-  GetTextExtentPoint32W(hdc, &strW[yearoffset], strlenW(yearW), &sz);
+  GetTextExtentPoint32W(hdc, &strW[yearoffset], lstrlenW(yearW), &sz);
   infoPtr->calendars[calIdx].titleyear.right = infoPtr->calendars[calIdx].titleyear.left + sz.cx;
 
-  GetTextExtentPoint32W(hdc, monthW, strlenW(monthW), &sz);
+  GetTextExtentPoint32W(hdc, monthW, lstrlenW(monthW), &sz);
   infoPtr->calendars[calIdx].titlemonth.right = infoPtr->calendars[calIdx].titlemonth.left + sz.cx;
 
   /* Finally translate rectangles to match center aligned string,
      hit rectangles are relative to title rectangle before translation. */
-  GetTextExtentPoint32W(hdc, strW, strlenW(strW), &sz);
+  GetTextExtentPoint32W(hdc, strW, lstrlenW(strW), &sz);
   shiftX = (title->right - title->left - sz.cx) / 2 + title->left;
   OffsetRect(&infoPtr->calendars[calIdx].titleyear, shiftX, 0);
   OffsetRect(&infoPtr->calendars[calIdx].titlemonth, shiftX, 0);
@@ -977,7 +976,7 @@ static void MONTHCAL_PaintWeeknumbers(const MONTHCAL_INFO *infoPtr, HDC hdc, con
      The first week of the year must contain only days of the new year
   */
   GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IFIRSTWEEKOFYEAR, buf, ARRAY_SIZE(buf));
-  weeknum = atoiW(buf);
+  weeknum = wcstol(buf, NULL, 10);
   switch (weeknum)
   {
     case 1: mindays = 6;
@@ -1208,7 +1207,7 @@ static void MONTHCAL_PaintCalendar(const MONTHCAL_INFO *infoPtr, HDC hdc, const 
   i = infoPtr->firstDay;
   for(j = 0; j < 7; j++) {
     get_localized_dayname(infoPtr, (i + j + 6) % 7, buf, ARRAY_SIZE(buf));
-    DrawTextW(hdc, buf, strlenW(buf), &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextW(hdc, buf, lstrlenW(buf), &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     OffsetRect(&r, infoPtr->width_increment, 0);
   }
 
@@ -1414,9 +1413,9 @@ MONTHCAL_SetFirstDayOfWeek(MONTHCAL_INFO *infoPtr, INT day)
     WCHAR buf[80];
 
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IFIRSTDAYOFWEEK, buf, ARRAY_SIZE(buf));
-    TRACE("%s %d\n", debugstr_w(buf), strlenW(buf));
+    TRACE("%s %d\n", debugstr_w(buf), lstrlenW(buf));
 
-    new_day = atoiW(buf);
+    new_day = wcstol(buf, NULL, 10);
 
     infoPtr->firstDaySet = FALSE;
   }

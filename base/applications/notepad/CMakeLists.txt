@@ -1,7 +1,12 @@
 
+if(DBG)
+    add_definitions(-D_DEBUG=1)
+endif()
+
 list(APPEND SOURCE
     dialog.c
     main.c
+    printing.c
     settings.c
     text.c
     notepad.h)

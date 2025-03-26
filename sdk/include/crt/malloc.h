@@ -3,10 +3,10 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#ifndef _MALLOC_H_
-#define _MALLOC_H_
+#ifndef _INC_MALLOC
+#define _INC_MALLOC
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 
@@ -22,10 +22,6 @@ extern "C" {
 #define _HEAP_MAXREQ 0xFFFFFFFFFFFFFFE0
 #else
 #define _HEAP_MAXREQ 0xFFFFFFE0
-#endif
-
-#ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(expr) extern char (*static_assert(void)) [(expr) ? 1 : -1]
 #endif
 
 /* Return codes for _heapwalk()  */
@@ -314,7 +310,7 @@ extern "C" {
 
 #if(defined(_X86_) && !defined(__x86_64))
 #define _ALLOCA_S_MARKER_SIZE 8
-#elif defined(__ia64__) || defined(__x86_64)
+#elif defined(__ia64__) || defined(__x86_64) || defined(__arm64__)
 #define _ALLOCA_S_MARKER_SIZE 16
 #elif defined(__arm__)
 #define _ALLOCA_S_MARKER_SIZE 8
@@ -387,4 +383,4 @@ extern "C" {
 
 #pragma pack(pop)
 
-#endif /* _MALLOC_H_ */
+#endif /* _INC_MALLOC */

@@ -10,6 +10,5 @@
 
 BOOL online_main(INT argc, LPWSTR *argv)
 {
-    ConResPuts(StdOut, IDS_HELP_CMD_ONLINE);
     return TRUE;
 }

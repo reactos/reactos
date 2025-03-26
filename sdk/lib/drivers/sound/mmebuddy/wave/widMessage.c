@@ -61,6 +61,14 @@ widMessage(
         }
         case WIDM_OPEN :
         {
+
+            /* Do sanity checks for 'recording' SamplesPerSec value */
+            LPWAVEOPENDESC OpenParameters = (LPWAVEOPENDESC)Parameter1;
+            if (OpenParameters->lpFormat->nSamplesPerSec > 100000)
+                OpenParameters->lpFormat->nSamplesPerSec = 100000;
+            if (OpenParameters->lpFormat->nSamplesPerSec < 5000)
+                OpenParameters->lpFormat->nSamplesPerSec = 5000;
+
             Result = MmeOpenDevice(WAVE_IN_DEVICE_TYPE,
                                        DeviceId,
                                        (LPWAVEOPENDESC) Parameter1,

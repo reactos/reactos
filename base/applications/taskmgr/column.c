@@ -1,64 +1,49 @@
 /*
- *  ReactOS Task Manager
- *
- *  column.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *                2005         Klemens Friedl <frik85@reactos.at>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Processes List Columns.
+ * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
+ *              Copyright 2005 Klemens Friedl <frik85@reactos.at>
  */
 
 #include "precomp.h"
 
 UINT    ColumnDataHints[COLUMN_NMAX];
 
-#define DECLARE_COLUMN_PRESET(_name, _size, _state) \
-    { IDS_TAB_##_name, IDC_##_name, _size, _state },
+#define DECLARE_COLUMN_PRESET(_name, _size, _state, _align) \
+    { IDS_TAB_##_name, IDC_##_name, _size, _state, _align },
 
 const PresetColumnEntry ColumnPresets[COLUMN_NMAX] = {
-    DECLARE_COLUMN_PRESET(IMAGENAME,        105,  TRUE)
-    DECLARE_COLUMN_PRESET(PID,               50,  TRUE)
-    DECLARE_COLUMN_PRESET(USERNAME,         107, FALSE)
-    DECLARE_COLUMN_PRESET(SESSIONID,         70, FALSE)
-    DECLARE_COLUMN_PRESET(CPUUSAGE,          35,  TRUE)
-    DECLARE_COLUMN_PRESET(CPUTIME,           70,  TRUE)
-    DECLARE_COLUMN_PRESET(MEMORYUSAGE,       70,  TRUE)
-    DECLARE_COLUMN_PRESET(PEAKMEMORYUSAGE,  100, FALSE)
-    DECLARE_COLUMN_PRESET(MEMORYUSAGEDELTA,  70, FALSE)
-    DECLARE_COLUMN_PRESET(PAGEFAULTS,        70, FALSE)
-    DECLARE_COLUMN_PRESET(PAGEFAULTSDELTA,   70, FALSE)
-    DECLARE_COLUMN_PRESET(VIRTUALMEMORYSIZE, 70, FALSE)
-    DECLARE_COLUMN_PRESET(PAGEDPOOL,         70, FALSE)
-    DECLARE_COLUMN_PRESET(NONPAGEDPOOL,      70, FALSE)
-    DECLARE_COLUMN_PRESET(BASEPRIORITY,      60, FALSE)
-    DECLARE_COLUMN_PRESET(HANDLECOUNT,       60, FALSE)
-    DECLARE_COLUMN_PRESET(THREADCOUNT,       60, FALSE)
-    DECLARE_COLUMN_PRESET(USEROBJECTS,       60, FALSE)
-    DECLARE_COLUMN_PRESET(GDIOBJECTS,        60, FALSE)
-    DECLARE_COLUMN_PRESET(IOREADS,           70, FALSE)
-    DECLARE_COLUMN_PRESET(IOWRITES,          70, FALSE)
-    DECLARE_COLUMN_PRESET(IOOTHER,           70, FALSE)
-    DECLARE_COLUMN_PRESET(IOREADBYTES,       70, FALSE)
-    DECLARE_COLUMN_PRESET(IOWRITEBYTES,      70, FALSE)
-    DECLARE_COLUMN_PRESET(IOOTHERBYTES,      70, FALSE)
-    DECLARE_COLUMN_PRESET(COMMANDLINE,      450, FALSE)
+    DECLARE_COLUMN_PRESET(IMAGENAME,        105,  TRUE, LVCFMT_LEFT)
+    DECLARE_COLUMN_PRESET(PID,               50,  TRUE, LVCFMT_LEFT)
+    DECLARE_COLUMN_PRESET(USERNAME,         107, FALSE, LVCFMT_LEFT)
+    DECLARE_COLUMN_PRESET(SESSIONID,         70, FALSE, LVCFMT_LEFT)
+    DECLARE_COLUMN_PRESET(CPUUSAGE,          35,  TRUE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(CPUTIME,           70,  TRUE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(MEMORYUSAGE,       70,  TRUE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(PEAKMEMORYUSAGE,  100, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(MEMORYUSAGEDELTA,  70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(PAGEFAULTS,        70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(PAGEFAULTSDELTA,   70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(VIRTUALMEMORYSIZE, 70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(PAGEDPOOL,         70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(NONPAGEDPOOL,      70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(BASEPRIORITY,      60, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(HANDLECOUNT,       60, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(THREADCOUNT,       60, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(USEROBJECTS,       60, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(GDIOBJECTS,        60, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(IOREADS,           70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(IOWRITES,          70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(IOOTHER,           70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(IOREADBYTES,       70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(IOWRITEBYTES,      70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(IOOTHERBYTES,      70, FALSE, LVCFMT_RIGHT)
+    DECLARE_COLUMN_PRESET(COMMANDLINE,      450, FALSE, LVCFMT_LEFT)
 };
 
-static int          InsertColumn(int nCol, LPCWSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);
-INT_PTR CALLBACK    ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+static int       InsertColumn(int nCol, LPCWSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);
+INT_PTR CALLBACK ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void AddColumns(void)
 {
@@ -68,13 +53,13 @@ void AddColumns(void)
 
     for (n=0; n<COLUMN_NMAX; n++) {
         if (TaskManagerSettings.Columns[n]) {
-            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, sizeof(szTemp)/sizeof(WCHAR));
-            InsertColumn(n, szTemp, LVCFMT_LEFT, TaskManagerSettings.ColumnSizeArray[n], -1);
+            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, _countof(szTemp));
+            InsertColumn(n, szTemp, ColumnPresets[n].dwAlign, TaskManagerSettings.ColumnSizeArray[n], -1);
         }
     }
 
     size = SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0);
-    SendMessageW(hProcessPageHeaderCtrl, HDM_SETORDERARRAY, (WPARAM) size, (LPARAM) &TaskManagerSettings.ColumnOrderArray);
+    SendMessageW(hProcessPageHeaderCtrl, HDM_SETORDERARRAY, (WPARAM)size, (LPARAM)&TaskManagerSettings.ColumnOrderArray);
 
     UpdateColumnDataHints();
 }
@@ -119,7 +104,7 @@ void SaveColumnSettings(void)
 
     /* Get header order */
     size = SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0);
-    SendMessageW(hProcessPageHeaderCtrl, HDM_GETORDERARRAY, (WPARAM) size, (LPARAM) &TaskManagerSettings.ColumnOrderArray);
+    SendMessageW(hProcessPageHeaderCtrl, HDM_GETORDERARRAY, (WPARAM)size, (LPARAM)&TaskManagerSettings.ColumnOrderArray);
 
     /* Get visible columns */
     for (i = 0; i < SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0); i++) {
@@ -132,7 +117,7 @@ void SaveColumnSettings(void)
         SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEM, i, (LPARAM) &hditem);
 
         for (n = 0; n < COLUMN_NMAX; n++) {
-            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, sizeof(szTemp)/sizeof(WCHAR));
+            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, _countof(szTemp));
             if (_wcsicmp(text, szTemp) == 0)
             {
                 TaskManagerSettings.Columns[n] = TRUE;
@@ -170,7 +155,6 @@ ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-
         for (i=0; i<COLUMN_NMAX; i++) {
             if (TaskManagerSettings.Columns[i])
                 CheckDlgButton(hDlg, ColumnPresets[i].dwIdcCtrl, BST_CHECKED);
@@ -178,7 +162,6 @@ ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
 
     case WM_COMMAND:
-
         if (LOWORD(wParam) == IDCANCEL)
         {
             EndDialog(hDlg, LOWORD(wParam));
@@ -222,7 +205,7 @@ void UpdateColumnDataHints(void)
         SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEM, Index, (LPARAM) &hditem);
 
         for (i=0; i<COLUMN_NMAX; i++) {
-            LoadStringW(hInst, ColumnPresets[i].dwIdsName, szTemp, sizeof(szTemp)/sizeof(WCHAR));
+            LoadStringW(hInst, ColumnPresets[i].dwIdsName, szTemp, _countof(szTemp));
             if (_wcsicmp(text, szTemp) == 0)
                 ColumnDataHints[Index] = i;
         }

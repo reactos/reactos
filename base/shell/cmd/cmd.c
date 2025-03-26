@@ -506,14 +506,14 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
             dwExitCode = 1;
         }
 
-        /* Restore our default console mode */
+        /* Restore the default console mode */
         SetConsoleMode(ConStreamGetOSHandle(StdIn),
                        ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
         SetConsoleMode(ConStreamGetOSHandle(StdOut),
                        ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
     }
 
-    /* Update our local codepage cache */
+    /* Update the local code page cache */
     {
         UINT uNewInputCodePage  = GetConsoleCP();
         UINT uNewOutputCodePage = GetConsoleOutputCP();
@@ -521,17 +521,21 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         if ((InputCodePage  != uNewInputCodePage) ||
             (OutputCodePage != uNewOutputCodePage))
         {
+            InputCodePage  = uNewInputCodePage;
+            OutputCodePage = uNewOutputCodePage;
+
+            /* Reset the current thread UI language */
+            if (IsConsoleHandle(ConStreamGetOSHandle(StdOut)) ||
+                IsConsoleHandle(ConStreamGetOSHandle(StdErr)))
+            {
+                ConSetThreadUILanguage(0);
+            }
+            /* Update the streams cached code page */
+            ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage);
+
             /* Update the locale as well */
             InitLocale();
         }
-
-        InputCodePage  = uNewInputCodePage;
-        OutputCodePage = uNewOutputCodePage;
-
-        /* Update the streams codepage cache as well */
-        ConStreamSetCacheCodePage(StdIn , InputCodePage );
-        ConStreamSetCacheCodePage(StdOut, OutputCodePage);
-        ConStreamSetCacheCodePage(StdErr, OutputCodePage);
     }
 
     /* Restore the original console title */
@@ -1154,11 +1158,9 @@ GetEnhancedVar(
         if (hFind != INVALID_HANDLE_VALUE)
         {
             PTSTR FixedComponent = w32fd.cFileName;
-            if (*w32fd.cAlternateFileName &&
-                ((Modifiers & M_SHORT) || !_tcsicmp(In, w32fd.cAlternateFileName)))
-            {
+            if ((Modifiers & M_SHORT) && *w32fd.cAlternateFileName)
                 FixedComponent = w32fd.cAlternateFileName;
-            }
+
             FindClose(hFind);
 
             if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[ARRAYSIZE(FixedPath)])
@@ -2180,7 +2182,7 @@ Initialize(VOID)
     /* Add ctrl break handler */
     AddBreakHandler();
 
-    /* Set our default console mode */
+    /* Set the default console mode */
     hOut = ConStreamGetOSHandle(StdOut);
     hIn  = ConStreamGetOSHandle(StdIn);
     SetConsoleMode(hOut, 0); // Reinitialize the console output mode
@@ -2252,6 +2254,22 @@ Initialize(VOID)
             {
                 OutputStreamMode = UTF16Text;
             }
+            else if (option == _T('F'))
+            {
+                if (!_tcsnicmp(&ptr[2], _T(":OFF"), 4))
+                {
+                    /* Disable file and path completion */
+                    AutoCompletionChar = 0x20;
+                    PathCompletionChar = 0x20;
+                }
+                else /* Enable completion by default */
+                {
+                    /* Enable (and replace) file and path completion
+                     * characters with Ctrl-F and Ctrl-D respectively */
+                    AutoCompletionChar = 0x06; // Ctrl-F
+                    PathCompletionChar = 0x04; // Ctrl-D
+                }
+            }
             else if (option == _T('V'))
             {
                 // FIXME: Check validity of the parameter given to V !
@@ -2289,7 +2307,7 @@ Initialize(VOID)
         ConSetScreenColor(ConStreamGetOSHandle(StdOut), wDefColor, TRUE);
 #endif
 
-    /* Reset the output Standard Streams translation modes and codepage caches */
+    /* Reset the output Standard Streams translation modes and code page caches */
     // ConStreamSetMode(StdIn , OutputStreamMode, InputCodePage );
     ConStreamSetMode(StdOut, OutputStreamMode, OutputCodePage);
     ConStreamSetMode(StdErr, OutputStreamMode, OutputCodePage);
@@ -2297,11 +2315,15 @@ Initialize(VOID)
     if (!*ptr)
     {
         /* If neither /C or /K was given, display a simple version string */
-        ConOutChar(_T('\n'));
+
+        /* Insert a new line above the copyright notice if we are drawing the information line. */
+        if (HasInfoLine())
+            ConOutChar('\n');
+
         ConOutResPrintf(STRING_REACTOS_VERSION,
                         _T(KERNEL_VERSION_STR),
                         _T(KERNEL_VERSION_BUILD_STR));
-        ConOutPuts(_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team.\n"));
+        ConOutResPrintf(STRING_CMD_COPYRIGHT, _T(COPYRIGHT_YEAR));
     }
 
     if (AutoRun)
@@ -2329,6 +2351,17 @@ static VOID Cleanup(VOID)
         ParseCommandLine(_T("\\cmdexit.bat"));
     }
 
+    /* Remove ctrl break handler */
+    RemoveBreakHandler();
+
+    /* Restore the default console mode */
+    SetConsoleMode(ConStreamGetOSHandle(StdIn),
+                   ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    SetConsoleMode(ConStreamGetOSHandle(StdOut),
+                   ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+
+
+#ifdef _DEBUG_MEM
 #ifdef FEATURE_DIRECTORY_STACK
     /* Destroy directory stack */
     DestroyDirectoryStack();
@@ -2340,15 +2373,7 @@ static VOID Cleanup(VOID)
 
     /* Free GetEnvVar's buffer */
     GetEnvVar(NULL);
-
-    /* Remove ctrl break handler */
-    RemoveBreakHandler();
-
-    /* Restore the default console mode */
-    SetConsoleMode(ConStreamGetOSHandle(StdIn),
-                   ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
-    SetConsoleMode(ConStreamGetOSHandle(StdOut),
-                   ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+#endif /* _DEBUG_MEM */
 
     DeleteCriticalSection(&ChildProcessRunningLock);
 }
@@ -2376,6 +2401,12 @@ int _tmain(int argc, const TCHAR *argv[])
     ConStreamInit(StdIn , GetStdHandle(STD_INPUT_HANDLE) , /*OutputStreamMode*/ AnsiText, InputCodePage);
     ConStreamInit(StdOut, GetStdHandle(STD_OUTPUT_HANDLE), OutputStreamMode, OutputCodePage);
     ConStreamInit(StdErr, GetStdHandle(STD_ERROR_HANDLE) , OutputStreamMode, OutputCodePage);
+    /* Reset the current thread UI language */
+    if (IsConsoleHandle(ConStreamGetOSHandle(StdOut)) ||
+        IsConsoleHandle(ConStreamGetOSHandle(StdErr)))
+    {
+        ConSetThreadUILanguage(0);
+    }
 
     CMD_ModuleHandle = GetModuleHandle(NULL);
 

@@ -148,8 +148,8 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
 }
 
+DECLSPEC_NORETURN
 VOID
-FASTCALL
 KiIdleLoop(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -163,7 +163,7 @@ KiIdleLoop(VOID)
         YieldProcessor();
         YieldProcessor();
         _disable();
-    
+
         /* Check for pending timers, pending DPCs, or pending ready threads */
         if ((Prcb->DpcData[0].DpcQueueDepth) ||
             (Prcb->TimerRequest) ||
@@ -193,8 +193,18 @@ KiIdleLoop(VOID)
             /* The thread is now running */
             NewThread->State = Running;
 
+#ifdef CONFIG_SMP
+            /* Do the swap at SYNCH_LEVEL */
+            KfRaiseIrql(SYNCH_LEVEL);
+#endif
+
             /* Switch away from the idle thread */
             KiSwapContext(APC_LEVEL, OldThread);
+
+#ifdef CONFIG_SMP
+            /* Go back to DISPATCH_LEVEL */
+            KeLowerIrql(DISPATCH_LEVEL);
+#endif
         }
         else
         {
@@ -324,6 +334,9 @@ KiDispatchInterrupt(VOID)
     }
     else if (Prcb->NextThread)
     {
+        /* Acquire the PRCB lock */
+        KiAcquirePrcbLock(Prcb);
+
         /* Capture current thread data */
         OldThread = Prcb->CurrentThread;
         NewThread = Prcb->NextThread;

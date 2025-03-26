@@ -122,9 +122,9 @@ GetPacketTypeFromHeaderBuffer(PLAN_ADAPTER Adapter,
             /* FIXME: Support other medias */
             return NDIS_STATUS_NOT_ACCEPTED;
     }
-    
+
     TI_DbgPrint(DEBUG_DATALINK, ("EtherType (0x%X).\n", *PacketType));
-    
+
     return NDIS_STATUS_SUCCESS;
 }
 
@@ -137,13 +137,13 @@ GetPacketTypeFromNdisPacket(PLAN_ADAPTER Adapter,
     PVOID HeaderBuffer;
     ULONG BytesCopied;
     NDIS_STATUS Status;
-    
+
     HeaderBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                          Adapter->HeaderSize,
                                          HEADER_TAG);
     if (!HeaderBuffer)
         return NDIS_STATUS_RESOURCES;
-    
+
     /* Copy the media header */
     BytesCopied = CopyPacketToBuffer(HeaderBuffer,
                                      NdisPacket,
@@ -161,9 +161,9 @@ GetPacketTypeFromNdisPacket(PLAN_ADAPTER Adapter,
                                            HeaderBuffer,
                                            BytesCopied,
                                            PacketType);
-    
+
     ExFreePoolWithTag(HeaderBuffer, HEADER_TAG);
-    
+
     return Status;
 }
 
@@ -583,26 +583,26 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     ULONG Unused;
     NTSTATUS Status;
     IP_ADDRESS DefaultMask, Router;
-    
+
     AddrInitIPv4(&DefaultMask, 0);
 
     TcpipRegistryPath.MaximumLength = sizeof(WCHAR) * 150;
     TcpipRegistryPath.Length = 0;
     TcpipRegistryPath.Buffer = Buffer;
-    
+
     /* Build the registry path */
     RtlAppendUnicodeStringToString(&TcpipRegistryPath, &Prefix);
     RtlAppendUnicodeStringToString(&TcpipRegistryPath, &Interface->Name);
-    
+
     InitializeObjectAttributes(&ObjectAttributes,
                                &TcpipRegistryPath,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                0,
                                NULL);
-    
+
     /* Open a handle to the adapter parameters */
     Status = ZwOpenKey(&ParameterHandle, KEY_READ, &ObjectAttributes);
-    
+
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -680,7 +680,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
             if (!AddrIsUnspecified(&Interface->Unicast) &&
                 !AddrIsUnspecified(&Interface->Netmask))
                 IPAddInterfaceRoute(Interface);
-            
+
             /* Read default gateway info */
             Status = ZwQueryValueKey(ParameterHandle,
                                      &Gateway,
@@ -718,7 +718,7 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
 {
     PLAN_ADAPTER Adapter = Context->Adapter;
     PIP_INTERFACE Interface = Adapter->Context;
-    //NDIS_STATUS NdisStatus;
+    NDIS_STATUS NdisStatus;
     IP_ADDRESS DefaultMask;
 
     /* Initialize the default unspecified address (0.0.0.0) */
@@ -740,74 +740,67 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
         Interface->Unicast = DefaultMask;
         Interface->Netmask = DefaultMask;
         Interface->Broadcast = DefaultMask;
-        
+
         /* Remove all interface routes */
         RouterRemoveRoutesForInterface(Interface);
-        
+
         /* Destroy all cached neighbors */
         NBDestroyNeighborsForInterface(Interface);
     }
-    
+
     Context->Adapter->CompletingReset = FALSE;
+
+    if (Context->State == LAN_STATE_STARTED)
+    {
+        /* Get maximum link speed */
+        NdisStatus = NDISCall(Adapter,
+                              NdisRequestQueryInformation,
+                              OID_GEN_LINK_SPEED,
+                              &Interface->Speed,
+                              sizeof(Interface->Speed));
+
+        if (!NT_SUCCESS(NdisStatus))
+            Interface->Speed = IP_DEFAULT_LINK_SPEED;
+
+        Adapter->Speed = Interface->Speed * 100L;
+
+        /* Get maximum frame size */
+        NdisStatus = NDISCall(Adapter,
+                              NdisRequestQueryInformation,
+                              OID_GEN_MAXIMUM_FRAME_SIZE,
+                              &Adapter->MTU,
+                              sizeof(Adapter->MTU));
+        if (NdisStatus != NDIS_STATUS_SUCCESS)
+            return FALSE;
+
+        Interface->MTU = Adapter->MTU;
+
+        /* Get maximum packet size */
+        NdisStatus = NDISCall(Adapter,
+                              NdisRequestQueryInformation,
+                              OID_GEN_MAXIMUM_TOTAL_SIZE,
+                              &Adapter->MaxPacketSize,
+                              sizeof(Adapter->MaxPacketSize));
+        if (NdisStatus != NDIS_STATUS_SUCCESS)
+            return FALSE;
+    }
+
+    Adapter->State = Context->State;
 
     /* Update the IP and link status information cached in TCP */
     TCPUpdateInterfaceIPInformation(Interface);
     TCPUpdateInterfaceLinkStatus(Interface);
 
-    /* We're done here if the adapter isn't connected */
-    if (Context->State != LAN_STATE_STARTED)
-    {
-        Adapter->State = Context->State;
-        return TRUE;
-    }
-    
-    /* NDIS Bug! */
-#if 0
-    /* Get maximum link speed */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_LINK_SPEED,
-                          &Interface->Speed,
-                          sizeof(UINT));
-    
-    if (!NT_SUCCESS(NdisStatus))
-        Interface->Speed = IP_DEFAULT_LINK_SPEED;
-
-    Adapter->Speed = Interface->Speed * 100L;
-    
-    /* Get maximum frame size */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_MAXIMUM_FRAME_SIZE,
-                          &Adapter->MTU,
-                          sizeof(UINT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        return FALSE;
-    
-    Interface->MTU = Adapter->MTU;
-    
-    /* Get maximum packet size */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_MAXIMUM_TOTAL_SIZE,
-                          &Adapter->MaxPacketSize,
-                          sizeof(UINT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        return FALSE;
-#endif
-
-    Adapter->State = Context->State;
-    
     return TRUE;
 }
 
 VOID ReconfigureAdapterWorker(PVOID Context)
 {
     PRECONFIGURE_CONTEXT ReconfigureContext = Context;
-    
+
     /* Complete the reconfiguration asynchronously */
     ReconfigureAdapter(ReconfigureContext);
-    
+
     /* Free the context */
     ExFreePool(ReconfigureContext);
 }
@@ -834,11 +827,11 @@ VOID NTAPI ProtocolStatus(
     /* Ignore the status indication if we have no context yet. We'll get another later */
     if (!Adapter->Context)
         return;
-    
+
     Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(RECONFIGURE_CONTEXT), CONTEXT_TAG);
     if (!Context)
         return;
-    
+
     Context->Adapter = Adapter;
 
     switch(GeneralStatus)
@@ -854,16 +847,16 @@ VOID NTAPI ProtocolStatus(
 
             Context->State = LAN_STATE_STARTED;
             break;
-            
+
         case NDIS_STATUS_MEDIA_DISCONNECT:
             DbgPrint("NDIS_STATUS_MEDIA_DISCONNECT\n");
-            
+
             if (Adapter->State == LAN_STATE_STOPPED)
             {
                 ExFreePoolWithTag(Context, CONTEXT_TAG);
                 return;
             }
-            
+
             Context->State = LAN_STATE_STOPPED;
             break;
 
@@ -945,7 +938,7 @@ VOID NTAPI ProtocolBindAdapter(
  *     SystemSpecific1: Pointer to a registry path with protocol-specific configuration information
  *     SystemSpecific2: Unused & must not be touched
  */
-{    
+{
     TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
     *Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
 }
@@ -1377,38 +1370,6 @@ BOOLEAN BindAdapter(
 
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                 &IF->Description));
-    
-    /* Get maximum link speed */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_LINK_SPEED,
-                          &IF->Speed,
-                          sizeof(UINT));
-    
-    if (!NT_SUCCESS(NdisStatus))
-        IF->Speed = IP_DEFAULT_LINK_SPEED;
-    
-    Adapter->Speed = IF->Speed * 100L;
-    
-    /* Get maximum frame size */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_MAXIMUM_FRAME_SIZE,
-                          &Adapter->MTU,
-                          sizeof(UINT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        return FALSE;
-    
-    IF->MTU = Adapter->MTU;
-    
-    /* Get maximum packet size */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_MAXIMUM_TOTAL_SIZE,
-                          &Adapter->MaxPacketSize,
-                          sizeof(UINT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        return FALSE;
 
     /* Register interface with IP layer */
     IPRegisterInterface(IF);
@@ -1646,7 +1607,7 @@ NDIS_STATUS LANUnregisterAdapter(
     return NdisStatus;
 }
 
-VOID 
+VOID
 NTAPI
 LANUnregisterProtocol(VOID)
 /*

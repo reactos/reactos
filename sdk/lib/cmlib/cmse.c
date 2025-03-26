@@ -25,17 +25,17 @@ CmpRemoveSecurityCellList(IN PHHIVE Hive,
 
     // ASSERT( (((PCMHIVE)Hive)->HiveSecurityLockOwner == KeGetCurrentThread()) || (CmpTestRegistryLockExclusive() == TRUE) );
 
-    SecurityData = HvGetCell(Hive, SecurityCell);
+    SecurityData = (PCM_KEY_SECURITY)HvGetCell(Hive, SecurityCell);
     if (!SecurityData) return;
 
-    FlinkCell = HvGetCell(Hive, SecurityData->Flink);
+    FlinkCell = (PCM_KEY_SECURITY)HvGetCell(Hive, SecurityData->Flink);
     if (!FlinkCell)
     {
         HvReleaseCell(Hive, SecurityCell);
         return;
     }
 
-    BlinkCell = HvGetCell(Hive, SecurityData->Blink);
+    BlinkCell = (PCM_KEY_SECURITY)HvGetCell(Hive, SecurityData->Blink);
     if (!BlinkCell)
     {
         HvReleaseCell(Hive, SecurityData->Flink);
@@ -72,7 +72,7 @@ CmpFreeSecurityDescriptor(IN PHHIVE Hive,
 
     // ASSERT( (((PCMHIVE)Hive)->HiveSecurityLockOwner == KeGetCurrentThread()) || (CmpTestRegistryLockExclusive() == TRUE) );
 
-    CellData = HvGetCell(Hive, Cell);
+    CellData = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
     if (!CellData) return;
 
     ASSERT(CellData->Signature == CM_KEY_NODE_SIGNATURE);
@@ -89,7 +89,7 @@ CmpFreeSecurityDescriptor(IN PHHIVE Hive,
         return;
     }
 
-    SecurityData = HvGetCell(Hive, CellData->Security);
+    SecurityData = (PCM_KEY_SECURITY)HvGetCell(Hive, CellData->Security);
     if (!SecurityData)
     {
         HvReleaseCell(Hive, Cell);

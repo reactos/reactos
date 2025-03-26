@@ -22,9 +22,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h> /* atoi */
@@ -36,7 +33,6 @@
 
 #include "comctl32.h"
 
-#include "wine/unicode.h"
 
 #include "wine/debug.h"
 
@@ -208,7 +204,7 @@ INT WINAPI Str_GetPtrW (LPCWSTR lpSrc, LPWSTR lpDest, INT nMaxLen)
     TRACE("(%p %p %d)\n", lpSrc, lpDest, nMaxLen);
 
     if (!lpDest && lpSrc)
-        return strlenW (lpSrc);
+        return lstrlenW (lpSrc);
 
     if (nMaxLen == 0)
         return 0;
@@ -218,7 +214,7 @@ INT WINAPI Str_GetPtrW (LPCWSTR lpSrc, LPWSTR lpDest, INT nMaxLen)
         return 0;
     }
 
-    len = strlenW (lpSrc);
+    len = lstrlenW (lpSrc);
     if (len >= nMaxLen)
         len = nMaxLen - 1;
 
@@ -238,11 +234,11 @@ BOOL WINAPI Str_SetPtrW (LPWSTR *lppDest, LPCWSTR lpSrc)
     TRACE("(%p %s)\n", lppDest, debugstr_w(lpSrc));
 
     if (lpSrc) {
-        INT len = strlenW (lpSrc) + 1;
+        INT len = lstrlenW (lpSrc) + 1;
         LPWSTR ptr = ReAlloc (*lppDest, len * sizeof(WCHAR));
         if (!ptr)
             return FALSE;
-        strcpyW (ptr, lpSrc);
+        lstrcpyW (ptr, lpSrc);
         *lppDest = ptr;
     }
     else {
@@ -391,8 +387,8 @@ LPWSTR WINAPI StrStrIW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
   if (!lpszStr || !lpszSearch || !*lpszSearch)
     return NULL;
 
-  iLen = strlenW(lpszSearch);
-  end = lpszStr + strlenW(lpszStr);
+  iLen = lstrlenW(lpszSearch);
+  end = lpszStr + lstrlenW(lpszStr);
 
   while (lpszStr + iLen <= end)
   {
@@ -410,7 +406,7 @@ LPWSTR WINAPI StrStrIW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
  */
 INT WINAPI StrToIntW (LPCWSTR lpString)
 {
-    return atoiW(lpString);
+    return wcstol(lpString, NULL, 10);
 }
 
 /*************************************************************************
@@ -472,7 +468,7 @@ LPWSTR WINAPI StrChrW(LPCWSTR lpszStr, WCHAR ch)
   TRACE("(%s,%i)\n", debugstr_w(lpszStr), ch);
 
   if (lpszStr)
-    lpszRet = strchrW(lpszStr, ch);
+    lpszRet = wcschr(lpszStr, ch);
   return lpszRet;
 }
 
@@ -558,7 +554,7 @@ LPWSTR WINAPI StrRChrW(LPCWSTR str, LPCWSTR end, WORD ch)
     WCHAR *ret = NULL;
 
     if (!str) return NULL;
-    if (!end) end = str + strlenW(str);
+    if (!end) end = str + lstrlenW(str);
     while (str < end)
     {
         if (*str == ch) ret = (WCHAR *)str;
@@ -594,7 +590,7 @@ LPSTR WINAPI StrStrA(LPCSTR lpszStr, LPCSTR lpszSearch)
 LPWSTR WINAPI StrStrW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
 {
     if (!lpszStr || !lpszSearch) return NULL;
-    return strstrW( lpszStr, lpszSearch );
+    return wcsstr( lpszStr, lpszSearch );
 }
 
 /*************************************************************************
@@ -638,10 +634,10 @@ LPWSTR WINAPI StrChrIW(LPCWSTR lpszStr, WCHAR ch)
 
   if (lpszStr)
   {
-    ch = toupperW(ch);
+    ch = towupper(ch);
     while (*lpszStr)
     {
-      if (toupperW(*lpszStr) == ch)
+      if (towupper(*lpszStr) == ch)
         return (LPWSTR)lpszStr;
       lpszStr++;
     }
@@ -713,10 +709,10 @@ LPWSTR WINAPI StrRStrIW(LPCWSTR lpszStr, LPCWSTR lpszEnd, LPCWSTR lpszSearch)
   if (!lpszStr || !lpszSearch || !*lpszSearch)
     return NULL;
 
-  iLen = strlenW(lpszSearch);
+  iLen = lstrlenW(lpszSearch);
 
   if (!lpszEnd)
-    lpszEnd = lpszStr + strlenW(lpszStr);
+    lpszEnd = lpszStr + lstrlenW(lpszStr);
   else /* reproduce the broken behaviour on Windows */
     lpszEnd += min(iLen - 1, lstrlenW(lpszEnd));
 
@@ -826,7 +822,7 @@ LPWSTR WINAPI StrRChrIW(LPCWSTR str, LPCWSTR end, WORD ch)
     WCHAR *ret = NULL;
 
     if (!str) return NULL;
-    if (!end) end = str + strlenW(str);
+    if (!end) end = str + lstrlenW(str);
     while (str < end)
     {
         if (!COMCTL32_ChrCmpIW(*str, ch)) ret = (WCHAR *)str;
@@ -843,7 +839,7 @@ LPWSTR WINAPI StrRChrIW(LPCWSTR str, LPCWSTR end, WORD ch)
 int WINAPI StrCSpnW(LPCWSTR lpszStr, LPCWSTR lpszMatch)
 {
     if (!lpszStr || !lpszMatch) return 0;
-    return strcspnW( lpszStr, lpszMatch );
+    return wcscspn( lpszStr, lpszMatch );
 }
 
 /*************************************************************************

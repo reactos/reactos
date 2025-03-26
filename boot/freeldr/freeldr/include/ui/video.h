@@ -19,7 +19,9 @@ typedef struct _PALETTE_ENTRY
 // extern PVOID VideoOffScreenBuffer;
 
 PVOID VideoAllocateOffScreenBuffer(VOID);   // Returns a pointer to an off-screen buffer sufficient for the current video mode
-VOID  VideoCopyOffScreenBufferToVRAM(VOID);
+
+VOID VideoFreeOffScreenBuffer(VOID);
+VOID VideoCopyOffScreenBufferToVRAM(VOID);
 
 VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount);
 VOID VideoRestorePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount);

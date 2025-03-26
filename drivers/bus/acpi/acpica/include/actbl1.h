@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2020, Intel Corp.
+ * Copyright (C) 2000 - 2022, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * NO WARRANTY
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
@@ -60,10 +60,12 @@
  * file. Useful because they make it more difficult to inadvertently type in
  * the wrong signature.
  */
+#define ACPI_SIG_AEST           "AEST"      /* Arm Error Source Table */
 #define ACPI_SIG_ASF            "ASF!"      /* Alert Standard Format table */
 #define ACPI_SIG_BERT           "BERT"      /* Boot Error Record Table */
 #define ACPI_SIG_BGRT           "BGRT"      /* Boot Graphics Resource Table */
 #define ACPI_SIG_BOOT           "BOOT"      /* Simple Boot Flag Table */
+#define ACPI_SIG_CEDT           "CEDT"      /* CXL Early Discovery Table */
 #define ACPI_SIG_CPEP           "CPEP"      /* Corrected Platform Error Polling table */
 #define ACPI_SIG_CSRT           "CSRT"      /* Core System Resource Table */
 #define ACPI_SIG_DBG2           "DBG2"      /* Debug Port table type 2 */
@@ -79,6 +81,7 @@
 #define ACPI_SIG_HMAT           "HMAT"      /* Heterogeneous Memory Attributes Table */
 #define ACPI_SIG_HPET           "HPET"      /* High Precision Event Timer table */
 #define ACPI_SIG_IBFT           "IBFT"      /* iSCSI Boot Firmware Table */
+#define ACPI_SIG_MSCT           "MSCT"      /* Maximum System Characteristics Table*/
 
 #define ACPI_SIG_S3PT           "S3PT"      /* S3 Performance (sub)Table */
 #define ACPI_SIG_PCCS           "PCC"       /* PCC Shared Memory Region */
@@ -384,6 +387,279 @@ typedef struct acpi_table_boot
 } ACPI_TABLE_BOOT;
 
 
+
+/*******************************************************************************
+ *
+ * CDAT - Coherent Device Attribute Table
+ *        Version 1
+ *
+ * Conforms to the "Coherent Device Attribute Table (CDAT) Specification
+ " (Revision 1.01, October 2020.)
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_cdat
+{
+    UINT32                  Length;                             /* Length of table in bytes, including this header */
+    UINT8                   Revision;                           /* ACPI Specification minor version number */
+    UINT8                   Checksum;                           /* To make sum of entire table == 0 */
+    UINT8                   Reserved[6];
+    UINT32                  Sequence;                           /* Used to detect runtime CDAT table changes */
+
+} ACPI_TABLE_CDAT;
+
+
+/* CDAT common subtable header */
+
+typedef struct acpi_cdat_header
+{
+    UINT8                   Type;
+    UINT8                   Reserved;
+    UINT16                  Length;
+
+} ACPI_CDAT_HEADER;
+
+/* Values for Type field above */
+
+enum AcpiCdatType
+{
+    ACPI_CDAT_TYPE_DSMAS                = 0,
+    ACPI_CDAT_TYPE_DSLBIS               = 1,
+    ACPI_CDAT_TYPE_DSMSCIS              = 2,
+    ACPI_CDAT_TYPE_DSIS                 = 3,
+    ACPI_CDAT_TYPE_DSEMTS               = 4,
+    ACPI_CDAT_TYPE_SSLBIS               = 5,
+    ACPI_CDAT_TYPE_RESERVED             = 6   /* 6 through 0xFF are reserved */
+};
+
+
+/* Subtable 0: Device Scoped Memory Affinity Structure (DSMAS) */
+
+typedef struct acpi_cadt_dsmas
+{
+    UINT8                   DsmadHandle;
+    UINT8                   Flags;
+    UINT16                  Reserved;
+    UINT64                  DpaBaseAddress;
+    UINT64                  DpaLength;
+
+} ACPI_CDAT_DSMAS;
+
+/* Flags for subtable above */
+
+#define ACPI_CEDT_DSMAS_NON_VOLATILE        (1 << 2)
+
+
+/* Subtable 1: Device scoped Latency and Bandwidth Information Structure (DSLBIS) */
+
+typedef struct acpi_cdat_dslbis
+{
+    UINT8                   Handle;
+    UINT8                   Flags; /* If Handle matches a DSMAS handle, the definition of this field matches
+                                    * Flags field in HMAT System Locality Latency */
+    UINT8                   DataType;
+    UINT8                   Reserved;
+    UINT64                  EntryBaseUnit;
+    UINT16                  Entry[3];
+    UINT16                  Reserved2;
+
+} ACPI_CDAT_DSLBIS;
+
+
+/* Subtable 2: Device Scoped Memory Side Cache Information Structure (DSMSCIS) */
+
+typedef struct acpi_cdat_dsmscis
+{
+    UINT8                   DsmasHandle;
+    UINT8                   Reserved[3];
+    UINT64                  SideCacheSize;
+    UINT32                  CacheAttributes;
+
+} ACPI_CDAT_DSMSCIS;
+
+
+/* Subtable 3: Device Scoped Initiator Structure (DSIS) */
+
+typedef struct acpi_cdat_dsis
+{
+    UINT8                   Flags;
+    UINT8                   Handle;
+    UINT16                  Reserved;
+
+} ACPI_CDAT_DSIS;
+
+/* Flags for above subtable */
+
+#define ACPI_CDAT_DSIS_MEM_ATTACHED         (1 << 0)
+
+
+/* Subtable 4: Device Scoped EFI Memory Type Structure (DSEMTS) */
+
+typedef struct acpi_cdat_dsemts
+{
+    UINT8                   DsmasHandle;
+    UINT8                   MemoryType;
+    UINT16                  Reserved;
+    UINT64                  DpaOffset;
+    UINT64                  RangeLength;
+
+} ACPI_CDAT_DSEMTS;
+
+
+/* Subtable 5: Switch Scoped Latency and Bandwidth Information Structure (SSLBIS) */
+
+typedef struct acpi_cdat_sslbis
+{
+    UINT8                   DataType;
+    UINT8                   Reserved[3];
+    UINT64                  EntryBaseUnit;
+
+} ACPI_CDAT_SSLBIS;
+
+
+/* Sub-subtable for above, SslbeEntries field */
+
+typedef struct acpi_cdat_sslbe
+{
+    UINT16                  PortxId;
+    UINT16                  PortyId;
+    UINT16                  LatencyOrBandwidth;
+    UINT16                  Reserved;
+
+} ACPI_CDAT_SSLBE;
+
+
+/*******************************************************************************
+ *
+ * CEDT - CXL Early Discovery Table
+ *        Version 1
+ *
+ * Conforms to the "CXL Early Discovery Table" (CXL 2.0, October 2020)
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_cedt
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_CEDT;
+
+/* CEDT subtable header (Performance Record Structure) */
+
+typedef struct acpi_cedt_header
+{
+    UINT8                   Type;
+    UINT8                   Reserved;
+    UINT16                  Length;
+
+} ACPI_CEDT_HEADER;
+
+/* Values for Type field above */
+
+enum AcpiCedtType
+{
+    ACPI_CEDT_TYPE_CHBS                 = 0,
+    ACPI_CEDT_TYPE_CFMWS                = 1,
+    ACPI_CEDT_TYPE_CXIMS                = 2,
+    ACPI_CEDT_TYPE_RDPAS                = 3,
+    ACPI_CEDT_TYPE_RESERVED             = 4,
+};
+
+/* Values for version field above */
+
+#define ACPI_CEDT_CHBS_VERSION_CXL11    (0)
+#define ACPI_CEDT_CHBS_VERSION_CXL20    (1)
+
+/* Values for length field above */
+
+#define ACPI_CEDT_CHBS_LENGTH_CXL11     (0x2000)
+#define ACPI_CEDT_CHBS_LENGTH_CXL20     (0x10000)
+
+/*
+ * CEDT subtables
+ */
+
+/* 0: CXL Host Bridge Structure */
+
+typedef struct acpi_cedt_chbs
+{
+    ACPI_CEDT_HEADER        Header;
+    UINT32                  Uid;
+    UINT32                  CxlVersion;
+    UINT32                  Reserved;
+    UINT64                  Base;
+    UINT64                  Length;
+
+} ACPI_CEDT_CHBS;
+
+
+/* 1: CXL Fixed Memory Window Structure */
+
+typedef struct acpi_cedt_cfmws
+{
+    ACPI_CEDT_HEADER        Header;
+    UINT32                  Reserved1;
+    UINT64                  BaseHpa;
+    UINT64                  WindowSize;
+    UINT8                   InterleaveWays;
+    UINT8                   InterleaveArithmetic;
+    UINT16                  Reserved2;
+    UINT32                  Granularity;
+    UINT16                  Restrictions;
+    UINT16                  QtgId;
+    UINT32                  InterleaveTargets[];
+
+} ACPI_CEDT_CFMWS;
+
+typedef struct acpi_cedt_cfmws_target_element
+{
+    UINT32                  InterleaveTarget;
+
+} ACPI_CEDT_CFMWS_TARGET_ELEMENT;
+
+/* Values for Interleave Arithmetic field above */
+
+#define ACPI_CEDT_CFMWS_ARITHMETIC_MODULO   (0)
+#define ACPI_CEDT_CFMWS_ARITHMETIC_XOR      (1)
+
+/* Values for Restrictions field above */
+
+#define ACPI_CEDT_CFMWS_RESTRICT_TYPE2      (1)
+#define ACPI_CEDT_CFMWS_RESTRICT_TYPE3      (1<<1)
+#define ACPI_CEDT_CFMWS_RESTRICT_VOLATILE   (1<<2)
+#define ACPI_CEDT_CFMWS_RESTRICT_PMEM       (1<<3)
+#define ACPI_CEDT_CFMWS_RESTRICT_FIXED      (1<<4)
+
+/* 2: CXL XOR Interleave Math Structure */
+
+struct acpi_cedt_cxims {
+    ACPI_CEDT_HEADER        Header;
+    UINT16                  Reserved1;
+    UINT8                   Hbig;
+    UINT8                   NrXormaps;
+    UINT64                  XormapList[];
+};
+
+/* 3: CXL RCEC Downstream Port Association Structure */
+
+struct acpi_cedt_rdpas {
+    ACPI_CEDT_HEADER        Header;
+    UINT8                   Reserved1;
+    UINT16                  Length;
+    UINT16                  Segment;
+    UINT16                  Bdf;
+    UINT8                   Protocol;
+    UINT64                  Address;
+};
+
+/* Masks for bdf field above */
+#define ACPI_CEDT_RDPAS_BUS_MASK            0xff00
+#define ACPI_CEDT_RDPAS_DEVICE_MASK         0x00f8
+#define ACPI_CEDT_RDPAS_FUNCTION_MASK       0x0007
+
+#define ACPI_CEDT_RDPAS_PROTOCOL_IO        (0)
+#define ACPI_CEDT_RDPAS_PROTOCOL_CACHEMEM  (1)
+
 /*******************************************************************************
  *
  * CPEP - Corrected Platform Error Polling table (ACPI 4.0)
@@ -499,7 +775,7 @@ typedef struct acpi_csrt_descriptor
  * DBG2 - Debug Port Table 2
  *        Version 0 (Both main table and subtables)
  *
- * Conforms to "Microsoft Debug Port Table 2 (DBG2)", December 10, 2015
+ * Conforms to "Microsoft Debug Port Table 2 (DBG2)", September 21, 2020
  *
  ******************************************************************************/
 
@@ -556,11 +832,24 @@ typedef struct acpi_dbg2_device
 
 #define ACPI_DBG2_16550_COMPATIBLE  0x0000
 #define ACPI_DBG2_16550_SUBSET      0x0001
+#define ACPI_DBG2_MAX311XE_SPI      0x0002
 #define ACPI_DBG2_ARM_PL011         0x0003
+#define ACPI_DBG2_MSM8X60           0x0004
+#define ACPI_DBG2_16550_NVIDIA      0x0005
+#define ACPI_DBG2_TI_OMAP           0x0006
+#define ACPI_DBG2_APM88XXXX         0x0008
+#define ACPI_DBG2_MSM8974           0x0009
+#define ACPI_DBG2_SAM5250           0x000A
+#define ACPI_DBG2_INTEL_USIF        0x000B
+#define ACPI_DBG2_IMX6              0x000C
 #define ACPI_DBG2_ARM_SBSA_32BIT    0x000D
 #define ACPI_DBG2_ARM_SBSA_GENERIC  0x000E
 #define ACPI_DBG2_ARM_DCC           0x000F
 #define ACPI_DBG2_BCM2835           0x0010
+#define ACPI_DBG2_SDM845_1_8432MHZ  0x0011
+#define ACPI_DBG2_16550_WITH_GAS    0x0012
+#define ACPI_DBG2_SDM845_7_372MHZ   0x0013
+#define ACPI_DBG2_INTEL_LPSS        0x0014
 
 #define ACPI_DBG2_1394_STANDARD     0x0000
 
@@ -631,7 +920,8 @@ enum AcpiDmarType
     ACPI_DMAR_TYPE_ROOT_ATS             = 2,
     ACPI_DMAR_TYPE_HARDWARE_AFFINITY    = 3,
     ACPI_DMAR_TYPE_NAMESPACE            = 4,
-    ACPI_DMAR_TYPE_RESERVED             = 5     /* 5 and greater are reserved */
+    ACPI_DMAR_TYPE_SATC                 = 5,
+    ACPI_DMAR_TYPE_RESERVED             = 6     /* 6 and greater are reserved */
 };
 
 
@@ -746,6 +1036,18 @@ typedef struct acpi_dmar_andd
 } ACPI_DMAR_ANDD;
 
 
+/* 5: SoC Integrated Address Translation Cache (SATC)  */
+
+typedef struct acpi_dmar_satc
+{
+    ACPI_DMAR_HEADER        Header;
+    UINT8                   Flags;
+    UINT8                   Reserved;
+    UINT16                  Segment;
+
+} ACPI_DMAR_SATC
+
+;
 /*******************************************************************************
  *
  * DRTM - Dynamic Root of Trust for Measurement table
@@ -1721,7 +2023,8 @@ typedef struct acpi_hmat_locality
     ACPI_HMAT_STRUCTURE     Header;
     UINT8                   Flags;
     UINT8                   DataType;
-    UINT16                  Reserved1;
+    UINT8                   MinTransferSize;
+    UINT8                   Reserved1;
     UINT32                  NumberOfInitiatorPDs;
     UINT32                  NumberOfTargetPDs;
     UINT32                  Reserved2;
@@ -1731,14 +2034,17 @@ typedef struct acpi_hmat_locality
 
 /* Masks for Flags field above */
 
-#define ACPI_HMAT_MEMORY_HIERARCHY  (0x0F)
+#define ACPI_HMAT_MEMORY_HIERARCHY  (0x0F)      /* Bits 0-3 */
 
-/* Values for Memory Hierarchy flag */
+/* Values for Memory Hierarchy flags */
 
 #define ACPI_HMAT_MEMORY            0
 #define ACPI_HMAT_1ST_LEVEL_CACHE   1
 #define ACPI_HMAT_2ND_LEVEL_CACHE   2
 #define ACPI_HMAT_3RD_LEVEL_CACHE   3
+#define ACPI_HMAT_MINIMUM_XFER_SIZE 0x10        /* Bit 4: ACPI 6.4 */
+#define ACPI_HMAT_NON_SEQUENTIAL_XFERS 0x20     /* Bit 5: ACPI 6.4 */
+
 
 /* Values for DataType field above */
 

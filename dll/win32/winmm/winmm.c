@@ -49,7 +49,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 
 HINSTANCE hWinMM32Instance;
 HANDLE psLastEvent;
-HANDLE psStopEvent;
 
 CRITICAL_SECTION WINMM_cs;
 
@@ -59,7 +58,6 @@ CRITICAL_SECTION WINMM_cs;
 static	BOOL	WINMM_CreateIData(HINSTANCE hInstDLL)
 {
     hWinMM32Instance = hInstDLL;
-    psStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     psLastEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     InitializeCriticalSection(&WINMM_cs);
     return TRUE;
@@ -74,7 +72,6 @@ static	void WINMM_DeleteIData(void)
 
     /* FIXME: should also free content and resources allocated
      * inside WINMM_IData */
-    CloseHandle(psStopEvent);
     CloseHandle(psLastEvent);
     DeleteCriticalSection(&WINMM_cs);
 }

@@ -1,6 +1,6 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Teléfono y módem"
     IDS_CPLSYSTEMDESCRIPTION "Establece las reglas de marcado de su teléfono y la configuración del módem."

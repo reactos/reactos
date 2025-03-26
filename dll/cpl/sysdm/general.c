@@ -14,10 +14,10 @@
 #include <winnls.h>
 #include <powrprof.h>
 #include <buildno.h>
-#include <strsafe.h>
 
 #define ANIM_STEP 2
 #define ANIM_TIME 50
+#define ID_SYSUPTIME_UPDATE_TIMER 1
 
 typedef struct _IMGINFO
 {
@@ -28,8 +28,13 @@ typedef struct _IMGINFO
     INT iBits;
 } IMGINFO, *PIMGINFO;
 
+typedef ULONGLONG (WINAPI *PFGETTICKCOUNT64)(VOID);
+
 static PIMGINFO pImgInfo;
 static const BLENDFUNCTION BlendFunc = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+static HMODULE hKernel32Vista = NULL;
+static PFGETTICKCOUNT64 pGetTickCount64 = NULL;
+static WCHAR szUptimeFormat[64];
 
 VOID ShowLastWin32Error(HWND hWndOwner)
 {
@@ -62,12 +67,15 @@ static VOID InitLogo(HWND hwndDlg)
     BITMAP logoBitmap;
     BITMAP maskBitmap;
     BITMAPINFO bmpi;
-    HDC hDC = GetDC(hwndDlg);
-    HDC hDCLogo = CreateCompatibleDC(NULL);
-    HDC hDCMask = CreateCompatibleDC(NULL);
-    HBITMAP hMask, hLogo, hAlphaLogo = NULL;
+    HDC hDC, hDCLogo, hDCMask;
+    HBITMAP hMask = NULL, hLogo = NULL;
+    HBITMAP hAlphaLogo = NULL;
     COLORREF *pBits;
     INT line, column;
+
+    hDC = GetDC(hwndDlg);
+    hDCLogo = CreateCompatibleDC(NULL);
+    hDCMask = CreateCompatibleDC(NULL);
 
     if (hDC == NULL || hDCLogo == NULL || hDCMask == NULL)
         goto Cleanup;
@@ -78,58 +86,58 @@ static VOID InitLogo(HWND hwndDlg)
     hLogo = (HBITMAP)LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_ROSBMP), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     hMask = (HBITMAP)LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-    if (hLogo != NULL && hMask != NULL)
+    if (hLogo == NULL || hMask == NULL)
+        goto Cleanup;
+
+    GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
+    GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
+
+    if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth)
+        goto Cleanup;
+
+    bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
+    bmpi.bmiHeader.biWidth = logoBitmap.bmWidth;
+    bmpi.bmiHeader.biHeight = logoBitmap.bmHeight;
+    bmpi.bmiHeader.biPlanes = 1;
+    bmpi.bmiHeader.biBitCount = 32;
+    bmpi.bmiHeader.biCompression = BI_RGB;
+    bmpi.bmiHeader.biSizeImage = 4 * logoBitmap.bmWidth * logoBitmap.bmHeight;
+
+    /* Create a premultiplied bitmap */
+    hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
+    if (!hAlphaLogo)
+        goto Cleanup;
+
+    SelectObject(hDCLogo, hLogo);
+    SelectObject(hDCMask, hMask);
+
+    for (line = logoBitmap.bmHeight - 1; line >= 0; line--)
     {
-        GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
-        GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
-
-        if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth)
-            goto Cleanup;
-
-        bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
-        bmpi.bmiHeader.biWidth = logoBitmap.bmWidth;
-        bmpi.bmiHeader.biHeight = logoBitmap.bmHeight;
-        bmpi.bmiHeader.biPlanes = 1;
-        bmpi.bmiHeader.biBitCount = 32;
-        bmpi.bmiHeader.biCompression = BI_RGB;
-        bmpi.bmiHeader.biSizeImage = 4 * logoBitmap.bmWidth * logoBitmap.bmHeight;
-
-        /* Create a premultiplied bitmap */
-        hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
-        if (!hAlphaLogo)
-            goto Cleanup;
-
-        SelectObject(hDCLogo, hLogo);
-        SelectObject(hDCMask, hMask);
-
-        for (line = logoBitmap.bmHeight - 1; line >= 0; line--)
+        for (column = 0; column < logoBitmap.bmWidth; column++)
         {
-            for (column = 0; column < logoBitmap.bmWidth; column++)
-            {
-                COLORREF alpha = GetPixel(hDCMask, column, line) & 0xFF;
-                COLORREF Color = GetPixel(hDCLogo, column, line);
-                DWORD r, g, b;
+            COLORREF alpha = GetPixel(hDCMask, column, line) & 0xFF;
+            COLORREF Color = GetPixel(hDCLogo, column, line);
+            DWORD r, g, b;
 
-                r = GetRValue(Color) * alpha / 255;
-                g = GetGValue(Color) * alpha / 255;
-                b = GetBValue(Color) * alpha / 255;
+            r = GetRValue(Color) * alpha / 255;
+            g = GetGValue(Color) * alpha / 255;
+            b = GetBValue(Color) * alpha / 255;
 
-                *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
-            }
+            *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
         }
-
-        pImgInfo->hBitmap = hAlphaLogo;
-        pImgInfo->cxSource = logoBitmap.bmWidth;
-        pImgInfo->cySource = logoBitmap.bmHeight;
-        pImgInfo->iBits = logoBitmap.bmBitsPixel;
-        pImgInfo->iPlanes = logoBitmap.bmPlanes;
     }
+
+    pImgInfo->hBitmap = hAlphaLogo;
+    pImgInfo->cxSource = logoBitmap.bmWidth;
+    pImgInfo->cySource = logoBitmap.bmHeight;
+    pImgInfo->iBits = logoBitmap.bmBitsPixel;
+    pImgInfo->iPlanes = logoBitmap.bmPlanes;
 
 Cleanup:
     if (hMask != NULL) DeleteObject(hMask);
     if (hLogo != NULL) DeleteObject(hLogo);
     if (hDCMask != NULL) DeleteDC(hDCMask);
-    if (hDCLogo != NULL) DeleteDC(hDCLogo);    
+    if (hDCLogo != NULL) DeleteDC(hDCLogo);
     if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 
@@ -145,19 +153,21 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             {
                 if (timerid == 0)
                 {
-                    HDC hCreditsDC, hLogoDC;
-                    HDC hDC = GetDC(NULL);
+                    HDC hDC;
+                    HDC hCreditsDC = NULL, hLogoDC = NULL;
                     HFONT hFont = NULL;
                     NONCLIENTMETRICS ncm;
                     RECT rcCredits;
                     TCHAR szCredits[2048];
                     INT iDevsHeight;
 
+                    hDC = GetDC(NULL);
                     if (hDC == NULL)
                         goto Cleanup;
 
                     top = 0;
                     offset = 0;
+
                     hCreditsDC = CreateCompatibleDC(hDC);
                     hLogoDC = CreateCompatibleDC(hCreditsDC);
 
@@ -180,7 +190,6 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     iDevsHeight = rcCredits.bottom - rcCredits.top;
 
                     hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPlanes, pImgInfo->iBits, NULL);
-
                     if (!hCreditsBitmap)
                         goto Cleanup;
 
@@ -234,11 +243,10 @@ Cleanup:
                 if (hCreditsBitmap != NULL)
                     DeleteObject(hCreditsBitmap);
 
+                InvalidateRect(hwnd, NULL, FALSE);
                 top = 0;
                 timerid = 0;
             }
-            
-            InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_TIMER:
             top += ANIM_STEP;
@@ -404,7 +412,7 @@ static VOID MakeFloatValueString(DOUBLE* dFloatValue, LPTSTR szOutput, LPTSTR sz
     }
 }
 
-static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
+static BOOL SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
     TCHAR szBuf[64], szHz[16];
     DWORD BufSize = sizeof(DWORD);
@@ -424,7 +432,7 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
         {
             if (!LoadString(hApplet, IDS_MEGAHERTZ, szHz, _countof(szHz)))
             {
-                return;
+                return FALSE;
             }
             StringCchPrintf(szBuf, _countof(szBuf), _T("%lu %s"), ppi.CurrentMhz, szHz);
         }
@@ -433,13 +441,16 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
             double flt = ppi.CurrentMhz / 1000.0;
             if (!LoadString(hApplet, IDS_GIGAHERTZ, szHz, _countof(szHz)))
             {
-                return;
+                return FALSE;
             }
             MakeFloatValueString(&flt, szBuf, szHz);
         }
 
         SetDlgItemText(hwnd, uID, szBuf);
+        return TRUE;
     }
+
+    return FALSE;
 }
 
 static VOID GetSystemInformation(HWND hwnd)
@@ -503,8 +514,8 @@ static VOID GetSystemInformation(HWND hwnd)
                                                 CurMachineLine + 1);
         }
 
-        SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine);
-        CurMachineLine++;
+        if (SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine))
+            CurMachineLine++;
         RegCloseKey(hKey);
     }
 
@@ -595,73 +606,85 @@ static VOID GetSystemVersion(HWND hwnd)
     HeapFree(GetProcessHeap(), 0, pwszStr);
 }
 
-ULONGLONG GetSecondsQPC(VOID)
+/**
+ * @brief
+ * An equivalent of GetTickCount64, implemented using QueryPerformanceCounter.
+ *
+ * @return
+ * The number of milliseconds that have elapsed since the system was started.
+ */
+static ULONGLONG GetTickCountQPC(VOID)
 {
     LARGE_INTEGER Counter, Frequency;
 
     QueryPerformanceCounter(&Counter);
     QueryPerformanceFrequency(&Frequency);
 
-    return Counter.QuadPart / Frequency.QuadPart;
+    return (Counter.QuadPart * 1000) / Frequency.QuadPart;
 }
 
-ULONGLONG GetSeconds(VOID)
+static VOID GetSystemUptime(HWND hwndDlg)
 {
-    ULONGLONG (WINAPI * pGetTickCount64)(VOID);
-    ULONGLONG Ticks64;
-    HMODULE hModule = GetModuleHandleW(L"kernel32.dll");
+    HWND hUptimeLabel;
+    ULONGLONG cMilliseconds;
+    ULONG cSeconds;
+    WCHAR szBuf[64];
 
-    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
-    if (pGetTickCount64)
+    hUptimeLabel = GetDlgItem(hwndDlg, IDC_UPTIME);
+    if (!hUptimeLabel)
     {
-        return pGetTickCount64() / 1000;
+        return;
     }
-
-    hModule = LoadLibraryW(L"kernel32_vista.dll");
-
-    if (!hModule)
-    {
-        return GetSecondsQPC();
-    }
-
-    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
 
     if (pGetTickCount64)
     {
-        Ticks64 = pGetTickCount64() / 1000;
+        cMilliseconds = pGetTickCount64();
     }
     else
     {
-        Ticks64 = GetSecondsQPC();
+        cMilliseconds = GetTickCountQPC();
     }
+    
+    cSeconds = cMilliseconds / 1000;
+    StringCchPrintfW(szBuf, _countof(szBuf), szUptimeFormat,
+                     cSeconds / (60*60*24),     // Days
+                     (cSeconds / (60*60)) % 24, // Hours
+                     (cSeconds / 60) % 60,      // Minutes
+                     cSeconds % 60);            // Seconds
+                     
+    SetWindowTextW(hUptimeLabel, szBuf);
 
-    FreeLibrary(hModule);
-    return Ticks64;
+    /* Set update timer (reset timeout if the timer exists) */
+    SetTimer(hwndDlg, ID_SYSUPTIME_UPDATE_TIMER, 1000 - (cMilliseconds % 1000), NULL);
 }
 
-VOID GetSystemUptime(HWND hwnd)
+static VOID InitSystemUptime(HWND hwndDlg)
 {
-    HWND hRosUptime;
-    WCHAR szBuf[64], szStr[64];
-    ULONG cSeconds;
+    HMODULE hKernel32;
 
-    hRosUptime = GetDlgItem(hwnd, IDC_UPTIME);
-    if (!hRosUptime)
+    /* Load time format string */
+    if (LoadStringW(hApplet, IDS_UPTIME_FORMAT, szUptimeFormat, _countof(szUptimeFormat)) == 0)
     {
         return;
     }
-    if (!LoadStringW(hApplet, IDS_UPTIME_FORMAT, szStr, _countof(szStr)))
-    {
-        return;
-    }
-    cSeconds = GetSeconds();
-    StringCchPrintfW(szBuf, _countof(szBuf), szStr,
-                     cSeconds / (60*60*24),
-                     (cSeconds / (60*60)) % 24,
-                     (cSeconds / 60) % 60,
-                     cSeconds % 60);
 
-    SetWindowTextW(hRosUptime, szBuf);
+    /* Load required DLLs */
+    hKernel32 = GetModuleHandleW(L"kernel32.dll");
+    if (hKernel32)
+    {
+        pGetTickCount64 = (PFGETTICKCOUNT64)GetProcAddress(hKernel32, "GetTickCount64");
+        if (!pGetTickCount64)
+        {
+            hKernel32Vista = LoadLibraryW(L"kernel32_vista.dll");
+            if (hKernel32Vista)
+            {
+                pGetTickCount64 = (PFGETTICKCOUNT64)GetProcAddress(hKernel32Vista, "GetTickCount64");
+            }
+        }
+    }
+
+    /* Show system uptime and set update timer */
+    GetSystemUptime(hwndDlg);
 }
 
 /* Property page dialog callback */
@@ -673,6 +696,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             pImgInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMGINFO));
             if (pImgInfo == NULL)
             {
@@ -684,14 +708,36 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWLP_WNDPROC, (LONG_PTR)RosImageProc);
             GetSystemInformation(hwndDlg);
             GetSystemVersion(hwndDlg);
-            GetSystemUptime(hwndDlg);
+            InitSystemUptime(hwndDlg);
             break;
+        }
 
         case WM_DESTROY:
+        {
+            KillTimer(hwndDlg, ID_SYSUPTIME_UPDATE_TIMER);
+
+            if (hKernel32Vista)
+            {
+                FreeLibrary(hKernel32Vista);
+            }
+
             HeapFree(GetProcessHeap(), 0, pImgInfo);
             break;
+        }
+
+        case WM_TIMER:
+        {
+            if (wParam == ID_SYSUPTIME_UPDATE_TIMER)
+            {
+                /* Update system uptime */
+                GetSystemUptime(hwndDlg);
+            }
+
+            break;
+        }
 
         case WM_COMMAND:
+        {
             if (LOWORD(wParam) == IDC_LICENCE)
             {
                 DialogBox(hApplet, MAKEINTRESOURCE(IDD_LICENCE), hwndDlg, LicenceDlgProc);
@@ -699,10 +745,11 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 return TRUE;
             }
             break;
+        }
 
         case WM_DRAWITEM:
         {
-            LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
 
             if (lpDrawItem->CtlID == IDC_ROSIMG)
             {

@@ -1,6 +1,6 @@
 Made by Vicmarcal 23/11/08
 
-THIS FILE HELPS TO EXPLAIN HOW REN IS NOW IMPLEMENTED. 
+THIS FILE HELPS TO EXPLAIN HOW REN IS NOW IMPLEMENTED.
 ****************************************************************
 (Please change or add latest modifications)
 ****************************************************************
@@ -14,7 +14,7 @@ ren c:\ie\hello.txt c:\ie\hi.txt
 rename command will change the name of hello.txt->hi.txt. We have to be sure that both paths(c:\ie\ ) be the same.Since rename cant move files within Directories (MSDN).
 
 WAY #2:Semi Path Way:
-ren c:\ie\hello.txt hi.txt 
+ren c:\ie\hello.txt hi.txt
 
 This is a special feature,since this does the same as Way #1 but without telling the Destiny path.So this feature must be implemented also.
 
@@ -35,7 +35,7 @@ So it changes the name of hello.txt in the current directory.
 Explaining code:
 
 
-srcPattern: here is stored Source Argument (C:\ie\hello.txt) 
+srcPattern: here is stored Source Argument (C:\ie\hello.txt)
 srcPath: here  is  stored Source Path(C:\ie)
 srcFILE: here  is  stored FILE name(hello.txt)
 
@@ -43,7 +43,7 @@ dstPattern: here is stored Destiny Argument (C:\ie\hi.txt)
 dstPath: here  is  stored Destiny Path(C:\i)
 dstFILE: here  is  stored FILE re-name(hi.txt)
 
-1)We begin retrieving arguments from command line and fulfilling dstPattern and srcPattern 
+1)We begin retrieving arguments from command line and fulfilling dstPattern and srcPattern
 
 
 2)If srcPattern contains "\" then:

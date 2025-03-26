@@ -1,13 +1,16 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/pl-PL.rc
- * PURPOSE:    Polish Language resource file
- * TRANSLATOR: Caemyr - Olaf Siejka (May, 2009), Use ReactOS forum PM or IRC to contact me
- * UTF-8 conversion by Caemyr (May, 2011)
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2009 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2017 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2023 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-pl-PL.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -42,6 +45,8 @@ BEGIN
         MENUITEM "&Wytnij\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopiuj\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Wkl&ej\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Wyczyść z&aznaczenie\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Odwróć zaznaczenie", IDM_EDITINVERTSELECTION
         MENUITEM "&Zaznacz wszystko\tCtrl+A", IDM_EDITSELECTALL
@@ -99,6 +104,27 @@ BEGIN
     END
 END
 
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "&Wytnij\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiuj\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Wkl&ej\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Wyczyść z&aznaczenie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Zaznacz wszystko\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Kopiuj &do...", IDM_EDITCOPYTO
+        MENUITEM "Wk&lej z...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "&Przerzuć/Obróć...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Roz&ciągnij/Pochyl...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Odwróć kolory\tCtrl+I", IDM_IMAGEINVERTCOLORS
+    END
+END
+
 ID_ACCELERATORS ACCELERATORS
 BEGIN
     "^N", IDM_FILENEW
@@ -120,6 +146,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -143,23 +173,23 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atrybuty"
 BEGIN
+    LTEXT "&Szerokość:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Wysokość:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "&Szerokość:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "&Wysokość:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
     LTEXT "Data:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Rozmiar:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Rozdzielczość:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Brak danych", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
     LTEXT "Brak danych", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Brak danych", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Jednostki", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "&Cale", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "Centy&metry", IDD_ATTRIBUTESRB2, 52, 69, 55, 10
     AUTORADIOBUTTON "&Piksele", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Kolory", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "Czarno-&biały", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "K&olory", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "K&olory", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 170, 24, 48, 14
     PUSHBUTTON "&Domyślne", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
@@ -192,14 +222,25 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Czcionki"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "Paint dla ReactOS"
     IDS_INFOTEXT "Dostępny na licencji GNU Lesser General Public License (LGPL, www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "Czy chcesz zapisać zmiany do %s?"
-    IDS_DEFAULTFILENAME "bez tytułu.bmp"
+    IDS_SAVEPROMPTTEXT "Czy chcesz zapisać zmiany do pliku %s?"
+    IDS_DEFAULTFILENAME "bez tytułu"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Zaznaczenie dowolne"
     IDS_TOOLTIP2 "Zaznaczenie"
@@ -218,12 +259,20 @@ BEGIN
     IDS_TOOLTIP15 "Elipsa"
     IDS_TOOLTIP16 "Zaokrąglony prostokąt"
     IDS_ALLFILES "Wszystkie pliki"
-    IDS_ALLPICTUREFILES "Wszystkie pliki graficzne"
+    IDS_ALLPICTUREFILES "Wszystkie pliki obrazów"
     IDS_FILESIZE "%d bajtów"
-    IDS_PRINTRES "%d x %d pikseli na metr"
     IDS_INTNUMBERS "Wprowadź liczbę całkowitą."
     IDS_PERCENTAGE "Wprowadź liczbę całkowitą z zakresu od 1 do 500."
     IDS_ANGLE "Wprowadź liczbę całkowitą z zakresu od -89 do 89."
     IDS_LOADERRORTEXT "Plik %s nie może być załadowany."
-    IDS_ENLARGEPROMPTTEXT "Obraz w schowku jest większy niż bitmapa.\nChciałbyś powiększyć bitmapę?"
+    IDS_ENLARGEPROMPTTEXT "Obraz w schowku jest większy niż bitmapa.\nCzy chcesz powiększyć bitmapę?"
+    IDS_BOLD "Pogrubienie"
+    IDS_ITALIC "Kursywa"
+    IDS_UNDERLINE "Podkreślenie"
+    IDS_VERTICAL "Pionowe"
+    IDS_PRINTRES "%d x %d piksel/cm"
+    IDS_CANTPASTE "Nie można wkleić ze schowka. Format danych jest nieprawidłowy lub nieobsługiwany."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

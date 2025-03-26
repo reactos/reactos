@@ -4,7 +4,8 @@ add_definitions(
     -D_URLMON_
     -DENTRY_PREFIX=URLMON_
     -DPROXY_DELEGATION
-    -DWINE_REGISTER_DLL)
+    -DWINE_REGISTER_DLL
+    -DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
@@ -12,12 +13,7 @@ add_rpcproxy_files(urlmon_urlmon.idl)
 
 set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/urlmon.inf)
 set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/urlmon_utf16.inf)
-add_custom_command(
-    OUTPUT "${_converted_file}"
-    COMMAND native-utf16le "${_source_file}" "${_converted_file}"
-    DEPENDS native-utf16le "${_source_file}")
-
-set_source_files_properties(${_converted_file} PROPERTIES GENERATED TRUE)
+utf16le_convert(${_source_file} ${_converted_file})
 set_source_files_properties(urlmon.rc PROPERTIES OBJECT_DEPENDS "${_converted_file}")
 
 list(APPEND SOURCE
@@ -55,7 +51,7 @@ add_library(urlmon MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
 
 set_module_type(urlmon win32dll)
-target_link_libraries(urlmon uuid wine ${PSEH_LIB})
+target_link_libraries(urlmon uuid wine ${PSEH_LIB} oldnames)
 add_delay_importlibs(urlmon advpack)
 add_importlibs(urlmon rpcrt4 propsys ole32 oleaut32 shlwapi shell32 wininet user32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_pch(urlmon precomp.h "${PCH_SKIP_SOURCE}")

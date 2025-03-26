@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
    IDS_APP_TITLE           "Console TaskManager von Aleksey Bragin <aleksey@reactos.org>"
 
@@ -11,7 +11,7 @@ BEGIN
    IDS_COLUMN_PID          "PID  "
    IDS_COLUMN_CPU          "CPU"
    IDS_COLUMN_MEM          "Speicher"
-   IDS_COLUMN_MEM_UNIT		"KB"
+   IDS_COLUMN_MEM_UNIT     "KB"
    IDS_COLUMN_PF           "Seitenfehler"
 
    IDS_IDLE_PROCESS        "Leerlaufprozess"

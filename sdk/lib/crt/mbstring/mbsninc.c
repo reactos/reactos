@@ -2,8 +2,8 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/mbstring/mbsninc.c
- * PURPOSE:     
- * PROGRAMERS:   
+ * PURPOSE:
+ * PROGRAMERS:
   *              Copyright 1999 Alexandre Julliard
  *              Copyright 2000 Jon Griffths
  *

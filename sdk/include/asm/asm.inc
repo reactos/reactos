@@ -172,6 +172,11 @@ ENDM
     .skip size, fill
 ENDM
 
+/* OFFset macro */
+#define OFF(x) offset x
+
+#define lXdtPrefix fword ptr
+
 ljmp MACRO segment, offset
     DB 0EAh
     DD offset
@@ -189,8 +194,23 @@ data32 MACRO opcode:VARARG
     opcode
 ENDM
 
-UNIMPLEMENTED MACRO name
+UNIMPLEMENTED2 MACRO file, line, func
+    jmp UNIMPLEMENTED2_IMPL
+UNIMPLEMENTED_MSG: .ascii "WARNING:  %s at %s:%d is UNIMPLEMENTED!", 10, 0
+UNIMPLEMENTED_FUNC: .ascii "&func&", 0
+UNIMPLEMENTED_FILE: .ascii file, 0
+EXTERN DbgPrint:PROC
+UNIMPLEMENTED2_IMPL:
+    sub rsp, 28h
+    mov r9, line
+    lea r8, UNIMPLEMENTED_FILE
+    lea rdx, UNIMPLEMENTED_FUNC
+    lea rcx, UNIMPLEMENTED_MSG
+    call DbgPrint
+    add rsp, 28h
+    xor eax, eax
 ENDM
+#define UNIMPLEMENTED UNIMPLEMENTED2 __FILE__, __LINE__,
 
 absolute MACRO address
     __absolute__address__ = address
@@ -235,6 +255,9 @@ ENDM
 /* Force intel syntax */
 .intel_syntax noprefix
 
+/* Put dwarf debug info in the .dwarf_debug section, which will be properly stripped */
+.cfi_sections .debug_frame
+
 .altmacro
 
 /* Explicit radix in GAS syntax */
@@ -246,6 +269,10 @@ ENDM
 /* Macro values need to be marked */
 #define VAL(x) \x
 
+#define CR  "\r"
+#define LF  "\n"
+#define NUL "\0"
+
 /* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
 #define MACRO(...) .macro __VA_ARGS__
 #define ENDM .endm
@@ -253,19 +280,22 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
-#ifdef _X86_
-    /* x86 GAS expects a label with _ prefix */
-    _\name:
-#endif
     \name:
+#ifdef _X86_
     .cfi_startproc
-    .equ cfa_current_offset, -8
+#else
+    .seh_proc \name
+#endif
 .endm
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .macro .ENDP
+#ifdef _X86_
     .cfi_endproc
+#else
+    .seh_endproc
+#endif
     .endfunc
 .endm
 #define ENDFUNC .ENDP
@@ -289,18 +319,38 @@ ENDM
 .endm
 
 /* MASM compatible ALIGN */
-#define ALIGN .align
+.macro align x
+    .align x
+.endm
 
 /* MASM compatible REPEAT, additional ENDR */
 #define REPEAT .rept
 #define ENDR .endr
 
+/* OFFset macro */
+#define OFF(x) x
+
+#define lXdtPrefix
+
 .macro ljmp segment, offset
-    jmp far ptr \segment:\offset
+    .byte 0xEA
+    .long offset
+    .word segment
 .endm
 
 .macro ljmp16 segment, offset
-    jmp far ptr \segment:\offset
+    .byte 0xEA
+    .word offset
+    .word segment
+.endm
+
+.macro data32 opcode:vararg
+    .byte 0x66
+    opcode
+.endm
+
+.macro retf
+    lret
 .endm
 
 /* MASM compatible EXTERN */
@@ -308,7 +358,8 @@ ENDM
 .endm
 
 /* MASM needs an END tag */
-#define END
+.macro END
+.endm
 
 .macro .MODEL model
 .endm
@@ -332,45 +383,36 @@ ENDM
 .endm
 
 /* Macros for x64 stack unwind OPs */
-
 .macro .allocstack size
-    .cfi_adjust_cfa_offset \size
-    .set cfa_current_offset, cfa_current_offset - \size
+    .seh_stackalloc \size
 .endm
 
-code = 1
-.macro .pushframe param=0
-    .if (\param)
-        .cfi_adjust_cfa_offset 0x30
-        .set cfa_current_offset, cfa_current_offset - 0x30
-    .else
-        .cfi_adjust_cfa_offset 0x28
-        .set cfa_current_offset, cfa_current_offset - 0x28
-    .endif
+.macro .pushframe param
+    /*
+     * FIXME. .seh_pushframe doesn't accept code argument.
+     * Patch sent.
+     */
+    .seh_pushframe \param
 .endm
 
 .macro .pushreg reg
-    .cfi_adjust_cfa_offset 8
-    .equ cfa_current_offset, cfa_current_offset - 8
-    .cfi_offset \reg, cfa_current_offset
+    .seh_pushreg \reg
 .endm
 
 .macro .savereg reg, offset
-    // checkme!!!
-    .cfi_offset \reg, \offset
+    .seh_savereg \reg, \offset
 .endm
 
 .macro .savexmm128 reg, offset
-    // checkme!!!
-    .cfi_offset \reg, \offset
+    .seh_savexmm \reg, \offset
 .endm
 
 .macro .setframe reg, offset
-    .cfi_def_cfa reg, \offset
-    .equ cfa_current_offset, \offset
+    .seh_setframe \reg, \offset
 .endm
 
 .macro .endprolog
+    .seh_endprologue
 .endm
 
 .macro absolute address
@@ -383,14 +425,15 @@ code = 1
 .endm
 
 .macro UNIMPLEMENTED2 file, line, func
-    jmp 3f
-1:  .asciz "\func"
-2:  .asciz \file
-3:
+    jmp 4f
+1:  .ascii "Unimplemented %s (%s:%d)", CR, LF, NUL
+2:  .asciz "\func"
+3:  .asciz \file
+4:
     sub rsp, 0x20
-    lea rcx, MsgUnimplemented[rip]
-    lea rdx, 1b[rip]
-    lea r8, 2b[rip]
+    lea rcx, 1b[rip]
+    lea rdx, 2b[rip]
+    lea r8, 3b[rip]
     mov r9, \line
     call DbgPrint
     add rsp, 0x20
@@ -403,10 +446,6 @@ code = 1
 #define endif .endif
 #define else .else
 #define elseif .elseif
-
-#define CR  "\r"
-#define LF  "\n"
-#define NUL "\0"
 
 /* CFI annotations */
 #define CFI_STARTPROC .cfi_startproc

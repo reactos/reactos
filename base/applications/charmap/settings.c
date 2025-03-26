@@ -93,7 +93,7 @@ extern void LoadSettings(void)
         lstatus = RegQueryValueEx(hKey, _T("Advanced"), NULL, &type, (LPBYTE)&dwAdvancedChecked, &size);
         if (lstatus == ERROR_SUCCESS && type == REG_DWORD && dwAdvancedChecked != FALSE)
         {
-            SendDlgItemMessage(hCharmapDlg, IDC_CHECK_ADVANCED, BM_CLICK, MF_CHECKED, 0);
+            SendDlgItemMessage(hCharmapDlg, IDC_CHECK_ADVANCED, BM_CLICK, 0, 0);
         }
 
     RegCloseKey(hKey);

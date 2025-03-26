@@ -15,7 +15,7 @@ namespace std
         round_toward_infinity = 2,
         round_toward_neg_infinity = 3
         };
-    
+
     // How to represent denormalized values
     enum float_denorm_style {
         denorm_indeterminate = -1,
@@ -78,7 +78,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<wchar_t>
     {
         static const bool is_specialized = true;
@@ -114,7 +114,7 @@ namespace std
             {return 0;}
         static wchar_t signaling_NaN( ) throw()
             {return 0;}
-        
+
 
         // Information
         static const bool is_exact = true;
@@ -141,7 +141,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<bool>
     {
     public:
@@ -205,7 +205,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<char>
     {
     public:
@@ -270,7 +270,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<signed char>
     {
     public:
@@ -335,7 +335,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<unsigned char>
     {
     public:
@@ -400,7 +400,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<short>
     {
     public:
@@ -465,7 +465,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<unsigned short>
     {
     public:
@@ -530,7 +530,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<int>
     {
     public:
@@ -595,7 +595,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<unsigned int>
     {
     public:
@@ -660,7 +660,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<long>
     {
     public:
@@ -725,7 +725,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<unsigned long>
     {
     public:
@@ -790,7 +790,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<long long>
     {
     public:
@@ -855,7 +855,7 @@ namespace std
         static const float_round_style round_style = round_toward_zero;
         static const bool tinyness_before = false;
     };
-    
+
     template<> class numeric_limits<unsigned long long>
     {
     public:
@@ -989,7 +989,7 @@ namespace std
         static const float_round_style round_style = round_to_nearest;
         static const bool tinyness_before = true;
     };
-    
+
     template<> class numeric_limits<double>
     {
     public:
@@ -1054,7 +1054,7 @@ namespace std
         static const float_round_style round_style = round_to_nearest;
         static const bool tinyness_before = true;
     };
-    
+
     template<> class numeric_limits<long double>
     {
     public:

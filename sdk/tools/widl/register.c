@@ -34,9 +34,7 @@
 #include "parser.h"
 #include "header.h"
 #include "typegen.h"
-#ifndef __REACTOS__
 #include "typelib.h"
-#endif
 
 static int indent;
 
@@ -276,7 +274,6 @@ void write_regscript( const statement_list_t *stmts )
     }
 }
 
-#ifndef __REACTOS__
 void write_typelib_regscript( const statement_list_t *stmts )
 {
     const statement_t *stmt;
@@ -289,17 +286,11 @@ void write_typelib_regscript( const statement_list_t *stmts )
         if (count && !strendswith( typelib_name, ".res" ))
             error( "Cannot store multiple typelibs into %s\n", typelib_name );
         else
-        {
-            if (do_old_typelib)
-                create_sltg_typelib( stmt->u.lib );
-            else
-                create_msft_typelib( stmt->u.lib );
-        }
+            create_msft_typelib( stmt->u.lib );
         count++;
     }
     if (count && strendswith( typelib_name, ".res" )) flush_output_resources( typelib_name );
 }
-#endif
 
 void output_typelib_regscript( const typelib_t *typelib )
 {
@@ -309,9 +300,7 @@ void output_typelib_regscript( const typelib_t *typelib )
     unsigned int version = get_attrv( typelib->attrs, ATTR_VERSION );
     unsigned int flags = 0;
     char id_part[12] = "";
-#ifndef __REACTOS__
     char *resname = typelib_name;
-#endif
     expr_t *expr;
 
     if (is_attr( typelib->attrs, ATTR_RESTRICTED )) flags |= 1; /* LIBFLAG_FRESTRICTED */
@@ -329,17 +318,14 @@ void output_typelib_regscript( const typelib_t *typelib )
              MAJORVERSION(version), MINORVERSION(version), descr ? descr : typelib->name );
     put_str( indent++, "{\n" );
     expr = get_attrp( typelib->attrs, ATTR_ID );
-#ifdef __REACTOS__
-    if (expr)
-        sprintf(id_part, "\\%d", expr->cval);
-#else
     if (expr)
     {
         sprintf(id_part, "\\%d", expr->cval);
+#ifndef __REACTOS__
         resname = xmalloc( strlen(typelib_name) + 20 );
         sprintf(resname, "%s\\%d", typelib_name, expr->cval);
-    }
 #endif
+    }
     put_str( indent, "'%x' { %s = s '%%MODULE%%%s' }\n",
              lcid_expr ? lcid_expr->cval : 0, pointer_size == 8 ? "win64" : "win32", id_part );
     put_str( indent, "FLAGS = s '%u'\n", flags );
@@ -359,9 +345,6 @@ void output_typelib_regscript( const typelib_t *typelib )
 
     write_progids( typelib->stmts );
     put_str( --indent, "}\n" );
-#ifdef __REACTOS__
-    add_output_to_resources( "WINE_REGISTRY", typelib_name );
-#else
+
     add_output_to_resources( "WINE_REGISTRY", resname );
-#endif
 }

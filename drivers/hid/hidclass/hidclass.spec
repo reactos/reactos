@@ -1,4 +1,4 @@
-@ stdcall -private DllInitialize(long)
+@ stdcall -private DllInitialize(ptr)
 @ stdcall -private DllUnload()
 @ stdcall HidRegisterMinidriver(ptr)
 

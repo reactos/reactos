@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/guiterm.h
  * PURPOSE:         GUI Terminal Front-End
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     GÃ© van Geldorp
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -65,11 +65,16 @@ GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
 /* conwnd.c */
 
 BOOL
-InitFonts(PGUI_CONSOLE_DATA GuiData,
-          LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements.
-          ULONG  FontFamily,
-          COORD  FontSize,
-          ULONG  FontWeight);
+InitFonts(
+    _Inout_ PGUI_CONSOLE_DATA GuiData,
+    _In_reads_or_z_(LF_FACESIZE)
+         PCWSTR FaceName,
+    _In_ ULONG FontWeight,
+    _In_ ULONG FontFamily,
+    _In_ COORD FontSize,
+    _In_opt_ UINT CodePage,
+    _In_ BOOL UseDefaultFallback);
+
 VOID
 DeleteFonts(PGUI_CONSOLE_DATA GuiData);
 

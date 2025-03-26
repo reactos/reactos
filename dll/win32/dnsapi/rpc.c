@@ -16,7 +16,7 @@ DNSRSLVR_HANDLE_bind(DNSRSLVR_HANDLE pszMachineName)
     LPWSTR pszStringBinding;
     RPC_STATUS Status;
 
-    DPRINT1("DNSRSLVR_HANDLE_bind(%S)\n", pszMachineName);
+    DPRINT("DNSRSLVR_HANDLE_bind(%S)\n", pszMachineName);
 
     Status = RpcStringBindingComposeW(NULL,
                                       L"ncalrpc",

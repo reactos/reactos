@@ -615,7 +615,7 @@ NtGdiResizePalette(
     XLATEOBJ *NewXlateObj = (int*) HeapReAlloc(GetProcessHeap(), 0, XlateObj, cEntries * sizeof(int));
     if(NewXlateObj == NULL)
     {
-      ERR("Can not resize logicalToSystem -- out of memory!");
+      ERR("Can not resize logicalToSystem -- out of memory!\n");
       GDI_ReleaseObj( hPal );
       return FALSE;
     }
@@ -730,7 +730,7 @@ UINT
 FASTCALL
 IntGdiRealizePalette(HDC hDC)
 {
-    UINT i, realize = 0;
+    UINT realize = 0;
     PDC pdc;
     PALETTE *ppalSurf, *ppalDC;
 
@@ -769,13 +769,8 @@ IntGdiRealizePalette(HDC hDC)
 
     ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
-    // FIXME: Should we resize ppalSurf if it's too small?
-    realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
-
-    for (i=0; i<realize; i++)
-    {
-        InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
-    }
+    DPRINT1("RealizePalette unimplemented for %s\n", 
+            (pdc->dctype == DCTYPE_MEMORY ? "memory managed DCs" : "device DCs"));
 
 cleanup:
     DC_UnlockDc(pdc);
@@ -966,7 +961,7 @@ IntSetPaletteEntries(
     PPALETTE palGDI;
     ULONG numEntries;
 
-    if ((UINT_PTR)hpal & GDI_HANDLE_STOCK_MASK)
+    if (GDI_HANDLE_IS_STOCKOBJ(hpal))
     {
     	return 0;
     }
@@ -1250,7 +1245,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    PPALETTE palGDI;
 
    if ( !hgdiobj ||
-        ((UINT_PTR)hgdiobj & GDI_HANDLE_STOCK_MASK) ||
+        GDI_HANDLE_IS_STOCKOBJ(hgdiobj) ||
         !GDI_HANDLE_IS_TYPE(hgdiobj, GDI_OBJECT_TYPE_PALETTE) )
       return Ret;
 

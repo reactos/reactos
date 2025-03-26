@@ -1,4 +1,9 @@
-/* Greek translation by Apostolos Alexiadis */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Greek resource file
+ * TRANSLATORS: Copyright 2007 Apostolos Alexiadis
+ */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
@@ -16,7 +21,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Έ&ξοδος", IDM_EXIT
     END
-    POPUP "&Εμφάνιση"
+    POPUP "&Εμφάνιση"//FIXME: accelerator collision &E
     BEGIN
         MENUITEM "&Newest first", IDM_LIST_NEWEST
         MENUITEM "&Oldest first", IDM_LIST_OLDEST
@@ -25,7 +30,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ανανέωση\tF5", IDM_REFRESH
     END
-    POPUP "&Επιλογές"
+    POPUP "&Επιλογές"//FIXME: accelerator collision &E
     BEGIN
         MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
         MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
@@ -37,6 +42,19 @@ BEGIN
         MENUITEM "Βο&ήθεια", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Περί", IDM_ABOUT
+    END
+END
+
+IDM_EVENTWR_CTX MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM SEPARATOR
+        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
+        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -87,9 +105,9 @@ BEGIN
     LTEXT "&Περιγραφή:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "Δ&εδομένα:", IDC_DETAILS_STATIC, 8, 140, 20, 8
-    CONTROL "&Bytes", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
-    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
+    LTEXT "Δ&εδομένα:", IDC_DETAILS_STATIC, 8, 140, 40, 8
+    AUTORADIOBUTTON "&Bytes", IDC_BYTESRADIO, 49, 140, 34, 8
+    AUTORADIOBUTTON "&Word", IDC_WORDRADIO, 87, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -104,13 +122,16 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "&Size:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "&Created:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Modifi&ed:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "&Accessed:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
     LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
@@ -119,13 +140,13 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
     LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    AUTORADIOBUTTON "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
+    AUTORADIOBUTTON "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
@@ -146,6 +167,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer.\n\nThe following information is part of the event:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -153,13 +176,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "ReactOS Event Viewer\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [computer name] [/L:<event log file>] [/?]\n\
 \n\
 ""computer name"" : Specifies the remote computer where to connect\n\
 \tto retrieve the events to display. If no name is specified, the\n\
 \tlocal computer is used.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
+/L:<event log file> : Specifies which event log file to open.\n\
 \tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
 \n\
 /? : Displays this help message.\n\
@@ -198,7 +221,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
+    IDS_COPY "\
+Event Type:     %s\r\n\
 Event Source:   %s\r\n\
 Event Category: %s\r\n\
 Event ID:       %s\r\n\

@@ -336,9 +336,9 @@ int ros_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chann
 static char *get_temp_buffer( size_t size )
 {
     static char *list[32];
-    static int pos;
+    static long pos = 0;
     char *ret;
-    int idx;
+    long idx;
 
     idx = interlocked_xchg_add( &pos, 1 ) % (sizeof(list)/sizeof(list[0]));
     if ((ret = realloc( list[idx], size ))) list[idx] = ret;

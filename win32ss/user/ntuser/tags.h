@@ -71,6 +71,7 @@
 #define GDITAG_DC_FREELIST               'fcdG'
 #define GDITAG_DWMSTATE                  'scDG'
 #define GDITAG_DEVMODE                   'vedG'
+#define GDITAG_MDEV                      'vdmG'
 #define GDITAG_PDEV                      'veDG'
 #define GDITAG_HGLYPH_ARRAY              'mfdG'
 #define GDITAG_DRVSUP                    'srdG'

@@ -12,20 +12,6 @@
 
 #include "winlogon.h"
 
-#define DESKTOP_ALL (DESKTOP_READOBJECTS | DESKTOP_CREATEWINDOW | \
-    DESKTOP_CREATEMENU | DESKTOP_HOOKCONTROL | DESKTOP_JOURNALRECORD | \
-    DESKTOP_JOURNALPLAYBACK | DESKTOP_ENUMERATE | DESKTOP_WRITEOBJECTS | \
-    DESKTOP_SWITCHDESKTOP | STANDARD_RIGHTS_REQUIRED)
-
-#define WINSTA_ALL (WINSTA_ENUMDESKTOPS | WINSTA_READATTRIBUTES | \
-    WINSTA_ACCESSCLIPBOARD | WINSTA_CREATEDESKTOP | \
-    WINSTA_WRITEATTRIBUTES | WINSTA_ACCESSGLOBALATOMS | \
-    WINSTA_EXITWINDOWS | WINSTA_ENUMERATE | WINSTA_READSCREEN | \
-    STANDARD_RIGHTS_REQUIRED)
-
-#define GENERIC_ACCESS (GENERIC_READ | GENERIC_WRITE | \
-    GENERIC_EXECUTE | GENERIC_ALL)
-
 typedef struct _DIALOG_LIST_ENTRY
 {
     LIST_ENTRY Entry;
@@ -939,292 +925,58 @@ GinaInit(
 }
 
 BOOL
-AddAceToWindowStation(
-    IN HWINSTA WinSta,
-    IN PSID Sid)
-{
-    DWORD AclSize;
-    SECURITY_INFORMATION SecurityInformation;
-    PACL pDefaultAcl = NULL;
-    PSECURITY_DESCRIPTOR WinstaSd = NULL;
-    PACCESS_ALLOWED_ACE Ace = NULL;
-    BOOL Ret = FALSE;
-
-    /* Allocate space for an ACL */
-    AclSize = sizeof(ACL)
-        + 2 * (FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + GetLengthSid(Sid));
-    pDefaultAcl = HeapAlloc(GetProcessHeap(), 0, AclSize);
-    if (!pDefaultAcl)
-    {
-        ERR("WL: HeapAlloc() failed\n");
-        goto cleanup;
-    }
-
-    /* Initialize it */
-    if (!InitializeAcl(pDefaultAcl, AclSize, ACL_REVISION))
-    {
-        ERR("WL: InitializeAcl() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Initialize new security descriptor */
-    WinstaSd = HeapAlloc(GetProcessHeap(), 0, SECURITY_DESCRIPTOR_MIN_LENGTH);
-    if (!InitializeSecurityDescriptor(WinstaSd, SECURITY_DESCRIPTOR_REVISION))
-    {
-        ERR("WL: InitializeSecurityDescriptor() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Allocate memory for access allowed ACE */
-    Ace = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ACCESS_ALLOWED_ACE)+
-        GetLengthSid(Sid) - sizeof(DWORD));
-
-    /* Create the first ACE for the window station */
-    Ace->Header.AceType = ACCESS_ALLOWED_ACE_TYPE;
-    Ace->Header.AceFlags = CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE;
-    Ace->Header.AceSize = sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(Sid) - sizeof(DWORD);
-    Ace->Mask = GENERIC_ACCESS;
-
-    /* Copy the sid */
-    if (!CopySid(GetLengthSid(Sid), &Ace->SidStart, Sid))
-    {
-        ERR("WL: CopySid() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Add the first ACE */
-    if (!AddAce(pDefaultAcl, ACL_REVISION, MAXDWORD, (LPVOID)Ace, Ace->Header.AceSize))
-    {
-        ERR("WL: AddAce() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Add the second ACE to the end of ACL */
-    Ace->Header.AceFlags = NO_PROPAGATE_INHERIT_ACE;
-    Ace->Mask = WINSTA_ALL;
-    if (!AddAce(pDefaultAcl, ACL_REVISION, MAXDWORD, (LPVOID)Ace, Ace->Header.AceSize))
-    {
-        ERR("WL: AddAce() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Add ACL to winsta's security descriptor */
-    if (!SetSecurityDescriptorDacl(WinstaSd, TRUE, pDefaultAcl, FALSE))
-    {
-        ERR("WL: SetSecurityDescriptorDacl() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Apply security to the window station */
-    SecurityInformation = DACL_SECURITY_INFORMATION;
-    if (!SetUserObjectSecurity(WinSta, &SecurityInformation, WinstaSd))
-    {
-        ERR("WL: SetUserObjectSecurity() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Indicate success */
-    Ret = TRUE;
-
-cleanup:
-    /* Free allocated stuff */
-    if (pDefaultAcl) HeapFree(GetProcessHeap(), 0, pDefaultAcl);
-    if (WinstaSd) HeapFree(GetProcessHeap(), 0, WinstaSd);
-    if (Ace) HeapFree(GetProcessHeap(), 0, Ace);
-
-    return Ret;
-}
-
-BOOL
-AddAceToDesktop(
-    IN HDESK Desktop,
-    IN PSID WinlogonSid,
-    IN PSID UserSid)
-{
-    DWORD AclSize;
-    SECURITY_INFORMATION SecurityInformation;
-    PACL Acl = NULL;
-    PSECURITY_DESCRIPTOR DesktopSd = NULL;
-    BOOL Ret = FALSE;
-
-    /* Allocate ACL */
-    AclSize = sizeof(ACL)
-        + FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + GetLengthSid(WinlogonSid);
-
-    /* Take user's sid into account */
-    if (UserSid)
-        AclSize += FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + GetLengthSid(UserSid);
-
-    Acl = HeapAlloc(GetProcessHeap(), 0, AclSize);
-    if (!Acl)
-    {
-        ERR("WL: HeapAlloc() failed\n");
-        goto cleanup;
-    }
-
-    /* Initialize ACL */
-    if (!InitializeAcl(Acl, AclSize, ACL_REVISION))
-    {
-        ERR("WL: InitializeAcl() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Add full desktop access ACE for winlogon */
-    if (!AddAccessAllowedAce(Acl, ACL_REVISION, DESKTOP_ALL, WinlogonSid))
-    {
-        ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Add full desktop access ACE for a user (if provided) */
-    if (UserSid && !AddAccessAllowedAce(Acl, ACL_REVISION, DESKTOP_ALL, UserSid))
-    {
-        ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Initialize new security descriptor */
-    DesktopSd = HeapAlloc(GetProcessHeap(), 0, SECURITY_DESCRIPTOR_MIN_LENGTH);
-    if (!InitializeSecurityDescriptor(DesktopSd, SECURITY_DESCRIPTOR_REVISION))
-    {
-        ERR("WL: InitializeSecurityDescriptor() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Add ACL to the security descriptor */
-    if (!SetSecurityDescriptorDacl(DesktopSd, TRUE, Acl, FALSE))
-    {
-        ERR("WL: SetSecurityDescriptorDacl() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Apply security to the window station */
-    SecurityInformation = DACL_SECURITY_INFORMATION;
-    if (!SetUserObjectSecurity(Desktop, &SecurityInformation, DesktopSd))
-    {
-        ERR("WL: SetUserObjectSecurity() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /* Indicate success */
-    Ret = TRUE;
-
-cleanup:
-    /* Free allocated stuff */
-    if (Acl) HeapFree(GetProcessHeap(), 0, Acl);
-    if (DesktopSd) HeapFree(GetProcessHeap(), 0, DesktopSd);
-
-    return Ret;
-}
-
-BOOL
 CreateWindowStationAndDesktops(
-    IN OUT PWLSESSION Session)
+    _Inout_ PWLSESSION Session)
 {
-    BYTE LocalSystemBuffer[SECURITY_MAX_SID_SIZE];
-    BYTE InteractiveBuffer[SECURITY_MAX_SID_SIZE];
-    PSID pLocalSystemSid = (PSID)&LocalSystemBuffer;
-    PSID pInteractiveSid = (PSID)InteractiveBuffer;
-    DWORD SidSize, AclSize;
-    PACL pDefaultAcl = NULL;
-    PACL pUserDesktopAcl = NULL;
-    SECURITY_DESCRIPTOR DefaultSecurityDescriptor;
-    SECURITY_ATTRIBUTES DefaultSecurity;
-    SECURITY_DESCRIPTOR UserDesktopSecurityDescriptor;
-    SECURITY_ATTRIBUTES UserDesktopSecurity;
+    SECURITY_ATTRIBUTES WinstaSecurity;
+    SECURITY_ATTRIBUTES ApplicationDesktopSecurity;
+    SECURITY_ATTRIBUTES WinlogonDesktopSecurity;
+    SECURITY_ATTRIBUTES ScreenSaverDesktopSecurity;
+    PSECURITY_DESCRIPTOR WlWinstaSecurityDescriptor;
+    PSECURITY_DESCRIPTOR WlApplicationDesktopSecurityDescriptor;
+    PSECURITY_DESCRIPTOR WlWinlogonDesktopSecurityDescriptor;
+    PSECURITY_DESCRIPTOR WlScreenSaverDesktopSecurityDescriptor;
     BOOL ret = FALSE;
 
-    /*
-     * Prepare information for ACLs we will apply
-     */
-    SidSize = SECURITY_MAX_SID_SIZE;
-    if (!CreateWellKnownSid(WinLocalSystemSid, NULL, pLocalSystemSid, &SidSize))
+    if (!CreateWinstaSecurity(&WlWinstaSecurityDescriptor))
     {
-        ERR("WL: CreateWellKnownSid() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-    SidSize = SECURITY_MAX_SID_SIZE;
-    if (!CreateWellKnownSid(WinInteractiveSid, NULL, pInteractiveSid, &SidSize))
-    {
-        ERR("WL: CreateWellKnownSid() failed (error %lu)\n", GetLastError());
-        goto cleanup;
+        ERR("WL: Failed to create winsta security!\n");
+        return ret;
     }
 
-    AclSize = sizeof(ACL)
-        + FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + GetLengthSid(pLocalSystemSid)
-        + FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + GetLengthSid(pInteractiveSid);
-    pDefaultAcl = HeapAlloc(GetProcessHeap(), 0, AclSize);
-    pUserDesktopAcl = HeapAlloc(GetProcessHeap(), 0, AclSize);
-    if (!pDefaultAcl || !pUserDesktopAcl)
+    WinstaSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
+    WinstaSecurity.lpSecurityDescriptor = WlWinstaSecurityDescriptor;
+    WinstaSecurity.bInheritHandle = TRUE;
+
+    if (!CreateApplicationDesktopSecurity(&WlApplicationDesktopSecurityDescriptor))
     {
-        ERR("WL: HeapAlloc() failed\n");
+        ERR("WL: Failed to create application desktop security!\n");
         goto cleanup;
     }
 
-    if (!InitializeAcl(pDefaultAcl, AclSize, ACL_REVISION)
-     || !InitializeAcl(pUserDesktopAcl, AclSize, ACL_REVISION))
+    ApplicationDesktopSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
+    ApplicationDesktopSecurity.lpSecurityDescriptor = WlApplicationDesktopSecurityDescriptor;
+    ApplicationDesktopSecurity.bInheritHandle = TRUE;
+
+    if (!CreateWinlogonDesktopSecurity(&WlWinlogonDesktopSecurityDescriptor))
     {
-        ERR("WL: InitializeAcl() failed (error %lu)\n", GetLastError());
+        ERR("WL: Failed to create winlogon desktop security!\n");
         goto cleanup;
     }
 
-    /*
-     * Create default ACL (window station, winlogon desktop, screen saver desktop)
-     */
-    if (!AddAccessAllowedAce(pDefaultAcl, ACL_REVISION, GENERIC_ALL, pLocalSystemSid)
-     || !AddAccessAllowedAce(pDefaultAcl, ACL_REVISION, GENERIC_READ, pInteractiveSid))
+    WinlogonDesktopSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
+    WinlogonDesktopSecurity.lpSecurityDescriptor = WlWinlogonDesktopSecurityDescriptor;
+    WinlogonDesktopSecurity.bInheritHandle = FALSE;
+
+    if (!CreateScreenSaverSecurity(&WlScreenSaverDesktopSecurityDescriptor))
     {
-        ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
+        ERR("WL: Failed to create winlogon desktop security!\n");
         goto cleanup;
     }
 
-    /*
-     * Create the default security descriptor
-     */
-    if (!InitializeSecurityDescriptor(&DefaultSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
-    {
-        ERR("WL: InitializeSecurityDescriptor() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    if (!SetSecurityDescriptorDacl(&DefaultSecurityDescriptor, TRUE, pDefaultAcl, FALSE))
-    {
-        ERR("WL: SetSecurityDescriptorDacl() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    DefaultSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
-    DefaultSecurity.lpSecurityDescriptor = &DefaultSecurityDescriptor;
-    DefaultSecurity.bInheritHandle = TRUE;
-
-    /*
-     * Create user desktop ACL
-     */
-    if (!AddAccessAllowedAce(pUserDesktopAcl, ACL_REVISION, GENERIC_ALL, pLocalSystemSid)
-     || !AddAccessAllowedAce(pUserDesktopAcl, ACL_REVISION, GENERIC_ALL, pInteractiveSid))
-    {
-        ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    /*
-     * Create the user desktop security descriptor
-     */
-    if (!InitializeSecurityDescriptor(&UserDesktopSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
-    {
-        ERR("WL: InitializeSecurityDescriptor() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    if (!SetSecurityDescriptorDacl(&UserDesktopSecurityDescriptor, TRUE, pUserDesktopAcl, FALSE))
-    {
-        ERR("WL: SetSecurityDescriptorDacl() failed (error %lu)\n", GetLastError());
-        goto cleanup;
-    }
-
-    UserDesktopSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
-    UserDesktopSecurity.lpSecurityDescriptor = &UserDesktopSecurityDescriptor;
-    UserDesktopSecurity.bInheritHandle = TRUE;
+    ScreenSaverDesktopSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
+    ScreenSaverDesktopSecurity.lpSecurityDescriptor = WlScreenSaverDesktopSecurityDescriptor;
+    ScreenSaverDesktopSecurity.bInheritHandle = TRUE;
 
     /*
      * Create the interactive window station
@@ -1234,12 +986,13 @@ CreateWindowStationAndDesktops(
         Session->InteractiveWindowStationName,
         0,
         MAXIMUM_ALLOWED,
-        &DefaultSecurity);
+        &WinstaSecurity);
     if (!Session->InteractiveWindowStation)
     {
         ERR("WL: Failed to create window station (%lu)\n", GetLastError());
         goto cleanup;
     }
+
     if (!SetProcessWindowStation(Session->InteractiveWindowStation))
     {
         ERR("WL: SetProcessWindowStation() failed (error %lu)\n", GetLastError());
@@ -1255,7 +1008,7 @@ CreateWindowStationAndDesktops(
         NULL,
         0, /* FIXME: Add DF_ALLOWOTHERACCOUNTHOOK flag? */
         MAXIMUM_ALLOWED,
-        &UserDesktopSecurity);
+        &ApplicationDesktopSecurity);
     if (!Session->ApplicationDesktop)
     {
         ERR("WL: Failed to create Default desktop (%lu)\n", GetLastError());
@@ -1271,7 +1024,7 @@ CreateWindowStationAndDesktops(
         NULL,
         0,
         MAXIMUM_ALLOWED,
-        &DefaultSecurity); // FIXME: Must use restricted Winlogon-only security!!
+        &WinlogonDesktopSecurity);
     if (!Session->WinlogonDesktop)
     {
         ERR("WL: Failed to create Winlogon desktop (%lu)\n", GetLastError());
@@ -1287,7 +1040,7 @@ CreateWindowStationAndDesktops(
         NULL,
         0,
         MAXIMUM_ALLOWED,
-        &DefaultSecurity);
+        &ScreenSaverDesktopSecurity);
     if(!Session->ScreenSaverDesktop)
     {
         ERR("WL: Failed to create Screen-Saver desktop (%lu)\n", GetLastError());
@@ -1332,8 +1085,23 @@ cleanup:
             CloseWindowStation(Session->InteractiveWindowStation);
             Session->InteractiveWindowStation = NULL;
         }
+        if (WlWinstaSecurityDescriptor)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinstaSecurityDescriptor);
+        }
+        if (WlApplicationDesktopSecurityDescriptor)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, WlApplicationDesktopSecurityDescriptor);
+        }
+        if (WlWinlogonDesktopSecurityDescriptor)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinlogonDesktopSecurityDescriptor);
+        }
+        if (WlScreenSaverDesktopSecurityDescriptor)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, WlScreenSaverDesktopSecurityDescriptor);
+        }
     }
-    HeapFree(GetProcessHeap(), 0, pDefaultAcl);
-    HeapFree(GetProcessHeap(), 0, pUserDesktopAcl);
+
     return ret;
 }

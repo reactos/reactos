@@ -7,11 +7,11 @@
 *
 * File: Sys_Spec.cpp
 *
-* Module: UDF File System Driver 
+* Module: UDF File System Driver
 * (both User and Kernel mode execution)
 *
 * Description:
-*   Contains system-secific code 
+*   Contains system-secific code
 *
 *************************************************************************/
 

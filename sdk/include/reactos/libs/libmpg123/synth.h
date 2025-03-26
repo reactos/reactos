@@ -1,5 +1,5 @@
 /*
-	synth.h: generic synth functions 
+	synth.h: generic synth functions
 
 	copyright 1995-2008 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
@@ -34,7 +34,7 @@ int SYNTH_NAME(real *bandPtr, int channel, mpg123_handle *fr, int final)
 	SAMPLE_T *samples = (SAMPLE_T *) (fr->buffer.data + fr->buffer.fill);
 
 	real *b0, **buf; /* (*buf)[0x110]; */
-	int clip = 0; 
+	int clip = 0;
 	int bo1;
 #ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);

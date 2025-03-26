@@ -75,7 +75,6 @@ BOOL bEcho = TRUE;  /* The echo flag */
 /* Buffer for reading Batch file lines */
 TCHAR textline[BATCH_BUFFSIZE];
 
-
 /*
  * Returns a pointer to the n'th parameter of the current batch file.
  * If no such parameter exists returns pointer to empty string.
@@ -338,10 +337,11 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
      */
     bTopLevel = !bc;
 
-    if (bc != NULL && Cmd == bc->current)
+    if (bc && Cmd == bc->current)
     {
         /* Then we are transferring to another batch */
-        ClearBatch();
+        if (!bSameFn)
+            ClearBatch();
         AddBatchRedirection(&Cmd->Redirections);
     }
     else
@@ -409,17 +409,10 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     /* Perform top-level batch initialization */
     if (bTopLevel)
     {
-        TCHAR *dot;
-
-        /* Default the top-level batch context type to .BAT */
-        BatType = BAT_TYPE;
-
-        /* If this is a .CMD file, adjust the type */
-        dot = _tcsrchr(bc->BatchFilePath, _T('.'));
-        if (dot && (!_tcsicmp(dot, _T(".cmd"))))
-        {
-            BatType = CMD_TYPE;
-        }
+        /* Default the top-level batch context type
+         * to .BAT, unless this is a .CMD file */
+        PTCHAR dotext = _tcsrchr(bc->BatchFilePath, _T('.'));
+        BatType = (dotext && (!_tcsicmp(dotext, _T(".cmd")))) ? CMD_TYPE : BAT_TYPE;
 
 #ifdef MSCMD_BATCH_ECHO
         bBcEcho = bEcho;
@@ -527,47 +520,31 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
  */
 BOOL BatchGetString(LPTSTR lpBuffer, INT nBufferLength)
 {
-    LPSTR lpString;
     INT len = 0;
-#ifdef _UNICODE
-    lpString = cmd_alloc(nBufferLength);
-    if (!lpString)
-    {
-        WARN("Cannot allocate memory for lpString\n");
-        error_out_of_memory();
-        return FALSE;
-    }
-#else
-    lpString = lpBuffer;
-#endif
+
     /* read all chars from memory until a '\n' is encountered */
     if (bc->mem)
     {
-        for (; (bc->mempos < bc->memsize  &&  len < (nBufferLength-1)); len++)
-        { 
-            lpString[len] = bc->mem[bc->mempos++];
-            if (lpString[len] == '\n' )
+        for (; ((bc->mempos + len) < bc->memsize  &&  len < (nBufferLength-1)); len++)
+        {
+#ifndef _UNICODE
+            lpBuffer[len] = bc->mem[bc->mempos + len];
+#endif
+            if (bc->mem[bc->mempos + len] == '\n')
             {
                 len++;
                 break;
             }
         }
+#ifdef _UNICODE
+        nBufferLength = MultiByteToWideChar(OutputCodePage, 0, &bc->mem[bc->mempos], len, lpBuffer, nBufferLength);
+        lpBuffer[nBufferLength] = L'\0';
+        lpBuffer[len] = '\0';
+#endif
+        bc->mempos += len;
     }
 
-    if (!len)
-    {
-#ifdef _UNICODE
-        cmd_free(lpString);
-#endif
-        return FALSE;
-    }
-
-    lpString[len++] = '\0';
-#ifdef _UNICODE
-    MultiByteToWideChar(OutputCodePage, 0, lpString, -1, lpBuffer, len);
-    cmd_free(lpString);
-#endif
-    return TRUE;
+    return len != 0;
 }
 
 /*

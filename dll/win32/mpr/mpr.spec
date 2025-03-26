@@ -23,6 +23,7 @@
 24 stdcall @(ptr) MPR_Free
 25 stdcall @(ptr long) _MPR_25
 
+@ stub I_MprSaveConn
 @ stdcall MultinetGetConnectionPerformanceA(ptr ptr)
 @ stdcall MultinetGetConnectionPerformanceW(ptr ptr)
 @ stdcall MultinetGetErrorTextA(long long long)
@@ -44,6 +45,7 @@
 @ stdcall PwdGetPasswordStatusW(wstr long ptr)
 @ stdcall PwdSetPasswordStatusA(str long long)
 @ stdcall PwdSetPasswordStatusW(wstr long long)
+@ stub RestoreConnectionA0
 @ stdcall WNetAddConnection2A(ptr str str long)
 @ stdcall WNetAddConnection2W(ptr wstr wstr long)
 @ stdcall WNetAddConnection3A(long ptr str str long)
@@ -55,14 +57,18 @@
 @ stdcall WNetCancelConnection2W(wstr long long)
 @ stdcall WNetCancelConnectionA(str long)
 @ stdcall WNetCancelConnectionW(wstr long)
-@ stdcall WNetClearConnections(long)
+@ stdcall WNetClearConnections(ptr)
 @ stdcall WNetCloseEnum(long)
 @ stdcall WNetConnectionDialog1A(ptr)
 @ stdcall WNetConnectionDialog1W(ptr)
 @ stdcall WNetConnectionDialog(long long)
+@ stub WNetConnectionDialog2 # (ptr long wstr long)
+@ stub WNetDirectoryNotifyA
+@ stub WNetDirectoryNotifyW # (ptr wstr long)
 @ stdcall WNetDisconnectDialog1A(ptr)
 @ stdcall WNetDisconnectDialog1W(ptr)
 @ stdcall WNetDisconnectDialog(long long)
+@ stub WNetDisconnectDialog2 # (ptr long wstr long)
 @ stdcall WNetEnumCachedPasswords(str long long ptr long)
 @ stdcall WNetEnumResourceA(long ptr ptr ptr)
 @ stdcall WNetEnumResourceW(long ptr ptr ptr)
@@ -70,11 +76,16 @@
 @ stub WNetFMXGetPermCaps
 @ stub WNetFMXGetPermHelp
 @ stub WNetFormatNetworkNameA
-@ stub WNetFormatNetworkNameW
+@ stub WNetFormatNetworkNameW # (wstr wstr ptr ptr long long)
 @ stdcall WNetGetCachedPassword(ptr long ptr ptr long)
+@ stub WNetGetConnection2A
+@ stub WNetGetConnection2W # (wstr ptr ptr)
+@ stub WNetGetConnection3A
+@ stub WNetGetConnection3W
 @ stdcall WNetGetConnectionA(str ptr ptr)
 @ stdcall WNetGetConnectionW(wstr ptr ptr)
-@ stub WNetGetDirectoryTypeA
+@ stdcall -stub WNetGetDirectoryTypeA(str ptr long)
+@ stdcall -stub WNetGetDirectoryTypeW(wstr ptr long)
 @ stub WNetGetHomeDirectoryA
 @ stub WNetGetHomeDirectoryW
 @ stdcall WNetGetLastErrorA(ptr ptr long ptr long)
@@ -82,12 +93,16 @@
 @ stdcall WNetGetNetworkInformationA(str ptr)
 @ stdcall WNetGetNetworkInformationW(wstr ptr)
 @ stub WNetGetPropertyTextA
+@ stub WNetGetPropertyTextW # (long long wstr ptr long long)
 @ stdcall WNetGetProviderNameA(long ptr ptr)
 @ stdcall WNetGetProviderNameW(long ptr ptr)
+@ stub WNetGetProviderTypeA
+@ stub WNetGetProviderTypeW
 @ stdcall WNetGetResourceInformationA(ptr ptr ptr ptr)
 @ stdcall WNetGetResourceInformationW(ptr ptr ptr ptr)
 @ stdcall WNetGetResourceParentA(ptr ptr ptr)
 @ stdcall WNetGetResourceParentW(ptr ptr ptr)
+@ stub WNetGetSearchDialog
 @ stdcall WNetGetUniversalNameA (str long ptr ptr)
 @ stdcall WNetGetUniversalNameW (wstr long ptr ptr)
 @ stdcall WNetGetUserA(str ptr ptr)
@@ -101,12 +116,18 @@
 @ stdcall WNetOpenEnumW(long long long ptr ptr)
 @ stub WNetPasswordChangeNotify
 @ stub WNetPropertyDialogA
+@ stub WNetPropertyDialogW # (ptr long long wstr long)
 @ stdcall WNetRemoveCachedPassword(ptr long long)
 @ stub WNetRestoreConnection
+@ stub WNetRestoreConnection2W
 @ stdcall WNetRestoreConnectionA(long str)
 @ stdcall WNetRestoreConnectionW(long wstr)
+# WNetRestoreSingleConnectionW # (ptr wstr long) # Not in WS03 yet?
 @ stdcall WNetSetConnectionA(str long ptr)
 @ stdcall WNetSetConnectionW(wstr long ptr)
+@ stub WNetSetLastErrorA # {long str str)
+@ stub WNetSetLastErrorW # {long wstr wstr)
+@ stub WNetSupportGlobalEnum
 @ stdcall WNetUseConnectionA(long ptr str str long str ptr ptr)
 @ stdcall WNetUseConnectionW(long ptr wstr wstr long wstr ptr ptr)
 @ stdcall WNetVerifyPasswordA(str ptr)

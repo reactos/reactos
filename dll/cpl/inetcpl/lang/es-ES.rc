@@ -52,7 +52,7 @@ CAPTION "Borrar historial de navegación"
 BEGIN
 
     AUTOCHECKBOX   "Archivos temporales\nCopias en caché de páginas web, imágenes y certificados.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Cookies\nArchivos guardados en su equipo por los sitios Web, utilizados para almacenar preferencias e información de inicio de sesión.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Historial\nLista de sitios que se han visitado.",
@@ -62,7 +62,7 @@ BEGIN
     AUTOCHECKBOX   "Contraseñas\nContraseñas guardadas introducidas en formularios.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Cancelar", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Borrar", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Borrar", IDOK, 120, 230, 60, 15
 
 END
 

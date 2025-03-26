@@ -7,7 +7,7 @@
  */
 
 /* Useful references:
-    http://msdn.microsoft.com/en-us/library/ms220938(VS.80).aspx
+    https://learn.microsoft.com/en-us/previous-versions/ms220938(v=vs.80)
     http://blogs.msdn.com/b/jiangyue/archive/2010/03/16/windows-heap-overrun-monitoring.aspx
 */
 
@@ -15,6 +15,7 @@
 
 #include <rtl.h>
 #include <heap.h>
+#include <reactos/verifier.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -192,10 +193,18 @@ BOOLEAN NTAPI
 RtlpDphIsNormalFreeHeapBlock(PVOID Block, PULONG ValidationInformation, BOOLEAN CheckFillers);
 
 VOID NTAPI
-RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot, ULONG Reserved, PVOID Block, ULONG ValidationInfo);
+RtlpDphReportCorruptedBlock(
+    _In_ PDPH_HEAP_ROOT DphRoot,
+    _In_ ULONG Reserved,
+    _In_ PVOID Block,
+    _In_ ULONG ValidationInfo);
 
 BOOLEAN NTAPI
 RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot, ULONG Flags, PVOID BaseAddress);
+
+/* verifier.c */
+VOID NTAPI
+AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize);
 
 
 VOID NTAPI
@@ -229,6 +238,27 @@ RtlpDphPointerFromHandle(PVOID Handle)
     DPRINT1("heap handle with incorrect signature\n");
     DbgBreakPoint();
     return NULL;
+}
+
+PVOID NTAPI
+RtlpDphHeapFromPointer(PDPH_HEAP_ROOT DphHeap)
+{
+    return ((PUCHAR)DphHeap) - PAGE_SIZE;
+}
+
+ULONG NTAPI
+RtlpDphGetBlockSizeFromCorruptedBlock(PVOID Block)
+{
+    PDPH_BLOCK_INFORMATION BlockInfo;
+    BlockInfo = (PDPH_BLOCK_INFORMATION)Block - 1;
+
+    /* Check stamps */
+    if (BlockInfo->StartStamp != DPH_FILL_START_STAMP_1 && BlockInfo->StartStamp != DPH_FILL_START_STAMP_2)
+    {
+        return 0;
+    }
+
+    return BlockInfo->RequestedSize;
 }
 
 VOID NTAPI
@@ -322,7 +352,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
                                      &Size,
                                      Type,
                                      Protection);
-    DPRINT("Page heap: AllocVm (%p, %Ix, %lx) status %lx \n", Base, Size, Type, Status);
+    DPRINT("Page heap: AllocVm (%p, %Ix, %lx) status %lx\n", Base, Size, Type, Status);
     /* Check for failures */
     if (!NT_SUCCESS(Status))
     {
@@ -331,7 +361,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
             _InterlockedIncrement(&RtlpDphCounter);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_RESERVE_FAIL)
             {
-                DPRINT1("Page heap: AllocVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: AllocVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -341,7 +371,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
             _InterlockedIncrement(&RtlpDphAllocFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_COMMIT_FAIL)
             {
-                DPRINT1("Page heap: AllocVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: AllocVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -358,7 +388,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
 
     /* Free the memory */
     Status = RtlpSecMemFreeVirtualMemory(NtCurrentProcess(), &Base, &Size, Type);
-    DPRINT("Page heap: FreeVm (%p, %Ix, %x) status %x \n", Base, Size, Type, Status);
+    DPRINT("Page heap: FreeVm (%p, %Ix, %lx) status %lx\n", Base, Size, Type, Status);
     /* Log/report failures */
     if (!NT_SUCCESS(Status))
     {
@@ -367,7 +397,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
             _InterlockedIncrement(&RtlpDphReleaseFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_RELEASE_FAIL)
             {
-                DPRINT1("Page heap: FreeVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: FreeVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -377,7 +407,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
             _InterlockedIncrement(&RtlpDphFreeFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_FREE_FAIL)
             {
-                DPRINT1("Page heap: FreeVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: FreeVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -402,7 +432,7 @@ RtlpDphProtectVm(PVOID Base, SIZE_T Size, ULONG Protection)
         _InterlockedIncrement(&RtlpDphProtectFails);
         if (RtlpDphBreakOptions & DPH_BREAK_ON_PROTECT_FAIL)
         {
-            DPRINT1("Page heap: ProtectVm (%p, %Ix, %x) failed with %x \n", Base, Size, Protection, Status);
+            DPRINT1("Page heap: ProtectVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Protection, Status);
             DbgBreakPoint();
             return Status;
         }
@@ -1297,59 +1327,94 @@ RtlpDphVerifyIntegrity(PDPH_HEAP_ROOT DphRoot)
 }
 
 VOID NTAPI
-RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot,
-                            ULONG Reserved,
-                            PVOID Block,
-                            ULONG ValidationInfo)
+RtlpDphReportCorruptedBlock(
+    _In_ PDPH_HEAP_ROOT DphRoot,
+    _In_ ULONG Reserved,
+    _In_ PVOID Block,
+    _In_ ULONG ValidationInfo)
 {
-    //RtlpDphGetBlockSizeFromCorruptedBlock();
+    PVOID Size = (PVOID)(ULONG_PTR)RtlpDphGetBlockSizeFromCorruptedBlock(Block);
+    DPH_BLOCK_INFORMATION SafeInfo = {0};
+
+    DPRINT1("Corrupted heap block %p\n", Block);
+
+    _SEH2_TRY
+    {
+        PDPH_BLOCK_INFORMATION BlockInfo = (PDPH_BLOCK_INFORMATION)Block - 1;
+        RtlCopyMemory(&SafeInfo, BlockInfo, sizeof(SafeInfo));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("ERROR: Could not read DPH_BLOCK_INFORMATION\n");
+        RtlZeroMemory(&SafeInfo, sizeof(SafeInfo));
+    }
+    _SEH2_END;
 
     if (ValidationInfo & DPH_VALINFO_CORRUPTED_AFTER_FREE)
     {
-        DPRINT1("block corrupted after having been freed\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_HEADER, "block corrupted after having been freed",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle", Block, "Heap block", (PVOID)Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_ALREADY_FREED)
     {
-        DPRINT1("block already freed\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_DOUBLE_FREE, "block already freed", RtlpDphHeapFromPointer(DphRoot), "Heap handle",
+            Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_INFIX_PATTERN)
     {
-        DPRINT1("corrupted infix pattern for freed block\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_FREED_HEAP_BLOCK, "corrupted infix pattern for freed block",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_POINTER)
     {
-        DPRINT1("corrupted heap pointer or using wrong heap\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_SWITCHED_HEAP_HANDLE, "corrupted heap pointer or using wrong heap",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle used", Block, "Heap block", Size, "Block size",
+            SafeInfo.Heap, "Actual heap handle");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_SUFFIX_PATTERN)
     {
-        DPRINT1("corrupted suffix pattern\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_SUFFIX, "corrupted suffix pattern", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_PREFIX_PATTERN)
     {
-        DPRINT1("corrupted prefix pattern\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_PREFIX, "corrupted prefix pattern", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_START_STAMP)
     {
-        DPRINT1("corrupted start stamp\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_START_STAMP, "corrupted start stamp", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", (PVOID)(ULONG_PTR)SafeInfo.StartStamp,
+            "Corrupted start stamp");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_END_STAMP)
     {
-        DPRINT1("corrupted end stamp\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_END_STAMP, "corrupted end stamp", RtlpDphHeapFromPointer(DphRoot),
+            "Heap handle used", Block, "Heap block", Size, "Block size", (PVOID)(ULONG_PTR)SafeInfo.EndStamp,
+            "Corrupted end stamp");
     }
 
     if (ValidationInfo & DPH_VALINFO_EXCEPTION)
     {
-        DPRINT1("exception raised while verifying block\n");
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_EXCEPTION_RAISED_FOR_HEADER, "exception raised while verifying block",
+            RtlpDphHeapFromPointer(DphRoot), "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
-
-    DPRINT1("Corrupted heap block %p\n", Block);
 }
 
 BOOLEAN NTAPI
@@ -1621,7 +1686,12 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
     /* Check if it's not a process heap */
     if (HeapPtr == RtlGetProcessHeap())
     {
-        DbgBreakPoint();
+        VERIFIER_STOP(APPLICATION_VERIFIER_DESTROY_PROCESS_HEAP,
+                      "attempt to destroy process heap",
+                      HeapPtr, "Heap handle",
+                      0, "",
+                      0, "",
+                      0, "");
         return NULL;
     }
 
@@ -1651,8 +1721,7 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
             }
         }
 
-        /* FIXME: Call AV notification */
-        //AVrfInternalHeapFreeNotification();
+        AVrfInternalHeapFreeNotification(Node->pUserAllocation, Node->nUserRequestedSize);
 
         /* Go to the next node */
         Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
@@ -1873,7 +1942,7 @@ RtlpPageHeapFree(HANDLE HeapPtr,
     {
         if (RtlpDphBreakOptions & DPH_BREAK_ON_NULL_FREE)
         {
-            DPRINT1("Page heap: freeing a null pointer \n");
+            DPRINT1("Page heap: freeing a null pointer\n");
             DbgBreakPoint();
         }
         return TRUE;

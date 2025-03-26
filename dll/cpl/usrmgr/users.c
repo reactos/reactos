@@ -60,7 +60,6 @@ ChangePasswordDlgProc(HWND hwndDlg,
                       LPARAM lParam)
 {
     PUSER_INFO_1003 userInfo;
-    INT nLength;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -79,14 +78,9 @@ ChangePasswordDlgProc(HWND hwndDlg,
                 case IDOK:
                     if (CheckPasswords(hwndDlg, IDC_EDIT_PASSWORD1, IDC_EDIT_PASSWORD2))
                     {
-
                         /* Store the password */
-                        nLength = SendDlgItemMessage(hwndDlg, IDC_EDIT_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
-                        if (nLength > 0)
-                        {
-                            userInfo->usri1003_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                            GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD1, userInfo->usri1003_password, nLength + 1);
-                        }
+                        userInfo->usri1003_password =
+                            GetDlgItemTextAlloc(hwndDlg, IDC_EDIT_PASSWORD1);
 
                         EndDialog(hwndDlg, IDOK);
                     }
@@ -109,7 +103,7 @@ ChangePasswordDlgProc(HWND hwndDlg,
 static VOID
 UserChangePassword(HWND hwndDlg)
 {
-    TCHAR szUserName[UNLEN];
+    TCHAR szUserName[UNLEN + 1];
     USER_INFO_1003 user;
     INT nItem;
     HWND hwndLV;
@@ -126,7 +120,7 @@ UserChangePassword(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szUserName,
-                         UNLEN);
+                         UNLEN + 1);
 
     if (DialogBoxParam(hApplet,
                        MAKEINTRESOURCE(IDD_CHANGE_PASSWORD),
@@ -147,8 +141,7 @@ UserChangePassword(HWND hwndDlg)
         }
     }
 
-    if (user.usri1003_password)
-        HeapFree(GetProcessHeap(), 0, user.usri1003_password);
+    HeapFree(GetProcessHeap(), 0, user.usri1003_password);
 }
 
 
@@ -250,36 +243,16 @@ NewUserDlgProc(HWND hwndDlg,
                     }
 
                     /* Store the user name */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_NAME, userInfo->usri3_name, nLength + 1);
-                    }
+                    userInfo->usri3_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_NAME);
 
                     /* Store the full user name */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_FULL_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_full_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_FULL_NAME, userInfo->usri3_full_name, nLength + 1);
-                    }
+                    userInfo->usri3_full_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_FULL_NAME);
 
                     /* Store the description */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_DESCRIPTION, userInfo->usri3_comment, nLength + 1);
-                    }
+                    userInfo->usri3_comment = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_DESCRIPTION);
 
                     /* Store the password */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_PASSWORD1, userInfo->usri3_password, nLength + 1);
-                    }
+                    userInfo->usri3_password = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_PASSWORD1);
 
                     EndDialog(hwndDlg, IDOK);
                     break;
@@ -351,17 +324,10 @@ UserNew(HWND hwndDlg)
                              user.usri3_comment);
     }
 
-    if (user.usri3_name)
-        HeapFree(GetProcessHeap(), 0, user.usri3_name);
-
-    if (user.usri3_full_name)
-        HeapFree(GetProcessHeap(), 0, user.usri3_full_name);
-
-    if (user.usri3_comment)
-        HeapFree(GetProcessHeap(), 0, user.usri3_comment);
-
-    if (user.usri3_password)
-        HeapFree(GetProcessHeap(), 0, user.usri3_password);
+    HeapFree(GetProcessHeap(), 0, user.usri3_name);
+    HeapFree(GetProcessHeap(), 0, user.usri3_full_name);
+    HeapFree(GetProcessHeap(), 0, user.usri3_comment);
+    HeapFree(GetProcessHeap(), 0, user.usri3_password);
 }
 
 
@@ -386,7 +352,7 @@ UserRename(HWND hwndDlg)
 static BOOL
 UserDelete(HWND hwndDlg)
 {
-    TCHAR szUserName[UNLEN];
+    TCHAR szUserName[UNLEN + 1];
     TCHAR szText[256];
     INT nItem;
     HWND hwndLV;
@@ -401,7 +367,7 @@ UserDelete(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szUserName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Display a warning message because the delete operation cannot be reverted */
     wsprintf(szText, TEXT("Do you really want to delete the user \"%s\"?"), szUserName);
@@ -550,8 +516,8 @@ OnBeginLabelEdit(LPNMLVDISPINFO pnmv)
 static BOOL
 OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
-    TCHAR szOldUserName[UNLEN];
-    TCHAR szNewUserName[UNLEN];
+    TCHAR szOldUserName[UNLEN + 1];
+    TCHAR szNewUserName[UNLEN + 1];
     USER_INFO_0 useri0;
     NET_API_STATUS status;
 
@@ -563,7 +529,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
     ListView_GetItemText(pnmv->hdr.hwndFrom,
                          pnmv->item.iItem, 0,
                          szOldUserName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Leave, if the user canceled the edit action */
     if (pnmv->item.pszText == NULL)
@@ -649,7 +615,7 @@ OnNotify(HWND hwndDlg, PUSER_DATA pUserData, NMHDR *phdr)
 static VOID
 UpdateUserProperties(HWND hwndDlg)
 {
-    TCHAR szUserName[UNLEN];
+    TCHAR szUserName[UNLEN + 1];
     INT iItem;
     HWND hwndLV;
     PUSER_INFO_2 pUserInfo = NULL;
@@ -664,7 +630,7 @@ UpdateUserProperties(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          iItem, 0,
                          szUserName,
-                         UNLEN);
+                         UNLEN + 1);
 
     NetUserGetInfo(NULL, szUserName, 2, (LPBYTE*)&pUserInfo);
 

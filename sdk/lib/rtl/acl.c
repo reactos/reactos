@@ -173,7 +173,7 @@ RtlpAddKnownObjectAce(IN PACL Acl,
     if (!RtlValidSid(Sid)) return STATUS_INVALID_SID;
 
     /* Check the validity of the revision */
-    if ((Acl->AclRevision > ACL_REVISION4) || (Revision > ACL_REVISION4))
+    if ((Acl->AclRevision > ACL_REVISION4) || (Revision != ACL_REVISION4))
     {
         return STATUS_REVISION_MISMATCH;
     }
@@ -839,6 +839,9 @@ RtlValidAcl(IN PACL Acl)
     PACE_HEADER Ace;
     PISID Sid;
     ULONG i;
+    USHORT RequiredObjectAceSize;
+    PULONG Flags;
+    ULONG GuidSize;
     PAGED_CODE_RTL();
 
     _SEH2_TRY
@@ -926,6 +929,68 @@ RtlValidAcl(IN PACL Acl)
                 if (Ace->AceSize < (sizeof(ACE_HEADER) + RtlLengthSid(Sid)))
                 {
                     DPRINT1("Invalid ACE size\n");
+                    _SEH2_YIELD(return FALSE);
+                }
+            }
+            else if (Ace->AceType == ACCESS_ALLOWED_OBJECT_ACE_TYPE ||
+                     Ace->AceType == ACCESS_DENIED_OBJECT_ACE_TYPE)
+            {
+                /* Object ACEs are supported starting with Revision 4 */
+                if (Acl->AclRevision < ACL_REVISION4)
+                {
+                    DPRINT1("Invalid ACL revision for Object ACE: %u\n", Acl->AclRevision);
+                    _SEH2_YIELD(return FALSE);
+                }
+
+                /* Validate the length of this ACE */
+                if (ROUND_DOWN(Ace->AceSize, sizeof(ULONG)) != Ace->AceSize)
+                {
+                    DPRINT1("Misaligned Object ACE size: %lx\n", Ace->AceSize);
+                    _SEH2_YIELD(return FALSE);
+                }
+
+                /* The ACE size should at least have enough space for the known object ACE header */
+                if (Ace->AceSize < sizeof(KNOWN_OBJECT_ACE))
+                {
+                    DPRINT1("Too small Object ACE size to hold KNOWN_OBJECT_ACE header: %lx\n", Ace->AceSize);
+                    _SEH2_YIELD(return FALSE);
+                }
+
+                /* This ACL may have multiple Object ACEs so reset the size counter */
+                GuidSize = 0;
+
+                /* If we have GUIDs include them */
+                Flags = (PULONG)&((PKNOWN_OBJECT_ACE)Ace)->Flags;
+                if (*Flags & ACE_OBJECT_TYPE_PRESENT)
+                {
+                    GuidSize += sizeof(GUID);
+                }
+
+                if (*Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+                {
+                    GuidSize += sizeof(GUID);
+                }
+
+                /* Check if the SID revision is valid */
+                Sid = (PISID)((ULONG_PTR)&((PKNOWN_OBJECT_ACE)Ace)->SidStart + GuidSize);
+                if (Sid->Revision != SID_REVISION)
+                {
+                    DPRINT1("Object ACE SID has invalid revision: %u\n", Sid->Revision);
+                    _SEH2_YIELD(return FALSE);
+                }
+
+                /* Check if the SID is out of bounds */
+                if (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES)
+                {
+                    DPRINT1("Object ACE SID's sub-authority count is out of bounds: %u\n", Sid->SubAuthorityCount);
+                    _SEH2_YIELD(return FALSE);
+                }
+
+                /* The ACE size should at least have enough space for the known object ACE header, GUIDs and the SID */
+                RequiredObjectAceSize = (sizeof(KNOWN_OBJECT_ACE) - sizeof(ULONG)) + GuidSize + RtlLengthSid(Sid);
+                if (Ace->AceSize < RequiredObjectAceSize)
+                {
+                    DPRINT1("Too small Object ACE size: AceSize %u RequiredSize %u\n", Ace->AceSize, RequiredObjectAceSize);
                     _SEH2_YIELD(return FALSE);
                 }
             }

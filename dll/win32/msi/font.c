@@ -25,86 +25,77 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "msipriv.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-typedef struct _tagTT_OFFSET_TABLE {
+struct offset_table
+{
     USHORT uMajorVersion;
     USHORT uMinorVersion;
     USHORT uNumOfTables;
     USHORT uSearchRange;
     USHORT uEntrySelector;
     USHORT uRangeShift;
-} TT_OFFSET_TABLE;
+};
 
-typedef struct _tagTT_TABLE_DIRECTORY {
+struct table_directory
+{
     char szTag[4]; /* table name */
     ULONG uCheckSum; /* Check sum */
     ULONG uOffset; /* Offset from beginning of file */
     ULONG uLength; /* length of the table in bytes */
-} TT_TABLE_DIRECTORY;
+};
 
-typedef struct _tagTT_NAME_TABLE_HEADER {
+struct name_table_header
+{
     USHORT uFSelector; /* format selector. Always 0 */
     USHORT uNRCount; /* Name Records count */
-    USHORT uStorageOffset; /* Offset for strings storage,
-                            * from start of the table */
-} TT_NAME_TABLE_HEADER;
+    USHORT uStorageOffset; /* Offset for strings storage from start of the table */
+};
 
 #define NAME_ID_FULL_FONT_NAME  4
 #define NAME_ID_VERSION         5
 
-typedef struct _tagTT_NAME_RECORD {
+struct name_record
+{
     USHORT uPlatformID;
     USHORT uEncodingID;
     USHORT uLanguageID;
     USHORT uNameID;
     USHORT uStringLength;
     USHORT uStringOffset; /* from start of storage area */
-} TT_NAME_RECORD;
+};
 
 #define SWAPWORD(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define SWAPLONG(x) MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
-
-static const WCHAR regfont1[] =
-    {'S','o','f','t','w','a','r','e','\\',
-     'M','i','c','r','o','s','o','f','t','\\',
-     'W','i','n','d','o','w','s',' ','N','T','\\',
-     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-     'F','o','n','t','s',0};
-static const WCHAR regfont2[] =
-    {'S','o','f','t','w','a','r','e','\\',
-     'M','i','c','r','o','s','o','f','t','\\',
-     'W','i','n','d','o','w','s','\\',
-     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-     'F','o','n','t','s',0};
 
 /*
  * Code based off of code located here
  * http://www.codeproject.com/gdi/fontnamefromfile.asp
  */
-static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
+static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWORD id )
 {
-    TT_TABLE_DIRECTORY tblDir;
+    struct table_directory tblDir;
     BOOL bFound = FALSE;
-    TT_OFFSET_TABLE ttOffsetTable;
-    TT_NAME_TABLE_HEADER ttNTHeader;
-    TT_NAME_RECORD ttRecord;
+    struct offset_table ttOffsetTable;
+    struct name_table_header ttNTHeader;
+    struct name_record ttRecord;
     DWORD dwRead;
     HANDLE handle;
     LPWSTR ret = NULL;
     int i;
 
-    handle = CreateFileW(filename ,GENERIC_READ, 0, NULL, OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL, 0 );
+    if (package)
+        handle = msi_create_file( package, filename, GENERIC_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL );
+    else
+        handle = CreateFileW( filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
     if (handle == INVALID_HANDLE_VALUE)
     {
         ERR("Unable to open font file %s\n", debugstr_w(filename));
         return NULL;
     }
 
-    if (!ReadFile(handle,&ttOffsetTable, sizeof(TT_OFFSET_TABLE),&dwRead,NULL))
+    if (!ReadFile(handle,&ttOffsetTable, sizeof(struct offset_table),&dwRead,NULL))
         goto end;
 
     ttOffsetTable.uNumOfTables = SWAPWORD(ttOffsetTable.uNumOfTables);
@@ -117,7 +108,7 @@ static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
 
     for (i=0; i< ttOffsetTable.uNumOfTables; i++)
     {
-        if (!ReadFile(handle,&tblDir, sizeof(TT_TABLE_DIRECTORY),&dwRead,NULL))
+        if (!ReadFile(handle, &tblDir, sizeof(tblDir), &dwRead, NULL))
             break;
         if (memcmp(tblDir.szTag,"name",4)==0)
         {
@@ -132,14 +123,14 @@ static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
         goto end;
 
     SetFilePointer(handle, tblDir.uOffset, NULL, FILE_BEGIN);
-    if (!ReadFile(handle,&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER), &dwRead,NULL))
+    if (!ReadFile(handle, &ttNTHeader, sizeof(ttNTHeader), &dwRead, NULL))
         goto end;
 
     ttNTHeader.uNRCount = SWAPWORD(ttNTHeader.uNRCount);
     ttNTHeader.uStorageOffset = SWAPWORD(ttNTHeader.uStorageOffset);
     for(i=0; i<ttNTHeader.uNRCount; i++)
     {
-        if (!ReadFile(handle,&ttRecord, sizeof(TT_NAME_RECORD),&dwRead,NULL))
+        if (!ReadFile(handle, &ttRecord, sizeof(ttRecord), &dwRead, NULL))
             break;
 
         ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);
@@ -155,17 +146,17 @@ static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
             ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
             SetFilePointer(handle, tblDir.uOffset + ttRecord.uStringOffset + ttNTHeader.uStorageOffset,
                            NULL, FILE_BEGIN);
-            if (!(buf = msi_alloc_zero( ttRecord.uStringLength + sizeof(WCHAR) ))) goto end;
+            if (!(buf = calloc(ttRecord.uStringLength, sizeof(WCHAR)))) goto end;
             dwRead = 0;
             ReadFile(handle, buf, ttRecord.uStringLength, &dwRead, NULL);
             if (dwRead % sizeof(WCHAR))
             {
-                msi_free(buf);
+                free(buf);
                 goto end;
             }
             for (i = 0; i < dwRead / sizeof(WCHAR); i++) buf[i] = SWAPWORD(buf[i]);
-            ret = strdupW(buf);
-            msi_free(buf);
+            ret = wcsdup(buf);
+            free(buf);
             break;
         }
     }
@@ -175,50 +166,48 @@ end:
     return ret;
 }
 
-static WCHAR *font_name_from_file( const WCHAR *filename )
+static WCHAR *font_name_from_file( MSIPACKAGE *package, const WCHAR *filename )
 {
-    static const WCHAR truetypeW[] = {' ','(','T','r','u','e','T','y','p','e',')',0};
     WCHAR *name, *ret = NULL;
 
-    if ((name = load_ttf_name_id( filename, NAME_ID_FULL_FONT_NAME )))
+    if ((name = load_ttf_name_id( package, filename, NAME_ID_FULL_FONT_NAME )))
     {
         if (!name[0])
         {
             WARN("empty font name\n");
-            msi_free( name );
+            free( name );
             return NULL;
         }
-        ret = msi_alloc( (strlenW( name ) + strlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
-        strcpyW( ret, name );
-        strcatW( ret, truetypeW );
-        msi_free( name );
+        ret = malloc( wcslen( name ) * sizeof(WCHAR) + sizeof( L" (TrueType)" ) );
+        lstrcpyW( ret, name );
+        lstrcatW( ret, L" (TrueType)" );
+        free( name );
     }
     return ret;
 }
 
-WCHAR *msi_font_version_from_file( const WCHAR *filename )
+WCHAR *msi_get_font_file_version( MSIPACKAGE *package, const WCHAR *filename )
 {
-    static const WCHAR fmtW[] = {'%','u','.','%','u','.','0','.','0',0};
     WCHAR *version, *p, *q, *ret = NULL;
 
-    if ((version = load_ttf_name_id( filename, NAME_ID_VERSION )))
+    if ((version = load_ttf_name_id( package, filename, NAME_ID_VERSION )))
     {
         int len, major = 0, minor = 0;
-        if ((p = strchrW( version, ';' ))) *p = 0;
+        if ((p = wcschr( version, ';' ))) *p = 0;
         p = version;
-        while (*p && !isdigitW( *p )) p++;
-        if ((q = strchrW( p, '.' )))
+        while (*p && !iswdigit( *p )) p++;
+        if ((q = wcschr( p, '.' )))
         {
-            major = atoiW( p );
+            major = wcstol( p, NULL, 10 );
             p = ++q;
-            while (*q && isdigitW( *q )) q++;
-            if (!*q || *q == ' ') minor = atoiW( p );
+            while (*q && iswdigit( *q )) q++;
+            if (!*q || *q == ' ') minor = wcstol( p, NULL, 10 );
             else major = 0;
         }
-        len = strlenW( fmtW ) + 20;
-        ret = msi_alloc( len * sizeof(WCHAR) );
-        sprintfW( ret, fmtW, major, minor );
-        msi_free( version );
+        len = lstrlenW( L"%u.%u.0.0" ) + 20;
+        ret = malloc( len * sizeof(WCHAR) );
+        swprintf( ret, len, L"%u.%u.0.0", major, minor );
+        free( version );
     }
     return ret;
 }
@@ -254,11 +243,11 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
 
-    RegCreateKeyW(HKEY_LOCAL_MACHINE,regfont1,&hkey1);
-    RegCreateKeyW(HKEY_LOCAL_MACHINE,regfont2,&hkey2);
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts" ,&hkey1 );
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Fonts", &hkey2 );
 
     if (MSI_RecordIsNull(row,2))
-        name = font_name_from_file( file->TargetPath );
+        name = font_name_from_file( package, file->TargetPath );
     else
         name = msi_dup_record_field(row,2);
 
@@ -268,20 +257,20 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
         msi_reg_set_val_str( hkey2, name, file->TargetPath);
     }
 
-    msi_free(name);
+    free(name);
     RegCloseKey(hkey1);
     RegCloseKey(hkey2);
 
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
-    uipath = strdupW( file->TargetPath );
-    p = strrchrW(uipath,'\\');
+    uipath = wcsdup( file->TargetPath );
+    p = wcsrchr(uipath,'\\');
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
-    msi_free( uipath );
+    free( uipath );
     /* FIXME: call msi_ui_progress? */
 
     return ERROR_SUCCESS;
@@ -289,12 +278,13 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
 
 UINT ACTION_RegisterFonts(MSIPACKAGE *package)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
     UINT rc;
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"RegisterFonts");
+
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `Font`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -334,11 +324,11 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
         return ERROR_SUCCESS;
     }
 
-    RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont1, &hkey1 );
-    RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont2, &hkey2 );
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", &hkey1 );
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Fonts", &hkey2 );
 
     if (MSI_RecordIsNull( row, 2 ))
-        name = font_name_from_file( file->TargetPath );
+        name = font_name_from_file( package, file->TargetPath );
     else
         name = msi_dup_record_field( row, 2 );
 
@@ -348,20 +338,20 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
         RegDeleteValueW( hkey2, name );
     }
 
-    msi_free( name );
+    free( name );
     RegCloseKey( hkey1 );
     RegCloseKey( hkey2 );
 
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
-    uipath = strdupW( file->TargetPath );
-    p = strrchrW( uipath,'\\' );
+    uipath = wcsdup( file->TargetPath );
+    p = wcsrchr( uipath,'\\' );
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
-    msi_free( uipath );
+    free( uipath );
     /* FIXME: call msi_ui_progress? */
 
     return ERROR_SUCCESS;
@@ -369,12 +359,13 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
 
 UINT ACTION_UnregisterFonts( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
     UINT r;
 
-    r = MSI_DatabaseOpenViewW( package->db, query, &view );
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"UnregisterFonts");
+
+    r = MSI_DatabaseOpenViewW( package->db, L"SELECT * FROM `Font`", &view );
     if (r != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 

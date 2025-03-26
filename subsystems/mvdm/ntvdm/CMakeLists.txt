@@ -73,6 +73,11 @@ add_executable(ntvdm
     ntvdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)
 
+set_target_properties(ntvdm
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
+
 add_pch(ntvdm ntvdm.h SOURCE)
 set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
 target_link_libraries(ntvdm fast486 ${PSEH_LIB})

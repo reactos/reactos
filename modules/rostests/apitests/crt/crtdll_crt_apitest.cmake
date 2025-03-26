@@ -212,7 +212,7 @@ list(APPEND SOURCE_CRTDLL
 #    _mbsnbset.c
 #    _mbsncat.c
 #    _mbsnccnt.c
-#    _mbsncmp.c
+    _mbsncmp.c
 #    _mbsncpy.c
 #    _mbsnextc.c
 #    _mbsnicmp.c
@@ -224,7 +224,7 @@ list(APPEND SOURCE_CRTDLL
 #    _mbsset.c
 #    _mbsspn.c
 #    _mbsspnp.c
-#    _mbsstr.c
+    _mbsstr.c
 #    _mbstok.c
 #    _mbstrlen.c
 #    _mbsupr.c
@@ -480,7 +480,7 @@ list(APPEND SOURCE_CRTDLL
 #    strxfrm.c
 #    swprintf.c
 #    swscanf.c
-#    system.c
+    system.c
 #    tan.c
 #    tanh.c
 #    time.c

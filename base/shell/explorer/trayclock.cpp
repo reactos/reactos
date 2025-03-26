@@ -38,6 +38,9 @@ const struct
 const UINT ClockWndFormatsCount = _ARRAYSIZE(ClockWndFormats);
 
 #define CLOCKWND_FORMAT_COUNT ClockWndFormatsCount
+#define CLOCKWND_FORMAT_TIME 0
+#define CLOCKWND_FORMAT_DAY  1
+#define CLOCKWND_FORMAT_DATE 2
 
 static const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
 
@@ -98,10 +101,13 @@ private:
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    VOID PaintLine(IN HDC hDC, IN OUT RECT *rcClient, IN UINT LineNumber, IN UINT szLinesIndex);
 
 public:
+    // *** IOleWindow methods ***
 
-    HRESULT WINAPI GetWindow(HWND* phwnd)
+    STDMETHODIMP
+    GetWindow(HWND* phwnd) override
     {
         if (!phwnd)
             return E_INVALIDARG;
@@ -109,7 +115,8 @@ public:
         return S_OK;
     }
 
-    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    STDMETHODIMP
+    ContextSensitiveHelp(BOOL fEnterMode) override
     {
         return E_NOTIMPL;
     }
@@ -150,11 +157,11 @@ public:
 
 CTrayClockWnd::CTrayClockWnd() :
         hFont(NULL),
+        textColor(0),
         dwFlags(0),
         LineSpacing(0),
         VisibleLines(0)
 {
-    ZeroMemory(&textColor, sizeof(textColor));
     ZeroMemory(&rcText, sizeof(rcText));
     ZeroMemory(&LocalTime, sizeof(LocalTime));
     ZeroMemory(&CurrentSize, sizeof(CurrentSize));
@@ -173,34 +180,19 @@ LRESULT CTrayClockWnd::OnThemeChanged()
 
     if (clockTheme)
     {
-        GetThemeFont(clockTheme,
-            NULL,
-            CLP_TIME,
-            0,
-            TMT_FONT,
-            &clockFont);
+        GetThemeFont(clockTheme, NULL, CLP_TIME, 0, TMT_FONT, &clockFont);
 
         hFont = CreateFontIndirectW(&clockFont);
 
-        GetThemeColor(clockTheme,
-            CLP_TIME,
-            0,
-            TMT_TEXTCOLOR,
-            &textColor);
+        GetThemeColor(clockTheme, CLP_TIME, 0, TMT_TEXTCOLOR, &textColor);
 
         if (this->hFont != NULL)
             DeleteObject(this->hFont);
 
         SetFont(hFont, FALSE);
-    }
-    else
-    {
-        /* We don't need to set a font here, our parent will use 
-            * WM_SETFONT to set the right one when themes are not enabled. */
-        textColor = RGB(0, 0, 0);
-    }
 
-    CloseThemeData(clockTheme);
+        CloseThemeData(clockTheme);
+    }
 
     return TRUE;
 }
@@ -277,6 +269,10 @@ WORD CTrayClockWnd::GetMinimumSize(IN BOOL Horizontal, IN OUT PSIZE pSize)
 
     if (!LinesMeasured)
         return 0;
+
+    /* Prevents the date from being cut off when the day of the week is shorter than the date. */
+    if (VisibleLines > 1 && g_TaskbarSettings.bPreferDate)
+        szMax.cx = LineSizes[CLOCKWND_FORMAT_DATE].cx;
 
     for (i = 0; i < CLOCKWND_FORMAT_COUNT; i++)
     {
@@ -429,15 +425,6 @@ UINT CTrayClockWnd::CalculateDueTime()
     if (!g_TaskbarSettings.bShowSeconds)
         uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
 
-    if (uiDueTime < USER_TIMER_MINIMUM || uiDueTime > USER_TIMER_MAXIMUM)
-        uiDueTime = 1000;
-    else
-    {
-        /* Add an artificial delay of 0.05 seconds to make sure the timer
-            doesn't fire too early*/
-        uiDueTime += 50;
-    }
-
     return uiDueTime;
 }
 
@@ -529,14 +516,11 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     HFONT hPrevFont;
     INT iPrevBkMode;
     UINT i, line;
-
     PAINTSTRUCT ps;
     HDC hDC = (HDC) wParam;
 
     if (wParam == 0)
-    {
         hDC = BeginPaint(&ps);
-    }
 
     if (hDC == NULL)
         return FALSE;
@@ -546,26 +530,30 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         iPrevBkMode = SetBkMode(hDC, TRANSPARENT);
 
-        SetTextColor(hDC, textColor);
+        if (!IsAppThemed())
+            textColor = ::GetSysColor(COLOR_BTNTEXT);
+
+        ::SetTextColor(hDC, textColor);
 
         hPrevFont = (HFONT) SelectObject(hDC, hFont);
 
         rcClient.top = (rcClient.bottom - CurrentSize.cy) / 2;
         rcClient.bottom = rcClient.top + CurrentSize.cy;
 
-        for (i = 0, line = 0;
-                i < CLOCKWND_FORMAT_COUNT && line < VisibleLines;
-                i++)
+        if (VisibleLines == 2)
         {
-            if (LineSizes[i].cx != 0)
+            /* Display either time and weekday (by default), or time and date (opt-in) */
+            PaintLine(hDC, &rcClient, 0, CLOCKWND_FORMAT_TIME);
+            PaintLine(hDC, &rcClient, 1,
+                      g_TaskbarSettings.bPreferDate ? CLOCKWND_FORMAT_DATE : CLOCKWND_FORMAT_DAY);
+        }
+        else
+        {
+            for (i = 0, line = 0;
+                 i < CLOCKWND_FORMAT_COUNT && line < VisibleLines;
+                 i++)
             {
-                TextOut(hDC,
-                    (rcClient.right - LineSizes[i].cx) / 2,
-                    rcClient.top + TRAY_CLOCK_WND_SPACING_Y,
-                    szLines[i],
-                    wcslen(szLines[i]));
-
-                rcClient.top += LineSizes[i].cy + LineSpacing;
+                PaintLine(hDC, &rcClient, i, i);
                 line++;
             }
         }
@@ -576,11 +564,26 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     }
 
     if (wParam == 0)
-    {
         EndPaint(&ps);
-    }
 
     return TRUE;
+}
+
+VOID CTrayClockWnd::PaintLine(IN HDC hDC, IN OUT RECT *rcClient, IN UINT LineNumber, IN UINT szLinesIndex)
+{
+    if (LineSizes[LineNumber].cx == 0)
+        return;
+
+    INT HShift = ((IsHorizontal && (VisibleLines <= 1 ||
+                   g_TaskbarSettings.UseCompactTrayIcons())) ? 0 : TRAY_CLOCK_WND_SPACING_X);
+
+    TextOut(hDC,
+            ((rcClient->right - LineSizes[szLinesIndex].cx) / 2) + HShift,
+            rcClient->top + TRAY_CLOCK_WND_SPACING_Y,
+            szLines[szLinesIndex],
+            wcslen(szLines[szLinesIndex]));
+
+    rcClient->top += LineSizes[LineNumber].cy + LineSpacing;
 }
 
 VOID CTrayClockWnd::SetFont(IN HFONT hNewFont, IN BOOL bRedraw)
@@ -684,7 +687,7 @@ LRESULT CTrayClockWnd::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     VisibleLines = GetMinimumSize(IsHorizontal, &szClient);
     CurrentSize = szClient;
 
-    InvalidateRect(NULL, TRUE);
+    UpdateWnd();
     return TRUE;
 }
 
@@ -728,6 +731,12 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         {
             ResetTime();
         }
+    }
+
+    if (newSettings->bPreferDate != g_TaskbarSettings.bPreferDate)
+    {
+        g_TaskbarSettings.bPreferDate = newSettings->bPreferDate;
+        bRealign = TRUE;
     }
 
     if (bRealign)

@@ -10,21 +10,18 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
-#define NDEBUG
-#include <debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
-NTAPI
+static VOID
 HalpWriteResetCommand(VOID)
 {
     /* Generate RESET signal via keyboard controller */
     WRITE_PORT_UCHAR((PUCHAR)0x64, 0xFE);
 };
 
+DECLSPEC_NORETURN
 VOID
-NTAPI
 HalpReboot(VOID)
 {
     PHYSICAL_ADDRESS PhysicalAddress;
@@ -69,39 +66,45 @@ HalpReboot(VOID)
 
     /* Halt the CPU */
     __halt();
+    UNREACHABLE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+#ifndef _MINIHAL_
 /*
  * @implemented
  */
 VOID
 NTAPI
-HalReturnToFirmware(IN FIRMWARE_REENTRY Action)
+HalReturnToFirmware(
+    _In_ FIRMWARE_REENTRY Action)
 {
     /* Check what kind of action this is */
     switch (Action)
     {
         /* All recognized actions */
         case HalHaltRoutine:
+        case HalPowerDownRoutine:
+        case HalRestartRoutine:
         case HalRebootRoutine:
-
-#ifndef _MINIHAL_
+        {
             /* Acquire the display */
             InbvAcquireDisplayOwnership();
-#endif
 
             /* Call the internal reboot function */
             HalpReboot();
+        }
 
         /* Anything else */
         default:
-
+        {
             /* Print message and break */
             DbgPrint("HalReturnToFirmware called!\n");
             DbgBreakPoint();
+        }
     }
 }
+#endif // _MINIHAL_
 
 /* EOF */

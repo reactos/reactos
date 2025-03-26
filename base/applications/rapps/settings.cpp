@@ -2,34 +2,41 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Functions to load / save settings from reg.
- * COPYRIGHT:   Copyright 2020 He Yang           (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2020 He Yang (1160386205@qq.com)
  */
 
 #include "rapps.h"
 #include "settings.h"
 
+#define SETTINGSSUBKEY L"Software\\ReactOS\\" RAPPS_NAME
 
 class SettingsField
 {
-public:
-    virtual ~SettingsField() { ; }
-    virtual BOOL Save(CRegKey &key) = 0;
-    virtual BOOL Load(CRegKey &key) = 0;
+  public:
+    virtual ~SettingsField()
+    {
+        ;
+    }
+    virtual BOOL
+    Save(CRegKey &key) = 0;
+    virtual BOOL
+    Load(CRegKey &key) = 0;
 };
 
 class SettingsFieldBool : public SettingsField
 {
-public:
-    SettingsFieldBool(BOOL *pValue, LPCWSTR szRegName)
-        : m_pValueStore(pValue), m_RegName(szRegName)
+  public:
+    SettingsFieldBool(BOOL *pValue, LPCWSTR szRegName) : m_pValueStore(pValue), m_RegName(szRegName)
     {
     }
 
-    virtual BOOL Save(CRegKey &key) override
+    virtual BOOL
+    Save(CRegKey &key) override
     {
         return key.SetDWORDValue(m_RegName, (DWORD)(*m_pValueStore)) == ERROR_SUCCESS;
     }
-    virtual BOOL Load(CRegKey &key) override
+    virtual BOOL
+    Load(CRegKey &key) override
     {
         DWORD dwField;
         LONG lResult = key.QueryDWORDValue(m_RegName, dwField);
@@ -41,24 +48,25 @@ public:
         return TRUE;
     }
 
-private:
-    BOOL *m_pValueStore;     // where to read/store the value
-    LPCWSTR m_RegName;       // key name in registery
+  private:
+    BOOL *m_pValueStore; // where to read/store the value
+    LPCWSTR m_RegName;   // key name in registery
 };
 
 class SettingsFieldInt : public SettingsField
 {
-public:
-    SettingsFieldInt(INT *pValue, LPCWSTR szRegName)
-        : m_pValueStore(pValue), m_RegName(szRegName)
+  public:
+    SettingsFieldInt(INT *pValue, LPCWSTR szRegName) : m_pValueStore(pValue), m_RegName(szRegName)
     {
     }
 
-    virtual BOOL Save(CRegKey &key) override
+    virtual BOOL
+    Save(CRegKey &key) override
     {
         return key.SetDWORDValue(m_RegName, (DWORD)(*m_pValueStore)) == ERROR_SUCCESS;
     }
-    virtual BOOL Load(CRegKey &key) override
+    virtual BOOL
+    Load(CRegKey &key) override
     {
         DWORD dwField;
         LONG lResult = key.QueryDWORDValue(m_RegName, dwField);
@@ -70,44 +78,47 @@ public:
         return TRUE;
     }
 
-private:
-    INT *m_pValueStore;      // where to read/store the value
-    LPCWSTR m_RegName;       // key name in registery
+  private:
+    INT *m_pValueStore; // where to read/store the value
+    LPCWSTR m_RegName;  // key name in registery
 };
 
 class SettingsFieldString : public SettingsField
 {
-public:
+  public:
     SettingsFieldString(WCHAR *pString, ULONG cchLen, LPCWSTR szRegName)
         : m_pStringStore(pString), m_StringLen(cchLen), m_RegName(szRegName)
     {
     }
 
-    virtual BOOL Save(CRegKey &key) override
+    virtual BOOL
+    Save(CRegKey &key) override
     {
         return key.SetStringValue(m_RegName, m_pStringStore) == ERROR_SUCCESS;
     }
-    virtual BOOL Load(CRegKey &key) override
+    virtual BOOL
+    Load(CRegKey &key) override
     {
         ULONG nChar = m_StringLen - 1; // make sure the terminating L'\0'
         LONG lResult = key.QueryStringValue(m_RegName, m_pStringStore, &nChar);
         return lResult == ERROR_SUCCESS;
     }
 
-private:
-    WCHAR *m_pStringStore;        // where to read/store the value
-    ULONG m_StringLen;            // string length, in chars
-    LPCWSTR m_RegName;            // key name in registery
+  private:
+    WCHAR *m_pStringStore; // where to read/store the value
+    ULONG m_StringLen;     // string length, in chars
+    LPCWSTR m_RegName;     // key name in registery
 };
 
-
-void AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &settings)
+static void
+AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &settings)
 {
     infoFields.AddTail(new SettingsFieldBool(&(settings.bSaveWndPos), L"bSaveWndPos"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.bUpdateAtStart), L"bUpdateAtStart"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.bLogEnabled), L"bLogEnabled"));
     infoFields.AddTail(new SettingsFieldString(settings.szDownloadDir, MAX_PATH, L"szDownloadDir"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.bDelInstaller), L"bDelInstaller"));
+    infoFields.AddTail(new SettingsFieldBool(&(settings.bSmallIcons), L"SmallIcons"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.Maximized), L"WindowPosMaximized"));
     infoFields.AddTail(new SettingsFieldInt(&(settings.Left), L"WindowPosLeft"));
     infoFields.AddTail(new SettingsFieldInt(&(settings.Top), L"WindowPosTop"));
@@ -118,11 +129,10 @@ void AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &se
     infoFields.AddTail(new SettingsFieldString((settings.szNoProxyFor), MAX_PATH, L"NoProxyFor"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.bUseSource), L"bUseSource"));
     infoFields.AddTail(new SettingsFieldString((settings.szSourceURL), INTERNET_MAX_URL_LENGTH, L"SourceURL"));
-
-    return;
 }
 
-BOOL SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
+static BOOL
+SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
 {
     BOOL bAllSuccess = TRUE;
     ATL::CAtlList<SettingsField *> infoFields;
@@ -143,9 +153,10 @@ BOOL SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
     return bAllSuccess;
 }
 
-BOOL LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
+static BOOL
+LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
 {
-    BOOL bAllSuccess = TRUE;
+    BOOL bLoadedAny = FALSE;
     ATL::CAtlList<SettingsField *> infoFields;
 
     AddInfoFields(infoFields, settings);
@@ -154,26 +165,18 @@ BOOL LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
     while (InfoListPosition)
     {
         SettingsField *Info = infoFields.GetNext(InfoListPosition);
-        if (!Info->Load(key))
-        {
-            bAllSuccess = FALSE;
-            // TODO: error log
-        }
+        if (Info->Load(key))
+            bLoadedAny = TRUE;
+        //else
+        //  TODO: error log
         delete Info;
     }
-    return bAllSuccess;
+    return bLoadedAny;
 }
 
-VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
+static void
+GetDefaultDownloadDirectory(CStringW &szDownloadDir)
 {
-    ATL::CStringW szDownloadDir;
-    ZeroMemory(pSettingsInfo, sizeof(SETTINGS_INFO));
-
-    pSettingsInfo->bSaveWndPos = TRUE;
-    pSettingsInfo->bUpdateAtStart = FALSE;
-    pSettingsInfo->bLogEnabled = TRUE;
-    pSettingsInfo->bUseSource = FALSE;
-
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szDownloadDir.GetBuffer(MAX_PATH))))
     {
         szDownloadDir.ReleaseBuffer();
@@ -189,32 +192,72 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 
     PathAppendW(szDownloadDir.GetBuffer(MAX_PATH), L"\\RAPPS Downloads");
     szDownloadDir.ReleaseBuffer();
+}
 
-    ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir,
-        _countof(pSettingsInfo->szDownloadDir),
-        szDownloadDir.GetString(),
-        szDownloadDir.GetLength() + 1);
+static VOID
+ValidateStringSettings(PSETTINGS_INFO pSettingsInfo)
+{
+    if (!pSettingsInfo->szDownloadDir[0])
+    {
+        CStringW szDownloadDir;
+        GetDefaultDownloadDirectory(szDownloadDir);
 
+        CStringW::CopyChars(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir),
+                            szDownloadDir.GetString(), szDownloadDir.GetLength() + 1);
+    }
+}
+
+VOID
+FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
+{
+    ZeroMemory(pSettingsInfo, sizeof(*pSettingsInfo));
+
+    pSettingsInfo->bSaveWndPos = TRUE;
+    pSettingsInfo->bUpdateAtStart = FALSE;
+    pSettingsInfo->bLogEnabled = TRUE;
+    pSettingsInfo->bUseSource = FALSE;
     pSettingsInfo->bDelInstaller = FALSE;
     pSettingsInfo->Maximized = FALSE;
     pSettingsInfo->Left = CW_USEDEFAULT;
     pSettingsInfo->Top = CW_USEDEFAULT;
     pSettingsInfo->Width = 680;
     pSettingsInfo->Height = 450;
+
+    ValidateStringSettings(pSettingsInfo);
 }
 
-BOOL LoadSettings(PSETTINGS_INFO pSettingsInfo)
+BOOL
+LoadSettings(PSETTINGS_INFO pSettingsInfo)
 {
+    BOOL bLoadedAny = FALSE;
+
+    FillDefaultSettings(pSettingsInfo);
+
     ATL::CRegKey RegKey;
-    if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", KEY_READ) != ERROR_SUCCESS)
+    if (RegKey.Open(HKEY_CURRENT_USER, SETTINGSSUBKEY, KEY_READ) == ERROR_SUCCESS)
     {
-        return FALSE;
+        bLoadedAny = LoadAllSettings(RegKey, *pSettingsInfo);
     }
 
-    return LoadAllSettings(RegKey, *pSettingsInfo);
+    ValidateStringSettings(pSettingsInfo); // Handles the case where a REG_SZ is present but empty
+
+    if (!bLoadedAny)
+    {
+        // This the first launch, write at least one item so ParseCmdAndExecute() does not
+        // trigger another DB update in another process instance between now and SaveSettings().
+        ATL::CRegKey RegKey;
+        if (RegKey.Create(HKEY_CURRENT_USER, SETTINGSSUBKEY, NULL, REG_OPTION_NON_VOLATILE,
+                          KEY_WRITE, NULL, NULL) == ERROR_SUCCESS)
+        {
+            SettingsFieldBool field(&(pSettingsInfo->bUpdateAtStart), L"bUpdateAtStart");
+            field.Save(RegKey);
+        }
+    }
+    return bLoadedAny;
 }
 
-BOOL SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
+BOOL
+SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
 {
     WINDOWPLACEMENT wp;
     ATL::CRegKey RegKey;
@@ -228,13 +271,12 @@ BOOL SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
         pSettingsInfo->Top = wp.rcNormalPosition.top;
         pSettingsInfo->Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
         pSettingsInfo->Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-        pSettingsInfo->Maximized = (wp.showCmd == SW_MAXIMIZE
-            || (wp.showCmd == SW_SHOWMINIMIZED
-                && (wp.flags & WPF_RESTORETOMAXIMIZED)));
+        pSettingsInfo->Maximized =
+            (wp.showCmd == SW_MAXIMIZE || (wp.showCmd == SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
-    if (RegKey.Create(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", NULL,
-        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) != ERROR_SUCCESS)
+    if (RegKey.Create(HKEY_CURRENT_USER, SETTINGSSUBKEY, NULL, REG_OPTION_NON_VOLATILE,
+                      KEY_WRITE, NULL, NULL) != ERROR_SUCCESS)
     {
         return FALSE;
     }

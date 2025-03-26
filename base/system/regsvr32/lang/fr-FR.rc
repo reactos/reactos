@@ -14,7 +14,7 @@ BEGIN
     IDS_InvalidFlag "Option non reconnue : %s"
     IDS_SwitchN_NoI "Option non reconnue : /n vous devez utiliser l'indicateur /i."
     IDS_DllNotLoaded "LoadLibrary('%s') a échoué.\nGetLastError renvoie le code 0x%08x."
-    IDS_MissingEntry "%s est chargé mais le point d'entrée de %s n'a pas été trouvé.\n\n \
+    IDS_MissingEntry "%s est chargé mais le point d'entrée de %s n'a pas été trouvé.\n\n\
 %s ne peut être exporté, ou une version corrompue de %s est en mémoire. Vous pouvez utiliser Pview pour détecter la DLL et la supprimer."
     IDS_FailureMessage "%s dans %s a échoué.\nLe code d'erreur est : 0x%08x"
     IDS_SuccessMessage "%s dans %s est un succès."

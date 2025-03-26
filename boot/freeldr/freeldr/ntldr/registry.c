@@ -2,6 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 2014  Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                2022  George Bișoc <george.bisoc@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,13 +22,27 @@
 #include <freeldr.h>
 #include <cmlib.h>
 #include "registry.h"
+#include <internal/cmboot.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(REGISTRY);
 
-static PCMHIVE CmHive;
-static PCM_KEY_NODE RootKeyNode;
-static HKEY CurrentControlSetKey;
+static PCMHIVE CmSystemHive;
+static HCELL_INDEX SystemRootCell;
+
+PHHIVE SystemHive = NULL;
+HKEY CurrentControlSetKey = NULL;
+
+#define HCI_TO_HKEY(CellIndex)          ((HKEY)(ULONG_PTR)(CellIndex))
+#ifndef HKEY_TO_HCI // See also registry.h
+#define HKEY_TO_HCI(hKey)               ((HCELL_INDEX)(ULONG_PTR)(hKey))
+#endif
+
+#define GET_HHIVE(CmHive)               (&((CmHive)->Hive))
+#define GET_HHIVE_FROM_HKEY(hKey)       GET_HHIVE(CmSystemHive)
+#define GET_CM_KEY_NODE(hHive, hKey)    ((PCM_KEY_NODE)HvGetCell(hHive, HKEY_TO_HCI(hKey)))
+
+#define GET_HBASE_BLOCK(ChunkBase)      ((PHBASE_BLOCK)ChunkBase)
 
 PVOID
 NTAPI
@@ -37,9 +52,7 @@ CmpAllocate(
     IN ULONG Tag)
 {
     UNREFERENCED_PARAMETER(Paged);
-    UNREFERENCED_PARAMETER(Tag);
-
-    return FrLdrTempAlloc(Size, Tag);
+    return FrLdrHeapAlloc(Size, Tag);
 }
 
 VOID
@@ -49,23 +62,50 @@ CmpFree(
     IN ULONG Quota)
 {
     UNREFERENCED_PARAMETER(Quota);
-    FrLdrTempFree(Ptr, 0);
+    FrLdrHeapFree(Ptr, 0);
 }
 
+/**
+ * @brief
+ * Initializes a flat hive descriptor for the
+ * hive and validates the registry hive.
+ * Volatile data is purged during this procedure
+ * for initialization.
+ *
+ * @param[in] CmHive
+ * A pointer to a CM (in-memory) hive descriptor
+ * containing the hive descriptor to be initialized.
+ *
+ * @param[in] ChunkBase
+ * An arbitrary pointer that points to the registry
+ * chunk base. This pointer serves as the base block
+ * containing the hive file header data.
+ *
+ * @param[in] LoadAlternate
+ * If set to TRUE, the function will initialize the
+ * hive as an alternate hive, otherwise FALSE to initialize
+ * it as primary.
+ *
+ * @return
+ * Returns TRUE if the hive has been initialized
+ * and registry data inside the hive is valid, FALSE
+ * otherwise.
+ */
+static
 BOOLEAN
-RegImportBinaryHive(
+RegInitializeHive(
+    _In_ PCMHIVE CmHive,
     _In_ PVOID ChunkBase,
-    _In_ ULONG ChunkSize)
+    _In_ BOOLEAN LoadAlternate)
 {
     NTSTATUS Status;
-    TRACE("RegImportBinaryHive(%p, 0x%lx)\n", ChunkBase, ChunkSize);
+    CM_CHECK_REGISTRY_STATUS CmStatusCode;
 
-    /* Allocate and initialize the hive */
-    CmHive = CmpAllocate(sizeof(CMHIVE), FALSE, 'eviH');
-    Status = HvInitialize(&CmHive->Hive,
+    /* Initialize the hive */
+    Status = HvInitialize(GET_HHIVE(CmHive),
                           HINIT_FLAT, // HINIT_MEMORY_INPLACE
                           0,
-                          0,
+                          LoadAlternate ? HFILE_TYPE_ALTERNATE : HFILE_TYPE_PRIMARY,
                           ChunkBase,
                           CmpAllocate,
                           CmpFree,
@@ -77,106 +117,423 @@ RegImportBinaryHive(
                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        CmpFree(CmHive, 0);
-        ERR("Corrupted hive %p!\n", ChunkBase);
+        ERR("Failed to initialize the flat hive (Status 0x%lx)\n", Status);
         return FALSE;
     }
 
-    /* Save the root key node */
-    RootKeyNode = (PCM_KEY_NODE)HvGetCell(&CmHive->Hive, CmHive->Hive.BaseBlock->RootCell);
+    /* Now check the hive and purge volatile data */
+    CmStatusCode = CmCheckRegistry(CmHive, CM_CHECK_REGISTRY_BOOTLOADER_PURGE_VOLATILES | CM_CHECK_REGISTRY_VALIDATE_HIVE);
+    if (!CM_CHECK_REGISTRY_SUCCESS(CmStatusCode))
+    {
+        ERR("CmCheckRegistry detected problems with the loaded flat hive (check code %lu)\n", CmStatusCode);
+        return FALSE;
+    }
 
-    TRACE("RegImportBinaryHive done\n");
     return TRUE;
 }
 
-LONG
+/**
+ * @brief
+ * Loads and reads a hive log at specified
+ * file offset.
+ *
+ * @param[in] DirectoryPath
+ * A pointer to a string that denotes the directory
+ * path of the hives and logs location.
+ *
+ * @param[in] LogFileOffset
+ * The file offset of which this function uses to
+ * seek at specific position during read.
+ *
+ * @param[in] LogName
+ * A pointer to a string that denotes the name of
+ * the desired hive log (e.g. "SYSTEM").
+ *
+ * @param[out] LogData
+ * A pointer to the returned hive log data that was
+ * read. The following data varies depending on the
+ * specified offset set up by the caller, that is used
+ * to where to start reading from the hive log.
+ *
+ * @return
+ * Returns TRUE if the hive log was loaded and read
+ * successfully, FALSE otherwise.
+ *
+ * @remarks
+ * The returned log data pointer to the caller is a
+ * virtual address. You must use VaToPa that converts
+ * the address to a physical one in order to actually
+ * use it!
+ */
+static
+BOOLEAN
+RegLoadHiveLog(
+    _In_ PCSTR DirectoryPath,
+    _In_ ULONG LogFileOffset,
+    _In_ PCSTR LogName,
+    _Out_ PVOID *LogData)
+{
+    ARC_STATUS Status;
+    ULONG LogId;
+    CHAR LogPath[MAX_PATH];
+    ULONG LogFileSize;
+    FILEINFORMATION FileInfo;
+    LARGE_INTEGER Position;
+    ULONG BytesRead;
+    PVOID LogDataVirtual;
+    PVOID LogDataPhysical;
+
+    /* Build the full path to the hive log */
+    RtlStringCbCopyA(LogPath, sizeof(LogPath), DirectoryPath);
+    RtlStringCbCatA(LogPath, sizeof(LogPath), LogName);
+
+    /* Open the file */
+    Status = ArcOpen(LogPath, OpenReadOnly, &LogId);
+    if (Status != ESUCCESS)
+    {
+        ERR("Failed to open %s (ARC code %lu)\n", LogName, Status);
+        return FALSE;
+    }
+
+    /* Get the file length */
+    Status = ArcGetFileInformation(LogId, &FileInfo);
+    if (Status != ESUCCESS)
+    {
+        ERR("Failed to get file information from %s (ARC code %lu)\n", LogName, Status);
+        ArcClose(LogId);
+        return FALSE;
+    }
+
+    /* Capture the size of the hive log file */
+    LogFileSize = FileInfo.EndingAddress.LowPart;
+    if (LogFileSize == 0)
+    {
+        ERR("LogFileSize is 0, %s is corrupt\n", LogName);
+        ArcClose(LogId);
+        return FALSE;
+    }
+
+    /* Allocate memory blocks for our log data */
+    LogDataPhysical = MmAllocateMemoryWithType(
+        MM_SIZE_TO_PAGES(LogFileSize + MM_PAGE_SIZE - 1) << MM_PAGE_SHIFT,
+        LoaderRegistryData);
+    if (LogDataPhysical == NULL)
+    {
+        ERR("Failed to allocate memory for log data\n");
+        ArcClose(LogId);
+        return FALSE;
+    }
+
+    /* Convert the address to virtual so that it can be useable */
+    LogDataVirtual = PaToVa(LogDataPhysical);
+
+    /* Seek within the log file at desired position */
+    Position.QuadPart = LogFileOffset;
+    Status = ArcSeek(LogId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
+    {
+        ERR("Failed to seek at %s (ARC code %lu)\n", LogName, Status);
+        ArcClose(LogId);
+        return FALSE;
+    }
+
+    /* And read the actual data from the log */
+    Status = ArcRead(LogId, LogDataPhysical, LogFileSize, &BytesRead);
+    if (Status != ESUCCESS)
+    {
+        ERR("Failed to read %s (ARC code %lu)\n", LogName, Status);
+        ArcClose(LogId);
+        return FALSE;
+    }
+
+    *LogData = LogDataVirtual;
+    ArcClose(LogId);
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Recovers the header base block of a flat
+ * registry hive.
+ *
+ * @param[in] ChunkBase
+ * A pointer to the registry hive chunk base of
+ * which the damaged header block is to be recovered.
+ *
+ * @param[in] DirectoryPath
+ * A pointer to a string that denotes the directory
+ * path of the hives and logs location.
+ *
+ * @param[in] LogName
+ * A pointer to a string that denotes the name of
+ * the desired hive log (e.g. "SYSTEM").
+ *
+ * @return
+ * Returns TRUE if the header base block was successfully
+ * recovered, FALSE otherwise.
+ */
+static
+BOOLEAN
+RegRecoverHeaderHive(
+    _Inout_ PVOID ChunkBase,
+    _In_ PCSTR DirectoryPath,
+    _In_ PCSTR LogName)
+{
+    BOOLEAN Success;
+    CHAR FullLogFileName[MAX_PATH];
+    PVOID LogData;
+    PHBASE_BLOCK HiveBaseBlock;
+    PHBASE_BLOCK LogBaseBlock;
+
+    /* Build the complete path of the hive log */
+    RtlStringCbCopyA(FullLogFileName, sizeof(FullLogFileName), LogName);
+    RtlStringCbCatA(FullLogFileName, sizeof(FullLogFileName), ".LOG");
+    Success = RegLoadHiveLog(DirectoryPath, 0, FullLogFileName, &LogData);
+    if (!Success)
+    {
+        ERR("Failed to read the hive log\n");
+        return FALSE;
+    }
+
+    /* Make sure the header from the hive log is actually sane  */
+    LogData = VaToPa(LogData);
+    LogBaseBlock = GET_HBASE_BLOCK(LogData);
+    if (!HvpVerifyHiveHeader(LogBaseBlock, HFILE_TYPE_LOG))
+    {
+        ERR("The hive log has corrupt base block\n");
+        return FALSE;
+    }
+
+    /* Copy the healthy header base block into the primary hive */
+    HiveBaseBlock = GET_HBASE_BLOCK(ChunkBase);
+    WARN("Recovering the hive base block...\n");
+    RtlCopyMemory(HiveBaseBlock,
+                  LogBaseBlock,
+                  LogBaseBlock->Cluster * HSECTOR_SIZE);
+    HiveBaseBlock->Type = HFILE_TYPE_PRIMARY;
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Recovers the corrupt data of a primary flat
+ * registry hive.
+ *
+ * @param[in] ChunkBase
+ * A pointer to the registry hive chunk base of
+ * which the damaged hive data is to be replaced
+ * with healthy data from the corresponding hive log.
+ *
+ * @param[in] DirectoryPath
+ * A pointer to a string that denotes the directory
+ * path of the hives and logs location.
+ *
+ * @param[in] LogName
+ * A pointer to a string that denotes the name of
+ * the desired hive log (e.g. "SYSTEM").
+ *
+ * @return
+ * Returns TRUE if the hive data was successfully
+ * recovered, FALSE otherwise.
+ *
+ * @remarks
+ * Data recovery of the target hive does not always
+ * guarantee the primary hive is fully recovered.
+ * It could happen a block from a hive log is not
+ * marked dirty (pending to be written to disk) that
+ * has healthy data therefore the following bad block
+ * would still remain in corrupt state in the main primary
+ * hive. In such scenarios an alternate hive must be replayed.
+ */
+static
+BOOLEAN
+RegRecoverDataHive(
+    _Inout_ PVOID ChunkBase,
+    _In_ PCSTR DirectoryPath,
+    _In_ PCSTR LogName)
+{
+    BOOLEAN Success;
+    ULONG StorageLength;
+    ULONG BlockIndex, LogIndex;
+    PUCHAR BlockPtr, BlockDest;
+    CHAR FullLogFileName[MAX_PATH];
+    PVOID LogData;
+    PUCHAR LogDataPhysical;
+    PHBASE_BLOCK HiveBaseBlock;
+
+    /* Build the complete path of the hive log */
+    RtlStringCbCopyA(FullLogFileName, sizeof(FullLogFileName), LogName);
+    RtlStringCbCatA(FullLogFileName, sizeof(FullLogFileName), ".LOG");
+    Success = RegLoadHiveLog(DirectoryPath, HV_LOG_HEADER_SIZE, FullLogFileName, &LogData);
+    if (!Success)
+    {
+        ERR("Failed to read the hive log\n");
+        return FALSE;
+    }
+
+    /* Make sure the dirty vector signature is there otherwise the hive log is corrupt */
+    LogDataPhysical = (PUCHAR)VaToPa(LogData);
+    if (*((PULONG)LogDataPhysical) != HV_LOG_DIRTY_SIGNATURE)
+    {
+        ERR("The hive log dirty signature could not be found\n");
+        return FALSE;
+    }
+
+    /* Copy the dirty data into the primary hive */
+    LogIndex = 0;
+    BlockIndex = 0;
+    HiveBaseBlock = GET_HBASE_BLOCK(ChunkBase);
+    StorageLength = HiveBaseBlock->Length / HBLOCK_SIZE;
+    for (; BlockIndex < StorageLength; ++BlockIndex)
+    {
+        /* Skip this block if it's not dirty and go to the next one */
+        if (LogDataPhysical[BlockIndex + sizeof(HV_LOG_DIRTY_SIGNATURE)] != HV_LOG_DIRTY_BLOCK)
+        {
+            continue;
+        }
+
+        /* Read the dirty block and copy it at right offsets */
+        BlockPtr = (PUCHAR)((ULONG_PTR)LogDataPhysical + 2 * HSECTOR_SIZE + LogIndex * HBLOCK_SIZE);
+        BlockDest = (PUCHAR)((ULONG_PTR)ChunkBase + (BlockIndex + 1) * HBLOCK_SIZE);
+        RtlCopyMemory(BlockDest, BlockPtr, HBLOCK_SIZE);
+
+        /* Increment the index in log as we continue further */
+        LogIndex++;
+    }
+
+    /* Fix the secondary sequence of the primary hive and compute a new checksum */
+    HiveBaseBlock->Sequence2 = HiveBaseBlock->Sequence1;
+    HiveBaseBlock->CheckSum = HvpHiveHeaderChecksum(HiveBaseBlock);
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Imports the SYSTEM binary hive from
+ * the registry base chunk that's been
+ * provided by the loader block.
+ *
+ * @param[in] ChunkBase
+ * A pointer to the registry base chunk
+ * that serves for SYSTEM hive initialization.
+ *
+ * @param[in] ChunkSize
+ * The size of the registry base chunk. This
+ * parameter refers to the actual size of
+ * the SYSTEM hive. This parameter is currently
+ * unused.
+ *
+ * @param[in] LoadAlternate
+ * If set to TRUE, the function will initialize the
+ * hive as an alternate hive, otherwise FALSE to initialize
+ * it as primary.
+ *
+ * @return
+ * Returns TRUE if hive importing and initialization
+ * have succeeded, FALSE otherwise.
+ */
+BOOLEAN
+RegImportBinaryHive(
+    _In_ PVOID ChunkBase,
+    _In_ ULONG ChunkSize,
+    _In_ PCSTR SearchPath,
+    _In_ BOOLEAN LoadAlternate)
+{
+    BOOLEAN Success;
+    PCM_KEY_NODE KeyNode;
+
+    TRACE("RegImportBinaryHive(%p, 0x%lx)\n", ChunkBase, ChunkSize);
+
+    /* Assume that we don't need boot recover, unless we have to */
+    ((PHBASE_BLOCK)ChunkBase)->BootRecover = HBOOT_NO_BOOT_RECOVER;
+
+    /* Allocate and initialize the hive */
+    CmSystemHive = FrLdrTempAlloc(sizeof(CMHIVE), 'eviH');
+    Success = RegInitializeHive(CmSystemHive, ChunkBase, LoadAlternate);
+    if (!Success)
+    {
+        /* Free the buffer and retry again */
+        FrLdrTempFree(CmSystemHive, 'eviH');
+        CmSystemHive = NULL;
+
+        if (!RegRecoverHeaderHive(ChunkBase, SearchPath, "SYSTEM"))
+        {
+            ERR("Failed to recover the hive header block\n");
+            return FALSE;
+        }
+
+        if (!RegRecoverDataHive(ChunkBase, SearchPath, "SYSTEM"))
+        {
+            ERR("Failed to recover the hive data\n");
+            return FALSE;
+        }
+
+        /* Now retry initializing the hive again */
+        CmSystemHive = FrLdrTempAlloc(sizeof(CMHIVE), 'eviH');
+        Success = RegInitializeHive(CmSystemHive, ChunkBase, LoadAlternate);
+        if (!Success)
+        {
+            ERR("Corrupted hive (despite recovery) %p\n", ChunkBase);
+            FrLdrTempFree(CmSystemHive, 'eviH');
+            return FALSE;
+        }
+
+        /*
+         * Acknowledge the kernel we recovered the SYSTEM hive
+         * on our side by applying log data.
+         */
+        ((PHBASE_BLOCK)ChunkBase)->BootRecover = HBOOT_BOOT_RECOVERED_BY_HIVE_LOG;
+    }
+
+    /* Save the root key node */
+    SystemHive = GET_HHIVE(CmSystemHive);
+    SystemRootCell = SystemHive->BaseBlock->RootCell;
+    ASSERT(SystemRootCell != HCELL_NIL);
+
+    /* Verify it is accessible */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(SystemHive, SystemRootCell);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+    HvReleaseCell(SystemHive, SystemRootCell);
+
+    return TRUE;
+}
+
+BOOLEAN
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood)
 {
-    WCHAR ControlSetKeyName[80];
-    HKEY SelectKey;
-    HKEY SystemKey;
-    ULONG CurrentSet = 0;
-    ULONG DefaultSet = 0;
-    ULONG LastKnownGoodSet = 0;
-    ULONG DataSize;
-    LONG Error;
+    UNICODE_STRING ControlSetName;
+    HCELL_INDEX ControlCell;
+    PCM_KEY_NODE KeyNode;
+    BOOLEAN AutoSelect;
+
     TRACE("RegInitCurrentControlSet\n");
 
-    Error = RegOpenKey(NULL,
-                       L"\\Registry\\Machine\\SYSTEM\\Select",
-                       &SelectKey);
-    if (Error != ERROR_SUCCESS)
+    /* Choose which control set to open and set it as the new "Current" */
+    RtlInitUnicodeString(&ControlSetName,
+                         LastKnownGood ? L"LastKnownGood"
+                                       : L"Default");
+
+    ControlCell = CmpFindControlSet(SystemHive,
+                                    SystemRootCell,
+                                    &ControlSetName,
+                                    &AutoSelect);
+    if (ControlCell == HCELL_NIL)
     {
-        ERR("RegOpenKey() failed (Error %u)\n", (int)Error);
-        return Error;
+        ERR("CmpFindControlSet('%wZ') failed\n", &ControlSetName);
+        return FALSE;
     }
 
-    DataSize = sizeof(ULONG);
-    Error = RegQueryValue(SelectKey,
-                          L"Default",
-                          NULL,
-                          (PUCHAR)&DefaultSet,
-                          &DataSize);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegQueryValue('Default') failed (Error %u)\n", (int)Error);
-        return Error;
-    }
+    CurrentControlSetKey = HCI_TO_HKEY(ControlCell);
 
-    DataSize = sizeof(ULONG);
-    Error = RegQueryValue(SelectKey,
-                          L"LastKnownGood",
-                          NULL,
-                          (PUCHAR)&LastKnownGoodSet,
-                          &DataSize);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegQueryValue('LastKnownGood') failed (Error %u)\n", (int)Error);
-        return Error;
-    }
+    /* Verify it is accessible */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(SystemHive, ControlCell);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+    HvReleaseCell(SystemHive, ControlCell);
 
-    CurrentSet = (LastKnownGood) ? LastKnownGoodSet : DefaultSet;
-    wcscpy(ControlSetKeyName, L"ControlSet");
-    switch(CurrentSet)
-    {
-        case 1:
-            wcscat(ControlSetKeyName, L"001");
-            break;
-        case 2:
-            wcscat(ControlSetKeyName, L"002");
-            break;
-        case 3:
-            wcscat(ControlSetKeyName, L"003");
-            break;
-        case 4:
-            wcscat(ControlSetKeyName, L"004");
-            break;
-        case 5:
-            wcscat(ControlSetKeyName, L"005");
-            break;
-    }
-
-    Error = RegOpenKey(NULL,
-                       L"\\Registry\\Machine\\SYSTEM",
-                       &SystemKey);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKey(SystemKey) failed (Error %lu)\n", Error);
-        return Error;
-    }
-
-    Error = RegOpenKey(SystemKey,
-                       ControlSetKeyName,
-                       &CurrentControlSetKey);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKey(CurrentControlSetKey) failed (Error %lu)\n", Error);
-        return Error;
-    }
-
-    TRACE("RegInitCurrentControlSet done\n");
-    return ERROR_SUCCESS;
+    return TRUE;
 }
 
 static
@@ -220,6 +577,7 @@ GetNextPathElement(
     return TRUE;
 }
 
+#if 0
 LONG
 RegEnumKey(
     _In_ HKEY Key,
@@ -228,7 +586,7 @@ RegEnumKey(
     _Inout_ PULONG NameSize,
     _Out_opt_ PHKEY SubKey)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode, SubKeyNode;
     HCELL_INDEX CellIndex;
     USHORT NameLength;
@@ -237,7 +595,8 @@ RegEnumKey(
           Key, Index, Name, NameSize, NameSize ? *NameSize : 0);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     CellIndex = CmpFindSubKeyByNumber(Hive, KeyNode, Index);
@@ -245,8 +604,10 @@ RegEnumKey(
     {
         TRACE("RegEnumKey index out of bounds (%d) in key (%.*s)\n",
               Index, KeyNode->NameLength, KeyNode->Name);
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_NO_MORE_ITEMS;
     }
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     /* Get the value cell */
     SubKeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
@@ -279,14 +640,15 @@ RegEnumKey(
 
     *NameSize = NameLength + sizeof(WCHAR);
 
-    /**/HvReleaseCell(Hive, CellIndex);/**/
+    HvReleaseCell(Hive, CellIndex);
 
     if (SubKey != NULL)
-        *SubKey = (HKEY)SubKeyNode;
+        *SubKey = HCI_TO_HKEY(CellIndex);
 
     TRACE("RegEnumKey done -> %u, '%.*S'\n", *NameSize, *NameSize, Name);
     return ERROR_SUCCESS;
 }
+#endif
 
 LONG
 RegOpenKey(
@@ -296,24 +658,23 @@ RegOpenKey(
 {
     UNICODE_STRING RemainingPath, SubKeyName;
     UNICODE_STRING CurrentControlSet = RTL_CONSTANT_STRING(L"CurrentControlSet");
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = (ParentKey ? GET_HHIVE_FROM_HKEY(ParentKey) : GET_HHIVE(CmSystemHive));
     PCM_KEY_NODE KeyNode;
     HCELL_INDEX CellIndex;
+
     TRACE("RegOpenKey(%p, '%S', %p)\n", ParentKey, KeyName, Key);
 
     /* Initialize the remaining path name */
     RtlInitUnicodeString(&RemainingPath, KeyName);
 
-    /* Get the parent key node */
-    KeyNode = (PCM_KEY_NODE)ParentKey;
-
     /* Check if we have a parent key */
-    if (KeyNode == NULL)
+    if (ParentKey == NULL)
     {
         UNICODE_STRING SubKeyName1, SubKeyName2, SubKeyName3;
         UNICODE_STRING RegistryPath = RTL_CONSTANT_STRING(L"Registry");
         UNICODE_STRING MachinePath = RTL_CONSTANT_STRING(L"MACHINE");
         UNICODE_STRING SystemPath = RTL_CONSTANT_STRING(L"SYSTEM");
+
         TRACE("RegOpenKey: absolute path\n");
 
         if ((RemainingPath.Length < sizeof(WCHAR)) ||
@@ -345,13 +706,16 @@ RegOpenKey(
         }
 
         /* Use the root key */
-        KeyNode = RootKeyNode;
+        CellIndex = SystemRootCell;
+    }
+    else
+    {
+        /* Use the parent key */
+        CellIndex = HKEY_TO_HCI(ParentKey);
     }
 
-    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
-
     /* Check if this is the root key */
-    if (KeyNode == RootKeyNode)
+    if (CellIndex == SystemRootCell)
     {
         UNICODE_STRING TempPath = RemainingPath;
 
@@ -362,34 +726,44 @@ RegOpenKey(
         if (RtlEqualUnicodeString(&SubKeyName, &CurrentControlSet, TRUE))
         {
             /* Use the CurrentControlSetKey and update the remaining path */
-            KeyNode = (PCM_KEY_NODE)CurrentControlSetKey;
+            CellIndex = HKEY_TO_HCI(CurrentControlSetKey);
             RemainingPath = TempPath;
         }
     }
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     TRACE("RegOpenKey: RemainingPath '%wZ'\n", &RemainingPath);
 
     /* Loop while there are path elements */
     while (GetNextPathElement(&SubKeyName, &RemainingPath))
     {
+        HCELL_INDEX NextCellIndex;
+
         TRACE("RegOpenKey: next element '%wZ'\n", &SubKeyName);
 
         /* Get the next sub key */
-        CellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
+        NextCellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
+        HvReleaseCell(Hive, CellIndex);
+        CellIndex = NextCellIndex;
         if (CellIndex == HCELL_NIL)
         {
-            ERR("Did not find sub key '%wZ' (full %S)\n", &SubKeyName, KeyName);
+            WARN("Did not find sub key '%wZ' (full: %S)\n", &SubKeyName, KeyName);
             return ERROR_PATH_NOT_FOUND;
         }
 
         /* Get the found key */
         KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
         ASSERT(KeyNode);
+        ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
     }
 
-    *Key = (HKEY)KeyNode;
+    HvReleaseCell(Hive, CellIndex);
+    *Key = HCI_TO_HKEY(CellIndex);
 
-    TRACE("RegOpenKey done\n");
     return ERROR_SUCCESS;
 }
 
@@ -439,7 +813,7 @@ RegQueryValue(
     _Out_opt_ PUCHAR Data,
     _Inout_opt_ PULONG DataSize)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode;
     PCM_KEY_VALUE ValueCell;
     HCELL_INDEX CellIndex;
@@ -449,7 +823,8 @@ RegQueryValue(
           Key, ValueName, Type, Data, DataSize);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     /* Initialize value name string */
@@ -459,8 +834,10 @@ RegQueryValue(
     {
         TRACE("RegQueryValue value not found in key (%.*s)\n",
               KeyNode->NameLength, KeyNode->Name);
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_FILE_NOT_FOUND;
     }
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     /* Get the value cell */
     ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
@@ -470,7 +847,6 @@ RegQueryValue(
 
     HvReleaseCell(Hive, CellIndex);
 
-    TRACE("RegQueryValue success\n");
     return ERROR_SUCCESS;
 }
 
@@ -490,7 +866,7 @@ RegEnumValue(
     _Out_opt_ PUCHAR Data,
     _Inout_opt_ PULONG DataSize)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode;
     PCELL_DATA ValueListCell;
     PCM_KEY_VALUE ValueCell;
@@ -500,7 +876,8 @@ RegEnumValue(
           Key, Index, ValueName, NameSize, Type, Data, DataSize, *DataSize);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     /* Check if the index is valid */
@@ -509,6 +886,7 @@ RegEnumValue(
         (Index >= KeyNode->ValueList.Count))
     {
         ERR("RegEnumValue: index invalid\n");
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_NO_MORE_ITEMS;
     }
 
@@ -550,6 +928,7 @@ RegEnumValue(
 
     HvReleaseCell(Hive, ValueListCell->KeyList[Index]);
     HvReleaseCell(Hive, KeyNode->ValueList.List);
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     TRACE("RegEnumValue done -> %u, '%.*S'\n", *NameSize, *NameSize, ValueName);
     return ERROR_SUCCESS;

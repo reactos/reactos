@@ -20,12 +20,12 @@ EDITMENU MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Desfazer", EM_UNDO
+        MENUITEM "&Retroceder", EM_UNDO
         MENUITEM SEPARATOR
         MENUITEM "Recor&tar", WM_CUT
         MENUITEM "&Copiar", WM_COPY
         MENUITEM "C&olar", WM_PASTE
-        MENUITEM "&Apagar", WM_CLEAR
+        MENUITEM "&Eliminar", WM_CLEAR
         MENUITEM SEPARATOR
         MENUITEM "&Seleccionar Tudo", EM_SETSEL
     END

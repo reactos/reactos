@@ -52,8 +52,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason)
     {
+#ifndef __REACTOS__
         case DLL_WINE_PREATTACH:
             return FALSE;    /* prefer native version */
+#endif
         case DLL_PROCESS_ATTACH:
             hInstance = hinstDLL;
             DisableThreadLibraryCalls(hinstDLL);
@@ -789,11 +791,15 @@ static LRESULT CALLBACK cert_mgr_advanced_dlg_proc(HWND hwnd, UINT msg,
         {
         case IDOK:
             save_cert_mgr_usages(hwnd);
+#ifndef __REACTOS__
             ImageList_Destroy((HIMAGELIST)GetWindowLongPtrW(hwnd, DWLP_USER));
+#endif
             EndDialog(hwnd, IDOK);
             break;
         case IDCANCEL:
+#ifndef __REACTOS__
             ImageList_Destroy((HIMAGELIST)GetWindowLongPtrW(hwnd, DWLP_USER));
+#endif
             EndDialog(hwnd, IDCANCEL);
             break;
         }
@@ -1153,6 +1159,14 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
         show_store_certs(hwnd, cert_mgr_index_to_store(tab, 0));
         break;
     }
+#ifdef __REACTOS__
+    case WM_DESTROY:
+        free_certs(GetDlgItem(hwnd, IDC_MGR_CERTS));
+        close_stores(GetDlgItem(hwnd, IDC_MGR_STORES));
+        data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+        HeapFree(GetProcessHeap(), 0, data);
+        break;
+#endif
     case WM_NOTIFY:
     {
         NMHDR *hdr = (NMHDR *)lp;
@@ -1278,11 +1292,13 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             cert_mgr_do_remove(hwnd);
             break;
         case IDCANCEL:
+#ifndef __REACTOS__
             free_certs(GetDlgItem(hwnd, IDC_MGR_CERTS));
             close_stores(GetDlgItem(hwnd, IDC_MGR_STORES));
             data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
             ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
+#endif
             EndDialog(hwnd, IDCANCEL);
             break;
         }
@@ -3717,7 +3733,9 @@ static UINT CALLBACK cert_properties_general_callback(HWND hwnd, UINT msg,
         data = (struct edit_cert_data *)GetWindowLongPtrW(hwnd, DWLP_USER);
         if (data)
         {
+#ifndef __REACTOS__
             ImageList_Destroy(data->imageList);
+#endif
             HeapFree(GetProcessHeap(), 0, data);
         }
         break;
@@ -4219,7 +4237,9 @@ static UINT CALLBACK hierarchy_callback(HWND hwnd, UINT msg,
     {
     case PSPCB_RELEASE:
         data = (struct hierarchy_data *)page->lParam;
+#ifndef __REACTOS__
         ImageList_Destroy(data->imageList);
+#endif
         HeapFree(GetProcessHeap(), 0, data);
         break;
     }
@@ -5114,6 +5134,9 @@ static LRESULT CALLBACK import_file_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             ofn.lpstrFilter = make_import_file_filter(data->dwFlags);
             ofn.lpstrFile = fileBuf;
             ofn.nMaxFile = ARRAY_SIZE(fileBuf);
+#ifdef __REACTOS__
+            ofn.Flags = OFN_EXPLORER;
+#endif
             fileBuf[0] = 0;
             if (GetOpenFileNameW(&ofn))
                 SendMessageW(GetDlgItem(hwnd, IDC_IMPORT_FILENAME), WM_SETTEXT,
@@ -7318,6 +7341,13 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
         select_cert_update_view_button(hwnd);
         break;
     }
+#ifdef __REACTOS__
+    case WM_DESTROY:
+        free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
+        data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+        HeapFree(GetProcessHeap(), 0, data);
+        break;
+#endif
     case WM_NOTIFY:
     {
         NMHDR *hdr = (NMHDR *)lp;
@@ -7375,17 +7405,21 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
                 break;
             }
             *data->cert = CertDuplicateCertificateContext(cert);
+#ifndef __REACTOS__
             free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
             ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
+#endif
             EndDialog(hwnd, IDOK);
             break;
         }
         case IDCANCEL:
+#ifndef __REACTOS__
             data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
             free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
             ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
+#endif
             EndDialog(hwnd, IDCANCEL);
             break;
         case IDC_SELECT_VIEW_CERT:

@@ -23,5 +23,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "ライセンス マネージャ"
     IDS_CPLDESCRIPTION_1 "ライセンス マネージャ"
-    IDS_REACTOS "ReactOS - FreeSoftware"
+    IDS_REACTOS "ReactOS - フリーソフト"
 END

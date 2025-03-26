@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 WCHAR dllpath[MAX_PATH];
 
 LONG g_TlsCalled = 0;

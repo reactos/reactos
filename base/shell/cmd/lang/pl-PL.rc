@@ -2,10 +2,10 @@
  *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
  *    Updated by niski - Maciej Bialas (Mar, 2010)
  *    Use ReactOS forum PM or IRC to contact me
- *    http://www.reactos.org
+ *    https://reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020) 
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -108,9 +108,9 @@ urządzenie CTTY\n\n\
             CON przeważnie jest domyślnym urządzeniem standardowym I/O.\n\n\
 Aby przywrócić kontrolę standardowej konsoli, wpisz: CTTY CON na urządzeniu\n\
 pomocniczym."
-    STRING_DATE_HELP1 "\nPodaj nową datę (mm%cdd%crrrr): "
-    STRING_DATE_HELP2 "\nPodaj nową datę (dd%cmm%crrrr): "
-    STRING_DATE_HELP3 "\nPodaj nową datę (rrrr%cmm%cdd): "
+    STRING_DATE_HELP1 "Podaj nową datę (mm%cdd%crrrr): "
+    STRING_DATE_HELP2 "Podaj nową datę (dd%cmm%crrrr): "
+    STRING_DATE_HELP3 "Podaj nową datę (rrrr%cmm%cdd): "
     STRING_DATE_HELP4 "Wyświetla lub zmienia datę systemową.\n\n\
 DATE [/T][data]\n\n\
   /T    tylko wyświetlenie\n\n\
@@ -179,10 +179,10 @@ odwrócić działanie parametrów przedrostkiem - (myślnik)-- na przykład, /-W
     STRING_DIR_HELP2 " Wolumin w napędzie %c ma etykietę: %s\n"
     STRING_DIR_HELP3 " Wolumin w napędzie %c nie posiada etykiety.\n"
     STRING_DIR_HELP4 " Numer seryjny woluminu to: %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Ogółem wyświetonych:\n%16i plik(ów)% 14s bajtów\n"
-    STRING_DIR_HELP6 "%16i katalog(ów)% 15s bajtów wolne\n"
+    STRING_DIR_HELP5 "\n     Ogółem wyświetonych:\n%16i plik(ów)    %14s bajtów\n"
+    STRING_DIR_HELP6 "%16i katalog(ów) %14s bajtów wolne\n"
     STRING_DIR_HELP7 "\n katalog %s\n\n"
-    STRING_DIR_HELP8 "%16i plik(ów)% 14s bajtów\n"
+    STRING_DIR_HELP8 "%16i plik(ów)    %14s bajtów\n"
     STRING_DIRSTACK_HELP1 "Przechowuje obecny katalog dla potrzeb komendy POPD, następnie\n\
 zmienia na podany.\n\n\
 PUSHD [ścieżka | ..]\n\n\
@@ -251,7 +251,8 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
-    STRING_LOCALE_HELP1 "Czas bieżący"
+    STRING_DATE_NOW "The current date is: "
+    STRING_TIME_NOW "Czas bieżący: "
     STRING_MKDIR_HELP "Tworzy katalog.\n\n\
 MKDIR [napęd:]ścieżka\nMD [napęd:]ścieżka"
     STRING_MKLINK_HELP "Tworzy dowiązanie obiektu w systemie plików.\n\n\
@@ -342,33 +343,6 @@ Uwaga: możesz również podać nową ścieżkę dostępu dla zmienionych plikó
 do tego komendy MOVE.\n"
     STRING_REN_HELP2 "   zmieniono nazwę %lu pliku\n"
     STRING_REN_HELP3 "   zmieniono nazwy %lu plików\n"
-    STRING_REPLACE_HELP1 "Zamienia pliki.\n\n\
-REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
-REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [napęd1:][ścieżka1]nazwa_pliku Wyznacza źródło pliku bądź plików.\n\
-  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być\n\
-                           zamienione.\n\
-  /A                       Dodaje nowe pliki do lokalizacji docelowej. Nie można\n\
-                           łączyć z opcjami /S lub /U.\n\
-  /P                       Żąda potwierdzenia przed zamianą istniejącego lub\n\
-                           dodaniem nowego pliku.\n\
-  /R                       Zamienia pliki tylko do odczytu na równi z niezabez-\n\
-                           pieczonymi.\n\
-  /S                       Zamienia pliki we wszystkich podkatalogach w lokazlizacji\n\
-                           docelowej. Nie można łączyć z opcją /A.\n\
-  /W                      Czeka na włożenie dyskietki przed rozpoczęciem zamiany.\n\
-  /U                       Zamienia (aktualizuje) wyłącznie pliki starsze od\n\
-                           źródłowych. Nie można łączyć z opcją /A.\n"
-    STRING_REPLACE_HELP2 "Brak ścieżki do źródła\n"
-    STRING_REPLACE_HELP3 "Nie zamieniono żadnego pliku\n"
-    STRING_REPLACE_HELP4 "Zamieniono %lu plik(i/ów)\n"
-    STRING_REPLACE_HELP5 "Zamiana %s\n"
-    STRING_REPLACE_HELP6 "Zamieniony %s\n"
-    STRING_REPLACE_HELP7 "Nie dodano nowych plików\n"
-    STRING_REPLACE_HELP8 "Dodano %lu plik(i/ów)\n"
-    STRING_REPLACE_HELP9 "Czy dodać %s (T/N)? "
-    STRING_REPLACE_HELP10 "Czy zamienić %s (T/N)? "
-    STRING_REPLACE_HELP11 "Dodawanie %s\n"
     STRING_SHIFT_HELP "Zmienia pozycję parametru w pliku wsadowym.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "Przesuwa kursor i opcjonalnie wyświetla tekst\n\n\
@@ -445,7 +419,7 @@ parametrem: `ver /c'."
 o ile nie naruszasz warunków GNU General Public License, w formie opublikowanej\n\
 przez Free Software Foundation; wersja 2 albo dowolna późniejsza.\n"
     STRING_VERSION_HELP5 "\nRaporty o błędach prosimy przesyłać pod adres: <ros-dev@reactos.org>.\n\
-Uaktualnienia dostępne na stronie: http://www.reactos.org"
+Uaktualnienia dostępne na stronie: https://reactos.org"
     STRING_VERSION_HELP6 "\nwersja FreeDOS, napisana przez:\n"
     STRING_VERSION_HELP7 "\nwersja ReactOS, napisana przez:\n"
     STRING_VOL_HELP1 " Wolumin w napędzie %c ma etykietę: %s"
@@ -453,14 +427,14 @@ Uaktualnienia dostępne na stronie: http://www.reactos.org"
     STRING_VOL_HELP3 " Numer seryjny woluminu to: %04X-%04X\n"
     STRING_VOL_HELP4 "Wyświetla etykietę woluminu w danym napędzie (o ile istnieje) i jego numer seryjny.\n\nVOL [napęd:]"
     STRING_WINDOW_HELP1 "Zmienia wymiar i pozycję danego okna konsoli\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['tytuł']\n\n\
 /POS          określa położenie i rozmiary okna\n\
 MIN           minimalizuje okno\n\
 MAX           maksymalizuje okno\n\
 RESTORE       odtwarza standardowe ustawienia okna"
     STRING_WINDOW_HELP2 "Zmienia wymiar i pozycję określonego okna konsoli\n\n\
-ACTIVATE 'tytuł' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'tytuł' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['nowy_tytuł']\n\n\
 window        tytuł okna, na którym zostaną przeprowadzone zmiany\n\
 /POS          określa położenie i rozmiary okna\n\
@@ -481,23 +455,23 @@ title         nowy tytuł okna\n"
     STRING_CMD_ERROR3 "Nie można przekierować do pliku %s\n"
     STRING_CMD_ERROR4 "Wykonywanie %s...\n"
     STRING_CMD_ERROR5 "Wykonywanie cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "Błąd! Kolor tła i tekstu nie może być taki sam"
-    STRING_COLOR_ERROR2 "Błąd w oznaczeniu kolorów."
+    STRING_COLOR_ERROR1 "Błąd! Kolor tła i tekstu nie może być taki sam\n"
+    STRING_COLOR_ERROR2 "Błąd w oznaczeniu kolorów.\n"
     STRING_CONSOLE_ERROR "Nieznany błąd: %d\n"
     STRING_COPY_ERROR1 "Błąd: Nie można otworzyć źródła - %s!\n"
     STRING_COPY_ERROR2 "Błąd: Nie można przekopiować pliku na niego samego!\n"
     STRING_COPY_ERROR3 "Błąd zapisu na miejscu docelowym!\n"
     STRING_COPY_ERROR4 "Błąd: Nie zaimplementowano!\n"
-    STRING_DATE_ERROR "Data nieprawidłowa."
+    STRING_DATE_ERROR "Data nieprawidłowa.\n"
     STRING_DEL_ERROR5 "Plik %s zostanie skasowany! "
     STRING_DEL_ERROR6 "Czy jesteś pewien (T/N)? "
     STRING_DEL_ERROR7 "Kasowanie: %s\n"
     STRING_ERROR_ERROR1 "Nieznany błąd! Kod błędu: 0x%lx\n"
     STRING_ERROR_ERROR2 "Błąd składni"
-    STRING_FOR_ERROR1 "Brak 'in' dla twierdzenia."
-    STRING_FOR_ERROR2 "Nawias nie został znaleziony."
-    STRING_FOR_ERROR3 "Brakuje 'do'."
-    STRING_FOR_ERROR4 "Brak komendy po 'do'."
+    STRING_FOR_ERROR1 "Brak 'in' dla twierdzenia.\n"
+    STRING_FOR_ERROR2 "Nawias nie został znaleziony.\n"
+    STRING_FOR_ERROR3 "Brakuje 'do'.\n"
+    STRING_FOR_ERROR4 "Brak komendy po 'do'.\n"
     STRING_FREE_ERROR1 "Nieprawidłowa litera napędu"
     STRING_FREE_ERROR2 "brak"
     STRING_GOTO_ERROR1 "Brak etykiety dla GOTO\n"
@@ -506,10 +480,10 @@ title         nowy tytuł okna\n"
     STRING_MD_ERROR2 "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Błąd]\n"
-    STRING_REN_ERROR1 "MoveFile() nieudane. Błąd: %lu\n"
-    STRING_TIME_ERROR1 "Nieprawidłowy czas."
-    STRING_TYPE_ERROR1 "Nieprawidłowa opcja '/%s'\n"
-    STRING_WINDOW_ERROR1 "Okno nie zostało odnalezione"
+    STRING_REN_ERROR "MoveFile() nieudane. Błąd: %lu\n"
+    STRING_TIME_ERROR "Nieprawidłowy czas.\n"
+    STRING_TYPE_ERROR "Nieprawidłowa opcja '/%s'\n"
+    STRING_WINDOW_ERROR "Okno nie zostało odnalezione\n"
     STRING_ERROR_PARAMETERF_ERROR "Format parametrów nieprawidłowy - %c\n"
     STRING_ERROR_INVALID_SWITCH "Niewłaściwy argument - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Zbyt wiele parametrów - %s\n"
@@ -523,24 +497,25 @@ title         nowy tytuł okna\n"
     STRING_ERROR_CANNOTPIPE "Błąd potoków! Nie można otworzyć pliku tymczasowego.\n"
     STRING_ERROR_D_PAUSEMSG "Naciśnij dowolny klawisz, aby kontynuować . . . "
     STRING_ERROR_DRIVER_NOT_READY "Napęd nie jest gotowy"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Zmienna środowiskowa '%s' nie jest zdefiniowana\n"
-    STRING_REPLACE_ERROR1 "Nieprawidłowy parametr - %s\n"
-    STRING_REPLACE_ERROR2 "Ścieżka nie została odnaleziona - %s\n"
-    STRING_REPLACE_ERROR3 "Nazwa pliku, katalogu lub napędu nie jest prawidłowa.\n"
-    STRING_REPLACE_ERROR4 "Nieprawidłowa kombinacja parametrów\n"
-    STRING_REPLACE_ERROR5 "Dostęp zabroniony - %s\n"
-    STRING_REPLACE_ERROR6 "Nie znaleziono plików - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32 -  Błąd współdzielenia\n"
     STRING_CMD_INFOLINE "  Wiersz polecenia ReactOS                                    Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Wersja %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpreter linii poleceń ReactOS\nWersja %s %s"
     STRING_VERSION_RUNNING_ON "Działający na: "
     STRING_VERSION_RUNVER "%s [Wersja %d.%d.%d] %s"
     STRING_COPY_FILE "        %d plik(ów) skopiowano\n"
     STRING_DELETE_WIPE "skasowano"
-    STRING_FOR_ERROR "złe określenie zmiennej."
-    STRING_SCREEN_COL "nieprawidłowy numer kolumny"
-    STRING_SCREEN_ROW "nieprawidłowy numer rzędu"
+    STRING_FOR_ERROR "złe określenie zmiennej.\n"
+    STRING_SCREEN_COL "nieprawidłowy numer kolumny\n"
+    STRING_SCREEN_ROW "nieprawidłowy numer rzędu\n"
     STRING_TIMER_TIME "Stoper %d czas - %s: "
     STRING_MKLINK_CREATED_SYMBOLIC "Dowiązanie symboliczne utworzone dla %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "Dowiązanie twarde utworzone dla %s <<===>> %s\n"

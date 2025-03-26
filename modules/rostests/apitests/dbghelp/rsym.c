@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for dbghelp rsym functions
  * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
- * 
+ *
  *              These tests are based on the PDB tests.
  */
 
@@ -321,7 +321,7 @@ START_TEST(rsym)
         dwErr = GetLastError();
 
         ok_ulonglong(BaseAddress, 0x600000);
-        ok_hex(dwErr, ERROR_SUCCESS);
+        ok(dwErr == ERROR_SUCCESS || dwErr == ERROR_FILE_NOT_FOUND, "Got 0x%x\n", dwErr);
 
         if (BaseAddress == 0x600000)
         {

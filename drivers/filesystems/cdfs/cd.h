@@ -99,7 +99,7 @@ typedef FILE_ID                     *PFILE_ID;
 #define TOC_DATA_TRACK              (0x04)
 #define TOC_LAST_TRACK              (0xaa)
 
-
+
 //
 //  There is considerable rearrangement of the volume descriptors for
 //  ISO and HSG.  However, within each standard the same structure can
@@ -122,7 +122,7 @@ typedef FILE_ID                     *PFILE_ID;
 
 #define MAX_FILE_ID_LENGTH          (255)
 
-
+
 typedef struct _RAW_ISO_VD {
 
     UCHAR       DescType;           // volume type: 1 = standard, 2 = coded
@@ -165,7 +165,7 @@ typedef struct _RAW_ISO_VD {
 } RAW_ISO_VD;
 typedef RAW_ISO_VD *PRAW_ISO_VD;
 
-
+
 typedef struct _RAW_HSG_VD {
 
     ULONG       BlkNumI;            // logical block number Intel
@@ -209,7 +209,7 @@ typedef struct _RAW_HSG_VD {
 } RAW_HSG_VD;
 typedef RAW_HSG_VD *PRAW_HSG_VD;
 
-
+
 typedef struct _RAW_JOLIET_VD {
 
     UCHAR       DescType;           // volume type: 2 = coded
@@ -316,7 +316,7 @@ typedef RAW_JOLIET_VD *PRAW_JOLIET_VD;
     ((PRAW_ISO_VD) (R))->VolSpaceI      \
 )
 
-
+
 //
 //  This structure is used to overlay a region of a disk sector
 //  to retrieve a single directory entry.  There is a difference
@@ -409,7 +409,7 @@ typedef RAW_DIRENT *PRAW_DIRENT;
         }                                                       \
 }
 
-
+
 //
 //  The on-disk representation of a Path Table entry differs between
 //  the ISO version and the HSG version.  The fields are the same
@@ -470,7 +470,7 @@ typedef RAW_PATH_HSG *PRAW_PATH_HSG;
     (RP)->DirLoc                                    \
 )
 
-
+
 //
 //  System use are for XA data.  The following is the system use area for
 //  directory entries on XA data disks.

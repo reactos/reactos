@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #include <wine/test.h>
+#undef subtest
 
 extern void no_op(void);
 extern int return_arg(int);
@@ -1068,7 +1069,7 @@ DEFINE_TEST(test_yield_5)
 	return test_yield_5_helper() == return_positive() && test_yield_5_ret == return_positive();
 }
 
-int test_yield_6_ret;
+static int test_yield_6_ret;
 
 static
 int test_yield_6_helper(void)
@@ -2424,7 +2425,12 @@ DEFINE_TEST(test_unvolatile)
     }
     _SEH2_END;
 
+    /* This works with a proper SEH implementation, but not with our hacked PSEH */
+#ifdef _USE_NATIVE_SEH
     return (val == 4);
+#else
+    return (val == 4 || val == 3);
+#endif
 }
 
 DEFINE_TEST(test_unvolatile_2)
@@ -2643,7 +2649,7 @@ int call_test(int (* func)(void))
 	static int ret;
 	static struct volatile_context before, after;
 	static LPTOP_LEVEL_EXCEPTION_FILTER prev_unhandled_exception;
-#if !defined(_PSEH3_H_) && !defined(_MSC_VER)
+#if defined(_X86_) && !defined(_PSEH3_H_) && !defined(_MSC_VER)
 	static _SEH2Registration_t * prev_frame;
 	_SEH2Registration_t passthrough_frame;
 #endif

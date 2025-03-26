@@ -1197,7 +1197,7 @@
 #define PACKAGE_TARNAME "ReactOS"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "http://www.reactos.org/"
+#define PACKAGE_URL "https://reactos.org/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION KERNEL_VERSION_STR

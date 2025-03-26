@@ -51,6 +51,11 @@ GetAvailableModes(
       return 0;
    }
 
+   if (Modes.NumModes == 0)
+   {
+      return 0;
+   }
+
    *ModeInfoSize = Modes.ModeInformationLength;
 
    /*
@@ -74,7 +79,7 @@ GetAvailableModes(
                           &ulTemp))
    {
       EngFreeMem(*ModeInfo);
-      *ModeInfo = (PVIDEO_MODE_INFORMATION)NULL;
+      *ModeInfo = NULL;
       return 0;
    }
 

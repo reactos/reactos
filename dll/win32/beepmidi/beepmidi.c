@@ -83,7 +83,7 @@ typedef struct _DeviceInfo
     HDRVR mme_handle;
     HANDLE kernel_device;
 
-    DWORD callback;
+    DWORD_PTR callback;
     DWORD instance;
     DWORD flags;
 

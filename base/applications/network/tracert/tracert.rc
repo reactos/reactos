@@ -7,7 +7,6 @@
 #define REACTOS_STR_ORIGINAL_COPYRIGHT "Ged Murphy (gedmurphy@reactos.org)"
 #include <reactos/version.rc>
 
-
 /* UTF-8 */
 #pragma code_page(65001)
 

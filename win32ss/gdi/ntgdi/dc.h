@@ -14,7 +14,7 @@ enum _FONT_STATE
 /* fl */
 #define DC_FL_PAL_BACK 1
 
-enum _DCFLAGS
+typedef enum _DCFLAGS
 {
     DC_DISPLAY           = 0x0001,
     DC_DIRECT            = 0x0002,
@@ -34,13 +34,13 @@ enum _DCFLAGS
 #if DBG
     DC_PREPARED          = 0x8000
 #endif
-};
+} DCFLAGS;
 
 typedef enum _DCTYPE
 {
-    DCTYPE_DIRECT = 0,
-    DCTYPE_MEMORY = 1,
-    DCTYPE_INFO = 2,
+    DCTYPE_DIRECT = 0,  /* Normal device context */
+    DCTYPE_MEMORY = 1,  /* Memory device context */
+    DCTYPE_INFO   = 2,  /* Information context   */
 } DCTYPE;
 
 
@@ -88,7 +88,10 @@ typedef struct _DCLEVEL
   SIZE              sizl;
 } DCLEVEL, *PDCLEVEL;
 
-/* The DC object structure */
+/*
+ * The DC object structure.
+ * See also: https://reactos.org/wiki/Techwiki:Win32k/DC
+ */
 typedef struct _DC
 {
   /* Header for all gdi objects in the handle table.
@@ -182,7 +185,7 @@ COLORREF FASTCALL IntSetDCPenColor(HDC,COLORREF);
 int FASTCALL GreGetGraphicsMode(HDC);
 BOOL FASTCALL GreSetBrushOrg(HDC,INT,INT,LPPOINT);
 
-NTSTATUS NTAPI InitDcImpl(VOID);
+CODE_SEG("INIT") NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
 PDC NTAPI DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType);
 BOOL NTAPI DC_bAllocDcAttr(PDC pdc);
@@ -200,8 +203,6 @@ VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 VOID NTAPI DC_vFreeDcAttr(PDC pdc);
 VOID NTAPI DC_vInitDc(PDC pdc, DCTYPE dctype, PPDEVOBJ ppdev);
 
-VOID FASTCALL IntGdiReferencePdev(PPDEVOBJ pPDev);
-VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);

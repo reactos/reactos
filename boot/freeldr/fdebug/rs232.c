@@ -98,7 +98,8 @@ BOOL Rs232ConfigurePortWin32(TCHAR* DeviceControlString)
     DCB        dcb;
     DWORD    ErrorCode;
 
-    /*if (!GetCommState(hPortHandle, &dcb))
+#if 0
+    if (!GetCommState(hPortHandle, &dcb))
     {
         ErrorCode = GetLastError();
 
@@ -124,10 +125,10 @@ BOOL Rs232ConfigurePortWin32(TCHAR* DeviceControlString)
     dcb.fDsrSensitivity = FALSE;
     dcb.fRtsControl = RTS_CONTROL_DISABLE;
     dcb.fOutxCtsFlow = FALSE;
-    dcb.fOutxCtsFlow = FALSE;*/
+    dcb.fOutxCtsFlow = FALSE;
+#endif
 
-
-    memset(&dcb, 0, sizeof(DCB));
+    ZeroMemory(&dcb, sizeof(dcb));
     dcb.DCBlength = sizeof(dcb);
     if (!BuildCommDCB(DeviceControlString, &dcb))
     {

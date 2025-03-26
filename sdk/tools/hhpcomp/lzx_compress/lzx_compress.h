@@ -28,7 +28,7 @@ typedef struct lzx_results
   long len_uncompressed_input;
 } lzx_results;
 
-int lzx_init(struct lzx_data **lzxdp, int wsize_code, 
+int lzx_init(struct lzx_data **lzxdp, int wsize_code,
 	     lzx_get_bytes_t get_bytes, void *get_bytes_arg,
 	     lzx_at_eof_t at_eof,
 	     lzx_put_bytes_t put_bytes, void *put_bytes_arg,

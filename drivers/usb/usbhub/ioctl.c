@@ -84,7 +84,7 @@ USBH_SelectConfigOrInterfaceComplete(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-USBH_PdoUrbFilter(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension, 
+USBH_PdoUrbFilter(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
                   IN PIRP Irp)
 {
     PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor;
@@ -463,7 +463,7 @@ USBH_PortIdleNotificationCancelRoutine(IN PDEVICE_OBJECT Device,
     }
 
     Status = USBH_AllocateWorkItem(HubExtension,
-                                   &HubIoWorkItem, 
+                                   &HubIoWorkItem,
                                    USBH_IdleCancelPowerHubWorker,
                                    sizeof(USBHUB_IDLE_PORT_CANCEL_CONTEXT),
                                    (PVOID *)&HubWorkItemBuffer,
@@ -892,7 +892,7 @@ USBH_IoctlGetNodeConnectionInformation(IN PUSBHUB_FDO_EXTENSION HubExtension,
     Info->ConnectionStatus = PortData->ConnectionStatus;
 
     Info->DeviceIsHub = (PortExtension->PortPdoFlags &
-                         USBHUB_PDO_FLAG_HUB_DEVICE) == 
+                         USBHUB_PDO_FLAG_HUB_DEVICE) ==
                          USBHUB_PDO_FLAG_HUB_DEVICE;
 
     RtlCopyMemory(&Info->DeviceDescriptor,
@@ -1139,7 +1139,7 @@ USBH_DeviceControl(IN PUSBHUB_FDO_EXTENSION HubExtension,
     NTSTATUS Status = STATUS_DEVICE_BUSY;
     PIO_STACK_LOCATION IoStack;
     ULONG ControlCode;
-    BOOLEAN IsCheckHubIdle = FALSE; 
+    BOOLEAN IsCheckHubIdle = FALSE;
 
     DPRINT("USBH_DeviceControl: HubExtension - %p, Irp - %p\n",
            HubExtension,

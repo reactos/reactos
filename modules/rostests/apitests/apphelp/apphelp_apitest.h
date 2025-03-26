@@ -5,7 +5,6 @@
 extern "C" {
 #endif
 
-
 /* data.c */
 void test_create_db_imp(const WCHAR* name, int win10);
 DWORD test_get_db_size();
@@ -21,8 +20,10 @@ void silence_debug_output(void);        // Silence output if the environment var
 #define test_create_file    (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_file_imp
 #define test_create_ne      (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_ne_imp
 
+/* register.cpp */
+BOOL IsUserAdmin(VOID);
 
-static DWORD g_WinVersion;
+extern DWORD g_WinVersion;
 
 #define WINVER_ANY     0
 #define WINVER_WINXP   0x0501
@@ -42,15 +43,12 @@ typedef VOID* HSDB;
 typedef INT PATH_TYPE;
 
 
-
 #define SDB_MAX_SDBS 16
 #define SDB_MAX_EXES_VISTA 16
 #define SDB_MAX_LAYERS 8
 #define SHIMREG_DISABLE_LAYER (0x00000020)
 
 #define SDBQUERYRESULT_EXPECTED_SIZE_VISTA    456
-
-
 
 typedef struct tagSDBQUERYRESULT_VISTA
 {
@@ -66,7 +64,6 @@ typedef struct tagSDBQUERYRESULT_VISTA
     DWORD  dwCustomSDBMap;
     GUID   rgGuidDB[SDB_MAX_SDBS];
 } SDBQUERYRESULT_VISTA, *PSDBQUERYRESULT_VISTA;
-
 
 #define SDBQUERYRESULT_EXPECTED_SIZE_2k3    344
 
@@ -86,14 +83,8 @@ typedef struct tagSDBQUERYRESULT_2k3
     GUID   rgGuidDB[SDB_MAX_SDBS];
 } SDBQUERYRESULT_2k3, *PSDBQUERYRESULT_2k3;
 
-
-
-
-
 C_ASSERT(sizeof(SDBQUERYRESULT_VISTA) == SDBQUERYRESULT_EXPECTED_SIZE_VISTA);
 C_ASSERT(sizeof(SDBQUERYRESULT_2k3) == SDBQUERYRESULT_EXPECTED_SIZE_2k3);
-
-
 
 
 #ifdef __cplusplus

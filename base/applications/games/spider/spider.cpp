@@ -9,6 +9,7 @@
 #include "spider.h"
 
 #include <commctrl.h>
+#include <shellapi.h>
 #include <tchar.h>
 
 TCHAR szHelpPath[MAX_PATH];
@@ -365,7 +366,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                     return 0;
 
                 case IDM_HELP_ABOUT:
-                    MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
+                    ShellAbout(hwnd, szAppName, MsgAbout,
+                               LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SPIDER)));
                     return 0;
 
                 case IDM_GAME_EXIT:

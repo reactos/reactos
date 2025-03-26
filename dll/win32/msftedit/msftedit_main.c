@@ -47,8 +47,10 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
 
     switch(reason)
     {
+#ifndef __REACTOS__
     case DLL_WINE_PREATTACH:
         return FALSE; /* prefer native version */
+#endif
     case DLL_PROCESS_ATTACH:
         /* explicitly load riched20 since it creates the window classes at dll attach time */
         richedit = LoadLibraryW( riched20W );

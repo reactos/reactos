@@ -1,4 +1,9 @@
-/* Translation made by Jerome Signouret, 2005. */
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATOR:  Copyright 2005 Jerome Signouret <ggcom@tele2.fr>
+ */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 

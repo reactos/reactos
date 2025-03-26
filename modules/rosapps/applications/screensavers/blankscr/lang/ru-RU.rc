@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Заставка ""Пустой экран"""
     IDS_TEXT        "Эта заставка не имеет настраиваемых параметров."

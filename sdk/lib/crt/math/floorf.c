@@ -1,6 +1,10 @@
 
 #include <math.h>
 
+#ifdef _MSC_VER
+#pragma function(floorf)
+#endif
+
 _Check_return_
 float
 __cdecl

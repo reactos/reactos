@@ -25,6 +25,8 @@
 #include <pnp_c.h>
 #include <winsvc.h>
 
+#include <pseh/pseh2.h>
+
 #include "rpc_private.h"
 
 DWORD
@@ -35,7 +37,8 @@ I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /* Registry key and value names */
-static const WCHAR Backslash[] = {'\\', 0};
+static const WCHAR BackslashOpenBrace[] = {'\\', '{', 0};
+static const WCHAR CloseBrace[] = {'}', 0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 
 static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
@@ -67,11 +70,22 @@ typedef struct _LOG_CONF_INFO
 
 #define LOG_CONF_MAGIC 0x464E434C  /* "LCNF" */
 
+typedef struct _RES_DES_INFO
+{
+    ULONG ulMagic;
+    DEVINST dnDevInst;
+    ULONG ulLogConfType;
+    ULONG ulLogConfTag;
+    ULONG ulResDesType;
+    ULONG ulResDesTag;
+} RES_DES_INFO, *PRES_DES_INFO;
+
+#define RES_DES_MAGIC 0x53445352  /* "RSDS" */
 
 typedef struct _NOTIFY_DATA
 {
     ULONG ulMagic;
-    ULONG ulNotifyData;
+    PVOID hNotifyHandle;
 } NOTIFY_DATA, *PNOTIFY_DATA;
 
 #define NOTIFY_MAGIC 0x44556677
@@ -432,6 +446,30 @@ IsValidLogConf(
 
 
 BOOL
+IsValidResDes(
+    _In_opt_ PRES_DES_INFO pResDesInfo)
+{
+    BOOL bValid = TRUE;
+
+    if (pResDesInfo == NULL)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        if (pResDesInfo->ulMagic != RES_DES_MAGIC)
+            bValid = FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bValid = FALSE;
+    }
+    _SEH2_END;
+
+    return bValid;
+}
+
+
+BOOL
 IsValidConflictData(
     _In_opt_ PCONFLICT_DATA pConflictData)
 {
@@ -600,7 +638,7 @@ CMP_RegisterNotification(
     _Out_ PHDEVNOTIFY phDevNotify)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
-    PNOTIFY_DATA pNotifyData = NULL;
+    PNOTIFY_DATA pNotifyData;
     WCHAR szNameBuffer[256];
     INT nLength;
     DWORD ulUnknown9 = 0;
@@ -631,6 +669,9 @@ CMP_RegisterNotification(
         return CR_OUT_OF_MEMORY;
 
     pNotifyData->ulMagic = NOTIFY_MAGIC;
+    pNotifyData->hNotifyHandle = NULL;
+
+    ZeroMemory(szNameBuffer, sizeof(szNameBuffer));
 
     if ((ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
     {
@@ -641,8 +682,7 @@ CMP_RegisterNotification(
                                  ARRAYSIZE(szNameBuffer));
         if (nLength == 0)
         {
-            HeapFree(GetProcessHeap(), 0, pNotifyData);
-            return CR_INVALID_DATA;
+            szNameBuffer[0] = UNICODE_NULL;
         }
 
         FIXME("Register window: %S\n", szNameBuffer);
@@ -666,13 +706,13 @@ CMP_RegisterNotification(
     RpcTryExcept
     {
         ret = PNP_RegisterNotification(BindingHandle,
-                                       0,            /* ??? */
+                                       (DWORD_PTR)hRecipient,
                                        szNameBuffer,
                                        (BYTE*)lpvNotificationFilter,
                                        ((DEV_BROADCAST_HDR*)lpvNotificationFilter)->dbch_size,
                                        ulFlags,
-                                       &pNotifyData->ulNotifyData,
-                                       0,            /* ??? */
+                                       &pNotifyData->hNotifyHandle,
+                                       GetCurrentProcessId(),
                                        &ulUnknown9); /* ??? */
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -683,12 +723,12 @@ CMP_RegisterNotification(
 
     if (ret == CR_SUCCESS)
     {
+        TRACE("hNotifyHandle: %p\n", pNotifyData->hNotifyHandle);
         *phDevNotify = (HDEVNOTIFY)pNotifyData;
     }
     else
     {
-        if (pNotifyData != NULL)
-            HeapFree(GetProcessHeap(), 0, pNotifyData);
+        HeapFree(GetProcessHeap(), 0, pNotifyData);
 
         *phDevNotify = (HDEVNOTIFY)NULL;
     }
@@ -771,7 +811,7 @@ CMP_UnregisterNotification(
     RpcTryExcept
     {
         ret = PNP_UnregisterNotification(BindingHandle,
-                                         pNotifyData->ulNotifyData);
+                                         &pNotifyData->hNotifyHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -780,7 +820,10 @@ CMP_UnregisterNotification(
     RpcEndExcept;
 
     if (ret == CR_SUCCESS)
+    {
+        pNotifyData->hNotifyHandle = NULL;
         HeapFree(GetProcessHeap(), 0, pNotifyData);
+    }
 
     return ret;
 }
@@ -1456,7 +1499,7 @@ CM_Create_Range_List(
     _Out_ PRANGE_LIST prlh,
     _In_ ULONG ulFlags)
 {
-    PINTERNAL_RANGE_LIST pRangeList = NULL;
+    PINTERNAL_RANGE_LIST pRangeList;
 
     FIXME("CM_Create_Range_List(%p %lx)\n",
           prlh, ulFlags);
@@ -1888,10 +1931,66 @@ CM_Dup_Range_List(
     _In_ RANGE_LIST rlhNew,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pOldRangeList, pNewRangeList;
+    PINTERNAL_RANGE pOldRange, pNewRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Dup_Range_List(%p %p %lx)\n",
           rlhOld, rlhNew, ulFlags);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    pOldRangeList = (PINTERNAL_RANGE_LIST)rlhOld;
+    pNewRangeList = (PINTERNAL_RANGE_LIST)rlhNew;
+
+    if (!IsValidRangeList(pOldRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (!IsValidRangeList(pNewRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    /* Lock the range lists */
+    WaitForSingleObject(pOldRangeList->hMutex, INFINITE);
+    WaitForSingleObject(pNewRangeList->hMutex, INFINITE);
+
+    /* Delete the new range list, if ist is not empty */
+    while (!IsListEmpty(&pNewRangeList->ListHead))
+    {
+        ListEntry = RemoveHeadList(&pNewRangeList->ListHead);
+        pNewRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+        HeapFree(GetProcessHeap(), 0, pNewRange);
+    }
+
+    /* Copy the old range list into the new range list */
+    ListEntry = &pOldRangeList->ListHead;
+    while (ListEntry->Flink == &pOldRangeList->ListHead)
+    {
+        pOldRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+        pNewRange = HeapAlloc(GetProcessHeap(), 0, sizeof(INTERNAL_RANGE));
+        if (pNewRange == NULL)
+        {
+            ret = CR_OUT_OF_MEMORY;
+            goto done;
+        }
+
+        pNewRange->pRangeList = pNewRangeList;
+        pNewRange->ullStart = pOldRange->ullStart;
+        pNewRange->ullEnd = pOldRange->ullEnd;
+
+        InsertTailList(&pNewRangeList->ListHead, &pNewRange->ListEntry);
+
+        ListEntry = ListEntry->Flink;
+    }
+
+done:
+    /* Unlock the range lists */
+    ReleaseMutex(pNewRangeList->hMutex);
+    ReleaseMutex(pOldRangeList->hMutex);
+
+    return ret;
 }
 
 
@@ -2482,9 +2581,17 @@ WINAPI
 CM_Free_Res_Des_Handle(
     _In_ RES_DES rdResDes)
 {
+    PRES_DES_INFO pResDesInfo;
+
     FIXME("CM_Free_Res_Des_Handle(%p)\n", rdResDes);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    pResDesInfo = (PRES_DES_INFO)rdResDes;
+    if (!IsValidResDes(pResDesInfo))
+        return CR_INVALID_RES_DES;
+
+    HeapFree(GetProcessHeap(), 0, pResDesInfo);
+
+    return CR_SUCCESS;
 }
 
 
@@ -2895,7 +3002,7 @@ CM_Get_Class_Registry_PropertyA(
     ULONG ulFlags,
     HMACHINE hMachine)
 {
-    PWSTR BufferW = NULL;
+    PWSTR BufferW;
     ULONG ulLength = 0;
     ULONG ulType;
     CONFIGRET ret;
@@ -3181,7 +3288,7 @@ CM_Get_DevNode_Custom_Property_ExA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    LPWSTR pszPropertyNameW = NULL;
+    LPWSTR pszPropertyNameW;
     PVOID BufferW;
     ULONG ulLengthW;
     ULONG ulDataType = REG_NONE;
@@ -3412,7 +3519,6 @@ CM_Get_DevNode_Registry_Property_ExA(
 
     LengthW = *pulLength * sizeof(WCHAR);
     BufferW = HeapAlloc(GetProcessHeap(), 0, LengthW);
-
     if (!BufferW)
         return CR_OUT_OF_MEMORY;
 
@@ -5168,7 +5274,7 @@ CM_Get_Next_Log_Conf_Ex(
 
 
 /***********************************************************************
- * CM_Get_Next_Re_Des [SETUPAPI.@]
+ * CM_Get_Next_Res_Des [SETUPAPI.@]
  */
 CONFIGRET
 WINAPI
@@ -5202,8 +5308,9 @@ CM_Get_Next_Res_Des_Ex(
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
-    ULONG ulInTag, ulOutTag = 0;
-    ULONG ulInType, ulOutType = 0;
+    PRES_DES_INFO pNewResDesInfo = NULL;
+    ULONG ulLogConfTag, ulLogConfType, ulResDesTag;
+    ULONG ulNextResDesType = 0, ulNextResDesTag = 0;
     LPWSTR lpDevInst;
     DEVINST dnDevInst;
     CONFIGRET ret;
@@ -5218,22 +5325,28 @@ CM_Get_Next_Res_Des_Ex(
     {
         FIXME("LogConf found!\n");
         dnDevInst = ((PLOG_CONF_INFO)rdResDes)->dnDevInst;
-        ulInTag = ((PLOG_CONF_INFO)rdResDes)->ulTag;
-        ulInType = ((PLOG_CONF_INFO)rdResDes)->ulType;
+        ulLogConfTag = ((PLOG_CONF_INFO)rdResDes)->ulTag;
+        ulLogConfType = ((PLOG_CONF_INFO)rdResDes)->ulType;
+        ulResDesTag = (ULONG)-1;
     }
-#if 0
     else if (IsValidResDes((PRES_DES_INFO)rdResDes))
     {
         FIXME("ResDes found!\n");
         dnDevInst = ((PRES_DES_INFO)rdResDes)->dnDevInst;
-        ulInTag = ((PRES_DES_INFO)rdResDes)->ulTag;
-        ulInType = ((PRES_DES_INFO)rdResDes)->ulType;
+        ulLogConfTag = ((PRES_DES_INFO)rdResDes)->ulLogConfTag;
+        ulLogConfType = ((PRES_DES_INFO)rdResDes)->ulLogConfType;
+        ulResDesTag = ((PRES_DES_INFO)rdResDes)->ulResDesTag;
     }
-#endif
     else
     {
         return CR_INVALID_RES_DES;
     }
+
+    if ((ForResource == ResType_All) && (pResourceID == NULL))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     if (hMachine != NULL)
     {
@@ -5259,12 +5372,12 @@ CM_Get_Next_Res_Des_Ex(
     {
         ret = PNP_GetNextResDes(BindingHandle,
                                 lpDevInst,
-                                ulInTag,
-                                ulInType,
+                                ulLogConfTag,
+                                ulLogConfType,
                                 ForResource,
-                                0, /* unsigned long ulResourceTag, */
-                                &ulOutTag,
-                                &ulOutType,
+                                ulResDesTag,
+                                &ulNextResDesTag,
+                                &ulNextResDesType,
                                 0);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -5276,7 +5389,24 @@ CM_Get_Next_Res_Des_Ex(
     if (ret != CR_SUCCESS)
         return ret;
 
-    /* FIXME: Create the ResDes handle */
+    if (ForResource == ResType_All)
+        *pResourceID = ulNextResDesType;
+
+    if (prdResDes)
+    {
+        pNewResDesInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(RES_DES_INFO));
+        if (pNewResDesInfo == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        pNewResDesInfo->ulMagic = LOG_CONF_MAGIC;
+        pNewResDesInfo->dnDevInst = dnDevInst;
+        pNewResDesInfo->ulLogConfType = ulLogConfType;
+        pNewResDesInfo->ulLogConfTag = ulLogConfTag;
+        pNewResDesInfo->ulResDesType = ulNextResDesType;
+        pNewResDesInfo->ulResDesTag = ulNextResDesTag;
+
+        *prdResDes = (RES_DES)pNewResDesInfo;
+    }
 
     return CR_SUCCESS;
 }
@@ -5940,6 +6070,19 @@ CM_Locate_DevNode_ExW(
     if (pDeviceID != NULL && lstrlenW(pDeviceID) != 0)
     {
         lstrcpyW(DeviceIdBuffer, pDeviceID);
+
+        RpcTryExcept
+        {
+            /* Validate the device ID */
+            ret = PNP_ValidateDeviceInstance(BindingHandle,
+                                             DeviceIdBuffer,
+                                             ulFlags);
+        }
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ret = RpcStatusToCmStatus(RpcExceptionCode());
+        }
+        RpcEndExcept;
     }
     else
     {
@@ -5955,24 +6098,9 @@ CM_Locate_DevNode_ExW(
             ret = RpcStatusToCmStatus(RpcExceptionCode());
         }
         RpcEndExcept;
-
-        if (ret != CR_SUCCESS)
-            return CR_FAILURE;
     }
+
     TRACE("DeviceIdBuffer: %s\n", debugstr_w(DeviceIdBuffer));
-
-    RpcTryExcept
-    {
-        /* Validate the device ID */
-        ret = PNP_ValidateDeviceInstance(BindingHandle,
-                                         DeviceIdBuffer,
-                                         ulFlags);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ret = RpcStatusToCmStatus(RpcExceptionCode());
-    }
-    RpcEndExcept;
 
     if (ret == CR_SUCCESS)
     {
@@ -6229,7 +6357,7 @@ CM_Open_Class_KeyW(
     _Out_ PHKEY phkClass,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Open_Class_KeyW%p %s %lx %lx %p %lx)\n",
+    TRACE("CM_Open_Class_KeyW(%p %s %lx %lx %p %lx)\n",
           debugstr_guid(pClassGuid), debugstr_w(pszClassName),
           samDesired, Disposition, phkClass, ulFlags);
 
@@ -6343,8 +6471,9 @@ CM_Open_Class_Key_ExW(
             return CR_INVALID_DATA;
         }
 
-        lstrcatW(szKeyName, Backslash);
+        lstrcatW(szKeyName, BackslashOpenBrace);
         lstrcatW(szKeyName, lpGuidString);
+        lstrcatW(szKeyName, CloseBrace);
     }
 
     if (Disposition == RegDisposition_OpenAlways)
@@ -6559,7 +6688,7 @@ CM_Query_And_Remove_SubTreeA(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Query_And_Remove_SubTreeA(%lx %p %s %lu %lx)\n",
+    TRACE("CM_Query_And_Remove_SubTreeA(%lx %p %p %lu %lx)\n",
           dnAncestor, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Query_And_Remove_SubTree_ExA(dnAncestor, pVetoType, pszVetoName,
@@ -6579,8 +6708,8 @@ CM_Query_And_Remove_SubTreeW(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Query_And_Remove_SubTreeW(%lx %p %s %lu %lx)\n",
-          dnAncestor, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags);
+    TRACE("CM_Query_And_Remove_SubTreeW(%lx %p %p %lu %lx)\n",
+          dnAncestor, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Query_And_Remove_SubTree_ExW(dnAncestor, pVetoType, pszVetoName,
                                            ulNameLength, ulFlags, NULL);
@@ -6603,8 +6732,8 @@ CM_Query_And_Remove_SubTree_ExA(
     LPWSTR lpLocalVetoName;
     CONFIGRET ret;
 
-    TRACE("CM_Query_And_Remove_SubTree_ExA(%lx %p %s %lu %lx %p)\n",
-          dnAncestor, pVetoType, debugstr_a(pszVetoName), ulNameLength,
+    TRACE("CM_Query_And_Remove_SubTree_ExA(%lx %p %p %lu %lx %p)\n",
+          dnAncestor, pVetoType, pszVetoName, ulNameLength,
           ulFlags, hMachine);
 
     if (pszVetoName == NULL && ulNameLength == 0)
@@ -6653,8 +6782,8 @@ CM_Query_And_Remove_SubTree_ExW(
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("CM_Query_And_Remove_SubTree_ExW(%lx %p %s %lu %lx %p)\n",
-          dnAncestor, pVetoType, debugstr_w(pszVetoName), ulNameLength,
+    TRACE("CM_Query_And_Remove_SubTree_ExW(%lx %p %p %lu %lx %p)\n",
+          dnAncestor, pVetoType, pszVetoName, ulNameLength,
           ulFlags, hMachine);
 
     if (dnAncestor == 0)
@@ -7249,7 +7378,7 @@ CM_Register_Device_Interface_ExA(
     _In_opt_ HMACHINE hMachine)
 {
     LPWSTR pszReferenceW = NULL;
-    LPWSTR pszDeviceInterfaceW = NULL;
+    LPWSTR pszDeviceInterfaceW;
     ULONG ulLength;
     CONFIGRET ret;
 
@@ -7435,8 +7564,8 @@ CM_Request_Device_EjectA(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Request_Device_EjectA(%lx %p %s %lu %lx)\n",
-          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags);
+    TRACE("CM_Request_Device_EjectA(%lx %p %p %lu %lx)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Request_Device_Eject_ExA(dnDevInst, pVetoType, pszVetoName,
                                        ulNameLength, ulFlags, NULL);
@@ -7455,8 +7584,8 @@ CM_Request_Device_EjectW(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Request_Device_EjectW(%lx %p %s %lu %lx)\n",
-          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags);
+    TRACE("CM_Request_Device_EjectW(%lx %p %p %lu %lx)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, pszVetoName,
                                        ulNameLength, ulFlags, NULL);
@@ -7476,22 +7605,25 @@ CM_Request_Device_Eject_ExA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    LPWSTR lpLocalVetoName;
+    LPWSTR lpLocalVetoName = NULL;
     CONFIGRET ret;
 
-    TRACE("CM_Request_Device_Eject_ExA(%lx %p %s %lu %lx %p)\n",
-          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags, hMachine);
+    TRACE("CM_Request_Device_Eject_ExA(%lx %p %p %lu %lx %p)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags, hMachine);
 
-    if (pszVetoName == NULL && ulNameLength == 0)
-        return CR_INVALID_POINTER;
+    if (ulNameLength != 0)
+    {
+        if (pszVetoName == NULL)
+            return CR_INVALID_POINTER;
 
-    lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
-    if (lpLocalVetoName == NULL)
-        return CR_OUT_OF_MEMORY;
+        lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
+        if (lpLocalVetoName == NULL)
+            return CR_OUT_OF_MEMORY;
+    }
 
     ret = CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, lpLocalVetoName,
                                       ulNameLength, ulFlags, hMachine);
-    if (ret == CR_REMOVE_VETOED)
+    if (ret == CR_REMOVE_VETOED && ulNameLength != 0)
     {
         if (WideCharToMultiByte(CP_ACP,
                                 0,
@@ -7528,8 +7660,8 @@ CM_Request_Device_Eject_ExW(
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("CM_Request_Device_Eject_ExW(%lx %p %s %lu %lx %p)\n",
-          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags, hMachine);
+    TRACE("CM_Request_Device_Eject_ExW(%lx %p %p %lu %lx %p)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags, hMachine);
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;
@@ -7537,8 +7669,13 @@ CM_Request_Device_Eject_ExW(
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
 
-    if (pszVetoName == NULL && ulNameLength == 0)
+    if (pszVetoName == NULL && ulNameLength != 0)
         return CR_INVALID_POINTER;
+
+    /* Windows 2003 SP2 ignores pszVetoName when ulNameLength is zero
+     * and behaves like when pszVetoName is NULL */
+    if (ulNameLength == 0)
+        pszVetoName = NULL;
 
     if (hMachine != NULL)
     {
@@ -7706,10 +7843,77 @@ CM_Set_Class_Registry_PropertyA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    FIXME("CM_Set_Class_Registry_PropertyA(%p %lx %p %lu %lx %p)\n",
+    LPWSTR lpBuffer;
+    ULONG ulType;
+    CONFIGRET ret;
+
+    TRACE("CM_Set_Class_Registry_PropertyA(%p %lx %p %lu %lx %p)\n",
           ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if ((Buffer == NULL) && (ulLength != 0))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (Buffer == NULL)
+    {
+        ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                              ulProperty,
+                                              Buffer,
+                                              ulLength,
+                                              ulFlags,
+                                              hMachine);
+    }
+    else
+    {
+        /* Get property type */
+        ulType = GetRegistryPropertyType(ulProperty);
+
+        /* Allocate buffer if needed */
+        if ((ulType == REG_SZ) || (ulType == REG_MULTI_SZ))
+        {
+            lpBuffer = MyMalloc(ulLength * sizeof(WCHAR));
+            if (lpBuffer == NULL)
+            {
+                ret = CR_OUT_OF_MEMORY;
+            }
+            else
+            {
+                if (!MultiByteToWideChar(CP_ACP, 0, Buffer,
+                                         ulLength, lpBuffer, ulLength))
+                {
+                    MyFree(lpBuffer);
+                    ret = CR_FAILURE;
+                }
+                else
+                {
+                    ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                                          ulProperty,
+                                                          lpBuffer,
+                                                          ulLength * sizeof(WCHAR),
+                                                          ulFlags,
+                                                          hMachine);
+                    MyFree(lpBuffer);
+                }
+            }
+        }
+        else
+        {
+            ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                                  ulProperty,
+                                                  Buffer,
+                                                  ulLength,
+                                                  ulFlags,
+                                                  hMachine);
+        }
+
+    }
+
+    return ret;
 }
 
 
@@ -7726,10 +7930,90 @@ CM_Set_Class_Registry_PropertyW(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    FIXME("CM_Set_Class_Registry_PropertyW(%p %lx %p %lu %lx %p)\n",
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    WCHAR szGuidString[PNP_MAX_GUID_STRING_LEN + 1];
+    ULONG ulType = 0;
+    PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
+    ULONG SecurityDescriptorSize = 0;
+    CONFIGRET ret;
+
+    TRACE("CM_Set_Class_Registry_PropertyW(%p %lx %p %lu %lx %p)\n",
           ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if ((Buffer == NULL) && (ulLength != 0))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (pSetupStringFromGuid(ClassGuid,
+                             szGuidString,
+                             PNP_MAX_GUID_STRING_LEN) != 0)
+        return CR_INVALID_DATA;
+
+    if ((ulProperty < CM_CRP_MIN) || (ulProperty > CM_CRP_MAX))
+        return CR_INVALID_PROPERTY;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulType = GetRegistryPropertyType(ulProperty);
+    if ((ulType == REG_DWORD) && (ulLength != sizeof(DWORD)))
+        return CR_INVALID_DATA;
+
+    if (ulProperty == CM_CRP_SECURITY_SDS)
+    {
+        if (ulLength != 0)
+        {
+            if (!ConvertStringSecurityDescriptorToSecurityDescriptorW((LPCWSTR)Buffer,
+                                                                      SDDL_REVISION_1,
+                                                                      &pSecurityDescriptor,
+                                                                      &SecurityDescriptorSize))
+            {
+                ERR("ConvertStringSecurityDescriptorToSecurityDescriptorW() failed (Error %lu)\n", GetLastError());
+                return CR_INVALID_DATA;
+            }
+
+            Buffer = (PCVOID)pSecurityDescriptor;
+            ulLength = SecurityDescriptorSize;
+        }
+
+        ulProperty = CM_CRP_SECURITY;
+        ulType = REG_BINARY;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_SetClassRegProp(BindingHandle,
+                                  szGuidString,
+                                  ulProperty,
+                                  ulType,
+                                  (LPBYTE)Buffer,
+                                  ulLength,
+                                  ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (pSecurityDescriptor)
+        LocalFree(pSecurityDescriptor);
+
+    return ret;
 }
 
 
@@ -8298,9 +8582,62 @@ CM_Test_Range_Available(
     _In_ RANGE_LIST rlh,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pRangeList;
+    PINTERNAL_RANGE pRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Test_Range_Available(%I64u %I64u %p %lx)\n",
           ullStartValue, ullEndValue, rlh, ulFlags);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    pRangeList = (PINTERNAL_RANGE_LIST)rlh;
+
+    if (!IsValidRangeList(pRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (ullStartValue > ullEndValue)
+        return CR_INVALID_RANGE;
+
+    /* Lock the range list */
+    WaitForSingleObject(pRangeList->hMutex, INFINITE);
+
+    /* Check the ranges */
+    ListEntry = &pRangeList->ListHead;
+    while (ListEntry->Flink == &pRangeList->ListHead)
+    {
+        pRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+        /* Check if the start value is within the current range */
+        if ((ullStartValue >= pRange->ullStart) && (ullStartValue <= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        /* Check if the end value is within the current range */
+        if ((ullEndValue >= pRange->ullStart) && (ullEndValue <= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        /* Check if the current range lies inside of the start-end interval */
+        if ((ullStartValue <= pRange->ullStart) && (ullEndValue >= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* Unlock the range list */
+    ReleaseMutex(pRangeList->hMutex);
+
+    return ret;
 }
 
 

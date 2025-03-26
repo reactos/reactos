@@ -1,15 +1,32 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/* TRANSLATORS:
+2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com),
+2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
+2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net),
+2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+*/
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+/* Dialogs */
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Kur Sihirbazına'na Hoş Geldiniz", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Daha bu CD'den ReactOS'u doğrudan kuramazsınız. Lütfen ReactOS'u kurmak için bu CD'den bilgisayarınızı yeniden başlatınız.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Kur'dan çıkmak için İptal'e tıklayınız.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "ReactOS Kurulum Sihirbazı'na hoşgeldiniz", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+under heavy development. It is recommended to use it only for \
+evaluation and testing and not as your daily-usage OS.\n\
+It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Backup your data or test on a secondary computer \
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "Kuruluma devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -17,19 +34,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "ReactOS'u Yükleme", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "ReactOS'un yeni bir kopyasını yükle. Bu seçenek, dosyalarınızı, ayarlarınızı ve programlarınızı korumaz. Disklere ve bölümlere değişiklikler yapabilirsiniz.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Kurulu ReactOS'u Onarma ya da Yükseltme", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "ReactOS'un kurulu bir kopyasını güncelle ya da onar. Bu seçenek, dosyalarınızı, ayarlarınızı ve programlarınızı korur. Bu seçenek yalnızca ReactOS bu bilgisayarda önceden kuruluysa kullanılabilir.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Aygıtları kurmak için İleri'ye tıklayınız.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "ReactOS'u &Yükleme", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "ReactOS'un yeni bir kopyasını yükle. Bu seçenek, dosyalarınızı, ayarlarınızı ve programlarınızı korumaz. Disklere ve bölümlere değişiklikler yapabilirsiniz.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "ReactOS'u &Onarma ya da Yükseltme", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Kurulu olan ReactOS'un günceller ya da onarır. Bu seçenek, dosyalarınızı, ayarlarınızı ve programlarınızı korur. Bu seçenek yalnızca ReactOS bu bilgisayarda önceden kuruluysa kullanılabilir.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "ReactOS Kur aşağıda listelenen ReactOS kurulumlarının birini yükseltebilir ya da eğer ReactOS kurulumu zarar görmüşse Kur programı onu onarmaya çalışabilir.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "ReactOS Kurulum Yöneticisi aşağıda listelenen ReactOS kurulumlarının birini yükseltebilir ya da eğer ReactOS kurulumu zarar görmüşse kurulum yöneticisi onu onarmaya çalışabilir.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Yükseltme yapma", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Seçilen işletim sistemi kurulumu için İleri'ye ya da yükseltme yapmadan bir yeni kuruluma devam etmek için 'Yükseltme yapma''ya tıklayınız.", IDC_STATIC, 7, 124, 222, 16
@@ -41,12 +57,12 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bilgisayar:", IDC_STATIC, 20, 15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
-    LTEXT "Görüntü:", IDC_STATIC, 20, 35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
+    COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "Ekran:", IDC_STATIC, 20, 35, 80, 10
+    COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Klavye:", IDC_STATIC, 20, 55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
-    LTEXT "Kurulum aygıtını kurmak için İleri'ye tıklayınız.", IDC_STATIC, 7, 128, 297, 8
+    COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "Kurulum aygıtında kuruluma devam etmek için İleri'ye tıklayın", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
@@ -55,42 +71,57 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 7, 122, 50, 15
-    PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 15
-    PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
-    PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 230, 122, 80, 15
-    // LTEXT "Kurulum özetini gözden geçirmek için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 277, 20
+    PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    // LTEXT "Kurulum özetini gözden geçirmek için İleri'ye tıklayınız.", IDC_STATIC, 7, 128, 277, 8
 END
 
-IDD_PARTITION DIALOGEX 0, 0, 145, 90
-STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "Bölüm Oluştur"
+IDD_PARTITION DIALOGEX 0, 0, 200, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Bölüm Oluşturma ve Biçimlendirme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
-    CONTROL "Bölüm Oluşturma ve Biçimlendirme", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
-    LTEXT "Boyut:", IDC_STATIC, 13, 24, 27, 9
-    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
-    LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "Dosya sistemi:", IDC_STATIC, 13, 46, 42, 9
-    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
-    PUSHBUTTON "Tamam", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "İptal", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Boyut:", IDC_STATIC, 7, 9, 70, 9
+    EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
+    CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
+    LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
+    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 46, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    PUSHBUTTON "Tamam", IDOK, 88, 98, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 143, 98, 50, 14
 END
 
-IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
-STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "Gelişmiş Bölümlendirme Seçenekleri"
+IDD_FORMAT DIALOGEX 0, 0, 200, 83
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Bölüm Biçimlendirme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Kurulum Dizini", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
-    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
-    CONTROL "Önyükleyici Kurulumu", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "Önyükleyiciyi sabit diskin üzerine kur. (MBR ve VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "Önyükleyiciyi sabit diskin üzerine kur. (Yalnızca VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
-    CONTROL "Önyükleyici kurulumu yok.", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
-    PUSHBUTTON "Tamam", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "İptal", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 9, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    PUSHBUTTON "Tamam", IDOK, 88, 61, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 143, 61, 50, 14
+END
+
+IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced Installation Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    EDITTEXT IDC_PATH, 7, 23, 291, 13
+    GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "Tamam", IDOK, 193, 113, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 248, 113, 50, 14
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
@@ -106,11 +137,11 @@ BEGIN
     EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Bilgisayar:", IDC_STATIC, 18, 41, 74, 11
     EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Görüntü:", IDC_STATIC, 18, 53, 74, 11
+    LTEXT "Ekran:", IDC_STATIC, 18, 53, 74, 11
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Klavye:", IDC_STATIC, 18, 65, 74, 11
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Hedef bölüm:", IDC_STATIC, 18, 77, 74, 11
+    LTEXT "Hedef disk bölümü:", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Hedef dizin:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
@@ -135,43 +166,148 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazını Tamamlama", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS kurulumunun ilk aşamasını başarıyla bitirdiniz.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Bitir'e tıkladığınızda bilgisayarınız yeniden başlatılacaktır.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Eğer bir sürücüde bir CD varsa onu çıkartınız. Sonra, bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "ReactOS kurulumunun ilk aşamasını başarıyla bitirdiniz.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Bitir'e tıkladığınızda bilgisayarınız yeniden başlatılacaktır.", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Eğer bir sürücüde bir CD varsa onu çıkartınız. Sonra, bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
+
+/* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "ReactOS Kur'a Hoş Geldiniz"
-    IDS_TYPESUBTITLE "Kurulum türünü seçiniz."
+    IDS_CAPTION "ReactOS Kur"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Ana Aygıtların Kurulumu"
-    IDS_DEVICESUBTITLE "Görüntü ve klavye ayarlarını yapınız."
+    IDS_DEVICESUBTITLE "Ekran ve Klavye ayarlarını yapınız."
     IDS_DRIVETITLE "Kurulum Bölümünün ve Sistem Dizininin Hazırlanması"
     IDS_DRIVESUBTITLE "Kurulum bölümünü, sistem dizinini ve önyükleyiciyi hazırlayınız."
-    IDS_PROCESSTITLE "Bölümün Biçimlendirilmesi, Dosyaların Çoğaltılması ve Önyükleyicinin Kurulması"
-    IDS_PROCESSSUBTITLE "Bölüm oluşturuluyor ve biçimlendiriliyor, dosyalar çoğaltılıyor, önyükleyici kuruluyor ve hazırlanıyor."
-    IDS_RESTARTTITLE "Kurulumun İlk Aşaması Bitti"
-    IDS_RESTARTSUBTITLE "Kurulumun ilk aşaması bitirildi, ikinci aşamayla sürdürmek için yeniden başlatınız."
     IDS_SUMMARYTITLE "Kurulum Özeti"
     IDS_SUMMARYSUBTITLE "Kurulumdan aygıtına uygulanmadan önce gözden geçirmek için listelenen kurulum seçenekleri."
-    IDS_ABORTSETUP "ReactOS, bilgisayarınıza tümüyle kurulmadı. Eğer şimdi Kur'dan çıkarsanız, ReactOS'u kurmak için Kur'u yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
+    IDS_PROCESSTITLE "Bölümün Biçimlendirilmesi, Dosyaların Kopyalanması ve Önyükleyicinin Kurulması"
+    IDS_PROCESSSUBTITLE "Bölüm oluşturuluyor ve biçimlendiriliyor, dosyalar kopyalanıyor, önyükleyici kuruluyor ve hazırlanıyor."
+    IDS_RESTARTTITLE "Kurulumun İlk Aşaması Bitti"
+    IDS_RESTARTSUBTITLE "Kurulumun ilk aşaması bitirildi, ikinci aşamaya geçmek için yeniden başlatınız."
+    IDS_ABORTSETUP "ReactOS, bilgisayarınıza tümüyle kurulamadı. Eğer şimdi Kurulum Yöneticisinden çıkarsanız, ReactOS'u kurmak için Kurulum Yöneticisini yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
-    IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKur sürdüremiyor."
-    IDS_CAPTION "ReactOS Kur"
+    IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKurulum Yöneticisi sürdüremiyor."
+    IDS_INSTALLBTN "&Install"
+    IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Ad"
+    IDS_INSTALLATION_NAME "İsim"
     IDS_INSTALLATION_PATH "Yükleme Dizini"
-    IDS_INSTALLATION_VENDOR "Sağlayıcı Adı"
+    IDS_INSTALLATION_VENDOR "Sağlayıcı İsmi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Ad"
+    IDS_PARTITION_NAME "İsim"
     IDS_PARTITION_TYPE "Tür"
     IDS_PARTITION_SIZE "Boyut"
     IDS_PARTITION_STATUS "Durum"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BOOTLOADER_NOINST "No installation"
+    IDS_BOOTLOADER_REMOVABLE "Removable media"
+    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
+    IDS_BOOTLOADER_MBRVBR "MBR ve VBR (Default)"
+    IDS_BOOTLOADER_VBRONLY "Yalnızca VBR"
+END
+
+/* Progress Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
+    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+
+    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+
+    IDS_COPYING  "Copying %s"
+    IDS_MOVING   "Moving %s to %s"
+    IDS_RENAMING "Renaming %s to %s"
+    IDS_DELETING "Deleting %s"
+
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
+    IDS_PREPARE_PARTITIONS "Preparing partitions..."
+    IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
+    IDS_COPYING_FILES "Copying the files..."
+
+    IDS_CREATE_REGISTRY "Creating the registry..."
+    IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
+END
+
+// Note to translators: please refer to the corresponding usetup/lang/*.h translations.
+STRINGTABLE
+BEGIN
+    IDS_REG_DONE "Done"
+    IDS_REG_REGHIVEUPDATE "Updating registry hives"
+    IDS_REG_IMPORTFILE "Importing %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
+    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
+    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
+    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
+    IDS_REG_UNKNOWN "Unknown status %d"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
+alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
+Spaces are not allowed."
+
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
+    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+and only contain letters, digits, dashes and periods. Spaces are not allowed."
+
+    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
+    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+
+    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
+    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+
+    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+
+    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
+on your system or could not create a new one. Without such a partition\n\
+the Setup program cannot install ReactOS.\
+\nClick on OK to return to the partition selection list."
+
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+
+    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
+\nClick on OK to continue Setup.\
+\nClick on CANCEL to quit Setup."
+
+    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+
+    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
+\nClick on OK to continue Setup.\
+\nClick on CANCEL to quit Setup."
+
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
 END

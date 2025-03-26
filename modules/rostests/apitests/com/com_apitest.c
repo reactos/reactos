@@ -205,6 +205,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IMenuPopup),                  TRUE },
     { ID_NAME(IID_IModalWindow)                      },
     { ID_NAME(IID_IMoniker)                          },
+    { ID_NAME(IID_IMruDataList),                TRUE },
+    { ID_NAME(IID_IMruPidlList),                TRUE },
     { ID_NAME(IID_IMultiMonitorDockingSite),    TRUE },
     { ID_NAME(IID_IMultiQI),                    TRUE },
     { ID_NAME(IID_INameSpaceTreeControl),       TRUE },
@@ -488,6 +490,25 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IPinnedListOld),              TRUE },
     { ID_NAME(IID_IPinnedList),                 TRUE },
     { ID_NAME(IID_IAttachmentExecute),          TRUE },
+
+    // + MMC stuff
+    { ID_NAME(IID_IComponentData),              TRUE },
+    { ID_NAME(IID_IConsole),                    TRUE },
+    { ID_NAME(IID_IConsole2),                   TRUE },
+    { ID_NAME(IID_IConsoleNameSpace),           TRUE },
+    { ID_NAME(IID_IConsoleNameSpace2),          TRUE },
+    { ID_NAME(IID_IPropertySheetCallback),      TRUE },
+    { ID_NAME(IID_IPropertySheetProvider),      TRUE },
+    { ID_NAME(IID_IExtendPropertySheet),        TRUE },
+    { ID_NAME(IID_IExtendPropertySheet2),       TRUE },
+    { ID_NAME(IID_IHeaderCtrl),                 TRUE },
+    { ID_NAME(IID_IToolbar),                    TRUE },
+    { ID_NAME(IID_IImageList_mmc),              TRUE },
+    { ID_NAME(IID_IConsoleVerb),                TRUE },
+    { ID_NAME(IID_ISnapInAbout),                TRUE },
+    // - MMC stuff
+
+    { ID_NAME(IID_ICertificateManager),         TRUE },
 };
 static const INT KnownInterfaceCount = RTL_NUMBER_OF(KnownInterfaces);
 
@@ -667,7 +688,7 @@ TestModuleRegistry(
                 // TODO: Use SearchPath (or assume everything's in system32) and do a proper full path compare
                 PathStripPathW(data);
                 PathRemoveExtensionW(data);
-                ok(!wcsicmp(data, ModuleName), "Server is %ls, expected %ls for %s\n", data, ModuleName, class->name);
+                ok(!_wcsicmp(data, ModuleName), "Server is %ls, expected %ls for %s\n", data, ModuleName, class->name);
             }
 
             dataSize = sizeof(data);
@@ -682,7 +703,7 @@ TestModuleRegistry(
                 expectedThreadingModel = class->ThreadingModel;
                 if (!expectedThreadingModel)
                     expectedThreadingModel = L"Apartment";
-                ok(!wcsicmp(data, expectedThreadingModel), "Server is %ls, expected %ls for %s\n", data, expectedThreadingModel, class->name);
+                ok(!_wcsicmp(data, expectedThreadingModel), "Server is %ls, expected %ls for %s\n", data, expectedThreadingModel, class->name);
             }
 
             RegCloseKey(hKeyServer);
@@ -808,7 +829,7 @@ TestInterfaceRegistry(
                     expectedName++;
                 else
                     expectedName = iface->wname;
-                ok(!wcsicmp(data, expectedName), "Name is %ls, expected %ls\n", data, expectedName);
+                ok(!_wcsicmp(data, expectedName), "Name is %ls, expected %ls\n", data, expectedName);
             }
 
             RegCloseKey(hKey);

@@ -304,9 +304,12 @@ START_TEST(IoReadWrite)
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatus;
     NTSTATUS Status;
+    DWORD Error;
 
-    KmtLoadDriver(L"IoReadWrite", FALSE);
-    KmtOpenDriver();
+    Error = KmtLoadAndOpenDriver(L"IoReadWrite", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
 
     RtlFillMemory(&IoStatus, sizeof(IoStatus), 0x55);
     InitializeObjectAttributes(&ObjectAttributes,

@@ -20,7 +20,7 @@ extern "C" {
 
 #define STATIC_IID_IKsPin\
     0xb61178d1L, 0xa2d9, 0x11cf, {0x9e, 0x53, 0x00, 0xaa, 0x00, 0xa2, 0x16, 0xa1}
-    
+
 #define STATIC_IID_IKsPinPipe\
     0xe539cd90L, 0xa8b4, 0x11d1, {0x81, 0x89, 0x00, 0xa0, 0xc9, 0x06, 0x28, 0x02}
 
@@ -38,10 +38,10 @@ extern "C" {
 
 #define STATIC_IID_IKsAllocator\
     0x8da64899L, 0xc0d9, 0x11d0, {0x84, 0x13, 0x00, 0x00, 0xf8, 0x22, 0xfe, 0x8a}
-    
+
 #define STATIC_IID_IKsAllocatorEx\
     0x091bb63aL, 0x603f, 0x11d1, {0xb0, 0x67, 0x00, 0xa0, 0xc9, 0x06, 0x28, 0x02}
-    
+
 
 #ifndef STATIC_IID_IKsPropertySet
 #define STATIC_IID_IKsPropertySet\
@@ -111,7 +111,7 @@ typedef enum
 
 typedef struct
 {
-    LONGLONG     MinTotalNominator;  
+    LONGLONG     MinTotalNominator;
     LONGLONG     MaxTotalNominator;
     LONGLONG     TotalDenominator;
 }OPTIMAL_WEIGHT_TOTALS;
@@ -121,12 +121,12 @@ typedef struct IKsPin IKsPin;
 typedef struct IKsAllocator IKsAllocator;
 typedef struct IKsAllocatorEx IKsAllocatorEx;
 
-                      
+
 #define AllocatorStrategy_DontCare                      0
 #define AllocatorStrategy_MinimizeNumberOfFrames        1
 #define AllocatorStrategy_MinimizeFrameSize             2
 #define AllocatorStrategy_MinimizeNumberOfAllocators    4
-#define AllocatorStrategy_MaximizeSpeed                 8 
+#define AllocatorStrategy_MaximizeSpeed                 8
 
 #define PipeFactor_None                   0x0
 #define PipeFactor_UserModeUpstream       0x1
@@ -299,7 +299,7 @@ DECLARE_INTERFACE_(IKsAllocatorEx, IKsAllocator)
     ) PURE;
     STDMETHOD_(VOID, KsSetProperties)(
         THIS_
-        PALLOCATOR_PROPERTIES_EX 
+        PALLOCATOR_PROPERTIES_EX
     ) PURE;
     STDMETHOD_(VOID, KsSetAllocatorHandle)(
         THIS_
@@ -309,7 +309,7 @@ DECLARE_INTERFACE_(IKsAllocatorEx, IKsAllocator)
         THIS_
         IKsPin*   KsPin
     ) PURE;
-};  
+};
 
 typedef enum {
     KsPeekOperation_PeekOnly,
@@ -388,9 +388,9 @@ DECLARE_INTERFACE_(IKsPinEx, IKsPin)
         THIS_
         IMediaSample* Sample,
         HRESULT hr
-    ) PURE;        
+    ) PURE;
 };
-                         
+
 interface DECLSPEC_UUID("e539cd90-a8b4-11d1-8189-00a0c9062802") IKsPinPipe;
 #undef INTERFACE
 #define INTERFACE IKsPinPipe
@@ -534,7 +534,7 @@ typedef struct _KSSTREAM_SEGMENT
     IKsDataTypeHandler      *KsDataTypeHandler;
     KSIOOPERATION           IoOperation;
     HANDLE                  CompletionEvent;
-    
+
 }KSSTREAM_SEGMENT;
 
 interface DECLSPEC_UUID("423c13a2-2070-11d0-9ef7-00aa00a216a1") IKsObject;
@@ -677,7 +677,7 @@ DECLSPEC_UUID("17CCA71B-ECD7-11D0-B908-00A0C9223196") CLSID_Proxy;
 #define KSPROPERTY_SUPPORT_GET 1
 #define KSPROPERTY_SUPPORT_SET 2
 
-interface DECLSPEC_UUID("31EFAC30-515C-11d0-A9AA-00aa0061be93") 
+interface DECLSPEC_UUID("31EFAC30-515C-11d0-A9AA-00aa0061be93")
 #undef INTERFACE
 #define INTERFACE IKsPropertySet
 DECLARE_INTERFACE_(IKsPropertySet, IUnknown)

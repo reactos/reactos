@@ -699,10 +699,12 @@ CreateClientPort(_In_ PFILE_OBJECT FileObject,
         goto Quit;
     }
 
-    /* Now insert the new client port into the object manager*/
-    Status = ObInsertObject(ClientPortObject, 0, FLT_PORT_ALL_ACCESS, 1, 0, (PHANDLE)&PortHandle);
+    /* Now insert the new client port into the object manager */
+    Status = ObInsertObject(ClientPortObject, NULL, FLT_PORT_ALL_ACCESS, 1, NULL, (PHANDLE)&PortHandle);
     if (!NT_SUCCESS(Status))
     {
+        /* ObInsertObject() failed and already dereferenced ClientPortObject */
+        ClientPortObject = NULL;
         goto Quit;
     }
 

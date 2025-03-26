@@ -14,47 +14,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
-
-static NTSTATUS NTAPI
-ForwardIrpAndWaitCompletion(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp,
-	IN PVOID Context)
-{
-	UNREFERENCED_PARAMETER(DeviceObject);
-	__analysis_assume(Context != NULL);
-	if (Irp->PendingReturned)
-		KeSetEvent(Context, IO_NO_INCREMENT, FALSE);
-	return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS NTAPI
-ForwardIrpAndWait(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp)
-{
-	KEVENT Event;
-	NTSTATUS Status;
-	PDEVICE_OBJECT LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-	ASSERT(LowerDevice);
-
-	KeInitializeEvent(&Event, NotificationEvent, FALSE);
-	IoCopyCurrentIrpStackLocationToNext(Irp);
-
-	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-
-	Status = IoCallDriver(LowerDevice, Irp);
-	if (Status == STATUS_PENDING)
-	{
-		Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-		if (NT_SUCCESS(Status))
-			Status = Irp->IoStatus.Status;
-	}
-
-	return Status;
-}
-
 NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -84,7 +43,7 @@ DuplicateUnicodeString(
 
 
 	if ((SourceString->Length == 0)
-	 && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE | 
+	 && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE |
 	               RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
 	{
 		DestinationString->Length = 0;

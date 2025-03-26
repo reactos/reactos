@@ -2,25 +2,17 @@
  * Regedit main function
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
 
-BOOL ProcessCmdLine(LPWSTR lpCmdLine);
+BOOL ProcessCmdLine(WCHAR *cmdline);
+
+const WCHAR *reg_class_namesW[] = {L"HKEY_LOCAL_MACHINE", L"HKEY_USERS",
+                                   L"HKEY_CLASSES_ROOT", L"HKEY_CURRENT_CONFIG",
+                                   L"HKEY_CURRENT_USER", L"HKEY_DYN_DATA"
+                                  };
 
 /*******************************************************************************
  * Global Variables:
@@ -30,7 +22,7 @@ HINSTANCE hInst;
 HWND hFrameWnd;
 HWND hStatusBar;
 HMENU hMenuFrame;
-HMENU hPopupMenus = 0;
+HMENU hPopupMenus;
 UINT nClipboardFormat;
 LPCWSTR strClipboardFormat = L"TODO: SET CORRECT FORMAT";
 
@@ -40,24 +32,18 @@ WCHAR szFrameClass[MAX_LOADSTRING];
 WCHAR szChildClass[MAX_LOADSTRING];
 
 
-/*******************************************************************************
+/**
+ * PURPOSE: Saves instance handle and creates main window
  *
- *
- *   FUNCTION: InitInstance(HANDLE, int)
- *
- *   PURPOSE: Saves instance handle and creates main window
- *
- *   COMMENTS:
- *
- *        In this function, we save the instance handle in a global variable and
- *        create and display the main program window.
+ * COMMENTS:
+ *   In this function, we save the instance handle in a global variable and
+ *   create and display the main program window.
  */
-
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
     HMENU hEditMenu;
-
+    INITCOMMONCONTROLSEX icce;
     WNDCLASSEXW wcFrame;
     WNDCLASSEXW wcChild;
     ATOM hFrameWndClass;
@@ -97,8 +83,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hPopupMenus = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDR_POPUP_MENUS));
 
     /* Initialize the Windows Common Controls DLL */
-    // TODO: Replace this call by InitCommonControlsEx(_something_)
-    InitCommonControls();
+    /* NOTE: Windows sets 0xFFFF to icce.dwICC but we use better value. */
+    icce.dwSize = sizeof(icce);
+    icce.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES;
+    InitCommonControlsEx(&icce);
 
     hEditMenu = GetSubMenu(hMenuFrame, 1);
 
@@ -126,11 +114,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
                                 WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                 CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                 NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
-
     if (!hFrameWnd)
-    {
         return FALSE;
-    }
 
     /* Create the status bar */
     hStatusBar = CreateStatusWindowW(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | SBT_NOBORDERS,
@@ -147,19 +132,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-/******************************************************************************/
-
 /*
  * We need to destroy the main menu before destroying the main window
  * to avoid a memory leak.
  */
-
 void DestroyMainMenu()
 {
     DestroyMenu(hMenuFrame);
 }
-
-/******************************************************************************/
 
 void ExitInstance(HINSTANCE hInstance)
 {
@@ -169,51 +149,61 @@ void ExitInstance(HINSTANCE hInstance)
     UnloadAclUiDll();
 }
 
-BOOL TranslateChildTabMessage(PMSG msg)
+static BOOL InLabelEdit(HWND hWnd, UINT Msg)
+{
+    HWND hEdit = (HWND)SendMessageW(hWnd, Msg, 0, 0);
+    return hEdit && IsWindowVisible(hEdit);
+}
+
+static BOOL TranslateChildTabMessage(PMSG msg)
 {
     if (msg->message != WM_KEYDOWN) return FALSE;
-
-    /* Allow Ctrl+A on address bar */
-    if ((msg->hwnd == g_pChildWnd->hAddressBarWnd) &&
-        (msg->message == WM_KEYDOWN) &&
-        (msg->wParam == L'A') && (GetKeyState(VK_CONTROL) < 0))
-    {
-        SendMessageW(msg->hwnd, EM_SETSEL, 0, -1);
-        return TRUE;
-    }
-
     if (msg->wParam != VK_TAB) return FALSE;
     if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
-    PostMessageW(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
+    PostMessageW(hFrameWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
     return TRUE;
 }
 
-int APIENTRY wWinMain(HINSTANCE hInstance,
-                      HINSTANCE hPrevInstance,
-                      LPWSTR    lpCmdLine,
-                      int       nCmdShow)
+static BOOL TranslateRegeditAccelerator(HWND hWnd, HACCEL hAccTable, PMSG msg)
+{
+    if (msg->message == WM_KEYDOWN)
+    {
+        if (msg->wParam == VK_DELETE)
+        {
+            if (g_pChildWnd->hAddressBarWnd == msg->hwnd)
+                return FALSE;
+            if (InLabelEdit(g_pChildWnd->hTreeWnd, TVM_GETEDITCONTROL) || InLabelEdit(g_pChildWnd->hListWnd, LVM_GETEDITCONTROL))
+                return FALSE;
+        }
+    }
+    return TranslateAcceleratorW(hWnd, hAccTable, msg);
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPWSTR lpCmdLine,
+    int nCmdShow)
 {
     MSG msg;
     HACCEL hAccel;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
-    /* Initialize global strings */
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-    LoadStringW(hInstance, IDC_REGEDIT_FRAME, szFrameClass, COUNT_OF(szFrameClass));
-    LoadStringW(hInstance, IDC_REGEDIT, szChildClass, COUNT_OF(szChildClass));
+    OleInitialize(NULL);
 
-    if (ProcessCmdLine(lpCmdLine))
-    {
+    /* Initialize global strings */
+    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
+    LoadStringW(hInstance, IDC_REGEDIT_FRAME, szFrameClass, ARRAY_SIZE(szFrameClass));
+    LoadStringW(hInstance, IDC_REGEDIT, szChildClass, ARRAY_SIZE(szChildClass));
+
+    if (ProcessCmdLine(GetCommandLineW()))
         return 0;
-    }
 
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
             SetProcessDefaultLayout(LAYOUT_RTL);
             break;
-
         default:
             break;
     }
@@ -222,15 +212,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     /* Perform application initialization */
     if (!InitInstance(hInstance, nCmdShow))
-    {
         return 0;
-    }
+
     hAccel = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(ID_ACCEL));
 
     /* Main message loop */
     while (GetMessageW(&msg, NULL, 0, 0))
     {
-        if (!TranslateAcceleratorW(hFrameWnd, hAccel, &msg) &&
+        if (!TranslateRegeditAccelerator(hFrameWnd, hAccel, &msg) &&
             !TranslateChildTabMessage(&msg))
         {
             TranslateMessage(&msg);

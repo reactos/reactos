@@ -934,59 +934,6 @@ static MUI_ENTRY sqALSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY sqALBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Instalimi nuk mund t\211 instaloj\211 programin e bootloaderit ne kompjuterin tuaj",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "hardisku",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Ju lutem fusni nje floppy disk t\211 formatuar n\211 drive A: dhe",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "klikoni ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Vazhdo   F3 = Dil",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY sqALSelectPartitionEntries[] =
 {
     {
@@ -999,7 +946,7 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         6,
         8,
-        "Lista meposht tregon particionet dhe pjes\211n e paperdorur t\211 hard diskut",
+        "Lista meposht tregon particionet dhe pjes\211n e paperdorur t\211 harddiskut",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1027,8 +974,7 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Kiko C p‰r t‰ krijuar nj‰ particion t‰ ri.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1042,13 +988,6 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Kliko D p\211r t\211 fshir\211 nj\211 particion ekzistues.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1316,7 +1255,7 @@ static MUI_ENTRY sqALFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Instalimi tani do t\211 formatoj\211 particionin. Kliko ENTER p\211r t\211 vazhduar.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1325,6 +1264,37 @@ static MUI_ENTRY sqALFormatPartitionEntries[] =
         0,
         0,
         "ENTER = Vazhdo   F3 = Dil",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY sqALCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalimi tani \211sht\211 duke kontrolluar particionin e p\211rzgjedhur.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Ju lutem prisni...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1440,7 +1410,7 @@ static MUI_ENTRY sqALFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY sqALBootLoaderEntries[] =
+static MUI_ENTRY sqALBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1452,7 +1422,7 @@ static MUI_ENTRY sqALBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalimi po instalon boot loaderin",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1497,6 +1467,83 @@ static MUI_ENTRY sqALBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY sqALBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalimi po instalon bootloaderin.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY sqALBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalimi po instalon bootloaderin.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Ju lutem fusni nje floppy disk t\211 formatuar n\211 drive A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "dhe klikoni ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Vazhdo   F3 = Dil",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY sqALKeyboardSettingsEntries[] =
@@ -1888,13 +1935,6 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Ju nuk mund t\211 fshini hap\211sir\211 n\211 disk jasht particioneve!\n"
-        "\n"
-        "  * Shtypni nj\211 tast cfar\211do p\211r t\211 vazhduar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalimi d\211shtoj n\211 instalimin e %S bootcode n\211 particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
@@ -2114,6 +2154,10 @@ MUI_PAGE sqALPages[] =
         sqALFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        sqALCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         sqALDeletePartitionEntries
     },
@@ -2134,8 +2178,8 @@ MUI_PAGE sqALPages[] =
         sqALKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        sqALBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        sqALBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2150,8 +2194,12 @@ MUI_PAGE sqALPages[] =
         sqALSuccessPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        sqALBootPageEntries
+        BOOTLOADER_INSTALL_PAGE,
+        sqALBootLoaderInstallPageEntries
+    },
+    {
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        sqALBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2168,27 +2216,29 @@ MUI_STRING sqALStrings[] =
     {STRING_PLEASEWAIT,
      "   Ju lutem prisni..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+     "   ENTER = Instalo   C = Create Primary   E = Create Extended   F3 = Dil"},
 //     "   ENTER = Instalo   C = Krijo Particion   F3 = Dil"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Instalo   C = Create Logical Partition   F3 = Dil"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalo   D = Fshi Particion   F3 = Dil"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Fshi Particion   F3 = Dil"},
     {STRING_PARTITIONSIZE,
      "Madh\211sia e particionit t\211 ri:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
 //     "You have chosen to create a primary partition on"},
      "Ju keni zgjedhur p\211r t\211 krijuar nj\211 ndarje t\211 re n\211"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Ju lutem, jepini madh\211sin\211 e particionit t\211 ri n\211 megabajt."},
     {STRING_CREATEPARTITION,
      "   ENTER = Krijo Particion   ESC = Anulo   F3 = Dil"},
+    {STRING_NEWPARTITION,
+    "Instalimi krijoj nj\211 particion t\211 ri n\211"},
     {STRING_PARTFORMAT,
     "Ky particion do t\211 formatohet tani."},
     {STRING_NONFORMATTEDPART,
@@ -2199,8 +2249,6 @@ MUI_STRING sqALStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Instalimi i ReactOS ne Particion"},
-    {STRING_CHECKINGPART,
-    "Instalimi tani \211sht\211 duke kontrolluar particionin e p\211rzgjedhur."},
     {STRING_CONTINUE,
     "ENTER = Vazhdo"},
     {STRING_QUITCONTINUE,
@@ -2228,7 +2276,7 @@ MUI_STRING sqALStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Apdejtimi i p\211rzgjedhj\211s se konfigurimit t\211 tastier\211s..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Shtimi i informacioneve codepage n\211 regjister..."},
+    "   Shtimi i informacioneve codepage..."},
     {STRING_DONE,
     "   Mbaruam..."},
     {STRING_REBOOTCOMPUTER2,
@@ -2241,42 +2289,30 @@ MUI_STRING sqALStrings[] =
     "Shkaku m\211 i zakonsh\211m i k\211saj \211sht\211 arsyea e perdorimit t\211 nj\211 tastiere USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Tastierat USB nuk jan\211 t\211 mb\211shtetura ende plot\211sisht\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Instalimi po formaton diskun tuaj"},
+    {STRING_FORMATTINGPART,
+    "Instalimi po formaton particionin..."},
     {STRING_CHECKINGDISK,
-    "Instalimi \211sht\211 duke kontrolluar diskun tuaj"},
+    "Instalimi \211sht\211 duke kontrolluar diskun..."},
     {STRING_FORMATDISK1,
     " Formato particionin si %S dokumentat e sistemit (formatim i shpejt\211) "},
     {STRING_FORMATDISK2,
     " Formato particionin si %S dokumentat e sistemit"},
     {STRING_KEEPFORMAT,
     " Mbaj dokumentat e sistemit siq jan\211 (pa ndryshime) "},
-    {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Tipi 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE_1,
-    "on %I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "on %I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Tipi 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "on Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sTipi %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Instalimi krijoj nj\211 particion t\211 ri n\211"},
+    {STRING_HDDISK1,
+    "%s."},
+    {STRING_HDDISK2,
+    "on %s."},
+    {STRING_PARTTYPE,
+    "Tipi 0x%02x"},
+    {STRING_HDDINFO1,
+    // "Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Harddisku %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDDINFO2,
+    // "Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Harddisku %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_UNPSPACE,
-    "    %sHap\211sire e papjesesezuar%s            %6lu %s"},
+    "Hap\211sire e papjesesezuar"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

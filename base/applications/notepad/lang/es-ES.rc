@@ -1,4 +1,4 @@
-/* Spanish translation by Ismael Ferreras Morezuelas (Swyter), Catalin Gabriel Draghita (jeffbox12) */
+// COPYRIGHT: Ismael Ferreras Morezuelas (Swyter), Catalin Gabriel Draghita (jeffbox12)
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -8,8 +8,9 @@ BEGIN
     "^C", CMD_COPY
     "^B", CMD_SEARCH
     "^T", CMD_GOTO
-    "^R", CMD_REPLACE, VIRTKEY, CONTROL
+    "R", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
     "^A", CMD_OPEN
     "^P", CMD_PRINT
     "^G", CMD_SAVE
@@ -17,6 +18,7 @@ BEGIN
     "^X", CMD_CUT
     "^Z", CMD_UNDO
     VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F3, CMD_SEARCH_PREV, VIRTKEY, SHIFT
     VK_F5, CMD_TIME_DATE, VIRTKEY
 END
 
@@ -25,6 +27,7 @@ BEGIN
     POPUP "&Archivo"
     BEGIN
         MENUITEM "&Nuevo\tCtrl+N", CMD_NEW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Abrir\tCtrl+A", CMD_OPEN
         MENUITEM "&Guardar\tCtrl+G", CMD_SAVE
         MENUITEM "Guardar &como...", CMD_SAVE_AS
@@ -84,8 +87,8 @@ BEGIN
     LTEXT "&Bandeja:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientación", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Vertical", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Horizontal", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Vertical", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Horizontal", rad2, 16, 100, 52, 12
     GROUPBOX "Márgenes", grp4, 80, 66, 152, 56, BS_GROUPBOX
     LTEXT "Izqui&erdo:", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
@@ -123,20 +126,27 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Ir a la línea"
 BEGIN
-    EDITTEXT ID_LINENUMBER, 89, 10, 86, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "Número de línea:", 0x155, 5, 12, 56, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
-    DEFPUSHBUTTON "Aceptar", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-    PUSHBUTTON "Cancelar", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    LTEXT "Número de línea:", 0x155, 5, 12, 56, 12
+    EDITTEXT ID_LINENUMBER, 89, 10, 86, 12, ES_NUMBER
+    DEFPUSHBUTTON "Aceptar", IDOK, 75, 30, 40, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 120, 30, 40, 15
+END
+
+DIALOG_PRINTING DIALOG 0, 0, 160, 100
+CAPTION "Now printing"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "Página %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 50, 75, 60, 20
 END
 
 STRINGTABLE
 BEGIN
-    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
-    STRING_PAGESETUP_FOOTERVALUE "Página &s" /* FIXME */
-    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
-    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
-    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
-    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_HEADERVALUE "&f"
+    STRING_PAGESETUP_FOOTERVALUE "Página &p"
     STRING_NOTEPAD "Bloc de notas"
     STRING_ERROR "ERROR"
     STRING_WARNING "ADVERTENCIA"
@@ -150,7 +160,7 @@ bloc de notas.\n Utilice otro editor."
 inténtelo de nuevo"
     STRING_DOESNOTEXIST "El archivo '%s'\nno existe\n\n ¿Desea crear \
 un nuevo archivo?"
-    STRING_NOTSAVED "El texto en el archivo '%s' ha cambiado\n\n \
+    STRING_NOTSAVED "El texto en el archivo '%s' ha cambiado\n\n\
 ¿Desea guardar los cambios?"
     STRING_NOTFOUND "No se encontró '%s'."
     STRING_OUT_OF_MEMORY "No hay suficiente memoria para terminar esta \
@@ -161,11 +171,19 @@ aumentar la cantidad\nde memoria libre."
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (big endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Línea %d, columna %d"
     STRING_PRINTERROR "No se puede imprimir el archivo '%s'.\n\nAsegúrese de que la impresora esté encendida y configurada correctamente."
+    STRING_DEFAULTFONT "Lucida Console"
+    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
+    STRING_NOWPRINTING "Now printing page..."
+    STRING_PRINTCANCELING "The print job is being canceled..."
+    STRING_PRINTCOMPLETE "Printing is successfully done."
+    STRING_PRINTCANCELED "Printing has been canceled."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Documento de texto"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

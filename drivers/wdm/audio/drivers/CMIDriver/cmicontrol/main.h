@@ -64,10 +64,9 @@ typedef struct _CMIDEV  {
 	HDEVINFO                          Info;
 	SP_DEVINFO_DATA                   InfoData;
 	PSP_DEVICE_INTERFACE_DETAIL_DATA  InterfaceDetailData;
-
 } CMIDEV;
 
-static LRESULT CALLBACK TabDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK TabDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE hInst;
 HWND      hWndMain;

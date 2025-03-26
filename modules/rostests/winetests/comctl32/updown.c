@@ -791,7 +791,7 @@ static void test_updown_create(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     GetWindowTextA(g_edit, text, MAX_PATH);
-    ok(lstrlenA(text) == 0, "Expected empty string\n");
+    ok(!*text, "Expected empty string\n");
     ok_sequence(sequences, EDIT_SEQ_INDEX, get_edit_text_seq, "get edit text", FALSE);
 
     DestroyWindow(updown);
@@ -865,7 +865,7 @@ static void test_UDS_SETBUDDYINT(void)
     ok(style & UDS_SETBUDDYINT, "Expected UDS_SETBUDDY to be set\n");
     SendMessageA(updown, UDM_SETPOS, 0, 20);
     GetWindowTextA(g_edit, text, ARRAY_SIZE(text));
-    ok(lstrlenA(text) == 0, "Expected empty string\n");
+    ok(!*text, "Expected empty string\n");
     DestroyWindow(updown);
 
     /* creating with UDS_SETBUDDYINT */

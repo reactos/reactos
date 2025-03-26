@@ -1,5 +1,5 @@
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION  "VBE Miniport Device Driver"
-#define REACTOS_STR_INTERNAL_NAME     "vbemp"
-#define REACTOS_STR_ORIGINAL_FILENAME "vbemp.sys"
+#define REACTOS_STR_INTERNAL_NAME     "vgapnp"
+#define REACTOS_STR_ORIGINAL_FILENAME "vgapnp.sys"
 #include <reactos/version.rc>

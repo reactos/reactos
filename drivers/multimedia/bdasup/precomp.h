@@ -10,7 +10,7 @@
 #include <bdamedia.h>
 #include <bdasup.h>
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 

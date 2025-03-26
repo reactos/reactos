@@ -346,3 +346,14 @@ $if (_NTIFS_)
 #define EX_PUSH_LOCK ULONG_PTR
 #define PEX_PUSH_LOCK PULONG_PTR
 $endif (_NTIFS_)
+
+$if (_WINNT_ || _WDMDDK_)
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef enum _FIRMWARE_TYPE {
+    FirmwareTypeUnknown,
+    FirmwareTypeBios,
+    FirmwareTypeUefi,
+    FirmwareTypeMax
+} FIRMWARE_TYPE, *PFIRMWARE_TYPE;
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+$endif (_WINNT_ || _WDMDDK_)

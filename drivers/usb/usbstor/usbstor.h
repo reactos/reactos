@@ -2,6 +2,7 @@
 #define _USBSTOR_H_
 
 #include <wdm.h>
+#include <ntstrsafe.h>
 #include <usbdi.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
@@ -215,11 +216,6 @@ USBSTOR_CreatePDO(
 //
 // misc.c routines
 //
-NTSTATUS
-NTAPI
-USBSTOR_SyncForwardIrp(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN OUT PIRP Irp);
 
 NTSTATUS
 NTAPI
@@ -245,13 +241,6 @@ NTSTATUS
 USBSTOR_GetMaxLUN(
     IN PDEVICE_OBJECT DeviceObject,
     IN PFDO_DEVICE_EXTENSION DeviceExtension);
-
-NTSTATUS
-NTAPI
-USBSTOR_SyncForwardIrpCompletionRoutine(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Context);
 
 NTSTATUS
 USBSTOR_ResetDevice(

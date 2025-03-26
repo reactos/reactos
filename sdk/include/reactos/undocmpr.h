@@ -2,6 +2,6 @@
 #define _UNDOCMPR_H
 
 /* WNET undocumented functions */
-DWORD WINAPI WNetClearConnections(HANDLE owner);
+DWORD WINAPI WNetClearConnections(HWND owner);
 
 #endif

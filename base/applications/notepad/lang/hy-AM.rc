@@ -8,6 +8,7 @@ BEGIN
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
     "^O", CMD_OPEN
     "^P", CMD_PRINT
     "^S", CMD_SAVE
@@ -15,6 +16,7 @@ BEGIN
     "^X", CMD_CUT
     "^Z", CMD_UNDO
     VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F3, CMD_SEARCH_PREV, VIRTKEY, SHIFT
     VK_F5, CMD_TIME_DATE, VIRTKEY
 END
 
@@ -23,6 +25,7 @@ BEGIN
     POPUP "&Ֆայլ"
     BEGIN
         MENUITEM "&Ստեղծել\tCtrl+N", CMD_NEW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Բացել...\tCtrl+O", CMD_OPEN
         MENUITEM "&Պահպանել\tCtrl+S", CMD_SAVE
         MENUITEM "Պահպանել &ինչպես...", CMD_SAVE_AS
@@ -82,8 +85,8 @@ BEGIN
     LTEXT "&Tray:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12
     GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
     LTEXT "L&eft:", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
@@ -121,20 +124,27 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Անցնել տող..."
 BEGIN
-    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "Տողի համարը:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
-    DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-    PUSHBUTTON "Չնդունել", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    LTEXT "Տողի համարը:", 0x155, 5, 12, 41, 12
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15
+    PUSHBUTTON "Չնդունել", IDCANCEL, 120, 30, 40, 15
+END
+
+DIALOG_PRINTING DIALOG 0, 0, 160, 100
+CAPTION "Now printing"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "Էջ %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    PUSHBUTTON "Չնդունել", IDCANCEL, 50, 75, 60, 20
 END
 
 STRINGTABLE
 BEGIN
-    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
-    STRING_PAGESETUP_FOOTERVALUE "Էջ &s" /* FIXME */
-    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
-    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
-    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
-    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_HEADERVALUE "&f"
+    STRING_PAGESETUP_FOOTERVALUE "Էջ &p"
     STRING_NOTEPAD "Բլոկնոտ"
     STRING_ERROR "ՍԽԱԼ"
     STRING_WARNING "ՈԻՇԱԴՐՈՒԹՅՈՒՆ"
@@ -142,27 +152,35 @@ BEGIN
     STRING_UNTITLED "Առանց վերնագրի"
     STRING_ALL_FILES "Բոլոր ֆայլերը (*.*)"
     STRING_TEXT_FILES_TXT "Տեքստային ֆայլերը (*.txt)"
-    STRING_TOOLARGE "Ֆայլը '%s' բավականին մեծ է բլոկնոտի համար.\n \
+    STRING_TOOLARGE "Ֆայլը '%s' բավականին մեծ է բլոկնոտի համար.\n\
 Please use a different editor."
     STRING_NOTEXT "Դուք տեքստ չեք ներմուծել \
 \nPlease type something and try again"
-    STRING_DOESNOTEXIST "Ֆայլը '%s'\n գոյութնուն չունի\n\n \
-Do you want to create a new file ?"
-    STRING_NOTSAVED "Ֆայլը '%s'\n ենթարկվել է փոփոխման\n\n \
-Would you like to save the changes ?"
-    STRING_NOTFOUND "'%s' չի  գտնվել."
-    STRING_OUT_OF_MEMORY "Կա հիծողությոն անբավարարվախույուն. \
+    STRING_DOESNOTEXIST "Ֆայլը '%s'\n գոյութնուն չունի\n\n\
+Do you want to create a new file?"
+    STRING_NOTSAVED "Ֆայլը '%s'\n ենթարկվել է փոփոխման\n\n\
+Would you like to save the changes?"
+    STRING_NOTFOUND "'%s' չի գտնվել."
+    STRING_OUT_OF_MEMORY "Կա հիծողությոն անբավարարվախույուն.\
 \nՓակեք մի կամ մի քանի ծրագիր."
     STRING_CANNOTFIND "Չի գտնվել '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Յունիկոդ"
     STRING_UNICODE_BE "Յունիկոդ (big endian)"
     STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 with BOM"
     STRING_CRLF "Պատւոհաններ (CR + LF)"
     STRING_LF "Յունիքս (LF)"
     STRING_CR "Մակինտոշ (CR)"
     STRING_LINE_COLUMN "Line %d, column %d"
     STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_DEFAULTFONT "Lucida Console"
+    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
+    STRING_NOWPRINTING "Now printing page..."
+    STRING_PRINTCANCELING "The print job is being canceled..."
+    STRING_PRINTCOMPLETE "Printing is successfully done."
+    STRING_PRINTCANCELED "Printing has been canceled."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Text Document"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

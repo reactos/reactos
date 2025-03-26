@@ -430,7 +430,7 @@ struct _xmlRelaxNGDocument {
 /**
  * xmlRngPErrMemory:
  * @ctxt:  an Relax-NG parser context
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of attribute error
  */
@@ -465,7 +465,7 @@ xmlRngPErrMemory(xmlRelaxNGParserCtxtPtr ctxt, const char *extra)
 /**
  * xmlRngVErrMemory:
  * @ctxt:  a Relax-NG validation context
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of attribute error
  */
@@ -1409,7 +1409,7 @@ xmlRelaxNGFreeValidState(xmlRelaxNGValidCtxtPtr ctxt,
  * @ctxt: a RelaxNG parser context
  * @flags: a set of flags values
  *
- * Semi private function used to pass informations to a parser context
+ * Semi private function used to pass information to a parser context
  * which are a combination of xmlRelaxNGParserFlag .
  *
  * Returns 0 if success and -1 in case of error
@@ -2849,6 +2849,11 @@ xmlRelaxNGInitTypes(void)
 /**
  * xmlRelaxNGCleanupTypes:
  *
+ * DEPRECATED: This function will be made private. Call xmlCleanupParser
+ * to free global state but see the warnings there. xmlCleanupParser
+ * should be only called once at program exit. In most cases, you don't
+ * have call cleanup functions at all.
+ *
  * Cleanup the default Schemas type library associated to RelaxNG
  */
 void
@@ -3654,6 +3659,7 @@ xmlRelaxNGParseData(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr node)
 
     def = xmlRelaxNGNewDefine(ctxt, node);
     if (def == NULL) {
+        xmlFree(library);
         xmlFree(type);
         return (NULL);
     }
@@ -6838,6 +6844,7 @@ xmlRelaxNGNewDocParserCtxt(xmlDocPtr doc)
         (xmlRelaxNGParserCtxtPtr) xmlMalloc(sizeof(xmlRelaxNGParserCtxt));
     if (ret == NULL) {
         xmlRngPErrMemory(NULL, "building parser\n");
+        xmlFreeDoc(copy);
         return (NULL);
     }
     memset(ret, 0, sizeof(xmlRelaxNGParserCtxt));
@@ -7226,7 +7233,7 @@ xmlRelaxNGCleanupTree(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr root)
 			                         BAD_CAST "name", NULL);
                             if (node != NULL) {
                                 xmlAddPrevSibling(cur->children, node);
-                                text = xmlNewText(name);
+                                text = xmlNewDocText(node->doc, name);
                                 xmlAddChild(node, text);
                                 text = node;
                             }
@@ -8165,7 +8172,7 @@ xmlRelaxNGElemPop(xmlRelaxNGValidCtxtPtr ctxt)
  @ @inputdata:  callback data, the Relax NG validation context
  *
  * Handle the callback and if needed validate the element children.
- * some of the in/out informations are passed via the context in @inputdata.
+ * some of the in/out information are passed via the context in @inputdata.
  */
 static void
 xmlRelaxNGValidateProgressiveCallback(xmlRegExecCtxtPtr exec
@@ -11000,7 +11007,7 @@ xmlRelaxNGFreeValidCtxt(xmlRelaxNGValidCtxtPtr ctxt)
  * @warn: the warning function
  * @ctx: the functions context
  *
- * Set the error and warning callback informations
+ * Set the error and warning callback information
  */
 void
 xmlRelaxNGSetValidErrors(xmlRelaxNGValidCtxtPtr ctxt,
@@ -11042,7 +11049,7 @@ xmlRelaxNGSetValidStructuredErrors(xmlRelaxNGValidCtxtPtr ctxt,
  * @warn: the warning function result
  * @ctx: the functions context result
  *
- * Get the error and warning callback informations
+ * Get the error and warning callback information
  *
  * Returns -1 in case of error and 0 otherwise
  */
@@ -11096,6 +11103,4 @@ xmlRelaxNGValidateDoc(xmlRelaxNGValidCtxtPtr ctxt, xmlDocPtr doc)
     return (ret);
 }
 
-#define bottom_relaxng
-#include "elfgcchack.h"
 #endif /* LIBXML_SCHEMAS_ENABLED */

@@ -20,6 +20,8 @@
 #include <imagehlp.h>
 #include <mmddk.h>
 
+#include <pseh/pseh2.h>
+
 /* Compatibility with the MS defines */
 
 #ifndef FACILITY_VISUALCPP
@@ -198,7 +200,7 @@ FARPROC WINAPI DliHook(unsigned dliNotify, PDelayLoadInfo pdli)
             g_VersionDll = LoadLibraryA("version.dll");
             return (FARPROC)1;
         }
-            
+
     }
     else if (dliNotify == dliNotePreGetProcAddress)
     {
@@ -367,7 +369,7 @@ LONG ExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo, ULONG ExceptionCode)
 so that we can check that both fallback and registration work*/
 extern "C"
 {
-    PfnDliHook __pfnDliNotifyHook2 = DliHook;
+    extern PfnDliHook __pfnDliNotifyHook2;
     //PfnDliHook __pfnDliFailureHook2 = DliFailHook;
 }
 
@@ -399,6 +401,7 @@ unsigned g_imagehlp[] = { dliStartProcessing, dliNotePreLoadLibrary, dliFailLoad
 //#define DELAYLOAD_SUPPORTS_UNLOADING
 START_TEST(delayimp)
 {
+    __pfnDliNotifyHook2 = DliHook;
     /* Verify that both scenario's work */
     ok(__pfnDliNotifyHook2 == DliHook, "Expected __pfnDliNotifyHook2 to be DliHook(%p), but was: %p\n",
         DliHook, __pfnDliNotifyHook2);
@@ -482,7 +485,7 @@ START_TEST(delayimp)
     ok(err == MMSYSERR_INVALHANDLE, "Expected err to be MMSYSERR_INVALHANDLE, was 0x%lx\n", err);
     CheckDliDone();
     ok(g_BreakFunctionName == false, "Expected the functionname to be changed\n");
-    
+
     /* Make the LoadLib fail, manually load the library in the Failure Hook,
     Respond to the dliNotePreGetProcAddress with an alternate function address */
     SetExpectedDli(g_sfc_key);

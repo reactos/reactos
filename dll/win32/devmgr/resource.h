@@ -61,6 +61,7 @@
 #define IDS_MENU_SCAN           94
 #define IDS_MENU_ADD            95
 #define IDS_MENU_PROPERTIES     96
+#define IDS_MENU_COPY           97
 
 
 /* menu hints */
@@ -127,6 +128,7 @@
 #define IDS_RESOURCE_INTERRUPT    0x11A
 #define IDS_RESOURCE_DMA          0x11B
 #define IDS_RESOURCE_PORT         0x11C
+#define IDS_COPY                  0x11D
 
 #define IDS_DEV_NO_PROBLEM                 0x200
 #define IDS_DEV_NOT_CONFIGURED             0x201

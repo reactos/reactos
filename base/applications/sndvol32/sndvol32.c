@@ -340,7 +340,7 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
     }
 }
 
-static 
+static
 VOID
 WriteLineSettings(PPREFERENCES_CONTEXT Context, HWND hwndDlg)
 {
@@ -576,11 +576,11 @@ DlgPreferencesProc(HWND hwndDlg,
                       IDCANCEL);
             break;
         }
-        
+
         case WM_SYSCOLORCHANGE:
         {
             HWND hwndControls;
-            
+
             /* Forward WM_SYSCOLORCHANGE */
             hwndControls = GetDlgItem(hwndDlg, IDC_CONTROLS);
             SendMessage(hwndControls, WM_SYSCOLORCHANGE, 0, 0);
@@ -636,7 +636,7 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
     PSET_VOLUME_CONTEXT Context = (PSET_VOLUME_CONTEXT)Ctx;
 
     /* check if the line name is equal */
-    if (wcsicmp(Line->szName, Context->LineName))
+    if (_wcsicmp(Line->szName, Context->LineName))
     {
         /* it is not */
         return TRUE;
@@ -971,6 +971,7 @@ MainWindowProc(HWND hwnd,
                 case IDM_EXIT:
                 {
                     PostQuitMessage(0);
+                    UnregisterHotKey(hwnd, HOTKEY_CTRL_S);
                     break;
                 }
 
@@ -1248,6 +1249,8 @@ MainWindowProc(HWND hwnd,
                     Result = -1;
                 }
             }
+
+            RegisterHotKey(hwnd, HOTKEY_CTRL_S, MOD_CONTROL, 'S');
             break;
         }
 
@@ -1272,6 +1275,16 @@ MainWindowProc(HWND hwnd,
         {
             SaveXYCoordWnd(hwnd, &Preferences);
             PostQuitMessage(0);
+            break;
+        }
+
+        case WM_HOTKEY:
+        {
+            if (wParam == HOTKEY_CTRL_S) 
+            {
+                Preferences.MixerWindow->Mode = (Preferences.MixerWindow->Mode == NORMAL_MODE ? SMALL_MODE : NORMAL_MODE);
+                RebuildMixerWindowControls(&Preferences);
+            }
             break;
         }
 
@@ -1342,7 +1355,7 @@ CreateApplicationWindow(
         hWnd = CreateWindowEx(WS_EX_WINDOWEDGE | WS_EX_CONTROLPARENT,
                               SZ_APP_CLASS,
                               lpAppTitle,
-                              WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, 
+                              WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
                               0, 0, 300, 315,
                               NULL,
                               LoadMenu(hAppInstance,

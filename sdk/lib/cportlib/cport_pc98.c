@@ -12,15 +12,11 @@
 #include <intrin.h>
 #include <ioaccess.h>
 #include <ntstatus.h>
-#include <ntstatus.h>
 #include <cportlib/cportlib.h>
 #include <drivers/pc98/serial.h>
 #include <drivers/pc98/sysport.h>
 #include <drivers/pc98/pit.h>
 #include <drivers/pc98/cpu.h>
-
-#define NDEBUG
-#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 

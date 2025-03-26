@@ -7,6 +7,8 @@
 #include <fltkernel.h>
 #include <pseh/pseh2.h>
 
+#include <section_attribs.h>
+
 #define DRIVER_NAME     L"FltMgr"
 
 #define FLT_MAJOR_VERSION   0x0200

@@ -34,7 +34,7 @@ SortListView(LPARAM lItemParam1,
     ListView_GetItemText(pSort->hList, iItem1, pSort->nClickedColumn, strItem1, MAX_VALUE_NAME);
     ListView_GetItemText(pSort->hList, iItem2, pSort->nClickedColumn, strItem2, MAX_VALUE_NAME);
 
-    // StrCmpLogicalW helps in comparing numbers intelligently, 10 is greater that 2, other 
+    // StrCmpLogicalW helps in comparing numbers intelligently, 10 is greater that 2, other
     // wise string comparison will always return 2 is greater that 10...
     return ( pSort->bSortAsc ? StrCmpLogicalW(strItem1, strItem2) : StrCmpLogicalW(strItem2, strItem1) );
 }

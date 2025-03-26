@@ -308,6 +308,34 @@ typedef enum _DOMAIN_DISPLAY_INFORMATION
     DomainDisplayServer
 } DOMAIN_DISPLAY_INFORMATION, *PDOMAIN_DISPLAY_INFORMATION;
 
+typedef struct _DOMAIN_DISPLAY_USER
+{
+    ULONG Index;
+    ULONG Rid;
+    ULONG AccountControl;
+    UNICODE_STRING LogonName;
+    UNICODE_STRING AdminComment;
+    UNICODE_STRING FullName;
+} DOMAIN_DISPLAY_USER, *PDOMAIN_DISPLAY_USER;
+
+typedef struct _DOMAIN_DISPLAY_MACHINE
+{
+    ULONG Index;
+    ULONG Rid;
+    ULONG AccountControl;
+    UNICODE_STRING Machine;
+    UNICODE_STRING Comment;
+} DOMAIN_DISPLAY_MACHINE, *PDOMAIN_DISPLAY_MACHINE;
+
+typedef struct _DOMAIN_DISPLAY_GROUP
+{
+    ULONG Index;
+    ULONG Rid;
+    ULONG Attributes;
+    UNICODE_STRING Group;
+    UNICODE_STRING Comment;
+} DOMAIN_DISPLAY_GROUP, *PDOMAIN_DISPLAY_GROUP;
+
 typedef enum _DOMAIN_INFORMATION_CLASS
 {
     DomainPasswordInformation = 1,

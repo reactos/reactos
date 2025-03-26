@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <initguid.h>
 
+#include <pseh/pseh2.h>
+
 #include "wine/test.h"
 
 #include "apphelp_apitest.h"
@@ -221,10 +223,16 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
         {
             ok(pInfo->dwMajor == 2, "Expected pInfo->dwMajor to be 2, was: %d\n", pInfo->dwMajor);
             if (g_WinVersion >= _WIN32_WINNT_VISTA)
+            {
                 ok(pInfo->dwMinor == 1, "Expected pInfo->dwMinor to be 1, was: %d\n", pInfo->dwMinor);
+            }
             else
-                ok(pInfo->dwMinor >= 190915 && pInfo->dwMinor <= 191300,
-                   "Expected pInfo->dwMinor to be between 190915 and 191300, was: %d\n", pInfo->dwMinor);
+            {
+                SYSTEMTIME si = {0};
+                GetSystemTime(&si);
+                DWORD dwExpect = ((DWORD)si.wYear - 2000) * 10000 + si.wMonth * 100 + si.wDay;
+                ok(pInfo->dwMinor == dwExpect, "Expected pInfo->dwMinor to be %d, was: %d\n", dwExpect, pInfo->dwMinor);
+            }
 
             ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
@@ -566,7 +574,7 @@ static void test_stringtable()
                 size = pSdbGetTagDataSize(pdb, tagstr);
                 ok(size == 4, "Expected datasize to be 4, was %u for %u/%u\n", size, j, n);
                 data = pSdbGetStringTagPtr(pdb, tagstr);
-                ok(data && !wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
+                ok(data && !_wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
             }
             tagstr = pSdbFindNextTag(pdb, TAGID_ROOT, tagstr);
         }
@@ -592,7 +600,7 @@ static void test_stringtable()
                     expected_size = (lstrlenW(all[j])+1) * 2;
                     ok(size == expected_size, "Expected datasize to be %u, was %u for %u/%u\n", expected_size, size, j, n);
                     data = pSdbGetStringTagPtr(pdb, tagstr);
-                    ok(data && !wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
+                    ok(data && !_wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
                 }
                 tagstr = pSdbFindNextTag(pdb, TAGID_ROOT, tagstr);
             }
@@ -1081,7 +1089,7 @@ static void test_GetDatabaseInformation(PDB pdb)
             ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
         }
-        
+
     }
     free(pInfo);
 }
@@ -1179,27 +1187,6 @@ static void test_is_testdb(PDB pdb)
     {
         skip("Not checking DB GUID, received a null pdb\n");
     }
-}
-
-static BOOL IsUserAdmin()
-{
-    BOOL Result;
-    SID_IDENTIFIER_AUTHORITY NtAuthority = { SECURITY_NT_AUTHORITY };
-    PSID AdministratorsGroup; 
-
-    Result = AllocateAndInitializeSid(&NtAuthority, 2,
-                                      SECURITY_BUILTIN_DOMAIN_RID,
-                                      DOMAIN_ALIAS_RID_ADMINS,
-                                      0, 0, 0, 0, 0, 0,
-                                      &AdministratorsGroup);
-    if (Result)
-    {
-        if (!CheckTokenMembership( NULL, AdministratorsGroup, &Result))
-            Result = FALSE;
-        FreeSid(AdministratorsGroup); 
-    }
-
-    return Result;
 }
 
 
@@ -1502,8 +1489,8 @@ static void test_match_ex(const WCHAR* workdir, HSDB hsdb)
         Vendor = pSdbGetStringTagPtr(pdb, tagid);
         if (!Vendor)
             continue;
-        Succeed = !wcsicmp(Vendor, L"Succeed");
-        if (!Succeed && wcsicmp(Vendor, L"Fail"))
+        Succeed = !_wcsicmp(Vendor, L"Succeed");
+        if (!Succeed && _wcsicmp(Vendor, L"Fail"))
             continue;
         tagid = pSdbFindFirstTag(pdb, exetag, TAG_APP_NAME);
         AppName = pSdbGetStringTagPtr(pdb, tagid);
@@ -1589,8 +1576,6 @@ static void test_MatchApplicationsEx(void)
     ret = RemoveDirectoryW(workdir);
     ok(ret, "RemoveDirectoryW error: %d\n", GetLastError());
 }
-
-
 
 
 static void test_TagRef(void)

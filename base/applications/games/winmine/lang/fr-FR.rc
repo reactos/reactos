@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Nouveau\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Marquage des cases suspectes", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Débutant", IDM_BEGINNER
         MENUITEM "&Avancé", IDM_ADVANCED

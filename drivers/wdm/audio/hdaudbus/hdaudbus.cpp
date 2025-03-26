@@ -5,6 +5,7 @@
 * PURPOSE:         HDA Driver Entry
 * PROGRAMMER:      Johannes Anderwald
 */
+
 #include "hdaudbus.h"
 
 DRIVER_DISPATCH HDA_Pnp;
@@ -19,19 +20,14 @@ AllocateItem(
     _In_ POOL_TYPE PoolType,
     _In_ SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_HDA);
-    if (!Item)
-        return Item;
-
-    RtlZeroMemory(Item, NumberOfBytes);
-    return Item;
+    return ExAllocatePoolZero(PoolType, NumberOfBytes, TAG_HDA);
 }
 
 VOID
 FreeItem(
     __drv_freesMem(Mem) PVOID Item)
 {
-    ExFreePool(Item);
+    ExFreePoolWithTag(Item, TAG_HDA);
 }
 
 NTSTATUS
@@ -131,7 +127,6 @@ HDA_PdoPnp(
         if (IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
         {
             /* handle target device relations */
-            ASSERT(IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation);
             ASSERT(Irp->IoStatus.Information == 0);
 
             /* allocate device relation */
@@ -155,6 +150,10 @@ HDA_PdoPnp(
                 /* no memory */
                 Status = STATUS_INSUFFICIENT_RESOURCES;
             }
+        }
+        else
+        {
+            Status = Irp->IoStatus.Status;
         }
         break;
     case IRP_MN_QUERY_CAPABILITIES:
@@ -302,6 +301,7 @@ HDA_Unload(
 
 extern "C"
 {
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -317,4 +317,4 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
-}
+} // extern "C"

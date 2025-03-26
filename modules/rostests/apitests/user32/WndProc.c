@@ -135,6 +135,27 @@ static void test_wndproc(void)
        "UnregisterClassA() failed: LastError = %lu\n", GetLastError());
 }
 
+static void test_get_wndproc(void)
+{
+    LONG_PTR ret;
+    SetLastError(0xfeedf00d);
+    ret = GetWindowLongPtrA(GetShellWindow(), GWLP_WNDPROC);
+    ok (ret == 0, "Should return NULL\n");
+    ok (GetLastError() == ERROR_ACCESS_DENIED, "Wrong return error!\n");
+    SetLastError(0xfeedf00d);
+    ret = GetWindowLongPtrW(GetShellWindow(), GWLP_WNDPROC);
+    ok (ret == 0, "Should return NULL\n");
+    ok (GetLastError() == ERROR_ACCESS_DENIED, "Wrong return error!\n");
+    SetLastError(0xfeedf00d);
+    ret = GetWindowLongPtrA(GetShellWindow(), GWLP_WNDPROC);
+    ok (ret == 0, "Should return NULL\n");
+    ok (GetLastError() == ERROR_ACCESS_DENIED, "Wrong return error!\n");
+    SetLastError(0xfeedf00d);
+    ret = GetWindowLongPtrW(GetShellWindow(), GWLP_WNDPROC);
+    ok (ret == 0, "Should return NULL\n");
+    ok (GetLastError() == ERROR_ACCESS_DENIED, "Wrong return error!\n");
+}
+
 START_TEST(WndProc)
 {
 #ifdef __RUNTIME_CHECKS__
@@ -142,5 +163,6 @@ START_TEST(WndProc)
     return;
 #endif /* __RUNTIME_CHECKS__ */
 
+    test_get_wndproc();
     test_wndproc();
 }

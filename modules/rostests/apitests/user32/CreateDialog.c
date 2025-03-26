@@ -31,7 +31,7 @@ typedef struct
     tagMsgInfo msgList[TEST_MAX_MSG];
 } tagMsgList;
 
-tagMsgList msglist;
+static tagMsgList msglist;
 
 /* the expected message-list */
 const tagMsgList t1msgList =

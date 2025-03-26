@@ -27,3 +27,9 @@ Revision History:
 #else
 #define CHECK_RETURN_IF_USER_MODE
 #endif
+
+#ifdef __REACTOS__
+# ifndef STDCALL
+#  define STDCALL __stdcall
+# endif
+#endif

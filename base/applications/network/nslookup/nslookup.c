@@ -376,7 +376,7 @@ void PerformLookup( PCHAR pAddr )
         case RCODE_NXDOMAIN:
             _tprintf( _T("*** %s can't find %s: Non-existant domain\n"), State.DefaultServer, pAddr );
             break;
-            
+
         case RCODE_REFUSED:
             _tprintf( _T("*** %s can't find %s: Query refused\n"), State.DefaultServer, pAddr );
             break;
@@ -384,7 +384,7 @@ void PerformLookup( PCHAR pAddr )
         default:
             _tprintf( _T("*** %s can't find %s: Unknown RCODE\n"), State.DefaultServer, pAddr );
         }
-            
+
         goto cleanup;
     }
 
@@ -761,6 +761,7 @@ int main( int argc, char* argv[] )
     PFIXED_INFO pNetInfo = NULL;
     ULONG NetBufLen = 0;
     WSADATA wsaData;
+    int ret;
 
     ProcessHeap = GetProcessHeap();
     RequestID = 1;
@@ -827,7 +828,12 @@ int main( int argc, char* argv[] )
 
     HeapFree( ProcessHeap, 0, pNetInfo );
 
-    WSAStartup( MAKEWORD(2,2), &wsaData );
+    ret = WSAStartup( MAKEWORD(2, 2), &wsaData );
+    if (ret != 0)
+    {
+        _tprintf( _T("Winsock initialization failed: %d\n"), ret );
+        return ret;
+    }
 
     switch( ParseCommandLine( argc, argv ) )
     {

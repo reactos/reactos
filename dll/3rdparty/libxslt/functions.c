@@ -150,40 +150,34 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
 	goto out_fragment;
     }
 
+#if LIBXML_VERSION >= 20911 || \
+    defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+    xptrctxt->opLimit = ctxt->context->opLimit;
+    xptrctxt->opCount = ctxt->context->opCount;
+    xptrctxt->depth = ctxt->context->depth;
+
     resObj = xmlXPtrEval(fragment, xptrctxt);
-    xmlXPathFreeContext(xptrctxt);
+
+    ctxt->context->opCount = xptrctxt->opCount;
+#else
+    resObj = xmlXPtrEval(fragment, xptrctxt);
 #endif
 
-    if (resObj == NULL)
-	goto out_fragment;
+    xmlXPathFreeContext(xptrctxt);
+#endif /* LIBXML_XPTR_ENABLED */
 
-    switch (resObj->type) {
-	case XPATH_NODESET:
-	    break;
-	case XPATH_UNDEFINED:
-	case XPATH_BOOLEAN:
-	case XPATH_NUMBER:
-	case XPATH_STRING:
-	case XPATH_POINT:
-	case XPATH_USERS:
-	case XPATH_XSLT_TREE:
-	case XPATH_RANGE:
-	case XPATH_LOCATIONSET:
-	    xsltTransformError(tctxt, NULL, NULL,
-		"document() : XPointer does not select a node set: #%s\n",
-		fragment);
-	goto out_object;
+    if ((resObj != NULL) && (resObj->type != XPATH_NODESET)) {
+        xsltTransformError(tctxt, NULL, NULL,
+            "document() : XPointer does not select a node set: #%s\n",
+            fragment);
+        xmlXPathFreeObject(resObj);
+        resObj = NULL;
     }
 
-    valuePush(ctxt, resObj);
-    xmlFree(fragment);
-    return;
-
-out_object:
-    xmlXPathFreeObject(resObj);
-
 out_fragment:
-    valuePush(ctxt, xmlXPathNewNodeSet(NULL));
+    if (resObj == NULL)
+        resObj = xmlXPathNewNodeSet(NULL);
+    valuePush(ctxt, resObj);
     xmlFree(fragment);
 }
 
@@ -593,7 +587,8 @@ xsltFormatNumberFunction(xmlXPathParserContextPtr ctxt, int nargs)
 
     switch (nargs) {
     case 3:
-	CAST_TO_STRING;
+        if ((ctxt->value != NULL) && (ctxt->value->type != XPATH_STRING))
+            xmlXPathStringFunction(ctxt, 1);
 	decimalObj = valuePop(ctxt);
         ncname = xsltSplitQName(sheet->dict, decimalObj->stringval, &prefix);
         if (prefix != NULL) {
@@ -619,13 +614,16 @@ xsltFormatNumberFunction(xmlXPathParserContextPtr ctxt, int nargs)
 	}
 	/* Intentional fall-through */
     case 2:
-	CAST_TO_STRING;
+        if ((ctxt->value != NULL) && (ctxt->value->type != XPATH_STRING))
+            xmlXPathStringFunction(ctxt, 1);
 	formatObj = valuePop(ctxt);
-	CAST_TO_NUMBER;
+        if ((ctxt->value != NULL) && (ctxt->value->type != XPATH_NUMBER))
+            xmlXPathNumberFunction(ctxt, 1);
 	numberObj = valuePop(ctxt);
 	break;
     default:
-	XP_ERROR(XPATH_INVALID_ARITY);
+	xmlXPathErr(ctxt, XPATH_INVALID_ARITY);
+        return;
     }
 
     if (formatValues != NULL) {

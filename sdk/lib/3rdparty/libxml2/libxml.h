@@ -9,8 +9,10 @@
 #ifndef __XML_LIBXML_H__
 #define __XML_LIBXML_H__
 
-#include <libxml/xmlstring.h>
-
+/*
+ * These macros must be defined before including system headers.
+ * Do not add any #include directives above this block.
+ */
 #ifndef NO_LARGEFILE_SOURCE
 #ifndef _LARGEFILE_SOURCE
 #define _LARGEFILE_SOURCE
@@ -20,17 +22,6 @@
 #endif
 #endif
 
-#if defined(macintosh)
-#include "config-mac.h"
-#elif defined(_WIN32_WCE)
-/*
- * Windows CE compatibility definitions and functions
- * This is needed to compile libxml2 for Windows CE.
- * At least I tested it with WinCE 5.0 for Emulator and WinCE 4.2/SH4 target
- */
-#include <win32config.h>
-#include <libxml/xmlversion.h>
-#else
 /*
  * Currently supported platforms use either autoconf or
  * copy to config.h own "preset" configuration file.
@@ -38,6 +29,10 @@
  */
 #include "config.h"
 #include <libxml/xmlversion.h>
+#include <libxml/xmlstring.h>
+
+#ifndef SYSCONFDIR
+  #define SYSCONFDIR "/etc"
 #endif
 
 #if defined(__Lynx__)
@@ -107,27 +102,14 @@ void __xmlGlobalInitMutexDestroy(void);
 
 int __xmlInitializeDict(void);
 
-#if defined(HAVE_RAND) && defined(HAVE_SRAND) && defined(HAVE_TIME)
 /*
  * internal thread safe random function
  */
 int __xmlRandom(void);
-#endif
 
 XMLPUBFUN xmlChar * XMLCALL xmlEscapeFormatString(xmlChar **msg);
 int xmlInputReadCallbackNop(void *context, char *buffer, int len);
 
-#ifdef IN_LIBXML
-#ifdef __GNUC__
-#ifdef PIC
-#ifdef __linux__
-#if (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 3)
-#include "elfgcchack.h"
-#endif
-#endif
-#endif
-#endif
-#endif
 #if !defined(PIC) && !defined(NOLIBTOOL) && !defined(LIBXML_STATIC)
 #  define LIBXML_STATIC
 #endif

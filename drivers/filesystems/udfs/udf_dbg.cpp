@@ -134,8 +134,8 @@ UDFDebugAcquireResourceExclusiveLite(
 
 #endif // USE_DLD
 
-    
-    
+
+
     if(Success) {
 #ifdef TRACK_RESOURCES
         UDFPrint(("Res:Exc:OK:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
@@ -150,10 +150,10 @@ UDFDebugAcquireResourceExclusiveLite(
 #endif
 //    BrutePoint();
     return FALSE;
-    
+
 }
 
-VOID 
+VOID
 UDFDebugReleaseResourceForThreadLite(
     IN PERESOURCE  Resource,
     IN ERESOURCE_THREAD  ResourceThreadId,
@@ -174,7 +174,7 @@ UDFDebugReleaseResourceForThreadLite(
     AcqCounter--;
 }
 
-VOID 
+VOID
 UDFDebugDeleteResource(
     IN PERESOURCE  Resource,
     IN ERESOURCE_THREAD  ResourceThreadId,
@@ -293,7 +293,7 @@ UDFDebugAcquireSharedWaitForExclusive(
 #endif
 //    BrutePoint();
     return FALSE;
-    
+
 }
 
 
@@ -420,8 +420,8 @@ DebugAllocatePool(
             AllocCountNPaged += (size+7) & ~7;
         }
     }
-    
-    MemDesc[i].Length = (size); 
+
+    MemDesc[i].Length = (size);
 #ifdef TRACK_SYS_ALLOC_CALLERS
     MemDesc[i].SrcId   = SrcId;
     MemDesc[i].SrcLine = SrcLine;
@@ -437,7 +437,7 @@ VOID DebugFreePool(PVOID addr) {
 
     ASSERT(addr);
 
-    for (i=0;i<cur_max;i++) {  
+    for (i=0;i<cur_max;i++) {
         if (MemDesc[i].Addr == addr)  {
 
             if(MemDesc[i].Type == PagedPool) {

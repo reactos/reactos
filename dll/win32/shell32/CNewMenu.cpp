@@ -33,6 +33,8 @@ CNewMenu::CNewMenu() :
     m_idCmdFirst(0),
     m_idCmdFolder(-1),
     m_idCmdLink(-1),
+    m_bCustomIconFolder(FALSE),
+    m_bCustomIconLink(FALSE),
     m_hIconFolder(NULL),
     m_hIconLink(NULL)
 {
@@ -42,6 +44,10 @@ CNewMenu::~CNewMenu()
 {
     UnloadAllItems();
 
+    if (m_bCustomIconFolder && m_hIconFolder)
+        DestroyIcon(m_hIconFolder);
+    if (m_bCustomIconLink && m_hIconLink)
+        DestroyIcon(m_hIconLink);
     if (m_pidlFolder)
         ILFree(m_pidlFolder);
 }
@@ -188,7 +194,7 @@ CNewMenu::CacheItems()
         if (pNewItem)
         {
             dwSize += wcslen(wszName) + 1;
-            if (!m_pLinkItem && wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
+            if (!m_pLinkItem && _wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
             {
                 /* The unique link handler */
                 m_pLinkItem = pNewItem;
@@ -271,7 +277,7 @@ CNewMenu::LoadCachedItems()
         pNewItem = LoadItem(wszName);
         if (pNewItem)
         {
-            if (!m_pLinkItem && wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
+            if (!m_pLinkItem && _wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
             {
                 /* The unique link handler */
                 m_pLinkItem = pNewItem;
@@ -418,13 +424,13 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
         dwSelectFlags |= SVSI_EDIT;
 
     /* Notify the view object about the new item */
-    SHChangeNotify(wEventId, uFlags, (LPCVOID) pszName, NULL);
+    SHChangeNotify(wEventId, uFlags | SHCNF_FLUSH, (LPCVOID)pszName, NULL);
 
     if (!m_pSite)
         return S_OK;
 
     /* Get a pointer to the shell view */
-    hr = IUnknown_QueryService(m_pSite, SID_IFolderView, IID_PPV_ARG(IShellView, &lpSV));
+    hr = IUnknown_QueryService(m_pSite, SID_SFolderView, IID_PPV_ARG(IShellView, &lpSV));
     if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
 
@@ -518,17 +524,14 @@ HRESULT CNewMenu::NewItemByCommand(SHELLNEW_ITEM *pItem, LPCWSTR wszPath)
 HRESULT CNewMenu::NewItemByNonCommand(SHELLNEW_ITEM *pItem, LPWSTR wszName,
                                       DWORD cchNameMax, LPCWSTR wszPath)
 {
-    WCHAR wszBuf[MAX_PATH];
-    WCHAR wszNewFile[MAX_PATH];
     BOOL bSuccess = TRUE;
 
-    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf)))
-        return E_FAIL;
-
-    StringCchPrintfW(wszNewFile, _countof(wszNewFile), L"%s %s%s", wszBuf, pItem->pwszDesc, pItem->pwszExt);
+    CStringW strNewItem;
+    strNewItem.Format(IDS_NEWITEMFORMAT, pItem->pwszDesc);
+    strNewItem += pItem->pwszExt;
 
     /* Create the name of the new file */
-    if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, wszNewFile))
+    if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, strNewItem))
         return E_FAIL;
 
     /* Create new file */
@@ -565,8 +568,10 @@ HRESULT CNewMenu::NewItemByNonCommand(SHELLNEW_ITEM *pItem, LPWSTR wszName,
     }
     else
     {
-        StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", wszName);
-        MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK | MB_ICONERROR); // FIXME load localized error msg
+        CStringW Caption(MAKEINTRESOURCEW(IDS_CREATEFILE_CAPTION));
+        CStringW Message(MAKEINTRESOURCEW(IDS_CREATEFILE_DENIED));
+        Message.FormatMessage(Message.GetString(), wszName);
+        MessageBoxW(0, Message, Caption, MB_ICONEXCLAMATION | MB_OK);
     }
 
     return S_OK;
@@ -769,10 +774,32 @@ HRESULT WINAPI
 CNewMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                      IDataObject *pdtobj, HKEY hkeyProgID)
 {
+    const INT cx = GetSystemMetrics(SM_CXSMICON), cy = GetSystemMetrics(SM_CYSMICON);
+    WCHAR wszIconPath[MAX_PATH];
+    int icon_idx;
+
     m_pidlFolder = ILClone(pidlFolder);
 
     /* Load folder and shortcut icons */
-    m_hIconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 16, 16, LR_SHARED);
-    m_hIconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 16, 16, LR_SHARED);
+    if (HLM_GetIconW(IDI_SHELL_FOLDER - 1, wszIconPath, _countof(wszIconPath), &icon_idx))
+    {
+        ::ExtractIconExW(wszIconPath, icon_idx, &m_hIconFolder, NULL, 1);
+        m_bCustomIconFolder = TRUE;
+    }
+    else
+    {
+        m_hIconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, cx, cy, LR_SHARED);
+    }
+
+    if (HLM_GetIconW(IDI_SHELL_SHORTCUT - 1, wszIconPath, _countof(wszIconPath), &icon_idx))
+    {
+        ::ExtractIconExW(wszIconPath, icon_idx, &m_hIconLink, NULL, 1);
+        m_bCustomIconLink = TRUE;
+    }
+    else
+    {
+        m_hIconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, cx, cy, LR_SHARED);
+    }
+
     return S_OK;
 }

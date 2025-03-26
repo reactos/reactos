@@ -20,18 +20,18 @@
        Hardware resource management (see io/resource.c)
        Exception support (see ke/catch.c)
        Mutex support (see nt/mutex.c)
-       
+
 * Verify implementation
 
-       
+
 * Major areas
 
        Security support (see se/*.c)
        SCSI miniport driver
-       
+
 * Drivers
        NTFS, EXT2 filesystems
        Many others (use oem's where possible)
-       
+
 * For the future
        DOS, Win16, POSIX subsystems

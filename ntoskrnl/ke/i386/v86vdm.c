@@ -191,13 +191,21 @@ KiVdmOpcodeINTnn(IN PKTRAP_FRAME TrapFrame,
     V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_INTERRUPT_MASK);
 
     /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
+    if (KeI386VirtualIntExtensions)
+    {
+        /* Set IF based on VIF */
+        V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
+        if (TrapEFlags & EFLAGS_VIF)
+        {
+            V86EFlags |= EFLAGS_INTERRUPT_MASK;
+        }
+    }
 
     /* Mask in the relevant V86 EFlags into the trap flags */
     V86EFlags |= (TrapEFlags & ~EFLAGS_INTERRUPT_MASK);
 
     /* And mask out the VIF, nested task and TF flag from the trap flags */
-    TrapFrame->EFlags = TrapEFlags &~ (EFLAGS_VIF | EFLAGS_NESTED_TASK | EFLAGS_TF);
+    TrapFrame->EFlags = TrapEFlags & ~(EFLAGS_VIF | EFLAGS_NESTED_TASK | EFLAGS_TF);
 
     /* Add the IOPL flag to the local trap flags */
     V86EFlags |= EFLAGS_IOPL;
@@ -299,11 +307,17 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Mask out EFlags */
-    EFlags &= ~(EFLAGS_IOPL + EFLAGS_VIF + EFLAGS_NESTED_TASK + EFLAGS_VIP);
+    EFlags &= ~(EFLAGS_VIP | EFLAGS_VIF | EFLAGS_NESTED_TASK | EFLAGS_IOPL);
     V86EFlags = EFlags;
 
     /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
+    if (KeI386VirtualIntExtensions)
+    {
+        if (EFlags & EFLAGS_INTERRUPT_MASK)
+        {
+            EFlags |= EFLAGS_VIF;
+        }
+    }
 
     /* Add V86 and Interrupt flag */
     EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
@@ -655,7 +669,7 @@ Ke386CallBios(IN ULONG Int,
     /* Allocate VDM structure */
     VdmProcessObjects = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(VDM_PROCESS_OBJECTS),
-                                              '  eK');
+                                              TAG_KERNEL);
     if (!VdmProcessObjects) return STATUS_NO_MEMORY;
 
     /* Set it up */
@@ -694,7 +708,7 @@ Ke386CallBios(IN ULONG Int,
     Context->ContextFlags = CONTEXT_FULL;
 
     /* Free VDM objects */
-    ExFreePoolWithTag(PsGetCurrentProcess()->VdmObjects, '  eK');
+    ExFreePoolWithTag(PsGetCurrentProcess()->VdmObjects, TAG_KERNEL);
     PsGetCurrentProcess()->VdmObjects = NULL;
 
     /* Return status */

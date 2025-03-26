@@ -98,9 +98,6 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 77 - */
   VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
   VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY, /* PA1 */
-  VK_EMPTY,
-  /* - 80 - */
-  0
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
@@ -338,7 +335,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x47, L"Home" },
   { 0x48, L"Up" },
   { 0x49, L"Page Up" },
-  { 0x4a, L"Left" },
+  { 0x4b, L"Left" },
   { 0x4c, L"Center" },
   { 0x4d, L"Right" },
   { 0x4f, L"End" },
@@ -372,7 +369,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   /* scan code to virtual key maps */
   scancode_to_vk,
-  sizeof(scancode_to_vk) / sizeof(scancode_to_vk[0]),
+  RTL_NUMBER_OF(scancode_to_vk),
   extcode0_to_vk,
   extcode1_to_vk,
 

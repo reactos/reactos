@@ -80,7 +80,7 @@ public:
 CMediaSample::CMediaSample(
     IMemAllocator * Allocator,
     BYTE * Buffer,
-    LONG BufferSize) : 
+    LONG BufferSize) :
                        m_Flags(0),
                        m_TypeFlags(0),
                        m_Buffer(Buffer),
@@ -340,7 +340,7 @@ CMediaSample::SetMediaTime(LONGLONG *pTimeStart, LONGLONG *pTimeEnd)
 HRESULT
 WINAPI
 CMediaSample_Constructor(
-    IMemAllocator* Allocator, 
+    IMemAllocator* Allocator,
     BYTE* pBuffer,
     ULONG BufferSize,
     REFIID riid,

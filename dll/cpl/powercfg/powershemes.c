@@ -252,7 +252,7 @@ LoadConfig(
                                           0);
     if (iCurSel == CB_ERR)
         return;
-        
+
     EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
                 (iCurSel > 0));
 
@@ -326,7 +326,7 @@ LoadConfig(
         {
             SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
-    }  
+    }
 }
 
 
@@ -519,7 +519,7 @@ Pos_SaveData(
 
     if (SetActivePwrScheme(pScheme->uId, NULL, &pScheme->PowerPolicy))
     {
-        pPageData->pActivePowerScheme = pScheme;        
+        pPageData->pActivePowerScheme = pScheme;
     }
 }
 
@@ -556,7 +556,7 @@ DelScheme(
     if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
         if (!DeletePwrScheme(pScheme->uId))
-        {            
+        {
             LoadStringW(hApplet, IDS_DEL_SCHEME_ERROR, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
             MessageBoxW(NULL, szErrorText, NULL, MB_OK | MB_ICONERROR);
             return FALSE;
@@ -719,10 +719,10 @@ SaveScheme(
                                 index,
                                 (LPARAM)SaveSchemeData.pNewScheme);
 
-                    SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);                    
+                    SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), TRUE);
                 }
-                
+
             }
             LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
         }

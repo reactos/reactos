@@ -13,7 +13,7 @@
 #ifdef REAL_IS_FIXED
 #error "Do not build this file with fixed point math!"
 #else
-/* 
+/*
 	Part 3: All synth functions that produce float output.
 	What we need is just a special WRITE_SAMPLE. For the generic and i386 functions, that is.
 	The optimized synths would need to be changed internally to support float output.

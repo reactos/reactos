@@ -1,74 +1,143 @@
 /*
- *    Translated by TestamenT
- *    testament@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    UTF-8 conversion by Caemyr (May, 2011) 
+ * PROJECT:     ReactOS ipconfig utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2007 Konrad Chielecki aka TestamenT <testament@users.sourceforge.net>
+ *              Copyright 2011 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2023 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_BCAST "Transmisja"
-    IDS_P2P "Peer To Peer"
-    IDS_MIXED "Mieszany"
-    IDS_HYBRID "Hybrydowy"
-    IDS_UNKNOWN "nieznany"
+    IDS_HEADER "\nKonfiguracja IP systemu ReactOS\n\n"
+    IDS_HOSTNAME            "\tNazwa hosta . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYDNSSUFFIX    "\tSufiks podstawowej domeny DNS . . : %hs\n"
+    IDS_NODETYPEBCAST       "\tTyp węzła . . . . . . . . . . . . : Transmisja\n"
+    IDS_NODETYPEP2P         "\tTyp węzła . . . . . . . . . . . . : Peer To Peer\n"
+    IDS_NODETYPEMIXED       "\tTyp węzła . . . . . . . . . . . . : Mieszany\n"
+    IDS_NODETYPEHYBRID      "\tTyp węzła . . . . . . . . . . . . : Hybrydowy\n"
+    IDS_NODETYPEUNKNOWN     "\tTyp węzła . . . . . . . . . . . . : nieznany\n"
+    IDS_IPROUTINGNO         "\tRouting IP włączony . . . . . . . : Nie\n"
+    IDS_IPROUTINGYES        "\tRouting IP włączony . . . . . . . : Tak\n"
+    IDS_WINSPROXYNO         "\tSerwer WINS Proxy włączony. . . . : Nie\n"
+    IDS_WINSPROXYYES        "\tSerwer WINS Proxy włączony. . . . : Tak\n"
+    IDS_DNSSUFFIXLIST       "\tLista przeszukiwania sufiksów DNS : %hs\n"
+    IDS_EMPTYLINE           "\t                                    %hs\n"
+    IDS_MEDIADISCONNECTED   "\tStan nośnika. . . . . . . . . . . : Nośnik odłączony\n"
+    IDS_CONNECTIONDNSSUFFIX "\tSufiks DNS konkretnego połączenia : %hs\n"
+    IDS_DESCRIPTION         "\tOpis. . . . . . . . . . . . . . . : "
+    IDS_PHYSICALADDRESS     "\tAdres fizyczny. . . . . . . . . . : %hs\n"
+    IDS_DHCPNO              "\tDHCP włączone . . . . . . . . . . : Nie\n"
+    IDS_DHCPYES             "\tDHCP włączone . . . . . . . . . . : Tak\n"
+    IDS_AUTOCONFIGNO        "\tAutokonfiguracja włączona . . . . : Nie\n"
+    IDS_AUTOCONFIGYES       "\tAutokonfiguracja włączona . . . . : Tak\n"
+    IDS_IPADDRESS           "\tAdres IP. . . . . . . . . . . . . : %hs\n"
+    IDS_SUBNETMASK          "\tMaska podsieci. . . . . . . . . . : %hs\n"
+    IDS_DEFAULTGATEWAY      "\tBrama domyślna. . . . . . . . . . : %hs\n"
+    IDS_DHCPSERVER          "\tSerwer DHCP . . . . . . . . . . . : %hs\n"
+    IDS_DNSSERVERS          "\tSerwer DNS. . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYWINSSERVER   "\tPodstawowy serwer WINS. . . . . . : %hs\n"
+    IDS_SECONDARYWINSSERVER "\tPomocniczy serwer WINS. . . . . . : %hs\n"
+    IDS_LEASEOBTAINED       "\tDzierżawa uzyskana. . . . . . . . : %s\n"
+    IDS_LEASEEXPIRES        "\tDzierżawa wygasa. . . . . . . . . : %s\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OTHER "inny rodzaj karty"
-    IDS_ETH "karta Ethernet"
-    IDS_TOKEN "karta Token Ring"
-    IDS_FDDI "karta FDDI"
-    IDS_PPP "karta PPP"
-    IDS_LOOP "karta Loopback"
-    IDS_SLIP "karta SLIP"
+    IDS_UNKNOWNADAPTER "\nNieznana karta: %ls\n\n"
+    IDS_OTHER "\nInna karta: %ls\n\n"
+    IDS_ETH "\nKarta Ethernet: %ls\n\n"
+    IDS_TOKEN "\nKarta Token Ring: %ls\n\n"
+    IDS_FDDI "\nKarta FDDI: %ls\n\n"
+    IDS_PPP "\nKarta PPP: %ls\n\n"
+    IDS_LOOP "\nKarta sprzężenia zwrotnego: %ls\n\n"
+    IDS_SLIP "\nKarta SLIP: %ls\n\n"
+    IDS_WIFI "\nKarta bezprzewodowej sieci LAN: %ls\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DNSNORECORD         "\tNo records of type %ls\n\n"
+    IDS_DNSNONAME           "\tName does not exist.\n\n"
+    IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
+    IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
+    IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
+    IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
+    IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
+    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
+    IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DNSNAME              "\t%ls\n"
+    IDS_DNSLINE              "\t----------------------------------------\n"
+    IDS_DNSRECORDNAME        "\tNazwa rekordu . . . . : %ls\n"
+    IDS_DNSRECORDTYPE        "\tTyp rekordu . . . . . : %hu\n"
+    IDS_DNSRECORDTTL         "\tCzas wygaśnięcia. . . : %lu\n"
+    IDS_DNSRECORDLENGTH      "\tDługość danych. . . . : %hu\n"
+    IDS_DNSSECTIONQUESTION   "\tSekcja. . . . . . . . : Pytanie\n"
+    IDS_DNSSECTIONANSWER     "\tSekcja. . . . . . . . : Odpowiedź\n"
+    IDS_DNSSECTIONAUTHORITY  "\tSekcja. . . . . . . . : Źródło\n"
+    IDS_DNSSECTIONADDITIONAL "\tSekcja. . . . . . . . : Dodatkowa\n"
+    IDS_DNSTYPEA             "\tRekord (hosta) A. . . : %ls\n"
+    IDS_DNSTYPENS            "\tRekord NS . . . . . . : %ls\n"
+    IDS_DNSTYPECNAME         "\tRekord CNAME. . . . . : %ls\n"
+    IDS_DNSTYPESOA1          "\tRekord SOA. . . . . . : %ls\n\t                        %ls\n\t                        %lu\n"
+    IDS_DNSTYPESOA2          "\t                        %lu\n\t                        %lu\n\t                        %lu\n\t                        %lu\n"
+    IDS_DNSTYPEPTR           "\tRekord PTR. . . . . . : %ls\n"
+    IDS_DNSTYPEMX            "\tRekord MX . . . . . . : %ls\n\t                        %hu\n\t                        %hu\n"
+    IDS_DNSTYPEAAAA          "\tRekord AAAA . . . . . : %ls\n"
+    IDS_DNSTYPEATMA          "\tRekord ATMA . . . . . : \n"
+    IDS_DNSTYPESRV           "\tRekord SRV. . . . . . : %ls\n\t                        %hu\n\t                        %hu\n\t                        %hu\n"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nSPOSÓB UŻYCIA:\n \
-        ipconfig [/? | /all | /renew [karta] | /release [karta] |\n \
-                  /flushdns | /displaydns | /registerdns\n \
-                  /showclassid karta |\n \
-                  /setclassid karta [identyfikator_klasy] ]\n \
-\n \
-    gdzie\n \
-        karta           Nazwa połączenia\n \
-                        (dozwolone symbole zastępcze * i ?, zobacz przykłady)\n \
-\n \
-         Opcje:\n \
-           /?           Wyświetla ten komunikat pomocy.\n \
-           /all         Wyświetla pełne informacje o konfiguracji.\n \
-           /release     Zwalnia adres IP dla określonej karty.\n \
-           /renew       Odnawia adres IP dla określonej karty.\n \
-           /flushdns    Czyści bufor programu rozpoznającego nazwy DNS.\n \
-           /registerdns Odświeża wszystkie dzierżawy DHCP i ponownie rejestruje nazwy DNS.\n \
-           /displaydns  Wyświetla zawartość buforu programu rozpoznającego nazwy DNS.\n \
-           /showclassid Wyświetla wszystkie identyfikatory klas DHCP dozwolone dla karty.\n \
-           /setclassid  Modyfikuje identyfikator klasy DHCP.\n \
-\n \
-    Zachowanie domyślne to wyświetlanie tylko adresu IP, maski podsieci i bramy\n \
-    domyślnej dla każdej karty związanej z protokołem TCP/IP.\n \
-\n \
-    Jeśli dla parametrów Release i Renew nie zostanie określona nazwa karty,\n \
-    zwolnieniu lub odnowieniu ulegają dzierżawy adresów IP dla wszystkich kart\n \
-    związanych z protokołem TCP/IP.\n \
-\n \
-    Jeśli dla parametru Setclassid nie zostanie określony\n \
-    identyfikator_klasy, to identyfikator_klasy jest usuwany.\n \
-\n \
-    Przykłady:\n \
-        > ipconfig                   ... Pokazuje informacje.\n \
-        > ipconfig /all              ... Pokazuje szczegółowe informacje.\n \
-        > ipconfig /renew            ... Odnawia wszystkie karty.\n \
-        > ipconfig /renew EL*        ... Odnawia każde połączenie o nazwie\n \
-                                         zaczynającej się od EL\n \
-        > ipconfig /release *Poł*    ... Zwalnia wszystkie pasujące połączenia,\n \
-                                         np. ""Połączenie lokalne 1"" lub\n \
+    "\nSPOSÓB UŻYCIA:\n\
+        ipconfig [/? | /all | /renew [karta] | /release [karta] |\n\
+                  /flushdns | /displaydns | /registerdns\n\
+                  /showclassid karta |\n\
+                  /setclassid karta [identyfikator_klasy] ]\n\
+\n\
+    gdzie\n\
+        karta           Nazwa połączenia\n\
+                        (dozwolone symbole zastępcze * i ?, zobacz przykłady)\n\
+\n\
+         Opcje:\n\
+           /?           Wyświetla ten komunikat pomocy.\n\
+           /all         Wyświetla pełne informacje o konfiguracji.\n\
+           /release     Zwalnia adres IP dla określonej karty.\n\
+           /renew       Odnawia adres IP dla określonej karty.\n\
+           /flushdns    Czyści bufor programu rozpoznającego nazwy DNS.\n\
+           /registerdns Odświeża wszystkie dzierżawy DHCP i ponownie rejestruje nazwy DNS.\n\
+           /displaydns  Wyświetla zawartość buforu programu rozpoznającego nazwy DNS.\n\
+           /showclassid Wyświetla wszystkie identyfikatory klas DHCP dozwolone dla karty.\n\
+           /setclassid  Modyfikuje identyfikator klasy DHCP.\n\
+\n\
+    Zachowanie domyślne to wyświetlanie tylko adresu IP, maski podsieci i bramy\n\
+    domyślnej dla każdej karty związanej z protokołem TCP/IP.\n\
+\n\
+    Jeśli dla parametrów Release i Renew nie zostanie określona nazwa karty,\n\
+    zwolnieniu lub odnowieniu ulegają dzierżawy adresów IP dla wszystkich kart\n\
+    związanych z protokołem TCP/IP.\n\
+\n\
+    Jeśli dla parametru Setclassid nie zostanie określony\n\
+    identyfikator_klasy, to identyfikator_klasy jest usuwany.\n\
+\n\
+    Przykłady:\n\
+        > ipconfig                   ... Pokazuje informacje.\n\
+        > ipconfig /all              ... Pokazuje szczegółowe informacje.\n\
+        > ipconfig /renew            ... Odnawia wszystkie karty.\n\
+        > ipconfig /renew EL*        ... Odnawia każde połączenie o nazwie\n\
+                                         zaczynającej się od EL\n\
+        > ipconfig /release *Poł*    ... Zwalnia wszystkie pasujące połączenia,\n\
+                                         np. ""Połączenie lokalne 1"" lub\n\
                                              ""Połączenie lokalne 2""\n"
 END

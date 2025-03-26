@@ -113,7 +113,7 @@ DsRoleGetPrimaryDomainInformation(
     status = DsSetupBind((LPWSTR)lpServer, &hBinding);
     if (status)
     {
-        TRACE("DsSetupBind() failed (Status %lu\n)", status);
+        TRACE("DsSetupBind() failed (Status %lu\n)\n", status);
         return status;
     }
 

@@ -7,6 +7,7 @@
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *                  Oleg Dubinskiy <oleg.dubinskij30@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -19,26 +20,12 @@
 #include <windowsx.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <tzlib.h>
 #include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#define PM_REGISTRATION_NOTIFY (WM_APP + 1)
-/* Private Message used to communicate progress from the background
-   registration thread to the main thread.
-   wParam = 0 Registration in progress
-          = 1 Registration completed
-   lParam = Pointer to a REGISTRATIONNOTIFY structure */
-
-typedef struct _REGISTRATIONNOTIFY
-{
-    ULONG Progress;
-    UINT ActivityID;
-    LPCWSTR CurrentItem;
-    LPCWSTR ErrorMessage;
-} REGISTRATIONNOTIFY, *PREGISTRATIONNOTIFY;
 
 typedef struct _REGISTRATIONDATA
 {
@@ -46,6 +33,7 @@ typedef struct _REGISTRATIONDATA
     ULONG DllCount;
     ULONG Registered;
     PVOID DefaultContext;
+    PREGISTRATIONNOTIFY pNotify;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
 
 typedef struct _TIMEZONE_ENTRY
@@ -63,7 +51,6 @@ typedef struct _TIMEZONE_ENTRY
 /* FUNCTIONS ****************************************************************/
 
 extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
-
 
 static VOID
 CenterWindow(HWND hWnd)
@@ -395,6 +382,8 @@ static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
 static const WCHAR s_szWinlogon[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
+static const WCHAR s_szDefaultSoundEvents[] = L"AppEvents\\Schemes\\Apps\\.Default";
+static const WCHAR s_szExplorerSoundEvents[] = L"AppEvents\\Schemes\\Apps\\Explorer";
 
 typedef struct _PRODUCT_OPTION_DATA
 {
@@ -410,6 +399,125 @@ static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
     { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 },
     { L"\0", L"WinNT", 1, 0x300, 1 }
 };
+
+static const WCHAR* s_DefaultSoundEvents[][2] = 
+{
+    { L".Default", L"%SystemRoot%\\Media\\ReactOS_Default.wav" },
+    { L"AppGPFault", L"" },
+    { L"Close", L"" },
+    { L"CriticalBatteryAlarm", L"%SystemRoot%\\Media\\ReactOS_Battery_Critical.wav" },
+    { L"DeviceConnect",  L"%SystemRoot%\\Media\\ReactOS_Hardware_Insert.wav" },
+    { L"DeviceDisconnect", L"%SystemRoot%\\Media\\ReactOS_Hardware_Remove.wav" },
+    { L"DeviceFail", L"%SystemRoot%\\Media\\ReactOS_Hardware_Fail.wav" },
+    { L"LowBatteryAlarm", L"%SystemRoot%\\Media\\ReactOS_Battery_Low.wav" },
+    { L"MailBeep", L"%SystemRoot%\\Media\\ReactOS_Notify.wav" },
+    { L"Maximize", L"%SystemRoot%\\Media\\ReactOS_Restore.wav" },
+    { L"MenuCommand", L"%SystemRoot%\\Media\\ReactOS_Menu_Command.wav" },
+    { L"MenuPopup", L"" },
+    { L"Minimize", L"%SystemRoot%\\Media\\ReactOS_Minimize.wav" },
+    { L"Open", L"" },
+    { L"PrintComplete", L"%SystemRoot%\\Media\\ReactOS_Print_Complete.wav" },
+    { L"RestoreDown", L"" },
+    { L"RestoreUp", L"" },
+    { L"SystemAsterisk", L"%SystemRoot%\\Media\\ReactOS_Ding.wav" },
+    { L"SystemExclamation", L"%SystemRoot%\\Media\\ReactOS_Exclamation.wav" },
+    { L"SystemExit", L"%SystemRoot%\\Media\\ReactOS_Shutdown.wav" },
+    { L"SystemHand", L"%SystemRoot%\\Media\\ReactOS_Critical_Stop.wav" },
+    { L"SystemNotification", L"%SystemRoot%\\Media\\ReactOS_Balloon.wav" },
+    { L"SystemQuestion", L"%SystemRoot%\\Media\\ReactOS_Ding.wav" },
+    { L"SystemStart", L"%SystemRoot%\\Media\\ReactOS_Startup.wav" },
+    { L"WindowsLogoff", L"%SystemRoot%\\Media\\ReactOS_LogOff.wav" }
+/* Logon sound is already set by default for both Server and Workstation */
+};
+
+static const WCHAR* s_ExplorerSoundEvents[][2] = 
+{
+    { L"EmptyRecycleBin", L"%SystemRoot%\\Media\\ReactOS_Recycle.wav" },
+    { L"Navigating", L"%SystemRoot%\\Media\\ReactOS_Start.wav" }
+};
+
+static BOOL
+DoWriteSoundEvents(HKEY hKey,
+                   LPCWSTR lpSubkey,
+                   LPCWSTR lpEventsArray[][2],
+                   DWORD dwSize)
+{
+    HKEY hRootKey, hEventKey, hDefaultKey;
+    LONG error;
+    ULONG i;
+    WCHAR szDest[MAX_PATH];
+    DWORD dwAttribs;
+    DWORD cbData;
+
+    /* Open the sound events key */
+    error = RegOpenKeyExW(hKey, lpSubkey, 0, KEY_READ, &hRootKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* Set each sound event */
+    for (i = 0; i < dwSize; i++)
+    {
+        /*
+         * Verify that the sound file exists and is an actual file.
+         */
+
+        /* Expand the sound file path */
+        if (!ExpandEnvironmentStringsW(lpEventsArray[i][1], szDest, _countof(szDest)))
+        {
+            /* Failed to expand, continue with the next sound event */
+            continue;
+        }
+
+        /* Check if the sound file exists and isn't a directory */
+        dwAttribs = GetFileAttributesW(szDest);
+        if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+            (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            /* It does not, just continue with the next sound event */
+            continue;
+        }
+
+        /*
+         * Create the sound event entry.
+         */
+
+        /* Open the sound event subkey */
+        error = RegOpenKeyExW(hRootKey, lpEventsArray[i][0], 0, KEY_READ, &hEventKey);
+        if (error)
+        {
+            /* Failed to open, continue with next sound event */
+            continue;
+        }
+
+        /* Open .Default subkey */
+        error = RegOpenKeyExW(hEventKey, L".Default", 0, KEY_WRITE, &hDefaultKey);
+        RegCloseKey(hEventKey);
+        if (error)
+        {
+            /* Failed to open, continue with next sound event */
+            continue;
+        }
+
+        /* Associate the sound file to this sound event */
+        cbData = (lstrlenW(lpEventsArray[i][1]) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hDefaultKey, NULL, 0, REG_EXPAND_SZ, (const BYTE *)lpEventsArray[i][1], cbData);
+        RegCloseKey(hDefaultKey);
+        if (error)
+        {
+            /* Failed to set the value, continue with next sound event */
+            continue;
+        }
+    }
+
+Error:
+    if (hRootKey)
+        RegCloseKey(hRootKey);
+
+    return error == ERROR_SUCCESS;
+}
 
 static BOOL
 DoWriteProductOption(PRODUCT_OPTION nOption)
@@ -507,6 +615,13 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     {
         DPRINT1("RegSetValueExW failed\n");
         goto Error;
+    }
+
+    if (nOption == PRODUCT_OPTION_WORKSTATION)
+    {
+        /* Write system sound events values for Workstation */
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szDefaultSoundEvents, s_DefaultSoundEvents, _countof(s_DefaultSoundEvents));
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szExplorerSoundEvents, s_ExplorerSoundEvents, _countof(s_ExplorerSoundEvents));
     }
 
 Error:
@@ -821,29 +936,34 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     SetAccountsDomainSid(NULL, ComputerName);
 
     /* Now we need to set the Hostname */
-    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                           L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                           0,
-                           KEY_SET_VALUE,
-                           &hKey);
-    if (lError != ERROR_SUCCESS)
+    lError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                             L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_WRITE,
+                             NULL,
+                             &hKey,
+                             NULL);
+    if (lError == ERROR_SUCCESS)
     {
-        DPRINT1("RegOpenKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
-        return TRUE;
-    }
+        lError = RegSetValueEx(hKey,
+                               L"Hostname",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)ComputerName,
+                               (wcslen(ComputerName) + 1) * sizeof(WCHAR));
+        if (lError != ERROR_SUCCESS)
+        {
+            DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
+        }
 
-    lError = RegSetValueEx(hKey,
-                           L"Hostname",
-                           0,
-                           REG_SZ,
-                           (LPBYTE)ComputerName,
-                           (wcslen(ComputerName) + 1) * sizeof(WCHAR));
-    if (lError != ERROR_SUCCESS)
+        RegCloseKey(hKey);
+    }
+    else
     {
-        DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
+        DPRINT1("RegCreateKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
     }
-
-    RegCloseKey(hKey);
 
     return TRUE;
 }
@@ -1087,59 +1207,101 @@ ComputerPageDlgProc(HWND hwndDlg,
 
 
 static VOID
+SetUserLocaleName(HWND hwnd)
+{
+    WCHAR CurLocale[256] = L"";
+    WCHAR CurGeo[256] = L"";
+    WCHAR ResText[256] = L"";
+    WCHAR LocaleText[256 * 2];
+
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, CurLocale, ARRAYSIZE(CurLocale));
+    GetGeoInfoW(GetUserGeoID(GEOCLASS_NATION), GEO_FRIENDLYNAME, CurGeo, ARRAYSIZE(CurGeo), GetThreadLocale());
+
+    LoadStringW(hDllInstance, IDS_LOCALETEXT, ResText, ARRAYSIZE(ResText));
+    StringCchPrintfW(LocaleText, ARRAYSIZE(LocaleText), ResText, CurLocale, CurGeo);
+
+    SetWindowTextW(hwnd, LocaleText);
+}
+
+static VOID
 SetKeyboardLayoutName(HWND hwnd)
 {
-#if 0
-    TCHAR szLayoutPath[256];
-    TCHAR szLocaleName[32];
-    DWORD dwLocaleSize;
+    HKL hkl;
+    BOOL LayoutSpecial = FALSE;
+    WCHAR LayoutPath[256];
+    WCHAR LocaleName[32];
+    WCHAR SpecialId[5] = L"";
+    WCHAR ResText[256] = L"";
+    DWORD dwValueSize;
     HKEY hKey;
+    UINT i;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale"),
-                     0,
-                     KEY_ALL_ACCESS,
-                     &hKey))
-        return;
-
-    dwValueSize = 16 * sizeof(TCHAR);
-    if (RegQueryValueEx(hKey,
-                        NULL,
-                        NULL,
-                        NULL,
-                        szLocaleName,
-                        &dwLocaleSize))
+    /* Get the default input language and method */
+    if (!SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, (LPDWORD)&hkl, 0))
     {
-        RegCloseKey(hKey);
-        return;
+        hkl = GetKeyboardLayout(0);
     }
 
-    _tcscpy(szLayoutPath,
-            _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\"));
-    _tcscat(szLayoutPath,
-            szLocaleName);
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     szLayoutPath,
-                     0,
-                     KEY_ALL_ACCESS,
-                     &hKey))
-        return;
-
-    dwValueSize = 32 * sizeof(TCHAR);
-    if (RegQueryValueEx(hKey,
-                        _T("Layout Text"),
-                        NULL,
-                        NULL,
-                        szLocaleName,
-                        &dwLocaleSize))
+    if ((HIWORD(hkl) & 0xF000) == 0xF000)
     {
-        RegCloseKey(hKey);
-        return;
+        /* Process keyboard layout with special id */
+        StringCchPrintfW(SpecialId, ARRAYSIZE(SpecialId), L"%04x", (HIWORD(hkl) & 0x0FFF));
+        LayoutSpecial = TRUE;
     }
 
-    RegCloseKey(hKey);
-#endif
+#define MAX_LAYOUTS_PER_LANGID 0x10000
+    for (i = 0; i < (LayoutSpecial ? MAX_LAYOUTS_PER_LANGID : 1); i++)
+    {
+        /* Generate a hexadecimal identifier for keyboard layout registry key */
+        StringCchPrintfW(LocaleName, ARRAYSIZE(LocaleName), L"%08lx", (i << 16) | LOWORD(hkl));
+
+        StringCchCopyW(LayoutPath, ARRAYSIZE(LayoutPath), L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\");
+        StringCchCatW(LayoutPath, ARRAYSIZE(LayoutPath), LocaleName);
+        *LocaleName = UNICODE_NULL;
+
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          LayoutPath,
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey) == ERROR_SUCCESS)
+        {
+            /* Make sure the keyboard layout key we opened is the one we need.
+             * If the layout has no special id, just pass this check. */
+            dwValueSize = sizeof(LocaleName);
+            if (!LayoutSpecial ||
+                ((RegQueryValueExW(hKey,
+                                   L"Layout Id",
+                                   NULL,
+                                   NULL,
+                                   (PVOID)&LocaleName,
+                                   &dwValueSize) == ERROR_SUCCESS) &&
+                (wcscmp(LocaleName, SpecialId) == 0)))
+            {
+                *LocaleName = UNICODE_NULL;
+                dwValueSize = sizeof(LocaleName);
+                RegQueryValueExW(hKey,
+                                 L"Layout Text",
+                                 NULL,
+                                 NULL,
+                                 (PVOID)&LocaleName,
+                                 &dwValueSize);
+                /* Let the loop know where to stop */
+                i = MAX_LAYOUTS_PER_LANGID;
+            }
+            RegCloseKey(hKey);
+        }
+        else
+        {
+            /* Keyboard layout registry keys are expected to go in order without gaps */
+            break;
+        }
+    }
+#undef MAX_LAYOUTS_PER_LANGID
+
+    LoadStringW(hDllInstance, IDS_LAYOUTTEXT, ResText, ARRAYSIZE(ResText));
+    StringCchPrintfW(LayoutPath, ARRAYSIZE(LayoutPath), ResText, LocaleName);
+
+    SetWindowTextW(hwnd, LayoutPath);
 }
 
 
@@ -1147,6 +1309,7 @@ static BOOL
 RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
 {
     MSG msg;
+    HWND MainWindow = GetParent(hwnd);
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
     WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
@@ -1179,8 +1342,14 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
         return FALSE;
     }
 
+    /* Disable the Back and Next buttons and the main window
+     * while we're interacting with the control panel applet */
+    PropSheet_SetWizButtons(MainWindow, 0);
+    EnableWindow(MainWindow, FALSE);
+
     while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
-    { 
+    {
+       /* We still need to process main window messages to avoid freeze */
        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
        {
            TranslateMessage(&msg);
@@ -1189,8 +1358,97 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
     }
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
+
+    /* Enable the Back and Next buttons and the main window again */
+    PropSheet_SetWizButtons(MainWindow, PSWIZB_BACK | PSWIZB_NEXT);
+    EnableWindow(MainWindow, TRUE);
+
     return TRUE;
 }
+
+
+VOID
+EnableVisualTheme(
+    _In_opt_ HWND hwndParent,
+    _In_opt_ PCWSTR ThemeFile)
+{
+    enum { THEME_FILE, STYLE_FILE, UNKNOWN } fType;
+    WCHAR szPath[MAX_PATH]; // Expanded path of the file to use.
+    WCHAR szStyleFile[MAX_PATH];
+
+    fType = THEME_FILE; // Default to Classic theme.
+    if (ThemeFile)
+    {
+        /* Expand the path if possible */
+        if (ExpandEnvironmentStringsW(ThemeFile, szPath, _countof(szPath)) != 0)
+            ThemeFile = szPath;
+
+        /* Determine the file type from its extension */
+        fType = UNKNOWN; {
+        PCWSTR pszExt = wcsrchr(ThemeFile, L'.'); // PathFindExtensionW(ThemeFile);
+        if (pszExt)
+        {
+            if (_wcsicmp(pszExt, L".theme") == 0)
+                fType = THEME_FILE;
+            else if (_wcsicmp(pszExt, L".msstyles") == 0)
+                fType = STYLE_FILE;
+        } }
+        if (fType == UNKNOWN)
+        {
+            DPRINT1("EnableVisualTheme(): Unknown file '%S'\n", ThemeFile);
+            return;
+        }
+    }
+
+    DPRINT1("Applying visual %s '%S'\n",
+            (fType == THEME_FILE) ? "theme" : "style",
+            ThemeFile ? ThemeFile : L"(Classic)");
+
+//
+// TODO: Use instead uxtheme!SetSystemVisualStyle() once it is implemented,
+// https://stackoverflow.com/a/1036903
+// https://pinvoke.net/default.aspx/uxtheme.SetSystemVisualStyle
+// or ApplyTheme(NULL, 0, NULL) for restoring the classic theme.
+//
+// NOTE: The '/Action:ActivateMSTheme' is ReactOS-specific.
+//
+
+    if (ThemeFile && (fType == THEME_FILE))
+    {
+        /* Retrieve the visual style specified in the theme file.
+         * If none, fall back to the classic theme. */
+        if (GetPrivateProfileStringW(L"VisualStyles", L"Path", NULL,
+                                     szStyleFile, _countof(szStyleFile), ThemeFile) && *szStyleFile)
+        {
+            /* Expand the path if possible */
+            ThemeFile = szStyleFile;
+            if (ExpandEnvironmentStringsW(ThemeFile, szPath, _countof(szPath)) != 0)
+                ThemeFile = szPath;
+        }
+        else
+        {
+            ThemeFile = NULL;
+        }
+
+        DPRINT1("--> Applying visual style '%S'\n",
+                ThemeFile ? ThemeFile : L"(Classic)");
+    }
+
+    if (ThemeFile)
+    {
+        WCHAR wszParams[1024];
+        // FIXME: L"desk.cpl desk,@Appearance" regression, see commit 50d260a7f0
+        PCWSTR format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
+
+        StringCchPrintfW(wszParams, _countof(wszParams), format, ThemeFile);
+        RunControlPanelApplet(hwndParent, wszParams);
+    }
+    else
+    {
+        RunControlPanelApplet(hwndParent, L"desk.cpl,,2 /Action:ActivateMSTheme");
+    }
+}
+
 
 static VOID
 WriteUserLocale(VOID)
@@ -1233,6 +1491,7 @@ LocalePageDlgProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
             WriteUserLocale();
 
+            SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
             SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
         }
         break;
@@ -1244,11 +1503,12 @@ LocalePageDlgProc(HWND hwndDlg,
                 {
                     case IDC_CUSTOMLOCALE:
                         RunControlPanelApplet(hwndDlg, L"intl.cpl,,5");
-                        /* FIXME: Update input locale name */
+                        SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
                         break;
 
                     case IDC_CUSTOMLAYOUT:
                         RunControlPanelApplet(hwndDlg, L"input.dll,@1");
+                        SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
                         break;
                 }
             }
@@ -1542,11 +1802,8 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 
 
 static VOID
-UpdateLocalSystemTime(HWND hwnd)
+UpdateLocalSystemTime(HWND hwnd, SYSTEMTIME LocalTime)
 {
-    SYSTEMTIME LocalTime;
-
-    GetLocalTime(&LocalTime);
     DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_DATEPICKER), GDT_VALID, &LocalTime);
     DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_TIMEPICKER), GDT_VALID, &LocalTime);
 }
@@ -1625,25 +1882,43 @@ DateTimePageDlgProc(HWND hwndDlg,
         }
 
         case WM_TIMER:
-            UpdateLocalSystemTime(hwndDlg);
+        {
+            SYSTEMTIME LocalTime;
+
+            GetLocalTime(&LocalTime);
+            UpdateLocalSystemTime(hwndDlg, LocalTime);
+
+            // Reset timeout.
+            SetTimer(hwndDlg, 1, 1000 - LocalTime.wMilliseconds, NULL);
             break;
+        }
 
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
+                {
+                    SYSTEMTIME LocalTime;
+
+                    GetLocalTime(&LocalTime);
+                    UpdateLocalSystemTime(hwndDlg, LocalTime);
+
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+
                     if (SetupData->UnattendSetup && WriteDateTimeSettings(hwndDlg, SetupData))
                     {
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
-                    SetTimer(hwndDlg, 1, 1000, NULL);
+
+                    SetTimer(hwndDlg, 1, 1000 - LocalTime.wMilliseconds, NULL);
                     break;
+                }
 
                 case PSN_KILLACTIVE:
                 case DTN_DATETIMECHANGE:
+                    // NB: Not re-set until changing page (PSN_SETACTIVE).
                     KillTimer(hwndDlg, 1);
                     break;
 
@@ -1735,13 +2010,14 @@ ThemePageDlgProc(HWND hwndDlg,
 
             /* Register the imagelist */
             ListView_SetImageList(hListView, himl, LVSIL_NORMAL);
-            /* Transparant background */
+            /* Transparent background */
             ListView_SetBkColor(hListView, CLR_NONE);
             ListView_SetTextBkColor(hListView, CLR_NONE);
             /* Reduce the size between the items */
             ListView_SetIconSpacing(hListView, 190, 173);
             break;
         }
+
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
@@ -1755,17 +2031,13 @@ ThemePageDlgProc(HWND hwndDlg,
 
                         if (Themes[iTheme].ThemeFile)
                         {
-                            WCHAR wszParams[1024];
                             WCHAR wszTheme[MAX_PATH];
-                            WCHAR* format = L"desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:\"%s\"";
-
                             SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, Themes[iTheme].ThemeFile, wszTheme);
-                            swprintf(wszParams, format, wszTheme);
-                            RunControlPanelApplet(hwndDlg, wszParams);
+                            EnableVisualTheme(hwndDlg, wszTheme);
                         }
                         else
                         {
-                            RunControlPanelApplet(hwndDlg, L"desk.cpl desk,@Appearance /Action:ActivateMSTheme");
+                            EnableVisualTheme(hwndDlg, Themes[iTheme].ThemeFile);
                         }
                     }
                     break;
@@ -1805,33 +2077,33 @@ RegistrationNotificationProc(PVOID Context,
                              UINT_PTR Param2)
 {
     PREGISTRATIONDATA RegistrationData;
-    REGISTRATIONNOTIFY RegistrationNotify;
     PSP_REGISTER_CONTROL_STATUSW StatusInfo;
     UINT MessageID;
-    WCHAR ErrorMessage[128];
 
-    RegistrationData = (PREGISTRATIONDATA) Context;
+    RegistrationData = (PREGISTRATIONDATA)Context;
 
-    if (SPFILENOTIFY_STARTREGISTRATION == Notification ||
-            SPFILENOTIFY_ENDREGISTRATION == Notification)
+    if (Notification == SPFILENOTIFY_STARTREGISTRATION ||
+        Notification == SPFILENOTIFY_ENDREGISTRATION)
     {
         StatusInfo = (PSP_REGISTER_CONTROL_STATUSW) Param1;
-        RegistrationNotify.CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
-        if (NULL == RegistrationNotify.CurrentItem)
+        RegistrationData->pNotify->CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
+        if (RegistrationData->pNotify->CurrentItem == NULL)
         {
-            RegistrationNotify.CurrentItem = StatusInfo->FileName;
+            RegistrationData->pNotify->CurrentItem = StatusInfo->FileName;
         }
         else
         {
-            RegistrationNotify.CurrentItem++;
+            RegistrationData->pNotify->CurrentItem++;
         }
 
-        if (SPFILENOTIFY_STARTREGISTRATION == Notification)
+        if (Notification == SPFILENOTIFY_STARTREGISTRATION)
         {
             DPRINT("Received SPFILENOTIFY_STARTREGISTRATION notification for %S\n",
                    StatusInfo->FileName);
-            RegistrationNotify.ErrorMessage = NULL;
-            RegistrationNotify.Progress = RegistrationData->Registered;
+            RegistrationData->pNotify->Progress = RegistrationData->Registered;
+
+            DPRINT("RegisterDll: Start step %ld\n", RegistrationData->pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)RegistrationData->pNotify);
         }
         else
         {
@@ -1839,9 +2111,9 @@ RegistrationNotificationProc(PVOID Context,
                    StatusInfo->FileName);
             DPRINT("Win32Error %u FailureCode %u\n", StatusInfo->Win32Error,
                    StatusInfo->FailureCode);
-            if (SPREG_SUCCESS != StatusInfo->FailureCode)
+            if (StatusInfo->FailureCode != SPREG_SUCCESS)
             {
-                switch(StatusInfo->FailureCode)
+                switch (StatusInfo->FailureCode)
                 {
                     case SPREG_LOADLIBRARY:
                         MessageID = IDS_LOADLIBRARY_FAILED;
@@ -1862,36 +2134,25 @@ RegistrationNotificationProc(PVOID Context,
                         MessageID = IDS_REASON_UNKNOWN;
                         break;
                 }
-                if (0 == LoadStringW(hDllInstance, MessageID,
-                                     ErrorMessage,
-                                     ARRAYSIZE(ErrorMessage)))
-                {
-                    ErrorMessage[0] = L'\0';
-                }
-                if (SPREG_TIMEOUT != StatusInfo->FailureCode)
-                {
-                    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                                   StatusInfo->Win32Error, 0,
-                                   ErrorMessage + wcslen(ErrorMessage),
-                                   ARRAYSIZE(ErrorMessage) - wcslen(ErrorMessage),
-                                   NULL);
-                }
-                RegistrationNotify.ErrorMessage = ErrorMessage;
+
+                RegistrationData->pNotify->MessageID = MessageID;
+                RegistrationData->pNotify->LastError = StatusInfo->Win32Error;
             }
             else
             {
-                RegistrationNotify.ErrorMessage = NULL;
+                RegistrationData->pNotify->MessageID = 0;
+                RegistrationData->pNotify->LastError = ERROR_SUCCESS;
             }
+
             if (RegistrationData->Registered < RegistrationData->DllCount)
             {
                 RegistrationData->Registered++;
             }
-        }
 
-        RegistrationNotify.Progress = RegistrationData->Registered;
-        RegistrationNotify.ActivityID = IDS_REGISTERING_COMPONENTS;
-        SendMessage(RegistrationData->hwndDlg, PM_REGISTRATION_NOTIFY,
-                    0, (LPARAM) &RegistrationNotify);
+            RegistrationData->pNotify->Progress = RegistrationData->Registered;
+            DPRINT("RegisterDll: End step %ld\n", RegistrationData->pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_END, 0, (LPARAM)RegistrationData->pNotify);
+        }
 
         return FILEOP_DOIT;
     }
@@ -1904,156 +2165,270 @@ RegistrationNotificationProc(PVOID Context,
 }
 
 
-static DWORD CALLBACK
-RegistrationProc(LPVOID Parameter)
+static
+DWORD
+RegisterDlls(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify)
 {
-    PREGISTRATIONDATA RegistrationData;
-    REGISTRATIONNOTIFY RegistrationNotify;
-    DWORD LastError = NO_ERROR;
-    WCHAR UnknownError[84];
-
-    RegistrationData = (PREGISTRATIONDATA) Parameter;
-    RegistrationData->Registered = 0;
-    RegistrationData->DefaultContext = SetupInitDefaultQueueCallback(RegistrationData->hwndDlg);
-
-    _SEH2_TRY
-    {
-        if (!SetupInstallFromInfSectionW(GetParent(RegistrationData->hwndDlg),
-        hSysSetupInf,
-        L"RegistrationPhase2",
-        SPINST_REGISTRY |
-        SPINST_REGISTERCALLBACKAWARE  |
-        SPINST_REGSVR,
-        0,
-        NULL,
-        0,
-        RegistrationNotificationProc,
-        RegistrationData,
-        NULL,
-        NULL))
-        {
-            LastError = GetLastError();
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        DPRINT("Catching exception\n");
-        LastError = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-
-    if (NO_ERROR == LastError)
-    {
-        RegistrationNotify.ErrorMessage = NULL;
-    }
-    else
-    {
-        DPRINT1("SetupInstallFromInfSection failed with error %u\n",
-                LastError);
-        if (0 == FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                                FORMAT_MESSAGE_FROM_SYSTEM, NULL, LastError, 0,
-                                (LPWSTR) &RegistrationNotify.ErrorMessage, 0,
-                                NULL))
-        {
-            if (0 == LoadStringW(hDllInstance, IDS_UNKNOWN_ERROR,
-                                 UnknownError,
-                                 ARRAYSIZE(UnknownError) - 20))
-            {
-                wcscpy(UnknownError, L"Unknown error");
-            }
-            wcscat(UnknownError, L" ");
-            _ultow(LastError, UnknownError + wcslen(UnknownError), 10);
-            RegistrationNotify.ErrorMessage = UnknownError;
-        }
-    }
-
-    RegistrationNotify.Progress = RegistrationData->DllCount;
-    RegistrationNotify.ActivityID = IDS_REGISTERING_COMPONENTS;
-    RegistrationNotify.CurrentItem = NULL;
-    SendMessage(RegistrationData->hwndDlg, PM_REGISTRATION_NOTIFY,
-                1, (LPARAM) &RegistrationNotify);
-    if (NULL != RegistrationNotify.ErrorMessage &&
-            UnknownError != RegistrationNotify.ErrorMessage)
-    {
-        LocalFree((PVOID) RegistrationNotify.ErrorMessage);
-    }
-
-    SetupTermDefaultQueueCallback(RegistrationData->DefaultContext);
-    HeapFree(GetProcessHeap(), 0, RegistrationData);
-
-    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
-
-    // FIXME: Move this call to a separate cleanup page!
-    RtlCreateBootStatusDataFile();
-
-    return 0;
-}
-
-
-static BOOL
-StartComponentRegistration(HWND hwndDlg, PULONG MaxProgress)
-{
-    HANDLE RegistrationThread;
-    LONG DllCount;
-    INFCONTEXT Context;
+    REGISTRATIONDATA RegistrationData;
     WCHAR SectionName[512];
-    PREGISTRATIONDATA RegistrationData;
+    INFCONTEXT Context;
+    LONG DllCount = 0;
+    DWORD Error = NO_ERROR;
 
-    DllCount = -1;
+    ZeroMemory(&RegistrationData, sizeof(REGISTRATIONDATA));
+    RegistrationData.hwndDlg = pItemsData->hwndDlg;
+    RegistrationData.Registered = 0;
+
     if (!SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
                              L"RegisterDlls", &Context))
     {
         DPRINT1("No RegistrationPhase2 section found\n");
-        return FALSE;
+        return GetLastError();
     }
+
     if (!SetupGetStringFieldW(&Context, 1, SectionName,
                               ARRAYSIZE(SectionName),
                               NULL))
     {
         DPRINT1("Unable to retrieve section name\n");
-        return FALSE;
+        return GetLastError();
     }
+
     DllCount = SetupGetLineCountW(hSysSetupInf, SectionName);
     DPRINT("SectionName %S DllCount %ld\n", SectionName, DllCount);
     if (DllCount < 0)
     {
-        SetLastError(STATUS_NOT_FOUND);
-        return FALSE;
+        return STATUS_NOT_FOUND;
     }
 
-    *MaxProgress = (ULONG) DllCount;
+    RegistrationData.DllCount = (ULONG)DllCount;
+    RegistrationData.DefaultContext = SetupInitDefaultQueueCallback(RegistrationData.hwndDlg);
+    RegistrationData.pNotify = pNotify;
 
-    /*
-     * Create a background thread to do the actual registrations, so the
-     * main thread can just run its message loop.
-     */
-    RegistrationThread = NULL;
-    RegistrationData = HeapAlloc(GetProcessHeap(), 0,
-                                 sizeof(REGISTRATIONDATA));
-    if (RegistrationData != NULL)
+    _SEH2_TRY
     {
-        RegistrationData->hwndDlg = hwndDlg;
-        RegistrationData->DllCount = DllCount;
-        RegistrationThread = CreateThread(NULL, 0, RegistrationProc,
-                                          RegistrationData, 0, NULL);
-        if (RegistrationThread != NULL)
+        if (!SetupInstallFromInfSectionW(GetParent(RegistrationData.hwndDlg),
+                                         hSysSetupInf,
+                                         L"RegistrationPhase2",
+                                         SPINST_REGISTRY | SPINST_REGISTERCALLBACKAWARE | SPINST_REGSVR,
+                                         0,
+                                         NULL,
+                                         0,
+                                         RegistrationNotificationProc,
+                                         &RegistrationData,
+                                         NULL,
+                                         NULL))
         {
-            CloseHandle(RegistrationThread);
+            Error = GetLastError();
         }
-        else
-        {
-            DPRINT1("CreateThread failed, error %u\n", GetLastError());
-            HeapFree(GetProcessHeap(), 0, RegistrationData);
-            return FALSE;
-        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT("Catching exception\n");
+        Error = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    SetupTermDefaultQueueCallback(RegistrationData.DefaultContext);
+
+    return Error;
+}
+
+static
+VOID
+RegisterComponents(
+    PITEMSDATA pItemsData)
+{
+    WCHAR SectionName[512];
+    INFCONTEXT Context;
+    LONG Steps = 0;
+    DWORD Error = NO_ERROR;
+    REGISTRATIONNOTIFY Notify;
+
+    ZeroMemory(&Notify, sizeof(Notify));
+
+    /* Count the 'RegisterDlls' steps */
+    if (!SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
+                             L"RegisterDlls", &Context))
+    {
+        DPRINT1("No RegistrationPhase2 section found\n");
+        return;
+    }
+
+    if (!SetupGetStringFieldW(&Context, 1, SectionName,
+                              ARRAYSIZE(SectionName),
+                              NULL))
+    {
+        DPRINT1("Unable to retrieve section name\n");
+        return;
+    }
+
+    Steps += SetupGetLineCountW(hSysSetupInf, SectionName);
+
+    /* Count the 'TypeLibratries' steps */
+    Steps += SetupGetLineCountW(hSysSetupInf, L"TypeLibraries");
+
+    /* Start the item */
+    DPRINT("Register Components: %ld Steps\n", Steps);
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 0, (LPARAM)Steps);
+
+    Error = RegisterDlls(pItemsData, &Notify);
+    if (Error == ERROR_SUCCESS)
+        RegisterTypeLibraries(pItemsData, &Notify, hSysSetupInf, L"TypeLibraries");
+
+    /* End the item */
+    DPRINT("Register Components: done\n");
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 0, Error);
+}
+
+
+static
+DWORD
+CALLBACK
+ItemCompletionThread(
+    LPVOID Parameter)
+{
+    PITEMSDATA pItemsData;
+    HWND hwndDlg;
+
+    pItemsData = (PITEMSDATA)Parameter;
+    hwndDlg = pItemsData->hwndDlg;
+
+    /* Step 0 - Registering components */
+    RegisterComponents(pItemsData);
+
+    /* Step 1 - Installing start menu items */
+    InstallStartMenuItems(pItemsData);
+
+    /* FIXME: Add completion steps here! */
+
+    // FIXME: Move this call to a separate cleanup page!
+    RtlCreateBootStatusDataFile();
+
+    /* Free the items data */
+    HeapFree(GetProcessHeap(), 0, pItemsData);
+
+    /* Tell the wizard page that we are done */
+    PostMessage(hwndDlg, PM_ITEMS_DONE, 0, 0);
+
+    return 0;
+}
+
+
+static
+BOOL
+RunItemCompletionThread(
+    _In_ HWND hwndDlg)
+{
+    HANDLE hCompletionThread;
+    PITEMSDATA pItemsData;
+
+    pItemsData = HeapAlloc(GetProcessHeap(), 0, sizeof(ITEMSDATA));
+    if (pItemsData == NULL)
+        return FALSE;
+
+    pItemsData->hwndDlg = hwndDlg;
+
+    hCompletionThread = CreateThread(NULL,
+                                     0,
+                                     ItemCompletionThread,
+                                     pItemsData,
+                                     0,
+                                     NULL);
+    if (hCompletionThread == NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, pItemsData);
     }
     else
     {
-        DPRINT1("HeapAlloc() failed, error %u\n", GetLastError());
-        return FALSE;
+        CloseHandle(hCompletionThread);
+        return TRUE;
     }
 
-    return TRUE;
+    return FALSE;
+}
+
+static
+VOID
+ShowItemError(
+    HWND hwndDlg,
+    DWORD LastError)
+{
+    LPWSTR ErrorMessage = NULL;
+    WCHAR UnknownError[84];
+    WCHAR Title[64];
+
+    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                       NULL, LastError, 0, ErrorMessage, 0, NULL) == 0)
+    {
+        if (LoadStringW(hDllInstance, IDS_UNKNOWN_ERROR,
+                        UnknownError,
+                        ARRAYSIZE(UnknownError) - 20) == 0)
+        {
+            wcscpy(UnknownError, L"Unknown error");
+        }
+        wcscat(UnknownError, L" ");
+        _ultow(LastError, UnknownError + wcslen(UnknownError), 10);
+        ErrorMessage = UnknownError;
+    }
+
+    if (ErrorMessage != NULL)
+    {
+        if (LoadStringW(hDllInstance, IDS_REACTOS_SETUP,
+                        Title, ARRAYSIZE(Title)) == 0)
+        {
+            wcscpy(Title, L"ReactOS Setup");
+        }
+
+        MessageBoxW(hwndDlg, ErrorMessage, Title, MB_ICONERROR | MB_OK);
+    }
+
+    if (ErrorMessage != NULL &&
+        ErrorMessage != UnknownError)
+    {
+        LocalFree(ErrorMessage);
+    }
+}
+
+
+static
+VOID
+ShowStepError(
+    HWND hwndDlg,
+    PREGISTRATIONNOTIFY RegistrationNotify)
+{
+    WCHAR ErrorMessage[128];
+    WCHAR Title[64];
+
+    if (LoadStringW(hDllInstance, RegistrationNotify->MessageID,
+                    ErrorMessage,
+                    ARRAYSIZE(ErrorMessage)) == 0)
+    {
+        ErrorMessage[0] = L'\0';
+    }
+
+    if (RegistrationNotify->MessageID != IDS_TIMEOUT)
+    {
+        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+                       RegistrationNotify->LastError, 0,
+                       ErrorMessage + wcslen(ErrorMessage),
+                       ARRAYSIZE(ErrorMessage) - wcslen(ErrorMessage),
+                       NULL);
+    }
+
+    if (ErrorMessage[0] != L'\0')
+    {
+        if (LoadStringW(hDllInstance, IDS_REACTOS_SETUP,
+                        Title, ARRAYSIZE(Title)) == 0)
+        {
+            wcscpy(Title, L"ReactOS Setup");
+        }
+
+        MessageBoxW(hwndDlg, ErrorMessage,
+                    Title, MB_ICONERROR | MB_OK);
+    }
 }
 
 
@@ -2065,8 +2440,6 @@ ProcessPageDlgProc(HWND hwndDlg,
 {
     PSETUPDATA SetupData;
     PREGISTRATIONNOTIFY RegistrationNotify;
-    static UINT oldActivityID = -1;
-    WCHAR Title[64];
 
     /* Retrieve pointer to the global setup data */
     SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
@@ -2074,33 +2447,26 @@ ProcessPageDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-        }
-        break;
+            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT3), SW_HIDE);
+            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
+            break;
 
         case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-            ULONG MaxProgress = 0;
-
-            switch (lpnm->code)
+            switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
+                    LogItem(L"BEGIN", L"ProcessPage");
+
                     /* Disable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
-
-                    StartComponentRegistration(hwndDlg, &MaxProgress);
-
-                    SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE,
-                                       0, MAKELPARAM(0, MaxProgress));
-                    SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS,
-                                       0, 0);
+                    RunItemCompletionThread(hwndDlg);
                     break;
 
                 case PSN_WIZNEXT:
+                    LogItem(L"END", L"ProcessPage");
                     break;
 
                 case PSN_WIZBACK:
@@ -2110,50 +2476,49 @@ ProcessPageDlgProc(HWND hwndDlg,
                 default:
                     break;
             }
-        }
-        break;
+            break;
 
-        case PM_REGISTRATION_NOTIFY:
-        {
-            WCHAR Activity[64];
-            RegistrationNotify = (PREGISTRATIONNOTIFY) lParam;
-            // update if necessary only
-            if (oldActivityID != RegistrationNotify->ActivityID)
-            {
-                if (0 != LoadStringW(hDllInstance, RegistrationNotify->ActivityID,
-                                     Activity,
-                                     ARRAYSIZE(Activity)))
-                {
-                    SendDlgItemMessageW(hwndDlg, IDC_ACTIVITY, WM_SETTEXT,
-                                        0, (LPARAM) Activity);
-                }
-                oldActivityID = RegistrationNotify->ActivityID;
-            }
-            SendDlgItemMessageW(hwndDlg, IDC_ITEM, WM_SETTEXT, 0,
-                                (LPARAM)(NULL == RegistrationNotify->CurrentItem ?
-                                         L"" : RegistrationNotify->CurrentItem));
-            SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS,
-                               RegistrationNotify->Progress, 0);
-            if (NULL != RegistrationNotify->ErrorMessage)
-            {
-                if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP,
-                                     Title, ARRAYSIZE(Title)))
-                {
-                    wcscpy(Title, L"ReactOS Setup");
-                }
-                MessageBoxW(hwndDlg, RegistrationNotify->ErrorMessage,
-                            Title, MB_ICONERROR | MB_OK);
+        case PM_ITEM_START:
+            DPRINT("PM_ITEM_START %lu\n", (ULONG)lParam);
+            SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
+            SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
+            break;
 
-            }
-
-            if (wParam)
+        case PM_ITEM_END:
+            DPRINT("PM_ITEM_END\n");
+            if (lParam == ERROR_SUCCESS)
             {
-                /* Enable the Back and Next buttons */
-                PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
-                PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
             }
-        }
-        return TRUE;
+            else
+            {
+                ShowItemError(hwndDlg, (DWORD)lParam);
+            }
+            break;
+
+        case PM_STEP_START:
+            DPRINT("PM_STEP_START\n");
+            RegistrationNotify = (PREGISTRATIONNOTIFY)lParam;
+            SendDlgItemMessage(hwndDlg, IDC_ITEM, WM_SETTEXT, 0,
+                               (LPARAM)((RegistrationNotify->CurrentItem != NULL)? RegistrationNotify->CurrentItem : L""));
+            break;
+
+        case PM_STEP_END:
+            DPRINT("PM_STEP_END\n");
+            RegistrationNotify = (PREGISTRATIONNOTIFY)lParam;
+            SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, RegistrationNotify->Progress, 0);
+            if (RegistrationNotify->LastError != ERROR_SUCCESS)
+            {
+                ShowStepError(hwndDlg, RegistrationNotify);
+            }
+            break;
+
+        case PM_ITEMS_DONE:
+            DPRINT("PM_ITEMS_DONE\n");
+            /* Enable the Back and Next buttons */
+            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+            PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
+            break;
 
         default:
             break;
@@ -2209,7 +2574,7 @@ FinishDlgProc(HWND hwndDlg,
             if (!SetupData->UnattendSetup || !SetupData->DisableGeckoInst)
             {
                 /* Run the Wine Gecko prompt */
-                Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl install_gecko", SW_SHOW);
+                Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl,,install_gecko", SW_SHOW);
             }
 
             /* Set title font */
@@ -2574,6 +2939,170 @@ ProcessUnattendSection(
     }
 
     RegCloseKey(hKey);
+
+    if (SetupFindFirstLineW(pSetupData->hSetupInf,
+        L"Env",
+        NULL,
+        &InfContext))
+    {
+        if (RegCreateKeyExW(
+                HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", 0, NULL,
+                REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        {
+            DPRINT1("Error: failed to open HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\n");
+            return;
+        }
+        do
+        {
+            if (!SetupGetStringFieldW(&InfContext,
+                0,
+                szName,
+                ARRAYSIZE(szName),
+                &LineLength))
+            {
+                DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                return;
+            }
+
+            if (!SetupGetStringFieldW(&InfContext,
+                1,
+                szValue,
+                ARRAYSIZE(szValue),
+                &LineLength))
+            {
+                DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                return;
+            }
+            DPRINT1("[ENV] %S=%S\n", szName, szValue);
+
+            DWORD dwType = wcschr(szValue, '%') != NULL ? REG_EXPAND_SZ : REG_SZ;
+
+            if (RegSetValueExW(hKey, szName, 0, dwType, (const BYTE*)szValue, (DWORD)(wcslen(szValue) + 1) * sizeof(TCHAR)) != ERROR_SUCCESS)
+            {
+                DPRINT1(" - Error %d\n", GetLastError());
+            }
+
+        } while (SetupFindNextLine(&InfContext, &InfContext));
+
+        RegCloseKey(hKey);
+    }
+}
+
+static BOOL
+PathIsEqual(
+    IN LPCWSTR lpPath1,
+    IN LPCWSTR lpPath2)
+{
+    WCHAR szPath1[MAX_PATH];
+    WCHAR szPath2[MAX_PATH];
+
+    /* If something goes wrong, better return TRUE,
+     * so the calling function returns early.
+     */
+    if (!PathCanonicalizeW(szPath1, lpPath1))
+        return TRUE;
+
+    if (!PathAddBackslashW(szPath1))
+        return TRUE;
+
+    if (!PathCanonicalizeW(szPath2, lpPath2))
+        return TRUE;
+
+    if (!PathAddBackslashW(szPath2))
+        return TRUE;
+
+    return (_wcsicmp(szPath1, szPath2) == 0);
+}
+
+static VOID
+AddInstallationSource(
+    IN HKEY hKey,
+    IN LPWSTR lpPath)
+{
+    LONG res;
+    DWORD dwRegType;
+    DWORD dwPathLength = 0;
+    DWORD dwNewLength = 0;
+    LPWSTR Buffer = NULL;
+    LPWSTR Path;
+
+    res = RegQueryValueExW(
+        hKey,
+        L"Installation Sources",
+        NULL,
+        &dwRegType,
+        NULL,
+        &dwPathLength);
+
+    if (res != ERROR_SUCCESS ||
+        dwRegType != REG_MULTI_SZ ||
+        dwPathLength == 0 ||
+        dwPathLength % sizeof(WCHAR) != 0)
+    {
+        dwPathLength = 0;
+        goto set;
+    }
+
+    /* Reserve space for existing data + new string */
+    dwNewLength = dwPathLength + (wcslen(lpPath) + 1) * sizeof(WCHAR);
+    Buffer = HeapAlloc(GetProcessHeap(), 0, dwNewLength);
+    if (!Buffer)
+        return;
+
+    ZeroMemory(Buffer, dwNewLength);
+
+    res = RegQueryValueExW(
+        hKey,
+        L"Installation Sources",
+        NULL,
+        NULL,
+        (LPBYTE)Buffer,
+        &dwPathLength);
+
+    if (res != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        dwPathLength = 0;
+        goto set;
+    }
+
+    /* Sanity check, these should already be zeros */
+    Buffer[dwPathLength / sizeof(WCHAR) - 2] = UNICODE_NULL;
+    Buffer[dwPathLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+
+    for (Path = Buffer; *Path; Path += wcslen(Path) + 1)
+    {
+        /* Check if path is already added */
+        if (PathIsEqual(Path, lpPath))
+            goto cleanup;
+    }
+
+    Path = Buffer + dwPathLength / sizeof(WCHAR) - 1;
+
+set:
+    if (dwPathLength == 0)
+    {
+        dwNewLength = (wcslen(lpPath) + 1 + 1) * sizeof(WCHAR);
+        Buffer = HeapAlloc(GetProcessHeap(), 0, dwNewLength);
+        if (!Buffer)
+            return;
+
+        Path = Buffer;
+    }
+
+    StringCbCopyW(Path, dwNewLength - (Path - Buffer) * sizeof(WCHAR), lpPath);
+    Buffer[dwNewLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+
+    RegSetValueExW(
+        hKey,
+        L"Installation Sources",
+        0,
+        REG_MULTI_SZ,
+        (LPBYTE)Buffer,
+        dwNewLength);
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, Buffer);
 }
 
 VOID
@@ -2674,6 +3203,8 @@ ProcessSetupInf(
                           NULL);
     if (res == ERROR_SUCCESS)
     {
+        AddInstallationSource(hKey, pSetupData->SourcePath);
+
         res = RegSetValueExW(hKey,
                              L"SourcePath",
                              0,

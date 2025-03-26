@@ -50,7 +50,7 @@ audio_wavein::alloc_buffers_mem_(unsigned int buffs, float secs)
     mb_size = tot_size;
 }
 
-void 
+void
 audio_wavein::free_buffers_mem_(void)
 {
     /* Frees memory */
@@ -65,7 +65,7 @@ audio_wavein::free_buffers_mem_(void)
     wave_headers = 0;
 }
 
-void 
+void
 audio_wavein::init_headers_(void)
 {
     /* If there is no memory for memory or headers, simply return */
@@ -85,7 +85,7 @@ audio_wavein::init_headers_(void)
     }
 }
 
-void 
+void
 audio_wavein::prep_headers_(void)
 {
     MMRESULT err;
@@ -108,7 +108,7 @@ audio_wavein::prep_headers_(void)
         MessageBox(0, TEXT("waveInPrepareHeader Error."), 0, 0);
 }
 
-void 
+void
 audio_wavein::unprep_headers_(void)
 {
     MMRESULT err;
@@ -131,7 +131,7 @@ audio_wavein::unprep_headers_(void)
         MessageBox(0, TEXT("waveInUnPrepareHeader Error."), 0, 0);
 }
 
-void 
+void
 audio_wavein::add_buffers_to_driver_(void)
 {
     MMRESULT err;
@@ -155,7 +155,7 @@ audio_wavein::add_buffers_to_driver_(void)
 }
 
 void
-audio_wavein::close(void) 
+audio_wavein::close(void)
 {
     /* If wavein object is already in the status NOTREADY, nothing to do */
     if (status == WAVEIN_NOTREADY)
@@ -340,7 +340,7 @@ audio_wavein::stop_recording(void)
     status = WAVEIN_STOP;
 }
 
-DWORD WINAPI 
+DWORD WINAPI
 audio_wavein::recording_procedure(LPVOID arg)
 {
     MSG msg;

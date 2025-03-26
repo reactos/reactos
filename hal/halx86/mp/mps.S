@@ -27,7 +27,7 @@
   movl  %eax, %gs; \
   movl  $(KGDT_R0_PCR), %eax; \
   movl  %eax, %fs;
-  
+
 #define AFTER \
   popl  %gs; \
   popl  %fs; \
@@ -37,7 +37,7 @@
 
 .global _MpsIpiInterrupt
 _MpsIpiInterrupt:
-  /* Save registers */	
+  /* Save registers */
   BEFORE
 
   /* Call the C handler */
@@ -46,11 +46,11 @@ _MpsIpiInterrupt:
 	/* Return to the caller */
   AFTER
   iret
-  
-  
+
+
 .globl _MpsErrorInterrupt
 _MpsErrorInterrupt:
-  /* Save registers */	
+  /* Save registers */
   BEFORE
 
   /* Call the C handler */
@@ -63,7 +63,7 @@ _MpsErrorInterrupt:
 
 .globl _MpsSpuriousInterrupt
 _MpsSpuriousInterrupt:
-  /* Save registers */	
+  /* Save registers */
   BEFORE
 
   /* Call the C handler */
@@ -76,8 +76,8 @@ _MpsSpuriousInterrupt:
 .global _MpsTimerInterrupt
 _MpsTimerInterrupt:
 	cld
-	pusha	
-	movl	$0xef,%ebx		
+	pusha
+	movl	$0xef,%ebx
   	pushl 	%ds
   	pushl 	%es
   	pushl 	%fs
@@ -102,7 +102,7 @@ _MpsTimerInterrupt:
   	popl	%ds
   	popa
   	iret
-  
-  
-  
+
+
+
 /* EOF */

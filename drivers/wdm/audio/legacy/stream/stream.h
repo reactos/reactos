@@ -1,7 +1,8 @@
 #pragma once
 
 #include <strmini.h>
-#define YDEBUG
+
+// #define NDEBUG
 #include <debug.h>
 
 #define STREAMDEBUG_LEVEL DebugLevelMaximum
@@ -101,13 +102,6 @@ NTAPI
 StreamClassAddDevice(
     IN PDRIVER_OBJECT  DriverObject,
     IN PDEVICE_OBJECT  PhysicalDeviceObject);
-
-
-NTSTATUS
-NTAPI
-ForwardIrpSynchronous(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp);
 
 BOOLEAN
 NTAPI

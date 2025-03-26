@@ -601,6 +601,8 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
   if (next) {
     if (Protseq) *Protseq = unescape_string_binding_component(data, next - data);
     data = next+1;
+  } else {
+    goto fail;
   }
 
   next = string_binding_find_delimiter(data, '[');
@@ -711,6 +713,8 @@ RPC_STATUS WINAPI RpcStringBindingParseW( RPC_WSTR StringBinding, RPC_WSTR *ObjU
   if (next) {
     if (Protseq) *Protseq = unescape_string_binding_componentW(data, next - data);
     data = next+1;
+  } else {
+    goto fail;
   }
 
   next = string_binding_find_delimiterW(data, '[');

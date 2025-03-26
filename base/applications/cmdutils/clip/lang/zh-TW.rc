@@ -1,11 +1,17 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* 
+ * PROJECT:     ReactOS Clip Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\n輸入 ""CLIP /?"" 知道用法資訊。\n"
-    IDS_HELP "\n將命令列程式的輸出重定向到剪貼簿。\n\n\
+    IDS_USAGE "\n輸入 'CLIP /?' 以取得用法資訊。\n"
+    IDS_HELP "\n將命令列程式的輸出重新導向到剪貼簿。\n\n\
 CLIP [/?]\n\n\
-    /?  顯示此説明消息。\n"
+    /?  顯示這個說明訊息。\n"
 END

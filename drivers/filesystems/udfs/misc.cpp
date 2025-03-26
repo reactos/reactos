@@ -474,7 +474,7 @@ UDFExceptionHandler(
         //
 
         if (FlagOn( PtrIrpContext->IrpContextFlags, UDF_IRP_CONTEXT_FLAG_DISABLE_POPUPS )) {
-  
+
             UDFPrint(("  DISABLE_POPUPS, complete Irp and return\n"));
             Irp->IoStatus.Status = ExceptionCode;
             Irp->IoStatus.Information = 0;
@@ -544,7 +544,7 @@ UDFExceptionHandler(
         // set the error code in the IRP
         Irp->IoStatus.Status = ExceptionCode;
         Irp->IoStatus.Information = 0;
-    
+
         // complete the IRP
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -666,7 +666,7 @@ UDFAllocateObjectName(VOID)
 *
 *************************************************************************/
 VOID
-__fastcall 
+__fastcall
 UDFReleaseObjectName(
     PtrUDFObjectName PtrObjectName)
 {
@@ -764,7 +764,7 @@ UDFAllocateCCB(VOID)
 *
 *************************************************************************/
 VOID
-__fastcall 
+__fastcall
 UDFReleaseCCB(
     PtrUDFCCB Ccb
     )
@@ -788,20 +788,20 @@ UDFReleaseCCB(
 } // end UDFReleaseCCB()
 
 /*
-  Function: UDFCleanupCCB()                      
-                                                 
-  Description:                                   
-    Cleanup and deallocate a previously allocated structure. 
-                                                 
-  Expected Interrupt Level (for execution) :     
-                                                 
-   IRQL_PASSIVE_LEVEL                            
-                                                 
-  Return Value: None                             
+  Function: UDFCleanupCCB()
+
+  Description:
+    Cleanup and deallocate a previously allocated structure.
+
+  Expected Interrupt Level (for execution) :
+
+   IRQL_PASSIVE_LEVEL
+
+  Return Value: None
 
 */
 VOID
-__fastcall 
+__fastcall
 UDFCleanUpCCB(
     PtrUDFCCB Ccb)
 {
@@ -904,7 +904,7 @@ UDFReleaseFCB(
 *
 *************************************************************************/
 VOID
-__fastcall 
+__fastcall
 UDFCleanUpFCB(
     PtrUDFFCB Fcb
     )
@@ -997,7 +997,7 @@ UDFAllocateIrpContext(
     if (!ExIsFullZone(&(UDFGlobalData.IrpContextZoneHeader))) {
         // we have enough memory
         PtrIrpContext = (PtrUDFIrpContext)ExAllocateFromZone(&(UDFGlobalData.IrpContextZoneHeader));
-  
+
         // release the spinlock
         KeReleaseSpinLock(&(UDFGlobalData.ZoneAllocationSpinLock), CurrentIrql);
     } else {
@@ -1337,7 +1337,7 @@ UDFCommonDispatch(
                 // This is the case where we have an invalid major function
                 Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
                 Irp->IoStatus.Information = 0;
-        
+
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 // Free up the Irp Context
                 UDFReleaseIrpContext(PtrIrpContext);
@@ -1577,7 +1577,7 @@ UDFInitializeVCB(
     //ASSERT(Vcb->PtrStreamFileObject);
 
     // Initialize some important fields in the newly created file object.
-    //Vcb->PtrStreamFileObject->FsContext = (PVOID)Vcb;      
+    //Vcb->PtrStreamFileObject->FsContext = (PVOID)Vcb;
     //Vcb->PtrStreamFileObject->FsContext2 = NULL;
     //Vcb->PtrStreamFileObject->SectionObjectPointer = &(Vcb->SectionObject);
 
@@ -1657,7 +1657,7 @@ read_reg:
 try_exit:   NOTHING;
 
     } _SEH2_FINALLY {
-        
+
         if(!NT_SUCCESS(RC)) {
             if(Vcb->TargetDevName.Buffer)
                 MyFreePool__(Vcb->TargetDevName.Buffer);
@@ -1730,7 +1730,7 @@ UDFGetMediaClass(
            Vcb->MediaClassEx == CdMediaClass_BDRE) {
             return MediaDvdrw;
         }
-        // 
+        //
         if(Vcb->MediaClassEx == CdMediaClass_CDROM ||
            Vcb->MediaClassEx == CdMediaClass_DVDROM ||
            Vcb->MediaClassEx == CdMediaClass_HD_DVDROM ||
@@ -1752,7 +1752,7 @@ UDFGetMediaClass(
 
 typedef ULONG
 (*ptrUDFGetParameter)(
-    IN PVCB Vcb, 
+    IN PVCB Vcb,
     IN PCWSTR Name,
     IN ULONG DefValue
     );
@@ -1785,7 +1785,7 @@ UDFReadRegKeys(
 {
     ULONG mult = 1;
     ptrUDFGetParameter UDFGetParameter = UseCfg ? UDFGetCfgParameter : UDFGetRegParameter;
-    
+
     Vcb->DefaultRegName = UDFMediaClassName[(ULONG)UDFGetMediaClass(Vcb)].ClassName;
 
     // Should we use Extended FE by default ?
@@ -1898,7 +1898,7 @@ UDFReadRegKeys(
     UDFUpdateCompatOption(Vcb, Update, UseCfg, UDF_OS_NATIVE_DOS_NAME, UDF_VCB_IC_OS_NATIVE_DOS_NAME, FALSE);
 #ifndef UDF_READ_ONLY_BUILD
     // should we force FO_WRITE_THROUGH on removable media
-    UDFUpdateCompatOption(Vcb, Update, UseCfg, UDF_FORCE_WRITE_THROUGH_NAME, UDF_VCB_IC_FORCE_WRITE_THROUGH, 
+    UDFUpdateCompatOption(Vcb, Update, UseCfg, UDF_FORCE_WRITE_THROUGH_NAME, UDF_VCB_IC_FORCE_WRITE_THROUGH,
                           (Vcb->TargetDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) ? TRUE : FALSE
                          );
 #endif //UDF_READ_ONLY_BUILD
@@ -1984,7 +1984,7 @@ UDFReadRegKeys(
 
 ULONG
 UDFGetRegParameter(
-    IN PVCB Vcb, 
+    IN PVCB Vcb,
     IN PCWSTR Name,
     IN ULONG DefValue
     )
@@ -1998,7 +1998,7 @@ UDFGetRegParameter(
 
 ULONG
 UDFGetCfgParameter(
-    IN PVCB Vcb, 
+    IN PVCB Vcb,
     IN PCWSTR Name,
     IN ULONG DefValue
     )
@@ -2077,7 +2077,7 @@ UDFGetCfgParameter(
                 wait_nl = FALSE;
                 wait_val = TRUE;
                 i+=len;
-                
+
             } else {
                 wait_nl = TRUE;
             }
@@ -2258,7 +2258,7 @@ UDFRegCheckParameterValue(
 
         RtlInitUnicodeString(&paramPathUnknownStr, REG_DEFAULT_UNKNOWN);
         RtlInitUnicodeString(&paramPathUnknown, NULL);
-        
+
         paramPathUnknown.MaximumLength = RegistryPath->Length + paramPathUnknownStr.Length + paramStr.Length + sizeof(WCHAR);
         paramPath.MaximumLength = RegistryPath->Length + paramStr.Length + sizeof(WCHAR);
 

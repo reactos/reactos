@@ -1,12 +1,13 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/vi-VN.rc
- * PURPOSE:     VN-Vietnamese Language resource file
- * TRANSLATORS: first times touched from en-US.rc file by Dummynosrev (Nguyễn Thanh Sơn)
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Vietnamese (Vietnam) resource file
+ * TRANSLATOR:  Copyright 2018 Nguyễn Thanh Sơn <dummynosrev@gmail.com>
  */
 
 LANGUAGE LANG_VIETNAMESE, SUBLANG_VIETNAMESE_VIETNAM
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-vi-VN.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -36,17 +37,19 @@ BEGIN
     POPUP "&Chỉnh sửa"
     BEGIN
         MENUITEM "&Quay về trạng thái trước\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "&Quay về trạng thái sau đó\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "Qua&y về trạng thái sau đó\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "Cắ&t\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Sao chép\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Dán\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Xó&a phần đã chọn\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Nghịch đảo phần chọn", IDM_EDITINVERTSELECTION
-        MENUITEM "Chọn &Tất cả\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "C&họn Tất cả\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "S&ao chép đến...", IDM_EDITCOPYTO
-        MENUITEM "Dán &từ...", IDM_EDITPASTEFROM
+        MENUITEM "Sa&o chép đến...", IDM_EDITCOPYTO
+        MENUITEM "Dán t&ừ...", IDM_EDITPASTEFROM
     END
     POPUP "&Xem"
     BEGIN
@@ -80,7 +83,7 @@ BEGIN
         MENUITEM "&Cắt hình ảnh", IDM_IMAGECROP
         MENUITEM "&Nghịch đảo màu sắc (âm bản)\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Thuộc tính...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Xóa hình ảnh\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Xóa hình ảnh\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "&Vẽ nét mờ", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Màu sắc"
@@ -95,6 +98,27 @@ BEGIN
         MENUITEM "&Trợ giúp về vấn đề...", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Thông tin", IDM_HELPINFO
+    END
+END
+
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "Cắ&t\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Sao chép\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Dán\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Xó&a phần đã chọn\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "C&họn Tất cả\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "S&ao chép đến...", IDM_EDITCOPYTO
+        MENUITEM "Dán t&ừ...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "Xoay/&Lật hình ảnh...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Kéo dãn/Nghiêng...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Nghịch đảo màu sắc (âm bản)\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -119,6 +143,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -142,26 +170,26 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Thuộc tính"
 BEGIN
-    EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Chiều rộng:", IDD_ATTRIBUTESTEXT1, 10, 42, 38, 10
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 50, 40, 35, 12
+    LTEXT "C&hiều cao:", IDD_ATTRIBUTESTEXT2, 90, 42, 38, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "&Chiều rộng:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
-    LTEXT "&Chiều cao:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "Ngày tạo &tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10 
-    LTEXT "Kích thước &tập tin :", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "&Độ phân giải:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "Ngày tạo tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 64, 10
+    LTEXT "Kích thước tập tin:", IDD_ATTRIBUTESTEXT4, 10, 15, 64, 10
+    LTEXT "Độ phân giải:", IDD_ATTRIBUTESTEXT5, 10, 25, 64, 10
+    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT6, 77, 5, 90, 10
+    LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT7, 77, 15, 90, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 77, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Đơn vị", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "&Inch (1 inch = 2,54 cm)", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "&Inch (= 2,54 cm)", IDD_ATTRIBUTESRB1, 12, 69, 66, 10, WS_GROUP
+    AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 82, 69, 25, 10
     AUTORADIOBUTTON "&Điểm ảnh", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Màu sắc", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "&Đen trắng", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Màu &sắc", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "Màu &sắc", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "Đồng ý", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Hủy", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Mặc định", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "Mặc đị&nh", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
@@ -191,6 +219,17 @@ BEGIN
     PUSHBUTTON "Hủy", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Vẽ"
@@ -198,7 +237,7 @@ BEGIN
     IDS_INFOTITLE "Trình Vẽ cho ReactOS"
     IDS_INFOTEXT "Được cung cấp theo điều lệ trong GNU Lesser General Public License (LGPL, xem www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Bạn có muốn lưu lại những thay đổi trong %s?"
-    IDS_DEFAULTFILENAME "Khongten.bmp"
+    IDS_DEFAULTFILENAME "Khongten"
     IDS_MINIATURETITLE "Ảnh nhỏ"
     IDS_TOOLTIP1 "Chọn tự do"
     IDS_TOOLTIP2 "Chọn"
@@ -219,10 +258,18 @@ BEGIN
     IDS_ALLFILES "Tất cả tập tin"
     IDS_ALLPICTUREFILES "Tất cả tập tin hình ảnh"
     IDS_FILESIZE "%d byte"
-    IDS_PRINTRES "%d x %d điểm ảnh trong một mét"
     IDS_INTNUMBERS "Xin vui lòng chỉ nhập số tự nhiên khác không (0)!"
     IDS_PERCENTAGE "Giá trị phần trăm phải ở giữa 1 và 500."
     IDS_ANGLE "Giá trị của góc phải ở giữa -89 và 89."
     IDS_LOADERRORTEXT "Không thể tải tập tin %s."
     IDS_ENLARGEPROMPTTEXT "Hình ảnh bạn định dán lớn hơn hình bitmap này.\n Bạn có muốn nới rộng hình bitmap?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

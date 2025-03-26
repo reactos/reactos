@@ -2,20 +2,7 @@
  * Regedit listviews
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -24,8 +11,8 @@
 #define CY_ICON            16
 #define LISTVIEW_NUM_ICONS 2
 
-int Image_String = 0;
-int Image_Bin = 0;
+int Image_String;
+int Image_Bin;
 INT iListViewSelect = -1;
 
 typedef struct tagLINE_INFO
@@ -46,13 +33,13 @@ typedef struct tagSORT_INFO
  * Global and Local Variables:
  */
 
-static INT g_iSortedColumn = 0;
+static INT g_iSortedColumn;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };  /* in percents */
 static const int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
-LPCWSTR GetValueName(HWND hwndLV, int iStartAt)
+WCHAR *GetValueName(HWND hwndLV, int iStartAt)
 {
     int item;
     LVITEMW LVItem;
@@ -91,7 +78,7 @@ VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
     {
         ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
     }
-    if (pszValueName == NULL)
+    if (pszValueName == NULL || pszValueName[0] == 0)
         i = 0;
     else
     {
@@ -101,6 +88,7 @@ VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
     }
     ListView_SetItemState(hwndLV, i, LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);
+    ListView_EnsureVisible(hwndLV, i, FALSE);
     iListViewSelect = i;
 }
 
@@ -181,7 +169,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             {
                 WCHAR buffer[255];
                 /* load (value not set) string */
-                LoadStringW(hInst, IDS_VALUE_NOT_SET, buffer, COUNT_OF(buffer));
+                LoadStringW(hInst, IDS_VALUE_NOT_SET, buffer, ARRAY_SIZE(buffer));
                 ListView_SetItemText(hwndLV, index, 2, buffer);
             }
             break;
@@ -221,13 +209,13 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             }
             else
             {
-                LoadStringW(hInst, IDS_INVALID_DWORD, buf, COUNT_OF(buf));
+                LoadStringW(hInst, IDS_INVALID_DWORD, buf, ARRAY_SIZE(buf));
             }
             ListView_SetItemText(hwndLV, index, 2, buf);
         }
         /*            lpsRes = convertHexToDWORDStr(lpbData, dwLen); */
         break;
-        default:
+        default: /* REG_BINARY, REG_NONE etc. */
         {
             unsigned int i;
             LPBYTE pData = (LPBYTE)ValBuf;
@@ -246,7 +234,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             else
             {
                 WCHAR szText[128];
-                LoadStringW(hInst, IDS_BINARY_EMPTY, szText, COUNT_OF(szText));
+                LoadStringW(hInst, IDS_BINARY_EMPTY, szText, ARRAY_SIZE(szText));
                 ListView_SetItemText(hwndLV, index, 2, szText);
             }
         }
@@ -271,7 +259,7 @@ static BOOL CreateListColumns(HWND hWndListView, INT cxTotal)
         lvC.iSubItem = index;
         lvC.cx = (cxTotal * default_column_widths[index]) / 100;
         lvC.fmt = column_alignment[index];
-        LoadStringW(hInst, IDS_LIST_COLUMN_FIRST + index, szText, COUNT_OF(szText));
+        LoadStringW(hInst, IDS_LIST_COLUMN_FIRST + index, szText, ARRAY_SIZE(szText));
         if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) return FALSE;
     }
     return TRUE;
@@ -319,7 +307,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
     switch (plvdi->item.iSubItem)
     {
     case 0:
-        LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+        LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, ARRAY_SIZE(buffer));
         plvdi->item.pszText = buffer;
         break;
     case 1:
@@ -364,7 +352,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
             default:
             {
                 WCHAR buf2[200];
-                LoadStringW(hInst, IDS_UNKNOWN_TYPE, buf2, COUNT_OF(buf2));
+                LoadStringW(hInst, IDS_UNKNOWN_TYPE, buf2, ARRAY_SIZE(buf2));
                 wsprintf(buffer, buf2, ((LINE_INFO*)plvdi->item.lParam)->dwValType);
                 plvdi->item.pszText = buffer;
                 break;
@@ -597,8 +585,8 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 {
                     WCHAR msg[128], caption[128];
 
-                    LoadStringW(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, COUNT_OF(msg));
-                    LoadStringW(hInst, IDS_ERR_RENVAL_CAPTION, caption, COUNT_OF(caption));
+                    LoadStringW(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, ARRAY_SIZE(msg));
+                    LoadStringW(hInst, IDS_ERR_RENVAL_CAPTION, caption, ARRAY_SIZE(caption));
                     MessageBoxW(0, msg, caption, 0);
                     *Result = TRUE;
                 }
@@ -664,10 +652,9 @@ void DestroyListView(HWND hwndLV)
         free(((LINE_INFO*)item.lParam)->name);
         HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
     }
-
 }
 
-BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
+BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
 {
     DWORD max_sub_key_len;
     DWORD max_val_name_len;
@@ -737,6 +724,9 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
     {
         ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
     }
+
+    if (bSelectNone)
+        iListViewSelect = -1;
     ListView_SetItemState(hwndLV, iListViewSelect,
                           LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);

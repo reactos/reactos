@@ -164,9 +164,9 @@ SymEnumSymbolsForAddrW(HANDLE hProcess,
 }
 
 BOOL WINAPI
-SymEnumerateSymbolsW64(HANDLE hProcess,  
-             DWORD64 ModBase,  
-             PSYM_ENUMSYMBOLS_CALLBACK64W Callback,  
+SymEnumerateSymbolsW64(HANDLE hProcess,
+             DWORD64 ModBase,
+             PSYM_ENUMSYMBOLS_CALLBACK64W Callback,
              PVOID pUserContext)
 {
     UNIMPLEMENTED;

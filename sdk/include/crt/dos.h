@@ -6,7 +6,7 @@
 #ifndef _INC_DOS
 #define _INC_DOS
 
-#include <crtdefs.h>
+#include <corecrt.h>
 #include <io.h>
 
 #pragma pack(push,_CRT_PACKING)

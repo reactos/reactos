@@ -18,7 +18,6 @@
 
 #include "msvideo_private.h"
 
-
 #include <reactos/manifest_dll.rc>
 
 /* UTF-8 */

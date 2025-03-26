@@ -951,59 +951,6 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY frFRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Installation de ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup ne peut installer le chargeur sur le disque dur",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "de votre ordinateur",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Veuillez ins\202rer une disquette format\202e dans le lecteur A: et",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "appuyer sur ENTR\220E.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTR\220E = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY frFRSelectPartitionEntries[] =
 {
     {
@@ -1044,7 +991,7 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Appuyer sur P pour cr\202er une partition primaire.",
+        "\x07  Appuyer sur C pour cr\202er une partition primaire/logique.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1058,13 +1005,6 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Appuyer sur L pour cr\202er une partition logique.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Appuyer sur D pour effacer une partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1346,7 +1286,7 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup va formater la partition. Appuyer sur ENTR\220E pour continuer.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1355,6 +1295,37 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
         0,
         0,
         "ENTR\220E = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY frFRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup v\202rifie la partition s\202lectionn\202e.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Veuillez patienter...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1385,7 +1356,7 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Choisissez un repertoire o\227 vous voulez que ReactOS soit install\202 :",
+        "Choisissez un r\202pertoire o\227 vous voulez que ReactOS soit install\202 :",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1470,7 +1441,7 @@ static MUI_ENTRY frFRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY frFRBootLoaderEntries[] =
+static MUI_ENTRY frFRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1482,7 +1453,7 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installe le chargeur de d\202marrage",
+        "Veuillez choisir o\227 Setup doit installer le chargeur de d\202marrage :",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1527,6 +1498,83 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY frFRBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup installe le chargeur de d\202marrage.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installation du chargeur de d\202marrage, veuillez patienter...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY frFRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup installe le chargeur de d\202marrage.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Veuillez ins\202rer une disquette format\202e dans le lecteur A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "et appuyer sur ENTR\220E.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTR\220E = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY frFRKeyboardSettingsEntries[] =
@@ -1918,13 +1966,6 @@ MUI_ERROR frFRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Vous ne pouvez supprimer de l'espace disque non partitionn\202!\n"
-        "\n"
-        "  * Appuyer sur une touche pour continuer.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Echec de l'installation du code de d\202marrage %S sur la partition syst\212me.",
         "ENTR\220E = Red\202marrer l'ordinateur"
@@ -2013,7 +2054,7 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Setup n'a pu ajouter la page de codes \205 la base de registres.\n"
+        "Setup n'a pu ajouter la page de codes au registre.\n"
         "ENTR\220E = Red\202marrer l'ordinateur"
     },
     {
@@ -2138,6 +2179,10 @@ MUI_PAGE frFRPages[] =
         frFRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        frFRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         frFRDeletePartitionEntries
     },
@@ -2158,8 +2203,8 @@ MUI_PAGE frFRPages[] =
         frFRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        frFRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        frFRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2174,8 +2219,12 @@ MUI_PAGE frFRPages[] =
         frFRSuccessPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        frFRBootPageEntries
+        BOOTLOADER_INSTALL_PAGE,
+        frFRBootLoaderInstallPageEntries
+    },
+    {
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        frFRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2192,25 +2241,27 @@ MUI_STRING frFRStrings[] =
     {STRING_PLEASEWAIT,
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTR\220E = Installer   P/E = Cr\202er partition Primaire/\220tendue   F3 = Quitter"},
+     "   ENTR\220E = Installer   C/E = Cr\202er partition Primaire/\220tendue   F3 = Quitter"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTR\220E = Installer   L = Cr\202er partition Logique   F3 = Quitter"},
+     "   ENTR\220E = Installer   C = Cr\202er partition Logique   F3 = Quitter"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTR\220E = Installer   D = Supprimer partition   F3 = Quitter"},
     {STRING_DELETEPARTITION,
      "   D = Supprimer partition   F3 = Quitter"},
     {STRING_PARTITIONSIZE,
      "Taille de la nouvelle partition :"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Vous avez choisi de cr\202er une partition primaire sur"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Vous avez choisi de cr\202er une partition \202tendue sur"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Vous avez choisi de cr\202er une partition logique sur"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Veuillez entrer la taille de la nouvelle partition en m\202gaoctets."},
     {STRING_CREATEPARTITION,
      "   ENTR\220E = Cr\202er partition   \220CHAP = Annuler   F3 = Quitter"},
+    {STRING_NEWPARTITION,
+    "Setup a cr\202\202 une nouvelle partition sur"},
     {STRING_PARTFORMAT,
     "Cette partition sera ensuite format\202e."},
     {STRING_NONFORMATTEDPART,
@@ -2221,8 +2272,6 @@ MUI_STRING frFRStrings[] =
     "La nouvelle partition n'est pas encore format\202e."},
     {STRING_INSTALLONPART,
     "Setup installe ReactOS sur la partition"},
-    {STRING_CHECKINGPART,
-    "Setup v\202rifie la partition s\202lectionn\202e."},
     {STRING_CONTINUE,
     "ENTR\220E = Continuer"},
     {STRING_QUITCONTINUE,
@@ -2240,17 +2289,17 @@ MUI_STRING frFRStrings[] =
     {STRING_SETUPCOPYINGFILES,
      "Setup copie les fichiers..."},
     {STRING_REGHIVEUPDATE,
-    "   Mise \205 jour de la base de registre..."},
+    "   Mise \205 jour de la base de registres..."},
     {STRING_IMPORTFILE,
     "   Importe %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
-    "   Mise \205 jour des param\212tres du registre pour l'\202cran..."},
+    "   Mise \205 jour des param\212tres de registre pour l'\202cran..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Mise \205 jour des param\212tres r\202gionaux..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Mise \205 jour des param\212tres de la dispoition clavier..."},
+    "   Mise \205 jour des param\212tres de disposition du clavier..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Ajout des informations de pages de codes \205 la base de registres..."},
+    "   Ajout des informations de pages de codes..."},
     {STRING_DONE,
     "   Termin\202..."},
     {STRING_REBOOTCOMPUTER2,
@@ -2263,42 +2312,30 @@ MUI_STRING frFRStrings[] =
     "La cause probable est l'utilisation d'un clavier USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Les claviers USB ne sont pas compl\212tement support\202s actuellement\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Setup formate votre disque"},
+    {STRING_FORMATTINGPART,
+    "Setup formate la partition..."},
     {STRING_CHECKINGDISK,
-    "Setup v\202rifie votre disque"},
+    "Setup v\202rifie le disque..."},
     {STRING_FORMATDISK1,
     " Formater la partition comme syst\212me de fichiers %S (formatage rapide) "},
     {STRING_FORMATDISK2,
     " Formater la partition comme syst\212me de fichiers %S "},
     {STRING_KEEPFORMAT,
     " Garder le syst\212me de fichiers courant (pas de changements) "},
-    {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE_1,
-    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "sur Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Setup a cr\202\202 une nouvelle partition sur"},
+    {STRING_HDDISK1,
+    "%s."},
+    {STRING_HDDISK2,
+    "sur le %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO1,
+    // "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Disque dur %lu (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]"},
+    {STRING_HDDINFO2,
+    // "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Disque dur %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_UNPSPACE,
-    "    %sEspace non partitionn\202%s            %6lu %s"},
+    "Espace non partitionn\202"},
     {STRING_MAXSIZE,
     "Mo (max. %lu Mo)"},
     {STRING_EXTENDED_PARTITION,
@@ -2316,6 +2353,6 @@ MUI_STRING frFRStrings[] =
     {STRING_GB,
     "Go"},
     {STRING_ADDKBLAYOUTS,
-    "Ajout des dispositions clavier"},
+    "Ajout des dispositions de clavier"},
     {0, 0}
 };

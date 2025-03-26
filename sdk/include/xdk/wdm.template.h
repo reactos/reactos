@@ -91,12 +91,9 @@ $define(USHORT=USHORT)
 #define NTKERNELAPI DECLSPEC_IMPORT
 #else
 #define NTKERNELAPI
-#ifndef _NTSYSTEM_
-#define _NTSYSTEM_
-#endif
 #endif
 
-/* for statically-linked ntoskrnl_vista library */
+/* For statically-linked ntoskrnl_vista library */
 #if defined(NTKRNLVISTA)
 #define NTKRNLVISTAAPI
 #else
@@ -117,7 +114,7 @@ $define(USHORT=USHORT)
 #define POINTER_ALIGNMENT
 #endif
 
-/* Helper macro to enable gcc's extension.  */
+/* Helper macro to enable gcc's extension */
 #ifndef __GNU_EXTENSION
 #ifdef __GNUC__
 #define __GNU_EXTENSION __extension__
@@ -196,8 +193,6 @@ struct _IO_RESOURCE_DESCRIPTOR;
 
 /* Structures not exposed to drivers */
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
-typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
-typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 typedef struct _EPROCESS *PEPROCESS;
 typedef struct _ETHREAD *PETHREAD;

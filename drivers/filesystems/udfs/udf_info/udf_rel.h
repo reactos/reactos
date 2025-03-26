@@ -329,11 +329,11 @@ typedef struct _UDF_DATALOC_INFO {
 #define UDF_FE_FLAG_DIR_MODIFIED (0x08)
 /// File contains pointer to Deleted Stream Dir
 #define UDF_FE_FLAG_HAS_DEL_SDIR (0x10)
-/// File is Deleted Stream Dir                                       
+/// File is Deleted Stream Dir
 #define UDF_FE_FLAG_IS_DEL_SDIR  (0x20)
 /// Dloc is being initialized, don't touch it now
 #define UDF_FE_FLAG_UNDER_INIT   (0x40)
-                                       
+
 
 #define UDF_FILE_INFO_MT PagedPool
 

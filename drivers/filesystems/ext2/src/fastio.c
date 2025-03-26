@@ -56,7 +56,11 @@ Ext2IsFastIoPossible(
 }
 
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoCheckIfPossible (
     IN PFILE_OBJECT         FileObject,
     IN PLARGE_INTEGER       FileOffset,
@@ -160,7 +164,11 @@ Ext2FastIoCheckIfPossible (
 }
 
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoRead (IN PFILE_OBJECT         FileObject,
                 IN PLARGE_INTEGER       FileOffset,
                 IN ULONG                Length,
@@ -191,7 +199,11 @@ Ext2FastIoRead (IN PFILE_OBJECT         FileObject,
     return Status;
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoWrite (
     IN PFILE_OBJECT         FileObject,
     IN PLARGE_INTEGER       FileOffset,
@@ -260,7 +272,11 @@ Ext2FastIoWrite (
     return Status;
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoQueryBasicInfo (
     IN PFILE_OBJECT             FileObject,
     IN BOOLEAN                  Wait,
@@ -372,7 +388,11 @@ Ext2FastIoQueryBasicInfo (
     return Status;
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoQueryStandardInfo (
     IN PFILE_OBJECT                 FileObject,
     IN BOOLEAN                      Wait,
@@ -489,7 +509,11 @@ Ext2FastIoQueryStandardInfo (
     return Status;
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoLock (
     IN PFILE_OBJECT         FileObject,
     IN PLARGE_INTEGER       FileOffset,
@@ -597,7 +621,11 @@ Ext2FastIoLock (
     return Status;
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoUnlockSingle (
     IN PFILE_OBJECT         FileObject,
     IN PLARGE_INTEGER       FileOffset,
@@ -700,7 +728,11 @@ Ext2FastIoUnlockSingle (
     return Status;
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoUnlockAll (
     IN PFILE_OBJECT         FileObject,
     IN PEPROCESS            Process,
@@ -791,7 +823,11 @@ Ext2FastIoUnlockAll (
     return Status;
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoUnlockAllByKey (
     IN PFILE_OBJECT         FileObject,
 #ifdef __REACTOS__
@@ -898,7 +934,11 @@ Ext2FastIoUnlockAllByKey (
 }
 
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2FastIoQueryNetworkOpenInfo (
     IN PFILE_OBJECT         FileObject,
     IN BOOLEAN              Wait,
@@ -995,7 +1035,11 @@ Ext2FastIoQueryNetworkOpenInfo (
 }
 
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2AcquireForCreateSection (
     IN PFILE_OBJECT FileObject
 )
@@ -1010,7 +1054,11 @@ Ext2AcquireForCreateSection (
     DEBUG(FASTIO_DEBUG_LEVEL, ("Ext2AcquireForCreateSection:  Fcb=%p\n", Fcb));
 }
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2ReleaseForCreateSection (
     IN PFILE_OBJECT FileObject
 )
@@ -1025,7 +1073,11 @@ Ext2ReleaseForCreateSection (
 }
 
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2AcquireFileForModWrite (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER EndingOffset,
@@ -1050,7 +1102,11 @@ Ext2AcquireFileForModWrite (
     return (ResourceAcquired ? STATUS_SUCCESS : STATUS_CANT_WAIT);
 }
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2ReleaseFileForModWrite (
     IN PFILE_OBJECT FileObject,
     IN PERESOURCE ResourceToRelease,
@@ -1071,7 +1127,11 @@ Ext2ReleaseFileForModWrite (
     return STATUS_SUCCESS;
 }
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2AcquireFileForCcFlush (
     IN PFILE_OBJECT FileObject,
     IN PDEVICE_OBJECT DeviceObject
@@ -1088,7 +1148,11 @@ Ext2AcquireFileForCcFlush (
     return STATUS_SUCCESS;
 }
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2ReleaseFileForCcFlush (
     IN PFILE_OBJECT FileObject,
     IN PDEVICE_OBJECT DeviceObject
@@ -1106,7 +1170,11 @@ Ext2ReleaseFileForCcFlush (
 }
 
 
+#ifdef __REACTOS__
 NTSTATUS NTAPI
+#else
+NTSTATUS
+#endif
 Ext2PreAcquireForCreateSection(
     IN PFS_FILTER_CALLBACK_DATA cd,
     OUT PVOID *cc

@@ -80,7 +80,7 @@ CdQueryFsSectorSizeInfo (
 #pragma alloc_text(PAGE, CdQueryFsSectorSizeInfo)
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonQueryVolInfo (
@@ -221,7 +221,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -314,7 +314,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -377,7 +377,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -441,7 +441,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local support routine
 //

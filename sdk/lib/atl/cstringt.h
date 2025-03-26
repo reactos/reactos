@@ -11,7 +11,7 @@
 namespace ATL
 {
 
-inline UINT WINAPI _AtlGetConversionACP() throw()
+inline UINT WINAPI _AtlGetConversionACP() noexcept
 {
 #ifdef _CONVERSION_DONT_USE_THREAD_LOCALE
     return CP_ACP;
@@ -26,13 +26,13 @@ class ChTraitsCRT : public ChTraitsBase<_CharType>
 {
 public:
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) noexcept
     {
         if (pszSource == NULL) return -1;
         return static_cast<int>(wcslen(pszSource));
     }
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) noexcept
     {
         if (pszSource == NULL) return 0;
         return ::MultiByteToWideChar(_AtlGetConversionACP(), 0, pszSource, -1, NULL, 0) - 1;
@@ -40,14 +40,14 @@ public:
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCWSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return nLength;
     }
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return ::MultiByteToWideChar(_AtlGetConversionACP(), 0, pszSource, nLength, NULL, 0);
     }
@@ -99,6 +99,12 @@ public:
     }
 
     static LPWSTR __cdecl FindString(
+        _In_z_ LPWSTR pszSource,
+        _In_z_ LPCWSTR pszSub)
+    {
+        return ::wcsstr(pszSource, pszSub);
+    }
+    static LPCWSTR __cdecl FindString(
         _In_z_ LPCWSTR pszSource,
         _In_z_ LPCWSTR pszSub)
     {
@@ -106,6 +112,12 @@ public:
     }
 
     static LPWSTR __cdecl FindChar(
+        _In_z_ LPWSTR pszSource,
+        _In_ WCHAR ch)
+    {
+        return ::wcschr(pszSource, ch);
+    }
+    static LPCWSTR __cdecl FindChar(
         _In_z_ LPCWSTR pszSource,
         _In_ WCHAR ch)
     {
@@ -113,6 +125,12 @@ public:
     }
 
     static LPWSTR __cdecl FindCharReverse(
+        _In_z_ LPWSTR pszSource,
+        _In_ WCHAR ch)
+    {
+        return ::wcsrchr(pszSource, ch);
+    }
+    static LPCWSTR __cdecl FindCharReverse(
         _In_z_ LPCWSTR pszSource,
         _In_ WCHAR ch)
     {
@@ -120,6 +138,12 @@ public:
     }
 
     static LPWSTR __cdecl FindOneOf(
+        _In_z_ LPWSTR pszSource,
+        _In_z_ LPCWSTR pszCharSet)
+    {
+        return ::wcspbrk(pszSource, pszCharSet);
+    }
+    static LPCWSTR __cdecl FindOneOf(
         _In_z_ LPCWSTR pszSource,
         _In_z_ LPCWSTR pszCharSet)
     {
@@ -190,12 +214,12 @@ class ChTraitsCRT<char> : public ChTraitsBase<char>
 {
 public:
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) noexcept
     {
         return ::WideCharToMultiByte(_AtlGetConversionACP(), 0, pszSource, -1, NULL, 0, NULL, NULL) - 1;
     }
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) noexcept
     {
         if (pszSource == NULL) return 0;
         return static_cast<int>(strlen(pszSource));
@@ -203,14 +227,14 @@ public:
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCWSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return ::WideCharToMultiByte(_AtlGetConversionACP(), 0, pszSource, nLength, NULL, 0, NULL, NULL);
     }
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return nLength;
     }
@@ -262,6 +286,12 @@ public:
     }
 
     static LPSTR __cdecl FindString(
+        _In_z_ LPSTR pszSource,
+        _In_z_ LPCSTR pszSub)
+    {
+        return ::strstr(pszSource, pszSub);
+    }
+    static LPCSTR __cdecl FindString(
         _In_z_ LPCSTR pszSource,
         _In_z_ LPCSTR pszSub)
     {
@@ -269,6 +299,12 @@ public:
     }
 
     static LPSTR __cdecl FindChar(
+        _In_z_ LPSTR pszSource,
+        _In_ CHAR ch)
+    {
+        return ::strchr(pszSource, ch);
+    }
+    static LPCSTR __cdecl FindChar(
         _In_z_ LPCSTR pszSource,
         _In_ CHAR ch)
     {
@@ -276,6 +312,12 @@ public:
     }
 
     static LPSTR __cdecl FindCharReverse(
+        _In_z_ LPSTR pszSource,
+        _In_ CHAR ch)
+    {
+        return ::strrchr(pszSource, ch);
+    }
+    static LPCSTR __cdecl FindCharReverse(
         _In_z_ LPCSTR pszSource,
         _In_ CHAR ch)
     {
@@ -283,6 +325,12 @@ public:
     }
 
     static LPSTR __cdecl FindOneOf(
+        _In_z_ LPSTR pszSource,
+        _In_z_ LPCSTR pszCharSet)
+    {
+        return ::strpbrk(pszSource, pszCharSet);
+    }
+    static LPCSTR __cdecl FindOneOf(
         _In_z_ LPCSTR pszSource,
         _In_z_ LPCSTR pszCharSet)
     {
@@ -380,12 +428,12 @@ public:
     typedef typename CThisSimpleString::PCYSTR PCYSTR;
 
 public:
-    CStringT() throw() :
+    CStringT() noexcept :
         CThisSimpleString(StringTraits::GetDefaultManager())
     {
     }
 
-    explicit CStringT( _In_ IAtlStringMgr* pStringMgr) throw() :
+    explicit CStringT( _In_ IAtlStringMgr* pStringMgr) noexcept :
         CThisSimpleString(pStringMgr)
     {
     }
@@ -451,13 +499,13 @@ public:
     }
 
     CStringT(_In_reads_z_(nLength) const XCHAR* pch,
-             _In_ int nLength) : 
+             _In_ int nLength) :
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }
 
     CStringT(_In_reads_z_(nLength) const YCHAR* pch,
-             _In_ int nLength) : 
+             _In_ int nLength) :
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }
@@ -496,41 +544,78 @@ public:
         return *this;
     }
 
-    friend bool operator==(const CStringT& str1, const CStringT& str2) throw()
+    friend bool operator==(const CStringT& str1, const CStringT& str2) noexcept
     {
         return str1.Compare(str2) == 0;
     }
 
-    friend bool operator==(const CStringT& str1, PCXSTR psz2) throw()
+    friend bool operator==(const CStringT& str1, PCXSTR psz2) noexcept
     {
         return str1.Compare(psz2) == 0;
     }
 
-    friend bool operator==(const CStringT& str1, PCYSTR psz2) throw()
+    friend bool operator==(const CStringT& str1, PCYSTR psz2) noexcept
     {
         CStringT tmp(psz2, str1.GetManager());
         return tmp.Compare(str1) == 0;
     }
 
-    friend bool operator==(const CStringT& str1, XCHAR ch2) throw()
+    friend bool operator==(const CStringT& str1, XCHAR ch2) noexcept
     {
         return str1.GetLength() == 1 && str1[0] == ch2;
     }
 
-    friend bool operator==(PCXSTR psz1, const CStringT& str2) throw()
+    friend bool operator==(PCXSTR psz1, const CStringT& str2) noexcept
     {
         return str2.Compare(psz1) == 0;
     }
 
-    friend bool operator==(PCYSTR psz1, const CStringT& str2) throw()
+    friend bool operator==(PCYSTR psz1, const CStringT& str2) noexcept
     {
         CStringT tmp(psz1, str2.GetManager());
         return tmp.Compare(str2) == 0;
     }
 
-    friend bool operator==(XCHAR ch1, const CStringT& str2) throw()
+    friend bool operator==(XCHAR ch1, const CStringT& str2) noexcept
     {
         return str2.GetLength() == 1 && str2[0] == ch1;
+    }
+
+    friend bool operator!=(const CStringT& str1, const CStringT& str2) noexcept
+    {
+        return str1.Compare(str2) != 0;
+    }
+
+    friend bool operator!=(const CStringT& str1, PCXSTR psz2) noexcept
+    {
+        return str1.Compare(psz2) != 0;
+    }
+
+    friend bool operator!=(const CStringT& str1, PCYSTR psz2) noexcept
+    {
+        CStringT tmp(psz2, str1.GetManager());
+        return tmp.Compare(str1) != 0;
+    }
+
+    friend bool operator!=(const CStringT& str1, XCHAR ch2) noexcept
+    {
+        return str1.GetLength() != 1 || str1[0] != ch2;
+    }
+
+    friend bool operator!=(PCXSTR psz1, const CStringT& str2) noexcept
+    {
+        return str2.Compare(psz1) != 0;
+    }
+
+    friend bool operator!=(PCYSTR psz1, const CStringT& str2) noexcept
+    {
+        CStringT tmp(psz1, str2.GetManager());
+        return tmp.Compare(str2) != 0;
+    }
+
+    friend bool operator!=(XCHAR ch1, const CStringT& str2) noexcept
+    {
+        return str2.GetLength() != 1 || str2[0] != ch1;
     }
 
     CStringT& operator+=(_In_ const CThisSimpleString& str)
@@ -608,7 +693,7 @@ public:
         return *this;
     }
 
-    int Find(_In_ PCXSTR pszSub, _In_opt_ int iStart = 0) const throw()
+    int Find(_In_ PCXSTR pszSub, _In_opt_ int iStart = 0) const noexcept
     {
         int nLength = CThisSimpleString::GetLength();
 
@@ -621,7 +706,7 @@ public:
         return pszResult ? ((int)(pszResult - pszString)) : -1;
     }
 
-    int Find(_In_ XCHAR ch, _In_opt_ int iStart = 0) const throw()
+    int Find(_In_ XCHAR ch, _In_opt_ int iStart = 0) const noexcept
     {
         int nLength = CThisSimpleString::GetLength();
 
@@ -634,7 +719,7 @@ public:
         return pszResult ? ((int)(pszResult - pszString)) : -1;
     }
 
-    int FindOneOf(_In_ PCXSTR pszCharSet) const throw()
+    int FindOneOf(_In_ PCXSTR pszCharSet) const noexcept
     {
         PCXSTR pszString = CThisSimpleString::GetString();
         PCXSTR pszResult = StringTraits::FindOneOf(pszString, pszCharSet);
@@ -642,7 +727,7 @@ public:
         return pszResult ? ((int)(pszResult - pszString)) : -1;
     }
 
-    int ReverseFind(_In_ XCHAR ch) const throw()
+    int ReverseFind(_In_ XCHAR ch) const noexcept
     {
         PCXSTR pszString = CThisSimpleString::GetString();
         PCXSTR pszResult = StringTraits::FindCharReverse(pszString, ch);
@@ -712,6 +797,23 @@ public:
         return CStringT(CThisSimpleString::GetString() + nLength - nCount, nCount);
     }
 
+    void __cdecl AppendFormat(UINT nFormatID, ...)
+    {
+        va_list args;
+        va_start(args, nFormatID);
+        CStringT formatString;
+        if (formatString.LoadString(nFormatID))
+            AppendFormatV(formatString, args);
+        va_end(args);
+    }
+
+    void __cdecl AppendFormat(PCXSTR pszFormat, ...)
+    {
+        va_list args;
+        va_start(args, pszFormat);
+        AppendFormatV(pszFormat, args);
+        va_end(args);
+    }
 
     void __cdecl Format(UINT nFormatID, ...)
     {
@@ -729,6 +831,16 @@ public:
         va_start(args, pszFormat);
         FormatV(pszFormat, args);
         va_end(args);
+    }
+
+    void AppendFormatV(PCXSTR pszFormat, va_list args)
+    {
+        int nLength = StringTraits::FormatV(NULL, pszFormat, args);
+        int nCurrent = CThisSimpleString::GetLength();
+
+        PXSTR pszBuffer = CThisSimpleString::GetBuffer(nLength + nCurrent);
+        StringTraits::FormatV(pszBuffer + nCurrent, pszFormat, args);
+        CThisSimpleString::ReleaseBufferSetLength(nLength + nCurrent);
     }
 
     void FormatV(PCXSTR pszFormat, va_list args)
@@ -812,7 +924,7 @@ public:
 
     int Replace(XCHAR chOld, XCHAR chNew)
     {
-        PCXSTR pszString = CThisSimpleString::GetString();
+        PXSTR pszString = CThisSimpleString::GetString();
         PXSTR pszFirst = StringTraits::FindChar(pszString, chOld);
         if (!pszFirst)
             return 0;

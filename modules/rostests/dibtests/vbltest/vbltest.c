@@ -1,7 +1,7 @@
 /*
  * Tests various blit and blend operations with different src
  * bit depths and scaling where possbile.
- * 
+ *
  * Created by Gregor Schneider <grschneider AT gmail DOT com>, November 2008
 */
 
@@ -26,7 +26,7 @@ BOOL WINAPI GdiTransparentBlt(
 HINSTANCE hInst;
 TCHAR szWindowClass[] = _T("testclass");
 
-static LRESULT CALLBACK 
+static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP hbmList[CURRENT_BMPS];
@@ -65,7 +65,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 y = 0;
                 SelectObject(hdcMem, hbmList[i]);
                 GetObject(hbmList[i], sizeof(BITMAP), &bitmap);
-                
+
                 /* bit blt */
                 BitBlt(hdc, x, y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
                 y += bitmap.bmHeight + OFFSET;
@@ -85,7 +85,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 /* transparent blt, transparency: grey, scaled */
                 GdiTransparentBlt(hdc, x, y, bitmap.bmWidth*SCALE, bitmap.bmHeight*SCALE, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, 128*256*256+128*256+128);
                 y += bitmap.bmHeight*SCALE + OFFSET;
-                
+
                 /* alpha blend, org size */
                 GdiAlphaBlend(hdc, x, y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bfunc);
                 y += bitmap.bmHeight + OFFSET;

@@ -82,8 +82,6 @@ void blake2b(void *out, size_t outlen, const void* in, size_t inlen);
 #ifdef __cplusplus
 extern "C" {
 #endif
-NTSYSCALLAPI NTSTATUS NTAPI NtFsControlFile(HANDLE FileHandle, HANDLE Event, PIO_APC_ROUTINE ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG FsControlCode, PVOID InputBuffer, ULONG InputBufferLength, PVOID OutputBuffer, ULONG OutputBufferLength);
-
 NTSTATUS NTAPI NtWriteFile(HANDLE FileHandle, HANDLE Event, PIO_APC_ROUTINE ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer,
                            ULONG Length, PLARGE_INTEGER ByteOffset, PULONG Key);
 
@@ -1263,13 +1261,6 @@ static bool is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
         bfs = malloc(bfssize);
 
         Status = NtDeviceIoControlFile(h2, NULL, NULL, NULL, &iosb, IOCTL_BTRFS_QUERY_FILESYSTEMS, NULL, 0, bfs, bfssize);
-        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-#ifdef __REACTOS__
-            if (bfs) free(bfs);
-#endif
-            NtClose(h2);
-            return false;
-        }
     } while (Status == STATUS_BUFFER_OVERFLOW);
 
     if (!NT_SUCCESS(Status))

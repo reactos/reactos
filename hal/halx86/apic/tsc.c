@@ -9,19 +9,18 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+#include "tsc.h"
+#include "apicp.h"
 #define NDEBUG
 #include <debug.h>
-
-#include "tsc.h"
 
 LARGE_INTEGER HalpCpuClockFrequency = {{INITIAL_STALL_COUNT * 1000000}};
 
 UCHAR TscCalibrationPhase;
 ULONG64 TscCalibrationArray[NUM_SAMPLES];
-UCHAR HalpRtcClockVector = 0xD1;
 
 #define RTC_MODE 6 /* Mode 6 is 1024 Hz */
-#define SAMPLE_FREQENCY ((32768 << 1) >> RTC_MODE)
+#define SAMPLE_FREQUENCY ((32768 << 1) >> RTC_MODE)
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -45,7 +44,7 @@ DoLinearRegression(
     }
 
     /* Account for sample frequency */
-    SumXY *= SAMPLE_FREQENCY;
+    SumXY *= SAMPLE_FREQUENCY;
 
     /* Return the quotient of the sums */
     return (SumXY + (SumXX/2)) / SumXX;
@@ -56,8 +55,7 @@ NTAPI
 HalpInitializeTsc(VOID)
 {
     ULONG_PTR Flags;
-    KIDTENTRY OldIdtEntry, *IdtPointer;
-    PKPCR Pcr = KeGetPcr();
+    PVOID PreviousHandler;
     UCHAR RegisterA, RegisterB;
 
     /* Check if the CPU supports RDTSC */
@@ -74,23 +72,22 @@ HalpInitializeTsc(VOID)
     RegisterB = HalpReadCmos(RTC_REGISTER_B);
     HalpWriteCmos(RTC_REGISTER_B, RegisterB | RTC_REG_B_PI);
 
-    /* Modify register A to RTC_MODE to get SAMPLE_FREQENCY */
+    /* Modify register A to RTC_MODE to get SAMPLE_FREQUENCY */
     RegisterA = HalpReadCmos(RTC_REGISTER_A);
     RegisterA = (RegisterA & 0xF0) | RTC_MODE;
     HalpWriteCmos(RTC_REGISTER_A, RegisterA);
 
     /* Save old IDT entry */
-    IdtPointer = KiGetIdtEntry(Pcr, HalpRtcClockVector);
-    OldIdtEntry = *IdtPointer;
+    PreviousHandler = KeQueryInterruptHandler(APIC_CLOCK_VECTOR);
 
     /* Set the calibration ISR */
-    KeRegisterInterruptHandler(HalpRtcClockVector, TscCalibrationISR);
+    KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, TscCalibrationISR);
 
     /* Reset TSC value to 0 */
     __writemsr(MSR_RDTSC, 0);
 
     /* Enable the timer interrupt */
-    HalEnableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL, Latched);
+    HalEnableSystemInterrupt(APIC_CLOCK_VECTOR, CLOCK_LEVEL, Latched);
 
     /* Read register C, so that the next interrupt can happen */
     HalpReadCmos(RTC_REGISTER_C);
@@ -104,10 +101,10 @@ HalpInitializeTsc(VOID)
     HalpWriteCmos(RTC_REGISTER_B, RegisterB & ~RTC_REG_B_PI);
 
     /* Disable the timer interrupt */
-    HalDisableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL);
+    HalDisableSystemInterrupt(APIC_CLOCK_VECTOR, CLOCK_LEVEL);
 
-    /* Restore old IDT entry */
-    *IdtPointer = OldIdtEntry;
+    /* Restore the previous handler */
+    KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, PreviousHandler);
 
     /* Calculate an average, using simplified linear regression */
     HalpCpuClockFrequency.QuadPart = DoLinearRegression(NUM_SAMPLES - 1,

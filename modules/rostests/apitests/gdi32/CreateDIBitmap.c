@@ -9,6 +9,8 @@
 
 #include "init.h"
 
+#include <pseh/pseh2.h>
+
 #define CBM_CREATDIB 2
 
 #define INVALID_POINTER ((PVOID)(ULONG_PTR)0xC0000000C0000000ULL)

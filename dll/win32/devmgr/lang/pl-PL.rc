@@ -42,6 +42,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "Zakres I/O"
+    IDS_COPY "&Kopiuj"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -84,7 +85,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Nie zainstalowano sterownika dla tego urządzenia."
     IDS_DEV_HARDWARE_DISABLED "Urządzenie jest wyłączone, ponieważ BIOS nie przydzielił żadnych zasobów dla tego urządzenia."
     IDS_DEV_CANT_SHARE_IRQ "Urządzenie żąda przerwania (IRQ), którego używa inne urządzenia i którego nie można współdzielić. Musisz zmienić ustawienia lub usunąć sterownik powodujący konflikt."
-    IDS_DEV_FAILED_ADD "Urządzenie nie działa prawidłowo, ponieważ %1 również nie działa poprawnie."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS nie mógł zainstalować sterownika dla urządzenia, ponieważ nie mógł uzyskać dostępu do lokacji zawartej w pliku instalacyjnym."
     IDS_DEV_TRANSLATION_FAILED "Sterownik nie jest przeznaczony dla tego urządzenia."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nie mógł określić ustawień dla tego urządzenia. Poszukaj rozwiązania w dokumentacji urządzenia i użyj ustawień zasobów, aby skonfigurować je ręcznie."
@@ -237,7 +238,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Ustawienia zasobów:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -295,14 +296,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Menedźer urządzeń ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Wyłączenie tego urządzenia spowoduje, że przestanie ono funkcjonować. Czy na /npewno chcesz je wyłączyć?"
-  IDS_CONFIRM_UNINSTALL     "Ostrzeżenie: Urządzenie to zostanie zaraz odinstalowane z systemu.\r\nCzy chcesz kontynuować?"
+  IDS_CONFIRM_DISABLE       "Wyłączenie tego urządzenia spowoduje, że przestanie ono funkcjonować.\nCzy na pewno chcesz je wyłączyć?"
+  IDS_CONFIRM_UNINSTALL     "Ostrzeżenie: Urządzenie to zostanie zaraz odinstalowane z systemu.\nCzy chcesz kontynuować?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Aktualizuj sterownik..."
   IDS_MENU_ENABLE           "Włącz"
@@ -313,7 +315,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Właściwości"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Właściwości"
   IDS_TOOLTIP_SCAN          "Skanuj w poszukiwaniu zmian sprzętu"
@@ -324,7 +326,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Otwiera okno dialogowe właściwiości dla bieżącego zaznaczenia."
@@ -333,7 +335,7 @@ BEGIN
   IDS_HINT_DISABLE      " Wyłącza wybrane urządzenie."
   IDS_HINT_UPDATE       " Uruchamia Kreatora aktualizacji sprzętu dla wybranego sterownika."
   IDS_HINT_UNINSTALL    " Odinstalowuje sterownik dla wybranego urządzenia."
-  IDS_HINT_ADD          " Dodaje starsze (niezgodne ze standardem Plug and Play) urządzenie do komputera." 
+  IDS_HINT_ADD          " Dodaje starsze (niezgodne ze standardem Plug and Play) urządzenie do komputera."
   IDS_HINT_ABOUT        " O menedżerze urządzeń ReactOS."
   IDS_HINT_EXIT         " Zamyka program."
 

@@ -7,14 +7,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Listede gösterilen her bir giriş dili için istediğiniz hizmetleri seçiniz.\nBu listeyi değiştirmek için Ekle veya Sil düğmelerini kullanınız.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
-    PUSHBUTTON "Ö&n Tanımlı Yap", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "&Ekle...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Sil", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "Ö&zellikler...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Tercihler", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Tuş Ayarları...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    GROUPBOX "Varsayılan giriş &dili", -1, 5, 5, 246, 55
+    LTEXT "Bilgisayarınız başladığında kullanmak için yüklü giriş dillerinden birini seçin.", -1, 15, 15, 230, 23
+    COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "&Yüklü hizmetler", -1, 5, 65, 246, 125
+    LTEXT "Listede gösterilen her bir giriş dili için istediğiniz hizmetleri seçiniz. Bu listeyi değiştirmek için Ekle veya Sil tuşlarını kullanınız.", -1, 15, 78, 230, 25
+    CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
+    PUSHBUTTON "&Ekle...", IDC_ADD_BUTTON, 175, 105, 70, 14
+    PUSHBUTTON "&Sil", IDC_REMOVE_BUTTON, 175, 125, 70, 14
+    PUSHBUTTON "Ö&zellikler...", IDC_PROP_BUTTON, 175, 145, 70, 14
+    GROUPBOX "Tercihler", -1, 5, 195, 245, 30
+    PUSHBUTTON "Dil &Çubuğu...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "&Tuş Ayarları...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
@@ -50,9 +54,9 @@ CAPTION "Giriş Dili Ekle"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Giriş Dili:", -1, 7, 7, 61, 10
-    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Klavye Düzeni/IME:", -1, 7, 36, 110, 10
-    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 116, 68, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 169, 68, 50, 14
 END
@@ -85,7 +89,7 @@ BEGIN
     LTEXT "&Giriş Dili:", -1, 7, 7, 61, 8
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
     LTEXT "&Klavye Düzeni/IME:", -1, 7, 21, 110, 10
-    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 116, 53, 52, 14
     PUSHBUTTON "İptal", IDCANCEL, 169, 53, 52, 14
 END
@@ -108,7 +112,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl + Shift"
     IDS_LEFT_ALT_SHIFT "Sol Alt + Shift"
     IDS_SWITCH_BET_INLANG "Giriş dilleri arasında geçiş yap."
-    IDS_REBOOT_NOW, "Şimdi yeniden başlatılsın mı?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE
@@ -244,7 +248,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Ukraynaca"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Ukraynaca (Öğrenci)"
     IDS_UNITED_KINGDOM_LAYOUT "Birleşik Krallık"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "ABD (Dvorak)"
+    IDS_UNITED_STATES_DVORAK_LAYOUT "ABD (Dvorak)"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "ABD (Dvorak - Sol el için.)"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "ABD (Dvorak - Sağ el için.)"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "ABD (Uluslararası)"

@@ -70,7 +70,7 @@ LpcWriteRegister(UCHAR Register, UCHAR Value)
     WRITE_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1), Value);
 }
 
-#ifndef __FREELDR_H
+#ifndef _BLDR_
 FORCEINLINE
 ULONG
 LpcDetectSuperIO(VOID)
@@ -93,7 +93,7 @@ LpcDetectSuperIO(VOID)
 
 FORCEINLINE
 ULONG
-LpcGetIoBase()
+LpcGetIoBase(VOID)
 {
     ULONG Base = 0;
 
@@ -105,10 +105,10 @@ LpcGetIoBase()
     return Base;
 }
 
-#ifndef __FREELDR_H
+#ifndef _BLDR_
 FORCEINLINE
 ULONG
-LpcGetIoBaseMPU()
+LpcGetIoBaseMPU(VOID)
 {
     ULONG Base = 0;
 
@@ -123,22 +123,22 @@ LpcGetIoBaseMPU()
 
 FORCEINLINE
 ULONG
-LpcGetIrqPrimary()
+LpcGetIrqPrimary(VOID)
 {
     return LpcReadRegister(LPC_CONFIG_DEVICE_INTERRUPT_PRIMARY);
 }
 
-#ifndef __FREELDR_H
+#ifndef _BLDR_
 FORCEINLINE
 ULONG
-LpcGetIrqSecondary()
+LpcGetIrqSecondary(VOID)
 {
     return LpcReadRegister(LPC_CONFIG_DEVICE_INTERRUPT_SECONDARY);
 }
 
 FORCEINLINE
 ULONG
-LpcGetDmaChannel()
+LpcGetDmaChannel(VOID)
 {
     return LpcReadRegister(LPC_CONFIG_DEVICE_DMA_CHANNEL);
 }

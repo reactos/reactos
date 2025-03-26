@@ -18,8 +18,8 @@ Thanks to Birger Langkjer for idea, to Mark Leisher for his wonderful XmBDFEd, a
 
 
 Adapted version, converted to TTF, by Roy Tam
-See http://www.reactos.org/forum/viewtopic.php?f=2&t=12930#p105065
-and http://www.reactos.org/forum/viewtopic.php?f=2&t=12930&start=15#p105307
+See https://reactos.org/forum/viewtopic.php?f=2&t=12930#p105065
+and https://reactos.org/forum/viewtopic.php?f=2&t=12930&start=15#p105307
 for more information.
 
 Unicode VGA font - Medium size 16px (UniVGA16.ttf)

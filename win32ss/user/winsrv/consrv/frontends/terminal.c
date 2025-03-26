@@ -939,6 +939,14 @@ ConSrvTermSetPalette(IN OUT PTERMINAL This,
     return FrontEnd->Vtbl->SetPalette(FrontEnd, PaletteHandle, PaletteUsage);
 }
 
+static BOOL NTAPI
+ConSrvTermSetCodePage(IN OUT PTERMINAL This,
+                      UINT CodePage)
+{
+    PFRONTEND FrontEnd = This->Context;
+    return FrontEnd->Vtbl->SetCodePage(FrontEnd, CodePage);
+}
+
 static INT NTAPI
 ConSrvTermShowMouseCursor(IN OUT PTERMINAL This,
                      BOOL Show)
@@ -963,6 +971,7 @@ static TERMINAL_VTBL ConSrvTermVtbl =
     ConSrvTermReleaseScreenBuffer,
     ConSrvTermGetLargestConsoleWindowSize,
     ConSrvTermSetPalette,
+    ConSrvTermSetCodePage,
     ConSrvTermShowMouseCursor,
 };
 

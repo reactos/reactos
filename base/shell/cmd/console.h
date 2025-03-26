@@ -14,7 +14,6 @@ extern CON_PAGER  StdOutPager;
 // extern BOOL   bIgnoreEcho;
 // extern BOOL   bExit;
 
-VOID ConInDummy (VOID);
 VOID ConInDisable (VOID);
 VOID ConInEnable (VOID);
 VOID ConInFlush (VOID);
@@ -96,3 +95,12 @@ BOOL ConSetScreenColor(HANDLE hOutput, WORD wColor, BOOL bFill);
 
 // INT FilePromptYN (UINT);
 // INT FilePromptYNA (UINT);
+
+SIZE_T ConGetTextWidthA(PCSTR pszText);
+SIZE_T ConGetTextWidthW(PCWSTR pszText);
+
+#ifdef UNICODE
+    #define ConGetTextWidth ConGetTextWidthW
+#else
+    #define ConGetTextWidth ConGetTextWidthA
+#endif

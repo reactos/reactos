@@ -11,10 +11,9 @@ extern "C" {
 /* SHA Context Structure Declaration */
 typedef struct
 {
-   ULONG Unknown[6];
-   ULONG State[5];
-   ULONG Count[2];
-   UCHAR Buffer[64];
+    UCHAR Buffer[64];
+    ULONG State[5];
+    ULONG Count[2];
 } SHA_CTX, *PSHA_CTX;
 
 VOID NTAPI

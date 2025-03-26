@@ -1,5 +1,9 @@
 
+@ stdcall InitOnceBeginInitialize(ptr long ptr ptr)
+@ stdcall InitOnceComplete(ptr long ptr)
 @ stdcall InitOnceExecuteOnce(ptr ptr ptr ptr)
+@ stdcall InitOnceInitialize(ptr) NTDLL.RtlRunOnceInitialize
+
 @ stdcall GetFileInformationByHandleEx(long long ptr long)
 @ stdcall -ret64 GetTickCount64()
 
@@ -16,6 +20,12 @@
 @ stdcall WakeConditionVariable(ptr)
 
 @ stdcall InitializeCriticalSectionEx(ptr long long)
+
+@ stdcall GetFirmwareEnvironmentVariableExA(str str ptr long long)
+@ stdcall GetFirmwareEnvironmentVariableExW(wstr wstr ptr long long)
+@ stdcall GetFirmwareType(ptr)
+@ stdcall SetFirmwareEnvironmentVariableExA(str str ptr long long)
+@ stdcall SetFirmwareEnvironmentVariableExW(str str ptr long long)
 
 @ stdcall ApplicationRecoveryFinished(long)
 @ stdcall ApplicationRecoveryInProgress(ptr)

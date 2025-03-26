@@ -1,4 +1,14 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATORS: Copyright 2009 Javier Remacha <remialdo@gmail.com>
+ *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
+ */
+
 LANGUAGE LANG_BASQUE, SUBLANG_DEFAULT
+
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-eu-ES.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -27,18 +37,20 @@ BEGIN
     END
     POPUP "&Editatu"
     BEGIN
-        MENUITEM "Desegin\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Errepikatu\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Desegin\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "E&rrepikatu\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Ebaki\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopiatu\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Itsasti\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Selekzioa ezabatu\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "selekzioa alderantzikatu", IDM_EDITINVERTSELECTION
-        MENUITEM "Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "E&baki\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiatu\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Itsasti\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Kopiatu hona...", IDM_EDITCOPYTO
-        MENUITEM "Itsasti hemendik...", IDM_EDITPASTEFROM
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Selekzioa &ezabatu\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Selekzioa &alderantzikatu", IDM_EDITINVERTSELECTION
+        MENUITEM "&Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Kopiatu h&ona...", IDM_EDITCOPYTO
+        MENUITEM "Itsasti he&mendik...", IDM_EDITPASTEFROM
     END
     POPUP "&Ikusi"
     BEGIN
@@ -67,13 +79,13 @@ BEGIN
     END
     POPUP "I&rudia"
     BEGIN
-        MENUITEM "Irauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Hedatu/Zeharkatu...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Moztu", IDM_IMAGECROP
-        MENUITEM "Alderantzikatu koloreak\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Atributuak...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Garbitu irudia\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Marraztu opako", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "I&rauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "He&datu/Zeharkatu...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Moztu", IDM_IMAGECROP
+        MENUITEM "A&lderantzikatu koloreak\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Atributuak...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "&Garbitu irudia\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Marraztu &opako", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Koloreak"
     BEGIN
@@ -87,6 +99,27 @@ BEGIN
         MENUITEM "Laguntza-gaiak", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "Paint-i buruz", IDM_HELPINFO
+    END
+END
+
+ID_POPUPMENU MENU
+BEGIN
+    POPUP "Popup #0"
+    BEGIN
+        MENUITEM "E&baki\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiatu\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Itsasti\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Selekzioa &ezabatu\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Kopiatu h&ona...", IDM_EDITCOPYTO
+        MENUITEM "Itsasti he&mendik...", IDM_EDITPASTEFROM
+        MENUITEM SEPARATOR
+        MENUITEM "I&rauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "He&datu/Zeharkatu...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "A&lderantzikatu koloreak\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -111,6 +144,10 @@ BEGIN
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+    VK_ADD, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_SUBTRACT, IDM_CTRL_MINUS, CONTROL, VIRTKEY
+    VK_OEM_PLUS, IDM_CTRL_PLUS, CONTROL, VIRTKEY
+    VK_OEM_MINUS, IDM_CTRL_MINUS, CONTROL, VIRTKEY
 END
 
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
@@ -134,26 +171,26 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atributuak"
 BEGIN
+    LTEXT "&Zabalera:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
+    LTEXT "&Altuera:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Zabalera:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
-    LTEXT "Altuera:", IDD_ATTRIBUTESTEXT2, 82, 42, 23, 10
-    LTEXT "Azken gordetze-data:", IDD_ATTRIBUTESTEXT3, 10, 5, 80, 10
-    LTEXT "Diskoko tamaina:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Bereizmena:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT6, 80, 5, 70, 10
-    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT7, 80, 15, 70, 10
-    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT8, 80, 25, 70, 10
-    GROUPBOX "Unitateak ", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "Hazbetea", IDD_ATTRIBUTESRB1, 12, 69, 42, 10, WS_GROUP
-    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 60, 69, 30, 10
-    AUTORADIOBUTTON "Pixela", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
-    GROUPBOX "Koloreak ", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "Zuri-beltzean", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Koloretean", IDD_ATTRIBUTESRB5, 92, 100, 50, 10
+    LTEXT "Azken gordetze-data:", IDD_ATTRIBUTESTEXT3, 10, 5, 70, 10
+    LTEXT "Diskoko tamaina:", IDD_ATTRIBUTESTEXT4, 10, 15, 70, 10
+    LTEXT "Bereizmena:", IDD_ATTRIBUTESTEXT5, 10, 25, 70, 10
+    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT6, 82, 5, 86, 10
+    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT7, 82, 15, 86, 10
+    LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 82, 25, 86, 10 /* This unit must match IDS_PRINTRES */
+    GROUPBOX "Unitateak", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
+    AUTORADIOBUTTON "&Hazbetea", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
+    AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 60, 69, 45, 10
+    AUTORADIOBUTTON "&Pixela", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    GROUPBOX "Koloreak", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
+    AUTORADIOBUTTON "&Zuri-beltzean", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "&Koloretean", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "Ados", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Utzi", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Lehenetsia", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "&Lehenetsia", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
@@ -183,6 +220,17 @@ BEGIN
     PUSHBUTTON "Utzi", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
@@ -190,7 +238,7 @@ BEGIN
     IDS_INFOTITLE "ReactOS-ko Paint"
     IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, ver www.gnu.org)"
     IDS_SAVEPROMPTTEXT "%s aldaketak gorde nahi duzu?"
-    IDS_DEFAULTFILENAME "Izegabea.bmp"
+    IDS_DEFAULTFILENAME "Izegabea"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Hautatu forma librea"
     IDS_TOOLTIP2 "Hautatu"
@@ -211,10 +259,18 @@ BEGIN
     IDS_ALLFILES "Fitxategi gustiak"
     IDS_ALLPICTUREFILES "Argazki fitxategi guztiak"
     IDS_FILESIZE "%d byte-k"
-    IDS_PRINTRES "%d x %d pixel-ak metro"
     IDS_INTNUMBERS "Mezedez sartu zembaki oso bakarrik!"
     IDS_PERCENTAGE "Ehuneko  1 eta 500 tartean izan behar da."
     IDS_ANGLE "Angelu -89 eta 89 tartean izan behar da."
     IDS_LOADERRORTEXT "%s artxiboaren karga ez ahal da."
     IDS_ENLARGEPROMPTTEXT "Klipboard dagoen argazkia bitmap-a baino handiagoa da.\nNahi duzu bitmap-a luzatu?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
+    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

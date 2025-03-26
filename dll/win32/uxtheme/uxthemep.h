@@ -3,6 +3,8 @@
 
 #include <stdarg.h>
 
+#include "resource.h"
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -69,7 +71,7 @@ typedef struct _THEME_IMAGE {
     WCHAR name[MAX_PATH];
     HBITMAP image;
     BOOL hasAlpha;
-    
+
     struct _THEME_IMAGE *next;
 } THEME_IMAGE, *PTHEME_IMAGE;
 
@@ -88,9 +90,19 @@ typedef struct _THEME_FILE {
     PTHEME_IMAGE images;
 } THEME_FILE, *PTHEME_FILE;
 
+typedef struct tagTMERRINFO
+{
+    UINT nID;
+    WCHAR szParam1[MAX_PATH];
+    WCHAR szParam2[MAX_PATH];
+    WCHAR szFile[MAX_PATH];
+    WCHAR szLine[MAX_PATH];
+    INT nLineNo;
+} TMERRINFO, *PTMERRINFO;
+
 typedef struct _UXINI_FILE *PUXINI_FILE;
 
-typedef struct _UXTHEME_HANDLE 
+typedef struct _UXTHEME_HANDLE
 {
     RTL_HANDLE_TABLE_ENTRY Handle;
     PTHEME_CLASS pClass;
@@ -115,6 +127,20 @@ PUXINI_FILE MSSTYLES_GetThemeIni(PTHEME_FILE tf);
 PTHEME_PARTSTATE MSSTYLES_FindPartState(PTHEME_CLASS tc, int iPartId, int iStateId, PTHEME_CLASS *tcNext);
 PTHEME_PROPERTY MSSTYLES_FindProperty(PTHEME_CLASS tc, int iPartId, int iStateId, int iPropertyPrimitive, int iPropertyId);
 PTHEME_PROPERTY MSSTYLES_FindMetric(PTHEME_FILE tf, int iPropertyPrimitive, int iPropertyId);
+#ifdef ENABLE_PNG_SUPPORT
+EXTERN_C
+BOOL
+MSSTYLES_TryLoadPng(
+    _In_ HINSTANCE hTheme,
+    _In_ LPCWSTR szFile,
+    _In_ LPCWSTR type,
+    _Out_ HBITMAP *phBitmap);
+EXTERN_C
+BOOL
+prepare_png_alpha(
+    _In_ HBITMAP png,
+    _Out_ BOOL* hasAlpha);
+#endif /* ENABLE_PNG_SUPPORT */
 HBITMAP MSSTYLES_LoadBitmap(PTHEME_CLASS tc, LPCWSTR lpFilename, BOOL* hasAlpha);
 
 HRESULT MSSTYLES_GetPropertyBool(PTHEME_PROPERTY tp, BOOL *pfVal);
@@ -174,7 +200,7 @@ typedef struct _DRAW_CONTEXT
 {
     HWND hWnd;
     HDC hDC;
-    HTHEME theme; 
+    HTHEME theme;
     HTHEME scrolltheme;
     HTHEME hPrevTheme;
     WINDOWINFO wi;
@@ -187,7 +213,7 @@ typedef struct _DRAW_CONTEXT
     HBITMAP hbmpOld;
 } DRAW_CONTEXT, *PDRAW_CONTEXT;
 
-typedef enum 
+typedef enum
 {
     CLOSEBUTTON,
     MAXBUTTON,
@@ -197,7 +223,7 @@ typedef enum
 
 /*
 The following values specify all possible button states
-Note that not all of them are documented but it is easy to 
+Note that not all of them are documented but it is easy to
 find them by opening a theme file
 */
 typedef enum {
@@ -244,7 +270,9 @@ typedef enum {
 
 LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc);
 void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme);
-void  ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
+LONG SCROLL_getObjectId(INT nBar);
+void ThemeDrawScrollBarEx(PDRAW_CONTEXT pcontext, INT nBar, PSCROLLBARINFO psbi, POINT* pt);
+void ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
 VOID NC_TrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt);
 void ThemeInitDrawContext(PDRAW_CONTEXT pcontext, HWND hWnd, HRGN hRgn);
 void ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext);
@@ -258,6 +286,7 @@ extern ATOM atWndContext;
 extern BOOL g_bThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
+void UXTHEME_UnInitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);
 BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 
@@ -267,5 +296,34 @@ BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 #define ALPHABLEND_BINARY           1
 /* Full alpha blending */
 #define ALPHABLEND_FULL             2
+
+extern DWORD gdwErrorInfoTlsIndex;
+
+VOID UXTHEME_DeleteParseErrorInfo(VOID);
+
+static inline
+HRESULT
+UXTHEME_MakeError(_In_ LONG error)
+{
+    if (error < 0)
+        return (HRESULT)error;
+    return HRESULT_FROM_WIN32(error);
+}
+
+static inline
+HRESULT
+UXTHEME_MakeLastError(VOID)
+{
+    return UXTHEME_MakeError(GetLastError());
+}
+
+HRESULT
+UXTHEME_MakeParseError(
+    _In_ UINT nID,
+    _In_ LPCWSTR pszParam1,
+    _In_ LPCWSTR pszParam2,
+    _In_ LPCWSTR pszFile,
+    _In_ LPCWSTR pszLine,
+    _In_ INT nLineNo);
 
 #endif /* _UXTHEME_PCH_ */

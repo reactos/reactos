@@ -8,44 +8,23 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
-class CPortFilterWaveRT : public IPortFilterWaveRT
+class CPortFilterWaveRT : public CUnknownImpl<IPortFilterWaveRT>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortFilterWaveRT;
     CPortFilterWaveRT(IUnknown *OuterUnknown){}
     virtual ~CPortFilterWaveRT(){}
 
 protected:
 
-
     IPortWaveRT* m_Port;
     IPortPinWaveRT ** m_Pins;
     SUBDEVICE_DESCRIPTOR * m_Descriptor;
-    LONG m_Ref;
 };
 
 NTSTATUS
@@ -154,7 +133,7 @@ CPortFilterWaveRT::DeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
         DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
-        
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -316,7 +295,7 @@ CPortFilterWaveRT::Init(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterWaveRT(
     OUT IPortFilterWaveRT ** OutFilter)
 {

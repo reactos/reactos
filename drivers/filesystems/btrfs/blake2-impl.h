@@ -29,6 +29,8 @@
   #define BLAKE2_INLINE inline
 #endif
 
+#define NATIVE_LITTLE_ENDIAN
+
 static BLAKE2_INLINE uint32_t load32( const void *src )
 {
 #if defined(NATIVE_LITTLE_ENDIAN)

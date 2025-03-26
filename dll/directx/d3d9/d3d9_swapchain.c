@@ -214,7 +214,7 @@ HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESE
 
     for (i = 0; i < 256; i++)
     {
-        pThisSwapChain->GammaRamp.red[i] = 
+        pThisSwapChain->GammaRamp.red[i] =
             pThisSwapChain->GammaRamp.green[i] =
             pThisSwapChain->GammaRamp.blue[i] = i;
     }
@@ -222,7 +222,7 @@ HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESE
     pThisSwapChain->PresentParameters = pPresentationParameters[pThisSwapChain->ChainIndex];
     pThisSwapChain->SwapEffect = pPresentationParameters->SwapEffect;
     Direct3DSwapChain9_SetDisplayMode(pThisSwapChain, &pThisSwapChain->PresentParameters);
-    
+
     if (FAILED(D3D9BaseObject_GetDeviceInt(&pThisSwapChain->BaseObject, &pDevice)))
     {
         DPRINT1("Could not get the swapchain device");

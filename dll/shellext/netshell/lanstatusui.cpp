@@ -9,6 +9,8 @@
 
 #include <winsock.h>
 
+#define NETTIMERID 0xFABC
+
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
     m_pHead(NULL)
@@ -116,7 +118,7 @@ UpdateLanStatusUiDlg(
 }
 
 VOID
-UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
+UpdateLanStatus(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 {
     MIB_IFROW IfEntry;
     HICON hIcon, hOldIcon = NULL;
@@ -128,6 +130,17 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     if (GetIfEntry(&IfEntry) != NO_ERROR)
     {
         return;
+    }
+
+    if (pContext->Status == (UINT)-1)
+    {
+        /*
+         * On first execution, pContext->dw[In|Out]Octets will be zero while
+         * the interface info is already refreshed with non-null data, so a
+         * gap is normal and does not correspond to an effective TX or RX packet.
+         */
+        pContext->dwInOctets = IfEntry.dwInOctets;
+        pContext->dwOutOctets = IfEntry.dwOutOctets;
     }
 
     hIcon = NULL;
@@ -146,7 +159,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
         {
             hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 32, 32, LR_SHARED);
-            pContext->Status = 2; 
+            pContext->Status = 2;
         }
         else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
         {
@@ -295,7 +308,7 @@ InsertColumnToListView(
 static
 VOID
 AddIPAddressToListView(
-    HWND hDlgCtrl, 
+    HWND hDlgCtrl,
     PIP_ADDR_STRING pAddr,
     INT Index)
 {
@@ -660,7 +673,7 @@ LANStatusUiDlg(
             {
                 if (pContext)
                 {
-                    ShowNetConnectionProperties(pContext->pNet, GetParent(pContext->hwndDlg)); 
+                    ShowNetConnectionProperties(pContext->pNet, GetParent(pContext->hwndDlg));
                     BringWindowToTop(GetParent(pContext->hwndDlg));
                 }
                 break;
@@ -700,7 +713,7 @@ InitializePropertyDialog(
 
     /* get the IfTable */
     dwSize = 0;
-    dwResult = GetAdaptersInfo(NULL, &dwSize); 
+    dwResult = GetAdaptersInfo(NULL, &dwSize);
     if (dwResult!= ERROR_BUFFER_OVERFLOW)
     {
         CoTaskMemFree(pStr);
@@ -828,7 +841,7 @@ LANStatusDlg(
         case WM_INITDIALOG:
             pContext = (LANSTATUSUI_CONTEXT *)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
-            pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
+            pContext->nIDEvent = SetTimer(hwndDlg, NETTIMERID, 1000, NULL);
             return TRUE;
         case WM_TIMER:
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
@@ -838,7 +851,7 @@ LANStatusDlg(
             }
             break;
         case WM_SHOWSTATUSDLG:
-            if (LOWORD(lParam) == WM_LBUTTONDOWN)
+            if (LOWORD(lParam) == WM_LBUTTONUP)
             {
                 pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 if (!pContext)
@@ -915,6 +928,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
     Index = 1;
     while (TRUE)
     {
+        pNetCon.Release();
         hr = pEnumCon->Next(1, &pNetCon, &Count);
         if (hr != S_OK)
             break;
@@ -934,10 +948,12 @@ CLanStatus::InitializeNetTaskbarNotifications()
         ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
         pContext->uID = Index;
         pContext->pNet = pNetCon;
+        pContext->Status = -1;
+        pContext->dwAdapterIndex = Index;
         pItem->uID = Index;
         pItem->pNext = NULL;
         pItem->pNet = pNetCon;
-        pNetCon->AddRef();
+        pItem->pNet->AddRef();
         hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
         if (!hwndDlg)
         {
@@ -1011,7 +1027,7 @@ CLanStatus::ShowStatusDialogByCLSID(const GUID *pguidCmdGroup)
     {
         if (IsEqualGUID(pItem->guidItem, *pguidCmdGroup))
         {
-            SendMessageW(pItem->hwndDlg, WM_SHOWSTATUSDLG, 0, WM_LBUTTONDOWN);
+            SendMessageW(pItem->hwndDlg, WM_SHOWSTATUSDLG, 0, WM_LBUTTONUP);
             return S_OK;
         }
         pItem = pItem->pNext;

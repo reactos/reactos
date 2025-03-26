@@ -9,10 +9,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 //  + for absolute / - for relative
@@ -61,18 +58,14 @@ const ULONG      kMPUInputBufferSize = 128;
 /*****************************************************************************
  * CMiniportDMusUART
  *****************************************************************************
- * MPU-401 miniport.  This object is associated with the device and is 
+ * MPU-401 miniport.  This object is associated with the device and is
  * created when the device is started.  The class inherits IMiniportDMus
  * so it can expose this interface and CUnknown so it automatically gets
  * reference counting and aggregation support.
  */
-class CMiniportDMusUART
-:   public IMiniportDMus,
-    public IMusicTechnology,
-    public IPowerNotify
+class CMiniportDMusUART : public CUnknownImpl<IMiniportDMus, IMusicTechnology, IPowerNotify>
 {
 private:
-    LONG            m_Ref;                  // Reference count
     KSSTATE         m_KSStateInput;         // Miniport state (RUN/PAUSE/ACQUIRE/STOP)
     PPORTDMUS       m_pPort;                // Callback interface.
     PUCHAR          m_pPortBase;            // Base port address.
@@ -105,34 +98,17 @@ private:
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-
     CMiniportDMusUART(IUnknown * Unknown){}
     virtual ~CMiniportDMusUART();
 
     /*************************************************************************
      * IMiniport methods
      */
-    STDMETHODIMP_(NTSTATUS) 
+    STDMETHODIMP_(NTSTATUS)
     GetDescription
     (   OUT     PPCFILTER_DESCRIPTOR *  OutFilterDescriptor
     );
-    STDMETHODIMP_(NTSTATUS) 
+    STDMETHODIMP_(NTSTATUS)
     DataRangeIntersection
     (   IN      ULONG           PinId
     ,   IN      PKSDATARANGE    DataRange
@@ -183,14 +159,14 @@ public:
     IMP_IPowerNotify;
 
     /*************************************************************************
-     * Friends 
+     * Friends
      */
     friend class CMiniportDMusUARTStream;
     friend NTSTATUS NTAPI
         DMusMPUInterruptServiceRoutine(PINTERRUPTSYNC InterruptSync,PVOID DynamicContext);
     friend NTSTATUS NTAPI
         SynchronizedDMusMPUWrite(PINTERRUPTSYNC InterruptSync,PVOID syncWriteContext);
-    friend VOID NTAPI 
+    friend VOID NTAPI
         DMusUARTTimerDPC(PKDPC Dpc,PVOID DeferredContext,PVOID SystemArgument1,PVOID SystemArgument2);
     friend NTSTATUS NTAPI PropertyHandler_Synth(IN PPCPROPERTY_REQUEST PropertyRequest);
     friend STDMETHODIMP_(NTSTATUS) SnapTimeStamp(PINTERRUPTSYNC InterruptSync,PVOID pStream);
@@ -204,10 +180,9 @@ public:
  * so it can expose this interface and CUnknown so it automatically gets
  * reference counting and aggregation support.
  */
-class CMiniportDMusUARTStream :   public IMXF
+class CMiniportDMusUARTStream : public CUnknownImpl<IMXF>
 {
 private:
-    LONG                m_Ref;                  // Reference Count
     CMiniportDMusUART * m_pMiniport;            // Parent.
     REFERENCE_TIME      m_SnapshotTimeStamp;    // Current snapshot of miniport's input timestamp.
     PUCHAR              m_pPortBase;            // Base port address.
@@ -219,7 +194,7 @@ private:
     ULONG               m_NumberOfRetries;      // Number of consecutive times the h/w was busy/full
     ULONG               m_DMKEvtOffset;         // offset into the event
     KDPC                m_Dpc;                  // DPC for timer
-    KTIMER              m_TimerEvent;           // timer 
+    KTIMER              m_TimerEvent;           // timer
     BOOL                m_TimerQueued;          // whether a timer has been set
     KSPIN_LOCK          m_DpcSpinLock;          // protects the ConsumeEvents DPC
 
@@ -229,23 +204,6 @@ private:
 
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
 
     virtual ~CMiniportDMusUARTStream();
 
@@ -709,20 +667,20 @@ InitMPU
     {
         return STATUS_INVALID_PARAMETER_2;
     }
-        
+
     PUCHAR      portBase = PUCHAR(DynamicContext);
     UCHAR       status;
     ULONGLONG   startTime;
     BOOLEAN     success;
     NTSTATUS    ntStatus = STATUS_SUCCESS;
-    
+
     //
     // Reset the card (puts it into "smart mode")
     //
     ntStatus = WriteMPU(portBase,COMMAND,MPU401_CMD_RESET);
 
     // wait for the acknowledgement
-    // NOTE: When the Ack arrives, it will trigger an interrupt.  
+    // NOTE: When the Ack arrives, it will trigger an interrupt.
     //       Normally the DPC routine would read in the ack byte and we
     //       would never see it, however since we have the hardware locked (HwEnter),
     //       we can read the port before the DPC can and thus we receive the Ack.
@@ -731,11 +689,11 @@ InitMPU
     while(PcGetTimeInterval(startTime) < GTI_MILLISECONDS(50))
     {
         status = READ_PORT_UCHAR(portBase + MPU401_REG_STATUS);
-        
+
         if (UartFifoOkForRead(status))                      // Is data waiting?
         {
-            READ_PORT_UCHAR(portBase + MPU401_REG_DATA);    // yep.. read ACK 
-            success = TRUE;                                 // don't need to do more 
+            READ_PORT_UCHAR(portBase + MPU401_REG_DATA);    // yep.. read ACK
+            success = TRUE;                                 // don't need to do more
             break;
         }
         KeStallExecutionProcessor(25);  //  microseconds
@@ -769,14 +727,14 @@ InitMPU
         KeStallExecutionProcessor(25);
     }
 
-    if ((0xFE != dataByte) || !success)   // Did we succeed? If no second ACK, something is hosed  
-    {                       
+    if ((0xFE != dataByte) || !success)   // Did we succeed? If no second ACK, something is hosed
+    {
         DPRINT("Second attempt to reset the MPU didn't get ACKed.\n");
         DPRINT("Init Reset failure error. Ack = %X", ULONG(dataByte));
 
         ntStatus = STATUS_IO_DEVICE_ERROR;
     }
-    
+
     return ntStatus;
 }
 
@@ -891,7 +849,7 @@ SynchronizedDMusMPUWrite
     // (we never wait on a byte.  Better to come back later)
     /*readStatus = */ DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
     while (  (*(context->BytesRead) < context->Length)
-          && (  TryMPU(context->PortBase) 
+          && (  TryMPU(context->PortBase)
              || (*(context->BytesRead)%3)
           )  )
     {
@@ -939,7 +897,7 @@ TryMPU
     while (numPolls < kMPUPollTimeout)
     {
         status = READ_PORT_UCHAR(PortBase + MPU401_REG_STATUS);
-                                       
+
         if (UartFifoOkForWrite(status)) // Is this a good time to write data?
         {
             break;
@@ -992,7 +950,7 @@ WriteMPU
     }
 
     ULONGLONG startTime = PcGetTimeInterval(0);
-    
+
     while (PcGetTimeInterval(startTime) < GTI_MILLISECONDS(50))
     {
         UCHAR status
@@ -1017,11 +975,11 @@ WriteMPU
  * SnapTimeStamp()
  *****************************************************************************
  *
- * At synchronized execution to ISR, copy miniport's volatile m_InputTimeStamp 
+ * At synchronized execution to ISR, copy miniport's volatile m_InputTimeStamp
  * to stream's m_SnapshotTimeStamp and zero m_InputTimeStamp.
  *
  */
-STDMETHODIMP_(NTSTATUS) 
+STDMETHODIMP_(NTSTATUS)
 SnapTimeStamp(PINTERRUPTSYNC InterruptSync,PVOID pStream)
 {
     CMiniportDMusUARTStream *pMPStream = (CMiniportDMusUARTStream *)pStream;
@@ -1030,7 +988,7 @@ SnapTimeStamp(PINTERRUPTSYNC InterruptSync,PVOID pStream)
     pMPStream->m_SnapshotTimeStamp = pMPStream->m_pMiniport->m_InputTimeStamp;
 
     //  if the window is closed, zero the timestamp
-    if (pMPStream->m_pMiniport->m_MPUInputBufferHead == 
+    if (pMPStream->m_pMiniport->m_MPUInputBufferHead ==
         pMPStream->m_pMiniport->m_MPUInputBufferTail)
     {
         pMPStream->m_pMiniport->m_InputTimeStamp = 0;
@@ -1177,11 +1135,11 @@ DMusMPUInterruptServiceRoutine
         if (UartFifoOkForRead(portStatus) && that->m_pPort)
         {
             startTime = PcGetTimeInterval(0);
-            while ( (PcGetTimeInterval(startTime) < GTI_MILLISECONDS(50)) 
+            while ( (PcGetTimeInterval(startTime) < GTI_MILLISECONDS(50))
                 &&  (UartFifoOkForRead(portStatus)) )
             {
                 UCHAR uDest = READ_PORT_UCHAR(that->m_pPortBase + MPU401_REG_DATA);
-                if (    (that->m_KSStateInput == KSSTATE_RUN) 
+                if (    (that->m_KSStateInput == KSSTATE_RUN)
                     &&  (that->m_NumCaptureStreams)
                    )
                 {
@@ -1205,13 +1163,13 @@ DMusMPUInterruptServiceRoutine
                         //  ...place the data in our FIFO...
                         that->m_MPUInputBuffer[that->m_MPUInputBufferTail] = uDest;
                         ASSERT(that->m_MPUInputBufferTail < kMPUInputBufferSize);
-                        
+
                         that->m_MPUInputBufferTail++;
                         if (that->m_MPUInputBufferTail >= kMPUInputBufferSize)
                         {
                             that->m_MPUInputBufferTail = 0;
                         }
-                    } 
+                    }
                 }
                 //
                 // Look for more MIDI data.

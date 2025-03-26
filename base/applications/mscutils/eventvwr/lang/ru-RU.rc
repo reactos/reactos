@@ -1,4 +1,13 @@
-/* Russian translation by Dmitry Chapyshev, Artem Reznikov, Kudratov Olimjon (olim98@bk.ru) */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007-2016 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2008 Artem Reznikov
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2014 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2016 Sergey Stopkin <stopkin.sergey@gmail.com>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -37,6 +46,19 @@ BEGIN
         MENUITEM "&Помощь", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "&О программе", IDM_ABOUT
+    END
+END
+
+IDM_EVENTWR_CTX MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM SEPARATOR
+        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
+        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -88,8 +110,8 @@ BEGIN
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
     LTEXT "&Данные:", IDC_DETAILS_STATIC, 8, 140, 30, 8
-    CONTROL "&Байты", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 49, 140, 34, 8
-    CONTROL "&Слова", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 87, 140, 34, 8
+    AUTORADIOBUTTON "&Байты", IDC_BYTESRADIO, 49, 140, 34, 8
+    AUTORADIOBUTTON "&Слова", IDC_WORDRADIO, 87, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -98,19 +120,22 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Основные"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Отображаемое имя:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "&Отображаемое имя:", IDC_STATIC, 7, 9, 60, 8//FIXME: accelerator collision &O
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "&Имя журнала:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Файл &журнала:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Размер:", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "&Размер:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Создан:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "&Создан:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Изменен:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "И&зменен:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Доступ:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "&Доступ:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Размер журнала", IDC_STATIC, 7, 106, 238, 99
     LTEXT "&Максимальный размер журнала:", IDC_STATIC, 17, 122, 58, 8
@@ -119,16 +144,16 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "КБ", IDC_STATIC, 130, 122, 20, 8
     LTEXT "При достижении максимального размера журнала:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&События перезаписываются по мере необходимости", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "П&ерезаписываются события старше, чем", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    AUTORADIOBUTTON "&События перезаписываются по мере необходимости", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "П&ерезаписываются события старше, чем", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
+    AUTORADIOBUTTON "&Не перезаписывать события\n(журнал очищается вручную)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "дней", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "&Не перезаписывать события\n(журнал очищается вручную)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "&По умолчанию", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "&Используется низкоскоростное подключение", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Очистить журнал", ID_CLEARLOG, 195, 213, 50, 14
+    PUSHBUTTON "&Очистить журнал", ID_CLEARLOG, 195, 213, 50, 14//FIXME: accelerator collision &O
 END
 
 STRINGTABLE
@@ -146,6 +171,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Вы хотите сохранить журнал событий перед очисткой?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера.\n\nСледующая информация часть события:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -153,13 +180,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "ReactOS Event Viewer\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [computer name] [/L:<event log file>] [/?]\n\
 \n\
 ""computer name"" : Specifies the remote computer where to connect\n\
 \tto retrieve the events to display. If no name is specified, the\n\
 \tlocal computer is used.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
+/L:<event log file> : Specifies which event log file to open.\n\
 \tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
 \n\
 /? : Displays this help message.\n\
@@ -198,7 +225,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Тип события:        %s\r\n\
+    IDS_COPY "\
+Тип события:        %s\r\n\
 Источник события:   %s\r\n\
 Категория события:  %s\r\n\
 ID события:         %s\r\n\

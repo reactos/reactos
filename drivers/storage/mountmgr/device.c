@@ -94,7 +94,6 @@ MountmgrWriteNoAutoMount(IN PDEVICE_EXTENSION DeviceExtension)
                                  REG_DWORD,
                                  &Value,
                                  sizeof(Value));
-
 }
 
 /*
@@ -115,16 +114,17 @@ MountMgrSetAutoMount(IN PDEVICE_EXTENSION DeviceExtension,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Only change if there's a real difference */
+    /* Change the state only if there is a real difference
+     * with the user-provided NewState (normalized) */
     SetState = (PMOUNTMGR_SET_AUTO_MOUNT)Irp->AssociatedIrp.SystemBuffer;
-    if (SetState->NewState == !DeviceExtension->NoAutoMount)
+    if ((SetState->NewState != Enabled) == DeviceExtension->NoAutoMount)
     {
         Irp->IoStatus.Information = 0;
         return STATUS_SUCCESS;
     }
 
-    /* Set new state; ! on purpose */
-    DeviceExtension->NoAutoMount = !SetState->NewState;
+    /* Set new state */
+    DeviceExtension->NoAutoMount = (SetState->NewState != Enabled);
     Irp->IoStatus.Information = 0;
     return MountmgrWriteNoAutoMount(DeviceExtension);
 }
@@ -330,11 +330,8 @@ MountMgrCheckUnprocessedVolumes(IN PDEVICE_EXTENSION DeviceExtension,
 BOOLEAN
 IsFtVolume(IN PUNICODE_STRING SymbolicName)
 {
-    PIRP Irp;
-    KEVENT Event;
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
-    IO_STATUS_BLOCK IoStatusBlock;
     PARTITION_INFORMATION PartitionInfo;
     PDEVICE_OBJECT DeviceObject, FileDeviceObject;
 
@@ -344,9 +341,7 @@ IsFtVolume(IN PUNICODE_STRING SymbolicName)
                                       &FileObject,
                                       &DeviceObject);
     if (!NT_SUCCESS(Status))
-    {
         return FALSE;
-    }
 
     /* Get attached device */
     FileDeviceObject = FileObject->DeviceObject;
@@ -363,34 +358,17 @@ IsFtVolume(IN PUNICODE_STRING SymbolicName)
     ObDereferenceObject(FileObject);
 
     /* Get partition information */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO,
-                                        DeviceObject,
-                                        NULL,
-                                        0,
-                                        &PartitionInfo,
-                                        sizeof(PartitionInfo),
-                                        FALSE,
-                                        &Event,
-                                        &IoStatusBlock);
-    if (!Irp)
-    {
-        ObDereferenceObject(DeviceObject);
-        return FALSE;
-    }
-
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
+    Status = MountMgrSendSyncDeviceIoCtl(IOCTL_DISK_GET_PARTITION_INFO,
+                                         DeviceObject,
+                                         NULL,
+                                         0,
+                                         &PartitionInfo,
+                                         sizeof(PartitionInfo),
+                                         NULL);
 
     ObDereferenceObject(DeviceObject);
     if (!NT_SUCCESS(Status))
-    {
         return FALSE;
-    }
 
     /* Check if this is a FT volume */
     return IsFTPartition(PartitionInfo.PartitionType);
@@ -502,7 +480,7 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-    /* Now, mark we have assigned a letter (assumption) */
+    /* Now, assume we will assign a letter */
     DeviceInformation->LetterAssigned =
     DriveLetterInfo->DriveLetterWasAssigned = TRUE;
 
@@ -523,39 +501,35 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
         NextEntry = NextEntry->Flink;
     }
 
-    /* If we didn't find a drive letter online
-     * ensure this is not a no drive entry
-    * by querying GPT attributes & database
-     */
+    /* If we didn't find a drive letter online, ensure this is not
+     * a no-drive entry by querying GPT attributes & database */
     if (NextEntry == &(DeviceInformation->SymbolicLinksListHead))
     {
         if (!GptDriveLetter || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
             DriveLetterInfo->CurrentDriveLetter = 0;
-
             goto Release;
         }
     }
 
-    /* No, ensure that the device is not automounted nor removable */
-    if (!DeviceExtension->NoAutoMount && !Removable)
+    /* If automount is disabled, and the device is not removable
+     * but needs a drive letter, don't assign one and bail out */
+    if (DeviceExtension->NoAutoMount && !Removable)
     {
         if (DriveLetterInfo->DriveLetterWasAssigned)
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
             DriveLetterInfo->CurrentDriveLetter = 0;
-
             goto Release;
         }
     }
 
+    /* Stop now if we don't need to assign the drive a letter */
     if (!DriveLetterInfo->DriveLetterWasAssigned)
-    {
         goto Release;
-    }
 
-    /* Now everything is fine, start processing */
+    /* Now everything is fine, begin drive letter assignment */
 
     if (RtlPrefixUnicodeString(&DeviceFloppy, &TargetDeviceName, TRUE))
     {
@@ -581,7 +555,6 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     {
         DriveLetterInfo->DriveLetterWasAssigned = FALSE;
         DriveLetterInfo->CurrentDriveLetter = 0;
-
         goto Release;
     }
 
@@ -664,7 +637,8 @@ MountMgrNextDriveLetter(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     DriveLetterTarget = (PMOUNTMGR_DRIVE_LETTER_TARGET)Irp->AssociatedIrp.SystemBuffer;
-    if (DriveLetterTarget->DeviceNameLength + sizeof(USHORT) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_DRIVE_LETTER_TARGET, DeviceName) + DriveLetterTarget->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -797,7 +771,7 @@ MountMgrAssignDriveLetters(IN PDEVICE_EXTENSION DeviceExtension)
                                           &DriveLetterInformation);
         }
 
-        /* If it was the system volume */
+        /* If it's the system volume */
         if (NT_SUCCESS(Status) && RtlEqualUnicodeString(&SystemVolumeName, &(DeviceInformation->DeviceName), TRUE))
         {
             /* Keep track of it */
@@ -810,16 +784,19 @@ MountMgrAssignDriveLetters(IN PDEVICE_EXTENSION DeviceExtension)
                               DeviceInformation->UniqueId->UniqueIdLength + sizeof(MOUNTDEV_UNIQUE_ID));
             }
 
-            /* If it was not automount, ensure it gets mounted */
-            if (!DeviceExtension->NoAutoMount)
+            /* Ensure it gets mounted if automount is disabled */
+            if (DeviceExtension->NoAutoMount)
             {
-                DeviceExtension->NoAutoMount = TRUE;
+                /* Temporarily re-enable automount for the
+                 * worker to mount and set a drive letter */
+                DeviceExtension->NoAutoMount = FALSE;
 
                 MountMgrNextDriveLetterWorker(DeviceExtension,
                                               &(DeviceInformation->DeviceName),
                                               &DriveLetterInformation);
 
-                DeviceExtension->NoAutoMount = FALSE;
+                /* And re-disable automount */
+                DeviceExtension->NoAutoMount = TRUE;
             }
         }
     }
@@ -843,6 +820,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     PLIST_ENTRY SymlinksEntry;
     UNICODE_STRING SymbolicName;
     PMOUNTMGR_TARGET_NAME Target;
+    PMOUNTMGR_VOLUME_PATHS Output;
     PWSTR DeviceString, OldBuffer;
     USHORT DeviceLength, OldLength;
     PDEVICE_INFORMATION DeviceInformation;
@@ -865,20 +843,20 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Validate the entry structure size */
-    if ((FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceNameLength) + Target->DeviceNameLength) >
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
         Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Ensure we can at least return needed size */
-    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Construct string for query */
-    SymbolicName.Length = Target->DeviceNameLength;
+    SymbolicName.Length =
     SymbolicName.MaximumLength = Target->DeviceNameLength;
     SymbolicName.Buffer = Target->DeviceName;
 
@@ -909,20 +887,16 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
             }
         }
 
-        /* We didn't find, break */
-        if (SymlinksEntry == &(DeviceInformation->SymbolicLinksListHead))
-        {
-            return STATUS_NOT_FOUND;
-        }
+        /* If we've found a device via drive letter, do default processing */
+        if (SymlinksEntry != &(DeviceInformation->SymbolicLinksListHead))
+            break;
 
-        /* It doesn't have associated device, go to fallback method */
+        /* If it doesn't have an associated device, go to fallback method */
         if (IsListEmpty(&DeviceInformation->AssociatedDevicesHead))
-        {
             goto TryWithVolumeName;
-        }
 
         /* Create a string with the information about the device */
-        AssociatedDevice = CONTAINING_RECORD(&(DeviceInformation->SymbolicLinksListHead), ASSOCIATED_DEVICE_ENTRY, AssociatedDevicesEntry);
+        AssociatedDevice = CONTAINING_RECORD(&(DeviceInformation->AssociatedDevicesHead), ASSOCIATED_DEVICE_ENTRY, AssociatedDevicesEntry);
         OldLength = DeviceLength;
         OldBuffer = DeviceString;
         DeviceLength += AssociatedDevice->String.Length;
@@ -989,6 +963,7 @@ TryWithVolumeName:
         if (DeviceString)
         {
             FreePool(DeviceString);
+            DeviceString = NULL;
             DeviceLength = 0;
         }
 
@@ -1016,46 +991,46 @@ TryWithVolumeName:
             }
 
             RtlCopyMemory(DeviceString, SymlinkInformation->Name.Buffer, DeviceLength);
-            /* Ensure we are in the right namespace; [1] can be ? */
+            /* Ensure we are in the Win32 namespace; [1] can be '?' */
             DeviceString[1] = L'\\';
         }
     }
 
-    /* If we found something */
-    if (DeviceString)
+    /* If we didn't find something, fail */
+    if (!DeviceString)
+        return STATUS_NOT_FOUND;
+
+    /* Get the output buffer */
+    Output = (PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer;
+
+    /* At least, we will return our length */
+    Output->MultiSzLength = DeviceLength + 2 * sizeof(UNICODE_NULL);
+    Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + Output->MultiSzLength;
+
+    /* If we have enough room for copying the string */
+    if (Irp->IoStatus.Information <= Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
-        /* At least, we will return our length */
-        ((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSzLength = DeviceLength;
-        /* MOUNTMGR_VOLUME_PATHS is a string + a ULONG */
-        Irp->IoStatus.Information = DeviceLength + sizeof(ULONG);
-
-        /* If we have enough room for copying the string */
-        if (sizeof(ULONG) + DeviceLength <= Stack->Parameters.DeviceIoControl.OutputBufferLength)
+        /* Copy it */
+        if (DeviceLength)
         {
-            /* Copy it */
-            if (DeviceLength)
-            {
-                RtlCopyMemory(((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSz, DeviceString, DeviceLength);
-            }
-
-            /* And double zero at its end - this is needed in case of multiple paths which are separated by a single 0 */
-            FreePool(DeviceString);
-            ((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSz[DeviceLength / sizeof(WCHAR)] = 0;
-            ((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSz[DeviceLength / sizeof(WCHAR) + 1] = 0;
-
-            return STATUS_SUCCESS;
+            RtlCopyMemory(Output->MultiSz, DeviceString, DeviceLength);
         }
-        else
-        {
-            /* Just return appropriate size and leave */
-            FreePool(DeviceString);
-            Irp->IoStatus.Information = sizeof(ULONG);
-            return STATUS_BUFFER_OVERFLOW;
-        }
+
+        /* And double-NUL at its end - this is needed in case of
+         * multiple paths which are separated by a single NUL */
+        FreePool(DeviceString);
+        Output->MultiSz[DeviceLength / sizeof(WCHAR)] = UNICODE_NULL;
+        Output->MultiSz[DeviceLength / sizeof(WCHAR) + 1] = UNICODE_NULL;
+
+        return STATUS_SUCCESS;
     }
-
-    /* Fail */
-    return STATUS_NOT_FOUND;
+    else
+    {
+        /* Just return the size needed and leave */
+        FreePool(DeviceString);
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz);
+        return STATUS_BUFFER_OVERFLOW;
+    }
 }
 
 /*
@@ -1491,20 +1466,21 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Validate the entry structure size */
-    if (Target->DeviceNameLength + FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Ensure we can at least return needed size */
-    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Construct string for query */
-    SymbolicName.Length = Target->DeviceNameLength;
-    SymbolicName.MaximumLength = Target->DeviceNameLength + sizeof(UNICODE_NULL);
+    SymbolicName.Length =
+    SymbolicName.MaximumLength = Target->DeviceNameLength;
     SymbolicName.Buffer = Target->DeviceName;
 
     /* Find device with our info */
@@ -1581,19 +1557,19 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
         MountMgrNotifyNameChange(DeviceExtension, &SymbolicName, FALSE);
     }
 
-    /* Get output buffer */
+    /* Get the output buffer */
     Output = (PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Set required size */
     Output->MultiSzLength = Paths->MultiSzLength;
 
     /* Compute total length */
-    OutputLength = Output->MultiSzLength + sizeof(ULONG);
+    OutputLength = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + Output->MultiSzLength;
 
-    /* If it cannot fit, just return need size and quit */
+    /* If it cannot fit, just return the size needed and leave */
     if (OutputLength > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
-        Irp->IoStatus.Information = sizeof(ULONG);
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz);
         FreePool(Paths);
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -1627,7 +1603,8 @@ MountMgrKeepLinksWhenOffline(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     Target = (PMOUNTMGR_TARGET_NAME)Irp->AssociatedIrp.SystemBuffer;
-    if (Target->DeviceNameLength + sizeof(USHORT) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1671,7 +1648,8 @@ MountMgrVolumeArrivalNotification(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     Target = (PMOUNTMGR_TARGET_NAME)Irp->AssociatedIrp.SystemBuffer;
-    if (Target->DeviceNameLength + sizeof(USHORT) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -2722,12 +2700,12 @@ MountMgrDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         case IOCTL_MOUNTMGR_AUTO_DL_ASSIGNMENTS:
+        // NOTE: On Win7+, this is handled during driver re-initialization.
             DeviceExtension->AutomaticDriveLetter = TRUE;
-            Status = STATUS_SUCCESS;
-
             MountMgrAssignDriveLetters(DeviceExtension);
             ReconcileAllDatabasesWithMaster(DeviceExtension);
             WaitForOnlinesToComplete(DeviceExtension);
+            Status = STATUS_SUCCESS;
             break;
 
         case IOCTL_MOUNTMGR_VOLUME_MOUNT_POINT_CREATED:
@@ -2793,9 +2771,6 @@ MountMgrDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             Status = MountMgrSetAutoMount(DeviceExtension, Irp);
             break;
 
-        case IOCTL_MOUNTMGR_DEFINE_UNIX_DRIVE:
-        case IOCTL_MOUNTMGR_QUERY_UNIX_DRIVE:
-            DPRINT1("Winism! Rewrite the caller!\n");
         default:
             Status = STATUS_INVALID_DEVICE_REQUEST;
     }

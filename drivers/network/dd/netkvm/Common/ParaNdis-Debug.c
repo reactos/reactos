@@ -51,25 +51,25 @@ static VOID NTAPI ParaNdis_OnBugCheck(
 );
 static VOID ParaNdis_PrepareBugCheckData();
 
-typedef BOOLEAN (*KeRegisterBugCheckReasonCallbackType) (
+typedef BOOLEAN (NTAPI *KeRegisterBugCheckReasonCallbackType) (
     __out PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
     __in PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
     __in KBUGCHECK_CALLBACK_REASON Reason,
     __in PUCHAR Component
     );
 
-typedef BOOLEAN (*KeDeregisterBugCheckReasonCallbackType) (
+typedef BOOLEAN (NTAPI *KeDeregisterBugCheckReasonCallbackType) (
     __inout PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord
     );
 
-typedef ULONG (*vDbgPrintExType)(
+typedef ULONG (NTAPI *vDbgPrintExType)(
     __in ULONG ComponentId,
     __in ULONG Level,
     __in PCCH Format,
     __in va_list arglist
     );
 
-static ULONG DummyPrintProcedure(
+static ULONG NTAPI DummyPrintProcedure(
     __in ULONG ComponentId,
     __in ULONG Level,
     __in PCCH Format,
@@ -78,7 +78,7 @@ static ULONG DummyPrintProcedure(
 {
     return 0;
 }
-static BOOLEAN KeRegisterBugCheckReasonCallbackDummyProc(
+static BOOLEAN NTAPI KeRegisterBugCheckReasonCallbackDummyProc(
     __out PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
     __in PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
     __in KBUGCHECK_CALLBACK_REASON Reason,
@@ -89,7 +89,7 @@ static BOOLEAN KeRegisterBugCheckReasonCallbackDummyProc(
     return FALSE;
 }
 
-BOOLEAN KeDeregisterBugCheckReasonCallbackDummyProc(
+BOOLEAN NTAPI KeDeregisterBugCheckReasonCallbackDummyProc(
     __inout PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord
     )
 {
@@ -105,7 +105,7 @@ KBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord;
 #if defined(DPFLTR_MASK)
 
 //common case, except Win2K
-static void DebugPrint(const char *fmt, ...)
+static void __cdecl DebugPrint(const char *fmt, ...)
 {
     va_list list;
     va_start(list, fmt);

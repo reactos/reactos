@@ -75,15 +75,15 @@ static void WlanConnect_test(void)
 {
     DWORD ret;
     WLAN_CONNECTION_PARAMETERS pConnectParams;
-    
+
     /* invalid pReserved */
     ret = WlanConnect((HANDLE) -1, &InterfaceGuid, &pConnectParams, (PVOID) 1);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
+
     /* invalid InterfaceGuid */
     ret = WlanConnect((HANDLE) -1, NULL, &pConnectParams, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
+
     /* invalid hClientHandle */
     ret = WlanConnect(NULL, &InterfaceGuid, &pConnectParams, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
@@ -96,11 +96,11 @@ static void WlanConnect_test(void)
 static void WlanDisconnect_test(void)
 {
     DWORD ret;
-    
+
     /* invalid pReserved */
     ret = WlanDisconnect((HANDLE) -1, &InterfaceGuid, (PVOID) 1);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
+
     /* invalid InterfaceGuid */
     ret = WlanDisconnect((HANDLE) -1, NULL, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
@@ -115,11 +115,11 @@ static void WlanScan_test(void)
     DWORD ret;
     DOT11_SSID Ssid;
     WLAN_RAW_DATA RawData;
-    
+
     /* invalid pReserved */
     ret = WlanScan((HANDLE) -1, &InterfaceGuid, &Ssid, &RawData, (PVOID) 1);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
+
     /* invalid InterfaceGuid */
     ret = WlanScan((HANDLE) -1, NULL, &Ssid, &RawData, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
@@ -147,7 +147,7 @@ static void WlanRenameProfile_test(void)
 
     /* invalid strNewProfileName */
     ret = WlanRenameProfile((HANDLE) -1, &InterfaceGuid, L"test", NULL, NULL);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
 }
 
 static void WlanDeleteProfile_test(void)
@@ -196,7 +196,7 @@ static void WlanEnumInterfaces_test(void)
 
     /* invalid pInterfaceList */
     ret = WlanEnumInterfaces((HANDLE) -1, NULL, NULL);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
 }
 
 static void WlanGetInterfaceCapability_test(void)
@@ -211,10 +211,10 @@ static void WlanGetInterfaceCapability_test(void)
     /* invalid InterfaceGuid */
     ret = WlanGetInterfaceCapability((HANDLE) -1, NULL, NULL, &pInterfaceCapability);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
+
     /* invalid pInterfaceCapability */
     ret = WlanGetInterfaceCapability((HANDLE) -1, &InterfaceGuid, NULL, NULL);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
 }
 
 

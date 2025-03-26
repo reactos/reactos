@@ -47,7 +47,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider"
-    IDS_SPI_ABOUT "Spider Solitaire av Gregor Schneider\nÖversätt av Ronny K Svensson\n\nCardLib version 1.0"
+    IDS_SPI_ABOUT "Spider Solitaire av Gregor Schneider; Översätt av Ronny K Svensson\nCardLib version 1.0"
     IDS_SPI_QUIT "Avsluta ditt nuvarande spel?"
     IDS_SPI_WIN "Grattis, du vann!"
     IDS_SPI_DEAL "Ge igen?"

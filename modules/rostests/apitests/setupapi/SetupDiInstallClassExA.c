@@ -105,7 +105,7 @@ static void test_SetupDiInstallClassExA(void)
     {
         RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM", 0, KEY_ALL_ACCESS, &RegHandle);
         del = RegDeleteKeyW(RegHandle, L"CurrentControlSet\\Control\\Class\\{3B409830-5F9D-432A-ABF5-7D2E4E102467}");
-        ok(del == ERROR_SUCCESS, "Expected success \n");
+        ok(del == ERROR_SUCCESS, "Expected success\n");
     }
 
     /* [Version]Signature+Class+ClassGUID;[ClassInstall32.NT]AddReg */
@@ -123,7 +123,7 @@ static void test_SetupDiInstallClassExA(void)
     {
         RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM", 0, KEY_ALL_ACCESS, &RegHandle);
         del = RegDeleteKeyW(RegHandle, L"CurrentControlSet\\Control\\Class\\{3B409830-5F9D-432A-ABF5-7D2E4E102467}");
-        ok(del == ERROR_SUCCESS, "Expected success \n");
+        ok(del == ERROR_SUCCESS, "Expected success\n");
     }
 
     /* [Version]Signature+Class+ClassGUID;[ClassInstall32.NT]AddReg; [SampleClassAddReg];*/
@@ -141,7 +141,7 @@ static void test_SetupDiInstallClassExA(void)
     {
         RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM", 0, KEY_ALL_ACCESS, &RegHandle);
         del = RegDeleteKeyW(RegHandle, L"CurrentControlSet\\Control\\Class\\{3B409830-5F9D-432A-ABF5-7D2E4E102467}");
-        ok(del == ERROR_SUCCESS, "Expected success \n");
+        ok(del == ERROR_SUCCESS, "Expected success\n");
     }
 
     /* [Version]Signature+Class+ClassGUID;[ClassInstall32.NT]AddReg; [SampleClassAddReg]HKR;*/
@@ -159,7 +159,7 @@ static void test_SetupDiInstallClassExA(void)
     {
         RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM", 0, KEY_ALL_ACCESS, &RegHandle);
         del = RegDeleteKeyW(RegHandle, L"CurrentControlSet\\Control\\Class\\{3B409830-5F9D-432A-ABF5-7D2E4E102467}");
-        ok(del == ERROR_SUCCESS, "Expected success \n");
+        ok(del == ERROR_SUCCESS, "Expected success\n");
     }
 
     /*[Version]Signature+Class+ClassGUID;[ClassInstall32.NT]AddReg;[SampleClassAddReg]HKR;[ClassInstall32.NT.Services]*/

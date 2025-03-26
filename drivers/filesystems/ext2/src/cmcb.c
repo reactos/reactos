@@ -19,7 +19,11 @@ extern PEXT2_GLOBAL Ext2Global;
 
 #define CMCB_DEBUG_LEVEL DL_NVR
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2AcquireForLazyWrite (
     IN PVOID    Context,
     IN BOOLEAN  Wait)
@@ -51,7 +55,11 @@ Ext2AcquireForLazyWrite (
     return TRUE;
 }
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2ReleaseFromLazyWrite (IN PVOID Context)
 {
     //
@@ -76,7 +84,11 @@ Ext2ReleaseFromLazyWrite (IN PVOID Context)
     IoSetTopLevelIrp( NULL );
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2AcquireForReadAhead (IN PVOID    Context,
                          IN BOOLEAN  Wait)
 {
@@ -97,7 +109,11 @@ Ext2AcquireForReadAhead (IN PVOID    Context,
     return TRUE;
 }
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2ReleaseFromReadAhead (IN PVOID Context)
 {
     PEXT2_FCB Fcb = (PEXT2_FCB) Context;
@@ -114,7 +130,11 @@ Ext2ReleaseFromReadAhead (IN PVOID Context)
     ExReleaseResourceLite(Fcb->Header.Resource);
 }
 
+#ifdef __REACTOS__
 BOOLEAN NTAPI
+#else
+BOOLEAN
+#endif
 Ext2NoOpAcquire (
     IN PVOID Fcb,
     IN BOOLEAN Wait
@@ -125,7 +145,11 @@ Ext2NoOpAcquire (
     return TRUE;
 }
 
+#ifdef __REACTOS__
 VOID NTAPI
+#else
+VOID
+#endif
 Ext2NoOpRelease (
     IN PVOID Fcb
 )

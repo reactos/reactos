@@ -270,7 +270,7 @@ STDMETHODIMP CVfdShExt::GetCommandString(
 #ifndef __REACTOS__
 	UINT			idCmd,
 #else
-    UINT_PTR		idCmd,
+	UINT_PTR		idCmd,
 #endif
 	UINT			uFlags,
 	UINT			*reserved,
@@ -339,11 +339,16 @@ STDMETHODIMP CVfdShExt::InvokeCommand(
 	DWORD	ret;
 	CMINVOKECOMMANDINFOEX *excmi = (CMINVOKECOMMANDINFOEX *)lpcmi;
 
+#ifdef __REACTOS__
+	unicode = lpcmi->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
+	          (lpcmi->fMask & CMIC_MASK_UNICODE);
+#else
 	if (lpcmi->cbSize >= sizeof(CMINVOKECOMMANDINFOEX) &&
 		(lpcmi->fMask & CMIC_MASK_UNICODE)) {
 
 		unicode = TRUE;
 	}
+#endif
 
 
 	if (!unicode && HIWORD(lpcmi->lpVerb)) {
