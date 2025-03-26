@@ -533,7 +533,7 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
     else if (clsid1 && clsid2)
     {
         if (memcmp(clsid1, clsid2, sizeof(GUID)) == 0)
-            return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+            return SHELL32_CompareChildren(this, lParam & SHCIDS_BITMASK, pidl1, pidl2);
 
         return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
     }
