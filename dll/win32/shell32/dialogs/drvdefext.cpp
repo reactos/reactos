@@ -553,8 +553,13 @@ CDrvDefExt::GeneralPageProc(
                     WCHAR wszCmd[MAX_PATH];
 
                     StringCbPrintfW(wszCmd, sizeof(wszCmd), wszBuf, pDrvDefExt->m_wszDrive[0]);
+                    WCHAR* wszArgs = PathGetArgsW(wszCmd);
+                    if (wszArgs && *wszArgs && wszArgs != wszCmd)
+                        wszArgs[-1] = UNICODE_NULL;
+                    else
+                        wszArgs = NULL;
 
-                    if (ShellExecuteW(hwndDlg, NULL, wszCmd, NULL, NULL, SW_SHOW) <= (HINSTANCE)32)
+                    if (ShellExecuteW(hwndDlg, NULL, wszCmd, wszArgs, NULL, SW_SHOW) <= (HINSTANCE)32)
                         ERR("Failed to create cleanup process %ls\n", wszCmd);
                 }
             }
