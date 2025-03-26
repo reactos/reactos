@@ -11,7 +11,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
 const GUID CLSID_CFontExt = { 0xbd84b380, 0x8ca2, 0x1069, { 0xab, 0x1d, 0x08, 0x00, 0x09, 0x48, 0xf5, 0x34 } };
 
-
 class CFontExtModule : public CComModule
 {
 public:
@@ -33,10 +32,8 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_CFontExt, CFontExt)
 END_OBJECT_MAP()
 
-
 LONG g_ModuleRefCnt;
 CFontExtModule gModule;
-
 
 STDAPI DllCanUnloadNow()
 {
@@ -49,7 +46,6 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     return gModule.DllGetClassObject(rclsid, riid, ppv);
 }
-
 
 STDAPI DllRegisterServer()
 {
@@ -102,7 +98,6 @@ STDAPI DllUnregisterServer()
 {
     return gModule.DllUnregisterServer(FALSE);
 }
-
 
 EXTERN_C
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)

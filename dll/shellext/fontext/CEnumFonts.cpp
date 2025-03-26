@@ -9,8 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-
-
 class CEnumFonts :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumIDList
@@ -26,7 +24,7 @@ public:
     {
     }
 
-    STDMETHODIMP Initialize(CFontExt* folder, DWORD flags)
+    STDMETHOD(Initialize)(CFontExt* folder, DWORD flags)
     {
         m_dwFlags = flags;
         m_Index = 0;
@@ -34,7 +32,7 @@ public:
     }
 
     // *** IEnumIDList methods ***
-    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched)
+    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
     {
         if (!rgelt || (!pceltFetched && celt != 1))
             return E_POINTER;
@@ -69,21 +67,23 @@ public:
             *pceltFetched = Fetched;
         return hr;
     }
-    STDMETHODIMP Skip(ULONG celt)
+
+    STDMETHODIMP Skip(ULONG celt) override
     {
         m_Index += celt;
         return S_OK;
     }
-    STDMETHODIMP Reset()
+
+    STDMETHODIMP Reset() override
     {
         m_Index = 0;
         return S_OK;
     }
-    STDMETHODIMP Clone(IEnumIDList **ppenum)
+
+    STDMETHODIMP Clone(IEnumIDList **ppenum) override
     {
         return E_NOTIMPL;
     }
-
 
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumFonts)
@@ -94,9 +94,7 @@ public:
     END_COM_MAP()
 };
 
-
 HRESULT _CEnumFonts_CreateInstance(CFontExt* zip, DWORD flags, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CEnumFonts>(zip, flags, riid, ppvOut);
 }
-

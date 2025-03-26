@@ -9,7 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-
 const char* DFM_TO_STR(UINT uMsg)
 {
     switch(uMsg)
@@ -30,7 +29,6 @@ const char* DFM_TO_STR(UINT uMsg)
     default: return "";
     }
 }
-
 
 static void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry)
 {

@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt implementation
  * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
- *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -487,7 +487,6 @@ STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-
 // *** IPersist methods ***
 STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
 {
@@ -533,70 +532,17 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         return E_FAIL;
     }
 
-    BOOL bOK = TRUE;
-    CAtlArray<CStringW> FontPaths;
+    CAtlArray<PCUIDLIST_RELATIVE> apidl;
     for (UINT n = 0; n < cida->cidl; ++n)
     {
         PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, n);
         if (!pidlRelative)
-            continue;
+            return E_FAIL;
 
-        PIDLIST_ABSOLUTE pidl = ILCombine(pidlParent, pidlRelative);
-        if (!pidl)
-        {
-            ERR("ILCombine failed\n");
-            bOK = FALSE;
-            break;
-        }
-
-        WCHAR szPath[MAX_PATH];
-        BOOL ret = SHGetPathFromIDListW(pidl, szPath);
-        ILFree(pidl);
-
-        if (!ret)
-        {
-            ERR("SHGetPathFromIDListW failed\n");
-            bOK = FALSE;
-            break;
-        }
-
-        if (PathIsDirectoryW(szPath))
-        {
-            ERR("PathIsDirectory\n");
-            bOK = FALSE;
-            break;
-        }
-
-        LPCWSTR pchDotExt = PathFindExtensionW(szPath);
-        if (!IsFontDotExt(pchDotExt))
-        {
-            ERR("'%S' is not supported\n", pchDotExt);
-            bOK = FALSE;
-            break;
-        }
-
-        FontPaths.Add(szPath);
+        apidl.Add(pidlRelative);
     }
 
-    if (!bOK)
-        return E_FAIL;
-
-    CRegKey keyFonts;
-    if (keyFonts.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) != ERROR_SUCCESS)
-    {
-        ERR("keyFonts.Open failed\n");
-        return E_FAIL;
-    }
-
-    for (size_t iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
-    {
-        HRESULT hr = DoInstallFontFile(FontPaths[iItem], g_FontCache->FontPath(), keyFonts.m_hKey);
-        if (FAILED_UNEXPECTEDLY(hr))
-        {
-            bOK = FALSE;
-            break;
-        }
-    }
+    DoInstallFontFiles(pidlParent, cida->cidl, &apidl[0]);
 
     // Invalidate our cache
     g_FontCache->Read();
@@ -609,10 +555,52 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 
     // TODO: Show message
 
-    return bOK ? S_OK : E_FAIL;
+    return S_OK;
 }
 
-HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts)
+HRESULT
+DoInstallFontFiles(
+    _In_ PCUIDLIST_ABSOLUTE pidlParent,
+    _In_ UINT cidl,
+    _In_ PCUITEMID_CHILD_ARRAY apidl)
+{
+    CAtlArray<CStringW> FontPaths;
+    for (UINT n = 0; n < cidl; ++n)
+    {
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
+        pidl.Attach(ILCombine(pidlParent, apidl[n]));
+        if (!pidl)
+            return E_OUTOFMEMORY;
+
+        WCHAR szPath[MAX_PATH];
+        if (!SHGetPathFromIDListW(pidl, szPath))
+            return E_FAIL;
+
+        FontPaths.Add(szPath);
+    }
+
+    CRegKey keyFonts;
+    if (keyFonts.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) != ERROR_SUCCESS)
+    {
+        ERR("keyFonts.Open failed\n");
+        return E_FAIL;
+    }
+
+    for (SIZE_T iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
+    {
+        HRESULT hr = DoInstallSingleFontFile(FontPaths[iItem], g_FontCache->FontPath(), keyFonts);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    return S_OK;
+}
+
+HRESULT
+DoInstallSingleFontFile(
+    _In_ PCWSTR pszFontPath,
+    _In_ PCWSTR pszFontsDir,
+    _In_ HKEY hkeyFonts)
 {
     WCHAR szDestFile[MAX_PATH];
 
@@ -656,13 +644,13 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
         return E_FAIL;
     }
 
-    AddFontResourceW(szDestFile);
-
-    return S_OK;
+    return AddFontResourceW(szDestFile) ? S_OK : E_FAIL;
 }
 
 HRESULT
-CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName)
+DoGetFontTitle(
+    _In_ LPCWSTR pszFontPath,
+    _Out_ CStringW& strFontName)
 {
     DWORD cbInfo = 0;
     BOOL ret = GetFontResourceInfoW(pszFontPath, &cbInfo, NULL, 1);
