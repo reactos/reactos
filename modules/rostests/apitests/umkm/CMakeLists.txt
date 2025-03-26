@@ -2,6 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 list(APPEND SOURCE
+    Exceptions.c
     SystemCall.c
     precomp.h)
 
