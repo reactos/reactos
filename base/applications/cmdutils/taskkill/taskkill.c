@@ -438,7 +438,7 @@ static void terminate_process_tree(DWORD ppid)
                     continue;
                 }
 
-                if (!TerminateProcess(process, 0))
+                if (!TerminateProcess(process, 1))
                 {
                     taskkill_message_printfW(STRING_TERM_CHILD_FAILED, pe.th32ProcessID, ppid);
                     CloseHandle(process);
@@ -551,7 +551,7 @@ static int terminate_processes(void)
                 continue;
             }
 
-            if (!TerminateProcess(process, 0))
+            if (!TerminateProcess(process, 1))
             {
                 taskkill_message_printfW(STRING_TERMINATE_FAILED, process_name);
                 status_code = 1;
