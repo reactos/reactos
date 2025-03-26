@@ -25,7 +25,10 @@
 #include <psapi.h>
 #include <tlhelp32.h>
 #include <wine/debug.h>
-#include <wine/unicode.h>
+
+#ifdef __REACTOS__
+#define wcsicmp _wcsicmp
+#endif
 
 #include "taskkill.h"
 
@@ -326,7 +329,7 @@ static int send_close_messages(void)
         /* Determine whether the string is not numeric. */
         while (*p)
         {
-            if (!isdigitW(*p++))
+            if (!iswdigit(*p++))
             {
                 is_numeric = FALSE;
                 break;
@@ -336,10 +339,11 @@ static int send_close_messages(void)
         // Find processes to kill
         if (is_numeric)
         {
+            DWORD pid = wcstol(task_list[i], NULL, 10);
             WCHAR ps_name[MAX_PATH] = { 0 };
-            if (get_process_name_from_pid(atoiW(task_list[i]), ps_name, MAX_PATH))
+            if (get_process_name_from_pid(pid, ps_name, MAX_PATH))
             {
-                pkill_list[pkill_size] = atoiW(task_list[i]);
+                pkill_list[pkill_size] = pid;
                 pkill_size++;
             }
         }
@@ -349,7 +353,7 @@ static int send_close_messages(void)
             {
                 WCHAR process_name[MAX_PATH];
                 if (get_process_name_from_pid(pid_list[index], process_name, MAX_PATH) &&
-                    !strcmpiW(process_name, task_list[i]))
+                    !wcsicmp(process_name, task_list[i]))
                 {
                     pkill_list[pkill_size] = pid_list[index];
                     pkill_size++;
@@ -489,7 +493,7 @@ static int terminate_processes(void)
         /* Determine whether the string is not numeric. */
         while (*p)
         {
-            if (!isdigitW(*p++))
+            if (!iswdigit(*p++))
             {
                 is_numeric = FALSE;
                 break;
@@ -499,10 +503,11 @@ static int terminate_processes(void)
         // Find processes to kill
         if (is_numeric)
         {
+            DWORD pid = wcstol(task_list[i], NULL, 10);
             WCHAR ps_name[MAX_PATH] = { 0 };
-            if (get_process_name_from_pid(atoiW(task_list[i]), ps_name, MAX_PATH))
+            if (get_process_name_from_pid(pid, ps_name, MAX_PATH))
             {
-                pkill_list[pkill_size] = atoiW(task_list[i]);
+                pkill_list[pkill_size] = pid;
                 pkill_size++;
             }
         }
@@ -512,7 +517,7 @@ static int terminate_processes(void)
             {
                 WCHAR process_name[MAX_PATH];
                 if (get_process_name_from_pid(pid_list[index], process_name, MAX_PATH) &&
-                    !strcmpiW(process_name, task_list[i]))
+                    !wcsicmp(process_name, task_list[i]))
                 {
                     pkill_list[pkill_size] = pid_list[index];
                     pkill_size++;
@@ -623,7 +628,7 @@ static int get_argument_type(WCHAR* argument)
 
     for (i = 0; i < _countof(opList); i++)
     {
-        if (!strcmpiW(opList[i], argument))
+        if (!wcsicmp(opList[i], argument))
         {
             return i;
         }
@@ -773,7 +778,7 @@ static BOOL process_arguments(int argc, WCHAR *argv[])
         if (argc == 2)
         {
             argdata = argv[1];
-            if ((*argdata == '/' || *argdata == '-') && !strcmpW(opHelp, argdata + 1))
+            if ((*argdata == '/' || *argdata == '-') && !lstrcmpW(opHelp, argdata + 1))
             {
                 taskkill_message(STRING_USAGE);
                 exit(0);
@@ -789,14 +794,14 @@ static BOOL process_arguments(int argc, WCHAR *argv[])
                 goto invalid;
             argdata++;
 
-            if (!strcmpiW(opTerminateChildren, argdata))
+            if (!wcsicmp(opTerminateChildren, argdata))
                 kill_child_processes = TRUE;
-            else if (!strcmpiW(opForceTerminate, argdata))
+            else if (!wcsicmp(opForceTerminate, argdata))
                 force_termination = TRUE;
             /* Options /IM and /PID appear to behave identically, except for
              * the fact that they cannot be specified at the same time. */
-            else if ((got_im = !strcmpiW(opImage, argdata)) ||
-                     (got_pid = !strcmpiW(opPID, argdata)))
+            else if ((got_im = !wcsicmp(opImage, argdata)) ||
+                     (got_pid = !wcsicmp(opPID, argdata)))
             {
                 if (!argv[i + 1])
                 {
