@@ -517,7 +517,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     *pdwEffect = DROPEFFECT_NONE;
 
     CDataObjectHIDA cida(pDataObj);
-    if (!cida)
+    if (!cida || cida->cidl <= 0)
         return E_UNEXPECTED;
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
