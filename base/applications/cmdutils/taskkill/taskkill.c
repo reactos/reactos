@@ -79,13 +79,13 @@ static int taskkill_vprintfW(const WCHAR *msg, va_list va_args)
          */
         len = WideCharToMultiByte(GetOEMCP(), 0, msg_buffer, wlen,
             NULL, 0, NULL, NULL);
-        msgA = HeapAlloc(GetProcessHeap(), 0, len);
+        msgA = malloc(len);
         if (!msgA)
             return 0;
 
         WideCharToMultiByte(GetOEMCP(), 0, msg_buffer, wlen, msgA, len, NULL, NULL);
         WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), msgA, len, &count, FALSE);
-        HeapFree(GetProcessHeap(), 0, msgA);
+        free(msgA);
     }
 
     return count;
@@ -148,7 +148,7 @@ static DWORD *enumerate_processes(DWORD *list_count)
 {
     DWORD *pid_list, alloc_bytes = 1024 * sizeof(*pid_list), needed_bytes;
 
-    pid_list = HeapAlloc(GetProcessHeap(), 0, alloc_bytes);
+    pid_list = malloc(alloc_bytes);
     if (!pid_list)
         return NULL;
 
@@ -158,7 +158,7 @@ static DWORD *enumerate_processes(DWORD *list_count)
 
         if (!EnumProcesses(pid_list, alloc_bytes, &needed_bytes))
         {
-            HeapFree(GetProcessHeap(), 0, pid_list);
+            free(pid_list);
             return NULL;
         }
 
@@ -171,10 +171,10 @@ static DWORD *enumerate_processes(DWORD *list_count)
             break;
 
         alloc_bytes *= 2;
-        realloc_list = HeapReAlloc(GetProcessHeap(), 0, pid_list, alloc_bytes);
+        realloc_list = realloc(pid_list, alloc_bytes);
         if (!realloc_list)
         {
-            HeapFree(GetProcessHeap(), 0, pid_list);
+            free(pid_list);
             return NULL;
         }
         pid_list = realloc_list;
@@ -304,7 +304,7 @@ static int send_close_messages(void)
         return 1;
     }
 
-    pkill_list = HeapAlloc(GetProcessHeap(), 0, pid_list_size * sizeof(DWORD));
+    pkill_list = malloc(pid_list_size * sizeof(DWORD));
     if (!pkill_list)
         return 1;
 
@@ -395,8 +395,8 @@ static int send_close_messages(void)
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, pkill_list);
-    HeapFree(GetProcessHeap(), 0, pid_list);
+    free(pkill_list);
+    free(pid_list);
     return status_code;
 }
 
@@ -468,7 +468,7 @@ static int terminate_processes(void)
         return 1;
     }
 
-    pkill_list = HeapAlloc(GetProcessHeap(), 0, pid_list_size * sizeof(DWORD));
+    pkill_list = malloc(pid_list_size * sizeof(DWORD));
     if (!pkill_list)
         return 1;
 
@@ -571,8 +571,8 @@ static int terminate_processes(void)
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, pkill_list);
-    HeapFree(GetProcessHeap(), 0, pid_list);
+    free(pkill_list);
+    free(pid_list);
     return status_code;
 }
 
@@ -582,8 +582,7 @@ static BOOL add_to_task_list(WCHAR *name)
 
     if (!task_list)
     {
-        task_list = HeapAlloc(GetProcessHeap(), 0,
-                                   list_size * sizeof(*task_list));
+        task_list = malloc(list_size * sizeof(*task_list));
         if (!task_list)
             return FALSE;
     }
@@ -592,8 +591,7 @@ static BOOL add_to_task_list(WCHAR *name)
         void *realloc_list;
 
         list_size *= 2;
-        realloc_list = HeapReAlloc(GetProcessHeap(), 0, task_list,
-                                   list_size * sizeof(*task_list));
+        realloc_list = realloc(task_list, list_size * sizeof(*task_list));
         if (!realloc_list)
             return FALSE;
 
@@ -835,7 +833,7 @@ int wmain(int argc, WCHAR *argv[])
 
     if (!process_arguments(argc, argv))
     {
-        HeapFree(GetProcessHeap(), 0, task_list);
+        free(task_list);
         return 1;
     }
 
@@ -844,6 +842,6 @@ int wmain(int argc, WCHAR *argv[])
     else
         status_code = send_close_messages();
 
-    HeapFree(GetProcessHeap(), 0, task_list);
+    free(task_list);
     return status_code;
 }
