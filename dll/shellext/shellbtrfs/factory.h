@@ -40,14 +40,15 @@ public:
     }
 
     // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppObj) override;
 
-    HRESULT __stdcall QueryInterface(REFIID riid, void **ppObj);
-
-    ULONG __stdcall AddRef() {
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
         return InterlockedIncrement(&refcount);
     }
 
-    ULONG __stdcall Release() {
+    STDMETHODIMP_(ULONG) Release() override
+    {
         LONG rc = InterlockedDecrement(&refcount);
 
         if (rc == 0)
@@ -58,8 +59,8 @@ public:
 
     // IClassFactory
 
-    virtual HRESULT __stdcall CreateInstance(IUnknown* pUnknownOuter, const IID& iid, void** ppv);
-    virtual HRESULT __stdcall LockServer(BOOL bLock);
+    STDMETHODIMP CreateInstance(IUnknown* pUnknownOuter, const IID& iid, void** ppv) override;
+    STDMETHODIMP LockServer(BOOL bLock) override;
 
     factory_type type;
 

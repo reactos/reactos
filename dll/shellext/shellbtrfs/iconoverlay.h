@@ -34,13 +34,15 @@ public:
 
     // IUnknown
 
-    HRESULT __stdcall QueryInterface(REFIID riid, void **ppObj);
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppObj) override;
 
-    ULONG __stdcall AddRef() {
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
         return InterlockedIncrement(&refcount);
     }
 
-    ULONG __stdcall Release() {
+    STDMETHODIMP_(ULONG) Release() override
+    {
         LONG rc = InterlockedDecrement(&refcount);
 
         if (rc == 0)
@@ -51,9 +53,9 @@ public:
 
     // IShellIconOverlayIdentifier
 
-    virtual HRESULT __stdcall GetOverlayInfo(PWSTR pwszIconFile, int cchMax, int* pIndex, DWORD* pdwFlags) noexcept;
-    virtual HRESULT __stdcall GetPriority(int *pPriority) noexcept;
-    virtual HRESULT __stdcall IsMemberOf(PCWSTR pwszPath, DWORD dwAttrib) noexcept;
+    STDMETHODIMP GetOverlayInfo(PWSTR pwszIconFile, int cchMax, int* pIndex, DWORD* pdwFlags) noexcept override;
+    STDMETHODIMP GetPriority(int *pPriority) noexcept override;
+    STDMETHODIMP IsMemberOf(PCWSTR pwszPath, DWORD dwAttrib) noexcept override;
 
 private:
     LONG refcount;

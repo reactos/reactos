@@ -60,15 +60,16 @@ public:
 
     // IUnknown
 
-    HRESULT __stdcall QueryInterface(REFIID riid, void **ppObj);
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppObj) override;
 
-    ULONG __stdcall AddRef() {
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
         return InterlockedIncrement(&refcount);
     }
 
-    ULONG __stdcall Release() {
+    STDMETHODIMP_(ULONG) Release() override
+    {
         LONG rc = InterlockedDecrement(&refcount);
-
         if (rc == 0)
             delete this;
 
@@ -76,13 +77,12 @@ public:
     }
 
     // IShellExtInit
-
-    virtual HRESULT __stdcall Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj, HKEY hkeyProgID);
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj, HKEY hkeyProgID) override;
 
     // IShellPropSheetExt
-
-    virtual HRESULT __stdcall AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-    virtual HRESULT __stdcall ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
+    STDMETHODIMP AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) override;
+    STDMETHODIMP ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage,
+                             LPARAM lParam) override;
 
     void FormatUsage(HWND hwndDlg, wstring& s, btrfs_usage* usage);
     void RefreshUsage(HWND hwndDlg);

@@ -70,7 +70,8 @@ typedef struct _FILE_FS_SIZE_INFORMATION {
 #endif
 #endif
 
-HRESULT __stdcall BtrfsPropSheet::QueryInterface(REFIID riid, void **ppObj) {
+STDMETHODIMP BtrfsPropSheet::QueryInterface(REFIID riid, void **ppObj)
+{
     if (riid == IID_IUnknown || riid == IID_IShellPropSheetExt) {
         *ppObj = static_cast<IShellPropSheetExt*>(this);
         AddRef();
@@ -1314,7 +1315,8 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     return false;
 }
 
-HRESULT __stdcall BtrfsPropSheet::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) {
+STDMETHODIMP BtrfsPropSheet::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
+{
     try {
         PROPSHEETPAGEW psp;
         HPROPSHEETPAGE hPage;
@@ -1357,7 +1359,9 @@ HRESULT __stdcall BtrfsPropSheet::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPAR
     return E_FAIL;
 }
 
-HRESULT __stdcall BtrfsPropSheet::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam) {
+STDMETHODIMP
+BtrfsPropSheet::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam)
+{
     return S_OK;
 }
 

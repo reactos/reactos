@@ -46,13 +46,15 @@ public:
 
     // IUnknown
 
-    HRESULT __stdcall QueryInterface(REFIID riid, void **ppObj);
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppObj) override;
 
-    ULONG __stdcall AddRef() {
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
         return InterlockedIncrement(&refcount);
     }
 
-    ULONG __stdcall Release() {
+    STDMETHODIMP_(ULONG) Release() override
+    {
         LONG rc = InterlockedDecrement(&refcount);
 
         if (rc == 0)
@@ -63,13 +65,15 @@ public:
 
     // IShellExtInit
 
-    virtual HRESULT __stdcall Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj, HKEY hkeyProgID);
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj,
+                            HKEY hkeyProgID) override;
 
     // IContextMenu
-
-    virtual HRESULT __stdcall QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT __stdcall InvokeCommand(LPCMINVOKECOMMANDINFO pici);
-    virtual HRESULT __stdcall GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName, UINT cchMax);
+    STDMETHODIMP QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst,
+                                  UINT idCmdLast, UINT uFlags) override;
+    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO pici) override;
+    STDMETHODIMP GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pwReserved,
+                                  LPSTR pszName, UINT cchMax) override;
 
 private:
     LONG refcount;

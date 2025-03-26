@@ -23,7 +23,8 @@
 #include "propsheet.h"
 #include "volpropsheet.h"
 
-HRESULT __stdcall Factory::QueryInterface(const IID& iid, void** ppv) {
+STDMETHODIMP Factory::QueryInterface(const IID& iid, void** ppv)
+{
     if (iid == IID_IUnknown || iid == IID_IClassFactory) {
         *ppv = static_cast<IClassFactory*>(this);
     } else {
@@ -36,11 +37,13 @@ HRESULT __stdcall Factory::QueryInterface(const IID& iid, void** ppv) {
     return S_OK;
 }
 
-HRESULT __stdcall Factory::LockServer(BOOL bLock) {
+STDMETHODIMP Factory::LockServer(BOOL bLock)
+{
     return E_NOTIMPL;
 }
 
-HRESULT __stdcall Factory::CreateInstance(IUnknown* pUnknownOuter, const IID& iid, void** ppv) {
+STDMETHODIMP Factory::CreateInstance(IUnknown* pUnknownOuter, const IID& iid, void** ppv)
+{
     if (pUnknownOuter)
         return CLASS_E_NOAGGREGATION;
 

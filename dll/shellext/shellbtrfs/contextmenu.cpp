@@ -67,7 +67,7 @@ static void path_remove_file(wstring& path);
 
 // FIXME - don't assume subvol's top inode is 0x100
 
-HRESULT __stdcall BtrfsContextMenu::QueryInterface(REFIID riid, void **ppObj) {
+STDMETHODIMP BtrfsContextMenu::QueryInterface(REFIID riid, void **ppObj) {
     if (riid == IID_IUnknown || riid == IID_IContextMenu) {
         *ppObj = static_cast<IContextMenu*>(this);
         AddRef();
@@ -82,7 +82,8 @@ HRESULT __stdcall BtrfsContextMenu::QueryInterface(REFIID riid, void **ppObj) {
     return E_NOINTERFACE;
 }
 
-HRESULT __stdcall BtrfsContextMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj, HKEY hkeyProgID) {
+STDMETHODIMP BtrfsContextMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj, HKEY hkeyProgID)
+{
     IO_STATUS_BLOCK iosb;
     btrfs_get_file_ids bgfi;
     NTSTATUS Status;
@@ -336,7 +337,10 @@ void BtrfsContextMenu::get_uac_icon() {
     }
 }
 
-HRESULT __stdcall BtrfsContextMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) {
+STDMETHODIMP
+BtrfsContextMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast,
+                                   UINT uFlags)
+{
     wstring str;
     ULONG entries = 0;
 
@@ -951,7 +955,8 @@ void BtrfsContextMenu::reflink_copy(HWND hwnd, const WCHAR* fn, const WCHAR* dir
     }
 }
 
-HRESULT __stdcall BtrfsContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO picia) {
+STDMETHODIMP BtrfsContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO picia)
+{
     LPCMINVOKECOMMANDINFOEX pici = (LPCMINVOKECOMMANDINFOEX)picia;
 
     try {
@@ -1166,7 +1171,10 @@ HRESULT __stdcall BtrfsContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO picia) {
     return E_FAIL;
 }
 
-HRESULT __stdcall BtrfsContextMenu::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName, UINT cchMax) {
+STDMETHODIMP
+BtrfsContextMenu::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName,
+                                   UINT cchMax)
+{
     if (ignore)
         return E_INVALIDARG;
 
