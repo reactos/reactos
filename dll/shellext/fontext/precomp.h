@@ -1,6 +1,11 @@
-#ifndef FONTEXT_PRECOMP_H
-#define FONTEXT_PRECOMP_H
+/*
+ * PROJECT:     ReactOS Font Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Font folder shell extension
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen <mark.jansen@reactos.org>
+ */
 
+#pragma once
 
 #define WIN32_NO_STATUS
 #define COM_NO_WINDOWS_H
@@ -50,4 +55,20 @@ inline BOOL IsFontDotExt(LPCWSTR pchDotExt)
     return FALSE;
 }
 
-#endif /* FONTEXT_PRECOMP_H */
+HRESULT
+InstallFontFiles(
+    _Out_ CStringW& strMessage,
+    _In_ PCUIDLIST_ABSOLUTE pidlParent,
+    _In_ UINT cidl,
+    _In_ PCUITEMID_CHILD_ARRAY apidl);
+
+HRESULT
+DoInstallFontFile(
+    _Out_ CStringW& strMsg,
+    _In_ PCWSTR pszFontPath,
+    _In_ PCWSTR pszFontsDir,
+    _In_ HKEY hkeyFonts);
+
+HRESULT DoGetFontTitle(
+    _In_ PCWSTR pszFontPath,
+    _Out_ CStringW& strFontName);

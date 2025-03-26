@@ -7,7 +7,6 @@
 
 #pragma once
 
-
 class CFontInfo
 {
 private:
@@ -33,7 +32,6 @@ public:
     const FILETIME& FileWriteTime();
     DWORD FileAttributes();
 };
-
 
 class CFontCache
 {
@@ -61,7 +59,4 @@ public:
     friend class CFontExtModule;
 };
 
-
 extern CFontCache* g_FontCache;
-
-

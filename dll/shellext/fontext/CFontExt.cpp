@@ -3,11 +3,10 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt implementation
  * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
- *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
-#include "undocgdi.h" // for GetFontResourceInfoW
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
@@ -40,7 +39,6 @@ static FolderViewColumns g_ColumnDefs[] =
     { IDS_COL_MODIFIED,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT,  15, LVCFMT_LEFT },
     { IDS_COL_ATTR,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   12, LVCFMT_RIGHT },
 };
-
 
 // Helper functions to translate a guid to a readable name
 bool GetInterfaceName(const WCHAR* InterfaceString, WCHAR* buf, size_t size)
@@ -78,7 +76,6 @@ WCHAR* g2s(REFCLSID iid)
 
     return buf[idx];
 }
-
 
 CFontExt::CFontExt()
 {
@@ -365,7 +362,6 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     return S_OK;
 }
 
-
 STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     if (riid == IID_IContextMenu ||
@@ -456,7 +452,6 @@ STDMETHODIMP CFontExt::GetCurFolder(LPITEMIDLIST *ppidl)
     return E_POINTER;
 }
 
-
 // *** IPersistFolder methods ***
 STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
 {
@@ -486,7 +481,6 @@ STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
 
     return S_OK;
 }
-
 
 // *** IPersist methods ***
 STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
@@ -523,7 +517,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     *pdwEffect = DROPEFFECT_NONE;
 
     CDataObjectHIDA cida(pDataObj);
-    if (!cida)
+    if (!cida || cida->cidl <= 0)
         return E_UNEXPECTED;
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
@@ -533,69 +527,21 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         return E_FAIL;
     }
 
-    BOOL bOK = TRUE;
-    CAtlArray<CStringW> FontPaths;
+    CAtlArray<PCUIDLIST_RELATIVE> apidl;
     for (UINT n = 0; n < cida->cidl; ++n)
     {
         PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, n);
         if (!pidlRelative)
-            continue;
+            return E_FAIL;
 
-        PIDLIST_ABSOLUTE pidl = ILCombine(pidlParent, pidlRelative);
-        if (!pidl)
-        {
-            ERR("ILCombine failed\n");
-            bOK = FALSE;
-            break;
-        }
-
-        WCHAR szPath[MAX_PATH];
-        BOOL ret = SHGetPathFromIDListW(pidl, szPath);
-        ILFree(pidl);
-
-        if (!ret)
-        {
-            ERR("SHGetPathFromIDListW failed\n");
-            bOK = FALSE;
-            break;
-        }
-
-        if (PathIsDirectoryW(szPath))
-        {
-            ERR("PathIsDirectory\n");
-            bOK = FALSE;
-            break;
-        }
-
-        LPCWSTR pchDotExt = PathFindExtensionW(szPath);
-        if (!IsFontDotExt(pchDotExt))
-        {
-            ERR("'%S' is not supported\n", pchDotExt);
-            bOK = FALSE;
-            break;
-        }
-
-        FontPaths.Add(szPath);
+        apidl.Add(pidlRelative);
     }
 
-    if (!bOK)
-        return E_FAIL;
-
-    CRegKey keyFonts;
-    if (keyFonts.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) != ERROR_SUCCESS)
+    CStringW strMessage;
+    if (InstallFontFiles(strMessage, pidlParent, cida->cidl, &apidl[0]) != S_OK)
     {
-        ERR("keyFonts.Open failed\n");
+        // TODO: Show message
         return E_FAIL;
-    }
-
-    for (size_t iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
-    {
-        HRESULT hr = DoInstallFontFile(FontPaths[iItem], g_FontCache->FontPath(), keyFonts.m_hKey);
-        if (FAILED_UNEXPECTEDLY(hr))
-        {
-            bOK = FALSE;
-            break;
-        }
     }
 
     // Invalidate our cache
@@ -609,79 +555,5 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 
     // TODO: Show message
 
-    return bOK ? S_OK : E_FAIL;
-}
-
-HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts)
-{
-    WCHAR szDestFile[MAX_PATH];
-
-    // Add this font to the font list, so we can query the name
-    if (!AddFontResourceW(pszFontPath))
-    {
-        ERR("AddFontResourceW('%S') failed\n", pszFontPath);
-        DeleteFileW(szDestFile);
-        return E_FAIL;
-    }
-
-    CStringW strFontName;
-    HRESULT hr = DoGetFontTitle(pszFontPath, strFontName);
-
-    // We got the name, remove it again
-    RemoveFontResourceW(pszFontPath);
-
-    if (!SUCCEEDED(hr))
-    {
-        ERR("DoGetFontTitle failed (err=0x%x)!\n", hr);
-        return hr;
-    }
-
-    StringCchCopyW(szDestFile, sizeof(szDestFile), pszFontsDir);
-
-    LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
-    PathAppendW(szDestFile, pszFileTitle);
-    if (!CopyFileW(pszFontPath, szDestFile, FALSE))
-    {
-        ERR("CopyFileW('%S', '%S') failed\n", pszFontPath, szDestFile);
-        return E_FAIL;
-    }
-
-    DWORD cbData = (wcslen(pszFileTitle) + 1) * sizeof(WCHAR);
-    LONG nError = RegSetValueExW(hkeyFonts, strFontName, 0, REG_SZ,
-                                 (const BYTE *)pszFileTitle, cbData);
-    if (nError)
-    {
-        ERR("RegSetValueExW failed with %ld\n", nError);
-        DeleteFileW(szDestFile);
-        return E_FAIL;
-    }
-
-    AddFontResourceW(szDestFile);
-
     return S_OK;
-}
-
-HRESULT
-CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName)
-{
-    DWORD cbInfo = 0;
-    BOOL ret = GetFontResourceInfoW(pszFontPath, &cbInfo, NULL, 1);
-    if (!ret || !cbInfo)
-    {
-        ERR("GetFontResourceInfoW failed (err: %u)\n", GetLastError());
-        return E_FAIL;
-    }
-
-    LPWSTR pszBuffer = strFontName.GetBuffer(cbInfo / sizeof(WCHAR));
-    ret = GetFontResourceInfoW(pszFontPath, &cbInfo, pszBuffer, 1);
-    DWORD dwErr = GetLastError();;
-    strFontName.ReleaseBuffer();
-    if (ret)
-    {
-        TRACE("pszFontName: %S\n", (LPCWSTR)strFontName);
-        return S_OK;
-    }
-
-    ERR("GetFontResourceInfoW failed (err: %u)\n", dwErr);
-    return E_FAIL;
 }

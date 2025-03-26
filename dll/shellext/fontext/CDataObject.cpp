@@ -9,7 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-
 #if 0
 static inline void DumpDataObjectFormats(IDataObject* pObject)
 {
@@ -33,7 +32,6 @@ static inline void DumpDataObjectFormats(IDataObject* pObject)
     }
 }
 #endif
-
 
 HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
                                     REFIID riid, LPVOID* ppvOut)
@@ -99,4 +97,3 @@ HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEM
 
     return hr;
 }
-

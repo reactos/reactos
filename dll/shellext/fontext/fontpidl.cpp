@@ -28,7 +28,6 @@ LPITEMIDLIST _ILCreate(LPCWSTR lpString, ULONG Index)
     return (LPITEMIDLIST)pidl;
 }
 
-
 const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl)
 {
     const FontPidlEntry* fontEntry = (const FontPidlEntry*)pidl;
