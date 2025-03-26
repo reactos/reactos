@@ -12,6 +12,7 @@
 #include <ntoskrnl.h>
 #include <x86x64/Cpuid.h>
 #include <x86x64/Msr.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -358,9 +359,9 @@ KiReportCpuFeatures(IN PKPRCB Prcb)
         CpuFeatures = CpuInfo.Edx;
     }
 
-    DPRINT1("Supported CPU features: ");
+    DPRINT1("Supported CPU features:");
 
-#define print_kf_bit(kf_value) if (Prcb->FeatureBits & kf_value) DbgPrint(#kf_value " ")
+#define print_kf_bit(kf_value) if (Prcb->FeatureBits & kf_value) DbgPrint(" " #kf_value)
     print_kf_bit(KF_SMEP);
     print_kf_bit(KF_RDTSC);
     print_kf_bit(KF_CR4);
@@ -405,7 +406,7 @@ KiReportCpuFeatures(IN PKPRCB Prcb)
     print_kf_bit(KF_SSE4_2);
 #undef print_kf_bit
 
-#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
+#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(" " #cpu_flag)
     print_cf(X86_FEATURE_PAE);
     print_cf(X86_FEATURE_HT);
 #undef print_cf

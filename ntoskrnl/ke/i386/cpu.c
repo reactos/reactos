@@ -9,10 +9,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <xmmintrin.h>
+
 #define NDEBUG
 #include <debug.h>
-
-#include <xmmintrin.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -451,9 +451,9 @@ KiReportCpuFeatures(VOID)
         CpuFeatures = CpuInfo.Edx;
     }
 
-    DPRINT1("Supported CPU features: ");
+    DPRINT1("Supported CPU features:");
 
-#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(#kf_value " ")
+#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(" " #kf_value)
     print_kf_bit(KF_V86_VIS);
     print_kf_bit(KF_RDTSC);
     print_kf_bit(KF_CR4);
@@ -477,7 +477,7 @@ KiReportCpuFeatures(VOID)
     print_kf_bit(KF_NX_ENABLED);
 #undef print_kf_bit
 
-#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
+#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(" " #cpu_flag)
     print_cf(X86_FEATURE_PAE);
     print_cf(X86_FEATURE_APIC);
     print_cf(X86_FEATURE_HT);
