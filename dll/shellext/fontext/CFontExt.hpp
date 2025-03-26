@@ -91,21 +91,3 @@ public:
         //COM_INTERFACE_ENTRY_FUNC_BLIND(0, log_stuff)
     END_COM_MAP()
 };
-
-HRESULT
-InstallFontFiles(
-    _Out_ CStringW& strMessage,
-    _In_ PCUIDLIST_ABSOLUTE pidlParent,
-    _In_ UINT cidl,
-    _In_ PCUITEMID_CHILD_ARRAY apidl);
-
-HRESULT
-DoInstallFontFile(
-    _Out_ CStringW& strMsg,
-    _In_ PCWSTR pszFontPath,
-    _In_ PCWSTR pszFontsDir,
-    _In_ HKEY hkeyFonts);
-
-HRESULT DoGetFontTitle(
-    _In_ PCWSTR pszFontPath,
-    _Out_ CStringW& strFontName);
