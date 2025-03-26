@@ -3,9 +3,11 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Utility routines
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "objects.h"
+#include <strsafe.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
@@ -209,7 +211,7 @@ AddUrlToFavorites(
     // Get title
     WCHAR szTitle[MAX_PATH];
     if (pszTitleW)
-        lstrcpynW(szTitle, pszTitleW, _countof(szTitle));
+        StringCchCopyW(szTitle, _countof(szTitle), pszTitleW);
     else
         ILGetDisplayNameEx(NULL, pidl, szTitle, ILGDN_NORMAL);
 
@@ -219,7 +221,7 @@ AddUrlToFavorites(
     // Build shortcut pathname
     WCHAR szPath[MAX_PATH];
     if (!SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_FAVORITES, TRUE))
-        SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_COMMON_FAVORITES, TRUE);
+        return E_FAIL;
     PathAppendW(szPath, szTitle);
     PathAddExtensionW(szPath, L".lnk");
 
