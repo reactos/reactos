@@ -573,7 +573,7 @@ DoInstallFontFiles(
             return E_OUTOFMEMORY;
 
         WCHAR szPath[MAX_PATH];
-        if (!SHGetPathFromIDListW(pidl, szPath))
+        if (!SHGetPathFromIDListW(pidl, szPath) || !IsFontDotExt(PathFindExtensionW(szPath)))
             return E_FAIL;
 
         FontPaths.Add(szPath);
