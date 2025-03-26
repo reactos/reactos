@@ -2180,6 +2180,12 @@ MiIsPfnInUse(
 
 PMMVAD
 NTAPI
+MiLocateVad(
+    _In_ PMM_AVL_TABLE Table,
+    _In_ PVOID VirtualAddress);
+
+PMMVAD
+NTAPI
 MiLocateAddress(
     IN PVOID VirtualAddress
 );
@@ -2258,10 +2264,10 @@ MiInsertBasedSection(
 NTSTATUS
 NTAPI
 MiRosUnmapViewOfSection(
-    IN PEPROCESS Process,
-    IN PVOID BaseAddress,
-    IN BOOLEAN SkipDebuggerNotify
-);
+    _In_ PEPROCESS Process,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID BaseAddress,
+    _In_ BOOLEAN SkipDebuggerNotify);
 
 VOID
 NTAPI
