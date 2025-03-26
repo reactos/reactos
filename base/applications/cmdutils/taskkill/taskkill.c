@@ -40,6 +40,14 @@ static BOOL kill_child_processes = FALSE;
 static WCHAR **task_list;
 static unsigned int task_count;
 
+static DWORD *pid_list, pid_list_size;
+
+struct pid_close_info
+{
+    DWORD pid;
+    BOOL found;
+};
+
 #ifdef __REACTOS__
 
 static PWCHAR opList[] = {L"f", L"im", L"pid", L"?", L"t"};
@@ -53,12 +61,6 @@ static PWCHAR opList[] = {L"f", L"im", L"pid", L"?", L"t"};
 #define OP_PARAM_TERMINATE_CHILD 4
 
 #endif // __REACTOS__
-
-struct pid_close_info
-{
-    DWORD pid;
-    BOOL found;
-};
 
 static int taskkill_vprintfW(const WCHAR *msg, va_list va_args)
 {
@@ -144,20 +146,20 @@ static BOOL CALLBACK pid_enum_proc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-static DWORD *enumerate_processes(DWORD *list_count)
+static BOOL enumerate_processes(void)
 {
-    DWORD *pid_list, alloc_bytes = 1024 * sizeof(*pid_list), needed_bytes;
+    DWORD alloc_bytes = 1024 * sizeof(*pid_list), needed_bytes;
 
     pid_list = malloc(alloc_bytes);
     if (!pid_list)
-        return NULL;
+        return FALSE;
 
     for (;;)
     {
         DWORD *realloc_list;
 
         if (!EnumProcesses(pid_list, alloc_bytes, &needed_bytes))
-            return NULL;
+            return FALSE;
 
         /* EnumProcesses can't signal an insufficient buffer condition, so the
          * only way to possibly determine whether a larger buffer is required
@@ -170,12 +172,12 @@ static DWORD *enumerate_processes(DWORD *list_count)
         alloc_bytes *= 2;
         realloc_list = realloc(pid_list, alloc_bytes);
         if (!realloc_list)
-            return NULL;
+            return FALSE;
         pid_list = realloc_list;
     }
 
-    *list_count = needed_bytes / sizeof(*pid_list);
-    return pid_list;
+    pid_list_size = needed_bytes / sizeof(*pid_list);
+    return TRUE;
 }
 
 static BOOL get_process_name_from_pid(DWORD pid, WCHAR *buf, DWORD chars)
@@ -286,17 +288,10 @@ static void send_close_messages_tree(DWORD ppid)
 
 static int send_close_messages(void)
 {
-    DWORD *pid_list, pid_list_size, *pkill_list;
+    DWORD *pkill_list;
     DWORD self_pid = GetCurrentProcessId();
     unsigned int i;
     int status_code = 0;
-
-    pid_list = enumerate_processes(&pid_list_size);
-    if (!pid_list)
-    {
-        taskkill_message(STRING_ENUM_FAILED);
-        return 1;
-    }
 
     pkill_list = malloc(pid_list_size * sizeof(DWORD));
     if (!pkill_list)
@@ -448,17 +443,10 @@ static void terminate_process_tree(DWORD ppid)
 
 static int terminate_processes(void)
 {
-    DWORD *pid_list, pid_list_size, *pkill_list;
+    DWORD *pkill_list;
     DWORD self_pid = GetCurrentProcessId();
     unsigned int i;
     int status_code = 0;
-
-    pid_list = enumerate_processes(&pid_list_size);
-    if (!pid_list)
-    {
-        taskkill_message(STRING_ENUM_FAILED);
-        return 1;
-    }
 
     pkill_list = malloc(pid_list_size * sizeof(DWORD));
     if (!pkill_list)
@@ -821,6 +809,12 @@ int wmain(int argc, WCHAR *argv[])
 {
     if (!process_arguments(argc, argv))
         return 1;
+
+    if (!enumerate_processes())
+    {
+        taskkill_message(STRING_ENUM_FAILED);
+        return 1;
+    }
 
     if (force_termination)
         return terminate_processes();
