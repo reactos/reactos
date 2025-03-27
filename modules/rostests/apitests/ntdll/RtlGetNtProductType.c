@@ -135,8 +135,8 @@ START_TEST(RtlGetNtProductType)
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version",
                       0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
-        DWORD cb = sizeof(DWORD);
-        if (RegQueryValueExW(hKey, L"ReportAsWorkstation", NULL, NULL, (PBYTE)&ReportAsWorkstation, &cb))
+        DWORD cb = sizeof(ReportAsWorkstation);
+        if (RegQueryValueExW(hKey, L"ReportAsWorkstation", NULL, NULL, (PBYTE)&ReportAsWorkstation, &cb) != ERROR_SUCCESS)
             ReportAsWorkstation = 0xbaadf00d;
         RegDeleteValueW(hKey, L"ReportAsWorkstation");
         RegCloseKey(hKey);
@@ -178,13 +178,12 @@ START_TEST(RtlGetNtProductType)
 
     ok_char(ChangeNtProductType(ProductType), TRUE);
 
-
     /* Restore ReportAsWorkstation */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version",
                       0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
         if (ReportAsWorkstation != 0xbaadf00d)
-            RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (PBYTE)&ReportAsWorkstation, sizeof(DWORD));
+            RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (PBYTE)&ReportAsWorkstation, sizeof(ReportAsWorkstation));
         RegCloseKey(hKey);
     }
 }
