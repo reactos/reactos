@@ -262,17 +262,6 @@ SheSetCurDrive(INT iIndex)
 /*
  * Unimplemented
  */
-EXTERN_C INT
-WINAPI
-SheGetPathOffsetW(LPWSTR lpPath)
-{
-    FIXME("SheGetPathOffsetW() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 SheGetDirExW(LPWSTR lpDrive,

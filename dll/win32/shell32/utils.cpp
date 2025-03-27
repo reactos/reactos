@@ -1835,6 +1835,33 @@ SHIsBadInterfacePtr(
 }
 
 /*************************************************************************
+ *  SheGetPathOffsetW [SHELL32.349]
+ */
+EXTERN_C INT WINAPI
+SheGetPathOffsetW(_In_ PCWSTR pszPath)
+{
+    if (!pszPath || !*pszPath)
+        return -1;
+
+    // Drive path?
+    if (pszPath[1] == L':' &&
+        (!pszPath[2] || pszPath[2] == L'\\' || pszPath[2] == L'/'))
+    {
+        return 2; // The length of "C:", "D:", etc.
+    }
+
+    if (!PathIsUNCW(pszPath)) // Not a UNC path?
+        return -1;
+
+    // "\\\\SERVER\\SharedFolder..."
+    SIZE_T ich = 2 + wcscspn(&pszPath[2], L"\\/");
+    if (!pszPath[ich])
+        return -1;
+    ich = (ich + 1) + wcscspn(&pszPath[ich + 1], L"\\/");
+    return (INT)ich;
+}
+
+/*************************************************************************
  *  SHGetUserDisplayName [SHELL32.241]
  *
  * @see https://undoc.airesoft.co.uk/shell32.dll/SHGetUserDisplayName.php

@@ -531,6 +531,8 @@ BOOL WINAPI PathIsEqualOrSubFolder(_In_ LPCWSTR pszFile1OrCSIDL, _In_ LPCWSTR ps
 BOOL WINAPI PathIsTemporaryA(_In_ LPCSTR Str);
 BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str);
 
+INT WINAPI SheGetPathOffsetW(_In_ PCWSTR pszPath);
+
 /****************************************************************************
  * Shell File Operations error codes - SHFileOperationA/W
  */

@@ -41,6 +41,7 @@ list(APPEND SOURCE
     SHShouldShowWizards.cpp
     SHEnumerateUnreadMailAccountsW.cpp
     She.cpp
+    SheGetPathOffset.cpp
     ShellExec_RunDLL.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
