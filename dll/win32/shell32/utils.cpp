@@ -2108,6 +2108,7 @@ PathProcessCommandW(
             else
             {
                 szPath.ReleaseBuffer();
+
                 DWORD attrs = GetFileAttributesW(szPath);
                 if (attrs != INVALID_FILE_ATTRIBUTES &&
                     (!(attrs & FILE_ATTRIBUTE_DIRECTORY) || !(dwFlags & PPCF_NODIRECTORIES)))
@@ -2136,18 +2137,16 @@ PathProcessCommandW(
 
         if (cchPath && (dwFlags & PPCF_LONGESTPOSSIBLE))
         {
-            WCHAR tempBuffer[MAX_PATH];
-            StringCchCopyNW(tempBuffer, _countof(tempBuffer), szPath, cchPath);
-            szPath = tempBuffer;
+            szPath = szPath.Left(cchPath);
             pchArg = lpszPath + cchPath;
         }
     }
 
     BOOL needsQuoting = (dwFlags & PPCF_ADDQUOTES) && StrChrW(szPath, L' ');
 
-    CString result;
+    CStringW result;
     if (needsQuoting)
-        result = CStringW(L"\"") + szPath + L"\"";
+        result = L"\"" + szPath + L"\"";
     else
         result = szPath;
 
