@@ -25,6 +25,19 @@ public:
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
     {
+        // Try to find an existing instance of this dialog
+        WCHAR buf[300];
+        GetWindowTextW(buf, _countof(buf));
+        for (HWND hNext = NULL, hFind; (hFind = ::FindWindowExW(NULL, hNext, NULL, buf)) != NULL; hNext = hFind)
+        {
+            if (hFind != *this && ::IsWindowVisible(hFind))
+            {
+                ::SetForegroundWindow(hFind);
+                EndDialog(IDCANCEL);
+                return FALSE;
+            }
+        }
+
         CWindow cbo = GetDlgItem(IDC_DRIVES);
         WCHAR VolumeNameBuffer[MAX_PATH + 1];
         CStringW Tmp;
