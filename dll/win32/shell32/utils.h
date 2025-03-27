@@ -71,9 +71,9 @@ RegSetString(HKEY hKey, LPCWSTR Name, LPCWSTR Str, DWORD Type OPTIONAL_(REG_SZ))
 
 EXTERN_C LONG
 PathProcessCommandW(
-    _In_ PCWSTR lpszPath,
-    _Out_writes_opt_(dwBuffSize) PWSTR lpszBuff,
-    _In_ DWORD dwBuffSize,
+    _In_ PCWSTR pszSrc,
+    _Out_writes_opt_(dwBuffSize) PWSTR pszDest,
+    _In_ INT cchDest,
     _In_ DWORD dwFlags);
 
 typedef struct
