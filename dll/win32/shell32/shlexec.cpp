@@ -22,6 +22,7 @@
 
 #include "precomp.h"
 #include <undocshell.h>
+#include "utils.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
@@ -3003,7 +3004,8 @@ ShellExec_RunDLL_Helper(
     }
 
     WCHAR szPath[2 * MAX_PATH];
-    if (PathProcessCommandAW(pszCmdLine, szPath, _countof(szPath), L'C') == -1)
+    DWORD dwFlags = PPCF_FORCEQUALIFY | PPCF_INCLUDEARGS | PPCF_ADDQUOTES;
+    if (PathProcessCommandW(pszCmdLine, szPath, _countof(szPath), dwFlags) == -1)
         StrCpyNW(szPath, pszCmdLine, _countof(szPath));
 
     // Split arguments from the path
