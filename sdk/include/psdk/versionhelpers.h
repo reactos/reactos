@@ -148,6 +148,6 @@ IsActiveSessionCountLimited()
 VERSIONHELPERAPI
 IsReactOS()
 {
-    return *(UINT*)0x7ffe0ffc == 0x8eac705;
+    return *(UINT*)(MM_SHARED_USER_DATA_VA + PAGE_SIZE - sizeof(ULONG)) == 0x8EAC705;
 }
 #endif // __REACTOS__
