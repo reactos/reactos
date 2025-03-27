@@ -165,8 +165,7 @@ GetULONG(
 )
 {
     LPWSTR StopString;
-    *Value = 0;
-
+    
     // check input arguments
     if (String == NULL || Value == NULL || *String == UNICODE_NULL)
     {
