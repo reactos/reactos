@@ -145,6 +145,7 @@ IsActiveSessionCountLimited()
 }
 
 #ifdef __REACTOS__
+#include <mmtypes.h>
 VERSIONHELPERAPI
 IsReactOS()
 {
