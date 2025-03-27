@@ -50,6 +50,9 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shresdef.h"
+#ifdef __REACTOS__
+#include "../utils.h"
+#endif
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WS03
@@ -1130,6 +1133,7 @@ static LONG PathProcessCommandA (
 	return strlen(lpszPath);
 }
 
+#ifndef __REACTOS__ // See ../utils.cpp
 /*************************************************************************
 *	PathProcessCommandW
 */
@@ -1145,6 +1149,7 @@ static LONG PathProcessCommandW (
 	if(lpszBuff) strcpyW(lpszBuff, lpszPath);
 	return strlenW(lpszPath);
 }
+#endif
 
 /*************************************************************************
 *	PathProcessCommand (SHELL32.653)

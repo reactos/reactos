@@ -7,6 +7,14 @@
 
 #pragma once
 
+#ifndef OPTIONAL_
+    #ifdef __cplusplus
+        #define OPTIONAL_(arg) = arg
+    #else
+        #define OPTIONAL_(arg)
+    #endif
+#endif
+
 #ifdef __cplusplus
 static inline LPWSTR
 SHStrDupW(LPCWSTR Src)
@@ -50,16 +58,23 @@ inline DWORD
 RegSetOrDelete(HKEY hKey, LPCWSTR Name, DWORD Type, LPCVOID Data, DWORD Size)
 {
     if (Data)
-        return RegSetValueExW(hKey, Name, 0, Type, LPBYTE(Data), Size);
+        return RegSetValueExW(hKey, Name, 0, Type, (LPBYTE)Data, Size);
     else
         return RegDeleteValueW(hKey, Name);
 }
 
 static inline DWORD
-RegSetString(HKEY hKey, LPCWSTR Name, LPCWSTR Str, DWORD Type = REG_SZ)
+RegSetString(HKEY hKey, LPCWSTR Name, LPCWSTR Str, DWORD Type OPTIONAL_(REG_SZ))
 {
-    return RegSetValueExW(hKey, Name, 0, Type, LPBYTE(Str), (lstrlenW(Str) + 1) * sizeof(WCHAR));
+    return RegSetValueExW(hKey, Name, 0, Type, (LPBYTE)Str, (lstrlenW(Str) + 1) * sizeof(WCHAR));
 }
+
+EXTERN_C LONG
+PathProcessCommandW(
+    _In_ PCWSTR lpszPath,
+    _Out_writes_opt_(dwBuffSize) PWSTR lpszBuff,
+    _In_ DWORD dwBuffSize,
+    _In_ DWORD dwFlags);
 
 typedef struct
 {

@@ -2040,3 +2040,126 @@ SHGetComputerDisplayNameW(
     // Build a string like "Description (SERVERNAME)"
     return SHELL_BuildDisplayMachineName(pszName, cchNameMax, pszServerName, szDesc);
 }
+
+/*************************************************************************
+ *  PathProcessCommandW [Internal]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathprocesscommand
+ */
+EXTERN_C LONG
+PathProcessCommandW(
+    _In_ PCWSTR lpszPath,
+    _Out_writes_opt_(dwBuffSize) PWSTR lpszBuff,
+    _In_ DWORD dwBuffSize,
+    _In_ DWORD dwFlags)
+{
+    TRACE("%s, %p, %d, 0x%X\n", wine_dbgstr_w(lpszPath), lpszBuff, dwBuffSize, dwFlags);
+
+    if (!lpszPath)
+        return -1;
+
+    CStringW szPath;
+    PCWSTR pchArg = NULL;
+
+    if (*lpszPath == L'"') // Quoted?
+    {
+        ++lpszPath;
+
+        PCWSTR pch = wcschr(lpszPath, L'"');
+        if (pch)
+        {
+            szPath.SetString(lpszPath, pch - lpszPath);
+            pchArg = pch + 1;
+        }
+        else
+        {
+            szPath = lpszPath;
+        }
+
+        if ((dwFlags & PPCF_FORCEQUALIFY) || PathIsRelativeW(szPath))
+        {
+            BOOL ret = PathResolveW(szPath.GetBuffer(MAX_PATH), NULL, PRF_TRYPROGRAMEXTENSIONS);
+            szPath.ReleaseBuffer();
+            if (!ret)
+                return -1;
+        }
+    }
+    else // Not quoted?
+    {
+        BOOL resolved = FALSE;
+        INT cchPath = 0;
+        BOOL resolveRelative = PathIsRelativeW(lpszPath) || (dwFlags & PPCF_FORCEQUALIFY);
+
+        for (INT ich = 0; ; ++ich)
+        {
+            szPath += lpszPath[ich];
+
+            if (lpszPath[ich] && lpszPath[ich] != L' ')
+                continue;
+
+            szPath = szPath.Left(ich);
+
+            if (resolveRelative &&
+                !PathResolveW(szPath.GetBuffer(MAX_PATH), NULL, PRF_TRYPROGRAMEXTENSIONS))
+            {
+                szPath.ReleaseBuffer();
+                szPath += lpszPath[ich];
+            }
+            else
+            {
+                szPath.ReleaseBuffer();
+                DWORD attrs = GetFileAttributesW(szPath);
+                if (attrs != INVALID_FILE_ATTRIBUTES &&
+                    (!(attrs & FILE_ATTRIBUTE_DIRECTORY) || !(dwFlags & PPCF_NODIRECTORIES)))
+                {
+                    resolved = TRUE;
+                    pchArg = lpszPath + ich;
+
+                    if (!(dwFlags & PPCF_LONGESTPOSSIBLE))
+                        break;
+
+                    cchPath = ich;
+                    break;
+                }
+                else if (!resolveRelative)
+                {
+                    szPath += lpszPath[ich];
+                }
+            }
+
+            if (!szPath[ich])
+                break;
+        }
+
+        if (!resolved)
+            return -1;
+
+        if (cchPath && (dwFlags & PPCF_LONGESTPOSSIBLE))
+        {
+            WCHAR tempBuffer[MAX_PATH];
+            StringCchCopyNW(tempBuffer, _countof(tempBuffer), szPath, cchPath);
+            szPath = tempBuffer;
+            pchArg = lpszPath + cchPath;
+        }
+    }
+
+    BOOL needsQuoting = (dwFlags & PPCF_ADDQUOTES) && StrChrW(szPath, L' ');
+
+    CString result;
+    if (needsQuoting)
+        result = CStringW(L"\"") + szPath + L"\"";
+    else
+        result = szPath;
+
+    if (pchArg && (dwFlags & PPCF_ADDARGUMENTS))
+        result += pchArg;
+
+    LONG requiredSize = result.GetLength() + 1;
+    if (!lpszBuff)
+        return requiredSize;
+
+    if (requiredSize > (LONG)dwBuffSize || StringCchCopyW(lpszBuff, dwBuffSize, result) != S_OK)
+        return -1;
+
+    return requiredSize;
+}
