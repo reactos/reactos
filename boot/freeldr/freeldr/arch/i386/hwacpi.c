@@ -69,6 +69,14 @@ FindAcpiTable(VOID)
     return OutputPointer;
 }
 
+SIZE_T
+FindAcpiTableSize(VOID)
+{
+    /* Calculate a size large enough for this variable by getting the bytes of every descriptor. */
+    return (PcBiosMapCount * sizeof(BIOS_MEMORY_MAP)) +
+           sizeof(ACPI_BIOS_DATA) - sizeof(BIOS_MEMORY_MAP);
+}
+
 VOID
 DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
@@ -87,8 +95,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         AcpiPresent = TRUE;
 
         /* Calculate the table size */
-        TableSize = PcBiosMapCount * sizeof(BIOS_MEMORY_MAP) +
-            sizeof(ACPI_BIOS_DATA) - sizeof(BIOS_MEMORY_MAP);
+        TableSize = FindAcpiTableSize();
 
         /* Set 'Configuration Data' value */
         PartialResourceList =

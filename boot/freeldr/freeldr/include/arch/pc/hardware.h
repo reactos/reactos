@@ -85,6 +85,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
 
 /* hwacpi.c */
 PVOID FindAcpiTable(VOID);
+SIZE_T FindAcpiTableSize(VOID);
 VOID DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* hwapm.c */

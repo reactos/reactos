@@ -246,13 +246,6 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* FIXME! HACK value for docking profile */
     Extension->Profile.Status = 2;
 
-    PDESCRIPTION_HEADER AcpiTable = FindAcpiTable();
-    if (AcpiTable)
-    {
-        Extension->AcpiTable = AcpiTable;
-        Extension->AcpiTableSize = AcpiTable->Length;
-    }
-
     if (VersionToBoot >= _WIN32_WINNT_VISTA)
     {
         Extension->BootViaWinload = 1;

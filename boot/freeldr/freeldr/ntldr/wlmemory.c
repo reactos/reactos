@@ -47,6 +47,7 @@ WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 /* GLOBALS ***************************************************************/
 
+ULONG_PTR AcpiTableSource;
 MEMORY_ALLOCATION_DESCRIPTOR *Mad;
 ULONG MadCount = 0;
 /* 200 MADs fit into 1 page, that should really be enough! */
@@ -177,6 +178,8 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     PFN_NUMBER i, PagesCount, MemoryMapSizeInPages, NoEntries;
     PFN_NUMBER LastPageIndex, MemoryMapStartPage;
     PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
+    PDESCRIPTION_HEADER AcpiTable;
+    PVOID AcpiTableClone;
     ULONG LastPageType;
     //PKTSS Tss;
     BOOLEAN Status;
@@ -232,18 +235,10 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
         return FALSE;
     }
 
-    // Always map the ACPI table if present, otherwise Windows will crash.
-    if (Extension->AcpiTable)
+    AcpiTable = FindAcpiTable();
+    if (AcpiTable)
     {
-        PVOID AcpiTableClone = MmAllocateMemoryWithType(Extension->AcpiTableSize, LoaderFirmwarePermanent);
-        if (!AcpiTableClone)
-        {
-            ERR("Cannot allocate ACPI table\n");
-            return FALSE;
-        }
-
-        RtlCopyMemory(AcpiTableClone, Extension->AcpiTable, Extension->AcpiTableSize);
-        Extension->AcpiTable = AcpiTableClone;
+        Extension->AcpiTableSize = FindAcpiTableSize();
     }
 
     /* Before creating the map, we need to map pages to kernel mode */
@@ -348,6 +343,8 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
         UiMessageBox("Error during MempSetupPaging.");
         return;
     }*/
+
+    MempSetupPaging((PFN_NUMBER)AcpiTableSource  >> MM_PAGE_SHIFT, Extension->AcpiTableSize >> MM_PAGE_SHIFT, FALSE);
 
     // Fill the memory descriptor list and
     //PrepareMemoryDescriptorList();

@@ -65,6 +65,13 @@ FindAcpiTable(VOID)
     return OutputPointer;
 }
 
+SIZE_T
+FindAcpiTableSize(VOID)
+{
+    //TODO:
+    return 0;
+}
+
 VOID
 DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {

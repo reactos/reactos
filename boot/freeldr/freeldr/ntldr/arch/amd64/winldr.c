@@ -204,7 +204,29 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
 VOID
 MempUnmapPage(PFN_NUMBER Page)
 {
-   // TRACE(">>> MempUnmapPage\n");
+    PHARDWARE_PTE PpeBase, PdeBase, PteBase;
+    ULONG Index;
+
+    PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(PaToVa((PVOID)(ULONG_PTR)(Page * PAGE_SIZE))));
+    PdeBase = MempGetOrCreatePageDir(PpeBase, VAtoPPI(PaToVa((PVOID)(ULONG_PTR)(Page * PAGE_SIZE))));
+    PteBase = MempGetOrCreatePageDir(PdeBase, VAtoPDI(PaToVa((PVOID)(ULONG_PTR)(Page * PAGE_SIZE))));
+
+    if (!PteBase)
+    {
+        ERR("!!!No Dir %p, %p, %p, %p\n", PxeBase, PpeBase, PdeBase, PteBase);
+        return;
+    }
+
+    Index = VAtoPTI(PaToVa((PVOID)(ULONG_PTR)(Page * PAGE_SIZE)));
+    if (!PteBase[Index].Valid)
+    {
+        ERR("!!!Already unmapped %ld\n", Index);
+        return;
+    }
+
+    PteBase[Index].Valid = 0;
+    PteBase[Index].Write = 0;
+    PteBase[Index].PageFrameNumber = 0;
 }
 
 static
