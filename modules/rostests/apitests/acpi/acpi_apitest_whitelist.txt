@@ -1,0 +1,2 @@
+9bcd83507467 modules/rostests/apitests/acpi/Bus_PDO_QueryResourceRequirements.c 504 "Fails on #WIN2003 #WIN8"
+9bcd83507467 modules/rostests/apitests/acpi/Bus_PDO_QueryResourceRequirements.c 528 "Fails on #WIN2003"
