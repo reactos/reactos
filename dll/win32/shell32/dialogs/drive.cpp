@@ -68,7 +68,7 @@ IsSystemDrive(PFORMAT_DRIVE_CONTEXT pContext)
     WCHAR wszSystemDrv[MAX_PATH];
     wszSystemDrv[0] = UNICODE_NULL;
     GetSystemDirectory(wszSystemDrv, _countof(wszSystemDrv));
-    return wszSystemDrv[0] == pContext->Drive + L'A';
+    return (wszSystemDrv[0] | 32) == pContext->Drive + L'a';
 }
 
 static HANDLE
@@ -131,7 +131,7 @@ CreateTipText(FORMAT_DRIVE_CONTEXT &Ctx)
             pie.PartitionNumber = pi.PartitionNumber;
         }
     }
-    CloseHandle(hDevice);C_ASSERT(sizeof(Ctx.Tip) > 800);
+    CloseHandle(hDevice);
 
     WCHAR szBuf[150], szGuid[39], *pszTip = Ctx.Tip.Name.Buffer;
     szBuf[0] = UNICODE_NULL;
