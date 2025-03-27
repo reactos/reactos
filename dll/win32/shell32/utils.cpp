@@ -2087,8 +2087,8 @@ PathProcessCommandW(
     else // Not quoted?
     {
         BOOL resolved = FALSE;
-        INT cchPath = 0;
         BOOL resolveRelative = PathIsRelativeW(lpszPath) || (dwFlags & PPCF_FORCEQUALIFY);
+        INT cchPath = 0;
 
         for (INT ich = 0; ; ++ich)
         {
@@ -2129,7 +2129,10 @@ PathProcessCommandW(
             }
 
             if (!szPath[ich])
+            {
+                szPath.ReleaseBuffer(); // Remove excessive '\0'
                 break;
+            }
         }
 
         if (!resolved)
@@ -2142,13 +2145,8 @@ PathProcessCommandW(
         }
     }
 
-    BOOL needsQuoting = (dwFlags & PPCF_ADDQUOTES) && StrChrW(szPath, L' ');
-
-    CStringW result;
-    if (needsQuoting)
-        result = L"\"" + szPath + L"\"";
-    else
-        result = szPath;
+    BOOL needsQuoting = (dwFlags & PPCF_ADDQUOTES) && wcschr(szPath, L' ');
+    CStringW result = needsQuoting ? (L"\"" + szPath + L"\"") : szPath;
 
     if (pchArg && (dwFlags & PPCF_ADDARGUMENTS))
         result += pchArg;
