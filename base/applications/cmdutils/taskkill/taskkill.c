@@ -43,6 +43,7 @@ static struct
 {
     PROCESSENTRY32W p;
     BOOL matched;
+    BOOL is_numeric;
 }
 *process_list;
 static unsigned int process_count;
@@ -52,6 +53,12 @@ struct pid_close_info
     DWORD pid;
     BOOL found;
 };
+
+#ifdef __REACTOS__
+unsigned int* pkill_list;
+DWORD pkill_size;
+DWORD self_pid;
+#endif
 
 #ifdef __REACTOS__
 
@@ -171,6 +178,7 @@ static BOOL enumerate_processes(void)
 
     do
     {
+        process_list[process_count].is_numeric = FALSE;
         process_list[process_count++].matched = FALSE;
         if (process_count == alloc_count)
         {
@@ -186,68 +194,50 @@ static BOOL enumerate_processes(void)
     return TRUE;
 }
 
-#ifdef __REACTOS__
-static BOOL get_task_pid(const WCHAR *str, BOOL *is_numeric, WCHAR *process_name, int *status_code,
-    DWORD self_pid, unsigned int* pkill_list, DWORD *pkill_size)
-#else
-static BOOL get_task_pid(const WCHAR *str, BOOL *is_numeric, WCHAR *process_name, int *status_code, DWORD *pid)
-#endif
+static void mark_task_process(const WCHAR *str, int *status_code)
 {
 #ifndef __REACTOS__
     DWORD self_pid = GetCurrentProcessId();
 #endif
     const WCHAR *p = str;
+    BOOL is_numeric;
     unsigned int i;
+    DWORD pid;
 
-#ifdef __REACTOS__
-    *pkill_size = 0;
-    memset(pkill_list, 0, process_count * sizeof(unsigned int*));
-#endif
-
-    *is_numeric = TRUE;
+    is_numeric = TRUE;
     while (*p)
     {
         if (!iswdigit(*p++))
         {
-            *is_numeric = FALSE;
+            is_numeric = FALSE;
             break;
         }
     }
 
-    if (*is_numeric)
+    if (is_numeric)
     {
-#ifdef __REACTOS__
-        DWORD pid = wcstol(str, NULL, 10);
-#else
-        *pid = wcstol(str, NULL, 10);
-#endif
+        pid = wcstol(str, NULL, 10);
         for (i = 0; i < process_count; ++i)
         {
-#ifdef __REACTOS__
             if (process_list[i].p.th32ProcessID == pid)
-#else
-            if (process_list[i].p.th32ProcessID == *pid)
-#endif
                 break;
         }
         if (i == process_count || process_list[i].matched)
             goto not_found;
         process_list[i].matched = TRUE;
-#ifdef __REACTOS__
+        process_list[i].is_numeric = TRUE;
         if (pid == self_pid)
-#else
-        if (*pid == self_pid)
-#endif
         {
             taskkill_message(STRING_SELF_TERMINATION);
             *status_code = 1;
-            return FALSE;
         }
 #ifdef __REACTOS__
-        pkill_list[*pkill_size] = i;
-        (*pkill_size)++;
+        else
+        {
+            pkill_list[pkill_size++] = i;
+        }
 #endif
-        return TRUE;
+        return;
     }
 
     for (i = 0; i < process_count; ++i)
@@ -259,32 +249,42 @@ static BOOL get_task_pid(const WCHAR *str, BOOL *is_numeric, WCHAR *process_name
             {
                 taskkill_message(STRING_SELF_TERMINATION);
                 *status_code = 1;
-                return FALSE;
             }
 #ifdef __REACTOS__
-            pkill_list[*pkill_size] = i;
-            (*pkill_size)++;
-#else
-            *pid = process_list[i].p.th32ProcessID;
-            wcscpy(process_name, process_list[i].p.szExeFile);
-            return TRUE;
+            else
+            {
+                pkill_list[pkill_size++] = i;
+                continue;
+            }
 #endif
+            return;
         }
     }
 
 #ifdef __REACTOS__
     // Cannot find any process matching the PID or name
-    if (*pkill_size == 0)
+    if (pkill_size == 0)
     {
 #endif
 not_found:
     taskkill_message_printfW(STRING_SEARCH_FAILED, str);
     *status_code = 128;
-    return FALSE;
 #ifdef __REACTOS__
     }
-    return TRUE;
 #endif
+}
+
+static void taskkill_message_print_process(int msg, unsigned int index)
+{
+    WCHAR pid_str[16];
+
+    if (!process_list[index].is_numeric)
+    {
+        taskkill_message_printfW(msg, process_list[index].p.szExeFile);
+        return;
+    }
+    wsprintfW(pid_str, L"%lu", process_list[index].p.th32ProcessID);
+    taskkill_message_printfW(msg, pid_str);
 }
 
 /* The implemented task enumeration and termination behavior does not
@@ -368,64 +368,51 @@ static void send_close_messages_tree(DWORD ppid)
 
 static int send_close_messages(void)
 {
-    WCHAR process_name[MAX_PATH];
+    const WCHAR *process_name;
     struct pid_close_info info;
     unsigned int i;
     int status_code = 0;
-    BOOL is_numeric;
 
 #ifdef __REACTOS__
-    DWORD self_pid = GetCurrentProcessId();
-    unsigned int* pkill_list = malloc(process_count * sizeof(unsigned int*));
-    if (!pkill_list)
-        return 1;
-#endif
-
+    // for (i = 0; i < process_count; i++) // Fix for Wine bug!
+    DWORD index;
+    for (index = 0; index < pkill_size; ++index)
+#else
     for (i = 0; i < task_count; i++)
+#endif
     {
 #ifdef __REACTOS__
-        DWORD pkill_size, index;
-        if (!get_task_pid(task_list[i], &is_numeric, process_name, &status_code,
-                          self_pid, pkill_list, &pkill_size))
+        i = pkill_list[index];
 #else
-        if (!get_task_pid(task_list[i], &is_numeric, process_name, &status_code, &info.pid))
-#endif
+        if (!process_list[i].matched)
             continue;
+#endif
 
+        info.pid = process_list[i].p.th32ProcessID;
 #ifdef __REACTOS__
-        // Try to send close messages to process in `pkill_list`
-        for (index = 0; index < pkill_size; index++)
+        if (info.pid == self_pid)
         {
-            // struct pid_close_info info = { process_list[pkill_list[index]].p.th32ProcessID };
-            info.pid = process_list[pkill_list[index]].p.th32ProcessID;
-            if (info.pid == self_pid)
-            {
-                taskkill_message(STRING_SELF_TERMINATION);
-                status_code = 1;
-                continue;
-            }
-
-            // Send close messages to child first
-            if (kill_child_processes)
-                send_close_messages_tree(info.pid);
-
-            wcscpy(process_name, process_list[pkill_list[index]].p.szExeFile);
-#endif
-            info.found = FALSE;
-            EnumWindows(pid_enum_proc, (LPARAM)&info);
-            if (info.found)
-            {
-                if (is_numeric)
-                    taskkill_message_printfW(STRING_CLOSE_PID_SEARCH, info.pid);
-                else
-                    taskkill_message_printfW(STRING_CLOSE_PROC_SRCH, process_name, info.pid);
-                continue;
-            }
-            taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
-            status_code = 128;
-#ifdef __REACTOS__
+            taskkill_message(STRING_SELF_TERMINATION);
+            status_code = 1;
+            continue;
         }
+        // Send close messages to child first
+        if (kill_child_processes)
+            send_close_messages_tree(info.pid);
 #endif
+        process_name = process_list[i].p.szExeFile;
+        info.found = FALSE;
+        EnumWindows(pid_enum_proc, (LPARAM)&info);
+        if (info.found)
+        {
+            if (process_list[i].is_numeric)
+                taskkill_message_printfW(STRING_CLOSE_PID_SEARCH, info.pid);
+            else
+                taskkill_message_printfW(STRING_CLOSE_PROC_SRCH, process_name, info.pid);
+            continue;
+        }
+        taskkill_message_print_process(STRING_SEARCH_FAILED, i);
+        status_code = 128;
     }
 
     return status_code;
@@ -487,81 +474,58 @@ static void terminate_process_tree(DWORD ppid)
 
 static int terminate_processes(void)
 {
-    WCHAR process_name[MAX_PATH];
+    const WCHAR *process_name;
     unsigned int i;
     int status_code = 0;
-    BOOL is_numeric;
     HANDLE process;
     DWORD pid;
 
 #ifdef __REACTOS__
-    DWORD self_pid = GetCurrentProcessId();
-    unsigned int* pkill_list = malloc(process_count * sizeof(unsigned int*));
-    if (!pkill_list)
-        return 1;
+    DWORD index;
+    for (index = 0; index < pkill_size; ++index)
+#else
+    for (i = 0; i < process_count; i++)
 #endif
-
-    for (i = 0; i < task_count; i++)
     {
 #ifdef __REACTOS__
-        DWORD pkill_size, index;
-        if (!get_task_pid(task_list[i], &is_numeric, process_name, &status_code,
-                          self_pid, pkill_list, &pkill_size))
+        i = pkill_list[index];
 #else
-        if (!get_task_pid(task_list[i], &is_numeric, process_name, &status_code, &pid))
-#endif
+        if (!process_list[i].matched)
             continue;
+#endif
 
+        pid = process_list[i].p.th32ProcessID;
 #ifdef __REACTOS__
-        // Try to terminate to process in `pkill_list`
-        for (index = 0; index < pkill_size; index++)
+        if (pid == self_pid)
         {
-            pid = process_list[pkill_list[index]].p.th32ProcessID;
-            if (pid == self_pid)
-            {
-                taskkill_message(STRING_SELF_TERMINATION);
-                status_code = 1;
-                continue;
-            }
-
-            // Terminate child first
-            if (kill_child_processes)
-                terminate_process_tree(pid);
-#endif
-            process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-            if (!process)
-            {
-                taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
-                status_code = 128;
-                continue;
-            }
-#ifdef __REACTOS__
-            wcscpy(process_name, process_list[pkill_list[index]].p.szExeFile);
-#endif
-
-            if (!TerminateProcess(process, 1))
-            {
-#ifdef __REACTOS__
-                taskkill_message_printfW(STRING_TERMINATE_FAILED, process_name);
-#else
-                taskkill_message_printfW(STRING_TERMINATE_FAILED, task_list[i]);
-#endif
-                status_code = 1;
-                CloseHandle(process);
-                continue;
-            }
-            if (is_numeric)
-                taskkill_message_printfW(STRING_TERM_PID_SEARCH, pid);
-            else
-#ifdef __REACTOS__
-                taskkill_message_printfW(STRING_TERM_PROC_SEARCH, process_name, pid);
-#else
-                taskkill_message_printfW(STRING_TERM_PROC_SEARCH, task_list[i], pid);
-#endif
-            CloseHandle(process);
-#ifdef __REACTOS__
+            taskkill_message(STRING_SELF_TERMINATION);
+            status_code = 1;
+            continue;
         }
+        // Terminate child first
+        if (kill_child_processes)
+            terminate_process_tree(pid);
 #endif
+        process_name = process_list[i].p.szExeFile;
+        process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+        if (!process)
+        {
+            taskkill_message_print_process(STRING_SEARCH_FAILED, i);
+            status_code = 128;
+            continue;
+        }
+        if (!TerminateProcess(process, 1))
+        {
+            taskkill_message_print_process(STRING_TERMINATE_FAILED, i);
+            status_code = 1;
+            CloseHandle(process);
+            continue;
+        }
+        if (process_list[i].is_numeric)
+            taskkill_message_printfW(STRING_TERM_PID_SEARCH, pid);
+        else
+            taskkill_message_printfW(STRING_TERM_PROC_SEARCH, process_name, pid);
+        CloseHandle(process);
     }
     return status_code;
 }
@@ -819,6 +783,9 @@ static BOOL process_arguments(int argc, WCHAR *argv[])
 
 int wmain(int argc, WCHAR *argv[])
 {
+    int search_status = 0, terminate_status;
+    unsigned int i;
+
     if (!process_arguments(argc, argv))
         return 1;
 
@@ -828,7 +795,22 @@ int wmain(int argc, WCHAR *argv[])
         return 1;
     }
 
+#ifdef __REACTOS__
+    pkill_list = malloc(process_count * sizeof(unsigned int*));
+    if (!pkill_list)
+        return 1;
+    memset(pkill_list, 0, process_count * sizeof(unsigned int*));
+    pkill_size = 0;
+
+    self_pid = GetCurrentProcessId();
+#endif
+
+    for (i = 0; i < task_count; ++i)
+        mark_task_process(task_list[i], &search_status);
+
     if (force_termination)
-        return terminate_processes();
-    return send_close_messages();
+        terminate_status = terminate_processes();
+    else
+        terminate_status = send_close_messages();
+    return search_status ? search_status : terminate_status;
 }
