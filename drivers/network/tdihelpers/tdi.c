@@ -129,6 +129,7 @@ static NTSTATUS TdiOpenDevice(
                                OBJ_KERNEL_HANDLE,
                                NULL,                    /* Root directory */
                                NULL);                   /* Security descriptor */
+DbgPrint("Into ZwCreateFile IRQL is %d...\n", KeGetCurrentIrql());
 
     Status = ZwCreateFile(Handle,                               /* Return file handle */
                           GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,         /* Desired access */
@@ -141,6 +142,7 @@ static NTSTATUS TdiOpenDevice(
                           0,                                    /* Create options */
                           EaInfo,                               /* EA buffer */
                           EaLength);                            /* EA length */
+DbgPrint("Out of ZwCreateFile IRQL is %d...\n", KeGetCurrentIrql());
     if (NT_SUCCESS(Status)) {
         Status = ObReferenceObjectByHandle(*Handle,                       /* Handle to open file */
                                            GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,  /* Access mode */
@@ -320,12 +322,14 @@ NTSTATUS TdiOpenConnectionEndpointFile(
     ContextArea = (PVOID*)(EaInfo->EaName + TDI_CONNECTION_CONTEXT_LENGTH + 1); /* 0-terminated */
     /* FIXME: Allocate context area */
     *ContextArea = NULL;
+DbgPrint("Into TdiOpenDevice ...\n");
     Status = TdiOpenDevice(DeviceName,
                            EaLength,
                            EaInfo,
                            AFD_SHARE_UNIQUE,
                            ConnectionHandle,
                            ConnectionObject);
+DbgPrint("Out of TdiOpenDevice ...\n");
     ExFreePoolWithTag(EaInfo, TAG_AFD_EA_INFO);
     return Status;
 }
@@ -536,6 +540,61 @@ NTSTATUS TdiListen(
                    0,                      /* Flags */
                    *RequestConnectionInfo, /* Request connection information */
                    *ReturnConnectionInfo);  /* Return connection information */
+
+    TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, NULL);
+
+    return STATUS_PENDING;
+}
+
+NTSTATUS TdiAccept(
+    PIRP *Irp,
+    PFILE_OBJECT AcceptConnectionObject,
+    PTDI_CONNECTION_INFORMATION RequestConnectionInfo,
+    PTDI_CONNECTION_INFORMATION ReturnConnectionInfo,
+    PIO_COMPLETION_ROUTINE  CompletionRoutine,
+    PVOID CompletionContext)
+/*
+ * FUNCTION: Listen on a connection endpoint for a connection request from a remote peer
+ * ARGUMENTS:
+ *     CompletionRoutine = Routine to be called when IRP is completed
+ *     CompletionContext = Context for CompletionRoutine
+ * RETURNS:
+ *     Status of operation
+ *     May return STATUS_PENDING
+ */
+{
+    PDEVICE_OBJECT DeviceObject;
+
+    AFD_DbgPrint(MAX_TRACE, ("Called\n"));
+
+    ASSERT(*Irp == NULL);   /* TODO: why at all? We are overwriting it anyway ... */
+
+    if (!AcceptConnectionObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DeviceObject = IoGetRelatedDeviceObject(AcceptConnectionObject);
+    if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,              /* Sub function */
+                                            DeviceObject,            /* Device object */
+                                            AcceptConnectionObject,        /* File object */
+                                            NULL,                    /* Event */
+                                            NULL);                   /* Status */
+    if (*Irp == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    TdiBuildAccept(*Irp,                   /* IRP */
+                   DeviceObject,           /* Device object */
+                   AcceptConnectionObject,       /* File object */
+                   CompletionRoutine,      /* Completion routine */
+                   CompletionContext,      /* Completion routine context */
+                   RequestConnectionInfo, /* Request connection information */
+                   ReturnConnectionInfo);  /* Return connection information */
 
     TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, NULL);
 
