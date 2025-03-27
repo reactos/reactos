@@ -45,7 +45,7 @@ static void test_LoadImage_DataFile(void)
     }
 }
 
-static void test_LoadImage_System(void)
+static void test_LoadIcon_SystemIds(void)
 {
     static const WORD icomap[][2] = {
         { 100, (WORD)(SIZE_T)IDI_APPLICATION },
@@ -170,5 +170,5 @@ START_TEST(LoadImage)
     CreateProcessA( NULL, path, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi );
     WaitForSingleObject (pi.hProcess, INFINITE);
 
-    test_LoadImage_System();
+    test_LoadIcon_SystemIds();
 }
