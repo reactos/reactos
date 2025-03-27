@@ -76,6 +76,7 @@ BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam);
 void DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam);
 void EnableCommandIfVerbExists(UINT ImageId, HWND hwnd, UINT CmdId, PCWSTR Verb, PCWSTR File);
 void ShellExecuteVerb(HWND hwnd, PCWSTR Verb, PCWSTR File, BOOL Quit);
+UINT ErrorBox(HWND hwnd, UINT Error);
 void DisplayHelp(HWND hwnd);
 
 static inline LPVOID QuickAlloc(SIZE_T cbSize, BOOL bZero)
