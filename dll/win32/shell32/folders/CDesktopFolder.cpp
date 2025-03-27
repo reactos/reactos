@@ -54,6 +54,12 @@ static const CLSID* IsRegItem(PCUITEMID_CHILD pidl)
     return NULL;
 }
 
+static bool IsRegItem(PCUITEMID_CHILD pidl, REFCLSID clsid)
+{
+    const CLSID *pClass = IsRegItem(pidl);
+    return pClass && *pClass == clsid;
+}
+
 static inline void MarkAsCommonItem(LPITEMIDLIST pidl)
 {
     ASSERT(_ILGetFSType(pidl) & PT_FS);
@@ -708,12 +714,12 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
         /* TODO: always add SFGAO_CANLINK */
         for (UINT i = 0; i < cidl; ++i)
         {
-            pdump(*apidl);
-            if (_ILIsDesktop(*apidl))
+            pdump(apidl[i]);
+            if (_ILIsDesktop(apidl[i]))
                 *rgfInOut &= dwDesktopAttributes;
             else if (_ILIsMyComputer(apidl[i]))
                 *rgfInOut &= dwMyComputerAttributes;
-            else if (_ILIsNetHood(apidl[i]))
+            else if (IsRegItem(apidl[i], CLSID_NetworkPlaces))
                 *rgfInOut &= dwMyNetPlacesAttributes;
             else if (_ILIsFolderOrFile(apidl[i]) || _ILIsSpecialFolder(apidl[i]))
             {
