@@ -9,6 +9,17 @@
 #include "precomp.h"
 #include <stdio.h>
 
+BOOL IsValidIcon(HICON hIco)
+{
+    ICONINFO info = { 0 };
+    if (!hIco || !GetIconInfo(hIco, &info))
+        return FALSE;
+    DeleteObject(info.hbmMask);
+    if (info.hbmColor)
+        DeleteObject(info.hbmColor);
+    return info.hbmMask || info.hbmColor;
+}
+
 BOOL FileExists(PCWSTR FileName)
 {
     DWORD Attribute = GetFileAttributesW(FileName);
@@ -110,11 +121,14 @@ static struct
     {L"%temp%\\cpimg2e.exe", IDR_EXE_NORMAL}
 };
 
+void TestPairExtraction(void);
+
 START_TEST(PrivateExtractIcons)
 {
     HICON ahIcon;
     UINT i, aIconId, cIcons, cIcoTotal;
     WCHAR PathBuffer[MAX_PATH];
+    UINT Shell32WinIcoCount = LOBYTE(GetVersion()) >= 6 ? 326 : 239; /* 239 on W2K3SP2, 326 on Win10 */
 
     /* Extract icons */
     for (i = 0; i < _countof(IconFiles); ++i)
@@ -125,6 +139,8 @@ START_TEST(PrivateExtractIcons)
             goto Cleanup;
     }
 
+    TestPairExtraction();
+
     for (i = 0; i < _countof(IconTests); ++i)
     {
         /* Get total number of icon groups in file.
@@ -132,7 +148,7 @@ START_TEST(PrivateExtractIcons)
          * two NULLs for the Icon Handle and Count to be set. */
         cIcoTotal = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, NULL, NULL, 0, 0);
         ok((i == 3 ?
-              cIcoTotal > 232 && cIcoTotal < 240 :    /* shell32 case: ROS has 233, W2K2SP2 has 239 icon groups. */
+              cIcoTotal > 232 && cIcoTotal <= Shell32WinIcoCount :  /* shell32 case: ROS has 233, Windows has >= 239 icon groups. */
               cIcoTotal == IconTests[i].cTotalIcons),
            "PrivateExtractIconsW(%u): "
            "got %u, expected %u\n", i, cIcoTotal, IconTests[i].cTotalIcons);
@@ -165,5 +181,69 @@ Cleanup:
     {
         ExpandEnvironmentStringsW(IconFiles[i].FileName, PathBuffer, _countof(PathBuffer));
         DeleteFileW(PathBuffer);
+    }
+}
+
+static const struct tagPAIRSTESTS
+{
+    BYTE InCount;
+    BYTE UseHigh; // Extract a pair (high and low word sizes)
+    BYTE Library;
+    BYTE ReturnNT5;
+    BYTE CountNT5;
+    BYTE ReturnNT6;
+    BYTE CountNT6;
+} g_pairs[] =
+{
+    { 0, 0, 0,     1, 1, 1, 1 },
+    { 0, 0, 1,     0, 0, 0, 0 },
+    { 0, 1, 0,     1, 2, 1, 2 },
+    { 0, 1, 1,     0, 0, 0, 0 },
+    { 1, 0, 0,     1, 1, 1, 1 },
+    { 1, 0, 1,     1, 1, 1, 1 },
+    { 1, 1, 0,     1, 2, 1, 2 },
+    { 1, 1, 1,     2, 2, 0, 0 },
+    { 2, 0, 0,     1, 1, 1, 1 },
+    { 2, 0, 1,     2, 2, 2, 2 },
+    { 2, 1, 0,     1, 2, 1, 2 },
+    { 2, 1, 1,     2, 2, 2, 2 }, // This is the only way to extract a pair from a PE on NT6!
+    { 3, 0, 0,     1, 1, 1, 1 },
+    { 3, 0, 1,     3, 3, 3, 3 },
+    { 3, 1, 0,     1, 2, 1, 2 },
+    { 3, 1, 1,     4, 4, 0, 0 },
+    { 4, 0, 0,     1, 1, 1, 1 },
+    { 4, 0, 1,     4, 4, 4, 4 },
+    { 4, 1, 0,     1, 2, 1, 2 },
+    { 4, 1, 1,     4, 4, 4, 4 }
+};
+
+void TestPairExtraction(void)
+{
+    const HICON hInvalidIcon = (HICON)(INT_PTR)-2;
+    const BOOL IsNT6 = LOBYTE(GetVersion()) >= 6;
+    for (UINT i = 0; i < _countof(g_pairs); ++i)
+    {
+        UINT j, Count, ExpectedCount;
+        int RetVal, ExpectedRet;
+        UINT IcoSize = MAKELONG(32, g_pairs[i].UseHigh ? 16 : 0);
+        PCWSTR pszPath = g_pairs[i].Library ? L"%SystemRoot%\\system32\\shell32.dll" : L"%temp%\\sysicon.ico";
+        HICON hIcons[8];
+        for (j = 0; j < _countof(hIcons); ++j)
+            hIcons[j] = hInvalidIcon;
+
+        RetVal = PrivateExtractIconsW(pszPath, 0, IcoSize, IcoSize, hIcons, NULL, g_pairs[i].InCount, 0);
+        for (j = 0, Count = 0; j < _countof(hIcons); ++j)
+        {
+            if (hIcons[j] != hInvalidIcon && IsValidIcon(hIcons[j]))
+            {
+                DestroyIcon(hIcons[j]);
+                ++Count;
+            }
+        }
+
+        ExpectedRet = !IsNT6 ? g_pairs[i].ReturnNT5 : g_pairs[i].ReturnNT6;
+        ExpectedCount = !IsNT6 ? g_pairs[i].CountNT5 : g_pairs[i].CountNT6;
+        ok(RetVal == ExpectedRet, "RetVal must be %d for test %u but got %d\n", ExpectedRet, i, RetVal);
+        ok(Count == ExpectedCount, "Count must be %u for test %u but got %d\n", ExpectedCount, i, Count);
     }
 }
