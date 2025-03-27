@@ -46,4 +46,4 @@ add_dependencies(setuplib xdk) # psdk
 set_module_type(setuplib nativedll)
 target_link_libraries(setuplib ext2lib vfatlib btrfslib ${PSEH_LIB})
 add_importlibs(setuplib ntdll)
-add_cd_file(TARGET setuplib DESTINATION reactos/system32 NO_CAB FOR bootcd regtest)
+add_cd_file(TARGET setuplib DESTINATION reactos/system32 NO_CAB FOR bootcd regtest bootcdregtest)
