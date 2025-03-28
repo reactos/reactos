@@ -57,6 +57,9 @@ extern "C" {
 
 typedef HANDLE HPAINTBUFFER;
 typedef HANDLE HTHEME;
+/* Vista+ */
+typedef HANDLE HANIMATIONBUFFER;
+
 typedef int (WINAPI *DTT_CALLBACK_PROC)(HDC,LPWSTR,int,RECT*,UINT,LPARAM);
 
 typedef enum _BP_BUFFERFORMAT
@@ -88,6 +91,21 @@ typedef enum THEMESIZE {
     TS_TRUE,
     TS_DRAW
 } THEMESIZE;
+
+/* Vista+ */
+typedef enum _BP_ANIMATIONSTYLE
+{
+    BPAS_NONE,
+    BPAS_LINEAR,
+    BPAS_CUBIC,
+    BPAS_SINE
+} BP_ANIMATIONSTYLE;
+  
+/* Vista+ */
+enum WINDOWTHEMEATTRIBUTETYPE
+{
+    WTA_NONCLIENT = 1
+};
 
 typedef struct _DTBGOPTS {
     DWORD dwSize;
@@ -126,6 +144,14 @@ typedef struct _DTTOPTS {
     DTT_CALLBACK_PROC pfnDrawTextCallback;
     LPARAM lParam;
 } DTTOPTS, *PDTTOPTS;
+
+typedef struct _BP_ANIMATIONPARAMS
+{
+    DWORD cbSize;
+    DWORD dwFlags;
+    BP_ANIMATIONSTYLE style;
+    DWORD dwDuration;
+} BP_ANIMATIONPARAMS, *PBP_ANIMATIONPARAMS;
 
 HRESULT WINAPI CloseThemeData(HTHEME);
 HRESULT WINAPI DrawThemeBackground(HTHEME,HDC,int,int,const RECT*,const RECT*);
@@ -192,6 +218,25 @@ DrawThemeTextEx(
     _Inout_ LPRECT pRect,
     _In_ const DTTOPTS *options
 );
+
+/* Vista+ */
+HRESULT WINAPI BufferedPaintInit(VOID);
+HRESULT WINAPI BufferedPaintUnInit(VOID);
+HPAINTBUFFER WINAPI BeginBufferedPaint(HDC, const RECT *, BP_BUFFERFORMAT,
+                                       BP_PAINTPARAMS *,HDC *);
+HRESULT WINAPI EndBufferedPaint(HPAINTBUFFER, BOOL);
+HRESULT WINAPI BufferedPaintClear(HPAINTBUFFER, const RECT *);
+HRESULT WINAPI BufferedPaintSetAlpha(HPAINTBUFFER, const RECT *, BYTE);
+HRESULT WINAPI GetBufferedPaintBits(HPAINTBUFFER, RGBQUAD **, int *);
+HDC WINAPI GetBufferedPaintDC(HPAINTBUFFER);
+HDC WINAPI GetBufferedPaintTargetDC(HPAINTBUFFER);
+HRESULT WINAPI GetBufferedPaintTargetRect(HPAINTBUFFER, RECT *prc);
+HANIMATIONBUFFER WINAPI BeginBufferedAnimation(HWND, HDC, const RECT *,
+                                               BP_BUFFERFORMAT, BP_PAINTPARAMS *,
+                                               BP_ANIMATIONPARAMS *, HDC *, HDC *);
+BOOL WINAPI BufferedPaintRenderAnimation(HWND, HDC);
+HRESULT WINAPI BufferedPaintStopAllAnimations(HWND);
+HRESULT WINAPI EndBufferedAnimation(HANIMATIONBUFFER, BOOL);
 #endif
 
 #ifdef __cplusplus
