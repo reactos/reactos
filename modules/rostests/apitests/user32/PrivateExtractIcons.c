@@ -8,16 +8,19 @@
 
 #include "precomp.h"
 #include <stdio.h>
+#include <versionhelpers.h>
 
 BOOL IsValidIcon(HICON hIco)
 {
     ICONINFO info = { 0 };
+
     if (!hIco || !GetIconInfo(hIco, &info))
         return FALSE;
+
     DeleteObject(info.hbmMask);
     if (info.hbmColor)
         DeleteObject(info.hbmColor);
-    return info.hbmMask || info.hbmColor;
+    return TRUE;
 }
 
 BOOL FileExists(PCWSTR FileName)
@@ -128,7 +131,7 @@ START_TEST(PrivateExtractIcons)
     HICON ahIcon;
     UINT i, aIconId, cIcons, cIcoTotal;
     WCHAR PathBuffer[MAX_PATH];
-    UINT Shell32WinIcoCount = LOBYTE(GetVersion()) >= 6 ? 326 : 239; /* 239 on W2K3SP2, 326 on Win10 */
+    UINT Shell32WinIcoCount = IsWindowsVistaOrGreater() ? 326 : 239; /* 239 on W2K3SP2, 326 on Win10 */
 
     /* Extract icons */
     for (i = 0; i < _countof(IconFiles); ++i)
@@ -220,7 +223,7 @@ static const struct tagPAIRSTESTS
 void TestPairExtraction(void)
 {
     const HICON hInvalidIcon = (HICON)(INT_PTR)-2;
-    const BOOL IsNT6 = LOBYTE(GetVersion()) >= 6;
+    const BOOL IsNT6 = IsWindowsVistaOrGreater();
     for (UINT i = 0; i < _countof(g_pairs); ++i)
     {
         UINT j, Count, ExpectedCount;
@@ -244,6 +247,6 @@ void TestPairExtraction(void)
         ExpectedRet = !IsNT6 ? g_pairs[i].ReturnNT5 : g_pairs[i].ReturnNT6;
         ExpectedCount = !IsNT6 ? g_pairs[i].CountNT5 : g_pairs[i].CountNT6;
         ok(RetVal == ExpectedRet, "RetVal must be %d for test %u but got %d\n", ExpectedRet, i, RetVal);
-        ok(Count == ExpectedCount, "Count must be %u for test %u but got %d\n", ExpectedCount, i, Count);
+        ok(Count == ExpectedCount, "Count must be %u for test %u but got %u\n", ExpectedCount, i, Count);
     }
 }
