@@ -69,13 +69,6 @@ RegSetString(HKEY hKey, LPCWSTR Name, LPCWSTR Str, DWORD Type OPTIONAL_(REG_SZ))
     return RegSetValueExW(hKey, Name, 0, Type, (LPBYTE)Str, (lstrlenW(Str) + 1) * sizeof(WCHAR));
 }
 
-EXTERN_C LONG
-PathProcessCommandW(
-    _In_ PCWSTR pszSrc,
-    _Out_writes_opt_(dwBuffSize) PWSTR pszDest,
-    _In_ INT cchDest,
-    _In_ DWORD dwFlags);
-
 typedef struct
 {
     LPCSTR Verb;
