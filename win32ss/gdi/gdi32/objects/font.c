@@ -1979,21 +1979,49 @@ IntConvertFontPaths(
     // Convert paths
     HRESULT hr = S_OK;
     PCWSTR pch1, pch1Prev;
+    BOOL bFirst = TRUE;
     for (pch1 = pch1Prev = pszFiles;; ++pch1)
     {
         if (*pch1 && *pch1 != L'|')
             continue;
 
         UINT_PTR spanLen = pch1 - pch1Prev;
-        if (spanLen == 0 || spanLen >= MAX_PATH)
+        if (spanLen < _countof(L".ttf") || spanLen >= MAX_PATH)
         {
             hr = E_INVALIDARG;
             break;
         }
 
-        // Search file
         WCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
         StringCchCopyNW(szFileName, _countof(szFileName), pch1Prev, spanLen);
+
+        // Check filename extension
+        PCWSTR pchDotExt = &szFileName[spanLen - 4];
+        if (bFirst)
+        {
+            if (lstrcmpiW(pchDotExt, L".fon") != 0 &&
+                lstrcmpiW(pchDotExt, L".fnt") != 0 &&
+                lstrcmpiW(pchDotExt, L".ttf") != 0 &&
+                lstrcmpiW(pchDotExt, L".ttc") != 0 &&
+                lstrcmpiW(pchDotExt, L".fot") != 0 &&
+                lstrcmpiW(pchDotExt, L".otf") != 0 &&
+                lstrcmpiW(pchDotExt, L".pfm") != 0)
+            {
+                hr = E_INVALIDARG;
+                break;
+            }
+        }
+        else
+        {
+            if (lstrcmpiW(pchDotExt, L".pfb") != 0 &&
+                lstrcmpiW(pchDotExt, L".mmm") != 0)
+            {
+                hr = E_INVALIDARG;
+                break;
+            }
+        }
+
+        // Search file
         if (!SearchPathW(L".", szFileName, NULL, _countof(szFullPath), szFullPath, NULL) &&
             !SearchPathW(szFontsDir, szFileName, NULL, _countof(szFullPath), szFullPath, NULL))
         {
@@ -2024,6 +2052,7 @@ IntConvertFontPaths(
             break;
 
         pch1Prev = pch1 + 1;
+        bFirst = FALSE;
     }
 
     if (FAILED(hr))
@@ -2534,6 +2563,12 @@ GdiAddFontResourceW(
     FLONG fl,
     DESIGNVECTOR *pdv)
 {
+    if (!*lpszFilename)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
     ULONG cFiles, cwc;
     PWSTR pszConverted = IntConvertFontPaths(lpszFilename, &cFiles, &cwc, &fl, FALSE);
     if (!pszConverted)
