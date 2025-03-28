@@ -145,12 +145,10 @@ IsActiveSessionCountLimited()
 }
 
 #ifdef __REACTOS__
+#include <mmtypes.h>
 VERSIONHELPERAPI
 IsReactOS()
 {
-    // FIXME: Find a better method!
-    WCHAR szWinDir[MAX_PATH];
-    GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
-    return (wcsstr(szWinDir, L"ReactOS") != NULL);
+    return *(UINT*)(MM_SHARED_USER_DATA_VA + PAGE_SIZE - sizeof(ULONG)) == 0x8EAC705;
 }
 #endif // __REACTOS__
