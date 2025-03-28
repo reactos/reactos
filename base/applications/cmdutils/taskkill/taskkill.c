@@ -371,69 +371,87 @@ static void mark_child_processes(void)
  * A PID of zero causes taskkill to warn about the inability to terminate
  * system processes. */
 
+#ifdef __REACTOS__
+
 static BOOL get_pid_creation_time(DWORD pid, FILETIME *time)
 {
     HANDLE process;
-    FILETIME t1 = { 0 }, t2 = { 0 }, t3 = { 0 };
+    FILETIME t1, t2, t3;
+    BOOL success;
 
     process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!process)
-    {
         return FALSE;
-    }
 
-    if (!GetProcessTimes(process, time, &t1, &t2, &t3))
-    {
-        CloseHandle(process);
-        return FALSE;
-    }
-
+    success = GetProcessTimes(process, time, &t1, &t2, &t3);
     CloseHandle(process);
-    return TRUE;
+
+    return success;
 }
 
-static void send_close_messages_tree(DWORD ppid)
+static void terminate_process_tree(DWORD ppid)
 {
-    FILETIME parent_creation_time = { 0 };
-    HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    PROCESSENTRY32W pe = { 0 };
-    pe.dwSize = sizeof(PROCESSENTRY32W);
+    FILETIME parent_creation_time;
+    unsigned int i;
 
-    if (!get_pid_creation_time(ppid, &parent_creation_time) || !h)
-    {
-        CloseHandle(h);
+    if (!get_pid_creation_time(ppid, &parent_creation_time))
         return;
-    }
 
-    if (Process32FirstW(h, &pe))
+    for (i = 0; i < process_count; ++i)
     {
-        do
+        FILETIME child_creation_time;
+        DWORD pid;
+
+        // Ignore processes already marked for termination
+        if (process_list[i].matched)
+            continue;
+
+        // Prevent self-termination if we are in the process tree
+        pid = process_list[i].p.th32ProcessID;
+        if (pid == self_pid)
+            continue;
+
+        if (!get_pid_creation_time(pid, &child_creation_time))
+            continue;
+
+        // Compare creation time to avoid PID reuse cases
+        if (process_list[i].p.th32ParentProcessID == ppid &&
+            CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
         {
-            FILETIME child_creation_time = { 0 };
-            struct pid_close_info info = { pe.th32ProcessID };
+            // Process marked for termination
+            process_list[i].matched = TRUE;
 
-            if (!get_pid_creation_time(pe.th32ProcessID, &child_creation_time))
+            // Use recursion to browse all child processes
+            terminate_process_tree(pid);
+
+            if (force_termination)
             {
-                continue;
+                HANDLE process;
+                process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+                if (!process)
+                    continue;
+
+                if (!TerminateProcess(process, 1))
+                    taskkill_message_printfW(STRING_TERM_CHILD_FAILED, pid, ppid);
+                else
+                    taskkill_message_printfW(STRING_TERM_CHILD, pid, ppid);
+
+                CloseHandle(process);
             }
-
-            // Compare creation time to avoid reuse PID, thanks to @ThFabba
-            if (pe.th32ParentProcessID == ppid &&
-                CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
+            else
             {
-                // Use recursion to browse all child processes
-                send_close_messages_tree(pe.th32ProcessID);
+                struct pid_close_info info = { pid, FALSE };
                 EnumWindows(pid_enum_proc, (LPARAM)&info);
                 if (info.found)
                 {
-                    taskkill_message_printfW(STRING_CLOSE_CHILD, pe.th32ProcessID, ppid);
+                    taskkill_message_printfW(STRING_CLOSE_CHILD, pid, ppid);
                 }
             }
-        } while (Process32NextW(h, &pe));
+        }
     }
-
-    CloseHandle(h);
 }
+
+#endif // __REACTOS__
 
 static int send_close_messages(void)
 {
@@ -458,15 +476,9 @@ static int send_close_messages(void)
 
         info.pid = process_list[i].p.th32ProcessID;
 #ifdef __REACTOS__
-        if (info.pid == self_pid)
-        {
-            taskkill_message(STRING_SELF_TERMINATION);
-            status_code = 1;
-            continue;
-        }
         // Send close messages to child first
         if (kill_child_processes)
-            send_close_messages_tree(info.pid);
+            terminate_process_tree(info.pid);
 #endif
         process_name = process_list[i].p.szExeFile;
         info.found = FALSE;
@@ -487,60 +499,6 @@ static int send_close_messages(void)
     }
 
     return status_code;
-}
-
-static void terminate_process_tree(DWORD ppid)
-{
-    FILETIME parent_creation_time = { 0 };
-    HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    PROCESSENTRY32W pe = { 0 };
-    pe.dwSize = sizeof(PROCESSENTRY32W);
-
-    if (!get_pid_creation_time(ppid, &parent_creation_time) || !h)
-    {
-        CloseHandle(h);
-        return;
-    }
-
-    if (Process32FirstW(h, &pe))
-    {
-        do
-        {
-            FILETIME child_creation_time = { 0 };
-
-            if (!get_pid_creation_time(pe.th32ProcessID, &child_creation_time))
-            {
-                continue;
-            }
-
-            // Compare creation time to avoid reuse PID, thanks to @ThFabba
-            if (pe.th32ParentProcessID == ppid &&
-                CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
-            {
-                HANDLE process;
-
-                // Use recursion to browse all child processes
-                terminate_process_tree(pe.th32ProcessID);
-                process = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
-                if (!process)
-                {
-                    continue;
-                }
-
-                if (!TerminateProcess(process, 1))
-                {
-                    taskkill_message_printfW(STRING_TERM_CHILD_FAILED, pe.th32ProcessID, ppid);
-                    CloseHandle(process);
-                    continue;
-                }
-
-                taskkill_message_printfW(STRING_TERM_CHILD, pe.th32ProcessID, ppid);
-                CloseHandle(process);
-            }
-        } while (Process32NextW(h, &pe));
-    }
-
-    CloseHandle(h);
 }
 
 static int terminate_processes(void)
@@ -567,12 +525,6 @@ static int terminate_processes(void)
 
         pid = process_list[i].p.th32ProcessID;
 #ifdef __REACTOS__
-        if (pid == self_pid)
-        {
-            taskkill_message(STRING_SELF_TERMINATION);
-            status_code = 1;
-            continue;
-        }
         // Terminate child first
         if (kill_child_processes)
             terminate_process_tree(pid);
@@ -671,7 +623,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             {
             case OP_PARAM_FORCE_TERMINATE:
             {
-                if (force_termination == TRUE)
+                if (force_termination)
                 {
                     // -f already specified
                     taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
@@ -717,7 +669,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             }
             case OP_PARAM_HELP:
             {
-                if (has_help == TRUE)
+                if (has_help)
                 {
                     // -? already specified
                     taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
@@ -729,7 +681,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             }
             case OP_PARAM_TERMINATE_CHILD:
             {
-                if (kill_child_processes == TRUE)
+                if (kill_child_processes)
                 {
                     // -t already specified
                     taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
@@ -764,7 +716,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             exit(0);
         }
     }
-    else if ((!has_im) && (!has_pid)) // has_help == FALSE
+    else if (!has_im && !has_pid) // has_help == FALSE
     {
         // both has_im and has_pid are missing (maybe -fi option is missing too, if implemented later)
         taskkill_message(STRING_MISSING_OPTION);
