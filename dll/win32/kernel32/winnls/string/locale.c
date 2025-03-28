@@ -260,7 +260,18 @@ static struct registry_value
     { LOCALE_ITIMEMARKPOSN, iTimePrefixW }
 };
 
+#ifdef __REACTOS__
+static RTL_CRITICAL_SECTION cache_section;
+static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &cache_section,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": locale_section") }
+};
+static RTL_CRITICAL_SECTION cache_section = { &critsect_debug, -1, 0, 0, 0, 0 };
+#else
 static RTL_CRITICAL_SECTION cache_section = { NULL, -1, 0, 0, 0, 0 };
+#endif
 
 #ifndef __REACTOS__
 /* Copy Ascii string to Unicode without using codepages */
