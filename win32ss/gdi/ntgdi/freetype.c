@@ -1233,7 +1233,7 @@ IntUnicodeStringToBuffer(LPWSTR pszBuffer, SIZE_T cbBuffer, const UNICODE_STRING
 }
 
 static NTSTATUS
-DuplicateUnicodeString(PUNICODE_STRING Source, PUNICODE_STRING Destination)
+DuplicateUnicodeString(const UNICODE_STRING *Source, PUNICODE_STRING Destination)
 {
     NTSTATUS Status = STATUS_NO_MEMORY;
     UNICODE_STRING Tmp;
@@ -1664,7 +1664,8 @@ IntLoadSystemFonts(VOID)
                     {
                         RtlCopyUnicodeString(&FileName, &Directory);
                         RtlAppendUnicodeStringToString(&FileName, &TempString);
-                        if (!IntGdiAddFontResourceEx(&FileName, 0, AFRX_WRITE_REGISTRY))
+                        if (!IntGdiAddFontResourceEx(&FileName, 0, AFRX_WRITE_REGISTRY, 1,
+                                                     FileName.MaximumLength / sizeof(WCHAR)))
                         {
                             DPRINT1("ERR: Failed to load %wZ\n", &FileName);
                         }
@@ -2086,15 +2087,12 @@ NameFromCharSet(BYTE CharSet)
     }
 }
 
-/*
- * IntGdiAddFontResource
- *
- * Adds the font resource from the specified file to the system.
- */
-
-INT FASTCALL
-IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
-                        DWORD dwFlags)
+/* Adds the font resource from the specified file to the system */
+static INT FASTCALL
+IntGdiAddFontResourceSingle(
+    IN const UNICODE_STRING *FileName,
+    IN DWORD Characteristics,
+    IN DWORD dwFlags)
 {
     NTSTATUS Status;
     HANDLE FileHandle;
@@ -2291,9 +2289,104 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
 }
 
 INT FASTCALL
-IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
+IntGdiAddFontResourceEx(
+    IN const UNICODE_STRING *FileName,
+    IN DWORD Characteristics,
+    IN DWORD dwFlags,
+    IN DWORD cFiles,
+    IN DWORD cwc)
 {
-    return IntGdiAddFontResourceEx(FileName, Characteristics, 0);
+    PWSTR pchFile = FileName->Buffer;
+    SIZE_T cchFile;
+    INT ret = 0;
+
+    while (cFiles--)
+    {
+        _SEH2_TRY
+        {
+            // Security issue: FileName should be terminated by double '\0'
+            if (!*pchFile)
+                return FALSE;
+
+            cchFile = wcslen(pchFile);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return FALSE);
+        }
+        _SEH2_END;
+
+        // Security issue: Prohibit buffer overrun
+        if (pchFile + (cchFile + 1) > FileName->Buffer + cwc)
+            return FALSE;
+
+        UNICODE_STRING ustrPathName;
+        ustrPathName.Length = (USHORT)(cchFile * sizeof(WCHAR));
+        ustrPathName.MaximumLength = ustrPathName.Length + sizeof(WCHAR);
+        ustrPathName.Buffer = pchFile;
+
+        INT count = IntGdiAddFontResourceSingle(&ustrPathName, Characteristics, dwFlags);
+        if (!count)
+            return 0;
+        ret += count;
+
+        pchFile += cchFile + 1;
+    }
+
+    return ret;
+}
+
+static BOOL FASTCALL
+IntGdiRemoveFontResourceSingle(
+    IN const UNICODE_STRING *FileName,
+    IN DWORD dwFlags)
+{
+    return FALSE; // FIXME
+}
+
+BOOL FASTCALL
+IntGdiRemoveFontResource(
+    IN const UNICODE_STRING *FileName,
+    IN DWORD dwFlags,
+    IN DWORD cFiles,
+    IN DWORD cwc)
+{
+    PWSTR pchFile = FileName->Buffer;
+    SIZE_T cchFile;
+
+    while (cFiles--)
+    {
+        _SEH2_TRY
+        {
+            // Security issue: FileName should be terminated by double '\0'
+            if (!*pchFile)
+                return FALSE;
+
+            cchFile = wcslen(pchFile);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return FALSE);
+        }
+        _SEH2_END;
+
+        // Security issue: Prohibit buffer overrun
+        if (pchFile + (cchFile + 1) > FileName->Buffer + cwc)
+            return FALSE;
+
+        UNICODE_STRING ustrPathName;
+        ustrPathName.Length = (USHORT)(cchFile * sizeof(WCHAR));
+        ustrPathName.MaximumLength = ustrPathName.Length + sizeof(WCHAR);
+        ustrPathName.Buffer = pchFile;
+
+        BOOL ret = IntGdiRemoveFontResourceSingle(&ustrPathName, dwFlags);
+        if (!ret)
+            return FALSE;
+
+        pchFile += cchFile + 1;
+    }
+
+    return TRUE;
 }
 
 /* Borrowed from shlwapi!PathIsRelativeW */
@@ -2439,7 +2532,8 @@ IntLoadFontsInRegistry(VOID)
         if (NT_SUCCESS(Status))
         {
             RtlCreateUnicodeString(&FileNameW, szPath);
-            nFontCount += IntGdiAddFontResourceEx(&FileNameW, 0, dwFlags);
+            nFontCount += IntGdiAddFontResourceEx(&FileNameW, 0, dwFlags, 1,
+                                                  FileNameW.MaximumLength / sizeof(WCHAR));
             RtlFreeUnicodeString(&FileNameW);
         }
 
@@ -2507,8 +2601,6 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
 
     return Ret;
 }
-
-// FIXME: Add RemoveFontResource
 
 VOID FASTCALL
 IntGdiCleanupMemEntry(PFONT_ENTRY_MEM Head)
