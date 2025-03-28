@@ -27,6 +27,6 @@ add_library(mscoree MODULE
 
 set_module_type(mscoree win32dll)
 target_link_libraries(mscoree uuid wine)
-add_importlibs(mscoree dbghelp advapi32 shell32 ole32 shlwapi msvcrt kernel32 ntdll)
+add_importlibs(mscoree dbghelp advapi32 shell32 ole32 shlwapi msvcrt kernel32_vista kernel32 ntdll)
 add_pch(mscoree mscoree_private.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET mscoree DESTINATION reactos/system32 FOR all)

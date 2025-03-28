@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Robert Shearman for CodeWeavers
+ * Copyright 2019 Nikolay Sivov for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma makedep header
+import "wtypes.idl";
 
-#include "wine/irot.idl"
+cpp_quote("#define IRPCSS_PROTSEQ {'n','c','a','l','r','p','c',0}")
+cpp_quote("#define IRPCSS_ENDPOINT {'i','r','p','c','s','s',0}")
+
+[
+    uuid(85da4974-edc7-40ff-bad4-9c4525a8d044),
+    version(0.0),
+]
+interface Irpcss
+{
+    HRESULT irpcss_get_thread_seq_id(
+        [in] handle_t handle,
+        [out] DWORD *sequence_id);
+}
