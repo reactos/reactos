@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <ndk/setypes.h>
 #include <ndk/exfuncs.h>
-#include <strsafe.h>
+
 WCHAR TestName[MAX_PATH];
 
 CConfiguration Configuration;
@@ -92,9 +92,12 @@ wmain(int argc, wchar_t* argv[])
     DWORD TestStartTime, TestEndTime;
 
     GetModuleFileNameW(NULL, TestName, _countof(TestName));
+//    printf("Full TestName is '%S'\n", TestName);
     WCHAR* Name = wcsrchr(TestName, '\\');
-    Name++;
-    StringCchCopyW(TestName, _countof(TestName), Name);
+    if (Name)
+        Name++;
+    memmove(TestName, Name, _countof(TestName) * sizeof(WCHAR));
+//    printf("Short TestName is '%S'.\n", TestName);
 
     SetNtGlobalFlags();
 
@@ -161,7 +164,7 @@ wmain(int argc, wchar_t* argv[])
         ss << endl
            << "[ROSAUTOTEST] System uptime at end was " << setprecision(2) << fixed;
         ss << ((float)TestEndTime / 1000) << " seconds" << endl;
-        ss << "[ROSAUTOTEST] Duration was " << (((float)TestEndTime / 1000) - ((float)TestStartTime / 1000)) / 60;
+        ss << "[ROSAUTOTEST] Duration was " << (((float)TestEndTime - (float)TestStartTime) / 1000) / 60;
         ss << " minutes" << endl;
         StringOut(ss.str());
 
