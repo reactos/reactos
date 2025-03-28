@@ -3159,7 +3159,13 @@ TOOLBAR_AddStringW (TOOLBAR_INFO *infoPtr, HINSTANCE hInstance, LPARAM lParam)
                 break;
             }
 
-            infoPtr->strings = ReAlloc(infoPtr->strings, sizeof(LPWSTR)*(infoPtr->nNumStrings+1));
+            PWSTR* new_strings = ReAlloc(infoPtr->strings, sizeof(LPWSTR) * (infoPtr->nNumStrings + 1));
+            if (!infoPtr->strings)
+            {
+                __debugbreak();
+                new_strings = ReAlloc(infoPtr->strings, sizeof(LPWSTR) * (infoPtr->nNumStrings + 1));
+            }
+            infoPtr->strings = new_strings;
             Str_SetPtrW(&infoPtr->strings[infoPtr->nNumStrings], p);
             infoPtr->nNumStrings++;
 

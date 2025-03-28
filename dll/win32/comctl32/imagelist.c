@@ -1316,7 +1316,7 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
     void *bits, *mask_bits;
     unsigned int *ptr;
     int i, j;
-
+    __debugbreak();
     if (!(hdc = CreateCompatibleDC( 0 ))) return FALSE;
     if (!(info = heap_alloc( FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) goto done;
     info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
