@@ -449,7 +449,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     hwndFileSystems = GetDlgItem(hwndDlg, 28677);
 
     int iForceDefault = -1;
-    while(QueryAvailableFileSystemFormat(dwIndex, szText, &uMajor, &uMinor, &Latest))
+    while (QueryAvailableFileSystemFormat(dwIndex, szText, &uMajor, &uMinor, &Latest))
     {
         if (!_wcsicmp(szText, szFs))
             iForceDefault = dwDefault = dwIndex; /* default to the same filesystem */
@@ -725,7 +725,7 @@ FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         }
         case WM_NEXTDLGCTL:
-            PostMessage(hwndDlg, WM_APP, TRUE, 0);
+            PostMessage(hwndDlg, WM_APP, TRUE, 0); // Delay our action until after focus has changed
             break;
         case WM_APP: // Show/Hide tip if tabbed to the info icon
         {
