@@ -340,6 +340,7 @@ public:
     BOOL IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pdwBandID);
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
+    HRESULT GoBackOrForward();
     HRESULT DoFolderOptions();
     HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pvs);
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -522,7 +523,6 @@ public:
     // *** IWebBrowser methods ***
     STDMETHOD(GoBack)() override;
     STDMETHOD(GoForward)() override;
-    STDMETHOD(GoBackOrForward)();
     STDMETHOD(GoHome)() override;
     STDMETHOD(GoSearch)() override;
     STDMETHOD(Navigate)(BSTR URL, VARIANT *Flags, VARIANT *TargetFrameName,
@@ -1404,6 +1404,26 @@ HRESULT CShellBrowser::NavigateToParent()
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
+}
+
+HRESULT CShellBrowser::GoBackOrForward()
+{
+    CComPtr<ITravelLog> travelLog;
+    HRESULT hResult = GetTravelLog(&travelLog);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    CComPtr<ITravelEntry> backEntry;
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_BACK, &backEntry);
+    if (SUCCEEDED(hResult) && backEntry)
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
+
+    CComPtr<ITravelEntry> forwardEntry;
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_FORE, &forwardEntry);
+    if (SUCCEEDED(hResult) && forwardEntry)
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
+
+    return hResult;
 }
 
 BOOL CALLBACK AddFolderOptionsPage(HPROPSHEETPAGE thePage, LPARAM lParam)
@@ -3151,26 +3171,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GoForward()
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
-}
-
-HRESULT STDMETHODCALLTYPE CShellBrowser::GoBackOrForward()
-{
-    CComPtr<ITravelLog> travelLog;
-    HRESULT hResult = GetTravelLog(&travelLog);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-
-    CComPtr<ITravelEntry> backEntry;
-    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_BACK, &backEntry);
-    if (SUCCEEDED(hResult) && backEntry)
-        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
-
-    CComPtr<ITravelEntry> forwardEntry;
-    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_FORE, &forwardEntry);
-    if (SUCCEEDED(hResult) && forwardEntry)
-        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
-
-    return hResult;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoHome()
