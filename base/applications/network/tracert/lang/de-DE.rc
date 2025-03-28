@@ -38,4 +38,7 @@ Optionen:\n\
     IDS_HOP_RESPONSE    "  Antwort: "
     IDS_DEST_HOST_UNREACHABLE "Zielhost nicht erreichbar.\n"
     IDS_DEST_NET_UNREACHABLE  "Zielnetz nicht erreichbar.\n"
+    IDS_BAD_OPTION_VALUE      "Bad value for option %1!ls!.\n"
+    IDS_MISSING_OPTION_VALUE  "A value must be supplied for option %1!ls!.\n"
+    IDS_MISSING_TARGET "A target name or address must be specified.\n"
 END
