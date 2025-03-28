@@ -243,36 +243,16 @@ ACPIDispatchDeviceControl(
             {
                 ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
-                if (KeGetCurrentIrql() == DISPATCH_LEVEL)
-                {
-                    PEVAL_WORKITEM_DATA workItemData;
-
-                    workItemData = ExAllocatePoolUninitialized(NonPagedPool,
-                                                               sizeof(*workItemData),
-                                                               'ipcA');
-                    if (!workItemData)
-                    {
-                        status = STATUS_INSUFFICIENT_RESOURCES;
-                        break;
-                    }
-                    workItemData->Irp = Irp;
-                    workItemData->DeviceData = (PPDO_DEVICE_DATA)commonData;
-
-                    ExInitializeWorkItem(&workItemData->WorkQueueItem,
-                                         Bus_PDO_EvalMethodWorker,
-                                         workItemData);
-                    ExQueueWorkItem(&workItemData->WorkQueueItem, DelayedWorkQueue);
-
-                    status = STATUS_PENDING;
-                    break;
-                }
-                __fallthrough;
+                status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData, Irp);
+                break;
             }
-           case IOCTL_ACPI_EVAL_METHOD:
+
+            case IOCTL_ACPI_EVAL_METHOD:
             {
-              status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData,
-                                          Irp);
-              break;
+                ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+
+                status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData, Irp);
+                break;
             }
 
            case IOCTL_GET_SYS_BUTTON_CAPS:

@@ -73,13 +73,6 @@ typedef struct _FDO_DEVICE_DATA
 
 } FDO_DEVICE_DATA, *PFDO_DEVICE_DATA;
 
-typedef struct _EVAL_WORKITEM_DATA
-{
-    PPDO_DEVICE_DATA DeviceData;
-    PIRP Irp;
-    WORK_QUEUE_ITEM WorkQueueItem;
-} EVAL_WORKITEM_DATA, *PEVAL_WORKITEM_DATA;
-
 #define FDO_FROM_PDO(pdoData) \
           ((PFDO_DEVICE_DATA) (pdoData)->ParentFdo->DeviceExtension)
 
@@ -100,10 +93,6 @@ NTSTATUS
 ACPIEnumerateDevices(
   PFDO_DEVICE_DATA DeviceExtension);
 
-CODE_SEG("PAGE")
-WORKER_THREAD_ROUTINE Bus_PDO_EvalMethodWorker;
-
-CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 Bus_PDO_EvalMethod(
