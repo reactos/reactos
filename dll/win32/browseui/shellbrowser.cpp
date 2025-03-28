@@ -3886,7 +3886,7 @@ LRESULT CShellBrowser::OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &
 
 LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    HRESULT hResult = GoBackOrForward();
+    HRESULT hResult = LOBYTE(GetVersion()) >= 6 ? GoBackOrForward() : NavigateToParent();
     if (FAILED(hResult))
         TRACE("GoBackOrForward failed with hResult=%08lx\n", hResult);
     return 0;
