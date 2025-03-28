@@ -1977,7 +1977,7 @@ IntConvertFontPaths(
     *pcFiles = pathCount;
 
     // Convert paths
-    HRESULT hr = S_OK;
+    DWORD dwError = ERROR_SUCCESS;
     PCWSTR pch1, pch1Prev;
     BOOL bFirst = TRUE;
     for (pch1 = pch1Prev = pszFiles;; ++pch1)
@@ -1988,7 +1988,7 @@ IntConvertFontPaths(
         UINT_PTR spanLen = pch1 - pch1Prev;
         if (spanLen < _countof(L".ttf") || spanLen >= MAX_PATH)
         {
-            hr = E_INVALIDARG;
+            dwError = ERROR_INVALID_PARAMETER;
             break;
         }
 
@@ -2007,7 +2007,7 @@ IntConvertFontPaths(
                 lstrcmpiW(pchDotExt, L".otf") != 0 &&
                 lstrcmpiW(pchDotExt, L".pfm") != 0)
             {
-                hr = E_INVALIDARG;
+                dwError = ERROR_INVALID_PARAMETER;
                 break;
             }
         }
@@ -2016,7 +2016,7 @@ IntConvertFontPaths(
             if (lstrcmpiW(pchDotExt, L".pfb") != 0 &&
                 lstrcmpiW(pchDotExt, L".mmm") != 0)
             {
-                hr = E_INVALIDARG;
+                dwError = ERROR_INVALID_PARAMETER;
                 break;
             }
         }
@@ -2025,7 +2025,7 @@ IntConvertFontPaths(
         if (!SearchPathW(L".", szFileName, NULL, _countof(szFullPath), szFullPath, NULL) &&
             !SearchPathW(szFontsDir, szFileName, NULL, _countof(szFullPath), szFullPath, NULL))
         {
-            hr = E_FAIL;
+            dwError = ERROR_FILE_NOT_FOUND;
             break;
         }
 
@@ -2033,7 +2033,7 @@ IntConvertFontPaths(
         UNICODE_STRING NtAbsPath;
         if (!RtlDosPathNameToNtPathName_U(szFullPath, &NtAbsPath, NULL, NULL))
         {
-            hr = E_OUTOFMEMORY;
+            dwError = ERROR_OUTOFMEMORY;
             break;
         }
 
@@ -2042,7 +2042,7 @@ IntConvertFontPaths(
             StringCchCatW(pszBuff, cchBuff, L"|") != S_OK)
         {
             RtlFreeUnicodeString(&NtAbsPath);
-            hr = E_FAIL;
+            dwError = ERROR_BUFFER_OVERFLOW;
             break;
         }
 
@@ -2055,10 +2055,11 @@ IntConvertFontPaths(
         bFirst = FALSE;
     }
 
-    if (FAILED(hr))
+    if (dwError != ERROR_SUCCESS)
     {
         HEAP_free(pszBuff);
         *pcwc = *pcFiles = 0;
+        SetLastError(dwError);
         return NULL;
     }
 
