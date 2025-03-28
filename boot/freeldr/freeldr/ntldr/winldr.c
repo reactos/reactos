@@ -246,11 +246,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* FIXME! HACK value for docking profile */
     Extension->Profile.Status = 2;
 
-    PDESCRIPTION_HEADER AcpiTable = FindAcpiTable();
-    if (AcpiTable)
+    /* Check if FreeLdr detected a ACPI table */
+    if (IsAcpiPresent())
     {
-        Extension->AcpiTable = AcpiTable;
-        Extension->AcpiTableSize = AcpiTable->Length;
+        /* Set the pointer to something for compatibility */
+        Extension->AcpiTable = (PVOID)1;
+        // FIXME: Extension->AcpiTableSize;
     }
 
     if (VersionToBoot >= _WIN32_WINNT_VISTA)

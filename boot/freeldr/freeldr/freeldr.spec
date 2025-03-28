@@ -108,7 +108,6 @@
 @ cdecl GetArgumentValue()
 @ cdecl GetBootMgrInfo()
 @ cdecl IsAcpiPresent()
-@ cdecl FindAcpiTable()
 @ cdecl LoadSettings()
 @ cdecl MachHwDetect()
 @ cdecl MachPrepareForReactOS()
