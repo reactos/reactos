@@ -4,6 +4,7 @@
  * Copyright 2008 Andrew Riedi
  * Copyright 2010 Andrew Nguyen
  * Copyright 2020 He Yang
+ * Copyright 2025 Hermès Bélusca-Maïto
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -301,9 +302,9 @@ static void taskkill_message_print_process(int msg, unsigned int index)
  * obtained from the system, is such that any child process P[j] of a given
  * parent process P[i] is enumerated *AFTER* its parent (i.e. i < j).
  *
- * Because of these facts, the ReactOS recursive method is employed instead.
- * Note however that the Wine method (below) has been adapted for ease of
- * usage and comparison with that of ReactOS.
+ * Because of these facts, the ReactOS method is employed instead.
+ * Note however that the Wine method (below) has been adapted for
+ * ease of usage and comparison with that of ReactOS.
  */
 
 static BOOL find_parent(unsigned int process_index, unsigned int *parent_index)
@@ -376,65 +377,99 @@ static void mark_child_processes(void)
 static BOOL get_pid_creation_time(DWORD pid, FILETIME *time)
 {
     HANDLE process;
-    FILETIME t1 = { 0 }, t2 = { 0 }, t3 = { 0 };
+    FILETIME t1, t2, t3;
+    BOOL success;
 
     process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!process)
-    {
         return FALSE;
-    }
 
-    if (!GetProcessTimes(process, time, &t1, &t2, &t3))
-    {
-        CloseHandle(process);
-        return FALSE;
-    }
-
+    success = GetProcessTimes(process, time, &t1, &t2, &t3);
     CloseHandle(process);
-    return TRUE;
+
+    return success;
 }
 
-static void send_close_messages_tree(DWORD ppid)
+static void queue_children(DWORD ppid)
 {
-    FILETIME parent_creation_time = { 0 };
-    HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    PROCESSENTRY32W pe = { 0 };
-    pe.dwSize = sizeof(PROCESSENTRY32W);
+    FILETIME parent_creation_time;
+    unsigned int i;
 
-    if (!get_pid_creation_time(ppid, &parent_creation_time) || !h)
-    {
-        CloseHandle(h);
+    if (!get_pid_creation_time(ppid, &parent_creation_time))
         return;
-    }
 
-    if (Process32FirstW(h, &pe))
+    for (i = 0; i < process_count; ++i)
     {
-        do
+        FILETIME child_creation_time;
+        DWORD pid;
+
+        // Ignore processes already marked for termination
+        if (process_list[i].matched)
+            continue;
+
+        // Prevent self-termination if we are in the process tree
+        pid = process_list[i].p.th32ProcessID;
+        if (pid == self_pid)
+            continue;
+
+        if (!get_pid_creation_time(pid, &child_creation_time))
+            continue;
+
+        // Compare creation time to avoid PID reuse cases
+        if (process_list[i].p.th32ParentProcessID == ppid &&
+            CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
         {
-            FILETIME child_creation_time = { 0 };
-            struct pid_close_info info = { pe.th32ProcessID };
-
-            if (!get_pid_creation_time(pe.th32ProcessID, &child_creation_time))
-            {
-                continue;
-            }
-
-            // Compare creation time to avoid reuse PID, thanks to @ThFabba
-            if (pe.th32ParentProcessID == ppid &&
-                CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
-            {
-                // Use recursion to browse all child processes
-                send_close_messages_tree(pe.th32ProcessID);
-                EnumWindows(pid_enum_proc, (LPARAM)&info);
-                if (info.found)
-                {
-                    taskkill_message_printfW(STRING_CLOSE_CHILD, pe.th32ProcessID, ppid);
-                }
-            }
-        } while (Process32NextW(h, &pe));
+            // Process marked for termination
+            WINE_TRACE("Adding child %04lx.\n", pid);
+            process_list[i].matched = TRUE;
+            pkill_list[pkill_size++] = i;
+        }
     }
+}
 
-    CloseHandle(h);
+/*
+ * Based on the root processes to terminate, we perform a level order traversal
+ * (Breadth First Search) of the corresponding process trees, building the list
+ * of all processes and children to terminate,
+ * This allows terminating the processes, starting from parents down to their
+ * children. Note that this is in the reverse order than what Windows' taskkill
+ * does. The reason why we chose to do the reverse, is because there exist
+ * (parent) processes that detect whether their children are terminated, and
+ * if so, attempt to restart their terminated children. We want to avoid this
+ * scenario in order to ensure no extra processes get started, while the user
+ * wanted to terminate them.
+ */
+static void mark_child_processes(void)
+{
+    /*
+     * The temporary FIFO queue for BFS (starting empty), is embedded
+     * inside the result list. The queue resides between the [front, end)
+     * indices (if front == end, the queue is empty), and moves down
+     * through the result list, generating the sought values in order.
+     */
+    unsigned int front = 0; // end = 0; given by pkill_size
+
+    /* The root processes have already been
+     * enqueued in pkill_list[0..pkill_size] */
+
+    /* Now, find and enqueue the children processes */
+    while (pkill_size - front > 0)
+    {
+        /* Begin search at the next level */
+        unsigned int len = pkill_size - front;
+        unsigned int i;
+        for (i = 0; i < len; ++i)
+        {
+            /* Standard BFS would pop the element from the front of
+             * the queue and push it to the end of the result list.
+             * In our case, everything is already correctly positioned
+             * so that we can just simply emulate queue front popping. */
+            DWORD pid = process_list[pkill_list[front++]].p.th32ProcessID;
+
+            /* Enqueue the children processes */
+            queue_children(pid); // Updates pkill_size accordingly.
+        }
+    }
 }
 
 #endif // __REACTOS__
@@ -461,17 +496,6 @@ static int send_close_messages(void)
 #endif
 
         info.pid = process_list[i].p.th32ProcessID;
-#ifdef __REACTOS__
-        if (info.pid == self_pid)
-        {
-            taskkill_message(STRING_SELF_TERMINATION);
-            status_code = 1;
-            continue;
-        }
-        // Send close messages to child first
-        if (kill_child_processes)
-            send_close_messages_tree(info.pid);
-#endif
         process_name = process_list[i].p.szExeFile;
         info.found = FALSE;
         WINE_TRACE("Terminating pid %04lx.\n", info.pid);
@@ -492,64 +516,6 @@ static int send_close_messages(void)
 
     return status_code;
 }
-
-#ifdef __REACTOS__
-
-static void terminate_process_tree(DWORD ppid)
-{
-    FILETIME parent_creation_time = { 0 };
-    HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    PROCESSENTRY32W pe = { 0 };
-    pe.dwSize = sizeof(PROCESSENTRY32W);
-
-    if (!get_pid_creation_time(ppid, &parent_creation_time) || !h)
-    {
-        CloseHandle(h);
-        return;
-    }
-
-    if (Process32FirstW(h, &pe))
-    {
-        do
-        {
-            FILETIME child_creation_time = { 0 };
-
-            if (!get_pid_creation_time(pe.th32ProcessID, &child_creation_time))
-            {
-                continue;
-            }
-
-            // Compare creation time to avoid reuse PID, thanks to @ThFabba
-            if (pe.th32ParentProcessID == ppid &&
-                CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
-            {
-                HANDLE process;
-
-                // Use recursion to browse all child processes
-                terminate_process_tree(pe.th32ProcessID);
-                process = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
-                if (!process)
-                {
-                    continue;
-                }
-
-                if (!TerminateProcess(process, 1))
-                {
-                    taskkill_message_printfW(STRING_TERM_CHILD_FAILED, pe.th32ProcessID, ppid);
-                    CloseHandle(process);
-                    continue;
-                }
-
-                taskkill_message_printfW(STRING_TERM_CHILD, pe.th32ProcessID, ppid);
-                CloseHandle(process);
-            }
-        } while (Process32NextW(h, &pe));
-    }
-
-    CloseHandle(h);
-}
-
-#endif // __REACTOS__
 
 static int terminate_processes(void)
 {
@@ -574,17 +540,6 @@ static int terminate_processes(void)
 #endif
 
         pid = process_list[i].p.th32ProcessID;
-#ifdef __REACTOS__
-        if (pid == self_pid)
-        {
-            taskkill_message(STRING_SELF_TERMINATION);
-            status_code = 1;
-            continue;
-        }
-        // Terminate child first
-        if (kill_child_processes)
-            terminate_process_tree(pid);
-#endif
         process_name = process_list[i].p.szExeFile;
         process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
         if (!process)
@@ -679,7 +634,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             {
             case OP_PARAM_FORCE_TERMINATE:
             {
-                if (force_termination == TRUE)
+                if (force_termination)
                 {
                     // -f already specified
                     taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
@@ -725,7 +680,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             }
             case OP_PARAM_HELP:
             {
-                if (has_help == TRUE)
+                if (has_help)
                 {
                     // -? already specified
                     taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
@@ -737,7 +692,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             }
             case OP_PARAM_TERMINATE_CHILD:
             {
-                if (kill_child_processes == TRUE)
+                if (kill_child_processes)
                 {
                     // -t already specified
                     taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
@@ -772,7 +727,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             exit(0);
         }
     }
-    else if ((!has_im) && (!has_pid)) // has_help == FALSE
+    else if (!has_im && !has_pid) // has_help == FALSE
     {
         // both has_im and has_pid are missing (maybe -fi option is missing too, if implemented later)
         taskkill_message(STRING_MISSING_OPTION);
@@ -893,10 +848,8 @@ int wmain(int argc, WCHAR *argv[])
 
     for (i = 0; i < task_count; ++i)
         mark_task_process(task_list[i], &search_status);
-#ifndef __REACTOS__
     if (kill_child_processes)
         mark_child_processes();
-#endif
     if (force_termination)
         terminate_status = terminate_processes();
     else
