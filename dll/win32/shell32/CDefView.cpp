@@ -4240,13 +4240,13 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
                 SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\ShellNoRoam\\Bags");
                 if (SUCCEEDED(GetDefaultViewStream(STGM_WRITE, &pStream)))
                     SaveViewState(pStream);
-                break;
+                return S_OK;
             case DVCMDID_RESET_DEFAULTFOLDER_SETTINGS:
-                wsprintfW(SubKey, L"%s\\%s", REGSTR_PATH_EXPLORER, L"Streams\\Default");
+                PathCombineW(SubKey, REGSTR_PATH_EXPLORER, L"Streams\\Default");
                 SHDeleteKey(HKEY_CURRENT_USER, SubKey);
                 SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\ShellNoRoam\\Bags");
                 m_FolderSettings.fFlags |= FWF_NOBROWSERVIEWSTATE; // Don't let this folder save itself
-                break;
+                return S_OK;
         }
     }
 
