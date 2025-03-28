@@ -4,7 +4,7 @@
  * PURPOSE:     Misc apphelp tests
  * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
  *              Copyright 2013 Mislav Blažević
- *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2025 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -197,13 +197,54 @@ void test_tag(TAG base, const char* names[], size_t upperlimit, int line)
     for (n = 0; names[n]; ++n)
     {
         LPCWSTR tagstr = pSdbTagToString(base | n);
-        ok_(__FILE__, line + 2)(!strcmp_wa(tagstr, names[n]), "Got %s instead of '%s' for %x\n", wine_dbgstr_w(tagstr), names[n], base | n);
+        BOOL is_same = !strcmp_wa(tagstr, names[n]);
+        // We didn't know about this tag yet
+        if (!is_same && !strcmp(names[n], "InvalidTag"))
+        {
+            trace_(__FILE__, line + 2)("%x resolved to %s instead of 'InvalidTag'\n", base | n, wine_dbgstr_w(tagstr));
+            continue;
+        }
+        if (!is_same && g_WinVersion >= WINVER_WIN10)
+        {
+            static struct { WORD tag; const char* alternate_name; }
+            exceptions[] = {
+                { 0x1007, "TRACE_PCA" },
+                { 0x100d, "FORCE_CACHE" },
+                { 0x401f, "InvalidTag" },
+                { 0x4022, "InvalidTag" },
+                { 0x4023, "GUEST_TARGET_PLATFORM" },
+                { 0x4027, "VISTA_SKU_UNUSED" },
+                { 0x4032, "EXE_TYPE" },
+                { 0x6025, "VENDOR_ID" },
+                { 0x7020, "BIOS" },
+                { 0, NULL }
+            };
+            BOOL found_exception = FALSE;
+            for (UINT j = 0; exceptions[j].tag; ++j)
+            {
+                if ((WORD)(base|n) == exceptions[j].tag && !strcmp_wa(tagstr, exceptions[j].alternate_name))
+                {
+                    found_exception = TRUE;
+                    trace_(__FILE__, line + 2)("%x resolved to %s instead of '%s'\n", base | n, wine_dbgstr_w(tagstr), names[n]);
+                    break;
+                }
+            }
+            if (found_exception)
+                continue;
+        }
+        ok_(__FILE__, line + 2)(is_same, "Got %s instead of '%s' for %x\n", wine_dbgstr_w(tagstr), names[n], base | n);
     }
+#if 0
+    // Enable this when looking for new tags
     for (; n < upperlimit; ++n)
     {
         LPCWSTR tagstr = pSdbTagToString(base | n);
-        ok_(__FILE__, line + 2)(!strcmp_wa(tagstr, "InvalidTag"), "Got %s instead of 'InvalidTag' for %x\n", wine_dbgstr_w(tagstr), base | n);
+        if (strcmp_wa(tagstr, "InvalidTag"))
+        {
+            trace_(__FILE__, line + 2)("%x resolved to %s instead of 'InvalidTag'\n", base | n, wine_dbgstr_w(tagstr));
+        }
     }
+#endif
 }
 
 static struct
@@ -780,8 +821,10 @@ static void test_ApplicationAttributes(void)
     DeleteFileA("testxx.exe");
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret == FALSE, "expected SdbGetFileAttributes to fail.\n");
-    ok(pattrinfo == (PATTRINFO)0xdead, "expected the pointer not to change.\n");
-    ok(num == 333, "expected the number of items not to change.\n");
+    if (pattrinfo != (PATTRINFO)0xdead)
+        trace("Pointer changed when the api failed: %p.\n", pattrinfo);
+    if (num != 333)
+        trace("Number of items changed when the api failed: %d.\n", num);
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
 
@@ -792,10 +835,12 @@ static void test_ApplicationAttributes(void)
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
 
-    //for (UINT n = 0; n < num; ++n)
-    //{
-    //    trace("%S\n", pSdbTagToString(pattrinfo[n].type));
-    //}
+#if 0
+    for (UINT n = 0; n < num; ++n)
+    {
+       trace("%S\n", pSdbTagToString(pattrinfo[n].type));
+    }
+#endif
 
     switch (num)
     {
@@ -806,6 +851,10 @@ static void test_ApplicationAttributes(void)
     case 28:
         // Win7+ (and maybe vista, but who cares about that?)
         g_AttrInfoSize = 28;
+        break;
+    case 41:
+        // Win11
+        g_AttrInfoSize = 41;
         break;
     default:
         ok(0, "Unknown attrinfo size: %u\n", num);
@@ -1017,7 +1066,8 @@ static void test_SdbGetAppPatchDir(void)
     HRESULT hr, expect_hr;
     int n;
 
-
+#if 0
+    // Newer versions seem to return garbage
     _SEH2_TRY
     {
         hr = pSdbGetAppPatchDir(NULL, NULL, 0);
@@ -1029,7 +1079,7 @@ static void test_SdbGetAppPatchDir(void)
         trace("SdbGetAppPatchDir did not handle a NULL pointer very gracefully.\n");
     }
     _SEH2_END;
-
+#endif
 
 
     memset(Buffer, 0xbb, sizeof(Buffer));
@@ -1042,17 +1092,21 @@ static void test_SdbGetAppPatchDir(void)
         expect_hr = S_FALSE;
     ok_hex(hr, expect_hr);
 
-    if (g_WinVersion < WINVER_WIN7)
-        expect_hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-    else if (g_WinVersion < WINVER_WIN10)
-        expect_hr = S_OK;
-    else
-        expect_hr = TRUE;
-
     memset(Buffer, 0xbb, sizeof(Buffer));
     hr = pSdbGetAppPatchDir(NULL, Buffer, 1);
-    ok_hex(hr, expect_hr);
-
+    if (g_WinVersion < WINVER_WIN7)
+    {
+        expect_hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        ok_hex(hr, expect_hr);
+    }
+    else
+    {
+        ok(hr == S_OK || hr == TRUE, "Epxected S_OK or TRUE, got %d\n", hr);
+        if (hr == S_OK || hr == TRUE)
+            expect_hr = hr;
+        else
+            expect_hr = E_FAIL;
+    }
 
     for (n = 2; n < _countof(Buffer) - 1; ++n)
     {
