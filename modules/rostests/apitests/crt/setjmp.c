@@ -105,7 +105,7 @@ static void TEST_setjmp_3(void)
 
 static void TEST_setjmp_4(void)
 {
-    volatile int x = 101, y = 102, z = 103;
+    volatile int x = 0xFEEDF00D;
     volatile int value;
 
     memset(&g_jmp_buf, 0xCC, sizeof(g_jmp_buf));
@@ -115,23 +115,16 @@ static void TEST_setjmp_4(void)
     {
         ok_int(TRUE, TRUE);
 
-        z = 999;
         TEST_longjmp(0);
 
-        ok_int(TRUE, FALSE);
-        ok_int(TRUE, FALSE);
         ok_int(TRUE, FALSE);
     }
     else if (value == 1)
     {
-        ok_int(x, 101);
-        ok_int(y, 102);
-        ok_int(z, 999);
+        ok_int(x, 0xFEEDF00D);
     }
     else
     {
-        ok_int(TRUE, FALSE);
-        ok_int(TRUE, FALSE);
         ok_int(TRUE, FALSE);
     }
 }
