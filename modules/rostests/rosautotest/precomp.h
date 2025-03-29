@@ -80,4 +80,6 @@ string StringOut(const string& String, bool forcePrint = true);
 string UnicodeToAscii(PCWSTR UnicodeString);
 string UnicodeToAscii(const wstring& UnicodeString);
 
+extern WCHAR TestName[MAX_PATH];
+
 #endif /* _ROSAUTOTEST_H_ */
