@@ -232,8 +232,8 @@ NTSTATUS FASTCALL
 HEAP_strdupA2W(OUT LPWSTR* ppszW, IN LPCSTR lpszA);
 
 /* Buffered Ansi-to-Wide conversion */
-LPWSTR FASTCALL
-HEAP_strdupA2W_buf(IN LPCSTR lpszA, OUT LPWSTR pszBuff, IN SIZE_T cchBuff);
+PWSTR FASTCALL
+HEAP_strdupA2W_buf(IN PCSTR lpszA, OUT PWSTR pszBuff, IN SIZE_T cchBuff);
 
 /* Free memory allocated by HEAP_strdupA2W_buf */
 static inline VOID FASTCALL

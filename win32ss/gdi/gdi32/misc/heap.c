@@ -49,19 +49,14 @@ HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
     return Status;
 }
 
-LPWSTR FASTCALL
-HEAP_strdupA2W_buf(IN LPCSTR lpszA, OUT LPWSTR pszBuff, IN SIZE_T cchBuff)
+PWSTR FASTCALL
+HEAP_strdupA2W_buf(IN PCSTR lpszA, OUT PWSTR pszBuff, IN SIZE_T cchBuff)
 {
     if (!lpszA)
         return NULL;
 
-    LPWSTR pszW;
     SIZE_T size = strlen(lpszA) + 1;
-    if (size < cchBuff)
-        pszW = pszBuff;
-    else
-        pszW = HEAP_alloc(size * sizeof(WCHAR));
-
+    PWSTR pszW = (size < cchBuff) ? pszBuff : HEAP_alloc(size * sizeof(WCHAR));
     if (!pszW)
         return NULL;
 
