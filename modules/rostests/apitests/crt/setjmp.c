@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS CRT
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Tests for setjmp/longjmp
+ * PURPOSE:     Tests for setjmp and longjmp
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *              Copyright 2025 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
