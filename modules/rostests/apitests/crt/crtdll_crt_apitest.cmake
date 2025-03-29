@@ -549,6 +549,10 @@ elseif(ARCH STREQUAL "amd64")
     #    _local_unwind.c
     #    longjmp.c
     )
+elseif(ARCH STREQUAL "arm")
+    list(APPEND SOURCE_CRTDLL
+        setjmp.c
+    )
 endif()
 
 

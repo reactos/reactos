@@ -1369,6 +1369,7 @@ elseif(ARCH STREQUAL "amd64")
     )
 elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE_MSVCRT
+        setjmp.c
         __rt_div.c
         __fto64.c
         __64tof.c

@@ -152,6 +152,10 @@ elseif(ARCH STREQUAL "amd64")
     #    _local_unwind.c
     #    longjmp.c
     )
+elseif(ARCH STREQUAL "arm")
+    list(APPEND SOURCE_NTDLL
+        setjmp.c
+    )
 endif()
 
 add_executable(ntdll_crt_apitest testlist.c ${SOURCE_NTDLL})
