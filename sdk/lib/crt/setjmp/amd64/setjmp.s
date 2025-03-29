@@ -169,7 +169,7 @@ FUNC longjmp
     jz LABEL3                                   /* If val is 0, jump to LABEL3 */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 LABEL3:
-    mov rax, 1                                  /* If val was 0, return 1 */
+    mov rax, 1                                  /* If val was 0, return 1 on second (longjmp) return */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 ENDFUNC
 
