@@ -15,6 +15,8 @@
 #include <ndk/rtlfuncs.h>
 
 #include "ext2_fs.h"
+#include <fmifs/fmifs.h>
+
 
 /* DEFINITIONS ***********************************************************/
 
@@ -194,6 +196,21 @@ typedef struct _EXT2_BDL {
     ULONG       Length;
 } EXT2_BDL, *PEXT2_BDL;
 
+typedef struct _FORMAT_CONTEXT
+{
+    PFMIFSCALLBACK Callback;
+    ULONG TotalCount;
+    ULONG CurrentCount;
+    BOOLEAN Success;
+    ULONG Percent;
+} FORMAT_CONTEXT, *PFORMAT_CONTEXT;
+
+VOID
+Ext2UpdateProgress(PFORMAT_CONTEXT Context,
+               ULONG Increment);
+
+
+
 /*
  * Where the master copy of the superblock is located, and how big
  * superblocks are supposed to be.  We define SUPERBLOCK_SIZE because
@@ -349,7 +366,7 @@ bool ext2_allocate_group_table(PEXT2_FILESYS fs, ULONG group,
                       PEXT2_BLOCK_BITMAP bmap);
 bool ext2_get_free_blocks(PEXT2_FILESYS fs, ULONG start, ULONG finish,
                  int num, PEXT2_BLOCK_BITMAP map, ULONG *ret);
-bool write_inode_tables(PEXT2_FILESYS fs);
+bool write_inode_tables(PEXT2_FILESYS fs, IN OUT PFORMAT_CONTEXT Context);
 
 bool ext2_new_block(PEXT2_FILESYS fs, ULONG goal,
                PEXT2_BLOCK_BITMAP map, ULONG *ret);
