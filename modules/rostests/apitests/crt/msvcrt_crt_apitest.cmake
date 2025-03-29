@@ -1145,7 +1145,6 @@ list(APPEND SOURCE_MSVCRT
 #    scanf.c
 #    scanf_s.c
 #    setbuf.c
-    setjmp.c
 #    setlocale.c
 #    setvbuf.c
 #    signal.c
@@ -1264,6 +1263,7 @@ list(APPEND SOURCE_MSVCRT
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_MSVCRT
         __getmainargs.c ##FIXME: Moved here because it doesn't work on x64
+        setjmp.c
     #    _CIacos.c
     #    _CIasin.c
     #    _CIatan.c
@@ -1363,6 +1363,7 @@ elseif(ARCH STREQUAL "amd64")
     #    fmodf.c
     #    logf.c
     #    powf.c
+        setjmp.c
     #    sinf.c
     #    sqrtf.c
     )
