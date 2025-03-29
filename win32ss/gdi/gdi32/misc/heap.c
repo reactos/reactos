@@ -30,15 +30,7 @@
 // global variables in a dll are process-global
 HANDLE hProcessHeap = NULL;
 
-PVOID FASTCALL
-HEAP_alloc(SIZE_T len)
-{
-    /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
-    assert(hProcessHeap);
-    return RtlAllocateHeap ( hProcessHeap, 0, len );
-}
-
-NTSTATUS
+NTSTATUS FASTCALL
 HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
 {
     ULONG len;
@@ -53,17 +45,8 @@ HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
     if ( !*ppszW )
         return STATUS_NO_MEMORY;
     Status = RtlMultiByteToUnicodeN ( *ppszW, len*sizeof(WCHAR), NULL, (PCHAR)lpszA, len );
-    (*ppszW)[len] = L'\0';
+    (*ppszW)[len] = UNICODE_NULL;
     return Status;
-}
-
-VOID FASTCALL
-HEAP_free(LPVOID memory)
-{
-    /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
-    assert(hProcessHeap);
-
-    RtlFreeHeap ( hProcessHeap, 0, memory );
 }
 
 LPWSTR FASTCALL
