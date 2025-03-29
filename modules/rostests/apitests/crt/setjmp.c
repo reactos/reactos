@@ -11,60 +11,101 @@
 
 static jmp_buf g_jmp_buf;
 
-static void Test_longjmp(void)
+static void TEST_setjmp_1(void)
 {
-    longjmp(g_jmp_buf, 1);
-}
+    volatile int x = 2, y = 3, z = 4;
 
-static void Test_setjmp_0(void)
-{
+    memset(&g_jmp_buf, 0, sizeof(g_jmp_buf));
+
     if (setjmp(g_jmp_buf) == 0)
     {
         ok_int(TRUE, TRUE);
-    }
-    else
-    {
-        ok_int(TRUE, FALSE);
-    }
-}
-
-static void Test_setjmp_1(void)
-{
-    if (setjmp(g_jmp_buf) == 0)
-    {
-        Test_longjmp();
-        ok_int(TRUE, FALSE);
-    }
-    else
-    {
-        ok_int(TRUE, TRUE);
-    }
-}
-
-static void Test_setjmp_2(void)
-{
-    volatile int x = 2;
-    volatile int y = 3;
-    volatile int z = 4;
-    if (setjmp(g_jmp_buf) == 0)
-    {
-        ok_int(TRUE, TRUE);
-        Test_longjmp();
-        ok_int(TRUE, FALSE);
-        ok_int(TRUE, FALSE);
-        ok_int(TRUE, FALSE);
-    }
-    else
-    {
         ok_int(x, 2);
-        ok_int(y, 3);
-        ok_int(z, 4);
+        ok_int(x, 3);
+        ok_int(x, 4);
+    }
+    else
+    {
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+    }
+}
+
+static void TEST_setjmp_2(void)
+{
+    volatile int x = 1001, y = 1002, z = 1003;
+    volatile int value;
+
+    memset(&g_jmp_buf, 0, sizeof(g_jmp_buf));
+    value = setjmp(g_jmp_buf);
+
+    if (value == 0)
+    {
+        ok_int(TRUE, TRUE);
+        longjmp(g_jmp_buf, 999);
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+    }
+    else if (value == 999)
+    {
+        ok_int(x, 1001);
+        ok_int(y, 1002);
+        ok_int(z, 1003);
+    }
+    else
+    {
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+    }
+}
+
+static void TEST_longjmp(int value)
+{
+    ok_int(TRUE, TRUE);
+    longjmp(g_jmp_buf, 0xBEEFCAFE);
+    ok_int(TRUE, FALSE);
+}
+
+static void TEST_setjmp_3(void)
+{
+    volatile int x = 1001, y = 1002, z = 1003;
+    volatile int value;
+
+    memset(&g_jmp_buf, 0, sizeof(g_jmp_buf));
+    value = setjmp(g_jmp_buf);
+
+    if (value == 0)
+    {
+        ok_int(TRUE, TRUE);
+
+        z = 9999;
+        TEST_longjmp();
+
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+    }
+    else if (value == 0xBEEFCAFE)
+    {
+        ok_int(x, 1001);
+        ok_int(y, 1002);
+        ok_int(z, 9999);
+    }
+    else
+    {
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
     }
 }
 
 START_TEST(setjmp)
 {
-    Test_setjmp_0();
-    Test_setjmp_1();
-    Test_setjmp_2();
+    TEST_setjmp_1();
+    TEST_setjmp_2();
+    TEST_setjmp_3();
 }
