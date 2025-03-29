@@ -447,7 +447,6 @@ list(APPEND SOURCE_CRTDLL
 #    rewind.c
 #    scanf.c
 #    setbuf.c
-    setjmp.c
 #    setlocale.c
 #    setvbuf.c
 #    signal.c
@@ -540,10 +539,12 @@ if(ARCH STREQUAL "i386")
     #    _aullrem.c
     #    _aullshr.c
     #    _chkstk.c
+        setjmp.c
     )
 elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE_CRTDLL
     #    __C_specific_handler
+        setjmp.c
     #    _setjmpex.c
     #    _local_unwind.c
     #    longjmp.c

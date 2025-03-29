@@ -14,7 +14,6 @@ list(APPEND SOURCE_STATIC
     mbstowcs.c
     mbtowc.c
     rand_s.c
-    setjmp.c
     sprintf.c
     strcpy.c
     strlen.c
@@ -27,10 +26,12 @@ list(APPEND SOURCE_STATIC
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_STATIC
         # To be filled
+        setjmp.c
     )
 elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE_STATIC
         # To be filled
+        setjmp.c
     )
 elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE_STATIC

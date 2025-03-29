@@ -57,7 +57,9 @@ const struct test winetest_testlist[] =
     { "_vsnwprintf", func__vsnwprintf },
     { "mbstowcs", func_mbstowcs },
     { "mbtowc", func_mbtowc },
+#if defined(_M_IX86) || defined(_M_AMD64)
     { "setjmp", func_setjmp },
+#endif
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
     { "sprintf", func_sprintf },
