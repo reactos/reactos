@@ -190,7 +190,7 @@ MMixerAddMixerControl(
 
             DPRINT("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
 
-            MaxRange = Range->Bounds.UnsignedMaximum  - Range->Bounds.UnsignedMinimum;
+            MaxRange = Range->Bounds.SignedMaximum - Range->Bounds.SignedMinimum;
 
             if (MaxRange)
             {
