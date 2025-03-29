@@ -30,9 +30,8 @@
 // global variables in a dll are process-global
 HANDLE hProcessHeap = NULL;
 
-
-PVOID
-HEAP_alloc ( DWORD len )
+PVOID FASTCALL
+HEAP_alloc(SIZE_T len)
 {
     /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
     assert(hProcessHeap);
@@ -58,12 +57,31 @@ HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
     return Status;
 }
 
-
-VOID
-HEAP_free ( LPVOID memory )
+VOID FASTCALL
+HEAP_free(LPVOID memory)
 {
     /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
     assert(hProcessHeap);
 
     RtlFreeHeap ( hProcessHeap, 0, memory );
+}
+
+LPWSTR FASTCALL
+HEAP_strdupA2W_buf(IN LPCSTR lpszA, OUT LPWSTR pszBuff, IN SIZE_T cchBuff)
+{
+    if (!lpszA)
+        return NULL;
+
+    LPWSTR pszW;
+    SIZE_T size = strlen(lpszA) + 1;
+    if (size < cchBuff)
+        pszW = pszBuff;
+    else
+        pszW = HEAP_alloc(size * sizeof(WCHAR));
+
+    if (!pszW)
+        return NULL;
+
+    RtlMultiByteToUnicodeN(pszW, size * sizeof(WCHAR), NULL, lpszA, size);
+    return pszW;
 }

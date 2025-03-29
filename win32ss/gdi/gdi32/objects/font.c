@@ -2124,29 +2124,21 @@ INT
 WINAPI
 AddFontResourceExA(LPCSTR lpszFilename, DWORD fl, PVOID pvReserved)
 {
-    PWSTR FilenameW;
-    WCHAR szBuff[MAX_PATH];
-    ULONG cchBuff, cbBuff;
-    INT ret;
-
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
+    if (!lpszFilename)
+        return 0;
+
+    PWSTR FilenameW;
+    WCHAR szBuff[MAX_PATH];
+
     _SEH2_TRY
     {
-        cchBuff = lstrlenA(lpszFilename) + 1;
-        cbBuff = cchBuff * sizeof(WCHAR);
-
-        if (cchBuff > _countof(szBuff))
-            FilenameW = HEAP_alloc(cbBuff);
-        else
-            FilenameW = szBuff;
-
-        if (FilenameW)
-            RtlMultiByteToUnicodeN(FilenameW, cbBuff, NULL, lpszFilename, cchBuff);
+        FilenameW = HEAP_strdupA2W_buf(lpszFilename, szBuff, _countof(szBuff));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2154,13 +2146,14 @@ AddFontResourceExA(LPCSTR lpszFilename, DWORD fl, PVOID pvReserved)
     }
     _SEH2_END;
 
-    ret = 0;
-    if (FilenameW)
-        ret = GdiAddFontResourceW(FilenameW, fl, NULL);
+    if (!FilenameW)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return 0;
+    }
 
-    if (FilenameW && FilenameW != szBuff)
-        HEAP_free(FilenameW);
-
+    INT ret = GdiAddFontResourceW(FilenameW, fl, NULL);
+    HEAP_strdupA2W_buf_free(FilenameW, szBuff);
     return ret;
 }
 
@@ -2215,34 +2208,36 @@ RemoveFontResourceExA(LPCSTR lpFileName,
                       DWORD fl,
                       PVOID pdv)
 {
-    NTSTATUS Status;
-    LPWSTR lpFileNameW;
-    BOOL result;
-
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
+    if (!lpFileName)
+        return FALSE;
+
+    WCHAR szBuff[MAX_PATH];
+    PWSTR FilenameW;
+
     _SEH2_TRY
     {
-        Status = HEAP_strdupA2W(&lpFileNameW, lpFileName);
+        FilenameW = HEAP_strdupA2W_buf(lpFileName, szBuff, _countof(szBuff));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        FilenameW = NULL;
     }
     _SEH2_END;
 
-    if (!NT_SUCCESS(Status))
+    if (!FilenameW)
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_OUTOFMEMORY);
         return FALSE;
     }
 
-    result = RemoveFontResourceExW(lpFileNameW, fl, pdv);
-    HEAP_free(lpFileNameW);
+    BOOL result = RemoveFontResourceExW(FilenameW, fl, pdv);
+    HEAP_strdupA2W_buf_free(FilenameW, szBuff);
     return result;
 }
 

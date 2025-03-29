@@ -211,17 +211,20 @@ extern OPENPRINTERW fpOpenPrinterW;
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID
-HEAP_alloc(DWORD len);
+PVOID FASTCALL HEAP_alloc(SIZE_T len);
+VOID FASTCALL HEAP_free(LPVOID memory);
+NTSTATUS HEAP_strdupA2W(OUT LPWSTR* ppszW, IN LPCSTR lpszA);
 
-NTSTATUS
-HEAP_strdupA2W(
-    LPWSTR* ppszW,
-    LPCSTR lpszA
-);
+/* Buffered Ansi-to-Wide conversion */
+LPWSTR FASTCALL HEAP_strdupA2W_buf(IN LPCSTR lpszA, OUT LPWSTR pszBuff, IN SIZE_T cchBuff);
 
-VOID
-HEAP_free(LPVOID memory);
+/* Free memory allocated by HEAP_strdupA2W_buf */
+inline VOID FASTCALL
+HEAP_strdupA2W_buf_free(LPWSTR pszW, LPWSTR pszBuff)
+{
+    if (pszW && pszW != pszBuff)
+        HEAP_free(pszW);
+}
 
 VOID
 FASTCALL
