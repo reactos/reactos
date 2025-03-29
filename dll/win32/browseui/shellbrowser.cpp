@@ -210,15 +210,13 @@ private:
 void CToolbarProxy::Initialize(HWND parent, IUnknown *explorerToolbar)
 {
     HWND                                    myWindow;
-    HRESULT                                 hResult;
 
     myWindow = SHCreateWorkerWindowW(0, parent, 0, WS_CHILD, NULL, 0);
     if (myWindow != NULL)
     {
         SubclassWindow(myWindow);
         SetWindowPos(NULL, -32000, -32000, 0, 0, SWP_NOOWNERZORDER | SWP_NOZORDER);
-        hResult = explorerToolbar->QueryInterface(
-            IID_PPV_ARG(IExplorerToolbar, &fExplorerToolbar));
+        explorerToolbar->QueryInterface(IID_PPV_ARG(IExplorerToolbar, &fExplorerToolbar));
     }
 }
 
@@ -230,15 +228,12 @@ void CToolbarProxy::Destroy()
 
 LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    long int                                result;
-    HRESULT                                 hResult;
-
-    result = 0;
+    long int result = 0;
     if (fExplorerToolbar.p != NULL)
     {
-        hResult = fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 1, (long)wParam,
+        fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 1, (long)wParam,
             reinterpret_cast<TBADDBITMAP *>(lParam), &result, RGB(192, 192, 192));
-        hResult = fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 2, (long)wParam,
+        fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 2, (long)wParam,
             reinterpret_cast<TBADDBITMAP *>(lParam), &result, RGB(192, 192, 192));
     }
     return result;
@@ -246,12 +241,9 @@ LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CToolbarProxy::OnForwardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    LRESULT                                 result;
-    HRESULT                                 hResult;
-
-    result = 0;
+    LRESULT result = 0;
     if (fExplorerToolbar.p != NULL)
-        hResult = fExplorerToolbar->SendToolbarMsg(&CGID_ShellBrowser, uMsg, wParam, lParam, &result);
+        fExplorerToolbar->SendToolbarMsg(&CGID_ShellBrowser, uMsg, wParam, lParam, &result);
     return result;
 }
 
@@ -362,7 +354,7 @@ public:
     HRESULT BuildExplorerBandMenu();
     HRESULT BuildExplorerBandCategory(HMENU hBandsMenu, CATID category, DWORD dwPos, UINT *nbFound);
     BOOL IsBuiltinBand(CLSID &bandID);
-    virtual WNDPROC GetWindowProc()
+    virtual WNDPROC GetWindowProc() override
     {
         return WindowProc;
     }
@@ -1172,14 +1164,14 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     UpdateWindowTitle();
 
     LPCITEMIDLIST pidlChild;
-    INT index, indexOpen;
     HIMAGELIST himlSmall, himlLarge;
 
     CComPtr<IShellFolder> sf;
     hResult = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
     if (SUCCEEDED(hResult))
     {
-        index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+        INT indexOpen;
+        SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
         Shell_GetImageLists(&himlLarge, &himlSmall);
 
@@ -1639,9 +1631,9 @@ HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arg
         if (*pp != NULL)
         {
             CComPtr<IDispatch>          theDispatch;
-
             hResult = (*pp)->QueryInterface(IID_PPV_ARG(IDispatch, &theDispatch));
-            hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+            if (SUCCEEDED(hResult))
+                hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
         }
         pp++;
     }
@@ -1651,9 +1643,9 @@ HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arg
         if (*pp != NULL)
         {
             CComPtr<IDispatch>          theDispatch;
-
             hResult = (*pp)->QueryInterface(IID_PPV_ARG(IDispatch, &theDispatch));
-            hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+            if (SUCCEEDED(hResult))
+                hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
         }
         pp++;
     }
@@ -1737,12 +1729,10 @@ HRESULT CShellBrowser::UpdateForwardBackState()
 HRESULT CShellBrowser::UpdateUpState()
 {
     bool canGoUp;
-    HRESULT hResult;
-
     canGoUp = true;
     if (_ILIsDesktop(fCurrentDirectoryPIDL))
         canGoUp = false;
-    hResult = FireCommandStateChange(canGoUp, 3);
+    FireCommandStateChange(canGoUp, 3);
     return S_OK;
 }
 
@@ -2137,8 +2127,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
 HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
     DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-    HRESULT                                 hResult;
-
     if (!pguidCmdGroup)
     {
         TRACE("Unhandled null CGID %d %d %p %p\n", nCmdID, nCmdexecopt, pvaIn, pvaOut);
@@ -2160,13 +2148,13 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
 
                 if (IsEqualCLSID(*pclsid, fCurrentVertBar))
                 {
-                    hResult = IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
+                    IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
                     memset(&fCurrentVertBar, 0, sizeof(fCurrentVertBar));
                     FireCommandStateChangeAll();
                 }
                 else
                 {
-                    hResult = ShowBand(*pclsid, true);
+                    ShowBand(*pclsid, true);
                 }
                 return S_OK;
             case 0x22:
@@ -3487,7 +3475,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Navigate2(VARIANT *URL, VARIANT *Flags,
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatusWB(OLECMDID cmdID, OLECMDF *pcmdf)
 {
-    OLECMD cmd = { cmdID, *pcmdf };
+    OLECMD cmd = { (ULONG)cmdID, (DWORD)(*pcmdf) };
     HRESULT hr = QueryStatus(NULL, 1, &cmd, NULL);
     *pcmdf = (OLECMDF)cmd.cmdf;
     return hr;
