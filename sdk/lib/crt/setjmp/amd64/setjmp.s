@@ -65,7 +65,7 @@ FUNC _setjmp
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
     lea rax, [rip + LABEL1]                     /* Get the return address (LABEL1) */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
-    mov rax, [rsp + 8]
+    mov rax, [rsp + 8]                          /* Get frame pointer */
     mov [rcx + JUMP_BUFFER_Frame], rax          /* Store frame pointer */
     movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
     movdqu [rcx + JUMP_BUFFER_Xmm7], xmm7       /* Store xmm7 */
@@ -152,7 +152,7 @@ FUNC longjmp
     mov r13, [rcx + JUMP_BUFFER_R13]            /* Restore r13 */
     mov r14, [rcx + JUMP_BUFFER_R14]            /* Restore r14 */
     mov r15, [rcx + JUMP_BUFFER_R15]            /* Restore r15 */
-    mov rax, [rcx + JUMP_BUFFER_Frame]          /* Restore frame pointer */
+    mov rax, [rcx + JUMP_BUFFER_Frame]          /* Get frame pointer */
     mov [rsp + 8], rax                          /* Restore frame pointer */
     movdqu xmm6, [rcx + JUMP_BUFFER_Xmm6]       /* Restore xmm6 */
     movdqu xmm7, [rcx + JUMP_BUFFER_Xmm7]       /* Restore xmm7 */
