@@ -247,6 +247,22 @@ public:
         return true;
     }
 
+    static inline UINT GetWindowProcessId(_In_ HWND hWnd)
+    {
+        DWORD pid;
+        return GetWindowThreadProcessId(hWnd, &pid) ? pid : 0;
+    }
+
+    static BOOL CALLBACK EnumSingleInstanceCallback(_In_ HWND hWnd, _In_ LPARAM lParam)
+    {
+        if (::IsWindowVisible(hWnd) && (LPARAM)GetWindowProcessId(hWnd) == lParam)
+        {
+            ::SetForegroundWindow(hWnd);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
     HRESULT Run(_In_ int nShowCmd) throw()
     {
         if (m_Drive == UNICODE_NULL)
@@ -256,6 +272,19 @@ public:
 
         if (m_Drive == UNICODE_NULL)
             return E_FAIL;
+
+        CStringW Title;
+        Title.Format(IDS_PROPERTIES_MAIN_TITLE, m_Drive);
+
+        HWND hWndInstance = ::CreateWindowExW(WS_EX_TOOLWINDOW, WC_STATIC, Title, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+        for (HWND hNext = NULL, hFind; (hFind = ::FindWindowExW(NULL, hNext, WC_STATIC, Title)) != NULL; hNext = hFind)
+        {
+            if (hFind != hWndInstance)
+            {
+                ::EnumWindows(EnumSingleInstanceCallback, GetWindowProcessId(hFind));
+                return S_FALSE;
+            }
+        }
 
         CCleanupHandlerList Handlers;
         CEmptyVolumeCacheCallBack CacheCallBack;
@@ -271,15 +300,18 @@ public:
         psh.dwFlags = PSH_NOAPPLYNOW | PSH_USEICONID | PSH_NOCONTEXTHELP;
         psh.hInstance = _AtlBaseModule.GetResourceInstance();
         psh.pszIcon = MAKEINTRESOURCEW(IDI_CLEANMGR);
-        CStringW Title;
-        Title.Format(IDS_PROPERTIES_MAIN_TITLE, m_Drive);
         psh.pszCaption = Title;
         psh.nPages = _countof(hpsp);
         psh.phpage = hpsp;
 
         if (PropertySheetW(&psh) >= 1)
         {
+            ::DestroyWindow(hWndInstance); // Allow new "cleanmgr /D" without waiting for these handlers
             Handlers.ExecuteCleanup(&CacheCallBack);
+        }
+        else
+        {
+            ::DestroyWindow(hWndInstance);
         }
         return S_OK;
     }
