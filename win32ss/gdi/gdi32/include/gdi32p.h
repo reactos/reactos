@@ -208,20 +208,38 @@ typedef DWORD (WINAPI *QUERYREMOTEFONTS) (DWORD,DWORD,DWORD);
 
 extern CLOSEPRINTER fpClosePrinter;
 extern OPENPRINTERW fpOpenPrinterW;
+extern HANDLE hProcessHeap;
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID
-HEAP_alloc(DWORD len);
+static inline PVOID FASTCALL
+HEAP_alloc(SIZE_T len)
+{
+    ASSERT(hProcessHeap); /* Make sure hProcessHeap gets initialized */
+    return RtlAllocateHeap(hProcessHeap, 0, len);
+}
 
-NTSTATUS
-HEAP_strdupA2W(
-    LPWSTR* ppszW,
-    LPCSTR lpszA
-);
+static inline VOID FASTCALL
+HEAP_free(LPVOID memory)
+{
+    ASSERT(hProcessHeap); /* Make sure hProcessHeap gets initialized */
+    RtlFreeHeap(hProcessHeap, 0, memory);
+}
 
-VOID
-HEAP_free(LPVOID memory);
+NTSTATUS FASTCALL
+HEAP_strdupA2W(OUT LPWSTR* ppszW, IN LPCSTR lpszA);
+
+/* Buffered string conversion (quicker) */
+PWSTR FASTCALL
+HEAP_strdupA2W_buf(IN PCSTR lpszA, OUT PWSTR pszBuff, IN SIZE_T cchBuff);
+
+/* Free memory allocated by HEAP_strdupA2W_buf */
+static inline VOID FASTCALL
+HEAP_strdupA2W_buf_free(LPWSTR pszW, LPWSTR pszBuff)
+{
+    if (pszW && pszW != pszBuff)
+        HEAP_free(pszW);
+}
 
 VOID
 FASTCALL

@@ -1184,23 +1184,6 @@ NtGdiGetStringBitmapW(
  */
 BOOL
 APIENTRY
-NtGdiRemoveFontResourceW(
-    IN WCHAR *pwszFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN ULONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiPolyTextOutW(
     IN HDC hdc,
     IN POLYTEXTW *pptw,
