@@ -63,7 +63,7 @@ FUNC _setjmp
     mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
-    lea rax, [rip + LABEL1]                     /* Get the return address (LABEL1 below) */
+    lea rax, [rip + JKRET]                      /* Get the return address (see JKRET below) */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
     mov rax, [rsp + 8]                          /* Get frame pointer */
     mov [rcx + JUMP_BUFFER_Frame], rax          /* Store frame pointer */
@@ -80,7 +80,7 @@ FUNC _setjmp
     mov rsp, rbp                                /* Restore original rsp */
     pop rbp                                     /* Restore original rbp */
     xor eax, eax                                /* Return 0 on first (_setjmp) return */
-LABEL1:
+JKRET:
     ret
 ENDFUNC
 
@@ -109,7 +109,7 @@ FUNC _setjmpex
     mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
-    lea rax, [rip + LABEL2]                     /* Get the return address (LABEL2 below) */
+    lea rax, [rip + JKXRET]                     /* Get the return address (see JKXRET below) */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
     mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame */
     movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
@@ -125,7 +125,7 @@ FUNC _setjmpex
     mov rsp, rbp                                /* Restore original rsp */
     pop rbp                                     /* Restore original rbp */
     xor eax, eax                                /* Return 0 on first (_setjmpex) return */
-LABEL2:
+JKXRET:
     ret
 ENDFUNC
 
@@ -166,9 +166,9 @@ FUNC longjmp
     movdqu xmm15, [rcx + JUMP_BUFFER_Xmm15]     /* Restore xmm15 */
     mov rax, rdx                                /* Move val into rax (return value) */
     test rax, rax                               /* Check if val is 0 */
-    jz LABEL3                                   /* If val is 0, jump to LABEL3 */
+    jz LJRET                                    /* If val is 0, jump to LJRET */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
-LABEL3:
+LJRET:
     mov rax, 1                                  /* If val was 0, return 1 on second (longjmp) return */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 ENDFUNC
