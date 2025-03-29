@@ -1821,6 +1821,17 @@ WSPAccept(
 
     if (lpErrno) *lpErrno = NO_ERROR;
 
+    /* AcceptSocket Async Events */
+    if (Socket->SharedData->NonBlocking)
+    {
+        /* The socket created by the accept function has the same
+         * properties as the listening socket used to accept it. */
+        WSAAsyncSelect(AcceptSocket,
+                       Socket->SharedData->hWnd,
+                       Socket->SharedData->wMsg,
+                       Socket->SharedData->AsyncEvents);
+    }
+
     /* Return Socket */
     return AcceptSocket;
 }
@@ -1973,12 +1984,6 @@ WSPConnect(SOCKET Handle,
     ConnectInfo->Root = 0;
     ConnectInfo->UseSAN = FALSE;
     ConnectInfo->Unknown = 0;
-
-    /* FIXME: Handle Async Connect */
-    if (Socket->SharedData->NonBlocking)
-    {
-        ERR("Async Connect UNIMPLEMENTED!\n");
-    }
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
