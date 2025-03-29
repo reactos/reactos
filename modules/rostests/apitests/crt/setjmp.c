@@ -7,7 +7,7 @@
 
 #include <apitest.h>
 #include <setjmp.h>
-#
+
 static jmp_buf g_jmp_buf;
 
 static void Test_longjmp(void)
