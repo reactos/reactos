@@ -51,6 +51,10 @@ FUNC _setjmp
 
     .endprolog
 
+#if 1
+    xor rdx, rdx
+    jmp _setjmpex
+#else
     push rbp                                    /* Save rbp */
     mov rbp, rsp                                /* rbp = rsp */
     and rsp, -16                                /* Align rsp to 16-byte boundary */
@@ -82,6 +86,7 @@ FUNC _setjmp
     xor eax, eax                                /* Return 0 */
 LABEL1:
     ret
+#endif
 ENDFUNC
 
 /*!
