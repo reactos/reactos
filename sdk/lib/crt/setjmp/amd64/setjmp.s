@@ -79,7 +79,7 @@ FUNC _setjmp
     movdqu [rcx + JUMP_BUFFER_Xmm15], xmm15     /* Store xmm15 */
     mov rsp, rbp                                /* Restore original rsp */
     pop rbp                                     /* Restore original rbp */
-    xor eax, eax                                /* Return 0 */
+    xor eax, eax                                /* Return 0 on first (_setjmp) return */
 LABEL1:
     ret
 ENDFUNC
