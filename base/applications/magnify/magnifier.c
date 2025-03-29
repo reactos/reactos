@@ -897,6 +897,8 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
             if (bShowMagnifier)
                 SendDlgItemMessage(hDlg,IDC_SHOWMAGNIFIERCHECK,BM_SETCHECK, wParam, 0);
 
+            EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HELP), FALSE);
+
             return (INT_PTR)TRUE;
         }
 
