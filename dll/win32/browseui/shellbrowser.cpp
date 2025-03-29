@@ -3888,7 +3888,7 @@ LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 {
     HRESULT hResult = LOBYTE(GetVersion()) >= 6 ? GoBackOrForward() : NavigateToParent();
     if (FAILED(hResult))
-        TRACE("GoBackOrForward failed with hResult=%08lx\n", hResult);
+        TRACE("Backspace navigation failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
