@@ -229,7 +229,7 @@ HEAP_free(LPVOID memory)
 NTSTATUS FASTCALL
 HEAP_strdupA2W(OUT LPWSTR* ppszW, IN LPCSTR lpszA);
 
-/* Buffered Ansi-to-Wide conversion */
+/* Buffered string conversion (quicker) */
 PWSTR FASTCALL
 HEAP_strdupA2W_buf(IN PCSTR lpszA, OUT PWSTR pszBuff, IN SIZE_T cchBuff);
 
