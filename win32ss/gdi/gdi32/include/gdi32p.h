@@ -228,10 +228,12 @@ HEAP_free(LPVOID memory)
     RtlFreeHeap(hProcessHeap, 0, memory);
 }
 
-NTSTATUS FASTCALL HEAP_strdupA2W(OUT LPWSTR* ppszW, IN LPCSTR lpszA);
+NTSTATUS FASTCALL
+HEAP_strdupA2W(OUT LPWSTR* ppszW, IN LPCSTR lpszA);
 
 /* Buffered Ansi-to-Wide conversion */
-LPWSTR FASTCALL HEAP_strdupA2W_buf(IN LPCSTR lpszA, OUT LPWSTR pszBuff, IN SIZE_T cchBuff);
+LPWSTR FASTCALL
+HEAP_strdupA2W_buf(IN LPCSTR lpszA, OUT LPWSTR pszBuff, IN SIZE_T cchBuff);
 
 /* Free memory allocated by HEAP_strdupA2W_buf */
 static inline VOID FASTCALL
