@@ -80,9 +80,8 @@ FUNC _setjmp
     mov rsp, rbp                                /* Restore original rsp */
     pop rbp                                     /* Restore original rbp */
     xor eax, eax                                /* Return 0 */
-    ret
 LABEL1:
-    nop
+    ret
 ENDFUNC
 
 /*!
@@ -126,9 +125,8 @@ FUNC _setjmpex
     mov rsp, rbp                                /* Restore original rsp */
     pop rbp                                     /* Restore original rbp */
     xor eax, eax                                /* Return 0 */
-    ret
 LABEL2:
-    nop
+    ret
 ENDFUNC
 
 
