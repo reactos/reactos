@@ -1954,6 +1954,12 @@ IntConvertFontPaths(
 
     *pcwc = *pcFiles = 0;
 
+    if (!*pszFiles)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
     // Build "Fonts" path
     WCHAR szFontsDir[MAX_PATH];
     GetWindowsDirectoryW(szFontsDir, _countof(szFontsDir));
@@ -1995,17 +2001,32 @@ IntConvertFontPaths(
         WCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
         StringCchCopyNW(szFileName, _countof(szFileName), pch1Prev, spanLen);
 
+        // Search file
+        if (!SearchPathW(L".", szFileName, NULL, _countof(szFullPath), szFullPath, NULL) &&
+            !SearchPathW(szFontsDir, szFileName, NULL, _countof(szFullPath), szFullPath, NULL))
+        {
+            dwError = ERROR_FILE_NOT_FOUND;
+            break;
+        }
+
         // Check filename extension
-        PCWSTR pchDotExt = &szFileName[spanLen - 4];
+        SIZE_T cch = wcslen(szFullPath);
+        if (cch < _countof(L".ttf"))
+        {
+            dwError = ERROR_INVALID_PARAMETER;
+            break;
+        }
+        PCWSTR pchDotExt = &szFullPath[cch - 4];
         if (bFirst)
         {
-            if (lstrcmpiW(pchDotExt, L".fon") != 0 &&
-                lstrcmpiW(pchDotExt, L".fnt") != 0 &&
-                lstrcmpiW(pchDotExt, L".ttf") != 0 &&
-                lstrcmpiW(pchDotExt, L".ttc") != 0 &&
-                lstrcmpiW(pchDotExt, L".fot") != 0 &&
-                lstrcmpiW(pchDotExt, L".otf") != 0 &&
-                lstrcmpiW(pchDotExt, L".pfm") != 0)
+            bFirst = FALSE;
+            if (_wcsnicmp(pchDotExt, L".ttf", 4) != 0 &&
+                _wcsnicmp(pchDotExt, L".ttc", 4) != 0 &&
+                _wcsnicmp(pchDotExt, L".otf", 4) != 0 &&
+                _wcsnicmp(pchDotExt, L".fon", 4) != 0 &&
+                _wcsnicmp(pchDotExt, L".fnt", 4) != 0 &&
+                _wcsnicmp(pchDotExt, L".fot", 4) != 0 &&
+                _wcsnicmp(pchDotExt, L".pfm", 4) != 0)
             {
                 dwError = ERROR_INVALID_PARAMETER;
                 break;
@@ -2013,20 +2034,12 @@ IntConvertFontPaths(
         }
         else
         {
-            if (lstrcmpiW(pchDotExt, L".pfb") != 0 &&
-                lstrcmpiW(pchDotExt, L".mmm") != 0)
+            if (_wcsnicmp(pchDotExt, L".pfb", 4) != 0 &&
+                _wcsnicmp(pchDotExt, L".mmm", 4) != 0)
             {
                 dwError = ERROR_INVALID_PARAMETER;
                 break;
             }
-        }
-
-        // Search file
-        if (!SearchPathW(L".", szFileName, NULL, _countof(szFullPath), szFullPath, NULL) &&
-            !SearchPathW(szFontsDir, szFileName, NULL, _countof(szFullPath), szFullPath, NULL))
-        {
-            dwError = ERROR_FILE_NOT_FOUND;
-            break;
         }
 
         // Convert to an NT path
@@ -2052,14 +2065,14 @@ IntConvertFontPaths(
             break;
 
         pch1Prev = pch1 + 1;
-        bFirst = FALSE;
     }
 
     if (dwError != ERROR_SUCCESS)
     {
         HEAP_free(pszBuff);
         *pcwc = *pcFiles = 0;
-        SetLastError(dwError);
+        if (dwError == ERROR_FILE_NOT_FOUND)
+            SetLastError(dwError);
         return NULL;
     }
 
@@ -2106,36 +2119,50 @@ AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
     return GdiAddFontResourceW(lpszFilename, fl,0);
 }
 
-
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
+AddFontResourceExA(LPCSTR lpszFilename, DWORD fl, PVOID pvReserved)
 {
-    NTSTATUS Status;
     PWSTR FilenameW;
-    int rc;
+    WCHAR szBuff[MAX_PATH];
+    ULONG cchBuff, cbBuff;
+    INT ret;
 
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
+    _SEH2_TRY
     {
-        SetLastError (RtlNtStatusToDosError(Status));
-        return 0;
+        cchBuff = lstrlenA(lpszFilename) + 1;
+        cbBuff = cchBuff * sizeof(WCHAR);
+
+        if (cchBuff > _countof(szBuff))
+            FilenameW = HEAP_alloc(cbBuff);
+        else
+            FilenameW = szBuff;
+
+        if (FilenameW)
+            RtlMultiByteToUnicodeN(FilenameW, cbBuff, NULL, lpszFilename, cchBuff);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return 0);
+    }
+    _SEH2_END;
 
-    rc = GdiAddFontResourceW ( FilenameW, fl, 0 );
-    HEAP_free ( FilenameW );
-    return rc;
+    ret = 0;
+    if (FilenameW)
+        ret = GdiAddFontResourceW(FilenameW, fl, NULL);
+
+    if (FilenameW && FilenameW != szBuff)
+        HEAP_free(FilenameW);
+
+    return ret;
 }
-
 
 /*
  * @implemented
@@ -2144,24 +2171,8 @@ int
 WINAPI
 AddFontResourceA ( LPCSTR lpszFilename )
 {
-    NTSTATUS Status;
-    PWSTR FilenameW;
-    int rc = 0;
-
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
-    {
-        SetLastError (RtlNtStatusToDosError(Status));
-    }
-    else
-    {
-        rc = GdiAddFontResourceW ( FilenameW, 0, 0);
-
-        HEAP_free ( FilenameW );
-    }
-    return rc;
+    return AddFontResourceExA(lpszFilename, 0, NULL);
 }
-
 
 /*
  * @implemented
@@ -2564,12 +2575,6 @@ GdiAddFontResourceW(
     FLONG fl,
     DESIGNVECTOR *pdv)
 {
-    if (!*lpszFilename)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
     ULONG cFiles, cwc;
     PWSTR pszConverted = IntConvertFontPaths(lpszFilename, &cFiles, &cwc, &fl, FALSE);
     if (!pszConverted)
