@@ -47,7 +47,10 @@ static void Test_setjmp_2(void)
     volatile int z = 4;
     if (setjmp(g_jmp_buf) == 0)
     {
+        ok_int(TRUE, TRUE);
         Test_longjmp();
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
         ok_int(TRUE, FALSE);
     }
     else
@@ -55,7 +58,6 @@ static void Test_setjmp_2(void)
         ok_int(x, 2);
         ok_int(y, 3);
         ok_int(z, 4);
-        ok_int(TRUE, TRUE);
     }
 }
 
