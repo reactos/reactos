@@ -81,7 +81,8 @@ FUNC _setjmp
     pop rbp                                     /* Restore original rbp */
     xor eax, eax                                /* Return 0 */
     ret
-LABEL1: nop
+LABEL1:
+    nop
 ENDFUNC
 
 /*!
@@ -154,7 +155,7 @@ FUNC longjmp
     mov r14, [rcx + JUMP_BUFFER_R14]            /* Restore r14 */
     mov r15, [rcx + JUMP_BUFFER_R15]            /* Restore r15 */
     mov rax, [rcx + JUMP_BUFFER_Frame]          /* Restore frame pointer */
-    mov [rsp + 8], rax
+    mov [rsp + 8], rax                          /* Restore frame pointer */
     movdqu xmm6, [rcx + JUMP_BUFFER_Xmm6]       /* Restore xmm6 */
     movdqu xmm7, [rcx + JUMP_BUFFER_Xmm7]       /* Restore xmm7 */
     movdqu xmm8, [rcx + JUMP_BUFFER_Xmm8]       /* Restore xmm8 */
@@ -170,7 +171,7 @@ FUNC longjmp
     jz LABEL3                                   /* If val is 0, jump to LABEL3 */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 LABEL3:
-    inc rax                                     /* If val was 0, return 1 */
+    mov rax, 1                                  /* If val was 0, return 1 */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 ENDFUNC
 
