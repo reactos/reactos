@@ -4223,7 +4223,6 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         if (error)
         {
             DPRINT1("%s: Failed to request font size.\n", face->family_name);
-            ASSERT(FALSE);
             return error;
         }
 
