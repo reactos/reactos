@@ -340,6 +340,7 @@ public:
     BOOL IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pdwBandID);
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
+    HRESULT GoBackOrForward();
     HRESULT DoFolderOptions();
     HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pvs);
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1403,6 +1404,26 @@ HRESULT CShellBrowser::NavigateToParent()
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
+}
+
+HRESULT CShellBrowser::GoBackOrForward()
+{
+    CComPtr<ITravelLog> travelLog;
+    HRESULT hResult = GetTravelLog(&travelLog);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    CComPtr<ITravelEntry> backEntry;
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_BACK, &backEntry);
+    if (SUCCEEDED(hResult) && backEntry)
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
+
+    CComPtr<ITravelEntry> forwardEntry;
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_FORE, &forwardEntry);
+    if (SUCCEEDED(hResult) && forwardEntry)
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
+
+    return hResult;
 }
 
 BOOL CALLBACK AddFolderOptionsPage(HPROPSHEETPAGE thePage, LPARAM lParam)
@@ -3865,10 +3886,9 @@ LRESULT CShellBrowser::OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &
 
 LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    // FIXME: This does not appear to be what windows does.
-    HRESULT hResult = NavigateToParent();
+    HRESULT hResult = LOBYTE(GetVersion()) >= 6 ? GoBackOrForward() : NavigateToParent();
     if (FAILED(hResult))
-        TRACE("NavigateToParent failed with hResult=%08lx\n", hResult);
+        TRACE("Backspace navigation failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
