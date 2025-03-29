@@ -107,6 +107,10 @@ _longjmp:
     mov edi, [ecx + JB_DI*4]
     mov esi, [ecx + JB_SI*4]
     mov esp, [ecx + JB_SP*4]
+    test eax, eax
+    jnz LJJMP
+    inc eax
+LJJMP:
     /* Jump to saved PC.  */
     jmp edx
 
