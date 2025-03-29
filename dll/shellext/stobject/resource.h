@@ -11,6 +11,7 @@
 #define IDS_PWR_AC                161
 #define IDS_PWR_HOURS_REMAINING   162
 #define IDS_PWR_MINUTES_REMAINING 163
+#define IDS_PWR_FULLY_CHARGED     164
 
 #define IDI_BATTERY               200
 #define IDI_EXTRACT               210
