@@ -287,6 +287,75 @@ static void taskkill_message_print_process(int msg, unsigned int index)
     taskkill_message_printfW(msg, pid_str);
 }
 
+#ifndef __REACTOS__
+/*
+ * Below is the Wine method of terminating child processes.
+ * Its problem is that it doesn't terminate them in either a parent-to-children
+ * or children-to-parent relationship, but instead in the order in which they
+ * appear in the process list. This differs from Windows' (or ReactOS) method.
+ * Wine's termination ordering can cause problems in scenarii where e.g. a
+ * parent process could re-spawn killed children processes, or, where it is
+ * of interest to kill the parent process first and then its children.
+ *
+ * NOTE: The following two functions implicitly assume that the process list
+ * obtained from the system, is such that any child process P[j] of a given
+ * parent process P[i] is enumerated *AFTER* its parent (i.e. i < j).
+ *
+ * Because of these facts, the ReactOS recursive method is employed instead.
+ * Note however that the Wine method (below) has been adapted for ease of
+ * usage and comparison with that of ReactOS.
+ */
+
+static BOOL find_parent(unsigned int process_index, unsigned int *parent_index)
+{
+    DWORD parent_id = process_list[process_index].p.th32ParentProcessID;
+    unsigned int i;
+
+    if (!parent_id)
+        return FALSE;
+
+    for (i = 0; i < process_count; ++i)
+    {
+        if (process_list[i].p.th32ProcessID == parent_id)
+        {
+            *parent_index = i;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static void mark_child_processes(void)
+{
+    unsigned int i, parent;
+
+    for (i = 0; i < process_count; ++i)
+    {
+        if (process_list[i].matched)
+            continue;
+#ifdef __REACTOS__
+        // Prevent self-termination if we are in the process tree
+        if (process_list[i].p.th32ProcessID == self_pid)
+            continue;
+#endif
+        parent = i;
+        while (find_parent(parent, &parent))
+        {
+            if (process_list[parent].matched)
+            {
+                WINE_TRACE("Adding child %04lx.\n", process_list[i].p.th32ProcessID);
+                process_list[i].matched = TRUE;
+#ifdef __REACTOS__
+                pkill_list[pkill_size++] = i;
+#endif
+                break;
+            }
+        }
+    }
+}
+
+#endif // !__REACTOS__
+
 /* The implemented task enumeration and termination behavior does not
  * exactly match native behavior. On Windows:
  *
@@ -374,11 +443,10 @@ static int send_close_messages(void)
     int status_code = 0;
 
 #ifdef __REACTOS__
-    // for (i = 0; i < process_count; i++) // Fix for Wine bug!
     DWORD index;
     for (index = 0; index < pkill_size; ++index)
 #else
-    for (i = 0; i < task_count; i++)
+    for (i = 0; i < process_count; i++)
 #endif
     {
 #ifdef __REACTOS__
@@ -402,10 +470,13 @@ static int send_close_messages(void)
 #endif
         process_name = process_list[i].p.szExeFile;
         info.found = FALSE;
+        WINE_TRACE("Terminating pid %04lx.\n", info.pid);
         EnumWindows(pid_enum_proc, (LPARAM)&info);
         if (info.found)
         {
-            if (process_list[i].is_numeric)
+            if (kill_child_processes)
+                taskkill_message_printfW(STRING_CLOSE_CHILD, info.pid, process_list[i].p.th32ParentProcessID);
+            else if (process_list[i].is_numeric)
                 taskkill_message_printfW(STRING_CLOSE_PID_SEARCH, info.pid);
             else
                 taskkill_message_printfW(STRING_CLOSE_PROC_SRCH, process_name, info.pid);
@@ -516,12 +587,19 @@ static int terminate_processes(void)
         }
         if (!TerminateProcess(process, 1))
         {
+#ifdef __REACTOS__
+            if (kill_child_processes)
+                taskkill_message_printfW(STRING_TERM_CHILD_FAILED, pid, process_list[i].p.th32ParentProcessID);
+            else
+#endif
             taskkill_message_print_process(STRING_TERMINATE_FAILED, i);
             status_code = 1;
             CloseHandle(process);
             continue;
         }
-        if (process_list[i].is_numeric)
+        if (kill_child_processes)
+            taskkill_message_printfW(STRING_TERM_CHILD, pid, process_list[i].p.th32ParentProcessID);
+        else if (process_list[i].is_numeric)
             taskkill_message_printfW(STRING_TERM_PID_SEARCH, pid);
         else
             taskkill_message_printfW(STRING_TERM_PROC_SEARCH, process_name, pid);
@@ -807,7 +885,10 @@ int wmain(int argc, WCHAR *argv[])
 
     for (i = 0; i < task_count; ++i)
         mark_task_process(task_list[i], &search_status);
-
+#ifndef __REACTOS__
+    if (kill_child_processes)
+        mark_child_processes();
+#endif
     if (force_termination)
         terminate_status = terminate_processes();
     else
