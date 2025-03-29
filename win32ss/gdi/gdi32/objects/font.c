@@ -1,10 +1,12 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            win32ss/gdi/gdi32/objects/font.c
- * PURPOSE:
- * PROGRAMMER:
- *
+ * PROJECT:     ReactOS GDI32
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Font manipulation API
+ * COPYRIGHT:   Copyright 2019 James Tabor
+ *              Copyright 2019 Pierre Schweitzer (heis_spiter@hotmail.com)
+ *              Copyright 2019-2021 Hermes Belusca-Maito (hermes.belusca-maito@reactos.org)
+ *              Copyright 2018 Baruch Rutman (peterooch@gmail.com)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <precomp.h>
@@ -2544,9 +2546,7 @@ NewEnumFontFamiliesExW(
     return ret;
 }
 
-/*
- * @implemented
- */
+/* @implemented */
 INT
 WINAPI
 GdiAddFontResourceW(
@@ -2800,4 +2800,3 @@ cGetTTFFromFOT(DWORD x1 ,DWORD x2 ,DWORD x3, DWORD x4, DWORD x5, DWORD x6, DWORD
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
