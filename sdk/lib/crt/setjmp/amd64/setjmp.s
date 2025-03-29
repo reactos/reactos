@@ -32,7 +32,6 @@
 #define JUMP_BUFFER_Xmm14 224 /* 0xe0 */
 #define JUMP_BUFFER_Xmm15 240 /* 0xf0 */
 
-
 /* FUNCTIONS ******************************************************************/
 .code64
 
