@@ -215,16 +215,14 @@ extern HANDLE hProcessHeap;
 static inline PVOID FASTCALL
 HEAP_alloc(SIZE_T len)
 {
-    /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
-    ASSERT(hProcessHeap);
+    ASSERT(hProcessHeap); /* Make sure hProcessHeap gets initialized */
     return RtlAllocateHeap(hProcessHeap, 0, len);
 }
 
 static inline VOID FASTCALL
 HEAP_free(LPVOID memory)
 {
-    /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
-    ASSERT(hProcessHeap);
+    ASSERT(hProcessHeap); /* Make sure hProcessHeap gets initialized */
     RtlFreeHeap(hProcessHeap, 0, memory);
 }
 
