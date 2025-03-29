@@ -162,9 +162,9 @@ FUNC longjmp
     movdqu xmm15, [rcx + JUMP_BUFFER_Xmm15]     /* Restore xmm15 */
     mov rax, rdx                                /* Move val into rax (return value) */
     test rax, rax                               /* Check if val is 0 */
-    jnz LJRET                                   /* If val is non-zero, jump to LJRET */
+    jnz LJJMP                                   /* If val is non-zero, jump to LJJMP */
     inc eax                                     /* Increment rax */
-LJRET:
+LJJMP:
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 ENDFUNC
 
