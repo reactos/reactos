@@ -55,15 +55,15 @@ FUNC _setjmp
     mov rbp, rsp                                /* rbp = rsp */
     and rsp, -16                                /* Align rsp to 16-byte boundary */
     mov [rcx + JUMP_BUFFER_Rbx], rbx            /* Store rbx */
-    mov [rcx + JUMP_BUFFER_Rsp], rsp            /* Store rsp (aligned) */
-    mov [rcx + JUMP_BUFFER_Rbp], rbp            /* Store rbp (aligned) */
+    mov [rcx + JUMP_BUFFER_Rsp], rsp            /* Store rsp */
+    mov [rcx + JUMP_BUFFER_Rbp], rbp            /* Store rbp */
     mov [rcx + JUMP_BUFFER_Rsi], rsi            /* Store rsi (non-volatile on windows) */
     mov [rcx + JUMP_BUFFER_Rdi], rdi            /* Store rdi (non-volatile on windows) */
     mov [rcx + JUMP_BUFFER_R12], r12            /* Store r12 */
     mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
-    lea rax, [rip + LABEL1]                     /* Get the return address (LABEL1) */
+    lea rax, [rip + LABEL1]                     /* Get the return address (LABEL1 below) */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
     mov rax, [rsp + 8]                          /* Get frame pointer */
     mov [rcx + JUMP_BUFFER_Frame], rax          /* Store frame pointer */
@@ -109,7 +109,7 @@ FUNC _setjmpex
     mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
-    lea rax, [rip + LABEL2]                     /* Get the return address (LABEL2) */
+    lea rax, [rip + LABEL2]                     /* Get the return address (LABEL2 below) */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
     mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame */
     movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
