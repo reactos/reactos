@@ -21,8 +21,8 @@ static void TEST_setjmp_1(void)
     {
         ok_int(TRUE, TRUE);
         ok_int(x, 2);
-        ok_int(x, 3);
-        ok_int(x, 4);
+        ok_int(y, 3);
+        ok_int(z, 4);
     }
     else
     {
@@ -63,7 +63,7 @@ static void TEST_setjmp_2(void)
     }
 }
 
-static void TEST_longjmp(int value)
+static void TEST_longjmp(void)
 {
     ok_int(TRUE, TRUE);
     longjmp(g_jmp_buf, 0xBEEFCAFE);
