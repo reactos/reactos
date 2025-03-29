@@ -2050,7 +2050,7 @@ IntConvertFontPaths(
             break;
         }
 
-        // Append a path to pszBuff
+        // Append a path and '|' to pszBuff
         if (StringCchCatW(pszBuff, cchBuff, NtAbsPath.Buffer) != S_OK ||
             StringCchCatW(pszBuff, cchBuff, L"|") != S_OK)
         {
@@ -2103,20 +2103,18 @@ CreateScalableFontResourceA(
     return FALSE;
 }
 
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
+AddFontResourceExW(LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved)
 {
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    return GdiAddFontResourceW(lpszFilename, fl,0);
+    return GdiAddFontResourceW(lpszFilename, fl, NULL);
 }
 
 /* @implemented */
@@ -2157,51 +2155,39 @@ AddFontResourceExA(LPCSTR lpszFilename, DWORD fl, PVOID pvReserved)
     return ret;
 }
 
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceA ( LPCSTR lpszFilename )
+AddFontResourceA(LPCSTR lpszFilename)
 {
     return AddFontResourceExA(lpszFilename, 0, NULL);
 }
 
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceW ( LPCWSTR lpszFilename )
+AddFontResourceW(LPCWSTR lpszFilename)
 {
-    return GdiAddFontResourceW ( lpszFilename, 0, 0 );
+    return GdiAddFontResourceW(lpszFilename, 0, NULL);
 }
 
-
-/*
- * @implemented
- */
+/* @implemented */
 BOOL
 WINAPI
 RemoveFontResourceW(LPCWSTR lpFileName)
 {
-    return RemoveFontResourceExW(lpFileName,0,0);
+    return RemoveFontResourceExW(lpFileName, 0, NULL);
 }
 
-
-/*
- * @implemented
- */
+/* @implemented */
 BOOL
 WINAPI
 RemoveFontResourceA(LPCSTR lpFileName)
 {
-    return RemoveFontResourceExA(lpFileName,0,0);
+    return RemoveFontResourceExA(lpFileName, 0, NULL);
 }
 
-/*
- * @implemented
- */
+/* @implemented */
 BOOL
 WINAPI
 RemoveFontResourceExA(LPCSTR lpFileName,
@@ -2241,9 +2227,7 @@ RemoveFontResourceExA(LPCSTR lpFileName,
     return result;
 }
 
-/*
- * @implemented
- */
+/* @implemented */
 BOOL
 WINAPI
 RemoveFontResourceExW(LPCWSTR lpFileName,
