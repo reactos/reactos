@@ -154,7 +154,7 @@ TestParameterValidation(void)
                                  0x80000000,
                                  ProfileTime,
                                  1);
-        ok_hex(Status, STATUS_ACCESS_VIOLATION);
+        ok_hex(Status, (sizeof(PVOID) == 8) ? STATUS_BUFFER_TOO_SMALL : STATUS_ACCESS_VIOLATION);
 
         Status = NtCreateProfile(NULL,
                                  NULL,
@@ -165,7 +165,7 @@ TestParameterValidation(void)
                                  0x80000000,
                                  ProfileTime,
                                  1);
-        ok_hex(Status, STATUS_ACCESS_VIOLATION);
+        ok_hex(Status, (sizeof(PVOID) == 8) ? STATUS_BUFFER_TOO_SMALL : STATUS_ACCESS_VIOLATION);
 
         Status = NtCreateProfile(NULL,
                                  NULL,
@@ -176,7 +176,9 @@ TestParameterValidation(void)
                                  0x80000000,
                                  ProfileTime,
                                  1);
-        ok_hex(Status, IsWow64 ? STATUS_ACCESS_VIOLATION : STATUS_BUFFER_OVERFLOW);
+        ok_hex(Status, (sizeof(PVOID) == 8) ? STATUS_BUFFER_TOO_SMALL :
+                       IsWow64 ? STATUS_ACCESS_VIOLATION : 
+                       STATUS_BUFFER_OVERFLOW);
 
         Status = NtCreateProfile(NULL,
                                  NULL,
@@ -187,7 +189,9 @@ TestParameterValidation(void)
                                  0x80000000,
                                  ProfileTime,
                                  1);
-        ok_hex(Status, IsWow64 ? STATUS_ACCESS_VIOLATION : STATUS_BUFFER_OVERFLOW);
+        ok_hex(Status, (sizeof(PVOID) == 8) ? STATUS_BUFFER_TOO_SMALL :
+                       IsWow64 ? STATUS_ACCESS_VIOLATION : 
+                       STATUS_BUFFER_OVERFLOW);
     }
 
     /* Handle is probed first and requires no alignment, buffer requires ULONG alignment */
@@ -281,34 +285,34 @@ TestBufferSizeValidation(void)
         { __LINE__,          8,  3, sizeof(ULONG),      STATUS_ACCESS_VIOLATION },
         { __LINE__,          9,  3, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,         10,  3, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL },
-                                                        
+
         { __LINE__,         16,  4, sizeof(ULONG),      STATUS_ACCESS_VIOLATION },
         { __LINE__,         17,  4, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,         18,  4, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,         19,  4, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,         20,  4, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL },
-                                                        
+
         { __LINE__,         32,  5, sizeof(ULONG),      STATUS_ACCESS_VIOLATION },
         { __LINE__,         33,  5, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,         39,  5, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,         40,  5, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL },
-                                                        
+
         { __LINE__,        256,  8, sizeof(ULONG),      STATUS_ACCESS_VIOLATION },
         { __LINE__,        257,  8, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,        319,  8, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,        320,  8, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL },
-                                                        
+
         { __LINE__,        256,  8, sizeof(ULONG),      STATUS_ACCESS_VIOLATION },
         { __LINE__,        257,  8, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,        319,  8, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__,        320,  8, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL },
-                                                        
+
         { __LINE__, 0x80000000, 31, sizeof(ULONG),      STATUS_ACCESS_VIOLATION },
         { __LINE__, 0x80000001, 31, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__, 0xBFFFFFFF, 31, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL, STATUS_ACCESS_VIOLATION },
         { __LINE__, 0xA0000000, 31, sizeof(ULONG),      STATUS_BUFFER_TOO_SMALL },
-                                                                   
-        /* Nothing checks against the max MDL size */              
+
+        /* Nothing checks against the max MDL size */
         { __LINE__,          3,  2, MAX_MDL_BUFFER_SIZE,           STATUS_ACCESS_VIOLATION },
         { __LINE__,          3,  2, MAX_MDL_BUFFER_SIZE + 1,       STATUS_ACCESS_VIOLATION },
         { __LINE__,          3,  2, (MAX_MDL_BUFFER_SIZE + 1) * 2, STATUS_ACCESS_VIOLATION },
