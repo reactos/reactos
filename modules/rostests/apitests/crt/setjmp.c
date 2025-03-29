@@ -15,7 +15,7 @@ static void TEST_setjmp_1(void)
 {
     volatile int x = 2, y = 3, z = 4;
 
-    memset(&g_jmp_buf, 0, sizeof(g_jmp_buf));
+    memset(&g_jmp_buf, 0xCC, sizeof(g_jmp_buf));
 
     if (setjmp(g_jmp_buf) == 0)
     {
@@ -38,7 +38,7 @@ static void TEST_setjmp_2(void)
     volatile int x = 1001, y = 1002, z = 1003;
     volatile int value;
 
-    memset(&g_jmp_buf, 0, sizeof(g_jmp_buf));
+    memset(&g_jmp_buf, 0xCC, sizeof(g_jmp_buf));
     value = setjmp(g_jmp_buf);
 
     if (value == 0)
@@ -75,7 +75,7 @@ static void TEST_setjmp_3(void)
     volatile int x = 1001, y = 1002, z = 1003;
     volatile int value;
 
-    memset(&g_jmp_buf, 0, sizeof(g_jmp_buf));
+    memset(&g_jmp_buf, 0xCC, sizeof(g_jmp_buf));
     value = setjmp(g_jmp_buf);
 
     if (value == 0)
@@ -108,7 +108,7 @@ static void TEST_setjmp_4(void)
     volatile int x = 101, y = 102, z = 103;
     volatile int value;
 
-    memset(&g_jmp_buf, 0, sizeof(g_jmp_buf));
+    memset(&g_jmp_buf, 0xCC, sizeof(g_jmp_buf));
     value = setjmp(g_jmp_buf);
 
     if (value == 0)
