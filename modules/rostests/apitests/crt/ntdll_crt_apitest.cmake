@@ -80,6 +80,7 @@ list(APPEND SOURCE_NTDLL
 #    memset.c
 #    pow.c
 #    qsort.c
+    setjmp.c
 #    sin.c
     sprintf.c
 #    sqrt.c
@@ -146,7 +147,6 @@ if(ARCH STREQUAL "i386")
 elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE_NTDLL
     #    __C_specific_handler
-        setjmp.c
     #    _setjmpex.c
     #    _local_unwind.c
     #    longjmp.c
