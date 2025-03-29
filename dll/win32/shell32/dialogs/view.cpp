@@ -249,7 +249,7 @@ ViewTree_InsertAll(HWND hwndTreeView)
 static BOOL
 ViewTree_LoadTree(HKEY hKey, LPCWSTR pszKeyName, DWORD dwParentID)
 {
-    DWORD dwIndex;
+    DWORD dwIndex = ~0UL;
     WCHAR szKeyName[64], szText[MAX_PATH], *pch;
     DWORD Size, Value;
     PVIEWTREE_ENTRY pAllocated;

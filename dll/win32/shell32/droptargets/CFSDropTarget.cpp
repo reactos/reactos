@@ -544,7 +544,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             bLinking = TRUE;
     }
 
-    if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
+    if (SUCCEEDED(hr = pDataObject->QueryGetData(&fmt)))
     {
         hr = pDataObject->GetData(&fmt, &medium);
         TRACE("CFSTR_SHELLIDLIST\n");
@@ -698,7 +698,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
         _ILFreeaPidl(apidl, lpcida->cidl);
         ReleaseStgMedium(&medium);
     }
-    else if (SUCCEEDED(pDataObject->QueryGetData(&fmt2)))
+    else if (SUCCEEDED(hr = pDataObject->QueryGetData(&fmt2)))
     {
         FORMATETC fmt2;
         InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);

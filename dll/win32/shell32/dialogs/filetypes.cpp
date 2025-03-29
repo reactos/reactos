@@ -334,6 +334,7 @@ InitializeDefaultIcons(PFILE_TYPE_GLOBALS pG)
     {
         int idx = ImageList_AddIcon(pG->himlSmall, pG->hDefExtIconSmall);
         ASSERT(idx == 0);
+        DBG_UNREFERENCED_LOCAL_VARIABLE(idx);
     }
 }
 

@@ -186,11 +186,13 @@ static inline LPCWSTR GetItemRecycledFullPath(const BBITEMDATA &Data)
     return (LPCWSTR)((BYTE*)&Data + Data.RecycledPathOffset);
 }
 
+#if UNUSED && FALSE
 static inline LPCWSTR GetItemRecycledFileName(LPCITEMIDLIST pidl, const BBITEMDATA &Data)
 {
     C_ASSERT(BBITEMFILETYPE & PT_FS_UNICODE_FLAG);
     return (LPCWSTR)((LPPIDLDATA)pidl->mkid.abID)->u.file.szNames;
 }
+#endif
 
 static int GetItemDriveNumber(LPCITEMIDLIST pidl)
 {
