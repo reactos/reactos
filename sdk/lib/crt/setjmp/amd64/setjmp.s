@@ -169,7 +169,8 @@ FUNC longjmp
     jz LJRET                                    /* If val is 0, jump to LJRET */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 LJRET:
-    mov rax, 1                                  /* If val was 0, return 1 on second (longjmp) return */
+    xor rax, rax
+    inc rax                                     /* If val was 0, return 1 on second (longjmp) return */
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 ENDFUNC
 
