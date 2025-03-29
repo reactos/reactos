@@ -2011,33 +2011,23 @@ IntConvertFontPaths(
             break;
         }
 
-        // Check filename extension
-        SIZE_T cch = wcslen(szFullPath);
-        if (cch < _countof(L".ttf"))
-        {
-            dwError = ERROR_INVALID_FUNCTION;
-            break;
-        }
-        PCWSTR pchDotExt = &szFullPath[cch - 4];
         if (bFirst)
         {
             bFirst = FALSE;
-            if (_wcsnicmp(pchDotExt, L".ttf", 4) != 0 &&
-                _wcsnicmp(pchDotExt, L".ttc", 4) != 0 &&
-                _wcsnicmp(pchDotExt, L".otf", 4) != 0 &&
-                _wcsnicmp(pchDotExt, L".fon", 4) != 0 &&
-                _wcsnicmp(pchDotExt, L".fnt", 4) != 0 &&
-                _wcsnicmp(pchDotExt, L".fot", 4) != 0 &&
-                _wcsnicmp(pchDotExt, L".pfm", 4) != 0)
+        }
+        else
+        {
+            SIZE_T cch = wcslen(szFullPath);
+            if (cch < _countof(L".pfb"))
             {
                 dwError = ERROR_INVALID_FUNCTION;
                 break;
             }
-        }
-        else
-        {
-            if (_wcsnicmp(pchDotExt, L".pfb", 4) != 0 &&
-                _wcsnicmp(pchDotExt, L".mmm", 4) != 0)
+
+            // Check filename extension
+            PCWSTR pchDotExt = &szFullPath[cch - 4];
+            if (_wcsicmp(pchDotExt, L".pfb") != 0 &&
+                _wcsicmp(pchDotExt, L".mmm") != 0)
             {
                 dwError = ERROR_INVALID_FUNCTION;
                 break;
