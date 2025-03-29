@@ -2976,6 +2976,127 @@ RealShellExecuteW(
                                0);
 }
 
+/*************************************************************************
+ *  PathProcessCommandW [Internal]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathprocesscommand
+ * @see ./wine/shellpath.c
+ */
+EXTERN_C LONG
+PathProcessCommandW(
+    _In_ PCWSTR pszSrc,
+    _Out_writes_opt_(dwBuffSize) PWSTR pszDest,
+    _In_ INT cchDest,
+    _In_ DWORD dwFlags)
+{
+    TRACE("%s, %p, %d, 0x%X\n", wine_dbgstr_w(pszSrc), pszDest, cchDest, dwFlags);
+
+    if (!pszSrc)
+        return -1;
+
+    CStringW szPath;
+    PCWSTR pchArg = NULL;
+
+    if (*pszSrc == L'"') // Quoted?
+    {
+        ++pszSrc;
+
+        PCWSTR pch = wcschr(pszSrc, L'"');
+        if (pch)
+        {
+            szPath.SetString(pszSrc, pch - pszSrc);
+            pchArg = pch + 1;
+        }
+        else
+        {
+            szPath = pszSrc;
+        }
+
+        if ((dwFlags & PPCF_FORCEQUALIFY) || PathIsRelativeW(szPath))
+        {
+            BOOL ret = PathResolveW(szPath.GetBuffer(MAX_PATH), NULL, PRF_TRYPROGRAMEXTENSIONS);
+            szPath.ReleaseBuffer();
+            if (!ret)
+                return -1;
+        }
+    }
+    else // Not quoted?
+    {
+        BOOL resolved = FALSE;
+        BOOL resolveRelative = PathIsRelativeW(pszSrc) || (dwFlags & PPCF_FORCEQUALIFY);
+        INT cchPath = 0;
+
+        for (INT ich = 0; ; ++ich)
+        {
+            szPath += pszSrc[ich];
+
+            if (pszSrc[ich] && pszSrc[ich] != L' ')
+                continue;
+
+            szPath = szPath.Left(ich);
+
+            if (resolveRelative &&
+                !PathResolveW(szPath.GetBuffer(MAX_PATH), NULL, PRF_TRYPROGRAMEXTENSIONS))
+            {
+                szPath.ReleaseBuffer();
+                szPath += pszSrc[ich];
+            }
+            else
+            {
+                szPath.ReleaseBuffer();
+
+                DWORD attrs = GetFileAttributesW(szPath);
+                if (attrs != INVALID_FILE_ATTRIBUTES &&
+                    (!(attrs & FILE_ATTRIBUTE_DIRECTORY) || !(dwFlags & PPCF_NODIRECTORIES)))
+                {
+                    resolved = TRUE;
+                    pchArg = pszSrc + ich;
+
+                    if (!(dwFlags & PPCF_LONGESTPOSSIBLE))
+                        break;
+
+                    cchPath = ich;
+                    break;
+                }
+                else if (!resolveRelative)
+                {
+                    szPath += pszSrc[ich];
+                }
+            }
+
+            if (!szPath[ich])
+            {
+                szPath.ReleaseBuffer(); // Remove excessive '\0'
+                break;
+            }
+        }
+
+        if (!resolved)
+            return -1;
+
+        if (cchPath && (dwFlags & PPCF_LONGESTPOSSIBLE))
+        {
+            szPath = szPath.Left(cchPath);
+            pchArg = pszSrc + cchPath;
+        }
+    }
+
+    BOOL needsQuoting = (dwFlags & PPCF_ADDQUOTES) && wcschr(szPath, L' ');
+    CStringW result = needsQuoting ? (L"\"" + szPath + L"\"") : szPath;
+
+    if (pchArg && (dwFlags & PPCF_ADDARGUMENTS))
+        result += pchArg;
+
+    LONG requiredSize = result.GetLength() + 1;
+    if (!pszDest)
+        return requiredSize;
+
+    if (requiredSize > cchDest || StringCchCopyW(pszDest, cchDest, result) != S_OK)
+        return -1;
+
+    return requiredSize;
+}
+
 // The common helper of ShellExec_RunDLLA and ShellExec_RunDLLW
 static VOID
 ShellExec_RunDLL_Helper(
@@ -3003,7 +3124,8 @@ ShellExec_RunDLL_Helper(
     }
 
     WCHAR szPath[2 * MAX_PATH];
-    if (PathProcessCommandAW(pszCmdLine, szPath, _countof(szPath), L'C') == -1)
+    DWORD dwFlags = PPCF_FORCEQUALIFY | PPCF_INCLUDEARGS | PPCF_ADDQUOTES;
+    if (PathProcessCommandW(pszCmdLine, szPath, _countof(szPath), dwFlags) == -1)
         StrCpyNW(szPath, pszCmdLine, _countof(szPath));
 
     // Split arguments from the path
