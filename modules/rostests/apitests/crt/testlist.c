@@ -32,6 +32,7 @@ extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
 extern void func_mbstowcs(void);
 extern void func_mbtowc(void);
+extern void func_setjmp(void);
 extern void func_rand_s(void);
 extern void func_sprintf(void);
 extern void func_strcpy(void);
@@ -56,6 +57,9 @@ const struct test winetest_testlist[] =
     { "_vsnwprintf", func__vsnwprintf },
     { "mbstowcs", func_mbstowcs },
     { "mbtowc", func_mbtowc },
+#if defined(_M_IX86) || defined(_M_AMD64)
+    { "setjmp", func_setjmp },
+#endif
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
     { "sprintf", func_sprintf },
