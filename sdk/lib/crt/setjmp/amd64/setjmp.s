@@ -51,8 +51,37 @@ FUNC _setjmp
 
     .endprolog
 
-    xor rdx, rdx
-    jmp _setjmpex
+    push rbp                                    /* Save rbp */
+    mov rbp, rsp                                /* rbp = rsp */
+    and rsp, -16                                /* Align rsp to 16-byte boundary */
+    mov [rcx + JUMP_BUFFER_Rbx], rbx            /* Store rbx */
+    mov [rcx + JUMP_BUFFER_Rsp], rsp            /* Store rsp (aligned) */
+    mov [rcx + JUMP_BUFFER_Rbp], rbp            /* Store rbp (aligned) */
+    mov [rcx + JUMP_BUFFER_Rsi], rsi            /* Store rsi (non-volatile on windows) */
+    mov [rcx + JUMP_BUFFER_Rdi], rdi            /* Store rdi (non-volatile on windows) */
+    mov [rcx + JUMP_BUFFER_R12], r12            /* Store r12 */
+    mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
+    mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
+    mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
+    lea rax, [rip + LABEL1]                     /* Get the return address (LABEL1) */
+    mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
+    mov rax, [rsp + 8]
+    mov [rcx + JUMP_BUFFER_Frame], rax          /* Store frame pointer */
+    movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
+    movdqu [rcx + JUMP_BUFFER_Xmm7], xmm7       /* Store xmm7 */
+    movdqu [rcx + JUMP_BUFFER_Xmm8], xmm8       /* Store xmm8 */
+    movdqu [rcx + JUMP_BUFFER_Xmm9], xmm9       /* Store xmm9 */
+    movdqu [rcx + JUMP_BUFFER_Xmm10], xmm10     /* Store xmm10 */
+    movdqu [rcx + JUMP_BUFFER_Xmm11], xmm11     /* Store xmm11 */
+    movdqu [rcx + JUMP_BUFFER_Xmm12], xmm12     /* Store xmm12 */
+    movdqu [rcx + JUMP_BUFFER_Xmm13], xmm13     /* Store xmm13 */
+    movdqu [rcx + JUMP_BUFFER_Xmm14], xmm14     /* Store xmm14 */
+    movdqu [rcx + JUMP_BUFFER_Xmm15], xmm15     /* Store xmm15 */
+    mov rsp, rbp                                /* Restore original rsp */
+    pop rbp                                     /* Restore original rbp */
+    xor eax, eax                                /* Return 0 */
+LABEL1:
+    ret
 ENDFUNC
 
 /*!
