@@ -1994,7 +1994,7 @@ IntConvertFontPaths(
         UINT_PTR spanLen = pch1 - pch1Prev;
         if (spanLen < _countof(L".ttf") || spanLen >= MAX_PATH)
         {
-            dwError = ERROR_INVALID_PARAMETER;
+            dwError = ERROR_INVALID_FUNCTION;
             break;
         }
 
@@ -2013,7 +2013,7 @@ IntConvertFontPaths(
         SIZE_T cch = wcslen(szFullPath);
         if (cch < _countof(L".ttf"))
         {
-            dwError = ERROR_INVALID_PARAMETER;
+            dwError = ERROR_INVALID_FUNCTION;
             break;
         }
         PCWSTR pchDotExt = &szFullPath[cch - 4];
@@ -2028,7 +2028,7 @@ IntConvertFontPaths(
                 _wcsnicmp(pchDotExt, L".fot", 4) != 0 &&
                 _wcsnicmp(pchDotExt, L".pfm", 4) != 0)
             {
-                dwError = ERROR_INVALID_PARAMETER;
+                dwError = ERROR_INVALID_FUNCTION;
                 break;
             }
         }
@@ -2037,7 +2037,7 @@ IntConvertFontPaths(
             if (_wcsnicmp(pchDotExt, L".pfb", 4) != 0 &&
                 _wcsnicmp(pchDotExt, L".mmm", 4) != 0)
             {
-                dwError = ERROR_INVALID_PARAMETER;
+                dwError = ERROR_INVALID_FUNCTION;
                 break;
             }
         }
@@ -2055,7 +2055,7 @@ IntConvertFontPaths(
             StringCchCatW(pszBuff, cchBuff, L"|") != S_OK)
         {
             RtlFreeUnicodeString(&NtAbsPath);
-            dwError = ERROR_BUFFER_OVERFLOW;
+            dwError = ERROR_INVALID_FUNCTION;
             break;
         }
 
@@ -2071,7 +2071,7 @@ IntConvertFontPaths(
     {
         HEAP_free(pszBuff);
         *pcwc = *pcFiles = 0;
-        if (dwError == ERROR_FILE_NOT_FOUND)
+        if (dwError != ERROR_INVALID_FUNCTION)
             SetLastError(dwError);
         return NULL;
     }
