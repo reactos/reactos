@@ -1649,6 +1649,13 @@ MmUnloadSystemImage(
     IN PVOID ImageHandle
 );
 
+#ifdef CONFIG_SMP
+BOOLEAN
+NTAPI
+MmVerifyImageIsOkForMpUse(
+    _In_ PVOID BaseAddress);
+#endif // CONFIG_SMP
+
 NTSTATUS
 NTAPI
 MmCheckSystemImage(

@@ -863,6 +863,16 @@ ExpLoadBootSymbols(
                                 LdrEntry->DllBase,
                                 (ULONG_PTR)PsGetCurrentProcessId());
         }
+
+#ifdef CONFIG_SMP
+        /* Check that the image is safe to use if we have more than one CPU */
+        if (!MmVerifyImageIsOkForMpUse(LdrEntry->DllBase))
+        {
+            KeBugCheckEx(UP_DRIVER_ON_MP_SYSTEM,
+                         (ULONG_PTR)LdrEntry->DllBase,
+                         0, 0, 0);
+        }
+#endif // CONFIG_SMP
     }
 }
 
