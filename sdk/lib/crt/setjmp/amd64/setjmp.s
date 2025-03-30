@@ -101,8 +101,7 @@ FUNC _setjmpex
     mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
-
-    mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame pointer from argument */
+    mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame pointer from 2nd argument */
 
     lea rax, [esp + 8]                          /* Get the return address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
