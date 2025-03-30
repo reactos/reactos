@@ -158,8 +158,8 @@ FUNC longjmp
     mov [rsp + 8], rax
 
     mov rax, rdx                                /* Move rdx into rax (return value) */
-    test rax, rax                               /* Check if rdx is 0 */
-    jnz LJJMP2                                  /* If rdx is non-zero, jump to LJJMP2 */
+    test rax, rax                               /* Check if rax is 0 */
+    jnz LJJMP2                                  /* If rax is non-zero, jump to LJJMP2 */
     inc rax                                     /* Increment rax */
 LJJMP2:
     ret
