@@ -13,7 +13,6 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
-#include <winnls.h>
 #define _INC_WINDOWS
 #include <stdlib.h>
 #include <winsock2.h>
@@ -36,6 +35,8 @@
 #define NUM_OF_PINGS            3
 #define MIN_HOP_COUNT           1
 #define MAX_HOP_COUNT           255
+#define MIN_MILLISECONDS        1
+#define MAX_MILLISECONDS        ULONG_MAX
 
 struct TraceInfo
 {
@@ -168,9 +169,7 @@ GetULONG(
     
     // check input arguments
     if (String == NULL || Value == NULL || *String == UNICODE_NULL)
-    {
         return false;
-    }
 
     // clear errno so we can use its value
     // after the call to wcstoul to check for errors
@@ -179,9 +178,7 @@ GetULONG(
     // try to convert String to ULONG
     *Value = wcstoul(String, &StopString, 10);
     if ((errno != ERANGE) && (errno != 0 || *StopString != UNICODE_NULL))
-    {
         return false;
-    }
     
     // the conversion was successful
     return true;
@@ -573,57 +570,19 @@ Cleanup:
 }
 
 static bool
-GetOptionNumberOfHops(
+GetUlongOptionInRange(
     _In_ int argc, 
     _In_ wchar_t *argv[], 
     _Inout_ int *i, 
-    _Out_ ULONG *Value)
+    _Out_ ULONG *Value,
+    _In_  ULONG MinimumValue,
+    _In_  ULONG MaximumValue)
 {
-    ULONG NumberOfHops = 0;
-
-    // check input arguments
-    if (argv == NULL || i == NULL || Value == NULL)
-    {
-        return false;
-    }
-    
-    // see if we have enough values    
-    if ((*i + 1) > (argc - 1))
-    {
-        OutputText(IDS_MISSING_OPTION_VALUE, argv[*i]);
-        return false;
-    }
-    
-    (*i)++;
-    
-    // try to parse and convert value as UULONG
-    // check if Timeout is within valid range
-    if (!GetULONG(argv[*i], &NumberOfHops)
-        || ((NumberOfHops < MIN_HOP_COUNT) || (NumberOfHops > MAX_HOP_COUNT))) 
-    {
-        (*i)--;
-        OutputText(IDS_BAD_OPTION_VALUE, argv[*i]);
-        return false;
-    }
-    
-    *Value = NumberOfHops;
-    return true;
-}
-
-static bool
-GetOptionTimeout(
-    _In_ int argc, 
-    _In_ wchar_t *argv[], 
-    _Inout_ int *i, 
-    _Out_ ULONG *Value)
-{
-    ULONG Timeout = 0;
+    ULONG ParsedValue = 0;
     
     // check input arguments
     if (argv == NULL || i == NULL || Value == NULL)
-    {
         return false;
-    }
     
     // see if we have enough values
     if ((*i + 1) > (argc - 1))
@@ -635,17 +594,24 @@ GetOptionTimeout(
     (*i)++;
     
     // try to parse and convert value as ULONG
-    // check if Timeout is within valid range
-    if (!GetULONG(argv[*i], &Timeout) || (Timeout < 1))
-    {        
-        // if we get here then Timeout is less then 1 or somthing other
-        // then a numeric value
+    // check if ParsedValue is within specified range
+    if (!GetULONG(argv[*i], &ParsedValue) 
+        || ((ParsedValue < MinimumValue) || (ParsedValue > MaximumValue)))
+    {
+        // if GetULONG Fails we need to check ERANGE to see if
+        // it was due to the value being out of range
+        if (errno == ERANGE)
+        {
+            *Value = ParsedValue;
+            return true;
+        }
+        
         (*i)--;
         OutputText(IDS_BAD_OPTION_VALUE, argv[*i]);
         return false;
     }
     
-    *Value = Timeout;
+    *Value = ParsedValue;
     return true;
 }
 
@@ -669,7 +635,12 @@ ParseCmdline(int argc, wchar_t *argv[])
                 break;
 
             case 'h':
-                if (GetOptionNumberOfHops(argc, argv, &i, &Info.MaxHops) == false)
+               if (!GetUlongOptionInRange(argc, 
+                                          argv, 
+                                          &i, 
+                                          &Info.MaxHops, 
+                                          MIN_HOP_COUNT, 
+                                          MAX_HOP_COUNT))
                     return false; 
                 break;
 
@@ -678,7 +649,12 @@ ParseCmdline(int argc, wchar_t *argv[])
                 return false;
 
             case 'w':
-                if (GetOptionTimeout(argc, argv, &i, &Info.Timeout) == false)
+                if (!GetUlongOptionInRange(argc, 
+                                           argv, 
+                                           &i, 
+                                           &Info.Timeout, 
+                                           MIN_MILLISECONDS, 
+                                           MAX_MILLISECONDS))
                     return false;
                 break;
 
