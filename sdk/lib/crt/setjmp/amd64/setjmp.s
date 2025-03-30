@@ -72,7 +72,7 @@ FUNC _setjmp
 
     mov [rcx + JUMP_BUFFER_Frame], rbp          /* Save frame */
 
-    mov rax, [rsp]                              /* Get address */
+    mov rax, [rsp]                              /* Get return address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Save as RIP */
 
     xor rax, rax                                /* Return 0 (first time) */
@@ -113,16 +113,17 @@ FUNC _setjmpex
     movdqu [rcx + JUMP_BUFFER_Xmm14], xmm14     /* Save xmm14 */
     movdqu [rcx + JUMP_BUFFER_Xmm15], xmm15     /* Save xmm15 */
 
-    mov [rcx + JUMP_BUFFER_Frame], rdx          /* Save frame */
+    mov [rcx + JUMP_BUFFER_Frame], rdx          /* Save frame from 2nd argument */
 
-    mov rax, [rsp]                              /* Get address */
+    mov rax, [rsp]                              /* Get return address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Save as RIP */
 
     xor rax, rax                                /* Return 0 (first time) */
-SJX_RET:
     ret
 ENDFUNC
 
+EXTERN RtlLookupFunctionEntry:PROC
+EXTERN RtlVirtualUnwind:PROC
 
 /*!
  * void longjmp(jmp_buf env, int value);
@@ -136,6 +137,11 @@ PUBLIC longjmp
 FUNC longjmp
 
     .endprolog
+
+    /*
+     * FIXME: Unwinding (Windows x64)
+     * NOTE: Use RtlLookupFunctionEntry, RtlVirtualUnwind
+     */
 
     mov rbx, [rcx + JUMP_BUFFER_Rbx]            /* Restore rbx */
     mov rsp, [rcx + JUMP_BUFFER_Rsp]            /* Restore rsp */
