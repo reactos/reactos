@@ -1985,6 +1985,12 @@ WSPConnect(SOCKET Handle,
     ConnectInfo->UseSAN = FALSE;
     ConnectInfo->Unknown = 0;
 
+    /* FIXME: Handle Async Connect */
+    if (Socket->SharedData->NonBlocking)
+    {
+        ERR("Async Connect UNIMPLEMENTED!\n");
+    }
+
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
                                    SockEvent,
