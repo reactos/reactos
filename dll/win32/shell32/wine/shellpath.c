@@ -1130,6 +1130,7 @@ static LONG PathProcessCommandA (
 	return strlen(lpszPath);
 }
 
+#ifndef __REACTOS__ // See ../shlexec.cpp
 /*************************************************************************
 *	PathProcessCommandW
 */
@@ -1145,6 +1146,7 @@ static LONG PathProcessCommandW (
 	if(lpszBuff) strcpyW(lpszBuff, lpszPath);
 	return strlenW(lpszPath);
 }
+#endif
 
 /*************************************************************************
 *	PathProcessCommand (SHELL32.653)
