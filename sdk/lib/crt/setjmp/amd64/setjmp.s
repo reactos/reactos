@@ -59,7 +59,7 @@ FUNC _setjmp
     mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
-    lea rax, [rip + JKRET]                      /* Get the return address (see JKRET below) */
+    lea rax, [rip + SJRET]                      /* Get the return address (see SJRET below) */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
     mov rax, [rsp + 8]                          /* Get frame pointer */
     mov [rcx + JUMP_BUFFER_Frame], rax          /* Store frame pointer */
@@ -76,7 +76,7 @@ FUNC _setjmp
     mov rsp, rbp                                /* Restore original rsp */
     pop rbp                                     /* Restore original rbp */
     xor eax, eax                                /* Return 0 on first (_setjmp) return */
-JKRET:
+SJRET:
     ret
 ENDFUNC
 
@@ -105,7 +105,7 @@ FUNC _setjmpex
     mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
-    lea rax, [rip + JKXRET]                     /* Get the return address (see JKXRET below) */
+    lea rax, [rip + SJXRET]                     /* Get the return address (see SJXRET below) */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
     mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame */
     movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
@@ -121,7 +121,7 @@ FUNC _setjmpex
     mov rsp, rbp                                /* Restore original rsp */
     pop rbp                                     /* Restore original rbp */
     xor eax, eax                                /* Return 0 on first (_setjmpex) return */
-JKXRET:
+SJXRET:
     ret
 ENDFUNC
 
