@@ -20,6 +20,7 @@
 
 #pragma once
 
+// FCIDM_BROWSERFIRST/LAST: 0xa000..0xbf00
 #define IDM_FILE_CLOSE                   0xA021
 #define IDM_FILE_EXPLORE_MENU            0xA027
 #define IDM_BACKSPACE                    0xA032
@@ -63,6 +64,7 @@
 #define IDM_BAND_MENU                       269
 #define IDM_BAND_TITLE                   0xA200
 #define IDM_BAND_CLOSE                   0xA201
+#define FCIDM_BROWSER_TOGGLEFULLSCREEN   0xA21B
 
 #define IDM_POPUPMENU        2001
 #define IDM_LARGE_ICONS      2002
@@ -73,7 +75,6 @@
 
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
-#define IDM_TOGGLEFULLSCREEN             0xA238 /* Arbitrary id */
 #define IDM_NOTIFYITBARDIRTY             0xA239 /* Arbitrary id */
 
 /* User-installed explorer band IDs according to API Monitor traces */
