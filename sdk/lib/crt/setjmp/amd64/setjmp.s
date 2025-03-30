@@ -155,7 +155,7 @@ FUNC longjmp
 
     /* Store return address */
     mov rax, [rcx + JUMP_BUFFER_Rip]
-    mov [esp + 8], rax
+    mov [rsp + 8], rax
 
     mov rax, rdx                                /* Move rdx into rax (return value) */
     test rax, rax                               /* Check if rdx is 0 */
