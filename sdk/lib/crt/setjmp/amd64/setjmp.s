@@ -49,31 +49,35 @@ FUNC _setjmp
 
     .endprolog
 
-    mov [rcx + JUMP_BUFFER_Rbx], rbx            /* Store rbx */
-    mov [rcx + JUMP_BUFFER_Rsp], rsp            /* Store rsp */
-    mov [rcx + JUMP_BUFFER_Rbp], rbp            /* Store rbp */
-    mov [rcx + JUMP_BUFFER_Rsi], rsi            /* Store rsi (non-volatile on windows) */
-    mov [rcx + JUMP_BUFFER_Rdi], rdi            /* Store rdi (non-volatile on windows) */
-    mov [rcx + JUMP_BUFFER_R12], r12            /* Store r12 */
-    mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
-    mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
-    mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
+    mov [rcx + JUMP_BUFFER_Rbx], rbx            /* Save rbx */
+    mov [rcx + JUMP_BUFFER_Rsp], rsp            /* Save rsp */
+    mov [rcx + JUMP_BUFFER_Rbp], rbp            /* Save rbp */
+    mov [rcx + JUMP_BUFFER_Rsi], rsi            /* Save rsi */
+    mov [rcx + JUMP_BUFFER_Rdi], rdi            /* Save rdi */
+    mov [rcx + JUMP_BUFFER_R12], r12            /* Save r12 */
+    mov [rcx + JUMP_BUFFER_R13], r13            /* Save r13 */
+    mov [rcx + JUMP_BUFFER_R14], r14            /* Save r14 */
+    mov [rcx + JUMP_BUFFER_R15], r15            /* Save r15 */
 
-    mov rax, [rsp + 8]                          /* Get the return address */
-    mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
+    mov [rcx + JUMP_BUFFER_Xmm6], xmm6          /* Save xmm6 */
+    mov [rcx + JUMP_BUFFER_Xmm7], xmm7          /* Save xmm7 */
+    mov [rcx + JUMP_BUFFER_Xmm8], xmm8          /* Save xmm8 */
+    mov [rcx + JUMP_BUFFER_Xmm9], xmm9          /* Save xmm9 */
+    mov [rcx + JUMP_BUFFER_Xmm10], xmm10        /* Save xmm10 */
+    mov [rcx + JUMP_BUFFER_Xmm11], xmm11        /* Save xmm11 */
+    mov [rcx + JUMP_BUFFER_Xmm12], xmm12        /* Save xmm12 */
+    mov [rcx + JUMP_BUFFER_Xmm13], xmm13        /* Save xmm13 */
+    mov [rcx + JUMP_BUFFER_Xmm14], xmm14        /* Save xmm14 */
+    mov [rcx + JUMP_BUFFER_Xmm15], xmm15        /* Save xmm15 */
 
-    movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
-    movdqu [rcx + JUMP_BUFFER_Xmm7], xmm7       /* Store xmm7 */
-    movdqu [rcx + JUMP_BUFFER_Xmm8], xmm8       /* Store xmm8 */
-    movdqu [rcx + JUMP_BUFFER_Xmm9], xmm9       /* Store xmm9 */
-    movdqu [rcx + JUMP_BUFFER_Xmm10], xmm10     /* Store xmm10 */
-    movdqu [rcx + JUMP_BUFFER_Xmm11], xmm11     /* Store xmm11 */
-    movdqu [rcx + JUMP_BUFFER_Xmm12], xmm12     /* Store xmm12 */
-    movdqu [rcx + JUMP_BUFFER_Xmm13], xmm13     /* Store xmm13 */
-    movdqu [rcx + JUMP_BUFFER_Xmm14], xmm14     /* Store xmm14 */
-    movdqu [rcx + JUMP_BUFFER_Xmm15], xmm15     /* Store xmm15 */
+    lea rax, [rsp + 8]                          /* Get frame */
+    mov [rcx + JUMP_BUFFER_Frame], rax          /* Save frame */
 
-    xor rax, rax                                /* Return 0 on first (_setjmp) return */
+    mov rax, SJ_RET                             /* Get address */
+    mov [rcx + JUMP_BUFFER_Rip], rax            /* Save as RIP */
+
+    xor rax, rax                                /* Return 0 (first time) */
+SJ_RET:
     ret
 ENDFUNC
 
@@ -90,31 +94,33 @@ FUNC _setjmpex
 
     .endprolog
 
-    mov [rcx + JUMP_BUFFER_Rbx], rbx            /* Store rbx */
-    mov [rcx + JUMP_BUFFER_Rsp], rsp            /* Store rsp */
-    mov [rcx + JUMP_BUFFER_Rbp], rbp            /* Store rbp */
-    mov [rcx + JUMP_BUFFER_Rsi], rsi            /* Store rsi (non-volatile on windows) */
-    mov [rcx + JUMP_BUFFER_Rdi], rdi            /* Store rdi (non-volatile on windows) */
-    mov [rcx + JUMP_BUFFER_R12], r12            /* Store r12 */
-    mov [rcx + JUMP_BUFFER_R13], r13            /* Store r13 */
-    mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
-    mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
+    mov [rcx + JUMP_BUFFER_Rbx], rbx            /* Save rbx */
+    mov [rcx + JUMP_BUFFER_Rsp], rsp            /* Save rsp */
+    mov [rcx + JUMP_BUFFER_Rbp], rbp            /* Save rbp */
+    mov [rcx + JUMP_BUFFER_Rsi], rsi            /* Save rsi */
+    mov [rcx + JUMP_BUFFER_Rdi], rdi            /* Save rdi */
+    mov [rcx + JUMP_BUFFER_R12], r12            /* Save r12 */
+    mov [rcx + JUMP_BUFFER_R13], r13            /* Save r13 */
+    mov [rcx + JUMP_BUFFER_R14], r14            /* Save r14 */
+    mov [rcx + JUMP_BUFFER_R15], r15            /* Save r15 */
 
-    mov rax, [rsp + 8]                          /* Get the return address */
-    mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
+    mov [rcx + JUMP_BUFFER_Xmm6], xmm6          /* Save xmm6 */
+    mov [rcx + JUMP_BUFFER_Xmm7], xmm7          /* Save xmm7 */
+    mov [rcx + JUMP_BUFFER_Xmm8], xmm8          /* Save xmm8 */
+    mov [rcx + JUMP_BUFFER_Xmm9], xmm9          /* Save xmm9 */
+    mov [rcx + JUMP_BUFFER_Xmm10], xmm10        /* Save xmm10 */
+    mov [rcx + JUMP_BUFFER_Xmm11], xmm11        /* Save xmm11 */
+    mov [rcx + JUMP_BUFFER_Xmm12], xmm12        /* Save xmm12 */
+    mov [rcx + JUMP_BUFFER_Xmm13], xmm13        /* Save xmm13 */
+    mov [rcx + JUMP_BUFFER_Xmm14], xmm14        /* Save xmm14 */
+    mov [rcx + JUMP_BUFFER_Xmm15], xmm15        /* Save xmm15 */
 
-    movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
-    movdqu [rcx + JUMP_BUFFER_Xmm7], xmm7       /* Store xmm7 */
-    movdqu [rcx + JUMP_BUFFER_Xmm8], xmm8       /* Store xmm8 */
-    movdqu [rcx + JUMP_BUFFER_Xmm9], xmm9       /* Store xmm9 */
-    movdqu [rcx + JUMP_BUFFER_Xmm10], xmm10     /* Store xmm10 */
-    movdqu [rcx + JUMP_BUFFER_Xmm11], xmm11     /* Store xmm11 */
-    movdqu [rcx + JUMP_BUFFER_Xmm12], xmm12     /* Store xmm12 */
-    movdqu [rcx + JUMP_BUFFER_Xmm13], xmm13     /* Store xmm13 */
-    movdqu [rcx + JUMP_BUFFER_Xmm14], xmm14     /* Store xmm14 */
-    movdqu [rcx + JUMP_BUFFER_Xmm15], xmm15     /* Store xmm15 */
+    mov [rcx + JUMP_BUFFER_Frame], rdx          /* Save frame */
 
-    xor rax, rax                                /* Return 0 on first (_setjmpex) return */
+    mov rax, SJX_RET                            /* Get address */
+    mov [rcx + JUMP_BUFFER_Rip], rax            /* Save as RIP */
+    xor rax, rax                                /* Return 0 (first time) */
+SJX_RET:
     ret
 ENDFUNC
 
@@ -142,27 +148,29 @@ FUNC longjmp
     mov r14, [rcx + JUMP_BUFFER_R14]            /* Restore r14 */
     mov r15, [rcx + JUMP_BUFFER_R15]            /* Restore r15 */
 
-    movdqu xmm6, [rcx + JUMP_BUFFER_Xmm6]       /* Restore xmm6 */
-    movdqu xmm7, [rcx + JUMP_BUFFER_Xmm7]       /* Restore xmm7 */
-    movdqu xmm8, [rcx + JUMP_BUFFER_Xmm8]       /* Restore xmm8 */
-    movdqu xmm9, [rcx + JUMP_BUFFER_Xmm9]       /* Restore xmm9 */
-    movdqu xmm10, [rcx + JUMP_BUFFER_Xmm10]     /* Restore xmm10 */
-    movdqu xmm11, [rcx + JUMP_BUFFER_Xmm11]     /* Restore xmm11 */
-    movdqu xmm12, [rcx + JUMP_BUFFER_Xmm12]     /* Restore xmm12 */
-    movdqu xmm13, [rcx + JUMP_BUFFER_Xmm13]     /* Restore xmm13 */
-    movdqu xmm14, [rcx + JUMP_BUFFER_Xmm14]     /* Restore xmm14 */
-    movdqu xmm15, [rcx + JUMP_BUFFER_Xmm15]     /* Restore xmm15 */
+    mov xmm6, [rcx + JUMP_BUFFER_Xmm6]          /* Restore xmm6 */
+    mov xmm7, [rcx + JUMP_BUFFER_Xmm7]          /* Restore xmm7 */
+    mov xmm8, [rcx + JUMP_BUFFER_Xmm8]          /* Restore xmm8 */
+    mov xmm9, [rcx + JUMP_BUFFER_Xmm9]          /* Restore xmm9 */
+    mov xmm10, [rcx + JUMP_BUFFER_Xmm10]        /* Restore xmm10 */
+    mov xmm11, [rcx + JUMP_BUFFER_Xmm11]        /* Restore xmm11 */
+    mov xmm12, [rcx + JUMP_BUFFER_Xmm12]        /* Restore xmm12 */
+    mov xmm13, [rcx + JUMP_BUFFER_Xmm13]        /* Restore xmm13 */
+    mov xmm14, [rcx + JUMP_BUFFER_Xmm14]        /* Restore xmm14 */
+    mov xmm15, [rcx + JUMP_BUFFER_Xmm15]        /* Restore xmm15 */
 
-    /* Store return address */
-    mov rax, [rcx + JUMP_BUFFER_Rip]
-    mov [rsp + 8], rax
+    mov rax, [rcx + JUMP_BUFFER_Frame]          /* Get frame */
+    mov rsp, rax                                /* Restore frame */
 
-    mov rax, rdx                                /* Move rdx into rax (return value) */
-    test rax, rax                               /* Check if rax is 0 */
-    jnz LJJMP2                                  /* If rax is non-zero, jump to LJJMP2 */
-    inc rax                                     /* Increment rax */
-LJJMP2:
-    ret
+    mov rdx, [rcx + JUMP_BUFFER_Rip]            /* Get target RIP */
+    mov rax, rdx                                /* 2nd argument */
+
+    /* Return 2nd argument, or 1 if it was zero */
+    test rax, rax
+    jnz LJ_JMP
+    inc rax
+LJ_JMP:
+    jmp rdx
 ENDFUNC
 
 END
