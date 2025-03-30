@@ -202,12 +202,12 @@ BrFolder_InitTreeView(BrFolder *info)
 static HRESULT
 BrFolder_GetIconPair(BrItemData &item, TVITEMW &tvi)
 {
-    int open = -1;
-    int normal = SHMapPIDLToSystemImageListIndex(item.lpsfParent, item.pidlChild, &open);
+    INT open = -1;
+    INT normal = SHMapPIDLToSystemImageListIndex(item.lpsfParent, item.pidlChild, &open);
     if (normal >= 0)
     {
         tvi.iImage = normal;
-        tvi.iSelectedImage = open >= 0 ? open : normal;
+        tvi.iSelectedImage = (open >= 0) ? open : normal;
         return S_OK;
     }
     tvi.iImage = tvi.iSelectedImage = Shell_GetCachedImageIndexW(swShell32Name, IDI_SHELL_FOLDER - 1, 0);
@@ -1269,7 +1269,7 @@ BrFolder_OnChangeEx(
         case SHCNE_RENAMEITEM:
         case SHCNE_UPDATEITEM:
         {
-            UINT UpdateFlags = event == SHCNE_UPDATEITEM ? (TVIF_IMAGE | TVIF_CHILDREN) : (TVIF_TEXT);
+            UINT UpdateFlags = (event == SHCNE_UPDATEITEM) ? (TVIF_IMAGE | TVIF_CHILDREN) : (TVIF_TEXT);
             if ((hTI = BrFolder_FindTreeItemOfAbsoluteItem(*info, pidl1)) != NULL)
             {
                 if (BrFolder_UpdateItemEx(*info, hTI, pidl2, UpdateFlags))
