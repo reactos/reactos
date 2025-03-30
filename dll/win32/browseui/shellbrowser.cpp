@@ -209,9 +209,7 @@ private:
 
 void CToolbarProxy::Initialize(HWND parent, IUnknown *explorerToolbar)
 {
-    HWND                                    myWindow;
-
-    myWindow = SHCreateWorkerWindowW(0, parent, 0, WS_CHILD, NULL, 0);
+    HWND myWindow = SHCreateWorkerWindowW(0, parent, 0, WS_CHILD, NULL, 0);
     if (myWindow != NULL)
     {
         SubclassWindow(myWindow);
@@ -228,7 +226,7 @@ void CToolbarProxy::Destroy()
 
 LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    long int result = 0;
+    long result = 0;
     if (fExplorerToolbar.p != NULL)
     {
         fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 1, (long)wParam,
@@ -1728,10 +1726,7 @@ HRESULT CShellBrowser::UpdateForwardBackState()
 
 HRESULT CShellBrowser::UpdateUpState()
 {
-    bool canGoUp;
-    canGoUp = true;
-    if (_ILIsDesktop(fCurrentDirectoryPIDL))
-        canGoUp = false;
+    bool canGoUp = !_ILIsDesktop(fCurrentDirectoryPIDL);
     FireCommandStateChange(canGoUp, 3);
     return S_OK;
 }
@@ -2628,6 +2623,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::ShowControlWindow(UINT id, BOOL fShow)
             return S_OK;
         case FCW_TREE:
             return Exec(&CGID_Explorer, SBCMDID_EXPLORERBARFOLDERS, 0, NULL, NULL);
+        case FCW_MENU:
+            return IUnknown_Exec(fClientBars[BIInternetToolbar].clientBar,
+                                 CGID_PrivCITCommands, ITID_MENUBANDSHOWN, 0, NULL, NULL);
         case FCW_ADDRESSBAR:
             return IUnknown_Exec(fClientBars[BIInternetToolbar].clientBar,
                                  CGID_PrivCITCommands, ITID_ADDRESSBANDSHOWN, 0, NULL, NULL);
@@ -2651,9 +2649,11 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfS
             shown = cmd.cmdf & OLECMDF_LATCHED;
             break;
         }
+        case FCW_MENU:
+            shown = (hr = IsInternetToolbarBandShown(ITID_MENUBANDSHOWN)) == S_OK;
+            break;
         case FCW_ADDRESSBAR:
-            hr = IsInternetToolbarBandShown(ITID_ADDRESSBANDSHOWN);
-            shown = hr == S_OK;
+            shown = (hr = IsInternetToolbarBandShown(ITID_ADDRESSBANDSHOWN)) == S_OK;
             break;
         default:
             hr = E_NOTIMPL;
@@ -3413,30 +3413,22 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::put_ToolBar(int Value)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_MenuBar(VARIANT_BOOL *Value)
 {
-#ifdef FCW_MENU
-    *Value = IsControlWindowShown(FCW_MENU) == S_OK ? VARIANT_TRUE : VARIANT_FALSE;
+    *Value = IsControlWindowShown(FCW_MENU, NULL) == S_OK ? VARIANT_TRUE : VARIANT_FALSE;
     return S_OK;
-#else
-    return E_NOTIMPL;
-#endif
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_MenuBar(VARIANT_BOOL Value)
 {
-#ifdef FCW_MENU
     SetFlags(BSF_UISETBYAUTOMATION, BSF_UISETBYAUTOMATION);
     HRESULT hr = ShowControlWindow(FCW_MENU, Value != VARIANT_FALSE);
     FireEvent_VBOOL(DISPID_ONMENUBAR, Value);
     return hr;
-#else
-    return E_NOTIMPL;
-#endif
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_FullScreen(VARIANT_BOOL *pbFullScreen)
 {
     *pbFullScreen = (m_BrowserSvcFlags & BSF_ROS_KIOSK) ? VARIANT_TRUE : VARIANT_FALSE;
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_FullScreen(VARIANT_BOOL bFullScreen)
@@ -4190,7 +4182,6 @@ LRESULT CShellBrowser::OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndC
         int x = mi.rcMonitor.left, w = mi.rcMonitor.right - x;
         int y = mi.rcMonitor.top, h = mi.rcMonitor.bottom - y;
         ::SetWindowPos(hWnd, HWND_TOPMOST, x, y, w, h, SWP_FRAMECHANGED);
-        ::RedrawWindow(hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
     else
     {
@@ -4204,9 +4195,9 @@ LRESULT CShellBrowser::OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndC
         ::ShowWindow(hWnd, SW_SHOWNOACTIVATE);
         if (m_NonFullscreenState & SF_MAXIMIZED)
             ::ShowWindow(hWnd, SW_SHOWMAXIMIZED);
-        ::RedrawWindow(hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
     SetFlags(OrgUiSetAuto, BSF_UISETBYAUTOMATION);
+    ::RedrawWindow(hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
     return 0;
 }
 

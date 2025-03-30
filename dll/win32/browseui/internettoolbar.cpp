@@ -167,7 +167,7 @@ private:
     STDMETHOD(GetWindow)(HWND *lphwnd) override;
     STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
-    // *** IDockingWindow methods ***
+    // *** IDockingWindowSite methods ***
     STDMETHOD(GetBorderDW)(IUnknown* punkObj, LPRECT prcBorder) override;
     STDMETHOD(RequestBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
     STDMETHOD(SetBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
@@ -1192,7 +1192,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                     break;
                 case ITID_MENUBANDSHOWN:    // Menubar band visibility
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
-                    if (fMenuBar)
+                    if (IsBandVisible(ITBBID_MENUBAND) == S_OK)
                         prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_AUTOHIDEENABLED:  // Auto hide enabled/disabled
@@ -1233,6 +1233,8 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::Exec(const GUID *pguidCmdGroup, DWOR
                 return S_OK;
             case ITID_TOOLBARBANDSHOWN:
                 return ToggleBandVisibility(ITBBID_TOOLSBAND);
+            case ITID_MENUBANDSHOWN:
+                return ToggleBandVisibility(ITBBID_MENUBAND);
             case ITID_ADDRESSBANDSHOWN:
                 return ToggleBandVisibility(ITBBID_ADDRESSBAND);
             case ITID_LINKSBANDSHOWN:

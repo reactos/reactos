@@ -20,7 +20,7 @@
 
 #pragma once
 
-// FCIDM_BROWSERFIRST/LAST: 0xa000..0xbf00
+// FCIDM_BROWSERFIRST..LAST: 0xa000..0xbf00
 #define IDM_FILE_CLOSE                   0xA021
 #define IDM_FILE_EXPLORE_MENU            0xA027
 #define IDM_BACKSPACE                    0xA032
