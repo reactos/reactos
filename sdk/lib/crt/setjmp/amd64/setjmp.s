@@ -4,7 +4,6 @@
  * PURPOSE:     Implementation of amd64 _setjmp / longjmp
  * COPYRIGHT:   Copyright Timo Kreuzer (timo.kreuzer@reactos.org)
  *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
- *              Copyright 2025 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 /* INCLUDES ******************************************************************/
