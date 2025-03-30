@@ -2,8 +2,9 @@
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Implementation of setjmp/longjmp
- * COPYRIGHT:   Copyright (c) Timo Kreuzer (timo.kreuzer@reactos.org)
- *              Copyright (c) 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright Timo Kreuzer (timo.kreuzer@reactos.org)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2025 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 /* INCLUDES ******************************************************************/
