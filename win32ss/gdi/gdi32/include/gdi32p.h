@@ -212,33 +212,38 @@ extern HANDLE hProcessHeap;
 
 /* FUNCTIONS *****************************************************************/
 
-static inline PVOID FASTCALL
-HEAP_alloc(SIZE_T len)
+static inline
+_Ret_maybenull_
+__drv_allocatesMem(Mem)
+PVOID FASTCALL
+HEAP_alloc(_In_ SIZE_T len)
 {
-    ASSERT(hProcessHeap); /* Make sure hProcessHeap gets initialized */
+    ASSERT(hProcessHeap);
     return RtlAllocateHeap(hProcessHeap, 0, len);
 }
 
 static inline VOID FASTCALL
-HEAP_free(LPVOID memory)
+HEAP_free(_In_ __drv_freesMem(Mem) PVOID memory)
 {
-    ASSERT(hProcessHeap); /* Make sure hProcessHeap gets initialized */
+    ASSERT(hProcessHeap);
     RtlFreeHeap(hProcessHeap, 0, memory);
 }
 
 NTSTATUS FASTCALL
-HEAP_strdupA2W(OUT LPWSTR* ppszW, IN LPCSTR lpszA);
+HEAP_strdupA2W(_Outptr_ PWSTR* ppszW, _In_ PCSTR lpszA);
 
 /* Buffered string conversion (quicker) */
 PWSTR FASTCALL
-HEAP_strdupA2W_buf(IN PCSTR lpszA, OUT PWSTR pszBuff, IN SIZE_T cchBuff);
+HEAP_strdupA2W_buf(_In_ PCSTR lpszA, _Out_ PWSTR pszStaticBuff, _In_ SIZE_T cchStaticBuff);
 
 /* Free memory allocated by HEAP_strdupA2W_buf */
 static inline VOID FASTCALL
-HEAP_strdupA2W_buf_free(LPWSTR pszW, LPWSTR pszBuff)
+HEAP_strdupA2W_buf_free(
+    _In_opt_ PWSTR pszDynamicBuff,
+    _In_ PWSTR pszStaticBuff)
 {
-    if (pszW && pszW != pszBuff)
-        HEAP_free(pszW);
+    if (pszDynamicBuff && pszDynamicBuff != pszStaticBuff)
+        HEAP_free(pszDynamicBuff);
 }
 
 VOID

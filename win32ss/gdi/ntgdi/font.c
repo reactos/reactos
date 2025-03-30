@@ -464,7 +464,7 @@ NtGdiAddFontResourceW(
         return 0;
 
     SafeFileName.Length = (USHORT)((cwc - 1) * sizeof(WCHAR));
-    SafeFileName.MaximumLength = SafeFileName.Length + 2 * sizeof(UNICODE_NULL); // Security issue
+    SafeFileName.MaximumLength = SafeFileName.Length + sizeof(UNICODE_NULL);
     SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                 SafeFileName.MaximumLength,
                                                 TAG_STRING);
@@ -485,9 +485,7 @@ NtGdiAddFontResourceW(
     }
     _SEH2_END;
 
-    // Security issue: Avoid buffer overrun by double '\0'
     SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR) + 1] = UNICODE_NULL;
 
     Ret = IntGdiAddFontResourceEx(&SafeFileName, fl, 0, cFiles, cwc);
 
@@ -518,7 +516,7 @@ NtGdiRemoveFontResourceW(
         return FALSE;
 
     SafeFileName.Length = (USHORT)((cwc - 1) * sizeof(WCHAR));
-    SafeFileName.MaximumLength = SafeFileName.Length + 2 * sizeof(UNICODE_NULL); // Security issue
+    SafeFileName.MaximumLength = SafeFileName.Length + sizeof(UNICODE_NULL);
     SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                 SafeFileName.MaximumLength,
                                                 TAG_STRING);
@@ -539,9 +537,7 @@ NtGdiRemoveFontResourceW(
     }
     _SEH2_END;
 
-    // Security issue: Avoid buffer overrun by double '\0'
     SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR) + 1] = UNICODE_NULL;
 
     Ret = IntGdiRemoveFontResource(&SafeFileName, fl, cFiles, cwc);
 

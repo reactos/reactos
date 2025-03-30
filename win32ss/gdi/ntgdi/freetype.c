@@ -1233,7 +1233,9 @@ IntUnicodeStringToBuffer(LPWSTR pszBuffer, SIZE_T cbBuffer, const UNICODE_STRING
 }
 
 static NTSTATUS
-DuplicateUnicodeString(const UNICODE_STRING *Source, PUNICODE_STRING Destination)
+DuplicateUnicodeString(
+    _In_ PCUNICODE_STRING Source,
+    _Out_ PUNICODE_STRING Destination)
 {
     NTSTATUS Status = STATUS_NO_MEMORY;
     UNICODE_STRING Tmp;
@@ -2090,9 +2092,9 @@ NameFromCharSet(BYTE CharSet)
 /* Adds the font resource from the specified file to the system */
 static INT FASTCALL
 IntGdiAddFontResourceSingle(
-    IN const UNICODE_STRING *FileName,
-    IN DWORD Characteristics,
-    IN DWORD dwFlags)
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD Characteristics,
+    _In_ DWORD dwFlags)
 {
     NTSTATUS Status;
     HANDLE FileHandle;
@@ -2290,11 +2292,11 @@ IntGdiAddFontResourceSingle(
 
 INT FASTCALL
 IntGdiAddFontResourceEx(
-    IN const UNICODE_STRING *FileName,
-    IN DWORD Characteristics,
-    IN DWORD dwFlags,
-    IN DWORD cFiles,
-    IN DWORD cwc)
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD Characteristics,
+    _In_ DWORD dwFlags,
+    _In_ DWORD cFiles,
+    _In_ DWORD cwc)
 {
     PWSTR pchFile = FileName->Buffer;
     SIZE_T cchFile;
@@ -2304,10 +2306,6 @@ IntGdiAddFontResourceEx(
     {
         _SEH2_TRY
         {
-            // Security issue: FileName should be terminated by double '\0'
-            if (!*pchFile)
-                return FALSE;
-
             cchFile = wcslen(pchFile);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2338,18 +2336,18 @@ IntGdiAddFontResourceEx(
 
 static BOOL FASTCALL
 IntGdiRemoveFontResourceSingle(
-    IN const UNICODE_STRING *FileName,
-    IN DWORD dwFlags)
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD dwFlags)
 {
     return FALSE; // FIXME
 }
 
 BOOL FASTCALL
 IntGdiRemoveFontResource(
-    IN const UNICODE_STRING *FileName,
-    IN DWORD dwFlags,
-    IN DWORD cFiles,
-    IN DWORD cwc)
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD dwFlags,
+    _In_ DWORD cFiles,
+    _In_ DWORD cwc)
 {
     PWSTR pchFile = FileName->Buffer;
     SIZE_T cchFile;
@@ -2358,10 +2356,6 @@ IntGdiRemoveFontResource(
     {
         _SEH2_TRY
         {
-            // Security issue: FileName should be terminated by double '\0'
-            if (!*pchFile)
-                return FALSE;
-
             cchFile = wcslen(pchFile);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

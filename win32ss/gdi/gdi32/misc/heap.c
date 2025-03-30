@@ -31,7 +31,7 @@
 HANDLE hProcessHeap = NULL;
 
 NTSTATUS FASTCALL
-HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
+HEAP_strdupA2W(_Outptr_ PWSTR* ppszW, _In_ PCSTR lpszA)
 {
     ULONG len;
     NTSTATUS Status;
@@ -50,13 +50,16 @@ HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
 }
 
 PWSTR FASTCALL
-HEAP_strdupA2W_buf(IN PCSTR lpszA, OUT PWSTR pszBuff, IN SIZE_T cchBuff)
+HEAP_strdupA2W_buf(
+    _In_ PCSTR lpszA,
+    _Out_ PWSTR pszStaticBuff,
+    _In_ SIZE_T cchStaticBuff)
 {
     if (!lpszA)
         return NULL;
 
     SIZE_T size = strlen(lpszA) + 1;
-    PWSTR pszW = (size < cchBuff) ? pszBuff : HEAP_alloc(size * sizeof(WCHAR));
+    PWSTR pszW = (size < cchStaticBuff) ? pszStaticBuff : HEAP_alloc(size * sizeof(WCHAR));
     if (!pszW)
         return NULL;
 
