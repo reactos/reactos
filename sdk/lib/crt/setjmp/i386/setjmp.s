@@ -107,6 +107,7 @@ _longjmp:
     mov edi, [ecx + JB_DI*4]
     mov esi, [ecx + JB_SI*4]
     mov esp, [ecx + JB_SP*4]
+    /* If return value is 0, return 1 instead. */
     test eax, eax
     jnz LJJMP
     inc eax
