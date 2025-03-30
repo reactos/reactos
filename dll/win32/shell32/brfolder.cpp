@@ -231,10 +231,10 @@ BrFolder_GetIconPair(BrItemData &item, TVITEMW &tvi)
  */
 static BOOL
 BrFolder_GetName(
-    IShellFolder *lpsf,
-    PCIDLIST_RELATIVE pidlChild,
-    DWORD dwFlags,
-    LPWSTR lpFriendlyName)
+    _In_ IShellFolder *lpsf,
+    _In_ PCIDLIST_RELATIVE pidlChild,
+    _In_ DWORD dwFlags,
+    _Out_ PWSTR lpFriendlyName)
 {
     BOOL   bSuccess = FALSE;
     STRRET str;
@@ -249,10 +249,10 @@ BrFolder_GetName(
 
 static BOOL
 BrFolder_GetName(
-    BrFolder *info,
-    HTREEITEM hItem,
-    UINT Flags,
-    PWSTR Buffer)
+    _In_ BrFolder *info,
+    _In_ HTREEITEM hItem,
+    _In_ UINT Flags,
+    _Out_ PWSTR Buffer)
 {
     if (BrItemData *item = BrFolder_GetItemData(info, hItem))
         return BrFolder_GetName(item->lpsfParent, item->pidlChild, Flags, Buffer);
@@ -302,9 +302,9 @@ BrFolder_TreeItemHasThisChild(
 
 static HTREEITEM
 BrFolder_FindTreeItemOfAbsoluteItem(
-    BrFolder &info,
-    PCIDLIST_ABSOLUTE pidl,
-    HTREEITEM hItem = NULL)
+    _In_ BrFolder &info,
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _In_opt_ HTREEITEM hItem = NULL)
 {
     if (!hItem)
         hItem = TreeView_GetRoot(info.hwndTreeView);
@@ -1262,7 +1262,6 @@ BrFolder_OnChangeEx(
 {
     TRACE("(%p)->(%p, %p, 0x%lX)\n", info, pidl1, pidl2, event);
 
-    HTREEITEM hTI;
     switch (event)
     {
         case SHCNE_RENAMEFOLDER:
@@ -1270,7 +1269,7 @@ BrFolder_OnChangeEx(
         case SHCNE_UPDATEITEM:
         {
             UINT UpdateFlags = (event == SHCNE_UPDATEITEM) ? (TVIF_IMAGE | TVIF_CHILDREN) : (TVIF_TEXT);
-            if ((hTI = BrFolder_FindTreeItemOfAbsoluteItem(*info, pidl1)) != NULL)
+            if (HTREEITEM hTI = BrFolder_FindTreeItemOfAbsoluteItem(*info, pidl1))
             {
                 if (BrFolder_UpdateItemEx(*info, hTI, pidl2, UpdateFlags))
                 {
