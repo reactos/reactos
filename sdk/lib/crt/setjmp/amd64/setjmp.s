@@ -59,7 +59,7 @@ FUNC _setjmp
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
 
-    mov [rcx + JUMP_BUFFER_Frame], ebp          /* Store frame pointer (ebp) */
+    mov [rcx + JUMP_BUFFER_Frame], rbp          /* Store frame pointer (rbp) */
 
     lea rax, [esp + 8]                          /* Get the return address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
@@ -102,7 +102,7 @@ FUNC _setjmpex
     mov [rcx + JUMP_BUFFER_R14], r14            /* Store r14 */
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
 
-    mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame pointer (rdx) */
+    mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame pointer from argument */
 
     lea rax, [esp + 8]                          /* Get the return address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
@@ -146,7 +146,11 @@ FUNC longjmp
     mov r14, [rcx + JUMP_BUFFER_R14]            /* Restore r14 */
     mov r15, [rcx + JUMP_BUFFER_R15]            /* Restore r15 */
 
-    mov ebp, [rcx + JUMP_BUFFER_Frame]          /* Get frame pointer (ebp) */
+    mov rax, [rcx + JUMP_BUFFER_Frame]          /* Get frame pointer */
+    test rax, rax                               /* Restore frame pointer (rbp) if non-zero */
+    jz LJJMP1
+    mov rbp, rax
+LJJMP1:
 
     movdqu xmm6, [rcx + JUMP_BUFFER_Xmm6]       /* Restore xmm6 */
     movdqu xmm7, [rcx + JUMP_BUFFER_Xmm7]       /* Restore xmm7 */
@@ -164,11 +168,9 @@ FUNC longjmp
 
     mov rax, rdx                                /* Move val into rax (return value) */
     test rax, rax                               /* Check if val is 0 */
-    jnz LJJMP                                   /* If val is non-zero, jump to LJJMP */
-
+    jnz LJJMP2                                  /* If val is non-zero, jump to LJJMP2 */
     inc rax                                     /* Increment rax */
-
-LJJMP:
+LJJMP2:
     ret
 ENDFUNC
 
