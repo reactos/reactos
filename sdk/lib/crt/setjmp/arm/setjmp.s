@@ -41,6 +41,9 @@
 
     LEAF_ENTRY longjmp
 
+    /* Save 2nd argument */
+    mov r2, r1
+
     ldmia r0!, {r1,r4-r11}
     ldmia r0!, {r1,lr,fp}
     mov sp, r1
@@ -55,10 +58,10 @@
     vld1.64 {d6}, [r0]!
     vld1.64 {d7}, [r0]!
 
-    /* Return r1, or 1 if it is 0. */
-    cmp r1, #0
+    /* Return 2nd argument, or 1 if it is 0. */
+    cmp r2, #0
     moveq r0, #1
-    movne r0, r1
+    movne r0, r2
     bx lr
     LEAF_END longjmp
 
