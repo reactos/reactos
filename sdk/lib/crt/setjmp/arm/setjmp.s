@@ -55,9 +55,8 @@
     vld1.64 {d6}, [r0]!
     vld1.64 {d7}, [r0]!
 
-    /* Check if r1 is zero */
+    /* Return r1, or 1 if it is 0. */
     cmp r1, #0
-    /* if r1 is zero, then set r0 to 1, else r0 = r1 */
     moveq r0, #1
     movne r0, r1
     bx lr
