@@ -186,7 +186,7 @@ static inline LPCWSTR GetItemRecycledFullPath(const BBITEMDATA &Data)
     return (LPCWSTR)((BYTE*)&Data + Data.RecycledPathOffset);
 }
 
-#if UNUSED && FALSE
+#if 0 // Unused
 static inline LPCWSTR GetItemRecycledFileName(LPCITEMIDLIST pidl, const BBITEMDATA &Data)
 {
     C_ASSERT(BBITEMFILETYPE & PT_FS_UNICODE_FLAG);

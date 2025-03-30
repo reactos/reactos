@@ -702,7 +702,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
     {
         FORMATETC fmt2;
         InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
-        if (SUCCEEDED(pDataObject->GetData(&fmt2, &medium)) /* && SUCCEEDED(pDataObject->GetData(&fmt2, &medium))*/)
+        if (SUCCEEDED(hr = pDataObject->GetData(&fmt2, &medium)) /* && SUCCEEDED(pDataObject->GetData(&fmt2, &medium))*/)
         {
             WCHAR wszTargetPath[MAX_PATH + 1];
             LPWSTR pszSrcList;
