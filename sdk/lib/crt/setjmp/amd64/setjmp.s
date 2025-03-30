@@ -70,14 +70,12 @@ FUNC _setjmp
     movdqu [rcx + JUMP_BUFFER_Xmm14], xmm14     /* Save xmm14 */
     movdqu [rcx + JUMP_BUFFER_Xmm15], xmm15     /* Save xmm15 */
 
-    lea rax, [rsp + 8]                          /* Get frame */
-    mov [rcx + JUMP_BUFFER_Frame], rax          /* Save frame */
+    mov [rcx + JUMP_BUFFER_Frame], rbp          /* Save frame */
 
-    mov rax, SJ_RET                             /* Get address */
+    mov rax, [rsp]                              /* Get address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Save as RIP */
 
     xor rax, rax                                /* Return 0 (first time) */
-SJ_RET:
     ret
 ENDFUNC
 
@@ -117,8 +115,9 @@ FUNC _setjmpex
 
     mov [rcx + JUMP_BUFFER_Frame], rdx          /* Save frame */
 
-    mov rax, SJX_RET                            /* Get address */
+    mov rax, [rsp]                              /* Get address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Save as RIP */
+
     xor rax, rax                                /* Return 0 (first time) */
 SJX_RET:
     ret
@@ -159,18 +158,17 @@ FUNC longjmp
     movdqu xmm14, [rcx + JUMP_BUFFER_Xmm14]     /* Restore xmm14 */
     movdqu xmm15, [rcx + JUMP_BUFFER_Xmm15]     /* Restore xmm15 */
 
-    mov rax, [rcx + JUMP_BUFFER_Frame]          /* Get frame */
-    mov rsp, rax                                /* Restore frame */
+    mov rax, [rcx + JUMP_BUFFER_Rip]            /* Get rip */
+    mov [rsp], rax                              /* Store return address */
 
-    mov rdx, [rcx + JUMP_BUFFER_Rip]            /* Get target RIP */
-    mov rax, rdx                                /* 2nd argument */
+    mov rax, rdx                                /* Get 2nd argument */
 
     /* Return 2nd argument, or 1 if it was zero */
     test rax, rax
     jnz LJ_JMP
     inc rax
 LJ_JMP:
-    jmp rdx
+    ret
 ENDFUNC
 
 END
