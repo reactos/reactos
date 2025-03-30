@@ -61,7 +61,7 @@ FUNC _setjmp
 
     mov [rcx + JUMP_BUFFER_Frame], rbp          /* Store frame pointer (rbp) */
 
-    lea rax, [esp + 8]                          /* Get the return address */
+    mov rax, [esp + 8]                          /* Get the return address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
 
     movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
@@ -103,7 +103,7 @@ FUNC _setjmpex
     mov [rcx + JUMP_BUFFER_R15], r15            /* Store r15 */
     mov [rcx + JUMP_BUFFER_Frame], rdx          /* Store frame pointer from 2nd argument */
 
-    lea rax, [esp + 8]                          /* Get the return address */
+    mov rax, [esp + 8]                          /* Get the return address */
     mov [rcx + JUMP_BUFFER_Rip], rax            /* Store rip (return address) */
 
     movdqu [rcx + JUMP_BUFFER_Xmm6], xmm6       /* Store xmm6 */
@@ -145,8 +145,9 @@ FUNC longjmp
     mov r14, [rcx + JUMP_BUFFER_R14]            /* Restore r14 */
     mov r15, [rcx + JUMP_BUFFER_R15]            /* Restore r15 */
 
-    mov rax, [rcx + JUMP_BUFFER_Frame]          /* Get frame pointer */
-    test rax, rax                               /* Restore frame pointer (rbp) if non-zero */
+    /* Restore frame pointer (rbp) if non-zero */
+    mov rax, [rcx + JUMP_BUFFER_Frame]
+    test rax, rax
     jz LJJMP1
     mov rbp, rax
 LJJMP1:
@@ -162,8 +163,9 @@ LJJMP1:
     movdqu xmm14, [rcx + JUMP_BUFFER_Xmm14]     /* Restore xmm14 */
     movdqu xmm15, [rcx + JUMP_BUFFER_Xmm15]     /* Restore xmm15 */
 
-    mov rax, [rcx + JUMP_BUFFER_Rip]             /* Get return address */
-    mov [esp + 8], rax                           /* Store return address */
+    /* Store return address */
+    mov rax, [rcx + JUMP_BUFFER_Rip]
+    mov [esp + 8], rax
 
     mov rax, rdx                                /* Move val into rax (return value) */
     test rax, rax                               /* Check if val is 0 */
