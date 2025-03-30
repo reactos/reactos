@@ -118,10 +118,17 @@ ULONG FASTCALL FontGetObject(PTEXTOBJ TextObj, ULONG Count, PVOID Buffer);
 VOID FASTCALL IntLoadSystemFonts(VOID);
 BOOL FASTCALL IntLoadFontsInRegistry(VOID);
 VOID FASTCALL IntGdiCleanupPrivateFontsForProcess(VOID);
-INT FASTCALL IntGdiAddFontResourceEx(PCUNICODE_STRING FileName, DWORD Characteristics,
-                                     DWORD dwFlags, DWORD cFiles, DWORD cwc);
-BOOL FASTCALL IntGdiRemoveFontResource(PCUNICODE_STRING FileName, DWORD dwFlags,
-                                       DWORD cFiles, DWORD cwc);
+INT FASTCALL IntGdiAddFontResourceEx(
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD Characteristics,
+    _In_ DWORD dwFlags,
+    _In_ DWORD cFiles,
+    _In_ DWORD cwc);
+BOOL FASTCALL IntGdiRemoveFontResource(
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD dwFlags,
+    _In_ DWORD cFiles,
+    _In_ DWORD cwc);
 HANDLE FASTCALL IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded);
 BOOL FASTCALL IntGdiRemoveFontMemResource(HANDLE hMMFont);
 ULONG FASTCALL ftGdiGetGlyphOutline(PDC,WCHAR,UINT,LPGLYPHMETRICS,ULONG,PVOID,LPMAT2,BOOL);

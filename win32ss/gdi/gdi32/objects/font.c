@@ -2098,7 +2098,10 @@ CreateScalableFontResourceA(
 /* @implemented */
 INT
 WINAPI
-AddFontResourceExW(LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved)
+AddFontResourceExW(
+    _In_ LPCWSTR lpszFilename,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pvReserved)
 {
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
@@ -2112,7 +2115,10 @@ AddFontResourceExW(LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved)
 /* @implemented */
 INT
 WINAPI
-AddFontResourceExA(LPCSTR lpszFilename, DWORD fl, PVOID pvReserved)
+AddFontResourceExA(
+    _In_ LPCSTR lpszFilename,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pvReserved)
 {
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
@@ -2150,7 +2156,7 @@ AddFontResourceExA(LPCSTR lpszFilename, DWORD fl, PVOID pvReserved)
 /* @implemented */
 INT
 WINAPI
-AddFontResourceA(LPCSTR lpszFilename)
+AddFontResourceA(_In_ LPCSTR lpszFilename)
 {
     return AddFontResourceExA(lpszFilename, 0, NULL);
 }
@@ -2158,7 +2164,7 @@ AddFontResourceA(LPCSTR lpszFilename)
 /* @implemented */
 INT
 WINAPI
-AddFontResourceW(LPCWSTR lpszFilename)
+AddFontResourceW(_In_ LPCWSTR lpszFilename)
 {
     return GdiAddFontResourceW(lpszFilename, 0, NULL);
 }
@@ -2166,7 +2172,7 @@ AddFontResourceW(LPCWSTR lpszFilename)
 /* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceW(LPCWSTR lpFileName)
+RemoveFontResourceW(_In_ LPCWSTR lpFileName)
 {
     return RemoveFontResourceExW(lpFileName, 0, NULL);
 }
@@ -2174,7 +2180,7 @@ RemoveFontResourceW(LPCWSTR lpFileName)
 /* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceA(LPCSTR lpFileName)
+RemoveFontResourceA(_In_ LPCSTR lpFileName)
 {
     return RemoveFontResourceExA(lpFileName, 0, NULL);
 }
@@ -2182,9 +2188,10 @@ RemoveFontResourceA(LPCSTR lpFileName)
 /* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceExA(LPCSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv)
+RemoveFontResourceExA(
+    _In_ LPCSTR lpFileName,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pdv)
 {
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
@@ -2222,9 +2229,10 @@ RemoveFontResourceExA(LPCSTR lpFileName,
 /* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceExW(LPCWSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv)
+RemoveFontResourceExW(
+    _In_ LPCWSTR lpFileName,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pdv)
 {
     DPRINT("RemoveFontResourceExW\n");
 

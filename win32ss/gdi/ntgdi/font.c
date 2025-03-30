@@ -496,12 +496,12 @@ NtGdiAddFontResourceW(
 BOOL
 APIENTRY
 NtGdiRemoveFontResourceW(
-    IN WCHAR *pwszFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN ULONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
+    _In_reads_(cwc) WCHAR *pwszFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles,
+    _In_ ULONG fl,
+    _In_ DWORD dwPidTid,
+    _In_opt_ DESIGNVECTOR *pdv)
 {
     UNICODE_STRING SafeFileName;
     BOOL Ret;
