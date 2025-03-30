@@ -1819,8 +1819,6 @@ WSPAccept(
         }
     }
 
-    if (lpErrno) *lpErrno = NO_ERROR;
-
     /* AcceptSocket Async Events */
     if (Socket->SharedData->NonBlocking)
     {
@@ -1831,6 +1829,8 @@ WSPAccept(
                        Socket->SharedData->wMsg,
                        Socket->SharedData->AsyncEvents);
     }
+
+    if (lpErrno) *lpErrno = NO_ERROR;
 
     /* Return Socket */
     return AcceptSocket;
