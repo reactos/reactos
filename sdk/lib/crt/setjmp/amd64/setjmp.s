@@ -163,7 +163,7 @@ FUNC longjmp
     mov rax, rdx                                /* Move val into rax (return value) */
     test rax, rax                               /* Check if val is 0 */
     jnz LJJMP                                   /* If val is non-zero, jump to LJJMP */
-    inc eax                                     /* Increment rax */
+    inc rax                                     /* Increment rax */
 LJJMP:
     jmp qword ptr [rcx + JUMP_BUFFER_Rip]       /* Jump to the stored return address (rip) */
 ENDFUNC
