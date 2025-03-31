@@ -444,12 +444,12 @@ RealizeFontInit(HFONT hFont)
 INT
 APIENTRY
 NtGdiAddFontResourceW(
-    IN WCHAR *pwcFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN FLONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
+    _In_reads_(cwc) WCHAR *pwcFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles,
+    _In_ FLONG fl,
+    _In_ DWORD dwPidTid,
+    _In_opt_ DESIGNVECTOR *pdv)
 {
     UNICODE_STRING SafeFileName;
     INT Ret;
