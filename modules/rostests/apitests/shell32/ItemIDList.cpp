@@ -12,6 +12,7 @@
 enum { 
     DIRBIT = 1, FILEBIT = 2,
     PT_COMPUTER_REGITEM = 0x2E,
+    PT_INTERNET_URL     = 0x61,
 };
 
 static BYTE GetPIDLType(LPCITEMIDLIST pidl)
@@ -232,7 +233,7 @@ START_TEST(PIDL)
         ok_long(hr, S_OK);
         if (hr == S_OK)
         {
-            ok_int(pidlUrl->mkid.abID[0], 0x61);
+            ok_int(pidlUrl->mkid.abID[0], PT_INTERNET_URL);
             WCHAR buf[MAX_PATH];
             hr = GetDisplayNameOf(pInternet, pidlUrl, SHGDN_FORPARSING, buf, _countof(buf));
             ok_long(hr, S_OK);

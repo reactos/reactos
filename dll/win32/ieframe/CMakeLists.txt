@@ -13,8 +13,8 @@ list(APPEND SOURCE
     ieframe_main.c
     iehtmlwnd.c
     iexplore.c
-    intshcut.c
     inetfolder.c
+    intshcut.c
     navigate.c
     oleobject.c
     persist.c
