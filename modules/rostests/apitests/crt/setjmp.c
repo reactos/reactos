@@ -136,8 +136,11 @@ START_TEST(setjmp)
     TEST_setjmp_longjmp_integration();
     TEST_setjmp_zero_longjmp_check();
 
-#define DO_COME(number)    ok(s_check_points[number],  "Line %d: Didn't reach\n",    s_check_points[number])
-#define NEVER_COME(number) ok(!s_check_points[number], "Line %d: Wrongly reached\n", s_check_points[number])
+#define DO_COME(number) \
+    ok(s_check_points[number], "CheckPoint #%d: Didn't reach\n", number)
+#define NEVER_COME(number) \
+    ok(!s_check_points[number], "CheckPoint #%d: Wrongly reached Line %d\n", \
+       number, s_check_points[number])
 
     DO_COME(0);
     NEVER_COME(1);
