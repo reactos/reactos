@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2025 Whindmar Saksit <whindsaks@proton.me>
  */
 
+#define NONAMELESSUNION
+
 #include "ieframe.h"
 
 #include "shlobj.h"
@@ -263,7 +265,7 @@ static HRESULT WINAPI GetDisplayNameOf(IShellFolder *This, PCUITEMID_CHILD pidl,
     {
         WCHAR szUrl[MAX_URL_LENGTH], *pszUrl = GetUrl(pUrl, szUrl);
         pSR->uType = STRRET_WSTR;
-        return SHStrDupW(pszUrl, &pSR->pOleStr);
+        return SHStrDupW(pszUrl, &pSR->u.pOleStr);
     }
     return E_FAIL;
 }
