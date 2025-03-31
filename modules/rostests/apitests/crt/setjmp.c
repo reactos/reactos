@@ -8,12 +8,16 @@
 
 #include <apitest.h>
 #include <setjmp.h>
+#include <assert.h>
 
 static jmp_buf g_jmp_buf;
 
 static INT s_check_points[18] = { 0 };
 
-#define CHECK_POINT(number) s_check_points[number] = __LINE__
+#define CHECK_POINT(number) do { \
+    assert(number < _countof(s_check_points)); \
+    s_check_points[number] = __LINE__; \
+} while (0)
 
 static void TEST_setjmp_simple(void)
 {
