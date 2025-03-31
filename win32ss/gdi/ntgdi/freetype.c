@@ -1666,11 +1666,8 @@ IntLoadSystemFonts(VOID)
                     {
                         RtlCopyUnicodeString(&FileName, &Directory);
                         RtlAppendUnicodeStringToString(&FileName, &TempString);
-                        if (!IntGdiAddFontResourceEx(&FileName, 0, AFRX_WRITE_REGISTRY, 1,
-                                                     FileName.MaximumLength / sizeof(WCHAR)))
-                        {
+                        if (!IntGdiAddFontResourceEx(&FileName, 1, 0, AFRX_WRITE_REGISTRY))
                             DPRINT1("ERR: Failed to load %wZ\n", &FileName);
-                        }
                     }
 
                     if (DirInfo->NextEntryOffset == 0)
@@ -2293,10 +2290,9 @@ IntGdiAddFontResourceSingle(
 INT FASTCALL
 IntGdiAddFontResourceEx(
     _In_ PCUNICODE_STRING FileName,
-    _In_ DWORD Characteristics,
-    _In_ DWORD dwFlags,
     _In_ DWORD cFiles,
-    _In_ DWORD cwc)
+    _In_ DWORD Characteristics,
+    _In_ DWORD dwFlags)
 {
     PWSTR pchFile = FileName->Buffer;
     SIZE_T cchFile;
@@ -2313,10 +2309,6 @@ IntGdiAddFontResourceEx(
             _SEH2_YIELD(return FALSE);
         }
         _SEH2_END;
-
-        // Security issue: Prohibit buffer overrun
-        if (pchFile + (cchFile + 1) > FileName->Buffer + cwc)
-            return FALSE;
 
         UNICODE_STRING ustrPathName;
         ustrPathName.Length = (USHORT)(cchFile * sizeof(WCHAR));
@@ -2345,9 +2337,8 @@ IntGdiRemoveFontResourceSingle(
 BOOL FASTCALL
 IntGdiRemoveFontResource(
     _In_ PCUNICODE_STRING FileName,
-    _In_ DWORD dwFlags,
     _In_ DWORD cFiles,
-    _In_ DWORD cwc)
+    _In_ DWORD dwFlags)
 {
     PWSTR pchFile = FileName->Buffer;
     SIZE_T cchFile;
@@ -2363,10 +2354,6 @@ IntGdiRemoveFontResource(
             _SEH2_YIELD(return FALSE);
         }
         _SEH2_END;
-
-        // Security issue: Prohibit buffer overrun
-        if (pchFile + (cchFile + 1) > FileName->Buffer + cwc)
-            return FALSE;
 
         UNICODE_STRING ustrPathName;
         ustrPathName.Length = (USHORT)(cchFile * sizeof(WCHAR));
@@ -2526,8 +2513,7 @@ IntLoadFontsInRegistry(VOID)
         if (NT_SUCCESS(Status))
         {
             RtlCreateUnicodeString(&FileNameW, szPath);
-            nFontCount += IntGdiAddFontResourceEx(&FileNameW, 0, dwFlags, 1,
-                                                  FileNameW.MaximumLength / sizeof(WCHAR));
+            nFontCount += IntGdiAddFontResourceEx(&FileNameW, 1, 0, dwFlags);
             RtlFreeUnicodeString(&FileNameW);
         }
 

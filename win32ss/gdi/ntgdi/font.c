@@ -438,6 +438,25 @@ RealizeFontInit(HFONT hFont)
   return pTextObj;
 }
 
+static BOOL
+IntCheckFontPathNames(
+    _In_reads_(cwc) WCHAR *pwcFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles)
+{
+    ULONG ich, cRealFiles;
+
+    if (pwcFiles[cwc - 1] != UNICODE_NULL)
+        return FALSE;
+
+    for (ich = cRealFiles = 0; ich < cwc; ++ich)
+    {
+        if (!pwcFiles[ich])
+            ++cRealFiles;
+    }
+
+    return cRealFiles >= cFiles;
+}
 
 /** Functions ******************************************************************/
 
@@ -453,7 +472,6 @@ NtGdiAddFontResourceW(
 {
     UNICODE_STRING SafeFileName;
     INT Ret;
-    ULONG ich, cRealFiles;
 
     DBG_UNREFERENCED_PARAMETER(dwPidTid);
     DBG_UNREFERENCED_PARAMETER(pdv);
@@ -475,21 +493,10 @@ NtGdiAddFontResourceW(
     _SEH2_TRY
     {
         ProbeForRead(pwcFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
-        if (pwcFiles[cwc - 1] != UNICODE_NULL)
+
+        if (!IntCheckFontPathNames(pwcFiles, cwc, cFiles))
             return 0;
-
-        for (ich = cRealFiles = 0; ich < cwc; ++ich)
-        {
-            if (!pwcFiles[ich])
-                ++cRealFiles;
-        }
-
-        if (cRealFiles < cFiles)
-        {
-            DPRINT1("%d < %d\n", cRealFiles, cFiles);
-            return 0;
-        }
-
+ 
         RtlCopyMemory(SafeFileName.Buffer, pwcFiles, SafeFileName.Length);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -501,7 +508,7 @@ NtGdiAddFontResourceW(
 
     SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-    Ret = IntGdiAddFontResourceEx(&SafeFileName, fl, 0, cFiles, cwc);
+    Ret = IntGdiAddFontResourceEx(&SafeFileName, cFiles, fl, 0);
 
     ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
     return Ret;
@@ -540,8 +547,10 @@ NtGdiRemoveFontResourceW(
     _SEH2_TRY
     {
         ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
-        if (pwszFiles[cwc - 1] != UNICODE_NULL)
-            return 0;
+
+        if (!IntCheckFontPathNames(pwszFiles, cwc, cFiles))
+            return FALSE;
+
         RtlCopyMemory(SafeFileName.Buffer, pwszFiles, SafeFileName.Length);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -553,7 +562,7 @@ NtGdiRemoveFontResourceW(
 
     SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-    Ret = IntGdiRemoveFontResource(&SafeFileName, fl, cFiles, cwc);
+    Ret = IntGdiRemoveFontResource(&SafeFileName, cFiles, fl);
 
     ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
     return Ret;

@@ -120,15 +120,13 @@ BOOL FASTCALL IntLoadFontsInRegistry(VOID);
 VOID FASTCALL IntGdiCleanupPrivateFontsForProcess(VOID);
 INT FASTCALL IntGdiAddFontResourceEx(
     _In_ PCUNICODE_STRING FileName,
-    _In_ DWORD Characteristics,
-    _In_ DWORD dwFlags,
     _In_ DWORD cFiles,
-    _In_ DWORD cwc);
+    _In_ DWORD Characteristics,
+    _In_ DWORD dwFlags);
 BOOL FASTCALL IntGdiRemoveFontResource(
     _In_ PCUNICODE_STRING FileName,
-    _In_ DWORD dwFlags,
     _In_ DWORD cFiles,
-    _In_ DWORD cwc);
+    _In_ DWORD dwFlags);
 HANDLE FASTCALL IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded);
 BOOL FASTCALL IntGdiRemoveFontMemResource(HANDLE hMMFont);
 ULONG FASTCALL ftGdiGetGlyphOutline(PDC,WCHAR,UINT,LPGLYPHMETRICS,ULONG,PVOID,LPMAT2,BOOL);
