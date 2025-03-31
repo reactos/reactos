@@ -129,6 +129,19 @@ BOOL                                        createNewStuff = false;
 // this class is private to browseui.dll and is not registered externally?
 //DEFINE_GUID(CLSID_ShellFldSetExt, 0x6D5313C0, 0x8C62, 0x11D1, 0xB2, 0xCD, 0x00, 0x60, 0x97, 0xDF, 0x8C, 0x11);
 
+static void GetWindowMonitorInfo(HWND hWnd, MONITORINFO &mi)
+{
+    HMONITOR hMon = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+    mi.cbSize = sizeof(mi);
+    if (!hMon || !GetMonitorInfo(hMon, &mi))
+    {
+        mi.rcMonitor.left = mi.rcMonitor.top = 0;
+        mi.rcMonitor.right = GetSystemMetrics(SM_CXFULLSCREEN);
+        mi.rcMonitor.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+    }
+}
+
 void DeleteMenuItems(HMENU theMenu, unsigned int firstIDToDelete, unsigned int lastIDToDelete)
 {
     MENUITEMINFO                            menuItemInfo;
@@ -196,16 +209,12 @@ private:
 
 void CToolbarProxy::Initialize(HWND parent, IUnknown *explorerToolbar)
 {
-    HWND                                    myWindow;
-    HRESULT                                 hResult;
-
-    myWindow = SHCreateWorkerWindowW(0, parent, 0, WS_CHILD, NULL, 0);
+    HWND myWindow = SHCreateWorkerWindowW(0, parent, 0, WS_CHILD, NULL, 0);
     if (myWindow != NULL)
     {
         SubclassWindow(myWindow);
         SetWindowPos(NULL, -32000, -32000, 0, 0, SWP_NOOWNERZORDER | SWP_NOZORDER);
-        hResult = explorerToolbar->QueryInterface(
-            IID_PPV_ARG(IExplorerToolbar, &fExplorerToolbar));
+        explorerToolbar->QueryInterface(IID_PPV_ARG(IExplorerToolbar, &fExplorerToolbar));
     }
 }
 
@@ -217,15 +226,12 @@ void CToolbarProxy::Destroy()
 
 LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    long int                                result;
-    HRESULT                                 hResult;
-
-    result = 0;
+    long result = 0;
     if (fExplorerToolbar.p != NULL)
     {
-        hResult = fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 1, (long)wParam,
+        fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 1, (long)wParam,
             reinterpret_cast<TBADDBITMAP *>(lParam), &result, RGB(192, 192, 192));
-        hResult = fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 2, (long)wParam,
+        fExplorerToolbar->AddBitmap(&CGID_ShellBrowser, 2, (long)wParam,
             reinterpret_cast<TBADDBITMAP *>(lParam), &result, RGB(192, 192, 192));
     }
     return result;
@@ -233,12 +239,9 @@ LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CToolbarProxy::OnForwardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    LRESULT                                 result;
-    HRESULT                                 hResult;
-
-    result = 0;
+    LRESULT result = 0;
     if (fExplorerToolbar.p != NULL)
-        hResult = fExplorerToolbar->SendToolbarMsg(&CGID_ShellBrowser, uMsg, wParam, lParam, &result);
+        fExplorerToolbar->SendToolbarMsg(&CGID_ShellBrowser, uMsg, wParam, lParam, &result);
     return result;
 }
 
@@ -272,6 +275,7 @@ class CShellBrowser :
     public MyIConnectionPointImpl<CShellBrowser, &DIID_DWebBrowserEvents>
 {
 private:
+    enum { BSF_ROS_REGBROWSER = 0x04, BSF_ROS_KIOSK = 0x08 }; // Custom values
     class barInfo
     {
     public:
@@ -310,6 +314,7 @@ private:
     SBFOLDERSETTINGS m_deffoldersettings;
     DWORD m_BrowserSvcFlags;
     bool m_Destroyed;
+    BYTE m_NonFullscreenState;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -341,13 +346,13 @@ public:
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
     HRESULT DoFolderOptions();
-    HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pvs);
+    HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pSV);
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void RepositionBars();
     HRESULT BuildExplorerBandMenu();
     HRESULT BuildExplorerBandCategory(HMENU hBandsMenu, CATID category, DWORD dwPos, UINT *nbFound);
     BOOL IsBuiltinBand(CLSID &bandID);
-    virtual WNDPROC GetWindowProc()
+    virtual WNDPROC GetWindowProc() override
     {
         return WindowProc;
     }
@@ -355,6 +360,7 @@ public:
     HRESULT FireNavigateComplete(const wchar_t *newDirectory);
     HRESULT FireCommandStateChange(bool newState, int commandID);
     HRESULT FireCommandStateChangeAll();
+    HRESULT FireEvent_VBOOL(DISPID dispIdMember, VARIANT_BOOL Param1);
     HRESULT UpdateForwardBackState();
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
@@ -363,6 +369,8 @@ public:
     void RefreshCabinetState();
     void UpdateWindowTitle();
     void SaveITBarLayout();
+
+    inline HWND GetTopLevelBrowserWindow() { return m_hWnd; }
 
 /*    // *** IDockingWindowFrame methods ***
     STDMETHOD(AddToolbar)(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags) override;
@@ -627,6 +635,7 @@ public:
     LRESULT OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarLock(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarBandVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -680,6 +689,7 @@ public:
         COMMAND_ID_HANDLER(IDM_FAVORITES_ORGANIZEFAVORITES, OnOrganizeFavorites)
         COMMAND_ID_HANDLER(IDM_VIEW_STATUSBAR, OnToggleStatusBarVisible)
         COMMAND_ID_HANDLER(IDM_VIEW_REFRESH, OnRefresh)
+        COMMAND_ID_HANDLER(FCIDM_BROWSER_TOGGLEFULLSCREEN, OnToggleFullscreen)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LOCKTOOLBARS, OnToggleToolbarLock)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_STANDARDBUTTONS, OnToggleToolbarBandVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_ADDRESSBAR, OnToggleAddressBandVisible)
@@ -814,14 +824,14 @@ HRESULT CShellBrowser::Initialize()
     return S_OK;
 }
 
-HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pvs)
+HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pSV)
 {
     HRESULT hr;
-    if (pvs)
+    if (pSV)
     {
         m_settings.Save();
         SBFOLDERSETTINGS &sbfs = m_deffoldersettings, defsbfs;
-        if (FAILED(pvs->GetCurrentInfo(&sbfs.FolderSettings)))
+        if (FAILED(pSV->GetCurrentInfo(&sbfs.FolderSettings)))
         {
             defsbfs.InitializeDefaults();
             sbfs = defsbfs;
@@ -1152,14 +1162,14 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     UpdateWindowTitle();
 
     LPCITEMIDLIST pidlChild;
-    INT index, indexOpen;
     HIMAGELIST himlSmall, himlLarge;
 
     CComPtr<IShellFolder> sf;
     hResult = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
     if (SUCCEEDED(hResult))
     {
-        index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+        INT indexOpen;
+        SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
         Shell_GetImageLists(&himlLarge, &himlSmall);
 
@@ -1619,9 +1629,9 @@ HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arg
         if (*pp != NULL)
         {
             CComPtr<IDispatch>          theDispatch;
-
             hResult = (*pp)->QueryInterface(IID_PPV_ARG(IDispatch, &theDispatch));
-            hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+            if (SUCCEEDED(hResult))
+                hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
         }
         pp++;
     }
@@ -1631,9 +1641,9 @@ HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arg
         if (*pp != NULL)
         {
             CComPtr<IDispatch>          theDispatch;
-
             hResult = (*pp)->QueryInterface(IID_PPV_ARG(IDispatch, &theDispatch));
-            hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+            if (SUCCEEDED(hResult))
+                hResult = theDispatch->Invoke(dispIdMember, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
         }
         pp++;
     }
@@ -1676,6 +1686,14 @@ HRESULT CShellBrowser::FireCommandStateChangeAll()
     return FireCommandStateChange(false, -1);
 }
 
+HRESULT CShellBrowser::FireEvent_VBOOL(DISPID dispIdMember, VARIANT_BOOL Param1)
+{
+    VARIANT vArgs[1];
+    V_VT(&vArgs[0]) = VT_BOOL;
+    V_BOOL(&vArgs[0]) = Param1 ? VARIANT_TRUE : VARIANT_FALSE;
+    return FireEvent(dispIdMember, 1, vArgs);
+}
+
 HRESULT CShellBrowser::UpdateForwardBackState()
 {
     CComPtr<ITravelLog>                     travelLog;
@@ -1708,13 +1726,8 @@ HRESULT CShellBrowser::UpdateForwardBackState()
 
 HRESULT CShellBrowser::UpdateUpState()
 {
-    bool canGoUp;
-    HRESULT hResult;
-
-    canGoUp = true;
-    if (_ILIsDesktop(fCurrentDirectoryPIDL))
-        canGoUp = false;
-    hResult = FireCommandStateChange(canGoUp, 3);
+    bool canGoUp = !_ILIsDesktop(fCurrentDirectoryPIDL);
+    FireCommandStateChange(canGoUp, 3);
     return S_OK;
 }
 
@@ -2109,8 +2122,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
 HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
     DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-    HRESULT                                 hResult;
-
     if (!pguidCmdGroup)
     {
         TRACE("Unhandled null CGID %d %d %p %p\n", nCmdID, nCmdexecopt, pvaIn, pvaOut);
@@ -2132,13 +2143,13 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
 
                 if (IsEqualCLSID(*pclsid, fCurrentVertBar))
                 {
-                    hResult = IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
+                    IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
                     memset(&fCurrentVertBar, 0, sizeof(fCurrentVertBar));
                     FireCommandStateChangeAll();
                 }
                 else
                 {
-                    hResult = ShowBand(*pclsid, true);
+                    ShowBand(*pclsid, true);
                 }
                 return S_OK;
             case 0x22:
@@ -2612,6 +2623,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::ShowControlWindow(UINT id, BOOL fShow)
             return S_OK;
         case FCW_TREE:
             return Exec(&CGID_Explorer, SBCMDID_EXPLORERBARFOLDERS, 0, NULL, NULL);
+        case FCW_MENU:
+            return IUnknown_Exec(fClientBars[BIInternetToolbar].clientBar,
+                                 CGID_PrivCITCommands, ITID_MENUBANDSHOWN, 0, NULL, NULL);
         case FCW_ADDRESSBAR:
             return IUnknown_Exec(fClientBars[BIInternetToolbar].clientBar,
                                  CGID_PrivCITCommands, ITID_ADDRESSBANDSHOWN, 0, NULL, NULL);
@@ -2635,9 +2649,11 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfS
             shown = cmd.cmdf & OLECMDF_LATCHED;
             break;
         }
+        case FCW_MENU:
+            shown = (hr = IsInternetToolbarBandShown(ITID_MENUBANDSHOWN)) == S_OK;
+            break;
         case FCW_ADDRESSBAR:
-            hr = IsInternetToolbarBandShown(ITID_ADDRESSBANDSHOWN);
-            shown = hr == S_OK;
+            shown = (hr = IsInternetToolbarBandShown(ITID_ADDRESSBANDSHOWN)) == S_OK;
             break;
         default:
             hr = E_NOTIMPL;
@@ -2893,7 +2909,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::InitializeTravelLog(ITravelLog *ptl, DW
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetTopBrowser()
 {
-    m_BrowserSvcFlags |= BSF_TOPBROWSER;
+    SetFlags(BSF_TOPBROWSER, BSF_TOPBROWSER);
     return S_OK;
 }
 
@@ -3294,7 +3310,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::get_Busy(VARIANT_BOOL *pBool)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::Quit()
 {
-    return E_NOTIMPL;
+    ::PostMessageW(GetTopLevelBrowserWindow(), WM_CLOSE, 0, 0);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::ClientToWindow(int *pcx, int *pcy)
@@ -3319,7 +3336,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::get_Name(BSTR *Name)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_HWND(SHANDLE_PTR *pHWND)
 {
-    return E_NOTIMPL;
+    *pHWND = HandleToLong(GetTopLevelBrowserWindow());
+    return *pHWND ? S_OK : E_UNEXPECTED;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_FullName(BSTR *FullName)
@@ -3334,22 +3352,35 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::get_Path(BSTR *Path)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_Visible(VARIANT_BOOL *pBool)
 {
-    return E_NOTIMPL;
+    HWND hWnd = GetTopLevelBrowserWindow();
+    *pBool = hWnd && ::IsWindowVisible(hWnd) ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_Visible(VARIANT_BOOL Value)
 {
-    return E_NOTIMPL;
+    if (HWND hWnd = GetTopLevelBrowserWindow())
+    {
+        ::ShowWindow(hWnd, Value? SW_SHOW : SW_HIDE);
+        if (Value)
+            ::SetForegroundWindow(hWnd);
+        FireEvent_VBOOL(DISPID_ONVISIBLE, Value);
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_StatusBar(VARIANT_BOOL *pBool)
 {
-    return E_NOTIMPL;
+    *pBool = IsControlWindowShown(FCW_STATUS, NULL) == S_OK ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_StatusBar(VARIANT_BOOL Value)
 {
-    return E_NOTIMPL;
+    SetFlags(BSF_UISETBYAUTOMATION, BSF_UISETBYAUTOMATION);
+    HRESULT hr = ShowControlWindow(FCW_STATUS, Value != VARIANT_FALSE);
+    FireEvent_VBOOL(DISPID_ONSTATUSBAR, Value);
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_StatusText(BSTR *StatusText)
@@ -3359,37 +3390,54 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::get_StatusText(BSTR *StatusText)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_StatusText(BSTR StatusText)
 {
-    return E_NOTIMPL;
+    SendControlMsg(FCW_STATUS, SB_SETTEXTW, 0, (LPARAM)StatusText, NULL);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_ToolBar(int *Value)
 {
-    return E_NOTIMPL;
+    *Value = IsControlWindowShown(FCW_INTERNETBAR, NULL) == S_OK;
+    if (!*Value && IsControlWindowShown(FCW_TOOLBAR, NULL) == S_OK)
+        *Value = FCW_TOOLBAR;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_ToolBar(int Value)
 {
-    return E_NOTIMPL;
+    SetFlags(BSF_UISETBYAUTOMATION, BSF_UISETBYAUTOMATION);
+    ShowControlWindow(FCW_INTERNETBAR, Value != VARIANT_FALSE && Value != FCW_TOOLBAR);
+    ShowControlWindow(FCW_TOOLBAR, Value == FCW_TOOLBAR);
+    FireEvent_VBOOL(DISPID_ONTOOLBAR, Value);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_MenuBar(VARIANT_BOOL *Value)
 {
-    return E_NOTIMPL;
+    *Value = IsControlWindowShown(FCW_MENU, NULL) == S_OK ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_MenuBar(VARIANT_BOOL Value)
 {
-    return E_NOTIMPL;
+    SetFlags(BSF_UISETBYAUTOMATION, BSF_UISETBYAUTOMATION);
+    HRESULT hr = ShowControlWindow(FCW_MENU, Value != VARIANT_FALSE);
+    FireEvent_VBOOL(DISPID_ONMENUBAR, Value);
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_FullScreen(VARIANT_BOOL *pbFullScreen)
 {
-    return E_NOTIMPL;
+    *pbFullScreen = (m_BrowserSvcFlags & BSF_ROS_KIOSK) ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_FullScreen(VARIANT_BOOL bFullScreen)
 {
-    return E_NOTIMPL;
+    SetFlags(BSF_UISETBYAUTOMATION, BSF_UISETBYAUTOMATION);
+    SetFlags(bFullScreen ? BSF_ROS_KIOSK : 0, BSF_ROS_KIOSK);
+    put_TheaterMode(bFullScreen);
+    FireEvent_VBOOL(DISPID_ONFULLSCREEN, bFullScreen);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::Navigate2(VARIANT *URL, VARIANT *Flags,
@@ -3419,13 +3467,21 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Navigate2(VARIANT *URL, VARIANT *Flags,
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatusWB(OLECMDID cmdID, OLECMDF *pcmdf)
 {
-    return E_NOTIMPL;
+    OLECMD cmd = { (ULONG)cmdID, (DWORD)(*pcmdf) };
+    HRESULT hr = QueryStatus(NULL, 1, &cmd, NULL);
+    *pcmdf = (OLECMDF)cmd.cmdf;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::ExecWB(OLECMDID cmdID, OLECMDEXECOPT cmdexecopt,
     VARIANT *pvaIn, VARIANT *pvaOut)
 {
-    return E_NOTIMPL;
+    CComPtr<IOleCommandTarget> pOCT;
+    IShellView *pSV = fCurrentShellView;
+    HRESULT hr = pSV ? pSV->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &pOCT)) : E_FAIL;
+    if (SUCCEEDED(hr))
+        hr = pOCT->Exec(NULL, cmdID, cmdexecopt, pvaIn, pvaOut);
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::ShowBrowserBar(VARIANT *pvaClsid, VARIANT *pvarShow, VARIANT *pvarSize)
@@ -3469,52 +3525,67 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::put_Silent(VARIANT_BOOL bSilent)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_RegisterAsBrowser(VARIANT_BOOL *pbRegister)
 {
-    return E_NOTIMPL;
+    *pbRegister = (m_BrowserSvcFlags & BSF_ROS_REGBROWSER) ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_RegisterAsBrowser(VARIANT_BOOL bRegister)
 {
-    return E_NOTIMPL;
+    if (!bRegister)
+        return E_UNEXPECTED;
+    SetFlags(BSF_ROS_REGBROWSER, BSF_ROS_REGBROWSER);
+    return RegisterWindow(TRUE, SWC_3RDPARTY);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_RegisterAsDropTarget(VARIANT_BOOL *pbRegister)
 {
-    return E_NOTIMPL;
+    *pbRegister = (m_BrowserSvcFlags & BSF_REGISTERASDROPTARGET) ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_RegisterAsDropTarget(VARIANT_BOOL bRegister)
 {
-    return E_NOTIMPL;
+    SetFlags(bRegister ? BSF_REGISTERASDROPTARGET : 0, BSF_REGISTERASDROPTARGET);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_TheaterMode(VARIANT_BOOL *pbRegister)
 {
-    return E_NOTIMPL;
+    *pbRegister = (m_BrowserSvcFlags & BSF_THEATERMODE) ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_TheaterMode(VARIANT_BOOL bRegister)
 {
-    return E_NOTIMPL;
+    BOOL handled;
+    OnToggleFullscreen(bRegister, 0, NULL, handled);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_AddressBar(VARIANT_BOOL *Value)
 {
-    return E_NOTIMPL;
+    *Value = IsControlWindowShown(FCW_ADDRESSBAR, NULL) == S_OK ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_AddressBar(VARIANT_BOOL Value)
 {
-    return E_NOTIMPL;
+    SetFlags(BSF_UISETBYAUTOMATION, BSF_UISETBYAUTOMATION);
+    HRESULT hr = ShowControlWindow(FCW_ADDRESSBAR, Value != VARIANT_FALSE);
+    FireEvent_VBOOL(DISPID_ONADDRESSBAR, Value);
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_Resizable(VARIANT_BOOL *Value)
 {
+    *Value = (m_BrowserSvcFlags & BSF_RESIZABLE) ? VARIANT_TRUE : VARIANT_FALSE;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::put_Resizable(VARIANT_BOOL Value)
 {
-    return E_NOTIMPL;
+    SetFlags(Value ? (BSF_RESIZABLE | BSF_CANMAXIMIZE) : 0, (BSF_RESIZABLE | BSF_CANMAXIMIZE));
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::FindWindowByIndex(DWORD dwID, IUnknown **ppunk)
@@ -4083,6 +4154,50 @@ LRESULT CShellBrowser::OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
             FIXME("uCmd: %u\n", uCmd);
             break;
     }
+    return 0;
+}
+
+LRESULT CShellBrowser::OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    enum { SF_MBAR = 0x1, SF_SBAR = 0x2, SF_RESIZE = 0x4, SF_MAXIMIZED = 0x8 };
+    const UINT OrgUiSetAuto = m_BrowserSvcFlags & BSF_UISETBYAUTOMATION;
+    const BOOL fCurrentlyFullscreen = (m_BrowserSvcFlags & BSF_THEATERMODE);
+    const BOOL fEnter = wID ? !fCurrentlyFullscreen : wNotifyCode;
+    const HWND hWnd = GetTopLevelBrowserWindow();
+    if (fEnter)
+    {
+        VARIANT_BOOL varb;
+        m_NonFullscreenState = (m_BrowserSvcFlags & BSF_RESIZABLE) ? SF_RESIZE : 0;
+        m_NonFullscreenState |= (FAILED(get_MenuBar(&varb)) || varb) ? SF_MBAR : 0;
+        m_NonFullscreenState |= (FAILED(get_StatusBar(&varb)) || varb) ? SF_SBAR : 0;
+        m_NonFullscreenState |= (SHSetWindowBits(hWnd, GWL_STYLE, 0, 0) & WS_MAXIMIZE) ? SF_MAXIMIZED : 0;
+        SetFlags(BSF_THEATERMODE, BSF_THEATERMODE);
+        put_MenuBar(VARIANT_FALSE);
+        put_StatusBar(VARIANT_FALSE);
+        SHSetWindowBits(hWnd, GWL_STYLE, WS_CAPTION | WS_BORDER | WS_DLGFRAME | WS_THICKFRAME, 0);
+        SHSetWindowBits(hWnd, GWL_EXSTYLE, WS_EX_WINDOWEDGE, 0);
+        ::ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+        MONITORINFO mi;
+        GetWindowMonitorInfo(hWnd, mi);
+        int x = mi.rcMonitor.left, w = mi.rcMonitor.right - x;
+        int y = mi.rcMonitor.top, h = mi.rcMonitor.bottom - y;
+        ::SetWindowPos(hWnd, HWND_TOPMOST, x, y, w, h, SWP_FRAMECHANGED);
+    }
+    else
+    {
+        SetFlags(0, BSF_THEATERMODE);
+        put_MenuBar((m_NonFullscreenState & SF_MBAR) ? VARIANT_TRUE : VARIANT_FALSE);
+        put_StatusBar((m_NonFullscreenState & SF_SBAR) ? VARIANT_TRUE : VARIANT_FALSE);
+        SHSetWindowBits(hWnd, GWL_EXSTYLE, WS_EX_WINDOWEDGE, WS_EX_WINDOWEDGE);
+        UINT styles = WS_CAPTION | WS_BORDER | WS_DLGFRAME | ((m_NonFullscreenState & SF_RESIZE) ? WS_THICKFRAME : 0);
+        SHSetWindowBits(hWnd, GWL_STYLE, styles | WS_THICKFRAME, styles);
+        ::SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+        ::ShowWindow(hWnd, SW_SHOWNOACTIVATE);
+        if (m_NonFullscreenState & SF_MAXIMIZED)
+            ::ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+    }
+    SetFlags(OrgUiSetAuto, BSF_UISETBYAUTOMATION);
+    ::RedrawWindow(hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
     return 0;
 }
 
