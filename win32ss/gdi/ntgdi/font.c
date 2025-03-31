@@ -441,8 +441,8 @@ RealizeFontInit(HFONT hFont)
 static BOOL
 IntCheckFontPathNames(
     _In_reads_(cwc) WCHAR *pwcFiles,
-    _In_ ULONG cwc,
-    _In_ ULONG cFiles)
+    _In_ ULONG cFiles,
+    _In_ ULONG cwc)
 {
     ULONG ich, cRealFiles;
 
@@ -494,7 +494,7 @@ NtGdiAddFontResourceW(
     {
         ProbeForRead(pwcFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
 
-        if (!IntCheckFontPathNames(pwcFiles, cwc, cFiles))
+        if (!IntCheckFontPathNames(pwcFiles, cFiles, cwc))
             return 0;
  
         RtlCopyMemory(SafeFileName.Buffer, pwcFiles, SafeFileName.Length);
@@ -548,7 +548,7 @@ NtGdiRemoveFontResourceW(
     {
         ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
 
-        if (!IntCheckFontPathNames(pwszFiles, cwc, cFiles))
+        if (!IntCheckFontPathNames(pwszFiles, cFiles, cwc))
             return FALSE;
 
         RtlCopyMemory(SafeFileName.Buffer, pwszFiles, SafeFileName.Length);
