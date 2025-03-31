@@ -71,7 +71,7 @@ CWineTest::GetNextFile()
         {
             // printf("cFileName is '%S'.\n", fd.cFileName);
             /* If it was NOT rosautotest.exe then proceed as normal */
-            if (wcsicmp(fd.cFileName, TestName) != 0)
+            if (_wcsicmp(fd.cFileName, TestName) != 0)
             {
                 FoundFile = true;
             }
