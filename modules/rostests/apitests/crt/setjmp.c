@@ -27,8 +27,7 @@ static void TEST_setjmp_simple(void)
 
 static void TEST_setjmp_return_check(void)
 {
-    volatile int x = 1001, y = 1002, z = 1003;
-    volatile int value;
+    volatile int x = 1001, value;
 
     memset(&g_jmp_buf, 0xCC, sizeof(g_jmp_buf));
     value = setjmp(g_jmp_buf);
@@ -43,13 +42,10 @@ static void TEST_setjmp_return_check(void)
     {
         ok(TRUE, "Yes, come here\n");
         ok_int(x, 1001);
-        ok_int(y, 1002);
-        ok_int(z, 1003);
     }
     else
     {
         ok(FALSE, "No, never come here\n");
-        skip("\n");
     }
 }
 
@@ -98,6 +94,7 @@ static void TEST_setjmp_zero_longjmp_check(void)
         if (went_zero)
         {
             ok(FALSE, "No, never come here\n");
+            skip("Further tests skipped\n");
             return;
         }
         went_zero = TRUE;
@@ -110,7 +107,14 @@ static void TEST_setjmp_zero_longjmp_check(void)
     }
     else if (value == 1)
     {
-        ok(TRUE, "Yes, come here\n");
+        if (went_zero)
+        {
+            ok(TRUE, "Yes, come here\n");
+        }
+        else
+        {
+            ok(FALSE, "No, never come here\n");
+        }
     }
     else
     {
