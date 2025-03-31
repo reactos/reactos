@@ -453,6 +453,7 @@ NtGdiAddFontResourceW(
 {
     UNICODE_STRING SafeFileName;
     INT Ret;
+    ULONG ich, cRealFiles;
 
     DBG_UNREFERENCED_PARAMETER(dwPidTid);
     DBG_UNREFERENCED_PARAMETER(pdv);
@@ -476,6 +477,19 @@ NtGdiAddFontResourceW(
         ProbeForRead(pwcFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
         if (pwcFiles[cwc - 1] != UNICODE_NULL)
             return 0;
+
+        for (ich = cRealFiles = 0; ich < cwc; ++ich)
+        {
+            if (!pwcFiles[ich])
+                ++cRealFiles;
+        }
+
+        if (cRealFiles < cFiles)
+        {
+            DPRINT1("%d < %d\n", cRealFiles, cFiles);
+            return 0;
+        }
+
         RtlCopyMemory(SafeFileName.Buffer, pwcFiles, SafeFileName.Length);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
