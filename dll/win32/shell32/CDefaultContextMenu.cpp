@@ -219,7 +219,7 @@ class CDefaultContextMenu :
         STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
         // IServiceProvider
-        virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID svc, REFIID riid, void**ppv)
+        STDMETHOD(QueryService)(REFGUID svc, REFIID riid, void**ppv) override
         {
             return IUnknown_QueryService(m_site, svc, riid, ppv);
         }
