@@ -95,8 +95,7 @@ wmain(int argc, wchar_t* argv[])
 //    printf("Full TestName is '%S'\n", TestName);
     WCHAR* Name = wcsrchr(TestName, '\\');
     if (Name)
-        Name++;
-    memmove(TestName, Name, _countof(TestName) * sizeof(WCHAR));
+        memmove(TestName, Name + 1, _countof(TestName) * sizeof(WCHAR));
 //    printf("Short TestName is '%S'.\n", TestName);
 
     SetNtGlobalFlags();
