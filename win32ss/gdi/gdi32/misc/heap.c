@@ -52,7 +52,7 @@ HEAP_strdupA2W(_Outptr_ PWSTR* ppszW, _In_ PCSTR lpszA)
 PWSTR FASTCALL
 HEAP_strdupA2W_buf(
     _In_ PCSTR lpszA,
-    _Out_ PWSTR pszStaticBuff,
+    _In_ PWSTR pszStaticBuff,
     _In_ SIZE_T cchStaticBuff)
 {
     if (!lpszA)
