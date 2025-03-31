@@ -14,6 +14,7 @@ list(APPEND SOURCE
     iehtmlwnd.c
     iexplore.c
     intshcut.c
+    inetfolder.c
     navigate.c
     oleobject.c
     persist.c
