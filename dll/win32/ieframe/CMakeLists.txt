@@ -13,6 +13,7 @@ list(APPEND SOURCE
     ieframe_main.c
     iehtmlwnd.c
     iexplore.c
+    inetfolder.c
     intshcut.c
     navigate.c
     oleobject.c
