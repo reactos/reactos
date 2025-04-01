@@ -6785,7 +6785,7 @@ IntExtTextOutW(
      */
 
     PDC_ATTR pdcattr;
-    SURFOBJ *SurfObj, *SourceGlyphSurf;
+    SURFOBJ *psoDest, *psoGlyph;
     SURFACE *psurf;
     INT glyph_index, i;
     FT_Face face;
@@ -6793,8 +6793,8 @@ IntExtTextOutW(
     LONGLONG X64, Y64, RealXStart64, RealYStart64, DeltaX64, DeltaY64;
     ULONG previous;
     RECTL DestRect, MaskRect;
-    HBITMAP HSourceGlyph;
-    SIZEL bitSize;
+    HBITMAP hbmGlyph;
+    SIZEL glyphSize;
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj = NULL;
@@ -6858,7 +6858,7 @@ IntExtTextOutW(
     MaskRect.top = 0;
 
     psurf = dc->dclevel.pSurface;
-    SurfObj = &psurf->SurfObj;
+    psoDest = &psurf->SurfObj;
 
     if (pdcattr->iGraphicsMode == GM_ADVANCED)
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
@@ -7073,23 +7073,23 @@ IntExtTextOutW(
         DPRINT("X64, Y64: %I64d, %I64d\n", X64, Y64);
         DPRINT("Advance: %d, %d\n", realglyph->root.advance.x, realglyph->root.advance.y);
 
-        bitSize.cx = realglyph->bitmap.width;
-        bitSize.cy = realglyph->bitmap.rows;
+        glyphSize.cx = realglyph->bitmap.width;
+        glyphSize.cy = realglyph->bitmap.rows;
 
-        /* Do chars > space & not DEL & not nbsp have a bitSize.cx of zero? */
-        if (ch0 > L' ' && ch0 != del && ch0 != nbsp && bitSize.cx == 0)
-            DPRINT1("WARNING: WChar 0x%04x has a bitSize.cx of zero\n", ch0);
+        /* Do chars > space & not DEL & not nbsp have a glyphSize.cx of zero? */
+        if (ch0 > L' ' && ch0 != del && ch0 != nbsp && glyphSize.cx == 0)
+            DPRINT1("WARNING: WChar 0x%04x has a glyphSize.cx of zero\n", ch0);
 
         /* Don't ignore spaces or non-breaking spaces when computing offset.
          * This completes the fix of CORE-11787. */
-        if ((pdcattr->flTextAlign & TA_UPDATECP) && bitSize.cx == 0 &&
+        if ((pdcattr->flTextAlign & TA_UPDATECP) && glyphSize.cx == 0 &&
             (ch0 == L' ' || ch0 == nbsp)) // Space chars needing x-dim widths
         { 
             IntUnLockFreeType();
             /* Get the width of the space character */
             TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, 0, &spaceWidth, 0);
             IntLockFreeType();
-            bitSize.cx = spaceWidth.cx;
+            glyphSize.cx = spaceWidth.cx;
             realglyph->left = 0;
         }
 
@@ -7097,32 +7097,32 @@ IntExtTextOutW(
         MaskRect.bottom = realglyph->bitmap.rows;
 
         DestRect.left   = ((X64 + 32) >> 6) + realglyph->left;
-        DestRect.right  = DestRect.left + bitSize.cx;
+        DestRect.right  = DestRect.left + glyphSize.cx;
         DestRect.top    = ((Y64 + 32) >> 6) - realglyph->top;
-        DestRect.bottom = DestRect.top + bitSize.cy;
+        DestRect.bottom = DestRect.top + glyphSize.cy;
 
         /* Check if the bitmap has any pixels */
-        if ((bitSize.cx != 0) && (bitSize.cy != 0))
+        if ((glyphSize.cx != 0) && (glyphSize.cy != 0))
         {
             /*
              * We should create the bitmap out of the loop at the biggest possible
              * glyph size. Then use memset with 0 to clear it and sourcerect to
              * limit the work of the transbitblt.
              */
-            HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
-                                           BMF_8BPP, BMF_TOPDOWN,
-                                           realglyph->bitmap.buffer);
-            if (!HSourceGlyph)
+            hbmGlyph = EngCreateBitmap(glyphSize, realglyph->bitmap.pitch,
+                                       BMF_8BPP, BMF_TOPDOWN,
+                                       realglyph->bitmap.buffer);
+            if (!hbmGlyph)
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
                 bResult = FALSE;
                 break;
             }
 
-            SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-            if (!SourceGlyphSurf)
+            psoGlyph = EngLockSurface((HSURF)hbmGlyph);
+            if (!psoGlyph)
             {
-                EngDeleteSurface((HSURF)HSourceGlyph);
+                EngDeleteSurface((HSURF)hbmGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
                 bResult = FALSE;
                 break;
@@ -7149,8 +7149,8 @@ IntExtTextOutW(
                 }
             }
 
-            if (!IntEngMaskBlt(SurfObj,
-                               SourceGlyphSurf,
+            if (!IntEngMaskBlt(psoDest,
+                               psoGlyph,
                                (CLIPOBJ *)&dc->co,
                                &exloRGB2Dst.xlo,
                                &exloDst2RGB.xlo,
@@ -7162,8 +7162,8 @@ IntExtTextOutW(
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
 
-            EngUnlockSurface(SourceGlyphSurf);
-            EngDeleteSurface((HSURF)HSourceGlyph);
+            EngUnlockSurface(psoGlyph);
+            EngDeleteSurface((HSURF)hbmGlyph);
         }
 
         if (DoBreak)
