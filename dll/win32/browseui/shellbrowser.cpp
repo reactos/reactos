@@ -340,7 +340,6 @@ public:
     BOOL IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pdwBandID);
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
-    HRESULT GoBackOrForward();
     HRESULT DoFolderOptions();
     HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pvs);
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1404,26 +1403,6 @@ HRESULT CShellBrowser::NavigateToParent()
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
-}
-
-HRESULT CShellBrowser::GoBackOrForward()
-{
-    CComPtr<ITravelLog> travelLog;
-    HRESULT hResult = GetTravelLog(&travelLog);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-
-    CComPtr<ITravelEntry> backEntry;
-    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_BACK, &backEntry);
-    if (SUCCEEDED(hResult) && backEntry)
-        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
-
-    CComPtr<ITravelEntry> forwardEntry;
-    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget*>(this), TLOG_FORE, &forwardEntry);
-    if (SUCCEEDED(hResult) && forwardEntry)
-        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
-
-    return hResult;
 }
 
 BOOL CALLBACK AddFolderOptionsPage(HPROPSHEETPAGE thePage, LPARAM lParam)
@@ -3157,20 +3136,44 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::v_CheckZoneCrossing(LPCITEMIDLIST pidl)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoBack()
 {
-    CComPtr<ITravelLog> travelLog;
-    HRESULT hResult = GetTravelLog(&travelLog);
+    CComPtr<ITravelLog>                     travelLog;
+    CComPtr<ITravelEntry>                   unusedEntry;
+    HRESULT                                 hResult;
+
+    hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
+
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget *>(this), TLOG_BACK, &unusedEntry);
+
+    if (SUCCEEDED(hResult))
+    {
+        unusedEntry.Release();
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
+    }
+
+    return E_ABORT;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoForward()
 {
-    CComPtr<ITravelLog> travelLog;
-    HRESULT hResult = GetTravelLog(&travelLog);
+    CComPtr<ITravelLog>                     travelLog;
+    CComPtr<ITravelEntry>                   unusedEntry;
+    HRESULT                                 hResult;
+
+    hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
+
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget *>(this), TLOG_FORE, &unusedEntry);
+
+    if (SUCCEEDED(hResult))
+    {
+        unusedEntry.Release();
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
+    }
+
+    return E_ABORT;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoHome()
@@ -3886,7 +3889,12 @@ LRESULT CShellBrowser::OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &
 
 LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    HRESULT hResult = LOBYTE(GetVersion()) >= 6 ? GoBackOrForward() : NavigateToParent();
+    HRESULT hResult;
+    if (LOBYTE(GetVersion()) < 6)
+        hResult = NavigateToParent();
+    else if (FAILED(hResult = GoBack()))
+        hResult = GoForward();
+
     if (FAILED(hResult))
         TRACE("Backspace navigation failed with hResult=%08lx\n", hResult);
     return 0;
