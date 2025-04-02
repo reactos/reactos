@@ -1601,11 +1601,8 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     else
     {
         hr = SHELL_SingleFileOperation(hwndOwner, FO_RENAME, szSrc, szDest, FOF_SILENT | FOF_ALLOWUNDO, NULL);
-        if (SUCCEEDED(hr))
-        {
-            if (pPidlOut)
-                hr = ParseDisplayName(hwndOwner, NULL, PathFindFileNameW(szDest), NULL, pPidlOut, NULL);
-        }
+        if (SUCCEEDED(hr) && pPidlOut)
+            hr = ParseDisplayName(hwndOwner, NULL, PathFindFileNameW(szDest), NULL, pPidlOut, NULL);
     }
     return hr;
 }

@@ -805,14 +805,11 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
         return ERROR_CANCELLED;
 
     ret = MoveFileWithProgressW(src, dest, SHCopyProgressRoutine, op, MOVEFILE_REPLACE_EXISTING);
-    DWORD LastError = GetLastError();
 
     /* MOVEFILE_REPLACE_EXISTING fails with dirs, so try MoveFile */
     if (!ret)
-    {
         ret = MoveFileW(src, dest);
-        LastError = GetLastError();
-    }
+    DWORD LastError = GetLastError();
 
     if (!ret)
     {
