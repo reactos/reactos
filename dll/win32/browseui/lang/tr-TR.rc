@@ -340,9 +340,3 @@ BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "ReactOS Gezgini"
     IDS_PARSE_ADDR_ERR_TEXT "ReactOS Gezgini '%1' ögesini bulamadı. Girdiğiniz değeri kontrol edin ve yeniden arayın."
 END
-
-STRINGTABLE
-BEGIN
-    IDS_INTERNET "İnternet tarayıcısı"
-    IDS_INTERNET_DESCRIPTION "Bir Web tarayıcısı açar ve İnternet'teki bilgileri görüntüler."
-END

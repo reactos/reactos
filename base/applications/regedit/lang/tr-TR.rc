@@ -702,6 +702,8 @@ BEGIN
             WS_TABSTOP, 14, 48, 36, 8
     CONTROL "&Değer Verileri", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 60, 42, 8
+    CONTROL "&Yalnızca Tüm Dizeyi Karşılaştır", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 32, 94, 13
     CONTROL "&Büyük-Küçük Harflere Göre Karşılaştır", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 48, 90, 12
 END

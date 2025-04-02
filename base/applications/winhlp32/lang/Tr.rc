@@ -52,7 +52,7 @@ MAIN_MENU MENU
  }
  POPUP "&Yardım" {
    MENUITEM "&Yardım Hakkında", MNID_HELP_HELPON
-   MENUITEM "&ReactOS Yardım Hakkında...", MNID_HELP_ABOUT
+   MENUITEM "&Wine Yardım Hakkında...", MNID_HELP_ABOUT
  }
 }
 
