@@ -7360,10 +7360,10 @@ NtGdiExtTextOutW(
     IN INT XStart,
     IN INT YStart,
     IN UINT fuOptions,
-    IN OPTIONAL LPRECT UnsafeRect,
-    IN LPWSTR UnsafeString,
-    IN INT Count,
-    IN OPTIONAL LPINT UnsafeDx,
+    IN OPTIONAL LPCRECT UnsafeRect,
+    IN LPCWSTR UnsafeString,
+    IN UINT Count,
+    IN OPTIONAL const INT *UnsafeDx,
     IN DWORD dwCodePage)
 {
     BOOL Result = FALSE;
