@@ -256,6 +256,8 @@ struct MenuBandInfo {
     BOOL fVertical;
 };
 
+#define BWM_ONDISPLAYCHANGEDELAYED (WM_APP)
+
 class CShellBrowser :
     public CWindowImpl<CShellBrowser, CWindow, CFrameWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -276,6 +278,7 @@ class CShellBrowser :
 {
 private:
     enum { BSF_ROS_REGBROWSER = 0x04, BSF_ROS_KIOSK = 0x08 }; // Custom values
+
     class barInfo
     {
     public:
@@ -315,6 +318,9 @@ private:
     DWORD m_BrowserSvcFlags;
     bool m_Destroyed;
     BYTE m_NonFullscreenState;
+
+    enum { FSF_MBAR = 0x1, FSF_SBAR = 0x2, FSF_RESIZE = 0x4, FSF_MAXIMIZED = 0x8 };
+
 public:
 #if 0
     ULONG InternalAddRef()
@@ -623,6 +629,8 @@ public:
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnDisplayChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDisplayChangeDelayed(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -676,6 +684,8 @@ public:
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
+        MESSAGE_HANDLER(WM_DISPLAYCHANGE, OnDisplayChange)
+        MESSAGE_HANDLER(BWM_ONDISPLAYCHANGEDELAYED, OnDisplayChangeDelayed)
         COMMAND_ID_HANDLER(IDM_FILE_CLOSE, OnClose)
         COMMAND_ID_HANDLER(IDM_TOOLS_FOLDEROPTIONS, OnFolderOptions)
         COMMAND_ID_HANDLER(IDM_TOOLS_MAPNETWORKDRIVE, OnMapNetworkDrive)
@@ -3715,6 +3725,13 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     HRESULT hr;
+    if (m_BrowserSvcFlags & (BSF_THEATERMODE | BSF_ROS_KIOSK))
+    {
+        if (m_NonFullscreenState & FSF_MBAR)
+            put_MenuBar(VARIANT_TRUE);
+        if (m_NonFullscreenState & FSF_SBAR)
+            put_StatusBar(VARIANT_TRUE);
+    }
     SaveViewState();
 
     /* The current thread is about to go down so render any IDataObject that may be left in the clipboard */
@@ -4159,7 +4176,6 @@ LRESULT CShellBrowser::OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CShellBrowser::OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    enum { SF_MBAR = 0x1, SF_SBAR = 0x2, SF_RESIZE = 0x4, SF_MAXIMIZED = 0x8 };
     const UINT OrgUiSetAuto = m_BrowserSvcFlags & BSF_UISETBYAUTOMATION;
     const BOOL fCurrentlyFullscreen = (m_BrowserSvcFlags & BSF_THEATERMODE);
     const BOOL fEnter = wID ? !fCurrentlyFullscreen : wNotifyCode;
@@ -4167,10 +4183,10 @@ LRESULT CShellBrowser::OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndC
     if (fEnter)
     {
         VARIANT_BOOL varb;
-        m_NonFullscreenState = (m_BrowserSvcFlags & BSF_RESIZABLE) ? SF_RESIZE : 0;
-        m_NonFullscreenState |= (FAILED(get_MenuBar(&varb)) || varb) ? SF_MBAR : 0;
-        m_NonFullscreenState |= (FAILED(get_StatusBar(&varb)) || varb) ? SF_SBAR : 0;
-        m_NonFullscreenState |= (SHSetWindowBits(hWnd, GWL_STYLE, 0, 0) & WS_MAXIMIZE) ? SF_MAXIMIZED : 0;
+        m_NonFullscreenState = (m_BrowserSvcFlags & BSF_RESIZABLE) ? FSF_RESIZE : 0;
+        m_NonFullscreenState |= (FAILED(get_MenuBar(&varb)) || varb) ? FSF_MBAR : 0;
+        m_NonFullscreenState |= (FAILED(get_StatusBar(&varb)) || varb) ? FSF_SBAR : 0;
+        m_NonFullscreenState |= (SHSetWindowBits(hWnd, GWL_STYLE, 0, 0) & WS_MAXIMIZE) ? FSF_MAXIMIZED : 0;
         SetFlags(BSF_THEATERMODE, BSF_THEATERMODE);
         put_MenuBar(VARIANT_FALSE);
         put_StatusBar(VARIANT_FALSE);
@@ -4186,18 +4202,38 @@ LRESULT CShellBrowser::OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndC
     else
     {
         SetFlags(0, BSF_THEATERMODE);
-        put_MenuBar((m_NonFullscreenState & SF_MBAR) ? VARIANT_TRUE : VARIANT_FALSE);
-        put_StatusBar((m_NonFullscreenState & SF_SBAR) ? VARIANT_TRUE : VARIANT_FALSE);
+        put_MenuBar((m_NonFullscreenState & FSF_MBAR) ? VARIANT_TRUE : VARIANT_FALSE);
+        put_StatusBar((m_NonFullscreenState & FSF_SBAR) ? VARIANT_TRUE : VARIANT_FALSE);
         SHSetWindowBits(hWnd, GWL_EXSTYLE, WS_EX_WINDOWEDGE, WS_EX_WINDOWEDGE);
-        UINT styles = WS_CAPTION | WS_BORDER | WS_DLGFRAME | ((m_NonFullscreenState & SF_RESIZE) ? WS_THICKFRAME : 0);
+        UINT styles = WS_CAPTION | WS_BORDER | WS_DLGFRAME | ((m_NonFullscreenState & FSF_RESIZE) ? WS_THICKFRAME : 0);
         SHSetWindowBits(hWnd, GWL_STYLE, styles | WS_THICKFRAME, styles);
         ::SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
         ::ShowWindow(hWnd, SW_SHOWNOACTIVATE);
-        if (m_NonFullscreenState & SF_MAXIMIZED)
+        if (m_NonFullscreenState & FSF_MAXIMIZED)
             ::ShowWindow(hWnd, SW_SHOWMAXIMIZED);
     }
     SetFlags(OrgUiSetAuto, BSF_UISETBYAUTOMATION);
     ::RedrawWindow(hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+    return 0;
+}
+
+LRESULT CShellBrowser::OnDisplayChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    PostMessage(BWM_ONDISPLAYCHANGEDELAYED, wParam, lParam);
+    return 0;
+}
+
+LRESULT CShellBrowser::OnDisplayChangeDelayed(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (m_BrowserSvcFlags & (BSF_THEATERMODE | BSF_ROS_KIOSK)) // Resize fullscreen on resolution change (CORE-20072)
+    {
+        const HWND hWnd = GetTopLevelBrowserWindow();
+        MONITORINFO mi;
+        GetWindowMonitorInfo(hWnd, mi);
+        int x = mi.rcMonitor.left, w = mi.rcMonitor.right - x;
+        int y = mi.rcMonitor.top, h = mi.rcMonitor.bottom - y;
+        ::SetWindowPos(hWnd, HWND_TOPMOST, x, y, w, h, SWP_NOZORDER | SWP_NOCOPYBITS);
+    }
     return 0;
 }
 
