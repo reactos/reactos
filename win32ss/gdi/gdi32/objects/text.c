@@ -70,7 +70,7 @@ TextOutW(
     _In_reads_(cchString) LPCWSTR lpString,
     _In_ INT cchString)
 {
-    return ExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cchString, NULL);
+    return ExtTextOutW(hdc, nXStart, nYStart, 0, NULL, lpString, cchString, NULL);
 }
 
 
