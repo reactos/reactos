@@ -246,7 +246,7 @@ void TestPairExtraction(void)
 
         ExpectedRet = !IsNT6 ? g_pairs[i].ReturnNT5 : g_pairs[i].ReturnNT6;
         ExpectedCount = !IsNT6 ? g_pairs[i].CountNT5 : g_pairs[i].CountNT6;
-        ok(RetVal == ExpectedRet, "RetVal must be %d for test %u but got %d\n", ExpectedRet, i, RetVal);
-        ok(Count == ExpectedCount, "Count must be %u for test %u but got %u\n", ExpectedCount, i, Count);
+        ok(RetVal == ExpectedRet, "Test %u: RetVal must be %d but got %d\n", i, ExpectedRet, RetVal);
+        ok(Count == ExpectedCount, "Test %u: Count must be %u but got %u\n", i, ExpectedCount, Count);
     }
 }
