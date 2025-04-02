@@ -278,6 +278,7 @@ class CShellBrowser :
 {
 private:
     enum { BSF_ROS_REGBROWSER = 0x04, BSF_ROS_KIOSK = 0x08 }; // Custom values
+
     class barInfo
     {
     public:
@@ -319,6 +320,7 @@ private:
     BYTE m_NonFullscreenState;
 
     enum { FSF_MBAR = 0x1, FSF_SBAR = 0x2, FSF_RESIZE = 0x4, FSF_MAXIMIZED = 0x8 };
+
 public:
 #if 0
     ULONG InternalAddRef()
