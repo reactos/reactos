@@ -647,10 +647,10 @@ ExtTextOutW(
                             x,
                             y,
                             fuOptions,
-                            (LPRECT)lprc,
-                            (LPWSTR)lpString,
+                            lprc,
+                            lpString,
                             cwc,
-                            (LPINT)lpDx,
+                            lpDx,
                             0);
 }
 
