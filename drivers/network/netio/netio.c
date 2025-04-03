@@ -281,22 +281,6 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     return STATUS_SUCCESS;
 }
 
-#if 0
-static NTSTATUS NTAPI
-AcceptComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
-{
-    PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL) Context;
-    FUNCTION_TRACE;
-
-    if (!NT_SUCCESS(Irp->IoStatus.Status))
-    {
-        DbgPrint("AcceptComplete got non-successful status 0x%08x, socket is %p\n", Irp->IoStatus.Status, s);
-        /* Close socket? */
-    }
-    return STATUS_SUCCESS;
-}
-#endif
-
 struct ListenContext {
     PWSK_SOCKET_INTERNAL ListenSocket;
     PWSK_SOCKET_INTERNAL AcceptSocket;
@@ -388,8 +372,6 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
         ListenSocket->ListenIrp != NULL &&
         !ListenSocket->ListenCancelled)
     {
-        DbgPrint("Callback ...\n");
-
         ListenSocket->ListenIrp = NULL;
 
         Status = ListenDispatch->WskAcceptEvent(ListenSocket->user_context, 0, &ListenSocket->LocalAddress, RemoteAddress, (PWSK_SOCKET)AcceptSocket, &AcceptSocketContext, &AcceptSocketDispatch);
@@ -981,9 +963,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
 
     tdiIrp = NULL;
 
-// DbgPrint("s is %p s->LocalAddressHandle is %p\n", s, s->LocalAddressHandle);
     status = TdiAssociateAddressFile(s->LocalAddressHandle, s->ConnectionFile);
-// DbgPrint("s is %p s->ConnectionFile is %p status is %x TdiAssociateAddressFile succeeded\n", s, s->ConnectionFile, status);
     if (!NT_SUCCESS(status))
     {
         goto err_out_free_nc;
@@ -1304,8 +1284,6 @@ WskSocket(
             status = STATUS_NOT_SUPPORTED;
             goto err_out;
     }
-
-// DbgPrint("Socket is %p s->ConnectionFile is %p ListenDispatch is %p\n", s, s->ConnectionFile, s->ListenDispatch);
 
     Irp->IoStatus.Information = (ULONG_PTR) s;
     status = STATUS_SUCCESS;

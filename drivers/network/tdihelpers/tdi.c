@@ -129,8 +129,6 @@ static NTSTATUS TdiOpenDevice(
                                OBJ_KERNEL_HANDLE,
                                NULL,                    /* Root directory */
                                NULL);                   /* Security descriptor */
-DbgPrint("Into ZwCreateFile IRQL is %d...\n", KeGetCurrentIrql());
-
     Status = ZwCreateFile(Handle,                               /* Return file handle */
                           GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,         /* Desired access */
                           &Attr,                                /* Object attributes */
@@ -142,7 +140,6 @@ DbgPrint("Into ZwCreateFile IRQL is %d...\n", KeGetCurrentIrql());
                           0,                                    /* Create options */
                           EaInfo,                               /* EA buffer */
                           EaLength);                            /* EA length */
-DbgPrint("Out of ZwCreateFile IRQL is %d...\n", KeGetCurrentIrql());
     if (NT_SUCCESS(Status)) {
         Status = ObReferenceObjectByHandle(*Handle,                       /* Handle to open file */
                                            GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,  /* Access mode */
@@ -322,14 +319,12 @@ NTSTATUS TdiOpenConnectionEndpointFile(
     ContextArea = (PVOID*)(EaInfo->EaName + TDI_CONNECTION_CONTEXT_LENGTH + 1); /* 0-terminated */
     /* FIXME: Allocate context area */
     *ContextArea = NULL;
-DbgPrint("Into TdiOpenDevice ...\n");
     Status = TdiOpenDevice(DeviceName,
                            EaLength,
                            EaInfo,
                            AFD_SHARE_UNIQUE,
                            ConnectionHandle,
                            ConnectionObject);
-DbgPrint("Out of TdiOpenDevice ...\n");
     ExFreePoolWithTag(EaInfo, TAG_AFD_EA_INFO);
     return Status;
 }
