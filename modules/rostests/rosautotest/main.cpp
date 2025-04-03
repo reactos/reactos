@@ -156,7 +156,7 @@ wmain(int argc, wchar_t* argv[])
 
         /* Show the beginning time again */
         ss << "[ROSAUTOTEST] System uptime at start was " << setprecision(2) << fixed;
-        ss << ((float)TestStartTime / 1000) << " seconds" << endl;
+        ss << (float)TestStartTime / 1000 << " seconds" << endl;
 
         /* Show the time now so that we can see how long the tests took */
         TestEndTime = GetTickCount();
