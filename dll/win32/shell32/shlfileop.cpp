@@ -117,7 +117,7 @@ static void HandleDesktopIniOp(PCWSTR Path)
     if ((Name[0] | 32) != 'd' || _wcsicmp(Name, L"desktop.ini"))
         return;
     WCHAR Dir[MAX_PATH];
-    if (FAILED(StringCchCopyW(Dir, _countof(Dir), Path)))
+    if (FAILED_UNEXPECTEDLY(StringCchCopyW(Dir, _countof(Dir), Path)))
         return;
     PathRemoveFileSpecW(Dir);
     if (!(GetFileAttributesW(Dir) & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)))
@@ -824,8 +824,7 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
                 {
                     ret = MoveFileW(src, dest);
                     LastError = GetLastError();
-                    if (ret)
-                        SetFileAttributesW(src, dwAttr);
+                    SetFileAttributesW(ret ? dest : src, dwAttr);
                 }
             }
         }
