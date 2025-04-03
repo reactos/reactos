@@ -1,4 +1,3 @@
-
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -10,7 +9,7 @@ Seçenekler:\n\
     -h maksimum_zıplama    Hedef ararken kullanılacak maksimum atlama sayısı.\n\
     -j host-list           Ana bilgisayar listesi 'host-list' boyunca kaynak yolu gevşetir.\n\
     -w süre                Her geri dönüşün ardından belirtilen\n\
-                           'süre' kara milisaniye cinsinden bekler.\n\
+                           'süre' kadar milisaniye cinsinden bekler.\n\
     -4                     IPv4 kullanmaya zorlar.\n\
     -6                     IPv6 kullanmaya zorlar.\n\
 \n"

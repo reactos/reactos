@@ -6,7 +6,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Sistem aygıtlarını yapılandırır.\n\n\
 Aygıt durumu:         MODE [aygıt] [/STATUS]\n\
-Serial giriş:        MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
+Seri giriş:          MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
                                    [to=on|off] [xon=on|off] [odsr=on|off]\n\
                                    [octs=on|off] [dtr=on|off|hs]\n\
                                    [rts=on|off|hs|tg] [idsr=on|off]\n\
@@ -16,9 +16,9 @@ Kod sayfası durumu:   MODE CON[:] CP [/STATUS]\n\
 Görüntü kipi:         MODE CON[:] [COLS=c] [LINES=n]\n\
 Yineleme hızı:        MODE CON[:] [RATE=r DELAY=d]\n"
 
-    IDS_QUERY_SERIAL_FOUND "Serial aygıtı bulundu - %s\n"
+    IDS_QUERY_SERIAL_FOUND "Seri aygıtı bulundu - %s\n"
     IDS_QUERY_PRINTER_FOUND "Yazıcı aygıtı bulundu - %s\n"
-    IDS_QUERY_PARALLEL_FOUND "Paralel aygıt bulundu - %s\n"
+    IDS_QUERY_PARALLEL_FOUND "Koşut aygıt bulundu - %s\n"
     IDS_QUERY_DOSDEV_FOUND "DOS aygıtı bulundu - %s\n"
     // IDS_QUERY_MISC_FOUND "Başka aygıt bulundu - %s\n"
 
@@ -51,7 +51,7 @@ BEGIN
     IDS_CONSOLE_CODEPAGE        "    Kod sayfası:      %d\n"
 
     IDS_PRINTER_OUTPUT_NOT_REROUTED     "    Yazıcı çıktısı yeniden yönlendirilmiyor.\n"
-    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Yazıcı çıktısı %s serial girişine yönlendiriliyor.\n"
+    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Yazıcı çıktısı %s seri girişine yönlendiriliyor.\n"
 END
 
 STRINGTABLE
