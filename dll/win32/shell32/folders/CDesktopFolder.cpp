@@ -311,9 +311,9 @@ HRESULT CDesktopFolder::_GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf)
     {
         FIXME("Desktop is unexpected here!\n");
     }
-    else
+    else if (_ILIsSpecialFolder(pidl))
     {
-        ASSERT(!_ILIsSpecialFolder(pidl));
+        FIXME("Unexpected PIDL type %#x\n", pidl->mkid.abID[0]);
     }
 #endif
     IShellFolder *pSF = IsCommonItem(pidl) ? m_SharedDesktopFSFolder : m_DesktopFSFolder;
