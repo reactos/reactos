@@ -149,7 +149,7 @@ getCommandLineFromProcess(HANDLE hProcess)
     return pszBuffer; // needs free()
 }
 
-static void TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
+static TEST_RESULT TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
 {
     SHELLEXECUTEINFOW info = { sizeof(info) };
     info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE |
@@ -172,6 +172,9 @@ static void TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
     ok(pEntry->result == result,
        "Line %d: result: %d vs %d\n", pEntry->line, pEntry->result, result);
 
+    if (result == TEST_SUCCESS_WITH_PROCESS)
+        WaitForInputIdle(info.hProcess, 2000);
+
     if (pEntry->result == TEST_SUCCESS_WITH_PROCESS && pEntry->cmdline && !s_bWow64)
     {
         LPWSTR cmdline = getCommandLineFromProcess(info.hProcess);
@@ -191,13 +194,30 @@ static void TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
     }
 
     CloseHandle(info.hProcess);
+    return result;
 }
 
 static void
 TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline)
 {
+    WINDOW_LIST newwindows = {}, existingwindows = {};
+    GetWindowList(&existingwindows);
+    HWND hWndForeground = GetForegroundWindow();
+
     TEST_ENTRY entry = { line, result, lpFile, cmdline };
-    TEST_DoTestEntryStruct(&entry);
+    result = TEST_DoTestEntryStruct(&entry);
+
+    if (result == TEST_SUCCESS_NO_PROCESS)
+    {
+        // Wait a bit for Explorer to open its window
+        for (UINT i = 0; i < 2000 && hWndForeground == GetForegroundWindow(); i += 250)
+            Sleep(250);
+    }
+
+    GetWindowListForClose(&newwindows);
+    CloseNewWindows(&existingwindows, &newwindows);
+    FreeWindowList(&newwindows);
+    FreeWindowList(&existingwindows);
 }
 
 static BOOL
