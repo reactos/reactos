@@ -1,7 +1,5 @@
 
 add_typelib(mshtml_tlb.idl)
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_library(mshtml.tlb MODULE rsrc.rc)
 
 list(APPEND mshtml_tlb_rc_deps
@@ -13,3 +11,4 @@ set_module_type(mshtml.tlb module)
 set_target_properties(mshtml.tlb PROPERTIES SUFFIX "")
 add_dependencies(mshtml.tlb stdole2)
 add_cd_file(TARGET mshtml.tlb DESTINATION reactos/system32 FOR all)
+set_wine_module(mshtml.tlb)

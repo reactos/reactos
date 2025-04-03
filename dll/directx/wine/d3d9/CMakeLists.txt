@@ -1,9 +1,7 @@
 
 add_definitions(
-    -D__WINESRC__
     -DUSE_WIN32_OPENGL)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3d9.dll d3d9.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -35,3 +33,4 @@ target_link_libraries(d3d9 wine)
 add_importlibs(d3d9 d3dwine user32 msvcrt kernel32 ntdll)
 add_pch(d3d9 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET d3d9 DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(d3d9) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(xmllite.dll xmllite.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -25,3 +23,4 @@ target_link_libraries(xmllite uuid wine oldnames)
 add_importlibs(xmllite msvcrt kernel32 ntdll)
 add_pch(xmllite precomp.h SOURCE)
 add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(xmllite) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

@@ -1,6 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__)
 spec2def(traffic.dll traffic.spec)
 
 list(APPEND SOURCE
@@ -13,3 +11,4 @@ set_module_type(traffic win32dll)
 target_link_libraries(traffic wine)
 add_importlibs(traffic msvcrt kernel32 ntdll)
 add_cd_file(TARGET traffic DESTINATION reactos/system32 FOR all)
+set_wine_module(traffic)

@@ -1,6 +1,5 @@
 
-add_definitions(-D__WINESRC__ -DDIRECTINPUT_VERSION=0x0700)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+add_definitions(-DDIRECTINPUT_VERSION=0x0700)
 spec2def(dinput.dll dinput.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -30,3 +29,4 @@ target_link_libraries(dinput dxguid uuid wine)
 add_importlibs(dinput comctl32 ole32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(dinput precomp.h SOURCE)
 add_cd_file(TARGET dinput DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(dinput) # CORE-5743: No ARRAY_SIZE macro
