@@ -1,4 +1,6 @@
 
+add_definitions(-D__WINESRC__)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-DWINE_REGISTER_DLL -DPROXY_DELEGATION)
 spec2def(actxprxy.dll actxprxy.spec)
 
@@ -43,4 +45,3 @@ target_link_libraries(actxprxy uuid wine ${PSEH_LIB})
 add_importlibs(actxprxy rpcrt4 ole32 oleaut32 msvcrt kernel32 ntdll)
 add_pch(actxprxy precomp.h SOURCE)
 add_cd_file(TARGET actxprxy DESTINATION reactos/system32 FOR all)
-set_wine_module(actxprxy)
