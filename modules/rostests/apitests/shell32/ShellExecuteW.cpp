@@ -93,7 +93,6 @@ START_TEST(ShellExecuteW)
     ret = (INT)(UINT_PTR)hInstance;
     ok(ret > 31, "TEST #4: ret:%d, LastError: %ld\n", ret, GetLastError());
     trace("TEST #4 ret: %d.\n", ret);
-
     CloseWindow(hInstance, L"CabinetWClass", PathFindFileNameW(SysDir));
 
     // TEST #5: Open %SystemDrive%
