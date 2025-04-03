@@ -59,7 +59,6 @@ start:
 // FAT table so that we can still load freeldr.sys
 // even if it is fragmented.
 
-
 FatHelperEntryPoint:
     /* First save AX - the start cluster of freeldr.sys */
     push ax
@@ -75,7 +74,7 @@ FatHelperEntryPoint:
 
     // AX has start cluster of freeldr.sys
     mov  bx, FREELDR_BASE / 16
-    mov  es,bx
+    mov  es, bx
 
 LoadFile:
     push ax
@@ -90,17 +89,17 @@ LoadFile2:
 LoadFile3:
     jae  LoadFile_Done      // If so continue, if not then read then next one
     push ax
-    xor  bx,bx              // Load ROSLDR starting at 0000:8000h
+    xor  bx, bx             // Load ROSLDR starting at 0000:F800h
     push es
     call word ptr [bp-ReadClusterOffset]
     pop  es
 
-    xor  bx,bx
+    xor  bx, bx
     mov  bl, [bp+SectsPerCluster]
-    shl  bx,5                           // BX = BX * 512 / 16
-    mov  ax,es                          // Increment the load address by
-    add  ax,bx                          // The size of a cluster
-    mov  es,ax
+    shl  bx, 5                          // BX = BX * 512 / 16
+    mov  ax, es                         // Increment the load address by
+    add  ax, bx                         // The size of a cluster
+    mov  es, ax
 
     call IsFat12
     pop  ax
@@ -119,7 +118,7 @@ LoadFile_Done:
     mov  dl, byte ptr [bp+BootDrive]        // Load the boot drive into DL
     mov  dh, byte ptr ds:[BootPartition]    // Load the boot partition into DH
 
-    /* continue where other bootsectors start */
+    /* Continue where other bootsectors start */
     jmp start
 
 
@@ -158,20 +157,20 @@ GetFatEntry16:
 // On entry AX has cluster number
 // On return AX has FAT entry for that cluster
 GetFatEntry12:
-    push  ax
-    mov   cx,ax
-    shr   ax,1
-    add   ax,cx                     // AX = AX * 1.5 (AX = AX + (AX / 2)) (since FAT12 entries are 12 bits)
+    push  ax                        // Save original cluster number
+    mov   cx, ax
+    shr   ax, 1
+    add   ax, cx                    // AX = AX * 1.5 (AX = AX + (AX / 2)) , since FAT12 entries are 12 bits
 
     mov   bx, HEX(7000)
     mov   es,bx
     mov   bx,ax                     // Put FAT entry offset into BX
     mov   ax, es:[bx]               // Get FAT entry
     pop   cx                        // Get cluster number from stack
-    and   cx,1
+    and   cx, 1
     jz    UseLow12Bits
     and   ax, HEX(0fff0)
-    shr   ax,4
+    shr   ax, 4
     jmp   GetFatEntry12_Done
 
 UseLow12Bits:
@@ -185,12 +184,10 @@ GetFatEntry12_Done:
 // Returns CF = 1 if this is a FAT12 file system
 // Otherwise CF = 0 for FAT16
 IsFat12:
-
     mov   ebx, dword ptr [bp-DataAreaStartLow]
     // EBX now has the number of the starting sector of the data area
-    // starting from the beginning of the disk, so subtrace hidden sectors
+    // starting from the beginning of the disk, so subtract hidden sectors
     sub   ebx, dword ptr [bp+HiddenSectors]
-
 
     xor   eax,eax
     mov   ax, word ptr [bp+TotalSectors]
@@ -201,15 +198,15 @@ IsFat12:
     // EAX now contains the number of sectors on the volume
 
 IsFat12_2:
-    sub   eax,ebx               // Subtract data area start sector
-    xor   edx,edx               // from total sectors of volume
+    sub   eax, ebx                  // Subtract data area start sector
+    xor   edx, edx                  // from total sectors of volume
 
     // EDX:EAX now contains the number of data sectors on the volume
     movzx ebx, byte ptr [bp+SectsPerCluster]
     div   ebx
     // EAX now has the number of clusters on the volume
     stc
-    cmp   eax,4085
+    cmp   eax, 4085
     jb    IsFat12_Done
     clc
 
@@ -222,4 +219,3 @@ msgLoading:
 
     .org 510                // Pad to 510 bytes
     .word HEX(0aa55)        // BootSector signature
-
