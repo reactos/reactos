@@ -149,9 +149,8 @@ CalcDriveSize:
 
 
     // Now we must find our way to the first sector of the root directory
-    xor ax, ax
     xor cx, cx
-    mov al, byte ptr BP_REL(NumberOfFats)       // Number of fats
+    movzx ax, byte ptr BP_REL(NumberOfFats)     // Number of fats
     mul word ptr BP_REL(SectorsPerFat)          // Times sectors per fat
     add ax, word ptr BP_REL(HiddenSectors)
     adc dx, word ptr BP_REL(HiddenSectors+2)    // Add the number of hidden sectors
@@ -271,16 +270,14 @@ ReadCluster:
     // StartSector = ((Cluster - 2) * SectorsPerCluster) + ReservedSectors + HiddenSectors;
     dec ax                              // Adjust start cluster by 2
     dec ax                              // Because the data area starts on cluster 2
-    xor ch, ch
-    mov cl, byte ptr BP_REL(SectsPerCluster)
+    movzx cx, byte ptr BP_REL(SectsPerCluster)
     mul cx                              // Times sectors per cluster
     add ax, [bp-DataAreaStartLow]       // Add start of data area
     adc dx, [bp-DataAreaStartHigh]      // Now we have DX:AX with the logical start sector of FREELDR.SYS
     xor bx, bx                          // We will load it to [ES:0000], ES loaded before function call
-//  mov  cl,BYTE [BYTE bp+SectsPerCluster]// Sectors per cluster still in CX
+//  movzx cx, byte ptr BP_REL(SectsPerCluster) // Sectors per cluster still in CX
 //  call ReadSectors
 //  ret
-
 
 
 // Reads logical sectors into [ES:BX]
