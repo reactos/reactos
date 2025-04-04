@@ -15,14 +15,11 @@
 
 /* GLOBALS ******************************************************************/
 
-//extern PAGED_LOOKASIDE_LIST RtlpRangeListEntryLookasideList;
-
 /* TYPES ********************************************************************/
-
-/* RTLP_RANGE_LIST_ENTRY == RTL_RANGE + ListEntry */
 
 /* RTLP_RANGE_LIST_ENTRY.PrivateFlags */
 #define RTLP_ENTRY_IS_MERGED  1
+#define RTL_RANGE_TAG 'elRR'
 
 /* FUNCTIONS ***************************************************************/
 
@@ -46,7 +43,6 @@ IsRangesIntersection(
     if (((Entry2->Start > Entry1->Start && Entry2->Start > Entry1->End) ||
          (Entry1->Start > Entry2->Start && Entry1->Start > Entry2->End)))
     {
-        /* No intersection */
         return FALSE;
     }
 
@@ -76,8 +72,7 @@ RtlpDeleteRangeListEntry(
     {
         DPRINT("RtlpDeleteRangeListEntry: Free RtlEntry %p, [%I64X-%I64X]\n", RtlEntry, RtlEntry->Start, RtlEntry->End);
 
-        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
-        RtlpFreeMemory(RtlEntry, 'elRR');
+        RtlpFreeMemory(RtlEntry, RTL_RANGE_TAG);
 
         RtlEntry = NextRtlEntry;
         NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
@@ -86,9 +81,7 @@ RtlpDeleteRangeListEntry(
 Finish:
 
     DPRINT("RtlpDeleteRangeListEntry: Free DelEntry %p, [%I64X-%I64X]\n", DelEntry, DelEntry->Start, DelEntry->End);
-
-    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, DelEntry);
-    RtlpFreeMemory(DelEntry, 'elRR');
+    RtlpFreeMemory(DelEntry, RTL_RANGE_TAG);
 }
 
 CODE_SEG("PAGE")
@@ -104,8 +97,7 @@ RtlpCopyRangeListEntry(
     PAGED_CODE_RTL();
     ASSERT (RtlEntry);
 
-    //NewRtlEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
-    NewRtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
+    NewRtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), RTL_RANGE_TAG);
     if (!NewRtlEntry)
     {
         DPRINT1("RtlpCopyRangeListEntry: Allocate failed\n");
@@ -115,8 +107,7 @@ RtlpCopyRangeListEntry(
     DPRINT("RtlpCopyRangeListEntry: (%p) ==> (%p) [%I64X-%I64X]\n", RtlEntry, NewRtlEntry, RtlEntry->Start, RtlEntry->End);
     RtlCopyMemory(NewRtlEntry, RtlEntry, sizeof(RTLP_RANGE_LIST_ENTRY));
 
-    NewRtlEntry->ListEntry.Flink = NULL;
-    NewRtlEntry->ListEntry.Blink = NULL;
+    RtlZeroMemory(&NewRtlEntry->ListEntry, sizeof(LIST_ENTRY));
 
     if (!(RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED))
         return NewRtlEntry;
@@ -129,8 +120,7 @@ RtlpCopyRangeListEntry(
          &MergedRtlEntry->ListEntry != &RtlEntry->Merged.ListHead;
          MergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink))
     {
-        //NewMergedRtlEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
-        NewMergedRtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
+        NewMergedRtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), RTL_RANGE_TAG);
         if (!NewMergedRtlEntry)
         {
             DPRINT1("RtlpCopyRangeListEntry: Allocate failed\n");
@@ -162,8 +152,7 @@ RtlpCreateRangeListEntry(
     PAGED_CODE_RTL();
     ASSERT(Start <= End);
 
-    //RtlEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
-    RtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
+    RtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), RTL_RANGE_TAG);
     if (!RtlEntry)
     {
         DPRINT1("RtlpCreateRangeListEntry: RtlpAllocateMemory failed\n");
@@ -172,18 +161,14 @@ RtlpCreateRangeListEntry(
 
     DPRINT("RtlpCreateRangeListEntry: %p [%I64X-%I64X], %X, %p, %p\n", RtlEntry, Start, End, Attributes, UserData, Owner);
 
+    RtlZeroMemory(RtlEntry, sizeof(RTLP_RANGE_LIST_ENTRY));
+    RtlZeroMemory(&RtlEntry->ListEntry, sizeof(LIST_ENTRY));
+
     RtlEntry->Start = Start;
     RtlEntry->End = End;
 
     RtlEntry->Allocated.UserData = UserData;
     RtlEntry->Allocated.Owner = Owner;
-
-    RtlEntry->ListEntry.Flink = NULL;
-    RtlEntry->ListEntry.Blink = NULL;
-
-    RtlEntry->PublicFlags = 0;
-    RtlEntry->PrivateFlags = 0;
-
     RtlEntry->Attributes = Attributes;
 
     return RtlEntry;
@@ -393,9 +378,7 @@ RtlpAddIntersectingRanges(
             ASSERT(IsListEmpty(&CurrentRtlEntry->Merged.ListHead));
 
             RemoveEntryList(&CurrentRtlEntry->ListEntry);
-
-            //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, CurrentRtlEntry);
-            RtlpFreeMemory(CurrentRtlEntry, 'elRR');
+            RtlpFreeMemory(CurrentRtlEntry, RTL_RANGE_TAG);
         }
         else
         {
@@ -544,10 +527,8 @@ RtlpDeleteFromMergedRange(
         TmpList.Blink->Flink = Flink;
     }
 
-    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, MergedRtlEntry);
-    RtlpFreeMemory(MergedRtlEntry, 'elRR');
-    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
-    RtlpFreeMemory(RtlEntry, 'elRR');
+    RtlpFreeMemory(MergedRtlEntry, RTL_RANGE_TAG);
+    RtlpFreeMemory(RtlEntry, RTL_RANGE_TAG);
 
     return STATUS_SUCCESS;
 }
@@ -705,8 +686,7 @@ RtlAddRange(
     {
         DPRINT1("RtlAddRange: Status %X\n", Status);
         ASSERT(FALSE);
-        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, AddRtlEntry);
-        RtlpFreeMemory(AddRtlEntry, 'elRR');
+        RtlpFreeMemory(AddRtlEntry, RTL_RANGE_TAG);
         return Status;
     }
 
@@ -809,7 +789,7 @@ RtlDeleteOwnersRanges(
 
     DPRINT("RtlDeleteOwnersRanges: RangeList %p, Owner %p, [%X]\n", RangeList, Owner, RangeList->Count);
 
-START:
+Retry:
 
     RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Flink);
     NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
@@ -837,7 +817,7 @@ START:
                     RangeList->Count--;
                     RangeList->Stamp++;
 
-                    goto START;
+                    goto Retry;
                 }
 
                 MergedRtlEntry = MergedNextEntry;
@@ -849,8 +829,7 @@ START:
             DPRINT("RtlDeleteOwnersRanges: Deleting range [%I64X-%I64X]\n", RtlEntry->Start, RtlEntry->End);
 
             RemoveEntryList(&RtlEntry->ListEntry);
-            //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
-            RtlpFreeMemory(RtlEntry, 'elRR');
+            RtlpFreeMemory(RtlEntry, RTL_RANGE_TAG);
 
             RangeList->Count--;
             RangeList->Stamp++;
@@ -942,8 +921,7 @@ RtlDeleteRange(
             RemoveEntryList(&RtlEntry->ListEntry);
 
             DPRINT("RtlDeleteRange: Free %p [%I64X-%I64X] %p\n", RtlEntry, RtlEntry->Start, RtlEntry->End, Owner);
-            //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
-            RtlpFreeMemory(RtlEntry, 'elRR');
+            RtlpFreeMemory(RtlEntry, RTL_RANGE_TAG);
 
             Status = STATUS_SUCCESS;
             break;
@@ -996,8 +974,6 @@ RtlGetNextRange(
     PLIST_ENTRY ListEntry;
 
     PAGED_CODE_RTL();
-    //DPRINT("RtlGetNextRange: Iterator %p, RangeListHead %p, Current %p, MergedHead %p, Stamp %X, MoveForwards %X\n", Iterator, Iterator->RangeListHead, Iterator->Current, Iterator->MergedHead, Iterator->Stamp, MoveForwards);
-
     RangeList = CONTAINING_RECORD((Iterator->RangeListHead), RTL_RANGE_LIST, ListHead);
 
     /* Bail out if the iterator is desynchronized with the list */
@@ -1127,8 +1103,6 @@ RtlGetLastRange(
     }
 
     RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Blink);
-    //DPRINT("RtlGetLastRange: Iterator->RangeListHead %p, Iterator->Stamp %X, RtlEntry %p\n", Iterator->RangeListHead, Iterator->Stamp, RtlEntry);
-
     if (RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
     {
         ASSERT(!IsListEmpty(&RtlEntry->Merged.ListHead));
@@ -1142,7 +1116,6 @@ RtlGetLastRange(
     {
         Iterator->MergedHead = NULL;
         Iterator->Current = RtlEntry;
-        //DPRINT("RtlGetLastRange: Iterator->MergedHead %p, Iterator->Current %p\n", Iterator->MergedHead, Iterator->Current);
     }
 
     *Range = (PRTL_RANGE)Iterator->Current;
@@ -1487,11 +1460,8 @@ RtlInitializeRangeList(
     DPRINT("RtlInitializeRangeList: RangeList %p\n", RangeList);
 
     ASSERT(RangeList);
-
+    RtlZeroMemory(RangeList, sizeof(RTL_RANGE_LIST));
     InitializeListHead(&RangeList->ListHead);
-    RangeList->Flags = 0;
-    RangeList->Count = 0;
-    RangeList->Stamp = 0;
 }
 
 /**
