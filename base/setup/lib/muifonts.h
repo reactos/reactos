@@ -33,6 +33,37 @@ MUI_SUBFONT LatinFonts[] =
     { NULL, NULL }
 };
 
+MUI_SUBFONT TokiFonts[] = {
+    /*Font                       Substitute  */
+    {L"Arial Baltic,186", L"Arial,186"},
+    {L"Arial CE,238", L"Arial,238"},
+    {L"Arial CYR,204", L"Arial,204"},
+    {L"Arial Greek,161", L"Arial,161"},
+    {L"Arial TUR,162", L"Arial,162"},
+    {L"Courier", L"Courier New"},
+    {L"Courier New Baltic,186", L"Courier New,186"},
+    {L"Courier New CE,238", L"Courier New,238"},
+    {L"Courier New CYR,204", L"Courier New,204"},
+    {L"Courier New Greek,161", L"Courier New,161"},
+    {L"Courier New TUR,162", L"Courier New,162"},
+    {L"Fixedsys", L"Fixedsys Excelsior 3.01-L2"},
+    {L"Helv", L"MS Sans Serif"},
+    {L"Helvetica", L"Arial"},
+    {L"MS Sans Serif", L"Tahoma"},
+    {L"MS Shell Dlg", L"Tahoma"},
+    {L"MS Shell Dlg 2", L"Tahoma"},
+    {L"Segoe UI Symbol", L"Arial"},
+    {L"System", L"FreeSans"},
+    {L"Terminal", L"Lucida Console"},
+    {L"Times", L"Times New Roman"},
+    {L"Times New Roman Baltic,186", L"Times New Roman,186"},
+    {L"Times New Roman CE,238", L"Times New Roman,238"},
+    {L"Times New Roman CYR,204", L"Times New Roman,204"},
+    {L"Times New Roman Greek,161", L"Times New Roman,161"},
+    {L"Times New Roman TUR,162", L"Times New Roman,162"},
+    {L"Tms Rmn", L"Times New Roman"},
+    {NULL, NULL}};
+
 MUI_SUBFONT CyrillicFonts[] =
 {
     { L"Arial Baltic,186",       L"Arial,186" },

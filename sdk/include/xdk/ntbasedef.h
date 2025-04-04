@@ -1105,7 +1105,7 @@ $endif(_WINNT_)
 #define LANG_WALON                       0x90
 #define LANG_CORNISH                     0x92
 #define LANG_MANX_GAELIC                 0x94
-#define LANG_TOKIPONA                    0x95
+#define LANG_TOK_SL                    0x95
 #endif
 
 #define SUBLANG_NEUTRAL                             0x00

@@ -372,6 +372,9 @@
 #ifdef LANGUAGE_TH_TH
     #include "lang/th-TH.h"
 #endif
+#ifdef LANGUAGE_TOK_SL
+    #include "lang/tok.h"
+#endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.h"
 #endif
@@ -813,6 +816,9 @@ const MUI_LANGUAGE MUILanguageList[] =
 #endif
 #ifdef LANGUAGE_TH_TH
     {L"0000041E", 874, 874, 10021, L"Thai", 227, UnicodeFonts, thTHLayouts},
+#endif
+#ifdef LANGUAGE_TOK_SL
+    {L"00000495", 1252, 437, 10000, L"toki pona (kepeken sitelen Lasina)", 244, TokiFonts, tokLayouts},
 #endif
 #ifdef LANGUAGE_TR_TR
     {L"0000041F", 1254, 857, 10081, L"Turkish", 235, LatinFonts, trTRLayouts},
