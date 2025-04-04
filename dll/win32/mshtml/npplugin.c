@@ -16,7 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#ifndef __REACTOS__
+#include "shlobj.h"
+#endif // __REACTOS__
+
 #include "mshtml_private.h"
+#include "pluginhost.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 /* Parts of npapi.h */
 

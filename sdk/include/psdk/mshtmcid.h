@@ -288,7 +288,7 @@
 #define IDM_CREATELINK                    2290
 #define IDM_COPYCONTENT                   2291
 #define IDM_LANGUAGE                      2292
-
+ 
 #define IDM_GETPRINTTEMPLATE              2295
 #define IDM_SETPRINTTEMPLATE              2296
 #define IDM_TEMPLATE_PAGESETUP            2298
