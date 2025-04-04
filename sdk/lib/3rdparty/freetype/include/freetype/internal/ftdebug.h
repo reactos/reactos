@@ -253,27 +253,16 @@ FT_BEGIN_HEADER
 
 #include "stdio.h"  /* for vfprintf() */
 
-#ifdef __REACTOS__
-unsigned long DbgPrint(const char *Format, ...);
-#endif
 
   /* print a message */
-#ifdef __REACTOS__
-#define FT_Message DbgPrint
-#else
   FT_BASE( void )
   FT_Message( const char*  fmt,
               ... );
-#endif
 
   /* print a message and exit */
-#ifdef __REACTOS__
-#define FT_Panic DbgPrint
-#else
   FT_BASE( void )
   FT_Panic( const char*  fmt,
             ... );
-#endif
 
   /* report file name and line number of an error */
   FT_BASE( int )

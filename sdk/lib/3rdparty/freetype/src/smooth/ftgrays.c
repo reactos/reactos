@@ -90,9 +90,6 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  smooth
 
-#ifdef __REACTOS__
-unsigned long DbgPrint(const char *Format, ...);
-#endif
 
 #ifdef STANDALONE_
 
@@ -1822,7 +1819,7 @@ typedef ptrdiff_t  FT_PtrDist;
     if ( params->flags & FT_RASTER_FLAG_DIRECT )
     {
       if ( !params->gray_spans )
-#ifdef __REACTOS__
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
       {
         free(worker);
         return 0;
@@ -1838,7 +1835,7 @@ typedef ptrdiff_t  FT_PtrDist;
     {
       /* if direct mode is not set, we must have a target bitmap */
       if ( !target_map )
-#ifdef __REACTOS__
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
       {
         free(worker);
         return FT_THROW( Invalid_Argument );
@@ -1849,7 +1846,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
       /* nothing to do */
       if ( !target_map->width || !target_map->rows )
-#ifdef __REACTOS__
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
       {
         free(worker);
         return 0;
@@ -1859,7 +1856,7 @@ typedef ptrdiff_t  FT_PtrDist;
 #endif
 
       if ( !target_map->buffer )
-#ifdef __REACTOS__
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
       {
         free(worker);
         return FT_THROW( Invalid_Argument );
@@ -1900,7 +1897,7 @@ typedef ptrdiff_t  FT_PtrDist;
     ras.max_ey = clip.yMax;
 
     if ( ras.max_ex <= ras.min_ex || ras.max_ey <= ras.min_ey )
-#ifdef __REACTOS__
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
     {
       free(worker);
       return 0;
@@ -1909,7 +1906,7 @@ typedef ptrdiff_t  FT_PtrDist;
       return 0;
 #endif
 
-#ifdef __REACTOS__
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
     {
       FT_Error error = gray_convert_glyph( RAS_VAR );
       free(worker);

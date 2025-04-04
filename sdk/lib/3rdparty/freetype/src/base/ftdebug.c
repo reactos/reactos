@@ -50,7 +50,7 @@
 
   /* documentation is in ftdebug.h */
 
-#ifndef __REACTOS__ /* Use DbgPrint instead of this function */
+#ifndef __REACTOS__ /* win32ss/drivers/font/ftfd/rosglue.c defines this */
   FT_BASE_DEF( void )
   FT_Message( const char*  fmt,
               ... )
@@ -67,7 +67,7 @@
 
   /* documentation is in ftdebug.h */
 
-#ifndef __REACTOS__ /* Use DbgPrint instead of this function */
+#ifndef __REACTOS__ /* win32ss/drivers/font/ftfd/rosglue.c defines this */
   FT_BASE_DEF( void )
   FT_Panic( const char*  fmt,
             ... )
@@ -100,9 +100,6 @@
              error,
              FT_Error_String( error ) );
 #else
-#ifdef __REACTOS__
-    //DbgPrint("%s:%d: error 0x%02x: %s\n", file, line, error, FT_Error_String(error)); // Too noisy
-#endif
     FT_UNUSED( error );
     FT_UNUSED( line );
     FT_UNUSED( file );

@@ -17,16 +17,38 @@
 /*
  * First some generic routines
  */
-
 ULONG
 DbgPrint(IN PCCH Format, IN ...)
 {
-    va_list args;
+    va_list va;
 
-    va_start(args, Format);
-    EngDebugPrint("ft2: ", (PCHAR)Format, args);
-    va_end(args);
+    va_start(va, Format);
+    EngDebugPrint("FreeType: ", (PCHAR)Format, va);
+    va_end(va);
     return 0;
+}
+
+/* print a message */
+void
+FT_Message(const char *format, ...)
+{
+    va_list va;
+
+    va_start(va, format);
+    EngDebugPrint("FreeType: ", (PCHAR)format, va);
+    va_end(va);
+}
+
+/* print a message and exit */
+void
+FT_Panic(const char *format, ...)
+{
+    va_list va;
+
+    va_start(va, format);
+    EngDebugPrint("FreeType: ", (PCHAR)format, va);
+    EngBugCheckEx(0xDEADBEEF, 0, 0, 0, 0);
+    va_end(va);
 }
 
 /*
