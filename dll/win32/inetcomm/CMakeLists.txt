@@ -1,6 +1,5 @@
 
-add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+add_definitions(-D__ROS_LONG64__)
 spec2def(inetcomm.dll inetcomm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -28,3 +27,4 @@ target_link_libraries(inetcomm uuid wine)
 add_importlibs(inetcomm ole32 oleaut32 ws2_32 user32 propsys urlmon msvcrt kernel32 ntdll)
 add_pch(inetcomm precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET inetcomm DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(inetcomm) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

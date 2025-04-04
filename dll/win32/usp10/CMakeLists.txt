@@ -1,6 +1,4 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__)
 spec2def(usp10.dll usp10.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -28,3 +26,4 @@ target_link_libraries(usp10 wine)
 add_importlibs(usp10 advapi32 user32 gdi32 msvcrt kernel32 ntdll)
 add_pch(usp10 precomp.h SOURCE)
 add_cd_file(TARGET usp10 DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(usp10) # CORE-5743: No ARRAY_SIZE macro

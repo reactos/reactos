@@ -1,6 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__)
 spec2def(shfolder.dll shfolder.spec)
 
 list(APPEND SOURCE
@@ -13,3 +11,4 @@ target_link_libraries(shfolder wine)
 add_importlibs(shfolder shell32 kernel32 ntdll)
 add_dependencies(shfolder psdk)
 add_cd_file(TARGET shfolder DESTINATION reactos/system32 FOR all)
+set_wine_module(shfolder)
