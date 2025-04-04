@@ -1233,13 +1233,14 @@ HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile)
  */
 #ifdef __REACTOS__
 HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, UINT Flags, HWND hWnd)
-{
-    HRESULT hr;
-    TRACE("(%p,%#x,%p)\n", hThemeFile, Flags, hWnd);
 #else
 HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
+#endif
 {
     HRESULT hr;
+#ifdef __REACTOS__
+    TRACE("(%p,%#x,%p)\n", hThemeFile, Flags, hWnd);
+#else
     TRACE("(%p,%s,%p)\n", hThemeFile, unknown, hWnd);
 #endif
     hr = UXTHEME_ApplyTheme(hThemeFile);
@@ -1250,7 +1251,7 @@ HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
 #ifdef __REACTOS__
 /**********************************************************************
  *      SetSystemVisualStyle                              (UXTHEME.65)
-*/
+ */
 HRESULT WINAPI SetSystemVisualStyle(PCWSTR pszStyleFile, PCWSTR pszColor, PCWSTR pszSize, UINT Flags)
 {
     HTHEMEFILE hThemeFile = NULL;
