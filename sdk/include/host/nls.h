@@ -162,6 +162,7 @@ typedef DWORD LCID;
 #define LANG_WALON			 0x90
 #define LANG_CORNISH                     0x92
 #define LANG_GAELIC                      0x94
+#define LANG_TOKIPONA                    0x95
 
 /* Sublanguage definitions */
 #define SUBLANG_NEUTRAL                  0x00    /* language neutral */
