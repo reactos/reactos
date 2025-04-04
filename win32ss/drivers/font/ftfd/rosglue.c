@@ -20,11 +20,11 @@
 ULONG
 DbgPrint(IN PCCH Format, IN ...)
 {
-    va_list va;
+    va_list args;
 
-    va_start(va, Format);
-    EngDebugPrint("FreeType: ", (PCHAR)Format, va);
-    va_end(va);
+    va_start(args, Format);
+    EngDebugPrint("FreeType: ", (PCHAR)Format, args);
+    va_end(args);
     return 0;
 }
 
