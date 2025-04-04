@@ -797,10 +797,7 @@ PspSetJobLimitsBasicOrExtended(
                 ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize <= 0)
             ||
             (ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize <
-                ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize)
-            ||
-            (!ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize &&
-                ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize))
+                ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize))
         {
             Status = STATUS_INVALID_PARAMETER;
             goto ExitFromBasicLimits;
