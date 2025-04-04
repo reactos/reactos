@@ -2821,8 +2821,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             }
 
             WCHAR szName[MAX_PATH], *pszText = lpdi->item.pszText;
-            if (SUCCEEDED(Shell_DisplayNameOf(m_pSFParent, pidl, SHGDN_FOREDITING | SHGDN_INFOLDER,
-                                              szName, _countof(szName))))
+            if (SUCCEEDED(DisplayNameOfW(m_pSFParent, pidl, SHGDN_FOREDITING | SHGDN_INFOLDER,
+                                         szName, _countof(szName))))
             {
                 pszText = szName;
                 ::SetWindowText(hEdit, pszText);
@@ -2875,6 +2875,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     ILFree(pidlNew);// A SHCNE has updated the item already
                 else if (!LV_UpdateItem(lpdi->item.iItem, pidlNew))
                     ILFree(pidlNew);
+                OnStateChange(CDBOSC_RENAME);
             }
             else
             {

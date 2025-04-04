@@ -622,7 +622,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     // If the target is a virtual item, we ask for the friendly name because SHGDN_FORPARSING will return a GUID.
                     BOOL UseParsing = (att & (SFGAO_FILESYSTEM | SFGAO_FOLDER)) == SFGAO_FILESYSTEM;
                     DWORD ShgdnFor = UseParsing ? SHGDN_FORPARSING : SHGDN_FOREDITING;
-                    hr = Shell_DisplayNameOf(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
+                    hr = DisplayNameOfW(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
                 }
                 if (FAILED_UNEXPECTEDLY(hr))
                 {
