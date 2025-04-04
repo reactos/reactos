@@ -52,8 +52,8 @@ typedef struct
 
 /** Function prototypes *******************************************************/
 
-ULONG
-DbgPrint(IN PCCH Format, IN ...);
+void
+FT_Message(const char *format, ...);
 
 DHPDEV
 APIENTRY

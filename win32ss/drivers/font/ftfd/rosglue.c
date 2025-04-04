@@ -9,24 +9,29 @@
 
 #include "ftfd.h"
 
-#define NDEBUG
-#include <debug.h>
-
 #define TAG_FREETYPE  'PYTF'
 
-/*
- * First some generic routines
- */
-
-ULONG
-DbgPrint(IN PCCH Format, IN ...)
+/* print a message */
+void
+FT_Message(const char *format, ...)
 {
-    va_list args;
+    va_list va;
 
-    va_start(args, Format);
-    EngDebugPrint("ft2: ", (PCHAR)Format, args);
-    va_end(args);
-    return 0;
+    va_start(va, format);
+    EngDebugPrint("FreeType: ", (PCHAR)format, va);
+    va_end(va);
+}
+
+/* print a message and exit */
+void
+FT_Panic(const char *format, ...)
+{
+    va_list va;
+
+    va_start(va, format);
+    EngDebugPrint("FreeType: ", (PCHAR)format, va);
+    EngBugCheckEx(0xDEADBEEF, 0, 0, 0, 0);
+    va_end(va);
 }
 
 /*
@@ -107,34 +112,34 @@ free(void *Object)
 FILE *
 fopen(const char *FileName, const char *Mode)
 {
-    DPRINT1("Freetype tries to open file %s\n", FileName);
+    FT_Message("Freetype tries to open file %s\n", FileName);
     return NULL;
 }
 
 int
 fseek(FILE *Stream, long Offset, int Origin)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't fseek!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't fseek!\n");
     return -1;
 }
 
 long
 ftell(FILE *Stream)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't ftell!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't ftell!\n");
     return -1;
 }
 
 size_t
 fread(void *Buffer, size_t Size, size_t Count, FILE *Stream)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't fread!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't fread!\n");
     return 0;
 }
 
 int
 fclose(FILE *Stream)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't fclose!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't fclose!\n");
     return EOF;
 }
