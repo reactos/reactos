@@ -135,7 +135,6 @@
   @ cdecl FT_Stroker_Rewind ()
   @ cdecl FT_Stroker_Set ()
   @ cdecl FT_Tan ()
-  @ cdecl -dbg FT_Throw()
   @ cdecl FT_TrueTypeGX_Free ()
   @ cdecl FT_TrueTypeGX_Validate ()
   @ cdecl FT_Vector_From_Polar ()
