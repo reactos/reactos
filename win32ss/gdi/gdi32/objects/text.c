@@ -249,7 +249,7 @@ GetTextExtentPointA(
     UNICODE_STRING StringU;
     BOOL ret;
 
-    RtlInitAnsiString(&StringA, (LPSTR)lpString);
+    RtlInitAnsiString(&StringA, lpString);
     RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
     ret = GetTextExtentPointW(hdc, StringU.Buffer, cchString, lpsz);
@@ -271,7 +271,7 @@ GetTextExtentPointW(
     _In_ INT cchString,
     _Out_ LPSIZE lpsz)
 {
-    return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpsz, 0);
+    return NtGdiGetTextExtent(hdc, lpString, cchString, lpsz, 0);
 }
 
 
@@ -299,8 +299,7 @@ GetTextExtentExPointW(
     if (LoadLPK(LPK_GTEP))
         return LpkGetTextExtentExPoint(hdc, lpszString, cchString, nMaxExtent, lpnFit, lpnDx, lpSize, 0, 0);
 
-    return NtGdiGetTextExtentExW (
-               hdc, (LPWSTR)lpszString, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)lpnDx, lpSize, 0 );
+    return NtGdiGetTextExtentExW(hdc, lpszString, cchString, nMaxExtent, lpnFit, lpnDx, lpSize, 0);
 }
 
 
@@ -318,7 +317,7 @@ GetTextExtentExPointWPri(
     _Out_writes_to_opt_(cwc, *pcCh) LPINT pdxOut,
     _In_ LPSIZE psize)
 {
-    return NtGdiGetTextExtentExW(hdc, (LPWSTR)lpwsz, cwc, dxMax, (PULONG)pcCh, (PULONG)pdxOut, psize, 0);
+    return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, dxMax, pcCh, pdxOut, psize, 0);
 }
 
 /*
@@ -356,8 +355,8 @@ GetTextExtentExPointA(
                                     lpszStrW,
                                     cchString,
                                     nMaxExtent,
-                                    (PULONG)lpnFit,
-                                    (PULONG)lpnDx,
+                                    lpnFit,
+                                    lpnDx,
                                     lpSize,
                                     0);
 
@@ -405,7 +404,7 @@ GetTextExtentPoint32W(
     _In_ int cchString,
     _Out_ LPSIZE lpSize)
 {
-    return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
+    return NtGdiGetTextExtent(hdc, lpString, cchString, lpSize, 0);
 }
 
 /*
@@ -426,8 +425,8 @@ GetTextExtentExPointI(
                                  pgiIn,
                                  cgi,
                                  nMaxExtent,
-                                 (PULONG)lpnFit,
-                                 (PULONG)lpnDx,
+                                 lpnFit,
+                                 lpnDx,
                                  lpSize,
                                  GTEF_INDICES);
 }
