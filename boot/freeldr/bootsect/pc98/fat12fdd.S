@@ -161,9 +161,8 @@ VideoTestDone:
      *
      * LBA = NumberOfFats * SectorsPerFat + HiddenSectors + ReservedSectors
      */
-    xor ax, ax
     xor cx, cx
-    mov al, byte ptr BP_REL(NumberOfFats)       // Number of fats
+    movzx ax, byte ptr BP_REL(NumberOfFats)     // Number of fats
     mul word ptr BP_REL(SectorsPerFat)          // Times sectors per fat
     add ax, word ptr BP_REL(HiddenSectors)
     adc dx, word ptr BP_REL(HiddenSectors + 2)  // Add the number of hidden sectors
@@ -272,8 +271,7 @@ ReadCluster:
      */
     dec ax                                      // Adjust start cluster by 2
     dec ax                                      // Because the data area starts on cluster 2
-    xor ch, ch
-    mov cl, byte ptr BP_REL(SectsPerCluster)
+    movzx cx, byte ptr BP_REL(SectsPerCluster)
     mul cx                                      // Times sectors per cluster
     add ax, [bp - DataAreaStartLow]             // Add start of data area
     adc dx, [bp - DataAreaStartHigh]            // Now we have DX:AX with the logical start sector of FREELDR.SYS

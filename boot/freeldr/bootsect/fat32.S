@@ -341,8 +341,7 @@ ContinueSearch:
 
     // Now we have to find our way through the root directory to
     // The FREELDR.SYS file
-    xor  bx,bx
-    mov  bl, byte ptr BP_REL(SectsPerCluster)
+    movzx bx, byte ptr BP_REL(SectsPerCluster)
     shl  bx, 4              // BX = BX * 512 / 32
     mov  ax, HEX(2000)      // We loaded at 2000:0000
     mov  es, ax
@@ -406,8 +405,7 @@ LoadFile:
     call ReadCluster
     pop  es
 
-    xor  bx, bx
-    mov  bl, byte ptr BP_REL(SectsPerCluster)
+    movzx bx, byte ptr BP_REL(SectsPerCluster)
     shl  bx, 5                  // BX = BX * 512 / 16
     mov  ax, es                 // Increment the load address by
     add  ax, bx                 // The size of a cluster
@@ -495,7 +493,6 @@ FatSectorInCache:                               // This variable tells us which 
 // Reads cluster number in EAX into [ES:0000]
 ReadCluster:
     // StartSector = ((Cluster - 2) * SectorsPerCluster) + ReservedSectors + HiddenSectors;
-
     dec   eax
     dec   eax
     xor   edx, edx
