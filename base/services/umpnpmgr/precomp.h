@@ -33,6 +33,8 @@
 #include <pnp_s.h>
 
 
+#define LOGCONF_NAME_BUFFER_SIZE 32
+
 typedef struct
 {
     LIST_ENTRY ListEntry;
