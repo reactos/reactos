@@ -106,12 +106,6 @@ coclass ClassMoniker { interface IMoniker; }
 coclass PSFactoryBuffer { interface IFactoryBuffer; }
 
 [
-    threading(apartment),
-    uuid(00000323-0000-0000-c000-000000000046)
-]
-coclass StdGlobalInterfaceTable { interface IGlobalInterfaceTable; }
-
-[
     helpstring("Component Categories Manager"),
     threading(both),
     uuid(0002e005-0000-0000-c000-000000000046)
