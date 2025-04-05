@@ -152,6 +152,15 @@ ExtractCab(LPCWSTR Archive, const CStringW &OutputDir,
     return err ? err : ERROR_INTERNAL_ERROR;
 }
 
+
+static UINT
+ExtractArchive(LPCWSTR Archive, const CStringW &OutputDir, EXTRACTCALLBACK Callback, void *Cookie)
+{
+    BOOL isCab = LOBYTE(ClassifyFile(Archive)) == 'C';
+    return isCab ? ExtractCab(Archive, OutputDir, Callback, Cookie)
+                 : ExtractZip(Archive, OutputDir, Callback, Cookie);
+}
+
 enum { IM_STARTPROGRESS = WM_APP, IM_PROGRESS, IM_END };
 
 static struct CommonInfo
@@ -501,11 +510,7 @@ ExtractAndInstallThread(LPVOID Parameter)
         ErrorBox(Info.Error);
 
     if (!Info.Error)
-    {
-        BOOL isCab = LOBYTE(ClassifyFile(tempdir)) == 'C';
-        Info.Error = isCab ? ExtractCab(Archive, tempdir, ExtractCallback, &Info)
-                           : ExtractZip(Archive, tempdir, ExtractCallback, &Info);
-    }
+        Info.Error = ExtractArchive(Archive, tempdir, ExtractCallback, &Info);
 
     if (!Info.Error)
     {
@@ -834,4 +839,47 @@ UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Fla
     UninstallInfo Info(AppInfo, Flags & UCF_SILENT);
     g_pInfo = &Info;
     return CreateUI(Info.Silent, UninstallThread) ? !Info.Error : FALSE;
+}
+
+HRESULT
+ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App)
+{
+    WCHAR buf[MAX_PATH], buf2[MAX_PATH];
+    CAppDB db(CAppDB::GetDefaultPath());
+    db.UpdateAvailable();
+    CAvailableApplicationInfo *pAppInfo = db.FindAvailableByPackageName(PackageName);
+    if (!pAppInfo)
+        return HResultFromWin32(ERROR_NOT_FOUND);
+    CConfigParser *pCfg = pAppInfo->GetConfigParser();
+
+    if (!GetTempPathW(_countof(buf), buf))
+        return E_FAIL;
+    wsprintfW(buf2, L"~%s-%u", RAPPS_NAME, GetCurrentProcessId());
+    TempDir = BuildPath(buf, buf2);
+    HRESULT hr = HResultFromWin32(CreateDirectoryTree(TempDir));
+    if (FAILED(hr))
+        return hr;
+
+    hr = HResultFromWin32(ExtractArchive(pszArchive, TempDir, NULL, NULL));
+    if (SUCCEEDED(hr))
+    {
+        CStringW Exe;
+        if (pCfg->GetSectionString(DB_EXEINZIPSECTION, DB_EXEINZIP_EXE, Exe) <= 0)
+        {
+            WIN32_FIND_DATAW wfd;
+            HANDLE hFind = FindFirstFileW(Exe = BuildPath(TempDir, L"*.exe"), &wfd);
+            if (hFind != INVALID_HANDLE_VALUE)
+            {
+                FindClose(hFind);
+                Exe = wfd.cFileName;
+            }
+        }
+        App = BuildPath(TempDir, Exe);
+        if (GetFileAttributesW(App) & FILE_ATTRIBUTE_DIRECTORY)
+            hr = HResultFromWin32(ERROR_FILE_NOT_FOUND);
+    }
+
+    if (FAILED(hr) && !TempDir.IsEmpty())
+        DeleteDirectoryTree(TempDir, hMainWnd);
+    return hr;
 }
