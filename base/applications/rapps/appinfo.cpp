@@ -380,10 +380,11 @@ CAvailableApplicationInfo::GetInstallerType() const
 {
     CStringW str;
     m_Parser->GetString(DB_INSTALLER, str);
-    if (str.CompareNoCase(DB_GENINSTSECTION) == 0)
+    if (str.CompareNoCase(DB_INSTALLER_GENERATE) == 0)
         return INSTALLER_GENERATE;
-    else
-        return INSTALLER_UNKNOWN;
+    if (str.CompareNoCase(DB_INSTALLER_EXEINZIP) == 0)
+        return INSTALLER_EXEINZIP;
+    return INSTALLER_UNKNOWN;
 }
 
 BOOL
