@@ -397,6 +397,7 @@ FT_BEGIN_HEADER
 #define TT_MAC_LANGID_CHEWA                        92
 #define TT_MAC_LANGID_MALAGASY                     93
 #define TT_MAC_LANGID_ESPERANTO                    94
+#define TT_MAC_LANGID_TOKIPONA                     95
 #define TT_MAC_LANGID_WELSH                       128
 #define TT_MAC_LANGID_BASQUE                      129
 #define TT_MAC_LANGID_CATALAN                     130

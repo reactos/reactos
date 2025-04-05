@@ -818,7 +818,7 @@ const MUI_LANGUAGE MUILanguageList[] =
     {L"0000041E", 874, 874, 10021, L"Thai", 227, UnicodeFonts, thTHLayouts},
 #endif
 #ifdef LANGUAGE_TOK_SL
-    {L"00000495", 1252, 437, 10000, L"toki pona (kepeken sitelen Lasina)", 244, TokiFonts, tokLayouts},
+    {L"00000495", 1252, 437, 10000, L"toki pona (kepeken sitelen Lasina)", 1, TokiFonts, tokLayouts},
 #endif
 #ifdef LANGUAGE_TR_TR
     {L"0000041F", 1254, 857, 10081, L"Turkish", 235, LatinFonts, trTRLayouts},

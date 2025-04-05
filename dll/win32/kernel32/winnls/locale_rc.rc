@@ -257,6 +257,8 @@
 
 #include "nls/gdv.nls"   /* 0x0494  LANG_MANX_GAELIC, SUBLANG_MANX_GAELIC */
 
+#include "nls/tok.nls"   /* 0x0495  LANG_TOK_SL, SUBLANG_DEFAULT */
+
 #include "nls/ast.nls"   /* 0x04a5  LANG_ASTURIAN, SUBLANG_DEFAULT */
 
 #include "nls/ivl.nls"   /* 0x047f  LANG_INVARIANT, SUBLANG_NEUTRAL */

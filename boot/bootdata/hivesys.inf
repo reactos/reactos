@@ -1182,6 +1182,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0455",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0456",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","048f",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0490",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0495",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0845",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","InstallLanguage",0x00000000,"0409"
@@ -1314,6 +1315,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000444",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000445",0x00000000,"f"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000455",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000456",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000495",0x00000000,"1"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000048f",0x00000000,"1" ; tdd-Tale-CN, reserved
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000490",0x00000000,"1" ; khb-Talu-CN, reserved
 

@@ -547,7 +547,7 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   case LANG_TSONGA:     case LANG_TSWANA:     case LANG_VENDA:
   case LANG_XHOSA:      case LANG_ZULU:       case LANG_ESPERANTO:
   case LANG_WALON:      case LANG_CORNISH:    case LANG_WELSH:
-  case LANG_BRETON:     case LANG_MANX_GAELIC:
+  case LANG_BRETON:     case LANG_MANX_GAELIC:case LANG_TOK_SL:
     nOffset = 16;
     pnLookup = Lookup_16;
     break;

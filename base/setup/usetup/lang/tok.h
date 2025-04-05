@@ -5,7 +5,7 @@ static MUI_ENTRY tokSetupInitPageEntries[] =
     {
         4,
         3,
-        "pali e ilo Lijaku nanpa " KERNEL_VERSION_STR,
+        "pali pi ilo Lijako nanpa " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -43,7 +43,7 @@ static MUI_ENTRY tokLanguagePageEntries[] =
     {
         4,
         3,
-        "pali e ilo Lijaku nanpa " KERNEL_VERSION_STR,
+        "pali pi ilo Lijako nanpa " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -95,7 +95,7 @@ static MUI_ENTRY tokWelcomePageEntries[] =
     {
         4,
         3,
-        "pali e ilo Lijaku nanpa " KERNEL_VERSION_STR,
+        "pali pi ilo Lijako nanpa " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -183,7 +183,7 @@ static MUI_ENTRY tokIntroPageEntries[] =
     {
         4,
         3,
-        "pali e ilo Lijaku nanpa " KERNEL_VERSION_STR,
+        "pali pi ilo Lijako nanpa " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
