@@ -113,7 +113,7 @@ wmain(int argc, wchar_t* argv[])
         ss << endl
            << endl
            << "[ROSAUTOTEST] System uptime " << setprecision(2) << fixed;
-        ss << ((float)GetTickCount()/1000) << " seconds" << endl;
+        ss << (float)TestStartTime / 1000 << " seconds" << endl;
         StringOut(ss.str());
 
         /* Report tests startup */
@@ -156,14 +156,14 @@ wmain(int argc, wchar_t* argv[])
 
         /* Show the beginning time again */
         ss << "[ROSAUTOTEST] System uptime at start was " << setprecision(2) << fixed;
-        ss << ((float)TestStartTime / 1000) << " seconds" << endl;
+        ss << (float)TestStartTime / 1000 << " seconds" << endl;
 
         /* Show the time now so that we can see how long the tests took */
         TestEndTime = GetTickCount();
         ss << endl
            << "[ROSAUTOTEST] System uptime at end was " << setprecision(2) << fixed;
         ss << ((float)TestEndTime / 1000) << " seconds" << endl;
-        ss << "[ROSAUTOTEST] Duration was " << (((float)TestEndTime - (float)TestStartTime) / 1000) / 60;
+        ss << "[ROSAUTOTEST] Duration was " << (float)(TestEndTime - TestStartTime) / (60 * 1000);
         ss << " minutes" << endl;
         StringOut(ss.str());
 
