@@ -3162,20 +3162,44 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::v_CheckZoneCrossing(LPCITEMIDLIST pidl)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoBack()
 {
-    CComPtr<ITravelLog> travelLog;
-    HRESULT hResult = GetTravelLog(&travelLog);
+    CComPtr<ITravelLog>                     travelLog;
+    CComPtr<ITravelEntry>                   unusedEntry;
+    HRESULT                                 hResult;
+
+    hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
+
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget *>(this), TLOG_BACK, &unusedEntry);
+
+    if (SUCCEEDED(hResult))
+    {
+        unusedEntry.Release();
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
+    }
+
+    return E_ABORT;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoForward()
 {
-    CComPtr<ITravelLog> travelLog;
-    HRESULT hResult = GetTravelLog(&travelLog);
+    CComPtr<ITravelLog>                     travelLog;
+    CComPtr<ITravelEntry>                   unusedEntry;
+    HRESULT                                 hResult;
+
+    hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
+
+    hResult = travelLog->GetTravelEntry(static_cast<IDropTarget *>(this), TLOG_FORE, &unusedEntry);
+
+    if (SUCCEEDED(hResult))
+    {
+        unusedEntry.Release();
+        return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
+    }
+
+    return E_ABORT;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoHome()
@@ -3953,10 +3977,14 @@ LRESULT CShellBrowser::OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &
 
 LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    // FIXME: This does not appear to be what windows does.
-    HRESULT hResult = NavigateToParent();
+    HRESULT hResult;
+    if (LOBYTE(GetVersion()) < 6)
+        hResult = NavigateToParent();
+    else if (FAILED(hResult = GoBack()))
+        hResult = GoForward();
+
     if (FAILED(hResult))
-        TRACE("NavigateToParent failed with hResult=%08lx\n", hResult);
+        TRACE("Backspace navigation failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
