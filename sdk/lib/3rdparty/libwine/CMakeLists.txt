@@ -16,6 +16,7 @@ list(APPEND SOURCE
 
 add_library(wine ${SOURCE})
 add_dependencies(wine psdk)
+target_compile_definitions(wine PRIVATE _WINE)
 
 add_library(wineldr loader.c)
 add_dependencies(wineldr xdk)
