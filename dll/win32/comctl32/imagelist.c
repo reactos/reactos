@@ -2263,7 +2263,20 @@ ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
             DeleteObject (handle);
             return NULL;
         }
+#ifdef __REACTOS__
+        if (clrMask == CLR_NONE)
+            nImageCount = ImageList_Add(himl, handle, NULL);
+        else
+            nImageCount = ImageList_AddMasked(himl, handle, clrMask);
+        
+        if (nImageCount < 0)
+        {
+            ImageList_Destroy(himl);
+            himl = NULL;
+        }
+#else
         ImageList_AddMasked (himl, handle, clrMask);
+#endif
     }
     else if ((uType == IMAGE_ICON) || (uType == IMAGE_CURSOR)) {
         ICONINFO ii;
