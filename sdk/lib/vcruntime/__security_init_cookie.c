@@ -70,15 +70,16 @@ void __security_init_cookie(void)
     randomValue += GetCurrentProcessId();
     randomValue = _rotlptr(randomValue, GetCurrentProcessId() >> 2);
 
-    if (randomValue == DEFAULT_SECURITY_COOKIE)
-    {
-        randomValue++;
-    }
-
 #ifdef _WIN64
     /* Zero out highest 16 bits */
     randomValue &= 0x0000FFFFFFFFFFFFull;
 #endif
+
+    /* Avoid the default security cookie */
+    if (randomValue == DEFAULT_SECURITY_COOKIE)
+    {
+        randomValue++;
+    }
 
     __security_cookie = randomValue;
     __security_cookie_complement = ~randomValue;
