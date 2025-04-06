@@ -41,6 +41,9 @@
 #include "winreg.h"
 #include "ole2.h"
 #include "ole2ver.h"
+#ifdef __REACTOS__
+#include "propidl.h"
+#endif
 
 #include "compobj_private.h"
 #include "olestd.h"
