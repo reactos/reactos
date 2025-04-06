@@ -3527,7 +3527,11 @@ static void set_cert_string_property(PCCERT_CONTEXT cert, DWORD prop,
 
 static BOOL CALLBACK refresh_propsheet_pages(HWND hwnd, LPARAM lParam)
 {
+#ifdef __REACTOS__
+    if ((GetClassLongW(hwnd, GCW_ATOM) == (LONG_PTR)WC_DIALOG))
+#else
     if ((GetClassLongW(hwnd, GCW_ATOM) == WC_DIALOG))
+#endif
         SendMessageW(hwnd, WM_REFRESH_VIEW, 0, 0);
     return TRUE;
 }

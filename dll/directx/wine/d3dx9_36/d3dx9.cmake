@@ -44,6 +44,7 @@ function(add_d3dx9_target __version)
     add_delay_importlibs(${module} windowscodecs)
     add_pch(${module} ../d3dx9_36/precomp.h "${PCH_SKIP_SOURCE}")
     add_cd_file(TARGET ${module} DESTINATION reactos/system32 FOR all)
+    set_wine_module(${module})
 
-    target_compile_definitions(${module} PRIVATE D3DX_SDK_VERSION=${__version} __WINESRC__ copysignf=_copysignf)
+    target_compile_definitions(${module} PRIVATE D3DX_SDK_VERSION=${__version} copysignf=_copysignf)
 endfunction()

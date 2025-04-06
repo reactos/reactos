@@ -35,4 +35,4 @@ target_link_libraries(atl uuid wine)
 add_importlibs(atl oleaut32 ole32 user32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
 add_pch(atl precomp.h SOURCE)
 add_cd_file(TARGET atl DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(atl) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(atl)

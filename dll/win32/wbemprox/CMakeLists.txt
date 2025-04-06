@@ -2,8 +2,7 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+add_definitions(-D__ROS_LONG64__)
 spec2def(wbemprox.dll wbemprox.spec)
 
 list(APPEND SOURCE
@@ -39,3 +38,4 @@ add_importlibs(wbemprox iphlpapi oleaut32 advapi32 user32 gdi32 version winspool
 add_dependencies(wbemprox d3d_idl_headers)
 add_pch(wbemprox precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wbemprox DESTINATION reactos/system32/wbem FOR all)
+set_wine_module(wbemprox)

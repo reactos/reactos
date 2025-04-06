@@ -87,4 +87,4 @@ add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel3
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
 add_pch(msxml3 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET msxml3 DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(msxml3) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(msxml3)

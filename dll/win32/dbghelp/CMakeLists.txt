@@ -74,7 +74,7 @@ else()
     add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
     add_pch(dbghelp precomp.h SOURCE)
     add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)
-    set_wine_module_FIXME(dbghelp) # CORE-5743: No ARRAY_SIZE macro
+    set_wine_module(dbghelp)
 
     if(MSVC)
         # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned

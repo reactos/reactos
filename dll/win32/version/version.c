@@ -191,7 +191,11 @@ static int read_xx_header( HFILE lzfd )
  */
 static BOOL find_ne_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff )
 {
+#ifdef __REACTOS__
+    const WORD typeid = (WORD)(INT_PTR)VS_FILE_INFO | 0x8000;
+#else
     const WORD typeid = VS_FILE_INFO | 0x8000;
+#endif
     const WORD resid = VS_VERSION_INFO | 0x8000;
     IMAGE_OS2_HEADER nehd;
     NE_TYPEINFO *typeInfo;
@@ -347,7 +351,11 @@ static BOOL find_pe_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff, DWORD fl
     resDir = resSection + (resDataDir->VirtualAddress - sections[i].VirtualAddress);
 
     resPtr = resDir;
+#ifdef __REACTOS__
+    resPtr = find_entry_by_id( resPtr, (WORD)(INT_PTR)VS_FILE_INFO, resDir );
+#else
     resPtr = find_entry_by_id( resPtr, VS_FILE_INFO, resDir );
+#endif
     if ( !resPtr )
     {
         TRACE("No typeid entry found\n" );

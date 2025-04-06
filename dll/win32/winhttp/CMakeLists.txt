@@ -32,4 +32,4 @@ add_importlibs(winhttp user32 advapi32 ws2_32 jsproxy kernel32_vista msvcrt kern
 add_dependencies(winhttp stdole2)
 add_pch(winhttp precomp.h SOURCE)
 add_cd_file(TARGET winhttp DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(winhttp) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(winhttp)

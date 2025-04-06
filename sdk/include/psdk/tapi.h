@@ -21,9 +21,7 @@
 #ifndef __WINE_TAPI_H
 #define __WINE_TAPI_H
 
-#ifndef __WINESRC__
-# include <windows.h>
-#endif
+#include <windows.h>
 #include <basetsd.h>
 #include <oaidl.h>
 

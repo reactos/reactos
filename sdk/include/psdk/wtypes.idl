@@ -296,9 +296,7 @@ cpp_quote("#endif")
 typedef WCHAR OLECHAR;
 typedef [string] OLECHAR *LPOLESTR;
 typedef [string] const OLECHAR *LPCOLESTR;
-cpp_quote("#ifndef __WINESRC__")
 cpp_quote("#define OLESTR(str) L##str")
-cpp_quote("#endif")
 
 typedef LONG SCODE;
 

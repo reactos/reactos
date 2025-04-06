@@ -190,7 +190,9 @@ extern void winetest_pop_context(void);
 #define skip_2k3_crash if (_winver < 0x600) skip("Test skipped, because it crashes on win 2003\n"); else
 #define skip_2k3_fail if (_winver < 0x600) skip("Test skipped, because it fails on win 2003\n"); else
 
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
 
 #ifdef NONAMELESSUNION
 # define U(x)  (x).u

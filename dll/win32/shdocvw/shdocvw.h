@@ -62,7 +62,6 @@ static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_r
 #ifdef __REACTOS__
 #include "resource.h"
 #include "objects.h"
-#define ARRAY_SIZE(array) _countof(array)
 EXTERN_C HINSTANCE instance;
 #endif // def __REACTOS__
 

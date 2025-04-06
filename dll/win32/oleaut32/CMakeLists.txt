@@ -61,4 +61,4 @@ add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_pch(oleaut32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(oleaut32) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(oleaut32)

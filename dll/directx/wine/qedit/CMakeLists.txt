@@ -18,4 +18,4 @@ target_link_libraries(qedit strmbase strmiids uuid wine)
 add_importlibs(qedit ole32 oleaut32 msvcrt kernel32 ntdll)
 add_pch(qedit precomp.h SOURCE)
 add_cd_file(TARGET qedit DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(qedit) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(qedit)

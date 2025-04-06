@@ -20,9 +20,7 @@
 #ifndef __WINE_DMUSIC_CORE_H
 #define __WINE_DMUSIC_CORE_H
 
-#ifndef __WINESRC__
 #include <windows.h>
-#endif /* __WINESRC__ */
 
 #define COM_NO_WINDOWS_H
 #include <objbase.h>

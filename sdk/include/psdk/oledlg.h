@@ -21,16 +21,12 @@
 #ifndef __WINE_OLEDLG_H
 #define __WINE_OLEDLG_H
 
-#ifndef __WINESRC__
-# include <windows.h>
-#endif
+#include <windows.h>
 #include <shellapi.h>
 #include <commdlg.h>
 #include <ole2.h>
-#ifndef __WINESRC__
-# include <string.h>
-# include <tchar.h>
-#endif
+#include <string.h>
+#include <tchar.h>
 #include <dlgs.h>
 #include <prsht.h>
 

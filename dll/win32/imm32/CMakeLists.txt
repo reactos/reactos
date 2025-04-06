@@ -1,9 +1,6 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/win32ss/include)
-
-add_definitions(-D__WINESRC__)
 
 spec2def(imm32.dll imm32.spec ADD_IMPORTLIB)
 
@@ -30,3 +27,4 @@ set_module_type(imm32 win32dll UNICODE ENTRYPOINT ImmDllInitialize 12)
 target_link_libraries(imm32 wine2ros win32ksys uuid)
 add_importlibs(imm32 advapi32 user32 gdi32 kernel32 ntdll)
 add_cd_file(TARGET imm32 DESTINATION reactos/system32 FOR all)
+set_wine_module(imm32)

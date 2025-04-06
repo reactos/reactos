@@ -1,6 +1,5 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__ -DWINETEST_USE_DBGSTR_LONGLONG)
+add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE
     atom.c
@@ -48,3 +47,4 @@ endif()
 set_module_type(ntdll_winetest win32cui)
 add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
 add_rostests_file(TARGET ntdll_winetest)
+set_wine_module(ntdll_winetest)

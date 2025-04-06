@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mapi32.dll mapi32.spec)
 
 list(APPEND SOURCE
@@ -21,8 +19,9 @@ add_library(mapi32 MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mapi32.def)
 
-set_module_type(mapi32 win32dll)
+set_module_type(mapi32 win32dll UNICODE)
 target_link_libraries(mapi32 uuid wine)
 add_importlibs(mapi32 shlwapi user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(mapi32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET mapi32 DESTINATION reactos/system32 FOR all)
+set_wine_module(mapi32)

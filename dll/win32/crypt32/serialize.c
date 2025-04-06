@@ -646,6 +646,9 @@ static BOOL CRYPT_WriteSerializedStoreToStream(HCERTSTORE store,
  SerializedOutputFunc output, void *handle)
 {
     static const BYTE fileTrailer[12] = { 0 };
+#ifdef __REACTOS__
+#undef interface
+#endif
     WINE_CONTEXT_INTERFACE interface;
     BOOL ret;
 

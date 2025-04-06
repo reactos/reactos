@@ -28,9 +28,7 @@
 #define COM_NO_WINDOWS_H
 #include <objbase.h>
 
-#ifndef __WINESRC__
-# include <windows.h>
-#endif
+#include <windows.h>
 
 #include <d3d8types.h>
 #include <d3d8caps.h>

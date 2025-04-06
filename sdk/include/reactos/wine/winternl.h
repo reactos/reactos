@@ -1296,20 +1296,12 @@ typedef struct _OBJECT_TYPES_INFORMATION
 } OBJECT_TYPES_INFORMATION, *POBJECT_TYPES_INFORMATION;
 
 typedef struct _PROCESS_BASIC_INFORMATION {
-#ifdef __WINESRC__
     DWORD_PTR ExitStatus;
     PPEB PebBaseAddress;
     DWORD_PTR AffinityMask;
     DWORD_PTR BasePriority;
     ULONG_PTR UniqueProcessId;
     ULONG_PTR InheritedFromUniqueProcessId;
-#else
-    PVOID Reserved1;
-    PPEB PebBaseAddress;
-    PVOID Reserved2[2];
-    ULONG_PTR UniqueProcessId;
-    PVOID Reserved3;
-#endif
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 #define PROCESS_PRIOCLASS_IDLE          1
@@ -1348,7 +1340,6 @@ typedef struct _RTL_RWLOCK {
 /* System Information Class 0x00 */
 
 typedef struct _SYSTEM_BASIC_INFORMATION {
-#ifdef __WINESRC__
     DWORD     unknown;
     ULONG     KeMaximumIncrement;
     ULONG     PageSize;
@@ -1360,11 +1351,6 @@ typedef struct _SYSTEM_BASIC_INFORMATION {
     PVOID     HighestUserAddress;
     ULONG_PTR ActiveProcessorsAffinityMask;
     BYTE      NumberOfProcessors;
-#else
-    BYTE Reserved1[24];
-    PVOID Reserved2[4];
-    CCHAR NumberOfProcessors;
-#endif
 } SYSTEM_BASIC_INFORMATION, *PSYSTEM_BASIC_INFORMATION;
 
 /* System Information Class 0x01 */
@@ -1478,15 +1464,11 @@ typedef struct _SYSTEM_PERFORMANCE_INFORMATION {
 /* System Information Class 0x03 */
 
 typedef struct _SYSTEM_TIMEOFDAY_INFORMATION {
-#ifdef __WINESRC__
     LARGE_INTEGER liKeBootTime;
     LARGE_INTEGER liKeSystemTime;
     LARGE_INTEGER liExpTimeZoneBias;
     ULONG uCurrentTimeZoneId;
     DWORD dwUnknown1[5];
-#else
-    BYTE Reserved1[48];
-#endif
 } SYSTEM_TIMEOFDAY_INFORMATION, *PSYSTEM_TIMEOFDAY_INFORMATION; /* was SYSTEM_TIME_INFORMATION */
 
 /* System Information Class 0x08 */
@@ -1617,7 +1599,6 @@ typedef struct _VM_COUNTERS_ {
 } VM_COUNTERS, *PVM_COUNTERS;
 
 typedef struct _SYSTEM_PROCESS_INFORMATION {
-#ifdef __WINESRC__                  /* win32/win64 */
     ULONG NextEntryOffset;             /* 00/00 */
     DWORD dwThreadCount;               /* 04/04 */
     DWORD dwUnknown1[6];               /* 08/08 */
@@ -1634,19 +1615,6 @@ typedef struct _SYSTEM_PROCESS_INFORMATION {
     VM_COUNTERS vmCounters;            /* 58/70 */
     IO_COUNTERS ioCounters;            /* 88/d0 */
     SYSTEM_THREAD_INFORMATION ti[1];   /* b8/100 */
-#else
-    ULONG NextEntryOffset;             /* 00/00 */
-    BYTE Reserved1[52];                /* 04/04 */
-    PVOID Reserved2[3];                /* 38/38 */
-    HANDLE UniqueProcessId;            /* 44/50 */
-    PVOID Reserved3;                   /* 48/58 */
-    ULONG HandleCount;                 /* 4c/60 */
-    BYTE Reserved4[4];                 /* 50/64 */
-    PVOID Reserved5[11];               /* 54/68 */
-    SIZE_T PeakPagefileUsage;          /* 80/c0 */
-    SIZE_T PrivatePageCount;           /* 84/c8 */
-    LARGE_INTEGER Reserved6[6];        /* 88/d0 */
-#endif
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
 
 typedef struct _SYSTEM_REGISTRY_QUOTA_INFORMATION {
@@ -3048,9 +3016,6 @@ static inline PLIST_ENTRY RemoveTailList(PLIST_ENTRY le)
     return e;
 }
 
-
-#ifdef __WINESRC__
-
 /* FIXME: private structure for vm86 mode, stored in teb->GdiTebBatch */
 typedef struct
 {
@@ -3075,8 +3040,6 @@ typedef struct
     CURDIR          curdir;     /* current directory */
     WCHAR           curdir_buffer[MAX_PATH];
 } WIN16_SUBSYSTEM_TIB;
-
-#endif /* __WINESRC__ */
 
 #ifdef __cplusplus
 } /* extern "C" */
