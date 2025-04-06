@@ -25,6 +25,9 @@
 #include <msi.h>
 #include <msiquery.h>
 #include <objidl.h>
+#ifdef __REACTOS__
+#include "propidl.h"
+#endif
 
 #include "wine/test.h"
 

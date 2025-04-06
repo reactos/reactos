@@ -26,4 +26,4 @@ add_delay_importlibs(appwiz msi)
 add_importlibs(appwiz urlmon ole32 comctl32 advapi32 shell32 shlwapi user32 msvcrt kernel32 ntdll)
 add_pch(appwiz appwiz.h SOURCE)
 add_cd_file(TARGET appwiz DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(appwiz) # CORE-5743: No CONST_VTABLE
+set_wine_module(appwiz)

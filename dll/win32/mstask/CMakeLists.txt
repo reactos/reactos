@@ -26,4 +26,4 @@ add_importlibs(mstask ole32 msvcrt kernel32 ntdll)
 add_dependencies(mstask netapi32)
 add_pch(mstask precomp.h SOURCE)
 add_cd_file(TARGET mstask DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(mstask) # CORE-5743: No CONST_VTABLE
+set_wine_module(mstask)

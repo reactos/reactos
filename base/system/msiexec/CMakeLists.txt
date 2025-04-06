@@ -13,4 +13,4 @@ target_link_libraries(msiexec uuid wine)
 add_importlibs(msiexec user32 advapi32 ole32 comctl32 msi msvcrt kernel32 ntdll)
 add_pch(msiexec precomp.h SOURCE)
 add_cd_file(TARGET msiexec DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(msiexec) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(msiexec)

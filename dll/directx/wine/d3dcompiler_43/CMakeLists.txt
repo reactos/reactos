@@ -1,11 +1,9 @@
 
 add_definitions(
-    -D__WINESRC__
     -D__ROS_LONG64__
     -Dstrcasecmp=_stricmp
     -DDIRECT3D_VERSION=0x0900)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3dcompiler_43.dll d3dcompiler_43.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -51,3 +49,4 @@ add_importlibs(d3dcompiler_43 msvcrt kernel32 ntdll)
 add_dependencies(d3dcompiler_43 d3d_idl_headers)
 add_pch(d3dcompiler_43 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET d3dcompiler_43 DESTINATION reactos/system32 FOR all)
+set_wine_module(d3dcompiler_43)

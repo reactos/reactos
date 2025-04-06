@@ -19,4 +19,4 @@ target_link_libraries(msdmo uuid wine mediaobj_guid)
 add_importlibs(msdmo user32 advapi32 ole32 msvcrt kernel32 ntdll)
 add_pch(msdmo precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET msdmo DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(msdmo) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(msdmo)

@@ -19,9 +19,7 @@
 #include <stdarg.h>
 
 #define COBJMACROS
-#ifdef __REACTOS__
 #define CONST_VTABLE
-#endif
 
 #include <windef.h>
 #include <winbase.h>

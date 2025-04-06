@@ -24,4 +24,4 @@ add_importlibs(devenum advapi32 advapi32_vista ole32 oleaut32 winmm user32 avica
 add_dependencies(devenum wineheaders)
 add_pch(devenum precomp.h SOURCE)
 add_cd_file(TARGET devenum DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(devenum) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(devenum)

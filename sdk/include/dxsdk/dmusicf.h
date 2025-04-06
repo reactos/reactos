@@ -21,9 +21,7 @@
 #ifndef __WINE_DMUSIC_FILEFORMATS_H
 #define __WINE_DMUSIC_FILEFORMATS_H
 
-#ifndef __WINESRC__
 #include <windows.h>
-#endif /* __WINESRC__ */
 
 #define COM_NO_WINDOWS_H
 #include <objbase.h>
