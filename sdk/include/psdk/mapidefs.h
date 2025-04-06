@@ -158,7 +158,7 @@ typedef struct _MAPIUID
 #define MAPI_USE_DEFAULT              0x00000040U
 #define MAPI_UNICODE                  0x80000000U /* Strings in this call are Unicode */
 
-#ifdef UNICODE
+#if defined (UNICODE) || defined (__WINESRC__)
 #define fMapiUnicode MAPI_UNICODE
 #else
 #define fMapiUnicode 0U

@@ -22,7 +22,6 @@
 #define __WINE_DMUSIC_PERFORMANCE_H
 
 #include <windows.h>
-#include <oleauto.h> /* VARIANT */
 
 #define COM_NO_WINDOWS_H
 #include <objbase.h>

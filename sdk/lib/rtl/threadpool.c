@@ -23,16 +23,11 @@
 #ifdef __REACTOS__
 #include <rtl_vista.h>
 #define NDEBUG
-#include "wine/list.h"
-#include <debug.h>
+#include <assert.h>
+#include <wine/list.h>
+#include <wine/debug.h>
 
-#define ERR(fmt, ...)    DPRINT1(fmt, ##__VA_ARGS__)
-#define FIXME(fmt, ...)  DPRINT(fmt, ##__VA_ARGS__)
-#define WARN(fmt, ...)   DPRINT(fmt, ##__VA_ARGS__)
-#define TRACE(fmt, ...)  DPRINT(fmt, ##__VA_ARGS__)
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(_x) (sizeof((_x))/sizeof((_x)[0]))
-#endif
+WINE_DEFAULT_DEBUG_CHANNEL(rtl);
 
 typedef struct _THREAD_NAME_INFORMATION
 {

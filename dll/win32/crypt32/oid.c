@@ -29,9 +29,7 @@
 #define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
-#ifndef __REACTOS__
 #define CRYPT_OID_INFO_HAS_EXTRA_FIELDS
-#endif
 #include "wincrypt.h"
 #include "winreg.h"
 #include "winuser.h"

@@ -2,7 +2,7 @@
  * Setupapi install routines
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -121,7 +121,7 @@ static const WCHAR ProfileItems[]    = {'P','r','o','f','i','l','e','I','t','e',
 static const WCHAR Include[]         = {'I','n','c','l','u','d','e',0};
 static const WCHAR Needs[]           = {'N','e','e','d','s',0};
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
-#ifdef __WINESRC__
+#ifndef __REACTOS__
 static const WCHAR WineFakeDlls[]    = {'W','i','n','e','F','a','k','e','D','l','l','s',0};
 #endif
 
@@ -714,7 +714,7 @@ static BOOL register_dlls_callback( HINF hinf, PCWSTR field, void *arg )
     return ret;
 }
 
-#ifdef __WINESRC__
+#ifndef __REACTOS__
 /***********************************************************************
  *            fake_dlls_callback
  *
@@ -756,7 +756,7 @@ static BOOL fake_dlls_callback( HINF hinf, PCWSTR field, void *arg )
     }
     return ret;
 }
-#endif // __WINESRC__
+#endif
 
 /***********************************************************************
  *            update_ini_callback
@@ -1407,10 +1407,10 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
         if (!iterate_section_fields( hinf, section, RegisterDlls, register_dlls_callback, &info ))
             return FALSE;
 
-#ifdef __WINESRC__
+#ifndef __REACTOS__
         if (!iterate_section_fields( hinf, section, WineFakeDlls, fake_dlls_callback, NULL ))
             return FALSE;
-#endif // __WINESRC__
+#endif
     }
     if (flags & SPINST_UNREGSVR)
     {

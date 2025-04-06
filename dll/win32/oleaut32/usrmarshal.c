@@ -49,6 +49,13 @@ ULONG __RPC_USER WdtpInterfacePointer_UserSize(ULONG*, ULONG, ULONG, IUnknown*, 
 unsigned char * __RPC_USER WdtpInterfacePointer_UserMarshal(ULONG*, ULONG, unsigned char*, IUnknown*, REFIID);
 unsigned char * __RPC_USER WdtpInterfacePointer_UserUnmarshal(ULONG*, unsigned char*, IUnknown**, REFIID);
 
+#ifdef __REACTOS__
+ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY *ppsa);
+unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buffer, LPSAFEARRAY *ppsa);
+unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, LPSAFEARRAY *ppsa);
+void WINAPI LPSAFEARRAY_UserFree(ULONG *pFlags, LPSAFEARRAY *ppsa);
+#endif
+
 static void dump_user_flags(const ULONG *pFlags)
 {
     if (HIWORD(*pFlags) == NDR_LOCAL_DATA_REPRESENTATION)

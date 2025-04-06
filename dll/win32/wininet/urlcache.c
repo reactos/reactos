@@ -1,3 +1,8 @@
+#ifdef __REACTOS__
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "precomp.h"
+#else
 /*
  * Wininet - Url Cache functions
  *
@@ -46,6 +51,7 @@
 
 #include "internet.h"
 #include "wine/debug.h"
+#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 

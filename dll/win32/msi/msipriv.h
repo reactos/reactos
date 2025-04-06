@@ -31,6 +31,9 @@
 #include "msiquery.h"
 #include "msidefs.h"
 #include "objbase.h"
+#ifdef __REACTOS__
+#include "propidl.h"
+#endif
 #include "objidl.h"
 #include "fusion.h"
 #include "winnls.h"
