@@ -13,14 +13,13 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-missing-braces)
 endif()
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-
 list(APPEND RTL_WINE_SOURCE
     actctx.c
     timerqueue.c
     threadpool.c
 )
-set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
+set_source_files_properties(threadpool.c PROPERTIES INCLUDE_DIRECTORIES
+    "${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine")
 
 if(MSVC)
     # Silence warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data

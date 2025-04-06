@@ -98,11 +98,10 @@ typedef struct {
 #define DRV_QUERYSTRINGID		(DRV_RESERVED + 14)
 #define DRV_QUERYSTRINGIDSIZE		(DRV_RESERVED + 15)
 #define DRV_QUERYIDFROMSTRINGID		(DRV_RESERVED + 16)
-#ifdef __WINESRC__
+
 #define DRV_QUERYDSOUNDIFACE		(DRV_RESERVED + 20)
 #define DRV_QUERYDSOUNDDESC		(DRV_RESERVED + 21)
 #define DRV_QUERYDSOUNDGUID		(DRV_RESERVED + 22)
-#endif
 
 #define WODM_INIT		DRVM_INIT
 #define WODM_GETNUMDEVS		 3
@@ -461,9 +460,7 @@ BOOL			WINAPI	mciFreeCommandResource(UINT uTable);
 BOOL		 	WINAPI	DriverCallback(DWORD dwCallBack, UINT uFlags, HDRVR hDev,
 					       UINT wMsg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2);
 
-#ifdef __WINESRC__
 #define  WAVE_DIRECTSOUND               0x0080
-#endif
 
 #include <poppack.h>
 
