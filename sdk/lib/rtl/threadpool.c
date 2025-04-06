@@ -23,8 +23,9 @@
 #ifdef __REACTOS__
 #include <rtl_vista.h>
 #define NDEBUG
+#include <winnt.h>
 #include <assert.h>
-#include "wine/list.h"
+#include <wine/list.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(rtl);
