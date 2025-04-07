@@ -86,6 +86,9 @@ typedef struct
     INT    direction;  /* direction of the scroll, (e.g. PGF_SCROLLUP) */
     WCHAR  *pwszBuffer;/* text buffer for converted notifications */
     INT    nBufferSize;/* size of the above buffer */
+#ifdef __REACTOS__
+    BOOL m_bProcessingReCalcSize;
+#endif
 } PAGER_INFO;
 
 #define TIMERID1         1
@@ -438,7 +441,6 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
 
     return 1;
 }
-
 
 static COLORREF
 PAGER_SetBkColor (PAGER_INFO* infoPtr, COLORREF clrBk)
@@ -1466,6 +1468,9 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case EM_FMTLINES:
+#ifdef __REACTOS__
+	    infoPtr->m_bProcessingReCalcSize = FALSE;
+#endif
 	    return PAGER_FmtLines(infoPtr);
 
         case PGM_FORWARDMOUSE:
@@ -1489,7 +1494,16 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /*      case PGM_GETDROPTARGET: */
 
         case PGM_RECALCSIZE:
+#ifdef __REACTOS__
+            if (!infoPtr->m_bProcessingReCalcSize)
+            {
+                infoPtr->m_bProcessingReCalcSize = TRUE;
+                PostMessageW(hwnd, EM_FMTLINES, wParam, lParam);
+            }
+            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+#else
             return PAGER_RecalcSize(infoPtr);
+#endif
 
         case PGM_SETBKCOLOR:
             return PAGER_SetBkColor (infoPtr, (COLORREF)lParam);
