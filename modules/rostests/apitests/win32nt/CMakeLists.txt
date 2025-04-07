@@ -66,6 +66,7 @@ list(APPEND SOURCE
     ntuser/NtUserSystemParametersInfo.c
     ntuser/NtUserToUnicodeEx.c
     ntuser/NtUserUpdatePerUserSystemParameters.c
+    ntuser/NtUserConvertMemHandle.c
 
     #osver.c
     )
