@@ -2086,6 +2086,9 @@ NameFromCharSet(BYTE CharSet)
     }
 }
 
+static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
+static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
+
 /* Adds the font resource from the specified file to the system */
 static INT FASTCALL
 IntGdiAddFontResourceSingle(
@@ -2107,8 +2110,6 @@ IntGdiAddFontResourceSingle(
     UNICODE_STRING PathName;
     LPWSTR pszBuffer;
     PFILE_OBJECT FileObject;
-    static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
-    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
     /* Build PathName */
     if (dwFlags & AFRX_DOS_DEVICE_PATH)
@@ -2326,12 +2327,109 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
+static BOOL
+IntDeleteRegFontEntry(_In_ LPCWSTR pszFileName, _In_ DWORD dwFlags)
+{
+    NTSTATUS Status;
+    HKEY hKey;
+    LPCWSTR pFileName = pszFileName;
+    WCHAR szName[MAX_PATH], szValue[MAX_PATH];
+    ULONG dwIndex, NameLength, ValueSize;
+    BOOL ret = TRUE;
+
+    if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
+    {
+        pFileName = wcsrchr(pszFileName, L'\\');
+        if (pFileName)
+            ++pFileName;
+        else
+            pFileName = pszFileName;
+    }
+
+    if (!pFileName)
+        return FALSE;
+
+    Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    for (dwIndex = 0; NT_SUCCESS(Status); ++dwIndex)
+    {
+        NameLength = RTL_NUMBER_OF(szName);
+        ValueSize = sizeof(szValue);
+
+        Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, NULL, szValue, &ValueSize);
+
+        szName[RTL_NUMBER_OF(szName) - 1] = UNICODE_NULL;
+        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL;
+
+        if (!NT_SUCCESS(Status) || _wcsicmp(szValue, pFileName) != 0)
+            continue;
+
+        Status = RegDeleteValueW(hKey, szValue);
+        if (!NT_SUCCESS(Status))
+            ret = FALSE;
+    }
+
+    ZwClose(hKey);
+    return ret;
+}
+
 static BOOL FASTCALL
 IntGdiRemoveFontResourceSingle(
     _In_ PCUNICODE_STRING FileName,
     _In_ DWORD dwFlags)
 {
-    return FALSE; // FIXME
+    BOOL ret = FALSE;
+    UNICODE_STRING PathName;
+    PLIST_ENTRY CurrentEntry, NextEntry;
+    PFONT_ENTRY FontEntry;
+    PFONTGDI FontGDI;
+    LPWSTR pszBuffer;
+    SIZE_T Length;
+    NTSTATUS Status;
+
+    /* Build PathName */
+    if (dwFlags & AFRX_DOS_DEVICE_PATH)
+    {
+        Length = DosPathPrefix.Length + FileName->Length + sizeof(UNICODE_NULL);
+        pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
+        if (!pszBuffer)
+            return FALSE; /* failure */
+
+        RtlInitEmptyUnicodeString(&PathName, pszBuffer, Length);
+        RtlAppendUnicodeStringToString(&PathName, &DosPathPrefix);
+        RtlAppendUnicodeStringToString(&PathName, FileName);
+    }
+    else
+    {
+        Status = DuplicateUnicodeString(FileName, &PathName);
+        if (!NT_SUCCESS(Status))
+            return FALSE; /* failure */
+    }
+
+    /* Delete font entries that matches PathName */
+    IntLockFreeType();
+    for (CurrentEntry = g_FontListHead.Flink;
+         CurrentEntry != &g_FontListHead;
+         CurrentEntry = NextEntry)
+    {
+        FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_ENTRY, ListEntry);
+        NextEntry = CurrentEntry->Flink;
+
+        FontGDI = FontEntry->Font;
+        if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, PathName.Buffer) == 0)
+        {
+            CleanupFontEntry(FontEntry);
+            if (dwFlags & AFRX_WRITE_REGISTRY)
+                IntDeleteRegFontEntry(PathName.Buffer, dwFlags);
+            ret = TRUE;
+        }
+    }
+    IntUnLockFreeType();
+
+    RtlFreeUnicodeString(&PathName);
+    return ret;
 }
 
 BOOL FASTCALL

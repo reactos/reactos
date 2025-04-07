@@ -60,6 +60,19 @@ DWORD
 NTAPI
 RegGetSectionDWORD(LPCWSTR pszSection, PCWSTR pszValue, DWORD dwDefault);
 
+NTSTATUS NTAPI
+RegDeleteValueW(_In_ HKEY hKey, _In_ LPCWSTR pszValueName);
+
+NTSTATUS NTAPI
+RegEnumValueW(
+    _In_ HKEY hKey,
+    _In_ ULONG Index,
+    _Out_opt_ LPWSTR Name,
+    _Out_opt_ PULONG NameLength,
+    _Out_opt_ PULONG Type,
+    _Out_opt_ PVOID Data,
+    _Out_opt_ PULONG DataLength);
+
 VOID
 FASTCALL
 SetLastNtError(_In_ NTSTATUS Status);
