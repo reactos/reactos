@@ -370,6 +370,7 @@ IContextMenu_Invoke(
     _In_ HWND hwnd,
     _In_ LPCSTR lpVerb,
     _In_ UINT uFlags);
+HRESULT WINAPI SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ LPCWSTR pszClientType);
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 

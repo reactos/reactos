@@ -237,3 +237,26 @@ GetVersionInfoString(IN LPCWSTR szFileName,
 
     return bRet;
 }
+
+HRESULT ShellExecuteCommand(PCWSTR Command)
+{
+    WCHAR szCmd[MAX_PATH * 2];
+    int len = PathProcessCommand(Command, szCmd, _countof(szCmd), PPCF_ADDARGUMENTS | PPCF_FORCEQUALIFY);
+    if (len <= 0) // Could not resolve the command, just use the input
+    {
+        HRESULT hr = StringCchCopyW(szCmd, _countof(szCmd), Command);
+        if (FAILED(hr))
+            return hr;
+    }
+    PWSTR pszArgs = PathGetArgsW(szCmd);
+    if (*pszArgs)
+        pszArgs[-1] = UNICODE_NULL; // Split szCmd program and arguments
+    PathUnquoteSpacesW(szCmd);
+
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
+    sei.lpFile = szCmd;
+    sei.lpParameters = pszArgs;
+    sei.nShow = SW_SHOW;
+    UINT error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
+    return HRESULT_FROM_WIN32(error);
+}

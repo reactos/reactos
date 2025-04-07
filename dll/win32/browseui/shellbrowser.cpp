@@ -4156,20 +4156,22 @@ LRESULT CShellBrowser::OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam,
 // WM_APPCOMMAND
 LRESULT CShellBrowser::OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    UINT uCmd = GET_APPCOMMAND_LPARAM(lParam);
+    UINT uCmd = GET_APPCOMMAND_LPARAM(lParam), uExecCmd = 0;
     switch (uCmd)
     {
-        case APPCOMMAND_BROWSER_BACKWARD:
-            GoBack();
-            break;
-
-        case APPCOMMAND_BROWSER_FORWARD:
-            GoForward();
-            break;
-
-        default:
-            FIXME("uCmd: %u\n", uCmd);
-            break;
+        case APPCOMMAND_BROWSER_BACKWARD:  uExecCmd = IDM_GOTO_BACK; break;
+        case APPCOMMAND_BROWSER_FORWARD:   uExecCmd = IDM_GOTO_FORWARD; break;
+        case APPCOMMAND_BROWSER_REFRESH:   uExecCmd = IDM_VIEW_REFRESH; break;
+        case APPCOMMAND_BROWSER_STOP:      uExecCmd = FCIDM_BROWSER_STOP; break; // TODO: Handle Stop()
+        case APPCOMMAND_BROWSER_SEARCH:    uExecCmd = IDM_EXPLORERBAR_SEARCH; break;
+        case APPCOMMAND_BROWSER_FAVORITES: uExecCmd = IDM_EXPLORERBAR_FAVORITES; break;
+        case APPCOMMAND_BROWSER_HOME:      uExecCmd = IDM_GOTO_HOMEPAGE; break;
+    }
+    if (uExecCmd)
+    {
+        SendMessage(WM_COMMAND, uExecCmd, 0);
+        bHandled = TRUE;
+        return TRUE;
     }
     return 0;
 }
