@@ -2428,6 +2428,7 @@ IntGdiRemoveFontResourceSingle(
 
     /* Delete font entries that matches PathName */
     IntLockFreeType();
+Retry:
     for (CurrentEntry = g_FontListHead.Flink;
          CurrentEntry != &g_FontListHead;
          CurrentEntry = NextEntry)
@@ -2442,6 +2443,7 @@ IntGdiRemoveFontResourceSingle(
             if (dwFlags & AFRX_WRITE_REGISTRY)
                 IntDeleteRegFontEntry(pszFileTitle, dwFlags);
             ret = TRUE;
+            goto Retry;
         }
     }
     IntUnLockFreeType();
