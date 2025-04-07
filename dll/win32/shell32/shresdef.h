@@ -296,6 +296,8 @@
 #define IDS_TITLE_MYNET                             30387
 #define IDS_TITLE_BIN_1                             30388
 #define IDS_TITLE_BIN_0                             30389
+#define IDS_TITLE_BIN                               30390
+#define IDS_TITLE_MYFILES                           30391
 
 /* Advanced settings */
 #define IDS_ADVANCED_FOLDER                         30498
@@ -329,13 +331,26 @@
 #define IDS_ADVANCED_DISPLAY_RUN                    30474
 #define IDS_ADVANCED_DISPLAY_ADMINTOOLS             30476
 #define IDS_ADVANCED_SMALL_START_MENU               30477
+/* End synchronized */
 
-#define IDS_NEWEXT_ADVANCED_LEFT                    30515
-#define IDS_NEWEXT_ADVANCED_RIGHT                   30516
-#define IDS_NEWEXT_NEW                              30518
-#define IDS_NEWEXT_SPECIFY_EXT                      30519
-#define IDS_NEWEXT_ALREADY_ASSOC                    30520
-#define IDS_NEWEXT_EXT_IN_USE                       30521
+#define IDS_STARTPANELCFG_MYCOMPUTER                30480
+#define IDS_STARTPANELCFG_NETHOOD                   30481
+#define IDS_STARTPANELCFG_CONNECTIONSFOLDER         30482
+#define IDS_STARTPANELCFG_RUN                       30483
+#define IDS_STARTPANELCFG_HELP                      30489
+#define IDS_STARTPANELCFG_DONTDISPLAYITEM           30492
+#define IDS_STARTPANELCFG_PRINTERS                  30493
+#define IDS_STARTPANELCFG_ADMINTOOLS                30515
+
+#define IDS_SEARCH_RESULTS                          30520 // FIXME: Move browseui IDS_SEARCH_RESULTS to shell32
+#define IDS_SEARCH_RESULTS_COMPUTERS                30521
+
+#define IDS_NEWEXT_SPECIFY_EXT                      10086
+#define IDS_NEWEXT_ALREADY_ASSOC                    10100
+#define IDS_NEWEXT_EXT_IN_USE                       10101
+#define IDS_NEWEXT_NEW                              10105
+#define IDS_NEWEXT_ADVANCED_LEFT                    10109
+#define IDS_NEWEXT_ADVANCED_RIGHT                   10110
 
 #define IDS_SPECIFY_ACTION                          30523
 #define IDS_INVALID_PROGRAM                         30524
@@ -347,7 +362,7 @@
 #define IDS_REMOVE_EXT                              30522
 
 #define IDS_NO_ICONS                                30529
-#define IDS_FILE_NOT_FOUND                          30530
+#define IDS_FILE_NOT_FOUND                          30530 // FIXME: "Animations in taskbar"
 #define IDS_LINK_INVALID                            30531
 #define IDS_COPYTOMENU                              30532
 #define IDS_COPYTOTITLE                             30533
@@ -356,9 +371,11 @@
 #define IDS_MOVETOMENU                              30536
 #define IDS_MOVETOTITLE                             30537
 #define IDS_MOVEITEMS                               30538
-#define IDS_MOVEBUTTON                              30539
+#define IDS_MOVEBUTTON                              30539 // FIXME: "Slide open combo boxes"
 
-#define IDS_SYSTEMFOLDER                            30540
+#define IDS_SYSTEMFOLDER                            30540 // FIXME: "Show translucent selection rectangle"
+#define IDS_DESKTOPLABELDROPSHADOW                  30541
+#define IDS_FOLDERTYPEBACKGROUNDIMAGE               30543
 
 #define IDS_LOG_OFF_DESC                            35000
 #define IDS_SWITCH_USER_DESC                        35001
