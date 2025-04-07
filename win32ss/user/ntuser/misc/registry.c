@@ -425,7 +425,7 @@ RegEnumValueW(
         if (Name)
         {
             /* Check if the name fits */
-            if (ValueInfo->NameLength < (*NameLength * sizeof(WCHAR)))
+            if ((ValueInfo->NameLength + sizeof(WCHAR)) <= (*NameLength * sizeof(WCHAR)))
             {
                 /* Copy it */
                 RtlMoveMemory(Name, ValueInfo->Name, ValueInfo->NameLength);
