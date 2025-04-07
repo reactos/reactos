@@ -2366,7 +2366,7 @@ IntDeleteRegFontEntry(_In_ LPCWSTR pszFileName, _In_ DWORD dwFlags)
         if (!NT_SUCCESS(Status) || _wcsicmp(szValue, pFileName) != 0)
             continue;
 
-        Status = RegDeleteValueW(hKey, szValue);
+        Status = RegDeleteValueW(hKey, szName);
         if (!NT_SUCCESS(Status))
             ret = FALSE;
     }
