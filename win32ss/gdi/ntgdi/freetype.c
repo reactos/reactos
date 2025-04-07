@@ -2327,26 +2327,27 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
+/* Delete registry font entry */
 static BOOL
-IntDeleteRegFontEntry(_In_ LPCWSTR pszFileName, _In_ DWORD dwFlags)
+IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
 {
     NTSTATUS Status;
     HKEY hKey;
-    LPCWSTR pFileName = pszFileName;
     WCHAR szName[MAX_PATH], szValue[MAX_PATH];
+    PCWSTR pszFileTitle = pszFileName;
     ULONG dwIndex, NameLength, ValueSize;
     BOOL ret = TRUE;
 
     if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
     {
-        pFileName = wcsrchr(pszFileName, L'\\');
-        if (pFileName)
-            ++pFileName;
+        pszFileTitle = wcsrchr(pszFileName, L'\\');
+        if (pszFileTitle)
+            ++pszFileTitle;
         else
-            pFileName = pszFileName;
+            pszFileTitle = pszFileName;
     }
 
-    if (!pFileName)
+    if (!pszFileTitle)
         return FALSE;
 
     Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
@@ -2357,15 +2358,18 @@ IntDeleteRegFontEntry(_In_ LPCWSTR pszFileName, _In_ DWORD dwFlags)
     {
         NameLength = RTL_NUMBER_OF(szName);
         ValueSize = sizeof(szValue);
-
         Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, NULL, szValue, &ValueSize);
+        if (!NT_SUCCESS(Status))
+            break;
 
+        /* Avoid buffer overrun */
         szName[RTL_NUMBER_OF(szName) - 1] = UNICODE_NULL;
         szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL;
 
-        if (!NT_SUCCESS(Status) || _wcsicmp(szValue, pFileName) != 0)
+        if (_wcsicmp(szValue, pszFileTitle) != 0)
             continue;
 
+        /* Delete the found value */
         Status = RegDeleteValueW(hKey, szName);
         if (!NT_SUCCESS(Status))
             ret = FALSE;
@@ -2385,7 +2389,7 @@ IntGdiRemoveFontResourceSingle(
     PLIST_ENTRY CurrentEntry, NextEntry;
     PFONT_ENTRY FontEntry;
     PFONTGDI FontGDI;
-    LPWSTR pszBuffer;
+    PWSTR pszBuffer;
     SIZE_T Length;
     NTSTATUS Status;
 
