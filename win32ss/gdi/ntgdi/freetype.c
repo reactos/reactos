@@ -2351,8 +2351,7 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
     NTSTATUS Status;
     HKEY hKey;
     WCHAR szName[MAX_PATH], szValue[MAX_PATH];
-    ULONG dwIndex, NameLength, ValueSize;
-    BOOL ret = TRUE;
+    ULONG dwIndex, NameLength, ValueSize, dwType;
 
     Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
     if (!NT_SUCCESS(Status))
@@ -2362,11 +2361,11 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
     {
         NameLength = RTL_NUMBER_OF(szName);
         ValueSize = sizeof(szValue);
-        Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, NULL, szValue, &ValueSize);
+        Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, &dwType, szValue, &ValueSize);
         if (!NT_SUCCESS(Status))
             break;
 
-        if (_wcsicmp(szValue, pszFileName) != 0) /* Skip if the filename was not equal */
+        if (dwType != REG_SZ || _wcsicmp(szValue, pszFileName) != 0)
             continue;
 
         /* Delete the found value */
