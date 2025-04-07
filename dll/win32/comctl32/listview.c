@@ -8556,8 +8556,13 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
 	if (infoPtr->himlSmall && (nColumn == 0 || (LISTVIEW_GetColumnInfo(infoPtr, nColumn)->fmt & LVCFMT_IMAGE)))
 	    max_cx += infoPtr->iconSize.cx;
 	max_cx += TRAILING_LABEL_PADDING;
+#ifdef __REACTOS__
+        if (nColumn == 0 && infoPtr->himlState)
+            max_cx += infoPtr->iconStateSize.cx;
+#else
         if (nColumn == 0 && (infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES))
             max_cx += GetSystemMetrics(SM_CXSMICON);
+#endif
     }
 
     /* autosize based on listview items width */
