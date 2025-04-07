@@ -2086,7 +2086,6 @@ NameFromCharSet(BYTE CharSet)
     }
 }
 
-static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
 static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
 /* Adds the font resource from the specified file to the system */
@@ -2110,6 +2109,7 @@ IntGdiAddFontResourceSingle(
     UNICODE_STRING PathName;
     LPWSTR pszBuffer;
     PFILE_OBJECT FileObject;
+    static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
 
     /* Build PathName */
     if (dwFlags & AFRX_DOS_DEVICE_PATH)
@@ -2327,6 +2327,23 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
+/* Borrrowed from shlwapi */
+static LPWSTR
+PathFindFileNameW(PCWSTR lpszPath)
+{
+    PCWSTR lastSlash = lpszPath;
+    while (lpszPath && *lpszPath)
+    {
+        if ((*lpszPath == '\\' || *lpszPath == '/' || *lpszPath == ':') &&
+            lpszPath[1] && lpszPath[1] != '\\' && lpszPath[1] != '/')
+        {
+            lastSlash = lpszPath + 1;
+        }
+        lpszPath++;
+    }
+    return (LPWSTR)lastSlash;
+}
+
 /* Delete registry font entry */
 static BOOL
 IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
@@ -2334,21 +2351,8 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
     NTSTATUS Status;
     HKEY hKey;
     WCHAR szName[MAX_PATH], szValue[MAX_PATH];
-    PCWSTR pszFileTitle = pszFileName;
     ULONG dwIndex, NameLength, ValueSize;
     BOOL ret = TRUE;
-
-    if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
-    {
-        pszFileTitle = wcsrchr(pszFileName, L'\\');
-        if (pszFileTitle)
-            ++pszFileTitle;
-        else
-            pszFileTitle = pszFileName;
-    }
-
-    if (!pszFileTitle)
-        return FALSE;
 
     Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
     if (!NT_SUCCESS(Status))
@@ -2366,7 +2370,7 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
         szName[RTL_NUMBER_OF(szName) - 1] = UNICODE_NULL;
         szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL;
 
-        if (_wcsicmp(szValue, pszFileTitle) != 0)
+        if (_wcsicmp(szValue, pszFileName) != 0) /* Skip if the filename was not equal */
             continue;
 
         /* Delete the found value */
@@ -2389,7 +2393,7 @@ IntGdiRemoveFontResourceSingle(
     PLIST_ENTRY CurrentEntry, NextEntry;
     PFONT_ENTRY FontEntry;
     PFONTGDI FontGDI;
-    PWSTR pszBuffer;
+    PWSTR pszBuffer, pszFileTitle;
     SIZE_T Length;
     NTSTATUS Status;
 
@@ -2399,7 +2403,7 @@ IntGdiRemoveFontResourceSingle(
         Length = DosPathPrefix.Length + FileName->Length + sizeof(UNICODE_NULL);
         pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
         if (!pszBuffer)
-            return FALSE; /* failure */
+            return FALSE; /* Failure */
 
         RtlInitEmptyUnicodeString(&PathName, pszBuffer, Length);
         RtlAppendUnicodeStringToString(&PathName, &DosPathPrefix);
@@ -2409,7 +2413,17 @@ IntGdiRemoveFontResourceSingle(
     {
         Status = DuplicateUnicodeString(FileName, &PathName);
         if (!NT_SUCCESS(Status))
-            return FALSE; /* failure */
+            return FALSE; /* Failure */
+    }
+
+    pszFileTitle = PathName.Buffer;
+    if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
+        pszFileTitle = PathFindFileNameW(PathName.Buffer);
+
+    if (!pszFileTitle || !*pszFileTitle)
+    {
+        RtlFreeUnicodeString(&PathName);
+        return FALSE; /* Failure */
     }
 
     /* Delete font entries that matches PathName */
@@ -2422,11 +2436,11 @@ IntGdiRemoveFontResourceSingle(
         NextEntry = CurrentEntry->Flink;
 
         FontGDI = FontEntry->Font;
-        if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, PathName.Buffer) == 0)
+        if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
         {
             CleanupFontEntry(FontEntry);
             if (dwFlags & AFRX_WRITE_REGISTRY)
-                IntDeleteRegFontEntry(PathName.Buffer, dwFlags);
+                IntDeleteRegFontEntry(pszFileTitle, dwFlags);
             ret = TRUE;
         }
     }
