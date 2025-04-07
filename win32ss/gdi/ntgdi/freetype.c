@@ -2358,6 +2358,7 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
     if (!NT_SUCCESS(Status))
         return FALSE;
 
+Retry:
     for (dwIndex = 0; NT_SUCCESS(Status); ++dwIndex)
     {
         NameLength = RTL_NUMBER_OF(szName);
@@ -2375,8 +2376,10 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
 
         /* Delete the found value */
         Status = RegDeleteValueW(hKey, szName);
-        if (!NT_SUCCESS(Status))
-            ret = FALSE;
+        if (NT_SUCCESS(Status))
+            goto Retry;
+
+        ret = FALSE;
     }
 
     ZwClose(hKey);
@@ -2428,7 +2431,6 @@ IntGdiRemoveFontResourceSingle(
 
     /* Delete font entries that matches PathName */
     IntLockFreeType();
-Retry:
     for (CurrentEntry = g_FontListHead.Flink;
          CurrentEntry != &g_FontListHead;
          CurrentEntry = NextEntry)
@@ -2437,6 +2439,7 @@ Retry:
         NextEntry = CurrentEntry->Flink;
 
         FontGDI = FontEntry->Font;
+        ASSERT(FontGDI);
         if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
         {
             RemoveEntryList(&FontEntry->ListEntry);
@@ -2444,7 +2447,6 @@ Retry:
             if (dwFlags & AFRX_WRITE_REGISTRY)
                 IntDeleteRegFontEntry(pszFileTitle, dwFlags);
             ret = TRUE;
-            goto Retry;
         }
     }
     IntUnLockFreeType();
