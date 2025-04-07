@@ -2328,14 +2328,14 @@ IntGdiAddFontResourceEx(
 }
 
 /* Borrowed from shlwapi */
-static LPWSTR
+static PWSTR
 PathFindFileNameW(PCWSTR lpszPath)
 {
     PCWSTR lastSlash = lpszPath;
-    while (lpszPath && *lpszPath)
+    while (*lpszPath)
     {
-        if ((*lpszPath == '\\' || *lpszPath == '/' || *lpszPath == ':') &&
-            lpszPath[1] && lpszPath[1] != '\\' && lpszPath[1] != '/')
+        if ((*lpszPath == L'\\' || *lpszPath == L'/' || *lpszPath == L':') &&
+            lpszPath[1] && lpszPath[1] != '\\' && lpszPath[1] != L'/')
         {
             lastSlash = lpszPath + 1;
         }
@@ -2439,6 +2439,7 @@ Retry:
         FontGDI = FontEntry->Font;
         if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
         {
+            RemoveEntryList(&FontEntry->ListEntry);
             CleanupFontEntry(FontEntry);
             if (dwFlags & AFRX_WRITE_REGISTRY)
                 IntDeleteRegFontEntry(pszFileTitle, dwFlags);
