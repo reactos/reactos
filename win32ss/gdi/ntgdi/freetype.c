@@ -2428,7 +2428,8 @@ IntGdiRemoveFontResourceSingle(
     }
     IntUnLockFreeType();
 
-    ExFreePoolWithTag(pszBuffer, TAG_USTR);
+    if (pszBuffer)
+        ExFreePoolWithTag(pszBuffer, TAG_USTR);
     return ret;
 }
 
