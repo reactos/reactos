@@ -221,7 +221,6 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
             {
                 /* Line input is in progress; end it */
                 Console->LinePos = Console->LineSize = 0;
-                Console->LineComplete = FALSE;
             }
             return STATUS_SUCCESS; // STATUS_CONTROL_C_EXIT;
         }
