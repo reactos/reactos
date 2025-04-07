@@ -2348,7 +2348,7 @@ PathFindFileNameW(PCWSTR lpszPath)
 static BOOL
 IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     HKEY hKey;
     WCHAR szName[MAX_PATH], szValue[MAX_PATH];
     ULONG dwIndex, NameLength, ValueSize;
