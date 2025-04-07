@@ -4,7 +4,7 @@
 :: PURPOSE:     Allows easy remastering of customized ReactOS ISO images.
 ::              Based on the MKISOFS.EXE utility and the boot/boot_images.cmake
 ::              script in the ReactOS source tree.
-:: COPYRIGHT:   Copyright 2023 Hermès Bélusca-Maïto
+:: COPYRIGHT:   Copyright 2023-2025 Hermès Bélusca-Maïto
 ::
 
 @echo off
@@ -43,19 +43,13 @@ echo.
 
 :: Verify that we have access to a temporary directory.
 :: See https://stackoverflow.com/a/21041546 for more details.
-if not defined TEMP goto :TEMP1
-if not exist "%TEMP%\" goto :TEMP1
-goto :TEMP0
-:TEMP1
-    if not defined TMP goto :TEMP2
-    if not exist "%TMP%\" goto :TEMP2
-    goto :TEMP10
-    :TEMP2
+if defined TEMP ( if exist "%TEMP%\" goto :TEMP0 )
+    if defined TMP ( if exist "%TMP%\" goto :TEMP1 )
         echo No temporary directory exists on your system.
         echo Please create one and assign it to the TEMP environment variable.
         echo.
         goto :EOC
-    :TEMP10
+    :TEMP1
     set "TEMP=%TMP%"
 :TEMP0
 
@@ -91,7 +85,7 @@ set isobtrt_file=loader/isobtrt.bin
 set efisys_file=loader/efisys.bin
 
 set ISOBOOT_PATH=%isoboot_file%
-CHOICE /c 12 /n /m "Please chose the ISO boot file: 1) isoboot.bin ; 2) isobtrt.bin!\n![default: 1]: "
+CHOICE /c 12 /n /m "Please choose the ISO boot file: 1) isoboot.bin ; 2) isobtrt.bin!\n![default: 1]: "
 echo.
 if errorlevel 2 set ISOBOOT_PATH=%isobtrt_file%
 if errorlevel 1 set ISOBOOT_PATH=%isoboot_file%
@@ -153,10 +147,10 @@ echo.
 :: Check whether ISOHYBRID is also available and if so, propose to post-process
 :: the generated ISO image to allow hybrid booting as a CD-ROM or as a hard disk.
 set TOOL_PATH=
-for /f "delims=" %%f in ('WHERE "%TOOL_DIR%":%ISOHYBRID% 2^>NUL') do (set "TOOL_PATH=%%f" & goto :isohybrid_found)
+for /f "delims=" %%f in ('WHERE "%TOOL_DIR%":%ISOHYBRID% 2^>NUL') do (
+    set "TOOL_PATH=%%f" & goto :isohybrid_found)
 if not defined TOOL_PATH (
     for /f "delims=" %%f in ('WHERE %ISOHYBRID% 2^>NUL') do (
-        set "TOOL_DIR=%%~dpf" & if "!TOOL_DIR:~-1!"=="\" set "TOOL_DIR=!TOOL_DIR:~0,-1!"
         set "TOOL_PATH=%%f"
         goto :isohybrid_found
     )
