@@ -2327,7 +2327,7 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
-/* Borrrowed from shlwapi */
+/* Borrowed from shlwapi */
 static LPWSTR
 PathFindFileNameW(PCWSTR lpszPath)
 {
