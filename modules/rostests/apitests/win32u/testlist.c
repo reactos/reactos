@@ -48,6 +48,7 @@ extern void func_NtGdiTransformPoints(void);
 //extern void func_NtUserCallHwndParamLock(void);
 //extern void func_NtUserCallNoParam(void);
 //extern void func_NtUserCallOneParam(void);
+extern void func_NtUserConvertMemHandle(void);
 extern void func_NtUserCountClipboardFormats(void);
 extern void func_NtUserCreateAcceleratorTable(void);
 extern void func_NtUserCreateWindowEx(void);
@@ -121,6 +122,7 @@ const struct test winetest_testlist[] =
     //{ "NtUserCallHwndParamLock", func_NtUserCallHwndParamLock },
     //{ "NtUserCallNoParam", func_NtUserCallNoParam },
     //{ "NtUserCallOneParam", func_NtUserCallOneParam },
+    { "NtUserConvertMemHandle", func_NtUserConvertMemHandle },
     { "NtUserCountClipboardFormats", func_NtUserCountClipboardFormats },
     { "NtUserCreateAcceleratorTable", func_NtUserCreateAcceleratorTable },
     { "NtUserCreateWindowEx", func_NtUserCreateWindowEx },
