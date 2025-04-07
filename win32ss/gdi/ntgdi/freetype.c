@@ -2345,7 +2345,7 @@ PathFindFileNameW(PCWSTR lpszPath)
 }
 
 /* Delete registry font entry */
-static BOOL
+static VOID
 IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -2356,9 +2356,8 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
 
     Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
     if (!NT_SUCCESS(Status))
-        return FALSE;
+        return;
 
-Retry:
     for (dwIndex = 0; NT_SUCCESS(Status); ++dwIndex)
     {
         NameLength = RTL_NUMBER_OF(szName);
@@ -2377,13 +2376,10 @@ Retry:
         /* Delete the found value */
         Status = RegDeleteValueW(hKey, szName);
         if (NT_SUCCESS(Status))
-            goto Retry;
-
-        ret = FALSE;
+            --dwIndex;
     }
 
     ZwClose(hKey);
-    return ret;
 }
 
 static BOOL FASTCALL
