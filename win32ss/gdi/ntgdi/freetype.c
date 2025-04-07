@@ -2366,10 +2366,6 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
         if (!NT_SUCCESS(Status))
             break;
 
-        /* Avoid buffer overrun */
-        szName[RTL_NUMBER_OF(szName) - 1] = UNICODE_NULL;
-        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL;
-
         if (_wcsicmp(szValue, pszFileName) != 0) /* Skip if the filename was not equal */
             continue;
 
