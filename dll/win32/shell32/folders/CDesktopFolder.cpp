@@ -29,9 +29,9 @@ extern BOOL SHELL32_IsShellFolderNamespaceItemHidden(LPCWSTR SubKey, REFCLSID Cl
 
 static const REQUIREDREGITEM g_RequiredItems[] =
 {
-    { CLSID_MyComputer, "sysdm.cpl", 0x50 },
-    { CLSID_NetworkPlaces, "ncpa.cpl", 0x58 },
-    { CLSID_Internet, "inetcpl.cpl", 0x68 },
+    { CLSID_MyComputer, "sysdm.cpl", REGITEMORDER_MYCOMPUTER },
+    { CLSID_NetworkPlaces, "ncpa.cpl", REGITEMORDER_NETHOOD },
+    { CLSID_Internet, "inetcpl.cpl", REGITEMORDER_INTERNET },
 };
 static const REGFOLDERINFO g_RegFolderInfo =
 {

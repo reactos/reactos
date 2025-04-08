@@ -25,41 +25,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-#define DEFAULTSORTORDERINDEX 0x80 // The default for registry items according to Geoff Chappell
-
 static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, HWND hwnd, UINT cidl,
                                                   PCUITEMID_CHILD_ARRAY apidl, IShellFolder *psf, IContextMenu **ppcm);
-
-static inline UINT GetRegItemCLSIDOffset(PIDLTYPE type)
-{
-    return type == PT_CONTROLS_NEWREGITEM ? 14 : 4;
-}
-
-static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, BYTE order = 0)
-{
-#if 1 // FIXME: CControlPanelFolder is not ready for this yet
-    if (type == PT_CONTROLS_NEWREGITEM)
-        type = PT_CONTROLS_OLDREGITEM;
-#endif
-    const UINT offset = GetRegItemCLSIDOffset(type);
-    const UINT cb = offset + sizeof(CLSID), cbTotal = cb + sizeof(WORD);
-    LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbTotal);
-    if (pidl)
-    {
-        ZeroMemory(pidl, cbTotal); // Note: This also initializes the terminator WORD
-        pidl->mkid.cb = cb;
-        pidl->mkid.abID[0] = type;
-        pidl->mkid.abID[1] = order;
-        *(CLSID*)(SIZE_T(pidl) + offset) = clsid;
-    }
-    return pidl;
-}
-
-static LPITEMIDLIST CreateRegItem(PIDLTYPE type, LPCWSTR clsidstr)
-{
-    CLSID clsid;
-    return SUCCEEDED(CLSIDFromString(clsidstr, &clsid)) ? CreateRegItem(type, clsid) : NULL;
-}
 
 HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
 {
@@ -84,6 +51,45 @@ static DWORD SHELL_QueryCLSIDValue(_In_ REFCLSID clsid, _In_opt_ LPCWSTR SubKey,
 static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
 {
     return SHELL_QueryCLSIDValue(clsid, L"ShellFolder", Value, NULL, NULL) == ERROR_SUCCESS;
+}
+
+static inline UINT GetRegItemCLSIDOffset(PIDLTYPE type)
+{
+    return type == PT_CONTROLS_NEWREGITEM ? 14 : 4;
+}
+
+static BYTE GetRegItemOrder(REFCLSID clsid)
+{
+    DWORD dwOrder, cb = sizeof(dwOrder);
+    if (SHELL_QueryCLSIDValue(clsid, NULL, L"SortOrderIndex", &dwOrder, &cb) || cb != sizeof(dwOrder))
+        dwOrder = REGITEMORDER_DEFAULT;
+    return (BYTE)dwOrder;
+}
+
+static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, int order = -1)
+{
+#if 1 // FIXME: CControlPanelFolder is not ready for this yet
+    if (type == PT_CONTROLS_NEWREGITEM)
+        type = PT_CONTROLS_OLDREGITEM;
+#endif
+    const UINT offset = GetRegItemCLSIDOffset(type);
+    const UINT cb = offset + sizeof(CLSID), cbTotal = cb + sizeof(WORD);
+    LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbTotal);
+    if (pidl)
+    {
+        ZeroMemory(pidl, cbTotal); // Note: This also initializes the terminator WORD
+        pidl->mkid.cb = cb;
+        pidl->mkid.abID[0] = type;
+        pidl->mkid.abID[1] = order >= 0 ? (BYTE)order : GetRegItemOrder(clsid);
+        *(CLSID*)(SIZE_T(pidl) + offset) = clsid;
+    }
+    return pidl;
+}
+
+static LPITEMIDLIST CreateRegItem(PIDLTYPE type, LPCWSTR clsidstr)
+{
+    CLSID clsid;
+    return SUCCEEDED(CLSIDFromString(clsidstr, &clsid)) ? CreateRegItem(type, clsid) : NULL;
 }
 
 struct CRegFolderInfo
@@ -116,6 +122,12 @@ struct CRegFolderInfo
     {
         const REQUIREDREGITEM &item = GetAt(i);
         return CreateRegItem(GetPidlType(), item.clsid, item.Order);
+    }
+
+    WORD GetRegItemOrder(LPCITEMIDLIST pidl) const
+    {
+        const CLSID *pCLSID = IsRegItem(pidl);
+        return pCLSID ? ::GetRegItemOrder(*pCLSID) : 0xffff;
     }
 
     LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
@@ -314,6 +326,7 @@ class CRegFolder :
         IShellFolder *m_pOuterFolder; // Not ref-counted
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
+        HRESULT CompareRegItemsSortOrder(PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
         HRESULT GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
         BOOL _IsInNameSpace(_In_ LPCITEMIDLIST pidl);
 
@@ -514,6 +527,16 @@ HRESULT WINAPI CRegFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserv
     return E_NOTIMPL;
 }
 
+HRESULT CRegFolder::CompareRegItemsSortOrder(PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
+{
+    int Order1 = pidl1->mkid.abID[1] > 0x40 ? pidl1->mkid.abID[1] : GetRegItemOrder(pidl1);
+    int Order2 = pidl2->mkid.abID[1] > 0x40 ? pidl2->mkid.abID[1] : GetRegItemOrder(pidl2);
+    int Cmp = Order1 - Order2;
+    if (Cmp != 0)
+        return MAKE_COMPARE_HRESULT(Cmp);
+    return SHELL32_CompareDetails(this, COL_NAME, pidl1, pidl2);
+}
+
 HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     if (!pidl1 || !pidl2 || pidl1->mkid.cb == 0 || pidl2->mkid.cb == 0)
@@ -532,6 +555,12 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
     }
     else if (clsid1 && clsid2)
     {
+        if ((lParam & ~SHCIDS_ALLFIELDS) == COL_NAME) // (== Name) && !(& SHCIDS_CANONICALONLY)
+        {
+            HRESULT hrCmpOrder = CompareRegItemsSortOrder(pidl1, pidl2);
+            if (hrCmpOrder && SUCCEEDED(hrCmpOrder))
+                return hrCmpOrder;
+        }
         if (memcmp(clsid1, clsid2, sizeof(GUID)) == 0)
             return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
 

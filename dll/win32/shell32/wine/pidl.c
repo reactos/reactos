@@ -1763,19 +1763,19 @@ LPITEMIDLIST _ILCreateDesktop(void)
 LPITEMIDLIST _ILCreateMyComputer(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_MyComputer);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_MyComputer, REGITEMORDER_MYCOMPUTER);
 }
 
 LPITEMIDLIST _ILCreateMyDocuments(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_MyDocuments);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_MyDocuments, REGITEMORDER_MYDOCS_DEFAULT);
 }
 
 LPITEMIDLIST _ILCreateIExplore(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_Internet);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_Internet, REGITEMORDER_INTERNET);
 }
 
 LPITEMIDLIST _ILCreateControlPanel(void)
@@ -1785,7 +1785,7 @@ LPITEMIDLIST _ILCreateControlPanel(void)
     TRACE("()\n");
     if (parent)
     {
-        LPITEMIDLIST cpl = _ILCreateGuid(PT_COMPUTER_REGITEM, &CLSID_ControlPanel);
+        LPITEMIDLIST cpl = _ILCreateGuid(PT_COMPUTER_REGITEM, &CLSID_ControlPanel, REGITEMORDER_MYCOMPUTER_CONTROLS);
         if (cpl)
         {
             ret = ILCombine(parent, cpl);
@@ -1826,22 +1826,22 @@ LPITEMIDLIST _ILCreatePrinters(void)
 LPITEMIDLIST _ILCreateNetwork(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_NetworkPlaces);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_NetworkPlaces, REGITEMORDER_NETHOOD);
 }
 
 LPITEMIDLIST _ILCreateBitBucket(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_RecycleBin);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_RecycleBin, REGITEMORDER_RECYCLEBIN);
 }
 
 LPITEMIDLIST _ILCreateAdminTools(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_GUID, &CLSID_AdminFolderShortcut); //FIXME
+    return _ILCreateGuid(PT_GUID, &CLSID_AdminFolderShortcut, REGITEMORDER_DEFAULT); //FIXME
 }
 
-LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
+LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid, BYTE SortOrder)
 {
     LPITEMIDLIST pidlOut;
 
@@ -1851,7 +1851,7 @@ LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
         if (pidlOut)
         {
             LPPIDLDATA pData = _ILGetDataPointer(pidlOut);
-
+            pidlOut->mkid.abID[1] = SortOrder;
             pData->u.guid.guid = *guid;
             TRACE("-- create GUID-pidl %s\n",
                   debugstr_guid(&(pData->u.guid.guid)));
