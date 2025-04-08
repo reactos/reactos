@@ -32,6 +32,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+EXTERN_C LSTATUS WINAPI RegGetValueW(HKEY, LPCWSTR, LPCWSTR, DWORD, LPDWORD, PVOID, LPDWORD);
+
 static inline WORD 
 GetVersionMajorMinor()
 {
@@ -204,44 +206,87 @@ IContextMenu_Invoke(
 }
 
 /*************************************************************************
+ * ShellExecuteCommand [INTERNAL]
+ */
+static HRESULT
+ShellExecuteCommand(_In_opt_ HWND hWnd, _In_ PCWSTR Command, _In_opt_ UINT Flags)
+{
+    WCHAR szCmd[MAX_PATH * 2];
+    int len = PathProcessCommand(Command, szCmd, _countof(szCmd), PPCF_ADDARGUMENTS | PPCF_FORCEQUALIFY);
+    if (len <= 0) // Could not resolve the command, just use the input
+    {
+        HRESULT hr = StringCchCopyW(szCmd, _countof(szCmd), Command);
+        if (FAILED(hr))
+            return hr;
+    }
+    PWSTR pszArgs = PathGetArgsW(szCmd);
+    if (*pszArgs)
+        pszArgs[-1] = UNICODE_NULL; // Split szCmd program and arguments
+    PathUnquoteSpacesW(szCmd);
+
+    SHELLEXECUTEINFOW sei = { sizeof(sei), Flags, hWnd, NULL, szCmd, pszArgs };
+    sei.nShow = SW_SHOW;
+    UINT error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
+    return HRESULT_FROM_WIN32(error);
+}
+
+/*************************************************************************
  * RunRegCommand [SHLWAPI.469]
  */
-#if 0 // TODO: Implement this function
 EXTERN_C HRESULT WINAPI
-RunRegCommand(_In_ HWND hWnd, _In_ HKEY hKey, _In_ PCWSTR pszSubKey)
+RunRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    WCHAR szCmd[MAX_PATH * 2];
+    DWORD cb = sizeof(szCmd);
+    DWORD error = RegGetValueW(hKey, pszSubKey, NULL, RRF_RT_REG_SZ, NULL, szCmd, &cb);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+    return ShellExecuteCommand(hWnd, szCmd, SEE_MASK_FLAG_LOG_USAGE);
 }
-#endif
 
 /*************************************************************************
  * RunIndirectRegCommand [SHLWAPI.468]
  */
-#if 0 // TODO: Implement this function
 EXTERN_C HRESULT WINAPI
-RunIndirectRegCommand(_In_ HWND hWnd, _In_ HKEY hKey, _In_ PCWSTR pszSubKey, _In_ PCWSTR pszVerb)
+RunIndirectRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey, _In_ PCWSTR pszVerb)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL; // TODO: return RunRegCommand(hWnd, ?, ?);
+    WCHAR szKey[MAX_PATH];
+    HRESULT hr;
+    if (pszSubKey)
+        hr = StringCchPrintfW(szKey, _countof(szKey), L"%s\\shell\\%s\\command", pszSubKey, pszVerb);
+    else
+        hr = StringCchPrintfW(szKey, _countof(szKey), L"shell\\%s\\command", pszVerb);
+    return SUCCEEDED(hr) ? RunRegCommand(hWnd, hKey, szKey) : hr;
 }
-#endif
 
 /*************************************************************************
  * SHRunIndirectRegClientCommand [SHLWAPI.467]
  */
 EXTERN_C HRESULT WINAPI
-SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ PCWSTR pszClientType)
+SHRunIndirectRegClientCommand(_In_opt_ HWND hWnd, _In_ PCWSTR pszClientType)
 {
-    // TODO: Does Vista+ also support HKCU?
-#if 0
-    WCHAR buf[MAX_PATH];
-    wsprintfW(buf, L"Software\\Clients\\%s", pszClientType);
-    return RunIndirectRegCommand(hWnd, HKEY_LOCAL_MACHINE, buf, L"open");
-#else
-    FIXME("stub\n");
-    return E_NOTIMPL;
-#endif
+    WCHAR szKey[MAX_PATH], szClient[MAX_PATH];
+    HRESULT hr = StringCchPrintfW(szKey, _countof(szKey), L"Software\\Clients\\%s", pszClientType);
+    if (FAILED(hr))
+        return hr;
+
+    // Find the default client
+    DWORD error, cb;
+    cb = sizeof(szClient);
+    error = RegGetValueW(HKEY_CURRENT_USER, szKey, NULL, RRF_RT_REG_SZ, NULL, szClient, &cb);
+    if (error)
+    {
+        cb = sizeof(szClient);
+        if (error != ERROR_MORE_DATA && error != ERROR_BUFFER_OVERFLOW)
+            error = RegGetValueW(HKEY_LOCAL_MACHINE, szKey, NULL, RRF_RT_REG_SZ, NULL, szClient, &cb);
+        if (error)
+            return HRESULT_FROM_WIN32(error);
+    }
+
+    hr = StringCchPrintfW(szKey, _countof(szKey), L"Software\\Clients\\%s\\%s", pszClientType, szClient);
+    if (SUCCEEDED(hr))
+        hr = RunIndirectRegCommand(hWnd, HKEY_LOCAL_MACHINE, szKey, L"open");
+    return hr;
 }
 
 /*************************************************************************

@@ -253,9 +253,7 @@ HRESULT ShellExecuteCommand(PCWSTR Command)
         pszArgs[-1] = UNICODE_NULL; // Split szCmd program and arguments
     PathUnquoteSpacesW(szCmd);
 
-    SHELLEXECUTEINFOW sei = { sizeof(sei) };
-    sei.lpFile = szCmd;
-    sei.lpParameters = pszArgs;
+    SHELLEXECUTEINFOW sei = { sizeof(sei), 0, NULL, NULL, szCmd, pszArgs };
     sei.nShow = SW_SHOW;
     UINT error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
     return HRESULT_FROM_WIN32(error);

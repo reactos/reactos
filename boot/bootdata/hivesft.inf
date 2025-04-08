@@ -136,7 +136,14 @@ HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%
 HKLM,"SOFTWARE\Clients\StartMenuInternet","",0x00000000,"IEXPLORE.EXE"
 HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE","",0x00000000,"Internet Explorer"
 HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\DefaultIcon","",0x00000000,"%programfiles%\Internet Explorer\iexplore.exe,-7"
-HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\shell\open\command","",0x00000000,"%programfiles%\Internet Explorer\iexplore.exe"
+HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\shell\open\command","",0x00020000,"%programfiles%\Internet Explorer\iexplore.exe"
+
+; Register (keyboard) AppKeys
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AppKey\7,Association,,"http"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AppKey\15,Association,,"mailto"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AppKey\16,Association,,".mp3"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AppKey\17,ShellExecute,,"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AppKey\18,ShellExecute,,"calc.exe"
 
 ; CTF
 HKLM,"SOFTWARE\Microsoft\CTF\SystemShared",,0x00000012

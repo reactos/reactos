@@ -1526,7 +1526,8 @@ public:
             case APPCOMMAND_VOLUME_MUTE:
             case APPCOMMAND_VOLUME_DOWN:
             case APPCOMMAND_VOLUME_UP:
-                FIXME("Call the Mixer API\n");
+                // TODO: Try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to mixer.
+                FIXME("Call the mixer API to change the global volume\n");
                 return TRUE;
             case APPCOMMAND_BROWSER_SEARCH:
                 return SHFindFiles(NULL, NULL);
