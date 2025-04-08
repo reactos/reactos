@@ -1220,9 +1220,8 @@ NtUserConvertMemHandle(
     if (!NT_SUCCESS(Status))
     {
         UserDeleteObject(hMem, TYPE_CLIPDATA);
-        SetLastNtError(Status);
-        pMemObj = NULL;
         hMem = NULL;
+        SetLastNtError(Status);
     }
 
 cleanup:
