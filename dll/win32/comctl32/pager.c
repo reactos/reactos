@@ -426,6 +426,14 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
 {
     TRACE("[%p]\n", infoPtr->hwndSelf);
 
+#ifdef __REACTOS__
+    if (!infoPtr->m_bProcessingReCalcSize)
+    {
+        infoPtr->m_bProcessingReCalcSize = TRUE;
+        PostMessageW(infoPtr->hwndSelf, EM_FMTLINES, 0, 0);
+    }
+    return DefWindowProcW(infoPtr->hwndSelf, PGM_RECALCSIZE, 0, 0);
+#else
     if (infoPtr->hwndChild)
     {
         INT scrollRange = PAGER_GetScrollRange(infoPtr, TRUE);
@@ -440,6 +448,7 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
     }
 
     return 1;
+#endif
 }
 
 static COLORREF
@@ -559,6 +568,9 @@ PAGER_Scroll(PAGER_INFO* infoPtr, INT dir)
 static LRESULT
 PAGER_FmtLines(const PAGER_INFO *infoPtr)
 {
+#ifdef __REACTOS__
+    infoPtr->m_bProcessingReCalcSize = FALSE;
+#endif
     /* initiate NCCalcSize to resize client wnd and get size */
     SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, 0, 0,
 		 SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE |
@@ -1468,9 +1480,6 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case EM_FMTLINES:
-#ifdef __REACTOS__
-	    infoPtr->m_bProcessingReCalcSize = FALSE;
-#endif
 	    return PAGER_FmtLines(infoPtr);
 
         case PGM_FORWARDMOUSE:
@@ -1494,16 +1503,7 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /*      case PGM_GETDROPTARGET: */
 
         case PGM_RECALCSIZE:
-#ifdef __REACTOS__
-            if (!infoPtr->m_bProcessingReCalcSize)
-            {
-                infoPtr->m_bProcessingReCalcSize = TRUE;
-                PostMessageW(hwnd, EM_FMTLINES, wParam, lParam);
-            }
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
-#else
             return PAGER_RecalcSize(infoPtr);
-#endif
 
         case PGM_SETBKCOLOR:
             return PAGER_SetBkColor (infoPtr, (COLORREF)lParam);
