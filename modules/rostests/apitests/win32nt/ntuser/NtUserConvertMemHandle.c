@@ -13,5 +13,5 @@ START_TEST(NtUserConvertMemHandle)
     HANDLE hMem;
  
     hMem = NtUserConvertMemHandle((PVOID)(UINT_PTR)0xDEADBEEF, 0xFFFF);
-    TEST(hMem == NULL);
+    ok_hdl(hMem, NULL);
 }
