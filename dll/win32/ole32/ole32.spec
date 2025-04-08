@@ -20,6 +20,7 @@
 @ stdcall CoCreateGuid(ptr)
 @ stdcall CoCreateInstance(ptr ptr long ptr ptr)
 @ stdcall CoCreateInstanceEx(ptr ptr long ptr long ptr)
+@ stdcall CoDecrementMTAUsage(ptr)
 # CoCreateObjectInContext
 # CoDeactivateObject
 @ stdcall CoDisableCallCancellation(ptr)
@@ -62,6 +63,7 @@
 # CoGetSystemSecurityPermissions
 @ stdcall CoGetTreatAsClass(ptr ptr)
 @ stdcall CoImpersonateClient()
+@ stdcall CoIncrementMTAUsage(ptr)
 @ stdcall CoInitialize(ptr)
 @ stdcall CoInitializeEx(ptr long)
 @ stdcall CoInitializeSecurity(ptr long ptr ptr long long ptr long ptr)
@@ -85,7 +87,7 @@
 @ stdcall CoRegisterChannelHook(ptr ptr)
 @ stdcall CoRegisterClassObject(ptr ptr long long ptr)
 @ stdcall CoRegisterInitializeSpy(ptr ptr)
-@ stdcall CoRegisterMallocSpy (ptr)
+@ stdcall CoRegisterMallocSpy(ptr)
 @ stdcall CoRegisterMessageFilter(ptr ptr)
 @ stdcall CoRegisterPSClsid(ptr ptr)
 @ stdcall CoRegisterSurrogate(ptr)
@@ -144,7 +146,7 @@
 @ stdcall GetClassFile(wstr ptr)
 @ stdcall GetConvertStg(ptr)
 @ stub GetDocumentBitStg
-@ stdcall GetErrorInfo(long ptr)
+@ stdcall GetErrorInfo(long ptr) combase.GetErrorInfo
 @ stdcall GetHGlobalFromILockBytes(ptr ptr)
 @ stdcall GetHGlobalFromStream(ptr ptr)
 @ stub GetHookInterface
@@ -153,8 +155,8 @@
 @ stdcall HACCEL_UserMarshal(ptr ptr ptr)
 @ stdcall HACCEL_UserSize(ptr long ptr)
 @ stdcall HACCEL_UserUnmarshal(ptr ptr ptr)
-@ stdcall HBITMAP_UserFree(ptr ptr)
-@ stdcall HBITMAP_UserMarshal(ptr ptr ptr)
+@ stdcall HBITMAP_UserFree(ptr ptr) 
+@ stdcall HBITMAP_UserMarshal(ptr ptr ptr) 
 @ stdcall HBITMAP_UserSize(ptr long ptr)
 @ stdcall HBITMAP_UserUnmarshal(ptr ptr ptr)
 @ stdcall HBRUSH_UserFree(ptr ptr)
@@ -162,8 +164,8 @@
 @ stdcall HBRUSH_UserSize(ptr long ptr)
 @ stdcall HBRUSH_UserUnmarshal(ptr ptr ptr)
 @ stdcall HDC_UserFree(ptr ptr)
-@ stdcall HDC_UserMarshal(ptr ptr ptr)
-@ stdcall HDC_UserSize(ptr long ptr)
+@ stdcall HDC_UserMarshal(ptr ptr ptr) 
+@ stdcall HDC_UserSize(ptr long ptr) 
 @ stdcall HDC_UserUnmarshal(ptr ptr ptr)
 @ stdcall HENHMETAFILE_UserFree(ptr ptr)
 @ stdcall HENHMETAFILE_UserMarshal(ptr ptr ptr)
@@ -175,12 +177,12 @@
 @ stdcall HGLOBAL_UserUnmarshal(ptr ptr ptr)
 @ stdcall HICON_UserFree(ptr ptr)
 @ stdcall HICON_UserMarshal(ptr ptr ptr)
-@ stdcall HICON_UserSize(ptr long ptr)
+@ stdcall HICON_UserSize(ptr long ptr) 
 @ stdcall HICON_UserUnmarshal(ptr ptr ptr)
 @ stdcall HMENU_UserFree(ptr ptr)
-@ stdcall HMENU_UserMarshal(ptr ptr ptr)
-@ stdcall HMENU_UserSize(ptr long ptr)
-@ stdcall HMENU_UserUnmarshal(ptr ptr ptr)
+@ stdcall HMENU_UserMarshal(ptr ptr ptr) 
+@ stdcall HMENU_UserSize(ptr long ptr) 
+@ stdcall HMENU_UserUnmarshal(ptr ptr ptr) 
 @ stdcall HMETAFILEPICT_UserFree(ptr ptr)
 @ stdcall HMETAFILEPICT_UserMarshal(ptr ptr ptr)
 @ stdcall HMETAFILEPICT_UserSize(ptr long ptr)
@@ -199,15 +201,16 @@
 @ stdcall HWND_UserUnmarshal(ptr ptr ptr)
 # HkOleRegisterObject
 @ stdcall IIDFromString(wstr ptr)
-@ stdcall IsAccelerator(long long ptr long)
+@ stdcall IsAccelerator(long long ptr ptr)
 @ stdcall IsEqualGUID(ptr ptr)
 @ stub IsValidIid
 @ stdcall IsValidInterface(ptr)
 @ stub IsValidPtrIn
 @ stub IsValidPtrOut
-@ stdcall MkParseDisplayName(ptr ptr ptr ptr)
+@ stdcall MkParseDisplayName(ptr wstr ptr ptr)
 @ stdcall MonikerCommonPrefixWith(ptr ptr ptr)
 @ stub MonikerRelativePathTo
+@ stdcall Ole32DllGetClassObject(ptr ptr ptr)
 @ stdcall OleBuildVersion()
 @ stdcall OleConvertIStorageToOLESTREAM(ptr ptr)
 @ stub OleConvertIStorageToOLESTREAMEx
@@ -250,9 +253,9 @@
 @ stdcall OleQueryCreateFromData(ptr)
 @ stdcall OleQueryLinkFromData(ptr)
 @ stdcall OleRegEnumFormatEtc(ptr long ptr)
-@ stdcall OleRegEnumVerbs(long ptr)
+@ stdcall OleRegEnumVerbs(ptr ptr)
 @ stdcall OleRegGetMiscStatus(ptr long ptr)
-@ stdcall OleRegGetUserType(long long ptr)
+@ stdcall OleRegGetUserType(ptr long ptr)
 @ stdcall OleRun(ptr)
 @ stdcall OleSave(ptr ptr long)
 @ stdcall OleSaveToStream(ptr ptr)
@@ -263,7 +266,7 @@
 @ stdcall OleTranslateAccelerator(ptr ptr ptr)
 @ stdcall OleUninitialize()
 @ stub OpenOrCreateStream
-@ stdcall ProgIDFromCLSID(ptr ptr)
+@ stdcall ProgIDFromCLSID(ptr ptr) combase.ProgIDFromCLSID
 @ stdcall PropStgNameToFmtId(wstr ptr)
 @ stdcall PropSysAllocString(wstr)
 @ stdcall PropSysFreeString(wstr)
@@ -287,7 +290,7 @@
 @ stdcall STGMEDIUM_UserUnmarshal(ptr ptr ptr)
 @ stdcall SetConvertStg(ptr long)
 @ stub SetDocumentBitStg
-@ stdcall SetErrorInfo(long ptr)
+@ stdcall SetErrorInfo(long ptr) combase.SetErrorInfo
 @ stdcall StgConvertPropertyToVariant(ptr long ptr ptr)
 @ stdcall StgConvertVariantToProperty(ptr long ptr ptr long long ptr)
 @ stdcall StgCreateDocfile(wstr long long ptr)
@@ -304,7 +307,7 @@
 @ stdcall StgOpenStorage(wstr ptr long ptr long ptr)
 @ stdcall StgOpenStorageEx(wstr long long long ptr ptr ptr ptr)
 # StgOpenStorageOnHandle
-@ stdcall StgOpenStorageOnILockBytes(ptr ptr long long long ptr)
+@ stdcall StgOpenStorageOnILockBytes(ptr ptr long ptr long ptr)
 # StgPropertyLengthAsVariant
 @ stdcall StgSetTimes(wstr ptr ptr ptr )
 @ stdcall StringFromCLSID(ptr ptr)
@@ -317,10 +320,11 @@
 @ stub UtGetDvtd32Info
 @ stdcall WdtpInterfacePointer_UserFree(ptr)
 @ stdcall WdtpInterfacePointer_UserMarshal(ptr long ptr ptr ptr)
-@ stdcall WdtpInterfacePointer_UserSize(ptr long ptr long ptr)
-@ stdcall WdtpInterfacePointer_UserUnmarshal(ptr ptr ptr ptr)
+@ stdcall WdtpInterfacePointer_UserSize(ptr long long ptr ptr) 
+@ stdcall WdtpInterfacePointer_UserUnmarshal(ptr ptr ptr ptr) 
 @ stdcall WriteClassStg(ptr ptr)
 @ stdcall WriteClassStm(ptr ptr)
 @ stdcall WriteFmtUserTypeStg(ptr long ptr)
 @ stub WriteOleStg
 @ stub WriteStringStream
+@ stdcall InternalIsInitialized()

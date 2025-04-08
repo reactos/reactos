@@ -290,97 +290,38 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
   return S_OK;
 }
 
-/* Classfactory definition - despite what MSDN says, some programs need this */
-
-static HRESULT WINAPI
-GITCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv)
-{
-  *ppv = NULL;
-  if (IsEqualIID(riid, &IID_IUnknown) ||
-      IsEqualIID(riid, &IID_IClassFactory))
-  {
-    *ppv = iface;
-    return S_OK;
-  }
-  return E_NOINTERFACE;
-}
-
-static ULONG WINAPI GITCF_AddRef(LPCLASSFACTORY iface)
-{
-  return 2;
-}
-
-static ULONG WINAPI GITCF_Release(LPCLASSFACTORY iface)
-{
-  return 1;
-}
-
-static HRESULT WINAPI
-GITCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
-                     REFIID riid, LPVOID *ppv)
-{
-  IGlobalInterfaceTable *git = get_std_git();
-  HRESULT hr = IGlobalInterfaceTable_QueryInterface(git, riid, ppv);
-  IGlobalInterfaceTable_Release(git);
-  return hr;
-}
-
-static HRESULT WINAPI GITCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-static const IClassFactoryVtbl GITClassFactoryVtbl = {
-    GITCF_QueryInterface,
-    GITCF_AddRef,
-    GITCF_Release,
-    GITCF_CreateInstance,
-    GITCF_LockServer
-};
-
-static IClassFactory git_classfactory = { &GITClassFactoryVtbl };
-
-HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv)
-{
-  *ppv = &git_classfactory;
-  TRACE("Returning GIT classfactory\n");
-  return S_OK;
-}
-
-/* Virtual function table */
 static const IGlobalInterfaceTableVtbl StdGlobalInterfaceTableImpl_Vtbl =
 {
-  StdGlobalInterfaceTable_QueryInterface,
-  StdGlobalInterfaceTable_AddRef,
-  StdGlobalInterfaceTable_Release,
-  StdGlobalInterfaceTable_RegisterInterfaceInGlobal,
-  StdGlobalInterfaceTable_RevokeInterfaceFromGlobal,
-  StdGlobalInterfaceTable_GetInterfaceFromGlobal
+    StdGlobalInterfaceTable_QueryInterface,
+    StdGlobalInterfaceTable_AddRef,
+    StdGlobalInterfaceTable_Release,
+    StdGlobalInterfaceTable_RegisterInterfaceInGlobal,
+    StdGlobalInterfaceTable_RevokeInterfaceFromGlobal,
+    StdGlobalInterfaceTable_GetInterfaceFromGlobal
 };
 
-IGlobalInterfaceTable* get_std_git(void)
+HRESULT WINAPI GlobalInterfaceTable_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid, void **obj)
 {
-  if (!std_git)
-  {
-    StdGlobalInterfaceTableImpl* newGIT;
+    StdGlobalInterfaceTableImpl *git;
 
-    newGIT = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGlobalInterfaceTableImpl));
-    if (!newGIT) return NULL;
-
-    newGIT->IGlobalInterfaceTable_iface.lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
-    list_init(&newGIT->list);
-    newGIT->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */
-
-    if (InterlockedCompareExchangePointer((void**)&std_git, &newGIT->IGlobalInterfaceTable_iface, NULL))
+    if (!std_git)
     {
-      HeapFree(GetProcessHeap(), 0, newGIT);
-    }
-    else
-      TRACE("Created the GIT at %p\n", newGIT);
-  }
+        git = heap_alloc(sizeof(*git));
+        if (!git) return E_OUTOFMEMORY;
 
-  return std_git;
+        git->IGlobalInterfaceTable_iface.lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
+        list_init(&git->list);
+        git->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */
+
+        if (InterlockedCompareExchangePointer((void **)&std_git, &git->IGlobalInterfaceTable_iface, NULL))
+        {
+            heap_free(git);
+        }
+        else
+            TRACE("Created the GIT %p\n", git);
+    }
+
+    return IGlobalInterfaceTable_QueryInterface(std_git, riid, obj);
 }
 
 void release_std_git(void)
