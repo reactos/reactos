@@ -494,7 +494,12 @@ FindExecutableW(
   _In_opt_ LPCWSTR lpDirectory,
   _Out_writes_(MAX_PATH) LPWSTR lpResult);
 
-UINT_PTR WINAPI SHAppBarMessage(_In_ DWORD, _Inout_ PAPPBARDATA);
+UINT_PTR
+WINAPI
+SHAppBarMessage(
+  _In_ DWORD dwMessage,
+  _Inout_ PAPPBARDATA pData);
+
 BOOL WINAPI Shell_NotifyIconA(_In_ DWORD, _In_ PNOTIFYICONDATAA);
 BOOL WINAPI Shell_NotifyIconW(_In_ DWORD, _In_ PNOTIFYICONDATAW);
 
