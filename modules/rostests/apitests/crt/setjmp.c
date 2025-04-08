@@ -191,7 +191,7 @@ START_TEST(setjmp)
 {
     ZeroMemory(&s_check_points, sizeof(s_check_points));
 
-    /* FIXME: These tests are insufficiant */
+    /* FIXME: These tests are insufficient */
     TEST_setjmp_normal();
     TEST_setjmp_return_check();
     TEST_setjmp_longjmp_integration();
