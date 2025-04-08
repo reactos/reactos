@@ -91,6 +91,8 @@ static ULONG InbvTerminalBkgdColor = 40;
 
 /* FUNCTIONS *****************************************************************/
 
+#define RT_BITMAP   MAKEINTRESOURCE(2)
+
 CODE_SEG("INIT")
 static
 PVOID
@@ -131,9 +133,10 @@ FindBitmapResource(
     if (NextEntry != ListHead)
     {
         /* Try to find the resource */
-        ResourceInfo.Type = 2; // RT_BITMAP;
+        ResourceInfo.Type = RT_BITMAP;
         ResourceInfo.Name = ResourceId;
-        ResourceInfo.Language = 0;
+        ResourceInfo.Language = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
+
         Status = LdrFindResource_U(LdrEntry->DllBase,
                                    &ResourceInfo,
                                    RESOURCE_DATA_LEVEL,
