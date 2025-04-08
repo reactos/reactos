@@ -3166,7 +3166,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GoForward()
         return hResult;
 
     hResult = travelLog->GetTravelEntry(static_cast<IDropTarget *>(this), TLOG_FORE, &unusedEntry);
-
     if (SUCCEEDED(hResult))
     {
         unusedEntry.Release();
