@@ -3136,9 +3136,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::v_CheckZoneCrossing(LPCITEMIDLIST pidl)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoBack()
 {
-    CComPtr<ITravelLog>                     travelLog;
-    CComPtr<ITravelEntry>                   unusedEntry;
-    HRESULT                                 hResult;
+    CComPtr<ITravelLog> travelLog;
+    CComPtr<ITravelEntry> unusedEntry;
+    HRESULT hResult;
 
     hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -3156,9 +3156,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GoBack()
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoForward()
 {
-    CComPtr<ITravelLog>                     travelLog;
-    CComPtr<ITravelEntry>                   unusedEntry;
-    HRESULT                                 hResult;
+    CComPtr<ITravelLog> travelLog;
+    CComPtr<ITravelEntry> unusedEntry;
+    HRESULT hResult;
 
     hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
