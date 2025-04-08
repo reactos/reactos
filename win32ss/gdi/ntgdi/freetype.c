@@ -4515,7 +4515,7 @@ ftGdiGetGlyphOutline(
     LPGLYPHMETRICS pgm,
     ULONG cjBuf,
     PVOID pvBuf,
-    LPMAT2 pmat2,
+    const MAT2 *pmat2,
     BOOL bIgnoreRotation)
 {
     PDC_ATTR pdcattr;
@@ -5036,15 +5036,16 @@ IntGetRealGlyph(
 
 BOOL
 FASTCALL
-TextIntGetTextExtentPoint(PDC dc,
-                          PTEXTOBJ TextObj,
-                          LPCWSTR String,
-                          INT Count,
-                          ULONG MaxExtent,
-                          LPINT Fit,
-                          LPINT Dx,
-                          LPSIZE Size,
-                          FLONG fl)
+TextIntGetTextExtentPoint(
+    _In_ PDC dc,
+    _In_ PTEXTOBJ TextObj,
+    _In_reads_(Count) LPCWSTR String,
+    _In_ INT Count,
+    _In_ ULONG MaxExtent,
+    _Out_ PULONG Fit,
+    _Out_writes_to_opt_(Count, *Fit) PULONG Dx,
+    _Out_ LPSIZE Size,
+    _In_ FLONG fl)
 {
     PFONTGDI FontGDI;
     FT_BitmapGlyph realglyph;
@@ -6553,10 +6554,11 @@ IntGetFontFamilyInfo(HDC Dc,
 }
 
 LONG NTAPI
-NtGdiGetFontFamilyInfo(HDC Dc,
-                       const LOGFONTW *UnsafeLogFont,
-                       PFONTFAMILYINFO UnsafeInfo,
-                       LPLONG UnsafeInfoCount)
+NtGdiGetFontFamilyInfo(
+    _In_ HDC Dc,
+    _In_ const LOGFONTW *UnsafeLogFont,
+    _Out_ PFONTFAMILYINFO UnsafeInfo,
+    _Inout_ LPLONG UnsafeInfoCount)
 {
     NTSTATUS Status;
     LOGFONTW LogFont;
@@ -6671,15 +6673,15 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
  */
 static BOOL
 IntGetTextDisposition(
-    OUT LONGLONG *pX64,
-    OUT LONGLONG *pY64,
-    IN LPCWSTR String,
-    IN INT Count,
-    IN OPTIONAL LPINT Dx,
-    IN OUT PFONT_CACHE_ENTRY Cache,
-    IN UINT fuOptions,
-    IN BOOL bNoTransform,
-    IN OUT PFONTLINK_CHAIN pChain)
+    _Out_ LONGLONG *pX64,
+    _Out_ LONGLONG *pY64,
+    _In_ LPCWSTR String,
+    _In_ INT Count,
+    _In_opt_ const INT *Dx,
+    _Inout_ PFONT_CACHE_ENTRY Cache,
+    _In_ UINT fuOptions,
+    _In_ BOOL bNoTransform,
+    _Inout_ PFONTLINK_CHAIN pChain)
 {
     LONGLONG X64 = 0, Y64 = 0;
     INT i, glyph_index;
@@ -6839,15 +6841,15 @@ IntEngFillBox(
 BOOL
 APIENTRY
 IntExtTextOutW(
-    IN PDC dc,
-    IN INT XStart,
-    IN INT YStart,
-    IN UINT fuOptions,
-    IN OPTIONAL PRECTL lprc,
-    IN LPCWSTR String,
-    IN INT Count,
-    IN OPTIONAL LPINT Dx,
-    IN DWORD dwCodePage)
+    _In_ PDC dc,
+    _In_ INT XStart,
+    _In_ INT YStart,
+    _In_ UINT fuOptions,
+    _In_opt_ PRECTL lprc,
+    _In_opt_ LPCWSTR String,
+    _In_ INT Count,
+    _In_opt_ const INT *Dx,
+    _In_ DWORD dwCodePage)
 {
     /*
      * FIXME:
@@ -7158,7 +7160,7 @@ IntExtTextOutW(
         { 
             IntUnLockFreeType();
             /* Get the width of the space character */
-            TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, 0, &spaceWidth, 0);
+            TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, NULL, &spaceWidth, 0);
             IntLockFreeType();
             glyphSize.cx = spaceWidth.cx;
             realglyph->left = 0;
@@ -7385,15 +7387,15 @@ Cleanup:
 BOOL
 APIENTRY
 GreExtTextOutW(
-    IN HDC hDC,
-    IN INT XStart,
-    IN INT YStart,
-    IN UINT fuOptions,
-    IN OPTIONAL PRECTL lprc,
-    IN LPCWSTR String,
-    IN INT Count,
-    IN OPTIONAL LPINT Dx,
-    IN DWORD dwCodePage)
+    _In_ HDC hDC,
+    _In_ INT XStart,
+    _In_ INT YStart,
+    _In_ UINT fuOptions,
+    _In_opt_ PRECTL lprc,
+    _In_opt_ LPCWSTR String,
+    _In_ INT Count,
+    _In_opt_ const INT *Dx,
+    _In_ DWORD dwCodePage)
 {
     BOOL bResult;
     DC *dc;
@@ -7427,15 +7429,15 @@ GreExtTextOutW(
 BOOL
 APIENTRY
 NtGdiExtTextOutW(
-    IN HDC hDC,
-    IN INT XStart,
-    IN INT YStart,
-    IN UINT fuOptions,
-    IN OPTIONAL LPCRECT UnsafeRect,
-    IN LPCWSTR UnsafeString,
-    IN UINT Count,
-    IN OPTIONAL const INT *UnsafeDx,
-    IN DWORD dwCodePage)
+    _In_ HDC hDC,
+    _In_ INT XStart,
+    _In_ INT YStart,
+    _In_ UINT fuOptions,
+    _In_opt_ LPCRECT UnsafeRect,
+    _In_reads_opt_(Count) LPCWSTR UnsafeString,
+    _In_range_(0, 0xFFFF) UINT Count,
+    _In_reads_opt_(_Inexpressible_(cwc)) const INT *UnsafeDx,
+    _In_ DWORD dwCodePage)
 {
     BOOL Result = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -7443,7 +7445,7 @@ NtGdiExtTextOutW(
     BYTE LocalBuffer[STACK_TEXT_BUFFER_SIZE];
     PVOID Buffer = LocalBuffer;
     LPCWSTR SafeString = NULL;
-    LPINT SafeDx = NULL;
+    PINT SafeDx = NULL;
     ULONG BufSize, StringSize, DxSize = 0;
 
     /* Check if String is valid */
@@ -7552,12 +7554,12 @@ cleanup:
 BOOL
 APIENTRY
 NtGdiGetCharABCWidthsW(
-    IN HDC hDC,
-    IN UINT FirstChar,
-    IN ULONG Count,
-    IN OPTIONAL PWCHAR UnSafepwch,
-    IN FLONG fl,
-    OUT PVOID Buffer)
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ ULONG Count,
+    _In_reads_opt_(Count) const WCHAR *UnSafepwch,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID Buffer)
 {
     LPABC SafeBuff;
     LPABCFLOAT SafeBuffF = NULL;
@@ -7755,12 +7757,12 @@ NtGdiGetCharABCWidthsW(
 BOOL
 APIENTRY
 NtGdiGetCharWidthW(
-    IN HDC hDC,
-    IN UINT FirstChar,
-    IN UINT Count,
-    IN OPTIONAL PWCHAR UnSafepwc,
-    IN FLONG fl,
-    OUT PVOID Buffer)
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) const WCHAR *UnSafepwc,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ULONG)) PVOID Buffer)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     LPINT SafeBuff;

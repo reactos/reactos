@@ -5,7 +5,7 @@
 #include <debug.h>
 
 BOOL FASTCALL IntPatBlt( PDC,INT,INT,INT,INT,DWORD,PEBRUSHOBJ);
-BOOL APIENTRY IntExtTextOutW(IN PDC,IN INT,IN INT,IN UINT,IN OPTIONAL PRECTL,IN LPCWSTR,IN INT,IN OPTIONAL LPINT,IN DWORD);
+BOOL APIENTRY IntExtTextOutW(IN PDC,IN INT,IN INT,IN UINT,IN OPTIONAL PRECTL,IN LPCWSTR,IN INT,IN OPTIONAL const INT *,IN DWORD);
 
 
 //
@@ -316,7 +316,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
                         lprc,
                         (LPCWSTR)&pgO->String[pgO->Size/sizeof(WCHAR)],
                         pgO->cbCount,
-                        pgO->Size ? (LPINT)&pgO->Buffer : NULL,
+                        pgO->Size ? (const INT *)&pgO->Buffer : NULL,
                         pgO->iCS_CP );
 
         // Restore attributes and flags
