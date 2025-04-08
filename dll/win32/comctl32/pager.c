@@ -430,6 +430,7 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
     if (!infoPtr->m_bProcessingReCalcSize)
     {
         infoPtr->m_bProcessingReCalcSize = TRUE;
+        /* NOTE: Posting a recalc message to ourselves, not actually a edit control message */
         PostMessageW(infoPtr->hwndSelf, EM_FMTLINES, 0, 0);
     }
     return DefWindowProcW(infoPtr->hwndSelf, PGM_RECALCSIZE, 0, 0);
@@ -566,7 +567,11 @@ PAGER_Scroll(PAGER_INFO* infoPtr, INT dir)
 }
 
 static LRESULT
+#ifdef __REACTOS__
+PAGER_FmtLines(PAGER_INFO *infoPtr)
+#else
 PAGER_FmtLines(const PAGER_INFO *infoPtr)
+#endif
 {
 #ifdef __REACTOS__
     infoPtr->m_bProcessingReCalcSize = FALSE;
