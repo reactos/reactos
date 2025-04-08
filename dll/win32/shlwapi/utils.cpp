@@ -220,8 +220,7 @@ ShellExecuteCommand(_In_opt_ HWND hWnd, _In_ PCWSTR Command, _In_opt_ UINT Flags
             return hr;
     }
     PWSTR pszArgs = PathGetArgsW(szCmd);
-    if (*pszArgs)
-        pszArgs[-1] = UNICODE_NULL; // Split szCmd program and arguments
+    PathRemoveArgsW(szCmd);
     PathUnquoteSpacesW(szCmd);
 
     SHELLEXECUTEINFOW sei = { sizeof(sei), Flags, hWnd, NULL, szCmd, pszArgs };
