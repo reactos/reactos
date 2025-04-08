@@ -16,9 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
+#include <wine/test.h>
+#include <stdarg.h>
 #include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "mshtmcid.h"
+#include "mshtmhst.h"
+#include "docobj.h"
+#include "hlink.h"
+#include "dispex.h"
+#include "mshtml_test.h"
+#include "objsafe.h"
+#include "htiface.h"
+#include "tlogstg.h"
 
 static INT (WINAPI *pLCIDToLocaleName)(LCID,LPWSTR,INT,DWORD);
 static LANGID (WINAPI *pGetUserDefaultUILanguage)(void);
@@ -162,6 +179,7 @@ static const IID * const doc_obj_iids[] = {
     &IID_IHTMLElement2, \
     &IID_IHTMLElement3, \
     &IID_IHTMLElement4, \
+    &IID_IHTMLUniqueName, \
     &IID_IDispatchEx
 
 static const IID * const elem_iids[] = {
@@ -1394,8 +1412,19 @@ static void test_get_set_attr(IHTMLDocument2 *doc)
     ok(V_VT(&val) == VT_BOOL, "variant type should have been VT_BOOL (0x%x), was: 0x%x\n", VT_BOOL, V_VT(&val));
     ok(V_BOOL(&val) == VARIANT_TRUE, "variant value should have been VARIANT_TRUE (0x%x), was %d\n", VARIANT_TRUE, V_BOOL(&val));
     VariantClear(&val);
-    SysFreeString(bstr);
 
+    /* overwrite the attribute with null */
+    V_VT(&val) = VT_NULL;
+    hres = IHTMLElement_setAttribute(elem, bstr, val, 0);
+    ok(hres == S_OK, "setAttribute failed: %08x\n", hres);
+
+    hres = IHTMLElement_getAttribute(elem, bstr, 2, &val);
+    ok(hres == S_OK, "getAttribute failed: %08x\n", hres);
+    ok(V_VT(&val) == VT_BSTR, "V_VT(val) = %u, expected VT_BSTR\n", V_VT(&val));
+    ok(!strcmp_wa(V_BSTR(&val), "null"), "V_BSTR(val) = %s, expected \"null\"\n", wine_dbgstr_w(V_BSTR(&val)));
+    VariantClear(&val);
+
+    SysFreeString(bstr);
     IHTMLElement_Release(elem);
 }
 
@@ -2676,6 +2705,35 @@ static void _test_elem_getelembytag(unsigned line, IUnknown *unk, elem_type_t ty
     IHTMLElementCollection_Release(col);
 }
 
+#define test_doc_getelembytag(a,b,c,d) _test_doc_getelembytag(__LINE__,a,b,c,d)
+static void _test_doc_getelembytag(unsigned line, IHTMLDocument2 *unk, const char *tag, elem_type_t type, LONG exlen)
+{
+    IHTMLDocument3 *doc = _get_doc3_iface(line, unk);
+    IHTMLElementCollection *col = NULL;
+    elem_type_t *types = NULL;
+    BSTR tmp;
+    int i;
+    HRESULT hres;
+
+    tmp = a2bstr(elem_type_infos[type].tag);
+    hres = IHTMLDocument3_getElementsByTagName(doc, tmp, &col);
+    SysFreeString(tmp);
+    ok_(__FILE__,line) (hres == S_OK, "getElementByTagName failed: %08x\n", hres);
+    ok_(__FILE__,line) (col != NULL, "col == NULL\n");
+
+    if(exlen) {
+        types = HeapAlloc(GetProcessHeap(), 0, exlen*sizeof(elem_type_t));
+        for(i=0; i<exlen; i++)
+            types[i] = type;
+    }
+
+    _test_elem_collection(line, (IUnknown*)col, types, exlen);
+
+    HeapFree(GetProcessHeap(), 0, types);
+    IHTMLElementCollection_Release(col);
+    IHTMLDocument3_Release(doc);
+}
+
 #define test_elem_innertext(e,t) _test_elem_innertext(__LINE__,e,t)
 static void _test_elem_innertext(unsigned line, IHTMLElement *elem, const char *extext)
 {
@@ -3538,6 +3596,36 @@ static void _set_elem_language(unsigned line, IHTMLElement *elem, const char *la
     SysFreeString(str);
 
     _test_elem_language(line, elem, lang);
+}
+
+#define test_elem_lang(e,i) _test_elem_lang(__LINE__,e,i)
+static void _test_elem_lang(unsigned line, IHTMLElement *elem, const char *exlang)
+{
+    BSTR lang = (void*)0xdeadbeef;
+    HRESULT hres;
+
+    hres = IHTMLElement_get_lang(elem, &lang);
+    ok_(__FILE__,line) (hres == S_OK, "get_lang failed: %08x\n", hres);
+
+    if(exlang)
+        ok_(__FILE__,line) (!strcmp_wa(lang, exlang), "unexpected lang %s\n", wine_dbgstr_w(lang));
+    else
+        ok_(__FILE__,line) (!lang, "lang=%s\n", wine_dbgstr_w(lang));
+
+    SysFreeString(lang);
+}
+
+#define set_elem_lang(e,i) _set_elem_lang(__LINE__,e,i)
+static void _set_elem_lang(unsigned line, IHTMLElement *elem, const char *lang)
+{
+    BSTR str = a2bstr(lang);
+    HRESULT hres;
+
+    hres = IHTMLElement_put_lang(elem, str);
+    ok_(__FILE__,line) (hres == S_OK, "get_lang failed: %08x\n", hres);
+    SysFreeString(str);
+
+    _test_elem_lang(line, elem, lang);
 }
 
 #define test_elem_put_id(u,i) _test_elem_put_id(__LINE__,u,i)
@@ -4716,6 +4804,20 @@ static void _put_attr_node_value(unsigned line, IHTMLDOMAttribute *attr, VARIANT
     ok_(__FILE__,line) (hres == S_OK, "put_nodeValue failed: %08x\n", hres);
 }
 
+#define put_attr_value(a,b) _put_attr_value(__LINE__,a,b)
+static void _put_attr_value(unsigned line, IHTMLDOMAttribute *attr, const char *value)
+{
+    IHTMLDOMAttribute2 *attr2 = _get_attr2_iface(line, (IUnknown*)attr);
+    BSTR str = a2bstr(value);
+    HRESULT hres;
+
+    hres = IHTMLDOMAttribute2_put_value(attr2, str);
+    ok_(__FILE__,line) (hres == S_OK, "put_nodeValue failed: %08x\n", hres);
+
+    IHTMLDOMAttribute2_Release(attr2);
+    SysFreeString(str);
+}
+
 #define get_window_doc(e) _get_window_doc(__LINE__,e)
 static IHTMLDocument2 *_get_window_doc(unsigned line, IHTMLWindow2 *window)
 {
@@ -5207,6 +5309,8 @@ static void test_insert_adjacent_elems(IHTMLDocument2 *doc, IHTMLElement *parent
     static const elem_type_t br_div_br[] = {ET_BR, ET_DIV, ET_BR};
 
     elem = test_create_elem(doc, "BR");
+    elem2 = test_elem_get_parent((IUnknown*)elem);
+    ok(!elem2, "get_parentElement returned %p\n", elem2);
     insert_adjacent_elem(parent, "BeforeEnd", elem);
     IHTMLElement_Release(elem);
 
@@ -5903,10 +6007,15 @@ static void test_navigator(IHTMLDocument2 *doc)
 
     hres = IHTMLWindow2_get_navigator(window, &navigator2);
     ok(hres == S_OK, "get_navigator failed: %08x\n", hres);
-    ok(navigator != navigator2, "navigator2 != navihgator\n");
+    ok(navigator != navigator2, "navigator2 != navigator\n");
+    IOmNavigator_Release(navigator2);
+
+    hres = IHTMLWindow2_get_clientInformation(window, &navigator2);
+    ok(hres == S_OK, "get_clientInformation failed: %08x\n", hres);
+    todo_wine ok(iface_cmp((IUnknown*)navigator, (IUnknown*)navigator2), "navigator2 != navigator\n");
+    IOmNavigator_Release(navigator2);
 
     IHTMLWindow2_Release(window);
-    IOmNavigator_Release(navigator2);
 
     hres = IOmNavigator_get_appCodeName(navigator, &bstr);
     ok(hres == S_OK, "get_appCodeName failed: %08x\n", hres);
@@ -6100,6 +6209,62 @@ static void test_default_selection(IHTMLDocument2 *doc)
     IHTMLTxtRange_Release(range);
 }
 
+static void test_unique_id(IHTMLDocument2 *doc, IHTMLElement *elem)
+{
+    IHTMLDocument3 *doc3 = get_doc3_iface(doc);
+    IHTMLUniqueName *unique_name;
+    char buf[32];
+    BSTR id, id2;
+    LONG num;
+    HRESULT hres;
+
+    static const WCHAR prefixW[] = {'m','s','_','_','i','d',0};
+
+    hres = IHTMLDocument3_get_uniqueID(doc3, &id);
+    ok(hres == S_OK, "get_uniqueID failed: %08x\n", hres);
+    ok(SysStringLen(id) >= sizeof(prefixW)/sizeof(*prefixW), "id %s too short\n", wine_dbgstr_w(id));
+
+    hres = IHTMLDocument3_get_uniqueID(doc3, &id2);
+    ok(hres == S_OK, "get_uniqueID failed: %08x\n", hres);
+    ok(SysStringLen(id2) >= sizeof(prefixW)/sizeof(*prefixW), "id %s too short\n", wine_dbgstr_w(id2));
+
+    ok(lstrcmpW(id, id2), "same unique ids %s\n", wine_dbgstr_w(id));
+
+    id[sizeof(prefixW)/sizeof(*prefixW)-1] = 0;
+    ok(!lstrcmpW(id, prefixW), "unexpected prefix %s\n", wine_dbgstr_w(id));
+    id2[sizeof(prefixW)/sizeof(*prefixW)-1] = 0;
+    ok(!lstrcmpW(id2, prefixW), "unexpected prefix %s\n", wine_dbgstr_w(id2));
+
+    SysFreeString(id);
+    SysFreeString(id2);
+
+    hres = IHTMLElement_QueryInterface(elem, &IID_IHTMLUniqueName, (void**)&unique_name);
+    ok(hres == S_OK, "Could not get IHTMLUniqueName iface: %08x\n", hres);
+
+    hres = IHTMLUniqueName_get_uniqueID(unique_name, &id);
+    ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
+    trace("id %s\n", wine_dbgstr_w(id));
+
+    hres = IHTMLUniqueName_get_uniqueID(unique_name, &id2);
+    ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
+    ok(!lstrcmpW(id, id2), "unique names differ\n");
+    trace("id %s\n", wine_dbgstr_w(id2));
+
+    hres = IHTMLUniqueName_get_uniqueNumber(unique_name, &num);
+    ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
+    ok(num, "num = 0\n");
+
+    sprintf(buf, "ms__id%u", num);
+    ok(!strcmp_wa(id, buf), "unexpected id %s\n", wine_dbgstr_w(id));
+    trace("num %d\n", num);
+
+    SysFreeString(id);
+    SysFreeString(id2);
+
+    IHTMLUniqueName_Release(unique_name);
+    IHTMLDocument3_Release(doc3);
+}
+
 static void test_doc_elem(IHTMLDocument2 *doc)
 {
     IHTMLDocument2 *doc_node, *owner_doc;
@@ -6134,6 +6299,7 @@ static void test_doc_elem(IHTMLDocument2 *doc)
     IHTMLDocument2_Release(doc_node);
 
     test_elem_client_rect((IUnknown*)elem);
+    test_unique_id(doc, elem);
 
     IHTMLElement_Release(elem);
 }
@@ -7967,6 +8133,9 @@ static void test_elems(IHTMLDocument2 *doc)
         test_input_readOnly(input, VARIANT_TRUE);
         test_input_readOnly(input, VARIANT_FALSE);
 
+        test_elem_lang(elem, NULL);
+        set_elem_lang(elem, "en-us");
+
         IHTMLInputElement_Release(input);
         IHTMLElement_Release(elem);
     }
@@ -8266,20 +8435,7 @@ static void test_elems(IHTMLDocument2 *doc)
     }
     IDispatch_Release(disp);
 
-    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument3, (void**)&doc3);
-    ok(hres == S_OK, "Could not get IHTMLDocument3 iface: %08x\n", hres);
-
-    str = a2bstr("Img");
-    hres = IHTMLDocument3_getElementsByTagName(doc3, str, &col);
-    ok(hres == S_OK, "getElementsByTagName(%s) failed: %08x\n", wine_dbgstr_w(str), hres);
-    SysFreeString(str);
-    if(hres == S_OK)
-    {
-        static const elem_type_t img_types[] = { ET_IMG };
-
-        test_elem_collection((IUnknown*)col, img_types, sizeof(img_types)/sizeof(img_types[0]));
-        IHTMLElementCollection_Release(col);
-    }
+    test_doc_getelembytag(doc, "Img", ET_IMG, 1);
 
     elem = get_doc_elem_by_id(doc, "y");
     test_elem_set_innerhtml((IUnknown*)elem, "inner html");
@@ -8295,6 +8451,9 @@ static void test_elems(IHTMLDocument2 *doc)
     IHTMLDOMNode_Release(node);
     IHTMLElement_Release(elem2);
     IHTMLElement_Release(elem);
+
+    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument3, (void**)&doc3);
+    ok(hres == S_OK, "Could not get IHTMLDocument3 iface: %08x\n", hres);
 
     hres = IHTMLDocument3_recalc(doc3, VARIANT_TRUE);
     ok(hres == S_OK, "recalc failed: %08x\n", hres);
@@ -8349,6 +8508,12 @@ static void test_attr(IHTMLElement *elem)
     ok(!strcmp_wa(V_BSTR(&v), "divid2"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
     VariantClear(&v);
 
+    put_attr_value(attr, "divid3");
+
+    get_attr_node_value(attr, &v, VT_BSTR);
+    ok(!strcmp_wa(V_BSTR(&v), "divid3"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
     IHTMLDOMAttribute_Release(attr);
 
     attr = get_elem_attr_node((IUnknown*)elem, "emptyattr", TRUE);
@@ -8383,6 +8548,11 @@ static void test_attr(IHTMLElement *elem)
 
     get_attr_node_value(attr, &v, VT_I4);
     ok(V_I4(&v) == 150, "V_I4(v) = %d\n", V_I4(&v));
+
+    put_attr_value(attr, "160");
+    get_attr_node_value(attr, &v, VT_BSTR);
+    ok(!strcmp_wa(V_BSTR(&v), "160"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
 
     IHTMLDOMAttribute_Release(attr);
 
@@ -9245,6 +9415,9 @@ static void test_docfrag(IHTMLDocument2 *doc)
     test_node_append_child((IUnknown*)frag, (IUnknown*)br);
     test_elem_source_index(br, 0);
     IHTMLElement_Release(br);
+
+    test_doc_getelembytag(frag, "a", ET_A, 0);
+    test_doc_getelembytag(frag, "Br", ET_BR, 1);
 
     div = get_elem_by_id(doc, "divid", TRUE);
     test_node_append_child((IUnknown*)div, (IUnknown*)frag);

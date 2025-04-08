@@ -16,11 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
 #pragma once
+#endif // __REACTOS__
 
 /* Check if Internet Explorer is configured to run in "Enhanced Security Configuration" (aka hardened mode) */
 /* Note: this code is duplicated in dlls/mshtml/tests/mshtml_test.h and dlls/urlmon/tests/sec_mgr.c */
-static inline BOOL is_ie_hardened(void)
+static BOOL is_ie_hardened(void)
 {
     HKEY zone_map;
     DWORD ie_harden, type, size;

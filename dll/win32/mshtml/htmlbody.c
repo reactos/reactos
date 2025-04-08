@@ -16,7 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "htmlevent.h"
+#include "htmlstyle.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
     HTMLTextContainer textcont;
@@ -855,7 +871,6 @@ static const tid_t HTMLBodyElement_iface_tids[] = {
     IHTMLBodyElement2_tid,
     HTMLELEMENT_TIDS,
     IHTMLTextContainer_tid,
-    IHTMLUniqueName_tid,
     0
 };
 
