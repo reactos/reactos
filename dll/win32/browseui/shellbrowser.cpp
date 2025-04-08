@@ -3151,7 +3151,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GoBack()
         return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_BACK);
     }
 
-    return E_ABORT;
+    return hResult;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoForward()
@@ -3171,7 +3171,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GoForward()
         return travelLog->Travel(static_cast<IDropTarget *>(this), TLOG_FORE);
     }
 
-    return E_ABORT;
+    return hResult;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GoHome()
