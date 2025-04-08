@@ -1526,7 +1526,7 @@ public:
             case APPCOMMAND_VOLUME_MUTE:
             case APPCOMMAND_VOLUME_DOWN:
             case APPCOMMAND_VOLUME_UP:
-                // FIXME: Perform these commands with the Mixer API.
+                FIXME("Call the Mixer API\n");
                 return TRUE;
             case APPCOMMAND_BROWSER_SEARCH:
                 return SHFindFiles(NULL, NULL);

@@ -206,7 +206,7 @@ IContextMenu_Invoke(
 /*************************************************************************
  * RunRegCommand [SHLWAPI.469]
  */
-#if 0
+#if 0 // TODO: Implement this function
 EXTERN_C HRESULT WINAPI
 RunRegCommand(_In_ HWND hWnd, _In_ HKEY hKey, _In_ PCWSTR pszSubKey)
 {
@@ -218,7 +218,7 @@ RunRegCommand(_In_ HWND hWnd, _In_ HKEY hKey, _In_ PCWSTR pszSubKey)
 /*************************************************************************
  * RunIndirectRegCommand [SHLWAPI.468]
  */
-#if 0
+#if 0 // TODO: Implement this function
 EXTERN_C HRESULT WINAPI
 RunIndirectRegCommand(_In_ HWND hWnd, _In_ HKEY hKey, _In_ PCWSTR pszSubKey, _In_ PCWSTR pszVerb)
 {
@@ -234,11 +234,14 @@ EXTERN_C HRESULT WINAPI
 SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ PCWSTR pszClientType)
 {
     // TODO: Does Vista+ also support HKCU?
-    // WCHAR buf[MAX_PATH];
-    // wsprintfW(buf, L"Software\\Clients\\%s", pszClientType);
-    // return RunIndirectRegCommand(hWnd, HKEY_LOCAL_MACHINE, buf, L"open");
+#if 0
+    WCHAR buf[MAX_PATH];
+    wsprintfW(buf, L"Software\\Clients\\%s", pszClientType);
+    return RunIndirectRegCommand(hWnd, HKEY_LOCAL_MACHINE, buf, L"open");
+#else
     FIXME("stub\n");
     return E_NOTIMPL;
+#endif
 }
 
 /*************************************************************************
