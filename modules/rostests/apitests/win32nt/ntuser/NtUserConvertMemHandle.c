@@ -18,4 +18,5 @@ START_TEST(NtUserConvertMemHandle)
 
     hMem = NtUserConvertMemHandle(data, sizeof(data));
     ok(hMem != NULL, "hMem is NULL\n");
+    // FIXME: Clean up hMem.
 }
