@@ -88,6 +88,9 @@ KiProcessorFreezeHandler(
     /* Restore the processor state */
     KiRestoreProcessorState(TrapFrame, ExceptionFrame);
 
+    /* Flush the TLB on this processor */
+    KxFlushEntireCurrentTb();
+
     /* We are running again now */
     CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_RUNNING;
 

@@ -233,7 +233,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     //
     // Flush the TLB
     //
-    KeFlushProcessTb();
+    KeFlushEntireTb(TRUE, TRUE);
 
     //
     // Return the reserved PTEs
@@ -280,6 +280,11 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
     // Zero PTEs
     //
     RtlZeroMemory(StartingPte, NumberOfPtes * sizeof(MMPTE));
+
+    //
+    // Flush the TLB
+    //
+    KeFlushRangeTb(StartingPte, NumberOfPtes, TRUE);
 
     //
     // Acquire the System PTE lock

@@ -522,7 +522,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     }
 
     /* Flush the TLB */
-    KeFlushCurrentTb();
+    KeFlushEntireTb(TRUE, TRUE);
 }
 
 VOID
@@ -2386,11 +2386,11 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                     MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&PteContents));
                     // FIXME: remove the page from the WS
                     MI_WRITE_INVALID_PTE(PointerPte, PteContents);
-#ifdef CONFIG_SMP
-                    // FIXME: Should invalidate entry in every CPU TLB
-                    ASSERT(KeNumberProcessors == 1);
+
+#ifndef CONFIG_SMP
+                    /* Invalidate the TLB entry. On SMP we flush the process TLB below */
+                    KxFlushSingleCurrentTb(MiPteToAddress(PointerPte));
 #endif
-                    KeInvalidateTlbEntry(MiPteToAddress(PointerPte));
 
                     /* We are done for this PTE */
                     MiReleasePfnLock(OldIrql);
@@ -2421,6 +2421,12 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
             /* Move to the next PTE */
             PointerPte++;
         }
+
+#ifdef CONFIG_SMP
+        KeFlushRangeTb((PVOID)StartingAddress,
+                       (EndingAddress + 1 - StartingAddress) / PAGE_SIZE,
+                       FALSE);
+#endif
 
         /* Unlock the working set */
         MiUnlockProcessWorkingSetUnsafe(Process, Thread);
@@ -2583,7 +2589,7 @@ MiProcessValidPteList(IN PMMPTE *ValidPteList,
     // All the PTEs have been dereferenced and made invalid, flush the TLB now
     // and then release the PFN lock
     //
-    KeFlushCurrentTb();
+    KeFlushEntireTb(TRUE, TRUE);
     MiReleasePfnLock(OldIrql);
 }
 

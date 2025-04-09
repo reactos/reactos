@@ -140,7 +140,7 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
         //
         Offset = MI_ZERO_PTES;
         PointerPte->u.Hard.PageFrameNumber = Offset;
-        KeFlushProcessTb();
+        KeFlushRangeTb(MiPteToAddress(PointerPte + 1), MI_ZERO_PTES, TRUE);
     }
 
     //
@@ -205,7 +205,8 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
     PointerPte = MiAddressToPte(VirtualAddress);
 
     //
-    // Blow away the mapped zero PTEs
+    // Blow away the mapped zero PTEs.
+    // Note: TLB flush happens in MiMapPagesInZeroSpace, when a new range is started
     //
     RtlZeroMemory(PointerPte, NumberOfPages * sizeof(MMPTE));
 }
