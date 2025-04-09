@@ -350,25 +350,6 @@ KeQueryInterruptHandler(IN ULONG Vector)
                     (Pcr->IDT[Entry].Offset & 0xFFFF));
 }
 
-//
-// Invalidates the TLB entry for a specified address
-//
-FORCEINLINE
-VOID
-KeInvalidateTlbEntry(IN PVOID Address)
-{
-    /* Invalidate the TLB entry for this address */
-    __invlpg(Address);
-}
-
-FORCEINLINE
-VOID
-KeFlushProcessTb(VOID)
-{
-    /* Flush the TLB by resetting CR3 */
-    __writecr3(__readcr3());
-}
-
 FORCEINLINE
 VOID
 KeSweepICache(IN PVOID BaseAddress,
