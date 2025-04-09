@@ -240,6 +240,8 @@ GetVersionInfoString(IN LPCWSTR szFileName,
 
 HRESULT ShellExecuteCommand(PCWSTR Command)
 {
+    // Note: ShellExecCmdLine can be used instead when compiling for NT6+
+    // See also shlwapi!utils.c:ShellExecuteCommand()
     WCHAR szCmd[MAX_PATH * 2];
     int len = PathProcessCommand(Command, szCmd, _countof(szCmd), PPCF_ADDARGUMENTS | PPCF_FORCEQUALIFY);
     if (len <= 0) // Could not resolve the command, just use the input

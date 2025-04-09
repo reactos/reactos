@@ -1736,7 +1736,7 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
     {
         HWND* cursor = HwndList;
         LPARAM shellhookparam = (Message == HSHELL_LANGUAGE || Message == HSHELL_APPCOMMAND)
-                              ? lParam : (LPARAM)wParam;
+                                ? lParam : (LPARAM)wParam;
 
         for (; *cursor; cursor++)
         {
