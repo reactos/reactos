@@ -1197,7 +1197,10 @@ NtUserConvertMemHandle(
     /* Create Clipboard data object */
     pMemObj = UserCreateObject(gHandleTable, NULL, NULL, &hMem, TYPE_CLIPDATA, sizeof(CLIPBOARDDATA) + cbData);
     if (!pMemObj)
+    {
+        SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
         goto cleanup;
+    }
 
     pMemObj->cbData = cbData;
 
