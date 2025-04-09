@@ -1890,7 +1890,7 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     // Flush the TLB
     //
     ASSERT(PreviousPte.u.Hard.Valid == 1);
-    KeFlushCurrentTb();
+    KeFlushEntireTb(TRUE, TRUE);
     ASSERT(PreviousPte.u.Hard.Valid == 1);
 
     //
@@ -2004,7 +2004,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
     }
 
     /* Flush the TLB */
-    KeFlushCurrentTb();
+    KeFlushEntireTb(TRUE, TRUE);
 
     /* Acquire the PFN lock */
     OldIrql = MiAcquirePfnLock();

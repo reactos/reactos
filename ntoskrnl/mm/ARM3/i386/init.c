@@ -501,7 +501,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[1] = PageFrameIndex << PAGE_SHIFT;
 
     /* Flush the TLB */
-    KeFlushCurrentTb();
+    KxFlushEntireCurrentTb();
 
     /* Release the lock */
     MiReleasePfnLock(OldIrql);
