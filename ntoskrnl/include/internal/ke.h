@@ -828,7 +828,26 @@ KiHandleNmi(VOID);
 
 VOID
 NTAPI
-KeFlushCurrentTb(VOID);
+KeFlushSingleTb(
+    _In_ PVOID Address,
+    _In_ BOOLEAN AllProcessors);
+
+VOID
+NTAPI
+KeFlushRangeTb(
+    _In_ PVOID Address,
+    _In_ ULONG NumberOfPages,
+    _In_ BOOLEAN Global);
+
+VOID
+NTAPI
+KeFlushProcessTb(VOID);
+
+VOID
+NTAPI
+KeFlushEntireTb(
+    _In_ BOOLEAN Invalid,
+    _In_ BOOLEAN AllProcessors);
 
 BOOLEAN
 NTAPI

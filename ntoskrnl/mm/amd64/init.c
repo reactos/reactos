@@ -224,8 +224,8 @@ MiInitializePageTable(VOID)
         PointerPxe->u.Long = 0;
     }
 
-    /* Flush the TLB */
-    KeFlushCurrentTb();
+    /* Flush the TLB on this processor */
+    KxFlushEntireCurrentTb();
 
     /* Set up a template PTE */
     TmplPte.u.Long = 0;
