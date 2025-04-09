@@ -23,8 +23,6 @@
 #include <regstr.h>
 #include <shlwapi_undoc.h>
 
-extern HRESULT ShellExecuteCommand(PCWSTR Command);
-
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
 #define DUMP_TASKS  0
@@ -1505,14 +1503,15 @@ public:
         cb = sizeof(szBuf);
         if (!bResult && SHRegQueryUSValueW(hKey, L"RegisteredApp", NULL, szBuf, &cb, FALSE, NULL, 0) == ERROR_SUCCESS)
         {
-            bResult = SUCCEEDED(SHRunIndirectRegClientCommand(NULL, szBuf));
+            bResult = TRUE;
+            SHRunIndirectRegClientCommand(NULL, szBuf);
             *szBuf = UNICODE_NULL; // Don't execute again
         }
         SHRegCloseUSKey(hKey);
 
         // Note: Tweak UI uses an empty string for its "Do nothing" option.
         if (bResult && *szBuf)
-            bResult = SUCCEEDED(ShellExecuteCommand(szBuf));
+            ShellExec_RunDLLW(NULL, NULL, szBuf, SW_SHOW);
         return bResult;
     }
 

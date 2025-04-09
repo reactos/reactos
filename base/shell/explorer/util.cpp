@@ -237,25 +237,3 @@ GetVersionInfoString(IN LPCWSTR szFileName,
 
     return bRet;
 }
-
-HRESULT ShellExecuteCommand(PCWSTR Command)
-{
-    // Note: ShellExecCmdLine can be used instead when compiling for NT6+
-    // See also shlwapi!utils.c:ShellExecuteCommand()
-    WCHAR szCmd[MAX_PATH * 2];
-    int len = PathProcessCommand(Command, szCmd, _countof(szCmd), PPCF_ADDARGUMENTS | PPCF_FORCEQUALIFY);
-    if (len <= 0) // Could not resolve the command, just use the input
-    {
-        HRESULT hr = StringCchCopyW(szCmd, _countof(szCmd), Command);
-        if (FAILED(hr))
-            return hr;
-    }
-    PWSTR pszArgs = PathGetArgsW(szCmd);
-    PathRemoveArgsW(szCmd);
-    PathUnquoteSpacesW(szCmd);
-
-    SHELLEXECUTEINFOW sei = { sizeof(sei), 0, NULL, NULL, szCmd, pszArgs };
-    sei.nShow = SW_SHOW;
-    UINT error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
-    return HRESULT_FROM_WIN32(error);
-}
