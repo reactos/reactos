@@ -26,6 +26,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+BOOL IsDriveFloppyA(LPCSTR pszDriveRoot);
+BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot);
+
 /*
 CDrivesFolder should create a CRegFolder to represent the virtual items that exist only in
 the registry. The CRegFolder is aggregated by the CDrivesFolder.
@@ -105,6 +108,13 @@ template<class T> static T* GetDrivePath(PCUITEMID_CHILD pidl, T *Path)
     return Path;
 }
 
+static inline UINT _ILGetRemovableTypeId(LPCITEMIDLIST pidl)
+{
+    WCHAR buf[8];
+    if (GetDrivePath(pidl, buf) && IsDriveFloppyW(buf))
+        return SHDID_COMPUTER_DRIVE35; // TODO: 3.5-inch vs 5.25-inch
+    return SHDID_COMPUTER_REMOVABLE;
+}
 
 BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
 {
@@ -476,8 +486,6 @@ static HRESULT GetDriveLabel(PCWSTR DrivePath, LPWSTR szLabel, UINT cchMax)
     HRESULT hr = getLabelForDriveFromAutoRun(DrivePath, szLabel, cchMax);
     return hr == S_OK ? S_OK : GetRawDriveLabel(DrivePath, szLabel, cchMax);
 }
-
-BOOL IsDriveFloppyA(LPCSTR pszDriveRoot);
 
 HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
@@ -1151,10 +1159,33 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF * 
     return S_OK;
 }
 
-HRESULT WINAPI CDrivesFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID * pscid, VARIANT * pv)
+HRESULT WINAPI CDrivesFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    FIXME("(%p)\n", this);
-    return E_NOTIMPL;
+    const CLSID *pCLSID = IsRegItem(pidl);
+    if (pscid->fmtid == FMTID_ShellDetails)
+    {
+        switch (pscid->pid)
+        {
+            case PID_DESCRIPTIONID:
+            {
+                if (pCLSID)
+                    return SHELL_CreateSHDESCRIPTIONID(pv, SHDID_ROOT_REGITEM, pCLSID);
+                UINT id = SHDID_COMPUTER_OTHER;
+                switch (_ILGetDriveType(pidl))
+                {
+                    case DRIVE_REMOVABLE: id = _ILGetRemovableTypeId(pidl); break;
+                    case DRIVE_FIXED:     id = SHDID_COMPUTER_FIXED; break;
+                    case DRIVE_REMOTE:    id = SHDID_COMPUTER_NETDRIVE; break;
+                    case DRIVE_CDROM:     id = SHDID_COMPUTER_CDROM; break;
+                    case DRIVE_RAMDISK:   id = SHDID_COMPUTER_RAMDISK; break;
+                }
+                return SHELL_CreateSHDESCRIPTIONID(pv, id, &CLSID_NULL);
+            }
+        }
+    }
+    if (pCLSID)
+        return m_regFolder->GetDetailsEx(pidl, pscid, pv);
+    return SHELL32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, FALSE);
 }
 
 HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
@@ -1230,10 +1261,15 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
     return hr;
 }
 
-HRESULT WINAPI CDrivesFolder::MapColumnToSCID(UINT column, SHCOLUMNID * pscid)
+HRESULT WINAPI CDrivesFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    FIXME("(%p)\n", this);
-    return E_NOTIMPL;
+    switch (column < _countof(MyComputerSFHeader) ? MyComputerSFHeader[column].colnameid : ~0UL)
+    {
+        case IDS_SHV_COLUMN_NAME: return MakeSCID(*pscid, FMTID_Storage, PID_STG_NAME);
+        case IDS_SHV_COLUMN_TYPE: return MakeSCID(*pscid, FMTID_Storage, PID_STG_STORAGETYPE);
+        case IDS_SHV_COLUMN_COMMENTS: return MakeSCID(*pscid, FMTID_SummaryInformation, PIDSI_COMMENTS);
+    }
+    return E_INVALIDARG;
 }
 
 /************************************************************************

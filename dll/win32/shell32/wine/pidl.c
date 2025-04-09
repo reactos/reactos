@@ -1254,6 +1254,33 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathAW(LPCVOID lpszPath)
     return SHSimpleIDListFromPathA (lpszPath);
 }
 
+static HRESULT GetShellFolder2ItemDetailsExToBuffer(IShellFolder2 *psf2, LPCITEMIDLIST pidl,
+                                                    const SHCOLUMNID *pscid, void*buf, UINT cb)
+{
+    VARIANT var;
+    V_VT(&var) = VT_EMPTY;
+    HRESULT hr = IShellFolder2_GetDetailsEx(psf2, pidl, pscid, &var);
+    if (SUCCEEDED(hr))
+    {
+        hr = SHELL_VariantToBuffer(&var, buf, cb);
+        VariantClear(&var);
+    }
+    return hr;
+}
+
+static HRESULT GetShellFolder1ItemDetailsExToBuffer(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
+                                                    const SHCOLUMNID *pscid, void*buf, UINT cb)
+{
+    IShellFolder2 *psf2;
+    HRESULT hr = IShellFolder_QueryInterface(psf, &IID_IShellFolder2, (void**)&psf2);
+    if (SUCCEEDED(hr))
+    {
+        hr = GetShellFolder2ItemDetailsExToBuffer(psf2, pidl, pscid, buf, cb);
+        IShellFolder2_Release(psf2);
+    }
+    return hr;
+}
+
 /*************************************************************************
  * SHGetDataFromIDListA [SHELL32.247]
  *
@@ -1303,8 +1330,10 @@ HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
             pfd->cAlternateFileName[0] = '\0';
         return S_OK;
 
-    case SHGDFIL_NETRESOURCE:
     case SHGDFIL_DESCRIPTIONID:
+        return SHGetDataFromIDListW(psf, pidl, nFormat, dest, len);
+
+    case SHGDFIL_NETRESOURCE:
         FIXME_(shell)("SHGDFIL %i stub\n", nFormat);
         break;
 
@@ -1334,7 +1363,7 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
 
     switch (nFormat)
     {
-    case SHGDFIL_FINDDATA:
+    case SHGDFIL_FINDDATA: /* FIXME: Ask the folder for PID_FINDDATA */
         pfd = dest;
 
         if (_ILIsDrive(pidl))
@@ -1362,8 +1391,14 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
             pfd->cAlternateFileName[13] = 0;
         return S_OK;
 
-    case SHGDFIL_NETRESOURCE:
     case SHGDFIL_DESCRIPTIONID:
+        {
+            /* TODO: Use PKEY_DescriptionID when the propsys headers are ready */
+            SHCOLUMNID scid = { FMTID_ShellDetails, PID_DESCRIPTIONID };
+            return GetShellFolder1ItemDetailsExToBuffer(psf, pidl, &scid, dest, len);
+        }
+
+    case SHGDFIL_NETRESOURCE:
         FIXME_(shell)("SHGDFIL %i stub\n", nFormat);
         break;
 

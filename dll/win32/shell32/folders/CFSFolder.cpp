@@ -88,9 +88,9 @@ static HKEY OpenKeyFromFileType(LPCWSTR pExtension, LPCWSTR KeyName)
     return hkey;
 }
 
-static LPCWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax)
+static LPCWSTR ExtensionFromPidlEx(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax, BOOL AllowFolder)
 {
-    if (!_ILIsValue(pidl))
+    if (!AllowFolder && !_ILIsValue(pidl))
     {
         ERR("Invalid pidl!\n");
         return NULL;
@@ -104,6 +104,11 @@ static LPCWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMa
         return NULL;
     }
     return pExtension;
+}
+
+static LPCWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax)
+{
+    return ExtensionFromPidlEx(pidl, Buf, cchMax, FALSE);
 }
 
 static HRESULT GetCLSIDForFileTypeFromExtension(LPCWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
@@ -169,6 +174,20 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
         return S_FALSE;
 
     return GetCLSIDForFileTypeFromExtension(pExtension, KeyName, pclsid);
+}
+
+HRESULT GetItemCLSID(PCUIDLIST_RELATIVE pidl, CLSID* pclsid)
+{
+    WCHAR buf[256];
+    LPCWSTR pExt = ExtensionFromPidlEx(pidl, buf, _countof(buf), TRUE);
+    if (!pExt)
+        return E_FAIL;
+    HRESULT hr = E_FAIL;
+    if (!ItemIsFolder(pidl))
+        hr = GetCLSIDForFileTypeFromExtension(pExt, L"CLSID", pclsid);
+    if (hr != S_OK && pExt[0] == '.' && pExt[1] == '{')
+        hr = CLSIDFromString(pExt + 1, pclsid);
+    return hr;
 }
 
 static HRESULT
@@ -1643,12 +1662,56 @@ HRESULT WINAPI CFSFolder::GetDefaultColumnState(UINT iColumn,
         return GetDefaultFSColumnState(iColumn, *pcsFlags);
 }
 
-HRESULT WINAPI CFSFolder::GetDetailsEx(PCUITEMID_CHILD pidl,
-                                       const SHCOLUMNID * pscid, VARIANT * pv)
+HRESULT WINAPI CFSFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    FIXME ("(%p)\n", this);
-
-    return E_NOTIMPL;
+    if (!_ILGetFSType(pidl))
+        return E_INVALIDARG;
+    HRESULT hr;
+    if (pscid->fmtid == FMTID_ShellDetails)
+    {
+        switch (pscid->pid)
+        {
+            case PID_DESCRIPTIONID:
+            {
+                if (FAILED(hr = SHELL_CreateVariantBuffer(pv, sizeof(SHDESCRIPTIONID))))
+                    return hr;
+                SHDESCRIPTIONID *pDID = (SHDESCRIPTIONID*)V_ARRAY(pv)->pvData;
+                if (ItemIsFolder(pidl))
+                    pDID->dwDescriptionId = SHDID_FS_DIRECTORY;
+                else if (_ILGetFSType(pidl) & PT_FS_FILE_FLAG)
+                    pDID->dwDescriptionId = SHDID_FS_FILE;
+                else
+                    pDID->dwDescriptionId = SHDID_FS_OTHER;
+                if (FAILED(GetItemCLSID(pidl, &pDID->clsid)))
+                    pDID->clsid = CLSID_NULL;
+                return S_OK;
+            }
+        }
+    }
+    // Handle non-string fields here when possible instead of deferring to GetDetailsOf
+    const FileStruct &fsitem = ((PIDLDATA*)pidl->mkid.abID)->u.file;
+    if (pscid->fmtid == FMTID_Storage)
+    {
+        switch (pscid->pid)
+        {
+            case PID_STG_NAME: // Handled directly here for faster performance
+                return SHELL_GetDetailsOfStringAsVariant(this, pidl, SHFSF_COL_NAME, pv);
+            case PID_STG_SIZE:
+                V_VT(pv) = VT_UI4;
+                V_UI4(pv) = _ILGetFileSize(pidl, NULL, 0);
+                return S_OK;
+            case PID_STG_ATTRIBUTES:
+                V_VT(pv) = VT_UI4;
+                V_UI4(pv) = fsitem.uFileAttribs;
+                return S_OK;
+            case PID_STG_WRITETIME:
+                V_VT(pv) = VT_DATE;
+                if (DosDateTimeToVariantTime(fsitem.uFileDate, fsitem.uFileTime, &V_DATE(pv)))
+                    return S_OK;
+                break;
+        }
+    }
+    return SHELL32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, TRUE);
 }
 
 HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
@@ -1714,11 +1777,18 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
     return hr;
 }
 
-HRESULT WINAPI CFSFolder::MapColumnToSCID (UINT column,
-        SHCOLUMNID * pscid)
+HRESULT WINAPI CFSFolder::MapColumnToSCID (UINT column, SHCOLUMNID *pscid)
 {
-    FIXME ("(%p)\n", this);
-    return E_NOTIMPL;
+    switch (column)
+    {
+        case SHFSF_COL_NAME: return MakeSCID(*pscid, FMTID_Storage, PID_STG_NAME);
+        case SHFSF_COL_SIZE: return MakeSCID(*pscid, FMTID_Storage, PID_STG_SIZE);
+        case SHFSF_COL_TYPE: return MakeSCID(*pscid, FMTID_Storage, PID_STG_STORAGETYPE);
+        case SHFSF_COL_MDATE: return MakeSCID(*pscid, FMTID_Storage, PID_STG_WRITETIME);
+        case SHFSF_COL_FATTS: return MakeSCID(*pscid, FMTID_Storage, PID_STG_ATTRIBUTES);
+        case SHFSF_COL_COMMENT: return MakeSCID(*pscid, FMTID_SummaryInformation, PIDSI_COMMENTS);
+    }
+    return E_INVALIDARG;
 }
 
 /************************************************************************

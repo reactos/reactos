@@ -818,7 +818,18 @@ HRESULT WINAPI CRegFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 
 HRESULT WINAPI CRegFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    return E_NOTIMPL;
+    const CLSID *pCLSID = IsRegItem(pidl);
+    if (!pCLSID)
+        return E_INVALIDARG;
+    if (pscid->fmtid == FMTID_ShellDetails)
+    {
+        switch (pscid->pid)
+        {
+            case PID_DESCRIPTIONID:
+                return SHELL_CreateSHDESCRIPTIONID(pv, SHDID_ROOT_REGITEM, pCLSID);
+        }
+    }
+    return SHELL32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, TRUE);
 }
 
 HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
@@ -867,7 +878,13 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
 
 HRESULT WINAPI CRegFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    return E_NOTIMPL;
+    switch (column)
+    {
+        case COL_NAME: return MakeSCID(*pscid, FMTID_Storage, PID_STG_NAME);
+        case COL_TYPE: return MakeSCID(*pscid, FMTID_Storage, PID_STG_STORAGETYPE);
+        case COL_INFOTIP: return MakeSCID(*pscid, FMTID_SummaryInformation, PIDSI_COMMENTS);
+    }
+    return E_INVALIDARG;
 }
 
 static HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
