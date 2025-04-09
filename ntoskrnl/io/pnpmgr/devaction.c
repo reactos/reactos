@@ -628,11 +628,14 @@ PiCallDriverAddDevice(
     Status = IopGetRegistryValue(SubKey, REGSTR_VAL_CLASSGUID, &kvInfo);
     if (NT_SUCCESS(Status))
     {
-        if (kvInfo->Type == REG_SZ && kvInfo->DataLength > sizeof(WCHAR))
+        if ((kvInfo->Type == REG_SZ) &&
+            (kvInfo->DataLength > sizeof(UNICODE_NULL)) &&
+            (kvInfo->DataLength <= UNICODE_STRING_MAX_BYTES) &&
+            ((kvInfo->DataLength % sizeof(WCHAR)) == 0))
         {
             UNICODE_STRING classGUID = {
                 .MaximumLength = kvInfo->DataLength,
-                .Length = kvInfo->DataLength - sizeof(UNICODE_NULL),
+                .Length = (USHORT)(kvInfo->DataLength - sizeof(UNICODE_NULL)),
                 .Buffer = (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset)
             };
             HANDLE ccsControlHandle;
@@ -1363,14 +1366,20 @@ IopSetServiceEnumData(
         return Status;
     }
 
-    if (kvInfo2->Type != REG_SZ || kvInfo2->DataLength <= sizeof(WCHAR))
+    if ((kvInfo2->Type != REG_SZ) ||
+        (kvInfo2->DataLength <= sizeof(UNICODE_NULL)) ||
+        (kvInfo2->DataLength > UNICODE_STRING_MAX_BYTES) ||
+        ((kvInfo2->DataLength % sizeof(WCHAR)) != 0))
     {
+        DPRINT1("ObjectName invalid (Type = %lu, DataLength = %lu)\n",
+                kvInfo2->Type,
+                kvInfo2->DataLength);
         ExFreePool(kvInfo2);
         return STATUS_UNSUCCESSFUL;
     }
 
     ServiceName.MaximumLength = kvInfo2->DataLength;
-    ServiceName.Length = kvInfo2->DataLength - sizeof(UNICODE_NULL);
+    ServiceName.Length = (USHORT)(kvInfo2->DataLength - sizeof(UNICODE_NULL));
     ServiceName.Buffer = (PVOID)((ULONG_PTR)kvInfo2 + kvInfo2->DataOffset);
 
     DPRINT("IopSetServiceEnumData(%p)\n", DeviceNode);
@@ -1508,7 +1517,7 @@ done:
  * Sends IRP_MN_QUERY_PNP_DEVICE_STATE request and sets device node's flags
  * according to the result.
  * Tree reenumeration should be started upon a successful return of the function.
- * 
+ *
  * @todo       Do not return STATUS_SUCCESS if nothing is changed.
  */
 static
@@ -1538,7 +1547,7 @@ PiUpdateDeviceState(
     if (PnPFlags & PNP_DEVICE_REMOVED || PnPFlags & PNP_DEVICE_DISABLED)
     {
         PiSetDevNodeProblem(DeviceNode,
-                            PnPFlags & PNP_DEVICE_DISABLED 
+                            PnPFlags & PNP_DEVICE_DISABLED
                             ? CM_PROB_HARDWARE_DISABLED
                             : CM_PROB_DEVICE_NOT_THERE);
 
@@ -2413,7 +2422,7 @@ PiDevNodeStateMachine(
                         PiIrpQueryStopDevice(currentNode);
                         PiSetDevNodeState(currentNode, DeviceNodeQueryStopped);
                     }
-                    
+
                     doProcessAgain = TRUE;
                 }
                 break;
@@ -2617,7 +2626,7 @@ PipDeviceActionWorker(
                     }
                 }
                 // TODO: Windows may return STATUS_DELETE_PENDING here
-                status = STATUS_SUCCESS;                
+                status = STATUS_SUCCESS;
                 break;
 
             default:

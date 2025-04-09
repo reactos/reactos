@@ -824,13 +824,13 @@ IoGetDeviceInterfaceAlias(
     DeviceString.MaximumLength = DeviceString.Length;
     DeviceString.Buffer = Buffer;
 
-    /* 
+    /*
      * Separate symbolic link into 4 parts:
      * 1) prefix string (\??\ for kernel mode or \\?\ for user mode),
      * 2) munged path string (like ##?#ACPI#PNP0501#1#{GUID}),
      * 3) GUID string (the current GUID),
      * 4) reference string (goes after GUID, starts with '\').
-     * 
+     *
      * We need only reference string.
      */
     Status = IopSeparateSymbolicLink(SymbolicLinkName,
@@ -1905,7 +1905,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     }
 
     ASSERT(GuidString.Buffer >= LinkNameNoPrefix.Buffer + 1);
-    DeviceInstance.Length = (GuidString.Buffer - LinkNameNoPrefix.Buffer - 1) * sizeof(WCHAR);
+    DeviceInstance.Length = (USHORT)((GuidString.Buffer - LinkNameNoPrefix.Buffer - 1) * sizeof(WCHAR));
     if (DeviceInstance.Length == 0)
     {
         DPRINT1("No device instance in link name '%wZ'\n", SymbolicLinkName);
