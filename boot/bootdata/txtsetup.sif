@@ -15,8 +15,7 @@ Signature = "$Windows NT$"
 _1 = %cdname%,%cdtagfile%,,""
 
 [SourceDisksNames.x86]
-;1 = %cdname%,%cdtagfilei%,,\i386
-1 = %cdname%,%cdtagfilei%,,\reactos
+1 = %cdname%,%cdtagfilei%,,\i386
 
 [SourceDisksNames.amd64]
 ;1 = %cdname%,%cdtagfilea%,,\amd64
