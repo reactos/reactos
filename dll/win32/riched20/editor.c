@@ -4357,7 +4357,11 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int buflen,
     str = get_text( run, 0 );
   }
   /* append '\r' to the last paragraph. */
+#ifdef __REACTOS__
+  if (run == para_end_run( para_prev( editor_end_para( editor ) ) ) && bEOP && buflen)
+#else
   if (run == para_end_run( para_prev( editor_end_para( editor ) ) ) && bEOP)
+#endif
   {
     *buffer = '\r';
     buffer ++;
