@@ -854,13 +854,6 @@ extern "C" {
 #define GGO_GRAY8_BITMAP 6
 #define GGO_GLYPH_INDEX 128
 #define GGO_UNHINTED 256
-#ifdef __WINESRC__
-#define WINE_GGO_GRAY16_BITMAP 0x10
-#define WINE_GGO_HRGB_BITMAP   0x11
-#define WINE_GGO_HBGR_BITMAP   0x12
-#define WINE_GGO_VRGB_BITMAP   0x13
-#define WINE_GGO_VBGR_BITMAP   0x14
-#endif
 #define GM_COMPATIBLE 1
 #define GM_ADVANCED 2
 #define GM_LAST     2
@@ -887,11 +880,6 @@ extern "C" {
 #define PT_CLOSEFIGURE 1
 #define TT_AVAILABLE 1
 #define TT_ENABLED 2
-
-#ifdef __WINESRC__
-#define WINE_TT_SUBPIXEL_RENDERING_ENABLED 0x4000
-#define WINE_TT_HINTER_ENABLED 0x8000
-#endif
 
 #define BLACK_BRUSH 4
 #define DKGRAY_BRUSH 3
@@ -4486,22 +4474,6 @@ typedef DISPLAY_DEVICEA DISPLAY_DEVICE, *PDISPLAY_DEVICE, *LPDISPLAY_DEVICE;
 #define wglUseFontOutlines wglUseFontOutlinesA
 #endif
 #endif
-
-#ifdef __WINESRC__
-/* the DC hook support is only exported on Win16, the 32-bit version is a Wine extension */
-
-#define DCHC_INVALIDVISRGN      0x0001
-#define DCHC_DELETEDC           0x0002
-#define DCHF_INVALIDATEVISRGN   0x0001
-#define DCHF_VALIDATEVISRGN     0x0002
-
-typedef BOOL (CALLBACK *DCHOOKPROC)(HDC,WORD,DWORD_PTR,LPARAM);
-
-WINGDIAPI DWORD_PTR WINAPI GetDCHook(HDC,DCHOOKPROC*);
-WINGDIAPI BOOL      WINAPI SetDCHook(HDC,DCHOOKPROC,DWORD_PTR);
-WINGDIAPI WORD      WINAPI SetHookFlags(HDC,WORD);
-WINGDIAPI INT       WINAPI SelectVisRgn(HDC,HRGN);
-#endif /* __WINESRC__ */
 
 #ifdef _MSC_VER
 #pragma warning(pop)

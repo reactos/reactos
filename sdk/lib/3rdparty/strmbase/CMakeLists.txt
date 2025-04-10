@@ -2,9 +2,6 @@
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__)
-
 list(APPEND SOURCE
     audio.c
     dispatch.c
@@ -26,3 +23,4 @@ list(APPEND SOURCE
 add_library(strmbase ${SOURCE})
 add_pch(strmbase precomp.h SOURCE)
 add_dependencies(strmbase psdk dxsdk)
+set_wine_module(strmbase)

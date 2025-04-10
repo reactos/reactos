@@ -12,6 +12,7 @@
 #include <shlguid_undoc.h>
 #include <atlbase.h>
 #include <atlcom.h>
+#include <atlcomcli.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);

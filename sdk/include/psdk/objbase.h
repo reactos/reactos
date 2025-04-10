@@ -206,10 +206,6 @@
 
 #define interface struct
 
-#ifdef __WINESRC__
-#define CONST_VTABLE
-#endif
-
 #ifdef CONST_VTABLE
 #undef CONST_VTBL
 #define CONST_VTBL const
@@ -769,13 +765,6 @@ DllGetClassObject(
 
 HRESULT WINAPI DllCanUnloadNow(void) DECLSPEC_HIDDEN;
 
-/* shouldn't be here, but is nice for type checking */
-#ifdef __WINESRC__
-HRESULT WINAPI DllRegisterServer(void) DECLSPEC_HIDDEN;
-HRESULT WINAPI DllUnregisterServer(void) DECLSPEC_HIDDEN;
-#endif
-
-
 /*****************************************************************************
  *	Data Object
  */
@@ -1041,19 +1030,18 @@ StgSetTimes(
 }
 #endif
 
-#ifndef __WINESRC__
-# include <urlmon.h>
+#ifndef NOURLMON
+#include <urlmon.h>
 #endif
-#include <propidl.h>
 
-#ifndef __WINESRC__
+#ifndef NOPROPIDL
+#include <propidl.h>
+#endif
 
 #define FARSTRUCT
 #define HUGEP
 
 #define WINOLEAPI        STDAPI
 #define WINOLEAPI_(type) STDAPI_(type)
-
-#endif /* __WINESRC__ */
 
 #endif /* _OBJBASE_H_ */

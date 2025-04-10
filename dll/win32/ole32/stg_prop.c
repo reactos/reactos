@@ -55,6 +55,9 @@
 #include "storage32.h"
 #include "enumx.h"
 #include "oleauto.h"
+#ifdef __REACTOS__
+#include "propidl.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 

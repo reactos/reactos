@@ -582,15 +582,11 @@ extern "C" {
 #define MAKEINTRESOURCEW(i) ((LPWSTR)(ULONG_PTR)LOWORD(i))
 
 #ifndef RC_INVOKED
-#ifdef WINE_NO_UNICODE_MACROS /* force using a cast */
-#define MAKEINTRESOURCE(i) ((ULONG_PTR)((WORD)(i)))
-#else
 #ifdef UNICODE
 #define MAKEINTRESOURCE MAKEINTRESOURCEW
 #else
 #define MAKEINTRESOURCE MAKEINTRESOURCEA
 #endif /* UNICODE */
-#endif /* WINE_NO_UNICODE_MACROS */
 #endif /* !RC_INVOKED */
 
 

@@ -471,11 +471,23 @@ static void taskdialog_get_expando_size(struct taskdialog_info *dialog_info, HWN
 static ULONG_PTR taskdialog_get_standard_icon(LPCWSTR icon)
 {
     if (icon == TD_WARNING_ICON)
+#ifdef __REACTOS__
+        return (ULONG_PTR)IDI_WARNING;
+#else
         return IDI_WARNING;
+#endif
     else if (icon == TD_ERROR_ICON)
+#ifdef __REACTOS__
+        return (ULONG_PTR)IDI_ERROR;
+#else
         return IDI_ERROR;
+#endif
     else if (icon == TD_INFORMATION_ICON)
+#ifdef __REACTOS__
+        return (ULONG_PTR)IDI_INFORMATION;
+#else
         return IDI_INFORMATION;
+#endif
     else if (icon == TD_SHIELD_ICON)
         return IDI_SHIELD;
     else

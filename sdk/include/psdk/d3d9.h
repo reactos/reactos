@@ -29,9 +29,7 @@
 #define COM_NO_WINDOWS_H
 #include <objbase.h>
 
-#ifndef __WINESRC__
-# include <windows.h>
-#endif
+#include <windows.h>
 
 #include <d3d9types.h>
 #include <d3d9caps.h>

@@ -1,7 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(amstream.dll amstream.spec)
 
 list(APPEND SOURCE
@@ -22,3 +19,4 @@ target_link_libraries(amstream strmbase strmiids uuid wine)
 add_importlibs(amstream ole32 ddraw user32 msvcrt kernel32 ntdll)
 add_pch(amstream precomp.h SOURCE)
 add_cd_file(TARGET amstream DESTINATION reactos/system32 FOR all)
+set_wine_module(amstream)

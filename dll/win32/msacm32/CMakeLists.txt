@@ -22,4 +22,4 @@ target_link_libraries(msacm32 wine oldnames)
 add_importlibs(msacm32 advapi32 user32 winmm msvcrt kernel32 ntdll)
 add_pch(msacm32 precomp.h SOURCE)
 add_cd_file(TARGET msacm32 DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(msacm32) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(msacm32)

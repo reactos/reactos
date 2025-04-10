@@ -18,11 +18,7 @@
 #ifndef _WINE_SNMP_H
 #define _WINE_SNMP_H
 
-#ifndef __WINESRC__
-# include <windows.h>
-#else
-# include <windef.h>
-#endif
+#include <windows.h>
 
 #include <pshpack4.h>
 

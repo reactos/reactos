@@ -204,7 +204,6 @@ extern HANDLE psStopEvent;
 INT LoadRegistryMMEDrivers(char* key);
 
 // REACTOS:
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define wcsnicmp strncmpiW
 #define swprintf snprintfW
 

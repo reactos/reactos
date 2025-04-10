@@ -1,6 +1,7 @@
 #include "precomp.h"
 
 #include <stubs.h>
+#include <oleauto.h> /* VARIANT */
 
 // FIXME: should go to iads.h
 typedef struct _adsvalue *PADSVALUE;

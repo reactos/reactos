@@ -29,7 +29,7 @@
 #undef __C89_NAMELESSUNIONNAME7
 #undef __C89_NAMELESSUNIONNAME8
 
-#if !defined(__WINESRC__) && !defined(WINE_NO_NAMELESS_EXTENSION)
+#ifndef WINE_NO_NAMELESS_EXTENSION
 # ifdef __GNUC__
    /* Anonymous structs support starts with gcc 2.96/g++ 2.95 */
 #  if (__GNUC__ > 2) || ((__GNUC__ == 2) && ((__GNUC_MINOR__ > 95) || ((__GNUC_MINOR__ == 95) && defined(__cplusplus))))
@@ -4569,10 +4569,6 @@ typedef struct _TP_CALLBACK_ENVIRON_V1 {
   } u;
 } TP_CALLBACK_ENVIRON_V1, TP_CALLBACK_ENVIRON, *PTP_CALLBACK_ENVIRON;
 #endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN7) */
-
-#ifdef __WINESRC__
-# define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)
