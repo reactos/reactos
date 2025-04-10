@@ -742,6 +742,40 @@ MiIsUserPte(PVOID Address)
 }
 #endif
 
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+FORCEINLINE
+BOOLEAN
+MiIsGlobalPte(_In_ PMMPTE PointerPte)
+{
+    /* Check if global pages are enabled */
+    if ((KeFeatureBits & KF_GLOBAL_PAGE) == 0)
+    {
+        return FALSE;
+    }
+
+    /* Check if this is even a real PTE */
+    if (!MI_IS_PAGE_TABLE_ADDRESS(PointerPte))
+    {
+        return FALSE;
+    }
+
+    PVOID Address = MiPteToAddress(PointerPte);
+    if (Address < MmSystemRangeStart)
+    {
+        return FALSE;
+    }
+    if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
+    {
+        return FALSE;
+    }
+    if (MI_IS_SESSION_ADDRESS(Address))
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+#endif
+
 //
 // Figures out the hardware bits for a PTE
 //
@@ -773,8 +807,9 @@ MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
         MI_MAKE_OWNER_PAGE(&TempPte);
     }
 
-    /* FIXME: We should also set the global bit */
-
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    TempPte.u.Hard.Global = MiIsGlobalPte((PMMPTE)PointerPte);
+#endif
     /* Return the protection */
     return TempPte.u.Long;
 }
@@ -806,11 +841,10 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 
     /* Make this valid & global */
-#ifdef _GLOBAL_PAGES_ARE_AWESOME_
-    if (KeFeatureBits & KF_GLOBAL_PAGE)
-        NewPte->u.Hard.Global = 1;
-#endif
     NewPte->u.Hard.Valid = 1;
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    NewPte->u.Hard.Global = MiIsGlobalPte(MappingPte);
+#endif
 }
 
 //
@@ -976,9 +1010,12 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
     /* Write the valid PTE */
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
-#if _M_AMD64
+#ifdef _M_AMD64
     ASSERT(!MI_IS_PAGE_TABLE_ADDRESS(MiPteToAddress(PointerPte)) ||
            (TempPte.u.Hard.NoExecute == 0));
+#endif
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    ASSERT(TempPte.u.Hard.Global == MiIsGlobalPte(PointerPte));
 #endif
     *PointerPte = TempPte;
 }
@@ -995,6 +1032,9 @@ MI_UPDATE_VALID_PTE(IN PMMPTE PointerPte,
     ASSERT(PointerPte->u.Hard.Valid == 1);
     ASSERT(TempPte.u.Hard.Valid == 1);
     ASSERT(PointerPte->u.Hard.PageFrameNumber == TempPte.u.Hard.PageFrameNumber);
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    ASSERT(TempPte.u.Hard.Global == MiIsGlobalPte(PointerPte));
+#endif
     *PointerPte = TempPte;
 }
 
@@ -2400,6 +2440,12 @@ VOID
 NTAPI
 MiWriteProtectSystemImage(
     _In_ PVOID ImageBase);
+
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+VOID
+MiInitializeGlobalPages(
+    VOID);
+#endif
 
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
