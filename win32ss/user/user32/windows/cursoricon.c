@@ -1622,7 +1622,7 @@ CURSORICON_LoadFromFileW(
     DWORD filesize = 0, BmpIconSize;
     PBYTE bits, pbBmpIcon = NULL;
     HANDLE hCurIcon = NULL;
-    CURSORDATA cursorData;
+    CURSORDATA cursorData = { 0 };
 
     TRACE("loading %s\n", debugstr_w( lpszName ));
 
@@ -1646,7 +1646,6 @@ CURSORICON_LoadFromFileW(
     if(!cxDesired) cxDesired = entry->bWidth;
     if(!cyDesired) cyDesired = entry->bHeight;
     /* A bit of preparation */
-    ZeroMemory(&cursorData, sizeof(cursorData));
     if(!bIcon)
     {
         cursorData.xHotspot = entry->xHotspot;
