@@ -370,6 +370,7 @@ IContextMenu_Invoke(
     _In_ HWND hwnd,
     _In_ LPCSTR lpVerb,
     _In_ UINT uFlags);
+
 HRESULT WINAPI RunRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey);
 HRESULT WINAPI RunIndirectRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey, _In_ PCWSTR pszVerb);
 HRESULT WINAPI SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ PCWSTR pszClientType);
