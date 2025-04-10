@@ -90,7 +90,7 @@ MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
     }
 
     /* Map the PTE and invalidate its TLB entry */
-    *MmDebugPte = TempPte;
+    MI_WRITE_VALID_PTE(MmDebugPte, TempPte);
     KxFlushSingleCurrentTb(MappingBaseAddress);
 
     /* Calculate and return the virtual offset into our mapping page */
