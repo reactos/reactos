@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-
 list(APPEND SOURCE
     arguments.c
     host.c
@@ -18,3 +16,4 @@ add_importlibs(wscript shell32 oleaut32 ole32 user32 advapi32 msvcrt kernel32 nt
 add_dependencies(wscript stdole2 wscript_idlheader)
 add_pch(wscript precomp.h SOURCE)
 add_cd_file(TARGET wscript DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(wscript) # CORE-5743: No ARRAY_SIZE macro

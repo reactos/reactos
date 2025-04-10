@@ -25,6 +25,7 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#define FCW_MENU 7
 #define FCW_ADDRESSBAR 9 // GetControlWindow/IsControlWindowShown
 
 // Name is IETHREADPARAM according to symbols / mangled function names

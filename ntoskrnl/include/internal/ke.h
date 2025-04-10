@@ -90,7 +90,6 @@ typedef PCHAR
     IN ULONG Length
 );
 
-extern KAFFINITY KeActiveProcessors;
 extern PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
 extern KSPIN_LOCK KiNmiCallbackListLock;
 extern PVOID KeUserApcDispatcher;
@@ -104,6 +103,13 @@ extern USHORT KeProcessorArchitecture;
 extern USHORT KeProcessorLevel;
 extern USHORT KeProcessorRevision;
 extern ULONG64 KeFeatureBits;
+extern KAFFINITY KeActiveProcessors;
+extern PKPRCB KiProcessorBlock[];
+#ifdef CONFIG_SMP
+extern ULONG KeMaximumProcessors;
+extern ULONG KeNumprocSpecified;
+extern ULONG KeBootprocSpecified;
+#endif
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
@@ -136,7 +142,6 @@ extern LIST_ENTRY KiProcessListHead;
 extern LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
 extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
-extern PKPRCB KiProcessorBlock[];
 extern KAFFINITY KiIdleSummary;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;

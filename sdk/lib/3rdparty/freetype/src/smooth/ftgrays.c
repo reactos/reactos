@@ -1,94 +1,94 @@
-/***************************************************************************/
-/*                                                                         */
-/*  ftgrays.c                                                              */
-/*                                                                         */
-/*    A new `perfect' anti-aliasing renderer (body).                       */
-/*                                                                         */
-/*  Copyright 2000-2018 by                                                 */
-/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
-/*                                                                         */
-/*  This file is part of the FreeType project, and may only be used,       */
-/*  modified, and distributed under the terms of the FreeType project      */
-/*  license, LICENSE.TXT.  By continuing to use, modify, or distribute     */
-/*  this file you indicate that you have read the license and              */
-/*  understand and accept it fully.                                        */
-/*                                                                         */
-/***************************************************************************/
+/****************************************************************************
+ *
+ * ftgrays.c
+ *
+ *   A new `perfect' anti-aliasing renderer (body).
+ *
+ * Copyright (C) 2000-2019 by
+ * David Turner, Robert Wilhelm, and Werner Lemberg.
+ *
+ * This file is part of the FreeType project, and may only be used,
+ * modified, and distributed under the terms of the FreeType project
+ * license, LICENSE.TXT.  By continuing to use, modify, or distribute
+ * this file you indicate that you have read the license and
+ * understand and accept it fully.
+ *
+ */
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* This file can be compiled without the rest of the FreeType engine, by */
-  /* defining the STANDALONE_ macro when compiling it.  You also need to   */
-  /* put the files `ftgrays.h' and `ftimage.h' into the current            */
-  /* compilation directory.  Typically, you could do something like        */
-  /*                                                                       */
-  /* - copy `src/smooth/ftgrays.c' (this file) to your current directory   */
-  /*                                                                       */
-  /* - copy `include/freetype/ftimage.h' and `src/smooth/ftgrays.h' to the */
-  /*   same directory                                                      */
-  /*                                                                       */
-  /* - compile `ftgrays' with the STANDALONE_ macro defined, as in         */
-  /*                                                                       */
-  /*     cc -c -DSTANDALONE_ ftgrays.c                                     */
-  /*                                                                       */
-  /* The renderer can be initialized with a call to                        */
-  /* `ft_gray_raster.raster_new'; an anti-aliased bitmap can be generated  */
-  /* with a call to `ft_gray_raster.raster_render'.                        */
-  /*                                                                       */
-  /* See the comments and documentation in the file `ftimage.h' for more   */
-  /* details on how the raster works.                                      */
-  /*                                                                       */
-  /*************************************************************************/
+  /**************************************************************************
+   *
+   * This file can be compiled without the rest of the FreeType engine, by
+   * defining the STANDALONE_ macro when compiling it.  You also need to
+   * put the files `ftgrays.h' and `ftimage.h' into the current
+   * compilation directory.  Typically, you could do something like
+   *
+   * - copy `src/smooth/ftgrays.c' (this file) to your current directory
+   *
+   * - copy `include/freetype/ftimage.h' and `src/smooth/ftgrays.h' to the
+   *   same directory
+   *
+   * - compile `ftgrays' with the STANDALONE_ macro defined, as in
+   *
+   *     cc -c -DSTANDALONE_ ftgrays.c
+   *
+   * The renderer can be initialized with a call to
+   * `ft_gray_raster.raster_new'; an anti-aliased bitmap can be generated
+   * with a call to `ft_gray_raster.raster_render'.
+   *
+   * See the comments and documentation in the file `ftimage.h' for more
+   * details on how the raster works.
+   *
+   */
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* This is a new anti-aliasing scan-converter for FreeType 2.  The       */
-  /* algorithm used here is _very_ different from the one in the standard  */
-  /* `ftraster' module.  Actually, `ftgrays' computes the _exact_          */
-  /* coverage of the outline on each pixel cell.                           */
-  /*                                                                       */
-  /* It is based on ideas that I initially found in Raph Levien's          */
-  /* excellent LibArt graphics library (see http://www.levien.com/libart   */
-  /* for more information, though the web pages do not tell anything       */
-  /* about the renderer; you'll have to dive into the source code to       */
-  /* understand how it works).                                             */
-  /*                                                                       */
-  /* Note, however, that this is a _very_ different implementation         */
-  /* compared to Raph's.  Coverage information is stored in a very         */
-  /* different way, and I don't use sorted vector paths.  Also, it doesn't */
-  /* use floating point values.                                            */
-  /*                                                                       */
-  /* This renderer has the following advantages:                           */
-  /*                                                                       */
-  /* - It doesn't need an intermediate bitmap.  Instead, one can supply a  */
-  /*   callback function that will be called by the renderer to draw gray  */
-  /*   spans on any target surface.  You can thus do direct composition on */
-  /*   any kind of bitmap, provided that you give the renderer the right   */
-  /*   callback.                                                           */
-  /*                                                                       */
-  /* - A perfect anti-aliaser, i.e., it computes the _exact_ coverage on   */
-  /*   each pixel cell.                                                    */
-  /*                                                                       */
-  /* - It performs a single pass on the outline (the `standard' FT2        */
-  /*   renderer makes two passes).                                         */
-  /*                                                                       */
-  /* - It can easily be modified to render to _any_ number of gray levels  */
-  /*   cheaply.                                                            */
-  /*                                                                       */
-  /* - For small (< 20) pixel sizes, it is faster than the standard        */
-  /*   renderer.                                                           */
-  /*                                                                       */
-  /*************************************************************************/
+  /**************************************************************************
+   *
+   * This is a new anti-aliasing scan-converter for FreeType 2.  The
+   * algorithm used here is _very_ different from the one in the standard
+   * `ftraster' module.  Actually, `ftgrays' computes the _exact_
+   * coverage of the outline on each pixel cell.
+   *
+   * It is based on ideas that I initially found in Raph Levien's
+   * excellent LibArt graphics library (see https://www.levien.com/libart
+   * for more information, though the web pages do not tell anything
+   * about the renderer; you'll have to dive into the source code to
+   * understand how it works).
+   *
+   * Note, however, that this is a _very_ different implementation
+   * compared to Raph's.  Coverage information is stored in a very
+   * different way, and I don't use sorted vector paths.  Also, it doesn't
+   * use floating point values.
+   *
+   * This renderer has the following advantages:
+   *
+   * - It doesn't need an intermediate bitmap.  Instead, one can supply a
+   *   callback function that will be called by the renderer to draw gray
+   *   spans on any target surface.  You can thus do direct composition on
+   *   any kind of bitmap, provided that you give the renderer the right
+   *   callback.
+   *
+   * - A perfect anti-aliaser, i.e., it computes the _exact_ coverage on
+   *   each pixel cell.
+   *
+   * - It performs a single pass on the outline (the `standard' FT2
+   *   renderer makes two passes).
+   *
+   * - It can easily be modified to render to _any_ number of gray levels
+   *   cheaply.
+   *
+   * - For small (< 20) pixel sizes, it is faster than the standard
+   *   renderer.
+   *
+   */
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
-  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
-  /* messages during execution.                                            */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * The macro FT_COMPONENT is used in trace mode.  It is an implicit
+   * parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log
+   * messages during execution.
+   */
 #undef  FT_COMPONENT
-#define FT_COMPONENT  trace_smooth
+#define FT_COMPONENT  smooth
 
 
 #ifdef STANDALONE_
@@ -112,9 +112,9 @@
 
 
   /*
-   *  Approximate sqrt(x*x+y*y) using the `alpha max plus beta min'
-   *  algorithm.  We use alpha = 1, beta = 3/8, giving us results with a
-   *  largest error less than 7% compared to the exact value.
+   * Approximate sqrt(x*x+y*y) using the `alpha max plus beta min'
+   * algorithm.  We use alpha = 1, beta = 3/8, giving us results with a
+   * largest error less than 7% compared to the exact value.
    */
 #define FT_HYPOT( x, y )                 \
           ( x = FT_ABS( x ),             \
@@ -222,10 +222,10 @@ typedef ptrdiff_t  FT_PtrDist;
 #endif
 
 #define FT_THROW( e )                               \
-          ( FT_Throw( FT_ERR_CAT( ErrRaster, e ),   \
+          ( FT_Throw( FT_ERR_CAT( ErrRaster_, e ),  \
                       __LINE__,                     \
                       __FILE__ )                  | \
-            FT_ERR_CAT( ErrRaster, e )            )
+            FT_ERR_CAT( ErrRaster_, e )           )
 
 #else /* !FT_DEBUG_LEVEL_TRACE */
 
@@ -278,8 +278,6 @@ typedef ptrdiff_t  FT_PtrDist;
 #include FT_OUTLINE_H
 
 #include "ftsmerrs.h"
-
-#include "ftspic.h"
 
 #define Smooth_Err_Invalid_Mode     Smooth_Err_Cannot_Render_Glyph
 #define Smooth_Err_Memory_Overflow  Smooth_Err_Out_Of_Memory
@@ -395,16 +393,16 @@ typedef ptrdiff_t  FT_PtrDist;
     ( sizeof( long ) * FT_CHAR_BIT - PIXEL_BITS ) )
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /*   TYPE DEFINITIONS                                                    */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * TYPE DEFINITIONS
+   */
 
   /* don't change the following types to FT_Int or FT_Pos, since we might */
   /* need to define them to "float" or "double" when experimenting with   */
   /* new algorithms                                                       */
 
-  typedef long  TPos;     /* sub-pixel coordinate              */
+  typedef long  TPos;     /* subpixel coordinate               */
   typedef int   TCoord;   /* integer scanline/pixel coordinate */
   typedef int   TArea;    /* cell areas, coordinate products   */
 
@@ -516,10 +514,10 @@ typedef ptrdiff_t  FT_PtrDist;
 #endif /* FT_DEBUG_LEVEL_TRACE */
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Record the current cell in the table.                                 */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * Record the current cell in the table.
+   */
   static void
   gray_record_cell( RAS_ARG )
   {
@@ -561,10 +559,10 @@ typedef ptrdiff_t  FT_PtrDist;
   }
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Set the current cell to a new position.                               */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * Set the current cell to a new position.
+   */
   static void
   gray_set_cell( RAS_ARG_ TCoord  ex,
                           TCoord  ey )
@@ -598,10 +596,10 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #ifndef FT_LONG64
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Render a scanline as one or more cells.                               */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * Render a scanline as one or more cells.
+   */
   static void
   gray_render_scanline( RAS_ARG_ TCoord  ey,
                                  TPos    x1,
@@ -696,10 +694,10 @@ typedef ptrdiff_t  FT_PtrDist;
   }
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Render a given line as a series of scanlines.                         */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * Render a given line as a series of scanlines.
+   */
   static void
   gray_render_line( RAS_ARG_ TPos  to_x,
                              TPos  to_y )
@@ -837,10 +835,10 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #else
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Render a straight line across multiple cells in any direction.        */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * Render a straight line across multiple cells in any direction.
+   */
   static void
   gray_render_line( RAS_ARG_ TPos  to_x,
                              TPos  to_y )
@@ -1330,40 +1328,43 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #ifdef STANDALONE_
 
-  /*************************************************************************/
-  /*                                                                       */
-  /*  The following functions should only compile in stand-alone mode,     */
-  /*  i.e., when building this component without the rest of FreeType.     */
-  /*                                                                       */
-  /*************************************************************************/
+  /**************************************************************************
+   *
+   * The following functions should only compile in stand-alone mode,
+   * i.e., when building this component without the rest of FreeType.
+   *
+   */
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Outline_Decompose                                               */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Walk over an outline's structure to decompose it into individual   */
-  /*    segments and Bézier arcs.  This function is also able to emit      */
-  /*    `move to' and `close to' operations to indicate the start and end  */
-  /*    of new contours in the outline.                                    */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    outline        :: A pointer to the source target.                  */
-  /*                                                                       */
-  /*    func_interface :: A table of `emitters', i.e., function pointers   */
-  /*                      called during decomposition to indicate path     */
-  /*                      operations.                                      */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    user           :: A typeless pointer which is passed to each       */
-  /*                      emitter during the decomposition.  It can be     */
-  /*                      used to store the state during the               */
-  /*                      decomposition.                                   */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    Error code.  0 means success.                                      */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * @Function:
+   *   FT_Outline_Decompose
+   *
+   * @Description:
+   *   Walk over an outline's structure to decompose it into individual
+   *   segments and Bézier arcs.  This function is also able to emit
+   *   `move to' and `close to' operations to indicate the start and end
+   *   of new contours in the outline.
+   *
+   * @Input:
+   *   outline ::
+   *     A pointer to the source target.
+   *
+   *   func_interface ::
+   *     A table of `emitters', i.e., function pointers
+   *     called during decomposition to indicate path
+   *     operations.
+   *
+   * @InOut:
+   *   user ::
+   *     A typeless pointer which is passed to each
+   *     emitter during the decomposition.  It can be
+   *     used to store the state during the
+   *     decomposition.
+   *
+   * @Return:
+   *   Error code.  0 means success.
+   */
   static int
   FT_Outline_Decompose( const FT_Outline*        outline,
                         const FT_Outline_Funcs*  func_interface,
@@ -1610,81 +1611,6 @@ typedef ptrdiff_t  FT_PtrDist;
     return FT_THROW( Invalid_Outline );
   }
 
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Outline_Get_CBox                                                */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return an outline's `control box'.  The control box encloses all   */
-  /*    the outline's points, including Bézier control points.  Though it  */
-  /*    coincides with the exact bounding box for most glyphs, it can be   */
-  /*    slightly larger in some situations (like when rotating an outline  */
-  /*    that contains Bézier outside arcs).                                */
-  /*                                                                       */
-  /*    Computing the control box is very fast, while getting the bounding */
-  /*    box can take much more time as it needs to walk over all segments  */
-  /*    and arcs in the outline.  To get the latter, you can use the       */
-  /*    `ftbbox' component, which is dedicated to this single task.        */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    outline :: A pointer to the source outline descriptor.             */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    acbox   :: The outline's control box.                              */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    See @FT_Glyph_Get_CBox for a discussion of tricky fonts.           */
-  /*                                                                       */
-
-  static void
-  FT_Outline_Get_CBox( const FT_Outline*  outline,
-                       FT_BBox           *acbox )
-  {
-    TPos  xMin, yMin, xMax, yMax;
-
-
-    if ( outline && acbox )
-    {
-      if ( outline->n_points == 0 )
-      {
-        xMin = 0;
-        yMin = 0;
-        xMax = 0;
-        yMax = 0;
-      }
-      else
-      {
-        FT_Vector*  vec   = outline->points;
-        FT_Vector*  limit = vec + outline->n_points;
-
-
-        xMin = xMax = vec->x;
-        yMin = yMax = vec->y;
-        vec++;
-
-        for ( ; vec < limit; vec++ )
-        {
-          TPos  x, y;
-
-
-          x = vec->x;
-          if ( x < xMin ) xMin = x;
-          if ( x > xMax ) xMax = x;
-
-          y = vec->y;
-          if ( y < yMin ) yMin = y;
-          if ( y > yMax ) yMax = y;
-        }
-      }
-      acbox->xMin = xMin;
-      acbox->xMax = xMax;
-      acbox->yMin = yMin;
-      acbox->yMax = yMax;
-    }
-  }
-
 #endif /* STANDALONE_ */
 
 
@@ -1702,19 +1628,20 @@ typedef ptrdiff_t  FT_PtrDist;
 
 
   static int
-  gray_convert_glyph_inner( RAS_ARG )
+  gray_convert_glyph_inner( RAS_ARG,
+                            int  continued )
   {
-
     volatile int  error = 0;
 
-#ifdef FT_CONFIG_OPTION_PIC
-      FT_Outline_Funcs func_interface;
-      Init_Class_func_interface(&func_interface);
-#endif
 
     if ( ft_setjmp( ras.jump_buffer ) == 0 )
     {
+      if ( continued )
+        FT_Trace_Disable();
       error = FT_Outline_Decompose( &ras.outline, &func_interface, &ras );
+      if ( continued )
+        FT_Trace_Enable();
+
       if ( !ras.invalid )
         gray_record_cell( RAS_VAR );
 
@@ -1741,11 +1668,12 @@ typedef ptrdiff_t  FT_PtrDist;
   {
     const TCoord  yMin = ras.min_ey;
     const TCoord  yMax = ras.max_ey;
-    const TCoord  xMin = ras.min_ex;
-    const TCoord  xMax = ras.max_ex;
 
 #ifdef __REACTOS__
-    TCell *buffer;
+    TCell   *buffer = malloc(FT_MAX_GRAY_POOL * sizeof(TCell));
+    if (!buffer)
+      return 1;
+    {
 #else
     TCell    buffer[FT_MAX_GRAY_POOL];
 #endif
@@ -1755,13 +1683,8 @@ typedef ptrdiff_t  FT_PtrDist;
     TCoord   bands[32];  /* enough to accommodate bisections */
     TCoord*  band;
 
-#ifdef __REACTOS__
-    buffer = malloc(FT_MAX(FT_RENDER_POOL_SIZE, 2048));
-    if (!buffer)
-    {
-      return 1;
-    }
-#endif
+    int  continued = 0;
+
 
     /* set up vertical bands */
     if ( height > n )
@@ -1785,8 +1708,8 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.max_ey = FT_MIN( y, yMax );
 
       band    = bands;
-      band[1] = xMin;
-      band[0] = xMax;
+      band[1] = ras.min_ey;
+      band[0] = ras.max_ey;
 
       do
       {
@@ -1798,10 +1721,11 @@ typedef ptrdiff_t  FT_PtrDist;
 
         ras.num_cells = 0;
         ras.invalid   = 1;
-        ras.min_ex    = band[1];
-        ras.max_ex    = band[0];
+        ras.min_ey    = band[1];
+        ras.max_ey    = band[0];
 
-        error = gray_convert_glyph_inner( RAS_VAR );
+        error     = gray_convert_glyph_inner( RAS_VAR, continued );
+        continued = 1;
 
         if ( !error )
         {
@@ -1810,12 +1734,14 @@ typedef ptrdiff_t  FT_PtrDist;
           continue;
         }
         else if ( error != ErrRaster_Memory_Overflow )
-        {
 #ifdef __REACTOS__
+        {
           free(buffer);
-#endif
           return 1;
         }
+#else
+          return 1;
+#endif
 
         /* render pool overflow; we will reduce the render band by half */
         width >>= 1;
@@ -1838,8 +1764,8 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #ifdef __REACTOS__
     free(buffer);
+    }
 #endif
-
     return 0;
   }
 
@@ -1850,10 +1776,14 @@ typedef ptrdiff_t  FT_PtrDist;
   {
     const FT_Outline*  outline    = (const FT_Outline*)params->source;
     const FT_Bitmap*   target_map = params->target;
-    FT_BBox            cbox, clip;
+    FT_BBox            clip;
 
 #ifndef FT_STATIC_RASTER
+#ifdef __REACTOS__
+    gray_TWorker *worker;
+#else
     gray_TWorker  worker[1];
+#endif
 #endif
 
 
@@ -1878,12 +1808,25 @@ typedef ptrdiff_t  FT_PtrDist;
            outline->contours[outline->n_contours - 1] + 1 )
       return FT_THROW( Invalid_Outline );
 
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
+    worker = malloc(sizeof(*worker));
+    if (!worker)
+      return FT_THROW(Out_Of_Memory);
+#endif /* !defined(FT_STATIC_RASTER) && defined(__REACTOS__) */
+
     ras.outline = *outline;
 
     if ( params->flags & FT_RASTER_FLAG_DIRECT )
     {
       if ( !params->gray_spans )
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
+      {
+        free(worker);
         return 0;
+      }
+#else
+        return 0;
+#endif
 
       ras.render_span      = (FT_Raster_Span_Func)params->gray_spans;
       ras.render_span_data = params->user;
@@ -1892,14 +1835,35 @@ typedef ptrdiff_t  FT_PtrDist;
     {
       /* if direct mode is not set, we must have a target bitmap */
       if ( !target_map )
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
+      {
+        free(worker);
         return FT_THROW( Invalid_Argument );
+      }
+#else
+        return FT_THROW( Invalid_Argument );
+#endif
 
       /* nothing to do */
       if ( !target_map->width || !target_map->rows )
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
+      {
+        free(worker);
         return 0;
+      }
+#else
+        return 0;
+#endif
 
       if ( !target_map->buffer )
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
+      {
+        free(worker);
         return FT_THROW( Invalid_Argument );
+      }
+#else
+        return FT_THROW( Invalid_Argument );
+#endif
 
       if ( target_map->pitch < 0 )
         ras.target.origin = target_map->buffer;
@@ -1913,21 +1877,11 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.render_span_data = NULL;
     }
 
-    FT_Outline_Get_CBox( outline, &cbox );
-
-    /* reject too large outline coordinates */
-    if ( cbox.xMin < -0x1000000L || cbox.xMax > 0x1000000L ||
-         cbox.yMin < -0x1000000L || cbox.yMax > 0x1000000L )
-      return FT_THROW( Invalid_Outline );
-
-    /* truncate the bounding box to integer pixels */
-    cbox.xMin = cbox.xMin >> 6;
-    cbox.yMin = cbox.yMin >> 6;
-    cbox.xMax = ( cbox.xMax + 63 ) >> 6;
-    cbox.yMax = ( cbox.yMax + 63 ) >> 6;
-
     /* compute clipping box */
-    if ( !( params->flags & FT_RASTER_FLAG_DIRECT ) )
+    if ( params->flags & FT_RASTER_FLAG_DIRECT &&
+         params->flags & FT_RASTER_FLAG_CLIP   )
+      clip = params->clip_box;
+    else
     {
       /* compute clip box from target pixmap */
       clip.xMin = 0;
@@ -1935,26 +1889,32 @@ typedef ptrdiff_t  FT_PtrDist;
       clip.xMax = (FT_Pos)target_map->width;
       clip.yMax = (FT_Pos)target_map->rows;
     }
-    else if ( params->flags & FT_RASTER_FLAG_CLIP )
-      clip = params->clip_box;
-    else
-    {
-      clip.xMin = -32768L;
-      clip.yMin = -32768L;
-      clip.xMax =  32767L;
-      clip.yMax =  32767L;
-    }
 
     /* clip to target bitmap, exit if nothing to do */
-    ras.min_ex = FT_MAX( cbox.xMin, clip.xMin );
-    ras.min_ey = FT_MAX( cbox.yMin, clip.yMin );
-    ras.max_ex = FT_MIN( cbox.xMax, clip.xMax );
-    ras.max_ey = FT_MIN( cbox.yMax, clip.yMax );
+    ras.min_ex = clip.xMin;
+    ras.min_ey = clip.yMin;
+    ras.max_ex = clip.xMax;
+    ras.max_ey = clip.yMax;
 
     if ( ras.max_ex <= ras.min_ex || ras.max_ey <= ras.min_ey )
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
+    {
+      free(worker);
       return 0;
+    }
+#else
+      return 0;
+#endif
 
+#if !defined(FT_STATIC_RASTER) && defined(__REACTOS__)
+    {
+      FT_Error error = gray_convert_glyph( RAS_VAR );
+      free(worker);
+      return error;
+    }
+#else
     return gray_convert_glyph( RAS_VAR );
+#endif
   }
 
 

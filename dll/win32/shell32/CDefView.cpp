@@ -518,7 +518,7 @@ public:
         return wc;
     }
 
-    virtual WNDPROC GetWindowProc()
+    virtual WNDPROC GetWindowProc() override
     {
         return WindowProc;
     }
@@ -1059,7 +1059,7 @@ HRESULT CDefView::GetDetailsByFolderColumn(PCUITEMID_CHILD pidl, UINT FoldCol, S
 {
     // According to learn.microsoft.com/en-us/windows/win32/shell/sfvm-getdetailsof
     // the query order is IShellFolder2, IShellDetails, SFVM_GETDETAILSOF.
-    HRESULT hr;
+    HRESULT hr = E_FAIL;
     if (m_pSF2Parent)
     {
         hr = m_pSF2Parent->GetDetailsOf(pidl, FoldCol, &sd);
@@ -1230,6 +1230,7 @@ void CDefView::ColumnListChanged()
             break;
         HRESULT foldCol = MapListColumnToFolderColumn(listCol);
         assert(SUCCEEDED(foldCol));
+        DBG_UNREFERENCED_LOCAL_VARIABLE(foldCol);
         AppendMenuItem(m_hMenuArrangeModes, MF_STRING,
                        DVIDM_ARRANGESORT_FIRST + listCol, lvc.pszText, listCol);
     }
@@ -2820,8 +2821,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             }
 
             WCHAR szName[MAX_PATH], *pszText = lpdi->item.pszText;
-            if (SUCCEEDED(Shell_DisplayNameOf(m_pSFParent, pidl, SHGDN_FOREDITING | SHGDN_INFOLDER,
-                                              szName, _countof(szName))))
+            if (SUCCEEDED(DisplayNameOfW(m_pSFParent, pidl, SHGDN_FOREDITING | SHGDN_INFOLDER,
+                                         szName, _countof(szName))))
             {
                 pszText = szName;
                 ::SetWindowText(hEdit, pszText);
@@ -2874,6 +2875,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     ILFree(pidlNew);// A SHCNE has updated the item already
                 else if (!LV_UpdateItem(lpdi->item.iItem, pidlNew))
                     ILFree(pidlNew);
+                OnStateChange(CDBOSC_RENAME);
             }
             else
             {
@@ -3373,7 +3375,7 @@ HRESULT CDefView::LoadViewState()
             m_LoadColumnsList = NULL;
         }
     }
-    m_sortInfo.bLoadedFromViewState = !fallback && m_LoadColumnsList && cvs.SortColId != LISTVIEW_SORT_INFO::UNSPECIFIEDCOLUMN;
+    m_sortInfo.bLoadedFromViewState = !fallback && m_LoadColumnsList && (int)cvs.SortColId != LISTVIEW_SORT_INFO::UNSPECIFIEDCOLUMN;
     m_sortInfo.bColumnIsFolderColumn = TRUE;
     m_sortInfo.Direction = cvs.SortDir > 0 ? 1 : -1;
     m_sortInfo.ListColumn = cvs.SortColId;

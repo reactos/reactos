@@ -1558,10 +1558,13 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     PITEMID_CHILD *pPidlOut)
 {
     WCHAR szSrc[MAX_PATH + 1], szDest[MAX_PATH + 1], szNameBuf[MAX_PATH];
-    BOOL bIsFolder = _ILIsFolder (ILFindLastID (pidl));
+    BOOL bIsFolder = ItemIsFolder(ILFindLastID(pidl));
 
     TRACE ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this, hwndOwner, pidl,
            debugstr_w (lpName), dwFlags, pPidlOut);
+
+    if (pPidlOut)
+        *pPidlOut = NULL;
 
     LPCWSTR pszName = GetItemFileName(pidl, szNameBuf, _countof(szNameBuf));
     if (!pszName)
@@ -1595,16 +1598,11 @@ HRESULT WINAPI CFSFolder::SetNameOf(
         if (pPidlOut)
             hr = SHILClone(pidl, pPidlOut);
     }
-    else if (MoveFileW(szSrc, szDest))
-    {
-        if (pPidlOut)
-            hr = ParseDisplayName(hwndOwner, NULL, PathFindFileNameW(szDest), NULL, pPidlOut, NULL);
-
-        SHChangeNotify(bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM, SHCNF_PATHW, szSrc, szDest);
-    }
     else
     {
-        hr = HResultFromWin32(GetLastError());
+        hr = SHELL_SingleFileOperation(hwndOwner, FO_RENAME, szSrc, szDest, FOF_SILENT | FOF_ALLOWUNDO, NULL);
+        if (SUCCEEDED(hr) && pPidlOut)
+            hr = ParseDisplayName(hwndOwner, NULL, PathFindFileNameW(szDest), NULL, pPidlOut, NULL);
     }
     return hr;
 }

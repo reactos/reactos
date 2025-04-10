@@ -105,6 +105,13 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
         hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index]));
         g_strTooltip.Format(IDS_PWR_CHARGING, PowerStatus.BatteryLifePercent);
     }
+    else if (PowerStatus.ACLineStatus == AC_LINE_ONLINE &&
+             PowerStatus.BatteryLifePercent == 100)
+    {
+        index = Quantize(PowerStatus.BatteryLifePercent);
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index]));
+        g_strTooltip.LoadStringW(IDS_PWR_FULLY_CHARGED);
+    }
     else if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
              ((PowerStatus.BatteryFlag & BATTERY_FLAG_CHARGING) == 0))
     {

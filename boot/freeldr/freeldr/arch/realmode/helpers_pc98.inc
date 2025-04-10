@@ -56,12 +56,12 @@ writestr:
     jmp short .writestr_loop
 
 .writestr_cr:
-    mov ax, word ptr VramOffset
+    mov ax, word ptr ds:[VramOffset]
     mov dl, 80 * 2
     div dl
     inc ax
     mul dl
-    mov word ptr VramOffset, ax
+    mov word ptr ds:[VramOffset], ax
 
     /* Skip the next LF character */
     inc si
@@ -80,26 +80,38 @@ writechr:
     pushf
     pusha
 
+    /* Check if the VRAM segment was initialized */
+    mov dx, word ptr ds:[VramSegment]
+    test dx, dx
+    jnz short .writechr_write
+
     /* High-resolution mode check */
     test byte ptr ds:[HEX(501)], HEX(08)
-    jz .writechr_normal
-    push HEX(0E000)
-    jmp short .writechr_test_done
-.writechr_normal:
-    push HEX(0A000)
-
+    mov dx, HEX(0A000) // Suppose normal mode
+    jz short .writechr_test_done
+    mov dh, HEX(E0)    // Change 0xA000 to 0xE000, use hi-res mode
 .writechr_test_done:
-    pop es
-    mov di, word ptr VramOffset
+    mov word ptr ds:[VramSegment], dx
+
+.writechr_write:
+    /* Load the VRAM segment and offset (ES:DI) */
+    les di, dword ptr ds:[VramSegOff]
+
+    /* Write ASCII directly to the VRAM (two bytes per character) */
     xor ah, ah
     stosw
-    mov word ptr VramOffset, di
+
+    /* Update the start position */
+    mov word ptr ds:[VramOffset], di
 
     popa
     popf
     ret
 
+VramSegOff:
 VramOffset:
+    .word 0
+VramSegment:
     .word 0
 
 /*

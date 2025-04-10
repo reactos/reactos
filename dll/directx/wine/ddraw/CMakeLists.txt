@@ -1,10 +1,7 @@
 
 add_definitions(
-    -D__WINESRC__
     -D__ROS_LONG64__
     -DUSE_WIN32_OPENGL)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 spec2def(ddraw.dll ddraw.spec ADD_IMPORTLIB)
 
@@ -41,3 +38,4 @@ add_importlibs(ddraw advapi32 gdi32 user32 d3dwine msvcrt kernel32 ntdll)
 add_dependencies(ddraw wineheaders)
 add_pch(ddraw precomp.h SOURCE)
 add_cd_file(TARGET ddraw DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(ddraw) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

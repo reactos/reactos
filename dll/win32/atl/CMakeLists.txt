@@ -3,10 +3,8 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D_ATL_VER=_ATL_VER_30)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(atl.dll atl.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -37,3 +35,4 @@ target_link_libraries(atl uuid wine)
 add_importlibs(atl oleaut32 ole32 user32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
 add_pch(atl precomp.h SOURCE)
 add_cd_file(TARGET atl DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(atl) # CORE-5743: No ARRAY_SIZE macro

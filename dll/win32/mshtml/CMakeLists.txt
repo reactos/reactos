@@ -3,14 +3,12 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D__ROS_LONG64__
     -DCOM_NO_WINDOWS_H
     -Dstrcasecmp=_stricmp
     -Dstrncasecmp=_strnicmp
 )
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_idl_headers(mshtml_nsiface_header nsiface.idl)
 spec2def(mshtml.dll mshtml.spec ADD_IMPORTLIB)
 
@@ -116,3 +114,4 @@ add_importlibs(mshtml urlmon shlwapi shell32 ole32 oleaut32 user32 gdi32 advapi3
 add_dependencies(mshtml mshtml_nsiface_header)
 add_pch(mshtml mshtml_private.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET mshtml DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(mshtml) # CORE-5743: No CONST_VTABLE

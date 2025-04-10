@@ -438,23 +438,41 @@ RealizeFontInit(HFONT hFont)
   return pTextObj;
 }
 
+static BOOL
+IntCheckFontPathNames(
+    _In_reads_(cwc) WCHAR *pwcFiles,
+    _In_ ULONG cFiles,
+    _In_ ULONG cwc)
+{
+    ULONG ich, cRealFiles;
+
+    if (pwcFiles[cwc - 1] != UNICODE_NULL)
+        return FALSE;
+
+    for (ich = cRealFiles = 0; ich < cwc; ++ich)
+    {
+        if (!pwcFiles[ich])
+            ++cRealFiles;
+    }
+
+    return cRealFiles >= cFiles;
+}
 
 /** Functions ******************************************************************/
 
 INT
 APIENTRY
 NtGdiAddFontResourceW(
-    IN WCHAR *pwcFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN FLONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
+    _In_reads_(cwc) WCHAR *pwcFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles,
+    _In_ FLONG fl,
+    _In_ DWORD dwPidTid,
+    _In_opt_ DESIGNVECTOR *pdv)
 {
     UNICODE_STRING SafeFileName;
     INT Ret;
 
-    DBG_UNREFERENCED_PARAMETER(cFiles);
     DBG_UNREFERENCED_PARAMETER(dwPidTid);
     DBG_UNREFERENCED_PARAMETER(pdv);
 
@@ -464,19 +482,21 @@ NtGdiAddFontResourceW(
     if ((cwc <= 1) || (cwc > UNICODE_STRING_MAX_CHARS))
         return 0;
 
-    SafeFileName.MaximumLength = (USHORT)(cwc * sizeof(WCHAR));
-    SafeFileName.Length = SafeFileName.MaximumLength - sizeof(UNICODE_NULL);
+    SafeFileName.Length = (USHORT)((cwc - 1) * sizeof(WCHAR));
+    SafeFileName.MaximumLength = SafeFileName.Length + sizeof(UNICODE_NULL);
     SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                 SafeFileName.MaximumLength,
                                                 TAG_STRING);
     if (!SafeFileName.Buffer)
-    {
         return 0;
-    }
 
     _SEH2_TRY
     {
         ProbeForRead(pwcFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
+
+        if (!IntCheckFontPathNames(pwcFiles, cFiles, cwc))
+            return 0;
+ 
         RtlCopyMemory(SafeFileName.Buffer, pwcFiles, SafeFileName.Length);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -487,7 +507,62 @@ NtGdiAddFontResourceW(
     _SEH2_END;
 
     SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    Ret = IntGdiAddFontResource(&SafeFileName, fl);
+
+    Ret = IntGdiAddFontResourceEx(&SafeFileName, cFiles, fl, 0);
+
+    ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
+    return Ret;
+}
+
+BOOL
+APIENTRY
+NtGdiRemoveFontResourceW(
+    _In_reads_(cwc) WCHAR *pwszFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles,
+    _In_ ULONG fl,
+    _In_ DWORD dwPidTid,
+    _In_opt_ DESIGNVECTOR *pdv)
+{
+    UNICODE_STRING SafeFileName;
+    BOOL Ret;
+
+    DBG_UNREFERENCED_PARAMETER(dwPidTid);
+    DBG_UNREFERENCED_PARAMETER(pdv);
+
+    DPRINT("NtGdiRemoveFontResourceW\n");
+
+    /* cwc = Length + trailing zero. */
+    if ((cwc <= 1) || (cwc > UNICODE_STRING_MAX_CHARS))
+        return FALSE;
+
+    SafeFileName.Length = (USHORT)((cwc - 1) * sizeof(WCHAR));
+    SafeFileName.MaximumLength = SafeFileName.Length + sizeof(UNICODE_NULL);
+    SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                SafeFileName.MaximumLength,
+                                                TAG_STRING);
+    if (!SafeFileName.Buffer)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
+
+        if (!IntCheckFontPathNames(pwszFiles, cFiles, cwc))
+            return FALSE;
+
+        RtlCopyMemory(SafeFileName.Buffer, pwszFiles, SafeFileName.Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    Ret = IntGdiRemoveFontResource(&SafeFileName, cFiles, fl);
 
     ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
     return Ret;

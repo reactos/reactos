@@ -1,0 +1,10 @@
+# Technical notes on ReactOS FreeType 2.10.0
+
+- FreeType in ReactOS is a static library. ftfd.dll (win32ss/drivers/font/ftfd) actually uses FreeType.
+- As usual for 3rd party libraries, the parts that differ are wrapped by #ifdef __REACTOS__ ... #endif.
+- Stack size is limited, so we have to use malloc/free instead of large stack variables.
+- malloc/realloc/free in ftfd.dll are wrappers implemented in win32ss/drivers/font/ftfd/rosglue.c.
+- FT_Bitmap_Convert_ReactOS_Hack function is an extension of FT_Bitmap_Convert function.
+  This hack function is (currently) needed for ReactOS text output.
+- Now we can use FT_ENCODING_NONE for FT_Select_Charmap on FON/FNT files.
+- Jamfile's and Makefile's in source are useless for ReactOS (search and delete).

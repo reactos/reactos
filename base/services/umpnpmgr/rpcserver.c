@@ -4179,7 +4179,7 @@ PNP_AddEmptyLogConf(
     DWORD RegDataType = 0;
     ULONG ulDataSize = 0;
     LPBYTE pDataBuffer = NULL;
-    WCHAR szValueNameBuffer[64];
+    WCHAR szValueNameBuffer[LOGCONF_NAME_BUFFER_SIZE];
     CONFIGRET ret = CR_SUCCESS;
 
     DPRINT("PNP_AddEmptyLogConf(%p %S %lu %p 0x%08lx)\n",
@@ -4211,7 +4211,7 @@ PNP_AddEmptyLogConf(
                                &RegDataType,
                                &ulDataSize,
                                &pDataBuffer,
-                               64,
+                               LOGCONF_NAME_BUFFER_SIZE,
                                szValueNameBuffer);
 
     if (ret != CR_SUCCESS || ulDataSize == 0)
@@ -4324,8 +4324,87 @@ PNP_FreeLogConf(
     DWORD ulLogConfTag,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    HKEY hConfigKey = NULL;
+    DWORD RegDataType = 0;
+    ULONG ulDataSize = 0;
+    LPBYTE pDataBuffer = NULL;
+    WCHAR szValueNameBuffer[LOGCONF_NAME_BUFFER_SIZE];
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_FreeLogConf(%p %S %lu %lu 0x%08lx)\n",
+           hBinding, pDeviceID, ulLogConfType, ulLogConfTag, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVNODE;
+
+    ret = OpenConfigurationKey(pDeviceID,
+                               ulLogConfType,
+                               &hConfigKey);
+    if (ret != CR_SUCCESS)
+    {
+        DPRINT1("OpenConfigurationKey() failed (Error %lu)\n", ret);
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
+    }
+
+    ret = GetConfigurationData(hConfigKey,
+                               ulLogConfType,
+                               &RegDataType,
+                               &ulDataSize,
+                               &pDataBuffer,
+                               LOGCONF_NAME_BUFFER_SIZE,
+                               szValueNameBuffer);
+    if (ret != CR_SUCCESS)
+    {
+        ret = CR_INVALID_LOG_CONF;
+        goto done;
+    }
+
+    if (RegDataType == REG_RESOURCE_LIST)
+    {
+        if (((PCM_RESOURCE_LIST)pDataBuffer)->Count <= 1)
+        {
+            /* Delete the key if there is only one or no configuration in the key */
+            DPRINT("Delete value %S\n", szValueNameBuffer);
+            RegDeleteValue(hConfigKey, szValueNameBuffer);
+        }
+        else
+        {
+            /* FIXME */
+        }
+    }
+    else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
+    {
+        if (((PIO_RESOURCE_REQUIREMENTS_LIST)pDataBuffer)->AlternativeLists <= 1)
+        {
+            /* Delete the key if there is only one or no configuration in the key */
+            DPRINT("Delete value %S\n", szValueNameBuffer);
+            RegDeleteValue(hConfigKey, szValueNameBuffer);
+        }
+        else
+        {
+            /* FIXME */
+        }
+    }
+    else
+    {
+        ret = CR_FAILURE;
+        goto done;
+    }
+
+done:
+    if (pDataBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, pDataBuffer);
+
+    if (hConfigKey != NULL)
+        RegCloseKey(hConfigKey);
+
+    DPRINT("PNP_FreeLogConf() returns %lu\n", ret);
+
+    return ret;
 }
 
 

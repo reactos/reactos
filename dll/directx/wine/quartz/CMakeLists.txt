@@ -3,12 +3,10 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -DENTRY_PREFIX=QUARTZ_
     -DWINE_REGISTER_DLL
     -DPROXY_DELEGATION)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(quartz.dll quartz.spec)
 add_rpcproxy_files(quartz_strmif.idl)
 
@@ -61,3 +59,4 @@ add_importlibs(quartz dsound msacm32 msvfw32 ole32 oleaut32 rpcrt4 user32 gdi32 
 add_dependencies(quartz dxsdk quartz_idlheader stdole2)
 add_pch(quartz precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(quartz) # CORE-5743: No CONST_VTABLE

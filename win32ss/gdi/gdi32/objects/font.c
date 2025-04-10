@@ -1,10 +1,12 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            win32ss/gdi/gdi32/objects/font.c
- * PURPOSE:
- * PROGRAMMER:
- *
+ * PROJECT:     ReactOS GDI32
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Font manipulation API
+ * COPYRIGHT:   Copyright 2019 James Tabor
+ *              Copyright 2019 Pierre Schweitzer (heis_spiter@hotmail.com)
+ *              Copyright 2019-2021 Hermes Belusca-Maito (hermes.belusca-maito@reactos.org)
+ *              Copyright 2018 Baruch Rutman (peterooch@gmail.com)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <precomp.h>
@@ -1939,6 +1941,144 @@ CreateFontW(
     return CreateFontIndirectW(&logfont);
 }
 
+// Convert single or multiple font path(s)
+PWSTR
+FASTCALL
+IntConvertFontPaths(
+    _In_ PCWSTR pszFiles,
+    _Out_ PDWORD pcFiles,
+    _Out_ PDWORD pcwc,
+    _Inout_ PDWORD pfl,
+    _In_ BOOL bFlag)
+{
+    // FIXME: pfl
+    // FIXME: bFlag
+
+    *pcwc = *pcFiles = 0;
+
+    if (!*pszFiles)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    // Build "Fonts" path
+    WCHAR szFontsDir[MAX_PATH];
+    GetWindowsDirectoryW(szFontsDir, _countof(szFontsDir));
+    StringCchCatW(szFontsDir, _countof(szFontsDir), L"\\Fonts");
+
+    // Count the number of paths separated by '|'.
+    ULONG pathCount = 1;
+    for (PCWSTR pch1 = pszFiles; *pch1; ++pch1)
+    {
+        if (*pch1 == L'|')
+            pathCount++;
+    }
+
+    // Allocate memory for the paths.
+    SIZE_T cchBuff = pathCount * MAX_PATH;
+    PWSTR pszBuff = HEAP_alloc(cchBuff * sizeof(WCHAR));
+    if (!pszBuff)
+        return NULL;
+
+    pszBuff[0] = UNICODE_NULL;
+    *pcFiles = pathCount;
+
+    // Convert paths
+    DWORD dwError = ERROR_SUCCESS;
+    PCWSTR pch1, pch1Prev;
+    BOOL bFirst = TRUE;
+    for (pch1 = pch1Prev = pszFiles;; ++pch1)
+    {
+        if (*pch1 && *pch1 != L'|')
+            continue;
+
+        UINT_PTR spanLen = pch1 - pch1Prev;
+        if (spanLen < _countof(L".ttf") || spanLen >= MAX_PATH)
+        {
+            dwError = ERROR_INVALID_FUNCTION;
+            break;
+        }
+
+        WCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
+        StringCchCopyNW(szFileName, _countof(szFileName), pch1Prev, spanLen);
+
+        // Search file
+        if (!SearchPathW(L".", szFileName, NULL, _countof(szFullPath), szFullPath, NULL) &&
+            !SearchPathW(szFontsDir, szFileName, NULL, _countof(szFullPath), szFullPath, NULL))
+        {
+            dwError = ERROR_FILE_NOT_FOUND;
+            break;
+        }
+
+        if (bFirst)
+        {
+            bFirst = FALSE;
+        }
+        else
+        {
+            SIZE_T cch = wcslen(szFullPath);
+            if (cch < _countof(L".pfb"))
+            {
+                dwError = ERROR_INVALID_FUNCTION;
+                break;
+            }
+
+            // Check filename extension
+            PCWSTR pchDotExt = &szFullPath[cch - 4];
+            if (_wcsicmp(pchDotExt, L".pfb") != 0 &&
+                _wcsicmp(pchDotExt, L".mmm") != 0)
+            {
+                dwError = ERROR_INVALID_FUNCTION;
+                break;
+            }
+        }
+
+        // Convert to an NT path
+        UNICODE_STRING NtAbsPath;
+        if (!RtlDosPathNameToNtPathName_U(szFullPath, &NtAbsPath, NULL, NULL))
+        {
+            dwError = ERROR_OUTOFMEMORY;
+            break;
+        }
+
+        // Append a path and '|' to pszBuff
+        if (StringCchCatW(pszBuff, cchBuff, NtAbsPath.Buffer) != S_OK ||
+            StringCchCatW(pszBuff, cchBuff, L"|") != S_OK)
+        {
+            RtlFreeUnicodeString(&NtAbsPath);
+            dwError = ERROR_INVALID_FUNCTION;
+            break;
+        }
+
+        RtlFreeUnicodeString(&NtAbsPath);
+
+        if (!*pch1)
+            break;
+
+        pch1Prev = pch1 + 1;
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        HEAP_free(pszBuff);
+        *pcwc = *pcFiles = 0;
+        if (dwError != ERROR_INVALID_FUNCTION)
+            SetLastError(dwError);
+        return NULL;
+    }
+
+    *pcwc = (DWORD)wcslen(pszBuff);
+
+    // Convert '|' to '\0'
+    for (PWSTR pch2 = pszBuff; *pch2; ++pch2)
+    {
+        if (*pch2 == L'|')
+            *pch2 = UNICODE_NULL;
+    }
+
+    return pszBuff;
+}
 
 /*
  * @unimplemented
@@ -1955,124 +2095,146 @@ CreateScalableFontResourceA(
     return FALSE;
 }
 
-
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
+AddFontResourceExW(
+    _In_ LPCWSTR lpszFilename,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pvReserved)
 {
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    return GdiAddFontResourceW(lpszFilename, fl,0);
+    return GdiAddFontResourceW(lpszFilename, fl, NULL);
 }
 
-
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
+AddFontResourceExA(
+    _In_ LPCSTR lpszFilename,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pvReserved)
 {
-    NTSTATUS Status;
-    PWSTR FilenameW;
-    int rc;
-
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
-    {
-        SetLastError (RtlNtStatusToDosError(Status));
+    if (!lpszFilename)
         return 0;
-    }
 
-    rc = GdiAddFontResourceW ( FilenameW, fl, 0 );
-    HEAP_free ( FilenameW );
-    return rc;
-}
-
-
-/*
- * @implemented
- */
-int
-WINAPI
-AddFontResourceA ( LPCSTR lpszFilename )
-{
-    NTSTATUS Status;
     PWSTR FilenameW;
-    int rc = 0;
+    WCHAR szBuff[MAX_PATH];
 
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
+    _SEH2_TRY
     {
-        SetLastError (RtlNtStatusToDosError(Status));
+        FilenameW = HEAP_strdupA2W_buf(lpszFilename, szBuff, _countof(szBuff));
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        rc = GdiAddFontResourceW ( FilenameW, 0, 0);
-
-        HEAP_free ( FilenameW );
+        _SEH2_YIELD(return 0);
     }
-    return rc;
+    _SEH2_END;
+
+    if (!FilenameW)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return 0;
+    }
+
+    INT ret = GdiAddFontResourceW(FilenameW, fl, NULL);
+    HEAP_strdupA2W_buf_free(FilenameW, szBuff);
+    return ret;
 }
 
-
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceW ( LPCWSTR lpszFilename )
+AddFontResourceA(_In_ LPCSTR lpszFilename)
 {
-    return GdiAddFontResourceW ( lpszFilename, 0, 0 );
+    return AddFontResourceExA(lpszFilename, 0, NULL);
 }
 
+/* @implemented */
+INT
+WINAPI
+AddFontResourceW(_In_ LPCWSTR lpszFilename)
+{
+    return GdiAddFontResourceW(lpszFilename, 0, NULL);
+}
 
-/*
- * @implemented
- */
+/* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceW(LPCWSTR lpFileName)
+RemoveFontResourceW(_In_ LPCWSTR lpFileName)
 {
-    return RemoveFontResourceExW(lpFileName,0,0);
+    return RemoveFontResourceExW(lpFileName, 0, NULL);
 }
 
-
-/*
- * @implemented
- */
+/* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceA(LPCSTR lpFileName)
+RemoveFontResourceA(_In_ LPCSTR lpFileName)
 {
-    return RemoveFontResourceExA(lpFileName,0,0);
+    return RemoveFontResourceExA(lpFileName, 0, NULL);
 }
 
-/*
- * @implemented
- */
+/* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceExA(LPCSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv)
+RemoveFontResourceExA(
+    _In_ LPCSTR lpFileName,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pdv)
 {
-    NTSTATUS Status;
-    LPWSTR lpFileNameW;
-    BOOL result;
+    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpFileName)
+        return FALSE;
+
+    WCHAR szBuff[MAX_PATH];
+    PWSTR FilenameW;
+
+    _SEH2_TRY
+    {
+        FilenameW = HEAP_strdupA2W_buf(lpFileName, szBuff, _countof(szBuff));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        FilenameW = NULL;
+    }
+    _SEH2_END;
+
+    if (!FilenameW)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
+    BOOL result = RemoveFontResourceExW(FilenameW, fl, pdv);
+    HEAP_strdupA2W_buf_free(FilenameW, szBuff);
+    return result;
+}
+
+/* @implemented */
+BOOL
+WINAPI
+RemoveFontResourceExW(
+    _In_ LPCWSTR lpFileName,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pdv)
+{
+    DPRINT("RemoveFontResourceExW\n");
 
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
@@ -2080,43 +2242,18 @@ RemoveFontResourceExA(LPCSTR lpFileName,
         return FALSE;
     }
 
-    _SEH2_TRY
-    {
-        Status = HEAP_strdupA2W(&lpFileNameW, lpFileName);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
+    if (!lpFileName)
         return FALSE;
-    }
 
-    result = RemoveFontResourceExW(lpFileNameW, fl, pdv);
-    HEAP_free(lpFileNameW);
-    return result;
+    ULONG cFiles, cwc;
+    PWSTR pszConverted = IntConvertFontPaths(lpFileName, &cFiles, &cwc, &fl, TRUE);
+    if (!pszConverted)
+        return FALSE;
+
+    BOOL ret = NtGdiRemoveFontResourceW(pszConverted, cwc, cFiles, fl, 0, NULL);
+    HEAP_free(pszConverted);
+    return ret;
 }
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-RemoveFontResourceExW(LPCWSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv)
-{
-    /* FIXME the flags */
-    /* FIXME the pdv */
-    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
-    DPRINT("RemoveFontResourceExW\n");
-    return 0;
-}
-
 
 /***********************************************************************
  *           GdiGetCharDimensions
@@ -2407,55 +2544,33 @@ NewEnumFontFamiliesExW(
     return ret;
 }
 
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
 GdiAddFontResourceW(
     LPCWSTR lpszFilename,
     FLONG fl,
     DESIGNVECTOR *pdv)
 {
-    INT Ret;
-    WCHAR lpszBuffer[MAX_PATH];
-    WCHAR lpszAbsPath[MAX_PATH];
-    UNICODE_STRING NtAbsPath;
-
-    /* FIXME: We don't support multiple files passed in lpszFilename
-     *        as L"abcxxxxx.pfm|abcxxxxx.pfb"
-     */
-
-    /* Does the file exist in CurrentDirectory or in the Absolute Path passed? */
-    GetCurrentDirectoryW(MAX_PATH, lpszBuffer);
-
-    if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
-    {
-        /* Nope. Then let's check Fonts folder */
-        GetWindowsDirectoryW(lpszBuffer, MAX_PATH);
-        StringCbCatW(lpszBuffer, sizeof(lpszBuffer), L"\\Fonts");
-
-        if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
-        {
-            DPRINT1("Font not found. The Buffer is: %ls, the FileName is: %S\n", lpszBuffer, lpszFilename);
-            return 0;
-        }
-    }
-
-    /* We found the font file so: */
-    if (!RtlDosPathNameToNtPathName_U(lpszAbsPath, &NtAbsPath, NULL, NULL))
-    {
-        DPRINT1("Can't convert Path! Path: %ls\n", lpszAbsPath);
+    ULONG cFiles, cwc;
+    PWSTR pszConverted = IntConvertFontPaths(lpszFilename, &cFiles, &cwc, &fl, FALSE);
+    if (!pszConverted)
         return 0;
-    }
 
-    /* The Nt call expects a null-terminator included in cwc param. */
-    ASSERT(NtAbsPath.Buffer[NtAbsPath.Length / sizeof(WCHAR)] == UNICODE_NULL);
-    Ret = NtGdiAddFontResourceW(NtAbsPath.Buffer, NtAbsPath.Length / sizeof(WCHAR) + 1, 1, fl, 0, pdv);
+    INT ret = NtGdiAddFontResourceW(pszConverted, cwc, cFiles, fl, 0, pdv);
+    HEAP_free(pszConverted);
+    if (ret)
+        return ret;
 
-    RtlFreeUnicodeString(&NtAbsPath);
+    pszConverted = IntConvertFontPaths(lpszFilename, &cFiles, &cwc, &fl, TRUE);
+    if (!pszConverted)
+        return 0;
 
-    return Ret;
+    ret = NtGdiAddFontResourceW(pszConverted, cwc, cFiles, fl, 0, pdv);
+    HEAP_free(pszConverted);
+    if (!ret)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    return ret;
 }
 
 /*
@@ -2683,4 +2798,3 @@ cGetTTFFromFOT(DWORD x1 ,DWORD x2 ,DWORD x3, DWORD x4, DWORD x5, DWORD x6, DWORD
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-

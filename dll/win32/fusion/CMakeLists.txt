@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(fusion.dll fusion.spec)
 
 list(APPEND COMMON_SOURCE
@@ -16,6 +14,7 @@ add_library(fusion_common STATIC ${COMMON_SOURCE})
 target_link_libraries(fusion_common oldnames)
 add_dependencies(fusion_common psdk)
 add_pch(fusion_common precomp.h COMMON_SOURCE)
+set_wine_module_FIXME(fusion_common) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
 
 add_library(fusion MODULE
     version.rc

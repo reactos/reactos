@@ -35,7 +35,7 @@ FtfdEnableDriver(
 {
     FT_Error fterror;
 
-    DbgPrint("FtfdEnableDriver()\n");
+    FT_Message("FtfdEnableDriver()\n");
 
     /* Check parameter */
     if (cj < sizeof(DRVENABLEDATA))
@@ -47,7 +47,7 @@ FtfdEnableDriver(
     fterror = FT_Init_FreeType(&gftlibrary);
     if (fterror)
     {
-        DbgPrint("an error occurred during library initialization: %ld.\n", fterror);
+        FT_Message("an error occurred during library initialization: %ld.\n", fterror);
         return FALSE;
     }
 
@@ -76,7 +76,7 @@ FtfdEnablePDEV(
     IN LPWSTR pwszDeviceName,
     IN HANDLE hDriver)
 {
-    DbgPrint("FtfdEnablePDEV(hdev=%p)\n", hdev);
+    FT_Message("FtfdEnablePDEV(hdev=%p)\n", hdev);
     __debugbreak();
 
 
@@ -91,7 +91,7 @@ FtfdCompletePDEV(
     IN DHPDEV dhpdev,
     IN HDEV hdev)
 {
-    DbgPrint("FtfdCompletePDEV()\n");
+    FT_Message("FtfdCompletePDEV()\n");
     /* Nothing to do */
 }
 
@@ -101,6 +101,6 @@ APIENTRY
 FtfdDisablePDEV(
     IN DHPDEV dhpdev)
 {
-    DbgPrint("FtfdDisablePDEV()\n");
+    FT_Message("FtfdDisablePDEV()\n");
     /* Nothing to do */
 }

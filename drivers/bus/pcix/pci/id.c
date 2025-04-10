@@ -31,8 +31,8 @@ PciGetDescriptionMessage(IN ULONG Identifier,
     /* Find the message identifier in the message table */
     MessageString.Buffer = NULL;
     Status = RtlFindMessage(PciDriverObject->DriverStart,
-                            11, // RT_MESSAGETABLE
-                            LANG_NEUTRAL,
+                            RT_MESSAGETABLE,
+                            MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                             Identifier,
                             &Entry);
     if (!NT_SUCCESS(Status)) return NULL;

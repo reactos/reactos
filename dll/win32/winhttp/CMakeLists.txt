@@ -3,10 +3,8 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D_WINE)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(winhttp.dll winhttp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -34,3 +32,4 @@ add_importlibs(winhttp user32 advapi32 ws2_32 jsproxy kernel32_vista msvcrt kern
 add_dependencies(winhttp stdole2)
 add_pch(winhttp precomp.h SOURCE)
 add_cd_file(TARGET winhttp DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(winhttp) # CORE-5743: No ARRAY_SIZE macro

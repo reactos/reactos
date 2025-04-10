@@ -42,19 +42,19 @@ FtfdLoadFontFile(
     PFTFD_FILE pfile;
     ULONG cjSize, cNumFaces;
 
-    DbgPrint("FtfdLoadFontFile()\n");
+    FT_Message("FtfdLoadFontFile()\n");
 
     /* Check parameters */
     if (cFiles != 1)
     {
-        DbgPrint("Only 1 File is allowed, got %ld!\n", cFiles);
+        FT_Message("Only 1 File is allowed, got %ld!\n", cFiles);
         return HFF_INVALID;
     }
 
     /* Map the font file */
     if (!EngMapFontFileFD(*piFile, (PULONG*)&pvView, &cjView))
     {
-        DbgPrint("Could not map font file!\n");
+        FT_Message("Could not map font file!\n");
         return HFF_INVALID;
     }
 
@@ -64,7 +64,7 @@ FtfdLoadFontFile(
     fterror = FT_New_Memory_Face(gftlibrary, pvView, cjView, 0, &ftface);
     if (fterror)
     {
-        DbgPrint("No faces found in file\n");
+        FT_Message("No faces found in file\n");
 
         /* Unmap the file */
         EngUnmapFontFileFD(*piFile);
@@ -80,7 +80,7 @@ FtfdLoadFontFile(
     pfile = EngAllocMem(0, cjSize, 'dftF');
     if (!pfile)
     {
-        DbgPrint("EngAllocMem() failed.\n");
+        FT_Message("EngAllocMem() failed.\n");
 
         /* Unmap the file */
         EngUnmapFontFileFD(*piFile);
@@ -100,7 +100,7 @@ FtfdLoadFontFile(
         FT_Select_Charmap(ftface, FT_ENCODING_UNICODE);
     }
 
-    DbgPrint("Success! Returning %ld faces\n", cNumFaces);
+    FT_Message("Success! Returning %ld faces\n", cNumFaces);
 
     return (ULONG_PTR)pfile;
 }
@@ -113,7 +113,7 @@ FtfdUnloadFontFile(
     PFTFD_FILE pfile = (PFTFD_FILE)iFile;
     ULONG i;
 
-    DbgPrint("FtfdUnloadFontFile()\n");
+    FT_Message("FtfdUnloadFontFile()\n");
 
     // HACK!!!
     EngFreeMem(pfile->pvView);
@@ -144,7 +144,7 @@ FtfdQueryFontFile(
 {
     PFTFD_FILE pfile = (PFTFD_FILE)iFile;
 
-    DbgPrint("FtfdQueryFontFile(ulMode=%ld)\n", ulMode);
+    FT_Message("FtfdQueryFontFile(ulMode=%ld)\n", ulMode);
 //    __debugbreak();
 
     switch (ulMode)
@@ -179,12 +179,12 @@ FtfdQueryFont(
     FT_Error fterror;
     ULONG i;
 
-    DbgPrint("FtfdQueryFont()\n");
+    FT_Message("FtfdQueryFont()\n");
 
     /* Validate parameters */
     if (iFace > pfile->cNumFaces || !pid)
     {
-        DbgPrint("iFace > pfile->cNumFaces || !pid\n");
+        FT_Message("iFace > pfile->cNumFaces || !pid\n");
         return NULL;
     }
 
@@ -195,7 +195,7 @@ FtfdQueryFont(
                                  &ftface);
     if (fterror)
     {
-        DbgPrint("FT_New_Memory_Face failed\n");
+        FT_Message("FT_New_Memory_Face failed\n");
         return NULL;
     }
 
@@ -203,7 +203,7 @@ FtfdQueryFont(
     pifiX = EngAllocMem(FL_ZERO_MEMORY, sizeof(FTFD_IFIMETRICS), TAG_IFIMETRICS);
     if (!pifiX)
     {
-        DbgPrint("EngAllocMem() failed.\n");
+        FT_Message("EngAllocMem() failed.\n");
         FT_Done_Face(ftface);
         return NULL;
     }
@@ -321,7 +321,7 @@ FtfdQueryFont(
 
     FT_Done_Face(ftface);
 
-    DbgPrint("Finished with the ifi: %p\n", pifiX);
+    FT_Message("Finished with the ifi: %p\n", pifiX);
     __debugbreak();
 
     return pifi;
@@ -334,7 +334,7 @@ FtfdQueryFontCaps(
     ULONG culCaps,
     ULONG *pulCaps)
 {
-    DbgPrint("FtfdQueryFontCaps()\n");
+    FT_Message("FtfdQueryFontCaps()\n");
 
     /* We need room for 2 ULONGs */
     if (culCaps < 2)
@@ -369,7 +369,7 @@ FtfdQueryFontTree(
     WCRUN *pwcrun;
     HGLYPH * phglyphs;
 
-    DbgPrint("FtfdQueryFontTree()\n");
+    FT_Message("FtfdQueryFontTree()\n");
 
     fterror = FT_New_Memory_Face(gftlibrary,
                                  pfile->pvView,
@@ -378,7 +378,7 @@ FtfdQueryFontTree(
                                  &ftface);
     if (fterror)
     {
-        DbgPrint("FT_New_Memory_Face() failed.\n");
+        FT_Message("FT_New_Memory_Face() failed.\n");
         return NULL;
     }
 
@@ -389,7 +389,7 @@ FtfdQueryFontTree(
     pcp = EngAllocMem(0, cGlyphs * sizeof(FTFD_CHARPAIR), 'pcp ');
     if (!pcp)
     {
-        DbgPrint("EngAllocMem() failed.\n");
+        FT_Message("EngAllocMem() failed.\n");
         return NULL;
     }
 
@@ -399,7 +399,7 @@ FtfdQueryFontTree(
     for (i = 1, cRuns = 1; charcode && i < cGlyphs; i++)
     {
         charcode = FT_Get_Next_Char(ftface, charcode, &pcp[i].index);
-        DbgPrint("charcode=0x%lx, index=0x%lx\n", charcode, pcp[i].index);
+        FT_Message("charcode=0x%lx, index=0x%lx\n", charcode, pcp[i].index);
         pcp[i].code = charcode;
         if (charcode != pcp[i - 1].code + 1)
         {
@@ -419,7 +419,7 @@ FtfdQueryFontTree(
     pGlyphSet = EngAllocMem(0, cjSize, TAG_GLYPHSET);
     if (!pGlyphSet)
     {
-        DbgPrint("EngAllocMem() failed.\n");
+        FT_Message("EngAllocMem() failed.\n");
         EngFreeMem(pcp);
         return NULL;
     }
@@ -438,7 +438,7 @@ FtfdQueryFontTree(
     pwcrun[0].phg = &phglyphs[0];
     phglyphs[0] = pcp[0].index;
 
-DbgPrint("pcp[0].index = 0x%lx\n", pcp[0].index);
+FT_Message("pcp[0].index = 0x%lx\n", pcp[0].index);
 
     /* Walk through all supported chars */
     for (i = 1, j = 0; i < cGlyphs; i++)
@@ -455,7 +455,7 @@ DbgPrint("pcp[0].index = 0x%lx\n", pcp[0].index);
         else
         {
             /* Add a new WCRUN */
-            DbgPrint("adding new run\n");
+            FT_Message("adding new run\n");
             j++;
             pwcrun[j].wcLow = pcp[i].code;
             pwcrun[j].cGlyphs = 1;
@@ -469,7 +469,7 @@ DbgPrint("pcp[0].index = 0x%lx\n", pcp[0].index);
     /* Set *pid to the allocated structure for use in FtfdFree */
     *pid = (ULONG_PTR)pGlyphSet;
 
-DbgPrint("pGlyphSet=%p\n", pGlyphSet);
+FT_Message("pGlyphSet=%p\n", pGlyphSet);
 __debugbreak();
 
     return pGlyphSet;
@@ -481,7 +481,7 @@ FtfdFree(
     PVOID pv,
     ULONG_PTR id)
 {
-    DbgPrint("FtfdFree()\n");
+    FT_Message("FtfdFree()\n");
     if (id)
     {
         EngFreeMem((PVOID)id);

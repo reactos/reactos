@@ -12,6 +12,7 @@
 enum { 
     DIRBIT = 1, FILEBIT = 2,
     PT_COMPUTER_REGITEM = 0x2E,
+    PT_INTERNET_URL     = 0x61,
 };
 
 static BYTE GetPIDLType(LPCITEMIDLIST pidl)
@@ -46,6 +47,15 @@ static int FileStruct_Att(LPCITEMIDLIST pidl)
     C_ASSERT(FIELD_OFFSET(FS95, att) == 12);
     FS95 *p = FS95::Validate(pidl);
     return p ? p->att : (UINT(1) << 31);
+}
+
+static HRESULT GetDisplayNameOf(IShellFolder *pSF, LPCITEMIDLIST pidl, UINT Flags, PWSTR Buf, UINT Cap)
+{
+    STRRET sr;
+    HRESULT hr = pSF->GetDisplayNameOf(pidl, Flags, &sr);
+    if (SUCCEEDED(hr))
+        hr = StrRetToBufW(&sr, pidl, Buf, Cap);
+    return hr;
 }
 
 #define TEST_CLSID(pidl, type, offset, clsid) \
@@ -195,6 +205,7 @@ START_TEST(ILCreateFromPath)
 
 START_TEST(PIDL)
 {
+    CCoInit ComInit;
     LPITEMIDLIST pidl;
 
     pidl = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, FALSE);
@@ -210,6 +221,29 @@ START_TEST(PIDL)
     else
         skip("?\n");
     ILFree(pidl);
+
+
+    CComPtr<IShellFolder> pInternet;
+    HRESULT hr = SHCoCreateInstance(NULL, &CLSID_Internet, NULL, IID_PPV_ARG(IShellFolder, &pInternet));
+    if (SUCCEEDED(hr))
+    {
+        PCWSTR pszUrl = L"http://example.com/page?query&foo=bar";
+        PIDLIST_RELATIVE pidlUrl;
+        hr = pInternet->ParseDisplayName(NULL, NULL, const_cast<PWSTR>(pszUrl), NULL, &pidlUrl, NULL);
+        ok_long(hr, S_OK);
+        if (hr == S_OK)
+        {
+            ok_int(pidlUrl->mkid.abID[0], PT_INTERNET_URL);
+            WCHAR buf[MAX_PATH];
+            hr = GetDisplayNameOf(pInternet, pidlUrl, SHGDN_FORPARSING, buf, _countof(buf));
+            ok_long(hr, S_OK);
+            if (SUCCEEDED(hr))
+            {
+                ok(!lstrcmpiW(buf, pszUrl), "FORPARSING must match URL\n");
+            }
+            ILFree(pidlUrl);
+        }
+    }
 }
 
 START_TEST(ILIsEqual)
