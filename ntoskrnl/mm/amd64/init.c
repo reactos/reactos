@@ -176,6 +176,10 @@ MiMapPTEs(
     PMMPTE PointerPte;
     MMPTE TmplPte = ValidKernelPte;
 
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    TmplPte.u.Hard.Global = MiIsGlobalPte(MiAddressToPte(StartAddress));
+#endif
+
     /* Loop the PTEs */
     for (PointerPte = MiAddressToPte(StartAddress);
          PointerPte <= MiAddressToPte(EndAddress);
@@ -193,6 +197,51 @@ MiMapPTEs(
         }
     }
 }
+
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+CODE_SEG("INIT")
+static
+VOID
+MiInitializeGlobalPtes(VOID)
+{
+    PMMPXE PointerPxe;
+    PMMPPE BasePpe;
+    PMMPDE BasePde;
+    PMMPTE BasePte;
+
+    /* Loop the kernel PXEs */
+    for (PointerPxe = MiAddressToPxe(MmSystemRangeStart);
+         PointerPxe < MiAddressToPxe(MI_HIGHEST_SYSTEM_ADDRESS);
+         PointerPxe++)
+    {
+        if (!PointerPxe->u.Hard.Valid) continue;
+
+        /* Loop all PPEs for this PXE */
+        BasePpe = (PMMPPE)MiPteToAddress(PointerPxe);
+        for (ULONG Ppi = 0; Ppi < PTE_PER_PAGE; Ppi++)
+        {
+            if (!BasePpe[Ppi].u.Hard.Valid) continue;
+
+            /* Loop all PDEs for this PPE */
+            BasePde = (PMMPDE)MiPteToAddress(&BasePpe[Ppi]);
+            for (ULONG Pdi = 0; Pdi < PTE_PER_PAGE; Pdi++)
+            {
+                if (!BasePde[Pdi].u.Hard.Valid) continue;
+
+                /* Loop all PTEs for this PDE */
+                BasePte = (PMMPTE)MiPteToAddress(&BasePde[Pdi]);
+                for (ULONG Pti = 0; Pti < PTE_PER_PAGE; Pti++)
+                {
+                    if (!BasePte[Pti].u.Hard.Valid) continue;
+
+                    /* Set the global bit */
+                    BasePte[Pti].u.Hard.Global = MiIsGlobalPte(&BasePte[Pti]);
+                }
+            }
+        }
+    }
+}
+#endif
 
 CODE_SEG("INIT")
 VOID
@@ -280,6 +329,10 @@ MiInitializePageTable(VOID)
     /* Setup PDE and PTEs for VAD bitmap and working set list */
     MiMapPDEs((PVOID)MI_VAD_BITMAP, (PVOID)(MI_WORKING_SET_LIST + PAGE_SIZE - 1));
     MiMapPTEs((PVOID)MI_VAD_BITMAP, (PVOID)(MI_WORKING_SET_LIST + PAGE_SIZE - 1));
+
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    MiInitializeGlobalPtes();
+#endif
 }
 
 CODE_SEG("INIT")
@@ -707,6 +760,15 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmPfnDatabase = (PVOID)MI_PFN_DATABASE;
     MmWorkingSetList = (PVOID)MI_WORKING_SET_LIST;
 
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    /* Check for global bit */
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+    {
+        /* Set it on the template PTE and PDE */
+        ValidKernelPte.u.Hard.Global = TRUE;
+        //ValidKernelPde.u.Hard.Global = TRUE;
+    }
+#endif
 
 //    PrototypePte.u.Proto.Valid = 1
 //    PrototypePte.u.ReadOnly
