@@ -106,7 +106,7 @@ MakeSCID(SHCOLUMNID &scid, REFCLSID fmtid, UINT pid)
 HRESULT
 SHELL_MapSCIDToColumn(IShellFolder2 *pSF, const SHCOLUMNID *pscid);
 HRESULT
-SHELL_GetDetailsOfStringAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar);
+SHELL_GetDetailsOfAsStringVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar);
 HRESULT
 SHELL_GetDetailsOfColumnAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARTYPE vt, VARIANT *pVar);
 HRESULT

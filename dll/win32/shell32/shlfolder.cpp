@@ -92,7 +92,7 @@ SHELL_MapSCIDToColumn(IShellFolder2 *pSF, const SHCOLUMNID *pscid)
 }
 
 HRESULT
-SHELL_GetDetailsOfStringAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar)
+SHELL_GetDetailsOfAsStringVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar)
 {
     V_VT(pVar) = VT_EMPTY;
     SHELLDETAILS sd;
@@ -109,7 +109,7 @@ SHELL_GetDetailsOfStringAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT
 HRESULT
 SHELL_GetDetailsOfColumnAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARTYPE vt, VARIANT *pVar)
 {
-    HRESULT hr = SHELL_GetDetailsOfStringAsVariant(pSF, pidl, Column, pVar);
+    HRESULT hr = SHELL_GetDetailsOfAsStringVariant(pSF, pidl, Column, pVar);
     if (FAILED(hr))
         return hr;
     if (vt == VT_EMPTY)

@@ -868,7 +868,7 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             RegCloseKey(hKey);
             return S_OK;
         default:
-            /* Return an empty string when we area asked for a column we don't support.
+            /* Return an empty string when we are asked for a column we don't support.
                Only  the regfolder is supposed to do this as it supports less columns compared to other folder
                and its contents are supposed to be presented alongside items that support more columns. */
             return SHSetStrRetEmpty(&psd->str);

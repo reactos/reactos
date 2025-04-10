@@ -1696,7 +1696,7 @@ HRESULT WINAPI CFSFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *p
         switch (pscid->pid)
         {
             case PID_STG_NAME: // Handled directly here for faster performance
-                return SHELL_GetDetailsOfStringAsVariant(this, pidl, SHFSF_COL_NAME, pv);
+                return SHELL_GetDetailsOfAsStringVariant(this, pidl, SHFSF_COL_NAME, pv);
             case PID_STG_SIZE:
                 V_VT(pv) = VT_UI4;
                 V_UI4(pv) = _ILGetFileSize(pidl, NULL, 0);
