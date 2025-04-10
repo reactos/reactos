@@ -252,7 +252,7 @@ SHELL_GetSafeArrayDataPtr(const SAFEARRAY *pSA, SIZE_T *pcb)
     LONG lob, upb;
     SafeArrayGetLBound((SAFEARRAY*)pSA, 1, &lob);
     SafeArrayGetUBound((SAFEARRAY*)pSA, 1, &upb);
-    *pcb = ((SIZE_T)upb - (SIZE_T)lob) + 1;
+    *pcb = (SIZE_T)(upb - lob) + 1;
     return pSA->pvData;
 }
 

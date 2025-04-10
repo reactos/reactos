@@ -829,7 +829,7 @@ HRESULT WINAPI CRegFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *
                 return SHELL_CreateSHDESCRIPTIONID(pv, SHDID_ROOT_REGITEM, pCLSID);
         }
     }
-    return SHELL32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, TRUE);
+    return SH32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, TRUE);
 }
 
 HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
@@ -860,7 +860,7 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         case COL_INFOTIP:
             HKEY hKey;
             if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
-                return SHSetStrRet(&psd->str, "");
+                return SHSetStrRetEmpty(&psd->str);
 
             psd->str.cStr[0] = 0x00;
             psd->str.uType = STRRET_CSTR;
@@ -871,7 +871,7 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             /* Return an empty string when we area asked for a column we don't support.
                Only  the regfolder is supposed to do this as it supports less columns compared to other folder
                and its contents are supposed to be presented alongside items that support more columns. */
-            return SHSetStrRet(&psd->str, "");
+            return SHSetStrRetEmpty(&psd->str);
     }
     return E_FAIL;
 }

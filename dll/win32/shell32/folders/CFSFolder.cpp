@@ -176,7 +176,7 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
     return GetCLSIDForFileTypeFromExtension(pExtension, KeyName, pclsid);
 }
 
-HRESULT GetItemCLSID(PCUIDLIST_RELATIVE pidl, CLSID* pclsid)
+HRESULT GetItemCLSID(PCUIDLIST_RELATIVE pidl, CLSID *pclsid)
 {
     WCHAR buf[256];
     LPCWSTR pExt = ExtensionFromPidlEx(pidl, buf, _countof(buf), TRUE);
@@ -185,6 +185,7 @@ HRESULT GetItemCLSID(PCUIDLIST_RELATIVE pidl, CLSID* pclsid)
     HRESULT hr = E_FAIL;
     if (!ItemIsFolder(pidl))
         hr = GetCLSIDForFileTypeFromExtension(pExt, L"CLSID", pclsid);
+    // TODO: Should we handle folders with desktop.ini here?
     if (hr != S_OK && pExt[0] == '.' && pExt[1] == '{')
         hr = CLSIDFromString(pExt + 1, pclsid);
     return hr;
@@ -1711,7 +1712,7 @@ HRESULT WINAPI CFSFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *p
                 break;
         }
     }
-    return SHELL32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, TRUE);
+    return SH32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, TRUE);
 }
 
 HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,

@@ -1185,7 +1185,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNI
     }
     if (pCLSID)
         return m_regFolder->GetDetailsEx(pidl, pscid, pv);
-    return SHELL32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, FALSE);
+    return SH32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, FALSE);
 }
 
 HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
@@ -1208,13 +1208,14 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
         switch (MyComputerSFHeader[iColumn].colnameid)
         {
             case IDS_SHV_COLUMN_NAME:
+                return m_regFolder->GetDetailsOf(pidl, SHFSF_COL_NAME, psd);
             case IDS_SHV_COLUMN_TYPE:
-                return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
+                return m_regFolder->GetDetailsOf(pidl, SHFSF_COL_TYPE, psd);
             case IDS_SHV_COLUMN_DISK_CAPACITY:
             case IDS_SHV_COLUMN_DISK_AVAILABLE:
-                return SHSetStrRet(&psd->str, ""); /* blank col */
+                return SHSetStrRetEmpty(&psd->str);
             case IDS_SHV_COLUMN_COMMENTS:
-                return m_regFolder->GetDetailsOf(pidl, 2, psd); /* 2 = comments */
+                return m_regFolder->GetDetailsOf(pidl, SHFSF_COL_COMMENT, psd);
             DEFAULT_UNREACHABLE;
         }
     }

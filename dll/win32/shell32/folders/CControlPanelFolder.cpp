@@ -88,7 +88,7 @@ static const CLSID* IsRegItem(LPCITEMIDLIST pidl)
 {
     BYTE type = _ILGetType(pidl);
     if (type == PT_CONTROLS_OLDREGITEM || type == PT_CONTROLS_NEWREGITEM)
-        return (CLSID*)(&pidl->mkid.abID[pidl->mkid.cb - sizeof(CLSID)]);
+        return (CLSID*)((BYTE*)pidl + (pidl->mkid.cb - sizeof(CLSID)));
     return NULL;
 }
 
@@ -575,7 +575,7 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHC
 {
     if (IsRegItem(pidl))
         return m_regFolder->GetDetailsEx(pidl, pscid, pv);
-    return SHELL32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, FALSE);
+    return SH32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, FALSE);
 }
 
 HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)

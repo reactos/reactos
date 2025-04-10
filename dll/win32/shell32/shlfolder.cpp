@@ -96,7 +96,7 @@ SHELL_GetDetailsOfStringAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT
 {
     V_VT(pVar) = VT_EMPTY;
     SHELLDETAILS sd;
-    sd.str.uType = STRRET_OFFSET;
+    sd.str.uType = STRRET_CSTR;
     HRESULT hr = pSF->GetDetailsOf(pidl, Column, &sd);
     if (FAILED(hr))
         return hr;
@@ -130,7 +130,7 @@ SHELL_GetDetailsOfColumnAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT
 }
 
 HRESULT
-SHELL32_GetDetailsOfPKeyAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pVar, BOOL Direct)
+SH32_GetDetailsOfPKeyAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pVar, BOOL Direct)
 {
     VARTYPE vt = VT_EMPTY;
     HRESULT hr = Direct ? MapSCIDToShell32FsColumn(pscid, vt) : SHELL_MapSCIDToColumn(pSF, pscid);
