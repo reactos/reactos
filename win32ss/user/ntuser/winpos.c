@@ -263,7 +263,7 @@ SelectWindowRgn(PWND Window, HRGN hRgnClip)
         /* Delete no longer needed region handle */
         IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(Window->hrgnClip);
-        Window->hrgnClip = NULL;       
+        Window->hrgnClip = NULL;
     }
 
     if (hRgnClip > HRGN_WINDOW)
@@ -915,7 +915,7 @@ UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
 
 //
 // Fix CORE-5177
-// See winetests:user32:win.c:wine_AdjustWindowRectEx, 
+// See winetests:user32:win.c:wine_AdjustWindowRectEx,
 // Simplified version.
 //
 DWORD IntGetWindowBorders(DWORD Style, DWORD ExStyle)
@@ -1824,6 +1824,14 @@ co_WinPosSetWindowPos(
    dump_winpos_flags(flags);
 #endif
 
+   /* HACKFIX: Check if we are runnning out of stack. See CORE-18799 */
+   SIZE_T RemainigStack = (ULONG_PTR)&WinPos - (ULONG_PTR)KeGetCurrentThread()->StackLimit;
+   if (RemainigStack < (2 * PAGE_SIZE))
+   {
+      ERR("Stack is running low, %d bytes left\n", RemainigStack);
+      return FALSE;
+   }
+
    /* FIXME: Get current active window from active queue. Why? since r2915. */
 
    bPointerInWindow = IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y);
@@ -2274,7 +2282,7 @@ co_WinPosSetWindowPos(
 
    if ( !PosChanged &&
          (WinPos.flags & SWP_FRAMECHANGED) &&
-        !(WinPos.flags & SWP_DEFERERASE) &&    // Prevent sending WM_SYNCPAINT message. 
+        !(WinPos.flags & SWP_DEFERERASE) &&    // Prevent sending WM_SYNCPAINT message.
          VisAfter )
    {
        PWND Parent = Window->spwndParent;
@@ -3925,7 +3933,7 @@ co_IntCalculateSnapPosition(PWND Wnd, UINT Edge, OUT RECT *Pos)
     {
     case HTTOP: /* Maximized (Calculate RECT snap preview for SC_MOVE) */
         height = min(Pos->bottom - Pos->top, maxs.y);
-        break; 
+        break;
     case HTLEFT:
         Pos->right = width;
         break;
