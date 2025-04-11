@@ -47,6 +47,7 @@ extern void func_NtGdiTransformPoints(void);
 //extern void func_NtUserCallHwndParamLock(void);
 //extern void func_NtUserCallNoParam(void);
 //extern void func_NtUserCallOneParam(void);
+extern void func_NtUserConvertMemHandle(void);
 extern void func_NtUserCountClipboardFormats(void);
 extern void func_NtUserCreateWindowEx(void);
 //extern void func_NtUserEnumDisplayMonitors(void);
@@ -66,7 +67,6 @@ extern void func_NtUserSetTimer(void);
 extern void func_NtUserSystemParametersInfo(void);
 extern void func_NtUserToUnicodeEx(void);
 extern void func_NtUserUpdatePerUserSystemParameters(void);
-extern void func_NtUserConvertMemHandle(void);
 
 const struct test winetest_testlist[] =
 {
@@ -117,6 +117,7 @@ const struct test winetest_testlist[] =
     //{ "NtUserCallHwndParamLock", func_NtUserCallHwndParamLock },
     //{ "NtUserCallNoParam", func_NtUserCallNoParam },
     //{ "NtUserCallOneParam", func_NtUserCallOneParam },
+    { "NtUserConvertMemHandle", func_NtUserConvertMemHandle },
     { "NtUserCountClipboardFormats", func_NtUserCountClipboardFormats },
     { "NtUserCreateWindowEx", func_NtUserCreateWindowEx },
     //{ "NtUserEnumDisplayMonitors", func_NtUserEnumDisplayMonitors },
@@ -136,7 +137,6 @@ const struct test winetest_testlist[] =
     { "NtUserSystemParametersInfo", func_NtUserSystemParametersInfo },
     { "NtUserToUnicodeEx", func_NtUserToUnicodeEx },
     { "NtUserUpdatePerUserSystemParameters", func_NtUserUpdatePerUserSystemParameters },
-    { "NtUserConvertMemHandle", func_NtUserConvertMemHandle },
 
     { 0, 0 }
 };

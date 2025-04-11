@@ -47,6 +47,7 @@ list(APPEND SOURCE
 #    ntuser/NtUserCallHwndParamLock.c
 #    ntuser/NtUserCallNoParam.c
 #    ntuser/NtUserCallOneParam.c
+    ntuser/NtUserConvertMemHandle.c
     ntuser/NtUserCountClipboardFormats.c
     ntuser/NtUserCreateWindowEx.c
 #    ntuser/NtUserEnumDisplayMonitors.c
@@ -66,7 +67,6 @@ list(APPEND SOURCE
     ntuser/NtUserSystemParametersInfo.c
     ntuser/NtUserToUnicodeEx.c
     ntuser/NtUserUpdatePerUserSystemParameters.c
-    ntuser/NtUserConvertMemHandle.c
 
     #osver.c
     )
