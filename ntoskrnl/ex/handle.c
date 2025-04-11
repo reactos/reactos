@@ -647,18 +647,17 @@ ULONG
 NTAPI
 ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
 {
-    ULONG LastFree, i;
+    ULONG FirstFree, LastFree, i;
 
     /* Clear the last free index */
-    LastFree = InterlockedExchange((PLONG) &HandleTable->LastFree, 0);
+    LastFree = InterlockedExchangeUL(&HandleTable->LastFree, 0);
 
     /* Check if we had no index */
     if (!LastFree) return LastFree;
 
-    /* Acquire the locks we need */
-    for (i = 1; i < 4; i++)
+    /* Wait for all locks to be released */
+    for (i = 1; i < ARRAYSIZE(HandleTable->HandleTableLock); i++)
     {
-        /* Acquire this lock exclusively */
         ExWaitOnPushLock(&HandleTable->HandleTableLock[i]);
     }
 
@@ -666,11 +665,15 @@ ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
     if (!HandleTable->StrictFIFO)
     {
         /* Update the first free index */
-        if (!InterlockedCompareExchange((PLONG) &HandleTable->FirstFree, LastFree, 0))
+        FirstFree = InterlockedCompareExchangeUL(&HandleTable->FirstFree, LastFree, 0);
+        if (FirstFree == 0)
         {
             /* We're done, exit */
             return LastFree;
         }
+
+        /* Another thread was faster, return the first free entry */
+        return FirstFree;
     }
 
     /* We are strict FIFO, we need to reverse the entries */
