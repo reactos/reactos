@@ -22,7 +22,7 @@ Seçenekler:\n\
     IDS_COULD_NOT_INIT_WINSOCK "Winsock dll başlatılamadı.\n\0"
     IDS_UNKNOWN_HOST "Bilinmeyen sunucu %1.\n\0"
     IDS_SRC_MUST_BE_SPECIFIED "Kaynak ana bilgisayarın IP adresi belirtilmelidir.\n\0"
-    IDS_BAD_VALUE_OPTION_N "-n seçeneği için hatalı değer, geçerli aralık 1 ile %1!u! arasındadır.-n seçeneği için hatalı değer, geçerli aralık 1 ile %1!u! arasındadır.\n\0"
+    IDS_BAD_VALUE_OPTION_N "-n seçeneği için hatalı değer, geçerli aralık 1 ile %1!u! arasındadır.\n\0"
     IDS_ARPING_TO_FROM "%2'den ARPING %1\n\0"
     IDS_MS "ms\0"
     IDS_1MS "1ms\0"

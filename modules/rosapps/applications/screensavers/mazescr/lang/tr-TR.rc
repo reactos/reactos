@@ -43,7 +43,7 @@ BEGIN
     LTEXT           "[10-08-94] Ge van Geldorp - Ported to Windows",IDC_STATIC,7,65,215,8
     LTEXT           "[08-15-03] Ge van Geldorp - Ported to ReactOS",IDC_STATIC,7,74,215,8
     CTEXT           "R.I.P. Ge van Geldorp, we miss you!",IDC_STATIC,7,87,215,10,SS_SUNKEN
-    DEFPUSHBUTTON   "OK",IDOK,87,100,56,14
+    DEFPUSHBUTTON   "Tamam",IDOK,87,100,56,14
 END
 
 STRINGTABLE
