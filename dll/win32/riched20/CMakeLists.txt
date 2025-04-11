@@ -36,6 +36,11 @@ add_library(riched20 MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
 
+if(MSVC AND ARCH STREQUAL "i386")
+    # MSVC doesn't support __thiscall in C code
+    target_compile_definitions(riched20 PRIVATE __ASM_USE_THISCALL_WRAPPER)
+endif()
+
 add_typelib(riched_tom.idl)
 add_dependencies(riched20 stdole2)
 set_module_type(riched20 win32dll)
