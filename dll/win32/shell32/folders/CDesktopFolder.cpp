@@ -955,14 +955,14 @@ HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *
     return hr;
 }
 
-HRESULT WINAPI CDesktopFolder::GetDetailsEx(
-    PCUITEMID_CHILD pidl,
-    const SHCOLUMNID *pscid,
-    VARIANT *pv)
+HRESULT WINAPI CDesktopFolder::GetDetailsEx(PCUITEMID_CHILD pidl,
+                                            const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    FIXME ("(%p)\n", this);
-
-    return E_NOTIMPL;
+    HRESULT hr;
+    CComPtr<IShellFolder2> psf;
+    if (FAILED_UNEXPECTEDLY(hr = _GetSFFromPidl(pidl, &psf)))
+        return hr;
+    return psf->GetDetailsEx(pidl, pscid, pv);
 }
 
 /*************************************************************************
@@ -1002,8 +1002,14 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
 
 HRESULT WINAPI CDesktopFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    FIXME ("(%p)\n", this);
-    return E_NOTIMPL;
+    // Note: All these folders use the same SHFSF_COL mapping (m_regFolder only handles a subset).
+    if (m_DesktopFSFolder)
+        return m_DesktopFSFolder->MapColumnToSCID(column, pscid);
+    if (m_SharedDesktopFSFolder)
+        return m_SharedDesktopFSFolder->MapColumnToSCID(column, pscid);
+    if (m_regFolder)
+        return m_regFolder->MapColumnToSCID(column, pscid);
+    return E_FAIL;
 }
 
 HRESULT WINAPI CDesktopFolder::GetClassID(CLSID *lpClassId)

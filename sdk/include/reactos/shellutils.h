@@ -474,6 +474,13 @@ template<class B, class R> static HRESULT SHILCombine(B base, PCUIDLIST_RELATIVE
 static inline bool StrIsNullOrEmpty(LPCSTR str) { return !str || !*str; }
 static inline bool StrIsNullOrEmpty(LPCWSTR str) { return !str || !*str; }
 
+HRESULT inline SHSetStrRetEmpty(LPSTRRET pStrRet)
+{
+    pStrRet->uType = STRRET_CSTR;
+    pStrRet->cStr[0] = '\0';
+    return S_OK;
+}
+
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)
 {
     pStrRet->uType = STRRET_CSTR;
