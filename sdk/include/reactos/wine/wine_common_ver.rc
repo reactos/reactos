@@ -51,4 +51,6 @@
 
 #define REACTOS_VERSION_DLL
 
+#define REACTOS_PRODUCTVERSION REACTOS_FILEVERSION
+
 #include <reactos/version.rc>
