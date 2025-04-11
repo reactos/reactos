@@ -61,11 +61,11 @@ MapSCIDToShell32FsColumn(const SHCOLUMNID *pscid, VARTYPE &vt)
     {
         switch (pscid->pid)
         {
-            case PID_STG_NAME:        return (vt = VT_BSTR, SHFSF_COL_NAME);
-            case PID_STG_SIZE:        return (vt = VT_UI8, SHFSF_COL_SIZE);
-            case PID_STG_STORAGETYPE: return (vt = VT_BSTR, SHFSF_COL_TYPE);
-            case PID_STG_ATTRIBUTES:  return (vt = VT_BSTR, SHFSF_COL_FATTS);
-            case PID_STG_WRITETIME:   return (vt = VT_DATE, SHFSF_COL_MDATE);
+            case PID_STG_NAME:        vt = VT_BSTR; return SHFSF_COL_NAME;
+            case PID_STG_SIZE:        vt = VT_UI8; return SHFSF_COL_SIZE;
+            case PID_STG_STORAGETYPE: vt = VT_BSTR; return SHFSF_COL_TYPE;
+            case PID_STG_ATTRIBUTES:  vt = VT_BSTR; return SHFSF_COL_FATTS;
+            case PID_STG_WRITETIME:   vt = VT_DATE; return SHFSF_COL_MDATE;
         }
     }
     if (pscid->fmtid == FMTID_SummaryInformation && pscid->pid == PIDSI_COMMENTS)
@@ -130,10 +130,12 @@ SHELL_GetDetailsOfColumnAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT
 }
 
 HRESULT
-SH32_GetDetailsOfPKeyAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pVar, BOOL Direct)
+SH32_GetDetailsOfPKeyAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pVar, BOOL UseFsColMap)
 {
+    // CFSFolder and CRegFolder uses the SHFSF_COL columns and can use the faster and better version,
+    // everyone else must ask the folder to map the SCID to a column.
     VARTYPE vt = VT_EMPTY;
-    HRESULT hr = Direct ? MapSCIDToShell32FsColumn(pscid, vt) : SHELL_MapSCIDToColumn(pSF, pscid);
+    HRESULT hr = UseFsColMap ? MapSCIDToShell32FsColumn(pscid, vt) : SHELL_MapSCIDToColumn(pSF, pscid);
     return SUCCEEDED(hr) ? SHELL_GetDetailsOfColumnAsVariant(pSF, pidl, hr, vt, pVar) : hr;
 }
 

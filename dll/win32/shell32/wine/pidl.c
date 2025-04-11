@@ -1392,11 +1392,11 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
         return S_OK;
 
     case SHGDFIL_DESCRIPTIONID:
-        {
-            /* TODO: Use PKEY_DescriptionID when the propsys headers are ready */
-            SHCOLUMNID scid = { FMTID_ShellDetails, PID_DESCRIPTIONID };
-            return GetShellFolder1ItemDetailsExToBuffer(psf, pidl, &scid, dest, len);
-        }
+    {
+        /* TODO: Use PKEY_DescriptionID when the propsys headers are ready */
+        SHCOLUMNID scid = { FMTID_ShellDetails, PID_DESCRIPTIONID };
+        return GetShellFolder1ItemDetailsExToBuffer(psf, pidl, &scid, dest, len);
+    }
 
     case SHGDFIL_NETRESOURCE:
         FIXME_(shell)("SHGDFIL %i stub\n", nFormat);

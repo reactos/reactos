@@ -26,8 +26,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-BOOL IsDriveFloppyA(LPCSTR pszDriveRoot);
-BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot);
+extern BOOL IsDriveFloppyA(LPCSTR pszDriveRoot);
+extern BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot);
 
 /*
 CDrivesFolder should create a CRegFolder to represent the virtual items that exist only in

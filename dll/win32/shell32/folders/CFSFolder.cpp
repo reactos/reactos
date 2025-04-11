@@ -88,7 +88,7 @@ static HKEY OpenKeyFromFileType(LPCWSTR pExtension, LPCWSTR KeyName)
     return hkey;
 }
 
-static LPCWSTR ExtensionFromPidlEx(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax, BOOL AllowFolder)
+static LPCWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax, BOOL AllowFolder = FALSE)
 {
     if (!AllowFolder && !_ILIsValue(pidl))
     {
@@ -104,11 +104,6 @@ static LPCWSTR ExtensionFromPidlEx(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cch
         return NULL;
     }
     return pExtension;
-}
-
-static LPCWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax)
-{
-    return ExtensionFromPidlEx(pidl, Buf, cchMax, FALSE);
 }
 
 static HRESULT GetCLSIDForFileTypeFromExtension(LPCWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
@@ -179,7 +174,7 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
 HRESULT GetItemCLSID(PCUIDLIST_RELATIVE pidl, CLSID *pclsid)
 {
     WCHAR buf[256];
-    LPCWSTR pExt = ExtensionFromPidlEx(pidl, buf, _countof(buf), TRUE);
+    LPCWSTR pExt = ExtensionFromPidl(pidl, buf, _countof(buf), TRUE);
     if (!pExt)
         return E_FAIL;
     HRESULT hr = E_FAIL;
@@ -1778,7 +1773,7 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
     return hr;
 }
 
-HRESULT WINAPI CFSFolder::MapColumnToSCID (UINT column, SHCOLUMNID *pscid)
+HRESULT WINAPI CFSFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
     switch (column)
     {
