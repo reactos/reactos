@@ -83,6 +83,7 @@ enum InstallerType
 {
     INSTALLER_UNKNOWN,
     INSTALLER_GENERATE, // .zip file automatically converted to installer by rapps
+    INSTALLER_EXEINZIP,
 };
 
 #define DB_VERSION L"Version"
@@ -90,11 +91,16 @@ enum InstallerType
 #define DB_PUBLISHER L"Publisher"
 #define DB_REGNAME L"RegName"
 #define DB_INSTALLER L"Installer"
+#define DB_INSTALLER_GENERATE L"Generate"
+#define DB_INSTALLER_EXEINZIP L"ExeInZip"
 #define DB_SCOPE L"Scope" // User or Machine
 #define DB_SAVEAS L"SaveAs"
 
 #define DB_GENINSTSECTION L"Generate"
 #define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here
+
+#define DB_EXEINZIPSECTION L"ExeInZip"
+#define DB_EXEINZIP_EXE L"Exe"
 
 class CAppRichEdit;
 class CConfigParser;
@@ -234,3 +240,5 @@ BOOL
 UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Flags);
 BOOL
 ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive);
+HRESULT
+ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App);

@@ -11,6 +11,7 @@
 #include "appdb.h"
 #include "configparser.h"
 #include "settings.h"
+#include "misc.h"
 
 
 static HKEY g_RootKeyEnum[3] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_LOCAL_MACHINE};
@@ -32,6 +33,14 @@ ClearList(CAtlList<CAppInfo *> &list)
 CAppDB::CAppDB(const CStringW &path) : m_BasePath(path)
 {
     m_BasePath.Canonicalize();
+}
+
+CStringW
+CAppDB::GetDefaultPath()
+{
+    CStringW path;
+    GetStorageDirectory(path);
+    return path;
 }
 
 CAvailableApplicationInfo *
