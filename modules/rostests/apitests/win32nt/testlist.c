@@ -66,6 +66,7 @@ extern void func_NtUserSetTimer(void);
 extern void func_NtUserSystemParametersInfo(void);
 extern void func_NtUserToUnicodeEx(void);
 extern void func_NtUserUpdatePerUserSystemParameters(void);
+extern void func_NtUserConvertMemHandle(void);
 
 const struct test winetest_testlist[] =
 {
@@ -135,6 +136,7 @@ const struct test winetest_testlist[] =
     { "NtUserSystemParametersInfo", func_NtUserSystemParametersInfo },
     { "NtUserToUnicodeEx", func_NtUserToUnicodeEx },
     { "NtUserUpdatePerUserSystemParameters", func_NtUserUpdatePerUserSystemParameters },
+    { "NtUserConvertMemHandle", func_NtUserConvertMemHandle },
 
     { 0, 0 }
 };
