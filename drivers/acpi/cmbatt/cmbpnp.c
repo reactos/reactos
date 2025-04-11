@@ -680,6 +680,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->InterruptTime = KeQueryInterruptTime();
     FdoExtension->TripPointSet = CmBattSetTripPoint(FdoExtension, 0) !=
                                  STATUS_OBJECT_NAME_NOT_FOUND;
+    FdoExtension->DbgString = "Initialized";
     if (!FdoExtension->TripPointSet)
     {
         DbgPrint("**** Battery ID 0x%x (PDO: 0x%p, FDO: 0x%p) doesn't support _BTP method\n",
@@ -704,6 +705,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     Status = BatteryClassInitializeDevice(&MiniportInfo, &FdoExtension->ClassData);
     if (!NT_SUCCESS(Status))
     {
+        FdoExtension->DbgString = "BatteryClassInitializeDevice failed";
         IoDetachDevice(FdoExtension->AttachedDevice);
         CmBattDestroyFdo(FdoExtension->FdoDeviceObject);
         if (CmBattDebug & 0xC)
@@ -711,10 +713,13 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
         return Status;
     }
 
+    FdoExtension->DbgString = FdoExtension->ClassData ? "Has ClassData" : "No ClassData";
+
     /* Register WMI */
     Status = CmBattWmiRegistration(FdoExtension);
     if (!NT_SUCCESS(Status))
     {
+        FdoExtension->DbgString = "CmBattWmiRegistration failed";
         if (CmBattDebug & 0xC)
             DbgPrint("CmBattAddBattery: Could not register as a WMI provider, status = %Lx\n", Status);
         return Status;
@@ -726,6 +731,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
                                                                         FdoExtension);
     if (!NT_SUCCESS(Status))
     {
+        FdoExtension->DbgString = "RegisterForDeviceNotifications failed";
         CmBattWmiDeRegistration(FdoExtension);
         BatteryClassUnload(FdoExtension->ClassData);
         IoDetachDevice(FdoExtension->AttachedDevice);
@@ -735,6 +741,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     }
 
     /* Return status */
+    FdoExtension->DbgString = FdoExtension->ClassData ? "Complete has ClassData" : "Complete no ClassData";
     return Status;
 }
 

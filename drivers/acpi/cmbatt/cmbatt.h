@@ -193,6 +193,7 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     ULONG TripPointValue;
     ULONG TripPointOld;
     ULONGLONG InterruptTime;
+    PCSTR DbgString;
 } CMBATT_DEVICE_EXTENSION, *PCMBATT_DEVICE_EXTENSION;
 
 NTSTATUS
