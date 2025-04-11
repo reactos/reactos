@@ -1363,6 +1363,13 @@ IofCompleteRequest(IN PIRP Irp,
         KeBugCheckEx(MULTIPLE_IRP_COMPLETE_REQUESTS, (ULONG_PTR)Irp, 0, 0, 0);
     }
 
+    if (Irp->Flags & 0x10000000)
+    {
+        //__debugbreak();
+        DbgPrint("### IRP %p completion:\n", Irp);
+        KeRosDumpStackFrames(0, 10);
+    }
+
     /* Some sanity checks */
     ASSERT(Irp->Type == IO_TYPE_IRP);
     ASSERT(!Irp->CancelRoutine);
