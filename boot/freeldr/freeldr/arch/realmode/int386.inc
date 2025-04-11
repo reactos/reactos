@@ -10,8 +10,8 @@ Int386:
     pushad
 
     /* Get the interrupt vector and patch the opcode */
-    mov al, byte ptr ds:[BSS_IntVector]
-    mov byte ptr ds:[Int386_vector_opcode], al
+    mov al, byte ptr ss:[BSS_IntVector]
+    mov byte ptr cs:[Int386_vector_opcode], al
 
     /* Get current EFLAGS and mask CF, ZF and SF */
     pushf
@@ -19,7 +19,7 @@ Int386:
     and cx, not (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
 
     /* Get flags CF, ZF and SF from the REGS structure */
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_EFLAGS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_EFLAGS]
     and ax, (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
 
     /* Combine flags and set them */
@@ -28,28 +28,28 @@ Int386:
     popf
 
     /* Setup the registers */
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_DS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_DS]
     mov ds, ax
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_ES]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_ES]
     mov es, ax
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_FS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_FS]
     mov fs, ax
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_GS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_GS]
     mov gs, ax
 
     /* Setup ebp only if EBP != 0, otherwise use it only as output */
-    mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EBP]
+    mov eax, dword ptr ss:[BSS_RegisterSet + REGS_EBP]
     test eax, eax
     jz Int386_set_registers
     mov ebp, eax
 
 Int386_set_registers:
-    mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EAX]
-    mov ebx, dword ptr cs:[BSS_RegisterSet + REGS_EBX]
-    mov ecx, dword ptr cs:[BSS_RegisterSet + REGS_ECX]
-    mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
-    mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
-    mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
+    mov eax, dword ptr ss:[BSS_RegisterSet + REGS_EAX]
+    mov ebx, dword ptr ss:[BSS_RegisterSet + REGS_EBX]
+    mov ecx, dword ptr ss:[BSS_RegisterSet + REGS_ECX]
+    mov edx, dword ptr ss:[BSS_RegisterSet + REGS_EDX]
+    mov esi, dword ptr ss:[BSS_RegisterSet + REGS_ESI]
+    mov edi, dword ptr ss:[BSS_RegisterSet + REGS_EDI]
 #if defined(SARCH_PC98)
     /* Always set EBP register even if its equals zero.
      * Otherwise the DISK BIOS calls will store garbage data in a output buffer.
@@ -64,25 +64,25 @@ Int386_vector_opcode:
     .byte 00
 
     /* Save the registers */
-    mov dword ptr cs:[BSS_RegisterSet + REGS_EAX], eax
-    mov dword ptr cs:[BSS_RegisterSet + REGS_EBX], ebx
-    mov dword ptr cs:[BSS_RegisterSet + REGS_ECX], ecx
-    mov dword ptr cs:[BSS_RegisterSet + REGS_EDX], edx
-    mov dword ptr cs:[BSS_RegisterSet + REGS_ESI], esi
-    mov dword ptr cs:[BSS_RegisterSet + REGS_EDI], edi
-    mov dword ptr cs:[BSS_RegisterSet + REGS_EBP], ebp
+    mov dword ptr ss:[BSS_RegisterSet + REGS_EAX], eax
+    mov dword ptr ss:[BSS_RegisterSet + REGS_EBX], ebx
+    mov dword ptr ss:[BSS_RegisterSet + REGS_ECX], ecx
+    mov dword ptr ss:[BSS_RegisterSet + REGS_EDX], edx
+    mov dword ptr ss:[BSS_RegisterSet + REGS_ESI], esi
+    mov dword ptr ss:[BSS_RegisterSet + REGS_EDI], edi
+    mov dword ptr ss:[BSS_RegisterSet + REGS_EBP], ebp
 
     mov ax, ds
-    mov word ptr cs:[BSS_RegisterSet + REGS_DS], ax
+    mov word ptr ss:[BSS_RegisterSet + REGS_DS], ax
     mov ax, es
-    mov word ptr cs:[BSS_RegisterSet + REGS_ES], ax
+    mov word ptr ss:[BSS_RegisterSet + REGS_ES], ax
     mov ax, fs
-    mov word ptr cs:[BSS_RegisterSet + REGS_FS], ax
+    mov word ptr ss:[BSS_RegisterSet + REGS_FS], ax
     mov ax, gs
-    mov word ptr cs:[BSS_RegisterSet + REGS_GS], ax
+    mov word ptr ss:[BSS_RegisterSet + REGS_GS], ax
 
     pushfd
-    pop dword ptr cs:[BSS_RegisterSet + REGS_EFLAGS]
+    pop dword ptr ss:[BSS_RegisterSet + REGS_EFLAGS]
 
     /* Restore all registers + segment registers */
     popad
