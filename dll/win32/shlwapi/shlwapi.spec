@@ -464,9 +464,9 @@
 464 stdcall -noname SHExpandEnvironmentStringsForUserW(ptr wstr ptr long) userenv.ExpandEnvironmentStringsForUserW
 465 stub -noname PathUnExpandEnvStringsForUserA
 466 stdcall -stub -noname PathUnExpandEnvStringsForUserW(ptr wstr ptr long)
-467 stub -ordinal SHRunIndirectRegClientCommand
-468 stub -noname RunIndirectRegCommand
-469 stub -noname RunRegCommand
+467 stdcall -ordinal SHRunIndirectRegClientCommand(ptr wstr) # Exported by name in Vista+
+468 stdcall -noname RunIndirectRegCommand(ptr ptr wstr wstr)
+469 stdcall -noname RunRegCommand(ptr ptr wstr)
 470 stub -noname IUnknown_ProfferServiceOld
 471 stdcall -noname SHCreatePropertyBagOnRegKey(ptr wstr long ptr ptr)
 472 stdcall -noname SHCreatePropertyBagOnProfileSection(wstr wstr long ptr ptr)

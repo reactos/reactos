@@ -64,6 +64,7 @@
 #define IDM_BAND_MENU                       269
 #define IDM_BAND_TITLE                   0xA200
 #define IDM_BAND_CLOSE                   0xA201
+#define FCIDM_BROWSER_STOP               0xA21A
 #define FCIDM_BROWSER_TOGGLEFULLSCREEN   0xA21B
 
 #define IDM_POPUPMENU        2001

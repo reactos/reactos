@@ -2656,7 +2656,7 @@ HRESULT WINAPI ShellExecCmdLine(
     DWORD dwSeclFlags)
 {
     SHELLEXECUTEINFOW info;
-    DWORD dwSize, dwError, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
+    DWORD dwSize, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
     LPCWSTR pszVerb = NULL;
     WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
     HRESULT hr;
@@ -2765,21 +2765,9 @@ HRESULT WINAPI ShellExecCmdLine(
     info.lpParameters = (pchParams && *pchParams) ? pchParams : NULL;
     info.lpDirectory = pwszStartDir;
     info.nShow = nShow;
-    if (ShellExecuteExW(&info))
-    {
-        if (info.lpIDList)
-            CoTaskMemFree(info.lpIDList);
-
-        SHFree(lpCommand);
-
-        return S_OK;
-    }
-
-    dwError = GetLastError();
-
+    UINT error = ShellExecuteExW(&info) ? ERROR_SUCCESS : GetLastError();
     SHFree(lpCommand);
-
-    return HRESULT_FROM_WIN32(dwError);
+    return HRESULT_FROM_WIN32(error);
 }
 
 /*************************************************************************
