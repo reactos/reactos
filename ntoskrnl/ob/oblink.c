@@ -442,7 +442,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     POBJECT_SYMBOLIC_LINK SymlinkObject = (POBJECT_SYMBOLIC_LINK)ParsedObject;
     PUNICODE_STRING TargetPath;
     PWSTR NewTargetPath;
-    ULONG LengthUsed, MaximumLength, TempLength;
+    SIZE_T LengthUsed, MaximumLength, TempLength;
     NTSTATUS Status;
     PAGED_CODE();
 
