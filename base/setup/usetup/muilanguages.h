@@ -377,7 +377,6 @@
 #ifdef LANGUAGE_TOK
     #include "lang/tok.h"
 #endif
-
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.h"
 #endif
