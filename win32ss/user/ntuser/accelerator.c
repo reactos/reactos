@@ -237,7 +237,8 @@ NtUserCreateAcceleratorTable(
           Entries, EntriesCount);
     UserEnterExclusive();
 
-    if (!Entries || EntriesCount <= 0)
+    if (!Entries || !EntriesCount ||
+        EntriesCount > (MAXULONG_PTR / sizeof(ACCEL)))
     {
         SetLastNtError(STATUS_INVALID_PARAMETER);
         goto Exit; // Return NULL
