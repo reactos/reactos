@@ -63,7 +63,8 @@ MUI_SUBFONT TokiFonts[] =
     {L"Times New Roman Greek,161", L"FairfaxHD"},
     {L"Times New Roman TUR,162", L"FairfaxHD"},
     {L"Tms Rmn", L"FairfaxHD"},
-    {NULL, NULL}};
+    {NULL, NULL}
+};
 
 MUI_SUBFONT CyrillicFonts[] =
 {
