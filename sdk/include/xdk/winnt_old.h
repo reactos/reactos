@@ -438,9 +438,9 @@
 #define LANG_ESPERANTO      0x8f
 #define LANG_WALON          0x90
 #define LANG_CORNISH        0x92
-#define LANG_TOK       0x95
 
 /* FIXME: not present in the official headers */
+#define LANG_TOK            0x95
 #define LANG_MALAGASY       0x8d
 #define LANG_GAELIC         0x94
 #define LANG_SAAMI          0x3b
