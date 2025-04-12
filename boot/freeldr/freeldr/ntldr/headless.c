@@ -139,6 +139,11 @@ WinLdrPortInitialize(IN ULONG BaudRate,
     else
     {
         /* Pick correct port for address */
+        /* FIXME: (Note: Same/Similar code in ntoskrnl/inbv/inbvport.c)
+         * * PC98 tests port 1 then 2, here 2 then 1. (Document) Why?
+         * * (Document) Why are ports 3 and 4 ignored here?
+         * * Current code can select a port which is already initialized and may be rejected below, while there may be a different and available port. (Document) Why?
+         */
         PortAddress = (PUCHAR)0x2F8;
         if (CpDoesPortExist(PortAddress))
         {
@@ -147,7 +152,9 @@ WinLdrPortInitialize(IN ULONG BaudRate,
         else
         {
             PortAddress = (PUCHAR)0x3F8;
-            if (!CpDoesPortExist(PortAddress)) return FALSE;
+            if (!CpDoesPortExist(PortAddress))
+                return FALSE;
+
             PortNumber = 1;
          }
     }
@@ -157,11 +164,10 @@ WinLdrPortInitialize(IN ULONG BaudRate,
     ASSERT(LoaderRedirectionInformation.IsMMIODevice == FALSE);
 
     /* Check if port exists */
-    if ((CpDoesPortExist(PortAddress)) || (CpDoesPortExist(PortAddress)))
+    if (CpDoesPortExist(PortAddress))
     {
         /* Initialize port for first time, or re-initialize if specified */
-        if (((TerminalConnected) && (Port[PortNumber - 1].Address)) ||
-            !(Port[PortNumber - 1].Address))
+        if (!Port[PortNumber - 1].Address || TerminalConnected)
         {
             /* Initialize the port, return it */
             CpInitialize(&Port[PortNumber - 1], PortAddress, BaudRate);
