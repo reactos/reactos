@@ -23,3 +23,6 @@ sdk/tools/winesync/winesync.cfg
 .vs/ilo-Lijako/v16/.suo
 .vs/ilo-Lijako/v16/ipch/AutoPCH/19c7b4b8a559e6ac/K32.ipch
 .vs/slnx.sqlite
+.*/
+.vs/
+.vs/slnx.sqlite
