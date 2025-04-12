@@ -33,7 +33,8 @@ MUI_SUBFONT LatinFonts[] =
     { NULL, NULL }
 };
 
-MUI_SUBFONT TokiFonts[] = {
+MUI_SUBFONT TokiFonts[] =
+{
     /*Font                       Substitute  */
     {L"Arial Baltic,186", L"FairfaxHD"},
     {L"Arial CE,238", L"FairfaxHD"},
