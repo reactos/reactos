@@ -374,7 +374,7 @@
 // #ifdef LANGUAGE_TH_TH
     // #include "lang/th-TH.h"
 // #endif
-#ifdef LANGUAGE_TOK_SL
+#ifdef LANGUAGE_TOK
     #include "lang/tok.h"
 #endif
 
@@ -820,7 +820,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
 #ifdef LANGUAGE_TH_TH
     {L"0000041E", L"Thai", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
-#ifdef LANGUAGE_TOK_SL
+#ifdef LANGUAGE_TOK
     {L"00000495", L"toki pona (kepeken sitelen Lasina)", tokPages, tokErrorEntries, tokStrings},
 #endif
 #ifdef LANGUAGE_TR_TR

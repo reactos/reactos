@@ -45,7 +45,7 @@
 #ifdef LANGUAGE_RU_RU
     #include "winnls/lang/ru-RU.rc"
 #endif
-#ifdef LANGUAGE_TOK_SL
+#ifdef LANGUAGE_TOK
     #include "winnls/lang/tok.rc"
 #endif
 #ifdef LANGUAGE_TR_TR

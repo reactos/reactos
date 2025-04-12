@@ -95,7 +95,7 @@ IDB_ROSMASK BITMAP "res/rosbitmap_mask.bmp"
 #ifdef LANGUAGE_TH_TH
     #include "lang/th-TH.rc"
 #endif
-#ifdef LANGUAGE_TOK_SL
+#ifdef LANGUAGE_TOK
     #include "lang/tok.rc"
 #endif
 #ifdef LANGUAGE_TR_TR

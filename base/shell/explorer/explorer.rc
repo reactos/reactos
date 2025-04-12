@@ -176,7 +176,7 @@ END
 #ifdef LANGUAGE_SQ_AL
     #include "lang/sq-AL.rc"
 #endif
-#ifdef LANGUAGE_TOK_SL
+#ifdef LANGUAGE_TOK
     #include "lang/tok.rc"
 #endif
 #ifdef LANGUAGE_TR_TR

@@ -572,8 +572,8 @@ unsigned int lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
 #ifdef LANG_CORNISH
   case LANG_CORNISH:
 #endif
-#ifdef LANG_TOK_SL
-  case LANG_TOK_SL:
+#ifdef LANG_TOK
+  case LANG_TOK:
 #endif
     nOffset = 16;
     pnLookup = Lookup_16;
