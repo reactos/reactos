@@ -673,28 +673,27 @@ void OnToggleRequireLogon(HWND hwndDlg)
                               &hKey,
                               NULL);
 
-    if (lResult == ERROR_SUCCESS)
-    {
-        lResult = RegSetValueExW(hKey,
-                                 L"AutoAdminLogon",
-                                 0,
-                                 REG_SZ, 
-                                 (const BYTE*)szAutoAdminLogonValue,
-                                 (wcslen(szAutoAdminLogonValue) + 1) * sizeof(WCHAR));
-
-        if (lResult != ERROR_SUCCESS)
-        {
-            wsprintf(szErrorMsg, L"Failed to set AutoAdminLogon registry value. Error code: %ld", lResult);
-            MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
-        }
-
-        RegCloseKey(hKey);
-    }
-    else
+    if (lResult != ERROR_SUCCESS)
     {
         wsprintf(szErrorMsg, L"Failed to open or create Winlogon registry key for writing. Error code: %ld", lResult);
         MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
+        return; 
     }
+
+    lResult = RegSetValueExW(hKey,
+                             L"AutoAdminLogon",
+                             0,
+                             REG_SZ, 
+                             (const BYTE*)szAutoAdminLogonValue,
+                             (wcslen(szAutoAdminLogonValue) + 1) * sizeof(WCHAR));
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        wsprintf(szErrorMsg, L"Failed to set AutoAdminLogon registry value. Error code: %ld", lResult);
+        MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
+    }
+
+    RegCloseKey(hKey);
 }
 
 INT_PTR CALLBACK
@@ -725,35 +724,33 @@ UsersPageProc(HWND hwndDlg,
                                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                                         0, KEY_READ, &hKeyInit);
 										
-            if (lResultInit == ERROR_SUCCESS)
-            {
-                  WCHAR szAutoAdminLogonValueInit[2];
-                  DWORD dwTypeInit;
-                  DWORD dwSizeInit = sizeof(szAutoAdminLogonValueInit);
-
-                  lResultInit = RegQueryValueExW(hKeyInit,
-                                                 L"AutoAdminLogon",
-                                                 NULL,
-                                                 &dwTypeInit,
-                                                 (LPBYTE)szAutoAdminLogonValueInit,
-                                                 &dwSizeInit);
-
-                 BOOL bRequireLogonInit = TRUE;
-                 if (lResultInit == ERROR_SUCCESS && dwTypeInit == REG_SZ)
-                 {
-                    if (wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
-                    {
-                       bRequireLogonInit = FALSE;
-                    }
-                 }
-
-                 CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogonInit ? BST_CHECKED : BST_UNCHECKED);
-                 RegCloseKey(hKeyInit);
-            }
-            else
+            if (lResultInit != ERROR_SUCCESS)
             {
                 CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, BST_CHECKED);
+                break; 
             }
+
+            WCHAR szAutoAdminLogonValueInit[2];
+            DWORD dwTypeInit;
+            DWORD dwSizeInit = sizeof(szAutoAdminLogonValueInit);
+
+            lResultInit = RegQueryValueExW(hKeyInit,
+                                           L"AutoAdminLogon",
+                                           NULL,
+                                           &dwTypeInit,
+                                           (LPBYTE)szAutoAdminLogonValueInit,
+                                           &dwSizeInit);
+
+            BOOL bRequireLogonInit = TRUE;
+            if (   lResultInit == ERROR_SUCCESS
+                && dwTypeInit == REG_SZ
+                && wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
+            {
+                bRequireLogonInit = FALSE;
+            }
+
+            CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogonInit ? BST_CHECKED : BST_UNCHECKED);
+            RegCloseKey(hKeyInit);
 			
             SetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
                                IDM_USER_PROPERTIES,
