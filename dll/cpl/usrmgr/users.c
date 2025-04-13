@@ -711,6 +711,13 @@ UsersPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
+            LONG lResultInit;
+            HKEY hKeyInit;
+            WCHAR szAutoAdminLogonValueInit[2];
+            DWORD dwTypeInit;
+            DWORD dwSizeInit = sizeof(szAutoAdminLogonValueInit);
+            BOOL bRequireLogonInit = TRUE;
+
             pUserData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(USER_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pUserData);
 
@@ -718,8 +725,6 @@ UsersPageProc(HWND hwndDlg,
 
             OnInitDialog(hwndDlg);
 			
-            HKEY hKeyInit;
-            LONG lResultInit;
             lResultInit = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                                         0, KEY_READ, &hKeyInit);
@@ -729,18 +734,14 @@ UsersPageProc(HWND hwndDlg,
                 break; 
             }
 
-            WCHAR szAutoAdminLogonValueInit[2];
-            DWORD dwTypeInit;
-            DWORD dwSizeInit = sizeof(szAutoAdminLogonValueInit);
-
             lResultInit = RegQueryValueExW(hKeyInit,
                                            L"AutoAdminLogon",
                                            NULL,
                                            &dwTypeInit,
                                            (LPBYTE)szAutoAdminLogonValueInit,
                                            &dwSizeInit);
+            RegCloseKey(hKeyInit);
 
-            BOOL bRequireLogonInit = TRUE;
             if (   lResultInit == ERROR_SUCCESS
                 && dwTypeInit == REG_SZ
                 && wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
@@ -749,7 +750,6 @@ UsersPageProc(HWND hwndDlg,
             }
 
             CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogonInit ? BST_CHECKED : BST_UNCHECKED);
-            RegCloseKey(hKeyInit);
 			
             SetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
                                IDM_USER_PROPERTIES,
