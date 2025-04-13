@@ -576,6 +576,41 @@ GetConfigurationData(
 
 
 static
+PCM_FULL_RESOURCE_DESCRIPTOR
+NextResourceDescriptor(
+    _In_ PCM_FULL_RESOURCE_DESCRIPTOR pDescriptor)
+{
+    PBYTE pNext = NULL;
+    ULONG ulLastIndex = 0;
+
+    if (pDescriptor == NULL)
+        return NULL;
+
+    /* Skip the full resource descriptor */
+    pNext = (LPBYTE)pDescriptor + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+
+    /* Skip the partial resource descriptors */
+    pNext += (pDescriptor->PartialResourceList.Count - 1) *
+         sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+
+    /* Skip the device specific data, if present */
+    if (pDescriptor->PartialResourceList.Count > 0)
+    {
+        ulLastIndex = pDescriptor->PartialResourceList.Count - 1;
+
+        if (pDescriptor->PartialResourceList.PartialDescriptors[ulLastIndex].Type ==
+            CmResourceTypeDeviceSpecific)
+        {
+            pNext += pDescriptor->PartialResourceList.PartialDescriptors[ulLastIndex].
+                     u.DeviceSpecificData.DataSize;
+        }
+    }
+
+    return (PCM_FULL_RESOURCE_DESCRIPTOR)pNext;
+}
+
+
+static
 BOOL
 IsCallerInteractive(
     _In_ handle_t hBinding)
@@ -4177,8 +4212,8 @@ PNP_AddEmptyLogConf(
 {
     HKEY hConfigKey = NULL;
     DWORD RegDataType = 0;
-    ULONG ulDataSize = 0;
-    LPBYTE pDataBuffer = NULL;
+    ULONG ulDataSize = 0, ulNewSize = 0;
+    PBYTE pDataBuffer = NULL;
     WCHAR szValueNameBuffer[LOGCONF_NAME_BUFFER_SIZE];
     CONFIGRET ret = CR_SUCCESS;
 
@@ -4221,7 +4256,9 @@ PNP_AddEmptyLogConf(
         if (RegDataType == REG_RESOURCE_LIST)
         {
             PCM_RESOURCE_LIST pResourceList = NULL;
+            PCM_FULL_RESOURCE_DESCRIPTOR pResource = NULL;
 
+            /* Allocate a buffer for the new configuration */
             ulDataSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
             pDataBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ulDataSize);
             if (pDataBuffer == NULL)
@@ -4232,11 +4269,13 @@ PNP_AddEmptyLogConf(
 
             pResourceList = (PCM_RESOURCE_LIST)pDataBuffer;
             pResourceList->Count = 1;
-            pResourceList->List[0].InterfaceType = InterfaceTypeUndefined;
-            pResourceList->List[0].BusNumber = 0;
-            pResourceList->List[0].PartialResourceList.Version = 1;
-            pResourceList->List[0].PartialResourceList.Revision = 1;
-            pResourceList->List[0].PartialResourceList.Count = 0;
+
+            pResource = (PCM_FULL_RESOURCE_DESCRIPTOR)&pResourceList->List[0];
+            pResource->InterfaceType = InterfaceTypeUndefined;
+            pResource->BusNumber = 0;
+            pResource->PartialResourceList.Version = 1;
+            pResource->PartialResourceList.Revision = 1;
+            pResource->PartialResourceList.Count = 0;
         }
         else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
         {
@@ -4277,7 +4316,38 @@ PNP_AddEmptyLogConf(
     {
         if (RegDataType == REG_RESOURCE_LIST)
         {
-            /* FIXME */
+            PCM_RESOURCE_LIST pResourceList = NULL;
+            PCM_FULL_RESOURCE_DESCRIPTOR pResource = NULL;
+            ULONG ulIndex;
+
+            /* Reallocate a larger buffer in order to add the new configuration */
+            ulNewSize = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+            pDataBuffer = HeapReAlloc(GetProcessHeap(),
+                                      0,
+                                      pDataBuffer,
+                                      ulDataSize + ulNewSize);
+            if (pDataBuffer == NULL)
+            {
+                ret = CR_OUT_OF_MEMORY;
+                goto done;
+            }
+
+            pResourceList = (PCM_RESOURCE_LIST)pDataBuffer;
+
+            /* Get a pointer to the new (uninitialized) resource descriptor */
+            pResource = (PCM_FULL_RESOURCE_DESCRIPTOR)&pResourceList->List[0];
+            for (ulIndex = 0; ulIndex < pResourceList->Count; ulIndex++)
+                pResource = NextResourceDescriptor(pResource);
+
+            /* Initialize the new resource descriptor */
+            pResourceList->Count++;
+            pResource->InterfaceType= InterfaceTypeUndefined;
+            pResource->BusNumber = 0;
+            pResource->PartialResourceList.Version = 1;
+            pResource->PartialResourceList.Revision = 1;
+            pResource->PartialResourceList.Count = 0;
+
+            *pulLogConfTag = ulIndex;
         }
         else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
         {
@@ -4290,12 +4360,13 @@ PNP_AddEmptyLogConf(
         }
     }
 
+    /* Store the configuration */
     if (RegSetValueEx(hConfigKey,
                       szValueNameBuffer,
                       0,
                       RegDataType,
                       pDataBuffer,
-                      ulDataSize) != ERROR_SUCCESS)
+                      ulDataSize + ulNewSize) != ERROR_SUCCESS)
     {
         ret = CR_REGISTRY_ERROR;
         goto done;
