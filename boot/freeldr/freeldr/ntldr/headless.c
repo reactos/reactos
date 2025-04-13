@@ -140,9 +140,9 @@ WinLdrPortInitialize(IN ULONG BaudRate,
     {
         /* Pick correct port for address */
         /* FIXME: (Note: Same/Similar code in ntoskrnl/inbv/inbvport.c)
-         * * PC98 tests port 1 then 2, here 2 then 1. (Document) Why?
-         * * (Document) Why are ports 3 and 4 ignored here?
-         * * Current code can select a port which is already initialized and may be rejected below, while there may be a different and available port. (Document) Why?
+         * - PC98 tests port 1 then 2, here 2 then 1. Why?
+         * - Why are ports 3 and 4 ignored here?
+         * - Current code can select a port which is already initialized and may be rejected below, while there may be a different and available port. Why?
          */
         PortAddress = (PUCHAR)0x2F8;
         if (CpDoesPortExist(PortAddress))
