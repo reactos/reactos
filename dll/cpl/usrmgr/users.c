@@ -15,6 +15,7 @@
  */
 
 #include "usrmgr.h"
+#include <winreg.h>
 
 typedef struct _USER_DATA
 {
@@ -650,6 +651,51 @@ UpdateUserProperties(HWND hwndDlg)
     NetApiBufferFree(pUserInfo);
 }
 
+void OnToggleRequireLogon(HWND hwndDlg)
+{
+    BOOL bIsChecked;
+    WCHAR szAutoAdminLogonValue[2]; 
+    HKEY hKey;
+    LONG lResult;
+    TCHAR szErrorMsg[256];
+
+    bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE);
+
+    wcscpy(szAutoAdminLogonValue, (bIsChecked == BST_CHECKED) ? L"0" : L"1");
+
+    lResult = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                              L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_SET_VALUE,
+                              NULL,
+                              &hKey,
+                              NULL);
+
+    if (lResult == ERROR_SUCCESS)
+    {
+        lResult = RegSetValueExW(hKey,
+                                 L"AutoAdminLogon",
+                                 0,
+                                 REG_SZ, 
+                                 (const BYTE*)szAutoAdminLogonValue,
+                                 (wcslen(szAutoAdminLogonValue) + 1) * sizeof(WCHAR));
+
+        if (lResult != ERROR_SUCCESS)
+        {
+            wsprintf(szErrorMsg, L"Failed to set AutoAdminLogon registry value. Error code: %ld", lResult);
+            MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
+        }
+
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        wsprintf(szErrorMsg, L"Failed to open or create Winlogon registry key for writing. Error code: %ld", lResult);
+        MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
+    }
+}
 
 INT_PTR CALLBACK
 UsersPageProc(HWND hwndDlg,
@@ -672,6 +718,43 @@ UsersPageProc(HWND hwndDlg,
             pUserData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_USER));
 
             OnInitDialog(hwndDlg);
+			
+            HKEY hKeyInit;
+            LONG lResultInit;
+            lResultInit = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                                        0, KEY_READ, &hKeyInit);
+										
+            if (lResultInit == ERROR_SUCCESS)
+            {
+                  WCHAR szAutoAdminLogonValueInit[2];
+                  DWORD dwTypeInit;
+                  DWORD dwSizeInit = sizeof(szAutoAdminLogonValueInit);
+
+                  lResultInit = RegQueryValueExW(hKeyInit,
+                                                 L"AutoAdminLogon",
+                                                 NULL,
+                                                 &dwTypeInit,
+                                                 (LPBYTE)szAutoAdminLogonValueInit,
+                                                 &dwSizeInit);
+
+                 BOOL bRequireLogonInit = TRUE;
+                 if (lResultInit == ERROR_SUCCESS && dwTypeInit == REG_SZ)
+                 {
+                    if (wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
+                    {
+                       bRequireLogonInit = FALSE;
+                    }
+                 }
+
+                 CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogonInit ? BST_CHECKED : BST_UNCHECKED);
+                 RegCloseKey(hKeyInit);
+            }
+            else
+            {
+                CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, BST_CHECKED);
+            }
+			
             SetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
                                IDM_USER_PROPERTIES,
                                FALSE);
@@ -704,6 +787,10 @@ UsersPageProc(HWND hwndDlg,
                     {
                         UpdateUserProperties(hwndDlg);
                     }
+                    break;
+					
+                case IDC_USERS_STARTUP_REQUIRE:
+                    OnToggleRequireLogon(hwndDlg);
                     break;
             }
             break;
