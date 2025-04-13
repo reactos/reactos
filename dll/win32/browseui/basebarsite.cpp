@@ -533,7 +533,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
     REBARBANDINFO bandInfo;
 
-    if (uBand == -1ul)
+    if (uBand == UINT_MAX)
         return (HRESULT)SendMessage(RB_GETBANDCOUNT, 0, 0);
     if (pdwBandID == NULL)
         return E_INVALIDARG;
