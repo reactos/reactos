@@ -452,6 +452,7 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
 #endif
 }
 
+
 static COLORREF
 PAGER_SetBkColor (PAGER_INFO* infoPtr, COLORREF clrBk)
 {
