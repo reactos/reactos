@@ -710,6 +710,7 @@ UsersPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             pUserData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(USER_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pUserData);
 
@@ -754,6 +755,7 @@ UsersPageProc(HWND hwndDlg,
                                IDM_USER_PROPERTIES,
                                FALSE);
             break;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
