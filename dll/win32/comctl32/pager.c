@@ -430,7 +430,7 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
     if (!infoPtr->m_bProcessingReCalcSize)
     {
         infoPtr->m_bProcessingReCalcSize = TRUE;
-        /* NOTE: Posting a recalc message to ourselves, not actually a edit control message */
+        /* NOTE: Posting a recalc message to ourselves, not actually an edit control message */
         PostMessageW(infoPtr->hwndSelf, EM_FMTLINES, 0, 0);
     }
     return DefWindowProcW(infoPtr->hwndSelf, PGM_RECALCSIZE, 0, 0);
