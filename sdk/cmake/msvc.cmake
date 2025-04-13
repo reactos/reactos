@@ -100,7 +100,7 @@ endif()
 
 # On x86 Debug builds, if it's not Clang-CL or msbuild, treat all warnings as errors
 if ((ARCH STREQUAL "i386") AND (CMAKE_BUILD_TYPE STREQUAL "Debug") AND (CMAKE_C_COMPILER_ID STREQUAL "MSVC") AND (NOT MSVC_IDE))
-    set(TREAT_ALL_WARNINGS_AS_ERRORS=TRUE)
+    set(TREAT_ALL_WARNINGS_AS_ERRORS TRUE)
 endif()
 
 # Define ALLOW_WARNINGS=TRUE on the cmake/configure command line to bypass errors
