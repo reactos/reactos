@@ -360,7 +360,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     }
 
     /* To make loading file quicker, we use the internal handle of EDIT control */
-    hLocal = LocalAlloc(LHND, sizeof(UNICODE_NULL));
+    hLocal = (HLOCAL)SendMessageW(Globals.hEdit, EM_GETHANDLE, 0, 0);
     if (!ReadText(hFile, &hLocal, &Globals.encFile, &Globals.iEoln))
     {
         ShowLastError();
