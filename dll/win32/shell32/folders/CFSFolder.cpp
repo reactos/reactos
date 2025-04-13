@@ -1127,7 +1127,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
     switch (LOWORD(lParam))
     {
         case SHFSF_COL_NAME:
-            result = _wcsicmp(pszName1, pszName2);
+            result = CompareUiStrings(pszName1, pszName2, lParam);
             break;
         case SHFSF_COL_SIZE:
             if (pData1->u.file.dwFileSize > pData2->u.file.dwFileSize)
@@ -1141,7 +1141,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
             // FIXME: Compare the type strings from SHGetFileInfo
             pExtension1 = PathFindExtensionW(pszName1);
             pExtension2 = PathFindExtensionW(pszName2);
-            result = _wcsicmp(pExtension1, pExtension2);
+            result = CompareUiStrings(pExtension1, pExtension2, lParam);
             break;
         case SHFSF_COL_MDATE:
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;

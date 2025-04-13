@@ -431,6 +431,7 @@ LRESULT CDesktopBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam
         LPVOID lpEnvironment;
         RegenerateUserEnvironment(&lpEnvironment, TRUE);
     }
+    SHSettingsChanged((LPCVOID)wParam, (PCWSTR)lParam); // Refresh policy restrictions
 
     if (m_hWndShellView)
     {

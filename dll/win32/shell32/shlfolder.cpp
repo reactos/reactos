@@ -307,7 +307,7 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     if (FAILED(hres))
         return MAKE_COMPARE_HRESULT(1);
 
-    int ret = _wcsicmp(wszItem1, wszItem2);
+    int ret = CFSFolder::CompareUiStrings(wszItem1, wszItem2, lParam);
     if (ret == 0)
         return SHELL32_CompareChildren(isf, lParam, pidl1, pidl2);
 
