@@ -657,7 +657,7 @@ void OnToggleRequireLogon(HWND hwndDlg)
     WCHAR szAutoAdminLogonValue[2]; 
     HKEY hKey;
     LONG lResult;
-    TCHAR szErrorMsg[256];
+    WCHAR szErrorMsg[256];
 
     bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE);
 
@@ -672,9 +672,9 @@ void OnToggleRequireLogon(HWND hwndDlg)
                               NULL,
                               &hKey,
                               NULL);
-
     if (lResult != ERROR_SUCCESS)
     {
+        // TODO: Localize
         wsprintf(szErrorMsg, L"Failed to open or create Winlogon registry key for writing. Error code: %ld", lResult);
         MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
         return; 
@@ -685,8 +685,7 @@ void OnToggleRequireLogon(HWND hwndDlg)
                              0,
                              REG_SZ, 
                              (const BYTE*)szAutoAdminLogonValue,
-                             (wcslen(szAutoAdminLogonValue) + 1) * sizeof(WCHAR));
-
+                             _sizeof(szAutoAdminLogonValue));
     if (lResult != ERROR_SUCCESS)
     {
         wsprintf(szErrorMsg, L"Failed to set AutoAdminLogon registry value. Error code: %ld", lResult);
@@ -723,7 +722,6 @@ UsersPageProc(HWND hwndDlg,
             lResultInit = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                                         0, KEY_READ, &hKeyInit);
-										
             if (lResultInit != ERROR_SUCCESS)
             {
                 CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, BST_CHECKED);
