@@ -6,6 +6,7 @@
  */
 
 #include "../win32nt.h"
+#include <pseh/pseh2.h>
 
 
 START_TEST(NtUserCreateAcceleratorTable)
@@ -13,20 +14,80 @@ START_TEST(NtUserCreateAcceleratorTable)
     HACCEL hAccel;
     ACCEL Entries[5];
     ULONG EntriesCount = 0x80000005;
+    BOOL bHung = FALSE;
 
-    hAccel = NtUserCreateAcceleratorTable(Entries, EntriesCount);
+    /* Try heap overflow */
+    _SEH2_TRY
+    {
+        hAccel = NtUserCreateAcceleratorTable(Entries, EntriesCount);        
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bHung = TRUE;
+    }
+    _SEH2_END;
+
+    ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
-    hAccel = NtUserCreateAcceleratorTable(NULL, EntriesCount);
+    /* Try NULL Entries argument */
+    bHung = FALSE;
+    _SEH2_TRY
+    {
+        hAccel = NtUserCreateAcceleratorTable(NULL, EntriesCount);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bHung = TRUE;
+    }
+    _SEH2_END;
+
+    ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
-    hAccel = NtUserCreateAcceleratorTable(Entries, 0);
+    /* Try EntriesCount = 0 */
+    bHung = FALSE;
+    _SEH2_TRY
+    {
+        hAccel = NtUserCreateAcceleratorTable(Entries, 0);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bHung = TRUE;
+    }
+    _SEH2_END;
+
+    ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
+    /* Try wrong Entries argument pointer */
     EntriesCount = ARRAYSIZE(Entries);
-    hAccel = NtUserCreateAcceleratorTable((LPACCEL)(ULONG_PTR)0xC0FEC0FE, EntriesCount);
+    bHung = FALSE;
+    _SEH2_TRY
+    {
+        hAccel = NtUserCreateAcceleratorTable((LPACCEL)(ULONG_PTR)0xC0FEC0FE, EntriesCount);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bHung = TRUE;
+    }
+    _SEH2_END;
+
+    ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
-    hAccel = NtUserCreateAcceleratorTable(Entries, EntriesCount);
+    /* Try correct parameters */
+    bHung = FALSE;
+    _SEH2_TRY
+    {
+        hAccel = NtUserCreateAcceleratorTable(Entries, EntriesCount);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bHung = TRUE;
+    }
+    _SEH2_END;
+
+    ok_int(bHung, FALSE);
     ok(hAccel != NULL, "hAccel is NULL\n");
 }
