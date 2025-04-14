@@ -1782,7 +1782,7 @@ NtIsProcessInJob(
     }
 
     /* Dereference the process object if it was referenced */
-    if (ProcessHandle == PsGetCurrentProcess())
+    if (ProcessHandle != PsGetCurrentProcess())
     {
         ObDereferenceObject(Process);
     }
