@@ -83,10 +83,10 @@ KdpDebugLogInit(
 #define DEFAULT_DEBUG_BAUD_RATE 115200 /* 115200 Baud */
 
 /* KD Native Modes */
-#define KdScreen    0
-#define KdSerial    1
-#define KdFile      2
-#define KdKdbg      3
+// #define KdScreen    0
+// #define KdSerial    1
+// #define KdFile      2
+// #define KdKdbg      3
 #define KdMax       4
 
 /* KD Private Debug Modes */
