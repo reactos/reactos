@@ -86,6 +86,9 @@ typedef struct
     INT    direction;  /* direction of the scroll, (e.g. PGF_SCROLLUP) */
     WCHAR  *pwszBuffer;/* text buffer for converted notifications */
     INT    nBufferSize;/* size of the above buffer */
+#ifdef __REACTOS__
+    BOOL m_bProcessingReCalcSize;
+#endif
 } PAGER_INFO;
 
 #define TIMERID1         1
@@ -423,6 +426,15 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
 {
     TRACE("[%p]\n", infoPtr->hwndSelf);
 
+#ifdef __REACTOS__
+    if (!infoPtr->m_bProcessingReCalcSize)
+    {
+        infoPtr->m_bProcessingReCalcSize = TRUE;
+        /* NOTE: Posting a recalc message to ourselves, not actually an edit control message */
+        PostMessageW(infoPtr->hwndSelf, EM_FMTLINES, 0, 0);
+    }
+    return 0;
+#else
     if (infoPtr->hwndChild)
     {
         INT scrollRange = PAGER_GetScrollRange(infoPtr, TRUE);
@@ -437,6 +449,7 @@ PAGER_RecalcSize(PAGER_INFO *infoPtr)
     }
 
     return 1;
+#endif
 }
 
 
@@ -555,8 +568,15 @@ PAGER_Scroll(PAGER_INFO* infoPtr, INT dir)
 }
 
 static LRESULT
+#ifdef __REACTOS__
+PAGER_FmtLines(PAGER_INFO *infoPtr)
+#else
 PAGER_FmtLines(const PAGER_INFO *infoPtr)
+#endif
 {
+#ifdef __REACTOS__
+    infoPtr->m_bProcessingReCalcSize = FALSE;
+#endif
     /* initiate NCCalcSize to resize client wnd and get size */
     SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, 0, 0,
 		 SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE |
