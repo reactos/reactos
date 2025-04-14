@@ -542,9 +542,6 @@ PspTerminateProcessCallback(
 
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    /* Flag the job as terminating */
-    InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
-
     /* Terminate the process */
     Status = PsTerminateProcess(Process, ExitStatus);
 
@@ -571,9 +568,6 @@ PspTerminateProcessCallback(
         }
     }
 
-    /* Clear the terminating flag */
-    InterlockedAnd((PLONG)&Job->JobFlags, ~JOB_OBJECT_TERMINATING);
-
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
     return Status;
@@ -599,6 +593,7 @@ PspTerminateJobObject(
     _In_ NTSTATUS ExitStatus
 )
 {
+    NTSTATUS Status;
     TERMINATE_PROCESS_CONTEXT Context;
     Context.Job = Job;
     Context.ExitStatus = ExitStatus;
@@ -607,10 +602,16 @@ PspTerminateJobObject(
             Job,
             ExitStatus);
 
-    return PspEnumerateProcessesInJob(Job,
-                                      PspTerminateProcessCallback,
-                                      &Context,
-                                      FALSE);
+    InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
+
+    Status = PspEnumerateProcessesInJob(Job,
+                                        PspTerminateProcessCallback,
+                                        &Context,
+                                        FALSE);
+
+    InterlockedAnd((PLONG)&Job->JobFlags, ~JOB_OBJECT_TERMINATING);
+
+    return Status;
 }
 
 /*!
