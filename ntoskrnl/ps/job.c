@@ -777,7 +777,7 @@ PspSetJobLimitsBasicOrExtended(
     }
 
     /* Acquire the job lock */
-    ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
+    ExAcquireResourceExclusiveLite(&Job->JobLock, TRUE);
 
     /*
      * Basic Limits
@@ -1034,6 +1034,7 @@ PspAssociateCompletionPortWithJob(
     Context.CompletionPort = Job->CompletionPort;
     Context.CompletionKey = Job->CompletionKey;
 
+    /* Inform all processes in the job about the association. */
     Status = PspEnumerateProcessesInJob(Job,
                                         PspAssociateCompletionPortCallback,
                                         &Context,
