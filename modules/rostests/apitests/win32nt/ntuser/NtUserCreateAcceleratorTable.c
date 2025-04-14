@@ -11,8 +11,8 @@
 
 START_TEST(NtUserCreateAcceleratorTable)
 {
-    HACCEL hAccel;
-    ACCEL Entries[5];
+    HACCEL hAccel = NULL;
+    ACCEL Entries[5] = {0};
     ULONG EntriesCount = 0x80000005;
     BOOL bHung = FALSE;
 
