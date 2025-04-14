@@ -86,8 +86,12 @@ KdpDebugLogInit(
 // #define KdScreen    0
 // #define KdSerial    1
 // #define KdFile      2
+#ifndef KDBG
+#define KdMax       3
+#else
 // #define KdKdbg      3
 #define KdMax       4
+#endif
 
 /* KD Private Debug Modes */
 typedef struct _KDP_DEBUG_MODE
