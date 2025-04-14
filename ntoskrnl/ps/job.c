@@ -654,6 +654,8 @@ PspCloseJob(
     /* Proceed only when the last handle is left */
     if (SystemHandleCount != 1)
     {
+        DPRINT1("PspJobClose called with unexpected SystemHandleCount: %lu\n",
+                SystemHandleCount);
         return;
     }
 
