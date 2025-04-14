@@ -648,7 +648,6 @@ PspCloseJob(
 )
 {
     PEJOB Job = (PEJOB)ObjectBody;
-    PVOID CompletionPort;
 
     PAGED_CODE();
 
