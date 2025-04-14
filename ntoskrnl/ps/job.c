@@ -765,14 +765,16 @@ PspSetJobLimitsBasicOrExtended(
     /* Validate flags */
     if (ExtendedLimit->BasicLimitInformation.LimitFlags & ~AllowedFlags)
     {
-        DPRINT1("Invalid LimitFlags specified\n");
+        DPRINT1("Invalid LimitFlags specified: 0x%08X\n",
+                (ExtendedLimit->BasicLimitInformation.LimitFlags & ~AllowedFlags));
         return STATUS_INVALID_PARAMETER;
     }
 
     if ((ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME) &&
         (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_JOB_TIME))
     {
-        DPRINT1("Invalid LimitFlags combination specified\n");
+        DPRINT1("Invalid LimitFlags combination specified "
+                "(PRESERVE_JOB_TIME and JOB_TIME are mutually exclusive)\n");
         return STATUS_INVALID_PARAMETER;
     }
 
