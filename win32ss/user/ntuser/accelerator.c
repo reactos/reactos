@@ -314,6 +314,8 @@ NtUserCreateAcceleratorTable(
 
     Ret = hAccel;
 
+    SetLastNtError(STATUS_SUCCESS);
+
 Exit:
     TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u) = %p\n",
           Entries, EntriesCount, Ret);
