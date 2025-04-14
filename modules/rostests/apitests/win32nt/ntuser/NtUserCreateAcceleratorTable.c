@@ -90,4 +90,6 @@ START_TEST(NtUserCreateAcceleratorTable)
 
     ok_int(bHung, FALSE);
     ok(hAccel != NULL, "hAccel is NULL\n");
+    if (!bHung && hAccel != NULL);
+        DestroyAcceleratorTable(hAccel);
 }
