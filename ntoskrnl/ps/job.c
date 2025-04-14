@@ -275,6 +275,7 @@ PspEnumerateProcessesInJob(
             AnyCallbackFailed = TRUE;
             if (BreakOnCallbackFailure)
             {
+                ObDereferenceObject(Process);
                 break;
             }
         }
