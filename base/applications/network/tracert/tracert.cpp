@@ -592,15 +592,7 @@ GetUlongOptionInRange(
     // check if ParsedValue is within specified range
     if (!GetULONG(argv[*i], &ParsedValue) 
         || ((ParsedValue < MinimumValue) || (ParsedValue > MaximumValue)))
-    {
-        // if GetULONG Fails we need to check ERANGE to see if
-        // it was due to the value being out of range
-        if (errno == ERANGE)
-        {
-            *Value = ParsedValue;
-            return true;
-        }
-        
+    {        
         (*i)--;
         OutputText(IDS_BAD_OPTION_VALUE, argv[*i]);
         return false;
