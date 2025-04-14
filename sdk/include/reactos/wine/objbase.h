@@ -20,7 +20,7 @@
 
 #include <psdk/wtypes.h>
 #include <psdk/objbase.h>
-#include <wine/oleauto.h>
+#include <oleauto.h>
 
 HRESULT WINAPI DllRegisterServer(void) DECLSPEC_HIDDEN;
 HRESULT WINAPI DllUnregisterServer(void) DECLSPEC_HIDDEN;
