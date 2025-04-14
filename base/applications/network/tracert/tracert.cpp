@@ -580,10 +580,6 @@ GetUlongOptionInRange(
 {
     ULONG ParsedValue = 0;
     
-    // check input arguments
-    if (argv == NULL || i == NULL || Value == NULL)
-        return false;
-    
     // see if we have enough values
     if ((*i + 1) > (argc - 1))
     {
