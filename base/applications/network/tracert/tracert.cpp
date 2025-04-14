@@ -161,9 +161,8 @@ Usage()
 
 static bool
 GetULONG(
-    _In_ PWSTR String,
-    _Out_ ULONG *Value
-)
+    _In_ PCWSTR String,
+    _Out_ PULONG Value)
 {
     PWSTR StopString;
     
