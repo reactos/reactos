@@ -168,7 +168,7 @@ GetULONG(
     PWSTR StopString;
     
     // check input arguments
-    if (String == NULL || Value == NULL || *String == UNICODE_NULL)
+    if (*String == UNICODE_NULL)
         return false;
 
     // clear errno so we can use its value
