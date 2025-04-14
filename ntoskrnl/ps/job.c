@@ -429,6 +429,17 @@ PspRemoveProcessFromJob(
 
     /* TODO: Ensure that job limits are respected */
 
+    /* If no active processes remain, notify the job completion port */
+    if (Job->ActiveProcesses == 0 && Job->CompletionPort)
+    {
+        IoSetIoCompletion(Job->CompletionPort,
+                          Job->CompletionKey,
+                          NULL,
+                          STATUS_SUCCESS,
+                          JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
+                          FALSE);
+    }
+
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 }
 
