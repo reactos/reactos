@@ -635,6 +635,7 @@ PspCloseJob(
 )
 {
     PEJOB Job = (PEJOB)ObjectBody;
+    PVOID CompletionPort;
 
     PAGED_CODE();
 
@@ -666,8 +667,11 @@ PspCloseJob(
         ASSERT(NT_SUCCESS(Status));
     }
 
-    /* Set the completion port to NULL to clean up */
-    Job->CompletionPort = NULL;
+    if (Job->CompletionPort)
+    {
+        ObDereferenceObject(Job->CompletionPort);
+        Job->CompletionPort = NULL;
+    }
 }
 
 /*!
