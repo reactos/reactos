@@ -657,7 +657,6 @@ void OnToggleRequireLogon(HWND hwndDlg)
     WCHAR szAutoAdminLogonValue[2]; 
     HKEY hKey;
     LONG lResult;
-    WCHAR szErrorMsg[256];
 
     bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE);
 
@@ -674,9 +673,7 @@ void OnToggleRequireLogon(HWND hwndDlg)
                               NULL);
     if (lResult != ERROR_SUCCESS)
     {
-        // TODO: Localize
-        wsprintf(szErrorMsg, L"Failed to open or create Winlogon registry key for writing. Error code: %ld", lResult);
-        MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
+        DPRINTF("OnToggleRequireLogon: Failed to open or create Winlogon registry key. Error code: %ld\n", lResult);
         return; 
     }
 
@@ -685,11 +682,10 @@ void OnToggleRequireLogon(HWND hwndDlg)
                              0,
                              REG_SZ, 
                              (const BYTE*)szAutoAdminLogonValue,
-                             _sizeof(szAutoAdminLogonValue));
+                             sizeof(szAutoAdminLogonValue));
     if (lResult != ERROR_SUCCESS)
     {
-        wsprintf(szErrorMsg, L"Failed to set AutoAdminLogon registry value. Error code: %ld", lResult);
-        MessageBoxW(hwndDlg, szErrorMsg, L"Registry Error", MB_OK | MB_ICONERROR);
+        DPRINTF("OnToggleRequireLogon: Failed to set AutoAdminLogon registry value. Error code: %ld\n", lResult);
     }
 
     RegCloseKey(hKey);
