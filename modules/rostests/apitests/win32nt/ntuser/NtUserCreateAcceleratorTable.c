@@ -122,7 +122,7 @@ START_TEST(NtUserCreateAcceleratorTable)
 
     /* Try maximum */
     bHung = FALSE;
-    pEntries = HeapAlloc(GetProcessHeap(), 0, MAX_VALID_NUMBER * sizeof(ACCEL));
+    pEntries = HeapAlloc(GetProcessHeap(), 0, MAX_VALID_NUMBER * sizeof(*pEntries));
     ok(pEntries != NULL, "pEntries is NULL\n");
     if (pEntries != NULL)
     {
