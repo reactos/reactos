@@ -54,7 +54,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     bHung = FALSE;
     _SEH2_TRY
     {
-        hAccel = NtUserCreateAcceleratorTable(Entries, 0);
+        hAccel = NtUserCreateAcceleratorTable(Entries, MIN_VALID_NUMBER - 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
