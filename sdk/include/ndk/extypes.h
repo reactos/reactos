@@ -312,6 +312,8 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemCoverageInformation,
     SystemPrefetchPathInformation,
     SystemVerifierFaultsInformation,
+    SystemSystemPartitionInformation,
+    SystemSystemDiskInformation,
     MaxSystemInfoClass,
 } SYSTEM_INFORMATION_CLASS;
 
@@ -1459,6 +1461,20 @@ typedef struct _SYSTEM_BOOT_ENVIRONMENT_V1
 #endif
 
 // FIXME: Class 91-97
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+// Class 98
+typedef struct _SYSTEM_SYSTEM_PARTITION_INFORMATION
+{
+    UNICODE_STRING SystemPartition;
+} SYSTEM_SYSTEM_PARTITION_INFORMATION, *PSYSTEM_SYSTEM_PARTITION_INFORMATION;
+
+// Class 99
+typedef struct _SYSTEM_SYSTEM_DISK_INFORMATION
+{
+    UNICODE_STRING SystemDisk;
+} SYSTEM_SYSTEM_DISK_INFORMATION, *PSYSTEM_SYSTEM_DISK_INFORMATION;
+#endif
 
 //
 // Hotpatch flags
