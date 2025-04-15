@@ -67,7 +67,6 @@ START_TEST(NtUserCreateAcceleratorTable)
     ok_hdl(hAccel, NULL);
 
     /* Try wrong Entries argument pointer */
-    EntriesCount = ARRAYSIZE(Entries);
     bHung = FALSE;
     _SEH2_TRY
     {
