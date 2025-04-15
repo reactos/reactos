@@ -673,7 +673,7 @@ void OnToggleRequireLogon(HWND hwndDlg)
                               NULL);
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINTF("OnToggleRequireLogon: Failed to open or create Winlogon registry key. Error code: %ld\n", lResult);
+        DPRINT("OnToggleRequireLogon: Failed to open or create Winlogon registry key. Error code: %ld\n", lResult);
         return; 
     }
 
@@ -685,7 +685,7 @@ void OnToggleRequireLogon(HWND hwndDlg)
                              sizeof(szAutoAdminLogonValue));
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINTF("OnToggleRequireLogon: Failed to set AutoAdminLogon registry value. Error code: %ld\n", lResult);
+        DPRINT("OnToggleRequireLogon: Failed to set AutoAdminLogon registry value. Error code: %ld\n", lResult);
     }
 
     RegCloseKey(hKey);
