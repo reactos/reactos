@@ -1,11 +1,5 @@
 option(NO_REACTOS_BUILDNO "If true, disables the generation of buildno.h and version.h for each configure" OFF)
 
-if (NOT NO_REACTOS_BUILDNO)
-    string(TIMESTAMP KERNEL_VERSION_BUILD %Y%m%d UTC)
-else()
-    set(KERNEL_VERSION_BUILD "custom")
-endif()
-
 set(KERNEL_VERSION_MAJOR "0")
 set(KERNEL_VERSION_MINOR "4")
 set(KERNEL_VERSION_PATCH_LEVEL "16")
