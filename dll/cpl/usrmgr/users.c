@@ -15,7 +15,6 @@
  */
 
 #include "usrmgr.h"
-#include <debug.h>
 #include <winreg.h>
 
 typedef struct _USER_DATA
