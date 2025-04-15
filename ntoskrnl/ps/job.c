@@ -1671,24 +1671,27 @@ NtAssignProcessToJobObject(
         /* Ensure the process is not already assigned to a job */
         ASSERT(Process->Job == NULL);
 
+        /* Capture a reference for the process lifetime */
+        ObReferenceObject(Job);
+
         /* Try to atomically compare-and-exchange the job pointer */
         if (InterlockedCompareExchangePointer((PVOID)&Process->Job, Job, NULL))
         {
-            Status = STATUS_ACCESS_DENIED;
-        }
-        else
-        {
-            /* Now that the job pointer is successfully set,
-               capture a reference */
-            ObReferenceObject(Job);
+            ExReleaseRundownProtection(&Process->RundownProtect);
 
-            /* Assign the process to the job */
-            Status = PspAssignProcessToJob(Process, Job);
-        }
+            /* At this point, the job was referenced twice */
+            ObDereferenceObjectEx(Job, 2);
+            ObDereferenceObject(Process);
 
-        /* TODO: UI restrictions class */
+            return STATUS_ACCESS_DENIED;
+        }
 
         ExReleaseRundownProtection(&Process->RundownProtect);
+
+        /* Assign the process to the job */
+        Status = PspAssignProcessToJob(Process, Job);
+
+        /* TODO: UI restrictions class */
     }
     else
     {
@@ -1772,8 +1775,8 @@ NtIsProcessInJob(
         }
         else
         {
-            /* Get the job object from the provided job handle and compare it
-               with the process job */
+            /* Get the job object from the provided job handle
+               and compare it with the process job */
             Status = ObReferenceObjectByHandle(JobHandle,
                                                JOB_OBJECT_QUERY,
                                                PsJobType,
