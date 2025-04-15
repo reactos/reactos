@@ -352,7 +352,8 @@ PspAssignProcessToJob(
        when AssignProcessToJob is called, the function fails" */
     if (Job->JobFlags & JOB_OBJECT_TERMINATING)
     {
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_INVALID_PARAMETER;
+        goto Exit;
     }
 
     /* Prevent processes from being added to the job if it is flagged for
@@ -360,7 +361,8 @@ PspAssignProcessToJob(
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE &&
         Job->JobFlags & JOB_OBJECT_CLOSE_DONE)
     {
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_INVALID_PARAMETER;
+        goto Exit;
     }
 
     /* Assign process to job object by inserting into the job's process list */
@@ -381,6 +383,8 @@ PspAssignProcessToJob(
                                    JOB_OBJECT_MSG_NEW_PROCESS,
                                    FALSE);
     }
+
+Exit:
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
