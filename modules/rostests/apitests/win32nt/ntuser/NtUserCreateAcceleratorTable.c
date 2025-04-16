@@ -155,4 +155,34 @@ START_TEST(NtUserCreateAcceleratorTable)
 
         HeapFree(GetProcessHeap(), 0, pEntries);
     }
+
+    /* Try maximum +1 */
+    SetLastError(0xdeadbeef);
+    bHung = FALSE;
+    pEntries = HeapAlloc(GetProcessHeap(), 0, (MAX_VALID_NUMBER + 1) * sizeof(*pEntries));
+    if (pEntries == NULL)
+    {
+        skip("pEntries is NULL\n");
+    }
+    else
+    {
+        _SEH2_TRY
+        {
+            hAccel = NtUserCreateAcceleratorTable(Entries, MAX_VALID_NUMBER);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            bHung = TRUE;
+        }
+        _SEH2_END;
+
+        ok_long(GetLastError(), ERROR_SUCCESS);
+        ok_int(bHung, FALSE);
+        ok(hAccel != NULL, "hAccel is NULL\n");
+
+        if (!bHung && hAccel != NULL)
+            DestroyAcceleratorTable(hAccel);
+
+        HeapFree(GetProcessHeap(), 0, pEntries);
+    }
 }
