@@ -2547,8 +2547,8 @@
 @ cdecl -stub rint(double)
 @ cdecl -stub rintf(float)
 @ cdecl rintl(double) rint
-@ cdecl -stub round(double)
-@ cdecl -stub roundf(float)
+@ cdecl round(double)
+@ cdecl roundf(float)
 @ cdecl roundl(double) round
 @ cdecl scalbln(double long) scalbn # double scalbln(double x, long exp);
 @ cdecl scalblnf(float long) scalbnf # float scalblnf(float x, long exp);
