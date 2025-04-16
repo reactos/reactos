@@ -128,7 +128,7 @@ BEGIN
     IDS_SELECT_PARTITION "\nPartizione %lu is now the selected partition.\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\nNon c'è nessun disco per selezionare una partizione.\nPer favore seleziona un disco e riprova.\n\n"
     IDS_SELECT_PARTITION_INVALID "\nPartizione non valida.\n\n"
-    IDS_SELECT_NO_VOLUME "\nNon .\nPer favore seleziona un disco e riprova\n\n"
+    IDS_SELECT_NO_VOLUME "\nNon è stato selezionato nessun disco corrente.\nPer favore seleziona un disco e riprova.\n\n"
     IDS_SELECT_VOLUME "\nVolume %lu è ora il volume selezionato.\n\n"
     IDS_SELECT_VOLUME_INVALID "\nVolume non valido.\n\n"
 END
