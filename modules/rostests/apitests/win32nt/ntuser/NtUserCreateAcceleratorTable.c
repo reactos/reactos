@@ -50,22 +50,6 @@ START_TEST(NtUserCreateAcceleratorTable)
     ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
-    /* Try EntriesCount = 0 */
-    bHung = FALSE;
-    _SEH2_TRY
-    {
-        hAccel = NtUserCreateAcceleratorTable(Entries, MIN_VALID_NUMBER - 1);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        bHung = TRUE;
-    }
-    _SEH2_END;
-
-    ok_int(GetLastError(), ERROR_INVALID_PARAMETER);
-    ok_int(bHung, FALSE);
-    ok_hdl(hAccel, NULL);
-
     /* Try invalid Entries argument */
     bHung = FALSE;
     _SEH2_TRY
@@ -81,6 +65,22 @@ START_TEST(NtUserCreateAcceleratorTable)
     ok_int(GetLastError(), ERROR_NOACCESS);
     ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
+
+    /* Try EntriesCount = 0 */
+    bHung = FALSE;
+    _SEH2_TRY
+    {
+        hAccel = NtUserCreateAcceleratorTable(Entries, MIN_VALID_NUMBER - 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bHung = TRUE;
+    }
+    _SEH2_END;
+
+    ok_int(GetLastError(), ERROR_INVALID_PARAMETER);
+    ok_int(bHung, FALSE);
+    ok_hdl(hAccel, NULL);    
 
     /* Try correct parameters */
     bHung = FALSE;
