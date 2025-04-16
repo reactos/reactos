@@ -101,7 +101,7 @@ BEGIN
     IDS_LIST_DISK_LINE "  ---------  ---------- ----------     -------    ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c Disco %-3lu  %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
     IDS_LIST_PARTITION_HEAD "  Partizione ###  Tipo              Dimensione     Offset\n"
-    IDS_LIST_PARTITION_LINE "  -------------  ----------------   ----------     -------\n"
+    IDS_LIST_PARTITION_LINE "  --------------  ----------------  ----------     -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partizione %-3lu  %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nNon c'è nessun disco per mostrare partizioni.\nPerfavore seleziona un disco e riprova.\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Etichetta    FS     Tipo        Dimensione  Stato  Info\n"
