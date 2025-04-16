@@ -80,26 +80,7 @@ START_TEST(NtUserCreateAcceleratorTable)
 
     ok_int(GetLastError(), ERROR_INVALID_PARAMETER);
     ok_int(bHung, FALSE);
-    ok_hdl(hAccel, NULL);    
-
-    /* Try correct parameters */
-    bHung = FALSE;
-    _SEH2_TRY
-    {
-        hAccel = NtUserCreateAcceleratorTable(Entries, _countof(Entries));
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        bHung = TRUE;
-    }
-    _SEH2_END;
-
-    ok_int(GetLastError(), ERROR_SUCCESS);
-    ok_int(bHung, FALSE);
-    ok(hAccel != NULL, "hAccel is NULL\n");
-
-    if (!bHung && hAccel != NULL)
-        DestroyAcceleratorTable(hAccel);
+    ok_hdl(hAccel, NULL);
 
     /* Try minimum */
     bHung = FALSE;
@@ -119,6 +100,25 @@ START_TEST(NtUserCreateAcceleratorTable)
 
     if (!bHung && hAccel != NULL)
         DestroyAcceleratorTable(hAccel);
+
+    /* Try correct parameters */
+    bHung = FALSE;
+    _SEH2_TRY
+    {
+        hAccel = NtUserCreateAcceleratorTable(Entries, _countof(Entries));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bHung = TRUE;
+    }
+    _SEH2_END;
+
+    ok_int(GetLastError(), ERROR_SUCCESS);
+    ok_int(bHung, FALSE);
+    ok(hAccel != NULL, "hAccel is NULL\n");
+
+    if (!bHung && hAccel != NULL)
+        DestroyAcceleratorTable(hAccel);    
 
     /* Try maximum */
     bHung = FALSE;
