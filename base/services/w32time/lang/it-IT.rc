@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS W32Time Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Italian resource file
- * TRANSLATORS: Copyright 2025 Gabriele Lo Re <gabrolr70@gmail.com>       
+ * TRANSLATOR:  Copyright 2025 Gabriele Lo Re <gabrolr70@gmail.com>       
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
