@@ -78,7 +78,7 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Filesystem corrente\n"
     IDS_FILESYSTEMS_FORMATTING "Filesystem disponibili per la formattazione\n"
-    IDS_FILESYSTEMS_TYPE "Tipo        : %s\n"
+    IDS_FILESYSTEMS_TYPE "Tipo              : %s\n"
     IDS_FILESYSTEMS_CLUSTERSIZE "Dimensione cluster: %lu\n"
 END
 
