@@ -659,7 +659,7 @@ VOID OnToggleRequireLogon(_In_ HWND hwndDlg)
     LONG lResult;
 
     bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE) == BST_CHECKED;
-	
+
     wcscpy(szAutoAdminLogonValue, bIsChecked ? L"0" : L"1");
 
     lResult = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
@@ -738,8 +738,12 @@ UsersPageProc(HWND hwndDlg,
                                            &dwSizeInit);
             RegCloseKey(hKeyInit);
 
-            if (lResultInit == ERROR_SUCCESS && dwTypeInit == REG_SZ &&
-                wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
+            if (   lResultInit == ERROR_SUCCESS
+                && dwTypeInit == REG_SZ
+                && wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
+            {
+                bRequireLogonInit = FALSE;
+            }
 
             CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogonInit ? BST_CHECKED : BST_UNCHECKED);
 			
