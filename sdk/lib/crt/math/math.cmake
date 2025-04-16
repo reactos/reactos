@@ -8,6 +8,8 @@ list(APPEND LIBCNTPR_MATH_SOURCE
     math/div.c
     math/exp2f.c
     math/labs.c
+    math/round.c
+    math/roundf.c
     math/sincos.c
 )
 
