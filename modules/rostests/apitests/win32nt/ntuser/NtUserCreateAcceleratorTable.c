@@ -143,10 +143,9 @@ START_TEST(NtUserCreateAcceleratorTable)
         ok_int(bHung, FALSE);
         ok(hAccel != NULL, "hAccel is NULL\n");
 
-        HeapFree(GetProcessHeap(), 0, pEntries);
-        pEntries = NULL;
-
         if (!bHung && hAccel != NULL)
             DestroyAcceleratorTable(hAccel);
+
+        HeapFree(GetProcessHeap(), 0, pEntries);
     }
 }
