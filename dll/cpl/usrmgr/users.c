@@ -651,16 +651,16 @@ UpdateUserProperties(HWND hwndDlg)
     NetApiBufferFree(pUserInfo);
 }
 
-void OnToggleRequireLogon(HWND hwndDlg)
+VOID OnToggleRequireLogon(_In_ HWND hwndDlg)
 {
     BOOL bIsChecked;
     WCHAR szAutoAdminLogonValue[2]; 
     HKEY hKey;
     LONG lResult;
 
-    bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE);
-
-    wcscpy(szAutoAdminLogonValue, (bIsChecked == BST_CHECKED) ? L"0" : L"1");
+    bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE) == BST_CHECKED;
+	
+    wcscpy(szAutoAdminLogonValue, bIsChecked ? L"0" : L"1");
 
     lResult = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                               L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
@@ -673,7 +673,7 @@ void OnToggleRequireLogon(HWND hwndDlg)
                               NULL);
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINTF("OnToggleRequireLogon: Failed to open or create Winlogon registry key. Error code: %ld\n", lResult);
+        ERR("OnToggleRequireLogon: Failed to open or create Winlogon registry key. Error code: %ld\n", lResult);
         return; 
     }
 
@@ -681,11 +681,11 @@ void OnToggleRequireLogon(HWND hwndDlg)
                              L"AutoAdminLogon",
                              0,
                              REG_SZ, 
-                             (const BYTE*)szAutoAdminLogonValue,
                              sizeof(szAutoAdminLogonValue));
+                             2 * sizeof(WCHAR));
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINTF("OnToggleRequireLogon: Failed to set AutoAdminLogon registry value. Error code: %ld\n", lResult);
+        ERR("OnToggleRequireLogon: Failed to set AutoAdminLogon registry value. Error code: %ld\n", lResult);
     }
 
     RegCloseKey(hKey);
@@ -738,12 +738,8 @@ UsersPageProc(HWND hwndDlg,
                                            &dwSizeInit);
             RegCloseKey(hKeyInit);
 
-            if (   lResultInit == ERROR_SUCCESS
-                && dwTypeInit == REG_SZ
-                && wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
-            {
-                bRequireLogonInit = FALSE;
-            }
+            if (lResultInit == ERROR_SUCCESS && dwTypeInit == REG_SZ &&
+                wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
 
             CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogonInit ? BST_CHECKED : BST_UNCHECKED);
 			
