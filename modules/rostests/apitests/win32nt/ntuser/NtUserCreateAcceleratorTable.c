@@ -66,7 +66,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
-    /* Try wrong Entries argument pointer */
+    /* Try invalid Entries argument */
     bHung = FALSE;
     _SEH2_TRY
     {
