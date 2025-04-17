@@ -208,7 +208,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     pImeDpi->hInst = hIME = LoadLibraryW(szPath);
     if (hIME == NULL)
     {
-        ERR("LoadLibraryW(%s) failed\n", debugstr_w(szPath));
+        ERR("LoadLibraryW(%S) failed\n", szPath);
         return FALSE;
     }
 
@@ -223,7 +223,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
         else if (!(optional)) { \
-            ERR("'%s' not found in IME module '%s'.\n", #name, debugstr_w(szPath)); \
+            ERR("'%s' not found in IME module '%S'.\n", #name, szPath); \
             goto Failed; \
         } \
     } while (0);
@@ -750,7 +750,7 @@ HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
     HKL hKL = NULL;
     LPWSTR pszFileNameW = NULL, pszLayoutTextW = NULL;
 
-    TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
+    TRACE("(%s, %s)\n", lpszIMEFileName, lpszLayoutText);
 
     pszFileNameW = Imm32WideFromAnsi(CP_ACP, lpszIMEFileName);
     if (IS_NULL_UNEXPECTEDLY(pszFileNameW))
@@ -781,7 +781,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     WORD wLangID;
     PREG_IME pLayouts = NULL;
 
-    TRACE("(%s, %s)\n", debugstr_w(lpszIMEFileName), debugstr_w(lpszLayoutText));
+    TRACE("(%S, %S)\n", lpszIMEFileName, lpszLayoutText);
 
     GetFullPathNameW(lpszIMEFileName, _countof(szImeFileName), szImeFileName, &pchFilePart);
     CharUpperW(szImeFileName);
@@ -1807,8 +1807,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     LPCANDIDATELIST pCL = NULL;
     PIMEDPI pImeDpi;
 
-    TRACE("(%p, %p, %s, %p, %lu, 0x%lX)\n", hKL, hIMC, debugstr_a(pSrc),
-          lpDst, dwBufLen, uFlag);
+    TRACE("(%p, %p, %s, %p, %lu, 0x%lX)\n", hKL, hIMC, pSrc, lpDst, dwBufLen, uFlag);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -1863,8 +1862,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     LPCANDIDATELIST pCL = NULL;
     LPSTR pszSrcA = NULL;
 
-    TRACE("(%p, %p, %s, %p, %lu, 0x%lX)\n", hKL, hIMC, debugstr_w(pSrc),
-          lpDst, dwBufLen, uFlag);
+    TRACE("(%p, %p, %S, %p, %lu, 0x%lX)\n", hKL, hIMC, pSrc, lpDst, dwBufLen, uFlag);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))

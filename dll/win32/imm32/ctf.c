@@ -308,7 +308,7 @@ Imm32AllocateTLS(VOID)
     if (IS_NULL_UNEXPECTEDLY(pData))
         return NULL;
 
-    if (IS_FALSE_UNEXPECTEDLY(TlsSetValue(g_dwTLSIndex, pData)))
+    if (IS_ZERO_UNEXPECTEDLY(TlsSetValue(g_dwTLSIndex, pData)))
     {
         ImmLocalFree(pData);
         return NULL;
