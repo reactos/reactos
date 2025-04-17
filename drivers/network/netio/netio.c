@@ -123,6 +123,12 @@ typedef struct _WSK_SOCKET_INTERNAL
      * open connections any more.
      */
     struct _WSK_SOCKET_INTERNAL *ListenSocket;
+
+    /* SocketPut() only works at PASSIVE_LEVEL. If > PASSIVE_LEVEL,
+     * it will put the socket on this list and wake the putsockets
+     * thread.
+     */
+    struct _WSK_SOCKET_INTERNAL *NextSocketToPut;
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
 struct NetioContext
@@ -195,10 +201,87 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
     }
 }
 
+static PWSK_SOCKET_INTERNAL SocketsToPut = NULL;
+static KSPIN_LOCK SocketsToPutListLock = 0;
+static BOOLEAN PutSocketsThreadShouldRun = FALSE;
+static KEVENT PutSocketsEvent;
+static HANDLE PutSocketsThreadHandle;
+
+static void WSKAPI PutSocketsThread(void *p)
+{
+    NTSTATUS status;
+    PWSK_SOCKET_INTERNAL SocketToPut;
+    KIRQL flags;
+
+    FUNCTION_TRACE;
+
+    while (PutSocketsThreadShouldRun)
+    {
+        status = KeWaitForSingleObject(&PutSocketsEvent, Executive, KernelMode, FALSE, NULL);
+        if (!NT_SUCCESS(status))
+        {
+            DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
+        }
+
+        KeAcquireSpinLock(&SocketsToPutListLock, &flags);
+        while (SocketsToPut != NULL)
+        {
+            SocketToPut = SocketsToPut;
+            SocketsToPut = SocketToPut->NextSocketToPut;
+
+            KeReleaseSpinLock(&SocketsToPutListLock, flags);
+            SocketPut(SocketToPut);	/* Here IRQL MUST be PASSIVE_LEVEL, else we loop forever! */
+            KeAcquireSpinLock(&SocketsToPutListLock, &flags);
+        }
+        KeReleaseSpinLock(&SocketsToPutListLock, flags);
+    }
+}
+
+static void StartSocketPutThread(void)
+{
+    NTSTATUS status;
+
+    KeInitializeSpinLock(&SocketsToPutListLock);
+    KeInitializeEvent(&PutSocketsEvent, SynchronizationEvent, FALSE);
+    PutSocketsThreadShouldRun = TRUE;
+
+    status = PsCreateSystemThread(&PutSocketsThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, PutSocketsThread, NULL);
+    if (status != STATUS_SUCCESS)
+    {
+        DbgPrint("Could not start put sockets thread, status is %x\n", status);
+    }
+}
+
+static void StopSocketPutThread(void)
+{
+    PutSocketsThreadShouldRun = FALSE;
+    KeSetEvent(&PutSocketsEvent, IO_NO_INCREMENT, FALSE);
+
+    /* eventually it will terminate, no need to wait for that. */
+}
+
 void
 SocketPut(PWSK_SOCKET_INTERNAL s)
 {
+    KIRQL flags;
+
     FUNCTION_TRACE;
+
+    /* We are doing calls like ZwClose, TdiDisassociateAddressFile, ...
+       which require IRQL to be PASSIVE_LEVEL. So if we get here while
+       in IRQ, defer the SocketPut() to a separate thread. */
+
+    if (KeGetCurrentIrql() > PASSIVE_LEVEL)
+    {
+        KeAcquireSpinLock(&SocketsToPutListLock, &flags);
+        s->NextSocketToPut = SocketsToPut;
+        SocketsToPut = s;
+        KeReleaseSpinLock(&SocketsToPutListLock, flags);
+
+        KeSetEvent(&PutSocketsEvent, IO_NO_INCREMENT, FALSE);
+
+        return;
+    }
 
     s->RefCount--;
     if (s->RefCount == 0)
@@ -1231,6 +1314,7 @@ WskSocket(
     s->ListenSocket = NULL;
     memset(&s->LocalAddress, 0, sizeof(s->LocalAddress));
     memset(&s->RemoteAddress, 0, sizeof(s->RemoteAddress));
+    s->NextSocketToPut = NULL;
 
     switch (SocketType)
     {
@@ -1323,6 +1407,8 @@ WskCaptureProviderNPI(_In_ PWSK_REGISTRATION reg, _In_ ULONG wait, _Out_ PWSK_PR
     npi->Client = NULL;
     npi->Dispatch = &provider_dispatch;
 
+    StartSocketPutThread();
+
     return STATUS_SUCCESS;
 }
 
@@ -1331,7 +1417,7 @@ WskReleaseProviderNPI(_In_ PWSK_REGISTRATION reg)
 {
     FUNCTION_TRACE;
 
-    /* noop */
+    StopSocketPutThread();
 }
 
 VOID WSKAPI
