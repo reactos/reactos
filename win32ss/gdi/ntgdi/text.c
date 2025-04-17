@@ -136,7 +136,7 @@ GreGetTextExtentExW(
     _In_ ULONG Count,
     _In_ ULONG MaxExtent,
     _Out_opt_ PULONG Fit,
-    _Out_writes_to_opt_(Count, *Fit) PULONG Dx,
+    _Out_writes_to_opt_(Count, *Fit) PINT Dx,
     _Out_ LPSIZE pSize,
     _In_ FLONG fl)
 {
@@ -327,7 +327,7 @@ NtGdiGetTextExtentExW(
     _In_ LONG Count,
     _In_ ULONG MaxExtent,
     _Out_opt_ PINT UnsafeFit,
-    _Out_writes_to_opt_(Count, *UnsafeFit) PULONG UnsafeDx,
+    _Out_writes_to_opt_(Count, *UnsafeFit) PINT UnsafeDx,
     _Out_ PSIZE UnsafeSize,
     _In_ FLONG fl)
 {
@@ -338,7 +338,7 @@ NtGdiGetTextExtentExW(
     NTSTATUS Status;
     BOOLEAN Result;
     ULONG Fit;
-    PULONG Dx;
+    PINT Dx;
     PTEXTOBJ TextObj;
 
     if (Count < 0)

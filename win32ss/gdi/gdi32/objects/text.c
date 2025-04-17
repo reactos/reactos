@@ -298,7 +298,7 @@ GetTextExtentExPointW(
     if (LoadLPK(LPK_GTEP))
         return LpkGetTextExtentExPoint(hdc, lpszString, cchString, nMaxExtent, lpnFit, lpnDx, lpSize, 0, 0);
 
-    return NtGdiGetTextExtentExW(hdc, lpszString, cchString, nMaxExtent, lpnFit, (PULONG)lpnDx, lpSize, 0);
+    return NtGdiGetTextExtentExW(hdc, lpszString, cchString, nMaxExtent, lpnFit, lpnDx, lpSize, 0);
 }
 
 
@@ -313,7 +313,7 @@ GetTextExtentExPointWPri(
     _In_ INT cwc,
     _In_ INT dxMax,
     _Out_opt_ LPINT pcCh,
-    _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
+    _Out_writes_to_opt_(cwc, *pcCh) PINT pdxOut,
     _In_ PSIZE psize)
 {
     return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, dxMax, pcCh, pdxOut, psize, 0);
@@ -355,7 +355,7 @@ GetTextExtentExPointA(
                                     cchString,
                                     nMaxExtent,
                                     lpnFit,
-                                    (PULONG)lpnDx,
+                                    lpnDx,
                                     lpSize,
                                     0);
 
@@ -425,7 +425,7 @@ GetTextExtentExPointI(
                                  cgi,
                                  nMaxExtent,
                                  lpnFit,
-                                 (PULONG)lpnDx,
+                                 lpnDx,
                                  lpSize,
                                  GTEF_INDICES);
 }

@@ -920,7 +920,7 @@ GetCharWidthFloatA(
         HeapFree(GetProcessHeap(), 0, str);
         return FALSE;
     }
-    ret = NtGdiGetCharWidthW( hdc, wstr[0], (ULONG) count, (PWCHAR) wstr, 0, (PVOID) pxBuffer);
+    ret = NtGdiGetCharWidthW(hdc, wstr[0], count, wstr, 0, pxBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -1000,7 +1000,7 @@ GetCharABCWidthsFloatA(
         HeapFree( GetProcessHeap(), 0, str );
         return FALSE;
     }
-    ret = NtGdiGetCharABCWidthsW( hdc,wstr[0],(ULONG)count, (PWCHAR)wstr, 0, (PVOID)lpABCF);
+    ret = NtGdiGetCharABCWidthsW(hdc, wstr[0], count, wstr, 0, lpABCF);
 
     HeapFree( GetProcessHeap(), 0, str );
     HeapFree( GetProcessHeap(), 0, wstr );
