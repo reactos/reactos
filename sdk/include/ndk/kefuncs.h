@@ -445,6 +445,22 @@ KiWriteSystemTime(
 }
 
 #endif // !NTOS_MODE_USER
+
+FORCEINLINE
+ULONG64
+KiTickCountToMs(_In_ LARGE_INTEGER TickCount)
+{
+#ifdef _WIN64
+    /* Native math is optimal on 64 bit */
+    return (TickCount.QuadPart * SharedUserData->TickCountMultiplier) >> 24;
+#else
+    /* This is optimal on 32 bit (overflows after ~20,000 years) */
+    ULONG Multiplier = SharedUserData->TickCountMultiplier;
+    return (UInt32x32To64(TickCount.LowPart, Multiplier) >> 24) +
+            UInt32x32To64(TickCount.HighPart << 8, Multiplier);
+#endif
+}
+
 #endif // !NONAMELESSUNION
 
 //
