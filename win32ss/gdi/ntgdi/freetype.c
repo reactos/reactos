@@ -2341,7 +2341,7 @@ PathFindFileNameW(PCWSTR lpszPath)
         }
         lpszPath++;
     }
-    return (LPWSTR)lastSlash;
+    return (PWSTR)lastSlash;
 }
 
 /* Delete registry font entry */
