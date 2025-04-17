@@ -472,7 +472,7 @@ IntCheckFontPathNames(
 INT
 APIENTRY
 NtGdiAddFontResourceW(
-    _In_reads_(cwc) const WCHAR *pwcFiles,
+    _In_reads_(cwc) PCWCH pwcFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ FLONG fl,
