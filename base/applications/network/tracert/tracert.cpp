@@ -165,21 +165,20 @@ GetULONG(
     _Out_ PULONG Value)
 {
     PWSTR StopString;
-    
-    // check input arguments
+
+    // Check input arguments
     if (*String == UNICODE_NULL)
         return false;
 
-    // clear errno so we can use its value
-    // after the call to wcstoul to check for errors
+    // Clear errno so we can use its value after
+    // the call to wcstoul to check for errors.
     errno = 0;
 
-    // try to convert String to ULONG
+    // Try to convert String to ULONG
     *Value = wcstoul(String, &StopString, 10);
     if ((errno != ERANGE) && (errno != 0 || *StopString != UNICODE_NULL))
         return false;
-    
-    // the conversion was successful
+    // The conversion was successful
     return true;
 }
 
@@ -570,34 +569,34 @@ Cleanup:
 
 static bool
 GetUlongOptionInRange(
-    _In_ int argc, 
-    _In_ wchar_t *argv[], 
-    _Inout_ int *i, 
+    _In_ int argc,
+    _In_ wchar_t *argv[],
+    _Inout_ int *i,
     _Out_ ULONG *Value,
     _In_  ULONG MinimumValue,
     _In_  ULONG MaximumValue)
 {
     ULONG ParsedValue = 0;
-    
-    // see if we have enough values
+
+    // Check if we have enough values
     if ((*i + 1) > (argc - 1))
     {
         OutputText(IDS_MISSING_OPTION_VALUE, argv[*i]);
         return false;
     }
-    
+
     (*i)++;
-    
-    // try to parse and convert value as ULONG
-    // check if ParsedValue is within specified range
-    if (!GetULONG(argv[*i], &ParsedValue) 
-        || ((ParsedValue < MinimumValue) || (ParsedValue > MaximumValue)))
-    {        
+
+    // Try to parse and convert the value as ULONG.
+    // Check if ParsedValue is within the specified range.
+    if (!GetULONG(argv[*i], &ParsedValue) ||
+        ((ParsedValue < MinimumValue) || (ParsedValue > MaximumValue)))
+    {
         (*i)--;
         OutputText(IDS_BAD_OPTION_VALUE, argv[*i]);
         return false;
     }
-    
+
     *Value = ParsedValue;
     return true;
 }
@@ -622,13 +621,15 @@ ParseCmdline(int argc, wchar_t *argv[])
                 break;
 
             case 'h':
-               if (!GetUlongOptionInRange(argc, 
-                                          argv, 
-                                          &i, 
-                                          &Info.MaxHops, 
-                                          MIN_HOP_COUNT, 
+               if (!GetUlongOptionInRange(argc,
+                                          argv,
+                                          &i,
+                                          &Info.MaxHops,
+                                          MIN_HOP_COUNT,
                                           MAX_HOP_COUNT))
-                    return false; 
+               {
+                    return false;
+               }
                 break;
 
             case 'j':
@@ -636,13 +637,15 @@ ParseCmdline(int argc, wchar_t *argv[])
                 return false;
 
             case 'w':
-                if (!GetUlongOptionInRange(argc, 
-                                           argv, 
-                                           &i, 
-                                           &Info.Timeout, 
-                                           MIN_MILLISECONDS, 
+                if (!GetUlongOptionInRange(argc,
+                                           argv,
+                                           &i,
+                                           &Info.Timeout,
+                                           MIN_MILLISECONDS,
                                            MAX_MILLISECONDS))
+                {
                     return false;
+                }
                 break;
 
             case '4':
@@ -663,7 +666,7 @@ ParseCmdline(int argc, wchar_t *argv[])
         }
         else
         {
-            // the host must be the last argument
+            // The host must be the last argument
             if (i != (argc - 1))
             {
                 Usage();
@@ -675,14 +678,13 @@ ParseCmdline(int argc, wchar_t *argv[])
         }
     }
 
-    // check for missing host
+    // Check for missing host
     if (Info.HostName[0] == UNICODE_NULL)
     {
         OutputText(IDS_MISSING_TARGET);
         Usage();
         return false;
     }
-       
     return true;
 }
 
