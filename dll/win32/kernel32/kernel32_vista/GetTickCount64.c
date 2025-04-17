@@ -12,7 +12,6 @@ GetTickCount64(VOID)
 
     TickCount = KiReadSystemTime(&SharedUserData->TickCount);
 
-    ULONG TickCountMultiplier = SharedUserData->TickCountMultiplier;
-    return (UInt32x32To64(TickCount.LowPart, TickCountMultiplier) >> 24) +
-           (UInt32x32To64(TickCount.HighPart, TickCountMultiplier) << 8);
+    /* Convert to milliseconds */
+    return KiTickCountToMs(TickCount);
 }
