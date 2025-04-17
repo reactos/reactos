@@ -673,7 +673,7 @@ NtGdiGetFontData(
     _In_ HDC hDC,
     _In_ DWORD Table,
     _In_ DWORD Offset,
-    _Out_writes_bytes_(Size) LPVOID Buffer,
+    _Out_writes_bytes_(Size) PVOID Buffer,
     _In_ DWORD Size)
 {
   PDC Dc;
