@@ -61,7 +61,7 @@ GreTextOutW(
     _In_ HDC hdc,
     _In_ INT nXStart,
     _In_ INT nYStart,
-    _In_ LPCWSTR lpString,
+    _In_reads_(cchString) PCWCH lpString,
     _In_ INT cchString)
 {
     return GreExtTextOutW(hdc, nXStart, nYStart, 0, NULL, lpString, cchString, NULL, 0);
