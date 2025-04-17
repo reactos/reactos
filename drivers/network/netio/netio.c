@@ -224,17 +224,13 @@ static void WSKAPI PutSocketsThread(void *p)
         {
             DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
-DbgPrint("PutSocketsThread: Got Event\n");
 
         KeAcquireSpinLock(&SocketsToPutListLock, &flags);
-DbgPrint("PutSocketsThread: Into Loop\n");
         while (SocketsToPut != NULL)
         {
             SocketToPut = SocketsToPut;
             SocketsToPut = SocketToPut->NextSocketToPut;
             NumSocketPuts = SocketToPut->NumSocketPuts;
-DbgPrint("PutSocketsThread: NumSocketPuts is %d\n", NumSocketPuts);
-DbgPrint("PutSocketsThread: SocketToPut is %p\n", SocketToPut);
 
             KeReleaseSpinLock(&SocketsToPutListLock, flags);
             while (NumSocketPuts > 0)
@@ -246,7 +242,6 @@ DbgPrint("PutSocketsThread: SocketToPut is %p\n", SocketToPut);
             }
             KeAcquireSpinLock(&SocketsToPutListLock, &flags);
         }
-DbgPrint("PutSocketsThread: Out of Loop\n");
         KeReleaseSpinLock(&SocketsToPutListLock, flags);
     }
 }
@@ -259,7 +254,6 @@ static void StartSocketPutThread(void)
     KeInitializeEvent(&PutSocketsEvent, SynchronizationEvent, FALSE);
     PutSocketsThreadShouldRun = TRUE;
 
-DbgPrint("StartSocketPutThread ...\n");
     status = PsCreateSystemThread(&PutSocketsThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, PutSocketsThread, NULL);
     if (status != STATUS_SUCCESS)
     {
@@ -272,7 +266,6 @@ static void StopSocketPutThread(void)
     PutSocketsThreadShouldRun = FALSE;
     KeSetEvent(&PutSocketsEvent, IO_NO_INCREMENT, FALSE);
 
-DbgPrint("StopSocketPutThread ...\n");
     /* eventually it will terminate, no need to wait for that. */
 }
 
@@ -292,7 +285,6 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
         KeAcquireSpinLock(&SocketsToPutListLock, &flags);
         if (s->NumSocketPuts > 0)
         {
-DbgPrint("s is %p s->NumSocketPuts is %d\n", s, s->NumSocketPuts);
             s->NumSocketPuts++;
         }
         else
@@ -374,7 +366,9 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 
         memcpy(&c->socket->RemoteAddress, RemoteAddress, sizeof(c->socket->RemoteAddress));
     }
+DbgPrint("About to complete IRP %p socket is %p Irp is %p\n", UserIrp, c->socket, Irp);
     IoCompleteRequest(UserIrp, IO_NETWORK_INCREMENT);
+DbgPrint("Ok, completed IRP %p.\n", UserIrp);
 
     SocketPut(c->socket);
     if (c->TargetConnectionInfo != NULL)
@@ -880,6 +874,7 @@ WskSendTo(
     }
     nc->socket = s;
     nc->UserIrp = Irp;
+DbgPrint("SendTo: UserIrp is %p\n", Irp);
 
     TargetConnectionInfo = TdiConnectionInfoFromSocketAddress(RemoteAddress);
     if (TargetConnectionInfo == NULL)
@@ -1069,6 +1064,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     }
     nc->socket = s;
     nc->UserIrp = Irp;
+DbgPrint("WskConnect: UserIrp is %p\n", Irp);
 
     tdiIrp = NULL;
 
@@ -1157,6 +1153,8 @@ WskStreamIo(
     }
     nc->socket = s;
     nc->UserIrp = Irp;
+DbgPrint("WskStreamIo: UserIrp is %p, direction is %s\n", Irp, Direction == DIR_SEND ? "Send" : "Receive");
+
     nc->TargetConnectionInfo = NULL;
     nc->PeerAddrRet = NULL;
 
