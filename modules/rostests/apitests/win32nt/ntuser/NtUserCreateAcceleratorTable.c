@@ -168,7 +168,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     {
         _SEH2_TRY
         {
-            hAccel = NtUserCreateAcceleratorTable(Entries, MAX_VALID_NUMBER);
+            hAccel = NtUserCreateAcceleratorTable(Entries, MAX_VALID_NUMBER + 1);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
