@@ -323,12 +323,12 @@ BOOL
 APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hDC,
-    _In_reads_opt_(Count) LPCWSTR UnsafeString,
-    _In_ ULONG Count,
+    _In_reads_opt_(Count) PCWCH UnsafeString,
+    _In_ LONG Count,
     _In_ ULONG MaxExtent,
     _Out_opt_ PINT UnsafeFit,
-    _Out_writes_to_opt_(Count, *UnsafeFit) PINT UnsafeDx,
-    _Out_ LPSIZE UnsafeSize,
+    _Out_writes_to_opt_(Count, *UnsafeFit) PULONG UnsafeDx,
+    _Out_ PSIZE UnsafeSize,
     _In_ FLONG fl)
 {
     PDC dc;
@@ -341,7 +341,7 @@ NtGdiGetTextExtentExW(
     PULONG Dx;
     PTEXTOBJ TextObj;
 
-    if ((LONG)Count < 0)
+    if (Count < 0)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;

@@ -289,7 +289,6 @@ GetTextExtentExPointW(
     _Out_writes_to_opt_(cchString, *lpnFit) LPINT lpnDx,
     _Out_ LPSIZE lpSize)
 {
-
     /* Windows doesn't check nMaxExtent validity in unicode version */
     if (nMaxExtent < -1)
     {
@@ -299,7 +298,7 @@ GetTextExtentExPointW(
     if (LoadLPK(LPK_GTEP))
         return LpkGetTextExtentExPoint(hdc, lpszString, cchString, nMaxExtent, lpnFit, lpnDx, lpSize, 0, 0);
 
-    return NtGdiGetTextExtentExW(hdc, lpszString, cchString, nMaxExtent, lpnFit, lpnDx, lpSize, 0);
+    return NtGdiGetTextExtentExW(hdc, lpszString, cchString, nMaxExtent, lpnFit, (PULONG)lpnDx, lpSize, 0);
 }
 
 
@@ -310,12 +309,12 @@ BOOL
 WINAPI
 GetTextExtentExPointWPri(
     _In_ HDC hdc,
-    _In_reads_(cwc) LPCWSTR lpwsz,
+    _In_reads_(cwc) PCWCH lpwsz,
     _In_ INT cwc,
     _In_ INT dxMax,
     _Out_opt_ LPINT pcCh,
-    _Out_writes_to_opt_(cwc, *pcCh) LPINT pdxOut,
-    _In_ LPSIZE psize)
+    _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
+    _In_ PSIZE psize)
 {
     return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, dxMax, pcCh, pdxOut, psize, 0);
 }
@@ -356,7 +355,7 @@ GetTextExtentExPointA(
                                     cchString,
                                     nMaxExtent,
                                     lpnFit,
-                                    lpnDx,
+                                    (PULONG)lpnDx,
                                     lpSize,
                                     0);
 
@@ -426,7 +425,7 @@ GetTextExtentExPointI(
                                  cgi,
                                  nMaxExtent,
                                  lpnFit,
-                                 lpnDx,
+                                 (PULONG)lpnDx,
                                  lpSize,
                                  GTEF_INDICES);
 }

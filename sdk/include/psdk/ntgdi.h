@@ -165,9 +165,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPCWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode);
 
 __kernel_entry
@@ -176,9 +176,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesWInternal(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode,
     _In_ BOOL bSubset);
 
@@ -1664,11 +1664,11 @@ APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hdc,
     _In_reads_opt_(cwc) PCWCH pwsz,
-    _In_ ULONG cwc,
+    _In_ LONG cwc,
     _In_ ULONG dxMax,
     _Out_opt_ PINT pcCh,
-    _Out_writes_to_opt_(cwc, *pcCh) PINT pdxOut,
-    _Out_ LPSIZE psize,
+    _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
+    _Out_ PSIZE psize,
     _In_ FLONG fl);
 
 __kernel_entry
@@ -2501,7 +2501,7 @@ NtGdiExtTextOutW(
     _In_ INT y,
     _In_ UINT flOpts,
     _In_opt_ LPCRECT prcl,
-    _In_reads_opt_(cwc) LPCWSTR pwsz,
+    _In_reads_opt_(cwc) PCWCH pwsz,
     _In_range_(0, 0xffff) UINT cwc,
     _In_reads_opt_(_Inexpressible_(cwc)) const INT *pdx,
     _In_ DWORD dwCodePage);

@@ -7922,9 +7922,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPCWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode)
 {
     PDC dc;
