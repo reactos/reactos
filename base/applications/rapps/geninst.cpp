@@ -60,7 +60,7 @@ BOOL IsZipFile(PCWSTR Path)
 
 static int
 ExtractFilesFromZip(LPCWSTR Archive, const CStringW &OutputDir,
-                    EXTRACTCALLBACK Callback, void *Cookie)
+                    EXTRACTCALLBACK Callback, void *Context)
 {
     const UINT pkzefsutf8 = 1 << 11; // APPNOTE; APPENDIX D
     zlib_filefunc64_def zff;
@@ -97,7 +97,7 @@ ExtractFilesFromZip(LPCWSTR Archive, const CStringW &OutputDir,
             fileatt = LOBYTE(fi.external_fa);
 
         if (!NotifyFileExtractCallback(path, fi.uncompressed_size, fileatt,
-                                       Callback, Cookie))
+                                       Callback, Context))
             continue; // Skip file
 
         path = BuildPath(OutputDir, path);
@@ -136,17 +136,17 @@ ExtractFilesFromZip(LPCWSTR Archive, const CStringW &OutputDir,
 
 static UINT
 ExtractZip(LPCWSTR Archive, const CStringW &OutputDir,
-           EXTRACTCALLBACK Callback, void *Cookie)
+           EXTRACTCALLBACK Callback, void *Context)
 {
-    int zerr = ExtractFilesFromZip(Archive, OutputDir, Callback, Cookie);
+    int zerr = ExtractFilesFromZip(Archive, OutputDir, Callback, Context);
     return zerr == UNZ_ERRNO ? GetLastError() : zerr ? ERROR_INTERNAL_ERROR : 0;
 }
 
 static UINT
 ExtractCab(LPCWSTR Archive, const CStringW &OutputDir,
-           EXTRACTCALLBACK Callback, void *Cookie)
+           EXTRACTCALLBACK Callback, void *Context)
 {
-    if (ExtractFilesFromCab(Archive, OutputDir, Callback, Cookie))
+    if (ExtractFilesFromCab(Archive, OutputDir, Callback, Context))
         return ERROR_SUCCESS;
     UINT err = GetLastError();
     return err ? err : ERROR_INTERNAL_ERROR;
@@ -154,11 +154,11 @@ ExtractCab(LPCWSTR Archive, const CStringW &OutputDir,
 
 
 static UINT
-ExtractArchive(LPCWSTR Archive, const CStringW &OutputDir, EXTRACTCALLBACK Callback, void *Cookie)
+ExtractArchive(LPCWSTR Archive, const CStringW &OutputDir, EXTRACTCALLBACK Callback, void *Context)
 {
     BOOL isCab = LOBYTE(ClassifyFile(Archive)) == 'C';
-    return isCab ? ExtractCab(Archive, OutputDir, Callback, Cookie)
-                 : ExtractZip(Archive, OutputDir, Callback, Cookie);
+    return isCab ? ExtractCab(Archive, OutputDir, Callback, Context)
+                 : ExtractZip(Archive, OutputDir, Callback, Context);
 }
 
 enum { IM_STARTPROGRESS = WM_APP, IM_PROGRESS, IM_END };
@@ -439,9 +439,9 @@ AddUninstallOperationsFromDB(LPCWSTR Name, WCHAR UnOp, CStringW PathPrefix = CSt
 }
 
 static BOOL CALLBACK
-ExtractCallback(const EXTRACTCALLBACKINFO &, void *Cookie)
+ExtractCallback(const EXTRACTCALLBACKINFO &, void *Context)
 {
-    InstallInfo &Info = *(InstallInfo *) Cookie;
+    InstallInfo &Info = *(InstallInfo *) Context;
     Info.Count += 1;
     return TRUE;
 }
@@ -844,7 +844,7 @@ UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Fla
 HRESULT
 ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App)
 {
-    WCHAR buf[MAX_PATH], buf2[MAX_PATH];
+    WCHAR TempDirBuf[MAX_PATH], UniqueDir[MAX_PATH];
     CAppDB db(CAppDB::GetDefaultPath());
     db.UpdateAvailable();
     CAvailableApplicationInfo *pAppInfo = db.FindAvailableByPackageName(PackageName);
@@ -852,10 +852,10 @@ ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStri
         return HResultFromWin32(ERROR_NOT_FOUND);
     CConfigParser *pCfg = pAppInfo->GetConfigParser();
 
-    if (!GetTempPathW(_countof(buf), buf))
+    if (!GetTempPathW(_countof(TempDirBuf), TempDirBuf))
         return E_FAIL;
-    wsprintfW(buf2, L"~%s-%u", RAPPS_NAME, GetCurrentProcessId());
-    TempDir = BuildPath(buf, buf2);
+    wsprintfW(UniqueDir, L"~%s-%u", RAPPS_NAME, GetCurrentProcessId());
+    TempDir = BuildPath(TempDirBuf, UniqueDir);
     HRESULT hr = HResultFromWin32(CreateDirectoryTree(TempDir));
     if (FAILED(hr))
         return hr;
