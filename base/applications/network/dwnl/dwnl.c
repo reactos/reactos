@@ -73,7 +73,7 @@ CBindStatusCallback_UpdateProgress(CBindStatusCallback *This)
         UINT Percentage;
 
         Percentage = (UINT)((This->Progress * 100) / This->Size);
-        if (Percentage > 100) // If percentage is greater than 100%, do a failsafe
+        if ((Percentage > 99) && (This->Progress != This->Size)) // If percentage is greater than 99% but sizes don't match, do a failsafe
             Percentage = 99;
 
         LoadStringW(NULL, IDS_BYTES_DOWNLOADED_FULL, szMessage, ARRAYSIZE(szMessage));
