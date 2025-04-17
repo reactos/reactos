@@ -129,6 +129,7 @@ typedef struct _WSK_SOCKET_INTERNAL
      * thread.
      */
     struct _WSK_SOCKET_INTERNAL *NextSocketToPut;
+    int NumSocketPuts;
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
 struct NetioContext
@@ -212,6 +213,7 @@ static void WSKAPI PutSocketsThread(void *p)
     NTSTATUS status;
     PWSK_SOCKET_INTERNAL SocketToPut;
     KIRQL flags;
+    int NumSocketPuts;
 
     FUNCTION_TRACE;
 
@@ -228,9 +230,14 @@ static void WSKAPI PutSocketsThread(void *p)
         {
             SocketToPut = SocketsToPut;
             SocketsToPut = SocketToPut->NextSocketToPut;
+            NumSocketPuts = SocketToPut->NumSocketPuts;
 
             KeReleaseSpinLock(&SocketsToPutListLock, flags);
-            SocketPut(SocketToPut);	/* Here IRQL MUST be PASSIVE_LEVEL, else we loop forever! */
+            while (NumSocketPuts > 0)
+            {
+                NumSocketPuts--;
+                SocketPut(SocketToPut);	/* Here IRQL MUST be PASSIVE_LEVEL, else we loop forever! */
+            }
             KeAcquireSpinLock(&SocketsToPutListLock, &flags);
         }
         KeReleaseSpinLock(&SocketsToPutListLock, flags);
@@ -274,8 +281,17 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
     if (KeGetCurrentIrql() > PASSIVE_LEVEL)
     {
         KeAcquireSpinLock(&SocketsToPutListLock, &flags);
-        s->NextSocketToPut = SocketsToPut;
-        SocketsToPut = s;
+        if (s->NumSocketPuts > 0)
+        {
+DbgPrint("s->NumSocketPuts is %d\n", s->NumSocketPuts);
+            s->NumSocketPuts++;
+        }
+        else
+        {
+            s->NextSocketToPut = SocketsToPut;
+            SocketsToPut = s;
+            s->NumSocketPuts = 1;
+        }
         KeReleaseSpinLock(&SocketsToPutListLock, flags);
 
         KeSetEvent(&PutSocketsEvent, IO_NO_INCREMENT, FALSE);
@@ -1315,6 +1331,7 @@ WskSocket(
     memset(&s->LocalAddress, 0, sizeof(s->LocalAddress));
     memset(&s->RemoteAddress, 0, sizeof(s->RemoteAddress));
     s->NextSocketToPut = NULL;
+    s->NumSocketPuts = 0;
 
     switch (SocketType)
     {
