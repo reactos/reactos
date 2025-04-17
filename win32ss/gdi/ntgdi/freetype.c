@@ -5039,7 +5039,7 @@ FASTCALL
 TextIntGetTextExtentPoint(
     _In_ PDC dc,
     _In_ PTEXTOBJ TextObj,
-    _In_reads_(Count) LPCWSTR String,
+    _In_reads_(Count) PCWCH String,
     _In_ INT Count,
     _In_ ULONG MaxExtent,
     _Out_ PULONG Fit,
