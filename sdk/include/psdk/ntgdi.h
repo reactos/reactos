@@ -2457,7 +2457,7 @@ BOOL
 APIENTRY
 NtGdiGetTextExtent(
     _In_ HDC hdc,
-    _In_reads_(cwc) LPCWSTR lpwsz,
+    _In_reads_(cwc) PCWCH lpwsz,
     _In_ INT cwc,
     _Out_ LPSIZE psize,
     _In_ UINT flOpts);
