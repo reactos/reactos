@@ -1663,7 +1663,7 @@ BOOL
 APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPCWSTR pwsz,
+    _In_reads_opt_(cwc) PCWCH pwsz,
     _In_ ULONG cwc,
     _In_ ULONG dxMax,
     _Out_opt_ PINT pcCh,
