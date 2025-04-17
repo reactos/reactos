@@ -1986,7 +1986,7 @@ NtGdiGetCharWidthW(
     _In_ HDC hdc,
     _In_ UINT wcFirst,
     _In_ UINT cwc,
-    _In_reads_opt_(cwc) const WCHAR *pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ FLONG fl,
     _Out_writes_bytes_(cwc * sizeof(ULONG)) PVOID pvBuf);
 
