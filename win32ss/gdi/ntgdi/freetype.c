@@ -7434,7 +7434,7 @@ NtGdiExtTextOutW(
     _In_ INT YStart,
     _In_ UINT fuOptions,
     _In_opt_ LPCRECT UnsafeRect,
-    _In_reads_opt_(Count) LPCWSTR UnsafeString,
+    _In_reads_opt_(Count) PCWCH UnsafeString,
     _In_range_(0, 0xFFFF) UINT Count,
     _In_reads_opt_(_Inexpressible_(cwc)) const INT *UnsafeDx,
     _In_ DWORD dwCodePage)
