@@ -249,6 +249,7 @@ GetTextExtentPointA(
     UNICODE_STRING StringU;
     BOOL ret;
 
+    /* FIXME: lpString can be non-NUL-terminated */
     RtlInitAnsiString(&StringA, lpString);
     RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
