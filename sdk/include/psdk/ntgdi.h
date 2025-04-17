@@ -151,7 +151,7 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
-    _In_reads_z_(cwc) LPCWSTR pwszFiles,
+    _In_reads_z_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ UINT cjBuf,
