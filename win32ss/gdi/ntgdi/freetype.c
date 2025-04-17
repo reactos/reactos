@@ -7557,7 +7557,7 @@ NtGdiGetCharABCWidthsW(
     _In_ HDC hDC,
     _In_ UINT FirstChar,
     _In_ ULONG Count,
-    _In_reads_opt_(Count) const WCHAR *UnSafepwch,
+    _In_reads_opt_(Count) PCWCH UnSafepwch,
     _In_ FLONG fl,
     _Out_writes_bytes_(Count * sizeof(ABC)) PVOID Buffer)
 {
