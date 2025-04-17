@@ -1043,8 +1043,8 @@ NtGdiGetFontResourceInfoInternalW(
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ UINT cjIn,
-    _Inout_ LPDWORD pdwBytes,
-    _Out_writes_bytes_(*pdwBytes) LPVOID pvBuf,
+    _Inout_ PDWORD pdwBytes,
+    _Out_writes_bytes_(*pdwBytes) PVOID pvBuf,
     _In_ DWORD dwType)
 {
     NTSTATUS Status = STATUS_SUCCESS;
