@@ -6675,7 +6675,7 @@ static BOOL
 IntGetTextDisposition(
     _Out_ LONGLONG *pX64,
     _Out_ LONGLONG *pY64,
-    _In_ LPCWSTR String,
+    _In_reads_(Count) PCWCH String,
     _In_ INT Count,
     _In_opt_ const INT *Dx,
     _Inout_ PFONT_CACHE_ENTRY Cache,
@@ -6846,7 +6846,7 @@ IntExtTextOutW(
     _In_ INT YStart,
     _In_ UINT fuOptions,
     _In_opt_ PRECTL lprc,
-    _In_opt_ LPCWSTR String,
+    _In_reads_opt_(Count) PCWCH String,
     _In_ INT Count,
     _In_opt_ const INT *Dx,
     _In_ DWORD dwCodePage)
@@ -7392,7 +7392,7 @@ GreExtTextOutW(
     _In_ INT YStart,
     _In_ UINT fuOptions,
     _In_opt_ PRECTL lprc,
-    _In_opt_ LPCWSTR String,
+    _In_reads_opt_(Count) PCWCH String,
     _In_ INT Count,
     _In_opt_ const INT *Dx,
     _In_ DWORD dwCodePage)
