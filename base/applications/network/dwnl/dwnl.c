@@ -73,7 +73,7 @@ CBindStatusCallback_UpdateProgress(CBindStatusCallback *This)
         UINT Percentage;
 
         Percentage = (UINT)((This->Progress * 100) / This->Size);
-        if (Percentage > 99)
+        if (Percentage > 100) // If percentage is greater than 100%, do a failsafe
             Percentage = 99;
 
         LoadStringW(NULL, IDS_BYTES_DOWNLOADED_FULL, szMessage, ARRAYSIZE(szMessage));
@@ -246,6 +246,14 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
             break;
 
         case BINDSTATUS_ENDDOWNLOADDATA:
+			/* since download is completed, update progress one last time to be at 100% */
+            if(This->Size) // To avoid division by zero: if file size is known
+            {
+
+                This->Progress = This->Size; // Ensure progress == total size
+                CBindStatusCallback_UpdateProgress(This); // Show 100% progress now
+            }
+
             ConResPrintf(StdOut, IDS_FILE_SAVED);
             break;
 
@@ -502,3 +510,4 @@ int wmain(int argc, WCHAR **argv)
 
     return iRet;
 }
+
