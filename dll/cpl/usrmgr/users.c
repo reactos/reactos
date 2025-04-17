@@ -719,7 +719,6 @@ UsersPageProc(HWND hwndDlg,
             pUserData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_USER));
 
             OnInitDialog(hwndDlg);
-			
             lResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                                     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                                     0, KEY_READ, &hKey);
@@ -744,7 +743,7 @@ UsersPageProc(HWND hwndDlg,
             }
 
             CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogon ? BST_CHECKED : BST_UNCHECKED);
-			
+
             SetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
                                IDM_USER_PROPERTIES,
                                FALSE);
@@ -779,7 +778,6 @@ UsersPageProc(HWND hwndDlg,
                         UpdateUserProperties(hwndDlg);
                     }
                     break;
-					
                 case IDC_USERS_STARTUP_REQUIRE:
                     OnToggleRequireLogon(hwndDlg);
                     break;
