@@ -44,8 +44,7 @@
 
 #include <strsafe.h>
 
-#include <wine/debug.h>
-#include <wine/list.h>
+#include "debug.h"
 
 #define IMM_INIT_MAGIC          0x19650412
 #define IMM_INVALID_CANDFORM    ULONG_MAX
@@ -100,53 +99,6 @@ BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
 BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
-#if 0
-    #define UNEXPECTED() ASSERT(FALSE)
-#else
-    #define UNEXPECTED() 0
-#endif
-
-/*
- * Unexpected Condition Checkers
- * --- Examine the condition, and then generate trace log if necessary.
- */
-#ifdef NDEBUG /* on Release */
-#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr))
-#define IS_NULL_UNEXPECTEDLY(p) (!(p))
-#define IS_ZERO_UNEXPECTEDLY(p) (!(p))
-#define IS_TRUE_UNEXPECTEDLY(x) (x)
-#define IS_FALSE_UNEXPECTEDLY(x) (!(x))
-#define IS_ERROR_UNEXPECTEDLY(x) (!(x))
-#else /* on Debug */
-#define FAILED_UNEXPECTEDLY(hr) \
-    (FAILED(hr) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                   __FILE__, __FUNCTION__, __LINE__, "FAILED(%s)\n", #hr), UNEXPECTED(), TRUE) \
-                : FALSE)
-#define IS_NULL_UNEXPECTEDLY(p) \
-    (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                         __FILE__, __FUNCTION__, __LINE__, "%s was NULL\n", #p), UNEXPECTED(), TRUE) \
-          : FALSE)
-#define IS_ZERO_UNEXPECTEDLY(p) \
-    (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                         __FILE__, __FUNCTION__, __LINE__, "%s was zero\n", #p), UNEXPECTED(), TRUE) \
-          : FALSE)
-#define IS_TRUE_UNEXPECTEDLY(x) \
-    ((x) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                        __FILE__, __FUNCTION__, __LINE__, "%s was non-zero\n", #x), UNEXPECTED(), TRUE) \
-         : FALSE)
-#define IS_FALSE_UNEXPECTEDLY(x) \
-    ((!(x)) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                           __FILE__, __FUNCTION__, __LINE__, "%s was FALSE\n", #x), UNEXPECTED(), TRUE) \
-            : FALSE)
-#define IS_ERROR_UNEXPECTEDLY(x) \
-    ((x) != ERROR_SUCCESS ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
-                                          __FILE__, __FUNCTION__, __LINE__, \
-                                          "%s was 0x%X\n", #x, (x)), TRUE) \
-                          : FALSE)
-#endif
-
-#define IS_CROSS_THREAD_HIMC(hIMC)     IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))
-#define IS_CROSS_PROCESS_HWND(hWnd)    IS_TRUE_UNEXPECTEDLY(Imm32IsCrossProcessAccess(hWnd))
 #define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
 
 DWORD APIENTRY
