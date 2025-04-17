@@ -303,7 +303,6 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
     s->RefCount--;
     if (s->RefCount == 0)
     {
-DbgPrint("s is %p s->RefCount is 0, freeing it\n", s);
         SocketShutdown(s);	/* noop when called twice */
 
         /* Especially listen sockets must keep the LocalAddressFile
@@ -357,11 +356,6 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 
     FUNCTION_TRACE;
 
-    if (Irp->IoStatus.Status == STATUS_CANCELLED)
-    {
-        DbgPrint("Irp %p is cancelled!\n", Irp);
-    }
-DbgPrint("Irp->IoStatus.Status is %08x\n", Irp->IoStatus.Status);
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
     {
         UserIrp->IoStatus.Status = Irp->IoStatus.Status;
@@ -374,12 +368,10 @@ DbgPrint("Irp->IoStatus.Status is %08x\n", Irp->IoStatus.Status);
 
         memcpy(&c->socket->RemoteAddress, RemoteAddress, sizeof(c->socket->RemoteAddress));
     }
-DbgPrint("About to complete IRP %p socket is %p Irp is %p\n", UserIrp, c->socket, Irp);
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
     {
         IoCompleteRequest(UserIrp, IO_NETWORK_INCREMENT);
     }
-DbgPrint("Ok, completed IRP %p.\n", UserIrp);
 
     SocketPut(c->socket);
     if (c->TargetConnectionInfo != NULL)
@@ -885,7 +877,6 @@ WskSendTo(
     }
     nc->socket = s;
     nc->UserIrp = Irp;
-DbgPrint("SendTo: UserIrp is %p\n", Irp);
 
     TargetConnectionInfo = TdiConnectionInfoFromSocketAddress(RemoteAddress);
     if (TargetConnectionInfo == NULL)
@@ -1075,17 +1066,14 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     }
     nc->socket = s;
     nc->UserIrp = Irp;
-DbgPrint("WskConnect: UserIrp is %p\n", Irp);
 
     tdiIrp = NULL;
 
-DbgPrint("WskConnect 1\n");
     status = TdiAssociateAddressFile(s->LocalAddressHandle, s->ConnectionFile);
     if (!NT_SUCCESS(status))
     {
         goto err_out_free_nc;
     }
-DbgPrint("WskConnect 2\n");
     s->ConnectionFileAssociated = TRUE;
 
     TargetConnectionInfo = TdiConnectionInfoFromSocketAddress(RemoteAddress);
@@ -1095,7 +1083,6 @@ DbgPrint("WskConnect 2\n");
     }
     nc->TargetConnectionInfo = TargetConnectionInfo;
 
-DbgPrint("WskConnect 3\n");
     PeerAddrRet = NULL;
     TdiBuildNullConnectionInfo(&PeerAddrRet, TDI_ADDRESS_TYPE_IP);
     if (PeerAddrRet == NULL)
@@ -1103,14 +1090,11 @@ DbgPrint("WskConnect 3\n");
         goto err_out_free_nc_and_tci;
     }
     nc->PeerAddrRet = PeerAddrRet;
-DbgPrint("WskConnect 4\n");
 
     IoMarkIrpPending(Irp);
     SocketGet(s);
 
-DbgPrint("WskConnect 5\n");
     status = TdiConnect(&tdiIrp, s->ConnectionFile, TargetConnectionInfo, PeerAddrRet, NetioComplete, nc);
-DbgPrint("WskConnect out of TdiConnect status is %08x\n", status);
 
     /* If allocating tdiIrp fails we get here.
      * Call the IoCompletion of the application's Irp so this Irp
@@ -1120,10 +1104,8 @@ DbgPrint("WskConnect out of TdiConnect status is %08x\n", status);
     {
         ExFreePoolWithTag(PeerAddrRet, TAG_NETIO);
         SocketPut(s);
-DbgPrint("WskConnect 6\n");
         goto err_out_free_nc_and_tci;
     }
-DbgPrint("WskConnect out, returning STATUS_PENDING.\n");
     return STATUS_PENDING;
 
 err_out_free_nc_and_tci:
@@ -1141,9 +1123,7 @@ err_out_free_nc:
 
 err_out:
     Irp->IoStatus.Status = status;
-DbgPrint("About to complete Irp %p\n", Irp);
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-DbgPrint("Done with Irp %p\n", Irp);
 
     return status;
 }
@@ -1174,7 +1154,6 @@ WskStreamIo(
     }
     nc->socket = s;
     nc->UserIrp = Irp;
-DbgPrint("WskStreamIo: UserIrp is %p, direction is %s\n", Irp, Direction == DIR_SEND ? "Send" : "Receive");
 
     nc->TargetConnectionInfo = NULL;
     nc->PeerAddrRet = NULL;
