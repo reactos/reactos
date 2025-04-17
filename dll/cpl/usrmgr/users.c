@@ -738,9 +738,8 @@ UsersPageProc(HWND hwndDlg,
                                            &dwSizeInit);
             RegCloseKey(hKeyInit);
 
-            if (   lResultInit == ERROR_SUCCESS
-                && dwTypeInit == REG_SZ
-                && wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
+            if (lResultInit == ERROR_SUCCESS && dwTypeInit == REG_SZ &&
+                wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
             {
                 bRequireLogonInit = FALSE;
             }
