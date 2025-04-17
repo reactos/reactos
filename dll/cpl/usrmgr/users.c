@@ -653,14 +653,10 @@ UpdateUserProperties(HWND hwndDlg)
 
 VOID OnToggleRequireLogon(_In_ HWND hwndDlg)
 {
-    BOOL bIsChecked;
-    WCHAR szAutoAdminLogonValue[2]; 
     HKEY hKey;
     LONG lResult;
-
-    bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE) == BST_CHECKED;
-
-    wcscpy(szAutoAdminLogonValue, bIsChecked ? L"0" : L"1");
+    BOOL bIsChecked;
+    PCWSTR pszAutoAdminLogonValue;
 
     lResult = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                               L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
@@ -677,11 +673,14 @@ VOID OnToggleRequireLogon(_In_ HWND hwndDlg)
         return; 
     }
 
+    bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE) == BST_CHECKED;
+    pszAutoAdminLogonValue = bIsChecked ? L"0" : L"1";
+
     lResult = RegSetValueExW(hKey,
                              L"AutoAdminLogon",
                              0,
                              REG_SZ, 
-                             sizeof(szAutoAdminLogonValue));
+                             (const BYTE*)pszAutoAdminLogonValue,
                              2 * sizeof(WCHAR));
     if (lResult != ERROR_SUCCESS)
     {
@@ -707,44 +706,44 @@ UsersPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            LONG lResultInit;
-            HKEY hKeyInit;
-            WCHAR szAutoAdminLogonValueInit[2];
-            DWORD dwTypeInit;
-            DWORD dwSizeInit = sizeof(szAutoAdminLogonValueInit);
-            BOOL bRequireLogonInit = TRUE;
+            LONG lResult;
+            HKEY hKey;
+            WCHAR szAutoAdminLogonValue[2];
+            DWORD dwType;
+            DWORD dwSize = sizeof(szAutoAdminLogonValue);
+            BOOL bRequireLogon = TRUE;
 
-            pUserData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(USER_DATA));
+            pUserData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pUserData));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pUserData);
 
             pUserData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_USER));
 
             OnInitDialog(hwndDlg);
 			
-            lResultInit = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
-                                        0, KEY_READ, &hKeyInit);
-            if (lResultInit != ERROR_SUCCESS)
+            lResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                                    0, KEY_READ, &hKey);
+            if (lResult != ERROR_SUCCESS)
             {
                 CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, BST_CHECKED);
                 break; 
             }
 
-            lResultInit = RegQueryValueExW(hKeyInit,
-                                           L"AutoAdminLogon",
-                                           NULL,
-                                           &dwTypeInit,
-                                           (LPBYTE)szAutoAdminLogonValueInit,
-                                           &dwSizeInit);
-            RegCloseKey(hKeyInit);
+            lResult = RegQueryValueExW(hKey,
+                                       L"AutoAdminLogon",
+                                       NULL,
+                                       &dwType,
+                                       (LPBYTE)szAutoAdminLogonValue,
+                                       &dwSize);
+            RegCloseKey(hKey);
 
-            if (lResultInit == ERROR_SUCCESS && dwTypeInit == REG_SZ &&
-                wcscmp(szAutoAdminLogonValueInit, L"1") == 0)
+            if (lResult == ERROR_SUCCESS && dwType == REG_SZ &&
+                wcscmp(szAutoAdminLogonValue, L"1") == 0)
             {
-                bRequireLogonInit = FALSE;
+                bRequireLogon = FALSE;
             }
 
-            CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogonInit ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogon ? BST_CHECKED : BST_UNCHECKED);
 			
             SetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
                                IDM_USER_PROPERTIES,
