@@ -449,7 +449,7 @@ RealizeFontInit(_In_ HFONT hFont)
 
 static BOOL
 IntCheckFontPathNames(
-    _In_reads_(cwc) const WCHAR *pwcFiles,
+    _In_reads_(cwc) PCWCH pwcFiles,
     _In_ ULONG cFiles,
     _In_ ULONG cwc)
 {
