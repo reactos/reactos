@@ -224,22 +224,29 @@ static void WSKAPI PutSocketsThread(void *p)
         {
             DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
+DbgPrint("PutSocketsThread: Got Event\n");
 
         KeAcquireSpinLock(&SocketsToPutListLock, &flags);
+DbgPrint("PutSocketsThread: Into Loop\n");
         while (SocketsToPut != NULL)
         {
             SocketToPut = SocketsToPut;
             SocketsToPut = SocketToPut->NextSocketToPut;
             NumSocketPuts = SocketToPut->NumSocketPuts;
+DbgPrint("PutSocketsThread: NumSocketPuts is %d\n", NumSocketPuts);
+DbgPrint("PutSocketsThread: SocketToPut is %p\n", SocketToPut);
 
             KeReleaseSpinLock(&SocketsToPutListLock, flags);
             while (NumSocketPuts > 0)
             {
-                NumSocketPuts--;
+                SocketToPut->NumSocketPuts--;
+                NumSocketPuts = SocketToPut->NumSocketPuts;
+
                 SocketPut(SocketToPut);	/* Here IRQL MUST be PASSIVE_LEVEL, else we loop forever! */
             }
             KeAcquireSpinLock(&SocketsToPutListLock, &flags);
         }
+DbgPrint("PutSocketsThread: Out of Loop\n");
         KeReleaseSpinLock(&SocketsToPutListLock, flags);
     }
 }
@@ -252,6 +259,7 @@ static void StartSocketPutThread(void)
     KeInitializeEvent(&PutSocketsEvent, SynchronizationEvent, FALSE);
     PutSocketsThreadShouldRun = TRUE;
 
+DbgPrint("StartSocketPutThread ...\n");
     status = PsCreateSystemThread(&PutSocketsThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, PutSocketsThread, NULL);
     if (status != STATUS_SUCCESS)
     {
@@ -264,6 +272,7 @@ static void StopSocketPutThread(void)
     PutSocketsThreadShouldRun = FALSE;
     KeSetEvent(&PutSocketsEvent, IO_NO_INCREMENT, FALSE);
 
+DbgPrint("StopSocketPutThread ...\n");
     /* eventually it will terminate, no need to wait for that. */
 }
 
@@ -283,7 +292,7 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
         KeAcquireSpinLock(&SocketsToPutListLock, &flags);
         if (s->NumSocketPuts > 0)
         {
-DbgPrint("s->NumSocketPuts is %d\n", s->NumSocketPuts);
+DbgPrint("s is %p s->NumSocketPuts is %d\n", s, s->NumSocketPuts);
             s->NumSocketPuts++;
         }
         else
@@ -302,6 +311,7 @@ DbgPrint("s->NumSocketPuts is %d\n", s->NumSocketPuts);
     s->RefCount--;
     if (s->RefCount == 0)
     {
+DbgPrint("s is %p s->RefCount is 0, freeing it\n", s);
         SocketShutdown(s);	/* noop when called twice */
 
         /* Especially listen sockets must keep the LocalAddressFile
