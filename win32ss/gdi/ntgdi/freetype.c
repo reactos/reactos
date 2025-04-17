@@ -6558,7 +6558,7 @@ NtGdiGetFontFamilyInfo(
     _In_ HDC Dc,
     _In_ const LOGFONTW *UnsafeLogFont,
     _Out_ PFONTFAMILYINFO UnsafeInfo,
-    _Inout_ LPLONG UnsafeInfoCount)
+    _Inout_ PLONG UnsafeInfoCount)
 {
     NTSTATUS Status;
     LOGFONTW LogFont;
