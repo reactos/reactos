@@ -2873,7 +2873,7 @@ INT
 W32KAPI
 APIENTRY
 NtGdiAddFontResourceW(
-    _In_reads_(cwc) const WCHAR *pwszFiles,
+    _In_reads_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ FLONG f,
