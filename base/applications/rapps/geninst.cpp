@@ -441,7 +441,7 @@ AddUninstallOperationsFromDB(LPCWSTR Name, WCHAR UnOp, CStringW PathPrefix = CSt
 static BOOL CALLBACK
 ExtractCallback(const EXTRACTCALLBACKINFO &, void *Context)
 {
-    InstallInfo &Info = *(InstallInfo *) Context;
+    InstallInfo &Info = *(InstallInfo *)Context;
     Info.Count += 1;
     return TRUE;
 }
