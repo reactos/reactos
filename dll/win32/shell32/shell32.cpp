@@ -426,6 +426,19 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return hResult;
 }
 
+static HRESULT UpdateRegistryFromResource(BOOL Register)
+{
+    static const BYTE resid[] =
+    {
+        IDR_FOLDEROPTIONS,
+        IDR_EXPLORER,
+    };
+    HRESULT hr = S_OK;
+    for (SIZE_T i = 0; i < _countof(resid) && SUCCEEDED(hr); ++i)
+        hr = gModule.UpdateRegistryFromResource(resid[i], Register, NULL);
+    return hr;
+}
+
 /***********************************************************************
  *              DllRegisterServer (SHELL32.@)
  */
@@ -437,8 +450,7 @@ STDAPI DllRegisterServer()
     if (FAILED(hr))
         return hr;
 
-    hr = gModule.UpdateRegistryFromResource(IDR_FOLDEROPTIONS, TRUE, NULL);
-    if (FAILED(hr))
+    if (FAILED(hr = UpdateRegistryFromResource(TRUE)))
         return hr;
 
     hr = SHELL_RegisterShellFolders();
@@ -459,8 +471,7 @@ STDAPI DllUnregisterServer()
     if (FAILED(hr))
         return hr;
 
-    hr = gModule.UpdateRegistryFromResource(IDR_FOLDEROPTIONS, FALSE, NULL);
-    if (FAILED(hr))
+    if (FAILED(hr = UpdateRegistryFromResource(FALSE)))
         return hr;
 
     return S_OK;

@@ -941,3 +941,4 @@
 #define IDR_MOVETOMENU          160
 #define IDR_COPYASPATHMENU      161
 #define IDR_RECYCLEBINCLEANER   162
+#define IDR_EXPLORER            163
