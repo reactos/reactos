@@ -14,7 +14,7 @@ BEGIN
     IDS_APP_USAGE "\nInterprete partizionamento disco.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S filename\tEsegue lo script dato.\n\
-/T timeout\tTimeout in seconds to prevent DiskPart usage overlap.\n\
+/T timeout\tTimeout in secondi per prevenire che l'uso di DiskPart si sovrapona.\n\
 /?\t\tMostra questo messaggio d'aiuto.\n\n"
     IDS_APP_LICENSE "Rilasciato sotto licenza GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER "Sul computer: %s\n\n"
@@ -63,8 +63,8 @@ BEGIN
     IDS_DETAIL_INFO_BOOT_DSK "Disco di avvio"
     IDS_DETAIL_INFO_PAGE_FILE_DSK "Pagefile Disk"
     IDS_DETAIL_INFO_HIBER_FILE_DSK "File Disco di Ibernazione"
-    IDS_DETAIL_INFO_CRASH_DSK "Crashdump Disk"
-    IDS_DETAIL_INFO_CLST_DSK "Clustered Disk"
+    IDS_DETAIL_INFO_CRASH_DSK "Disco di crashdump"
+    IDS_DETAIL_INFO_CLST_DSK "Disco clustered"
     IDS_DETAIL_PARTITION_NUMBER "Partizione %lu\n"
     IDS_DETAIL_PARTITION_TYPE   "Tipo          : %02x\n"
     IDS_DETAIL_PARTITION_HIDDEN "Nascosto        : %s\n"
@@ -125,7 +125,7 @@ BEGIN
     IDS_SELECT_DISK_ENUM_NO_START "\nNessuna enumerazione del disco è iniziata.\n\nNessun disco è selezionato al momento.\n\n"
     IDS_SELECT_DISK_ENUM_FINISHED "\nL'ultimo disco è stato enumerato.\n\nNessun disco è selezionato al momento.\n\n"
     IDS_SELECT_NO_PARTITION "\nNon c'è nessuna partizione al momento selezionata.\nPer favore seleziona una partizione e riprova.\n\n"
-    IDS_SELECT_PARTITION "\nPartizione %lu is now the selected partition.\n\n"
+    IDS_SELECT_PARTITION "\nPartizione %lu è ora la partizione selezionata.\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\nNon c'è nessun disco per selezionare una partizione.\nPer favore seleziona un disco e riprova.\n\n"
     IDS_SELECT_PARTITION_INVALID "\nPartizione non valida.\n\n"
     IDS_SELECT_NO_VOLUME "\nNon è stato selezionato nessun disco corrente.\nPer favore seleziona un disco e riprova.\n\n"
@@ -164,13 +164,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_HELP_ACTIVE                    "Segna la partizione corrente come attiva.\n"
-    IDS_HELP_ADD                       "Add a mirror to a simple volume.\n"
+    IDS_HELP_ADD                       "Aggiungi un mirror ad un volume semplice.\n"
     IDS_HELP_ASSIGN                    "Assegna una lettera dell'unità o monta al volume selezionato.\n"
     IDS_HELP_ATTACH                    "Monta un file disco virtuale.\n"
     IDS_HELP_ATTRIBUTES                "Manipola volume o attributi disco.\n"
     IDS_HELP_AUTOMOUNT                 "Abilita e disabili montaggio dei volumi base.\n"
-    IDS_HELP_BREAK                     "Break a mirror set.\n"
-    IDS_HELP_CLEAN                     "Clear the configuration information, or all information, off\n              the disk.\n"
+    IDS_HELP_BREAK                     "Rompi un set mirror.\n"
+    IDS_HELP_CLEAN                     "Pulisci l'informazione sulla configurazione, o tutte le informazioni, dal\n              disco.\n"
     IDS_HELP_COMPACT                   "Tenta di ridurre la grandezza fisica del file.\n"
     IDS_HELP_CONVERT                   "Converti tra formati dischi differenti.\n"
 
@@ -212,28 +212,28 @@ BEGIN
     IDS_HELP_LIST_VOLUME               "Mostra volumi.\n"
     IDS_HELP_LIST_VDISK                "Mostra file di disco virtuale.\n"
 
-    IDS_HELP_MERGE                     "Merges a child disk with its parents.\n"
+    IDS_HELP_MERGE                     "Unisci un disco figlio con i suoi genitori.\n"
     IDS_HELP_OFFLINE                   "Rendi offline un oggetto che è al momento segnato come online.\n"
     IDS_HELP_ONLINE                    "Rendi online un oggetto che è al momento segnato come offline.\n"
-    IDS_HELP_RECOVER                   "Refreshes the state of all disks in the invalid pack,\n              and resynchronizes mirrored volumes and RAID5 volumes\n              that have stale plex or parity data.\n"
+    IDS_HELP_RECOVER                   "Riaggiorna lo stato di tutti i dischi nel pacco non valido,\n              e risincronizza i volumi specchiati e volumi RAID5\n              che hanno il plex in stallo o dati in parità.\n"
     IDS_HELP_REM                       "Non fa nulla. Questo è usato per commentare i scripts.\n"
     IDS_HELP_REMOVE                    "Rimuove una lettera dell'unità o un assegnazione al punto di montaggio.\n"
     IDS_HELP_REPAIR                    "Ripara un volume RAID-5 volume con un membro fallito.\n"
     IDS_HELP_RESCAN                    "Riscansiona il computer per cercare dischi e volumi.\n"
-    IDS_HELP_RETAIN                    "Place a retained partition under a simple volume.\n"
+    IDS_HELP_RETAIN                    "Piazza una partizione trattenuta sotto un semplice volumd.\n"
     IDS_HELP_SAN                       "Mostra o imposta la politica SAN policy per l'OS al momento avviato.\n"
 
-    IDS_HELP_SELECT                    "Shift the focus to an object.\n"
-    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
-    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
-    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
-    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+    IDS_HELP_SELECT                    "Sposta the focus ad un oggetto.\n"
+    IDS_HELP_SELECT_DISK               "Muove il focus al disco.\n"
+    IDS_HELP_SELECT_PARTITION          "Muove il focus alla partizione.\n"
+    IDS_HELP_SELECT_VOLUME             "Muove il focus al volume.\n"
+    IDS_HELP_SELECT_VDISK              "Muove il focus al disco virtuale.\n"
 
     IDS_HELP_SETID                     "Cambia tipo partizione.\n"
     IDS_HELP_SHRINK                    "Riduci la dimensione del volume selezionato.\n"
 
-    IDS_HELP_UNIQUEID                  "Displays or sets the GUID partition table (GPT) identifier\n              or master boot record (MBR) signature of a disk.\n"
-    IDS_HELP_UNIQUEID_DISK             "Displays or sets the GUID partition table (GPT) identifier\n              or master boot record (MBR) signature of a disk.\n"
+    IDS_HELP_UNIQUEID                  "Mostra o imposta l'identificativo della tabella partizione GUID (GPT)\n              o della firma del master boot record (MBR) di un disco.\n"
+    IDS_HELP_UNIQUEID_DISK             "Mostra o imposta l'identificativo della tabella partizione GUID (GPT)\n              o della firma del master boot record (MBR) di un disco.\n"
 END
 
 /* Common Error Messages */
