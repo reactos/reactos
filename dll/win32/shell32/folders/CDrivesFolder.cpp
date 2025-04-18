@@ -567,7 +567,7 @@ class CDrivesFolderEnum :
                 DWORD dwRestricted = SHRestricted(REST_NODRIVES);
                 while (wszDriveName[0] <= 'Z')
                 {
-                    if((dwDrivemap & 1) && !(dwRestricted & 1))
+                    if ((dwDrivemap & 1) && !(dwRestricted & 1))
                         AddToEnumList(_ILCreateDrive(wszDriveName));
                     wszDriveName[0]++;
                     dwDrivemap = dwDrivemap >> 1;
