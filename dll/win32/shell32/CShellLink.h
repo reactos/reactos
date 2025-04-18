@@ -87,7 +87,6 @@ private:
     LPDBLIST      m_pDBList; /* Optional data block list (in the extra data section) */
     BOOL          m_bInInit;    // in initialization or not
     HICON         m_hIcon;
-    UINT          m_idCmdFirst;
 
     /* Pointers to strings inside Logo3/Darwin info blocks, cached for debug info purposes only */
     LPWSTR sProduct;
