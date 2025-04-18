@@ -532,6 +532,10 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
             RegSetValueExA(hkey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
             dwEnableDHCP = 1;
             RegSetValueExA(hkey, "EnableDHCP", 0, REG_DWORD, (LPBYTE)&dwEnableDHCP, sizeof(DWORD));
+
+            RegSetValueExA(hkey, "LeaseObtainedTime", 0, REG_DWORD, (LPBYTE)&new_lease->obtained, sizeof(DWORD));
+            RegSetValueExA(hkey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&new_lease->expiry, sizeof(DWORD));
+            RegSetValueExA(hkey, "DhcpServer", 0, REG_SZ, (LPBYTE)piaddr(new_lease->serveraddress), strlen(piaddr(new_lease->serveraddress))+1);
         }
 
         if( !NT_SUCCESS(Status) )
