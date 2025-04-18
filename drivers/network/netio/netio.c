@@ -109,7 +109,7 @@ typedef struct _WSK_SOCKET_INTERNAL
     UINT CallbackMask;
 
     UINT Flags;                          /* SO_REUSEADDR, ... see ws2def.h */
-    UINT RefCount;                       /* See SocketGet/SocketPut TODO: this should be atomic */
+    LONG RefCount;                       /* See SocketGet/SocketPut TODO: this should be atomic */
 
     PIRP ListenIrp;	           /* must be cancelled on close */
     BOOLEAN ListenCancelled;
@@ -145,7 +145,7 @@ SocketGet(PWSK_SOCKET_INTERNAL s)
 {
     FUNCTION_TRACE;
 
-    s->RefCount++;
+    InterlockedIncrement(&s->RefCount);
 // DbgPrint("SocketGet: refcount is %d socket is %p\n", s->RefCount, s);
 }
 
@@ -232,15 +232,15 @@ static void WSKAPI PutSocketsThread(void *p)
             SocketsToPut = SocketToPut->NextSocketToPut;
             NumSocketPuts = SocketToPut->NumSocketPuts;
 
-            KeReleaseSpinLock(&SocketsToPutListLock, flags);
             while (NumSocketPuts > 0)
             {
                 SocketToPut->NumSocketPuts--;
                 NumSocketPuts = SocketToPut->NumSocketPuts;
 
+                KeReleaseSpinLock(&SocketsToPutListLock, flags);
                 SocketPut(SocketToPut);	/* Here IRQL MUST be PASSIVE_LEVEL, else we loop forever! */
+                KeAcquireSpinLock(&SocketsToPutListLock, &flags);
             }
-            KeAcquireSpinLock(&SocketsToPutListLock, &flags);
         }
         KeReleaseSpinLock(&SocketsToPutListLock, flags);
     }
@@ -300,8 +300,7 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
         return;
     }
 
-    s->RefCount--;
-    if (s->RefCount == 0)
+    if (InterlockedDecrement(&s->RefCount) == 0)
     {
         SocketShutdown(s);	/* noop when called twice */
 
