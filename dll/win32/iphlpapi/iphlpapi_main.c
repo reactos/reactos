@@ -686,8 +686,6 @@ DWORD WINAPI GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
 DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
   DWORD ret;
-  BOOL dhcpEnabled;
-  DWORD dhcpServer;
 
   TRACE("pAdapterInfo %p, pOutBufLen %p\n", pAdapterInfo, pOutBufLen);
   if (!pOutBufLen)
@@ -771,12 +769,7 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
               ptr->IpAddressList.Context = ptr->Index;
               toIPAddressString(getInterfaceGatewayByIndex(table->indexes[ndx]),
                ptr->GatewayList.IpAddress.String);
-              getDhcpInfoForAdapter(table->indexes[ndx], &dhcpEnabled,
-                                    &dhcpServer, &ptr->LeaseObtained,
-                                    &ptr->LeaseExpires);
-              ptr->DhcpEnabled = (DWORD) dhcpEnabled;
-              toIPAddressString(dhcpServer,
-                                ptr->DhcpServer.IpAddress.String);
+              getDhcpInfoForAdapter(table->indexes[ndx], ptr);
               if (winsEnabled) {
                 ptr->HaveWins = TRUE;
                 memcpy(ptr->PrimaryWinsServer.IpAddress.String,
