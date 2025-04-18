@@ -2924,7 +2924,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         return FALSE;
     }
     lEvent &= ~SHCNE_INTERRUPT;
-    TRACE("(%p)(%p,%p,%p) %#x\n", this, Pidls[0], Pidls[1], lParam, (UINT)lEvent);
+    TRACE("(%p)(%p,%p,%p) %#x\n", this, Pidls[0], Pidls[1], lParam, lEvent);
 
     if (_DoFolderViewCB(SFVM_FSNOTIFY, (WPARAM)Pidls, lEvent) == S_FALSE)
     {

@@ -563,15 +563,12 @@ class CDrivesFolderEnum :
             if (dwFlags & SHCONTF_FOLDERS)
             {
                 WCHAR wszDriveName[] = {'A', ':', '\\', '\0'};
-                DWORD dwDrivemap = GetLogicalDrives();
-                DWORD dwRestricted = SHRestricted(REST_NODRIVES);
-                while (wszDriveName[0] <= 'Z')
+                DWORD dwDrivemap = GetLogicalDrives() & ~SHRestricted(REST_NODRIVES);
+                for (; wszDriveName[0] <= 'Z'; wszDriveName[0]++)
                 {
-                    if ((dwDrivemap & 1) && !(dwRestricted & 1))
+                    if (dwDrivemap & 1)
                         AddToEnumList(_ILCreateDrive(wszDriveName));
-                    wszDriveName[0]++;
-                    dwDrivemap = dwDrivemap >> 1;
-                    dwRestricted = dwRestricted >> 1;
+                    dwDrivemap >>= 1;
                 }
             }
 
