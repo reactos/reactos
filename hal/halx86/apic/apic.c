@@ -503,7 +503,7 @@ ApicInitializeIOApic(VOID)
     ReDirReg.Vector = APIC_CLOCK_VECTOR;
     ReDirReg.MessageType = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
-    ReDirReg.TriggerMode = APIC_TGM_Edge;
+    ReDirReg.TriggerMode = APIC_TGM_Level;
     ReDirReg.Mask = 1;
     ReDirReg.Destination = ApicRead(APIC_ID);
     ApicWriteIORedirectionEntry(APIC_CLOCK_INDEX, ReDirReg);
