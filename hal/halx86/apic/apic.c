@@ -385,7 +385,7 @@ HalpAllocateSystemInterrupt(
     ReDirReg.TriggerMode = APIC_TGM_Edge;
     ReDirReg.Mask = 1;
     ReDirReg.Reserved = 0;
-    ReDirReg.Destination = 0;
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
 
     /* Initialize entry */
     ApicWriteIORedirectionEntry(Irq, ReDirReg);
@@ -484,7 +484,7 @@ ApicInitializeIOApic(VOID)
     ReDirReg.TriggerMode = APIC_TGM_Edge;
     ReDirReg.Mask = 1;
     ReDirReg.Reserved = 0;
-    ReDirReg.Destination = 0;
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
 
     /* Loop all table entries */
     for (Index = 0; Index < APIC_MAX_IRQ; Index++)
@@ -505,7 +505,7 @@ ApicInitializeIOApic(VOID)
     ReDirReg.DestinationMode = APIC_DM_Physical;
     ReDirReg.TriggerMode = APIC_TGM_Level;
     ReDirReg.Mask = 1;
-    ReDirReg.Destination = ApicRead(APIC_ID);
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
     ApicWriteIORedirectionEntry(APIC_CLOCK_INDEX, ReDirReg);
 }
 
@@ -704,7 +704,7 @@ HalEnableSystemInterrupt(
     ReDirReg.Vector = Vector;
     ReDirReg.MessageType = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
-    ReDirReg.Destination = KeGetCurrentPrcb()->InitialApicId;
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
     ReDirReg.TriggerMode = (InterruptMode == LevelSensitive) ?
         APIC_TGM_Level : APIC_TGM_Edge;
     ReDirReg.Mask = FALSE;
