@@ -1254,31 +1254,27 @@ HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
  */
 HRESULT WINAPI SetSystemVisualStyle(PCWSTR pszStyleFile, PCWSTR pszColor, PCWSTR pszSize, UINT Flags)
 {
-    HTHEMEFILE hThemeFile = NULL;
+    PTHEME_FILE pThemeFile = NULL;
     HRESULT hr;
 
     if (pszStyleFile)
     {
-        WCHAR szColor[256], szSize[256];
-        if (!pszColor || !*pszColor)
-        {
-            GetThemeDefaults(pszStyleFile, szColor, 256, NULL, 0);
-            pszColor = szColor;
-        }
-        if (!pszSize || !*pszSize)
-        {
-            GetThemeDefaults(pszStyleFile, NULL, 0, szSize, 256);
-            pszSize = szSize;
-        }
+        if (!g_bThemeHooksActive)
+            return E_FAIL;
 
-        hr = OpenThemeFile(pszStyleFile, pszColor, pszSize, &hThemeFile, 0);
+        if (pszColor && !*pszColor)
+            pszColor = NULL;
+        if (pszSize && !*pszSize)
+            pszSize = NULL;
+
+        hr = MSSTYLES_OpenThemeFile(pszStyleFile, pszColor, pszSize, &pThemeFile);
         if (FAILED(hr))
             return hr;
     }
-    hr = ApplyTheme(hThemeFile, Flags, NULL);
+    hr = ApplyTheme(pThemeFile, Flags, NULL);
 
-    if (hThemeFile)
-        CloseThemeFile(hThemeFile);
+    if (pThemeFile)
+        MSSTYLES_CloseThemeFile(pThemeFile);
 
     return hr;
 }

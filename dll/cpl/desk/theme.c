@@ -438,7 +438,7 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
                     StyleName,
                     (lstrlenW(StyleName) + 1) * sizeof(WCHAR));
     }
-    
+
     if (pSelectedTheme->ThemeActive)
     {
         SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"Current", REG_SZ, NULL, 0);
