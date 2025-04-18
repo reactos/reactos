@@ -18,7 +18,7 @@ Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /?\t\tMostra questo messaggio d'aiuto.\n\n"
     IDS_APP_LICENSE "Rilasciato sotto licenza GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER "Sul computer: %s\n\n"
-    IDS_APP_LEAVING "\nLeaving DiskPart...\n"
+    IDS_APP_LEAVING "\nUscita DiskPart...\n"
     IDS_APP_PROMPT "DISKPART> "
 END
 
@@ -31,9 +31,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CLEAN_FAIL "\nDiskPart was unable to clean the disk.\nThe data on this disk may be unrecoverable.\n"
-    IDS_CLEAN_SUCCESS "\nDiskPart succeeded in cleaning the disk.\n"
-    IDS_CLEAN_SYSTEM "\nThe selected disk is neccessary to the operation of your computer, and may not be cleaned.\n"
+    IDS_CLEAN_FAIL "\nDiskPart non è stato in grado di pulire il disco.\ni dati in questo disco potrebbero essere non recuperabili.\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart ha pulito con successo il disco.\n"
+    IDS_CLEAN_SYSTEM "\nIl disco selezionato è neccessario per il funzionamento del computer, e non può essere pulito.\n"
 END
 
 STRINGTABLE
@@ -57,12 +57,12 @@ BEGIN
     IDS_DETAIL_INFO_PATH   "Percorso   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Target     : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "Lun ID     : %hu\n"
-    IDS_DETAIL_INFO_LOC_PATH "Location Path"
-    IDS_DETAIL_INFO_CURR_RO_STATE "Current Read-only State"
-    IDS_DETAIL_INFO_RO "Read-only"
-    IDS_DETAIL_INFO_BOOT_DSK "Boot Disk"
+    IDS_DETAIL_INFO_LOC_PATH "Percorso di locazione"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Stato Sola lettura corrente"
+    IDS_DETAIL_INFO_RO "Sola lettura"
+    IDS_DETAIL_INFO_BOOT_DSK "Disco di avvio"
     IDS_DETAIL_INFO_PAGE_FILE_DSK "Pagefile Disk"
-    IDS_DETAIL_INFO_HIBER_FILE_DSK "Hibernation File Disk"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "File Disco di Ibernazione"
     IDS_DETAIL_INFO_CRASH_DSK "Crashdump Disk"
     IDS_DETAIL_INFO_CLST_DSK "Clustered Disk"
     IDS_DETAIL_PARTITION_NUMBER "Partizione %lu\n"
@@ -147,7 +147,7 @@ BEGIN
     IDS_STATUS_YES "Sì"
     IDS_STATUS_NO "No"
     IDS_STATUS_DISK_HEALTHY "Salutare"
-    IDS_STATUS_DISK_SICK "Sick"
+    IDS_STATUS_DISK_SICK "A rischio"
     IDS_STATUS_UNAVAILABLE "NON DISPONIBILE"
     IDS_STATUS_ONLINE "Online"
     IDS_STATUS_OFFLINE "Offline"
@@ -213,15 +213,15 @@ BEGIN
     IDS_HELP_LIST_VDISK                "Mostra file di disco virtuale.\n"
 
     IDS_HELP_MERGE                     "Merges a child disk with its parents.\n"
-    IDS_HELP_OFFLINE                   "Offline an object that is currently marked as online.\n"
-    IDS_HELP_ONLINE                    "Online an object that is currently marked as offline.\n"
+    IDS_HELP_OFFLINE                   "Rendi offline un oggetto che è al momento segnato come online.\n"
+    IDS_HELP_ONLINE                    "Rendi online un oggetto che è al momento segnato come offline.\n"
     IDS_HELP_RECOVER                   "Refreshes the state of all disks in the invalid pack,\n              and resynchronizes mirrored volumes and RAID5 volumes\n              that have stale plex or parity data.\n"
-    IDS_HELP_REM                       "Does nothing. This is used to comment scripts.\n"
-    IDS_HELP_REMOVE                    "Remove a drive letter or mount point assignment.\n"
-    IDS_HELP_REPAIR                    "Repair a RAID-5 volume with a failed member.\n"
+    IDS_HELP_REM                       "Non fa nulla. Questo è usato per commentare i scripts.\n"
+    IDS_HELP_REMOVE                    "Rimuove una lettera dell'unità o un assegnazione al punto di montaggio.\n"
+    IDS_HELP_REPAIR                    "Ripara un volume RAID-5 volume con un membro fallito.\n"
     IDS_HELP_RESCAN                    "Riscansiona il computer per cercare dischi e volumi.\n"
     IDS_HELP_RETAIN                    "Place a retained partition under a simple volume.\n"
-    IDS_HELP_SAN                       "Display or set the SAN policy for the currently booted OS.\n"
+    IDS_HELP_SAN                       "Mostra o imposta la politica SAN policy per l'OS al momento avviato.\n"
 
     IDS_HELP_SELECT                    "Shift the focus to an object.\n"
     IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
