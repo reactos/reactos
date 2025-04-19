@@ -13,7 +13,7 @@
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <dhcpcsdk.h>
-#include <dhcp/rosdhcp_public.h>
+#include <rosdhcp_pipe.h>
 
 #include "debug.h"
 

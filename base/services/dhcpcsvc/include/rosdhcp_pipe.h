@@ -1,5 +1,5 @@
-#ifndef ROSDHCP_PUBLIC_H
-#define ROSDHCP_PUBLIC_H
+#ifndef ROSDHCP_PIPE_H
+#define ROSDHCP_PIPE_H
 
 enum {
     DhcpReqLeaseIpAddress,
@@ -43,4 +43,4 @@ typedef union _COMM_DHCP_REPLY {
 
 #define DHCP_PIPE_NAME L"\\\\.\\pipe\\dhcpclient"
 
-#endif/*ROSDHCP_PUBLIC_H*/
+#endif/*ROSDHCP_PIPE_H*/
