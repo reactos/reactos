@@ -353,6 +353,8 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
  */
 VOID
 ShowCustomizeClassic(HINSTANCE, HWND);
+VOID
+ClearRecentAndMru();
 
 /*
 * startmnusite.cpp
