@@ -74,23 +74,81 @@ IntIsDebugChannelEnabled(DEBUGCHANNEL channel)
 }
 #endif /* DBG */
 
-#define NUM_BUFS 4
+#define DEBUG_ESCAPE_TAIL_LEN 5
+
+static inline PSTR
+debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
+{
+    PCH pch = pszBuf;
+    PCCH pchSrc = pszSrc;
+
+    if (!pszSrc)
+        return "(null)";
+
+    *pch++ = '"';
+    --cchBuf;
+
+    for (; cchBuf > DEBUG_ESCAPE_TAIL_LEN; ++pchSrc)
+    {
+        switch (*pchSrc)
+        {
+            case '\'': case '\"': case '\\': case '\t': case '\r': case '\n':
+                if (cchBuf <= DEBUG_ESCAPE_TAIL_LEN)
+                    goto finish;
+                *pch++ = '\\';
+                if (*pchSrc == '\t')
+                    *pch++ = 't';
+                else if (*pchSrc == '\r')
+                    *pch++ = 'r';
+                else if (*pchSrc == '\n')
+                    *pch++ = 'n';
+                else
+                    *pch++ = *pchSrc;
+                cchBuf -= 4;
+                break;
+            default:
+            {
+                if (*pchSrc >= ' ')
+                {
+                    *pch++ = *pchSrc;
+                    --cchBuf;
+                }
+                else
+                {
+                    if (cchBuf <= DEBUG_ESCAPE_TAIL_LEN)
+                        goto finish;
+                    *pch++ = '\\';
+                    *pch++ = 'x';
+                    *pch++ = "0123456789ABCDEF"[*pchSrc & 0xF];
+                    *pch++ = "0123456789ABCDEF"[(*pchSrc >> 4) & 0xF];
+                    cchBuf -= 4;
+                }
+                break;
+            }
+        }
+    }
+
+finish:
+    if (cchBuf <= DEBUG_ESCAPE_TAIL_LEN)
+    {
+        *pch++ = '.';
+        *pch++ = '.';
+        *pch++ = '.';
+    }
+    *pch++ = '"';
+    *pch = ANSI_NULL;
+    return pszBuf;
+}
+
+#define DEBUG_BUF_SIZE MAX_PATH
+#define DEBUG_NUM_BUFS 4
 
 static inline LPCSTR
 debugstr_a(PCSTR pszA)
 {
-    static CHAR s_bufs[NUM_BUFS][MAX_PATH];
+    static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
     static SIZE_T s_index = 0;
-    CHAR buf[MAX_PATH], *ptr;
-
-    if (!pszA)
-        return "(null)";
-
-    buf[0] = '"';
-    lstrcpynA(&buf[1], pszA, _countof(buf) - 2);
-    lstrcatA(buf, "\"");
-
-    ptr = lstrcpynA(s_bufs[s_index], buf, _countof(s_bufs[s_index]));
+    PCHAR ptr = debugstr_escape(s_bufs[s_index], _countof(s_bufs[s_index]), pszA);
     s_index = (s_index + 1) % _countof(s_bufs);
     return ptr;
 }
@@ -98,19 +156,18 @@ debugstr_a(PCSTR pszA)
 static inline LPCSTR
 debugstr_w(PCWSTR pszW)
 {
-    static CHAR s_bufs[NUM_BUFS][MAX_PATH];
+    static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
     static SIZE_T s_index = 0;
-    CHAR buf[MAX_PATH], *ptr;
+    CHAR buf[DEBUG_BUF_SIZE];
+    PCHAR ptr;
 
     if (!pszW)
         return "(null)";
 
-    buf[0] = '"';
-    WideCharToMultiByte(CP_ACP, 0, pszW, -1, &buf[1], _countof(buf) - 2, NULL, NULL);
-    buf[_countof(buf) - 2] = ANSI_NULL;
-    lstrcatA(buf, "\"");
+    WideCharToMultiByte(CP_ACP, 0, pszW, -1, buf, _countof(buf), NULL, NULL);
+    buf[_countof(buf) - 1] = ANSI_NULL;
 
-    ptr = lstrcpynA(s_bufs[s_index], buf, _countof(s_bufs[s_index]));
+    ptr = debugstr_escape(s_bufs[s_index], _countof(s_bufs[s_index]), buf);
     s_index = (s_index + 1) % _countof(s_bufs);
     return ptr;
 }
@@ -118,10 +175,11 @@ debugstr_w(PCWSTR pszW)
 static inline LPCSTR
 debugstr_guid(const GUID *guid)
 {
-    static CHAR s_bufs[NUM_BUFS][50];
+    static CHAR s_bufs[DEBUG_NUM_BUFS][50];
     WCHAR szW[50];
     static SIZE_T s_index = 0;
-    CHAR buf[MAX_PATH], *ptr;
+    CHAR buf[DEBUG_BUF_SIZE];
+    PCHAR ptr;
 
     if (!guid)
         return "(null)";
