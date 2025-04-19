@@ -19,11 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS__
 #define WIN32_NO_STATUS
+#endif
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
+#ifdef __REACTOS__
+#include "winnt.h"
+#include "winternl.h"
+#else
 #include "ndk/rtlfuncs.h"
+#endif
 #include "patchapi.h"
 #include "lzx.h"
 #include "wine/debug.h"
