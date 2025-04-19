@@ -15,18 +15,11 @@ PUBLIC DbgBreakPointWithStatus
 PUBLIC DbgUserBreakPoint
 PUBLIC DebugService
 PUBLIC DebugService2
-PUBLIC DbgBreakPointNoBugCheck
 PUBLIC RtlpBreakWithStatusInstruction
 
 /* FUNCTIONS ***************************************************************/
 
 .code64
-
-.PROC DbgBreakPointNoBugCheck
-    .endprolog
-    int 3
-    ret
-.ENDP
 
 DbgUserBreakPoint:
 .PROC DbgBreakPoint
