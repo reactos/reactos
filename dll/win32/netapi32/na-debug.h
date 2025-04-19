@@ -143,7 +143,7 @@ finish:
 #define DEBUG_BUF_SIZE MAX_PATH
 #define DEBUG_NUM_BUFS 4
 
-static inline LPCSTR
+static inline PCSTR
 debugstr_a(PCSTR pszA)
 {
     static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
@@ -153,7 +153,7 @@ debugstr_a(PCSTR pszA)
     return ptr;
 }
 
-static inline LPCSTR
+static inline PCSTR
 debugstr_w(PCWSTR pszW)
 {
     static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
@@ -172,7 +172,7 @@ debugstr_w(PCWSTR pszW)
     return ptr;
 }
 
-static inline LPCSTR
+static inline PCSTR
 debugstr_guid(const GUID *guid)
 {
     static CHAR s_bufs[DEBUG_NUM_BUFS][50];
