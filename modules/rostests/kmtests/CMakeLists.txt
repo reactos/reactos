@@ -124,7 +124,8 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     add_asm_files(KMTEST_DRV_ASM
         kmtest_drv/vm_detect.S)
     list(APPEND KMTEST_DRV_SOURCE
-        ${KMTEST_DRV_ASM})
+        ${KMTEST_DRV_ASM}
+        hal/HalPortIo.c)
 endif()
 
 add_library(kmtest_drv MODULE ${KMTEST_DRV_SOURCE})
