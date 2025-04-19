@@ -186,15 +186,15 @@ debugstr_guid(const GUID *guid)
     static CHAR s_bufs[DEBUG_NUM_BUFS][50];
     WCHAR szW[50];
     static SIZE_T s_index = 0;
-    CHAR buf[DEBUG_BUF_SIZE];
     PCHAR ptr;
 
     if (!guid)
         return "(null)";
 
     StringFromGUID2(guid, szW, _countof(szW));
-    WideCharToMultiByte(CP_ACP, 0, szW, -1, buf, _countof(s_bufs[0]), NULL, NULL);
-    s_bufs[s_index][_countof(s_bufs[0]) - 1] = ANSI_NULL;
+    WideCharToMultiByte(CP_ACP, 0, szW, -1, s_bufs[s_index], _countof(s_bufs[s_index]),
+                        NULL, NULL);
+    s_bufs[s_index][_countof(s_bufs[s_index]) - 1] = ANSI_NULL;
 
     ptr = s_bufs[s_index];
     s_index = (s_index + 1) % _countof(s_bufs);
