@@ -36,6 +36,10 @@ typedef struct _KMT_USER_WORK_LIST
     KEVENT NewWorkEvent;
 } KMT_USER_WORK_LIST, *PKMT_USER_WORK_LIST;
 
+extern
+BOOLEAN
+KmtDetectVirtualMachine(VOID);
+
 /* Prototypes */
 DRIVER_INITIALIZE DriverEntry;
 static DRIVER_UNLOAD DriverUnload;
@@ -88,6 +92,7 @@ DriverEntry(
     Prcb = KeGetCurrentPrcb();
     KmtIsCheckedBuild = (Prcb->BuildType & PRCB_BUILD_DEBUG) != 0;
     KmtIsMultiProcessorBuild = (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR) == 0;
+    KmtIsVirtualMachine = KmtDetectVirtualMachine();
     KmtDriverObject = DriverObject;
 
     RtlInitUnicodeString(&DeviceName, KMTEST_DEVICE_DRIVER_PATH);
