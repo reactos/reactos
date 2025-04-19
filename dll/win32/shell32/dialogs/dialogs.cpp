@@ -755,9 +755,11 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                 case IDC_RUNDLG_EDITPATH:
                 {
                     if (HIWORD(wParam) == CBN_EDITCHANGE)
-                    {
                         EnableOkButtonFromEditContents(hwnd);
-                    }
+
+                    // Delay handling dropdown changes until the edit box has been updated.
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                        PostMessage(hwnd, message, MAKELONG(IDC_RUNDLG_EDITPATH, CBN_EDITCHANGE), lParam);
                     return TRUE;
                 }
             }
