@@ -58,7 +58,7 @@ typedef struct _WSK_SOCKET_INTERNAL
     ADDRESS_FAMILY family;      /* AF_INET or AF_INET6 */
     USHORT type;                /* SOCK_DGRAM, SOCK_STREAM, ... */
     ULONG proto;                /* IPPROTO_UDP, IPPROTO_TCP */
-    ULONG flags;                /* WSK_FLAG_LISTEN_SOCKET, ... */
+    ULONG WskFlags;             /* WSK_FLAG_LISTEN_SOCKET, ... */
     PVOID user_context;         /* parameter for callbacks, opaque */
     UNICODE_STRING TdiName;     /* \\Devices\\Tcp, \\Devices\\Udp */
 
@@ -158,11 +158,14 @@ void SocketShutdown(_In_ PWSK_SOCKET_INTERNAL s)
         IoCancelIrp(s->ListenIrp);
         s->ListenIrp = NULL;
     }
-    if (s->ConnectionFile != NULL) {
-        if (s->ConnectionFileAssociated) {
+    if (s->ConnectionFile != NULL)
+    {
+        if (s->ConnectionFileAssociated)
+        {
                /* This fails with error 0xc000023b (still connected) on Windows 2003 */
             status = TdiDisassociateAddressFile(s->ConnectionFile);
-            if (!NT_SUCCESS(status)) {
+            if (!NT_SUCCESS(status))
+            {
                 DPRINT1("Warning: TdiDisassociateAddressFile returned status %08x\n", status);
             }
             s->ConnectionFileAssociated = FALSE;
@@ -287,7 +290,8 @@ SocketPut(_In_ PWSK_SOCKET_INTERNAL s)
          * are gone (AcceptSockets hold a reference to the listen socket).
          */
 
-        if (s->LocalAddressFile != NULL) {
+        if (s->LocalAddressFile != NULL)
+        {
             ObDereferenceObject(s->LocalAddressFile);
             s->LocalAddressFile = NULL;
         }
@@ -336,9 +340,10 @@ NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Contex
         UserIrp->IoStatus.Information = Irp->IoStatus.Information;
     }
 
-    if (c->PeerAddrRet != NULL) {
+    if (c->PeerAddrRet != NULL)
+    {
         PSOCKADDR RemoteAddress =
-            (PSOCKADDR)(&((PTRANSPORT_ADDRESS) c->PeerAddrRet->RemoteAddress)->Address[0].AddressType);
+            (PSOCKADDR)(&((PTRANSPORT_ADDRESS)c->PeerAddrRet->RemoteAddress)->Address[0].AddressType);
 
         memcpy(&c->socket->RemoteAddress, RemoteAddress, sizeof(c->socket->RemoteAddress));
     }
@@ -361,7 +366,8 @@ NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Contex
     return STATUS_SUCCESS;
 }
 
-struct ListenContext {
+struct ListenContext
+{
     PWSK_SOCKET_INTERNAL ListenSocket;
     PWSK_SOCKET_INTERNAL AcceptSocket;
     PTDI_CONNECTION_INFORMATION RequestConnectionInfo, ReturnConnectionInfo;
@@ -370,7 +376,7 @@ struct ListenContext {
 static NTSTATUS NTAPI
 CompletionFireEvent(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Context)
 {
-    PKEVENT Event = (PKEVENT) Context;
+    PKEVENT Event = (PKEVENT)Context;
 
     FUNCTION_TRACE;
 
@@ -410,13 +416,14 @@ static NTSTATUS CreateSocket(
     Status = WskSocket(NULL, AddressFamily, SocketType, Protocol, Flags,
         NULL, NULL, NULL, NULL, NULL, NewSocketIrp);
 
-    if (Status == STATUS_PENDING) {
+    if (Status == STATUS_PENDING)
+    {
         KeWaitForSingleObject(&CompletionEvent, Executive, KernelMode, FALSE, NULL);
         Status = NewSocketIrp->IoStatus.Status;
     }
 
     if (NT_SUCCESS(Status))
-        *TheSocket = (PWSK_SOCKET_INTERNAL) NewSocketIrp->IoStatus.Information;
+        *TheSocket = (PWSK_SOCKET_INTERNAL)NewSocketIrp->IoStatus.Information;
 
     IoFreeIrp(NewSocketIrp);
     return Status;
@@ -432,7 +439,7 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
     PWSK_SOCKET_INTERNAL ListenSocket = l->ListenSocket;
     PWSK_SOCKET_INTERNAL AcceptSocket = l->AcceptSocket;
     PWSK_CLIENT_LISTEN_DISPATCH ListenDispatch =
-        (PWSK_CLIENT_LISTEN_DISPATCH) ListenSocket->ListenDispatch;
+        (PWSK_CLIENT_LISTEN_DISPATCH)ListenSocket->ListenDispatch;
 
         /* A PTRANSPORT_ADDRESS address field has an additional
          * AddressLength field so the struct sockaddr_in starts
@@ -440,7 +447,7 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
          * field.
          */
     PSOCKADDR RemoteAddress =
-        (PSOCKADDR)(&((PTRANSPORT_ADDRESS) l->ReturnConnectionInfo->RemoteAddress)->Address[0].AddressType);
+        (PSOCKADDR)(&((PTRANSPORT_ADDRESS)l->ReturnConnectionInfo->RemoteAddress)->Address[0].AddressType);
     PVOID AcceptSocketContext;
     const WSK_CLIENT_CONNECTION_DISPATCH *AcceptSocketDispatch;
     NTSTATUS Status;
@@ -464,15 +471,18 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
             memcpy(&AcceptSocket->RemoteAddress, RemoteAddress, sizeof(AcceptSocket->RemoteAddress));
         }
 
-            /* And wait for the next incoming connection. */
-            /* This is done in a separate thread at IRQL = 0 */
+        /* And wait for the next incoming connection. */
+        /* This is done in a separate thread at IRQL = 0 */
+
         QueueListening(ListenSocket);
     }
     ListenSocket->ListenIrp = NULL;
 
     SocketPut(AcceptSocket);
     SocketPut(ListenSocket);
-// TODO: free ReturnConnectionInfo, RequestConnectionInfo
+
+    ExFreePoolWithTag(l->ReturnConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+    ExFreePoolWithTag(l->RequestConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
     ExFreePoolWithTag(l, TAG_NETIO);
 
     return STATUS_SUCCESS;
@@ -558,7 +568,8 @@ err_out_free_lc_and_req_conn_info:
 
 err_out_free_lc_and_disassociate:
     status = TdiDisassociateAddressFile(AcceptSocket->ConnectionFile);
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         DPRINT1("Warning: TdiDisassociateAddressFile returned status %08x\n", status);
     }
     AcceptSocket->ConnectionFileAssociated = FALSE;
@@ -581,7 +592,7 @@ static void QueueListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 
 static void WSKAPI RequeueListenThread(_In_ PVOID p)
 {
-    PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL) p;
+    PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL)p;
     // PWSK_SOCKET_INTERNAL AcceptSocket;
     NTSTATUS status;
     // PIRP AcceptIrp;
@@ -674,13 +685,16 @@ WskControlSocket(
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
-                            WSK_EVENT_CALLBACK_CONTROL *c = (WSK_EVENT_CALLBACK_CONTROL *) InputBuffer;
+                            WSK_EVENT_CALLBACK_CONTROL *c = (WSK_EVENT_CALLBACK_CONTROL *)InputBuffer;
 
                             if (((s->CallbackMask & WSK_EVENT_ACCEPT) == 0) &&
-                                ((c->EventMask & WSK_EVENT_ACCEPT) == WSK_EVENT_ACCEPT)) {
+                                ((c->EventMask & WSK_EVENT_ACCEPT) == WSK_EVENT_ACCEPT))
+                            {
                                 s->CallbackMask = c->EventMask;
                                 QueueListening(s);
-                            } else {
+                            }
+                            else
+                            {
                                 s->CallbackMask = c->EventMask;
                             }
 
@@ -716,10 +730,12 @@ WskCloseSocket(_In_ PWSK_SOCKET Socket, _Inout_ PIRP Irp)
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
 
     IoSetNextIrpStackLocation(Irp);
-        /* There might be a reference from (for example) a pending
-	 * receive. Shutdown the socket here explicitly. We expect
-         * all pending I/O operations to be cancelled, then.
-	 */
+
+    /* There might be a reference from (for example) a pending
+     * receive. Shutdown the socket here explicitly. We expect
+     * all pending I/O operations to be cancelled, then.
+     */
+
     SocketShutdown(s);
     SocketPut(s);
 
@@ -953,7 +969,8 @@ WskGetRemoteAddress(_In_ PWSK_SOCKET Socket, _Out_ PSOCKADDR RemoteAddress, _Ino
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
 
     IoSetNextIrpStackLocation(Irp);
-    if (s != NULL) {
+    if (s != NULL)
+    {
         memcpy(RemoteAddress, &s->RemoteAddress, sizeof(*RemoteAddress));
         Status = STATUS_SUCCESS;
     }
@@ -1087,7 +1104,8 @@ err_out_free_nc_and_tci:
 
 err_out_free_nc_and_disassociate:
     status2 = TdiDisassociateAddressFile(s->ConnectionFile);
-    if (!NT_SUCCESS(status2)) {
+    if (!NT_SUCCESS(status2))
+    {
         DPRINT1("Warning: TdiDisassociateAddressFile returned status %08x\n", status);
     }
     s->ConnectionFileAssociated = FALSE;
@@ -1295,11 +1313,11 @@ WskSocket(
     s->family = AddressFamily;
     s->type = SocketType;
     s->proto = Protocol;
-    s->flags = Flags;
+    s->WskFlags = Flags;
     s->user_context = SocketContext;
     s->LocalAddressHandle = NULL;
     s->LocalAddressFile = NULL;
-    s->Flags = 0; /* TODO: arghhh: we have both Flags and flags as members ... */
+    s->Flags = 0;
     s->ListenDispatch = Dispatch;
     s->RefCount = 1;            /* SocketPut() is in WskCloseSocket */
     s->ConnectionHandle = NULL;
@@ -1347,7 +1365,7 @@ WskSocket(
                     ExFreePoolWithTag(s, TAG_NETIO);
                     goto err_out;
                 }
-                status = ObReferenceObjectByHandle(s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (void **) &s->ListenThread, NULL);
+                status = ObReferenceObjectByHandle(s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (void **)&s->ListenThread, NULL);
                 if (status != STATUS_SUCCESS)
                 {
                     DPRINT1("Could not get a PKTHREAD object, status is %x\n", status);
@@ -1368,7 +1386,7 @@ WskSocket(
             goto err_out;
     }
 
-    Irp->IoStatus.Information = (ULONG_PTR) s;
+    Irp->IoStatus.Information = (ULONG_PTR)s;
     status = STATUS_SUCCESS;
 
 err_out:
