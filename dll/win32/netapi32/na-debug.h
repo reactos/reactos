@@ -79,6 +79,7 @@ IntIsDebugChannelEnabled(DEBUGCHANNEL channel)
 static inline PSTR
 debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
 {
+#if DBG
     PCH pch = pszBuf;
     PCCH pchSrc = pszSrc;
 
@@ -138,6 +139,9 @@ finish:
     *pch++ = '"';
     *pch = ANSI_NULL;
     return pszBuf;
+#else
+    return NULL;
+#endif
 }
 
 #define DEBUG_BUF_SIZE MAX_PATH
@@ -146,16 +150,21 @@ finish:
 static inline PCSTR
 debugstr_a(PCSTR pszA)
 {
+#if DBG
     static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
     static SIZE_T s_index = 0;
     PCHAR ptr = debugstr_escape(s_bufs[s_index], _countof(s_bufs[s_index]), pszA);
     s_index = (s_index + 1) % _countof(s_bufs);
     return ptr;
+#else
+    return NULL;
+#endif
 }
 
 static inline PCSTR
 debugstr_w(PCWSTR pszW)
 {
+#if DBG
     static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
     static SIZE_T s_index = 0;
     CHAR buf[DEBUG_BUF_SIZE];
@@ -170,11 +179,15 @@ debugstr_w(PCWSTR pszW)
     ptr = debugstr_escape(s_bufs[s_index], _countof(s_bufs[s_index]), buf);
     s_index = (s_index + 1) % _countof(s_bufs);
     return ptr;
+#else /* !DBG */
+    return NULL;
+#endif /* !DBG */
 }
 
 static inline PCSTR
 debugstr_guid(const GUID *guid)
 {
+#if DBG
     static CHAR s_bufs[DEBUG_NUM_BUFS][50];
     WCHAR szW[50];
     static SIZE_T s_index = 0;
@@ -191,4 +204,7 @@ debugstr_guid(const GUID *guid)
     ptr = s_bufs[s_index];
     s_index = (s_index + 1) % _countof(s_bufs);
     return ptr;
+#else
+    return NULL;
+#endif
 }
