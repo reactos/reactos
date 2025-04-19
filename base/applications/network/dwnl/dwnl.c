@@ -248,11 +248,8 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
 
         case BINDSTATUS_ENDDOWNLOADDATA:
             /* Since download is completed, update progress one last time to be at 100% */
-            if (This->Size) // To avoid division by zero: if file size is known
-            {
-                This->Progress = This->Size; // Ensure progress == total size
-                CBindStatusCallback_UpdateProgress(This); // Show 100% progress now
-            }
+            This->Progress = This->Size; // Ensure progress == total size
+            CBindStatusCallback_UpdateProgress(This); // Show 100% progress now
 
             ConResPrintf(StdOut, IDS_FILE_SAVED);
             break;
