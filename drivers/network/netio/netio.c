@@ -26,8 +26,7 @@
 #include <ws2def.h>
 #include <wsk.h>
 #include <ndis.h>
-#define DBG 1
-#include <netio_debug.h>
+#include <reactos/debug.h>
 
 #include <tdi.h>
 #include <tcpioctl.h>
@@ -35,8 +34,6 @@
 #include <tdiinfo.h>
 #include <tdi_proto.h>
 #include <tdiconn.h>
-
-ULONG DebugTraceLevel = MIN_TRACE;
 
 #define TAG_NETIO 'OIEN'
 
@@ -51,34 +48,8 @@ ULONG DebugTraceLevel = MIN_TRACE;
 #define AFD_SHARE_EXCLUSIVE 0x3L
 
 /* Function trace */
-// #define FUNCTION_TRACE DbgPrint("Function %s ...\n", __func__)
+// #define FUNCTION_TRACE DPRINT1("Function %s ...\n", __func__)
 #define FUNCTION_TRACE do { } while (0)
-
-#if 0
-
-/* Very simple malloc debugger .. I would like to keep this here
- * for now in case we find another BSOD.
- */
-
-#define ExAllocatePoolWithTag(pool, size, tag) \
-({ \
-	void *ret; \
-	if (tag == TAG_NETIO) { \
-		ret = ExAllocatePoolWithTag(pool, size+4, tag); \
-		if (ret != NULL) \
-			*(int*)(((char*)ret)+size) = 0xabcdef; \
-	} else { \
-		ret = ExAllocatePoolWithTag(pool, size, tag); \
-	} \
-        NETIO_DbgPrint(MIN_TRACE, ("ExAllocatePoolWithTag returning %p size is %d tag is %x\n", ret, size, tag)) \
-	ret; \
-})
-
-#define ExFreePoolWithTag(p, tag) \
-	NETIO_DbgPrint(MIN_TRACE, ("ExFreePoolWithTag %p %x\n", p, tag)) \
-	ExFreePoolWithTag(p, tag)
-
-#endif
 
 typedef struct _WSK_SOCKET_INTERNAL
 {
@@ -140,20 +111,24 @@ struct NetioContext
     PTDI_CONNECTION_INFORMATION PeerAddrRet;
 };
 
-void
-SocketGet(PWSK_SOCKET_INTERNAL s)
+static void
+SocketGet(_In_ PWSK_SOCKET_INTERNAL s)
 {
     FUNCTION_TRACE;
 
     InterlockedIncrement(&s->RefCount);
-// DbgPrint("SocketGet: refcount is %d socket is %p\n", s->RefCount, s);
 }
 
-void
-SocketPut(PWSK_SOCKET_INTERNAL s);
+static void
+SocketPut(_In_ PWSK_SOCKET_INTERNAL s);
+
+/* This function can be called several times on the same socket.
+   In particular it will be called by WskClose and later by the
+   SocketPut() of the socket.
+ */
 
 static
-void SocketShutdown(PWSK_SOCKET_INTERNAL s)
+void SocketShutdown(_In_ PWSK_SOCKET_INTERNAL s)
 {
     NTSTATUS status;
 
@@ -171,7 +146,7 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
         status = KeWaitForSingleObject(s->ListenThread, Executive, KernelMode, FALSE, (PLARGE_INTEGER)NULL);
         if (!NT_SUCCESS(status))
         {
-            DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
+            DPRINT1("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
         ObDereferenceObject(s->ListenThread);
         s->ListenThread = NULL;
@@ -188,7 +163,7 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
                /* This fails with error 0xc000023b (still connected) on Windows 2003 */
             status = TdiDisassociateAddressFile(s->ConnectionFile);
             if (!NT_SUCCESS(status)) {
-                NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
+                DPRINT1("Warning: TdiDisassociateAddressFile returned status %08x\n", status);
             }
             s->ConnectionFileAssociated = FALSE;
         }
@@ -208,7 +183,7 @@ static BOOLEAN PutSocketsThreadShouldRun = FALSE;
 static KEVENT PutSocketsEvent;
 static HANDLE PutSocketsThreadHandle;
 
-static void WSKAPI PutSocketsThread(void *p)
+static void WSKAPI PutSocketsThread(_In_opt_ void *p)
 {
     NTSTATUS status;
     PWSK_SOCKET_INTERNAL SocketToPut;
@@ -222,7 +197,7 @@ static void WSKAPI PutSocketsThread(void *p)
         status = KeWaitForSingleObject(&PutSocketsEvent, Executive, KernelMode, FALSE, NULL);
         if (!NT_SUCCESS(status))
         {
-            DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
+            DPRINT1("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
 
         KeAcquireSpinLock(&SocketsToPutListLock, &flags);
@@ -257,7 +232,7 @@ static void StartSocketPutThread(void)
     status = PsCreateSystemThread(&PutSocketsThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, PutSocketsThread, NULL);
     if (status != STATUS_SUCCESS)
     {
-        DbgPrint("Could not start put sockets thread, status is %x\n", status);
+        DPRINT1("Could not start put sockets thread, status is %x\n", status);
     }
 }
 
@@ -269,8 +244,8 @@ static void StopSocketPutThread(void)
     /* eventually it will terminate, no need to wait for that. */
 }
 
-void
-SocketPut(PWSK_SOCKET_INTERNAL s)
+static void
+SocketPut(_In_ PWSK_SOCKET_INTERNAL s)
 {
     KIRQL flags;
 
@@ -302,7 +277,7 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
 
     if (InterlockedDecrement(&s->RefCount) == 0)
     {
-        SocketShutdown(s);	/* noop when called twice */
+        SocketShutdown(s);
 
         /* Especially listen sockets must keep the LocalAddressFile
          * open when being closed and there are still accepted sockets
@@ -326,7 +301,7 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
 }
 
 NTSTATUS NTAPI
-DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 {
     FUNCTION_TRACE;
 
@@ -348,7 +323,7 @@ WskSocket(
     _Inout_ PIRP Irp);
 
 static NTSTATUS NTAPI
-NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
+NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Context)
 {
     struct NetioContext *c = (struct NetioContext *)Context;
     PIRP UserIrp = c->UserIrp;
@@ -393,7 +368,7 @@ struct ListenContext {
 };
 
 static NTSTATUS NTAPI
-CompletionFireEvent(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
+CompletionFireEvent(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Context)
 {
     PKEVENT Event = (PKEVENT) Context;
 
@@ -425,7 +400,7 @@ static NTSTATUS CreateSocket(
     NewSocketIrp = IoAllocateIrp(1, FALSE);
     if (NewSocketIrp == NULL)
     {
-        DbgPrint("Out of memory?\n");
+        DPRINT1("Out of memory?\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
@@ -448,10 +423,10 @@ static NTSTATUS CreateSocket(
 }
 
 static void
-QueueListening(PWSK_SOCKET_INTERNAL ListenSocket);
+QueueListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket);
 
 static NTSTATUS NTAPI
-ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
+ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Context)
 {
     struct ListenContext *l = (struct ListenContext *)Context;
     PWSK_SOCKET_INTERNAL ListenSocket = l->ListenSocket;
@@ -482,7 +457,7 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
         Status = ListenDispatch->WskAcceptEvent(ListenSocket->user_context, 0, &ListenSocket->LocalAddress, RemoteAddress, (PWSK_SOCKET)AcceptSocket, &AcceptSocketContext, &AcceptSocketDispatch);
         if (!NT_SUCCESS(Status))
         {
-            DbgPrint("ListenDispatch->WskAcceptEvent returned non-successful status 0x%08x\n", Status);
+            DPRINT1("ListenDispatch->WskAcceptEvent returned non-successful status 0x%08x\n", Status);
         }
         else
         {
@@ -504,7 +479,7 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 }
 
 static NTSTATUS
-StartListening(PWSK_SOCKET_INTERNAL ListenSocket)
+StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 {
     PIRP tdiIrp;
     NTSTATUS status;
@@ -515,14 +490,14 @@ StartListening(PWSK_SOCKET_INTERNAL ListenSocket)
 
     if (ListenSocket->LocalAddressHandle == NULL)
     {
-        DbgPrint("LocalAddressHandle is not set, need to bind your socket before listening\n");
+        DPRINT1("LocalAddressHandle is not set, need to bind your socket before listening\n");
         return STATUS_INVALID_PARAMETER;
     }
 
     status = CreateSocket(ListenSocket->family, ListenSocket->type, ListenSocket->proto, WSK_FLAG_CONNECTION_SOCKET, &AcceptSocket);
     if (status != STATUS_SUCCESS)
     {
-        DbgPrint("Could not create AcceptSocket, status is 0x%08x\n", status);
+        DPRINT1("Could not create AcceptSocket, status is 0x%08x\n", status);
         return status;
     }
     AcceptSocket->ListenSocket = ListenSocket;
@@ -584,7 +559,7 @@ err_out_free_lc_and_req_conn_info:
 err_out_free_lc_and_disassociate:
     status = TdiDisassociateAddressFile(AcceptSocket->ConnectionFile);
     if (!NT_SUCCESS(status)) {
-        NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
+        DPRINT1("Warning: TdiDisassociateAddressFile returned status %08x\n", status);
     }
     AcceptSocket->ConnectionFileAssociated = FALSE;
 
@@ -597,14 +572,14 @@ err_out_free_accept_socket:
     return status;
 }
 
-static void QueueListening(PWSK_SOCKET_INTERNAL ListenSocket)
+static void QueueListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 {
     FUNCTION_TRACE;
 
     KeSetEvent(&ListenSocket->StartListenEvent, IO_NO_INCREMENT, FALSE);
 }
 
-static void WSKAPI RequeueListenThread(void *p)
+static void WSKAPI RequeueListenThread(_In_ PVOID p)
 {
     PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL) p;
     // PWSK_SOCKET_INTERNAL AcceptSocket;
@@ -618,7 +593,7 @@ static void WSKAPI RequeueListenThread(void *p)
         status = KeWaitForSingleObject(&ListenSocket->StartListenEvent, Executive, KernelMode, FALSE, NULL);
         if (!NT_SUCCESS(status))
         {
-            DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
+            DPRINT1("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
         if (!ListenSocket->ListenThreadShouldRun)
         {
@@ -664,13 +639,13 @@ WskControlSocket(
                         case SO_REUSEADDR:     /* add more supported flags here */
                             if (InputBuffer == NULL)
                             {
-                                DbgPrint("WskControlSocket: Need an InputBuffer for this operation\n");
+                                DPRINT1("WskControlSocket: Need an InputBuffer for this operation\n");
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
                             if (InputSize < 4)
                             {
-                                DbgPrint("WskControlSocket: InputBuffer too small for this operation\n");
+                                DPRINT1("WskControlSocket: InputBuffer too small for this operation\n");
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
@@ -689,13 +664,13 @@ WskControlSocket(
                         case SO_WSK_EVENT_CALLBACK:
                             if (InputBuffer == NULL)
                             {
-                                DbgPrint("WskControlSocket: Need an InputBuffer for this operation\n");
+                                DPRINT1("WskControlSocket: Need an InputBuffer for this operation\n");
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
                             if (InputSize < sizeof(WSK_EVENT_CALLBACK_CONTROL))
                             {
-                                DbgPrint("WskControlSocket: InputBuffer too small for this operation\n");
+                                DPRINT1("WskControlSocket: InputBuffer too small for this operation\n");
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
@@ -713,18 +688,18 @@ WskControlSocket(
                             break;
 
                         default:
-                            DbgPrint("WskControlSocket: ControlCode %d Not implemented\n", ControlCode);
+                            DPRINT1("WskControlSocket: ControlCode %d Not implemented\n", ControlCode);
                     }
                     break;
                 default:
-                    DbgPrint("WskControlSocket: Level %d Not implemented\n", Level);
+                    DPRINT1("WskControlSocket: Level %d Not implemented\n", Level);
             }
             break;
 
         case WskGetOption:
         case WskIoctl:
         default:
-            DbgPrint("WskControlSocket: Option %d Not implemented\n", RequestType);
+            DPRINT1("WskControlSocket: Option %d Not implemented\n", RequestType);
     }
 
 err_out:
@@ -755,14 +730,14 @@ WskCloseSocket(_In_ PWSK_SOCKET Socket, _Inout_ PIRP Irp)
 }
 
 static PTRANSPORT_ADDRESS
-TdiTransportAddressFromSocketAddress(PSOCKADDR SocketAddress)
+TdiTransportAddressFromSocketAddress(_In_ PSOCKADDR SocketAddress)
 {
     PTRANSPORT_ADDRESS ta;
 
     ta = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ta) + sizeof(SocketAddress->sa_data), TAG_NETIO);
     if (ta == NULL)
     {
-        DbgPrint("TdiTransportAddressFromSocketAddress: Out of memory\n");
+        DPRINT1("TdiTransportAddressFromSocketAddress: Out of memory\n");
         return NULL;
     }
 
@@ -776,7 +751,7 @@ TdiTransportAddressFromSocketAddress(PSOCKADDR SocketAddress)
 }
 
 static PTDI_CONNECTION_INFORMATION
-TdiConnectionInfoFromSocketAddress(PSOCKADDR SocketAddress)
+TdiConnectionInfoFromSocketAddress(_In_ PSOCKADDR SocketAddress)
 {
     PTRANSPORT_ADDRESS TargetAddress;
     PTDI_CONNECTION_INFORMATION ConnectionInformation = NULL;
@@ -826,7 +801,7 @@ WskBind(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG F
     status = TdiOpenAddressFile(&s->TdiName,
                                 ta, AFD_SHARE_REUSE, &s->LocalAddressHandle, &s->LocalAddressFile);
 
-// DbgPrint("WskBind s is %p s->LocalAddressHandle is %p s->LocalAddressFile is %p status is %x TdiOpenAddressFile\n", s, s->LocalAddressHandle, s->LocalAddressFile, status);
+// DPRINT1("WskBind s is %p s->LocalAddressHandle is %p s->LocalAddressFile is %p status is %x TdiOpenAddressFile\n", s, s->LocalAddressHandle, s->LocalAddressFile, status);
 
     if (NT_SUCCESS(status))
     {
@@ -888,7 +863,7 @@ WskSendTo(
     BufferData = MmGetSystemAddressForMdlSafe(Buffer->Mdl, NormalPagePriority);
     if (BufferData == NULL)
     {
-        DbgPrint("Error mapping MDL\n");
+        DPRINT1("Error mapping MDL\n");
         goto err_out_free_nc_and_tci;
     }
 
@@ -1053,7 +1028,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     status = STATUS_INVALID_PARAMETER;
     if (s->LocalAddressHandle == NULL)
     {
-        DbgPrint("LocalAddressHandle is not set, need to bind your socket before connecting\n");
+        DPRINT1("LocalAddressHandle is not set, need to bind your socket before connecting\n");
         goto err_out;
     }
 
@@ -1113,7 +1088,7 @@ err_out_free_nc_and_tci:
 err_out_free_nc_and_disassociate:
     status2 = TdiDisassociateAddressFile(s->ConnectionFile);
     if (!NT_SUCCESS(status2)) {
-        NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
+        DPRINT1("Warning: TdiDisassociateAddressFile returned status %08x\n", status);
     }
     s->ConnectionFileAssociated = FALSE;
 
@@ -1160,7 +1135,7 @@ WskStreamIo(
     BufferData = MmGetSystemAddressForMdlSafe(Buffer->Mdl, NormalPagePriority);
     if (BufferData == NULL)
     {
-        DbgPrint("Error mapping MDL\n");
+        DPRINT1("Error mapping MDL\n");
         goto err_out_free_nc;
     }
 
@@ -1264,7 +1239,7 @@ WskSocket(
 
     if (AddressFamily != AF_INET)
     {
-        DbgPrint("Address family %d not supported\n", AddressFamily);
+        DPRINT1("Address family %d not supported\n", AddressFamily);
         status = STATUS_NOT_SUPPORTED;
         goto err_out;
     }
@@ -1273,13 +1248,13 @@ WskSocket(
         case SOCK_DGRAM:
             if (Protocol != IPPROTO_UDP)
             {
-                DbgPrint("SOCK_DGRAM only supports IPPROTO_UDP\n");
+                DPRINT1("SOCK_DGRAM only supports IPPROTO_UDP\n");
                 status = STATUS_INVALID_PARAMETER;
                 goto err_out;
             }
             if (Flags != WSK_FLAG_DATAGRAM_SOCKET)
             {
-                DbgPrint("SOCK_DGRAM flags must be WSK_FLAG_DATAGRAM_SOCKET\n");
+                DPRINT1("SOCK_DGRAM flags must be WSK_FLAG_DATAGRAM_SOCKET\n");
                 status = STATUS_INVALID_PARAMETER;
                 goto err_out;
             }
@@ -1288,20 +1263,20 @@ WskSocket(
         case SOCK_STREAM:
             if (Protocol != IPPROTO_TCP)
             {
-                DbgPrint("SOCK_STREAM only supports IPPROTO_TCP\n");
+                DPRINT1("SOCK_STREAM only supports IPPROTO_TCP\n");
                 status = STATUS_INVALID_PARAMETER;
                 goto err_out;
             }
             if ((Flags != WSK_FLAG_CONNECTION_SOCKET) && (Flags != WSK_FLAG_LISTEN_SOCKET))
             {
-                DbgPrint("SOCK_STREAM flags must be either WSK_FLAG_CONNECTION_SOCKET or WSK_FLAG_LISTEN_SOCKET\n");
+                DPRINT1("SOCK_STREAM flags must be either WSK_FLAG_CONNECTION_SOCKET or WSK_FLAG_LISTEN_SOCKET\n");
                 status = STATUS_INVALID_PARAMETER;
                 goto err_out;
             }
             break;
 
         case SOCK_RAW:
-            DbgPrint("SOCK_RAW not supported\n");
+            DPRINT1("SOCK_RAW not supported\n");
             status = STATUS_NOT_SUPPORTED;
             goto err_out;
 
@@ -1313,7 +1288,7 @@ WskSocket(
     s = ExAllocatePoolWithTag(NonPagedPool, sizeof(*s), TAG_NETIO);
     if (s == NULL)
     {
-        DbgPrint("WskSocket: Out of memory\n");
+        DPRINT1("WskSocket: Out of memory\n");
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto err_out;
     }
@@ -1335,8 +1310,8 @@ WskSocket(
     s->ListenThreadShouldRun = FALSE;
     s->ListenCancelled = FALSE;
     s->ListenSocket = NULL;
-    memset(&s->LocalAddress, 0, sizeof(s->LocalAddress));
-    memset(&s->RemoteAddress, 0, sizeof(s->RemoteAddress));
+    RtlZeroMemory(&s->LocalAddress, sizeof(s->LocalAddress));
+    RtlZeroMemory(&s->RemoteAddress, sizeof(s->RemoteAddress));
     s->NextSocketToPut = NULL;
     s->NumSocketPuts = 0;
 
@@ -1355,7 +1330,7 @@ WskSocket(
                 status = TdiOpenConnectionEndpointFile(&s->TdiName, &s->ConnectionHandle, &s->ConnectionFile);
                 if (status != STATUS_SUCCESS)
                 {
-                    DbgPrint("Could not open TDI handle, status is %x\n", status);
+                    DPRINT1("Could not open TDI handle, status is %x\n", status);
                     ExFreePoolWithTag(s, TAG_NETIO);
                     goto err_out;
                 }
@@ -1368,14 +1343,14 @@ WskSocket(
                 status = PsCreateSystemThread(&s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, RequeueListenThread, s);
                 if (status != STATUS_SUCCESS)
                 {
-                    DbgPrint("Could not start listen thread, status is %x\n", status);
+                    DPRINT1("Could not start listen thread, status is %x\n", status);
                     ExFreePoolWithTag(s, TAG_NETIO);
                     goto err_out;
                 }
                 status = ObReferenceObjectByHandle(s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (void **) &s->ListenThread, NULL);
                 if (status != STATUS_SUCCESS)
                 {
-                    DbgPrint("Could not get a PKTHREAD object, status is %x\n", status);
+                    DPRINT1("Could not get a PKTHREAD object, status is %x\n", status);
                     ExFreePoolWithTag(s, TAG_NETIO);
                     goto err_out;
                 }
@@ -1383,12 +1358,12 @@ WskSocket(
 
             if (Flags == WSK_FLAG_LISTEN_SOCKET && s->ListenDispatch == NULL)
             {
-                DbgPrint("Warning: no callbacks given for listen socket\n");
+                DPRINT1("Warning: no callbacks given for listen socket\n");
             }
             break;
 
         default:
-            DbgPrint("Socket type not yet supported\n");
+            DPRINT1("Socket type not yet supported\n");
             status = STATUS_NOT_SUPPORTED;
             goto err_out;
     }
