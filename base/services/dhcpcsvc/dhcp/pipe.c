@@ -399,10 +399,6 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
                 DSStaticRefreshParams( PipeSend, CommPipe, &Req );
                 break;
 
-            case DhcpReqGetAdapterInfo:
-                DSGetAdapterInfo( PipeSend, CommPipe, &Req );
-                break;
-
             default:
                 DPRINT1("Unrecognized request type %d\n", Req.Type);
                 ZeroMemory( &Reply, sizeof( COMM_DHCP_REPLY ) );

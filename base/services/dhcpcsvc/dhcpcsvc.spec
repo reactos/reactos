@@ -42,5 +42,4 @@
 @ stub McastReleaseAddress
 @ stub McastRenewAddress
 @ stub McastRequestAddress
-@ stdcall DhcpRosGetAdapterInfo(long ptr ptr ptr ptr)
 @ stdcall ServiceMain(long ptr)
