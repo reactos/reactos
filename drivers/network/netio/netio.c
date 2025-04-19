@@ -26,6 +26,13 @@
 #include <ws2def.h>
 #include <wsk.h>
 #include <ndis.h>
+
+/* If you want to see the DPRINT() output in your debugger,
+ * remove the following line (or comment it out):
+ * Note that DPRINT1() is always printed to the debugger.
+ */
+#define NDEBUG 1
+
 #include <reactos/debug.h>
 
 #include <tdi.h>

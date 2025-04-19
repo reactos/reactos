@@ -13,6 +13,11 @@
 #undef UNIMPLEMENTED
 #endif
 
+/* If you want to see the DPRINT() output in your debugger,
+ * remove the following line (or comment it out):
+ */
+#define NDEBUG 1
+
 #include <reactos/debug.h>
 
 UINT TdiAddressSizeFromType( UINT AddressType ) {
