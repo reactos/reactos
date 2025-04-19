@@ -2391,18 +2391,27 @@ ChangePos:
         /* Set the initial lock state in the band site */
         m_TrayBandSite->Lock(g_TaskbarSettings.bLock);
 
-        RegisterHotKey(m_hWnd, IDHK_RUN, MOD_WIN, 'R');
-        RegisterHotKey(m_hWnd, IDHK_MINIMIZE_ALL, MOD_WIN, 'M');
-        RegisterHotKey(m_hWnd, IDHK_RESTORE_ALL, MOD_WIN|MOD_SHIFT, 'M');
-        RegisterHotKey(m_hWnd, IDHK_HELP, MOD_WIN, VK_F1);
-        RegisterHotKey(m_hWnd, IDHK_EXPLORE, MOD_WIN, 'E');
-        RegisterHotKey(m_hWnd, IDHK_FIND, MOD_WIN, 'F');
-        RegisterHotKey(m_hWnd, IDHK_FIND_COMPUTER, MOD_WIN|MOD_CONTROL, 'F');
-        RegisterHotKey(m_hWnd, IDHK_NEXT_TASK, MOD_WIN, VK_TAB);
-        RegisterHotKey(m_hWnd, IDHK_PREV_TASK, MOD_WIN|MOD_SHIFT, VK_TAB);
-        RegisterHotKey(m_hWnd, IDHK_SYS_PROPERTIES, MOD_WIN, VK_PAUSE);
-        RegisterHotKey(m_hWnd, IDHK_DESKTOP, MOD_WIN, 'D');
-        RegisterHotKey(m_hWnd, IDHK_PAGER, MOD_WIN, 'B');
+        static const UINT hotkeys[] =
+        {
+            MAKELONG(IDHK_RUN,            MAKEWORD('R', MOD_WIN)),
+            MAKELONG(IDHK_MINIMIZE_ALL,   MAKEWORD('M', MOD_WIN)),
+            MAKELONG(IDHK_RESTORE_ALL,    MAKEWORD('M', MOD_WIN|MOD_SHIFT)),
+            MAKELONG(IDHK_HELP,           MAKEWORD(VK_F1, MOD_WIN)),
+            MAKELONG(IDHK_EXPLORE,        MAKEWORD('E', MOD_WIN)),
+            MAKELONG(IDHK_FIND,           MAKEWORD('F', MOD_WIN)),
+            MAKELONG(IDHK_FIND_COMPUTER,  MAKEWORD('F', MOD_WIN|MOD_CONTROL)),
+            MAKELONG(IDHK_NEXT_TASK,      MAKEWORD(VK_TAB, MOD_WIN)),
+            MAKELONG(IDHK_PREV_TASK,      MAKEWORD(VK_TAB, MOD_WIN|MOD_SHIFT)),
+            MAKELONG(IDHK_SYS_PROPERTIES, MAKEWORD(VK_PAUSE, MOD_WIN)),
+            MAKELONG(IDHK_DESKTOP,        MAKEWORD('D', MOD_WIN)),
+            MAKELONG(IDHK_PAGER,          MAKEWORD('B', MOD_WIN)),
+        };
+        BOOL bNoWinKeys = SHRestricted(REST_NOWINKEYS);
+        for (UINT i = 0; i < _countof(hotkeys) && !bNoWinKeys; ++i)
+        {
+            UINT mod = HIBYTE(HIWORD(hotkeys[i])), key = LOBYTE(HIWORD(hotkeys[i]));
+            RegisterHotKey(m_hWnd, LOWORD(hotkeys[i]), mod, key);
+        }
 
         return TRUE;
     }

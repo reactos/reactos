@@ -666,7 +666,7 @@ LRESULT CTrayClockWnd::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
     m_tooltip.AddTool(&ti);
 
-    if (!g_TaskbarSettings.sr.HideClock)
+    if (!GetHideClock())
     {
         ResetTime();
     }
@@ -694,12 +694,13 @@ LRESULT CTrayClockWnd::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     BOOL bRealign = FALSE;
+    BOOL bOldHideClock = GetHideClock();
 
     TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
     if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
     {
         g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
-        if (!g_TaskbarSettings.sr.HideClock)
+        if (!bOldHideClock)
         {
             bRealign = TRUE;
 
@@ -707,13 +708,14 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         }
     }
 
-    if (newSettings->sr.HideClock != g_TaskbarSettings.sr.HideClock)
+    if (newSettings->sr.HideClock != bOldHideClock)
     {
         g_TaskbarSettings.sr.HideClock = newSettings->sr.HideClock;
-        ShowWindow(g_TaskbarSettings.sr.HideClock ? SW_HIDE : SW_SHOW);
+        BOOL bHideClock = GetHideClock();
+        ShowWindow(bHideClock ? SW_HIDE : SW_SHOW);
         bRealign = TRUE;
 
-        if (g_TaskbarSettings.sr.HideClock)
+        if (bHideClock)
         {
             /* Disable all timers */
             if (IsTimerEnabled)
@@ -766,7 +768,7 @@ HRESULT CTrayClockWnd::Initialize(IN HWND hWndParent)
     /* Create the window. The tray window is going to move it to the correct
         position and resize it as needed. */
     DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS;
-    if (!g_TaskbarSettings.sr.HideClock)
+    if (!GetHideClock())
         dwStyle |= WS_VISIBLE;
 
     Create(hWndParent, 0, NULL, dwStyle);
