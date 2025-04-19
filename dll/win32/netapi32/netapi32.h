@@ -1,7 +1,9 @@
 #ifndef __WINE_NETAPI32_H__
 #define __WINE_NETAPI32_H__
 
+#ifndef __REACTOS__
 #include <wine/config.h>
+#endif
 
 #include <limits.h>
 #include <stdarg.h>
@@ -19,8 +21,13 @@
 #include <nb30.h>
 #include <iphlpapi.h>
 
+#ifdef __REACTOS__
+#include "na-debug.h"
+#define strcmpiW lstrcmpiW
+#else
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#endif
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>

@@ -1,9 +1,7 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 
-add_definitions(-D__WINESRC__)
 spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
 add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl
@@ -53,9 +51,9 @@ add_library(netapi32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)
 
 set_module_type(netapi32 win32dll)
-target_link_libraries(netapi32 wine ${PSEH_LIB})
+target_link_libraries(netapi32 ${PSEH_LIB})
 add_delay_importlibs(netapi32 samlib secur32)
-add_importlibs(netapi32 iphlpapi ws2_32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
+add_importlibs(netapi32 iphlpapi ws2_32 advapi32 rpcrt4 ole32 msvcrt kernel32 ntdll)
 add_pch(netapi32 netapi32.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET netapi32 DESTINATION reactos/system32 FOR all)
 
