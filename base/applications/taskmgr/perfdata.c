@@ -314,7 +314,7 @@ void PerfDataRefresh(void)
                 }
             }
         }
-        
+
         if (pSPI->ImageName.Buffer) {
             /* Don't assume a UNICODE_STRING Buffer is zero terminated: */
             int len = pSPI->ImageName.Length / 2;
