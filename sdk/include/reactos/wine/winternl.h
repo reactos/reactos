@@ -54,6 +54,10 @@ typedef NTSTATUS *PNTSTATUS;
 #endif /* __REACTOS__ */
 #endif
 
+#ifndef NT_SUCCESS
+#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+#endif
+
 typedef const char *PCSZ;
 
 typedef short CSHORT;
