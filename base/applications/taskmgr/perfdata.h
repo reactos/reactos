@@ -12,7 +12,7 @@
 
 typedef struct _PERFDATA
 {
-	WCHAR				ImageName[MAX_PATH];
+	WCHAR				ImageName[MAX_PATH + 4];
 	HANDLE				ProcessId;
 	WCHAR				UserName[MAX_PATH];
 	ULONG				SessionId;
