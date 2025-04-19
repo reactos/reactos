@@ -390,7 +390,8 @@ ReadProcOwner:
                     pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
                 }
 
-                if (IsWow64Process(hProcess, &bIsWow64) && bIsWow64) {
+                if (IsWow64Process(hProcess, &bIsWow64) && bIsWow64)
+                {
                     wcscat(pPerfData[Idx].ImageName, L" *32");
                 }
 
