@@ -94,8 +94,6 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
         switch (*pchSrc)
         {
             case '\'': case '\"': case '\\': case '\t': case '\r': case '\n':
-                if (cchBuf <= DEBUG_ESCAPE_TAIL_LEN)
-                    goto finish;
                 *pch++ = '\\';
                 if (*pchSrc == '\t')
                     *pch++ = 't';
@@ -105,7 +103,7 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
                     *pch++ = 'n';
                 else
                     *pch++ = *pchSrc;
-                cchBuf -= 4;
+                cchBuf -= 2;
                 break;
             default:
             {
@@ -116,8 +114,6 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
                 }
                 else
                 {
-                    if (cchBuf <= DEBUG_ESCAPE_TAIL_LEN)
-                        goto finish;
                     *pch++ = '\\';
                     *pch++ = 'x';
                     *pch++ = "0123456789ABCDEF"[*pchSrc & 0xF];
@@ -129,7 +125,6 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
         }
     }
 
-finish:
     if (cchBuf <= DEBUG_ESCAPE_TAIL_LEN)
     {
         *pch++ = '.';
