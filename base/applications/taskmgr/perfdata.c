@@ -176,6 +176,7 @@ void PerfDataRefresh(void)
     PSID                                       ProcessUser;
     ULONG                                      Buffer[64]; /* must be 4 bytes aligned! */
     ULONG                                      cwcUserName;
+    BOOL                                       bIsWow64;
 
     /* Get new system time */
     status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), NULL);
@@ -313,7 +314,7 @@ void PerfDataRefresh(void)
                 }
             }
         }
-
+        
         if (pSPI->ImageName.Buffer) {
             /* Don't assume a UNICODE_STRING Buffer is zero terminated: */
             int len = pSPI->ImageName.Length / 2;
@@ -387,6 +388,10 @@ ReadProcOwner:
 
                     pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
                     pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+                }
+
+                if (IsWow64Process(hProcess, &bIsWow64) && bIsWow64) {
+                    wcscat(pPerfData[Idx].ImageName, L" *32");
                 }
 
                 GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
