@@ -85,8 +85,8 @@ debugstr_quote_a(
                 {
                     *pch++ = '\\';
                     *pch++ = 'x';
-                    *pch++ = DEBUGSTR_HEX[*pchSrc & 0xF];
                     *pch++ = DEBUGSTR_HEX[(*pchSrc >> 4) & 0xF];
+                    *pch++ = DEBUGSTR_HEX[*pchSrc & 0xF];
                     cchBuf -= 4;
                 }
                 break;
