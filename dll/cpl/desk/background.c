@@ -1278,8 +1278,10 @@ BackgroundPageProc(HWND hwndDlg,
 
                     case NM_CUSTOMDRAW:
                         if (lpnm->idFrom == IDC_COLOR_BUTTON)
+                        {
                             return SetDlgMsgResult(hwndDlg, 0, ClrBtn_CustomDraw((NMCUSTOMDRAW*)lpnm,
                                                                                  g_GlobalData.desktop_color));
+                        }
                         break;
                 }
             }
