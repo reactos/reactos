@@ -2344,9 +2344,9 @@ PathFindFileNameW(_In_ PCWSTR pszPath)
     return (PWSTR)lastSlash;
 }
 
-/* Delete registry font entry */
+/* Delete registry font entries */
 static VOID
-IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
+IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
 {
     NTSTATUS Status;
     HKEY hKey;
@@ -2374,7 +2374,7 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
         /* Delete the found value */
         Status = RegDeleteValueW(hKey, szName);
         if (!NT_SUCCESS(Status))
-            ++dwIndex;
+            break;
     }
 
     ZwClose(hKey);
@@ -2439,7 +2439,7 @@ IntGdiRemoveFontResourceSingle(
             RemoveEntryList(&FontEntry->ListEntry);
             CleanupFontEntry(FontEntry);
             if (dwFlags & AFRX_WRITE_REGISTRY)
-                IntDeleteRegFontEntry(pszFileTitle, dwFlags);
+                IntDeleteRegFontEntries(pszFileTitle, dwFlags);
             ret = TRUE;
         }
     }
