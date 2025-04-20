@@ -51,7 +51,7 @@ debugstr_quote_a(
 
     if (!((ULONG_PTR)pszSrc >> 16))
     {
-        snprintf(pszBuf, cchBuf, "#%04lx", (((ULONG_PTR)pszSrc) & 0xFFFF));
+        snprintf(pszBuf, cchBuf, "%p", pszSrc);
         return pszBuf;
     }
 
@@ -119,7 +119,7 @@ debugstr_quote_w(
 
     if (!((ULONG_PTR)pszSrc >> 16))
     {
-        snprintf(pszBuf, cchBuf, "#%04lx", (((ULONG_PTR)pszSrc) & 0xFFFF));
+        snprintf(pszBuf, cchBuf, "%p", pszSrc);
         return pszBuf;
     }
 
@@ -212,7 +212,7 @@ debugstr_guid(_In_opt_ const GUID *id)
 
     if (!((ULONG_PTR)id >> 16))
     {
-        snprintf(ptr, DEBUGSTR_BUFF_SIZE, "<guid-0x%04lx>", ((ULONG_PTR)id) & 0xFFFF);
+        snprintf(ptr, DEBUGSTR_BUFF_SIZE, "%p", id);
     }
     else
     {
