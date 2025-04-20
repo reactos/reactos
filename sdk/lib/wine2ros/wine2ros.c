@@ -153,8 +153,8 @@ debugstr_quote_w(
                 {
                     *pch++ = L'\\';
                     *pch++ = L'x';
-                    *pch++ = DEBUGSTR_HEX[*pchSrc & 0xF];
                     *pch++ = DEBUGSTR_HEX[(*pchSrc >> 4) & 0xF];
+                    *pch++ = DEBUGSTR_HEX[*pchSrc & 0xF];
                     *pch++ = DEBUGSTR_HEX[(*pchSrc >> 8) & 0xF];
                     *pch++ = DEBUGSTR_HEX[(*pchSrc >> 12) & 0xF];
                     cchBuf -= 6;
