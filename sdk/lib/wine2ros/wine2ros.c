@@ -51,7 +51,7 @@ debugstr_quote_a(
 
     if (!((ULONG_PTR)pszSrc >> 16))
     {
-        sprintf(pszBuf, "#%04lx", (((ULONG_PTR)pszSrc) & 0xFFFF));
+        snprintf(pszBuf, cchBuf, "#%04lx", (((ULONG_PTR)pszSrc) & 0xFFFF));
         return pszBuf;
     }
 
@@ -119,7 +119,7 @@ debugstr_quote_w(
 
     if (!((ULONG_PTR)pszSrc >> 16))
     {
-        sprintf(pszBuf, "#%04lx", (((ULONG_PTR)pszSrc) & 0xFFFF));
+        snprintf(pszBuf, cchBuf, "#%04lx", (((ULONG_PTR)pszSrc) & 0xFFFF));
         return pszBuf;
     }
 
@@ -212,14 +212,15 @@ debugstr_guid(_In_opt_ const GUID *id)
 
     if (!((ULONG_PTR)id >> 16))
     {
-        sprintf(ptr, "<guid-0x%04lx>", ((ULONG_PTR)id) & 0xFFFF);
+        snprintf(ptr, DEBUGSTR_BUFF_SIZE, "<guid-0x%04lx>", ((ULONG_PTR)id) & 0xFFFF);
     }
     else
     {
-        sprintf(ptr, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-                id->Data1, id->Data2, id->Data3,
-                id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
-                id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
+        snprintf(ptr, DEBUGSTR_BUFF_SIZE,
+                 "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+                 id->Data1, id->Data2, id->Data3,
+                 id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
+                 id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
     }
 
     return ptr;
