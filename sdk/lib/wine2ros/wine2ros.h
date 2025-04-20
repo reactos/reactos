@@ -16,7 +16,7 @@
     #define ERR_LEVEL   0x1
     #define TRACE_LEVEL 0x8
 
-    #define WINE_DEFAULT_DEBUG_CHANNEL(x) static const char *DbgDefaultChannel = #x;
+    #define WINE_DEFAULT_DEBUG_CHANNEL(x) static PCSTR DbgDefaultChannel = #x;
 
     BOOL IntIsDebugChannelEnabled(_In_ PCSTR channel);
 
