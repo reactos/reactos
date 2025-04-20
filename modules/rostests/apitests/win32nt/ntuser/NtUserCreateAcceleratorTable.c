@@ -31,7 +31,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_END;
 
-    ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
+    ok_long(GetLastError(), 0xdeadbeef);
     ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
@@ -48,7 +48,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_END;
 
-    ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
+    ok_long(GetLastError(), 0xdeadbeef);
     ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
@@ -82,7 +82,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_END;
 
-    ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
+    ok_long(GetLastError(), 0xdeadbeef);
     ok_int(bHung, FALSE);
     ok_hdl(hAccel, NULL);
 
@@ -99,7 +99,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_END;
 
-    ok_long(GetLastError(), ERROR_SUCCESS);
+    ok_long(GetLastError(), 0xdeadbeef);
     ok_int(bHung, FALSE);
     ok(hAccel != NULL, "hAccel is NULL\n");
 
@@ -119,7 +119,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_END;
 
-    ok_long(GetLastError(), ERROR_SUCCESS);
+    ok_long(GetLastError(), 0xdeadbeef);
     ok_int(bHung, FALSE);
     ok(hAccel != NULL, "hAccel is NULL\n");
 
@@ -146,7 +146,7 @@ START_TEST(NtUserCreateAcceleratorTable)
         }
         _SEH2_END;
 
-        ok_long(GetLastError(), ERROR_SUCCESS);
+        ok_long(GetLastError(), 0xdeadbeef);
         ok_int(bHung, FALSE);
         ok(hAccel != NULL, "hAccel is NULL\n");
 
@@ -176,7 +176,7 @@ START_TEST(NtUserCreateAcceleratorTable)
         }
         _SEH2_END;
 
-        ok_long(GetLastError(), ERROR_SUCCESS);
+        ok_long(GetLastError(), 0xdeadbeef);
         ok_int(bHung, FALSE);
         ok(hAccel != NULL, "hAccel is NULL\n");
 
