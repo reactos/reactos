@@ -53,7 +53,7 @@ add_library(netapi32 MODULE
 set_module_type(netapi32 win32dll)
 target_link_libraries(netapi32 wine2ros ${PSEH_LIB})
 add_delay_importlibs(netapi32 samlib secur32)
-add_importlibs(netapi32 iphlpapi ws2_32 advapi32 rpcrt4 ole32 msvcrt kernel32 ntdll)
+add_importlibs(netapi32 iphlpapi ws2_32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(netapi32 netapi32.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET netapi32 DESTINATION reactos/system32 FOR all)
 
