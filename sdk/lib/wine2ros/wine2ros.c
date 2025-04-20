@@ -16,7 +16,8 @@
 BOOL
 IntIsDebugChannelEnabled(_In_ DEBUGCHANNEL channel)
 {
-    CHAR szValue[MAX_PATH], *pch0, *pch;
+    CHAR szValue[MAX_PATH];
+    PCHAR pch0, pch;
 
     if (!GetEnvironmentVariableA("DEBUGCHANNEL", szValue, _countof(szValue)))
         return FALSE;
