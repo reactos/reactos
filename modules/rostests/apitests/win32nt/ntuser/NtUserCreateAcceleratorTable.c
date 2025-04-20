@@ -124,7 +124,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     ok(hAccel != NULL, "hAccel is NULL\n");
 
     if (!bHung && hAccel != NULL)
-        DestroyAcceleratorTable(hAccel);    
+        DestroyAcceleratorTable(hAccel);
 
     /* Try maximum */
     SetLastError(0xdeadbeef);
