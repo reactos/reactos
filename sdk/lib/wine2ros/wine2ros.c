@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
+#if DBG
+
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,12 +37,12 @@ IntIsDebugChannelEnabled(_In_ DEBUGCHANNEL channel)
     }
 }
 
-#define DEBUG_ESCAPE_TAIL_LEN 5
+#define DEBUGSTR_HEX "0123456789ABCDEF"
+#define DEBUGSTR_QUOTE_TAIL_LEN 8
 
 static PSTR
-debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
+debugstr_quote_a(_Out_ PSTR pszBuf, _In_ INT cchBuf, _In_opt_ PCSTR pszSrc)
 {
-#if DBG
     PCH pch = pszBuf;
     PCCH pchSrc = pszSrc;
 
@@ -56,7 +58,7 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
     *pch++ = '"';
     --cchBuf;
 
-    for (; cchBuf > DEBUG_ESCAPE_TAIL_LEN; ++pchSrc)
+    for (; cchBuf > DEBUGSTR_QUOTE_TAIL_LEN; ++pchSrc)
     {
         switch (*pchSrc)
         {
@@ -83,8 +85,8 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
                 {
                     *pch++ = '\\';
                     *pch++ = 'x';
-                    *pch++ = "0123456789ABCDEF"[*pchSrc & 0xF];
-                    *pch++ = "0123456789ABCDEF"[(*pchSrc >> 4) & 0xF];
+                    *pch++ = DEBUGSTR_HEX[*pchSrc & 0xF];
+                    *pch++ = DEBUGSTR_HEX[(*pchSrc >> 4) & 0xF];
                     cchBuf -= 4;
                 }
                 break;
@@ -92,7 +94,7 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
         }
     }
 
-    if (cchBuf <= DEBUG_ESCAPE_TAIL_LEN)
+    if (cchBuf <= DEBUGSTR_QUOTE_TAIL_LEN)
     {
         *pch++ = '.';
         *pch++ = '.';
@@ -101,74 +103,113 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
     *pch++ = '"';
     *pch = ANSI_NULL;
     return pszBuf;
-#else
-    return NULL;
-#endif
 }
 
-#define DEBUG_BUF_SIZE MAX_PATH
-#define DEBUG_NUM_BUFS 4
-#define DEBUG_NUM_BUFS 4
+static PSTR
+debugstr_quote_w(_Out_ PSTR pszBuf, _In_ INT cchBuf, _In_opt_ PCWSTR pszSrc)
+{
+    PCH pch = pszBuf;
+    PCWCH pchSrc = pszSrc;
+
+    if (!pszSrc)
+        return "(null)";
+
+    if (!((ULONG_PTR)pszSrc >> 16))
+    {
+        sprintf(pszBuf, "#%04lx", (DWORD)(ULONG_PTR)pszSrc);
+        return pszBuf;
+    }
+
+    *pch++ = '"';
+    --cchBuf;
+
+    for (; cchBuf > DEBUGSTR_QUOTE_TAIL_LEN; ++pchSrc)
+    {
+        switch (*pchSrc)
+        {
+            case L'\'': case L'\"': case L'\\': case L'\t': case L'\r': case L'\n':
+                *pch++ = '\\';
+                if (*pchSrc == L'\t')
+                    *pch++ = 't';
+                else if (*pchSrc == L'\r')
+                    *pch++ = 'r';
+                else if (*pchSrc == L'\n')
+                    *pch++ = 'n';
+                else
+                    *pch++ = *pchSrc;
+                cchBuf -= 2;
+                break;
+            default:
+            {
+                if (*pchSrc >= L' ' && *pchSrc < 0x100)
+                {
+                    *pch++ = (CHAR)*pchSrc;
+                    --cchBuf;
+                }
+                else
+                {
+                    *pch++ = L'\\';
+                    *pch++ = L'x';
+                    *pch++ = DEBUGSTR_HEX[*pchSrc & 0xF];
+                    *pch++ = DEBUGSTR_HEX[(*pchSrc >> 4) & 0xF];
+                    *pch++ = DEBUGSTR_HEX[(*pchSrc >> 8) & 0xF];
+                    *pch++ = DEBUGSTR_HEX[(*pchSrc >> 12) & 0xF];
+                    cchBuf -= 6;
+                }
+                break;
+            }
+        }
+    }
+
+    if (cchBuf <= DEBUGSTR_QUOTE_TAIL_LEN)
+    {
+        *pch++ = '.';
+        *pch++ = '.';
+        *pch++ = '.';
+    }
+    *pch++ = '"';
+    *pch = ANSI_NULL;
+    return pszBuf;
+}
+
+#define DEBUGSTR_NUM_BUFFS 5
+#define DEBUGSTR_BUFF_SIZE MAX_PATH
+
+static LPSTR
+debugstr_next_buff(void)
+{
+    static CHAR s_bufs[DEBUGSTR_NUM_BUFFS][DEBUGSTR_BUFF_SIZE];
+    static SIZE_T s_index = 0;
+    PCHAR ptr = s_bufs[s_index];
+    s_index = (s_index + 1) % _countof(s_bufs);
+    return ptr;
+}
 
 PCSTR
 debugstr_a(_In_opt_ PCSTR pszA)
 {
-#if DBG
-    static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
-    static SIZE_T s_index = 0;
-    PCHAR ptr = debugstr_escape(s_bufs[s_index], _countof(s_bufs[s_index]), pszA);
-    s_index = (s_index + 1) % _countof(s_bufs);
-    return ptr;
-#else
-    return NULL;
-#endif
+    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA);
 }
 
 PCSTR
 debugstr_w(_In_opt_ PCWSTR pszW)
 {
-#if DBG
-    static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
-    static SIZE_T s_index = 0;
-    CHAR buf[DEBUG_BUF_SIZE];
-    PCHAR ptr;
-
-    if (!pszW)
-        return "(null)";
-
-    if (!((ULONG_PTR)pszW >> 16))
-    {
-        sprintf(buf, "#%04lx", (DWORD)(ULONG_PTR)pszW);
-    }
-    else
-    {
-        WideCharToMultiByte(CP_ACP, 0, pszW, -1, buf, _countof(buf), NULL, NULL);
-        buf[_countof(buf) - 1] = ANSI_NULL;
-    }
-
-    ptr = debugstr_escape(s_bufs[s_index], _countof(s_bufs[s_index]), buf);
-    s_index = (s_index + 1) % _countof(s_bufs);
-    return ptr;
-#else /* !DBG */
-    return NULL;
-#endif /* !DBG */
+    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW);
 }
 
 PCSTR
 debugstr_guid(_In_opt_ const GUID *id)
 {
-#if DBG
-    static CHAR s_bufs[DEBUG_NUM_BUFS][50];
-    static SIZE_T s_index = 0;
     PCHAR ptr;
 
     if (!id)
         return "(null)";
 
-    ptr = s_bufs[s_index];
+    ptr = debugstr_next_buff();
+
     if (!((ULONG_PTR)id >> 16))
     {
-        sprintf(ptr, "<guid-0x%04lx>", (ULONG_PTR)id & 0xffff);
+        sprintf(ptr, "<guid-0x%04lx>", (ULONG_PTR)id & 0xFFFF);
     }
     else
     {
@@ -178,9 +219,7 @@ debugstr_guid(_In_opt_ const GUID *id)
                 id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
     }
 
-    s_index = (s_index + 1) % _countof(s_bufs);
     return ptr;
-#else
-    return NULL;
-#endif
 }
+
+#endif /* DBG */

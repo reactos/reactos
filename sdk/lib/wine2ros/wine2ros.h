@@ -36,6 +36,11 @@ typedef enum tagDEBUGCHANNEL
     #define TRACE(fmt, ...) DBG_PRINT(DbgDefaultChannel, TRACE_LEVEL, "",        fmt, ##__VA_ARGS__)
 
     #define UNIMPLEMENTED FIXME("%s is unimplemented", __FUNCTION__);
+
+    BOOL IntIsDebugChannelEnabled(_In_ DEBUGCHANNEL channel);
+    PCSTR debugstr_a(_In_opt_ PCSTR pszA);
+    PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
+    PCSTR debugstr_guid(_In_opt_ const GUID *id);
 #else
     #define WINE_DEFAULT_DEBUG_CHANNEL(x)
     #define DBG_IS_CHANNEL_ENABLED(ch,level)
@@ -45,13 +50,13 @@ typedef enum tagDEBUGCHANNEL
     #define FIXME(fmt, ...)
     #define TRACE(fmt, ...)
     #define UNIMPLEMENTED
+    #define IntIsDebugChannelEnabled(channel) FALSE
+    #define debugstr_a(pszA)
+    #define debugstr_w(pszW)
+    #define debugstr_guid(id)
 #endif
 
-BOOL IntIsDebugChannelEnabled(_In_ DEBUGCHANNEL channel);
-PCSTR debugstr_a(_In_opt_ PCSTR pszA);
-PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
-PCSTR debugstr_guid(_In_opt_ const GUID *id);
-
+/* <wine/unicode.h> */
 #define memicmpW(s1,s2,n) _wcsnicmp((s1),(s2),(n))
 #define strlenW(s) wcslen((s))
 #define strcpyW(d,s) wcscpy((d),(s))
