@@ -14,26 +14,22 @@
 #include "wine2ros.h"
 
 BOOL
-IntIsDebugChannelEnabled(_In_ DEBUGCHANNEL channel)
+IntIsDebugChannelEnabled(_In_ PCSTR channel)
 {
     CHAR szValue[MAX_PATH];
-    PCHAR pch0, pch;
+    PCHAR pch0, pch1;
 
     if (!GetEnvironmentVariableA("DEBUGCHANNEL", szValue, _countof(szValue)))
         return FALSE;
 
-    for (pch0 = szValue;; pch0 = pch + 1)
+    for (pch0 = szValue;; pch0 = pch1 + 1)
     {
-        pch = strchr(pch0, ',');
-        if (pch)
-            *pch = ANSI_NULL;
-        if (channel == DbgCh_imm && _stricmp(pch0, "imm") == 0)
+        pch1 = strchr(pch0, ',');
+        if (pch1)
+            *pch1 = ANSI_NULL;
+        if (_stricmp(pch0, channel) == 0)
             return TRUE;
-        if (channel == DbgCh_netapi32 && _stricmp(pch0, "netapi32") == 0)
-            return TRUE;
-        if (channel == DbgCh_netbios && _stricmp(pch0, "netbios") == 0)
-            return TRUE;
-        if (!pch)
+        if (!pch1)
             return FALSE;
     }
 }

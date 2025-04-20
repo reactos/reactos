@@ -7,13 +7,6 @@
 
 #pragma once
 
-typedef enum tagDEBUGCHANNEL
-{
-    DbgCh_imm = 0,
-    DbgCh_netapi32,
-    DbgCh_netbios,
-} DEBUGCHANNEL;
-
 /* <wine/debug.h> */
 #if DBG
     #ifndef __RELFILE__
@@ -23,11 +16,12 @@ typedef enum tagDEBUGCHANNEL
     #define ERR_LEVEL   0x1
     #define TRACE_LEVEL 0x8
 
-    #define WINE_DEFAULT_DEBUG_CHANNEL(x) static int DbgDefaultChannel = DbgCh_##x;
-    #define DBG_IS_CHANNEL_ENABLED(ch) IntIsDebugChannelEnabled(ch)
+    #define WINE_DEFAULT_DEBUG_CHANNEL(x) static const char *DbgDefaultChannel = #x;
+
+    BOOL IntIsDebugChannelEnabled(_In_ PCSTR channel);
 
     #define DBG_PRINT(ch, level, tag, fmt, ...) (void)( \
-        (((level) == ERR_LEVEL) || DBG_IS_CHANNEL_ENABLED(ch)) ? \
+        (((level) == ERR_LEVEL) || IntIsDebugChannelEnabled(ch)) ? \
         (DbgPrint("(%s:%d) %s" fmt, __RELFILE__, __LINE__, (tag), ##__VA_ARGS__), FALSE) : TRUE \
     )
 
@@ -38,20 +32,18 @@ typedef enum tagDEBUGCHANNEL
 
     #define UNIMPLEMENTED FIXME("%s is unimplemented", __FUNCTION__);
 
-    BOOL IntIsDebugChannelEnabled(_In_ DEBUGCHANNEL channel);
     PCSTR debugstr_a(_In_opt_ PCSTR pszA);
     PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
     PCSTR debugstr_guid(_In_opt_ const GUID *id);
 #else
     #define WINE_DEFAULT_DEBUG_CHANNEL(x)
-    #define DBG_IS_CHANNEL_ENABLED(ch,level)
+    #define IntIsDebugChannelEnabled(channel) FALSE
     #define DBG_PRINT(ch,level)
     #define ERR(fmt, ...)
     #define WARN(fmt, ...)
     #define FIXME(fmt, ...)
     #define TRACE(fmt, ...)
     #define UNIMPLEMENTED
-    #define IntIsDebugChannelEnabled(channel) FALSE
     #define debugstr_a(pszA)
     #define debugstr_w(pszW)
     #define debugstr_guid(id)
