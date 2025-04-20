@@ -2329,17 +2329,17 @@ IntGdiAddFontResourceEx(
 
 /* Borrowed from shlwapi */
 static PWSTR
-PathFindFileNameW(PCWSTR lpszPath)
+PathFindFileNameW(_In_ PCWSTR pszPath)
 {
-    PCWSTR lastSlash = lpszPath;
-    while (*lpszPath)
+    PCWSTR lastSlash = pszPath;
+    while (*pszPath)
     {
-        if ((*lpszPath == L'\\' || *lpszPath == L'/' || *lpszPath == L':') &&
-            lpszPath[1] && lpszPath[1] != '\\' && lpszPath[1] != L'/')
+        if ((*pszPath == L'\\' || *pszPath == L'/' || *pszPath == L':') &&
+            pszPath[1] && pszPath[1] != '\\' && pszPath[1] != L'/')
         {
-            lastSlash = lpszPath + 1;
+            lastSlash = pszPath + 1;
         }
-        lpszPath++;
+        pszPath++;
     }
     return (PWSTR)lastSlash;
 }
