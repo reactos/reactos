@@ -2357,7 +2357,7 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
     if (!NT_SUCCESS(Status))
         return;
 
-    for (dwIndex = 0; NT_SUCCESS(Status); ++dwIndex)
+    for (dwIndex = 0;;)
     {
         NameLength = RTL_NUMBER_OF(szName);
         ValueSize = sizeof(szValue);
@@ -2366,12 +2366,15 @@ IntDeleteRegFontEntry(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
             break;
 
         if (dwType != REG_SZ || _wcsicmp(szValue, pszFileName) != 0)
+        {
+            ++dwIndex;
             continue;
+        }
 
         /* Delete the found value */
         Status = RegDeleteValueW(hKey, szName);
-        if (NT_SUCCESS(Status))
-            --dwIndex;
+        if (!NT_SUCCESS(Status))
+            ++dwIndex;
     }
 
     ZwClose(hKey);
