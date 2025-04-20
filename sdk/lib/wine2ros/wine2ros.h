@@ -38,15 +38,15 @@
 #else
     #define WINE_DEFAULT_DEBUG_CHANNEL(x)
     #define IntIsDebugChannelEnabled(channel) FALSE
-    #define DBG_PRINT(ch,level)
+    #define DBG_PRINT(ch, level)
     #define ERR(fmt, ...)
     #define WARN(fmt, ...)
     #define FIXME(fmt, ...)
     #define TRACE(fmt, ...)
     #define UNIMPLEMENTED
-    #define debugstr_a(pszA)
-    #define debugstr_w(pszW)
-    #define debugstr_guid(id)
+    #define debugstr_a(pszA) ((PCSTR)NULL)
+    #define debugstr_w(pszW) ((PCSTR)NULL)
+    #define debugstr_guid(id) ((PCSTR)NULL)
 #endif
 
 /* <wine/unicode.h> */
