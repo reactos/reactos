@@ -151,8 +151,8 @@ debugstr_quote_w(
                 }
                 else
                 {
-                    *pch++ = L'\\';
-                    *pch++ = L'x';
+                    *pch++ = '\\';
+                    *pch++ = 'x';
                     *pch++ = DEBUGSTR_HEX[(*pchSrc >> 12) & 0xF];
                     *pch++ = DEBUGSTR_HEX[(*pchSrc >> 8) & 0xF];
                     *pch++ = DEBUGSTR_HEX[(*pchSrc >> 4) & 0xF];
