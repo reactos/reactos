@@ -38,7 +38,10 @@ IntIsDebugChannelEnabled(_In_ PCSTR channel)
 #define DEBUGSTR_QUOTE_TAIL_LEN 8
 
 static PSTR
-debugstr_quote_a(_Out_ PSTR pszBuf, _In_ INT cchBuf, _In_opt_ PCSTR pszSrc)
+debugstr_quote_a(
+    _Out_ PSTR pszBuf,
+    _In_ SIZE_T cchBuf,
+    _In_opt_ PCSTR pszSrc)
 {
     PCH pch = pszBuf;
     PCCH pchSrc = pszSrc;
@@ -103,7 +106,10 @@ debugstr_quote_a(_Out_ PSTR pszBuf, _In_ INT cchBuf, _In_opt_ PCSTR pszSrc)
 }
 
 static PSTR
-debugstr_quote_w(_Out_ PSTR pszBuf, _In_ INT cchBuf, _In_opt_ PCWSTR pszSrc)
+debugstr_quote_w(
+    _Out_ PSTR pszBuf,
+    _In_ SIZE_T cchBuf,
+    _In_opt_ PCWSTR pszSrc)
 {
     PCH pch = pszBuf;
     PCWCH pchSrc = pszSrc;
