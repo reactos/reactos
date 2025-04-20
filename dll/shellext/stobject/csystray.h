@@ -55,6 +55,10 @@ public:
 
     VOID EnableService(DWORD dwServiceFlag, BOOL bEnable);
     BOOL IsServiceEnabled(DWORD dwServiceFlag);
+    void ConfigurePollTimer(DWORD dwServiceFlag, BOOL bEnable);
+
+    static void RunDll(PCSTR Dll, PCSTR Parameters);
+    static void RunAccessCpl(PCSTR Parameters);
 
 protected:
     BOOL ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD dwMsgMapID = 0);
