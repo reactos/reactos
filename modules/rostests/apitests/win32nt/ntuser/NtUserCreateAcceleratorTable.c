@@ -23,7 +23,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     SetLastError(0xdeadbeef);
     _SEH2_TRY
     {
-        hAccel = NtUserCreateAcceleratorTable(Entries, EntriesCount);        
+        hAccel = NtUserCreateAcceleratorTable(Entries, EntriesCount);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
