@@ -248,7 +248,6 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
 
         case BINDSTATUS_ENDDOWNLOADDATA:
             /* Since download is completed, update progress one last time to be at 100% */
-			// Temporary comment to trigger GitHub pipeline
             This->Progress = This->Size; // Ensure progress == total size
             CBindStatusCallback_UpdateProgress(This); // Show 100% progress now
 
