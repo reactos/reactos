@@ -22,8 +22,7 @@
 #include <iphlpapi.h>
 
 #ifdef __REACTOS__
-#include "na-debug.h"
-#define strcmpiW lstrcmpiW
+#include <wine2ros.h>
 #else
 #include <wine/debug.h>
 #include <wine/unicode.h>

@@ -1,58 +1,18 @@
 /*
- * PROJECT:     ReactOS NETAPI32
+ * PROJECT:     ReactOS Wine-To-ReactOS
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Debugging NETAPI32
+ * PURPOSE:     Reducing dependency on Wine
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#pragma once
-
-#include <winnls.h>
+#include <windows.h>
 #include <stdlib.h>
-#include <objbase.h>
+#include <stdio.h>
+#include <string.h>
+#include "wine2ros.h"
 
-typedef enum tagDEBUGCHANNEL
-{
-    DbgCh_netapi32 = 0,
-    DbgCh_netbios,
-} DEBUGCHANNEL;
-
-#if DBG
-    #ifndef __RELFILE__
-        #define __RELFILE__ __FILE__
-    #endif
-
-    #define ERR_LEVEL   0x1
-    #define TRACE_LEVEL 0x8
-
-    #define WINE_DEFAULT_DEBUG_CHANNEL(x) static int DbgDefaultChannel = DbgCh_##x;
-    #define DBG_IS_CHANNEL_ENABLED(ch) IntIsDebugChannelEnabled(ch)
-
-    #define DBG_PRINT(ch, level, tag, fmt, ...) (void)( \
-        (((level) == ERR_LEVEL) || DBG_IS_CHANNEL_ENABLED(ch)) ? \
-        (DbgPrint("(%s:%d) %s" fmt, __RELFILE__, __LINE__, (tag), ##__VA_ARGS__), FALSE) : TRUE \
-    )
-
-    #define ERR(fmt, ...)   DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "err: ",   fmt, ##__VA_ARGS__)
-    #define WARN(fmt, ...)  DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "warn: ",  fmt, ##__VA_ARGS__)
-    #define FIXME(fmt, ...) DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "fixme: ", fmt, ##__VA_ARGS__)
-    #define TRACE(fmt, ...) DBG_PRINT(DbgDefaultChannel, TRACE_LEVEL, "",        fmt, ##__VA_ARGS__)
-
-    #define UNIMPLEMENTED FIXME("%s is UNIMPLEMENTED\n", __FUNCTION__)
-#else
-    #define WINE_DEFAULT_DEBUG_CHANNEL(x)
-    #define DBG_IS_CHANNEL_ENABLED(ch,level)
-    #define DBG_PRINT(ch,level)
-    #define ERR(fmt, ...)
-    #define WARN(fmt, ...)
-    #define FIXME(fmt, ...)
-    #define TRACE(fmt, ...)
-    #define UNIMPLEMENTED
-#endif
-
-#if DBG
-static inline BOOL
-IntIsDebugChannelEnabled(DEBUGCHANNEL channel)
+BOOL
+IntIsDebugChannelEnabled(_In_ DEBUGCHANNEL channel)
 {
     CHAR szValue[MAX_PATH], *pch0, *pch;
 
@@ -64,6 +24,8 @@ IntIsDebugChannelEnabled(DEBUGCHANNEL channel)
         pch = strchr(pch0, ',');
         if (pch)
             *pch = ANSI_NULL;
+        if (channel == DbgCh_imm && _stricmp(pch0, "imm") == 0)
+            return TRUE;
         if (channel == DbgCh_netapi32 && _stricmp(pch0, "netapi32") == 0)
             return TRUE;
         if (channel == DbgCh_netbios && _stricmp(pch0, "netbios") == 0)
@@ -72,11 +34,10 @@ IntIsDebugChannelEnabled(DEBUGCHANNEL channel)
             return FALSE;
     }
 }
-#endif /* DBG */
 
 #define DEBUG_ESCAPE_TAIL_LEN 5
 
-static inline PSTR
+static PSTR
 debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
 {
 #if DBG
@@ -85,6 +46,12 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
 
     if (!pszSrc)
         return "(null)";
+
+    if (!((ULONG_PTR)pszSrc >> 16))
+    {
+        sprintf(pszBuf, "#%04lx", (DWORD)(ULONG_PTR)pszSrc);
+        return pszBuf;
+    }
 
     *pch++ = '"';
     --cchBuf;
@@ -141,9 +108,10 @@ debugstr_escape(PSTR pszBuf, INT cchBuf, PCSTR pszSrc)
 
 #define DEBUG_BUF_SIZE MAX_PATH
 #define DEBUG_NUM_BUFS 4
+#define DEBUG_NUM_BUFS 4
 
-static inline PCSTR
-debugstr_a(PCSTR pszA)
+PCSTR
+debugstr_a(_In_opt_ PCSTR pszA)
 {
 #if DBG
     static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
@@ -156,8 +124,8 @@ debugstr_a(PCSTR pszA)
 #endif
 }
 
-static inline PCSTR
-debugstr_w(PCWSTR pszW)
+PCSTR
+debugstr_w(_In_opt_ PCWSTR pszW)
 {
 #if DBG
     static CHAR s_bufs[DEBUG_NUM_BUFS][DEBUG_BUF_SIZE];
@@ -168,8 +136,15 @@ debugstr_w(PCWSTR pszW)
     if (!pszW)
         return "(null)";
 
-    WideCharToMultiByte(CP_ACP, 0, pszW, -1, buf, _countof(buf), NULL, NULL);
-    buf[_countof(buf) - 1] = ANSI_NULL;
+    if (!((ULONG_PTR)pszW >> 16))
+    {
+        sprintf(buf, "#%04lx", (DWORD)(ULONG_PTR)pszW);
+    }
+    else
+    {
+        WideCharToMultiByte(CP_ACP, 0, pszW, -1, buf, _countof(buf), NULL, NULL);
+        buf[_countof(buf) - 1] = ANSI_NULL;
+    }
 
     ptr = debugstr_escape(s_bufs[s_index], _countof(s_bufs[s_index]), buf);
     s_index = (s_index + 1) % _countof(s_bufs);
@@ -179,24 +154,30 @@ debugstr_w(PCWSTR pszW)
 #endif /* !DBG */
 }
 
-static inline PCSTR
-debugstr_guid(const GUID *guid)
+PCSTR
+debugstr_guid(_In_opt_ const GUID *id)
 {
 #if DBG
     static CHAR s_bufs[DEBUG_NUM_BUFS][50];
-    WCHAR szW[50];
     static SIZE_T s_index = 0;
     PCHAR ptr;
 
-    if (!guid)
+    if (!id)
         return "(null)";
 
-    StringFromGUID2(guid, szW, _countof(szW));
-    WideCharToMultiByte(CP_ACP, 0, szW, -1, s_bufs[s_index], _countof(s_bufs[s_index]),
-                        NULL, NULL);
-    s_bufs[s_index][_countof(s_bufs[s_index]) - 1] = ANSI_NULL;
-
     ptr = s_bufs[s_index];
+    if (!((ULONG_PTR)id >> 16))
+    {
+        sprintf(ptr, "<guid-0x%04lx>", (ULONG_PTR)id & 0xffff);
+    }
+    else
+    {
+        sprintf(ptr, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+                id->Data1, id->Data2, id->Data3,
+                id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
+                id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
+    }
+
     s_index = (s_index + 1) % _countof(s_bufs);
     return ptr;
 #else
