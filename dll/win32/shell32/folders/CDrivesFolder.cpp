@@ -563,14 +563,12 @@ class CDrivesFolderEnum :
             if (dwFlags & SHCONTF_FOLDERS)
             {
                 WCHAR wszDriveName[] = {'A', ':', '\\', '\0'};
-                DWORD dwDrivemap = GetLogicalDrives();
-
-                while (wszDriveName[0] <= 'Z')
+                DWORD dwDrivemap = GetLogicalDrives() & ~SHRestricted(REST_NODRIVES);
+                for (; wszDriveName[0] <= 'Z'; wszDriveName[0]++)
                 {
-                    if(dwDrivemap & 0x00000001L)
+                    if (dwDrivemap & 1)
                         AddToEnumList(_ILCreateDrive(wszDriveName));
-                    wszDriveName[0]++;
-                    dwDrivemap = dwDrivemap >> 1;
+                    dwDrivemap >>= 1;
                 }
             }
 
@@ -1282,6 +1280,25 @@ HRESULT WINAPI CDrivesFolder::ShouldShow(IShellFolder *psf, PCIDLIST_ABSOLUTE pi
     if (const CLSID* pClsid = IsRegItem(pidlItem))
         return SHELL32_IsShellFolderNamespaceItemHidden(L"HideMyComputerIcons", *pClsid) ? S_FALSE : S_OK;
     return S_OK;
+}
+
+/**************************************************************************
+ *    CDrivesFolder::MessageSFVCB (IShellFolderViewCB)
+ */
+STDMETHODIMP CDrivesFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case SFVM_FSNOTIFY:
+            if (lParam == SHCNE_DRIVEADD && wParam)
+            {
+                INT8 drive = GetDriveNumber(((PIDLIST_ABSOLUTE*)wParam)[0]);
+                if (drive >= 0 && ((1UL << drive) & SHRestricted(REST_NODRIVES)))
+                    return S_FALSE;
+            }
+            break;
+    }
+    return E_NOTIMPL;
 }
 
 /************************************************************************/
