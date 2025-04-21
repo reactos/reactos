@@ -23,6 +23,7 @@
 
 #ifndef _SHFLDR_H_
 #define _SHFLDR_H_
+#include <ntquery.h> // For PID_STG_*
 
 #define CHARS_IN_GUID 39
 
@@ -93,6 +94,23 @@ SHELL_GetDefaultFolderEnumSHCONTF();
 
 BOOL
 SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGAOF Query, SHCONTF Flags);
+
+static inline HRESULT
+MakeSCID(SHCOLUMNID &scid, REFCLSID fmtid, UINT pid)
+{
+    scid.fmtid = fmtid;
+    scid.pid = pid;
+    return S_OK;
+}
+
+HRESULT
+SHELL_MapSCIDToColumn(IShellFolder2 *pSF, const SHCOLUMNID *pscid);
+HRESULT
+SHELL_GetDetailsOfAsStringVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar);
+HRESULT
+SHELL_GetDetailsOfColumnAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARTYPE vt, VARIANT *pVar);
+HRESULT
+SH32_GetDetailsOfPKeyAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pVar, BOOL UseFsColMap);
 
 HRESULT
 SHELL_CreateAbsolutePidl(IShellFolder *pSF, PCUIDLIST_RELATIVE pidlChild, PIDLIST_ABSOLUTE *ppPidl);
