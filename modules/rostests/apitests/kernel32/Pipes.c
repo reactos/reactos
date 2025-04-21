@@ -88,14 +88,20 @@ VOID StartTestCORE17376(_In_ DWORD adReadBufferSize)
         NULL);
     ok(hPipeReader != INVALID_HANDLE_VALUE, "CreateNamedPipeA failed\n");
 
-    if (hPipeReader == INVALID_HANDLE_VALUE) return;
+    if (hPipeReader == INVALID_HANDLE_VALUE)
+        return;
 
     hThreadReader = CreateThread(NULL, 0, PipeReader, hPipeReader, 0, NULL);
     ok(hThreadReader != INVALID_HANDLE_VALUE, "CreateThread failed\n");
 
     hPipeWriter = CreateFile(
-        g_PipeName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        g_PipeName,
+        GENERIC_READ | GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL);
     ok(hPipeWriter != INVALID_HANDLE_VALUE, "CreateFile failed\n");
 
     if (hPipeWriter != INVALID_HANDLE_VALUE)
