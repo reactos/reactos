@@ -345,10 +345,10 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE
     switch(LOWORD(lParam))
     {
         case CONTROLPANEL_COL_NAME:
-            result = _wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
+            result = SHELL_StrCmpLogical(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
             break;
         case CONTROLPANEL_COL_COMMENT:
-            result = _wcsicmp(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
+            result = SHELL_StrCmpLogical(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
             break;
         default:
             ERR("Got wrong lParam!\n");

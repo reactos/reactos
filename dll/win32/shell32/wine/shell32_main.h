@@ -35,6 +35,7 @@ extern "C" {
 */
 extern HMODULE	huser32 DECLSPEC_HIDDEN;
 extern HINSTANCE shell32_hInstance DECLSPEC_HIDDEN;
+extern int (WINAPI* SHELL_StrCmpLogical)(PCWSTR s1, PCWSTR s2);
 
 BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
