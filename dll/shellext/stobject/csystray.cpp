@@ -88,12 +88,12 @@ VOID CSysTray::EnableService(DWORD dwServiceFlag, BOOL bEnable)
                        0,
                        REG_DWORD,
                        (LPBYTE)&dwConfig,
-                       sizeof(DWORD));
+                       sizeof(dwConfig));
 
         RegCloseKey(hKey);
     }
 
-    ConfigurePollTimer(dwServiceFlag, bEnable);
+    ConfigurePollTimer();
 }
 
 BOOL CSysTray::IsServiceEnabled(DWORD dwServiceFlag)
@@ -101,7 +101,7 @@ BOOL CSysTray::IsServiceEnabled(DWORD dwServiceFlag)
     return (this->dwServicesEnabled & dwServiceFlag);
 }
 
-void CSysTray::ConfigurePollTimer(DWORD dwServiceFlag, BOOL bEnable)
+void CSysTray::ConfigurePollTimer()
 {
     // FIXME: VOLUME_SERVICE_FLAG should use mixerOpen(CALLBACK_WINDOW)
     // FIXME: POWER_SERVICE_FLAG should use WM_DEVICECHANGE, WM_POWERBROADCAST
@@ -376,7 +376,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         GetServicesEnabled();
         InitIcons();
         RegisterShellHookWindow(hWnd);
-        ConfigurePollTimer(0, 0);
+        ConfigurePollTimer();
         return TRUE;
 
     case WM_TIMER:

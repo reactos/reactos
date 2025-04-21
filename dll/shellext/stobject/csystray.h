@@ -55,7 +55,7 @@ public:
 
     VOID EnableService(DWORD dwServiceFlag, BOOL bEnable);
     BOOL IsServiceEnabled(DWORD dwServiceFlag);
-    void ConfigurePollTimer(DWORD dwServiceFlag, BOOL bEnable);
+    void ConfigurePollTimer();
 
     static void RunDll(PCSTR Dll, PCSTR Parameters);
     static void RunAccessCpl(PCSTR Parameters);
