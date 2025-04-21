@@ -2586,7 +2586,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case FCIDM_SHVIEW_INVERTSELECTION:
             nCount = m_ListView.GetItemCount();
             for (int i=0; i < nCount; i++)
-                m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ? 0 : LVIS_SELECTED, LVIS_SELECTED);
+                m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ^ LVIS_SELECTED, LVIS_SELECTED);
             break;
         case FCIDM_SHVIEW_REFRESH:
             Refresh();
@@ -4046,7 +4046,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSelectedObjects(PCUITEMID_CHILD **pidl, U
             return E_OUTOFMEMORY;
         }
 
-        /* it's documented that caller shouldn't PIDLs, only array itself */
+        // It's documented that caller shouldn't free the PIDLs, only the array itself
         memcpy(*pidl, m_apidl, *items * sizeof(PCUITEMID_CHILD));
     }
 
