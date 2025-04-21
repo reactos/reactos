@@ -2,6 +2,8 @@
 #define ROSDHCP_PIPE_H
 
 enum {
+    DhcpReqAcquireParams,
+    DhcpReqReleaseParams,
     DhcpReqLeaseIpAddress,
     DhcpReqQueryHWInfo,
     DhcpReqReleaseIpAddress,
@@ -12,7 +14,12 @@ enum {
 typedef struct _COMM_DHCP_REQ {
     UINT Type;
     DWORD AdapterIndex;
-    union {
+    union
+    {
+        struct
+        {
+            CHAR AdapterName[64];
+        } AcquireParams;
         struct {
             BOOL Inserted;
         } PnpEvent;

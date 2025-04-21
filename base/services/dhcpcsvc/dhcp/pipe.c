@@ -377,11 +377,21 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
             }
         }
 
-        if( Result ) {
-            switch( Req.Type ) {
-            case DhcpReqQueryHWInfo:
-                DSQueryHWInfo( PipeSend, CommPipe, &Req );
-                break;
+        if( Result )
+        {
+            switch( Req.Type )
+            {
+                case DhcpReqAcquireParams:
+                    DSAcquireParams(PipeSend, CommPipe, &Req);
+                    break;
+
+                case DhcpReqReleaseParams:
+                    DSReleaseParams(PipeSend, CommPipe, &Req);
+                    break;
+
+                case DhcpReqQueryHWInfo:
+                    DSQueryHWInfo(PipeSend, CommPipe, &Req);
+                    break;
 
             case DhcpReqLeaseIpAddress:
                 DSLeaseIpAddress( PipeSend, CommPipe, &Req );
