@@ -2939,13 +2939,13 @@ void CShellLink::OnCommand(HWND hwndDlg, int id, HWND hwndCtl, UINT codeNotify)
             if (!StrIsNullOrEmpty(m_sIcoPath))
             {
                 PWSTR pszPath = m_sIcoPath;
-                if (*m_sIcoPath == '.') // Extension-only icon location
+                if (*m_sIcoPath == '.') // Extension-only icon location, we need a fake path
                 {
                     if (SUCCEEDED(StringCchPrintfW(wszPath, _countof(wszPath), L"x:\\x%s", m_sIcoPath)) &&
                         SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICONLOCATION | SHGFI_USEFILEATTRIBUTES))
                     {
-                        pszPath = fi.szDisplayName;
-                        IconIndex = fi.iIcon;
+                        pszPath = fi.szDisplayName; // The path is now a generic icon based
+                        IconIndex = fi.iIcon;       // on the registry info of the file extension.
                     }
                 }
 
@@ -3019,6 +3019,7 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
         /* set link destination */
         HWND hWndTarget = GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT);
         GetWindowTextW(hWndTarget, wszBuf, _countof(wszBuf));
+        // Only set the path and arguments for filesystem targets (we can't verify other targets)
         if (IsWindowEnabled(hWndTarget))
         {
             LPWSTR lpszArgs = NULL;
