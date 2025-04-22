@@ -1258,6 +1258,9 @@ typedef struct tagAPPBAR_COMMAND
     DWORD dwMagic;
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
 
+#define APPBAR_MAGIC_WIN32 0xBEEF0086
+#define APPBAR_MAGIC_WIN64 0xBEEF0064
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

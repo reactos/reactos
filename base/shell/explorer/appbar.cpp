@@ -427,7 +427,7 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 
     // For security check
     if (pCopyData->cbData != sizeof(*pData) ||
-        (pData->dwMagic != 0xBEEFBE32 && pData->dwMagic != 0xBEEFBE64))
+        (pData->dwMagic != APPBAR_MAGIC_WIN32 && pData->dwMagic != APPBAR_MAGIC_WIN64))
     {
         WARN("Invalid AppBar message\n");
         return NULL;
