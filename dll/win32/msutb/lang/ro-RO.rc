@@ -2,9 +2,8 @@
  * PROJECT:     ReactOS msutb.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
- * TRANSLATOR:  Copyright 2022-2025 Andrei-Valentin Miloiu <miloiuandrei@gmail.com>
+ * TRANSLATOR:  Copyright 2025 Andrei-Valentin Miloiu <miloiuandrei@gmail.com>
  */
-
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
