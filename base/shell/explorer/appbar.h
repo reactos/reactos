@@ -92,6 +92,6 @@ protected:
     virtual HMONITOR GetMonitor() const = 0;
     virtual HMONITOR GetPreviousMonitor() const = 0;
     virtual INT GetPosition() const = 0;
-    virtual LPRECT GetTrayRect() = 0;
+    virtual const RECT* GetTrayRect() = 0;
     virtual HWND GetDesktopWnd() const = 0;
 };

@@ -3567,7 +3567,7 @@ protected:
     HMONITOR GetMonitor() const override { return m_Monitor; }
     HMONITOR GetPreviousMonitor() const override { return m_PreviousMonitor; }
     INT GetPosition() const override { return m_Position; }
-    LPRECT GetTrayRect() override { return &m_TrayRects[m_Position]; }
+    const RECT* GetTrayRect() override { return &m_TrayRects[m_Position]; }
     HWND GetDesktopWnd() const override { return m_DesktopWnd; }
 };
 
