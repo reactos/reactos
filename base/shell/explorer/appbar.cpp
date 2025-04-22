@@ -420,13 +420,6 @@ CAppBarManager::RecomputeWorkArea(
     return WORKAREA_SAME_AS_MONITOR;
 }
 
-// TWM_NOTIFYALLAPPBARS
-LRESULT CAppBarManager::OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    OnAppBarNotifyAll((HMONITOR)lParam, (HWND)wParam, ABN_POSCHANGED, FALSE);
-    return TRUE;
-}
-
 PAPPBAR_COMMAND
 CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 {

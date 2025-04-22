@@ -61,7 +61,6 @@ protected:
     PAPPBAR_COMMAND GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
     void GetDockedRect(_Out_ PRECT prcDocked);
 
-    LRESULT OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     BOOL OnAppBarNew(_In_ const APPBAR_COMMAND *pData);
     void OnAppBarRemove(_In_ const APPBAR_COMMAND *pData);
     void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData);
