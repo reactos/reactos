@@ -87,7 +87,12 @@ SHAppBarMessage(
     cmd.lParam64 = pData->lParam;
     cmd.dwMessage = dwMessage;
     cmd.dwProcessId = GetCurrentProcessId();
-    cmd.dwMagic = 0xBEEFCAFE; // For security check
+
+#ifdef _WIN64
+    cmd.dwMagic = 0xBEEFBE64; /* For security check */
+#else
+    cmd.dwMagic = 0xBEEFBE32; /* For security check */
+#endif
 
     const SIZE_T offset = offsetof(APPBAR_COMMAND, dwMessage);
 
