@@ -99,7 +99,7 @@ static void LoadCoolSwitchSettings(void)
 {
    HKEY hKey;
 
-   if (!SettingsLoaded
+   if (SettingsLoaded
 #if DBG
        && !(GetKeyState(VK_SCROLL) & 1) // If Scroll-Lock is on, always read the settings
 #endif
@@ -118,7 +118,7 @@ static void LoadCoolSwitchSettings(void)
       RegCloseKey(hKey);
    }
 
-   if (CoolSwitchRows * CoolSwitchColumns < 1 * 3)
+   if (CoolSwitchRows * CoolSwitchColumns < 3)
    {
       CoolSwitchRows = DefSwitchRows;
       CoolSwitchColumns = DefSwitchColumns;
