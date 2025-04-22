@@ -78,11 +78,18 @@ SHAppBarMessage(
     }
 
     APPBAR_COMMAND cmd;
-    cmd.data = *pData;
+    ZeroMemory(&cmd, sizeof(cmd));
+    cmd.cbSize = sizeof(cmd);
+    cmd.hWnd32 = HandleToUlong(pData->hWnd);
+    cmd.uCallbackMessage = pData->uCallbackMessage;
+    cmd.uEdge = pData->uEdge;
+    cmd.rc = pData->rc;
+    cmd.lParam64 = pData->lParam;
     cmd.dwMessage = dwMessage;
     cmd.dwProcessId = GetCurrentProcessId();
-    cmd.hOutput = NULL;
     cmd.dwMagic = 0xBEEFCAFE; // For security check
+
+    const SIZE_T offset = offsetof(APPBAR_COMMAND, dwMessage);
 
     /* Make output data if necessary */
     switch (dwMessage)
@@ -90,8 +97,8 @@ SHAppBarMessage(
         case ABM_QUERYPOS:
         case ABM_SETPOS:
         case ABM_GETTASKBARPOS:
-            cmd.hOutput = AppBar_CopyIn(&cmd.data, sizeof(cmd.data), cmd.dwProcessId);
-            if (!cmd.hOutput)
+            cmd.hOutput64.Handle = AppBar_CopyIn(&cmd, offset, cmd.dwProcessId);
+            if (!cmd.hOutput64.Handle)
             {
                 ERR("AppBar_CopyIn: %d\n", dwMessage);
                 return FALSE;
@@ -106,14 +113,18 @@ SHAppBarMessage(
     UINT_PTR ret = SendMessageW(hTrayWnd, WM_COPYDATA, (WPARAM)pData->hWnd, (LPARAM)&copyData);
 
     /* Copy back output data */
-    if (cmd.hOutput)
+    if (cmd.hOutput64.Handle)
     {
-        if (!AppBar_CopyOut(cmd.hOutput, &cmd.data, sizeof(cmd.data), cmd.dwProcessId))
+        if (!AppBar_CopyOut(cmd.hOutput64.Handle, &cmd, offset, cmd.dwProcessId))
         {
             ERR("AppBar_CopyOut: %d\n", dwMessage);
             return FALSE;
         }
-        *pData = cmd.data;
+        pData->hWnd = HWND_FROM_HWND32(cmd.hWnd32);
+        pData->uCallbackMessage = cmd.uCallbackMessage;
+        pData->uEdge = cmd.uEdge;
+        pData->rc = cmd.rc;
+        pData->lParam = (LPARAM)cmd.lParam64;
     }
 
     return ret;

@@ -61,9 +61,9 @@ BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
 {
     if (m_hAppBarDPA)
     {
-        if (FindAppBar(pData->data.hWnd))
+        if (FindAppBar(HWND_FROM_HWND32(pData->hWnd32)))
         {
-            WARN("Already exists: %p\n", pData->data.hWnd);
+            WARN("Already exists: %p\n", HWND_FROM_HWND32(pData->hWnd32));
             return FALSE;
         }
     }
@@ -81,9 +81,9 @@ BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
     PAPPBAR pAppBar = (PAPPBAR)::LocalAlloc(LPTR, sizeof(*pAppBar));
     if (pAppBar)
     {
-        pAppBar->hWnd = pData->data.hWnd;
+        pAppBar->hWnd = HWND_FROM_HWND32(pData->hWnd32);
         pAppBar->uEdge = UINT_MAX;
-        pAppBar->uCallbackMessage = pData->data.uCallbackMessage;
+        pAppBar->uCallbackMessage = pData->uCallbackMessage;
         if (DPA_InsertPtr(m_hAppBarDPA, INT_MAX, pAppBar) >= 0)
             return TRUE; // Success!
 
@@ -107,11 +107,11 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
         if (!pAppBar)
             continue;
 
-        if (pAppBar->hWnd == pData->data.hWnd)
+        if (pAppBar->hWnd == HWND_FROM_HWND32(pData->hWnd32))
         {
             RECT rcOld = pAppBar->rc;
             EliminateAppBar(nItems);
-            StuckAppChange(pData->data.hWnd, &rcOld, NULL, FALSE);
+            StuckAppChange(HWND_FROM_HWND32(pData->hWnd32), &rcOld, NULL, FALSE);
         }
     }
 }
@@ -119,10 +119,10 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
 // ABM_QUERYPOS
 void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
 {
-    PAPPBAR pAppBar1 = FindAppBar(pData->data.hWnd);
+    PAPPBAR pAppBar1 = FindAppBar(HWND_FROM_HWND32(pData->hWnd32));
     if (!pAppBar1)
     {
-        ERR("Not found: %p\n", pData->data.hWnd);
+        ERR("Not found: %p\n", HWND_FROM_HWND32(pData->hWnd32));
         return;
     }
 
@@ -132,7 +132,7 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
         ERR("!pOutput: %d\n", pData->dwProcessId);
         return;
     }
-    pOutput->rc = pData->data.rc;
+    pOutput->rc = pData->rc;
 
     if (::IsRectEmpty(&pOutput->rc))
         WARN("IsRectEmpty\n");
@@ -150,7 +150,7 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
     }
 
     // Subtract area from pOutput->rc
-    UINT uEdge = pData->data.uEdge;
+    UINT uEdge = pData->uEdge;
     INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
     while (--nItems >= 0)
     {
@@ -176,7 +176,7 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
 // ABM_SETPOS
 void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
 {
-    PAPPBAR pAppBar = FindAppBar(pData->data.hWnd);
+    PAPPBAR pAppBar = FindAppBar(HWND_FROM_HWND32(pData->hWnd32));
     if (!pAppBar)
         return;
 
@@ -186,16 +186,16 @@ void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
     if (!pOutput)
         return;
 
-    RECT rcOld = pAppBar->rc, rcNew = pData->data.rc;
+    RECT rcOld = pAppBar->rc, rcNew = pData->rc;
     BOOL bChanged = !::EqualRect(&rcOld, &rcNew);
 
     pAppBar->rc = rcNew;
-    pAppBar->uEdge = pData->data.uEdge;
+    pAppBar->uEdge = pData->uEdge;
 
     AppBar_UnLockOutput(pOutput);
 
     if (bChanged)
-        StuckAppChange(pData->data.hWnd, &rcOld, &rcNew, FALSE);
+        StuckAppChange(HWND_FROM_HWND32(pData->hWnd32), &rcOld, &rcNew, FALSE);
 }
 
 void CAppBarManager::OnAppBarNotifyAll(

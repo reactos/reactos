@@ -1220,17 +1220,42 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
     COLORREF clrTextBack;
 } SFVM_CUSTOMVIEWINFO_DATA, *LPSFVM_CUSTOMVIEWINFO_DATA;
 
-/* For internal AppBar messaging (private) */
-typedef struct _APPBAR_COMMAND
+#include <poppack.h>
+
+typedef UINT32 HANDLE32, *PHANDLE32;
+typedef UINT64 HANDLE64, *PHANDLE64;
+typedef UINT32 HWND32;
+#define HWND_FROM_HWND32(hwnd32) ((HWND)(ULONG_PTR)(ULONG)(hwnd32))
+
+typedef union tagLARGE_HANDLE
 {
-    APPBARDATA data;
+    HANDLE64 Handle64;
+    HANDLE32 Handle32;
+    HANDLE Handle;
+    struct
+    {
+        UINT32 LowLong;
+        UINT32 HighLong;
+    };
+} LARGE_HANDLE, *PLARGE_HANDLE;
+
+/*
+ * Structure for internal AppBar messaging (private).
+ * This struct should work between 32-bit and 64-bit.
+ */
+typedef struct tagAPPBAR_COMMAND
+{
+    DWORD cbSize;
+    HWND32 hWnd32;
+    UINT uCallbackMessage;
+    UINT uEdge;
+    RECT rc;
+    UINT64 lParam64;
     DWORD dwMessage;
     DWORD dwProcessId;
-    HANDLE hOutput;
+    LARGE_HANDLE hOutput64;
     DWORD dwMagic;
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
-
-#include <poppack.h>
 
 #ifdef __cplusplus
 } /* extern "C" */
