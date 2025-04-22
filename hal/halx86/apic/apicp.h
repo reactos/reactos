@@ -32,6 +32,7 @@
     #define IrqlToSoftVector(Irql) ((Irql << 4)|0xf)
     #define TprToIrql(Tpr) ((KIRQL)(Tpr >> 4))
     #define CLOCK2_LEVEL CLOCK_LEVEL
+    #define APIC_PROFILE_LEVEL PROFILE_LEVEL
 #else
     #define LOCAL_APIC_BASE  0xFFFE0000
     #define IOAPIC_BASE 0xFFFE1000
@@ -54,6 +55,7 @@
     #define IrqlToTpr(Irql) (HalpIRQLtoTPR[Irql])
     #define IrqlToSoftVector(Irql) IrqlToTpr(Irql)
     #define TprToIrql(Tpr)  (HalVectorToIRQL[Tpr >> 4])
+    #define APIC_PROFILE_LEVEL HIGH_LEVEL
 #endif
 
 #define APIC_MAX_IRQ 24
