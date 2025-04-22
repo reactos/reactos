@@ -1241,7 +1241,8 @@ typedef union tagLARGE_HANDLE
 
 /*
  * Structure for internal AppBar messaging (private).
- * This struct should work between 32-bit and 64-bit.
+ * This APPBAR_COMMAND struct can be sent from
+ * a 32-bit app to 64-bit Explorer.
  */
 typedef struct tagAPPBAR_COMMAND
 {
