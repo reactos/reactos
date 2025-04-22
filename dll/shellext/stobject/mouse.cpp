@@ -133,7 +133,7 @@ HRESULT STDMETHODCALLTYPE MouseKeys_Message(_In_ CSysTray * pSysTray, UINT uMsg,
             {
                 case WM_LBUTTONDBLCLK:
                 case WM_RBUTTONDBLCLK:
-                    pSysTray->RunAccessCpl(",,3");
+                    pSysTray->RunAccessCpl(",,4");
                     return S_OK;
             }
             break;
