@@ -75,7 +75,7 @@ const DWORD ExStyle = WS_EX_TOPMOST | WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW;
 
 static int GetRegInt(HKEY hKey, PCWSTR Name, int DefVal)
 {
-   WCHAR buf[100];
+   WCHAR buf[sizeof("-2147483648")];
    DWORD cb = sizeof(buf), type;
    DWORD err = RegQueryValueExW(hKey, Name, 0, &type, (BYTE*)buf, &cb);
    if (err == ERROR_SUCCESS && cb <= sizeof(buf) - sizeof(*buf))
