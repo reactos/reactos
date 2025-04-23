@@ -588,6 +588,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
     case MPOS_CANCELLEVEL:
         if (m_subMenuChild)
             m_subMenuChild->OnSelect(dwSelectType);
+        // Deselect the currently selected item
+        _ChangeHotItem(NULL, -1, 0);
         break;
     }
     return S_FALSE;
