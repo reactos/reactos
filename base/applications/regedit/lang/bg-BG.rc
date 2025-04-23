@@ -435,6 +435,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Добавя нова низова стойност"
     ID_EDIT_NEW_BINARYVALUE "Добавя нова двоична стойност"
     ID_EDIT_NEW_DWORDVALUE "Добавя нова стойност за двойна дума"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Внася се словесен файл в регистъра"
     ID_REGISTRY_EXPORTREGISTRYFILE "Изнася се целия регистър или части от него в словесен файл"
     ID_REGISTRY_LOADHIVE "Зарежда се роеви файл в регистъра"

@@ -442,6 +442,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adaugă o nouă valoare șir"
     ID_EDIT_NEW_BINARYVALUE "Adaugă o nouă valoare de 1 bit"
     ID_EDIT_NEW_DWORDVALUE "Adaugă o nouă valoare de 32 de biți"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importă registru dintr-un fișier"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exportă registrul total sau parțial într-un fișier"
     ID_REGISTRY_LOADHIVE "Încarcă un fișier binar în registru"
