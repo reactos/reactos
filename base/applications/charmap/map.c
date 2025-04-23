@@ -806,6 +806,7 @@ MapWndProc(HWND hwnd,
         case FM_SETFONT:
             infoPtr->CaretX = infoPtr->CaretY = infoPtr->iYStart = 0;
             SetFont(infoPtr, (LPWSTR)lParam);
+            SetCaretXY(infoPtr, infoPtr->CaretX, infoPtr->CaretY, FALSE, TRUE);
             break;
 
         case FM_GETCHAR:
