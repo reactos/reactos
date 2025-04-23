@@ -12,6 +12,7 @@
 
 #include <shellapi.h>
 #include <shlwapi.h>
+#include <windowsx.h>
 
 #define MAX_BACKGROUNDS     100
 
@@ -570,6 +571,7 @@ OnColorButton(HWND hwndDlg, PBACKGROUND_DATA pData)
 
         /* Window will be updated :) */
         InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW), NULL, TRUE);
+        InvalidateRect(GetDlgItem(hwndDlg, IDC_COLOR_BUTTON), NULL, TRUE);
 
         /* Save custom colors to reg. To this moment key must be created already. See above */
         res = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0,
@@ -1240,14 +1242,10 @@ BackgroundPageProc(HWND hwndDlg,
 
         case WM_DRAWITEM:
             {
-                LPDRAWITEMSTRUCT drawItem;
-                drawItem = (LPDRAWITEMSTRUCT)lParam;
+                LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
 
                 if (drawItem->CtlID == IDC_BACKGROUND_PREVIEW)
-                {
                     DrawBackgroundPreview(drawItem, pData);
-                }
-
             }
             break;
 
@@ -1275,6 +1273,14 @@ BackgroundPageProc(HWND hwndDlg,
                                 return FALSE;
 
                             ListViewItemChanged(hwndDlg, pData, nm->iItem);
+                        }
+                        break;
+
+                    case NM_CUSTOMDRAW:
+                        if (lpnm->idFrom == IDC_COLOR_BUTTON)
+                        {
+                            return SetDlgMsgResult(hwndDlg, 0, ClrBtn_CustomDraw((NMCUSTOMDRAW*)lpnm,
+                                                                                 g_GlobalData.desktop_color));
                         }
                         break;
                 }

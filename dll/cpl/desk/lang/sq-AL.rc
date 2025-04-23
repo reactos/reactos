@@ -26,9 +26,10 @@ BEGIN
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
     LTEXT "Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "Sfond i des&ktopit:" for the backport, because that doesn't overflow the length of the IDC_BACKGROUND_LIST below and therefore looks better
     PUSHBUTTON "&Shfleto...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
-    PUSHBUTTON "&Ngjyra...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Vendosje:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Vendosje:" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Ngjyra:", IDC_STATIC, 188, 156, 55, 9
+    PUSHBUTTON " ", IDC_COLOR_BUTTON, 188, 167, 55, 15
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
