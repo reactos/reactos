@@ -1229,11 +1229,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_User,
         L"Desktop",
         MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
-#ifdef __REACTOS__
         0
-#else
-        -IDI_SHELL_DESKTOP
-#endif
     },
     { /* 0x01 - CSIDL_INTERNET */
         &FOLDERID_InternetFolder,
@@ -1246,11 +1242,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_User,
         L"Programs",
         MAKEINTRESOURCEW(IDS_PROGRAMS),
-#ifdef __REACTOS__
         0
-#else
-        -IDI_SHELL_PROGRAMS_FOLDER
-#endif
     },
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
         &FOLDERID_ControlPanelFolder,
@@ -1352,11 +1344,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_User,
         L"Desktop",
         MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
-#ifdef __REACTOS__
         0
-#else
-        -IDI_SHELL_DESKTOP
-#endif
     },
     { /* 0x11 - CSIDL_DRIVES */
         &FOLDERID_ComputerFolder,
@@ -1404,11 +1392,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_AllUsers,
         L"Common Programs",
         MAKEINTRESOURCEW(IDS_PROGRAMS),
-#ifdef __REACTOS__
         0
-#else
-        -IDI_SHELL_PROGRAMS_FOLDER
-#endif
     },
     { /* 0x18 - CSIDL_COMMON_STARTUP */
         &FOLDERID_CommonStartup,
@@ -1421,11 +1405,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_AllUsers,
         L"Common Desktop",
         MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
-#ifdef __REACTOS__
         0
-#else
-        -IDI_SHELL_DESKTOP
-#endif
     },
     { /* 0x1a - CSIDL_APPDATA */
         &FOLDERID_RoamingAppData,
@@ -1494,25 +1474,21 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_WindowsPath,
         L"Windows",
         NULL,
-        -IDI_SHELL_SYSTEM_GEAR
+        0
     },
     { /* 0x25 - CSIDL_SYSTEM */
         &FOLDERID_System,
         CSIDL_Type_SystemPath,
         L"System",
         NULL,
-        -IDI_SHELL_SYSTEM_GEAR
+        0
     },
     { /* 0x26 - CSIDL_PROGRAM_FILES */
         &FOLDERID_ProgramFiles,
         CSIDL_Type_CurrVer,
         L"ProgramFiles",
         MAKEINTRESOURCEW(IDS_PROGRAM_FILES),
-#ifdef __REACTOS__
         0
-#else
-        -IDI_SHELL_PROGRAMS_FOLDER
-#endif
     },
     { /* 0x27 - CSIDL_MYPICTURES */
         &FOLDERID_Pictures,
