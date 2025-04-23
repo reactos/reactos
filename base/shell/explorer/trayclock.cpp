@@ -703,7 +703,6 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         if (!bOldHideClock)
         {
             bRealign = TRUE;
-
             ResetTime();
         }
     }

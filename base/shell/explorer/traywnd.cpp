@@ -2391,7 +2391,7 @@ ChangePos:
         /* Set the initial lock state in the band site */
         m_TrayBandSite->Lock(g_TaskbarSettings.bLock);
 
-        static const UINT hotkeys[] =
+        static const UINT winkeys[] =
         {
             MAKELONG(IDHK_RUN,            MAKEWORD('R', MOD_WIN)),
             MAKELONG(IDHK_MINIMIZE_ALL,   MAKEWORD('M', MOD_WIN)),
@@ -2406,11 +2406,13 @@ ChangePos:
             MAKELONG(IDHK_DESKTOP,        MAKEWORD('D', MOD_WIN)),
             MAKELONG(IDHK_PAGER,          MAKEWORD('B', MOD_WIN)),
         };
-        BOOL bNoWinKeys = SHRestricted(REST_NOWINKEYS);
-        for (UINT i = 0; i < _countof(hotkeys) && !bNoWinKeys; ++i)
+        if (!SHRestricted(REST_NOWINKEYS))
         {
-            UINT mod = HIBYTE(HIWORD(hotkeys[i])), key = LOBYTE(HIWORD(hotkeys[i]));
-            RegisterHotKey(m_hWnd, LOWORD(hotkeys[i]), mod, key);
+            for (UINT i = 0; i < _countof(winkeys); ++i)
+            {
+                UINT mod = HIBYTE(HIWORD(winkeys[i])), key = LOBYTE(HIWORD(winkeys[i]));
+                RegisterHotKey(m_hWnd, LOWORD(winkeys[i]), mod, key);
+            }
         }
 
         return TRUE;
