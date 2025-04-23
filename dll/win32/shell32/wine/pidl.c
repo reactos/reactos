@@ -1851,8 +1851,8 @@ LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid, BYTE SortOrder)
         if (pidlOut)
         {
             LPPIDLDATA pData = _ILGetDataPointer(pidlOut);
-            pidlOut->mkid.abID[1] = SortOrder;
             pData->u.guid.guid = *guid;
+            pidlOut->mkid.abID[1] = SortOrder;
             TRACE("-- create GUID-pidl %s\n",
                   debugstr_guid(&(pData->u.guid.guid)));
         }

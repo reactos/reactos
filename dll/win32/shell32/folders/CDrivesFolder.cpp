@@ -57,7 +57,7 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
 
 static const REQUIREDREGITEM g_RequiredItems[] =
 {
-    { CLSID_ControlPanel, 0, REGITEMORDER_MYCOMPUTER_CONTROLS },
+    { CLSID_ControlPanel, NULL, REGITEMORDER_MYCOMPUTER_CONTROLS },
 };
 static const REGFOLDERINFO g_RegFolderInfo =
 {

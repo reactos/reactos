@@ -555,7 +555,7 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
     }
     else if (clsid1 && clsid2)
     {
-        if ((lParam & ~SHCIDS_ALLFIELDS) == COL_NAME) // (== Name) && !(& SHCIDS_CANONICALONLY)
+        if ((lParam & SHCIDS_COLUMNMASK) == COL_NAME && !(lParam & SHCIDS_CANONICALONLY))
         {
             HRESULT hrCmpOrder = CompareRegItemsSortOrder(pidl1, pidl2);
             if (hrCmpOrder && SUCCEEDED(hrCmpOrder))
