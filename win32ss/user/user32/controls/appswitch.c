@@ -75,58 +75,58 @@ const DWORD ExStyle = WS_EX_TOPMOST | WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW;
 
 static int GetRegInt(HKEY hKey, PCWSTR Name, int DefVal)
 {
-   WCHAR buf[sizeof("-2147483648")];
-   DWORD cb = sizeof(buf), type;
-   DWORD err = RegQueryValueExW(hKey, Name, 0, &type, (BYTE*)buf, &cb);
-   if (err == ERROR_SUCCESS && cb <= sizeof(buf) - sizeof(*buf))
-   {
-      buf[cb / sizeof(*buf)] = UNICODE_NULL;
-      if (type == REG_SZ || type == REG_EXPAND_SZ)
-      {
-         WCHAR *pszEnd;
-         long Value = wcstol(buf, &pszEnd, 10);
-         return pszEnd > buf ? Value : DefVal;
-      }
-      if ((type == REG_DWORD || type == REG_BINARY) && cb == sizeof(DWORD))
-      {
-         return *(DWORD*)buf;
-      }
-   }
-   return DefVal;
+    WCHAR buf[sizeof("-2147483648")];
+    DWORD cb = sizeof(buf), type;
+    DWORD err = RegQueryValueExW(hKey, Name, NULL, &type, (BYTE*)buf, &cb);
+    if (err == ERROR_SUCCESS && cb <= sizeof(buf) - sizeof(*buf))
+    {
+        buf[cb / sizeof(*buf)] = UNICODE_NULL;
+        if (type == REG_SZ || type == REG_EXPAND_SZ)
+        {
+            WCHAR *pszEnd;
+            long Value = wcstol(buf, &pszEnd, 10);
+            return pszEnd > buf ? Value : DefVal;
+        }
+        if ((type == REG_DWORD || type == REG_BINARY) && cb == sizeof(DWORD))
+        {
+            return *(DWORD*)buf;
+        }
+    }
+    return DefVal;
 }
 
 static void LoadCoolSwitchSettings(void)
 {
-   HKEY hKey;
+    HKEY hKey;
 
-   if (SettingsLoaded
+    if (SettingsLoaded
 #if DBG
-       && !(GetKeyState(VK_SCROLL) & 1) // If Scroll-Lock is on, always read the settings
+        && !(GetKeyState(VK_SCROLL) & 1) // If Scroll-Lock is on, always read the settings
 #endif
-       )
-   {
-      return;
-   }
+        )
+    {
+        return;
+    }
 
-   SettingsLoaded = TRUE;
-   // TODO: Should read from win.ini instead when IniFileMapping is fixed
-   if (!RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_READ, &hKey))
-   {
-      CoolSwitch = GetRegInt(hKey, L"CoolSwitch", TRUE);
-      CoolSwitchRows = GetRegInt(hKey, L"CoolSwitchRows", DefSwitchRows);
-      CoolSwitchColumns = GetRegInt(hKey, L"CoolSwitchColumns", DefSwitchColumns);
-      RegCloseKey(hKey);
-   }
+    SettingsLoaded = TRUE;
+    // TODO: Should read from win.ini instead when IniFileMapping is implemented
+    if (!RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_READ, &hKey))
+    {
+        CoolSwitch = GetRegInt(hKey, L"CoolSwitch", TRUE);
+        CoolSwitchRows = GetRegInt(hKey, L"CoolSwitchRows", DefSwitchRows);
+        CoolSwitchColumns = GetRegInt(hKey, L"CoolSwitchColumns", DefSwitchColumns);
+        RegCloseKey(hKey);
+    }
 
-   if (CoolSwitchRows * CoolSwitchColumns < 3)
-   {
-      CoolSwitchRows = DefSwitchRows;
-      CoolSwitchColumns = DefSwitchColumns;
-   }
+    if (CoolSwitchRows * CoolSwitchColumns < 3)
+    {
+        CoolSwitchRows = DefSwitchRows;
+        CoolSwitchColumns = DefSwitchColumns;
+    }
 
-   TRACE("CoolSwitch: %d\n", CoolSwitch);
-   TRACE("CoolSwitchRows: %d\n", CoolSwitchRows);
-   TRACE("CoolSwitchColumns: %d\n", CoolSwitchColumns);
+    TRACE("CoolSwitch: %d\n", CoolSwitch);
+    TRACE("CoolSwitchRows: %d\n", CoolSwitchRows);
+    TRACE("CoolSwitchColumns: %d\n", CoolSwitchColumns);
 }
 
 void ResizeAndCenter(HWND hwnd, int width, int height)
