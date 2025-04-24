@@ -1252,8 +1252,8 @@ typedef struct tagAPPBAR_COMMAND
     RECT rc;
     UINT64 lParam64;
     DWORD dwMessage;
+    HANDLE hOutput64;
     DWORD dwProcessId;
-    LARGE_HANDLE hOutput64;
     DWORD dwMagic;
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
 
