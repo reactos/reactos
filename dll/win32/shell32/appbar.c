@@ -80,7 +80,7 @@ SHAppBarMessage(
     APPBAR_COMMAND cmd;
     ZeroMemory(&cmd, sizeof(cmd));
     cmd.cbSize = sizeof(cmd);
-    cmd.hWnd32 = HandleToUlong(pData->hWnd);
+    cmd.hWnd32 = HandleToUlong(pData->hWnd); // Truncated on x64, as on Windows!
     cmd.uCallbackMessage = pData->uCallbackMessage;
     cmd.uEdge = pData->uEdge;
     cmd.rc = pData->rc;
