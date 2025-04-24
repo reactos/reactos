@@ -1231,14 +1231,14 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 #include <pshpack8.h>
 typedef struct tagAPPBAR_COMMAND
 {
-    DWORD cbSize;
+    DWORD cbSize; /* == offsetof(APPBAR_COMMAND, dwMessage) */
     UINT32 hWnd32;
     UINT uCallbackMessage;
     UINT uEdge;
     RECT rc;
     LONGLONG lParam64;
     DWORD dwMessage;
-    UINT32 hOutput32;
+    UINT32 hOutput32; /* For shlwapi!SHAllocShared */
     DWORD dwProcessId;
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
 #include <poppack.h>
