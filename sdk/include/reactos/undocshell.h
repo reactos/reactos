@@ -1247,7 +1247,7 @@ typedef union tagLARGE_HANDLE
 typedef struct tagAPPBAR_COMMAND
 {
     DWORD cbSize;
-    HWND32 hWnd32;
+    UINT32 hWnd32;
     UINT uCallbackMessage;
     UINT uEdge;
     RECT rc;
