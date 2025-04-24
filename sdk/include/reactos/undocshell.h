@@ -1242,6 +1242,11 @@ typedef struct tagAPPBAR_COMMAND
     DWORD dwProcessId;
     DWORD dwMagic;
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
+#ifdef _WIN64
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x40);
+#else
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x38);
+#endif
 
 #define APPBAR_MAGIC_WIN32 0xBEEF0032
 #define APPBAR_MAGIC_WIN64 0xBEEF0064
