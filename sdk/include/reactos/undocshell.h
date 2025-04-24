@@ -1222,8 +1222,6 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 
 #include <poppack.h>
 
-typedef UINT32 HANDLE32, *PHANDLE32;
-typedef UINT64 HANDLE64, *PHANDLE64;
 #define HWND_FROM_HWND32(hwnd32) ((HWND)UlongToHandle(hwnd32))
 
 /*
