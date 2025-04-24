@@ -101,6 +101,11 @@ static const WCHAR* KEY_KDBPREF = L"Control Panel\\Accessibility\\Keyboard Prefe
 static const WCHAR* KEY_SCRREAD = L"Control Panel\\Accessibility\\Blind Access";
 static const WCHAR* VAL_ON = L"On";
 
+static const WCHAR* KEY_MOUSEKEYS = L"Control Panel\\Accessibility\\MouseKeys";
+static const WCHAR* VAL_MOUSEKEYS_FLAGS = L"Flags";
+static const WCHAR* VAL_MOUSEKEYS_MAX = L"MaximumSpeed";
+static const WCHAR* VAL_MOUSEKEYS_TIMETOMAX = L"TimeToMaximumSpeed";
+
 /** Loading the settings ******************************************************/
 
 static
@@ -336,6 +341,10 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.filterkeys.cbSize = sizeof(FILTERKEYS);
     gspv.togglekeys.cbSize = sizeof(TOGGLEKEYS);
     gspv.mousekeys.cbSize = sizeof(MOUSEKEYS);
+    gspv.mousekeys.dwFlags = SpiLoadInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_FLAGS, 62);
+    gspv.mousekeys.iMaxSpeed = SpiLoadInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_MAX, 80);
+    gspv.mousekeys.iTimeToMaxSpeed = SpiLoadInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_TIMETOMAX, 3000);
+    gspv.mousekeys.iCtrlSpeed = 8; // FIXME
     gspv.stickykeys.cbSize = sizeof(STICKYKEYS);
     gspv.serialkeys.cbSize = sizeof(SERIALKEYS);
     gspv.soundsentry.cbSize = sizeof(SOUNDSENTRYW);
@@ -1197,7 +1206,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: What to do?
+                SpiStoreSzInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_FLAGS, gspv.mousekeys.dwFlags);
+                SpiStoreSzInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_MAX, gspv.mousekeys.iMaxSpeed);
+                SpiStoreSzInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_TIMETOMAX, gspv.mousekeys.iTimeToMaxSpeed);
             }
             return (UINT_PTR)KEY_DESKTOP;
         }

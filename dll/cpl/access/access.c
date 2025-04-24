@@ -189,11 +189,11 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     PGLOBAL_DATA pGlobalData;
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh;
-    INT nPage = 0;
+    UINT nPage = 0; // This is unsigned so we don't have to deal with negative numbers
     INT ret;
 
     if (uMsg == CPL_STARTWPARMSW && lParam != 0)
-        nPage = _wtoi((PWSTR)lParam);
+        nPage = (*(PWSTR)lParam) - '1'; // Convert from 1-based to 0-based.
 
     pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
     if (pGlobalData == NULL)
