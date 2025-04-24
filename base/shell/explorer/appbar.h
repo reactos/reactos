@@ -18,7 +18,7 @@ typedef struct _APPBAR
 static inline PAPPBARDATA
 AppBar_LockOutput(_In_ PAPPBAR_COMMAND pData)
 {
-    return (PAPPBARDATA)SHLockShared(pData->hOutput, pData->dwProcessId);
+    return (PAPPBARDATA)SHLockShared(UlongToHandle(pData->hOutput32), pData->dwProcessId);
 }
 
 static inline VOID

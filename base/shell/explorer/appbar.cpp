@@ -430,7 +430,7 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 {
     PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
 
-    if (pCopyData->cbData != sizeof(*pData))
+    if (pCopyData->cbData != offsetof(APPBAR_COMMAND, dwMessage))
     {
         WARN("Invalid AppBar message\n");
         return NULL;

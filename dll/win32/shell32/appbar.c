@@ -77,9 +77,11 @@ SHAppBarMessage(
         return FALSE;
     }
 
+#define OFFSET_TO_MESSAGE offsetof(APPBAR_COMMAND, dwMessage)
+
     APPBAR_COMMAND cmd;
     ZeroMemory(&cmd, sizeof(cmd));
-    cmd.cbSize = sizeof(cmd);
+    cmd.cbSize = OFFSET_TO_MESSAGE;
     cmd.hWnd32 = HandleToUlong(pData->hWnd); // Truncated on x64, as on Windows!
     cmd.uCallbackMessage = pData->uCallbackMessage;
     cmd.uEdge = pData->uEdge;
@@ -88,16 +90,14 @@ SHAppBarMessage(
     cmd.dwMessage = dwMessage;
     cmd.dwProcessId = GetCurrentProcessId();
 
-    const SIZE_T offset = offsetof(APPBAR_COMMAND, dwMessage);
-
     /* Make output data if necessary */
     switch (dwMessage)
     {
         case ABM_QUERYPOS:
         case ABM_SETPOS:
         case ABM_GETTASKBARPOS:
-            cmd.hOutput = AppBar_CopyIn(&cmd, offset, cmd.dwProcessId);
-            if (!cmd.hOutput)
+            cmd.hOutput32 = HandleToUlong(AppBar_CopyIn(&cmd, OFFSET_TO_MESSAGE, cmd.dwProcessId));
+            if (!cmd.hOutput32)
             {
                 ERR("AppBar_CopyIn: %d\n", dwMessage);
                 return FALSE;
@@ -112,9 +112,9 @@ SHAppBarMessage(
     UINT_PTR ret = SendMessageW(hTrayWnd, WM_COPYDATA, (WPARAM)pData->hWnd, (LPARAM)&copyData);
 
     /* Copy back output data */
-    if (cmd.hOutput)
+    if (cmd.hOutput32)
     {
-        if (!AppBar_CopyOut(cmd.hOutput, &cmd, offset, cmd.dwProcessId))
+        if (!AppBar_CopyOut(UlongToHandle(cmd.hOutput32), &cmd, OFFSET_TO_MESSAGE, cmd.dwProcessId))
         {
             ERR("AppBar_CopyOut: %d\n", dwMessage);
             return FALSE;
