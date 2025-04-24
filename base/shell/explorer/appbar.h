@@ -11,8 +11,8 @@ typedef struct _APPBAR
 {
     HWND hWnd;
     UINT uCallbackMessage;
-    RECT rc;
     UINT uEdge;
+    RECT rc;
 } APPBAR, *PAPPBAR;
 
 static inline PAPPBARDATA
