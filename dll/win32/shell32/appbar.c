@@ -102,8 +102,8 @@ SHAppBarMessage(
         case ABM_QUERYPOS:
         case ABM_SETPOS:
         case ABM_GETTASKBARPOS:
-            cmd.hOutput64.Handle = AppBar_CopyIn(&cmd, offset, cmd.dwProcessId);
-            if (!cmd.hOutput64.Handle)
+            cmd.hOutput = AppBar_CopyIn(&cmd, offset, cmd.dwProcessId);
+            if (!cmd.hOutput)
             {
                 ERR("AppBar_CopyIn: %d\n", dwMessage);
                 return FALSE;
