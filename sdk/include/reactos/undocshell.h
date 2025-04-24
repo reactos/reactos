@@ -1226,18 +1226,6 @@ typedef UINT32 HANDLE32, *PHANDLE32;
 typedef UINT64 HANDLE64, *PHANDLE64;
 #define HWND_FROM_HWND32(hwnd32) ((HWND)UlongToHandle(hwnd32))
 
-typedef union tagLARGE_HANDLE
-{
-    HANDLE64 Handle64;
-    HANDLE32 Handle32;
-    HANDLE Handle;
-    struct
-    {
-        UINT32 LowLong;
-        UINT32 HighLong;
-    };
-} LARGE_HANDLE, *PLARGE_HANDLE;
-
 /*
  * Private structure for internal AppBar messaging.
  * This APPBAR_COMMAND struct can be sent from
