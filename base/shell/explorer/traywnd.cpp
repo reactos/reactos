@@ -2465,6 +2465,7 @@ ChangePos:
             CheckTrayWndPosition();
         }
 
+        // Note: We rely on CDesktopBrowser to get this message and call SHSettingsChanged
         if (m_DesktopWnd)
             ::SendMessageW(m_DesktopWnd, uMsg, wParam, lParam);
 

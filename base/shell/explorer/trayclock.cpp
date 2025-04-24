@@ -694,23 +694,13 @@ LRESULT CTrayClockWnd::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     BOOL bRealign = FALSE;
-    BOOL bOldHideClock = GetHideClock();
-
+    BOOL bHideClock = GetHideClock();
     TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
-    if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
-    {
-        g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
-        if (!bOldHideClock)
-        {
-            bRealign = TRUE;
-            ResetTime();
-        }
-    }
 
-    if (newSettings->sr.HideClock != bOldHideClock)
+    if (newSettings->sr.HideClock != !IsWindowVisible())
     {
         g_TaskbarSettings.sr.HideClock = newSettings->sr.HideClock;
-        BOOL bHideClock = GetHideClock();
+        bHideClock = GetHideClock();
         ShowWindow(bHideClock ? SW_HIDE : SW_SHOW);
         bRealign = TRUE;
 
@@ -730,6 +720,16 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         }
         else
         {
+            ResetTime();
+        }
+    }
+
+    if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
+    {
+        g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
+        if (!bHideClock)
+        {
+            bRealign = TRUE;
             ResetTime();
         }
     }
