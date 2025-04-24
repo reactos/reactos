@@ -88,12 +88,6 @@ SHAppBarMessage(
     cmd.dwMessage = dwMessage;
     cmd.dwProcessId = GetCurrentProcessId();
 
-#ifdef _WIN64
-    cmd.dwMagic = APPBAR_MAGIC_WIN64; /* For security check */
-#else
-    cmd.dwMagic = APPBAR_MAGIC_WIN32; /* For security check */
-#endif
-
     const SIZE_T offset = offsetof(APPBAR_COMMAND, dwMessage);
 
     /* Make output data if necessary */
@@ -125,7 +119,7 @@ SHAppBarMessage(
             ERR("AppBar_CopyOut: %d\n", dwMessage);
             return FALSE;
         }
-        pData->hWnd = HWND_FROM_HWND32(cmd.hWnd32);
+        pData->hWnd = UlongToHandle(cmd.hWnd32);
         pData->uCallbackMessage = cmd.uCallbackMessage;
         pData->uEdge = cmd.uEdge;
         pData->rc = cmd.rc;

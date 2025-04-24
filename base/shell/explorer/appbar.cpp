@@ -59,11 +59,13 @@ void CAppBarManager::DestroyAppBarDPA()
 // ABM_NEW
 BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
 {
+    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
+
     if (m_hAppBarDPA)
     {
-        if (FindAppBar(HWND_FROM_HWND32(pData->hWnd32)))
+        if (FindAppBar(hWnd))
         {
-            WARN("Already exists: %p\n", HWND_FROM_HWND32(pData->hWnd32));
+            WARN("Already exists: %p\n", hWnd);
             return FALSE;
         }
     }
@@ -81,7 +83,7 @@ BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
     PAPPBAR pAppBar = (PAPPBAR)::LocalAlloc(LPTR, sizeof(*pAppBar));
     if (pAppBar)
     {
-        pAppBar->hWnd = HWND_FROM_HWND32(pData->hWnd32);
+        pAppBar->hWnd = hWnd;
         pAppBar->uEdge = UINT_MAX;
         pAppBar->uCallbackMessage = pData->uCallbackMessage;
         if (DPA_InsertPtr(m_hAppBarDPA, INT_MAX, pAppBar) >= 0)
@@ -100,6 +102,7 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
     if (!m_hAppBarDPA)
         return;
 
+    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
     INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
     while (--nItems >= 0)
     {
@@ -107,11 +110,11 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
         if (!pAppBar)
             continue;
 
-        if (pAppBar->hWnd == HWND_FROM_HWND32(pData->hWnd32))
+        if (pAppBar->hWnd == hWnd)
         {
             RECT rcOld = pAppBar->rc;
             EliminateAppBar(nItems);
-            StuckAppChange(HWND_FROM_HWND32(pData->hWnd32), &rcOld, NULL, FALSE);
+            StuckAppChange(hWnd, &rcOld, NULL, FALSE);
         }
     }
 }
@@ -119,10 +122,11 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
 // ABM_QUERYPOS
 void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
 {
-    PAPPBAR pAppBar1 = FindAppBar(HWND_FROM_HWND32(pData->hWnd32));
+    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
+    PAPPBAR pAppBar1 = FindAppBar(hWnd);
     if (!pAppBar1)
     {
-        ERR("Not found: %p\n", HWND_FROM_HWND32(pData->hWnd32));
+        ERR("Not found: %p\n", hWnd);
         return;
     }
 
@@ -176,7 +180,8 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
 // ABM_SETPOS
 void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
 {
-    PAPPBAR pAppBar = FindAppBar(HWND_FROM_HWND32(pData->hWnd32));
+    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
+    PAPPBAR pAppBar = FindAppBar(hWnd);
     if (!pAppBar)
         return;
 
@@ -195,7 +200,7 @@ void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
     AppBar_UnLockOutput(pOutput);
 
     if (bChanged)
-        StuckAppChange(HWND_FROM_HWND32(pData->hWnd32), &rcOld, &rcNew, FALSE);
+        StuckAppChange(hWnd, &rcOld, &rcNew, FALSE);
 }
 
 void CAppBarManager::OnAppBarNotifyAll(
@@ -425,9 +430,7 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 {
     PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
 
-    // For security check
-    if (pCopyData->cbData != sizeof(*pData) ||
-        (pData->dwMagic != APPBAR_MAGIC_WIN32 && pData->dwMagic != APPBAR_MAGIC_WIN64))
+    if (pCopyData->cbData != sizeof(*pData))
     {
         WARN("Invalid AppBar message\n");
         return NULL;
