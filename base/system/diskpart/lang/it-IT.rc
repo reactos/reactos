@@ -31,7 +31,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CLEAN_FAIL "\nDiskPart non è stato in grado di pulire il disco.\ni dati in questo disco potrebbero essere non recuperabili.\n"
+    IDS_CLEAN_FAIL "\nDiskPart non è stato in grado di pulire il disco.\nI dati in questo disco potrebbero essere non recuperabili.\n"
     IDS_CLEAN_SUCCESS "\nDiskPart ha pulito con successo il disco.\n"
     IDS_CLEAN_SYSTEM "\nIl disco selezionato è neccessario per il funzionamento del computer, e non può essere pulito.\n"
 END
