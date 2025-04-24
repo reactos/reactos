@@ -63,27 +63,70 @@ int nShift = 0;
 
 BOOL Esc = FALSE;
 
+enum { DefSwitchRows = 3, DefSwitchColumns = 7 };
 BOOL CoolSwitch = TRUE;
-int CoolSwitchRows = 3;
-int CoolSwitchColumns = 7;
+int CoolSwitchRows = DefSwitchRows;
+int CoolSwitchColumns = DefSwitchColumns;
+BOOL SettingsLoaded = FALSE;
 
 // window style
 const DWORD Style = WS_POPUP | WS_BORDER | WS_DISABLED;
 const DWORD ExStyle = WS_EX_TOPMOST | WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW;
 
-BOOL LoadCoolSwitchSettings(void)
+static int GetRegInt(HKEY hKey, PCWSTR Name, int DefVal)
 {
-   CoolSwitch = TRUE;
-   CoolSwitchRows = 3;
-   CoolSwitchColumns = 7;
+    WCHAR buf[sizeof("-2147483648")];
+    DWORD cb = sizeof(buf), type;
+    DWORD err = RegQueryValueExW(hKey, Name, NULL, &type, (BYTE*)buf, &cb);
+    if (err == ERROR_SUCCESS && cb <= sizeof(buf) - sizeof(*buf))
+    {
+        buf[cb / sizeof(*buf)] = UNICODE_NULL;
+        if (type == REG_SZ || type == REG_EXPAND_SZ)
+        {
+            WCHAR *pszEnd;
+            long Value = wcstol(buf, &pszEnd, 10);
+            return pszEnd > buf ? Value : DefVal;
+        }
+        if ((type == REG_DWORD || type == REG_BINARY) && cb == sizeof(DWORD))
+        {
+            return *(DWORD*)buf;
+        }
+    }
+    return DefVal;
+}
 
-   // FIXME: load the settings from registry
+static void LoadCoolSwitchSettings(void)
+{
+    HKEY hKey;
 
-   TRACE("CoolSwitch: %d\n", CoolSwitch);
-   TRACE("CoolSwitchRows: %d\n", CoolSwitchRows);
-   TRACE("CoolSwitchColumns: %d\n", CoolSwitchColumns);
+    if (SettingsLoaded
+#if DBG
+        && !(GetKeyState(VK_SCROLL) & 1) // If Scroll-Lock is on, always read the settings
+#endif
+        )
+    {
+        return;
+    }
 
-   return TRUE;
+    SettingsLoaded = TRUE;
+    // TODO: Should read from win.ini instead when IniFileMapping is implemented
+    if (!RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_READ, &hKey))
+    {
+        CoolSwitch = GetRegInt(hKey, L"CoolSwitch", TRUE);
+        CoolSwitchRows = GetRegInt(hKey, L"CoolSwitchRows", DefSwitchRows);
+        CoolSwitchColumns = GetRegInt(hKey, L"CoolSwitchColumns", DefSwitchColumns);
+        RegCloseKey(hKey);
+    }
+
+    if (CoolSwitchRows * CoolSwitchColumns < 3)
+    {
+        CoolSwitchRows = DefSwitchRows;
+        CoolSwitchColumns = DefSwitchColumns;
+    }
+
+    TRACE("CoolSwitch: %d\n", CoolSwitch);
+    TRACE("CoolSwitchRows: %d\n", CoolSwitchRows);
+    TRACE("CoolSwitchColumns: %d\n", CoolSwitchColumns);
 }
 
 void ResizeAndCenter(HWND hwnd, int width, int height)
