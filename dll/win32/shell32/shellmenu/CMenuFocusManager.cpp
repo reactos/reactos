@@ -348,6 +348,12 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
         iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
         isTracking = entry->mb->_IsTracking();
 
+        // Separators have a negative ID
+        if (iHitTestResult < -1)
+        {
+            iHitTestResult = -iHitTestResult;
+        }
+
         if (SendMessage(child, WM_USER_ISTRACKEDITEM, iHitTestResult, 0) == S_FALSE)
         {
             // The current tracked item has changed, notify the toolbar
