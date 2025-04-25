@@ -40,12 +40,12 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "Visualizzatore del Clipboard"
-    STRING_CLIPFILE  "Elemento Clipboard"
-    STRING_DELETE_MSG "Cancella i contenuti della Clipboard?"
-    STRING_DELETE_TITLE "Cancella Clipboard"
-    STRING_FORMAT_NT "I file Clipboard di ReactOS (*.clp)"
-    STRING_FORMAT_GEN "I file Clipboard (*.clp)"
+    STRING_CLIPBOARD "Visualizzatore degli appunti condivisi"
+    STRING_CLIPFILE  "Elemento appunti condivisi"
+    STRING_DELETE_MSG "Cancella i contenuti degli appunti condivisi?"
+    STRING_DELETE_TITLE "Cancella appunti condivisi"
+    STRING_FORMAT_NT "I file appunti condivisi di ReactOS (*.clp)"
+    STRING_FORMAT_GEN "I file appunti condivisi (*.clp)"
 END
 
 STRINGTABLE
@@ -68,6 +68,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ERROR_UNSUPPORTED_FORMAT "La Clipboard contiene informazioni in formato data, che non può essere visualizzato."
-    ERROR_INVALID_FILE_FORMAT "Il file selezionato non è un file di tipo clipboard valido."
+    ERROR_UNSUPPORTED_FORMAT "Gli appunti Condivisi contengono informazioni in formato data, che non può essere visualizzato."
+    ERROR_INVALID_FILE_FORMAT "Il file selezionato non è un file di tipo appunti condivisi valido."
 END
