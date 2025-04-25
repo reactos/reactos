@@ -362,13 +362,11 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
             // TB_HITTEST would return -1 in 2 states,
             // 1. the mouse is outside the toolbar
             // 2. the mouse is over the first item, and that item is a separator
-            
             // Confirm the second scenario by checking first item's rect
-            SendMessageW(child, TB_GETITEMRECT, 1, (LPARAM)&itemRc);
+            SendMessageW(child, TB_GETITEMRECT, 1, (LPARAM)&rcItem);
 
-            if (PtInRect(&itemRc, pt))
+            if (PtInRect(&rcItem, pt))
             {
-                // The first menu item is actually a separator and the mouse is hovering it right now
                 iHitTestResult = 1;
             }
         }
