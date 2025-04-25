@@ -1016,8 +1016,11 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                 else if (!pchSecondComma) 
                     pchSecondComma = &wszCmd[i];
                 break;
-            case L' ': 
-                pchLastUnquotedSpace = &wszCmd[i];
+            case L' ':
+                if (!pchFirstComma)
+                    pchFirstComma = &wszCmd[i];
+                else
+                    pchLastUnquotedSpace = &wszCmd[i];
                 break;
         }
     }
@@ -1104,7 +1107,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             }
         }
 
-        if (sp >= applet->count && (wszDialogBoxName[0] == L'\0' || wszDialogBoxName[0] == L'@'))
+        if (sp >= applet->count && (wszDialogBoxName[0] == L'\0' || wszDialogBoxName[0] == L'@' ||
+                                    extraPmts[0] != '\0'))
         {
             sp = 0;
         }
