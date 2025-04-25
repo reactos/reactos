@@ -801,6 +801,7 @@ MapWndProc(HWND hwnd,
                     infoPtr->CurrentFont.lfFaceName,
                     SIZEOF(lfFaceName));
             SetFont(infoPtr, lfFaceName);
+            SetCaretXY(infoPtr, infoPtr->CaretX, infoPtr->CaretY, FALSE, TRUE);
             break;
 
         case FM_SETFONT:
