@@ -170,7 +170,7 @@ BEGIN
     IDS_HELP_ATTRIBUTES                "Manipola volume o attributi disco.\n"
     IDS_HELP_AUTOMOUNT                 "Abilita e disabili montaggio dei volumi base.\n"
     IDS_HELP_BREAK                     "Rompi un set mirror.\n"
-    IDS_HELP_CLEAN                     "Pulisci l'informazione sulla configurazione, o tutte le informazioni, dal\n              disco.\n"
+    IDS_HELP_CLEAN                     "Cancella le informazioni sulla configurazione o tutte le informazioni dal\n disco.\n"
     IDS_HELP_COMPACT                   "Tenta di ridurre la grandezza fisica del file.\n"
     IDS_HELP_CONVERT                   "Converti tra formati dischi differenti.\n"
 
