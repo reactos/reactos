@@ -51,13 +51,22 @@ START_TEST(RtlAllocateHeap)
         return;
     }
 
+#ifdef _M_IX86
+    PULONG pheap = (PULONG)hHeap;
+    trace("Heap: %p, Heap->AlignRound: %lx\n", hHeap, pheap[12]);
+    trace("Heap: %p, Heap->AlignMask: %lx\n", hHeap, pheap[13]);
+#endif
+
     for (i = 0; i < ARRAYSIZE(Buffers); ++i)
     {
         Buffers[i] = RtlAllocateHeap(hHeap, 0, (i % 16 ) + 1);
         ASSERT(Buffers[i] != NULL);
 
         if (Buffers[i] != ALIGN_DOWN_POINTER_BY(Buffers[i], 16))
+        {
+            ok(FALSE, "Buffer %d: %p is unaligned!\n", i, Buffers[i]);
             Not16BytesAligned = TRUE;
+        }
     }
 
     for (i = 0; i < ARRAYSIZE(Buffers); ++i)
