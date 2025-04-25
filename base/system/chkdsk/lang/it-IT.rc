@@ -33,7 +33,7 @@ BEGIN
     IDS_CHKDSK_FAIL "Chkdsk non è stato in grado di finire con successo.\n\n"
     IDS_NO_ENTRY_POINT "Impossibile trovare i punti d'ingresso FMIFS.\n\n"
     IDS_BAD_ARGUMENT "Argomento sconosciuto: %s\n"
-    IDS_NO_CURRENT_DIR "Impossibile ottenre la directory corrente. Codice errore: "
+    IDS_NO_CURRENT_DIR "Impossibile ottenere la directory corrente. Codice errore: "
     IDS_NO_QUERY_VOL "Impossibile interrogare il volume. Codice errore: "
     IDS_VOLUME_IN_USE_PROC "Impossibile eseguire Chkdsk perché il volume è in uso da un altro processo.\n\n"
 END
