@@ -103,7 +103,7 @@ BEGIN
     IDS_LIST_PARTITION_HEAD "  Partizione ###  Tipo              Dimensione     Offset\n"
     IDS_LIST_PARTITION_LINE "  --------------  ----------------  ----------     -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partizione %-3lu  %-16s  %4I64u %-2s  %4I64u %-2s\n"
-    IDS_LIST_PARTITION_NO_DISK "\nNon c'è nessun disco per mostrare partizioni.\nPerfavore seleziona un disco e riprova.\n\n"
+    IDS_LIST_PARTITION_NO_DISK "\nNon c'è nessun disco per mostrare partizioni.\nSi prega di selezionare un disco e riprova.\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Etichetta    FS     Tipo        Dimensione  Stato  Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  ----------  -----  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
@@ -112,23 +112,23 @@ END
 /* RESCAN command string */
 STRINGTABLE
 BEGIN
-    IDS_RESCAN_START "\nPer favore attendi mentre DiskPart scansione la tua configurazione...\n"
-    IDS_RESCAN_END "\nDiskPart ha finito di scannerizzare la tua configurazione.\n\n"
+    IDS_RESCAN_START "\Si prega di attendere mentre DiskPart esanima la tua configurazione...\n"
+    IDS_RESCAN_END "\nDiskPart ha finito di esaminare la tua configurazione.\n\n"
 END
 
 /* Select command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\nNon c'è nessun disco al momento selezionato.\nPerfavore seleziona un disco e riprova.\n\n"
+    IDS_SELECT_NO_DISK "\nNon c'è nessun disco al momento selezionato.\Si prega di selezionare un disco e riprova.\n\n"
     IDS_SELECT_DISK "\nDisco %lu è ora il disco selezionato.\n\n"
     IDS_SELECT_DISK_INVALID "\nDisco non valido.\n\n"
     IDS_SELECT_DISK_ENUM_NO_START "\nNessuna enumerazione del disco è iniziata.\n\nNessun disco è selezionato al momento.\n\n"
     IDS_SELECT_DISK_ENUM_FINISHED "\nL'ultimo disco è stato enumerato.\n\nNessun disco è selezionato al momento.\n\n"
-    IDS_SELECT_NO_PARTITION "\nNon c'è nessuna partizione al momento selezionata.\nPer favore seleziona una partizione e riprova.\n\n"
+    IDS_SELECT_NO_PARTITION "\nNon c'è nessuna partizione al momento selezionata.\nSi prega di selezionare una partizione e riprovare.\n\n"
     IDS_SELECT_PARTITION "\nPartizione %lu è ora la partizione selezionata.\n\n"
-    IDS_SELECT_PARTITION_NO_DISK "\nNon c'è nessun disco per selezionare una partizione.\nPer favore seleziona un disco e riprova.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nNon c'è nessun disco per selezionare una partizione.\nSi prega di selezionare un disco e riprovare.\n\n"
     IDS_SELECT_PARTITION_INVALID "\nPartizione non valida.\n\n"
-    IDS_SELECT_NO_VOLUME "\nNon è stato selezionato nessun disco corrente.\nPer favore seleziona un disco e riprova.\n\n"
+    IDS_SELECT_NO_VOLUME "\nNon è stato selezionato nessun disco corrente.\nSi prega di selezionare un disco e riprovare.\n\n"
     IDS_SELECT_VOLUME "\nVolume %lu è ora il volume selezionato.\n\n"
     IDS_SELECT_VOLUME_INVALID "\nVolume non valido.\n\n"
 END
