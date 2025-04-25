@@ -68,6 +68,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ERROR_UNSUPPORTED_FORMAT "Gli appunti Condivisi contengono informazioni in formato data, che non può essere visualizzato."
+    ERROR_UNSUPPORTED_FORMAT "Gli appunti Condivisi contengono informazioni in formato data, che non possono essere visualizzate."
     ERROR_INVALID_FILE_FORMAT "Il file selezionato non è un file di tipo appunti condivisi valido."
 END
