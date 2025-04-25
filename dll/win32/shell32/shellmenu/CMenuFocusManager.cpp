@@ -324,7 +324,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
 
     POINT pt = msg->pt;
 
-    RECT itemRc = { 0 };
+    RECT rcItem;
 
     // Don't do anything if another window is capturing the mouse.
     HWND cCapture = ::GetCapture();
