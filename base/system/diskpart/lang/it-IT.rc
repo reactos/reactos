@@ -224,10 +224,10 @@ BEGIN
     IDS_HELP_SAN                       "Mostra o imposta la politica SAN policy per l'OS al momento avviato.\n"
 
     IDS_HELP_SELECT                    "Sposta the focus ad un oggetto.\n"
-    IDS_HELP_SELECT_DISK               "Muove il focus al disco.\n"
-    IDS_HELP_SELECT_PARTITION          "Muove il focus alla partizione.\n"
-    IDS_HELP_SELECT_VOLUME             "Muove il focus al volume.\n"
-    IDS_HELP_SELECT_VDISK              "Muove il focus al disco virtuale.\n"
+    IDS_HELP_SELECT_DISK               "Muove la selezione al disco.\n"
+    IDS_HELP_SELECT_PARTITION          "Muove la selezione alla partizione.\n"
+    IDS_HELP_SELECT_VOLUME             "Muove la selezione al volume.\n"
+    IDS_HELP_SELECT_VDISK              "Muove la selezione al disco virtuale.\n"
 
     IDS_HELP_SETID                     "Cambia tipo partizione.\n"
     IDS_HELP_SHRINK                    "Riduci la dimensione del volume selezionato.\n"
