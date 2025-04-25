@@ -44,7 +44,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DELETE_PARTITION_FAIL "\nDiskPart ha fallito ad eliminare la partizione selezionata.\nPer favore assicurati che la partizione selezionata sia valida.\n"
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart ha fallito ad eliminare la partizione selezionata.\nAssicurarsi che la partizione selezionata sia valida.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart ha eliminato con successo la partizione selezionata.\n"
 END
 
@@ -103,7 +103,7 @@ BEGIN
     IDS_LIST_PARTITION_HEAD "  Partizione ###  Tipo              Dimensione     Offset\n"
     IDS_LIST_PARTITION_LINE "  --------------  ----------------  ----------     -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partizione %-3lu  %-16s  %4I64u %-2s  %4I64u %-2s\n"
-    IDS_LIST_PARTITION_NO_DISK "\nNon c'è nessun disco per mostrare partizioni.\nSi prega di selezionare un disco e riprova.\n\n"
+    IDS_LIST_PARTITION_NO_DISK "\nNon c'è nessun disco per mostrare partizioni.\nSelezionare un disco e riprova.\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Etichetta    FS     Tipo        Dimensione  Stato  Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  ----------  -----  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
@@ -119,16 +119,16 @@ END
 /* Select command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\nNon c'è nessun disco al momento selezionato.\Si prega di selezionare un disco e riprova.\n\n"
+    IDS_SELECT_NO_DISK "\nNon c'è nessun disco al momento selezionato.\nSelezionare un disco e riprova.\n\n"
     IDS_SELECT_DISK "\nDisco %lu è ora il disco selezionato.\n\n"
     IDS_SELECT_DISK_INVALID "\nDisco non valido.\n\n"
     IDS_SELECT_DISK_ENUM_NO_START "\nNessuna enumerazione del disco è iniziata.\n\nNessun disco è selezionato al momento.\n\n"
     IDS_SELECT_DISK_ENUM_FINISHED "\nL'ultimo disco è stato enumerato.\n\nNessun disco è selezionato al momento.\n\n"
-    IDS_SELECT_NO_PARTITION "\nNon c'è nessuna partizione al momento selezionata.\nSi prega di selezionare una partizione e riprovare.\n\n"
+    IDS_SELECT_NO_PARTITION "\nNon c'è nessuna partizione al momento selezionata.\nSelezionare una partizione e riprovare.\n\n"
     IDS_SELECT_PARTITION "\nPartizione %lu è ora la partizione selezionata.\n\n"
-    IDS_SELECT_PARTITION_NO_DISK "\nNon c'è nessun disco per selezionare una partizione.\nSi prega di selezionare un disco e riprovare.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nNon c'è nessun disco per selezionare una partizione.\nSelezionare un disco e riprovare.\n\n"
     IDS_SELECT_PARTITION_INVALID "\nPartizione non valida.\n\n"
-    IDS_SELECT_NO_VOLUME "\nNon è stato selezionato nessun disco corrente.\nSi prega di selezionare un disco e riprovare.\n\n"
+    IDS_SELECT_NO_VOLUME "\nNon è stato selezionato nessun disco corrente.\nSelezionare un disco e riprovare.\n\n"
     IDS_SELECT_VOLUME "\nVolume %lu è ora il volume selezionato.\n\n"
     IDS_SELECT_VOLUME_INVALID "\nVolume non valido.\n\n"
 END
@@ -146,7 +146,7 @@ STRINGTABLE
 BEGIN
     IDS_STATUS_YES "Sì"
     IDS_STATUS_NO "No"
-    IDS_STATUS_DISK_HEALTHY "Salutare"
+    IDS_STATUS_DISK_HEALTHY "Integro"
     IDS_STATUS_DISK_SICK "A rischio"
     IDS_STATUS_UNAVAILABLE "NON DISPONIBILE"
     IDS_STATUS_ONLINE "Online"
@@ -157,7 +157,7 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "Gli argomenti specificati per questo commando non sono validi.\nPer piu' informazioni digita:"
+    IDS_MSG_ARG_SYNTAX_ERROR "Gli argomenti specificati per questo commando non sono validi.\nPer più informazioni digita:"
 END
 
 /* Help Command Descriptions */
