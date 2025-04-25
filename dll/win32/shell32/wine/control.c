@@ -1107,8 +1107,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             }
         }
 
-        if (sp >= applet->count && (wszDialogBoxName[0] == L'\0' || wszDialogBoxName[0] == L'@' ||
-                                    extraPmts[0] != '\0'))
+        if (applet->count == 1 ||
+            (sp >= applet->count && (wszDialogBoxName[0] == L'\0' || wszDialogBoxName[0] == L'@')))
         {
             sp = 0;
         }
