@@ -72,7 +72,7 @@ static BOOL HandleMruData(BOOL Delete)
     {
         WCHAR szKey[200];
         PCWSTR pszKey = g_MruKeys[i];
-        if (*pszKey != 'S')
+        if (*pszKey != 'S') // Keys not starting with S[oftware] are assumed to be relative to "SMWCV"
         {
             wsprintfW(szKey, L"%s\\%s", L"Software\\Microsoft\\Windows\\CurrentVersion", pszKey);
             pszKey = szKey;
