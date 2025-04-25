@@ -37,13 +37,14 @@ HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUI
 
 static DWORD SHELL_QueryCLSIDValue(_In_ REFCLSID clsid, _In_opt_ LPCWSTR SubKey, _In_opt_ LPCWSTR Value, _In_opt_ PVOID pData, _In_opt_ PDWORD pSize)
 {
+    const UINT cchGuid = CHARS_IN_GUID - 1, cchClsidSlash = sizeof("CLSID\\") - 1;
     WCHAR Path[200];
     wcscpy(Path, L"CLSID\\");
-    StringFromGUID2(clsid, Path + 6, 39);
+    StringFromGUID2(clsid, Path + 6, CHARS_IN_GUID);
     if (SubKey)
     {
-        Path[6 + 38] = L'\\';
-        wcscpy(Path + 6 + 39, SubKey);
+        *(Path + cchClsidSlash + cchGuid) = L'\\';
+        wcscpy(Path + cchClsidSlash + cchGuid + 1, SubKey);
     }
     return RegGetValueW(HKEY_CLASSES_ROOT, Path, Value, RRF_RT_ANY, NULL, pData, pSize);
 }
