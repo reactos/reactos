@@ -37,12 +37,12 @@ HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUI
 
 static DWORD SHELL_QueryCLSIDValue(_In_ REFCLSID clsid, _In_opt_ LPCWSTR SubKey, _In_opt_ LPCWSTR Value, _In_opt_ PVOID pData, _In_opt_ PDWORD pSize)
 {
-    WCHAR Path[MAX_PATH];
+    WCHAR Path[200];
     wcscpy(Path, L"CLSID\\");
     StringFromGUID2(clsid, Path + 6, 39);
     if (SubKey)
     {
-        wcscpy(Path + 6 + 38, L"\\");
+        Path[6 + 38] = L'\\';
         wcscpy(Path + 6 + 39, SubKey);
     }
     return RegGetValueW(HKEY_CLASSES_ROOT, Path, Value, RRF_RT_ANY, NULL, pData, pSize);
@@ -529,8 +529,10 @@ HRESULT WINAPI CRegFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserv
 
 HRESULT CRegFolder::CompareRegItemsSortOrder(PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    int Order1 = pidl1->mkid.abID[1] > 0x40 ? pidl1->mkid.abID[1] : GetRegItemOrder(pidl1);
-    int Order2 = pidl2->mkid.abID[1] > 0x40 ? pidl2->mkid.abID[1] : GetRegItemOrder(pidl2);
+    LPPIDLDATA p1 = (LPPIDLDATA)pidl1->mkid.abID;
+    LPPIDLDATA p2 = (LPPIDLDATA)pidl2->mkid.abID;
+    int Order1 = p1->u.guid.uSortOrder > 0x40 ? p1->u.guid.uSortOrder : GetRegItemOrder(pidl1);
+    int Order2 = p2->u.guid.uSortOrder > 0x40 ? p2->u.guid.uSortOrder : GetRegItemOrder(pidl2);
     int Cmp = Order1 - Order2;
     if (Cmp != 0)
         return MAKE_COMPARE_HRESULT(Cmp);

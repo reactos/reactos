@@ -185,7 +185,7 @@ typedef struct tagPIDLPrinterStruct
 
 typedef struct tagGUIDStruct
 {
-    BYTE dummy; /* offset 01 is unknown */
+    BYTE uSortOrder;
     GUID guid;  /* offset 02 */
 } GUIDStruct;
 
