@@ -352,7 +352,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
 
         if (iHitTestResult < -1)
         {
-            // TB_HITTEST would would return negative numbers for separators
+            // TB_HITTEST would return negative numbers for separators
             iHitTestResult = -iHitTestResult;
         }
         else if (iHitTestResult == -1)
