@@ -70,7 +70,7 @@ BEGIN
     IDS_DETAIL_PARTITION_HIDDEN "Nascosto        : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Attivo        : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
-    IDS_DETAIL_NO_DISKS "\nNon ci sono dischi allegati a questo volume.\n"
+    IDS_DETAIL_NO_DISKS "\nNon ci sono dischi collegati a questo volume.\n"
     IDS_DETAIL_NO_VOLUME "\nNon c'è nessun volume associato a questa partizione.\n"
 END
 
