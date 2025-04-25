@@ -219,6 +219,20 @@ def generate_sin_table(func_name = "sin", typecode = 'd'):
 def generate_sinf_table():
     generate_sin_table("sinf", 'f')
 
+def generate_sqrt_table(func_name = "sqrt", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.sqrt, 0.0, 2.2250738585072009e-308, 3, 0)
+    gen_table_range(func_name, typecode, mp.sqrt, 2.2250738585072009e-308, 0.99, 17, 0)
+    gen_table_range(func_name, typecode, mp.sqrt, 1.0, 9.99, 17, 0)
+    gen_table_range(func_name, typecode, mp.sqrt, 10.0, 99.9, 17, 0)
+    gen_table_range(func_name, typecode, mp.sqrt, 100.0, 999.9, 17, 0)
+    gen_table_range(func_name, typecode, mp.sqrt, 1000.0, 9999.9, 17, 0)
+    gen_table_range(func_name, typecode, mp.sqrt, 10000.0, 99999.9, 17, 0)
+    print("};\n")
+
+def generate_sqrtf_table():
+    generate_sqrt_table("sqrtf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
@@ -237,6 +251,8 @@ TABLE_FUNCTIONS = {
     "log10f": generate_log10f_table,
     "sin": generate_sin_table,
     "sinf": generate_sinf_table,
+    "sqrt": generate_sqrt_table,
+    "sqrtf": generate_sqrtf_table,
 }
 
 def main():
