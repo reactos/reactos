@@ -14,7 +14,7 @@ BEGIN
     IDS_APP_USAGE "\nInterprete partizionamento disco.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S filename\tEsegue lo script dato.\n\
-/T timeout\tTimeout in secondi per prevenire che l'uso di DiskPart si sovrapona.\n\
+/T timeout\tTimeout in secondi per prevenire che l'uso di DiskPart si sovrapponga.\n\
 /?\t\tMostra questo messaggio d'aiuto.\n\n"
     IDS_APP_LICENSE "Rilasciato sotto licenza GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER "Sul computer: %s\n\n"
@@ -24,7 +24,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACTIVE_FAIL "\nDiskPart non ha potuto segnare la partizione come attiva.\nAssicurati che la partizione sia valida.\n"
+    IDS_ACTIVE_FAIL "\nDiskPart non ha potuto segnare la partizione come attiva.\nAssicurarsi che la partizione sia valida.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart ha segnato la partizione corrente come attiva.\n"
     IDS_ACTIVE_ALREADY "\nLa partizione corrente è già segnata come attiva.\n"
 END
