@@ -10,5 +10,5 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_DISPLAYNAME "Servizio Tempo"
-    IDS_DESCRIPTION "Mantiene la sincronizzazione del tempo su tutti i client e server della rete."
+    IDS_DESCRIPTION "Mantiene la sincronizzazione oraria su tutti i client e server della rete."
 END
