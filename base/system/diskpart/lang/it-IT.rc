@@ -157,7 +157,7 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "Gli argomenti specificati per questo commando non sono validi.\nPer più informazioni digita:"
+    IDS_MSG_ARG_SYNTAX_ERROR "Gli argomenti specificati per questo commando non sono validi.\Per ulteriori informazioni sui comandi, digitare:"
 END
 
 /* Help Command Descriptions */
@@ -174,8 +174,8 @@ BEGIN
     IDS_HELP_COMPACT                   "Tenta di ridurre la grandezza fisica del file.\n"
     IDS_HELP_CONVERT                   "Converti tra formati dischi differenti.\n"
 
-    IDS_HELP_CREATE                    "Crea volume, partizione, o disco virtuale.\n"
-    IDS_HELP_CREATE_PARTITION          "Crea una partition.\n"
+    IDS_HELP_CREATE                    "Crea volume, partizione o disco virtuale.\n"
+    IDS_HELP_CREATE_PARTITION          "Crea una partizione.\n"
     IDS_HELP_CREATE_PARTITION_EFI      "Crea una partizione EFI.\n"
     IDS_HELP_CREATE_PARTITION_EXTENDED "Crea una partizione estesa.\n"
     IDS_HELP_CREATE_PARTITION_LOGICAL  "Crea un disco logico.\n"
