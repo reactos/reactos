@@ -1519,21 +1519,21 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_CurrVer,
         L"ProgramFilesX86",
         L"Program Files (x86)",
-        -IDI_SHELL_PROGRAMS_FOLDER
+        0
     },
     { /* 0x2b - CSIDL_PROGRAM_FILES_COMMON */
         &FOLDERID_ProgramFilesCommon,
         CSIDL_Type_CurrVer,
         L"ProgramFilesCommon",
         MAKEINTRESOURCEW(IDS_PROGRAM_FILES_COMMON),
-        -IDI_SHELL_PROGRAMS_FOLDER
+        0
     },
     { /* 0x2c - CSIDL_PROGRAM_FILES_COMMONX86 */
         &FOLDERID_ProgramFilesCommonX86,
         CSIDL_Type_CurrVer,
         L"ProgramFilesCommonX86",
         L"Program Files (x86)\\Common Files",
-        -IDI_SHELL_PROGRAMS_FOLDER
+        0
     },
     { /* 0x2d - CSIDL_COMMON_TEMPLATES */
         &FOLDERID_CommonTemplates,
