@@ -161,6 +161,55 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, SystemStartOptions);
 }
 
+static BOOL
+SafeGetUnicodeString(const LSA_UNICODE_STRING *pInput, PWSTR pszOutput, SIZE_T cchMax)
+{
+    if (pInput && pszOutput)
+    {
+        PWSTR pszInput = pInput->Buffer;
+        SIZE_T cchInput = pInput->Length / sizeof(WCHAR);
+        if (cchInput < cchMax && (pszInput || !cchInput))
+        {
+            CopyMemory(pszOutput, pszInput, cchInput * sizeof(WCHAR));
+            pszOutput[cchInput] = UNICODE_NULL;
+            return TRUE;
+        }
+    }
+    if (pszOutput && cchMax)
+        *pszOutput = UNICODE_NULL;
+    return FALSE;
+}
+
+static BOOL
+GetLsaDefaultPassword(PGINA_CONTEXT pgContext)
+{
+    // learn.microsoft.com/en-us/windows/win32/secauthn/protecting-the-automatic-logon-password
+
+    LSA_HANDLE hPolicy;
+    LSA_UNICODE_STRING Name, *pPwd = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes = { sizeof(ObjectAttributes) };
+
+    NTSTATUS status = LsaOpenPolicy(NULL, &ObjectAttributes, 
+                                    POLICY_GET_PRIVATE_INFORMATION, &hPolicy);
+    if (status != STATUS_SUCCESS)
+        return FALSE;
+
+    RtlInitUnicodeString(&Name, L"DefaultPassword");
+    status = LsaRetrievePrivateData(hPolicy, &Name, &pPwd);
+    LsaClose(hPolicy);
+
+    if (status == STATUS_SUCCESS)
+    {
+        if (!SafeGetUnicodeString(pPwd, pgContext->Password,
+                                  sizeof(pgContext->Password) / sizeof(WCHAR)))
+        {
+            status = STATUS_BUFFER_TOO_SMALL;
+        }
+        SecureZeroMemory(pPwd->Buffer, pPwd->Length);
+        LsaFreeMemory(pPwd);
+    }
+    return status == STATUS_SUCCESS;
+}
 
 static
 BOOL
@@ -252,13 +301,16 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           (LPBYTE)&pgContext->DomainName,
                           &dwSize);
 
-    dwSize = sizeof(pgContext->Password);
-    rc = RegQueryValueExW(hKey,
-                          L"DefaultPassword",
-                          NULL,
-                          NULL,
-                          (LPBYTE)&pgContext->Password,
-                          &dwSize);
+    if (!GetLsaDefaultPassword(pgContext))
+    {
+        dwSize = sizeof(pgContext->Password);
+        rc = RegQueryValueExW(hKey,
+                              L"DefaultPassword",
+                              NULL,
+                              NULL,
+                              (LPBYTE)&pgContext->Password,
+                              &dwSize);
+    }
 
     if (lpIgnoreShiftOverride != NULL)
         HeapFree(GetProcessHeap(), 0, lpIgnoreShiftOverride);

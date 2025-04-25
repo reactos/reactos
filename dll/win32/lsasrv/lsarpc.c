@@ -3620,6 +3620,8 @@ LsarRetrievePrivateData(
     PRPC_UNICODE_STRING KeyName,
     PLSAPR_CR_CIPHER_VALUE *EncryptedData)
 {
+    /* TODO: This should just call LsarOpenSecret(SECRET_QUERY_VALUE)+LsarQuerySecret? */
+
     PLSA_DB_OBJECT PolicyObject = NULL;
     PLSA_DB_OBJECT SecretObject = NULL;
     PLSAPR_CR_CIPHER_VALUE EncCurrentValue = NULL;
@@ -3633,7 +3635,7 @@ LsarRetrievePrivateData(
     /* Validate the SecretHandle */
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  POLICY_CREATE_SECRET,
+                                  POLICY_GET_PRIVATE_INFORMATION,
                                   &PolicyObject);
     if (!NT_SUCCESS(Status))
     {
