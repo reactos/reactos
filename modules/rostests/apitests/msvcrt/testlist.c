@@ -30,6 +30,7 @@ extern void func_mbtowc(void);
 extern void func_rand_s(void);
 extern void func_setjmp(void);
 extern void func_sin(void);
+extern void func_sqrt(void);
 extern void func_sprintf(void);
 extern void func_static_construct(void);
 extern void func_static_init(void);
@@ -81,6 +82,7 @@ const struct test winetest_testlist[] =
     { "rand_s", func_rand_s },
     { "setjmp", func_setjmp },
     { "sin", func_sin },
+    { "sqrt", func_sqrt },
     { "sprintf", func_sprintf },
     { "static_construct", func_static_construct },
     { "static_init", func_static_init },

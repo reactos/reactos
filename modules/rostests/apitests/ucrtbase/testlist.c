@@ -13,6 +13,7 @@ extern void func_log(void);
 extern void func_log10(void);
 extern void func_round(void);
 extern void func_sin(void);
+extern void func_sqrt(void);
 
 
 const struct test winetest_testlist[] =
@@ -27,6 +28,7 @@ const struct test winetest_testlist[] =
     { "log10", func_log10 },
     { "round", func_round },
     { "sin", func_sin },
+    { "sqrt", func_sqrt },
 
     { 0, 0 }
 };
