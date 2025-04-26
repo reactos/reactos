@@ -162,7 +162,9 @@ cleanup:
 }
 
 static BOOL
-SafeGetUnicodeString(_In_ const LSA_UNICODE_STRING *pInput, _Out_ PWSTR pszOutput, _In_ SIZE_T cchMax)
+SafeGetUnicodeString(_In_ const LSA_UNICODE_STRING *pInput,
+    _Out_ PWSTR pszOutput,
+    _In_ SIZE_T cchMax)
 {
     if (pInput && pszOutput)
     {
@@ -200,7 +202,7 @@ GetLsaDefaultPassword(_Inout_ PGINA_CONTEXT pgContext)
     if (Status == STATUS_SUCCESS)
     {
         if (!SafeGetUnicodeString(pPwd, pgContext->Password,
-                                  sizeof(pgContext->Password) / sizeof(WCHAR)))
+                                  _countof(pgContext->Password)))
         {
             Status = STATUS_BUFFER_TOO_SMALL;
         }
