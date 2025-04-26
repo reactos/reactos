@@ -748,6 +748,76 @@ NtQueryInformationProcess(
             break;
         }
 
+#if (NTDDI_VERSION >= NTDDI_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+        case ProcessImageFileNameWin32:
+        {
+            PFILE_OBJECT FileObject;
+            POBJECT_NAME_INFORMATION ObjectNameInformation;
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION, // FIXME: Use PROCESS_QUERY_LIMITED_INFORMATION if implemented
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                break;
+            }
+
+            /* Get the image path */
+            Status = PsReferenceProcessFilePointer(Process, &FileObject);
+            ObDereferenceObject(Process);
+            if (!NT_SUCCESS(Status))
+            {
+                break;
+            }
+            Status = IoQueryFileDosDeviceName(FileObject, &ObjectNameInformation);
+            ObDereferenceObject(FileObject);
+            if (!NT_SUCCESS(Status))
+            {
+                break;
+            }
+
+            /* Determine return length and output */
+            Length = sizeof(UNICODE_STRING) + ObjectNameInformation->Name.MaximumLength;
+            if (Length <= ProcessInformationLength)
+            {
+                _SEH2_TRY
+                {
+                    PUNICODE_STRING ImageName = (PUNICODE_STRING)ProcessInformation;
+                    ImageName->Length = ObjectNameInformation->Name.Length;
+                    ImageName->MaximumLength = ObjectNameInformation->Name.MaximumLength;
+                    if (ObjectNameInformation->Name.MaximumLength)
+                    {
+                        ImageName->Buffer = (PWSTR)(ImageName + 1);
+                        RtlCopyMemory(ImageName->Buffer,
+                                      ObjectNameInformation->Name.Buffer,
+                                      ObjectNameInformation->Name.MaximumLength);
+                    }
+                    else
+                    {
+                        ASSERT(ImageName->Length == 0);
+                        ImageName->Buffer = NULL;
+                    }
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+            }
+            else
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+            ExFreePool(ObjectNameInformation);
+
+            break;
+        }
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA) */
+
         case ProcessDebugFlags:
 
             if (ProcessInformationLength != sizeof(ULONG))
