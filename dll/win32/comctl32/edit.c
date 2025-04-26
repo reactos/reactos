@@ -3469,6 +3469,7 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
                 {
                     if (!notify_parent(es, EN_UPDATE)) break;
                     notify_parent(es, EN_CHANGE);
+					EDIT_EM_ScrollCaret(es);
                 }
             }
             break;
