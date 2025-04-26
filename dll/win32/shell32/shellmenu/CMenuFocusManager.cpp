@@ -324,8 +324,6 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
 
     POINT pt = msg->pt;
 
-    RECT rcItem;
-
     // Don't do anything if another window is capturing the mouse.
     HWND cCapture = ::GetCapture();
     if (cCapture && cCapture != m_captureHwnd && m_current->type != TrackedMenuEntry)
@@ -361,9 +359,10 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
             // 1. the mouse is outside the toolbar
             // 2. the mouse is over the first item, and that item is a separator
             // Confirm the second scenario by checking first item's rect
-            SendMessageW(child, TB_GETITEMRECT, 1, (LPARAM)&rcItem);
+            RECT rc;
+            SendMessageW(child, TB_GETITEMRECT, 1, (LPARAM)&rc);
 
-            if (PtInRect(&rcItem, pt))
+            if (PtInRect(&rc, pt))
             {
                 iHitTestResult = 1;
             }
