@@ -341,9 +341,9 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     /* ProcessImageFileNameWin32 */
     IQS_SAME
     (
-        CHAR,
-        CHAR,
-        ICIF_NONE
+        UNICODE_STRING,
+        ULONG,
+        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
     ),
 
     /* ProcessImageFileMapping */
