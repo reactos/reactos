@@ -162,7 +162,7 @@ cleanup:
 }
 
 static BOOL
-SafeGetUnicodeString(const LSA_UNICODE_STRING *pInput, PWSTR pszOutput, SIZE_T cchMax)
+SafeGetUnicodeString(_In_ const LSA_UNICODE_STRING *pInput, _Out_ PWSTR pszOutput, _In_ SIZE_T cchMax)
 {
     if (pInput && pszOutput)
     {
@@ -180,35 +180,35 @@ SafeGetUnicodeString(const LSA_UNICODE_STRING *pInput, PWSTR pszOutput, SIZE_T c
     return FALSE;
 }
 
+/* Reference: https://learn.microsoft.com/en-us/windows/win32/secauthn/protecting-the-automatic-logon-password */
 static BOOL
-GetLsaDefaultPassword(PGINA_CONTEXT pgContext)
+GetLsaDefaultPassword(_Inout_ PGINA_CONTEXT pgContext)
 {
-    // learn.microsoft.com/en-us/windows/win32/secauthn/protecting-the-automatic-logon-password
-
     LSA_HANDLE hPolicy;
-    LSA_UNICODE_STRING Name, *pPwd = NULL;
+    LSA_UNICODE_STRING Name, *pPwd;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes = { sizeof(ObjectAttributes) };
 
-    NTSTATUS status = LsaOpenPolicy(NULL, &ObjectAttributes, 
+    NTSTATUS Status = LsaOpenPolicy(NULL, &ObjectAttributes, 
                                     POLICY_GET_PRIVATE_INFORMATION, &hPolicy);
-    if (status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(Status))
         return FALSE;
 
     RtlInitUnicodeString(&Name, L"DefaultPassword");
-    status = LsaRetrievePrivateData(hPolicy, &Name, &pPwd);
+    Status = LsaRetrievePrivateData(hPolicy, &Name, &pPwd);
     LsaClose(hPolicy);
 
-    if (status == STATUS_SUCCESS)
+    if (Status == STATUS_SUCCESS)
     {
         if (!SafeGetUnicodeString(pPwd, pgContext->Password,
                                   sizeof(pgContext->Password) / sizeof(WCHAR)))
         {
-            status = STATUS_BUFFER_TOO_SMALL;
+            Status = STATUS_BUFFER_TOO_SMALL;
         }
         SecureZeroMemory(pPwd->Buffer, pPwd->Length);
         LsaFreeMemory(pPwd);
     }
-    return status == STATUS_SUCCESS;
+
+    return Status == STATUS_SUCCESS;
 }
 
 static
