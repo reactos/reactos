@@ -371,9 +371,6 @@ private:
 
         TRACE("csidl: 0x%X\n", csidl);
 
-        if (csidl == CSIDL_CONTROLS || csidl == CSIDL_NETWORK || csidl == CSIDL_PRINTERS)
-            FIXME("This CSIDL %d wrongly opens My Computer. CORE-19477\n", csidl);
-
         CComHeapPtr<ITEMIDLIST> pidl;
         SHGetSpecialFolderLocation(NULL, csidl, &pidl);
 
