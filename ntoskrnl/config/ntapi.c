@@ -1467,8 +1467,172 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
                            IN ULONG Length,
                            IN BOOLEAN Asynchronous)
 {
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PCM_KEY_BODY KeyObject = NULL;
+    PCM_NOTIFY_BLOCK NotifyBlock = NULL;
+    PCM_POST_BLOCK PostBlock = NULL;
+    PCMHIVE Hive = NULL;
+
+    PAGED_CODE();
+
+    /* Validate flags */
+    if ((CompletionFilter & REG_LEGAL_CHANGE_FILTER) != CompletionFilter)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Count can't be larger than 1 */
+    if (Count != 0 && Count != 1)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* For asynchronous calls, either Event or APC routine should be provided */
+    if (Asynchronous && (Event == NULL && ApcRoutine == NULL))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Verify the handle is valid and has sufficient permissions */
+    Status = ObReferenceObjectByHandle(MasterKeyHandle,
+        KEY_NOTIFY,
+        CmpKeyObjectType,
+        PreviousMode,
+        (PVOID*)&KeyObject,
+        NULL);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Block APCs */
+    KeEnterCriticalRegion();
+
+    /* Check for user-mode caller */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            if (SlaveObjects != NULL)
+            {
+                ProbeForRead(SlaveObjects, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
+            }
+
+            ProbeForWrite(IoStatusBlock, sizeof(IO_STATUS_BLOCK), sizeof(ULONG));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(goto Quit);
+        }
+        _SEH2_END;
+    }
+
+    /* Allocate and initialize NotifyBlock */
+    if (KeyObject->NotifyBlock == NULL)
+    {
+        NotifyBlock = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(CM_NOTIFY_BLOCK), TAG_CM);
+        if (!NotifyBlock)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
+        }
+        RtlZeroMemory(NotifyBlock, sizeof(CM_NOTIFY_BLOCK));
+
+        InitializeListHead(&(NotifyBlock->HiveList));
+        InitializeListHead(&(NotifyBlock->PostList));
+        NotifyBlock->KeyControlBlock = KeyObject->KeyControlBlock;
+        NotifyBlock->Filter = CompletionFilter;
+        NotifyBlock->WatchTree = WatchTree;
+        NotifyBlock->NotifyPending = FALSE;
+
+        /* Link notify block to the key body */
+        NotifyBlock->KeyBody = KeyObject;
+        KeyObject->NotifyBlock = NotifyBlock;
+
+        /* Link notify block to the hive */
+        Hive = CONTAINING_RECORD(KeyObject->KeyControlBlock->KeyHive, CMHIVE, Hive);
+        InsertHeadList(&(NotifyBlock->HiveList), &(Hive->NotifyList));
+    }
+    else
+    {
+        if (KeyObject->NotifyBlock->NotifyPending)
+        {
+            /* There's a notification pending already */
+            /* TODO: Do we need to reset NotifyPending flag??? */
+            Status = STATUS_NOTIFY_ENUM_DIR;
+            goto Cleanup;
+        }
+
+        /* Add our filters */
+        KeyObject->NotifyBlock->Filter |= CompletionFilter;
+
+        /* Watch subtrees */
+        if (WatchTree)
+        {
+            KeyObject->NotifyBlock->WatchTree = TRUE;
+        }
+    }
+
+    if (Asynchronous)
+    {
+        goto Unimpl;
+    }
+    else
+    {
+        /* Allocate and initialize PostBlock */
+        PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
+        if (!PostBlock)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Failure;
+        }
+        RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
+        
+        InitializeListHead(&(PostBlock->NotifyList));
+        KeInitializeEvent(&(PostBlock->Event), NotificationEvent, FALSE);
+
+        /* Link post block to notify block */
+        InsertHeadList(&(PostBlock->NotifyList), &(NotifyBlock->PostList));
+
+        /* Wait for event to be signaled */
+        KeWaitForSingleObject(&(PostBlock->Event), Executive, PreviousMode, FALSE, NULL);
+
+        /* FIXME: handle scenarios where the key is deleted, or the handle closed */
+        /* FIXME: Fill IoStatusBlock */
+
+        Status = STATUS_NOTIFY_ENUM_DIR;
+        goto Cleanup;
+    }
+
+Unimpl:
+    Status = STATUS_NOT_IMPLEMENTED;
     UNIMPLEMENTED_ONCE;
-    return STATUS_NOT_IMPLEMENTED;
+
+Failure:
+    if (NotifyBlock)
+    {
+        if (KeyObject->NotifyBlock == NotifyBlock)
+        {
+            KeyObject->NotifyBlock = NULL;
+        }
+
+        ExFreePoolWithTag(NotifyBlock, TAG_CM);
+    }
+
+    if (PostBlock)
+        ExFreePoolWithTag(PostBlock, TAG_CM);
+
+Cleanup:
+    if (KeyObject)
+        ObDereferenceObject(KeyObject);
+
+Quit:
+    /* Bring back APCs */
+    KeLeaveCriticalRegion();
+
+    return Status;
 }
 
 NTSTATUS
