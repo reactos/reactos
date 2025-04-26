@@ -335,6 +335,15 @@ typedef struct _CM_NOTIFY_BLOCK
 } CM_NOTIFY_BLOCK, *PCM_NOTIFY_BLOCK;
 
 //
+// Post Block
+//
+typedef struct _CM_POST_BLOCK
+{
+    LIST_ENTRY NotifyList;
+    KEVENT Event;
+} CM_POST_BLOCK, *PCM_POST_BLOCK;
+
+//
 // Re-map Block
 //
 typedef struct _CM_CELL_REMAP_BLOCK
