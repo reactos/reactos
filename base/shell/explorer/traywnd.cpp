@@ -470,6 +470,9 @@ public:
             return;
 
         SendMessage(m_DesktopWnd, WM_PROGMAN_SAVESTATE, 0, 0);
+
+        if (SHRestricted(REST_CLEARRECENTDOCSONEXIT))
+            ClearRecentAndMru();
     }
 
     LRESULT DoExitWindows()
