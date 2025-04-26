@@ -296,16 +296,15 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           (LPBYTE)&pgContext->DomainName,
                           &dwSize);
 
-    if (!GetLsaDefaultPassword(pgContext))
-    {
-        dwSize = sizeof(pgContext->Password);
-        rc = RegQueryValueExW(hKey,
-                              L"DefaultPassword",
-                              NULL,
-                              NULL,
-                              (LPBYTE)&pgContext->Password,
-                              &dwSize);
-    }
+    dwSize = sizeof(pgContext->Password);
+    rc = RegQueryValueExW(hKey,
+                          L"DefaultPassword",
+                          NULL,
+                          NULL,
+                          (LPBYTE)&pgContext->Password,
+                          &dwSize);
+    if (rc)
+        GetLsaDefaultPassword(pgContext);
 
     if (lpIgnoreShiftOverride != NULL)
         HeapFree(GetProcessHeap(), 0, lpIgnoreShiftOverride);
