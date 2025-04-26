@@ -162,24 +162,17 @@ cleanup:
 }
 
 static BOOL
-SafeGetUnicodeString(_In_ const LSA_UNICODE_STRING *pInput,
+SafeGetUnicodeString(
+    _In_ const LSA_UNICODE_STRING *pInput,
     _Out_ PWSTR pszOutput,
     _In_ SIZE_T cchMax)
 {
-    if (pInput && pszOutput)
-    {
-        PWSTR pszInput = pInput->Buffer;
-        SIZE_T cchInput = pInput->Length / sizeof(WCHAR);
-        if (cchInput < cchMax && (pszInput || !cchInput))
-        {
-            CopyMemory(pszOutput, pszInput, cchInput * sizeof(WCHAR));
-            pszOutput[cchInput] = UNICODE_NULL;
-            return TRUE;
-        }
-    }
-    if (pszOutput && cchMax)
-        *pszOutput = UNICODE_NULL;
-    return FALSE;
+    HRESULT hr;
+    hr = StringCbCopyNExW(pszOutput, cchMax * sizeof(WCHAR),
+                          pInput->Buffer, pInput->Length,
+                          NULL, NULL,
+                          STRSAFE_NO_TRUNCATION | STRSAFE_NULL_ON_FAILURE);
+    return (hr == S_OK);
 }
 
 /* Reference: https://learn.microsoft.com/en-us/windows/win32/secauthn/protecting-the-automatic-logon-password */
