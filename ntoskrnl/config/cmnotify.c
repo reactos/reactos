@@ -34,16 +34,27 @@ CmpReportNotifyToPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
         PostBlock = CONTAINING_RECORD(NextEntry, CM_POST_BLOCK, NotifyList);
 
         /* Check the filter */
-        if ((PostBlock->Filter & Filter) != Filter) goto SkipEntry;
+        if ((PostBlock->Filter & Filter) != Filter)
+        {
+            /* The listener doesn't want this type of notification, skip it */
+            NextEntry = NextEntry->Flink;
+            continue;
+        }
 
         /* Signal the event */
-        KeSetEvent(&(PostBlock->Event), 1, FALSE);
+        KeSetEvent(PostBlock->Event, 1, FALSE);
 
         /* FIXME: Support for ApcRoutine */
 
-SkipEntry:
-        /* Navigate to next entry */
+        /* Release the Post Block */
         NextEntry = NextEntry->Flink;
+        /* Free the event object */
+        ObDereferenceObject(PostBlock->Event);
+        ZwClose(PostBlock->EventHandle);
+        /* Remove post block entry */
+        RemoveEntryList(&(PostBlock->NotifyList));
+        /* Free the memory */
+        ExFreePoolWithTag(PostBlock, TAG_CM);
     }
 }
 
@@ -94,25 +105,32 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
     PLIST_ENTRY ListHead, NextEntry;
     PCM_POST_BLOCK PostBlock;
 
+    /* Lock the KCB so no one would try to make changes
+     * to NotifyBlock while we are releasing its resources
+     */
     if (!LockHeld)
         CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
 
     /* Enumerate PostBlocks */
     ListHead = &(KeyBody->NotifyBlock->PostList);
-    if (IsListEmpty(ListHead)) return;
+    NextEntry = ListHead->Flink;
     while (NextEntry != ListHead)
     {
-        NextEntry = ListHead->Flink;
-
         /* Get the post block */
         PostBlock = CONTAINING_RECORD(NextEntry, CM_POST_BLOCK, NotifyList);
 
         /* Signal the event */
-        KeSetEvent(&(PostBlock->Event), 1, FALSE);
+        KeSetEvent(PostBlock->Event, 1, FALSE);
 
-        /* FIXME: is it safe to release the post block here? */
-        RemoveEntryList(NextEntry);
+        /* Free the event object */
+        ObDereferenceObject(PostBlock->Event);
+        ZwClose(PostBlock->EventHandle);
+        /* Remove post block entry */
+        RemoveEntryList(&(PostBlock->NotifyList));
+        /* Free the memory */
         ExFreePoolWithTag(PostBlock, TAG_CM);
+
+        NextEntry = ListHead->Flink;
     }
 
     /* Finally, free the NotifyBlock */
