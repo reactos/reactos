@@ -37,8 +37,10 @@
 /* GLOBALS ******************************************************************/
 
 static WCHAR szRootDeviceInstanceID[] = L"HTREE\\ROOT\\0";
+LUID LoadDriverPrivilege = {SE_LOAD_DRIVER_PRIVILEGE, 0};
 
 LIST_ENTRY NotificationListHead;
+RTL_RESOURCE NotificationListLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -53,6 +55,7 @@ RpcServerThread(LPVOID lpParameter)
     DPRINT("RpcServerThread() called\n");
 
     InitializeListHead(&NotificationListHead);
+    RtlInitializeResource(&NotificationListLock);
 
 #if 0
     /* 2k/XP/2k3-compatible protocol sequence/endpoint */
@@ -5051,6 +5054,8 @@ PNP_RegisterNotification(
         pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_ENTRY));
         if (pNotifyData == NULL)
             return CR_OUT_OF_MEMORY;
+        
+        pNotifyData->dwType = CLASS_NOTIFICATION;
 
         if (pszName != NULL)
         {
@@ -5064,8 +5069,20 @@ PNP_RegisterNotification(
             }
         }
 
+        pNotifyData->hRecipient = hRecipient;
+        pNotifyData->ulFlags = ulFlags;
+
+        if ((ulFlags & DEVICE_NOTIFY_ALL_INTERFACE_CLASSES) == 0)
+        {
+            CopyMemory(&pNotifyData->ClassGuid,
+                       &pBroadcastDeviceInterface->dbcc_classguid,
+                       sizeof(GUID));
+        }
+
         /* Add the entry to the notification list */
+        RtlAcquireResourceExclusive(&NotificationListLock, TRUE);
         InsertTailList(&NotificationListHead, &pNotifyData->ListEntry);
+        RtlReleaseResource(&NotificationListLock);
 
         DPRINT("pNotifyData: %p\n", pNotifyData);
         *pNotifyHandle = (PNP_NOTIFY_HANDLE)pNotifyData;
@@ -5108,7 +5125,10 @@ PNP_UnregisterNotification(
     if (pEntry == NULL)
         return CR_INVALID_DATA;
 
+    RtlAcquireResourceExclusive(&NotificationListLock, TRUE);
     RemoveEntryList(&pEntry->ListEntry);
+    RtlReleaseResource(&NotificationListLock);
+
     if (pEntry->pszName)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry->pszName);
     RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry);
