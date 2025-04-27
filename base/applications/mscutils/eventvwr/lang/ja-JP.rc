@@ -222,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-イベントの種類:     %s\r\n\
-イベントのソース:   %s\r\n\
-イベントのカテゴリ: %s\r\n\
-イベント ID:        %s\r\n\
-日付:               %s\r\n\
-時刻:               %s\r\n\
-ユーザー:           %s\r\n\
-コンピューター:     %s\r\n\
-説明:\r\n%s"
+    IDS_COPY_EVTTYPE "イベントの種類:"
+    IDS_COPY_EVTSRC  "イベントのソース:"
+    IDS_COPY_EVTCAT  "イベントのカテゴリ:"
+    IDS_COPY_EVTID   "イベント ID:"
+    IDS_COPY_EVTDATE "日付:"
+    IDS_COPY_EVTTIME "時刻:"
+    IDS_COPY_EVTUSER "ユーザー:"
+    IDS_COPY_EVTCOMP "コンピューター:"
+    IDS_COPY_EVTTEXT "説明:"
+    IDS_COPY_EVTDATA "データ:"
 END
 
 STRINGTABLE

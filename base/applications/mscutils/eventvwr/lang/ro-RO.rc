@@ -93,7 +93,7 @@ BEGIN
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "T&ip:", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "ID &Eveniment:", IDC_STATIC, 103, 25, 36, 8
+    LTEXT "ID &eveniment:", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Utilizator:", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -218,21 +218,21 @@ BEGIN
     IDS_COLUMNCATEGORY "Categorie"
     IDS_COLUMNEVENT "Eveniment"
     IDS_COLUMNUSER "Utilizator"
-    IDS_COLUMNCOMPUTER "Computer"
+    IDS_COLUMNCOMPUTER "Calculator"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Tip eveniment:       %s\r\n\
-Sursă eveniment:     %s\r\n\
-Categorie eveniment: %s\r\n\
-ID eveniment:        %s\r\n\
-Dată:                %s\r\n\
-Oră:                 %s\r\n\
-Utilizator:          %s\r\n\
-Computer:            %s\r\n\
-Descriere:\r\n%s"
+    IDS_COPY_EVTTYPE "Tip eveniment:"
+    IDS_COPY_EVTSRC  "Sursă eveniment:"
+    IDS_COPY_EVTCAT  "Categorie eveniment:"
+    IDS_COPY_EVTID   "ID eveniment:"
+    IDS_COPY_EVTDATE "Dată:"
+    IDS_COPY_EVTTIME "Oră:"
+    IDS_COPY_EVTUSER "Utilizator:"
+    IDS_COPY_EVTCOMP "Calculator:"
+    IDS_COPY_EVTTEXT "Descriere:"
+    IDS_COPY_EVTDATA "Date:"
 END
 
 STRINGTABLE

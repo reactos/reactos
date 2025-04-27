@@ -222,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Olay Türü:          %s\r\n\
-Olay Kaynağı:       %s\r\n\
-Olay Kategorisi:    %s\r\n\
-Olay Kimliği:       %s\r\n\
-Tarih:              %s\r\n\
-Saat:               %s\r\n\
-Kullanıcı:          %s\r\n\
-Bilgisayar:         %s\r\n\
-Tanım:\r\n%s"
+    IDS_COPY_EVTTYPE "Olay Türü:"
+    IDS_COPY_EVTSRC  "Olay Kaynağı:"
+    IDS_COPY_EVTCAT  "Olay Kategorisi:"
+    IDS_COPY_EVTID   "Olay Kimliği:"
+    IDS_COPY_EVTDATE "Tarih:"
+    IDS_COPY_EVTTIME "Saat:"
+    IDS_COPY_EVTUSER "Kullanıcı:"
+    IDS_COPY_EVTCOMP "Bilgisayar:"
+    IDS_COPY_EVTTEXT "Tanım:"
+    IDS_COPY_EVTDATA "Veri:"
 END
 
 STRINGTABLE

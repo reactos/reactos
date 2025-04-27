@@ -12,6 +12,17 @@
 
 #include <shellapi.h>
 
+/**
+ * @brief
+ * ReactOS-only feature:
+ * Enable or disable support for copying event info text using space padding
+ * between header titles and data, when pressing the SHIFT key while clicking
+ * on the "Copy" button, instead of using TABs as separators.
+ *
+ * @see CopyEventEntry().
+ **/
+#define COPY_EVTTEXT_SPACE_PADDING_MODE
+
 // FIXME:
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  (1024*10)
 extern WCHAR szTitle[];
@@ -250,83 +261,291 @@ DisplayEventData(
     HeapFree(GetProcessHeap(), 0, pTextBuffer);
 }
 
-static
-HFONT
-CreateMonospaceFont(VOID)
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+
+static inline
+int my_cType3ToWidth(WORD wType, wchar_t ucs)
 {
-    LOGFONTW tmpFont = {0};
-    HFONT hFont;
-    HDC hDC;
-
-    hDC = GetDC(NULL);
-
-    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
-    tmpFont.lfWeight = FW_NORMAL;
-    wcscpy(tmpFont.lfFaceName, L"Courier New");
-
-    hFont = CreateFontIndirectW(&tmpFont);
-
-    ReleaseDC(NULL, hDC);
-
-    return hFont;
+    if (wType & C3_HALFWIDTH)
+        return 1;
+    else if (wType & (C3_FULLWIDTH | C3_KATAKANA | C3_HIRAGANA | C3_IDEOGRAPH))
+        return 2;
+    /*
+     * HACK for Wide Hangul characters not recognized by GetStringTypeW(CT_CTYPE3)
+     * See:
+     * https://unicode.org/reports/tr11/
+     * https://www.unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt
+     * https://www.unicode.org/Public/UCD/latest/ucd/extracted/DerivedEastAsianWidth.txt
+     * (or the /Public/UNIDATA/ files)
+     */
+    else if ((ucs >= 0x1100 && ucs <= 0x115F) || (ucs >= 0x302E && ucs <= 0x302F) ||
+             (ucs >= 0x3131 && ucs <= 0x318E) || (ucs >= 0x3260 && ucs <= 0x327F) ||
+             (ucs >= 0xA960 && ucs <= 0xA97C) || (ucs >= 0xAC00 && ucs <= 0xD7A3))
+        return 2;
+    else if (wType & (C3_SYMBOL | C3_KASHIDA | C3_LEXICAL | C3_ALPHA))
+        return 1;
+    else // if (wType & (C3_NONSPACING | C3_DIACRITIC | C3_VOWELMARK | C3_HIGHSURROGATE | C3_LOWSURROGATE | C3_NOTAPPLICABLE))
+        return 0;
 }
 
+int my_wcwidth(wchar_t ucs)
+{
+    WORD wType = 0;
+    GetStringTypeW(CT_CTYPE3, &ucs, sizeof(ucs)/sizeof(WCHAR), &wType);
+    return my_cType3ToWidth(wType, ucs);
+}
+
+int my_wcswidth(const wchar_t *pwcs, size_t n)
+{
+    int width = 0;
+    PWORD pwType, pwt;
+
+    pwType = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, n * sizeof(WORD));
+    if (!pwType)
+        return 0;
+    if (!GetStringTypeW(CT_CTYPE3, pwcs, n, pwType))
+        goto Quit;
+
+    for (pwt = pwType; n-- > 0; ++pwt, ++pwcs)
+    {
+        width += my_cType3ToWidth(*pwt, *pwcs);
+    }
+Quit:
+    HeapFree(GetProcessHeap(), 0, pwType);
+    return width;
+}
+
+#endif // COPY_EVTTEXT_SPACE_PADDING_MODE
+
+/**
+ * @brief
+ * Retrieves the already-gathered event information, structure it in
+ * text format and copy it into the clipboard for user consumption.
+ *
+ * The copied event information has the following text format, where
+ * each text line ends with CR-LF newlines:
+ *   ```
+ *   Event Type:     <event_type>\r\n
+ *   Event Source:   <event_source>\r\n
+ *   Event Category: <event_cat>\r\n
+ *   Event ID:       <event_id>\r\n
+ *   Date:           <event_date>\r\n
+ *   Time:           <event_time>\r\n
+ *   User:           <event_user>\r\n
+ *   Computer:       <event_computer>\r\n
+ *   Description:\r\n
+ *   <event_description>\r\n
+ *   Data:\r\n
+ *   <event...
+ *    ...data...
+ *    ...if any>\r\n
+ *   ```
+ *
+ * For the single-line fields, the spacing between the header title and
+ * information is either a TAB (default), to facilitate data import in
+ * spreadsheet programs, or space-padding (when the user presses the
+ * SHIFT key while copying the data) to prettify information display.
+ * (This latter functionality is supported only if the program is compiled
+ * with the @b COPY_EVTTEXT_SPACE_PADDING_MODE define.)
+ **/
 static
 VOID
-CopyEventEntry(HWND hWnd)
+CopyEventEntry(
+    _In_ HWND hWnd)
 {
-    WCHAR tmpHeader[512];
-    WCHAR szEventType[MAX_PATH];
-    WCHAR szSource[MAX_PATH];
-    WCHAR szCategory[MAX_PATH];
-    WCHAR szEventID[MAX_PATH];
-    WCHAR szDate[MAX_PATH];
-    WCHAR szTime[MAX_PATH];
-    WCHAR szUser[MAX_PATH];
-    WCHAR szComputer[MAX_PATH];
-    WCHAR evtDesc[EVENT_MESSAGE_EVENTTEXT_BUFFER];
-    ULONG size = 0;
-    LPWSTR output;
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    static const LONG nTabWidth = 4;
+#endif
+    static const WCHAR szCRLF[] = L"\r\n";
+    struct
+    {
+        WORD uHdrID;        // Header string resource ID.
+        WORD nDlgItemID;    // Dialog control ID containing the corresponding info.
+        WORD bSameLine : 1; // Info follows header on same line (TRUE) or not (FALSE).
+        WORD bOptional : 1; // Omit if info is empty (TRUE) or keep it (FALSE).
+        PCWCH pchHdrText;   // Pointer to header string resource.
+        SIZE_T cchHdrLen;   // Header string length (number of characters).
+        SIZE_T cchInfoLen;  // Info string length (number of characters).
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+        UINT nHdrWidth;     // Display width of the header string.
+        UINT nSpacesPad;    // Padding after header in number of spaces.
+#endif
+    } CopyData[] =
+    {
+        {IDS_COPY_EVTTYPE, IDC_EVENTTYPESTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTSRC , IDC_EVENTSOURCESTATIC  , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTCAT , IDC_EVENTCATEGORYSTATIC, TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTID  , IDC_EVENTIDSTATIC      , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTDATE, IDC_EVENTDATESTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTTIME, IDC_EVENTTIMESTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTUSER, IDC_EVENTUSERSTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTCOMP, IDC_EVENTCOMPUTERSTATIC, TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTTEXT, IDC_EVENTTEXTEDIT      , FALSE, FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTDATA, IDC_EVENTDATAEDIT      , FALSE, TRUE , NULL, 0, 0},
+    };
+    USHORT i;
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    BOOL bUsePad; // Use space padding (TRUE) or not (FALSE, default).
+    UINT nMaxHdrWidth = 0;
+#endif
+    SIZE_T size = 0;
+    PWSTR output;
+    PWSTR pszDestEnd;
+    size_t cchRemaining;
     HGLOBAL hMem;
 
     /* Try to open the clipboard */
     if (!OpenClipboard(hWnd))
         return;
 
-    /* Get the formatted text needed to place the content into */
-    size += LoadStringW(hInst, IDS_COPY, tmpHeader, ARRAYSIZE(tmpHeader));
-
-    /* Grab all the information and get it ready for the clipboard */
-    size += GetDlgItemTextW(hWnd, IDC_EVENTTYPESTATIC, szEventType, ARRAYSIZE(szEventType));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTSOURCESTATIC, szSource, ARRAYSIZE(szSource));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTCATEGORYSTATIC, szCategory, ARRAYSIZE(szCategory));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTIDSTATIC, szEventID, ARRAYSIZE(szEventID));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTDATESTATIC, szDate, ARRAYSIZE(szDate));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTTIMESTATIC, szTime, ARRAYSIZE(szTime));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTUSERSTATIC, szUser, ARRAYSIZE(szUser));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTCOMPUTERSTATIC, szComputer, ARRAYSIZE(szComputer));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTTEXTEDIT, evtDesc, ARRAYSIZE(evtDesc));
-
-    size++; /* Null-termination */
-    size *= sizeof(WCHAR);
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    /* Use space padding only if the user presses SHIFT */
+    bUsePad = !!(GetKeyState(VK_SHIFT) & 0x8000);
+#endif
 
     /*
-     * Consolidate the information into one big piece and
-     * sort out the memory needed to write to the clipboard.
+     * Grab all the information and get it ready for the clipboard.
      */
-    hMem = GlobalAlloc(GMEM_MOVEABLE, size);
-    if (hMem == NULL) goto Quit;
+
+    /* Calculate the necessary string buffer size */
+    for (i = 0; i < _countof(CopyData); ++i)
+    {
+        /* Retrieve the event info string length (without NUL terminator) */
+        CopyData[i].cchInfoLen = GetWindowTextLengthW(GetDlgItem(hWnd, CopyData[i].nDlgItemID));
+
+        /* If no data is present and is optional, ignore it */
+        if ((CopyData[i].cchInfoLen == 0) && CopyData[i].bOptional)
+            continue;
+
+        /* Load the header string from resources */
+        CopyData[i].cchHdrLen = LoadStringW(hInst, CopyData[i].uHdrID, (PWSTR)&CopyData[i].pchHdrText, 0);
+        size += CopyData[i].cchHdrLen;
+
+        if (CopyData[i].bSameLine)
+        {
+            /* The header and info are on the same line */
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+            if (bUsePad)
+            {
+                /* Retrieve the maximum header string displayed
+                 * width for computing space padding later */
+                CopyData[i].nHdrWidth = my_wcswidth(CopyData[i].pchHdrText, CopyData[i].cchHdrLen);
+                nMaxHdrWidth = max(nMaxHdrWidth, CopyData[i].nHdrWidth);
+            }
+            else
+#endif
+            {
+                /* Count a TAB separator */
+                size++;
+            }
+        }
+        else
+        {
+            /* The data is on a separate line, count a newline */
+            size += _countof(szCRLF)-1;
+        }
+
+        /* Count the event info string and the newline that follows it */
+        size += CopyData[i].cchInfoLen;
+        size += _countof(szCRLF)-1;
+    }
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    if (bUsePad)
+    {
+        /* Round nMaxHdrWidth to the next TAB width, and
+         * compute the space padding for each field */
+        UINT nSpaceWidth = 1; // my_wcwidth(L' ');
+        nMaxHdrWidth = ((nMaxHdrWidth / nTabWidth) + 1) * nTabWidth;
+        for (i = 0; i < _countof(CopyData); ++i)
+        {
+            /* If no data is present and is optional, ignore it */
+            if ((CopyData[i].cchInfoLen == 0) && CopyData[i].bOptional)
+                continue;
+
+            /* If the data is on a separate line, ignore padding */
+            if (!CopyData[i].bSameLine)
+                continue;
+
+            /* Compute the padding */
+            CopyData[i].nSpacesPad = (nMaxHdrWidth - CopyData[i].nHdrWidth) / nSpaceWidth;
+            size += CopyData[i].nSpacesPad;
+        }
+    }
+#endif // COPY_EVTTEXT_SPACE_PADDING_MODE
+    /* Add NUL-termination */
+    size++;
+
+    /*
+     * Consolidate the information into a single buffer to copy in the clipboard.
+     */
+    hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size * sizeof(WCHAR));
+    if (!hMem)
+        goto Quit;
 
     output = GlobalLock(hMem);
-    if (output == NULL)
+    if (!output)
     {
         GlobalFree(hMem);
         goto Quit;
     }
 
-    StringCbPrintfW(output, size,
-                    tmpHeader, szEventType, szSource, szCategory, szEventID,
-                    szDate, szTime, szUser, szComputer, evtDesc);
+    /* Build the string */
+    pszDestEnd = output;
+    cchRemaining = size;
+    for (i = 0; i < _countof(CopyData); ++i)
+    {
+        SIZE_T sizeDataStr;
+
+        /* If no data is present and is optional, ignore it */
+        if ((CopyData[i].cchInfoLen == 0) && CopyData[i].bOptional)
+            continue;
+
+        /* Copy the header string */
+        StringCchCopyNExW(pszDestEnd, cchRemaining,
+                          CopyData[i].pchHdrText, CopyData[i].cchHdrLen,
+                          &pszDestEnd, &cchRemaining, 0);
+
+        if (CopyData[i].bSameLine)
+        {
+            /* The header and info are on the same line, add
+             * either the space padding or the TAB separator */
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+            if (bUsePad)
+            {
+                UINT j = CopyData[i].nSpacesPad;
+                while (j--)
+                {
+                    *pszDestEnd++ = L' ';
+                    cchRemaining--;
+                }
+            }
+            else
+#endif
+            {
+                *pszDestEnd++ = L'\t';
+                cchRemaining--;
+            }
+        }
+        else
+        {
+            /* The data is on a separate line, add a newline */
+            StringCchCopyExW(pszDestEnd, cchRemaining, szCRLF,
+                             &pszDestEnd, &cchRemaining, 0);
+        }
+
+        /* Copy the event info */
+        sizeDataStr = min(cchRemaining, CopyData[i].cchInfoLen + 1);
+        sizeDataStr = GetDlgItemTextW(hWnd, CopyData[i].nDlgItemID, pszDestEnd, sizeDataStr);
+        pszDestEnd += sizeDataStr;
+        cchRemaining -= sizeDataStr;
+
+        /* A newline follows the data */
+        StringCchCopyExW(pszDestEnd, cchRemaining, szCRLF,
+                         &pszDestEnd, &cchRemaining, 0);
+    }
+    /* NUL-terminate the buffer */
+    *pszDestEnd++ = UNICODE_NULL;
+    cchRemaining--;
 
     GlobalUnlock(hMem);
 
@@ -775,6 +994,27 @@ ClearContents(
 
     SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, L"");
     SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, L"");
+}
+
+static
+HFONT
+CreateMonospaceFont(VOID)
+{
+    LOGFONTW tmpFont = {0};
+    HFONT hFont;
+    HDC hDC;
+
+    hDC = GetDC(NULL);
+
+    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+    tmpFont.lfWeight = FW_NORMAL;
+    wcscpy(tmpFont.lfFaceName, L"Courier New");
+
+    hFont = CreateFontIndirectW(&tmpFont);
+
+    ReleaseDC(NULL, hDC);
+
+    return hFont;
 }
 
 static
