@@ -357,7 +357,7 @@ private:
             case IDM_MYDOCUMENTS: return CSIDL_MYDOCUMENTS;
             case IDM_MYPICTURES: return CSIDL_MYPICTURES;
             case IDM_CONTROLPANEL: return CSIDL_CONTROLS;
-            case IDM_NETWORKCONNECTIONS: return CSIDL_NETWORK;
+            case IDM_NETWORKCONNECTIONS: return CSIDL_CONNECTIONS;
             case IDM_PRINTERSANDFAXES: return CSIDL_PRINTERS;
             default: return 0;
         }
