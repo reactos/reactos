@@ -325,12 +325,12 @@ typedef struct _CM_KEY_CONTROL_BLOCK
 //
 typedef struct _CM_NOTIFY_BLOCK
 {
-    LIST_ENTRY HiveList;
-    LIST_ENTRY PostList;
-    PCM_KEY_CONTROL_BLOCK KeyControlBlock;
-    PCM_KEY_BODY KeyBody;
-    ULONG Filter:29;
-    ULONG WatchTree:30;
+    LIST_ENTRY HiveList; /* link to CMHIVE->NotifyList */
+    LIST_ENTRY PostList; /* list of CM_POST_BLOCK entries */
+    PCM_KEY_CONTROL_BLOCK KeyControlBlock; /* Control block for the target registry key */
+    PCM_KEY_BODY KeyBody; /* the registry key body */
+    ULONG Filter:29; /* Event type flags, REG_NOTIFY_CHANGE_* enum members */
+    ULONG WatchTree:30; /* Signal for changes in subkeys */
     ULONG NotifyPending:31;
 } CM_NOTIFY_BLOCK, *PCM_NOTIFY_BLOCK;
 
@@ -339,9 +339,9 @@ typedef struct _CM_NOTIFY_BLOCK
 //
 typedef struct _CM_POST_BLOCK
 {
-    LIST_ENTRY NotifyList;
-    KEVENT Event;
-    ULONG Filter;
+    LIST_ENTRY NotifyList; /* link to CM_NOTIFY_BLOCK->PostList */
+    KEVENT Event; /* An event object to signal listeners about the change */
+    ULONG Filter; /* Filter for event types to be notified about, REG_NOTIFY_CHANGE_* enum members */
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
 
 //
