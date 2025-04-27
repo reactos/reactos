@@ -1602,6 +1602,11 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         /* FIXME: handle scenarios where the key is deleted, or the handle closed */
         /* FIXME: Fill IoStatusBlock */
 
+        /* Free the PostBlock now when the wait is over */
+        RemoveEntryList(&(PostBlock->NotifyList));
+        ExFreePoolWithTag(PostBlock, TAG_CM);
+        PostBlock = NULL;
+
         Status = STATUS_NOTIFY_ENUM_DIR;
         goto Cleanup;
     }
