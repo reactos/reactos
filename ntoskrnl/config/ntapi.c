@@ -1529,13 +1529,18 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         _SEH2_END;
     }
 
+    /* Lock the Kcb while we are initializing/updating NotifyBlock */
+    CmpAcquireKcbLockExclusive(KeyObject->KeyControlBlock);
+
     /* Allocate and initialize NotifyBlock */
     if (KeyObject->NotifyBlock == NULL)
     {
+        /* Allocate memory */
         NotifyBlock = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(CM_NOTIFY_BLOCK), TAG_CM);
         if (!NotifyBlock)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
+            CmpReleaseKcbLock(KeyObject->KeyControlBlock);
             goto Cleanup;
         }
         RtlZeroMemory(NotifyBlock, sizeof(CM_NOTIFY_BLOCK));
@@ -1562,6 +1567,7 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
             /* There's a notification pending already */
             /* TODO: Do we need to reset NotifyPending flag??? */
             Status = STATUS_NOTIFY_ENUM_DIR;
+            CmpReleaseKcbLock(KeyObject->KeyControlBlock);
             goto Cleanup;
         }
 
@@ -1597,6 +1603,9 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         /* Link post block to notify block */
         InsertHeadList(&(PostBlock->NotifyList), &(NotifyBlock->PostList));
 
+        /* Release the lock before we go to the wait state */
+        CmpReleaseKcbLock(KeyObject->KeyControlBlock);
+
         /* Wait for event to be signaled */
         KeWaitForSingleObject(&(PostBlock->Event), Executive, PreviousMode, FALSE, NULL);
 
@@ -1604,9 +1613,11 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         /* FIXME: Fill IoStatusBlock */
 
         /* Free the PostBlock now when the wait is over */
+        CmpAcquireKcbLockExclusive(KeyObject->KeyControlBlock);
         RemoveEntryList(&(PostBlock->NotifyList));
         ExFreePoolWithTag(PostBlock, TAG_CM);
         PostBlock = NULL;
+        CmpReleaseKcbLock(KeyObject->KeyControlBlock);
 
         Status = STATUS_NOTIFY_ENUM_DIR;
         goto Cleanup;
@@ -1629,6 +1640,8 @@ Failure:
 
     if (PostBlock)
         ExFreePoolWithTag(PostBlock, TAG_CM);
+
+    CmpReleaseKcbLock(KeyObject->KeyControlBlock);
 
 Cleanup:
     if (KeyObject)
