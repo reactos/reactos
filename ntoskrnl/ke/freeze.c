@@ -64,6 +64,8 @@ VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable)
 {
+    KIRQL OldIrql = KiOldIrql;
+
 #ifdef CONFIG_SMP
     /* Architecture specific thaw code */
     KxThawExecution();
@@ -77,9 +79,9 @@ KeThawExecution(IN BOOLEAN Enable)
 
     /* Restore the old IRQL */
 #ifndef CONFIG_SMP
-    if (KiOldIrql < DISPATCH_LEVEL)
+    if (OldIrql < DISPATCH_LEVEL)
 #endif
-    KeLowerIrql(KiOldIrql);
+    KeLowerIrql(OldIrql);
 
     /* Re-enable interrupts */
     KeRestoreInterrupts(Enable);
