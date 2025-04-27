@@ -16,13 +16,70 @@
 
 VOID
 NTAPI
+CmpReportNotifyToPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
+                            _In_ ULONG Filter)
+{
+    PLIST_ENTRY ListHead, NextEntry;
+    PCM_POST_BLOCK PostBlock;
+
+    /* Get the PostList */
+    ListHead = &(NotifyBlock->PostList);
+    if (IsListEmpty(ListHead)) return;
+
+    /* Enumerate through NotifyBlock->PostList */
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the post block */
+        PostBlock = CONTAINING_RECORD(NextEntry, CM_POST_BLOCK, NotifyList);
+
+        /* Signal the event */
+        KeSetEvent(&(PostBlock->Event), 1, FALSE);
+
+        /* FIXME: Support for ApcRoutine */
+
+        /* Navigate to next entry */
+        NextEntry = NextEntry->Flink;
+    }
+}
+
+VOID
+NTAPI
 CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 IN PHHIVE Hive,
                 IN HCELL_INDEX Cell,
                 IN ULONG Filter)
 {
-    /* FIXME: TODO */
-    return;
+    PCMHIVE KeyHive;
+    PLIST_ENTRY ListHead, NextEntry;
+    PCM_NOTIFY_BLOCK NotifyBlock;
+
+    /* Find the CMHIVE linked to this Hive */
+    KeyHive = CONTAINING_RECORD(Hive, CMHIVE, Hive);
+    
+    /* Get NotifyBlock list on the Hive */
+    ListHead = &(KeyHive->NotifyList);
+    if (IsListEmpty(ListHead)) return;
+
+    /* Enumerate through CMHIVE->NotifyList */
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        NotifyBlock = CONTAINING_RECORD(NextEntry, CM_NOTIFY_BLOCK, HiveList);
+
+        /* Check if the NotifyBlock is paired with this Kcb */
+        if (NotifyBlock->KeyControlBlock != Kcb) goto SkipEntry;
+
+        /* Check the notification filter */
+        if ((NotifyBlock->Filter & Filter) != Filter) goto SkipEntry;
+
+        /* Report the notification to PostBlocks linked to this NotifyBlock */
+        CmpReportNotifyToPostBlocks(NotifyBlock, Filter);
+
+SkipEntry:
+        /* Navigate to next entry */
+        NextEntry = NextEntry->Flink;
+    }
 }
 
 VOID
