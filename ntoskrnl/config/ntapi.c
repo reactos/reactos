@@ -1585,7 +1585,58 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
     if (Asynchronous)
     {
-        goto Unimpl;
+        if (Event)
+        {
+            /* Convert the user event handle to a kernel event handle,
+             * or duplicate a kernel handle so we won't close the caller's handle
+             * when flushing post blocks
+             */
+            Status = CmpConvertHandleToKernelHandle(Event,
+                                                    ExEventObjectType, 
+                                                    EVENT_MODIFY_STATE, 
+                                                    PreviousMode, 
+                                                    &LocalEventHandle);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
+
+            /* Open the event object */
+            Status = ObReferenceObjectByHandle(LocalEventHandle,
+                                               EVENT_MODIFY_STATE,
+                                               ExEventObjectType,
+                                               KernelMode,
+                                               (PVOID*)&EventObject,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
+
+            /* Allocate and initialize a post block */
+            PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
+            if (!PostBlock)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Failure;
+            }
+            RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
+
+            InitializeListHead(&(PostBlock->NotifyList));
+            PostBlock->Filter = CompletionFilter;
+            PostBlock->EventHandle = LocalEventHandle;
+            PostBlock->Event = EventObject;
+
+            /* Link post block to notify block */
+            InsertHeadList(&(PostBlock->NotifyList), &(KeyObject->NotifyBlock->PostList));
+
+            /* This is an asynchronous call, caller will be notified using its provided event handle,
+             * unlock KCB and return with STATUS_PENDING now.
+             */
+            CmpReleaseKcbLock(KeyObject->KeyControlBlock);
+            Status = STATUS_PENDING;
+            goto Cleanup;
+        }
+        else
+        {
+            goto Unimpl;
+        }
     }
     else
     {
@@ -1609,7 +1660,7 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         PostBlock->Event = EventObject;
 
         /* Link post block to notify block */
-        InsertHeadList(&(PostBlock->NotifyList), &(NotifyBlock->PostList));
+        InsertHeadList(&(PostBlock->NotifyList), &(KeyObject->NotifyBlock->PostList));
 
         /* Release the lock before we go to the wait state */
         CmpReleaseKcbLock(KeyObject->KeyControlBlock);
