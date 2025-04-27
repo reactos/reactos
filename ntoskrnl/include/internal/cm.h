@@ -340,7 +340,8 @@ typedef struct _CM_NOTIFY_BLOCK
 typedef struct _CM_POST_BLOCK
 {
     LIST_ENTRY NotifyList; /* link to CM_NOTIFY_BLOCK->PostList */
-    KEVENT Event; /* An event object to signal listeners about the change */
+    HANDLE EventHandle; /* Event object handle */
+    PKEVENT Event; /* An event object to signal listeners about the change */
     ULONG Filter; /* Filter for event types to be notified about, REG_NOTIFY_CHANGE_* enum members */
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
 
