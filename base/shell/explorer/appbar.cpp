@@ -65,7 +65,7 @@ BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
     {
         if (FindAppBar(hWnd))
         {
-            WARN("Already exists: %p\n", hWnd);
+            ERR("Already exists: %p\n", hWnd);
             return FALSE;
         }
     }
@@ -139,7 +139,7 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
     pOutput->rc = pData->rc;
 
     if (::IsRectEmpty(&pOutput->rc))
-        WARN("IsRectEmpty\n");
+        ERR("IsRectEmpty\n");
 
     HMONITOR hMon1 = ::MonitorFromRect(&pOutput->rc, MONITOR_DEFAULTTOPRIMARY);
     ASSERT(hMon1 != NULL);
@@ -433,7 +433,7 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
     if (pCopyData->cbData != sizeof(*pData) ||
         pData->cbSize != offsetof(APPBAR_COMMAND, dwMessage))
     {
-        WARN("Invalid AppBar message\n");
+        ERR("Invalid AppBar message\n");
         return NULL;
     }
 

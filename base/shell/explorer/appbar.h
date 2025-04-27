@@ -7,7 +7,7 @@
 
 #pragma once
 
-typedef struct _APPBAR
+typedef struct tagAPPBAR
 {
     HWND hWnd;
     UINT uCallbackMessage;
