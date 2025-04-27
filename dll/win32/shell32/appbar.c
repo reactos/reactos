@@ -80,7 +80,6 @@ SHAppBarMessage(
 #define OFFSET_TO_MESSAGE offsetof(APPBAR_COMMAND, dwMessage)
 
     APPBAR_COMMAND cmd;
-    ZeroMemory(&cmd, sizeof(cmd));
     cmd.cbSize = OFFSET_TO_MESSAGE;
     cmd.hWnd32 = HandleToUlong(pData->hWnd); // Truncated on x64, as on Windows!
     cmd.uCallbackMessage = pData->uCallbackMessage;
@@ -88,6 +87,7 @@ SHAppBarMessage(
     cmd.rc = pData->rc;
     cmd.lParam64 = pData->lParam;
     cmd.dwMessage = dwMessage;
+    cmd.hOutput32 = 0;
     cmd.dwProcessId = GetCurrentProcessId();
 
     /* Make output data if necessary */
