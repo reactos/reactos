@@ -341,6 +341,7 @@ typedef struct _CM_POST_BLOCK
 {
     LIST_ENTRY NotifyList;
     KEVENT Event;
+    ULONG Filter;
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
 
 //

@@ -33,11 +33,15 @@ CmpReportNotifyToPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
         /* Get the post block */
         PostBlock = CONTAINING_RECORD(NextEntry, CM_POST_BLOCK, NotifyList);
 
+        /* Check the filter */
+        if ((PostBlock->Filter & Filter) != Filter) goto SkipEntry;
+
         /* Signal the event */
         KeSetEvent(&(PostBlock->Event), 1, FALSE);
 
         /* FIXME: Support for ApcRoutine */
 
+SkipEntry:
         /* Navigate to next entry */
         NextEntry = NextEntry->Flink;
     }
