@@ -807,6 +807,9 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             InitDetailsDlgCtrl(hDlg, pData);
 
+            EnableWindow(GetDlgItem(hDlg, IDC_BYTESRADIO), FALSE);
+            EnableWindow(GetDlgItem(hDlg, IDC_WORDRADIO), FALSE);
+
             // OnSize(hDlg, pData, pData->cxOld, pData->cyOld);
             return (INT_PTR)TRUE;
         }
