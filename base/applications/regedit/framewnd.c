@@ -164,10 +164,49 @@ void SetupStatusBar(HWND hWnd, BOOL bResize)
 
 void UpdateStatusBar(void)
 {
-    HKEY hKeyRoot;
-    LPCWSTR pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    HKEY hKeyRoot = NULL;
+    LPCWSTR pszKeyPath = NULL;
+    LPWSTR pszFullPath = NULL;
+    DWORD dwCbFullPath;
+    LPCWSTR pszRootName = NULL;
 
-    SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszKeyPath);
+    if (g_pChildWnd && g_pChildWnd->hTreeWnd)
+    {
+        pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    }
+
+    if (pszKeyPath && hKeyRoot)
+    {
+        pszRootName = get_root_key_name(hKeyRoot);
+        if (pszRootName)
+        {
+            dwCbFullPath = (wcslen(pszRootName) + 1 + wcslen(pszKeyPath) + 1) * sizeof(WCHAR);
+            pszFullPath = malloc(dwCbFullPath);
+
+            if (pszFullPath)
+            {
+                if (pszKeyPath[0] != UNICODE_NULL)
+                {
+                    StringCbPrintfW(pszFullPath, dwCbFullPath, L"%s%s%s", pszRootName,
+                                    ((pszKeyPath[0] == L'\\') ? L"" : L"\\"), pszKeyPath);
+                }
+                else
+                {
+                    StringCbCopyW(pszFullPath, dwCbFullPath, pszRootName);
+                }
+            }
+        }
+    }
+
+    if (hStatusBar)
+    {
+        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszFullPath);
+    }
+
+    if (pszFullPath)
+    {
+        free(pszFullPath);
+    }
 }
 
 static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
