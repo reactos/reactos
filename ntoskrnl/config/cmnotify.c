@@ -91,7 +91,36 @@ NTAPI
 CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
                IN BOOLEAN LockHeld)
 {
-    /* FIXME: TODO */
-    return;
+    PLIST_ENTRY ListHead, NextEntry;
+    PCM_POST_BLOCK PostBlock;
+
+    if (!LockHeld)
+        CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
+
+    /* Enumerate PostBlocks */
+    ListHead = &(KeyBody->NotifyBlock->PostList);
+    if (IsListEmpty(ListHead)) return;
+    while (NextEntry != ListHead)
+    {
+        NextEntry = ListHead->Flink;
+
+        /* Get the post block */
+        PostBlock = CONTAINING_RECORD(NextEntry, CM_POST_BLOCK, NotifyList);
+
+        /* Signal the event */
+        KeSetEvent(&(PostBlock->Event), 1, FALSE);
+
+        /* FIXME: is it safe to release the post block here? */
+        RemoveEntryList(NextEntry);
+        ExFreePoolWithTag(PostBlock, TAG_CM);
+    }
+
+    /* Finally, free the NotifyBlock */
+    RemoveEntryList(&(KeyBody->NotifyBlock->HiveList));
+    ExFreePoolWithTag(KeyBody->NotifyBlock, TAG_CM);
+    KeyBody->NotifyBlock = NULL;
+
+    if (!LockHeld)
+        CmpReleaseKcbLock(KeyBody->KeyControlBlock);
 }
 
