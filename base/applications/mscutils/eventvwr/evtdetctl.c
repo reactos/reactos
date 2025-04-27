@@ -4,7 +4,7 @@
  * PURPOSE:     Event Details Control.
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
  *              Copyright 2008-2016 Eric Kohl <eric.kohl@reactos.org>
- *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2016-2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include "eventvwr.h"
@@ -16,6 +16,7 @@
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  (1024*10)
 extern WCHAR szTitle[];
 extern HWND hwndListView;
+
 extern BOOL
 GetEventMessage(IN LPCWSTR KeyName,
                 IN LPCWSTR SourceName,
@@ -25,6 +26,9 @@ GetEventMessage(IN LPCWSTR KeyName,
 
 typedef struct _DETAILDATA
 {
+    /* The event record being displayed */
+    PEVENTLOGRECORD pevlr;
+
     /* Data initialized from EVENTDETAIL_INFO */
     PEVENTLOGFILTER EventLogFilter;
     INT iEventItem;
@@ -40,14 +44,19 @@ typedef struct _DETAILDATA
 
 static
 VOID
+DisplayEventData(
+    _In_ HWND hDlg,
+    _In_ PDETAILDATA pDetailData);
+
+static
+VOID
 DisplayEvent(
     _In_ HWND hDlg,
     _In_ PDETAILDATA pDetailData)
 {
+    PEVENTLOGRECORD pevlr;
     PEVENTLOGFILTER EventLogFilter = pDetailData->EventLogFilter;
     INT iItem = pDetailData->iEventItem;
-    LVITEMW li;
-    PEVENTLOGRECORD pevlr;
     BOOL bEventData;
 
     WCHAR szEventType[MAX_PATH];
@@ -60,12 +69,13 @@ DisplayEvent(
     WCHAR szEventID[MAX_PATH];
     WCHAR szEventText[EVENT_MESSAGE_EVENTTEXT_BUFFER];
 
+    /* Retrieve and cache the pointer to the selected event item */
+    LVITEMW li;
     li.mask = LVIF_PARAM;
     li.iItem = iItem;
     li.iSubItem = 0;
     ListView_GetItem(hwndListView, &li);
-
-    pevlr = (PEVENTLOGRECORD)li.lParam;
+    pevlr = pDetailData->pevlr = (PEVENTLOGRECORD)li.lParam;
 
     ListView_GetItemText(hwndListView, iItem, 0, szEventType, ARRAYSIZE(szEventType));
     ListView_GetItemText(hwndListView, iItem, 1, szDate, ARRAYSIZE(szDate));
@@ -92,6 +102,8 @@ DisplayEvent(
     // FIXME: At the moment we support only one event log in the filter
     GetEventMessage(EventLogFilter->EventLogs[0]->LogName, szSource, pevlr, szEventText);
     SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, szEventText);
+
+    DisplayEventData(hDlg, pDetailData);
 }
 
 static
@@ -179,22 +191,17 @@ DisplayEventData(
     _In_ HWND hDlg,
     _In_ PDETAILDATA pDetailData)
 {
+    PEVENTLOGRECORD pevlr = pDetailData->pevlr;
     BOOL bDisplayWords = pDetailData->bDisplayWords;
-    INT iItem = pDetailData->iEventItem;
-    LVITEMW li;
-    PEVENTLOGRECORD pevlr;
 
     LPBYTE pData;
     UINT i, uOffset;
     UINT uBufferSize, uLineLength;
     PWCHAR pTextBuffer, pLine;
 
-    li.mask = LVIF_PARAM;
-    li.iItem = iItem;
-    li.iSubItem = 0;
-    ListView_GetItem(hwndListView, &li);
+    if (!pevlr)
+        return;
 
-    pevlr = (PEVENTLOGRECORD)li.lParam;
     if (pevlr->DataLength == 0)
     {
         SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, L"");
@@ -730,6 +737,46 @@ OnSize(HWND hDlg, PDETAILDATA pData, INT cx, INT cy)
 
 static
 VOID
+EnableNavigationArrows(
+    _In_ HWND hDlg,
+    _In_ BOOL bEnable)
+{
+    /* Enable Previous/Next only if there is more than one item in the list */
+    if (bEnable)
+        bEnable &= (ListView_GetItemCount(hwndListView) > 1);
+    EnableDlgItem(hDlg, IDC_PREVIOUS, bEnable);
+    EnableDlgItem(hDlg, IDC_NEXT, bEnable);
+}
+
+static
+VOID
+ClearContents(
+    _In_ HWND hDlg)
+{
+    /* Disable the Previous/Next and Copy buttons */
+    EnableNavigationArrows(hDlg, FALSE);
+    EnableDlgItem(hDlg, IDC_COPY, FALSE);
+
+    /* Disable the Bytes/Words mode buttons */
+    EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
+    EnableDlgItem(hDlg, IDC_WORDRADIO, FALSE);
+
+    /* Clear the data fields */
+    SetDlgItemTextW(hDlg, IDC_EVENTDATESTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTTIMESTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTUSERSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTSOURCESTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTCOMPUTERSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTCATEGORYSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTIDSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTTYPESTATIC, L"");
+
+    SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, L"");
+}
+
+static
+VOID
 InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
 {
     DWORD dwMask;
@@ -761,6 +808,20 @@ InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
 
     SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
     SendDlgItemMessageW(hDlg, IDC_EVENTDATAEDIT, WM_SETFONT, (WPARAM)pData->hMonospaceFont, (LPARAM)TRUE);
+
+    //ClearContents(hDlg);
+    if (pData->iEventItem != -1)
+    {
+        EnableNavigationArrows(hDlg, TRUE);
+        EnableDlgItem(hDlg, IDC_COPY, TRUE);
+    }
+    else
+    {
+        EnableNavigationArrows(hDlg, FALSE);
+        EnableDlgItem(hDlg, IDC_COPY, FALSE);
+    }
+    EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
+    EnableDlgItem(hDlg, IDC_WORDRADIO, FALSE);
 }
 
 /* Message handler for Event Details control */
@@ -806,9 +867,8 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             pData->scPos.x = pData->scPos.y = 0;
 
             InitDetailsDlgCtrl(hDlg, pData);
-
-            EnableWindow(GetDlgItem(hDlg, IDC_BYTESRADIO), FALSE);
-            EnableWindow(GetDlgItem(hDlg, IDC_WORDRADIO), FALSE);
+            /* NOTE: Showing the event (if any) is currently delayed to later */
+            // SendMessageW(hDlg, EVT_DISPLAY, TRUE, (LPARAM)pData->iEventItem);
 
             // OnSize(hDlg, pData, pData->cxOld, pData->cyOld);
             return (INT_PTR)TRUE;
@@ -824,17 +884,58 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return (INT_PTR)TRUE;
 
         case EVT_SETFILTER:
+        {
+            /* Disable the display first, before changing the current filter */
+            pData->pevlr = NULL;
+            pData->iEventItem = -1;
+            ClearContents(hDlg);
             pData->EventLogFilter = (PEVENTLOGFILTER)lParam;
             return (INT_PTR)TRUE;
+        }
 
         case EVT_DISPLAY:
         {
-            pData->iEventItem = (INT)lParam;
-            if (pData->EventLogFilter)
+            if (wParam)
             {
-                /* Show event info in control */
-                DisplayEvent(hDlg, pData);
-                DisplayEventData(hDlg, pData);
+                INT iEventItem = (INT)lParam;
+
+                /* If no filter is set, don't change anything */
+                if (!pData->EventLogFilter)
+                    return (INT_PTR)TRUE;
+
+                /* If we re-enable display from previously disabled state, re-enable the buttons */
+                if ((pData->iEventItem == -1) && (iEventItem != -1))
+                {
+                    EnableNavigationArrows(hDlg, TRUE);
+                    EnableDlgItem(hDlg, IDC_COPY, TRUE);
+                }
+                else
+                /* If we disable display from previously enabled state, clear and disable it */
+                if ((pData->iEventItem != -1) && (iEventItem == -1))
+                {
+                    ClearContents(hDlg);
+                }
+
+                /* Set the new item */
+                pData->pevlr = NULL;
+                pData->iEventItem = iEventItem;
+
+                /* Display the event info, if there is one */
+                if (pData->iEventItem != -1)
+                    DisplayEvent(hDlg, pData);
+            }
+            else
+            {
+                /* Enable or disable the Previous/Next buttons,
+                 * but keep the existing contents, if any */
+                EnableNavigationArrows(hDlg, (lParam != -1));
+
+                // HACK: Disable the Bytes/Words mode buttons
+                // because we won't have access anymore to the
+                // event data. (This will be fixed in the future.)
+                pData->pevlr = NULL; // Invalidate also the cache.
+                EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
+                EnableDlgItem(hDlg, IDC_WORDRADIO, FALSE);
             }
             return (INT_PTR)TRUE;
         }
@@ -846,25 +947,33 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDC_NEXT:
                 {
                     BOOL bPrev = (LOWORD(wParam) == IDC_PREVIOUS);
-                    INT iItem, iSel, nItems = ListView_GetItemCount(hwndListView);
-                    WCHAR szText[200];
+                    INT nItems = ListView_GetItemCount(hwndListView);
+                    INT iItem, iSel;
 
                     if (nItems <= 0) /* No items? */
                         break;
 
+                    /* Get the index of the first selected item */
+                    iSel = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
+
                     /* Select the previous/next item from our current one */
-                    iItem = ListView_GetNextItem(hwndListView, -1, LVNI_ALL | LVNI_SELECTED);
-                    iItem = ListView_GetNextItem(hwndListView, iItem,
+                    iItem = ListView_GetNextItem(hwndListView, iSel,
                                                  (bPrev ? LVNI_ABOVE : LVNI_BELOW));
                     if (iItem < 0 || iItem >= nItems)
                     {
-                        LoadStringW(hInst,
-                                    (bPrev ? IDS_CONTFROMEND : IDS_CONTFROMBEGINNING),
-                                    szText, _countof(szText));
-                        if (MessageBoxW(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
-                            break;
+                        /* Confirm selection restart only if an item was previously
+                         * selected. If not, just proceed with default selection. */
+                        if (iSel != -1)
+                        {
+                            WCHAR szText[200];
+                            LoadStringW(hInst,
+                                        (bPrev ? IDS_CONTFROMEND : IDS_CONTFROMBEGINNING),
+                                        szText, _countof(szText));
+                            if (MessageBoxW(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) != IDYES)
+                                break;
+                        }
 
-                        /* Determine from where to restart */
+                        /* Determine where to restart from */
                         iItem = (bPrev ? (nItems - 1) : 0);
                     }
 
@@ -886,14 +995,12 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                           LVIS_FOCUSED | LVIS_SELECTED);
                     ListView_EnsureVisible(hwndListView, iItem, FALSE);
 
+                    pData->pevlr = NULL;
                     pData->iEventItem = iItem;
 
-                    /* Show event info in control */
+                    /* Display the event info */
                     if (pData->EventLogFilter)
-                    {
                         DisplayEvent(hDlg, pData);
-                        DisplayEventData(hDlg, pData);
-                    }
                     return (INT_PTR)TRUE;
                 }
 
@@ -904,14 +1011,10 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDC_BYTESRADIO:
                 case IDC_WORDRADIO:
-                {
+                    pData->bDisplayWords = (LOWORD(wParam) == IDC_WORDRADIO);
                     if (pData->EventLogFilter)
-                    {
-                        pData->bDisplayWords = (LOWORD(wParam) == IDC_WORDRADIO);
                         DisplayEventData(hDlg, pData);
-                    }
                     return (INT_PTR)TRUE;
-                }
 
                 default:
                     break;
@@ -961,12 +1064,4 @@ CreateEventDetailsCtrl(HINSTANCE hInstance,
     return CreateDialogParamW(hInstance,
                               MAKEINTRESOURCEW(IDD_EVENTDETAILS_CTRL),
                               hParentWnd, EventDetailsCtrl, lParam);
-}
-
-VOID
-EnableEventDetailsButtons(HWND hWnd, BOOL bEnable)
-{
-    EnableDlgItem(hWnd, IDC_PREVIOUS, bEnable);
-    EnableDlgItem(hWnd, IDC_NEXT, bEnable);
-    EnableDlgItem(hWnd, IDC_COPY, bEnable);
 }
