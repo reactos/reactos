@@ -97,7 +97,7 @@ DisplayEvent(
 
     bEventData = (pevlr->DataLength > 0);
     EnableDlgItem(hDlg, IDC_BYTESRADIO, bEventData);
-    EnableDlgItem(hDlg, IDC_WORDRADIO, bEventData);
+    EnableDlgItem(hDlg, IDC_WORDSRADIO, bEventData);
 
     // FIXME: At the moment we support only one event log in the filter
     GetEventMessage(EventLogFilter->EventLogs[0]->LogName, szSource, pevlr, szEventText);
@@ -658,7 +658,7 @@ OnSize(HWND hDlg, PDETAILDATA pData, INT cx, INT cy)
                                   0, 0,
                                   SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-        hItemWnd = GetDlgItem(hDlg, IDC_WORDRADIO);
+        hItemWnd = GetDlgItem(hDlg, IDC_WORDSRADIO);
         GetWindowRect(hItemWnd, &rect);
         MapWindowPoints(HWND_DESKTOP /*NULL*/, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
         // OffsetRect(&rect, 0, y);
@@ -759,7 +759,7 @@ ClearContents(
 
     /* Disable the Bytes/Words mode buttons */
     EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
-    EnableDlgItem(hDlg, IDC_WORDRADIO, FALSE);
+    EnableDlgItem(hDlg, IDC_WORDSRADIO, FALSE);
 
     /* Clear the data fields */
     SetDlgItemTextW(hDlg, IDC_EVENTDATESTATIC, L"");
@@ -806,7 +806,7 @@ InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
 
     /* Note that the RichEdit control never gets themed under WinXP+; one would have to write code to simulate Edit-control theming */
 
-    SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
+    SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDSRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
     SendDlgItemMessageW(hDlg, IDC_EVENTDATAEDIT, WM_SETFONT, (WPARAM)pData->hMonospaceFont, (LPARAM)TRUE);
 
     //ClearContents(hDlg);
@@ -821,7 +821,7 @@ InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
         EnableDlgItem(hDlg, IDC_COPY, FALSE);
     }
     EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
-    EnableDlgItem(hDlg, IDC_WORDRADIO, FALSE);
+    EnableDlgItem(hDlg, IDC_WORDSRADIO, FALSE);
 }
 
 /* Message handler for Event Details control */
@@ -935,7 +935,7 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 // event data. (This will be fixed in the future.)
                 pData->pevlr = NULL; // Invalidate also the cache.
                 EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
-                EnableDlgItem(hDlg, IDC_WORDRADIO, FALSE);
+                EnableDlgItem(hDlg, IDC_WORDSRADIO, FALSE);
             }
             return (INT_PTR)TRUE;
         }
@@ -1010,8 +1010,8 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     return (INT_PTR)TRUE;
 
                 case IDC_BYTESRADIO:
-                case IDC_WORDRADIO:
-                    pData->bDisplayWords = (LOWORD(wParam) == IDC_WORDRADIO);
+                case IDC_WORDSRADIO:
+                    pData->bDisplayWords = (LOWORD(wParam) == IDC_WORDSRADIO);
                     if (pData->EventLogFilter)
                         DisplayEventData(hDlg, pData);
                     return (INT_PTR)TRUE;
