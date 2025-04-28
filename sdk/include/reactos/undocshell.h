@@ -1231,7 +1231,7 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 #include <pshpack8.h>
 typedef struct tagAPPBARDATA3264
 {
-    DWORD cbSize; /* == sizeof(APPBAR_COMPAT) */
+    DWORD cbSize; /* == sizeof(APPBARDATA3264) */
     UINT32 hWnd32;
     UINT uCallbackMessage;
     UINT uEdge;
