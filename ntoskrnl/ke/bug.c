@@ -242,8 +242,13 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
                 KeBugCheckUnicodeToAnsi(&LdrEntry->BaseDllName,
                                         AnsiName,
                                         sizeof(AnsiName));
+                ULONG_PTR Offset = (ULONG_PTR)Addr - (ULONG_PTR)LdrEntry->DllBase;
+#ifdef KDBG
                 Addr -= (ULONG_PTR)LdrEntry->DllBase;
-                DbgPrint("<%s: %p>", AnsiName, (PVOID)Addr);
+                DbgPrint("<%s: %p>", AnsiName, (PVOID)Offset);
+#else
+                DbgPrint("<%p> (%s+0x%Ix)", (PVOID)Addr, AnsiName, Offset);
+#endif
             }
         }
         else
