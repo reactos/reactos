@@ -1223,9 +1223,9 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 #include <poppack.h>
 
 #if defined(_WIN64) || defined(BUILD_WOW64_ENABLED)
-    typedef UINT_PTR APPBAR_HANDLE;
+    typedef UINT_PTR APPBAR_OUTPUT;
 #else
-    typedef HANDLE APPBAR_HANDLE;
+    typedef HANDLE APPBAR_OUTPUT;
 #endif
 
 /*
@@ -1250,7 +1250,7 @@ typedef struct tagAPPBAR_COMMAND
 {
     APPBARDATAINTEROP abd;
     DWORD dwMessage;
-    APPBAR_HANDLE hOutput; /* For shlwapi!SHAllocShared */
+    APPBAR_OUTPUT hOutput; /* For shlwapi!SHAllocShared */
     DWORD dwProcessId;
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
 #include <poppack.h>
