@@ -343,6 +343,8 @@ typedef struct _CM_POST_BLOCK
     HANDLE EventHandle; /* Event object handle */
     PKEVENT Event; /* An event object to signal listeners about the change */
     ULONG Filter; /* Filter for event types to be notified about, REG_NOTIFY_CHANGE_* enum members */
+    PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
+    WORK_QUEUE_TYPE WorkQueueType;
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
 
 //
@@ -666,6 +668,8 @@ CmpInsertNewPostBlock(
     _In_        ULONG Filter,
     _In_opt_    HANDLE EventHandle,
     _In_opt_    PKEVENT EventObject,
+    _In_opt_    PWORK_QUEUE_ITEM WorkQueueItem,
+    _In_opt_    WORK_QUEUE_TYPE WorkQueueType,
     _Out_       PCM_POST_BLOCK *PostBlock
 );
 
