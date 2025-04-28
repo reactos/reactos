@@ -1,30 +1,16 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- * Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *
- * this library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * this library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Tray window implementation
+ * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2018-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 #include <commoncontrols.h>
+#include "appbar.h"
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
-LRESULT appbar_message(COPYDATASTRUCT* cds);
-void appbar_notify_all(HMONITOR hMon, UINT uMsg, HWND hwndExclude, LPARAM lParam);
 
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)
 
@@ -55,8 +41,6 @@ void appbar_notify_all(HMONITOR hMon, UINT uMsg, HWND hwndExclude, LPARAM lParam
 #define IDHK_SYS_PROPERTIES 0x1fd
 #define IDHK_DESKTOP 0x1fe
 #define IDHK_PAGER 0x1ff
-
-static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 
 enum { NONE, TILED, CASCADED } g_Arrangement = NONE;
 
@@ -323,6 +307,7 @@ class CTrayWindow :
     public CComCoClass<CTrayWindow>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl < CTrayWindow, CWindow, CControlWinTraits >,
+    public CAppBarManager,
     public ITrayWindow,
     public IShellDesktopTray,
     public IOleWindow,
@@ -684,35 +669,35 @@ public:
             break;
 
         case ID_SHELL_CMD_TILE_WND_H:
-            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            OnAppBarNotifyAll(NULL, NULL, ABN_WINDOWARRANGE, TRUE);
             if (g_Arrangement == NONE)
             {
                 BackupWindowPos();
             }
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
-            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            OnAppBarNotifyAll(NULL, NULL, ABN_WINDOWARRANGE, FALSE);
             g_Arrangement = TILED;
             break;
 
         case ID_SHELL_CMD_TILE_WND_V:
-            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            OnAppBarNotifyAll(NULL, NULL, ABN_WINDOWARRANGE, TRUE);
             if (g_Arrangement == NONE)
             {
                 BackupWindowPos();
             }
             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
-            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            OnAppBarNotifyAll(NULL, NULL, ABN_WINDOWARRANGE, FALSE);
             g_Arrangement = TILED;
             break;
 
         case ID_SHELL_CMD_CASCADE_WND:
-            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
+            OnAppBarNotifyAll(NULL, NULL, ABN_WINDOWARRANGE, TRUE);
             if (g_Arrangement == NONE)
             {
                 BackupWindowPos();
             }
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
-            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
+            OnAppBarNotifyAll(NULL, NULL, ABN_WINDOWARRANGE, FALSE);
             g_Arrangement = CASCADED;
             break;
 
@@ -2518,11 +2503,14 @@ ChangePos:
 
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        COPYDATASTRUCT *pCopyData = (COPYDATASTRUCT *)lParam;
+        PCOPYDATASTRUCT pCopyData = (PCOPYDATASTRUCT)lParam;
+        if (!pCopyData)
+            return FALSE;
+
         switch (pCopyData->dwData)
         {
             case TABDMC_APPBAR:
-                return appbar_message(pCopyData);
+                return OnAppBarMessage(pCopyData);
             case TABDMC_NOTIFY:
             case TABDMC_LOADINPROC:
                 return ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
@@ -2951,7 +2939,7 @@ HandleTrayContextMenu:
         LRESULT Ret = FALSE;
         /* FIXME: We can't check with IsChild whether the hwnd is somewhere inside
         the rebar control! But we shouldn't forward messages that the band
-        site doesn't handle, such as other controls (start button, tray window */
+        site doesn't handle, such as other controls (start button, tray window) */
 
         HRESULT hr = E_FAIL;
 
@@ -3386,7 +3374,7 @@ HandleTrayContextMenu:
         return 0;
     }
 
-    DECLARE_WND_CLASS_EX(szTrayWndClass, CS_DBLCLKS, COLOR_3DFACE)
+    DECLARE_WND_CLASS_EX(L"Shell_TrayWnd", CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTrayWindow)
         if (m_StartMenuBand != NULL)
@@ -3577,6 +3565,24 @@ HandleTrayContextMenu:
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
+
+protected:
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    // AppBar section
+    //
+    // See also: appbar.cpp
+    // TODO: freedesktop _NET_WM_STRUT integration
+    // TODO: find when a fullscreen app is in the foreground and send FULLSCREENAPP notifications
+    // TODO: detect changes in the screen size and send ABN_POSCHANGED ?
+    // TODO: multiple monitor support
+
+    BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
+    BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
+    HMONITOR GetMonitor() const override { return m_Monitor; }
+    HMONITOR GetPreviousMonitor() const override { return m_PreviousMonitor; }
+    INT GetPosition() const override { return m_Position; }
+    const RECT* GetTrayRect() override { return &m_TrayRects[m_Position]; }
+    HWND GetDesktopWnd() const override { return m_DesktopWnd; }
 };
 
 class CTrayWindowCtxMenu :
