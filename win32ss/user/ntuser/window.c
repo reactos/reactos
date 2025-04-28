@@ -2582,8 +2582,11 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    /* Set the hotkey */
    if (!(Window->style & (WS_POPUP | WS_CHILD)) || (Window->ExStyle & WS_EX_APPWINDOW))
    {
-       co_IntSendMessage(UserHMGetHandle(Window), WM_SETHOTKEY, pti->ppi->dwHotkey, 0);
-       pti->ppi->dwHotkey = 0; /* Only the first suitable window gets the hotkey */
+       if (pti->ppi->dwHotkey)
+       {
+          co_IntSendMessage(UserHMGetHandle(Window), WM_SETHOTKEY, pti->ppi->dwHotkey, 0);
+          pti->ppi->dwHotkey = 0; /* Only the first suitable window gets the hotkey */
+       }
    }
 
    TRACE("co_UserCreateWindowEx(%wZ): Created window %p\n", ClassName, hWnd);
