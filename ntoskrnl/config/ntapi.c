@@ -1600,7 +1600,9 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
                 goto Failure;
 
             /* Register for receiving notifications */
-            CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, LocalEventHandle, NULL, &PostBlock);
+            Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, LocalEventHandle, NULL, &PostBlock);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
 
             /* This is an asynchronous call, caller will be notified using its provided event handle,
              * unlock KCB and return with STATUS_PENDING now.
@@ -1618,7 +1620,9 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     else
     {
         /* Register for receiving notifications */
-        CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, NULL, NULL, &PostBlock);
+        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, NULL, NULL, &PostBlock);
+        if (!NT_SUCCESS(Status))
+            goto Failure;
 
         /* Release the lock before we go to the wait state */
         CmpReleaseKcbLock(KeyObject->KeyControlBlock);
