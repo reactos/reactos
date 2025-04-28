@@ -659,6 +659,16 @@ CmpFlushNotify(
     IN BOOLEAN LockHeld
 );
 
+NTSTATUS
+NTAPI
+CmpInsertNewPostBlock(
+    _In_        PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_        ULONG Filter,
+    _In_opt_    HANDLE EventHandle,
+    _In_opt_    PKEVENT EventObject,
+    _Out_       PCM_POST_BLOCK *PostBlock
+);
+
 CODE_SEG("INIT")
 VOID
 NTAPI

@@ -1599,35 +1599,12 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
             if (!NT_SUCCESS(Status))
                 goto Failure;
 
-            /* Open the event object */
-            Status = ObReferenceObjectByHandle(LocalEventHandle,
-                                               EVENT_MODIFY_STATE,
-                                               ExEventObjectType,
-                                               KernelMode,
-                                               (PVOID*)&EventObject,
-                                               NULL);
-            if (!NT_SUCCESS(Status))
-                goto Failure;
-
-            /* Allocate and initialize a post block */
-            PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
-            if (!PostBlock)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto Failure;
-            }
-            RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
-
-            InitializeListHead(&(PostBlock->NotifyList));
-            PostBlock->Filter = CompletionFilter;
-            PostBlock->EventHandle = LocalEventHandle;
-            PostBlock->Event = EventObject;
-
-            /* Link post block to notify block */
-            InsertHeadList(&(PostBlock->NotifyList), &(KeyObject->NotifyBlock->PostList));
+            /* Register for receiving notifications */
+            CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, LocalEventHandle, NULL, &PostBlock);
 
             /* This is an asynchronous call, caller will be notified using its provided event handle,
              * unlock KCB and return with STATUS_PENDING now.
+             * The event object should be released by CmpReportNotify, when it signals them.
              */
             CmpReleaseKcbLock(KeyObject->KeyControlBlock);
             Status = STATUS_PENDING;
@@ -1640,33 +1617,14 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     }
     else
     {
-        /* Allocate and initialize event object */
-        Status = CmpCreateEvent(NotificationEvent, &LocalEventHandle, &EventObject);
-        if (!NT_SUCCESS(Status))
-            goto Failure;
-
-        /* Allocate and initialize PostBlock */
-        PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
-        if (!PostBlock)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto Failure;
-        }
-        RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
-        
-        InitializeListHead(&(PostBlock->NotifyList));
-        PostBlock->Filter = CompletionFilter;
-        PostBlock->EventHandle = LocalEventHandle;
-        PostBlock->Event = EventObject;
-
-        /* Link post block to notify block */
-        InsertHeadList(&(PostBlock->NotifyList), &(KeyObject->NotifyBlock->PostList));
+        /* Register for receiving notifications */
+        CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, NULL, NULL, &PostBlock);
 
         /* Release the lock before we go to the wait state */
         CmpReleaseKcbLock(KeyObject->KeyControlBlock);
 
         /* Wait for event to be signaled */
-        KeWaitForSingleObject(&(PostBlock->Event), Executive, PreviousMode, FALSE, NULL);
+        KeWaitForSingleObject(PostBlock->Event, Executive, PreviousMode, FALSE, NULL);
 
         /* FIXME: handle scenarios where the key is deleted, or the handle closed */
         /* FIXME: Fill IoStatusBlock */
