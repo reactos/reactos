@@ -1222,6 +1222,12 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 
 #include <poppack.h>
 
+#if defined(_WIN64) || defined(BUILD_WOW64_ENABLED)
+    typedef UINT_PTR APPBAR_HANDLE;
+#else
+    typedef HANDLE APPBAR_HANDLE;
+#endif
+
 /*
  * Private structures for internal AppBar messaging.
  * These structures can be sent from 32-bit shell32 to 64-bit Explorer.
@@ -1244,12 +1250,16 @@ typedef struct tagAPPBAR_COMMAND
 {
     APPBARDATAINTEROP abd;
     DWORD dwMessage;
-    UINT32 hOutput32; /* For shlwapi!SHAllocShared */
+    APPBAR_HANDLE hOutput; /* For shlwapi!SHAllocShared */
     DWORD dwProcessId;
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
 #include <poppack.h>
 
+#ifdef _WIN64
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x40);
+#else
 C_ASSERT(sizeof(APPBAR_COMMAND) == 0x38);
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
