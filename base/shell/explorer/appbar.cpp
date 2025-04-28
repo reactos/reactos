@@ -59,7 +59,7 @@ void CAppBarManager::DestroyAppBarDPA()
 // ABM_NEW
 BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
 {
-    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
+    HWND hWnd = (HWND)UlongToHandle(pData->abCompat.hWnd32);
 
     if (m_hAppBarDPA)
     {
@@ -85,7 +85,7 @@ BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
     {
         pAppBar->hWnd = hWnd;
         pAppBar->uEdge = UINT_MAX;
-        pAppBar->uCallbackMessage = pData->uCallbackMessage;
+        pAppBar->uCallbackMessage = pData->abCompat.uCallbackMessage;
         if (DPA_InsertPtr(m_hAppBarDPA, INT_MAX, pAppBar) >= 0)
             return TRUE; // Success!
 
@@ -102,7 +102,7 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
     if (!m_hAppBarDPA)
         return;
 
-    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
+    HWND hWnd = (HWND)UlongToHandle(pData->abCompat.hWnd32);
     INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
     while (--nItems >= 0)
     {
@@ -122,7 +122,7 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
 // ABM_QUERYPOS
 void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
 {
-    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
+    HWND hWnd = (HWND)UlongToHandle(pData->abCompat.hWnd32);
     PAPPBAR pAppBar1 = FindAppBar(hWnd);
     if (!pAppBar1)
     {
@@ -130,13 +130,13 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
         return;
     }
 
-    PAPPBAR_COMMAND pOutput = AppBar_LockOutput(pData);
+    PAPPBAR_COMPAT pOutput = AppBar_LockOutput(pData);
     if (!pOutput)
     {
         ERR("!pOutput: %d\n", pData->dwProcessId);
         return;
     }
-    pOutput->rc = pData->rc;
+    pOutput->rc = pData->abCompat.rc;
 
     if (::IsRectEmpty(&pOutput->rc))
         ERR("IsRectEmpty\n");
@@ -154,7 +154,7 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
     }
 
     // Subtract area from pOutput->rc
-    UINT uEdge = pData->uEdge;
+    UINT uEdge = pData->abCompat.uEdge;
     INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
     while (--nItems >= 0)
     {
@@ -180,22 +180,22 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
 // ABM_SETPOS
 void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
 {
-    HWND hWnd = (HWND)UlongToHandle(pData->hWnd32);
+    HWND hWnd = (HWND)UlongToHandle(pData->abCompat.hWnd32);
     PAPPBAR pAppBar = FindAppBar(hWnd);
     if (!pAppBar)
         return;
 
     OnAppBarQueryPos(pData);
 
-    PAPPBAR_COMMAND pOutput = AppBar_LockOutput(pData);
+    PAPPBAR_COMPAT pOutput = AppBar_LockOutput(pData);
     if (!pOutput)
         return;
 
-    RECT rcOld = pAppBar->rc, rcNew = pData->rc;
+    RECT rcOld = pAppBar->rc, rcNew = pData->abCompat.rc;
     BOOL bChanged = !::EqualRect(&rcOld, &rcNew);
 
     pAppBar->rc = rcNew;
-    pAppBar->uEdge = pData->uEdge;
+    pAppBar->uEdge = pData->abCompat.uEdge;
 
     AppBar_UnLockOutput(pOutput);
 
@@ -431,7 +431,7 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
     PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
 
     if (pCopyData->cbData != sizeof(*pData) ||
-        pData->cbSize != offsetof(APPBAR_COMMAND, dwMessage))
+        pData->abCompat.cbSize != sizeof(pData->abCompat))
     {
         ERR("Invalid AppBar message\n");
         return NULL;

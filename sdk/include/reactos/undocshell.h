@@ -1223,20 +1223,24 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 #include <poppack.h>
 
 /*
- * Private structure for internal AppBar messaging.
- * This APPBAR_COMMAND structure can be sent from 32-bit shell32 to 64-bit Explorer.
+ * Private structures for internal AppBar messaging.
+ * These structures can be sent from 32-bit shell32 to 64-bit Explorer.
  * See also: https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
  * > ... only the lower 32 bits are significant, so it is safe to truncate the handle
  */
 #include <pshpack8.h>
-typedef struct tagAPPBAR_COMMAND
+typedef struct tagAPPBAR_COMPAT
 {
-    DWORD cbSize; /* == offsetof(APPBAR_COMMAND, dwMessage) */
+    DWORD cbSize; /* == sizeof(APPBAR_COMPAT) */
     UINT32 hWnd32;
     UINT uCallbackMessage;
     UINT uEdge;
     RECT rc;
     LONGLONG lParam64;
+} APPBAR_COMPAT, *PAPPBAR_COMPAT;
+typedef struct tagAPPBAR_COMMAND
+{
+    APPBAR_COMPAT abCompat;
     DWORD dwMessage;
     UINT32 hOutput32; /* For shlwapi!SHAllocShared */
     DWORD dwProcessId;
