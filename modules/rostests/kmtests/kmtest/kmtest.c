@@ -112,7 +112,7 @@ ListTests(
     IN BOOLEAN IncludeHidden)
 {
     DWORD Error = ERROR_SUCCESS;
-    CHAR Buffer[1024];
+    CHAR Buffer[2024];
     DWORD BytesRead;
     PCSTR TestName = Buffer;
     PCKMT_TEST TestEntry = TestList;
