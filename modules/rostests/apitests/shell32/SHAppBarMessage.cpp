@@ -10,6 +10,9 @@
 #include <shlwapi.h>
 #include <stdio.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /* Based on https://github.com/katahiromz/AppBarSample */
 
 //#define VERBOSE
@@ -438,8 +441,10 @@ protected:
 
     BOOL AppBar_SetSide(HWND hwnd, UINT uSide)
     {
-        RECT rc;
-        SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        HMONITOR hMon = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+        MONITORINFO mi = { sizeof(mi) };
+        ::GetMonitorInfo(hMon, &mi);
+        RECT rc = mi.rcWork;
 
         BOOL fAutoHide = FALSE;
         if (m_fAutoHide)
@@ -452,18 +457,21 @@ protected:
 
         switch (uSide)
         {
-        case ABE_TOP:
-            rc.bottom = rc.top + m_cyHeight;
-            break;
-        case ABE_BOTTOM:
-            rc.top = rc.bottom - m_cyHeight;
-            break;
-        case ABE_LEFT:
-            rc.right = rc.left + m_cxWidth;
-            break;
-        case ABE_RIGHT:
-            rc.left = rc.right - m_cxWidth;
-            break;
+            case ABE_TOP:
+                rc.bottom = rc.top + m_cyHeight;
+                break;
+            case ABE_BOTTOM:
+                rc.top = rc.bottom - m_cyHeight;
+                break;
+            case ABE_LEFT:
+                rc.right = rc.left + m_cxWidth;
+                break;
+            case ABE_RIGHT:
+                rc.left = rc.right - m_cxWidth;
+                break;
+            default:
+                ASSERT(FALSE);
+                break;
         }
 
         APPBARDATA abd = { sizeof(abd) };
@@ -1125,6 +1133,10 @@ START_TEST(SHAppBarMessage)
     }
 
     SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
+
+    DPRINT1("SM_CMONITORS: %d\n", GetSystemMetrics(SM_CMONITORS));
+    DPRINT1("s_rcWorkArea: %d, %d, %d, %d\n",
+            s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
 
     HWND hwnd1 = Window::DoCreateMainWnd(hInstance, TEXT("Test1"), 80, 80,
                                          WS_POPUP | WS_THICKFRAME | WS_CLIPCHILDREN);
