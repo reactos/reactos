@@ -40,6 +40,8 @@ UINT gfsModOnlyCandidate;
 
 /* FUNCTIONS *****************************************************************/
 
+#define IsInternalHotKey(pHK) ( (pHK)->pti == NULL )
+
 VOID FASTCALL
 StartDebugHotKeys(VOID)
 {
@@ -80,6 +82,45 @@ IntGetModifiers(PBYTE pKeyState)
         fModifiers |= MOD_WIN;
 
     return fModifiers;
+}
+
+/*
+ * IntModToComCtl32 & IntComCtl32ToMod
+ *
+ * Maps to/from MOD_/HOTKEYF_
+ */
+
+static const struct { char Mod, CC32; } g_ModMap[] =
+{
+    { MOD_SHIFT, 1 },
+    { MOD_CONTROL, 2 },
+    { MOD_ALT, 4 },
+};
+
+static
+char
+IntModToComCtl32(UINT Mod)
+{
+    char Bits = 0;
+    for (ULONG i = 0; i < _countof(g_ModMap); ++i)
+    {
+        if (g_ModMap[i].Mod & Mod)
+            Bits |= g_ModMap[i].CC32;
+    }
+    return Bits;
+}
+
+static
+char
+IntComCtl32ToMod(UINT CC32)
+{
+    char Bits = 0;
+    for (ULONG i = 0; i < _countof(g_ModMap); ++i)
+    {
+        if (g_ModMap[i].CC32 & CC32)
+            Bits |= g_ModMap[i].Mod;
+    }
+    return Bits;
 }
 
 /*
@@ -290,6 +331,18 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                     UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
                     co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
                 }
+                else if (pHotKey->id == IDHK_REACTOS && IsInternalHotKey(pHotKey))
+                {
+                    /* WM_SETHOTKEY notifies with WM_SYSCOMMAND, not WM_HOTKEY */
+                    if (bIsDown)
+                    {
+                        if (gpqForeground && gpqForeground->spwndActive)
+                            pWnd = gpqForeground->spwndActive;
+                        UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND,
+                                        SC_HOTKEY, (LPARAM)UserHMGetHandle(pHotKey->pWnd));
+                    }
+                    return TRUE; /* Don't send any message */
+                }
                 else
                 {
                     TRACE("UPM Hot key Id %d Key %u\n", pHotKey->id, wVk );
@@ -318,10 +371,10 @@ DefWndGetHotKey(PWND pWnd)
 
     while (pHotKey)
     {
-        if (pHotKey->pWnd == pWnd && pHotKey->id == IDHK_REACTOS)
+        if (pHotKey->pWnd == pWnd && pHotKey->id == IDHK_REACTOS && IsInternalHotKey(pHotKey))
         {
             /* We have found it */
-            return MAKELONG(pHotKey->vk, pHotKey->fsModifiers);
+            return MAKEWORD(pHotKey->vk, IntModToComCtl32(pHotKey->fsModifiers));
         }
 
         /* Move to the next entry */
@@ -339,7 +392,8 @@ DefWndGetHotKey(PWND pWnd)
 INT FASTCALL
 DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 {
-    UINT fsModifiers, vk;
+    UINT fsModifiers = IntComCtl32ToMod(HIBYTE(wParam));
+    UINT vk = LOBYTE(wParam);
     PHOT_KEY pHotKey, *pLink;
     INT iRet = 1;
 
@@ -350,15 +404,10 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
         return 0;
 
     // VK_ESCAPE, VK_SPACE, and VK_TAB are invalid hot keys.
-    if (LOWORD(wParam) == VK_ESCAPE ||
-        LOWORD(wParam) == VK_SPACE ||
-        LOWORD(wParam) == VK_TAB)
+    if (vk == VK_ESCAPE || vk == VK_SPACE || vk == VK_TAB)
     {
         return -1;
     }
-
-    vk = LOWORD(wParam);
-    fsModifiers = HIWORD(wParam);
 
     if (wParam)
     {
@@ -412,7 +461,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 
         /* A window can only have one hot key. If the window already has a
            hot key associated with it, the new hot key replaces the old one. */
-        pHotKey->pti = NULL;
+        pHotKey->pti = NULL; /* IsInternalHotKey */
         pHotKey->fsModifiers = fsModifiers;
         pHotKey->vk = vk;
     }

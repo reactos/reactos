@@ -27,6 +27,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
+#ifndef STARTF_SHELLPRIVATE
+#define STARTF_SHELLPRIVATE 0x400 // From kernel32.h
+#endif
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
@@ -511,6 +514,27 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
 
     if (psei->fMask & SEE_MASK_HASLINKNAME)
         startup.dwFlags |= STARTF_TITLEISLINKNAME;
+
+    if (psei->fMask & SEE_MASK_HOTKEY)
+    {
+        startup.hStdInput = LongToHandle(psei->dwHotKey);
+        startup.dwFlags |= STARTF_USEHOTKEY;
+    }
+
+    if (psei->fMask & SEE_MASK_ICON) // hIcon has higher precedence than hMonitor
+    {
+        startup.hStdOutput = (HANDLE)psei->hIcon;
+        startup.dwFlags |= STARTF_SHELLPRIVATE;
+    }
+    else if ((psei->fMask & SEE_MASK_HMONITOR) || psei->hwnd)
+    {
+        if (psei->fMask & SEE_MASK_HMONITOR)
+            startup.hStdOutput = (HANDLE)psei->hIcon;
+        else if (psei->hwnd)
+            startup.hStdOutput = (HANDLE)MonitorFromWindow(psei->hwnd, MONITOR_DEFAULTTONEAREST);
+        if (startup.hStdOutput)
+            startup.dwFlags |= STARTF_SHELLPRIVATE;
+    }
 
     if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
                        lpDirectory, &startup, &info))
@@ -1942,9 +1966,7 @@ static WCHAR *expand_environment( const WCHAR *str )
 static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 {
     static const DWORD unsupportedFlags =
-        SEE_MASK_ICON         | SEE_MASK_HOTKEY |
-        SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT |
-        SEE_MASK_ASYNCOK      | SEE_MASK_HMONITOR;
+        SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT | SEE_MASK_ASYNCOK;
 
     DWORD len;
     UINT_PTR retval = SE_ERR_NOASSOC;
