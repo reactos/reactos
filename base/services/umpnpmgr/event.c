@@ -157,7 +157,7 @@ ProcessDeviceClassChangeEvent(
                     DPRINT("Interface arrival: %S\n", PnpEvent->DeviceClass.SymbolicLinkName);
                     SendMessageW((HANDLE)pNotifyData->hRecipient, WM_DEVICECHANGE, DBT_DEVICEARRIVAL, (LPARAM)pData);
                 }
-                else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_INTERFACE_ARRIVAL, &RpcStatus))
+                else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_INTERFACE_REMOVAL, &RpcStatus))
                 {
                     DPRINT("Interface removal: %S\n", PnpEvent->DeviceClass.SymbolicLinkName);
                     SendMessageW((HANDLE)pNotifyData->hRecipient, WM_DEVICECHANGE, DBT_DEVICEREMOVECOMPLETE, (LPARAM)pData);
