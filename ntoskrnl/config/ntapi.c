@@ -1469,12 +1469,22 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 {
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    /* Registry Key */
     PCM_KEY_BODY KeyObject = NULL;
+    PCMHIVE Hive = NULL;
+
+    /* Notification state blocks */
     PCM_NOTIFY_BLOCK NotifyBlock = NULL;
     PCM_POST_BLOCK PostBlock = NULL;
-    PCMHIVE Hive = NULL;
+
+    /* Event Objects */
     HANDLE LocalEventHandle = NULL;
     PKEVENT EventObject = NULL;
+
+    /* Kernel-mode asynchronous WorkQueueItem */
+    PWORK_QUEUE_ITEM WorkQueueItem = NULL;
+    WORK_QUEUE_TYPE WorkQueueType = 0;
 
     PAGED_CODE();
 
@@ -1597,30 +1607,47 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
                                                     PreviousMode, 
                                                     &LocalEventHandle);
             if (!NT_SUCCESS(Status))
-                goto Failure;
-
-            /* Register for receiving notifications */
-            Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, LocalEventHandle, NULL, &PostBlock);
-            if (!NT_SUCCESS(Status))
-                goto Failure;
-
-            /* This is an asynchronous call, caller will be notified using its provided event handle,
-             * unlock KCB and return with STATUS_PENDING now.
-             * The event object should be released by CmpReportNotify, when it signals them.
-             */
-            CmpReleaseKcbLock(KeyObject->KeyControlBlock);
-            Status = STATUS_PENDING;
-            goto Cleanup;
+            goto Failure;
         }
-        else
+
+        if (ApcRoutine)
         {
-            goto Unimpl;
+            if (PreviousMode == KernelMode)
+            {
+                /* A kernel-mode caller should provide a WorkQueueItem instead of APC routine
+                 * ref: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey
+                 */
+                WorkQueueItem = (PWORK_QUEUE_ITEM)ApcRoutine;
+                WorkQueueType = (WORK_QUEUE_TYPE)ApcContext;
+            }
+            else
+            {
+                goto Unimpl;
+            }
         }
+
+        /* Register for receiving notifications */
+        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, LocalEventHandle, NULL, WorkQueueItem, WorkQueueType, &PostBlock);
+        if (!NT_SUCCESS(Status))
+            goto Failure;
+
+        /* This is an asynchronous call, caller will be notified using its provided event handle,
+         * unlock KCB and return with STATUS_PENDING now.
+         * The event object should be released by CmpReportNotify, when it signals them.
+         */
+        CmpReleaseKcbLock(KeyObject->KeyControlBlock);
+        Status = STATUS_PENDING;
+        goto Cleanup;
     }
     else
     {
+        /* Create an event object */
+        Status = CmpCreateEvent(NotificationEvent, &LocalEventHandle, &EventObject);
+        if (!NT_SUCCESS(Status))
+            goto Failure;
+
         /* Register for receiving notifications */
-        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, NULL, NULL, &PostBlock);
+        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, LocalEventHandle, EventObject, NULL, 0, &PostBlock);
         if (!NT_SUCCESS(Status))
             goto Failure;
 
@@ -1640,8 +1667,8 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     }
 
 Unimpl:
+    DPRINT1("NtNotifyChangeMultipleKeys: Unimplemented state: Asynchronous=%d, PreviousMode=%d, Event=0x%x, ApcRoutine=0x%x, SlaveCount=%d\n", Asynchronous, PreviousMode, Event, ApcRoutine, Count);
     Status = STATUS_NOT_IMPLEMENTED;
-    UNIMPLEMENTED_ONCE;
 
 Failure:
     if (EventObject)

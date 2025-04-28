@@ -26,9 +26,16 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
         return;
         
     /* Signal the event */
-    KeSetEvent(PostBlock->Event, 1, FALSE);
+    if (PostBlock->Event)
+        KeSetEvent(PostBlock->Event, 1, FALSE);
 
-    /* FIXME: Handle WorkQueueItem */
+    /* Queue the Work Item
+     *
+     * REG_LEGAL_CHANGE_FILTER is used to indicate this Post Block is being flushed,
+     * because the notification session is closing therefore there won't be a notification.
+     */
+    if (Filter != REG_LEGAL_CHANGE_FILTER && PostBlock->WorkQueueItem)
+        ExQueueWorkItem(PostBlock->WorkQueueItem, PostBlock->WorkQueueType);
 
     /* FIXME: Handle ApcRoutine */
 
@@ -77,16 +84,17 @@ CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
                       _In_      ULONG Filter,
                       _In_opt_  HANDLE EventHandle,
                       _In_opt_  PKEVENT EventObject,
-                      _Out_     PCM_POST_BLOCK *PostBlockOut)
+                      _In_opt_  PWORK_QUEUE_ITEM WorkQueueItem,
+                      _In_opt_  WORK_QUEUE_TYPE WorkQueueType,
+                      _Out_     PCM_POST_BLOCK *Result)
 {
     NTSTATUS Status;
     HANDLE LocalEventHandle;
     PKEVENT LocalEventObject;
     PCM_POST_BLOCK PostBlock;
 
-    /* EventHandle should be provided when an EventObject is provided */
-    if (EventHandle == NULL && EventObject != NULL)
-        return STATUS_INVALID_PARAMETER;
+    /* EventHandle must be provided when an EventObject is provided */
+    ASSERT(!(EventHandle == NULL && EventObject != NULL));
 
     if (EventHandle == NULL && EventObject == NULL)
     {
@@ -137,11 +145,13 @@ CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
     PostBlock->Filter = Filter;
     PostBlock->EventHandle = LocalEventHandle;
     PostBlock->Event = LocalEventObject;
+    PostBlock->WorkQueueItem = WorkQueueItem;
+    PostBlock->WorkQueueType = WorkQueueType;
 
     /* Insert to NotifyBlock */
     InsertHeadList(&(PostBlock->NotifyList), &(NotifyBlock->PostList));
 
-    *PostBlockOut = PostBlock;
+    *Result = PostBlock;
     return STATUS_SUCCESS;
 }
 
