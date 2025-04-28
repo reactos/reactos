@@ -1229,7 +1229,7 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
  * > ... only the lower 32 bits are significant, so it is safe to truncate the handle
  */
 #include <pshpack8.h>
-typedef struct tagAPPBAR_COMPAT
+typedef struct tagAPPBARDATA3264
 {
     DWORD cbSize; /* == sizeof(APPBAR_COMPAT) */
     UINT32 hWnd32;
@@ -1237,10 +1237,10 @@ typedef struct tagAPPBAR_COMPAT
     UINT uEdge;
     RECT rc;
     LONGLONG lParam64;
-} APPBAR_COMPAT, *PAPPBAR_COMPAT;
+} APPBARDATA3264, *PAPPBARDATA3264;
 typedef struct tagAPPBAR_COMMAND
 {
-    APPBAR_COMPAT abCompat;
+    APPBARDATA3264 abd;
     DWORD dwMessage;
     UINT32 hOutput32; /* For shlwapi!SHAllocShared */
     DWORD dwProcessId;

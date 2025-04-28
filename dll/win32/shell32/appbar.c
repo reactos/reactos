@@ -21,7 +21,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(appbar);
 
 static UINT32
 AppBar_CopyIn(
-    _In_ LPCVOID pvSrc,
+    _In_ const VOID *pvSrc,
     _In_ SIZE_T dwSize,
     _In_ DWORD dwProcessId)
 {
@@ -29,7 +29,7 @@ AppBar_CopyIn(
     if (!hMem)
         return 0;
 
-    LPVOID pvDest = SHLockShared(hMem, dwProcessId);
+    PVOID pvDest = SHLockShared(hMem, dwProcessId);
     if (!pvDest)
     {
         SHFreeShared(hMem, dwProcessId);
@@ -44,12 +44,12 @@ AppBar_CopyIn(
 static BOOL
 AppBar_CopyOut(
     _In_ UINT32 hOutput32,
-    _Out_ LPVOID pvDest,
+    _Out_ PVOID pvDest,
     _In_ SIZE_T cbDest,
     _In_ DWORD dwProcessId)
 {
     HANDLE hOutput = UlongToHandle(hOutput32);
-    LPVOID pvSrc = SHLockShared(hOutput, dwProcessId);
+    PVOID pvSrc = SHLockShared(hOutput, dwProcessId);
     if (pvSrc)
     {
         CopyMemory(pvDest, pvSrc, cbDest);
@@ -79,12 +79,12 @@ SHAppBarMessage(
     }
 
     APPBAR_COMMAND cmd;
-    cmd.abCompat.cbSize = sizeof(cmd.abCompat);
-    cmd.abCompat.hWnd32 = HandleToUlong(pData->hWnd); // Truncated on x64, as on Windows!
-    cmd.abCompat.uCallbackMessage = pData->uCallbackMessage;
-    cmd.abCompat.uEdge = pData->uEdge;
-    cmd.abCompat.rc = pData->rc;
-    cmd.abCompat.lParam64 = pData->lParam;
+    cmd.abd.cbSize = sizeof(cmd.abd);
+    cmd.abd.hWnd32 = HandleToUlong(pData->hWnd); // Truncated on x64, as on Windows!
+    cmd.abd.uCallbackMessage = pData->uCallbackMessage;
+    cmd.abd.uEdge = pData->uEdge;
+    cmd.abd.rc = pData->rc;
+    cmd.abd.lParam64 = pData->lParam;
     cmd.dwMessage = dwMessage;
     cmd.hOutput32 = 0;
     cmd.dwProcessId = GetCurrentProcessId();
@@ -95,7 +95,7 @@ SHAppBarMessage(
         case ABM_QUERYPOS:
         case ABM_SETPOS:
         case ABM_GETTASKBARPOS:
-            cmd.hOutput32 = AppBar_CopyIn(&cmd.abCompat, sizeof(cmd.abCompat), cmd.dwProcessId);
+            cmd.hOutput32 = AppBar_CopyIn(&cmd.abd, sizeof(cmd.abd), cmd.dwProcessId);
             if (!cmd.hOutput32)
             {
                 ERR("AppBar_CopyIn: %d\n", dwMessage);
@@ -113,16 +113,16 @@ SHAppBarMessage(
     /* Copy back output data */
     if (cmd.hOutput32)
     {
-        if (!AppBar_CopyOut(cmd.hOutput32, &cmd.abCompat, sizeof(cmd.abCompat), cmd.dwProcessId))
+        if (!AppBar_CopyOut(cmd.hOutput32, &cmd.abd, sizeof(cmd.abd), cmd.dwProcessId))
         {
             ERR("AppBar_CopyOut: %d\n", dwMessage);
             return FALSE;
         }
-        pData->hWnd = UlongToHandle(cmd.abCompat.hWnd32);
-        pData->uCallbackMessage = cmd.abCompat.uCallbackMessage;
-        pData->uEdge = cmd.abCompat.uEdge;
-        pData->rc = cmd.abCompat.rc;
-        pData->lParam = (LPARAM)cmd.abCompat.lParam64;
+        pData->hWnd = UlongToHandle(cmd.abd.hWnd32);
+        pData->uCallbackMessage = cmd.abd.uCallbackMessage;
+        pData->uEdge = cmd.abd.uEdge;
+        pData->rc = cmd.abd.rc;
+        pData->lParam = (LPARAM)cmd.abd.lParam64;
     }
 
     return ret;

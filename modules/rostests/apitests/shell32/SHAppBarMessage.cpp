@@ -267,15 +267,15 @@ protected:
         switch (id)
         {
         case ID_ACTION:
-            PostMessage(s_hwnd2, WM_COMMAND, ID_ACTION + 1, 0);
+            PostMessageW(s_hwnd2, WM_COMMAND, ID_ACTION + 1, 0);
             break;
         case ID_ACTION + 1:
             hThread = CreateThread(NULL, 0, ActionThreadFunc, this, 0, NULL);
             if (!hThread)
             {
                 skip("failed to create thread\n");
-                PostMessage(s_hwnd1, WM_CLOSE, 0, 0);
-                PostMessage(s_hwnd2, WM_CLOSE, 0, 0);
+                PostMessageW(s_hwnd1, WM_CLOSE, 0, 0);
+                PostMessageW(s_hwnd2, WM_CLOSE, 0, 0);
                 return;
             }
             CloseHandle(hThread);
@@ -1002,7 +1002,7 @@ public:
         ok_long(rcWork.top, s_rcWorkArea.top + 110);
         ok_long(rcWork.right, s_rcWorkArea.right);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
-        PostMessage(s_hwnd1, WM_CLOSE, 0, 0);
+        PostMessageW(s_hwnd1, WM_CLOSE, 0, 0);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
@@ -1113,7 +1113,7 @@ public:
         ok_long(rcWork.right, s_rcWorkArea.right);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
 
-        PostMessage(s_hwnd2, WM_QUIT, 0, 0);
+        PostMessageW(s_hwnd2, WM_QUIT, 0, 0);
         PostThreadMessage(dwTID, WM_QUIT, 0, 0);
 #undef INTERVAL
     }
@@ -1136,9 +1136,14 @@ START_TEST(SHAppBarMessage)
         return;
     }
 
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
-
     DPRINT1("SM_CMONITORS: %d\n", GetSystemMetrics(SM_CMONITORS));
+    if (GetSystemMetrics(SM_CMONITORS) != 1)
+    {
+        skip("Multi-monitor not supported yet\n");
+        return;
+    }
+
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
     DPRINT1("s_rcWorkArea: %d, %d, %d, %d\n",
             s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
 
@@ -1161,7 +1166,7 @@ START_TEST(SHAppBarMessage)
     s_hwnd1 = hwnd1;
     s_hwnd2 = hwnd2;
 
-    PostMessage(hwnd1, WM_COMMAND, ID_ACTION, 0);
+    PostMessageW(hwnd1, WM_COMMAND, ID_ACTION, 0);
 
     Window::DoMainLoop();
 }
