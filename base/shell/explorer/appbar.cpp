@@ -130,7 +130,7 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
         return;
     }
 
-    PAPPBARDATA3264 pOutput = AppBar_LockOutput(pData);
+    PAPPBARDATAINTEROP pOutput = AppBar_LockOutput(pData);
     if (!pOutput)
     {
         ERR("!pOutput: %d\n", pData->dwProcessId);
@@ -187,7 +187,7 @@ void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
 
     OnAppBarQueryPos(pData);
 
-    PAPPBARDATA3264 pOutput = AppBar_LockOutput(pData);
+    PAPPBARDATAINTEROP pOutput = AppBar_LockOutput(pData);
     if (!pOutput)
         return;
 

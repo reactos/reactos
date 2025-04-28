@@ -15,14 +15,14 @@ typedef struct tagAPPBAR
     RECT rc;
 } APPBAR, *PAPPBAR;
 
-static inline PAPPBARDATA3264
+static inline PAPPBARDATAINTEROP
 AppBar_LockOutput(_In_ PAPPBAR_COMMAND pData)
 {
-    return (PAPPBARDATA3264)SHLockShared(UlongToHandle(pData->hOutput32), pData->dwProcessId);
+    return (PAPPBARDATAINTEROP)SHLockShared(UlongToHandle(pData->hOutput32), pData->dwProcessId);
 }
 
 static inline VOID
-AppBar_UnLockOutput(_Out_ PAPPBARDATA3264 pOutput)
+AppBar_UnLockOutput(_Out_ PAPPBARDATAINTEROP pOutput)
 {
     SHUnlockShared(pOutput);
 }

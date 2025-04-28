@@ -1227,20 +1227,22 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
  * These structures can be sent from 32-bit shell32 to 64-bit Explorer.
  * See also: https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
  * > ... only the lower 32 bits are significant, so it is safe to truncate the handle
+ * See also: https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-duplicatehandle
+ * > DuplicateHandle can be used to duplicate a handle between a 32-bit process and a 64-bit process.
  */
 #include <pshpack8.h>
-typedef struct tagAPPBARDATA3264
+typedef struct tagAPPBARDATAINTEROP
 {
-    DWORD cbSize; /* == sizeof(APPBARDATA3264) */
+    DWORD cbSize; /* == sizeof(APPBARDATAINTEROP) */
     UINT32 hWnd32;
     UINT uCallbackMessage;
     UINT uEdge;
     RECT rc;
     LONGLONG lParam64;
-} APPBARDATA3264, *PAPPBARDATA3264;
+} APPBARDATAINTEROP, *PAPPBARDATAINTEROP;
 typedef struct tagAPPBAR_COMMAND
 {
-    APPBARDATA3264 abd;
+    APPBARDATAINTEROP abd;
     DWORD dwMessage;
     UINT32 hOutput32; /* For shlwapi!SHAllocShared */
     DWORD dwProcessId;
