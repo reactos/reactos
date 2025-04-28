@@ -688,6 +688,7 @@ protected:
         AppBar_Register(hwnd);
         AppBar_SetSide(hwnd, ABE_TOP);
 
+        DPRINT1("OnCreate(%p) done\n", hwnd);
         return TRUE;
     }
 
@@ -982,6 +983,9 @@ public:
         POINT pt;
         RECT rc1, rc2, rcWork;
         DWORD dwTID = GetWindowThreadProcessId(s_hwnd1, NULL);
+
+        DPRINT1("DoAction\n");
+        Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd1, &rc1);
         GetWindowRect(s_hwnd2, &rc2);
