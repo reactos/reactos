@@ -1255,7 +1255,7 @@ typedef struct tagAPPBAR_COMMAND
 } APPBAR_COMMAND, *PAPPBAR_COMMAND;
 #include <poppack.h>
 
-#ifdef _WIN64
+#if defined(_WIN64) || defined(BUILD_WOW6432)
 C_ASSERT(sizeof(APPBAR_COMMAND) == 0x40);
 #else
 C_ASSERT(sizeof(APPBAR_COMMAND) == 0x38);
