@@ -452,6 +452,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "新增新的字串值"
     ID_EDIT_NEW_BINARYVALUE "新增新二進制值"
     ID_EDIT_NEW_DWORDVALUE "新增新 DWORD 值"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到登錄中"
     ID_REGISTRY_EXPORTREGISTRYFILE "將登錄全部或部分匯出到檔案中"
     ID_REGISTRY_LOADHIVE "載入 Hive 控制檔到登錄中"
