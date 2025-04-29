@@ -319,11 +319,17 @@ typedef struct _SHELLEXECUTEINFOA {
 	LPCSTR lpDirectory;
 	int nShow;
 	HINSTANCE hInstApp;
+	/* Optional fields */
 	PVOID lpIDList;
 	LPCSTR lpClass;
 	HKEY hkeyClass;
 	DWORD dwHotKey;
-	HANDLE hIcon;
+	_ANONYMOUS_UNION union {
+		HANDLE hIcon;
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+		HANDLE hMonitor;
+#endif
+	} DUMMYUNIONNAME;
 	HANDLE hProcess;
 } SHELLEXECUTEINFOA,*LPSHELLEXECUTEINFOA;
 typedef struct _SHELLEXECUTEINFOW {
@@ -336,11 +342,17 @@ typedef struct _SHELLEXECUTEINFOW {
 	LPCWSTR lpDirectory;
 	int nShow;
 	HINSTANCE hInstApp;
+	/* Optional fields */
 	PVOID lpIDList;
 	LPCWSTR lpClass;
 	HKEY hkeyClass;
 	DWORD dwHotKey;
-	HANDLE hIcon;
+	_ANONYMOUS_UNION union {
+		HANDLE hIcon;
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+		HANDLE hMonitor;
+#endif
+	} DUMMYUNIONNAME;
 	HANDLE hProcess;
 } SHELLEXECUTEINFOW,*LPSHELLEXECUTEINFOW;
 typedef struct _SHFILEOPSTRUCTA {
