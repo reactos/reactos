@@ -2690,7 +2690,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 
     sei.dwHotKey = lpici->dwHotKey;
     sei.fMask |= CmicFlagsToSeeFlags(lpici->fMask & CMIC_MASK_HOTKEY);
-    if ((!(sei.fMask & SEE_MASK_HOTKEY) || !sei.dwHotKey) && m_Header.wHotKey)
+    if (m_Header.wHotKey)
     {
         sei.dwHotKey = m_Header.wHotKey;
         sei.fMask |= SEE_MASK_HOTKEY;

@@ -469,7 +469,7 @@ InitThreadCallback(PETHREAD Thread)
     PTEB pTeb;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
     PKL pDefKL;
-    ULONG fPrevW32PF_flags = 0;
+    BOOLEAN bFirstThread;
 
     Process = Thread->ThreadsProcess;
 
@@ -494,7 +494,7 @@ InitThreadCallback(PETHREAD Thread)
     pTeb->Win32ThreadInfo = ptiCurrent;
     ptiCurrent->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
     ptiCurrent->pcti = &ptiCurrent->cti;
-    fPrevW32PF_flags = ptiCurrent->ppi->W32PF_flags;
+    bFirstThread = !(ptiCurrent->ppi->W32PF_flags & W32PF_THREADCONNECTED);
 
     /* Mark the process as having threads */
     ptiCurrent->ppi->W32PF_flags |= W32PF_THREADCONNECTED;
@@ -588,14 +588,14 @@ InitThreadCallback(PETHREAD Thread)
           }
        }
 
-       if (!(fPrevW32PF_flags & W32PF_THREADCONNECTED))
+       if (bFirstThread)
        {
              /* Note: Only initialize once so it can be set back to 0 after being used */
              if (ProcessParams->WindowFlags & STARTF_USEHOTKEY)
                  ptiCurrent->ppi->dwHotkey = HandleToUlong(ProcessParams->StandardInput);
              /* TODO:
-             else if (Parameters->ShellInfo.Buffer)
-                 ..->dwHotkey = ParseShellInfo(Parameters->ShellInfo.Buffer, L"hotkey.");
+             else if (ProcessParams->ShellInfo.Buffer)
+                 ..->dwHotkey = ParseShellInfo(ProcessParams->ShellInfo.Buffer, L"hotkey.");
              */
 
              if (ProcessParams->WindowFlags & STARTF_SHELLPRIVATE)

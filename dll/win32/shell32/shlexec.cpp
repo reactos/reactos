@@ -517,21 +517,21 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
 
     if (psei->fMask & SEE_MASK_HOTKEY)
     {
-        startup.hStdInput = LongToHandle(psei->dwHotKey);
+        startup.hStdInput = UlongToHandle(psei->dwHotKey);
         startup.dwFlags |= STARTF_USEHOTKEY;
     }
 
     if (psei->fMask & SEE_MASK_ICON) // hIcon has higher precedence than hMonitor
     {
-        startup.hStdOutput = (HANDLE)psei->hIcon;
+        startup.hStdOutput = psei->hIcon;
         startup.dwFlags |= STARTF_SHELLPRIVATE;
     }
     else if ((psei->fMask & SEE_MASK_HMONITOR) || psei->hwnd)
     {
         if (psei->fMask & SEE_MASK_HMONITOR)
-            startup.hStdOutput = (HANDLE)psei->hIcon;
+            startup.hStdOutput = psei->hMonitor;
         else if (psei->hwnd)
-            startup.hStdOutput = (HANDLE)MonitorFromWindow(psei->hwnd, MONITOR_DEFAULTTONEAREST);
+            startup.hStdOutput = MonitorFromWindow(psei->hwnd, MONITOR_DEFAULTTONEAREST);
         if (startup.hStdOutput)
             startup.dwFlags |= STARTF_SHELLPRIVATE;
     }
