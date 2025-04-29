@@ -441,6 +441,11 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     NextThread = Prcb->NextThread;
     if (NextThread)
     {
+        ASSERT(NextThread->State == Standby);
+#ifndef CONFIG_SMP
+        ASSERT(NextThread != CurrentThread);
+#endif
+
         /* Already got a thread, set it up */
         Prcb->NextThread = NULL;
         Prcb->CurrentThread = NextThread;
