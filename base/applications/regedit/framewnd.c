@@ -168,43 +168,30 @@ void UpdateStatusBar(void)
     LPCWSTR pszKeyPath = NULL;
     LPWSTR pszFullPath = NULL;
     DWORD dwCbFullPath;
-    LPCWSTR pszRootName = NULL;
 
-    if (g_pChildWnd && g_pChildWnd->hTreeWnd)
-    {
-        pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-    }
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
 
-    if (pszKeyPath && hKeyRoot)
+    LPCWSTR pszRootName = get_root_key_name(hKeyRoot);
+
+    dwCbFullPath = (wcslen(pszRootName) + 1 + wcslen(pszKeyPath) + 1) * sizeof(WCHAR);
+    pszFullPath = malloc(dwCbFullPath);
+
+    if (pszFullPath)
     {
-        pszRootName = get_root_key_name(hKeyRoot);
-        if (pszRootName)
+        if (pszKeyPath[0] != UNICODE_NULL)
         {
-            dwCbFullPath = (wcslen(pszRootName) + 1 + wcslen(pszKeyPath) + 1) * sizeof(WCHAR);
-            pszFullPath = malloc(dwCbFullPath);
-
-            if (pszFullPath)
-            {
-                if (pszKeyPath[0] != UNICODE_NULL)
-                {
-                    StringCbPrintfW(pszFullPath, dwCbFullPath, L"%s%s%s", pszRootName,
-                                    ((pszKeyPath[0] == L'\\') ? L"" : L"\\"), pszKeyPath);
-                }
-                else
-                {
-                    StringCbCopyW(pszFullPath, dwCbFullPath, pszRootName);
-                }
-            }
+            StringCbPrintfW(pszFullPath, dwCbFullPath, L"%s%s%s", pszRootName,
+                            ((pszKeyPath[0] == L'\\') ? L"" : L"\\"), pszKeyPath);
         }
-    }
-
-    if (hStatusBar)
-    {
-        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszFullPath);
+        else
+        {
+            StringCbCopyW(pszFullPath, dwCbFullPath, pszRootName);
+        }
     }
 
     if (pszFullPath)
     {
+        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszFullPath);
         free(pszFullPath);
     }
 }
