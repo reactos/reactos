@@ -343,6 +343,7 @@ typedef struct _CM_POST_BLOCK
     HANDLE EventHandle; /* Event object handle */
     PKEVENT Event; /* An event object to signal listeners about the change */
     ULONG Filter; /* Filter for event types to be notified about, REG_NOTIFY_CHANGE_* enum members */
+    BOOLEAN WatchTree; /* Filter for notifications from subkeys */
     PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
     WORK_QUEUE_TYPE WorkQueueType;
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
@@ -666,6 +667,7 @@ NTAPI
 CmpInsertNewPostBlock(
     _In_        PCM_NOTIFY_BLOCK NotifyBlock,
     _In_        ULONG Filter,
+    _In_        BOOLEAN WatchTree,
     _In_opt_    HANDLE EventHandle,
     _In_opt_    PKEVENT EventObject,
     _In_opt_    PWORK_QUEUE_ITEM WorkQueueItem,
