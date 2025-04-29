@@ -53,7 +53,8 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
 VOID
 NTAPI
 CmpFlushAllPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
-                      _In_ ULONG Filter)
+                      _In_ ULONG Filter,
+                      _In_ BOOLEAN IsSubKey)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PCM_POST_BLOCK PostBlock;
@@ -71,6 +72,10 @@ CmpFlushAllPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
         /* Navigate to the next, since the previous entry might get freed */
         NextEntry = NextEntry->Flink;
 
+        /* Check if the post block likes children */
+        if (IsSubKey && !PostBlock->WatchTree)
+            continue;
+
         /* Flush it */
         CmpFlushPostBlock(PostBlock, Filter);
     }
@@ -82,6 +87,7 @@ NTSTATUS
 NTAPI
 CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
                       _In_      ULONG Filter,
+                      _In_      BOOLEAN WatchTree,
                       _In_opt_  HANDLE EventHandle,
                       _In_opt_  PKEVENT EventObject,
                       _In_opt_  PWORK_QUEUE_ITEM WorkQueueItem,
@@ -143,6 +149,7 @@ CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
 
     /* Fill fields */
     PostBlock->Filter = Filter;
+    PostBlock->WatchTree = WatchTree;
     PostBlock->EventHandle = LocalEventHandle;
     PostBlock->Event = LocalEventObject;
     PostBlock->WorkQueueItem = WorkQueueItem;
@@ -165,6 +172,7 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PCMHIVE KeyHive;
     PLIST_ENTRY ListHead, NextEntry;
     PCM_NOTIFY_BLOCK NotifyBlock;
+    BOOLEAN IsSubKey = FALSE;
 
     /* Find the CMHIVE linked to this Hive */
     KeyHive = CONTAINING_RECORD(Hive, CMHIVE, Hive);
@@ -180,13 +188,45 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
         NotifyBlock = CONTAINING_RECORD(NextEntry, CM_NOTIFY_BLOCK, HiveList);
 
         /* Check if the NotifyBlock is paired with this Kcb */
-        if (NotifyBlock->KeyControlBlock != Kcb) goto SkipEntry;
+        if (NotifyBlock->KeyControlBlock != Kcb)
+        {
+            if (NotifyBlock->WatchTree)
+            {
+                /* Check if the Kcb is a subkey of this NotifyBlock's Kcb */
+
+                /* This helps to optimize our search for our parents */
+                int Depth = Kcb->TotalLevels - NotifyBlock->KeyControlBlock->TotalLevels;
+
+                /* A subkey must be deeper than its parent */
+                if (Depth < 0)
+                    goto SkipEntry;
+
+                /* Walk the parents tree, either it reaches to the root or it reaches to the NotifyBlock's KCB */
+                PCM_KEY_CONTROL_BLOCK Parent = Kcb->ParentKcb;
+                while (Parent != NULL && Parent != NotifyBlock->KeyControlBlock && Depth > 0)
+                {
+                    Parent = Parent->ParentKcb;
+                    Depth--;
+                }
+
+                /* I guess we're orphan now */
+                if (Parent != NotifyBlock->KeyControlBlock)
+                    goto SkipEntry;
+
+                /* We should remember this so we wouldn't notify a post block who doesn't want children */
+                IsSubKey = TRUE;
+            }
+            else
+            {
+                goto SkipEntry;
+            }
+        }
 
         /* Check the notification filter */
         if ((NotifyBlock->Filter & Filter) != Filter) goto SkipEntry;
 
         /* Report the notification to PostBlocks linked to this NotifyBlock */
-        CmpFlushAllPostBlocks(NotifyBlock, Filter);
+        CmpFlushAllPostBlocks(NotifyBlock, Filter, IsSubKey);
 
 SkipEntry:
         /* Navigate to next entry */
@@ -206,7 +246,7 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
         CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
 
     /* Flush PostBlocks */
-    CmpFlushAllPostBlocks(KeyBody->NotifyBlock, REG_LEGAL_CHANGE_FILTER);
+    CmpFlushAllPostBlocks(KeyBody->NotifyBlock, REG_LEGAL_CHANGE_FILTER, FALSE);
 
     /* Free the NotifyBlock */
     RemoveEntryList(&(KeyBody->NotifyBlock->HiveList));
