@@ -1138,7 +1138,7 @@ START_TEST(SHAppBarMessage)
     }
 
     SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
-    trace("s_rcWorkArea: %d, %d, %d, %d\n",
+    trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n",
           s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
 
     HWND hwnd1 = Window::DoCreateMainWnd(hInstance, TEXT("Test1"), 80, 80,
