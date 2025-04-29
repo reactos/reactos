@@ -1050,7 +1050,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     /* If an unquoted comma was found, there are at least two parts of the string:
      * - the CPL path
      * - either a dialog box number preceeded by @, or a dialog box name.
-     * If there was a second unqoted comma, there is another part of the string:
+     * If there was a second unquoted comma, there is another part of the string:
      * - the rest of the parameters. */
     else
     {
