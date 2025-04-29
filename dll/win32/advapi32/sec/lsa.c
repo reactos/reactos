@@ -692,12 +692,6 @@ LsaEnumerateTrustedDomainsEx(IN LSA_HANDLE PolicyHandle,
     return Status;
 }
 
-static
-LPVOID
-LsaAllocMemory(SIZE_T cb)
-{
-    return RtlAllocateHeap(RtlGetProcessHeap(), 0, cb);
-}
 
 /*
  * @implemented
@@ -1848,8 +1842,8 @@ LsaRetrievePrivateData(IN LSA_HANDLE PolicyHandle,
     else
     {
         BufferSize = sizeof(LSA_UNICODE_STRING) + EncryptedData->MaximumLength;
-        DecryptedData = LsaAllocMemory(BufferSize); // The caller must use LsaFreeMemory
-        if (!DecryptedData)
+        DecryptedData = midl_user_allocate(BufferSize);
+        if (DecryptedData == NULL)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto done;
