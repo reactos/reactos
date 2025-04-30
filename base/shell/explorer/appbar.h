@@ -77,6 +77,7 @@ protected:
         _In_ const RECT *prcTray,
         _In_ HMONITOR hMonitor,
         _Out_ PRECT prcWorkArea);
+    void RecomputeAllWorkareas();
 
     void StuckAppChange(
         _In_opt_ HWND hwndTarget,
@@ -93,4 +94,11 @@ protected:
     virtual INT GetPosition() const = 0;
     virtual const RECT* GetTrayRect() = 0;
     virtual HWND GetDesktopWnd() const = 0;
+
+    static BOOL CALLBACK
+    MonitorEnumProc(
+        _In_ HMONITOR hMonitor,
+        _In_ HDC hDC,
+        _In_ LPRECT prc,
+        _Inout_ LPARAM lParam);
 };

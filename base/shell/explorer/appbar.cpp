@@ -425,6 +425,31 @@ CAppBarManager::RecomputeWorkArea(
     return WORKAREA_SAME_AS_MONITOR;
 }
 
+BOOL CALLBACK
+CAppBarManager::MonitorEnumProc(
+    _In_ HMONITOR hMonitor,
+    _In_ HDC hDC,
+    _In_ LPRECT prc,
+    _Inout_ LPARAM lParam)
+{
+    CAppBarManager *pThis = (CAppBarManager *)lParam;
+    UNREFERENCED_PARAMETER(hDC);
+
+    RECT rcWorkArea;
+    if (pThis->RecomputeWorkArea(prc, hMonitor, &rcWorkArea) != WORKAREA_IS_NOT_MONITOR)
+        return TRUE;
+
+    HWND hwndDesktop = pThis->GetDesktopWnd();
+    ::SystemParametersInfoW(SPI_SETWORKAREA, 0, &rcWorkArea, hwndDesktop ? SPIF_SENDCHANGE : 0);
+    pThis->RedrawDesktop(hwndDesktop, &rcWorkArea);
+    return TRUE;
+}
+
+void CAppBarManager::RecomputeAllWorkareas()
+{
+    ::EnumDisplayMonitors(NULL, NULL, CAppBarManager::MonitorEnumProc, (LPARAM)this);
+}
+
 PAPPBAR_COMMAND
 CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 {
