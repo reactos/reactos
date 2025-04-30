@@ -88,7 +88,7 @@ add_livecd_shortcut("Sound Recorder" sndrec32.exe "Profiles/All Users/Start Menu
 add_livecd_shortcut("Volume Control" sndvol32.exe "Profiles/All Users/Start Menu/Programs/Accessories/Entertainment")
 add_livecd_shortcut("Character Map" charmap.exe "Profiles/All Users/Start Menu/Programs/Accessories/System Tools")
 add_livecd_shortcut("Clipboard Viewer" clipbrd.exe "Profiles/All Users/Start Menu/Programs/Accessories/System Tools")
-add_livecd_shortcut("Keyboard Layout Switcher" kbswitch.exe "Profiles/All Users/Start Menu/Programs/Accessories/System Tools")
+add_livecd_shortcut("Keyboard Layout Switcher" internat.exe "Profiles/All Users/Start Menu/Programs/Accessories/System Tools")
 add_livecd_shortcut("ReactX Diagnostic" dxdiag.exe "Profiles/All Users/Start Menu/Programs/Accessories/System Tools")
 add_livecd_shortcut("Registry Editor" regedit.exe "Profiles/All Users/Start Menu/Programs/Accessories/System Tools")
 add_livecd_shortcut("Task Manager" taskmgr.exe "Profiles/All Users/Start Menu/Programs/Accessories/System Tools")

@@ -1,11 +1,12 @@
 /*
- * PROJECT:         ReactOS Keyboard Layout Switcher
- * FILE:            base/applications/kbswitch/kbsdll/kbsdll.c
- * PROGRAMMER:      Dmitry Chapyshev <dmitry@reactos.org>
- *
+ * PROJECT:     ReactOS Keyboard Layout Switcher
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Switching Keyboard Layouts
+ * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#include "../kbswitch.h"
+#include "../internat.h"
 
 HHOOK hWinHook = NULL;
 HHOOK hShellHook = NULL;

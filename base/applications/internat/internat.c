@@ -1,27 +1,27 @@
 /*
- * PROJECT:         Keyboard Layout Switcher
- * FILE:            base/applications/kbswitch/kbswitch.c
- * PURPOSE:         Switching Keyboard Layouts
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
- *                  Colin Finck (mail@colinfinck.de)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS Keyboard Layout Switcher
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Switching Keyboard Layouts
+ * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright Colin Finck (mail@colinfinck.de)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#include "kbswitch.h"
+#include "internat.h"
 #include <shlobj.h>
 #include <shlwapi_undoc.h>
 #include <imm.h>
 #include <imm32_undoc.h>
 
 /*
- * This program kbswitch is a mimic of Win2k's internat.exe.
+ * This program is a mimic of Win2k's internat.exe.
  * However, there are some differences.
  *
  * Comparing with WinNT4 ActivateKeyboardLayout, WinXP ActivateKeyboardLayout has
  * process boundary, so we cannot activate the IME keyboard layout from the outer process.
  * It needs special care.
  *
- * We use global hook by our kbsdll.dll, to watch the shell and the windows.
+ * We use global hook by indicdll.dll, to watch the shell and the windows.
  *
  * It might not work correctly on Vista+ because keyboard layout change notification
  * won't be generated in Vista+.
@@ -555,7 +555,7 @@ BuildLeftPopupMenu(VOID)
 BOOL
 SetHooks(VOID)
 {
-    g_hHookDLL = LoadLibrary(_T("kbsdll.dll"));
+    g_hHookDLL = LoadLibrary(_T("indicdll.dll"));
     if (!g_hHookDLL)
     {
         return FALSE;
@@ -702,14 +702,14 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
-        case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
+        case WM_LANG_CHANGED: /* Comes from indicdll.dll and this module */
         {
             UpdateLayoutList((HKL)lParam);
             UpdateLanguageDisplay(hwnd, (HKL)lParam);
             break;
         }
 
-        case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
+        case WM_WINDOW_ACTIVATE: /* Comes from indicdll.dll and this module */
         {
             HWND hwndFore = GetForegroundWindow();
             if (RememberLastActive(hwnd, hwndFore))
