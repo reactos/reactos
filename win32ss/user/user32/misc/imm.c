@@ -637,7 +637,6 @@ ImeWnd_SwitchSoftKbdProc(_In_ HIMC hIMC, _In_ LPARAM lParam)
 }
 
 /* Handles WM_IME_SYSTEM message of the default IME window. */
-/* Win: ImeSystemHandler */
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
