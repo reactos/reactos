@@ -1570,7 +1570,7 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
         /* Link notify block to the hive */
         Hive = CONTAINING_RECORD(KeyObject->KeyControlBlock->KeyHive, CMHIVE, Hive);
-        InsertHeadList(&(NotifyBlock->HiveList), &(Hive->NotifyList));
+        InsertHeadList(&(Hive->NotifyList), &(NotifyBlock->HiveList));
     }
     else
     {

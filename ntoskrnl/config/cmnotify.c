@@ -40,8 +40,11 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
     /* FIXME: Handle ApcRoutine */
 
     /* Cleanup resources */
-    ObDereferenceObject(PostBlock->Event);
-    ZwClose(PostBlock->EventHandle);
+    if (PostBlock->Event)
+    {
+        ObDereferenceObject(PostBlock->Event);
+        ZwClose(PostBlock->EventHandle);
+    }
 
     /* Remove post block entry */
     RemoveEntryList(&(PostBlock->NotifyList));
@@ -156,7 +159,7 @@ CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
     PostBlock->WorkQueueType = WorkQueueType;
 
     /* Insert to NotifyBlock */
-    InsertHeadList(&(PostBlock->NotifyList), &(NotifyBlock->PostList));
+    InsertHeadList(&(NotifyBlock->PostList), &(PostBlock->NotifyList));
 
     *Result = PostBlock;
     return STATUS_SUCCESS;
