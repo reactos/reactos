@@ -2921,7 +2921,7 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
 
     if (FontGDI->OriginalWeight != FW_DONTCARE &&
-        FontGDI->OriginalWeight != FW_NORMAL)
+        FontGDI->OriginalWeight > FontGDI->RequestWeight)
     {
         TM->tmWeight = FontGDI->OriginalWeight;
     }
