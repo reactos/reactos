@@ -99,9 +99,42 @@ START_TEST(NtQueryObject)
         skip("ObjectName->Buffer string length check skipped\n");
         return;
     }
+
     /* Verify that ObjectName->Length doesn't count extra NUL-terminators */
-    {
     SIZE_T strLen = wcslen(ObjectName->Buffer) * sizeof(WCHAR);
     ok_eq_size(strLen, (SIZE_T)ObjectName->Length);
+
+    /* Get the full path name of the current executable */
+    WCHAR ExecutablePath[MAX_PATH];
+    GetModuleFileNameW(NULL, ExecutablePath, MAX_PATH);
+
+    /* Open the executable file */
+    HANDLE FileHandle;
+    FileHandle = CreateFileW(ExecutablePath,
+                             GENERIC_READ,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE,
+                             NULL,
+                             OPEN_EXISTING,
+                             FILE_ATTRIBUTE_NORMAL,
+                             NULL);
+    ok(FileHandle != INVALID_HANDLE_VALUE,
+       "File '%S': Opening failed\n", ExecutablePath);
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        skip("File '%S': Opening failed\n", ExecutablePath);
+        return;
     }
+
+    /* Query the name of the file */
+    Status = NtQueryObject(FileHandle,
+                           ObjectNameInformation,
+                           &ObjectNameBuffer,
+                           sizeof(ObjectNameBuffer),
+                           &BufferSize3);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Validate that the name starts with "\\Device" */
+    ok(wcsncmp(ObjectName->Buffer, L"\\Device", 7) == 0,
+       "ObjectName->Buffer: '%S' does not start with '\\Device'\n",
+       ObjectName->Buffer);
 }
