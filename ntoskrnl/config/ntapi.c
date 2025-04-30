@@ -1480,11 +1480,7 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
     /* Event Objects */
     HANDLE LocalEventHandle = NULL;
-    PKEVENT EventObject = NULL;
-
-    /* Kernel-mode asynchronous WorkQueueItem */
-    PWORK_QUEUE_ITEM WorkQueueItem = NULL;
-    WORK_QUEUE_TYPE WorkQueueType = 0;
+    PKEVENT LocalEventObject = NULL;
 
     PAGED_CODE();
 
@@ -1593,44 +1589,66 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         }
     }
 
-    if (Asynchronous)
+    /* Allocate and initialize local event object */
+    if (Event)
     {
-        if (Event)
-        {
-            /* Convert the user event handle to a kernel event handle,
-             * or duplicate a kernel handle so we won't close the caller's handle
-             * when flushing post blocks
-             */
-            Status = CmpConvertHandleToKernelHandle(Event,
-                                                    ExEventObjectType, 
-                                                    EVENT_MODIFY_STATE, 
-                                                    PreviousMode, 
-                                                    &LocalEventHandle);
-            if (!NT_SUCCESS(Status))
+        /* Convert the user event handle to a kernel event handle,
+         * or duplicate a kernel handle so we won't close the caller's handle
+         * when flushing post blocks
+         */
+        Status = CmpConvertHandleToKernelHandle(Event,
+                                                ExEventObjectType, 
+                                                EVENT_MODIFY_STATE, 
+                                                PreviousMode, 
+                                                &LocalEventHandle);
+        if (!NT_SUCCESS(Status))
             goto Failure;
-        }
+    }
+    else if (!Asynchronous)
+    {
+        /* Create a local event object so we can wait on it in synchronous mode */
+        Status = CmpCreateEvent(NotificationEvent, &LocalEventHandle, &LocalEventObject);
+        if (!NT_SUCCESS(Status))
+            goto Failure;
+    }
 
-        if (ApcRoutine)
-        {
-            if (PreviousMode == KernelMode)
-            {
-                /* A kernel-mode caller should provide a WorkQueueItem instead of APC routine
-                 * ref: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey
-                 */
-                WorkQueueItem = (PWORK_QUEUE_ITEM)ApcRoutine;
-                WorkQueueType = (WORK_QUEUE_TYPE)ApcContext;
-            }
-            else
-            {
-                goto Unimpl;
-            }
-        }
-
-        /* Register for receiving notifications */
-        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, WatchTree, LocalEventHandle, NULL, WorkQueueItem, WorkQueueType, &PostBlock);
+    /* Register for receiving notifications */
+    if (PreviousMode != KernelMode)
+    {
+        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock,
+                                       LocalEventHandle,
+                                       LocalEventObject,
+                                       ApcRoutine,
+                                       ApcContext,
+                                       &PostBlock);
+        if (!NT_SUCCESS(Status))
+            goto Failure;    
+    }
+    else
+    {
+        /* A kernel-mode caller should provide a WorkQueueItem instead of APC routine
+         * ref: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey
+         */
+        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock,
+                                       LocalEventHandle,
+                                       LocalEventObject,
+                                       NULL,
+                                       NULL,
+                                       &PostBlock);
+                                       
         if (!NT_SUCCESS(Status))
             goto Failure;
 
+        PostBlock->WorkQueueItem = (PWORK_QUEUE_ITEM)ApcRoutine;
+        PostBlock->WorkQueueType = (WORK_QUEUE_TYPE)ApcContext;
+    }
+    
+    /* Fill the PostBlock fields */
+    PostBlock->Filter = CompletionFilter;
+    PostBlock->WatchTree = WatchTree;
+
+    if (Asynchronous)
+    {
         /* This is an asynchronous call, caller will be notified using its provided event handle,
          * unlock KCB and return with STATUS_PENDING now.
          * The event object should be released by CmpReportNotify, when it signals them.
@@ -1641,16 +1659,6 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     }
     else
     {
-        /* Create an event object */
-        Status = CmpCreateEvent(NotificationEvent, &LocalEventHandle, &EventObject);
-        if (!NT_SUCCESS(Status))
-            goto Failure;
-
-        /* Register for receiving notifications */
-        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock, CompletionFilter, WatchTree, LocalEventHandle, EventObject, NULL, 0, &PostBlock);
-        if (!NT_SUCCESS(Status))
-            goto Failure;
-
         /* Release the lock before we go to the wait state */
         CmpReleaseKcbLock(KeyObject->KeyControlBlock);
 
@@ -1666,13 +1674,9 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         goto Cleanup;
     }
 
-Unimpl:
-    DPRINT1("NtNotifyChangeMultipleKeys: Unimplemented state: Asynchronous=%d, PreviousMode=%d, Event=0x%x, ApcRoutine=0x%x, SlaveCount=%d\n", Asynchronous, PreviousMode, Event, ApcRoutine, Count);
-    Status = STATUS_NOT_IMPLEMENTED;
-
 Failure:
-    if (EventObject)
-        ObDereferenceObject(EventObject);
+    if (LocalEventObject)
+        ObDereferenceObject(LocalEventObject);
 
     if (LocalEventHandle)
         ZwClose(LocalEventHandle);

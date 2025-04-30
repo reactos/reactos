@@ -344,6 +344,7 @@ typedef struct _CM_POST_BLOCK
     PKEVENT Event; /* An event object to signal listeners about the change */
     ULONG Filter; /* Filter for event types to be notified about, REG_NOTIFY_CHANGE_* enum members */
     BOOLEAN WatchTree; /* Filter for notifications from subkeys */
+    PKAPC UserApc; /* User-mode Asynchronous Procedure Call, a callback routine to notify the listener about the change */
     PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
     WORK_QUEUE_TYPE WorkQueueType;
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
@@ -666,13 +667,27 @@ NTSTATUS
 NTAPI
 CmpInsertNewPostBlock(
     _In_        PCM_NOTIFY_BLOCK NotifyBlock,
-    _In_        ULONG Filter,
-    _In_        BOOLEAN WatchTree,
     _In_opt_    HANDLE EventHandle,
     _In_opt_    PKEVENT EventObject,
-    _In_opt_    PWORK_QUEUE_ITEM WorkQueueItem,
-    _In_opt_    WORK_QUEUE_TYPE WorkQueueType,
+    _In_opt_    PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_    PVOID ApcContext,
     _Out_       PCM_POST_BLOCK *PostBlock
+);
+
+VOID
+NTAPI 
+CmpApcKernelRoutine(
+  _In_    PKAPC Apc,
+  _Inout_ PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
+  _Inout_ PVOID *NormalContext OPTIONAL,
+  _Inout_ PVOID *SystemArgument1 OPTIONAL,
+  _Inout_ PVOID *SystemArgument2 OPTIONAL
+);
+
+VOID
+NTAPI 
+CmpApcRoutineRundown(
+    _In_ PKAPC Apc
 );
 
 CODE_SEG("INIT")

@@ -37,7 +37,23 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
     if (Filter != REG_LEGAL_CHANGE_FILTER && PostBlock->WorkQueueItem)
         ExQueueWorkItem(PostBlock->WorkQueueItem, PostBlock->WorkQueueType);
 
-    /* FIXME: Handle ApcRoutine */
+    /* Queue the APC routine */
+    if (Filter != REG_LEGAL_CHANGE_FILTER && PostBlock->UserApc)
+    {
+        KeInsertQueueApc(PostBlock->UserApc, PostBlock, (PVOID)STATUS_NOTIFY_ENUM_DIR, 0);
+
+        /* We can't free the resource, yet
+         * There's an APC routine to be called so we still need them
+         * Let the CmpApcKernelRoutine handle it for us
+         */
+
+        /* Even though we are not freeing the resources, we don't want the PostBlock be triggered twice 
+         * Remove it from the post list
+         */
+        RemoveEntryList(&(PostBlock->NotifyList));
+
+        return;
+    }
 
     /* Cleanup resources */
     if (PostBlock->Event)
@@ -89,32 +105,31 @@ CmpFlushAllPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
 NTSTATUS
 NTAPI
 CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
-                      _In_      ULONG Filter,
-                      _In_      BOOLEAN WatchTree,
                       _In_opt_  HANDLE EventHandle,
                       _In_opt_  PKEVENT EventObject,
-                      _In_opt_  PWORK_QUEUE_ITEM WorkQueueItem,
-                      _In_opt_  WORK_QUEUE_TYPE WorkQueueType,
+                      _In_opt_  PIO_APC_ROUTINE ApcRoutine,
+                      _In_opt_  PVOID ApcContext,
                       _Out_     PCM_POST_BLOCK *Result)
 {
     NTSTATUS Status;
     HANDLE LocalEventHandle;
     PKEVENT LocalEventObject;
+    PKAPC LocalApc;
     PCM_POST_BLOCK PostBlock;
+    PETHREAD CurrentThread;
 
     /* EventHandle must be provided when an EventObject is provided */
     ASSERT(!(EventHandle == NULL && EventObject != NULL));
 
-    if (EventHandle == NULL && EventObject == NULL)
+    if (EventHandle == NULL)
     {
-        /* Allocate an event object if it's not provided by the caller */
-        Status = CmpCreateEvent(NotificationEvent, &LocalEventHandle, &LocalEventObject);
-        if (!NT_SUCCESS(Status))
-            return Status;
+        /* No event notification is requested */
+        LocalEventHandle = NULL;
+        LocalEventObject = NULL;
     }
-    else if (EventHandle != NULL && EventObject == NULL)
+    else if (EventObject == NULL)
     {
-        /* Open the event handle if the event object is not provided by the caller */
+        /* Event is provided by its handle, open it */
         LocalEventHandle = EventHandle;
         
         Status = ObReferenceObjectByHandle(EventHandle,
@@ -124,26 +139,43 @@ CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
                                            (PVOID*)&LocalEventObject,
                                            NULL);
         if (!NT_SUCCESS(Status))
-            return Status;
+            goto Failure;
     }
     else
     {
-        /* The only reminaing state is, both EventHandle and EventObjects are non-null */
+        /* Both event handle and event objects are provided */
         LocalEventHandle = EventHandle;
         LocalEventObject = EventObject;
+    }
+
+    /* Initialize KAPC if an APC routine provided */
+    if (ApcRoutine)
+    {
+        CurrentThread = PsGetCurrentThread();
+        LocalApc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_CM);
+        if (!LocalApc)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        KeInitializeApc(LocalApc,
+                        &CurrentThread->Tcb,
+                        CurrentApcEnvironment,
+                        CmpApcKernelRoutine,
+                        CmpApcRoutineRundown,
+                        (PKNORMAL_ROUTINE)ApcRoutine,
+                        UserMode,
+                        ApcContext);
+    }
+    else
+    {
+        LocalApc = NULL;
     }
 
     /* Allocate memory */
     PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
     if (!PostBlock)
     {
-        /* Free the event resources if we own them */
-        if (LocalEventObject != EventObject)
-            ObDereferenceObject(LocalEventObject);
-        if (LocalEventHandle != EventHandle)
-            ZwClose(LocalEventHandle);
-
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
     }
     RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
 
@@ -151,18 +183,27 @@ CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
     InitializeListHead(&(PostBlock->NotifyList));
 
     /* Fill fields */
-    PostBlock->Filter = Filter;
-    PostBlock->WatchTree = WatchTree;
     PostBlock->EventHandle = LocalEventHandle;
     PostBlock->Event = LocalEventObject;
-    PostBlock->WorkQueueItem = WorkQueueItem;
-    PostBlock->WorkQueueType = WorkQueueType;
+    PostBlock->UserApc = LocalApc;
 
     /* Insert to NotifyBlock */
     InsertHeadList(&(NotifyBlock->PostList), &(PostBlock->NotifyList));
 
     *Result = PostBlock;
     return STATUS_SUCCESS;
+
+Failure:
+    /* Free the event resources if we own them */
+    if (LocalEventObject != EventObject)
+        ObDereferenceObject(LocalEventObject);
+    if (LocalEventHandle != EventHandle)
+        ZwClose(LocalEventHandle);
+    if (LocalApc)
+        ExFreePoolWithTag(LocalApc, TAG_CM);
+    /*if (PostBlock)
+        ExFreePoolWithTag(PostBlock, TAG_CM);*/
+    return Status;
 }
 
 VOID
@@ -261,3 +302,63 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
         CmpReleaseKcbLock(KeyBody->KeyControlBlock);
 }
 
+/* APC ROUTINES **************************************************************/
+
+VOID
+NTAPI 
+CmpApcKernelRoutine(_In_ PKAPC Apc,
+                    _Inout_ PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
+                    _Inout_ PVOID *NormalContext OPTIONAL,
+                    _Inout_ PVOID *SystemArgument1 OPTIONAL,
+                    _Inout_ PVOID *SystemArgument2 OPTIONAL)
+{
+    PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)*SystemArgument1;
+
+    /* TODO: Set IO_STATUS_BLOCK */
+    /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
+
+    /* Cleanup resources */
+    if (PostBlock->Event)
+    {
+        ObDereferenceObject(PostBlock->Event);
+        PostBlock->Event = NULL;
+        ZwClose(PostBlock->EventHandle);
+        PostBlock->EventHandle = NULL;
+    }
+
+    /* it's safe to release the KAPC here */
+    ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
+    PostBlock->UserApc = NULL;
+
+    ExFreePoolWithTag(PostBlock, TAG_CM);
+    SystemArgument1 = NULL;
+}
+
+VOID
+NTAPI 
+CmpApcRoutineRundown(_In_ PKAPC Apc)
+{
+    if (!Apc->SystemArgument1) return;
+
+    PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)Apc->SystemArgument1;
+
+    DPRINT1("CmpApcRoutineRundown( %p, %p )\n", PostBlock, Apc->SystemArgument2);
+    DPRINT1("PostBlock { Event = %p , EventHandle = %p , UserApc = %p }\n", PostBlock->Event, PostBlock->EventHandle, PostBlock->UserApc);
+    
+    /* TODO: Set IO_STATUS_BLOCK */
+    /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
+
+    /* Cleanup resources */
+    if (PostBlock->Event)
+    {
+        ObDereferenceObject(PostBlock->Event);
+        PostBlock->Event = NULL;
+        ZwClose(PostBlock->EventHandle);
+        PostBlock->EventHandle = NULL;
+    }
+    
+    ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
+    PostBlock->UserApc = NULL;
+
+    ExFreePoolWithTag(PostBlock, TAG_CM);
+}
