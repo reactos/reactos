@@ -285,6 +285,82 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
 }
 
 /*********************************************************************
+ *		_wcstombs_s_l (MSVCRT.@)
+ */
+int CDECL MSVCRT__wcstombs_s_l(MSVCRT_size_t *ret, char *mbstr,
+        MSVCRT_size_t size, const MSVCRT_wchar_t *wcstr,
+        MSVCRT_size_t count, MSVCRT__locale_t locale)
+{
+    char default_char = '\0', *p;
+    int hlp, len;
+
+    if(!size)
+        return 0;
+
+    if(!mbstr || !wcstr) {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        if(mbstr)
+            *mbstr = '\0';
+        *MSVCRT__errno() = MSVCRT_EINVAL;
+        return MSVCRT_EINVAL;
+    }
+
+    if(!locale)
+        locale = get_locale();
+
+    if(size<=count)
+        len = size;
+    else if(count==_TRUNCATE)
+        len = size-1;
+    else
+        len = count;
+
+    p = mbstr;
+    *ret = 0;
+    while(1) {
+        if(!len)
+            break;
+
+        if(*wcstr == '\0') {
+            *p = '\0';
+            break;
+        }
+
+        hlp = WideCharToMultiByte(locale->locinfo->lc_codepage,
+                WC_NO_BEST_FIT_CHARS, wcstr, 1, p, len, &default_char, NULL);
+        if(!hlp || *p=='\0')
+            break;
+
+        p += hlp;
+        len -= hlp;
+
+        wcstr++;
+        *ret += 1;
+    }
+
+    if(!len && size<=count) {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        *mbstr = '\0';
+        *MSVCRT__errno() = MSVCRT_ERANGE;
+        return MSVCRT_ERANGE;
+    }
+
+    if(*wcstr == '\0')
+        *ret += 1;
+    *p = '\0';
+    return 0;
+}
+
+/*********************************************************************
+ *		wcstombs_s (MSVCRT.@)
+ */
+int CDECL MSVCRT_wcstombs_s(MSVCRT_size_t *ret, char *mbstr,
+        MSVCRT_size_t size, const MSVCRT_wchar_t *wcstr, MSVCRT_size_t count)
+{
+    return MSVCRT__wcstombs_s_l(ret, mbstr, size, wcstr, count, NULL);
+}
+
+/*********************************************************************
  *		wcstod (MSVCRT.@)
  */
 double CDECL MSVCRT_wcstod(const MSVCRT_wchar_t* lpszStr, MSVCRT_wchar_t** end)
