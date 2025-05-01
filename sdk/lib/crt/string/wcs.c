@@ -58,6 +58,7 @@
 #define MSVCRT_wcscat_s wcscat_s
 #define MSVCRT_wcsncat_s wcsncat_s
 #define MSVCRT_wcsncpy_s wcsncpy_s
+#define MSVCRT__wcsnset _wcsnset
 #define MSVCRT__wcsupr_s _wcsupr_s
 #define MSVCRT__vsnprintf _vsnprintf
 #define MSVCRT__vsnwprintf _vsnwprintf
@@ -108,7 +109,7 @@ INT CDECL _wcsicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2 )
 /*********************************************************************
  *		_wcsnset (MSVCRT.@)
  */
-MSVCRT_wchar_t* CDECL _wcsnset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c, MSVCRT_size_t n )
+MSVCRT_wchar_t* CDECL MSVCRT__wcsnset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c, MSVCRT_size_t n )
 {
   MSVCRT_wchar_t* ret = str;
   while ((n-- > 0) && *str) *str++ = c;
