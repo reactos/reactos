@@ -1637,3 +1637,162 @@ INT CDECL MSVCRT_wcsncat_s(MSVCRT_wchar_t *dst, MSVCRT_size_t elem,
     return MSVCRT_ERANGE;
 }
 
+#ifndef _LIBCNT_
+/*********************************************************************
+ *  _wctoi64_l (MSVCR90.@)
+ *
+ * FIXME: locale parameter is ignored
+ */
+__int64 CDECL MSVCRT__wcstoi64_l(const MSVCRT_wchar_t *nptr,
+        MSVCRT_wchar_t **endptr, int base, MSVCRT__locale_t locale)
+{
+    BOOL negative = FALSE;
+    __int64 ret = 0;
+
+    TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
+
+    if(!nptr || base<0 || base>36 || base==1) {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        return 0;
+    }
+
+    while(isspaceW(*nptr)) nptr++;
+
+    if(*nptr == '-') {
+        negative = TRUE;
+        nptr++;
+    } else if(*nptr == '+')
+        nptr++;
+
+    if((base==0 || base==16) && *nptr=='0' && tolowerW(*(nptr+1))=='x') {
+        base = 16;
+        nptr += 2;
+    }
+
+    if(base == 0) {
+        if(*nptr=='0')
+            base = 8;
+        else
+            base = 10;
+    }
+
+    while(*nptr) {
+        char cur = tolowerW(*nptr);
+        int v;
+
+        if(isdigitW(cur)) {
+            if(cur >= '0'+base)
+                break;
+            v = cur-'0';
+        } else {
+            if(cur<'a' || cur>='a'+base-10)
+                break;
+            v = cur-'a'+10;
+        }
+
+        if(negative)
+            v = -v;
+
+        nptr++;
+
+        if(!negative && (ret>MSVCRT_I64_MAX/base || ret*base>MSVCRT_I64_MAX-v)) {
+            ret = MSVCRT_I64_MAX;
+            *MSVCRT__errno() = MSVCRT_ERANGE;
+        } else if(negative && (ret<MSVCRT_I64_MIN/base || ret*base<MSVCRT_I64_MIN-v)) {
+            ret = MSVCRT_I64_MIN;
+            *MSVCRT__errno() = MSVCRT_ERANGE;
+        } else
+            ret = ret*base + v;
+    }
+
+    if(endptr)
+        *endptr = (MSVCRT_wchar_t*)nptr;
+
+    return ret;
+}
+
+/*********************************************************************
+ *  _wcstoi64 (MSVCR90.@)
+ */
+__int64 CDECL MSVCRT__wcstoi64(const MSVCRT_wchar_t *nptr,
+        MSVCRT_wchar_t **endptr, int base)
+{
+    return MSVCRT__wcstoi64_l(nptr, endptr, base, NULL);
+}
+
+/*********************************************************************
+ *  _wcstoui64_l (MSVCR90.@)
+ *
+ * FIXME: locale parameter is ignored
+ */
+unsigned __int64 CDECL MSVCRT__wcstoui64_l(const MSVCRT_wchar_t *nptr,
+        MSVCRT_wchar_t **endptr, int base, MSVCRT__locale_t locale)
+{
+    BOOL negative = FALSE;
+    unsigned __int64 ret = 0;
+
+    TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
+
+    if(!nptr || base<0 || base>36 || base==1) {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        return 0;
+    }
+
+    while(isspaceW(*nptr)) nptr++;
+
+    if(*nptr == '-') {
+        negative = TRUE;
+        nptr++;
+    } else if(*nptr == '+')
+        nptr++;
+
+    if((base==0 || base==16) && *nptr=='0' && tolowerW(*(nptr+1))=='x') {
+        base = 16;
+        nptr += 2;
+    }
+
+    if(base == 0) {
+        if(*nptr=='0')
+            base = 8;
+        else
+            base = 10;
+    }
+
+    while(*nptr) {
+        char cur = tolowerW(*nptr);
+        int v;
+
+        if(isdigit(cur)) {
+            if(cur >= '0'+base)
+                break;
+            v = *nptr-'0';
+        } else {
+            if(cur<'a' || cur>='a'+base-10)
+                break;
+            v = cur-'a'+10;
+        }
+
+        nptr++;
+
+        if(ret>MSVCRT_UI64_MAX/base || ret*base>MSVCRT_UI64_MAX-v) {
+            ret = MSVCRT_UI64_MAX;
+            *MSVCRT__errno() = MSVCRT_ERANGE;
+        } else
+            ret = ret*base + v;
+    }
+
+    if(endptr)
+        *endptr = (MSVCRT_wchar_t*)nptr;
+
+    return negative ? -ret : ret;
+}
+
+/*********************************************************************
+ *  _wcstoui64 (MSVCR90.@)
+ */
+unsigned __int64 CDECL MSVCRT__wcstoui64(const MSVCRT_wchar_t *nptr,
+        MSVCRT_wchar_t **endptr, int base)
+{
+    return MSVCRT__wcstoui64_l(nptr, endptr, base, NULL);
+}
+#endif // !_LIBCNT_
