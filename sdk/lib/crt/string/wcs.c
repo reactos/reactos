@@ -493,19 +493,39 @@ static inline int pf_check_auto_grow(pf_output *out, unsigned delta)
         out->len = max(out->len * 2, out->used + delta);
         if (out->unicode)
         {
+            WCHAR *ptr;
+
             if (out->buf.W != out->grow.W)
-                out->buf.W = MSVCRT_realloc(out->buf.W, out->len * sizeof(WCHAR));
+            {
+                if (!(ptr = MSVCRT_realloc(out->buf.W, out->len * sizeof(WCHAR))))
+                    return -1;
+            }
             else
-                out->buf.W = MSVCRT_malloc(out->len * sizeof(WCHAR));
-            if (!out->buf.W) return -1;
+            {
+                if (!(ptr = MSVCRT_malloc(out->len * sizeof(WCHAR))))
+                    return -1;
+                memcpy(ptr, out->buf.W, out->used * sizeof(WCHAR));
+            }
+
+            out->buf.W = ptr;
         }
         else
         {
+            char *ptr;
+
             if (out->buf.A != out->grow.A)
-                out->buf.A = MSVCRT_realloc(out->buf.A, out->len * sizeof(char));
+            {
+                if (!(ptr = MSVCRT_realloc(out->buf.A, out->len * sizeof(char))))
+                    return -1;
+            }
             else
-                out->buf.A = MSVCRT_malloc(out->len * sizeof(char));
-            if (!out->buf.A) return -1;
+            {
+                if (!(ptr = MSVCRT_malloc(out->len * sizeof(char))))
+                    return -1;
+                memcpy(ptr, out->buf.A, out->used * sizeof(char));
+            }
+
+            out->buf.A = ptr;
         }
     }
     return 0;
