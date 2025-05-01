@@ -956,6 +956,20 @@ int CDECL MSVCRT_sprintf( char *str, const char *format, ... )
 }
 
 /*********************************************************************
+ *		sprintf_s (MSVCRT.@)
+ */
+int CDECL MSVCRT_sprintf_s( char *str, MSVCRT_size_t num, const char *format, ... )
+{
+    __ms_va_list ap;
+    int r;
+
+    __ms_va_start( ap, format );
+    r = MSVCRT_vsnprintf( str, num, format, ap );
+    __ms_va_end( ap );
+    return r;
+}
+
+/*********************************************************************
  *		swprintf (MSVCRT.@)
  */
 int CDECL MSVCRT_swprintf( MSVCRT_wchar_t *str, const MSVCRT_wchar_t *format, ... )
