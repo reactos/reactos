@@ -185,6 +185,7 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
 {
     MSVCRT_pthreadlocinfo locinfo;
     unsigned __int64 d=0, hlp;
+    unsigned fpcontrol;
     int exp=0, sign=1;
     const MSVCRT_wchar_t *p;
     double ret;
@@ -270,10 +271,16 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
         }
     }
 
+    fpcontrol = _control87(0, 0);
+    _control87(MSVCRT__EM_DENORMAL|MSVCRT__EM_INVALID|MSVCRT__EM_ZERODIVIDE
+            |MSVCRT__EM_OVERFLOW|MSVCRT__EM_UNDERFLOW|MSVCRT__EM_INEXACT, 0xffffffff);
+
     if(exp>0)
         ret = (double)sign*d*pow(10, exp);
     else
         ret = (double)sign*d/pow(10, -exp);
+
+    _control87(fpcontrol, 0xffffffff);
 
     if((d && ret==0.0) || isinf(ret))
         *MSVCRT__errno() = MSVCRT_ERANGE;
