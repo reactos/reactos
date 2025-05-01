@@ -884,6 +884,14 @@ int CDECL MSVCRT_vsprintf( char *str, const char *format, __ms_va_list valist)
 }
 
 /*********************************************************************
+ *		vsprintf_s (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsprintf_s( char *str, MSVCRT_size_t num, const char *format, __ms_va_list valist)
+{
+    return MSVCRT_vsnprintf(str, num, format, valist);
+}
+
+/*********************************************************************
  *		_vscprintf (MSVCRT.@)
  */
 int CDECL _vscprintf( const char *format, __ms_va_list valist )
