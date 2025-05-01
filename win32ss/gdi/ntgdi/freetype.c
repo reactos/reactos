@@ -1816,7 +1816,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FontGDI->CharSet = ANSI_CHARSET;
     FontGDI->OriginalItalic = FALSE;
     FontGDI->RequestItalic = FALSE;
-    FontGDI->OriginalWeight = FALSE;
+    FontGDI->OriginalWeight = FW_DONTCARE;
     FontGDI->RequestWeight = FW_NORMAL;
 
     IntLockFreeType();
