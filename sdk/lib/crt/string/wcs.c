@@ -191,8 +191,7 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
     double ret;
     BOOL found_digit = FALSE;
 
-    if(!str) {
-        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+    if (!MSVCRT_CHECK_PMT(str != NULL)) {
         *MSVCRT__errno() = MSVCRT_EINVAL;
         return 0;
     }
@@ -1825,8 +1824,9 @@ __int64 CDECL MSVCRT__wcstoi64_l(const MSVCRT_wchar_t *nptr,
 
     TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
 
-    if(!nptr || base<0 || base>36 || base==1) {
-        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+    if (!MSVCRT_CHECK_PMT(nptr != NULL) || !MSVCRT_CHECK_PMT(base == 0 || base >= 2) ||
+        !MSVCRT_CHECK_PMT(base <= 36)) {
+        *MSVCRT__errno() = MSVCRT_EINVAL;
         return 0;
     }
 
@@ -1907,8 +1907,9 @@ unsigned __int64 CDECL MSVCRT__wcstoui64_l(const MSVCRT_wchar_t *nptr,
 
     TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
 
-    if(!nptr || base<0 || base>36 || base==1) {
-        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+    if (!MSVCRT_CHECK_PMT(nptr != NULL) || !MSVCRT_CHECK_PMT(base == 0 || base >= 2) ||
+        !MSVCRT_CHECK_PMT(base <= 36)) {
+        *MSVCRT__errno() = MSVCRT_EINVAL;
         return 0;
     }
 
