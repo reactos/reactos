@@ -609,11 +609,14 @@ static void pf_fixup_exponent( char *buf )
  *
  *  implements both A and W vsnprintf functions
  */
-static int pf_vsnprintf( pf_output *out, const WCHAR *format, __ms_va_list valist )
+static int pf_vsnprintf( pf_output *out, const WCHAR *format, MSVCRT__locale_t locale, __ms_va_list valist )
 {
     int r;
     LPCWSTR q, p = format;
     pf_flags flags;
+
+    if(!locale)
+        locale = get_locale();
 
     TRACE("format is %s\n",debugstr_w(format));
     while (*p)
@@ -806,7 +809,7 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, __ms_va_list valis
         /* deal with integers and floats using libc's printf */
         else if( pf_is_valid_format( flags.Format ) )
         {
-            char fmt[20], number[40], *x = number;
+            char fmt[20], number[40], *x = number, *decimal_point;
 
             /* Estimate largest possible required buffer size:
                * Chooses the larger of the field or precision
@@ -829,6 +832,10 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, __ms_va_list valis
             }
             else
                 sprintf( x, fmt, va_arg(valist, int) );
+
+            decimal_point = strchr(x, '.');
+            if(decimal_point)
+                *decimal_point = *locale->locinfo->lconv->decimal_point;
 
             r = pf_output_stringA( out, x, -1 );
             if( x != number )
@@ -869,7 +876,7 @@ int CDECL MSVCRT_vsnprintf( char *str, unsigned int len,
     formatW = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, format, -1, formatW, sz );
 
-    r = pf_vsnprintf( &out, formatW, valist );
+    r = pf_vsnprintf( &out, formatW, NULL, valist );
 
     HeapFree( GetProcessHeap(), 0, formatW );
 
@@ -926,7 +933,7 @@ int CDECL MSVCRT_vsnwprintf( MSVCRT_wchar_t *str, unsigned int len,
     out.used = 0;
     out.len = len;
 
-    return pf_vsnprintf( &out, format, valist );
+    return pf_vsnprintf( &out, format, NULL, valist );
 }
 
 /*********************************************************************
