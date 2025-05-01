@@ -1970,3 +1970,15 @@ unsigned __int64 CDECL MSVCRT__wcstoui64(const MSVCRT_wchar_t *nptr,
     return MSVCRT__wcstoui64_l(nptr, endptr, base, NULL);
 }
 #endif // !_LIBCNT_
+
+/******************************************************************
+ *  wcsnlen (MSVCRT.@)
+ */
+MSVCRT_size_t CDECL MSVCRT_wcsnlen(const MSVCRT_wchar_t *s, MSVCRT_size_t maxlen)
+{
+    MSVCRT_size_t i;
+
+    for (i = 0; i < maxlen; i++)
+        if (!s[i]) break;
+    return i;
+}
