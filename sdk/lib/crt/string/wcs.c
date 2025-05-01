@@ -895,7 +895,12 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format,
         /* deal with integer width modifier */
         while( *p )
         {
-            if( *p == 'h' || *p == 'l' || *p == 'L' )
+            if( *p == 'l' && *(p+1) == 'l' )
+            {
+                flags.IntegerDouble++;
+                p += 2;
+            }
+            else if( *p == 'h' || *p == 'l' || *p == 'L' )
             {
                 flags.IntegerLength = *p;
                 p++;
