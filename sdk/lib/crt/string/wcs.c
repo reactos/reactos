@@ -869,10 +869,10 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format,
 }
 
 /*********************************************************************
- *		_vsnprintf (MSVCRT.@)
+ * vsnprintf_internal (INTERNAL)
  */
-int CDECL MSVCRT_vsnprintf( char *str, unsigned int len,
-                            const char *format, __ms_va_list valist )
+static inline int vsnprintf_internal( char *str, MSVCRT_size_t len, const char *format,
+        MSVCRT__locale_t locale, BOOL valid, __ms_va_list valist )
 {
     DWORD sz;
     LPWSTR formatW = NULL;
@@ -888,11 +888,68 @@ int CDECL MSVCRT_vsnprintf( char *str, unsigned int len,
     formatW = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, format, -1, formatW, sz );
 
-    r = pf_vsnprintf( &out, formatW, NULL, FALSE, valist );
+    r = pf_vsnprintf( &out, formatW, locale, valid, valist );
 
     HeapFree( GetProcessHeap(), 0, formatW );
 
     return r;
+}
+
+/*********************************************************************
+ *              _vsnprintf (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnprintf( char *str, MSVCRT_size_t len,
+                            const char *format, __ms_va_list valist )
+{
+    return vsnprintf_internal(str, len, format, NULL, FALSE, valist);
+}
+
+/*********************************************************************
+*		_vsnprintf_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnprintf_l( char *str, MSVCRT_size_t len, const char *format,
+                            MSVCRT__locale_t locale, __ms_va_list valist )
+{
+    return vsnprintf_internal(str, len, format, locale, FALSE, valist);
+}
+
+/*********************************************************************
+ *		_vsnprintf_s_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnprintf_s_l( char *str, MSVCRT_size_t sizeOfBuffer,
+        MSVCRT_size_t count, const char *format,
+        MSVCRT__locale_t locale, __ms_va_list valist )
+{
+    int len, ret;
+
+    if(sizeOfBuffer<count+1 || count==-1)
+        len = sizeOfBuffer;
+    else
+        len = count+1;
+
+    ret = vsnprintf_internal(str, len, format, locale, TRUE, valist);
+
+    if(ret<0 || ret==len) {
+        if(count!=_TRUNCATE && count>sizeOfBuffer) {
+            MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
+            *MSVCRT__errno() = MSVCRT_ERANGE;
+            memset(str, 0, sizeOfBuffer);
+        } else
+            str[len-1] = '\0';
+
+        return -1;
+    }
+
+    return ret;
+}
+
+/*********************************************************************
+ *              _vsnprintf_s (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnprintf_s( char *str, MSVCRT_size_t sizeOfBuffer,
+        MSVCRT_size_t count, const char *format, __ms_va_list valist )
+{
+    return MSVCRT_vsnprintf_s_l(str,sizeOfBuffer, count, format, NULL, valist);
 }
 
 /*********************************************************************
