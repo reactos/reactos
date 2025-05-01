@@ -1167,7 +1167,7 @@ int CDECL MSVCRT__snprintf(char *str, unsigned int len, const char *format, ...)
 }
 
 /*********************************************************************
- * vsnwsprintf_internal (INTERNAL)
+ * vsnwprintf_internal (INTERNAL)
  */
 static inline int vsnwprintf_internal(MSVCRT_wchar_t *str, MSVCRT_size_t len,
         const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, BOOL valid,
@@ -1184,7 +1184,7 @@ static inline int vsnwprintf_internal(MSVCRT_wchar_t *str, MSVCRT_size_t len,
 }
 
 /*********************************************************************
- *              _vsnwsprintf (MSVCRT.@)
+ *              _vsnwprintf (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnwprintf(MSVCRT_wchar_t *str, MSVCRT_size_t len,
         const MSVCRT_wchar_t *format, __ms_va_list valist)
@@ -1193,7 +1193,7 @@ int CDECL MSVCRT_vsnwprintf(MSVCRT_wchar_t *str, MSVCRT_size_t len,
 }
 
 /*********************************************************************
- *              _vsnwsprintf_l (MSVCRT.@)
+ *              _vsnwprintf_l (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnwprintf_l(MSVCRT_wchar_t *str, MSVCRT_size_t len,
         const MSVCRT_wchar_t *format, MSVCRT__locale_t locale,
@@ -1203,7 +1203,7 @@ int CDECL MSVCRT_vsnwprintf_l(MSVCRT_wchar_t *str, MSVCRT_size_t len,
 }
 
 /*********************************************************************
- *              _vsnwsprintf_s_l (MSVCRT.@)
+ *              _vsnwprintf_s_l (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer,
         MSVCRT_size_t count, const MSVCRT_wchar_t *format,
@@ -1232,7 +1232,7 @@ int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer
 }
 
 /*********************************************************************
- *              _vsnwsprintf_s (MSVCRT.@)
+ *              _vsnwprintf_s (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnwprintf_s(MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer,
         MSVCRT_size_t count, const MSVCRT_wchar_t *format, __ms_va_list valist)
@@ -1752,7 +1752,7 @@ INT CDECL MSVCRT_wcsncat_s(MSVCRT_wchar_t *dst, MSVCRT_size_t elem,
 
 #ifndef _LIBCNT_
 /*********************************************************************
- *  _wctoi64_l (MSVCRT.@)
+ *  _wcstoi64_l (MSVCRT.@)
  *
  * FIXME: locale parameter is ignored
  */
