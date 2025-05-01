@@ -738,6 +738,11 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, va_list valist )
         flags.Format = *p;
         r = 0;
 
+        if (flags.Format == '$')
+        {
+            FIXME("Positional parameters are not supported (%s)\n", wine_dbgstr_w(format));
+            return -1;
+        }
         /* output a string */
         if(  flags.Format == 's' || flags.Format == 'S' )
             r = pf_handle_string_format( out, va_arg(valist, const void*), -1,
@@ -956,6 +961,14 @@ int CDECL MSVCRT_vswprintf( MSVCRT_wchar_t* str, const MSVCRT_wchar_t* format, v
     return MSVCRT_vsnwprintf( str, INT_MAX, format, args );
 }
 
+/*********************************************************************
+ *		vswprintf_s (MSVCRT.@)
+ */
+int CDECL MSVCRT_vswprintf_s( MSVCRT_wchar_t* str, MSVCRT_size_t num, const MSVCRT_wchar_t* format, va_list args )
+{
+    /* FIXME: must handle positional arguments */
+    return MSVCRT_vsnwprintf( str, num, format, args );
+}
 #endif // !__REACTOS__
 
 /*********************************************************************
