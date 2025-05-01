@@ -425,17 +425,6 @@ double CDECL MSVCRT__wtof_l(const MSVCRT_wchar_t *str, MSVCRT__locale_t locale)
 
 #ifndef __REACTOS__
 
-typedef struct pf_output_t
-{
-    int used;
-    int len;
-    BOOL unicode;
-    union {
-        LPWSTR W;
-        LPSTR  A;
-    } buf;
-} pf_output;
-
 typedef struct pf_flags_t
 {
     char Sign, LeftAlign, Alternate, PadZero;
@@ -445,6 +434,36 @@ typedef struct pf_flags_t
     char Format;
 } pf_flags;
 
+static inline BOOL pf_is_auto_grow(pf_output *out)
+{
+    return (out->unicode) ? !!out->grow.W : !!out->grow.A;
+}
+
+static inline int pf_check_auto_grow(pf_output *out, unsigned delta)
+{
+    if (pf_is_auto_grow(out) && out->used + delta > out->len)
+    {
+        out->len = max(out->len * 2, out->used + delta);
+        if (out->unicode)
+        {
+            if (out->buf.W != out->grow.W)
+                out->buf.W = MSVCRT_realloc(out->buf.W, out->len * sizeof(WCHAR));
+            else
+                out->buf.W = MSVCRT_malloc(out->len * sizeof(WCHAR));
+            if (!out->buf.W) return -1;
+        }
+        else
+        {
+            if (out->buf.A != out->grow.A)
+                out->buf.A = MSVCRT_realloc(out->buf.A, out->len * sizeof(char));
+            else
+                out->buf.A = MSVCRT_malloc(out->len * sizeof(char));
+            if (!out->buf.A) return -1;
+        }
+    }
+    return 0;
+}
+
 /*
  * writes a string of characters to the output
  * returns -1 if the string doesn't fit in the output buffer
@@ -452,14 +471,17 @@ typedef struct pf_flags_t
  */
 static inline int pf_output_stringW( pf_output *out, LPCWSTR str, int len )
 {
-    int space = out->len - out->used;
+    int space;
 
     if( len < 0 )
         len = strlenW( str );
     if( out->unicode )
     {
-        LPWSTR p = out->buf.W + out->used;
+        LPWSTR p;
 
+        if(pf_check_auto_grow(out, len) == -1) return -1;
+        space = out->len - out->used;
+        p = out->buf.W + out->used;
         if( space >= len )
         {
             if (out->buf.W) memcpy( p, str, len*sizeof(WCHAR) );
@@ -473,8 +495,11 @@ static inline int pf_output_stringW( pf_output *out, LPCWSTR str, int len )
     else
     {
         int n = WideCharToMultiByte( CP_ACP, 0, str, len, NULL, 0, NULL, NULL );
-        LPSTR p = out->buf.A + out->used;
+        LPSTR p;
 
+        if(pf_check_auto_grow(out, n) == -1) return -1;
+        space = out->len - out->used;
+        p = out->buf.A + out->used;
         if( space >= n )
         {
             if (out->buf.A) WideCharToMultiByte( CP_ACP, 0, str, len, p, n, NULL, NULL );
@@ -490,14 +515,17 @@ static inline int pf_output_stringW( pf_output *out, LPCWSTR str, int len )
 
 static inline int pf_output_stringA( pf_output *out, LPCSTR str, int len )
 {
-    int space = out->len - out->used;
+    int space;
 
     if( len < 0 )
         len = strlen( str );
     if( !out->unicode )
     {
-        LPSTR p = out->buf.A + out->used;
+        LPSTR p;
 
+        if (pf_check_auto_grow(out, len) == -1) return -1;
+        p = out->buf.A + out->used;
+        space = out->len - out->used;
         if( space >= len )
         {
             if (out->buf.A) memcpy( p, str, len );
@@ -511,8 +539,11 @@ static inline int pf_output_stringA( pf_output *out, LPCSTR str, int len )
     else
     {
         int n = MultiByteToWideChar( CP_ACP, 0, str, len, NULL, 0 );
-        LPWSTR p = out->buf.W + out->used;
+        LPWSTR p;
 
+        if (pf_check_auto_grow(out, n) == -1) return -1;
+        p = out->buf.W + out->used;
+        space = out->len - out->used;
         if( space >= n )
         {
             if (out->buf.W) MultiByteToWideChar( CP_ACP, 0, str, len, p, n );
@@ -787,8 +818,8 @@ static void pf_fixup_exponent( char *buf )
  *
  *  implements both A and W vsnprintf functions
  */
-static int pf_vsnprintf( pf_output *out, const WCHAR *format,
-        MSVCRT__locale_t locale, BOOL valid, __ms_va_list valist )
+int pf_vsnprintf( pf_output *out, const WCHAR *format,
+                  MSVCRT__locale_t locale, BOOL valid, __ms_va_list valist )
 {
     int r;
     LPCWSTR q, p = format;
@@ -1064,6 +1095,7 @@ static inline int vsnprintf_internal( char *str, MSVCRT_size_t len, const char *
 
     out.unicode = FALSE;
     out.buf.A = str;
+    out.grow.A = NULL;
     out.used = 0;
     out.len = len;
 
@@ -1210,6 +1242,7 @@ static inline int vsnwprintf_internal(MSVCRT_wchar_t *str, MSVCRT_size_t len,
 
     out.unicode = TRUE;
     out.buf.W = str;
+    out.grow.W = NULL;
     out.used = 0;
     out.len = len;
 
