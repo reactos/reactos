@@ -1167,6 +1167,20 @@ int CDECL MSVCRT__snprintf(char *str, unsigned int len, const char *format, ...)
 }
 
 /*********************************************************************
+ *		_snprintf_s (MSVCRT.@)
+ */
+int CDECL MSVCRT__snprintf_s(char *str, unsigned int len, unsigned int count,
+    const char *format, ...)
+{
+    int retval;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    retval = MSVCRT_vsnprintf_s_l(str, len, count, format, NULL, valist);
+    __ms_va_end(valist);
+    return retval;
+}
+
+/*********************************************************************
  * vsnwprintf_internal (INTERNAL)
  */
 static inline int vsnwprintf_internal(MSVCRT_wchar_t *str, MSVCRT_size_t len,
