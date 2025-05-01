@@ -279,7 +279,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
      */
     CComPtr<IShellBrowser> pisb;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     /*
@@ -287,8 +287,11 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
      */
     PIDLIST_ABSOLUTE pidl;
     hr = GetAbsolutePidl(&pidl);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        m_pidlLastParsed.Free();
         return hr;
+    }
 
     BOOL bEqual = ILIsEqual(pidl, m_pidlLastParsed);
     ILFree(pidl);
@@ -319,7 +322,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
         hr = SHInvokeDefaultCommand(hWnd, sf, pidlChild);
 
     if (bParsedForExec)
-        m_pidlLastParsed.Free(); // Throw away the non-folder thing we just parsed
+        m_pidlLastParsed.Free(); // Throw away the non-folder item we just parsed
 
     RefreshAddress(); // Set the address back to a valid folder
     return hr;
