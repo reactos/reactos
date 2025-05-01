@@ -250,6 +250,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ShowFileNotFoundError(HRESULT hRet)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 {
+    BOOL bParsedForExec = FALSE;
     HRESULT hr;
 
     /*
@@ -270,6 +271,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 
         if (!m_pidlLastParsed)
             return E_FAIL;
+        bParsedForExec = TRUE;
     }
 
     /*
@@ -288,16 +290,9 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     if (FAILED(hr))
         return hr;
 
-    CComPtr<IShellFolder> psf;
-    hr = SHGetDesktopFolder(&psf);
-    if (FAILED(hr))
-        return hr;
-
-    hr = psf->CompareIDs(0, pidl, m_pidlLastParsed);
-
-    SHFree(pidl);
-
-    if (hr == S_OK)
+    BOOL bEqual = ILIsEqual(pidl, m_pidlLastParsed);
+    ILFree(pidl);
+    if (bEqual)
     {
         m_pidlLastParsed.Free();
         return S_OK;
@@ -311,23 +306,22 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
         return hr;
 
     /*
-     * Browsing to the pidl failed so it's not a folder. So invoke its defaule command.
+     * Browsing to the pidl failed so it's not a folder. So invoke its default command.
      */
-    HWND topLevelWindow;
-    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
-    if (FAILED(hr))
-        return hr;
+    HWND hWnd;
+    if (FAILED(IUnknown_GetWindow(pisb, &hWnd)))
+        hWnd = NULL;
 
     LPCITEMIDLIST pidlChild;
     CComPtr<IShellFolder> sf;
     hr = SHBindToParent(m_pidlLastParsed, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
-    if (FAILED(hr))
-        return hr;
+    if (SUCCEEDED(hr))
+        hr = SHInvokeDefaultCommand(hWnd, sf, pidlChild);
 
-    hr = SHInvokeDefaultCommand(topLevelWindow, sf, pidlChild);
-    if (FAILED(hr))
-        return hr;
+    if (bParsedForExec)
+        m_pidlLastParsed.Free(); // Throw away the non-folder thing we just parsed
 
+    RefreshAddress(); // Set the address back to a valid folder
     return hr;
 }
 
