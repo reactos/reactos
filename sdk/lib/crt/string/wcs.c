@@ -1211,17 +1211,17 @@ int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer
 {
     int len, ret;
 
-    len = sizeOfBuffer/sizeof(MSVCRT_wchar_t);
+    len = sizeOfBuffer;
     if(count!=-1 && len>count+1)
         len = count+1;
 
     ret = vsnwprintf_internal(str, len, format, locale, TRUE, valist);
 
     if(ret<0 || ret==len) {
-        if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer/sizeof(MSVCRT_wchar_t)) {
+        if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer) {
             MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
             *MSVCRT__errno() = MSVCRT_ERANGE;
-            memset(str, 0, sizeOfBuffer);
+            memset(str, 0, sizeOfBuffer*sizeof(MSVCRT_wchar_t));
         } else
             str[len-1] = '\0';
 
@@ -1306,8 +1306,7 @@ int CDECL MSVCRT_swprintf_s(MSVCRT_wchar_t *str, MSVCRT_size_t numberOfElements,
     int r;
 
     __ms_va_start(ap, format);
-    r = MSVCRT_vsnwprintf_s(str, numberOfElements*sizeof(MSVCRT_wchar_t),
-            INT_MAX, format, ap);
+    r = MSVCRT_vsnwprintf_s(str, numberOfElements, INT_MAX, format, ap);
     __ms_va_end(ap);
 
     return r;
@@ -1335,8 +1334,7 @@ int CDECL _vscwprintf( const MSVCRT_wchar_t *format, __ms_va_list args )
 int CDECL MSVCRT_vswprintf_s(MSVCRT_wchar_t* str, MSVCRT_size_t numberOfElements,
         const MSVCRT_wchar_t* format, __ms_va_list args)
 {
-    return MSVCRT_vsnwprintf_s(str, numberOfElements*sizeof(MSVCRT_wchar_t),
-            INT_MAX, format, args);
+    return MSVCRT_vsnwprintf_s(str, numberOfElements, INT_MAX, format, args );
 }
 
 /*********************************************************************
@@ -1345,8 +1343,8 @@ int CDECL MSVCRT_vswprintf_s(MSVCRT_wchar_t* str, MSVCRT_size_t numberOfElements
 int CDECL MSVCRT_vswprintf_s_l(MSVCRT_wchar_t* str, MSVCRT_size_t numberOfElements,
         const MSVCRT_wchar_t* format, MSVCRT__locale_t locale, __ms_va_list args)
 {
-    return MSVCRT_vsnwprintf_s_l(str, numberOfElements*sizeof(MSVCRT_wchar_t),
-            INT_MAX, format, locale, args );
+    return MSVCRT_vsnwprintf_s_l(str, numberOfElements, INT_MAX,
+            format, locale, args );
 }
 #endif // !__REACTOS__
 
