@@ -281,11 +281,11 @@ static inline int pf_output_stringW( pf_output *out, LPCWSTR str, int len )
 
         if( space >= len )
         {
-            memcpy( p, str, len*sizeof(WCHAR) );
+            if (out->buf.W) memcpy( p, str, len*sizeof(WCHAR) );
             out->used += len;
             return len;
         }
-        if( space > 0 )
+        if( space > 0 && out->buf.W )
             memcpy( p, str, space*sizeof(WCHAR) );
         out->used += len;
     }
@@ -296,11 +296,11 @@ static inline int pf_output_stringW( pf_output *out, LPCWSTR str, int len )
 
         if( space >= n )
         {
-            WideCharToMultiByte( CP_ACP, 0, str, len, p, n, NULL, NULL );
+            if (out->buf.A) WideCharToMultiByte( CP_ACP, 0, str, len, p, n, NULL, NULL );
             out->used += n;
             return len;
         }
-        if( space > 0 )
+        if( space > 0 && out->buf.A )
             WideCharToMultiByte( CP_ACP, 0, str, len, p, space, NULL, NULL );
         out->used += n;
     }
@@ -319,11 +319,11 @@ static inline int pf_output_stringA( pf_output *out, LPCSTR str, int len )
 
         if( space >= len )
         {
-            memcpy( p, str, len );
+            if (out->buf.A) memcpy( p, str, len );
             out->used += len;
             return len;
         }
-        if( space > 0 )
+        if( space > 0 && out->buf.A )
             memcpy( p, str, space );
         out->used += len;
     }
@@ -334,11 +334,11 @@ static inline int pf_output_stringA( pf_output *out, LPCSTR str, int len )
 
         if( space >= n )
         {
-            MultiByteToWideChar( CP_ACP, 0, str, len, p, n );
+            if (out->buf.W) MultiByteToWideChar( CP_ACP, 0, str, len, p, n );
             out->used += n;
             return len;
         }
-        if( space > 0 )
+        if( space > 0 && out->buf.W )
             MultiByteToWideChar( CP_ACP, 0, str, len, p, space );
         out->used += n;
     }
@@ -885,6 +885,14 @@ int CDECL MSVCRT_vsprintf( char *str, const char *format, __ms_va_list valist)
 }
 
 /*********************************************************************
+ *		_vscprintf (MSVCRT.@)
+ */
+int CDECL _vscprintf( const char *format, __ms_va_list valist )
+{
+    return MSVCRT_vsnprintf( NULL, INT_MAX, format, valist );
+}
+
+/*********************************************************************
  *		_snprintf (MSVCRT.@)
  */
 int CDECL MSVCRT__snprintf(char *str, unsigned int len, const char *format, ...)
@@ -960,6 +968,14 @@ int CDECL MSVCRT_swprintf( MSVCRT_wchar_t *str, const MSVCRT_wchar_t *format, ..
 int CDECL MSVCRT_vswprintf( MSVCRT_wchar_t* str, const MSVCRT_wchar_t* format, __ms_va_list args )
 {
     return MSVCRT_vsnwprintf( str, INT_MAX, format, args );
+}
+
+/*********************************************************************
+ *		_vscwprintf (MSVCRT.@)
+ */
+int CDECL _vscwprintf( const MSVCRT_wchar_t *format, __ms_va_list args )
+{
+    return MSVCRT_vsnwprintf( NULL, INT_MAX, format, args );
 }
 
 /*********************************************************************
