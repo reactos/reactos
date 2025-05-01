@@ -1715,7 +1715,7 @@ INT CDECL MSVCRT_wcsncat_s(MSVCRT_wchar_t *dst, MSVCRT_size_t elem,
 
 #ifndef _LIBCNT_
 /*********************************************************************
- *  _wctoi64_l (MSVCR90.@)
+ *  _wctoi64_l (MSVCRT.@)
  *
  * FIXME: locale parameter is ignored
  */
@@ -1788,7 +1788,7 @@ __int64 CDECL MSVCRT__wcstoi64_l(const MSVCRT_wchar_t *nptr,
 }
 
 /*********************************************************************
- *  _wcstoi64 (MSVCR90.@)
+ *  _wcstoi64 (MSVCRT.@)
  */
 __int64 CDECL MSVCRT__wcstoi64(const MSVCRT_wchar_t *nptr,
         MSVCRT_wchar_t **endptr, int base)
@@ -1797,7 +1797,7 @@ __int64 CDECL MSVCRT__wcstoi64(const MSVCRT_wchar_t *nptr,
 }
 
 /*********************************************************************
- *  _wcstoui64_l (MSVCR90.@)
+ *  _wcstoui64_l (MSVCRT.@)
  *
  * FIXME: locale parameter is ignored
  */
@@ -1864,7 +1864,7 @@ unsigned __int64 CDECL MSVCRT__wcstoui64_l(const MSVCRT_wchar_t *nptr,
 }
 
 /*********************************************************************
- *  _wcstoui64 (MSVCR90.@)
+ *  _wcstoui64 (MSVCRT.@)
  */
 unsigned __int64 CDECL MSVCRT__wcstoui64(const MSVCRT_wchar_t *nptr,
         MSVCRT_wchar_t **endptr, int base)
