@@ -158,10 +158,10 @@ MSVCRT_wchar_t* CDECL _wcsset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c )
 }
 
 /******************************************************************
- *		_wcsupr_s (MSVCRT.@)
- *
+ *		_wcsupr_s_l (MSVCRT.@)
  */
-INT CDECL MSVCRT__wcsupr_s( MSVCRT_wchar_t* str, MSVCRT_size_t n )
+int CDECL MSVCRT__wcsupr_s_l( MSVCRT_wchar_t* str, MSVCRT_size_t n,
+   MSVCRT__locale_t locale )
 {
   MSVCRT_wchar_t* ptr = str;
 
@@ -175,6 +175,7 @@ INT CDECL MSVCRT__wcsupr_s( MSVCRT_wchar_t* str, MSVCRT_size_t n )
   while (n--)
   {
     if (!*ptr) return 0;
+    /* FIXME: add locale support */
     *ptr = toupperW(*ptr);
     ptr++;
   }
@@ -184,6 +185,15 @@ INT CDECL MSVCRT__wcsupr_s( MSVCRT_wchar_t* str, MSVCRT_size_t n )
   *str = '\0';
   *MSVCRT__errno() = MSVCRT_EINVAL;
   return MSVCRT_EINVAL;
+}
+
+/******************************************************************
+ *		_wcsupr_s (MSVCRT.@)
+ *
+ */
+INT CDECL MSVCRT__wcsupr_s( MSVCRT_wchar_t* str, MSVCRT_size_t n )
+{
+  return MSVCRT__wcsupr_s_l( str, n, NULL );
 }
 
 /******************************************************************
