@@ -1138,10 +1138,21 @@ int CDECL _vscwprintf( const MSVCRT_wchar_t *format, __ms_va_list args )
 /*********************************************************************
  *		vswprintf_s (MSVCRT.@)
  */
-int CDECL MSVCRT_vswprintf_s( MSVCRT_wchar_t* str, MSVCRT_size_t num, const MSVCRT_wchar_t* format, __ms_va_list args )
+int CDECL MSVCRT_vswprintf_s(MSVCRT_wchar_t* str, MSVCRT_size_t numberOfElements,
+        const MSVCRT_wchar_t* format, __ms_va_list args)
 {
-    /* FIXME: must handle positional arguments */
-    return MSVCRT_vsnwprintf( str, num, format, args );
+    return MSVCRT_vsnwprintf_s(str, numberOfElements*sizeof(MSVCRT_wchar_t),
+            INT_MAX, format, args);
+}
+
+/*********************************************************************
+ *              _vswprintf_s_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vswprintf_s_l(MSVCRT_wchar_t* str, MSVCRT_size_t numberOfElements,
+        const MSVCRT_wchar_t* format, MSVCRT__locale_t locale, __ms_va_list args)
+{
+    return MSVCRT_vsnwprintf_s_l(str, numberOfElements*sizeof(MSVCRT_wchar_t),
+            INT_MAX, format, locale, args );
 }
 #endif // !__REACTOS__
 
