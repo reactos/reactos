@@ -402,7 +402,7 @@ MSVCRT_size_t CDECL MSVCRT__wcstombs_s_l(MSVCRT_size_t *ret, char *mbstr,
     if(!mbstr && !size) {
         conv = MSVCRT__wcstombs_l(NULL, wcstr, 0, locale);
         if(ret)
-            *ret = conv;
+            *ret = conv+1;
         return 0;
     }
 
