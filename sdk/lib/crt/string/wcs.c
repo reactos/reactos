@@ -365,7 +365,7 @@ MSVCRT_size_t CDECL MSVCRT__wcstombs_s_l(MSVCRT_size_t *ret, char *mbstr,
         return MSVCRT_EINVAL;
     }
 
-    if(count==_TRUNCATE || size<count)
+    if(count==MSVCRT__TRUNCATE || size<count)
         conv = size;
     else
         conv = count;
@@ -373,7 +373,7 @@ MSVCRT_size_t CDECL MSVCRT__wcstombs_s_l(MSVCRT_size_t *ret, char *mbstr,
     conv = MSVCRT__wcstombs_l(mbstr, wcstr, conv, locale);
     if(conv<size)
         mbstr[conv++] = '\0';
-    else if(conv==size && (count==_TRUNCATE || mbstr[conv-1]=='\0'))
+    else if(conv==size && (count==MSVCRT__TRUNCATE || mbstr[conv-1]=='\0'))
         mbstr[conv-1] = '\0';
     else {
         MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
@@ -1107,7 +1107,7 @@ int CDECL MSVCRT_vsnprintf_s_l( char *str, MSVCRT_size_t sizeOfBuffer,
     ret = vsnprintf_internal(str, len, format, locale, TRUE, valist);
 
     if(ret<0 || ret==len) {
-        if(count!=_TRUNCATE && count>sizeOfBuffer) {
+        if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer) {
             MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
             *MSVCRT__errno() = MSVCRT_ERANGE;
             memset(str, 0, sizeOfBuffer);
@@ -1218,7 +1218,7 @@ int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer
     ret = vsnwprintf_internal(str, len, format, locale, TRUE, valist);
 
     if(ret<0 || ret==len) {
-        if(count!=_TRUNCATE && count>sizeOfBuffer/sizeof(MSVCRT_wchar_t)) {
+        if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer/sizeof(MSVCRT_wchar_t)) {
             MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
             *MSVCRT__errno() = MSVCRT_ERANGE;
             memset(str, 0, sizeOfBuffer);
