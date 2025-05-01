@@ -764,9 +764,9 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, __ms_va_list valis
 
             flags.PadZero = 0;
             if( flags.Alternate )
-                sprintf(pointer, "0X%0*lX", 2 * sizeof(ptr), (ULONG_PTR)ptr);
+                sprintf(pointer, "0X%0*lX", 2 * (int)sizeof(ptr), (ULONG_PTR)ptr);
             else
-                sprintf(pointer, "%0*lX", 2 * sizeof(ptr), (ULONG_PTR)ptr);
+                sprintf(pointer, "%0*lX", 2 * (int)sizeof(ptr), (ULONG_PTR)ptr);
             r = pf_output_format_A( out, pointer, -1, &flags );
         }
 
