@@ -1676,11 +1676,26 @@ MSVCRT_wchar_t * CDECL MSVCRT_wcstok( MSVCRT_wchar_t *str, const MSVCRT_wchar_t 
 }
 
 /*********************************************************************
+ *		wctob (MSVCRT.@)
+ */
+INT CDECL MSVCRT_wctob( MSVCRT_wint_t wchar )
+{
+    MSVCRT__locale_t locale = get_locale();
+    char out;
+    BOOL error;
+
+    if(WideCharToMultiByte( locale->locinfo->lc_codepage, 0, &wchar, 1, &out, 1, NULL, &error ) && !error)
+        return (INT)out;
+    return MSVCRT_EOF;
+}
+
+/*********************************************************************
  *		wctomb (MSVCRT.@)
  */
 INT CDECL MSVCRT_wctomb( char *dst, MSVCRT_wchar_t ch )
 {
-  return WideCharToMultiByte( CP_ACP, 0, &ch, 1, dst, 6, NULL, NULL );
+    MSVCRT__locale_t locale = get_locale();
+    return WideCharToMultiByte( locale->locinfo->lc_codepage, 0, &ch, 1, dst, 6, NULL, NULL );
 }
 
 /*********************************************************************
