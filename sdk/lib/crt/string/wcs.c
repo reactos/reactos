@@ -289,71 +289,23 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
  */
 double CDECL MSVCRT_wcstod(const MSVCRT_wchar_t* lpszStr, MSVCRT_wchar_t** end)
 {
-  const MSVCRT_wchar_t* str = lpszStr;
-  int negative = 0;
-  double ret = 0, divisor = 10.0;
+    return MSVCRT__wcstod_l(lpszStr, end, NULL);
+}
 
-  TRACE("(%s,%p) semi-stub\n", debugstr_w(lpszStr), end);
+/*********************************************************************
+ *		_wtof (MSVCRT.@)
+ */
+double CDECL MSVCRT__wtof(const MSVCRT_wchar_t *str)
+{
+    return MSVCRT__wcstod_l(str, NULL, NULL);
+}
 
-  /* FIXME:
-   * - Should set errno on failure
-   * - Should fail on overflow
-   * - Need to check which input formats are allowed
-   */
-  while (isspaceW(*str))
-    str++;
-
-  if (*str == '-')
-  {
-    negative = 1;
-    str++;
-  }
-
-  while (isdigitW(*str))
-  {
-    ret = ret * 10.0 + (*str - '0');
-    str++;
-  }
-  if (*str == '.')
-    str++;
-  while (isdigitW(*str))
-  {
-    ret = ret + (*str - '0') / divisor;
-    divisor *= 10;
-    str++;
-  }
-
-  if (*str == 'E' || *str == 'e' || *str == 'D' || *str == 'd')
-  {
-    int negativeExponent = 0;
-    int exponent = 0;
-    if (*(++str) == '-')
-    {
-      negativeExponent = 1;
-      str++;
-    }
-    while (isdigitW(*str))
-    {
-      exponent = exponent * 10 + (*str - '0');
-      str++;
-    }
-    if (exponent != 0)
-    {
-      if (negativeExponent)
-        ret = ret / pow(10.0, exponent);
-      else
-        ret = ret * pow(10.0, exponent);
-    }
-  }
-
-  if (negative)
-    ret = -ret;
-
-  if (end)
-    *end = (MSVCRT_wchar_t*)str;
-
-  TRACE("returning %g\n", ret);
-  return ret;
+/*********************************************************************
+ *		_wtof_l (MSVCRT.@)
+ */
+double CDECL MSVCRT__wtof_l(const MSVCRT_wchar_t *str, MSVCRT__locale_t locale)
+{
+    return MSVCRT__wcstod_l(str, NULL, locale);
 }
 #endif
 
