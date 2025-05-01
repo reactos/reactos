@@ -990,10 +990,11 @@ int CDECL MSVCRT__snprintf(char *str, unsigned int len, const char *format, ...)
 }
 
 /*********************************************************************
- *		_vsnwsprintf (MSVCRT.@)
+ * vsnwsprintf_internal (INTERNAL)
  */
-int CDECL MSVCRT_vsnwprintf( MSVCRT_wchar_t *str, unsigned int len,
-                             const MSVCRT_wchar_t *format, __ms_va_list valist )
+static inline int vsnwprintf_internal(MSVCRT_wchar_t *str, MSVCRT_size_t len,
+        const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, BOOL valid,
+        __ms_va_list valist)
 {
     pf_output out;
 
@@ -1002,7 +1003,65 @@ int CDECL MSVCRT_vsnwprintf( MSVCRT_wchar_t *str, unsigned int len,
     out.used = 0;
     out.len = len;
 
-    return pf_vsnprintf( &out, format, NULL, FALSE, valist );
+    return pf_vsnprintf( &out, format, locale, valid, valist );
+}
+
+/*********************************************************************
+ *              _vsnwsprintf (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnwprintf(MSVCRT_wchar_t *str, MSVCRT_size_t len,
+        const MSVCRT_wchar_t *format, __ms_va_list valist)
+{
+    return vsnwprintf_internal(str, len, format, NULL, FALSE, valist);
+}
+
+/*********************************************************************
+ *              _vsnwsprintf_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnwprintf_l(MSVCRT_wchar_t *str, MSVCRT_size_t len,
+        const MSVCRT_wchar_t *format, MSVCRT__locale_t locale,
+        __ms_va_list valist)
+{
+        return vsnwprintf_internal(str, len, format, locale, FALSE, valist);
+}
+
+/*********************************************************************
+ *              _vsnwsprintf_s_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer,
+        MSVCRT_size_t count, const MSVCRT_wchar_t *format,
+        MSVCRT__locale_t locale, __ms_va_list valist)
+{
+    int len, ret;
+
+    len = sizeOfBuffer/sizeof(MSVCRT_wchar_t);
+    if(count!=-1 && len>count+1)
+        len = count+1;
+
+    ret = vsnwprintf_internal(str, len, format, locale, TRUE, valist);
+
+    if(ret<0 || ret==len) {
+        if(count!=_TRUNCATE && count>sizeOfBuffer/sizeof(MSVCRT_wchar_t)) {
+            MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
+            *MSVCRT__errno() = MSVCRT_ERANGE;
+            memset(str, 0, sizeOfBuffer);
+        } else
+            str[len-1] = '\0';
+
+        return -1;
+    }
+
+    return ret;
+}
+
+/*********************************************************************
+ *              _vsnwsprintf_s (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsnwprintf_s(MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer,
+        MSVCRT_size_t count, const MSVCRT_wchar_t *format, __ms_va_list valist)
+{
+    return MSVCRT_vsnwprintf_s_l(str, sizeOfBuffer, count,
+            format, NULL, valist);
 }
 
 /*********************************************************************
