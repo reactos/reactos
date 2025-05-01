@@ -864,12 +864,9 @@ int CDECL MSVCRT_vsnprintf( char *str, unsigned int len,
     out.used = 0;
     out.len = len;
 
-    if( format )
-    {
-        sz = MultiByteToWideChar( CP_ACP, 0, format, -1, NULL, 0 );
-        formatW = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, format, -1, formatW, sz );
-    }
+    sz = MultiByteToWideChar( CP_ACP, 0, format, -1, NULL, 0 );
+    formatW = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
+    MultiByteToWideChar( CP_ACP, 0, format, -1, formatW, sz );
 
     r = pf_vsnprintf( &out, formatW, valist );
 
