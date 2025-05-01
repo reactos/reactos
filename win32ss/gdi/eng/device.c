@@ -512,6 +512,131 @@ VideoPortCallout(
     }
 }
 
+/* Sends a TargetDeviceRelation request to PDO
+ * On success, caller needs to free pDeviceRelations with ExFreePool()
+ */
+static
+NTSTATUS
+EngpPnPTargetRelationRequest(
+    _In_ PDEVICE_OBJECT pDeviceObject,
+    _Out_ PDEVICE_RELATIONS *pDeviceRelations)
+{
+    PIO_STACK_LOCATION IrpSp;
+    KEVENT Event;
+    PIRP pIrp;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+
+    /* Initialize an event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* Build IRP */
+    pIrp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
+                                        pDeviceObject,
+                                        NULL, 0,
+                                        NULL,
+                                        &Event,
+                                        &Iosb);
+    if (!pIrp)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Initialize IRP */
+    pIrp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    IrpSp = IoGetNextIrpStackLocation(pIrp);
+    IrpSp->MinorFunction = IRP_MN_QUERY_DEVICE_RELATIONS;
+    IrpSp->Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
+
+    /* Call the driver */
+    Status = IoCallDriver(pDeviceObject, pIrp);
+
+    /* Wait if neccessary */
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, 0);
+        Status = Iosb.Status;
+    }
+
+    /* Return information to the caller about the operation. */
+    if (NT_SUCCESS(Status))
+        *pDeviceRelations = (PDEVICE_RELATIONS)Iosb.Information;
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+EngpUpdateMonitorDevices(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    PDEVICE_RELATIONS pDeviceRelations;
+    PVIDEO_MONITOR_DEVICE pMonitorDevices;
+    ULONG i, bytesWritten, monitorCount;
+    NTSTATUS Status;
+
+    /* Request right PDO for device relations */
+    Status = EngpPnPTargetRelationRequest(pGraphicsDevice->DeviceObject, &pDeviceRelations);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("EngpPnPTargetRelationRequest() failed with status 0x%08x\n", Status);
+        return Status;
+    }
+    ASSERT(pDeviceRelations->Count == 1);
+
+    /* Invalidate relations, so that videoprt reenumerates its monitors */
+    IoSynchronousInvalidateDeviceRelations(pDeviceRelations->Objects[0], BusRelations);
+
+    /* Free returned structure */
+    for (i = 0; i < pDeviceRelations->Count; i++)
+        ObDereferenceObject(pDeviceRelations->Objects[i]);
+    ExFreePool(pDeviceRelations);
+
+    /* Now, get list of monitor PDOs */
+    Status = EngDeviceIoControl(pGraphicsDevice->DeviceObject,
+                                IOCTL_VIDEO_ENUM_MONITOR_PDO,
+                                NULL, 0,
+                                &pMonitorDevices, sizeof(pMonitorDevices),
+                                &bytesWritten);
+    if (Status != ERROR_SUCCESS)
+    {
+        ERR("EngDeviceIoControl(IOCTL_VIDEO_ENUM_MONITOR_PDO) failed with status 0x%08x\n", Status);
+        return Status;
+    }
+    ASSERT(bytesWritten == sizeof(pMonitorDevices));
+
+    /* Count number of available monitors */
+    for (monitorCount = 0; pMonitorDevices[monitorCount].pdo; ++monitorCount)
+        ;
+
+    if (pGraphicsDevice->pvMonDev)
+    {
+        /* Erase everything */
+        for (i = 0; i < pGraphicsDevice->dwMonCnt; i++)
+            ObDereferenceObject(pGraphicsDevice->pvMonDev[i].pdo);
+        ExFreePoolWithTag(pGraphicsDevice->pvMonDev, GDITAG_GDEVICE);
+        pGraphicsDevice->pvMonDev = NULL;
+        pGraphicsDevice->dwMonCnt = 0;
+    }
+    pGraphicsDevice->pvMonDev = ExAllocatePoolZero(PagedPool,
+                                                   monitorCount * sizeof(VIDEO_MONITOR_DEVICE),
+                                                   GDITAG_GDEVICE);
+    if (!pGraphicsDevice->pvMonDev)
+    {
+        for (i = 0; pMonitorDevices[i].pdo; ++i)
+            ObDereferenceObject(pMonitorDevices[i].pdo);
+        ExFreePool(pMonitorDevices);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Copy data */
+    for (i = 0; i < monitorCount; i++)
+    {
+        TRACE("%S\\Monitor%u: PDO %p HwID %u\n", pGraphicsDevice->szWinDeviceName, i, pMonitorDevices[i].pdo, pMonitorDevices[i].HwID);
+        pGraphicsDevice->pvMonDev[pGraphicsDevice->dwMonCnt++] = pMonitorDevices[i];
+    }
+    ExFreePool(pMonitorDevices);
+    return STATUS_SUCCESS;
+}
+
 PGRAPHICS_DEVICE
 NTAPI
 EngpRegisterGraphicsDevice(
@@ -580,19 +705,6 @@ EngpRegisterGraphicsDevice(
     // if (Win32kCallbacks.DualviewFlags & ???)
     pGraphicsDevice->PhysDeviceHandle = Win32kCallbacks.pPhysDeviceObject;
 
-    /* FIXME: Enumerate children monitor devices for this video adapter
-     *
-     * - Force the adapter to re-enumerate its monitors:
-     *   IoSynchronousInvalidateDeviceRelations(pdo, BusRelations)
-     *
-     * - Retrieve all monitor PDOs from VideoPrt:
-     *   EngDeviceIoControl(0x%p, IOCTL_VIDEO_ENUM_MONITOR_PDO)
-     *
-     * - Initialize these fields and structures accordingly:
-     *   pGraphicsDevice->dwMonCnt
-     *   pGraphicsDevice->pvMonDev[0..dwMonCnt-1]
-     */
-
     /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
                       sizeof(pGraphicsDevice->szNtDeviceName),
@@ -628,6 +740,9 @@ EngpRegisterGraphicsDevice(
                   pustrDescription->Buffer,
                   pustrDescription->Length);
     pGraphicsDevice->pwszDescription[pustrDescription->Length/sizeof(WCHAR)] = 0;
+
+    /* Update list of connected monitors */
+    EngpUpdateMonitorDevices(pGraphicsDevice);
 
     /* Lock loader */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
