@@ -1120,6 +1120,23 @@ int CDECL MSVCRT_swprintf( MSVCRT_wchar_t *str, const MSVCRT_wchar_t *format, ..
 }
 
 /*********************************************************************
+ *		swprintf_s (MSVCRT.@)
+ */
+int CDECL MSVCRT_swprintf_s(MSVCRT_wchar_t *str, MSVCRT_size_t numberOfElements,
+        const MSVCRT_wchar_t *format, ... )
+{
+    __ms_va_list ap;
+    int r;
+
+    __ms_va_start(ap, format);
+    r = MSVCRT_vsnwprintf_s(str, numberOfElements*sizeof(MSVCRT_wchar_t),
+            INT_MAX, format, ap);
+    __ms_va_end(ap);
+
+    return r;
+}
+
+/*********************************************************************
  *		vswprintf (MSVCRT.@)
  */
 int CDECL MSVCRT_vswprintf( MSVCRT_wchar_t* str, const MSVCRT_wchar_t* format, __ms_va_list args )
