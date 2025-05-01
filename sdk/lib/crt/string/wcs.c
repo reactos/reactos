@@ -1187,6 +1187,14 @@ INT CDECL MSVCRT_iswalpha( MSVCRT_wchar_t wc )
 }
 
 /*********************************************************************
+ *              iswalpha_l (MSVCRT.@)
+ */
+INT CDECL MSVCRT__iswalpha_l( MSVCRT_wchar_t wc, MSVCRT__locale_t locale )
+{
+    return isalphaW( wc );
+}
+
+/*********************************************************************
  *		iswcntrl (MSVCRT.@)
  */
 INT CDECL MSVCRT_iswcntrl( MSVCRT_wchar_t wc )
