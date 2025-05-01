@@ -759,13 +759,14 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, va_list valist )
         /* output a pointer */
         else if( flags.Format == 'p' )
         {
-            char pointer[11];
+            char pointer[32];
+            void *ptr = va_arg( valist, void * );
 
             flags.PadZero = 0;
             if( flags.Alternate )
-                sprintf(pointer, "0X%08lX", va_arg(valist, long));
+                sprintf(pointer, "0X%0*lX", 2 * sizeof(ptr), (ULONG_PTR)ptr);
             else
-                sprintf(pointer, "%08lX", va_arg(valist, long));
+                sprintf(pointer, "%0*lX", 2 * sizeof(ptr), (ULONG_PTR)ptr);
             r = pf_output_format_A( out, pointer, -1, &flags );
         }
 
