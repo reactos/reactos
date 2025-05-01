@@ -1114,7 +1114,7 @@ int CDECL MSVCRT_vsnprintf_s_l( char *str, MSVCRT_size_t sizeOfBuffer,
 
     if(ret<0 || ret==len) {
         if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer) {
-            MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
+            MSVCRT_INVALID_PMT("str[sizeOfBuffer] is too small");
             *MSVCRT__errno() = MSVCRT_ERANGE;
             memset(str, 0, sizeOfBuffer);
         } else
@@ -1252,7 +1252,7 @@ int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer
 
     if(ret<0 || ret==len) {
         if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer) {
-            MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
+            MSVCRT_INVALID_PMT("str[sizeOfBuffer] is too small");
             *MSVCRT__errno() = MSVCRT_ERANGE;
             memset(str, 0, sizeOfBuffer*sizeof(MSVCRT_wchar_t));
         } else
