@@ -298,26 +298,34 @@ MSVCRT_size_t CDECL MSVCRT__wcstombs_l(char *mbstr, const MSVCRT_wchar_t *wcstr,
         MSVCRT_size_t count, MSVCRT__locale_t locale)
 {
     char default_char = '\0';
-    MSVCRT_size_t tmp;
+    MSVCRT_size_t tmp = 0;
     BOOL used_default;
 
     if(!locale)
         locale = get_locale();
 
-    /* FIXME: Use wcslen here */
-    tmp = strlenW(wcstr);
-    if(tmp>count && mbstr)
-        tmp = count;
+    if(!mbstr)
+        return WideCharToMultiByte(locale->locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
+                wcstr, -1, NULL, 0, &default_char, &used_default)-1;
 
-    tmp = WideCharToMultiByte(locale->locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
-            wcstr, tmp, mbstr, count, &default_char, &used_default);
+    while(*wcstr) {
+        char buf[3];
+        MSVCRT_size_t i, size;
 
-    if(used_default)
-        return -1;
+        size = WideCharToMultiByte(locale->locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
+                wcstr, 1, buf, 3, &default_char, &used_default);
+        if(used_default)
+            return -1;
+        if(tmp+size > count)
+            return tmp;
 
-    if(tmp<count && mbstr)
+        for(i=0; i<size; i++)
+            mbstr[tmp++] = buf[i];
+        wcstr++;
+    }
+
+    if(tmp < count)
         mbstr[tmp] = '\0';
-
     return tmp;
 }
 
