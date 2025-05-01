@@ -1814,7 +1814,7 @@ INT CDECL MSVCRT_wcsncat_s(MSVCRT_wchar_t *dst, MSVCRT_size_t elem,
     if (!MSVCRT_CHECK_PMT(dst != NULL) || !MSVCRT_CHECK_PMT(elem > 0))
     {
 #ifndef _LIBCNT_
-        _set_errno(EINVAL);
+        *MSVCRT__errno() = MSVCRT_EINVAL;
 #endif
         return MSVCRT_EINVAL;
     }
