@@ -609,7 +609,8 @@ static void pf_fixup_exponent( char *buf )
  *
  *  implements both A and W vsnprintf functions
  */
-static int pf_vsnprintf( pf_output *out, const WCHAR *format, MSVCRT__locale_t locale, __ms_va_list valist )
+static int pf_vsnprintf( pf_output *out, const WCHAR *format,
+        MSVCRT__locale_t locale, BOOL valid, __ms_va_list valist )
 {
     int r;
     LPCWSTR q, p = format;
@@ -840,9 +841,20 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, MSVCRT__locale_t l
             r = pf_output_stringA( out, x, -1 );
             if( x != number )
                 HeapFree( GetProcessHeap(), 0, x );
+            if(r < 0)
+                return r;
         }
         else
+        {
+            if( valid )
+            {
+                MSVCRT__invalid_parameter( NULL, NULL, NULL, 0, 0 );
+                *MSVCRT__errno() = MSVCRT_EINVAL;
+                return -1;
+            }
+
             continue;
+        }
 
         if( r<0 )
             return r;
@@ -876,7 +888,7 @@ int CDECL MSVCRT_vsnprintf( char *str, unsigned int len,
     formatW = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, format, -1, formatW, sz );
 
-    r = pf_vsnprintf( &out, formatW, NULL, valist );
+    r = pf_vsnprintf( &out, formatW, NULL, FALSE, valist );
 
     HeapFree( GetProcessHeap(), 0, formatW );
 
@@ -933,7 +945,7 @@ int CDECL MSVCRT_vsnwprintf( MSVCRT_wchar_t *str, unsigned int len,
     out.used = 0;
     out.len = len;
 
-    return pf_vsnprintf( &out, format, NULL, valist );
+    return pf_vsnprintf( &out, format, NULL, FALSE, valist );
 }
 
 /*********************************************************************
