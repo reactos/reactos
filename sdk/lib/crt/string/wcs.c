@@ -112,6 +112,15 @@ INT CDECL _wcsicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2 )
 #endif
 
 /*********************************************************************
+ *		_wcsnicoll (MSVCRT.@)
+ */
+INT CDECL _wcsnicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2, MSVCRT_size_t count )
+{
+  /* FIXME: handle collates */
+  return strncmpiW( str1, str2, count );
+}
+
+/*********************************************************************
  *		_wcsnset (MSVCRT.@)
  */
 MSVCRT_wchar_t* CDECL MSVCRT__wcsnset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c, MSVCRT_size_t n )
