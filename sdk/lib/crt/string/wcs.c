@@ -63,8 +63,13 @@
 #define MSVCRT__vsnprintf _vsnprintf
 #define MSVCRT__vsnwprintf _vsnwprintf
 #define MSVCRT__errno _errno
+#define MSVCRT__invalid_parameter _invalid_parameter
+#define isinf(x) (!_finite(x))
 
 #else
+#include "config.h"
+#include "wine/port.h"
+
 #include <limits.h>
 #include <stdio.h>
 #include <math.h>
@@ -170,6 +175,110 @@ INT CDECL MSVCRT__wcsupr_s( MSVCRT_wchar_t* str, MSVCRT_size_t n )
   *str = '\0';
   *MSVCRT__errno() = MSVCRT_EINVAL;
   return MSVCRT_EINVAL;
+}
+
+/*********************************************************************
+ * _wcstod_l - not exported in native msvcrt
+ */
+double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
+        MSVCRT__locale_t locale)
+{
+    unsigned __int64 d=0, hlp;
+    int exp=0, sign=1;
+    const MSVCRT_wchar_t *p;
+    double ret;
+
+    if(!str) {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        *MSVCRT__errno() = MSVCRT_EINVAL;
+        return 0;
+    }
+
+    if(!locale)
+        locale = get_locale();
+
+    p = str;
+    while(isspaceW(*p))
+        p++;
+
+    if(*p == '-') {
+        sign = -1;
+        p++;
+    } else  if(*p == '+')
+        p++;
+
+    while(isdigitW(*p)) {
+        hlp = d*10+*(p++)-'0';
+        if(d>MSVCRT_UI64_MAX/10 || hlp<d) {
+            exp++;
+            break;
+        } else
+            d = hlp;
+    }
+    while(isdigitW(*p)) {
+        exp++;
+        p++;
+    }
+    if(*p == *locale->locinfo->lconv->decimal_point)
+        p++;
+
+    while(isdigitW(*p)) {
+        hlp = d*10+*(p++)-'0';
+        if(d>MSVCRT_UI64_MAX/10 || hlp<d)
+            break;
+
+        d = hlp;
+        exp--;
+    }
+    while(isdigitW(*p))
+        p++;
+
+    if(p == str) {
+        if(end)
+            *end = (MSVCRT_wchar_t*)str;
+        return 0.0;
+    }
+
+    if(*p=='e' || *p=='E' || *p=='d' || *p=='D') {
+        int e=0, s=1;
+
+        p++;
+        if(*p == '-') {
+            s = -1;
+            p++;
+        } else if(*p == '+')
+            p++;
+
+        if(isdigitW(*p)) {
+            while(isdigitW(*p)) {
+                if(e>INT_MAX/10 || (e=e*10+*p-'0')<0)
+                    e = INT_MAX;
+                p++;
+            }
+            e *= s;
+
+            if(exp<0 && e<0 && exp+e>=0) exp = INT_MIN;
+            else if(exp>0 && e>0 && exp+e<0) exp = INT_MAX;
+            else exp += e;
+        } else {
+            if(*p=='-' || *p=='+')
+                p--;
+            p--;
+        }
+    }
+
+    if(exp>0)
+        ret = (double)sign*d*pow(10, exp);
+    else
+        ret = (double)sign*d/pow(10, -exp);
+
+    if((d && ret==0.0) || isinf(ret))
+        *MSVCRT__errno() = MSVCRT_ERANGE;
+
+    if(end)
+        *end = (MSVCRT_wchar_t*)p;
+
+    return ret;
 }
 
 /*********************************************************************
