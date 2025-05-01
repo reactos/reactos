@@ -58,8 +58,10 @@
 #define MSVCRT_wcscat_s wcscat_s
 #define MSVCRT_wcsncat_s wcsncat_s
 #define MSVCRT_wcsncpy_s wcsncpy_s
+#define MSVCRT__wcsupr_s _wcsupr_s
 #define MSVCRT__vsnprintf _vsnprintf
 #define MSVCRT__vsnwprintf _vsnwprintf
+#define MSVCRT__errno _errno
 
 #else
 #include <limits.h>
@@ -144,15 +146,15 @@ MSVCRT_wchar_t* CDECL _wcsset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c )
  *		_wcsupr_s (MSVCRT.@)
  *
  */
-INT CDECL _wcsupr_s( wchar_t* str, size_t n )
+INT CDECL MSVCRT__wcsupr_s( MSVCRT_wchar_t* str, MSVCRT_size_t n )
 {
-  wchar_t* ptr = str;
+  MSVCRT_wchar_t* ptr = str;
 
   if (!str || !n)
   {
     if (str) *str = '\0';
-    _set_errno(EINVAL);
-    return EINVAL;
+    *MSVCRT__errno() = MSVCRT_EINVAL;
+    return MSVCRT_EINVAL;
   }
 
   while (n--)
@@ -165,8 +167,8 @@ INT CDECL _wcsupr_s( wchar_t* str, size_t n )
   /* MSDN claims that the function should return and set errno to
    * ERANGE, which doesn't seem to be true based on the tests. */
   *str = '\0';
-  _set_errno(EINVAL);
-  return EINVAL;
+  *MSVCRT__errno() = MSVCRT_EINVAL;
+  return MSVCRT_EINVAL;
 }
 
 /*********************************************************************
