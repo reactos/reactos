@@ -103,6 +103,7 @@ typedef struct tagGUIDELINE {
 #define IMS_CONFIGURE           0x0D
 #define IMS_SETOPENSTATUS       0x0F
 #define IMS_FREELAYOUT          0x11
+#define IMS_SOFTKBDONOFF        0x13
 #define IMS_GETCONVSTATUS       0x14
 #define IMS_IMEHELP             0x15
 #define IMS_IMEACTIVATE         0x17
