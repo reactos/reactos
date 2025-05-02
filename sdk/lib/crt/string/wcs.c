@@ -377,7 +377,6 @@ static MSVCRT_size_t CDECL MSVCRT_wcsrtombs_l(char *mbstr, const MSVCRT_wchar_t 
         MSVCRT_size_t count, MSVCRT__locale_t locale)
 {
     MSVCRT_pthreadlocinfo locinfo;
-    char default_char = '\0';
     MSVCRT_size_t tmp = 0;
     BOOL used_default;
 
@@ -386,16 +385,20 @@ static MSVCRT_size_t CDECL MSVCRT_wcsrtombs_l(char *mbstr, const MSVCRT_wchar_t 
     else
         locinfo = locale->locinfo;
 
-    if(!mbstr)
-        return WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
-                *wcstr, -1, NULL, 0, &default_char, &used_default)-1;
+    if(!mbstr) {
+        tmp = WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
+                *wcstr, -1, NULL, 0, NULL, &used_default)-1;
+        if(used_default)
+            return -1;
+        return tmp;
+    }
 
     while(**wcstr) {
         char buf[3];
         MSVCRT_size_t i, size;
 
         size = WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
-                *wcstr, 1, buf, 3, &default_char, &used_default);
+                *wcstr, 1, buf, 3, NULL, &used_default);
         if(used_default)
             return -1;
         if(tmp+size > count)
