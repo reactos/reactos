@@ -347,6 +347,12 @@ typedef struct _CM_POST_BLOCK
     PKAPC UserApc; /* User-mode Asynchronous Procedure Call, a callback routine to notify the listener about the change */
     PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
     WORK_QUEUE_TYPE WorkQueueType;
+    /* Master Post Block specific fields */
+    ULONG SubCount; /* SubNotifyBlocks size */
+    PCM_NOTIFY_BLOCK* SubNotifyBlocks; /* Array of Subordinates notification block */
+    /* Subordinate Post Block specific fields */
+    PCM_NOTIFY_BLOCK MasterNotifyBlock; /* Hold a reference to the master key's notify block */
+    struct _CM_POST_BLOCK* MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
 
 //
@@ -665,13 +671,31 @@ CmpFlushNotify(
 
 NTSTATUS
 NTAPI
-CmpInsertNewPostBlock(
+CmpInsertNotifyBlock(
+    _In_  PCM_KEY_BODY KeyBody,
+    _In_  ULONG Filter,
+    _In_  BOOLEAN WatchTree,
+    _Out_ PCM_NOTIFY_BLOCK* NotifyBlock
+);
+
+NTSTATUS
+NTAPI
+CmpInsertPostBlock(
     _In_        PCM_NOTIFY_BLOCK NotifyBlock,
     _In_opt_    HANDLE EventHandle,
     _In_opt_    PKEVENT EventObject,
     _In_opt_    PIO_APC_ROUTINE ApcRoutine,
     _In_opt_    PVOID ApcContext,
     _Out_       PCM_POST_BLOCK *PostBlock
+);
+
+NTSTATUS
+NTAPI
+CmpInsertSubPostBlock(
+    _In_  PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
+    _In_  PCM_POST_BLOCK MasterPostBlock,
+    _Out_ PCM_POST_BLOCK *PostBlock
 );
 
 VOID

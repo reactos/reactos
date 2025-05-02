@@ -1472,7 +1472,6 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
     /* Registry Key */
     PCM_KEY_BODY KeyObject = NULL;
-    PCMHIVE Hive = NULL;
 
     /* Notification state blocks */
     PCM_NOTIFY_BLOCK NotifyBlock = NULL;
@@ -1482,16 +1481,19 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     HANDLE LocalEventHandle = NULL;
     PKEVENT LocalEventObject = NULL;
 
+    /* Subordinate objects */
+    OBJECT_ATTRIBUTES* LocalSubObjects = NULL;
+    UNICODE_STRING* SubNames = NULL;
+    PCM_KEY_BODY* LocalSubObjectsKeyBody = NULL;
+    PCM_NOTIFY_BLOCK* SubNotifyBlocks = NULL;
+
     PAGED_CODE();
+
+    DPRINT("NtNotifyChangeMultipleKeys(MasterKeyHandle=%p, Subordinate[%d]=%p, Event=%p, ApcRoutine=%p, ApcContext=%p, IoStatusBlock=%p, CompletionFilter=%d, WatchTree=%d, Buffer[%d]=%p, Asynchronous=%d)\n",
+        MasterKeyHandle, Count, SlaveObjects, Event, ApcRoutine, ApcContext, IoStatusBlock, CompletionFilter, WatchTree, Buffer, Length, Asynchronous);
 
     /* Validate flags */
     if ((CompletionFilter & REG_LEGAL_CHANGE_FILTER) != CompletionFilter)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Count can't be larger than 1 */
-    if (Count != 0 && Count != 1)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1502,13 +1504,19 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Windows doesn't support more than one subordinate */
+    if (Count != 0 && Count != 1)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Verify the handle is valid and has sufficient permissions */
     Status = ObReferenceObjectByHandle(MasterKeyHandle,
-        KEY_NOTIFY,
-        CmpKeyObjectType,
-        PreviousMode,
-        (PVOID*)&KeyObject,
-        NULL);
+                                       KEY_NOTIFY,
+                                       CmpKeyObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&KeyObject,
+                                       NULL);
 
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1521,72 +1529,127 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     {
         _SEH2_TRY
         {
-            if (SlaveObjects != NULL)
-            {
-                ProbeForRead(SlaveObjects, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
-            }
-
             ProbeForWrite(IoStatusBlock, sizeof(IO_STATUS_BLOCK), sizeof(ULONG));
+            ProbeForWrite(Buffer, Length, sizeof(ULONG));
+
+            /* Probe and capture subordinate objects */
+            if (Count > 0)
+            {
+                LocalSubObjects = ExAllocatePool(NonPagedPool, Count * sizeof(OBJECT_ATTRIBUTES));
+                if (!LocalSubObjects)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto Quit;
+                }
+
+                SubNames = ExAllocatePool(NonPagedPool, Count * sizeof(UNICODE_STRING));
+                if (!SubNames)
+                {
+                    ExFreePool(LocalSubObjects);
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto Quit;
+                }
+
+                for (int i = 0; i < Count; i++)
+                {
+                    Status = ProbeAndCaptureObjectAttributes(&LocalSubObjects[i],
+                                                             &SubNames[i],
+                                                             PreviousMode,
+                                                             &SlaveObjects[i],
+                                                             FALSE);
+                }
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Return the exception code */
             Status = _SEH2_GetExceptionCode();
-            _SEH2_YIELD(goto Quit);
         }
         _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (LocalSubObjects)
+                ExFreePool(LocalSubObjects);
+            if (SubNames)
+                ExFreePool(SubNames);
+            goto Quit;
+        }
     }
+
+    if (KeyObject->NotifyBlock)
+    {
+        /* This is not the first time that user requests for notifications for this key handle, we already allocated a NotifyBlock before. */
+
+        /* There was a new notification when user was was processing the last one */
+        if (KeyObject->NotifyBlock->NotifyPending)
+        {
+            /* FIXME: Currently, we do not set this flag anywhere yet */
+            KeyObject->NotifyBlock->NotifyPending = FALSE;
+            Status = STATUS_NOTIFY_ENUM_DIR;
+            goto Cleanup;
+        }
+    }
+
+    /* Lock the registry while we're setting up notifications */
+    CmpLockRegistryExclusive();
 
     /* Lock the Kcb while we are initializing/updating NotifyBlock */
     CmpAcquireKcbLockExclusive(KeyObject->KeyControlBlock);
 
-    /* Allocate and initialize NotifyBlock */
-    if (KeyObject->NotifyBlock == NULL)
+    /* Open subordinate objects */
+    if (Count > 0)
     {
-        /* Allocate memory */
-        NotifyBlock = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(CM_NOTIFY_BLOCK), TAG_CM);
-        if (!NotifyBlock)
+        LocalSubObjectsKeyBody = ExAllocatePool(NonPagedPool, Count * sizeof(PCM_KEY_BODY));
+        if (!LocalSubObjectsKeyBody)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            CmpReleaseKcbLock(KeyObject->KeyControlBlock);
-            goto Cleanup;
+            goto Failure;
         }
-        RtlZeroMemory(NotifyBlock, sizeof(CM_NOTIFY_BLOCK));
+        RtlZeroMemory(LocalSubObjectsKeyBody, Count * sizeof(PCM_KEY_BODY));
 
-        InitializeListHead(&(NotifyBlock->HiveList));
-        InitializeListHead(&(NotifyBlock->PostList));
-        NotifyBlock->KeyControlBlock = KeyObject->KeyControlBlock;
-        NotifyBlock->Filter = CompletionFilter;
-        NotifyBlock->WatchTree = WatchTree;
-        NotifyBlock->NotifyPending = FALSE;
+        for (int i = 0; i < Count; i++)
+        {
+            /* Open a kernel-mode handle, since we're using it internally without returning it to the user */
+            HANDLE SubHandle;
+            LocalSubObjects[i].Attributes |= OBJ_KERNEL_HANDLE;
+            Status = ObOpenObjectByName(&LocalSubObjects[i],
+                                        CmpKeyObjectType,
+                                        KernelMode,
+                                        NULL,
+                                        KEY_NOTIFY,
+                                        NULL,
+                                        &SubHandle);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
 
-        /* Link notify block to the key body */
-        NotifyBlock->KeyBody = KeyObject;
-        KeyObject->NotifyBlock = NotifyBlock;
+            Status = ObReferenceObjectByHandle(SubHandle,
+                                               KEY_NOTIFY,
+                                               CmpKeyObjectType,
+                                               KernelMode,
+                                               (PVOID*)&LocalSubObjectsKeyBody[i],
+                                               NULL);
+            /* clsoe the handle as we don't need it anymore */
+            ZwClose(SubHandle);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
 
-        /* Link notify block to the hive */
-        Hive = CONTAINING_RECORD(KeyObject->KeyControlBlock->KeyHive, CMHIVE, Hive);
-        InsertHeadList(&(Hive->NotifyList), &(NotifyBlock->HiveList));
+            /* Lock KCB for Subordinate objects */
+            CmpAcquireKcbLockExclusive(LocalSubObjectsKeyBody[i]->KeyControlBlock);
+        }
+
+        /* The name is no longer needed */
+        ExFreePool(LocalSubObjects);
+        ExFreePool(SubNames);
     }
-    else
+
+    /* Allocate and initialize master NotifyBlock */
+    if (KeyObject->NotifyBlock == NULL)
     {
-        if (KeyObject->NotifyBlock->NotifyPending)
-        {
-            /* There's a notification pending already */
-            /* TODO: Do we need to reset NotifyPending flag??? */
-            Status = STATUS_NOTIFY_ENUM_DIR;
-            CmpReleaseKcbLock(KeyObject->KeyControlBlock);
-            goto Cleanup;
-        }
-
-        /* Add our filters */
-        KeyObject->NotifyBlock->Filter |= CompletionFilter;
-
-        /* Watch subtrees */
-        if (WatchTree)
-        {
-            KeyObject->NotifyBlock->WatchTree = TRUE;
-        }
+        Status = CmpInsertNotifyBlock(KeyObject, CompletionFilter, WatchTree, &NotifyBlock);
+        if (!NT_SUCCESS(Status))
+            goto Failure;
+        KeyObject->NotifyBlock = NotifyBlock;
     }
 
     /* Allocate and initialize local event object */
@@ -1613,55 +1676,88 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     }
 
     /* Register for receiving notifications */
-    if (PreviousMode != KernelMode)
-    {
-        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock,
-                                       LocalEventHandle,
-                                       LocalEventObject,
-                                       ApcRoutine,
-                                       ApcContext,
-                                       &PostBlock);
-        if (!NT_SUCCESS(Status))
-            goto Failure;    
-    }
-    else
-    {
-        /* A kernel-mode caller should provide a WorkQueueItem instead of APC routine
-         * ref: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey
-         */
-        Status = CmpInsertNewPostBlock(KeyObject->NotifyBlock,
-                                       LocalEventHandle,
-                                       LocalEventObject,
-                                       NULL,
-                                       NULL,
-                                       &PostBlock);
-                                       
-        if (!NT_SUCCESS(Status))
-            goto Failure;
-
-        PostBlock->WorkQueueItem = (PWORK_QUEUE_ITEM)ApcRoutine;
-        PostBlock->WorkQueueType = (WORK_QUEUE_TYPE)ApcContext;
-    }
+    Status = CmpInsertPostBlock(KeyObject->NotifyBlock,
+                                LocalEventHandle,
+                                LocalEventObject,
+                                PreviousMode != KernelMode ? ApcRoutine : NULL, /* APC routine is not supported for kernel-mode callers */
+                                PreviousMode != KernelMode ? ApcContext : NULL,
+                                &PostBlock);
+    if (!NT_SUCCESS(Status))
+        goto Failure;
     
     /* Fill the PostBlock fields */
     PostBlock->Filter = CompletionFilter;
     PostBlock->WatchTree = WatchTree;
 
+    if (PreviousMode == KernelMode)
+    {
+        /* A kernel-mode caller should provide a WorkQueueItem instead of APC routine
+         * ref: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey
+         */
+        PostBlock->WorkQueueItem = (PWORK_QUEUE_ITEM)ApcRoutine;
+        PostBlock->WorkQueueType = (WORK_QUEUE_TYPE)ApcContext;
+    }
+
+    /* Allocate NotifyBlock for Subordinate objects */
+    if (Count > 0)
+    {
+        /* Allocate a storage array */
+        SubNotifyBlocks = ExAllocatePool(NonPagedPool, Count * sizeof(PCM_NOTIFY_BLOCK));
+        if (!SubNotifyBlocks)
+            goto Failure;
+
+        /* Initialize a NotifyBlock and PostBlock for each subordinate */
+        for (int i = 0; i < Count; i++)
+        {
+            Status = CmpInsertNotifyBlock(LocalSubObjectsKeyBody[i],
+                                          CompletionFilter,
+                                          WatchTree,
+                                          &SubNotifyBlocks[i]);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
+
+            /* Allocate PostBlock */
+            PCM_POST_BLOCK SubPostBlock;
+            Status = CmpInsertSubPostBlock(SubNotifyBlocks[i],
+                                           NotifyBlock,
+                                           PostBlock,
+                                           &SubPostBlock);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
+            
+            SubPostBlock->Filter = CompletionFilter;
+            SubPostBlock->WatchTree = WatchTree;
+
+            /* The object is no longer needed */
+            CmpReleaseKcbLock(LocalSubObjectsKeyBody[i]->KeyControlBlock);
+            ObDereferenceObject(LocalSubObjectsKeyBody[i]);
+            LocalSubObjectsKeyBody[i] = NULL;
+
+            /* CmpInsertSubPostBlock adds a reference of PostBlock to NotifyBlock->PostList */
+        }
+
+        /* We don't need an array for storing KeyBody objects */
+        ExFreePool(LocalSubObjectsKeyBody);
+        LocalSubObjectsKeyBody = NULL;
+    }
+
+    /* Attach subordinate NotifyBlocks to the master's PostBlock */
+    PostBlock->SubCount = Count;
+    PostBlock->SubNotifyBlocks = SubNotifyBlocks;
+
+    /* We are done with the NotifyBlock, unlock the KCB so now user can change registry keys */
+    CmpReleaseKcbLock(KeyObject->KeyControlBlock);
+    CmpUnlockRegistry();
+
     if (Asynchronous)
     {
-        /* This is an asynchronous call, caller will be notified using its provided event handle,
-         * unlock KCB and return with STATUS_PENDING now.
-         * The event object should be released by CmpReportNotify, when it signals them.
-         */
-        CmpReleaseKcbLock(KeyObject->KeyControlBlock);
+        /* This is an asynchronous call, we set the notification up, return NOW and notify later */
+        /* The allocated resources will be freed later when notification session ended */
         Status = STATUS_PENDING;
         goto Cleanup;
     }
     else
     {
-        /* Release the lock before we go to the wait state */
-        CmpReleaseKcbLock(KeyObject->KeyControlBlock);
-
         /* Wait for event to be signaled */
         KeWaitForSingleObject(PostBlock->Event, Executive, PreviousMode, FALSE, NULL);
 
@@ -1675,6 +1771,33 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     }
 
 Failure:
+    if (LocalSubObjects)
+        ExFreePool(LocalSubObjects);
+    if (SubNames)
+        ExFreePool(SubNames);
+
+    if (LocalSubObjectsKeyBody)
+    {
+        for (int i = 0; i < Count; i++)
+        {
+            if (LocalSubObjectsKeyBody[i])
+                ObDereferenceObject(LocalSubObjectsKeyBody[i]);
+        }
+
+        ExFreePool(LocalSubObjectsKeyBody);
+    }
+
+    if (SubNotifyBlocks)
+    {
+        for (int i = 0; i < Count; i++)
+        {
+            if (SubNotifyBlocks[i])
+                ExFreePoolWithTag(SubNotifyBlocks[i], TAG_CM);
+        }
+
+        ExFreePool(SubNotifyBlocks);
+    }
+        
     if (LocalEventObject)
         ObDereferenceObject(LocalEventObject);
 
@@ -1696,6 +1819,8 @@ Failure:
         ExFreePoolWithTag(PostBlock, TAG_CM);
 
     CmpReleaseKcbLock(KeyObject->KeyControlBlock);
+
+    CmpUnlockRegistry();
 
 Cleanup:
     if (KeyObject)
