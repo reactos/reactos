@@ -89,7 +89,6 @@ IntGetModifiers(PBYTE pKeyState)
  *
  * Maps to/from MOD_/HOTKEYF_ (swaps the SHIFT and ALT bits)
  */
-
 static inline
 UCHAR
 IntSwapModHKF(UINT Input)

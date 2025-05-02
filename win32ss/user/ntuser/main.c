@@ -588,24 +588,24 @@ InitThreadCallback(PETHREAD Thread)
           }
        }
 
-       if (bFirstThread)
-       {
-             /* Note: Only initialize once so it can be set back to 0 after being used */
-             if (ProcessParams->WindowFlags & STARTF_USEHOTKEY)
-                 ptiCurrent->ppi->dwHotkey = HandleToUlong(ProcessParams->StandardInput);
-             /* TODO:
-             else if (ProcessParams->ShellInfo.Buffer)
-                 ..->dwHotkey = ParseShellInfo(ProcessParams->ShellInfo.Buffer, L"hotkey.");
-             */
+        if (bFirstThread)
+        {
+            /* Note: Only initialize once so it can be set back to 0 after being used */
+            if (ProcessParams->WindowFlags & STARTF_USEHOTKEY)
+                ptiCurrent->ppi->dwHotkey = HandleToUlong(ProcessParams->StandardInput);
+            /* TODO:
+            else if (ProcessParams->ShellInfo.Buffer)
+                ..->dwHotkey = ParseShellInfo(ProcessParams->ShellInfo.Buffer, L"hotkey.");
+            */
 
-             if (ProcessParams->WindowFlags & STARTF_SHELLPRIVATE)
-             {
-                 /* We need to validate this handle because it can also be a HICON */
-                 HMONITOR hMonitor = (HMONITOR)ProcessParams->StandardOutput;
-                 if (hMonitor && UserGetMonitorObject(hMonitor))
+            if (ProcessParams->WindowFlags & STARTF_SHELLPRIVATE)
+            {
+              /* We need to validate this handle because it can also be a HICON */
+                HMONITOR hMonitor = (HMONITOR)ProcessParams->StandardOutput;
+                if (hMonitor && UserGetMonitorObject(hMonitor))
                     ptiCurrent->ppi->hMonitor = hMonitor;
-             }
-       }
+            }
+        }
     }
 
     /*
