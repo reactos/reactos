@@ -266,7 +266,8 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
     int exp=0, sign=1;
     const MSVCRT_wchar_t *p;
     double ret;
-    BOOL found_digit = FALSE;
+    long double lret=1, expcnt = 10;
+    BOOL found_digit = FALSE, negexp;
 
     if (!MSVCRT_CHECK_PMT(str != NULL)) return 0;
 
@@ -351,10 +352,16 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
     _control87(MSVCRT__EM_DENORMAL|MSVCRT__EM_INVALID|MSVCRT__EM_ZERODIVIDE
             |MSVCRT__EM_OVERFLOW|MSVCRT__EM_UNDERFLOW|MSVCRT__EM_INEXACT, 0xffffffff);
 
-    if(exp>0)
-        ret = (double)sign*d*pow(10, exp);
-    else
-        ret = (double)sign*d/pow(10, -exp);
+    negexp = (exp < 0);
+    if(negexp)
+        exp = -exp;
+    while(exp) {
+        if(exp & 1)
+            lret *= expcnt;
+        exp /= 2;
+        expcnt = expcnt*expcnt;
+    }
+    ret = (long double)sign * (negexp ? d/lret : d*lret);
 
     _control87(fpcontrol, 0xffffffff);
 
