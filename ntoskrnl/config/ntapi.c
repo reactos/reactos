@@ -1758,20 +1758,29 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     CmpReleaseKcbLock(KeyObject->KeyControlBlock);
     CmpUnlockRegistry();
 
+    /* Initialize IO_STATUS_BLOCK */
+    IoStatusBlock->Status = STATUS_PENDING;
+    IoStatusBlock->Information = 0;
+
     if (Asynchronous)
     {
         /* This is an asynchronous call, we set the notification up, return NOW and notify later */
         /* The allocated resources will be freed later when notification session ended */
         Status = STATUS_PENDING;
         goto Cleanup;
+
+        /* FIXME: Update IoStatusBlock when a notification is sent, and report back the relative name of the changed key using the buffer */
     }
     else
     {
         /* Wait for event to be signaled */
         KeWaitForSingleObject(PostBlock->Event, Executive, PreviousMode, FALSE, NULL);
 
-        /* FIXME: handle scenarios where the key is deleted, or the handle closed */
-        /* FIXME: Fill IoStatusBlock */
+        /* Fill the IoStatusBlock fields */
+        IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
+        IoStatusBlock->Information = 0;
+
+        /* FIXME: Report back the relative name of the changed using the Buffer */
 
         /* PostBlock is freed automatically when the event is signaled */
 
