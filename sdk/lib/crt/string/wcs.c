@@ -66,6 +66,8 @@
 #define MSVCRT__invalid_parameter _invalid_parameter
 #define isinf(x) (!_finite(x))
 
+struct _str_ctx_a { size_t len; char *buf; };
+struct _str_ctx_w { size_t len; wchar_t *buf; };
 #else
 #include "config.h"
 #include "wine/port.h"
@@ -1180,40 +1182,19 @@ printf_arg arg_clbk_valist(void *ctx, int arg_pos, int type, __ms_va_list *valis
 }
 
 /*********************************************************************
- * vsnprintf_internal (INTERNAL)
- */
-static inline int vsnprintf_internal( char *str, MSVCRT_size_t len, const char *format,
-        MSVCRT__locale_t locale, BOOL valid, __ms_va_list valist )
-{
-    DWORD sz;
-    LPWSTR formatW = NULL;
-    pf_output out;
-    int r;
-
-    out.unicode = FALSE;
-    out.buf.A = str;
-    out.grow.A = NULL;
-    out.used = 0;
-    out.len = len;
-
-    sz = MultiByteToWideChar( CP_ACP, 0, format, -1, NULL, 0 );
-    formatW = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
-    MultiByteToWideChar( CP_ACP, 0, format, -1, formatW, sz );
-
-    r = pf_vsnprintf( &out, formatW, locale, valid, valist );
-
-    HeapFree( GetProcessHeap(), 0, formatW );
-
-    return r;
-}
-
-/*********************************************************************
  *              _vsnprintf (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnprintf( char *str, MSVCRT_size_t len,
                             const char *format, __ms_va_list valist )
 {
-    return vsnprintf_internal(str, len, format, NULL, FALSE, valist);
+    static const char nullbyte = '\0';
+    struct _str_ctx_a ctx = {len, str};
+    int ret;
+
+    ret = pf_printf_a(puts_clbk_str_a, &ctx, format, NULL, FALSE, FALSE,
+            arg_clbk_valist, NULL, valist);
+    puts_clbk_str_a(&ctx, 1, &nullbyte);
+    return ret;
 }
 
 /*********************************************************************
@@ -1222,7 +1203,14 @@ int CDECL MSVCRT_vsnprintf( char *str, MSVCRT_size_t len,
 int CDECL MSVCRT_vsnprintf_l( char *str, MSVCRT_size_t len, const char *format,
                             MSVCRT__locale_t locale, __ms_va_list valist )
 {
-    return vsnprintf_internal(str, len, format, locale, FALSE, valist);
+    static const char nullbyte = '\0';
+    struct _str_ctx_a ctx = {len, str};
+    int ret;
+
+    ret = pf_printf_a(puts_clbk_str_a, &ctx, format, locale, FALSE, FALSE,
+            arg_clbk_valist, NULL, valist);
+    puts_clbk_str_a(&ctx, 1, &nullbyte);
+    return ret;
 }
 
 /*********************************************************************
@@ -1232,6 +1220,8 @@ int CDECL MSVCRT_vsnprintf_s_l( char *str, MSVCRT_size_t sizeOfBuffer,
         MSVCRT_size_t count, const char *format,
         MSVCRT__locale_t locale, __ms_va_list valist )
 {
+    static const char nullbyte = '\0';
+    struct _str_ctx_a ctx;
     int len, ret;
 
     if(sizeOfBuffer<count+1 || count==-1)
@@ -1239,7 +1229,11 @@ int CDECL MSVCRT_vsnprintf_s_l( char *str, MSVCRT_size_t sizeOfBuffer,
     else
         len = count+1;
 
-    ret = vsnprintf_internal(str, len, format, locale, TRUE, valist);
+    ctx.len = len;
+    ctx.buf = str;
+    ret = pf_printf_a(puts_clbk_str_a, &ctx, format, locale, FALSE, TRUE,
+            arg_clbk_valist, NULL, valist);
+    puts_clbk_str_a(&ctx, 1, &nullbyte);
 
     if(ret<0 || ret==len) {
         if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer) {
@@ -1329,30 +1323,19 @@ int CDECL MSVCRT__scprintf(const char *format, ...)
 }
 
 /*********************************************************************
- * vsnwprintf_internal (INTERNAL)
- */
-static inline int vsnwprintf_internal(MSVCRT_wchar_t *str, MSVCRT_size_t len,
-        const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, BOOL valid,
-        __ms_va_list valist)
-{
-    pf_output out;
-
-    out.unicode = TRUE;
-    out.buf.W = str;
-    out.grow.W = NULL;
-    out.used = 0;
-    out.len = len;
-
-    return pf_vsnprintf( &out, format, locale, valid, valist );
-}
-
-/*********************************************************************
  *              _vsnwprintf (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnwprintf(MSVCRT_wchar_t *str, MSVCRT_size_t len,
         const MSVCRT_wchar_t *format, __ms_va_list valist)
 {
-    return vsnwprintf_internal(str, len, format, NULL, FALSE, valist);
+    static const MSVCRT_wchar_t nullbyte = '\0';
+    struct _str_ctx_w ctx = {len, str};
+    int ret;
+
+    ret = pf_printf_w(puts_clbk_str_w, &ctx, format, NULL, FALSE, FALSE,
+            arg_clbk_valist, NULL, valist);
+    puts_clbk_str_w(&ctx, 1, &nullbyte);
+    return ret;
 }
 
 /*********************************************************************
@@ -1362,7 +1345,14 @@ int CDECL MSVCRT_vsnwprintf_l(MSVCRT_wchar_t *str, MSVCRT_size_t len,
         const MSVCRT_wchar_t *format, MSVCRT__locale_t locale,
         __ms_va_list valist)
 {
-        return vsnwprintf_internal(str, len, format, locale, FALSE, valist);
+    static const MSVCRT_wchar_t nullbyte = '\0';
+    struct _str_ctx_w ctx = {len, str};
+    int ret;
+
+    ret = pf_printf_w(puts_clbk_str_w, &ctx, format, locale, FALSE, FALSE,
+            arg_clbk_valist, NULL, valist);
+    puts_clbk_str_w(&ctx, 1, &nullbyte);
+    return ret;
 }
 
 /*********************************************************************
@@ -1372,13 +1362,19 @@ int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer
         MSVCRT_size_t count, const MSVCRT_wchar_t *format,
         MSVCRT__locale_t locale, __ms_va_list valist)
 {
+    static const MSVCRT_wchar_t nullbyte = '\0';
+    struct _str_ctx_w ctx;
     int len, ret;
 
     len = sizeOfBuffer;
     if(count!=-1 && len>count+1)
         len = count+1;
 
-    ret = vsnwprintf_internal(str, len, format, locale, TRUE, valist);
+    ctx.len = len;
+    ctx.buf = str;
+    ret = pf_printf_w(puts_clbk_str_w, &ctx, format, locale, FALSE, TRUE,
+            arg_clbk_valist, NULL, valist);
+    puts_clbk_str_w(&ctx, 1, &nullbyte);
 
     if(ret<0 || ret==len) {
         if(count!=MSVCRT__TRUNCATE && count>sizeOfBuffer) {
