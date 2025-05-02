@@ -16,6 +16,26 @@
 
 VOID
 NTAPI
+CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK* Subordinates)
+{
+    PCM_POST_BLOCK PostBlock;
+
+    if (Count <= 0) return;
+
+    for (int i = 0; i < Count; i++)
+    {
+        /* Every subordinate has one PostBlock, because the KeyBody is allocated internally just for us and we didn't allocate more */
+        PostBlock = CONTAINING_RECORD(Subordinates[i]->PostList.Flink, CM_POST_BLOCK, NotifyList);
+        RemoveEntryList(&PostBlock->NotifyList);
+        ExFreePoolWithTag(PostBlock, TAG_CM);
+    }
+
+    /* At last free the array itself */
+    ExFreePool(Subordinates);
+}
+
+VOID
+NTAPI
 CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
                   _In_ ULONG Filter)
 {
@@ -24,7 +44,25 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
      */
     if ((Filter != REG_LEGAL_CHANGE_FILTER) && (PostBlock->Filter & Filter) != Filter)
         return;
+
+    /* Check if this is a subordinate PostBlock */
+    if (PostBlock->MasterPostBlock)
+    {
+        /* Let the master handle the notification */
+
+        /* Hold a copy of the master KCB because we might get freed later */
+        PCM_KEY_CONTROL_BLOCK MasterKcb = PostBlock->MasterNotifyBlock->KeyControlBlock;
+        /* Lock the master KCB before we do anything with its NotifyBlock */
+        CmpAcquireKcbLockShared(MasterKcb);
         
+        /* This should happen, we don't want an endless recursion */
+        ASSERT(PostBlock->MasterPostBlock->MasterPostBlock == NULL);
+        CmpFlushPostBlock(PostBlock->MasterPostBlock, Filter);
+        
+        CmpReleaseKcbLock(MasterKcb);
+        return;
+    }
+    
     /* Signal the event */
     if (PostBlock->Event)
         KeSetEvent(PostBlock->Event, 1, FALSE);
@@ -51,6 +89,9 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
          * Remove it from the post list
          */
         RemoveEntryList(&(PostBlock->NotifyList));
+        CmpPostBlockFreeSubordinates(PostBlock->SubCount, PostBlock->SubNotifyBlocks);
+        PostBlock->SubCount = 0;
+        PostBlock->SubNotifyBlocks = NULL;
 
         return;
     }
@@ -64,6 +105,9 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
 
     /* Remove post block entry */
     RemoveEntryList(&(PostBlock->NotifyList));
+
+    /* Release subordinate NotifyBlocks */
+    CmpPostBlockFreeSubordinates(PostBlock->SubCount, PostBlock->SubNotifyBlocks);
 
     /* Free the memory */
     ExFreePoolWithTag(PostBlock, TAG_CM);
@@ -104,12 +148,54 @@ CmpFlushAllPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
 
 NTSTATUS
 NTAPI
-CmpInsertNewPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
-                      _In_opt_  HANDLE EventHandle,
-                      _In_opt_  PKEVENT EventObject,
-                      _In_opt_  PIO_APC_ROUTINE ApcRoutine,
-                      _In_opt_  PVOID ApcContext,
-                      _Out_     PCM_POST_BLOCK *Result)
+CmpInsertNotifyBlock(
+    _In_ PCM_KEY_BODY KeyBody,
+    _In_ ULONG Filter,
+    _In_ BOOLEAN WatchTree,
+    _Out_ PCM_NOTIFY_BLOCK *Result)
+{
+    PCM_NOTIFY_BLOCK NotifyBlock;
+    PCMHIVE Hive;
+
+    /* Allocate memory */
+    NotifyBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_NOTIFY_BLOCK), TAG_CM);
+    if (!NotifyBlock)
+    {
+        *Result = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(NotifyBlock, sizeof(CM_NOTIFY_BLOCK));
+
+    /* Initialize list heads */
+    InitializeListHead(&NotifyBlock->HiveList);
+    InitializeListHead(&NotifyBlock->PostList);
+
+    /* Initialize fields */
+    NotifyBlock->Filter = Filter;
+    NotifyBlock->WatchTree = WatchTree;
+
+    /* Attach to the key object */
+    NotifyBlock->KeyControlBlock = KeyBody->KeyControlBlock;
+    NotifyBlock->KeyBody = KeyBody;
+    /* Let the caller attach us to the KeyBody, because if this is a subordinate our owner would be the master not the KeyBody */
+    /*KeyBody->NotifyBlock = NotifyBlock;*/
+
+    /* Attach to the hive */
+    Hive = CONTAINING_RECORD(KeyBody->KeyControlBlock->KeyHive, CMHIVE, Hive);
+    InsertHeadList(&(Hive->NotifyList), &(NotifyBlock->HiveList));
+
+    *Result = NotifyBlock;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
+                   _In_opt_  HANDLE EventHandle,
+                   _In_opt_  PKEVENT EventObject,
+                   _In_opt_  PIO_APC_ROUTINE ApcRoutine,
+                   _In_opt_  PVOID ApcContext,
+                   _Out_     PCM_POST_BLOCK *Result)
 {
     NTSTATUS Status;
     HANDLE LocalEventHandle;
@@ -201,9 +287,37 @@ Failure:
         ZwClose(LocalEventHandle);
     if (LocalApc)
         ExFreePoolWithTag(LocalApc, TAG_CM);
-    /*if (PostBlock)
-        ExFreePoolWithTag(PostBlock, TAG_CM);*/
     return Status;
+}
+
+NTSTATUS
+NTAPI
+CmpInsertSubPostBlock(
+    _In_  PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
+    _In_  PCM_POST_BLOCK MasterPostBlock,
+    _Out_ PCM_POST_BLOCK *Result)
+{
+    PCM_POST_BLOCK PostBlock;
+
+    /* Allocate memory */
+    PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
+    if (!PostBlock)
+    {
+        *Result = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
+
+    /* Attach to master NotifyBlock */
+    PostBlock->MasterNotifyBlock = MasterNotifyBlock;
+    PostBlock->MasterPostBlock = MasterPostBlock;
+
+    /* Attach to our NotifyBlock */
+    InsertHeadList(&(NotifyBlock->PostList), &(PostBlock->NotifyList));
+
+    *Result = PostBlock;
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -326,6 +440,8 @@ CmpApcKernelRoutine(_In_ PKAPC Apc,
         PostBlock->EventHandle = NULL;
     }
 
+    /* We released subordinates resources before queueing the APC, so there's no need to release them here again */
+
     /* it's safe to release the KAPC here */
     ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
     PostBlock->UserApc = NULL;
@@ -342,9 +458,6 @@ CmpApcRoutineRundown(_In_ PKAPC Apc)
 
     PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)Apc->SystemArgument1;
 
-    DPRINT1("CmpApcRoutineRundown( %p, %p )\n", PostBlock, Apc->SystemArgument2);
-    DPRINT1("PostBlock { Event = %p , EventHandle = %p , UserApc = %p }\n", PostBlock->Event, PostBlock->EventHandle, PostBlock->UserApc);
-    
     /* TODO: Set IO_STATUS_BLOCK */
     /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
 
