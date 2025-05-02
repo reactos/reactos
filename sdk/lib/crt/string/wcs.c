@@ -64,6 +64,11 @@
 #define MSVCRT__vsnwprintf _vsnwprintf
 #define MSVCRT__errno _errno
 #define MSVCRT__invalid_parameter _invalid_parameter
+#define MSVCRT__wcsdup _wcsdup
+#define MSVCRT__wcsicoll _wcsicoll
+#define MSVCRT__wcsnicoll _wcsnicoll
+#define MSVCRT__wcsrev _wcsrev
+#define MSVCRT__wcsset _wcsset
 #define isinf(x) (!_finite(x))
 
 struct _str_ctx_a { size_t len; char *buf; };
@@ -92,13 +97,13 @@ static BOOL n_format_enabled = TRUE;
 #undef PRINTF_WIDE
 
 /* _get_printf_count_output - not exported in native msvcrt */
-int CDECL _get_printf_count_output( void )
+int CDECL MSVCRT__get_printf_count_output( void )
 {
     return n_format_enabled ? 1 : 0;
 }
 
 /* _set_printf_count_output - not exported in native msvcrt */
-int CDECL _set_printf_count_output( int enable )
+int CDECL MSVCRT__set_printf_count_output( int enable )
 {
     BOOL old = n_format_enabled;
     n_format_enabled = (enable ? TRUE : FALSE);
@@ -115,7 +120,7 @@ int CDECL _set_printf_count_output( int enable )
 /*********************************************************************
  *		_wcsdup (MSVCRT.@)
  */
-MSVCRT_wchar_t* CDECL _wcsdup( const MSVCRT_wchar_t* str )
+MSVCRT_wchar_t* CDECL MSVCRT__wcsdup( const MSVCRT_wchar_t* str )
 {
   MSVCRT_wchar_t* ret = NULL;
   if (str)
@@ -129,7 +134,7 @@ MSVCRT_wchar_t* CDECL _wcsdup( const MSVCRT_wchar_t* str )
 /*********************************************************************
  *		_wcsicoll (MSVCRT.@)
  */
-INT CDECL _wcsicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2 )
+INT CDECL MSVCRT__wcsicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2 )
 {
   /* FIXME: handle collates */
   return strcmpiW( str1, str2 );
@@ -139,7 +144,7 @@ INT CDECL _wcsicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2 )
 /*********************************************************************
  *		_wcsnicoll (MSVCRT.@)
  */
-INT CDECL _wcsnicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2, MSVCRT_size_t count )
+INT CDECL MSVCRT__wcsnicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2, MSVCRT_size_t count )
 {
   /* FIXME: handle collates */
   return strncmpiW( str1, str2, count );
@@ -158,7 +163,7 @@ MSVCRT_wchar_t* CDECL MSVCRT__wcsnset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c, MS
 /*********************************************************************
  *		_wcsrev (MSVCRT.@)
  */
-MSVCRT_wchar_t* CDECL _wcsrev( MSVCRT_wchar_t* str )
+MSVCRT_wchar_t* CDECL MSVCRT__wcsrev( MSVCRT_wchar_t* str )
 {
   MSVCRT_wchar_t* ret = str;
   MSVCRT_wchar_t* end = str + strlenW(str) - 1;
@@ -175,7 +180,7 @@ MSVCRT_wchar_t* CDECL _wcsrev( MSVCRT_wchar_t* str )
 /*********************************************************************
  *		_wcsset (MSVCRT.@)
  */
-MSVCRT_wchar_t* CDECL _wcsset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c )
+MSVCRT_wchar_t* CDECL MSVCRT__wcsset( MSVCRT_wchar_t* str, MSVCRT_wchar_t c )
 {
   MSVCRT_wchar_t* ret = str;
   while (*str) *str++ = c;
@@ -671,7 +676,7 @@ int CDECL MSVCRT_vsprintf_s( char *str, MSVCRT_size_t num, const char *format, _
 /*********************************************************************
  *		_vscprintf (MSVCRT.@)
  */
-int CDECL _vscprintf( const char *format, __ms_va_list valist )
+int CDECL MSVCRT__vscprintf( const char *format, __ms_va_list valist )
 {
     return MSVCRT_vsnprintf( NULL, INT_MAX, format, valist );
 }
@@ -711,7 +716,7 @@ int CDECL MSVCRT__scprintf(const char *format, ...)
     int retval;
     __ms_va_list valist;
     __ms_va_start(valist, format);
-    retval = _vscprintf(format, valist);
+    retval = MSVCRT__vscprintf(format, valist);
     __ms_va_end(valist);
     return retval;
 }
@@ -904,7 +909,7 @@ int CDECL MSVCRT_vswprintf( MSVCRT_wchar_t* str, const MSVCRT_wchar_t* format, _
 /*********************************************************************
  *		_vscwprintf (MSVCRT.@)
  */
-int CDECL _vscwprintf( const MSVCRT_wchar_t *format, __ms_va_list args )
+int CDECL MSVCRT__vscwprintf( const MSVCRT_wchar_t *format, __ms_va_list args )
 {
     return MSVCRT_vsnwprintf( NULL, INT_MAX, format, args );
 }
