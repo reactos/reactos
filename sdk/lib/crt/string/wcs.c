@@ -136,19 +136,19 @@ MSVCRT_wchar_t* CDECL MSVCRT__wcsdup( const MSVCRT_wchar_t* str )
  */
 INT CDECL MSVCRT__wcsicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2 )
 {
-  /* FIXME: handle collates */
-  return strcmpiW( str1, str2 );
+    return CompareStringW(get_locinfo()->lc_handle[MSVCRT_LC_COLLATE],
+            NORM_IGNORECASE, str1, -1, str2, -1)-CSTR_EQUAL;
 }
-#endif
 
 /*********************************************************************
  *		_wcsnicoll (MSVCRT.@)
  */
 INT CDECL MSVCRT__wcsnicoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2, MSVCRT_size_t count )
 {
-  /* FIXME: handle collates */
-  return strncmpiW( str1, str2, count );
+    return CompareStringW(get_locinfo()->lc_handle[MSVCRT_LC_COLLATE],
+            NORM_IGNORECASE, str1, count, str2, count)-CSTR_EQUAL;
 }
+#endif
 
 /*********************************************************************
  *		_wcsnset (MSVCRT.@)
@@ -1074,14 +1074,16 @@ int CDECL MSVCRT_swprintf_p_l(MSVCRT_wchar_t *buffer, MSVCRT_size_t length,
 
 #endif // !__REACTOS__
 
+#ifndef _LIBCNT_
 /*********************************************************************
  *		wcscoll (MSVCRT.@)
  */
 int CDECL MSVCRT_wcscoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2 )
 {
-  /* FIXME: handle collates */
-  return strcmpW( str1, str2 );
+    return CompareStringW(get_locinfo()->lc_handle[MSVCRT_LC_COLLATE],
+            0, str1, -1, str2, -1)-CSTR_EQUAL;
 }
+#endif // !_LIBCNT_
 
 /*********************************************************************
  *		wcspbrk (MSVCRT.@)
