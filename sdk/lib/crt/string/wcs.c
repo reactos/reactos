@@ -1410,34 +1410,40 @@ INT CDECL MSVCRT_wcscpy_s( MSVCRT_wchar_t* wcDest, MSVCRT_size_t numElement, con
 INT CDECL MSVCRT_wcsncpy_s( MSVCRT_wchar_t* wcDest, MSVCRT_size_t numElement, const MSVCRT_wchar_t *wcSrc,
                             MSVCRT_size_t count )
 {
-    MSVCRT_size_t size = 0;
-    INT ret = 0;
+    WCHAR *p = wcDest;
+    BOOL truncate = (count == MSVCRT__TRUNCATE);
+
+    if(!wcDest && !numElement && !count)
+        return 0;
 
     if (!wcDest || !numElement)
         return MSVCRT_EINVAL;
 
-    wcDest[0] = 0;
-
     if (!wcSrc)
     {
+        *wcDest = 0;
         return count ? MSVCRT_EINVAL : 0;
     }
 
-    size = min(strlenW(wcSrc), count);
-    if (count==MSVCRT__TRUNCATE && size>=numElement)
+    while (numElement && count && *wcSrc)
     {
-        ret = MSVCRT_STRUNCATE;
-        size = numElement-1;
+        *p++ = *wcSrc++;
+        numElement--;
+        count--;
     }
-    else if (size >= numElement)
+    if (!numElement && truncate)
     {
+        *(p-1) = 0;
+        return MSVCRT_STRUNCATE;
+    }
+    else if (!numElement)
+    {
+        *wcDest = 0;
         return MSVCRT_ERANGE;
     }
 
-    memcpy( wcDest, wcSrc, size*sizeof(WCHAR) );
-    wcDest[size] = '\0';
-
-    return ret;
+    *p = 0;
+    return 0;
 }
 
 /******************************************************************
