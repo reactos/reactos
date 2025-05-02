@@ -1629,3 +1629,19 @@ MSVCRT_size_t CDECL MSVCRT_wcsnlen(const MSVCRT_wchar_t *s, MSVCRT_size_t maxlen
         if (!s[i]) break;
     return i;
 }
+
+/*********************************************************************
+ *              _towupper_l (MSVCRT.@)
+ */
+int CDECL MSVCRT__towupper_l(MSVCRT_wint_t c, MSVCRT__locale_t locale)
+{
+    return toupperW(c);
+}
+
+/*********************************************************************
+ *              _towlower_l (MSVCRT.@)
+ */
+int CDECL MSVCRT__towlower_l(MSVCRT_wint_t c, MSVCRT__locale_t locale)
+{
+    return tolowerW(c);
+}
