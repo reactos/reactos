@@ -758,6 +758,35 @@ int CDECL MSVCRT_vsnwprintf_l(MSVCRT_wchar_t *str, MSVCRT_size_t len,
 }
 
 /*********************************************************************
+ *		_vswprintf_p_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vswprintf_p_l(MSVCRT_wchar_t *buffer, MSVCRT_size_t length,
+        const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, __ms_va_list args)
+{
+    static const MSVCRT_wchar_t nullbyte = '\0';
+    printf_arg args_ctx[MSVCRT__ARGMAX+1];
+    struct _str_ctx_w puts_ctx = {length, buffer};
+    int ret;
+
+    memset(args_ctx, 0, sizeof(args_ctx));
+
+    ret = create_positional_ctx_w(args_ctx, format, args);
+    if(ret < 0)  {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        *MSVCRT__errno() = MSVCRT_EINVAL;
+        return ret;
+    } else if(ret == 0)
+        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
+                arg_clbk_valist, NULL, &args);
+    else
+        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
+                arg_clbk_positional, args_ctx, NULL);
+
+    puts_clbk_str_w(&puts_ctx, 1, &nullbyte);
+    return ret;
+}
+
+/*********************************************************************
  *              _vsnwprintf_s_l (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnwprintf_s_l( MSVCRT_wchar_t *str, MSVCRT_size_t sizeOfBuffer,
@@ -927,6 +956,22 @@ int CDECL MSVCRT__vscwprintf( const MSVCRT_wchar_t *format, __ms_va_list args )
 }
 
 /*********************************************************************
+ *		_vscwprintf_l (MSVCRT.@)
+ */
+int CDECL MSVCRT__vscwprintf_l( const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, __ms_va_list args )
+{
+    return MSVCRT_vsnwprintf_l( NULL, INT_MAX, format, locale, args );
+}
+
+/*********************************************************************
+ *		_vscwprintf_p_l (MSVCRT.@)
+ */
+int CDECL MSVCRT__vscwprintf_p_l( const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, __ms_va_list args )
+{
+    return MSVCRT_vswprintf_p_l( NULL, INT_MAX, format, locale, args );
+}
+
+/*********************************************************************
  *		vswprintf_s (MSVCRT.@)
  */
 int CDECL MSVCRT_vswprintf_s(MSVCRT_wchar_t* str, MSVCRT_size_t numberOfElements,
@@ -997,35 +1042,6 @@ int CDECL MSVCRT_sprintf_p_l(char *buffer, MSVCRT_size_t length,
     __ms_va_end(valist);
 
     return r;
-}
-
-/*********************************************************************
- *		_vswprintf_p_l (MSVCRT.@)
- */
-int CDECL MSVCRT_vswprintf_p_l(MSVCRT_wchar_t *buffer, MSVCRT_size_t length,
-        const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, __ms_va_list args)
-{
-    static const MSVCRT_wchar_t nullbyte = '\0';
-    printf_arg args_ctx[MSVCRT__ARGMAX+1];
-    struct _str_ctx_w puts_ctx = {length, buffer};
-    int ret;
-
-    memset(args_ctx, 0, sizeof(args_ctx));
-
-    ret = create_positional_ctx_w(args_ctx, format, args);
-    if(ret < 0)  {
-        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
-        *MSVCRT__errno() = MSVCRT_EINVAL;
-        return ret;
-    } else if(ret == 0)
-        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
-                arg_clbk_valist, NULL, &args);
-    else
-        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
-                arg_clbk_positional, args_ctx, NULL);
-
-    puts_clbk_str_w(&puts_ctx, 1, &nullbyte);
-    return ret;
 }
 
 /*********************************************************************
