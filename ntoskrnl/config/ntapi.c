@@ -1494,21 +1494,23 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
     /* Validate flags */
     if ((CompletionFilter & REG_LEGAL_CHANGE_FILTER) != CompletionFilter)
-    {
         return STATUS_INVALID_PARAMETER;
-    }
 
     /* For asynchronous calls, either Event or APC routine should be provided */
     if (Asynchronous && (Event == NULL && ApcRoutine == NULL))
-    {
         return STATUS_INVALID_PARAMETER;
-    }
+
+    /* ApcContext can't be null when ApcRoutine is not */
+    if (PreviousMode != KernelMode && ApcRoutine != NULL && ApcContext == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* IoStatusBlock is required */
+    if (IoStatusBlock == NULL)
+        return STATUS_INVALID_PARAMETER;
 
     /* Windows doesn't support more than one subordinate */
     if (Count != 0 && Count != 1)
-    {
         return STATUS_INVALID_PARAMETER;
-    }
 
     /* Verify the handle is valid and has sufficient permissions */
     Status = ObReferenceObjectByHandle(MasterKeyHandle,
@@ -1520,6 +1522,22 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
     if (!NT_SUCCESS(Status))
         return Status;
+
+    /* Check if the registry key is deleted */
+    if (KeyObject->KeyControlBlock->Delete)
+    {
+        ObDereferenceObject(KeyObject);
+        return STATUS_KEY_DELETED;
+    }
+
+    /* Early return if there's a notification pending */
+    if (KeyObject->NotifyBlock && KeyObject->NotifyBlock->NotifyPending)
+    {
+        /* FIXME: NotifyPending is not set anywhere */
+        KeyObject->NotifyBlock->NotifyPending = FALSE;
+        ObDereferenceObject(KeyObject);
+        return STATUS_NOTIFY_ENUM_DIR;
+    }
 
     /* Block APCs */
     KeEnterCriticalRegion();
@@ -1574,20 +1592,6 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
             if (SubNames)
                 ExFreePool(SubNames);
             goto Quit;
-        }
-    }
-
-    if (KeyObject->NotifyBlock)
-    {
-        /* This is not the first time that user requests for notifications for this key handle, we already allocated a NotifyBlock before. */
-
-        /* There was a new notification when user was was processing the last one */
-        if (KeyObject->NotifyBlock->NotifyPending)
-        {
-            /* FIXME: Currently, we do not set this flag anywhere yet */
-            KeyObject->NotifyBlock->NotifyPending = FALSE;
-            Status = STATUS_NOTIFY_ENUM_DIR;
-            goto Cleanup;
         }
     }
 
@@ -1666,6 +1670,17 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
                                                 &LocalEventHandle);
         if (!NT_SUCCESS(Status))
             goto Failure;
+
+        Status = ObReferenceObjectByHandle(LocalEventHandle,
+                                           EVENT_MODIFY_STATE,
+                                           NULL,
+                                           KernelMode,
+                                           (PVOID*)&LocalEventObject,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+            goto Failure;
+        ZwClose(LocalEventHandle);
+        LocalEventHandle = NULL;
     }
     else if (!Asynchronous)
     {
@@ -1673,11 +1688,12 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
         Status = CmpCreateEvent(NotificationEvent, &LocalEventHandle, &LocalEventObject);
         if (!NT_SUCCESS(Status))
             goto Failure;
+        ZwClose(LocalEventHandle);
+        LocalEventHandle = NULL;
     }
 
     /* Register for receiving notifications */
     Status = CmpInsertPostBlock(KeyObject->NotifyBlock,
-                                LocalEventHandle,
                                 LocalEventObject,
                                 PreviousMode != KernelMode ? ApcRoutine : NULL, /* APC routine is not supported for kernel-mode callers */
                                 PreviousMode != KernelMode ? ApcContext : NULL,
@@ -1685,10 +1701,6 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     if (!NT_SUCCESS(Status))
         goto Failure;
     
-    /* Fill the PostBlock fields */
-    PostBlock->Filter = CompletionFilter;
-    PostBlock->WatchTree = WatchTree;
-
     if (PreviousMode == KernelMode)
     {
         /* A kernel-mode caller should provide a WorkQueueItem instead of APC routine
@@ -1725,9 +1737,6 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
             if (!NT_SUCCESS(Status))
                 goto Failure;
             
-            SubPostBlock->Filter = CompletionFilter;
-            SubPostBlock->WatchTree = WatchTree;
-
             /* The object is no longer needed */
             CmpReleaseKcbLock(LocalSubObjectsKeyBody[i]->KeyControlBlock);
             ObDereferenceObject(LocalSubObjectsKeyBody[i]);

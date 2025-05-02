@@ -340,19 +340,29 @@ typedef struct _CM_NOTIFY_BLOCK
 typedef struct _CM_POST_BLOCK
 {
     LIST_ENTRY NotifyList; /* link to CM_NOTIFY_BLOCK->PostList */
-    HANDLE EventHandle; /* Event object handle */
-    PKEVENT Event; /* An event object to signal listeners about the change */
-    ULONG Filter; /* Filter for event types to be notified about, REG_NOTIFY_CHANGE_* enum members */
-    BOOLEAN WatchTree; /* Filter for notifications from subkeys */
-    PKAPC UserApc; /* User-mode Asynchronous Procedure Call, a callback routine to notify the listener about the change */
-    PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
-    WORK_QUEUE_TYPE WorkQueueType;
-    /* Master Post Block specific fields */
-    ULONG SubCount; /* SubNotifyBlocks size */
-    PCM_NOTIFY_BLOCK* SubNotifyBlocks; /* Array of Subordinates notification block */
-    /* Subordinate Post Block specific fields */
-    PCM_NOTIFY_BLOCK MasterNotifyBlock; /* Hold a reference to the master key's notify block */
-    struct _CM_POST_BLOCK* MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
+    BOOLEAN IsMasterPostBlock;
+
+    union
+    {
+        /* Master-specific fields */
+        struct
+        {
+            PKEVENT Event; /* An event object to signal listeners about the change */
+            PKAPC UserApc; /* User-mode Asynchronous Procedure Call, a callback routine to notify the listener about the change */
+            PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
+            WORK_QUEUE_TYPE WorkQueueType;
+
+            ULONG SubCount; /* SubNotifyBlocks size */
+            PCM_NOTIFY_BLOCK* SubNotifyBlocks; /* Array of Subordinates notification block */
+        };
+
+        /* Subordinate-specific fields */
+        struct
+        {
+            PCM_NOTIFY_BLOCK MasterNotifyBlock; /* Hold a reference to the master key's notify block */
+            struct _CM_POST_BLOCK* MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
+        };
+    };
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
 
 //
@@ -682,7 +692,6 @@ NTSTATUS
 NTAPI
 CmpInsertPostBlock(
     _In_        PCM_NOTIFY_BLOCK NotifyBlock,
-    _In_opt_    HANDLE EventHandle,
     _In_opt_    PKEVENT EventObject,
     _In_opt_    PIO_APC_ROUTINE ApcRoutine,
     _In_opt_    PVOID ApcContext,
@@ -696,22 +705,6 @@ CmpInsertSubPostBlock(
     _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
     _In_  PCM_POST_BLOCK MasterPostBlock,
     _Out_ PCM_POST_BLOCK *PostBlock
-);
-
-VOID
-NTAPI 
-CmpApcKernelRoutine(
-  _In_    PKAPC Apc,
-  _Inout_ PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
-  _Inout_ PVOID *NormalContext OPTIONAL,
-  _Inout_ PVOID *SystemArgument1 OPTIONAL,
-  _Inout_ PVOID *SystemArgument2 OPTIONAL
-);
-
-VOID
-NTAPI 
-CmpApcRoutineRundown(
-    _In_ PKAPC Apc
 );
 
 CODE_SEG("INIT")
