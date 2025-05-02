@@ -1088,13 +1088,14 @@ int CDECL MSVCRT_wcscoll( const MSVCRT_wchar_t* str1, const MSVCRT_wchar_t* str2
  */
 MSVCRT_wchar_t* CDECL MSVCRT_wcspbrk( const MSVCRT_wchar_t* str, const MSVCRT_wchar_t* accept )
 {
-  const MSVCRT_wchar_t* p;
-  while (*str)
-  {
-    for (p = accept; *p; p++) if (*p == *str) return (MSVCRT_wchar_t*)str;
-      str++;
-  }
-  return NULL;
+    const MSVCRT_wchar_t* p;
+
+    while (*str)
+    {
+        for (p = accept; *p; p++) if (*p == *str) return (MSVCRT_wchar_t*)str;
+        str++;
+    }
+    return NULL;
 }
 
 #ifndef __REACTOS__
