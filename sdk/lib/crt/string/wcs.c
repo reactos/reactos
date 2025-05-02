@@ -1157,6 +1157,29 @@ int pf_vsnprintf( pf_output *out, const WCHAR *format,
 }
 
 /*********************************************************************
+ * arg_clbk_valist (INTERNAL)
+ */
+printf_arg arg_clbk_valist(void *ctx, int arg_pos, int type, __ms_va_list *valist)
+{
+    printf_arg ret;
+
+    if(type == VT_I8)
+        ret.get_longlong = va_arg(*valist, LONGLONG);
+    else if(type == VT_INT)
+        ret.get_int = va_arg(*valist, int);
+    else if(type == VT_R8)
+        ret.get_double = va_arg(*valist, double);
+    else if(type == VT_PTR)
+        ret.get_ptr = va_arg(*valist, void*);
+    else {
+        ERR("Incorrect type\n");
+        ret.get_int = 0;
+    }
+
+    return ret;
+}
+
+/*********************************************************************
  * vsnprintf_internal (INTERNAL)
  */
 static inline int vsnprintf_internal( char *str, MSVCRT_size_t len, const char *format,
