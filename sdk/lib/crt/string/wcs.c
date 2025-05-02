@@ -106,7 +106,7 @@ int CDECL MSVCRT__get_printf_count_output( void )
 int CDECL MSVCRT__set_printf_count_output( int enable )
 {
     BOOL old = n_format_enabled;
-    n_format_enabled = (enable ? TRUE : FALSE);
+    n_format_enabled = enable != 0;
     return old ? 1 : 0;
 }
 
