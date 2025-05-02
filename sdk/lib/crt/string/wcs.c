@@ -902,11 +902,20 @@ int CDECL MSVCRT_swprintf_s(MSVCRT_wchar_t *str, MSVCRT_size_t numberOfElements,
 }
 
 /*********************************************************************
- *		vswprintf (MSVCRT.@)
+ *		_vswprintf (MSVCRT.@)
  */
 int CDECL MSVCRT_vswprintf( MSVCRT_wchar_t* str, const MSVCRT_wchar_t* format, __ms_va_list args )
 {
     return MSVCRT_vsnwprintf( str, INT_MAX, format, args );
+}
+
+/*********************************************************************
+ *		_vswprintf (MSVCRT.@)
+ */
+int CDECL MSVCRT_vswprintf_l( MSVCRT_wchar_t* str, const MSVCRT_wchar_t* format,
+        MSVCRT__locale_t locale, __ms_va_list args )
+{
+    return MSVCRT_vsnwprintf_l( str, INT_MAX, format, locale, args );
 }
 
 /*********************************************************************
