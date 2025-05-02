@@ -264,4 +264,6 @@ int pf_printf_a(puts_clbk_a, void*, const char*, _locale_t,
 int pf_printf_w(puts_clbk_w, void*, const wchar_t*, _locale_t,
         BOOL, BOOL, args_clbk, void*, __ms_va_list);
 
+typedef int MSVCRT_mbstate_t;
+
 #endif /* __WINE_MSVCRT_H */
