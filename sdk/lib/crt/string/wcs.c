@@ -1391,7 +1391,7 @@ INT CDECL MSVCRT_wcsncpy_s( MSVCRT_wchar_t* wcDest, MSVCRT_size_t numElement, co
 
     if (!wcSrc)
     {
-        return MSVCRT_EINVAL;
+        return count ? MSVCRT_EINVAL : 0;
     }
 
     size = min(strlenW(wcSrc), count);
