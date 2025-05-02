@@ -776,7 +776,7 @@ int CDECL MSVCRT_vswprintf_p_l(MSVCRT_wchar_t *buffer, MSVCRT_size_t length,
         *MSVCRT__errno() = MSVCRT_EINVAL;
         return ret;
     } else if(ret == 0)
-        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
+        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, FALSE, TRUE,
                 arg_clbk_valist, NULL, &args);
     else
         ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
