@@ -1235,8 +1235,14 @@ INT CDECL MSVCRT_wctob( MSVCRT_wint_t wchar )
 {
     char out;
     BOOL error;
+    UINT codepage = get_locinfo()->lc_codepage;
 
-    if(WideCharToMultiByte( get_locinfo()->lc_codepage, 0, &wchar, 1, &out, 1, NULL, &error ) && !error)
+    if(!codepage) {
+        if (wchar < 0xff)
+            return (signed char)wchar;
+        else
+            return MSVCRT_EOF;
+    } else if(WideCharToMultiByte( codepage, 0, &wchar, 1, &out, 1, NULL, &error ) && !error)
         return (INT)out;
     return MSVCRT_EOF;
 }
