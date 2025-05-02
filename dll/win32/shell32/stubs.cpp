@@ -89,30 +89,6 @@ SHParseDarwinIDFromCacheW(LPCWSTR lpUnknown1, LPWSTR lpUnknown2)
  */
 EXTERN_C HRESULT
 WINAPI
-SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags)
-{
-    FIXME("SHMultiFileProperties() stub\n");
-
-    // Temporary workaround to display a property sheet if possible
-    if (DataObject_GetHIDACount(pDataObject) == 1)
-        return SHELL32_ShowPropertiesDialog(pDataObject);
-
-    if (pDataObject)
-    {
-        HWND hWnd;
-        if (FAILED(IUnknown_GetWindow(pDataObject, &hWnd))) // Will probably not work but we have no other option
-            hWnd = NULL;
-        SHELL_ErrorBox(hWnd, HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED));
-    }  
-
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C HRESULT
-WINAPI
 SHCopyMonikerToTemp(IMoniker *pMoniker, LPCWSTR lpInput, LPWSTR lpOutput, INT cchMax)
 {
     /* Unimplemented in XP SP3 */

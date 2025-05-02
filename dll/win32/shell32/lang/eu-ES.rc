@@ -981,7 +981,10 @@ BEGIN
     IDS_PRINT_VERB "Inprimatu"
     IDS_CMD_VERB "Ireki terminalan"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u fitxategiak, %u karpetak"
+
     IDS_PRINTERS "Imprimagailuak"
     IDS_FONTS "Letra-tipo"
     IDS_INSTALLNEWFONT "Letra-tipo instalatu..."
