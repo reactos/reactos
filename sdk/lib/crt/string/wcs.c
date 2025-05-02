@@ -1290,6 +1290,14 @@ INT CDECL MSVCRT_iswdigit( MSVCRT_wchar_t wc )
 }
 
 /*********************************************************************
+ *		_iswdigit_l (MSVCRT.@)
+ */
+INT CDECL MSVCRT__iswdigit_l( MSVCRT_wchar_t wc, MSVCRT__locale_t locale )
+{
+    return isdigitW( wc );
+}
+
+/*********************************************************************
  *		iswgraph (MSVCRT.@)
  */
 INT CDECL MSVCRT_iswgraph( MSVCRT_wchar_t wc )
