@@ -634,7 +634,12 @@ public:
     // IObjectWithSite
     STDMETHODIMP SetSite(IUnknown *pUnkSite) override
     {
-        IUnknown_Set(&m_pUnkSite, pUnkSite);
+        IUnknown *punkOrg = m_pUnkSite;
+        m_pUnkSite = pUnkSite;
+        if (pUnkSite)
+            pUnkSite->AddRef();
+        if (punkOrg)
+            punkOrg->Release();
         return S_OK;
     }
     STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
