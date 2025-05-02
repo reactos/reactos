@@ -202,6 +202,8 @@ extern unsigned create_io_inherit_block(WORD*, BYTE**);
 
 #define MSVCRT__TRUNCATE ((MSVCRT_size_t)-1)
 
+#define MSVCRT__ARGMAX 100
+
 extern char* __cdecl __unDName(char *,const char*,int,malloc_func_t,free_func_t,unsigned short int);
 
 /* __unDName/__unDNameEx flags */

@@ -505,6 +505,15 @@ printf_arg arg_clbk_valist(void *ctx, int arg_pos, int type, __ms_va_list *valis
 }
 
 /*********************************************************************
+ * arg_clbk_positional (INTERNAL)
+ */
+printf_arg arg_clbk_positional(void *ctx, int pos, int type, __ms_va_list *valist)
+{
+    printf_arg *args = ctx;
+    return args[pos];
+}
+
+/*********************************************************************
  *              _vsnprintf (MSVCRT.@)
  */
 int CDECL MSVCRT_vsnprintf( char *str, MSVCRT_size_t len,
@@ -856,6 +865,106 @@ int CDECL MSVCRT_vswprintf_s_l(MSVCRT_wchar_t* str, MSVCRT_size_t numberOfElemen
     return MSVCRT_vsnwprintf_s_l(str, numberOfElements, INT_MAX,
             format, locale, args );
 }
+
+/*********************************************************************
+ *		_vsprintf_p_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsprintf_p_l(char *buffer, MSVCRT_size_t length, const char *format,
+        MSVCRT__locale_t locale, __ms_va_list args)
+{
+    static const char nullbyte = '\0';
+    printf_arg args_ctx[MSVCRT__ARGMAX+1];
+    struct _str_ctx_a puts_ctx = {length, buffer};
+    int ret;
+
+    memset(args_ctx, 0, sizeof(args_ctx));
+
+    ret = create_positional_ctx_a(args_ctx, format, args);
+    if(ret < 0) {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        *MSVCRT__errno() = MSVCRT_EINVAL;
+        return ret;
+    } else if(ret == 0)
+        ret = pf_printf_a(puts_clbk_str_a, &puts_ctx, format, locale, FALSE, TRUE,
+                arg_clbk_valist, NULL, args);
+    else
+        ret = pf_printf_a(puts_clbk_str_a, &puts_ctx, format, locale, TRUE, TRUE,
+                arg_clbk_positional, args_ctx, NULL);
+
+    puts_clbk_str_a(&puts_ctx, 1, &nullbyte);
+    return ret;
+}
+
+/*********************************************************************
+ *		_vsprintf_p (MSVCRT.@)
+ */
+int CDECL MSVCRT_vsprintf_p(char *buffer, MSVCRT_size_t length,
+        const char *format, __ms_va_list args)
+{
+    return MSVCRT_vsprintf_p_l(buffer, length, format, NULL, args);
+}
+
+/*********************************************************************
+ *		_sprintf_p_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_sprintf_p_l(char *buffer, MSVCRT_size_t length,
+        const char *format, MSVCRT__locale_t locale, ...)
+{
+    __ms_va_list valist;
+    int r;
+
+    __ms_va_start(valist, locale);
+    r = MSVCRT_vsprintf_p_l(buffer, length, format, locale, valist);
+    __ms_va_end(valist);
+
+    return r;
+}
+
+/*********************************************************************
+ *		_vswprintf_p_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_vswprintf_p_l(MSVCRT_wchar_t *buffer, MSVCRT_size_t length,
+        const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, __ms_va_list args)
+{
+    static const MSVCRT_wchar_t nullbyte = '\0';
+    printf_arg args_ctx[MSVCRT__ARGMAX+1];
+    struct _str_ctx_w puts_ctx = {length, buffer};
+    int ret;
+
+    memset(args_ctx, 0, sizeof(args_ctx));
+
+    ret = create_positional_ctx_w(args_ctx, format, args);
+    if(ret < 0)  {
+        MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0);
+        *MSVCRT__errno() = MSVCRT_EINVAL;
+        return ret;
+    } else if(ret == 0)
+        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
+                arg_clbk_valist, NULL, args);
+    else
+        ret = pf_printf_w(puts_clbk_str_w, &puts_ctx, format, locale, TRUE, TRUE,
+                arg_clbk_positional, args_ctx, NULL);
+
+    puts_clbk_str_w(&puts_ctx, 1, &nullbyte);
+    return ret;
+}
+
+/*********************************************************************
+ *		_swprintf_p_l (MSVCRT.@)
+ */
+int CDECL MSVCRT_swprintf_p_l(MSVCRT_wchar_t *buffer, MSVCRT_size_t length,
+        const MSVCRT_wchar_t *format, MSVCRT__locale_t locale, ...)
+{
+    __ms_va_list valist;
+    int r;
+
+    __ms_va_start(valist, locale);
+    r = MSVCRT_vswprintf_p_l(buffer, length, format, locale, valist);
+    __ms_va_end(valist);
+
+    return r;
+}
+
 #endif // !__REACTOS__
 
 /*********************************************************************
