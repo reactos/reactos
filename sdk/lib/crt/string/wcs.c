@@ -1262,7 +1262,25 @@ INT CDECL MSVCRT_wctob( MSVCRT_wint_t wchar )
  */
 INT CDECL MSVCRT_wctomb( char *dst, MSVCRT_wchar_t ch )
 {
-    return WideCharToMultiByte( get_locinfo()->lc_codepage, 0, &ch, 1, dst, 6, NULL, NULL );
+    BOOL error;
+    INT size;
+
+    size = WideCharToMultiByte(get_locinfo()->lc_codepage, 0, &ch, 1, dst, dst ? 6 : 0, NULL, &error);
+    if(!size || error) {
+        *MSVCRT__errno() = MSVCRT_EINVAL;
+        return MSVCRT_EOF;
+    }
+    return size;
+}
+
+/*********************************************************************
+ *              wcrtomb (MSVCRT.@)
+ */
+MSVCRT_size_t CDECL MSVCRT_wcrtomb( char *dst, MSVCRT_wchar_t ch, MSVCRT_mbstate_t *s)
+{
+    if(s)
+        *s = 0;
+    return MSVCRT_wctomb(dst, ch);
 }
 
 /*********************************************************************
