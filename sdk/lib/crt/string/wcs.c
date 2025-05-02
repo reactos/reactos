@@ -1620,6 +1620,23 @@ __int64 CDECL MSVCRT__wcstoi64(const MSVCRT_wchar_t *nptr,
 }
 
 /*********************************************************************
+ *  _wtoi_l (MSVCRT.@)
+ */
+int MSVCRT__wtoi_l(const MSVCRT_wchar_t *str, MSVCRT__locale_t locale)
+{
+    __int64 ret = MSVCRT__wcstoi64_l(str, NULL, 10, locale);
+
+    if(ret > INT_MAX) {
+        ret = INT_MAX;
+        *MSVCRT__errno() = MSVCRT_ERANGE;
+    } else if(ret < INT_MIN) {
+        ret = INT_MIN;
+        *MSVCRT__errno() = MSVCRT_ERANGE;
+    }
+    return ret;
+}
+
+/*********************************************************************
  *  _wcstoui64_l (MSVCRT.@)
  *
  * FIXME: locale parameter is ignored
