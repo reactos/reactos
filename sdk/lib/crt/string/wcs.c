@@ -441,7 +441,7 @@ MSVCRT_size_t CDECL MSVCRT_wcsrtombs(char *mbstr, const MSVCRT_wchar_t **wcstr,
 /*********************************************************************
  * MSVCRT_wcsrtombs_s_l (INTERNAL)
  */
-static MSVCRT_size_t MSVCRT_wcsrtombs_s_l(MSVCRT_size_t *ret, char *mbstr,
+static int MSVCRT_wcsrtombs_s_l(MSVCRT_size_t *ret, char *mbstr,
         MSVCRT_size_t size, const MSVCRT_wchar_t **wcstr,
         MSVCRT_size_t count, MSVCRT__locale_t locale)
 {
@@ -488,7 +488,7 @@ static MSVCRT_size_t MSVCRT_wcsrtombs_s_l(MSVCRT_size_t *ret, char *mbstr,
 /*********************************************************************
  *		_wcstombs_s_l (MSVCRT.@)
  */
-MSVCRT_size_t CDECL MSVCRT__wcstombs_s_l(MSVCRT_size_t *ret, char *mbstr,
+int CDECL MSVCRT__wcstombs_s_l(MSVCRT_size_t *ret, char *mbstr,
         MSVCRT_size_t size, const MSVCRT_wchar_t *wcstr,
         MSVCRT_size_t count, MSVCRT__locale_t locale)
 {
@@ -498,7 +498,7 @@ MSVCRT_size_t CDECL MSVCRT__wcstombs_s_l(MSVCRT_size_t *ret, char *mbstr,
 /*********************************************************************
  *		wcstombs_s (MSVCRT.@)
  */
-MSVCRT_size_t CDECL MSVCRT_wcstombs_s(MSVCRT_size_t *ret, char *mbstr,
+int CDECL MSVCRT_wcstombs_s(MSVCRT_size_t *ret, char *mbstr,
         MSVCRT_size_t size, const MSVCRT_wchar_t *wcstr, MSVCRT_size_t count)
 {
     return MSVCRT_wcsrtombs_s_l(ret, mbstr, size, &wcstr, count, NULL);
@@ -507,7 +507,7 @@ MSVCRT_size_t CDECL MSVCRT_wcstombs_s(MSVCRT_size_t *ret, char *mbstr,
 /*********************************************************************
  *		wcsrtombs_s (MSVCRT.@)
  */
-MSVCRT_size_t CDECL MSVCRT_wcsrtombs_s(MSVCRT_size_t *ret, char *mbstr, MSVCRT_size_t size,
+int CDECL MSVCRT_wcsrtombs_s(MSVCRT_size_t *ret, char *mbstr, MSVCRT_size_t size,
         const MSVCRT_wchar_t **wcstr, MSVCRT_size_t count, MSVCRT_mbstate_t *mbstate)
 {
     if(mbstate)
