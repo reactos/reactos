@@ -262,6 +262,10 @@
 #define IDS_SHORTCUT_RUN_MIN     4168
 #define IDS_SHORTCUT_RUN_MAX     4169
 
+/* FS property sheet */
+#define IDS_MULTIPLETYPES       8705
+#define IDS_VARIOUSFOLDERS      8709
+
 #define IDS_MENU_EMPTY           34561
 
 /* Note: those strings are referenced from the registry */

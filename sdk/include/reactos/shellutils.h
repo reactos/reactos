@@ -653,8 +653,11 @@ public:
     }
 };
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 79f955e07ed ([SHELL32] Implement SHMultiFileProperties)
 #endif /* __cplusplus */
 
 #define S_LESSTHAN 0xffff

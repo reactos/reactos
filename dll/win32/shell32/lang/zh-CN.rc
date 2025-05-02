@@ -986,7 +986,10 @@ BEGIN
     IDS_PRINT_VERB "打印"
     IDS_CMD_VERB "在此打开命令提示符"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u 个文件，%u 个文件夹"
+
     IDS_PRINTERS "打印机"
     IDS_FONTS "字体"
     IDS_INSTALLNEWFONT "安装新字体..."

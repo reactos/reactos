@@ -985,7 +985,10 @@ BEGIN
     IDS_PRINT_VERB "Yazdır"
     IDS_CMD_VERB "Burada komut istemi aç"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Dosya, %u Dizin"
+
     IDS_PRINTERS "Yazıcılar"
     IDS_FONTS "Yazı Tipleri"
     IDS_INSTALLNEWFONT "Yeni Yazı Tipi Yükle..."

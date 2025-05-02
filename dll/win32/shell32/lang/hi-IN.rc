@@ -978,7 +978,10 @@ BEGIN
     IDS_PRINT_VERB "प्रिंट"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u फ़ाइलें, %u फ़ोल्डर"
+
     IDS_PRINTERS "प्रिंटर"
     IDS_FONTS "फोंट्स"
     IDS_INSTALLNEWFONT "नया फ़ॉन्ट इन्स्टॉल करें..."

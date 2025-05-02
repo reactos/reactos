@@ -255,6 +255,11 @@ SHELL_GetUIObjectOfAbsoluteItem(
     _In_ PCIDLIST_ABSOLUTE pidl,
     _In_ REFIID riid, _Out_ void **ppvObj);
 
+HRESULT
+SH32_DisplayNameOf(
+    _In_opt_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl,
+    _In_opt_ UINT Flags, _Out_ PWSTR *ppStr);
+
 DWORD
 SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes);
 HRESULT SHELL_GetIDListTarget(_In_ LPCITEMIDLIST pidl, _Out_ PIDLIST_ABSOLUTE *ppidl);

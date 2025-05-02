@@ -402,6 +402,29 @@ SHELL_GetUIObjectOfAbsoluteItem(
     return hr;
 }
 
+HRESULT
+SH32_DisplayNameOf(
+    _In_opt_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl,
+    _In_opt_ UINT Flags, _Out_ PWSTR *ppStr)
+{
+    HRESULT hr;
+    IShellFolder *psfRelease = NULL;
+    if (!psf)
+    {
+        PCUITEMID_CHILD pidlChild;
+        hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfRelease), &pidlChild);
+        if (FAILED(hr))
+            return hr;
+        psf = psfRelease;
+        pidl = pidlChild;
+    }
+    STRRET sr;
+    hr = psf->GetDisplayNameOf((PCUITEMID_CHILD)pidl, Flags, &sr);
+    if (psfRelease)
+        psfRelease->Release();
+    return SUCCEEDED(hr) ? StrRetToStrW(&sr, pidl, ppStr) : hr;
+}
+
 /***********************************************************************
  *    DisplayNameOfW [SHELL32.757] (Vista+)
  */

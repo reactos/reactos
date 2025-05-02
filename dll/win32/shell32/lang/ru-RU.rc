@@ -985,7 +985,10 @@ BEGIN
     IDS_PRINT_VERB "Печать"
     IDS_CMD_VERB "Командная строка"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u файлов, %u папок"
+
     IDS_PRINTERS "Принтеры"
     IDS_FONTS "Шрифты"
     IDS_INSTALLNEWFONT "Установить новый шрифт..."
