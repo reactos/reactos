@@ -14,6 +14,46 @@
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
+/**
+ * @brief
+ * Checks if SubKey is part of ParentKey's tree.
+ * 
+ * @param[in] ParentKey
+ * KeyControlBlock for the parent key.
+ * 
+ * @param[in] SubKey
+ * KeyControlBlock for the potential subkey of ParentKey.
+ * 
+ * @return
+ * TRUE is ParentKey is found while walking SubKey's parents, FALSE if not.
+ */
+BOOLEAN
+NTAPI
+CmpIsKcbSubKey(_In_ PCM_KEY_CONTROL_BLOCK ParentKey, _In_ PCM_KEY_CONTROL_BLOCK SubKey)
+{
+    ULONG Depth;
+    PCM_KEY_CONTROL_BLOCK SubKeyParent;
+
+    /* This helps to optimize our search for our parents */
+    Depth = SubKey->TotalLevels - ParentKey->TotalLevels;
+    /* A subkey must be deeper than its parent */
+    if (Depth <= 0)
+        return FALSE;
+
+    /* Walk the parents tree, either it reaches to the root or it reaches to the NotifyBlock's KCB */
+    SubKeyParent = SubKey->ParentKcb;
+    while (SubKeyParent != NULL && SubKeyParent != ParentKey && Depth >= 0)
+    {
+        SubKeyParent = SubKeyParent->ParentKcb;
+        Depth--;
+    }
+    return SubKeyParent == ParentKey;
+}
+
+/**
+ * @brief
+ * Helper function for releasing resources allocated for Subordinate objects in a NotifyBlock
+ */
 VOID
 NTAPI
 CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK* Subordinates)
@@ -34,49 +74,24 @@ CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK* Subordinat
     ExFreePool(Subordinates);
 }
 
+/**
+ * @brief
+ * Helper function for sending change notification to a PostBlock
+ */
 VOID
 NTAPI
-CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
-                  _In_ ULONG Filter)
+CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
 {
-    /* Don't flush if it doesn't match our filter
-     * Using REG_LEGAL_CHANGE_FILTER to flush all PostBlocks regardless to their filter
-     */
-    if ((Filter != REG_LEGAL_CHANGE_FILTER) && (PostBlock->Filter & Filter) != Filter)
-        return;
-
-    /* Check if this is a subordinate PostBlock */
-    if (PostBlock->MasterPostBlock)
-    {
-        /* Let the master handle the notification */
-
-        /* Hold a copy of the master KCB because we might get freed later */
-        PCM_KEY_CONTROL_BLOCK MasterKcb = PostBlock->MasterNotifyBlock->KeyControlBlock;
-        /* Lock the master KCB before we do anything with its NotifyBlock */
-        CmpAcquireKcbLockShared(MasterKcb);
-        
-        /* This should happen, we don't want an endless recursion */
-        ASSERT(PostBlock->MasterPostBlock->MasterPostBlock == NULL);
-        CmpFlushPostBlock(PostBlock->MasterPostBlock, Filter);
-        
-        CmpReleaseKcbLock(MasterKcb);
-        return;
-    }
-    
     /* Signal the event */
     if (PostBlock->Event)
         KeSetEvent(PostBlock->Event, 1, FALSE);
 
-    /* Queue the Work Item
-     *
-     * REG_LEGAL_CHANGE_FILTER is used to indicate this Post Block is being flushed,
-     * because the notification session is closing therefore there won't be a notification.
-     */
-    if (Filter != REG_LEGAL_CHANGE_FILTER && PostBlock->WorkQueueItem)
+    /* Queue the Work Item */
+    if (PostBlock->WorkQueueItem)
         ExQueueWorkItem(PostBlock->WorkQueueItem, PostBlock->WorkQueueType);
 
     /* Queue the APC routine */
-    if (Filter != REG_LEGAL_CHANGE_FILTER && PostBlock->UserApc)
+    if (PostBlock->UserApc)
     {
         KeInsertQueueApc(PostBlock->UserApc, PostBlock, (PVOID)STATUS_NOTIFY_ENUM_DIR, 0);
 
@@ -98,10 +113,9 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
 
     /* Cleanup resources */
     if (PostBlock->Event)
-    {
         ObDereferenceObject(PostBlock->Event);
-        ZwClose(PostBlock->EventHandle);
-    }
+
+    /* WorkQueueItem should be handled by the caller, not us */
 
     /* Remove post block entry */
     RemoveEntryList(&(PostBlock->NotifyList));
@@ -113,39 +127,217 @@ CmpFlushPostBlock(_In_ PCM_POST_BLOCK PostBlock,
     ExFreePoolWithTag(PostBlock, TAG_CM);
 }
 
+/* APC ROUTINES **************************************************************/
+
+VOID
+NTAPI 
+CmpApcKernelRoutine(_In_ PKAPC Apc,
+                    _Inout_ PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
+                    _Inout_ PVOID *NormalContext OPTIONAL,
+                    _Inout_ PVOID *SystemArgument1 OPTIONAL,
+                    _Inout_ PVOID *SystemArgument2 OPTIONAL)
+{
+    PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)*SystemArgument1;
+
+    /* TODO: Set IO_STATUS_BLOCK */
+    /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
+
+    /* Cleanup resources */
+    if (PostBlock->Event)
+    {
+        ObDereferenceObject(PostBlock->Event);
+        PostBlock->Event = NULL;
+    }
+
+    /* We released subordinates resources before queueing the APC, so there's no need to release them here again */
+
+    /* it's safe to release the KAPC here */
+    ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
+    PostBlock->UserApc = NULL;
+
+    ExFreePoolWithTag(PostBlock, TAG_CM);
+    SystemArgument1 = NULL;
+}
+
+VOID
+NTAPI 
+CmpApcRoutineRundown(_In_ PKAPC Apc)
+{
+    if (!Apc->SystemArgument1) return;
+
+    PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)Apc->SystemArgument1;
+
+    /* TODO: Set IO_STATUS_BLOCK */
+    /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
+
+    /* Cleanup resources */
+    if (PostBlock->Event)
+    {
+        ObDereferenceObject(PostBlock->Event);
+        PostBlock->Event = NULL;
+    }
+    
+    ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
+    PostBlock->UserApc = NULL;
+
+    ExFreePoolWithTag(PostBlock, TAG_CM);
+}
+
+
+/* FUNCTIONS *****************************************************************/
+
+/**
+ * @brief
+ * Report a change notifications to its listeners
+ * 
+ * @param[in] Kcb
+ * The KeyControlBlock of the changed registry key
+ * 
+ * @param[in] Hive
+ * The registry hive containing the KCB, this is used for enumerating NotifyBlocks
+ * 
+ * @param[in] Cell
+ * This parameter is unused.
+ * 
+ * @param[in] Filter
+ * The notification type, one of REG_CHANGE_FILTER_* enum values.
+ */
 VOID
 NTAPI
-CmpFlushAllPostBlocks(_In_ PCM_NOTIFY_BLOCK NotifyBlock,
-                      _In_ ULONG Filter,
-                      _In_ BOOLEAN IsSubKey)
+CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                IN PHHIVE Hive,
+                IN HCELL_INDEX Cell,
+                IN ULONG Filter)
+{
+    PCMHIVE KeyHive;
+    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY PostListHead, PostNextEntry;
+    PCM_NOTIFY_BLOCK NotifyBlock;
+    PCM_POST_BLOCK PostBlock;
+
+    /* Find the CMHIVE linked to this Hive */
+    KeyHive = CONTAINING_RECORD(Hive, CMHIVE, Hive);
+    
+    /* Get NotifyBlock list on the Hive */
+    ListHead = &(KeyHive->NotifyList);
+    if (IsListEmpty(ListHead)) return;
+
+    /* Enumerate through CMHIVE->NotifyList */
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        NotifyBlock = CONTAINING_RECORD(NextEntry, CM_NOTIFY_BLOCK, HiveList);
+        NextEntry = NextEntry->Flink;
+
+        /* Check if this KCB matches to this NotifyBlock */
+        if (NotifyBlock->KeyControlBlock != Kcb && 
+            !(NotifyBlock->WatchTree && CmpIsKcbSubKey(NotifyBlock->KeyControlBlock, Kcb)))
+            continue;
+
+        /* Check the notification filter */
+        if ((NotifyBlock->Filter & Filter) != Filter) 
+            continue;
+
+        /* Enumerate PostBlocks */
+        PostListHead = &(NotifyBlock->PostList);
+        if (IsListEmpty(PostListHead))
+        {
+            /* A notification block is allocated but no one is watching, so this is a pending notification */
+            NotifyBlock->NotifyPending = TRUE;
+            continue;
+        }
+        PostNextEntry = PostListHead->Flink;
+        while (PostNextEntry != PostListHead)
+        {
+            PostBlock = CONTAINING_RECORD(PostNextEntry, CM_POST_BLOCK, NotifyList);
+            PostNextEntry = PostNextEntry->Flink;
+
+            if (PostBlock->IsMasterPostBlock)
+            {
+                CmpNotifyPostBlock(PostBlock);
+            }
+            else
+            {
+                /* Let the master handle the notification */
+
+                /* Hold a copy of the master KCB because we might get freed later */
+                PCM_KEY_CONTROL_BLOCK MasterKcb = PostBlock->MasterNotifyBlock->KeyControlBlock;
+                /* Lock the master KCB before we do anything with its NotifyBlock */
+                CmpAcquireKcbLockShared(MasterKcb);
+                
+                CmpNotifyPostBlock(PostBlock->MasterPostBlock);
+                
+                CmpReleaseKcbLock(MasterKcb);
+            }
+        }
+    }
+}
+
+/**
+ * @brief
+ * Free the resources allocated for a NotifyBlock on a KeyBody. 
+ * This is called when system is deleting a key body object, or it's closing a handle to a registry key.
+ * 
+ * @param[in] LockHeld
+ * TRUE if the called locked the KCB, FALSE if it didn't
+ */
+VOID
+NTAPI
+CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
+               IN BOOLEAN LockHeld)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PCM_POST_BLOCK PostBlock;
 
-    /* Get the PostList */
-    ListHead = &(NotifyBlock->PostList);
-    if (IsListEmpty(ListHead)) return;
+    /* Lock the KCB so no one would try to make changes
+     * to NotifyBlock while we are releasing its resources
+     */
+    if (!LockHeld)
+        CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
 
-    /* Enumerate through NotifyBlock->PostList */
+    /* Enumerate PostBlocks */
+    ListHead = &(KeyBody->NotifyBlock->PostList);
     NextEntry = ListHead->Flink;
     while (NextEntry != ListHead)
     {
-        /* Get PostBlock for current entry */
         PostBlock = CONTAINING_RECORD(NextEntry, CM_POST_BLOCK, NotifyList);
-        /* Navigate to the next, since the previous entry might get freed */
         NextEntry = NextEntry->Flink;
 
-        /* Check if the post block likes children */
-        if (IsSubKey && !PostBlock->WatchTree)
-            continue;
+        /* This shouldn't happen, We don't assign subordinate NotifyBlocks to a KeyBody */
+        ASSERT(PostBlock->MasterPostBlock == NULL);
 
-        /* Flush it */
-        CmpFlushPostBlock(PostBlock, Filter);
+        if (PostBlock->Event)
+            ObDereferenceObject(PostBlock->Event);
+
+        if (PostBlock->UserApc)
+            ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
+
+        RemoveEntryList(&(PostBlock->NotifyList));
+        CmpPostBlockFreeSubordinates(PostBlock->SubCount, PostBlock->SubNotifyBlocks);
+        ExFreePoolWithTag(PostBlock, TAG_CM);
     }
+
+    /* Free the NotifyBlock */
+    RemoveEntryList(&(KeyBody->NotifyBlock->HiveList));
+    ExFreePoolWithTag(KeyBody->NotifyBlock, TAG_CM);
+    KeyBody->NotifyBlock = NULL;
+
+    /* Unlock the Kcb if we locked it previously */
+    if (!LockHeld)
+        CmpReleaseKcbLock(KeyBody->KeyControlBlock);
 }
 
-/* FUNCTIONS *****************************************************************/
-
+/**
+ * @brief
+ * Allocate a NotifyBlock for a registry key, and attach it to the hive.
+ * KeyBody->NotifyBlock should be set manually.
+ * 
+ * @param[in] KeyBody
+ * The registry key to be watched for notifications
+ * 
+ * @param[in] Filter
+ * The desired notification type, a bit flag of REG_CHANGE_FILTER_* enum values
+ */
 NTSTATUS
 NTAPI
 CmpInsertNotifyBlock(
@@ -188,56 +380,38 @@ CmpInsertNotifyBlock(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Allocate a PostBlock and insert it to a NotifyBlock.
+ * A PostBlock holds information for a notification callback.
+ * 
+ * @param[in] NotifyBlock
+ * The NotifyBlock for attaching the PostBlock to.
+ * 
+ * @param[in] EventObject
+ * The event object to signal when a notification occured, will be dereferenced after signalling the event.
+ * 
+ * @param[in] ApcRoutine
+ * The user-mode APC routine to be queued when a notification occured
+ * 
+ * @param[in] ApcContext
+ * The parameter to be passed to the ApcRoutine
+ */
 NTSTATUS
 NTAPI
 CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
-                   _In_opt_  HANDLE EventHandle,
                    _In_opt_  PKEVENT EventObject,
                    _In_opt_  PIO_APC_ROUTINE ApcRoutine,
                    _In_opt_  PVOID ApcContext,
                    _Out_     PCM_POST_BLOCK *Result)
 {
-    NTSTATUS Status;
-    HANDLE LocalEventHandle;
-    PKEVENT LocalEventObject;
     PKAPC LocalApc;
     PCM_POST_BLOCK PostBlock;
-    PETHREAD CurrentThread;
-
-    /* EventHandle must be provided when an EventObject is provided */
-    ASSERT(!(EventHandle == NULL && EventObject != NULL));
-
-    if (EventHandle == NULL)
-    {
-        /* No event notification is requested */
-        LocalEventHandle = NULL;
-        LocalEventObject = NULL;
-    }
-    else if (EventObject == NULL)
-    {
-        /* Event is provided by its handle, open it */
-        LocalEventHandle = EventHandle;
-        
-        Status = ObReferenceObjectByHandle(EventHandle,
-                                           EVENT_MODIFY_STATE,
-                                           ExEventObjectType,
-                                           KernelMode,
-                                           (PVOID*)&LocalEventObject,
-                                           NULL);
-        if (!NT_SUCCESS(Status))
-            goto Failure;
-    }
-    else
-    {
-        /* Both event handle and event objects are provided */
-        LocalEventHandle = EventHandle;
-        LocalEventObject = EventObject;
-    }
 
     /* Initialize KAPC if an APC routine provided */
     if (ApcRoutine)
     {
-        CurrentThread = PsGetCurrentThread();
+        PETHREAD CurrentThread = PsGetCurrentThread();
         LocalApc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_CM);
         if (!LocalApc)
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -260,8 +434,8 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
     PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
     if (!PostBlock)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Failure;
+        ExFreePoolWithTag(LocalApc, TAG_CM);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
     RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
 
@@ -269,8 +443,8 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
     InitializeListHead(&(PostBlock->NotifyList));
 
     /* Fill fields */
-    PostBlock->EventHandle = LocalEventHandle;
-    PostBlock->Event = LocalEventObject;
+    PostBlock->IsMasterPostBlock = TRUE;
+    PostBlock->Event = EventObject;
     PostBlock->UserApc = LocalApc;
 
     /* Insert to NotifyBlock */
@@ -278,18 +452,22 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
 
     *Result = PostBlock;
     return STATUS_SUCCESS;
-
-Failure:
-    /* Free the event resources if we own them */
-    if (LocalEventObject != EventObject)
-        ObDereferenceObject(LocalEventObject);
-    if (LocalEventHandle != EventHandle)
-        ZwClose(LocalEventHandle);
-    if (LocalApc)
-        ExFreePoolWithTag(LocalApc, TAG_CM);
-    return Status;
 }
 
+/**
+ * @brief
+ * Allocate a PostBlock and insert it to a NotifyBlock for a subordinate object.
+ * The PostBlock will be released by the master NotifyBlock.
+ * 
+ * @param[in] NotifyBlock
+ * The subordinate NotifyBlock to insert the PostBlock to.
+ * 
+ * @param[in] MasterNotifyBlock
+ * The NotifyBlock for the master registry key
+ * 
+ * @param[in] MasterPostBlock
+ * The PostBlock allocated for the master registry key
+ */
 NTSTATUS
 NTAPI
 CmpInsertSubPostBlock(
@@ -309,6 +487,8 @@ CmpInsertSubPostBlock(
     }
     RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
 
+    PostBlock->IsMasterPostBlock = FALSE;
+
     /* Attach to master NotifyBlock */
     PostBlock->MasterNotifyBlock = MasterNotifyBlock;
     PostBlock->MasterPostBlock = MasterPostBlock;
@@ -318,160 +498,4 @@ CmpInsertSubPostBlock(
 
     *Result = PostBlock;
     return STATUS_SUCCESS;
-}
-
-VOID
-NTAPI
-CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
-                IN PHHIVE Hive,
-                IN HCELL_INDEX Cell,
-                IN ULONG Filter)
-{
-    PCMHIVE KeyHive;
-    PLIST_ENTRY ListHead, NextEntry;
-    PCM_NOTIFY_BLOCK NotifyBlock;
-    BOOLEAN IsSubKey = FALSE;
-
-    /* Find the CMHIVE linked to this Hive */
-    KeyHive = CONTAINING_RECORD(Hive, CMHIVE, Hive);
-    
-    /* Get NotifyBlock list on the Hive */
-    ListHead = &(KeyHive->NotifyList);
-    if (IsListEmpty(ListHead)) return;
-
-    /* Enumerate through CMHIVE->NotifyList */
-    NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
-    {
-        NotifyBlock = CONTAINING_RECORD(NextEntry, CM_NOTIFY_BLOCK, HiveList);
-
-        /* Check if the NotifyBlock is paired with this Kcb */
-        if (NotifyBlock->KeyControlBlock != Kcb)
-        {
-            if (NotifyBlock->WatchTree)
-            {
-                /* Check if the Kcb is a subkey of this NotifyBlock's Kcb */
-
-                /* This helps to optimize our search for our parents */
-                int Depth = Kcb->TotalLevels - NotifyBlock->KeyControlBlock->TotalLevels;
-
-                /* A subkey must be deeper than its parent */
-                if (Depth < 0)
-                    goto SkipEntry;
-
-                /* Walk the parents tree, either it reaches to the root or it reaches to the NotifyBlock's KCB */
-                PCM_KEY_CONTROL_BLOCK Parent = Kcb->ParentKcb;
-                while (Parent != NULL && Parent != NotifyBlock->KeyControlBlock && Depth > 0)
-                {
-                    Parent = Parent->ParentKcb;
-                    Depth--;
-                }
-
-                /* I guess we're orphan now */
-                if (Parent != NotifyBlock->KeyControlBlock)
-                    goto SkipEntry;
-
-                /* We should remember this so we wouldn't notify a post block who doesn't want children */
-                IsSubKey = TRUE;
-            }
-            else
-            {
-                goto SkipEntry;
-            }
-        }
-
-        /* Check the notification filter */
-        if ((NotifyBlock->Filter & Filter) != Filter) goto SkipEntry;
-
-        /* Report the notification to PostBlocks linked to this NotifyBlock */
-        CmpFlushAllPostBlocks(NotifyBlock, Filter, IsSubKey);
-
-SkipEntry:
-        /* Navigate to next entry */
-        NextEntry = NextEntry->Flink;
-    }
-}
-
-VOID
-NTAPI
-CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
-               IN BOOLEAN LockHeld)
-{
-    /* Lock the KCB so no one would try to make changes
-     * to NotifyBlock while we are releasing its resources
-     */
-    if (!LockHeld)
-        CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
-
-    /* Flush PostBlocks */
-    CmpFlushAllPostBlocks(KeyBody->NotifyBlock, REG_LEGAL_CHANGE_FILTER, FALSE);
-
-    /* Free the NotifyBlock */
-    RemoveEntryList(&(KeyBody->NotifyBlock->HiveList));
-    ExFreePoolWithTag(KeyBody->NotifyBlock, TAG_CM);
-    KeyBody->NotifyBlock = NULL;
-
-    /* Unlock the Kcb if we locked it previously */
-    if (!LockHeld)
-        CmpReleaseKcbLock(KeyBody->KeyControlBlock);
-}
-
-/* APC ROUTINES **************************************************************/
-
-VOID
-NTAPI 
-CmpApcKernelRoutine(_In_ PKAPC Apc,
-                    _Inout_ PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
-                    _Inout_ PVOID *NormalContext OPTIONAL,
-                    _Inout_ PVOID *SystemArgument1 OPTIONAL,
-                    _Inout_ PVOID *SystemArgument2 OPTIONAL)
-{
-    PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)*SystemArgument1;
-
-    /* TODO: Set IO_STATUS_BLOCK */
-    /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
-
-    /* Cleanup resources */
-    if (PostBlock->Event)
-    {
-        ObDereferenceObject(PostBlock->Event);
-        PostBlock->Event = NULL;
-        ZwClose(PostBlock->EventHandle);
-        PostBlock->EventHandle = NULL;
-    }
-
-    /* We released subordinates resources before queueing the APC, so there's no need to release them here again */
-
-    /* it's safe to release the KAPC here */
-    ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
-    PostBlock->UserApc = NULL;
-
-    ExFreePoolWithTag(PostBlock, TAG_CM);
-    SystemArgument1 = NULL;
-}
-
-VOID
-NTAPI 
-CmpApcRoutineRundown(_In_ PKAPC Apc)
-{
-    if (!Apc->SystemArgument1) return;
-
-    PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)Apc->SystemArgument1;
-
-    /* TODO: Set IO_STATUS_BLOCK */
-    /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
-
-    /* Cleanup resources */
-    if (PostBlock->Event)
-    {
-        ObDereferenceObject(PostBlock->Event);
-        PostBlock->Event = NULL;
-        ZwClose(PostBlock->EventHandle);
-        PostBlock->EventHandle = NULL;
-    }
-    
-    ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
-    PostBlock->UserApc = NULL;
-
-    ExFreePoolWithTag(PostBlock, TAG_CM);
 }
