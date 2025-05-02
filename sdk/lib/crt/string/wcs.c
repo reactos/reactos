@@ -1411,6 +1411,7 @@ INT CDECL MSVCRT_wcsncpy_s( MSVCRT_wchar_t* wcDest, MSVCRT_size_t numElement, co
                             MSVCRT_size_t count )
 {
     MSVCRT_size_t size = 0;
+    INT ret = 0;
 
     if (!wcDest || !numElement)
         return MSVCRT_EINVAL;
@@ -1423,8 +1424,12 @@ INT CDECL MSVCRT_wcsncpy_s( MSVCRT_wchar_t* wcDest, MSVCRT_size_t numElement, co
     }
 
     size = min(strlenW(wcSrc), count);
-
-    if (size >= numElement)
+    if (count==MSVCRT__TRUNCATE && size>=numElement)
+    {
+        ret = MSVCRT_STRUNCATE;
+        size = numElement-1;
+    }
+    else if (size >= numElement)
     {
         return MSVCRT_ERANGE;
     }
@@ -1432,7 +1437,7 @@ INT CDECL MSVCRT_wcsncpy_s( MSVCRT_wchar_t* wcDest, MSVCRT_size_t numElement, co
     memcpy( wcDest, wcSrc, size*sizeof(WCHAR) );
     wcDest[size] = '\0';
 
-    return 0;
+    return ret;
 }
 
 /******************************************************************
