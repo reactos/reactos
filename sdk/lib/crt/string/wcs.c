@@ -297,22 +297,25 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
 MSVCRT_size_t CDECL MSVCRT__wcstombs_l(char *mbstr, const MSVCRT_wchar_t *wcstr,
         MSVCRT_size_t count, MSVCRT__locale_t locale)
 {
+    MSVCRT_pthreadlocinfo locinfo;
     char default_char = '\0';
     MSVCRT_size_t tmp = 0;
     BOOL used_default;
 
     if(!locale)
-        locale = get_locale();
+        locinfo = get_locinfo();
+    else
+        locinfo = locale->locinfo;
 
     if(!mbstr)
-        return WideCharToMultiByte(locale->locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
+        return WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
                 wcstr, -1, NULL, 0, &default_char, &used_default)-1;
 
     while(*wcstr) {
         char buf[3];
         MSVCRT_size_t i, size;
 
-        size = WideCharToMultiByte(locale->locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
+        size = WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
                 wcstr, 1, buf, 3, &default_char, &used_default);
         if(used_default)
             return -1;
