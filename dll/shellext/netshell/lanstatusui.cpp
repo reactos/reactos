@@ -827,9 +827,12 @@ ShowStatusPropertyDialog(
     }
 }
 
-VOID ShowNetworkIconContextMenu(HWND hwndOwner, LANSTATUSUI_CONTEXT *pContext)
+VOID ShowNetworkIconContextMenu(
+    _In_ HWND hwndOwner,
+    _In_ LANSTATUSUI_CONTEXT *pContext)
 {
-    if (!pContext || !pContext->pNet) return;
+    if (!pContext || !pContext->pNet)
+        return;
 
     HMENU hMenu = CreatePopupMenu();
     if (!hMenu) return;
@@ -839,47 +842,56 @@ VOID ShowNetworkIconContextMenu(HWND hwndOwner, LANSTATUSUI_CONTEXT *pContext)
 
     SetForegroundWindow(hwndOwner);
 
+    // The context menu items, set to their default values.
+    struct
+    {
+        UINT uID;
+        UINT uFlags;
+        UINT_PTR uIDNewItem; // wCmdID
+    } MenuItems[] =
+    {
+        {IDS_NET_ACTIVATE, MF_STRING | MF_GRAYED, IDM_NETICON_ENABLE},
+        {IDS_NET_STATUS, MF_STRING | MF_GRAYED, IDM_NETICON_STATUS},
+        {IDS_NET_REPAIR, MF_STRING | MF_GRAYED, IDM_NETICON_REPAIR},
+        {-1, 0, -1}, // Separator
+        {IDS_NET_OPEN_CONNECTIONS, MF_STRING, IDM_NETICON_OPEN_CONNECTIONS},
+        {IDS_NET_PROPERTIES, MF_STRING | MFS_DEFAULT, IDM_NETICON_PROPERTIES},
+    };
+
     NETCON_PROPERTIES *pProps = NULL;
     HRESULT hr = pContext->pNet->GetProperties(&pProps);
-    UINT uEnableDisableFlags = MF_STRING | MF_GRAYED;
-    UINT uStatusFlags = MF_STRING | MF_GRAYED;
-    UINT uRepairFlags = MF_STRING | MF_GRAYED;
-    UINT uPropertiesFlags = MF_STRING | MFS_DEFAULT;
-    UINT uEnableDisableCmd = IDM_NETICON_ENABLE;
-    UINT uEnableDisableString = IDS_NET_ACTIVATE;
-
     if (SUCCEEDED(hr) && pProps)
     {
         if (pProps->Status == NCS_HARDWARE_DISABLED ||
             pProps->Status == NCS_MEDIA_DISCONNECTED ||
             pProps->Status == NCS_DISCONNECTED)
         {
-            uEnableDisableFlags = MF_STRING | MFS_DEFAULT;
-            uEnableDisableCmd = IDM_NETICON_ENABLE;
-            uEnableDisableString = IDS_NET_ACTIVATE;
-            uPropertiesFlags = MF_STRING;
+            MenuItems[0].uID = IDS_NET_ACTIVATE;
+            MenuItems[0].uFlags = MF_STRING | MFS_DEFAULT;
+            MenuItems[0].uIDNewItem = IDM_NETICON_ENABLE;
+            MenuItems[5].uFlags = MF_STRING;
         }
         else
         {
-            uEnableDisableFlags = MF_STRING;
-            uEnableDisableCmd = IDM_NETICON_DISABLE;
-            uEnableDisableString = IDS_NET_DEACTIVATE;
+            MenuItems[0].uID = IDS_NET_DEACTIVATE;
+            MenuItems[0].uFlags = MF_STRING;
+            MenuItems[0].uIDNewItem = IDM_NETICON_DISABLE;
         }
 
         if (pProps->Status == NCS_CONNECTED)
         {
-            uStatusFlags = MF_STRING;
-            uRepairFlags = MF_STRING;
+            MenuItems[1].uFlags = MF_STRING;
+            MenuItems[2].uFlags = MF_STRING;
         }
         else if (pProps->Status == NCS_CONNECTING)
         {
-            uStatusFlags = MF_STRING;
-            uRepairFlags = MF_STRING | MF_GRAYED;
+            MenuItems[1].uFlags = MF_STRING;
+            MenuItems[2].uFlags = MF_STRING | MF_GRAYED;
         }
         else
         {
-            uStatusFlags = MF_STRING | MF_GRAYED;
-            uRepairFlags = MF_STRING | MF_GRAYED;
+            MenuItems[1].uFlags = MF_STRING | MF_GRAYED;
+            MenuItems[2].uFlags = MF_STRING | MF_GRAYED;
         }
 
         NcFreeNetconProperties(pProps);
@@ -887,44 +899,29 @@ VOID ShowNetworkIconContextMenu(HWND hwndOwner, LANSTATUSUI_CONTEXT *pContext)
     }
     else
     {
-        uEnableDisableFlags = MF_STRING | MF_GRAYED;
-        uStatusFlags = MF_STRING | MF_GRAYED;
-        uRepairFlags = MF_STRING | MF_GRAYED;
-        uPropertiesFlags = MF_STRING | MF_GRAYED;
+        MenuItems[0].uFlags = MF_STRING | MF_GRAYED;
+        MenuItems[1].uFlags = MF_STRING | MF_GRAYED;
+        MenuItems[2].uFlags = MF_STRING | MF_GRAYED;
+        MenuItems[5].uFlags = MF_STRING | MF_GRAYED;
     }
 
+    // Set the "Properties" item as default, if the Network "Enable/Disable" item isn't.
+    if (!(MenuItems[0].uFlags & MFS_DEFAULT))
+        MenuItems[5].uFlags |= MFS_DEFAULT;
 
     WCHAR szMenuItem[128];
 
-    if (LoadStringW(netshell_hInstance, uEnableDisableString, szMenuItem, _countof(szMenuItem)))
+    for (USHORT i = 0; i < _countof(MenuItems); ++i)
     {
-        AppendMenuW(hMenu, uEnableDisableFlags, uEnableDisableCmd, szMenuItem);
-    }
-
-    if (LoadStringW(netshell_hInstance, IDS_NET_STATUS, szMenuItem, _countof(szMenuItem)))
-    {
-        AppendMenuW(hMenu, uStatusFlags, IDM_NETICON_STATUS, szMenuItem);
-    }
-
-    if (LoadStringW(netshell_hInstance, IDS_NET_REPAIR, szMenuItem, _countof(szMenuItem)))
-    {
-        AppendMenuW(hMenu, uRepairFlags, IDM_NETICON_REPAIR, szMenuItem);
-    }
-
-    AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
-
-    if (LoadStringW(netshell_hInstance, IDS_NET_OPEN_CONNECTIONS, szMenuItem, _countof(szMenuItem)))
-    {
-        AppendMenuW(hMenu, MF_STRING, IDM_NETICON_OPEN_CONNECTIONS, szMenuItem);
-    }
-
-    if (LoadStringW(netshell_hInstance, IDS_NET_PROPERTIES, szMenuItem, _countof(szMenuItem)))
-    {
-        UINT finalPropertiesFlags = uPropertiesFlags;
-        if (!(uEnableDisableFlags & MFS_DEFAULT)) {
-            finalPropertiesFlags |= MFS_DEFAULT;
+        if (MenuItems[i].uID != -1)
+        {
+            if (LoadStringW(netshell_hInstance, MenuItems[i].uID, szMenuItem, _countof(szMenuItem)))
+                AppendMenuW(hMenu, MenuItems[i].uFlags, MenuItems[i].uIDNewItem, szMenuItem);
         }
-        AppendMenuW(hMenu, finalPropertiesFlags, IDM_NETICON_PROPERTIES, szMenuItem);
+        else
+        {
+            AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+        }
     }
 
     TrackPopupMenuEx(hMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, hwndOwner, NULL);
@@ -941,18 +938,16 @@ VOID LaunchNetworkConnectionsFolder(HWND hwndOwner)
     PROCESS_INFORMATION pi;
     BOOL bSuccess;
 
-    bSuccess = CreateProcessW(
-        NULL,
-        szCommand,
-        NULL,
-        NULL,
-        FALSE,
-        0,
-        NULL,
-        NULL,
-        &si,
-        &pi);
-
+    bSuccess = CreateProcessW(NULL,
+                              szCommand,
+                              NULL,
+                              NULL,
+                              FALSE,
+                              0,
+                              NULL,
+                              NULL,
+                              &si,
+                              &pi);
     if (bSuccess)
     {
         CloseHandle(pi.hProcess);
@@ -1052,10 +1047,11 @@ LANStatusDlg(
         case WM_COMMAND:
         {
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if (!pContext || !pContext->pNet) break;
+            if (!pContext || !pContext->pNet)
+                break;
 
             UINT menuId = LOWORD(wParam);
-            switch(menuId)
+            switch (menuId)
             {
                 case IDM_NETICON_ENABLE:
                     pContext->pNet->Connect();
