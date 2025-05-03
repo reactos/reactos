@@ -2687,6 +2687,14 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
         else if (pszDirA && SHAnsiToUnicode(pszDirA, dir, _countof(dir)))
             sei.lpDirectory = dir;
     }
+
+    sei.dwHotKey = lpici->dwHotKey;
+    sei.fMask |= CmicFlagsToSeeFlags(lpici->fMask & CMIC_MASK_HOTKEY);
+    if (m_Header.wHotKey)
+    {
+        sei.dwHotKey = m_Header.wHotKey;
+        sei.fMask |= SEE_MASK_HOTKEY;
+    }
     return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
 }
 
