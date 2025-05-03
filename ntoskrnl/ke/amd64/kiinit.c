@@ -385,7 +385,8 @@ KiInitializeKernelMachineDependent(
         (FeatureBits & KF_CMPXCHG16B) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_COMPARE64_EXCHANGE128] = FALSE; // ???
     SharedUserData->ProcessorFeatures[PF_CHANNELS_ENABLED] = FALSE; // ???
-    SharedUserData->ProcessorFeatures[PF_XSAVE_ENABLED] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_XSAVE_ENABLED] =
+        (FeatureBits & KF_XSTATE) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_SECOND_LEVEL_ADDRESS_TRANSLATION] =
         (FeatureBits & KF_SLAT) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_VIRT_FIRMWARE_ENABLED] =
@@ -404,9 +405,12 @@ KiInitializeKernelMachineDependent(
         (FeatureBits & KF_SSE4_1) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_SSE4_2_INSTRUCTIONS_AVAILABLE] =
         (FeatureBits & KF_SSE4_2) ? TRUE : FALSE;
-    SharedUserData->ProcessorFeatures[PF_AVX_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
-    SharedUserData->ProcessorFeatures[PF_AVX2_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
-    SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_AVX_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_AVX2_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX2) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX512F) ? TRUE : FALSE;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
