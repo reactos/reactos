@@ -1719,7 +1719,9 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     case WM_DESTROY:
         TRACE("SysLink Ctrl destruction, hwnd=%p\n", hwnd);
         SYSLINK_ClearDoc(infoPtr);
+#ifndef __REACTOS__
         if(infoPtr->Font != 0) DeleteObject(infoPtr->Font);
+#endif
         if(infoPtr->LinkFont != 0) DeleteObject(infoPtr->LinkFont);
         SetWindowLongPtrW(hwnd, 0, 0);
         Free (infoPtr);
