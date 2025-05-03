@@ -8,23 +8,23 @@
 
 #pragma once
 
+#include "cmboot.h"
 #include <cmlib.h>
 #include <cmreslist.h>
-#include "cmboot.h"
 
 //
 // Define this if you want debugging support
 //
-#define _CM_DEBUG_                                      0x00
+#define _CM_DEBUG_ 0x00
 
 //
 // These define the Debug Masks Supported
 //
-#define CM_HANDLE_DEBUG                                 0x01
-#define CM_NAMESPACE_DEBUG                              0x02
-#define CM_SECURITY_DEBUG                               0x04
-#define CM_REFERENCE_DEBUG                              0x08
-#define CM_CALLBACK_DEBUG                               0x10
+#define CM_HANDLE_DEBUG 0x01
+#define CM_NAMESPACE_DEBUG 0x02
+#define CM_SECURITY_DEBUG 0x04
+#define CM_REFERENCE_DEBUG 0x08
+#define CM_CALLBACK_DEBUG 0x10
 
 //
 // Debug/Tracing support
@@ -33,8 +33,9 @@
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
 #define CMTRACE DbgPrintEx
 #else
-#define CMTRACE(x, ...)                                 \
-    if (x & CmpTraceLevel) DbgPrint(__VA_ARGS__)
+#define CMTRACE(x, ...)                                                                                                \
+    if (x & CmpTraceLevel)                                                                                             \
+    DbgPrint(__VA_ARGS__)
 #endif
 #else
 #define CMTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
@@ -43,93 +44,91 @@
 //
 // CM_KEY_CONTROL_BLOCK Signatures
 //
-#define CM_KCB_SIGNATURE                                'bKmC'
-#define CM_KCB_INVALID_SIGNATURE                        '4FmC'
+#define CM_KCB_SIGNATURE 'bKmC'
+#define CM_KCB_INVALID_SIGNATURE '4FmC'
 
 //
 // CM_KEY_CONTROL_BLOCK ExtFlags
 //
-#define CM_KCB_NO_SUBKEY                                0x01
-#define CM_KCB_SUBKEY_ONE                               0x02
-#define CM_KCB_SUBKEY_HINT                              0x04
-#define CM_KCB_SYM_LINK_FOUND                           0x08
-#define CM_KCB_KEY_NON_EXIST                            0x10
-#define CM_KCB_NO_DELAY_CLOSE                           0x20
-#define CM_KCB_INVALID_CACHED_INFO                      0x40
-#define CM_KCB_READ_ONLY_KEY                            0x80
+#define CM_KCB_NO_SUBKEY 0x01
+#define CM_KCB_SUBKEY_ONE 0x02
+#define CM_KCB_SUBKEY_HINT 0x04
+#define CM_KCB_SYM_LINK_FOUND 0x08
+#define CM_KCB_KEY_NON_EXIST 0x10
+#define CM_KCB_NO_DELAY_CLOSE 0x20
+#define CM_KCB_INVALID_CACHED_INFO 0x40
+#define CM_KCB_READ_ONLY_KEY 0x80
 
 //
 // CM_KEY_BODY Types
 //
-#define CM_KEY_BODY_TYPE                                0x6B793032  // 'ky02'
+#define CM_KEY_BODY_TYPE 0x6B793032 // 'ky02'
 
 //
 // Number of various lists and hashes
 //
 #if 0 // See sdk/lib/cmlib/cmlib.h
-#define CMP_SECURITY_HASH_LISTS                         64
+#define CMP_SECURITY_HASH_LISTS 64
 #endif
-#define CMP_MAX_CALLBACKS                               100
+#define CMP_MAX_CALLBACKS 100
 
 //
 // Hashing Constants
 //
-#define CMP_HASH_IRRATIONAL                             314159269
-#define CMP_HASH_PRIME                                  1000000007
+#define CMP_HASH_IRRATIONAL 314159269
+#define CMP_HASH_PRIME 1000000007
 
 //
 // CmpCreateKeyControlBlock Flags
 //
-#define CMP_CREATE_FAKE_KCB                             0x1
-#define CMP_LOCK_HASHES_FOR_KCB                         0x2
+#define CMP_CREATE_FAKE_KCB 0x1
+#define CMP_LOCK_HASHES_FOR_KCB 0x2
 
 //
 // CmpDoCreate and CmpDoOpen flags
 //
-#define CMP_CREATE_KCB_KCB_LOCKED                       0x2
-#define CMP_OPEN_KCB_NO_CREATE                          0x4
+#define CMP_CREATE_KCB_KCB_LOCKED 0x2
+#define CMP_OPEN_KCB_NO_CREATE 0x4
 
 //
 // EnlistKeyBodyWithKCB Flags
 //
-#define CMP_ENLIST_KCB_LOCKED_SHARED                    0x1
-#define CMP_ENLIST_KCB_LOCKED_EXCLUSIVE                 0x2
+#define CMP_ENLIST_KCB_LOCKED_SHARED 0x1
+#define CMP_ENLIST_KCB_LOCKED_EXCLUSIVE 0x2
 
 //
 // CmpBuildAndLockKcbArray & CmpLockKcbArray Flags
 //
-#define CMP_LOCK_KCB_ARRAY_EXCLUSIVE                    0x1
-#define CMP_LOCK_KCB_ARRAY_SHARED                       0x2
+#define CMP_LOCK_KCB_ARRAY_EXCLUSIVE 0x1
+#define CMP_LOCK_KCB_ARRAY_SHARED 0x2
 
 //
 // Unload Flags
 //
-#define CMP_UNLOCK_KCB_LOCKED                    0x1
-#define CMP_UNLOCK_REGISTRY_LOCKED               0x2
+#define CMP_UNLOCK_KCB_LOCKED 0x1
+#define CMP_UNLOCK_REGISTRY_LOCKED 0x2
 
 //
 // Maximum size of Value Cache
 //
-#define MAXIMUM_CACHED_DATA                             (2 * PAGE_SIZE)
+#define MAXIMUM_CACHED_DATA (2 * PAGE_SIZE)
 
 //
 // Hives to load on startup
 //
-#define CM_NUMBER_OF_MACHINE_HIVES                      6
+#define CM_NUMBER_OF_MACHINE_HIVES 6
 
 //
 // Number of items that can fit inside an Allocation Page
 //
-#define CM_KCBS_PER_PAGE                                \
-    ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_KEY_CONTROL_BLOCK))
-#define CM_DELAYS_PER_PAGE                              \
-    ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_DELAY_ALLOC))
+#define CM_KCBS_PER_PAGE ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_KEY_CONTROL_BLOCK))
+#define CM_DELAYS_PER_PAGE ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_DELAY_ALLOC))
 
 //
 // Cache Lookup & KCB Array constructs
 //
-#define CMP_SUBKEY_LEVELS_DEPTH_LIMIT   32
-#define CMP_KCBS_IN_ARRAY_LIMIT         (CMP_SUBKEY_LEVELS_DEPTH_LIMIT + 2)
+#define CMP_SUBKEY_LEVELS_DEPTH_LIMIT 32
+#define CMP_KCBS_IN_ARRAY_LIMIT (CMP_SUBKEY_LEVELS_DEPTH_LIMIT + 2)
 
 //
 // Value Search Results
@@ -272,11 +271,11 @@ typedef struct _CM_KEY_CONTROL_BLOCK
     ULONG RefCount;
     struct
     {
-        ULONG ExtFlags:8;
-        ULONG PrivateAlloc:1;
-        ULONG Delete:1;
-        ULONG DelayedCloseIndex:12;
-        ULONG TotalLevels:10;
+        ULONG ExtFlags : 8;
+        ULONG PrivateAlloc : 1;
+        ULONG Delete : 1;
+        ULONG DelayedCloseIndex : 12;
+        ULONG TotalLevels : 10;
     };
     union
     {
@@ -312,10 +311,10 @@ typedef struct _CM_KEY_CONTROL_BLOCK
     ULONG KcbMaxValueDataLen;
     struct
     {
-         ULONG KcbUserFlags : 4;
-         ULONG KcbVirtControlFlags : 4;
-         ULONG KcbDebug : 8;
-         ULONG Flags : 16;
+        ULONG KcbUserFlags : 4;
+        ULONG KcbVirtControlFlags : 4;
+        ULONG KcbDebug : 8;
+        ULONG Flags : 16;
     };
     ULONG InDelayClose;
 } CM_KEY_CONTROL_BLOCK, *PCM_KEY_CONTROL_BLOCK;
@@ -325,13 +324,13 @@ typedef struct _CM_KEY_CONTROL_BLOCK
 //
 typedef struct _CM_NOTIFY_BLOCK
 {
-    LIST_ENTRY HiveList; /* link to CMHIVE->NotifyList */
-    LIST_ENTRY PostList; /* list of CM_POST_BLOCK entries */
+    LIST_ENTRY HiveList;                   /* link to CMHIVE->NotifyList */
+    LIST_ENTRY PostList;                   /* list of CM_POST_BLOCK entries */
     PCM_KEY_CONTROL_BLOCK KeyControlBlock; /* Control block for the target registry key */
-    PCM_KEY_BODY KeyBody; /* the registry key body */
-    ULONG Filter:29; /* Event type flags, REG_NOTIFY_CHANGE_* enum members */
-    ULONG WatchTree:30; /* Signal for changes in subkeys */
-    ULONG NotifyPending:31;
+    PCM_KEY_BODY KeyBody;                  /* the registry key body */
+    ULONG Filter : 29;                     /* Event type flags, REG_NOTIFY_CHANGE_* enum members */
+    ULONG WatchTree : 30;                  /* Signal for changes in subkeys */
+    ULONG NotifyPending : 31;
 } CM_NOTIFY_BLOCK, *PCM_NOTIFY_BLOCK;
 
 //
@@ -348,19 +347,21 @@ typedef struct _CM_POST_BLOCK
         struct
         {
             PKEVENT Event; /* An event object to signal listeners about the change */
-            PKAPC UserApc; /* User-mode Asynchronous Procedure Call, a callback routine to notify the listener about the change */
+            PKAPC UserApc; /* User-mode Asynchronous Procedure Call, a callback routine to notify the listener about the
+                              change */
             PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
             WORK_QUEUE_TYPE WorkQueueType;
 
-            ULONG SubCount; /* SubNotifyBlocks size */
-            PCM_NOTIFY_BLOCK* SubNotifyBlocks; /* Array of Subordinates notification block */
+            ULONG SubCount;                    /* SubNotifyBlocks size */
+            PCM_NOTIFY_BLOCK *SubNotifyBlocks; /* Array of Subordinates notification block */
         };
 
         /* Subordinate-specific fields */
         struct
         {
             PCM_NOTIFY_BLOCK MasterNotifyBlock; /* Hold a reference to the master key's notify block */
-            struct _CM_POST_BLOCK* MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
+            struct _CM_POST_BLOCK
+                *MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
         };
     };
 } CM_POST_BLOCK, *PCM_POST_BLOCK;
@@ -526,47 +527,33 @@ typedef struct _KEY_INFORMATION
 //
 // BUGBUG Old Hive Stuff for Temporary Support
 //
-NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
+NTSTATUS
+CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
 ///////////////////////////////////////////////////////////////////////////////
 
 //
 // Mapped View Hive Functions
 //
-VOID
-NTAPI
-CmpInitHiveViewList(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpInitHiveViewList(IN PCMHIVE Hive);
 
-VOID
-NTAPI
-CmpDestroyHiveViewList(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpDestroyHiveViewList(IN PCMHIVE Hive);
 
 //
 // Security Management Functions
 //
 NTSTATUS
-CmpAssignSecurityDescriptor(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
-);
+CmpAssignSecurityDescriptor(IN PCM_KEY_CONTROL_BLOCK Kcb, IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 //
 // Security Cache Functions
 //
-VOID
-NTAPI
-CmpInitSecurityCache(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpInitSecurityCache(IN PCMHIVE Hive);
 
-VOID
-NTAPI
-CmpDestroySecurityCache(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpDestroySecurityCache(IN PCMHIVE Hive);
 
 //
 // Value Cache Functions
@@ -580,8 +567,7 @@ CmpFindValueByNameFromCache(
     OUT ULONG *Index,
     OUT PCM_KEY_VALUE *Value,
     OUT BOOLEAN *ValueIsCached,
-    OUT PHCELL_INDEX CellToRelease
-);
+    OUT PHCELL_INDEX CellToRelease);
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
@@ -594,8 +580,7 @@ CmpQueryKeyValueData(
     IN PVOID KeyValueInformation,
     IN ULONG Length,
     OUT PULONG ResultLength,
-    OUT PNTSTATUS Status
-);
+    OUT PNTSTATUS Status);
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
@@ -603,8 +588,7 @@ CmpGetValueListFromCache(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     OUT PCELL_DATA *CellData,
     OUT BOOLEAN *IndexIsCached,
-    OUT PHCELL_INDEX ValueListToRelease
-);
+    OUT PHCELL_INDEX ValueListToRelease);
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
@@ -616,8 +600,7 @@ CmpGetValueKeyFromCache(
     OUT PCM_KEY_VALUE *Value,
     IN BOOLEAN IndexIsCached,
     OUT BOOLEAN *ValueIsCached,
-    OUT PHCELL_INDEX CellToRelease
-);
+    OUT PHCELL_INDEX CellToRelease);
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
@@ -626,143 +609,92 @@ CmpCompareNewValueDataAgainstKCBCache(
     IN PUNICODE_STRING ValueName,
     IN ULONG Type,
     IN PVOID Data,
-    IN ULONG DataSize
-);
+    IN ULONG DataSize);
 
 //
 // Hive List Routines
 //
 BOOLEAN
 NTAPI
-CmpGetHiveName(
-    IN  PCMHIVE Hive,
-    OUT PUNICODE_STRING HiveName
-);
+CmpGetHiveName(IN PCMHIVE Hive, OUT PUNICODE_STRING HiveName);
 
 NTSTATUS
 NTAPI
-CmpAddToHiveFileList(
-    IN PCMHIVE Hive
-);
+CmpAddToHiveFileList(IN PCMHIVE Hive);
 
-VOID
-NTAPI
-CmpRemoveFromHiveFileList(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpRemoveFromHiveFileList(IN PCMHIVE Hive);
 
 //
 // Quota Routines
 //
-VOID
-NTAPI
-CmpSetGlobalQuotaAllowed(
-    VOID
-);
+VOID NTAPI CmpSetGlobalQuotaAllowed(VOID);
 
 //
 // Notification Routines
 //
-VOID
-NTAPI
-CmpReportNotify(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Cell,
-    IN ULONG Filter
-);
+VOID NTAPI
+CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb, IN PHHIVE Hive, IN HCELL_INDEX Cell, IN ULONG Filter);
 
-VOID
-NTAPI
-CmpFlushNotify(
-    IN PCM_KEY_BODY KeyBody,
-    IN BOOLEAN LockHeld
-);
+VOID NTAPI
+CmpFlushNotify(IN PCM_KEY_BODY KeyBody, IN BOOLEAN LockHeld);
 
 NTSTATUS
 NTAPI
 CmpInsertNotifyBlock(
-    _In_  PCM_KEY_BODY KeyBody,
-    _In_  ULONG Filter,
-    _In_  BOOLEAN WatchTree,
-    _Out_ PCM_NOTIFY_BLOCK* NotifyBlock
-);
+    _In_ PCM_KEY_BODY KeyBody,
+    _In_ ULONG Filter,
+    _In_ BOOLEAN WatchTree,
+    _Out_ PCM_NOTIFY_BLOCK *NotifyBlock);
 
 NTSTATUS
 NTAPI
 CmpInsertPostBlock(
-    _In_        PCM_NOTIFY_BLOCK NotifyBlock,
-    _In_opt_    PKEVENT EventObject,
-    _In_opt_    PIO_APC_ROUTINE ApcRoutine,
-    _In_opt_    PVOID ApcContext,
-    _Out_       PCM_POST_BLOCK *PostBlock
-);
+    _In_ PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_opt_ PKEVENT EventObject,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PCM_POST_BLOCK *PostBlock);
 
 NTSTATUS
 NTAPI
 CmpInsertSubPostBlock(
-    _In_  PCM_NOTIFY_BLOCK NotifyBlock,
-    _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
-    _In_  PCM_POST_BLOCK MasterPostBlock,
-    _Out_ PCM_POST_BLOCK *PostBlock
-);
+    _In_ PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_ PCM_NOTIFY_BLOCK MasterNotifyBlock,
+    _In_ PCM_POST_BLOCK MasterPostBlock,
+    _Out_ PCM_POST_BLOCK *PostBlock);
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmpInitCallback(
-    VOID
-);
+VOID NTAPI CmpInitCallback(VOID);
 
 //
 // KCB Cache/Delay Routines
 //
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmpInitializeCache(
-    VOID
-);
+VOID NTAPI CmpInitializeCache(VOID);
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmpInitCmPrivateDelayAlloc(
-    VOID
-);
+VOID NTAPI CmpInitCmPrivateDelayAlloc(VOID);
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmpInitCmPrivateAlloc(
-    VOID
-);
+VOID NTAPI CmpInitCmPrivateAlloc(VOID);
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmpInitDelayDerefKCBEngine(
-    VOID
-);
+VOID NTAPI CmpInitDelayDerefKCBEngine(VOID);
 
 //
 // Key Object Routines
 //
-VOID
-NTAPI
+VOID NTAPI
 CmpCloseKeyObject(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,
     IN ACCESS_MASK GrantedAccess,
     IN ULONG ProcessHandleCount,
-    IN ULONG SystemHandleCount
-);
+    IN ULONG SystemHandleCount);
 
-VOID
-NTAPI
-CmpDeleteKeyObject(
-    IN PVOID Object
-);
+VOID NTAPI
+CmpDeleteKeyObject(IN PVOID Object);
 
 NTSTATUS
 NTAPI
@@ -776,8 +708,7 @@ CmpParseKey(
     IN OUT PUNICODE_STRING RemainingName,
     IN OUT PVOID Context OPTIONAL,
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-    OUT PVOID *Object
-);
+    OUT PVOID *Object);
 
 NTSTATUS
 NTAPI
@@ -789,8 +720,7 @@ CmpSecurityMethod(
     IN OUT PULONG CapturedLength,
     IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
     IN POOL_TYPE PoolType,
-    IN PGENERIC_MAPPING GenericMapping
-);
+    IN PGENERIC_MAPPING GenericMapping);
 
 NTSTATUS
 NTAPI
@@ -800,8 +730,7 @@ CmpQueryKeyName(
     OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
     IN ULONG Length,
     OUT PULONG ReturnLength,
-    IN KPROCESSOR_MODE AccessMode
-);
+    IN KPROCESSOR_MODE AccessMode);
 
 //
 // Hive Routines
@@ -819,20 +748,15 @@ CmpInitializeHive(
     _In_ HANDLE External,
     _In_ HANDLE Alternate,
     _In_opt_ PCUNICODE_STRING FileName,
-    _In_ ULONG CheckFlags
-);
+    _In_ ULONG CheckFlags);
 
 NTSTATUS
 NTAPI
-CmpDestroyHive(
-    IN PCMHIVE CmHive
-);
+CmpDestroyHive(IN PCMHIVE CmHive);
 
 PSECURITY_DESCRIPTOR
 NTAPI
-CmpHiveRootSecurityDescriptor(
-    VOID
-);
+CmpHiveRootSecurityDescriptor(VOID);
 
 NTSTATUS
 NTAPI
@@ -841,8 +765,7 @@ CmpLinkHiveToMaster(
     IN HANDLE RootDirectory,
     IN PCMHIVE CmHive,
     IN BOOLEAN Allocate,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
-);
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTSTATUS
 NTAPI
@@ -856,14 +779,10 @@ CmpOpenHiveFiles(
     IN BOOLEAN CreateAllowed,
     IN BOOLEAN MarkAsSystemHive,
     IN BOOLEAN NoBuffering,
-    OUT PULONG ClusterSize OPTIONAL
-);
+    OUT PULONG ClusterSize OPTIONAL);
 
-VOID
-NTAPI
-CmpCloseHiveFiles(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpCloseHiveFiles(IN PCMHIVE Hive);
 
 NTSTATUS
 NTAPI
@@ -872,122 +791,67 @@ CmpInitHiveFromFile(
     IN ULONG HiveFlags,
     OUT PCMHIVE *Hive,
     IN OUT PBOOLEAN New,
-    IN ULONG CheckFlags
-);
+    IN ULONG CheckFlags);
 
-VOID
-NTAPI
-CmpInitializeHiveList(
-    VOID
-);
+VOID NTAPI CmpInitializeHiveList(VOID);
 
 //
 // Registry Utility Functions
 //
 BOOLEAN
 NTAPI
-CmpTestRegistryLockExclusive(
-    VOID
-);
+CmpTestRegistryLockExclusive(VOID);
 
 BOOLEAN
 NTAPI
-CmpTestRegistryLock(
-    VOID
-);
+CmpTestRegistryLock(VOID);
 
-VOID
-NTAPI
-CmpLockRegistryExclusive(
-    VOID
-);
+VOID NTAPI CmpLockRegistryExclusive(VOID);
 
-VOID
-NTAPI
-CmpLockRegistry(
-    VOID
-);
+VOID NTAPI CmpLockRegistry(VOID);
 
-VOID
-NTAPI
-CmpUnlockRegistry(
-    VOID
-);
+VOID NTAPI CmpUnlockRegistry(VOID);
 
-VOID
-NTAPI
-CmpLockHiveFlusherExclusive(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpLockHiveFlusherExclusive(IN PCMHIVE Hive);
 
-VOID
-NTAPI
-CmpLockHiveFlusherShared(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpLockHiveFlusherShared(IN PCMHIVE Hive);
 
 BOOLEAN
 NTAPI
-CmpTestHiveFlusherLockExclusive(
-    IN PCMHIVE Hive
-);
+CmpTestHiveFlusherLockExclusive(IN PCMHIVE Hive);
 
 BOOLEAN
 NTAPI
-CmpTestHiveFlusherLockShared(
-    IN PCMHIVE Hive
-);
+CmpTestHiveFlusherLockShared(IN PCMHIVE Hive);
 
-VOID
-NTAPI
-CmpUnlockHiveFlusher(
-    IN PCMHIVE Hive
-);
+VOID NTAPI
+CmpUnlockHiveFlusher(IN PCMHIVE Hive);
 
 //
 // Delay Functions
 //
 PVOID
 NTAPI
-CmpAllocateDelayItem(
-    VOID
-);
+CmpAllocateDelayItem(VOID);
 
-VOID
-NTAPI
-CmpFreeDelayItem(
-    PVOID Entry
-);
+VOID NTAPI
+CmpFreeDelayItem(PVOID Entry);
 
-VOID
-NTAPI
-CmpDelayDerefKeyControlBlock(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
+VOID NTAPI
+CmpDelayDerefKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
-VOID
-NTAPI
-CmpAddToDelayedClose(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN BOOLEAN LockHeldExclusively
-);
+VOID NTAPI
+CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb, IN BOOLEAN LockHeldExclusively);
 
-VOID
-NTAPI
-CmpArmDelayedCloseTimer(
-    VOID
-);
+VOID NTAPI CmpArmDelayedCloseTimer(VOID);
 
-VOID
-NTAPI
+VOID NTAPI
 CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmpInitializeDelayedCloseTable(
-    VOID
-);
+VOID NTAPI CmpInitializeDelayedCloseTable(VOID);
 
 //
 // KCB Functions
@@ -1000,89 +864,49 @@ CmpCreateKeyControlBlock(
     IN PCM_KEY_NODE Node,
     IN PCM_KEY_CONTROL_BLOCK Parent,
     IN ULONG Flags,
-    IN PUNICODE_STRING KeyName
-);
+    IN PUNICODE_STRING KeyName);
 
 PCM_KEY_CONTROL_BLOCK
 NTAPI
-CmpAllocateKeyControlBlock(
-    VOID
-);
+CmpAllocateKeyControlBlock(VOID);
 
-VOID
-NTAPI
-CmpFreeKeyControlBlock(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
+VOID NTAPI
+CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
-VOID
-NTAPI
-CmpRemoveKeyControlBlock(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
+VOID NTAPI
+CmpRemoveKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
-VOID
-NTAPI
-CmpCleanUpKcbValueCache(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
+VOID NTAPI
+CmpCleanUpKcbValueCache(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
-VOID
-NTAPI
-CmpCleanUpKcbCacheWithLock(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN BOOLEAN LockHeldExclusively
-);
+VOID NTAPI
+CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb, IN BOOLEAN LockHeldExclusively);
 
-VOID
-NTAPI
-CmpCleanUpSubKeyInfo(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
+VOID NTAPI
+CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
 PUNICODE_STRING
 NTAPI
-CmpConstructName(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
+CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
 BOOLEAN
 NTAPI
-CmpReferenceKeyControlBlock(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
+CmpReferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb);
+
+VOID NTAPI
+CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb, IN BOOLEAN LockHeldExclusively);
+
+VOID NTAPI
+CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb);
+
+VOID NTAPI
+EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyObject, IN ULONG Flags);
+
+VOID NTAPI
+DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody, IN BOOLEAN LockHeld);
 
 VOID
-NTAPI
-CmpDereferenceKeyControlBlockWithLock(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN BOOLEAN LockHeldExclusively
-);
-
-VOID
-NTAPI
-CmpDereferenceKeyControlBlock(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
-);
-
-VOID
-NTAPI
-EnlistKeyBodyWithKCB(
-    IN PCM_KEY_BODY KeyObject,
-    IN ULONG Flags
-);
-
-VOID
-NTAPI
-DelistKeyBodyFromKCB(
-    IN PCM_KEY_BODY KeyBody,
-    IN BOOLEAN LockHeld
-);
-
-VOID
-CmpUnLockKcbArray(
-    _In_ PULONG LockedKcbs
-);
+CmpUnLockKcbArray(_In_ PULONG LockedKcbs);
 
 PULONG
 NTAPI
@@ -1092,61 +916,35 @@ CmpBuildAndLockKcbArray(
     _In_ PCM_KEY_CONTROL_BLOCK Kcb,
     _Inout_ PULONG OuterStackArray,
     _In_ ULONG TotalRemainingSubkeys,
-    _In_ ULONG MatchRemainSubkeyLevel
-);
+    _In_ ULONG MatchRemainSubkeyLevel);
 
-VOID
-NTAPI
-CmpAcquireTwoKcbLocksExclusiveByKey(
-    IN ULONG ConvKey1,
-    IN ULONG ConvKey2
-);
+VOID NTAPI
+CmpAcquireTwoKcbLocksExclusiveByKey(IN ULONG ConvKey1, IN ULONG ConvKey2);
 
-VOID
-NTAPI
-CmpReleaseTwoKcbLockByKey(
-    IN ULONG ConvKey1,
-    IN ULONG ConvKey2
-);
+VOID NTAPI
+CmpReleaseTwoKcbLockByKey(IN ULONG ConvKey1, IN ULONG ConvKey2);
 
-VOID
-NTAPI
-CmpFlushNotifiesOnKeyBodyList(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN BOOLEAN LockHeld
-);
+VOID NTAPI
+CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb, IN BOOLEAN LockHeld);
 
 //
 // Parse Routines
 //
 BOOLEAN
 NTAPI
-CmpGetNextName(
-    IN OUT PUNICODE_STRING RemainingName,
-    OUT PUNICODE_STRING NextName,
-    OUT PBOOLEAN LastName
-);
+CmpGetNextName(IN OUT PUNICODE_STRING RemainingName, OUT PUNICODE_STRING NextName, OUT PBOOLEAN LastName);
 
 //
 // Command Routines (Flush, Open, Close, Init);
 //
 BOOLEAN
 NTAPI
-CmpDoFlushAll(
-    IN BOOLEAN ForceFlush
-);
+CmpDoFlushAll(IN BOOLEAN ForceFlush);
 
-VOID
-NTAPI
-CmpShutdownWorkers(
-    VOID
-);
+VOID NTAPI CmpShutdownWorkers(VOID);
 
-VOID
-NTAPI
-CmpCmdInit(
-    IN BOOLEAN SetupBoot
-);
+VOID NTAPI
+CmpCmdInit(IN BOOLEAN SetupBoot);
 
 NTSTATUS
 NTAPI
@@ -1155,14 +953,9 @@ CmpCmdHiveOpen(
     IN PSECURITY_CLIENT_CONTEXT ImpersonationContext,
     IN OUT PBOOLEAN Allocate,
     OUT PCMHIVE *NewHive,
-    IN ULONG CheckFlags
-);
+    IN ULONG CheckFlags);
 
-VOID
-NTAPI
-CmpLazyFlush(
-    VOID
-);
+VOID NTAPI CmpLazyFlush(VOID);
 
 //
 // Open/Create Routines
@@ -1177,8 +970,7 @@ CmpDoCreate(
     IN KPROCESSOR_MODE AccessMode,
     IN PCM_PARSE_CONTEXT Context,
     IN PCM_KEY_CONTROL_BLOCK ParentKcb,
-    OUT PVOID *Object
-);
+    OUT PVOID *Object);
 
 NTSTATUS
 NTAPI
@@ -1192,25 +984,18 @@ CmpCreateLinkNode(
     IN PCM_PARSE_CONTEXT Context,
     IN PCM_KEY_CONTROL_BLOCK ParentKcb,
     IN PULONG KcbsLocked,
-    OUT PVOID *Object
-);
+    OUT PVOID *Object);
 
 //
 // Boot Routines
 //
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmGetSystemControlValues(
-    IN PVOID SystemHiveData,
-    IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
-);
+VOID NTAPI
+CmGetSystemControlValues(IN PVOID SystemHiveData, IN PCM_SYSTEM_CONTROL_VECTOR ControlVector);
 
 NTSTATUS
 NTAPI
-CmpSaveBootControlSet(
-    IN USHORT ControlSet
-);
+CmpSaveBootControlSet(IN USHORT ControlSet);
 
 //
 // Hardware Configuration Routines
@@ -1224,47 +1009,30 @@ CmpInitializeRegistryNode(
     OUT PHANDLE NewHandle,
     IN INTERFACE_TYPE InterfaceType,
     IN ULONG BusNumber,
-    IN PUSHORT DeviceIndexTable
-);
+    IN PUSHORT DeviceIndexTable);
 
 NTSTATUS
 NTAPI
-CmpInitializeMachineDependentConfiguration(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
-);
+CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-CmpInitializeHardwareConfiguration(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
-);
+CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 //
 // Wrapper Routines
 //
 NTSTATUS
 NTAPI
-CmpCreateEvent(
-    IN EVENT_TYPE EventType,
-    OUT PHANDLE EventHandle,
-    OUT PKEVENT *Event
-);
+CmpCreateEvent(IN EVENT_TYPE EventType, OUT PHANDLE EventHandle, OUT PKEVENT *Event);
 
 PVOID
 NTAPI
-CmpAllocate(
-    IN SIZE_T Size,
-    IN BOOLEAN Paged,
-    IN ULONG Tag
-);
+CmpAllocate(IN SIZE_T Size, IN BOOLEAN Paged, IN ULONG Tag);
 
-VOID
-NTAPI
-CmpFree(
-    IN PVOID Ptr,
-    IN ULONG Quota
-);
+VOID NTAPI
+CmpFree(IN PVOID Ptr, IN ULONG Quota);
 
 BOOLEAN
 NTAPI
@@ -1273,8 +1041,7 @@ CmpFileRead(
     IN ULONG FileType,
     IN OUT PULONG FileOffset,
     OUT PVOID Buffer,
-    IN SIZE_T BufferLength
-);
+    IN SIZE_T BufferLength);
 
 BOOLEAN
 NTAPI
@@ -1283,26 +1050,15 @@ CmpFileWrite(
     IN ULONG FileType,
     IN OUT PULONG FileOffset,
     IN PVOID Buffer,
-    IN SIZE_T BufferLength
-);
+    IN SIZE_T BufferLength);
 
 BOOLEAN
 NTAPI
-CmpFileSetSize(
-    _In_ PHHIVE RegistryHive,
-    _In_ ULONG FileType,
-    _In_ ULONG FileSize,
-    _In_ ULONG OldFileSize
-);
+CmpFileSetSize(_In_ PHHIVE RegistryHive, _In_ ULONG FileType, _In_ ULONG FileSize, _In_ ULONG OldFileSize);
 
 BOOLEAN
 NTAPI
-CmpFileFlush(
-   IN PHHIVE RegistryHive,
-   IN ULONG FileType,
-   IN OUT PLARGE_INTEGER FileOffset,
-   IN ULONG Length
-);
+CmpFileFlush(IN PHHIVE RegistryHive, IN ULONG FileType, IN OUT PLARGE_INTEGER FileOffset, IN ULONG Length);
 
 //
 // Configuration Manager side of Registry System Calls
@@ -1328,42 +1084,34 @@ CmSetValueKey(
 
 NTSTATUS
 NTAPI
-CmQueryKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
+CmQueryKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN KEY_INFORMATION_CLASS KeyInformationClass,
     IN PVOID KeyInformation,
     IN ULONG Length,
-    IN PULONG ResultLength
-);
+    IN PULONG ResultLength);
 
 NTSTATUS
 NTAPI
-CmEnumerateKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
+CmEnumerateKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN ULONG Index,
     IN KEY_INFORMATION_CLASS KeyInformationClass,
     IN PVOID KeyInformation,
     IN ULONG Length,
-    IN PULONG ResultLength
-);
+    IN PULONG ResultLength);
 
 NTSTATUS
 NTAPI
-CmDeleteKey(
-    IN PCM_KEY_BODY KeyBody
-);
+CmDeleteKey(IN PCM_KEY_BODY KeyBody);
 
 NTSTATUS
 NTAPI
-CmFlushKey(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN BOOLEAN EclusiveLock
-);
+CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb, IN BOOLEAN EclusiveLock);
 
 NTSTATUS
 NTAPI
-CmDeleteValueKey(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN UNICODE_STRING ValueName
-);
+CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb, IN UNICODE_STRING ValueName);
 
 NTSTATUS
 NTAPI
@@ -1373,41 +1121,26 @@ CmQueryValueKey(
     IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
     IN PVOID KeyValueInformation,
     IN ULONG Length,
-    IN PULONG ResultLength
-);
+    IN PULONG ResultLength);
 
 NTSTATUS
 NTAPI
-CmLoadKey(
-    IN POBJECT_ATTRIBUTES TargetKey,
-    IN POBJECT_ATTRIBUTES SourceFile,
-    IN ULONG Flags,
-    IN PCM_KEY_BODY KeyBody
-);
+CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey, IN POBJECT_ATTRIBUTES SourceFile, IN ULONG Flags, IN PCM_KEY_BODY KeyBody);
 
 NTSTATUS
 NTAPI
-CmUnloadKey(
-    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
-    _In_ ULONG Flags
-);
+CmUnloadKey(_In_ PCM_KEY_CONTROL_BLOCK Kcb, _In_ ULONG Flags);
 
 ULONG
 NTAPI
 CmpEnumerateOpenSubKeys(
     _In_ PCM_KEY_CONTROL_BLOCK RootKcb,
     _In_ BOOLEAN RemoveEmptyCacheEntries,
-    _In_ BOOLEAN DereferenceOpenedEntries
-);
+    _In_ BOOLEAN DereferenceOpenedEntries);
 
 HCELL_INDEX
 NTAPI
-CmpCopyCell(
-    IN PHHIVE SourceHive,
-    IN HCELL_INDEX SourceCell,
-    IN PHHIVE DestinationHive,
-    IN HSTORAGE_TYPE StorageType
-);
+CmpCopyCell(IN PHHIVE SourceHive, IN HCELL_INDEX SourceCell, IN PHHIVE DestinationHive, IN HSTORAGE_TYPE StorageType);
 
 NTSTATUS
 NTAPI
@@ -1416,24 +1149,15 @@ CmpDeepCopyKey(
     IN HCELL_INDEX SrcKeyCell,
     IN PHHIVE DestinationHive,
     IN HSTORAGE_TYPE StorageType,
-    OUT PHCELL_INDEX DestKeyCell OPTIONAL
-);
+    OUT PHCELL_INDEX DestKeyCell OPTIONAL);
 
 NTSTATUS
 NTAPI
-CmSaveKey(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN HANDLE FileHandle,
-    IN ULONG Flags
-);
+CmSaveKey(IN PCM_KEY_CONTROL_BLOCK Kcb, IN HANDLE FileHandle, IN ULONG Flags);
 
 NTSTATUS
 NTAPI
-CmSaveMergedKeys(
-    IN PCM_KEY_CONTROL_BLOCK HighKcb,
-    IN PCM_KEY_CONTROL_BLOCK LowKcb,
-    IN HANDLE FileHandle
-);
+CmSaveMergedKeys(IN PCM_KEY_CONTROL_BLOCK HighKcb, IN PCM_KEY_CONTROL_BLOCK LowKcb, IN HANDLE FileHandle);
 
 //
 // Startup and Shutdown
@@ -1441,37 +1165,20 @@ CmSaveMergedKeys(
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
-CmInitSystem1(
-    VOID
-);
+CmInitSystem1(VOID);
 
-VOID
-NTAPI
-CmShutdownSystem(
-    VOID
-);
+VOID NTAPI CmShutdownSystem(VOID);
 
-VOID
-NTAPI
-CmSetLazyFlushState(
-    IN BOOLEAN Enable
-);
+VOID NTAPI
+CmSetLazyFlushState(IN BOOLEAN Enable);
 
-VOID
-NTAPI
-CmpSetVersionData(
-    VOID
-);
+VOID NTAPI CmpSetVersionData(VOID);
 
 //
 // Driver List Routines
 //
 CODE_SEG("INIT")
-PUNICODE_STRING*
-NTAPI
-CmGetSystemDriverList(
-    VOID
-);
+PUNICODE_STRING *NTAPI CmGetSystemDriverList(VOID);
 
 //
 // Global variables accessible from all of Cm

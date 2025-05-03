@@ -17,13 +17,13 @@
 /**
  * @brief
  * Checks if SubKey is part of ParentKey's tree.
- * 
+ *
  * @param[in] ParentKey
  * KeyControlBlock for the parent key.
- * 
+ *
  * @param[in] SubKey
  * KeyControlBlock for the potential subkey of ParentKey.
- * 
+ *
  * @return
  * TRUE is ParentKey is found while walking SubKey's parents, FALSE if not.
  */
@@ -54,17 +54,18 @@ CmpIsKcbSubKey(_In_ PCM_KEY_CONTROL_BLOCK ParentKey, _In_ PCM_KEY_CONTROL_BLOCK 
  * @brief
  * Helper function for releasing resources allocated for Subordinate objects in a NotifyBlock
  */
-VOID
-NTAPI
-CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK* Subordinates)
+VOID NTAPI
+CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK *Subordinates)
 {
     PCM_POST_BLOCK PostBlock;
 
-    if (Count <= 0) return;
+    if (Count <= 0)
+        return;
 
     for (int i = 0; i < Count; i++)
     {
-        /* Every subordinate has one PostBlock, because the KeyBody is allocated internally just for us and we didn't allocate more */
+        /* Every subordinate has one PostBlock, because the KeyBody is allocated internally just for us and we didn't
+         * allocate more */
         PostBlock = CONTAINING_RECORD(Subordinates[i]->PostList.Flink, CM_POST_BLOCK, NotifyList);
         RemoveEntryList(&PostBlock->NotifyList);
         ExFreePoolWithTag(PostBlock, TAG_CM);
@@ -78,8 +79,7 @@ CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK* Subordinat
  * @brief
  * Helper function for sending change notification to a PostBlock
  */
-VOID
-NTAPI
+VOID NTAPI
 CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
 {
     /* Signal the event */
@@ -100,7 +100,7 @@ CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
          * Let the CmpApcKernelRoutine handle it for us
          */
 
-        /* Even though we are not freeing the resources, we don't want the PostBlock be triggered twice 
+        /* Even though we are not freeing the resources, we don't want the PostBlock be triggered twice
          * Remove it from the post list
          */
         RemoveEntryList(&(PostBlock->NotifyList));
@@ -129,13 +129,13 @@ CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
 
 /* APC ROUTINES **************************************************************/
 
-VOID
-NTAPI 
-CmpApcKernelRoutine(_In_ PKAPC Apc,
-                    _Inout_ PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
-                    _Inout_ PVOID *NormalContext OPTIONAL,
-                    _Inout_ PVOID *SystemArgument1 OPTIONAL,
-                    _Inout_ PVOID *SystemArgument2 OPTIONAL)
+VOID NTAPI
+CmpApcKernelRoutine(
+    _In_ PKAPC Apc,
+    _Inout_ PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
+    _Inout_ PVOID *NormalContext OPTIONAL,
+    _Inout_ PVOID *SystemArgument1 OPTIONAL,
+    _Inout_ PVOID *SystemArgument2 OPTIONAL)
 {
     PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)*SystemArgument1;
 
@@ -159,11 +159,11 @@ CmpApcKernelRoutine(_In_ PKAPC Apc,
     SystemArgument1 = NULL;
 }
 
-VOID
-NTAPI 
+VOID NTAPI
 CmpApcRoutineRundown(_In_ PKAPC Apc)
 {
-    if (!Apc->SystemArgument1) return;
+    if (!Apc->SystemArgument1)
+        return;
 
     PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)Apc->SystemArgument1;
 
@@ -176,38 +176,33 @@ CmpApcRoutineRundown(_In_ PKAPC Apc)
         ObDereferenceObject(PostBlock->Event);
         PostBlock->Event = NULL;
     }
-    
+
     ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
     PostBlock->UserApc = NULL;
 
     ExFreePoolWithTag(PostBlock, TAG_CM);
 }
 
-
 /* FUNCTIONS *****************************************************************/
 
 /**
  * @brief
  * Report a change notifications to its listeners
- * 
+ *
  * @param[in] Kcb
  * The KeyControlBlock of the changed registry key
- * 
+ *
  * @param[in] Hive
  * The registry hive containing the KCB, this is used for enumerating NotifyBlocks
- * 
+ *
  * @param[in] Cell
  * This parameter is unused.
- * 
+ *
  * @param[in] Filter
  * The notification type, one of REG_CHANGE_FILTER_* enum values.
  */
-VOID
-NTAPI
-CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
-                IN PHHIVE Hive,
-                IN HCELL_INDEX Cell,
-                IN ULONG Filter)
+VOID NTAPI
+CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb, IN PHHIVE Hive, IN HCELL_INDEX Cell, IN ULONG Filter)
 {
     PCMHIVE KeyHive;
     PLIST_ENTRY ListHead, NextEntry;
@@ -217,10 +212,11 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
     /* Find the CMHIVE linked to this Hive */
     KeyHive = CONTAINING_RECORD(Hive, CMHIVE, Hive);
-    
+
     /* Get NotifyBlock list on the Hive */
     ListHead = &(KeyHive->NotifyList);
-    if (IsListEmpty(ListHead)) return;
+    if (IsListEmpty(ListHead))
+        return;
 
     /* Enumerate through CMHIVE->NotifyList */
     NextEntry = ListHead->Flink;
@@ -230,12 +226,12 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
         NextEntry = NextEntry->Flink;
 
         /* Check if this KCB matches to this NotifyBlock */
-        if (NotifyBlock->KeyControlBlock != Kcb && 
+        if (NotifyBlock->KeyControlBlock != Kcb &&
             !(NotifyBlock->WatchTree && CmpIsKcbSubKey(NotifyBlock->KeyControlBlock, Kcb)))
             continue;
 
         /* Check the notification filter */
-        if ((NotifyBlock->Filter & Filter) != Filter) 
+        if ((NotifyBlock->Filter & Filter) != Filter)
             continue;
 
         /* Enumerate PostBlocks */
@@ -264,9 +260,9 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 PCM_KEY_CONTROL_BLOCK MasterKcb = PostBlock->MasterNotifyBlock->KeyControlBlock;
                 /* Lock the master KCB before we do anything with its NotifyBlock */
                 CmpAcquireKcbLockShared(MasterKcb);
-                
+
                 CmpNotifyPostBlock(PostBlock->MasterPostBlock);
-                
+
                 CmpReleaseKcbLock(MasterKcb);
             }
         }
@@ -275,16 +271,14 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
 /**
  * @brief
- * Free the resources allocated for a NotifyBlock on a KeyBody. 
+ * Free the resources allocated for a NotifyBlock on a KeyBody.
  * This is called when system is deleting a key body object, or it's closing a handle to a registry key.
- * 
+ *
  * @param[in] LockHeld
  * TRUE if calling while the KCB is already locked, FALSE if it not
  */
-VOID
-NTAPI
-CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
-               IN BOOLEAN LockHeld)
+VOID NTAPI
+CmpFlushNotify(IN PCM_KEY_BODY KeyBody, IN BOOLEAN LockHeld)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PCM_POST_BLOCK PostBlock;
@@ -331,10 +325,10 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
  * @brief
  * Allocate a NotifyBlock for a registry key, and attach it to the hive.
  * KeyBody->NotifyBlock should be set manually.
- * 
+ *
  * @param[in] KeyBody
  * The registry key to be watched for notifications
- * 
+ *
  * @param[in] Filter
  * The desired notification type, a bit flag of REG_CHANGE_FILTER_* enum values
  */
@@ -369,7 +363,8 @@ CmpInsertNotifyBlock(
     /* Attach to the key object */
     NotifyBlock->KeyControlBlock = KeyBody->KeyControlBlock;
     NotifyBlock->KeyBody = KeyBody;
-    /* Let the caller attach us to the KeyBody, because if this is a subordinate our owner would be the master not the KeyBody */
+    /* Let the caller attach us to the KeyBody, because if this is a subordinate our owner would be the master not the
+     * KeyBody */
     /*KeyBody->NotifyBlock = NotifyBlock;*/
 
     /* Attach to the hive */
@@ -384,26 +379,27 @@ CmpInsertNotifyBlock(
  * @brief
  * Allocate a PostBlock and insert it to a NotifyBlock.
  * A PostBlock holds information for a notification callback.
- * 
+ *
  * @param[in] NotifyBlock
  * The NotifyBlock for attaching the PostBlock to.
- * 
+ *
  * @param[in] EventObject
  * The event object to signal when a notification occured, will be dereferenced after signalling the event.
- * 
+ *
  * @param[in] ApcRoutine
  * The user-mode APC routine to be queued when a notification occured
- * 
+ *
  * @param[in] ApcContext
  * The parameter to be passed to the ApcRoutine
  */
 NTSTATUS
 NTAPI
-CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
-                   _In_opt_  PKEVENT EventObject,
-                   _In_opt_  PIO_APC_ROUTINE ApcRoutine,
-                   _In_opt_  PVOID ApcContext,
-                   _Out_     PCM_POST_BLOCK *Result)
+CmpInsertPostBlock(
+    _In_ PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_opt_ PKEVENT EventObject,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PCM_POST_BLOCK *Result)
 {
     PKAPC LocalApc;
     PCM_POST_BLOCK PostBlock;
@@ -416,14 +412,9 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
         if (!LocalApc)
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        KeInitializeApc(LocalApc,
-                        &CurrentThread->Tcb,
-                        CurrentApcEnvironment,
-                        CmpApcKernelRoutine,
-                        CmpApcRoutineRundown,
-                        (PKNORMAL_ROUTINE)ApcRoutine,
-                        UserMode,
-                        ApcContext);
+        KeInitializeApc(
+            LocalApc, &CurrentThread->Tcb, CurrentApcEnvironment, CmpApcKernelRoutine, CmpApcRoutineRundown,
+            (PKNORMAL_ROUTINE)ApcRoutine, UserMode, ApcContext);
     }
     else
     {
@@ -458,22 +449,22 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
  * @brief
  * Allocate a PostBlock and insert it to a NotifyBlock for a subordinate object.
  * The PostBlock will be released by the master NotifyBlock.
- * 
+ *
  * @param[in] NotifyBlock
  * The subordinate NotifyBlock to insert the PostBlock to.
- * 
+ *
  * @param[in] MasterNotifyBlock
  * The NotifyBlock for the master registry key
- * 
+ *
  * @param[in] MasterPostBlock
  * The PostBlock allocated for the master registry key
  */
 NTSTATUS
 NTAPI
 CmpInsertSubPostBlock(
-    _In_  PCM_NOTIFY_BLOCK NotifyBlock,
-    _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
-    _In_  PCM_POST_BLOCK MasterPostBlock,
+    _In_ PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_ PCM_NOTIFY_BLOCK MasterNotifyBlock,
+    _In_ PCM_POST_BLOCK MasterPostBlock,
     _Out_ PCM_POST_BLOCK *Result)
 {
     PCM_POST_BLOCK PostBlock;
