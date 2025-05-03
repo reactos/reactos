@@ -936,8 +936,10 @@ LANGID
 WINAPI
 SetThreadUILanguage(IN LANGID LangId)
 {
-    /* To do: What is this for?*/
-#if 0
+    PTEB Teb = NtCurrentTeb();
+    LCID PreviousLcid;
+    LANGID PreviousLangId;
+    LCID NewLcid;
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* We only support LangId == 0, for selecting a language
      * identifier that best supports the NT Console. */
@@ -947,11 +949,6 @@ SetThreadUILanguage(IN LANGID LangId)
         return 0;
     }
 #endif
-#endif
-    PTEB Teb = NtCurrentTeb();
-    LCID PreviousLcid;
-    LANGID PreviousLangId;
-    LCID NewLcid;
 
     PreviousLcid = Teb->CurrentLocale;
     PreviousLangId = LANGIDFROMLCID(PreviousLcid);
