@@ -346,7 +346,7 @@ KiInitializeKernelMachineDependent(
     IN PKPRCB Prcb,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG64 FeatureBits;
+    ULONG64 FeatureBits = KeFeatureBits;
 
     /* Set boot-level flags */
     KeI386CpuType = Prcb->CpuType;
@@ -355,8 +355,6 @@ KiInitializeKernelMachineDependent(
     KeProcessorLevel = (USHORT)Prcb->CpuType;
     if (Prcb->CpuID)
         KeProcessorRevision = Prcb->CpuStep;
-
-    FeatureBits = Prcb->FeatureBits | (ULONG64)Prcb->FeatureBitsHigh << 32;
 
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
@@ -522,6 +520,10 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initial setup for the boot CPU */
     if (Cpu == 0)
     {
+        /* Set global feature bits */
+        KeFeatureBits = (ULONG64)Pcr->Prcb.FeatureBitsHigh << 32 |
+                        Pcr->Prcb.FeatureBits;
+
         /* Initialize the module list (ntos, hal, kdcom) */
         KiInitModuleList(LoaderBlock);
 
