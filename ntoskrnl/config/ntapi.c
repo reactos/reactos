@@ -1643,6 +1643,22 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
             if (!NT_SUCCESS(Status))
                 goto Failure;
 
+            /* Check if this is a duplicate object */
+            if (LocalSubObjectsKeyBody[i]->KeyControlBlock == KeyObject->KeyControlBlock)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                goto Failure;
+            }
+
+            for (int j = 0; j < i; j++)
+            {
+                if (LocalSubObjectsKeyBody[i]->KeyControlBlock == LocalSubObjectsKeyBody[j]->KeyControlBlock)
+                {
+                    Status = STATUS_INVALID_PARAMETER;
+                    goto Failure;
+                }
+            }
+
             /* Lock KCB for Subordinate objects */
             CmpAcquireKcbLockExclusive(LocalSubObjectsKeyBody[i]->KeyControlBlock);
         }
