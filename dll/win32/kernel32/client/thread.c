@@ -934,7 +934,8 @@ GetThreadId(IN HANDLE Thread)
  */
 LANGID
 WINAPI
-SetThreadUILanguage(IN LANGID LangId)
+SetThreadUILanguage(
+    _In_ LANGID LangId)
 {
     PTEB Teb = NtCurrentTeb();
     LCID PreviousLcid;
