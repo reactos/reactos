@@ -279,7 +279,7 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
  * This is called when system is deleting a key body object, or it's closing a handle to a registry key.
  * 
  * @param[in] LockHeld
- * TRUE if the called locked the KCB, FALSE if it didn't
+ * TRUE if calling while the KCB is already locked, FALSE if it not
  */
 VOID
 NTAPI
@@ -304,7 +304,7 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
         NextEntry = NextEntry->Flink;
 
         /* This shouldn't happen, We don't assign subordinate NotifyBlocks to a KeyBody */
-        ASSERT(PostBlock->MasterPostBlock == NULL);
+        ASSERT(PostBlock->IsMasterPostBlock);
 
         if (PostBlock->Event)
             ObDereferenceObject(PostBlock->Event);

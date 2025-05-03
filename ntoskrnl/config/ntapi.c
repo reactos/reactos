@@ -1533,7 +1533,6 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
     /* Early return if there's a notification pending */
     if (KeyObject->NotifyBlock && KeyObject->NotifyBlock->NotifyPending)
     {
-        /* FIXME: NotifyPending is not set anywhere */
         KeyObject->NotifyBlock->NotifyPending = FALSE;
         ObDereferenceObject(KeyObject);
         return STATUS_NOTIFY_ENUM_DIR;
@@ -1556,16 +1555,18 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
                 LocalSubObjects = ExAllocatePool(NonPagedPool, Count * sizeof(OBJECT_ATTRIBUTES));
                 if (!LocalSubObjects)
                 {
+                    ObDereferenceObject(KeyObject);
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-                    goto Quit;
+                    _SEH2_YIELD(goto Quit);
                 }
 
                 SubNames = ExAllocatePool(NonPagedPool, Count * sizeof(UNICODE_STRING));
                 if (!SubNames)
                 {
+                    ObDereferenceObject(KeyObject);
                     ExFreePool(LocalSubObjects);
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-                    goto Quit;
+                    _SEH2_YIELD(goto Quit);
                 }
 
                 for (int i = 0; i < Count; i++)
@@ -1575,6 +1576,8 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
                                                              PreviousMode,
                                                              &SlaveObjects[i],
                                                              FALSE);
+                    if (!NT_SUCCESS(Status))
+                        break;
                 }
             }
         }
@@ -1587,6 +1590,8 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
         if (!NT_SUCCESS(Status))
         {
+            if (KeyObject)
+                ObDereferenceObject(KeyObject);
             if (LocalSubObjects)
                 ExFreePool(LocalSubObjects);
             if (SubNames)

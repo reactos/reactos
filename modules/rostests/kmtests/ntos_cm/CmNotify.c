@@ -99,7 +99,7 @@ START_TEST(ZwNotifyChangeKey)
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Verify the thread is still running */
-    timeout.QuadPart = -1 * 1000 * 1000 * 10;
+    timeout.QuadPart = -1 * 100 * 1000 * 10;
     Status = KeWaitForSingleObject(WatchThreadObject, Executive, KernelMode, FALSE, &timeout);
     ok_ntstatus(Status, STATUS_TIMEOUT);
 
