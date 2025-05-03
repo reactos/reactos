@@ -159,6 +159,7 @@ BEGIN
     IDS_NET_DEACTIVATE "Disabilita"
     IDS_NET_STATUS "Stato"
     IDS_NET_REPAIR "Ripara"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_NET_CREATELINK "Crea collegamento"
     IDS_NET_DELETE "Cancella"
     IDS_NET_RENAME "Rinomina"

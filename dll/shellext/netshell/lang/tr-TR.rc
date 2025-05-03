@@ -161,6 +161,7 @@ BEGIN
     IDS_NET_DEACTIVATE "Devre Dışı Bırak"
     IDS_NET_STATUS "Durum"
     IDS_NET_REPAIR "Onar"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_NET_CREATELINK "Kısayol Oluştur"
     IDS_NET_DELETE "Sil"
     IDS_NET_RENAME "Yeniden Adlandır"

@@ -167,6 +167,7 @@ BEGIN
     IDS_NET_DEACTIVATE "停用"
     IDS_NET_STATUS "狀態"
     IDS_NET_REPAIR "修復"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_NET_CREATELINK "建立捷徑"
     IDS_NET_DELETE "刪除"
     IDS_NET_RENAME "重新命名"

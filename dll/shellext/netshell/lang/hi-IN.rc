@@ -165,6 +165,7 @@ BEGIN
     IDS_NET_DEACTIVATE "डिसेबल"
     IDS_NET_STATUS "स्थिति"
     IDS_NET_REPAIR "मरम्मत"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_NET_CREATELINK "शॉर्टकट बनाएं"
     IDS_NET_DELETE "हटाए"
     IDS_NET_RENAME "नाम बदलें"

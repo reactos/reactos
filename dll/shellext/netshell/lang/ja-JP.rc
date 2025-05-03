@@ -158,6 +158,7 @@ BEGIN
     IDS_NET_DEACTIVATE "無効"
     IDS_NET_STATUS "状態"
     IDS_NET_REPAIR "修復"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_NET_CREATELINK "ショートカットの作成"
     IDS_NET_DELETE "削除"
     IDS_NET_RENAME "名前の変更"

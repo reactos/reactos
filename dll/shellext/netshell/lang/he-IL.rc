@@ -159,6 +159,7 @@ BEGIN
     IDS_NET_DEACTIVATE "הפסק"
     IDS_NET_STATUS "מצב"
     IDS_NET_REPAIR "תקן"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_NET_CREATELINK "צור קיצור דרך"
     IDS_NET_DELETE "מחק"
     IDS_NET_RENAME "שנה שם"

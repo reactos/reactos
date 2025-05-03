@@ -159,6 +159,7 @@ BEGIN
     IDS_NET_DEACTIVATE "Letiltás"
     IDS_NET_STATUS "Állapot"
     IDS_NET_REPAIR "Javítás"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_NET_CREATELINK "Parancsikon létrehozása"
     IDS_NET_DELETE "Törlés"
     IDS_NET_RENAME "Átnevezés"

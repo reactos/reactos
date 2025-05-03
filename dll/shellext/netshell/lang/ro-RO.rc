@@ -168,6 +168,7 @@ BEGIN
     IDS_NET_DEACTIVATE "Dezactivare"
     IDS_NET_STATUS "Stare"
     IDS_NET_REPAIR "Repară"
+    IDS_NET_OPEN_CONNECTIONS "Deschide Conexiuni de rețea"
     IDS_NET_CREATELINK "Creare legătură"
     IDS_NET_DELETE "Ștergere"
     IDS_NET_RENAME "Redenumire"
