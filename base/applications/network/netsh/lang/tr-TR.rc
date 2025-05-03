@@ -1,0 +1,43 @@
+/*
+ * PROJECT:     ReactOS NetSh
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish (Republic of Türkiye) kaynak dosyası
+ * TRANSLATOR:  Copyright 2025 Efe Gürel <info.efegurel@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+/* Basic application information, Temel uygulama bilgisi */ 
+STRINGTABLE
+BEGIN
+    IDS_APP_USAGE "\nKullanım: netsh [-a AliasFile] [-c Context] [-r RemoteMachine] \
+\n             [Command | -f ScriptFile]\n"
+    IDS_INVALID_COMMAND "İstenen komut bulunamadı: %ls.\n"
+    IDS_OPEN_FAILED     "%ls dosyası açılamadı.\n"
+    IDS_INVALID_SYNTAX  "Bu komut için sağlanan syntax geçerli değil. Doğru syntax için yardıma bakınız.\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_HEADER "\nKullanılabilecek bağlamlar şunlardır:\n"
+    IDS_SUBCONTEXT_HEADER "\nKullanılabilecek alt bağlamlar şunlardır:\n"
+    IDS_HLP_UP             "Bir üst bağlam seviyesine çıkar."
+    IDS_HLP_UP_EX          "Syntax: ..\n\n        Bir üst bağlam seviyesine çıkar.\n\n"
+    IDS_HLP_EXIT           "Uygulamadan çıkar."
+    IDS_HLP_EXIT_EX        "Syntax: çık\n\n        Uygulamadan çıkar.\n\n"
+    IDS_HLP_HELP           "Komutları listeler."
+    IDS_HLP_HELP_EX        "Syntax: Yardım\n\n        Komutların listesini sergiler.\n\n"
+
+    IDS_HLP_ADD_HELPER     "Yardımcı DLL'yi indirir."
+    IDS_HLP_ADD_HELPER_EX  "Syntax: yardımcıyı ekler: <dll file name>\n\n        Belirlenen yardımcı DLL'yi netsh'de indirir.\n\n"
+
+    IDS_HLP_DEL_HELPER     "Yardımcı DLL'yi kaldırır."
+    IDS_HLP_DEL_HELPER_EX  "Syntax: yardımcıyı kaldırır: <dll file name>\n\n        Belirlenen yardımcı DLL'yi netsh'de kaldırır.\n\n"
+
+    IDS_HLP_SHOW_HELPER    "Üst-seviye yardımcıları listeler."
+    IDS_HLP_SHOW_HELPER_EX "Syntax: yardımcıyı göster:\n\n        Üst-seviye yardımcıları listeler.\n\n"
+
+    IDS_HLP_GROUP_ADD      "Girdilere bir konfigurasyon girdisi ekler."
+    IDS_HLP_GROUP_DELETE   "Girdilerden bir konfigurasyon girdisi kaldırır."
+    IDS_HLP_GROUP_SHOW     "Bilgi gösterir."
+END

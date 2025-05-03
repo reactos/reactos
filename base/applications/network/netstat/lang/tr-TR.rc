@@ -1,0 +1,117 @@
+/* Translator:
+	2025 - Efe Gürel - <info.efegurel@gmail.com> 
+	PS: gözden kaçan yerler olduysa iletişime geçebilirsiniz.
+*/
+
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nGüncel TCP/IP protocol istatiklerini ve ağ bağlantılarını gösterir.\n\n\
+NETSTAT [-a] [-b] [-e] [-n] [-o] [-p proto] [-r] [-s] [-t] [-v] [interval]\n\n\
+  -a            Bütün bağlantıları ve dinleme portlarını gösterir.\n\
+  -b            BENİDÜZELT (Desteklenen fakat henüz getirilmemiş özellik).\n\
+  -e            İnternet istatiklerini gösterir. -s ile kullanılabilir\n\
+  -n            Adres ve port numaralarını sayısal olarak gösterir.\n\
+  -o            Her bağlantının işlem bilgisini gösterir.\n\
+  -p proto      Protokol'ün bağlantılarını gösterir. 'proto' TCP ya da UDP.\n\
+                -s opsiyonuyla kullanıldıysa, \n\
+                per-protokol listeleri 'proto' TCP, UDP, ya da IP olabilir.\n\
+  -r            Güncel yönlendirme çizelgesini gösterir.\n\
+  -s            Per-protokol istatistiklerini gösterir. Varsayılan olarak, İstatistikler \n\
+                IP, ICMP, TCP ve UDP olarak gösterilir.\n\
+                Varsayılanın alt-kümesini belirlemek için -p opsiyonu kullanılabilir.\n\
+  -t            BENİDÜZELT (Desteklenen fakat henüz getirilmemiş özellik).\n\
+  -v            BENİDÜZELT (Desteklenen fakat henüz getirilmemiş özellik).\n\
+  interval      Belirli bir saniye aralığında seçilmiş istatistiği yeniden gösterir.\n\
+                Gösterimi durdurmak için CTRL+C'ye basınız. Varsayılan netstat \n\
+                güncel bilgiyi sadece bir kere yazar.\n"
+    IDS_DISPLAY_THEADER "\n  Proto  Yerel Adres          Yabancı Adres        Durum"
+    IDS_DISPLAY_PROCESS "       İşlem\n"
+    IDS_ACTIVE_CONNECT "\nAktif bağlantılar\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_IP4_STAT_HEADER "\nIPv4 İstatistikleri\n\n"
+    IDS_IP_PACK_REC            "  Alınan Paketler                    = %lu\n"
+    IDS_IP_HEAD_REC_ERROR      "  Alınan Başlık Hataları             = %lu\n"
+    IDS_IP_ADDR_REC_ERROR      "  Alınan Adres Hataları              = %lu\n"
+    IDS_IP_DATAG_FWD           "  İletilen Veri Birimleri            = %lu\n"
+    IDS_IP_UNKNOWN_PRO_REC     "  Alınan Bilinmeyen Protokoller      = %lu\n"
+    IDS_IP_REC_PACK_DISCARD    "  Alınan Paketler Atıldı             = %lu\n"
+    IDS_IP_REC_PACK_DELIVER    "  Teslim Edilen Alınan Paketler      = %lu\n"
+    IDS_IP_OUT_REQUEST         "  Çıktı İstekleri                    = %lu\n"
+    IDS_IP_ROUTE_DISCARD       "  Yönlendirme Atmaları               = %lu\n"
+    IDS_IP_DISCARD_OUT_PACK    "  Atılan Çıkış Paketleri             = %lu\n"
+    IDS_IP_OUT_PACKET_NO_ROUTE "  Rotası Bulunmayan Çıkış Paketleri  = %lu\n"
+    IDS_IP_REASSEMBLE_REQUIRED "  Yeniden Birleştirme Gerektirenler  = %lu\n"
+    IDS_IP_REASSEMBLE_SUCCESS  "  Başarılı Yeniden Birleştirmeler    = %lu\n"
+    IDS_IP_REASSEMBLE_FAILURE  "  Hatalı Yeniden Birleştirmeler      = %lu\n"
+    IDS_IP_DATAG_FRAG_SUCCESS  "  Başarıyla Parçalanan Veri Birimleri= %lu\n"
+    IDS_IP_DATAG_FRAG_FAILURE  "  Parçalanamayan Veri Birimleri      = %lu\n"
+    IDS_IP_DATAG_FRAG_CREATE   "  Oluşturulan Parçalar               = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ICMP4_STAT_HEADER "\nICMPv4 İstatistikleri\n\n"
+    IDS_ICMP_THEADER             "                            Alınan    Gönderilen\n"
+    IDS_ICMP_MSG                 "  Mesajlar                  %-11lu %-10lu\n"
+    IDS_ICMP_ERROR               "  Hatalar                   %-11lu %-10lu\n"
+    IDS_ICMP_DEST_UNREACH        "  Ulaşılamaz Hedef          %-11lu %-10lu\n"
+    IDS_ICMP_TIME_EXCEED         "  Zaman Aşıldı              %-11lu %-10lu\n"
+    IDS_ICMP_PARAM_PROBLEM       "  Parametre Sorunları       %-11lu %-10lu\n"
+    IDS_ICMP_SRC_QUENCHES        "  Kaynak Bastırmaları       %-11lu %-10lu\n"
+    IDS_ICMP_REDIRECT            "  Yönlendirmeler            %-11lu %-10lu\n"
+    IDS_ICMP_ECHO                "  Yankılar                  %-11lu %-10lu\n"
+    IDS_ICMP_ECHO_REPLY          "  Yankı Cevapları           %-11lu %-10lu\n"
+    IDS_ICMP_TIMESTAMP           "  Zaman Bilgisi             %-11lu %-10lu\n"
+    IDS_ICMP_TIMESTAMP_REPLY     "  Zaman Bilgisi Cevapları   %-11lu %-10lu\n"
+    IDS_ICMP_ADDRESSS_MASK       "  Adres Maskeleri           %-11lu %-10lu\n"
+    IDS_ICMP_ADDRESSS_MASK_REPLY "  Adres Maskesi Cevapları   %-11lu %-10lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TCP4_HEADER         "\nIPv4 için TCP istatistikleri\n\n"
+    IDS_TCP_ACTIVE_OPEN     "  Aktif Bağlantı Açılışları           = %lu\n"
+    IDS_TCP_PASS_OPEN       "  Pasif Bağlantı Açılışları           = %lu\n"
+    IDS_TCP_FAIL_CONNECT    "  Başarısız Bağlanma İstekleri        = %lu\n"
+    IDS_TCP_RESET_CONNECT   "  Sıfırlanmış Bağlantılar             = %lu\n"
+    IDS_TCP_CURRENT_CONNECT "  Güncel Bağlantılar                  = %lu\n"
+    IDS_TCP_SEG_RECEIVE     "  Alınan Segmentler                   = %lu\n"
+    IDS_TCP_SEG_SENT        "  Gönderilen Segmentler               = %lu\n"
+    IDS_TCP_SEG_RETRANSMIT  "  Yeniden İletilen Segmentler         = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UDP_IP4_HEADER    "\nIPv4 için UDP istatistikleri\n\n"
+    IDS_UDP_DATAG_RECEIVE "  Alınan Veri Birimleri      = %lu\n"
+    IDS_UDP_NO_PORT       "  Port Yok                   = %lu\n"
+    IDS_UDP_RECEIVE_ERROR "  Alınan Hatalar             = %lu\n"
+    IDS_UDP_DATAG_SEND    "  Gönderilen Veri Birimleri  = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ETHERNET_INTERFACE_STAT     "Arayüz İstatistikleri\n\n"
+    IDS_ETHERNET_THEADER            "                           Alınan           Gönderilen\n\n"
+    IDS_ETHERNET_BYTES              "Baytlar                   %14lu %15lu\n"
+    IDS_ETHERNET_UNICAST_PACKET     "Unicast Paketleri         %14lu %15lu\n"
+    IDS_ETHERNET_NON_UNICAST_PACKET "Unicast Olmayan Paketler  %14lu %15lu\n"
+    IDS_ETHERNET_DISCARD            "Atılanlar                 %14lu %15lu\n"
+    IDS_ETHERNET_ERROR              "Hatalar                   %14lu %15lu\n"
+    IDS_ETHERNET_UNKNOWN            "Bilinmeyen Protokoller    %14lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_WSA_START "HATA: WSAStartup() başarısız oldu: %d\n"
+    IDS_ERROR_ROUTE "HATA: 'route.exe' bulunamadı.\n"
+    IDS_ERROR_TCP_SNAPSHOT "HATA: TCP uç noktalarının anlık görüntüsü alınamadı.\n"
+    IDS_ERROR_UDP_ENDPOINT "HATA: UDP uç noktalarının anlık görüntüsü alınamadı.\n"
+    IDS_ERROR_UDP_ENDPOINT_TABLE "HATA: UDP uç noktaları tablosunun anlık görüntüsü alınamadı.\n"
+END

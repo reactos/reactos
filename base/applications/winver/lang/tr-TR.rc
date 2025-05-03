@@ -1,0 +1,14 @@
+/*
+ * PROJECT:      ReactOS Version Program
+ * LICENSE:      MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:      Türkçe (Republic of Türkiye) kaynak dosyası
+ * TRANSLATOR:   Copyright 2025 Efe Gürel <info.efegurel@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_OSINFO_COMPAT_FORMAT "NT'ye rapor ediliyor. %s (Build %s%s)"
+    IDS_OSINFO_SPK_FORMAT ": %s"
+END
