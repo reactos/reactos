@@ -73,6 +73,11 @@ Author:
 #define KF_SSE4_1               0x0001000000000000ULL
 #define KF_SSE4_2               0x0002000000000000ULL
 
+// ReactOS specific
+#define KF_AVX                  0x1000000000000000ULL
+#define KF_AVX2                 0x2000000000000000ULL
+#define KF_AVX512F              0x4000000000000000ULL
+
 #define KF_XSAVEOPT_BIT                 15 // From ksamd64.inc (0x0F -> 0x8000)
 #define KF_XSTATE_BIT                   23 // From ksamd64.inc (0x17 -> 0x800000)
 #define KF_RDWRFSGSBASE_BIT             28 // From ksamd64.inc (0x1C -> 0x10000000)
