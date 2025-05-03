@@ -936,7 +936,7 @@ VOID ShowNetworkIconContextMenu(HWND hwndOwner, LANSTATUSUI_CONTEXT *pContext)
 
 VOID LaunchNetworkConnectionsFolder(HWND hwndOwner)
 {
-    WCHAR szCommand[] = L"control.exe netconnections";
+    WCHAR szCommand[] = L"control netconnections";
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi;
     BOOL bSuccess;
