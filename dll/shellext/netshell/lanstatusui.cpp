@@ -936,26 +936,22 @@ VOID ShowNetworkIconContextMenu(HWND hwndOwner, LANSTATUSUI_CONTEXT *pContext)
 
 VOID LaunchNetworkConnectionsFolder(HWND hwndOwner)
 {
-    WCHAR szPath[MAX_PATH];
+    WCHAR szCommand[] = L"control.exe netconnections";
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi;
     BOOL bSuccess;
 
-    StringCchPrintfW(szPath,
-                     MAX_PATH,
-                     L"%s\\explorer.exe /e,::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
-                     _wgetenv(L"SystemRoot"));
-
-    bSuccess = CreateProcessW(NULL,
-                              szPath,
-                              NULL,
-                              NULL,
-                              FALSE,
-                              0,
-                              NULL,
-                              NULL,
-                              &si,
-                              &pi);
+    bSuccess = CreateProcessW(
+        NULL,
+        szCommand,
+        NULL,
+        NULL,
+        FALSE,
+        0,
+        NULL,
+        NULL,
+        &si,
+        &pi);
 
     if (bSuccess)
     {
