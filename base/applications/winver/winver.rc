@@ -20,6 +20,3 @@
 #ifdef LANGUAGE_TR_TR
 	#include "lang/tr-TR.rc"
 #endif
-
-
-
