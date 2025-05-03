@@ -54,19 +54,21 @@ DisplayEvent(
     _In_ HWND hDlg,
     _In_ PDETAILDATA pDetailData)
 {
+    /* Mapping of ListView column index to corresponding dialog control ID */
+    static const WORD lvColsToDlgItemIDs[] =
+    {
+        IDC_EVENTTYPESTATIC,   IDC_EVENTDATESTATIC,     IDC_EVENTTIMESTATIC,
+        IDC_EVENTSOURCESTATIC, IDC_EVENTCATEGORYSTATIC, IDC_EVENTIDSTATIC,
+        IDC_EVENTUSERSTATIC,   IDC_EVENTCOMPUTERSTATIC,
+    };
+
     PEVENTLOGRECORD pevlr;
     PEVENTLOGFILTER EventLogFilter = pDetailData->EventLogFilter;
     INT iItem = pDetailData->iEventItem;
+    USHORT i;
     BOOL bEventData;
 
-    WCHAR szEventType[MAX_PATH];
-    WCHAR szTime[MAX_PATH];
-    WCHAR szDate[MAX_PATH];
-    WCHAR szUser[MAX_PATH];
-    WCHAR szComputer[MAX_PATH];
     WCHAR szSource[MAX_PATH];
-    WCHAR szCategory[MAX_PATH];
-    WCHAR szEventID[MAX_PATH];
     WCHAR szEventText[EVENT_MESSAGE_EVENTTEXT_BUFFER];
 
     /* Retrieve and cache the pointer to the selected event item */
@@ -77,23 +79,23 @@ DisplayEvent(
     ListView_GetItem(hwndListView, &li);
     pevlr = pDetailData->pevlr = (PEVENTLOGRECORD)li.lParam;
 
-    ListView_GetItemText(hwndListView, iItem, 0, szEventType, ARRAYSIZE(szEventType));
-    ListView_GetItemText(hwndListView, iItem, 1, szDate, ARRAYSIZE(szDate));
-    ListView_GetItemText(hwndListView, iItem, 2, szTime, ARRAYSIZE(szTime));
-    ListView_GetItemText(hwndListView, iItem, 3, szSource, ARRAYSIZE(szSource));
-    ListView_GetItemText(hwndListView, iItem, 4, szCategory, ARRAYSIZE(szCategory));
-    ListView_GetItemText(hwndListView, iItem, 5, szEventID, ARRAYSIZE(szEventID));
-    ListView_GetItemText(hwndListView, iItem, 6, szUser, ARRAYSIZE(szUser));
-    ListView_GetItemText(hwndListView, iItem, 7, szComputer, ARRAYSIZE(szComputer));
-
-    SetDlgItemTextW(hDlg, IDC_EVENTDATESTATIC, szDate);
-    SetDlgItemTextW(hDlg, IDC_EVENTTIMESTATIC, szTime);
-    SetDlgItemTextW(hDlg, IDC_EVENTUSERSTATIC, szUser);
-    SetDlgItemTextW(hDlg, IDC_EVENTSOURCESTATIC, szSource);
-    SetDlgItemTextW(hDlg, IDC_EVENTCOMPUTERSTATIC, szComputer);
-    SetDlgItemTextW(hDlg, IDC_EVENTCATEGORYSTATIC, szCategory);
-    SetDlgItemTextW(hDlg, IDC_EVENTIDSTATIC, szEventID);
-    SetDlgItemTextW(hDlg, IDC_EVENTTYPESTATIC, szEventType);
+    for (i = 0; i < _countof(lvColsToDlgItemIDs); ++i)
+    {
+        PWSTR pszBuffer = szEventText;
+        if (lvColsToDlgItemIDs[i] == IDC_EVENTSOURCESTATIC)
+        {
+            /* Use a separate buffer to store the source; used below */
+            pszBuffer = szSource;
+            ListView_GetItemText(hwndListView, iItem, i,
+                                 szSource, _countof(szSource));
+        }
+        else
+        {
+            ListView_GetItemText(hwndListView, iItem, i,
+                                 szEventText, _countof(szEventText));
+        }
+        SetDlgItemTextW(hDlg, lvColsToDlgItemIDs[i], pszBuffer);
+    }
 
     bEventData = (pevlr->DataLength > 0);
     EnableDlgItem(hDlg, IDC_BYTESRADIO, bEventData);
