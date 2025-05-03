@@ -4,7 +4,7 @@
  * PURPOSE:     Event Log Viewer main file.
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
  *              Copyright 2008-2016 Eric Kohl <eric.kohl@reactos.org>
- *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2016-2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include "eventvwr.h"
@@ -1440,7 +1440,7 @@ LONG EventLogFilter_Release(IN PEVENTLOGFILTER EventLogFilter)
 void
 TrimNulls(LPWSTR s)
 {
-    WCHAR *c;
+    PWCHAR c;
 
     if (s != NULL)
     {
@@ -1451,17 +1451,20 @@ TrimNulls(LPWSTR s)
     }
 }
 
-DWORD
+SIZE_T
 GetExpandedFilePathName(
-    IN LPCWSTR ComputerName OPTIONAL,
-    IN LPCWSTR lpFileName,
-    OUT LPWSTR lpFullFileName OPTIONAL,
-    IN DWORD nSize)
+    _In_opt_ PCWSTR ComputerName,
+    _In_ PCWSTR FileName,
+    _Out_writes_z_(nSize) PWSTR pFullFileName,
+    _In_ SIZE_T nSize)
 {
     SIZE_T dwLength;
 
+    if (nSize == 0)
+        return 0;
+
     /* Determine the needed size after expansion of any environment strings */
-    dwLength = ExpandEnvironmentStringsW(lpFileName, NULL, 0);
+    dwLength = ExpandEnvironmentStringsW(FileName, NULL, 0);
     if (dwLength == 0)
     {
         /* We failed, bail out */
@@ -1487,15 +1490,14 @@ GetExpandedFilePathName(
     if (dwLength > nSize)
     {
         /* No, return the needed size in characters (includes NULL-terminator) */
+        *pFullFileName = UNICODE_NULL;
         return dwLength;
     }
 
-
     /* Now expand the file path */
-    ASSERT(dwLength <= nSize);
 
     /* Expand any existing environment strings */
-    if (ExpandEnvironmentStringsW(lpFileName, lpFullFileName, dwLength) == 0)
+    if (ExpandEnvironmentStringsW(FileName, pFullFileName, dwLength) == 0)
     {
         /* We failed, bail out */
         return 0;
@@ -1508,16 +1510,16 @@ GetExpandedFilePathName(
         /* Note that we previously skipped any potential leading backslashes */
 
         /* Replace ':' by '$' in the drive letter */
-        if (*lpFullFileName && lpFullFileName[1] == L':')
-            lpFullFileName[1] = L'$';
+        if (*pFullFileName && pFullFileName[1] == L':')
+            pFullFileName[1] = L'$';
 
         /* Prepend the computer name */
-        MoveMemory(lpFullFileName + 2 + wcslen(ComputerName) + 1,
-                   lpFullFileName, dwLength * sizeof(WCHAR) - (2 + wcslen(ComputerName) + 1) * sizeof(WCHAR));
-        lpFullFileName[0] = L'\\';
-        lpFullFileName[1] = L'\\';
-        wcsncpy(lpFullFileName + 2, ComputerName, wcslen(ComputerName));
-        lpFullFileName[2 + wcslen(ComputerName)] = L'\\';
+        MoveMemory(pFullFileName + 2 + wcslen(ComputerName) + 1,
+                   pFullFileName, dwLength * sizeof(WCHAR) - (2 + wcslen(ComputerName) + 1) * sizeof(WCHAR));
+        pFullFileName[0] = L'\\';
+        pFullFileName[1] = L'\\';
+        wcsncpy(pFullFileName + 2, ComputerName, wcslen(ComputerName));
+        pFullFileName[2 + wcslen(ComputerName)] = L'\\';
     }
 
     /* Return the number of stored characters (includes NULL-terminator) */
@@ -1525,27 +1527,38 @@ GetExpandedFilePathName(
 }
 
 BOOL
-GetEventMessageFileDLL(IN LPCWSTR lpLogName,
-                       IN LPCWSTR SourceName,
-                       IN LPCWSTR EntryName,
-                       OUT PWCHAR lpModuleName) // TODO: Add IN DWORD BufLen
+GetEventMessageFileDLL(
+    _In_ PCWSTR LogName,
+    _In_ PCWSTR SourceName,
+    _In_ PCWSTR EntryName,
+    _Out_writes_z_(cchName) PWSTR pModuleName,
+    _In_ SIZE_T cchName)
 {
     BOOL Success = FALSE;
     LONG Result;
     DWORD dwType, dwSize;
     WCHAR szModuleName[MAX_PATH];
-    WCHAR szKeyName[MAX_PATH];
+    PWSTR KeyPath;
+    SIZE_T cbKeyPath;
     HKEY hLogKey = NULL;
     HKEY hSourceKey = NULL;
 
-    StringCbCopyW(szKeyName, sizeof(szKeyName), EVENTLOG_BASE_KEY);
-    StringCbCatW(szKeyName, sizeof(szKeyName), lpLogName);
+    if (cchName == 0)
+        return FALSE;
 
-    Result = RegOpenKeyExW(hkMachine,
-                           szKeyName,
-                           0,
-                           KEY_READ,
-                           &hLogKey);
+    cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(LogName) + 1) * sizeof(WCHAR);
+    KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
+    if (!KeyPath)
+    {
+        ShowWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
+    StringCbCatW(KeyPath, cbKeyPath, LogName);
+
+    Result = RegOpenKeyExW(hkMachine, KeyPath, 0, KEY_READ, &hLogKey);
+    HeapFree(GetProcessHeap(), 0, KeyPath);
     if (Result != ERROR_SUCCESS)
         return FALSE;
 
@@ -1554,11 +1567,9 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                            0,
                            KEY_QUERY_VALUE,
                            &hSourceKey);
+    RegCloseKey(hLogKey);
     if (Result != ERROR_SUCCESS)
-    {
-        RegCloseKey(hLogKey);
         return FALSE;
-    }
 
     dwSize = sizeof(szModuleName);
     Result = RegQueryValueExW(hSourceKey,
@@ -1569,34 +1580,42 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                               &dwSize);
     if ((Result != ERROR_SUCCESS) || (dwType != REG_EXPAND_SZ && dwType != REG_SZ))
     {
-        szModuleName[0] = UNICODE_NULL;
+        *szModuleName = UNICODE_NULL;
     }
     else
     {
         /* NULL-terminate the string and expand it */
         szModuleName[dwSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
-        GetExpandedFilePathName(lpComputerName, szModuleName, lpModuleName, ARRAYSIZE(szModuleName));
-        Success = TRUE;
+        Success =
+            (GetExpandedFilePathName(lpComputerName, szModuleName,
+                                     pModuleName, cchName) != 0 && *pModuleName);
     }
 
     RegCloseKey(hSourceKey);
-    RegCloseKey(hLogKey);
 
     return Success;
 }
 
 BOOL
-GetEventCategory(IN LPCWSTR KeyName,
-                 IN LPCWSTR SourceName,
-                 IN PEVENTLOGRECORD pevlr,
-                 OUT PWCHAR CategoryName) // TODO: Add IN DWORD BufLen
+GetEventCategory(
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR SourceName,
+    _In_ PEVENTLOGRECORD pevlr,
+    _Out_writes_z_(cchName) PWSTR CategoryName,
+    _In_ SIZE_T cchName)
 {
     BOOL Success = FALSE;
     WCHAR szMessageDLL[MAX_PATH];
-    LPWSTR lpMsgBuf = NULL;
+    LPWSTR lpMsgBuf;
 
-    if (!GetEventMessageFileDLL(KeyName, SourceName, EVENT_CATEGORY_MESSAGE_FILE, szMessageDLL))
+    if (cchName == 0)
+        return FALSE;
+
+    if (!GetEventMessageFileDLL(KeyName, SourceName, EVENT_CATEGORY_MESSAGE_FILE,
+                                szMessageDLL, _countof(szMessageDLL)))
+    {
         goto Quit;
+    }
 
     /* Retrieve the message string without appending extra newlines */
     lpMsgBuf =
@@ -1612,7 +1631,7 @@ GetEventCategory(IN LPCWSTR KeyName,
         TrimNulls(lpMsgBuf);
 
         /* Copy the category name */
-        StringCchCopyW(CategoryName, MAX_PATH, lpMsgBuf);
+        StringCchCopyW(CategoryName, cchName, lpMsgBuf);
 
         /* Free the buffer allocated by FormatMessage */
         LocalFree(lpMsgBuf);
@@ -1626,7 +1645,7 @@ Quit:
     {
         if (pevlr->EventCategory != 0)
         {
-            StringCchPrintfW(CategoryName, MAX_PATH, L"(%lu)", pevlr->EventCategory);
+            StringCchPrintfW(CategoryName, cchName, L"(%lu)", pevlr->EventCategory);
             Success = TRUE;
         }
     }
@@ -1634,12 +1653,14 @@ Quit:
     return Success;
 }
 
-
-BOOL                                                                        // NOTE: Used by evtdetctl.c
-GetEventMessage(IN LPCWSTR KeyName,
-                IN LPCWSTR SourceName,
-                IN PEVENTLOGRECORD pevlr,
-                OUT PWCHAR EventText) // TODO: Add IN DWORD BufLen
+// NOTE: Used by evtdetctl.c
+BOOL
+GetEventMessage(
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR SourceName,
+    _In_ PEVENTLOGRECORD pevlr,
+    _Out_writes_z_(cchText) PWSTR EventText,
+    _In_ SIZE_T cchText)
 {
     BOOL Success = FALSE;
     DWORD i;
@@ -1647,26 +1668,36 @@ GetEventMessage(IN LPCWSTR KeyName,
     WCHAR SourceModuleName[1024];
     WCHAR ParameterModuleName[1024];
     BOOL IsParamModNameCached = FALSE;
-    LPWSTR lpMsgBuf = NULL;
+    LPWSTR lpMsgBuf;
     LPWSTR szStringArray, szMessage;
     LPWSTR *szArguments;
+
+    if (cchText == 0)
+        return FALSE;
 
     /* Get the event string array */
     szStringArray = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);
 
     /* NOTE: GetEventMessageFileDLL can return a comma-separated list of DLLs */
-    if (!GetEventMessageFileDLL(KeyName, SourceName, EVENT_MESSAGE_FILE, SourceModuleName))
+    if (!GetEventMessageFileDLL(KeyName, SourceName, EVENT_MESSAGE_FILE,
+                                SourceModuleName, _countof(SourceModuleName)))
+    {
         goto Quit;
+    }
 
     /* Allocate space for insertion strings */
     szArguments = HeapAlloc(GetProcessHeap(), 0, pevlr->NumStrings * sizeof(LPVOID));
     if (!szArguments)
         goto Quit;
 
+    // TODO: Revisit this whole IsParamModNameCached later,
+    // see commits c1ecc98f60 (r71368) and d5ba2a3784 (r71958).
+    *ParameterModuleName = UNICODE_NULL; // TEMP fix in case GetEventMessageFileDLL fails.
     if (!IsParamModNameCached)
     {
         /* Now that the parameter file list is loaded, no need to reload it at the next run! */
-        IsParamModNameCached = GetEventMessageFileDLL(KeyName, SourceName, EVENT_PARAMETER_MESSAGE_FILE, ParameterModuleName);
+        IsParamModNameCached = GetEventMessageFileDLL(KeyName, SourceName, EVENT_PARAMETER_MESSAGE_FILE,
+                                                      ParameterModuleName, _countof(ParameterModuleName));
         // FIXME: If the string loading failed the first time, no need to retry it just after???
     }
 
@@ -1679,7 +1710,7 @@ GetEventMessage(IN LPCWSTR KeyName,
     /*
      * HACK:
      * We do some hackish preformatting of the cached event strings...
-     * That's because after we pass the string to FormatMessage
+     * That's because below, we pass the string to FormatMessage
      * (via GetMessageStringFromDllList) with the FORMAT_MESSAGE_ARGUMENT_ARRAY
      * flag, instead of ignoring the insertion parameters and do the formatting
      * by ourselves. Therefore, the resulting string should have the parameter
@@ -1737,7 +1768,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         }
 
         /* Copy the event text */
-        StringCchCopyW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, lpMsgBuf);
+        StringCchCopyW(EventText, cchText, lpMsgBuf);
 
         /* Free the buffer allocated by FormatMessage */
         LocalFree(lpMsgBuf);
@@ -1748,17 +1779,31 @@ GetEventMessage(IN LPCWSTR KeyName,
 Quit:
     if (!Success)
     {
-        /* Get a read-only pointer to the "event-not-found" string */
-        lpMsgBuf = HeapAlloc(GetProcessHeap(), 0, EVENT_MESSAGE_EVENTTEXT_BUFFER * sizeof(WCHAR));
-        LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, lpMsgBuf, EVENT_MESSAGE_EVENTTEXT_BUFFER);
-        StringCchPrintfW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, lpMsgBuf, (pevlr->EventID & 0xFFFF), SourceName);
+        /* Get a read-only pointer to the "Event-Not-Found" string */
+        SIZE_T cchResLen =
+            LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, (PWSTR)&szMessage, 0);
+
+        lpMsgBuf = HeapAlloc(GetProcessHeap(), 0, (cchResLen + 1) * sizeof(WCHAR));
+        if (lpMsgBuf)
+        {
+            StringCchCopyNW(lpMsgBuf, cchResLen + 1, szMessage, cchResLen);
+            szMessage = lpMsgBuf;
+        }
+        else
+        {
+            /* Use a hardcoded format string */
+            szMessage = L"Event ID ( %lu ), Source ( %s )\n\n";
+        }
+        StringCchPrintfW(EventText, cchText, szMessage, (pevlr->EventID & 0xFFFF), SourceName);
+        if (lpMsgBuf)
+            HeapFree(GetProcessHeap(), 0, lpMsgBuf);
 
         /* Append the strings */
         szMessage = szStringArray;
         for (i = 0; i < pevlr->NumStrings; i++)
         {
-            StringCchCatW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, szMessage);
-            StringCchCatW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, L"\n");
+            StringCchCatW(EventText, cchText, szMessage);
+            StringCchCatW(EventText, cchText, L"\n");
             szMessage += wcslen(szMessage) + 1;
         }
     }
@@ -1767,48 +1812,55 @@ Quit:
 }
 
 VOID
-GetEventType(IN WORD dwEventType,
-             OUT PWCHAR eventTypeText) // TODO: Add IN DWORD BufLen
+GetEventType(
+    _In_ WORD dwEventType,
+    _Out_writes_z_(cchText) PWSTR pszEventType,
+    _In_ SIZE_T cchText)
 {
     switch (dwEventType)
     {
         case EVENTLOG_ERROR_TYPE:
-            LoadStringW(hInst, IDS_EVENTLOG_ERROR_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_ERROR_TYPE, pszEventType, cchText);
             break;
         case EVENTLOG_WARNING_TYPE:
-            LoadStringW(hInst, IDS_EVENTLOG_WARNING_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_WARNING_TYPE, pszEventType, cchText);
             break;
         case EVENTLOG_INFORMATION_TYPE:
-            LoadStringW(hInst, IDS_EVENTLOG_INFORMATION_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_INFORMATION_TYPE, pszEventType, cchText);
             break;
         case EVENTLOG_SUCCESS:
-            LoadStringW(hInst, IDS_EVENTLOG_SUCCESS, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_SUCCESS, pszEventType, cchText);
             break;
         case EVENTLOG_AUDIT_SUCCESS:
-            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_SUCCESS, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_SUCCESS, pszEventType, cchText);
             break;
         case EVENTLOG_AUDIT_FAILURE:
-            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_FAILURE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_FAILURE, pszEventType, cchText);
             break;
         default:
-            LoadStringW(hInst, IDS_EVENTLOG_UNKNOWN_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_UNKNOWN_TYPE, pszEventType, cchText);
             break;
     }
 }
 
 BOOL
-GetEventUserName(IN PEVENTLOGRECORD pelr,
-                 IN OUT PSID *pLastSid,
-                 OUT PWCHAR pszUser) // TODO: Add IN DWORD BufLen
+GetEventUserName(
+    _In_ PEVENTLOGRECORD pelr,
+    _Inout_ PSID *pLastSid,
+    _Out_writes_z_(cchUser) PWSTR pszUser,
+    _In_ SIZE_T cchUser)
 {
     PSID pCurrentSid;
     PWSTR StringSid;
     WCHAR szName[1024];
     WCHAR szDomain[1024];
     SID_NAME_USE peUse;
-    DWORD cchName = ARRAYSIZE(szName);
-    DWORD cchDomain = ARRAYSIZE(szDomain);
+    DWORD cchName = _countof(szName);
+    DWORD cchDomain = _countof(szDomain);
     BOOL Success = FALSE;
+
+    if (cchUser == 0)
+        return FALSE;
 
     /* Point to the SID */
     pCurrentSid = (PSID)((LPBYTE)pelr + pelr->UserSidOffset);
@@ -1840,15 +1892,15 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
                               &cchDomain,
                               &peUse))
         {
-            StringCchCopyW(pszUser, MAX_PATH, szName);
+            StringCchCopyW(pszUser, cchUser, szName);
             Success = TRUE;
         }
         else if (ConvertSidToStringSidW(pCurrentSid, &StringSid))
         {
             /* Copy the string only if the user-provided buffer is big enough */
-            if (wcslen(StringSid) + 1 <= MAX_PATH) // + 1 for NULL-terminator
+            if (wcslen(StringSid) + 1 <= cchUser) // + 1 for NULL-terminator
             {
-                StringCchCopyW(pszUser, MAX_PATH, StringSid);
+                StringCchCopyW(pszUser, cchUser, StringSid);
                 Success = TRUE;
             }
             else
@@ -2190,15 +2242,19 @@ EnumEventsThread(IN LPVOID lpParameter)
             GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &time, NULL, szLocalTime, ARRAYSIZE(szLocalTime));
 
             /* Get the username that generated the event, and filter it */
-            lpszUsername = GetEventUserName(pEvlrTmp, &pLastSid, szUsername) ? szUsername : szNoUsername;
+            lpszUsername = GetEventUserName(pEvlrTmp, &pLastSid,
+                                            szUsername, _countof(szUsername))
+                            ? szUsername : szNoUsername;
 
             if (!FilterByString(EventLogFilter->Users, lpszUsername))
                 goto SkipEvent;
 
             // TODO: Filter by event ID and category
-            GetEventType(pEvlrTmp->EventType, szEventTypeText);
+            GetEventType(pEvlrTmp->EventType, szEventTypeText, _countof(szEventTypeText));
 
-            lpszCategoryName = GetEventCategory(EventLog->LogName, lpszSourceName, pEvlrTmp, szCategory) ? szCategory : szNoCategory;
+            lpszCategoryName = GetEventCategory(EventLog->LogName, lpszSourceName, pEvlrTmp,
+                                                szCategory, _countof(szCategory))
+                                ? szCategory : szNoCategory;
 
             StringCbPrintfW(szEventID, sizeof(szEventID), L"%u", (pEvlrTmp->EventID & 0xFFFF));
             StringCbPrintfW(szCategoryID, sizeof(szCategoryID), L"%u", pEvlrTmp->EventCategory);
@@ -2712,14 +2768,16 @@ MyRegisterClass(HINSTANCE hInstance)
 
 
 BOOL
-GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
-                        OUT PWCHAR lpModuleName, // TODO: Add IN DWORD BufLen
-                        OUT PDWORD pdwMessageID)
+GetDisplayNameFileAndID(
+    _In_ PCWSTR LogName,
+    _Out_writes_z_(cchName) PWSTR pModuleName,
+    _In_ SIZE_T cchName,
+    _Out_ PDWORD pdwMessageID)
 {
     BOOL Success = FALSE;
     LONG Result;
     HKEY hLogKey;
-    WCHAR *KeyPath;
+    PWSTR KeyPath;
     SIZE_T cbKeyPath;
     DWORD dwType, cbData;
     DWORD dwMessageID = 0;
@@ -2728,7 +2786,10 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
     /* Use a default value for the message ID */
     *pdwMessageID = 0;
 
-    cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
+    if (cchName == 0)
+        return FALSE;
+
+    cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(LogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
     if (!KeyPath)
     {
@@ -2737,7 +2798,7 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
     }
 
     StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
-    StringCbCatW(KeyPath, cbKeyPath, lpLogName);
+    StringCbCatW(KeyPath, cbKeyPath, LogName);
 
     Result = RegOpenKeyExW(hkMachine, KeyPath, 0, KEY_QUERY_VALUE, &hLogKey);
     HeapFree(GetProcessHeap(), 0, KeyPath);
@@ -2756,14 +2817,15 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
                               &cbData);
     if ((Result != ERROR_SUCCESS) || (dwType != REG_EXPAND_SZ && dwType != REG_SZ))
     {
-        szModuleName[0] = UNICODE_NULL;
+        *szModuleName = UNICODE_NULL;
     }
     else
     {
         /* NULL-terminate the string and expand it */
         szModuleName[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
-        GetExpandedFilePathName(lpComputerName, szModuleName, lpModuleName, ARRAYSIZE(szModuleName));
-        Success = TRUE;
+        Success =
+            (GetExpandedFilePathName(lpComputerName, szModuleName,
+                                     pModuleName, cchName) != 0 && *pModuleName);
     }
 
     /*
@@ -2940,8 +3002,8 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
         /* Get the display name for the event log */
         lpDisplayName = NULL;
 
-        ZeroMemory(szModuleName, sizeof(szModuleName));
-        if (GetDisplayNameFileAndID(LogName, szModuleName, &dwMessageID))
+        *szModuleName = UNICODE_NULL;
+        if (GetDisplayNameFileAndID(LogName, szModuleName, _countof(szModuleName), &dwMessageID))
         {
             /* Retrieve the message string without appending extra newlines */
             lpDisplayName =
@@ -3857,9 +3919,9 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     LPWSTR FileName;
 
     HKEY hLogKey;
-    WCHAR *KeyPath;
-    DWORD cbData;
+    PWSTR KeyPath;
     SIZE_T cbKeyPath;
+    DWORD cbData;
 
     if (EventLog->Permanent)
     {
@@ -3929,7 +3991,7 @@ Quit:
     if (FileName && *FileName)
     {
         /* Expand the file name. If the log file is on a remote computer, retrieve the network share form of the file name. */
-        GetExpandedFilePathName(EventLog->ComputerName, FileName, wszBuf, ARRAYSIZE(wszBuf));
+        GetExpandedFilePathName(EventLog->ComputerName, FileName, wszBuf, _countof(wszBuf));
         FileName = wszBuf;
     }
     else
@@ -4040,7 +4102,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     LONG Result;
     DWORD dwMaxSize = 0, dwRetention = 0;
     HKEY hLogKey;
-    WCHAR *KeyPath;
+    PWSTR KeyPath;
     SIZE_T cbKeyPath;
 
     if (!EventLog->Permanent)

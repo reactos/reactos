@@ -29,10 +29,12 @@ extern WCHAR szTitle[];
 extern HWND hwndListView;
 
 extern BOOL
-GetEventMessage(IN LPCWSTR KeyName,
-                IN LPCWSTR SourceName,
-                IN PEVENTLOGRECORD pevlr,
-                OUT PWCHAR EventText);
+GetEventMessage(
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR SourceName,
+    _In_ PEVENTLOGRECORD pevlr,
+    _Out_writes_z_(cchText) PWSTR EventText,
+    _In_ SIZE_T cchText);
 
 
 typedef struct _DETAILDATA
@@ -113,7 +115,8 @@ DisplayEvent(
     EnableDlgItem(hDlg, IDC_WORDSRADIO, bEventData);
 
     // FIXME: At the moment we support only one event log in the filter
-    GetEventMessage(EventLogFilter->EventLogs[0]->LogName, szSource, pevlr, szEventText);
+    GetEventMessage(EventLogFilter->EventLogs[0]->LogName, szSource, pevlr,
+                    szEventText, _countof(szEventText));
     SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, szEventText);
 
     DisplayEventData(hDlg, pDetailData);
