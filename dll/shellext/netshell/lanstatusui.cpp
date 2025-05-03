@@ -1069,9 +1069,9 @@ LANStatusDlg(
                         HWND hwndSheet = GetParent(pContext->hwndDlg);
                         if (hwndSheet)
                         {
-                           ShowWindow(hwndSheet, SW_RESTORE);
-                           SetForegroundWindow(hwndSheet);
-                           BringWindowToTop(hwndSheet);
+                            ShowWindow(hwndSheet, SW_RESTORE);
+                            SetForegroundWindow(hwndSheet);
+                            BringWindowToTop(hwndSheet);
                         }
                     }
                     else
