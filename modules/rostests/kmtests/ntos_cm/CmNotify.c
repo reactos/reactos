@@ -21,19 +21,19 @@ typedef struct _WORK_QUEUE_CONTEXT
     PKEVENT EventObject;
 } WORK_QUEUE_CONTEXT, *PWORK_QUEUE_CONTEXT;
 
-_Function_class_(KSTART_ROUTINE)
-VOID NTAPI ZwNotifyChangeKey_WatchThread(_In_ PVOID lpParameter)
+_Function_class_(KSTART_ROUTINE) VOID NTAPI ZwNotifyChangeKey_WatchThread(_In_ PVOID lpParameter)
 {
     NTSTATUS Status;
     PWATCH_THREAD_DATA WatchThreadData = (PWATCH_THREAD_DATA)lpParameter;
     IO_STATUS_BLOCK IoStatusBlock;
-    
-    Status = ZwNotifyChangeKey(WatchThreadData->KeyHandle, NULL, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
+
+    Status = ZwNotifyChangeKey(
+        WatchThreadData->KeyHandle, NULL, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0,
+        FALSE);
     WatchThreadData->Status = Status;
 }
 
-_Function_class_(WORKER_THREAD_ROUTINE)
-VOID NTAPI ZwNotifyChangeKey_ItemWorker(_In_ PVOID pParameter)
+_Function_class_(WORKER_THREAD_ROUTINE) VOID NTAPI ZwNotifyChangeKey_ItemWorker(_In_ PVOID pParameter)
 {
     PWORK_QUEUE_CONTEXT ctx = (PWORK_QUEUE_CONTEXT)pParameter;
 
@@ -45,7 +45,7 @@ START_TEST(ZwNotifyChangeKey)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
-    
+
     /* Key creation */
     HANDLE KeyHandle;
     UNICODE_STRING KeyName;
@@ -86,16 +86,18 @@ START_TEST(ZwNotifyChangeKey)
     Status = ZwOpenKey(&KeyHandle, KEY_SET_VALUE | KEY_NOTIFY | DELETE, &ObjectAttributes);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    /* 
-     * Test synchronous mode, single registry key, not watching subtree 
+    /*
+     * Test synchronous mode, single registry key, not watching subtree
      */
-    
+
     /* Create a thread */
     WatchThreadData.KeyHandle = KeyHandle;
-    Status = PsCreateSystemThread(&WatchThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, ZwNotifyChangeKey_WatchThread, &WatchThreadData);
+    Status = PsCreateSystemThread(
+        &WatchThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, ZwNotifyChangeKey_WatchThread, &WatchThreadData);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    Status = ObReferenceObjectByHandle(WatchThreadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (PVOID*)&WatchThreadObject, NULL);
+    Status = ObReferenceObjectByHandle(
+        WatchThreadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (PVOID *)&WatchThreadObject, NULL);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Verify the thread is still running */
@@ -128,16 +130,17 @@ START_TEST(ZwNotifyChangeKey)
 
     Status = ZwOpenKey(&KeyHandle, KEY_SET_VALUE | KEY_NOTIFY | DELETE, &ObjectAttributes);
     ok_ntstatus(Status, STATUS_SUCCESS);
-    
+
     /* Create event */
     Status = ZwCreateEvent(&EventHandle, EVENT_ALL_ACCESS, NULL, NotificationEvent, FALSE);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    Status = ObReferenceObjectByHandle(EventHandle, EVENT_ALL_ACCESS, NULL, KernelMode, (PVOID*)&EventObject, NULL);
+    Status = ObReferenceObjectByHandle(EventHandle, EVENT_ALL_ACCESS, NULL, KernelMode, (PVOID *)&EventObject, NULL);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Start watching for changes */
-    Status = ZwNotifyChangeKey(KeyHandle, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
+    Status = ZwNotifyChangeKey(
+        KeyHandle, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
 
     /* Check event state */
@@ -175,17 +178,19 @@ START_TEST(ZwNotifyChangeKey)
     Status = ZwCreateEvent(&EventHandle, EVENT_ALL_ACCESS, NULL, NotificationEvent, FALSE);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    Status = ObReferenceObjectByHandle(EventHandle, EVENT_ALL_ACCESS, NULL, KernelMode, (PVOID*)&EventObject, NULL);
+    Status = ObReferenceObjectByHandle(EventHandle, EVENT_ALL_ACCESS, NULL, KernelMode, (PVOID *)&EventObject, NULL);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     WorkQueueContext.EventHandle = EventHandle;
-    WorkQueueContext.EventObject= EventObject;
-    
+    WorkQueueContext.EventObject = EventObject;
+
     /* Initialize Work Queue Item */
     ExInitializeWorkItem(&WorkQueueItem, ZwNotifyChangeKey_ItemWorker, &WorkQueueContext);
 
     /* Listen for notification */
-    Status = ZwNotifyChangeKey(KeyHandle, NULL, (PVOID)&WorkQueueItem, (PVOID)DelayedWorkQueue, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
+    Status = ZwNotifyChangeKey(
+        KeyHandle, NULL, (PVOID)&WorkQueueItem, (PVOID)DelayedWorkQueue, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET,
+        TRUE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
 
     /* Check event state */
