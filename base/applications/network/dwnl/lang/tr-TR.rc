@@ -1,6 +1,9 @@
-/* Translator:
-2025 Efe Gürel (efegurel) (info [dot] efegurel [at] gmail [dot] com) 
-*/
+/*
+ * PROJECT:     ReactOS File Download Utility
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2025 Efe Gürel <info.efegurel@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
