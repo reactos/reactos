@@ -172,6 +172,7 @@ BEGIN
     IDS_NET_DELETE "Ștergere"
     IDS_NET_RENAME "Redenumire"
     IDS_NET_PROPERTIES "Proprietăți"
+    IDS_NET_OPEN_CONNECTIONS "Deschide Conexiuni de rețea"
     IDS_FORMAT_BIT "%u biți/s"
     IDS_FORMAT_KBIT "%u kbiți/s"
     IDS_FORMAT_MBIT "%u Mbiți/s"

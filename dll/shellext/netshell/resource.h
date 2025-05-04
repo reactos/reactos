@@ -51,6 +51,17 @@
 
 #define IDC_CLOSE 1300
 
+/* Network right click menu defines */
+#define IDM_NETICON_CONTEXT_BASE        1400
+#define IDM_NETICON_ENABLE              (IDM_NETICON_CONTEXT_BASE + 0)
+#define IDM_NETICON_DISABLE             (IDM_NETICON_CONTEXT_BASE + 1)
+#define IDM_NETICON_STATUS              (IDM_NETICON_CONTEXT_BASE + 2)
+#define IDM_NETICON_REPAIR              (IDM_NETICON_CONTEXT_BASE + 3)
+#define IDM_NETICON_OPEN_CONNECTIONS    (IDM_NETICON_CONTEXT_BASE + 5)
+#define IDM_NETICON_PROPERTIES          (IDM_NETICON_CONTEXT_BASE + 6)
+
+#define IDS_NET_OPEN_CONNECTIONS    10108
+
 /* Network setup wizard pages */
 #define IDD_NETWORKINITPAGE      3400
 #define IDC_INSTALL_PROGRESS     3401

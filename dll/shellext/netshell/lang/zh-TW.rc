@@ -171,6 +171,7 @@ BEGIN
     IDS_NET_DELETE "刪除"
     IDS_NET_RENAME "重新命名"
     IDS_NET_PROPERTIES "內容"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u Bit／秒"
     IDS_FORMAT_KBIT "%u KBit／秒"
     IDS_FORMAT_MBIT "%u MBit／秒"

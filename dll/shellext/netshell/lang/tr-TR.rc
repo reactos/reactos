@@ -165,6 +165,7 @@ BEGIN
     IDS_NET_DELETE "Sil"
     IDS_NET_RENAME "Yeniden Adlandır"
     IDS_NET_PROPERTIES "Özellikler"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u Bit/s"
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"
