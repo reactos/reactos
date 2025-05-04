@@ -8,8 +8,6 @@
 #include "precomp.h"
 
 #include <winsock.h>
-#include <shellapi.h>
-#include <shellutils.h>
 
 #define NETTIMERID 0xFABC
 
