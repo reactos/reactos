@@ -355,10 +355,10 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
         }
         else if (iHitTestResult == -1)
         {
-            // TB_HITTEST would return -1 in 2 states,
-            // 1. the mouse is outside the toolbar
-            // 2. the mouse is over the first item, and that item is a separator
-            // Confirm the second scenario by checking first item's rect
+            // TB_HITTEST would return -1 in two cases:
+            // 1. the mouse is outside the toolbar;
+            // 2. the mouse is over the first item, and that item is a separator.
+            // Confirm the second scenario by checking first item's rect.
             RECT rc;
             SendMessageW(child, TB_GETITEMRECT, 1, (LPARAM)&rc);
             if (PtInRect(&rc, pt))
