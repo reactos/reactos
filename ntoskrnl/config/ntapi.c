@@ -1452,36 +1452,83 @@ NtLockRegistryKey(IN HANDLE KeyHandle)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/**
+ * @brief
+ * NtNotifyChangeMultipleKeys can notify the caller about a change in a registry key
+ * 
+ * @param[in] MasterKeyHandle
+ * A handle to a registry key to watch for changes
+ * 
+ * @param[in] Count
+ * Count of objects in _SubordinateObjects_ array
+ * 
+ * @param[in] SubordinateObjects
+ * An array of additional registry key object names to watch alongside the _MasterKeyHandle_.
+ * The array can't contain more than 1 object and the object can't be in the same hive as the _MasterKeyHandle_.
+ * 
+ * @param[in] Event
+ * A handle to an event object to signal when a change detected.
+ * 
+ * @param[in] ApcRoutine
+ * An APC routine to queue when a change detected. Can be NULL.
+ * 
+ * @param[in] ApcContext
+ * The parameter to be passed to _ApcRoutine_.
+ * 
+ * @param[out] IoStatusBlock
+ * An IO_STATUS_BLOCK to report the notification session's status.
+ * This contains number of bytes written to the buffer and operation status.
+ * This parameter is required.
+ * 
+ * @param[in] CompletionFilter
+ * Filter the notification types you want to recieve.
+ * Can be REG_NOTIFY_CHANGE_NAME, REG_NOTIFY_CHANGE_ATTRIBUTES, REG_NOTIFY_CHANGE_LAST_SET and REG_NOTIFY_CHANGE_SECURITY.
+ * This parameter is only used on the first call to the NtNotifyChangeMultipleKeys and new calls use the value previously provided.
+ * You need to close your handle to the _MasterKeyHandle_ and open a new one if you want to change this.
+ * 
+ * @param[in] WatchTree
+ * Set to TRUE to watch the whole subtree of _MasterKeyHandle_ or _SubordinateObjects_.
+ * This parameter is only used on the first call to the NtNotifyChangeMultipleKeys and new calls use the value previously provided.
+ * You need to close your handle to the _MasterKeyHandle_ and open a new one if you want to change this.
+ * 
+ * @param[out] Buffer
+ * A buffer to return the name of changed registry key. Currently unimplemented and can be NULL.
+ * 
+ * @param[in] Length
+ * The size of the _Buffer_.
+ * 
+ * @param[in] Asynchronous
+ * TRUE to call in asynchronous mode, FALSE to not. 
+ * If TRUE, one of _Event_ parameter or _ApcRoutine_ should be provided, 
+ * then function immediately returns STATUS_PENDING and reports the change using these parameters.
+ * The final status can be retrived from _IoStatusBlock_ parameter.
+ * If FALSE, the function blocks current thread until it detects a change.
+ * 
+ * @return
+ * STATUS_SUCCESS if the name of changed key is written in Buffer, STATUS_NOTIFY_ENUM_DIR if not, or an error code.
+ */
 NTSTATUS
 NTAPI
-NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
-                           IN ULONG Count,
-                           IN POBJECT_ATTRIBUTES SlaveObjects,
-                           IN HANDLE Event,
-                           IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-                           IN PVOID ApcContext OPTIONAL,
-                           OUT PIO_STATUS_BLOCK IoStatusBlock,
-                           IN ULONG CompletionFilter,
-                           IN BOOLEAN WatchTree,
-                           OUT PVOID Buffer,
-                           IN ULONG Length,
-                           IN BOOLEAN Asynchronous)
+NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
+                           _In_opt_ ULONG Count,
+                           _In_reads_opt_(Count) OBJECT_ATTRIBUTES SubordinateObjects[],
+                           _In_opt_ HANDLE Event,
+                           _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+                           _In_opt_ PVOID ApcContext,
+                           _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+                           _In_ ULONG CompletionFilter,
+                           _In_ BOOLEAN WatchTree,
+                           _Out_writes_bytes_opt_(Length) PVOID Buffer,
+                           _In_ ULONG Length,
+                           _In_ BOOLEAN Asynchronous)
 {
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-
-    /* Registry Key */
     PCM_KEY_BODY KeyObject = NULL;
-
-    /* Notification state blocks */
     PCM_NOTIFY_BLOCK NotifyBlock = NULL;
     PCM_POST_BLOCK PostBlock = NULL;
-
-    /* Event Objects */
     HANDLE LocalEventHandle = NULL;
     PKEVENT LocalEventObject = NULL;
-
-    /* Subordinate objects */
     OBJECT_ATTRIBUTES* LocalSubObjects = NULL;
     UNICODE_STRING* SubNames = NULL;
     PCM_KEY_BODY* LocalSubObjectsKeyBody = NULL;
