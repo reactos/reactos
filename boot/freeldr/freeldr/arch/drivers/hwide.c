@@ -127,6 +127,7 @@ AtapWaitForIdle(
 }
 
 static
+DECLSPEC_NOINLINE
 VOID
 AtapSendCdb(
     _In_ PHW_DEVICE_UNIT DeviceUnit,
