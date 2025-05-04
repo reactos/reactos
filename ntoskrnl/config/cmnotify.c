@@ -73,7 +73,7 @@ CmpPostBlockFreeSubordinates(_In_ ULONG Count,
     }
 
     /* At last free the array itself */
-    ExFreePoolWithTag(Subordinates);
+    ExFreePoolWithTag(Subordinates, TAG_CM);
 }
 
 /**
