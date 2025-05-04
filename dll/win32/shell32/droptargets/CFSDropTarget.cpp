@@ -544,7 +544,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             bLinking = TRUE;
     }
 
-    if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
+    if (SUCCEEDED(hr = pDataObject->QueryGetData(&fmt)))
     {
         hr = pDataObject->GetData(&fmt, &medium);
         TRACE("CFSTR_SHELLIDLIST\n");
@@ -622,7 +622,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     // If the target is a virtual item, we ask for the friendly name because SHGDN_FORPARSING will return a GUID.
                     BOOL UseParsing = (att & (SFGAO_FILESYSTEM | SFGAO_FOLDER)) == SFGAO_FILESYSTEM;
                     DWORD ShgdnFor = UseParsing ? SHGDN_FORPARSING : SHGDN_FOREDITING;
-                    hr = Shell_DisplayNameOf(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
+                    hr = DisplayNameOfW(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
                 }
                 if (FAILED_UNEXPECTEDLY(hr))
                 {
@@ -698,11 +698,11 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
         _ILFreeaPidl(apidl, lpcida->cidl);
         ReleaseStgMedium(&medium);
     }
-    else if (SUCCEEDED(pDataObject->QueryGetData(&fmt2)))
+    else if (SUCCEEDED(hr = pDataObject->QueryGetData(&fmt2)))
     {
         FORMATETC fmt2;
         InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
-        if (SUCCEEDED(pDataObject->GetData(&fmt2, &medium)) /* && SUCCEEDED(pDataObject->GetData(&fmt2, &medium))*/)
+        if (SUCCEEDED(hr = pDataObject->GetData(&fmt2, &medium)) /* && SUCCEEDED(pDataObject->GetData(&fmt2, &medium))*/)
         {
             WCHAR wszTargetPath[MAX_PATH + 1];
             LPWSTR pszSrcList;

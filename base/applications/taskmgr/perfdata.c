@@ -176,6 +176,7 @@ void PerfDataRefresh(void)
     PSID                                       ProcessUser;
     ULONG                                      Buffer[64]; /* must be 4 bytes aligned! */
     ULONG                                      cwcUserName;
+    BOOL                                       bIsWow64;
 
     /* Get new system time */
     status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), NULL);
@@ -387,6 +388,11 @@ ReadProcOwner:
 
                     pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
                     pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+                }
+
+                if (IsWow64Process(hProcess, &bIsWow64) && bIsWow64)
+                {
+                    wcscat(pPerfData[Idx].ImageName, L" *32");
                 }
 
                 GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);

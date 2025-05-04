@@ -27,6 +27,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
+#ifndef STARTF_SHELLPRIVATE
+#define STARTF_SHELLPRIVATE 0x400 // From kernel32.h
+#endif
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
@@ -511,6 +514,27 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
 
     if (psei->fMask & SEE_MASK_HASLINKNAME)
         startup.dwFlags |= STARTF_TITLEISLINKNAME;
+
+    if (psei->fMask & SEE_MASK_HOTKEY)
+    {
+        startup.hStdInput = UlongToHandle(psei->dwHotKey);
+        startup.dwFlags |= STARTF_USEHOTKEY;
+    }
+
+    if (psei->fMask & SEE_MASK_ICON) // hIcon has higher precedence than hMonitor
+    {
+        startup.hStdOutput = psei->hIcon;
+        startup.dwFlags |= STARTF_SHELLPRIVATE;
+    }
+    else if ((psei->fMask & SEE_MASK_HMONITOR) || psei->hwnd)
+    {
+        if (psei->fMask & SEE_MASK_HMONITOR)
+            startup.hStdOutput = psei->hMonitor;
+        else if (psei->hwnd)
+            startup.hStdOutput = MonitorFromWindow(psei->hwnd, MONITOR_DEFAULTTONEAREST);
+        if (startup.hStdOutput)
+            startup.dwFlags |= STARTF_SHELLPRIVATE;
+    }
 
     if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
                        lpDirectory, &startup, &info))
@@ -1942,9 +1966,7 @@ static WCHAR *expand_environment( const WCHAR *str )
 static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 {
     static const DWORD unsupportedFlags =
-        SEE_MASK_ICON         | SEE_MASK_HOTKEY |
-        SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT |
-        SEE_MASK_ASYNCOK      | SEE_MASK_HMONITOR;
+        SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT | SEE_MASK_ASYNCOK;
 
     DWORD len;
     UINT_PTR retval = SE_ERR_NOASSOC;
@@ -2656,7 +2678,7 @@ HRESULT WINAPI ShellExecCmdLine(
     DWORD dwSeclFlags)
 {
     SHELLEXECUTEINFOW info;
-    DWORD dwSize, dwError, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
+    DWORD dwSize, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
     LPCWSTR pszVerb = NULL;
     WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
     HRESULT hr;
@@ -2765,21 +2787,9 @@ HRESULT WINAPI ShellExecCmdLine(
     info.lpParameters = (pchParams && *pchParams) ? pchParams : NULL;
     info.lpDirectory = pwszStartDir;
     info.nShow = nShow;
-    if (ShellExecuteExW(&info))
-    {
-        if (info.lpIDList)
-            CoTaskMemFree(info.lpIDList);
-
-        SHFree(lpCommand);
-
-        return S_OK;
-    }
-
-    dwError = GetLastError();
-
+    UINT error = ShellExecuteExW(&info) ? ERROR_SUCCESS : GetLastError();
     SHFree(lpCommand);
-
-    return HRESULT_FROM_WIN32(dwError);
+    return HRESULT_FROM_WIN32(error);
 }
 
 /*************************************************************************
@@ -2976,6 +2986,127 @@ RealShellExecuteW(
                                0);
 }
 
+/*************************************************************************
+ *  PathProcessCommandW [Internal]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathprocesscommand
+ * @see ./wine/shellpath.c
+ */
+EXTERN_C LONG
+PathProcessCommandW(
+    _In_ PCWSTR pszSrc,
+    _Out_writes_opt_(dwBuffSize) PWSTR pszDest,
+    _In_ INT cchDest,
+    _In_ DWORD dwFlags)
+{
+    TRACE("%s, %p, %d, 0x%X\n", wine_dbgstr_w(pszSrc), pszDest, cchDest, dwFlags);
+
+    if (!pszSrc)
+        return -1;
+
+    CStringW szPath;
+    PCWSTR pchArg = NULL;
+
+    if (*pszSrc == L'"') // Quoted?
+    {
+        ++pszSrc;
+
+        PCWSTR pch = wcschr(pszSrc, L'"');
+        if (pch)
+        {
+            szPath.SetString(pszSrc, pch - pszSrc);
+            pchArg = pch + 1;
+        }
+        else
+        {
+            szPath = pszSrc;
+        }
+
+        if ((dwFlags & PPCF_FORCEQUALIFY) || PathIsRelativeW(szPath))
+        {
+            BOOL ret = PathResolveW(szPath.GetBuffer(MAX_PATH), NULL, PRF_TRYPROGRAMEXTENSIONS);
+            szPath.ReleaseBuffer();
+            if (!ret)
+                return -1;
+        }
+    }
+    else // Not quoted?
+    {
+        BOOL resolved = FALSE;
+        BOOL resolveRelative = PathIsRelativeW(pszSrc) || (dwFlags & PPCF_FORCEQUALIFY);
+        INT cchPath = 0;
+
+        for (INT ich = 0; ; ++ich)
+        {
+            szPath += pszSrc[ich];
+
+            if (pszSrc[ich] && pszSrc[ich] != L' ')
+                continue;
+
+            szPath = szPath.Left(ich);
+
+            if (resolveRelative &&
+                !PathResolveW(szPath.GetBuffer(MAX_PATH), NULL, PRF_TRYPROGRAMEXTENSIONS))
+            {
+                szPath.ReleaseBuffer();
+                szPath += pszSrc[ich];
+            }
+            else
+            {
+                szPath.ReleaseBuffer();
+
+                DWORD attrs = GetFileAttributesW(szPath);
+                if (attrs != INVALID_FILE_ATTRIBUTES &&
+                    (!(attrs & FILE_ATTRIBUTE_DIRECTORY) || !(dwFlags & PPCF_NODIRECTORIES)))
+                {
+                    resolved = TRUE;
+                    pchArg = pszSrc + ich;
+
+                    if (!(dwFlags & PPCF_LONGESTPOSSIBLE))
+                        break;
+
+                    cchPath = ich;
+                    break;
+                }
+                else if (!resolveRelative)
+                {
+                    szPath += pszSrc[ich];
+                }
+            }
+
+            if (!szPath[ich])
+            {
+                szPath.ReleaseBuffer(); // Remove excessive '\0'
+                break;
+            }
+        }
+
+        if (!resolved)
+            return -1;
+
+        if (cchPath && (dwFlags & PPCF_LONGESTPOSSIBLE))
+        {
+            szPath = szPath.Left(cchPath);
+            pchArg = pszSrc + cchPath;
+        }
+    }
+
+    BOOL needsQuoting = (dwFlags & PPCF_ADDQUOTES) && wcschr(szPath, L' ');
+    CStringW result = needsQuoting ? (L"\"" + szPath + L"\"") : szPath;
+
+    if (pchArg && (dwFlags & PPCF_ADDARGUMENTS))
+        result += pchArg;
+
+    LONG requiredSize = result.GetLength() + 1;
+    if (!pszDest)
+        return requiredSize;
+
+    if (requiredSize > cchDest || StringCchCopyW(pszDest, cchDest, result) != S_OK)
+        return -1;
+
+    return requiredSize;
+}
+
 // The common helper of ShellExec_RunDLLA and ShellExec_RunDLLW
 static VOID
 ShellExec_RunDLL_Helper(
@@ -3003,7 +3134,8 @@ ShellExec_RunDLL_Helper(
     }
 
     WCHAR szPath[2 * MAX_PATH];
-    if (PathProcessCommandAW(pszCmdLine, szPath, _countof(szPath), L'C') == -1)
+    DWORD dwFlags = PPCF_FORCEQUALIFY | PPCF_INCLUDEARGS | PPCF_ADDQUOTES;
+    if (PathProcessCommandW(pszCmdLine, szPath, _countof(szPath), dwFlags) == -1)
         StrCpyNW(szPath, pszCmdLine, _countof(szPath));
 
     // Split arguments from the path

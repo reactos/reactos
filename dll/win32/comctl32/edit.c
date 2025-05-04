@@ -2715,6 +2715,9 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
     if (!hloc)
         return;
 
+#ifdef __REACTOS__
+    if (es->text)
+#endif
     EDIT_UnlockBuffer(es, TRUE);
 
     es->hloc32W = hloc;

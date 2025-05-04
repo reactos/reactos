@@ -22,7 +22,7 @@ BEGIN
     PUSHBUTTON "&Dodaj...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "&Usuń", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "Właściw&ości", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Wymagaj nazwy użytkownika i hasła przy starcie systemu.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14, WS_DISABLED
+    AUTOCHECKBOX "Wymagaj nazwy użytkownika i hasła przy starcie systemu.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14
     PUSHBUTTON "Resetuj hasło", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 

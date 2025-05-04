@@ -20,6 +20,8 @@
 
 #include "precomp.h"
 #include <commoncontrols.h>
+#include <regstr.h>
+#include <shlwapi_undoc.h>
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
@@ -1476,25 +1478,60 @@ public:
         ::SendMessage(hwndTray, TWM_PULSE, bDelete, (LPARAM)hwndActive);
     }
 
+    static BOOL InvokeRegistryAppKeyCommand(UINT uAppCmd)
+    {
+        BOOL bResult = FALSE;
+        WCHAR szBuf[MAX_PATH * 2];
+        wsprintfW(szBuf, L"%s\\AppKey\\%u", REGSTR_PATH_EXPLORER, uAppCmd);
+        HUSKEY hKey;
+        if (SHRegOpenUSKeyW(szBuf, KEY_READ, NULL, &hKey, FALSE) != ERROR_SUCCESS)
+            return bResult;
+
+        DWORD cb = sizeof(szBuf);
+        if (!bResult && SHRegQueryUSValueW(hKey, L"ShellExecute", NULL, szBuf, &cb, FALSE, NULL, 0) == ERROR_SUCCESS)
+        {
+            bResult = TRUE;
+        }
+        cb = sizeof(szBuf);
+        if (!bResult && SHRegQueryUSValueW(hKey, L"Association", NULL, szBuf, &cb, FALSE, NULL, 0) == ERROR_SUCCESS)
+        {
+            bResult = TRUE;
+            cb = _countof(szBuf);
+            if (AssocQueryString(ASSOCF_NOTRUNCATE, ASSOCSTR_EXECUTABLE, szBuf, NULL, szBuf, &cb) != S_OK)
+                *szBuf = UNICODE_NULL;
+        }
+        cb = sizeof(szBuf);
+        if (!bResult && SHRegQueryUSValueW(hKey, L"RegisteredApp", NULL, szBuf, &cb, FALSE, NULL, 0) == ERROR_SUCCESS)
+        {
+            bResult = TRUE;
+            SHRunIndirectRegClientCommand(NULL, szBuf);
+            *szBuf = UNICODE_NULL; // Don't execute again
+        }
+        SHRegCloseUSKey(hKey);
+
+        // Note: Tweak UI uses an empty string for its "Do nothing" option.
+        if (bResult && *szBuf)
+            ShellExec_RunDLLW(NULL, NULL, szBuf, SW_SHOW);
+        return bResult;
+    }
+
     BOOL HandleAppCommand(IN WPARAM wParam, IN LPARAM lParam)
     {
-        BOOL Ret = FALSE;
-
-        switch (GET_APPCOMMAND_LPARAM(lParam))
+        const UINT uAppCmd = GET_APPCOMMAND_LPARAM(lParam);
+        if (InvokeRegistryAppKeyCommand(uAppCmd))
+            return TRUE;
+        switch (uAppCmd)
         {
-        case APPCOMMAND_BROWSER_SEARCH:
-            Ret = SHFindFiles(NULL,
-                NULL);
-            break;
-
-        case APPCOMMAND_BROWSER_HOME:
-        case APPCOMMAND_LAUNCH_MAIL:
-        default:
-            TRACE("Shell app command %d unhandled!\n", (INT) GET_APPCOMMAND_LPARAM(lParam));
-            break;
+            case APPCOMMAND_VOLUME_MUTE:
+            case APPCOMMAND_VOLUME_DOWN:
+            case APPCOMMAND_VOLUME_UP:
+                // TODO: Try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to mixer.
+                FIXME("Call the mixer API to change the global volume\n");
+                return TRUE;
+            case APPCOMMAND_BROWSER_SEARCH:
+                return SHFindFiles(NULL, NULL);
         }
-
-        return Ret;
+        return FALSE;
     }
 
     LRESULT OnShellHook(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1513,7 +1550,7 @@ public:
         switch ((INT) wParam)
         {
         case HSHELL_APPCOMMAND:
-            Ret = HandleAppCommand(wParam, lParam);
+            Ret = HandleAppCommand(0, lParam);
             break;
 
         case HSHELL_WINDOWCREATED:

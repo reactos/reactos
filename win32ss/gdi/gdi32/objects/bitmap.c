@@ -1019,8 +1019,7 @@ SetDIBitsToDevice(
 
     if (pConvertedInfo->bmiHeader.biHeight < 0)
     {
-        if (pConvertedInfo->bmiHeader.biHeight < -MaxSourceHeight || 
-            (YDest >= 0 && src_y < -ScanLines))
+        if (pConvertedInfo->bmiHeader.biHeight < -MaxSourceHeight || YDest >= 0)
         {
             LinesCopied = ScanLines + src_y;
         }

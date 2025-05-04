@@ -3,14 +3,12 @@ remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D__ROS_LONG64__
     -D_WINE
     -D_CRYPT32_
     -Dstrncasecmp=_strnicmp
 )
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -60,3 +58,4 @@ add_delay_importlibs(crypt32 cryptnet)
 add_importlibs(crypt32 bcrypt user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
 add_pch(crypt32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET crypt32 DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(crypt32) # CORE-5743: No ARRAY_SIZE macro

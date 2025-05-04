@@ -22,26 +22,27 @@
 
 /* FUNCTIONS ****************************************************************/
 
+#define MAKEINTRESOURCE(i)  ((ULONG_PTR)(USHORT)(i))
+#define RT_VERSION          MAKEINTRESOURCE(16) // See psdk/winuser.h
+#define VS_VERSION_INFO     1                   // See psdk/verrsrc.h
+#define VS_FILE_INFO        RT_VERSION
+
 NTSTATUS
 NtGetVersionResource(
     IN PVOID BaseAddress,
     OUT PVOID* Resource,
     OUT PULONG ResourceSize OPTIONAL)
 {
-// #define RT_VERSION MAKEINTRESOURCE(16)  // See winuser.h
-#define VS_VERSION_INFO         1       // See psdk/verrsrc.h
-#define VS_FILE_INFO            RT_VERSION
-
     NTSTATUS Status;
     LDR_RESOURCE_INFO ResourceInfo;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     PVOID Data = NULL;
     ULONG Size = 0;
 
-    /* Try to find the resource */
-    ResourceInfo.Type = 16; // RT_VERSION;
-    ResourceInfo.Name = VS_VERSION_INFO; // MAKEINTRESOURCEW(VS_VERSION_INFO);
-    ResourceInfo.Language = 0; // Don't care about the language
+    /* Try to find the resource (language-neutral) */
+    ResourceInfo.Type = RT_VERSION;
+    ResourceInfo.Name = VS_VERSION_INFO;
+    ResourceInfo.Language = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 
     Status = LdrFindResource_U(BaseAddress,
                                &ResourceInfo,

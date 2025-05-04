@@ -1,19 +1,19 @@
-/***************************************************************************/
-/*                                                                         */
-/*  cidgload.c                                                             */
-/*                                                                         */
-/*    CID-keyed Type1 Glyph Loader (body).                                 */
-/*                                                                         */
-/*  Copyright 1996-2018 by                                                 */
-/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
-/*                                                                         */
-/*  This file is part of the FreeType project, and may only be used,       */
-/*  modified, and distributed under the terms of the FreeType project      */
-/*  license, LICENSE.TXT.  By continuing to use, modify, or distribute     */
-/*  this file you indicate that you have read the license and              */
-/*  understand and accept it fully.                                        */
-/*                                                                         */
-/***************************************************************************/
+/****************************************************************************
+ *
+ * cidgload.c
+ *
+ *   CID-keyed Type1 Glyph Loader (body).
+ *
+ * Copyright (C) 1996-2019 by
+ * David Turner, Robert Wilhelm, and Werner Lemberg.
+ *
+ * This file is part of the FreeType project, and may only be used,
+ * modified, and distributed under the terms of the FreeType project
+ * license, LICENSE.TXT.  By continuing to use, modify, or distribute
+ * this file you indicate that you have read the license and
+ * understand and accept it fully.
+ *
+ */
 
 
 #include <ft2build.h>
@@ -31,14 +31,14 @@
 #include "ciderrs.h"
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
-  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
-  /* messages during execution.                                            */
-  /*                                                                       */
+  /**************************************************************************
+   *
+   * The macro FT_COMPONENT is used in trace mode.  It is an implicit
+   * parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log
+   * messages during execution.
+   */
 #undef  FT_COMPONENT
-#define FT_COMPONENT  trace_cidgload
+#define FT_COMPONENT  cidgload
 
 
   FT_CALLBACK_DEF( FT_Error )
@@ -286,7 +286,16 @@
                                 FT_Int*   max_advance )
   {
     FT_Error       error;
+#ifdef __REACTOS__
+    T1_DecoderRec *decoder_allocated = malloc(sizeof(*decoder_allocated));
+    if (!decoder_allocated)
+      return FT_THROW( Out_Of_Memory );
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder_allocated)
+    {
+#else
     T1_DecoderRec  decoder;
+#endif
     FT_Int         glyph_index;
 
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
@@ -304,7 +313,14 @@
                                            0, /* hinting == 0 */
                                            cid_load_glyph );
     if ( error )
+#ifdef __REACTOS__
+    {
+        free(decoder_allocated);
+        return error;
+    }
+#else
       return error;
+#endif
 
     /* TODO: initialize decoder.len_buildchar and decoder.buildchar */
     /*       if we ever support CID-keyed multiple master fonts     */
@@ -326,6 +342,11 @@
 
     psaux->t1_decoder_funcs->done( &decoder );
 
+#ifdef __REACTOS__
+    free(decoder_allocated);
+#undef decoder
+    }
+#endif
     return FT_Err_Ok;
   }
 
@@ -342,10 +363,10 @@
     CID_GlyphSlot  glyph = (CID_GlyphSlot)cidglyph;
     FT_Error       error;
 #ifdef __REACTOS__
-    T1_DecoderRec *decoder = malloc(sizeof(T1_DecoderRec));
-    if (!decoder) return FT_Err_Out_Of_Memory;
+    T1_DecoderRec *decoder_allocated = malloc(sizeof(*decoder_allocated));
+    if (!decoder_allocated) return FT_Err_Out_Of_Memory;
 /* Ugly but it allows us to reduce the diff */
-#define decoder (*decoder)
+#define decoder (*decoder_allocated)
     {
 #else
     T1_DecoderRec  decoder;
@@ -401,8 +422,7 @@
     must_finish_decoder = TRUE;
 
     /* set up the decoder */
-    decoder.builder.no_recurse = FT_BOOL(
-      ( ( load_flags & FT_LOAD_NO_RECURSE ) != 0 ) );
+    decoder.builder.no_recurse = FT_BOOL( load_flags & FT_LOAD_NO_RECURSE );
 
     error = cid_load_glyph( &decoder, glyph_index );
     if ( error )
@@ -533,7 +553,7 @@
       psaux->t1_decoder_funcs->done( &decoder );
 
 #ifdef __REACTOS__
-    free(&decoder);
+    free(decoder_allocated);
 #undef decoder
     }
 #endif

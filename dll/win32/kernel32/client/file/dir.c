@@ -919,8 +919,8 @@ RemoveDirectoryW(IN LPCWSTR lpPathName)
         return FALSE;
     }
 
-    RtlCopyMemory(&PathName.Buffer, lpPathName, PathName.Length);
-    if (PathName.Buffer[PathName.Length / sizeof(WCHAR)] != L'\\')
+    RtlCopyMemory(PathName.Buffer, lpPathName, PathName.Length);
+    if (PathName.Buffer[(PathName.Length / sizeof(WCHAR)) - 1] != L'\\')
     {
         PathName.Buffer[PathName.Length / sizeof(WCHAR)] = L'\\';
         PathName.Buffer[(PathName.Length / sizeof(WCHAR)) + 1] = UNICODE_NULL;

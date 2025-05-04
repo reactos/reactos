@@ -2500,10 +2500,10 @@ NtGdiExtTextOutW(
     _In_ INT x,
     _In_ INT y,
     _In_ UINT flOpts,
-    _In_opt_ LPRECT prcl,
-    _In_reads_opt_(cwc) LPWSTR pwsz,
-    _In_range_(0, 0xffff) INT cwc,
-    _In_reads_opt_(_Inexpressible_(cwc)) LPINT pdx,
+    _In_opt_ LPCRECT prcl,
+    _In_reads_opt_(cwc) LPCWSTR pwsz,
+    _In_range_(0, 0xffff) UINT cwc,
+    _In_reads_opt_(_Inexpressible_(cwc)) const INT *pdx,
     _In_ DWORD dwCodePage);
 
 __kernel_entry

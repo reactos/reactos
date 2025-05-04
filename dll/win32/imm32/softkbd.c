@@ -169,7 +169,7 @@ T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
     HFONT hFont;
     HGDIOBJ hFontOld;
     HDC hDC;
-#ifndef NDEBUG
+#if DBG
     WCHAR szFace[LF_FACESIZE];
 #endif
 
@@ -190,9 +190,9 @@ T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
     hDC = GetDC(NULL);
     hFontOld = SelectObject(hDC, hFont);
 
-#ifndef NDEBUG
+#if DBG
     GetTextFaceW(hDC, _countof(szFace), szFace);
-    TRACE("szFace: %s\n", debugstr_w(szFace));
+    TRACE("szFace: %S\n", szFace);
 #endif
 
     GetTextMetricsW(hDC, ptm);

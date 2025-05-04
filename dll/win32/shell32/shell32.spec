@@ -466,3 +466,4 @@
 754 stub -noname SHLimitInputEditWithFlags
 755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)
 756 stub -noname DeleteFileThumbnail
+757 stdcall -version=0x600+ DisplayNameOfW(ptr ptr long ptr long)

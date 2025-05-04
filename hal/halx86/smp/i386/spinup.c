@@ -16,6 +16,8 @@
 
 /* GLOBALS *******************************************************************/
 
+extern BOOLEAN HalpOnlyBootProcessor;
+
 extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
 extern PHYSICAL_ADDRESS HalpLowStubPhysicalAddress;
 extern PVOID HalpLowStub;
@@ -88,6 +90,11 @@ HalStartNextProcessor(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
     _In_ PKPROCESSOR_STATE ProcessorState)
 {
+    /* Bail out if we only use the boot CPU */
+    if (HalpOnlyBootProcessor)
+        return FALSE;
+
+    /* Bail out if we have started all available CPUs */
     if (HalpStartedProcessorCount == HalpApicInfoTable.ProcessorCount)
         return FALSE;
 

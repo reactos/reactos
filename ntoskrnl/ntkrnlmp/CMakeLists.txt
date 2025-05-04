@@ -10,6 +10,16 @@ endif()
 
 add_asm_files(ntkrnlmp_asm ${NTKRNLMP_ASM_SOURCE})
 
+if(ARCH STREQUAL "i386")
+    list(APPEND NTKRNLMP_SOURCE
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/mproc.c)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND NTKRNLMP_SOURCE
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/mproc.c)
+elseif(ARCH STREQUAL "arm")
+    #TBD
+endif()
+
 list(APPEND NTKRNLMP_PCH_SKIP_SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/guid.c)
 

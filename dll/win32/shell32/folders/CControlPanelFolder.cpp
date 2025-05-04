@@ -84,6 +84,14 @@ HRESULT WINAPI CControlPanelEnum::Initialize(DWORD dwFlags, IEnumIDList* pRegEnu
     return S_OK;
 }
 
+static const CLSID* IsRegItem(LPCITEMIDLIST pidl)
+{
+    BYTE type = _ILGetType(pidl);
+    if (type == PT_CONTROLS_OLDREGITEM || type == PT_CONTROLS_NEWREGITEM)
+        return (CLSID*)((BYTE*)pidl + (pidl->mkid.cb - sizeof(CLSID)));
+    return NULL;
+}
+
 static LPITEMIDLIST _ILCreateCPanelApplet(LPCWSTR pszName, LPCWSTR pszDisplayName, LPCWSTR pszComment, int iIconIdx)
 {
     PIDLCPanelStruct *pCP;
@@ -345,10 +353,10 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE
     switch(LOWORD(lParam))
     {
         case CONTROLPANEL_COL_NAME:
-            result = _wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
+            result = SHELL_StrCmpLogical(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
             break;
         case CONTROLPANEL_COL_COMMENT:
-            result = _wcsicmp(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
+            result = SHELL_StrCmpLogical(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
             break;
         default:
             ERR("Got wrong lParam!\n");
@@ -565,8 +573,9 @@ HRESULT WINAPI CControlPanelFolder::GetDefaultColumnState(UINT iColumn, DWORD *p
 
 HRESULT WINAPI CControlPanelFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    FIXME("(%p)\n", this);
-    return E_NOTIMPL;
+    if (IsRegItem(pidl))
+        return m_regFolder->GetDetailsEx(pidl, pscid, pv);
+    return SH32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, FALSE);
 }
 
 HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
@@ -605,8 +614,12 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
 
 HRESULT WINAPI CControlPanelFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    FIXME("(%p)\n", this);
-    return E_NOTIMPL;
+    switch (column)
+    {
+        case CONTROLPANEL_COL_NAME: return MakeSCID(*pscid, FMTID_Storage, PID_STG_NAME);
+        case CONTROLPANEL_COL_COMMENT: return MakeSCID(*pscid, FMTID_SummaryInformation, PIDSI_COMMENTS);
+    }
+    return E_INVALIDARG;
 }
 
 /************************************************************************

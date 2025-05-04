@@ -331,9 +331,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     if (!argv)
         return FALSE;
 
-    CStringW Directory;
-    GetStorageDirectory(Directory);
-    CAppDB db(Directory);
+    CAppDB db(CAppDB::GetDefaultPath());
 
     BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
     if (!bAppwizMode)

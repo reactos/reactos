@@ -24,6 +24,7 @@ BEGIN
     IDS_PWR_AC "交流電源"
     IDS_PWR_HOURS_REMAINING "残り %1!u!:%2!02u! 時間 (%3!u!%%)"
     IDS_PWR_MINUTES_REMAINING "残り %1!u! 分 (%2!u!%%)"
+    IDS_PWR_FULLY_CHARGED "Fully charged"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "安全なハードウェアの取り外し"

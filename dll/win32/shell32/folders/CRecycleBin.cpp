@@ -186,11 +186,13 @@ static inline LPCWSTR GetItemRecycledFullPath(const BBITEMDATA &Data)
     return (LPCWSTR)((BYTE*)&Data + Data.RecycledPathOffset);
 }
 
+#if 0 // Unused
 static inline LPCWSTR GetItemRecycledFileName(LPCITEMIDLIST pidl, const BBITEMDATA &Data)
 {
     C_ASSERT(BBITEMFILETYPE & PT_FS_UNICODE_FLAG);
     return (LPCWSTR)((LPPIDLDATA)pidl->mkid.abID)->u.file.szNames;
 }
+#endif
 
 static int GetItemDriveNumber(LPCITEMIDLIST pidl)
 {
@@ -508,33 +510,25 @@ fail:
 typedef struct _FILEOPDATA
 {
     PCUITEMID_CHILD_ARRAY apidl;
-    UINT cidl, index;
-    BBITEMDATA *pItem;
+    UINT cidl;
 } FILEOPDATA;
 
 static HRESULT CALLBACK FileOpCallback(FILEOPCALLBACKEVENT Event, LPCWSTR Src, LPCWSTR Dst, UINT Attrib, HRESULT hrOp, void *CallerData)
 {
     FILEOPDATA &data = *(FILEOPDATA*)CallerData;
-    if (Event == FOCE_PREMOVEITEM || Event == FOCE_PREDELETEITEM)
+    if ((Event == FOCE_POSTDELETEITEM || Event == FOCE_POSTMOVEITEM) && SUCCEEDED(hrOp))
     {
-        data.pItem = NULL;
         for (UINT i = 0; i < data.cidl; ++i)
         {
             BBITEMDATA *pItem = ValidateItem(data.apidl[i]);
             if (pItem && !_wcsicmp(Src, GetItemRecycledFullPath(*pItem)))
             {
-                data.pItem = pItem;
-                data.index = i;
+                RECYCLEBINFILEIDENTITY identity = { pItem->DeletionTime, GetItemRecycledFullPath(*pItem) };
+                RemoveFromRecycleBinDatabase(&identity);
+                CRecycleBin_NotifyRemovedFromRecycleBin(data.apidl[i]);
                 break;
             }
         }
-    }
-    else if ((Event == FOCE_POSTDELETEITEM || Event == FOCE_POSTMOVEITEM) && SUCCEEDED(hrOp) && data.pItem)
-    {
-        RECYCLEBINFILEIDENTITY identity = { data.pItem->DeletionTime, GetItemRecycledFullPath(*data.pItem) };
-        RemoveFromRecycleBinDatabase(&identity);
-        CRecycleBin_NotifyRemovedFromRecycleBin(data.apidl[data.index]);
-        data.pItem = NULL;
     }
     else if (Event == FOCE_FINISHOPERATIONS)
     {
@@ -768,7 +762,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
                     return CompareCanonical(*pData1, *pData2);
                 pName1 = GetItemOriginalFileName(*pData1);
                 pName2 = GetItemOriginalFileName(*pData2);
-                result = CFSFolder::CompareUiStrings(pName1, pName2);
+                result = CFSFolder::CompareUiStrings(pName1, pName2, lParam);
             }
             else
             {
@@ -788,7 +782,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
             {
                 if (SUCCEEDED(hr = GetItemOriginalFolder(*pData2, const_cast<LPWSTR&>(pName2))))
                 {
-                    result = CFSFolder::CompareUiStrings(pName1, pName2);
+                    result = CFSFolder::CompareUiStrings(pName1, pName2, lParam);
                     SHFree(const_cast<LPWSTR>(pName2));
                 }
                 SHFree(const_cast<LPWSTR>(pName1));
@@ -803,7 +797,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
         case COLUMN_TYPE:
             GetItemTypeName(pidl1, *pData1, shfi1);
             GetItemTypeName(pidl2, *pData2, shfi2);
-            result = CFSFolder::CompareUiStrings(shfi1.szTypeName, shfi2.szTypeName);
+            result = CFSFolder::CompareUiStrings(shfi1.szTypeName, shfi2.szTypeName, lParam);
             break;
         case COLUMN_MTIME:
             _ILGetFileDateTime(pidl1, &ft1);

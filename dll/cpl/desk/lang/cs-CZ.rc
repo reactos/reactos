@@ -28,9 +28,10 @@ BEGIN
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
     LTEXT "Vyberte obrázek, který chcete použít jako pozadí:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel, I used "Vyb&erte obrázek, který chcete použít jako pozadí:" for the backport
     PUSHBUTTON "&Vybrat...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
-    PUSHBUTTON "&Barva...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Umístění:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Umístění:" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Barva:", IDC_STATIC, 188, 156, 55, 9
+    PUSHBUTTON " ", IDC_COLOR_BUTTON, 188, 167, 55, 15
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 

@@ -108,15 +108,38 @@ extern "C" {
 #define PT_FOLDERTYPEMASK       0x70
 #define PT_DESKTOP_REGITEM      0x1F // => SHDID_ROOT_REGITEM
 #define PT_COMPUTER_REGITEM     0x2E // => SHDID_COMPUTER_?
+#define PT_COMPUTER_DRIVE       0x2F
 #define PT_FS                   0x30 // Win95 SHSimpleIDListFromPath
 #define PT_FS_FOLDER_FLAG       0x01
 #define PT_FS_FILE_FLAG         0x02
 #define PT_FS_UNICODE_FLAG      0x04
 #define PT_FS_COMMON_FLAG       0x08
 //      PT_NET_REGITEM          0x4? // => SHDID_NET_OTHER
+#define PT_INTERNET             0x60
+#define PT_INTERNET_URL         0x61
 #define PT_CONTROLS_OLDREGITEM  0x70
 #define PT_CONTROLS_NEWREGITEM  0x71
+
+#define REGITEMLOCATION_CONTROLS CSIDL_DRIVES
+#define REGITEMLOCATION_PRINTERS CSIDL_CONTROLS
+
+#define REGITEMORDER_DEFAULT                 0x80
+#define REGITEMORDER_LIBRARIES               0x42
+#define REGITEMORDER_USERSFILEFOLDER         0x44
+#define REGITEMORDER_MYCOMPUTER              0x50
+#define REGITEMORDER_MYDOCS_BEFOREMYCOMPUTER 0x48 // Tweak UI "Desktop => First Icon" only
+#define REGITEMORDER_MYDOCS_AFTERMYCOMPUTER  0x54 // accepts these two values.
+#define REGITEMORDER_MYDOCS_DEFAULT          0x48
+#define REGITEMORDER_NETHOOD                 0x58
+#if (REGITEMLOCATION_CONTROLS == CSIDL_DESKTOP)
+#define REGITEMORDER_RECYCLEBIN              0x78
+#else
+#define REGITEMORDER_RECYCLEBIN              0x60
 #endif
+#define REGITEMORDER_INTERNET                0x68
+#define REGITEMORDER_DESKTOP_CONTROLS        0x70 // NT6
+#define REGITEMORDER_MYCOMPUTER_CONTROLS     0x1E // NT5
+#endif // __REACTOS__
 
 static inline BYTE _ILGetType(LPCITEMIDLIST pidl)
 {
@@ -162,7 +185,7 @@ typedef struct tagPIDLPrinterStruct
 
 typedef struct tagGUIDStruct
 {
-    BYTE dummy; /* offset 01 is unknown */
+    BYTE uSortOrder;
     GUID guid;  /* offset 02 */
 } GUIDStruct;
 
@@ -266,7 +289,7 @@ UINT _ILGetDepth(LPCITEMIDLIST pidl);
 /* Creates a PIDL with guid format and type type, which must be one of PT_GUID,
  * PT_SHELLEXT, or PT_YAGUID.
  */
-LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid, BYTE SortOrder);
 
 #ifndef __REACTOS__
 /* Like _ILCreateGuid, but using the string szGUID. */

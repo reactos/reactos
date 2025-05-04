@@ -376,6 +376,9 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     VOID
     OnCommand(WPARAM wParam, LPARAM lParam);
 
+    void
+    _UpdateInstallBtn();
+
   public:
     CApplicationView(CMainWindow *MainWindow);
     ~CApplicationView();
@@ -420,13 +423,9 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     VOID
     RefreshDetailsPane(CAppInfo &Info, bool OnlyUpdateText = false);
 
-    // this function is called when a item of listview get focus.
-    // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
     VOID
     ItemGetFocus(LPVOID CallbackParam);
 
-    // this function is called when a item of listview is checked/unchecked
-    // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
     VOID
     ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam);
 };

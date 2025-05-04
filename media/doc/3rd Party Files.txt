@@ -220,9 +220,9 @@ URL: https://savannah.nongnu.org/projects/lwip/
 
 Title: FreeType
 Path: sdk/lib/3rdparty/freetype
-Used Version: 2.9.0
+Used Version: 2.10.0
 License: FTL (https://spdx.org/licenses/FTL.html)
-URL: http://www.freetype.org
+URL: https://freetype.org/
 
 Title: dosfstools
 Path: sdk/lib/fslib/vfatlib/check

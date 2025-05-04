@@ -5,7 +5,7 @@
 # PURPOSE:     dhcpcsvc exports
 # COPYRIGHT:   Copyright 2006 Ge van Geldorp <gvg@reactos.org>
 #
-@ stub DhcpAcquireParameters
+@ stdcall DhcpAcquireParameters(str)
 @ stub DhcpAcquireParametersByBroadcast
 @ stdcall DhcpCApiCleanup()
 @ stdcall DhcpCApiInitialize(ptr)
@@ -27,7 +27,7 @@
 @ stub DhcpRegisterParamChange
 @ stdcall DhcpReleaseIpAddressLease(long)
 @ stub DhcpReleaseIpAddressLeaseEx
-@ stub DhcpReleaseParameters
+@ stdcall DhcpReleaseParameters(str)
 @ stub DhcpRemoveDNSRegistrations
 @ stdcall DhcpRenewIpAddressLease(long)
 @ stub DhcpRenewIpAddressLeaseEx
@@ -42,5 +42,4 @@
 @ stub McastReleaseAddress
 @ stub McastRenewAddress
 @ stub McastRequestAddress
-@ stdcall DhcpRosGetAdapterInfo(long ptr ptr ptr ptr)
 @ stdcall ServiceMain(long ptr)

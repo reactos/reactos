@@ -101,8 +101,8 @@ ImmEnumRegisterWordA(HKL hKL, REGISTERWORDENUMPROCA lpfnEnumProc,
     ENUM_WORD_W2A EnumDataW2A;
     PIMEDPI pImeDpi;
 
-    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, debugstr_a(lpszReading),
-          dwStyle, debugstr_a(lpszRegister), lpData);
+    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, lpszReading,
+          dwStyle, lpszRegister, lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -158,8 +158,8 @@ ImmEnumRegisterWordW(HKL hKL, REGISTERWORDENUMPROCW lpfnEnumProc,
     ENUM_WORD_A2W EnumDataA2W;
     PIMEDPI pImeDpi;
 
-    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, debugstr_w(lpszReading),
-          dwStyle, debugstr_w(lpszRegister), lpData);
+    TRACE("(%p, %p, %S, 0x%lX, %S, %p)\n", hKL, lpfnEnumProc, lpszReading,
+          dwStyle, lpszRegister, lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -330,8 +330,7 @@ ImmRegisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszRegister
     PIMEDPI pImeDpi;
     LPWSTR pszReadingW = NULL, pszRegisterW = NULL;
 
-    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
-          debugstr_a(lpszRegister));
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, lpszReading, dwStyle, lpszRegister);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -378,8 +377,7 @@ ImmRegisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegist
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszRegisterA = NULL;
 
-    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
-          debugstr_w(lpszRegister));
+    TRACE("(%p, %S, 0x%lX, %S)\n", hKL, lpszReading, dwStyle, lpszRegister);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -426,8 +424,7 @@ ImmUnregisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszUnregi
     PIMEDPI pImeDpi;
     LPWSTR pszReadingW = NULL, pszUnregisterW = NULL;
 
-    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
-          debugstr_a(lpszUnregister));
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, lpszReading, dwStyle, lpszUnregister);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -474,8 +471,7 @@ ImmUnregisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszUnre
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszUnregisterA = NULL;
 
-    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
-          debugstr_w(lpszUnregister));
+    TRACE("(%p, %S, 0x%lX, %S)\n", hKL, lpszReading, dwStyle, lpszUnregister);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))

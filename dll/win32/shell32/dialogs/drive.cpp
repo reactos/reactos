@@ -374,7 +374,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {
     WCHAR szDrive[] = { WCHAR(pContext->Drive + 'A'), ':', '\\', '\0' };
     WCHAR szText[120], szFs[30];
-    INT cchText;
+    SIZE_T cchText;
     ULARGE_INTEGER TotalNumberOfBytes;
     DWORD dwIndex, dwDefault;
     UCHAR uMinor, uMajor;
@@ -398,8 +398,6 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     SendMessageW(pContext->hWndTipTrigger, STM_SETICON, (WPARAM)hIco, 0);
 
     cchText = GetWindowTextW(hwndDlg, szText, _countof(szText) - 1);
-    if (cchText < 0)
-        cchText = 0;
     szText[cchText++] = L' ';
     szFs[0] = UNICODE_NULL;
     if (GetVolumeInformationW(szDrive, &szText[cchText], _countof(szText) - cchText, NULL, NULL, NULL, szFs, _countof(szFs)))

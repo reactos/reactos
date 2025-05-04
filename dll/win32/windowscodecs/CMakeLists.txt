@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -DENTRY_PREFIX=WIC_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
@@ -10,7 +9,6 @@ remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
-    BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng
@@ -88,3 +86,4 @@ target_link_libraries(windowscodecs wine uuid ${PSEH_LIB} oldnames)
 add_importlibs(windowscodecs libjpeg libpng libtiff ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 advapi32_vista propsys msvcrt kernel32 ntdll)
 add_pch(windowscodecs precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(windowscodecs) # CORE-5743: No CONST_VTABLE

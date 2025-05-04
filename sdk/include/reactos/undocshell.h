@@ -1,23 +1,23 @@
 /*
- * Copyright 1999, 2000 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Undocumented shell definitions
+ * COPYRIGHT:   Copyright 1999, 2000 Juergen Schmied
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#ifndef __WINE_UNDOCSHELL_H
-#define __WINE_UNDOCSHELL_H
+#pragma once
+
+#include <shellapi.h>
+
+#ifndef SHSTDAPI
+#if defined(_SHELL32_) /* DECLSPEC_IMPORT disabled because of CORE-6504: */ || TRUE
+#define SHSTDAPI_(type) type WINAPI
+#else
+#define SHSTDAPI_(type) EXTERN_C DECLSPEC_IMPORT type WINAPI
+#endif
+#define SHSTDAPI SHSTDAPI_(HRESULT)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,6 +77,15 @@ BOOL WINAPI ILGetDisplayNameEx(
     LPCITEMIDLIST pidl,
     LPVOID path,
     DWORD type);
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_SHELL32_)
+SHSTDAPI DisplayNameOfW(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_ LPWSTR pszBuf,
+    _In_ UINT cchBuf);
+#endif
 
 LPITEMIDLIST WINAPI ILGlobalClone(LPCITEMIDLIST pidl);
 void WINAPI ILGlobalFree(LPITEMIDLIST pidl);
@@ -1213,8 +1222,33 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 
 #include <poppack.h>
 
+/*
+ * Private structures for internal AppBar messaging.
+ * These structures can be sent from 32-bit shell32 to 64-bit Explorer.
+ * See also: https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
+ * > ... only the lower 32 bits are significant, so it is safe to truncate the handle
+ */
+#include <pshpack8.h>
+typedef struct tagAPPBARDATA3264
+{
+    DWORD cbSize; /* == sizeof(APPBARDATA3264) */
+    UINT32 hWnd32;
+    UINT uCallbackMessage;
+    UINT uEdge;
+    RECT rc;
+    LONGLONG lParam64;
+} APPBARDATA3264, *PAPPBARDATA3264;
+typedef struct tagAPPBAR_COMMAND
+{
+    APPBARDATA3264 abd;
+    DWORD dwMessage;
+    UINT32 hOutput32; /* For shlwapi!SHAllocShared */
+    DWORD dwProcessId;
+} APPBAR_COMMAND, *PAPPBAR_COMMAND;
+#include <poppack.h>
+
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x38);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
-
-#endif /* __WINE_UNDOCSHELL_H */

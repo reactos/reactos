@@ -588,6 +588,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
     case MPOS_CANCELLEVEL:
         if (m_subMenuChild)
             m_subMenuChild->OnSelect(dwSelectType);
+        // Deselect the currently selected item
+        _ChangeHotItem(NULL, -1, 0);
         break;
     }
     return S_FALSE;
@@ -859,7 +861,8 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
         _MenuItemSelect(MPOS_FULLCANCEL);
 
         TRACE("Before InvokeCommand\n");
-        CMINVOKECOMMANDINFO cmi = { sizeof(cmi), 0, hwnd };
+        // Note: Not passing hwnd to InvokeCommand because it can be a BaseBar window that is about to die
+        CMINVOKECOMMANDINFO cmi = { sizeof(cmi), 0, NULL };
         cmi.lpVerb = MAKEINTRESOURCEA(uCommand - idCmdFirst);
         if (GetKeyState(VK_SHIFT) < 0)
             cmi.fMask |= CMIC_MASK_SHIFT_DOWN;

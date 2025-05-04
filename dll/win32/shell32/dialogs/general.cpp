@@ -72,6 +72,7 @@ IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
     shellstate.fWebView = !!bUseCommonTasks;
     SHGetSetSettings(&shellstate, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, TRUE);
 
+    // FIXME: This is not correct, it does nothing. SHGetSetSettings will broadcast it.
     SHSettingsChanged(0, L"ShellState");
     return TRUE;
 }
@@ -107,7 +108,7 @@ static BOOL IntSetUnderlineState(BOOL bIconUnderline)
     if (Status != ERROR_SUCCESS)
         return FALSE;
 
-    SHSettingsChanged(0, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\IconUnderline");
+    SHSendMessageBroadcastW(WM_SETTINGCHANGE, 0, (LPARAM)L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\IconUnderline");
     return TRUE;
 }
 

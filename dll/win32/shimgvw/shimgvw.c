@@ -1392,13 +1392,8 @@ Preview_Delete(PPREVIEW_DATA pData)
     FileOp.pFrom = szCurFile;
     FileOp.fFlags = GetKeyState(VK_SHIFT) < 0 ? 0 : FOF_ALLOWUNDO;
     error = g_szFile[0] ? SHFileOperationW(&FileOp) : ERROR_FILE_NOT_FOUND;
-    if (error != 0)
-    {
-        enum { SHFO_FIRSTCUSTOMERROR = 0x71 /* DE_SAMEFILE */ };
-        if (!FileOp.fAnyOperationsAborted && error != ERROR_CANCELLED)
-            ErrorBox(FileOp.hwnd, error < SHFO_FIRSTCUSTOMERROR ? error : E_FAIL);
+    if (error)
         return;
-    }
 
     /* Reload the file list and go next file */
     pFreeFileList(g_pCurrentFile);

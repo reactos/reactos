@@ -24,6 +24,7 @@ BEGIN
     IDS_PWR_AC "Sur secteur"
     IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! heures (%3!u!%%) restantes"
     IDS_PWR_MINUTES_REMAINING "%1!u! mins (%2!u!%%) restantes"
+    IDS_PWR_FULLY_CHARGED "Fully charged"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "Retirer le périphérique en sécurité"

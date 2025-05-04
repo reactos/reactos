@@ -334,6 +334,7 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
     else
     {
         DWORD read = 0, data, cb, dummy = 0;
+        DBG_UNREFERENCED_LOCAL_VARIABLE(dummy);
         if (SHELL_GlobalCounterChanged(&g_ShellStateCounter, SHELL_GCOUNTER_SHELLSTATE))
             g_CachedSSF = 0;
 

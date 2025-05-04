@@ -334,10 +334,6 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/i386/psldt.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/vdm/vdmmain.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/vdm/vdmexec.c)
-    if(BUILD_MP)
-        list(APPEND SOURCE
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/mproc.c)
-    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/boot.S
@@ -366,10 +362,6 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/stubs.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/traphandler.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall.c)
-    if(BUILD_MP)
-        list(APPEND SOURCE
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/mproc.c)
-    endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ex/arm/ioport.s

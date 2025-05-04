@@ -559,7 +559,8 @@ RecycleBin5_Create(
     LPWSTR FileName; /* Pointer into BufferName buffer */
     LPCSTR DesktopIniContents = "[.ShellClassInfo]\r\nCLSID={645FF040-5081-101B-9F08-00AA002F954E}\r\n";
     INFO2_HEADER Info2Contents[] = { { 5, 0, 0, 0x320, 0 } };
-    DWORD BytesToWrite, BytesWritten, Needed;
+    DWORD BytesToWrite, BytesWritten;
+    SIZE_T Needed;
     HANDLE hFile = INVALID_HANDLE_VALUE;
     HRESULT hr;
 
@@ -623,7 +624,7 @@ RecycleBin5_Create(
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }
-    BytesToWrite = strlen(DesktopIniContents);
+    BytesToWrite = (UINT)strlen(DesktopIniContents);
     if (!WriteFile(hFile, DesktopIniContents, (DWORD)BytesToWrite, &BytesWritten, NULL))
     {
         hr = HRESULT_FROM_WIN32(GetLastError());

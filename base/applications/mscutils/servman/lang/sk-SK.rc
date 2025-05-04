@@ -161,7 +161,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Some services depend on other services, system drivers and load order groups. If a system component is stopped or it is not running properly, dependant services can be affected.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "This service depends on the following components", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "This service depends on the following components:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

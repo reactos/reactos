@@ -402,8 +402,11 @@ SHELL_GetUIObjectOfAbsoluteItem(
     return hr;
 }
 
-HRESULT
-Shell_DisplayNameOf(
+/***********************************************************************
+ *    DisplayNameOfW [SHELL32.757] (Vista+)
+ */
+EXTERN_C HRESULT WINAPI
+DisplayNameOfW(
     _In_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwFlags,
@@ -492,7 +495,7 @@ SHGetNameAndFlagsW(
     if (SUCCEEDED(hr))
     {
         if (pszText)
-            hr = Shell_DisplayNameOf(psfFolder, ppidlLast, dwFlags, pszText, cchBuf);
+            hr = DisplayNameOfW(psfFolder, ppidlLast, dwFlags, pszText, cchBuf);
 
         if (SUCCEEDED(hr))
         {

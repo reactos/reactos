@@ -13,7 +13,7 @@
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <dhcpcsdk.h>
-#include <dhcp/rosdhcp_public.h>
+#include <rosdhcp_pipe.h>
 
 #include "debug.h"
 
@@ -90,6 +90,7 @@ void AdapterStop(VOID);
 extern PDHCP_ADAPTER AdapterGetFirst(VOID);
 extern PDHCP_ADAPTER AdapterGetNext(PDHCP_ADAPTER);
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
+extern PDHCP_ADAPTER AdapterFindName(const CHAR *name);
 extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
 extern PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen );
 extern HANDLE PipeInit(HANDLE hStopEvent);
@@ -97,6 +98,8 @@ extern VOID ApiInit(VOID);
 extern VOID ApiFree(VOID);
 extern VOID ApiLock(VOID);
 extern VOID ApiUnlock(VOID);
+extern DWORD DSAcquireParams(PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req);
+extern DWORD DSReleaseParams(PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req);
 extern DWORD DSQueryHWInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
 extern DWORD DSLeaseIpAddress( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
 extern DWORD DSRenewIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );

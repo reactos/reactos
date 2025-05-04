@@ -1,5 +1,5 @@
-  FreeType 2.9
-  ============
+  FreeType 2.10.0
+  ===============
 
   Homepage: https://www.freetype.org
 
@@ -15,8 +15,8 @@
   Read the  files `docs/INSTALL*'  for installation  instructions; see
   the file `docs/LICENSE.TXT' for the available licenses.
 
-  The FreeType 2 API reference is located in `docs/reference'; use the
-  file   `ft2-toc.html'   as   the   top  entry   point.    Additional
+  The FreeType  2 API  reference is located  in `docs/reference/site';
+  use  the  file `index.html'  as  the  top entry  point.   Additional
   documentation is available as a separate package from our sites.  Go
   to
 
@@ -24,13 +24,13 @@
 
   and download one of the following files.
 
-    freetype-doc-2.9.tar.bz2
-    freetype-doc-2.9.tar.gz
-    ftdoc29.zip
+    freetype-doc-2.10.0.tar.bz2
+    freetype-doc-2.10.0.tar.gz
+    ftdoc2100.zip
 
   To view the documentation online, go to
 
-    https://www.freetype.org/freetype2/documentation.html
+    https://www.freetype.org/freetype2/docs/
 
 
   Mailing Lists
@@ -71,7 +71,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006-2018 by
+Copyright (C) 2006-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

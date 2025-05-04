@@ -133,9 +133,11 @@ class CFSFolder :
         static HRESULT FormatDateTime(const FILETIME &ft, LPWSTR Buf, UINT cchBuf);
         static HRESULT FormatSize(UINT64 size, LPWSTR Buf, UINT cchBuf);
         static HRESULT CompareSortFoldersFirst(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
-        static inline int CompareUiStrings(LPCWSTR a, LPCWSTR b)
+        static inline int CompareUiStrings(LPCWSTR a, LPCWSTR b, LPARAM lParam = 0)
         {
-            return StrCmpLogicalW(a, b);
+            if (lParam & SHCIDS_CANONICALONLY)
+                return _wcsicmp(a, b);
+            return SHELL_StrCmpLogical(a, b);
         }
 };
 

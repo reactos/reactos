@@ -76,6 +76,9 @@ static BYTE GetSpecial(PCIDLIST_ABSOLUTE pidl)
 
 static HRESULT BindToObject(PCIDLIST_ABSOLUTE pidl, REFIID riid, void **ppv)
 {
+    if (GetSpecial(pidl))
+        return E_FAIL;
+
     PCUITEMID_CHILD pidlChild;
     CComPtr<IShellFolder> psf;
     HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlChild);

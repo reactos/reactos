@@ -1978,7 +1978,6 @@ EnumEventsThread(IN LPVOID lpParameter)
     BOOL bResult = TRUE; /* Read succeeded */
     HANDLE hProcessHeap = GetProcessHeap();
     PSID pLastSid = NULL;
-    INT nItems;
 
     UINT uStep = 0, uStepAt = 0, uPos = 0;
 
@@ -1998,7 +1997,8 @@ EnumEventsThread(IN LPVOID lpParameter)
     SYSTEMTIME time;
     LVITEMW lviEventItem;
 
-    EnableEventDetailsButtons(hwndEventDetails, FALSE);
+    /* Disable the Previous/Next buttons */
+    SendMessageW(hwndEventDetails, EVT_DISPLAY, FALSE, (LPARAM)-1);
 
     /* Save the current event log filter globally */
     EventLogFilter_AddRef(EventLogFilter);
@@ -2265,9 +2265,6 @@ Quit:
     /* All events loaded */
 
 Cleanup:
-    nItems = ListView_GetItemCount(hwndListView);
-    EnableEventDetailsButtons(hwndEventDetails, (nItems > 0));
-
     ShowWindow(hwndStatusProgress, SW_HIDE);
     SendMessageW(hwndListView, LVM_PROGRESS, 0, FALSE);
 
@@ -2297,6 +2294,11 @@ Cleanup:
 
     /* Resume list view redraw */
     SendMessageW(hwndListView, WM_SETREDRAW, TRUE, 0);
+
+    /* Re-enable the Previous/Next buttons, keeping the current event details
+     * displayed, if any. Don't auto-select the first list item but wait for
+     * the user to do it. */
+    SendMessageW(hwndEventDetails, EVT_DISPLAY, FALSE, 0);
 
     EventLogFilter_Release(EventLogFilter);
 
@@ -3342,7 +3344,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                             MB_OK | MB_ICONERROR);
                                 break;
                             }
-                            SendMessageW(hwndEventDetails, EVT_DISPLAY, 0, (LPARAM)pnmv->iItem);
+                            SendMessageW(hwndEventDetails, EVT_DISPLAY, TRUE, (LPARAM)pnmv->iItem);
                         }
                         break;
                     }
@@ -4347,9 +4349,9 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             cxOld = rcWnd.right - rcWnd.left;
             cyOld = rcWnd.bottom - rcWnd.top;
 
-            /* Show event info in dialog control */
-            iEventItem = (lParam != 0 ? ((PEVENTDETAIL_INFO)lParam)->iEventItem : 0);
-            SendMessageW(hWndDetailsCtrl, EVT_DISPLAY, 0, (LPARAM)iEventItem);
+            /* Display the event info in the dialog */
+            iEventItem = (lParam != 0 ? ((PEVENTDETAIL_INFO)lParam)->iEventItem : -1);
+            SendMessageW(hWndDetailsCtrl, EVT_DISPLAY, TRUE, (LPARAM)iEventItem);
 
             // SetWindowPos(hWndDetailsCtrl, NULL,
                          // 0, 0,

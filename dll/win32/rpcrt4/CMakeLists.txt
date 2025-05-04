@@ -3,12 +3,10 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D_RPCRT4_
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)
 
 add_rpc_files(client epm.idl)
@@ -70,3 +68,4 @@ add_importlibs(rpcrt4 advapi32 advapi32_vista kernel32_vista ws2_32 msvcrt kerne
 add_dependencies(rpcrt4 ndr_types_header)
 add_pch(rpcrt4 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(rpcrt4) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

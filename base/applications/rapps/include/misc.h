@@ -16,6 +16,12 @@
 #define CurrentArchitecture L"ppc"
 #endif
 
+static inline HRESULT
+HResultFromWin32(UINT Error)
+{
+    return HRESULT_FROM_WIN32(Error);
+}
+
 static inline UINT
 ErrorFromHResult(HRESULT hr)
 {

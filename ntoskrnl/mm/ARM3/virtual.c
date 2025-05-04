@@ -527,9 +527,10 @@ MiDeletePte(IN PMMPTE PointerPte,
 
 VOID
 NTAPI
-MiDeleteVirtualAddresses(IN ULONG_PTR Va,
-                         IN ULONG_PTR EndingAddress,
-                         IN PMMVAD Vad)
+MiDeleteVirtualAddresses(
+    _In_ ULONG_PTR Va,
+    _In_ ULONG_PTR EndingAddress,
+    _In_opt_ PMMVAD Vad)
 {
     PMMPTE PointerPte, PrototypePte, LastPrototypePte;
     PMMPDE PointerPde;
@@ -545,8 +546,8 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     BOOLEAN AddressGap = FALSE;
     PSUBSECTION Subsection;
 
-    /* Get out if this is a fake VAD, RosMm will free the marea pages */
-    if ((Vad) && (Vad->u.VadFlags.Spare == 1)) return;
+    /* We should never get RosMm memory areas here */
+    ASSERT((Vad == NULL) || !MI_IS_MEMORY_AREA_VAD(Vad));
 
     /* Get the current process */
     CurrentProcess = PsGetCurrentProcess();
@@ -1674,7 +1675,6 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     MEMORY_BASIC_INFORMATION MemoryInfo;
     KAPC_STATE ApcState;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PMEMORY_AREA MemoryArea;
     SIZE_T ResultLength;
 
     /* Check for illegal addresses in user-space, or the shared memory area */
@@ -1900,18 +1900,15 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         MemoryInfo.Type = MEM_MAPPED;
     }
 
-    /* Find the memory area the specified address belongs to */
-    MemoryArea = MmLocateMemoryAreaByAddress(&TargetProcess->Vm, BaseAddress);
-    ASSERT(MemoryArea != NULL);
-
-    /* Determine information dependent on the memory area type */
-    if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+    /* Check if this is a RosMM VAD */
+    if (MI_IS_ROSMM_VAD(Vad))
     {
-        Status = MmQuerySectionView(MemoryArea, BaseAddress, &MemoryInfo, &ResultLength);
+        ASSERT(((PMEMORY_AREA)Vad)->Type == MEMORY_AREA_SECTION_VIEW);
+        Status = MmQuerySectionView((PMEMORY_AREA)Vad, BaseAddress, &MemoryInfo, &ResultLength);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("MmQuerySectionView failed. MemoryArea=%p (%p-%p), BaseAddress=%p\n",
-                    MemoryArea, MA_GetStartingAddress(MemoryArea), MA_GetEndingAddress(MemoryArea), BaseAddress);
+                    Vad, Vad->StartingVpn, Vad->EndingVpn, BaseAddress);
             ASSERT(NT_SUCCESS(Status));
         }
     }
@@ -2155,53 +2152,12 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
 
 NTSTATUS
 NTAPI
-MiRosProtectVirtualMemory(IN PEPROCESS Process,
-                          IN OUT PVOID *BaseAddress,
-                          IN OUT PSIZE_T NumberOfBytesToProtect,
-                          IN ULONG NewAccessProtection,
-                          OUT PULONG OldAccessProtection OPTIONAL)
-{
-    PMEMORY_AREA MemoryArea;
-    PMMSUPPORT AddressSpace;
-    ULONG OldAccessProtection_;
-    NTSTATUS Status;
-
-    *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
-    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
-
-    AddressSpace = &Process->Vm;
-    MmLockAddressSpace(AddressSpace);
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    if (OldAccessProtection == NULL) OldAccessProtection = &OldAccessProtection_;
-
-    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
-    Status = MmProtectSectionView(AddressSpace,
-                                  MemoryArea,
-                                  *BaseAddress,
-                                  *NumberOfBytesToProtect,
-                                  NewAccessProtection,
-                                  OldAccessProtection);
-
-    MmUnlockAddressSpace(AddressSpace);
-
-    return Status;
-}
-
-NTSTATUS
-NTAPI
 MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN OUT PVOID *BaseAddress,
                        IN OUT PSIZE_T NumberOfBytesToProtect,
                        IN ULONG NewAccessProtection,
                        OUT PULONG OldAccessProtection OPTIONAL)
 {
-    PMEMORY_AREA MemoryArea;
     PMMVAD Vad;
     PMMSUPPORT AddressSpace;
     ULONG_PTR StartingAddress, EndingAddress;
@@ -2240,19 +2196,6 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         goto FailPath;
     }
 
-    /* Check for ROS specific memory area */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
-    {
-        /* Evil hack */
-        MmUnlockAddressSpace(AddressSpace);
-        return MiRosProtectVirtualMemory(Process,
-                                         BaseAddress,
-                                         NumberOfBytesToProtect,
-                                         NewAccessProtection,
-                                         OldAccessProtection);
-    }
-
     /* Get the VAD for this address range, and make sure it exists */
     Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
                                        EndingAddress >> PAGE_SHIFT,
@@ -2263,6 +2206,23 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         DPRINT("Could not find a VAD for this allocation\n");
         Status = STATUS_CONFLICTING_ADDRESSES;
         goto FailPath;
+    }
+
+    /* Check if this is a ROSMM VAD */
+    if (MI_IS_ROSMM_VAD(Vad))
+    {
+        /* Not too shabby hack */
+        ASSERT(((PMEMORY_AREA)Vad)->Type == MEMORY_AREA_SECTION_VIEW);
+        *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
+        *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
+        Status = MmProtectSectionView(AddressSpace,
+                                      (PMEMORY_AREA)Vad,
+                                      *BaseAddress,
+                                      *NumberOfBytesToProtect,
+                                      NewAccessProtection,
+                                      OldAccessProtection);
+        MmUnlockAddressSpace(AddressSpace);
+        return Status;
     }
 
     /* Make sure the address is within this VAD's boundaries */
@@ -4497,7 +4457,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                         IN ULONG Protect)
 {
     PEPROCESS Process;
-    PMEMORY_AREA MemoryArea;
     PMMVAD Vad = NULL, FoundVad;
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
@@ -4913,9 +4872,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     //
     // Make sure this is an ARM3 section
     //
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)PAGE_ROUND_DOWN(PBaseAddress));
-    ASSERT(MemoryArea != NULL);
-    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
+    if (MI_IS_ROSMM_VAD(FoundVad))
     {
         DPRINT1("Illegal commit of non-ARM3 section!\n");
         Status = STATUS_ALREADY_COMMITTED;
@@ -5232,7 +5189,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     IN PSIZE_T URegionSize,
                     IN ULONG FreeType)
 {
-    PMEMORY_AREA MemoryArea;
     SIZE_T PRegionSize;
     PVOID PBaseAddress;
     LONG_PTR AlreadyDecommitted, CommitReduction = 0;
@@ -5394,15 +5350,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     ASSERT(Vad->u.VadFlags.NoChange == 0);
 
     //
-    // Finally, make sure there is a ReactOS Mm MEMORY_AREA for this allocation
-    // and that is is an ARM3 memory area, and not a section view, as we currently
-    // don't support freeing those though this interface.
-    //
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)StartingAddress);
-    ASSERT(MemoryArea);
-    ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
-
-    //
     //  Now we can try the operation. First check if this is a RELEASE or a DECOMMIT
     //
     if (FreeType & MEM_RELEASE)
@@ -5492,11 +5439,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Vad,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-                    // For ReactOS: shrink the corresponding memory area
-                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
-                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->StartingVpn = (EndingAddress + 1) >> PAGE_SHIFT;
-                    MemoryArea->VadNode.StartingVpn = Vad->StartingVpn;
 
                     //
                     // After analyzing the VAD, set it to NULL so that we don't
@@ -5526,11 +5469,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Vad,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-                    // For ReactOS: shrink the corresponding memory area
-                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
-                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->VadNode.EndingVpn = Vad->EndingVpn;
                 }
                 else
                 {
@@ -5584,12 +5523,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 
                     //
                     // Adjust the end of the original VAD (first chunk).
-                    // For ReactOS: shrink the corresponding memory area
                     //
-                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
-                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->VadNode.EndingVpn = Vad->EndingVpn;
 
                     //
                     // Now the addresses for both VADs are consistent,

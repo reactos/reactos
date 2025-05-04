@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(wintrust.dll wintrust.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -30,3 +28,4 @@ add_delay_importlibs(wintrust cryptui)
 add_importlibs(wintrust imagehlp crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(wintrust precomp.h SOURCE)
 add_cd_file(TARGET wintrust DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(wintrust) # CORE-5743: No ARRAY_SIZE macro
