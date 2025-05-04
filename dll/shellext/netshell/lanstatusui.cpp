@@ -834,7 +834,8 @@ VOID ShowNetworkIconContextMenu(
         return;
 
     HMENU hMenu = CreatePopupMenu();
-    if (!hMenu) return;
+    if (!hMenu)
+        return;
 
     POINT pt;
     GetCursorPos(&pt);
