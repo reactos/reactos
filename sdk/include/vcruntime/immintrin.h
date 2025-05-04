@@ -58,6 +58,28 @@ extern int __cdecl _rdseed32_step(unsigned int *random_val);
 extern int __cdecl _rdseed64_step(unsigned __int64 *random_val);
 #endif
 
+void __cdecl _fxsave(void *);
+void __cdecl _fxrstor(void const *);
+void __cdecl _xsave(void *, unsigned __int64);
+void __cdecl _xsavec(void *, unsigned __int64);
+void __cdecl _xsaveopt(void *, unsigned __int64);
+void __cdecl _xsaves(void *, unsigned __int64);
+void __cdecl _xrstor(void const *, unsigned __int64);
+void __cdecl _xrstors(void const *, unsigned __int64);
+#if defined (_M_X64)
+void __cdecl _fxsave64(void *);
+void __cdecl _fxrstor64(void const *);
+void __cdecl _xsave64(void *, unsigned __int64);
+void __cdecl _xsavec64(void *, unsigned __int64);
+void __cdecl _xsaveopt64(void *, unsigned __int64);
+void __cdecl _xsaves64(void *, unsigned __int64);
+void __cdecl _xrstor64(void const *, unsigned __int64);
+void __cdecl _xrstors64(void const *, unsigned __int64);
+#endif
+
+unsigned __int64 __cdecl _xgetbv(unsigned int);
+void __cdecl _xsetbv(unsigned int, unsigned __int64);
+
 
 #if defined(_MSC_VER) && !defined(__clang__)
 
@@ -77,6 +99,28 @@ extern int __cdecl _rdseed64_step(unsigned __int64 *random_val);
 #if defined(_M_X64)
 #pragma intrinsic(_rdseed64_step)
 #endif
+
+#pragma intrinsic(_fxsave)
+#pragma intrinsic(_fxrstor)
+#pragma intrinsic(_xsave)
+#pragma intrinsic(_xsaveopt)
+#pragma intrinsic(_xsavec)
+#pragma intrinsic(_xsaves)
+#pragma intrinsic(_xrstor)
+#pragma intrinsic(_xrstors)
+#if defined (_M_X64)
+#pragma intrinsic(_fxsave64)
+#pragma intrinsic(_fxrstor64)
+#pragma intrinsic(_xsave64)
+#pragma intrinsic(_xsaveopt64)
+#pragma intrinsic(_xsavec64)
+#pragma intrinsic(_xsaves64)
+#pragma intrinsic(_xrstor64)
+#pragma intrinsic(_xrstors64)
+#endif
+
+#pragma intrinsic(_xgetbv)
+#pragma intrinsic(_xsetbv)
 
 #else /* _MSC_VER */
 
@@ -163,6 +207,149 @@ __INTRIN_INLINE int _rdseed64_step(unsigned __int64* random_val)
     return (int)ok;
 }
 #endif // __x86_64__
+
+__INTRIN_INLINE void _fxsave(void *__P)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_fxsave(__P);
+#else
+    __asm__ __volatile__("fxsave (%0)" : : "r"(__P));
+#endif
+}
+
+__INTRIN_INLINE void _fxrstor(void const *__P)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_fxrstor((void*)__P);
+#else
+    __asm__ __volatile__("fxrstor (%0)" : : "r"(__P));
+#endif
+}
+
+#if defined(__x86_64__)
+__INTRIN_INLINE void _fxsave64(void *__P)
+{
+    __builtin_ia32_fxsave64(__P);
+}
+
+__INTRIN_INLINE void _fxrstor64(void const *__P)
+{
+    __builtin_ia32_fxrstor64((void*)__P);
+}
+#endif // __x86_64__
+
+#ifdef __clang__
+#define __ATTRIBUTE_XSAVE__ __attribute__((__target__("xsave")))
+#else
+#define __ATTRIBUTE_XSAVE__
+#endif
+#define __INTRIN_INLINE_XSAVE __INTRIN_INLINE __ATTRIBUTE_XSAVE__
+
+__INTRIN_INLINE_XSAVE void _xsave(void *__P, unsigned __int64 __M)
+{
+    __builtin_ia32_xsave(__P, __M);
+}
+
+__INTRIN_INLINE_XSAVE void _xsavec(void *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xsavec(__P, __M);
+#else
+    __asm__ __volatile__("xsavec %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) :"memory");
+#endif
+}
+
+__INTRIN_INLINE_XSAVE void _xsaveopt(void *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xsaveopt(__P, __M);
+#else
+    __asm__ __volatile__("xsaveopt %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) :"memory");
+#endif
+}
+
+__INTRIN_INLINE_XSAVE void _xsaves(void *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xsaves(__P, __M);
+#else
+    __asm__ __volatile__("xsaves %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) :"memory");
+#endif
+}
+
+__INTRIN_INLINE_XSAVE void _xrstor(void const *__P, unsigned __int64 __M)
+{
+    __builtin_ia32_xrstor((void*)__P, __M);
+}
+
+__INTRIN_INLINE_XSAVE void _xrstors(void const *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xrstors((void*)__P, __M);
+#else
+    __asm__ __volatile__("xrstors %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) :"memory");
+#endif
+}
+
+#if defined(__x86_64__)
+__INTRIN_INLINE_XSAVE void _xsave64(void *__P, unsigned __int64 __M)
+{
+    __builtin_ia32_xsave64(__P, __M);
+}
+
+__INTRIN_INLINE_XSAVE void _xsavec64(void *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xsavec64(__P, __M);
+#else
+    __asm__ __volatile__("xsavec %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) : "memory");
+#endif
+}
+
+__INTRIN_INLINE_XSAVE void _xsaveopt64(void *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xsaveopt64(__P, __M);
+#else
+    __asm__ __volatile__("xsaveopt %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) : "memory");
+#endif
+}
+
+__INTRIN_INLINE_XSAVE void _xsaves64(void *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xsaves64(__P, __M);
+#else
+    __asm__ __volatile__("xsaves %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) : "memory");
+#endif
+}
+
+__INTRIN_INLINE_XSAVE void _xrstor64(void const *__P, unsigned __int64 __M)
+{
+    __builtin_ia32_xrstor64((void*)__P, __M);
+}
+
+__INTRIN_INLINE_XSAVE void _xrstors64(void const *__P, unsigned __int64 __M)
+{
+#if 0 // Needs newer GCC
+    __builtin_ia32_xrstors64((void*)__P, __M);
+#else
+    __asm__ __volatile__("xrstors %0" : "=m" (*(char*)__P) : "a" ((unsigned int)__M), "d" ((unsigned int)(__M >> 32)) : "memory");
+#endif
+}
+#endif // __x86_64__
+
+#ifndef __clang__
+__INTRIN_INLINE unsigned __int64 _xgetbv(unsigned int __A)
+{
+    return __builtin_ia32_xgetbv(__A);
+}
+
+__INTRIN_INLINE void _xsetbv(unsigned int __A, unsigned __int64 __V)
+{
+    __builtin_ia32_xsetbv(__A, __V);
+}
+#endif // !__clang__
 
 #endif /* _MSC_VER */
 
