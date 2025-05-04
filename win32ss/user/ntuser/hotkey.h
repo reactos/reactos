@@ -14,7 +14,7 @@ typedef struct _HOT_KEY
 #define IDHK_F12       -5
 #define IDHK_SHIFTF12  -6
 #define IDHK_WINKEY    -7
-#define IDHK_REACTOS   -8
+#define IDHK_WNDKEY    -8 /* WM_SETHOTKEY */
 
 /* Window Snap Hot Keys */
 #define IDHK_SNAP_LEFT   -10

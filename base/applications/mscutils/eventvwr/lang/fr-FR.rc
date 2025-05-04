@@ -222,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Type d'événement :          %s\r\n\
-Source de l'événement :     %s\r\n\
-Catégorie de l'événement :  %s\r\n\
-ID de l'événement :         %s\r\n\
-Date :                      %s\r\n\
-Heure :                     %s\r\n\
-Utilisateur :               %s\r\n\
-Ordinateur :                %s\r\n\
-Description :\r\n%s"
+    IDS_COPY_EVTTYPE "Type de l'événement :"
+    IDS_COPY_EVTSRC  "Source de l'événement :"
+    IDS_COPY_EVTCAT  "Catégorie de l'événement :"
+    IDS_COPY_EVTID   "ID de l'événement :"
+    IDS_COPY_EVTDATE "Date :"
+    IDS_COPY_EVTTIME "Heure :"
+    IDS_COPY_EVTUSER "Utilisateur :"
+    IDS_COPY_EVTCOMP "Ordinateur :"
+    IDS_COPY_EVTTEXT "Description :"
+    IDS_COPY_EVTDATA "Données :"
 END
 
 STRINGTABLE
