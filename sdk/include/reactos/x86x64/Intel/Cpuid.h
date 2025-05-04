@@ -1982,9 +1982,9 @@ typedef union {
     ///
     UINT32    AVX_512    : 3;
     ///
-    /// [Bit 8] Used for IA32_XSS.
+    /// [Bit 8] Intel PT state.
     ///
-    UINT32    IA32_XSS   : 1;
+    UINT32    IPT        : 1;
     ///
     /// [Bit 9] PKRU state.
     ///
@@ -2057,7 +2057,11 @@ typedef union {
     /// [Bit 3] Supports XSAVES/XRSTORS and IA32_XSS if set.
     ///
     UINT32    XSAVES   : 1;
-    UINT32    Reserved : 28;
+    ///
+    /// [Bit 4] Supports ExtendedFeatureDisable if set.
+    ///
+    UINT32    Xfd      : 1;
+    UINT32    Reserved : 27;
   } Bits;
   ///
   /// All bit fields as a 32-bit value
@@ -2077,21 +2081,44 @@ typedef union {
     ///
     /// [Bits 7:0] Used for XCR0.
     ///
-    UINT32    XCR0      : 1;
+    UINT32    XCR0      : 8;
     ///
-    /// [Bit 8] PT STate.
+    /// [Bit 8] PT state.
     ///
     UINT32    PT        : 1;
     ///
     /// [Bit 9] Used for XCR0.
     ///
     UINT32    XCR0_1    : 1;
-    UINT32    Reserved1 : 3;
     ///
-    /// [Bit 13] HWP state.
+    /// [Bit 10] PASID state.
     ///
-    UINT32    HWPState  : 1;
-    UINT32    Reserved8 : 18;
+    UINT32    PASID     : 1;
+    ///
+    /// [Bit 11] CET user state.
+    ///
+    UINT32    CET_U     : 1;
+    ///
+    /// [Bit 12] CET supervisor state.
+    ///
+    UINT32    CET_S     : 1;
+    ///
+    /// [Bit 13] HDC state.
+    ///
+    UINT32    HDC       : 1;
+    ///
+    /// [Bit 14] UINTR state.
+    ///
+    UINT32    UINTR     : 1;
+    ///
+    /// [Bit 15] LBR state.
+    ///
+    UINT32    LBR       : 1;
+    ///
+    /// [Bit 16] HWP state.
+    ///
+    UINT32    HWP       : 1;
+    UINT32    Reserved8 : 15;
   } Bits;
   ///
   /// All bit fields as a 32-bit value
@@ -2167,7 +2194,7 @@ typedef union {
     /// following the preceding state component (otherwise, it is located
     /// immediately following the preceding state component).
     ///
-    UINT32    Compacted : 1;
+    UINT32    Aligned : 1;
     UINT32    Reserved  : 30;
   } Bits;
   ///
