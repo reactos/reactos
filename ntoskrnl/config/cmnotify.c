@@ -432,13 +432,12 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
     }
 
     /* Allocate memory */
-    PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
+    PostBlock = ExAllocatePoolZero(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
     if (!PostBlock)
     {
         ExFreePoolWithTag(LocalApc, TAG_CM);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
 
     /* Initialize list heads */
     InitializeListHead(&(PostBlock->NotifyList));
@@ -479,13 +478,12 @@ CmpInsertSubPostBlock(_In_  PCM_NOTIFY_BLOCK NotifyBlock,
     PCM_POST_BLOCK PostBlock;
 
     /* Allocate memory */
-    PostBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
+    PostBlock = ExAllocatePoolZero(NonPagedPool, sizeof(CM_POST_BLOCK), TAG_CM);
     if (!PostBlock)
     {
         *Result = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    RtlZeroMemory(PostBlock, sizeof(CM_POST_BLOCK));
 
     PostBlock->IsMasterPostBlock = FALSE;
 
