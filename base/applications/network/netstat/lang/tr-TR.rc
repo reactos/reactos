@@ -1,8 +1,9 @@
-/* Translator:
-	2025 - Efe Gürel - <info.efegurel@gmail.com> 
-	PS: gözden kaçan yerler olduysa iletişime geçebilirsiniz.
-*/
-
+/*
+ * PROJECT:     ReactOS netstat utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2025 Efe Gürel <info.efegurel@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
