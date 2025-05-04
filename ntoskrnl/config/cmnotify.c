@@ -29,7 +29,8 @@
  */
 BOOLEAN
 NTAPI
-CmpIsKcbSubKey(_In_ PCM_KEY_CONTROL_BLOCK ParentKey, _In_ PCM_KEY_CONTROL_BLOCK SubKey)
+CmpIsKcbSubKey(_In_ PCM_KEY_CONTROL_BLOCK ParentKey,
+               _In_ PCM_KEY_CONTROL_BLOCK SubKey)
 {
     ULONG Depth;
     PCM_KEY_CONTROL_BLOCK SubKeyParent;
@@ -56,7 +57,8 @@ CmpIsKcbSubKey(_In_ PCM_KEY_CONTROL_BLOCK ParentKey, _In_ PCM_KEY_CONTROL_BLOCK 
  */
 VOID
 NTAPI
-CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK* Subordinates)
+CmpPostBlockFreeSubordinates(_In_ ULONG Count,
+                             _In_ PCM_NOTIFY_BLOCK* Subordinates)
 {
     PCM_POST_BLOCK PostBlock;
 
@@ -340,11 +342,10 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
  */
 NTSTATUS
 NTAPI
-CmpInsertNotifyBlock(
-    _In_ PCM_KEY_BODY KeyBody,
-    _In_ ULONG Filter,
-    _In_ BOOLEAN WatchTree,
-    _Out_ PCM_NOTIFY_BLOCK *Result)
+CmpInsertNotifyBlock(_In_ PCM_KEY_BODY KeyBody,
+                     _In_ ULONG Filter,
+                     _In_ BOOLEAN WatchTree,
+                     _Out_ PCM_NOTIFY_BLOCK *Result)
 {
     PCM_NOTIFY_BLOCK NotifyBlock;
     PCMHIVE Hive;
@@ -470,11 +471,10 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
  */
 NTSTATUS
 NTAPI
-CmpInsertSubPostBlock(
-    _In_  PCM_NOTIFY_BLOCK NotifyBlock,
-    _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
-    _In_  PCM_POST_BLOCK MasterPostBlock,
-    _Out_ PCM_POST_BLOCK *Result)
+CmpInsertSubPostBlock(_In_  PCM_NOTIFY_BLOCK NotifyBlock,
+                      _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
+                      _In_  PCM_POST_BLOCK MasterPostBlock,
+                      _Out_ PCM_POST_BLOCK *Result)
 {
     PCM_POST_BLOCK PostBlock;
 
