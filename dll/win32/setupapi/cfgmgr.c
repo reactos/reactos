@@ -24,17 +24,11 @@
 #include <dbt.h>
 #include <pnp_c.h>
 #include <winsvc.h>
+#include <winsvc_undoc.h>
 
 #include <pseh/pseh2.h>
 
 #include "rpc_private.h"
-
-DWORD
-WINAPI
-I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
-                      OUT LPWSTR lpServiceName,
-                      IN DWORD cchServiceName);
-
 
 /* Registry key and value names */
 static const WCHAR BackslashOpenBrace[] = {'\\', '{', 0};
