@@ -211,7 +211,7 @@ STRINGTABLE
 BEGIN
     IDS_COLUMNTYPE "Tipo"
     IDS_COLUMNDATE "Data"
-    IDS_COLUMNTIME "Hora"
+    IDS_COLUMNTIME "Tempo"
     IDS_COLUMNSOURCE "Fonte"
     IDS_COLUMNCATEGORY "Categoria"
     IDS_COLUMNEVENT "Evento"
@@ -221,16 +221,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY_EVTTYPE "Tipo de evento:"
+    IDS_COPY_EVTSRC  "Fonte do evento:"
+    IDS_COPY_EVTCAT  "Categoria:"
+    IDS_COPY_EVTID   "ID do evento:"
+    IDS_COPY_EVTDATE "Data:"
+    IDS_COPY_EVTTIME "Tempo:"
+    IDS_COPY_EVTUSER "Usuário:"
+    IDS_COPY_EVTCOMP "Computador:"
+    IDS_COPY_EVTTEXT "Descrição:"
+    IDS_COPY_EVTDATA "Dados:"
 END
 
 STRINGTABLE

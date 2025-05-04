@@ -130,7 +130,16 @@
 #define IDS_COLUMNUSER      226
 #define IDS_COLUMNCOMPUTER  227
 
-#define IDS_COPY            240
+#define IDS_COPY_EVTTYPE    240
+#define IDS_COPY_EVTSRC     241
+#define IDS_COPY_EVTCAT     242
+#define IDS_COPY_EVTID      243
+#define IDS_COPY_EVTDATE    244
+#define IDS_COPY_EVTTIME    245
+#define IDS_COPY_EVTUSER    246
+#define IDS_COPY_EVTCOMP    247
+#define IDS_COPY_EVTTEXT    248
+#define IDS_COPY_EVTDATA    249
 
 #define IDS_NONE            250
 #define IDS_NOT_AVAILABLE   251
