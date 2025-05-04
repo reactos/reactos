@@ -847,15 +847,15 @@ VOID ShowNetworkIconContextMenu(
     {
         UINT uID;
         UINT uFlags;
-        UINT_PTR uIDNewItem; // wCmdID
+        UINT_PTR uIDNewItem;
     } MenuItems[] =
     {
-        {IDS_NET_ACTIVATE, MF_STRING | MF_GRAYED, IDM_NETICON_ENABLE},
-        {IDS_NET_STATUS, MF_STRING | MF_GRAYED, IDM_NETICON_STATUS},
-        {IDS_NET_REPAIR, MF_STRING | MF_GRAYED, IDM_NETICON_REPAIR},
+        {IDS_NET_ACTIVATE, MF_GRAYED, IDM_NETICON_ENABLE},
+        {IDS_NET_STATUS, MF_GRAYED, IDM_NETICON_STATUS},
+        {IDS_NET_REPAIR, MF_GRAYED, IDM_NETICON_REPAIR},
         {UINT_MAX, 0, 0}, // Separator
-        {IDS_NET_OPEN_CONNECTIONS, MF_STRING, IDM_NETICON_OPEN_CONNECTIONS},
-        {IDS_NET_PROPERTIES, MF_STRING | MFS_DEFAULT, IDM_NETICON_PROPERTIES},
+        {IDS_NET_OPEN_CONNECTIONS, MF_ENABLED, IDM_NETICON_OPEN_CONNECTIONS},
+        {IDS_NET_PROPERTIES, MF_ENABLED | MFS_DEFAULT, IDM_NETICON_PROPERTIES},
     };
 
     NETCON_PROPERTIES *pProps = NULL;
@@ -867,31 +867,31 @@ VOID ShowNetworkIconContextMenu(
             pProps->Status == NCS_DISCONNECTED)
         {
             MenuItems[0].uID = IDS_NET_ACTIVATE;
-            MenuItems[0].uFlags = MF_STRING | MFS_DEFAULT;
+            MenuItems[0].uFlags = MF_ENABLED | MFS_DEFAULT;
             MenuItems[0].uIDNewItem = IDM_NETICON_ENABLE;
-            MenuItems[5].uFlags = MF_STRING;
+            MenuItems[5].uFlags = MF_ENABLED;
         }
         else
         {
             MenuItems[0].uID = IDS_NET_DEACTIVATE;
-            MenuItems[0].uFlags = MF_STRING;
+            MenuItems[0].uFlags = MF_ENABLED;
             MenuItems[0].uIDNewItem = IDM_NETICON_DISABLE;
         }
 
         if (pProps->Status == NCS_CONNECTED)
         {
-            MenuItems[1].uFlags = MF_STRING;
-            MenuItems[2].uFlags = MF_STRING;
+            MenuItems[1].uFlags = MF_ENABLED;
+            MenuItems[2].uFlags = MF_ENABLED;
         }
         else if (pProps->Status == NCS_CONNECTING)
         {
-            MenuItems[1].uFlags = MF_STRING;
-            MenuItems[2].uFlags = MF_STRING | MF_GRAYED;
+            MenuItems[1].uFlags = MF_ENABLED;
+            MenuItems[2].uFlags = MF_GRAYED;
         }
         else
         {
-            MenuItems[1].uFlags = MF_STRING | MF_GRAYED;
-            MenuItems[2].uFlags = MF_STRING | MF_GRAYED;
+            MenuItems[1].uFlags = MF_GRAYED;
+            MenuItems[2].uFlags = MF_GRAYED;
         }
 
         NcFreeNetconProperties(pProps);
@@ -899,10 +899,10 @@ VOID ShowNetworkIconContextMenu(
     }
     else
     {
-        MenuItems[0].uFlags = MF_STRING | MF_GRAYED;
-        MenuItems[1].uFlags = MF_STRING | MF_GRAYED;
-        MenuItems[2].uFlags = MF_STRING | MF_GRAYED;
-        MenuItems[5].uFlags = MF_STRING | MF_GRAYED;
+        MenuItems[0].uFlags = MF_GRAYED;
+        MenuItems[1].uFlags = MF_GRAYED;
+        MenuItems[2].uFlags = MF_GRAYED;
+        MenuItems[5].uFlags = MF_GRAYED;
     }
 
     // Set the "Properties" item as default, if the Network "Enable/Disable" item isn't.
@@ -916,7 +916,7 @@ VOID ShowNetworkIconContextMenu(
         if (MenuItems[i].uID != UINT_MAX)
         {
             if (LoadStringW(netshell_hInstance, MenuItems[i].uID, szMenuItem, _countof(szMenuItem)))
-                AppendMenuW(hMenu, MenuItems[i].uFlags, MenuItems[i].uIDNewItem, szMenuItem);
+                AppendMenuW(hMenu, MF_STRING | MenuItems[i].uFlags, MenuItems[i].uIDNewItem, szMenuItem);
         }
         else
         {
