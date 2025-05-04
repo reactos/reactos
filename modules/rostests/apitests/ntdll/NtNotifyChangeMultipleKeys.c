@@ -42,15 +42,13 @@ typedef struct _CHANGE_NOTIFY_TEST_STATE
 
 /* Registry watcher thread for testing synchronous mode */
 
-DWORD WINAPI
-NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
+DWORD WINAPI NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
 {
     NTSTATUS Status;
     HANDLE KeyHandle = (HANDLE)lpParameter;
     IO_STATUS_BLOCK IoStatusBlock;
-
-    Status = NtNotifyChangeMultipleKeys(
-        KeyHandle, 0, NULL, NULL, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
+    
+    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, NULL, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
     ok_ntstatus(Status, STATUS_NOTIFY_ENUM_DIR);
 
     return 0;
@@ -58,8 +56,7 @@ NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
 
 /* APC Routine for testing asynchronous mode */
 
-VOID WINAPI
-NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
+VOID WINAPI NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
 {
     UNREFERENCED_PARAMETER(IoStatusBlock);
     UNREFERENCED_PARAMETER(Reserved);
@@ -71,33 +68,14 @@ NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatu
 /* Helper functions */
 
 #define CLEANUP(state) NtNotifyChangeMultipleKeys_Cleanup(state)
-#define CHECK_ERROR(state, Status)                                                                                     \
-    if (!NT_SUCCESS(Status))                                                                                           \
-    {                                                                                                                  \
-        ok(FALSE, "%d: Internal error, Status=0x%x\n", __LINE__, (unsigned int)Status);                                \
-        CLEANUP(state);                                                                                                \
-        return Status;                                                                                                 \
-    }
-#define TEST_ERROR(state, Status, Expected)                                                                            \
-    ok_ntstatus(Status, Expected);                                                                                     \
-    if (Status != Expected)                                                                                            \
-    {                                                                                                                  \
-        CLEANUP(state);                                                                                                \
-        return Status;                                                                                                 \
-    }
-#define INIT_TEST(state, Status)                                                                                       \
-    Status = NtNotifyChangeMultipleKeys_InitializePerTest(state);                                                      \
-    CHECK_ERROR(state, Status)
-#define FINALIZE_TEST(state)                                                                                           \
-    CLEANUP(state);                                                                                                    \
-    return STATUS_SUCCESS
-#define RUN_TEST(state, Status, TestName)                                                                              \
-    Status = NtNotifyChangeMultipleKeys_TEST_##TestName(state);                                                        \
-    ok(Status == STATUS_SUCCESS, "Subtest " #TestName " failed.\n")
+#define CHECK_ERROR(state, Status) if (!NT_SUCCESS(Status)) { ok(FALSE, "%d: Internal error, Status=0x%x\n", __LINE__, (unsigned int)Status); CLEANUP(state); return Status; }
+#define TEST_ERROR(state, Status, Expected)  ok_ntstatus(Status, Expected); if (Status != Expected) { CLEANUP(state); return Status; }
+#define INIT_TEST(state, Status) Status = NtNotifyChangeMultipleKeys_InitializePerTest(state); CHECK_ERROR(state, Status)
+#define FINALIZE_TEST(state) CLEANUP(state); return STATUS_SUCCESS
+#define RUN_TEST(state, Status, TestName) Status = NtNotifyChangeMultipleKeys_TEST_##TestName(state); ok(Status == STATUS_SUCCESS, "Subtest "#TestName" failed.\n")
 #define START_SUBTEST(TestName) NTSTATUS WINAPI NtNotifyChangeMultipleKeys_TEST_##TestName(PState state)
 
-VOID WINAPI
-NtNotifyChangeMultipleKeys_Cleanup(PState state)
+VOID WINAPI NtNotifyChangeMultipleKeys_Cleanup(PState state)
 {
     if (state->EventHandle)
     {
@@ -121,8 +99,7 @@ NtNotifyChangeMultipleKeys_Cleanup(PState state)
     }
 }
 
-NTSTATUS WINAPI
-NtNotifyChangeMultipleKeys_Initialize(PState state)
+NTSTATUS WINAPI NtNotifyChangeMultipleKeys_Initialize(PState state)
 {
     NTSTATUS Status;
 
@@ -141,28 +118,23 @@ NtNotifyChangeMultipleKeys_Initialize(PState state)
     InitializeObjectAttributes(&state->SubKeyObjectAttributes, &state->SubKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     RtlInitUnicodeString(&state->SecondaryKeyName, L"\\Registry\\User\\.DEFAULT\\SOFTWARE\\TestKey");
-    InitializeObjectAttributes(
-        &state->SecondaryObjectAttributes, &state->SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&state->SecondaryObjectAttributes, &state->SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     /* Create registry keys */
-    Status = NtCreateKey(
-        &state->KeyHandle, KEY_ALL_ACCESS, &state->ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+    Status = NtCreateKey(&state->KeyHandle, KEY_ALL_ACCESS, &state->ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     CHECK_ERROR(state, Status);
 
-    Status = NtCreateKey(
-        &state->SubKeyHandle, KEY_ALL_ACCESS, &state->SubKeyObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+    Status = NtCreateKey(&state->SubKeyHandle, KEY_ALL_ACCESS, &state->SubKeyObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     CHECK_ERROR(state, Status);
 
-    Status = NtCreateKey(
-        &SecondaryKeyHandle, KEY_ALL_ACCESS, &state->SecondaryObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+    Status = NtCreateKey(&SecondaryKeyHandle, KEY_ALL_ACCESS, &state->SecondaryObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     CHECK_ERROR(state, Status);
     CloseHandle(SecondaryKeyHandle);
 
     FINALIZE_TEST(state);
 }
 
-NTSTATUS WINAPI
-NtNotifyChangeMultipleKeys_CleanupTestKeys(PState state)
+NTSTATUS WINAPI NtNotifyChangeMultipleKeys_CleanupTestKeys(PState state)
 {
     NTSTATUS Status;
     HANDLE SecondaryKey;
@@ -177,15 +149,14 @@ NtNotifyChangeMultipleKeys_CleanupTestKeys(PState state)
     Status = NtOpenKey(&SecondaryKey, DELETE, &state->SecondaryObjectAttributes);
     if (NT_SUCCESS(Status))
     {
-        NtDeleteKey(SecondaryKey);
+        NtDeleteKey(SecondaryKey);   
         CloseHandle(SecondaryKey);
     }
 
     return STATUS_SUCCESS;
 }
 
-NTSTATUS WINAPI
-NtNotifyChangeMultipleKeys_InitializePerTest(PState state)
+NTSTATUS WINAPI NtNotifyChangeMultipleKeys_InitializePerTest(PState state)
 {
     NTSTATUS Status;
 
@@ -211,7 +182,7 @@ START_SUBTEST(Synchronous)
     DWORD ValueData2 = 0x87654321;
 
     INIT_TEST(state, Status);
-
+    
     /* Create a thread */
     state->ThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, state->KeyHandle, 0, NULL);
     if (!state->ThreadHandle)
@@ -256,9 +227,7 @@ START_SUBTEST(Asynchronous)
     ok(state->EventHandle != NULL, "Failed to create event\n");
 
     /* Start watching for changes */
-    Status = NtNotifyChangeMultipleKeys(
-        state->KeyHandle, 0, NULL, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET,
-        FALSE, NULL, 0, TRUE);
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle, 0, NULL, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
     TEST_ERROR(state, Status, STATUS_PENDING);
 
     /* Check event state */
@@ -296,9 +265,7 @@ START_SUBTEST(WatchSubtree)
     ok(state->EventHandle != NULL, "Failed to create event\n");
 
     /* Start watching for changes */
-    Status = NtNotifyChangeMultipleKeys(
-        state->KeyHandle, 0, NULL, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET,
-        TRUE, NULL, 0, TRUE);
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle, 0, NULL, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
     TEST_ERROR(state, Status, STATUS_PENDING);
 
     /* Check event state */
@@ -340,9 +307,18 @@ START_SUBTEST(WatchSecondaryKey)
     /* Start watching for changes */
     OBJECT_ATTRIBUTES SubordinateObjects[1];
     InitializeObjectAttributes(&SubordinateObjects[0], &state->SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtNotifyChangeMultipleKeys(
-        state->KeyHandle, sizeof(SubordinateObjects) / sizeof(OBJECT_ATTRIBUTES), SubordinateObjects,
-        state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
+                                        sizeof(SubordinateObjects)/sizeof(OBJECT_ATTRIBUTES),
+                                        SubordinateObjects,
+                                        state->EventHandle,
+                                        NULL,
+                                        NULL,
+                                        &state->IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        TRUE,
+                                        NULL,
+                                        0,
+                                        TRUE);
     TEST_ERROR(state, Status, STATUS_PENDING);
 
     /* Check event state */
@@ -381,9 +357,7 @@ START_SUBTEST(ApcRoutine)
     state->ApcRan = FALSE;
 
     /* Start watching for changes */
-    Status = NtNotifyChangeMultipleKeys(
-        state->KeyHandle, 0, NULL, NULL, NtNotifyChangeMultipleKeys_ApcRoutine, state, &state->IoStatusBlock,
-        REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle, 0, NULL, NULL, NtNotifyChangeMultipleKeys_ApcRoutine, state, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
     TEST_ERROR(state, Status, STATUS_PENDING);
 
     /* Make change to the registry key */
@@ -409,7 +383,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
 {
     NTSTATUS Status;
     TState State;
-
+    
     Status = NtNotifyChangeMultipleKeys_Initialize(&State);
     ASSERT(NT_SUCCESS(Status));
 
