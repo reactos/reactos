@@ -1050,8 +1050,7 @@ LANStatusDlg(
             if (!pContext || !pContext->pNet)
                 break;
 
-            UINT menuId = LOWORD(wParam);
-            switch (menuId)
+            switch (LOWORD(wParam))
             {
                 case IDM_NETICON_ENABLE:
                     pContext->pNet->Connect();
