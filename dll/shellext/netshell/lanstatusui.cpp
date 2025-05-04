@@ -913,7 +913,7 @@ VOID ShowNetworkIconContextMenu(
 
     for (USHORT i = 0; i < _countof(MenuItems); ++i)
     {
-        if (MenuItems[i].uID != -1)
+        if (MenuItems[i].uID != UINT_MAX)
         {
             if (LoadStringW(netshell_hInstance, MenuItems[i].uID, szMenuItem, _countof(szMenuItem)))
                 AppendMenuW(hMenu, MenuItems[i].uFlags, MenuItems[i].uIDNewItem, szMenuItem);
