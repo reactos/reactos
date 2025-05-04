@@ -361,11 +361,8 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
             // Confirm the second scenario by checking first item's rect
             RECT rc;
             SendMessageW(child, TB_GETITEMRECT, 1, (LPARAM)&rc);
-
             if (PtInRect(&rc, pt))
-            {
                 iHitTestResult = 1;
-            }
         }
 
         if (SendMessage(child, WM_USER_ISTRACKEDITEM, iHitTestResult, 0) == S_FALSE)
