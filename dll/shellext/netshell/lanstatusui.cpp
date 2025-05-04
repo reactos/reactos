@@ -9,6 +9,7 @@
 
 #include <winsock.h>
 #include <shellapi.h>
+#include <shellutils.h>
 
 #define NETTIMERID 0xFABC
 
@@ -931,36 +932,9 @@ VOID ShowNetworkIconContextMenu(
     DestroyMenu(hMenu);
 }
 
-VOID LaunchNetworkConnectionsFolder(HWND hwndOwner)
-{
-    WCHAR szCommand[] = L"control netconnections";
-    STARTUPINFOW si = { sizeof(si) };
-    PROCESS_INFORMATION pi;
-    BOOL bSuccess;
-
-    bSuccess = CreateProcessW(NULL,
-                              szCommand,
-                              NULL,
-                              NULL,
-                              FALSE,
-                              0,
-                              NULL,
-                              NULL,
-                              &si,
-                              &pi);
-    if (bSuccess)
-    {
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-    }
-}
-
 HRESULT RepairConnection(INetConnection *pNet, HWND hwndOwner)
 {
-    MessageBoxW(hwndOwner,
-                L"The 'Repair' function is not yet implemented in ReactOS.",
-                L"Repair Network Connection",
-                 MB_ICONINFORMATION | MB_OK);
+    SHELL_ErrorBox(hwndOwner, HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED));
 
     return E_NOTIMPL;
 }
@@ -1088,7 +1062,7 @@ LANStatusDlg(
                     break;
 
                 case IDM_NETICON_OPEN_CONNECTIONS:
-                    LaunchNetworkConnectionsFolder(hwndDlg);
+                    ShellExecuteW(hwndDlg, NULL, L"control", L"netconnections", NULL, SW_SHOWNORMAL);
                     break;
             }
             break;
