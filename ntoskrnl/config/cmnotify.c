@@ -71,7 +71,7 @@ CmpPostBlockFreeSubordinates(_In_ ULONG Count, _In_ PCM_NOTIFY_BLOCK* Subordinat
     }
 
     /* At last free the array itself */
-    ExFreePool(Subordinates);
+    ExFreePoolWithTag(Subordinates);
 }
 
 /**
