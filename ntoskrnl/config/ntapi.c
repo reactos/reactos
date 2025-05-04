@@ -1570,21 +1570,6 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Check if the registry key is deleted */
-    if (KeyObject->KeyControlBlock->Delete)
-    {
-        ObDereferenceObject(KeyObject);
-        return STATUS_KEY_DELETED;
-    }
-
-    /* Early return if there's a notification pending */
-    if (KeyObject->NotifyBlock && KeyObject->NotifyBlock->NotifyPending)
-    {
-        KeyObject->NotifyBlock->NotifyPending = FALSE;
-        ObDereferenceObject(KeyObject);
-        return STATUS_NOTIFY_ENUM_DIR;
-    }
-
     /* Block APCs */
     KeEnterCriticalRegion();
 
@@ -1652,6 +1637,25 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
 
     /* Lock the Kcb while we are initializing/updating NotifyBlock */
     CmpAcquireKcbLockExclusive(KeyObject->KeyControlBlock);
+
+    /* Check if the registry key is deleted */
+    if (KeyObject->KeyControlBlock->Delete)
+    {
+        ExFreePool(LocalSubObjects);
+        ExFreePool(SubNames);
+        ObDereferenceObject(KeyObject);
+        return STATUS_KEY_DELETED;
+    }
+
+    /* Early return if there's a notification pending */
+    if (KeyObject->NotifyBlock && KeyObject->NotifyBlock->NotifyPending)
+    {
+        KeyObject->NotifyBlock->NotifyPending = FALSE;
+        ExFreePool(LocalSubObjects);
+        ExFreePool(SubNames);
+        ObDereferenceObject(KeyObject);
+        return STATUS_NOTIFY_ENUM_DIR;
+    }
 
     /* Open subordinate objects */
     if (Count > 0)
