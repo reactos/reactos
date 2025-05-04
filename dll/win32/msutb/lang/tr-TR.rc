@@ -1,0 +1,79 @@
+/*
+ * PROJECT:     ReactOS msutb.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2025 Efe Gürel <info.efegurel@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_OK               "Tamam"
+    IDS_CANCEL           "İptal"
+    IDS_ABORT            "&Sonlandır"
+    IDS_RETRY            "&Tekrar Dene"
+    IDS_IGNORE           "&Yoksay"
+    IDS_YES              "&Evet"
+    IDS_NO               "&Hayır"
+
+    IDS_SETTINGS         "A&yarlar..."
+    IDS_RESTORELANGBAR   "Dil Çubuğunu Geri Yükle"
+    IDS_LANGUAGE         "Dil"
+    IDS_LANGUAGEBUTTON   "Dil Butonu"
+    IDS_TRANSPARENCY     "&Transparanlık"
+    IDS_TEXTLABELS       "M&etin Etiketleri"
+    IDS_MINIMIZE         "&Küçült"
+    IDS_CLOSELANGBAR     "&Dil Çubuğunu Kapat"
+    IDS_EXTRAICONS       "&Görev Çubuğunda Ek İkonlar"
+    IDS_LANGUAGEBAR      "Dil Çubuğu"
+    IDS_RESTORELANGBAR2  "&Dil Çubuğunu Geri Yükle"
+    IDS_MENUWND          "Menü Penceresi"
+    IDS_VERTICAL         "&Dikey"
+    IDS_ADJUSTLANGBAND   "&Dil Çubuğu Konumunu Ayarla"
+    IDS_LEFTCLICK        "Sol Tık"
+END
+
+IDD_CLOSELANGBARNOBAND DIALOGEX 0, 0, 200, 105
+CAPTION "Dil Çubuğu"
+STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Dil çubuğunu kapattınız.\r\n\r\nDil çubuğunu daha sonra tekrar kullanmak için, Dil Çubuğu Ayarları iletişim kutusunda, ""Masaüstünde Dil Çubuğunu Göster"" seçeneğini işaretleyin. Bu ayarı Metin Hizmetleri Denetim Masasında bulabilirsiniz.", -1, 5, 5, 190, 60
+    AUTOCHECKBOX "&Bu mesajı bir daha gösterme", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
+    DEFPUSHBUTTON "Tamam", IDOK, 80, 85, 55, 15
+    PUSHBUTTON "İptal", IDCANCEL, 140, 85, 55, 15
+}
+
+IDD_CLOSELANGBAR DIALOGEX 0, 0, 200, 105
+CAPTION "Dil Çubuğu"
+STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Dil çubuğunu kapattınız.\r\n\r\nDil çubuğunu daha sonra tekrar kullanmak için, Dil Çubuğu Ayarları İletişim kutusunda, ""Masaüstünde Dil Çubuğunu Göster"" seçeneğini işaretleyin. Bu ayarı Bölge ve Dil Seçenekleri Denetim Masasında bulabilirsiniz.", -1, 5, 5, 190, 60
+    AUTOCHECKBOX "&Bu mesajı bir daha gösterme", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
+    DEFPUSHBUTTON "Tamam", IDOK, 80, 85, 55, 15
+    PUSHBUTTON "İptal", IDCANCEL, 140, 85, 55, 15
+}
+
+IDD_MINIMIZELANGBARNOBAND DIALOGEX 0, 0, 205, 124
+CAPTION "Dil Çubuğu"
+STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Dil çubuğunu küçülttünüz. Geri yüklemek için, sadece Dil çubuğu ikonuna tıklayınız (saatin yanında) ve çıkan menüde ""Dil çubuğunu geri yükle"" seçeneğine basınız.", -1, 5, 5, 190, 50
+    CONTROL IDB_BITMAP154, -1, "STATIC", SS_BITMAP, 72, 63, 60, 60, WS_EX_STATICEDGE
+    AUTOCHECKBOX "Bu mesajı bir daha gösterme", IDC_MINIMIZELANGBAR_CHECK, 5, 95, 142, 10
+    DEFPUSHBUTTON "Tamam", IDOK, 140, 105, 60, 15
+}
+
+IDD_MINIMIZELANGBAR DIALOGEX 0, 0, 205, 124
+CAPTION "Dil Çubuğu"
+STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Dil çubuğunu küçülttünüz. Geri yüklemek için, sadece Dil çubuğu ikonuna tıklayınız (saatin yanında) ve çıkan menüde ""Dil çubuğunu geri yükle"" seçeneğine basınız.", -1, 5, 5, 190, 50
+    CONTROL IDB_BITMAP155, -1, "STATIC", SS_BITMAP, 53, 67, 60, 60, WS_EX_STATICEDGE
+    AUTOCHECKBOX "Bu mesajı bir daha gösterme", IDC_MINIMIZELANGBAR_CHECK, 5, 95, 142, 10
+    DEFPUSHBUTTON "Tamam", IDOK, 140, 105, 60, 15
+}
