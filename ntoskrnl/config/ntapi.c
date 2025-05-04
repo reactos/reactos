@@ -1584,7 +1584,7 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
             /* Probe and capture subordinate objects */
             if (Count > 0)
             {
-                LocalSubObjects = ExAllocatePool(NonPagedPool, Count * sizeof(OBJECT_ATTRIBUTES));
+                LocalSubObjects = ExAllocatePoolZero(NonPagedPool, Count * sizeof(OBJECT_ATTRIBUTES), TAG_CM);
                 if (!LocalSubObjects)
                 {
                     ObDereferenceObject(KeyObject);
@@ -1592,11 +1592,11 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
                     _SEH2_YIELD(goto Quit);
                 }
 
-                SubNames = ExAllocatePool(NonPagedPool, Count * sizeof(UNICODE_STRING));
+                SubNames = ExAllocatePoolZero(NonPagedPool, Count * sizeof(UNICODE_STRING), TAG_CM);
                 if (!SubNames)
                 {
                     ObDereferenceObject(KeyObject);
-                    ExFreePool(LocalSubObjects);
+                    ExFreePoolWithTag(LocalSubObjects, TAG_CM);
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     _SEH2_YIELD(goto Quit);
                 }
@@ -1625,9 +1625,9 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
             if (KeyObject)
                 ObDereferenceObject(KeyObject);
             if (LocalSubObjects)
-                ExFreePool(LocalSubObjects);
+                ExFreePoolWithTag(LocalSubObjects, TAG_CM);
             if (SubNames)
-                ExFreePool(SubNames);
+                ExFreePoolWithTag(SubNames, TAG_CM);
             goto Quit;
         }
     }
@@ -1641,8 +1641,8 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
     /* Check if the registry key is deleted */
     if (KeyObject->KeyControlBlock->Delete)
     {
-        ExFreePool(LocalSubObjects);
-        ExFreePool(SubNames);
+        ExFreePoolWithTag(LocalSubObjects, TAG_CM);
+        ExFreePoolWithTag(SubNames, TAG_CM);
         ObDereferenceObject(KeyObject);
         return STATUS_KEY_DELETED;
     }
@@ -1651,8 +1651,8 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
     if (KeyObject->NotifyBlock && KeyObject->NotifyBlock->NotifyPending)
     {
         KeyObject->NotifyBlock->NotifyPending = FALSE;
-        ExFreePool(LocalSubObjects);
-        ExFreePool(SubNames);
+        ExFreePoolWithTag(LocalSubObjects, TAG_CM);
+        ExFreePoolWithTag(SubNames, TAG_CM);
         ObDereferenceObject(KeyObject);
         return STATUS_NOTIFY_ENUM_DIR;
     }
@@ -1660,13 +1660,12 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
     /* Open subordinate objects */
     if (Count > 0)
     {
-        LocalSubObjectsKeyBody = ExAllocatePool(NonPagedPool, Count * sizeof(PCM_KEY_BODY));
+        LocalSubObjectsKeyBody = ExAllocatePoolZero(NonPagedPool, Count * sizeof(PCM_KEY_BODY), TAG_CM);
         if (!LocalSubObjectsKeyBody)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Failure;
         }
-        RtlZeroMemory(LocalSubObjectsKeyBody, Count * sizeof(PCM_KEY_BODY));
 
         for (int i = 0; i < Count; i++)
         {
@@ -1715,8 +1714,8 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
         }
 
         /* The name is no longer needed */
-        ExFreePool(LocalSubObjects);
-        ExFreePool(SubNames);
+        ExFreePoolWithTag(LocalSubObjects, TAG_CM);
+        ExFreePoolWithTag(SubNames, TAG_CM);
     }
 
     /* Allocate and initialize master NotifyBlock */
@@ -1786,7 +1785,7 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
     if (Count > 0)
     {
         /* Allocate a storage array */
-        SubNotifyBlocks = ExAllocatePool(NonPagedPool, Count * sizeof(PCM_NOTIFY_BLOCK));
+        SubNotifyBlocks = ExAllocatePoolZero(NonPagedPool, Count * sizeof(PCM_NOTIFY_BLOCK), TAG_CM);
         if (!SubNotifyBlocks)
             goto Failure;
 
@@ -1818,7 +1817,7 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
         }
 
         /* We don't need an array for storing KeyBody objects */
-        ExFreePool(LocalSubObjectsKeyBody);
+        ExFreePoolWithTag(LocalSubObjectsKeyBody, TAG_CM);
         LocalSubObjectsKeyBody = NULL;
     }
 
@@ -1862,9 +1861,9 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
 
 Failure:
     if (LocalSubObjects)
-        ExFreePool(LocalSubObjects);
+        ExFreePoolWithTag(LocalSubObjects, TAG_CM);
     if (SubNames)
-        ExFreePool(SubNames);
+        ExFreePoolWithTag(SubNames, TAG_CM);
 
     if (LocalSubObjectsKeyBody)
     {
@@ -1874,7 +1873,7 @@ Failure:
                 ObDereferenceObject(LocalSubObjectsKeyBody[i]);
         }
 
-        ExFreePool(LocalSubObjectsKeyBody);
+        ExFreePoolWithTag(LocalSubObjectsKeyBody, TAG_CM);
     }
 
     if (SubNotifyBlocks)
@@ -1885,7 +1884,7 @@ Failure:
                 ExFreePoolWithTag(SubNotifyBlocks[i], TAG_CM);
         }
 
-        ExFreePool(SubNotifyBlocks);
+        ExFreePoolWithTag(SubNotifyBlocks, TAG_CM);
     }
         
     if (LocalEventObject)
