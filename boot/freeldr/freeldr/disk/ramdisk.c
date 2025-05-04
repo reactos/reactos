@@ -12,6 +12,9 @@
 #include <freeldr.h>
 #include "../ntldr/ntldropts.h"
 
+#include <debug.h>
+DBG_DEFAULT_CHANNEL(DISK);
+
 /* GLOBALS ********************************************************************/
 
 PVOID gInitRamDiskBase = NULL;
@@ -119,6 +122,8 @@ RamDiskLoadVirtualFile(
     UiDrawProgressBarCenter("Loading RamDisk...");
 
     /* Try opening the Ramdisk file */
+    TRACE("RamDiskLoadVirtualFile: Opening '%s', '%s'\n",
+          FileName, DefaultPath ? DefaultPath : "n/a");
     Status = FsOpenFile(FileName, DefaultPath, OpenReadOnly, &RamFileId);
     if (Status != ESUCCESS)
         return Status;
@@ -130,16 +135,24 @@ RamDiskLoadVirtualFile(
         ArcClose(RamFileId);
         return Status;
     }
+    /* NOTE: For partitions, StartingAddress/EndingAddress are the start/end
+     * positions of the partition as byte offsets from the start of the disk */
+    Information.EndingAddress.QuadPart -= Information.StartingAddress.QuadPart;
+    Information.StartingAddress.QuadPart = 0ULL;
+
+    TRACE("RAMDISK size: %I64u (High: %lu ; Low: %lu)\n",
+          Information.EndingAddress.QuadPart,
+          Information.EndingAddress.HighPart,
+          Information.EndingAddress.LowPart);
 
     /* FIXME: For now, limit RAM disks to 4GB */
-    if (Information.EndingAddress.HighPart != 0)
+    if (Information.EndingAddress.HighPart != 0) // (RamDiskFileSize >= 0x100000000ULL)
     {
         ArcClose(RamFileId);
         UiMessageBox("RAM disk too big.");
         return ENOMEM;
     }
     RamDiskFileSize = Information.EndingAddress.QuadPart;
-    ASSERT(RamDiskFileSize < 0x100000000); // See FIXME above.
 
     /* Allocate memory for it */
     ChunkSize = 8 * 1024 * 1024;
@@ -208,6 +221,11 @@ RamDiskInitialize(
     IN PCSTR LoadOptions OPTIONAL,
     IN PCSTR DefaultPath OPTIONAL)
 {
+    TRACE("RamDiskInitialize(%s, '%s', '%s')\n",
+          InitRamDisk ? "INIT" : "REGULAR",
+          LoadOptions ? LoadOptions : "n/a",
+          DefaultPath ? DefaultPath : "n/a");
+
     /* Reset the RAMDISK device */
     if ((RamDiskBase != gInitRamDiskBase) &&
         (RamDiskFileSize != gInitRamDiskSize) &&
