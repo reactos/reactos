@@ -6,10 +6,10 @@
 #endif /* UNIT_TEST */
 
 #define AcpiVerifyInBuffer(Stack, Length) \
-    ((Stack)->Parameters.DeviceIoControl.InputBufferLength >= Length)
+    ((Stack)->Parameters.DeviceIoControl.InputBufferLength >= (Length))
 
 #define AcpiVerifyOutBuffer(Stack, Length) \
-    ((Stack)->Parameters.DeviceIoControl.OutputBufferLength >= Length)
+    ((Stack)->Parameters.DeviceIoControl.OutputBufferLength >= (Length))
 
 #define TAG_ACPI_PARAMETERS_LIST     'OpcA'
 #define TAG_ACPI_PACKAGE_LIST        'PpcA'
@@ -31,7 +31,6 @@
  * into a string method argument.
  */
 static
-CODE_SEG("PAGE")
 NTSTATUS
 EvalConvertObjectReference(
     _Out_ PACPI_METHOD_ARGUMENT Argument,
@@ -39,8 +38,6 @@ EvalConvertObjectReference(
 {
     ACPI_BUFFER OutName;
     ACPI_STATUS AcpiStatus;
-
-    PAGED_CODE();
 
     Argument->Type = ACPI_METHOD_ARGUMENT_STRING;
     Argument->DataLength = ACPI_OBJECT_NAME_LENGTH;
@@ -52,7 +49,7 @@ EvalConvertObjectReference(
     AcpiStatus = AcpiGetName(Reference->Reference.Handle, ACPI_SINGLE_NAME, &OutName);
     if (!ACPI_SUCCESS(AcpiStatus))
     {
-        DPRINT1("AcpiGetName() failed on %p with status 0x%04lx\n",
+        DPRINT1("AcpiGetName() failed on %p with status 0x%04x\n",
                 Reference->Reference.Handle,
                 AcpiStatus);
 
@@ -68,7 +65,6 @@ EvalConvertObjectReference(
  * based on the type of an ACPI_OBJECT structure.
  */
 static
-CODE_SEG("PAGE")
 NTSTATUS
 EvalGetElementSize(
     _In_ ACPI_OBJECT* Obj,
@@ -78,8 +74,6 @@ EvalGetElementSize(
 {
     ULONG TotalCount, TotalLength;
     NTSTATUS Status;
-
-    PAGED_CODE();
 
     if (Depth >= ACPI_MAX_PACKAGE_DEPTH)
     {
@@ -150,7 +144,7 @@ EvalGetElementSize(
 
         default:
         {
-            DPRINT1("Unsupported element type %lu\n", Obj->Type);
+            DPRINT1("Unsupported element type %u\n", Obj->Type);
             return STATUS_UNSUCCESSFUL;
         }
     }
@@ -167,7 +161,6 @@ EvalGetElementSize(
  * @brief Performs translation from the supplied ACPI_OBJECT structure into a method argument.
  */
 static
-CODE_SEG("PAGE")
 NTSTATUS
 EvalConvertEvaluationResults(
     _Out_ ACPI_METHOD_ARGUMENT* Argument,
@@ -176,8 +169,6 @@ EvalConvertEvaluationResults(
 {
     ACPI_METHOD_ARGUMENT *Ptr;
     NTSTATUS Status;
-
-    PAGED_CODE();
 
     if (Depth >= ACPI_MAX_PACKAGE_DEPTH)
     {
@@ -259,7 +250,7 @@ EvalConvertEvaluationResults(
 
         default:
         {
-            DPRINT1("Unsupported element type %lu\n", Obj->Type);
+            DPRINT1("Unsupported element type %u\n", Obj->Type);
             return STATUS_UNSUCCESSFUL;
         }
     }
@@ -271,7 +262,6 @@ EvalConvertEvaluationResults(
  * @brief Returns the number of sub-objects (elements) in a package.
  */
 static
-CODE_SEG("PAGE")
 ULONG
 EvalGetPackageCount(
     _In_ PACPI_METHOD_ARGUMENT Package,
@@ -280,8 +270,6 @@ EvalGetPackageCount(
 {
     ACPI_METHOD_ARGUMENT* Ptr;
     ULONG TotalLength = 0, TotalCount = 0;
-
-    PAGED_CODE();
 
     /* Empty package */
     if (DataLength < ACPI_METHOD_ARGUMENT_LENGTH(0) || Package->Argument == 0)
@@ -303,7 +291,6 @@ EvalGetPackageCount(
  * @brief Performs translation from the supplied method argument into an ACPI_OBJECT structure.
  */
 static
-CODE_SEG("PAGE")
 NTSTATUS
 EvalConvertParameterObjects(
     _Out_ ACPI_OBJECT* Arg,
@@ -312,7 +299,6 @@ EvalConvertParameterObjects(
     _In_ PIO_STACK_LOCATION IoStack,
     _In_ ULONG Offset)
 {
-    PAGED_CODE();
 
     if (Depth >= ACPI_MAX_PACKAGE_DEPTH)
     {
@@ -388,7 +374,7 @@ EvalConvertParameterObjects(
             Status = RtlULongMult(Arg->Package.Count, sizeof(*Arg), &PackageSize);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("Invalid package count 0x%lx\n", Arg->Package.Count);
+                DPRINT1("Invalid package count 0x%x\n", Arg->Package.Count);
                 return STATUS_ACPI_INCORRECT_ARGUMENT_COUNT;
             }
 
@@ -431,7 +417,6 @@ EvalConvertParameterObjects(
  * @brief Creates a counted array of ACPI_OBJECTs from the given input buffer.
  */
 static
-CODE_SEG("PAGE")
 NTSTATUS
 EvalCreateParametersList(
     _In_ PIRP Irp,
@@ -440,8 +425,6 @@ EvalCreateParametersList(
     _Out_ ACPI_OBJECT_LIST* ParamList)
 {
     ACPI_OBJECT* Arg;
-
-    PAGED_CODE();
 
     if (!AcpiVerifyInBuffer(IoStack, RTL_SIZEOF_THROUGH_FIELD(ACPI_EVAL_INPUT_BUFFER, Signature)))
     {
@@ -537,7 +520,7 @@ EvalCreateParametersList(
             Status = RtlULongMult(ParamList->Count, sizeof(*Arg), &ArgumentsSize);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("Invalid argument count 0x%lx\n", ParamList->Count);
+                DPRINT1("Invalid argument count 0x%x\n", ParamList->Count);
                 return STATUS_ACPI_INCORRECT_ARGUMENT_COUNT;
             }
 
@@ -593,15 +576,12 @@ EvalCreateParametersList(
  * @brief Deallocates the memory for all sub-objects (elements) in a package.
  */
 static
-CODE_SEG("PAGE")
 VOID
 EvalFreeParameterArgument(
     _In_ ACPI_OBJECT* Arg,
     _In_ ULONG Depth)
 {
     ULONG i;
-
-    PAGED_CODE();
 
     if (Depth >= ACPI_MAX_PACKAGE_DEPTH)
     {
@@ -626,15 +606,12 @@ EvalFreeParameterArgument(
  * @brief Deallocates the given array of ACPI_OBJECTs.
  */
 static
-CODE_SEG("PAGE")
 VOID
 EvalFreeParametersList(
     _In_ ACPI_OBJECT_LIST* ParamList)
 {
     ACPI_OBJECT* Arg;
     ULONG i;
-
-    PAGED_CODE();
 
     Arg = ParamList->Pointer;
     for (i = 0; i < ParamList->Count; i++)
@@ -649,13 +626,10 @@ EvalFreeParametersList(
  * @brief Converts the provided value of ACPI_STATUS to NTSTATUS return value.
  */
 static
-CODE_SEG("PAGE")
 NTSTATUS
 EvalAcpiStatusToNtStatus(
     _In_ ACPI_STATUS AcpiStatus)
 {
-    PAGED_CODE();
-
     if (ACPI_ENV_EXCEPTION(AcpiStatus))
     {
         switch (AcpiStatus)
@@ -680,7 +654,7 @@ EvalAcpiStatusToNtStatus(
                 return STATUS_ACPI_STACK_OVERFLOW;
 
             default:
-                break;
+                goto DefaultStatus;
         }
     }
 
@@ -692,10 +666,11 @@ EvalAcpiStatusToNtStatus(
                 return STATUS_ACPI_INCORRECT_ARGUMENT_COUNT;
 
             default:
-                break;
+                goto DefaultStatus;
         }
     }
 
+DefaultStatus:
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -703,7 +678,6 @@ EvalAcpiStatusToNtStatus(
  * @brief Evaluates an ACPI namespace object.
  */
 static
-CODE_SEG("PAGE")
 ACPI_STATUS
 EvalEvaluateObject(
     _In_ PPDO_DEVICE_DATA DeviceData,
@@ -713,9 +687,7 @@ EvalEvaluateObject(
 {
     CHAR MethodName[ACPI_OBJECT_NAME_LENGTH];
 
-    PAGED_CODE();
-
-    RtlCopyMemory(MethodName, EvalInputBuffer->MethodName, ACPI_OBJECT_NAME_LENGTH);
+    RtlCopyMemory(MethodName, EvalInputBuffer->MethodName, ACPI_OBJECT_NAME_LENGTH - 1);
     MethodName[ACPI_OBJECT_NAME_LENGTH - 1] = ANSI_NULL;
 
     return AcpiEvaluateObject(DeviceData->AcpiHandle, MethodName, ParamList, ReturnBuffer);
@@ -725,7 +697,6 @@ EvalEvaluateObject(
  * @brief Writes the results from the evaluation into the output IRP buffer.
  */
 static
-CODE_SEG("PAGE")
 NTSTATUS
 EvalCreateOutputArguments(
     _In_ PIRP Irp,
@@ -737,8 +708,6 @@ EvalCreateOutputArguments(
     PACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
     NTSTATUS Status;
     ULONG Count;
-
-    PAGED_CODE();
 
     /* If we didn't get anything back then we're done */
     if (!ReturnBuffer->Pointer || ReturnBuffer->Length == 0)
@@ -790,7 +759,7 @@ EvalCreateOutputArguments(
     return STATUS_SUCCESS;
 }
 
-CODE_SEG("PAGE")
+/* IOCTL handlers for asynchronous evaluation requests must not be paged */
 NTSTATUS
 NTAPI
 Bus_PDO_EvalMethod(
@@ -803,8 +772,6 @@ Bus_PDO_EvalMethod(
     ACPI_STATUS AcpiStatus;
     NTSTATUS Status;
     ACPI_BUFFER ReturnBuffer = { ACPI_ALLOCATE_BUFFER, NULL };
-
-    PAGED_CODE();
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     EvalInputBuffer = Irp->AssociatedIrp.SystemBuffer;
@@ -820,7 +787,7 @@ Bus_PDO_EvalMethod(
 
     if (!ACPI_SUCCESS(AcpiStatus))
     {
-        DPRINT("Query method '%.4s' failed on %p with status 0x%04lx\n",
+        DPRINT("Query method '%.4s' failed on %p with status 0x%04x\n",
                EvalInputBuffer->MethodName,
                DeviceData->AcpiHandle,
                AcpiStatus);
@@ -835,27 +802,3 @@ Bus_PDO_EvalMethod(
 
     return Status;
 }
-
-#ifndef UNIT_TEST
-CODE_SEG("PAGE")
-VOID
-NTAPI
-Bus_PDO_EvalMethodWorker(
-    _In_ PVOID Parameter)
-{
-    PEVAL_WORKITEM_DATA WorkItemData = Parameter;
-    NTSTATUS Status;
-    PIRP Irp;
-
-    PAGED_CODE();
-
-    Irp = WorkItemData->Irp;
-
-    Status = Bus_PDO_EvalMethod(WorkItemData->DeviceData, Irp);
-
-    ExFreePoolWithTag(WorkItemData, 'ipcA');
-
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-}
-#endif /* UNIT_TEST */
