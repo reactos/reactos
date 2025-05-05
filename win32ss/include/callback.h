@@ -128,6 +128,26 @@ typedef struct _GET_CHARSET_INFO
     CHARSETINFO Cs;
 } GET_CHARSET_INFO, *PGET_CHARSET_INFO;
 
+typedef struct _LOADCURSORS_CALLBACK_ARGUMENTS
+{
+    HCURSOR hCursorArrow;
+    HCURSOR hCursorIbeam;
+    HCURSOR hCursorWait;
+    HCURSOR hCursorCross;
+    HCURSOR hCursorUp;
+    HCURSOR hCursorIcon;
+    HCURSOR hCursorSize;
+    HCURSOR hCursorSizeNwse;
+    HCURSOR hCursorSizeNesw;
+    HCURSOR hCursorSizeWe;
+    HCURSOR hCursorSizeNs;
+    HCURSOR hCursorSizeAll;
+    HCURSOR hCursorNo;
+    HCURSOR hCursorHand;
+    HCURSOR hCursorAppStarting;
+    HCURSOR hCursorHelp;
+} LOADCURSORS_CALLBACK_ARGUMENTS, *PLOADCURSORS_CALLBACK_ARGUMENTS;
+
 typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
 {
     HICON hIconSample;

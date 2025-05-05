@@ -267,57 +267,34 @@ CURSORICON_ConvertPngToBmpIcon(
 
 /************* USER32 INTERNAL FUNCTIONS **********/
 
-VOID LoadSystemCursors(VOID)
-{
-   if (!gpsi->hIconSmWindows)
-   {
-       ERR("Loading System Cursors\n");
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_ARROW,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_NORMAL);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_IBEAM,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_IBEAM);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_WAIT,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_WAIT);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_CROSS,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_CROSS);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_UPARROW,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_UP);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_ICON,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_ICON);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZE,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZE);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENWSE,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENWSE);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENESW,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENESW);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZEWE,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZEWE);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENS,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENS);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZEALL,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZEALL);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_NO,          IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_NO);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_HAND,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_HAND);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_APPSTARTING, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_APPSTARTING);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_HELP,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_HELP);
-   }
-}
-
 /* This callback routine is called directly after switching to gui mode */
 NTSTATUS
 WINAPI
 User32SetupDefaultCursors(PVOID Arguments,
                           ULONG ArgumentLength)
 {
-    BOOL *DefaultCursor = (BOOL*)Arguments;
-    HCURSOR hCursor;
+    PLOADCURSORS_CALLBACK_ARGUMENTS Common = Arguments;
 
-    /* Load system cursors first */
-    LoadSystemCursors();
+    ERR("Loading System Cursors\n");
 
-    if(*DefaultCursor)
-    {
-        /* set default cursor */
-        hCursor = LoadCursorW(0, IDC_ARROW);
-        SetCursor(hCursor);
-    }
-    else
-    {
-        /* FIXME load system cursor scheme */
-        SetCursor(0);
-        hCursor = LoadCursorW(0, IDC_ARROW);
-        SetCursor(hCursor);
-    }
+    Common->hCursorArrow       = LoadImageW(NULL, IDC_ARROW,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorIbeam       = LoadImageW(NULL, IDC_IBEAM,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorWait        = LoadImageW(NULL, IDC_WAIT,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorCross       = LoadImageW(NULL, IDC_CROSS,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorUp          = LoadImageW(NULL, IDC_UPARROW,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorIcon        = LoadImageW(NULL, IDC_ICON,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorSize        = LoadImageW(NULL, IDC_SIZE,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorSizeNwse    = LoadImageW(NULL, IDC_SIZENWSE,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorSizeNesw    = LoadImageW(NULL, IDC_SIZENESW,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorSizeWe      = LoadImageW(NULL, IDC_SIZEWE,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorSizeNs      = LoadImageW(NULL, IDC_SIZENS,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorSizeAll     = LoadImageW(NULL, IDC_SIZEALL,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorNo          = LoadImageW(NULL, IDC_NO,          IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorHand        = LoadImageW(NULL, IDC_HAND,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorAppStarting = LoadImageW(NULL, IDC_APPSTARTING, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    Common->hCursorHelp        = LoadImageW(NULL, IDC_HELP,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
 
-    return(ZwCallbackReturn(&hCursor, sizeof(HCURSOR), STATUS_SUCCESS));
+    return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
 }
 
 BOOL get_icon_size(HICON hIcon, SIZE *size)

@@ -82,6 +82,14 @@ IntInsertCursorIntoList(
 {
     PPROCESSINFO ppi = pcur->head.ppi;
     PCURICON_OBJECT *ppcurHead;
+
+    //  This is hacked around to support this while at the initial system start up.
+    //  Avoids leakages of cursor handles when using a custom *.ani cursor themes.
+    if (pcur->head.ppi == NULL) return;
+
+    /* Don't cache *.ani frames */
+    if (pcur->CURSORF_flags & CURSORF_ACONFRAME) return;
+
     NT_ASSERT((pcur->CURSORF_flags & (CURSORF_GLOBAL|CURSORF_LRSHARED)) != 0);
     NT_ASSERT((pcur->CURSORF_flags & CURSORF_LINKED) == 0);
 
@@ -104,6 +112,13 @@ IntRemoveCursorFromList(
     PPROCESSINFO ppi = pcur->head.ppi;
     PCURICON_OBJECT *ppcurHead;
     PCURICON_OBJECT *ppcur;
+
+    //  This is hacked around to support this while at the initial system start up.
+    if (pcur->head.ppi == NULL) return;
+
+    /* Don't cache *.ani frames */
+    if (pcur->CURSORF_flags & CURSORF_ACONFRAME) return;
+
     NT_ASSERT((pcur->CURSORF_flags & (CURSORF_GLOBAL|CURSORF_LRSHARED)) != 0);
     NT_ASSERT((pcur->CURSORF_flags & CURSORF_LINKED) != 0);
 
@@ -134,11 +149,47 @@ IntRemoveCursorFromList(
 }
 
 VOID
-IntLoadSystenIcons(HICON hcur, DWORD id)
+IntLoadSystemCursors(HCURSOR hcur, DWORD id)
 {
     PCURICON_OBJECT pcur;
     int i;
-    PPROCESSINFO ppi;
+
+    if (!hcur)
+    {
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        return;
+    }
+
+    pcur = UserGetCurIconObject(hcur);
+    if (!pcur)
+    {
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        return;
+    }
+
+    for (i = 0 ; i < 16; i++)
+    {
+        if (gasyscur[i].type == id)
+        {
+            gasyscur[i].handle = pcur;
+            pcur->CURSORF_flags |= CURSORF_GLOBAL;
+            pcur->CURSORF_flags &= ~CURSORF_LINKED;
+
+            //  The active switch between LR shared and Global public.
+            //  This is hacked around to support this while at the initial system start up.
+            pcur->head.ppi = NULL;
+
+            IntInsertCursorIntoList(pcur);
+            return;
+        }
+    }
+}
+
+VOID
+IntLoadSystemIcons(HICON hcur, DWORD id)
+{
+    PCURICON_OBJECT pcur;
+    int i;
 
     if (hcur)
     {
@@ -148,11 +199,6 @@ IntLoadSystenIcons(HICON hcur, DWORD id)
             EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
             return;
         }
-
-        ppi = PsGetCurrentProcessWin32Process();
-
-        if (!(ppi->W32PF_flags & W32PF_CREATEDWINORDC))
-           return;
 
         // Set Small Window Icon and do not link.
         if ( id == OIC_WINLOGO+1 )
