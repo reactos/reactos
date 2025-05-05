@@ -310,7 +310,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          {
             IntSystemSetCursor(pWnd->pcls->spcur);
          }
-         return FALSE;
+         return TRUE;
       }
 
       case HTLEFT:
@@ -367,7 +367,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
        }
    }
    IntSystemSetCursor(SYSTEMCUR(ARROW));
-   return FALSE;
+   return TRUE;
 }
 
 /* Win: xxxDWPPrint */
