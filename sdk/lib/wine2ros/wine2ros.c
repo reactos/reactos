@@ -18,8 +18,14 @@ IntIsDebugChannelEnabled(_In_ PCSTR channel)
 {
     CHAR szValue[MAX_PATH];
     PCHAR pch0, pch1;
+    BOOL ret;
+    DWORD error;
 
-    if (!GetEnvironmentVariableA("DEBUGCHANNEL", szValue, _countof(szValue)))
+    error = GetLastError();
+    ret = GetEnvironmentVariableA("DEBUGCHANNEL", szValue, _countof(szValue));
+    SetLastError(error);
+
+    if (!ret)
         return FALSE;
 
     for (pch0 = szValue;; pch0 = pch1 + 1)
