@@ -2218,6 +2218,7 @@ HKLM,"SYSTEM\Setup","SystemPrefix",0x00000001
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 
 ; Debug channels
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+EngDev,+EngLDev,+EngPDev,+EngMDev"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+ole,+rpc"
 
 ; Winsrv configuration
