@@ -240,7 +240,6 @@ NtUserCreateAcceleratorTable(
     if (Entries == NULL || EntriesCount == 0 ||
         EntriesCount > MAXULONG_PTR / sizeof(*Entries))
     {
-        SetLastNtError(STATUS_INVALID_PARAMETER);
         goto Exit; // Return NULL
     }
 
@@ -313,8 +312,6 @@ NtUserCreateAcceleratorTable(
     UserDereferenceObject(Accel);
 
     Ret = hAccel;
-
-    SetLastNtError(STATUS_SUCCESS);
 
 Exit:
     TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u) = %p\n",
