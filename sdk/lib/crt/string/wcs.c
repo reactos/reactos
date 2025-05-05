@@ -183,6 +183,7 @@ INT CDECL MSVCRT__wcsupr_s( MSVCRT_wchar_t* str, MSVCRT_size_t n )
 double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
         MSVCRT__locale_t locale)
 {
+    MSVCRT_pthreadlocinfo locinfo;
     unsigned __int64 d=0, hlp;
     int exp=0, sign=1;
     const MSVCRT_wchar_t *p;
@@ -195,7 +196,9 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
     }
 
     if(!locale)
-        locale = get_locale();
+        locinfo = get_locinfo();
+    else
+        locinfo = locale->locinfo;
 
     p = str;
     while(isspaceW(*p))
@@ -219,7 +222,7 @@ double CDECL MSVCRT__wcstod_l(const MSVCRT_wchar_t* str, MSVCRT_wchar_t** end,
         exp++;
         p++;
     }
-    if(*p == *locale->locinfo->lconv->decimal_point)
+    if(*p == *locinfo->lconv->decimal_point)
         p++;
 
     while(isdigitW(*p)) {
