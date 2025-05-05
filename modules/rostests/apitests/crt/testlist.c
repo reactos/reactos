@@ -26,6 +26,7 @@ extern void func_floor(void);
 extern void func_fpcontrol(void);
 extern void func_fputc(void);
 extern void func_fputwc(void);
+extern void func_setjmp(void);
 extern void func__snprintf(void);
 extern void func__snwprintf(void);
 extern void func__vsnprintf(void);
@@ -56,6 +57,7 @@ const struct test winetest_testlist[] =
     { "_vsnwprintf", func__vsnwprintf },
     { "mbstowcs", func_mbstowcs },
     { "mbtowc", func_mbtowc },
+    { "setjmp", func_setjmp },
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
     { "sprintf", func_sprintf },

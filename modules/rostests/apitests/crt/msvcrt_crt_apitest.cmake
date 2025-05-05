@@ -1145,7 +1145,7 @@ list(APPEND SOURCE_MSVCRT
 #    scanf.c
 #    scanf_s.c
 #    setbuf.c
-#    _setjmp.c
+    setjmp.c
 #    setlocale.c
 #    setvbuf.c
 #    signal.c
@@ -1352,7 +1352,6 @@ if(ARCH STREQUAL "i386")
 elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE_MSVCRT
     #    __C_specific_handler
-    #    _setjmp.c
     #    _setjmpex.c
     #    _local_unwind.c
     #    longjmp.c
