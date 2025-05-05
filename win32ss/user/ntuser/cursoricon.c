@@ -852,6 +852,47 @@ leave:
     return ret;
 }
 
+PCURICON_OBJECT
+UserFindExistingCursorIcon(
+    _In_ PCURICON_OBJECT CurIcon,
+    _In_ RTL_ATOM atomModName,
+    _In_ PUNICODE_STRING pustrRsrc,
+    _In_ FINDEXISTINGCURICONPARAM* param)
+{
+    for (; CurIcon; CurIcon = CurIcon->pcurNext)
+    {
+        /* Icon/cursor */
+        if (param->bIcon != is_icon(CurIcon))
+        {
+            continue;
+        }
+        /* See if module names match */
+        if (atomModName == CurIcon->atomModName)
+        {
+            /* They do. Now see if this is the same resource */
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(pustrRsrc->Buffer))
+            {
+                /* One is an INT resource and the other is not -> no match */
+                continue;
+            }
+
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer))
+            {
+                if (CurIcon->strName.Buffer == pustrRsrc->Buffer)
+                {
+                    /* INT resources match */
+                    return CurIcon;
+                }
+            }
+            else if (RtlEqualUnicodeString(pustrRsrc, &CurIcon->strName, TRUE))
+            {
+                /* Resource name strings match */
+                return CurIcon;
+            }
+        }
+    }
+    return NULL;
+}
 
 /*
  * @implemented
@@ -900,82 +941,9 @@ NtUserFindExistingCursorIcon(
     }
 
     UserEnterShared();
-    CurIcon = pProcInfo->pCursorCache;
-    while (CurIcon)
-    {
-        /* Icon/cursor */
-        if (paramSafe.bIcon != is_icon(CurIcon))
-        {
-            CurIcon = CurIcon->pcurNext;
-            continue;
-        }
-        /* See if module names match */
-        if (atomModName == CurIcon->atomModName)
-        {
-            /* They do. Now see if this is the same resource */
-            if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
-            {
-                /* One is an INT resource and the other is not -> no match */
-                CurIcon = CurIcon->pcurNext;
-                continue;
-            }
-
-            if (IS_INTRESOURCE(CurIcon->strName.Buffer))
-            {
-                if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
-                {
-                    /* INT resources match */
-                    break;
-                }
-            }
-            else if (RtlCompareUnicodeString(&ustrRsrcSafe, &CurIcon->strName, TRUE) == 0)
-            {
-                /* Resource name strings match */
-                break;
-            }
-        }
-        CurIcon = CurIcon->pcurNext;
-    }
-
-    /* Now search Global Cursors or Icons. */
-    if (CurIcon == NULL)
-    {
-        CurIcon = gcurFirst;
-        while (CurIcon)
-        {
-            /* Icon/cursor */
-            if (paramSafe.bIcon != is_icon(CurIcon))
-            {
-                CurIcon = CurIcon->pcurNext;
-                continue;
-            }
-            /* See if module names match */
-            if (atomModName == CurIcon->atomModName)
-            {
-                /* They do. Now see if this is the same resource */
-                if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
-                {
-                    /* One is an INT resource and the other is not -> no match */
-                    CurIcon = CurIcon->pcurNext;
-                    continue;
-                }
-                if (IS_INTRESOURCE(CurIcon->strName.Buffer))
-                {
-                    if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
-                    {
-                        /* INT resources match */
-                        break;
-                    }
-                }
-                else if (RtlCompareUnicodeString(&ustrRsrcSafe, &CurIcon->strName, TRUE) == 0)
-                {
-                    /* Resource name strings match */
-                    break;
-                }
-            }
-            CurIcon = CurIcon->pcurNext;
-        }
-    }
+    CurIcon = UserFindExistingCursorIcon(pProcInfo->pCursorCache, atomModName, &ustrRsrcSafe, &paramSafe);
+    if (!CurIcon)
+        CurIcon = UserFindExistingCursorIcon(gcurFirst, atomModName, &ustrRsrcSafe, &paramSafe);
     if (CurIcon)
         Ret = UserHMGetHandle(CurIcon);
     UserLeave();
