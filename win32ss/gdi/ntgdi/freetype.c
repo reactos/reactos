@@ -5042,7 +5042,7 @@ TextIntGetTextExtentPoint(
     _In_reads_(Count) PCWCH String,
     _In_ INT Count,
     _In_ ULONG MaxExtent,
-    _Out_ PULONG Fit,
+    _Out_ PINT Fit,
     _Out_writes_to_opt_(Count, *Fit) PINT Dx,
     _Out_ LPSIZE Size,
     _In_ FLONG fl)

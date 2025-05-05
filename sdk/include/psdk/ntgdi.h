@@ -1664,10 +1664,10 @@ APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hdc,
     _In_reads_opt_(cwc) PCWCH pwsz,
-    _In_ LONG cwc,
+    _In_ ULONG cwc,
     _In_ ULONG dxMax,
-    _Out_opt_ PINT pcCh,
-    _Out_writes_to_opt_(cwc, *pcCh) PINT pdxOut,
+    _Out_opt_ PULONG pcCh,
+    _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
     _Out_ PSIZE psize,
     _In_ FLONG fl);
 
@@ -2479,7 +2479,7 @@ APIENTRY
 NtGdiGetTextFaceW(
     _In_ HDC hDC,
     _In_ INT Count,
-    _Out_writes_to_opt_(Count, return) LPWSTR FaceName,
+    _Out_writes_to_opt_(Count, return) PWSTR FaceName,
     _In_ BOOL bAliasName);
 
 __kernel_entry

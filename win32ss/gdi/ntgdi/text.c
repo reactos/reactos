@@ -76,9 +76,9 @@ BOOL
 FASTCALL
 GreGetTextExtentW(
     _In_ HDC hDC,
-    _In_reads_(cwc) LPCWSTR lpwsz,
+    _In_reads_(cwc) PCWCH lpwsz,
     _In_ INT cwc,
-    _Out_ LPSIZE psize,
+    _Out_ PSIZE psize,
     _In_ UINT flOpts)
 {
     PDC pdc;
@@ -132,12 +132,12 @@ BOOL
 FASTCALL
 GreGetTextExtentExW(
     _In_ HDC hDC,
-    _In_ LPCWSTR String,
+    _In_ PCWCH String,
     _In_ ULONG Count,
     _In_ ULONG MaxExtent,
     _Out_opt_ PULONG Fit,
     _Out_writes_to_opt_(Count, *Fit) PINT Dx,
-    _Out_ LPSIZE pSize,
+    _Out_ PSIZE pSize,
     _In_ FLONG fl)
 {
     PDC pdc;
@@ -324,10 +324,10 @@ APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hDC,
     _In_reads_opt_(Count) PCWCH UnsafeString,
-    _In_ LONG Count,
+    _In_ ULONG Count,
     _In_ ULONG MaxExtent,
-    _Out_opt_ PINT UnsafeFit,
-    _Out_writes_to_opt_(Count, *UnsafeFit) PINT UnsafeDx,
+    _Out_opt_ PULONG UnsafeFit,
+    _Out_writes_to_opt_(Count, *UnsafeFit) PULONG UnsafeDx,
     _Out_ PSIZE UnsafeSize,
     _In_ FLONG fl)
 {
@@ -529,7 +529,7 @@ APIENTRY
 NtGdiGetTextFaceW(
     _In_ HDC hDC,
     _In_ INT Count,
-    _Out_writes_to_opt_(Count, return) LPWSTR FaceName,
+    _Out_writes_to_opt_(Count, return) PWSTR FaceName,
     _In_ BOOL bAliasName)
 {
     PDC Dc;
