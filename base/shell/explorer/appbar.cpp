@@ -130,7 +130,7 @@ void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
         return;
     }
 
-    PAPPBARDATA3264 pOutput = AppBar_LockOutput(pData);
+    PAPPBARDATAINTEROP pOutput = AppBar_LockOutput(pData);
     if (!pOutput)
     {
         ERR("!pOutput: %d\n", pData->dwProcessId);
@@ -187,7 +187,7 @@ void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
 
     OnAppBarQueryPos(pData);
 
-    PAPPBARDATA3264 pOutput = AppBar_LockOutput(pData);
+    PAPPBARDATAINTEROP pOutput = AppBar_LockOutput(pData);
     if (!pOutput)
         return;
 
@@ -423,6 +423,31 @@ CAppBarManager::RecomputeWorkArea(
         return WORKAREA_NO_TRAY_AREA;
 
     return WORKAREA_SAME_AS_MONITOR;
+}
+
+BOOL CALLBACK
+CAppBarManager::MonitorEnumProc(
+    _In_ HMONITOR hMonitor,
+    _In_ HDC hDC,
+    _In_ LPRECT prc,
+    _Inout_ LPARAM lParam)
+{
+    CAppBarManager *pThis = (CAppBarManager *)lParam;
+    UNREFERENCED_PARAMETER(hDC);
+
+    RECT rcWorkArea;
+    if (pThis->RecomputeWorkArea(prc, hMonitor, &rcWorkArea) != WORKAREA_IS_NOT_MONITOR)
+        return TRUE;
+
+    HWND hwndDesktop = pThis->GetDesktopWnd();
+    ::SystemParametersInfoW(SPI_SETWORKAREA, 0, &rcWorkArea, hwndDesktop ? SPIF_SENDCHANGE : 0);
+    pThis->RedrawDesktop(hwndDesktop, &rcWorkArea);
+    return TRUE;
+}
+
+void CAppBarManager::RecomputeAllWorkareas()
+{
+    ::EnumDisplayMonitors(NULL, NULL, CAppBarManager::MonitorEnumProc, (LPARAM)this);
 }
 
 PAPPBAR_COMMAND

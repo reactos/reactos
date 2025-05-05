@@ -2492,6 +2492,9 @@ ChangePos:
 
     LRESULT OnDisplayChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        /* Refresh workareas */
+        RecomputeAllWorkareas();
+
         /* Load the saved tray window settings */
         RegLoadSettings();
 

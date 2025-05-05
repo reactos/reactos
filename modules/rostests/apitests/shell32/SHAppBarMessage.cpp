@@ -10,9 +10,6 @@
 #include <shlwapi.h>
 #include <stdio.h>
 
-#define NDEBUG
-#include <debug.h>
-
 /* Based on https://github.com/katahiromz/AppBarSample */
 
 //#define VERBOSE
@@ -469,9 +466,6 @@ protected:
             case ABE_RIGHT:
                 rc.left = rc.right - m_cxWidth;
                 break;
-            default:
-                ASSERT(FALSE);
-                break;
         }
 
         APPBARDATA abd = { sizeof(abd) };
@@ -688,7 +682,7 @@ protected:
         AppBar_Register(hwnd);
         AppBar_SetSide(hwnd, ABE_TOP);
 
-        DPRINT1("OnCreate(%p) done\n", hwnd);
+        trace("OnCreate(%p) done\n", hwnd);
         return TRUE;
     }
 
@@ -984,7 +978,7 @@ public:
         RECT rc1, rc2, rcWork;
         DWORD dwTID = GetWindowThreadProcessId(s_hwnd1, NULL);
 
-        DPRINT1("DoAction\n");
+        trace("DoAction\n");
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd1, &rc1);
@@ -1136,7 +1130,7 @@ START_TEST(SHAppBarMessage)
         return;
     }
 
-    DPRINT1("SM_CMONITORS: %d\n", GetSystemMetrics(SM_CMONITORS));
+    trace("SM_CMONITORS: %d\n", GetSystemMetrics(SM_CMONITORS));
     if (GetSystemMetrics(SM_CMONITORS) != 1)
     {
         skip("Multi-monitor not supported yet\n");
@@ -1144,8 +1138,8 @@ START_TEST(SHAppBarMessage)
     }
 
     SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
-    DPRINT1("s_rcWorkArea: %d, %d, %d, %d\n",
-            s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
+    trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n",
+          s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
 
     HWND hwnd1 = Window::DoCreateMainWnd(hInstance, TEXT("Test1"), 80, 80,
                                          WS_POPUP | WS_THICKFRAME | WS_CLIPCHILDREN);

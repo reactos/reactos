@@ -19,7 +19,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(appbar);
 
-static UINT32
+static HANDLE
 AppBar_CopyIn(
     _In_ const VOID *pvSrc,
     _In_ SIZE_T dwSize,
@@ -38,17 +38,16 @@ AppBar_CopyIn(
 
     CopyMemory(pvDest, pvSrc, dwSize);
     SHUnlockShared(pvDest);
-    return HandleToUlong(hMem);
+    return hMem;
 }
 
 static BOOL
 AppBar_CopyOut(
-    _In_ UINT32 hOutput32,
+    _In_ HANDLE hOutput,
     _Out_ PVOID pvDest,
     _In_ SIZE_T cbDest,
     _In_ DWORD dwProcessId)
 {
-    HANDLE hOutput = UlongToHandle(hOutput32);
     PVOID pvSrc = SHLockShared(hOutput, dwProcessId);
     if (pvSrc)
     {
@@ -86,7 +85,7 @@ SHAppBarMessage(
     cmd.abd.rc = pData->rc;
     cmd.abd.lParam64 = pData->lParam;
     cmd.dwMessage = dwMessage;
-    cmd.hOutput32 = 0;
+    cmd.hOutput = (APPBAR_OUTPUT)NULL;
     cmd.dwProcessId = GetCurrentProcessId();
 
     /* Make output data if necessary */
@@ -95,8 +94,8 @@ SHAppBarMessage(
         case ABM_QUERYPOS:
         case ABM_SETPOS:
         case ABM_GETTASKBARPOS:
-            cmd.hOutput32 = AppBar_CopyIn(&cmd.abd, sizeof(cmd.abd), cmd.dwProcessId);
-            if (!cmd.hOutput32)
+            cmd.hOutput = (APPBAR_OUTPUT)AppBar_CopyIn(&cmd.abd, sizeof(cmd.abd), cmd.dwProcessId);
+            if (!cmd.hOutput)
             {
                 ERR("AppBar_CopyIn: %d\n", dwMessage);
                 return FALSE;
@@ -111,9 +110,9 @@ SHAppBarMessage(
     UINT_PTR ret = SendMessageW(hTrayWnd, WM_COPYDATA, (WPARAM)pData->hWnd, (LPARAM)&copyData);
 
     /* Copy back output data */
-    if (cmd.hOutput32)
+    if (cmd.hOutput)
     {
-        if (!AppBar_CopyOut(cmd.hOutput32, &cmd.abd, sizeof(cmd.abd), cmd.dwProcessId))
+        if (!AppBar_CopyOut((HANDLE)cmd.hOutput, &cmd.abd, sizeof(cmd.abd), cmd.dwProcessId))
         {
             ERR("AppBar_CopyOut: %d\n", dwMessage);
             return FALSE;

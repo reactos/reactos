@@ -15,14 +15,14 @@ typedef struct tagAPPBAR
     RECT rc;
 } APPBAR, *PAPPBAR;
 
-static inline PAPPBARDATA3264
+static inline PAPPBARDATAINTEROP
 AppBar_LockOutput(_In_ PAPPBAR_COMMAND pData)
 {
-    return (PAPPBARDATA3264)SHLockShared(UlongToHandle(pData->hOutput32), pData->dwProcessId);
+    return (PAPPBARDATAINTEROP)SHLockShared((HANDLE)pData->hOutput, pData->dwProcessId);
 }
 
 static inline VOID
-AppBar_UnLockOutput(_Out_ PAPPBARDATA3264 pOutput)
+AppBar_UnLockOutput(_Out_ PAPPBARDATAINTEROP pOutput)
 {
     SHUnlockShared(pOutput);
 }
@@ -77,6 +77,7 @@ protected:
         _In_ const RECT *prcTray,
         _In_ HMONITOR hMonitor,
         _Out_ PRECT prcWorkArea);
+    void RecomputeAllWorkareas();
 
     void StuckAppChange(
         _In_opt_ HWND hwndTarget,
@@ -93,4 +94,11 @@ protected:
     virtual INT GetPosition() const = 0;
     virtual const RECT* GetTrayRect() = 0;
     virtual HWND GetDesktopWnd() const = 0;
+
+    static BOOL CALLBACK
+    MonitorEnumProc(
+        _In_ HMONITOR hMonitor,
+        _In_ HDC hDC,
+        _In_ LPRECT prc,
+        _Inout_ LPARAM lParam);
 };
