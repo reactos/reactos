@@ -1223,7 +1223,7 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 #include <poppack.h>
 
 #if defined(_WIN64) || defined(BUILD_WOW6432)
-    typedef UINT_PTR APPBAR_OUTPUT;
+    typedef UINT64 APPBAR_OUTPUT;
 #else
     typedef HANDLE APPBAR_OUTPUT;
 #endif
