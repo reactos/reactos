@@ -4,11 +4,11 @@ PnpBiosGetDeviceNodeCount:
     mov ax, word ptr ds:[BSS_PnpBiosDataSegment]
     push ax
 
-    push cs
+    push ds
     mov ax, BSS_PnpNodeSize
     push ax
 
-    push cs
+    push ds
     mov ax, BSS_PnpNodeCount
     push ax
 
@@ -39,7 +39,7 @@ PnpBiosGetDeviceNode:
     push ax
 
     /* push pointer to node number (segment/offset) */
-    push cs
+    push ds
     mov ax, BSS_PnpNodeNumber
     push ax
 

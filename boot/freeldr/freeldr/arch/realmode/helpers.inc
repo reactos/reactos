@@ -144,7 +144,7 @@ Relocator16Boot:
     and cx, not (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
 
     /* Get flags CF, ZF and SF from the REGS structure */
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_EFLAGS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_EFLAGS]
     and ax, (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
 
     /* Combine flags and set them */
@@ -153,35 +153,46 @@ Relocator16Boot:
     popf
 
     /* Setup the segment registers */
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_DS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_DS]
     mov ds, ax
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_ES]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_ES]
     mov es, ax
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_FS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_FS]
     mov fs, ax
-    mov ax, word ptr cs:[BSS_RegisterSet + REGS_GS]
+    mov ax, word ptr ss:[BSS_RegisterSet + REGS_GS]
     mov gs, ax
 
     /* Patch the jump address (segment:offset) */
-    mov eax, dword ptr cs:[BSS_RealModeEntry]
+    mov eax, dword ptr ss:[BSS_RealModeEntry]
     mov dword ptr cs:[Relocator16Address], eax
 
-    /* Switch the stack (segment:offset) */
+    /* Store the stack (segment:offset) */
     mov eax, dword ptr cs:[BSS_CallbackReturn]
     shr eax, 16
-    mov ss, ax
+    mov word ptr cs:[Relocator16SS], ax
     mov eax, dword ptr cs:[BSS_CallbackReturn]
     and eax, HEX(0FFFF)
-    mov esp, eax
+    mov dword ptr cs:[Relocator16ESP], eax
 
     /* Setup the registers */
-    mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EAX]
-    mov ebx, dword ptr cs:[BSS_RegisterSet + REGS_EBX]
-    mov ecx, dword ptr cs:[BSS_RegisterSet + REGS_ECX]
-    mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
-    mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
-    mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
+    mov eax, dword ptr ss:[BSS_RegisterSet + REGS_EAX]
+    mov ebx, dword ptr ss:[BSS_RegisterSet + REGS_EBX]
+    mov ecx, dword ptr ss:[BSS_RegisterSet + REGS_ECX]
+    mov edx, dword ptr ss:[BSS_RegisterSet + REGS_EDX]
+    mov esi, dword ptr ss:[BSS_RegisterSet + REGS_ESI]
+    mov edi, dword ptr ss:[BSS_RegisterSet + REGS_EDI]
     // Don't setup ebp, we only use it as output! <-- FIXME!
+
+    /* Save eax */
+    mov dword ptr cs:[Relocator16EAX], eax
+
+    /* Switch the stack (segment:offset) */
+    mov esp, dword ptr cs:[Relocator16ESP]
+    mov ax, word ptr cs:[Relocator16SS]
+    mov ss, ax
+
+    /* Restore eax */
+    mov eax, dword ptr cs:[Relocator16EAX]
 
     /* Jump to the new CS:IP (e.g. jump to bootsector code...) */
     .byte HEX(0EA) // ljmp16 segment:offset
