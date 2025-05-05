@@ -938,9 +938,9 @@ SetThreadUILanguage(
     _In_ LANGID LangId)
 {
     PTEB Teb = NtCurrentTeb();
-    LCID PreviousLcid;
     LANGID PreviousLangId;
-    LCID NewLcid;
+    LCID PreviousLcid, NewLcid;
+
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* We only support LangId == 0, for selecting a language
      * identifier that best supports the NT Console. */
@@ -955,7 +955,6 @@ SetThreadUILanguage(
     PreviousLangId = LANGIDFROMLCID(PreviousLcid);
 
     NewLcid = MAKELCID(LangId, SORT_DEFAULT);
-
     Teb->CurrentLocale = NewLcid;
 
     return PreviousLangId;
