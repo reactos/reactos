@@ -39,8 +39,8 @@ GetTextExtentExPointWPri(
     _In_ INT cwc,
     _In_ INT dxMax,
     _Out_opt_ LPINT pcCh,
-    _Out_writes_to_opt_(cwc, *pcCh) PINT pdxOut,
-    _In_ PSIZE psize);
+    _Out_writes_to_opt_(cwc, *pcCh) LPINT pdxOut,
+    _In_ LPSIZE psize);
 
 BOOL WINAPI
 GetFontResourceInfoW(

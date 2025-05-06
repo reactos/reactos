@@ -342,9 +342,9 @@ W32KAPI
 HANDLE
 APIENTRY
 NtGdiAddFontMemResourceEx(
-    _In_reads_bytes_(cjBuffer) LPCVOID pvBuffer,
+    _In_reads_bytes_(cjBuffer) const VOID *pvBuffer,
     _In_ DWORD cjBuffer,
-    _In_reads_bytes_opt_(cjDV) DESIGNVECTOR *pdv,
+    _In_reads_bytes_opt_(cjDV) const DESIGNVECTOR *pdv,
     _In_ ULONG cjDV,
     _Out_ DWORD *pNumFonts);
 
