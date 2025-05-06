@@ -805,7 +805,7 @@ NtGdiGetGlyphOutline(
     _In_ WCHAR wch,
     _In_ UINT iFormat,
     _Out_ LPGLYPHMETRICS pgm,
-    _In_opt_ ULONG cjBuf,
+    _In_ ULONG cjBuf,
     _Out_writes_bytes_opt_(cjBuf) PVOID UnsafeBuf,
     _In_opt_ const MAT2 *pmat2,
     _In_ BOOL bIgnoreRotation)
