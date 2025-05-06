@@ -17,7 +17,8 @@ static PPAGED_LOOKASIDE_LIST pgMessageLookasideList;
 static PPAGED_LOOKASIDE_LIST pgSendMsgLookasideList;
 INT PostMsgCount = 0;
 INT SendMsgCount = 0;
-PUSER_MESSAGE_QUEUE gpqCursor;
+PUSER_MESSAGE_QUEUE gpqCursor = NULL;
+PACON gAniCursor = NULL;
 ULONG_PTR gdwMouseMoveExtraInfo = 0;
 DWORD gdwMouseMoveTimeStamp = 0;
 LIST_ENTRY usmList;
@@ -126,7 +127,7 @@ UserSetCursor(
     pWnd = IntTopLevelWindowFromPoint(gpsi->ptCursor.x, gpsi->ptCursor.y);
     if (pWnd && pWnd->head.pti->MessageQueue == MessageQueue)
     {
-       /* Get the screen DC */
+        /* Get the screen DC */
         if (!(hdcScreen = IntGetScreenDC()))
         {
             return NULL;
@@ -134,21 +135,29 @@ UserSetCursor(
 
         if (NewCursor)
         {
-            /* Call GDI to set the new screen cursor */
             PCURICON_OBJECT CursorFrame = NewCursor;
-            if(NewCursor->CURSORF_flags & CURSORF_ACON)
+            if (NewCursor->CURSORF_flags & CURSORF_ACON)
             {
-                FIXME("Should animate the cursor, using only the first frame now.\n");
-                CursorFrame = ((PACON)NewCursor)->aspcur[0];
+                gAniCursor = (PACON)NewCursor;
+                IntSetTimer(pWnd, ID_EVENT_SYSTIMER_ANIMATECURSOR, ((PACON)NewCursor)->ajifRate[((PACON)NewCursor)->iicur] * 100 / 6, SystemTimerProc, TMRF_SYSTEM);
+                CursorFrame = ((PACON)NewCursor)->aspcur[((PACON)NewCursor)->aicur[((PACON)NewCursor)->iicur]];
             }
+
+            /* Kill the timer if the cursor is not *.ani anymore */
+            if (!(CursorFrame->CURSORF_flags & CURSORF_ACONFRAME))
+                IntKillTimer(pWnd, ID_EVENT_SYSTIMER_ANIMATECURSOR, TRUE);
+
+            /* Call GDI to set the new screen cursor */
             GreSetPointerShape(hdcScreen,
-                               CursorFrame->hbmAlpha ? NULL : NewCursor->hbmMask,
-                               CursorFrame->hbmAlpha ? NewCursor->hbmAlpha : NewCursor->hbmColor,
+                               CursorFrame->hbmAlpha ? NULL : CursorFrame->hbmMask,
+                               CursorFrame->hbmAlpha ? CursorFrame->hbmAlpha : CursorFrame->hbmColor,
                                CursorFrame->xHotspot,
                                CursorFrame->yHotspot,
                                gpsi->ptCursor.x,
                                gpsi->ptCursor.y,
-                               CursorFrame->hbmAlpha ? SPS_ALPHA : 0);
+                               NewCursor->CURSORF_flags & CURSORF_ACON ?
+                               (SPS_ANIMATEUPDATE | (CursorFrame->hbmAlpha ? SPS_ALPHA : 0)) :
+                               (CursorFrame->hbmAlpha ? SPS_ALPHA : 0));
         }
         else /* Note: OldCursor != NewCursor so we have to hide cursor */
         {
@@ -680,8 +689,8 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                                        MessageQueue->CursorObject->yHotspot,
                                        gpsi->ptCursor.x,
                                        gpsi->ptCursor.y,
-                                       MessageQueue->CursorObject->hbmAlpha ? SPS_ALPHA : 0);
-
+                                       MessageQueue->CursorObject->CURSORF_flags & CURSORF_ACON ?
+                                       SPS_ANIMATEUPDATE : (MessageQueue->CursorObject->hbmAlpha ? SPS_ALPHA : 0));
                } else
                    GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
            }
