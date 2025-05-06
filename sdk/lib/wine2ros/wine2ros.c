@@ -197,6 +197,17 @@ debugstr_next_buff(void)
 }
 
 PCSTR
+wine_dbg_sprintf(_In_ PCSTR format, ... )
+{
+    va_list va;
+    PCHAR ptr = debugstr_next_buff();
+    va_start(va, format);
+    _vsnprintf(ptr, DEBUGSTR_BUFF_SIZE, format, va);
+    va_end(va);
+    return ptr;
+}
+
+PCSTR
 debugstr_a(_In_opt_ PCSTR pszA)
 {
     if (!pszA)

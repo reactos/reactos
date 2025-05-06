@@ -23,7 +23,12 @@
 #ifndef _NTSTATUS_
 #define _NTSTATUS_
 
-#include "inttypes.h"
+#ifndef _NTINTSAFE_H_INCLUDED_
+    #ifndef _NTDEF_ /* Guard agains redefinition from ntstatus.h */
+        typedef _Return_type_success_(return >= 0) long NTSTATUS;
+    #endif
+    #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
