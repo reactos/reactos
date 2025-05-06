@@ -1338,11 +1338,13 @@ static void test_demangle(void)
 
     for (i = 0; i < ARRAY_SIZE(test); i++)
     {
+#ifdef __REACTOS__
         if (((i == 149) || (i == 150)) && (_winver < 0x600))
         {
             skip("Skipping test with i = %u, because it fails on Windows 2003\n", i);
             continue;
         }
+#endif // __REACTOS__
 	name = p__unDName(0, test[i].in, 0, malloc, free, test[i].flags);
         ok(name != NULL, "%u: unDName failed\n", i);
         if (!name) continue;

@@ -37,7 +37,9 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winuser.h"
+#ifdef __REACTOS__
 #include <versionhelpers.h>
+#endif
 
 static char *buf_to_string(const unsigned char *bin, int len, int nr)
 {
@@ -136,13 +138,13 @@ static void test_swab( void ) {
     char expected1[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ@#";
     char expected2[] = "ABCDEFGHIJKLMNOPQRSTUVWX$";
     char expected3[] = "$";
-
+    
     char from[30];
     char to[30];
-
+    
     int testsize;
-
-    /* Test 1 - normal even case */
+    
+    /* Test 1 - normal even case */                               
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 26;
@@ -150,7 +152,7 @@ static void test_swab( void ) {
     _swab( from, to, testsize );
     ok(memcmp(to,expected1,testsize) == 0, "Testing even size %d returned '%*.*s'\n", testsize, testsize, testsize, to);
 
-    /* Test 2 - uneven case  */
+    /* Test 2 - uneven case  */                               
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 25;
@@ -158,7 +160,7 @@ static void test_swab( void ) {
     _swab( from, to, testsize );
     ok(memcmp(to,expected2,testsize) == 0, "Testing odd size %d returned '%*.*s'\n", testsize, testsize, testsize, to);
 
-    /* Test 3 - from = to */
+    /* Test 3 - from = to */                               
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 26;
@@ -166,7 +168,7 @@ static void test_swab( void ) {
     _swab( to, to, testsize );
     ok(memcmp(to,expected1,testsize) == 0, "Testing overlapped size %d returned '%*.*s'\n", testsize, testsize, testsize, to);
 
-    /* Test 4 - 1 bytes */
+    /* Test 4 - 1 bytes */                               
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 1;
@@ -3663,11 +3665,13 @@ static void test__wcstoi64(void)
 
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
+#ifdef __REACTOS__
         if ((i == 20) && (_winver < 0x600))
         {
             skip("Skipping test with i = 20, because it fails on Windows 2003\n");
             continue;
         }
+#endif // __REACTOS__
         res = p_wcstoi64( tests[i].str, &endpos, tests[i].base );
         ok( res == tests[i].res, "%u: %s res %s\n",
             i, wine_dbgstr_w(tests[i].str), wine_dbgstr_longlong(res) );
