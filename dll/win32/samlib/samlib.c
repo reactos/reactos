@@ -31,7 +31,7 @@
 #include <ntsam.h>
 #include <sam_c.h>
 
-#include <wine/debug.h>
+#include <wine2ros.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 

@@ -199,13 +199,17 @@ debugstr_next_buff(void)
 PCSTR
 debugstr_a(_In_opt_ PCSTR pszA)
 {
-    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA, lstrlenA(pszW));
+    if (!pszA)
+        return "(null)";
+    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA, strlen(pszA));
 }
 
 PCSTR
 debugstr_w(_In_opt_ PCWSTR pszW)
 {
-    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW, lstrlenW(pszW));
+    if (!pszW)
+        return "(null)";
+    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW, wcslen(pszW));
 }
 
 PCSTR

@@ -19,8 +19,7 @@ add_library(samlib MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/samlib.def)
 
 set_module_type(samlib win32dll UNICODE)
-target_link_libraries(samlib wine ${PSEH_LIB})
+target_link_libraries(samlib wine2ros ${PSEH_LIB})
 add_importlibs(samlib rpcrt4 advapi32 msvcrt kernel32 ntdll)
 add_pch(samlib precomp.h SOURCE)
 add_cd_file(TARGET samlib DESTINATION reactos/system32 FOR all)
-set_wine_module(samlib)
