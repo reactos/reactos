@@ -31,10 +31,9 @@
 #include <imm32_undoc.h>
 
 #define NTOS_MODE_USER
-#include <winternl.h>
-//#include <ndk/umtypes.h>
-//#include <ndk/pstypes.h>
-//#include <ndk/rtlfuncs.h>
+#include <ndk/umtypes.h>
+#include <ndk/pstypes.h>
+#include <ndk/rtlfuncs.h>
 
 /* Public Win32K Headers */
 #include "ntuser.h"
