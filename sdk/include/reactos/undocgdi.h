@@ -34,13 +34,13 @@ BOOL WINAPI GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS);
 
 BOOL WINAPI
 GetTextExtentExPointWPri(
-    HDC hdc,
-    LPCWSTR lpwsz,
-    INT cwc,
-    INT dxMax,
-    LPINT pcCh,
-    LPINT pdxOut,
-    LPSIZE psize);
+    _In_ HDC hdc,
+    _In_reads_(cwc) PCWCH lpwsz,
+    _In_ INT cwc,
+    _In_ INT dxMax,
+    _Out_opt_ LPINT pcCh,
+    _Out_writes_to_opt_(cwc, *pcCh) LPINT pdxOut,
+    _In_ LPSIZE psize);
 
 BOOL WINAPI
 GetFontResourceInfoW(

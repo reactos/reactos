@@ -672,7 +672,7 @@ NewGetCharacterPlacementW(
         nSet = lpResults->nGlyphs;
 
     return NtGdiGetCharacterPlacementW( hdc,
-                                        (LPWSTR)lpString,
+                                        lpString,
                                         nSet,
                                         nMaxExtent,
                                         lpResults,
@@ -699,9 +699,9 @@ GetCharABCWidthsFloatW(HDC hdc,
     return NtGdiGetCharABCWidthsW( hdc,
                                    FirstChar,
                                    (ULONG)(LastChar - FirstChar + 1),
-                                   (PWCHAR) NULL,
+                                   NULL,
                                    0,
-                                   (PVOID)abcF);
+                                   abcF);
 }
 
 /*
@@ -724,9 +724,9 @@ GetCharWidthFloatW(HDC hdc,
     return NtGdiGetCharWidthW( hdc,
                                iFirstChar,
                                (ULONG)(iLastChar - iFirstChar + 1),
-                               (PWCHAR) NULL,
+                               NULL,
                                0,
-                               (PVOID) pxBuffer);
+                               pxBuffer);
 }
 
 /*
@@ -749,9 +749,9 @@ GetCharWidthW(HDC hdc,
     return NtGdiGetCharWidthW( hdc,
                                iFirstChar,
                                (ULONG)(iLastChar - iFirstChar + 1),
-                               (PWCHAR) NULL,
+                               NULL,
                                GCW_NOFLOAT,
-                               (PVOID) lpBuffer);
+                               lpBuffer);
 }
 
 /*
@@ -774,9 +774,9 @@ GetCharWidth32W(HDC hdc,
     return NtGdiGetCharWidthW( hdc,
                                iFirstChar,
                                (ULONG)(iLastChar - iFirstChar + 1),
-                               (PWCHAR) NULL,
+                               NULL,
                                GCW_NOFLOAT|GCW_WIN32,
-                               (PVOID) lpBuffer);
+                               lpBuffer);
 }
 
 
@@ -800,9 +800,9 @@ GetCharABCWidthsW(HDC hdc,
     return NtGdiGetCharABCWidthsW( hdc,
                                    FirstChar,
                                    (ULONG)(LastChar - FirstChar + 1),
-                                   (PWCHAR) NULL,
+                                   NULL,
                                    GCABCW_NOFLOAT,
-                                   (PVOID)lpabc);
+                                   lpabc);
 }
 
 /*
@@ -837,10 +837,10 @@ GetCharWidthA(
 
     ret = NtGdiGetCharWidthW( hdc,
                               wstr[0],
-                              (ULONG) count,
-                              (PWCHAR) wstr,
+                              count,
+                              wstr,
                               GCW_NOFLOAT,
-                              (PVOID) lpBuffer);
+                              lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -880,10 +880,10 @@ GetCharWidth32A(
 
     ret = NtGdiGetCharWidthW( hdc,
                               wstr[0],
-                              (ULONG) count,
-                              (PWCHAR) wstr,
+                              count,
+                              wstr,
                               GCW_NOFLOAT|GCW_WIN32,
-                              (PVOID) lpBuffer);
+                              lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -920,7 +920,7 @@ GetCharWidthFloatA(
         HeapFree(GetProcessHeap(), 0, str);
         return FALSE;
     }
-    ret = NtGdiGetCharWidthW( hdc, wstr[0], (ULONG) count, (PWCHAR) wstr, 0, (PVOID) pxBuffer);
+    ret = NtGdiGetCharWidthW(hdc, wstr[0], count, wstr, 0, pxBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -1000,7 +1000,7 @@ GetCharABCWidthsFloatA(
         HeapFree( GetProcessHeap(), 0, str );
         return FALSE;
     }
-    ret = NtGdiGetCharABCWidthsW( hdc,wstr[0],(ULONG)count, (PWCHAR)wstr, 0, (PVOID)lpABCF);
+    ret = NtGdiGetCharABCWidthsW(hdc, wstr[0], count, wstr, 0, lpABCF);
 
     HeapFree( GetProcessHeap(), 0, str );
     HeapFree( GetProcessHeap(), 0, wstr );
@@ -1666,7 +1666,7 @@ CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
                           &Logfont.elfEnumLogfontEx );
 
         RtlCopyMemory( &Logfont.elfDesignVector,
-                       (PVOID) &elfexd->elfDesignVector,
+                       &elfexd->elfDesignVector,
                        sizeof(DESIGNVECTOR));
 
         return NtGdiHfontCreate( &Logfont, 0, 0, 0, NULL);
@@ -1864,7 +1864,7 @@ CreateFontA(
     UNICODE_STRING StringU;
     HFONT ret;
 
-    RtlInitAnsiString(&StringA, (LPSTR)lpszFace);
+    RtlInitAnsiString(&StringA, lpszFace);
     RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
     ret = CreateFontW(nHeight,
