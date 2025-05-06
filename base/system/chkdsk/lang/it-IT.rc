@@ -3,6 +3,7 @@
  * LICENSE:     See COPYING in the top level directory
  * PURPOSE:     Italian resource file
  * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
+ *              Copyright 2025 Gabriele Lo Re (gabrolr70@gmail.com)
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -15,7 +16,7 @@ Uso: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
 -F          Risolvi gli errori del disco.\n\
 -V          Visualizza il percorso del file di ogni file del disco.\n\
 -R          Trova i settori danneggiati e recupera le informazioni leggibili.\n\
--C          Controlla il drive solamente se è sporco.\n\
+-C          Controlla solamente se il drive è sporco.\n\
 \n"
 
     IDS_PERCENT_COMPL "%d percentuale completato.\r"
@@ -29,10 +30,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_VOLUME_IN_USE "Il volume è in uso e non può essere bloccato\n"
-    IDS_CHKDSK_FAIL "Chkdsk non era in grado di finire con successo.\n\n"
+    IDS_CHKDSK_FAIL "Chkdsk non è stato in grado di finire con successo.\n\n"
     IDS_NO_ENTRY_POINT "Impossibile trovare i punti d'ingresso FMIFS.\n\n"
     IDS_BAD_ARGUMENT "Argomento sconosciuto: %s\n"
-    IDS_NO_CURRENT_DIR "Impossibile ottenre la cartella corrente. Codice errore: "
+    IDS_NO_CURRENT_DIR "Impossibile ottenere la directory corrente. Codice errore: "
     IDS_NO_QUERY_VOL "Impossibile interrogare il volume. Codice errore: "
-    IDS_VOLUME_IN_USE_PROC "Impossibile l'esecuzione del Chkdsk perché il volume è in uso da un altro processo.\n\n"
+    IDS_VOLUME_IN_USE_PROC "Impossibile eseguire Chkdsk perché il volume è in uso da un altro processo.\n\n"
 END
