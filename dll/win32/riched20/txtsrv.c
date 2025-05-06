@@ -29,6 +29,7 @@
 #include "textserv.h"
 #include "wine/debug.h"
 #include "editstr.h"
+#include "riched20.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
@@ -116,12 +117,8 @@ static ULONG WINAPI fnTextSrv_Release(ITextServices *iface)
     return IUnknown_Release( services->outer_unk );
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxSendMessage( ITextServices *iface, UINT msg, WPARAM wparam,
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSendMessage,20)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSendMessage( ITextServices *iface, UINT msg, WPARAM wparam,
-#endif
                                                             LPARAM lparam, LRESULT *result )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -153,12 +150,8 @@ static HRESULT update_client_rect( struct text_services *services, const RECT *c
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxDraw( ITextServices *iface, DWORD aspect, LONG index, void *aspect_info,
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxDraw,52)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD aspect, LONG index, void *aspect_info,
-#endif
                                                      DVTARGETDEVICE *td, HDC draw, HDC target,
                                                      const RECTL *bounds, const RECTL *mf_bounds, RECT *update,
                                                      BOOL (CALLBACK *continue_fn)(DWORD), DWORD continue_param,
@@ -199,12 +192,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetHScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetHScroll,24)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetHScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
-#endif
                                                            LONG *page, BOOL *enabled )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -217,12 +206,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetHScroll( ITextServices *iface,
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetVScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetVScroll,24)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetVScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
-#endif
                                                            LONG *page, BOOL *enabled )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -235,12 +220,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetVScroll( ITextServices *iface,
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_OnTxSetCursor( ITextServices *iface, DWORD aspect, LONG index,
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxSetCursor,40)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxSetCursor( ITextServices *iface, DWORD aspect, LONG index,
-#endif
                                                             void *aspect_info, DVTARGETDEVICE *td, HDC draw,
                                                             HDC target, const RECT *client, INT x, INT y )
 {
@@ -257,12 +238,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxSetCursor( ITextServices *iface
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxQueryHitPoint(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxQueryHitPoint,44)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxQueryHitPoint(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
-#endif
                                                              void *pvAspect, DVTARGETDEVICE *ptd, HDC hdcDraw,
                                                              HDC hicTargetDev, LPCRECT lprcClient, INT x, INT y,
                                                              DWORD *pHitResult)
@@ -273,12 +250,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxQueryHitPoint(ITextServices *ifac
     return E_NOTIMPL;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_OnTxInPlaceActivate( ITextServices *iface, const RECT *client )
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceActivate,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceActivate( ITextServices *iface, const RECT *client )
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
     HRESULT hr;
@@ -297,12 +270,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceActivate( ITextServices 
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_OnTxInPlaceDeactivate(ITextServices *iface)
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceDeactivate,4)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceDeactivate(ITextServices *iface)
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -311,12 +280,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceDeactivate(ITextServices
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_OnTxUIActivate(ITextServices *iface)
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIActivate(ITextServices *iface)
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -324,12 +289,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIActivate(ITextServices *iface
     return E_NOTIMPL;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_OnTxUIDeactivate(ITextServices *iface)
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIDeactivate(ITextServices *iface)
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -337,12 +298,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIDeactivate(ITextServices *ifa
     return E_NOTIMPL;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetText( ITextServices *iface, BSTR *text )
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetText( ITextServices *iface, BSTR *text )
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
     int length;
@@ -364,12 +321,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetText( ITextServices *iface, BS
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxSetText( ITextServices *iface, const WCHAR *text )
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSetText( ITextServices *iface, const WCHAR *text )
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
     ME_Cursor cursor;
@@ -386,12 +339,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSetText( ITextServices *iface, co
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetCurTargetX(ITextServices *iface, LONG *x)
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurTargetX,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCurTargetX(ITextServices *iface, LONG *x)
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -399,12 +348,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCurTargetX(ITextServices *ifac
     return E_NOTIMPL;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetBaseLinePos(ITextServices *iface, LONG *x)
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetBaseLinePos(ITextServices *iface, LONG *x)
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -412,12 +357,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetBaseLinePos(ITextServices *ifa
     return E_NOTIMPL;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetNaturalSize( ITextServices *iface, DWORD aspect, HDC draw,
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *iface, DWORD aspect, HDC draw,
-#endif
                                                                HDC target, DVTARGETDEVICE *td, DWORD mode,
                                                                const SIZEL *extent, LONG *width, LONG *height )
 {
@@ -456,12 +397,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *if
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetDropTarget(ITextServices *iface, IDropTarget **ppDropTarget)
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetDropTarget(ITextServices *iface, IDropTarget **ppDropTarget)
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -469,12 +406,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetDropTarget(ITextServices *ifac
     return E_NOTIMPL;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_OnTxPropertyBitsChange( ITextServices *iface, DWORD mask, DWORD bits )
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxPropertyBitsChange,12)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServices *iface, DWORD mask, DWORD bits )
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
     DWORD scrollbars;
@@ -537,12 +470,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServic
     return S_OK;
 }
 
-#ifdef _MSC_VER
-DECLSPEC_HIDDEN HRESULT __stdcall fnTextSrv_TxGetCachedSize(ITextServices *iface, DWORD *pdwWidth, DWORD *pdwHeight)
-#else
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCachedSize,12)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *iface, DWORD *pdwWidth, DWORD *pdwHeight)
-#endif
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -553,7 +482,6 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *ifac
 #ifdef __ASM_USE_THISCALL_WRAPPER
 
 #define STDCALL(func) (void *) __stdcall_ ## func
-
 #ifdef _MSC_VER
 #define DEFINE_STDCALL_WRAPPER(num,func) \
     __declspec(naked) HRESULT __stdcall_##func(void) \
@@ -599,26 +527,6 @@ const ITextServicesVtbl text_services_stdcall_vtbl =
     NULL,
     NULL,
     NULL,
-#ifdef _MSC_VER
-    ITextServices_TxSendMessage,
-    ITextServices_TxDraw,
-    ITextServices_TxGetHScroll,
-    ITextServices_TxGetVScroll,
-    ITextServices_OnTxSetCursor,
-    ITextServices_TxQueryHitPoint,
-    ITextServices_OnTxInPlaceActivate,
-    ITextServices_OnTxInPlaceDeactivate,
-    ITextServices_OnTxUIActivate,
-    ITextServices_OnTxUIDeactivate,
-    ITextServices_TxGetText,
-    ITextServices_TxSetText,
-    ITextServices_TxGetCurTargetX,
-    ITextServices_TxGetBaseLinePos,
-    ITextServices_TxGetNaturalSize,
-    ITextServices_TxGetDropTarget,
-    ITextServices_OnTxPropertyBitsChange,
-    ITextServices_TxGetCachedSize,
-#else /* _MSC_VER */
     STDCALL(ITextServices_TxSendMessage),
     STDCALL(ITextServices_TxDraw),
     STDCALL(ITextServices_TxGetHScroll),
@@ -637,7 +545,6 @@ const ITextServicesVtbl text_services_stdcall_vtbl =
     STDCALL(ITextServices_TxGetDropTarget),
     STDCALL(ITextServices_OnTxPropertyBitsChange),
     STDCALL(ITextServices_TxGetCachedSize),
-#endif
 };
 
 #endif /* __ASM_USE_THISCALL_WRAPPER */
@@ -647,26 +554,6 @@ static const ITextServicesVtbl textservices_vtbl =
     fnTextSrv_QueryInterface,
     fnTextSrv_AddRef,
     fnTextSrv_Release,
-#ifdef _MSC_VER
-    fnTextSrv_TxSendMessage,
-    fnTextSrv_TxDraw,
-    fnTextSrv_TxGetHScroll,
-    fnTextSrv_TxGetVScroll,
-    fnTextSrv_OnTxSetCursor,
-    fnTextSrv_TxQueryHitPoint,
-    fnTextSrv_OnTxInPlaceActivate,
-    fnTextSrv_OnTxInPlaceDeactivate,
-    fnTextSrv_OnTxUIActivate,
-    fnTextSrv_OnTxUIDeactivate,
-    fnTextSrv_TxGetText,
-    fnTextSrv_TxSetText,
-    fnTextSrv_TxGetCurTargetX,
-    fnTextSrv_TxGetBaseLinePos,
-    fnTextSrv_TxGetNaturalSize,
-    fnTextSrv_TxGetDropTarget,
-    fnTextSrv_OnTxPropertyBitsChange,
-    fnTextSrv_TxGetCachedSize
-#else /* _MSC_VER */
     THISCALL(fnTextSrv_TxSendMessage),
     THISCALL(fnTextSrv_TxDraw),
     THISCALL(fnTextSrv_TxGetHScroll),
@@ -685,7 +572,6 @@ static const ITextServicesVtbl textservices_vtbl =
     THISCALL(fnTextSrv_TxGetDropTarget),
     THISCALL(fnTextSrv_OnTxPropertyBitsChange),
     THISCALL(fnTextSrv_TxGetCachedSize)
-#endif
 };
 
 HRESULT create_text_services( IUnknown *outer, ITextHost *text_host, IUnknown **unk, BOOL emulate_10 )

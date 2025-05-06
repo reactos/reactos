@@ -63,7 +63,7 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HalpEnableInterruptHandler(IDT_DEVICE,
                                0,
                                APIC_PROFILE_VECTOR,
-                               PROFILE_LEVEL,
+                               APIC_PROFILE_LEVEL,
                                HalpProfileInterrupt,
                                Latched);
 }

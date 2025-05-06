@@ -5,6 +5,16 @@
 extern "C" {
 #endif
 
+DWORD
+APIENTRY
+DhcpAcquireParameters(
+    _In_ PSTR AdapterName);
+
+DWORD
+APIENTRY
+DhcpReleaseParameters(
+    _In_ PSTR AdapterName);
+
 DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex );
 DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
                                      PDWORD MediaType,
@@ -23,11 +33,6 @@ DhcpNotifyConfigChange(LPWSTR ServerName,
                        DWORD IpAddress,
                        DWORD SubnetMask,
                        int DhcpAction);
-DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
-                                      PBOOL DhcpEnabled,
-                                      PDWORD DhcpServer,
-                                      time_t *LeaseObtained,
-                                      time_t *LeaseExpires );
 
 #ifdef __cplusplus
 }

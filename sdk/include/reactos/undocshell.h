@@ -1,23 +1,14 @@
 /*
- * Copyright 1999, 2000 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Undocumented shell definitions
+ * COPYRIGHT:   Copyright 1999, 2000 Juergen Schmied
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#ifndef __WINE_UNDOCSHELL_H
-#define __WINE_UNDOCSHELL_H
+#pragma once
+
+#include <shellapi.h>
 
 #ifndef SHSTDAPI
 #if defined(_SHELL32_) /* DECLSPEC_IMPORT disabled because of CORE-6504: */ || TRUE
@@ -1231,8 +1222,45 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 
 #include <poppack.h>
 
+#if defined(_WIN64) || defined(BUILD_WOW6432)
+    typedef UINT64 APPBAR_OUTPUT;
+#else
+    typedef HANDLE APPBAR_OUTPUT;
+#endif
+
+/*
+ * Private structures for internal AppBar messaging.
+ * These structures can be sent from 32-bit shell32 to 64-bit Explorer.
+ * See also: https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
+ * > ... only the lower 32 bits are significant, so it is safe to truncate the handle
+ * See also: https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-duplicatehandle
+ * > DuplicateHandle can be used to duplicate a handle between a 32-bit process and a 64-bit process.
+ */
+#include <pshpack8.h>
+typedef struct tagAPPBARDATAINTEROP
+{
+    DWORD cbSize; /* == sizeof(APPBARDATAINTEROP) */
+    UINT32 hWnd32;
+    UINT uCallbackMessage;
+    UINT uEdge;
+    RECT rc;
+    LONGLONG lParam64;
+} APPBARDATAINTEROP, *PAPPBARDATAINTEROP;
+typedef struct tagAPPBAR_COMMAND
+{
+    APPBARDATAINTEROP abd;
+    DWORD dwMessage;
+    APPBAR_OUTPUT hOutput; /* For shlwapi!SHAllocShared */
+    DWORD dwProcessId;
+} APPBAR_COMMAND, *PAPPBAR_COMMAND;
+#include <poppack.h>
+
+#if defined(_WIN64) || defined(BUILD_WOW6432)
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x40);
+#else
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x38);
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
-
-#endif /* __WINE_UNDOCSHELL_H */

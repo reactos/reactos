@@ -1058,10 +1058,8 @@ run:
     // run it
     if (Info.DLType == DLTYPE_APPLICATION)
     {
-        CStringW app, params;
-        SHELLEXECUTEINFOW shExInfo = {0};
-        shExInfo.cbSize = sizeof(shExInfo);
-        shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+        CStringW app, params, tempdir;
+        SHELLEXECUTEINFOW shExInfo = { sizeof(shExInfo), SEE_MASK_NOCLOSEPROCESS, hDlg };
         shExInfo.lpVerb = L"open";
         shExInfo.lpFile = Path;
         shExInfo.lpParameters = L"";
@@ -1076,6 +1074,16 @@ run:
             shExInfo.lpFile = app.GetBuffer(MAX_PATH);
             GetModuleFileNameW(NULL, const_cast<LPWSTR>(shExInfo.lpFile), MAX_PATH);
             app.ReleaseBuffer();
+        }
+        else if (Info.IType == INSTALLER_EXEINZIP)
+        {
+            HRESULT hr = ExtractArchiveForExecution(Path, Info.szPackageName, tempdir, app);
+            if (FAILED(hr))
+            {
+                ShowLastError(hDlg, FALSE, hr);
+                goto end;
+            }
+            shExInfo.lpFile = app;
         }
 
         /* FIXME: Do we want to log installer status? */
@@ -1102,6 +1110,11 @@ run:
         {
             ShowLastError(hMainWnd, FALSE, GetLastError());
         }
+
+        if (!tempdir.IsEmpty())
+        {
+            DeleteDirectoryTree(tempdir, hDlg);
+        }
     }
 
 end:
@@ -1117,8 +1130,8 @@ end:
         if (bCancelled || (SettingsInfo.bDelInstaller && Info.DLType == DLTYPE_APPLICATION))
         {
             // Don't delete .zip/.cab files so the user can extract from them
-            if (bCancelled || Info.IType == INSTALLER_GENERATE || !OpensWithExplorer(Path) ||
-                HIBYTE(ClassifyFile(Path)) != PERCEIVED_TYPE_COMPRESSED)
+            if (bCancelled || Info.IType == INSTALLER_GENERATE || Info.IType == INSTALLER_EXEINZIP ||
+                !OpensWithExplorer(Path) || HIBYTE(ClassifyFile(Path)) != PERCEIVED_TYPE_COMPRESSED)
             {
                 DeleteFileW(Path);
             }

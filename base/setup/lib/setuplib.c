@@ -1405,31 +1405,4 @@ Cleanup:
     return ErrorNumber;
 }
 
-
-/* ENTRY-POINT ***************************************************************/
-
-/* Declared in ndk/umfuncs.h */
-NTSTATUS
-NTAPI
-LdrDisableThreadCalloutsForDll(
-    _In_ PVOID BaseAddress);
-
-BOOL
-NTAPI
-DllMain(
-    _In_ HINSTANCE hDll,
-    _In_ ULONG dwReason,
-    _In_opt_ PVOID pReserved)
-{
-    UNREFERENCED_PARAMETER(pReserved);
-
-    if (dwReason == DLL_PROCESS_ATTACH)
-    {
-        LdrDisableThreadCalloutsForDll(hDll);
-        ProcessHeap = RtlGetProcessHeap();
-    }
-
-    return TRUE;
-}
-
 /* EOF */

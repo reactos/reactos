@@ -272,11 +272,11 @@ RamDiskInitialize(
         }
 
         if (*FileName)
-        {
             Status = RamDiskLoadVirtualFile(FileName, DefaultPath);
-            if (Status != ESUCCESS)
-                return Status;
-        }
+        else
+            Status = RamDiskLoadVirtualFile(DefaultPath, NULL);
+        if (Status != ESUCCESS)
+            return Status;
     }
 
     /* Adjust the Ramdisk image length if needed */

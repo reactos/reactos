@@ -40,6 +40,8 @@ UINT gfsModOnlyCandidate;
 
 /* FUNCTIONS *****************************************************************/
 
+#define IsWindowHotKey(pHK) ( (pHK)->pti == NULL && (pHK)->id == IDHK_WNDKEY )
+
 VOID FASTCALL
 StartDebugHotKeys(VOID)
 {
@@ -80,6 +82,18 @@ IntGetModifiers(PBYTE pKeyState)
         fModifiers |= MOD_WIN;
 
     return fModifiers;
+}
+
+/*
+ * IntSwapModHKF
+ *
+ * Maps to/from MOD_/HOTKEYF_ (swaps the SHIFT and ALT bits)
+ */
+static inline
+UCHAR
+IntSwapModHKF(UINT Input)
+{
+    return (Input & 2) | ((Input & 1) << 2) | ((Input >> 2) & 1);
 }
 
 /*
@@ -290,6 +304,17 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                     UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
                     co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
                 }
+                else if (IsWindowHotKey(pHotKey))
+                {
+                    /* WM_SETHOTKEY notifies with WM_SYSCOMMAND, not WM_HOTKEY */
+                    if (bIsDown)
+                    {
+                        if (gpqForeground && gpqForeground->spwndActive)
+                            pWnd = gpqForeground->spwndActive;
+                        UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND,
+                                        SC_HOTKEY, (LPARAM)UserHMGetHandle(pHotKey->pWnd));
+                    }
+                }
                 else
                 {
                     TRACE("UPM Hot key Id %d Key %u\n", pHotKey->id, wVk );
@@ -318,10 +343,10 @@ DefWndGetHotKey(PWND pWnd)
 
     while (pHotKey)
     {
-        if (pHotKey->pWnd == pWnd && pHotKey->id == IDHK_REACTOS)
+        if (pHotKey->pWnd == pWnd && IsWindowHotKey(pHotKey))
         {
             /* We have found it */
-            return MAKELONG(pHotKey->vk, pHotKey->fsModifiers);
+            return MAKEWORD(pHotKey->vk, IntSwapModHKF(pHotKey->fsModifiers));
         }
 
         /* Move to the next entry */
@@ -339,7 +364,8 @@ DefWndGetHotKey(PWND pWnd)
 INT FASTCALL
 DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 {
-    UINT fsModifiers, vk;
+    const UINT fsModifiers = IntSwapModHKF(HIBYTE(wParam));
+    const UINT vk = LOBYTE(wParam);
     PHOT_KEY pHotKey, *pLink;
     INT iRet = 1;
 
@@ -349,16 +375,11 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
     if (pWnd->style & WS_CHILD)
         return 0;
 
-    // VK_ESCAPE, VK_SPACE, and VK_TAB are invalid hot keys.
-    if (LOWORD(wParam) == VK_ESCAPE ||
-        LOWORD(wParam) == VK_SPACE ||
-        LOWORD(wParam) == VK_TAB)
+    // VK_ESCAPE, VK_SPACE, VK_TAB and VK_PACKET are invalid hot keys.
+    if (vk == VK_ESCAPE || vk == VK_SPACE || vk == VK_TAB || vk == VK_PACKET)
     {
         return -1;
     }
-
-    vk = LOWORD(wParam);
-    fsModifiers = HIWORD(wParam);
 
     if (wParam)
     {
@@ -367,7 +388,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
         {
             if (pHotKey->fsModifiers == fsModifiers &&
                 pHotKey->vk == vk &&
-                pHotKey->id == IDHK_REACTOS)
+                IsWindowHotKey(pHotKey))
             {
                 if (pHotKey->pWnd != pWnd)
                     iRet = 2; // Another window already has the same hot key.
@@ -383,8 +404,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
     pLink = &gphkFirst;
     while (pHotKey)
     {
-        if (pHotKey->pWnd == pWnd &&
-            pHotKey->id == IDHK_REACTOS)
+        if (pHotKey->pWnd == pWnd && IsWindowHotKey(pHotKey))
         {
             /* This window has already hotkey registered */
             break;
@@ -405,14 +425,14 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
                 return 0;
 
             pHotKey->pWnd = pWnd;
-            pHotKey->id = IDHK_REACTOS; // Don't care, these hot keys are unrelated to the hot keys set by RegisterHotKey
+            pHotKey->id = IDHK_WNDKEY; // Don't care, these hot keys are unrelated to the hot keys set by RegisterHotKey
             pHotKey->pNext = gphkFirst;
             gphkFirst = pHotKey;
         }
 
         /* A window can only have one hot key. If the window already has a
            hot key associated with it, the new hot key replaces the old one. */
-        pHotKey->pti = NULL;
+        pHotKey->pti = NULL; /* IsWindowHotKey */
         pHotKey->fsModifiers = fsModifiers;
         pHotKey->vk = vk;
     }

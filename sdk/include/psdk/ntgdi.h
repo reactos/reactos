@@ -151,7 +151,7 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
-    _In_reads_z_(cwc) LPWSTR pwszFiles,
+    _In_reads_z_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ UINT cjBuf,
@@ -165,9 +165,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPCWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode);
 
 __kernel_entry
@@ -176,9 +176,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesWInternal(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode,
     _In_ BOOL bSubset);
 
@@ -235,8 +235,8 @@ APIENTRY
 NtGdiGetOutlineTextMetricsInternalW(
     _In_ HDC hdc,
     _In_ ULONG cjotm,
-    _Out_writes_bytes_opt_(cjotm) OUTLINETEXTMETRICW *potmw,
-    _Out_ TMDIFF *ptmd);
+    _Out_writes_bytes_opt_(cjotm) POUTLINETEXTMETRICW potmw,
+    _Out_ PTMDIFF ptmd);
 
 _Success_(return != FALSE)
 __kernel_entry
@@ -342,11 +342,11 @@ W32KAPI
 HANDLE
 APIENTRY
 NtGdiAddFontMemResourceEx(
-    _In_reads_bytes_(cjBuffer) PVOID pvBuffer,
+    _In_reads_bytes_(cjBuffer) const VOID *pvBuffer,
     _In_ DWORD cjBuffer,
-    _In_reads_bytes_opt_(cjDV) DESIGNVECTOR *pdv,
+    _In_reads_bytes_opt_(cjDV) const DESIGNVECTOR *pdv,
     _In_ ULONG cjDV,
-    _Out_ DWORD *pNumFonts);
+    _Out_ PDWORD pNumFonts);
 
 __kernel_entry
 W32KAPI
@@ -1598,12 +1598,12 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiRemoveFontResourceW(
-    _In_reads_(cwc) WCHAR *pwszFiles,
+    _In_reads_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ ULONG fl,
     _In_ DWORD dwPidTid,
-    _In_opt_ DESIGNVECTOR *pdv);
+    _In_opt_ const DESIGNVECTOR *pdv);
 
 __kernel_entry
 W32KAPI
@@ -1663,12 +1663,12 @@ BOOL
 APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPWSTR pwsz,
+    _In_reads_opt_(cwc) PCWCH pwsz,
     _In_ ULONG cwc,
     _In_ ULONG dxMax,
-    _Out_opt_ ULONG *pcCh,
+    _Out_opt_ PULONG pcCh,
     _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
-    _Out_ LPSIZE psize,
+    _Out_ PSIZE psize,
     _In_ FLONG fl);
 
 __kernel_entry
@@ -1679,7 +1679,7 @@ NtGdiGetCharABCWidthsW(
     _In_ HDC hdc,
     _In_ UINT wchFirst,
     _In_ ULONG cwch,
-    _In_reads_opt_(cwch) PWCHAR pwch,
+    _In_reads_opt_(cwch) PCWCH pwch,
     _In_ FLONG fl,
     _Out_writes_bytes_(cwch * sizeof(ABC)) PVOID pvBuf);
 
@@ -1689,10 +1689,10 @@ DWORD
 APIENTRY
 NtGdiGetCharacterPlacementW(
     _In_ HDC hdc,
-    _In_reads_z_(nCount) LPWSTR pwsz,
+    _In_reads_(nCount) PCWCH pwsz,
     _In_ INT nCount,
     _In_ INT nMaxExtent,
-    _Inout_ LPGCP_RESULTSW pgcpw,
+    _Inout_opt_ LPGCP_RESULTSW pgcpw,
     _In_ DWORD dwFlags);
 
 __kernel_entry
@@ -1986,7 +1986,7 @@ NtGdiGetCharWidthW(
     _In_ HDC hdc,
     _In_ UINT wcFirst,
     _In_ UINT cwc,
-    _In_reads_opt_(cwc) PWCHAR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ FLONG fl,
     _Out_writes_bytes_(cwc * sizeof(ULONG)) PVOID pvBuf);
 
@@ -2069,7 +2069,7 @@ NtGdiGetGlyphOutline(
     _Out_ LPGLYPHMETRICS pgm,
     _In_ ULONG cjBuf,
     _Out_writes_bytes_opt_(cjBuf) PVOID pvBuf,
-    _In_ LPMAT2 pmat2,
+    _In_ const MAT2 *pmat2,
     _In_ BOOL bIgnoreRotation);
 
 __kernel_entry
@@ -2457,9 +2457,9 @@ BOOL
 APIENTRY
 NtGdiGetTextExtent(
     _In_ HDC hdc,
-    _In_reads_(cwc) LPWSTR lpwsz,
+    _In_reads_(cwc) PCWCH lpwsz,
     _In_ INT cwc,
-    _Out_ LPSIZE psize,
+    _Out_ PSIZE psize,
     _In_ UINT flOpts);
 
 _Success_(return != FALSE)
@@ -2469,7 +2469,7 @@ BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
     _In_ HDC hdc,
-    _Out_writes_bytes_(cj) TMW_INTERNAL *ptm,
+    _Out_writes_bytes_(cj) PTMW_INTERNAL ptm,
     _In_ ULONG cj);
 
 __kernel_entry
@@ -2477,9 +2477,9 @@ W32KAPI
 INT
 APIENTRY
 NtGdiGetTextFaceW(
-    _In_ HDC hdc,
-    _In_ INT cChar,
-    _Out_writes_to_opt_(cChar, return) LPWSTR pszOut,
+    _In_ HDC hDC,
+    _In_ INT Count,
+    _Out_writes_to_opt_(Count, return) PWSTR FaceName,
     _In_ BOOL bAliasName);
 
 __kernel_entry
@@ -2501,7 +2501,7 @@ NtGdiExtTextOutW(
     _In_ INT y,
     _In_ UINT flOpts,
     _In_opt_ LPCRECT prcl,
-    _In_reads_opt_(cwc) LPCWSTR pwsz,
+    _In_reads_opt_(cwc) PCWCH pwsz,
     _In_range_(0, 0xffff) UINT cwc,
     _In_reads_opt_(_Inexpressible_(cwc)) const INT *pdx,
     _In_ DWORD dwCodePage);
@@ -2873,23 +2873,23 @@ INT
 W32KAPI
 APIENTRY
 NtGdiAddFontResourceW(
-    _In_reads_(cwc) WCHAR *pwszFiles,
+    _In_reads_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ FLONG f,
     _In_ DWORD dwPidTid,
-    _In_opt_ DESIGNVECTOR *pdv);
+    _In_opt_ const DESIGNVECTOR *pdv);
 
 __kernel_entry
 W32KAPI
 HFONT
 APIENTRY
 NtGdiHfontCreate(
-    _In_reads_bytes_(cjElfw) ENUMLOGFONTEXDVW *pelfw,
+    _In_reads_bytes_(cjElfw) const ENUMLOGFONTEXDVW *pelfw,
     _In_ ULONG cjElfw,
     _In_ LFTYPE lft,
     _In_ FLONG fl,
-    _In_ PVOID pvCliData);
+    _In_opt_ PVOID pvCliData);
 
 __kernel_entry
 W32KAPI

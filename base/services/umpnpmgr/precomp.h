@@ -26,6 +26,7 @@
 #include <rtlfuncs.h>
 #include <setypes.h>
 #include <umpnpmgr/sysguid.h>
+#include <wdmguid.h>
 #include <cfgmgr32.h>
 #include <regstr.h>
 #include <userenv.h>
@@ -41,10 +42,21 @@ typedef struct
     WCHAR DeviceIds[ANYSIZE_ARRAY];
 } DeviceInstallParams;
 
+typedef enum
+{
+    CLASS_NOTIFICATION = 1,
+    TARGET_NOTIFICATION
+} NOTIFICATION_TYPE;
+
+
 typedef struct
 {
     LIST_ENTRY ListEntry;
+    NOTIFICATION_TYPE dwType;
     PWSTR pszName;
+    DWORD_PTR hRecipient;
+    DWORD ulFlags;
+    GUID ClassGuid;
 } NOTIFY_ENTRY, *PNOTIFY_ENTRY;
 
 /* event.c */
@@ -78,6 +90,7 @@ DeviceInstallThread(
 /* rpcserver.c */
 
 extern LIST_ENTRY NotificationListHead;
+extern RTL_RESOURCE NotificationListLock;
 
 DWORD
 WINAPI

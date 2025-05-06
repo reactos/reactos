@@ -163,6 +163,7 @@ BEGIN
     IDS_NET_DELETE "Удалить"
     IDS_NET_RENAME "Переименовать"
     IDS_NET_PROPERTIES "Свойства"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u бит/с"
     IDS_FORMAT_KBIT "%u Кбит/с"
     IDS_FORMAT_MBIT "%u Мбит/с"

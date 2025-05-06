@@ -762,7 +762,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
                     return CompareCanonical(*pData1, *pData2);
                 pName1 = GetItemOriginalFileName(*pData1);
                 pName2 = GetItemOriginalFileName(*pData2);
-                result = CFSFolder::CompareUiStrings(pName1, pName2);
+                result = CFSFolder::CompareUiStrings(pName1, pName2, lParam);
             }
             else
             {
@@ -782,7 +782,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
             {
                 if (SUCCEEDED(hr = GetItemOriginalFolder(*pData2, const_cast<LPWSTR&>(pName2))))
                 {
-                    result = CFSFolder::CompareUiStrings(pName1, pName2);
+                    result = CFSFolder::CompareUiStrings(pName1, pName2, lParam);
                     SHFree(const_cast<LPWSTR>(pName2));
                 }
                 SHFree(const_cast<LPWSTR>(pName1));
@@ -797,7 +797,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
         case COLUMN_TYPE:
             GetItemTypeName(pidl1, *pData1, shfi1);
             GetItemTypeName(pidl2, *pData2, shfi2);
-            result = CFSFolder::CompareUiStrings(shfi1.szTypeName, shfi2.szTypeName);
+            result = CFSFolder::CompareUiStrings(shfi1.szTypeName, shfi2.szTypeName, lParam);
             break;
         case COLUMN_MTIME:
             _ILGetFileDateTime(pidl1, &ft1);

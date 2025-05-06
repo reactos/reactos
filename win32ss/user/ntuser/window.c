@@ -1718,13 +1718,17 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
    /* default positioning for overlapped windows */
     if(!(Cs->style & (WS_POPUP | WS_CHILD)))
    {
-      PMONITOR pMonitor;
+      PMONITOR pMonitor = NULL;
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
+      PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-      pMonitor = UserGetPrimaryMonitor();
+      if (ppi && ppi->hMonitor)
+         pMonitor = UserGetMonitorObject(ppi->hMonitor);
+      if (!pMonitor)
+         pMonitor = UserGetPrimaryMonitor();
 
       /* Check if we don't have a monitor attached yet */
-      if(pMonitor == NULL)
+      if (pMonitor == NULL)
       {
           Cs->x = Cs->y = 0;
           Cs->cx = 800;
@@ -2573,6 +2577,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    {
        /* Count only console windows manually */
        co_IntUserManualGuiCheck(TRUE);
+   }
+
+   /* Set the hotkey */
+   if (!(Window->style & (WS_POPUP | WS_CHILD)) || (Window->ExStyle & WS_EX_APPWINDOW))
+   {
+       if (pti->ppi->dwHotkey)
+       {
+          co_IntSendMessage(UserHMGetHandle(Window), WM_SETHOTKEY, pti->ppi->dwHotkey, 0);
+          pti->ppi->dwHotkey = 0; /* Only the first suitable window gets the hotkey */
+       }
    }
 
    TRACE("co_UserCreateWindowEx(%wZ): Created window %p\n", ClassName, hWnd);

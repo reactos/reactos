@@ -165,6 +165,7 @@ BEGIN
     IDS_NET_DELETE "Odstrániť"
     IDS_NET_RENAME "Premenovať"
     IDS_NET_PROPERTIES "Vlastnosti"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u Bitov/s"
     IDS_FORMAT_KBIT "%u KBitov/s"
     IDS_FORMAT_MBIT "%u MBitov/s"

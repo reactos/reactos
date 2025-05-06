@@ -440,6 +440,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Dodaje nową wartość ciągu"
     ID_EDIT_NEW_BINARYVALUE "Dodaje nową wartość binarną"
     ID_EDIT_NEW_DWORDVALUE "Dodaje nową wartość DWORD"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Dodaje nową wartość wielociągu"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Dodaje nową wartość ciągu rozwijalnego"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importuje plik do rejestru"
     ID_REGISTRY_EXPORTREGISTRYFILE "Eksportuje całość lub część rejestru do pliku"
     ID_REGISTRY_LOADHIVE "Ładuje plik Drzewa do rejestru"

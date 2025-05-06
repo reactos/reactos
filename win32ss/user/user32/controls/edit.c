@@ -2898,6 +2898,9 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 		return;
 	}
 
+#ifdef __REACTOS__
+	if (es->text)
+#endif
 	EDIT_UnlockBuffer(es, TRUE);
 
 	if(es->is_unicode)

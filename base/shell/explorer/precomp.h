@@ -353,6 +353,8 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
  */
 VOID
 ShowCustomizeClassic(HINSTANCE, HWND);
+VOID
+ClearRecentAndMru();
 
 /*
 * startmnusite.cpp
@@ -366,6 +368,11 @@ CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID 
 
 /* TrayClockWnd */
 HRESULT CTrayClockWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
+
+static inline BOOL GetHideClock()
+{
+    return g_TaskbarSettings.sr.HideClock || SHRestricted(REST_HIDECLOCK);
+}
 
 /* TrayNotifyWnd */
 #define TNWM_GETMINIMUMSIZE (WM_USER + 0x100)

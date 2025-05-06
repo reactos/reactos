@@ -33,6 +33,101 @@ VOID ApiFree() {
 
 /* This represents the service portion of the DHCP client API */
 
+DWORD
+DSAcquireParams(
+    _In_ PipeSendFunc Send,
+    _In_ HANDLE CommPipe,
+    _Out_ COMM_DHCP_REQ *Req)
+{
+    COMM_DHCP_REPLY Reply;
+    PDHCP_ADAPTER Adapter;
+    struct protocol* proto;
+
+    DPRINT1("DSAcquireParams()\n");
+
+    ApiLock();
+
+    Adapter = AdapterFindName(Req->Body.AcquireParams.AdapterName);
+    DPRINT1("Adapter: %p\n", Adapter);
+
+    if (Adapter == NULL || Adapter->DhclientState.state == S_STATIC)
+    {
+        Reply.Reply = 0;
+        ApiUnlock();
+        return Send(CommPipe,  &Reply);
+    }
+
+    Reply.Reply = 1;
+
+    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+    if (proto)
+        remove_protocol(proto);
+
+    add_protocol(Adapter->DhclientInfo.name,
+                 Adapter->DhclientInfo.rfdesc, got_one,
+                 &Adapter->DhclientInfo);
+
+    Adapter->DhclientInfo.client->state = S_INIT;
+    state_reboot(&Adapter->DhclientInfo);
+
+    if (hAdapterStateChangedEvent != NULL)
+        SetEvent(hAdapterStateChangedEvent);
+
+    ApiUnlock();
+
+    return Send(CommPipe, &Reply);
+}
+
+
+DWORD
+DSReleaseParams(
+    _In_ PipeSendFunc Send,
+    _In_ HANDLE CommPipe,
+    _Out_ COMM_DHCP_REQ *Req)
+{
+    COMM_DHCP_REPLY Reply;
+    PDHCP_ADAPTER Adapter;
+    struct protocol* proto;
+
+    DPRINT1("DSReleaseParams()\n");
+
+    ApiLock();
+
+    Adapter = AdapterFindName(Req->Body.AcquireParams.AdapterName);
+    DPRINT1("Adapter: %p\n", Adapter);
+
+    Reply.Reply = Adapter ? 1 : 0;
+
+    if (Adapter)
+    {
+        if (Adapter->NteContext)
+        {
+            DeleteIPAddress(Adapter->NteContext);
+            Adapter->NteContext = 0;
+        }
+        if (Adapter->RouterMib.dwForwardNextHop)
+        {
+            DeleteIpForwardEntry(&Adapter->RouterMib);
+            Adapter->RouterMib.dwForwardNextHop = 0;
+        }
+
+        proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+        if (proto)
+           remove_protocol(proto);
+
+        Adapter->DhclientInfo.client->active = NULL;
+        Adapter->DhclientInfo.client->state = S_INIT;
+
+        if (hAdapterStateChangedEvent != NULL)
+            SetEvent(hAdapterStateChangedEvent);
+    }
+
+    ApiUnlock();
+
+    return Send(CommPipe, &Reply);
+}
+
+
 DWORD DSLeaseIpAddress( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
@@ -199,43 +294,6 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *
 
         if (hAdapterStateChangedEvent != NULL)
             SetEvent(hAdapterStateChangedEvent);
-    }
-
-    ApiUnlock();
-
-    return Send(CommPipe,  &Reply );
-}
-
-DWORD DSGetAdapterInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
-    PDHCP_ADAPTER Adapter;
-
-    ApiLock();
-
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if( Adapter ) {
-        Reply.GetAdapterInfo.DhcpEnabled = (S_STATIC != Adapter->DhclientState.state);
-        if (S_BOUND == Adapter->DhclientState.state) {
-            if (sizeof(Reply.GetAdapterInfo.DhcpServer) ==
-                Adapter->DhclientState.active->serveraddress.len) {
-                memcpy(&Reply.GetAdapterInfo.DhcpServer,
-                       Adapter->DhclientState.active->serveraddress.iabuf,
-                       Adapter->DhclientState.active->serveraddress.len);
-            } else {
-                DPRINT1("Unexpected server address len %d\n",
-                        Adapter->DhclientState.active->serveraddress.len);
-                Reply.GetAdapterInfo.DhcpServer = htonl(INADDR_NONE);
-            }
-            Reply.GetAdapterInfo.LeaseObtained = Adapter->DhclientState.active->obtained;
-            Reply.GetAdapterInfo.LeaseExpires = Adapter->DhclientState.active->expiry;
-        } else {
-            Reply.GetAdapterInfo.DhcpServer = htonl(INADDR_NONE);
-            Reply.GetAdapterInfo.LeaseObtained = 0;
-            Reply.GetAdapterInfo.LeaseExpires = 0;
-        }
     }
 
     ApiUnlock();

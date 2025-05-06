@@ -171,7 +171,7 @@ HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray)
 
 static void _RunPower()
 {
-    ShellExecuteW(NULL, NULL, L"powercfg.cpl", NULL, NULL, SW_SHOWNORMAL);
+    CSysTray::RunDll("powercfg.cpl", "");
 }
 
 static void _ShowContextMenu(CSysTray * pSysTray)

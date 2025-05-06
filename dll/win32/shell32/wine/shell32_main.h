@@ -35,6 +35,7 @@ extern "C" {
 */
 extern HMODULE	huser32 DECLSPEC_HIDDEN;
 extern HINSTANCE shell32_hInstance DECLSPEC_HIDDEN;
+extern int (WINAPI* SHELL_StrCmpLogical)(PCWSTR s1, PCWSTR s2);
 
 BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
@@ -214,6 +215,73 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
 
 HRESULT WINAPI DoRegisterServer(void);
 HRESULT WINAPI DoUnregisterServer(void);
+
+/* Property system */
+static inline HRESULT
+SHELL_CreateVariantBufferEx(VARIANT *pVar, UINT cb, VARTYPE vt)
+{
+    SAFEARRAY *pSA = SafeArrayCreateVector(vt, 0, cb);
+    if (pSA)
+    {
+        V_VT(pVar) = VT_ARRAY | vt;
+        V_ARRAY(pVar) = pSA;
+        return S_OK;
+    }
+    return E_OUTOFMEMORY;
+}
+
+static inline HRESULT
+SHELL_CreateVariantBuffer(VARIANT *pVar, UINT cb)
+{
+    return SHELL_CreateVariantBufferEx(pVar, cb, VT_UI1);
+}
+
+static inline HRESULT
+SHELL_InitVariantFromBuffer(VARIANT *pVar, const void *pData, UINT cb)
+{
+    HRESULT hr = SHELL_CreateVariantBuffer(pVar, cb);
+    if (SUCCEEDED(hr))
+        CopyMemory(V_ARRAY(pVar)->pvData, pData, cb);
+    return hr;
+}
+
+static inline void*
+SHELL_GetSafeArrayDataPtr(const SAFEARRAY *pSA, SIZE_T *pcb)
+{
+    if (pSA->cDims != 1)
+        return NULL;
+    LONG lob, upb;
+    SafeArrayGetLBound((SAFEARRAY*)pSA, 1, &lob);
+    SafeArrayGetUBound((SAFEARRAY*)pSA, 1, &upb);
+    *pcb = (SIZE_T)(upb - lob) + 1;
+    return pSA->pvData;
+}
+
+static inline HRESULT
+SHELL_VariantToBuffer(VARIANT *pVar, void *pData, SIZE_T cb)
+{
+    if (V_VT(pVar) != (VT_ARRAY | VT_UI1))
+        return E_INVALIDARG;
+    SIZE_T cbArr;
+    void *pArrData = SHELL_GetSafeArrayDataPtr(V_ARRAY(pVar), &cbArr);
+    if (!pArrData || cbArr < cb)
+        return E_FAIL;
+    CopyMemory(pData, pArrData, cb);
+    return (cbArr > cb) ? S_FALSE : S_OK;
+}
+
+static inline HRESULT
+SHELL_CreateSHDESCRIPTIONID(VARIANT *pVar, DWORD Id, const CLSID *pCLSID)
+{
+    HRESULT hr = SHELL_CreateVariantBuffer(pVar, sizeof(SHDESCRIPTIONID));
+    if (SUCCEEDED(hr))
+    {
+        SHDESCRIPTIONID *pDID = (SHDESCRIPTIONID*)V_ARRAY(pVar)->pvData;
+        pDID->dwDescriptionId = Id;
+        pDID->clsid = *pCLSID;
+    }
+    return hr;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

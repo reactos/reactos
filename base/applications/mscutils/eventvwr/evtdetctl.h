@@ -4,7 +4,7 @@
  * PURPOSE:     Event Details Control.
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
  *              Copyright 2008-2016 Eric Kohl <eric.kohl@reactos.org>
- *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2016-2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
@@ -24,5 +24,3 @@ HWND
 CreateEventDetailsCtrl(HINSTANCE hInstance,
                        HWND hParentWnd,
                        LPARAM lParam);
-
-VOID EnableEventDetailsButtons(HWND hWnd, BOOL bEnable);

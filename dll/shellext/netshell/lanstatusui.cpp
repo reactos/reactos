@@ -826,6 +826,118 @@ ShowStatusPropertyDialog(
     }
 }
 
+VOID ShowNetworkIconContextMenu(
+    _In_ HWND hwndOwner,
+    _In_ LANSTATUSUI_CONTEXT *pContext)
+{
+    if (!pContext || !pContext->pNet)
+        return;
+
+    HMENU hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return;
+
+    POINT pt;
+    GetCursorPos(&pt);
+
+    SetForegroundWindow(hwndOwner);
+
+    // The context menu items, set to their default values.
+    struct
+    {
+        UINT uID;
+        UINT uFlags;
+        UINT_PTR uIDNewItem;
+    } MenuItems[] =
+    {
+        {IDS_NET_ACTIVATE, MF_GRAYED, IDM_NETICON_ENABLE},
+        {IDS_NET_STATUS, MF_GRAYED, IDM_NETICON_STATUS},
+        {IDS_NET_REPAIR, MF_GRAYED, IDM_NETICON_REPAIR},
+        {UINT_MAX, 0, 0}, // Separator
+        {IDS_NET_OPEN_CONNECTIONS, MF_ENABLED, IDM_NETICON_OPEN_CONNECTIONS},
+        {IDS_NET_PROPERTIES, MF_ENABLED | MFS_DEFAULT, IDM_NETICON_PROPERTIES},
+    };
+
+    NETCON_PROPERTIES *pProps = NULL;
+    HRESULT hr = pContext->pNet->GetProperties(&pProps);
+    if (SUCCEEDED(hr) && pProps)
+    {
+        if (pProps->Status == NCS_HARDWARE_DISABLED ||
+            pProps->Status == NCS_MEDIA_DISCONNECTED ||
+            pProps->Status == NCS_DISCONNECTED)
+        {
+            MenuItems[0].uID = IDS_NET_ACTIVATE;
+            MenuItems[0].uFlags = MF_ENABLED | MFS_DEFAULT;
+            MenuItems[0].uIDNewItem = IDM_NETICON_ENABLE;
+            MenuItems[5].uFlags = MF_ENABLED;
+        }
+        else
+        {
+            MenuItems[0].uID = IDS_NET_DEACTIVATE;
+            MenuItems[0].uFlags = MF_ENABLED;
+            MenuItems[0].uIDNewItem = IDM_NETICON_DISABLE;
+        }
+
+        if (pProps->Status == NCS_CONNECTED)
+        {
+            MenuItems[1].uFlags = MF_ENABLED;
+            MenuItems[2].uFlags = MF_ENABLED;
+        }
+        else if (pProps->Status == NCS_CONNECTING)
+        {
+            MenuItems[1].uFlags = MF_ENABLED;
+            MenuItems[2].uFlags = MF_GRAYED;
+        }
+        else
+        {
+            MenuItems[1].uFlags = MF_GRAYED;
+            MenuItems[2].uFlags = MF_GRAYED;
+        }
+
+        NcFreeNetconProperties(pProps);
+        pProps = NULL;
+    }
+    else
+    {
+        MenuItems[0].uFlags = MF_GRAYED;
+        MenuItems[1].uFlags = MF_GRAYED;
+        MenuItems[2].uFlags = MF_GRAYED;
+        MenuItems[5].uFlags = MF_GRAYED;
+    }
+
+    // Set the "Properties" item as default, if the Network "Enable/Disable" item isn't.
+    if (!(MenuItems[0].uFlags & MFS_DEFAULT))
+        MenuItems[5].uFlags |= MFS_DEFAULT;
+
+    WCHAR szMenuItem[128];
+
+    for (USHORT i = 0; i < _countof(MenuItems); ++i)
+    {
+        if (MenuItems[i].uID != UINT_MAX)
+        {
+            if (LoadStringW(netshell_hInstance, MenuItems[i].uID, szMenuItem, _countof(szMenuItem)))
+                AppendMenuW(hMenu, MF_STRING | MenuItems[i].uFlags, MenuItems[i].uIDNewItem, szMenuItem);
+        }
+        else
+        {
+            AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+        }
+    }
+
+    TrackPopupMenuEx(hMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, hwndOwner, NULL);
+
+    PostMessage(hwndOwner, WM_NULL, 0, 0);
+
+    DestroyMenu(hMenu);
+}
+
+HRESULT RepairConnection(INetConnection *pNet, HWND hwndOwner)
+{
+    SHELL_ErrorBox(hwndOwner, HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED));
+
+    return E_NOTIMPL;
+}
+
 INT_PTR
 CALLBACK
 LANStatusDlg(
@@ -841,8 +953,20 @@ LANStatusDlg(
         case WM_INITDIALOG:
             pContext = (LANSTATUSUI_CONTEXT *)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
+            pContext->hwndStatusDlg = hwndDlg;
             pContext->nIDEvent = SetTimer(hwndDlg, NETTIMERID, 1000, NULL);
             return TRUE;
+
+        case WM_DESTROY:
+            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+            if (pContext && pContext->nIDEvent)
+            {
+                KillTimer(hwndDlg, pContext->nIDEvent);
+                pContext->nIDEvent = 0;
+            }
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
+            break;
+
         case WM_TIMER:
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (wParam == (WPARAM)pContext->nIDEvent)
@@ -850,11 +974,29 @@ LANStatusDlg(
                 UpdateLanStatus(pContext->hwndDlg, pContext);
             }
             break;
+
         case WM_SHOWSTATUSDLG:
-            if (LOWORD(lParam) == WM_LBUTTONUP)
+            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+            if (!pContext)
+                break;
+
+            switch (LOWORD(lParam))
             {
-                pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                if (!pContext)
+                case WM_LBUTTONUP:
+                    if (pContext->hwndDlg)
+                    {
+                        HWND hwndSheet = GetParent(pContext->hwndDlg);
+                        if (hwndSheet)
+                        {
+                           ShowWindow(hwndSheet, SW_RESTORE);
+                           SetForegroundWindow(hwndSheet);
+                           BringWindowToTop(hwndSheet);
+                        }
+                    }
+                    else
+                    {
+                        ShowStatusPropertyDialog(pContext, hwndDlg);
+                    }
                     break;
 
                 if (pContext->hwndDlg)
@@ -867,8 +1009,63 @@ LANStatusDlg(
                     ShowStatusPropertyDialog(pContext, hwndDlg);
                 }
                 break;
+
+                case WM_RBUTTONUP:
+                case WM_CONTEXTMENU:
+                    ShowNetworkIconContextMenu(hwndDlg, pContext);
+                    break;
             }
             break;
+
+        case WM_COMMAND:
+        {
+            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+            if (!pContext || !pContext->pNet)
+                break;
+
+            switch (LOWORD(wParam))
+            {
+                case IDM_NETICON_ENABLE:
+                    pContext->pNet->Connect();
+                    UpdateLanStatus(NULL, pContext);
+                    break;
+
+                case IDM_NETICON_DISABLE:
+                    pContext->pNet->Disconnect();
+                    UpdateLanStatus(NULL, pContext);
+                    break;
+
+                case IDM_NETICON_STATUS:
+                    if (pContext->hwndDlg)
+                    {
+                        HWND hwndSheet = GetParent(pContext->hwndDlg);
+                        if (hwndSheet)
+                        {
+                            ShowWindow(hwndSheet, SW_RESTORE);
+                            SetForegroundWindow(hwndSheet);
+                            BringWindowToTop(hwndSheet);
+                        }
+                    }
+                    else
+                    {
+                        ShowStatusPropertyDialog(pContext, hwndDlg);
+                    }
+                    break;
+
+                case IDM_NETICON_REPAIR:
+                    RepairConnection(pContext->pNet, hwndDlg);
+                    break;
+
+                case IDM_NETICON_PROPERTIES:
+                    ShowNetConnectionProperties(pContext->pNet, hwndDlg);
+                    break;
+
+                case IDM_NETICON_OPEN_CONNECTIONS:
+                    ShellExecuteW(hwndDlg, NULL, L"control", L"netconnections", NULL, SW_SHOWNORMAL);
+                    break;
+            }
+            break;
+        }
     }
     return FALSE;
 }

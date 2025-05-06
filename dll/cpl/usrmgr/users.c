@@ -15,6 +15,7 @@
  */
 
 #include "usrmgr.h"
+#include <winreg.h>
 
 typedef struct _USER_DATA
 {
@@ -650,6 +651,44 @@ UpdateUserProperties(HWND hwndDlg)
     NetApiBufferFree(pUserInfo);
 }
 
+VOID OnToggleRequireLogon(_In_ HWND hwndDlg)
+{
+    HKEY hKey;
+    LONG lResult;
+    BOOL bIsChecked;
+    PCWSTR pszAutoAdminLogonValue;
+
+    lResult = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                              L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_SET_VALUE,
+                              NULL,
+                              &hKey,
+                              NULL);
+    if (lResult != ERROR_SUCCESS)
+    {
+        ERR("OnToggleRequireLogon: Failed to open or create Winlogon registry key. Error code: %ld\n", lResult);
+        return; 
+    }
+
+    bIsChecked = IsDlgButtonChecked(hwndDlg, IDC_USERS_STARTUP_REQUIRE) == BST_CHECKED;
+    pszAutoAdminLogonValue = bIsChecked ? L"0" : L"1";
+
+    lResult = RegSetValueExW(hKey,
+                             L"AutoAdminLogon",
+                             0,
+                             REG_SZ, 
+                             (const BYTE*)pszAutoAdminLogonValue,
+                             2 * sizeof(WCHAR));
+    if (lResult != ERROR_SUCCESS)
+    {
+        ERR("OnToggleRequireLogon: Failed to set AutoAdminLogon registry value. Error code: %ld\n", lResult);
+    }
+
+    RegCloseKey(hKey);
+}
 
 INT_PTR CALLBACK
 UsersPageProc(HWND hwndDlg,
@@ -666,16 +705,50 @@ UsersPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pUserData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(USER_DATA));
+        {
+            LONG lResult;
+            HKEY hKey;
+            WCHAR szAutoAdminLogonValue[2];
+            DWORD dwType;
+            DWORD dwSize = sizeof(szAutoAdminLogonValue);
+            BOOL bRequireLogon = TRUE;
+
+            pUserData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pUserData));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pUserData);
 
             pUserData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_USER));
 
             OnInitDialog(hwndDlg);
+            lResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                                    0, KEY_READ, &hKey);
+            if (lResult != ERROR_SUCCESS)
+            {
+                CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, BST_CHECKED);
+                break; 
+            }
+
+            lResult = RegQueryValueExW(hKey,
+                                       L"AutoAdminLogon",
+                                       NULL,
+                                       &dwType,
+                                       (LPBYTE)szAutoAdminLogonValue,
+                                       &dwSize);
+            RegCloseKey(hKey);
+
+            if (lResult == ERROR_SUCCESS && dwType == REG_SZ &&
+                wcscmp(szAutoAdminLogonValue, L"1") == 0)
+            {
+                bRequireLogon = FALSE;
+            }
+
+            CheckDlgButton(hwndDlg, IDC_USERS_STARTUP_REQUIRE, bRequireLogon ? BST_CHECKED : BST_UNCHECKED);
+
             SetMenuDefaultItem(GetSubMenu(pUserData->hPopupMenu, 1),
                                IDM_USER_PROPERTIES,
                                FALSE);
             break;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -704,6 +777,9 @@ UsersPageProc(HWND hwndDlg,
                     {
                         UpdateUserProperties(hwndDlg);
                     }
+                    break;
+                case IDC_USERS_STARTUP_REQUIRE:
+                    OnToggleRequireLogon(hwndDlg);
                     break;
             }
             break;

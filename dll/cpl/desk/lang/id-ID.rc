@@ -23,9 +23,10 @@ BEGIN
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
     LTEXT "Pilih gambar untuk dipakai sebagai desktop wallpaper anda:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "&Pilih gambar untuk dipakai sebagai desktop wallpaper anda:" for the backport
     PUSHBUTTON "&Lihat...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
-    PUSHBUTTON "&Warna...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Penempatan:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "P&enempatan:" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Warna:", IDC_STATIC, 188, 156, 55, 9
+    PUSHBUTTON " ", IDC_COLOR_BUTTON, 188, 167, 55, 15
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 

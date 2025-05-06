@@ -7,7 +7,7 @@
                   type="win32"
                   name="dep1"
                   version="0.4.4.0"
-                  processorArchitecture="x86"
+                  processorArchitecture="*"
                   />
           </dependentAssembly>
   </dependency>

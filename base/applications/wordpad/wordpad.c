@@ -2294,6 +2294,9 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         tr.chrg.cpMax = nLen;
         tr.lpstrText = data;
         SendMessageW(hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+#ifdef __REACTOS__
+        data[tr.chrg.cpMax - tr.chrg.cpMin] = UNICODE_NULL;
+#endif
         MessageBoxW(NULL, data, wszAppTitle, MB_OK);
         HeapFree( GetProcessHeap(), 0, data );
 

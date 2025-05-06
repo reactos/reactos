@@ -74,6 +74,69 @@ DhcpCApiCleanup(VOID)
     PipeHandle = INVALID_HANDLE_VALUE;
 }
 
+
+/* FIXME: The adapter name should be a unicode string */
+DWORD
+APIENTRY
+DhcpAcquireParameters(
+    _In_ PSTR AdapterName)
+{
+    COMM_DHCP_REQ Req;
+    COMM_DHCP_REPLY Reply;
+    DWORD BytesRead;
+    BOOL Result;
+
+    DPRINT1("DhcpAcquireParameters(%s)\n", AdapterName);
+
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
+    Req.Type = DhcpReqAcquireParams;
+    strcpy(Req.Body.AcquireParams.AdapterName, AdapterName);
+
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
+    if (!Result)
+    {
+        /* Pipe transaction failed */
+        return GetLastError();
+    }
+
+    return Reply.Reply;
+}
+
+/* FIXME: The adapter name should be a unicode string */
+DWORD
+APIENTRY
+DhcpReleaseParameters(
+    _In_ PSTR AdapterName)
+{
+    COMM_DHCP_REQ Req;
+    COMM_DHCP_REPLY Reply;
+    DWORD BytesRead;
+    BOOL Result;
+
+    DPRINT1("DhcpReleaseParameters(%s)\n", AdapterName);
+
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
+    Req.Type = DhcpReqReleaseParams;
+    strcpy(Req.Body.AcquireParams.AdapterName, AdapterName);
+
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
+    if (!Result)
+    {
+        /* Pipe transaction failed */
+        return GetLastError();
+    }
+
+    return Reply.Reply;
+}
+
 DWORD APIENTRY
 DhcpQueryHWInfo(DWORD AdapterIndex,
                 PDWORD MediaType,
@@ -271,74 +334,6 @@ DhcpRequestParams(DWORD Flags,
     UNIMPLEMENTED;
     return 0;
 }
-
-/*!
- * Get DHCP info for an adapter
- *
- * \param[in] AdapterIndex
- *        Index of the adapter (iphlpapi-style) for which info is
- *        requested
- *
- * \param[out] DhcpEnabled
- *        Returns whether DHCP is enabled for the adapter
- *
- * \param[out] DhcpServer
- *        Returns DHCP server IP address (255.255.255.255 if no
- *        server reached yet), in network byte order
- *
- * \param[out] LeaseObtained
- *        Returns time at which the lease was obtained
- *
- * \param[out] LeaseExpires
- *        Returns time at which the lease will expire
- *
- * \return non-zero on success
- *
- * \remarks This is a ReactOS-only routine
- */
-DWORD APIENTRY
-DhcpRosGetAdapterInfo(DWORD AdapterIndex,
-                      PBOOL DhcpEnabled,
-                      PDWORD DhcpServer,
-                      time_t* LeaseObtained,
-                      time_t* LeaseExpires)
-{
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
-
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqGetAdapterInfo;
-    Req.AdapterIndex = AdapterIndex;
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-
-    if (Result && Reply.Reply != 0)
-        *DhcpEnabled = Reply.GetAdapterInfo.DhcpEnabled;
-    else
-        *DhcpEnabled = FALSE;
-
-    if (*DhcpEnabled)
-    {
-        *DhcpServer = Reply.GetAdapterInfo.DhcpServer;
-        *LeaseObtained = Reply.GetAdapterInfo.LeaseObtained;
-        *LeaseExpires = Reply.GetAdapterInfo.LeaseExpires;
-    }
-    else
-    {
-        *DhcpServer = INADDR_NONE;
-        *LeaseObtained = 0;
-        *LeaseExpires = 0;
-    }
-
-    return Reply.Reply;
-}
-
 
 static VOID
 UpdateServiceStatus(DWORD dwState)

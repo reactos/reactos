@@ -2586,7 +2586,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case FCIDM_SHVIEW_INVERTSELECTION:
             nCount = m_ListView.GetItemCount();
             for (int i=0; i < nCount; i++)
-                m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ? 0 : LVIS_SELECTED, LVIS_SELECTED);
+                m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ^ LVIS_SELECTED, LVIS_SELECTED);
             break;
         case FCIDM_SHVIEW_REFRESH:
             Refresh();
@@ -2923,8 +2923,8 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         ERR("hLock == NULL\n");
         return FALSE;
     }
-
-    TRACE("(%p)(%p,%p,%p)\n", this, Pidls[0], Pidls[1], lParam);
+    lEvent &= ~SHCNE_INTERRUPT;
+    TRACE("(%p)(%p,%p,%p) %#x\n", this, Pidls[0], Pidls[1], lParam, lEvent);
 
     if (_DoFolderViewCB(SFVM_FSNOTIFY, (WPARAM)Pidls, lEvent) == S_FALSE)
     {
@@ -2934,7 +2934,6 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     // Translate child IDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
-    lEvent &= ~SHCNE_INTERRUPT;
     HRESULT hr;
     PITEMID_CHILD child0 = NULL, child1 = NULL;
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
@@ -4047,7 +4046,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSelectedObjects(PCUITEMID_CHILD **pidl, U
             return E_OUTOFMEMORY;
         }
 
-        /* it's documented that caller shouldn't PIDLs, only array itself */
+        // It's documented that caller shouldn't free the PIDLs, only the array itself
         memcpy(*pidl, m_apidl, *items * sizeof(PCUITEMID_CHILD));
     }
 

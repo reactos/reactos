@@ -36,11 +36,11 @@ ApicSetTimerInterval(ULONG MicroSeconds)
     /* Set the count interval */
     ApicWrite(APIC_TICR, (ULONG)TimerInterval);
 
-    /* Set to periodic */
+    /* Set to periodic / masked */
     LvtEntry.Long = 0;
     LvtEntry.TimerMode = 1;
     LvtEntry.Vector = APIC_PROFILE_VECTOR;
-    LvtEntry.Mask = 0;
+    LvtEntry.Mask = 1;
     ApicWrite(APIC_TMRLVTR, LvtEntry.Long);
 
 }

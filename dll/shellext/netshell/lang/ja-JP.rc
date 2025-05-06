@@ -162,6 +162,7 @@ BEGIN
     IDS_NET_DELETE "削除"
     IDS_NET_RENAME "名前の変更"
     IDS_NET_PROPERTIES "プロパティ"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u Bit/s"
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"

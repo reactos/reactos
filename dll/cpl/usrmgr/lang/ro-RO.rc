@@ -14,7 +14,7 @@ BEGIN
     PUSHBUTTON "A&dăugare…", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "&Eliminare…", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "&Proprietăți…", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "S&olicită la pornirea sistemului numele de utilizator și parola.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14, WS_DISABLED
+    AUTOCHECKBOX "S&olicită la pornirea sistemului numele de utilizator și parola.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14
     PUSHBUTTON "Destit&uie parola", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 

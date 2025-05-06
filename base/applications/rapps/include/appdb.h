@@ -23,6 +23,9 @@ class CAppDB
   public:
     CAppDB(const CStringW &path);
 
+    static CStringW
+    GetDefaultPath();
+
     VOID
     GetApps(CAtlList<CAppInfo *> &List, AppsCategories Type) const;
     CAvailableApplicationInfo *

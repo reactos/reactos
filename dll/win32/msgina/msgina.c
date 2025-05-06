@@ -161,6 +161,50 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, SystemStartOptions);
 }
 
+static BOOL
+SafeGetUnicodeString(
+    _In_ const LSA_UNICODE_STRING *pInput,
+    _Out_ PWSTR pszOutput,
+    _In_ SIZE_T cchMax)
+{
+    HRESULT hr;
+    hr = StringCbCopyNExW(pszOutput, cchMax * sizeof(WCHAR),
+                          pInput->Buffer, pInput->Length,
+                          NULL, NULL,
+                          STRSAFE_NO_TRUNCATION | STRSAFE_NULL_ON_FAILURE);
+    return (hr == S_OK);
+}
+
+/* Reference: https://learn.microsoft.com/en-us/windows/win32/secauthn/protecting-the-automatic-logon-password */
+static BOOL
+GetLsaDefaultPassword(_Inout_ PGINA_CONTEXT pgContext)
+{
+    LSA_HANDLE hPolicy;
+    LSA_UNICODE_STRING Name, *pPwd;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes = { sizeof(ObjectAttributes) };
+
+    NTSTATUS Status = LsaOpenPolicy(NULL, &ObjectAttributes, 
+                                    POLICY_GET_PRIVATE_INFORMATION, &hPolicy);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    RtlInitUnicodeString(&Name, L"DefaultPassword");
+    Status = LsaRetrievePrivateData(hPolicy, &Name, &pPwd);
+    LsaClose(hPolicy);
+
+    if (Status == STATUS_SUCCESS)
+    {
+        if (!SafeGetUnicodeString(pPwd, pgContext->Password,
+                                  _countof(pgContext->Password)))
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        SecureZeroMemory(pPwd->Buffer, pPwd->Length);
+        LsaFreeMemory(pPwd);
+    }
+
+    return Status == STATUS_SUCCESS;
+}
 
 static
 BOOL
@@ -259,6 +303,8 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           NULL,
                           (LPBYTE)&pgContext->Password,
                           &dwSize);
+    if (rc)
+        GetLsaDefaultPassword(pgContext);
 
     if (lpIgnoreShiftOverride != NULL)
         HeapFree(GetProcessHeap(), 0, lpIgnoreShiftOverride);

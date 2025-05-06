@@ -1816,7 +1816,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FontGDI->CharSet = ANSI_CHARSET;
     FontGDI->OriginalItalic = FALSE;
     FontGDI->RequestItalic = FALSE;
-    FontGDI->OriginalWeight = FALSE;
+    FontGDI->OriginalWeight = FW_DONTCARE;
     FontGDI->RequestWeight = FW_NORMAL;
 
     IntLockFreeType();
@@ -2086,6 +2086,8 @@ NameFromCharSet(BYTE CharSet)
     }
 }
 
+static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
+
 /* Adds the font resource from the specified file to the system */
 static INT FASTCALL
 IntGdiAddFontResourceSingle(
@@ -2108,7 +2110,6 @@ IntGdiAddFontResourceSingle(
     LPWSTR pszBuffer;
     PFILE_OBJECT FileObject;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
-    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
     /* Build PathName */
     if (dwFlags & AFRX_DOS_DEVICE_PATH)
@@ -2326,12 +2327,126 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
+/* Borrowed from shlwapi */
+static PWSTR
+PathFindFileNameW(_In_ PCWSTR pszPath)
+{
+    PCWSTR lastSlash = pszPath;
+    while (*pszPath)
+    {
+        if ((*pszPath == L'\\' || *pszPath == L'/' || *pszPath == L':') &&
+            pszPath[1] && pszPath[1] != '\\' && pszPath[1] != L'/')
+        {
+            lastSlash = pszPath + 1;
+        }
+        pszPath++;
+    }
+    return (PWSTR)lastSlash;
+}
+
+/* Delete registry font entries */
+static VOID
+IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
+{
+    NTSTATUS Status;
+    HKEY hKey;
+    WCHAR szName[MAX_PATH], szValue[MAX_PATH];
+    ULONG dwIndex, NameLength, ValueSize, dwType;
+
+    Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
+    if (!NT_SUCCESS(Status))
+        return;
+
+    for (dwIndex = 0;;)
+    {
+        NameLength = RTL_NUMBER_OF(szName);
+        ValueSize = sizeof(szValue);
+        Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, &dwType, szValue, &ValueSize);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        if (dwType != REG_SZ || _wcsicmp(szValue, pszFileName) != 0)
+        {
+            ++dwIndex;
+            continue;
+        }
+
+        /* Delete the found value */
+        Status = RegDeleteValueW(hKey, szName);
+        if (!NT_SUCCESS(Status))
+            break;
+    }
+
+    ZwClose(hKey);
+}
+
 static BOOL FASTCALL
 IntGdiRemoveFontResourceSingle(
     _In_ PCUNICODE_STRING FileName,
     _In_ DWORD dwFlags)
 {
-    return FALSE; // FIXME
+    BOOL ret = FALSE;
+    UNICODE_STRING PathName;
+    PLIST_ENTRY CurrentEntry, NextEntry;
+    PFONT_ENTRY FontEntry;
+    PFONTGDI FontGDI;
+    PWSTR pszBuffer, pszFileTitle;
+    SIZE_T Length;
+    NTSTATUS Status;
+
+    /* Build PathName */
+    if (dwFlags & AFRX_DOS_DEVICE_PATH)
+    {
+        Length = DosPathPrefix.Length + FileName->Length + sizeof(UNICODE_NULL);
+        pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
+        if (!pszBuffer)
+            return FALSE; /* Failure */
+
+        RtlInitEmptyUnicodeString(&PathName, pszBuffer, Length);
+        RtlAppendUnicodeStringToString(&PathName, &DosPathPrefix);
+        RtlAppendUnicodeStringToString(&PathName, FileName);
+    }
+    else
+    {
+        Status = DuplicateUnicodeString(FileName, &PathName);
+        if (!NT_SUCCESS(Status))
+            return FALSE; /* Failure */
+    }
+
+    pszFileTitle = PathName.Buffer;
+    if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
+        pszFileTitle = PathFindFileNameW(PathName.Buffer);
+
+    if (!pszFileTitle || !*pszFileTitle)
+    {
+        RtlFreeUnicodeString(&PathName);
+        return FALSE; /* Failure */
+    }
+
+    /* Delete font entries that matches PathName */
+    IntLockFreeType();
+    for (CurrentEntry = g_FontListHead.Flink;
+         CurrentEntry != &g_FontListHead;
+         CurrentEntry = NextEntry)
+    {
+        FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_ENTRY, ListEntry);
+        NextEntry = CurrentEntry->Flink;
+
+        FontGDI = FontEntry->Font;
+        ASSERT(FontGDI);
+        if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
+        {
+            RemoveEntryList(&FontEntry->ListEntry);
+            CleanupFontEntry(FontEntry);
+            if (dwFlags & AFRX_WRITE_REGISTRY)
+                IntDeleteRegFontEntries(pszFileTitle, dwFlags);
+            ret = TRUE;
+        }
+    }
+    IntUnLockFreeType();
+
+    RtlFreeUnicodeString(&PathName);
+    return ret;
 }
 
 BOOL FASTCALL
@@ -2921,7 +3036,7 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
 
     if (FontGDI->OriginalWeight != FW_DONTCARE &&
-        FontGDI->OriginalWeight != FW_NORMAL)
+        FontGDI->OriginalWeight > FontGDI->RequestWeight)
     {
         TM->tmWeight = FontGDI->OriginalWeight;
     }
@@ -4515,7 +4630,7 @@ ftGdiGetGlyphOutline(
     LPGLYPHMETRICS pgm,
     ULONG cjBuf,
     PVOID pvBuf,
-    LPMAT2 pmat2,
+    const MAT2 *pmat2,
     BOOL bIgnoreRotation)
 {
     PDC_ATTR pdcattr;
@@ -5036,15 +5151,16 @@ IntGetRealGlyph(
 
 BOOL
 FASTCALL
-TextIntGetTextExtentPoint(PDC dc,
-                          PTEXTOBJ TextObj,
-                          LPCWSTR String,
-                          INT Count,
-                          ULONG MaxExtent,
-                          LPINT Fit,
-                          LPINT Dx,
-                          LPSIZE Size,
-                          FLONG fl)
+TextIntGetTextExtentPoint(
+    _In_ PDC dc,
+    _In_ PTEXTOBJ TextObj,
+    _In_reads_(Count) PCWCH String,
+    _In_ INT Count,
+    _In_ ULONG MaxExtent,
+    _Out_ PINT Fit,
+    _Out_writes_to_opt_(Count, *Fit) PINT Dx,
+    _Out_ PSIZE Size,
+    _In_ FLONG fl)
 {
     PFONTGDI FontGDI;
     FT_BitmapGlyph realglyph;
@@ -6553,10 +6669,11 @@ IntGetFontFamilyInfo(HDC Dc,
 }
 
 LONG NTAPI
-NtGdiGetFontFamilyInfo(HDC Dc,
-                       const LOGFONTW *UnsafeLogFont,
-                       PFONTFAMILYINFO UnsafeInfo,
-                       LPLONG UnsafeInfoCount)
+NtGdiGetFontFamilyInfo(
+    _In_ HDC Dc,
+    _In_ const LOGFONTW *UnsafeLogFont,
+    _Out_ PFONTFAMILYINFO UnsafeInfo,
+    _Inout_ PLONG UnsafeInfoCount)
 {
     NTSTATUS Status;
     LOGFONTW LogFont;
@@ -6671,15 +6788,15 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
  */
 static BOOL
 IntGetTextDisposition(
-    OUT LONGLONG *pX64,
-    OUT LONGLONG *pY64,
-    IN LPCWSTR String,
-    IN INT Count,
-    IN OPTIONAL LPINT Dx,
-    IN OUT PFONT_CACHE_ENTRY Cache,
-    IN UINT fuOptions,
-    IN BOOL bNoTransform,
-    IN OUT PFONTLINK_CHAIN pChain)
+    _Out_ LONGLONG *pX64,
+    _Out_ LONGLONG *pY64,
+    _In_reads_(Count) PCWCH String,
+    _In_ INT Count,
+    _In_opt_ const INT *Dx,
+    _Inout_ PFONT_CACHE_ENTRY Cache,
+    _In_ UINT fuOptions,
+    _In_ BOOL bNoTransform,
+    _Inout_ PFONTLINK_CHAIN pChain)
 {
     LONGLONG X64 = 0, Y64 = 0;
     INT i, glyph_index;
@@ -6839,15 +6956,15 @@ IntEngFillBox(
 BOOL
 APIENTRY
 IntExtTextOutW(
-    IN PDC dc,
-    IN INT XStart,
-    IN INT YStart,
-    IN UINT fuOptions,
-    IN OPTIONAL PRECTL lprc,
-    IN LPCWSTR String,
-    IN INT Count,
-    IN OPTIONAL LPINT Dx,
-    IN DWORD dwCodePage)
+    _In_ PDC dc,
+    _In_ INT XStart,
+    _In_ INT YStart,
+    _In_ UINT fuOptions,
+    _In_opt_ PRECTL lprc,
+    _In_reads_opt_(Count) PCWCH String,
+    _In_ INT Count,
+    _In_opt_ const INT *Dx,
+    _In_ DWORD dwCodePage)
 {
     /*
      * FIXME:
@@ -7158,7 +7275,7 @@ IntExtTextOutW(
         { 
             IntUnLockFreeType();
             /* Get the width of the space character */
-            TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, 0, &spaceWidth, 0);
+            TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, NULL, &spaceWidth, 0);
             IntLockFreeType();
             glyphSize.cx = spaceWidth.cx;
             realglyph->left = 0;
@@ -7385,15 +7502,15 @@ Cleanup:
 BOOL
 APIENTRY
 GreExtTextOutW(
-    IN HDC hDC,
-    IN INT XStart,
-    IN INT YStart,
-    IN UINT fuOptions,
-    IN OPTIONAL PRECTL lprc,
-    IN LPCWSTR String,
-    IN INT Count,
-    IN OPTIONAL LPINT Dx,
-    IN DWORD dwCodePage)
+    _In_ HDC hDC,
+    _In_ INT XStart,
+    _In_ INT YStart,
+    _In_ UINT fuOptions,
+    _In_opt_ PRECTL lprc,
+    _In_reads_opt_(Count) PCWCH String,
+    _In_ INT Count,
+    _In_opt_ const INT *Dx,
+    _In_ DWORD dwCodePage)
 {
     BOOL bResult;
     DC *dc;
@@ -7427,15 +7544,15 @@ GreExtTextOutW(
 BOOL
 APIENTRY
 NtGdiExtTextOutW(
-    IN HDC hDC,
-    IN INT XStart,
-    IN INT YStart,
-    IN UINT fuOptions,
-    IN OPTIONAL LPCRECT UnsafeRect,
-    IN LPCWSTR UnsafeString,
-    IN UINT Count,
-    IN OPTIONAL const INT *UnsafeDx,
-    IN DWORD dwCodePage)
+    _In_ HDC hDC,
+    _In_ INT XStart,
+    _In_ INT YStart,
+    _In_ UINT fuOptions,
+    _In_opt_ LPCRECT UnsafeRect,
+    _In_reads_opt_(Count) PCWCH UnsafeString,
+    _In_range_(0, 0xFFFF) UINT Count,
+    _In_reads_opt_(_Inexpressible_(cwc)) const INT *UnsafeDx,
+    _In_ DWORD dwCodePage)
 {
     BOOL Result = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -7443,7 +7560,7 @@ NtGdiExtTextOutW(
     BYTE LocalBuffer[STACK_TEXT_BUFFER_SIZE];
     PVOID Buffer = LocalBuffer;
     LPCWSTR SafeString = NULL;
-    LPINT SafeDx = NULL;
+    PINT SafeDx = NULL;
     ULONG BufSize, StringSize, DxSize = 0;
 
     /* Check if String is valid */
@@ -7552,12 +7669,12 @@ cleanup:
 BOOL
 APIENTRY
 NtGdiGetCharABCWidthsW(
-    IN HDC hDC,
-    IN UINT FirstChar,
-    IN ULONG Count,
-    IN OPTIONAL PWCHAR UnSafepwch,
-    IN FLONG fl,
-    OUT PVOID Buffer)
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ ULONG Count,
+    _In_reads_opt_(Count) PCWCH UnSafepwch,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID Buffer)
 {
     LPABC SafeBuff;
     LPABCFLOAT SafeBuffF = NULL;
@@ -7755,12 +7872,12 @@ NtGdiGetCharABCWidthsW(
 BOOL
 APIENTRY
 NtGdiGetCharWidthW(
-    IN HDC hDC,
-    IN UINT FirstChar,
-    IN UINT Count,
-    IN OPTIONAL PWCHAR UnSafepwc,
-    IN FLONG fl,
-    OUT PVOID Buffer)
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH UnSafepwc,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ULONG)) PVOID Buffer)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     LPINT SafeBuff;
@@ -7920,9 +8037,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPCWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode)
 {
     PDC dc;

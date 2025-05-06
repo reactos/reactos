@@ -174,23 +174,14 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
         nPage = _wtoi((PWSTR)lParam);
 
-#if 0
         argv = CommandLineToArgvW((LPCWSTR)lParam, &argc);
-#else
-        argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-#endif
 
         if (argv && argc)
         {
             for (i = 0; i<argc; i++)
             {
-#if 0
                 if (argv[i][0] == L'@')
                     pwszSelectedTab = &argv[i][1];
-#else
-                if (wcsncmp(argv[i], L"desk,@", 6) == 0)
-                    pwszSelectedTab = &argv[i][6];
-#endif
                 else if (wcsncmp(argv[i], L"/Action:", 8) == 0)
                     pwszAction = &argv[i][8];
                 else if (wcsncmp(argv[i], L"/file:", 6) == 0)

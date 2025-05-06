@@ -163,6 +163,7 @@ BEGIN
     IDS_NET_DELETE "Изтриване"
     IDS_NET_RENAME "Преименуване"
     IDS_NET_PROPERTIES "Свойства"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u бита/с"
     IDS_FORMAT_KBIT "%u КБ/с"
     IDS_FORMAT_MBIT "%u МБ/с"

@@ -54,6 +54,91 @@ BOOL SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGA
     return TRUE;
 }
 
+static HRESULT
+MapSCIDToShell32FsColumn(const SHCOLUMNID *pscid, VARTYPE &vt)
+{
+    if (pscid->fmtid == FMTID_Storage)
+    {
+        switch (pscid->pid)
+        {
+            case PID_STG_NAME:        vt = VT_BSTR; return SHFSF_COL_NAME;
+            case PID_STG_SIZE:        vt = VT_UI8; return SHFSF_COL_SIZE;
+            case PID_STG_STORAGETYPE: vt = VT_BSTR; return SHFSF_COL_TYPE;
+            case PID_STG_ATTRIBUTES:  vt = VT_BSTR; return SHFSF_COL_FATTS;
+            case PID_STG_WRITETIME:   vt = VT_DATE; return SHFSF_COL_MDATE;
+        }
+    }
+    if (pscid->fmtid == FMTID_SummaryInformation && pscid->pid == PIDSI_COMMENTS)
+    {
+        vt = VT_BSTR;
+        return SHFSF_COL_COMMENT;
+    }
+    return E_INVALIDARG;
+}
+
+HRESULT
+SHELL_MapSCIDToColumn(IShellFolder2 *pSF, const SHCOLUMNID *pscid)
+{
+    for (UINT i = 0; i <= SHCIDS_COLUMNMASK; ++i)
+    {
+        SHCOLUMNID scid;
+        HRESULT hr = pSF->MapColumnToSCID(i, &scid);
+        if (FAILED(hr))
+            break;
+        if (IsEqualPropertyKey(scid, *pscid))
+            return i;
+    }
+    return E_FAIL;
+}
+
+HRESULT
+SHELL_GetDetailsOfAsStringVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar)
+{
+    V_VT(pVar) = VT_EMPTY;
+    SHELLDETAILS sd;
+    sd.str.uType = STRRET_CSTR;
+    HRESULT hr = pSF->GetDetailsOf(pidl, Column, &sd);
+    if (FAILED(hr))
+        return hr;
+    if (FAILED(hr = StrRetToBSTR(&sd.str, pidl, &V_BSTR(pVar))))
+        return hr;
+    V_VT(pVar) = VT_BSTR;
+    return hr;
+}
+
+HRESULT
+SHELL_GetDetailsOfColumnAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARTYPE vt, VARIANT *pVar)
+{
+    HRESULT hr = SHELL_GetDetailsOfAsStringVariant(pSF, pidl, Column, pVar);
+    if (FAILED(hr))
+        return hr;
+    if (vt == VT_EMPTY)
+    {
+        SHCOLSTATEF state;
+        if (FAILED(pSF->GetDefaultColumnState(Column, &state)))
+            state = SHCOLSTATE_TYPE_STR;
+        if ((state & SHCOLSTATE_TYPEMASK) == SHCOLSTATE_TYPE_INT)
+            vt = VT_I8;
+        else if ((state & SHCOLSTATE_TYPEMASK) == SHCOLSTATE_TYPE_DATE)
+            vt = VT_DATE;
+        else
+            vt = VT_BSTR;
+    }
+    if (vt != VT_BSTR)
+        VariantChangeType(pVar, pVar, 0, vt);
+    return hr;
+}
+
+HRESULT
+SH32_GetDetailsOfPKeyAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pVar, BOOL UseFsColMap)
+{
+    // CFSFolder and CRegFolder uses the SHFSF_COL columns and can use the faster and better version,
+    // everyone else must ask the folder to map the SCID to a column.
+    VARTYPE vt = VT_EMPTY;
+    HRESULT hr = UseFsColMap ? MapSCIDToShell32FsColumn(pscid, vt) : SHELL_MapSCIDToColumn(pSF, pscid);
+    return SUCCEEDED(hr) ? SHELL_GetDetailsOfColumnAsVariant(pSF, pidl, hr, vt, pVar) : hr;
+}
+
 HRESULT SHELL_CreateAbsolutePidl(IShellFolder *pSF, PCUIDLIST_RELATIVE pidlChild, PIDLIST_ABSOLUTE *ppPidl)
 {
     PIDLIST_ABSOLUTE pidlFolder;
@@ -307,7 +392,7 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     if (FAILED(hres))
         return MAKE_COMPARE_HRESULT(1);
 
-    int ret = _wcsicmp(wszItem1, wszItem2);
+    int ret = CFSFolder::CompareUiStrings(wszItem1, wszItem2, lParam);
     if (ret == 0)
         return SHELL32_CompareChildren(isf, lParam, pidl1, pidl2);
 

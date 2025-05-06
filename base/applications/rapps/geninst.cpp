@@ -60,7 +60,7 @@ BOOL IsZipFile(PCWSTR Path)
 
 static int
 ExtractFilesFromZip(LPCWSTR Archive, const CStringW &OutputDir,
-                    EXTRACTCALLBACK Callback, void *Cookie)
+                    EXTRACTCALLBACK Callback, void *Context)
 {
     const UINT pkzefsutf8 = 1 << 11; // APPNOTE; APPENDIX D
     zlib_filefunc64_def zff;
@@ -97,7 +97,7 @@ ExtractFilesFromZip(LPCWSTR Archive, const CStringW &OutputDir,
             fileatt = LOBYTE(fi.external_fa);
 
         if (!NotifyFileExtractCallback(path, fi.uncompressed_size, fileatt,
-                                       Callback, Cookie))
+                                       Callback, Context))
             continue; // Skip file
 
         path = BuildPath(OutputDir, path);
@@ -136,20 +136,29 @@ ExtractFilesFromZip(LPCWSTR Archive, const CStringW &OutputDir,
 
 static UINT
 ExtractZip(LPCWSTR Archive, const CStringW &OutputDir,
-           EXTRACTCALLBACK Callback, void *Cookie)
+           EXTRACTCALLBACK Callback, void *Context)
 {
-    int zerr = ExtractFilesFromZip(Archive, OutputDir, Callback, Cookie);
+    int zerr = ExtractFilesFromZip(Archive, OutputDir, Callback, Context);
     return zerr == UNZ_ERRNO ? GetLastError() : zerr ? ERROR_INTERNAL_ERROR : 0;
 }
 
 static UINT
 ExtractCab(LPCWSTR Archive, const CStringW &OutputDir,
-           EXTRACTCALLBACK Callback, void *Cookie)
+           EXTRACTCALLBACK Callback, void *Context)
 {
-    if (ExtractFilesFromCab(Archive, OutputDir, Callback, Cookie))
+    if (ExtractFilesFromCab(Archive, OutputDir, Callback, Context))
         return ERROR_SUCCESS;
     UINT err = GetLastError();
     return err ? err : ERROR_INTERNAL_ERROR;
+}
+
+
+static UINT
+ExtractArchive(LPCWSTR Archive, const CStringW &OutputDir, EXTRACTCALLBACK Callback, void *Context)
+{
+    BOOL isCab = LOBYTE(ClassifyFile(Archive)) == 'C';
+    return isCab ? ExtractCab(Archive, OutputDir, Callback, Context)
+                 : ExtractZip(Archive, OutputDir, Callback, Context);
 }
 
 enum { IM_STARTPROGRESS = WM_APP, IM_PROGRESS, IM_END };
@@ -430,9 +439,9 @@ AddUninstallOperationsFromDB(LPCWSTR Name, WCHAR UnOp, CStringW PathPrefix = CSt
 }
 
 static BOOL CALLBACK
-ExtractCallback(const EXTRACTCALLBACKINFO &, void *Cookie)
+ExtractCallback(const EXTRACTCALLBACKINFO &, void *Context)
 {
-    InstallInfo &Info = *(InstallInfo *) Cookie;
+    InstallInfo &Info = *(InstallInfo *)Context;
     Info.Count += 1;
     return TRUE;
 }
@@ -501,11 +510,7 @@ ExtractAndInstallThread(LPVOID Parameter)
         ErrorBox(Info.Error);
 
     if (!Info.Error)
-    {
-        BOOL isCab = LOBYTE(ClassifyFile(tempdir)) == 'C';
-        Info.Error = isCab ? ExtractCab(Archive, tempdir, ExtractCallback, &Info)
-                           : ExtractZip(Archive, tempdir, ExtractCallback, &Info);
-    }
+        Info.Error = ExtractArchive(Archive, tempdir, ExtractCallback, &Info);
 
     if (!Info.Error)
     {
@@ -834,4 +839,47 @@ UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Fla
     UninstallInfo Info(AppInfo, Flags & UCF_SILENT);
     g_pInfo = &Info;
     return CreateUI(Info.Silent, UninstallThread) ? !Info.Error : FALSE;
+}
+
+HRESULT
+ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App)
+{
+    WCHAR TempDirBuf[MAX_PATH], UniqueDir[MAX_PATH];
+    CAppDB db(CAppDB::GetDefaultPath());
+    db.UpdateAvailable();
+    CAvailableApplicationInfo *pAppInfo = db.FindAvailableByPackageName(PackageName);
+    if (!pAppInfo)
+        return HResultFromWin32(ERROR_NOT_FOUND);
+    CConfigParser *pCfg = pAppInfo->GetConfigParser();
+
+    if (!GetTempPathW(_countof(TempDirBuf), TempDirBuf))
+        return E_FAIL;
+    wsprintfW(UniqueDir, L"~%s-%u", RAPPS_NAME, GetCurrentProcessId());
+    TempDir = BuildPath(TempDirBuf, UniqueDir);
+    HRESULT hr = HResultFromWin32(CreateDirectoryTree(TempDir));
+    if (FAILED(hr))
+        return hr;
+
+    hr = HResultFromWin32(ExtractArchive(pszArchive, TempDir, NULL, NULL));
+    if (SUCCEEDED(hr))
+    {
+        CStringW Exe;
+        if (pCfg->GetSectionString(DB_EXEINZIPSECTION, DB_EXEINZIP_EXE, Exe) <= 0)
+        {
+            WIN32_FIND_DATAW wfd;
+            HANDLE hFind = FindFirstFileW(Exe = BuildPath(TempDir, L"*.exe"), &wfd);
+            if (hFind != INVALID_HANDLE_VALUE)
+            {
+                FindClose(hFind);
+                Exe = wfd.cFileName;
+            }
+        }
+        App = BuildPath(TempDir, Exe);
+        if (GetFileAttributesW(App) & FILE_ATTRIBUTE_DIRECTORY)
+            hr = HResultFromWin32(ERROR_FILE_NOT_FOUND);
+    }
+
+    if (FAILED(hr) && !TempDir.IsEmpty())
+        DeleteDirectoryTree(TempDir, hMainWnd);
+    return hr;
 }

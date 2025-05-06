@@ -21,11 +21,7 @@
     LEAF_END DbgUserBreakPoint
 
     LEAF_ENTRY DbgBreakPointWithStatus
-    __debugbreak
-    bx lr
-    LEAF_END
-
-    LEAF_ENTRY RtlpBreakWithStatusInstruction
+    ALTERNATE_ENTRY RtlpBreakWithStatusInstruction
     __debugbreak
     bx lr
     LEAF_END

@@ -4357,7 +4357,11 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int buflen,
     str = get_text( run, 0 );
   }
   /* append '\r' to the last paragraph. */
+#ifdef __REACTOS__
+  if (run == para_end_run( para_prev( editor_end_para( editor ) ) ) && bEOP && buflen)
+#else
   if (run == para_end_run( para_prev( editor_end_para( editor ) ) ) && bEOP)
+#endif
   {
     *buffer = '\r';
     buffer ++;
@@ -4496,7 +4500,11 @@ static BOOL ME_IsCandidateAnURL(ME_TextEditor *editor, const ME_Cursor *start, i
 #define MAX_PREFIX_LEN 9
 #define X(str)  str, ARRAY_SIZE(str) - 1
   struct prefix_s {
+#ifdef __REACTOS__
+    const WCHAR text[MAX_PREFIX_LEN + 1];
+#else
     const WCHAR text[MAX_PREFIX_LEN];
+#endif
     int length;
   }prefixes[] = {
     {X(L"prospero:")},

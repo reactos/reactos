@@ -8,44 +8,29 @@
 
 #include <asm.inc>
 
-/* GLOBALS ****************************************************************/
-
-PUBLIC DbgBreakPoint
-PUBLIC DbgBreakPointWithStatus
-PUBLIC DbgUserBreakPoint
-PUBLIC DebugService
-PUBLIC DebugService2
-PUBLIC DbgBreakPointNoBugCheck
-PUBLIC RtlpBreakWithStatusInstruction
-
 /* FUNCTIONS ***************************************************************/
 
 .code64
 
-.PROC DbgBreakPointNoBugCheck
-    .endprolog
-    int 3
-    ret
-.ENDP
-
+PUBLIC DbgUserBreakPoint
 DbgUserBreakPoint:
+PUBLIC DbgBreakPoint
 .PROC DbgBreakPoint
     .endprolog
     int 3
     ret
 .ENDP
 
+PUBLIC RtlpBreakWithStatusInstruction
+RtlpBreakWithStatusInstruction:
+PUBLIC DbgBreakPointWithStatus
 .PROC DbgBreakPointWithStatus
-    .endprolog
-    mov eax, ecx
-.ENDP
-
-.PROC RtlpBreakWithStatusInstruction
     .endprolog
     int 3
     ret
 .ENDP
 
+PUBLIC DebugService2
 DebugService2:
 
     /* Pass the service number in eax */
@@ -63,6 +48,7 @@ DebugService2:
  *     IN PVOID Argument1,  // <r9>  = [rsp + 32]
  *     IN PVOID Argument2); //         [rsp + 40]
  */
+PUBLIC DebugService
 DebugService:
 
     /* Prepare registers for interrupt */

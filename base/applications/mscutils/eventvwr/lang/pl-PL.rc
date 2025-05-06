@@ -108,9 +108,9 @@ BEGIN
     LTEXT "&Opis:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "D&ane:", IDC_DETAILS_STATIC, 8, 140, 20, 8
     AUTORADIOBUTTON "&Bajty", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "&Słowa", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "&Słowa", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "D&ane:", IDC_DETAILS_STATIC, 8, 140, 20, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -224,16 +224,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Typ zdarzenia:            %s\r\n\
-Źródło zdarzenia:         %s\r\n\
-Kategoria zdarzenia:      %s\r\n\
-Idnetyfikator Zdarzenia:  %s\r\n\
-Data:                     %s\r\n\
-Czas:                     %s\r\n\
-Użytkownik:               %s\r\n\
-Komputer:                 %s\r\n\
-Opis:\r\n%s"
+    IDS_COPY_EVTTYPE "Typ zdarzenia:"
+    IDS_COPY_EVTSRC  "Źródło zdarzenia:"
+    IDS_COPY_EVTCAT  "Kategoria zdarzenia:"
+    IDS_COPY_EVTID   "Identyfikator zdarzenia:"
+    IDS_COPY_EVTDATE "Data:"
+    IDS_COPY_EVTTIME "Czas:"
+    IDS_COPY_EVTUSER "Użytkownik:"
+    IDS_COPY_EVTCOMP "Komputer:"
+    IDS_COPY_EVTTEXT "Opis:"
+    IDS_COPY_EVTDATA "Dane:"
 END
 
 STRINGTABLE

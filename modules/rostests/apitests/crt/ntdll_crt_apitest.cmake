@@ -80,6 +80,7 @@ list(APPEND SOURCE_NTDLL
 #    memset.c
 #    pow.c
 #    qsort.c
+    setjmp.c
 #    sin.c
     sprintf.c
 #    sqrt.c

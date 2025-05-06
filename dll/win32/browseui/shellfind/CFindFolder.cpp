@@ -904,15 +904,24 @@ class CFindFolderContextMenu :
 {
     CComPtr<IContextMenu> m_pInner;
     CComPtr<IShellFolderView> m_shellFolderView;
-    UINT m_firstCmdId;
+    UINT m_MyFirstId = 0;
     static const UINT ADDITIONAL_MENU_ITEMS = 2;
 
     //// *** IContextMenu methods ***
     STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {
-        m_firstCmdId = idCmdFirst;
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_SEARCH_OPEN_FOLDER), MFS_ENABLED);
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst++, MFT_SEPARATOR, NULL, 0);
+        m_MyFirstId = 0;
+        if (idCmdLast - idCmdFirst > ADDITIONAL_MENU_ITEMS)
+        {
+            // We use the last available id. For DefView, this places us at
+            // DVIDM_CONTEXTMENU_LAST which should not collide with anything.
+            // This is just a temporary fix until we are moved to shell32 and
+            // can use DFM_MERGECONTEXTMENU.
+            _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdLast--, MFT_STRING,
+                             MAKEINTRESOURCEW(IDS_SEARCH_OPEN_FOLDER), MFS_ENABLED);
+            _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdLast--, MFT_SEPARATOR, NULL, 0);
+            m_MyFirstId = idCmdLast + 1;
+        }
         return m_pInner->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
     }
 
@@ -923,7 +932,8 @@ class CFindFolderContextMenu :
             return m_pInner->InvokeCommand(lpcmi);
         }
 
-        if (LOWORD(lpcmi->lpVerb) >= m_firstCmdId && LOWORD(lpcmi->lpVerb) < m_firstCmdId + ADDITIONAL_MENU_ITEMS)
+        UINT idCmd = LOWORD(lpcmi->lpVerb);
+        if (m_MyFirstId && idCmd >= m_MyFirstId && idCmd < m_MyFirstId + ADDITIONAL_MENU_ITEMS)
         {
             PCUITEMID_CHILD *apidl;
             UINT cidl;
@@ -944,11 +954,7 @@ class CFindFolderContextMenu :
         }
 
         // FIXME: We can't block FCIDM_SHVIEW_REFRESH here, add items on SFVM_LISTREFRESHED instead
-        CMINVOKECOMMANDINFOEX actualCmdInfo;
-        memcpy(&actualCmdInfo, lpcmi, lpcmi->cbSize);
-        if (LOWORD(lpcmi->lpVerb) < FCIDM_SHVIEW_ARRANGE) // HACKFIX for DefView using direct FCIDM_SHVIEW ids
-            actualCmdInfo.lpVerb -= ADDITIONAL_MENU_ITEMS;
-        return m_pInner->InvokeCommand((CMINVOKECOMMANDINFO *)&actualCmdInfo);
+        return m_pInner->InvokeCommand(lpcmi);
     }
 
     STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)

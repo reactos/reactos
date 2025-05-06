@@ -389,10 +389,6 @@ KeFindNextRightSetAffinity(
 
 VOID
 NTAPI
-DbgBreakPointNoBugCheck(VOID);
-
-VOID
-NTAPI
 KeInitializeProfile(
     struct _KPROFILE* Profile,
     struct _KPROCESS* Process,

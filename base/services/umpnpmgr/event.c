@@ -118,6 +118,12 @@ VOID
 ProcessDeviceClassChangeEvent(
     _In_ PPLUGPLAY_EVENT_BLOCK PnpEvent)
 {
+    RPC_STATUS RpcStatus;
+    PLIST_ENTRY Current;
+    PNOTIFY_ENTRY pNotifyData;
+    PDEV_BROADCAST_DEVICEINTERFACE_W pData;
+    DWORD dwSize;
+
     DPRINT("ProcessDeviceClassChangeEvent(%p)\n", PnpEvent);
     DPRINT("SymbolicLink: %S\n", PnpEvent->DeviceClass.SymbolicLinkName);
     DPRINT("ClassGuid: {%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}\n",
@@ -125,6 +131,50 @@ ProcessDeviceClassChangeEvent(
            PnpEvent->DeviceClass.ClassGuid.Data4[0], PnpEvent->DeviceClass.ClassGuid.Data4[1], PnpEvent->DeviceClass.ClassGuid.Data4[2],
            PnpEvent->DeviceClass.ClassGuid.Data4[3], PnpEvent->DeviceClass.ClassGuid.Data4[4], PnpEvent->DeviceClass.ClassGuid.Data4[5],
            PnpEvent->DeviceClass.ClassGuid.Data4[6], PnpEvent->DeviceClass.ClassGuid.Data4[7]);
+
+    RtlAcquireResourceShared(&NotificationListLock, TRUE);
+
+    Current = NotificationListHead.Flink;
+    while (Current != &NotificationListHead)
+    {
+        pNotifyData = CONTAINING_RECORD(Current, NOTIFY_ENTRY, ListEntry);
+        if ((pNotifyData->dwType == CLASS_NOTIFICATION) &&
+            ((pNotifyData->ulFlags & DEVICE_NOTIFY_ALL_INTERFACE_CLASSES) ||
+             (UuidEqual(&PnpEvent->DeviceClass.ClassGuid, &pNotifyData->ClassGuid, &RpcStatus))))
+        {
+            if ((pNotifyData->ulFlags & DEVICE_NOTIFY_WINDOW_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
+            {
+                dwSize = sizeof(DEV_BROADCAST_DEVICEINTERFACE_W) + wcslen(PnpEvent->DeviceClass.SymbolicLinkName) * sizeof(WCHAR);
+                pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+
+                pData->dbcc_size = dwSize;
+                pData->dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+                CopyMemory(&pData->dbcc_classguid, &PnpEvent->DeviceClass.ClassGuid, sizeof(GUID));
+                wcscpy(pData->dbcc_name, PnpEvent->DeviceClass.SymbolicLinkName);
+
+                if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_INTERFACE_ARRIVAL, &RpcStatus))
+                {
+                    DPRINT("Interface arrival: %S\n", PnpEvent->DeviceClass.SymbolicLinkName);
+                    SendMessageW((HANDLE)pNotifyData->hRecipient, WM_DEVICECHANGE, DBT_DEVICEARRIVAL, (LPARAM)pData);
+                }
+                else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_INTERFACE_REMOVAL, &RpcStatus))
+                {
+                    DPRINT("Interface removal: %S\n", PnpEvent->DeviceClass.SymbolicLinkName);
+                    SendMessageW((HANDLE)pNotifyData->hRecipient, WM_DEVICECHANGE, DBT_DEVICEREMOVECOMPLETE, (LPARAM)pData);
+                }
+
+                HeapFree(GetProcessHeap(), 0, pData);
+            }
+            else
+            {
+                DPRINT1("Service notification is not implemented yet!\n");
+            }
+        }
+
+        Current = Current->Flink;
+    }
+
+    RtlReleaseResource(&NotificationListLock);
 }
 
 

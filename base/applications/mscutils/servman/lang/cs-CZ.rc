@@ -157,6 +157,7 @@ BEGIN
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Některé služby závisí na jiných službách, systémových ovladačích nebo načítají jiné skupiny služeb. Zastavené nebo nesprávně fungující součásti systému mohou ovlivnit závislé služby.", IDC_STATIC, 8, 7, 238, 26
     LTEXT "Tato služba závisí na následujících součástech:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

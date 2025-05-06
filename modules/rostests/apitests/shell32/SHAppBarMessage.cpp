@@ -264,15 +264,15 @@ protected:
         switch (id)
         {
         case ID_ACTION:
-            PostMessage(s_hwnd2, WM_COMMAND, ID_ACTION + 1, 0);
+            PostMessageW(s_hwnd2, WM_COMMAND, ID_ACTION + 1, 0);
             break;
         case ID_ACTION + 1:
             hThread = CreateThread(NULL, 0, ActionThreadFunc, this, 0, NULL);
             if (!hThread)
             {
                 skip("failed to create thread\n");
-                PostMessage(s_hwnd1, WM_CLOSE, 0, 0);
-                PostMessage(s_hwnd2, WM_CLOSE, 0, 0);
+                PostMessageW(s_hwnd1, WM_CLOSE, 0, 0);
+                PostMessageW(s_hwnd2, WM_CLOSE, 0, 0);
                 return;
             }
             CloseHandle(hThread);
@@ -438,8 +438,10 @@ protected:
 
     BOOL AppBar_SetSide(HWND hwnd, UINT uSide)
     {
-        RECT rc;
-        SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        HMONITOR hMon = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+        MONITORINFO mi = { sizeof(mi) };
+        ::GetMonitorInfo(hMon, &mi);
+        RECT rc = mi.rcWork;
 
         BOOL fAutoHide = FALSE;
         if (m_fAutoHide)
@@ -452,18 +454,18 @@ protected:
 
         switch (uSide)
         {
-        case ABE_TOP:
-            rc.bottom = rc.top + m_cyHeight;
-            break;
-        case ABE_BOTTOM:
-            rc.top = rc.bottom - m_cyHeight;
-            break;
-        case ABE_LEFT:
-            rc.right = rc.left + m_cxWidth;
-            break;
-        case ABE_RIGHT:
-            rc.left = rc.right - m_cxWidth;
-            break;
+            case ABE_TOP:
+                rc.bottom = rc.top + m_cyHeight;
+                break;
+            case ABE_BOTTOM:
+                rc.top = rc.bottom - m_cyHeight;
+                break;
+            case ABE_LEFT:
+                rc.right = rc.left + m_cxWidth;
+                break;
+            case ABE_RIGHT:
+                rc.left = rc.right - m_cxWidth;
+                break;
         }
 
         APPBARDATA abd = { sizeof(abd) };
@@ -680,6 +682,7 @@ protected:
         AppBar_Register(hwnd);
         AppBar_SetSide(hwnd, ABE_TOP);
 
+        trace("OnCreate(%p) done\n", hwnd);
         return TRUE;
     }
 
@@ -975,6 +978,9 @@ public:
         RECT rc1, rc2, rcWork;
         DWORD dwTID = GetWindowThreadProcessId(s_hwnd1, NULL);
 
+        trace("DoAction\n");
+        Sleep(INTERVAL);
+
         GetWindowRect(s_hwnd1, &rc1);
         GetWindowRect(s_hwnd2, &rc2);
         GetWorkArea(&rcWork);
@@ -990,7 +996,7 @@ public:
         ok_long(rcWork.top, s_rcWorkArea.top + 110);
         ok_long(rcWork.right, s_rcWorkArea.right);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
-        PostMessage(s_hwnd1, WM_CLOSE, 0, 0);
+        PostMessageW(s_hwnd1, WM_CLOSE, 0, 0);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
@@ -1101,7 +1107,7 @@ public:
         ok_long(rcWork.right, s_rcWorkArea.right);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
 
-        PostMessage(s_hwnd2, WM_QUIT, 0, 0);
+        PostMessageW(s_hwnd2, WM_QUIT, 0, 0);
         PostThreadMessage(dwTID, WM_QUIT, 0, 0);
 #undef INTERVAL
     }
@@ -1124,7 +1130,16 @@ START_TEST(SHAppBarMessage)
         return;
     }
 
+    trace("SM_CMONITORS: %d\n", GetSystemMetrics(SM_CMONITORS));
+    if (GetSystemMetrics(SM_CMONITORS) != 1)
+    {
+        skip("Multi-monitor not supported yet\n");
+        return;
+    }
+
     SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
+    trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n",
+          s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
 
     HWND hwnd1 = Window::DoCreateMainWnd(hInstance, TEXT("Test1"), 80, 80,
                                          WS_POPUP | WS_THICKFRAME | WS_CLIPCHILDREN);
@@ -1145,7 +1160,7 @@ START_TEST(SHAppBarMessage)
     s_hwnd1 = hwnd1;
     s_hwnd2 = hwnd2;
 
-    PostMessage(hwnd1, WM_COMMAND, ID_ACTION, 0);
+    PostMessageW(hwnd1, WM_COMMAND, ID_ACTION, 0);
 
     Window::DoMainLoop();
 }

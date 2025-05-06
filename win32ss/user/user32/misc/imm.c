@@ -618,8 +618,25 @@ User32DoImeHelp(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
+static BOOL CALLBACK
+ImeWnd_SwitchSoftKbdProc(_In_ HIMC hIMC, _In_ LPARAM lParam)
+{
+    DWORD dwConversion, dwSentence, dwNewConversion;
+
+    IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence);
+
+    if (lParam)
+        dwNewConversion = dwConversion | IME_CMODE_SOFTKBD;
+    else
+        dwNewConversion = dwConversion & ~IME_CMODE_SOFTKBD;
+
+    if (dwNewConversion != dwConversion)
+        IMM_FN(ImmSetConversionStatus)(hIMC, dwNewConversion, dwSentence);
+
+    return TRUE;
+}
+
 /* Handles WM_IME_SYSTEM message of the default IME window. */
-/* Win: ImeSystemHandler */
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
@@ -720,8 +737,8 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             ret = IMM_FN(ImmFreeLayout)((HKL)lParam);
             break;
 
-        case 0x13:
-            FIXME("\n");
+        case IMS_SOFTKBDONOFF:
+            IMM_FN(ImmEnumInputContext)(0, ImeWnd_SwitchSoftKbdProc, lParam);
             break;
 
         case IMS_GETCONVSTATUS:

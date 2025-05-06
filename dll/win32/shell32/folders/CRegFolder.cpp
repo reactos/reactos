@@ -25,17 +25,49 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-#define DEFAULTSORTORDERINDEX 0x80 // The default for registry items according to Geoff Chappell
-
 static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, HWND hwnd, UINT cidl,
                                                   PCUITEMID_CHILD_ARRAY apidl, IShellFolder *psf, IContextMenu **ppcm);
+
+HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
+{
+    WCHAR xriid[CHARS_IN_GUID];
+    StringFromGUID2(*riid, xriid, _countof(xriid));
+    return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
+}
+
+static DWORD SHELL_QueryCLSIDValue(_In_ REFCLSID clsid, _In_opt_ LPCWSTR SubKey, _In_opt_ LPCWSTR Value, _In_opt_ PVOID pData, _In_opt_ PDWORD pSize)
+{
+    const UINT cchGuid = CHARS_IN_GUID - 1, cchClsidSlash = sizeof("CLSID\\") - 1;
+    WCHAR Path[200];
+    wcscpy(Path, L"CLSID\\");
+    StringFromGUID2(clsid, Path + 6, CHARS_IN_GUID);
+    if (SubKey)
+    {
+        *(Path + cchClsidSlash + cchGuid) = L'\\';
+        wcscpy(Path + cchClsidSlash + cchGuid + 1, SubKey);
+    }
+    return RegGetValueW(HKEY_CLASSES_ROOT, Path, Value, RRF_RT_ANY, NULL, pData, pSize);
+}
+
+static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
+{
+    return SHELL_QueryCLSIDValue(clsid, L"ShellFolder", Value, NULL, NULL) == ERROR_SUCCESS;
+}
 
 static inline UINT GetRegItemCLSIDOffset(PIDLTYPE type)
 {
     return type == PT_CONTROLS_NEWREGITEM ? 14 : 4;
 }
 
-static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, BYTE order = 0)
+static BYTE GetRegItemOrder(REFCLSID clsid)
+{
+    DWORD dwOrder, cb = sizeof(dwOrder);
+    if (SHELL_QueryCLSIDValue(clsid, NULL, L"SortOrderIndex", &dwOrder, &cb) || cb != sizeof(dwOrder))
+        dwOrder = REGITEMORDER_DEFAULT;
+    return (BYTE)dwOrder;
+}
+
+static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, int order = -1)
 {
 #if 1 // FIXME: CControlPanelFolder is not ready for this yet
     if (type == PT_CONTROLS_NEWREGITEM)
@@ -49,7 +81,7 @@ static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, BYTE order = 0)
         ZeroMemory(pidl, cbTotal); // Note: This also initializes the terminator WORD
         pidl->mkid.cb = cb;
         pidl->mkid.abID[0] = type;
-        pidl->mkid.abID[1] = order;
+        pidl->mkid.abID[1] = order >= 0 ? (BYTE)order : GetRegItemOrder(clsid);
         *(CLSID*)(SIZE_T(pidl) + offset) = clsid;
     }
     return pidl;
@@ -59,31 +91,6 @@ static LPITEMIDLIST CreateRegItem(PIDLTYPE type, LPCWSTR clsidstr)
 {
     CLSID clsid;
     return SUCCEEDED(CLSIDFromString(clsidstr, &clsid)) ? CreateRegItem(type, clsid) : NULL;
-}
-
-HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
-{
-    WCHAR xriid[CHARS_IN_GUID];
-    StringFromGUID2(*riid, xriid, _countof(xriid));
-    return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
-}
-
-static DWORD SHELL_QueryCLSIDValue(_In_ REFCLSID clsid, _In_opt_ LPCWSTR SubKey, _In_opt_ LPCWSTR Value, _In_opt_ PVOID pData, _In_opt_ PDWORD pSize)
-{
-    WCHAR Path[MAX_PATH];
-    wcscpy(Path, L"CLSID\\");
-    StringFromGUID2(clsid, Path + 6, 39);
-    if (SubKey)
-    {
-        wcscpy(Path + 6 + 38, L"\\");
-        wcscpy(Path + 6 + 39, SubKey);
-    }
-    return RegGetValueW(HKEY_CLASSES_ROOT, Path, Value, RRF_RT_ANY, NULL, pData, pSize);
-}
-
-static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
-{
-    return SHELL_QueryCLSIDValue(clsid, L"ShellFolder", Value, NULL, NULL) == ERROR_SUCCESS;
 }
 
 struct CRegFolderInfo
@@ -116,6 +123,12 @@ struct CRegFolderInfo
     {
         const REQUIREDREGITEM &item = GetAt(i);
         return CreateRegItem(GetPidlType(), item.clsid, item.Order);
+    }
+
+    WORD GetRegItemOrder(LPCITEMIDLIST pidl) const
+    {
+        const CLSID *pCLSID = IsRegItem(pidl);
+        return pCLSID ? ::GetRegItemOrder(*pCLSID) : 0xffff;
     }
 
     LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
@@ -314,6 +327,7 @@ class CRegFolder :
         IShellFolder *m_pOuterFolder; // Not ref-counted
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
+        HRESULT CompareRegItemsSortOrder(PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
         HRESULT GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
         BOOL _IsInNameSpace(_In_ LPCITEMIDLIST pidl);
 
@@ -514,6 +528,18 @@ HRESULT WINAPI CRegFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserv
     return E_NOTIMPL;
 }
 
+HRESULT CRegFolder::CompareRegItemsSortOrder(PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
+{
+    LPPIDLDATA p1 = (LPPIDLDATA)pidl1->mkid.abID;
+    LPPIDLDATA p2 = (LPPIDLDATA)pidl2->mkid.abID;
+    int Order1 = p1->u.guid.uSortOrder > 0x40 ? p1->u.guid.uSortOrder : GetRegItemOrder(pidl1);
+    int Order2 = p2->u.guid.uSortOrder > 0x40 ? p2->u.guid.uSortOrder : GetRegItemOrder(pidl2);
+    int Cmp = Order1 - Order2;
+    if (Cmp != 0)
+        return MAKE_COMPARE_HRESULT(Cmp);
+    return SHELL32_CompareDetails(this, COL_NAME, pidl1, pidl2);
+}
+
 HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     if (!pidl1 || !pidl2 || pidl1->mkid.cb == 0 || pidl2->mkid.cb == 0)
@@ -532,6 +558,12 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
     }
     else if (clsid1 && clsid2)
     {
+        if ((lParam & SHCIDS_COLUMNMASK) == COL_NAME && !(lParam & SHCIDS_CANONICALONLY))
+        {
+            HRESULT hrCmpOrder = CompareRegItemsSortOrder(pidl1, pidl2);
+            if (hrCmpOrder && SUCCEEDED(hrCmpOrder))
+                return hrCmpOrder;
+        }
         if (memcmp(clsid1, clsid2, sizeof(GUID)) == 0)
             return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
 
@@ -818,7 +850,18 @@ HRESULT WINAPI CRegFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 
 HRESULT WINAPI CRegFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    return E_NOTIMPL;
+    const CLSID *pCLSID = IsRegItem(pidl);
+    if (!pCLSID)
+        return E_INVALIDARG;
+    if (pscid->fmtid == FMTID_ShellDetails)
+    {
+        switch (pscid->pid)
+        {
+            case PID_DESCRIPTIONID:
+                return SHELL_CreateSHDESCRIPTIONID(pv, SHDID_ROOT_REGITEM, pCLSID);
+        }
+    }
+    return SH32_GetDetailsOfPKeyAsVariant(this, pidl, pscid, pv, TRUE);
 }
 
 HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
@@ -849,7 +892,7 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         case COL_INFOTIP:
             HKEY hKey;
             if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
-                return SHSetStrRet(&psd->str, "");
+                return SHSetStrRetEmpty(&psd->str);
 
             psd->str.cStr[0] = 0x00;
             psd->str.uType = STRRET_CSTR;
@@ -857,17 +900,23 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             RegCloseKey(hKey);
             return S_OK;
         default:
-            /* Return an empty string when we area asked for a column we don't support.
-               Only  the regfolder is supposed to do this as it supports less columns compared to other folder
+            /* Return an empty string when we are asked for a column we don't support.
+               Only the regfolder is supposed to do this as it supports fewer columns compared to other folders
                and its contents are supposed to be presented alongside items that support more columns. */
-            return SHSetStrRet(&psd->str, "");
+            return SHSetStrRetEmpty(&psd->str);
     }
     return E_FAIL;
 }
 
 HRESULT WINAPI CRegFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    return E_NOTIMPL;
+    switch (column)
+    {
+        case COL_NAME: return MakeSCID(*pscid, FMTID_Storage, PID_STG_NAME);
+        case COL_TYPE: return MakeSCID(*pscid, FMTID_Storage, PID_STG_STORAGETYPE);
+        case COL_INFOTIP: return MakeSCID(*pscid, FMTID_SummaryInformation, PIDSI_COMMENTS);
+    }
+    return E_INVALIDARG;
 }
 
 static HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,

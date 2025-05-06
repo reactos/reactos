@@ -169,6 +169,7 @@ BEGIN
     IDS_NET_DELETE "हटाए"
     IDS_NET_RENAME "नाम बदलें"
     IDS_NET_PROPERTIES "गुण"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u बिट/सेकंड"
     IDS_FORMAT_KBIT "%u किलोबिट/सेकंड"
     IDS_FORMAT_MBIT "%u मेगाबिट/सेकंड"

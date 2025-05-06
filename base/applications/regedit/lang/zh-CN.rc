@@ -442,6 +442,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "添加新字符串值"
     ID_EDIT_NEW_BINARYVALUE "添加新二进制值"
     ID_EDIT_NEW_DWORDVALUE "添加新 DWORD 值"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "将文本文件导入到注册表中"
     ID_REGISTRY_EXPORTREGISTRYFILE "将注册表全部或部分导出到文件中"
     ID_REGISTRY_LOADHIVE "加載配置单元到注册表中"
