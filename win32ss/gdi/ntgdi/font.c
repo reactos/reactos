@@ -43,7 +43,7 @@ GreCreateFontIndirectW(_In_ const LOGFONTW *lplf)
 
         RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
 
-        return HfontCreate(&Logfont, 0, 0, 0, NULL );
+        return HfontCreate(&Logfont, 0, 0, 0, NULL);
     }
     else return NULL;
 }
