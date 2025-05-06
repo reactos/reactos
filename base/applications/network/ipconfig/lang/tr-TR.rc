@@ -23,7 +23,7 @@ BEGIN
     IDS_WINSPROXYNO         "\tWINS Vekil Sunucusu etkin  . . : Hayır\n"
     IDS_WINSPROXYYES        "\tWINS Vekil Sunucusu etkin  . . : Evet\n"
     IDS_DNSSUFFIXLIST       "\tDNS Sonek Arama Listesi  . . . : %hs\n"
-    IDS_EMPTYLINE           "\t                                    %hs\n"
+    IDS_EMPTYLINE           "\t                                 %hs\n"
     IDS_MEDIADISCONNECTED   "\tOrtam Durumu . . . . . . . . . : Ortam bağlantısı kesildi\n"
     IDS_CONNECTIONDNSSUFFIX "\tBağlantıya özgü DNS Soneki . . : %hs\n"
     IDS_DESCRIPTION         "\tAçıklama . . . . . . . . . . . : "
@@ -71,13 +71,13 @@ BEGIN
     IDS_DNSTYPEA             "\tA (Ana Bilgisayar) Kaydı . . . : %ls\n"
     IDS_DNSTYPENS            "\tNS Kaydı . . . . . . . . . . . : %ls\n"
     IDS_DNSTYPECNAME         "\tCNAME Kaydı  . . . . . . . . . : %ls\n"
-    IDS_DNSTYPESOA1          "\tSOA Kaydı  . . . . . . . . . . : %ls\n\t                        %ls\n\t                        %lu\n"
-    IDS_DNSTYPESOA2          "\t                        %lu\n\t                        %lu\n\t                        %lu\n\t                        %lu\n"
+    IDS_DNSTYPESOA1          "\tSOA Kaydı  . . . . . . . . . . : %ls\n\t                                 %ls\n\t                                 %lu\n"
+    IDS_DNSTYPESOA2          "\t                                 %lu\n\t                                 %lu\n\t                                 %lu\n\t                                 %lu\n"
     IDS_DNSTYPEPTR           "\tPTR Kaydı  . . . . . . . . . . : %ls\n"
-    IDS_DNSTYPEMX            "\tMX Kaydı . . . . . . . . . . . : %ls\n\t                        %hu\n\t                        %hu\n"
+    IDS_DNSTYPEMX            "\tMX Kaydı . . . . . . . . . . . : %ls\n\t                                 %hu\n\t                                 %hu\n"
     IDS_DNSTYPEAAAA          "\tAAAA Kaydı . . . . . . . . . . : %ls\n"
     IDS_DNSTYPEATMA          "\tATMA Kaydı . . . . . . . . . . : \n"
-    IDS_DNSTYPESRV           "\tSRV Kaydı  . . . . . . . . . . : %ls\n\t                        %hu\n\t                        %hu\n\t                        %hu\n"
+    IDS_DNSTYPESRV           "\tSRV Kaydı  . . . . . . . . . . : %ls\n\t                                 %hu\n\t                                 %hu\n\t                                 %hu\n"
 END
 
 STRINGTABLE
