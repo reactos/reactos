@@ -44,7 +44,33 @@
 
 #include <strsafe.h>
 
-#include "debug.h"
+#include <wine2ros.h>
+
+/* #define UNEXPECTED() (ASSERT(FALSE), TRUE) */
+#define UNEXPECTED() TRUE
+
+/* Unexpected Condition Checkers */
+#if DBG
+    #define FAILED_UNEXPECTEDLY(hr) \
+        (FAILED(hr) ? (ERR("FAILED(0x%08X)\n", hr), UNEXPECTED()) : FALSE)
+    #define IS_NULL_UNEXPECTEDLY(p) \
+        (!(p) ? (ERR("%s was NULL\n", #p), UNEXPECTED()) : FALSE)
+    #define IS_ZERO_UNEXPECTEDLY(p) \
+        (!(p) ? (ERR("%s was zero\n", #p), UNEXPECTED()) : FALSE)
+    #define IS_TRUE_UNEXPECTEDLY(x) \
+        ((x) ? (ERR("%s was %d\n", #x, (int)(x)), UNEXPECTED()) : FALSE)
+    #define IS_ERROR_UNEXPECTEDLY(x) \
+        ((x) != ERROR_SUCCESS ? (ERR("%s was %d\n", #x, (int)(x)), UNEXPECTED()) : FALSE)
+#else
+    #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
+    #define IS_NULL_UNEXPECTEDLY(p) (!(p))
+    #define IS_ZERO_UNEXPECTEDLY(p) (!(p))
+    #define IS_TRUE_UNEXPECTEDLY(x) (x)
+    #define IS_ERROR_UNEXPECTEDLY(x) ((x) != ERROR_SUCCESS)
+#endif
+
+#define IS_CROSS_THREAD_HIMC(hIMC)   IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))
+#define IS_CROSS_PROCESS_HWND(hWnd)  IS_TRUE_UNEXPECTEDLY(Imm32IsCrossProcessAccess(hWnd))
 
 #define IMM_INIT_MAGIC          0x19650412
 #define IMM_INVALID_CANDFORM    ULONG_MAX
