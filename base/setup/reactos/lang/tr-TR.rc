@@ -70,7 +70,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Başlat", IDC_INITDISK, 7, 122, 50, 14
-    PUSHBUTTON "&Biçimlendir", IDC_PARTFORMAT, 7, 122, 50, 14
+    PUSHBUTTON "&Biçimlendir", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -245,6 +245,7 @@ BEGIN
     IDS_UPDATE_REGISTRY "Kayıt defteri güncelleniyor..."
 
     IDS_INSTALL_BOOTLOADER "Önyükleyici kuruluyor..."
+    // IDS_INSTALL_FINALIZE "Kurulum tamamlanıyor..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.

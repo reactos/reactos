@@ -46,8 +46,8 @@ BEGIN
         MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
         MENUITEM "&Seçimi Kırp", IDM_CROPSELECTION
-        MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "S&eçimi Evir", IDM_EDITINVERTSELECTION
+        MENUITEM "S&eçimi Sil\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Se&çimi Evir", IDM_EDITINVERTSELECTION
         MENUITEM "&Tümünü Seç\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Ş&uraya Kopyala...", IDM_EDITCOPYTO
@@ -269,7 +269,7 @@ BEGIN
     IDS_ITALIC "İtalik"
     IDS_UNDERLINE "Altı Çizgili"
     IDS_VERTICAL "Düşey"
-    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_PRINTRES "%d x %d piksel/cm"
     IDS_CANTPASTE "Panodan yapıştırma işlemi başarısız oldu. Veri biçimi ya yanlış ya da desteklenmiyor."
     IDS_SAVEERROR "Bit eşlemi dosyaya kaydedilemedi:\n\n%s"
     IDS_CANTSENDMAIL "Posta gönderilemedi."

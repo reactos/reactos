@@ -802,7 +802,7 @@ BEGIN
     IDS_VIEW_DETAILS "&Ayrıntılar"
     IDS_SELECT "Seç"
     IDS_OPEN "Aç"
-    IDS_CREATELINK "Kısayol &Oluştur"
+    IDS_CREATELINK "Kısayol &oluştur"
     IDS_COPY "&Kopyala"
     IDS_DELETE "&Sil"
     IDS_PROPERTIES "Ö&zellikler"
