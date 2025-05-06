@@ -89,13 +89,92 @@ IntTopLevelWindowFromPoint(INT x, INT y)
     return pwndDesktop;
 }
 
+/**
+ * @brief
+ * Retreives an appropriate system cursor for the specified cursor object.
+ * Avoids force loading default system cursors from user32 for user-mode classes.
+ */
+PCURICON_OBJECT
+ReferenceSysCursorById(
+   _Inout_ DWORD_PTR ResourceId)
+{
+    PCURICON_OBJECT pcur;
+
+    /* Resource id is invalid (zero) or system cursors are not initialized yet */
+    if (!ResourceId || !SYSTEMCUR(ARROW)) return NULL;
+
+    /* Our cursor should be one of the system-defined curors,
+     * assign an appropriate type of cursor */
+    switch (ResourceId)
+    {
+        case OCR_NORMAL:
+            pcur = SYSTEMCUR(ARROW);
+            break;
+        case OCR_IBEAM:
+            pcur = SYSTEMCUR(IBEAM);
+            break;
+        case OCR_WAIT:
+            pcur = SYSTEMCUR(WAIT);
+            break;
+        case OCR_CROSS:
+            pcur = SYSTEMCUR(CROSS);
+            break;
+        case OCR_UP:
+            pcur = SYSTEMCUR(UP);
+            break;
+        case OCR_ICON:
+            pcur = SYSTEMCUR(ICON);
+            break;
+        case OCR_SIZE:
+            pcur = SYSTEMCUR(SIZE);
+            break;
+        case OCR_SIZENWSE:
+            pcur = SYSTEMCUR(SIZENWSE);
+            break;
+        case OCR_SIZENESW:
+            pcur = SYSTEMCUR(SIZENESW);
+            break;
+        case OCR_SIZEWE:
+            pcur = SYSTEMCUR(SIZEWE);
+            break;
+        case OCR_SIZENS:
+            pcur = SYSTEMCUR(SIZENS);
+            break;
+        case OCR_SIZEALL:
+            pcur = SYSTEMCUR(SIZEALL);
+            break;
+        case OCR_NO:
+            pcur = SYSTEMCUR(NO);
+            break;
+        case OCR_HAND:
+            pcur = SYSTEMCUR(HAND);
+            break;
+        case OCR_APPSTARTING:
+            pcur = SYSTEMCUR(APPSTARTING);
+            break;
+        case OCR_HELP:
+            pcur = SYSTEMCUR(HELP);
+            break;
+        default:
+
+        {
+            /* None of the cases matched, this is not a system cursor,
+             * must be loaded from the custom app resource then */
+            return NULL;
+        }
+    }
+
+    /* As a final, return our system cursor */
+    return pcur;
+}
+
 PCURICON_OBJECT
 FASTCALL
 UserSetCursor(
     PCURICON_OBJECT NewCursor,
     BOOL ForceChange)
 {
-    PCURICON_OBJECT OldCursor;
+    PCURICON_OBJECT OldCursor, pcurSystem;
     HDC hdcScreen;
     PTHREADINFO pti;
     PUSER_MESSAGE_QUEUE MessageQueue;
@@ -109,6 +188,17 @@ UserSetCursor(
     /* Check if cursors are different */
     if (OldCursor == NewCursor)
         return OldCursor;
+
+    if (NewCursor)
+    {
+        /* Check if we have a system cursor for this cursor */
+        pcurSystem = ReferenceSysCursorById((DWORD_PTR)NewCursor->strName.Buffer);
+        if (pcurSystem)
+        {
+            /* Use the system cursor instead */
+            UserAssignmentLock((PVOID)&NewCursor, pcurSystem);
+        }
+    }
 
     /* Update cursor for this message queue */
     MessageQueue->CursorObject = NewCursor;
