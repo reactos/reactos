@@ -2226,6 +2226,41 @@ Leave:
 }
 
 NTSTATUS WINAPI
+User32CallLoadImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+    PLOADIMAGE_CALLBACK_ARGUMENTS Common;
+    HANDLE Result;
+    DWORD Ret;
+    WCHAR ExpandedFilePath[MAX_PATH];
+    Common = (PLOADIMAGE_CALLBACK_ARGUMENTS) Arguments;
+
+    TRACE("User32CallLoadImageFromKernel called\n");
+
+    if (!Common->ResourceId)
+    {
+        Ret = ExpandEnvironmentStringsW(Common->ImageName,
+                                        ExpandedFilePath,
+                                        _countof(ExpandedFilePath));
+        if (!Ret)
+        {
+            ERR("ExpandEnvironmentStringsW failed with error %d\n", GetLastError());
+            return ZwCallbackReturn(NULL, 0, STATUS_UNSUCCESSFUL);
+        }
+    }
+
+    Result = LoadImageW(NULL,
+                        Common->ResourceId ?
+                        Common->ResourceId :
+                        ExpandedFilePath,
+                        Common->ImageType,
+                        Common->cxDesired,
+                        Common->cyDesired,
+                        Common->fuFlags);
+
+    return ZwCallbackReturn(&Result, sizeof(HANDLE), STATUS_SUCCESS);
+}
+
+NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PCOPYIMAGE_CALLBACK_ARGUMENTS Common;

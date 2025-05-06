@@ -2216,9 +2216,8 @@ NtUserSetSystemCursor(
     HCURSOR hcur,
     DWORD id)
 {
-    PCURICON_OBJECT pcur, pcurOrig = NULL;
+    PCURICON_OBJECT pcur;
     int i;
-    PPROCESSINFO ppi;
     BOOL Ret = FALSE;
     UserEnterExclusive();
 
@@ -2227,39 +2226,41 @@ NtUserSetSystemCursor(
         goto Exit;
     }
 
-    if (hcur)
+    if (!hcur)
     {
-        pcur = UserGetCurIconObject(hcur);
-        if (!pcur)
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        goto Exit;
+    }
+
+    pcur = UserGetCurIconObject(hcur);
+    if (!pcur)
+    {
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        goto Exit;
+    }
+
+    for (i = 0; i < 16; i++)
+    {
+        if (gasyscur[i].type == id)
         {
-            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
-            goto Exit;
-        }
+            /* Check if cursor is already set */
+            if (pcur == gasyscur[i].handle)
+            {
+                ERR("Cursor %p is already set\n", pcur);
+                Ret = TRUE;
+                break;
+            }
 
-        ppi = PsGetCurrentProcessWin32Process();
+            pcur->CURSORF_flags |= CURSORF_GLOBAL;
 
-        for (i = 0 ; i < 16; i++)
-        {
-           if (gasyscur[i].type == id)
-           {
-              pcurOrig = gasyscur[i].handle;
+            //  The active switch between LR shared and Global public.
+            //  This is hacked around to support this while at the initial system start up.
+            pcur->head.ppi = NULL;
 
-              if (pcurOrig) break;
-
-              if (ppi->W32PF_flags & W32PF_CREATEDWINORDC)
-              {
-                 gasyscur[i].handle = pcur;
-                 pcur->CURSORF_flags |= CURSORF_GLOBAL;
-                 pcur->head.ppi = NULL;
-                 IntInsertCursorIntoList(pcur);
-                 Ret = TRUE;
-              }
-              break;
-           }
-        }
-        if (pcurOrig)
-        {
-           FIXME("Need to copy cursor data or do something! pcurOrig %p new pcur %p\n",pcurOrig,pcur);
+            /* Set new cursor */
+            gasyscur[i].handle = pcur;
+            Ret = TRUE;
+            break;
         }
     }
 Exit:

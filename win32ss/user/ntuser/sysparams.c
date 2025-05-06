@@ -58,6 +58,23 @@ static const WCHAR* VAL_HOVERWIDTH = L"MouseHoverWidth";
 static const WCHAR* VAL_HOVERHEIGHT = L"MouseHoverHeight";
 static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
 
+static const WCHAR* KEY_CURSORS = L"Control Panel\\Cursors";
+static const WCHAR* VAL_APPSTARTING = L"AppStarting";
+static const WCHAR* VAL_ARROW = L"Arrow";
+static const WCHAR* VAL_CROSS = L"Crosshair";
+static const WCHAR* VAL_HAND = L"Hand";
+static const WCHAR* VAL_HELP = L"Help";
+static const WCHAR* VAL_IBEAM = L"IBeam";
+static const WCHAR* VAL_NO = L"No";
+//static const WCHAR* VAL_NWPEN = L"NWPen";
+static const WCHAR* VAL_SIZEALL = L"SizeAll";
+static const WCHAR* VAL_SIZENESW = L"SizeNESW";
+static const WCHAR* VAL_SIZENS = L"SizeNS";
+static const WCHAR* VAL_SIZENWSE = L"SizeNWSE";
+static const WCHAR* VAL_SIZEWE = L"SizeWE";
+static const WCHAR* VAL_UPARROW = L"UpArrow";
+static const WCHAR* VAL_WAIT = L"Wait";
+
 static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 static const WCHAR* VAL_SCRTO = L"ScreenSaveTimeOut";
 static const WCHAR* VAL_SCRNSV = L"SCRNSAVE.EXE";
@@ -136,6 +153,13 @@ SpiLoadInt(PCWSTR pwszKey, PCWSTR pwszValue, INT iValue)
 }
 
 static
+BOOL
+SpiLoadString(PCWSTR pwszKey, PCWSTR pwszValue, LPWSTR pwszBuffer, ULONG cbSize)
+{
+    return RegReadUserSetting(pwszKey, pwszValue, REG_EXPAND_SZ, pwszBuffer, cbSize);
+}
+
+static
 DWORD
 SpiLoadUserPrefMask(DWORD dValue)
 {
@@ -159,6 +183,59 @@ SpiLoadTimeOut(VOID)
     }
     if (szApplicationName[0] == 0) return 0;
     return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 600);
+}
+
+static
+BOOL
+SpiLoadCursor(PCWSTR pwszValue, LPWSTR pwszBuffer, ULONG cbSize)
+{
+    return SpiLoadString(KEY_CURSORS, pwszValue, pwszBuffer, cbSize);
+}
+
+static
+VOID
+SpiReloadSystemCursor(PCWSTR pwszValue, DWORD dwId)
+{
+    WCHAR wchCursorPath[MAX_PATH];
+    HANDLE hCursor;
+    ULONG cbSize;
+
+    cbSize = sizeof(wchCursorPath);
+    if (!SpiLoadCursor(pwszValue, wchCursorPath, cbSize))
+    {
+        WARN("Failed to get cursor path from registry for %ls\n", pwszValue);
+        return;
+    }
+    hCursor = co_IntLoadImage(wchCursorPath, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+    if (!hCursor)
+        hCursor = co_IntLoadImage(MAKEINTRESOURCEW(dwId), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
+    if (!hCursor)
+    {
+        ERR("Failed to load cursor %ls, resource ID %ls\n", wchCursorPath, MAKEINTRESOURCEW(dwId));
+        return;
+    }
+    if (!NtUserSetSystemCursor(hCursor, dwId))
+        ERR("NtUserSetSystemCursor failed with error %d\n", EngGetLastError());
+}
+
+static
+VOID
+SpiReloadAllSystemCursors(VOID)
+{
+    SpiReloadSystemCursor(VAL_ARROW, OCR_NORMAL);
+    SpiReloadSystemCursor(VAL_IBEAM, OCR_IBEAM);
+    SpiReloadSystemCursor(VAL_WAIT,  OCR_WAIT);
+    SpiReloadSystemCursor(VAL_CROSS, OCR_CROSS);
+    SpiReloadSystemCursor(VAL_UPARROW, OCR_UP);
+    SpiReloadSystemCursor(VAL_SIZENWSE, OCR_SIZENWSE);
+    SpiReloadSystemCursor(VAL_SIZENESW, OCR_SIZENESW);
+    SpiReloadSystemCursor(VAL_SIZEWE, OCR_SIZEWE);
+    SpiReloadSystemCursor(VAL_SIZENS, OCR_SIZENS);
+    SpiReloadSystemCursor(VAL_SIZEALL, OCR_SIZEALL);
+    SpiReloadSystemCursor(VAL_NO, OCR_NO);
+    SpiReloadSystemCursor(VAL_HAND, OCR_HAND);
+    SpiReloadSystemCursor(VAL_APPSTARTING, OCR_APPSTARTING);
+    SpiReloadSystemCursor(VAL_HELP, OCR_HELP);
 }
 
 static
@@ -356,6 +433,9 @@ SpiUpdatePerUserSystemParameters(VOID)
 
     /* Update SystemMetrics */
     InitMetrics();
+
+    /* Load system cursors from registry */
+    SpiReloadAllSystemCursors();
 
     if (gbSpiInitialized && gpsi)
     {
@@ -1457,7 +1537,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bPwrOffActive, uiParam, KEY_DESKTOP, L"PowerOffActive", fl);
 
         case SPI_SETCURSORS:
-            ERR("SPI_SETCURSORS is unimplemented\n");
+            SpiReloadAllSystemCursors();
             break;
 
         case SPI_SETICONS:

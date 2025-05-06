@@ -1007,6 +1007,63 @@ co_IntClientThreadSetup(VOID)
 }
 
 HANDLE FASTCALL
+co_IntLoadImage(LPCWSTR name, UINT type, INT desiredx, INT desiredy, UINT flags)
+{
+   HANDLE Handle;
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PLOADIMAGE_CALLBACK_ARGUMENTS Common;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   ArgumentLength = sizeof(LOADIMAGE_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (!Argument)
+   {
+      ERR("LoadImage callback failed: out of memory\n");
+      return NULL;
+   }
+   Common = (PLOADIMAGE_CALLBACK_ARGUMENTS) Argument;
+
+   if (IS_INTRESOURCE(name))
+       Common->ResourceId = name;
+   else
+       wcscpy(Common->ImageName, name);
+   Common->ImageType = type;
+   Common->cxDesired = desiredx;
+   Common->cyDesired = desiredy;
+   Common->fuFlags = flags;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_LOADIMAGE,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   if (NT_SUCCESS(Status))
+   {
+      Handle = *(HANDLE*)ResultPointer;
+   }
+   else
+   {
+      ERR("LoadImage callback failed\n");
+      Handle = NULL;
+   }
+
+   IntCbFreeMemory(Argument);
+
+   return Handle;
+}
+
+HANDLE FASTCALL
 co_IntCopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 {
    HANDLE Handle;
