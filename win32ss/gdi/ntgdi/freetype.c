@@ -2086,6 +2086,8 @@ NameFromCharSet(BYTE CharSet)
     }
 }
 
+static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
+
 /* Adds the font resource from the specified file to the system */
 static INT FASTCALL
 IntGdiAddFontResourceSingle(
@@ -2108,7 +2110,6 @@ IntGdiAddFontResourceSingle(
     LPWSTR pszBuffer;
     PFILE_OBJECT FileObject;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
-    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
     /* Build PathName */
     if (dwFlags & AFRX_DOS_DEVICE_PATH)
@@ -2326,12 +2327,126 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
+/* Borrowed from shlwapi */
+static PWSTR
+PathFindFileNameW(_In_ PCWSTR pszPath)
+{
+    PCWSTR lastSlash = pszPath;
+    while (*pszPath)
+    {
+        if ((*pszPath == L'\\' || *pszPath == L'/' || *pszPath == L':') &&
+            pszPath[1] && pszPath[1] != '\\' && pszPath[1] != L'/')
+        {
+            lastSlash = pszPath + 1;
+        }
+        pszPath++;
+    }
+    return (PWSTR)lastSlash;
+}
+
+/* Delete registry font entries */
+static VOID
+IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
+{
+    NTSTATUS Status;
+    HKEY hKey;
+    WCHAR szName[MAX_PATH], szValue[MAX_PATH];
+    ULONG dwIndex, NameLength, ValueSize, dwType;
+
+    Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
+    if (!NT_SUCCESS(Status))
+        return;
+
+    for (dwIndex = 0;;)
+    {
+        NameLength = RTL_NUMBER_OF(szName);
+        ValueSize = sizeof(szValue);
+        Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, &dwType, szValue, &ValueSize);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        if (dwType != REG_SZ || _wcsicmp(szValue, pszFileName) != 0)
+        {
+            ++dwIndex;
+            continue;
+        }
+
+        /* Delete the found value */
+        Status = RegDeleteValueW(hKey, szName);
+        if (!NT_SUCCESS(Status))
+            break;
+    }
+
+    ZwClose(hKey);
+}
+
 static BOOL FASTCALL
 IntGdiRemoveFontResourceSingle(
     _In_ PCUNICODE_STRING FileName,
     _In_ DWORD dwFlags)
 {
-    return FALSE; // FIXME
+    BOOL ret = FALSE;
+    UNICODE_STRING PathName;
+    PLIST_ENTRY CurrentEntry, NextEntry;
+    PFONT_ENTRY FontEntry;
+    PFONTGDI FontGDI;
+    PWSTR pszBuffer, pszFileTitle;
+    SIZE_T Length;
+    NTSTATUS Status;
+
+    /* Build PathName */
+    if (dwFlags & AFRX_DOS_DEVICE_PATH)
+    {
+        Length = DosPathPrefix.Length + FileName->Length + sizeof(UNICODE_NULL);
+        pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
+        if (!pszBuffer)
+            return FALSE; /* Failure */
+
+        RtlInitEmptyUnicodeString(&PathName, pszBuffer, Length);
+        RtlAppendUnicodeStringToString(&PathName, &DosPathPrefix);
+        RtlAppendUnicodeStringToString(&PathName, FileName);
+    }
+    else
+    {
+        Status = DuplicateUnicodeString(FileName, &PathName);
+        if (!NT_SUCCESS(Status))
+            return FALSE; /* Failure */
+    }
+
+    pszFileTitle = PathName.Buffer;
+    if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
+        pszFileTitle = PathFindFileNameW(PathName.Buffer);
+
+    if (!pszFileTitle || !*pszFileTitle)
+    {
+        RtlFreeUnicodeString(&PathName);
+        return FALSE; /* Failure */
+    }
+
+    /* Delete font entries that matches PathName */
+    IntLockFreeType();
+    for (CurrentEntry = g_FontListHead.Flink;
+         CurrentEntry != &g_FontListHead;
+         CurrentEntry = NextEntry)
+    {
+        FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_ENTRY, ListEntry);
+        NextEntry = CurrentEntry->Flink;
+
+        FontGDI = FontEntry->Font;
+        ASSERT(FontGDI);
+        if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
+        {
+            RemoveEntryList(&FontEntry->ListEntry);
+            CleanupFontEntry(FontEntry);
+            if (dwFlags & AFRX_WRITE_REGISTRY)
+                IntDeleteRegFontEntries(pszFileTitle, dwFlags);
+            ret = TRUE;
+        }
+    }
+    IntUnLockFreeType();
+
+    RtlFreeUnicodeString(&PathName);
+    return ret;
 }
 
 BOOL FASTCALL
