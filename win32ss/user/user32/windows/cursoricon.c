@@ -1212,6 +1212,8 @@ static BOOL CURSORICON_GetCursorDataFromANI(
         else
             pFrameData = pCurData;
 
+        pFrameData->cx = pCurData->cx;
+        pFrameData->cy = pCurData->cy;
         pFrameData->rt = pCurData->rt;
 
         if (pHeader->flags & ANI_FLAG_ICON)
@@ -1238,8 +1240,8 @@ static BOOL CURSORICON_GetCursorDataFromANI(
             }
             else
             {
-                pFrameData->cx = pHeader->width;
-                pFrameData->cy = pHeader->height;
+                if (!pFrameData->cx) pFrameData->cx = pHeader->width;
+                if (!pFrameData->cy) pFrameData->cy = pHeader->height;
             }
             pbmi = (const BITMAPINFO *) (icon_data + pDirEntry->dwDIBOffset);
         }
@@ -1598,6 +1600,7 @@ CURSORICON_LoadFromFileW(
     const CURSORICONFILEDIR *dir;
     DWORD filesize = 0, BmpIconSize;
     PBYTE bits, pbBmpIcon = NULL;
+    BOOL isAnimated = FALSE;
     HANDLE hCurIcon = NULL;
     CURSORDATA cursorData = { 0 };
 
@@ -1607,11 +1610,22 @@ CURSORICON_LoadFromFileW(
     if (!bits)
         return NULL;
 
+    /* A bit of preparation */
+    cursorData.cx = cxDesired;
+    cursorData.cy = cyDesired;
+    cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
+
     /* Check for .ani. */
     if (memcmp( bits, "RIFF", 4 ) == 0)
     {
-        UNIMPLEMENTED;
-        goto end;
+        if (!CURSORICON_GetCursorDataFromANI(&cursorData, bits, filesize, fuLoad))
+        {
+            ERR("Failing File is \n    '%S'.\n", lpszName);
+            goto end;
+        }
+        cursorData.CURSORF_flags = (CURSORF_FROMRESOURCE | CURSORF_LRSHARED | CURSORF_ACON);
+        isAnimated = TRUE;
+        goto create;
     }
 
     dir = (CURSORICONFILEDIR*) bits;
@@ -1620,15 +1634,15 @@ CURSORICON_LoadFromFileW(
         goto end;
 
     /* Fix dimensions */
-    if(!cxDesired) cxDesired = entry->bWidth;
-    if(!cyDesired) cyDesired = entry->bHeight;
+    if(!cursorData.cx) cursorData.cx = entry->bWidth;
+    if(!cursorData.cy) cursorData.cy = entry->bHeight;
+
     /* A bit of preparation */
     if(!bIcon)
     {
         cursorData.xHotspot = entry->xHotspot;
         cursorData.yHotspot = entry->yHotspot;
     }
-    cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
     /* Try to load BMP icon */
     if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (PBITMAPINFO)(&bits[entry->dwDIBOffset])))
@@ -1657,7 +1671,8 @@ CURSORICON_LoadFromFileW(
         TRACE("Processing PNG/Vista icon: '%S'\n", lpszName);
     }
 
-    hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
+create:
+    hCurIcon = NtUserxCreateEmptyCurObject(isAnimated);
     if(!hCurIcon)
         goto end;
 
@@ -1696,7 +1711,7 @@ CURSORICON_LoadImageW(
     CURSORICONDIR* dir;
     WORD wResId;
     LPBYTE bits;
-    CURSORDATA cursorData;
+    CURSORDATA cursorData = { 0 };
     BOOL bStatus;
     UNICODE_STRING ustrRsrc;
     UNICODE_STRING ustrModule = {0, 0, NULL};
@@ -1746,37 +1761,25 @@ CURSORICON_LoadImageW(
     }
     else if(hinst)
     {
-        DWORD size = MAX_PATH;
+        DWORD ret, size = MAX_PATH;
+
         /* Get the module name string */
-        while (TRUE)
+        ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, size*sizeof(WCHAR));
+        if (!ustrModule.Buffer)
         {
-            DWORD ret;
-            ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, size*sizeof(WCHAR));
-            if (!ustrModule.Buffer)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                return NULL;
-            }
-            ret = GetModuleFileNameW(hinst, ustrModule.Buffer, size);
-            if(ret == 0)
-            {
-                HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-                return NULL;
-            }
-
-            /* This API is completely broken... */
-            if (ret == size)
-            {
-                HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-                size *= 2;
-                continue;
-            }
-
-            ustrModule.Buffer[ret] = UNICODE_NULL;
-            ustrModule.Length = (USHORT)(ret * sizeof(WCHAR));
-            ustrModule.MaximumLength = (USHORT)(size * sizeof(WCHAR));
-            break;
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return NULL;
         }
+        ret = GetModuleFileNameW(hinst, ustrModule.Buffer, size);
+        if(ret == 0)
+        {
+            HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
+            return NULL;
+        }
+
+        ustrModule.Buffer[ret] = UNICODE_NULL;
+        ustrModule.Length = (USHORT)(ret * sizeof(WCHAR));
+        ustrModule.MaximumLength = (USHORT)(size * sizeof(WCHAR));
     }
 
     if(fuLoad & LR_SHARED)
@@ -1837,8 +1840,6 @@ CURSORICON_LoadImageW(
         FreeResource(handle);
         goto done;
     }
-
-    ZeroMemory(&cursorData, sizeof(cursorData));
 
     /* This is from resource */
     cursorData.CURSORF_flags = CURSORF_FROMRESOURCE;
