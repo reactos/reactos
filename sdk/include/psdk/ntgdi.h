@@ -346,7 +346,7 @@ NtGdiAddFontMemResourceEx(
     _In_ DWORD cjBuffer,
     _In_reads_bytes_opt_(cjDV) const DESIGNVECTOR *pdv,
     _In_ ULONG cjDV,
-    _Out_ DWORD *pNumFonts);
+    _Out_ PDWORD pNumFonts);
 
 __kernel_entry
 W32KAPI

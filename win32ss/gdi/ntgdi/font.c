@@ -584,7 +584,7 @@ NtGdiAddFontMemResourceEx(
     _In_ DWORD cjBuffer,
     _In_reads_bytes_opt_(cjDV) const DESIGNVECTOR *pdv,
     _In_ ULONG cjDV,
-    _Out_ DWORD *pNumFonts)
+    _Out_ PDWORD pNumFonts)
 {
     _SEH2_VOLATILE PVOID Buffer = NULL;
     HANDLE Ret;
@@ -1039,7 +1039,7 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
-    _In_reads_(cwc) LPCWSTR pwszFiles,
+    _In_reads_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ UINT cjIn,
