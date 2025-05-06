@@ -24,10 +24,13 @@
 #define _NTSTATUS_
 
 #ifndef _NTINTSAFE_H_INCLUDED_
+    #include <no_sal2.h>
     #ifndef _NTDEF_ /* Guard agains redefinition from ntstatus.h */
         typedef _Return_type_success_(return >= 0) long NTSTATUS;
     #endif
-    #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+    #ifndef NT_SUCCESS
+        #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+    #endif
 #endif
 
 #ifdef __cplusplus
