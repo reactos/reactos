@@ -235,8 +235,8 @@ APIENTRY
 NtGdiGetOutlineTextMetricsInternalW(
     _In_ HDC hdc,
     _In_ ULONG cjotm,
-    _Out_writes_bytes_opt_(cjotm) OUTLINETEXTMETRICW *potmw,
-    _Out_ TMDIFF *ptmd);
+    _Out_writes_bytes_opt_(cjotm) POUTLINETEXTMETRICW potmw,
+    _Out_ PTMDIFF ptmd);
 
 _Success_(return != FALSE)
 __kernel_entry
@@ -2469,7 +2469,7 @@ BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
     _In_ HDC hdc,
-    _Out_writes_bytes_(cj) TMW_INTERNAL *ptm,
+    _Out_writes_bytes_(cj) PTMW_INTERNAL ptm,
     _In_ ULONG cj);
 
 __kernel_entry

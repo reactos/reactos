@@ -963,8 +963,8 @@ APIENTRY
 NtGdiGetOutlineTextMetricsInternalW(
     _In_ HDC hDC,
     _In_ ULONG Data,
-    _Out_opt_ OUTLINETEXTMETRICW *otm,
-    _In_ TMDIFF *Tmd)
+    _Out_opt_ POUTLINETEXTMETRICW otm,
+    _In_ PTMDIFF Tmd)
 {
   PDC dc;
   PDC_ATTR pdcattr;

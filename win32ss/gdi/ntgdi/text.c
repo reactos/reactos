@@ -28,7 +28,7 @@
 VOID FASTCALL
 IntTMWFixUp(
    _In_ HDC hDC,
-   _Inout_ TMW_INTERNAL *ptm)
+   _Inout_ PTMW_INTERNAL ptm)
 {
     LOGFONTW lf;
     HFONT hCurrentFont;
@@ -136,7 +136,7 @@ GreGetTextExtentExW(
     _In_ ULONG Count,
     _In_ ULONG MaxExtent,
     _Out_opt_ PULONG Fit,
-    _Out_writes_to_opt_(Count, *Fit) PINT Dx,
+    _Out_writes_to_opt_(Count, *Fit) PULONG Dx,
     _Out_ PSIZE pSize,
     _In_ FLONG fl)
 {
@@ -173,8 +173,8 @@ GreGetTextExtentExW(
                                             String,
                                             Count,
                                             MaxExtent,
-                                            Fit,
-                                            Dx,
+                                            (PINT)Fit,
+                                            (PINT)Dx,
                                             pSize,
                                             fl);
         TEXTOBJ_UnlockText(TextObj);
@@ -337,7 +337,7 @@ NtGdiGetTextExtentExW(
     SIZE Size;
     NTSTATUS Status;
     BOOLEAN Result;
-    ULONG Fit;
+    INT Fit;
     PINT Dx;
     PTEXTOBJ TextObj;
 
@@ -587,7 +587,7 @@ BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
     _In_ HDC hDC,
-    _Out_ TMW_INTERNAL *pUnsafeTmwi,
+    _Out_ PTMW_INTERNAL pUnsafeTmwi,
     _In_ ULONG cj)
 {
     TMW_INTERNAL Tmwi;

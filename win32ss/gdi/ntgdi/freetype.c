@@ -5044,7 +5044,7 @@ TextIntGetTextExtentPoint(
     _In_ ULONG MaxExtent,
     _Out_ PINT Fit,
     _Out_writes_to_opt_(Count, *Fit) PINT Dx,
-    _Out_ LPSIZE Size,
+    _Out_ PSIZE Size,
     _In_ FLONG fl)
 {
     PFONTGDI FontGDI;
