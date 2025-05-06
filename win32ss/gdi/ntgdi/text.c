@@ -341,7 +341,7 @@ NtGdiGetTextExtentExW(
     PINT Dx;
     PTEXTOBJ TextObj;
 
-    if (Count < 0)
+    if ((LONG)Count < 0)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -488,9 +488,9 @@ BOOL
 APIENTRY
 NtGdiGetTextExtent(
     _In_ HDC hdc,
-    _In_reads_(cwc) LPCWSTR lpwsz,
+    _In_reads_(cwc) PCWCH lpwsz,
     _In_ INT cwc,
-    _Out_ LPSIZE psize,
+    _Out_ PSIZE psize,
     _In_ UINT flOpts)
 {
     return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, 0, NULL, NULL, psize, flOpts);
