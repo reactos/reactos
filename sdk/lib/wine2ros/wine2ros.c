@@ -47,7 +47,8 @@ static PSTR
 debugstr_quote_a(
     _Out_ PSTR pszBuf,
     _In_ SIZE_T cchBuf,
-    _In_opt_ PCSTR pszSrc)
+    _In_opt_ PCSTR pszSrc,
+    _In_ INT cchSrc)
 {
     PCH pch = pszBuf;
     PCCH pchSrc = pszSrc;
@@ -64,7 +65,7 @@ debugstr_quote_a(
     *pch++ = '"';
     --cchBuf;
 
-    for (; cchBuf > DEBUGSTR_QUOTE_TAIL_LEN; ++pchSrc)
+    for (; cchBuf > DEBUGSTR_QUOTE_TAIL_LEN && cchSrc > 0; ++pchSrc, --cchSrc)
     {
         switch (*pchSrc)
         {
@@ -115,7 +116,8 @@ static PSTR
 debugstr_quote_w(
     _Out_ PSTR pszBuf,
     _In_ SIZE_T cchBuf,
-    _In_opt_ PCWSTR pszSrc)
+    _In_opt_ PCWSTR pszSrc,
+    _In_ INT cchSrc)
 {
     PCH pch = pszBuf;
     PCWCH pchSrc = pszSrc;
@@ -132,7 +134,7 @@ debugstr_quote_w(
     *pch++ = '"';
     --cchBuf;
 
-    for (; cchBuf > DEBUGSTR_QUOTE_TAIL_LEN; ++pchSrc)
+    for (; cchBuf > DEBUGSTR_QUOTE_TAIL_LEN && cchSrc > 0; ++pchSrc, --cchSrc)
     {
         switch (*pchSrc)
         {
@@ -197,13 +199,34 @@ debugstr_next_buff(void)
 PCSTR
 debugstr_a(_In_opt_ PCSTR pszA)
 {
-    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA);
+    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA, -1);
 }
 
 PCSTR
 debugstr_w(_In_opt_ PCWSTR pszW)
 {
-    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW);
+    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW, -1);
+}
+
+PCSTR
+debugstr_wn(_In_opt_ PCWSTR s, INT n)
+{
+    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, s, n);
+}
+
+PCSTR
+wine_dbgstr_rect(_In_opt_ LPCRECT prc)
+{
+    PCHAR ptr;
+
+    if (!prc)
+        return "(null)";
+
+    ptr = debugstr_next_buff();
+
+    snprintf(ptr, DEBUGSTR_BUFF_SIZE, "{%ld, %ld, %ld, %ld}",
+             prc->left, prc->top, prc->right, prc->bottom);
+    return ptr;
 }
 
 PCSTR

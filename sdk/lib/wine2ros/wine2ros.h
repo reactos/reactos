@@ -16,7 +16,9 @@
     #define ERR_LEVEL   0x1
     #define TRACE_LEVEL 0x8
 
-    #define WINE_DEFAULT_DEBUG_CHANNEL(x) static PCSTR DbgDefaultChannel = #x;
+    #define WINE_DEFAULT_DEBUG_CHANNEL(x) \
+        static PCSTR DbgDefaultChannel = #x; \
+        static const PCSTR * const _DbgDefaultChannel_ = &DbgDefaultChannel;
 
     BOOL IntIsDebugChannelEnabled(_In_ PCSTR channel);
 
@@ -34,7 +36,9 @@
 
     PCSTR debugstr_a(_In_opt_ PCSTR pszA);
     PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
+    PCSTR debugstr_wn(_In_opt_ PCWSTR s, INT n);
     PCSTR debugstr_guid(_In_opt_ const GUID *id);
+    PCSTR wine_dbgstr_rect(_In_opt_ LPCRECT prc);
 #else
     #define WINE_DEFAULT_DEBUG_CHANNEL(x)
     #define IntIsDebugChannelEnabled(channel) FALSE
@@ -46,7 +50,9 @@
     #define UNIMPLEMENTED
     #define debugstr_a(pszA) ((PCSTR)NULL)
     #define debugstr_w(pszW) ((PCSTR)NULL)
+    #define debugstr_wn(s, n) ((PCSTR)NULL)
     #define debugstr_guid(id) ((PCSTR)NULL)
+    #define wine_dbgstr_rect(prc)
 #endif
 
 /* <wine/unicode.h> */

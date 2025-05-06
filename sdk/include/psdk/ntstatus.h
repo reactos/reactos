@@ -23,6 +23,8 @@
 #ifndef _NTSTATUS_
 #define _NTSTATUS_
 
+#include "inttypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
