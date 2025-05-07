@@ -17,7 +17,6 @@
 TODO:
     ** drag and drop support
     ** tooltips
-    ** handle change notifications
     ** Fix position of the items context menu
     ** Implement responding to theme change
 */
@@ -57,10 +56,10 @@ CISFBand::~CISFBand()
 HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
     // Create the toolbar.
-    HWND hwndToolbar;
-    hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
-        WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
-        hWndParent, NULL, 0, NULL);
+    DWORD style = WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER;
+    HWND hwndToolbar = ::CreateWindowEx(0, TOOLBARCLASSNAME, NULL, style,
+                                        CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+                                        hWndParent, NULL, 0, NULL);
     if (hwndToolbar == NULL)
         return E_FAIL;
 
@@ -68,7 +67,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     SubclassWindow(hwndToolbar);
 
     if (!m_textFlag)
-        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+        SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
 
     // Set the image list.
     HIMAGELIST* piml;
@@ -78,12 +77,12 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         DestroyWindow();
         return hr;
     }
-    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)piml);
 
     AddButtons();
 
     // Resize the toolbar, and then show it.
-    SendMessage(m_hWnd, TB_AUTOSIZE, 0, 0);
+    SendMessage(TB_AUTOSIZE, 0, 0);
 
     return hr;
 }
@@ -110,7 +109,7 @@ HRESULT CISFBand::AddButtons()
 
         TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, BTNS_AUTOSIZE, { 0 },
                         (DWORD_PTR)pidl, (INT_PTR)szText };
-        SendMessage(m_hWnd, TB_INSERTBUTTONW, i, (LPARAM)&tb);
+        SendMessage(TB_INSERTBUTTONW, i, (LPARAM)&tb);
     }
 
     return S_OK;
@@ -118,11 +117,13 @@ HRESULT CISFBand::AddButtons()
 
 void CISFBand::RefreshToolbar()
 {
-    while (::SendMessage(m_hWnd, TB_DELETEBUTTON, 0, 0))
+    while (SendMessage(TB_DELETEBUTTON, 0, 0))
         ;
 
     AddButtons();
-    ::SendMessage(m_hWnd, TB_AUTOSIZE, 0, 0);
+
+    SendMessage(TB_AUTOSIZE, 0, 0);
+
     if (m_Site)
         IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
 }
@@ -162,11 +163,11 @@ void CISFBand::RegisterChangeNotify()
 
 void CISFBand::UnregisterChangeNotify()
 {
-    if (m_uChangeNotify)
-    {
-        SHChangeNotifyDeregister(m_uChangeNotify);
-        m_uChangeNotify = 0;
-    }
+    if (!m_uChangeNotify)
+        return;
+
+    SHChangeNotifyDeregister(m_uChangeNotify);
+    m_uChangeNotify = 0;
 }
 
 /*****************************************************************************/
