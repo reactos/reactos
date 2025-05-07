@@ -213,7 +213,6 @@
 @ cdecl __doserrno()
 @ cdecl __dstbias() __p__dstbias
 @ cdecl __fpecode()
-@ stub __get_app_type
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
 @ extern __initenv MSVCRT___initenv
 @ cdecl __iob_func()
@@ -222,7 +221,6 @@
 @ cdecl __iscsymf(long)
 @ stdcall -arch=arm __jump_unwind(ptr ptr) ntdll.__jump_unwind
 @ extern __lc_codepage MSVCRT___lc_codepage
-@ stub __lc_collate
 @ extern __lc_collate_cp MSVCRT___lc_collate_cp
 @ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
@@ -369,8 +367,8 @@
 @ cdecl _control87(long long)
 @ cdecl _controlfp(long long)
 @ cdecl _controlfp_s(ptr long long)
-@ cdecl _copysign(double double) copysign
-@ cdecl -arch=!i386 _copysignf(float float) copysignf
+@ cdecl _copysign(double double) # copysign
+@ cdecl -arch=!i386 _copysignf(float float) # copysignf
 @ varargs _cprintf(str)
 @ varargs _cprintf_l(str ptr)
 # stub _cprintf_p(str)
@@ -479,7 +477,6 @@
 @ cdecl _fstat(long ptr)
 @ cdecl _fstat64(long ptr)
 @ cdecl _fstati64(long ptr)
-@ cdecl -ret64 _ftelli64(ptr)
 @ cdecl -arch=win32 _ftime(ptr) _ftime32
 @ cdecl -arch=win64 _ftime(ptr) _ftime64
 @ cdecl _ftime32(ptr)
@@ -488,7 +485,7 @@
 @ cdecl _ftime64_s(ptr)
 @ cdecl -arch=i386 -ret64 _ftol()
 @ cdecl -arch=i386 -ret64 _ftol2() _ftol
-@ cdecl -arch=i386 -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
+@ cdecl -arch=i386 -ret64 _ftol2_sse()
 # stub _ftol2_sse_excpt
 @ cdecl _fullpath(ptr str long)
 # stub _fullpath_dbg(ptr str long long str long)
@@ -560,9 +557,9 @@
 @ cdecl _i64tow_s(int64 ptr long long)
 @ cdecl _initterm(ptr ptr)
 @ cdecl _initterm_e(ptr ptr)
-@ stub -arch=i386 _inp(long)
-@ stub -arch=i386 _inpd(long)
-@ stub -arch=i386 _inpw(long)
+@ cdecl -arch=i386 _inp(long)
+@ cdecl -arch=i386 _inpd(long)
+@ cdecl -arch=i386 _inpw(long)
 @ cdecl _invalid_parameter(wstr wstr wstr long long)
 @ extern _iob MSVCRT__iob
 @ cdecl _isalnum_l(long ptr)
@@ -672,8 +669,8 @@
 @ cdecl _lock(long)
 @ cdecl _lock_file(ptr)
 @ cdecl _locking(long long long)
-@ cdecl _logb(double) logb
-@ cdecl -arch=!i386 _logbf(float) logbf
+@ cdecl _logb(double) # logb
+@ cdecl -arch=!i386 _logbf(float) # logbf
 @ cdecl -arch=i386 _longjmpex(ptr long) longjmp
 @ cdecl _lrotl(long long) MSVCRT__lrotl
 @ cdecl _lrotr(long long) MSVCRT__lrotr
@@ -844,14 +841,14 @@
 # stub -arch=win64 _msize_dbg(ptr long)
 @ cdecl _nextafter(double double) nextafter
 @ cdecl -arch=x86_64 _nextafterf(float float) nextafterf
-@ cdecl _onexit(ptr)
+@ extern _onexit # Declaring it as extern let us use the symbol from msvcrtex while having the __imp_ symbol defined in the import lib
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
 @ extern _osplatform MSVCRT__osplatform
 @ extern _osver MSVCRT__osver
-@ stub -arch=i386 _outp(long long)
-@ stub -arch=i386 _outpd(long long)
-@ stub -arch=i386 _outpw(long long)
+@ cdecl -arch=i386 _outp(long long)
+@ cdecl -arch=i386 _outpd(long long)
+@ cdecl -arch=i386 _outpw(long long)
 @ cdecl _pclose (ptr) _pclose
 @ extern _pctype MSVCRT__pctype
 @ extern _pgmptr MSVCRT__pgmptr
@@ -1256,11 +1253,11 @@
 @ cdecl asctime(ptr)
 @ cdecl asctime_s(ptr long ptr)
 @ cdecl asin(double) MSVCRT_asin
+@ cdecl -arch=!i386 asinf(float)
 @ cdecl atan(double) MSVCRT_atan
 @ cdecl atan2(double double)
-@ cdecl -arch=!i386 asinf(float)
-@ cdecl -arch=!i386 atanf(float) MSVCRT_atanf
 @ cdecl -arch=!i386 atan2f(float float)
+@ cdecl -arch=!i386 atanf(float) MSVCRT_atanf
 @ cdecl -private atexit(ptr) MSVCRT_atexit  # not imported to avoid conflicts with Mingw
 @ cdecl atof(str)
 @ cdecl atoi(str)
@@ -1314,7 +1311,6 @@
 @ cdecl freopen(str str ptr)
 @ cdecl freopen_s(ptr str str ptr)
 @ cdecl frexp(double ptr)
-@ cdecl -arch=x86_64 frexpf(float ptr)
 @ varargs fscanf(ptr str)
 @ varargs fscanf_s(ptr str)
 @ cdecl fseek(ptr long long)
@@ -1414,7 +1410,7 @@
 @ varargs scanf(str)
 @ varargs scanf_s(str)
 @ cdecl setbuf(ptr ptr)
-@ cdecl -arch=arm,x86_64 -norelay -private setjmp(ptr ptr) _setjmp
+@ cdecl -arch=arm,x86_64 -norelay setjmp(ptr ptr) _setjmp # FIXME: should be private, but is imported by ARM builds somehow
 @ cdecl setlocale(long str)
 @ cdecl setvbuf(ptr str long long)
 @ cdecl signal(long long)
@@ -1478,7 +1474,8 @@
 @ cdecl towupper(long)
 @ cdecl ungetc(long ptr)
 @ cdecl ungetwc(long ptr)
-# stub utime
+@ cdecl -arch=win32 utime(str ptr) _utime32
+@ cdecl -arch=win64 utime(str ptr) _utime64
 @ cdecl vfprintf(ptr str ptr)
 @ cdecl vfprintf_s(ptr str ptr)
 @ cdecl vfwprintf(ptr wstr ptr)
