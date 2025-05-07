@@ -27,6 +27,9 @@
 #define RTTI_USE_RVA 1
 #endif
 
+#ifdef _MSC_VER
+#define __ASM_VTABLE(name,funcs)
+#else
 #ifdef _WIN64
 
 #define VTABLE_ADD_FUNC(name) "\t.quad " THISCALL_NAME(name) "\n"
@@ -52,6 +55,7 @@
             funcs "\n\t.text")
 
 #endif /* _WIN64 */
+#endif // _MSC_VER
 
 #ifndef RTTI_USE_RVA
 
@@ -479,6 +483,10 @@ static inline void *rtti_rva( const void *ptr, uintptr_t base )
     return (void *)ptr;
 }
 
+#endif
+
+#ifdef __REACTOS__
+void * __thiscall type_info_vector_dtor(type_info * _this, unsigned int flags);
 #endif
 
 #define CREATE_TYPE_INFO_VTABLE \

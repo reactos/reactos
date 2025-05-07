@@ -24,6 +24,10 @@
 #include <fpieee.h>
 #include "cxx.h"
 
+#ifdef __REACTOS__
+#include "msvc_fwd_decl.h"
+#endif
+
 #define CXX_FRAME_MAGIC_VC6 0x19930520
 #define CXX_FRAME_MAGIC_VC7 0x19930521
 #define CXX_FRAME_MAGIC_VC8 0x19930522
@@ -137,7 +141,7 @@ typedef struct
 #define TYPE_FLAG_VOLATILE   2
 #define TYPE_FLAG_REFERENCE  8
 
-void WINAPI DECLSPEC_NORETURN _CxxThrowException(void*,const cxx_exception_type*);
+DECLSPEC_NORETURN void WINAPI _CxxThrowException(void*,const cxx_exception_type*);
 
 static inline BOOL is_cxx_exception( EXCEPTION_RECORD *rec )
 {

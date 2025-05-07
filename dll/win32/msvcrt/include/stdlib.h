@@ -297,6 +297,7 @@ static inline unsigned __int64 __cdecl strtoull(const char *ptr, char **endptr, 
 static inline void swab(char* src, char* dst, int len) { _swab(src, dst, len); }
 static inline char* ultoa(__msvcrt_ulong value, char* str, int radix) { return _ultoa(value, str, radix); }
 
+#ifndef __REACTOS__
 #ifdef __i386__
 static inline div_t __wine_msvcrt_div(int num, int denom)
 {
@@ -319,6 +320,7 @@ static inline ldiv_t __wine_msvcrt_ldiv(__msvcrt_long num, __msvcrt_long denom)
 #define div(num,denom) __wine_msvcrt_div(num,denom)
 #define ldiv(num,denom) __wine_msvcrt_ldiv(num,denom)
 #endif
+#endif /* !__REACTOS__ */
 
 #include <poppack.h>
 
