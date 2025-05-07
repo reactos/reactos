@@ -158,7 +158,7 @@ void CISFBand::RegisterChangeNotify(BOOL bRegister)
                                                  SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY,
                                                  1, &entry);
     }
-    else
+    else // De-register?
     {
         if (m_uChangeNotify)
         {
