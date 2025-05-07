@@ -8,8 +8,10 @@
 
 #pragma once
 
+#define WM_ISFBAND_CHANGE_NOTIFY (WM_USER + 100)
+
 class CISFBand :
-    public CWindow,
+    public CWindowImpl<CISFBand, CWindow>,
     public CComCoClass<CBandSiteMenu, &CLSID_ISFBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
@@ -27,11 +29,17 @@ class CISFBand :
     // Toolbar
     CComPtr<IShellFolder> m_pISF;
     PIDLIST_ABSOLUTE m_pidl;
+    UINT m_uChangeNotify;
 
     // Menu
     BOOL m_textFlag;
     BOOL m_iconFlag;
     BOOL m_QLaunch;
+
+    void RegisterChangeNotify();
+    void UnregisterChangeNotify();
+    HRESULT AddButtons();
+    void RefreshToolbar();
 
 public:
 
@@ -191,6 +199,16 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderBand, IShellFolderBand)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
+
+    LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
+    BEGIN_MSG_MAP(CISFBand)
+        MESSAGE_HANDLER(WM_ISFBAND_CHANGE_NOTIFY, OnChangeNotify)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+    END_MSG_MAP()
 };
 
 extern "C" HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv);

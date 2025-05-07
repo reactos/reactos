@@ -22,12 +22,15 @@ TODO:
     ** Implement responding to theme change
 */
 
+#define TIMERID_REFRESH 0xBEEF
+
 //*****************************************************************************************
 // *** CISFBand ***
 
 CISFBand::CISFBand() :
     m_BandID(0),
     m_pidl(NULL),
+    m_uChangeNotify(0),
     m_textFlag(true),
     m_iconFlag(true),
     m_QLaunch(false)
@@ -53,15 +56,16 @@ CISFBand::~CISFBand()
 *--*/
 HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
-    // Declare and initialize local constants.
-    const DWORD buttonStyles = BTNS_AUTOSIZE;
-
     // Create the toolbar.
-    m_hWnd = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
+    HWND hwndToolbar;
+    hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
         WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
         hWndParent, NULL, 0, NULL);
-    if (m_hWnd == NULL)
+    if (hwndToolbar == NULL)
         return E_FAIL;
+
+#undef SubclassWindow // Don't use SubclassWindow macro
+    SubclassWindow(hwndToolbar);
 
     if (!m_textFlag)
         SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
@@ -76,37 +80,93 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     }
     SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
 
-    // Enumerate objects
-    CComPtr<IEnumIDList> pEndl;
-    LPITEMIDLIST pidl;
-    STRRET stret;
-    hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS, &pEndl);
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        DestroyWindow();
-        return hr;
-    }
-
-    for (int i=0; pEndl->Next(1, &pidl, NULL) != S_FALSE; i++)
-    {
-         WCHAR sz[MAX_PATH];
-         int index = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);
-         hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &stret);
-         if (FAILED_UNEXPECTEDLY(hr))
-         {
-             StringCchCopyW(sz, MAX_PATH, L"<Unknown-Name>");
-         }
-         else
-             StrRetToBuf(&stret, pidl, sz, _countof(sz));
-
-         TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)pidl, (INT_PTR)sz };
-         SendMessage(m_hWnd, TB_INSERTBUTTONW, i, (LPARAM)&tb);
-    }
+    AddButtons();
 
     // Resize the toolbar, and then show it.
     SendMessage(m_hWnd, TB_AUTOSIZE, 0, 0);
 
     return hr;
+}
+
+HRESULT CISFBand::AddButtons()
+{
+    // Enumerate objects
+    CComPtr<IEnumIDList> pEndl;
+    LPITEMIDLIST pidl;
+    HRESULT hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &pEndl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    for (INT i = 0; pEndl->Next(1, &pidl, NULL) != S_FALSE; ++i)
+    {
+        WCHAR szText[MAX_PATH];
+        INT index = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);
+        STRRET strret;
+        hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &strret);
+        if (FAILED_UNEXPECTEDLY(hr))
+            StringCchCopyW(szText, _countof(szText), L"<Unknown-Name>");
+        else
+            StrRetToBuf(&strret, pidl, szText, _countof(szText));
+
+        TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, BTNS_AUTOSIZE, { 0 },
+                        (DWORD_PTR)pidl, (INT_PTR)szText };
+        SendMessage(m_hWnd, TB_INSERTBUTTONW, i, (LPARAM)&tb);
+    }
+
+    return S_OK;
+}
+
+void CISFBand::RefreshToolbar()
+{
+    while (::SendMessage(m_hWnd, TB_DELETEBUTTON, 0, 0))
+        ;
+
+    AddButtons();
+    ::SendMessage(m_hWnd, TB_AUTOSIZE, 0, 0);
+    if (m_Site)
+        IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+}
+
+LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam != TIMERID_REFRESH)
+        return 0;
+
+    KillTimer(wParam);
+    RefreshToolbar();
+    return 0;
+}
+
+LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    KillTimer(TIMERID_REFRESH);
+    SetTimer(TIMERID_REFRESH, 500);
+    return 0;
+}
+
+LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    KillTimer(TIMERID_REFRESH);
+    UnregisterChangeNotify();
+    return 0;
+}
+
+void CISFBand::RegisterChangeNotify()
+{
+    SHChangeNotifyEntry ntreg;
+    ntreg.pidl = m_pidl;
+    ntreg.fRecursive = FALSE;
+    m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
+                                             SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY, 1, &ntreg);
+}
+
+void CISFBand::UnregisterChangeNotify()
+{
+    if (m_uChangeNotify)
+    {
+        SHChangeNotifyDeregister(m_uChangeNotify);
+        m_uChangeNotify = 0;
+    }
 }
 
 /*****************************************************************************/
@@ -130,6 +190,8 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         hr = CreateSimpleToolbar(hwndParent);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+
+        RegisterChangeNotify();
 
         return S_OK;
     }
