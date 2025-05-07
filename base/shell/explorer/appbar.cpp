@@ -451,7 +451,7 @@ void CAppBarManager::RecomputeAllWorkareas()
     ::EnumDisplayMonitors(NULL, NULL, CAppBarManager::MonitorEnumProc, (LPARAM)this);
 }
 
-BOOL CAppBarManager::SetAutoHideBar(HWND hwndNewAutoHide, BOOL bSetOrReset, UINT uSide)
+BOOL CAppBarManager::SetAutoHideBar(HWND hwndTarget, BOOL bSetOrReset, UINT uSide)
 {
     HWND *phwndAutoHide = &m_ahwndAutoHide[uSide];
     if (!IsWindow(*phwndAutoHide))
@@ -460,12 +460,12 @@ BOOL CAppBarManager::SetAutoHideBar(HWND hwndNewAutoHide, BOOL bSetOrReset, UINT
     if (bSetOrReset) // Set?
     {
         if (!*phwndAutoHide)
-            *phwndAutoHide = hwndNewAutoHide;
-        return *phwndAutoHide == hwndNewAutoHide;
+            *phwndAutoHide = hwndTarget;
+        return *phwndAutoHide == hwndTarget;
     }
     else // Reset
     {
-        if (*phwndAutoHide == hwndNewAutoHide)
+        if (*phwndAutoHide == hwndTarget)
             *phwndAutoHide = NULL;
         return TRUE;
     }
@@ -474,11 +474,8 @@ BOOL CAppBarManager::SetAutoHideBar(HWND hwndNewAutoHide, BOOL bSetOrReset, UINT
 void CAppBarManager::OnAppBarActivationChange2(HWND hwndNewAutoHide, UINT uSide)
 {
     HWND hwndAutoHideBar = OnAppBarGetAutoHideBar(uSide);
-    if (hwndAutoHideBar)
-    {
-        if (hwndAutoHideBar != hwndNewAutoHide)
-            ::PostMessageW(GetTrayWnd(), TWM_SETZORDER, (WPARAM)hwndAutoHideBar, uSide);
-    }
+    if (hwndAutoHideBar && hwndAutoHideBar != hwndNewAutoHide)
+        ::PostMessageW(GetTrayWnd(), TWM_SETZORDER, (WPARAM)hwndAutoHideBar, uSide);
 }
 
 PAPPBAR_COMMAND
@@ -486,8 +483,7 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 {
     PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
 
-    if (pCopyData->cbData != sizeof(*pData) ||
-        pData->abd.cbSize != sizeof(pData->abd))
+    if (pCopyData->cbData != sizeof(*pData) || pData->abd.cbSize != sizeof(pData->abd))
     {
         ERR("Invalid AppBar message\n");
         return NULL;
@@ -556,8 +552,8 @@ BOOL CAppBarManager::OnAppBarSetAutoHideBar(_Inout_ PAPPBAR_COMMAND pData)
 {
     if (pData->abd.uEdge >= _countof(m_ahwndAutoHide))
         return FALSE;
-    HWND hWnd = (HWND)UlongToHandle(pData->abd.hWnd32);
-    return SetAutoHideBar(hWnd, (BOOL)pData->abd.lParam64, pData->abd.uEdge);
+    HWND hwndTarget = (HWND)UlongToHandle(pData->abd.hWnd32);
+    return SetAutoHideBar(hwndTarget, (BOOL)pData->abd.lParam64, pData->abd.uEdge);
 }
 
 // ABM_SETSTATE

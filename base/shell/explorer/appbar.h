@@ -61,7 +61,7 @@ protected:
     void ComputeHiddenRect(_Inout_ PRECT prc, _In_ UINT uSide);
     PAPPBAR_COMMAND GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
     void GetDockedRect(_Out_ PRECT prcDocked);
-    BOOL SetAutoHideBar(HWND hwndNewAutoHide, BOOL bSetOrReset, UINT uSide);
+    BOOL SetAutoHideBar(HWND hwndTarget, BOOL bSetOrReset, UINT uSide);
     void OnAppBarActivationChange2(HWND hwndNewAutoHide, UINT uSide);
 
     BOOL OnAppBarNew(_In_ const APPBAR_COMMAND *pData);
