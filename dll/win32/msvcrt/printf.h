@@ -605,7 +605,11 @@ static inline int FUNC_NAME(pf_output_fp)(FUNC_NAME(puts_clbk) pf_puts, void *pu
         BOOL standard_rounding)
 {
     int e2, e10 = 0, round_pos, round_limb, radix_pos, first_limb_len, i, len, r, ret;
+#ifdef _MSC_VER
+    BYTE bnum_data[FIELD_OFFSET(struct bnum, data) + BNUM_PREC64 * sizeof(DWORD)];
+#else
     BYTE bnum_data[FIELD_OFFSET(struct bnum, data[BNUM_PREC64])];
+#endif
     struct bnum *b = (struct bnum*)bnum_data;
     APICHAR buf[LIMB_DIGITS + 1];
     BOOL trim_tail = FALSE, round_up = FALSE;

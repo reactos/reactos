@@ -601,8 +601,11 @@ int CDECL _except_handler3(PEXCEPTION_RECORD rec,
         rec->ExceptionCode, rec->ExceptionFlags, rec->ExceptionAddress,
         frame->handler, context, dispatcher);
 
+#ifdef _MSC_VER
+  __asm{ cld }
+#else
   __asm__ __volatile__ ("cld");
-
+#endif
   if (rec->ExceptionFlags & (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND))
   {
     /* Unwinding the current frame */
