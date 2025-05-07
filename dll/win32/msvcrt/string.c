@@ -2786,6 +2786,7 @@ int __cdecl memcmp(const void *ptr1, const void *ptr2, size_t n)
     return memcmp_blocks(p1, p2, n);
 }
 
+#ifndef __REACTOS__
 #if defined(__i386__) || (defined(__x86_64__) && !defined(__arm64ec__))
 
 #ifdef __i386__
@@ -3154,6 +3155,7 @@ void * __cdecl memmove(void *dst, const void *src, size_t n)
 #endif
 }
 #undef MERGE
+#endif /* !__REACTOS__ */
 
 /*********************************************************************
  *                  memcpy   (MSVCRT.@)
