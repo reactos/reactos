@@ -3081,6 +3081,7 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    // TWM_SETZORDER
     LRESULT OnSetZOrder(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return ::SetWindowPos(m_hWnd, (HWND)wParam, 0, 0, 0, 0,
