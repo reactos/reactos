@@ -493,7 +493,7 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 }
 
 // ABM_GETSTATE
-UINT CAppBarManager::OnAppBarGetState(_Inout_ PAPPBAR_COMMAND pData)
+UINT CAppBarManager::OnAppBarGetState()
 {
     return (IsAutoHideState() ? ABS_AUTOHIDE : 0) | (IsAlwaysOnTop() ? ABS_ALWAYSONTOP : 0);
 }
@@ -516,7 +516,7 @@ BOOL CAppBarManager::OnAppBarGetTaskbarPos(_Inout_ PAPPBAR_COMMAND pData)
 }
 
 // ABM_ACTIVATE, ABM_WINDOWPOSCHANGED
-void CAppBarManager::OnAppBarActivationChange(_Inout_ PAPPBAR_COMMAND pData)
+void CAppBarManager::OnAppBarActivationChange(_In_ const APPBAR_COMMAND *pData)
 {
     HWND hWnd = (HWND)UlongToHandle(pData->abd.hWnd32);
     PAPPBAR pAppBar = FindAppBar(hWnd);
@@ -548,7 +548,7 @@ HWND CAppBarManager::OnAppBarGetAutoHideBar(_In_ UINT uSide)
 }
 
 // ABM_SETAUTOHIDEBAR
-BOOL CAppBarManager::OnAppBarSetAutoHideBar(_Inout_ PAPPBAR_COMMAND pData)
+BOOL CAppBarManager::OnAppBarSetAutoHideBar(_In_ const APPBAR_COMMAND *pData)
 {
     if (pData->abd.uEdge >= _countof(m_ahwndAutoHide))
         return FALSE;
@@ -588,7 +588,7 @@ LRESULT CAppBarManager::OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
             OnAppBarSetPos(pData);
             break;
         case ABM_GETSTATE:
-            return OnAppBarGetState(pData);
+            return OnAppBarGetState();
         case ABM_GETTASKBARPOS:
             return OnAppBarGetTaskbarPos(pData);
         case ABM_ACTIVATE:

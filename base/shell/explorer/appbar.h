@@ -68,11 +68,11 @@ protected:
     void OnAppBarRemove(_In_ const APPBAR_COMMAND *pData);
     void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData);
     void OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData);
-    UINT OnAppBarGetState(_Inout_ PAPPBAR_COMMAND pData);
+    UINT OnAppBarGetState();
     BOOL OnAppBarGetTaskbarPos(_Inout_ PAPPBAR_COMMAND pData);
-    void OnAppBarActivationChange(_Inout_ PAPPBAR_COMMAND pData);
+    void OnAppBarActivationChange(_In_ const APPBAR_COMMAND *pData);
     HWND OnAppBarGetAutoHideBar(_In_ UINT uSide);
-    BOOL OnAppBarSetAutoHideBar(_Inout_ PAPPBAR_COMMAND pData);
+    BOOL OnAppBarSetAutoHideBar(_In_ const APPBAR_COMMAND *pData);
     HRESULT OnAppBarSetState(UINT uState);
 
     void OnAppBarNotifyAll(
