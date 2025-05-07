@@ -12,7 +12,7 @@
 CAppBarManager::CAppBarManager()
     : m_hAppBarDPA(NULL)
 {
-    ZeroMemory(m_ahwndAutoHide, sizeof(m_ahwndAutoHide));
+    ZeroMemory(m_ahwndAutoHideBars, sizeof(m_ahwndAutoHideBars));
 }
 
 CAppBarManager::~CAppBarManager()
@@ -453,7 +453,7 @@ void CAppBarManager::RecomputeAllWorkareas()
 
 BOOL CAppBarManager::SetAutoHideBar(HWND hwndTarget, BOOL bSetOrReset, UINT uSide)
 {
-    HWND *phwndAutoHide = &m_ahwndAutoHide[uSide];
+    HWND *phwndAutoHide = &m_ahwndAutoHideBars[uSide];
     if (!IsWindow(*phwndAutoHide))
         *phwndAutoHide = NULL;
 
@@ -529,7 +529,7 @@ void CAppBarManager::OnAppBarActivationChange(_In_ const APPBAR_COMMAND *pData)
     HWND hwndAppBar = pAppBar->hWnd;
     for (UINT uSide = ABE_LEFT; uSide <= ABE_BOTTOM; ++uSide)
     {
-        if (m_ahwndAutoHide[uSide] == hwndAppBar && uSide != pAppBar->uEdge)
+        if (m_ahwndAutoHideBars[uSide] == hwndAppBar && uSide != pAppBar->uEdge)
             return;
     }
 
@@ -539,18 +539,18 @@ void CAppBarManager::OnAppBarActivationChange(_In_ const APPBAR_COMMAND *pData)
 // ABM_GETAUTOHIDEBAR
 HWND CAppBarManager::OnAppBarGetAutoHideBar(_In_ UINT uSide)
 {
-    if (uSide >= _countof(m_ahwndAutoHide))
+    if (uSide >= _countof(m_ahwndAutoHideBars))
         return NULL;
 
-    if (!::IsWindow(m_ahwndAutoHide[uSide]))
-        m_ahwndAutoHide[uSide] = NULL;
-    return m_ahwndAutoHide[uSide];
+    if (!::IsWindow(m_ahwndAutoHideBars[uSide]))
+        m_ahwndAutoHideBars[uSide] = NULL;
+    return m_ahwndAutoHideBars[uSide];
 }
 
 // ABM_SETAUTOHIDEBAR
 BOOL CAppBarManager::OnAppBarSetAutoHideBar(_In_ const APPBAR_COMMAND *pData)
 {
-    if (pData->abd.uEdge >= _countof(m_ahwndAutoHide))
+    if (pData->abd.uEdge >= _countof(m_ahwndAutoHideBars))
         return FALSE;
     HWND hwndTarget = (HWND)UlongToHandle(pData->abd.hWnd32);
     return SetAutoHideBar(hwndTarget, (BOOL)pData->abd.lParam64, pData->abd.uEdge);

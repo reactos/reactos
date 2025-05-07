@@ -51,7 +51,7 @@ public:
 
 protected:
     HDPA m_hAppBarDPA; // DPA (Dynamic Pointer Array)
-    HWND m_ahwndAutoHide[4]; // The side --> auto hide window
+    HWND m_ahwndAutoHideBars[4]; // The side --> auto-hide window
 
     PAPPBAR FindAppBar(_In_ HWND hwndAppBar) const;
     void EliminateAppBar(_In_ INT iItem);
