@@ -37,8 +37,7 @@ class CISFBand :
     BOOL m_iconFlag;
     BOOL m_QLaunch;
 
-    void RegisterChangeNotify();
-    void UnregisterChangeNotify();
+    void RegisterChangeNotify(BOOL bRegister);
     HRESULT AddToolbarButtons();
     void DeleteToolbarButtons();
     void RefreshToolbar();
@@ -183,6 +182,10 @@ public:
         UINT uFlags
     ) override;
 
+    LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
 //*****************************************************************************************************
 
     DECLARE_REGISTRY_RESOURCEID(IDR_ISFBAND)
@@ -201,10 +204,6 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderBand, IShellFolderBand)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
-
-    LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BEGIN_MSG_MAP(CISFBand)
         MESSAGE_HANDLER(WM_ISFBAND_CHANGE_NOTIFY, OnChangeNotify)

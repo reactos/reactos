@@ -14,6 +14,8 @@
 #include <wingdi.h>
 #include <uxtheme.h>
 
+#undef SubclassWindow // Don't use SubclassWindow macro
+
 /*
 TODO:
     ** drag and drop support
@@ -52,7 +54,6 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     if (!hwndToolbar)
         return E_FAIL;
 
-#undef SubclassWindow // Don't use SubclassWindow macro
     SubclassWindow(hwndToolbar);
 
     if (!m_textFlag)
@@ -104,11 +105,11 @@ HRESULT CISFBand::AddToolbarButtons()
 void CISFBand::DeleteToolbarButtons()
 {
     TBBUTTON tb;
-    for (INT i = 0; SendMessage(TB_GETBUTTON, i, (LPARAM)&tb); ++i)
+    while (SendMessage(TB_GETBUTTON, 0, (LPARAM)&tb))
+    {
         CoTaskMemFree((LPITEMIDLIST)tb.dwData);
-
-    while (SendMessage(TB_DELETEBUTTON, 0, 0))
-        ;
+        SendMessage(TB_DELETEBUTTON, 0, 0);
+    }
 }
 
 void CISFBand::RefreshToolbar()
@@ -140,7 +141,7 @@ LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     KillTimer(TIMERID_REFRESH);
-    UnregisterChangeNotify();
+    RegisterChangeNotify(FALSE);
     ShowWindow(SW_HIDE);
     DeleteToolbarButtons();
     UnsubclassWindow();
@@ -148,20 +149,23 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     return 0;
 }
 
-void CISFBand::RegisterChangeNotify()
+void CISFBand::RegisterChangeNotify(BOOL bRegister)
 {
-    SHChangeNotifyEntry entry = { m_pidl, FALSE };
-    m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
-                                             SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY, 1, &entry);
-}
-
-void CISFBand::UnregisterChangeNotify()
-{
-    if (!m_uChangeNotify)
-        return;
-
-    SHChangeNotifyDeregister(m_uChangeNotify);
-    m_uChangeNotify = 0;
+    if (bRegister)
+    {
+        SHChangeNotifyEntry entry = { m_pidl, FALSE };
+        m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
+                                                 SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY,
+                                                 1, &entry);
+    }
+    else
+    {
+        if (m_uChangeNotify)
+        {
+            SHChangeNotifyDeregister(m_uChangeNotify);
+            m_uChangeNotify = 0;
+        }
+    }
 }
 
 /*****************************************************************************/
@@ -186,8 +190,7 @@ void CISFBand::UnregisterChangeNotify()
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        RegisterChangeNotify();
-
+        RegisterChangeNotify(TRUE);
         return S_OK;
     }
 
