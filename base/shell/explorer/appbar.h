@@ -99,8 +99,8 @@ protected:
     virtual BOOL IsAutoHideState() const = 0;
     virtual BOOL IsHidingState() const = 0;
     virtual BOOL IsAlwaysOnTop() const = 0;
-    virtual HMONITOR GetMonitor() const = 0;
-    virtual HMONITOR GetPreviousMonitor() const = 0;
+    virtual HMONITOR& GetMonitor() = 0;
+    virtual HMONITOR& GetPreviousMonitor() = 0;
     virtual INT GetPosition() const = 0;
     virtual const RECT* GetTrayRect() = 0;
     virtual HWND GetTrayWnd() const = 0;

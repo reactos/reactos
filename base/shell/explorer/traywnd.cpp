@@ -1462,14 +1462,13 @@ GetPrimaryScreenRect:
                    without user interaction. */
                 rcTray = m_TrayRects[m_Position];
 
-                if (g_TaskbarSettings.sr.AutoHide)
+                if (IsAutoHideState())
                 {
                     rcTray.left += m_AutoHideOffset.cx;
                     rcTray.right += m_AutoHideOffset.cx;
                     rcTray.top += m_AutoHideOffset.cy;
                     rcTray.bottom += m_AutoHideOffset.cy;
                 }
-
             }
 
 ChangePos:
@@ -1543,7 +1542,7 @@ ChangePos:
 
         /* If AutoHide is false then change the workarea to exclude
            the area that the taskbar covers. */
-        if (!g_TaskbarSettings.sr.AutoHide)
+        if (!IsAutoHideState())
         {
             switch (m_Position)
             {
@@ -1902,49 +1901,30 @@ ChangePos:
 
     void ProcessMouseTracking()
     {
-        RECT rcCurrent;
         POINT pt;
-        BOOL over;
-        UINT state = m_AutoHideState;
-
         GetCursorPos(&pt);
+
+        RECT rcCurrent;
         GetWindowRect(&rcCurrent);
-        over = PtInRect(&rcCurrent, pt);
 
-        if (m_StartButton.SendMessage( BM_GETSTATE, 0, 0) != BST_UNCHECKED)
-        {
+        BOOL over = PtInRect(&rcCurrent, pt);
+        if (m_StartButton.SendMessage(BM_GETSTATE, 0, 0) != BST_UNCHECKED)
             over = TRUE;
-        }
 
+        UINT state = m_AutoHideState;
         if (over)
         {
             if (state == AUTOHIDE_HIDING)
-            {
-                TRACE("AutoHide cancelling hide.\n");
-                m_AutoHideState = AUTOHIDE_SHOWING;
-                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
-            }
+                StartShowHideAnimation(TRUE);
             else if (state == AUTOHIDE_HIDDEN)
-            {
-                TRACE("AutoHide starting show.\n");
-                m_AutoHideState = AUTOHIDE_SHOWING;
-                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_SHOW, NULL);
-            }
+                Unhide();
         }
         else
         {
             if (state == AUTOHIDE_SHOWING)
-            {
-                TRACE("AutoHide cancelling show.\n");
-                m_AutoHideState = AUTOHIDE_HIDING;
-                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
-            }
+                StartShowHideAnimation(FALSE);
             else if (state == AUTOHIDE_SHOWN)
-            {
-                TRACE("AutoHide starting hide.\n");
-                m_AutoHideState = AUTOHIDE_HIDING;
-                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
-            }
+                WaitForHide();
 
             KillTimer(TIMER_ID_MOUSETRACK);
         }
@@ -1994,7 +1974,6 @@ ChangePos:
 
             /* fallthrough */
         case AUTOHIDE_HIDDEN:
-
             switch (m_Position)
             {
             case ABE_LEFT:
@@ -2054,7 +2033,6 @@ ChangePos:
 
             /* fallthrough */
         case AUTOHIDE_SHOWN:
-
             KillTimer(TIMER_ID_AUTOHIDE);
             m_AutoHideState = AUTOHIDE_SHOWN;
             break;
@@ -2062,10 +2040,6 @@ ChangePos:
 
         SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
     }
-
-
-
-
 
     /**********************************************************
      *    ##### taskbar drawing #####
@@ -2127,10 +2101,6 @@ ChangePos:
         ReleaseDC(hdc);
         return 0;
     }
-
-
-
-
 
     /*
      * ITrayWindow
@@ -2370,10 +2340,10 @@ ChangePos:
 
         InitShellServices(&m_ShellServices);
 
-        if (g_TaskbarSettings.sr.AutoHide)
+        if (IsAutoHideState())
         {
-            m_AutoHideState = AUTOHIDE_HIDING;
-            SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
+            Unhide();
+            WaitForHide();
         }
 
         /* Set the initial lock state in the band site */
@@ -2689,6 +2659,7 @@ ChangePos:
             /* Remove the clipping on multi monitor systems while dragging around */
             ApplyClipping(FALSE);
         }
+        m_PreviousMonitor = m_Monitor;
         return TRUE;
     }
 
@@ -3196,7 +3167,7 @@ HandleTrayContextMenu:
     {
         SendMessage(m_TrayNotify, uMsg, wParam, lParam);
 
-        if (g_TaskbarSettings.sr.AutoHide)
+        if (IsAutoHideState())
         {
             SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
         }
@@ -3295,6 +3266,29 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    // WM_ACTIVATE
+    LRESULT OnActivate(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        OnAppBarActivationChange2(m_hWnd, m_Position);
+        if (wParam) // Activate || Minimized
+        {
+            Unhide();
+        }
+        else
+        {
+            SendMessage(WM_CHANGEUISTATE, MAKELONG(UIS_SET, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
+            IUnknown_UIActivateIO(m_TrayBandSite, FALSE, NULL);
+        }
+        return 0;
+    }
+
+    // WM_SETFOCUS
+    LRESULT OnSetFocus(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        IUnknown_UIActivateIO(m_TrayBandSite, TRUE, NULL);
+        return 0;
+    }
+
     LRESULT OnRebarAutoSize(INT code, LPNMHDR nmhdr, BOOL& bHandled)
     {
 #if 0
@@ -3355,7 +3349,7 @@ HandleTrayContextMenu:
         ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
 
         /* Toggle autohide */
-        if (newSettings->sr.AutoHide != g_TaskbarSettings.sr.AutoHide)
+        if (newSettings->sr.AutoHide != IsAutoHideState())
             SetAutoHideState(newSettings->sr.AutoHide);
 
         /* Toggle lock state */
@@ -3431,6 +3425,8 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
+        MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
@@ -3577,8 +3573,8 @@ protected:
     BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
     BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
     BOOL IsAlwaysOnTop() const override { return g_TaskbarSettings.sr.AlwaysOnTop; }
-    HMONITOR GetMonitor() const override { return m_Monitor; }
-    HMONITOR GetPreviousMonitor() const override { return m_PreviousMonitor; }
+    HMONITOR& GetMonitor() override { return m_Monitor; }
+    HMONITOR& GetPreviousMonitor() override { return m_PreviousMonitor; }
     INT GetPosition() const override { return m_Position; }
     const RECT* GetTrayRect() override { return &m_TrayRects[m_Position]; }
     HWND GetTrayWnd() const override { return m_hWnd; }
@@ -3601,6 +3597,32 @@ protected:
         g_TaskbarSettings.sr.AlwaysOnTop = bAlwaysOnTop;
         HWND hwndInsertAfter = (bAlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM);
         SetWindowPos(hwndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    }
+
+    void WaitForHide()
+    {
+        TRACE("WaitForHide()\n");
+#if 0 // This needs generic auto-hide code
+        if (!SetAutoHideBar(m_hWnd, TRUE, m_Position))
+            SetAutoHideState(FALSE);
+#else
+        m_AutoHideState = AUTOHIDE_HIDING;
+        SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
+#endif
+    }
+
+    void Unhide()
+    {
+        TRACE("Unhide()\n");
+        m_AutoHideState = AUTOHIDE_SHOWING;
+        SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_SHOW, NULL);
+    }
+
+    void StartShowHideAnimation(BOOL bShowing)
+    {
+        TRACE("StartShowHideAnimation(%d)\n", bShowing);
+        m_AutoHideState = (bShowing ? AUTOHIDE_SHOWING : AUTOHIDE_HIDING);
+        SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
     }
 };
 
