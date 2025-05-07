@@ -24,7 +24,7 @@ TODO:
     ** Implement responding to theme change
 */
 
-#define TIMERID_REFRESH 0xBEEFCAFE
+#define TIMERID_DELAYED_REFRESH 0xBEEFCAFE
 #define TIMER_REFRESH_DELAY 500
 
 //*****************************************************************************************
@@ -123,7 +123,7 @@ void CISFBand::RefreshToolbar()
 
 LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    if (wParam != TIMERID_REFRESH)
+    if (wParam != TIMERID_DELAYED_REFRESH)
         return 0;
 
     KillTimer(wParam);
@@ -133,14 +133,14 @@ LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
 
 LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    KillTimer(TIMERID_REFRESH);
-    SetTimer(TIMERID_REFRESH, TIMER_REFRESH_DELAY);
+    KillTimer(TIMERID_DELAYED_REFRESH);
+    SetTimer(TIMERID_DELAYED_REFRESH, TIMER_REFRESH_DELAY);
     return 0;
 }
 
 LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    KillTimer(TIMERID_REFRESH);
+    KillTimer(TIMERID_DELAYED_REFRESH);
     RegisterChangeNotify(FALSE);
     ShowWindow(SW_HIDE);
     DeleteToolbarButtons();
