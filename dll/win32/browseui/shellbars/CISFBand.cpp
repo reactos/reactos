@@ -40,7 +40,6 @@ CISFBand::CISFBand() :
 
 CISFBand::~CISFBand()
 {
-    CloseDW(0);
 }
 
 HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
@@ -142,6 +141,10 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 {
     KillTimer(TIMERID_REFRESH);
     UnregisterChangeNotify();
+    ShowWindow(SW_HIDE);
+    DeleteToolbarButtons();
+    UnsubclassWindow();
+    bHandled = FALSE;
     return 0;
 }
 
@@ -237,13 +240,7 @@ void CISFBand::UnregisterChangeNotify()
     {
         if (m_hWnd)
         {
-            ShowWindow(SW_HIDE);
-
-            DeleteToolbarButtons();
-
             DestroyWindow();
-
-            m_hWnd = NULL;
             return S_OK;
         }
 
