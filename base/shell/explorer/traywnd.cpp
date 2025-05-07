@@ -1915,16 +1915,32 @@ ChangePos:
         if (over)
         {
             if (state == AUTOHIDE_HIDING)
-                StartShowHideAnimation(TRUE);
+            {
+                TRACE("AutoHide cancelling hide.\n");
+                m_AutoHideState = AUTOHIDE_SHOWING;
+                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
+            }
             else if (state == AUTOHIDE_HIDDEN)
-                Unhide();
+            {
+                TRACE("AutoHide starting show.\n");
+                m_AutoHideState = AUTOHIDE_SHOWING;
+                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_SHOW, NULL);
+            }
         }
         else
         {
             if (state == AUTOHIDE_SHOWING)
-                StartShowHideAnimation(FALSE);
+            {
+                TRACE("AutoHide cancelling show.\n");
+                m_AutoHideState = AUTOHIDE_HIDING;
+                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
+            }
             else if (state == AUTOHIDE_SHOWN)
-                WaitForHide();
+            {
+                TRACE("AutoHide starting hide.\n");
+                m_AutoHideState = AUTOHIDE_HIDING;
+                SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
+            }
 
             KillTimer(TIMER_ID_MOUSETRACK);
         }
@@ -2342,8 +2358,8 @@ ChangePos:
 
         if (IsAutoHideState())
         {
-            Unhide();
-            WaitForHide();
+            m_AutoHideState = AUTOHIDE_HIDING;
+            SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
         }
 
         /* Set the initial lock state in the band site */
@@ -3270,11 +3286,7 @@ HandleTrayContextMenu:
     LRESULT OnActivate(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         OnAppBarActivationChange2(m_hWnd, m_Position);
-        if (wParam) // Activate || Minimized
-        {
-            Unhide();
-        }
-        else
+        if (!wParam) // !(Activate || Minimized)
         {
             SendMessage(WM_CHANGEUISTATE, MAKELONG(UIS_SET, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
             IUnknown_UIActivateIO(m_TrayBandSite, FALSE, NULL);
@@ -3597,32 +3609,6 @@ protected:
         g_TaskbarSettings.sr.AlwaysOnTop = bAlwaysOnTop;
         HWND hwndInsertAfter = (bAlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM);
         SetWindowPos(hwndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-    }
-
-    void WaitForHide()
-    {
-        TRACE("WaitForHide()\n");
-#if 0 // This needs generic auto-hide code
-        if (!SetAutoHideBar(m_hWnd, TRUE, m_Position))
-            SetAutoHideState(FALSE);
-#else
-        m_AutoHideState = AUTOHIDE_HIDING;
-        SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
-#endif
-    }
-
-    void Unhide()
-    {
-        TRACE("Unhide()\n");
-        m_AutoHideState = AUTOHIDE_SHOWING;
-        SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_SHOW, NULL);
-    }
-
-    void StartShowHideAnimation(BOOL bShowing)
-    {
-        TRACE("StartShowHideAnimation(%d)\n", bShowing);
-        m_AutoHideState = (bShowing ? AUTOHIDE_SHOWING : AUTOHIDE_HIDING);
-        SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
     }
 };
 
