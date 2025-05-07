@@ -48,8 +48,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
     // Create the toolbar.
     DWORD style = WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER;
-    HWND hwndToolbar = ::CreateWindowEx(0, TOOLBARCLASSNAME, NULL, style,
-                                        CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+    HWND hwndToolbar = ::CreateWindowEx(0, TOOLBARCLASSNAME, NULL, style, 0, 0, 0, 0,
                                         hWndParent, NULL, 0, NULL);
     if (!hwndToolbar)
         return E_FAIL;
