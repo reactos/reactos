@@ -142,7 +142,7 @@ ProcessDeviceClassChangeEvent(
             ((pNotifyData->ulFlags & DEVICE_NOTIFY_ALL_INTERFACE_CLASSES) ||
              (UuidEqual(&PnpEvent->DeviceClass.ClassGuid, &pNotifyData->ClassGuid, &RpcStatus))))
         {
-            if ((pNotifyData->ulFlags & DEVICE_NOTIFY_WINDOW_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
+            if ((pNotifyData->ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
             {
                 dwSize = sizeof(DEV_BROADCAST_DEVICEINTERFACE_W) + wcslen(PnpEvent->DeviceClass.SymbolicLinkName) * sizeof(WCHAR);
                 pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
@@ -165,7 +165,7 @@ ProcessDeviceClassChangeEvent(
 
                 HeapFree(GetProcessHeap(), 0, pData);
             }
-            else
+            else if ((pNotifyData->ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_SERVICE_HANDLE)
             {
                 DPRINT1("Service notification is not implemented yet!\n");
             }
