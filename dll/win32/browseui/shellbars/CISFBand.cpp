@@ -80,7 +80,7 @@ HRESULT CISFBand::AddToolbarButtons()
         return hr;
 
     LPITEMIDLIST pidl;
-    for (INT i = 0; pEnum->Next(1, &pidl, NULL) != S_FALSE; ++i)
+    for (INT i = 0; pEnum->Next(1, &pidl, NULL) == S_OK; ++i)
     {
         STRRET strret;
         hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &strret);
