@@ -62,14 +62,14 @@ _ACRTIMP void __cdecl _ftime64(struct __timeb64*);
 #endif
 
 #ifdef _USE_32BIT_TIME_T
-static inline void __cdecl _ftime(struct _timeb *tb) { return _ftime32((struct __timeb32*)tb); }
+static inline void __cdecl _ftime(struct _timeb *tb) { _ftime32((struct __timeb32*)tb); }
 #else
-static inline void __cdecl _ftime(struct _timeb *tb) { return _ftime64((struct __timeb64*)tb); }
+static inline void __cdecl _ftime(struct _timeb *tb) { _ftime64((struct __timeb64*)tb); }
 #endif
 
 #define timeb _timeb
 
-static inline void ftime(struct _timeb* ptr) { return _ftime(ptr); }
+static inline void ftime(struct _timeb* ptr) { _ftime(ptr); }
 
 #include <poppack.h>
 

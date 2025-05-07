@@ -16,6 +16,10 @@
 #define _NLSCMP_DEFINED
 #endif
 
+#ifdef _MSC_VER
+#pragma function(strset)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -31,6 +31,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 static unsigned int output_format;
 
+#ifdef _MSC_VER
+#pragma function(_byteswap_ushort, _byteswap_ulong, _byteswap_uint64)
+#endif
+
 /*********************************************************************
  *		_beep (MSVCRT.@)
  */

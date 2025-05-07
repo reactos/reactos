@@ -36,6 +36,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
+#ifdef _MSC_VER
+#pragma function(_strset,memchr,memcmp,memcpy,memset,strcat,strcmp,strcpy,strlen)
+#endif
+
 /*********************************************************************
  *		_mbsdup (MSVCRT.@)
  *		_strdup (MSVCRT.@)
@@ -978,13 +982,21 @@ struct fpnum fpnum_parse(wchar_t (*get)(void *ctx), void (*unget)(void *ctx),
        void *ctx, pthreadlocinfo locinfo, BOOL ldouble)
 {
     if(!ldouble) {
+#ifdef _MSC_VER
+        BYTE bnum_data[FIELD_OFFSET(struct bnum, data) + BNUM_PREC64 * sizeof(DWORD)];
+#else
         BYTE bnum_data[FIELD_OFFSET(struct bnum, data[BNUM_PREC64])];
+#endif
         struct bnum *b = (struct bnum*)bnum_data;
 
         b->size = BNUM_PREC64;
         return fpnum_parse_bnum(get, unget, ctx, locinfo, ldouble, b);
     } else {
+#ifdef _MSC_VER
+        BYTE bnum_data[FIELD_OFFSET(struct bnum, data) + BNUM_PREC80 * sizeof(DWORD)];
+#else
         BYTE bnum_data[FIELD_OFFSET(struct bnum, data[BNUM_PREC80])];
+#endif
         struct bnum *b = (struct bnum*)bnum_data;
 
         b->size = BNUM_PREC80;
