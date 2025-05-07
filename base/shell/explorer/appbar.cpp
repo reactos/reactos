@@ -451,7 +451,7 @@ void CAppBarManager::RecomputeAllWorkareas()
     ::EnumDisplayMonitors(NULL, NULL, CAppBarManager::MonitorEnumProc, (LPARAM)this);
 }
 
-BOOL CAppBarManager::SetAutoHideBar(HWND hwndTarget, BOOL bSetOrReset, UINT uSide)
+BOOL CAppBarManager::SetAutoHideBar(_In_ HWND hwndTarget, _In_ BOOL bSetOrReset, _In_ UINT uSide)
 {
     HWND *phwndAutoHide = &m_ahwndAutoHideBars[uSide];
     if (!IsWindow(*phwndAutoHide))
@@ -471,7 +471,7 @@ BOOL CAppBarManager::SetAutoHideBar(HWND hwndTarget, BOOL bSetOrReset, UINT uSid
     }
 }
 
-void CAppBarManager::OnAppBarActivationChange2(HWND hwndNewAutoHide, UINT uSide)
+void CAppBarManager::OnAppBarActivationChange2(_In_ HWND hwndNewAutoHide, _In_ UINT uSide)
 {
     HWND hwndAutoHideBar = OnAppBarGetAutoHideBar(uSide);
     if (hwndAutoHideBar && hwndAutoHideBar != hwndNewAutoHide)
@@ -557,7 +557,7 @@ BOOL CAppBarManager::OnAppBarSetAutoHideBar(_In_ const APPBAR_COMMAND *pData)
 }
 
 // ABM_SETSTATE
-void CAppBarManager::OnAppBarSetState(UINT uState)
+void CAppBarManager::OnAppBarSetState(_In_ UINT uState)
 {
     if ((uState & ~(ABS_AUTOHIDE | ABS_ALWAYSONTOP)))
         return;

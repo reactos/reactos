@@ -3585,10 +3585,9 @@ protected:
     HWND GetTrayWnd() const override { return m_hWnd; }
     HWND GetDesktopWnd() const override { return m_DesktopWnd; }
 
-    void SetAutoHideState(BOOL bAutoHide) override
+    void SetAutoHideState(_In_ BOOL bAutoHide) override
     {
         g_TaskbarSettings.sr.AutoHide = bAutoHide;
-
         ZeroMemory(&m_AutoHideOffset, sizeof(m_AutoHideOffset));
 
         m_AutoHideState = AUTOHIDE_SHOWN;
@@ -3598,7 +3597,7 @@ protected:
             SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
     }
 
-    void UpdateAlwaysOnTop(BOOL bAlwaysOnTop) override
+    void UpdateAlwaysOnTop(_In_ BOOL bAlwaysOnTop) override
     {
         g_TaskbarSettings.sr.AlwaysOnTop = bAlwaysOnTop;
         HWND hwndInsertAfter = (bAlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM);
