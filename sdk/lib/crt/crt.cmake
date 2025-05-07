@@ -3,9 +3,7 @@ list(APPEND CRT_SOURCE
     ${CRT_CONIO_SOURCE}
     ${CRT_DIRECT_SOURCE}
     ${CRT_EXCEPT_SOURCE}
-    ${CRT_FLOAT_SOURCE}
     locale/locale.c
-    ${CRT_MATH_SOURCE}
     ${CRT_MBSTRING_SOURCE}
     ${CRT_MEM_SOURCE}
     ${CRT_MISC_SOURCE}
@@ -25,8 +23,6 @@ list(APPEND CRT_SOURCE
 
 list(APPEND CRT_ASM_SOURCE
     ${CRT_EXCEPT_ASM_SOURCE}
-    ${CRT_FLOAT_ASM_SOURCE}
-    ${CRT_MATH_ASM_SOURCE}
     ${CRT_SETJMP_ASM_SOURCE}
     ${CRT_STDLIB_ASM_SOURCE}
     ${CRT_STRING_ASM_SOURCE}
@@ -38,6 +34,7 @@ add_asm_files(crt_asm ${CRT_ASM_SOURCE})
 
 add_library(crt ${CRT_SOURCE} ${crt_asm})
 target_link_libraries(crt chkstk ${PSEH_LIB})
+target_sources(crt PRIVATE $<TARGET_OBJECTS:crtmath>)
 target_compile_definitions(crt
  PRIVATE    __MINGW_IMPORT=extern
     USE_MSVCRT_PREFIX
