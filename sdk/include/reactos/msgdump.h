@@ -15,7 +15,7 @@
 #pragma once
 
 #ifndef _INC_WINXX
-    #include "winxx.h"      /* An unofficial extension of <windowsx.h>. */
+    #include "winxx.h"      /* An unofficial extension of <windowsx.h> */
 #endif
 #ifndef _INC_SHELLAPI
     #include <shellapi.h>
@@ -1308,14 +1308,14 @@ MD_OnHotKey(HWND hwnd, int idHotKey, UINT fuModifiers, UINT vk)
 }
 
 static __inline INT MSGDUMP_API
-MD_OnSetHotKey(HWND hwnd, INT nCode, UINT nOptions)
+MD_OnSetHotKey(HWND hwnd, WORD wVkCode, WORD wModifiers)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETHOTKEY(hwnd:%p, nCode:%d, nOptions:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nCode, nOptions);
+    MSGDUMP_TPRINTF(TEXT("%sWM_SETHOTKEY(hwnd:%p, wVkCode:%u, wModifiers:%u)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, wVkCode, wModifiers);
     return 0;
 }
 
-static __inline INT MSGDUMP_API
+static __inline DWORD MSGDUMP_API
 MD_OnGetHotKey(HWND hwnd)
 {
     MSGDUMP_TPRINTF(TEXT("%sWM_GETHOTKEY(hwnd:%p)\n"),
