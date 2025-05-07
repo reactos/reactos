@@ -60,14 +60,14 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
 
     // Set the image list.
-    HIMAGELIST* piml;
-    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml);
+    CComPtr<IImageList> piml;
+    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
     if (FAILED_UNEXPECTEDLY(hr))
     {
         DestroyWindow();
         return hr;
     }
-    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)piml);
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)(HIMAGELIST)piml.Detach());
 
     RefreshToolbar();
     return hr;
