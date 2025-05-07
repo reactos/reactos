@@ -3,6 +3,8 @@ include_directories(libm_sse2)
 
 list(APPEND LIBCNTPR_MATH_SOURCE
     math/_chgsignf.c
+    math/_dsign.c
+    math/_fdsign.c
     math/_invoke_matherr.c
     math/abs.c
     math/div.c
