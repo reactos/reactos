@@ -22,6 +22,7 @@ TODO:
 */
 
 #define TIMERID_REFRESH 0xBEEF
+#define TIMER_REFRESH_DELAY 500
 
 //*****************************************************************************************
 // *** CISFBand ***
@@ -141,7 +142,7 @@ LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
 LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     KillTimer(TIMERID_REFRESH);
-    SetTimer(TIMERID_REFRESH, 500);
+    SetTimer(TIMERID_REFRESH, TIMER_REFRESH_DELAY);
     return 0;
 }
 
