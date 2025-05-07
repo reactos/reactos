@@ -1,4 +1,4 @@
-/*/*
+/*
  * PROJECT:     ReactOS shell extensions
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
