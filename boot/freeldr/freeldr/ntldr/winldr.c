@@ -1279,7 +1279,9 @@ LoadAndBootWindowsCommon(
 #endif
 
     /* Show a notice to user about debugger connection */
-    if (strstr(LoaderBlockVA->LoadOptions, "DEBUG"))
+    if (!strstr(LoaderBlockVA->LoadOptions, "CRASHDEBUG") &&
+        !strstr(LoaderBlockVA->LoadOptions, "NODEBUG") &&
+        strstr(LoaderBlockVA->LoadOptions, "DEBUG"))
     {
         MachVideoPuts("Debug mode is enabled.\n"
                       "If you're stuck here it means your debugger is not attached.\n"
