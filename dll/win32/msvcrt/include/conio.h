@@ -46,10 +46,12 @@ static inline int kbhit(void) { return _kbhit(); }
 static inline int putch(int c) { return _putch(c); }
 static inline int ungetch(int c) { return _ungetch(c); }
 #ifdef _M_IX86
+#ifndef _MSC_VER
 static inline int inp(unsigned short i) { return _inp(i); }
 static inline unsigned short inpw(unsigned short i) { return _inpw(i); }
 static inline int outp(unsigned short i, int j) { return _outp(i, j); }
 static inline unsigned short outpw(unsigned short i, unsigned short j) { return _outpw(i, j); }
+#endif
 #endif
 
 #if defined(__GNUC__) && (__GNUC__ < 4)
