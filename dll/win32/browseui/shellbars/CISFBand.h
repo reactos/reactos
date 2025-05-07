@@ -39,6 +39,7 @@ class CISFBand :
     void RegisterChangeNotify();
     void UnregisterChangeNotify();
     HRESULT AddButtons();
+    void DeleteButtons();
     void RefreshToolbar();
 
 public:
