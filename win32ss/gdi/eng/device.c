@@ -620,7 +620,6 @@ EngpRegisterGraphicsDevice(
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
-    TRACE("Prepared %lu modes for %ls\n", pGraphicsDevice->cDevModes, pGraphicsDevice->pwszDescription);
 
     /* HACK: already in graphic mode; display wallpaper on this new display */
     if (ScreenDeviceContext)
