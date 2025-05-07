@@ -1278,6 +1278,16 @@ LoadAndBootWindowsCommon(
     WinLdrpDumpArcDisks(LoaderBlockVA);
 #endif
 
+    /* Show a notice to user about debugger connection */
+    if (strstr(LoaderBlockVA->LoadOptions, "DEBUG"))
+    {
+        MachVideoPuts("Debug mode is enabled.\n"
+                      "If you're stuck here it means your debugger is not attached.\n"
+                      "Check your debugger's configuration and the serial connection to continue.",
+                      ATTR(COLOR_WHITE, COLOR_BLACK),
+                      0, 0);
+    }
+
     /* Pass control */
     (*KiSystemStartup)(LoaderBlockVA);
 

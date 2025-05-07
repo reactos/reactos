@@ -71,4 +71,30 @@ MachGetBootSectorLoadAddress(IN UCHAR DriveNumber)
 #endif
 }
 
+VOID
+MachVideoPuts(PCSTR String, UCHAR Attr, unsigned X, unsigned Y)
+{
+    PCSTR ch = String;
+    int x = X;
+    int y = Y;
+    while (*ch != '\0')
+    {
+        if (*ch > ' ')
+        {
+            MachVtbl.VideoPutChar(*ch, ATTR(COLOR_WHITE, COLOR_BLACK), x, y);
+        }
+        
+        if (*ch == '\n' || x >= 80)
+        {
+            x = 0;
+            y++;
+        }
+        else
+        {
+            x++;
+        }
+        ch++;
+    }
+}
+
 /* EOF */
