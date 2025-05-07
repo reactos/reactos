@@ -73,6 +73,15 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     return hr;
 }
 
+void CISFBand::RefreshToolbar()
+{
+    DeleteToolbarButtons();
+    AddToolbarButtons();
+
+    if (m_Site)
+        IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+}
+
 HRESULT CISFBand::AddToolbarButtons()
 {
     CComPtr<IEnumIDList> pEnum;
@@ -113,15 +122,6 @@ void CISFBand::DeleteToolbarButtons()
         CoTaskMemFree((LPITEMIDLIST)tb.dwData);
         SendMessage(TB_DELETEBUTTON, 0, 0);
     }
-}
-
-void CISFBand::RefreshToolbar()
-{
-    DeleteToolbarButtons();
-    AddToolbarButtons();
-
-    if (m_Site)
-        IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
 }
 
 LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
