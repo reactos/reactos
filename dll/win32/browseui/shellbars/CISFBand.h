@@ -1,9 +1,10 @@
 /*
  * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CISFBand.h
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
- * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ * COPYRIGHT:   Copyright 2017 Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ *              Copyright 2017-2018 Giannis Adamopoulos
+ *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -38,8 +39,8 @@ class CISFBand :
 
     void RegisterChangeNotify();
     void UnregisterChangeNotify();
-    HRESULT AddButtons();
-    void DeleteButtons();
+    HRESULT AddToolbarButtons();
+    void DeleteToolbarButtons();
     void RefreshToolbar();
 
 public:

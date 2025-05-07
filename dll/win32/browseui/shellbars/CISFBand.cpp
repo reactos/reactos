@@ -1,9 +1,10 @@
-/*
+/*/*
  * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CISFBand.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
- * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ * COPYRIGHT:   Copyright 2017 Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ *              Copyright 2017-2018 Giannis Adamopoulos
+ *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "shellbars.h"
@@ -42,18 +43,6 @@ CISFBand::~CISFBand()
     CloseDW(0);
 }
 
-// Toolbar
-/*++
-* @name CreateSimpleToolbar
-*
-* Creates a toolbar and fills it up with buttons for enumerated objects.
-*
-* @param hWndParent
-*        Handle to the parent window, which receives the appropriate messages from child toolbar.
-*
-* @return The error code.
-*
-*--*/
 HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
     // Create the toolbar.
@@ -84,7 +73,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     return hr;
 }
 
-HRESULT CISFBand::AddButtons()
+HRESULT CISFBand::AddToolbarButtons()
 {
     CComPtr<IEnumIDList> pEnum;
     HRESULT hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &pEnum);
@@ -109,10 +98,11 @@ HRESULT CISFBand::AddButtons()
         SendMessage(TB_INSERTBUTTONW, i, (LPARAM)&tb);
     }
 
+    SendMessage(TB_AUTOSIZE, 0, 0);
     return S_OK;
 }
 
-void CISFBand::DeleteButtons()
+void CISFBand::DeleteToolbarButtons()
 {
     TBBUTTON tb;
     for (INT i = 0; SendMessage(TB_GETBUTTON, i, (LPARAM)&tb); ++i)
@@ -124,11 +114,8 @@ void CISFBand::DeleteButtons()
 
 void CISFBand::RefreshToolbar()
 {
-    DeleteButtons();
-
-    AddButtons();
-
-    SendMessage(TB_AUTOSIZE, 0, 0);
+    DeleteToolbarButtons();
+    AddToolbarButtons();
 
     if (m_Site)
         IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
@@ -160,9 +147,9 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
 void CISFBand::RegisterChangeNotify()
 {
-    SHChangeNotifyEntry ntreg = { m_pidl, FALSE };
+    SHChangeNotifyEntry entry = { m_pidl, FALSE };
     m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
-                                             SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY, 1, &ntreg);
+                                             SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY, 1, &entry);
 }
 
 void CISFBand::UnregisterChangeNotify()
@@ -252,7 +239,7 @@ void CISFBand::UnregisterChangeNotify()
         {
             ShowWindow(SW_HIDE);
 
-            DeleteButtons();
+            DeleteToolbarButtons();
 
             DestroyWindow();
 
