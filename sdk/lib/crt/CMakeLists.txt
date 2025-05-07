@@ -56,3 +56,10 @@ if(MSVC AND ARCH STREQUAL "i386")
     set_target_properties(ftol2 PROPERTIES LINKER_LANGUAGE "C")
     add_dependencies(ftol2 asm)
 endif()
+
+add_library(dbgrpt misc/dbgrpt.cpp)
+target_link_libraries(dbgrpt chkstk ${PSEH_LIB})
+target_compile_definitions(dbgrpt PRIVATE
+    _MT
+    _DEBUG)
+add_dependencies(dbgrpt psdk asm)
