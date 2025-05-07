@@ -104,6 +104,9 @@ HRESULT CISFBand::AddToolbarButtons()
 
 void CISFBand::DeleteToolbarButtons()
 {
+    // Assumption: Deleting a button causes the remaining buttons to shift,
+    // so the next button always appears at index 0. This ensures the loop
+    // progresses and avoids infinite loops.
     TBBUTTON tb;
     while (SendMessage(TB_GETBUTTON, 0, (LPARAM)&tb))
     {
