@@ -520,7 +520,7 @@ BOOL CAppBarManager::OnAppBarGetTaskbarPos(_Inout_ PAPPBAR_COMMAND pData)
 }
 
 // ABM_ACTIVATE, ABM_WINDOWPOSCHANGED
-void CAppBarManager::OnAppBarActivatationChange(_Inout_ PAPPBAR_COMMAND pData)
+void CAppBarManager::OnAppBarActivationChange(_Inout_ PAPPBAR_COMMAND pData)
 {
     HWND hWnd = (HWND)UlongToHandle(pData->abd.hWnd32);
     PAPPBAR pAppBar = FindAppBar(hWnd);
@@ -597,7 +597,7 @@ LRESULT CAppBarManager::OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
             return OnAppBarGetTaskbarPos(pData);
         case ABM_ACTIVATE:
         case ABM_WINDOWPOSCHANGED:
-            OnAppBarActivatationChange(pData);
+            OnAppBarActivationChange(pData);
             break;
         case ABM_GETAUTOHIDEBAR:
             return (LRESULT)OnAppBarGetAutoHideBar(pData->abd.uEdge);

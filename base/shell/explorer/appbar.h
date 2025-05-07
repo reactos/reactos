@@ -70,7 +70,7 @@ protected:
     void OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData);
     UINT OnAppBarGetState(_Inout_ PAPPBAR_COMMAND pData);
     BOOL OnAppBarGetTaskbarPos(_Inout_ PAPPBAR_COMMAND pData);
-    void OnAppBarActivatationChange(_Inout_ PAPPBAR_COMMAND pData);
+    void OnAppBarActivationChange(_Inout_ PAPPBAR_COMMAND pData);
     HWND OnAppBarGetAutoHideBar(_In_ UINT uSide);
     BOOL OnAppBarSetAutoHideBar(_Inout_ PAPPBAR_COMMAND pData);
     HRESULT OnAppBarSetState(UINT uState);
