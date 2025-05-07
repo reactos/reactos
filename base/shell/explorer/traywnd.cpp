@@ -3572,7 +3572,6 @@ protected:
     // See also: appbar.cpp
     // TODO: freedesktop _NET_WM_STRUT integration
     // TODO: find when a fullscreen app is in the foreground and send FULLSCREENAPP notifications
-    // TODO: detect changes in the screen size and send ABN_POSCHANGED ?
     // TODO: multiple monitor support
 
     BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
