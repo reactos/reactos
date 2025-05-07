@@ -52,6 +52,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
+#ifdef _MSC_VER
+#pragma function(abs,labs,div,ldiv)
+#endif
+
 #undef div
 #undef ldiv
 
@@ -699,13 +703,19 @@ intmax_t CDECL imaxabs( intmax_t n )
 /*********************************************************************
  *		_abs64 (MSVCRT.@)
  */
+#ifdef _MSC_VER
+#pragma function(_abs64)
+#endif
 __int64 CDECL _abs64( __int64 n )
 {
     return n >= 0 ? n : -n;
 }
 
 #if defined(__i386__) || defined(__x86_64__)
-
+#ifdef _MSC_VER
+#define get_mxcsr() _mm_getcsr()
+#define set_mxcsr(val) _mm_setcsr(val)
+#else
 static unsigned int get_mxcsr(void)
 {
     unsigned int ret;
@@ -727,6 +737,7 @@ static void set_mxcsr( unsigned int val )
     __asm__ __volatile__( "ldmxcsr %0" : : "m" (val) );
 #endif
 }
+#endif
 
 static void _setfp_sse( unsigned int *cw, unsigned int cw_mask,
         unsigned int *sw, unsigned int sw_mask )
@@ -826,7 +837,7 @@ static void _setfp_sse( unsigned int *cw, unsigned int cw_mask,
 static void _setfp( unsigned int *cw, unsigned int cw_mask,
         unsigned int *sw, unsigned int sw_mask )
 {
-#if (defined(__GNUC__) || defined(__clang__)) && defined(__i386__)
+#if (defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)) && defined(__i386__)
     unsigned long oldcw = 0, newcw = 0;
     unsigned long oldsw = 0, newsw = 0;
     unsigned int flags;
@@ -836,7 +847,11 @@ static void _setfp( unsigned int *cw, unsigned int cw_mask,
 
     if (sw)
     {
+#ifdef _MSC_VER
+        __asm { fstsw newsw }
+#else
         __asm__ __volatile__( "fstsw %0" : "=m" (newsw) );
+#endif
         oldsw = newsw;
 
         flags = 0;
@@ -861,7 +876,11 @@ static void _setfp( unsigned int *cw, unsigned int cw_mask,
 
     if (cw)
     {
-        __asm__ __volatile__( "fstcw %0" : "=m" (newcw) );
+#ifdef _MSC_VER
+        __asm { fstcw newcw }
+#else
+       __asm__ __volatile__( "fstcw %0" : "=m" (newcw) );
+#endif
         oldcw = newcw;
 
         flags = 0;
@@ -928,18 +947,34 @@ static void _setfp( unsigned int *cw, unsigned int cw_mask,
 
         assert(cw);
 
+#ifdef _MSC_VER
+        __asm { fnstenv fenv }
+#else
         __asm__ __volatile__( "fnstenv %0" : "=m" (fenv) );
+#endif
         fenv.control_word = newcw;
         fenv.status_word = newsw;
+#ifdef _MSC_VER
+        __asm { fldenv fenv }
+#else
         __asm__ __volatile__( "fldenv %0" : : "m" (fenv) : "st", "st(1)",
                 "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)" );
+#endif
         return;
     }
 
     if (oldsw != newsw)
+#ifdef _MSC_VER
+        __asm { fnclex }
+#else
         __asm__ __volatile__( "fnclex" );
+#endif
     if (oldcw != newcw)
+#ifdef _MSC_VER
+        __asm { fldcw newcw }
+#else
         __asm__ __volatile__( "fldcw %0" : : "m" (newcw) );
+#endif
 #elif defined(__x86_64__)
     _setfp_sse(cw, cw_mask, sw, sw_mask);
 #elif defined(__aarch64__)
@@ -2012,6 +2047,7 @@ int CDECL _gcvt_s(char *buff, size_t size, double number, int digits)
 
 #include <stdlib.h> /* div_t, ldiv_t */
 
+#ifndef __REACTOS__
 /*********************************************************************
  *		div (MSVCRT.@)
  * VERSION
@@ -2078,6 +2114,7 @@ ldiv_t CDECL ldiv(__msvcrt_long num, __msvcrt_long denom)
     return ret;
 }
 #endif /* ifdef __i386__ */
+#endif /* !__REACTOS__ */
 
 #if _MSVCR_VER>=100
 /*********************************************************************
@@ -2325,6 +2362,7 @@ void _safe_fprem1(void)
   TRACE("(): stub\n");
 }
 
+#ifndef __REACTOS__
 /***********************************************************************
  *		__libm_sse2_acos   (MSVCRT.@)
  */
@@ -2580,6 +2618,7 @@ void __cdecl __libm_sse2_sqrt_precise(void)
     }
     __asm__ __volatile__( "sqrtsd %xmm0, %xmm0" );
 }
+#endif /* !__REACTOS__ */
 #endif  /* __i386__ */
 
 #if _MSVCR_VER>=120
