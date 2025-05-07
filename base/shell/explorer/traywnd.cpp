@@ -3081,6 +3081,12 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    LRESULT OnSetZOrder(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return ::SetWindowPos(m_hWnd, (HWND)wParam, 0, 0, 0, 0,
+                              SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    }
+
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return HandleHotKey(wParam);
@@ -3349,26 +3355,14 @@ HandleTrayContextMenu:
 
         /* Toggle autohide */
         if (newSettings->sr.AutoHide != g_TaskbarSettings.sr.AutoHide)
-        {
-            g_TaskbarSettings.sr.AutoHide = newSettings->sr.AutoHide;
-            memset(&m_AutoHideOffset, 0, sizeof(m_AutoHideOffset));
-            m_AutoHideState = AUTOHIDE_SHOWN;
-            if (!newSettings->sr.AutoHide)
-                SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
-            else
-                SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
-        }
+            SetAutoHideState(newSettings->sr.AutoHide);
 
         /* Toggle lock state */
         Lock(newSettings->bLock);
 
         /* Toggle OnTop state */
         if (newSettings->sr.AlwaysOnTop != g_TaskbarSettings.sr.AlwaysOnTop)
-        {
-            g_TaskbarSettings.sr.AlwaysOnTop = newSettings->sr.AlwaysOnTop;
-            HWND hWndInsertAfter = newSettings->sr.AlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM;
-            SetWindowPos(hWndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-        }
+            UpdateAlwaysOnTop(newSettings->sr.AlwaysOnTop);
 
         /* Adjust taskbar size */
         CheckTrayWndPosition();
@@ -3440,6 +3434,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)
+        MESSAGE_HANDLER(TWM_SETZORDER, OnSetZOrder)
         MESSAGE_HANDLER(TWM_PULSE, OnPulse)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
@@ -3581,11 +3576,33 @@ protected:
 
     BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
     BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
+    BOOL IsAlwaysOnTop() const override { return g_TaskbarSettings.sr.AlwaysOnTop; }
     HMONITOR GetMonitor() const override { return m_Monitor; }
     HMONITOR GetPreviousMonitor() const override { return m_PreviousMonitor; }
     INT GetPosition() const override { return m_Position; }
     const RECT* GetTrayRect() override { return &m_TrayRects[m_Position]; }
+    HWND GetTrayWnd() const override { return m_hWnd; }
     HWND GetDesktopWnd() const override { return m_DesktopWnd; }
+
+    void SetAutoHideState(BOOL bAutoHide) override
+    {
+        g_TaskbarSettings.sr.AutoHide = bAutoHide;
+
+        ZeroMemory(&m_AutoHideOffset, sizeof(m_AutoHideOffset));
+
+        m_AutoHideState = AUTOHIDE_SHOWN;
+        if (bAutoHide)
+            SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
+        else
+            SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
+    }
+
+    void UpdateAlwaysOnTop(BOOL bAlwaysOnTop) override
+    {
+        g_TaskbarSettings.sr.AlwaysOnTop = bAlwaysOnTop;
+        HWND hwndInsertAfter = (bAlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM);
+        SetWindowPos(hwndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    }
 };
 
 class CTrayWindowCtxMenu :

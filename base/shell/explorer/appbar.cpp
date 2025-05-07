@@ -12,6 +12,7 @@
 CAppBarManager::CAppBarManager()
     : m_hAppBarDPA(NULL)
 {
+    ZeroMemory(m_ahwndAutoHide, sizeof(m_ahwndAutoHide));
 }
 
 CAppBarManager::~CAppBarManager()
@@ -450,6 +451,36 @@ void CAppBarManager::RecomputeAllWorkareas()
     ::EnumDisplayMonitors(NULL, NULL, CAppBarManager::MonitorEnumProc, (LPARAM)this);
 }
 
+BOOL CAppBarManager::SetAutoHideBar(HWND hwndNewAutoHide, BOOL bSetOrReset, UINT uSide)
+{
+    HWND *phwndAutoHide = &m_ahwndAutoHide[uSide];
+    if (!IsWindow(*phwndAutoHide))
+        *phwndAutoHide = NULL;
+
+    if (bSetOrReset) // Set?
+    {
+        if (!*phwndAutoHide)
+            *phwndAutoHide = hwndNewAutoHide;
+        return *phwndAutoHide == hwndNewAutoHide;
+    }
+    else // Reset
+    {
+        if (*phwndAutoHide == hwndNewAutoHide)
+            *phwndAutoHide = NULL;
+        return TRUE;
+    }
+}
+
+void CAppBarManager::OnAppBarActivationChange2(HWND hwndNewAutoHide, UINT uSide)
+{
+    HWND hwndAutoHideBar = OnAppBarGetAutoHideBar(uSide);
+    if (hwndAutoHideBar)
+    {
+        if (hwndAutoHideBar != hwndNewAutoHide)
+            ::PostMessageW(GetTrayWnd(), TWM_SETZORDER, (WPARAM)hwndAutoHideBar, uSide);
+    }
+}
+
 PAPPBAR_COMMAND
 CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 {
@@ -463,6 +494,81 @@ CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
     }
 
     return pData;
+}
+
+// ABM_GETSTATE
+UINT CAppBarManager::OnAppBarGetState(_Inout_ PAPPBAR_COMMAND pData)
+{
+    return (IsAutoHideState() ? ABS_AUTOHIDE : 0) | (IsAlwaysOnTop() ? ABS_ALWAYSONTOP : 0);
+}
+
+// ABM_GETTASKBARPOS
+BOOL CAppBarManager::OnAppBarGetTaskbarPos(_Inout_ PAPPBAR_COMMAND pData)
+{
+    PAPPBARDATAINTEROP pOutput = AppBar_LockOutput(pData);
+    if (!pOutput)
+    {
+        ERR("!pOutput: %d\n", pData->dwProcessId);
+        return FALSE;
+    }
+
+    pOutput->rc = *GetTrayRect();
+    pOutput->uEdge = GetPosition();
+
+    AppBar_UnLockOutput(pOutput);
+    return TRUE;
+}
+
+// ABM_ACTIVATE, ABM_WINDOWPOSCHANGED
+void CAppBarManager::OnAppBarActivatationChange(_Inout_ PAPPBAR_COMMAND pData)
+{
+    HWND hWnd = (HWND)UlongToHandle(pData->abd.hWnd32);
+    PAPPBAR pAppBar = FindAppBar(hWnd);
+    if (!pAppBar)
+    {
+        ERR("Not found: %p\n", hWnd);
+        return;
+    }
+
+    HWND hwndAppBar = pAppBar->hWnd;
+    for (UINT uSide = ABE_LEFT; uSide <= ABE_BOTTOM; ++uSide)
+    {
+        if (m_ahwndAutoHide[uSide] == hwndAppBar && uSide != pAppBar->uEdge)
+            return;
+    }
+
+    OnAppBarActivationChange2(hwndAppBar, pAppBar->uEdge);
+}
+
+// ABM_GETAUTOHIDEBAR
+HWND CAppBarManager::OnAppBarGetAutoHideBar(_In_ UINT uSide)
+{
+    if (uSide >= _countof(m_ahwndAutoHide))
+        return NULL;
+
+    if (!::IsWindow(m_ahwndAutoHide[uSide]))
+        m_ahwndAutoHide[uSide] = NULL;
+    return m_ahwndAutoHide[uSide];
+}
+
+// ABM_SETAUTOHIDEBAR
+BOOL CAppBarManager::OnAppBarSetAutoHideBar(_Inout_ PAPPBAR_COMMAND pData)
+{
+    if (pData->abd.uEdge >= _countof(m_ahwndAutoHide))
+        return FALSE;
+    HWND hWnd = (HWND)UlongToHandle(pData->abd.hWnd32);
+    return SetAutoHideBar(hWnd, (BOOL)pData->abd.lParam64, pData->abd.uEdge);
+}
+
+// ABM_SETSTATE
+HRESULT CAppBarManager::OnAppBarSetState(UINT uState)
+{
+    if ((uState & ~(ABS_AUTOHIDE | ABS_ALWAYSONTOP)))
+        return E_INVALIDARG;
+
+    SetAutoHideState(!!(uState & ABS_AUTOHIDE));
+    UpdateAlwaysOnTop(!!(uState & ABS_ALWAYSONTOP));
+    return S_OK;
 }
 
 // WM_COPYDATA TABDMC_APPBAR
@@ -484,6 +590,21 @@ LRESULT CAppBarManager::OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
             break;
         case ABM_SETPOS:
             OnAppBarSetPos(pData);
+            break;
+        case ABM_GETSTATE:
+            return OnAppBarGetState(pData);
+        case ABM_GETTASKBARPOS:
+            return OnAppBarGetTaskbarPos(pData);
+        case ABM_ACTIVATE:
+        case ABM_WINDOWPOSCHANGED:
+            OnAppBarActivatationChange(pData);
+            break;
+        case ABM_GETAUTOHIDEBAR:
+            return (LRESULT)OnAppBarGetAutoHideBar(pData->abd.uEdge);
+        case ABM_SETAUTOHIDEBAR:
+            return OnAppBarSetAutoHideBar(pData);
+        case ABM_SETSTATE:
+            OnAppBarSetState((UINT)pData->abd.lParam64);
             break;
         default:
         {
