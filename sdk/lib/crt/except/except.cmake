@@ -79,3 +79,11 @@ add_asm_files(chkstk_lib_asm ${CHKSTK_ASM_SOURCE})
 add_library(chkstk ${CHKSTK_SOURCE} ${chkstk_lib_asm})
 set_target_properties(chkstk PROPERTIES LINKER_LANGUAGE "C")
 add_dependencies(chkstk asm)
+
+# Temporary lib, until crt and vcruntime are cleaned up
+if(ARCH STREQUAL "i386")
+    add_asm_files(chkesp_lib_asm except/i386/chkesp.s)
+    add_library(chkesp ${chkesp_lib_asm})
+    set_target_properties(chkesp PROPERTIES LINKER_LANGUAGE "C")
+    add_dependencies(chkesp asm)
+endif()
