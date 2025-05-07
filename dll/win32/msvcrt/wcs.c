@@ -33,6 +33,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
+#ifdef _MSC_VER
+#pragma function(_wcsset,wcscat,wcscmp,wcscpy,wcslen)
+#endif
+
 typedef struct
 {
     enum { LEN_DEFAULT, LEN_SHORT, LEN_LONG } IntegerLength;
