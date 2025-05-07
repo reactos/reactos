@@ -557,14 +557,13 @@ BOOL CAppBarManager::OnAppBarSetAutoHideBar(_In_ const APPBAR_COMMAND *pData)
 }
 
 // ABM_SETSTATE
-HRESULT CAppBarManager::OnAppBarSetState(UINT uState)
+void CAppBarManager::OnAppBarSetState(UINT uState)
 {
     if ((uState & ~(ABS_AUTOHIDE | ABS_ALWAYSONTOP)))
-        return E_INVALIDARG;
+        return;
 
     SetAutoHideState(!!(uState & ABS_AUTOHIDE));
     UpdateAlwaysOnTop(!!(uState & ABS_ALWAYSONTOP));
-    return S_OK;
 }
 
 // WM_COPYDATA TABDMC_APPBAR

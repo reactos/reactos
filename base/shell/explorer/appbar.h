@@ -73,7 +73,7 @@ protected:
     void OnAppBarActivationChange(_In_ const APPBAR_COMMAND *pData);
     HWND OnAppBarGetAutoHideBar(_In_ UINT uSide);
     BOOL OnAppBarSetAutoHideBar(_In_ const APPBAR_COMMAND *pData);
-    HRESULT OnAppBarSetState(UINT uState);
+    void OnAppBarSetState(UINT uState);
 
     void OnAppBarNotifyAll(
         _In_opt_ HMONITOR hMon,
