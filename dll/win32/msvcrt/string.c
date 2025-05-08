@@ -478,7 +478,11 @@ int fpnum_double(struct fpnum *fp, double *d)
 
 #define LDBL_EXP_BITS 15
 #define LDBL_MANT_BITS 64
+#ifdef __REACTOS__
+int fpnum_ldouble(struct fpnum *fp, WINE_BROKEN_LDOUBLE *d)
+#else
 int fpnum_ldouble(struct fpnum *fp, MSVCRT__LDOUBLE *d)
+#endif
 {
     if (fp->mod == FP_VAL_INFINITY)
     {
@@ -1513,9 +1517,16 @@ size_t CDECL strxfrm( char *dest, const char *src, size_t len )
 /********************************************************************
  *		__STRINGTOLD_L (MSVCR80.@)
  */
+#ifdef __REACTOS__
+int CDECL __STRINGTOLD_L( MSVCRT__LDOUBLE *value_, char **endptr,
+#else
 int CDECL __STRINGTOLD_L( MSVCRT__LDOUBLE *value, char **endptr,
+#endif
         const char *str, int flags, _locale_t locale )
 {
+#ifdef __REACTOS__
+    WINE_BROKEN_LDOUBLE value[1];
+#endif
     pthreadlocinfo locinfo;
     const char *beg, *p;
     int err, ret = 0;
@@ -1539,6 +1550,9 @@ int CDECL __STRINGTOLD_L( MSVCRT__LDOUBLE *value, char **endptr,
 
     err = fpnum_ldouble(&fp, value);
     if (err) ret = (value->x80[2] & 0x7fff ? 2 : 1);
+#ifdef __REACTOS__
+    memcpy(value_, value, sizeof(*value_));
+#endif
     return ret;
 }
 
@@ -2670,8 +2684,16 @@ struct _I10_OUTPUT_DATA {
  *      Native sets last byte of data->str to '0' or '9', I don't know what
  *      it means. Current implementation sets it always to '0'.
  */
+#ifdef __REACTOS__
+int CDECL I10_OUTPUT(MSVCRT__LDOUBLE ld80_, int prec, int flag, struct _I10_OUTPUT_DATA *data)
+#else
 int CDECL I10_OUTPUT(MSVCRT__LDOUBLE ld80, int prec, int flag, struct _I10_OUTPUT_DATA *data)
+#endif
 {
+#ifdef __REACTOS__
+    WINE_BROKEN_LDOUBLE ld80 = { 0 };
+    memcpy(&ld80, &ld80_, sizeof(ld80_));
+#endif
     struct fpnum num;
     double d;
     char format[8];
