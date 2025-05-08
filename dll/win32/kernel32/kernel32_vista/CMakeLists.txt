@@ -14,6 +14,7 @@ list(APPEND SOURCE
     GetTickCount64.c
     GetUserDefaultLocaleName.c
     InitOnce.c
+    IsValidLocaleName.c
     LCIDToLocaleName.c
     LocaleNameToLCID.c
     sync.c
