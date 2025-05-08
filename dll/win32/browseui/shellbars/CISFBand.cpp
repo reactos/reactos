@@ -30,13 +30,13 @@ TODO:
 //*****************************************************************************************
 // *** CISFBand ***
 
-CISFBand::CISFBand() :
-    m_BandID(0),
-    m_pidl(NULL),
-    m_uChangeNotify(0),
-    m_textFlag(true),
-    m_bSmallIcon(TRUE),
-    m_QLaunch(false)
+CISFBand::CISFBand()
+    : m_BandID(0),
+    , m_pidl(NULL)
+    , m_uChangeNotify(0)
+    , m_bShowText(TRUE)
+    , m_bSmallIcon(TRUE)
+    , m_QLaunch(FALSE)
 {
 }
 
@@ -55,8 +55,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     SubclassWindow(hwndToolbar);
 
-    if (!m_textFlag)
-        SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+    ShowHideText(m_bShowText);
 
     // Set the image list.
     CComPtr<IImageList> piml;
@@ -190,6 +189,14 @@ HRESULT CISFBand::BandInfoChanged()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
     return S_OK;
+}
+
+HRESULT CISFBand::ShowHideText(BOOL bShow)
+{
+    // NOTE: TBSTYLE_EX_MIXEDBUTTONS hides non-BTNS_SHOWTEXT buttons' text.
+    m_bShowText = bShow;
+    SendMessage(TB_SETEXTENDEDSTYLE, 0, (bShow ? 0 : TBSTYLE_EX_MIXEDBUTTONS));
+    return BandInfoChanged();
 }
 
 /*****************************************************************************/
@@ -595,10 +602,8 @@ HRESULT CISFBand::BandInfoChanged()
             (pbi->dwState & ISFB_STATE_QLINKSMODE) &&
             (pbi->dwStateMask & ISFB_STATE_QLINKSMODE))
         {
-            m_QLaunch = true;
-            m_textFlag = false;
-            if (m_hWnd)
-                SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+            m_QLaunch = TRUE;
+            ShowHideText(FALSE);
         }
 
         return E_NOTIMPL;
@@ -670,19 +675,7 @@ HRESULT CISFBand::BandInfoChanged()
                 }
                 case IDM_SHOW_TEXT:
                 {
-                    if (m_textFlag)
-                    {
-                        m_textFlag = false;
-                        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-                        return BandInfoChanged();
-                    }
-                    else
-                    {
-                        m_textFlag = true;
-                        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, 0);
-                        return BandInfoChanged();
-                    }
-                    break;
+                    return ShowHideText(!m_bShowText);
                 }
                 default:
                     return E_FAIL;
@@ -696,10 +689,7 @@ HRESULT CISFBand::BandInfoChanged()
     {
         HMENU qMenu = LoadMenu(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCE(IDM_POPUPMENU));
 
-        if(m_textFlag)
-            CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_CHECKED);
-        else
-            CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_UNCHECKED);
+        CheckMenuItem(qMenu, IDM_SHOW_TEXT, (m_bShowText ? MF_CHECKED : MF_UNCHECKED));
 
         if (m_bSmallIcon)
         {

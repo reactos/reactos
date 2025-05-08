@@ -33,7 +33,7 @@ class CISFBand :
     UINT m_uChangeNotify;
 
     // Menu
-    BOOL m_textFlag;
+    BOOL m_bShowText;
     BOOL m_bSmallIcon;
     BOOL m_QLaunch;
 
@@ -43,6 +43,7 @@ class CISFBand :
     void RefreshToolbar();
     HRESULT SetIconSize(BOOL bSmall);
     HRESULT BandInfoChanged();
+    HRESULT ShowHideText(BOOL bShow);
 
 public:
     CISFBand();
