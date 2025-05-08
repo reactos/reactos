@@ -31,7 +31,7 @@ TODO:
 // *** CISFBand ***
 
 CISFBand::CISFBand()
-    : m_BandID(0),
+    : m_BandID(0)
     , m_pidl(NULL)
     , m_uChangeNotify(0)
     , m_bShowText(TRUE)
