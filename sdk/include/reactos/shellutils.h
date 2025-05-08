@@ -635,11 +635,11 @@ public:
     STDMETHODIMP SetSite(IUnknown *pUnkSite) override
     {
         IUnknown *punkOrg = m_pUnkSite;
+        if (punkOrg)
+            punkOrg->Release();
         m_pUnkSite = pUnkSite;
         if (pUnkSite)
             pUnkSite->AddRef();
-        if (punkOrg)
-            punkOrg->Release();
         return S_OK;
     }
     STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override

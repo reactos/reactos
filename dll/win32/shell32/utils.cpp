@@ -408,20 +408,18 @@ SH32_DisplayNameOf(
     _In_opt_ UINT Flags, _Out_ PWSTR *ppStr)
 {
     HRESULT hr;
-    IShellFolder *psfRelease = NULL;
+    CComPtr<IShellFolder> psfRoot;
     if (!psf)
     {
         PCUITEMID_CHILD pidlChild;
-        hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfRelease), &pidlChild);
+        hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfRoot), &pidlChild);
         if (FAILED(hr))
             return hr;
-        psf = psfRelease;
+        psf = psfRoot;
         pidl = pidlChild;
     }
     STRRET sr;
     hr = psf->GetDisplayNameOf((PCUITEMID_CHILD)pidl, Flags, &sr);
-    if (psfRelease)
-        psfRelease->Release();
     return SUCCEEDED(hr) ? StrRetToStrW(&sr, pidl, ppStr) : hr;
 }
 
