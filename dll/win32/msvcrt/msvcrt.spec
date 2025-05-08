@@ -144,10 +144,10 @@
 @ cdecl -arch=i386 _CItanh()
 @ stub -version=0x600+ _CrtCheckMemory
 # stub -version=0x600+ _CrtDbgBreak
-# stub -version=0x600+ _CrtDbgReport
-# stub -version=0x600+ _CrtDbgReportV
-# stub -version=0x600+ _CrtDbgReportW
-# stub -version=0x600+ _CrtDbgReportWV
+@ cdecl -version=0x600+ _CrtDbgReport(long str long str str)
+@ cdecl -version=0x600+ _CrtDbgReportV(long str long str str ptr)
+@ cdecl -version=0x600+ _CrtDbgReportW(long wstr long wstr wstr)
+@ cdecl -version=0x600+ _CrtDbgReportWV(long wstr long wstr wstr ptr)
 # stub -version=0x600+ _CrtDoForAllClientObjects
 # stub -version=0x600+ _CrtDumpMemoryLeaks
 # stub -version=0x600+ _CrtIsMemoryBlock
@@ -163,10 +163,10 @@
 # stub -version=0x600+ _CrtSetDbgBlockType
 # stub -version=0x600+ _CrtSetDbgFlag
 # stub -version=0x600+ _CrtSetDumpClient
-# stub -version=0x600+ _CrtSetReportFile
+@ cdecl -version=0x600+ _CrtSetReportFile(long ptr)
 # stub -version=0x600+ _CrtSetReportHook
 # stub -version=0x600+ _CrtSetReportHook2
-@ cdecl -stub -version=0x600+ _CrtSetReportMode(long long)
+@ cdecl -version=0x600+ _CrtSetReportMode(long long)
 @ stdcall _CxxThrowException(ptr ptr)
 @ cdecl -arch=i386 -norelay _EH_prolog()
 @ cdecl _Getdays()
@@ -261,10 +261,10 @@
 @ cdecl -arch=i386 __p__daylight()
 @ cdecl -arch=i386 __p__dstbias()
 @ cdecl -arch=i386 __p__environ()
-@ stub -arch=i386 __p__fileinfo()
+@ cdecl -arch=i386 __p__fileinfo()
 @ cdecl -arch=i386 __p__fmode()
 @ cdecl -arch=i386 __p__iob() __iob_func
-@ stub -arch=i386 __p__mbcasemap()
+@ cdecl -arch=i386 __p__mbcasemap()
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
 @ cdecl -arch=i386 __p__pctype()
@@ -397,10 +397,10 @@
 @ cdecl _cwait(ptr long long)
 @ varargs _cwprintf(wstr)
 @ varargs -version=0x600+ _cwprintf_l(wstr ptr)
-# stub -version=0x600+ _cwprintf_p(wstr)
-# stub -version=0x600+ _cwprintf_p_l(wstr ptr)
-# stub -version=0x600+ _cwprintf_s(wstr)
-# stub -version=0x600+ _cwprintf_s_l(wstr ptr)
+@ stub -version=0x600+ _cwprintf_p
+@ stub -version=0x600+ _cwprintf_p_l
+@ stub -version=0x600+ _cwprintf_s
+@ stub -version=0x600+ _cwprintf_s_l
 @ varargs _cwscanf(wstr)
 @ varargs -version=0x600+ _cwscanf_l(wstr ptr)
 @ varargs -version=0x600+ _cwscanf_s(wstr)
@@ -439,7 +439,7 @@
 @ cdecl _fgetchar()
 @ cdecl _fgetwchar()
 @ cdecl _filbuf(ptr)
-# extern _fileinfo
+@ extern -arch=i386,x86_64 _fileinfo
 @ cdecl _filelength(long)
 @ cdecl -ret64 _filelengthi64(long)
 @ cdecl _fileno(ptr)
@@ -508,7 +508,7 @@
 @ cdecl -version=0x600+ _get_doserrno(ptr)
 @ cdecl -version=0x600+ _get_environ(ptr)
 @ cdecl -version=0x600+ _get_errno(ptr)
-# stub -version=0x600+ _get_fileinfo(ptr)
+@ cdecl -version=0x600+ _get_fileinfo(ptr)
 @ cdecl -version=0x600+ _get_fmode(ptr)
 @ cdecl _get_heap_handle()
 @ cdecl _get_osfhandle(long)
@@ -520,7 +520,7 @@
 @ cdecl -version=0x600+ _get_wenviron(ptr)
 @ cdecl -version=0x600+ _get_winmajor(ptr)
 @ cdecl -version=0x600+ _get_winminor(ptr)
-# stub -version=0x600+ _get_winver(ptr)
+@ cdecl -version=0x600+ _get_winver(ptr)
 @ cdecl -version=0x600+ _get_wpgmptr(ptr)
 @ cdecl _get_terminate()
 @ cdecl _get_tzname(ptr str long long)
@@ -686,12 +686,12 @@
 @ cdecl _ltow(long ptr long)
 @ cdecl -version=0x600+ _ltow_s(long ptr long long)
 @ cdecl _makepath(ptr str str str str)
-@ cdecl -version=0x600+ _makepath_s(ptr long str str str str)
-# stub -version=0x600+ _malloc_dbg(long long str long)
+@ cdecl -version=0x600+ _makepath_s(str long str)
+@ stub -version=0x600+ _malloc_dbg
 @ cdecl _mbbtombc(long)
 @ cdecl -version=0x600+ _mbbtombc_l(long ptr)
 @ cdecl _mbbtype(long long)
-# extern _mbcasemap
+@ extern _mbcasemap
 @ cdecl _mbccpy(ptr ptr)
 @ cdecl -version=0x600+ _mbccpy_l(ptr ptr ptr)
 @ cdecl -version=0x600+ _mbccpy_s(ptr long ptr ptr)
@@ -901,7 +901,7 @@
 @ cdecl -version=0x600+ _set_doserrno(long)
 @ cdecl -version=0x600+ _set_errno(long)
 @ cdecl _set_error_mode(long)
-# stub -version=0x600+ _set_fileinfo(long)
+@ cdecl -version=0x600+ _set_fileinfo(long)
 @ cdecl -version=0x600+ _set_fmode(long)
 @ cdecl -version=0x600+ _set_output_format(long)
 @ cdecl _set_sbh_threshold(long)
@@ -1008,7 +1008,7 @@
 @ cdecl _tell(long)
 @ cdecl -ret64 _telli64(long)
 @ cdecl _tempnam(str str)
-# stub -version=0x600+ _tempnam_dbg(str str long str long)
+@ stub -version=0x600+ _tempnam_dbg(str str long str long)
 @ cdecl -version=0x600+ _time32(ptr)
 @ cdecl _time64(ptr)
 @ extern _timezone MSVCRT___timezone
@@ -1456,7 +1456,9 @@
 @ cdecl strtok(str str)
 @ cdecl -version=0x600+ strtok_s(ptr str ptr)
 @ cdecl strtol(str ptr long)
+@ cdecl -impsym strtoll(str ptr long) _strtoi64
 @ cdecl strtoul(str ptr long)
+@ cdecl -impsym strtoull(str ptr long) _strtoui64
 @ cdecl strxfrm(ptr str long)
 @ varargs swprintf(ptr wstr) _swprintf
 @ varargs -version=0x600+ swprintf_s(ptr long wstr)
