@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(WpfCppProps)" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{b3e8407e-5529-456f-9039-edcc65e1c2dc}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <OutputName>resources</OutputName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.hpp</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MsBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="precomp.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="affinetransform3d.cpp" />
+    <ClCompile Include="ambientlight.cpp" />
+    <ClCompile Include="axisanglerotation3d.cpp" />
+    <ClCompile Include="bitmapres.cpp" />
+    <ClCompile Include="BitmapCacheBrush.cpp" />
+    <ClCompile Include="BitmapCacheMode.cpp" />
+    <ClCompile Include="BlurEffect.cpp" />
+    <ClCompile Include="brush.cpp" />
+    <ClCompile Include="BrushIntermediateCache.cpp" />
+    <ClCompile Include="BrushIntermediateRealizer.cpp" />
+    <ClCompile Include="BrushRealizer.cpp" />
+    <ClCompile Include="brushtypeutils.cpp" />
+    <ClCompile Include="CacheMode.cpp" />
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="combinedgeometry.cpp" />
+    <ClCompile Include="currentvalue.cpp" />
+    <ClCompile Include="d3dimage.cpp" />
+    <ClCompile Include="dashStyle.cpp" />
+    <ClCompile Include="DeviceAlignedIntermediateRealizer.cpp" />
+    <ClCompile Include="diffusematerial.cpp" />
+    <ClCompile Include="directionallight.cpp" />
+    <ClCompile Include="doublebufferedbitmapres.cpp" />
+    <ClCompile Include="drawingbrush.cpp" />
+    <ClCompile Include="drawinggroup.cpp" />
+    <ClCompile Include="drawingimage.cpp" />
+    <ClCompile Include="DropShadowEffect.cpp" />
+    <ClCompile Include="ellipsegeometry.cpp" />
+    <ClCompile Include="emissivematerial.cpp" />
+    <ClCompile Include="etwresource.cpp" />
+    <ClCompile Include="geometry.cpp" />
+    <ClCompile Include="geometry3d.cpp" />
+    <ClCompile Include="geometrydrawing.cpp" />
+    <ClCompile Include="geometrygroup.cpp" />
+    <ClCompile Include="geometrymodel3d.cpp" />
+    <ClCompile Include="glyphrundrawing.cpp" />
+    <ClCompile Include="GlyphRunGeometrySink.cpp" />
+    <ClCompile Include="glyphrunslave.cpp" />
+    <ClCompile Include="gradientbrush.cpp" />
+    <ClCompile Include="GuidelineCollectionResource.cpp" />
+    <ClCompile Include="imagebrush.cpp" />
+    <ClCompile Include="imagedrawing.cpp" />
+    <ClCompile Include="ImplicitInputBrush.cpp" />
+    <ClCompile Include="Effect.cpp" />
+    <ClCompile Include="light.cpp" />
+    <ClCompile Include="lineargradient.cpp" />
+    <ClCompile Include="linegeometry.cpp" />
+    <ClCompile Include="marshal_generated.cpp" />
+    <ClCompile Include="material.cpp" />
+    <ClCompile Include="materialgroup.cpp" />
+    <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="matrixcamera.cpp" />
+    <ClCompile Include="matrixtransform3d.cpp" />
+    <ClCompile Include="meshgeometry3d.cpp" />
+    <ClCompile Include="model3d.cpp" />
+    <ClCompile Include="model3dgroup.cpp" />
+    <ClCompile Include="modelrenderwalker.cpp" />
+    <ClCompile Include="modelwalker.cpp" />
+    <ClCompile Include="node.cpp" />
+    <ClCompile Include="orthographiccamera.cpp" />
+    <ClCompile Include="pathgeometry.cpp" />
+    <ClCompile Include="pathgeometrywrapper.cpp" />
+    <ClCompile Include="pen.cpp" />
+    <ClCompile Include="perspectivecamera.cpp" />
+    <ClCompile Include="PixelShader.cpp" />
+    <ClCompile Include="pointlight.cpp" />
+    <ClCompile Include="prerenderwalker.cpp" />
+    <ClCompile Include="projectioncamera.cpp" />
+    <ClCompile Include="quaternionrotation3d.cpp" />
+    <ClCompile Include="radialgradient.cpp" />
+    <ClCompile Include="rectanglegeometry.cpp" />
+    <ClCompile Include="renderdata.cpp" />
+    <ClCompile Include="renderdata_generated.cpp" />
+    <ClCompile Include="rotate.cpp" />
+    <ClCompile Include="rotatetransform3d.cpp" />
+    <ClCompile Include="rotation3d.cpp" />
+    <ClCompile Include="scale.cpp" />
+    <ClCompile Include="scaletransform3d.cpp" />
+    <ClCompile Include="ShaderEffect.cpp" />
+    <ClCompile Include="skew.cpp" />
+    <ClCompile Include="solidcolorbrush.cpp" />
+    <ClCompile Include="specularmaterial.cpp" />
+    <ClCompile Include="spotlight.cpp" />
+    <ClCompile Include="tilebrush.cpp" />
+    <ClCompile Include="tilebrushutils.cpp" />
+    <ClCompile Include="transform.cpp" />
+    <ClCompile Include="transform3d.cpp" />
+    <ClCompile Include="transform3dgroup.cpp" />
+    <ClCompile Include="transformgroup.cpp" />
+    <ClCompile Include="translate.cpp" />
+    <ClCompile Include="translatetransform3d.cpp" />
+    <ClCompile Include="valueres.cpp" />
+    <ClCompile Include="videoSlave.cpp" />
+    <ClCompile Include="videodrawing.cpp" />
+    <ClCompile Include="ViewportAlignedIntermediateRealizer.cpp" />
+    <ClCompile Include="viewport3dvisual.cpp" />
+    <ClCompile Include="visual3D.cpp" />
+    <ClCompile Include="visualbrush.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
