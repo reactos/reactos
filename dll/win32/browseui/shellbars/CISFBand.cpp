@@ -32,7 +32,6 @@ TODO:
 
 CISFBand::CISFBand()
     : m_BandID(0)
-    , m_pidl(NULL)
     , m_uChangeNotify(0)
     , m_bShowText(TRUE)
     , m_bSmallIcon(TRUE)
@@ -56,19 +55,10 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     SubclassWindow(hwndToolbar);
 
     ShowHideText(m_bShowText);
-
-    // Set the image list.
-    CComPtr<IImageList> piml;
-    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        DestroyWindow();
-        return hr;
-    }
-    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)(HIMAGELIST)piml.Detach());
-
+    SetImageListIconSize(m_bSmallIcon);
     RefreshToolbar();
-    return hr;
+
+    return S_OK;
 }
 
 void CISFBand::RefreshToolbar()
@@ -120,6 +110,56 @@ void CISFBand::DeleteToolbarButtons()
     }
 }
 
+void CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
+{
+    if (bRegister)
+    {
+        SHChangeNotifyEntry entry = { m_pidl, FALSE };
+        m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
+                                                 SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY,
+                                                 1, &entry);
+    }
+    else // De-register?
+    {
+        if (m_uChangeNotify)
+        {
+            SHChangeNotifyDeregister(m_uChangeNotify);
+            m_uChangeNotify = 0;
+        }
+    }
+}
+
+HRESULT CISFBand::SetImageListIconSize(_In_ BOOL bSmall)
+{
+    m_bSmallIcon = bSmall;
+
+    CComPtr<IImageList> piml;
+    HRESULT hr = SHGetImageList((bSmall ? SHIL_SMALL : SHIL_LARGE), IID_PPV_ARG(IImageList, &piml));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)(HIMAGELIST)piml.Detach());
+    return S_OK;
+}
+
+HRESULT CISFBand::BandInfoChanged()
+{
+    if (!m_Site)
+        return S_OK;
+    HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return S_OK;
+}
+
+HRESULT CISFBand::ShowHideText(_In_ BOOL bShow)
+{
+    // NOTE: TBSTYLE_EX_MIXEDBUTTONS hides non-BTNS_SHOWTEXT buttons' text.
+    m_bShowText = bShow;
+    SendMessage(TB_SETEXTENDEDSTYLE, 0, (bShow ? 0 : TBSTYLE_EX_MIXEDBUTTONS));
+    return S_OK;
+}
+
 LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (wParam != TIMERID_DELAYED_REFRESH)
@@ -147,56 +187,6 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     UnsubclassWindow();
     bHandled = FALSE;
     return 0;
-}
-
-void CISFBand::RegisterChangeNotify(BOOL bRegister)
-{
-    if (bRegister)
-    {
-        SHChangeNotifyEntry entry = { m_pidl, FALSE };
-        m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
-                                                 SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY,
-                                                 1, &entry);
-    }
-    else // De-register?
-    {
-        if (m_uChangeNotify)
-        {
-            SHChangeNotifyDeregister(m_uChangeNotify);
-            m_uChangeNotify = 0;
-        }
-    }
-}
-
-HRESULT CISFBand::SetIconSize(BOOL bSmall)
-{
-    m_bSmallIcon = bSmall;
-
-    CComPtr<IImageList> piml;
-    HRESULT hr = SHGetImageList((bSmall ? SHIL_SMALL : SHIL_LARGE), IID_PPV_ARG(IImageList, &piml));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)(HIMAGELIST)piml.Detach());
-
-    return BandInfoChanged();
-}
-
-HRESULT CISFBand::BandInfoChanged()
-{
-    if (!m_Site)
-        return S_OK;
-    HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-    return S_OK;
-}
-
-HRESULT CISFBand::ShowHideText(BOOL bShow)
-{
-    // NOTE: TBSTYLE_EX_MIXEDBUTTONS hides non-BTNS_SHOWTEXT buttons' text.
-    m_bShowText = bShow;
-    SendMessage(TB_SETEXTENDEDSTYLE, 0, (bShow ? 0 : TBSTYLE_EX_MIXEDBUTTONS));
-    return BandInfoChanged();
 }
 
 /*****************************************************************************/
@@ -284,7 +274,6 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
     STDMETHODIMP CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
     {
         /* No need to implement this method */
-
         return E_NOTIMPL;
     }
 
@@ -367,14 +356,12 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
     STDMETHODIMP CISFBand::GetClassID(OUT CLSID *pClassID)
     {
         *pClassID = CLSID_ISFBand;
-
         return S_OK;
     }
 
     STDMETHODIMP CISFBand::IsDirty()
     {
         /* The object hasn't changed since the last save! */
-
         return S_FALSE;
     }
 
@@ -382,21 +369,18 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
     {
         TRACE("CISFBand::Load called\n");
         /* Nothing to do */
-
         return S_OK;
     }
 
     STDMETHODIMP CISFBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
     {
         /* Nothing to do */
-
         return S_OK;
     }
 
     STDMETHODIMP CISFBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
     {
         TRACE("CISFBand::GetSizeMax called\n");
-
         return S_OK;
     }
 
@@ -512,9 +496,7 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
     STDMETHODIMP CISFBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
     {
         if (IsEqualIID(*pguidCmdGroup, IID_IBandSite))
-        {
             return S_OK;
-        }
 
         if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
         {
@@ -558,6 +540,8 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
         if (psf && pidl)
             return E_INVALIDARG;
 
+        m_pidl.Free();
+
         if (pidl != NULL)
         {
             CComPtr<IShellFolder> psfDesktop;
@@ -576,7 +560,7 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
                     return hr;
             }
 
-            m_pidl = ILClone(pidl);
+            m_pidl.Attach(ILClone(pidl));
         }
 
         if (psf != NULL)
@@ -604,6 +588,7 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
         {
             m_QLaunch = TRUE;
             ShowHideText(FALSE);
+            return BandInfoChanged();
         }
 
         return E_NOTIMPL;
@@ -650,32 +635,33 @@ HRESULT CISFBand::ShowHideText(BOOL bShow)
             {
                 case IDM_LARGE_ICONS:
                 {
-                    return SetIconSize(FALSE);
+                    HRESULT hr = SetImageListIconSize(FALSE);
+                    if (FAILED(hr))
+                        return hr;
+                    return BandInfoChanged();
                 }
                 case IDM_SMALL_ICONS:
                 {
-                    return SetIconSize(TRUE);
+                    HRESULT hr = SetImageListIconSize(TRUE);
+                    if (FAILED(hr))
+                        return hr;
+                    return BandInfoChanged();
                 }
                 case IDM_OPEN_FOLDER:
                 {
-                    SHELLEXECUTEINFO shexinfo;
-
-                    memset(&shexinfo, 0x0, sizeof(shexinfo));
-
-                    shexinfo.cbSize = sizeof(shexinfo);
+                    SHELLEXECUTEINFOW shexinfo = { sizeof(shexinfo) };
                     shexinfo.fMask = SEE_MASK_IDLIST;
-                    shexinfo.lpVerb = _T("open");
+                    shexinfo.lpVerb = L"open";
                     shexinfo.lpIDList = m_pidl;
                     shexinfo.nShow = SW_SHOW;
-
-                    if (!ShellExecuteEx(&shexinfo))
+                    if (!ShellExecuteExW(&shexinfo))
                         return E_FAIL;
-
                     break;
                 }
                 case IDM_SHOW_TEXT:
                 {
-                    return ShowHideText(!m_bShowText);
+                    ShowHideText(!m_bShowText);
+                    return BandInfoChanged();
                 }
                 default:
                     return E_FAIL;

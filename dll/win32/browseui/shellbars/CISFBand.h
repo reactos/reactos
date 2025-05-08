@@ -29,7 +29,7 @@ class CISFBand :
 
     // Toolbar
     CComPtr<IShellFolder> m_pISF;
-    PIDLIST_ABSOLUTE m_pidl;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> m_pidl;
     UINT m_uChangeNotify;
 
     // Menu
@@ -37,13 +37,13 @@ class CISFBand :
     BOOL m_bSmallIcon;
     BOOL m_QLaunch;
 
-    void RegisterChangeNotify(BOOL bRegister);
+    void RegisterChangeNotify(_In_ BOOL bRegister);
     HRESULT AddToolbarButtons();
     void DeleteToolbarButtons();
     void RefreshToolbar();
-    HRESULT SetIconSize(BOOL bSmall);
+    HRESULT SetImageListIconSize(_In_ BOOL bSmall);
     HRESULT BandInfoChanged();
-    HRESULT ShowHideText(BOOL bShow);
+    HRESULT ShowHideText(_In_ BOOL bShow);
 
 public:
     CISFBand();
