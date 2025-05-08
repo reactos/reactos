@@ -166,6 +166,7 @@ HRESULT CISFBand::ShowHideText(_In_ BOOL bShow)
 //****************************************************************************
 // Message handlers
 
+// WM_TIMER
 LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (wParam == TIMERID_DELAYED_REFRESH)
@@ -176,6 +177,7 @@ LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
     return 0;
 }
 
+// WM_ISFBAND_CHANGE_NOTIFY
 LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     // This code reduces the redrawing cost by coalescing multiple change events
@@ -184,6 +186,7 @@ LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return 0;
 }
 
+// WM_DESTROY
 LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     KillTimer(TIMERID_DELAYED_REFRESH);
