@@ -79,7 +79,13 @@ void __cdecl terminate(void);
 
 typedef void (__cdecl *MSVCRT_security_error_handler)(int, void *);
 
+#ifdef __REACTOS__
+// The wine version is wrong and causes buffer overruns in the test!
+typedef struct {UCHAR ld[10];} MSVCRT__LDOUBLE; /* Intel 80 bit FP format has sizeof() 10! The structure is documented!!! */
+typedef struct {ULONG x80[3];} WINE_BROKEN_LDOUBLE; /* Wine devs making up their own crap */
+#else
 typedef struct {ULONG x80[3];} MSVCRT__LDOUBLE; /* Intel 80 bit FP format has sizeof() 12 */
+#endif
 
 typedef struct __lc_time_data {
     union {
