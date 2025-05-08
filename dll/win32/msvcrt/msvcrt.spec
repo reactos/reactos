@@ -439,7 +439,7 @@
 @ cdecl _fgetchar()
 @ cdecl _fgetwchar()
 @ cdecl _filbuf(ptr)
-# extern _fileinfo
+@ extern -arch=i386,x86_64 _fileinfo
 @ cdecl _filelength(long)
 @ cdecl -ret64 _filelengthi64(long)
 @ cdecl _fileno(ptr)
@@ -691,7 +691,7 @@
 @ cdecl _mbbtombc(long)
 @ cdecl -version=0x600+ _mbbtombc_l(long ptr)
 @ cdecl _mbbtype(long long)
-# extern _mbcasemap
+@ extern _mbcasemap
 @ cdecl _mbccpy(ptr ptr)
 @ cdecl -version=0x600+ _mbccpy_l(ptr ptr ptr)
 @ cdecl -version=0x600+ _mbccpy_s(ptr long ptr ptr)
