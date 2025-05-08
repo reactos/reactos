@@ -46,6 +46,7 @@
 @ stdcall GetUILanguageInfo(long wstr wstr ptr ptr)
 @ stdcall GetUserDefaultLocaleName(wstr long)
 @ stdcall GetUserPreferredUILanguages(long ptr wstr ptr)
+@ stdcall IsValidLocaleName(wstr)
 @ stdcall LCIDToLocaleName(long wstr long long)
 @ stdcall LocaleNameToLCID(wstr long)
 @ stdcall OpenFileById(ptr ptr long long ptr long)
