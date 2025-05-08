@@ -5021,6 +5021,7 @@ PNP_RegisterNotification(
     PDEV_BROADCAST_DEVICEINTERFACE_W pBroadcastDeviceInterface;
     PDEV_BROADCAST_HANDLE pBroadcastDeviceHandle;
     PNOTIFY_ENTRY pNotifyData = NULL;
+    DWORD ret = CR_SUCCESS;
 
     DPRINT1("PNP_RegisterNotification(%p %p '%S' %p %lu 0x%lx %p %lx %p)\n",
            hBinding, hRecipient, pszName, pNotificationFilter,
@@ -5053,8 +5054,11 @@ PNP_RegisterNotification(
 
         pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_ENTRY));
         if (pNotifyData == NULL)
-            return CR_OUT_OF_MEMORY;
-        
+        {
+            ret = CR_OUT_OF_MEMORY;
+            goto done;
+        }
+
         pNotifyData->dwType = CLASS_NOTIFICATION;
 
         if (pszName != NULL)
@@ -5064,12 +5068,32 @@ PNP_RegisterNotification(
                                                    (wcslen(pszName) + 1) * sizeof(WCHAR));
             if (pNotifyData->pszName == NULL)
             {
-                RtlFreeHeap(GetProcessHeap(), 0, pNotifyData);
-                return CR_OUT_OF_MEMORY;
+                ret = CR_OUT_OF_MEMORY;
+                goto done;
             }
+
+            wcscpy(pNotifyData->pszName, pszName);
         }
 
-        pNotifyData->hRecipient = hRecipient;
+        if ((ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
+        {
+            pNotifyData->hRecipient = hRecipient;
+        }
+        else
+        {
+            DPRINT("Validate service: %S\n", pszName);
+            if (I_ScValidatePnpService(NULL,
+                                       pszName,
+                                       (SERVICE_STATUS_HANDLE *)&pNotifyData->hRecipient) != ERROR_SUCCESS)
+            {
+                DPRINT1("I_ScValidatePnpService failed!\n");
+                ret = CR_INVALID_DATA;
+                goto done;
+            }
+
+            DPRINT("Service status handle: %p\n", pNotifyData->hRecipient);
+        }
+
         pNotifyData->ulFlags = ulFlags;
 
         if ((ulFlags & DEVICE_NOTIFY_ALL_INTERFACE_CLASSES) == 0)
@@ -5094,18 +5118,38 @@ PNP_RegisterNotification(
 
         if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_HANDLE)) ||
             (pBroadcastDeviceHandle->dbch_size < sizeof(DEV_BROADCAST_HANDLE)))
-            return CR_INVALID_DATA;
+        {
+            ret = CR_INVALID_DATA;
+            goto done;
+        }
 
         if (ulFlags & DEVICE_NOTIFY_ALL_INTERFACE_CLASSES)
-            return CR_INVALID_FLAG;
+        {
+            ret = CR_INVALID_FLAG;
+            goto done;
+        }
+
+        /* FIXME */
     }
     else
     {
         DPRINT1("Invalid device type %lu\n", ((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype);
-        return CR_INVALID_DATA;
+        ret = CR_INVALID_DATA;
     }
 
-    return CR_SUCCESS;
+done:
+    if (ret != CR_SUCCESS)
+    {
+        if (pNotifyData)
+        {
+            if (pNotifyData->pszName)
+                RtlFreeHeap(GetProcessHeap(), 0, pNotifyData->pszName);
+
+            RtlFreeHeap(GetProcessHeap(), 0, pNotifyData);
+        }
+    }
+
+    return ret;
 }
 
 

@@ -31,6 +31,7 @@
 #include <regstr.h>
 #include <userenv.h>
 #include <shlwapi.h>
+#include <winsvc_undoc.h>
 #include <pnp_s.h>
 
 
