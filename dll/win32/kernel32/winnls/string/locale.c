@@ -1849,17 +1849,6 @@ IsValidLocaleName(
     TRACE( "IsValidLocaleName not implemented (lpLocaleName=%s)\n", debugstr_w(lpLocaleName));
     return TRUE;
 }
-
-INT
-WINAPI
-GetUserDefaultLocaleName(
-  LPWSTR lpLocaleName,
-  INT    cchLocaleName
-)
-{
-    TRACE( "GetUserDefaultLocaleName not implemented (lpLocaleName=%s, cchLocaleName=%d)\n", debugstr_w(lpLocaleName), cchLocaleName);
-    return 0;
-}
 #endif
 
 /******************************************************************************

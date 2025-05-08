@@ -10,6 +10,7 @@ list(APPEND SOURCE
     firmware.c
     GetFileInformationByHandleEx.c
     GetTickCount64.c
+    GetUserDefaultLocaleName.c
     InitOnce.c
     sync.c
     vista.c)
