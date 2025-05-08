@@ -3011,6 +3011,7 @@ struct enum_locale_ex_data
     LPARAM            lparam;
 };
 
+#if 0
 static BOOL CALLBACK enum_locale_ex_proc( HMODULE module, LPCWSTR type,
                                           LPCWSTR name, WORD lang, LONG_PTR lparam )
 {
@@ -3051,7 +3052,7 @@ BOOL WINAPI EnumSystemLocalesEx( LOCALE_ENUMPROCEX proc, DWORD flags, LPARAM lpa
                             enum_locale_ex_proc, (LONG_PTR)&data );
     return TRUE;
 }
-
+#endif
 
 /***********************************************************************
  *           VerLanguageNameA  (KERNEL32.@)
