@@ -476,6 +476,7 @@ done:
  * Unix format is: lang[_country][.charset][@modifier]
  * Windows format is: lang[-script][-country][_modifier]
  */
+#if 0 // See kernel32_vista
 static void parse_locale_name( const WCHAR *str, struct locale_name *name )
 {
     static const WCHAR sepW[] = {'-','_','.','@',0};
@@ -576,7 +577,8 @@ done:
     EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING, (LPCWSTR)LOCALE_ILANGUAGE,
                             find_locale_id_callback, (LPARAM)name );
 }
-#endif
+#endif // 0 See kernel32_vista
+#endif // (WINVER >= 0x0600)
 
 
 /***********************************************************************
@@ -1400,6 +1402,7 @@ LANGID WINAPI GetSystemDefaultUILanguage(void)
 }
 
 #if (WINVER >= 0x0600)
+#if 0 // See kernel32_vista
 /***********************************************************************
  *           LocaleNameToLCID  (KERNEL32.@)
  */
@@ -1430,6 +1433,7 @@ LCID WINAPI LocaleNameToLCID( LPCWSTR name, DWORD flags )
 
     return locale_name.lcid;
 }
+#endif
 
 
 /***********************************************************************

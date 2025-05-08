@@ -12,6 +12,7 @@ list(APPEND SOURCE
     GetTickCount64.c
     GetUserDefaultLocaleName.c
     InitOnce.c
+    LocaleNameToLCID.c
     sync.c
     vista.c)
 
