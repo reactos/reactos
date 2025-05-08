@@ -40,7 +40,7 @@ class CISFBand :
     void RegisterChangeNotify(_In_ BOOL bRegister);
     HRESULT AddToolbarButtons();
     void DeleteToolbarButtons();
-    void RefreshToolbar();
+    HRESULT RefreshToolbar();
     HRESULT SetImageListIconSize(_In_ BOOL bSmall);
     HRESULT BandInfoChanged();
     HRESULT ShowHideText(_In_ BOOL bShow);
