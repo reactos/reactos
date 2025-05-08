@@ -652,12 +652,6 @@ public:
         return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
     }
 };
-
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 79f955e07ed ([SHELL32] Implement SHMultiFileProperties)
 #endif /* __cplusplus */
 
 #define S_LESSTHAN 0xffff
