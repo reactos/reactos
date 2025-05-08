@@ -42,6 +42,7 @@
 @ stdcall GetThreadPreferredUILanguages(long ptr wstr ptr)
 @ stdcall GetThreadUILanguage()
 @ stdcall GetUILanguageInfo(long wstr wstr ptr ptr)
+@ stdcall GetUserDefaultLocaleName(wstr long)
 @ stdcall GetUserPreferredUILanguages(long ptr wstr ptr)
 @ stdcall OpenFileById(ptr ptr long long ptr long)
 @ stdcall QueryFullProcessImageNameA(ptr long str ptr)
