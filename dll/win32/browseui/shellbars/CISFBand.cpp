@@ -163,6 +163,9 @@ HRESULT CISFBand::ShowHideText(_In_ BOOL bShow)
     return S_OK;
 }
 
+//****************************************************************************
+// Message handlers
+
 LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (wParam == TIMERID_DELAYED_REFRESH)
