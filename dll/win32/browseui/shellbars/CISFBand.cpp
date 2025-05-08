@@ -114,9 +114,12 @@ void CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
 {
     if (bRegister)
     {
+#define SHCNE_WATCH (SHCNE_RENAMEITEM | SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | \
+                     SHCNE_RMDIR | SHCNE_UPDATEDIR | SHCNE_UPDATEITEM | SHCNE_UPDATEIMAGE | \
+                     SHCNE_RENAMEFOLDER | SHCNE_ASSOCCHANGED)
         SHChangeNotifyEntry entry = { m_pidl, FALSE };
         m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
-                                                 SHCNE_ALLEVENTS, WM_ISFBAND_CHANGE_NOTIFY,
+                                                 SHCNE_WATCH, WM_ISFBAND_CHANGE_NOTIFY,
                                                  1, &entry);
     }
     else // De-register?
