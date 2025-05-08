@@ -37,7 +37,7 @@ class CISFBand :
     BOOL m_bSmallIcon;
     BOOL m_QLaunch;
 
-    void RegisterChangeNotify(_In_ BOOL bRegister);
+    BOOL RegisterChangeNotify(_In_ BOOL bRegister);
     HRESULT AddToolbarButtons();
     void DeleteToolbarButtons();
     HRESULT RefreshToolbar();

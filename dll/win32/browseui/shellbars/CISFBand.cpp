@@ -108,7 +108,7 @@ void CISFBand::DeleteToolbarButtons()
     }
 }
 
-void CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
+BOOL CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
 {
     if (bRegister)
     {
@@ -119,6 +119,7 @@ void CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
         m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
                                                  SHCNE_WATCH, WM_ISFBAND_CHANGE_NOTIFY,
                                                  1, &entry);
+        return m_uChangeNotify != 0;
     }
     else // De-register?
     {
@@ -126,7 +127,9 @@ void CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
         {
             SHChangeNotifyDeregister(m_uChangeNotify);
             m_uChangeNotify = 0;
+            return TRUE;
         }
+        return FALSE;
     }
 }
 
