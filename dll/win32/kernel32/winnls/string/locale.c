@@ -1816,6 +1816,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
 }
 
 #if (WINVER >= 0x0600)
+#if 0 // See kernel32_vista
 /******************************************************************************
  *           GetLocaleInfoEx (KERNEL32.@)
  */
@@ -1848,6 +1849,7 @@ INT WINAPI GetLocaleInfoEx(LPCWSTR locale, LCTYPE info, LPWSTR buffer, INT len)
 
     return GetLocaleInfoW(lcid, info, buffer, len);
 }
+#endif
 
 BOOL
 WINAPI
