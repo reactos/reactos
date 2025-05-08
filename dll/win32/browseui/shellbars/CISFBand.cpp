@@ -175,7 +175,7 @@ LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
 
 LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    // This code reduces the redrawing cost
+    // This code reduces the redrawing cost by coalescing multiple change events
     KillTimer(TIMERID_DELAYED_REFRESH);
     SetTimer(TIMERID_DELAYED_REFRESH, TIMER_REFRESH_DELAY);
     return 0;
