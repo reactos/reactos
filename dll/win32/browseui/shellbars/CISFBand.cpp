@@ -47,8 +47,8 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
     // Create the toolbar.
     DWORD style = WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER;
-    HWND hwndToolbar = ::CreateWindowEx(0, TOOLBARCLASSNAME, NULL, style, 0, 0, 0, 0,
-                                        hWndParent, NULL, 0, NULL);
+    HWND hwndToolbar = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0,
+                                         hWndParent, NULL, 0, NULL);
     if (!hwndToolbar)
         return E_FAIL;
 
@@ -76,21 +76,21 @@ HRESULT CISFBand::AddToolbarButtons()
         return hr;
 
     LPITEMIDLIST pidl;
-    for (INT i = 0; pEnum->Next(1, &pidl, NULL) == S_OK; ++i)
+    for (INT iItem = 0; pEnum->Next(1, &pidl, NULL) == S_OK; ++iItem)
     {
         STRRET strret;
         hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &strret);
 
         WCHAR szText[MAX_PATH];
         if (FAILED_UNEXPECTEDLY(hr))
-            StringCchCopyW(szText, _countof(szText), L"<Unknown-Name>");
+            szText[0] = UNICODE_NULL;
         else
-            StrRetToBuf(&strret, pidl, szText, _countof(szText));
+            StrRetToBufW(&strret, pidl, szText, _countof(szText));
 
-        INT index = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);
-        TBBUTTON tb = { index, i, TBSTATE_ENABLED, BTNS_AUTOSIZE, { 0 },
+        INT iImage = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);
+        TBBUTTON tb = { iImage, iItem, TBSTATE_ENABLED, BTNS_AUTOSIZE, { 0 },
                         (DWORD_PTR)pidl, (INT_PTR)szText };
-        SendMessage(TB_INSERTBUTTONW, i, (LPARAM)&tb);
+        SendMessage(TB_INSERTBUTTONW, iItem, (LPARAM)&tb);
     }
 
     SendMessage(TB_AUTOSIZE, 0, 0);
@@ -165,11 +165,11 @@ HRESULT CISFBand::ShowHideText(_In_ BOOL bShow)
 
 LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    if (wParam != TIMERID_DELAYED_REFRESH)
-        return 0;
-
-    KillTimer(wParam);
-    RefreshToolbar();
+    if (wParam == TIMERID_DELAYED_REFRESH)
+    {
+        KillTimer(wParam);
+        RefreshToolbar();
+    }
     return 0;
 }
 
@@ -407,7 +407,7 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             case WM_COMMAND:
             {
                 TBBUTTON tb;
-                bool chk = SendMessage(m_hWnd, TB_GETBUTTON, LOWORD(wParam), (LPARAM)&tb);
+                BOOL chk = SendMessage(TB_GETBUTTON, LOWORD(wParam), (LPARAM)&tb);
                 if (chk)
                     SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);
 
