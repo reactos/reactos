@@ -53,6 +53,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         return E_FAIL;
 
     SubclassWindow(hwndToolbar);
+    ATLASSERT(m_hWnd);
 
     ShowHideText(m_bShowText);
     SetImageListIconSize(m_bSmallIcon);
@@ -112,6 +113,8 @@ BOOL CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
 {
     if (bRegister)
     {
+        if (!m_pidl)
+            return FALSE;
 #define SHCNE_WATCH (SHCNE_RENAMEITEM | SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | \
                      SHCNE_RMDIR | SHCNE_UPDATEDIR | SHCNE_UPDATEITEM | SHCNE_UPDATEIMAGE | \
                      SHCNE_RENAMEFOLDER | SHCNE_ASSOCCHANGED)
@@ -574,6 +577,8 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             }
 
             m_pidl.Attach(ILClone(pidl));
+            if (!m_pidl)
+                ERR("Out of memory\n");
         }
 
         if (psf != NULL)
@@ -587,6 +592,7 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
+            ATLASSERT(m_pidl);
             m_pISF = psf;
         }
 
