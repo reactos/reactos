@@ -1848,6 +1848,7 @@ INT WINAPI GetLocaleInfoEx(LPCWSTR locale, LCTYPE info, LPWSTR buffer, INT len)
 }
 #endif
 
+#if 0 // See kernel32_vista
 BOOL
 WINAPI
 IsValidLocaleName(
@@ -1857,6 +1858,7 @@ IsValidLocaleName(
     TRACE( "IsValidLocaleName not implemented (lpLocaleName=%s)\n", debugstr_w(lpLocaleName));
     return TRUE;
 }
+#endif
 #endif
 
 /******************************************************************************
