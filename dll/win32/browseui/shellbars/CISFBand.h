@@ -34,16 +34,17 @@ class CISFBand :
 
     // Menu
     BOOL m_textFlag;
-    BOOL m_iconFlag;
+    BOOL m_bSmallIcon;
     BOOL m_QLaunch;
 
     void RegisterChangeNotify(BOOL bRegister);
     HRESULT AddToolbarButtons();
     void DeleteToolbarButtons();
     void RefreshToolbar();
+    HRESULT SetIconSize(BOOL bSmall);
+    HRESULT BandInfoChanged();
 
 public:
-
     CISFBand();
     virtual ~CISFBand();
 

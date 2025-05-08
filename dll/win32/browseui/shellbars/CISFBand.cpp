@@ -35,7 +35,7 @@ CISFBand::CISFBand() :
     m_pidl(NULL),
     m_uChangeNotify(0),
     m_textFlag(true),
-    m_iconFlag(true),
+    m_bSmallIcon(TRUE),
     m_QLaunch(false)
 {
 }
@@ -76,9 +76,7 @@ void CISFBand::RefreshToolbar()
 {
     DeleteToolbarButtons();
     AddToolbarButtons();
-
-    if (m_Site)
-        IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+    BandInfoChanged();
 }
 
 HRESULT CISFBand::AddToolbarButtons()
@@ -169,6 +167,29 @@ void CISFBand::RegisterChangeNotify(BOOL bRegister)
             m_uChangeNotify = 0;
         }
     }
+}
+
+HRESULT CISFBand::SetIconSize(BOOL bSmall)
+{
+    m_bSmallIcon = bSmall;
+
+    CComPtr<IImageList> piml;
+    HRESULT hr = SHGetImageList((bSmall ? SHIL_SMALL : SHIL_LARGE), IID_PPV_ARG(IImageList, &piml));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)(HIMAGELIST)piml.Detach());
+
+    return BandInfoChanged();
+}
+
+HRESULT CISFBand::BandInfoChanged()
+{
+    if (!m_Site)
+        return S_OK;
+    HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return S_OK;
 }
 
 /*****************************************************************************/
@@ -624,27 +645,11 @@ void CISFBand::RegisterChangeNotify(BOOL bRegister)
             {
                 case IDM_LARGE_ICONS:
                 {
-                    m_iconFlag = false;
-
-                    HIMAGELIST* piml = (HIMAGELIST*) SendMessage(m_hWnd, TB_GETIMAGELIST, 0, 0);
-                    HRESULT hr = SHGetImageList(SHIL_LARGE, IID_IImageList, (void**)&piml);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
-                    hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    break;
+                    return SetIconSize(FALSE);
                 }
                 case IDM_SMALL_ICONS:
                 {
-                    m_iconFlag = true;
-
-                    HIMAGELIST* piml = (HIMAGELIST*)SendMessage(m_hWnd, TB_GETIMAGELIST, 0, 0);
-                    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
-                    hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    break;
+                    return SetIconSize(TRUE);
                 }
                 case IDM_OPEN_FOLDER:
                 {
@@ -669,15 +674,13 @@ void CISFBand::RegisterChangeNotify(BOOL bRegister)
                     {
                         m_textFlag = false;
                         SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-                        HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+                        return BandInfoChanged();
                     }
                     else
                     {
                         m_textFlag = true;
                         SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, 0);
-                        HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+                        return BandInfoChanged();
                     }
                     break;
                 }
@@ -698,7 +701,7 @@ void CISFBand::RegisterChangeNotify(BOOL bRegister)
         else
             CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_UNCHECKED);
 
-        if (m_iconFlag)
+        if (m_bSmallIcon)
         {
             CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_CHECKED);
             CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_UNCHECKED);
@@ -719,9 +722,9 @@ void CISFBand::RegisterChangeNotify(BOOL bRegister)
 
 /*****************************************************************************/
 // C Constructor
-    extern "C"
-    HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv)
-    {
-        return ShellObjectCreator<CISFBand>(riid, ppv);
-    }
 
+EXTERN_C
+HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv)
+{
+    return ShellObjectCreator<CISFBand>(riid, ppv);
+}
