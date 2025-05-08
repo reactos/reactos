@@ -182,9 +182,9 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 {
     KillTimer(TIMERID_DELAYED_REFRESH);
     RegisterChangeNotify(FALSE);
+    UnsubclassWindow();
     ShowWindow(SW_HIDE);
     DeleteToolbarButtons();
-    UnsubclassWindow();
     bHandled = FALSE;
     return 0;
 }
