@@ -56,7 +56,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     ShowHideText(m_bShowText);
     SetImageListIconSize(m_bSmallIcon);
-    RefreshToolbar();
+    AddToolbarButtons();
 
     return S_OK;
 }
@@ -65,7 +65,6 @@ void CISFBand::RefreshToolbar()
 {
     DeleteToolbarButtons();
     AddToolbarButtons();
-    BandInfoChanged();
 }
 
 HRESULT CISFBand::AddToolbarButtons()
@@ -94,7 +93,7 @@ HRESULT CISFBand::AddToolbarButtons()
     }
 
     SendMessage(TB_AUTOSIZE, 0, 0);
-    return S_OK;
+    return BandInfoChanged();
 }
 
 void CISFBand::DeleteToolbarButtons()
