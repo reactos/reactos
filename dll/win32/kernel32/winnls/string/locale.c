@@ -1436,6 +1436,7 @@ LCID WINAPI LocaleNameToLCID( LPCWSTR name, DWORD flags )
 #endif
 
 
+#if 0 // See kernel32_vista
 /***********************************************************************
  *           LCIDToLocaleName  (KERNEL32.@)
  */
@@ -1445,6 +1446,7 @@ INT WINAPI LCIDToLocaleName( LCID lcid, LPWSTR name, INT count, DWORD flags )
 
     return GetLocaleInfoW( lcid, LOCALE_SNAME | LOCALE_NOUSEROVERRIDE, name, count );
 }
+#endif
 #endif
 
 
