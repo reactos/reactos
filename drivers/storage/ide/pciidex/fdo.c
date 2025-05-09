@@ -13,6 +13,32 @@
 
 static
 CODE_SEG("PAGE")
+PCM_RESOURCE_LIST
+PciIdeXCloneResourceList(
+    _In_ PCM_RESOURCE_LIST ResourcesTranslated)
+{
+    ULONG Count, Size;
+    PCM_RESOURCE_LIST ResourceList;
+
+    PAGED_CODE();
+
+    /* Only the first list is accessible for WDM drivers */
+    ASSERT(ResourcesTranslated->Count == 1);
+
+    Count = ResourcesTranslated->List[0].PartialResourceList.Count;
+    Size = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[Count]);
+
+    ResourceList = ExAllocatePoolUninitialized(PagedPool, Size, TAG_PCIIDEX);
+    if (!ResourceList)
+        return NULL;
+
+    RtlCopyMemory(ResourceList, ResourcesTranslated, Size);
+
+    return ResourceList;
+}
+
+static
+CODE_SEG("PAGE")
 NTSTATUS
 PciIdeXFdoParseResources(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
@@ -25,7 +51,17 @@ PciIdeXFdoParseResources(
     PAGED_CODE();
 
     if (!ResourcesTranslated)
-        return STATUS_INVALID_PARAMETER;
+    {
+        if (FdoExtension->Flags & FDO_DMA_CAPABLE)
+            return STATUS_INSUFFICIENT_RESOURCES;
+        else
+            return STATUS_SUCCESS;
+    }
+
+    /* Save the resource list */
+    FdoExtension->ResourceList = PciIdeXCloneResourceList(ResourcesTranslated);
+    if (!FdoExtension->ResourceList)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
     for (i = 0; i < ResourcesTranslated->List[0].PartialResourceList.Count; ++i)
     {
@@ -58,7 +94,12 @@ PciIdeXFdoParseResources(
     }
 
     if (!BusMasterDescriptor)
-        return STATUS_DEVICE_CONFIGURATION_ERROR;
+    {
+        if (FdoExtension->Flags & FDO_DMA_CAPABLE)
+            return STATUS_DEVICE_CONFIGURATION_ERROR;
+        else
+            return STATUS_SUCCESS;
+    }
 
     if ((BusMasterDescriptor->Type == CmResourceTypePort) &&
         (BusMasterDescriptor->Flags & CM_RESOURCE_PORT_IO))
@@ -71,7 +112,7 @@ PciIdeXFdoParseResources(
         if (!IoBase)
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        FdoExtension->IoBaseMapped = TRUE;
+        FdoExtension->Flags |= FDO_IO_BASE_MAPPED;
     }
     FdoExtension->BusMasterPortBase = IoBase;
 
@@ -128,10 +169,16 @@ PciIdeXFdoFreeResources(
 {
     PAGED_CODE();
 
-    if (FdoExtension->IoBaseMapped)
+    if (FdoExtension->ResourceList)
+    {
+        ExFreePoolWithTag(FdoExtension->ResourceList, TAG_PCIIDEX);
+        FdoExtension->ResourceList = NULL;
+    }
+
+    if (FdoExtension->Flags & FDO_IO_BASE_MAPPED)
     {
         MmUnmapIoSpace(FdoExtension->BusMasterPortBase, 16);
-        FdoExtension->IoBaseMapped = FALSE;
+        FdoExtension->Flags &= ~FDO_IO_BASE_MAPPED;
     }
 }
 
@@ -162,6 +209,12 @@ PciIdeXFdoRemoveDevice(
     PAGED_CODE();
 
     PciIdeXFdoFreeResources(FdoExtension);
+
+    if (FdoExtension->ControllerObject)
+    {
+        IoDeleteController(FdoExtension->ControllerObject);
+        FdoExtension->ControllerObject = NULL;
+    }
 
     ExAcquireFastMutex(&FdoExtension->DeviceSyncMutex);
 
@@ -397,7 +450,7 @@ PciIdeXFdoQueryInterface(
         ResourceType = (ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData;
 
         /* In native mode the IDE controller does not use any legacy interrupt resources */
-        if (FdoExtension->InNativeMode ||
+        if ((FdoExtension->Flags & FDO_IN_NATIVE_MODE) ||
             ResourceType != CmResourceTypeInterrupt ||
             IoStack->Parameters.QueryInterface.Size < sizeof(TRANSLATOR_INTERFACE))
         {
