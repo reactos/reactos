@@ -413,8 +413,9 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     }
 
     /* Set drive type and icon */
+    // TODO: Call SHGetFileInfo to get this info
     UINT DriveType = GetDriveTypeW(m_wszDrive);
-    UINT IconId, TypeStrId = 0;
+    UINT IconId, TypeStrId;
     switch (DriveType)
     {
         case DRIVE_REMOVABLE:
