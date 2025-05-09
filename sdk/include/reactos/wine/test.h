@@ -1001,6 +1001,9 @@ int main( int argc, char **argv )
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
 #define ok_hdl ok_ptr
 
+#define is_reactos() \
+    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
