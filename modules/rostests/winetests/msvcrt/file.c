@@ -1802,6 +1802,14 @@ static void test_file_inherit( const char* selfname )
     arg_v[2] = "inherit";
     arg_v[3] = buffer; sprintf(buffer, "%d", fd);
     arg_v[4] = 0;
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        skip("Skipping test_file_inherit pipe test, because it hangs on ReactOS\n");
+    }
+    else
+    {
+#endif
     ret = _spawnvp(_P_WAIT, selfname, arg_v);
     ok(ret == 0, "_spawnvp returned %Id, errno %d\n", ret, errno);
     ret = tell(fd);
@@ -1815,7 +1823,9 @@ static void test_file_inherit( const char* selfname )
     CloseHandle(thread_handle);
     close(pipefds[0]);
     close(pipefds[1]);
-
+#ifdef __REACTOS__
+    }
+#endif
     /* make file handle inheritable */
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
@@ -2513,7 +2523,13 @@ static void test_pipes(const char* selfname)
     char expected[4096];
     int r;
     int i;
-
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        win_skip("Skipping test_pipes, because it hangs on ReactOS\n");
+        return;
+    }
+#endif
     /* Test reading from a pipe with read() */
     if (_pipe(pipes, 1024, O_BINARY) < 0)
     {
