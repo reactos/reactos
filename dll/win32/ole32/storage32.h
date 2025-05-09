@@ -36,6 +36,9 @@
 #include "winbase.h"
 #include "winnt.h"
 #include "objbase.h"
+#ifdef __REACTOS__
+#include "propidl.h"
+#endif
 #include "winreg.h"
 #include "winternl.h"
 #include "wine/list.h"

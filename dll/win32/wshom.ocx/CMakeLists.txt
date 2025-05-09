@@ -31,4 +31,4 @@ add_importlibs(wshom oleaut32 ole32 shell32 advapi32 advapi32_vista user32 msvcr
 add_dependencies(wshom stdole2 wshom_idlheader)
 add_pch(wshom precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wshom DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(wshom) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(wshom)

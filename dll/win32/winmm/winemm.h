@@ -22,7 +22,9 @@
 #ifndef _WINEMM_H_
 #define _WINEMM_H_
 
+#ifndef __REACTOS__
 #include <wine/config.h>
+#endif
 
 #include <assert.h>
 #include <stdio.h>
@@ -39,9 +41,13 @@
 #include <winreg.h>
 #include <mmddk.h>
 
+#ifdef __REACTOS__
+#include <wine2ros.h>
+#else
 #include <wine/debug.h>
 #include <wine/exception.h>
 #include <wine/unicode.h>
+#endif
 
 #define WINE_DEFAULT_WINMM_DRIVER     "alsa,oss,coreaudio,esd"
 #define WINE_DEFAULT_WINMM_MAPPER     "msacm32.drv"
@@ -204,7 +210,6 @@ extern HANDLE psStopEvent;
 INT LoadRegistryMMEDrivers(char* key);
 
 // REACTOS:
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define wcsnicmp strncmpiW
 #define swprintf snprintfW
 

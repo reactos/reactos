@@ -21,11 +21,7 @@
 #ifndef _PDH_H_
 #define _PDH_H_
 
-#ifdef __WINESRC__
-# include <windef.h>
-#else
-# include <windows.h>
-#endif
+#include <windows.h>
 #include <winperf.h>
 
 #ifdef __cplusplus

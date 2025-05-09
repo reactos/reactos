@@ -5021,7 +5021,7 @@ ResetDevice(
         IN HDEVINFO DeviceInfoSet,
         IN PSP_DEVINFO_DATA DeviceInfoData)
 {
-#ifndef __WINESRC__
+#ifdef __REACTOS__
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
     CONFIGRET cr;
@@ -5045,7 +5045,7 @@ StopDevice(
         IN HDEVINFO DeviceInfoSet,
         IN PSP_DEVINFO_DATA DeviceInfoData)
 {
-#ifndef __WINESRC__
+#ifdef __REACTOS__
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
     CONFIGRET cr;

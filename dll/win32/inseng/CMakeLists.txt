@@ -28,4 +28,4 @@ target_link_libraries(inseng uuid wine)
 add_importlibs(inseng ole32 urlmon kernel32_vista msvcrt kernel32 ntdll)
 add_pch(inseng precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET inseng DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(inseng) # CORE-5743: No CONST_VTABLE
+set_wine_module(inseng)

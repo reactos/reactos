@@ -28,4 +28,4 @@ add_delay_importlibs(wintrust cryptui)
 add_importlibs(wintrust imagehlp crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(wintrust precomp.h SOURCE)
 add_cd_file(TARGET wintrust DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(wintrust) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(wintrust)

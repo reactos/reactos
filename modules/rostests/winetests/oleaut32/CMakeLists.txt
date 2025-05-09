@@ -1,13 +1,11 @@
 
 add_definitions(
-    -D__WINESRC__
     -DUSE_WINE_TODOS
     -DWINETEST_USE_DBGSTR_LONGLONG
     -D_USE_MATH_DEFINES
     -Dstrcasecmp=_stricmp
 )
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_typelib(test_reg.idl test_tlb.idl tmarshal.idl)
 add_idl_Headers(oleaut32_idlheaders test_reg.idl test_tlb.idl tmarshal.idl)
 generate_idl_iids(test_reg.idl test_tlb.idl tmarshal.idl)
@@ -53,3 +51,4 @@ endif()
 add_dependencies(oleaut32_winetest stdole2 oleaut32_idlheaders)
 add_pch(oleaut32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET oleaut32_winetest)
+set_wine_module(oleaut32_winetest)

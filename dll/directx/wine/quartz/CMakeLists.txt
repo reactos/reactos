@@ -59,4 +59,4 @@ add_importlibs(quartz dsound msacm32 msvfw32 ole32 oleaut32 rpcrt4 user32 gdi32 
 add_dependencies(quartz dxsdk quartz_idlheader stdole2)
 add_pch(quartz precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(quartz) # CORE-5743: No CONST_VTABLE
+set_wine_module(quartz)

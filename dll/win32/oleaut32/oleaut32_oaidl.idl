@@ -23,9 +23,7 @@
 #pragma makedep proxy
 #pragma makedep register
 
-cpp_quote("#if 0    /* oleaut32_oaidl.idl hack */")
 #include "oaidl.idl"
-cpp_quote("#endif   /* oleaut32_oaidl.idl hack */")
 
 [
     threading(both),

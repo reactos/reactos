@@ -54,10 +54,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
-#ifdef __REACTOS__
-#undef __WINESRC__
-#endif
-
 #include "resource.h"
 
 #define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057

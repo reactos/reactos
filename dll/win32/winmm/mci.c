@@ -54,7 +54,11 @@
 #include "digitalv.h"
 #include "winemm.h"
 
+#ifdef __REACTOS__
+#include <wine2ros.h>
+#else
 #include "wine/debug.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(mci);
 

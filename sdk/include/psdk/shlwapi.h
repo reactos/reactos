@@ -2008,11 +2008,6 @@ typedef struct _DllVersionInfo {
 
 typedef HRESULT (CALLBACK *DLLGETVERSIONPROC)(DLLVERSIONINFO *);
 
-#ifdef __WINESRC__
-/* shouldn't be here, but is nice for type checking */
-HRESULT WINAPI DllGetVersion(DLLVERSIONINFO *) DECLSPEC_HIDDEN;
-#endif
-
 typedef struct _DLLVERSIONINFO2 {
     DLLVERSIONINFO info1;
     DWORD          dwFlags;    /* Reserved */

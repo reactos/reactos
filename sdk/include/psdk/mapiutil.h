@@ -31,7 +31,7 @@ LPMALLOC WINAPI MAPIGetDefaultMalloc(void);
 
 #define SOF_UNIQUEFILENAME 0x80000000U /* Create a unique (temporary) filename */
 
-#if defined (UNICODE) || defined (__WINESRC__)
+#ifdef UNICODE
 typedef HRESULT (WINAPI * LPOPENSTREAMONFILE)(LPALLOCATEBUFFER,LPFREEBUFFER,
                                               ULONG,LPWSTR,LPWSTR,LPSTREAM*);
 HRESULT WINAPI OpenStreamOnFile(LPALLOCATEBUFFER,LPFREEBUFFER,
@@ -81,7 +81,7 @@ HRESULT WINAPI HrQueryAllRows(LPMAPITABLE,LPSPropTagArray,LPSRestriction,
                               LPSSortOrderSet,LONG,LPSRowSet*);
 LPSPropValue WINAPI PpropFindProp(LPSPropValue,ULONG,ULONG);
 
-#if defined (UNICODE) || defined (__WINESRC__)
+#ifdef UNICODE
 BOOL   WINAPI FBinFromHex(LPWSTR,LPBYTE);
 SCODE  WINAPI ScBinFromHexBounded(LPWSTR,LPBYTE,ULONG);
 void   WINAPI HexFromBin(LPBYTE,int,LPWSTR);

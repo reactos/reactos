@@ -48,4 +48,4 @@ target_link_libraries(riched20 wine uuid)
 add_importlibs(riched20 ole32 oleaut32 usp10 imm32 user32 gdi32 msvcrt kernel32 ntdll)
 add_pch(riched20 precomp.h SOURCE)
 add_cd_file(TARGET riched20 DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(riched20) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(riched20)

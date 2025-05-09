@@ -1102,8 +1102,7 @@ typedef enum
 {
     SYMOPT_EX_DISABLEACCESSTIMEUPDATE,
     SYMOPT_EX_MAX,
-/* __WINESRC__ */
-    SYMOPT_EX_WINE_NATIVE_MODULES = 1000
+    SYMOPT_EX_WINE_NATIVE_MODULES = 1000 // See sdk/include/reactos/wine/dbghelp.h
 } IMAGEHLP_EXTENDED_OPTIONS;
 typedef struct _SRCCODEINFO
 {

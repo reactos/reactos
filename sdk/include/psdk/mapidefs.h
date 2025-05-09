@@ -20,10 +20,7 @@
 #ifndef MAPIDEFS_H
 #define MAPIDEFS_H
 
-#ifndef __WINESRC__
-# include <windows.h>
-#endif
-
+#include <windows.h>
 #include <winerror.h>
 #include <objbase.h>
 #include <stddef.h>
@@ -604,7 +601,7 @@ typedef struct _SRestriction
 typedef struct _MAPIERROR
 {
     ULONG  ulVersion;       /* Mapi version */
-#if defined (UNICODE) || defined (__WINESRC__)
+#ifdef UNICODE
     LPWSTR lpszError;       /* Error and component strings. These are Ascii */
     LPWSTR lpszComponent;   /* unless the MAPI_UNICODE flag is passed in */
 #else
@@ -691,7 +688,7 @@ typedef struct _NEWMAIL_NOTIFICATION
     ULONG     cbParentID;
     LPENTRYID lpParentID;
     ULONG     ulFlags;
-#if defined (UNICODE) || defined (__WINESRC__)
+#ifdef UNICODE
     LPWSTR    lpszMessageClass;
 #else
     LPSTR     lpszMessageClass;

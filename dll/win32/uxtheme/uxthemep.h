@@ -26,7 +26,7 @@
 #include <ndk/ntndk.h>
 #include <ndk/rtltypes.h>
 
-#include <wine/debug.h>
+#include <wine2ros.h>
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
 #define TMT_ENUM 200

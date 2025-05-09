@@ -23,6 +23,18 @@
 #ifndef _NTSTATUS_
 #define _NTSTATUS_
 
+/* FIXME: Ugly code */
+#if !defined(_NTINTSAFE_H_INCLUDED_) && !defined(_NTDEF_) && !defined(NTSTATUS) && !defined(WINE_NTSTATUS_DECLARED)
+    #define WINE_NTSTATUS_DECLARED
+    #define NTSTATUS NTSTATUS
+    #include <windef.h>
+    #include <specstrings.h>
+    typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+    #ifndef NT_SUCCESS
+        #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+    #endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

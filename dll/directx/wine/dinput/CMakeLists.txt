@@ -21,11 +21,11 @@ add_library(dinput MODULE
     dinput.rc
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
-set_wine_module_FIXME(dinput) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(dinput)
 
 add_library(dinput_data_formats data_formats.c)
 add_dependencies(dinput_data_formats psdk)
-set_wine_module_FIXME(dinput_data_formats) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(dinput_data_formats)
 
 set_module_type(dinput win32dll)
 target_link_libraries(dinput dxguid uuid wine)

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <winnls.h>
+
 /* <wine/debug.h> */
 #if DBG
     #ifndef __RELFILE__
@@ -16,15 +18,20 @@
     #define ERR_LEVEL   0x1
     #define TRACE_LEVEL 0x8
 
-    #define WINE_DEFAULT_DEBUG_CHANNEL(x) static PCSTR DbgDefaultChannel = #x;
+    #define WINE_DEFAULT_DEBUG_CHANNEL(x) \
+        static PCSTR DbgDefaultChannel = #x; \
+        static const PCSTR * const _DbgDefaultChannel_ = &DbgDefaultChannel;
 
     BOOL IntIsDebugChannelEnabled(_In_ PCSTR channel);
+
+    ULONG __cdecl DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...);
 
     #define DBG_PRINT(ch, level, tag, fmt, ...) (void)( \
         (((level) == ERR_LEVEL) || IntIsDebugChannelEnabled(ch)) ? \
         (DbgPrint("(%s:%d) %s" fmt, __RELFILE__, __LINE__, (tag), ##__VA_ARGS__), FALSE) : TRUE \
     )
 
+    #define TRACE_ON(ch) IntIsDebugChannelEnabled(#ch)
     #define ERR(fmt, ...)   DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "err: ",   fmt, ##__VA_ARGS__)
     #define WARN(fmt, ...)  DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "warn: ",  fmt, ##__VA_ARGS__)
     #define FIXME(fmt, ...) DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "fixme: ", fmt, ##__VA_ARGS__)
@@ -34,11 +41,15 @@
 
     PCSTR debugstr_a(_In_opt_ PCSTR pszA);
     PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
+    PCSTR debugstr_wn(_In_opt_ PCWSTR s, INT n);
     PCSTR debugstr_guid(_In_opt_ const GUID *id);
+    PCSTR wine_dbgstr_rect(_In_opt_ LPCRECT prc);
+    PCSTR wine_dbg_sprintf(_In_ PCSTR format, ... );
 #else
     #define WINE_DEFAULT_DEBUG_CHANNEL(x)
     #define IntIsDebugChannelEnabled(channel) FALSE
     #define DBG_PRINT(ch, level)
+    #define TRACE_ON(ch) FALSE
     #define ERR(fmt, ...)
     #define WARN(fmt, ...)
     #define FIXME(fmt, ...)
@@ -46,7 +57,10 @@
     #define UNIMPLEMENTED
     #define debugstr_a(pszA) ((PCSTR)NULL)
     #define debugstr_w(pszW) ((PCSTR)NULL)
+    #define debugstr_wn(s, n) ((PCSTR)NULL)
     #define debugstr_guid(id) ((PCSTR)NULL)
+    #define wine_dbgstr_rect(prc) ((PCSTR)NULL)
+    #define wine_dbg_sprintf(format, ... ) ((PCSTR)NULL)
 #endif
 
 /* <wine/unicode.h> */
@@ -86,3 +100,6 @@
 #define snprintfW _snwprintf
 #define vsnprintfW _vsnwprintf
 #define isprintW iswprint
+
+/* <wine/exception.h> */
+#include <wine/exception.h>

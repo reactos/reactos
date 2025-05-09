@@ -43,7 +43,7 @@ add_idl_headers(msi_winetest_idlheader typelib.idl)
 generate_idl_iids(typelib.idl)
 add_typelib(typelib.idl)
 
-target_compile_definitions(msi_winetest PRIVATE __WINESRC__ USE_WINE_TODOS strcasecmp=_stricmp)
+target_compile_definitions(msi_winetest PRIVATE USE_WINE_TODOS strcasecmp=_stricmp)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(msi_winetest PRIVATE -Wno-format-overflow -Wno-format)
@@ -61,3 +61,4 @@ add_importlibs(msi_winetest secur32 cabinet msi shell32 ole32 oleaut32 odbccp32 
 add_pch(msi_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET msi_winetest)
 add_dependencies(msi_winetest msi_custom msi_selfreg msi_winetest_idlheader stdole2)
+set_wine_module(msi_winetest)

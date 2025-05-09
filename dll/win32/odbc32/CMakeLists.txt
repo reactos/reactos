@@ -11,4 +11,4 @@ set_module_type(odbc32 win32dll)
 target_link_libraries(odbc32 wine)
 add_importlibs(odbc32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET odbc32 DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(odbc32) # CORE-5743: No ARRAY_SIZE macro
+set_wine_module(odbc32)

@@ -21,11 +21,7 @@
 #ifndef __WINE_DMUSIC_PERFORMANCE_H
 #define __WINE_DMUSIC_PERFORMANCE_H
 
-#ifndef __WINESRC__
 #include <windows.h>
-#else
-#include <oleauto.h> /* VARIANT */
-#endif /* __WINESRC__ */
 
 #define COM_NO_WINDOWS_H
 #include <objbase.h>

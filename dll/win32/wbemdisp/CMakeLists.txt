@@ -30,4 +30,4 @@ add_dependencies(wbemdisp stdole2 wbemdisp_idlheader)
 add_importlibs(wbemdisp oleaut32 ole32 msvcrt kernel32 ntdll)
 add_pch(wbemdisp precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wbemdisp DESTINATION reactos/system32/wbem FOR all)
-set_wine_module_FIXME(wbemdisp) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(wbemdisp)
