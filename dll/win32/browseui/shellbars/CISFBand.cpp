@@ -194,13 +194,10 @@ LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     RegisterChangeNotify(FALSE);
-    if (m_hWnd)
-    {
-        KillTimer(TIMERID_DELAYED_REFRESH);
-        ShowWindow(SW_HIDE);
-        DeleteToolbarButtons();
-        UnsubclassWindow();
-    }
+    KillTimer(TIMERID_DELAYED_REFRESH);
+    ShowWindow(SW_HIDE);
+    DeleteToolbarButtons();
+    UnsubclassWindow();
     bHandled = FALSE;
     return 0;
 }
