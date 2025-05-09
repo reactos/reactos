@@ -983,7 +983,10 @@ BEGIN
     IDS_PRINT_VERB "Prindi"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Faili, %u Kausta"
+
     IDS_PRINTERS "Printerid"
     IDS_FONTS "Fondid"
     IDS_INSTALLNEWFONT "Paigalda uus font..."
