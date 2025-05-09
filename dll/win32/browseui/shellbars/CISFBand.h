@@ -1,15 +1,18 @@
 /*
  * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CISFBand.h
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
- * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ * COPYRIGHT:   Copyright 2017 Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ *              Copyright 2017-2018 Giannis Adamopoulos
+ *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
 
+#define WM_ISFBAND_CHANGE_NOTIFY (WM_USER + 100)
+
 class CISFBand :
-    public CWindow,
+    public CWindowImpl<CISFBand, CWindow>,
     public CComCoClass<CBandSiteMenu, &CLSID_ISFBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
@@ -26,15 +29,23 @@ class CISFBand :
 
     // Toolbar
     CComPtr<IShellFolder> m_pISF;
-    PIDLIST_ABSOLUTE m_pidl;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> m_pidl;
+    UINT m_uChangeNotify;
 
     // Menu
-    BOOL m_textFlag;
-    BOOL m_iconFlag;
+    BOOL m_bShowText;
+    BOOL m_bSmallIcon;
     BOOL m_QLaunch;
 
-public:
+    BOOL RegisterChangeNotify(_In_ BOOL bRegister);
+    HRESULT AddToolbarButtons();
+    void DeleteToolbarButtons();
+    HRESULT RefreshToolbar();
+    HRESULT SetImageListIconSize(_In_ BOOL bSmall);
+    HRESULT BandInfoChanged();
+    HRESULT ShowHideText(_In_ BOOL bShow);
 
+public:
     CISFBand();
     virtual ~CISFBand();
 
@@ -173,6 +184,10 @@ public:
         UINT uFlags
     ) override;
 
+    LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
 //*****************************************************************************************************
 
     DECLARE_REGISTRY_RESOURCEID(IDR_ISFBAND)
@@ -191,6 +206,12 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderBand, IShellFolderBand)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
+
+    BEGIN_MSG_MAP(CISFBand)
+        MESSAGE_HANDLER(WM_ISFBAND_CHANGE_NOTIFY, OnChangeNotify)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+    END_MSG_MAP()
 };
 
 extern "C" HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv);
