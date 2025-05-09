@@ -113,6 +113,7 @@
 @ cdecl MachPrepareForReactOS()
 @ cdecl MachGetExtendedBIOSData()
 @ cdecl MachVideoGetFontsFromFirmware()
+@ cdecl MachVideoPuts(str ptr ptr ptr)
 @ cdecl PxeCallApi()
 @ cdecl RamDiskInitialize()
 @ cdecl Reboot()
