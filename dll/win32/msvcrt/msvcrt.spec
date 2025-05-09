@@ -1274,7 +1274,7 @@
 @ cdecl _wtoi(wstr)
 @ cdecl _wtoi64(wstr)
 @ cdecl -version=0x600+ _wtoi64_l(wstr ptr)
-@ stub -version=0x600+ _wtoi_l
+@ cdecl -version=0x600+ _wtoi_l(wstr ptr) MSVCRT__wtoi_l
 @ cdecl _wtol(wstr)
 @ stub -version=0x600+ _wtol_l
 @ cdecl _wunlink(wstr)
