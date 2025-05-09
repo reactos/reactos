@@ -33,6 +33,39 @@ MUI_SUBFONT LatinFonts[] =
     { NULL, NULL }
 };
 
+MUI_SUBFONT TokiFonts[] =
+{
+    /*Font                       Substitute  */
+    {L"Arial Baltic,186", L"FairfaxHD"},
+    {L"Arial CE,238", L"FairfaxHD"},
+    {L"Arial CYR,204", L"FairfaxHD"},
+    {L"Arial Greek,161", L"FairfaxHD"},
+    {L"Arial TUR,162", L"FairfaxHD"},
+    {L"Courier", L"FairfaxHD"},
+    {L"Courier New Baltic,186", L"FairfaxHD"},
+    {L"Courier New CE,238", L"FairfaxHD"},
+    {L"Courier New CYR,204", L"FairfaxHD"},
+    {L"Courier New Greek,161", L"FairfaxHD"},
+    {L"Courier New TUR,162", L"FairfaxHD"},
+    {L"Fixedsys", L"FairfaxHD"},
+    {L"Helv", L"FairfaxHD"},
+    {L"Helvetica", L"FairfaxHD"},
+    {L"MS Sans Serif", L"FairfaxHD"},
+    {L"MS Shell Dlg", L"FairfaxHD"},
+    {L"MS Shell Dlg 2", L"FairfaxHD"},
+    {L"Segoe UI Symbol", L"FairfaxHD"},
+    {L"System", L"Fairfax"},
+    {L"Terminal", L"Fairfax"},
+    {L"Times", L"FairfaxHD"},
+    {L"Times New Roman Baltic,186", L"FairfaxHD"},
+    {L"Times New Roman CE,238", L"FairfaxHD"},
+    {L"Times New Roman CYR,204", L"FairfaxHD"},
+    {L"Times New Roman Greek,161", L"FairfaxHD"},
+    {L"Times New Roman TUR,162", L"FairfaxHD"},
+    {L"Tms Rmn", L"FairfaxHD"},
+    {NULL, NULL}
+};
+
 MUI_SUBFONT CyrillicFonts[] =
 {
     { L"Arial Baltic,186",       L"Arial,186" },
