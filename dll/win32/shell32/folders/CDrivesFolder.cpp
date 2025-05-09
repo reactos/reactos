@@ -37,22 +37,22 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 3. The parsing name returned for my computer is incorrect. It should be "My Computer"
 */
 
-static int iDriveIconIds[7] = { IDI_SHELL_NOT_CONNECTED_HDD,/* DRIVE_UNKNOWN */
-                                IDI_SHELL_NOT_CONNECTED_HDD,/* DRIVE_NO_ROOT_DIR*/
-                                IDI_SHELL_REMOVEABLE,  /* DRIVE_REMOVABLE*/
-                                IDI_SHELL_DRIVE,       /* DRIVE_FIXED*/
-                                IDI_SHELL_NETDRIVE,    /* DRIVE_REMOTE*/
-                                IDI_SHELL_CDROM,       /* DRIVE_CDROM*/
-                                IDI_SHELL_RAMDISK      /* DRIVE_RAMDISK*/
+static int iDriveIconIds[7] = { IDI_SHELL_NOT_CONNECTED_HDD, /* DRIVE_UNKNOWN */
+                                IDI_SHELL_NOT_CONNECTED_HDD, /* DRIVE_NO_ROOT_DIR*/
+                                IDI_SHELL_REMOVEABLE,        /* DRIVE_REMOVABLE*/
+                                IDI_SHELL_DRIVE,             /* DRIVE_FIXED*/
+                                IDI_SHELL_NETDRIVE,          /* DRIVE_REMOTE*/
+                                IDI_SHELL_CDROM,             /* DRIVE_CDROM*/
+                                IDI_SHELL_RAMDISK            /* DRIVE_RAMDISK*/
                                 };
 
-static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
-                                IDS_DRIVE_FIXED,       /* DRIVE_NO_ROOT_DIR*/
-                                IDS_DRIVE_REMOVABLE,   /* DRIVE_REMOVABLE*/
-                                IDS_DRIVE_FIXED,       /* DRIVE_FIXED*/
-                                IDS_DRIVE_NETWORK,     /* DRIVE_REMOTE*/
-                                IDS_DRIVE_CDROM,       /* DRIVE_CDROM*/
-                                IDS_DRIVE_FIXED        /* DRIVE_RAMDISK*/
+static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,             /* DRIVE_UNKNOWN */
+                                IDS_DRIVE_FIXED,             /* DRIVE_NO_ROOT_DIR*/
+                                IDS_DRIVE_REMOVABLE,         /* DRIVE_REMOVABLE*/
+                                IDS_DRIVE_FIXED,             /* DRIVE_FIXED*/
+                                IDS_DRIVE_NETWORK,           /* DRIVE_REMOTE*/
+                                IDS_DRIVE_CDROM,             /* DRIVE_CDROM*/
+                                IDS_DRIVE_FIXED /* FIXME */  /* DRIVE_RAMDISK*/
                                 };
 
 static const REQUIREDREGITEM g_RequiredItems[] =
@@ -115,21 +115,20 @@ static bool IsFloppyDrive(PCWSTR DrivePath)
 {
     extern BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot);
     INT8 DrvNum = GetDriveNumber(DrivePath);
-    if (DrvNum >= 0)
+    if (DrvNum < 0)
+        return false;
+    if (g_IsFloppyCache & (1 << DrvNum))
+        return true;
+    UINT Type = GetCachedDriveType(DrvNum);
+    if (Type == DRIVE_REMOVABLE && IsDriveFloppyW(DrivePath))
     {
-        if (g_IsFloppyCache & (1 << DrvNum))
-            return true;
-        UINT Type = GetCachedDriveType(DrvNum);
-        if (Type == DRIVE_REMOVABLE && IsDriveFloppyW(DrivePath))
-        {
-            g_IsFloppyCache |= (1 << DrvNum);
-            return true;
-        }
+        g_IsFloppyCache |= (1 << DrvNum);
+        return true;
     }
     return false;
 }
 
-template<class T> INT8 GetDrivePath(PCUITEMID_CHILD pidl, T *Path)
+INT8 GetDrivePath(PCUITEMID_CHILD pidl, PWSTR Path)
 {
     int number = GetDriveNumber(pidl);
     if (number < 0)
@@ -149,7 +148,7 @@ static inline UINT _ILGetRemovableTypeId(LPCITEMIDLIST pidl)
     return SHDID_COMPUTER_REMOVABLE;
 }
 
-BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
+UINT _ILGetDriveType(LPCITEMIDLIST pidl)
 {
     WCHAR szDrive[8];
     if (!_ILGetDrive(pidl, szDrive, _countof(szDrive)))
@@ -554,8 +553,8 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
 
     WCHAR wTemp[MAX_PATH], szDrive[8];
     int icon_idx, reg_idx = 0;
-    UINT flags = 0;
-    BOOL floppy = FALSE;
+    UINT GilOut = 0;
+    BOOL bFloppy = FALSE;
     INT8 DriveNum = GetDrivePath(pidl, szDrive);
     UINT DriveType = GetCachedDriveType(DriveNum);
     if (DriveType > DRIVE_RAMDISK)
@@ -564,8 +563,8 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     switch (DriveType)
     {
         case DRIVE_REMOVABLE:
-            floppy = IsFloppyDrive(szDrive);
-            reg_idx = floppy ? IDI_SHELL_3_14_FLOPPY : IDI_SHELL_REMOVEABLE;
+            bFloppy = IsFloppyDrive(szDrive);
+            reg_idx = bFloppy ? IDI_SHELL_3_14_FLOPPY : IDI_SHELL_REMOVEABLE;
             break;
         case DRIVE_FIXED:
             reg_idx = IDI_SHELL_DRIVE;
@@ -582,13 +581,13 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     }
 
     hr = getIconLocationForDrive(szDrive, wTemp, _countof(wTemp),
-                                 &icon_idx, &flags);
+                                 &icon_idx, &GilOut);
     if (SUCCEEDED(hr))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
     else if (DriveType > DRIVE_NO_ROOT_DIR &&
-             GetRegCustomizedDriveIcon(DriveNum, wTemp, _countof(wTemp), &icon_idx, &flags))
+             GetRegCustomizedDriveIcon(DriveNum, wTemp, _countof(wTemp), &icon_idx, &GilOut))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
@@ -603,7 +602,7 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     }
     else
     {
-        if (DriveType == DRIVE_REMOVABLE && floppy)
+        if (DriveType == DRIVE_REMOVABLE && bFloppy)
             icon_idx = IDI_SHELL_3_14_FLOPPY;
         else
             icon_idx = iDriveIconIds[DriveType];
@@ -1105,15 +1104,12 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
 
         if (GetDriveLabel(szDrive, pszLabel, MAX_PATH - 7) != S_OK && !bEditLabel)
         {
-            UINT ResId = 0;
-            switch (GetDriveTypeW(szDrive))
-            {
-                case DRIVE_REMOVABLE: ResId = IsFloppyDrive(szDrive) ? IDS_DRIVE_FLOPPY : IDS_DRIVE_REMOVABLE; break;
-                case DRIVE_FIXED: ResId = IDS_DRIVE_FIXED; break;
-                case DRIVE_REMOTE: ResId = IDS_DRIVE_NETWORK; break;
-                case DRIVE_CDROM: ResId = IDS_DRIVE_CDROM; break;
-                // TODO: DRIVE_RAMDISK
-            }
+            UINT ResId = 0, DrvType = GetDriveTypeW(szDrive);
+            if (DrvType == DRIVE_REMOVABLE)
+                ResId = IsFloppyDrive(szDrive) ? IDS_DRIVE_FLOPPY : IDS_DRIVE_REMOVABLE;
+            else if (DrvType < _countof(iDriveTypeIds))
+                ResId = iDriveTypeIds[DrvType];
+
             if (ResId)
             {
                 UINT len = LoadStringW(shell32_hInstance, ResId, pszLabel, MAX_PATH - 7);
