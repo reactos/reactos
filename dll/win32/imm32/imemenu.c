@@ -614,7 +614,7 @@ ImmGetImeMenuItemsAW(
             {
                 if (!Imm32ImeMenuAnsiToWide(pItemA, pItemW, pImeDpi->uCodePage, TRUE))
                 {
-                    ERR("\n");
+                    ERR("Imm32ImeMenuAnsiToWide failed\n");
                     ret = 0;
                     break;
                 }
