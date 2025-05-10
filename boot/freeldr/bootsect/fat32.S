@@ -425,7 +425,7 @@ LoadFileDone:
     mov  dh, byte ptr ds:[BootPartition]    // Load boot partition into DH
 
     /* Transfer execution to the bootloader */
-    ljmp16 0, FREELDR_BASE
+    ljmp16 FREELDR_BASE / 16, 0
 
 // Returns the FAT entry for a given cluster number
 // On entry EAX has cluster number
