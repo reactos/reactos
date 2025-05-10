@@ -1251,6 +1251,29 @@ LoadAndBootWindowsCommon(
     /* "Stop all motors", change videomode */
     MachPrepareForReactOS();
 
+    /* Show the "debug mode" notice if needed */
+    BOOLEAN DebugMode = !NtLdrGetOption(BootOptions, "NODEBUG") && /* NODEBUG is absent, priority over DEBUG option */
+                        !NtLdrGetOption(BootOptions, "CRASHDEBUG") && /* CRASHDEBUG is abset, no wait during the boot */
+                        !!NtLdrGetOption(BootOptions, "DEBUG"); /* DEBUG is present */
+    if (DebugMode)
+    {
+        /* It is booting in debug mode */
+        TuiPrintf("Booting in debug mode\n");
+
+        /* Check whether there is a DEBUGPORT option */
+        PCSTR DebugPort;
+        ULONG DebugPortLength;
+        DebugPort = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &DebugPortLength);
+        if (DebugPort && (DebugPortLength > 10))
+        {
+            /* Show the debug port */
+            DebugPort += 10;
+            DebugPortLength -= 10;
+            TuiPrintf("You would need a debugger attached to the %.*s port to continue.\n", DebugPortLength, DebugPort);
+        }
+        TuiPrintf("For more information, visit https://reactos.org/wiki/Debugging.\n");
+    }
+
     /* Debugging... */
     //DumpMemoryAllocMap();
 
