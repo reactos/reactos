@@ -308,7 +308,7 @@ START_SUBTEST(WatchSecondaryKey)
     OBJECT_ATTRIBUTES SubordinateObjects[1];
     InitializeObjectAttributes(&SubordinateObjects[0], &state->SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
-                                        sizeof(SubordinateObjects)/sizeof(OBJECT_ATTRIBUTES),
+                                        _countof(SubordinateObjects),
                                         SubordinateObjects,
                                         state->EventHandle,
                                         NULL,
