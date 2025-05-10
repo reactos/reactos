@@ -361,6 +361,23 @@ START_SUBTEST(WatchSecondaryKey)
     Status = WaitForSingleObject(state->EventHandle, 100);
     TEST_ERROR(state, Status, WAIT_OBJECT_0);
 
+    /* Test if the function gives error if the given subordinate key is same with master key */
+    InitializeObjectAttributes(&SubordinateObjects[0], &state->KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
+                                        _countof(SubordinateObjects),
+                                        SubordinateObjects,
+                                        state->EventHandle,
+                                        NULL,
+                                        NULL,
+                                        &state->IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        TRUE,
+                                        NULL,
+                                        0,
+                                        TRUE);
+    /* The status is STATUS_INVALID_PARAMETER on Windows Server 2003 and STATUS_INVALID_OBJECT_NAME on Windows 10 */
+    ok(!NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys succeeded unexpectedly.\n");
+
     FINALIZE_TEST(state);
 }
 
