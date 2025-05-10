@@ -505,10 +505,8 @@ ImmGetImeMenuItemsAW(
     DWORD ret = 0, cbTotal, dwProcessId, dwThreadId, iItem;
     PINPUTCONTEXT pIC;
     PIMEDPI pImeDpi = NULL;
-    IMEMENUITEMINFOA ParentA;
-    IMEMENUITEMINFOW ParentW;
-    PIMEMENUITEMINFOA pItemA;
-    PIMEMENUITEMINFOW pItemW;
+    IMEMENUITEMINFOA ParentA, *pItemA;
+    IMEMENUITEMINFOW ParentW, *pItemW;
     PVOID pNewItems = NULL, pNewParent = NULL;
     BOOL bImcIsAnsi;
     HKL hKL;
@@ -566,16 +564,22 @@ ImmGetImeMenuItemsAW(
         return 0;
     }
 
+    /* Is input ANSI? */
     bImcIsAnsi = Imm32IsImcAnsi(hIMC);
 
-    if (bImcIsAnsi != bTargetIsAnsi) /* Are text types (ANSI/Wide) different? */
+    /* Are text types (ANSI/Wide) of IME and target different? */
+    if (bImcIsAnsi != bTargetIsAnsi)
     {
-        /* Allocate buffer for new items */
         if (bTargetIsAnsi)
         {
+            /* Convert the parent */
             if (lpImeParentMenu)
+            {
+                Imm32ImeMenuAnsiToWide(lpImeParentMenu, &ParentW, pImeDpi->uCodePage, TRUE);
                 pNewParent = &ParentW;
+            }
 
+            /* Allocate buffer for new items */
             if (lpImeMenu)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOA)) * sizeof(IMEMENUITEMINFOW));
@@ -589,9 +593,14 @@ ImmGetImeMenuItemsAW(
         }
         else
         {
+            /* Convert the parent */
             if (lpImeParentMenu)
+            {
+                Imm32ImeMenuWideToAnsi(lpImeParentMenu, &ParentA, pImeDpi->uCodePage);
                 pNewParent = &ParentA;
+            }
 
+            /* Allocate buffer for new items */
             if (lpImeMenu)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOW)) * sizeof(IMEMENUITEMINFOA));
@@ -621,12 +630,13 @@ ImmGetImeMenuItemsAW(
 
     if (bImcIsAnsi != bTargetIsAnsi) /* Are text types different? */
     {
-        /* Convert the items */
         if (bTargetIsAnsi)
         {
+            /* Convert the parent */
             if (pNewParent)
                 Imm32ImeMenuWideToAnsi(pNewParent, lpImeParentMenu, pImeDpi->uCodePage);
 
+            /* Convert the items */
             pItemW = pNewItems;
             pItemA = lpImeMenu;
             for (iItem = 0; iItem < ret; ++iItem, ++pItemW, ++pItemA)
@@ -641,9 +651,11 @@ ImmGetImeMenuItemsAW(
         }
         else
         {
+            /* Convert the parent */
             if (pNewParent)
                 Imm32ImeMenuAnsiToWide(pNewParent, lpImeParentMenu, pImeDpi->uCodePage, TRUE);
 
+            /* Convert the items */
             pItemA = pNewItems;
             pItemW = lpImeMenu;
             for (iItem = 0; iItem < dwSize; ++iItem, ++pItemA, ++pItemW)
