@@ -241,9 +241,6 @@ Imm32SerializeImeMenu(
     _Inout_opt_ PIMEMENUITEMINFOW lpImeParentMenu,
     _In_ BOOL bCountOnly)
 {
-    PBYTE pb = (PBYTE)pView;
-    pb += sizeof(*pView);
-
     DWORD dwFlags = pView->dwFlags;
     DWORD dwType = pView->dwType;
 
@@ -254,6 +251,9 @@ Imm32SerializeImeMenu(
 
     if (!dwItemCount)
         return 0;
+
+    PBYTE pb = (PBYTE)pView;
+    pb += sizeof(*pView);
 
     if (lpImeParentMenu)
     {
@@ -419,7 +419,7 @@ Imm32GetImeMenuItemWInterProcess(
     HWND hwndIme = (HWND)NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME);
     if (!hwndIme || !IsWindow(hwndIme))
     {
-        ERR("\n");
+        ERR("!hwndIme\n");
         return 0;
     }
 
