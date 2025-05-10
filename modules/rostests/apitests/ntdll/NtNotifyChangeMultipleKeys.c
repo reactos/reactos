@@ -45,12 +45,11 @@ typedef struct _CHANGE_NOTIFY_TEST_STATE
 DWORD WINAPI NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
 {
     NTSTATUS Status;
-    HANDLE KeyHandle = (HANDLE)lpParameter;
-    IO_STATUS_BLOCK IoStatusBlock;
+    PState State = (PState)lpParameter;
     
-    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, NULL, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
-    ok_ntstatus(Status, STATUS_NOTIFY_ENUM_DIR);
-
+    Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0, NULL, NULL, NULL, NULL, &State->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
+    ok(NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys was unsuccessful. (0x%lx)\n", Status);
+    
     return 0;
 }
 
@@ -178,13 +177,17 @@ START_SUBTEST(Synchronous)
     UNICODE_STRING ValueName;
     RtlInitUnicodeString(&ValueName, L"TestValue");
 
-    DWORD ValueData1 = 0x12345678;
-    DWORD ValueData2 = 0x87654321;
+    DWORD ValueData = 0x87654321;
 
     INIT_TEST(state, Status);
+
+    /* Reset value */
+    DWORD ValuePreData = 0x12345678;
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
     
     /* Create a thread */
-    state->ThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, state->KeyHandle, 0, NULL);
+    state->ThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, state, 0, NULL);
     if (!state->ThreadHandle)
     {
         CLEANUP(state);
@@ -196,15 +199,13 @@ START_SUBTEST(Synchronous)
     TEST_ERROR(state, Status, WAIT_TIMEOUT);
 
     /* Make change to the registry key */
-    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData1, sizeof(ValueData1));
-    CHECK_ERROR(state, Status);
-    /* Give system some time to process the change and notify our watch thread */
-    SleepEx(100, TRUE);
-    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData2, sizeof(ValueData2));
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
     CHECK_ERROR(state, Status);
 
     /* Verify that the thread is notified */
-    Status = WaitForSingleObjectEx(state->ThreadHandle, 100, TRUE);
+    SetThreadPriority(state->ThreadHandle, THREAD_PRIORITY_HIGHEST);
+    SwitchToThread();
+    Status = WaitForSingleObject(state->ThreadHandle, 100);
     TEST_ERROR(state, Status, WAIT_OBJECT_0);
 
     FINALIZE_TEST(state);
@@ -217,10 +218,14 @@ START_SUBTEST(Asynchronous)
     UNICODE_STRING ValueName;
     RtlInitUnicodeString(&ValueName, L"AsyncTestValue");
 
-    DWORD ValueData1 = 0x12345678;
-    DWORD ValueData2 = 0x87654321;
-
+    DWORD ValueData = 0x12345678;
+    
     INIT_TEST(state, Status);
+    
+    /* Reset value */
+    DWORD ValuePreData = 0x87654321;
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
 
     /* Create event */
     state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -235,14 +240,12 @@ START_SUBTEST(Asynchronous)
     TEST_ERROR(state, Status, WAIT_TIMEOUT);
 
     /* Make change to the registry key */
-    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData1, sizeof(ValueData1));
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
     TEST_ERROR(state, Status, STATUS_SUCCESS);
-    SleepEx(100, TRUE);
-    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData2, sizeof(ValueData2));
-    TEST_ERROR(state, Status, STATUS_SUCCESS);
-
+    
     /* Verify that the event is signaled */
-    Status = WaitForSingleObjectEx(state->EventHandle, 100, TRUE);
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
     TEST_ERROR(state, Status, WAIT_OBJECT_0);
 
     FINALIZE_TEST(state);
@@ -255,10 +258,14 @@ START_SUBTEST(WatchSubtree)
     UNICODE_STRING ValueName;
     RtlInitUnicodeString(&ValueName, L"SubtreeTestValue");
 
-    DWORD ValueData1 = 0x12345678;
-    DWORD ValueData2 = 0x87654321;
-
+    DWORD ValueData = 0x12345678;
+    
     INIT_TEST(state, Status);
+    
+    /* Reset value */
+    DWORD ValuePreData = 0x87654321;
+    Status = NtSetValueKey(state->SubKeyHandle, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
 
     /* Create event */
     state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -273,14 +280,12 @@ START_SUBTEST(WatchSubtree)
     TEST_ERROR(state, Status, WAIT_TIMEOUT);
 
     /* Make change to the subkey */
-    Status = NtSetValueKey(state->SubKeyHandle, &ValueName, 0, REG_DWORD, &ValueData1, sizeof(ValueData1));
-    TEST_ERROR(state, Status, STATUS_SUCCESS);
-    SleepEx(100, TRUE);
-    Status = NtSetValueKey(state->SubKeyHandle, &ValueName, 0, REG_DWORD, &ValueData2, sizeof(ValueData2));
+    Status = NtSetValueKey(state->SubKeyHandle, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
     TEST_ERROR(state, Status, STATUS_SUCCESS);
 
     /* Verify that the event is signaled */
-    Status = WaitForSingleObjectEx(state->EventHandle, 100, TRUE);
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
     TEST_ERROR(state, Status, WAIT_OBJECT_0);
 
     FINALIZE_TEST(state);
@@ -293,12 +298,19 @@ START_SUBTEST(WatchSecondaryKey)
     UNICODE_STRING ValueName;
     RtlInitUnicodeString(&ValueName, L"SecondaryKeyTestValue");
 
-    DWORD ValueData1 = 0x12345678;
-    DWORD ValueData2 = 0x87654321;
-
+    DWORD ValueData = 0x12345678;
+    
     HANDLE SecondaryKey;
-
+    
     INIT_TEST(state, Status);
+    
+    /* Reset value */
+    DWORD ValuePreData = 0x87654321;
+    Status = NtOpenKey(&SecondaryKey, KEY_SET_VALUE | KEY_NOTIFY | DELETE, &state->SecondaryObjectAttributes);
+    CHECK_ERROR(state, Status);
+    Status = NtSetValueKey(SecondaryKey, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
+    CloseHandle(SecondaryKey);
 
     /* Create event */
     state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -328,15 +340,13 @@ START_SUBTEST(WatchSecondaryKey)
     /* Make change to the secondary key */
     Status = NtOpenKey(&SecondaryKey, KEY_SET_VALUE | KEY_NOTIFY | DELETE, &state->SecondaryObjectAttributes);
     CHECK_ERROR(state, Status);
-    Status = NtSetValueKey(SecondaryKey, &ValueName, 0, REG_DWORD, &ValueData1, sizeof(ValueData1));
-    TEST_ERROR(state, Status, STATUS_SUCCESS);
-    Status = NtSetValueKey(SecondaryKey, &ValueName, 0, REG_DWORD, &ValueData2, sizeof(ValueData2));
+    Status = NtSetValueKey(SecondaryKey, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
     TEST_ERROR(state, Status, STATUS_SUCCESS);
     CloseHandle(SecondaryKey);
-    SleepEx(100, TRUE);
 
     /* Verify that the event is signaled */
-    Status = WaitForSingleObjectEx(state->EventHandle, 100, TRUE);
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
     TEST_ERROR(state, Status, WAIT_OBJECT_0);
 
     FINALIZE_TEST(state);
@@ -347,25 +357,29 @@ START_SUBTEST(ApcRoutine)
     NTSTATUS Status;
 
     UNICODE_STRING ValueName;
-    RtlInitUnicodeString(&ValueName, L"SecondaryKeyTestValue");
+    RtlInitUnicodeString(&ValueName, L"ApcRoutineTestValue");
 
-    DWORD ValueData1 = 0x12345678;
-    DWORD ValueData2 = 0x87654321;
-
+    DWORD ValueData = 0x12345678;
+    
     INIT_TEST(state, Status);
-
+    
     state->ApcRan = FALSE;
+    
+    /* Reset value */
+    DWORD ValuePreData = 0x87654321;
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
 
     /* Start watching for changes */
     Status = NtNotifyChangeMultipleKeys(state->KeyHandle, 0, NULL, NULL, NtNotifyChangeMultipleKeys_ApcRoutine, state, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
     TEST_ERROR(state, Status, STATUS_PENDING);
 
     /* Make change to the registry key */
-    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData1, sizeof(ValueData1));
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
     TEST_ERROR(state, Status, STATUS_SUCCESS);
-    SleepEx(100, TRUE);
-    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData2, sizeof(ValueData2));
-    TEST_ERROR(state, Status, STATUS_SUCCESS);
+
+    /* Force system to run queued APC routines */
+    NtTestAlert();
 
     ok(state->ApcRan == TRUE, "The APC routine did not ran.\n");
     if (!state->ApcRan)
