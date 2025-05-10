@@ -467,6 +467,7 @@ Imm32GetImeMenuItemWInterProcess(
     return ret;
 }
 
+/* Absorbs the differences between ANSI and Wide */
 static DWORD
 ImmGetImeMenuItemsAW(
     _In_ HIMC hIMC,
@@ -494,6 +495,7 @@ ImmGetImeMenuItemsAW(
         return 0;
     }
 
+    /* Get input process ID */
     dwProcessId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
     if (!dwProcessId)
     {
@@ -501,13 +503,15 @@ ImmGetImeMenuItemsAW(
         return 0;
     }
 
-    if (dwProcessId != GetCurrentProcessId())
+    if (dwProcessId != GetCurrentProcessId()) /* Cross process? */
     {
         if (bTargetIsAnsi)
         {
             ERR("ImmGetImeMenuItemsA cannot cross process boundary\n");
             return 0;
         }
+
+        /* Transport the IME menu items, using file mapping */
         return Imm32GetImeMenuItemWInterProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
                                                 lpImeMenu, dwSize);
     }
@@ -519,6 +523,7 @@ ImmGetImeMenuItemsAW(
         return 0;
     }
 
+    /* Get input thread ID */
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (!dwThreadId)
     {
@@ -527,6 +532,7 @@ ImmGetImeMenuItemsAW(
         return 0;
     }
 
+    /* Get IME interface */
     hKL = GetKeyboardLayout(dwThreadId);
     pImeDpi = ImmLockImeDpi(hKL);
     if (!pImeDpi)
@@ -538,8 +544,9 @@ ImmGetImeMenuItemsAW(
 
     bImcIsAnsi = Imm32IsImcAnsi(hIMC);
 
-    if (bImcIsAnsi != bTargetIsAnsi)
+    if (bImcIsAnsi != bTargetIsAnsi) /* Are text types (ANSI/Wide) different? */
     {
+        /* Allocate buffer for new items */
         if (bTargetIsAnsi)
         {
             if (lpImeParentMenu)
@@ -575,10 +582,12 @@ ImmGetImeMenuItemsAW(
     }
     else
     {
+        /* Get the items directly */
         pNewItems = lpImeMenu;
         pNewParent = lpImeParentMenu;
     }
 
+    /* Get IME menu items from the IME */
     ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, pNewParent, pNewItems, dwSize);
     if (!ret || !lpImeMenu)
     {
@@ -586,8 +595,9 @@ ImmGetImeMenuItemsAW(
         goto Quit;
     }
 
-    if (bImcIsAnsi != bTargetIsAnsi)
+    if (bImcIsAnsi != bTargetIsAnsi) /* Are text types different? */
     {
+        /* Convert the items */
         if (bTargetIsAnsi)
         {
             if (pNewParent)
@@ -629,7 +639,6 @@ Quit:
         ImmLocalFree(pNewItems);
     ImmUnlockImeDpi(pImeDpi);
     ImmUnlockIMC(hIMC);
-    TRACE("ret: 0x%X\n", ret);
     return ret;
 }
 
