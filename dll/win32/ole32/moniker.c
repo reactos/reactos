@@ -26,17 +26,8 @@
 
 #define COBJMACROS
 
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winsvc.h"
-#include "wtypes.h"
-#include "ole2.h"
-
 #include "wine/list.h"
 #include "wine/debug.h"
-#include "wine/exception.h"
 
 #include "compobj_private.h"
 #include "moniker.h"
@@ -44,15 +35,18 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-/* see MSDN docs for IROTData::GetComparisonData, which states what this
- * constant is
- */
-#define MAX_COMPARISON_DATA 2048
 
-static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *eptr)
-{
-    return I_RpcExceptionFilter(eptr->ExceptionRecord->ExceptionCode);
-}
+HRESULT WINAPI InternalIrotRegister(const MonikerComparisonData *moniker_data,
+        const InterfaceData *object, const InterfaceData *moniker,
+        const FILETIME *time, DWORD flags, IrotCookie *cookie, IrotContextHandle *ctxt_handle);
+HRESULT WINAPI InternalIrotIsRunning(const MonikerComparisonData *moniker_data);
+HRESULT WINAPI InternalIrotGetObject(const MonikerComparisonData *moniker_data, PInterfaceData *obj,
+        IrotCookie *cookie);
+HRESULT WINAPI InternalIrotNoteChangeTime(IrotCookie cookie, const FILETIME *time);
+HRESULT WINAPI InternalIrotGetTimeOfLastChange(const MonikerComparisonData *moniker_data, FILETIME *time);
+HRESULT WINAPI InternalIrotEnumRunning(PInterfaceList *list);
+HRESULT WINAPI InternalIrotRevoke(IrotCookie cookie, IrotContextHandle *ctxt_handle, PInterfaceData *object,
+        PInterfaceData *moniker);
 
 /* define the structure of the running object table elements */
 struct rot_entry
@@ -101,30 +95,6 @@ static inline EnumMonikerImpl *impl_from_IEnumMoniker(IEnumMoniker *iface)
 /* IEnumMoniker Local functions*/
 static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
     ULONG pos, IEnumMoniker **ppenumMoniker);
-
-static IrotHandle get_irot_handle(void)
-{
-    if (!irot_handle)
-    {
-        RPC_STATUS status;
-        RPC_WSTR binding;
-        IrotHandle new_handle;
-        unsigned short ncacn_np[] = IROT_PROTSEQ;
-        unsigned short endpoint[] = IROT_ENDPOINT;
-        status = RpcStringBindingComposeW(NULL, ncacn_np, NULL, endpoint, NULL, &binding);
-        if (status == RPC_S_OK)
-        {
-            status = RpcBindingFromStringBindingW(binding, &new_handle);
-            RpcStringFreeW(&binding);
-        }
-        if (status != RPC_S_OK)
-            return NULL;
-        if (InterlockedCompareExchangePointer(&irot_handle, new_handle, NULL))
-            /* another thread beat us to it */
-            RpcBindingFree(&new_handle);
-    }
-    return irot_handle;
-}
 
 static BOOL start_rpcss(void)
 {
@@ -176,6 +146,13 @@ static BOOL start_rpcss(void)
     return ret;
 }
 
+HRESULT __cdecl irpcss_get_thread_seq_id(handle_t h, DWORD *id)
+{
+    static LONG thread_seq_id;
+    *id = InterlockedIncrement(&thread_seq_id);
+    return S_OK;
+}
+
 static HRESULT create_stream_on_mip_ro(const InterfaceData *mip, IStream **stream)
 {
     HGLOBAL hglobal = GlobalAlloc(0, mip->ulCntData);
@@ -191,15 +168,8 @@ static void rot_entry_delete(struct rot_entry *rot_entry)
     {
         InterfaceData *object = NULL;
         InterfaceData *moniker = NULL;
-        __TRY
-        {
-            IrotRevoke(get_irot_handle(), rot_entry->cookie,
-                       &rot_entry->ctxt_handle, &object, &moniker);
-        }
-        __EXCEPT(rpc_filter)
-        {
-        }
-        __ENDTRY
+
+        InternalIrotRevoke(rot_entry->cookie, &rot_entry->ctxt_handle, &object, &moniker);
         MIDL_user_free(object);
         if (moniker)
         {
@@ -238,7 +208,7 @@ static HRESULT get_moniker_comparison_data(IMoniker *pMoniker, MonikerComparison
     hr = IMoniker_QueryInterface(pMoniker, &IID_IROTData, (void *)&pROTData);
     if (SUCCEEDED(hr))
     {
-        ULONG size = MAX_COMPARISON_DATA;
+        ULONG size = ROT_COMPARE_MAX;
         *moniker_data = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(MonikerComparisonData, abData[size]));
         if (!*moniker_data)
         {
@@ -434,7 +404,7 @@ RunningObjectTableImpl_Release(IRunningObjectTable* iface)
  * pdwRegister    [out] the value identifying the registration
  */
 static HRESULT WINAPI
-RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
+RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD flags,
                IUnknown *punkObject, IMoniker *pmkObjectName, DWORD *pdwRegister)
 {
     RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
@@ -445,11 +415,11 @@ RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
     IBindCtx *pbc;
     InterfaceData *moniker = NULL;
 
-    TRACE("(%p,%d,%p,%p,%p)\n",This,grfFlags,punkObject,pmkObjectName,pdwRegister);
+    TRACE("%p, %#x, %p, %p, %p\n", This, flags, punkObject, pmkObjectName, pdwRegister);
 
-    if (grfFlags & ~(ROTFLAGS_REGISTRATIONKEEPSALIVE|ROTFLAGS_ALLOWANYCLIENT))
+    if (flags & ~(ROTFLAGS_REGISTRATIONKEEPSALIVE|ROTFLAGS_ALLOWANYCLIENT))
     {
-        ERR("Invalid grfFlags: 0x%08x\n", grfFlags & ~(ROTFLAGS_REGISTRATIONKEEPSALIVE|ROTFLAGS_ALLOWANYCLIENT));
+        ERR("Invalid flags: 0x%08x\n", flags & ~(ROTFLAGS_REGISTRATIONKEEPSALIVE|ROTFLAGS_ALLOWANYCLIENT));
         return E_INVALIDARG;
     }
 
@@ -467,7 +437,7 @@ RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
         rot_entry_delete(rot_entry);
         return hr;
     }
-    mshlflags = (grfFlags & ROTFLAGS_REGISTRATIONKEEPSALIVE) ? MSHLFLAGS_TABLESTRONG : MSHLFLAGS_TABLEWEAK;
+    mshlflags = flags & ROTFLAGS_REGISTRATIONKEEPSALIVE ? MSHLFLAGS_TABLESTRONG : MSHLFLAGS_TABLEWEAK;
     hr = CoMarshalInterface(pStream, &IID_IUnknown, punkObject, MSHCTX_LOCAL | MSHCTX_NOSHAREDMEM, NULL, mshlflags);
     /* FIXME: a cleaner way would be to create an IStream class that writes
      * directly to an MInterfacePointer */
@@ -560,28 +530,9 @@ RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
         return hr;
     }
 
+    hr = InternalIrotRegister(rot_entry->moniker_data, rot_entry->object, moniker,
+            &rot_entry->last_modified, flags, &rot_entry->cookie, &rot_entry->ctxt_handle);
 
-    while (TRUE)
-    {
-        __TRY
-        {
-            hr = IrotRegister(get_irot_handle(), rot_entry->moniker_data,
-                              rot_entry->object, moniker,
-                              &rot_entry->last_modified, grfFlags,
-                              &rot_entry->cookie, &rot_entry->ctxt_handle);
-        }
-        __EXCEPT(rpc_filter)
-        {
-            hr = HRESULT_FROM_WIN32(GetExceptionCode());
-        }
-        __ENDTRY
-        if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
-        {
-            if (start_rpcss())
-                continue;
-        }
-        break;
-    }
     HeapFree(GetProcessHeap(), 0, moniker);
     if (FAILED(hr))
     {
@@ -668,26 +619,7 @@ RunningObjectTableImpl_IsRunning( IRunningObjectTable* iface, IMoniker *pmkObjec
     LeaveCriticalSection(&This->lock);
 
     if (hr == S_FALSE)
-    {
-        while (TRUE)
-        {
-            __TRY
-            {
-                hr = IrotIsRunning(get_irot_handle(), moniker_data);
-            }
-            __EXCEPT(rpc_filter)
-            {
-                hr = HRESULT_FROM_WIN32(GetExceptionCode());
-            }
-            __ENDTRY
-            if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
-            {
-                if (start_rpcss())
-                    continue;
-            }
-            break;
-        }
-    }
+        hr = InternalIrotIsRunning(moniker_data);
 
     HeapFree(GetProcessHeap(), 0, moniker_data);
 
@@ -751,25 +683,7 @@ RunningObjectTableImpl_GetObject( IRunningObjectTable* iface,
 
     TRACE("moniker unavailable locally, calling SCM\n");
 
-    while (TRUE)
-    {
-        __TRY
-        {
-            hr = IrotGetObject(get_irot_handle(), moniker_data, &object, &cookie);
-        }
-        __EXCEPT(rpc_filter)
-        {
-            hr = HRESULT_FROM_WIN32(GetExceptionCode());
-        }
-        __ENDTRY
-        if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
-        {
-            if (start_rpcss())
-                continue;
-        }
-        break;
-    }
-
+    hr = InternalIrotGetObject(moniker_data, &object, &cookie);
     if (SUCCEEDED(hr))
     {
         IStream *pStream;
@@ -813,24 +727,7 @@ RunningObjectTableImpl_NoteChangeTime(IRunningObjectTable* iface,
             rot_entry->last_modified = *pfiletime;
             LeaveCriticalSection(&This->lock);
 
-            while (TRUE)
-            {
-                __TRY
-                {
-                    hr = IrotNoteChangeTime(get_irot_handle(), dwRegister, pfiletime);
-                }
-                __EXCEPT(rpc_filter)
-                {
-                    hr = HRESULT_FROM_WIN32(GetExceptionCode());
-                }
-                __ENDTRY
-                if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
-                {
-                    if (start_rpcss())
-                        continue;
-                }
-                break;
-            }
+            hr = InternalIrotNoteChangeTime(dwRegister, pfiletime);
 
             goto done;
         }
@@ -887,26 +784,7 @@ RunningObjectTableImpl_GetTimeOfLastChange(IRunningObjectTable* iface,
     LeaveCriticalSection(&This->lock);
 
     if (hr != S_OK)
-    {
-        while (TRUE)
-        {
-            __TRY
-            {
-                hr = IrotGetTimeOfLastChange(get_irot_handle(), moniker_data, pfiletime);
-            }
-            __EXCEPT(rpc_filter)
-            {
-                hr = HRESULT_FROM_WIN32(GetExceptionCode());
-            }
-            __ENDTRY
-            if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
-            {
-                if (start_rpcss())
-                    continue;
-            }
-            break;
-        }
-    }
+        hr = InternalIrotGetTimeOfLastChange(moniker_data, pfiletime);
 
     HeapFree(GetProcessHeap(), 0, moniker_data);
 
@@ -932,28 +810,9 @@ RunningObjectTableImpl_EnumRunning(IRunningObjectTable* iface,
 
     *ppenumMoniker = NULL;
 
-    while (TRUE)
-    {
-        __TRY
-        {
-            hr = IrotEnumRunning(get_irot_handle(), &interface_list);
-        }
-        __EXCEPT(rpc_filter)
-        {
-            hr = HRESULT_FROM_WIN32(GetExceptionCode());
-        }
-        __ENDTRY
-        if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
-        {
-            if (start_rpcss())
-                continue;
-        }
-        break;
-    }
-
+    hr = InternalIrotEnumRunning(&interface_list);
     if (SUCCEEDED(hr))
-        hr = EnumMonikerImpl_CreateEnumROTMoniker(interface_list,
-                                                  0, ppenumMoniker);
+        hr = EnumMonikerImpl_CreateEnumROTMoniker(interface_list, 0, ppenumMoniker);
 
     return hr;
 }
