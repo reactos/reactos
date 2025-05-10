@@ -109,26 +109,26 @@ Imm32ImeMenuWideToAnsi(
 
 static DWORD
 Imm32FindImeMenuBitmap(
-    _In_ const IMEMENUINFO *pInfo,
+    _In_ const IMEMENUINFO *pView,
     _In_ HBITMAP hbm)
 {
-    const BYTE *pb = (const BYTE *)pInfo;
-    pb += pInfo->dwBitmapsOffset;
+    const BYTE *pb = (const BYTE *)pView;
+    pb += pView->dwBitmapsOffset;
     const IMEMENUBITMAPHEADER *pBitmap = (const IMEMENUBITMAPHEADER *)pb;
     while (pBitmap->cbSize)
     {
         if (pBitmap->hbm == hbm)
-            return (PBYTE)pBitmap - (PBYTE)pInfo;
+            return (PBYTE)pBitmap - (PBYTE)pView;
         pBitmap = PTR_FROM_OFFSET(pBitmap, pBitmap->cbSize);
     }
     return 0;
 }
 
 static VOID
-Imm32DeleteImeMenuBitmaps(_Inout_ PIMEMENUINFO pInfo)
+Imm32DeleteImeMenuBitmaps(_Inout_ PIMEMENUINFO pView)
 {
-    PBYTE pb = (PBYTE)pInfo;
-    pb += pInfo->dwBitmapsOffset;
+    PBYTE pb = (PBYTE)pView;
+    pb += pView->dwBitmapsOffset;
     PIMEMENUBITMAPHEADER pBitmap = (PIMEMENUBITMAPHEADER)pb;
     while (pBitmap->cbSize)
     {
@@ -144,13 +144,13 @@ Imm32DeleteImeMenuBitmaps(_Inout_ PIMEMENUINFO pInfo)
 static DWORD
 Imm32SerializeImeMenuBitmap(
     _In_ HDC hDC,
-    _Inout_ PIMEMENUINFO pInfo,
+    _Inout_ PIMEMENUINFO pView,
     _In_ HBITMAP hbm)
 {
     if (hbm == NULL)
         return 0;
 
-    DWORD dwOffset = Imm32FindImeMenuBitmap(pInfo, hbm);
+    DWORD dwOffset = Imm32FindImeMenuBitmap(pView, hbm);
     if (dwOffset)
         return dwOffset;
 
@@ -175,7 +175,7 @@ Imm32SerializeImeMenuBitmap(
     DWORD dibHeaderSize = sizeof(BITMAPINFOHEADER) + colorTableSize;
     DWORD cbData = cbBitmapHeader + dibHeaderSize + bmi.bmiHeader.biSizeImage;
 
-    if (pInfo->cbSize + cbData + sizeof(DWORD) > pInfo->cbCapacity)
+    if (pView->cbSize + cbData + sizeof(DWORD) > pView->cbCapacity)
     {
         ERR("Boundary check\n");
         return 0;
@@ -189,7 +189,7 @@ Imm32SerializeImeMenuBitmap(
         return 0;
     }
 
-    PBYTE pb = (PBYTE)pInfo + pInfo->cbSize;
+    PBYTE pb = (PBYTE)pView + pView->cbSize;
     PIMEMENUBITMAPHEADER pBitmap = (PIMEMENUBITMAPHEADER)pb;
 
     pBitmap->cbSize = cbData;
@@ -212,8 +212,8 @@ Imm32SerializeImeMenuBitmap(
         return 0;
     }
 
-    pInfo->cbSize += cbData;
-    return (PBYTE)pBitmap - (PBYTE)pInfo;
+    pView->cbSize += cbData;
+    return (PBYTE)pBitmap - (PBYTE)pView;
 }
 
 static HBITMAP
@@ -237,25 +237,19 @@ Imm32DeserializeImeMenuBitmap(_Inout_ const IMEMENUBITMAPHEADER *pBitmap)
 
 static DWORD
 Imm32SerializeImeMenu(
-    _Out_ PBYTE pb,
-    _In_ DWORD cbCapacity,
+    _Out_ PIMEMENUINFO pView,
     _In_ HIMC hIMC,
-    _In_ DWORD dwFlags,
-    _In_ DWORD dwType,
     _Inout_opt_ PIMEMENUITEMINFOW lpImeParentMenu,
     _In_ BOOL bCountOnly)
 {
-    PIMEMENUINFO pInfo = (PIMEMENUINFO)pb;
-    ZeroMemory(pInfo, cbCapacity);
-    pInfo->cbSize = sizeof(*pInfo);
-    pInfo->cbCapacity = cbCapacity;
-    pInfo->dwMagic = IMEMENUINFO_MAGIC;
-    pInfo->dwFlags = dwFlags;
-    pInfo->dwType = dwType;
-    pb += sizeof(*pInfo);
+    PBYTE pb = (PBYTE)pView;
+    pb += sizeof(*pView);
+
+    DWORD dwFlags = pView->dwFlags;
+    DWORD dwType = pView->dwType;
 
     DWORD dwItemCount = ImmGetImeMenuItemsW(hIMC, dwFlags, dwType, lpImeParentMenu, NULL, 0);
-    pInfo->dwItemCount = dwItemCount;
+    pView->dwItemCount = dwItemCount;
     if (bCountOnly)
         return dwItemCount;
 
@@ -264,8 +258,8 @@ Imm32SerializeImeMenu(
 
     if (lpImeParentMenu)
     {
-        pInfo->dwParentOffset = pb - (PBYTE)pInfo;
-        pInfo->cbSize += sizeof(*lpImeParentMenu);
+        pView->dwParentOffset = pb - (PBYTE)pView;
+        pView->cbSize += sizeof(*lpImeParentMenu);
         CopyMemory(pb, lpImeParentMenu, sizeof(*lpImeParentMenu));
         pb += sizeof(*lpImeParentMenu);
     }
@@ -276,11 +270,11 @@ Imm32SerializeImeMenu(
         return 0;
 
     dwItemCount = ImmGetImeMenuItemsW(hIMC, dwFlags, dwType, lpImeParentMenu, pItems, cbItems);
-    pInfo->dwItemCount = dwItemCount;
+    pView->dwItemCount = dwItemCount;
 
-    pInfo->dwItemsOffset = pb - (PBYTE)pInfo;
-    pInfo->dwBitmapsOffset = pInfo->dwItemsOffset + cbItems;
-    if (pInfo->dwBitmapsOffset + sizeof(DWORD) > pInfo->cbCapacity)
+    pView->dwItemsOffset = pb - (PBYTE)pView;
+    pView->dwBitmapsOffset = pView->dwItemsOffset + cbItems;
+    if (pView->dwBitmapsOffset + sizeof(DWORD) > pView->cbCapacity)
     {
         for (DWORD iItem = 0; iItem < dwItemCount; ++iItem)
         {
@@ -295,10 +289,10 @@ Imm32SerializeImeMenu(
         return 0;
     }
     CopyMemory(pb, pItems, cbItems);
-    pInfo->cbSize += cbItems;
+    pView->cbSize += cbItems;
 
     ImmLocalFree(pItems);
-    pItems = PTR_FROM_OFFSET(pInfo, pInfo->dwItemsOffset);
+    pItems = PTR_FROM_OFFSET(pView, pView->dwItemsOffset);
 
     DWORD dwOffset;
     HDC hDC = CreateCompatibleDC(NULL);
@@ -306,43 +300,43 @@ Imm32SerializeImeMenu(
     {
         PIMEMENUITEMINFOW pItem = &pItems[iItem];
 
-        dwOffset = Imm32SerializeImeMenuBitmap(hDC, pInfo, pItem->hbmpChecked);
+        dwOffset = Imm32SerializeImeMenuBitmap(hDC, pView, pItem->hbmpChecked);
         if (dwOffset)
             pItem->hbmpChecked = UlongToHandle(dwOffset);
 
-        dwOffset = Imm32SerializeImeMenuBitmap(hDC, pInfo, pItem->hbmpUnchecked);
+        dwOffset = Imm32SerializeImeMenuBitmap(hDC, pView, pItem->hbmpUnchecked);
         if (dwOffset)
             pItem->hbmpUnchecked = UlongToHandle(dwOffset);
 
-        dwOffset = Imm32SerializeImeMenuBitmap(hDC, pInfo, pItem->hbmpItem);
+        dwOffset = Imm32SerializeImeMenuBitmap(hDC, pView, pItem->hbmpItem);
         if (dwOffset)
             pItem->hbmpItem = UlongToHandle(dwOffset);
     }
     DeleteDC(hDC);
 
-    Imm32DeleteImeMenuBitmaps(pInfo);
+    Imm32DeleteImeMenuBitmaps(pView);
 
     return dwItemCount;
 }
 
 static DWORD
 Imm32DeserializeImeMenu(
-    _Inout_ PBYTE pb,
+    _Inout_ PIMEMENUINFO pView,
     _Out_opt_ PIMEMENUITEMINFOW lpImeMenu,
     _In_ DWORD dwSize)
 {
-    PIMEMENUINFO pInfo = (PIMEMENUINFO)pb;
-    if (pInfo->dwMagic != IMEMENUINFO_MAGIC || pInfo->cbSize > pInfo->cbCapacity)
+    if (pView->dwMagic != IMEMENUINFO_MAGIC || pView->cbSize > pView->cbCapacity)
         return 0;
 
-    DWORD dwItemCount = pInfo->dwItemCount;
+    DWORD dwItemCount = pView->dwItemCount;
     if (!lpImeMenu)
         return dwItemCount;
 
     if (dwItemCount > dwSize / sizeof(IMEMENUITEMINFOW))
         dwItemCount = dwSize / sizeof(IMEMENUITEMINFOW);
 
-    pb += pInfo->dwItemsOffset;
+    PBYTE pb = (PBYTE)pView;
+    pb += pView->dwItemsOffset;
     PIMEMENUITEMINFOW pItems = (PIMEMENUITEMINFOW)pb;
 
     PIMEMENUBITMAPHEADER pBitmap;
@@ -351,17 +345,17 @@ Imm32DeserializeImeMenu(
         PIMEMENUITEMINFOW pItem = &pItems[iItem];
         if (pItem->hbmpChecked)
         {
-            pBitmap = PTR_FROM_OFFSET(pInfo, pItem->hbmpChecked);
+            pBitmap = PTR_FROM_OFFSET(pView, pItem->hbmpChecked);
             pItem->hbmpChecked = Imm32DeserializeImeMenuBitmap(pBitmap);
         }
         if (pItem->hbmpUnchecked)
         {
-            pBitmap = PTR_FROM_OFFSET(pInfo, pItem->hbmpUnchecked);
+            pBitmap = PTR_FROM_OFFSET(pView, pItem->hbmpUnchecked);
             pItem->hbmpUnchecked = Imm32DeserializeImeMenuBitmap(pBitmap);
         }
         if (pItem->hbmpItem)
         {
-            pBitmap = PTR_FROM_OFFSET(pInfo, pItem->hbmpItem);
+            pBitmap = PTR_FROM_OFFSET(pView, pItem->hbmpItem);
             pItem->hbmpItem = Imm32DeserializeImeMenuBitmap(pBitmap);
         }
         lpImeMenu[iItem] = *pItem;
@@ -403,9 +397,7 @@ ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
         lpImeParentMenu = PTR_FROM_OFFSET(pView, pView->dwParentOffset);
 
     /* Serialize the IME menu */
-    DWORD dwItemCount = Imm32SerializeImeMenu((PBYTE)pView, pView->cbCapacity,
-                                              hIMC, pView->dwFlags, pView->dwType,
-                                              lpImeParentMenu, !pView->dwItemCount);
+    DWORD dwItemCount = Imm32SerializeImeMenu(pView, hIMC, lpImeParentMenu, !pView->dwItemCount);
 
     /* Clean up */
     UnmapViewOfFile(pView);
@@ -455,12 +447,21 @@ Imm32GetImeMenuItemWInterProcess(
         return 0;
     }
 
+    /* Initialize view header */
+    ZeroMemory(pView, IMEMENUINFO_BUFFER_SIZE);
+    pView->cbSize = sizeof(*pView);
+    pView->cbCapacity = IMEMENUINFO_BUFFER_SIZE;
+    pView->dwMagic = IMEMENUINFO_MAGIC;
+    pView->dwFlags = dwFlags;
+    pView->dwType = dwType;
+    pView->dwItemCount = lpImeMenu ? (dwSize / sizeof(IMEMENUITEMINFOW)) : 0;
+
     /* Send WM_IME_SYSTEM.IMS_GETIMEMENU message. It will call ImmPutImeMenuItemsIntoMappedFile */
     DWORD ret = 0;
     if (SendMessageW(hwndIme, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
     {
         /* De-serialize the IME menu */
-        ret = Imm32DeserializeImeMenu((PBYTE)pView, lpImeMenu, dwSize);
+        ret = Imm32DeserializeImeMenu(pView, lpImeMenu, dwSize);
     }
 
     /* Cleanup */
