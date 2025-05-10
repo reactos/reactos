@@ -57,6 +57,7 @@ KMT_TESTFUNC Test_NpfsFileInfo;
 KMT_TESTFUNC Test_NpfsReadWrite;
 KMT_TESTFUNC Test_NpfsVolumeInfo;
 KMT_TESTFUNC Test_ObHandle;
+KMT_TESTFUNC Test_ObInsert;
 KMT_TESTFUNC Test_ObQuery;
 KMT_TESTFUNC Test_ObReference;
 KMT_TESTFUNC Test_ObSecurity;
@@ -141,6 +142,7 @@ const KMT_TEST TestList[] =
     { "NpfsReadWrite",                      Test_NpfsReadWrite },
     { "NpfsVolumeInfo",                     Test_NpfsVolumeInfo },
     { "ObHandle",                           Test_ObHandle },
+    { "ObInsert",                           Test_ObInsert },
     { "ObQuery",                            Test_ObQuery },
     { "ObReference",                        Test_ObReference },
     { "ObSecurity",                         Test_ObSecurity },
