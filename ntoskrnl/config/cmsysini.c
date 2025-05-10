@@ -16,6 +16,7 @@ POBJECT_TYPE CmpKeyObjectType;
 PCMHIVE CmiVolatileHive;
 LIST_ENTRY CmpHiveListHead;
 ERESOURCE CmpRegistryLock;
+extern ERESOURCE CmpNotificationLock;
 KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
 KEVENT CmpLoadWorkerEvent;
@@ -1648,6 +1649,9 @@ CmInitSystem1(VOID)
 
     /* Initialize registry lock */
     ExInitializeResourceLite(&CmpRegistryLock);
+
+    /* Initialize notification lock */
+    ExInitializeResourceLite(&CmpNotificationLock);
 
     /* Initialize the cache */
     CmpInitializeCache();

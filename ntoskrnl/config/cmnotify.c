@@ -12,6 +12,34 @@
 #define NDEBUG
 #include "debug.h"
 
+/* NOTIFICATION LOCK *********************************************************/
+
+ERESOURCE CmpNotificationLock;
+
+VOID
+NTAPI
+CmpLockNotifyShared()
+{
+    KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(&CmpNotificationLock, TRUE);
+}
+
+VOID
+NTAPI
+CmpLockNotifyExclusive()
+{
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpNotificationLock, TRUE);
+}
+
+VOID
+NTAPI
+CmpUnlockNotify()
+{
+    ExReleaseResourceLite(&CmpNotificationLock);
+    KeLeaveCriticalRegion();
+}
+
 /* INTERNAL FUNCTIONS ********************************************************/
 
 /**
@@ -217,12 +245,19 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PCM_NOTIFY_BLOCK NotifyBlock;
     PCM_POST_BLOCK PostBlock;
 
+    /* Acquire notification lock */
+    CmpLockNotifyShared();
+
     /* Find the CMHIVE linked to this Hive */
     KeyHive = CONTAINING_RECORD(Hive, CMHIVE, Hive);
     
     /* Get NotifyBlock list on the Hive */
     ListHead = &(KeyHive->NotifyList);
-    if (IsListEmpty(ListHead)) return;
+    if (IsListEmpty(ListHead))
+    {
+        CmpUnlockNotify();
+        return;
+    }
 
     /* Enumerate through CMHIVE->NotifyList */
     NextEntry = ListHead->Flink;
@@ -273,6 +308,8 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
             }
         }
     }
+
+    CmpUnlockNotify();
 }
 
 /**

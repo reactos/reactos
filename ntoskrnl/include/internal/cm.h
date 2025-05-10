@@ -679,6 +679,18 @@ CmpFlushNotify(
     IN BOOLEAN LockHeld
 );
 
+VOID
+NTAPI
+CmpLockNotifyShared();
+
+VOID
+NTAPI
+CmpLockNotifyExclusive();
+
+VOID
+NTAPI
+CmpUnlockNotify();
+
 NTSTATUS
 NTAPI
 CmpInsertNotifyBlock(
