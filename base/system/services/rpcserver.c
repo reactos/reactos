@@ -1608,6 +1608,9 @@ ScmIsValidServiceState(DWORD dwCurrentState)
     }
 }
 
+/*static*/ VOID
+ScmDereferenceOrTerminateServiceImage(PSERVICE pService);
+
 static
 DWORD
 WINAPI
@@ -1621,13 +1624,9 @@ ScmStopThread(PVOID pParam)
     if (lpService->lpImage->dwImageRunCount == 1)
     {
         /* Stop the dispatcher thread.
-         * We must not send a control message while holding the database lock, otherwise it can cause timeouts
+         * We must not send a control message while holding the database lock, otherwise it can cause timeouts.
          * We are sure that the service won't be deleted in the meantime because we still have a reference to it. */
-        DPRINT("Stopping the dispatcher thread for service %S\n", lpService->lpServiceName);
-        ScmControlService(lpService->lpImage->hControlPipe,
-                          L"",
-                          SERVICE_CONTROL_STOP,
-                          (SERVICE_STATUS_HANDLE)lpService);
+        /// ScmRemoveServiceImage(lpService->lpImage); /// FIXME: See below.
     }
 
     /* Lock the service database exclusively */
@@ -1635,17 +1634,8 @@ ScmStopThread(PVOID pParam)
 
     DPRINT("Service %S image count:%d\n", lpService->lpServiceName, lpService->lpImage->dwImageRunCount);
 
-    /* Decrement the image run counter */
-    lpService->lpImage->dwImageRunCount--;
-
-    /* If we just stopped the last running service... */
-    if (lpService->lpImage->dwImageRunCount == 0)
-    {
-        /* Remove the service image */
-        DPRINT("Removing service image for %S\n", lpService->lpServiceName);
-        ScmRemoveServiceImage(lpService->lpImage);
-        lpService->lpImage = NULL;
-    }
+    /* Dereference the service image */
+    ScmDereferenceOrTerminateServiceImage(lpService);
 
     /* Report the results of the status change here */
     if (lpService->Status.dwWin32ExitCode != ERROR_SUCCESS)
@@ -1675,7 +1665,7 @@ ScmStopThread(PVOID pParam)
     }
 
     /* Remove the reference that was added when the service started */
-    DPRINT("Service %S has %d references while stoping\n", lpService->lpServiceName, lpService->RefCount);
+    DPRINT("Service %S has %d references while stopping\n", lpService->lpServiceName, lpService->RefCount);
     ScmDereferenceService(lpService);
 
     /* Unlock the service database */
@@ -1781,13 +1771,15 @@ RSetServiceStatus(
     {
         HANDLE hStopThread;
         DWORD dwStopThreadId;
-        DPRINT("Service %S, currentstate: %d, prev: %d\n", lpService->lpServiceName, lpServiceStatus->dwCurrentState, dwPreviousState);
+        DPRINT("Service %S, CurrentState: %d, Prev: %d\n", lpService->lpServiceName, lpServiceStatus->dwCurrentState, dwPreviousState);
 
         /*
          * The service just changed its status to stopped.
-         * Create a thread that will complete the stop sequence.
-         * This thread will remove the reference that was added when the service started.
-         * This will ensure that the service will remain valid as long as this reference is still held.
+         * Create a thread that will complete the stop sequence asynchronously;
+         * this will give the service a chance to finish its cleanup.
+         * This thread will remove the reference that was added when the service
+         * started. This will ensure that the service will remain valid as long
+         * as this reference is still held.
          */
         hStopThread = CreateThread(NULL,
                                    0,
@@ -1795,7 +1787,7 @@ RSetServiceStatus(
                                    (LPVOID)lpService,
                                    0,
                                    &dwStopThreadId);
-        if (hStopThread == NULL)
+        if (!hStopThread)
         {
             DPRINT1("Failed to create thread to complete service stop\n");
             /* We can't leave without releasing the reference.
