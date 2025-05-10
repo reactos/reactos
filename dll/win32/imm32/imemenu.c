@@ -46,8 +46,7 @@ typedef struct tagIMEMENUBITMAPHEADER
 
 #define PTR_FROM_OFFSET(head, offset)  (PVOID)((PBYTE)(head) + (SIZE_T)(offset))
 
-static
-INT APIENTRY
+static INT
 Imm32ImeMenuAnsiToWide(
     _In_ const IMEMENUITEMINFOA *pItemA,
     _Out_ PIMEMENUITEMINFOW pItemW,
@@ -76,8 +75,7 @@ Imm32ImeMenuAnsiToWide(
     return ret;
 }
 
-static
-INT APIENTRY
+static INT
 Imm32ImeMenuWideToAnsi(
     _In_ const IMEMENUITEMINFOW *pItemW,
     _Out_ PIMEMENUITEMINFOA pItemA,
@@ -405,8 +403,7 @@ ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
     return dwItemCount;
 }
 
-static
-DWORD APIENTRY
+static DWORD
 Imm32GetImeMenuItemWInterProcess(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
