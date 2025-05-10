@@ -49,7 +49,7 @@ DWORD WINAPI NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
     
     Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0, NULL, NULL, NULL, NULL, &State->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
     ok(NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys was unsuccessful. (0x%lx)\n", Status);
-    
+
     return 0;
 }
 
@@ -229,7 +229,11 @@ START_SUBTEST(Asynchronous)
 
     /* Create event */
     state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
-    ok(state->EventHandle != NULL, "Failed to create event\n");
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Start watching for changes */
     Status = NtNotifyChangeMultipleKeys(state->KeyHandle, 0, NULL, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
@@ -269,7 +273,11 @@ START_SUBTEST(WatchSubtree)
 
     /* Create event */
     state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
-    ok(state->EventHandle != NULL, "Failed to create event\n");
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Start watching for changes */
     Status = NtNotifyChangeMultipleKeys(state->KeyHandle, 0, NULL, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
@@ -314,7 +322,11 @@ START_SUBTEST(WatchSecondaryKey)
 
     /* Create event */
     state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
-    ok(state->EventHandle != NULL, "Failed to create event\n");
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Start watching for changes */
     OBJECT_ATTRIBUTES SubordinateObjects[1];
