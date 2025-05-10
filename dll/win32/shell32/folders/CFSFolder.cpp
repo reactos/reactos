@@ -1131,13 +1131,12 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
     if (!pszName1 || !pszName2 || LOWORD(lParam) >= GENERICSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
 
-    LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
-    LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
-    LPWSTR pExtension1, pExtension2;
-
     HRESULT hr = CompareSortFoldersFirst(pidl1, pidl2);
     if (SUCCEEDED(hr))
         return hr;
+
+    LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
+    LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
     int result = 0;
     switch (lParam & SHCIDS_COLUMNMASK)
     {
@@ -1153,10 +1152,8 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
                 result = 0;
             break;
         case SHFSF_COL_TYPE:
-            // FIXME: Compare the type strings from SHGetFileInfo
-            pExtension1 = PathFindExtensionW(pszName1);
-            pExtension2 = PathFindExtensionW(pszName2);
-            result = CompareUiStrings(pExtension1, pExtension2, lParam);
+            if ((hr = SHELL32_CompareDetails(this, lParam, pidl1, pidl2)) != 0 && SUCCEEDED(hr))
+                return hr;
             break;
         case SHFSF_COL_MDATE:
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
@@ -1164,12 +1161,14 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
                 result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
             break;
         case SHFSF_COL_FATTS:
-            result = SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
-            if (result == 0)
-                result = pData1->u.file.uFileAttribs - pData1->u.file.uFileAttribs; // Attributes without a "UI letter" (R/A/S/H)
+            if (lParam & SHCIDS_CANONICALONLY)
+                result = pData1->u.file.uFileAttribs - pData2->u.file.uFileAttribs; // Attributes without a "UI letter" (R/A/S/H)
+            else if ((hr = SHELL32_CompareDetails(this, lParam, pidl1, pidl2)) != 0 && SUCCEEDED(hr))
+                return hr;
             break;
         case SHFSF_COL_COMMENT:
-            result = SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+            if ((hr = SHELL32_CompareDetails(this, lParam, pidl1, pidl2)) != 0 && SUCCEEDED(hr))
+                return hr;
             break;
         default:
             if (_ILIsPidlSimple(pidl1) || _ILIsPidlSimple(pidl2))
