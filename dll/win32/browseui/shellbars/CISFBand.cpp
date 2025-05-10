@@ -1,9 +1,10 @@
 /*
  * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CISFBand.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
- * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ * COPYRIGHT:   Copyright 2017 Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ *              Copyright 2017-2018 Giannis Adamopoulos
+ *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "shellbars.h"
@@ -13,100 +14,192 @@
 #include <wingdi.h>
 #include <uxtheme.h>
 
+#undef SubclassWindow // Don't use SubclassWindow macro
+
 /*
 TODO:
     ** drag and drop support
     ** tooltips
-    ** handle change notifications
     ** Fix position of the items context menu
     ** Implement responding to theme change
 */
 
+#define TIMERID_DELAYED_REFRESH 0xBEEFCAFE
+#define TIMER_REFRESH_DELAY 500
+
 //*****************************************************************************************
 // *** CISFBand ***
 
-CISFBand::CISFBand() :
-    m_BandID(0),
-    m_pidl(NULL),
-    m_textFlag(true),
-    m_iconFlag(true),
-    m_QLaunch(false)
+CISFBand::CISFBand()
+    : m_BandID(0)
+    , m_uChangeNotify(0)
+    , m_bShowText(TRUE)
+    , m_bSmallIcon(TRUE)
+    , m_QLaunch(FALSE)
 {
 }
 
 CISFBand::~CISFBand()
 {
-    CloseDW(0);
 }
 
-// Toolbar
-/*++
-* @name CreateSimpleToolbar
-*
-* Creates a toolbar and fills it up with buttons for enumerated objects.
-*
-* @param hWndParent
-*        Handle to the parent window, which receives the appropriate messages from child toolbar.
-*
-* @return The error code.
-*
-*--*/
 HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
-    // Declare and initialize local constants.
-    const DWORD buttonStyles = BTNS_AUTOSIZE;
-
     // Create the toolbar.
-    m_hWnd = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
-        WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
-        hWndParent, NULL, 0, NULL);
-    if (m_hWnd == NULL)
+    DWORD style = WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER;
+    HWND hwndToolbar = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0,
+                                         hWndParent, NULL, 0, NULL);
+    if (!hwndToolbar)
         return E_FAIL;
 
-    if (!m_textFlag)
-        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+    SubclassWindow(hwndToolbar);
+    ATLASSERT(m_hWnd);
 
-    // Set the image list.
-    HIMAGELIST* piml;
-    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml);
+    ShowHideText(m_bShowText);
+    SetImageListIconSize(m_bSmallIcon);
+
+    return AddToolbarButtons();
+}
+
+HRESULT CISFBand::RefreshToolbar()
+{
+    DeleteToolbarButtons();
+    return AddToolbarButtons();
+}
+
+HRESULT CISFBand::AddToolbarButtons()
+{
+    CComPtr<IEnumIDList> pEnum;
+    HRESULT hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &pEnum);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        DestroyWindow();
         return hr;
-    }
-    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
 
-    // Enumerate objects
-    CComPtr<IEnumIDList> pEndl;
     LPITEMIDLIST pidl;
-    STRRET stret;
-    hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS, &pEndl);
+    for (INT iItem = 0; pEnum->Next(1, &pidl, NULL) == S_OK; ++iItem)
+    {
+        STRRET strret;
+        hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &strret);
+
+        WCHAR szText[MAX_PATH];
+        if (FAILED_UNEXPECTEDLY(hr))
+            szText[0] = UNICODE_NULL;
+        else
+            StrRetToBufW(&strret, pidl, szText, _countof(szText));
+
+        INT iImage = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);
+        TBBUTTON tb = { iImage, iItem, TBSTATE_ENABLED, BTNS_AUTOSIZE, { 0 },
+                        (DWORD_PTR)pidl, (INT_PTR)szText };
+        SendMessage(TB_INSERTBUTTONW, iItem, (LPARAM)&tb);
+    }
+
+    SendMessage(TB_AUTOSIZE, 0, 0);
+    return BandInfoChanged();
+}
+
+void CISFBand::DeleteToolbarButtons()
+{
+    // Assumption: Deleting a button causes the remaining buttons to shift,
+    // so the next button always appears at index 0. This ensures the loop
+    // progresses and avoids infinite loops.
+    TBBUTTON tb;
+    while (SendMessage(TB_GETBUTTON, 0, (LPARAM)&tb))
+    {
+        CoTaskMemFree((LPITEMIDLIST)tb.dwData);
+        SendMessage(TB_DELETEBUTTON, 0, 0);
+    }
+}
+
+BOOL CISFBand::RegisterChangeNotify(_In_ BOOL bRegister)
+{
+    if (bRegister)
+    {
+        if (!m_pidl)
+            return FALSE;
+#define SHCNE_WATCH (SHCNE_RENAMEITEM | SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | \
+                     SHCNE_RMDIR | SHCNE_UPDATEDIR | SHCNE_UPDATEITEM | SHCNE_UPDATEIMAGE | \
+                     SHCNE_RENAMEFOLDER | SHCNE_ASSOCCHANGED)
+        SHChangeNotifyEntry entry = { m_pidl, FALSE };
+        m_uChangeNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_ShellLevel | SHCNRF_NewDelivery,
+                                                 SHCNE_WATCH, WM_ISFBAND_CHANGE_NOTIFY,
+                                                 1, &entry);
+        return m_uChangeNotify != 0;
+    }
+    else // De-register?
+    {
+        if (m_uChangeNotify)
+        {
+            SHChangeNotifyDeregister(m_uChangeNotify);
+            m_uChangeNotify = 0;
+            return TRUE;
+        }
+        return FALSE;
+    }
+}
+
+HRESULT CISFBand::SetImageListIconSize(_In_ BOOL bSmall)
+{
+    m_bSmallIcon = bSmall;
+
+    CComPtr<IImageList> piml;
+    HRESULT hr = SHGetImageList((bSmall ? SHIL_SMALL : SHIL_LARGE), IID_PPV_ARG(IImageList, &piml));
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        DestroyWindow();
         return hr;
-    }
 
-    for (int i=0; pEndl->Next(1, &pidl, NULL) != S_FALSE; i++)
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)(HIMAGELIST)piml.Detach());
+    return S_OK;
+}
+
+HRESULT CISFBand::BandInfoChanged()
+{
+    if (!m_Site)
+        return S_OK;
+    HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return S_OK;
+}
+
+HRESULT CISFBand::ShowHideText(_In_ BOOL bShow)
+{
+    // NOTE: TBSTYLE_EX_MIXEDBUTTONS hides non-BTNS_SHOWTEXT buttons' text.
+    m_bShowText = bShow;
+    SendMessage(TB_SETEXTENDEDSTYLE, 0, (bShow ? 0 : TBSTYLE_EX_MIXEDBUTTONS));
+    return S_OK;
+}
+
+//****************************************************************************
+// Message handlers
+
+// WM_TIMER
+LRESULT CISFBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam == TIMERID_DELAYED_REFRESH)
     {
-         WCHAR sz[MAX_PATH];
-         int index = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);
-         hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &stret);
-         if (FAILED_UNEXPECTEDLY(hr))
-         {
-             StringCchCopyW(sz, MAX_PATH, L"<Unknown-Name>");
-         }
-         else
-             StrRetToBuf(&stret, pidl, sz, _countof(sz));
-
-         TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)pidl, (INT_PTR)sz };
-         SendMessage(m_hWnd, TB_INSERTBUTTONW, i, (LPARAM)&tb);
+        KillTimer(wParam);
+        RefreshToolbar();
     }
+    return 0;
+}
 
-    // Resize the toolbar, and then show it.
-    SendMessage(m_hWnd, TB_AUTOSIZE, 0, 0);
+// WM_ISFBAND_CHANGE_NOTIFY
+LRESULT CISFBand::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    // This code reduces the redrawing cost by coalescing multiple change events
+    KillTimer(TIMERID_DELAYED_REFRESH);
+    SetTimer(TIMERID_DELAYED_REFRESH, TIMER_REFRESH_DELAY);
+    return 0;
+}
 
-    return hr;
+// WM_DESTROY
+LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    RegisterChangeNotify(FALSE);
+    KillTimer(TIMERID_DELAYED_REFRESH);
+    ShowWindow(SW_HIDE);
+    DeleteToolbarButtons();
+    UnsubclassWindow();
+    bHandled = FALSE;
+    return 0;
 }
 
 /*****************************************************************************/
@@ -131,6 +224,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        RegisterChangeNotify(TRUE);
         return S_OK;
     }
 
@@ -183,16 +277,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     {
         if (m_hWnd)
         {
-            ShowWindow(SW_HIDE);
-
-            TBBUTTON tb;
-            for (int i = 0; SendMessage(m_hWnd, TB_GETBUTTON, i, (LPARAM)&tb); i++)
-            {
-                CoTaskMemFree((LPITEMIDLIST)tb.dwData);
-            }
-
             DestroyWindow();
-            m_hWnd = NULL;
             return S_OK;
         }
 
@@ -202,7 +287,6 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     STDMETHODIMP CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
     {
         /* No need to implement this method */
-
         return E_NOTIMPL;
     }
 
@@ -285,14 +369,12 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     STDMETHODIMP CISFBand::GetClassID(OUT CLSID *pClassID)
     {
         *pClassID = CLSID_ISFBand;
-
         return S_OK;
     }
 
     STDMETHODIMP CISFBand::IsDirty()
     {
         /* The object hasn't changed since the last save! */
-
         return S_FALSE;
     }
 
@@ -300,21 +382,18 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     {
         TRACE("CISFBand::Load called\n");
         /* Nothing to do */
-
         return S_OK;
     }
 
     STDMETHODIMP CISFBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
     {
         /* Nothing to do */
-
         return S_OK;
     }
 
     STDMETHODIMP CISFBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
     {
         TRACE("CISFBand::GetSizeMax called\n");
-
         return S_OK;
     }
 
@@ -338,7 +417,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             case WM_COMMAND:
             {
                 TBBUTTON tb;
-                bool chk = SendMessage(m_hWnd, TB_GETBUTTON, LOWORD(wParam), (LPARAM)&tb);
+                BOOL chk = SendMessage(TB_GETBUTTON, LOWORD(wParam), (LPARAM)&tb);
                 if (chk)
                     SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);
 
@@ -430,9 +509,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     STDMETHODIMP CISFBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
     {
         if (IsEqualIID(*pguidCmdGroup, IID_IBandSite))
-        {
             return S_OK;
-        }
 
         if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
         {
@@ -476,6 +553,8 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         if (psf && pidl)
             return E_INVALIDARG;
 
+        m_pidl.Free();
+
         if (pidl != NULL)
         {
             CComPtr<IShellFolder> psfDesktop;
@@ -494,7 +573,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                     return hr;
             }
 
-            m_pidl = ILClone(pidl);
+            m_pidl.Attach(ILClone(pidl));
+            if (!m_pidl)
+                ERR("Out of memory\n");
         }
 
         if (psf != NULL)
@@ -508,6 +589,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
+            ATLASSERT(m_pidl);
             m_pISF = psf;
         }
 
@@ -520,10 +602,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             (pbi->dwState & ISFB_STATE_QLINKSMODE) &&
             (pbi->dwStateMask & ISFB_STATE_QLINKSMODE))
         {
-            m_QLaunch = true;
-            m_textFlag = false;
-            if (m_hWnd)
-                SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+            m_QLaunch = TRUE;
+            ShowHideText(FALSE);
+            return BandInfoChanged();
         }
 
         return E_NOTIMPL;
@@ -570,62 +651,33 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             {
                 case IDM_LARGE_ICONS:
                 {
-                    m_iconFlag = false;
-
-                    HIMAGELIST* piml = (HIMAGELIST*) SendMessage(m_hWnd, TB_GETIMAGELIST, 0, 0);
-                    HRESULT hr = SHGetImageList(SHIL_LARGE, IID_IImageList, (void**)&piml);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
-                    hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    break;
+                    HRESULT hr = SetImageListIconSize(FALSE);
+                    if (FAILED(hr))
+                        return hr;
+                    return BandInfoChanged();
                 }
                 case IDM_SMALL_ICONS:
                 {
-                    m_iconFlag = true;
-
-                    HIMAGELIST* piml = (HIMAGELIST*)SendMessage(m_hWnd, TB_GETIMAGELIST, 0, 0);
-                    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
-                    hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    break;
+                    HRESULT hr = SetImageListIconSize(TRUE);
+                    if (FAILED(hr))
+                        return hr;
+                    return BandInfoChanged();
                 }
                 case IDM_OPEN_FOLDER:
                 {
-                    SHELLEXECUTEINFO shexinfo;
-
-                    memset(&shexinfo, 0x0, sizeof(shexinfo));
-
-                    shexinfo.cbSize = sizeof(shexinfo);
+                    SHELLEXECUTEINFOW shexinfo = { sizeof(shexinfo) };
                     shexinfo.fMask = SEE_MASK_IDLIST;
-                    shexinfo.lpVerb = _T("open");
+                    shexinfo.lpVerb = L"open";
                     shexinfo.lpIDList = m_pidl;
                     shexinfo.nShow = SW_SHOW;
-
-                    if (!ShellExecuteEx(&shexinfo))
+                    if (!ShellExecuteExW(&shexinfo))
                         return E_FAIL;
-
                     break;
                 }
                 case IDM_SHOW_TEXT:
                 {
-                    if (m_textFlag)
-                    {
-                        m_textFlag = false;
-                        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-                        HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                        if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    }
-                    else
-                    {
-                        m_textFlag = true;
-                        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, 0);
-                        HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
-                        if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    }
-                    break;
+                    ShowHideText(!m_bShowText);
+                    return BandInfoChanged();
                 }
                 default:
                     return E_FAIL;
@@ -639,12 +691,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     {
         HMENU qMenu = LoadMenu(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCE(IDM_POPUPMENU));
 
-        if(m_textFlag)
-            CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_CHECKED);
-        else
-            CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_UNCHECKED);
+        CheckMenuItem(qMenu, IDM_SHOW_TEXT, (m_bShowText ? MF_CHECKED : MF_UNCHECKED));
 
-        if (m_iconFlag)
+        if (m_bSmallIcon)
         {
             CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_CHECKED);
             CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_UNCHECKED);
@@ -665,9 +714,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
 /*****************************************************************************/
 // C Constructor
-    extern "C"
-    HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv)
-    {
-        return ShellObjectCreator<CISFBand>(riid, ppv);
-    }
 
+EXTERN_C
+HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv)
+{
+    return ShellObjectCreator<CISFBand>(riid, ppv);
+}
