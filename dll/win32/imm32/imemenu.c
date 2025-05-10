@@ -242,7 +242,7 @@ Imm32SerializeImeMenu(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
-    _Inout_opt_ PIMEMENUITEMINFO lpImeParentMenu,
+    _Inout_opt_ PIMEMENUITEMINFOW lpImeParentMenu,
     _In_ BOOL bCountOnly)
 {
     PIMEMENUINFO pInfo = (PIMEMENUINFO)pb;
@@ -270,8 +270,8 @@ Imm32SerializeImeMenu(
         pb += sizeof(*lpImeParentMenu);
     }
 
-    SIZE_T cbItems = dwItemCount * sizeof(IMEMENUITEMINFO);
-    PIMEMENUITEMINFO pItems = ImmLocalAlloc(LPTR, cbItems);
+    SIZE_T cbItems = dwItemCount * sizeof(IMEMENUITEMINFOW);
+    PIMEMENUITEMINFOW pItems = ImmLocalAlloc(LPTR, cbItems);
     if (!pItems)
         return 0;
 
@@ -304,7 +304,7 @@ Imm32SerializeImeMenu(
     HDC hDC = CreateCompatibleDC(NULL);
     for (DWORD iItem = 0; iItem < dwItemCount; ++iItem)
     {
-        PIMEMENUITEMINFO pItem = &pItems[iItem];
+        PIMEMENUITEMINFOW pItem = &pItems[iItem];
 
         dwOffset = Imm32SerializeImeMenuBitmap(hDC, pInfo, pItem->hbmpChecked);
         if (dwOffset)
@@ -328,7 +328,7 @@ Imm32SerializeImeMenu(
 static DWORD
 Imm32DeserializeImeMenu(
     _Inout_ PBYTE pb,
-    _Out_opt_ PIMEMENUITEMINFO lpImeMenu,
+    _Out_opt_ PIMEMENUITEMINFOW lpImeMenu,
     _In_ DWORD dwSize)
 {
     PIMEMENUINFO pInfo = (PIMEMENUINFO)pb;
@@ -339,16 +339,16 @@ Imm32DeserializeImeMenu(
     if (!lpImeMenu)
         return dwItemCount;
 
-    if (dwItemCount > dwSize / sizeof(IMEMENUITEMINFO))
-        dwItemCount = dwSize / sizeof(IMEMENUITEMINFO);
+    if (dwItemCount > dwSize / sizeof(IMEMENUITEMINFOW))
+        dwItemCount = dwSize / sizeof(IMEMENUITEMINFOW);
 
     pb += pInfo->dwItemsOffset;
-    PIMEMENUITEMINFO pItems = (PIMEMENUITEMINFO)pb;
+    PIMEMENUITEMINFOW pItems = (PIMEMENUITEMINFOW)pb;
 
     PIMEMENUBITMAPHEADER pBitmap;
     for (DWORD iItem = 0; iItem < dwItemCount; ++iItem)
     {
-        PIMEMENUITEMINFO pItem = &pItems[iItem];
+        PIMEMENUITEMINFOW pItem = &pItems[iItem];
         if (pItem->hbmpChecked)
         {
             pBitmap = PTR_FROM_OFFSET(pInfo, pItem->hbmpChecked);
