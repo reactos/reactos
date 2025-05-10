@@ -3607,7 +3607,7 @@ protected:
     void UpdateAlwaysOnTop(_In_ BOOL bAlwaysOnTop) override
     {
         g_TaskbarSettings.sr.AlwaysOnTop = bAlwaysOnTop;
-        HWND hwndInsertAfter = (bAlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM);
+        HWND hwndInsertAfter = (bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST);
         SetWindowPos(hwndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 };
