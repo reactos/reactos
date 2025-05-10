@@ -111,7 +111,7 @@ Imm32FindImeMenuBitmap(
     while (pBitmap->cbSize)
     {
         if (pBitmap->hbm == hbm)
-            return (PBYTE)pBitmap - (PBYTE)pView;
+            return (PBYTE)pBitmap - (PBYTE)pView; /* Byte offset from pView */
         pBitmap = PTR_FROM_OFFSET(pBitmap, pBitmap->cbSize);
     }
     return 0;
@@ -206,7 +206,7 @@ Imm32SerializeImeMenuBitmap(
     }
 
     pView->cbSize += cbData;
-    return (PBYTE)pBitmap - (PBYTE)pView;
+    return (PBYTE)pBitmap - (PBYTE)pView; /* Byte offset from pView */
 }
 
 static HBITMAP
