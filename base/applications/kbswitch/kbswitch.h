@@ -10,6 +10,7 @@
 #include <shellapi.h>
 #include <tchar.h>
 #include <strsafe.h>
+#include <ddk/indicml.h> /* INDICATOR_CLASS, INDICM_... */
 
 #include "resource.h"
 
@@ -26,4 +27,4 @@
 typedef BOOL (WINAPI *PKBSWITCHSETHOOKS) (VOID);
 typedef VOID (WINAPI *PKBSWITCHDELETEHOOKS) (VOID);
 
-TCHAR szKbSwitcherName[] = _T("kbswitcher");
+#define szKbSwitcherName INDICATOR_CLASS
