@@ -41,6 +41,7 @@ typedef struct tagBITMAPINFOMAX
     RGBQUAD bmiColors[256];
 } BITMAPINFOMAX, *PBITMAPINFOMAX;
 
+/* ReactOS-specific */
 typedef struct tagIMEMENUBITMAPHEADER
 {
     DWORD cbSize;
