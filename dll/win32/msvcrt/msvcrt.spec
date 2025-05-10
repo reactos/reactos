@@ -176,18 +176,18 @@
 @ cdecl _XcptFilter(long ptr)
 @ stdcall -arch=!i386 __C_specific_handler(ptr long ptr ptr) ntdll.__C_specific_handler
 @ cdecl __CppXcptFilter(long ptr)
-# stub __CxxCallUnwindDelDtor
-# stub __CxxCallUnwindDtor
-# stub __CxxCallUnwindVecDtor
-@ cdecl __CxxDetectRethrow(ptr)
-@ cdecl __CxxExceptionFilter(ptr ptr long ptr)
+# stub -arch=i386 __CxxCallUnwindDelDtor
+# stub -arch=i386 __CxxCallUnwindDtor
+# stub -arch=i386 __CxxCallUnwindVecDtor
+@ cdecl -arch=i386 __CxxDetectRethrow(ptr)
+@ cdecl -arch=i386 __CxxExceptionFilter(ptr ptr long ptr)
 @ cdecl -norelay __CxxFrameHandler(ptr ptr ptr ptr)
 @ cdecl -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
 @ cdecl -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
 @ stdcall -arch=i386 __CxxLongjmpUnwind(ptr)
-@ cdecl __CxxQueryExceptionSize()
-@ cdecl __CxxRegisterExceptionObject(ptr ptr)
-@ cdecl __CxxUnregisterExceptionObject(ptr long)
+@ cdecl -arch=i386 __CxxQueryExceptionSize()
+@ cdecl -arch=i386 __CxxRegisterExceptionObject(ptr ptr)
+@ cdecl -arch=i386 __CxxUnregisterExceptionObject(ptr long)
 @ cdecl __DestructExceptionObject(ptr)
 @ cdecl __RTCastToVoid(ptr)
 @ cdecl __RTDynamicCast(ptr long ptr ptr long)
@@ -197,8 +197,8 @@
 @ cdecl ___lc_collate_cp_func()
 @ cdecl ___lc_handle_func()
 @ cdecl ___mb_cur_max_func()
-@ cdecl ___setlc_active_func()
-@ cdecl ___unguarded_readlc_active_add_func()
+@ cdecl -arch=i386,x86_64 ___setlc_active_func()
+@ cdecl -arch=i386,x86_64 ___unguarded_readlc_active_add_func()
 @ extern __argc MSVCRT___argc
 @ extern __argv MSVCRT___argv
 @ extern __badioinfo MSVCRT___badioinfo
@@ -214,14 +214,14 @@
 @ cdecl __dstbias() __p__dstbias
 @ cdecl __fpecode()
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
-@ extern __initenv MSVCRT___initenv
+@ extern -arch=i386,x86_64 __initenv MSVCRT___initenv
 @ cdecl __iob_func()
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
 @ stdcall -arch=arm __jump_unwind(ptr ptr) ntdll.__jump_unwind
-@ extern __lc_codepage MSVCRT___lc_codepage
-@ extern __lc_collate_cp MSVCRT___lc_collate_cp
+@ extern -arch=i386,x86_64 __lc_codepage MSVCRT___lc_codepage
+@ extern -arch=i386,x86_64 __lc_collate_cp MSVCRT___lc_collate_cp
 @ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
 @ cdecl -arch=i386 -norelay __libm_sse2_acos()
@@ -296,7 +296,7 @@
 # stub __wcsncnt(wstr long)
 @ cdecl __wgetmainargs(ptr ptr ptr long ptr)
 @ extern __winitenv MSVCRT___winitenv
-@ cdecl _abnormal_termination() __intrinsic_abnormal_termination
+@ cdecl -arch=i386 _abnormal_termination() __intrinsic_abnormal_termination
 @ cdecl -ret64 _abs64(int64)
 @ cdecl _access(str long)
 @ cdecl _access_s(str long)
