@@ -19,8 +19,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  */
 
 #define IMEMENUINFO_BUFFER_SIZE 0x20000
-#define IMEMENUINFO_MAGIC 0xBABEF00D
+#define IMEMENUINFO_MAGIC 0xBABEF00D /* ReactOS-specific */
 
+/* ReactOS-specific */
 typedef struct tagIMEMENUINFO
 {
     DWORD cbSize;
