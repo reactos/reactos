@@ -230,7 +230,7 @@ Imm32DeserializeImeMenuBitmap(_Inout_ const IMEMENUBITMAPHEADER *pBitmap)
 
 /*
  * We transport the IME menu items by using a flat memory block via
- * a file mapping object beyond the boundary of a process.
+ * a file mapping object beyond boundary of process.
  */
 static DWORD
 Imm32SerializeImeMenu(
