@@ -240,11 +240,18 @@ Imm32DeserializeImeMenuBitmap(_Inout_ const IMEMENUBITMAPHEADER *pBitmap)
  */
 static DWORD
 Imm32SerializeImeMenu(
-    _Out_ PIMEMENUINFO pView,
+    _Inout_ PIMEMENUINFO pView,
     _In_ HIMC hIMC,
     _Inout_opt_ PIMEMENUITEMINFOW lpImeParentMenu,
     _In_ BOOL bCountOnly)
 {
+    /* Sanity check */
+    if (pView->dwMagic != IMEMENUINFO_MAGIC || pView->cbSize > pView->cbCapacity)
+    {
+        ERR("Invalid pView\n");
+        return 0;
+    }
+
     /* Get the count of menu items */
     DWORD dwFlags = pView->dwFlags;
     DWORD dwType = pView->dwType;
