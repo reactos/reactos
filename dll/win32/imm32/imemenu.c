@@ -567,7 +567,7 @@ ImmGetImeMenuItemsAW(
     /* Is input ANSI? */
     bImcIsAnsi = Imm32IsImcAnsi(hIMC);
 
-    /* Are text types (ANSI/Wide) of IME and target different? */
+    /* Are text types (ANSI/Wide) different between IME and target? */
     if (bImcIsAnsi != bTargetIsAnsi)
     {
         if (bTargetIsAnsi)
