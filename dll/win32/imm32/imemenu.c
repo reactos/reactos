@@ -371,7 +371,7 @@ Imm32DeserializeImeMenu(
 LRESULT WINAPI
 ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
 {
-    /* Open the existing file mapping*/
+    /* Open the existing file mapping */
     HANDLE hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"ImmMenuInfo");
     if (!hMapping)
     {
@@ -460,7 +460,7 @@ Imm32GetImeMenuItemWInterProcess(
         ret = Imm32DeserializeImeMenu(pView, lpImeMenu, dwSize);
     }
 
-    /* Cleanup */
+    /* Clean up */
     UnmapViewOfFile(pView); /* Unmap */
     CloseHandle(hMapping); /* Close the file mapping */
     RtlLeaveCriticalSection(&gcsImeDpi); /* Unlock */
