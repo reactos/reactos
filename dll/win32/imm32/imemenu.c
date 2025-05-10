@@ -13,11 +13,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-/*
- * We will transport the IME menu items by using a flat memory block via
- * a file mapping object beyond the boundary of a process.
- */
-
 #define IMEMENUINFO_BUFFER_SIZE 0x20000
 #define IMEMENUINFO_MAGIC 0xBABEF00D /* ReactOS-specific */
 
@@ -235,6 +230,10 @@ Imm32DeserializeImeMenuBitmap(_Inout_ const IMEMENUBITMAPHEADER *pBitmap)
     return hbm;
 }
 
+/*
+ * We transport the IME menu items by using a flat memory block via
+ * a file mapping object beyond the boundary of a process.
+ */
 static DWORD
 Imm32SerializeImeMenu(
     _Out_ PIMEMENUINFO pView,
