@@ -14,6 +14,7 @@
 
 BOOLEAN KmtIsCheckedBuild;
 BOOLEAN KmtIsMultiProcessorBuild;
+BOOLEAN KmtIsVirtualMachine;
 PCSTR KmtMajorFunctionNames[] =
 {
     "Create",
