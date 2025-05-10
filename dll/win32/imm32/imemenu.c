@@ -507,7 +507,10 @@ ImmGetImeMenuItemsAW(
     if (dwProcessId != GetCurrentProcessId())
     {
         if (bTargetIsAnsi)
+        {
+            ERR("ImmGetImeMenuItemsA cannot cross process boundary\n");
             return 0;
+        }
         return Imm32GetImeMenuItemWInterProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
                                                 lpImeMenu, dwSize);
     }
