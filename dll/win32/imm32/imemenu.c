@@ -172,7 +172,7 @@ Imm32SerializeImeMenuBitmap(
     DWORD cbData = cbBitmapHeader + dibHeaderSize + bmi.bmiHeader.biSizeImage;
     if (pView->cbSize + cbData + sizeof(DWORD) > pView->cbCapacity)
     {
-        ERR("Boundary check\n");
+        ERR("Too large IME menu\n");
         return 0;
     }
 
@@ -284,7 +284,7 @@ Imm32SerializeImeMenu(
     pView->dwBitmapsOffset = pView->dwItemsOffset + cbItems;
     if (pView->dwBitmapsOffset + sizeof(DWORD) > pView->cbCapacity)
     {
-        ERR("Boundary check\n");
+        ERR("Too large IME menu\n");
 
         /* Clean up */
         for (DWORD iItem = 0; iItem < dwItemCount; ++iItem)
@@ -343,7 +343,10 @@ Imm32DeserializeImeMenu(
 {
     /* Sanity check */
     if (pView->dwMagic != IMEMENUINFO_MAGIC || pView->cbSize > pView->cbCapacity)
+    {
+        ERR("Invalid pView\n");
         return 0;
+    }
 
     DWORD dwItemCount = pView->dwItemCount;
     if (lpImeMenu == NULL)
