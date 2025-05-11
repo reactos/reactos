@@ -3,8 +3,12 @@ include_directories(libm_sse2)
 
 list(APPEND LIBCNTPR_MATH_SOURCE
     math/_chgsignf.c
+    math/_dclass.c
     math/_dsign.c
+    math/_dtest.c
+    math/_fdclass.c
     math/_fdsign.c
+    math/_fdtest.c
     math/_finite.c
     math/_finitef.c
     math/_isnan.c

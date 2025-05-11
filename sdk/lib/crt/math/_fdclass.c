@@ -1,17 +1,15 @@
-//
-// _fdclass.c
-//
-//      Copyright (c) 2024 Timo Kreuzer
-//
-// Implementation of _fdclass.
-//
-// SPDX-License-Identifier: MIT
-//
+/*
+ * PROJECT:     ReactOS CRT
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Implementation of _fdclass.
+ * COPYRIGHT:   Copyright 2025 Timo Kreuzer <timo.kreuzer@reactos.org>
+ */
 
 #include <math.h>
 #include <stdint.h>
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1922)
+_Check_return_ short __cdecl _fdclass(_In_ float _X);
 #pragma function(_fdclass)
 #endif
 
