@@ -22,8 +22,8 @@ typedef struct tagIMEMENUINFO
     DWORD cbSize;
     DWORD cbCapacity; /* IMEMENUINFO_BUFFER_SIZE */
     DWORD dwMagic; /* IMEMENUINFO_MAGIC */
-    DWORD dwFlags;
-    DWORD dwType;
+    DWORD dwFlags; /* ImmGetImeMenuItems.dwFlags */
+    DWORD dwType; /* ImmGetImeMenuItems.dwType */
     DWORD dwItemCount;
     DWORD dwParentOffset;
     DWORD dwItemsOffset;
