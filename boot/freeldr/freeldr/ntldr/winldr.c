@@ -1252,10 +1252,10 @@ LoadAndBootWindowsCommon(
     MachPrepareForReactOS();
 
     /* Show the "debug mode" notice if needed */
-    BOOLEAN DebugMode = !NtLdrGetOption(BootOptions, "NODEBUG") && /* NODEBUG is absent, priority over DEBUG option */
-                        !NtLdrGetOption(BootOptions, "CRASHDEBUG") && /* CRASHDEBUG is abset, no wait during the boot */
-                        !!NtLdrGetOption(BootOptions, "DEBUG"); /* DEBUG is present */
-    if (DebugMode)
+    /* Match KdInitSystem() conditions */
+    if (!NtLdrGetOption(BootOptions, "CRASHDEBUG") &&
+        !NtLdrGetOption(BootOptions, "NODEBUG") &&
+        NtLdrGetOption(BootOptions, "DEBUG"))
     {
         /* It is booting in debug mode */
         TuiPrintf("Booting in debug mode\n");
