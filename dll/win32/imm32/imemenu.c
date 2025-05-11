@@ -164,7 +164,7 @@ Imm32SerializeImeMenuBitmap(
     DWORD cbData = cbBitmapHeader + dibHeaderSize + bmi.bmiHeader.biSizeImage;
     if (pView->cbSize + cbData + sizeof(DWORD) > pView->cbCapacity)
     {
-        ERR("Too large IME menu\n");
+        ERR("Too large IME menu (0x%X, 0x%X)\n", pView->cbSize, cbData);
         return 0;
     }
 
@@ -268,44 +268,24 @@ Imm32SerializeImeMenu(
         pb += sizeof(*lpImeParentMenu);
     }
 
-    /* Allocate the items */
+    /* The byte size of items */
     SIZE_T cbItems = dwItemCount * sizeof(IMEMENUITEMINFOW);
-    PIMEMENUITEMINFOW pItems = ImmLocalAlloc(LPTR, cbItems);
-    if (!pItems)
-        return 0;
-
-    /* Actually get the menu items */
-    dwItemCount = ImmGetImeMenuItemsW(hIMC, dwFlags, dwType, lpImeParentMenu, pItems, cbItems);
-    pView->dwItemCount = dwItemCount;
 
     /* Update the offset info */
     pView->dwItemsOffset = pb - (PBYTE)pView;
     pView->dwBitmapsOffset = pView->dwItemsOffset + cbItems;
-    if (pView->dwBitmapsOffset + sizeof(DWORD) > pView->cbCapacity)
+    if (pView->dwItemsOffset + sizeof(DWORD) > pView->cbCapacity ||
+        pView->dwBitmapsOffset + sizeof(DWORD) > pView->cbCapacity)
     {
-        ERR("Too large IME menu\n");
-
-        /* Clean up */
-        for (DWORD iItem = 0; iItem < dwItemCount; ++iItem)
-        {
-            if (pItems[iItem].hbmpChecked)
-                DeleteObject(pItems[iItem].hbmpChecked);
-            if (pItems[iItem].hbmpUnchecked)
-                DeleteObject(pItems[iItem].hbmpUnchecked);
-            if (pItems[iItem].hbmpItem)
-                DeleteObject(pItems[iItem].hbmpItem);
-        }
-        ImmLocalFree(pItems);
-
+        ERR("Too large IME menu (0x%X, 0x%X)\n", pView->dwItemsOffset, pView->dwBitmapsOffset);
         return 0;
     }
 
-    /* Copy the items into pView */
-    CopyMemory(pb, pItems, cbItems);
+    /* Actually get the items */
+    PIMEMENUITEMINFOW pItems = (PIMEMENUITEMINFOW)pb;
+    dwItemCount = ImmGetImeMenuItemsW(hIMC, dwFlags, dwType, lpImeParentMenu, pItems, cbItems);
+    pView->dwItemCount = dwItemCount;
     pView->cbSize += cbItems;
-
-    ImmLocalFree(pItems);
-    pItems = PTR_FROM_OFFSET(pView, pView->dwItemsOffset);
 
     /* Serialize the bitmaps */
     DWORD dwOffset;
