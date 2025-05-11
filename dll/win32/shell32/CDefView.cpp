@@ -1246,14 +1246,12 @@ void CDefView::ColumnListChanged()
 HRESULT CDefView::CompareIDsWithFallback(LPARAM Rule, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     const UINT Flags = m_pSF2Parent ? (Rule & SHCIDS_BITMASK) : 0;
-    int Col = (Rule & SHCIDS_COLUMNMASK);
+    const int Col = (Rule & SHCIDS_COLUMNMASK), DefCol = m_sortInfo.DefaultFolderColumn;
     HRESULT hr = m_pSFParent->CompareIDs(Rule, pidl1, pidl2);
-    if (hr != 0)
+    if (hr != 0 && SUCCEEDED(hr))
         return hr;
-    if (hr == 0 && m_sortInfo.DefaultFolderColumn > 0)
-        hr = m_pSFParent->CompareIDs(m_sortInfo.DefaultFolderColumn | Flags, pidl1, pidl2);
-    if (hr == 0 && Col != 0 && Col != m_sortInfo.DefaultFolderColumn)
-        hr = m_pSFParent->CompareIDs(0 | Flags, pidl1, pidl2); // Try SHFSF_COL_NAME
+    if (hr == 0 && Col != DefCol)
+        hr = m_pSFParent->CompareIDs((DefCol >= 0 ? DefCol : 0) | Flags, pidl1, pidl2);
     if (hr == 0 && !(Rule & SHCIDS_ALLFIELDS) && m_pSF2Parent)
         hr = m_pSFParent->CompareIDs(0 | SHCIDS_ALLFIELDS, pidl1, pidl2);
     return hr;
@@ -1261,11 +1259,11 @@ HRESULT CDefView::CompareIDsWithFallback(LPARAM Rule, PCUIDLIST_RELATIVE pidl1, 
 
 HRESULT CDefView::GetDefaultFolderSortColumn()
 {
-    if (!m_pSF2Parent)
-        return E_NOTIMPL;
     ULONG folderSortCol = ~0UL, dummy;
-    HRESULT hr = m_pSF2Parent->GetDefaultColumn(0, &folderSortCol, &dummy);
-    return (folderSortCol == ~0UL && SUCCEEDED(hr)) ? E_FAIL : hr;
+    HRESULT hr = m_pSF2Parent ? m_pSF2Parent->GetDefaultColumn(0, &folderSortCol, &dummy) : E_FAIL;
+    if (_DoFolderViewCB(SFVM_GETSORTDEFAULTS, (WPARAM)&dummy, (LPARAM)&folderSortCol) == S_OK)
+        hr = S_OK;
+    return (folderSortCol == ~0UL && SUCCEEDED(hr)) ? E_FAIL : folderSortCol;
 }
 
 /*************************************************************************
@@ -1621,11 +1619,9 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
     if (!IsRefreshCommand && !m_sortInfo.bLoadedFromViewState) // Are we loading for the first time?
     {
         m_sortInfo.Direction = 0;
-        sortCol = 0; // In case the folder does not know/care
+        sortCol = 0; // In case the folder nor view-callback does not know/care
         HRESULT hr = GetDefaultFolderSortColumn();
-        if (SUCCEEDED(hr))
-            hr = MapFolderColumnToListColumn(hr);
-        if (SUCCEEDED(hr))
+        if (SUCCEEDED(hr) && SUCCEEDED(hr = MapFolderColumnToListColumn(hr)))
             sortCol = (int)hr;
     }
     _Sort(sortCol);
