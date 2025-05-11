@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <winnls.h>
-
 #if DBG
     #ifndef __RELFILE__
         #define __RELFILE__ __FILE__
