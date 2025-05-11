@@ -24,6 +24,7 @@ if(ARCH STREQUAL "i386")
         math/i386/cisin.c
         math/i386/cisqrt.c
         math/i386/ldexp.c
+        math/i386/libm_sse2.c
     )
     list(APPEND LIBCNTPR_MATH_ASM_SOURCE
         math/i386/alldiv_asm.s
