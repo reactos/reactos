@@ -57,13 +57,13 @@
     #define FIXME(fmt, ...)
     #define TRACE(fmt, ...)
     #define UNIMPLEMENTED
-    #define debugstr_a(pszA) ((PCSTR)NULL)
-    #define debugstr_w(pszW) ((PCSTR)NULL)
     #define debugstr_an(pszA, cchA) ((PCSTR)NULL)
     #define debugstr_wn(pszW, cchW) ((PCSTR)NULL)
     #define debugstr_guid(id) ((PCSTR)NULL)
     #define wine_dbgstr_rect(prc) ((PCSTR)NULL)
     #define wine_dbg_sprintf(format, ... ) ((PCSTR)NULL)
+    #define debugstr_a(pszA) ((PCSTR)NULL)
+    #define debugstr_w(pszW) ((PCSTR)NULL)
 #endif
 
 /* <wine/unicode.h> */
