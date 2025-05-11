@@ -47,7 +47,7 @@ typedef struct tagIMEMENUBITMAPHEADER
 #define PTR_FROM_OFFSET(head, offset)  (PVOID)((PBYTE)(head) + (SIZE_T)(offset))
 
 /* Convert ANSI IME menu to Wide */
-static INT
+static BOOL
 Imm32ImeMenuAnsiToWide(
     _In_ const IMEMENUITEMINFOA *pItemA,
     _Out_ PIMEMENUITEMINFOW pItemW,
@@ -68,16 +68,12 @@ Imm32ImeMenuAnsiToWide(
     pItemW->dwItemData = pItemA->dwItemData;
     ret = MultiByteToWideChar(uCodePage, 0, pItemA->szString, -1,
                               pItemW->szString, _countof(pItemW->szString));
-    if (ret >= _countof(pItemW->szString))
-    {
-        ret = 0;
-        pItemW->szString[0] = UNICODE_NULL;
-    }
-    return ret;
+    pItemW->szString[_countof(pItemW->szString) - 1] = UNICODE_NULL;
+    return !!ret;
 }
 
 /* Convert Wide IME menu to ANSI */
-static INT
+static BOOL
 Imm32ImeMenuWideToAnsi(
     _In_ const IMEMENUITEMINFOW *pItemW,
     _Out_ PIMEMENUITEMINFOA pItemA,
@@ -94,12 +90,8 @@ Imm32ImeMenuWideToAnsi(
     pItemA->hbmpItem = pItemW->hbmpItem;
     ret = WideCharToMultiByte(uCodePage, 0, pItemW->szString, -1,
                               pItemA->szString, _countof(pItemA->szString), NULL, NULL);
-    if (ret >= _countof(pItemA->szString))
-    {
-        ret = 0;
-        pItemA->szString[0] = ANSI_NULL;
-    }
-    return ret;
+    pItemA->szString[_countof(pItemA->szString) - 1] = ANSI_NULL;
+    return !!ret;
 }
 
 static DWORD
@@ -345,7 +337,7 @@ Imm32SerializeImeMenu(
 static DWORD
 Imm32DeserializeImeMenu(
     _Inout_ PIMEMENUINFO pView,
-    _Out_opt_ PIMEMENUITEMINFOW lpImeMenu,
+    _Out_writes_bytes_opt_(dwSize) PIMEMENUITEMINFOW lpImeMenuItems,
     _In_ DWORD dwSize)
 {
     /* Sanity check */
@@ -356,7 +348,7 @@ Imm32DeserializeImeMenu(
     }
 
     DWORD dwItemCount = pView->dwItemCount;
-    if (lpImeMenu == NULL)
+    if (lpImeMenuItems == NULL)
         return dwItemCount; /* Count only */
 
     /* Limit the item count for dwSize */
@@ -386,7 +378,7 @@ Imm32DeserializeImeMenu(
             pBitmap = PTR_FROM_OFFSET(pView, pItem->hbmpItem);
             pItem->hbmpItem = Imm32DeserializeImeMenuBitmap(pBitmap);
         }
-        lpImeMenu[iItem] = *pItem;
+        lpImeMenuItems[iItem] = *pItem;
     }
 
     return dwItemCount;
@@ -440,7 +432,7 @@ Imm32GetImeMenuItemWInterProcess(
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
     _Inout_opt_ PVOID lpImeParentMenu,
-    _Out_opt_ PVOID lpImeMenu,
+    _Out_writes_bytes_opt_(dwSize) PVOID lpImeMenuItems,
     _In_ DWORD dwSize)
 {
     /* Get IME window */
@@ -481,14 +473,14 @@ Imm32GetImeMenuItemWInterProcess(
     pView->dwMagic = IMEMENUINFO_MAGIC;
     pView->dwFlags = dwFlags;
     pView->dwType = dwType;
-    pView->dwItemCount = lpImeMenu ? (dwSize / sizeof(IMEMENUITEMINFOW)) : 0;
+    pView->dwItemCount = lpImeMenuItems ? (dwSize / sizeof(IMEMENUITEMINFOW)) : 0;
 
     /* Send WM_IME_SYSTEM.IMS_GETIMEMENU message. It will call ImmPutImeMenuItemsIntoMappedFile */
     DWORD ret = 0;
     if (SendMessageW(hwndIme, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
     {
         /* De-serialize the IME menu */
-        ret = Imm32DeserializeImeMenu(pView, lpImeMenu, dwSize);
+        ret = Imm32DeserializeImeMenu(pView, lpImeMenuItems, dwSize);
     }
 
     /* Clean up */
@@ -505,7 +497,7 @@ ImmGetImeMenuItemsAW(
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
     _Inout_opt_ PVOID lpImeParentMenu,
-    _Out_opt_ PVOID lpImeMenu,
+    _Out_writes_bytes_opt_(dwSize) PVOID lpImeMenuItems,
     _In_ DWORD dwSize,
     _In_ BOOL bTargetIsAnsi)
 {
@@ -535,7 +527,7 @@ ImmGetImeMenuItemsAW(
 
         /* Transport the IME menu items, using file mapping */
         return Imm32GetImeMenuItemWInterProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
-                                                lpImeMenu, dwSize);
+                                                lpImeMenuItems, dwSize);
     }
 
     PINPUTCONTEXT pIC = ImmLockIMC(hIMC);
@@ -585,7 +577,7 @@ ImmGetImeMenuItemsAW(
             }
 
             /* Allocate buffer for new items */
-            if (lpImeMenu)
+            if (lpImeMenuItems)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOA)) * sizeof(IMEMENUITEMINFOW));
                 pNewItems = ImmLocalAlloc(LPTR, cbTotal);
@@ -606,7 +598,7 @@ ImmGetImeMenuItemsAW(
             }
 
             /* Allocate buffer for new items */
-            if (lpImeMenu)
+            if (lpImeMenuItems)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOW)) * sizeof(IMEMENUITEMINFOA));
                 pNewItems = ImmLocalAlloc(LPTR, cbTotal);
@@ -621,15 +613,15 @@ ImmGetImeMenuItemsAW(
     else
     {
         /* Get the items directly */
-        pNewItems = lpImeMenu;
+        pNewItems = lpImeMenuItems;
         pNewParent = lpImeParentMenu;
     }
 
     /* Get IME menu items from the IME */
     ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, pNewParent, pNewItems, dwSize);
-    if (!ret || !lpImeMenu)
+    if (!ret || !lpImeMenuItems)
     {
-        ERR("%d, %p\n", ret, lpImeMenu);
+        ERR("%d, %p\n", ret, lpImeMenuItems);
         goto Quit;
     }
 
@@ -643,15 +635,10 @@ ImmGetImeMenuItemsAW(
 
             /* Convert the items */
             pItemW = pNewItems;
-            pItemA = lpImeMenu;
+            pItemA = lpImeMenuItems;
             for (iItem = 0; iItem < ret; ++iItem, ++pItemW, ++pItemA)
             {
-                if (!Imm32ImeMenuWideToAnsi(pItemW, pItemA, pImeDpi->uCodePage))
-                {
-                    ERR("Imm32ImeMenuWideToAnsi failed\n");
-                    ret = 0;
-                    break;
-                }
+                Imm32ImeMenuWideToAnsi(pItemW, pItemA, pImeDpi->uCodePage);
             }
         }
         else
@@ -662,21 +649,16 @@ ImmGetImeMenuItemsAW(
 
             /* Convert the items */
             pItemA = pNewItems;
-            pItemW = lpImeMenu;
+            pItemW = lpImeMenuItems;
             for (iItem = 0; iItem < dwSize; ++iItem, ++pItemA, ++pItemW)
             {
-                if (!Imm32ImeMenuAnsiToWide(pItemA, pItemW, pImeDpi->uCodePage, TRUE))
-                {
-                    ERR("Imm32ImeMenuAnsiToWide failed\n");
-                    ret = 0;
-                    break;
-                }
+                Imm32ImeMenuAnsiToWide(pItemA, pItemW, pImeDpi->uCodePage, TRUE);
             }
         }
     }
 
 Quit:
-    if (pNewItems != lpImeMenu)
+    if (pNewItems != lpImeMenuItems)
         ImmLocalFree(pNewItems);
     ImmUnlockImeDpi(pImeDpi);
     ImmUnlockIMC(hIMC);
@@ -692,7 +674,7 @@ ImmGetImeMenuItemsA(
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
     _Inout_opt_ PIMEMENUITEMINFOA lpImeParentMenu,
-    _Out_opt_ PIMEMENUITEMINFOA lpImeMenu,
+    _Out_writes_bytes_opt_(dwSize) PIMEMENUITEMINFOA lpImeMenu,
     _In_ DWORD dwSize)
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
@@ -709,7 +691,7 @@ ImmGetImeMenuItemsW(
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
     _Inout_opt_ PIMEMENUITEMINFOW lpImeParentMenu,
-    _Out_opt_ PIMEMENUITEMINFOW lpImeMenu,
+    _Out_writes_bytes_opt_(dwSize) PIMEMENUITEMINFOW lpImeMenu,
     _In_ DWORD dwSize)
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
