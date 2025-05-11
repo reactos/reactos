@@ -187,6 +187,7 @@ wine_dbg_sprintf(_In_ PCSTR format, ...)
     PCHAR ptr = debugstr_next_buff();
     va_start(va, format);
     _vsnprintf(ptr, DEBUGSTR_BUFF_SIZE, format, va);
+    ptr[DEBUGSTR_BUFF_SIZE - 1] = ANSI_NULL;
     va_end(va);
     return ptr;
 }
