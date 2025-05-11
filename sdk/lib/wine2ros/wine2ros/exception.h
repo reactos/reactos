@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Wine-To-ReactOS
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Reducing dependency on Wine
+ * PURPOSE:     Mimic of <wine/exception.h>
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
