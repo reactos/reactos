@@ -8,11 +8,6 @@
 #if DBG
 
 #define WIN32_NO_STATUS
-#include <windef.h>
-#include <winbase.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "wine2ros.h"
 
 BOOL
