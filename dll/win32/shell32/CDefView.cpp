@@ -3036,8 +3036,10 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 {
     HMENU hmenu = (HMENU) wParam;
     int nPos = LOWORD(lParam);
-    UINT  menuItemId;
+    UINT menuItemId;
 
+    if (m_isEditing)
+        ListView_CancelEditLabel(m_ListView);
     if (m_pCM)
         OnMenuMessage(uMsg, wParam, lParam, bHandled);
 

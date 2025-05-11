@@ -157,7 +157,7 @@ class CDefaultContextMenu :
         UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
-        UINT m_iIdQCMFirst;
+        UINT m_iIdQCMFirst; /* The first id passed to us in QueryContextMenu */
         CAtlList<DynamicShellEntry> m_DynamicEntries;
         UINT m_iIdSHEFirst; /* first used id */
         UINT m_iIdSHELast; /* last used id */
@@ -842,9 +842,8 @@ CDefaultContextMenu::QueryContextMenu(
     UINT idCmdLast,
     UINT uFlags)
 {
-    m_iIdQCMFirst = idCmdFirst;
     HRESULT hr;
-    UINT idCmdNext = idCmdFirst;
+    UINT idCmdNext = m_iIdQCMFirst = idCmdFirst;
     UINT cIds = 0;
 
     TRACE("BuildShellItemContextMenu entered\n");
@@ -1779,7 +1778,7 @@ CDefaultContextMenu::HandleMenuMsg2(
         if (PDynamicShellEntry pEntry = GetDynamicEntry(CmdId - m_iIdSHEFirst))
             return SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
     }
-    // TODO: m_pmcb
+    // TODO: _DoCallback(DFM_WM_*, ...)
     return E_FAIL;
 }
 
