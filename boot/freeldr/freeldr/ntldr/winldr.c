@@ -1257,21 +1257,25 @@ LoadAndBootWindowsCommon(
         !NtLdrGetOption(BootOptions, "NODEBUG") &&
         NtLdrGetOption(BootOptions, "DEBUG"))
     {
-        /* It is booting in debug mode */
-        TuiPrintf("Booting in debug mode\n");
-
         /* Check whether there is a DEBUGPORT option */
         PCSTR DebugPort;
-        ULONG DebugPortLength;
+        ULONG DebugPortLength = 0;
         DebugPort = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &DebugPortLength);
-        if (DebugPort && (DebugPortLength > 10))
+        if (DebugPort != NULL && DebugPortLength > 10)
         {
-            /* Show the debug port */
-            DebugPort += 10;
-            DebugPortLength -= 10;
-            TuiPrintf("You would need a debugger attached to the %.*s port to continue.\n", DebugPortLength, DebugPort);
+            /* Move to the debug port name */
+            DebugPort += 10; DebugPortLength -= 10;
         }
-        TuiPrintf("For more information, visit https://reactos.org/wiki/Debugging.\n");
+        else
+        {
+            /* Default to COM */
+            DebugPort = "COM"; DebugPortLength = 3;
+        }
+
+        /* It is booting in debug mode, show the banner */
+        TuiPrintf("You need to connect a debugger on port %.*s\n"
+                  "For more information, visit https://reactos.org/wiki/Debugging.\n",
+                  DebugPortLength, DebugPort);
     }
 
     /* Debugging... */
