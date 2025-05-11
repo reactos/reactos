@@ -104,4 +104,5 @@
 #define isprintW iswprint
 
 /* <wine/exception.h> */
+#include <ndk/rtltypes.h>
 #include <wine/exception.h>
