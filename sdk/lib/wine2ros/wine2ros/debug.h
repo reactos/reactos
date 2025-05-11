@@ -24,11 +24,10 @@
     #define TRACE_LEVEL 0x8
 
     #define WINE_DEFAULT_DEBUG_CHANNEL(x) \
-        static PCSTR DbgDefaultChannel = #x; \
-        static const PCSTR * const _DbgDefaultChannel_ = &DbgDefaultChannel;
+        static PCSTR _dbg_default_channel = #x; \
+        static const PCSTR * const _dbg_unreferenced_variable_error_killer_ = &_dbg_default_channel;
 
     BOOL IntIsDebugChannelEnabled(_In_ PCSTR channel);
-
     ULONG __cdecl DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...);
 
     #define DBG_PRINT(ch, level, tag, fmt, ...) (void)( \
@@ -37,10 +36,10 @@
     )
 
     #define TRACE_ON(ch) IntIsDebugChannelEnabled(#ch)
-    #define ERR(fmt, ...)   DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "err: ",   fmt, ##__VA_ARGS__)
-    #define WARN(fmt, ...)  DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "warn: ",  fmt, ##__VA_ARGS__)
-    #define FIXME(fmt, ...) DBG_PRINT(DbgDefaultChannel, ERR_LEVEL,   "fixme: ", fmt, ##__VA_ARGS__)
-    #define TRACE(fmt, ...) DBG_PRINT(DbgDefaultChannel, TRACE_LEVEL, "",        fmt, ##__VA_ARGS__)
+    #define ERR(fmt, ...)   DBG_PRINT(_dbg_default_channel, ERR_LEVEL,   "err: ",   fmt, ##__VA_ARGS__)
+    #define WARN(fmt, ...)  DBG_PRINT(_dbg_default_channel, ERR_LEVEL,   "warn: ",  fmt, ##__VA_ARGS__)
+    #define FIXME(fmt, ...) DBG_PRINT(_dbg_default_channel, ERR_LEVEL,   "fixme: ", fmt, ##__VA_ARGS__)
+    #define TRACE(fmt, ...) DBG_PRINT(_dbg_default_channel, TRACE_LEVEL, "",        fmt, ##__VA_ARGS__)
 
     #define UNIMPLEMENTED FIXME("%s is unimplemented", __FUNCTION__);
 
@@ -66,7 +65,7 @@
     #define debugstr_wn(pszW, cchW) ((PCSTR)NULL)
     #define debugstr_guid(id) ((PCSTR)NULL)
     #define wine_dbgstr_rect(prc) ((PCSTR)NULL)
-    #define wine_dbg_sprintf(format, ... ) ((PCSTR)NULL)
+    #define wine_dbg_sprintf(format, ...) ((PCSTR)NULL)
     #define debugstr_a(pszA) ((PCSTR)NULL)
     #define debugstr_w(pszW) ((PCSTR)NULL)
 #endif
