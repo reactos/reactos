@@ -6715,10 +6715,16 @@ RControlServiceExW(
 /* Function 52 */
 DWORD
 WINAPI
-RSendPnPMessage(
-    handle_t BindingHandle)  /* FIXME */
+RI_ScSendPnPMessage(
+    _In_ RPC_SERVICE_STATUS_HANDLE hServiceStatus,
+    _In_ DWORD dwControl,
+    _In_ DWORD dwEventType,
+    _In_ DWORD dwEventSize,
+    _In_ LPBYTE pEventData)
 {
-    UNIMPLEMENTED;
+    DPRINT1("RI_ScSendPnPMessage(%p %lx %lu %lu %p)\n",
+            hServiceStatus, dwControl, dwEventType, dwEventSize, pEventData);
+
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 

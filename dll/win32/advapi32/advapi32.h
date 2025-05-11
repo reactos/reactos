@@ -39,6 +39,8 @@
 #include <seclogon_c.h>
 #include <svcctl_c.h>
 #include <winreg_c.h>
+#include <dbt.h>
+// #include <winsvc_undoc.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>

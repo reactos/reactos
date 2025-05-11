@@ -60,7 +60,13 @@ I_ScPnPGetServiceName(
     _Out_ LPWSTR lpServiceName,
     _In_ DWORD cchServiceName);
 
-/* I_ScSendPnPMessage */
+DWORD
+WINAPI
+I_ScSendPnPMessage(
+    _In_ SERVICE_STATUS_HANDLE hServiceStatus,
+    _In_ DWORD dwControlCode,
+    _In_ DWORD dwEventType,
+    _In_ PVOID pEventData);
 
 /* I_ScSendTSMessage */
 
