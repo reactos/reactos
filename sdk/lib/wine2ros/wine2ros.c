@@ -55,15 +55,6 @@ debugstr_quote_a(
     PCH pch = pszBuf;
     PCCH pchSrc = pszSrc;
 
-    if (!pszSrc)
-        return "(null)";
-
-    if (!((ULONG_PTR)pszSrc >> 16))
-    {
-        snprintf(pszBuf, cchBuf, "%p", pszSrc);
-        return pszBuf;
-    }
-
     *pch++ = '"';
     --cchBuf;
 
@@ -123,15 +114,6 @@ debugstr_quote_w(
 {
     PCH pch = pszBuf;
     PCWCH pchSrc = pszSrc;
-
-    if (!pszSrc)
-        return "(null)";
-
-    if (!((ULONG_PTR)pszSrc >> 16))
-    {
-        snprintf(pszBuf, cchBuf, "%p", pszSrc);
-        return pszBuf;
-    }
 
     *pch++ = '"';
     --cchBuf;
@@ -210,31 +192,27 @@ wine_dbg_sprintf(_In_ PCSTR format, ...)
 }
 
 PCSTR
-debugstr_a(_In_opt_ PCSTR pszA)
+debugstr_an(_In_opt_ PCSTR pszA, _In_ INT cchA)
 {
     if (!pszA)
         return "(null)";
-    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA, (INT)strlen(pszA));
+    if (!((ULONG_PTR)pszA >> 16))
+        return wine_dbg_sprintf("%p", pszA);
+    if (cchA == -1)
+        cchA = (INT)strlen(pszA);
+    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA, cchA);
 }
 
 PCSTR
-debugstr_w(_In_opt_ PCWSTR pszW)
+debugstr_wn(_In_opt_ PCWSTR pszW, _In_ INT cchW)
 {
     if (!pszW)
         return "(null)";
-    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW, (INT)wcslen(pszW));
-}
-
-PCSTR
-debugstr_an(_In_opt_ PCSTR s, _In_ INT n)
-{
-    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, s, n);
-}
-
-PCSTR
-debugstr_wn(_In_opt_ PCWSTR s, _In_ INT n)
-{
-    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, s, n);
+    if (!((ULONG_PTR)pszW >> 16))
+        return wine_dbg_sprintf("%p", pszW);
+    if (cchW == -1)
+        cchW = (INT)wcslen(pszW);
+    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW, cchW);
 }
 
 PCSTR

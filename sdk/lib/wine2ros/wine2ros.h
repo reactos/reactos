@@ -39,13 +39,14 @@
 
     #define UNIMPLEMENTED FIXME("%s is unimplemented", __FUNCTION__);
 
-    PCSTR debugstr_a(_In_opt_ PCSTR pszA);
-    PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
-    PCSTR debugstr_an(_In_opt_ PCSTR s, _In_ INT n);
-    PCSTR debugstr_wn(_In_opt_ PCWSTR s, _In_ INT n);
+    PCSTR debugstr_an(_In_opt_ PCSTR pszA, _In_ INT cchA);
+    PCSTR debugstr_wn(_In_opt_ PCWSTR pszW, _In_ INT cchW);
     PCSTR debugstr_guid(_In_opt_ const GUID *id);
     PCSTR wine_dbgstr_rect(_In_opt_ LPCRECT prc);
     PCSTR wine_dbg_sprintf(_In_ PCSTR format, ...);
+
+    #define debugstr_a(pszA) debugstr_an((pszA), -1)
+    #define debugstr_w(pszW) debugstr_wn((pszW), -1)
 #else
     #define WINE_DEFAULT_DEBUG_CHANNEL(x)
     #define IntIsDebugChannelEnabled(channel) FALSE
@@ -58,8 +59,8 @@
     #define UNIMPLEMENTED
     #define debugstr_a(pszA) ((PCSTR)NULL)
     #define debugstr_w(pszW) ((PCSTR)NULL)
-    #define debugstr_an(s, n) ((PCSTR)NULL)
-    #define debugstr_wn(s, n) ((PCSTR)NULL)
+    #define debugstr_an(pszA, cchA) ((PCSTR)NULL)
+    #define debugstr_wn(pszW, cchW) ((PCSTR)NULL)
     #define debugstr_guid(id) ((PCSTR)NULL)
     #define wine_dbgstr_rect(prc) ((PCSTR)NULL)
     #define wine_dbg_sprintf(format, ... ) ((PCSTR)NULL)
@@ -105,4 +106,83 @@
 
 /* <wine/exception.h> */
 #include <ndk/rtltypes.h>
-#include <wine/exception.h>
+#include <setjmp.h>
+#include <intrin.h>
+#include <excpt.h>
+
+#define EH_NONCONTINUABLE   0x01
+#define EH_UNWINDING        0x02
+#define EH_EXIT_UNWIND      0x04
+#define EH_STACK_INVALID    0x08
+#define EH_NESTED_CALL      0x10
+#define EH_TARGET_UNWIND    0x20
+#define EH_COLLIDED_UNWIND  0x40
+
+#define EXCEPTION_WINE_STUB       0x80000100
+#define EXCEPTION_WINE_ASSERTION  0x80000101
+#define EXCEPTION_VM86_INTx       0x80000110
+#define EXCEPTION_VM86_STI        0x80000111
+#define EXCEPTION_VM86_PICRETURN  0x80000112
+
+#define __TRY _SEH2_TRY
+#define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))
+#define __EXCEPT_CTX(func, ctx) _SEH2_EXCEPT((func)(GetExceptionInformation(), ctx))
+#define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
+#define __EXCEPT_ALL _SEH2_EXCEPT(1)
+#define __ENDTRY _SEH2_END
+#define __FINALLY(func) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination()); }
+#define __FINALLY_CTX(func, ctx) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination(), ctx); }; _SEH2_END
+
+#ifndef GetExceptionCode
+#define GetExceptionCode() _SEH2_GetExceptionCode()
+#endif
+
+#ifndef GetExceptionInformation
+#define GetExceptionInformation() _SEH2_GetExceptionInformation()
+#endif
+
+#ifndef AbnormalTermination
+#define AbnormalTermination() _SEH2_AbnormalTermination()
+#endif
+
+#if defined(__MINGW32__) || defined(__CYGWIN__)
+#define sigjmp_buf jmp_buf
+#define sigsetjmp(buf,sigs) setjmp(buf)
+#define siglongjmp(buf,val) longjmp(buf,val)
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4733)
+#endif
+
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+{
+#ifdef __i386__
+    frame->Next = (struct _EXCEPTION_REGISTRATION_RECORD *)__readfsdword(0);
+    __writefsdword(0, (unsigned long)frame);
+    return frame->Next;
+#else
+    NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
+    frame->Next = teb->ExceptionList;
+    teb->ExceptionList = frame;
+    return frame->Next;
+#endif
+}
+
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+{
+#ifdef __i386__
+    __writefsdword(0, (unsigned long)frame->Next);
+    return frame->Next;
+#else
+    NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
+    frame->Next = teb->ExceptionList;
+    teb->ExceptionList = frame;
+    return frame->Next;
+#endif
+}
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
