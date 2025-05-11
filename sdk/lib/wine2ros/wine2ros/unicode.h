@@ -7,6 +7,24 @@
 
 #pragma once
 
+#include <stdarg.h>
+#include <stdlib.h>
+#include <wchar.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+
+#ifndef WINE_UNICODE_API
+#define WINE_UNICODE_API
+#endif
+
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
+/* msvcrt versions incompatibilities */
+#define _swprintf(s,f,...) _snwprintf((s),MAXLONG,(f),##__VA_ARGS__)
+#define _vswprintf(s,f,v) _vsnwprintf((s),MAXLONG,(f),(v))
+#endif
+
 #define memicmpW(s1,s2,n) _wcsnicmp((s1),(s2),(n))
 #define strlenW(s) wcslen((s))
 #define strcpyW(d,s) wcscpy((d),(s))

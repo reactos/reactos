@@ -7,6 +7,14 @@
 
 #pragma once
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <windef.h>
+
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
+
 #if DBG
     #ifndef __RELFILE__
         #define __RELFILE__ __FILE__
