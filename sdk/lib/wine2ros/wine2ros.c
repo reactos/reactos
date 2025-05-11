@@ -212,7 +212,7 @@ debugstr_a(_In_opt_ PCSTR pszA)
 {
     if (!pszA)
         return "(null)";
-    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA, strlen(pszA));
+    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszA, (INT)strlen(pszA));
 }
 
 PCSTR
@@ -220,7 +220,7 @@ debugstr_w(_In_opt_ PCWSTR pszW)
 {
     if (!pszW)
         return "(null)";
-    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW, wcslen(pszW));
+    return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, pszW, (INT)wcslen(pszW));
 }
 
 PCSTR
