@@ -356,7 +356,7 @@ Imm32DeserializeImeMenu(
         dwItemCount = dwSize / sizeof(IMEMENUITEMINFOW);
 
     /* Get the items pointer */
-    PIMEMENUITEMINFOW pItems = (PIMEMENUITEMINFOW)((PBYTE)pView + pView->dwItemsOffset);
+    PIMEMENUITEMINFOW pItems = PTR_FROM_OFFSET(pView, pView->dwItemsOffset);
 
     /* Copy the items and de-serialize the bitmaps */
     PIMEMENUBITMAPHEADER pBitmap;
