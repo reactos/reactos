@@ -26,7 +26,11 @@
 #include <ndk/ntndk.h>
 #include <ndk/rtltypes.h>
 
+#ifdef __REACTOS__
+#include <wine2ros.h>
+#else
 #include <wine/debug.h>
+#endif
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
 #define TMT_ENUM 200
