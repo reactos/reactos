@@ -150,39 +150,3 @@
 #define sigsetjmp(buf,sigs) setjmp(buf)
 #define siglongjmp(buf,val) longjmp(buf,val)
 #endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4733)
-#endif
-
-static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
-{
-#ifdef __i386__
-    frame->Next = (struct _EXCEPTION_REGISTRATION_RECORD *)__readfsdword(0);
-    __writefsdword(0, (unsigned long)frame);
-    return frame->Next;
-#else
-    NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
-    frame->Next = teb->ExceptionList;
-    teb->ExceptionList = frame;
-    return frame->Next;
-#endif
-}
-
-static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
-{
-#ifdef __i386__
-    __writefsdword(0, (unsigned long)frame->Next);
-    return frame->Next;
-#else
-    NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
-    frame->Next = teb->ExceptionList;
-    teb->ExceptionList = frame;
-    return frame->Next;
-#endif
-}
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
