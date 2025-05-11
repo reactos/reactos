@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Wine-To-ReactOS
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Mimic of <wine/unicode.h>
+ * PURPOSE:     Mimic of <wine/unicode.h> without Wine dependency
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
