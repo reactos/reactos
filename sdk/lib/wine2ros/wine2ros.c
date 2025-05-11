@@ -232,40 +232,24 @@ debugstr_wn(_In_opt_ PCWSTR s, _In_ INT n)
 PCSTR
 wine_dbgstr_rect(_In_opt_ LPCRECT prc)
 {
-    PCHAR ptr;
-
     if (!prc)
         return "(null)";
-
-    ptr = debugstr_next_buff();
-
-    snprintf(ptr, DEBUGSTR_BUFF_SIZE, "{%ld, %ld, %ld, %ld}",
-             prc->left, prc->top, prc->right, prc->bottom);
-    return ptr;
+    return wine_dbg_sprintf("{%ld, %ld, %ld, %ld}", prc->left, prc->top, prc->right, prc->bottom);
 }
 
 PCSTR
 debugstr_guid(_In_opt_ const GUID *id)
 {
-    PCHAR ptr;
-
     if (!id)
         return "(null)";
 
-    ptr = debugstr_next_buff();
-
     if (!((ULONG_PTR)id >> 16))
-    {
-        snprintf(ptr, DEBUGSTR_BUFF_SIZE, "%p", id);
-        return ptr;
-    }
+        return wine_dbg_sprintf("%p", id);
 
-    snprintf(ptr, DEBUGSTR_BUFF_SIZE,
-             "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-             id->Data1, id->Data2, id->Data3,
-             id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
-             id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
-    return ptr;
+    return wine_dbg_sprintf("{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+                            id->Data1, id->Data2, id->Data3,
+                            id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
+                            id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
 }
 
 #endif /* DBG */
