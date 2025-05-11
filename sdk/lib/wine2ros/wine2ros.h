@@ -41,6 +41,7 @@
 
     PCSTR debugstr_a(_In_opt_ PCSTR pszA);
     PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
+    PCSTR debugstr_an(_In_opt_ PCSTR s, _In_ INT n);
     PCSTR debugstr_wn(_In_opt_ PCWSTR s, _In_ INT n);
     PCSTR debugstr_guid(_In_opt_ const GUID *id);
     PCSTR wine_dbgstr_rect(_In_opt_ LPCRECT prc);
@@ -57,6 +58,7 @@
     #define UNIMPLEMENTED
     #define debugstr_a(pszA) ((PCSTR)NULL)
     #define debugstr_w(pszW) ((PCSTR)NULL)
+    #define debugstr_an(s, n) ((PCSTR)NULL)
     #define debugstr_wn(s, n) ((PCSTR)NULL)
     #define debugstr_guid(id) ((PCSTR)NULL)
     #define wine_dbgstr_rect(prc) ((PCSTR)NULL)

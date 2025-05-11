@@ -224,6 +224,12 @@ debugstr_w(_In_opt_ PCWSTR pszW)
 }
 
 PCSTR
+debugstr_an(_In_opt_ PCSTR s, _In_ INT n)
+{
+    return debugstr_quote_a(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, s, n);
+}
+
+PCSTR
 debugstr_wn(_In_opt_ PCWSTR s, _In_ INT n)
 {
     return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, s, n);
