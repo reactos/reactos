@@ -41,10 +41,10 @@
 
     PCSTR debugstr_a(_In_opt_ PCSTR pszA);
     PCSTR debugstr_w(_In_opt_ PCWSTR pszW);
-    PCSTR debugstr_wn(_In_opt_ PCWSTR s, INT n);
+    PCSTR debugstr_wn(_In_opt_ PCWSTR s, _In_ INT n);
     PCSTR debugstr_guid(_In_opt_ const GUID *id);
     PCSTR wine_dbgstr_rect(_In_opt_ LPCRECT prc);
-    PCSTR wine_dbg_sprintf(_In_ PCSTR format, ... );
+    PCSTR wine_dbg_sprintf(_In_ PCSTR format, ...);
 #else
     #define WINE_DEFAULT_DEBUG_CHANNEL(x)
     #define IntIsDebugChannelEnabled(channel) FALSE

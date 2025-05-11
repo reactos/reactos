@@ -197,7 +197,7 @@ debugstr_next_buff(void)
 }
 
 PCSTR
-wine_dbg_sprintf(_In_ PCSTR format, ... )
+wine_dbg_sprintf(_In_ PCSTR format, ...)
 {
     va_list va;
     PCHAR ptr = debugstr_next_buff();
@@ -224,7 +224,7 @@ debugstr_w(_In_opt_ PCWSTR pszW)
 }
 
 PCSTR
-debugstr_wn(_In_opt_ PCWSTR s, INT n)
+debugstr_wn(_In_opt_ PCWSTR s, _In_ INT n)
 {
     return debugstr_quote_w(debugstr_next_buff(), DEBUGSTR_BUFF_SIZE, s, n);
 }
