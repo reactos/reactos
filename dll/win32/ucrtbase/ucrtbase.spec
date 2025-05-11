@@ -133,27 +133,27 @@
 @ cdecl __iswcsym(long)
 @ cdecl __iswcsymf(long)
 @ stdcall -arch=arm __jump_unwind(ptr ptr) ntdll.__jump_unwind
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_acos()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_acosf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_asin()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_asinf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_atan()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_atan2()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_atanf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_cos()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_cosf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_exp()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_expf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_log()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_log10()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_log10f()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_logf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_pow()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_powf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_sin()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_sinf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_tan()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_tanf()
+@ cdecl -arch=i386 -norelay __libm_sse2_acos()
+@ cdecl -arch=i386 -norelay __libm_sse2_acosf()
+@ cdecl -arch=i386 -norelay __libm_sse2_asin()
+@ cdecl -arch=i386 -norelay __libm_sse2_asinf()
+@ cdecl -arch=i386 -norelay __libm_sse2_atan()
+@ cdecl -arch=i386 -norelay __libm_sse2_atan2()
+@ cdecl -arch=i386 -norelay __libm_sse2_atanf()
+@ cdecl -arch=i386 -norelay __libm_sse2_cos()
+@ cdecl -arch=i386 -norelay __libm_sse2_cosf()
+@ cdecl -arch=i386 -norelay __libm_sse2_exp()
+@ cdecl -arch=i386 -norelay __libm_sse2_expf()
+@ cdecl -arch=i386 -norelay __libm_sse2_log()
+@ cdecl -arch=i386 -norelay __libm_sse2_log10()
+@ cdecl -arch=i386 -norelay __libm_sse2_log10f()
+@ cdecl -arch=i386 -norelay __libm_sse2_logf()
+@ cdecl -arch=i386 -norelay __libm_sse2_pow()
+@ cdecl -arch=i386 -norelay __libm_sse2_powf()
+@ cdecl -arch=i386 -norelay __libm_sse2_sin()
+@ cdecl -arch=i386 -norelay __libm_sse2_sinf()
+@ cdecl -arch=i386 -norelay __libm_sse2_tan()
+@ cdecl -arch=i386 -norelay __libm_sse2_tanf()
 @ cdecl __p___argc()
 @ cdecl __p___argv()
 @ cdecl __p___wargv()
@@ -602,17 +602,17 @@
 @ cdecl _ldunscale(ptr ptr) _dunscale
 @ cdecl _lfind(ptr ptr ptr long ptr)
 @ cdecl _lfind_s(ptr ptr ptr long ptr ptr)
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_acos_precise() #__libm_sse2_acos
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_asin_precise() #__libm_sse2_asin
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_atan_precise() #__libm_sse2_atan
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_cos_precise() #__libm_sse2_cos
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_exp_precise() #__libm_sse2_exp
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_log10_precise() #__libm_sse2_log10
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_log_precise() #__libm_sse2_log
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_pow_precise() #__libm_sse2_pow
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_sin_precise() #__libm_sse2_sin
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_sqrt_precise() #__libm_sse2_sqrt
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_tan_precise() #__libm_sse2_tan
+@ cdecl -arch=i386 -norelay _libm_sse2_acos_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_asin_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_atan_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_cos_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_exp_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_log10_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_log_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_pow_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_sin_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_sqrt_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_tan_precise()
 @ cdecl _loaddll(str)
 @ cdecl -arch=win64 _local_unwind(ptr ptr) ntdll._local_unwind
 @ cdecl -arch=i386 _local_unwind2(ptr long)
