@@ -215,8 +215,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FORMATTING_PROGRESS1 "ボリューム %c: (%s) をフォーマット中 (%s)..."
-    IDS_FORMATTING_PROGRESS2 "ボリューム %s をフォーマット中 (%s)..."
+    IDS_FORMATTING_PROGRESS1 "ボリューム %c: (%s) をフォーマット中 (%s 内)..."
+    IDS_FORMATTING_PROGRESS2 "ボリューム %s をフォーマット中 (%s 内)..."
 
     IDS_CHECKING_PROGRESS1 "ボリューム %c: (%s) をチェック中 ..."
     IDS_CHECKING_PROGRESS2 "ボリューム %s をチェック中..."
