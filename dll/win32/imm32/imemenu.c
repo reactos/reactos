@@ -509,14 +509,7 @@ ImmGetImeMenuItemsAW(
     _In_ DWORD dwSize,
     _In_ BOOL bTargetIsAnsi)
 {
-    DWORD ret = 0, cbTotal, dwProcessId, dwThreadId, iItem;
-    PINPUTCONTEXT pIC;
-    PIMEDPI pImeDpi = NULL;
-    IMEMENUITEMINFOA ParentA, *pItemA;
-    IMEMENUITEMINFOW ParentW, *pItemW;
-    PVOID pNewItems = NULL, pNewParent = NULL;
-    BOOL bImcIsAnsi;
-    HKL hKL;
+    DWORD ret = 0, iItem;
 
     if (!hIMC)
     {
@@ -525,7 +518,7 @@ ImmGetImeMenuItemsAW(
     }
 
     /* Get input process ID */
-    dwProcessId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
+    DWORD dwProcessId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
     if (!dwProcessId)
     {
         ERR("!dwProcessId\n");
@@ -545,7 +538,7 @@ ImmGetImeMenuItemsAW(
                                                 lpImeMenu, dwSize);
     }
 
-    pIC = ImmLockIMC(hIMC);
+    PINPUTCONTEXT pIC = ImmLockIMC(hIMC);
     if (!pIC)
     {
         ERR("!pIC\n");
@@ -553,7 +546,7 @@ ImmGetImeMenuItemsAW(
     }
 
     /* Get input thread ID */
-    dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+    DWORD dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (!dwThreadId)
     {
         ERR("!dwThreadId\n");
@@ -562,8 +555,8 @@ ImmGetImeMenuItemsAW(
     }
 
     /* Get IME interface */
-    hKL = GetKeyboardLayout(dwThreadId);
-    pImeDpi = ImmLockImeDpi(hKL);
+    HKL hKL = GetKeyboardLayout(dwThreadId);
+    PIMEDPI pImeDpi = ImmLockImeDpi(hKL);
     if (!pImeDpi)
     {
         ERR("!pImeDpi\n");
@@ -572,11 +565,16 @@ ImmGetImeMenuItemsAW(
     }
 
     /* Is the IME ANSI? */
-    bImcIsAnsi = Imm32IsImcAnsi(hIMC);
+    BOOL bImcIsAnsi = Imm32IsImcAnsi(hIMC);
+
+    IMEMENUITEMINFOA ParentA, *pItemA;
+    IMEMENUITEMINFOW ParentW, *pItemW;
+    PVOID pNewItems = NULL, pNewParent = NULL;
 
     /* Are text types (ANSI/Wide) different between IME and target? */
     if (bImcIsAnsi != bTargetIsAnsi)
     {
+        DWORD cbTotal;
         if (bTargetIsAnsi)
         {
             /* Convert the parent */
