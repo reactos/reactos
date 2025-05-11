@@ -328,6 +328,8 @@ Imm32SerializeImeMenu(
     }
     DeleteDC(hDC);
 
+    TRACE("pView->cbSize: %d\n", pView->cbSize);
+
     /* Clean up */
     Imm32DeleteImeMenuBitmaps(pView);
 
