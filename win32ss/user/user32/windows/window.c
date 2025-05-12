@@ -928,51 +928,6 @@ GetAltTabInfoW(HWND hwnd,
 /*
  * @implemented
  */
-HWND WINAPI
-GetAncestor(HWND hwnd, UINT gaFlags)
-{
-    HWND Ret = NULL;
-    PWND Ancestor, Wnd;
-
-    Wnd = ValidateHwnd(hwnd);
-    if (!Wnd)
-        return NULL;
-
-    _SEH2_TRY
-    {
-        Ancestor = NULL;
-        switch (gaFlags)
-        {
-            case GA_PARENT:
-                if (Wnd->spwndParent != NULL)
-                    Ancestor = DesktopPtrToUser(Wnd->spwndParent);
-                break;
-
-            default:
-                /* FIXME: Call win32k for now */
-                Wnd = NULL;
-                break;
-        }
-
-        if (Ancestor != NULL)
-            Ret = UserHMGetHandle(Ancestor);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Do nothing */
-    }
-    _SEH2_END;
-
-    if (!Wnd) /* Fall back */
-        Ret = NtUserGetAncestor(hwnd, gaFlags);
-
-    return Ret;
-}
-
-
-/*
- * @implemented
- */
 BOOL WINAPI
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
