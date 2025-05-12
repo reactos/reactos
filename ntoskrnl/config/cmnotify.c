@@ -345,8 +345,15 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
         /* This shouldn't happen, We don't assign subordinate NotifyBlocks to a KeyBody */
         ASSERT(PostBlock->IsMasterPostBlock);
 
+        /* TODO: Set IO_STATUS_BLOCK->Status to STATUS_NOTIFY_CLEANUP */
+
         if (PostBlock->Event)
+        {
+            /* Signal the event in case somebody is waiting, the notification session is ending and there won't be any notifications */
+            KeSetEvent(PostBlock->Event, 1, FALSE);
+            
             ObDereferenceObject(PostBlock->Event);
+        }
 
         if (PostBlock->UserApc)
             ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
