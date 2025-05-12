@@ -928,6 +928,33 @@ GetAltTabInfoW(HWND hwnd,
 HWND WINAPI
 GetAncestor(HWND hwnd, UINT gaFlags)
 {
+    PWND pWnd = ValidateHwnd(hwnd);
+    if (!pWnd || pWnd == GetThreadDesktopWnd())
+        return NULL;
+
+    if (gaFlags == GA_PARENT)
+    {
+        /* Optimized for speed */
+        PWND pwndAncestor;
+        HWND hwndAncestor = NULL;
+
+        _SEH2_TRY
+        {
+            if (pWnd->spwndParent && pWnd->fnid != FNID_MESSAGEWND)
+            {
+                pwndAncestor = DesktopPtrToUser(pWnd->spwndParent);
+                hwndAncestor = (pwndAncestor ? UserHMGetHandle(pwndAncestor) : NULL);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Do nothing */
+        }
+        _SEH2_END;
+
+        return hwndAncestor;
+    }
+
     return NtUserGetAncestor(hwnd, gaFlags);
 }
 
