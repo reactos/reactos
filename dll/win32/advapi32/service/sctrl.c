@@ -79,10 +79,10 @@ RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
 }
 
 
-static RPC_STATUS
+static DWORD
 ScCreateStatusBinding(VOID)
 {
-    LPWSTR pszStringBinding;
+    RPC_WSTR pszStringBinding;
     RPC_STATUS status;
 
     TRACE("ScCreateStatusBinding()\n");
@@ -96,7 +96,7 @@ ScCreateStatusBinding(VOID)
     if (status != RPC_S_OK)
     {
         ERR("RpcStringBindingCompose returned 0x%x\n", status);
-        return status;
+        goto Quit;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
@@ -113,7 +113,8 @@ ScCreateStatusBinding(VOID)
         ERR("RpcStringFree returned 0x%x\n", status);
     }
 
-    return status;
+Quit:
+    return ScmRpcStatusToWinError(status);
 }
 
 
@@ -606,24 +607,32 @@ ScControlService(PACTIVE_SERVICE lpService,
 
 
 static BOOL
-ScServiceDispatcher(HANDLE hPipe,
-                    PSCM_CONTROL_PACKET ControlPacket,
-                    DWORD dwBufferSize)
+ScServiceDispatcher(
+    _In_ HANDLE hPipe)
 {
     DWORD Count;
     BOOL bResult;
     BOOL bRunning = TRUE;
     LPWSTR lpServiceName;
     PACTIVE_SERVICE lpService;
+    PSCM_CONTROL_PACKET ControlPacket;
+    DWORD dwBufferSize;
     SCM_REPLY_PACKET ReplyPacket;
     DWORD dwError;
 
-    TRACE("ScServiceDispatcher(%p %p %lu)\n",
-          hPipe, ControlPacket, dwBufferSize);
+    TRACE("ScServiceDispatcher(%p)\n", hPipe);
 
-    if (ControlPacket == NULL || dwBufferSize < sizeof(SCM_CONTROL_PACKET))
+    dwBufferSize = sizeof(SCM_CONTROL_PACKET) + SC_MAX_NAME_LENGTH * sizeof(WCHAR);
+    ControlPacket = RtlAllocateHeap(RtlGetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    dwBufferSize);
+    if (!ControlPacket)
+    {
+        // dwError = ERROR_NOT_ENOUGH_MEMORY; // bResult = FALSE;
         return FALSE;
+    }
 
+    bResult = TRUE;
     while (bRunning)
     {
         /* Read command from the control pipe */
@@ -632,10 +641,10 @@ ScServiceDispatcher(HANDLE hPipe,
                            dwBufferSize,
                            &Count,
                            NULL);
-        if (bResult == FALSE)
+        if (!bResult)
         {
             ERR("Pipe read failed (Error: %lu)\n", GetLastError());
-            return FALSE;
+            break;
         }
 
         lpServiceName = (LPWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
@@ -690,14 +699,17 @@ ScServiceDispatcher(HANDLE hPipe,
                             sizeof(ReplyPacket),
                             &Count,
                             NULL);
-        if (bResult == FALSE)
+        if (!bResult)
         {
             ERR("Pipe write failed (Error: %lu)\n", GetLastError());
-            return FALSE;
+            break;
         }
     }
 
-    return TRUE;
+    /* Free the control packet */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ControlPacket);
+
+    return bResult;
 }
 
 
@@ -1034,23 +1046,37 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 BOOL WINAPI
 StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
 {
+    BOOL bRet = TRUE;
+    DWORD dwError;
     ULONG i;
     HANDLE hPipe;
-    DWORD dwError;
-    PSCM_CONTROL_PACKET ControlPacket;
-    DWORD dwBufSize;
-    BOOL bRet = TRUE;
 
-    TRACE("StartServiceCtrlDispatcherA(%p)\n",
-          lpServiceStartTable);
+    TRACE("StartServiceCtrlDispatcherA(%p)\n", lpServiceStartTable);
 
-    i = 0;
-    while (lpServiceStartTable[i].lpServiceProc != NULL)
+    /* If this function was already called (and thus dwActiveServiceCount
+     * set to a non-zero number of active services), fail the call */
+    if (dwActiveServiceCount)
     {
-        i++;
+        SetLastError(ERROR_SERVICE_ALREADY_RUNNING);
+        return FALSE;
     }
 
+    /* Count the number of active services. They must
+     * have a "valid" name and service procedure. */
+    i = 0;
+    while (lpServiceStartTable[i].lpServiceName != NULL &&
+           lpServiceStartTable[i].lpServiceProc != NULL)
+    {
+        ++i;
+    }
     dwActiveServiceCount = i;
+
+    /* If no active services were found, fail the call */
+    if (!dwActiveServiceCount)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Allocate the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -1075,38 +1101,24 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
 
     /* Connect to the SCM */
     dwError = ScConnectControlPipe(&hPipe);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwError = ScCreateStatusBinding();
+        if (dwError != ERROR_SUCCESS)
+            CloseHandle(hPipe);
+    }
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
         goto done;
     }
 
-    dwBufSize = sizeof(SCM_CONTROL_PACKET) +
-                (MAX_SERVICE_NAME_LENGTH + 1) * sizeof(WCHAR);
-
-    ControlPacket = RtlAllocateHeap(RtlGetProcessHeap(),
-                                    HEAP_ZERO_MEMORY,
-                                    dwBufSize);
-    if (ControlPacket == NULL)
-    {
-        dwError = ERROR_NOT_ENOUGH_MEMORY;
-        bRet = FALSE;
-        goto done;
-    }
-
-    ScCreateStatusBinding();
-
-    /* Call the dispatcher loop */
-    ScServiceDispatcher(hPipe, ControlPacket, dwBufSize);
-
-
-    ScDestroyStatusBinding();
+    /* Start the dispatcher loop */
+    ScServiceDispatcher(hPipe);
 
     /* Close the connection */
+    ScDestroyStatusBinding();
     CloseHandle(hPipe);
-
-    /* Free the control packet */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, ControlPacket);
 
 done:
     /* Free the service table */
@@ -1133,23 +1145,37 @@ done:
 BOOL WINAPI
 StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
 {
+    BOOL bRet = TRUE;
+    DWORD dwError;
     ULONG i;
     HANDLE hPipe;
-    DWORD dwError;
-    PSCM_CONTROL_PACKET ControlPacket;
-    DWORD dwBufSize;
-    BOOL bRet = TRUE;
 
-    TRACE("StartServiceCtrlDispatcherW(%p)\n",
-          lpServiceStartTable);
+    TRACE("StartServiceCtrlDispatcherW(%p)\n", lpServiceStartTable);
 
-    i = 0;
-    while (lpServiceStartTable[i].lpServiceProc != NULL)
+    /* If this function was already called (and thus dwActiveServiceCount
+     * set to a non-zero number of active services), fail the call */
+    if (dwActiveServiceCount)
     {
-        i++;
+        SetLastError(ERROR_SERVICE_ALREADY_RUNNING);
+        return FALSE;
     }
 
+    /* Count the number of active services. They must
+     * have a "valid" name and service procedure. */
+    i = 0;
+    while (lpServiceStartTable[i].lpServiceName != NULL &&
+           lpServiceStartTable[i].lpServiceProc != NULL)
+    {
+        ++i;
+    }
     dwActiveServiceCount = i;
+
+    /* If no active services were found, fail the call */
+    if (!dwActiveServiceCount)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Allocate the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -1174,37 +1200,24 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
 
     /* Connect to the SCM */
     dwError = ScConnectControlPipe(&hPipe);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwError = ScCreateStatusBinding();
+        if (dwError != ERROR_SUCCESS)
+            CloseHandle(hPipe);
+    }
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
         goto done;
     }
 
-    dwBufSize = sizeof(SCM_CONTROL_PACKET) +
-                (MAX_SERVICE_NAME_LENGTH + 1) * sizeof(WCHAR);
-
-    ControlPacket = RtlAllocateHeap(RtlGetProcessHeap(),
-                                    HEAP_ZERO_MEMORY,
-                                    dwBufSize);
-    if (ControlPacket == NULL)
-    {
-        dwError = ERROR_NOT_ENOUGH_MEMORY;
-        bRet = FALSE;
-        goto done;
-    }
-
-    ScCreateStatusBinding();
-
-    /* Call the dispatcher loop */
-    ScServiceDispatcher(hPipe, ControlPacket, dwBufSize);
-
-    ScDestroyStatusBinding();
+    /* Start the dispatcher loop */
+    ScServiceDispatcher(hPipe);
 
     /* Close the connection */
+    ScDestroyStatusBinding();
     CloseHandle(hPipe);
-
-    /* Free the control packet */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, ControlPacket);
 
 done:
     /* Free the service table */
