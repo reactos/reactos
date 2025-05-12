@@ -35,4 +35,16 @@ HKCR
 			}
 		}
 	}
+	NoRemove Unknown
+	{
+		val AlwaysShowExt = s ''
+		val QueryClassStore = s ''
+		shell = s 'openas'
+		{
+			ForceRemove openas
+			{
+				command = e '%%SystemRoot%%\system32\rundll32.exe %%SystemRoot%%\system32\shell32.dll,OpenAs_RunDLL %%1'
+			}
+		}
+	}
 }

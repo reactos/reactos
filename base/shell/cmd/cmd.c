@@ -263,13 +263,13 @@ static BOOL IsConsoleProcess(HANDLE Process)
 
 typedef BOOL (WINAPI *MYEX)(LPSHELLEXECUTEINFO lpExecInfo);
 
-HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
-               LPTSTR directory, INT show)
+HANDLE RunFileEx(DWORD flags, LPTSTR filename, LPTSTR params,
+                 LPTSTR directory, INT show)
 {
-    SHELLEXECUTEINFO sei;
+    SHELLEXECUTEINFO sei = { sizeof sei, flags | SEE_MASK_FLAG_DDEWAIT };
     HMODULE     hShell32;
     MYEX        hShExt;
-    BOOL        ret;
+    UINT        err;
 
     TRACE ("RunFile(%s)\n", debugstr_aw(filename));
     hShell32 = LoadLibrary(_T("SHELL32.DLL"));
@@ -289,19 +289,28 @@ HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
 
     TRACE ("RunFile: ShellExecuteExA/W is at %x\n", hShExt);
 
-    memset(&sei, 0, sizeof sei);
-    sei.cbSize = sizeof sei;
-    sei.fMask = flags;
     sei.lpFile = filename;
     sei.lpParameters = params;
     sei.lpDirectory = directory;
     sei.nShow = show;
-    ret = hShExt(&sei);
+    err = hShExt(&sei) ? ERROR_SUCCESS : GetLastError();
+    if (!sei.hProcess)
+        sei.hProcess = INVALID_HANDLE_VALUE; /* Succeeded without spawning a process */
 
-    TRACE ("RunFile: ShellExecuteExA/W returned 0x%p\n", ret);
+    TRACE ("RunFile: ShellExecuteExA/W returned error %#x\n", err);
 
     FreeLibrary(hShell32);
-    return ret ? sei.hProcess : NULL;
+    if (!err)
+        return sei.hProcess;
+    SetLastError(err);
+    return NULL;
+}
+
+HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
+               LPTSTR directory, INT show)
+{
+    HANDLE hProcess = RunFileEx(flags, filename, params, directory, show);
+    return hProcess != INVALID_HANDLE_VALUE ? hProcess : NULL;
 }
 
 
@@ -431,6 +440,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         /* exec the program */
         PROCESS_INFORMATION prci;
         STARTUPINFO stui;
+        UINT execerror = ERROR_FILE_NOT_FOUND;
 
         /* build command line for CreateProcess(): FullName + " " + rest */
         BOOL quoted = !!_tcschr(First, _T(' '));
@@ -450,8 +460,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         memset(&stui, 0, sizeof(stui));
         stui.cb = sizeof(stui);
         stui.lpTitle = Full;
-        stui.dwFlags = STARTF_USESHOWWINDOW;
-        stui.wShowWindow = SW_SHOWDEFAULT;
+        stui.dwFlags = 0;
+        stui.wShowWindow = SW_SHOWNORMAL;
 
         /* Set the console to standard mode */
         SetConsoleMode(ConStreamGetOSHandle(StdIn),
@@ -470,14 +480,16 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         {
             CloseHandle(prci.hThread);
         }
-        else
+        else if (GetLastError() == ERROR_BAD_EXE_FORMAT)
         {
             // See if we can run this with ShellExecute() ie myfile.xls
-            prci.hProcess = RunFile(SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,
-                                    szFullName,
-                                    rest,
-                                    NULL,
-                                    SW_SHOWNORMAL);
+            HANDLE hProcess = RunFileEx(SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,
+                                        szFullName,
+                                        rest,
+                                        NULL,
+                                        SW_SHOWNORMAL);
+            execerror = hProcess != NULL ? ERROR_SUCCESS : GetLastError();
+            prci.hProcess = hProcess != INVALID_HANDLE_VALUE ? hProcess : NULL;
         }
 
         *FirstEnd = _T('\0');
@@ -499,10 +511,13 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
             }
             CloseHandle(prci.hProcess);
         }
-        else
+        else if (execerror)
         {
             TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(Full));
-            error_bad_command(first);
+            if (execerror == ERROR_NO_ASSOCIATION)
+                error_cant_exec_program();
+            else
+                error_bad_command(first);
             dwExitCode = 1;
         }
 
