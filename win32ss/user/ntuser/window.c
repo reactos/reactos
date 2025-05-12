@@ -3355,12 +3355,15 @@ Exit:
 /* @implemented */
 PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
 {
-    PWND Ret, Parent, pwndNode;
+    PWND Ret, Parent, pwndNode, pwndMessage;
     PDESKTOP pDesktop = Wnd->head.rpdesk;
     PWND pwndDesktop = pDesktop->pDeskInfo->spwnd;
-    PWND pwndMessage = pDesktop->spwndMessage;
 
-    if (Wnd == pwndDesktop || Wnd == pwndMessage)
+    if (Wnd == pwndDesktop)
+        return NULL;
+
+    pwndMessage = pDesktop->spwndMessage;
+    if (Wnd == pwndMessage)
         return NULL;
 
     Parent = Wnd->spwndParent;
@@ -3370,8 +3373,7 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
     switch (Type)
     {
         case GA_PARENT:
-            Ret = Parent;
-            break;
+            return Parent;
         case GA_ROOT:
             Ret = Wnd;
             if (Parent != pwndDesktop)
@@ -3391,10 +3393,7 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
                 Ret = pwndNode;
             break;
         default:
-        {
-            Ret = NULL;
-            break;
-        }
+            return NULL;
     }
 
     return Ret;
