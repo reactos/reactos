@@ -3376,17 +3376,16 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
             return Parent;
         case GA_ROOT:
             Ret = Wnd;
-            if (Parent != pwndDesktop)
+            if (Parent == pwndDesktop)
+                break;
+            do
             {
-                do
-                {
-                    if (Parent == pwndMessage)
-                        break;
-                    Ret = Parent;
-                    pDesktop = Parent->head.rpdesk;
-                    Parent = Parent->spwndParent;
-                } while (Parent != pDesktop->pDeskInfo->spwnd);
-            }
+                if (Parent == pwndMessage)
+                    break;
+                Ret = Parent;
+                pDesktop = Parent->head.rpdesk;
+                Parent = Parent->spwndParent;
+            } while (Parent != pDesktop->pDeskInfo->spwnd);
             break;
         case GA_ROOTOWNER:
             for (pwndNode = Parent; pwndNode; pwndNode = IntGetParent(pwndNode))
