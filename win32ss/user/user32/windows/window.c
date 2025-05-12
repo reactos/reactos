@@ -955,12 +955,6 @@ GetAncestor(_In_ HWND hwnd, _In_ UINT uType)
         return hwndAncestor;
     }
 
-    if (!uType || uType > GA_ROOTOWNER)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
-
     return NtUserGetAncestor(hwnd, uType);
 }
 
