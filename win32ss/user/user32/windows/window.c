@@ -924,6 +924,12 @@ GetAltTabInfoW(HWND hwnd,
     return NtUserGetAltTabInfo(hwnd,iItem,pati,pszItemText,cchItemText,FALSE);
 }
 
+/* @implemented */
+HWND WINAPI
+GetAncestor(HWND hwnd, UINT gaFlags)
+{
+    return NtUserGetAncestor(hwnd, gaFlags);
+}
 
 /*
  * @implemented
