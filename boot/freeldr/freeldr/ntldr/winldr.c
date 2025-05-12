@@ -1255,7 +1255,7 @@ LoadAndBootWindowsCommon(
     /* Match KdInitSystem() conditions */
     if (!NtLdrGetOption(BootOptions, "CRASHDEBUG") &&
         !NtLdrGetOption(BootOptions, "NODEBUG") &&
-        NtLdrGetOption(BootOptions, "DEBUG"))
+        !!NtLdrGetOption(BootOptions, "DEBUG"))
     {
         /* Check whether there is a DEBUGPORT option */
         PCSTR DebugPort;
