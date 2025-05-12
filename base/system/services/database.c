@@ -516,7 +516,7 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
 
         pServiceImage->dwImageRunCount = 1;
         pServiceImage->hControlPipe = INVALID_HANDLE_VALUE;
-        pServiceImage->hProcess = INVALID_HANDLE_VALUE;
+        pServiceImage->hProcess = NULL;
 
         pString = (PWSTR)((INT_PTR)pServiceImage + sizeof(SERVICE_IMAGE));
 
@@ -617,19 +617,82 @@ done:
     return dwError;
 }
 
+/*static*/ VOID
+ScmDereferenceOrTerminateServiceImage(PSERVICE pService)
+{
+    ASSERT(pService->lpImage);
+    ASSERT(pService->lpImage->dwImageRunCount > 0);
+
+    /* Decrement the run counter */
+    pService->lpImage->dwImageRunCount--;
+
+    /* If we just stopped the last running service... */
+    if (pService->lpImage->dwImageRunCount == 0)
+    {
+        /* Remove the service image */
+        DPRINT("Removing service image %S for %S\n",
+               pService->lpImage->pszImagePath, pService->lpServiceName);
+        ScmRemoveServiceImage(pService->lpImage);
+        pService->lpImage = NULL;
+    }
+}
+
 
 VOID
 ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage)
 {
-    DPRINT1("ScmRemoveServiceImage() called\n");
+    DWORD dwError;
 
-    /* FIXME: Terminate the process */
+    DPRINT1("ScmRemoveServiceImage(%S) called\n", pServiceImage->pszImagePath);
+
+    ASSERT(pServiceImage->dwImageRunCount == 0);
+
+    /*
+     * No services are running in this image anymore. Notify the service
+     * dispatcher to exit now, and wait for the process to cleanly terminate.
+     * Note that the timeout used there (20 seconds) corresponds to the default
+     * value of the "WaitToKillServiceTimeout" registry value.
+     */
+    DPRINT("Stopping the dispatcher thread of service image %S\n", pServiceImage->pszImagePath);
+    dwError = ScmControlService(pServiceImage->hControlPipe,
+                                L"",
+                                SERVICE_CONTROL_STOP, // Windows: use SERVICE_STOP
+                                NULL);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwError = WaitForSingleObject(pServiceImage->hProcess, 20000);
+        if (dwError != WAIT_OBJECT_0)
+            DPRINT1("WaitForSingleObject failed, going to kill the process.\n");
+    }
+    else
+    {
+        DPRINT1("ScmControlService failed, going to kill the process.\n");
+    }
+
+    if (dwError != ERROR_SUCCESS || dwError != WAIT_OBJECT_0)
+    {
+        /* If the control or the wait failed, kill the host process
+         * (asynchronously), unless it is ourselves (services.exe
+         * itself hosting services) */
+        if (pServiceImage->hProcess != GetCurrentProcess())
+        {
+            TerminateProcess(pServiceImage->hProcess, 0);
+
+            /* Be sure the process really terminates */
+            dwError = WaitForSingleObject(pServiceImage->hProcess, 20000);
+            if (dwError != WAIT_OBJECT_0)
+                DPRINT1("WaitForSingleObject failed, the process cannot be killed.\n");
+        }
+        /* If the process cannot be killed, it may fail using the user profile
+         * since it gets unloaded below. In addition, the process may be left
+         * in a zombie state on the system. */
+    }
 
     /* Remove the service image from the list */
     RemoveEntryList(&pServiceImage->ImageListEntry);
 
     /* Close the process handle */
-    if (pServiceImage->hProcess != INVALID_HANDLE_VALUE)
+    if (pServiceImage->hProcess)
         CloseHandle(pServiceImage->hProcess);
 
     /* Close the control pipe */
@@ -637,7 +700,7 @@ ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage)
         CloseHandle(pServiceImage->hControlPipe);
 
     /* Unload the user profile */
-    if (pServiceImage->hProfile != NULL)
+    if (pServiceImage->hProfile)
     {
         ScmEnableBackupRestorePrivileges(pServiceImage->hToken, TRUE);
         UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
@@ -645,7 +708,7 @@ ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage)
     }
 
     /* Close the logon token */
-    if (pServiceImage->hToken != NULL)
+    if (pServiceImage->hToken)
         CloseHandle(pServiceImage->hToken);
 
     /* Release the service image */
@@ -824,15 +887,7 @@ ScmDeleteServiceRecord(PSERVICE lpService)
 
     /* Dereference the service image */
     if (lpService->lpImage)
-    {
-        lpService->lpImage->dwImageRunCount--;
-
-        if (lpService->lpImage->dwImageRunCount == 0)
-        {
-            ScmRemoveServiceImage(lpService->lpImage);
-            lpService->lpImage = NULL;
-        }
-    }
+        ScmDereferenceOrTerminateServiceImage(lpService);
 
     /* Decrement the group reference counter */
     ScmSetServiceGroup(lpService, NULL);
@@ -933,8 +988,8 @@ ScmReferenceService(PSERVICE lpService)
     return InterlockedIncrement(&lpService->RefCount);
 }
 
-/* This function must be called with the database lock held exclusively as
-   it can end up deleting the service */
+/* This function must be called with the database lock held exclusively
+ * as it can end up deleting the service */
 DWORD
 ScmDereferenceService(PSERVICE lpService)
 {
@@ -1948,12 +2003,7 @@ ScmLoadService(PSERVICE Service,
             }
             else
             {
-                Service->lpImage->dwImageRunCount--;
-                if (Service->lpImage->dwImageRunCount == 0)
-                {
-                    ScmRemoveServiceImage(Service->lpImage);
-                    Service->lpImage = NULL;
-                }
+                ScmDereferenceOrTerminateServiceImage(Service);
             }
         }
     }
