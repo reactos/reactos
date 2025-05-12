@@ -41,14 +41,18 @@ typedef struct _CHANGE_NOTIFY_TEST_STATE
 #define PState PCHANGE_NOTIFY_TEST_STATE
 
 /* Registry watcher thread for testing synchronous mode */
+typedef struct _WATCH_KEY_PARAMETERS
+{
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    PIO_STATUS_BLOCK IoStatusBlock;
+} WATCH_KEY_PARAMETERS, *PWATCH_KEY_PARAMETERS;
 
 DWORD WINAPI NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
 {
-    NTSTATUS Status;
-    PState State = (PState)lpParameter;
+    PWATCH_KEY_PARAMETERS State = (PWATCH_KEY_PARAMETERS)lpParameter;
     
-    Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0, NULL, NULL, NULL, NULL, &State->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
-    ok(NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys was unsuccessful. (0x%lx)\n", Status);
+    State->Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0, NULL, NULL, NULL, NULL, State->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
 
     return 0;
 }
@@ -67,7 +71,7 @@ VOID WINAPI NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_B
 /* Helper functions */
 
 #define CLEANUP(state) NtNotifyChangeMultipleKeys_Cleanup(state)
-#define CHECK_ERROR(state, Status) if (!NT_SUCCESS(Status)) { ok(FALSE, "%d: Internal error, Status=0x%x\n", __LINE__, (unsigned int)Status); CLEANUP(state); return Status; }
+#define CHECK_ERROR(state, Status) if (!NT_SUCCESS(Status)) { ok(FALSE, "Internal error, Status=0x%lx\n", Status); CLEANUP(state); return Status; }
 #define TEST_ERROR(state, Status, Expected)  ok_ntstatus(Status, Expected); if (Status != Expected) { CLEANUP(state); return Status; }
 #define INIT_TEST(state, Status) Status = NtNotifyChangeMultipleKeys_InitializePerTest(state); CHECK_ERROR(state, Status)
 #define FINALIZE_TEST(state) CLEANUP(state); return STATUS_SUCCESS
@@ -187,7 +191,10 @@ START_SUBTEST(Synchronous)
     CHECK_ERROR(state, Status);
     
     /* Create a thread */
-    state->ThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, state, 0, NULL);
+    WATCH_KEY_PARAMETERS Params;
+    Params.KeyHandle = state->KeyHandle;
+    Params.IoStatusBlock = &state->IoStatusBlock;
+    state->ThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, &Params, 0, NULL);
     if (!state->ThreadHandle)
     {
         CLEANUP(state);
@@ -203,10 +210,28 @@ START_SUBTEST(Synchronous)
     CHECK_ERROR(state, Status);
 
     /* Verify that the thread is notified */
-    SetThreadPriority(state->ThreadHandle, THREAD_PRIORITY_HIGHEST);
-    SwitchToThread();
     Status = WaitForSingleObject(state->ThreadHandle, 100);
     TEST_ERROR(state, Status, WAIT_OBJECT_0);
+
+    /* Verify the status code */
+    ok_ntstatus(Params.Status, STATUS_NOTIFY_ENUM_DIR);
+    ok_ntstatus(Params.IoStatusBlock->Status, STATUS_NOTIFY_ENUM_DIR);
+
+    /* Watch again, but this time close the handle without making any change */
+    state->ThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, &Params, 0, NULL);
+    if (!state->ThreadHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    Status = WaitForSingleObject(state->ThreadHandle, 100);
+    TEST_ERROR(state, Status, WAIT_TIMEOUT);
+    NtClose(state->KeyHandle);
+    state->KeyHandle = NULL;
+    Status = WaitForSingleObject(state->ThreadHandle, 100);
+    TEST_ERROR(state, Status, WAIT_OBJECT_0);
+    ok_ntstatus(Params.Status, STATUS_NOTIFY_CLEANUP);
+    ok_ntstatus(Params.IoStatusBlock->Status, STATUS_NOTIFY_CLEANUP);
 
     FINALIZE_TEST(state);
 }
@@ -251,6 +276,21 @@ START_SUBTEST(Asynchronous)
     NtTestAlert();
     Status = WaitForSingleObject(state->EventHandle, 100);
     TEST_ERROR(state, Status, WAIT_OBJECT_0);
+
+    /* Verify the status code */
+    ok_ntstatus(state->IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
+
+    /* Watch again, but this time close the handle without making any change */
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle, 0, NULL, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
+    TEST_ERROR(state, Status, STATUS_PENDING);
+    Status = WaitForSingleObject(state->EventHandle, 0);
+    TEST_ERROR(state, Status, WAIT_TIMEOUT);
+    NtClose(state->KeyHandle);
+    state->KeyHandle = NULL;
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
+    TEST_ERROR(state, Status, WAIT_OBJECT_0);
+    ok_ntstatus(state->IoStatusBlock.Status, STATUS_NOTIFY_CLEANUP);
 
     FINALIZE_TEST(state);
 }
@@ -409,7 +449,6 @@ START_SUBTEST(ApcRoutine)
 
     /* Force system to run queued APC routines */
     NtTestAlert();
-
     ok(state->ApcRan == TRUE, "The APC routine did not ran.\n");
     if (!state->ApcRan)
     {
