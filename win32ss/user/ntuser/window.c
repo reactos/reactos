@@ -3418,14 +3418,11 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
         goto Quit;
     }
 
-    if (Window)
-    {
-        Ancestor = UserGetAncestor(Window, Type);
-        Ret = (Ancestor ? UserHMGetHandle(Ancestor) : NULL);
-    }
+    Ancestor = UserGetAncestor(Window, Type);
+    Ret = (Ancestor ? UserHMGetHandle(Ancestor) : NULL);
 
 Quit:
-    TRACE("Leave NtUserGetAncestor, ret=%p\n", Ret);
+    TRACE("Leave NtUserGetAncestor, ret = %p\n", Ret);
     UserLeave();
     return Ret;
 }
