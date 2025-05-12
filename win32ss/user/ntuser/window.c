@@ -3409,7 +3409,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
     HWND Ret = NULL;
 
     TRACE("Enter NtUserGetAncestor\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     Window = UserGetWindowObject(hWnd);
     if (!Window)
