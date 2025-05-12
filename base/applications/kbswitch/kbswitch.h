@@ -10,7 +10,7 @@
 #include <shellapi.h>
 #include <tchar.h>
 #include <strsafe.h>
-#include <ddk/indicml.h> /* INDICATOR_CLASS, INDICM_... */
+#include <ime/indicml.h> /* INDICATOR_CLASS, INDICM_... */
 
 #include "resource.h"
 

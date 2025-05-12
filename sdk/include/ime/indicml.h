@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS DDK headers
+ * PROJECT:     ReactOS headers
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Indicator (internat.exe) window class
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
