@@ -3357,8 +3357,10 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
 {
     PWND WndAncestor, Parent, pwndMessage;
     PDESKTOP pDesktop = Wnd->head.rpdesk;
-    PWND pwndDesktop = pDesktop->pDeskInfo->spwnd;
+    PWND pwndDesktop;
 
+    ASSERT(pDesktop);
+    pwndDesktop = pDesktop->pDeskInfo->spwnd;
     if (Wnd == pwndDesktop)
         return NULL;
 
@@ -3382,8 +3384,12 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
             {
                 if (Parent == pwndMessage)
                     break;
+
                 WndAncestor = Parent;
+
                 pDesktop = Parent->head.rpdesk;
+                ASSERT(pDesktop);
+
                 Parent = Parent->spwndParent;
             } while (Parent != pDesktop->pDeskInfo->spwnd);
             break;
