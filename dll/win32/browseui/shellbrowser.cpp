@@ -1617,6 +1617,10 @@ void CShellBrowser::RepositionBars()
             }
         }
     }
+
+    if (!fCurrentShellViewWindow)
+        return;
+
     ::SetWindowPos(fCurrentShellViewWindow, NULL, clientRect.left, clientRect.top,
                         clientRect.right - clientRect.left,
                         clientRect.bottom - clientRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
