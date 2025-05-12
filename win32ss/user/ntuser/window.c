@@ -3351,7 +3351,6 @@ Exit:
    return Ret;
 }
 
-
 /* @implemented */
 PWND FASTCALL
 UserGetAncestor(_In_ PWND pWnd, _In_ UINT uType)
