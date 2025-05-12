@@ -112,6 +112,37 @@ VOID
 NTAPI
 CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
 {
+    if (PostBlock->IoStatusBlock /* && !PostBlock->Buffer */)
+    {
+        KAPC_STATE ApcState;
+        BOOLEAN IsSameProcess = PostBlock->Process == &PsGetCurrentProcess()->Pcb;
+
+        if (!IsSameProcess)
+            KeStackAttachProcess(PostBlock->Process, &ApcState);
+
+        _SEH2_TRY
+        {
+            /* Verify if the memory location is still an IO_STATUS_BLOCK */
+            ProbeForWrite(PostBlock->IoStatusBlock, sizeof(IO_STATUS_BLOCK), sizeof(ULONG));
+            if (PostBlock->IoStatusBlock->Status == STATUS_PENDING && PostBlock->IoStatusBlock->Information == 0)
+            {
+                /* FIXME: what if the memory location is pointing to another IoStatusBlock with the same condition but it's not the same IoStatusBlock that we expect? */
+                PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            NTSTATUS Status = _SEH2_GetExceptionCode();
+            DPRINT1("CmpNotifyPostBlock: Writing to IO_STATUS_BLOCK failed with %lx. Process=0x%lx, IoStatusBlock=0x%lx\n", Status, PostBlock->Process, PostBlock->IoStatusBlock);
+        }
+        _SEH2_END;
+
+        if (!IsSameProcess)
+            KeUnstackDetachProcess(&ApcState);
+    }
+
+    /* FIXME: Return the name of updated registry key in PostBlock->Buffer */
+
     /* Signal the event */
     if (PostBlock->Event)
         KeSetEvent(PostBlock->Event, 1, FALSE);
@@ -345,13 +376,31 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
         /* This shouldn't happen, We don't assign subordinate NotifyBlocks to a KeyBody */
         ASSERT(PostBlock->IsMasterPostBlock);
 
-        /* TODO: Set IO_STATUS_BLOCK->Status to STATUS_NOTIFY_CLEANUP */
+        if (PostBlock->IoStatusBlock)
+        {
+            _SEH2_TRY
+            {
+                /* Verify if the memory location is still an IO_STATUS_BLOCK */
+                ProbeForWrite(PostBlock->IoStatusBlock, sizeof(IO_STATUS_BLOCK), sizeof(ULONG));
+                if (PostBlock->IoStatusBlock->Status == STATUS_PENDING && PostBlock->IoStatusBlock->Information == 0)
+                {
+                    /* We are ending the notification session without signalling the caller for any change */
+                    PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_CLEANUP;
+                }
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                NTSTATUS Status = _SEH2_GetExceptionCode();
+                DPRINT1("CmpFlushNotify: Writing to IO_STATUS_BLOCK failed with %lx. Process=0x%lx, IoStatusBlock=0x%lx\n", Status, PostBlock->Process, PostBlock->IoStatusBlock);
+            }   
+            _SEH2_END;
+        }
 
         if (PostBlock->Event)
         {
             /* Signal the event in case somebody is waiting, the notification session is ending and there won't be any notifications */
             KeSetEvent(PostBlock->Event, 1, FALSE);
-            
+
             ObDereferenceObject(PostBlock->Event);
         }
 

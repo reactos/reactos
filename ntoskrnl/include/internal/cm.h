@@ -354,6 +354,9 @@ typedef struct _CM_POST_BLOCK
 
             ULONG SubCount; /* SubNotifyBlocks size */
             PCM_NOTIFY_BLOCK* SubNotifyBlocks; /* Array of Subordinates notification block */
+
+            PKPROCESS Process;
+            PIO_STATUS_BLOCK IoStatusBlock;
         };
 
         /* Subordinate-specific fields */
