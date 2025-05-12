@@ -3353,35 +3353,36 @@ Exit:
 
 
 /* @implemented */
-PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
+PWND FASTCALL
+UserGetAncestor(_In_ PWND pWnd, _In_ UINT uType)
 {
     PWND WndAncestor, Parent, pwndMessage;
     PDESKTOP pDesktop;
     PWND pwndDesktop;
 
-    pDesktop = Wnd->head.rpdesk;
+    pDesktop = pWnd->head.rpdesk;
     ASSERT(pDesktop);
     ASSERT(pDesktop->pDeskInfo);
 
     pwndDesktop = pDesktop->pDeskInfo->spwnd;
-    if (Wnd == pwndDesktop)
+    if (pWnd == pwndDesktop)
         return NULL;
 
     pwndMessage = pDesktop->spwndMessage;
-    if (Wnd == pwndMessage)
+    if (pWnd == pwndMessage)
         return NULL;
 
-    Parent = Wnd->spwndParent;
+    Parent = pWnd->spwndParent;
     if (!Parent)
         return NULL;
 
-    switch (Type)
+    switch (uType)
     {
         case GA_PARENT:
             return Parent;
 
         case GA_ROOT:
-            WndAncestor = Wnd;
+            WndAncestor = pWnd;
             if (Parent == pwndDesktop)
                 break;
 
@@ -3416,10 +3417,10 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
 
 /* @implemented */
 HWND APIENTRY
-NtUserGetAncestor(HWND hWnd, UINT Type)
+NtUserGetAncestor(_In_ HWND hWnd, _In_ UINT uType)
 {
-    PWND Window, Ancestor;
-    HWND Ret = NULL;
+    PWND Window, pwndAncestor;
+    HWND hwndAncestor = NULL;
 
     TRACE("Enter NtUserGetAncestor\n");
     UserEnterShared();
@@ -3428,19 +3429,19 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
     if (!Window)
         goto Quit;
 
-    if (!Type || Type > GA_ROOTOWNER)
+    if (!uType || uType > GA_ROOTOWNER)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         goto Quit;
     }
 
-    Ancestor = UserGetAncestor(Window, Type);
-    Ret = (Ancestor ? UserHMGetHandle(Ancestor) : NULL);
+    pwndAncestor = UserGetAncestor(Window, uType);
+    hwndAncestor = (pwndAncestor ? UserHMGetHandle(pwndAncestor) : NULL);
 
 Quit:
-    TRACE("Leave NtUserGetAncestor, ret = %p\n", Ret);
+    TRACE("Leave NtUserGetAncestor returning %p\n", hwndAncestor);
     UserLeave();
-    return Ret;
+    return hwndAncestor;
 }
 
 ////

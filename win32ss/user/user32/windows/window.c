@@ -926,13 +926,13 @@ GetAltTabInfoW(HWND hwnd,
 
 /* @implemented */
 HWND WINAPI
-GetAncestor(HWND hwnd, UINT gaFlags)
+GetAncestor(_In_ HWND hwnd, _In_ UINT uType)
 {
     PWND pWnd = ValidateHwnd(hwnd);
     if (!pWnd || pWnd == GetThreadDesktopWnd())
         return NULL;
 
-    if (gaFlags == GA_PARENT)
+    if (uType == GA_PARENT)
     {
         /* Optimized for speed */
         PWND pwndAncestor;
@@ -955,7 +955,13 @@ GetAncestor(HWND hwnd, UINT gaFlags)
         return hwndAncestor;
     }
 
-    return NtUserGetAncestor(hwnd, gaFlags);
+    if (!uType || uType > GA_ROOTOWNER)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    return NtUserGetAncestor(hwnd, uType);
 }
 
 /*
