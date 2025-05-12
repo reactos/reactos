@@ -1796,6 +1796,10 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
         DPRINT1("NtNotifyChangeMultipleKeys: Failed to allocate and insert master PostBlock. (0x%lx)\n", Status);
         goto Failure2;
     }
+
+    /* Attach the IO_STATUS_BLOCK */
+    PostBlock->Process = &PsGetCurrentProcess()->Pcb;
+    PostBlock->IoStatusBlock = IoStatusBlock;
     
     if (PreviousMode == KernelMode)
     {
@@ -1882,17 +1886,11 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
         /* Wait for event to be signaled */
         KeWaitForSingleObject(PostBlock->Event, Executive, PreviousMode, FALSE, NULL);
 
-        /* Fill the IoStatusBlock fields */
-        IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
-        IoStatusBlock->Information = 0;
-
         /* FIXME: Report back the relative name of the changed using the Buffer */
-
-        /* FIXME: Read Status from IoStatusBlock -- return STATUS_NOTIFY_CLEANUP if event is set by closing the key handle */
 
         /* PostBlock is freed automatically when the event is signaled */
 
-        Status = STATUS_NOTIFY_ENUM_DIR;
+        Status = PostBlock->IoStatusBlock->Status;
         goto Cleanup;
     }
 
