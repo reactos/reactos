@@ -122,13 +122,7 @@ CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
 
         _SEH2_TRY
         {
-            /* Verify if the memory location is still an IO_STATUS_BLOCK */
-            ProbeForWrite(PostBlock->IoStatusBlock, sizeof(IO_STATUS_BLOCK), sizeof(ULONG));
-            if (PostBlock->IoStatusBlock->Status == STATUS_PENDING && PostBlock->IoStatusBlock->Information == 0)
-            {
-                /* FIXME: what if the memory location is pointing to another IoStatusBlock with the same condition but it's not the same IoStatusBlock that we expect? */
-                PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
-            }
+            PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -378,15 +372,11 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
 
         if (PostBlock->IoStatusBlock)
         {
+            /* No need to KeStackAttachProcess, the handle is closed on in the context of the same process as the original caller */
             _SEH2_TRY
             {
-                /* Verify if the memory location is still an IO_STATUS_BLOCK */
-                ProbeForWrite(PostBlock->IoStatusBlock, sizeof(IO_STATUS_BLOCK), sizeof(ULONG));
-                if (PostBlock->IoStatusBlock->Status == STATUS_PENDING && PostBlock->IoStatusBlock->Information == 0)
-                {
-                    /* We are ending the notification session without signalling the caller for any change */
-                    PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_CLEANUP;
-                }
+                /* We are ending the notification session without signalling the caller for any change */
+                PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_CLEANUP;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
