@@ -1693,15 +1693,19 @@ cpp_quote("#define CMDSTR_VIEWLIST     WINELIB_NAME_AW(CMDSTR_VIEWLIST)")
 cpp_quote("#define CMDSTR_VIEWDETAILS  WINELIB_NAME_AW(CMDSTR_VIEWDETAILS)")
 
 cpp_quote("#define CMIC_MASK_HOTKEY         SEE_MASK_HOTKEY")
-cpp_quote("#define CMIC_MASK_ICON           SEE_MASK_ICON")
+cpp_quote("#define CMIC_MASK_ICON           SEE_MASK_ICON") // (NTDDI_VERSION < NTDDI_VISTA) || defined(__REACTOS__)
 cpp_quote("#define CMIC_MASK_FLAG_NO_UI     SEE_MASK_FLAG_NO_UI")
 cpp_quote("#define CMIC_MASK_UNICODE        SEE_MASK_UNICODE")
 cpp_quote("#define CMIC_MASK_NO_CONSOLE     SEE_MASK_NO_CONSOLE")
-cpp_quote("#define CMIC_MASK_HASLINKNAME    SEE_MASK_HASLINKNAME")
-cpp_quote("#define CMIC_MASK_FLAG_SEP_VDM   SEE_MASK_FLAG_SEPVDM")
-cpp_quote("#define CMIC_MASK_HASTITLE       SEE_MASK_HASTITLE")
+cpp_quote("#if (NTDDI_VERSION < NTDDI_VISTA) || defined(__REACTOS__)")
+cpp_quote("#define CMIC_MASK_HASLINKNAME    SEE_MASK_HASLINKNAME")  // NOTE: Depends on undocumented define
+cpp_quote("#define CMIC_MASK_HASTITLE       SEE_MASK_HASTITLE")     // NOTE: Depends on undocumented define
+cpp_quote("#endif")
+cpp_quote("#define CMIC_MASK_FLAG_SEP_VDM   SEE_MASK_FLAG_SEPVDM")  // NOTE: Depends on undocumented define
 cpp_quote("#define CMIC_MASK_ASYNCOK        SEE_MASK_ASYNCOK")
+cpp_quote("#if (NTDDI_VERSION >= NTDDI_VISTA)")
 cpp_quote("#define CMIC_MASK_NOASYNC        SEE_MASK_NOASYNC")
+cpp_quote("#endif")
 cpp_quote("#define CMIC_MASK_SHIFT_DOWN     0x10000000")
 cpp_quote("#define CMIC_MASK_PTINVOKE       0x20000000")
 cpp_quote("#define CMIC_MASK_CONTROL_DOWN   0x40000000")
