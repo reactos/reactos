@@ -931,6 +931,9 @@ typedef struct _KSYSTEM_TIME {
   LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
+$endif(_WDMDDK_)
+$if(_WDMDDK_ || _WINNT_)
+
 typedef struct DECLSPEC_ALIGN(16) _M128A {
   ULONGLONG Low;
   LONGLONG High;
@@ -1009,6 +1012,9 @@ typedef struct _XSTATE_SAVE {
   } DUMMYUNIONNAME;
 #endif
 } XSTATE_SAVE, *PXSTATE_SAVE;
+
+$endif(_WDMDDK_ || _WINNT_)
+$if(_WDMDDK_)
 
 #ifdef _X86_
 
@@ -1128,6 +1134,9 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
   _Out_opt_ PBOOLEAN PreviousState;
 } TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+$endif (_NTDDK_)
+$if (_NTDDK_ || _WINNT_)
 
 #define XSTATE_LEGACY_FLOATING_POINT        0
 #define XSTATE_LEGACY_SSE                   1
@@ -1251,6 +1260,9 @@ typedef struct _XSTATE_CONFIGURATION
     ULONG Spare;
 #endif
 } XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
+
+$endif (_NTDDK_ || _WINNT_)
+$if (_NTDDK_)
 
 #define MAX_WOW64_SHARED_ENTRIES 16
 
