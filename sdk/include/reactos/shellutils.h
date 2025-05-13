@@ -662,11 +662,22 @@ public:
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
 
+#ifdef _UNDOCSHELL_H
+/* The SEE_MASK_* defines that are undocumented, are defined in reactos/undocshell.h */
 #define SEE_CMIC_COMMON_BASICFLAGS (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_UNICODE | \
                                     SEE_MASK_NO_CONSOLE | SEE_MASK_FLAG_NO_UI | SEE_MASK_FLAG_SEPVDM | \
                                     SEE_MASK_FLAG_LOG_USAGE | SEE_MASK_NOZONECHECKS)
 #define SEE_CMIC_COMMON_FLAGS      (SEE_CMIC_COMMON_BASICFLAGS | SEE_MASK_HOTKEY | SEE_MASK_ICON | \
                                     SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE)
+
+#define CmicFlagsToSeeFlags(flags)  ((flags) & SEE_CMIC_COMMON_FLAGS)
+static inline UINT SeeFlagsToCmicFlags(UINT flags)
+{
+    if (flags & SEE_MASK_CLASSNAME)
+        flags &= ~(SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE);
+    return flags & SEE_CMIC_COMMON_FLAGS;
+}
+#endif // _UNDOCSHELL_H
 
 static inline BOOL SHELL_IsContextMenuMsg(UINT uMsg)
 {

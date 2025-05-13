@@ -6,6 +6,9 @@
  *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+#ifndef _UNDOCSHELL_H
+#define _UNDOCSHELL_H
+
 #pragma once
 
 #include <shellapi.h>
@@ -589,44 +592,44 @@ C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
 /* Generic structure used by several messages */
 typedef struct
 {
-  DWORD          dwReserved;
-  DWORD          dwReserved2;
-  LPCITEMIDLIST  pidl;
-  LPDWORD        lpdwUser;
-} SFVCBINFO, * LPSFVCBINFO;
-typedef const SFVCBINFO * LPCSFVCBINFO;
+    DWORD dwReserved;
+    DWORD dwReserved2;
+    LPCITEMIDLIST pidl;
+    LPDWORD lpdwUser;
+} SFVCBINFO, *LPSFVCBINFO;
+typedef const SFVCBINFO *LPCSFVCBINFO;
 
 /* SFVCB_SELECTIONCHANGED structure */
 typedef struct
 {
-  UINT           uOldState;
-  UINT           uNewState;
-  LPCITEMIDLIST  pidl;
-  LPDWORD        lpdwUser;
-} SFVSELECTSTATE, * LPSFVSELECTSTATE;
-typedef const SFVSELECTSTATE * LPCSFVSELECTSTATE;
+    UINT uOldState;
+    UINT uNewState;
+    LPCITEMIDLIST pidl;
+    LPDWORD lpdwUser;
+} SFVSELECTSTATE, *LPSFVSELECTSTATE;
+typedef const SFVSELECTSTATE *LPCSFVSELECTSTATE;
 
 /* SFVCB_COPYHOOKCALLBACK structure */
 typedef struct
 {
-  HWND    hwnd;
-  UINT    wFunc;
-  UINT    wFlags;
-  LPCSTR  pszSrcFile;
-  DWORD   dwSrcAttribs;
-  LPCSTR  pszDestFile;
-  DWORD   dwDestAttribs;
-} SFVCOPYHOOKINFO, * LPSFVCOPYHOOKINFO;
-typedef const SFVCOPYHOOKINFO * LPCSFVCOPYHOOKINFO;
+    HWND   hwnd;
+    UINT   wFunc;
+    UINT   wFlags;
+    LPCSTR pszSrcFile;
+    DWORD  dwSrcAttribs;
+    LPCSTR pszDestFile;
+    DWORD  dwDestAttribs;
+} SFVCOPYHOOKINFO, *LPSFVCOPYHOOKINFO;
+typedef const SFVCOPYHOOKINFO *LPCSFVCOPYHOOKINFO;
 
 /* SFVCB_GETDETAILSOF structure */
 typedef struct
 {
-  LPCITEMIDLIST  pidl;
-  int            fmt;
-  int            cx;
-  STRRET         lpText;
-} SFVCOLUMNINFO, * LPSFVCOLUMNINFO;
+    LPCITEMIDLIST pidl;
+    int fmt;
+    int cx;
+    STRRET lpText;
+} SFVCOLUMNINFO, *LPSFVCOLUMNINFO;
 
 /****************************************************************************
  * Misc Stuff
@@ -666,6 +669,19 @@ HRESULT WINAPI ShellExecCmdLine(
     int nShow,
     LPVOID pUnused,
     DWORD dwSeclFlags);
+
+/*
+ * Undocumented SEE_MASK_* flags for the SHELLEXECUTEINFO::fMask member
+ * used by ShellExecuteEx(). These are absent from the official Windows SDK.
+ * However they are used in shobjidl.idl to define some CMIC_MASK_* flags,
+ * these ones being mentioned in the MSDN documentation of the
+ * CMINVOKECOMMANDINFOEX structure.
+ */
+#define SEE_MASK_UNKNOWN_0x1000 0x00001000 // FIXME: Name
+#define SEE_MASK_HASLINKNAME    0x00010000
+#define SEE_MASK_FLAG_SEPVDM    0x00020000
+#define SEE_MASK_USE_RESERVED   0x00040000
+#define SEE_MASK_HASTITLE       0x00080000
 
 HINSTANCE WINAPI
 RealShellExecuteA(
@@ -799,6 +815,7 @@ HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
 BOOL WINAPI GUIDFromStringA(
     _In_   PCSTR psz,
     _Out_  LPGUID pguid);
+
 BOOL WINAPI GUIDFromStringW(
     _In_   PCWSTR psz,
     _Out_  LPGUID pguid);
@@ -862,6 +879,7 @@ SHInvokePrivilegedFunctionW(
 
 BOOL WINAPI
 SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName);
+
 BOOL WINAPI IsSuspendAllowed(VOID);
 
 BOOL WINAPI
@@ -949,6 +967,7 @@ LONG WINAPI SHRegQueryValueExA(
     LPDWORD lpType,
     LPBYTE lpData,
     LPDWORD lpcbData);
+
 LONG WINAPI SHRegQueryValueExW(
     HKEY hkey,
     LPCWSTR pszValue,
@@ -956,10 +975,11 @@ LONG WINAPI SHRegQueryValueExW(
     LPDWORD pdwType,
     LPVOID pvData,
     LPDWORD pcbData);
+
 #ifdef UNICODE
-    #define SHRegQueryValueEx SHRegQueryValueExW
+#define SHRegQueryValueEx SHRegQueryValueExW
 #else
-    #define SHRegQueryValueEx SHRegQueryValueExA
+#define SHRegQueryValueEx SHRegQueryValueExA
 #endif
 
 BOOL WINAPI
@@ -1264,3 +1284,5 @@ C_ASSERT(sizeof(APPBAR_COMMAND) == 0x38);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
+
+#endif /* _UNDOCSHELL_H */
