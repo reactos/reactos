@@ -167,6 +167,8 @@
 /drivers/base/condrv/                       @HBelusca
 /drivers/setup/blue/                        @HBelusca
 /modules/rostests/winetests/kernel32/console.c  @HBelusca
+/sdk/include/psdk/wincon.h                  @HBelusca
+/sdk/include/reactos/wincon_undoc.h         @HBelusca
 /sdk/include/reactos/drivers/condrv/        @HBelusca
 /sdk/include/reactos/drivers/blue/          @HBelusca
 /sdk/include/reactos/subsys/win/conmsg.h    @HBelusca
