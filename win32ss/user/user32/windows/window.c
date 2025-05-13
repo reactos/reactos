@@ -935,7 +935,6 @@ GetAncestor(_In_ HWND hwnd, _In_ UINT uType)
     if (uType == GA_PARENT)
     {
         /* Optimized for speed */
-        PWND pwndAncestor;
         HWND hwndAncestor = NULL;
 
         _SEH2_TRY
