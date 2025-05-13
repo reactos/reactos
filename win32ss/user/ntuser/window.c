@@ -3438,8 +3438,8 @@ NtUserGetAncestor(_In_ HWND hWnd, _In_ UINT uType)
     hwndAncestor = (pwndAncestor ? UserHMGetHandle(pwndAncestor) : NULL);
 
 Quit:
-    TRACE("Leave NtUserGetAncestor returning %p\n", hwndAncestor);
     UserLeave();
+    TRACE("Leave NtUserGetAncestor returning %p\n", hwndAncestor);
     return hwndAncestor;
 }
 
