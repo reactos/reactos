@@ -529,7 +529,7 @@ typedef struct _XSTATE_FEATURE
 typedef struct _XSTATE_CONFIGURATION
 {
     ULONG64 EnabledFeatures;
-#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+#if (NTDDI_VERSION >= NTDDI_WIN8)
     ULONG64 EnabledVolatileFeatures;
 #endif
     ULONG Size;
@@ -540,6 +540,7 @@ typedef struct _XSTATE_CONFIGURATION
         {
             ULONG OptimizedSave:1;
             ULONG CompactionEnabled:1; // WIN10+
+            ULONG ExtendedFeatureDisable:1; // Win11+
         };
     };
     XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
