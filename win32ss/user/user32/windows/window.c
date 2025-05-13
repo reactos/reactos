@@ -941,7 +941,7 @@ GetAncestor(_In_ HWND hwnd, _In_ UINT uType)
         {
             if (pWnd->spwndParent && pWnd->fnid != FNID_MESSAGEWND)
             {
-                pwndAncestor = DesktopPtrToUser(pWnd->spwndParent);
+                PWND pwndAncestor = DesktopPtrToUser(pWnd->spwndParent);
                 hwndAncestor = (pwndAncestor ? UserHMGetHandle(pwndAncestor) : NULL);
             }
         }
