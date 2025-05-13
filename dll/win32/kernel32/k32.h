@@ -21,6 +21,7 @@
 #include <wingdi.h>
 #include <winreg.h>
 #include <wincon.h>
+#include <wincon_undoc.h>
 #include <winuser.h>
 
 #undef TEXT
