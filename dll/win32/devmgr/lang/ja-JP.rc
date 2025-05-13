@@ -74,12 +74,12 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "このデバイスに対するドライバは、インストールされていません。"
     IDS_DEV_HARDWARE_DISABLED "このデバイスは、BIOS がリソースを提供しなかったため、無効になっています。"
     IDS_DEV_CANT_SHARE_IRQ "このデバイスは、他のデバイスが使用中のIRQ (Interrupt Request) リソースを使っており、共有できません。\nあなたは、競合する設定を変更するか、競合を引き起こしているリアルモード ドライバを除去する必要があります。"
-    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
+    IDS_DEV_FAILED_ADD "ReactOS がこのデバイスに必要なドライバーをロードできないため、このデバイスは正常に動作していません。"
     IDS_DEV_DISABLED_SERVICE "セットアップ ファイルがあるドライブかネットワークの場所にアクセスできないため、ReactOS は、このデバイスに対するドライバをインストールできません。"
     IDS_DEV_TRANSLATION_FAILED "このデバイスは、このドライバに応答していません。"
     IDS_DEV_NO_SOFTCONFIG "ReactOS は、このデバイスに対する設定を決定できません。このデバイスに付属する文書と相談するか、構成をセットするためにリソース タブを使用して下さい。"
-    IDS_DEV_BIOS_TABLE "Your computer's system firmware does not include enough information to properly configure and use this device.\nTo use this device, contact your computer manufacturer to obtain a firmware or BIOS update."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "This device is requesting a PCI interrupt but is configured for an ISA interrupt (or vice versa).\nPlease use the computer's system setup program to reconfigure the interrupt for this device."
+    IDS_DEV_BIOS_TABLE "コンピュータのシステム ファームウェアには、このデバイスを適切に構成して使用するための十分な情報が含まれていません。\nこのデバイスを使用するには、コンピュータの製造元に問い合わせて、ファームウェアまたは BIOS のアップデートを入手してください。"
+    IDS_DEV_IRQ_TRANSLATION_FAILED "このデバイスは PCI 割り込みを要求していますが、ISA 割り込み用に構成されています (またはその逆)。\nこのデバイスの割り込みを再設定するには、コンピュータのシステム セットアップ プログラムを使用してください。"
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS は、このハードウェアに対するデバイス ドライバを初期化できません。"
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "以前のデバイス ドライバの実体がメモリー上にあるため、ReactOS は、このデバイス ドライバを読み込めません。"
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS は、このハードウェアに対するデバイス ドライバを読み込めません。ドライバは、壊れているか見つかりません。"
@@ -90,7 +90,7 @@ BEGIN
     IDS_DEV_HALTED "アプリケーションかサービスは、このハードウェア デバイスをシャットダウンしました。"
     IDS_DEV_PHANTOM "現在、このハードウェア デバイスは、コンピュータに接続されていません。"
     IDS_DEV_SYSTEM_SHUTDOWN "OS がシャットダウン中のため、ReactOS は、このハードウェア デバイスへのアクセスを取得できません。"
-    IDS_DEV_HELD_FOR_EJECT "ReactOS cannot use this hardware device because it has been prepared for safe removal, but it has not been removed from the computer"
+    IDS_DEV_HELD_FOR_EJECT "このハードウェアデバイスは安全に取り外せるように準備されていますが、コンピュータから取り外されていないため、ReactOS はこのデバイスを使用できません。"
     IDS_DEV_DRIVER_BLOCKED "このデバイスに対するソフトウェアは、ReactOS との問題があることが分かっているため、起動がブロックされています。新しいドライバのハードウェアのベンダーに連絡して下さい。"
     IDS_DEV_REGISTRY_TOO_LARGE "ReactOS は、システム ハイブが大きすぎる（レジストリ サイズの制限を超えた）ため、新しいハードウェア デバイスを開始できません。"
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS は、このデバイスの設定を変更できませんでした。"
@@ -98,30 +98,30 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device Instance ID"
-    IDS_PROP_HARDWAREIDS "Hardware IDs"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
-    IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_CAPABILITIES "Capabilities"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
-    IDS_PROP_CONFIGFLAGS "Config Flags"
-    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installers"
-    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
-    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
-    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
-    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
-    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
-    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+    IDS_PROP_DEVICEID "デバイス インスタンス ID"
+    IDS_PROP_HARDWAREIDS "ハードウェア ID"
+    IDS_PROP_COMPATIBLEIDS "互換 ID"
+    IDS_PROP_MATCHINGDEVICEID "一致するデバイス ID"
+    IDS_PROP_SERVICE "サービス"
+    IDS_PROP_ENUMERATOR "列挙子"
+    IDS_PROP_CAPABILITIES "互換性"
+    IDS_PROP_DEVNODEFLAGS "Devnodeフラグ"
+    IDS_PROP_CONFIGFLAGS "設定フラグ"
+    IDS_PROP_CSCONFIGFLAGS "CSConfig フラグ"
+    IDS_PROP_EJECTIONRELATIONS "取り出し関係"
+    IDS_PROP_REMOVALRELATIONS "除去関係"
+    IDS_PROP_BUSRELATIONS "バス関係"
+    IDS_PROP_DEVUPPERFILTERS "デバイス上位フィルター"
+    IDS_PROP_DEVLOWERFILTERS "デバイス下位フィルター"
+    IDS_PROP_CLASSUPPERFILTERS "クラス上位フィルター"
+    IDS_PROP_CLASSLOWERFILTERS "クラス下位フィルター"
+    IDS_PROP_CLASSINSTALLER "クラス インストーラー"
+    IDS_PROP_CLASSCOINSTALLER "クラス共同インストーラ"
+    IDS_PROP_DEVICECOINSTALLER "デバイス共同インストーラ"
+    IDS_PROP_FIRMWAREREVISION "ファームウェア リビジョン"
+    IDS_PROP_CURRENTPOWERSTATE "現在の電源状態"
+    IDS_PROP_POWERCAPABILITIES "電力能力"
+    IDS_PROP_POWERSTATEMAPPINGS "電源状態のマッピング"
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 300, 400
@@ -178,10 +178,10 @@ BEGIN
     LTEXT "ドライバ ファイルの詳細を表示します。", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "ドライバの更新(&U)...", IDC_UPDATEDRIVER, 7, 134, 75, 15
     LTEXT "デバイス ドライバを更新します。", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 91, 162, 154, 25, SS_NOPREFIX
-    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "To uninstall the driver (Advanced).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "ロールバック ドライバー(&R)", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "ドライバーの更新後にデバイスに障害が発生した場合は、以前にインストールしたドライバーにロールバックします。", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "アンインストール(&U)", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
+    LTEXT "ドライバーをアンインストールする（詳細）", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
@@ -243,14 +243,14 @@ END
 
 IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Confirm Device Removal"
+CAPTION "デバイス削除の確認"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
+    LTEXT "警告: このデバイスをシステムからアンインストールしようとしています。", -1, 7, 37, 204, 50
     DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 166, 100, 50, 14
 END
 
 
