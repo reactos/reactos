@@ -53,6 +53,8 @@ HDC ScreenDeviceContext = NULL;
 PTHREADINFO gptiDesktopThread = NULL;
 HCURSOR gDesktopCursor = NULL;
 PKEVENT gpDesktopThreadStartedEvent = NULL;
+PKEVENT gpDesktopSwitchEvent = NULL;    ///< WinSta0_DesktopSwitch event.
+HANDLE ghDesktopSwitchEvent = NULL;     ///< WinSta0_DesktopSwitch handle in CSRSS process.
 
 /* OBJECT CALLBACKS **********************************************************/
 
@@ -3044,6 +3046,16 @@ NtUserSwitchDesktop(HDESK hdesk)
 
     /* Show the new desktop window */
     co_IntShowDesktop(pdesk, UserGetSystemMetrics(SM_CXSCREEN), UserGetSystemMetrics(SM_CYSCREEN), bRedrawDesktop);
+
+    // TODO: Request hard-error popups to be re-spawn to the new desktop.
+
+    /* Notify waiters that a desktop has been switched on the
+     * interactive window station: pulse the legacy (NT 3.5+)
+     * event and send the desktop-switch notification (Vista+) */
+    KePulseEvent(gpDesktopSwitchEvent, EVENT_INCREMENT, FALSE);
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    IntNotifyWinEvent(EVENT_SYSTEM_DESKTOPSWITCH, NULL, OBJID_WINDOW, CHILDID_SELF, 0);
+#endif
 
     TRACE("SwitchDesktop gpdeskInputDesktop 0x%p\n", gpdeskInputDesktop);
     ObDereferenceObject(pdesk);
