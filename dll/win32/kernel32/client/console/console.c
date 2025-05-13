@@ -421,7 +421,7 @@ ConsoleMenuControl(HANDLE hConsoleOutput,
 HANDLE
 WINAPI
 DECLSPEC_HOTPATCH
-DuplicateConsoleHandle(HANDLE hConsole,
+DuplicateConsoleHandle(HANDLE hSourceHandle,
                        DWORD dwDesiredAccess,
                        BOOL bInheritHandle,
                        DWORD dwOptions)
@@ -438,7 +438,7 @@ DuplicateConsoleHandle(HANDLE hConsole,
     }
 
     DuplicateHandleRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-    DuplicateHandleRequest->SourceHandle  = hConsole;
+    DuplicateHandleRequest->SourceHandle  = hSourceHandle;
     DuplicateHandleRequest->DesiredAccess = dwDesiredAccess;
     DuplicateHandleRequest->InheritHandle = bInheritHandle;
     DuplicateHandleRequest->Options       = dwOptions;
@@ -975,12 +975,14 @@ SetConsoleHardwareState(HANDLE hConsoleOutput,
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-SetConsoleKeyShortcuts(DWORD Unknown0,
-                       DWORD Unknown1,
-                       DWORD Unknown2,
-                       DWORD Unknown3)
+SetConsoleKeyShortcuts(
+    _In_ BOOL bSet,
+    _In_ BYTE bReserveKeys,
+    _In_reads_(dwNumAppKeys) LPAPPKEY lpAppKeys,
+    _In_ DWORD dwNumAppKeys)
 {
-    DPRINT1("SetConsoleKeyShortcuts(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
+    DPRINT1("SetConsoleKeyShortcuts(%lu, 0x%x, 0x%p, 0x%x) UNIMPLEMENTED!\n",
+            bSet, bReserveKeys, lpAppKeys, dwNumAppKeys);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -3024,7 +3026,11 @@ SetConsoleNlsMode(HANDLE hConsole, DWORD dwMode)
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+SetConsoleLocalEUDC(
+    _In_ HANDLE hConsoleHandle,
+    _In_ WORD wCodePoint,
+    _In_ COORD cFontSize,
+    _In_ PCHAR lpSB)
 {
     STUB;
     return FALSE;
