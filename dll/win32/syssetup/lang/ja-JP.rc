@@ -112,9 +112,9 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "コンポーネントを登録しています", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "スタートメニュー項目のインストール", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "設定の保存", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "一時ファイルの削除", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
@@ -240,7 +240,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CLASSIC "Classic"
+    IDS_CLASSIC "クラシック"
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
     IDS_MIZU "Mizu"
@@ -250,9 +250,9 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "製品オプション"
     IDS_PRODUCTSUBTITLE "システムのふるまいに影響する製品オプションを選べます。"
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "システムはサーバとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は ""マイ ドキュメント"" から独立しています。"
+    IDS_PRODUCTSERVERNAME "ReactOS サーバー"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS ワークステーション"
+    IDS_PRODUCTSERVERINFO "システムはサーバーとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は ""マイ ドキュメント"" から独立しています。"
     IDS_PRODUCTWORKSTATIONINFO "システムはワークステーションとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は、""マイ ドキュメント"" の中にあります。"
     IDS_DEFAULT "(既定)"
 END
