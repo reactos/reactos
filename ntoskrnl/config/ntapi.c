@@ -1797,9 +1797,13 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
         goto Failure2;
     }
 
-    /* Attach the IO_STATUS_BLOCK */
-    PostBlock->Process = &PsGetCurrentProcess()->Pcb;
-    PostBlock->IoStatusBlock = IoStatusBlock;
+    /* Windows ignores the IO_STATUS_BLOCK with KernelMode callers */
+    if (PreviousMode != KernelMode)
+    {
+        /* Attach the IO_STATUS_BLOCK */
+        PostBlock->Process = &PsGetCurrentProcess()->Pcb;
+        PostBlock->IoStatusBlock = IoStatusBlock;
+    }
     
     if (PreviousMode == KernelMode)
     {
@@ -1869,8 +1873,11 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
     KeLeaveCriticalRegion();
 
     /* Initialize IO_STATUS_BLOCK */
-    IoStatusBlock->Status = STATUS_PENDING;
-    IoStatusBlock->Information = 0;
+    if (PreviousMode != KernelMode)
+    {
+        IoStatusBlock->Status = STATUS_PENDING;
+        IoStatusBlock->Information = 0;
+    }
 
     if (Asynchronous)
     {
