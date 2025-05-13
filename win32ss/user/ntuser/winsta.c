@@ -104,18 +104,38 @@ IntWinStaObjectDelete(
 
     TRACE("Deleting window station 0x%p\n", WinSta);
 
+    WinSta->Flags |= WSS_DYING;
+
     if (WinSta == InputWindowStation)
     {
         ERR("WARNING: Deleting the interactive window station '%wZ'!\n",
             &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(InputWindowStation))->Name));
 
+        /* The window station must NOT be tagged as non-interactive */
+        ASSERT(!(WinSta->Flags & WSS_NOIO));
+
         /* Only Winlogon can close and delete the interactive window station */
         ASSERT(gpidLogon == PsGetCurrentProcessId());
 
         InputWindowStation = NULL;
-    }
 
-    WinSta->Flags |= WSS_DYING;
+        /* Signal and cleanup the global desktop-switch event */
+        if (gpDesktopSwitchEvent)
+        {
+            KAPC_STATE ApcState;
+
+            KeSetEvent(gpDesktopSwitchEvent, EVENT_INCREMENT, FALSE);
+            ObDereferenceObject(gpDesktopSwitchEvent);
+            gpDesktopSwitchEvent = NULL;
+
+            /* Close the handle in the CSRSS process */
+            ASSERT(gpepCSRSS);
+            KeStackAttachProcess(&gpepCSRSS->Pcb, &ApcState);
+            ObCloseHandle(ghDesktopSwitchEvent, UserMode);
+            KeUnstackDetachProcess(&ApcState);
+            ghDesktopSwitchEvent = NULL;
+        }
+    }
 
     UserEmptyClipboardData(WinSta);
 
@@ -233,7 +253,7 @@ IntValidateWindowStationHandle(
     if (WindowStation == NULL)
     {
         ERR("Invalid window station handle\n");
-        EngSetLastError(ERROR_INVALID_HANDLE);
+        SetLastNtError(STATUS_INVALID_HANDLE);
         return STATUS_INVALID_HANDLE;
     }
 
@@ -412,6 +432,203 @@ IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+/**
+ * @brief
+ * Creates the global per-session `\BaseNamedObjects\WinSta0_DesktopSwitch` event.
+ **/
+static NTSTATUS
+IntCreateDesktopSwitchEvent(VOID)
+{
+    NTSTATUS Status;
+    ULONG SessionId;
+    HANDLE BnoHandle, EventHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    SECURITY_DESCRIPTOR EventSd;
+    UNICODE_STRING Name;
+    WCHAR BnoBuffer[50];
+
+    /* We must not be called more than once */
+    NT_VERIFY(!gpDesktopSwitchEvent);
+    if (gpDesktopSwitchEvent)
+        return STATUS_OBJECT_NAME_COLLISION;
+
+    /* Open the per-session BaseNamedObjects directory */
+    SessionId = PsGetCurrentProcessSessionId(); // gSessionId
+    if (SessionId)
+    {
+        RtlStringCbPrintfW(BnoBuffer, sizeof(BnoBuffer),
+                           L"\\Sessions\\%lu\\BaseNamedObjects",
+                           /*SESSION_DIR,*/ SessionId);
+        RtlInitUnicodeString(&Name, BnoBuffer);
+    }
+    else
+    {
+        RtlInitUnicodeString(&Name, L"\\BaseNamedObjects");
+    }
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenDirectoryObject(&BnoHandle,
+                                   DIRECTORY_CREATE_OBJECT,
+                                   &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open '%wZ', Status 0x%08lx\n", &Name, Status);
+        return Status;
+    }
+
+    /* Build a security descriptor for SYNCHRONIZE world-access for the event */
+    // TODO: Modularize together with some functions in security.c
+    {
+    PACL Dacl;
+    ULONG DaclSize;
+
+    /* Initialize the absolute security descriptor */
+    Status = RtlCreateSecurityDescriptor(&EventSd, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_VERIFY(NT_SUCCESS(Status)))
+    {
+        ERR("Failed to initialize absolute SD, Status 0x%08lx\n", Status);
+        goto Quit;
+    }
+
+    DaclSize = sizeof(ACL) +
+               FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(SeExports->SeWorldSid);
+
+    /* Allocate memory for the DACL */
+    Dacl = ExAllocatePoolWithTag(/*PagedPoolSession*/ PagedPool, DaclSize, USERTAG_SECURITY);
+    if (!Dacl)
+    {
+        ERR("Failed to allocate memory for service DACL!\n");
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+
+    /* Now create the DACL */
+    Status = RtlCreateAcl(Dacl, DaclSize, ACL_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to create service DACL, Status 0x%08lx\n", Status);
+        ExFreePoolWithTag(Dacl, USERTAG_SECURITY);
+        goto Quit;
+    }
+
+    /* Everyone has the right to synchronize with the desktop switch event */
+    Status = RtlAddAccessAllowedAceEx(Dacl, ACL_REVISION, 0,
+                                      SYNCHRONIZE, SeExports->SeWorldSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to set up window station ACE for authenticated user, Status 0x%08lx\n", Status);
+        ExFreePoolWithTag(Dacl, USERTAG_SECURITY);
+        goto Quit;
+    }
+
+    /* Set the DACL for the absolute SD */
+    Status = RtlSetDaclSecurityDescriptor(&EventSd, TRUE, Dacl, FALSE);
+    if (!NT_VERIFY(NT_SUCCESS(Status)))
+    {
+        ERR("Failed to set up DACL for absolute SD, Status 0x%08lx\n", Status);
+        ExFreePoolWithTag(Dacl, USERTAG_SECURITY);
+        goto Quit;
+    }
+
+    /* No need for a SACL */
+    Status = RtlSetSaclSecurityDescriptor(&EventSd, FALSE, NULL, FALSE);
+    NT_VERIFY(NT_SUCCESS(Status));
+
+    /* This descriptor is ownerless */
+    Status = RtlSetOwnerSecurityDescriptor(&EventSd, NULL, FALSE);
+    NT_VERIFY(NT_SUCCESS(Status));
+
+    /* This descriptor has no primary group */
+    Status = RtlSetGroupSecurityDescriptor(&EventSd, NULL, FALSE);
+    NT_VERIFY(NT_SUCCESS(Status));
+    }
+
+    /* Create or open the named event in the BNO directory */
+    RtlInitUnicodeString(&Name, L"WinSta0_DesktopSwitch");
+
+    /*
+     * Create and obtain a user-mode handle to the switch event in the CSRSS
+     * process, so as to make it its owner and ensure the event name persists.
+     * Then, retrieve a pointer to the underlying event object.
+     *
+     * (*ALTERNATIVELY*, we could instead:
+     * create and obtain a kernel-mode handle to the event, and retrieve a
+     * pointer to the underlying event object. Only then, duplicate the handle
+     * into the CSRSS process to ensure the event name persists.)
+     */
+    {
+    KAPC_STATE ApcState;
+
+    ASSERT(gpepCSRSS);
+    KeStackAttachProcess(&gpepCSRSS->Pcb, &ApcState);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               /* No OBJ_KERNEL_HANDLE: directly create a user-mode handle */
+                               OBJ_OPENIF,
+                               BnoHandle,
+                               &EventSd);
+    Status = ZwCreateEvent(&EventHandle,
+                           EVENT_ALL_ACCESS,
+                           &ObjectAttributes,
+                           NotificationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Event '%wZ' creation failed, Status 0x%08lx\n", &Name, Status);
+    }
+    else
+    {
+        /* Reference the object and keep it global */
+        Status = ObReferenceObjectByHandle(EventHandle,
+                                           EVENT_ALL_ACCESS,
+                                           *ExEventObjectType,
+                                           UserMode, // We use a user-mode handle
+                                           (PVOID*)&gpDesktopSwitchEvent,
+                                           NULL);
+        if (NT_SUCCESS(Status))
+        {
+            /* We succeeded, keep the handle around to ensure the object name persists */
+            ghDesktopSwitchEvent = EventHandle;
+            /*
+             * *ALTERNATIVELY*, we would duplicate the handle in the CSRSS process:
+             *
+             * KAPC_STATE ApcState;
+             * KeStackAttachProcess(&gpepCSRSS->Pcb, &ApcState);
+             * Status = ObOpenObjectByPointer(gpDesktopSwitchEvent,
+             *                                0,
+             *                                NULL,
+             *                                EVENT_ALL_ACCESS,
+             *                                NULL,
+             *                                KernelMode,
+             *                                &ghDesktopSwitchEvent);
+             * KeUnstackDetachProcess(&ApcState);
+             *
+             * then close the original kernel handle:
+             * ObCloseHandle(EventHandle, KernelMode);
+             */
+        }
+        else
+        {
+            /* We failed, close the handle */
+            ERR("Failed to reference the event object, Status 0x%08lx\n", Status);
+            ObCloseHandle(EventHandle, UserMode);
+        }
+    }
+    KeUnstackDetachProcess(&ApcState);
+    }
+
+    /* We are done with the SD DACL */
+    ExFreePoolWithTag(EventSd.Dacl, USERTAG_SECURITY);
+Quit:
+    /* We don't need the BNO handle anymore */
+    ObCloseHandle(BnoHandle, KernelMode);
+
+    return Status;
+}
+
 /*
  * NtUserCreateWindowStation
  *
@@ -519,21 +736,6 @@ IntCreateWindowStation(
         return Status;
     }
 
-    Status = ObInsertObject(WindowStation,
-                            NULL,
-                            dwDesiredAccess,
-                            0,
-                            NULL,
-                            (PVOID*)&hWinSta);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("ObInsertObject failed for window station, Status 0x%08lx\n", Status);
-        SetLastNtError(Status);
-        return Status;
-    }
-
-    // FIXME! TODO: Add this new window station to a linked list
-
     if (InputWindowStation == NULL)
     {
         ERR("Initializing input window station\n");
@@ -543,6 +745,44 @@ IntCreateWindowStation(
 
         InputWindowStation = WindowStation;
         WindowStation->Flags &= ~WSS_NOIO;
+    }
+    else
+    {
+        WindowStation->Flags |= WSS_NOIO;
+    }
+
+    /* Create the global WinSta0_DesktopSwitch event
+     * only when creating the interactive WinSta0 */
+    if (InputWindowStation == WindowStation)
+    {
+        Status = IntCreateDesktopSwitchEvent();
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceObject(WindowStation);
+            SetLastNtError(Status);
+            return Status;
+        }
+    }
+
+    Status = ObInsertObject(WindowStation,
+                            NULL,
+                            dwDesiredAccess,
+                            0,
+                            NULL,
+                            (PVOID*)&hWinSta);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("ObInsertObject failed for window station, Status 0x%08lx\n", Status);
+        /* WindowStation is dereferenced on ObInsertObject() failure */
+        SetLastNtError(Status);
+        return Status;
+    }
+
+    // FIXME! TODO: Add this new window station to a linked list
+
+    if (InputWindowStation == WindowStation)
+    {
+        ERR("Initializing input window station\n");
 
         InitCursorImpl();
 
@@ -558,17 +798,12 @@ IntCreateWindowStation(
                               NULL);
         UserEnterCo();
     }
-    else
-    {
-        WindowStation->Flags |= WSS_NOIO;
-    }
 
     TRACE("IntCreateWindowStation created window station '%wZ' object 0x%p handle 0x%p\n",
           ObjectAttributes->ObjectName, WindowStation, hWinSta);
 
     *phWinSta = hWinSta;
-    EngSetLastError(ERROR_SUCCESS);
-
+    SetLastNtError(STATUS_SUCCESS);
     return STATUS_SUCCESS;
 }
 
