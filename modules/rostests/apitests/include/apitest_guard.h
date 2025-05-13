@@ -33,7 +33,7 @@ AllocateGuarded(
         }
     }
 
-    StartOfBuffer = VirtualMemory;
+    StartOfBuffer = (PCHAR)VirtualMemory;
     StartOfBuffer += Size - SizeRequested;
 
     return StartOfBuffer;
