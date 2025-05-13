@@ -27,43 +27,43 @@ END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Alternate Configuration"
+CAPTION "代替構成"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "If this computer is used on more than one network, enter the alternate IP settings below", -1, 9, 9, 220, 20
+    LTEXT "このコンピュータが複数のネットワークで使用されている場合は、以下の代替IP設定を入力してください", -1, 9, 9, 220, 20
     GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
-    CONTROL "Au&tomatic private IP address", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    CONTROL "U&ser configured", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
-    LTEXT "&IP address:", -1, 14, 75, 135, 8
+    CONTROL "自動プライベート IP アドレス(&T)", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    CONTROL "ユーザー設定(&S)", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
+    LTEXT "&IP アドレス:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
-    LTEXT "S&ubnet mask:", -1, 14, 95, 135, 8
+    LTEXT "サブネット マスク(&U):", -1, 14, 95, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
-    LTEXT "&Default gateway:", -1, 14, 115, 135, 8
+    LTEXT "デフォルト ゲートウェイ(&D):", -1, 14, 115, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
-    LTEXT "&Preferred DNS server:", -1, 14, 150, 135, 8
+    LTEXT "優先DNSサーバー(&P):", -1, 14, 150, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
-    LTEXT "&Alternate DNS server:", -1, 14, 165, 180, 8
+    LTEXT "代替DNSサーバー(&A):", -1, 14, 165, 180, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "IP Settings"
+CAPTION "IP 設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "IP addresses", -1, 5, 5, 240, 83
+    GROUPBOX "IP アドレス", -1, 5, 5, 240, 83
     CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 50
-    PUSHBUTTON "Add...", IDC_IPADD, 60, 67, 50, 14
-    PUSHBUTTON "Edit...", IDC_IPMOD, 120, 67, 50, 14
-    PUSHBUTTON "Remove", IDC_IPDEL, 180, 67, 50, 14
-    GROUPBOX "Default gateways:", -1, 5, 93, 240, 83
+    PUSHBUTTON "追加...", IDC_IPADD, 60, 67, 50, 14
+    PUSHBUTTON "編集...", IDC_IPMOD, 120, 67, 50, 14
+    PUSHBUTTON "削除", IDC_IPDEL, 180, 67, 50, 14
+    GROUPBOX "デフォルト ゲートウェイ:", -1, 5, 93, 240, 83
     CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 103, 215, 50
-    PUSHBUTTON "Add...", IDC_GWADD, 60, 155, 50, 14
-    PUSHBUTTON "Edit...", IDC_GWMOD, 120, 155, 50, 14
-    PUSHBUTTON "Remove", IDC_GWDEL, 180, 155, 50, 14
+    PUSHBUTTON "追加...", IDC_GWADD, 60, 155, 50, 14
+    PUSHBUTTON "編集...", IDC_GWMOD, 120, 155, 50, 14
+    PUSHBUTTON "削除", IDC_GWDEL, 180, 155, 50, 14
     GROUPBOX "", -1, 5, 181, 240, 30
-    CHECKBOX "Automatic metric", IDC_AUTOMETRIC, 9, 179, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Interface metric:", -1, 15, 195, 90, 12
+    CHECKBOX "自動メトリック", IDC_AUTOMETRIC, 9, 179, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "インターフェース メトリック:", -1, 15, 195, 90, 12
     EDITTEXT IDC_METRIC, 110, 193, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
@@ -73,172 +73,172 @@ CAPTION "DNS"
 FONT 9, "MS UI Gothic"
 BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 34, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT
-    LTEXT "D&NS server addresses, in order of use:", -1, 5, 5, 180, 12
-    PUSHBUTTON "Up", IDC_DNSADDRUP, 190, 18, 50, 14
-    PUSHBUTTON "Down", IDC_DNSADDRDOWN, 190, 35, 50, 14
-    PUSHBUTTON "&Add...", IDC_DNSADDRADD, 15, 53, 50, 14
-    PUSHBUTTON "&Edit...", IDC_DNSADDRMOD, 75, 53, 50, 14
-    PUSHBUTTON "Remo&ve", IDC_DNSADDRDEL, 135, 53, 50, 14
-    LTEXT "The following three settings are applied to all connections with TCP/IP enabled. For resolution of unqualified names:", -1, 5, 70, 220, 24
-    CONTROL "Append &primary and connection specific DNS suffixes", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
-    CHECKBOX "Append parent suffi&xes of the primary DNS suffix", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Append t&hese DNS suffixes (in order):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 115, 220, 12
+    LTEXT "DNS サーバー アドレス (使用順) (&N):", -1, 5, 5, 180, 12
+    PUSHBUTTON "上へ", IDC_DNSADDRUP, 190, 18, 50, 14
+    PUSHBUTTON "下へ", IDC_DNSADDRDOWN, 190, 35, 50, 14
+    PUSHBUTTON "追加(&A)...", IDC_DNSADDRADD, 15, 53, 50, 14
+    PUSHBUTTON "編集(&E)...", IDC_DNSADDRMOD, 75, 53, 50, 14
+    PUSHBUTTON "削除(&V)", IDC_DNSADDRDEL, 135, 53, 50, 14
+    LTEXT "TCP/I Pが有効になっているすべての接続に、以下の 3 つの設定が適用されます。非修飾名の解決については、以下の設定が適用されます。", -1, 5, 70, 220, 24
+    CONTROL "プライマリおよび接続固有のDNSサフィックスを追加する(&P)", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
+    CHECKBOX "プライマリ DNS サフィックスの親サフィックスを追加(&X)", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "次の DNS サフィックスを（順番に）追加します(&H)", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 115, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 127, 180, 34, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT
-    PUSHBUTTON "Up", IDC_DNSSUFFIXUP, 190, 128, 50, 14
-    PUSHBUTTON "Down", IDC_DNSSUFFIXDOWN, 190, 145, 50, 14
-    PUSHBUTTON "&Add...", IDC_DNSSUFFIXADD, 15, 163, 50, 14
-    PUSHBUTTON "&Edit...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14
-    PUSHBUTTON "Remo&ve", IDC_DNSSUFFIXDEL, 135, 163, 50, 14
-    LTEXT "DNS &suffix for this connection:", -1, 5, 183, 110, 14
+    PUSHBUTTON "上へ", IDC_DNSSUFFIXUP, 190, 128, 50, 14
+    PUSHBUTTON "下へ", IDC_DNSSUFFIXDOWN, 190, 145, 50, 14
+    PUSHBUTTON "追加(&A)...", IDC_DNSSUFFIXADD, 15, 163, 50, 14
+    PUSHBUTTON "編集(&E)...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14
+    PUSHBUTTON "削除(&V)", IDC_DNSSUFFIXDEL, 135, 163, 50, 14
+    LTEXT "この接続の DNS サフィックス(&S):", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
-    CHECKBOX "&Register this connection's addresses in DNS", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Use this connection's DNS suffix in DNS registration", IDC_USESUFFIX, 15, 207, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "この接続のアドレスをDNSに登録する(&R)", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "DNS登録でこの接続のDNSサフィックスを使用する(&U)", IDC_USESUFFIX, 15, 207, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Options"
+CAPTION "オプション"
 FONT 9, "MS UI Gothic"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
-    LTEXT "&Optional settings", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Properties", IDC_OPTPROP, 165, 100, 70, 14
-    GROUPBOX "Description:", -1, 5, 120, 240, 70
+    LTEXT "オプション設定(&O)", -1, 5, 15, 130, 12
+    PUSHBUTTON "プロパティ(&P)", IDC_OPTPROP, 165, 100, 70, 14
+    GROUPBOX "説明:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
 IDD_TCPIPADDIP_DLG DIALOGEX 0, 0, 200, 70
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP Address"
+CAPTION "TCP/IP アドレス"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
-    LTEXT "IP address:", -1, 5, 15, 70, 12
-    LTEXT "Subnet mask:", -1, 5, 30, 70, 12
+    LTEXT "IP アドレス:", -1, 5, 15, 70, 12
+    LTEXT "サブネット マスク:", -1, 5, 30, 70, 12
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 96, 30, 85, 12
     DEFPUSHBUTTON "", IDC_OK, 50, 50, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 110, 50, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 110, 50, 50, 14
 END
 
 IDD_TCPIPGW_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP Gateway Address"
+CAPTION "TCP/IP ゲートウェイ アドレス"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
-    LTEXT "Gateway:", -1, 5, 15, 70, 12
-    CHECKBOX "Automatic metric", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "&Metric:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
+    LTEXT "ゲートウェイ:", -1, 5, 15, 70, 12
+    CHECKBOX "自動メトリック", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "メトリック(&M):", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     DEFPUSHBUTTON "", IDC_OK, 50, 60, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 110, 60, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 110, 60, 50, 14
 END
 
 IDD_TCPIPDNS_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP DNS Server"
+CAPTION "TCP/IP DNS サーバー"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 85, 12
-    LTEXT "DNS server:", -1, 5, 10, 120, 12
+    LTEXT "DNS サーバー:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 110, 50, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 110, 50, 50, 14
 END
 
 IDD_TCPIPSUFFIX_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP Domain Suffix"
+CAPTION "TCP/IP ドメイン サフィックス"
 FONT 9, "MS UI Gothic"
 BEGIN
     EDITTEXT IDC_SUFFIX, 5, 25, 190, 12, WS_TABSTOP
-    LTEXT "Domain suffix:", -1, 5, 10, 120, 12
+    LTEXT "ドメイン サフィックス:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 110, 50, 50, 14
 END
 
 IDD_TCPIP_FILTER_DLG DIALOGEX 0, 0, 305, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP Filtering"
+CAPTION "TCP/IP フィルタリング"
 FONT 9, "MS UI Gothic"
 BEGIN
-    CHECKBOX "Enable TCP/IP-Filtering (All adapters)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "TCP/IPフィルタリングを有効にする (すべてのアダプタ)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
-    CONTROL "Permit All", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
-    CONTROL "Permit Only", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 44, 70, 12
+    CONTROL "すべて許可", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
+    CONTROL "許可のみ", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 44, 70, 12
     CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
-    PUSHBUTTON "Add", IDC_TCP_ADD, 15, 141, 50, 14
-    PUSHBUTTON "Remove", IDC_TCP_DEL, 15, 161, 50, 14
+    PUSHBUTTON "追加", IDC_TCP_ADD, 15, 141, 50, 14
+    PUSHBUTTON "削除", IDC_TCP_DEL, 15, 161, 50, 14
     GROUPBOX "", -1, 105, 30, 90, 150
-    CONTROL "Permit All", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
-    CONTROL "Permit Only", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_TABSTOP, 115, 44, 70, 12
+    CONTROL "すべて許可", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "許可のみ", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_TABSTOP, 115, 44, 70, 12
     CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
-    PUSHBUTTON "Add", IDC_UDP_ADD, 115, 141, 50, 14
-    PUSHBUTTON "Remove", IDC_UDP_DEL, 115, 161, 50, 14
+    PUSHBUTTON "追加", IDC_UDP_ADD, 115, 141, 50, 14
+    PUSHBUTTON "削除", IDC_UDP_DEL, 115, 161, 50, 14
     GROUPBOX "", -1, 205, 30, 90, 150
-    CONTROL "Permit All", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
-    CONTROL "Permit Only", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_TABSTOP, 215, 44, 70, 12
+    CONTROL "すべて許可", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
+    CONTROL "許可のみ", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_TABSTOP, 215, 44, 70, 12
     CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
-    PUSHBUTTON "Add", IDC_IP_ADD, 215, 141, 50, 14
-    PUSHBUTTON "Remove", IDC_IP_DEL, 215, 161, 50, 14
+    PUSHBUTTON "追加", IDC_IP_ADD, 215, 141, 50, 14
+    PUSHBUTTON "削除", IDC_IP_DEL, 215, 161, 50, 14
     PUSHBUTTON "OK", IDC_OK, 150, 190, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 210, 190, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 210, 190, 50, 14
 END
 
 IDD_TCPIP_PORT_DLG DIALOGEX 0, 0, 200, 60
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Add Filter"
+CAPTION "フィルターの追加"
 FONT 9, "MS UI Gothic"
 BEGIN
     EDITTEXT IDC_PORT_VAL, 5, 30, 70, 12, WS_TABSTOP | ES_NUMBER
     LTEXT "", IDC_PORT_DESC, 5, 15, 40, 12
     PUSHBUTTON "OK", IDC_OK, 120, 15, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 120, 30, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 120, 30, 50, 14
 END
 
 IDD_NET_PROPERTY_DLG DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Advanced"
+CAPTION "上級者向け"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "The following properties are available for this network adapter. Click the property you want to change on the left, and then select its value on the right.", -1, 7, 7, 218, 24, WS_GROUP
-    LTEXT "&Property:", -1, 7, 37, 60, 8, WS_GROUP
+    LTEXT "このネットワークアダプタには以下のプロパティがあります。左側で変更したいプロパティをクリックし、右側でその値を選択してください。", -1, 7, 7, 218, 24, WS_GROUP
+    LTEXT "プロパティ(&P):", -1, 7, 37, 60, 8, WS_GROUP
     LISTBOX IDC_PROPERTY_NAME, 7, 48, 124, 124, LBS_STANDARD | WS_TABSTOP
-    LTEXT "&Value:", -1, 151, 37, 60, 8, WS_GROUP
+    LTEXT "値(&V):", -1, 151, 37, 60, 8, WS_GROUP
     EDITTEXT IDC_PROPERTY_VALUE_EDIT, 153, 48, 92, 14, ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
     CONTROL "", IDC_PROPERTY_VALUE_UPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_BORDER, 232, 48, 12, 12
     COMBOBOX IDC_PROPERTY_VALUE_LIST, 153, 48, 92, 64, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     AUTORADIOBUTTON "", IDC_PROPERTY_PRESENT, 141, 50, 8, 10, BS_TOP | WS_GROUP
-    AUTORADIOBUTTON "&Not Present", IDC_PROPERTY_NOT_PRESENT, 141, 68, 103, 10, BS_TOP
+    AUTORADIOBUTTON "存在しない(&N)", IDC_PROPERTY_NOT_PRESENT, 141, 68, 103, 10, BS_TOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NET_CONNECT "Network Connection"
-    IDS_NO_IPADDR_SET "The adapter requires at least one IP address. Please enter one."
-    IDS_NO_SUBMASK_SET "You have entered an address that is missing its subnet mask. Please add a subnet mask."
-    IDS_TCPFILTERDESC "TCP/IP filtering allows you to control the type of TCP/IP network traffic that reaches your computer."
-    IDS_TCPFILTER "TCP/IP Filtering"
-    IDS_IPADDR "IP address"
-    IDS_SUBMASK "Subnet mask"
-    IDS_GATEWAY "Gateway"
-    IDS_METRIC "Metric"
-    IDS_DHCPACTIVE "DHCP Enabled"
-    IDS_AUTOMATIC "Automatic"
-    IDS_NOITEMSEL "You have not selected an item. Select one first."
-    IDS_TCPIP "ReactOS-TCP/IP"
-    IDS_ADD "Add"
+    IDS_NET_CONNECT "ネットワーク接続"
+    IDS_NO_IPADDR_SET "アダプタには少なくとも 1 つの IP アドレスが必要です。1 つ入力してください。"
+    IDS_NO_SUBMASK_SET "サブネットマスクが指定されていないアドレスを入力しました。サブネットマスクを追加してください。"
+    IDS_TCPFILTERDESC "TCP/IP フィルタリングを使用すると、コンピュータに到達する TCP/IP ネットワーク トラフィックの種類を制御できます。"
+    IDS_TCPFILTER "TCP/IP フィルタリング"
+    IDS_IPADDR "IP アドレス"
+    IDS_SUBMASK "サブネット マスク"
+    IDS_GATEWAY "ゲートウェイ"
+    IDS_METRIC "メトリック"
+    IDS_DHCPACTIVE "DHCP有効"
+    IDS_AUTOMATIC "自動"
+    IDS_NOITEMSEL "項目が選択されていません。まず項目を 1 つ選択してください。"
+    IDS_TCPIP "ReactOS の TCP/IP"
+    IDS_ADD "追加"
     IDS_MOD "OK"
-    IDS_TCP_PORTS "TCP Ports"
-    IDS_UDP_PORTS "UDP Ports"
-    IDS_IP_PROTO "IP protocols"
-    IDS_PORT_RANGE "Port numbers must be greater than 0 and less than 65536. Please enter a number within this range."
-    IDS_PROT_RANGE "Protocol numbers must be greater than 0 and less than 256. Please enter a number within this range."
-    IDS_DUP_NUMBER "The number you are trying to add is already in the list. Please enter a different number."
-    IDS_DISABLE_FILTER "Disabling this global TCP/IP setting will affect all adapters."
-    IDS_NO_SUFFIX "The current setting of search method requires at least one DNS suffix. Please enter one or change the setting."
-    IDS_DOMAIN_SUFFIX "Domain suffix is not a valid suffix."
-    IDS_DNS_SUFFIX "The DNS domain name ""%s"" is not a valid DNS name."
-    IDS_DUP_SUFFIX "The DNS suffix is already on the list."
-    IDS_DUP_IPADDR "The IP address is already on the list."
-    IDS_DUP_GW "The default gateway is already on the list."
+    IDS_TCP_PORTS "TCP ポート"
+    IDS_UDP_PORTS "UDP ポート"
+    IDS_IP_PROTO "IP プロトコル"
+    IDS_PORT_RANGE "ポート番号は 0 より大きく 65536 より小さくなければなりません。この範囲内の番号を入力してください。"
+    IDS_PROT_RANGE "プロトコル番号は 0 より大きく 256 より小さくなければなりません。この範囲内の数値を入力してください。"
+    IDS_DUP_NUMBER "追加しようとしている番号は既にリストに存在します。別の番号を入力してください。"
+    IDS_DISABLE_FILTER "このグローバル TCP/IP 設定を無効にすると、すべてのアダプタに影響します。"
+    IDS_NO_SUFFIX "現在の検索方法の設定では、少なくとも 1 つの DNS サフィックスが必要です。DNS サフィックスを入力するか、設定を変更してください。"
+    IDS_DOMAIN_SUFFIX "ドメイン サフィックスは有効なサフィックスではありません。"
+    IDS_DNS_SUFFIX "DNS ドメイン名「%s」は有効な DNS 名ではありません。"
+    IDS_DUP_SUFFIX "DNS サフィックスはすでにリストに存在します。"
+    IDS_DUP_IPADDR "IP アドレスはすでにリストに存在します。"
+    IDS_DUP_GW "デフォルト ゲートウェイはすでにリストに存在します。"
 END
