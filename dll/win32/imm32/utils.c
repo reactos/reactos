@@ -423,7 +423,6 @@ LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
     return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
 }
 
-// Win: MakeIMENotify
 BOOL APIENTRY
 Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
                    DWORD_PTR dwCommand, DWORD_PTR dwData)
@@ -443,11 +442,24 @@ Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWOR
             if (pImeDpi)
             {
                 /* do notify */
+                TRACE("NotifyIME(%p, %ld, %p, %p)\n", hIMC, dwAction, dwIndex, dwValue);
                 pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
 
                 ImmUnlockImeDpi(pImeDpi); /* unlock */
             }
+            else
+            {
+                WARN("pImeDpi was NULL\n");
+            }
         }
+        else
+        {
+            WARN("dwThreadId was zero\n");
+        }
+    }
+    else
+    {
+        WARN("dwAction was zero\n");
     }
 
     if (hwnd && dwCommand)
