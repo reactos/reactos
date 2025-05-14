@@ -430,6 +430,7 @@ Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD dwIndex, DWORD_PT
     DWORD dwThreadId;
     HKL hKL;
     PIMEDPI pImeDpi;
+    BOOL ret;
 
     if (dwAction != 0)
     {
@@ -443,7 +444,8 @@ Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD dwIndex, DWORD_PT
             {
                 /* do notify */
                 TRACE("NotifyIME(%p, %ld, %ld, %p)\n", hIMC, dwAction, dwIndex, dwValue);
-                pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
+                ret = pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
+                TRACE("NotifyIME = %d\n", ret);
 
                 ImmUnlockImeDpi(pImeDpi); /* unlock */
             }
