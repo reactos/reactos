@@ -11,17 +11,17 @@
 
 #define WM_ISFBAND_CHANGE_NOTIFY (WM_USER + 100)
 
-class CISFBand
-    : public CWindowImpl<CISFBand, CWindow>
-    , public CComCoClass<CBandSiteMenu, &CLSID_ISFBand>
-    , public CComObjectRootEx<CComMultiThreadModelNoCS>
-    , public IObjectWithSite
-    , public IDeskBand
-    , public IPersistStream
-    , public IWinEventHandler
-    , public IOleCommandTarget
-    , public IShellFolderBand
-    , public IContextMenu
+class CISFBand :
+    public CWindowImpl<CISFBand, CWindow>,
+    public CComCoClass<CBandSiteMenu, &CLSID_ISFBand>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IObjectWithSite,
+    public IDeskBand,
+    public IPersistStream,
+    public IWinEventHandler,
+    public IOleCommandTarget,
+    public IShellFolderBand,
+    public IContextMenu
 {
     // Band
     DWORD m_BandID;
