@@ -437,7 +437,6 @@ BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
     }
 
     if (IS_CROSS_THREAD_HIMC(hIMC))
-    {
         return FALSE;
     }
 
