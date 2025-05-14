@@ -138,7 +138,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
                         UINT uCodePage);
 
 BOOL APIENTRY
-Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwValue,
                    DWORD_PTR dwCommand, DWORD_PTR dwData);
 
 DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList);

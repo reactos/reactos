@@ -424,7 +424,7 @@ LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
 }
 
 BOOL APIENTRY
-Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwValue,
                    DWORD_PTR dwCommand, DWORD_PTR dwData)
 {
     DWORD dwThreadId;
@@ -442,7 +442,7 @@ Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWOR
             if (pImeDpi)
             {
                 /* do notify */
-                TRACE("NotifyIME(%p, %ld, %p, %p)\n", hIMC, dwAction, dwIndex, dwValue);
+                TRACE("NotifyIME(%p, %ld, %ld, %p)\n", hIMC, dwAction, dwIndex, dwValue);
                 pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
 
                 ImmUnlockImeDpi(pImeDpi); /* unlock */
