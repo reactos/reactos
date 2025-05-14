@@ -44,23 +44,26 @@
 
 #include <strsafe.h>
 
-#include <wine2ros.h>
+#include <wine/debug.h>
 
 /* #define UNEXPECTED() (ASSERT(FALSE), TRUE) */
 #define UNEXPECTED() TRUE
 
+#define ERR_PRINTF(fmt, ...) (__WINE_IS_DEBUG_ON(_ERR, __wine_dbch___default) ? \
+    (wine_dbg_printf(fmt, ##__VA_ARGS__), UNEXPECTED()) : UNEXPECTED())
+
 /* Unexpected Condition Checkers */
 #if DBG
     #define FAILED_UNEXPECTEDLY(hr) \
-        (FAILED(hr) ? (ERR("FAILED(0x%08X)\n", hr), UNEXPECTED()) : FALSE)
+        (FAILED(hr) ? ERR_PRINTF("FAILED(0x%08X)\n", hr) : FALSE)
     #define IS_NULL_UNEXPECTEDLY(p) \
-        (!(p) ? (ERR("%s was NULL\n", #p), UNEXPECTED()) : FALSE)
+        (!(p) ? ERR_PRINTF("%s was NULL\n", #p) : FALSE)
     #define IS_ZERO_UNEXPECTEDLY(p) \
-        (!(p) ? (ERR("%s was zero\n", #p), UNEXPECTED()) : FALSE)
+        (!(p) ? ERR_PRINTF("%s was zero\n", #p) : FALSE)
     #define IS_TRUE_UNEXPECTEDLY(x) \
-        ((x) ? (ERR("%s was %d\n", #x, (int)(x)), UNEXPECTED()) : FALSE)
+        ((x) ? ERR_PRINTF("%s was non-zero\n", #x) : FALSE)
     #define IS_ERROR_UNEXPECTEDLY(x) \
-        ((x) != ERROR_SUCCESS ? (ERR("%s was %d\n", #x, (int)(x)), UNEXPECTED()) : FALSE)
+        ((x) != ERROR_SUCCESS ? ERR_PRINTF("%s was %d\n", #x, (int)(x)) : FALSE)
 #else
     #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
     #define IS_NULL_UNEXPECTEDLY(p) (!(p))
