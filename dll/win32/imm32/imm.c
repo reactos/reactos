@@ -1289,8 +1289,6 @@ VOID APIENTRY Imm32UnitTest(VOID)
 }
 #endif
 
-BOOL WINAPI User32InitializeImmEntryTable(DWORD);
-
 BOOL
 WINAPI
 ImmDllInitialize(
