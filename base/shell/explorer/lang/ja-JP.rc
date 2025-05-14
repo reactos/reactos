@@ -4,7 +4,7 @@
  * PURPOSE:     Japanese resource file
  * TRANSLATORS: Copyright 2009 pcds90net <ds200xnet-ros@yahoo.co.jp>
  *              Copyright 2009 Tomoya Kitagawa <jptomoya@yahoo.co.jp>
- *              Copyright 2017-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2017-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
@@ -54,7 +54,7 @@ BEGIN
             MENUITEM "セキュリティ(&S)", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "ネットワーク接続(&N)", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "プリンタとFAX(&P)", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "タスク バーと[スタート] メニュー(&)", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "タスク バーと [スタート] メニュー(&)", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         MENUITEM "検索(&C)", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "ヘルプとサポート(&H)", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
@@ -70,30 +70,30 @@ END
 
 IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "タスクバー"
+CAPTION "タスク バー"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
-    GROUPBOX "タスクバーの外観", IDC_STATIC, 6, 6, 240, 120
+    GROUPBOX "タスク バーの外観", IDC_STATIC, 6, 6, 240, 120
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
-    AUTOCHECKBOX "タスクバーを固定する(&L)", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
-    AUTOCHECKBOX "タスクバーを自動的に隠す(&U)", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
-    AUTOCHECKBOX "タスクバーを他のウインドウ上に保つ(&T)", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
-    AUTOCHECKBOX "類似するタスクバーボタンをグループ化する(&G)", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "タスク バーを固定する(&L)", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "タスク バーを自動的に隠す(&U)", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "タスク バーを他のウインドウ上に保つ(&T)", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "類似するタスク バー ボタンをグループ化する(&G)", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "クイック起動の表示(&Q)", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     AUTOCHECKBOX "小さいアイコンを使う(&S)", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "スタートメニュー"
+CAPTION "スタート メニュー"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "スタートメニュー(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "このメニュースタイルはフォルダ、お気に入りのプログラム、検索への簡単なアクセスを提供します。", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    AUTORADIOBUTTON "スタート メニュー(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "このメニュー スタイルはフォルダ、お気に入りのプログラム、検索への簡単なアクセスを提供します。", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "カスタマイズ(&C)...", IDC_TASKBARPROP_STARTMENUCUST, 180, 132, 65, 14
-    AUTORADIOBUTTON "古風なスタートメニュー(&M)", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "このメニュースタイルは古い外観、機能性を提供します。", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    AUTORADIOBUTTON "古風なスタート メニュー(&M)", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT "このメニュー スタイルは古い外観、機能性を提供します。", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "カスタマイズ(&C)...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 180, 172, 65, 14
 END
 
@@ -108,7 +108,7 @@ BEGIN
     AUTOCHECKBOX "アクティブでないアイコンを隠す(&H)", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
     PUSHBUTTON "カスタマイズ(&C)...", IDC_TASKBARPROP_ICONCUST, 175, 69, 65, 14
     GROUPBOX "システム アイコン", IDC_STATIC, 6, 99, 240, 56
-    LTEXT "常に表示するシステム アイコンを選んで下さい。", IDC_STATIC, 13, 113, 223, 8
+    LTEXT "常に表示するシステム アイコンを選んでください。", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "時計(&K)", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
     AUTOCHECKBOX "秒を表示", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
     AUTOCHECKBOX "デスクトップ(&D)", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
@@ -121,30 +121,30 @@ CAPTION "通知のカスタマイズ"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     LTEXT            "ReactOS は、アクティブで緊急な通知に対してアイコンを表示し、非アクティブなものを隠します。以下のリストの中の項目に対してこの動作を変更できます。", IDC_STATIC, 6, 6, 220, 30
-    LTEXT            "項目を選択し、通知の動作を選んで下さい:", IDC_STATIC, 6, 40, 220, 10
+    LTEXT            "項目を選択し、通知の動作を選んでください:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
-    PUSHBUTTON       "規定値に戻す(&R)", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
+    PUSHBUTTON       "デフォルトに戻す(&R)", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "キャンセル", IDCANCEL, 176, 220, 50, 14
 END
 
 IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "クラシック スタートメニューのカスタマイズ"
+CAPTION "クラシック スタート メニューのカスタマイズ"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
-    GROUPBOX         "スタートメニュー", IDC_STATIC, 8, 7, 218, 114
+    GROUPBOX         "スタート メニュー", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "スタートメニューに項目を追加または削除して、カスタマイズできます。", IDC_STATIC, 48, 17, 108, 39
+    LTEXT            "スタート メニューに項目を追加または削除して、カスタマイズできます。", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "追加(&D)...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "削除(&R)...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "上級者向け(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "並べ替え(&S)", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "最近アクセスした文書、プログラム、Webサイトの記録を消すには、[クリア] をクリックして下さい。", IDC_STATIC, 49, 85, 108, 33
+    LTEXT            "最近アクセスした文書、プログラム、Webサイトの記録を消すには、[クリア] をクリックしてください。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "クリア(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "上級者向けスタートメニューのオプション(&T):", IDC_STATIC, 8, 129, 150, 8
+    LTEXT            "上級者向けスタート メニューのオプション(&T):", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "キャンセル", IDCANCEL, 176, 220, 50, 14
@@ -168,13 +168,13 @@ STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "上級者向け"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
-    GROUPBOX         "スタートメニューの設定 ", IDC_STATIC, 7, 7, 238, 42
+    GROUPBOX         "スタート メニューの設定 ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "マウスで一定時間サブメニューにとどまれば、それを開きます(&O)", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "新しくインストールしたプログラムを強調表示します(&N)", IDC_HIGHLIGHT, 14, 35, 224, 10
-    LTEXT            "スタートメニューの項目(&M):", IDC_STATIC, 7, 53, 238, 8
+    LTEXT            "スタート メニューの項目(&M):", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "最近の文書 ", IDC_STATIC, 7, 133, 238, 56
-    LTEXT            "最近開いた文書への素早いアクセスのために、このオプションを選択して下さい。このリストをクリアしても文書を削除しません。", IDC_STATIC, 14, 144, 224, 21
+    LTEXT            "最近開いた文書への素早いアクセスのために、このオプションを選択してください。このリストをクリアしても文書を削除しません。", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "最近開いた文書をリストアップする(&R)", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "リストのクリア(&C)", IDC_CLEAR, 170, 168, 70, 14
 END
@@ -184,18 +184,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "全般設定"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
-    GROUPBOX         "プログラムのアイコンサイズを選択", IDC_STATIC, 7, 7, 238, 37
+    GROUPBOX         "プログラムのアイコン サイズを選択", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
     AUTORADIOBUTTON  "大きなアイコン(&L)", IDC_CHOOSELARGE, 43, 25, 75, 10
     AUTORADIOBUTTON  "小さなアイコン(&S)", IDC_CHOOSESMALL, 160, 25, 70, 10, NOT WS_TABSTOP
     GROUPBOX         "プログラム", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "スタートメニューは、よく使うプログラムのリストが表示されます。このリストをクリアしても、プログラムは削除されません。", IDC_STATIC, 14, 63, 224, 20
-    LTEXT            "スタートメニューに表示する個数(&N):", IDC_STATIC, 14, 86, 112, 8
+    LTEXT            "スタート メニューは、よく使うプログラムのリストが表示されます。このリストをクリアしても、プログラムは削除されません。", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "スタート メニューに表示する個数(&N):", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
-    PUSHBUTTON       "リストをクリアする(&C)", IDC_CLEARLIST, 160, 98, 80, 14
-    GROUPBOX         "スタートメニューに表示 ", IDC_STATIC, 7, 126, 238, 63
+    PUSHBUTTON       "リストをクリア(&C)", IDC_CLEARLIST, 160, 98, 80, 14
+    GROUPBOX         "スタート メニューに表示 ", IDC_STATIC, 7, 126, 238, 63
     AUTOCHECKBOX     "インターネット(&I):", IDC_SHOWINTERNET, 14, 140, 70, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "電子メール(&E):", IDC_SHOWEMAIL, 14, 157, 70, 10
@@ -213,9 +213,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "タスクバーとスタートメニュー"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "タスク バーとスタート メニュー"
     IDS_RESTORE_ALL "開いているウィンドウを表示(&S)"
     IDS_TRAYWND_UNDO_CASCADE "「重ねて表示」を元に戻す(&U)"
     IDS_TRAYWND_UNDO_TILE "「ウィンドウを並べて表示」を元に戻す(&U)"
-    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
+    IDS_TRAYDESKBTN_TOOLTIP "デスクトップ / ウィンドウを表示"
 END
