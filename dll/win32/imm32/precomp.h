@@ -46,8 +46,11 @@
 
 #include <wine/debug.h>
 
-#define ERR_PRINTF(fmt, ...) \
-    (__WINE_IS_DEBUG_ON(_ERR, __wine_dbch___default) ? (wine_dbg_printf(fmt, ##__VA_ARGS__), TRUE) : TRUE)
+/* #define UNEXPECTED() (ASSERT(FALSE), TRUE) */
+#define UNEXPECTED() TRUE
+
+#define ERR_PRINTF(fmt, ...) (__WINE_IS_DEBUG_ON(_ERR, __wine_dbch___default) ? \
+    (wine_dbg_printf(fmt, ##__VA_ARGS__), UNEXPECTED()) : UNEXPECTED())
 
 /* Unexpected Condition Checkers */
 #if DBG
@@ -58,7 +61,7 @@
     #define IS_ZERO_UNEXPECTEDLY(p) \
         (!(p) ? ERR_PRINTF("%s was zero\n", #p) : FALSE)
     #define IS_TRUE_UNEXPECTEDLY(x) \
-        ((x) ? ERR_PRINTF("%s was %d\n", #x, (int)(x)) : FALSE)
+        ((x) ? ERR_PRINTF("%s was non-zero\n", #x) : FALSE)
     #define IS_ERROR_UNEXPECTEDLY(x) \
         ((x) != ERROR_SUCCESS ? ERR_PRINTF("%s was %d\n", #x, (int)(x)) : FALSE)
 #else
