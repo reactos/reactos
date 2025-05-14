@@ -205,512 +205,512 @@ LRESULT CISFBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 /*****************************************************************************/
 
 // *** IObjectWithSite ***
-    STDMETHODIMP CISFBand::SetSite(IUnknown *pUnkSite)
+STDMETHODIMP CISFBand::SetSite(IUnknown *pUnkSite)
+{
+    HRESULT hr;
+    HWND hwndParent;
+
+    TRACE("CISFBand::SetSite(0x%p)\n", pUnkSite);
+
+    hr = IUnknown_GetWindow(pUnkSite, &hwndParent);
+    if (FAILED(hr))
     {
-        HRESULT hr;
-        HWND hwndParent;
+        TRACE("Querying site window failed: 0x%x\n", hr);
+        return hr;
+    }
+    m_Site = pUnkSite;
 
-        TRACE("CISFBand::SetSite(0x%p)\n", pUnkSite);
+    hr = CreateSimpleToolbar(hwndParent);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-        hr = IUnknown_GetWindow(pUnkSite, &hwndParent);
-        if (FAILED(hr))
-        {
-            TRACE("Querying site window failed: 0x%x\n", hr);
-            return hr;
-        }
-        m_Site = pUnkSite;
+    RegisterChangeNotify(TRUE);
+    return S_OK;
+}
 
-        hr = CreateSimpleToolbar(hwndParent);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+STDMETHODIMP CISFBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
+{
+    TRACE("CISFBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
-        RegisterChangeNotify(TRUE);
-        return S_OK;
+    HRESULT hr;
+    if (m_Site != NULL)
+    {
+        hr = m_Site->QueryInterface(riid, ppvSite);
+        if (FAILED(hr)) return hr;
     }
 
-    STDMETHODIMP CISFBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
-    {
-        TRACE("CISFBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
-
-        HRESULT hr;
-        if (m_Site != NULL)
-        {
-            hr = m_Site->QueryInterface(riid, ppvSite);
-            if (FAILED(hr)) return hr;
-        }
-
-        *ppvSite = NULL;
-        return E_FAIL;
-    }
+    *ppvSite = NULL;
+    return E_FAIL;
+}
 
 /*****************************************************************************/
 // *** IDeskBand ***
-    STDMETHODIMP CISFBand::GetWindow(OUT HWND *phwnd)
+STDMETHODIMP CISFBand::GetWindow(OUT HWND *phwnd)
+{
+    if (!m_hWnd)
+        return E_FAIL;
+    if (!phwnd)
+        return E_POINTER;
+    *phwnd = m_hWnd;
+
+    return S_OK;
+}
+
+STDMETHODIMP CISFBand::ContextSensitiveHelp(IN BOOL fEnterMode)
+{
+    /* FIXME: Implement */
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CISFBand::ShowDW(IN BOOL bShow)
+{
+    if (m_hWnd)
     {
-        if (!m_hWnd)
-            return E_FAIL;
-        if (!phwnd)
-            return E_POINTER;
-        *phwnd = m_hWnd;
+        ShowWindow(bShow ? SW_SHOW : SW_HIDE);
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
+STDMETHODIMP CISFBand::CloseDW(IN DWORD dwReserved)
+{
+    if (m_hWnd)
+    {
+        DestroyWindow();
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
+STDMETHODIMP CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
+{
+    /* No need to implement this method */
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CISFBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
+{
+    TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
+
+    if (m_hWnd && pdbi)
+    {
+        m_BandID = dwBandID;
+
+        RECT actualRect;
+        POINTL actualSize;
+        POINTL idealSize;
+        POINTL maxSize;
+        POINTL itemSize;
+
+        GetWindowRect(&actualRect);
+        actualSize.x = actualRect.right - actualRect.left;
+        actualSize.y = actualRect.bottom - actualRect.top;
+
+        // Obtain the ideal size, to be used as min and max
+        SendMessageW(m_hWnd, TB_AUTOSIZE, 0, 0);
+        SendMessageW(m_hWnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&maxSize));
+
+        idealSize = maxSize;
+        SendMessageW(m_hWnd, TB_GETIDEALSIZE, FALSE, reinterpret_cast<LPARAM>(&idealSize));
+
+        // Obtain the button size, to be used as the integral size
+        DWORD size = SendMessageW(m_hWnd, TB_GETBUTTONSIZE, 0, 0);
+        itemSize.x = GET_X_LPARAM(size);
+        itemSize.y = GET_Y_LPARAM(size);
+
+        if (pdbi->dwMask & DBIM_MINSIZE)
+        {
+            if (m_QLaunch)
+                pdbi->ptMinSize.x = idealSize.x;
+            else
+                pdbi->ptMinSize.x = -1;
+            pdbi->ptMinSize.y = idealSize.y;
+        }
+        if (pdbi->dwMask & DBIM_MAXSIZE)
+        {
+            pdbi->ptMaxSize = maxSize;
+        }
+        if (pdbi->dwMask & DBIM_INTEGRAL)
+        {
+            pdbi->ptIntegral = itemSize;
+        }
+        if (pdbi->dwMask & DBIM_ACTUAL)
+        {
+            pdbi->ptActual = actualSize;
+        }
+        if (pdbi->dwMask & DBIM_TITLE)
+        {
+            if (m_QLaunch || !ILGetDisplayNameEx(NULL, m_pidl, pdbi->wszTitle, ILGDN_INFOLDER))
+            {
+                pdbi->dwMask &= ~DBIM_TITLE;
+            }
+        }
+        if (pdbi->dwMask & DBIM_MODEFLAGS)
+        {
+            pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT | DBIMF_USECHEVRON | DBIMF_NOMARGINS | DBIMF_BKCOLOR;
+            if (m_QLaunch)
+            {
+                pdbi->dwModeFlags |= DBIMF_ADDTOFRONT;
+            }
+        }
+        if (pdbi->dwMask & DBIM_BKCOLOR)
+            pdbi->dwMask &= ~DBIM_BKCOLOR;
 
         return S_OK;
     }
 
-    STDMETHODIMP CISFBand::ContextSensitiveHelp(IN BOOL fEnterMode)
-    {
-        /* FIXME: Implement */
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CISFBand::ShowDW(IN BOOL bShow)
-    {
-        if (m_hWnd)
-        {
-            ShowWindow(bShow ? SW_SHOW : SW_HIDE);
-            return S_OK;
-        }
-
-        return E_FAIL;
-    }
-
-    STDMETHODIMP CISFBand::CloseDW(IN DWORD dwReserved)
-    {
-        if (m_hWnd)
-        {
-            DestroyWindow();
-            return S_OK;
-        }
-
-        return E_FAIL;
-    }
-
-    STDMETHODIMP CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
-    {
-        /* No need to implement this method */
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CISFBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
-    {
-        TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
-
-        if (m_hWnd && pdbi)
-        {
-            m_BandID = dwBandID;
-
-            RECT actualRect;
-            POINTL actualSize;
-            POINTL idealSize;
-            POINTL maxSize;
-            POINTL itemSize;
-
-            GetWindowRect(&actualRect);
-            actualSize.x = actualRect.right - actualRect.left;
-            actualSize.y = actualRect.bottom - actualRect.top;
-
-            // Obtain the ideal size, to be used as min and max
-            SendMessageW(m_hWnd, TB_AUTOSIZE, 0, 0);
-            SendMessageW(m_hWnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&maxSize));
-
-            idealSize = maxSize;
-            SendMessageW(m_hWnd, TB_GETIDEALSIZE, FALSE, reinterpret_cast<LPARAM>(&idealSize));
-
-            // Obtain the button size, to be used as the integral size
-            DWORD size = SendMessageW(m_hWnd, TB_GETBUTTONSIZE, 0, 0);
-            itemSize.x = GET_X_LPARAM(size);
-            itemSize.y = GET_Y_LPARAM(size);
-
-            if (pdbi->dwMask & DBIM_MINSIZE)
-            {
-                if (m_QLaunch)
-                    pdbi->ptMinSize.x = idealSize.x;
-                else
-                    pdbi->ptMinSize.x = -1;
-                pdbi->ptMinSize.y = idealSize.y;
-            }
-            if (pdbi->dwMask & DBIM_MAXSIZE)
-            {
-                pdbi->ptMaxSize = maxSize;
-            }
-            if (pdbi->dwMask & DBIM_INTEGRAL)
-            {
-                pdbi->ptIntegral = itemSize;
-            }
-            if (pdbi->dwMask & DBIM_ACTUAL)
-            {
-                pdbi->ptActual = actualSize;
-            }
-            if (pdbi->dwMask & DBIM_TITLE)
-            {
-                if (m_QLaunch || !ILGetDisplayNameEx(NULL, m_pidl, pdbi->wszTitle, ILGDN_INFOLDER))
-                {
-                    pdbi->dwMask &= ~DBIM_TITLE;
-                }
-            }
-            if (pdbi->dwMask & DBIM_MODEFLAGS)
-            {
-                pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT | DBIMF_USECHEVRON | DBIMF_NOMARGINS | DBIMF_BKCOLOR;
-                if (m_QLaunch)
-                {
-                    pdbi->dwModeFlags |= DBIMF_ADDTOFRONT;
-                }
-            }
-            if (pdbi->dwMask & DBIM_BKCOLOR)
-                pdbi->dwMask &= ~DBIM_BKCOLOR;
-
-            return S_OK;
-        }
-
-        return E_FAIL;
-    }
+    return E_FAIL;
+}
 
 /*****************************************************************************/
 // *** IPersistStream ***
-    STDMETHODIMP CISFBand::GetClassID(OUT CLSID *pClassID)
-    {
-        *pClassID = CLSID_ISFBand;
-        return S_OK;
-    }
+STDMETHODIMP CISFBand::GetClassID(OUT CLSID *pClassID)
+{
+    *pClassID = CLSID_ISFBand;
+    return S_OK;
+}
 
-    STDMETHODIMP CISFBand::IsDirty()
-    {
-        /* The object hasn't changed since the last save! */
-        return S_FALSE;
-    }
+STDMETHODIMP CISFBand::IsDirty()
+{
+    /* The object hasn't changed since the last save! */
+    return S_FALSE;
+}
 
-    STDMETHODIMP CISFBand::Load(IN IStream *pStm)
-    {
-        TRACE("CISFBand::Load called\n");
-        /* Nothing to do */
-        return S_OK;
-    }
+STDMETHODIMP CISFBand::Load(IN IStream *pStm)
+{
+    TRACE("CISFBand::Load called\n");
+    /* Nothing to do */
+    return S_OK;
+}
 
-    STDMETHODIMP CISFBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
-    {
-        /* Nothing to do */
-        return S_OK;
-    }
+STDMETHODIMP CISFBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
+{
+    /* Nothing to do */
+    return S_OK;
+}
 
-    STDMETHODIMP CISFBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
-    {
-        TRACE("CISFBand::GetSizeMax called\n");
-        return S_OK;
-    }
+STDMETHODIMP CISFBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
+{
+    TRACE("CISFBand::GetSizeMax called\n");
+    return S_OK;
+}
 
 /*****************************************************************************/
 // *** IWinEventHandler ***
-    STDMETHODIMP CISFBand::ContainsWindow(IN HWND hWnd)
+STDMETHODIMP CISFBand::ContainsWindow(IN HWND hWnd)
+{
+    if (hWnd == m_hWnd || IsChild(hWnd))
     {
-        if (hWnd == m_hWnd || IsChild(hWnd))
-        {
-            TRACE("CISFBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
-            return S_OK;
-        }
-
-        return S_FALSE;
-    }
-
-    STDMETHODIMP CISFBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-    {
-        switch (uMsg)
-        {
-            case WM_COMMAND:
-            {
-                TBBUTTON tb;
-                BOOL chk = SendMessage(TB_GETBUTTON, LOWORD(wParam), (LPARAM)&tb);
-                if (chk)
-                    SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);
-
-                if (theResult)
-                    *theResult = TRUE;
-                break;
-            }
-            case WM_NOTIFY:
-            {
-                switch (((LPNMHDR)lParam)->code)
-                {
-                    case NM_RCLICK:
-                    {
-                        HRESULT hr;
-                        POINT pt = ((LPNMMOUSE)lParam)->pt; // Already in screen coordinates
-                        CComPtr<IContextMenu> picm;
-                        HMENU fmenu = CreatePopupMenu();
-                        TBBUTTON tb;
-
-                        bool chk = SendMessage(m_hWnd, TB_GETBUTTON, ((LPNMMOUSE)lParam)->dwItemSpec, (LPARAM)&tb);
-                        LPITEMIDLIST pidl = (LPITEMIDLIST)tb.dwData;
-
-                        if (chk)
-                        {
-                            hr = m_pISF->GetUIObjectOf(m_hWnd, 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &picm));
-                            if (FAILED_UNEXPECTEDLY(hr))
-                                return hr;
-
-                            hr = picm->QueryContextMenu(fmenu, 0, 1, 0x7FFF, CMF_DEFAULTONLY);
-                            if (FAILED_UNEXPECTEDLY(hr))
-                                return hr;
-
-                            int id = TrackPopupMenuEx(fmenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, m_hWnd, 0);
-                            if (id > 0)
-                            {
-                                CMINVOKECOMMANDINFOEX info = { 0 };
-                                info.cbSize = sizeof(info);
-                                info.fMask = CMIC_MASK_PTINVOKE;
-                                if (GetKeyState(VK_CONTROL) < 0)
-                                {
-                                    info.fMask |= CMIC_MASK_CONTROL_DOWN;
-                                }
-                                if (GetKeyState(VK_SHIFT) < 0)
-                                {
-                                    info.fMask |= CMIC_MASK_SHIFT_DOWN;
-                                }
-                                info.hwnd = m_hWnd;
-                                info.lpVerb = MAKEINTRESOURCEA(id - 1);
-                                info.nShow = SW_SHOWNORMAL;
-                                info.ptInvoke = pt;
-                                picm->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
-                            }
-                        }
-                        DestroyMenu(fmenu);
-
-                        if (theResult)
-                            *theResult = TRUE;
-                        break;
-                    }
-                    default:
-                        if (theResult)
-                            *theResult = FALSE;
-                }
-
-                break;
-            }
-            default:
-                if (theResult)
-                    *theResult = FALSE;
-        }
-
+        TRACE("CISFBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
         return S_OK;
     }
 
-    STDMETHODIMP CISFBand::IsWindowOwner(HWND hWnd)
+    return S_FALSE;
+}
+
+STDMETHODIMP CISFBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+{
+    switch (uMsg)
     {
-        return (hWnd == m_hWnd) ? S_OK : S_FALSE;
+        case WM_COMMAND:
+        {
+            TBBUTTON tb;
+            BOOL chk = SendMessage(TB_GETBUTTON, LOWORD(wParam), (LPARAM)&tb);
+            if (chk)
+                SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);
+
+            if (theResult)
+                *theResult = TRUE;
+            break;
+        }
+        case WM_NOTIFY:
+        {
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case NM_RCLICK:
+                {
+                    HRESULT hr;
+                    POINT pt = ((LPNMMOUSE)lParam)->pt; // Already in screen coordinates
+                    CComPtr<IContextMenu> picm;
+                    HMENU fmenu = CreatePopupMenu();
+                    TBBUTTON tb;
+
+                    bool chk = SendMessage(m_hWnd, TB_GETBUTTON, ((LPNMMOUSE)lParam)->dwItemSpec, (LPARAM)&tb);
+                    LPITEMIDLIST pidl = (LPITEMIDLIST)tb.dwData;
+
+                    if (chk)
+                    {
+                        hr = m_pISF->GetUIObjectOf(m_hWnd, 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &picm));
+                        if (FAILED_UNEXPECTEDLY(hr))
+                            return hr;
+
+                        hr = picm->QueryContextMenu(fmenu, 0, 1, 0x7FFF, CMF_DEFAULTONLY);
+                        if (FAILED_UNEXPECTEDLY(hr))
+                            return hr;
+
+                        int id = TrackPopupMenuEx(fmenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, m_hWnd, 0);
+                        if (id > 0)
+                        {
+                            CMINVOKECOMMANDINFOEX info = { 0 };
+                            info.cbSize = sizeof(info);
+                            info.fMask = CMIC_MASK_PTINVOKE;
+                            if (GetKeyState(VK_CONTROL) < 0)
+                            {
+                                info.fMask |= CMIC_MASK_CONTROL_DOWN;
+                            }
+                            if (GetKeyState(VK_SHIFT) < 0)
+                            {
+                                info.fMask |= CMIC_MASK_SHIFT_DOWN;
+                            }
+                            info.hwnd = m_hWnd;
+                            info.lpVerb = MAKEINTRESOURCEA(id - 1);
+                            info.nShow = SW_SHOWNORMAL;
+                            info.ptInvoke = pt;
+                            picm->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
+                        }
+                    }
+                    DestroyMenu(fmenu);
+
+                    if (theResult)
+                        *theResult = TRUE;
+                    break;
+                }
+                default:
+                    if (theResult)
+                        *theResult = FALSE;
+            }
+
+            break;
+        }
+        default:
+            if (theResult)
+                *theResult = FALSE;
     }
+
+    return S_OK;
+}
+
+STDMETHODIMP CISFBand::IsWindowOwner(HWND hWnd)
+{
+    return (hWnd == m_hWnd) ? S_OK : S_FALSE;
+}
 
 /*****************************************************************************/
 // *** IOleCommandTarget methods ***
-    STDMETHODIMP CISFBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
+STDMETHODIMP CISFBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
+{
+    UNIMPLEMENTED;
+
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CISFBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+{
+    if (IsEqualIID(*pguidCmdGroup, IID_IBandSite))
+        return S_OK;
+
+    if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
     {
-        UNIMPLEMENTED;
-
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CISFBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
-    {
-        if (IsEqualIID(*pguidCmdGroup, IID_IBandSite))
-            return S_OK;
-
-        if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
+        if (nCmdID == DBID_SETWINDOWTHEME)
         {
-            if (nCmdID == DBID_SETWINDOWTHEME)
+            if (pvaIn && V_VT(pvaIn) == VT_BSTR && V_BSTR(pvaIn))
             {
-                if (pvaIn && V_VT(pvaIn) == VT_BSTR && V_BSTR(pvaIn))
-                {
-                    SetWindowTheme(m_hWnd, V_BSTR(pvaIn), NULL);
-                }
+                SetWindowTheme(m_hWnd, V_BSTR(pvaIn), NULL);
             }
-            return S_OK;
         }
-
-        UNIMPLEMENTED;
-
-        return E_NOTIMPL;
+        return S_OK;
     }
+
+    UNIMPLEMENTED;
+
+    return E_NOTIMPL;
+}
 
 /*****************************************************************************/
 // *** IShellFolderBand ***
-    STDMETHODIMP CISFBand::GetBandInfoSFB(PBANDINFOSFB pbi)
+STDMETHODIMP CISFBand::GetBandInfoSFB(PBANDINFOSFB pbi)
+{
+    if (pbi->dwMask == ISFB_MASK_IDLIST)
     {
-        if (pbi->dwMask == ISFB_MASK_IDLIST)
-        {
-            pbi->pidl = ILClone(m_pidl);
-            if (!pbi->pidl)
-                return E_OUTOFMEMORY;
-            return S_OK;
-        }
-
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
-    {
-        HRESULT hr;
-
-        if (!psf && !pidl)
-            return E_INVALIDARG;
-
-        if (psf && pidl)
-            return E_INVALIDARG;
-
-        m_pidl.Free();
-
-        if (pidl != NULL)
-        {
-            CComPtr<IShellFolder> psfDesktop;
-            hr = SHGetDesktopFolder(&psfDesktop);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            if (_ILIsDesktop(pidl))
-            {
-                m_pISF = psfDesktop;
-            }
-            else
-            {
-                hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &m_pISF));
-                if (FAILED_UNEXPECTEDLY(hr))
-                    return hr;
-            }
-
-            m_pidl.Attach(ILClone(pidl));
-            if (!m_pidl)
-                ERR("Out of memory\n");
-        }
-
-        if (psf != NULL)
-        {
-            CComPtr<IPersistFolder2> ppf2;
-            hr = psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            hr = ppf2->GetCurFolder(&m_pidl);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            ATLASSERT(m_pidl);
-            m_pISF = psf;
-        }
-
+        pbi->pidl = ILClone(m_pidl);
+        if (!pbi->pidl)
+            return E_OUTOFMEMORY;
         return S_OK;
     }
 
-    STDMETHODIMP CISFBand::SetBandInfoSFB( PBANDINFOSFB pbi)
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
+{
+    HRESULT hr;
+
+    if (!psf && !pidl)
+        return E_INVALIDARG;
+
+    if (psf && pidl)
+        return E_INVALIDARG;
+
+    m_pidl.Free();
+
+    if (pidl != NULL)
     {
-        if ((pbi->dwMask & ISFB_MASK_STATE) &&
-            (pbi->dwState & ISFB_STATE_QLINKSMODE) &&
-            (pbi->dwStateMask & ISFB_STATE_QLINKSMODE))
+        CComPtr<IShellFolder> psfDesktop;
+        hr = SHGetDesktopFolder(&psfDesktop);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (_ILIsDesktop(pidl))
         {
-            m_QLaunch = TRUE;
-            ShowHideText(FALSE);
-            return BandInfoChanged();
-        }
-
-        return E_NOTIMPL;
-    }
-
-/*****************************************************************************/
-// *** IContextMenu ***
-    STDMETHODIMP CISFBand::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax)
-    {
-        /*HRESULT hr = E_INVALIDARG;
-
-        if (idCmd == IDM_DISPLAY)
-        {
-            switch (uFlags)
-            {
-            case GCS_HELPTEXTW:
-                // Only useful for pre-Vista versions of Windows that
-                // have a Status bar.
-                hr = StringCchCopyW(reinterpret_cast<PWSTR>(pszName),
-                    cchMax,
-                    L"Display File Name");
-                break;
-
-            case GCS_VERBW:
-                // GCS_VERBW is an optional feature that enables a caller
-                // to discover the canonical name for the verb that is passed in
-                // through idCommand.
-                hr = StringCchCopyW(reinterpret_cast<PWSTR>(pszName),
-                    cchMax,
-                    L"DisplayFileName");
-                break;
-            }
-        }
-        return hr;  */
-
-        return S_OK;
-    }
-
-    STDMETHODIMP CISFBand::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
-    {
-        if (!HIWORD(pici->lpVerb))
-        {
-            switch (LOWORD(pici->lpVerb))
-            {
-                case IDM_LARGE_ICONS:
-                {
-                    HRESULT hr = SetImageListIconSize(FALSE);
-                    if (FAILED(hr))
-                        return hr;
-                    return BandInfoChanged();
-                }
-                case IDM_SMALL_ICONS:
-                {
-                    HRESULT hr = SetImageListIconSize(TRUE);
-                    if (FAILED(hr))
-                        return hr;
-                    return BandInfoChanged();
-                }
-                case IDM_OPEN_FOLDER:
-                {
-                    SHELLEXECUTEINFOW shexinfo = { sizeof(shexinfo) };
-                    shexinfo.fMask = SEE_MASK_IDLIST;
-                    shexinfo.lpVerb = L"open";
-                    shexinfo.lpIDList = m_pidl;
-                    shexinfo.nShow = SW_SHOW;
-                    if (!ShellExecuteExW(&shexinfo))
-                        return E_FAIL;
-                    break;
-                }
-                case IDM_SHOW_TEXT:
-                {
-                    ShowHideText(!m_bShowText);
-                    return BandInfoChanged();
-                }
-                default:
-                    return E_FAIL;
-            }
-        }
-
-        return S_OK;
-    }
-
-    STDMETHODIMP CISFBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
-    {
-        HMENU qMenu = LoadMenu(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCE(IDM_POPUPMENU));
-
-        CheckMenuItem(qMenu, IDM_SHOW_TEXT, (m_bShowText ? MF_CHECKED : MF_UNCHECKED));
-
-        if (m_bSmallIcon)
-        {
-            CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_CHECKED);
-            CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_UNCHECKED);
+            m_pISF = psfDesktop;
         }
         else
         {
-            CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_CHECKED);
-            CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_UNCHECKED);
+            hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &m_pISF));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
         }
 
-        if (_ILIsDesktop(m_pidl))
-            DeleteMenu(qMenu, IDM_OPEN_FOLDER, MF_BYCOMMAND);
-
-        UINT idMax = Shell_MergeMenus(hmenu, GetSubMenu(qMenu, 0), indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
-        DestroyMenu(qMenu);
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1));
+        m_pidl.Attach(ILClone(pidl));
+        if (!m_pidl)
+            ERR("Out of memory\n");
     }
+
+    if (psf != NULL)
+    {
+        CComPtr<IPersistFolder2> ppf2;
+        hr = psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = ppf2->GetCurFolder(&m_pidl);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        ATLASSERT(m_pidl);
+        m_pISF = psf;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CISFBand::SetBandInfoSFB( PBANDINFOSFB pbi)
+{
+    if ((pbi->dwMask & ISFB_MASK_STATE) &&
+        (pbi->dwState & ISFB_STATE_QLINKSMODE) &&
+        (pbi->dwStateMask & ISFB_STATE_QLINKSMODE))
+    {
+        m_QLaunch = TRUE;
+        ShowHideText(FALSE);
+        return BandInfoChanged();
+    }
+
+    return E_NOTIMPL;
+}
+
+/*****************************************************************************/
+// *** IContextMenu ***
+STDMETHODIMP CISFBand::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax)
+{
+    /*HRESULT hr = E_INVALIDARG;
+
+    if (idCmd == IDM_DISPLAY)
+    {
+        switch (uFlags)
+        {
+        case GCS_HELPTEXTW:
+            // Only useful for pre-Vista versions of Windows that
+            // have a Status bar.
+            hr = StringCchCopyW(reinterpret_cast<PWSTR>(pszName),
+                cchMax,
+                L"Display File Name");
+            break;
+
+        case GCS_VERBW:
+            // GCS_VERBW is an optional feature that enables a caller
+            // to discover the canonical name for the verb that is passed in
+            // through idCommand.
+            hr = StringCchCopyW(reinterpret_cast<PWSTR>(pszName),
+                cchMax,
+                L"DisplayFileName");
+            break;
+        }
+    }
+    return hr;  */
+
+    return S_OK;
+}
+
+STDMETHODIMP CISFBand::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
+{
+    if (!HIWORD(pici->lpVerb))
+    {
+        switch (LOWORD(pici->lpVerb))
+        {
+            case IDM_LARGE_ICONS:
+            {
+                HRESULT hr = SetImageListIconSize(FALSE);
+                if (FAILED(hr))
+                    return hr;
+                return BandInfoChanged();
+            }
+            case IDM_SMALL_ICONS:
+            {
+                HRESULT hr = SetImageListIconSize(TRUE);
+                if (FAILED(hr))
+                    return hr;
+                return BandInfoChanged();
+            }
+            case IDM_OPEN_FOLDER:
+            {
+                SHELLEXECUTEINFOW shexinfo = { sizeof(shexinfo) };
+                shexinfo.fMask = SEE_MASK_IDLIST;
+                shexinfo.lpVerb = L"open";
+                shexinfo.lpIDList = m_pidl;
+                shexinfo.nShow = SW_SHOW;
+                if (!ShellExecuteExW(&shexinfo))
+                    return E_FAIL;
+                break;
+            }
+            case IDM_SHOW_TEXT:
+            {
+                ShowHideText(!m_bShowText);
+                return BandInfoChanged();
+            }
+            default:
+                return E_FAIL;
+        }
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CISFBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+{
+    HMENU qMenu = LoadMenu(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCE(IDM_POPUPMENU));
+
+    CheckMenuItem(qMenu, IDM_SHOW_TEXT, (m_bShowText ? MF_CHECKED : MF_UNCHECKED));
+
+    if (m_bSmallIcon)
+    {
+        CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_CHECKED);
+        CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_UNCHECKED);
+    }
+    else
+    {
+        CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_CHECKED);
+        CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_UNCHECKED);
+    }
+
+    if (_ILIsDesktop(m_pidl))
+        DeleteMenu(qMenu, IDM_OPEN_FOLDER, MF_BYCOMMAND);
+
+    UINT idMax = Shell_MergeMenus(hmenu, GetSubMenu(qMenu, 0), indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
+    DestroyMenu(qMenu);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1));
+}
 
 /*****************************************************************************/
 // C Constructor
