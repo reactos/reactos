@@ -1,14 +1,20 @@
 #ifndef _WINBASE_
 #define _WINBASE_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if !defined(_ADVAPI32_)
+#define WINADVAPI DECLSPEC_IMPORT
+#else
+#define WINADVAPI
+#endif
+
 #if !defined(_KERNEL32_)
 #define WINBASEAPI DECLSPEC_IMPORT
 #else
 #define WINBASEAPI
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 #include <libloaderapi.h>
