@@ -3435,7 +3435,8 @@ NtUserGetAncestor(_In_ HWND hWnd, _In_ UINT uType)
     }
 
     pwndAncestor = UserGetAncestor(Window, uType);
-    hwndAncestor = (pwndAncestor ? UserHMGetHandle(pwndAncestor) : NULL);
+    if (pwndAncestor)
+        hwndAncestor = UserHMGetHandle(pwndAncestor);
 
 Quit:
     UserLeave();
