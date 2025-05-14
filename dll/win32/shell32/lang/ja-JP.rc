@@ -702,7 +702,7 @@ BEGIN
     LTEXT "アクションを実行するのに使うアプリ(&L):", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "閲覧(&R)...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "DDE使用(&U)", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    AUTOCHECKBOX "DDE 使用(&U)", IDC_ACTION_USE_DDE, 10, 75, 103, 14
     DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 160, 40, 60, 14
 END
@@ -778,7 +778,7 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "あなたのコンピュータに対する管理者設定を変更します。"
     IDS_FOLDER_OPTIONS_DESCRIPTION "ファイルとフォルダの表示をカスタマイズし、ファイル関連付けを変更します。"
     IDS_FONTS_DESCRIPTION "あなたのコンピュータのフォントを追加、変更、管理します。"
-    IDS_PRINTERS_DESCRIPTION "インストール済みのプリンタやFAXプリンタを表示し、新しいのを追加するのを助けます。"
+    IDS_PRINTERS_DESCRIPTION "インストール済みのプリンタや FAX プリンタを表示し、新しいのを追加するのを助けます。"
 
     /* About shell dialog version string */
     IDS_ABOUT_VERSION_STRING "バージョン %S (%S)"
@@ -847,7 +847,7 @@ BEGIN
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "ローカルディスクをフォーマット"
-    IDS_FORMAT_WARNING "警告: フォーマットはこのディスクの「すべての」データを消去します。\nフォーマットするならOKをクリック。終了するにはキャンセルをクリックして下さい。"
+    IDS_FORMAT_WARNING "警告: フォーマットはこのディスクの「すべての」データを消去します。\nフォーマットするならOKをクリック。終了するにはキャンセルをクリックしてください。"
     IDS_FORMAT_COMPLETE "フォーマット完了。"
 
     /* Warning format system drive dialog strings */
@@ -896,12 +896,12 @@ BEGIN
     IDS_NETWORKPLACE "マイ ネットワーク"
 
     IDS_NEWFOLDER "新しいフォルダ"
-    IDS_NEWITEMFORMAT "新しい%s"
+    IDS_NEWITEMFORMAT "新しい %s"
 
     IDS_DRIVE_FIXED "ローカル ディスク"
     IDS_DRIVE_CDROM "CDドライブ"
     IDS_DRIVE_NETWORK "ネットワーク ディスク"
-    IDS_DRIVE_FLOPPY "3.5フロッピー"
+    IDS_DRIVE_FLOPPY "3.5 フロッピー"
     IDS_DRIVE_REMOVABLE "リムーバブル ディスク"
     IDS_FS_UNKNOWN "未知の形式"
 
@@ -917,8 +917,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "フォルダ(&F)"
     FCIDM_SHVIEW_NEWLINK "ショートカット(&L)"
     IDS_FOLDER_OPTIONS "フォルダ オプション"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "タスクバーとスタートメニュー"
+    IDS_TASKBAR_OPTIONS_INFOTIP "表示される項目の種類や表示方法など、スタート メニューとタスク バーをカスタマイズします。"
     IDS_RECYCLEBIN_LOCATION "ごみ箱の場所"
     IDS_RECYCLEBIN_DISKSPACE "利用できる領域"
     IDS_EMPTY_BITBUCKET "ごみ箱を空にする"
@@ -926,11 +926,11 @@ BEGIN
     IDS_PICK_ICON_FILTER "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0すべてのファイル (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "実行可能ファイル (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "ボリュームをロックできませんでした (エラーコード: %lu)."
-    IDS_CANTDISMOUNTVOLUME "ボリュームをディスマウントできませんでした (エラーコード: %lu)."
-    IDS_CANTEJECTMEDIA "メディアを取り出しできませんでした (エラーコード: %lu)."
-    IDS_CANTSHOWPROPERTIES "プロパティを表示できませんでした (エラーコード: %lu)."
-    IDS_CANTDISCONNECT "接続を切れませんでした (エラーコード: %lu)."
+    IDS_CANTLOCKVOLUME "ボリュームをロックできませんでした (エラーコード: %lu)"
+    IDS_CANTDISMOUNTVOLUME "ボリュームをディスマウントできませんでした (エラーコード: %lu)"
+    IDS_CANTEJECTMEDIA "メディアを取り出しできませんでした (エラーコード: %lu)"
+    IDS_CANTSHOWPROPERTIES "プロパティを表示できませんでした (エラーコード: %lu)"
+    IDS_CANTDISCONNECT "接続を切れませんでした (エラーコード: %lu)"
     IDS_NONE "(なし)"
 
     IDS_EXPAND "展開(&A)"
@@ -998,9 +998,9 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "参照..."
 
-    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
-    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "ごみ箱"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "ごみ箱には、パソコンから削除したファイルが含まれています。これらのファイルは、ごみ箱を空にするまで完全には削除されません。"
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "ファイルを表示する(&V)"
 
     IDS_TITLE_MYCOMP "マイ コンピュータ"
     IDS_TITLE_MYNET "マイ ネットワーク"
@@ -1040,26 +1040,26 @@ BEGIN
     IDS_NEWEXT_ADVANCED_LEFT "<< 高度な設定(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "高度な設定(&V) >>"
     IDS_NEWEXT_NEW "<新規>"
-    IDS_NEWEXT_SPECIFY_EXT "拡張子を指定して下さい。"
+    IDS_NEWEXT_SPECIFY_EXT "拡張子を指定してください。"
     IDS_NEWEXT_ALREADY_ASSOC "拡張子 %s はすでにファイルの種類 %s に関連付けられています。%s から %s への関連付けを解除して、新しいファイルの種類を作成しますか?"
     IDS_NEWEXT_EXT_IN_USE "拡張子は使用中"
 
     IDS_REMOVE_EXT "もし、ファイル名の拡張子を削除すれば、ダブルクリックによってそれらのファイルを開くことができなくなります。\n\nこの拡張子を削除しますか?"
-    IDS_SPECIFY_ACTION "アクションを指定して下さい。"
-    IDS_INVALID_PROGRAM "指定されたプログラムは見つかりません。ファイル名とパスが正しいか確認して下さい。"
+    IDS_SPECIFY_ACTION "アクションを指定してください。"
+    IDS_INVALID_PROGRAM "指定されたプログラムは見つかりません。ファイル名とパスが正しいか確認してください。"
     IDS_REMOVE_ACTION "このアクションを削除しますか?"
-    IDS_ACTION_EXISTS "アクション '%s' は、すでにこのファイルの種類に登録済みです。他の名前を入力してやり直して下さい。"
+    IDS_ACTION_EXISTS "アクション '%s' は、すでにこのファイルの種類に登録済みです。他の名前を入力してやり直してください。"
     IDS_EXE_FILTER "プログラム\0*.exe\0すべてのファイル\0*.*\0"
     IDS_EDITING_ACTION "種類に対するアクションの編集: "
-    IDS_NO_ICONS "ファイル '%s' にはアイコン データがありません。.\n\nリストからアイコンを選ぶか、別のファイルを指定して下さい。"
+    IDS_NO_ICONS "ファイル '%s' にはアイコン データがありません。\n\nリストからアイコンを選ぶか、別のファイルを指定してください。"
     IDS_FILE_NOT_FOUND "ファイル '%s' は見つかりませんでした。"
     IDS_LINK_INVALID "このショートカットが参照する項目 '%s' は、変更されたか移動したので、このショートカットはもう正常に動作しません。"
     IDS_COPYTOMENU "フォルダにコピー(&F)..."
-    IDS_COPYTOTITLE "'%s' のコピー先を選択して「コピー」ボタンをクリックして下さい。"
+    IDS_COPYTOTITLE "'%s' のコピー先を選択して「コピー」ボタンをクリックしてください。"
     IDS_COPYITEMS "項目のコピー先"
     IDS_COPYBUTTON "コピー"
     IDS_MOVETOMENU "フォルダに移動(&V)..."
-    IDS_MOVETOTITLE "'%s' の移動先を選択して「移動」ボタンをクリックして下さい。"
+    IDS_MOVETOTITLE "'%s' の移動先を選択して「移動」ボタンをクリックしてください。"
     IDS_MOVEITEMS "項目の移動先"
     IDS_MOVEBUTTON "移動"
 
