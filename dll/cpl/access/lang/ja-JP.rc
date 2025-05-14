@@ -10,10 +10,10 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "固定キー機能を使う(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_STICKY_BUTTON, 144, 49, 90, 14
-    GROUPBOX "フィルタキー機能", -1, 6, 79, 234, 62
-    LTEXT "フィルタキー機能を使うと、速いキー入力や繰り返されたキー入力を無視したり、繰り返し入力の間隔を長くしたりすることができます。",
+    GROUPBOX "フィルタ キー機能", -1, 6, 79, 234, 62
+    LTEXT "フィルタ キー機能を使うと、速いキー入力や繰り返されたキー入力を無視したり、繰り返し入力の間隔を長くしたりすることができます。",
           -1, 12, 89, 222, 29
-    AUTOCHECKBOX "フィルタキー機能を使う(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
+    AUTOCHECKBOX "フィルタ キー機能を使う(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
     GROUPBOX "切り替えキー機能", -1, 6, 148, 234, 55
     LTEXT "切り替えキー機能を使うと、CapsLock、NumLock、ScrollLock キーを押したときに音を鳴らします。",
@@ -113,13 +113,13 @@ CAPTION "固定キー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キー", -1, 6, 11, 234, 62
-    LTEXT "固定キー機能を有効にするにはShiftキーを5回押してください。",
+    LTEXT "固定キー機能を有効にするには Shift キーを 5 回押してください。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "固定キーを有効にする(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "オプション", -1, 6, 83, 234, 44
-    AUTOCHECKBOX "修飾キーを2回押すとロックする(&P)", IDC_STICKY_LOCK_CHECK,
+    AUTOCHECKBOX "修飾キーを 2 回押すとロックする(&P)", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
-    AUTOCHECKBOX "一度に2つのキーが押されたら固定キーをオフにする(&T)", IDC_STICKY_UNLOCK_CHECK,
+    AUTOCHECKBOX "一度に 2 つのキーが押されたら固定キーをオフにする(&T)", IDC_STICKY_UNLOCK_CHECK,
                  12, 106, 222, 14
     GROUPBOX "通知", -1, 6, 133, 234, 44
     AUTOCHECKBOX "修飾キーが押されたら音を鳴らす(&M)", IDC_STICKY_SOUND_CHECK,
@@ -132,11 +132,11 @@ END
 
 IDD_FILTERKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "フィルタキー設定"
+CAPTION "フィルタ キー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
-    LTEXT "フィルタキーのショートカットは:\n<右Shift>を8秒間押し続ける。",
+    LTEXT "フィルタ キーのショートカットは:\n<右Shift>を8秒間押し続ける。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "ショートカットを使う(&U)", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "フィルタ オプション", -1, 6, 79, 234, 79
@@ -151,7 +151,7 @@ BEGIN
     GROUPBOX "通知", -1, 6, 161, 234, 41
     AUTOCHECKBOX "キーが押されたか受け付けたとき音を鳴らす(&B)", IDC_FILTER_SOUND_CHECK,
                  12, 169, 222, 10
-    AUTOCHECKBOX "スクリーンにフィルタキーの状態を表示(&H)", IDC_FILTER_STATUS_CHECK,
+    AUTOCHECKBOX "スクリーンにフィルタ キーの状態を表示(&H)", IDC_FILTER_STATUS_CHECK,
                  12, 188, 222, 10
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
@@ -208,7 +208,7 @@ BEGIN
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
     LTEXT "速い", -1, 204, 123, 18, 11
-    AUTOCHECKBOX "速度を上げたいときにCtrlを、遅くしたいときにShiftを押す", IDC_MOUSEKEYS_SPEED_CHECK,
+    AUTOCHECKBOX "速度を上げたいときに Ctrl を、遅くしたいときに Shift を押す", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
     LTEXT "NumLock が次のときにマウスキーを使う:", -1, 6, 171, 120, 11
     AUTORADIOBUTTON "O&n", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
@@ -221,14 +221,14 @@ END
 
 IDD_BOUNCEKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "高度なフィルタキーの設定"
+CAPTION "高度なフィルタ キーの設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "バウンスキー", -1, 6, 11, 234, 47
-    LTEXT "次よりも速い連続のキーストロークを無視する(&I):", -1, 12, 21, 222, 20
+    GROUPBOX "バウンス キー", -1, 6, 11, 234, 47
+    LTEXT "次よりも速い連続のキー ストロークを無視する(&I):", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "テストエリア(&T):", -1, 6, 68, 48, 11
+    LTEXT "テスト エリア(&T):", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
@@ -240,7 +240,7 @@ CAPTION "高度なフィルター キー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "リピート キー", -1, 6, 11, 234, 106
-    LTEXT "Override settings on the Keyboard control panel:",
+    LTEXT "キーボード コントロール パネルで設定を上書きします:",
           -1, 12, 20, 222, 20
     AUTORADIOBUTTON "キーをリピートしない(&N)", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
     AUTORADIOBUTTON "キー リピート率を遅くする(&S)", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
@@ -262,16 +262,16 @@ END
 
 IDD_SERIALKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "シリアルキー設定"
+CAPTION "シリアル キー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "シリアルキー", -1, 6, 11, 234, 92
+    GROUPBOX "シリアル キー", -1, 6, 11, 234, 92
     LTEXT "代替入力デバイスに接続するポートを選んでください。",
           -1, 12, 20, 222, 20
-    LTEXT "シリアルポート(&S):", -1, 12, 34, 222, 20
+    LTEXT "シリアル ポート(&S):", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "ボーレート(&B):", -1, 12, 65, 222, 20
+    LTEXT "ボー レート(&B):", -1, 12, 65, 222, 20
     COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 76, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
