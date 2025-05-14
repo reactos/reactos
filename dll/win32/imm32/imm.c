@@ -88,8 +88,11 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     /* Open the key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, pszSubKey, 0, KEY_READ, &hKey);
-    if (IS_ERROR_UNEXPECTEDLY(error))
+    if (error)
+    {
+        ERR("error: %ld\n", error);
         return FALSE;
+    }
 
     /* Load "IME File" value */
     cbData = sizeof(pImeInfoEx->wszImeFile);

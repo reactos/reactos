@@ -906,8 +906,11 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 
     /* Open the registry keyboard layouts */
     lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
-    if (IS_ERROR_UNEXPECTEDLY(lError))
+    if (lError)
+    {
+        ERR("error: %ld\n", lError);
         return 0;
+    }
 
     for (iKey = nCount = 0; ; ++iKey)
     {
@@ -929,8 +932,11 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
             break;
 
         lError = RegOpenKeyW(hkeyLayouts, szImeKey, &hkeyIME); /* Open the IME key */
-        if (IS_ERROR_UNEXPECTEDLY(lError))
+        if (lError)
+        {
+            ERR("error: %ld\n", lError);
             continue;
+        }
 
         /* Load the "Ime File" value */
         szImeFileName[0] = 0;
@@ -981,28 +987,40 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
 
     /* Open the registry keyboard layouts */
     lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
-    if (IS_ERROR_UNEXPECTEDLY(lError))
+    if (lError)
+    {
+        ERR("error: %ld\n", lError);
         return FALSE;
+    }
 
     /* Get the IME key from hKL */
     StringCchPrintf(szImeKey, _countof(szImeKey), L"%08X", HandleToUlong(hKL));
 
     /* Create a registry IME key */
     lError = RegCreateKeyW(hkeyLayouts, szImeKey, &hkeyIME);
-    if (IS_ERROR_UNEXPECTEDLY(lError))
+    if (lError)
+    {
+        ERR("error: %ld\n", lError);
         goto Failure;
+    }
 
     /* Write "Ime File" */
     cbData = (wcslen(pchFilePart) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Ime File", 0, REG_SZ, (LPBYTE)pchFilePart, cbData);
-    if (IS_ERROR_UNEXPECTEDLY(lError))
+    if (lError)
+    {
+        ERR("error: %ld\n", lError);
         goto Failure;
+    }
 
     /* Write "Layout Text" */
     cbData = (wcslen(pszLayoutText) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Layout Text", 0, REG_SZ, (LPBYTE)pszLayoutText, cbData);
-    if (IS_ERROR_UNEXPECTEDLY(lError))
+    if (lError)
+    {
+        ERR("error: %ld\n", lError);
         goto Failure;
+    }
 
     /* Choose "Layout File" from hKL */
     LangID = LOWORD(hKL);
@@ -1016,8 +1034,11 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
     /* Write "Layout File" */
     cbData = (wcslen(pszLayoutFile) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)pszLayoutFile, cbData);
-    if (IS_ERROR_UNEXPECTEDLY(lError))
+    if (lError)
+    {
+        ERR("error: %ld\n", lError);
         goto Failure;
+    }
 
     RegCloseKey(hkeyIME);
     RegCloseKey(hkeyLayouts);

@@ -59,14 +59,11 @@
         (!(p) ? (ERR("%s was zero\n", #p), UNEXPECTED()) : FALSE)
     #define IS_TRUE_UNEXPECTEDLY(x) \
         ((x) ? (ERR("%s was %d\n", #x, (int)(x)), UNEXPECTED()) : FALSE)
-    #define IS_ERROR_UNEXPECTEDLY(x) \
-        ((x) != ERROR_SUCCESS ? (ERR("%s was %d\n", #x, (int)(x)), UNEXPECTED()) : FALSE)
 #else
     #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
     #define IS_NULL_UNEXPECTEDLY(p) (!(p))
     #define IS_ZERO_UNEXPECTEDLY(p) (!(p))
     #define IS_TRUE_UNEXPECTEDLY(x) (x)
-    #define IS_ERROR_UNEXPECTEDLY(x) ((x) != ERROR_SUCCESS)
 #endif
 
 #define IS_CROSS_THREAD_HIMC(hIMC)   IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))
