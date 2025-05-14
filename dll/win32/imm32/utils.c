@@ -498,7 +498,7 @@ DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList)
             return 0;
 
         phNewList = ImmLocalAlloc(0, dwCount * sizeof(HIMC));
-        if (phNewList)
+        if (!phNewList)
         {
             ERR("!phNewList\n");
             return 0;
