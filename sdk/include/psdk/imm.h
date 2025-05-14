@@ -658,7 +658,7 @@ ImmGetImeMenuItemsA(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
-    _Out_opt_ LPIMEMENUITEMINFOA lpImeParentMenu,
+    _Inout_opt_ LPIMEMENUITEMINFOA lpImeParentMenu,
     _Out_writes_bytes_opt_(dwSize) LPIMEMENUITEMINFOA lpImeMenu,
     _In_ DWORD dwSize);
 
@@ -668,7 +668,7 @@ ImmGetImeMenuItemsW(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
-    _Out_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
+    _Inout_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
     _Out_writes_bytes_opt_(dwSize) LPIMEMENUITEMINFOW lpImeMenu,
     _In_ DWORD dwSize);
 

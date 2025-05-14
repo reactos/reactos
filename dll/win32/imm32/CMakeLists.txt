@@ -13,6 +13,7 @@ list(APPEND SOURCE
     ctf.c
     guideline.c
     ime.c
+    imemenu.c
     imm.c
     keymsg.c
     regword.c

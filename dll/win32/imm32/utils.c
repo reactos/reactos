@@ -496,57 +496,6 @@ DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList)
 #undef MAX_RETRY
 }
 
-// Win: ConvertImeMenuItemInfoAtoW
-INT APIENTRY
-Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW,
-                       UINT uCodePage, BOOL bBitmap)
-{
-    INT ret;
-    pItemW->cbSize = pItemA->cbSize;
-    pItemW->fType = pItemA->fType;
-    pItemW->fState = pItemA->fState;
-    pItemW->wID = pItemA->wID;
-    if (bBitmap)
-    {
-        pItemW->hbmpChecked = pItemA->hbmpChecked;
-        pItemW->hbmpUnchecked = pItemA->hbmpUnchecked;
-        pItemW->hbmpItem = pItemA->hbmpItem;
-    }
-    pItemW->dwItemData = pItemA->dwItemData;
-    ret = MultiByteToWideChar(uCodePage, 0, pItemA->szString, -1,
-                              pItemW->szString, _countof(pItemW->szString));
-    if (ret >= _countof(pItemW->szString))
-    {
-        ret = 0;
-        pItemW->szString[0] = 0;
-    }
-    return ret;
-}
-
-// Win: ConvertImeMenuItemInfoWtoA
-INT APIENTRY
-Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA,
-                       UINT uCodePage)
-{
-    INT ret;
-    pItemA->cbSize = pItemW->cbSize;
-    pItemA->fType = pItemW->fType;
-    pItemA->fState = pItemW->fState;
-    pItemA->wID = pItemW->wID;
-    pItemA->hbmpChecked = pItemW->hbmpChecked;
-    pItemA->hbmpUnchecked = pItemW->hbmpUnchecked;
-    pItemA->dwItemData = pItemW->dwItemData;
-    pItemA->hbmpItem = pItemW->hbmpItem;
-    ret = WideCharToMultiByte(uCodePage, 0, pItemW->szString, -1,
-                              pItemA->szString, _countof(pItemA->szString), NULL, NULL);
-    if (ret >= _countof(pItemA->szString))
-    {
-        ret = 0;
-        pItemA->szString[0] = 0;
-    }
-    return ret;
-}
-
 // Win: GetImeModeSaver
 PIME_STATE APIENTRY
 Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
