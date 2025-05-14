@@ -33,7 +33,7 @@ BEGIN
     LTEXT "システムが音を鳴らすとき、視覚的に通知を出します。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "サウンド通知を使う(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
-    LTEXT "Use the following warning:", IDC_SENTRY_TEXT, 12, 72, 222, 11
+    LTEXT "次の警告を使用してください:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "サウンド解説", -1, 6, 115, 234, 67
@@ -53,7 +53,7 @@ BEGIN
     AUTOCHECKBOX "ハイコントラストを使う(&U)", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
     GROUPBOX "カーソル オプション", -1, 6, 79, 234, 115
-    LTEXT "カーソルの点滅速度と幅を変更するのにこれらのトラックバーをお使い下さい。",
+    LTEXT "カーソルの点滅速度と幅を変更するのにこれらのトラックバーをお使いください。",
           -1, 12, 88, 222, 20
     CTEXT "点滅速度:", -1, 12, 115, 222, 11
     LTEXT "なし", -1, 18, 130, 36, 11
@@ -113,7 +113,7 @@ CAPTION "固定キー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キー", -1, 6, 11, 234, 62
-    LTEXT "固定キー機能を有効にするにはShiftキーを5回押して下さい。",
+    LTEXT "固定キー機能を有効にするにはShiftキーを5回押してください。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "固定キーを有効にする(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "オプション", -1, 6, 83, 234, 44
@@ -146,7 +146,7 @@ BEGIN
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "設定(&S)", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
     PUSHBUTTON "設定(&E)", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
-    LTEXT "設定をテストするには、ここをクリックして入力して下さい(&C):", -1, 12, 129, 222, 11
+    LTEXT "設定をテストするには、ここをクリックして入力してください(&C):", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "通知", -1, 6, 161, 234, 41
     AUTOCHECKBOX "キーが押されたか受け付けたとき音を鳴らす(&B)", IDC_FILTER_SOUND_CHECK,
@@ -193,7 +193,7 @@ CAPTION "マウスキー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
-    LTEXT "マウスキーのショートカットは:\n<← Alt+← Shift+NumLock> を押して下さい。",
+    LTEXT "マウスキーのショートカットは:\n<← Alt+← Shift+NumLock> を押してください。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
@@ -266,7 +266,7 @@ CAPTION "シリアルキー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "シリアルキー", -1, 6, 11, 234, 92
-    LTEXT "代替入力デバイスに接続するポートを選んで下さい。",
+    LTEXT "代替入力デバイスに接続するポートを選んでください。",
           -1, 12, 20, 222, 20
     LTEXT "シリアルポート(&S):", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
