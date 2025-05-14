@@ -42,7 +42,7 @@ BEGIN
     EDITTEXT IDC_STATIC_MEM, 155, 130, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_SWAP, 155, 140, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_VERSION, 155, 150, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CHECKBOX "Check for WHQL digital signatures", IDC_WHQL_SIGN_CHECK, 15, 170, 135, 10, WS_DISABLED
+    CHECKBOX "WHQL デジタル署名を確認する", IDC_WHQL_SIGN_CHECK, 15, 170, 135, 10, WS_DISABLED
 END
 
 IDD_DISPLAY_DIALOG DIALOGEX 0, 0, 462, 220
@@ -127,7 +127,7 @@ BEGIN
     EDITTEXT IDC_STATIC_ADAPTER_PROVIDER, 335, 60, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "ReactX の機能", IDC_STATIC, 5, 97, 452, 70
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 110, 125, 80, 17
-    RTEXT "Hardware Sound\nAcceleration Level:", IDC_STATIC, 10, 125, 90, 20, WS_DISABLED
+    RTEXT "ハードウェア音声\n加速レベル:", IDC_STATIC, 10, 125, 90, 20, WS_DISABLED
     PUSHBUTTON "DirectSound のテスト", IDC_BUTTON_TESTDSOUND, 270, 125, 80, 14, WS_DISABLED
     GROUPBOX "注意", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_TEXT_DSOUNDINFO, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
@@ -137,17 +137,17 @@ IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "MS UI Gothic"
 BEGIN
-    RTEXT "General MIDI DLS Collection:", IDC_STATIC, 0, 0, 100, 10
+    RTEXT "General MIDI DLS コレクション:", IDC_STATIC, 0, 0, 100, 10
     EDITTEXT IDC_MIDI_DLS_COLLECTION, 105, 0, 250, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Music Ports", IDC_STATIC, 5, 10, 452, 85
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 97, 452, 70
-    LTEXT "Default Port Acceleration:", IDC_STATIC, 15, 120, 95, 17
+    GROUPBOX "音楽ポート", IDC_STATIC, 5, 10, 452, 85
+    GROUPBOX "ReactXの機能", IDC_STATIC, 5, 97, 452, 70
+    LTEXT "デフォルトのポート高速化:", IDC_STATIC, 15, 120, 95, 17
     LTEXT "", IDC_STATIC_DEFAULT_PORT_ACCELERATION, 115, 120, 50, 10
-    PUSHBUTTON "Disable", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
-    LTEXT "Test using this port:", IDC_STATIC, 180, 105, 100, 10
+    PUSHBUTTON "無効にする", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
+    LTEXT "このポートを使用してテストします:", IDC_STATIC, 180, 105, 100, 10
     LISTBOX IDC_DMUSIC_TEST_LIST, 180, 115, 180, 45, LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Test DirectMusic", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    PUSHBUTTON "DirectMusic をテストする", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
+    GROUPBOX "注記", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_MUSIC_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -170,11 +170,11 @@ FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "登録済み DirectPlay サービス プロバイダ", IDC_STATIC, 5, 0, 452, 75
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 15, 12, 432, 55
-    GROUPBOX "Registered Lobbyable DirectPlay Applications", IDC_STATIC, 5, 77, 452, 55
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 133, 452, 35
-    PUSHBUTTON "DirectPlay Voice Options", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
-    PUSHBUTTON "Test DirectPlay", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "登録済みのロビー可能な DirectPlay アプリ", IDC_STATIC, 5, 77, 452, 55
+    GROUPBOX "ReactX の機能", IDC_STATIC, 5, 133, 452, 35
+    PUSHBUTTON "DirectPlay 音声オプション", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
+    PUSHBUTTON "DirectPlay をテストする", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
+    GROUPBOX "注記", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_NETWORK_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -182,11 +182,11 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "Still can't find the information you're looking for? Here are some additional things you can do:", IDC_STATIC, 5, 0, 300, 10
-    PUSHBUTTON "System Information", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
-    LTEXT "Displays additional system information", IDC_STATIC, 90, 23, 300, 10
-    PUSHBUTTON "Refresh Rate Override", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
-    LTEXT "Overrides the Refresh Rate for DirectDraw", IDC_STATIC, 90, 43, 300, 10
+    LTEXT "探している情報がまだ見つかりませんか？ 以下の方法をお試しください。", IDC_STATIC, 5, 0, 300, 10
+    PUSHBUTTON "システム情報", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
+    LTEXT "追加のシステム情報を表示します", IDC_STATIC, 90, 23, 300, 10
+    PUSHBUTTON "リフレッシュ レートのオーバーライド", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
+    LTEXT "DirectDrawのリフレッシュ レートを上書きします", IDC_STATIC, 90, 43, 300, 10
 END
 
 STRINGTABLE
@@ -238,17 +238,17 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "このテストでは、DirectDraw を使って全画面表示モードで描画します。移動している白い矩形が描画されます。続行しますか?"
     IDS_DDFULLSCREEN_RESULT "全画面表示モードで移動している白い矩形が見えましたか?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u ビット) (%uHz)"
     IDS_OPTION_NO "いいえ"
     IDS_D3DTEST_DESCRIPTION "Direct3D インタフェーステストを開始しようとしています。続行しますか?"
     IDS_D3DTEST_D3Dx "このテストはハードウェア アクセラーレータ Direct3D %u インターフェイスを使います。"
-    IDS_OS_VERSION "%s %s (%d.%d, Build %d)"
-    IDS_DMUSIC_DESC "Description"
-    IDS_DMUSIC_TYPE "Type"
-    IDS_DMUSIC_KERNEL "Kernel Mode"
-    IDS_DMUSIC_IO "In/Out"
-    IDS_DMUSIC_DLS "Supports DLS"
-    IDS_DMUSIC_EXT "External"
-    IDS_DMUSIC_PORT "Default Port"
-    IDS_DDDISABLE_MSG "This will disable all hardware acceleration for DirectDraw on all display devices.\nDo you wish to continue?\n"
+    IDS_OS_VERSION "%s %s (%d.%d, ビルド %d)"
+    IDS_DMUSIC_DESC "説明"
+    IDS_DMUSIC_TYPE "種類"
+    IDS_DMUSIC_KERNEL "カーネル　モード"
+    IDS_DMUSIC_IO "入出力"
+    IDS_DMUSIC_DLS "DLS をサポート"
+    IDS_DMUSIC_EXT "外部"
+    IDS_DMUSIC_PORT "デフォルトのポート"
+    IDS_DDDISABLE_MSG "これにより、すべてのディスプレイ デバイス上の DirectDraw のすべてのハードウェア アクセラレーションが無効になります。\n続行しますか?\n"
 END
