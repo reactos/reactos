@@ -214,8 +214,8 @@ START_SUBTEST(AsynchronousEvent)
     /* Verify that the event is signaled */
     Status = KeWaitForSingleObject(state->EventObject, Executive, KernelMode, FALSE, &state->WaitTimeout);
     ok_ntstatus(Status, STATUS_WAIT_0);
-    /* Verify status */
-    // ok_ntstatus(state->IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
+    
+    /* Windows ignores IO_STATUS_BLOCK on Aynchronous kernel-mode calls */
 
     FINALIZE_TEST(state);
 }
@@ -255,8 +255,8 @@ START_SUBTEST(AsynchronousWqi)
     /* Verify that the event is signaled */
     Status = KeWaitForSingleObject(state->EventObject, Executive, KernelMode, FALSE, &state->WaitTimeout);
     ok_ntstatus(Status, STATUS_WAIT_0);
-    /* Verify status */
-    // ok_ntstatus(state->IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
+
+    /* Windows ignores IO_STATUS_BLOCK on Aynchronous kernel-mode calls */
 
     FINALIZE_TEST(state);
 }
@@ -276,7 +276,6 @@ START_TEST(ZwNotifyChangeKey)
     RUN_TEST(&State, Status, Synchronous);
     RUN_TEST(&State, Status, AsynchronousEvent);
     RUN_TEST(&State, Status, AsynchronousWqi);
-    //RUN_SUBTEST(AsynchronousSUAF);
     
     ZwNotifyChangeKey_CleanupTestKeys(&State);
 }
