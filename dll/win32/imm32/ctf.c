@@ -305,8 +305,11 @@ Imm32AllocateTLS(VOID)
         return pData;
 
     pData = (IMMTLSDATA*)ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IMMTLSDATA));
-    if (IS_NULL_UNEXPECTEDLY(pData))
+    if (!pData)
+    {
+        ERR("!pData\n");
         return NULL;
+    }
 
     if (IS_ZERO_UNEXPECTEDLY(TlsSetValue(g_dwTLSIndex, pData)))
     {
@@ -593,8 +596,11 @@ CtfImmCoInitialize(VOID)
 
     pSpy = Imm32AllocIMMISPY();
     pData->pSpy = (IInitializeSpy*)pSpy;
-    if (IS_NULL_UNEXPECTEDLY(pSpy))
+    if (!pSpy)
+    {
+        ERR("!pSpy\n");
         return S_OK; /* Cannot allocate a spy */
+    }
 
     if (FAILED_UNEXPECTEDLY(Imm32CoRegisterInitializeSpy(pData->pSpy, &pData->uliCookie)))
     {
@@ -1242,8 +1248,11 @@ CtfImmSetLangBand(
     if (hWnd && gpsi)
         pWnd = ValidateHwndNoErr(hWnd);
 
-    if (IS_NULL_UNEXPECTEDLY(pWnd))
+    if (!pWnd)
+    {
+        ERR("!pWnd\n");
         return 0;
+    }
 
     if (pWnd->state2 & WNDS2_WMCREATEMSGPROCESSED)
     {
@@ -1253,8 +1262,11 @@ CtfImmSetLangBand(
     }
 
     pSetBand = ImmLocalAlloc(0, sizeof(IMM_DELAY_SET_LANG_BAND));
-    if (IS_NULL_UNEXPECTEDLY(pSetBand))
+    if (!pSetBand)
+    {
+        ERR("!pSetBand\n");
         return 0;
+    }
 
     pSetBand->hWnd = hWnd;
     pSetBand->fSet = fSet;
@@ -1292,20 +1304,27 @@ CtfImmGenerateMessage(
     }
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     bUnicode = !!(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
     pIC = (LPINPUTCONTEXT)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     dwNumMsgBuf = pIC->dwNumMsgBuf;
     pOldTransMsg = (LPTRANSMSG)ImmLockIMCC(pIC->hMsgBuf);
-    if (IS_NULL_UNEXPECTEDLY(pOldTransMsg))
+    if (!pOldTransMsg)
     {
+        ERR("!pOldTransMsg\n");
         pIC->dwNumMsgBuf = 0;
         ImmUnlockIMC(hIMC);
         return TRUE;
@@ -1313,8 +1332,9 @@ CtfImmGenerateMessage(
 
     cbTransMsg = sizeof(TRANSMSG) * dwNumMsgBuf;
     pNewTransMsg = (PTRANSMSG)ImmLocalAlloc(0, cbTransMsg);
-    if (IS_NULL_UNEXPECTEDLY(pNewTransMsg))
+    if (!pNewTransMsg)
     {
+        ERR("!pNewTransMsg\n");
         ImmUnlockIMCC(pIC->hMsgBuf);
         pIC->dwNumMsgBuf = 0;
         ImmUnlockIMC(hIMC);
@@ -1451,8 +1471,11 @@ CtfImmIsGuidMapEnable(
         return ret;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return ret;
+    }
 
     ret = pImeDpi->CtfImeIsGuidMapEnable(hIMC);
 
@@ -1487,8 +1510,11 @@ CtfImmGetGuidAtom(
         return S_OK;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return hr;
+    }
 
     hr = pImeDpi->CtfImeGetGuidAtom(hIMC, dwUnknown, pdwGuidAtom);
 

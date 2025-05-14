@@ -70,8 +70,11 @@ BOOL APIENTRY Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
 
-    if (IS_NULL_UNEXPECTEDLY(hWnd))
+    if (!hWnd)
+    {
+        ERR("!hWnd\n");
         return FALSE;
+    }
 
     if (LOWORD(hKL) != LangID || !ImmIsIME(hKL))
     {
@@ -80,8 +83,11 @@ BOOL APIENTRY Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID
     }
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return TRUE;
+    }
 
     fOpen = pIC->fOpen;
     ImmUnlockIMC(hIMC);
@@ -106,8 +112,11 @@ BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return TRUE;
+    }
 
     fOpen = pIC->fOpen;
     if (fOpen)
@@ -137,8 +146,11 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return TRUE;
+    }
 
     fOpen = pIC->fOpen;
     if (fOpen)
@@ -191,8 +203,11 @@ BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
     DWORD dwConversion, dwSentence;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     dwConversion = (pIC->fdwConversion ^ IME_CMODE_FULLSHAPE);
     dwSentence = pIC->fdwSentence;
@@ -214,8 +229,11 @@ BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
     DWORD dwConversion, dwSentence;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     dwConversion = (pIC->fdwConversion ^ IME_CMODE_HANJACONVERT);
     dwSentence = pIC->fdwSentence;
@@ -233,8 +251,11 @@ BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
     BOOL fOpen;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     dwConversion = (pIC->fdwConversion ^ IME_CMODE_NATIVE);
     dwSentence = pIC->fdwSentence;
@@ -297,8 +318,11 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
         return FALSE;
 
     pImeDpi = ImmLockImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return FALSE;
+    }
 
     ret = (BOOL)pImeDpi->ImeEscape(hIMC, IME_ESC_PRIVATE_HOTKEY, &dwHotKeyID);
     ImmUnlockImeDpi(pImeDpi);
@@ -319,8 +343,11 @@ ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAns
             return FALSE;
     }
 
-    if (IS_NULL_UNEXPECTEDLY(hWndIME))
+    if (!hWndIME)
+    {
+        ERR("!hWndIME\n");
         return TRUE;
+    }
 
     if (bAnsi)
         SendMessageA(hWndIME, msg, wParam, lParam);
@@ -341,8 +368,11 @@ Imm32SendNotificationProc(
     UNREFERENCED_PARAMETER(lParam);
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return TRUE;
+    }
 
     hWnd = pIC->hWnd;
     if (!IsWindow(hWnd))
@@ -427,8 +457,11 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             break;
 
         default:
-            if (IS_NULL_UNEXPECTEDLY(pData))
+            if (!pData)
+            {
+                ERR("!pData\n");
                 return 0;
+            }
             break;
     }
 
@@ -451,8 +484,11 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             else
                 pTempData = ImmLocalAlloc(0, sizeof(LOGFONTW));
 
-            if (IS_NULL_UNEXPECTEDLY(pTempData))
+            if (!pTempData)
+            {
+                ERR("!pTempData\n");
                 return 0;
+            }
             break;
 
         case IMR_RECONVERTSTRING: case IMR_CONFIRMRECONVERTSTRING: case IMR_DOCUMENTFEED:
@@ -465,8 +501,11 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
                 ret = Imm32ReconvertWideFromAnsi(NULL, pData, uCodePage);
 
             pTempData = ImmLocalAlloc(0, ret + sizeof(WCHAR));
-            if (IS_NULL_UNEXPECTEDLY(pTempData))
+            if (!pTempData)
+            {
+                ERR("!pTempData\n");
                 return 0;
+            }
 
             pRS = pTempData;
             pRS->dwSize = ret;
@@ -495,8 +534,11 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
                     return 0;
 
                 pCS = ImmLocalAlloc(0, (cchCompStr + 1) * sizeof(CHAR));
-                if (IS_NULL_UNEXPECTEDLY(pCS))
+                if (!pCS)
+                {
+                    ERR("!pCS\n");
                     return 0;
+                }
 
                 ImmGetCompositionStringA(hIMC, GCS_COMPSTR, pCS, cchCompStr);
                 pICP->dwCharPos = IchWideFromAnsi(pICP->dwCharPos, pCS, uCodePage);
@@ -508,8 +550,11 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
                     return 0;
 
                 pCS = ImmLocalAlloc(0, (cchCompStr + 1) * sizeof(WCHAR));
-                if (IS_NULL_UNEXPECTEDLY(pCS))
+                if (!pCS)
+                {
+                    ERR("!pCS\n");
                     return 0;
+                }
 
                 ImmGetCompositionStringW(hIMC, GCS_COMPSTR, pCS, cchCompStr);
                 pICP->dwCharPos = IchAnsiFromWide(pICP->dwCharPos, pCS, uCodePage);
@@ -586,12 +631,21 @@ LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BO
     HWND hWnd;
     PWND pWnd = NULL;
 
-    if (IS_NULL_UNEXPECTEDLY(hIMC) || IS_CROSS_THREAD_HIMC(hIMC))
+    if (!hIMC)
+    {
+        ERR("!hIMC\n");
+        return FALSE;
+    }
+
+    if (IS_CROSS_THREAD_HIMC(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     hWnd = pIC->hWnd;
     if (hWnd)
@@ -678,8 +732,11 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 
     hIMC = ImmGetContext(hWnd);
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return ret;
+    }
 
     if (pIC->bNeedsTrans)
         ret = pIC->nVKey;
@@ -699,8 +756,11 @@ DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
     TRACE("(%p)\n", hIMC);
 
     pClientIMC = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientIMC))
+    if (!pClientIMC)
+    {
+        ERR("!pClientIMC\n");
         return 0;
+    }
 
     dwFlags = pClientIMC->dwCompatFlags;
     ImmUnlockClientImc(pClientIMC);
@@ -853,15 +913,21 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     dwCount = pIC->dwNumMsgBuf;
     if (dwCount == 0)
@@ -869,13 +935,19 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
 
     hMsgBuf = pIC->hMsgBuf;
     pMsgs = ImmLockIMCC(hMsgBuf);
-    if (IS_NULL_UNEXPECTEDLY(pMsgs))
+    if (!pMsgs)
+    {
+        ERR("!pMsgs\n");
         goto Quit;
+    }
 
     cbTrans = dwCount * sizeof(TRANSMSG);
     pTrans = ImmLocalAlloc(0, cbTrans);
-    if (IS_NULL_UNEXPECTEDLY(pTrans))
+    if (!pTrans)
+    {
+        ERR("!pTrans\n");
         goto Quit;
+    }
 
     RtlCopyMemory(pTrans, pMsgs, cbTrans);
 
@@ -923,8 +995,11 @@ ImmPostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
     BOOL bAnsi;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return;
+    }
 
     bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
@@ -1004,8 +1079,9 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
 
     hIMC = ImmGetContext(hwnd);
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
     {
+        ERR("!pIC\n");
         ImmReleaseContext(hwnd, hIMC);
         return FALSE;
     }
@@ -1032,8 +1108,11 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     dwThreadId = GetWindowThreadProcessId(hwnd, NULL);
     hKL = GetKeyboardLayout(dwThreadId);
     pImeDpi = ImmLockImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         goto Quit;
+    }
 
     if (!GetKeyboardState(abKeyState)) /* get keyboard ON/OFF status */
     {
@@ -1074,8 +1153,11 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     /* allocate a list */
     cbList = offsetof(TRANSMSGLIST, TransMsg) + MSG_COUNT * sizeof(TRANSMSG);
     pList = ImmLocalAlloc(0, cbList);
-    if (IS_NULL_UNEXPECTEDLY(pList))
+    if (!pList)
+    {
+        ERR("!pList\n");
         goto Quit;
+    }
 
     /* use IME conversion engine and convert the list */
     pList->uMsgCount = MSG_COUNT;
@@ -1092,8 +1174,11 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     else
     {
         pTransMsg = ImmLockIMCC(pIC->hMsgBuf);
-        if (IS_NULL_UNEXPECTEDLY(pTransMsg))
+        if (!pTransMsg)
+        {
+            ERR("!pTransMsg\n");
             goto Quit;
+        }
         ImmPostMessages(hwnd, hIMC, kret, pTransMsg);
         ImmUnlockIMCC(pIC->hMsgBuf);
     }
@@ -1162,22 +1247,34 @@ ImmCallImeConsoleIME(
 
     if (hWnd && gpsi)
         pWnd = ValidateHwndNoErr(hWnd);
-    if (IS_NULL_UNEXPECTEDLY(pWnd))
+    if (!pWnd)
+    {
+        ERR("!pWnd\n");
         return 0;
+    }
 
     hIMC = ImmGetContext(hWnd);
-    if (IS_NULL_UNEXPECTEDLY(hIMC))
+    if (!hIMC)
+    {
+        ERR("!hIMC\n");
         return 0;
+    }
 
     uVK = *puVK = (wParam & 0xFF);
 
     pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
-    if (IS_NULL_UNEXPECTEDLY(pIMC))
+    if (!pIMC)
+    {
+        ERR("!pIMC\n");
         return 0;
+    }
 
     pImeDpi = ImmLockImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return 0;
+    }
 
     if ((lParam & MAKELPARAM(0, KF_UP)) && (pImeDpi->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
         goto Quit;

@@ -52,8 +52,11 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     // clone the message list
     cbTempList = (dwCount + 1) * sizeof(TRANSMSG);
     pTempList = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbTempList);
-    if (IS_NULL_UNEXPECTEDLY(pTempList))
+    if (!pTempList)
+    {
+        ERR("!pTempList\n");
         return 0;
+    }
     RtlCopyMemory(pTempList, pTrans, dwCount * sizeof(TRANSMSG));
 
     if (pIC->dwUIFlags & 0x2)
@@ -188,12 +191,16 @@ WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi
     LPCOMPOSITIONSTRING pCS;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return 0;
+    }
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (IS_NULL_UNEXPECTEDLY(pCS))
+    if (!pCS)
     {
+        ERR("!pCS\n");
         ImmUnlockIMC(hIMC);
         return 0;
     }

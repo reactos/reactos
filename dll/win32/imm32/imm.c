@@ -137,8 +137,11 @@ BOOL WINAPI ImmFreeLayout(HKL hKL)
         if (cKLs)
         {
             pList = ImmLocalAlloc(0, cKLs * sizeof(HKL));
-            if (IS_NULL_UNEXPECTEDLY(pList))
+            if (!pList)
+            {
+                ERR("!pList\n");
                 return FALSE;
+            }
 
             cKLs = GetKeyboardLayoutList(cKLs, pList);
             for (iKL = 0; iKL < cKLs; ++iKL)
@@ -196,8 +199,11 @@ VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
     PIME_STATE pNewState = NULL, pOldState = NULL;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return;
+    }
 
     pNewImeDpi = ImmLockImeDpi(hNewKL);
 
@@ -505,8 +511,11 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
     }
 
     pWnd = ValidateHwnd(hWnd);
-    if (IS_NULL_UNEXPECTEDLY(pWnd))
+    if (!pWnd)
+    {
+        ERR("!pWnd\n");
         return NULL;
+    }
 
     if (hIMC && IS_CROSS_THREAD_HIMC(hIMC))
         return NULL;
@@ -602,12 +611,16 @@ HIMC WINAPI ImmCreateContext(void)
     }
 
     pClientImc = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return NULL;
+    }
 
     hIMC = NtUserCreateInputContext((ULONG_PTR)pClientImc);
-    if (IS_NULL_UNEXPECTEDLY(hIMC))
+    if (!hIMC)
     {
+        ERR("!hIMC\n");
         ImmLocalFree(pClientImc);
         return NULL;
     }
@@ -659,8 +672,11 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     }
 
     pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
-    if (IS_NULL_UNEXPECTEDLY(pIMC))
+    if (!pIMC)
+    {
+        ERR("!pIMC\n");
         return FALSE;
+    }
 
     if (pIMC->head.pti != Imm32CurrentPti())
     {
@@ -686,12 +702,16 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 
     InterlockedIncrement(&pClientImc->cLockObj);
 
-    if (IS_NULL_UNEXPECTEDLY(pClientImc->hInputContext))
+    if (!pClientImc->hInputContext)
+    {
+        ERR("!pClientImc->hInputContext\n");
         goto Quit;
+    }
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
     {
+        ERR("!pIC\n");
         ImmUnlockClientImc(pClientImc);
         return FALSE;
     }
@@ -748,30 +768,37 @@ Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HK
     pIC->hCandInfo = ImmCreateIMCC(sizeof(CANDIDATEINFO));
     pIC->hGuideLine = ImmCreateIMCC(sizeof(GUIDELINE));
     pIC->hMsgBuf = ImmCreateIMCC(sizeof(UINT));
-    if (IS_NULL_UNEXPECTEDLY(pIC->hCompStr) ||
-        IS_NULL_UNEXPECTEDLY(pIC->hCandInfo) ||
-        IS_NULL_UNEXPECTEDLY(pIC->hGuideLine) ||
-        IS_NULL_UNEXPECTEDLY(pIC->hMsgBuf))
+    if (!pIC->hCompStr || !pIC->hCandInfo || !pIC->hGuideLine || !pIC->hMsgBuf)
     {
+        ERR("%p, %p, %p, %p\n", pIC->hCompStr, pIC->hCandInfo, pIC->hGuideLine, pIC->hMsgBuf);
         goto Fail;
     }
 
     /* Initialize IC components */
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (IS_NULL_UNEXPECTEDLY(pCS))
+    if (!pCS)
+    {
+        ERR("!pCS\n");
         goto Fail;
+    }
     pCS->dwSize = sizeof(COMPOSITIONSTRING);
     ImmUnlockIMCC(pIC->hCompStr);
 
     pCI = ImmLockIMCC(pIC->hCandInfo);
-    if (IS_NULL_UNEXPECTEDLY(pCI))
+    if (!pCI)
+    {
+        ERR("!pCI\n");
         goto Fail;
+    }
     pCI->dwSize = sizeof(CANDIDATEINFO);
     ImmUnlockIMCC(pIC->hCandInfo);
 
     pGL = ImmLockIMCC(pIC->hGuideLine);
-    if (IS_NULL_UNEXPECTEDLY(pGL))
+    if (!pGL)
+    {
+        ERR("!pGL\n");
         goto Fail;
+    }
     pGL->dwSize = sizeof(GUIDELINE);
     ImmUnlockIMCC(pIC->hGuideLine);
 
@@ -800,8 +827,11 @@ Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HK
 
     /* Create private data */
     pIC->hPrivate = ImmCreateIMCC(cbPrivate);
-    if (IS_NULL_UNEXPECTEDLY(pIC->hPrivate))
+    if (!pIC->hPrivate)
+    {
+        ERR("!pIC->hPrivate\n");
         goto Fail;
+    }
 
     CtfImmTIMCreateInputContext(hIMC);
 
@@ -854,8 +884,11 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     if (pClientImc->hInputContext)
     {
         pIC = LocalLock(pClientImc->hInputContext);
-        if (IS_NULL_UNEXPECTEDLY(pIC))
+        if (!pIC)
+        {
+            ERR("!pIC\n");
             goto Failure;
+        }
 
         CtfImmTIMCreateInputContext(hIMC);
         goto Success;
@@ -883,8 +916,9 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
 
     hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
     pIC = LocalLock(hIC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
     {
+        ERR("!pIC\n");
         LocalFree(hIC);
         goto Failure;
     }
@@ -942,8 +976,11 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
     TRACE("(%p)\n", hImc);
 
-    if (IS_NULL_UNEXPECTEDLY(hImc))
+    if (!hImc)
+    {
+        ERR("!hImc\n");
         return NULL;
+    }
 
     pIMC = ValidateHandle(hImc, TYPE_INPUTCONTEXT);
     if (!pIMC || !Imm32CheckImcProcess(pIMC))
@@ -958,8 +995,11 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     }
 
     pClientImc = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return NULL;
+    }
 
     RtlInitializeCriticalSection(&pClientImc->cs);
     pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
@@ -1020,7 +1060,13 @@ static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
     }
 
     pWnd = ValidateHwnd(hWnd);
-    if (IS_NULL_UNEXPECTEDLY(pWnd) || IS_CROSS_PROCESS_HWND(hWnd))
+    if (!pWnd)
+    {
+        ERR("!pWnd\n");
+        return NULL;
+    }
+
+    if (IS_CROSS_PROCESS_HWND(hWnd))
         return NULL;
 
     hIMC = pWnd->hImc;
@@ -1029,8 +1075,11 @@ static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
 
 Quit:
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return NULL;
+    }
 
     if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_DISABLEIME))
         hIMC = NULL;
@@ -1045,8 +1094,11 @@ Quit:
 HIMC WINAPI ImmGetContext(HWND hWnd)
 {
     TRACE("(%p)\n", hWnd);
-    if (IS_NULL_UNEXPECTEDLY(hWnd))
+    if (!hWnd)
+    {
+        ERR("!hWnd\n");
         return NULL;
+    }
     return ImmGetSaveContext(hWnd, 2);
 }
 
@@ -1069,8 +1121,11 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
     PCLIENTIMC pClientImc;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     if (pClientImc->hInputContext)
         LocalUnlock(pClientImc->hInputContext);
@@ -1150,12 +1205,16 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     }
     else if (hIMC)
     {
-        if (IS_NULL_UNEXPECTEDLY(pClientImc))
+        if (!pClientImc)
+        {
+            ERR("!pClientImc\n");
             return FALSE;
+        }
 
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-        if (IS_NULL_UNEXPECTEDLY(pIC))
+        if (!pIC)
         {
+            ERR("!pIC\n");
             ImmUnlockClientImc(pClientImc);
             return FALSE;
         }
@@ -1240,8 +1299,11 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
     TRACE("(%p, %d)\n", hwnd, fFlag);
 
     hIMC = ImmGetContext(hwnd);
-    if (IS_NULL_UNEXPECTEDLY(hIMC))
+    if (!hIMC)
+    {
+        ERR("!hIMC\n");
         return FALSE;
+    }
     return ImmSetActiveContext(hwnd, hIMC, fFlag);
 }
 

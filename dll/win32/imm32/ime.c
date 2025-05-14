@@ -291,8 +291,11 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     }
 
     pImeDpiNew = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IMEDPI));
-    if (IS_NULL_UNEXPECTEDLY(pImeDpiNew))
+    if (!pImeDpiNew)
+    {
+        ERR("!pImeDpiNew\n");
         return NULL;
+    }
 
     pImeDpiNew->hKL = hKL;
 
@@ -426,12 +429,18 @@ HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
     TRACE("(%s, %s)\n", lpszIMEFileName, lpszLayoutText);
 
     pszFileNameW = Imm32WideFromAnsi(CP_ACP, lpszIMEFileName);
-    if (IS_NULL_UNEXPECTEDLY(pszFileNameW))
+    if (!pszFileNameW)
+    {
+        ERR("!pszFileNameW\n");
         goto Quit;
+    }
 
     pszLayoutTextW = Imm32WideFromAnsi(CP_ACP, lpszLayoutText);
-    if (IS_NULL_UNEXPECTEDLY(pszLayoutTextW))
+    if (!pszLayoutTextW)
+    {
+        ERR("!pszLayoutTextW\n");
         goto Quit;
+    }
 
     hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
 
@@ -458,8 +467,11 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
 
     GetFullPathNameW(lpszIMEFileName, _countof(szImeFileName), szImeFileName, &pchFilePart);
     CharUpperW(szImeFileName);
-    if (IS_NULL_UNEXPECTEDLY(pchFilePart))
+    if (!pchFilePart)
+    {
+        ERR("!pchFilePart\n");
         return NULL;
+    }
 
     /* Load the IME version info */
     InfoEx.hkl = hNewKL = NULL;
@@ -476,8 +488,11 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     if (cLayouts)
     {
         pLayouts = ImmLocalAlloc(0, cLayouts * sizeof(REG_IME));
-        if (IS_NULL_UNEXPECTEDLY(pLayouts))
+        if (!pLayouts)
+        {
+            ERR("!pLayouts\n");
             return NULL;
+        }
 
         if (!Imm32GetImeLayout(pLayouts, cLayouts))
         {
@@ -590,8 +605,11 @@ BOOL WINAPI ImmNotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwV
 
     hKL = GetKeyboardLayout(0);
     pImeDpi = ImmLockImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return FALSE;
+    }
 
     ret = pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
     ImmUnlockImeDpi(pImeDpi);
@@ -918,8 +936,11 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
     if (ImeInfoEx.fLoadFlag != 2)
     {
         pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-        if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+        if (!pImeDpi)
+        {
+            ERR("!pImeDpi\n");
             return FALSE;
+        }
 
         pImeInfo = &pImeDpi->ImeInfo;
     }
@@ -958,8 +979,11 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return 0;
+    }
 
     if (!ImeDpi_IsUnicode(pImeDpi) || !lpData) /* No conversion needed */
     {
@@ -1047,8 +1071,11 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return 0;
+    }
 
     if (ImeDpi_IsUnicode(pImeDpi) || !lpData) /* No conversion needed */
     {
@@ -1120,12 +1147,18 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (IS_NULL_UNEXPECTEDLY(hIMC))
+    if (!hIMC)
+    {
+        ERR("!hIMC\n");
         return FALSE;
+    }
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     ret = pIC->fOpen;
     ImmUnlockIMC(hIMC);
@@ -1149,8 +1182,11 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (pIC->fOpen != fOpen)
     {
@@ -1187,8 +1223,11 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
     TRACE("(%p, %p)\n", hIMC, lpptPos);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     ret = !!(pIC->fdwInit & INIT_STATUSWNDPOS);
     if (ret)
@@ -1212,8 +1251,11 @@ BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     hWnd = pIC->hWnd;
     pIC->ptStatusWndPos = *lpptPos;
@@ -1237,8 +1279,11 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
     TRACE("(%p, %p)\n", hIMC, lpCompForm);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (pIC->fdwInit & INIT_COMPFORM)
     {
@@ -1262,8 +1307,11 @@ BOOL WINAPI ImmSetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
         return FALSE;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     pIC->cfCompForm = *lpCompForm;
     pIC->fdwInit |= INIT_COMPFORM;
@@ -1294,15 +1342,21 @@ BOOL WINAPI ImmGetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     TRACE("(%p, %p)\n", hIMC, lplf);
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (pIC->fdwInit & INIT_LOGFONT)
     {
@@ -1331,15 +1385,21 @@ BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     TRACE("(%p, %p)\n", hIMC, lplf);
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (pIC->fdwInit & INIT_LOGFONT)
     {
@@ -1373,8 +1433,11 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
@@ -1386,8 +1449,11 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     }
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
@@ -1429,8 +1495,11 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
@@ -1442,8 +1511,11 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     }
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
@@ -1483,8 +1555,11 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     TRACE("(%p, %p, %s, %p, %lu, 0x%lX)\n", hKL, hIMC, pSrc, lpDst, dwBufLen, uFlag);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return 0;
+    }
 
     if (!ImeDpi_IsUnicode(pImeDpi)) /* No conversion needed */
     {
@@ -1496,8 +1571,11 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     if (pSrc)
     {
         pszSrcW = Imm32WideFromAnsi(pImeDpi->uCodePage, pSrc);
-        if (IS_NULL_UNEXPECTEDLY(pszSrcW))
+        if (!pszSrcW)
+        {
+            ERR("!pszSrcW\n");
             goto Quit;
+        }
     }
 
     cb = pImeDpi->ImeConversionList(hIMC, pszSrcW, NULL, 0, uFlag);
@@ -1505,8 +1583,11 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
         goto Quit;
 
     pCL = ImmLocalAlloc(0, cb);
-    if (IS_NULL_UNEXPECTEDLY(pCL))
+    if (!pCL)
+    {
+        ERR("!pCL\n");
         goto Quit;
+    }
 
     cb = pImeDpi->ImeConversionList(hIMC, pszSrcW, pCL, cb, uFlag);
     if (IS_ZERO_UNEXPECTEDLY(cb))
@@ -1538,8 +1619,11 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     TRACE("(%p, %p, %S, %p, %lu, 0x%lX)\n", hKL, hIMC, pSrc, lpDst, dwBufLen, uFlag);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return 0;
+    }
 
     if (ImeDpi_IsUnicode(pImeDpi)) /* No conversion needed */
     {
@@ -1551,8 +1635,11 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     if (pSrc)
     {
         pszSrcA = Imm32AnsiFromWide(pImeDpi->uCodePage, pSrc);
-        if (IS_NULL_UNEXPECTEDLY(pszSrcA))
+        if (!pszSrcA)
+        {
+            ERR("!pszSrcA\n");
             goto Quit;
+        }
     }
 
     cb = pImeDpi->ImeConversionList(hIMC, pszSrcA, NULL, 0, uFlag);
@@ -1560,8 +1647,11 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
         goto Quit;
 
     pCL = ImmLocalAlloc(0, cb);
-    if (IS_NULL_UNEXPECTEDLY(pCL))
+    if (!pCL)
+    {
+        ERR("!pCL\n");
         goto Quit;
+    }
 
     cb = pImeDpi->ImeConversionList(hIMC, pszSrcA, pCL, cb, uFlag);
     if (IS_ZERO_UNEXPECTEDLY(cb))
@@ -1587,8 +1677,11 @@ BOOL WINAPI ImmGetConversionStatus(HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD l
     TRACE("(%p %p %p)\n", hIMC, lpfdwConversion, lpfdwSentence);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (lpfdwConversion)
     {
@@ -1627,8 +1720,11 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     if (pIC->fdwConversion != fdwConversion)
     {
@@ -1677,12 +1773,21 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     TRACE("(%p, %p, 0x%lX, %p)\n", hKL, hWnd, dwMode, lpData);
 
-    if (IS_NULL_UNEXPECTEDLY(ValidateHwnd(hWnd)) || IS_CROSS_PROCESS_HWND(hWnd))
+    if (!ValidateHwnd(hWnd))
+    {
+        ERR("!ValidateHwnd(hWnd)\n");
+        return FALSE;
+    }
+
+    if (IS_CROSS_PROCESS_HWND(hWnd))
         return FALSE;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return FALSE;
+    }
 
     RtlZeroMemory(&RegWordW, sizeof(RegWordW));
 
@@ -1694,15 +1799,21 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     if (pRegWordA->lpReading)
     {
         RegWordW.lpReading = Imm32WideFromAnsi(pImeDpi->uCodePage, pRegWordA->lpReading);
-        if (IS_NULL_UNEXPECTEDLY(RegWordW.lpReading))
+        if (!RegWordW.lpReading)
+        {
+            ERR("!RegWordW.lpReading\n");
             goto Quit;
+        }
     }
 
     if (pRegWordA->lpWord)
     {
         RegWordW.lpWord = Imm32WideFromAnsi(pImeDpi->uCodePage, pRegWordA->lpWord);
-        if (IS_NULL_UNEXPECTEDLY(RegWordW.lpWord))
+        if (!RegWordW.lpWord)
+        {
+            ERR("!RegWordW.lpWord\n");
             goto Quit;
+        }
     }
 
     lpData = &RegWordW;
@@ -1732,12 +1843,21 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     TRACE("(%p, %p, 0x%lX, %p)\n", hKL, hWnd, dwMode, lpData);
 
-    if (IS_NULL_UNEXPECTEDLY(ValidateHwnd(hWnd)) || IS_CROSS_PROCESS_HWND(hWnd))
+    if (!ValidateHwnd(hWnd))
+    {
+        ERR("!ValidateHwnd(hWnd)\n");
+        return FALSE;
+    }
+
+    if (IS_CROSS_PROCESS_HWND(hWnd))
         return FALSE;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return FALSE;
+    }
 
     RtlZeroMemory(&RegWordA, sizeof(RegWordA));
 
@@ -1749,15 +1869,21 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     if (pRegWordW->lpReading)
     {
         RegWordA.lpReading = Imm32AnsiFromWide(pImeDpi->uCodePage, pRegWordW->lpReading);
-        if (IS_NULL_UNEXPECTEDLY(RegWordA.lpReading))
+        if (!RegWordA.lpReading)
+        {
+            ERR("!RegWordA.lpReading\n");
             goto Quit;
+        }
     }
 
     if (pRegWordW->lpWord)
     {
         RegWordA.lpWord = Imm32AnsiFromWide(pImeDpi->uCodePage, pRegWordW->lpWord);
-        if (IS_NULL_UNEXPECTEDLY(RegWordA.lpWord))
+        if (!RegWordA.lpWord)
+        {
+            ERR("!RegWordA.lpWord\n");
             goto Quit;
+        }
     }
 
     lpData = &RegWordA;
@@ -1794,12 +1920,18 @@ BOOL WINAPI ImmWINNLSEnableIME(HWND hWnd, BOOL enable)
     }
 
     hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
-    if (IS_NULL_UNEXPECTEDLY(hIMC))
+    if (!hIMC)
+    {
+        ERR("!hIMC\n");
         return FALSE;
+    }
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return FALSE;
+    }
 
     ret = !(pClientImc->dwFlags & CLIENTIMC_DISABLEIME);
     if (!!enable == ret)

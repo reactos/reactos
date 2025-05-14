@@ -161,20 +161,25 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     LPCANDIDATELIST pCL;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return 0;
+    }
 
     uCodePage = pClientImc->uCodePage;
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
     {
+        ERR("!pIC\n");
         ImmUnlockClientImc(pClientImc);
         return 0;
     }
 
     pCI = ImmLockIMCC(pIC->hCandInfo);
-    if (IS_NULL_UNEXPECTEDLY(pCI))
+    if (!pCI)
     {
+        ERR("!pCI\n");
         ImmUnlockIMC(hIMC);
         ImmUnlockClientImc(pClientImc);
         return 0;
@@ -254,18 +259,25 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
     const CANDIDATELIST *pCL;
     const DWORD *pdwOffsets;
 
-    if (IS_NULL_UNEXPECTEDLY(lpdwListCount))
+    if (!lpdwListCount)
+    {
+        ERR("!lpdwListCount\n");
         return 0;
+    }
 
     *lpdwListCount = 0;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return 0;
+    }
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
     {
+        ERR("!pIC\n");
         ImmUnlockClientImc(pClientImc);
         return 0;
     }
@@ -273,8 +285,9 @@ ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
     uCodePage = pClientImc->uCodePage;
 
     pCI = ImmLockIMCC(pIC->hCandInfo);
-    if (IS_NULL_UNEXPECTEDLY(pCI))
+    if (!pCI)
     {
+        ERR("!pCI\n");
         ImmUnlockIMC(hIMC);
         ImmUnlockClientImc(pClientImc);
         return 0;
@@ -389,8 +402,11 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
     }
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     pCF = &pIC->cfCandForm[dwIndex];
     if (pCF->dwIndex != IMM_INVALID_CANDFORM)
@@ -420,12 +436,18 @@ BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
         return FALSE;
     }
 
-    if (IS_CROSS_THREAD_HIMC(hIMC))
+    if (!hIMC)
+    {
+        ERR("!hIMC\n");
         return FALSE;
+    }
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     hWnd = pIC->hWnd;
     pIC->cfCandForm[lpCandidate->dwIndex] = *lpCandidate;

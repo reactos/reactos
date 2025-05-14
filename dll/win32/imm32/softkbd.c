@@ -2124,8 +2124,11 @@ ImmCreateSoftKeyboard(
     /* Check IME */
     hKL = GetKeyboardLayout(0);
     pImeDpi = ImmLockImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return NULL; /* No IME */
+    }
 
     UICaps = pImeDpi->ImeInfo.fdwUICaps;
     ImmUnlockImeDpi(pImeDpi);

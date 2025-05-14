@@ -23,12 +23,16 @@ Imm32OpenICAndCS(HIMC hIMC, LPINPUTCONTEXT *ppIC, LPCOMPOSITIONSTRING *ppCS)
     *ppCS = NULL;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return FALSE;
+    }
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (IS_NULL_UNEXPECTEDLY(pCS))
+    if (!pCS)
     {
+        ERR("!pCS\n");
         ImmUnlockIMC(hIMC);
         return FALSE;
     }
@@ -539,8 +543,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
 
     hKL = GetKeyboardLayout(dwThreadId);
     pImeDpi = ImmLockImeDpi(hKL);
-    if (IS_NULL_UNEXPECTEDLY(pImeDpi))
+    if (!pImeDpi)
+    {
+        ERR("!pImeDpi\n");
         return FALSE;
+    }
 
     uCodePage = pImeDpi->uCodePage;
     bAnsiClient = !ImeDpi_IsUnicode(pImeDpi);
@@ -590,8 +597,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32CompStrWideToAnsi(pComp, dwCompLen, NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompStrWideToAnsi(pComp, dwCompLen, pCompNew, cbCompNew, uCodePage);
                 }
@@ -599,8 +609,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32CompStrAnsiToWide(pComp, dwCompLen, NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompStrAnsiToWide(pComp, dwCompLen, pCompNew, cbCompNew, uCodePage);
                 }
@@ -612,8 +625,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32CompStrWideToAnsi(pRead, dwReadLen, NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompStrWideToAnsi(pRead, dwReadLen, pReadNew, cbReadNew, uCodePage);
                 }
@@ -621,8 +637,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32CompStrAnsiToWide(pRead, dwReadLen, NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompStrAnsiToWide(pRead, dwReadLen, pReadNew, cbReadNew, uCodePage);
                 }
@@ -639,8 +658,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeW(pCS, CompStr),
                                                         NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompAttrWideToAnsi(pComp, dwCompLen,
                                             CS_StrW(pCS, CompStr), CS_SizeW(pCS, CompStr),
@@ -653,8 +675,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeA(pCS, CompStr),
                                                         NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompAttrAnsiToWide(pComp, dwCompLen,
                                             CS_StrA(pCS, CompStr), CS_SizeA(pCS, CompStr),
@@ -671,8 +696,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeW(pCS, CompReadStr),
                                                         NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompAttrWideToAnsi(pRead, dwReadLen,
                                             CS_StrW(pCS, CompReadStr), CS_SizeW(pCS, CompReadStr),
@@ -685,8 +713,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                                                         CS_SizeA(pCS, CompReadStr),
                                                         NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompAttrAnsiToWide(pRead, dwReadLen,
                                             CS_StrA(pCS, CompReadStr), CS_SizeA(pCS, CompReadStr),
@@ -703,8 +734,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbCompNew = Imm32CompClauseWideToAnsi(pComp, dwCompLen, CS_StrW(pCS, CompStr),
                                                           NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompClauseWideToAnsi(pComp, dwCompLen, CS_StrW(pCS, CompStr),
                                               pCompNew, cbCompNew, uCodePage);
@@ -714,8 +748,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbCompNew = Imm32CompClauseAnsiToWide(pComp, dwCompLen, CS_StrA(pCS, CompStr),
                                                           NULL, 0, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompClauseAnsiToWide(pComp, dwCompLen, CS_StrA(pCS, CompStr),
                                               pCompNew, cbCompNew, uCodePage);
@@ -729,8 +766,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbReadNew = Imm32CompClauseWideToAnsi(pRead, dwReadLen, CS_StrW(pCS, CompReadStr),
                                                           NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompClauseWideToAnsi(pRead, dwReadLen,
                                               CS_StrW(pCS, CompReadStr),
@@ -741,8 +781,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                     cbReadNew = Imm32CompClauseAnsiToWide(pRead, dwReadLen, CS_StrA(pCS, CompReadStr),
                                                           NULL, 0, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     Imm32CompClauseAnsiToWide(pRead, dwReadLen, CS_StrA(pCS, CompReadStr),
                                               pReadNew, cbReadNew, uCodePage);
@@ -758,8 +801,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32ReconvertAnsiFromWide(NULL, pComp, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     pRS = pCompNew;
                     pRS->dwSize = cbCompNew;
@@ -770,8 +816,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbCompNew = Imm32ReconvertWideFromAnsi(NULL, pComp, uCodePage);
                     pCompNew = ImmLocalAlloc(0, cbCompNew);
-                    if (IS_NULL_UNEXPECTEDLY(pCompNew))
+                    if (!pCompNew)
+                    {
+                        ERR("!pCompNew\n");
                         goto Quit;
+                    }
 
                     pRS = pCompNew;
                     pRS->dwSize = cbCompNew;
@@ -786,8 +835,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32ReconvertAnsiFromWide(NULL, pRead, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     pRS = pReadNew;
                     pRS->dwSize = cbReadNew;
@@ -798,8 +850,11 @@ ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLe
                 {
                     cbReadNew = Imm32ReconvertWideFromAnsi(NULL, pRead, uCodePage);
                     pReadNew = ImmLocalAlloc(0, cbReadNew);
-                    if (IS_NULL_UNEXPECTEDLY(pReadNew))
+                    if (!pReadNew)
+                    {
+                        ERR("!pReadNew\n");
                         goto Quit;
+                    }
 
                     pRS = pReadNew;
                     pRS->dwSize = cbReadNew;
@@ -864,24 +919,34 @@ LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
 
     TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
-    if (dwBufLen && IS_NULL_UNEXPECTEDLY(lpBuf))
+    if (dwBufLen && !lpBuf)
+    {
+        ERR("dwBufLen && !lpBuf\n");
         return 0;
+    }
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return 0;
+    }
 
     bAnsiClient = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     uCodePage = pClientImc->uCodePage;
     ImmUnlockClientImc(pClientImc);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return 0;
+    }
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (IS_NULL_UNEXPECTEDLY(pCS))
+    if (!pCS)
     {
+        ERR("!pCS\n");
         ImmUnlockIMC(hIMC);
         return 0;
     }
@@ -907,24 +972,34 @@ LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
 
     TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
-    if (dwBufLen && IS_NULL_UNEXPECTEDLY(lpBuf))
+    if (dwBufLen && !lpBuf)
+    {
+        ERR("dwBufLen && !lpBuf\n");
         return 0;
+    }
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return 0;
+    }
 
     bAnsiClient = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     uCodePage = pClientImc->uCodePage;
     ImmUnlockClientImc(pClientImc);
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
+    {
+        ERR("!pIC\n");
         return 0;
+    }
 
     pCS = ImmLockIMCC(pIC->hCompStr);
-    if (IS_NULL_UNEXPECTEDLY(pCS))
+    if (!pCS)
     {
+        ERR("!pCS\n");
         ImmUnlockIMC(hIMC);
         return 0;
     }

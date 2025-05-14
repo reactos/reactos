@@ -53,8 +53,6 @@
 #if DBG
     #define FAILED_UNEXPECTEDLY(hr) \
         (FAILED(hr) ? (ERR("FAILED(0x%08X)\n", hr), UNEXPECTED()) : FALSE)
-    #define IS_NULL_UNEXPECTEDLY(p) \
-        (!(p) ? (ERR("%s was NULL\n", #p), UNEXPECTED()) : FALSE)
     #define IS_ZERO_UNEXPECTEDLY(p) \
         (!(p) ? (ERR("%s was zero\n", #p), UNEXPECTED()) : FALSE)
     #define IS_TRUE_UNEXPECTEDLY(x) \
@@ -63,7 +61,6 @@
         ((x) != ERROR_SUCCESS ? (ERR("%s was %d\n", #x, (int)(x)), UNEXPECTED()) : FALSE)
 #else
     #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
-    #define IS_NULL_UNEXPECTEDLY(p) (!(p))
     #define IS_ZERO_UNEXPECTEDLY(p) (!(p))
     #define IS_TRUE_UNEXPECTEDLY(x) (x)
     #define IS_ERROR_UNEXPECTEDLY(x) ((x) != ERROR_SUCCESS)

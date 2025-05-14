@@ -22,21 +22,26 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
     UINT uCodePage;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return 0;
+    }
 
     uCodePage = pClientImc->uCodePage;
 
     pIC = ImmLockIMC(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pIC))
+    if (!pIC)
     {
+        ERR("!pIC\n");
         ImmUnlockClientImc(pClientImc);
         return 0;
     }
 
     pGuideLine = ImmLockIMCC(pIC->hGuideLine);
-    if (IS_NULL_UNEXPECTEDLY(pGuideLine))
+    if (!pGuideLine)
     {
+        ERR("!pGuideLine\n");
         ImmUnlockIMC(hIMC);
         ImmUnlockClientImc(pClientImc);
         return 0;

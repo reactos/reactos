@@ -217,8 +217,12 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
     PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return -1;
+    }
+
     ret = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
     return ret;
@@ -228,8 +232,12 @@ LPWSTR APIENTRY Imm32WideFromAnsi(UINT uCodePage, LPCSTR pszA)
 {
     INT cch = lstrlenA(pszA);
     LPWSTR pszW = ImmLocalAlloc(0, (cch + 1) * sizeof(WCHAR));
-    if (IS_NULL_UNEXPECTEDLY(pszW))
+    if (!pszW)
+    {
+        ERR("!pszW\n");
         return NULL;
+    }
+
     cch = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pszA, cch, pszW, cch + 1);
     pszW[cch] = 0;
     return pszW;
@@ -240,8 +248,12 @@ LPSTR APIENTRY Imm32AnsiFromWide(UINT uCodePage, LPCWSTR pszW)
     INT cchW = lstrlenW(pszW);
     INT cchA = (cchW + 1) * sizeof(WCHAR);
     LPSTR pszA = ImmLocalAlloc(0, cchA);
-    if (IS_NULL_UNEXPECTEDLY(pszA))
+    if (!pszA)
+    {
+        ERR("!pszA\n");
         return NULL;
+    }
+
     cchA = WideCharToMultiByte(uCodePage, 0, pszW, cchW, pszA, cchA, NULL, NULL);
     pszA[cchA] = 0;
     return pszA;
@@ -393,8 +405,11 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
     HIMC hIMC;
     DWORD_PTR dwPID1, dwPID2;
 
-    if (IS_NULL_UNEXPECTEDLY(pIMC))
+    if (!pIMC)
+    {
+        ERR("!pIMC\n");
         return FALSE;
+    }
 
     if (pIMC->head.pti == Imm32CurrentPti())
         return TRUE;
@@ -417,8 +432,11 @@ LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
     if (!ghImmHeap)
     {
         ghImmHeap = RtlGetProcessHeap();
-        if (IS_NULL_UNEXPECTEDLY(ghImmHeap))
+        if (!ghImmHeap)
+        {
+            ERR("!ghImmHeap\n");
             return NULL;
+        }
     }
     return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
 }
@@ -466,8 +484,11 @@ DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList)
     HIMC *phNewList;
 
     phNewList = ImmLocalAlloc(0, dwCount * sizeof(HIMC));
-    if (IS_NULL_UNEXPECTEDLY(phNewList))
+    if (!phNewList)
+    {
+        ERR("!phNewList\n");
         return 0;
+    }
 
     Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     while (Status == STATUS_BUFFER_TOO_SMALL)
@@ -477,8 +498,11 @@ DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList)
             return 0;
 
         phNewList = ImmLocalAlloc(0, dwCount * sizeof(HIMC));
-        if (IS_NULL_UNEXPECTEDLY(phNewList))
+        if (phNewList)
+        {
+            ERR("!phNewList\n");
             return 0;
+        }
 
         Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     }
@@ -545,8 +569,11 @@ BOOL APIENTRY
 Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
     PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
-    if (IS_NULL_UNEXPECTEDLY(pSubState))
+    if (!pSubState)
+    {
+        ERR("!pSubState\n");
         return FALSE;
+    }
 
     pIC->fdwSentence |= pSubState->dwValue;
     return TRUE;
@@ -557,8 +584,11 @@ BOOL APIENTRY
 Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
     PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
-    if (IS_NULL_UNEXPECTEDLY(pSubState))
+    if (!pSubState)
+    {
+        ERR("!pSubState\n");
         return FALSE;
+    }
 
     pSubState->dwValue = (pIC->fdwSentence & 0xffff0000);
     return TRUE;
@@ -805,8 +835,11 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
     if (!hinstVersion)
     {
         hinstVersion = LoadLibraryW(szPath);
-        if (IS_NULL_UNEXPECTEDLY(hinstVersion))
+        if (!hinstVersion)
+        {
+            ERR("!hinstVersion\n");
             return FALSE;
+        }
 
         bLoaded = TRUE;
     }
@@ -828,8 +861,11 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
         goto Quit;
 
     pVerInfo = ImmLocalAlloc(0, cbVerInfo);
-    if (IS_NULL_UNEXPECTEDLY(pVerInfo))
+    if (!pVerInfo)
+    {
+        ERR("!pVerInfo\n");
         goto Quit;
+    }
 
     /* Load the version info of the IME module */
     if (s_fnGetFileVersionInfoW(szPath, dwHandle, cbVerInfo, pVerInfo) &&
@@ -1084,8 +1120,11 @@ BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
     if (!hinstLZ32)
     {
         hinstLZ32 = LoadLibraryW(szLZ32Path);
-        if (IS_NULL_UNEXPECTEDLY(hinstLZ32))
+        if (!hinstLZ32)
+        {
+            ERR("!hinstLZ32\n");
             return FALSE;
+        }
         bLoaded = TRUE;
     }
 
@@ -1199,8 +1238,11 @@ DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
     PCLIENTIMC pClientImc;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return 0;
+    }
 
     ret = 0;
     hInputContext = pClientImc->hInputContext;
