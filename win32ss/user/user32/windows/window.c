@@ -932,9 +932,9 @@ GetAncestor(_In_ HWND hwnd, _In_ UINT uType)
     if (!pWnd || pWnd == GetThreadDesktopWnd())
         return NULL;
 
+    /* Special handling optimized for speed */
     if (uType == GA_PARENT)
     {
-        /* Optimized for speed */
         HWND hwndAncestor = NULL;
 
         _SEH2_TRY

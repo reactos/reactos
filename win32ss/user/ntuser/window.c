@@ -3401,7 +3401,8 @@ UserGetAncestor(_In_ PWND pWnd, _In_ UINT uType)
             break;
 
         case GA_ROOTOWNER:
-            for (PWND pwndNode = Parent; pwndNode; pwndNode = IntGetParent(pwndNode))
+            WndAncestor = pWnd;
+            for (PWND pwndNode = IntGetParent(pWnd); pwndNode; pwndNode = IntGetParent(pwndNode))
             {
                 WndAncestor = pwndNode;
             }
