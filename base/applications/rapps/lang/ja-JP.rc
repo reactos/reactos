@@ -4,7 +4,7 @@
  * PURPOSE:     Japanese resource file
  * TRANSLATORS: Copyright 2009 pcds90net <ds200xnet-ros@yahoo.co.jp>
  *              Copyright 2009 Tomoya Kitagawa (sabiki) <jptomoya@yahoo.co.jp>
- *              Copyright 2019-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2019-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
@@ -87,7 +87,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
-CAPTION "ダウンロード %ls..."
+CAPTION "%ls をダウンロード中..."
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -133,7 +133,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nアンインストールに使用する文字列: "
     IDS_INFO_MODIFYPATH "\n変更に使用するパス: "
     IDS_INFO_INSTALLDATE "\nインストールした日付: "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_AINFO_PACKAGE_NAME "\nパッケージ名: "
 END
 
 STRINGTABLE
@@ -145,7 +145,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nホームページ: "
     IDS_AINFO_LICENSE "\nライセンス: "
     IDS_AINFO_URLDOWNLOAD "\nダウンロード: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\n言語: "
 END
 
 STRINGTABLE
@@ -176,9 +176,9 @@ BEGIN
     IDS_WELCOME_TEXT "左側からカテゴリを選択し、インストールまたはアンインストールするアプリを選んでください。\nReactOS ウェブ サイト: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "プログラムの追加と削除"
+    IDS_APPWIZ_TEXT1 "「アプリケーション」または「更新」を選択すると、システムにインストールされているアプリケーションまたは更新内容の一覧が表示されます。"
+    IDS_APPWIZ_TEXT2 "プログラムを削除したり、インストールされているコンポーネントを変更するには、リストからプログラムを選択し、「アンインストール」または「変更」をクリックします。"
 END
 
 STRINGTABLE
@@ -206,7 +206,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "ディスクへの書き込みができません。容量を確認して下さい。"
     IDS_INSTALL_SELECTED "選択をインストール"
     IDS_SELECTEDFORINST "インストールを選択済み"
-    IDS_MISMATCH_CERT_INFO "証明書は未知のものです:\nSubject: %s\nIssuer: %s\nそれでも続けますか？"
+    IDS_MISMATCH_CERT_INFO "証明書は未知のものです:\n件名: %s\n発行者: %s\nそれでも続けますか？"
     IDS_UNABLE_PATH "パス形式が正しくありません"
     IDS_APP_DISPLAY_DETAILS "詳細"
     IDS_APP_DISPLAY_LIST "リスト"
@@ -243,7 +243,7 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "他の言語をサポート"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "英語をサポート"
     IDS_LANGUAGE_SINGLE "単一言語"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d 件以上)"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d 利用可能)"
 END
 
@@ -268,6 +268,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
-    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
+    IDS_INSTGEN_CONFIRMUNINST "%s をアンインストールしてもよろしいですか?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "インストールが完了しました。今すぐ %s を実行しますか?"
 END
