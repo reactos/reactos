@@ -1251,6 +1251,33 @@ LoadAndBootWindowsCommon(
     /* "Stop all motors", change videomode */
     MachPrepareForReactOS();
 
+    /* Show the "debug mode" notice if needed */
+    /* Match KdInitSystem() conditions */
+    if (!NtLdrGetOption(BootOptions, "CRASHDEBUG") &&
+        !NtLdrGetOption(BootOptions, "NODEBUG") &&
+        !!NtLdrGetOption(BootOptions, "DEBUG"))
+    {
+        /* Check whether there is a DEBUGPORT option */
+        PCSTR DebugPort;
+        ULONG DebugPortLength = 0;
+        DebugPort = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &DebugPortLength);
+        if (DebugPort != NULL && DebugPortLength > 10)
+        {
+            /* Move to the debug port name */
+            DebugPort += 10; DebugPortLength -= 10;
+        }
+        else
+        {
+            /* Default to COM */
+            DebugPort = "COM"; DebugPortLength = 3;
+        }
+
+        /* It is booting in debug mode, show the banner */
+        TuiPrintf("You need to connect a debugger on port %.*s\n"
+                  "For more information, visit https://reactos.org/wiki/Debugging.\n",
+                  DebugPortLength, DebugPort);
+    }
+
     /* Debugging... */
     //DumpMemoryAllocMap();
 
