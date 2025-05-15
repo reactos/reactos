@@ -629,6 +629,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
         if (!IS_IME_HKL(hKL) &&
             (!IS_CICERO_MODE() || IS_CICERO_COMPAT_DISABLED() || bTextServiceDisabled))
         {
+            TRACE("IME is disabled\n");
             return FALSE;
         }
 
@@ -641,7 +642,8 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
         return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
     }
 
-    /* ImeInfoExImeWindow is ignored */
+    /* NOTE: ImeInfoExImeWindow is ignored */
+    ERR("SearchType: %d\n", SearchType);
     return FALSE;
 }
 
