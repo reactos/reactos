@@ -562,7 +562,7 @@ ImmGetImeMenuItemsAW(
             if (lpImeMenuItems)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOA)) * sizeof(IMEMENUITEMINFOW));
-                pNewItems = ImmLocalAlloc(LPTR, cbTotal);
+                pNewItems = ImmLocalAlloc(0, cbTotal);
                 if (!pNewItems)
                 {
                     ERR("!pNewItems\n");
@@ -583,7 +583,7 @@ ImmGetImeMenuItemsAW(
             if (lpImeMenuItems)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOW)) * sizeof(IMEMENUITEMINFOA));
-                pNewItems = ImmLocalAlloc(LPTR, cbTotal);
+                pNewItems = ImmLocalAlloc(0, cbTotal);
                 if (!pNewItems)
                 {
                     ERR("!pNewItems\n");
