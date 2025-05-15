@@ -595,7 +595,8 @@ BOOL WINAPI ImmNotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwV
 
     TRACE("NotifyIME(%p, %ld, %ld, %p)\n", hIMC, dwAction, dwIndex, dwValue);
     ret = pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
-    TRACE("NotifyIME = %d\n", ret);
+    if (!ret)
+        ERR("NotifyIME(%p, %ld, %ld, %p) failed\n", hIMC, dwAction, dwIndex, dwValue);
 
     ImmUnlockImeDpi(pImeDpi);
     return ret;
