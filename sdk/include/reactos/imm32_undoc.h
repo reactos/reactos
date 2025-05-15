@@ -258,6 +258,12 @@ CtfImmDispatchDefImeMessage(
     _In_ WPARAM wParam,
     _In_ LPARAM lParam);
 
+#ifdef UNICODE
+    #define ImmIMPGetIME ImmIMPGetIMEW
+#else
+    #define ImmIMPGetIME ImmIMPGetIMEA
+#endif
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
