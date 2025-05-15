@@ -538,6 +538,15 @@ ImmGetImeMenuItemsAW(
         return 0;
     }
 
+    /* ImeGetImeMenuItems is optional */
+    if (!pImeDpi->ImeGetImeMenuItems)
+    {
+        ERR("!pImeDpi->ImeGetImeMenuItems\n");
+        ImmUnlockImeDpi(pImeDpi);
+        ImmUnlockIMC(hIMC);
+        return 0;
+    }
+
     /* Is the IME ANSI? */
     BOOL bImcIsAnsi = Imm32IsImcAnsi(hIMC);
 
