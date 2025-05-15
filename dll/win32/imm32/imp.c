@@ -9,6 +9,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+/*
+ * An IMEPROA/IMEPROW is an IME program information.
+ * The ImmIMP* functions just treat these information.
+ */
+
 static VOID
 Imm32ConvertImeProWideToAnsi(_In_ const IMEPROW *pProW, _Out_ PIMEPROA pProA)
 {
