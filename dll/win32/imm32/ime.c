@@ -279,7 +279,6 @@ Failed:
     return ret;
 }
 
-// Win: LoadImeDpi
 PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
 {
     IMEINFOEX ImeInfoEx;
@@ -287,12 +286,6 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     PIMEDPI pImeDpiNew, pImeDpiFound;
     UINT uCodePage;
     LCID lcid;
-
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return NULL;
-    }
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {
@@ -620,45 +613,33 @@ BOOL WINAPI ImmNotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwV
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey)
 {
-    HKL hKL;
-    if (SearchType == ImeInfoExKeyboardLayout || SearchType == ImeInfoExKeyboardLayoutTFS)
+    BOOL bTextServiceDisabled = FALSE;
+
+    if (SearchType == ImeInfoExKeyboardLayoutTFS)
     {
-        hKL = *(HKL*)pvSearchKey;
+        SearchType = ImeInfoExKeyboardLayout;
+        bTextServiceDisabled = CtfImmIsTextFrameServiceDisabled();
+    }
+
+    if (SearchType == ImeInfoExKeyboardLayout)
+    {
+        HKL hKL = *(HKL *)pvSearchKey;
         pImeInfoEx->hkl = hKL;
 
-        if (SearchType == ImeInfoExKeyboardLayoutTFS)
-        {
-            if (!IS_IME_HKL(hKL))
-            {
-                if (CtfImmIsTextFrameServiceDisabled() || !IS_CICERO_MODE() || IS_16BIT_MODE())
-                {
-                    TRACE("\n");
-                    return FALSE;
-                }
-            }
+        if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_CICERO_COMPAT() || bTextServiceDisabled))
+            return FALSE;
 
-            SearchType = ImeInfoExKeyboardLayout;
-        }
-        else
-        {
-            if (!IS_IME_HKL(hKL))
-            {
-                TRACE("\n");
-                return FALSE;
-            }
-        }
-    }
-    else if (SearchType == ImeInfoExImeFileName)
-    {
-        StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
-                       pvSearchKey);
-    }
-    else
-    {
-        return FALSE;
+        return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
     }
 
-    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+    if (SearchType == ImeInfoExImeFileName)
+    {
+        StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile), pvSearchKey);
+        return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+    }
+
+    /* ImeInfoExImeWindow is ignored */
+    return FALSE;
 }
 
 /***********************************************************************
