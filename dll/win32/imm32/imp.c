@@ -40,7 +40,7 @@ Imm32IMPGetIME(_In_ HKL hKL, _Out_ PIMEPROW pProW)
 
     StringCchCopyW(pProW->szDescription, _countof(ImeInfoEx.wszImeDescription),
                    ImeInfoEx.wszImeDescription);
-    StringCchCopyW(pProW->szName, _countof(ImeInfoEx.wszImeFile), ImeInfoEx.wszImeFile);
+    StringCchCopyW(pProW->szName, _countof(pProW->szName), ImeInfoEx.wszImeFile);
     pProW->szOptions[0] = UNICODE_NULL;
 
     return TRUE;
