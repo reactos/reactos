@@ -911,7 +911,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
 
     if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        ERR("Already one process running\n");
+        ERR("Another instance is already running\n");
         CloseHandle(hMutex);
         return 1;
     }
