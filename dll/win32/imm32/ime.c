@@ -230,7 +230,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 #undef DEFINE_IME_ENTRY
 
     /* Check for Cicero IMEs */
-    if (!IS_IME_HKL(pImeDpi->hKL) && IS_CICERO_MODE() && IS_CICERO_COMPAT())
+    if (!IS_IME_HKL(pImeDpi->hKL) && IS_CICERO_MODE() && !IS_CICERO_COMPAT_DISABLED())
     {
 #define CHECK_IME_FN(name) do { \
     if (!pImeDpi->name) { \
@@ -626,8 +626,11 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
         HKL hKL = *(HKL *)pvSearchKey;
         pImeInfoEx->hkl = hKL;
 
-        if (!IS_IME_HKL(hKL) && (!IS_CICERO_MODE() || IS_CICERO_COMPAT() || bTextServiceDisabled))
+        if (!IS_IME_HKL(hKL) &&
+            (!IS_CICERO_MODE() || IS_CICERO_COMPAT_DISABLED() || bTextServiceDisabled))
+        {
             return FALSE;
+        }
 
         return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
     }

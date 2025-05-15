@@ -929,7 +929,7 @@ HRESULT
 CtfImmTIMDestroyInputContext(
     _In_ HIMC hIMC)
 {
-    if (!IS_CICERO_MODE() || IS_CICERO_COMPAT())
+    if (!IS_CICERO_MODE() || IS_CICERO_COMPAT_DISABLED())
         return E_NOINTERFACE;
 
     return CtfImeDestroyInputContext(hIMC);
