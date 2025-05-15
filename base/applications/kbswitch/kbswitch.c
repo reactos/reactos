@@ -933,6 +933,9 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     if (!RegisterShellHookWindow(hwnd))
     {
         ERR("RegisterShellHookWindow failed\n");
+        DestroyWindow(hwnd);
+        CloseHandle(hMutex);
+        return 1;
     }
 
     while (GetMessage(&msg, NULL, 0, 0))
