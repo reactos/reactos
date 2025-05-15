@@ -50,7 +50,7 @@ Imm32IMPGetIME(_In_ HKL hKL, _Out_ PIMEPROW pProW)
  *		ImmIMPGetIMEA(IMM32.@)
  */
 BOOL WINAPI
-ImmIMPGetIMEA(_In_ HWND hWnd, _Out_ LPIMEPROA pImePro)
+ImmIMPGetIMEA(_In_opt_ HWND hWnd, _Out_ LPIMEPROA pImePro)
 {
     UNREFERENCED_PARAMETER(hWnd);
 
@@ -75,7 +75,7 @@ ImmIMPGetIMEA(_In_ HWND hWnd, _Out_ LPIMEPROA pImePro)
  *		ImmIMPGetIMEW(IMM32.@)
  */
 BOOL WINAPI
-ImmIMPGetIMEW(_In_ HWND hWnd, _Out_ LPIMEPROW pImePro)
+ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro)
 {
     UNREFERENCED_PARAMETER(hWnd);
 
