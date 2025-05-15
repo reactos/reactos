@@ -157,6 +157,7 @@ class CDefaultContextMenu :
         UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
+        UINT m_iIdQCMFirst; /* The first id passed to us in QueryContextMenu */
         CAtlList<DynamicShellEntry> m_DynamicEntries;
         UINT m_iIdSHEFirst; /* first used id */
         UINT m_iIdSHELast; /* last used id */
@@ -244,6 +245,7 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_cKeys(NULL),
     m_pidlFolder(NULL),
     m_bGroupPolicyActive(0),
+    m_iIdQCMFirst(0),
     m_iIdSHEFirst(0),
     m_iIdSHELast(0),
     m_iIdSCMFirst(0),
@@ -841,7 +843,7 @@ CDefaultContextMenu::QueryContextMenu(
     UINT uFlags)
 {
     HRESULT hr;
-    UINT idCmdNext = idCmdFirst;
+    UINT idCmdNext = m_iIdQCMFirst = idCmdFirst;
     UINT cIds = 0;
 
     TRACE("BuildShellItemContextMenu entered\n");
@@ -1536,7 +1538,6 @@ CDefaultContextMenu::InvokeCommand(
         else
             return E_INVALIDARG;
     }
-
     CmdId = LOWORD(LocalInvokeInfo.lpVerb);
 
     if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
@@ -1726,8 +1727,7 @@ CDefaultContextMenu::HandleMenuMsg(
     WPARAM wParam,
     LPARAM lParam)
 {
-    /* FIXME: Should we implement this as well? */
-    return S_OK;
+    return HandleMenuMsg2(uMsg, wParam, lParam, NULL);
 }
 
 HRESULT SHGetMenuIdFromMenuMsg(UINT uMsg, LPARAM lParam, UINT *CmdId)
@@ -1744,25 +1744,6 @@ HRESULT SHGetMenuIdFromMenuMsg(UINT uMsg, LPARAM lParam, UINT *CmdId)
         *CmdId = pMeasureStruct->itemID;
         return S_OK;
     }
-
-    return E_FAIL;
-}
-
-HRESULT SHSetMenuIdInMenuMsg(UINT uMsg, LPARAM lParam, UINT CmdId)
-{
-    if (uMsg == WM_DRAWITEM)
-    {
-        DRAWITEMSTRUCT* pDrawStruct = reinterpret_cast<DRAWITEMSTRUCT*>(lParam);
-        pDrawStruct->itemID = CmdId;
-        return S_OK;
-    }
-    else if (uMsg == WM_MEASUREITEM)
-    {
-        MEASUREITEMSTRUCT* pMeasureStruct = reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
-        pMeasureStruct->itemID = CmdId;
-        return S_OK;
-    }
-
     return E_FAIL;
 }
 
@@ -1774,34 +1755,31 @@ CDefaultContextMenu::HandleMenuMsg2(
     LPARAM lParam,
     LRESULT *plResult)
 {
-    if (uMsg == WM_INITMENUPOPUP)
-    {
-        POSITION it = m_DynamicEntries.GetHeadPosition();
-        while (it != NULL)
-        {
-            DynamicShellEntry& info = m_DynamicEntries.GetNext(it);
-            SHForwardContextMenuMsg(info.pCM, uMsg, wParam, lParam, plResult, TRUE);
-        }
-        return S_OK;
-    }
+    if (!SHELL_IsContextMenuMsg(uMsg))
+        return E_FAIL;
 
     UINT CmdId;
-    HRESULT hr = SHGetMenuIdFromMenuMsg(uMsg, lParam, &CmdId);
-    if (FAILED(hr))
-        return S_FALSE;
-
-    if (CmdId < m_iIdSHEFirst || CmdId >= m_iIdSHELast)
-        return S_FALSE;
-
-    CmdId -= m_iIdSHEFirst;
-    PDynamicShellEntry pEntry = GetDynamicEntry(CmdId);
-    if (pEntry)
+    if (uMsg == WM_INITMENUPOPUP)
     {
-        SHSetMenuIdInMenuMsg(uMsg, lParam, CmdId - pEntry->iIdCmdFirst);
-        SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
+        CmdId = GetMenuItemID((HMENU)wParam, 0);
+        if (CmdId == ~0ul)
+            return E_FAIL;
     }
+    else
+    {
+        HRESULT hr = SHGetMenuIdFromMenuMsg(uMsg, lParam, &CmdId);
+        if (FAILED(hr))
+            return S_FALSE;
+    }
+    CmdId -= m_iIdQCMFirst; // Convert from Win32 id to our base
 
-   return S_OK;
+    if (CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
+    {
+        if (PDynamicShellEntry pEntry = GetDynamicEntry(CmdId - m_iIdSHEFirst))
+            return SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
+    }
+    // TODO: _DoCallback(DFM_WM_*, ...)
+    return E_FAIL;
 }
 
 HRESULT

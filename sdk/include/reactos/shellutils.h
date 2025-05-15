@@ -635,6 +635,12 @@ typedef CCoInitBase<OleInitialize, OleUninitialize> COleInit;
 #define SEE_CMIC_COMMON_FLAGS      (SEE_CMIC_COMMON_BASICFLAGS | SEE_MASK_HOTKEY | SEE_MASK_ICON | \
                                     SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE)
 
+static inline BOOL SHELL_IsContextMenuMsg(UINT uMsg)
+{
+    return uMsg == WM_MEASUREITEM || uMsg == WM_DRAWITEM ||
+           uMsg == WM_INITMENUPOPUP || uMsg == WM_MENUSELECT || uMsg == WM_MENUCHAR;
+}
+
 static inline BOOL ILIsSingle(LPCITEMIDLIST pidl)
 {
     return pidl == ILFindLastID(pidl);

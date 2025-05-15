@@ -973,6 +973,17 @@ struct CMenuTemp
     }
 };
 
+static LRESULT CALLBACK MenuMessageForwarderWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT ret = 0;
+    IContextMenu *pCM = (IContextMenu*)GetWindowLongPtrW(hWnd, 0);
+    if (uMsg == WM_DESTROY)
+        SetWindowLongPtrW(hWnd, 0, 0);
+    else if (pCM && SHForwardContextMenuMsg(pCM, uMsg, wParam, lParam, &ret, TRUE) == S_OK)
+        return ret;
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
+
 // *** ATL event handlers ***
 LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
@@ -1033,8 +1044,13 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         return 0;
     SHELL_RemoveVerb(contextMenu, idCmdFirst, menuTemp, L"link");
 
+    HWND hWndWorker = SHCreateWorkerWindowW(MenuMessageForwarderWndProc, m_hWnd, 0,
+                                            WS_CHILD | WS_VISIBLE, NULL,
+                                            (LONG_PTR)static_cast<IContextMenu*>(contextMenu));
+    HWND hWndMenuOwner = hWndWorker ? hWndWorker : m_hWnd;
+
     enum { flags = TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON };
-    UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, m_hWnd, NULL);
+    UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, hWndMenuOwner, NULL);
     if (uCommand)
     {
         uCommand -= idCmdFirst;
@@ -1050,6 +1066,8 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
         hr = _ExecuteCommand(contextMenu, uCommand);
     }
+    if (hWndWorker)
+        ::DestroyWindow(hWndWorker);
 
     return TRUE;
 }

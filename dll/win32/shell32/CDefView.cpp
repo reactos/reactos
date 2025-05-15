@@ -141,15 +141,15 @@ struct MenuCleanup
     }
     ~MenuCleanup()
     {
-        if (m_hMenu)
-        {
-            DestroyMenu(m_hMenu);
-            m_hMenu = NULL;
-        }
         if (m_pCM)
         {
             IUnknown_SetSite(m_pCM, NULL);
             m_pCM.Release();
+        }
+        if (m_hMenu)
+        {
+            DestroyMenu(m_hMenu);
+            m_hMenu = NULL;
         }
     }
 };
@@ -497,7 +497,7 @@ public:
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnUpdateStatusbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnMenuMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnChangeCBChain(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -548,8 +548,8 @@ public:
     MESSAGE_HANDLER(SHV_CHANGE_NOTIFY, OnChangeNotify)
     MESSAGE_HANDLER(SHV_UPDATESTATUSBAR, OnUpdateStatusbar)
     MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
-    MESSAGE_HANDLER(WM_DRAWITEM, OnCustomItem)
-    MESSAGE_HANDLER(WM_MEASUREITEM, OnCustomItem)
+    MESSAGE_HANDLER(WM_DRAWITEM, OnMenuMessage)
+    MESSAGE_HANDLER(WM_MEASUREITEM, OnMenuMessage)
     MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
     MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
     MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -3009,10 +3009,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return TRUE;
 }
 
-HRESULT SHGetMenuIdFromMenuMsg(UINT uMsg, LPARAM lParam, UINT *CmdId);
-HRESULT SHSetMenuIdInMenuMsg(UINT uMsg, LPARAM lParam, UINT CmdId);
-
-LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+LRESULT CDefView::OnMenuMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (!m_pCM)
     {
@@ -3020,19 +3017,9 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         ERR("no context menu\n");
         return FALSE;
     }
-
-    // lParam of WM_DRAWITEM WM_MEASUREITEM contains a menu id and
-    // this also needs to be changed to a menu identifier offset
-    UINT CmdID;
-    HRESULT hres = SHGetMenuIdFromMenuMsg(uMsg, lParam, &CmdID);
-    if (SUCCEEDED(hres))
-        SHSetMenuIdInMenuMsg(uMsg, lParam, CmdID - CONTEXT_MENU_BASE_ID);
-
-    /* Forward the message to the IContextMenu2 */
-    LRESULT result;
-    hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
-
-    return (SUCCEEDED(hres));
+    LRESULT result = 0;
+    HRESULT hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
+    return SUCCEEDED(hres);
 }
 
 LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -3049,10 +3036,12 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 {
     HMENU hmenu = (HMENU) wParam;
     int nPos = LOWORD(lParam);
-    UINT  menuItemId;
+    UINT menuItemId;
 
+    if (m_isEditing)
+        ListView_CancelEditLabel(m_ListView);
     if (m_pCM)
-        OnCustomItem(uMsg, wParam, lParam, bHandled);
+        OnMenuMessage(uMsg, wParam, lParam, bHandled);
 
     HMENU hViewMenu = GetSubmenuByID(m_hMenu, FCIDM_MENU_VIEW);
 

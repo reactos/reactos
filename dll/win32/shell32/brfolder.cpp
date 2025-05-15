@@ -1337,7 +1337,7 @@ BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (!info)
         return 0;
 
-    if (info->pContextMenu)
+    if (info->pContextMenu && SHELL_IsContextMenuMsg(uMsg))
     {
         LRESULT result;
         if (SHForwardContextMenuMsg(info->pContextMenu, uMsg, wParam,
