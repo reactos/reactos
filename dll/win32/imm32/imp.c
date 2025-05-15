@@ -10,7 +10,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 /*
- * An IMEPROA/IMEPROW is an IME program information.
+ * An IMEPROA/IMEPROW structure is an IME program information.
  * The ImmIMP* functions just treat these information.
  */
 
