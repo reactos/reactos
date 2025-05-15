@@ -564,8 +564,10 @@ SetHooks(VOID)
         return FALSE;
     }
 
-    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(1));
-    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(2));
+#define IHOOK_SET 1
+#define IHOOK_DELETE 2
+    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(IHOOK_SET));
+    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(IHOOK_DELETE));
 
     if (!KbSwitchSetHooks || !KbSwitchDeleteHooks || !KbSwitchSetHooks())
     {
