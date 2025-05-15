@@ -103,6 +103,7 @@ ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro)
 BOOL WINAPI ImmIMPQueryIMEA(LPIMEPROA pImePro)
 {
     FIXME("(%p)\n", pImePro);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 
@@ -112,6 +113,7 @@ BOOL WINAPI ImmIMPQueryIMEA(LPIMEPROA pImePro)
 BOOL WINAPI ImmIMPQueryIMEW(LPIMEPROW pImePro)
 {
     FIXME("(%p)\n", pImePro);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 
@@ -121,6 +123,7 @@ BOOL WINAPI ImmIMPQueryIMEW(LPIMEPROW pImePro)
 BOOL WINAPI ImmIMPSetIMEA(HWND hWnd, LPIMEPROA pImePro)
 {
     FIXME("(%p, %p)\n", hWnd, pImePro);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 
@@ -130,5 +133,6 @@ BOOL WINAPI ImmIMPSetIMEA(HWND hWnd, LPIMEPROA pImePro)
 BOOL WINAPI ImmIMPSetIMEW(HWND hWnd, LPIMEPROW pImePro)
 {
     FIXME("(%p, %p)\n", hWnd, pImePro);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
