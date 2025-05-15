@@ -423,9 +423,15 @@ LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
     return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
 }
 
-BOOL APIENTRY
-Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwValue,
-                   DWORD_PTR dwCommand, DWORD_PTR dwData)
+BOOL
+Imm32MakeIMENotify(
+    _In_ HIMC hIMC,
+    _In_ HWND hwnd,
+    _In_ DWORD dwAction,
+    _In_ DWORD dwIndex,
+    _Inout_opt_ DWORD_PTR dwValue,
+    _In_ DWORD dwCommand,
+    _Inout_opt_ DWORD_PTR dwData)
 {
     DWORD dwThreadId;
     HKL hKL;
