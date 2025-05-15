@@ -165,9 +165,6 @@ HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLang
 BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
 PTHREADINFO FASTCALL Imm32CurrentPti(VOID);
 
-HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
-BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
-
 HRESULT CtfImmTIMCreateInputContext(_In_ HIMC hIMC);
 HRESULT CtfImmTIMDestroyInputContext(_In_ HIMC hIMC);
 HRESULT CtfImmCoInitialize(VOID);
