@@ -38,9 +38,10 @@ Imm32IMPGetIME(_In_ HKL hKL, _Out_ PIMEPROW pProW)
     ZeroMemory(&pProW->InstDate, sizeof(pProW->InstDate));
     pProW->wVersion = ImeInfoEx.dwImeWinVersion;
 
-    StringCchCopyW(pProW->szDescription, _countof(ImeInfoEx.wszImeDescription),
-                   ImeInfoEx.wszImeDescription);
-    StringCchCopyW(pProW->szName, _countof(pProW->szName), ImeInfoEx.wszImeFile);
+    StringCchCopyNW(pProW->szDescription, _countof(ImeInfoEx.wszImeDescription),
+                    ImeInfoEx.wszImeDescription, _countof(ImeInfoEx.wszImeDescription));
+    StringCchCopyNW(pProW->szName, _countof(pProW->szName),
+                    ImeInfoEx.wszImeFile, _countof(ImeInfoEx.wszImeFile));
     pProW->szOptions[0] = UNICODE_NULL;
 
     return TRUE;
