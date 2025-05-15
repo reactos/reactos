@@ -756,12 +756,6 @@ UINT WINAPI ImmGetDescriptionA(HKL hKL, LPSTR lpszDescription, UINT uBufLen)
 
     TRACE("(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return 0;
-    }
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
@@ -786,12 +780,6 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 
     TRACE("(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return 0;
-    }
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
@@ -815,14 +803,6 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
     size_t cch;
 
     TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
-
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        if (uBufLen > 0)
-            lpszFileName[0] = 0;
-        return 0;
-    }
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
@@ -856,14 +836,6 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
 
     TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        if (uBufLen > 0)
-            lpszFileName[0] = 0;
-        return 0;
-    }
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
@@ -896,12 +868,6 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
     PIMEDPI pImeDpi = NULL;
 
     TRACE("(%p, %lu)\n", hKL, fdwIndex);
-
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return FALSE;
-    }
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {
