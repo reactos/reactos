@@ -20,6 +20,7 @@
 PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 PMMPTE MiFirstReservedZeroingPte;
 MMPTE HyperTemplatePte;
+extern PKTHREAD MiZeroPageThread;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -118,6 +119,7 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
     //
     // Sanity checks
     //
+    ASSERT(KeGetCurrentThread() == MiZeroPageThread);
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(NumberOfPages != 0);
     ASSERT(NumberOfPages <= MI_ZERO_PTES);
@@ -192,6 +194,7 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
     //
     // Sanity checks
     //
+    ASSERT(KeGetCurrentThread() == MiZeroPageThread);
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT (NumberOfPages != 0);
     ASSERT(NumberOfPages <= MI_ZERO_PTES);
