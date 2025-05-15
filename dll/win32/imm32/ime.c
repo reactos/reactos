@@ -230,7 +230,7 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 #undef DEFINE_IME_ENTRY
 
     /* Check for Cicero IMEs */
-    if (!IS_IME_HKL(pImeDpi->hKL) && IS_CICERO_MODE() && (GetWin32ClientInfo()->dwCompatFlags2 & 2))
+    if (!IS_IME_HKL(pImeDpi->hKL) && IS_CICERO_MODE() && IS_CICERO_COMPAT())
     {
 #define CHECK_IME_FN(name) do { \
     if (!pImeDpi->name) { \
