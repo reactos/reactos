@@ -1,2 +1,2 @@
-@ stdcall KbSwitchSetHooks()
-@ stdcall KbSwitchDeleteHooks()
+1 stdcall KbSwitchSetHooks()
+2 stdcall KbSwitchDeleteHooks()

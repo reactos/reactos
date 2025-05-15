@@ -13,6 +13,9 @@
 #include <imm.h>
 #include <imm32_undoc.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(internat);
+
 /*
  * This program kbswitch is a mimic of Win2k's internat.exe.
  * However, there are some differences.
@@ -561,15 +564,17 @@ SetHooks(VOID)
         return FALSE;
     }
 
-    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, "KbSwitchSetHooks");
-    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, "KbSwitchDeleteHooks");
+    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(1));
+    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(2));
 
-    if (KbSwitchSetHooks == NULL || KbSwitchDeleteHooks == NULL)
+    if (!KbSwitchSetHooks || !KbSwitchDeleteHooks || !KbSwitchSetHooks())
     {
+        ERR("SetHooks failed\n");
         return FALSE;
     }
 
-    return KbSwitchSetHooks();
+    TRACE("SetHooks OK\n");
+    return TRUE;
 }
 
 VOID
@@ -580,11 +585,14 @@ DeleteHooks(VOID)
         KbSwitchDeleteHooks();
         KbSwitchDeleteHooks = NULL;
     }
+
     if (g_hHookDLL)
     {
         FreeLibrary(g_hHookDLL);
         g_hHookDLL = NULL;
     }
+
+    TRACE("DeleteHooks OK\n");
 }
 
 static UINT GetLayoutNum(HKL hKL)
@@ -704,6 +712,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
+            TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
             UpdateLayoutList((HKL)lParam);
             UpdateLanguageDisplay(hwnd, (HKL)lParam);
             break;
@@ -711,7 +720,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
         {
-            HWND hwndFore = GetForegroundWindow();
+            HWND hwndFore;
+            TRACE("WM_WINDOW_ACTIVATE: wParam:%p, lParam:%p\n", wParam, lParam);
+            hwndFore = GetForegroundWindow();
             if (RememberLastActive(hwnd, hwndFore))
                 return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
             break;
@@ -856,6 +867,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             }
             else if (Message == ShellHookMessage)
             {
+                TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
                 if (wParam == HSHELL_LANGUAGE)
                     PostMessage(hwnd, WM_LANG_CHANGED, wParam, lParam);
                 else if (wParam == HSHELL_WINDOWACTIVATED)
@@ -881,6 +893,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            TRACE("LAYOUT_RTL\n");
             SetProcessDefaultLayout(LAYOUT_RTL);
             break;
         default:
@@ -889,10 +902,14 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
 
     hMutex = CreateMutex(NULL, FALSE, szKbSwitcherName);
     if (!hMutex)
+    {
+        ERR("!hMutex\n");
         return 1;
+    }
 
     if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
+        ERR("Already one process running\n");
         CloseHandle(hMutex);
         return 1;
     }
@@ -913,7 +930,10 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
 
     hwnd = CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
     ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
-    RegisterShellHookWindow(hwnd);
+    if (!RegisterShellHookWindow(hwnd))
+    {
+        ERR("RegisterShellHookWindow failed\n");
+    }
 
     while (GetMessage(&msg, NULL, 0, 0))
     {
