@@ -14,8 +14,8 @@ list(APPEND SOURCE
     guideline.c
     ime.c
     imemenu.c
+    imepro.c
     imm.c
-    imp.c
     keymsg.c
     regword.c
     softkbd.c
