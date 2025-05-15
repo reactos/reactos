@@ -1824,6 +1824,12 @@ NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
             if (ptiIMC->spDefaultImc)
                 ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spDefaultImc);
             break;
+
+        default:
+        {
+            FIXME("dwType: %ld\n", dwType);
+            break;
+        }
     }
 
 Quit:
