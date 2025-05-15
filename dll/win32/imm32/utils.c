@@ -65,7 +65,7 @@ Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
     return S_OK;
 }
 
-BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
+BOOL Imm32IsSystemJapaneseOrKorean(VOID)
 {
     LCID lcid = GetSystemDefaultLCID();
     LANGID LangID = LANGIDFROMLCID(lcid);
@@ -78,7 +78,7 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     return TRUE;
 }
 
-BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
+BOOL Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
     PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);

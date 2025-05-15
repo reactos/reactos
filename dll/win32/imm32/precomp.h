@@ -123,10 +123,10 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
-BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
+BOOL Imm32IsSystemJapaneseOrKorean(VOID);
 BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
 BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
-BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
+BOOL Imm32IsImcAnsi(HIMC hIMC);
 
 #define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
 
