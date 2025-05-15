@@ -442,9 +442,9 @@ Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD dwIndex, DWORD_PT
             if (pImeDpi)
             {
                 /* do notify */
-                TRACE("NotifyIME(%p, %ld, %ld, %p)\n", hIMC, dwAction, dwIndex, dwValue);
+                TRACE("NotifyIME(%p, %lu, %lu, %p)\n", hIMC, dwAction, dwIndex, dwValue);
                 if (!pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue))
-                    ERR("NotifyIME(%p, %ld, %ld, %p) failed\n", hIMC, dwAction, dwIndex, dwValue);
+                    WARN("NotifyIME(%p, %lu, %lu, %p) failed\n", hIMC, dwAction, dwIndex, dwValue);
 
                 ImmUnlockImeDpi(pImeDpi); /* unlock */
             }
