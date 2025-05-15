@@ -194,7 +194,6 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 #include <imetable.h>
 #undef DEFINE_IME_ENTRY
 
-// Win: LoadIME
 BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
     WCHAR szPath[MAX_PATH];
@@ -229,6 +228,23 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     } while (0);
 #include <imetable.h>
 #undef DEFINE_IME_ENTRY
+
+    /* Check for Cicero IMEs */
+    if (!IS_IME_HKL(pImeDpi->hKL) && IS_CICERO_MODE() && (GetWin32ClientInfo()->dwCompatFlags2 & 2))
+    {
+#define CHECK_IME_FN(name) do { \
+    if (!pImeDpi->name) { \
+        ERR("'%s' not found in Cicero IME module '%S'.\n", #name, szPath); \
+        goto Failed; \
+    } \
+} while(0)
+        CHECK_IME_FN(CtfImeInquireExW);
+        CHECK_IME_FN(CtfImeSelectEx);
+        CHECK_IME_FN(CtfImeEscapeEx);
+        CHECK_IME_FN(CtfImeGetGuidAtom);
+        CHECK_IME_FN(CtfImeIsGuidMapEnable);
+#undef CHECK_IME_FN
+    }
 
     if (Imm32InquireIme(pImeDpi))
     {
