@@ -11,6 +11,8 @@ list(APPEND FONT_FILES
     courbd.ttf
     courbi.ttf
     couri.ttf
+    Fairfax.ttf
+    FairfaxHD.ttf
     framd.ttf
     framdit.ttf
     FreeSans.ttf
