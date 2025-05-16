@@ -985,7 +985,10 @@ BEGIN
     IDS_PRINT_VERB "Imprimir"
     IDS_CMD_VERB "Linha de Comandos aqui"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Ficheiros, %u Pastas"
+
     IDS_PRINTERS "Impressoras"
     IDS_FONTS "Tipos de letra"
     IDS_INSTALLNEWFONT "Instalar novo tipo de letra..."

@@ -59,7 +59,7 @@ class CFileDefExt :
 	public IShellExtInit,
 	public IContextMenu,
 	public IShellPropSheetExt,
-	public IObjectWithSite
+	public CObjectWithSiteBase
 {
 private:
     VOID InitOpensWithField(HWND hwndDlg);
@@ -72,21 +72,37 @@ private:
     BOOL AddVersionString(HWND hwndDlg, LPCWSTR pwszName);
     BOOL InitVersionPage(HWND hwndDlg);
     BOOL InitFolderCustomizePage(HWND hwndDlg);
+    void InitMultifilePage(HWND hwndDlg);
+    void InitMultifilePageThread();
+    void CountFolderAndFiles();
     static INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	BOOL CountFolderAndFiles(HWND hwndDlg, LPCWSTR pwszBuf, LPDWORD ticks);
+    static INT_PTR CALLBACK MultifilePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	WCHAR m_wszPath[MAX_PATH];
 	CFileVersionInfo m_VerInfo;
-	BOOL m_bDir;
+    BOOL m_bDir;
+    BOOL m_bMultifile;
 
-	DWORD m_cFiles;
+    LPITEMIDLIST m_pidlFolder = NULL;
+    LPITEMIDLIST *m_pidls = NULL;
+    UINT m_cidl = 0;
+    DWORD m_cFiles;
     DWORD m_cFolders;
     ULARGE_INTEGER m_DirSize;
     ULARGE_INTEGER m_DirSizeOnDisc;
+    enum { WM_UPDATEDIRSTATS = WM_APP };
+    HWND m_hWndDirStatsDlg;
+    void InitDirStats(struct DIRTREESTATS *pStats);
+    BOOL WalkDirTree(PCWSTR pszPath, struct DIRTREESTATS *pStats, WIN32_FIND_DATAW *pWFD);
+    void UpdateDirStatsResults();
+
+    LONG volatile m_Destroyed = 0;
+    BOOL IsDestroyed() const { return m_Destroyed; }
 
     static DWORD WINAPI _CountFolderAndFilesThreadProc(LPVOID lpParameter);
+    static DWORD WINAPI _InitializeMultifileThreadProc(LPVOID lpParameter);
 
     // FolderCustomize
     WCHAR   m_szFolderIconPath[MAX_PATH];
@@ -115,10 +131,6 @@ public:
 	// IShellPropSheetExt
 	STDMETHOD(AddPages)(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) override;
 	STDMETHOD(ReplacePage)(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam) override;
-
-    // IObjectWithSite
-	STDMETHOD(SetSite)(IUnknown *punk) override;
-	STDMETHOD(GetSite)(REFIID iid, void **ppvSite) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_FILEDEFEXT)
 DECLARE_NOT_AGGREGATABLE(CFileDefExt)

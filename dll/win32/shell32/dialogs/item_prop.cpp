@@ -185,11 +185,7 @@ SHELL32_ShowFilesystemItemsPropertiesDialogAsync(HWND hOwner, IDataObject *pDO)
 {
     if (DataObject_GetHIDACount(pDO) == 1)
         return SHELL32_ShowFilesystemItemPropertiesDialogAsync(pDO);
-
-    ERR("SHMultiFileProperties is not implemented yet\n");
-    HRESULT hr = HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-    SHELL_ErrorBox(hOwner, hr);
-    return hr; // TODO: return SHMultiFileProperties(pDO, 0);
+    return SHMultiFileProperties(pDO, 0);
 }
 
 HRESULT
@@ -219,4 +215,18 @@ SHELL_ShowItemIDListProperties(LPCITEMIDLIST pidl)
         NULL, NULL, NULL, SW_SHOWNORMAL, NULL, const_cast<LPITEMIDLIST>(pidl)
     };
     return ShellExecuteExA(&sei) ? S_OK : HResultFromWin32(GetLastError());
+}
+
+/*
+ * SHMultiFileProperties                [SHELL32.716]
+ */
+EXTERN_C HRESULT
+WINAPI
+SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags)
+{
+    if (DataObject_GetHIDACount(pDataObject) == 1)
+        return SHELL32_ShowFilesystemItemPropertiesDialogAsync(pDataObject);
+
+    ShellPropSheetDialog Dialog;
+    return Dialog.ShowAsync(&CLSID_ShellFileDefExt, pDataObject, NULL, NULL);
 }
