@@ -145,10 +145,10 @@ IsActiveSessionCountLimited()
 }
 
 #ifdef __REACTOS__
-#include <mmtypes.h>
 VERSIONHELPERAPI
 IsReactOS()
 {
-    return *(UINT*)(MM_SHARED_USER_DATA_VA + PAGE_SIZE - sizeof(ULONG)) == 0x8EAC705;
+    /* Hardcoded SharedUserData and PAGE_SIZE to avoid NDK includes */
+    return *(UINT*)((ULONG_PTR)0x7FFE0000 + 4096 - sizeof(ULONG)) == 0x8EAC705;
 }
 #endif // __REACTOS__
