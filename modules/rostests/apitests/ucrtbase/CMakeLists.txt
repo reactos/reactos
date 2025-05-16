@@ -12,6 +12,7 @@ add_definitions(
 
 list(APPEND SOURCE
     ../crt/ceil.c
+    ../crt/round.c
     testlist.c
 )
 
