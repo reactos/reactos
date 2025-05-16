@@ -76,6 +76,7 @@ list(APPEND PCH_SKIP_SOURCE
 add_executable(win32knt_apitest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
+    dlihook.c
     win32knt.rc)
 
 target_link_libraries(win32knt_apitest ${PSEH_LIB} gditools)
