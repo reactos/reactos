@@ -14,8 +14,8 @@
 /**** Linker magic: provide a default (NULL) pointer, but allow the user to override it ****/
 
 /* The actual items we use */
-PfnDliHook __pfnDliNotifyHook2;
-PfnDliHook __pfnDliFailureHook2;
+extern PfnDliHook __pfnDliNotifyHook2;
+extern PfnDliHook __pfnDliFailureHook2;
 
 #if !defined(__GNUC__)
 /* The fallback symbols */
