@@ -3351,99 +3351,98 @@ Exit:
    return Ret;
 }
 
-
-/*
- * @implemented
- */
-PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
+/* @implemented */
+PWND FASTCALL
+UserGetAncestor(_In_ PWND pWnd, _In_ UINT uType)
 {
-   PWND WndAncestor, Parent;
+    PWND WndAncestor, Parent, pwndMessage;
+    PDESKTOP pDesktop;
+    PWND pwndDesktop;
 
-   if (UserHMGetHandle(Wnd) == IntGetDesktopWindow())
-   {
-      return NULL;
-   }
+    pDesktop = pWnd->head.rpdesk;
+    ASSERT(pDesktop);
+    ASSERT(pDesktop->pDeskInfo);
 
-   switch (Type)
-   {
-      case GA_PARENT:
-         {
-            WndAncestor = Wnd->spwndParent;
-            break;
-         }
+    pwndDesktop = pDesktop->pDeskInfo->spwnd;
+    if (pWnd == pwndDesktop)
+        return NULL;
 
-      case GA_ROOT:
-         {
-            WndAncestor = Wnd;
-            Parent = NULL;
+    pwndMessage = pDesktop->spwndMessage;
+    if (pWnd == pwndMessage)
+        return NULL;
 
-            for(;;)
+    Parent = pWnd->spwndParent;
+    if (!Parent)
+        return NULL;
+
+    switch (uType)
+    {
+        case GA_PARENT:
+            return Parent;
+
+        case GA_ROOT:
+            WndAncestor = pWnd;
+            if (Parent == pwndDesktop)
+                break;
+
+            do
             {
-               if(!(Parent = WndAncestor->spwndParent))
-               {
-                  break;
-               }
-               if(IntIsDesktopWindow(Parent))
-               {
-                  break;
-               }
+                if (Parent == pwndMessage)
+                    break;
 
-               WndAncestor = Parent;
+                WndAncestor = Parent;
+
+                pDesktop = Parent->head.rpdesk;
+                ASSERT(pDesktop);
+                ASSERT(pDesktop->pDeskInfo);
+
+                Parent = Parent->spwndParent;
+            } while (Parent != pDesktop->pDeskInfo->spwnd);
+            break;
+
+        case GA_ROOTOWNER:
+            WndAncestor = pWnd;
+            for (PWND pwndNode = IntGetParent(pWnd); pwndNode; pwndNode = IntGetParent(pwndNode))
+            {
+                WndAncestor = pwndNode;
             }
             break;
-         }
 
-      case GA_ROOTOWNER:
-         {
-            WndAncestor = Wnd;
-
-            for (;;)
-            {
-               Parent = IntGetParent(WndAncestor);
-
-               if (!Parent)
-               {
-                  break;
-               }
-
-               WndAncestor = Parent;
-            }
-            break;
-         }
-
-      default:
-         {
+        default:
             return NULL;
-         }
-   }
+    }
 
-   return WndAncestor;
+    return WndAncestor;
 }
 
-/*
- * @implemented
- */
+/* @implemented */
 HWND APIENTRY
-NtUserGetAncestor(HWND hWnd, UINT Type)
+NtUserGetAncestor(_In_ HWND hWnd, _In_ UINT uType)
 {
-   PWND Window, Ancestor;
-   HWND Ret = NULL;
+    PWND Window, pwndAncestor;
+    HWND hwndAncestor = NULL;
 
-   TRACE("Enter NtUserGetAncestor\n");
-   UserEnterExclusive();
+    TRACE("Enter NtUserGetAncestor\n");
+    UserEnterShared();
 
-   Window = UserGetWindowObject(hWnd);
-   if (Window)
-   {
-      Ancestor = UserGetAncestor(Window, Type);
-      /* fixme: can UserGetAncestor ever return NULL for a valid window? */
+    Window = UserGetWindowObject(hWnd);
+    if (!Window)
+        goto Quit;
 
-      Ret = (Ancestor ? UserHMGetHandle(Ancestor) : NULL);
-   }
+    if (!uType || uType > GA_ROOTOWNER)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto Quit;
+    }
 
-   TRACE("Leave NtUserGetAncestor, ret=%p\n", Ret);
-   UserLeave();
-   return Ret;
+    pwndAncestor = UserGetAncestor(Window, uType);
+    if (pwndAncestor)
+        hwndAncestor = UserHMGetHandle(pwndAncestor);
+
+Quit:
+    UserLeave();
+    TRACE("Leave NtUserGetAncestor returning %p\n", hwndAncestor);
+    return hwndAncestor;
 }
 
 ////

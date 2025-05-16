@@ -2138,8 +2138,8 @@ NtUserGetAltTabInfo(
 HWND
 NTAPI
 NtUserGetAncestor(
-    HWND hWnd,
-    UINT Flags);
+    _In_ HWND hWnd,
+    _In_ UINT uType);
 
 DWORD
 NTAPI

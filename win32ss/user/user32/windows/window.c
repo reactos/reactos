@@ -924,51 +924,39 @@ GetAltTabInfoW(HWND hwnd,
     return NtUserGetAltTabInfo(hwnd,iItem,pati,pszItemText,cchItemText,FALSE);
 }
 
-
-/*
- * @implemented
- */
+/* @implemented */
 HWND WINAPI
-GetAncestor(HWND hwnd, UINT gaFlags)
+GetAncestor(_In_ HWND hwnd, _In_ UINT uType)
 {
-    HWND Ret = NULL;
-    PWND Ancestor, Wnd;
-
-    Wnd = ValidateHwnd(hwnd);
-    if (!Wnd)
+    PWND pWnd = ValidateHwnd(hwnd);
+    if (!pWnd || pWnd == GetThreadDesktopWnd())
         return NULL;
 
-    _SEH2_TRY
+    /* Special handling optimized for speed */
+    if (uType == GA_PARENT)
     {
-        Ancestor = NULL;
-        switch (gaFlags)
+        HWND hwndAncestor = NULL;
+
+        _SEH2_TRY
         {
-            case GA_PARENT:
-                if (Wnd->spwndParent != NULL)
-                    Ancestor = DesktopPtrToUser(Wnd->spwndParent);
-                break;
-
-            default:
-                /* FIXME: Call win32k for now */
-                Wnd = NULL;
-                break;
+            if (pWnd->spwndParent && pWnd->fnid != FNID_MESSAGEWND)
+            {
+                PWND pwndAncestor = DesktopPtrToUser(pWnd->spwndParent);
+                if (pwndAncestor)
+                    hwndAncestor = UserHMGetHandle(pwndAncestor);
+            }
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Do nothing */
+        }
+        _SEH2_END;
 
-        if (Ancestor != NULL)
-            Ret = UserHMGetHandle(Ancestor);
+        return hwndAncestor;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Do nothing */
-    }
-    _SEH2_END;
 
-    if (!Wnd) /* Fall back */
-        Ret = NtUserGetAncestor(hwnd, gaFlags);
-
-    return Ret;
+    return NtUserGetAncestor(hwnd, uType);
 }
-
 
 /*
  * @implemented

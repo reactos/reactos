@@ -249,7 +249,7 @@
 @ stdcall GetAltTabInfo(long long ptr ptr long) GetAltTabInfoA
 @ stdcall GetAltTabInfoA(long long ptr ptr long)
 @ stdcall GetAltTabInfoW(long long ptr ptr long)
-@ stdcall GetAncestor(long long) ; Direct call NtUserGetAncestor
+@ stdcall GetAncestor(ptr long) ; Direct call NtUserGetAncestor
 @ stdcall GetAppCompatFlags(long)
 @ stdcall GetAppCompatFlags2(long)
 @ stdcall GetAsyncKeyState(long)
