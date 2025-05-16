@@ -1,0 +1,7 @@
+; Netio driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\Netio","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Netio","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\Netio","ImagePath",0x00020000,"system32\drivers\netio.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Netio","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Netio","Type",0x00010001,0x00000001
