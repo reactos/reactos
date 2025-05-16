@@ -128,9 +128,18 @@ def gen_table_range(func_name, typecode, func, start, end, steps, max_ulp):
               " }, " f"{max_ulp}"
               " }, // " f"{func_name}" "(" f"{float(x)}" ") == " f"{mp.nstr(high_prec, 20)}")
 
+def generate_acos_table(func_name = "acos", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.acos, -1.0, 1.0, 101, 1)
+    print("};\n")
+
+def generate_acosf_table():
+    generate_acos_table("acosf", 'f')
 
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
+    "acos": generate_acos_table,
+    "acosf": generate_acosf_table,
 }
 
 def main():
