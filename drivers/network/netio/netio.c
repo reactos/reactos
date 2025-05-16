@@ -1249,15 +1249,18 @@ WskReceive(_In_ PWSK_SOCKET Socket, _In_ PWSK_BUF Buffer, _In_ ULONG Flags, _Ino
 static NTSTATUS WSKAPI
 WskDisconnect(_In_ PWSK_SOCKET Socket, _In_opt_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
+    PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
+
     FUNCTION_TRACE;
 
-    UNIMPLEMENTED;
+    SocketShutdown(s);
+
     if (Irp != NULL)
     {
-        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_PENDING;
 }
 
 
