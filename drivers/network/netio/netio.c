@@ -1,7 +1,8 @@
 /*
  * PROJECT:     NetIO driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     A more convenient networking (TCP/IP, UDP/IP) kernel API (NT6+)
+ * PURPOSE:     NT6 compatible NETIO.SYS driver: A BSD sockets like kernel
+ *              internal interface for networking (TCP/IP, UDP/IP).
  * COPYRIGHT:   Copyright 2023-2024 Johannes Thoma <johannes@johannesthoma.com>
  */
 
@@ -11,7 +12,8 @@
     Done: Remove unnecessary code (like Hook of completion)
     Done: The whole Listen / Accept mechanism
 
-    Make it compile with MS VC as well
+    Done: Make it compile with MS VC as well
+	There was some flexbison.7z file missing.
     Rebase onto latest master
     Squash commits (git rebase -i) one for tdihelpers one for netio
 
@@ -94,7 +96,7 @@ typedef struct _WSK_SOCKET_INTERNAL
     HANDLE ListenThreadHandle;     /* needed to restart listening */
     PKTHREAD ListenThread;
     KEVENT StartListenEvent;
-    BOOLEAN ListenThreadShouldRun;
+    volatile BOOLEAN ListenThreadShouldRun;
 
     /* AcceptSocket's keep a reference on their listen sockets so
      * that the Address file will be closed only if there are no
@@ -189,11 +191,11 @@ void SocketShutdown(_In_ PWSK_SOCKET_INTERNAL s)
 
 static PWSK_SOCKET_INTERNAL SocketsToPut = NULL;
 static KSPIN_LOCK SocketsToPutListLock = 0;
-static BOOLEAN PutSocketsThreadShouldRun = FALSE;
+static volatile BOOLEAN PutSocketsThreadShouldRun = FALSE;
 static KEVENT PutSocketsEvent;
 static HANDLE PutSocketsThreadHandle;
 
-static void WSKAPI PutSocketsThread(_In_opt_ void *p)
+static VOID NTAPI PutSocketsThread(_In_opt_ void *p)
 {
     NTSTATUS status;
     PWSK_SOCKET_INTERNAL SocketToPut;
@@ -229,9 +231,11 @@ static void WSKAPI PutSocketsThread(_In_opt_ void *p)
         }
         KeReleaseSpinLock(&SocketsToPutListLock, flags);
     }
+
+    PsTerminateSystemThread(0);
 }
 
-static void StartSocketPutThread(void)
+static NTSTATUS StartSocketPutThread(void)
 {
     NTSTATUS status;
 
@@ -240,10 +244,11 @@ static void StartSocketPutThread(void)
     PutSocketsThreadShouldRun = TRUE;
 
     status = PsCreateSystemThread(&PutSocketsThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, PutSocketsThread, NULL);
-    if (status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(status))
     {
         DPRINT1("Could not start put sockets thread, status is %x\n", status);
     }
+    return status;
 }
 
 static void StopSocketPutThread(void)
@@ -430,7 +435,9 @@ static NTSTATUS CreateSocket(
     }
 
     if (NT_SUCCESS(Status))
+    {
         *TheSocket = (PWSK_SOCKET_INTERNAL)NewSocketIrp->IoStatus.Information;
+    }
 
     IoFreeIrp(NewSocketIrp);
     return Status;
@@ -512,7 +519,7 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
     }
 
     status = CreateSocket(ListenSocket->family, ListenSocket->type, ListenSocket->proto, WSK_FLAG_CONNECTION_SOCKET, &AcceptSocket);
-    if (status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(status))
     {
         DPRINT1("Could not create AcceptSocket, status is 0x%08x\n", status);
         return status;
@@ -522,7 +529,7 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
     SocketGet(AcceptSocket->ListenSocket);
 
     status = STATUS_INSUFFICIENT_RESOURCES;
-    lc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*lc), TAG_NETIO);
+    lc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*lc), TAG_NETIO);
     if (lc == NULL)
     {
         goto err_out_free_accept_socket;
@@ -597,7 +604,7 @@ static void QueueListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
     KeSetEvent(&ListenSocket->StartListenEvent, IO_NO_INCREMENT, FALSE);
 }
 
-static void WSKAPI RequeueListenThread(_In_ PVOID p)
+static VOID NTAPI RequeueListenThread(_In_ PVOID p)
 {
     PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL)p;
     // PWSK_SOCKET_INTERNAL AcceptSocket;
@@ -619,6 +626,7 @@ static void WSKAPI RequeueListenThread(_In_ PVOID p)
         }
         StartListening(ListenSocket);
     }
+    PsTerminateSystemThread(0);
 }
 
 static NTSTATUS WSKAPI
@@ -757,7 +765,7 @@ TdiTransportAddressFromSocketAddress(_In_ PSOCKADDR SocketAddress)
 {
     PTRANSPORT_ADDRESS ta;
 
-    ta = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ta) + sizeof(SocketAddress->sa_data), TAG_NETIO);
+    ta = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*ta) + sizeof(SocketAddress->sa_data), TAG_NETIO);
     if (ta == NULL)
     {
         DPRINT1("TdiTransportAddressFromSocketAddress: Out of memory\n");
@@ -867,7 +875,7 @@ WskSendTo(
     IoSetNextIrpStackLocation(Irp);
 
     status = STATUS_INSUFFICIENT_RESOURCES;
-    nc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*nc), TAG_NETIO);
+    nc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*nc), TAG_NETIO);
     if (nc == NULL)
     {
         goto err_out;
@@ -937,6 +945,11 @@ WskReceiveFrom(
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
+    if (Irp != NULL)
+    {
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    }
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -964,6 +977,11 @@ WskGetLocalAddress(_In_ PWSK_SOCKET Socket, _Out_ PSOCKADDR LocalAddress, _Inout
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
+    if (Irp != NULL)
+    {
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    }
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1005,6 +1023,11 @@ WskSocketConnect(
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
+    if (Irp != NULL)
+    {
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    }
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1021,6 +1044,11 @@ WskControlClient(
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
+    if (Irp != NULL)
+    {
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    }
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1057,7 +1085,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     }
 
     status = STATUS_INSUFFICIENT_RESOURCES;
-    nc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*nc), TAG_NETIO);
+    nc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*nc), TAG_NETIO);
     if (nc == NULL)
     {
         goto err_out;
@@ -1146,7 +1174,7 @@ WskStreamIo(
     IoSetNextIrpStackLocation(Irp);
     status = STATUS_INSUFFICIENT_RESOURCES;
 
-    nc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*nc), TAG_NETIO);
+    nc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*nc), TAG_NETIO);
     if (nc == NULL)
     {
         goto err_out;
@@ -1224,6 +1252,11 @@ WskDisconnect(_In_ PWSK_SOCKET Socket, _In_opt_ PWSK_BUF Buffer, _In_ ULONG Flag
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
+    if (Irp != NULL)
+    {
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    }
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1310,7 +1343,7 @@ WskSocket(
             goto err_out;
     }
 
-    s = ExAllocatePoolWithTag(NonPagedPool, sizeof(*s), TAG_NETIO);
+    s = ExAllocatePoolZero(NonPagedPool, sizeof(*s), TAG_NETIO);
     if (s == NULL)
     {
         DPRINT1("WskSocket: Out of memory\n");
@@ -1322,23 +1355,8 @@ WskSocket(
     s->proto = Protocol;
     s->WskFlags = Flags;
     s->user_context = SocketContext;
-    s->LocalAddressHandle = NULL;
-    s->LocalAddressFile = NULL;
-    s->Flags = 0;
     s->ListenDispatch = Dispatch;
     s->RefCount = 1;            /* SocketPut() is in WskCloseSocket */
-    s->ConnectionHandle = NULL;
-    s->ConnectionFile = NULL;
-    s->ConnectionFileAssociated = FALSE;
-    s->ListenIrp = NULL;
-    s->ListenThreadHandle = NULL;
-    s->ListenThreadShouldRun = FALSE;
-    s->ListenCancelled = FALSE;
-    s->ListenSocket = NULL;
-    RtlZeroMemory(&s->LocalAddress, sizeof(s->LocalAddress));
-    RtlZeroMemory(&s->RemoteAddress, sizeof(s->RemoteAddress));
-    s->NextSocketToPut = NULL;
-    s->NumSocketPuts = 0;
 
     switch (SocketType)
     {
@@ -1353,7 +1371,7 @@ WskSocket(
             if (Flags != WSK_FLAG_LISTEN_SOCKET)
             {
                 status = TdiOpenConnectionEndpointFile(&s->TdiName, &s->ConnectionHandle, &s->ConnectionFile);
-                if (status != STATUS_SUCCESS)
+                if (!NT_SUCCESS(status))
                 {
                     DPRINT1("Could not open TDI handle, status is %x\n", status);
                     ExFreePoolWithTag(s, TAG_NETIO);
@@ -1366,19 +1384,20 @@ WskSocket(
                 s->ListenThreadShouldRun = TRUE;
 
                 status = PsCreateSystemThread(&s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, RequeueListenThread, s);
-                if (status != STATUS_SUCCESS)
+                if (!NT_SUCCESS(status))
                 {
                     DPRINT1("Could not start listen thread, status is %x\n", status);
                     ExFreePoolWithTag(s, TAG_NETIO);
                     goto err_out;
                 }
                 status = ObReferenceObjectByHandle(s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (void **)&s->ListenThread, NULL);
-                if (status != STATUS_SUCCESS)
+                if (!NT_SUCCESS(status))
                 {
                     DPRINT1("Could not get a PKTHREAD object, status is %x\n", status);
                     ExFreePoolWithTag(s, TAG_NETIO);
                     goto err_out;
                 }
+                ZwClose(s->ListenThreadHandle);
             }
 
             if (Flags == WSK_FLAG_LISTEN_SOCKET && s->ListenDispatch == NULL)
@@ -1431,9 +1450,7 @@ WskCaptureProviderNPI(_In_ PWSK_REGISTRATION reg, _In_ ULONG wait, _Out_ PWSK_PR
     npi->Client = NULL;
     npi->Dispatch = &provider_dispatch;
 
-    StartSocketPutThread();
-
-    return STATUS_SUCCESS;
+    return StartSocketPutThread();
 }
 
 VOID WSKAPI
