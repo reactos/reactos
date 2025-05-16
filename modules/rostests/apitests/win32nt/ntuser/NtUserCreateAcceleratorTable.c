@@ -127,8 +127,6 @@ START_TEST(NtUserCreateAcceleratorTable)
         DestroyAcceleratorTable(hAccel);
 
     /* Try maximum */
-    SetLastError(0xdeadbeef);
-    bHung = FALSE;
     pEntries = HeapAlloc(GetProcessHeap(), 0, MAX_VALID_NUMBER * sizeof(*pEntries));
     if (pEntries == NULL)
     {
@@ -136,6 +134,8 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     else
     {
+        SetLastError(0xdeadbeef);
+        bHung = FALSE;
         _SEH2_TRY
         {
             hAccel = NtUserCreateAcceleratorTable(pEntries, MAX_VALID_NUMBER);
@@ -157,8 +157,6 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
 
     /* Try maximum +1 */
-    SetLastError(0xdeadbeef);
-    bHung = FALSE;
     pEntries = HeapAlloc(GetProcessHeap(), 0, (MAX_VALID_NUMBER + 1) * sizeof(*pEntries));
     if (pEntries == NULL)
     {
@@ -166,6 +164,8 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     else
     {
+        SetLastError(0xdeadbeef);
+        bHung = FALSE;
         _SEH2_TRY
         {
             hAccel = NtUserCreateAcceleratorTable(pEntries, MAX_VALID_NUMBER + 1);
