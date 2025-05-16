@@ -54,7 +54,8 @@ list(APPEND SOURCE
     SHSetUnreadMailCountW.cpp
     StrRStr.cpp
     menu.cpp
-    shelltest.cpp)
+    shelltest.cpp
+    SHGetKnownFolderPath.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
