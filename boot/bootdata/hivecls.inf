@@ -5,8 +5,8 @@ Signature = "$Windows NT$"
 HKLM,"SOFTWARE\Classes",,0x00000010
 
 ; Default key
-HKCR,"*","",0x00000000,""
-HKCR,"SystemFileAssociations","",0x00000000,""
+HKCR,"*","AlwaysShowExt",0x00000000,""
+HKCR,"SystemFileAssociations",,0x00000010
 
 ; Open With List
 HKCR,"*\OpenWithList\excel.exe","",0x00000000,""
