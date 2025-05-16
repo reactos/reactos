@@ -27,7 +27,7 @@ void test_rand_s_performance(void)
         p_rand_s(&val);
     }
     end = __rdtsc();
-    printf("rand_s took %llu cycles\n", end - start);
+    printf("rand_s took %I64u cycles\n", end - start);
 }
 
 START_TEST(rand_s)
