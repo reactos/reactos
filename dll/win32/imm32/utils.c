@@ -411,8 +411,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
     return TRUE;
 }
 
-// Win: ImmLocalAlloc
-LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
+LPVOID ImmLocalAlloc(_In_ DWORD dwFlags, _In_ DWORD dwBytes)
 {
     if (!ghImmHeap)
     {

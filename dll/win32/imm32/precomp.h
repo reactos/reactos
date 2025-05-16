@@ -113,7 +113,7 @@ LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType);
 #define ValidateHwnd(hwnd) ValidateHandle((hwnd), TYPE_WINDOW)
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
 
-LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes);
+LPVOID ImmLocalAlloc(_In_ DWORD dwFlags, _In_ DWORD dwBytes);
 #define ImmLocalFree(lpData) HeapFree(ghImmHeap, 0, (lpData))
 
 LPWSTR APIENTRY Imm32WideFromAnsi(UINT uCodePage, LPCSTR pszA);
