@@ -61,7 +61,7 @@ typedef struct _TESTENTRY_FLT
         double x = u64_to_dbl(ullx); \
         unsigned long long ullz = dbl_to_u64(z); \
         double exp = u64_to_dbl(ullexp); \
-        ok_(file, line)(ullz == ullexp, "Wrong value for '%s(%f)' [0x%016llx], expected: %f [0x%016llx], got: %f [0x%016llx]\n", \
+        ok_(file, line)(ullz == ullexp, "Wrong value for '%s(%f)' [0x%016I64x], expected: %f [0x%016I64x], got: %f [0x%016I64x]\n", \
            func, x, ullx, exp, ullexp, z, ullz); \
     }
 #define ok_eq_dbl_exact(func, ullx, z, ullexp) ok_eq_dbl_exact_(__FILE__, __LINE__, func, ullx, z, ullexp)
@@ -72,6 +72,6 @@ typedef struct _TESTENTRY_FLT
         unsigned int uz = flt_to_u32(z); \
         float exp = u32_to_flt(uexp); \
         ok_(file, line)(uz == uexp, "Wrong value for '%s(%f)' [0x%08x], expected: %f [0x%08x], got: %f [0x%08x]\n", \
-           func, x, ux, exp, uexp, z, uz); \
+           func, x, (unsigned)ux, exp, (unsigned)uexp, z, (unsigned)uz); \
     }
 #define ok_eq_flt_exact(func, ux, z, uexp) ok_eq_flt_exact_(__FILE__, __LINE__, func, ux, z, uexp)
