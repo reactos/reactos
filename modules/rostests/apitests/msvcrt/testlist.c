@@ -13,6 +13,7 @@ extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
 extern void func__wsystem(void);
 extern void func_acos(void);
+extern void func_asin(void);
 extern void func_atexit(void);
 extern void func_ceil(void);
 extern void func_crtdata(void);
@@ -58,6 +59,7 @@ const struct test winetest_testlist[] =
     { "_vsnwprintf", func__vsnwprintf },
     { "_wsystem", func__wsystem },
     { "acos", func_acos },
+    { "asin", func_asin },
     { "atexit", func_atexit },
     { "ceil", func_ceil },
     { "crtdata", func_crtdata },
