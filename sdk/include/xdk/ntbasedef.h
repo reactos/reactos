@@ -173,7 +173,11 @@
  #endif
 #endif /* DECLSPEC_EXPORT */
 
+#ifdef __GNUC__
+#define DECLSPEC_NORETURN __attribute__((noreturn))
+#else
 #define DECLSPEC_NORETURN __declspec(noreturn)
+#endif
 
 #ifndef DECLSPEC_ADDRSAFE
  #if defined(_MSC_VER) && (defined(_M_ALPHA) || defined(_M_AXP64))

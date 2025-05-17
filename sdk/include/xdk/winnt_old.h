@@ -79,9 +79,9 @@
 
 /*#ifdef _WINE*/
 #if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
-# define __WINE_ALLOC_SIZE(x) __attribute__((__alloc_size__(x)))
+# define __WINE_ALLOC_SIZE(...) __attribute__((__alloc_size__(__VA_ARGS__)))
 #else
-# define __WINE_ALLOC_SIZE(x)
+# define __WINE_ALLOC_SIZE(...)
 #endif
 /*#endif*/
 
@@ -1442,6 +1442,9 @@ typedef struct _RUNTIME_FUNCTION {
     DWORD UnwindData;
 } RUNTIME_FUNCTION,*PRUNTIME_FUNCTION;
 
+#ifndef _APISETRTLSUPPORT_
+#define _APISETRTLSUPPORT_
+
 #define UNWIND_HISTORY_TABLE_SIZE 12
 
 typedef struct _UNWIND_HISTORY_TABLE_ENTRY
@@ -1461,6 +1464,8 @@ typedef struct _UNWIND_HISTORY_TABLE
     ULONG64 HighAddress;
     UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
 } UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
+
+#endif /* _APISETRTLSUPPORT_ */
 
 typedef
 _Function_class_(GET_RUNTIME_FUNCTION_CALLBACK)

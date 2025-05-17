@@ -13,6 +13,7 @@ extern "C" {
 
 #include <libloaderapi.h>
 #include <sysinfoapi.h>
+#include <threadpoolapiset.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)

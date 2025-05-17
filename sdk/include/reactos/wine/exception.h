@@ -55,14 +55,14 @@ typedef struct _WINE_EXCEPTION_REGISTRATION_RECORD
 #define PEXCEPTION_REGISTRATION_RECORD PWINE_EXCEPTION_REGISTRATION_RECORD
 #endif
 
-#define __TRY _SEH2_TRY
-#define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))
-#define __EXCEPT_CTX(func, ctx) _SEH2_EXCEPT((func)(GetExceptionInformation(), ctx))
-#define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
-#define __EXCEPT_ALL _SEH2_EXCEPT(1)
-#define __ENDTRY _SEH2_END
-#define __FINALLY(func) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination()); }
-#define __FINALLY_CTX(func, ctx) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination(), ctx); }; _SEH2_END
+#define __TRY _SEH2_TRY {
+#define __EXCEPT(func) } _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation())) {
+#define __EXCEPT_CTX(func, ctx) } _SEH2_EXCEPT((func)(GetExceptionInformation(), ctx)) {
+#define __EXCEPT_PAGE_FAULT } _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION) {
+#define __EXCEPT_ALL } _SEH2_EXCEPT(1) {
+#define __ENDTRY } _SEH2_END
+#define __FINALLY(func) } _SEH2_FINALLY { func(!_SEH2_AbnormalTermination()); } {
+#define __FINALLY_CTX(func, ctx) } _SEH2_FINALLY { func(!_SEH2_AbnormalTermination(), ctx); }; _SEH2_END
 
 #ifndef GetExceptionCode
 #define GetExceptionCode() _SEH2_GetExceptionCode()
@@ -86,6 +86,24 @@ typedef struct _WINE_EXCEPTION_REGISTRATION_RECORD
 #pragma warning(push)
 #pragma warning(disable:4733)
 #endif
+
+#ifndef __wine_jmp_buf // Conflict with CRT hack
+#ifdef __i386__
+typedef struct { int reg[16]; } __wine_jmp_buf;
+#elif defined(__x86_64__)
+typedef struct { DECLSPEC_ALIGN(16) struct { unsigned __int64 Part[2]; } reg[16]; } __wine_jmp_buf;
+#elif defined(__arm__)
+typedef struct { int reg[28]; } __wine_jmp_buf;
+#elif defined(__aarch64__)
+typedef struct { __int64 reg[24]; } __wine_jmp_buf;
+#else
+typedef struct { int reg; } __wine_jmp_buf;
+#endif
+#endif
+
+DECLSPEC_NORETURN extern void __cdecl __wine_longjmp( __wine_jmp_buf *buf, int retval );
+DECLSPEC_NORETURN extern void __cdecl __wine_rtl_unwind( EXCEPTION_REGISTRATION_RECORD* frame, EXCEPTION_RECORD *record,
+                                                         void (*target)(void) );
 
 static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
