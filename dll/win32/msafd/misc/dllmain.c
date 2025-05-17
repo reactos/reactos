@@ -1824,10 +1824,19 @@ WSPAccept(
     {
         /* The socket created by the accept function has the same
          * properties as the listening socket used to accept it. */
-        WSAAsyncSelect(AcceptSocket,
-                       Socket->SharedData->hWnd,
-                       Socket->SharedData->wMsg,
-                       Socket->SharedData->AsyncEvents);
+        if (Socket->SharedData->AsyncEvents)
+        {
+            WSAAsyncSelect(AcceptSocket,
+                           Socket->SharedData->hWnd,
+                           Socket->SharedData->wMsg,
+                           Socket->SharedData->AsyncEvents);
+        }
+        else if (Socket->EventObject && Socket->NetworkEvents)
+        {
+            WSAEventSelect(AcceptSocket,
+                           Socket->EventObject,
+                           Socket->NetworkEvents);
+        }
     }
 
     if (lpErrno) *lpErrno = NO_ERROR;
