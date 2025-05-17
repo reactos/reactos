@@ -50,6 +50,7 @@ extern void func_SHGetComputerDisplayNameW(void);
 extern void func_SHGetFileInfo(void);
 extern void func_SHGetUnreadMailCountW(void);
 extern void func_SHGetUserDisplayName(void);
+extern void func_SHGetKnownFolderPath(void);
 extern void func_SHIsBadInterfacePtr(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
@@ -58,7 +59,6 @@ extern void func_SHSimpleIDListFromPath(void);
 extern void func_SHRestricted(void);
 extern void func_SHSetUnreadMailCountW(void);
 extern void func_StrRStr(void);
-extern void func_SHGetKnownFolderPath(void);
 
 const struct test winetest_testlist[] =
 {
@@ -109,6 +109,7 @@ const struct test winetest_testlist[] =
     { "SHGetFileInfo", func_SHGetFileInfo },
     { "SHGetUnreadMailCountW", func_SHGetUnreadMailCountW },
     { "SHGetUserDisplayName", func_SHGetUserDisplayName },
+    { "SHGetKnownFolderPath", func_SHGetKnownFolderPath },
     { "SHIsBadInterfacePtr", func_SHIsBadInterfacePtr },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
@@ -117,7 +118,6 @@ const struct test winetest_testlist[] =
     { "SHRestricted", func_SHRestricted },
     { "SHSetUnreadMailCountW", func_SHSetUnreadMailCountW },
     { "StrRStr", func_StrRStr },
-    { "SHGetKnownFolderPath", func_SHGetKnownFolderPath },
 
     { 0, 0 }
 };

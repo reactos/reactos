@@ -50,12 +50,12 @@ list(APPEND SOURCE
     ShellState.cpp
     SHGetAttributesFromDataObject.cpp
     SHGetUserDisplayName.cpp
+    SHGetKnownFolderPath.cpp
     SHLimitInputEdit.cpp
     SHSetUnreadMailCountW.cpp
     StrRStr.cpp
     menu.cpp
-    shelltest.cpp
-    SHGetKnownFolderPath.cpp)
+    shelltest.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
