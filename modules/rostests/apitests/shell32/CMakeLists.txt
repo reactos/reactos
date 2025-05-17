@@ -49,8 +49,8 @@ list(APPEND SOURCE
     ShellInfo.cpp
     ShellState.cpp
     SHGetAttributesFromDataObject.cpp
-    SHGetUserDisplayName.cpp
     SHGetKnownFolderPath.cpp
+    SHGetUserDisplayName.cpp
     SHLimitInputEdit.cpp
     SHSetUnreadMailCountW.cpp
     StrRStr.cpp
