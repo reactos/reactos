@@ -18,6 +18,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/_vsnwprintf.c
     ../crt/_wsystem.c
     ../crt/acos.c
+    ../crt/asin.c
     ../crt/atexit.c
     ../crt/ceil.c
     ../crt/crtdata.c

@@ -136,10 +136,20 @@ def generate_acos_table(func_name = "acos", typecode = 'd'):
 def generate_acosf_table():
     generate_acos_table("acosf", 'f')
 
+def generate_asin_table(func_name = "asin", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.asin, -1.0, 1.0, 101, 1)
+    print("};\n")
+
+def generate_asinf_table():
+    generate_asin_table("asinf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
     "acosf": generate_acosf_table,
+    "asin": generate_asin_table,
+    "asinf": generate_asinf_table,
 }
 
 def main():
