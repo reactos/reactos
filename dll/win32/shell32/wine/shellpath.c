@@ -3419,10 +3419,10 @@ HRESULT WINAPI SHGetSpecialFolderLocation(
  *   Other HRESULT error codes on failure (e.g., out of memory, path not found).
  */
 HRESULT WINAPI SHGetKnownFolderPath(
-    REFKNOWNFOLDERID rfid,
-    DWORD dwFlags,
-    HANDLE hToken,
-    PWSTR *ppszPath)
+    _In_ REFKNOWNFOLDERID rfid,
+    _In_ DWORD dwFlags,
+    _In_ HANDLE hToken,
+    _Outptr_ PWSTR *ppszPath)
 {
     UINT i;
     HRESULT hr = E_INVALIDARG;

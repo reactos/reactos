@@ -14,7 +14,7 @@ START_TEST(SHGetKnownFolderPath)
 {
     HRESULT hr;
     HINSTANCE hShell32;
-    PWSTR path = NULL;
+    PWSTR path;
     HRESULT result;
 
     hShell32 = LoadLibraryW(L"shell32.dll");
@@ -28,18 +28,19 @@ START_TEST(SHGetKnownFolderPath)
 
     if (!pSHGetKnownFolderPath)
     {
-        trace("SHGetKnownFolderPath not exported. Likely running on an OS older than Vista.\n");
+        skip("SHGetKnownFolderPath not exported. Likely running on an OS older than Vista\n");
+        FreeLibrary(hShell32);
+        return;
     }
 
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (FAILED(hr))
     {
         skip("Failed to initialize COM library. Error Code: 0x%08lX\n", hr);
-        pSHGetKnownFolderPath = NULL;
     }
-
-    if (pSHGetKnownFolderPath)
+    else
     {
+        path = NULL;
         result = pSHGetKnownFolderPath(FOLDERID_Desktop, 0, NULL, &path);
         if (SUCCEEDED(result))
         {
@@ -54,9 +55,10 @@ START_TEST(SHGetKnownFolderPath)
             ok(0, "Desktop: Expected success, got Error Code: 0x%08lX\n", result);
             ok(path == NULL, "Desktop: Expected path to be NULL on failure\n");
         }
-        if (path) SHFree(path);
-        path = NULL;
+        if (path)
+            SHFree(path);
 
+        path = NULL;
         result = pSHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &path);
         if (SUCCEEDED(result))
         {
@@ -71,13 +73,9 @@ START_TEST(SHGetKnownFolderPath)
             ok(0, "Documents: Expected success, got Error Code: 0x0%08lX\n", result);
             ok(path == NULL, "Documents: Expected path to be NULL on failure\n");
         }
-        if (path) SHFree(path);
-        path = NULL;
-    }
+        if (path)
+            SHFree(path);
 
-
-    if (SUCCEEDED(hr))
-    {
         CoUninitialize();
     }
 
