@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 #include <immdev.h>
+#include <winnls32.h> /* For IMEPROA/W */
 
 #define IME_MASK        (0xE0000000UL)
 #define SUBST_MASK      (0xD0000000UL)
@@ -230,6 +231,9 @@ BOOL WINAPI ImmLoadIME(_In_ HKL hKL);
 DWORD WINAPI ImmProcessKey(_In_ HWND, _In_ HKL, _In_ UINT, _In_ LPARAM, _In_ DWORD);
 LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC);
 
+BOOL WINAPI ImmIMPGetIMEA(_In_opt_ HWND hWnd, _Out_ LPIMEPROA pImePro);
+BOOL WINAPI ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro);
+
 HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
 HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
 BOOL WINAPI CtfAImmIsIME(_In_ HKL hKL);
@@ -253,6 +257,12 @@ CtfImmDispatchDefImeMessage(
     _In_ UINT uMsg,
     _In_ WPARAM wParam,
     _In_ LPARAM lParam);
+
+#ifdef UNICODE
+    #define ImmIMPGetIME ImmIMPGetIMEW
+#else
+    #define ImmIMPGetIME ImmIMPGetIMEA
+#endif
 
 #ifdef __cplusplus
 } // extern "C"
