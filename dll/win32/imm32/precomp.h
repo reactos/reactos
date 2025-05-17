@@ -46,11 +46,8 @@
 
 #include <wine/debug.h>
 
-/* #define UNEXPECTED() (ASSERT(FALSE), TRUE) */
-#define UNEXPECTED() TRUE
-
 #define ERR_PRINTF(fmt, ...) (__WINE_IS_DEBUG_ON(_ERR, __wine_dbch___default) ? \
-    (wine_dbg_printf(fmt, ##__VA_ARGS__), UNEXPECTED()) : UNEXPECTED())
+    (wine_dbg_printf("err:(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__), TRUE) : TRUE)
 
 /* Unexpected Condition Checkers */
 #if DBG
@@ -137,9 +134,15 @@ DWORD APIENTRY
 CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
                         UINT uCodePage);
 
-BOOL APIENTRY
-Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                   DWORD_PTR dwCommand, DWORD_PTR dwData);
+BOOL
+Imm32MakeIMENotify(
+    _In_ HIMC hIMC,
+    _In_ HWND hwnd,
+    _In_ DWORD dwAction,
+    _In_ DWORD dwIndex,
+    _Inout_opt_ DWORD_PTR dwValue,
+    _In_ DWORD dwCommand,
+    _Inout_opt_ DWORD_PTR dwData);
 
 DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList);
 
