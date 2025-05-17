@@ -248,8 +248,8 @@ void Test_exceptions(void)
         _SEH2_END;
 
         exp_fpstatus = g_exception_Testcases[i].FpStatus;
-        ok(statusfp == exp_fpstatus, "[%u] Wrong value for _statusfp(). Expected 0x%lx, got 0x%lx\n", i, exp_fpstatus, statusfp);
-        ok(status == g_exception_Testcases[i].ExceptionCode, "[%u] Wrong value for status. Expected 0x%lx, got 0x%lx\n", i, g_exception_Testcases[i].ExceptionCode, status);
+        ok(statusfp == exp_fpstatus, "[%u] Wrong value for _statusfp(). Expected 0x%x, got 0x%x\n", i, exp_fpstatus, statusfp);
+        ok(status == g_exception_Testcases[i].ExceptionCode, "[%u] Wrong value for status. Expected 0x%x, got 0x%lx\n", i, g_exception_Testcases[i].ExceptionCode, status);
         ok(native_fpcw == g_exception_Testcases[i].Native, "[%u] wrong native_fpcw: expected 0x%x, got 0x%x\n", i, g_exception_Testcases[i].Native, native_fpcw);
     }
 }
