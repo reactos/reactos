@@ -81,7 +81,7 @@ const struct test winetest_testlist[] =
     { "Int64ToString", func_Int64ToString },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },
-    { "OpenAs_RunDLL", func_OpenAs_RunDLL },
+    //{ "OpenAs_RunDLL", func_OpenAs_RunDLL }, // Test hangs on Win 2003
     { "PathIsEqualOrSubFolder", func_PathIsEqualOrSubFolder },
     { "PathIsTemporary", func_PathIsTemporary },
     { "PathMakeUniqueName", func_PathMakeUniqueName },
