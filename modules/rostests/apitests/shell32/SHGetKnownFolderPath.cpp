@@ -42,7 +42,7 @@ START_TEST(SHGetKnownFolderPath)
     {
         path = NULL;
         result = pSHGetKnownFolderPath(FOLDERID_Desktop, 0, NULL, &path);
-        if (SUCCEEDED(result))
+        if (result == S_OK)
         {
             ok(path != NULL, "Desktop: Expected success (hr=0x%lx), got path %ls\n", result, path);
         }

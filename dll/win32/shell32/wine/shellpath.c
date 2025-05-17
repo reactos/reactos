@@ -3425,7 +3425,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
     _Outptr_ PWSTR *ppszPath)
 {
     UINT i;
-    HRESULT hr = E_INVALIDARG;
+    HRESULT hr;
     WCHAR szPath[MAX_PATH];
     INT mapped_csidl = -1;
 
@@ -3442,7 +3442,6 @@ HRESULT WINAPI SHGetKnownFolderPath(
         if (IsEqualGUID(rfid, CSIDL_Data[i].id))
         {
             mapped_csidl = i;
-            hr = S_OK;
             break;
         }
     }
@@ -3455,7 +3454,6 @@ HRESULT WINAPI SHGetKnownFolderPath(
     CSIDL_Type type = CSIDL_Data[mapped_csidl].type;
     LPCWSTR szDefaultPath = CSIDL_Data[mapped_csidl].szDefaultPath;
     int nShell32IconIndex = CSIDL_Data[mapped_csidl].nShell32IconIndex;
-
 
     switch (mapped_csidl)
     {
@@ -3472,13 +3470,13 @@ HRESULT WINAPI SHGetKnownFolderPath(
             }
             break;
         default:
-             break;
+            break;
     }
-
 
     szPath[0] = UNICODE_NULL;
 
     DWORD internalFlags = 0;
+
     if (dwFlags & KF_FLAG_DEFAULT_PATH)
         internalFlags |= SHGFP_TYPE_DEFAULT;
 
@@ -3598,7 +3596,6 @@ HRESULT WINAPI SHGetKnownFolderPath(
                  SetFileAttributesW(szPath, dwAttributes);
             }
 
-
             StringCchCopyW(szDesktopIniPath, _countof(szDesktopIniPath), szPath);
             PathAppendW(szDesktopIniPath, L"desktop.ini");
 
@@ -3611,7 +3608,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
             WritePrivateProfileStringW(NULL, NULL, NULL, szDesktopIniPath);
 
             dwAttributes = GetFileAttributesW(szDesktopIniPath);
-             if (dwAttributes != INVALID_FILE_ATTRIBUTES)
+            if (dwAttributes != INVALID_FILE_ATTRIBUTES)
             {
                 dwAttributes |= FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN;
                 SetFileAttributesW(szDesktopIniPath, dwAttributes);
@@ -3620,8 +3617,8 @@ HRESULT WINAPI SHGetKnownFolderPath(
     }
 
     SIZE_T pathLen = lstrlenW(szPath);
-    *ppszPath = (PWSTR)SHAlloc((pathLen + 1) * sizeof(WCHAR));
 
+    *ppszPath = (PWSTR)SHAlloc((pathLen + 1) * sizeof(WCHAR));
     if (!*ppszPath)
     {
         hr = E_OUTOFMEMORY;
