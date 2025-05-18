@@ -3361,15 +3361,13 @@ HandleTrayContextMenu:
         ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
 
         /* Toggle autohide */
-        if (newSettings->sr.AutoHide != IsAutoHideState())
-            SetAutoHideState(newSettings->sr.AutoHide);
+        SetAutoHideState(newSettings->sr.AutoHide);
 
         /* Toggle lock state */
         Lock(newSettings->bLock);
 
         /* Toggle OnTop state */
-        if (newSettings->sr.AlwaysOnTop != IsAlwaysOnTop())
-            UpdateAlwaysOnTop(newSettings->sr.AlwaysOnTop);
+        UpdateAlwaysOnTop(newSettings->sr.AlwaysOnTop);
 
         /* Adjust taskbar size */
         CheckTrayWndPosition();
