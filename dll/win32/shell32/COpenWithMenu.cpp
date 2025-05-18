@@ -1092,7 +1092,7 @@ VOID COpenWithDialog::Init(HWND hwnd)
 
     m_hDialog = hwnd;
     SetWindowLongPtr(hwnd, DWLP_USER, (LONG_PTR)this);
-    
+
     UINT fDisallow = 0;
     PCWSTR pszExt = PathFindExtensionW(m_pInfo->pcszFile);
     // Don't allow registration for "" nor "." nor ".exe" etc.

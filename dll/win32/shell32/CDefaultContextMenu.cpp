@@ -59,8 +59,8 @@ static const struct _StaticInvokeCommandMap_
 } g_StaticInvokeCmdMap[] =
 {
     { "runas", 0 },  // Unimplemented
-    { "Print", 0 },  // Unimplemented
-    { "Preview", 0 }, // Unimplemented
+    { "print", 0 },  // Unimplemented
+    { "preview", 0 }, // Unimplemented
     { "open",            FCIDM_SHVIEW_OPEN },
     { CMDSTR_NEWFOLDERA, FCIDM_SHVIEW_NEWFOLDER,  (SHORT)DFM_CMD_NEWFOLDER },
     { "cut",             FCIDM_SHVIEW_CUT,        /* ? */ },
@@ -163,8 +163,8 @@ static HRESULT GetFriendlyVerb(_In_ PCWSTR pszVerb, _Out_ PWSTR pszBuf, _In_ SIZ
     // Try to make a friendly verb based on the verb subkey
     if (pszVerb[0] < 127 && !StrChrW(pszVerb, '&') && SUCCEEDED(StringCchCopyW(pszBuf + 1, --cchMax, pszVerb)))
     {
-        *pszBuf = '&';
-        return S_FALSE;
+        *pszBuf = L'&';
+        return S_OK; // This can be changed to S_FALSE if the caller needs to know we faked it
     }
     return E_FAIL;
 }

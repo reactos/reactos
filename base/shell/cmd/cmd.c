@@ -263,10 +263,10 @@ static BOOL IsConsoleProcess(HANDLE Process)
 
 typedef BOOL (WINAPI *MYEX)(LPSHELLEXECUTEINFO lpExecInfo);
 
-HANDLE RunFileEx(DWORD flags, LPTSTR filename, LPTSTR params,
-                 LPTSTR directory, INT show)
+HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
+               LPTSTR directory, INT show)
 {
-    SHELLEXECUTEINFO sei = { sizeof sei, flags | SEE_MASK_FLAG_DDEWAIT };
+    SHELLEXECUTEINFO sei = { sizeof(sei), flags | SEE_MASK_FLAG_DDEWAIT };
     HMODULE     hShell32;
     MYEX        hShExt;
     UINT        err;
@@ -294,23 +294,12 @@ HANDLE RunFileEx(DWORD flags, LPTSTR filename, LPTSTR params,
     sei.lpDirectory = directory;
     sei.nShow = show;
     err = hShExt(&sei) ? ERROR_SUCCESS : GetLastError();
-    if (!sei.hProcess)
-        sei.hProcess = INVALID_HANDLE_VALUE; /* Succeeded without spawning a process */
-
     TRACE ("RunFile: ShellExecuteExA/W returned error %#x\n", err);
 
     FreeLibrary(hShell32);
-    if (!err)
-        return sei.hProcess;
-    SetLastError(err);
-    return NULL;
-}
 
-HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
-               LPTSTR directory, INT show)
-{
-    HANDLE hProcess = RunFileEx(flags, filename, params, directory, show);
-    return hProcess != INVALID_HANDLE_VALUE ? hProcess : NULL;
+    SetLastError(err);
+    return err ? NULL : sei.hProcess;
 }
 
 
@@ -483,13 +472,9 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         else if (GetLastError() == ERROR_BAD_EXE_FORMAT)
         {
             // See if we can run this with ShellExecute() ie myfile.xls
-            HANDLE hProcess = RunFileEx(SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,
-                                        szFullName,
-                                        rest,
-                                        NULL,
-                                        SW_SHOWNORMAL);
-            execerror = hProcess != NULL ? ERROR_SUCCESS : GetLastError();
-            prci.hProcess = hProcess != INVALID_HANDLE_VALUE ? hProcess : NULL;
+            HANDLE hProcess = RunFile(SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,
+                                      szFullName, rest, NULL, SW_SHOWNORMAL);
+            execerror = hProcess ? ERROR_SUCCESS : GetLastError();
         }
 
         *FirstEnd = _T('\0');

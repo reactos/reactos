@@ -719,7 +719,7 @@ static UINT SHELL_FindExecutableByVerb(LPCWSTR lpVerb, LPWSTR key, LPWSTR classn
     RegCloseKey(hkeyClass);
 
     /* Looking for ...buffer\shell\<verb>\command */
-    wcscat(classname, L"\\shell\\"); // FIXME: Use HCR_GetExecuteCommandW
+    wcscat(classname, L"\\shell\\"); // FIXME: Use HCR_GetExecuteCommandW or AssocAPI
     wcscat(classname, verb);
     wcscat(classname, L"\\command");
 
@@ -1893,7 +1893,7 @@ static UINT_PTR SHELL_execute_url(LPCWSTR lpFile, LPCWSTR wcmd, LPSHELLEXECUTEIN
     if (psei->lpVerb && *psei->lpVerb)
         len += lstrlenW(psei->lpVerb);
     else
-        len += lstrlenW(L"open"); // FIXME: Use HCR_GetExecuteCommandW
+        len += lstrlenW(L"open"); // FIXME: Use HCR_GetExecuteCommandW or AssocAPI
     lpstrProtocol.Allocate(len);
     memcpy(lpstrProtocol, lpFile, iSize * sizeof(WCHAR));
     lpstrProtocol[iSize] = '\0';
@@ -2329,7 +2329,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         if (retval == SE_ERR_NOASSOC && !(sei->fMask & SEE_MASK_CLASSALL))
             retval = InvokeOpenWith(sei_tmp.hwnd, *sei);
         if (retval <= 32)
-            do_error_dialog(retval, sei_tmp.hwnd, sei->lpFile);
+            do_error_dialog(retval, sei_tmp.hwnd, lpFile);
     }
 
     sei->hInstApp = (HINSTANCE)(retval > 32 ? 33 : retval);
