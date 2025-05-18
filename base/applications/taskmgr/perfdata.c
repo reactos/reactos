@@ -30,7 +30,14 @@ SYSTEM_PERFORMANCE_INFORMATION             SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION                   SystemBasicInfo;
 SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
 ULONG                                      SystemNumberOfHandles;
+
+#ifdef MAKE_LEAK // Defining this will cause CORE-18932. Used for testing.
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
+#else
+/* Handle up to 32 processors */
+SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION   SystemProcessorTimeInfo[32] = { 0 };
+#endif
+
 PSID                                       SystemUserSid = NULL;
 
 PCMD_LINE_CACHE global_cache = NULL;
@@ -91,10 +98,11 @@ void PerfDataUninitialize(void)
         pCur = pCur->Flink;
         HeapFree(GetProcessHeap(), 0, pEntry);
     }
-
+#ifdef MAKE_LEAK
     if (SystemProcessorTimeInfo) {
         HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
+#endif
 }
 
 static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
@@ -247,15 +255,25 @@ void PerfDataRefresh(void)
     /*
      * Save system processor time info
      */
+#ifdef MAKE_LEAK
     if (SystemProcessorTimeInfo) {
         HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
     SystemProcessorTimeInfo = SysProcessorTimeInfo;
+#else
+    if (SystemBasicInfo.NumberOfProcessors <= 32)
+        memcpy(&SystemProcessorTimeInfo, &SysProcessorTimeInfo,
+               sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+#endif
 
     /*
      * Save system handle info
      */
     SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
+#ifndef MAKE_LEAK
+    // HACK: We need to do this twice or we leak memory
+    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
+#endif
 
     for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
