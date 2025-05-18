@@ -1832,7 +1832,7 @@ WSPAccept(
                            Socket->SharedData->AsyncEvents,
                            lpErrno);
         }
-        else if (Socket->EventObject && Socket->NetworkEvents)
+        else if (Socket->NetworkEvents)
         {
             WSPEventSelect(AcceptSocket,
                            Socket->EventObject,
