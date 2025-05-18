@@ -983,7 +983,10 @@ BEGIN
     IDS_PRINT_VERB "הדפס"
     IDS_CMD_VERB "פתח בשורת הפקודה"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u קבצים, %u תיקיות"
+
     IDS_PRINTERS "מדפסות"
     IDS_FONTS "גופנים"
     IDS_INSTALLNEWFONT "התקנת גופן חדש..."

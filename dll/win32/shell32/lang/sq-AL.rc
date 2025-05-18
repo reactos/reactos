@@ -983,7 +983,10 @@ BEGIN
     IDS_PRINT_VERB "Printo"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Dokumenta, %u Dosje"
+
     IDS_PRINTERS "Printera"
     IDS_FONTS "Fonte"
     IDS_INSTALLNEWFONT "Instalo Fonte të Ri..."

@@ -973,7 +973,10 @@ BEGIN
     IDS_PRINT_VERB "印刷"
     IDS_CMD_VERB "ここでコマンドプロンプトを開く"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u 個のファイル、 %u 個のフォルダ"
+
     IDS_PRINTERS "プリンタ"
     IDS_FONTS "フォント"
     IDS_INSTALLNEWFONT "新しいフォントのインストール..."

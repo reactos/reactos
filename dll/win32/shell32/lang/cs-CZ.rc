@@ -984,7 +984,10 @@ BEGIN
     IDS_PRINT_VERB "Tisknout"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u souborů, %u složek"
+
     IDS_PRINTERS "Tiskárny"
     IDS_FONTS "Písma"
     IDS_INSTALLNEWFONT "Nainstalovat nové písmo..."
