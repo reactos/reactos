@@ -1819,7 +1819,7 @@ WSPAccept(
         }
     }
 
-    /* AcceptSocket Async Events */
+    /* AcceptSocket asynchronous events */
     if (Socket->SharedData->NonBlocking)
     {
         /* The socket created by the accept function has the same
