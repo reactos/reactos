@@ -3368,7 +3368,7 @@ HandleTrayContextMenu:
         Lock(newSettings->bLock);
 
         /* Toggle OnTop state */
-        if (newSettings->sr.AlwaysOnTop != g_TaskbarSettings.sr.AlwaysOnTop)
+        if (newSettings->sr.AlwaysOnTop != IsAlwaysOnTop())
             UpdateAlwaysOnTop(newSettings->sr.AlwaysOnTop);
 
         /* Adjust taskbar size */
