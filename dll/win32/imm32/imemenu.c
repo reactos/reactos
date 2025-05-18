@@ -541,7 +541,7 @@ ImmGetImeMenuItemsAW(
     /* ImeGetImeMenuItems is optional */
     if (!pImeDpi->ImeGetImeMenuItems)
     {
-        WARN("ImeGetImeMenuItems is not available. This is optional.\n");
+        WARN("ImeGetImeMenuItems is not available (optional).\n");
         ImmUnlockImeDpi(pImeDpi);
         ImmUnlockIMC(hIMC);
         return 0;
