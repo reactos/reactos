@@ -3814,10 +3814,11 @@ StartScan:
                                                       NULL);
     }
 
-    /* Check if we're going to be debugged */
-    if (dwCreationFlags & DEBUG_PROCESS)
+    /* Check if CREATE_BREAKAWAY_FROM_JOB is set, this flag allows the child process
+       to break away from the job associated with the calling process */
+    if (dwCreationFlags & CREATE_BREAKAWAY_FROM_JOB)
     {
-        /* Set process flag */
+        /* Set the corresponding process flag */
         Flags |= PROCESS_CREATE_FLAGS_BREAKAWAY;
     }
 
