@@ -21,15 +21,13 @@
  */
 
 #include "precomp.h"
+#include <winbase_undoc.h>
 #include <undocshell.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
-#ifndef STARTF_SHELLPRIVATE
-#define STARTF_SHELLPRIVATE 0x400 // From kernel32.h
-#endif
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,

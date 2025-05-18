@@ -536,6 +536,9 @@ extern "C" {
 #define STARTF_TITLEISAPPID     0x00001000
 #define STARTF_PREVENTPINNING   0x00002000
 #endif /* (WINVER >= 0x400) */
+#if (WINVER >= 0x0600)
+#define STARTF_UNTRUSTEDSOURCE  0x00008000
+#endif /* (WINVER >= 0x0600) */
 
 #define TC_NORMAL 0
 #define TC_HARDERR 1

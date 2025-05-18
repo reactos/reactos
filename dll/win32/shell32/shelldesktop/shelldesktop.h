@@ -26,7 +26,6 @@
 #include <atlcom.h>
 #include <atlwin.h>
 #include <undocshell.h>
-#include <undocuser.h>
 
 #include <shellutils.h>
 #include "CChangeNotifyServer.h"

@@ -14,10 +14,9 @@
 
 #include "services.h"
 
+#include <winbase_undoc.h>
 #include <userenv.h>
 #include <strsafe.h>
-
-#include <reactos/undocuser.h>
 
 #define NDEBUG
 #include <debug.h>

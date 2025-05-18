@@ -8,17 +8,11 @@
 
 #include <win32k.h>
 #include <napi.h>
+#include <winbase_undoc.h>
 
 #define NDEBUG
 #include <debug.h>
 #include <kdros.h>
-
-#ifndef STARTF_USEHOTKEY
-#define STARTF_USEHOTKEY    0x0200
-#endif
-#ifndef STARTF_SHELLPRIVATE
-#define STARTF_SHELLPRIVATE 0x0400
-#endif
 
 HANDLE hModuleWin;
 
