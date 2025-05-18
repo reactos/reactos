@@ -460,6 +460,14 @@ HidClassPDO_PnP(
             RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities,
                           &PDODeviceExtension->Capabilities,
                           sizeof(DEVICE_CAPABILITIES));
+
+            //
+            // override some capabilities
+            //
+            IoStack->Parameters.DeviceCapabilities.Capabilities->Removable = FALSE;
+            IoStack->Parameters.DeviceCapabilities.Capabilities->SilentInstall = TRUE;
+            IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+
             Status = STATUS_SUCCESS;
             break;
         }
