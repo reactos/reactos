@@ -11,8 +11,8 @@
 
 CAppBarManager::CAppBarManager()
     : m_hAppBarDPA(NULL)
+    , m_ahwndAutoHideBars { 0 }
 {
-    ZeroMemory(m_ahwndAutoHideBars, sizeof(m_ahwndAutoHideBars));
 }
 
 CAppBarManager::~CAppBarManager()
