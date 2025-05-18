@@ -453,6 +453,7 @@ void CAppBarManager::RecomputeAllWorkareas()
 
 BOOL CAppBarManager::SetAutoHideBar(_In_ HWND hwndTarget, _In_ BOOL bSetOrReset, _In_ UINT uSide)
 {
+    ATLASSERT(uSide < _countof(m_ahwndAutoHideBars));
     HWND *phwndAutoHide = &m_ahwndAutoHideBars[uSide];
     if (!IsWindow(*phwndAutoHide))
         *phwndAutoHide = NULL;
