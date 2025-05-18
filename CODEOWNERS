@@ -432,6 +432,8 @@
 #   M:
 #   R: HBelusca, Hermès Bélusca-Maïto
 #   S: Maintained
+/sdk/include/reactos/winbase_undoc.h        @HBelusca
+/subsystems/win/basesrv/
 /win32ss/user/winsrv/
 /win32ss/user/winsrv/usersrv/harderror.c    @HBelusca
 

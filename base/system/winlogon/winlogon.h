@@ -47,8 +47,8 @@
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
-#include <reactos/undocuser.h>
-#include <reactos/undocmpr.h>
+#include <undocuser.h>
+#include <undocmpr.h>
 
 BOOL
 WINAPI

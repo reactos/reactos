@@ -1,6 +1,8 @@
 #ifndef _UNDOCUSER_H
 #define _UNDOCUSER_H
 
+#pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
@@ -159,10 +161,13 @@ extern "C" {
 #define DFCS_MENUARROWDOWN 0x0010
 
 //
-// Undocumented flags for CreateProcess
+// Win32-user-specific undocumented flags for CreateProcess
 //
+#ifndef STARTF_INHERITDESKTOP
 #define STARTF_INHERITDESKTOP   0x40000000
 #define STARTF_SCREENSAVER      0x80000000
+#endif
+
 
 #define MOD_WINLOGON_SAS 0x8000
 
@@ -414,4 +419,4 @@ typedef enum tagSETIMEHOTKEY_ACTION
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
-#endif
+#endif /* _UNDOCUSER_H */
