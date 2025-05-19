@@ -826,6 +826,7 @@ WskBind(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG F
     NTSTATUS status;
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
 
+#if 0
 DbgPrint("WskBind Socket is %p ...\n", Socket);
 if (((struct sockaddr_in *)LocalAddress)->sin_port == 0)
 {
@@ -834,6 +835,7 @@ static int port = 0xd000;
 ((struct sockaddr_in *)LocalAddress)->sin_port = my_htons(port++);
 DbgPrint("WskBind: assigning port %d\n", port);
 }
+#endif
 
     PTRANSPORT_ADDRESS ta = TdiTransportAddressFromSocketAddress(LocalAddress);
 
