@@ -222,6 +222,13 @@ void PerfDataRefresh(void)
     if (status != STATUS_INFO_LENGTH_MISMATCH)
         SysHandleInfoData.NumberOfHandles = SystemNumberOfHandles;
 
+#ifndef MAKE_LEAK
+    /*
+     * Save system handle info
+     */
+    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
+#endif
+
     /* Get process information
      * We don't know how much data there is so just keep
      * increasing the buffer size until the call succeeds
@@ -266,12 +273,10 @@ void PerfDataRefresh(void)
                sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
 #endif
 
+#ifdef MAKE_LEAK
     /*
      * Save system handle info
      */
-    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
-#ifndef MAKE_LEAK
-    // HACK: We need to do this twice or we leak memory
     SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
 #endif
 
