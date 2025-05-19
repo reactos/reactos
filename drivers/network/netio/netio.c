@@ -92,7 +92,7 @@ typedef struct _WSK_SOCKET_INTERNAL
     LONG RefCount;                       /* See SocketGet/SocketPut TODO: this should be atomic */
 
     PIRP ListenIrp;	           /* must be cancelled on close */
-    BOOLEAN ListenCancelled;
+    volatile BOOLEAN ListenCancelled;
     HANDLE ListenThreadHandle;     /* needed to restart listening */
     PKTHREAD ListenThread;
     KEVENT StartListenEvent;
@@ -471,7 +471,8 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
     if (ListenSocket->CallbackMask & WSK_EVENT_ACCEPT &&
         ListenDispatch->WskAcceptEvent != NULL &&
         ListenSocket->ListenIrp != NULL &&
-        !ListenSocket->ListenCancelled)
+        !ListenSocket->ListenCancelled &&
+        Irp->IoStatus.Status != STATUS_CANCELLED)
     {
         ListenSocket->ListenIrp = NULL;
 
