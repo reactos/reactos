@@ -57,7 +57,7 @@ typedef struct BindCtxImpl{
     DWORD          bindCtxTableLastIndex;  /* first free index in the table */
     DWORD          bindCtxTableSize;   /* size table */
 
-    BIND_OPTS2 bindOption2; /* a structure which contains the bind options*/
+    BIND_OPTS3 options;
 
 } BindCtxImpl;
 
@@ -246,17 +246,17 @@ BindCtxImpl_SetBindOptions(IBindCtx* iface,BIND_OPTS *pbindopts)
 {
     BindCtxImpl *This = impl_from_IBindCtx(iface);
 
-    TRACE("(%p,%p)\n",This,pbindopts);
+    TRACE("(%p,%p)\n",This, pbindopts);
 
     if (pbindopts==NULL)
         return E_POINTER;
 
-    if (pbindopts->cbStruct > sizeof(BIND_OPTS2))
+    if (pbindopts->cbStruct > sizeof(This->options))
     {
-        WARN("invalid size\n");
-        return E_INVALIDARG; /* FIXME : not verified */
+        WARN("invalid size %u.\n", pbindopts->cbStruct);
+        return E_INVALIDARG;
     }
-    memcpy(&This->bindOption2, pbindopts, pbindopts->cbStruct);
+    memcpy(&This->options, pbindopts, pbindopts->cbStruct);
     return S_OK;
 }
 
@@ -267,19 +267,16 @@ static HRESULT WINAPI
 BindCtxImpl_GetBindOptions(IBindCtx* iface,BIND_OPTS *pbindopts)
 {
     BindCtxImpl *This = impl_from_IBindCtx(iface);
-    ULONG cbStruct;
+    DWORD size;
 
     TRACE("(%p,%p)\n",This,pbindopts);
 
     if (pbindopts==NULL)
         return E_POINTER;
 
-    cbStruct = pbindopts->cbStruct;
-    if (cbStruct > sizeof(BIND_OPTS2))
-        cbStruct = sizeof(BIND_OPTS2);
-
-    memcpy(pbindopts, &This->bindOption2, cbStruct);
-    pbindopts->cbStruct = cbStruct;
+    size = min(pbindopts->cbStruct, sizeof(This->options));
+    memcpy(pbindopts, &This->options, size);
+    pbindopts->cbStruct = size;
 
     return S_OK;
 }
@@ -520,16 +517,11 @@ static HRESULT BindCtxImpl_Construct(BindCtxImpl* This)
     This->IBindCtx_iface.lpVtbl = &VT_BindCtxImpl;
     This->ref          = 0;
 
-    /* Initialize the BIND_OPTS2 structure */
-    This->bindOption2.cbStruct  = sizeof(BIND_OPTS2);
-    This->bindOption2.grfFlags = 0;
-    This->bindOption2.grfMode = STGM_READWRITE;
-    This->bindOption2.dwTickCountDeadline = 0;
-
-    This->bindOption2.dwTrackFlags = 0;
-    This->bindOption2.dwClassContext = CLSCTX_SERVER;
-    This->bindOption2.locale = GetThreadLocale();
-    This->bindOption2.pServerInfo = 0;
+    memset(&This->options, 0, sizeof(This->options));
+    This->options.cbStruct = sizeof(This->options);
+    This->options.grfMode = STGM_READWRITE;
+    This->options.dwClassContext = CLSCTX_SERVER;
+    This->options.locale = GetThreadLocale();
 
     /* Initialize the bindctx table */
     This->bindCtxTableSize=0;
