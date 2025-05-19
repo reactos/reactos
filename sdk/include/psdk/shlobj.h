@@ -201,7 +201,7 @@ SHGetFolderPathAndSubDirW(
 HRESULT WINAPI SHGetKnownFolderPath(
   _In_ REFKNOWNFOLDERID rfid,
   _In_ DWORD dwFlags,
-  _In_ HANDLE hToken,
+  _In_opt_ HANDLE hToken,
   _Outptr_ PWSTR *ppszPath);
 #endif
 

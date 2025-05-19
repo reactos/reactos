@@ -17,15 +17,14 @@ START_TEST(SHGetKnownFolderPath)
     PWSTR path;
     HRESULT result;
 
-    hShell32 = LoadLibraryW(L"shell32.dll");
+    hShell32 = GetModuleHandleW(L"shell32.dll");
     if (!hShell32)
     {
-        skip("Failed to load shell32.dll\n");
+        skip("Failed to find shell32.dll\n");
         return;
     }
 
     pSHGetKnownFolderPath = (PSHGETKNOWNFOLDERPATH)GetProcAddress(hShell32, "SHGetKnownFolderPath");
-
     if (!pSHGetKnownFolderPath)
     {
         skip("SHGetKnownFolderPath not exported. Likely running on an OS older than Vista\n");
@@ -68,7 +67,7 @@ START_TEST(SHGetKnownFolderPath)
         {
              ok(path == NULL, "Documents: Expected S_FALSE, got hr=0x%lx, path %p\n", result, path);
         }
-         else
+        else
         {
             ok(0, "Documents: Expected success, got Error Code: 0x0%08lX\n", result);
             ok(path == NULL, "Documents: Expected path to be NULL on failure\n");
