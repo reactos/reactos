@@ -473,6 +473,7 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
     NTSTATUS Status;
 
     FUNCTION_TRACE;
+DbgPrint("ListenComplete!!!\n");
 
     if (ListenSocket->CallbackMask & WSK_EVENT_ACCEPT &&
         ListenDispatch->WskAcceptEvent != NULL &&
@@ -480,6 +481,7 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
         !ListenSocket->ListenCancelled &&
         Irp->IoStatus.Status != STATUS_CANCELLED)
     {
+DbgPrint("ListenComplete about to call accept event...\n");
         ListenSocket->ListenIrp = NULL;
 
         Status = ListenDispatch->WskAcceptEvent(ListenSocket->user_context, 0, &ListenSocket->LocalAddress, RemoteAddress, (PWSK_SOCKET)AcceptSocket, &AcceptSocketContext, &AcceptSocketDispatch);
@@ -742,7 +744,7 @@ err_out:
     Irp->IoStatus.Status = status;
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
-    return status;
+    return STATUS_PENDING;
 }
 
 static NTSTATUS WSKAPI
@@ -866,7 +868,7 @@ err_out:
     Irp->IoStatus.Status = status;
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
-    return status;
+    return STATUS_PENDING;
 }
 
 enum direction
@@ -1446,7 +1448,7 @@ err_out:
     Irp->IoStatus.Status = status;
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
-    return status;
+    return STATUS_PENDING;
 }
 
 static WSK_PROVIDER_DISPATCH provider_dispatch = {
