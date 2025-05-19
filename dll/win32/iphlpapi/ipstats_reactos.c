@@ -92,13 +92,17 @@ NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
     }
 }
 
-NTSTATUS tdiGetMibForIpEntity
-( HANDLE tcpFile, TDIEntityID *ent, IPSNMPInfo *entry ) {
+static NTSTATUS
+tdiGetMibForIpEntity(
+  _In_ HANDLE tcpFile,
+  _In_ TDIEntityID *ent,
+  _Out_ MIB_IPSTATS *entry)
+{
     TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
-    NTSTATUS status = STATUS_SUCCESS;
+    NTSTATUS Status;
     DWORD returnSize;
 
-    memset( entry, 0, sizeof( *entry ) );
+    ZeroMemory(entry, sizeof(*entry));
 
     TRACE("TdiGetMibForIpEntity(tcpFile 0x%p, entityId 0x%x)\n",
           tcpFile, ent->tei_instance);
@@ -108,7 +112,7 @@ NTSTATUS tdiGetMibForIpEntity
     req.ID.toi_id                   = IP_MIB_STATS_ID;
     req.ID.toi_entity               = *ent;
 
-    status = DeviceIoControl(tcpFile,
+    Status = DeviceIoControl(tcpFile,
                              IOCTL_TCP_QUERY_INFORMATION_EX,
                              &req,
                              sizeof(req),
@@ -130,20 +134,104 @@ NTSTATUS tdiGetMibForIpEntity
            "  ipsi_numaddr ............... %lu\n"
            "  ipsi_numroutes ............. %lu\n"
            "}\n",
-          status,
-          entry->ipsi_forwarding,
-          entry->ipsi_defaultttl,
-          entry->ipsi_inreceives,
-          entry->ipsi_indelivers,
-          entry->ipsi_outrequests,
-          entry->ipsi_routingdiscards,
-          entry->ipsi_outdiscards,
-          entry->ipsi_outnoroutes,
-          entry->ipsi_numif,
-          entry->ipsi_numaddr,
-          entry->ipsi_numroutes);
+          Status,
+          entry->dwForwarding,
+          entry->dwDefaultTTL,
+          entry->dwInReceives,
+          entry->dwInDelivers,
+          entry->dwOutRequests,
+          entry->dwRoutingDiscards,
+          entry->dwOutDiscards,
+          entry->dwOutNoRoutes,
+          entry->dwNumIf,
+          entry->dwNumAddr,
+          entry->dwNumRoutes);
 
-    return status;
+    return Status;
+}
+
+static NTSTATUS
+tdiGetMibForTcpEntity(
+  _In_ HANDLE tcpFile,
+  _In_ TDIEntityID *ent,
+  _Out_ MIB_TCPSTATS *entry)
+{
+    TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
+    NTSTATUS Status;
+    DWORD returnSize;
+
+    ZeroMemory(entry, sizeof(*entry));
+
+    TRACE("TdiGetMibForTcpEntity(tcpFile 0x%p, entityId 0x%x)\n",
+          tcpFile, ent->tei_instance);
+
+    req.ID.toi_class                = INFO_CLASS_PROTOCOL;
+    req.ID.toi_type                 = INFO_TYPE_PROVIDER;
+    req.ID.toi_id                   = TCP_MIB_STAT_ID;
+    req.ID.toi_entity               = *ent;
+
+    Status = DeviceIoControl(tcpFile,
+                             IOCTL_TCP_QUERY_INFORMATION_EX,
+                             &req,
+                             sizeof(req),
+                             entry,
+                             sizeof(*entry),
+                             &returnSize,
+                             NULL);
+
+    TRACE("TdiGetMibForTcpEntity() => status = 0x%08lx, entry = {\n"
+           "  dwInSegs ............. %lu\n"
+           "  dwOutSegs ............ %lu\n"
+           "  dwNumConns ........... %lu\n"
+           "}\n",
+          Status,
+          entry->dwInSegs,
+          entry->dwOutSegs,
+          entry->dwNumConns);
+
+    return Status;
+}
+
+static NTSTATUS
+tdiGetMibForUdpEntity(
+  _In_ HANDLE tcpFile,
+  _In_ TDIEntityID *ent,
+  _Out_ MIB_UDPSTATS *entry)
+{
+    TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
+    NTSTATUS Status;
+    DWORD returnSize;
+
+    ZeroMemory(entry, sizeof(*entry));
+
+    TRACE("TdiGetMibForUdpEntity(tcpFile 0x%p, entityId 0x%x)\n",
+          tcpFile, ent->tei_instance);
+
+    req.ID.toi_class                = INFO_CLASS_PROTOCOL;
+    req.ID.toi_type                 = INFO_TYPE_PROVIDER;
+    req.ID.toi_id                   = UDP_MIB_STAT_ID;
+    req.ID.toi_entity               = *ent;
+
+    Status = DeviceIoControl(tcpFile,
+                             IOCTL_TCP_QUERY_INFORMATION_EX,
+                             &req,
+                             sizeof(req),
+                             entry,
+                             sizeof(*entry),
+                             &returnSize,
+                             NULL);
+
+    TRACE("TdiGetMibForUdpEntity() => status = 0x%08lx, entry = {\n"
+           "  dwInDatagrams ....... %lu\n"
+           "  dwOutDatagrams ...... %lu\n"
+           "  dwNumAddrs .......... %lu\n"
+           "}\n",
+          Status,
+          entry->dwInDatagrams,
+          entry->dwOutDatagrams,
+          entry->dwNumAddrs);
+
+    return Status;
 }
 
 NTSTATUS tdiGetRoutesForIpEntity
@@ -330,37 +418,58 @@ DWORD getICMPStats(MIB_ICMP *stats)
   return NO_ERROR;
 }
 
-DWORD getIPStats(PMIB_IPSTATS stats, DWORD family)
+DWORD getIPStats(
+    _In_ HANDLE TcpFile,
+    _Out_ PMIB_IPSTATS pStats)
 {
-  if (!stats)
-    return ERROR_INVALID_PARAMETER;
+    TDIEntityID ent;
+    NTSTATUS Status;
 
-  if (family != AF_INET && family != AF_INET6)
-    return ERROR_INVALID_PARAMETER;
+    ent.tei_entity = CL_NL_ENTITY;
+    ent.tei_instance = 0;
 
-  return NO_ERROR;
+    Status = tdiGetMibForIpEntity(TcpFile, &ent, pStats);
+
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    return NO_ERROR;
 }
 
-DWORD getTCPStats(MIB_TCPSTATS *stats, DWORD family)
+DWORD getTCPStats(
+    _In_ HANDLE TcpFile,
+    _Out_ MIB_TCPSTATS *pStats)
 {
-  if (!stats)
-    return ERROR_INVALID_PARAMETER;
+    TDIEntityID ent;
+    NTSTATUS Status;
 
-  if (family != AF_INET && family != AF_INET6)
-    return ERROR_INVALID_PARAMETER;
+    ent.tei_entity = CO_TL_ENTITY;
+    ent.tei_instance = 0;
 
-  return NO_ERROR;
+    Status = tdiGetMibForTcpEntity(TcpFile, &ent, pStats);
+
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    return NO_ERROR;
 }
 
-DWORD getUDPStats(MIB_UDPSTATS *stats, DWORD family)
+DWORD getUDPStats(
+    _In_ HANDLE TcpFile,
+    _Out_ MIB_UDPSTATS *pStats)
 {
-  if (!stats)
-    return ERROR_INVALID_PARAMETER;
+    TDIEntityID ent;
+    NTSTATUS Status;
 
-  if (family != AF_INET && family != AF_INET6)
-    return ERROR_INVALID_PARAMETER;
+    ent.tei_entity = CL_TL_ENTITY;
+    ent.tei_instance = 0;
 
-  return NO_ERROR;
+    Status = tdiGetMibForUdpEntity(TcpFile, &ent, pStats);
+
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    return NO_ERROR;
 }
 
 DWORD getNumRoutes(void)
@@ -389,15 +498,15 @@ DWORD getNumRoutes(void)
 
     for (i = 0; i < numEntities; i++) {
         if (isIpEntity(tcpFile, &entitySet[i])) {
-            IPSNMPInfo isnmp;
-            memset(&isnmp, 0, sizeof(isnmp));
-            status = tdiGetMibForIpEntity(tcpFile, &entitySet[i], &isnmp);
+            MIB_IPSTATS ipstats;
+            memset(&ipstats, 0, sizeof(ipstats));
+            status = tdiGetMibForIpEntity(tcpFile, &entitySet[i], &ipstats);
             if (!NT_SUCCESS(status)) {
                 ERR("tdiGetMibForIpEntity returned 0x%08lx, for i = %d\n", status, i);
                 numRoutes = 0;
                 break;
             }
-            numRoutes += isnmp.ipsi_numroutes;
+            numRoutes += ipstats.dwNumRoutes;
         }
     }
 
