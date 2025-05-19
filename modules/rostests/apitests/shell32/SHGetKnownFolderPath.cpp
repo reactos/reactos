@@ -13,7 +13,7 @@ static PSHGETKNOWNFOLDERPATH pSHGetKnownFolderPath = NULL;
 START_TEST(SHGetKnownFolderPath)
 {
     HRESULT hr;
-    HINSTANCE hShell32;
+    HMODULE hShell32;
     PWSTR path;
     HRESULT result;
 
@@ -28,7 +28,6 @@ START_TEST(SHGetKnownFolderPath)
     if (!pSHGetKnownFolderPath)
     {
         skip("SHGetKnownFolderPath not exported. Likely running on an OS older than Vista\n");
-        FreeLibrary(hShell32);
         return;
     }
 
@@ -77,6 +76,4 @@ START_TEST(SHGetKnownFolderPath)
 
         CoUninitialize();
     }
-
-    FreeLibrary(hShell32);
 }
