@@ -106,6 +106,10 @@ static const WCHAR* VAL_MOUSEKEYS_FLAGS = L"Flags";
 static const WCHAR* VAL_MOUSEKEYS_MAX = L"MaximumSpeed";
 static const WCHAR* VAL_MOUSEKEYS_TIMETOMAX = L"TimeToMaximumSpeed";
 
+static const WCHAR* KEY_SNAP = L"Control Panel\\Desktop";
+static const WCHAR* VAL_SNAP_ENABLED = L"WindowArrangementActive";
+static const WCHAR* VAL_SNAP_DOCKMOVING = L"DockMoving";
+
 /** Loading the settings ******************************************************/
 
 static
@@ -217,19 +221,6 @@ SpiFixupValues(VOID)
     gspv.tmCaptionFont.tmHeight = 11;
     gspv.tmCaptionFont.tmExternalLeading = 2;
 
-}
-
-/* Is Window Snap enabled? */
-static BOOL IntIsWindowSnapEnabled(VOID)
-{
-    WCHAR szValue[2];
-    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
-                           REG_SZ, szValue, sizeof(szValue)))
-    {
-        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-        return (_wtoi(szValue) != 0);
-    }
-    return TRUE;
 }
 
 static
@@ -351,6 +342,9 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.highcontrast.cbSize = sizeof(HIGHCONTRASTW);
     gspv.animationinfo.cbSize = sizeof(ANIMATIONINFO);
 
+    g_bWindowSnapEnabled = SpiLoadInt(KEY_SNAP, VAL_SNAP_ENABLED, TRUE);
+    gspv.bDockMoving = SpiLoadInt(KEY_SNAP, VAL_SNAP_DOCKMOVING, TRUE);
+
     /* Make sure we don't use broken values */
     SpiFixupValues();
 
@@ -366,8 +360,6 @@ SpiUpdatePerUserSystemParameters(VOID)
     }
     gdwLanguageToggleKey = UserGetLanguageToggle(L"Language Hotkey", 1);
     gdwLayoutToggleKey = UserGetLanguageToggle(L"Layout Hotkey", 2);
-
-    g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
 }
 
 BOOL
@@ -1803,6 +1795,16 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETFONTSMOOTHINGORIENTATION:
             return SpiSetDWord(&gspv.uiFontSmoothingOrientation, PtrToUlong(pvParam), KEY_DESKTOP, VAL_FONTSMOOTHINGORIENTATION, fl);
+
+        case SPI_GETWINARRANGING:
+            return SpiGetInt(pvParam, &g_bWindowSnapEnabled, fl);
+        case SPI_SETWINARRANGING:
+            return SpiSetInt(&g_bWindowSnapEnabled, uiParam, KEY_SNAP, VAL_SNAP_ENABLED, fl);
+
+        case SPI_GETDOCKMOVING:
+            return SpiGetInt(pvParam, &gspv.bDockMoving, fl);
+        case SPI_SETDOCKMOVING:
+            return SpiSetInt(&gspv.bDockMoving, uiParam, KEY_SNAP, VAL_SNAP_DOCKMOVING, fl);
 
         /* The following are undocumented, but valid SPI values */
         case 0x1010:
