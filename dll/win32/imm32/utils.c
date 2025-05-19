@@ -422,10 +422,15 @@ LPVOID ImmLocalAlloc(_In_ DWORD dwFlags, _In_ DWORD dwBytes)
     return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
 }
 
-// Win: MakeIMENotify
-BOOL APIENTRY
-Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                   DWORD_PTR dwCommand, DWORD_PTR dwData)
+BOOL
+Imm32MakeIMENotify(
+    _In_ HIMC hIMC,
+    _In_ HWND hwnd,
+    _In_ DWORD dwAction,
+    _In_ DWORD dwIndex,
+    _Inout_opt_ DWORD_PTR dwValue,
+    _In_ DWORD dwCommand,
+    _Inout_opt_ DWORD_PTR dwData)
 {
     DWORD dwThreadId;
     HKL hKL;
@@ -442,11 +447,25 @@ Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWOR
             if (pImeDpi)
             {
                 /* do notify */
-                pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
+                TRACE("NotifyIME(%p, %lu, %lu, %p)\n", hIMC, dwAction, dwIndex, dwValue);
+                if (!pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue))
+                    WARN("NotifyIME(%p, %lu, %lu, %p) failed\n", hIMC, dwAction, dwIndex, dwValue);
 
                 ImmUnlockImeDpi(pImeDpi); /* unlock */
             }
+            else
+            {
+                WARN("pImeDpi was NULL\n");
+            }
         }
+        else
+        {
+            WARN("dwThreadId was zero\n");
+        }
+    }
+    else
+    {
+        WARN("dwAction was zero\n");
     }
 
     if (hwnd && dwCommand)
