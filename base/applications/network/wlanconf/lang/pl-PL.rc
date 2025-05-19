@@ -10,12 +10,12 @@ WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-d\t\tRozłącza obecnie połączony AP.\n\
 \t-s\t\tSkauje i wyświetle listę dostępnych AP\n\
 \t\t\tw zasięgu.\n\n\
-Uruchomienie bez parametr?w wyświetli informacje o bie?ącym połączeniu WLAN\n"
+Uruchomienie bez parametrów wyświetli informacje o bieżącym połączeniu WLAN\n"
     IDS_NO_NETWORK "Brak sieci w zasięgu\n"
     IDS_NO_WLAN_ADAPTER "Adapter WLAN nie został wykryty w systemie\n"
-    IDS_SUCCESS "Operacja zako?czyła się sukcesem.\n"
+    IDS_SUCCESS "Operacja zakończyła się sukcesem.\n"
     IDS_WLAN_DISCONNECT "\nWLAN został odłączony\n"
-    IDS_MSG_WEP_ENABLED "WEP w u?yciu: %s\n"
+    IDS_MSG_WEP_ENABLED "WEP w użyciu: %s\n"
     IDS_MSG_NETWORK_MODE "Tryb połączenia: %s\n"
     IDS_MSG_CURRENT_WIRELESS "\nInformacje o konfiguracji obecnej sieci bezprzewodowej:\n\n"
     IDS_MSG_ENCRYPTED "Szyfrowana: %s\n"
