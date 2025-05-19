@@ -438,6 +438,19 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
                     StyleName,
                     (lstrlenW(StyleName) + 1) * sizeof(WCHAR));
     }
+
+    if (pSelectedTheme->ThemeActive)
+    {
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"Current", REG_SZ, NULL, 0);
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"NewCurrent", REG_SZ, NULL, 0);
+    }
+    else if (pSelectedTheme->Color)
+    {
+        PCWSTR ClassicSchemeName = pSelectedTheme->Color->DisplayName;
+        DWORD cb = (lstrlenW(ClassicSchemeName) + 1) * sizeof(WCHAR);
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"Current", REG_SZ, ClassicSchemeName, cb); // 95+
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"NewCurrent", REG_SZ, ClassicSchemeName, cb); // XP+
+    }
 }
 
 static THEME*
