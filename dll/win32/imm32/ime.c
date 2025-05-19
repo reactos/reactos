@@ -6,7 +6,7 @@
  *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
  *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
- *              Copyright 2020-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2020-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -194,7 +194,6 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 #include <imetable.h>
 #undef DEFINE_IME_ENTRY
 
-// Win: LoadIME
 BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
     WCHAR szPath[MAX_PATH];
@@ -230,6 +229,23 @@ BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 #include <imetable.h>
 #undef DEFINE_IME_ENTRY
 
+    /* Check for Cicero IMEs */
+    if (!IS_IME_HKL(pImeDpi->hKL) && IS_CICERO_MODE() && !IS_CICERO_COMPAT_DISABLED())
+    {
+#define CHECK_IME_FN(name) do { \
+    if (!pImeDpi->name) { \
+        ERR("'%s' not found in Cicero IME module '%S'.\n", #name, szPath); \
+        goto Failed; \
+    } \
+} while(0)
+        CHECK_IME_FN(CtfImeInquireExW);
+        CHECK_IME_FN(CtfImeSelectEx);
+        CHECK_IME_FN(CtfImeEscapeEx);
+        CHECK_IME_FN(CtfImeGetGuidAtom);
+        CHECK_IME_FN(CtfImeIsGuidMapEnable);
+#undef CHECK_IME_FN
+    }
+
     if (Imm32InquireIme(pImeDpi))
     {
         ret = TRUE;
@@ -263,7 +279,6 @@ Failed:
     return ret;
 }
 
-// Win: LoadImeDpi
 PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
 {
     IMEINFOEX ImeInfoEx;
@@ -271,12 +286,6 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     PIMEDPI pImeDpiNew, pImeDpiFound;
     UINT uCodePage;
     LCID lcid;
-
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return NULL;
-    }
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {
@@ -608,45 +617,38 @@ BOOL WINAPI ImmNotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwV
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey)
 {
-    HKL hKL;
-    if (SearchType == ImeInfoExKeyboardLayout || SearchType == ImeInfoExKeyboardLayoutTFS)
+    BOOL bTextServiceDisabled = FALSE;
+
+    if (SearchType == ImeInfoExKeyboardLayoutTFS)
     {
-        hKL = *(HKL*)pvSearchKey;
+        SearchType = ImeInfoExKeyboardLayout;
+        bTextServiceDisabled = CtfImmIsTextFrameServiceDisabled();
+    }
+
+    if (SearchType == ImeInfoExKeyboardLayout)
+    {
+        HKL hKL = *(HKL *)pvSearchKey;
         pImeInfoEx->hkl = hKL;
 
-        if (SearchType == ImeInfoExKeyboardLayoutTFS)
+        if (!IS_IME_HKL(hKL) &&
+            (!IS_CICERO_MODE() || IS_CICERO_COMPAT_DISABLED() || bTextServiceDisabled))
         {
-            if (!IS_IME_HKL(hKL))
-            {
-                if (CtfImmIsTextFrameServiceDisabled() || !IS_CICERO_MODE() || IS_16BIT_MODE())
-                {
-                    TRACE("\n");
-                    return FALSE;
-                }
-            }
+            TRACE("IME is disabled\n");
+            return FALSE;
+        }
 
-            SearchType = ImeInfoExKeyboardLayout;
-        }
-        else
-        {
-            if (!IS_IME_HKL(hKL))
-            {
-                TRACE("\n");
-                return FALSE;
-            }
-        }
-    }
-    else if (SearchType == ImeInfoExImeFileName)
-    {
-        StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
-                       pvSearchKey);
-    }
-    else
-    {
-        return FALSE;
+        return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
     }
 
-    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+    if (SearchType == ImeInfoExImeFileName)
+    {
+        StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile), pvSearchKey);
+        return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+    }
+
+    /* NOTE: ImeInfoExImeWindow is ignored */
+    ERR("SearchType: %d\n", SearchType);
+    return FALSE;
 }
 
 /***********************************************************************
@@ -763,12 +765,6 @@ UINT WINAPI ImmGetDescriptionA(HKL hKL, LPSTR lpszDescription, UINT uBufLen)
 
     TRACE("(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return 0;
-    }
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
@@ -793,12 +789,6 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 
     TRACE("(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return 0;
-    }
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
@@ -822,14 +812,6 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
     size_t cch;
 
     TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
-
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        if (uBufLen > 0)
-            lpszFileName[0] = 0;
-        return 0;
-    }
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
@@ -863,14 +845,6 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
 
     TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        if (uBufLen > 0)
-            lpszFileName[0] = 0;
-        return 0;
-    }
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
     {
         ERR("\n");
@@ -903,12 +877,6 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
     PIMEDPI pImeDpi = NULL;
 
     TRACE("(%p, %lu)\n", hKL, fdwIndex);
-
-    if (!IS_IME_HKL(hKL))
-    {
-        TRACE("\n");
-        return FALSE;
-    }
 
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
     {

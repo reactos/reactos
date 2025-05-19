@@ -946,7 +946,6 @@ Quit:
     return ret;
 }
 
-// Win: GetImeInfoEx
 BOOL FASTCALL
 UserGetImeInfoEx(
     _Inout_ PWINSTATION_OBJECT pWinSta,
@@ -1006,8 +1005,8 @@ UserGetImeInfoEx(
 BOOL
 NTAPI
 NtUserGetImeInfoEx(
-    PIMEINFOEX pImeInfoEx,
-    IMEINFOEXCLASS SearchType)
+    _Inout_ PIMEINFOEX pImeInfoEx,
+    _In_ IMEINFOEXCLASS SearchType)
 {
     IMEINFOEX ImeInfoEx;
     BOOL ret = FALSE;
@@ -1018,6 +1017,7 @@ NtUserGetImeInfoEx(
     if (!IS_IMM_MODE())
     {
         ERR("!IS_IMM_MODE()\n");
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         goto Quit;
     }
 
@@ -1824,6 +1824,12 @@ NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
             if (ptiIMC->spDefaultImc)
                 ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spDefaultImc);
             break;
+
+        default:
+        {
+            FIXME("dwType: %ld\n", dwType);
+            break;
+        }
     }
 
 Quit:
