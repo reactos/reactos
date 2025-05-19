@@ -3,7 +3,8 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     NT6 compatible NETIO.SYS driver: A BSD sockets like kernel
  *              internal interface for networking (TCP/IP, UDP/IP).
- * COPYRIGHT:   Copyright 2023-2024 Johannes Thoma <johannes@johannesthoma.com>
+ * COPYRIGHT:   Copyright 2023-2025 Johannes Khoshnazar-Thoma
+ *              <johannes@johannesthoma.com>
  */
 
 /* TODOs:
@@ -345,6 +346,11 @@ NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Contex
     PIRP UserIrp = c->UserIrp;
 
     FUNCTION_TRACE;
+
+if (!NT_SUCCESS(Irp->IoStatus.Status))
+{
+DbgPrint("Irp->IoStatus.Status is 0x%08x\n", Irp->IoStatus.Status);
+}
 
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
     {
@@ -807,11 +813,26 @@ TdiConnectionInfoFromSocketAddress(_In_ PSOCKADDR SocketAddress)
     return ConnectionInformation;
 }
 
+int my_htons(int i)
+{
+	return ((i & 0xff) >> 8) | ((i & 0xff00) << 8);
+}
+
 static NTSTATUS WSKAPI
 WskBind(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG Flags, _Inout_ PIRP Irp)
 {
     NTSTATUS status;
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
+
+DbgPrint("WskBind Socket is %p ...\n", Socket);
+if (((struct sockaddr_in *)LocalAddress)->sin_port == 0)
+{
+DbgPrint("WskBind: binding to a random port\n");
+static int port = 0xd000;
+((struct sockaddr_in *)LocalAddress)->sin_port = my_htons(port++);
+DbgPrint("WskBind: assigning port %d\n", port);
+}
+
     PTRANSPORT_ADDRESS ta = TdiTransportAddressFromSocketAddress(LocalAddress);
 
     FUNCTION_TRACE;
@@ -1121,7 +1142,9 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     IoMarkIrpPending(Irp);
     SocketGet(s);
 
+DbgPrint("Into TdiConnect ...\n");
     status = TdiConnect(&tdiIrp, s->ConnectionFile, TargetConnectionInfo, PeerAddrRet, NetioComplete, nc);
+DbgPrint("Out of TdiConnect, status is 0x%08x ...\n", status);
 
     /* If allocating tdiIrp fails we get here.
      * Call the IoCompletion of the application's Irp so this Irp
