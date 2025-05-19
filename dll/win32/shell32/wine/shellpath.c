@@ -3492,7 +3492,9 @@ HRESULT WINAPI SHGetKnownFolderPath(
             if (!GetWindowsDirectoryW(szPath, MAX_PATH))
             {
                 hr = HRESULT_FROM_WIN32(GetLastError());
-            } else {
+            } 
+            else 
+            {
                 hr = S_OK;
             }
             if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
@@ -3504,7 +3506,9 @@ HRESULT WINAPI SHGetKnownFolderPath(
             if (!GetSystemDirectoryW(szPath, MAX_PATH))
             {
                 hr = HRESULT_FROM_WIN32(GetLastError());
-            } else {
+            } 
+            else 
+            {
                 hr = S_OK;
             }
             if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
@@ -3518,13 +3522,17 @@ HRESULT WINAPI SHGetKnownFolderPath(
                 if (!GetSystemDirectoryW(szPath, MAX_PATH))
                 {
                     hr = HRESULT_FROM_WIN32(GetLastError());
-                } else {
+                } 
+                else 
+                {
                     hr = S_OK;
                 }
-            } else {
+            } 
+            else 
+            {
                 hr = S_OK;
             }
-             if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
+            if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
             {
                 PathAppendW(szPath, szDefaultPath);
             }
