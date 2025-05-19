@@ -1255,11 +1255,11 @@ WskDisconnect(_In_ PWSK_SOCKET Socket, _In_opt_ PWSK_BUF Buffer, _In_ ULONG Flag
 
     SocketShutdown(s);
 
-    if (Irp != NULL)
-    {
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-    }
+    IoSetNextIrpStackLocation(Irp);
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+
     return STATUS_PENDING;
 }
 
