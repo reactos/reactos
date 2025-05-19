@@ -268,7 +268,7 @@ void PerfDataRefresh(void)
     }
     SystemProcessorTimeInfo = SysProcessorTimeInfo;
 #else
-    if (SystemBasicInfo.NumberOfProcessors <= 32)
+    if (SystemBasicInfo.NumberOfProcessors <=  _countof(SystemProcessorTimeInfo))
         memcpy(&SystemProcessorTimeInfo, &SysProcessorTimeInfo,
                sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
 #endif
