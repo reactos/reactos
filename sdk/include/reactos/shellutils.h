@@ -622,6 +622,39 @@ struct CCoInitBase
 typedef CCoInitBase<CoInitialize, CoUninitialize> CCoInit;
 typedef CCoInitBase<OleInitialize, OleUninitialize> COleInit;
 
+class CObjectWithSiteBase :
+    public IObjectWithSite
+{
+public:
+    IUnknown* m_pUnkSite;
+
+    CObjectWithSiteBase() : m_pUnkSite(NULL) {}
+    virtual ~CObjectWithSiteBase() { SetSite(NULL); }
+
+    // IObjectWithSite
+    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
+    {
+#if defined(__WINE_SHLWAPI_H) && !defined(NO_SHLWAPI)
+        IUnknown_Set(&m_pUnkSite, pUnkSite);
+#else
+        IUnknown *punkOrg = m_pUnkSite;
+        if (punkOrg)
+            punkOrg->Release();
+        m_pUnkSite = pUnkSite;
+        if (pUnkSite)
+            pUnkSite->AddRef();
+#endif
+        return S_OK;
+    }
+    STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
+    {
+        *ppvSite = NULL;
+        return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
+    }
+};
+
+
+
 #endif /* __cplusplus */
 
 #define S_LESSTHAN 0xffff

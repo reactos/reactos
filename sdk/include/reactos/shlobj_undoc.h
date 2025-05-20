@@ -453,11 +453,13 @@ DECLARE_INTERFACE_(IExplorerToolbar, IUnknown)
  */
 typedef enum tagWALK_TREE_CMD
 {
-	WALK_TREE_OPTION0 = 0,
-	WALK_TREE_OPTION1 = 1,
-	WALK_TREE_OPTION2 = 2,
-	WALK_TREE_OPTION3 = 3
+	WALK_TREE_SAVE = 0,
+	WALK_TREE_DESTROY = 1,
+	WALK_TREE_DEFAULT = 2,
+	WALK_TREE_REFRESH = 3
 } WALK_TREE_CMD;
+
+#define HKEY_REGTREEOPTION_GRAYED ( (HKEY)INVALID_HANDLE_VALUE ) /* ROS extension */
 
 #define INTERFACE IRegTreeOptions
 DECLARE_INTERFACE_(IRegTreeOptions, IUnknown)
@@ -467,10 +469,10 @@ DECLARE_INTERFACE_(IRegTreeOptions, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** IRegTreeOptions ***/
-	STDMETHOD(InitTree)(THIS_ HWND paramC, HKEY param10, char const *param14, char const *param18) PURE;
-	STDMETHOD(WalkTree)(THIS_ WALK_TREE_CMD paramC) PURE;
-	STDMETHOD(ToggleItem)(THIS_ HTREEITEM paramC) PURE;
-	STDMETHOD(ShowHelp)(THIS_ HTREEITEM paramC, unsigned long param10) PURE;
+	STDMETHOD(InitTree)(THIS_ HWND hTV, HKEY hKey, LPCSTR SubKey, char const *pUnknown) PURE;
+	STDMETHOD(WalkTree)(THIS_ WALK_TREE_CMD Command) PURE;
+	STDMETHOD(ToggleItem)(THIS_ HTREEITEM hTI) PURE;
+	STDMETHOD(ShowHelp)(THIS_ HTREEITEM hTI, unsigned long Unknown) PURE;
 };
 #undef INTERFACE
 
