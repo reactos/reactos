@@ -120,10 +120,10 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
-BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
+BOOL Imm32IsSystemJapaneseOrKorean(VOID);
 BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
 BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
-BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
+BOOL Imm32IsImcAnsi(HIMC hIMC);
 
 #define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
 
@@ -167,9 +167,6 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
 HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
 BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
 PTHREADINFO FASTCALL Imm32CurrentPti(VOID);
-
-HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
-BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
 
 HRESULT CtfImmTIMCreateInputContext(_In_ HIMC hIMC);
 HRESULT CtfImmTIMDestroyInputContext(_In_ HIMC hIMC);
