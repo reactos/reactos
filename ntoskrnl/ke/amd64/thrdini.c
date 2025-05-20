@@ -161,11 +161,7 @@ KiSwapContextResume(
     NewProcess = NewThread->ApcState.Process;
     if (OldProcess != NewProcess)
     {
-        /* Switch address space and flush TLB */
-        __writecr3(NewProcess->DirectoryTableBase[0]);
-
-        /* Set new TSS fields */
-        //Pcr->TssBase->IoMapBase = NewProcess->IopmOffset;
+        KiSwapProcess(NewProcess, OldProcess);
     }
 
     /* Set TEB pointer and GS base */
