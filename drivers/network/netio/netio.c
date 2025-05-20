@@ -126,6 +126,7 @@ SocketGet(_In_ PWSK_SOCKET_INTERNAL s)
 {
     FUNCTION_TRACE;
 
+DPRINT1("s is %p, s->RefCount is %d, about to increment ...\n", s, s->RefCount);
     InterlockedIncrement(&s->RefCount);
 }
 
@@ -144,13 +145,17 @@ void SocketShutdown(_In_ PWSK_SOCKET_INTERNAL s)
 
     FUNCTION_TRACE;
 
+DPRINT1("SocketShutdown 1 socket is %p\n", s);
     if (s->ListenSocket != NULL)
     {
+DPRINT1("SocketShutdown 2 socket is %p ListenSocket is %p\n", s, s->ListenSocket);
         SocketPut(s->ListenSocket);
         s->ListenSocket = NULL;
     }
+DPRINT1("SocketShutdown 3 socket is %p\n", s);
     if (s->ListenThreadHandle != NULL)
     {
+DPRINT1("SocketShutdown 4 terminating listen thread ...\n");
         s->ListenThreadShouldRun = FALSE;
         KeSetEvent(&s->StartListenEvent, IO_NO_INCREMENT, FALSE);
         status = KeWaitForSingleObject(s->ListenThread, Executive, KernelMode, FALSE, (PLARGE_INTEGER)NULL);
@@ -158,21 +163,27 @@ void SocketShutdown(_In_ PWSK_SOCKET_INTERNAL s)
         {
             DPRINT1("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
+DPRINT1("SocketShutdown 5 listen thread terminated %p\n", s);
         ObDereferenceObject(s->ListenThread);
         s->ListenThread = NULL;
         s->ListenThreadHandle = NULL;
     }
+DPRINT1("SocketShutdown 6 socket is %p\n", s);
     if (s->ListenIrp != NULL)
     {
+DPRINT1("SocketShutdown 7 socket is %p cancel ListenIrp (%p)\n", s, s->ListenIrp);
         s->ListenCancelled = TRUE;
         IoCancelIrp(s->ListenIrp);
         s->ListenIrp = NULL;
     }
+DPRINT1("SocketShutdown 8 socket is %p\n", s);
     if (s->ConnectionFile != NULL)
     {
+DPRINT1("SocketShutdown 9 socket is %p\n", s);
         if (s->ConnectionFileAssociated)
         {
                /* This fails with error 0xc000023b (still connected) on Windows 2003 */
+DPRINT1("SocketShutdown a socket is %p\n", s);
             status = TdiDisassociateAddressFile(s->ConnectionFile);
             if (!NT_SUCCESS(status))
             {
@@ -183,8 +194,10 @@ void SocketShutdown(_In_ PWSK_SOCKET_INTERNAL s)
         ObDereferenceObject(s->ConnectionFile);
         s->ConnectionFile = NULL;
     }
+DPRINT1("SocketShutdown b socket is %p\n", s);
     if (s->ConnectionHandle != NULL)
     {
+DPRINT1("SocketShutdown b socket is %p\n", s);
         ZwClose(s->ConnectionHandle);
         s->ConnectionHandle = NULL;
     }
@@ -291,6 +304,7 @@ SocketPut(_In_ PWSK_SOCKET_INTERNAL s)
         return;
     }
 
+DPRINT1("s is %p, s->RefCount is %d, about to decrement ...\n", s, s->RefCount);
     if (InterlockedDecrement(&s->RefCount) == 0)
     {
         SocketShutdown(s);
@@ -303,16 +317,21 @@ SocketPut(_In_ PWSK_SOCKET_INTERNAL s)
          * are gone (AcceptSockets hold a reference to the listen socket).
          */
 
+DPRINT1("SocketPut %p 1\n", s);
         if (s->LocalAddressFile != NULL)
         {
+DPRINT1("SocketPut %p 2\n", s);
             ObDereferenceObject(s->LocalAddressFile);
             s->LocalAddressFile = NULL;
         }
+DPRINT1("SocketPut %p 3\n", s);
         if (s->LocalAddressHandle != NULL)
         {
+DPRINT1("SocketPut %p 4\n", s);
             ZwClose(s->LocalAddressHandle);
             s->LocalAddressHandle = NULL;
         }
+DPRINT1("SocketPut %p 5\n", s);
         ExFreePoolWithTag(s, TAG_NETIO);
     }
 }
@@ -494,6 +513,11 @@ DbgPrint("ListenComplete about to call accept event...\n");
             memcpy(&AcceptSocket->RemoteAddress, RemoteAddress, sizeof(AcceptSocket->RemoteAddress));
         }
     }
+    else
+    {
+DPRINT1("EXTRA put for accept socket (it was never sent to user, so nobody will ever call WskClose on it)\n");
+        SocketPut(AcceptSocket);	/* close the AcceptSocket */
+    }
     ListenSocket->ListenIrp = NULL;
 
     SocketPut(AcceptSocket);
@@ -521,12 +545,14 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 
     FUNCTION_TRACE;
 
+DPRINT1("StartListening 1\n");
     if (ListenSocket->LocalAddressHandle == NULL)
     {
         DPRINT1("LocalAddressHandle is not set, need to bind your socket before listening\n");
         return STATUS_INVALID_PARAMETER;
     }
 
+DPRINT1("StartListening 2\n");
     status = CreateSocket(ListenSocket->family, ListenSocket->type, ListenSocket->proto, WSK_FLAG_CONNECTION_SOCKET, &AcceptSocket);
     if (!NT_SUCCESS(status))
     {
@@ -537,35 +563,43 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
     /* Put when the AcceptSocket is closed */
     SocketGet(AcceptSocket->ListenSocket);
 
+DPRINT1("StartListening 3\n");
     status = STATUS_INSUFFICIENT_RESOURCES;
     lc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*lc), TAG_NETIO);
     if (lc == NULL)
     {
         goto err_out_free_accept_socket;
     }
+DPRINT1("StartListening 4\n");
     lc->ListenSocket = ListenSocket;
     lc->AcceptSocket = AcceptSocket;
 
     tdiIrp = NULL;
 
+DPRINT1("StartListening 5\n");
     status = TdiAssociateAddressFile(ListenSocket->LocalAddressHandle, AcceptSocket->ConnectionFile);
     if (!NT_SUCCESS(status))
     {
+DPRINT1("StartListening 6\n");
         goto err_out_free_lc;
     }
     AcceptSocket->ConnectionFileAssociated = TRUE;
 
     lc->RequestConnectionInfo = NULL;
     TdiBuildNullConnectionInfo(&lc->RequestConnectionInfo, TDI_ADDRESS_TYPE_IP);
+DPRINT1("StartListening 7\n");
     if (lc->RequestConnectionInfo == NULL)
     {
+DPRINT1("StartListening 8\n");
         goto err_out_free_lc_and_disassociate;
     }
 
+DPRINT1("StartListening 9\n");
     lc->ReturnConnectionInfo = NULL;
     TdiBuildNullConnectionInfo(&lc->ReturnConnectionInfo, TDI_ADDRESS_TYPE_IP);
     if (lc->ReturnConnectionInfo == NULL)
     {
+DPRINT1("StartListening a\n");
         goto err_out_free_lc_and_req_conn_info;
     }
     SocketGet(ListenSocket);
@@ -573,10 +607,13 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 
     ListenSocket->ListenCancelled = FALSE;
     /* pass the ConnectionFile from accept socket, not from ListenSocket ... */
+DPRINT1("StartListening b\n");
     status = TdiListen(&tdiIrp, AcceptSocket->ConnectionFile, &lc->RequestConnectionInfo, &lc->ReturnConnectionInfo, ListenComplete, lc);
 
+DPRINT1("StartListening c\n");
     if (!NT_SUCCESS(status))
     {
+DPRINT1("StartListening d\n");
         ExFreePoolWithTag(lc->ReturnConnectionInfo, TAG_NETIO);
         SocketPut(ListenSocket);
         SocketPut(AcceptSocket);
@@ -584,6 +621,7 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
     }
     ListenSocket->ListenIrp = tdiIrp;
 
+DPRINT1("StartListening e\n");
     return STATUS_PENDING;
 
 err_out_free_lc_and_req_conn_info:
@@ -610,6 +648,7 @@ static void QueueListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 {
     FUNCTION_TRACE;
 
+DbgPrint("QueueListening ...\n");
     KeSetEvent(&ListenSocket->StartListenEvent, IO_NO_INCREMENT, FALSE);
 }
 
@@ -621,10 +660,13 @@ static VOID NTAPI RequeueListenThread(_In_ PVOID p)
     // PIRP AcceptIrp;
 
     FUNCTION_TRACE;
+DbgPrint("RequeueListenThread starting thread ...\n");
 
     while (ListenSocket->ListenThreadShouldRun)
     {
+DbgPrint("RequeueListenThread into KeWaitForSingleObject ...\n");
         status = KeWaitForSingleObject(&ListenSocket->StartListenEvent, Executive, KernelMode, FALSE, NULL);
+DbgPrint("RequeueListenThread out of KeWaitForSingleObject ...\n");
         if (!NT_SUCCESS(status))
         {
             DPRINT1("KeWaitForSingleObject failed with status 0x%08x!\n", status);
@@ -633,8 +675,10 @@ static VOID NTAPI RequeueListenThread(_In_ PVOID p)
         {
             break;
         }
+DbgPrint("RequeueListenThread StartListening ...\n");
         StartListening(ListenSocket);
     }
+DbgPrint("RequeueListenThread Stopping thread ...\n");
     PsTerminateSystemThread(0);
 }
 
