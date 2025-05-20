@@ -17,32 +17,37 @@
     ok_eq_ulong(ObjectInfo.HandleCount, Handles);                   \
 } while (0)
 
-#define CheckSection(SectionObject, SectionFlag) do                     \
-{                                                                       \
-    SECTION_BASIC_INFORMATION Sbi;                                      \
-    HANDLE SectionHandle = NULL;                                        \
-    NTSTATUS Status;                                                    \
-    if (skip(SectionObject != NULL &&                                   \
-             SectionObject != (PVOID)0x5555555555555555ULL,             \
-             "No section object\n"))                                    \
-        break;                                                          \
-    Status = ObOpenObjectByPointer(SectionObject, OBJ_KERNEL_HANDLE,    \
-                                   NULL, 0, MmSectionObjectType,        \
-                                   KernelMode, &SectionHandle);         \
-    ok_eq_hex(Status, STATUS_SUCCESS);                                  \
-    ok(SectionHandle != NULL, "Section handle null\n");                 \
-    if (!skip(NT_SUCCESS(Status) && SectionHandle,                      \
-              "No section handle\n"))                                   \
-    {                                                                   \
-        Status = ZwQuerySection(SectionHandle, SectionBasicInformation, \
-                                &Sbi, sizeof Sbi, NULL);                \
-        ok_eq_hex(Status, STATUS_SUCCESS);                              \
-        ok_eq_pointer(Sbi.BaseAddress, NULL);                           \
-        ok_eq_longlong(Sbi.Size.QuadPart, 1LL);                         \
-        ok_eq_hex(Sbi.Attributes, SectionFlag | SEC_FILE);              \
-        ZwClose(SectionHandle);                                         \
-    }                                                                   \
-} while (0)
+static
+void
+CheckSection_(ULONG Line, PVOID SectionObject, ULONG SectionFlag)
+{
+    SECTION_BASIC_INFORMATION Sbi;
+    HANDLE SectionHandle = NULL;
+    NTSTATUS Status;
+
+    if (skip(SectionObject != NULL &&
+             SectionObject != (PVOID)0x5555555555555555ULL,
+             "No section object\n"))
+        return;
+
+    Status = ObOpenObjectByPointer(SectionObject, OBJ_KERNEL_HANDLE,
+                                   NULL, 0, MmSectionObjectType,
+                                   KernelMode, &SectionHandle);
+    ok(Status == STATUS_SUCCESS, "Line %lu: Status = 0x%lx, expected STATUS_SUCCESS\n", Line, Status);
+    ok(SectionHandle != NULL, "Line %lu: Section handle null\n", Line);
+    if (!skip(NT_SUCCESS(Status) && SectionHandle,
+              "No section handle\n"))
+    {
+        Status = ZwQuerySection(SectionHandle, SectionBasicInformation,
+                                &Sbi, sizeof Sbi, NULL);
+        ok(Status == STATUS_SUCCESS, "Line %lu: Status = 0x%lx, expected STATUS_SUCCESS\n", Line, Status);
+        ok(Sbi.BaseAddress == NULL, "Line %lu: Sbi.BaseAddress = 0x%p, expected NULL\n", Line, Sbi.BaseAddress);
+        ok(Sbi.Size.QuadPart == 1LL, "Line %lu: Sbi.Size.QuadPart = 0x%I64x, expected 1\n", Line, Sbi.Size.QuadPart);
+        ok(Sbi.Attributes == (SectionFlag | SEC_FILE), "Line %lu: Sbi.Attributes = 0x%lx, expected 0x%x\n", Line, Sbi.Attributes, (SectionFlag | SEC_FILE));
+        ZwClose(SectionHandle);
+    }
+}
+#define CheckSection(SectionObject, SectionFlag) CheckSection_(__LINE__, SectionObject, SectionFlag)
 
 #define TestMapView(SectionObject, ExpectAtBase, ExpectM) do                    \
 {                                                                               \
@@ -154,6 +159,16 @@ TestCreateSection(
     KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER_4);
     ok_eq_longlong(MaximumSize.QuadPart, 0LL);
+
+    if (SectionObject && SectionObject != KmtInvalidPointer)
+        ObDereferenceObject(SectionObject);
+
+    MaximumSize.QuadPart = -1;
+    KmtStartSeh()
+        Status = MmCreateSection(NULL, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_eq_hex(Status, STATUS_SECTION_TOO_BIG);
+    ok_eq_longlong(MaximumSize.QuadPart, -1LL);
 
     if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
@@ -569,6 +584,7 @@ TestPhysicalMemorySection(VOID)
             ok((LONG_PTR)Mapping > 0, "Mapping = %p\n", Mapping);
             ok(((ULONG_PTR)Mapping % PAGE_SIZE) == 0, "Mapping = %p\n", Mapping);
             ok_eq_ulong(ViewSize, PAGE_SIZE);
+            ok_eq_longlong(PhysicalAddress.QuadPart, MyPagePhysical.QuadPart);
 
             EqualBytes = RtlCompareMemory(Mapping,
                                           MyPage,
