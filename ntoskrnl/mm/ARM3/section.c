@@ -1405,7 +1405,7 @@ static
 NTSTATUS
 MiCreateDataFileMap(IN PFILE_OBJECT File,
                     OUT PSEGMENT *Segment,
-                    IN PSIZE_T MaximumSize,
+                    IN PLARGE_INTEGER MaximumSize,
                     IN ULONG SectionPageProtection,
                     IN ULONG AllocationAttributes,
                     IN ULONG IgnoreFileSizing)
@@ -2239,7 +2239,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
         /* So we always create a data file map */
         Status = MiCreateDataFileMap(File,
                                      &Segment,
-                                     (PSIZE_T)InputMaximumSize,
+                                     InputMaximumSize,
                                      SectionPageProtection,
                                      AllocationAttributes,
                                      KernelCall);
