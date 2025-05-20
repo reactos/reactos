@@ -1494,7 +1494,7 @@ extern "C" {
     #define SPI_GETSCREENSAVESECURE 0x0076
     #define SPI_SETSCREENSAVESECURE 0x0077
 #endif
-#if(WINVER >= 0x0601) || defined(__REACTOS__)
+#if(_WIN32_WINNT >= 0x0601) || defined(__REACTOS__)
     #define SPI_GETWINARRANGING     0x0082
     #define SPI_SETWINARRANGING     0x0083
     #define SPI_GETDRAGFROMMAXIMIZE 0x008C
