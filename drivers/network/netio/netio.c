@@ -493,11 +493,6 @@ DbgPrint("ListenComplete about to call accept event...\n");
         {
             memcpy(&AcceptSocket->RemoteAddress, RemoteAddress, sizeof(AcceptSocket->RemoteAddress));
         }
-
-        /* And wait for the next incoming connection. */
-        /* This is done in a separate thread at IRQL = 0 */
-
-        QueueListening(ListenSocket);
     }
     ListenSocket->ListenIrp = NULL;
 
@@ -507,6 +502,11 @@ DbgPrint("ListenComplete about to call accept event...\n");
     ExFreePoolWithTag(l->ReturnConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
     ExFreePoolWithTag(l->RequestConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
     ExFreePoolWithTag(l, TAG_NETIO);
+
+    /* And wait for the next incoming connection. */
+    /* This is done in a separate thread at IRQL = 0 */
+
+    QueueListening(ListenSocket);
 
     return STATUS_SUCCESS;
 }
