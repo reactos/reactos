@@ -180,7 +180,8 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
     if (SUCCEEDED(GetRegString(hKey, "CLSID", Temp, _countof(Temp))) && ..(Temp, &clsid))
     {
         IRegTreeItem *pRTI;
-        if (SUCCEEDED(hr = IUnknown_QueryService(m_pUnkSite, clsid, ..)))
+        if (SUCCEEDED(hr = IUnknown_QueryService(m_pUnkSite, clsid, IID_PPV_ARG(IRegTreeItem, &pti))) ||
+            SUCCEEDED(hr = SHCoCreateInstance(NULL, &clsid, NULL, IID_PPV_ARG(IRegTreeItem, &pRTI))))
         {
             BOOL *boolptr = (BOOL*)Data;
             Size = sizeof(BOOL);
@@ -230,22 +231,21 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
 
         if (SUCCEEDED(hr))
         {
-            hr = HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
+            Err = ERROR_OUTOFMEMORY;
             cb = max(cb, (Offset + 1) * sizeof(DWORD));
             if (PDWORD pBigData = (PDWORD)LocalAlloc(LPTR, cb)) // LPTR to zero extended data
             {
                 Err = SHRegGetValueW(hValueKey, NULL, Name, SRRF_RT_ANY, &Type, pBigData, &cb);
-                hr = HRESULT_FROM_WIN32(Err);
                 Size = cb;
-                if (SUCCEEDED(hr))
+                if (Err == ERROR_SUCCESS)
                 {
                     pBigData[Offset] &= ~Mask;
                     pBigData[Offset] |= *((PDWORD)Data);
                     Err = SHSetValueW(hValueKey, NULL, Name, Type, pBigData, cb);
-                    hr = HRESULT_FROM_WIN32(Err);
                 }
                 LocalFree(pBigData);
             }
+            hr = HRESULT_FROM_WIN32(Err);
         }
     }
     else if (Set)
@@ -348,7 +348,7 @@ static HRESULT SaveCheckState(HKEY hKey, BOOL Checked)
     DWORD Err = SHRegGetValueW(hKey, NULL, Name, SRRF_RT_ANY, &Type, Data, &Size);
     if (Err == ERROR_FILE_NOT_FOUND)
         Err = ERROR_SUCCESS;
-    return Err ? HResultFromWin32(Err) : GetSetState(hKey, Type, Data, Size, TRUE);
+    return Err ? HRESULT_FROM_WIN32(Err) : GetSetState(hKey, Type, Data, Size, TRUE);
 }
 
 static void WalkTree(WALK_TREE_CMD Command, HWND hTree, HTREEITEM hTI)

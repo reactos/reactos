@@ -9,28 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-class CObjectWithSiteBase :
-    public IObjectWithSite
-{
-public:
-    IUnknown* m_pUnkSite;
-
-    CObjectWithSiteBase() : m_pUnkSite(NULL) {}
-    virtual ~CObjectWithSiteBase() { SetSite(NULL); }
-
-    // IObjectWithSite
-    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
-    {
-        IUnknown_Set(&m_pUnkSite, pUnkSite);
-        return S_OK;
-    }
-    STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
-    {
-        *ppvSite = NULL;
-        return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
-    }
-};
-
 // This class adapts the legacy function callback to work as an IShellFolderViewCB
 class CShellFolderViewCBWrapper :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,

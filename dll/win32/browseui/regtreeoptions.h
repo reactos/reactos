@@ -7,27 +7,6 @@
 
 #pragma once
 
-class CObjectWithSiteBase :
-    public IObjectWithSite
-{
-public:
-    IUnknown* m_pUnkSite;
-
-    CObjectWithSiteBase() : m_pUnkSite(NULL) {}
-    virtual ~CObjectWithSiteBase() { SetSite(NULL); }
-
-    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
-    {
-        IUnknown_Set(&m_pUnkSite, pUnkSite);
-        return S_OK;
-    }
-    STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
-    {
-        *ppvSite = NULL;
-        return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
-    }
-};
-
 class CRegTreeOptions :
     public CComCoClass<CRegTreeOptions, &CLSID_CRegTreeOptions>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
