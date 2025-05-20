@@ -2383,8 +2383,6 @@ MmCreateDataFileSection(PSECTION *SectionObject,
 
     if (AllocationAttributes & SEC_NO_CHANGE)
         Section->u.Flags.NoChange = 1;
-    if (AllocationAttributes & SEC_RESERVE)
-        Section->u.Flags.Reserve = 1;
 
     if (!GotFileHandle)
     {
@@ -3236,6 +3234,7 @@ MmCreateImageSection(PSECTION *SectionObject,
     Section->u.Flags.filler = 1;
 
     Section->InitialPageProtection = SectionPageProtection;
+    Section->SizeOfSection = *UMaximumSize;
     Section->u.Flags.File = 1;
     Section->u.Flags.Image = 1;
     if (AllocationAttributes & SEC_NO_CHANGE)
@@ -3362,6 +3361,12 @@ grab_image_section_object:
 
         Status = STATUS_SUCCESS;
     }
+
+    if (Section->SizeOfSection.QuadPart == 0)
+    {
+        Section->SizeOfSection.QuadPart = ImageSectionObject->ImageInformation.ImageFileSize;
+    }
+
     //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
     *SectionObject = Section;
     ASSERT(ImageSectionObject->RefCount > 0);
@@ -3850,7 +3855,7 @@ NtQuerySection(
             SECTION_BASIC_INFORMATION Sbi = { 0 };
 
             Sbi.Size = Section->SizeOfSection;
-            Sbi.BaseAddress = (PVOID)Section->Address.StartingVpn;
+            Sbi.BaseAddress = NULL;
 
             if (Section->u.Flags.File)
                 Sbi.Attributes |= SEC_FILE;
@@ -3865,13 +3870,7 @@ NtQuerySection(
 
             if (Section->u.Flags.Image)
             {
-                if (MiIsRosSectionObject(Section))
-                {
-                    PMM_IMAGE_SECTION_OBJECT ImageSectionObject = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment);
-                    Sbi.BaseAddress = NULL;
-                    Sbi.Size.QuadPart = ImageSectionObject->ImageInformation.ImageFileSize;
-                }
-                else
+                if (!MiIsRosSectionObject(Section))
                 {
                     /* Not supported yet */
                     ASSERT(FALSE);
@@ -3880,7 +3879,6 @@ NtQuerySection(
             else if (MiIsRosSectionObject(Section))
             {
                 Sbi.BaseAddress = (PVOID)((PMM_SECTION_SEGMENT)Section->Segment)->Image.VirtualAddress;
-                Sbi.Size.QuadPart = ((PMM_SECTION_SEGMENT)Section->Segment)->RawLength.QuadPart;
             }
             else
             {
@@ -4201,18 +4199,42 @@ MmMapViewOfSection(IN PVOID SectionObject,
         }
         else
         {
+            SectionOffset->QuadPart &= ~(PAGE_SIZE - 1);
             ViewOffset = SectionOffset->QuadPart;
         }
 
-        if ((ViewOffset % PAGE_SIZE) != 0)
+        /* Check if the offset and size would cause an overflow */
+        if (((ULONG64)ViewOffset + *ViewSize) < (ULONG64)ViewOffset)
         {
-            Status = STATUS_MAPPED_ALIGNMENT;
+            DPRINT1("Section offset overflows\n");
+            Status = STATUS_INVALID_VIEW_SIZE;
             goto Exit;
+        }
+
+        /* Check if the offset and size are bigger than the section itself */
+        if (((ULONG64)ViewOffset + *ViewSize) > (ULONG64)Section->SizeOfSection.QuadPart)
+        {
+            /* This is allowed for physical memory sections and kernel mode callers */
+            if (!Section->u.Flags.PhysicalMemory || (ExGetPreviousMode() == UserMode))
+            {
+                DPRINT1("Section offset and size are larger than section\n");
+                Status = STATUS_INVALID_VIEW_SIZE;
+                goto Exit;
+            }
         }
 
         if ((*ViewSize) == 0)
         {
-            (*ViewSize) = Section->SizeOfSection.QuadPart - ViewOffset;
+            /* Calculate a view size and make sure it doesn't overflow a SIZE_T */
+            ULONG64 CalculatedSize = Section->SizeOfSection.QuadPart - ViewOffset;
+            if (CalculatedSize > SIZE_T_MAX)
+            {
+                DPRINT1("ViewSize is larger than SIZE_T_MAX\n");
+                Status = STATUS_INVALID_VIEW_SIZE;
+                goto Exit;
+            }
+
+            *ViewSize = (SIZE_T)CalculatedSize;
         }
         else if ((ExGetPreviousMode() == UserMode) &&
             (((*ViewSize)+ViewOffset) > Section->SizeOfSection.QuadPart) &&
@@ -4640,9 +4662,17 @@ MmCreateSection (OUT PVOID  * Section,
     ULONG Protection;
     PSECTION *SectionObject = (PSECTION *)Section;
     BOOLEAN FileLock = FALSE;
+    BOOLEAN HaveFileObject = FALSE;
+
+    // FIXME: Implement support for large pages
+    if (AllocationAttributes & SEC_LARGE_PAGES)
+    {
+        DPRINT1("SEC_LARGE_PAGES is not supported\n");
+        return STATUS_INVALID_PARAMETER_6;
+    }
 
     /* Check if an ARM3 section is being created instead */
-    if (!(AllocationAttributes & (SEC_IMAGE | SEC_PHYSICALMEMORY)))
+    if (!(AllocationAttributes & SEC_IMAGE))
     {
         if (!(FileObject) && !(FileHandle))
         {
@@ -4683,9 +4713,7 @@ MmCreateSection (OUT PVOID  * Section,
         {
             /* Reference the object directly */
             ObReferenceObject(FileObject);
-
-            /* We don't create image mappings with file objects */
-            AllocationAttributes &= ~SEC_IMAGE;
+            HaveFileObject = TRUE;
         }
         else
         {
@@ -4732,6 +4760,12 @@ MmCreateSection (OUT PVOID  * Section,
         if (AllocationAttributes & SEC_IMAGE) return STATUS_INVALID_FILE_FOR_SECTION;
     }
 
+    if (FileObject == NULL)
+    {
+        Status = STATUS_INVALID_FILE_FOR_SECTION;
+        goto Exit;
+    }
+
     if (AllocationAttributes & SEC_IMAGE)
     {
         Status = MmCreateImageSection(SectionObject,
@@ -4741,9 +4775,16 @@ MmCreateSection (OUT PVOID  * Section,
                                       SectionPageProtection,
                                       AllocationAttributes,
                                       FileObject);
+
+        /* If the file was ivalid, and we got a FileObject passed, fall back to data section */
+        if (!NT_SUCCESS(Status) && HaveFileObject)
+        {
+            AllocationAttributes &= ~SEC_IMAGE;
+        }
     }
+
 #ifndef NEWCC
-    else if (FileObject != NULL)
+    if (!(AllocationAttributes & SEC_IMAGE))
     {
         Status =  MmCreateDataFileSection(SectionObject,
                                           DesiredAccess,
@@ -4755,7 +4796,7 @@ MmCreateSection (OUT PVOID  * Section,
                                           FileHandle != NULL);
     }
 #else
-    else if (FileHandle != NULL || FileObject != NULL)
+    else
     {
         Status = MmCreateCacheSection(SectionObject,
                                       DesiredAccess,
@@ -4766,11 +4807,8 @@ MmCreateSection (OUT PVOID  * Section,
                                       FileObject);
     }
 #endif
-    else
-    {
-        /* All cases should be handled above */
-        Status = STATUS_INVALID_PARAMETER;
-    }
+
+Exit:
 
     if (FileLock)
         FsRtlReleaseFile(FileObject);
