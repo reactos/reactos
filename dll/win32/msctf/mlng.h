@@ -7,6 +7,8 @@
 
 #pragma once
 
+#define CTF_COMPAT_DELAY_FIRST_ACTIVATE 2
+
 struct MLNGINFO
 {
     HKL m_hKL;
