@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS msctf.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Text Framework Services
- * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <stdlib.h>
@@ -49,6 +49,7 @@ BOOL gfSharedMemory = FALSE;
 LONG g_cRefDll = -1;
 BOOL g_fCUAS = FALSE;
 TCHAR g_szCUASImeFile[16] = { 0 };
+DWORD g_dwAppCompatibility = 0;
 
 // Messages
 UINT g_msgPrivate = 0;
@@ -236,7 +237,234 @@ RunCPLSetting(LPCTSTR pszCmdLine)
 }
 
 /***********************************************************************
- *      TF_RegisterLangBarAddIn (MSCTF.@)
+ *      TF_GetThreadFlags (MSCTF.4)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_GetThreadFlags(
+    _In_ DWORD dwThreadId,
+    _Out_ LPDWORD pdwFlags1,
+    _Out_ LPDWORD pdwFlags2,
+    _Out_ LPDWORD pdwFlags3)
+{
+    FIXME("(%lu, %p, %p, %p)\n", dwThreadId, pdwFlags1, pdwFlags2, pdwFlags3);
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_CreateCategoryMgr (MSCTF.20)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_CreateCategoryMgr(_Out_ ITfCategoryMgr **ppcat)
+{
+    FIXME("(%p)\n", ppcat);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_CreateCicLoadMutex (MSCTF.21)
+ *
+ * @unimplemented
+ */
+EXTERN_C HANDLE WINAPI
+TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon)
+{
+    FIXME("(%p)\n", pfWinLogon);
+    *pfWinLogon = FALSE;
+    return NULL;
+}
+
+/***********************************************************************
+ *      TF_CreateDisplayAttributeMgr (MSCTF.22)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_CreateDisplayAttributeMgr(_Out_ ITfDisplayAttributeMgr **ppdam)
+{
+    FIXME("(%p)\n", ppdam);
+    *ppdam = NULL;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_DllDetachInOther (MSCTF.27)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_DllDetachInOther(VOID)
+{
+    FIXME("()\n");
+    return TRUE;
+}
+
+/***********************************************************************
+ *      TF_GetGlobalCompartment (MSCTF.28)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMgr)
+{
+    FIXME("(%p)\n", ppCompMgr);
+    *ppCompMgr = NULL;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_GetLangIcon (MSCTF.1)
+ *
+ * @unimplemented
+ */
+EXTERN_C HICON WINAPI
+TF_GetLangIcon(_In_ LANGID LangID, _Out_ LPWSTR pszText, _In_ INT cchText)
+{
+    FIXME("(0x%X, %p, %d)\n", LangID, pszText, cchText);
+    return NULL;
+}
+
+/***********************************************************************
+ *      TF_IsFullScreenWindowAcitvated (MSCTF.32)
+ *
+ * Yes, this function name is misspelled by MS.
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_IsFullScreenWindowAcitvated(VOID)
+{
+    FIXME("()\n");
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_GetInputScope (MSCTF.29)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_GetInputScope(_In_opt_ HWND hWnd, _Out_ ITfInputScope **ppInputScope)
+{
+    FIXME("(%p, %p)\n", hWnd, ppInputScope);
+    *ppInputScope = NULL;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      SetInputScopeXML (MSCTF.15)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+SetInputScopeXML(_In_opt_ HWND hwnd, _Out_ PWSTR pszXML)
+{
+    FIXME("(%p, %p)\n", hwnd, pszXML);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_CUASAppFix (MSCTF.15)
+ *
+ * @implemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_CUASAppFix(_In_ LPCSTR pszName)
+{
+    if (!pszName || lstrcmpiA(pszName, "DelayFirstActivateKeyboardLayout") != 0)
+        return E_INVALIDARG;
+    g_dwAppCompatibility |= 2; // FIXME: Magic number
+    return S_OK;
+}
+
+/***********************************************************************
+ *      TF_CheckThreadInputIdle (MSCTF.18)
+ *
+ * @unimplemented
+ */
+EXTERN_C LONG WINAPI
+TF_CheckThreadInputIdle(_In_ DWORD dwThreadId, _In_ DWORD dwMilliseconds)
+{
+    FIXME("(%lu, %lu)\n", dwThreadId, dwMilliseconds);
+    return -1;
+}
+
+/***********************************************************************
+ *      TF_ClearLangBarAddIns (MSCTF.19)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_ClearLangBarAddIns(_In_ REFGUID guid)
+{
+    FIXME("(%p)\n", guid);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_InvalidAssemblyListCache (MSCTF.32)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_InvalidAssemblyListCache(VOID)
+{
+    FIXME("()\n");
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_IsInMarshaling (MSCTF.7)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_IsInMarshaling(_In_ DWORD dwThreadId)
+{
+    FIXME("(%lu)\n", dwThreadId);
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_PostAllThreadMsg (MSCTF.36)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_PostAllThreadMsg(_In_opt_ WPARAM wParam, _In_ DWORD dwFlags)
+{
+    FIXME("(%p, 0x%X)\n", wParam, dwFlags);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_InitSystem (MSCTF.31)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_InitSystem(VOID)
+{
+    FIXME("()\n");
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_UninitSystem (MSCTF.38)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_UninitSystem(VOID)
+{
+    FIXME("()\n");
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_RegisterLangBarAddIn (MSCTF.37)
  *
  * @implemented
  */
@@ -273,7 +501,7 @@ TF_RegisterLangBarAddIn(
 }
 
 /***********************************************************************
- *      TF_UnregisterLangBarAddIn (MSCTF.@)
+ *      TF_UnregisterLangBarAddIn (MSCTF.39)
  *
  * @implemented
  */
@@ -309,7 +537,7 @@ TF_UnregisterLangBarAddIn(
 }
 
 /***********************************************************************
- *      TF_RunInputCPL (MSCTF.@)
+ *      TF_RunInputCPL (MSCTF.9)
  *
  * @implemented
  */
@@ -339,7 +567,7 @@ TF_RunInputCPL(VOID)
 }
 
 /***********************************************************************
- *      TF_IsCtfmonRunning (MSCTF.@)
+ *      TF_IsCtfmonRunning (MSCTF.34)
  *
  * @implemented
  */
