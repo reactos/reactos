@@ -366,7 +366,7 @@ SetInputScopeXML(_In_opt_ HWND hwnd, _Out_ PWSTR pszXML)
 }
 
 /***********************************************************************
- *      TF_CUASAppFix (MSCTF.15)
+ *      TF_CUASAppFix (MSCTF.17)
  *
  * @implemented
  */
