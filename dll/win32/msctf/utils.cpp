@@ -34,9 +34,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
-// FIXME: Move this macro to proper place
-#define CTF_COMPAT_DELAY_FIRST_ACTIVATE 2
-
 BOOL gf_CRT_INIT = FALSE;
 BOOL g_fDllProcessDetached = FALSE;
 CRITICAL_SECTION g_cs;
@@ -364,11 +361,9 @@ TF_GetInputScope(_In_opt_ HWND hWnd, _Out_ ITfInputScope **ppInputScope)
  * @unimplemented
  */
 EXTERN_C HRESULT WINAPI
-SetInputScopeXML(_In_opt_ HWND hwnd, _Out_ PWSTR pszXML)
+SetInputScopeXML(_In_opt_ HWND hwnd, _In_opt_ PCWSTR pszXML)
 {
     FIXME("(%p, %p)\n", hwnd, pszXML);
-    if (pszXML)
-        pszXML[0] = UNICODE_NULL;
     return E_NOTIMPL;
 }
 
