@@ -261,6 +261,8 @@ EXTERN_C HRESULT WINAPI
 TF_CreateCategoryMgr(_Out_ ITfCategoryMgr **ppcat)
 {
     FIXME("(%p)\n", ppcat);
+    if (ppcat)
+        *ppcat = NULL;
     return E_NOTIMPL;
 }
 
