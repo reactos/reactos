@@ -18,6 +18,7 @@
 #include <undocuser.h>
 #include <cguid.h>
 #include <msctf.h>
+#include <msctf_undoc.h>
 #include <ctffunc.h>
 #include <ctfutb.h>
 #include <shlwapi.h>
