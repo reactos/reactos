@@ -362,6 +362,8 @@ EXTERN_C HRESULT WINAPI
 SetInputScopeXML(_In_opt_ HWND hwnd, _Out_ PWSTR pszXML)
 {
     FIXME("(%p, %p)\n", hwnd, pszXML);
+    if (pszXML)
+        pszXML[0] = UNICODE_NULL;
     return E_NOTIMPL;
 }
 
