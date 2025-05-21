@@ -34,6 +34,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
+// FIXME: Move this macro to proper place
 #define CTF_COMPAT_DELAY_FIRST_ACTIVATE 2
 
 BOOL gf_CRT_INIT = FALSE;
