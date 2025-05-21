@@ -49,6 +49,7 @@ BOOL gfSharedMemory = FALSE;
 LONG g_cRefDll = -1;
 BOOL g_fCUAS = FALSE;
 TCHAR g_szCUASImeFile[16] = { 0 };
+BOOL g_fNoITextStoreAnchor = TRUE;
 
 // Messages
 UINT g_msgPrivate = 0;
@@ -481,11 +482,22 @@ BOOL InitLangChangeHotKey(VOID)
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 VOID CheckAnchorStores(VOID)
 {
-    //FIXME
+    HKEY hKey;
+    LSTATUS error;
+    error = RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\CTF"), 0, KEY_READ, &hKey);
+    if (error != ERROR_SUCCESS)
+        return;
+
+    DWORD dwData = 0, cbData = sizeof(dwData);
+    error = RegQueryValueEx(hKey, TEXT("EnableAnchorContext"), NULL, NULL, (PBYTE)&dwData, &cbData);
+    if (error == ERROR_SUCCESS && cbData == sizeof(DWORD) && dwData == 1)
+        g_fNoITextStoreAnchor = FALSE;
+
+    RegCloseKey(hKey);
 }
 
 VOID InitCUASFlag(VOID)
