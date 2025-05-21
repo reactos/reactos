@@ -39,7 +39,7 @@ BOOL WINAPI
 TF_GetMlngHKL(
     _In_ INT iKL,
     _Out_opt_ HKL *phKL,
-    _Out_opt_ LPWSTR pszText,
+    _Out_writes_opt_(cchText) LPWSTR pszText,
     _In_ INT cchText);
 
 BOOL WINAPI
