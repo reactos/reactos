@@ -34,6 +34,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
+#define CTF_COMPAT_DELAY_FIRST_ACTIVATE 2
+
 BOOL gf_CRT_INIT = FALSE;
 BOOL g_fDllProcessDetached = FALSE;
 CRITICAL_SECTION g_cs;
@@ -379,7 +381,7 @@ TF_CUASAppFix(_In_ LPCSTR pszName)
 {
     if (!pszName || lstrcmpiA(pszName, "DelayFirstActivateKeyboardLayout") != 0)
         return E_INVALIDARG;
-    g_dwAppCompatibility |= 2; // FIXME: Magic number
+    g_dwAppCompatibility |= CTF_COMPAT_DELAY_FIRST_ACTIVATE;
     return S_OK;
 }
 
