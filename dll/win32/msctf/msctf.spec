@@ -32,7 +32,7 @@
 32 stdcall TF_InvalidAssemblyListCache()
 33 stdcall TF_InvalidAssemblyListCacheIfExist()
 34 stdcall TF_IsCtfmonRunning()
-35 stdcall TF_IsFullScreenWindowAcitvated()
+35 stdcall TF_IsFullScreenWindowAcitvated() ; Yes, Microsoft really misspelled this one!
 36 stdcall TF_PostAllThreadMsg(ptr long)
 37 stdcall TF_RegisterLangBarAddIn(ptr wstr long)
 38 stdcall TF_UninitSystem()
