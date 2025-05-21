@@ -1826,18 +1826,28 @@ WSPAccept(
          * properties as the listening socket used to accept it. */
         if (Socket->SharedData->AsyncEvents)
         {
-            WSPAsyncSelect(AcceptSocket,
-                           Socket->SharedData->hWnd,
-                           Socket->SharedData->wMsg,
-                           Socket->SharedData->AsyncEvents,
-                           lpErrno);
+            Status = WSPAsyncSelect(AcceptSocket,
+                                    Socket->SharedData->hWnd,
+                                    Socket->SharedData->wMsg,
+                                    Socket->SharedData->AsyncEvents,
+                                    lpErrno);
         }
         else if (Socket->NetworkEvents)
         {
-            WSPEventSelect(AcceptSocket,
-                           Socket->EventObject,
-                           Socket->NetworkEvents,
-                           lpErrno);
+            Status = WSPEventSelect(AcceptSocket,
+                                    Socket->EventObject,
+                                    Socket->NetworkEvents,
+                                    lpErrno);
+        }
+        else
+        {
+            Status = ERROR_SUCCESS;
+        }
+		
+        if (Status != ERROR_SUCCESS)
+        {
+            if (lpErrno) *lpErrno = Status;
+            return SOCKET_ERROR;
         }
     }
 
