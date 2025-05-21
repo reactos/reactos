@@ -321,7 +321,7 @@ TF_GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMgr)
  * @unimplemented
  */
 EXTERN_C HICON WINAPI
-TF_GetLangIcon(_In_ LANGID LangID, _Out_ LPWSTR pszText, _In_ INT cchText)
+TF_GetLangIcon(_In_ LANGID LangID, _Out_ PWSTR pszText, _In_ INT cchText)
 {
     FIXME("(0x%X, %p, %d)\n", LangID, pszText, cchText);
     return NULL;
