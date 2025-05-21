@@ -21,7 +21,7 @@ HRESULT WINAPI TF_PostAllThreadMsg(_In_opt_ WPARAM wParam, _In_ DWORD dwFlags);
 HANDLE WINAPI TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon);
 HRESULT WINAPI TF_InvalidAssemblyListCache(VOID);
 HRESULT WINAPI TF_InvalidAssemblyListCacheIfExist(VOID);
-HICON WINAPI TF_GetLangIcon(_In_ LANGID LangID, _Out_ PWSTR pszText, _In_ INT cchText);
+HICON WINAPI TF_GetLangIcon(_In_ LANGID LangID, _Out_writes_(cchText) PWSTR pszText, _In_ INT cchText);
 VOID WINAPI TF_InitMlngInfo(VOID);
 INT WINAPI TF_MlngInfoCount(VOID);
 INT WINAPI TF_GetMlngIconIndex(_In_ INT iKL);
