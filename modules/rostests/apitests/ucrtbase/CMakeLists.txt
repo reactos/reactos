@@ -13,6 +13,7 @@ add_definitions(
 list(APPEND SOURCE
     ../crt/acos.c
     ../crt/asin.c
+    ../crt/atan.c
     ../crt/ceil.c
     ../crt/round.c
     testlist.c

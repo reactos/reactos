@@ -144,12 +144,24 @@ def generate_asin_table(func_name = "asin", typecode = 'd'):
 def generate_asinf_table():
     generate_asin_table("asinf", 'f')
 
+def generate_atan_table(func_name = "atan", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.atan, -10.0, -0.9, 33, 1)
+    gen_table_range(func_name, typecode, mp.atan, -1.0, 1.0, 33, 1)
+    gen_table_range(func_name, typecode, mp.atan, 1.1, 10.0, 33, 1)
+    print("};\n")
+
+def generate_atanf_table():
+    generate_atan_table("atanf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
     "acosf": generate_acosf_table,
     "asin": generate_asin_table,
     "asinf": generate_asinf_table,
+    "atan": generate_atan_table,
+    "atanf": generate_atanf_table,
 }
 
 def main():
