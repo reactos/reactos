@@ -139,7 +139,10 @@ NC_GetSysPopupPos(PWND Wnd, RECT *Rect)
 static UINT
 GetSnapActivationPoint(PWND Wnd, POINT pt)
 {
+    // TODO: SPI_GETMOUSEDOCKTHRESHOLD
     RECT wa;
+    if (!GetSnapSetting(bDockMoving))
+        return HTNOWHERE;
     UserSystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0); /* FIXME: MultiMon of PWND */
 
     if (pt.x <= wa.left) return HTLEFT;

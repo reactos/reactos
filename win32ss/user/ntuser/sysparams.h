@@ -157,6 +157,12 @@ typedef struct _SPIVALUES
     DWORD dwForegroundFlashCount;
     DWORD dwCaretWidth;
 
+    /* Snap */
+    // BOOL bWinArranging; (g_bWindowSnapEnabled)
+    BOOL bDockMoving;
+    // BOOL bSnapSizing;
+    // BOOL bDragFromMaximize;
+
 //    SPI_LANGDRIVER
 //    SPI_SETDESKPATTERN
 //    SPI_SETPENWINDOWS
