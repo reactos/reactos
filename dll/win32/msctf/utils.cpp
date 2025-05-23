@@ -333,7 +333,7 @@ TF_GetLangIcon(_In_ LANGID LangID, _Out_ PWSTR pszText, _In_ INT cchText)
 }
 
 /***********************************************************************
- *      TF_IsFullScreenWindowAcitvated (MSCTF.32)
+ *      TF_IsFullScreenWindowAcitvated (MSCTF.35)
  *
  * Yes, this function name is misspelled by MS.
  * @unimplemented
