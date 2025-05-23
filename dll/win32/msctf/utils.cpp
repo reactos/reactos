@@ -250,6 +250,7 @@ TF_GetThreadFlags(
     _Out_ LPDWORD pdwFlags3)
 {
     FIXME("(%lu, %p, %p, %p)\n", dwThreadId, pdwFlags1, pdwFlags2, pdwFlags3);
+    *pdwFlags1 = *pdwFlags2 = *pdwFlags3 = 0;
     return FALSE;
 }
 
