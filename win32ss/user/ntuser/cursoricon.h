@@ -129,7 +129,8 @@ extern SYSTEMCURICO gasyscur[];
 #define SYSTEMCUR(func) (gasyscur[ROCR_ ## func].handle)
 #define SYSTEMICO(func) (gasysico[ROIC_ ## func].handle)
 
-VOID IntLoadSystenIcons(HICON,DWORD);
+VOID IntLoadSystemCursors(HCURSOR,DWORD);
+VOID IntLoadSystemIcons(HICON,DWORD);
 
 BOOL InitCursorImpl(VOID);
 HANDLE IntCreateCurIconHandle(BOOLEAN Anim);
