@@ -15,6 +15,7 @@ list(APPEND SOURCE
     ../crt/asin.c
     ../crt/atan.c
     ../crt/ceil.c
+    ../crt/cos.c
     ../crt/round.c
     testlist.c
 )

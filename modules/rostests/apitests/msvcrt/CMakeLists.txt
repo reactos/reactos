@@ -22,6 +22,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/atan.c
     ../crt/atexit.c
     ../crt/ceil.c
+    ../crt/cos.c
     ../crt/crtdata.c
     ../crt/fabs.c
     ../crt/floor.c

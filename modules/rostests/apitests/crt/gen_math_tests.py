@@ -154,6 +154,18 @@ def generate_atan_table(func_name = "atan", typecode = 'd'):
 def generate_atanf_table():
     generate_atan_table("atanf", 'f')
 
+def generate_cos_table(func_name = "cos", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.cos, -10000*mp.pi, -10200*mp.pi, 9, 1)
+    gen_table_range(func_name, typecode, mp.cos, -100*mp.pi, -98*mp.pi, 9, 1)
+    gen_table_range(func_name, typecode, mp.cos, -math.pi, math.pi, 57, 1)
+    gen_table_range(func_name, typecode, mp.cos, 2000*mp.pi, 2002*mp.pi, 9, 1)
+    gen_table_range(func_name, typecode, mp.cos, 2000000*mp.pi, 2070000*mp.pi, 9, 1)
+    print("};\n")
+
+def generate_cosf_table():
+    generate_cos_table("cosf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
@@ -162,6 +174,8 @@ TABLE_FUNCTIONS = {
     "asinf": generate_asinf_table,
     "atan": generate_atan_table,
     "atanf": generate_atanf_table,
+    "cos": generate_cos_table,
+    "cosf": generate_cosf_table,
 }
 
 def main():

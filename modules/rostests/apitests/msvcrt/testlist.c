@@ -17,6 +17,7 @@ extern void func_asin(void);
 extern void func_atan(void);
 extern void func_atexit(void);
 extern void func_ceil(void);
+extern void func_cos(void);
 extern void func_crtdata(void);
 extern void func_fabs(void);
 extern void func_floor(void);
@@ -64,6 +65,7 @@ const struct test winetest_testlist[] =
     { "atan", func_atan },
     { "atexit", func_atexit },
     { "ceil", func_ceil },
+    { "cos", func_cos },
     { "crtdata", func_crtdata },
     { "fabs", func_fabs },
     { "floor", func_floor },
