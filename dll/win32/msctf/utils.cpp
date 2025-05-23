@@ -238,7 +238,7 @@ RunCPLSetting(LPCTSTR pszCmdLine)
 }
 
 /***********************************************************************
- *      TF_GetThreadFlags (MSCTF.4)
+ *      TF_GetThreadFlags (MSCTF.@)
  *
  * @unimplemented
  */
@@ -255,7 +255,7 @@ TF_GetThreadFlags(
 }
 
 /***********************************************************************
- *      TF_CreateCategoryMgr (MSCTF.20)
+ *      TF_CreateCategoryMgr (MSCTF.@)
  *
  * @unimplemented
  */
@@ -269,7 +269,7 @@ TF_CreateCategoryMgr(_Out_ ITfCategoryMgr **ppcat)
 }
 
 /***********************************************************************
- *      TF_CreateCicLoadMutex (MSCTF.21)
+ *      TF_CreateCicLoadMutex (MSCTF.@)
  *
  * @unimplemented
  */
@@ -284,7 +284,7 @@ TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon)
 }
 
 /***********************************************************************
- *      TF_CreateDisplayAttributeMgr (MSCTF.22)
+ *      TF_CreateDisplayAttributeMgr (MSCTF.@)
  *
  * @unimplemented
  */
@@ -297,7 +297,7 @@ TF_CreateDisplayAttributeMgr(_Out_ ITfDisplayAttributeMgr **ppdam)
 }
 
 /***********************************************************************
- *      TF_DllDetachInOther (MSCTF.27)
+ *      TF_DllDetachInOther (MSCTF.@)
  *
  * @unimplemented
  */
@@ -309,7 +309,7 @@ TF_DllDetachInOther(VOID)
 }
 
 /***********************************************************************
- *      TF_GetGlobalCompartment (MSCTF.28)
+ *      TF_GetGlobalCompartment (MSCTF.@)
  *
  * @unimplemented
  */
@@ -322,7 +322,7 @@ TF_GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMgr)
 }
 
 /***********************************************************************
- *      TF_GetLangIcon (MSCTF.1)
+ *      TF_GetLangIcon (MSCTF.@)
  *
  * @unimplemented
  */
@@ -334,7 +334,7 @@ TF_GetLangIcon(_In_ LANGID LangID, _Out_ PWSTR pszText, _In_ INT cchText)
 }
 
 /***********************************************************************
- *      TF_IsFullScreenWindowAcitvated (MSCTF.35)
+ *      TF_IsFullScreenWindowAcitvated (MSCTF.@)
  *
  * Yes, this function name is misspelled by MS.
  * @unimplemented
@@ -347,7 +347,7 @@ TF_IsFullScreenWindowAcitvated(VOID)
 }
 
 /***********************************************************************
- *      TF_GetInputScope (MSCTF.29)
+ *      TF_GetInputScope (MSCTF.@)
  *
  * @unimplemented
  */
@@ -360,7 +360,7 @@ TF_GetInputScope(_In_opt_ HWND hWnd, _Out_ ITfInputScope **ppInputScope)
 }
 
 /***********************************************************************
- *      SetInputScopeXML (MSCTF.15)
+ *      SetInputScopeXML (MSCTF.@)
  *
  * @unimplemented
  */
@@ -372,7 +372,7 @@ SetInputScopeXML(_In_opt_ HWND hwnd, _In_opt_ PCWSTR pszXML)
 }
 
 /***********************************************************************
- *      TF_CUASAppFix (MSCTF.17)
+ *      TF_CUASAppFix (MSCTF.@)
  *
  * @implemented
  */
@@ -386,7 +386,7 @@ TF_CUASAppFix(_In_ LPCSTR pszName)
 }
 
 /***********************************************************************
- *      TF_CheckThreadInputIdle (MSCTF.18)
+ *      TF_CheckThreadInputIdle (MSCTF.@)
  *
  * @unimplemented
  */
@@ -398,7 +398,7 @@ TF_CheckThreadInputIdle(_In_ DWORD dwThreadId, _In_ DWORD dwMilliseconds)
 }
 
 /***********************************************************************
- *      TF_ClearLangBarAddIns (MSCTF.19)
+ *      TF_ClearLangBarAddIns (MSCTF.@)
  *
  * @unimplemented
  */
@@ -410,7 +410,7 @@ TF_ClearLangBarAddIns(_In_ REFGUID guid)
 }
 
 /***********************************************************************
- *      TF_InvalidAssemblyListCache (MSCTF.32)
+ *      TF_InvalidAssemblyListCache (MSCTF.@)
  *
  * @unimplemented
  */
@@ -422,7 +422,7 @@ TF_InvalidAssemblyListCache(VOID)
 }
 
 /***********************************************************************
- *      TF_IsInMarshaling (MSCTF.7)
+ *      TF_IsInMarshaling (MSCTF.@)
  *
  * @unimplemented
  */
@@ -434,7 +434,7 @@ TF_IsInMarshaling(_In_ DWORD dwThreadId)
 }
 
 /***********************************************************************
- *      TF_PostAllThreadMsg (MSCTF.36)
+ *      TF_PostAllThreadMsg (MSCTF.@)
  *
  * @unimplemented
  */
@@ -446,7 +446,7 @@ TF_PostAllThreadMsg(_In_opt_ WPARAM wParam, _In_ DWORD dwFlags)
 }
 
 /***********************************************************************
- *      TF_InitSystem (MSCTF.31)
+ *      TF_InitSystem (MSCTF.@)
  *
  * @unimplemented
  */
@@ -458,7 +458,7 @@ TF_InitSystem(VOID)
 }
 
 /***********************************************************************
- *      TF_UninitSystem (MSCTF.38)
+ *      TF_UninitSystem (MSCTF.@)
  *
  * @unimplemented
  */
@@ -470,7 +470,7 @@ TF_UninitSystem(VOID)
 }
 
 /***********************************************************************
- *      TF_RegisterLangBarAddIn (MSCTF.37)
+ *      TF_RegisterLangBarAddIn (MSCTF.@)
  *
  * @implemented
  */
@@ -507,7 +507,7 @@ TF_RegisterLangBarAddIn(
 }
 
 /***********************************************************************
- *      TF_UnregisterLangBarAddIn (MSCTF.39)
+ *      TF_UnregisterLangBarAddIn (MSCTF.@)
  *
  * @implemented
  */
@@ -543,7 +543,7 @@ TF_UnregisterLangBarAddIn(
 }
 
 /***********************************************************************
- *      TF_RunInputCPL (MSCTF.9)
+ *      TF_RunInputCPL (MSCTF.@)
  *
  * @implemented
  */
@@ -573,7 +573,7 @@ TF_RunInputCPL(VOID)
 }
 
 /***********************************************************************
- *      TF_IsCtfmonRunning (MSCTF.34)
+ *      TF_IsCtfmonRunning (MSCTF.@)
  *
  * @implemented
  */
