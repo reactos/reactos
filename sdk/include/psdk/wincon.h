@@ -1,12 +1,34 @@
-#ifndef _WINCON_H
-#define _WINCON_H
+/*
+ * wincon.h
+ *
+ * Console API definitions
+ *
+ * This file is part of the ReactOS PSDK package.
+ *
+ * Contributors:
+ *   Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
+
+#ifndef _WINCON_
+#define _WINCON_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) && !defined(NOGDI)
-#  include "wingdi.h"
+#include "wingdi.h"
 #endif
 
 #ifdef _MSC_VER
@@ -17,19 +39,25 @@ extern "C" {
 /*
  * Special PID for parent process for AttachConsole API
  */
-#if (_WIN32_WINNT >= _WIN32_WINNT_WINXP)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN2K)
 #define ATTACH_PARENT_PROCESS   ((DWORD)-1)
+#endif
+
+/* Special console handle values */
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
+#define CONSOLE_REAL_OUTPUT_HANDLE  (LongToHandle(-2))
+#define CONSOLE_REAL_INPUT_HANDLE   (LongToHandle(-3))
 #endif
 
 /*
  * Console display modes
  */
-// These codes are answered by GetConsoleDisplayMode
+// These flags are returned by GetConsoleDisplayMode
 #define CONSOLE_WINDOWED            0
-#define CONSOLE_FULLSCREEN          1
-#define CONSOLE_FULLSCREEN_HARDWARE 2
+#define CONSOLE_FULLSCREEN          1   /* Fullscreen console */
+#define CONSOLE_FULLSCREEN_HARDWARE 2   /* Console owns the hardware */
 
-// These codes should be given to SetConsoleDisplayMode
+// These flags are given to SetConsoleDisplayMode
 #define CONSOLE_FULLSCREEN_MODE     1
 #define CONSOLE_WINDOWED_MODE       2
 
@@ -59,18 +87,19 @@ extern "C" {
 /*
  * Screen buffer types
  */
-#define CONSOLE_TEXTMODE_BUFFER         1
-#define CONSOLE_GRAPHICS_BUFFER         2   /* Undocumented, see http://blog.airesoft.co.uk/2012/10/things-ms-can-do-that-they-dont-tell-you-about-console-graphics/ */
+#define CONSOLE_TEXTMODE_BUFFER 1
+// 2 is reserved!
 
 /*
  * Control handler codes
  */
-#define CTRL_C_EVENT            0
-#define CTRL_BREAK_EVENT        1
-#define CTRL_CLOSE_EVENT        2
-#define CTRL_LAST_CLOSE_EVENT   3   /* Undocumented */
-#define CTRL_LOGOFF_EVENT       5
-#define CTRL_SHUTDOWN_EVENT     6
+#define CTRL_C_EVENT        0
+#define CTRL_BREAK_EVENT    1
+#define CTRL_CLOSE_EVENT    2
+// 3 is reserved!
+// 4 is reserved!
+#define CTRL_LOGOFF_EVENT   5
+#define CTRL_SHUTDOWN_EVENT 6
 
 /*
  * Input mode flags
@@ -86,24 +115,29 @@ extern "C" {
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 #define ENABLE_AUTO_POSITION            0x0100
 #endif
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) // (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
 #define ENABLE_VIRTUAL_TERMINAL_INPUT   0x0200
 #endif
 
 /*
  * Output mode flags
  */
-#define ENABLE_PROCESSED_OUTPUT         0x0001
-#define ENABLE_WRAP_AT_EOL_OUTPUT       0x0002
+#define ENABLE_PROCESSED_OUTPUT             0x0001
+#define ENABLE_WRAP_AT_EOL_OUTPUT           0x0002
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) // (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING  0x0004
+#define DISABLE_NEWLINE_AUTO_RETURN         0x0008
+#define ENABLE_LVB_GRID_WORLDWIDE           0x0010
+#endif
 
 /*
  * Console selection flags
  */
 #define CONSOLE_NO_SELECTION            0x0000
-#define CONSOLE_SELECTION_IN_PROGRESS   0x0001
-#define CONSOLE_SELECTION_NOT_EMPTY     0x0002
-#define CONSOLE_MOUSE_SELECTION         0x0004
-#define CONSOLE_MOUSE_DOWN              0x0008
+#define CONSOLE_SELECTION_IN_PROGRESS   0x0001  /* Selection has begun */
+#define CONSOLE_SELECTION_NOT_EMPTY     0x0002  /* Non-null select rectangle */
+#define CONSOLE_MOUSE_SELECTION         0x0004  /* Selecting with mouse */
+#define CONSOLE_MOUSE_DOWN              0x0008  /* Mouse is down */
 
 /*
  * History information and mode flags
@@ -115,12 +149,6 @@ extern "C" {
 #define CONSOLE_OVERSTRIKE              0x0001
 #endif
 
-
-/*
- * Read input flags
- */
-#define CONSOLE_READ_NOREMOVE           0x0001
-#define CONSOLE_READ_NOWAIT             0x0002
 
 /*
  * Event types
@@ -151,6 +179,8 @@ extern "C" {
 #define NLS_HIRAGANA                    0x00040000  /* Hiragana mode      */
 #define NLS_ROMAN                       0x00400000  /* Roman/Noroman mode */
 #define NLS_IME_CONVERSION              0x00800000  /* IME conversion     */
+/* Reserved for EXTENDED_BIT, DONTCARE_BIT, FAKE_KEYSTROKE, ALTNUMPAD_BIT (kbd.h) */
+#define ALTNUMPAD_BIT                   0x04000000  /* AltNumpad OEM char */
 #define NLS_IME_DISABLE                 0x20000000  /* IME enable/disable */
 
 /*
@@ -223,18 +253,9 @@ typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
     COORD      dwMaximumWindowSize;
 } CONSOLE_SCREEN_BUFFER_INFO,*PCONSOLE_SCREEN_BUFFER_INFO;
 
-/* Undocumented, see http://blog.airesoft.co.uk/2012/10/things-ms-can-do-that-they-dont-tell-you-about-console-graphics/ */
-#if defined(_WINGDI_) && !defined(NOGDI)
-typedef struct _CONSOLE_GRAPHICS_BUFFER_INFO {
-    DWORD        dwBitMapInfoLength;
-    LPBITMAPINFO lpBitMapInfo;
-    DWORD        dwUsage;    // DIB_PAL_COLORS or DIB_RGB_COLORS
-    HANDLE       hMutex;
-    PVOID        lpBitMap;
-} CONSOLE_GRAPHICS_BUFFER_INFO, *PCONSOLE_GRAPHICS_BUFFER_INFO;
-#endif
-
-typedef BOOL(CALLBACK *PHANDLER_ROUTINE)(_In_ DWORD);
+typedef BOOL
+(WINAPI *PHANDLER_ROUTINE)(
+    _In_ DWORD CtrlType);
 
 typedef struct _KEY_EVENT_RECORD {
     BOOL bKeyDown;
@@ -310,148 +331,320 @@ typedef struct _CONSOLE_FONT_INFOEX {
     WCHAR FaceName[LF_FACESIZE];
 } CONSOLE_FONT_INFOEX, *PCONSOLE_FONT_INFOEX;
 #endif
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+
+WINBASEAPI
+BOOL
+WINAPI
+AllocConsole(VOID);
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN2K)
+WINBASEAPI
+BOOL
+WINAPI
+AttachConsole(
+  _In_ DWORD dwProcessId);
 #endif
 
-BOOL WINAPI AllocConsole(VOID);
-
 #if (_WIN32_WINNT >= _WIN32_WINNT_WINXP)
-BOOL WINAPI AttachConsole(_In_ DWORD);
 
-BOOL WINAPI AddConsoleAliasA(_In_ LPCSTR, _In_ LPCSTR, _In_ LPCSTR);
-BOOL WINAPI AddConsoleAliasW(_In_ LPCWSTR, _In_ LPCWSTR, _In_ LPCWSTR);
+WINBASEAPI
+DWORD
+WINAPI
+GetConsoleProcessList(
+  _Out_writes_(dwProcessCount) LPDWORD lpdwProcessList,
+  _In_ DWORD dwProcessCount);
 
+WINBASEAPI
+BOOL
+WINAPI
+AddConsoleAliasA(
+  _In_ LPCSTR Source,
+  _In_ LPCSTR Target,
+  _In_ LPCSTR ExeName);
+
+WINBASEAPI
+BOOL
+WINAPI
+AddConsoleAliasW(
+  _In_ LPCWSTR Source,
+  _In_ LPCWSTR Target,
+  _In_ LPCWSTR ExeName);
+
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleAliasA(
-  _In_ LPSTR Source,
+  _In_ LPCSTR Source,
   _Out_writes_(TargetBufferLength) LPSTR TargetBuffer,
   _In_ DWORD TargetBufferLength,
-  _In_ LPSTR ExeName);
+  _In_ LPCSTR ExeName);
 
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleAliasW(
-  _In_ LPWSTR Source,
+  _In_ LPCWSTR Source,
   _Out_writes_(TargetBufferLength) LPWSTR TargetBuffer,
   _In_ DWORD TargetBufferLength,
-  _In_ LPWSTR ExeName);
+  _In_ LPCWSTR ExeName);
 
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleAliasesA(
   _Out_writes_(AliasBufferLength) LPSTR AliasBuffer,
   _In_ DWORD AliasBufferLength,
-  _In_ LPSTR ExeName);
+  _In_ LPCSTR ExeName);
 
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleAliasesW(
   _Out_writes_(AliasBufferLength) LPWSTR AliasBuffer,
   _In_ DWORD AliasBufferLength,
-  _In_ LPWSTR ExeName);
+  _In_ LPCWSTR ExeName);
 
-DWORD WINAPI GetConsoleAliasesLengthA(_In_ LPSTR ExeName);
-DWORD WINAPI GetConsoleAliasesLengthW(_In_ LPWSTR ExeName);
+WINBASEAPI
+DWORD
+WINAPI
+GetConsoleAliasesLengthA(
+  _In_ LPCSTR ExeName);
 
+WINBASEAPI
+DWORD
+WINAPI
+GetConsoleAliasesLengthW(
+  _In_ LPCWSTR ExeName);
+
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleAliasExesA(
   _Out_writes_(ExeNameBufferLength) LPSTR ExeNameBuffer,
   _In_ DWORD ExeNameBufferLength);
 
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleAliasExesW(
   _Out_writes_(ExeNameBufferLength) LPWSTR ExeNameBuffer,
   _In_ DWORD ExeNameBufferLength);
 
-DWORD WINAPI GetConsoleAliasExesLengthA(VOID);
-DWORD WINAPI GetConsoleAliasExesLengthW(VOID);
-#endif
+WINBASEAPI
+DWORD
+WINAPI
+GetConsoleAliasExesLengthA(VOID);
 
+WINBASEAPI
+DWORD
+WINAPI
+GetConsoleAliasExesLengthW(VOID);
+
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_WINXP)
+
+WINBASEAPI
 HANDLE
 WINAPI
 CreateConsoleScreenBuffer(
-  _In_ DWORD,
-  _In_ DWORD,
-  _In_opt_ CONST SECURITY_ATTRIBUTES*,
-  _In_ DWORD,
-  _Reserved_ LPVOID);
+  _In_ DWORD dwDesiredAccess,
+  _In_ DWORD dwShareMode,
+  _In_opt_ CONST SECURITY_ATTRIBUTES *lpSecurityAttributes,
+  _In_ DWORD dwFlags,
+  _Reserved_ LPVOID lpScreenBufferData);
 
+WINBASEAPI
 BOOL
 WINAPI
 FillConsoleOutputAttribute(
-  _In_ HANDLE,
-  _In_ WORD,
-  _In_ DWORD,
-  _In_ COORD,
-  _Out_ PDWORD);
+  _In_ HANDLE hConsoleOutput,
+  _In_ WORD wAttribute,
+  _In_ DWORD nLength,
+  _In_ COORD dwWriteCoord,
+  _Out_ LPDWORD lpNumberOfAttrsWritten);
 
+WINBASEAPI
 BOOL
 WINAPI
 FillConsoleOutputCharacterA(
-  _In_ HANDLE,
-  _In_ CHAR,
-  _In_ DWORD,
-  _In_ COORD,
-  _Out_ PDWORD);
+  _In_ HANDLE hConsoleOutput,
+  _In_ CHAR cCharacter,
+  _In_ DWORD nLength,
+  _In_ COORD dwWriteCoord,
+  _Out_ LPDWORD lpNumberOfCharsWritten);
 
+WINBASEAPI
 BOOL
 WINAPI
 FillConsoleOutputCharacterW(
-  _In_ HANDLE,
-  _In_ WCHAR,
-  _In_ DWORD,
-  _In_ COORD,
-  _Out_ PDWORD);
+  _In_ HANDLE hConsoleOutput,
+  _In_ WCHAR cCharacter,
+  _In_ DWORD nLength,
+  _In_ COORD dwWriteCoord,
+  _Out_ LPDWORD lpNumberOfCharsWritten);
 
-BOOL WINAPI FlushConsoleInputBuffer(_In_ HANDLE);
-BOOL WINAPI FreeConsole(VOID);
-BOOL WINAPI GenerateConsoleCtrlEvent(_In_ DWORD, _In_ DWORD);
-UINT WINAPI GetConsoleCP(VOID);
-BOOL WINAPI GetConsoleCursorInfo(_In_ HANDLE, _Out_ PCONSOLE_CURSOR_INFO);
-BOOL WINAPI GetConsoleMode(_In_ HANDLE, _Out_ PDWORD);
-UINT WINAPI GetConsoleOutputCP(VOID);
+WINBASEAPI
+BOOL
+WINAPI
+FlushConsoleInputBuffer(
+  _In_ HANDLE hConsoleInput);
 
+WINBASEAPI
+BOOL
+WINAPI
+FreeConsole(VOID);
+
+WINBASEAPI
+BOOL
+WINAPI
+GenerateConsoleCtrlEvent(
+  _In_ DWORD dwCtrlEvent,
+  _In_ DWORD dwProcessGroupId);
+
+WINBASEAPI
+UINT
+WINAPI
+GetConsoleCP(VOID);
+
+WINBASEAPI
+BOOL
+WINAPI
+GetConsoleCursorInfo(
+  _In_ HANDLE hConsoleOutput,
+  _Out_ PCONSOLE_CURSOR_INFO lpConsoleCursorInfo);
+
+WINBASEAPI
+BOOL
+WINAPI
+GetConsoleMode(
+  _In_ HANDLE hConsoleHandle,
+  _Out_ LPDWORD lpMode);
+
+WINBASEAPI
+UINT
+WINAPI
+GetConsoleOutputCP(VOID);
+
+WINBASEAPI
 BOOL
 WINAPI
 GetConsoleScreenBufferInfo(
-  _In_ HANDLE,
-  _Out_ PCONSOLE_SCREEN_BUFFER_INFO);
+  _In_ HANDLE hConsoleOutput,
+  _Out_ PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
 
-/* Undocumented, see http://blog.airesoft.co.uk/2012/10/things-ms-can-do-that-they-dont-tell-you-about-console-graphics/ */
-BOOL WINAPI InvalidateConsoleDIBits(_In_ HANDLE, _In_ PSMALL_RECT);
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+WINBASEAPI
+BOOL
+WINAPI
+GetConsoleScreenBufferInfoEx(
+  _In_ HANDLE hConsoleOutput,
+  _Inout_ PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx);
 
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleScreenBufferInfoEx(
+  _In_ HANDLE hConsoleOutput,
+  _In_ PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx);
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleTitleA(
   _Out_writes_(nSize) LPSTR lpConsoleTitle,
   _In_ DWORD nSize);
 
+WINBASEAPI
 DWORD
 WINAPI
 GetConsoleTitleW(
   _Out_writes_(nSize) LPWSTR lpConsoleTitle,
   _In_ DWORD nSize);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+
+WINBASEAPI
+DWORD
+WINAPI
+GetConsoleOriginalTitleA(
+  _Out_writes_(nSize) LPSTR lpConsoleTitle,
+  _In_ DWORD nSize);
+
+WINBASEAPI
+DWORD
+WINAPI
+GetConsoleOriginalTitleW(
+  _Out_writes_(nSize) LPWSTR lpConsoleTitle,
+  _In_ DWORD nSize);
+
+#ifndef NOGDI
+WINBASEAPI
+BOOL
+WINAPI
+GetCurrentConsoleFontEx(
+  _In_ HANDLE hConsoleOutput,
+  _In_ BOOL bMaximumWindow,
+  _Out_ PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetCurrentConsoleFontEx(
+  _In_ HANDLE hConsoleOutput,
+  _In_ BOOL bMaximumWindow,
+  _In_ PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx);
+#endif
+
+WINBASEAPI
+BOOL
+WINAPI
+GetConsoleHistoryInfo(
+  _Out_ PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleHistoryInfo(
+  _In_ PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo);
+
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN2K)
+
+WINBASEAPI
+BOOL
+WINAPI
+GetCurrentConsoleFont(
+  _In_ HANDLE hConsoleOutput,
+  _In_ BOOL bMaximumWindow,
+  _Out_ PCONSOLE_FONT_INFO lpConsoleCurrentFont);
+
+WINBASEAPI
 COORD
 WINAPI
 GetConsoleFontSize(
   _In_ HANDLE hConsoleOutput,
   _In_ DWORD nFont);
 
+WINBASEAPI
 BOOL
 WINAPI
-GetCurrentConsoleFont(
-  _In_  HANDLE hConsoleOutput,
-  _In_  BOOL bMaximumWindow,
-  _Out_ PCONSOLE_FONT_INFO lpConsoleCurrentFont);
+GetConsoleSelectionInfo(
+  _Out_ PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo);
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN2K)
+WINBASEAPI
+HWND
+WINAPI
+GetConsoleWindow(VOID);
 
-HWND WINAPI GetConsoleWindow(VOID);
-BOOL WINAPI GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);
+WINBASEAPI
+BOOL
+WINAPI
+GetConsoleDisplayMode(
+  _Out_ LPDWORD lpModeFlags);
 
+WINBASEAPI
 BOOL
 WINAPI
 SetConsoleDisplayMode(
@@ -459,13 +652,29 @@ SetConsoleDisplayMode(
   _In_ DWORD dwFlags,
   _Out_opt_ PCOORD lpNewScreenBufferDimensions);
 
-#endif
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_WIN2K)
 
-COORD WINAPI GetLargestConsoleWindowSize(_In_ HANDLE);
-BOOL WINAPI GetNumberOfConsoleInputEvents(_In_ HANDLE, _Out_ PDWORD);
-BOOL WINAPI GetNumberOfConsoleMouseButtons(_Out_ PDWORD);
+WINBASEAPI
+COORD
+WINAPI
+GetLargestConsoleWindowSize(
+  _In_ HANDLE hConsoleOutput);
 
-_Success_(return != 0)
+WINBASEAPI
+BOOL
+WINAPI
+GetNumberOfConsoleInputEvents(
+  _In_ HANDLE hConsoleInput,
+  _Out_ LPDWORD lpNumberOfEvents);
+
+WINBASEAPI
+BOOL
+WINAPI
+GetNumberOfConsoleMouseButtons(
+  _Out_ LPDWORD lpNumberOfMouseButtons);
+
+WINBASEAPI
+_Success_(return != FALSE)
 BOOL
 WINAPI PeekConsoleInputA(
   _In_ HANDLE hConsoleInput,
@@ -473,7 +682,8 @@ WINAPI PeekConsoleInputA(
   _In_ DWORD nLength,
   _Out_ LPDWORD lpNumberOfEventsRead);
 
-_Success_(return != 0)
+WINBASEAPI
+_Success_(return != FALSE)
 BOOL
 WINAPI
 PeekConsoleInputW(
@@ -482,64 +692,49 @@ PeekConsoleInputW(
   _In_ DWORD nLength,
   _Out_ LPDWORD lpNumberOfEventsRead);
 
-_Success_(return != 0)
+WINBASEAPI
+_Success_(return != FALSE)
 BOOL
 WINAPI
 ReadConsoleA(
   _In_ HANDLE hConsoleInput,
   _Out_writes_bytes_to_(nNumberOfCharsToRead * sizeof(CHAR), *lpNumberOfCharsRead * sizeof(CHAR)) LPVOID lpBuffer,
   _In_ DWORD nNumberOfCharsToRead,
-  _Out_ _Deref_out_range_(<= , nNumberOfCharsToRead) LPDWORD lpNumberOfCharsRead,
+  _Out_ _Deref_out_range_(<=, nNumberOfCharsToRead) LPDWORD lpNumberOfCharsRead,
   _In_opt_ PCONSOLE_READCONSOLE_CONTROL pInputControl);
 
-_Success_(return != 0)
+WINBASEAPI
+_Success_(return != FALSE)
 BOOL
 WINAPI
 ReadConsoleW(
   _In_ HANDLE hConsoleInput,
   _Out_writes_bytes_to_(nNumberOfCharsToRead * sizeof(WCHAR), *lpNumberOfCharsRead * sizeof(WCHAR)) LPVOID lpBuffer,
   _In_ DWORD nNumberOfCharsToRead,
-  _Out_ _Deref_out_range_(<= , nNumberOfCharsToRead) LPDWORD lpNumberOfCharsRead,
+  _Out_ _Deref_out_range_(<=, nNumberOfCharsToRead) LPDWORD lpNumberOfCharsRead,
   _In_opt_ PCONSOLE_READCONSOLE_CONTROL pInputControl);
 
-_Success_(return != 0)
+WINBASEAPI
+_Success_(return != FALSE)
 BOOL
 WINAPI
 ReadConsoleInputA(
   _In_ HANDLE hConsoleInput,
   _Out_writes_to_(nLength, *lpNumberOfEventsRead) PINPUT_RECORD lpBuffer,
   _In_ DWORD nLength,
-  _Out_ _Deref_out_range_(<= , nLength) LPDWORD lpNumberOfEventsRead);
+  _Out_ _Deref_out_range_(<=, nLength) LPDWORD lpNumberOfEventsRead);
 
-_Success_(return != 0)
+WINBASEAPI
+_Success_(return != FALSE)
 BOOL
 WINAPI
 ReadConsoleInputW(
   _In_ HANDLE hConsoleInput,
   _Out_writes_to_(nLength, *lpNumberOfEventsRead) PINPUT_RECORD lpBuffer,
   _In_ DWORD nLength,
-  _Out_ _Deref_out_range_(<= , nLength) LPDWORD lpNumberOfEventsRead);
+  _Out_ _Deref_out_range_(<=, nLength) LPDWORD lpNumberOfEventsRead);
 
-_Success_(return != 0)
-BOOL
-WINAPI
-ReadConsoleInputExA(
-  _In_ HANDLE hConsoleInput,
-  _Out_writes_to_(nLength, *lpNumberOfEventsRead) PINPUT_RECORD lpBuffer,
-  _In_ DWORD nLength,
-  _Out_ _Deref_out_range_(<= , nLength) LPDWORD lpNumberOfEventsRead,
-  _In_ WORD wFlags);
-
-_Success_(return != 0)
-BOOL
-WINAPI
-ReadConsoleInputExW(
-  _In_ HANDLE hConsoleInput,
-  _Out_writes_to_(nLength, *lpNumberOfEventsRead) PINPUT_RECORD lpBuffer,
-  _In_ DWORD nLength,
-  _Out_ _Deref_out_range_(<= , nLength) LPDWORD lpNumberOfEventsRead,
-  _In_ WORD wFlags);
-
+WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputAttribute(
@@ -549,6 +744,7 @@ ReadConsoleOutputAttribute(
   _In_ COORD dwReadCoord,
   _Out_ LPDWORD lpNumberOfAttrsRead);
 
+WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputCharacterA(
@@ -558,6 +754,7 @@ ReadConsoleOutputCharacterA(
   _In_ COORD dwReadCoord,
   _Out_ LPDWORD lpNumberOfCharsRead);
 
+WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputCharacterW(
@@ -567,6 +764,7 @@ ReadConsoleOutputCharacterW(
   _In_ COORD dwReadCoord,
   _Out_ LPDWORD lpNumberOfCharsRead);
 
+WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputA(
@@ -576,6 +774,7 @@ ReadConsoleOutputA(
   _In_ COORD dwBufferCoord,
   _Inout_ PSMALL_RECT lpReadRegion);
 
+WINBASEAPI
 BOOL
 WINAPI
 ReadConsoleOutputW(
@@ -585,68 +784,107 @@ ReadConsoleOutputW(
   _In_ COORD dwBufferCoord,
   _Inout_ PSMALL_RECT lpReadRegion);
 
+WINBASEAPI
 BOOL
 WINAPI
 ScrollConsoleScreenBufferA(
-  _In_ HANDLE,
-  _In_ const SMALL_RECT*,
-  _In_opt_ const SMALL_RECT*,
-  _In_ COORD,
-  _In_ const CHAR_INFO*);
+  _In_ HANDLE hConsoleOutput,
+  _In_ CONST SMALL_RECT *lpScrollRectangle,
+  _In_opt_ CONST SMALL_RECT *lpClipRectangle,
+  _In_ COORD dwDestinationOrigin,
+  _In_ CONST CHAR_INFO *lpFill);
 
+WINBASEAPI
 BOOL
 WINAPI
 ScrollConsoleScreenBufferW(
-  _In_ HANDLE,
-  _In_ const SMALL_RECT*,
-  _In_opt_ const SMALL_RECT*,
-  _In_ COORD,
-  _In_ const CHAR_INFO*);
+  _In_ HANDLE hConsoleOutput,
+  _In_ CONST SMALL_RECT *lpScrollRectangle,
+  _In_opt_ CONST SMALL_RECT *lpClipRectangle,
+  _In_ COORD dwDestinationOrigin,
+  _In_ CONST CHAR_INFO *lpFill);
 
-BOOL WINAPI SetConsoleActiveScreenBuffer(_In_ HANDLE);
-BOOL WINAPI SetConsoleCP(_In_ UINT);
-BOOL WINAPI SetConsoleCtrlHandler(_In_opt_ PHANDLER_ROUTINE, _In_ BOOL);
-BOOL WINAPI SetConsoleCursorInfo(_In_ HANDLE, _In_ const CONSOLE_CURSOR_INFO*);
-BOOL WINAPI SetConsoleCursorPosition(_In_ HANDLE, _In_ COORD);
-BOOL WINAPI SetConsoleMode(_In_ HANDLE, _In_ DWORD);
-BOOL WINAPI SetConsoleOutputCP(_In_ UINT);
-BOOL WINAPI SetConsoleScreenBufferSize(_In_ HANDLE, _In_ COORD);
-BOOL WINAPI SetConsoleTextAttribute(_In_ HANDLE, _In_ WORD);
-BOOL WINAPI SetConsoleTitleA(_In_ LPCSTR);
-BOOL WINAPI SetConsoleTitleW(_In_ LPCWSTR);
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleActiveScreenBuffer(
+  _In_ HANDLE hConsoleOutput);
 
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleCP(
+  _In_ UINT wCodePageID);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleCtrlHandler(
+  _In_opt_ PHANDLER_ROUTINE HandlerRoutine,
+  _In_ BOOL Add);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleCursorInfo(
+  _In_ HANDLE hConsoleOutput,
+  _In_ CONST CONSOLE_CURSOR_INFO *lpConsoleCursorInfo);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleCursorPosition(
+  _In_ HANDLE hConsoleOutput,
+  _In_ COORD dwCursorPosition);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleMode(
+  _In_ HANDLE hConsoleHandle,
+  _In_ DWORD dwMode);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleOutputCP(
+  _In_ UINT wCodePageID);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleScreenBufferSize(
+  _In_ HANDLE hConsoleOutput,
+  _In_ COORD dwSize);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleTextAttribute(
+  _In_ HANDLE hConsoleOutput,
+  _In_ WORD wAttributes);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleTitleA(
+  _In_ LPCSTR lpConsoleTitle);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetConsoleTitleW(
+  _In_ LPCWSTR lpConsoleTitle);
+
+WINBASEAPI
 BOOL
 WINAPI
 SetConsoleWindowInfo(
-  _In_ HANDLE,
-  _In_ BOOL,
-  _In_ const SMALL_RECT*);
+  _In_ HANDLE hConsoleOutput,
+  _In_ BOOL bAbsolute,
+  _In_ CONST SMALL_RECT *lpConsoleWindow);
 
-/* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/ConsoleMenuControl.php */
-HMENU WINAPI ConsoleMenuControl(_In_ HANDLE, _In_ DWORD, _In_ DWORD);
-/* Undocumented */
-BOOL WINAPI SetConsoleMenuClose(_In_ BOOL);
-/* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/SetConsoleCursor.php */
-BOOL WINAPI SetConsoleCursor(_In_ HANDLE, _In_ HCURSOR);
-/* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/ShowConsoleCursor.php */
-INT WINAPI ShowConsoleCursor(_In_ HANDLE, _In_ BOOL);
-/* Undocumented */
-BOOL WINAPI SetConsoleIcon(_In_ HICON);
-/* Undocumented, see http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844 */
-BOOL WINAPI SetConsolePalette(_In_ HANDLE, _In_ HPALETTE, _In_ UINT);
-/* Undocumented */
-BOOL WINAPI CloseConsoleHandle(_In_ HANDLE);
-/* Undocumented */
-HANDLE WINAPI GetConsoleInputWaitHandle(VOID);
-/* Undocumented */
-BOOL WINAPI VerifyConsoleIoHandle(_In_ HANDLE);
-/* Undocumented */
-BOOL
-WINAPI
-RegisterConsoleVDM(_In_ DWORD, _In_ HANDLE, _In_ HANDLE, _In_ HANDLE, _In_ DWORD,
-                   _Out_ LPDWORD, _Out_ PVOID*, _In_ PVOID, _In_ DWORD, _In_ COORD,
-                   _Out_ PVOID*);
-
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleA(
@@ -656,6 +894,7 @@ WriteConsoleA(
   _Out_opt_ LPDWORD lpNumberOfCharsWritten,
   _Reserved_ LPVOID lpReserved);
 
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleW(
@@ -665,6 +904,7 @@ WriteConsoleW(
   _Out_opt_ LPDWORD lpNumberOfCharsWritten,
   _Reserved_ LPVOID lpReserved);
 
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleInputA(
@@ -673,6 +913,7 @@ WriteConsoleInputA(
   _In_ DWORD nLength,
   _Out_ LPDWORD lpNumberOfEventsWritten);
 
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleInputW(
@@ -681,22 +922,7 @@ WriteConsoleInputW(
   _In_ DWORD nLength,
   _Out_ LPDWORD lpNumberOfEventsWritten);
 
-BOOL
-WINAPI
-WriteConsoleInputVDMA(
-  _In_ HANDLE hConsoleInput,
-  _In_reads_(nLength) CONST INPUT_RECORD *lpBuffer,
-  _In_ DWORD nLength,
-  _Out_ LPDWORD lpNumberOfEventsWritten);
-
-BOOL
-WINAPI
-WriteConsoleInputVDMW(
-  _In_ HANDLE hConsoleInput,
-  _In_reads_(nLength) CONST INPUT_RECORD *lpBuffer,
-  _In_ DWORD nLength,
-  _Out_ LPDWORD lpNumberOfEventsWritten);
-
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleOutputA(
@@ -706,6 +932,7 @@ WriteConsoleOutputA(
   _In_ COORD dwBufferCoord,
   _Inout_ PSMALL_RECT lpWriteRegion);
 
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleOutputW(
@@ -715,6 +942,7 @@ WriteConsoleOutputW(
   _In_ COORD dwBufferCoord,
   _Inout_ PSMALL_RECT lpWriteRegion);
 
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleOutputAttribute(
@@ -724,6 +952,7 @@ WriteConsoleOutputAttribute(
   _In_ COORD dwWriteCoord,
   _Out_ LPDWORD lpNumberOfAttrsWritten);
 
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleOutputCharacterA(
@@ -733,6 +962,7 @@ WriteConsoleOutputCharacterA(
   _In_ COORD dwWriteCoord,
   _Out_ LPDWORD lpNumberOfCharsWritten);
 
+WINBASEAPI
 BOOL
 WINAPI
 WriteConsoleOutputCharacterW(
@@ -743,6 +973,22 @@ WriteConsoleOutputCharacterW(
   _Out_ LPDWORD lpNumberOfCharsWritten);
 
 
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+// typedef VOID *HPCON;
+// CreatePseudoConsole()
+// ResizePseudoConsole()
+// ClosePseudoConsole()
+#endif // (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+/* See https://github.com/microsoft/terminal/blob/main/doc/specs/%237335%20-%20Console%20Allocation%20Policy.md
+ * and https://github.com/MicrosoftDocs/Console-Docs/pull/323 */
+// ALLOC_CONSOLE_MODE, ALLOC_CONSOLE_OPTIONS, ALLOC_CONSOLE_RESULT
+// AllocConsoleWithOptions()
+// ReleasePseudoConsole()
+#endif // (NTDDI_VERSION >= NTDDI_WIN11_GE)
+
+
 #ifdef UNICODE
 #define AddConsoleAlias AddConsoleAliasW
 #define GetConsoleAlias GetConsoleAliasW
@@ -751,17 +997,16 @@ WriteConsoleOutputCharacterW(
 #define GetConsoleAliasExes GetConsoleAliasExesW
 #define GetConsoleAliasExesLength GetConsoleAliasExesLengthW
 #define GetConsoleTitle GetConsoleTitleW
+#define GetConsoleOriginalTitle GetConsoleOriginalTitleW
 #define PeekConsoleInput PeekConsoleInputW
 #define ReadConsole ReadConsoleW
 #define ReadConsoleInput ReadConsoleInputW
-#define ReadConsoleInputEx ReadConsoleInputExW
 #define ReadConsoleOutput ReadConsoleOutputW
 #define ReadConsoleOutputCharacter ReadConsoleOutputCharacterW
 #define ScrollConsoleScreenBuffer ScrollConsoleScreenBufferW
 #define SetConsoleTitle SetConsoleTitleW
 #define WriteConsole WriteConsoleW
 #define WriteConsoleInput WriteConsoleInputW
-#define WriteConsoleInputVDM WriteConsoleInputVDMW
 #define WriteConsoleOutput WriteConsoleOutputW
 #define FillConsoleOutputCharacter FillConsoleOutputCharacterW
 #define WriteConsoleOutputCharacter WriteConsoleOutputCharacterW
@@ -773,17 +1018,16 @@ WriteConsoleOutputCharacterW(
 #define GetConsoleAliasExes GetConsoleAliasExesA
 #define GetConsoleAliasExesLength GetConsoleAliasExesLengthA
 #define GetConsoleTitle GetConsoleTitleA
+#define GetConsoleOriginalTitle GetConsoleOriginalTitleA
 #define PeekConsoleInput PeekConsoleInputA
 #define ReadConsole ReadConsoleA
 #define ReadConsoleInput ReadConsoleInputA
-#define ReadConsoleInputEx ReadConsoleInputExA
 #define ReadConsoleOutput ReadConsoleOutputA
 #define ReadConsoleOutputCharacter ReadConsoleOutputCharacterA
 #define ScrollConsoleScreenBuffer ScrollConsoleScreenBufferA
 #define SetConsoleTitle SetConsoleTitleA
 #define WriteConsole WriteConsoleA
 #define WriteConsoleInput WriteConsoleInputA
-#define WriteConsoleInputVDM WriteConsoleInputVDMA
 #define WriteConsoleOutput WriteConsoleOutputA
 #define FillConsoleOutputCharacter FillConsoleOutputCharacterA
 #define WriteConsoleOutputCharacter WriteConsoleOutputCharacterA
@@ -797,4 +1041,4 @@ WriteConsoleOutputCharacterW(
 }
 #endif
 
-#endif /* _WINCON_H */
+#endif /* _WINCON_ */

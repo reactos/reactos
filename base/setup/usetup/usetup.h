@@ -33,10 +33,11 @@
 
 /* PSDK/NDK */
 #define WIN32_NO_STATUS
+#define _KERNEL32_ // To define WINBASEAPI empty
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <winuser.h>
+#include <winuser.rh>
 #include <wincon.h>
 
 #define NTOS_MODE_USER

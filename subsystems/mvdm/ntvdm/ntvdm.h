@@ -55,6 +55,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <wincon.h>
+#include <wincon_undoc.h>
 #include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
@@ -66,8 +67,6 @@
 // for backwards compatibility in nt_vdd.h
 #define NO_NTVDD_COMPAT
 #include <vddsvc.h>
-
-DWORD WINAPI SetLastConsoleEventActive(VOID);
 
 #define NTOS_MODE_USER
 #include <ndk/kefuncs.h>    // For NtQueryPerformanceCounter()

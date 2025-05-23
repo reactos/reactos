@@ -9,6 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "precomp.h"
+#include <winbase_undoc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(schedsvc);
 
