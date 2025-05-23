@@ -29,7 +29,10 @@ HICON WINAPI TF_InatExtractIcon(_In_ INT iKL);
 HRESULT WINAPI TF_RunInputCPL(VOID);
 LONG WINAPI TF_CheckThreadInputIdle(_In_ DWORD dwThreadId, _In_ DWORD dwMilliseconds);
 BOOL WINAPI TF_IsInMarshaling(_In_ DWORD dwThreadId);
+
+// This is intentionally misspelled to match the original name:
 BOOL WINAPI TF_IsFullScreenWindowAcitvated(VOID);
+
 HRESULT WINAPI TF_CUASAppFix(_In_ LPCSTR pszName);
 HRESULT WINAPI TF_ClearLangBarAddIns(_In_ REFGUID rguid);
 HRESULT WINAPI TF_GetInputScope(_In_opt_ HWND hWnd, _Out_ ITfInputScope **ppInputScope);
