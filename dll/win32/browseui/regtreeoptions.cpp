@@ -318,7 +318,7 @@ HRESULT CRegTreeOptions::GetCheckState(HKEY hKey, BOOL UseDefault)
 
     CurrType = NormalizeRegType(CurrType);
     CheckType = NormalizeRegType(CheckType);
-    if (CurrType == REG_GET_DIRECT)
+    if (CurrType == (UINT)REG_GET_DIRECT)
     {
         Checked = *(BOOL*)CurrData;
     }
