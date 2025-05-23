@@ -223,7 +223,7 @@ START_TEST(ILCreateFromPath)
 START_TEST(PIDL)
 {
     CCoInit ComInit;
-    LPITEMIDLIST pidl, pidl2;
+    LPITEMIDLIST pidl;
 
     pidl = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, FALSE);
     if (pidl)
@@ -237,12 +237,13 @@ START_TEST(PIDL)
     {
         // Accept both the old and new format from the special folder API (NT5 vs NT6)
         LPITEMIDLIST pidlLeaf = ILFindLastID(pidl);
-        if (GetPIDLType(pidlLeaf) == PT_CONTROLS_OLDREGITEM)
+        if (LOBYTE(GetVersion()) < 6)
             TEST_CLSID(pidlLeaf, PT_CONTROLS_OLDREGITEM, 4, CLSID_Printers);
         else
             TEST_CLSID(pidlLeaf, PT_CONTROLS_NEWREGITEM, 14, CLSID_Printers);
 
         // The Control Panel should always return the new format when parsing
+        LPITEMIDLIST pidl2;
         WCHAR szParse[MAX_PATH];
         if (SUCCEEDED(GetDisplayNameOf(pidl, SHGDN_FORPARSING, szParse, _countof(szParse))) &&
             SUCCEEDED(ParseDisplayName(szParse, &pidl2)))
