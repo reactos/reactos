@@ -24,6 +24,10 @@
 #ifndef __WINE_RPCPROXY_H
 #define __WINE_RPCPROXY_H
 
+#ifdef _URLMON_
+#define PROXY_CLSID_IS {0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}}
+#endif
+
 #define __midl_proxy
 
 #include <basetsd.h>
