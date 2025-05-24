@@ -5,8 +5,8 @@ Signature = "$Windows NT$"
 HKLM,"SOFTWARE\Classes",,0x00000010
 
 ; Default key
-HKCR,"*","",0x00000000,""
-HKCR,"SystemFileAssociations","",0x00000000,""
+HKCR,"*","AlwaysShowExt",0x00000000,""
+HKCR,"SystemFileAssociations",,0x00000010
 
 ; Open With List
 HKCR,"*\OpenWithList\excel.exe","",0x00000000,""
@@ -15,6 +15,12 @@ HKCR,"*\OpenWithList\mspaint.exe","",0x00000000,""
 HKCR,"*\OpenWithList\notepad.exe","",0x00000000,""
 HKCR,"*\OpenWithList\winword.exe","",0x00000000,""
 HKCR,"*\OpenWithList\wordpad.exe","",0x00000000,""
+
+; Unknown
+HKCR,"Unknown","AlwaysShowExt"
+HKCR,"Unknown","QueryClassStore"
+HKCR,"Unknown\shell","",,"openas"
+HKCR,"Unknown\shell\openas\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe %SystemRoot%\system32\shell32.dll,OpenAs_RunDLL %1"
 
 ; Folders
 HKCR,"Folder","",0x00000000,"Folder"

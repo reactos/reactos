@@ -591,7 +591,7 @@ HRESULT CQueryAssociations::GetValue(HKEY hkey, const WCHAR *name, void **data, 
     DWORD size;
     LONG ret;
 
-    ret = RegQueryValueExW(hkey, name, 0, NULL, NULL, &size);
+    ret = SHQueryValueExW(hkey, name, 0, NULL, NULL, &size);
     if (ret != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(ret);
 
@@ -602,7 +602,7 @@ HRESULT CQueryAssociations::GetValue(HKEY hkey, const WCHAR *name, void **data, 
     if (!*data)
         return E_OUTOFMEMORY;
 
-    ret = RegQueryValueExW(hkey, name, 0, NULL, (LPBYTE)*data, &size);
+    ret = SHQueryValueExW(hkey, name, 0, NULL, (LPBYTE)*data, &size);
     if (ret != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, *data);

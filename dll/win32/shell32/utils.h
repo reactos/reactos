@@ -54,6 +54,20 @@ RegKeyExists(HKEY hKey, LPCWSTR Path)
     return ret;
 }
 
+inline UINT
+RegQueryDword(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, DWORD *pnVal)
+{
+    DWORD cb = sizeof(*pnVal);
+    return RegGetValueW(hKey, pszPath, pszName, RRF_RT_REG_DWORD, NULL, pnVal, &cb);
+}
+
+inline DWORD
+RegGetDword(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, DWORD nDefVal)
+{
+    DWORD nVal;
+    return RegQueryDword(hKey, pszPath, pszName, &nVal) == ERROR_SUCCESS ? nVal : nDefVal;
+}
+
 inline DWORD
 RegSetOrDelete(HKEY hKey, LPCWSTR Name, DWORD Type, LPCVOID Data, DWORD Size)
 {
