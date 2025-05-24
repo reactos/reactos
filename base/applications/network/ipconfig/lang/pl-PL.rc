@@ -61,15 +61,15 @@ END
 STRINGTABLE
 BEGIN
     IDS_DNSNORECORD         "\tNo records of type %ls\n\n"
-    IDS_DNSNONAME           "\tName does not exist.\n\n"
-    IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
-    IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
-    IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
-    IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
-    IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
-    IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
-    IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DNSNONAME           "\tNazwa DNS nie istnieje.\n\n"
+    IDS_DNSFLUSHERROR       "Nie można wyczyścić DNS Resolver Cache: "
+    IDS_DNSFLUSHSUCCESS     "Pomyślnie wyczyszczono DNS Resolver Cache.\n"
+    IDS_DHCPNOTCONNECTED    "Nie można wykonać operacji na %ls podczas gdy połączenie jest rozłączone.\n"
+    IDS_DHCPNOTENABLED      "Adapter %ls nie jest włączony dla DHCP.\n"
+    IDS_DHCPNOADAPTER       "Operacja nie powiodła się as no adapter is in the state permissible for \nthis operation.\n"
+    IDS_DHCPRELEASED        "adres IP dla adapteru %ls został zwolniony.\n"
+    IDS_DHCPRELEASEERROR    "Wystąpił błąd przy zwalnianiu interfejsu %ls: "
+    IDS_DHCPRENEWERROR      "Wystąpił błąd przy wznawianiu interfejsu %ls: "
 END
 
 STRINGTABLE
