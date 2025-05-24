@@ -2,15 +2,18 @@
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 list(APPEND SOURCE
+    MovSsBug.c
     SystemCall.c
     precomp.h)
 
 if(ARCH STREQUAL "i386")
     add_asm_files(umkm_apitest_asm
+        i386/MovSsBug_asm.s
         i386/SystemCall_asm.s
     )
 elseif(ARCH STREQUAL "amd64")
     add_asm_files(umkm_apitest_asm
+        amd64/MovSsBug_asm.s
         amd64/SystemCall_asm.s
     )
 endif()
