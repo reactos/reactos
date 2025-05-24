@@ -30,7 +30,14 @@ SYSTEM_PERFORMANCE_INFORMATION             SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION                   SystemBasicInfo;
 SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
 ULONG                                      SystemNumberOfHandles;
+
+#ifdef MAKE_LEAK // Defining this will cause CORE-18932. Used for testing.
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
+#else
+/* Handle up to 32 processors */
+SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION   SystemProcessorTimeInfo[32] = { 0 };
+#endif
+
 PSID                                       SystemUserSid = NULL;
 
 PCMD_LINE_CACHE global_cache = NULL;
@@ -91,10 +98,11 @@ void PerfDataUninitialize(void)
         pCur = pCur->Flink;
         HeapFree(GetProcessHeap(), 0, pEntry);
     }
-
+#ifdef MAKE_LEAK
     if (SystemProcessorTimeInfo) {
         HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
+#endif
 }
 
 static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
@@ -214,6 +222,13 @@ void PerfDataRefresh(void)
     if (status != STATUS_INFO_LENGTH_MISMATCH)
         SysHandleInfoData.NumberOfHandles = SystemNumberOfHandles;
 
+#ifndef MAKE_LEAK
+    /*
+     * Save system handle info
+     */
+    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
+#endif
+
     /* Get process information
      * We don't know how much data there is so just keep
      * increasing the buffer size until the call succeeds
@@ -247,15 +262,23 @@ void PerfDataRefresh(void)
     /*
      * Save system processor time info
      */
+#ifdef MAKE_LEAK
     if (SystemProcessorTimeInfo) {
         HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
     SystemProcessorTimeInfo = SysProcessorTimeInfo;
+#else
+    if (SystemBasicInfo.NumberOfProcessors <=  _countof(SystemProcessorTimeInfo))
+        memcpy(&SystemProcessorTimeInfo, &SysProcessorTimeInfo,
+               sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+#endif
 
+#ifdef MAKE_LEAK
     /*
      * Save system handle info
      */
     SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
+#endif
 
     for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
