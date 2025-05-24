@@ -45,6 +45,28 @@ HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
 
+ULONG
+NTAPI
+vDbgPrintExWithPrefix(IN PCCH Prefix,
+                      IN ULONG ComponentId,
+                      IN ULONG Level,
+                      IN PCCH Format,
+                      IN va_list ap)
+{
+    CHAR Buffer[512];
+
+    SIZE_T PrefixLength = strlen(Prefix);
+    strncpy(Buffer, Prefix, PrefixLength);
+
+    _vsnprintf(Buffer + PrefixLength,
+               sizeof(Buffer) - PrefixLength,
+               Format,
+               ap);
+
+    OutputDebugStringA(Buffer);
+    return 0;
+}
+
 typedef struct
 {
     DWORD dwLayoutId;
