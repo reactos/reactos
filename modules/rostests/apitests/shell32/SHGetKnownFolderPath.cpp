@@ -46,7 +46,7 @@ START_TEST(SHGetKnownFolderPath)
         }
         else if (result == S_FALSE)
         {
-             ok(path == NULL, "Desktop: Expected S_FALSE, got hr=0x%lx, path %p\n", result, path);
+            ok(path == NULL, "Desktop: S_FALSE returned, but path is not NULL: %p\n", path);
         }
         else
         {
@@ -64,7 +64,7 @@ START_TEST(SHGetKnownFolderPath)
         }
         else if (result == S_FALSE)
         {
-             ok(path == NULL, "Documents: Expected S_FALSE, got hr=0x%lx, path %p\n", result, path);
+            ok(path == NULL, "Documents: S_FALSE returned, but path is not NULL: %p\n", path);
         }
         else
         {
