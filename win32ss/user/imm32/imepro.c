@@ -122,10 +122,10 @@ ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro)
     IMEPROW ProW;
     if (pImePro->szName[0])
     {
-        if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pImePro->szName, -1,
+        if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (PSTR)pImePro->szName, -1,
                                  ProW.szName, _countof(ProW.szName)))
         {
-            ERR("szName: %s\n", debugstr_w(pImePro->szName));
+            ERR("szName: %s\n", debugstr_a((PSTR)pImePro->szName));
             return FALSE;
         }
         ProW.szName[_countof(ProW.szName) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
@@ -226,10 +226,10 @@ ImmIMPSetIMEA(
 
     if (pImePro->szName[0])
     {
-        if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pImePro->szName, -1,
+        if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (PSTR)pImePro->szName, -1,
                                  ProW.szName, _countof(ProW.szName)))
         {
-            ERR("szName: %s\n", debugstr_w(pImePro->szName));
+            ERR("szName: %s\n", debugstr_a((PSTR)pImePro->szName));
             return FALSE;
         }
         ProW.szName[_countof(ProW.szName) - 1] = UNICODE_NULL; /* Avoid buffer overrun */

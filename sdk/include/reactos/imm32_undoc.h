@@ -233,6 +233,10 @@ LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC);
 
 BOOL WINAPI ImmIMPGetIMEA(_In_opt_ HWND hWnd, _Out_ LPIMEPROA pImePro);
 BOOL WINAPI ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro);
+BOOL WINAPI ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro);
+BOOL WINAPI ImmIMPQueryIMEW(_Inout_ LPIMEPROW pImePro);
+BOOL WINAPI ImmIMPSetIMEA(_In_opt_ HWND hWnd, _Inout_ LPIMEPROA pImePro);
+BOOL WINAPI ImmIMPSetIMEW(_In_opt_ HWND hWnd, _Inout_ LPIMEPROW pImePro);
 
 HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
 HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
@@ -260,8 +264,12 @@ CtfImmDispatchDefImeMessage(
 
 #ifdef UNICODE
     #define ImmIMPGetIME ImmIMPGetIMEW
+    #define ImmIMPQueryIME ImmIMPQueryIMEW
+    #define ImmIMPSetIME ImmIMPSetIMEW
 #else
     #define ImmIMPGetIME ImmIMPGetIMEA
+    #define ImmIMPQueryIME ImmIMPQueryIMEA
+    #define ImmIMPSetIME ImmIMPSetIMEA
 #endif
 
 #ifdef __cplusplus
