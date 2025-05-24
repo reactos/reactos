@@ -50,7 +50,7 @@ START_TEST(SHGetKnownFolderPath)
         }
         else
         {
-            ok(0, "Desktop: Expected success, got Error Code: 0x%08lX\n", result);
+            ok(FALSE, "Desktop: Expected success, got Error Code: 0x%08lX\n", result);
             ok(path == NULL, "Desktop: Expected path to be NULL on failure\n");
         }
         if (path)
@@ -68,7 +68,7 @@ START_TEST(SHGetKnownFolderPath)
         }
         else
         {
-            ok(0, "Documents: Expected success, got Error Code: 0x0%08lX\n", result);
+            ok(FALSE, "Documents: Expected success, got Error Code: 0x0%08lX\n", result);
             ok(path == NULL, "Documents: Expected path to be NULL on failure\n");
         }
         if (path)
