@@ -3430,7 +3430,10 @@ HRESULT WINAPI SHGetKnownFolderPath(
     INT mapped_csidl = -1;
 
     if (!ppszPath)
+    {
+        TRACE("Invalid argument: ppszPath is NULL\n");
         return E_INVALIDARG;
+    }
 
     *ppszPath = NULL;
 
@@ -3448,6 +3451,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
 
     if (mapped_csidl == -1)
     {
+        TRACE("Unknown known folder GUID requested\n");
         return E_INVALIDARG;
     }
 
@@ -3548,12 +3552,14 @@ HRESULT WINAPI SHGetKnownFolderPath(
             hr = _SHGetAllUsersProfilePath(internalFlags, (BYTE)mapped_csidl, szPath);
             break;
         default:
+            TRACE("SHGetKnownFolderPath: Unhandled CSIDL_Type %d\n", type);
             hr = E_NOTIMPL;
             break;
     }
 
     if (FAILED(hr))
     {
+        TRACE("Failed to get path, HRESULT=0x%08x\n", hr);
         goto end;
     }
 
@@ -3563,6 +3569,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
         hr = _SHExpandEnvironmentStrings(hToken, szPath, szExpandedPath, _countof(szExpandedPath));
         if (FAILED(hr))
         {
+             TRACE("Failed to expand environment strings, HRESULT=0x%08x\n", hr);
              goto end;
         }
         StringCchCopyW(szPath, _countof(szPath), szExpandedPath);
@@ -3581,12 +3588,14 @@ HRESULT WINAPI SHGetKnownFolderPath(
                 if (ret != ERROR_SUCCESS && ret != ERROR_ALREADY_EXISTS)
                 {
                     hr = HRESULT_FROM_WIN32(ret);
+                    TRACE("Failed to create directory, HRESULT=0x%08x\n", hr);
                     goto end;
                 }
             }
             else
             {
                  hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+                 TRACE("Path not found and creation not requested\n");
                  goto end;
             }
         }
@@ -3629,6 +3638,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
     *ppszPath = (PWSTR)SHAlloc((pathLen + 1) * sizeof(WCHAR));
     if (!*ppszPath)
     {
+        TRACE("Failed to allocate memory for path\n");
         hr = E_OUTOFMEMORY;
         goto end;
     }
