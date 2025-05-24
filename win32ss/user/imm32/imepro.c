@@ -133,7 +133,7 @@ ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro)
     }
     else
     {
-        ProW.szName[0] = 0;
+        ProW.szName[0] = UNICODE_NULL;
     }
 
     if (!ImmIMPQueryIMEW(&ProW))
