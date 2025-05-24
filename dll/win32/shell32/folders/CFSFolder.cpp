@@ -991,6 +991,17 @@ HRESULT WINAPI CFSFolder::EnumObjects(
     DWORD dwFlags,
     LPENUMIDLIST *ppEnumIDList)
 {
+    HRESULT hr;
+
+    if (FAILED(SHFindFirstFile(m_sPathTarget)))
+    {
+        RETRY_DATA* retryData;
+        retryData = (RETRY_DATA*)SHAlloc(sizeof(RETRY_DATA));
+        StringCchCopyW(retryData->szDrive, MAX_PATH, m_sPathTarget);
+        hr = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCE(IDD_INSERT_DISK), hwndOwner, RetryDlgProc, (LPARAM)retryData);
+        if (hr == IDCANCEL)
+            return HRESULT_FROM_WIN32(ERROR_CANCELLED);
+    }
     return ShellObjectCreatorInit<CFileSysEnum>(m_sPathTarget, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
@@ -2183,4 +2194,66 @@ HRESULT CFSFolder::FormatSize(UINT64 size, LPWSTR Buf, UINT cchBuf)
     if (cchBuf)
         *Buf = UNICODE_NULL;
     return E_FAIL;
+}
+
+INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    SHFILEINFOW* psfi;
+    RETRY_DATA* retryData;
+    WCHAR szFormat[MAX_PATH] = {0};
+    WCHAR szDrive[MAX_PATH] = {0};
+
+    retryData = (RETRY_DATA*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            retryData = reinterpret_cast<RETRY_DATA*>(lParam);
+            retryData->hDlg = hwndDlg;
+            SetWindowLong(hwndDlg, DWLP_USER, lParam);
+
+            /* set message text */
+            GetDlgItemTextW(hwndDlg, IDC_INSERT_DISK_LABEL, szFormat, MAX_PATH);
+            StringCchPrintfW(szDrive, MAX_PATH, szFormat, retryData->szDrive[0]);
+            SetDlgItemTextW(hwndDlg, IDC_INSERT_DISK_LABEL, szDrive);
+
+            /* set icon */
+            StringCchCopyW(szDrive, MAX_PATH, retryData->szDrive);
+            PathStripToRoot(szDrive);
+            psfi = (SHFILEINFOW*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHFILEINFOW));
+            SHGetFileInfoW(szDrive, FILE_ATTRIBUTE_DIRECTORY, psfi, sizeof(SHFILEINFOW), SHGFI_ICON | SHGFI_ADDOVERLAYS);
+            SendDlgItemMessageW(hwndDlg, IDC_INSERT_DISK_ICON, STM_SETICON, (WPARAM)psfi->hIcon, 0);
+            HeapFree(GetProcessHeap(), 0, psfi);
+            SetTimer(hwndDlg, 1, 2000, NULL);
+            break;
+        case WM_COMMAND:
+            if (wParam == IDCANCEL)
+                EndDialog(hwndDlg, IDCANCEL);
+            break;
+        case WM_TIMER:
+            if(SUCCEEDED(SHFindFirstFile(retryData->szDrive)))
+                EndDialog(retryData->hDlg, 4);
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+HRESULT SHFindFirstFile(LPCWSTR lpFilePath)
+{
+    WIN32_FIND_DATAW stffile;
+    HANDLE hFile;
+    WCHAR szPath[MAX_PATH];
+
+    wcscpy(szPath, lpFilePath);
+    PathAddBackslashW(szPath);
+    wcscat(szPath, L"*.*");
+
+    hFile = FindFirstFileW(szPath, &stffile);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return E_FAIL;
+    else
+        FindClose(hFile);
+    return S_OK;
 }
