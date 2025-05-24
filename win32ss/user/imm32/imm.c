@@ -54,7 +54,10 @@ static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
  *		ImmRegisterClient(IMM32.@)
  *       ( Undocumented, called from user32.dll )
  */
-BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
+BOOL WINAPI
+ImmRegisterClient(
+    _Inout_ PSHAREDINFO ptr,
+    _In_ HINSTANCE hMod)
 {
     gSharedInfo = *ptr;
     gpsi = gSharedInfo.psi;
@@ -1000,8 +1003,10 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     ImmLocalFree(pClientImc);
 }
 
-// Win: ImmGetSaveContext
-static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
+static HIMC
+ImmGetSaveContext(
+    _In_opt_ HWND hWnd,
+    _In_ DWORD dwContextFlags)
 {
     HIMC hIMC;
     PCLIENTIMC pClientImc;
@@ -1219,8 +1224,8 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 /***********************************************************************
  *              ImmWINNLSGetEnableStatus (IMM32.@)
  */
-
-BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
+BOOL WINAPI
+ImmWINNLSGetEnableStatus(_In_opt_ HWND hWnd)
 {
     if (!Imm32IsSystemJapaneseOrKorean())
     {
@@ -1234,7 +1239,10 @@ BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
 /***********************************************************************
  *              ImmSetActiveContextConsoleIME(IMM32.@)
  */
-BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
+BOOL WINAPI
+ImmSetActiveContextConsoleIME(
+    _In_ HWND hwnd,
+    _In_ BOOL fFlag)
 {
     HIMC hIMC;
     TRACE("(%p, %d)\n", hwnd, fFlag);
