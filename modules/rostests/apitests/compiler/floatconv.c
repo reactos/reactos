@@ -39,7 +39,7 @@
 #endif
 
 #ifdef __GNUC__
-#define todo_gcc todo_ros
+#define todo_gcc todo_if(TRUE)
 #else
 #define todo_gcc
 #endif
