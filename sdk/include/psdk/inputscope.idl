@@ -74,7 +74,7 @@ typedef enum {
 
 cpp_quote("HRESULT WINAPI SetInputScope(HWND hwnd,InputScope inputscope);")
 cpp_quote("HRESULT WINAPI SetInputScopes(HWND hwnd,const InputScope *pInputScopes,UINT cInputScopes,WCHAR **ppszPhraseList,UINT cPhrases,WCHAR *pszRegExp,WCHAR *pszSRGS);")
-cpp_quote("HRESULT WINAPI SetInputScopeXML(HWND hwnd,WCHAR *pszXML);")
+cpp_quote("HRESULT WINAPI SetInputScopeXML(_In_opt_ HWND hwnd, _In_opt_ PCWSTR pszXML);")
 
 cpp_quote("DEFINE_GUID(GUID_PROP_INPUTSCOPE,0x1713dd5a,0x68e7,0x4a5b,0x9a,0xf6,0x59,0x2a,0x59,0x5c,0x77,0x8d);")
 

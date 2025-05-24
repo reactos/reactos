@@ -20,6 +20,7 @@
 #include <cguid.h>
 #include <tchar.h>
 #include <msctf.h>
+#include <msctf_undoc.h>
 #include <ctffunc.h>
 #include <shlwapi.h>
 #include <strsafe.h>

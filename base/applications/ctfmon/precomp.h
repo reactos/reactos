@@ -15,6 +15,7 @@
 #include <tchar.h>
 #include <strsafe.h>
 #include <msctf.h>
+#include <msctf_undoc.h>
 #include <ctfutb.h>
 #include <ctffunc.h>
 #include <cicbase.h>
