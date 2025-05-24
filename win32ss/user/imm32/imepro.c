@@ -19,6 +19,9 @@ Imm32ConvertImeProWideToAnsi(
     _In_ const IMEPROW *pProW,
     _Out_ PIMEPROA pProA)
 {
+    ASSERT(pProW);
+    ASSERT(pProA);
+
     pProA->hWnd = pProW->hWnd;
     pProA->InstDate = pProW->InstDate;
     pProA->wVersion = pProW->wVersion;
@@ -39,6 +42,8 @@ Imm32IMPGetIME(
     _In_ HKL hKL,
     _Out_ PIMEPROW pProW)
 {
+    ASSERT(pProW);
+
     IMEINFOEX ImeInfoEx;
     if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
         return FALSE;
@@ -68,6 +73,8 @@ ImmIMPGetIMEA(
 
     TRACE("(%p, %p)\n", hWnd, pImePro);
 
+    ASSERT(pImePro);
+
     if (!Imm32IsSystemJapaneseOrKorean())
     {
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -95,6 +102,8 @@ ImmIMPGetIMEW(
 
     TRACE("(%p, %p)\n", hWnd, pImePro);
 
+    ASSERT(pImePro);
+
     if (!Imm32IsSystemJapaneseOrKorean())
     {
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -112,6 +121,8 @@ BOOL WINAPI
 ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro)
 {
     TRACE("(%p)\n", pImePro);
+
+    ASSERT(pImePro);
 
     if (!Imm32IsSystemJapaneseOrKorean())
     {
@@ -150,6 +161,8 @@ BOOL WINAPI
 ImmIMPQueryIMEW(_Inout_ LPIMEPROW pImePro)
 {
     TRACE("(%p)\n", pImePro);
+
+    ASSERT(pImePro);
 
     if (!Imm32IsSystemJapaneseOrKorean())
     {
@@ -218,6 +231,8 @@ ImmIMPSetIMEA(
 {
     TRACE("(%p, %p)\n", hWnd, pImePro);
 
+    ASSERT(pImePro);
+
     IMEPROW ProW;
     if (!Imm32IsSystemJapaneseOrKorean())
     {
@@ -255,6 +270,8 @@ ImmIMPSetIMEW(
     UNREFERENCED_PARAMETER(hWnd);
 
     TRACE("(%p, %p)\n", hWnd, pImePro);
+
+    ASSERT(pImePro);
 
     if (!Imm32IsSystemJapaneseOrKorean())
     {
