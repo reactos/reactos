@@ -122,6 +122,7 @@ ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro)
     IMEPROW ProW;
     if (pImePro->szName[0])
     {
+        /* pImePro->szName is BYTE[], so we need type cast */
         if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (PSTR)pImePro->szName, -1,
                                  ProW.szName, _countof(ProW.szName)))
         {
@@ -226,6 +227,7 @@ ImmIMPSetIMEA(
 
     if (pImePro->szName[0])
     {
+        /* pImePro->szName is BYTE[], so we need type cast */
         if (!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (PSTR)pImePro->szName, -1,
                                  ProW.szName, _countof(ProW.szName)))
         {
