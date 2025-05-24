@@ -231,10 +231,7 @@ Imm32GetImeLayoutList(
         RegCloseKey(hkeyIME);
 
         /* We don't allow the invalid "IME File" values for security reason */
-        if (!szImeFileName[0] ||
-            wcscmp(szImeFileName, L".") == 0 ||
-            wcscmp(szImeFileName, L"..") == 0 ||
-            wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName))
+        if (!szImeFileName[0] || wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName))
         {
             WARN("Invalid IME Filename (%s)\n", debugstr_w(szImeFileName));
             continue;
