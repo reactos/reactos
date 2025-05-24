@@ -810,7 +810,11 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
 /***********************************************************************
  *		ImmSystemHandler(IMM32.@)
  */
-LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI
+ImmSystemHandler(
+    _In_ HIMC hIMC,
+    _Inout_opt_ WPARAM wParam,
+    _Inout_opt_ LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
 

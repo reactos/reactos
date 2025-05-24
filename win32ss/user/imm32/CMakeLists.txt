@@ -14,6 +14,7 @@ list(APPEND SOURCE
     imemenu.c
     imepro.c
     imm.c
+    install.c
     keymsg.c
     regword.c
     softkbd.c

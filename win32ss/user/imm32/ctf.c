@@ -1130,52 +1130,52 @@ CtfImmTIMActivate(_In_ HKL hKL)
     {
         TRACE("g_disable_CUAS_flag\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
-        return FALSE;
+        return S_OK;
     }
 
     if (GetWin32ClientInfo()->CI_flags & CI_TSFDISABLED)
     {
         TRACE("CI_TSFDISABLED\n");
-        return FALSE;
+        return S_OK;
     }
 
     if (Imm32IsTIMDisabledInRegistry())
     {
         TRACE("TIM is disabled in registry\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
-        return FALSE;
+        return S_OK;
     }
 
     if (!Imm32IsInteractiveUserLogon() || Imm32IsRunningInMsoobe())
     {
         TRACE("TIM is disabled due to LOGON or MSOBE\n");
-        return FALSE;
+        return S_OK;
     }
 
     if (!Imm32IsCUASEnabledInRegistry())
     {
         TRACE("CUAS is disabled in registry\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
-        return FALSE;
+        return S_OK;
     }
 
     if (NtCurrentTeb()->ProcessEnvironmentBlock->AppCompatFlags.LowPart & 0x100)
     {
         TRACE("CUAS is disabled by AppCompatFlags\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
-        return FALSE;
+        return S_OK;
     }
 
     if (RtlIsThreadWithinLoaderCallout() || Imm32InsideLoaderLock())
     {
         TRACE("TIM is disabled by Loader\n");
-        return FALSE;
+        return S_OK;
     }
 
     if (!IS_CICERO_MODE() || IS_16BIT_MODE())
     {
         TRACE("TIM is disabled because CICERO mode is unset\n");
-        return FALSE;
+        return S_OK;
     }
 
     if (IS_IME_HKL(hKL))

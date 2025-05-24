@@ -9,7 +9,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-// Win: InternalGetCandidateListWtoA
+#define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
+
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
