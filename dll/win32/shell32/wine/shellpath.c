@@ -3399,7 +3399,7 @@ HRESULT WINAPI SHGetSpecialFolderLocation(
 
 #ifdef __REACTOS__
 /*************************************************************************
- * SHGetKnownFolderPath [SHELL32.758] (Vista+)
+ * SHGetKnownFolderPath [SHELL32.@] (Vista+)
  *
  * Retrieves the path of a known folder identified by its ID.
  *
