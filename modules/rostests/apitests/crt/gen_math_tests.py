@@ -166,6 +166,16 @@ def generate_cos_table(func_name = "cos", typecode = 'd'):
 def generate_cosf_table():
     generate_cos_table("cosf", 'f')
 
+def generate_exp_table(func_name = "exp", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.exp, -100.0, -0.9, 33, 1)
+    gen_table_range(func_name, typecode, mp.exp, -1.0, 1.0, 33, 1)
+    gen_table_range(func_name, typecode, mp.exp, 1.1, 100.0, 33, 1)
+    print("};\n")
+
+def generate_expf_table():
+    generate_exp_table("expf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
@@ -176,6 +186,8 @@ TABLE_FUNCTIONS = {
     "atanf": generate_atanf_table,
     "cos": generate_cos_table,
     "cosf": generate_cosf_table,
+    "exp": generate_exp_table,
+    "expf": generate_expf_table,
 }
 
 def main():
