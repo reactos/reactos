@@ -145,10 +145,22 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->Dr2 = Context->Dr2;
         TrapFrame->Dr3 = Context->Dr3;
         TrapFrame->Dr6 = Context->Dr6;
-        TrapFrame->Dr7 = Context->Dr7;
+        TrapFrame->Dr7 = Context->Dr7 & DR7_LEGAL;
 
-        if ((Context->SegCs & MODE_MASK) != KernelMode)
+        /* Check if we are dealing with user mode */
+        ASSERT((PreviousMode == KernelMode) ||
+               (TrapFrame->SegCs & MODE_MASK) == UserMode);
+        if ((TrapFrame->SegCs & MODE_MASK) != KernelMode)
         {
+            /* If the caller is kernel mode, assert correct values */
+            if (PreviousMode == KernelMode)
+            {
+                ASSERT(TrapFrame->Dr0 <= (ULONG64)MmHighestUserAddress);
+                ASSERT(TrapFrame->Dr1 <= (ULONG64)MmHighestUserAddress);
+                ASSERT(TrapFrame->Dr2 <= (ULONG64)MmHighestUserAddress);
+                ASSERT(TrapFrame->Dr3 <= (ULONG64)MmHighestUserAddress);
+            }
+
             if (TrapFrame->Dr0 > (ULONG64)MmHighestUserAddress)
                 TrapFrame->Dr0 = 0;
             if (TrapFrame->Dr1 > (ULONG64)MmHighestUserAddress)
@@ -157,6 +169,10 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                 TrapFrame->Dr2 = 0;
             if (TrapFrame->Dr3 > (ULONG64)MmHighestUserAddress)
                 TrapFrame->Dr3 = 0;
+
+            /* Set ActiveDR7 flag in the thread */
+            KeGetCurrentThread()->Header.ActiveDR7 =
+                ((TrapFrame->Dr7 & DR7_ACTIVE) != 0);
         }
     }
 
