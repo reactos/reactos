@@ -8,6 +8,7 @@ extern void func_asin(void);
 extern void func_atan(void);
 extern void func_ceil(void);
 extern void func_cos(void);
+extern void func_exp(void);
 extern void func_round(void);
 
 
@@ -18,6 +19,7 @@ const struct test winetest_testlist[] =
     { "atan", func_atan },
     { "ceil", func_ceil },
     { "cos", func_cos },
+    { "exp", func_exp },
     { "round", func_round },
 
     { 0, 0 }

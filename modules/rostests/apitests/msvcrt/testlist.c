@@ -19,6 +19,7 @@ extern void func_atexit(void);
 extern void func_ceil(void);
 extern void func_cos(void);
 extern void func_crtdata(void);
+extern void func_exp(void);
 extern void func_fabs(void);
 extern void func_floor(void);
 extern void func_fpcontrol(void);
@@ -67,6 +68,7 @@ const struct test winetest_testlist[] =
     { "ceil", func_ceil },
     { "cos", func_cos },
     { "crtdata", func_crtdata },
+    { "exp", func_exp },
     { "fabs", func_fabs },
     { "floor", func_floor },
     { "mbstowcs", func_mbstowcs },

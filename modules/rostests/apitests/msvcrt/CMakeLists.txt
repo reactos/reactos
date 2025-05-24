@@ -24,6 +24,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/ceil.c
     ../crt/cos.c
     ../crt/crtdata.c
+    ../crt/exp.c
     ../crt/fabs.c
     ../crt/floor.c
     ../crt/mbstowcs.c
