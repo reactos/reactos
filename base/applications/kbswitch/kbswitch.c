@@ -632,11 +632,9 @@ GetNextLayout(VOID)
 }
 
 HWND
-GetTargetWindow(HWND hwndFore)
+GetTargetWindow(HWND hwndFore OPTIONAL)
 {
-    HWND hwndTarget = hwndFore;
-    if (hwndTarget == NULL)
-        hwndTarget = GetForegroundWindow();
+    HWND hwndTarget = (hwndFore ? hwndFore : GetForegroundWindow());
 
     TCHAR szClass[64];
     GetClassName(hwndTarget, szClass, _countof(szClass));
@@ -754,7 +752,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
-            //HWND hwndTarget = IsWindow((HWND)wParam) ? (HWND)wParam : NULL;
+            //HWND hwndTarget = IsWindow((HWND)wParam) ? (HWND)wParam : GetTargetWindow(NULL);
             HKL hKL = lParam ? (HKL)lParam : GetActiveKL();
             UpdateLayoutList(hKL);
             UpdateLanguageDisplay(hwnd, hKL);
