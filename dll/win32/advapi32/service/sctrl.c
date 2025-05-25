@@ -551,6 +551,8 @@ ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
     DWORD dwError = ERROR_SUCCESS;
+    DWORD dwEventType = 0;
+    PVOID pEventData = NULL;
 
     TRACE("ScControlService(%p %p)\n",
           lpService, ControlPacket);
@@ -578,11 +580,17 @@ ScControlService(PACTIVE_SERVICE lpService,
     }
     else if (lpService->HandlerFunctionEx)
     {
+        if (ControlPacket->dwControl == SERVICE_CONTROL_DEVICEEVENT)
+        {
+            dwEventType = *(LPDWORD)((ULONG_PTR)ControlPacket + sizeof(SCM_CONTROL_PACKET));
+            pEventData = (PVOID)((ULONG_PTR)ControlPacket + sizeof(SCM_CONTROL_PACKET) + sizeof(DWORD));
+        }
+
         _SEH2_TRY
         {
-            /* FIXME: Send correct 2nd and 3rd parameters */
             (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
-                                           0, NULL,
+                                           dwEventType,
+                                           pEventData,
                                            lpService->HandlerContext);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
