@@ -31,10 +31,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
-#define TIMER_ID_WATCH_CONSOLE 1002
-
-#define TIMER_WATCH_CONSOLE_INTERVAL 800
-
 FN_KbSwitchSetHooks KbSwitchSetHooks = NULL;
 UINT ShellHookMessage = 0;
 
@@ -45,7 +41,6 @@ HICON     g_hTrayIcon = NULL;
 HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
-BOOL      g_bOnConsole = FALSE;
 
 /* Debug logging */
 ULONG NTAPI
@@ -158,6 +153,7 @@ GetKLIDFromHKL(HKL hKL, LPTSTR szKLID, SIZE_T KLIDLength)
 
 static HKL GetActiveKL(VOID)
 {
+    /* FIXME: Get console window's HKL */
     HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
     DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
     return GetKeyboardLayout(dwTID);
@@ -644,18 +640,6 @@ GetTargetWindow(HWND hwndFore OPTIONAL)
     return hwndTarget;
 }
 
-static VOID
-StartWatchConsole(HWND hwnd)
-{
-    SetTimer(hwnd, TIMER_ID_WATCH_CONSOLE, TIMER_WATCH_CONSOLE_INTERVAL, NULL);
-}
-
-static VOID
-StopWatchConsole(HWND hwnd)
-{
-    KillTimer(hwnd, TIMER_ID_WATCH_CONSOLE);
-}
-
 UINT
 UpdateLanguageDisplay(HWND hwnd, HKL hKL)
 {
@@ -667,12 +651,6 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
     GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, _countof(szLangName));
     UpdateTrayIcon(hwnd, szKLID, szLangName);
     g_nCurrentLayoutNum = GetLayoutNum(hKL);
-
-    g_bOnConsole = IsConsoleWnd(GetTargetWindow(NULL));
-    if (g_bOnConsole)
-        StartWatchConsole(hwnd);
-    else
-        StopWatchConsole(hwnd);
 
     return 0;
 }
@@ -731,28 +709,13 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
-
-            HWND hwndTarget = GetTargetWindow(NULL);
-            if (IsConsoleWnd(hwndTarget))
-                StartWatchConsole(hwnd);
-            break;
-        }
-
-        case WM_TIMER:
-        {
-            if (wParam == TIMER_ID_WATCH_CONSOLE)
-            {
-                HKL hKL = GetActiveKL();
-                UpdateLayoutList(hKL);
-                UpdateLanguageDisplay(hwnd, hKL);
-            }
             break;
         }
 
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
-            //HWND hwndTarget = IsWindow((HWND)wParam) ? (HWND)wParam : GetTargetWindow(NULL);
+            //HWND hwndTarget = GetTargetWindow(IsWindow((HWND)wParam) ? (HWND)wParam : NULL);
             HKL hKL = lParam ? (HKL)lParam : GetActiveKL();
             UpdateLayoutList(hKL);
             UpdateLanguageDisplay(hwnd, hKL);
@@ -775,9 +738,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case WM_RBUTTONUP:
                 case WM_LBUTTONUP:
                 {
-                    if (g_bOnConsole)
-                        StopWatchConsole(hwnd);
-
                     UpdateLayoutList(NULL);
 
                     GetCursorPos(&pt);
@@ -806,8 +766,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     if (nID)
                         PostMessage(hwnd, WM_COMMAND, nID, 0);
 
-                    if (g_bOnConsole)
-                        StartWatchConsole(hwnd);
                     break;
                 }
             }
