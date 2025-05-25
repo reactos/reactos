@@ -9,6 +9,7 @@
 
 HHOOK hWinHook = NULL;
 HHOOK hShellHook = NULL;
+HHOOK hKeyboardLLHook = NULL;
 HINSTANCE hInstance = NULL;
 HWND hKbSwitchWnd = NULL;
 
@@ -33,7 +34,7 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
             HWND hwndFocus = (HWND)wParam;
             if (hwndFocus && hwndFocus != hKbSwitchWnd)
             {
-                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, lParam);
+                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, 2, 0);
             }
         }
         break;
@@ -52,9 +53,13 @@ ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
 
     switch (code)
     {
+        case HSHELL_WINDOWACTIVATED:
+        {
+            PostMessageToMainWnd(WM_WINDOW_ACTIVATE, 3, 0);
+        }
         case HSHELL_LANGUAGE:
         {
-            PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
+            PostMessageToMainWnd(WM_LANG_CHANGED, 1, 0);
         }
         break;
     }
@@ -62,16 +67,40 @@ ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hShellHook, code, wParam, lParam);
 }
 
+LRESULT CALLBACK
+KeyboardLLHook(int code, WPARAM wParam, LPARAM lParam)
+{
+    if (code < 0)
+        return CallNextHookEx(hKeyboardLLHook, code, wParam, lParam);
+
+    if (code == HC_ACTION)
+    {
+        KBDLLHOOKSTRUCT *pKbStruct = (KBDLLHOOKSTRUCT *)lParam;
+        BOOL bAltPressed = GetAsyncKeyState(VK_MENU) < 0;
+        BOOL bShiftPressed = GetAsyncKeyState(VK_SHIFT) < 0;
+        if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+        {
+            if ((bAltPressed && bShiftPressed) ||
+                (pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
+                (pKbStruct->vkCode == VK_MENU && bShiftPressed))
+            {
+                PostMessageToMainWnd(WM_LANG_CHANGED, 2, 0);
+            }
+        }
+    }
+
+    return CallNextHookEx(hKeyboardLLHook, code, wParam, lParam);
+}
+
 BOOL WINAPI
 KbSwitchSetHooks(VOID)
 {
     hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, hInstance, 0);
     hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, hInstance, 0);
+    hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, hInstance, 0);
 
     if (!hWinHook || !hShellHook)
-    {
         return FALSE;
-    }
 
     return TRUE;
 }
@@ -79,6 +108,11 @@ KbSwitchSetHooks(VOID)
 VOID WINAPI
 KbSwitchDeleteHooks(VOID)
 {
+    if (hKeyboardLLHook)
+    {
+        UnhookWindowsHookEx(hKeyboardLLHook);
+        hKeyboardLLHook = NULL;
+    }
     if (hWinHook)
     {
         UnhookWindowsHookEx(hWinHook);

@@ -1,12 +1,11 @@
 /*
- * PROJECT:         Keyboard Layout Switcher
- * FILE:            base/applications/kbswitch/kbswitch.c
- * PURPOSE:         Switching Keyboard Layouts
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
- *                  Colin Finck (mail@colinfinck.de)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS Keyboard Layout Switcher
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Switching Keyboard Layouts
+ * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright Colin Finck (mail@colinfinck.de)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #include "kbswitch.h"
 #include <shlobj.h>
 #include <shlwapi_undoc.h>
@@ -25,12 +24,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
  * It needs special care.
  *
  * We use global hook by our kbsdll.dll, to watch the shell and the windows.
- *
- * It might not work correctly on Vista+ because keyboard layout change notification
- * won't be generated in Vista+.
  */
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
+
+#define TIMER_ID_LANG_CHANGED_DELAY 1000
+#define TIMER_ID_WINDOW_ACTIVATED_DELAY 1001
+
+#define TIMER_LANG_CHANGED_DELAY 200
+#define TIMER_WINDOW_ACTIVATED_DELAY 200
 
 PKBSWITCHSETHOOKS    KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
@@ -158,15 +160,20 @@ GetKLIDFromHKL(HKL hKL, LPTSTR szKLID, SIZE_T KLIDLength)
     }
 }
 
+HKL GetActiveKL(VOID)
+{
+    HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
+    DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
+    return GetKeyboardLayout(dwTID);
+}
+
 static VOID UpdateLayoutList(HKL hKL OPTIONAL)
 {
     INT iKL;
 
     if (!hKL)
     {
-        HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
-        DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
-        hKL = GetKeyboardLayout(dwTID);
+        hKL = GetActiveKL();
     }
 
     g_cKLs = GetKeyboardLayoutList(_countof(g_ahKLs), g_ahKLs);
@@ -734,21 +741,41 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
+        case WM_TIMER:
+        {
+            /* Delayed actions */
+            if (wParam == TIMER_ID_LANG_CHANGED_DELAY)
+            {
+                KillTimer(hwnd, wParam);
+                HKL hKL = GetActiveKL();
+                UpdateLayoutList(hKL);
+                UpdateLanguageDisplay(hwnd, hKL);
+            }
+            else if (wParam == TIMER_ID_WINDOW_ACTIVATED_DELAY)
+            {
+                KillTimer(hwnd, wParam);
+                HWND hwndFore = GetForegroundWindow();
+                if (RememberLastActive(hwnd, hwndFore))
+                    return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
+            }
+            break;
+        }
+
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
-            UpdateLayoutList((HKL)lParam);
-            UpdateLanguageDisplay(hwnd, (HKL)lParam);
+            /* Delayed action */
+            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAY);
+            SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAY, TIMER_LANG_CHANGED_DELAY, NULL);
             break;
         }
 
         case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
         {
-            HWND hwndFore;
             TRACE("WM_WINDOW_ACTIVATE: wParam:%p, lParam:%p\n", wParam, lParam);
-            hwndFore = GetForegroundWindow();
-            if (RememberLastActive(hwnd, hwndFore))
-                return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
+            /* Delayed action */
+            KillTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAY);
+            SetTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAY, TIMER_WINDOW_ACTIVATED_DELAY, NULL);
             break;
         }
 
@@ -866,7 +893,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam == SPI_SETNONCLIENTMETRICS)
             {
-                PostMessage(hwnd, WM_WINDOW_ACTIVATE, wParam, lParam);
+                PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
                 break;
             }
         }
@@ -893,9 +920,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             {
                 TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
                 if (wParam == HSHELL_LANGUAGE)
-                    PostMessage(hwnd, WM_LANG_CHANGED, wParam, lParam);
+                    PostMessage(hwnd, WM_LANG_CHANGED, 0, 0);
                 else if (wParam == HSHELL_WINDOWACTIVATED)
-                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, wParam, lParam);
+                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, 1, 0);
 
                 break;
             }
