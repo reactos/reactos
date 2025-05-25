@@ -53,12 +53,13 @@ vDbgPrintExWithPrefix(IN PCCH Prefix,
     CHAR Buffer[512];
     SIZE_T PrefixLength = strlen(Prefix);
     strncpy(Buffer, Prefix, PrefixLength);
-    _vsnprintf(Buffer + PrefixLength, sizeof(Buffer) - PrefixLength, Format, ap);
+    _vsnprintf(Buffer + PrefixLength, _countof(Buffer) - PrefixLength, Format, ap);
+    Buffer[_countof(Buffer) - 1] = ANSI_NULL; /* Avoid buffer overrun */
     OutputDebugStringA(Buffer);
     return 0;
 }
 
-typedef struct
+typedef struct tagSPECIAL_ID
 {
     DWORD dwLayoutId;
     HKL hKL;
@@ -646,12 +647,8 @@ HWND
 GetTargetWindow(HWND hwndFore OPTIONAL)
 {
     HWND hwndTarget = (hwndFore ? hwndFore : GetForegroundWindow());
-
-    TCHAR szClass[64];
-    GetClassName(hwndTarget, szClass, _countof(szClass));
-    if (_tcsicmp(szClass, szKbSwitcherName) == 0)
+    if (CheckWndClassName(hwndTarget, szKbSwitcherName))
         hwndTarget = g_hwndLastActive;
-
     return hwndTarget;
 }
 
@@ -667,15 +664,13 @@ UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
 
 static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
 {
-    TCHAR szClass[64];
-
     hwndFore = GetAncestor(hwndFore, GA_ROOT);
 
-    if (!IsWindowVisible(hwndFore) || !GetClassName(hwndFore, szClass, _countof(szClass)))
+    if (!IsWindowVisible(hwndFore))
         return FALSE;
 
-    if (_tcsicmp(szClass, szKbSwitcherName) == 0 ||
-        _tcsicmp(szClass, TEXT("Shell_TrayWnd")) == 0)
+    if (CheckWndClassName(hwndFore, szKbSwitcherName) ||
+        CheckWndClassName(hwndFore, TEXT("Shell_TrayWnd")))
     {
         return FALSE; /* Special window */
     }

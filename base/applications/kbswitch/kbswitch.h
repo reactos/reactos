@@ -37,11 +37,15 @@ typedef BOOL (APIENTRY *FN_KbSwitchSetHooks)(BOOL bHook);
 const TCHAR szKbSwitcherName[] = INDICATOR_CLASS;
 
 static inline BOOL
-IsConsoleWnd(_In_opt_ HWND hwndTarget)
+CheckWndClassName(_In_opt_ HWND hwndTarget, PCTSTR pszName)
 {
     TCHAR szClass[32];
     GetClassName(hwndTarget, szClass, _countof(szClass));
-    if (lstrcmpi(szClass, TEXT("ConsoleWindowClass")) != 0)
-        return FALSE;
-    return TRUE;
+    return lstrcmpi(szClass, pszName) == 0;
+}
+
+static inline BOOL
+IsConsoleWnd(_In_opt_ HWND hwndTarget)
+{
+    return CheckWndClassName(hwndTarget, TEXT("ConsoleWindowClass"));
 }
