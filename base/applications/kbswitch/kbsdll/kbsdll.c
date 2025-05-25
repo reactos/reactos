@@ -33,9 +33,7 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
         {
             HWND hwndFocus = (HWND)wParam;
             if (hwndFocus && hwndFocus != hKbSwitchWnd)
-            {
-                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, 2, 0);
-            }
+                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_FOCUS, 0);
             break;
         }
     }
@@ -55,12 +53,12 @@ ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
     {
         case HSHELL_WINDOWACTIVATED:
         {
-            PostMessageToMainWnd(WM_WINDOW_ACTIVATE, 3, 0);
+            PostMessageToMainWnd(WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_SHELL, 0);
             break;
         }
         case HSHELL_LANGUAGE:
         {
-            PostMessageToMainWnd(WM_LANG_CHANGED, 1, 0);
+            PostMessageToMainWnd(WM_LANG_CHANGED, LANG_CHANGED_FROM_SHELL, 0);
             break;
         }
     }
@@ -85,7 +83,7 @@ KeyboardLLHook(int code, WPARAM wParam, LPARAM lParam)
                 (pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
                 (pKbStruct->vkCode == VK_MENU && bShiftPressed))
             {
-                PostMessageToMainWnd(WM_LANG_CHANGED, 2, 0);
+                PostMessageToMainWnd(WM_LANG_CHANGED, LANG_CHANGED_FROM_KBD_LL, 0);
             }
         }
     }

@@ -896,7 +896,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam == SPI_SETNONCLIENTMETRICS)
             {
-                PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
+                PostMessage(hwnd, WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_SETTING, 0);
                 break;
             }
         }
@@ -923,9 +923,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             {
                 TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
                 if (wParam == HSHELL_LANGUAGE)
-                    PostMessage(hwnd, WM_LANG_CHANGED, 0, 0);
+                    PostMessage(hwnd, WM_LANG_CHANGED, LANG_CHANGED_FROM_SHELL_MSG, 0);
                 else if (wParam == HSHELL_WINDOWACTIVATED)
-                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, 1, 0);
+                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_SHELL_MSG, 0);
 
                 break;
             }
