@@ -6722,10 +6722,50 @@ RI_ScSendPnPMessage(
     _In_ DWORD dwEventSize,
     _In_ LPBYTE pEventData)
 {
-    DPRINT1("RI_ScSendPnPMessage(%p %lx %lu %lu %p)\n",
-            hServiceStatus, dwControl, dwEventType, dwEventSize, pEventData);
+    PSCM_CONTROL_PACKET ControlPacket;
+    DWORD PacketSize;
+    PSERVICE pService;
+    ULONG_PTR Ptr;
+    DWORD dwError = ERROR_SUCCESS;
 
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DPRINT("RI_ScSendPnPMessage(%p %lx %lu %lu %p)\n",
+           hServiceStatus, dwControl, dwEventType, dwEventSize, pEventData);
+
+    /* FIXME: Verify the status handle */
+    pService = (PSERVICE)hServiceStatus;
+
+    /* Calculate the total size of the control packet:
+     * initial structure, event type and event data */
+    PacketSize = sizeof(SCM_CONTROL_PACKET) + sizeof(DWORD) + dwEventSize;
+
+    /* Allocate the control packet */
+    ControlPacket = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, PacketSize);
+    if (!ControlPacket)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ControlPacket->dwSize = PacketSize;
+    ControlPacket->dwControl = dwControl;
+
+    /* Copy the event type and event data into the control packet */
+    Ptr = ((ULONG_PTR)ControlPacket + sizeof(SCM_CONTROL_PACKET));
+    RtlCopyMemory((PULONG)Ptr, &dwEventType, sizeof(dwEventType));
+    if (dwEventSize != 0)
+    {
+        Ptr = Ptr + sizeof(dwEventType);
+        RtlCopyMemory((PULONG)Ptr, pEventData, dwEventSize);
+    }
+
+    /* Send the control packet */
+    dwError = ScmSendControlPacket(pService->lpImage->hControlPipe,
+                                   pService->lpServiceName,
+                                   dwControl,
+                                   PacketSize,
+                                   ControlPacket);
+
+    /* Free the control packet */
+    HeapFree(GetProcessHeap(), 0, ControlPacket);
+
+    return dwError;
 }
 
 

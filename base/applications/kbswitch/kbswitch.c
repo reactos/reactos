@@ -13,6 +13,9 @@
 #include <imm.h>
 #include <imm32_undoc.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(internat);
+
 /*
  * This program kbswitch is a mimic of Win2k's internat.exe.
  * However, there are some differences.
@@ -42,6 +45,28 @@ HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
 
+ULONG
+NTAPI
+vDbgPrintExWithPrefix(IN PCCH Prefix,
+                      IN ULONG ComponentId,
+                      IN ULONG Level,
+                      IN PCCH Format,
+                      IN va_list ap)
+{
+    CHAR Buffer[512];
+
+    SIZE_T PrefixLength = strlen(Prefix);
+    strncpy(Buffer, Prefix, PrefixLength);
+
+    _vsnprintf(Buffer + PrefixLength,
+               sizeof(Buffer) - PrefixLength,
+               Format,
+               ap);
+
+    OutputDebugStringA(Buffer);
+    return 0;
+}
+
 typedef struct
 {
     DWORD dwLayoutId;
@@ -69,7 +94,7 @@ static VOID LoadSpecialIds(VOID)
 
     for (dwIndex = 0; dwIndex < 1000; ++dwIndex)
     {
-        dwSize = ARRAYSIZE(szKLID);
+        dwSize = _countof(szKLID);
         if (RegEnumKeyEx(hKey, dwIndex, szKLID, &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             break;
 
@@ -88,13 +113,13 @@ static VOID LoadSpecialIds(VOID)
             g_SpecialIds[g_cSpecialIds].dwLayoutId = wLayoutId;
             g_SpecialIds[g_cSpecialIds].hKL = hKL;
             StringCchCopy(g_SpecialIds[g_cSpecialIds].szKLID,
-                          ARRAYSIZE(g_SpecialIds[g_cSpecialIds].szKLID), szKLID);
+                          _countof(g_SpecialIds[g_cSpecialIds].szKLID), szKLID);
             ++g_cSpecialIds;
         }
 
         RegCloseKey(hLayoutKey);
 
-        if (g_cSpecialIds >= ARRAYSIZE(g_SpecialIds))
+        if (g_cSpecialIds >= _countof(g_SpecialIds))
         {
             OutputDebugStringA("g_SpecialIds is full!");
             break;
@@ -144,7 +169,7 @@ static VOID UpdateLayoutList(HKL hKL OPTIONAL)
         hKL = GetKeyboardLayout(dwTID);
     }
 
-    g_cKLs = GetKeyboardLayoutList(ARRAYSIZE(g_ahKLs), g_ahKLs);
+    g_cKLs = GetKeyboardLayoutList(_countof(g_ahKLs), g_ahKLs);
 
     g_nCurrentLayoutNum = -1;
     for (iKL = 0; iKL < g_cKLs; ++iKL)
@@ -156,7 +181,7 @@ static VOID UpdateLayoutList(HKL hKL OPTIONAL)
         }
     }
 
-    if (g_nCurrentLayoutNum == -1 && g_cKLs < ARRAYSIZE(g_ahKLs))
+    if (g_nCurrentLayoutNum == -1 && g_cKLs < _countof(g_ahKLs))
     {
         g_nCurrentLayoutNum = g_cKLs;
         g_ahKLs[g_cKLs++] = hKL;
@@ -202,9 +227,9 @@ GetLayoutName(INT nLayoutNum, LPTSTR szName, SIZE_T NameLength)
     DWORD dwBufLen;
     TCHAR szBuf[MAX_PATH], szKLID[CCH_LAYOUT_ID + 1];
 
-    GetKLIDFromLayoutNum(nLayoutNum, szKLID, ARRAYSIZE(szKLID));
+    GetKLIDFromLayoutNum(nLayoutNum, szKLID, _countof(szKLID));
 
-    StringCchPrintf(szBuf, ARRAYSIZE(szBuf),
+    StringCchPrintf(szBuf, _countof(szBuf),
                     _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szKLID);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
@@ -245,7 +270,7 @@ static BOOL GetImeFile(LPTSTR szImeFile, SIZE_T cchImeFile, LPCTSTR szKLID)
     if (szKLID[0] != TEXT('E') && szKLID[0] != TEXT('e'))
         return FALSE; /* Not an IME HKL */
 
-    StringCchPrintf(szBuf, ARRAYSIZE(szBuf),
+    StringCchPrintf(szBuf, _countof(szBuf),
                     _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szKLID);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
@@ -336,7 +361,7 @@ CreateTrayIcon(LPTSTR szKLID, LPCTSTR szImeFile OPTIONAL)
 
     if (szImeFile && szImeFile[0])
     {
-        if (GetSystemLibraryPath(szPath, ARRAYSIZE(szPath), szImeFile))
+        if (GetSystemLibraryPath(szPath, _countof(szPath), szImeFile))
             return FakeExtractIcon(szPath, cxIcon, cyIcon);
     }
 
@@ -345,7 +370,7 @@ CreateTrayIcon(LPTSTR szKLID, LPCTSTR szImeFile OPTIONAL)
     if (GetLocaleInfo(LangID,
                       LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
                       szBuf,
-                      ARRAYSIZE(szBuf)) == 0)
+                      _countof(szBuf)) == 0)
     {
         szBuf[0] = szBuf[1] = _T('?');
     }
@@ -421,13 +446,13 @@ AddTrayIcon(HWND hwnd)
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
     TCHAR szKLID[CCH_LAYOUT_ID + 1], szName[MAX_PATH], szImeFile[80];
 
-    GetKLIDFromLayoutNum(g_nCurrentLayoutNum, szKLID, ARRAYSIZE(szKLID));
-    GetLayoutName(g_nCurrentLayoutNum, szName, ARRAYSIZE(szName));
-    GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szKLID);
+    GetKLIDFromLayoutNum(g_nCurrentLayoutNum, szKLID, _countof(szKLID));
+    GetLayoutName(g_nCurrentLayoutNum, szName, _countof(szName));
+    GetImeFile(szImeFile, _countof(szImeFile), szKLID);
 
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szKLID, szImeFile);
-    StringCchCopy(tnid.szTip, ARRAYSIZE(tnid.szTip), szName);
+    StringCchCopy(tnid.szTip, _countof(tnid.szTip), szName);
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
 
@@ -455,11 +480,11 @@ UpdateTrayIcon(HWND hwnd, LPTSTR szKLID, LPTSTR szName)
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
     TCHAR szImeFile[80];
 
-    GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szKLID);
+    GetImeFile(szImeFile, _countof(szImeFile), szKLID);
 
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szKLID, szImeFile);
-    StringCchCopy(tnid.szTip, ARRAYSIZE(tnid.szTip), szName);
+    StringCchCopy(tnid.szTip, _countof(tnid.szTip), szName);
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
 
@@ -486,11 +511,11 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum, HWND hwndTarget OPTIONAL, BOOL bNoAc
     if (uLayoutNum == 0 || uLayoutNum > 0xFF) /* Invalid */
         return;
 
-    GetKLIDFromLayoutNum(uLayoutNum, szKLID, ARRAYSIZE(szKLID));
+    GetKLIDFromLayoutNum(uLayoutNum, szKLID, _countof(szKLID));
     LangID = (LANGID)_tcstoul(szKLID, NULL, 16);
 
     /* Switch to the new keyboard layout */
-    GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
+    GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, _countof(szLangName));
     UpdateTrayIcon(hwnd, szKLID, szLangName);
 
     if (hwndTarget && !bNoActivate)
@@ -525,10 +550,10 @@ BuildLeftPopupMenu(VOID)
 
     for (iKL = 0; iKL < g_cKLs; ++iKL)
     {
-        GetKLIDFromHKL(g_ahKLs[iKL], szKLID, ARRAYSIZE(szKLID));
-        GetImeFile(szImeFile, ARRAYSIZE(szImeFile), szKLID);
+        GetKLIDFromHKL(g_ahKLs[iKL], szKLID, _countof(szKLID));
+        GetImeFile(szImeFile, _countof(szImeFile), szKLID);
 
-        if (!GetLayoutName(iKL + 1, szName, ARRAYSIZE(szName)))
+        if (!GetLayoutName(iKL + 1, szName, _countof(szName)))
             continue;
 
         mii.fMask       = MIIM_ID | MIIM_STRING;
@@ -561,15 +586,19 @@ SetHooks(VOID)
         return FALSE;
     }
 
-    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, "KbSwitchSetHooks");
-    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, "KbSwitchDeleteHooks");
+#define IHOOK_SET 1
+#define IHOOK_DELETE 2
+    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(IHOOK_SET));
+    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(IHOOK_DELETE));
 
-    if (KbSwitchSetHooks == NULL || KbSwitchDeleteHooks == NULL)
+    if (!KbSwitchSetHooks || !KbSwitchDeleteHooks || !KbSwitchSetHooks())
     {
+        ERR("SetHooks failed\n");
         return FALSE;
     }
 
-    return KbSwitchSetHooks();
+    TRACE("SetHooks OK\n");
+    return TRUE;
 }
 
 VOID
@@ -580,11 +609,14 @@ DeleteHooks(VOID)
         KbSwitchDeleteHooks();
         KbSwitchDeleteHooks = NULL;
     }
+
     if (g_hHookDLL)
     {
         FreeLibrary(g_hHookDLL);
         g_hHookDLL = NULL;
     }
+
+    TRACE("DeleteHooks OK\n");
 }
 
 static UINT GetLayoutNum(HKL hKL)
@@ -612,9 +644,9 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
     TCHAR szKLID[MAX_PATH], szLangName[MAX_PATH];
     LANGID LangID;
 
-    GetKLIDFromHKL(hKL, szKLID, ARRAYSIZE(szKLID));
+    GetKLIDFromHKL(hKL, szKLID, _countof(szKLID));
     LangID = (LANGID)_tcstoul(szKLID, NULL, 16);
-    GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, ARRAYSIZE(szLangName));
+    GetLocaleInfo(LangID, LOCALE_SLANGUAGE, szLangName, _countof(szLangName));
     UpdateTrayIcon(hwnd, szKLID, szLangName);
     g_nCurrentLayoutNum = GetLayoutNum(hKL);
 
@@ -630,7 +662,7 @@ GetTargetWindow(HWND hwndFore)
     if (hwndTarget == NULL)
         hwndTarget = GetForegroundWindow();
 
-    GetClassName(hwndTarget, szClass, ARRAYSIZE(szClass));
+    GetClassName(hwndTarget, szClass, _countof(szClass));
     if (_tcsicmp(szClass, szKbSwitcherName) == 0)
         hwndTarget = g_hwndLastActive;
 
@@ -654,7 +686,7 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
 
     hwndFore = GetAncestor(hwndFore, GA_ROOT);
 
-    if (!IsWindowVisible(hwndFore) || !GetClassName(hwndFore, szClass, ARRAYSIZE(szClass)))
+    if (!IsWindowVisible(hwndFore) || !GetClassName(hwndFore, szClass, _countof(szClass)))
         return FALSE;
 
     if (_tcsicmp(szClass, szKbSwitcherName) == 0 ||
@@ -704,6 +736,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
+            TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
             UpdateLayoutList((HKL)lParam);
             UpdateLanguageDisplay(hwnd, (HKL)lParam);
             break;
@@ -711,7 +744,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
         {
-            HWND hwndFore = GetForegroundWindow();
+            HWND hwndFore;
+            TRACE("WM_WINDOW_ACTIVATE: wParam:%p, lParam:%p\n", wParam, lParam);
+            hwndFore = GetForegroundWindow();
             if (RememberLastActive(hwnd, hwndFore))
                 return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
             break;
@@ -786,7 +821,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     /* FIXME: CONWND needs special handling */
                     if (hwndTarget &&
-                        GetClassName(hwndTarget, szClass, ARRAYSIZE(szClass)) &&
+                        GetClassName(hwndTarget, szClass, _countof(szClass)) &&
                         _tcsicmp(szClass, TEXT("ConsoleWindowClass")) == 0)
                     {
                         bCONWND = TRUE;
@@ -856,6 +891,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             }
             else if (Message == ShellHookMessage)
             {
+                TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
                 if (wParam == HSHELL_LANGUAGE)
                     PostMessage(hwnd, WM_LANG_CHANGED, wParam, lParam);
                 else if (wParam == HSHELL_WINDOWACTIVATED)
@@ -881,6 +917,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            TRACE("LAYOUT_RTL\n");
             SetProcessDefaultLayout(LAYOUT_RTL);
             break;
         default:
@@ -889,10 +926,14 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
 
     hMutex = CreateMutex(NULL, FALSE, szKbSwitcherName);
     if (!hMutex)
+    {
+        ERR("!hMutex\n");
         return 1;
+    }
 
     if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
+        ERR("Another instance is already running\n");
         CloseHandle(hMutex);
         return 1;
     }
@@ -913,7 +954,13 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
 
     hwnd = CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
     ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
-    RegisterShellHookWindow(hwnd);
+    if (!RegisterShellHookWindow(hwnd))
+    {
+        ERR("RegisterShellHookWindow failed\n");
+        DestroyWindow(hwnd);
+        CloseHandle(hMutex);
+        return 1;
+    }
 
     while (GetMessage(&msg, NULL, 0, 0))
     {
