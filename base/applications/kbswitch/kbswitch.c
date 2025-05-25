@@ -1,10 +1,10 @@
 /*
  * PROJECT:     ReactOS Keyboard Layout Switcher
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Switching Keyboard Layouts
  * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
  *              Copyright Colin Finck (mail@colinfinck.de)
- *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2022-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include "kbswitch.h"
 #include <shlobj.h>
