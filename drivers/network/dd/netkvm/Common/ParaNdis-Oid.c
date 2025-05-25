@@ -415,6 +415,9 @@ NDIS_STATUS ParaNdis_OidQueryCommon(PARANDIS_ADAPTER *pContext, tOidDesc *pOid)
     case OID_802_3_MAXIMUM_LIST_SIZE:
         SETINFO(ul, PARANDIS_MULTICAST_LIST_SIZE);
         break;
+    case OID_GEN_PHYSICAL_MEDIUM:
+        SETINFO(ul, NdisPhysicalMedium802_3);
+        break;
     case OID_PNP_CAPABILITIES:
         pInfo  = &u.PMCaps;
         ulSize = sizeof(u.PMCaps);
