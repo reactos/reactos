@@ -57,10 +57,7 @@ ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
         }
         case HSHELL_LANGUAGE:
         {
-            if ((HWND)wParam && IsConsoleWnd((HWND)wParam))
-                PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
-            else
-                PostMessageToMainWnd(WM_LANG_CHANGED, wParam, 0);
+            PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
             break;
         }
     }

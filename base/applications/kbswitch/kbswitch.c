@@ -754,7 +754,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
-
+            //HWND hwndTarget = IsWindow((HWND)wParam) ? (HWND)wParam : NULL;
             HKL hKL = lParam ? (HKL)lParam : GetActiveKL();
             UpdateLayoutList(hKL);
             UpdateLanguageDisplay(hwnd, hKL);
