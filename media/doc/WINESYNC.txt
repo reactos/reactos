@@ -15,6 +15,8 @@ wine-patches@winehq.com and ros-dev@reactos.org
 
 The following build tools are shared with Wine.
 
+base/ctf/msctf                  # Synced to WineStaging-4.18
+
 sdk/tools/unicode               # Synced to WineStaging-4.18
 sdk/tools/widl                  # Synced to WineStaging-4.0
 sdk/tools/wpp                   # Synced to WineStaging-2.9
@@ -108,7 +110,6 @@ dll/win32/msadp32.acm         # Synced to WineStaging-4.0
 dll/win32/mscat32             # Synced to WineStaging-4.18
 dll/win32/mscms               # Synced to WineStaging-4.18
 dll/win32/mscoree             # Synced to Wine-1.5.4
-dll/win32/msctf               # Synced to WineStaging-4.18
 dll/win32/msftedit            # Synced to WineStaging-4.18
 dll/win32/msg711.acm          # Synced to WineStaging-4.18
 dll/win32/msgsm32.acm         # Synced to WineStaging-4.0
