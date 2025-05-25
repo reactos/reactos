@@ -627,19 +627,6 @@ GetNextLayout(VOID)
     return (g_nCurrentLayoutNum % g_cKLs) + 1;
 }
 
-HWND
-GetTargetWindow(HWND hwndFore OPTIONAL)
-{
-    HWND hwndTarget = (hwndFore ? hwndFore : GetForegroundWindow());
-
-    TCHAR szClass[64];
-    GetClassName(hwndTarget, szClass, _countof(szClass));
-    if (_tcsicmp(szClass, szKbSwitcherName) == 0)
-        hwndTarget = g_hwndLastActive;
-
-    return hwndTarget;
-}
-
 UINT
 UpdateLanguageDisplay(HWND hwnd, HKL hKL)
 {
@@ -653,6 +640,19 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
     g_nCurrentLayoutNum = GetLayoutNum(hKL);
 
     return 0;
+}
+
+HWND
+GetTargetWindow(HWND hwndFore OPTIONAL)
+{
+    HWND hwndTarget = (hwndFore ? hwndFore : GetForegroundWindow());
+
+    TCHAR szClass[64];
+    GetClassName(hwndTarget, szClass, _countof(szClass));
+    if (_tcsicmp(szClass, szKbSwitcherName) == 0)
+        hwndTarget = g_hwndLastActive;
+
+    return hwndTarget;
 }
 
 UINT
