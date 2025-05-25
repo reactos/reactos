@@ -15,6 +15,7 @@
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <msctf.h>
+#include <msctf_undoc.h>
 #include <strsafe.h>
 #include <assert.h>
 

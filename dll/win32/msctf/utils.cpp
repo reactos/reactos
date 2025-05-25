@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS msctf.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Text Framework Services
- * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <stdlib.h>
@@ -19,6 +19,7 @@
 #include <cguid.h>
 #include <tchar.h>
 #include <msctf.h>
+#include <msctf_undoc.h>
 #include <ctffunc.h>
 #include <shlwapi.h>
 #include <strsafe.h>
@@ -49,6 +50,7 @@ BOOL gfSharedMemory = FALSE;
 LONG g_cRefDll = -1;
 BOOL g_fCUAS = FALSE;
 TCHAR g_szCUASImeFile[16] = { 0 };
+DWORD g_dwAppCompatibility = 0;
 BOOL g_fNoITextStoreAnchor = TRUE;
 
 // Messages
@@ -234,6 +236,238 @@ RunCPLSetting(LPCTSTR pszCmdLine)
         return FALSE;
 
     return FullPathExec(TEXT("rundll32.exe"), pszCmdLine, SW_SHOWMINNOACTIVE, FALSE);
+}
+
+/***********************************************************************
+ *      TF_GetThreadFlags (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_GetThreadFlags(
+    _In_ DWORD dwThreadId,
+    _Out_ LPDWORD pdwFlags1,
+    _Out_ LPDWORD pdwFlags2,
+    _Out_ LPDWORD pdwFlags3)
+{
+    FIXME("(%lu, %p, %p, %p)\n", dwThreadId, pdwFlags1, pdwFlags2, pdwFlags3);
+    *pdwFlags1 = *pdwFlags2 = *pdwFlags3 = 0;
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_CreateCategoryMgr (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_CreateCategoryMgr(_Out_ ITfCategoryMgr **ppcat)
+{
+    FIXME("(%p)\n", ppcat);
+    if (ppcat)
+        *ppcat = NULL;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_CreateCicLoadMutex (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HANDLE WINAPI
+TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon)
+{
+    FIXME("(%p)\n", pfWinLogon);
+    if (pfWinLogon == NULL)
+        return NULL;
+    *pfWinLogon = FALSE;
+    return NULL;
+}
+
+/***********************************************************************
+ *      TF_CreateDisplayAttributeMgr (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_CreateDisplayAttributeMgr(_Out_ ITfDisplayAttributeMgr **ppdam)
+{
+    FIXME("(%p)\n", ppdam);
+    *ppdam = NULL;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_DllDetachInOther (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_DllDetachInOther(VOID)
+{
+    FIXME("()\n");
+    return TRUE;
+}
+
+/***********************************************************************
+ *      TF_GetGlobalCompartment (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMgr)
+{
+    FIXME("(%p)\n", ppCompMgr);
+    *ppCompMgr = NULL;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_GetLangIcon (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HICON WINAPI
+TF_GetLangIcon(_In_ LANGID LangID, _Out_ PWSTR pszText, _In_ INT cchText)
+{
+    FIXME("(0x%X, %p, %d)\n", LangID, pszText, cchText);
+    return NULL;
+}
+
+/***********************************************************************
+ *      TF_IsFullScreenWindowAcitvated (MSCTF.@)
+ *
+ * Yes, this function name is misspelled by MS.
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_IsFullScreenWindowAcitvated(VOID)
+{
+    FIXME("()\n");
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_GetInputScope (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_GetInputScope(_In_opt_ HWND hWnd, _Out_ ITfInputScope **ppInputScope)
+{
+    FIXME("(%p, %p)\n", hWnd, ppInputScope);
+    *ppInputScope = NULL;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      SetInputScopeXML (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+SetInputScopeXML(_In_opt_ HWND hwnd, _In_opt_ PCWSTR pszXML)
+{
+    FIXME("(%p, %p)\n", hwnd, pszXML);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_CUASAppFix (MSCTF.@)
+ *
+ * @implemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_CUASAppFix(_In_ LPCSTR pszName)
+{
+    if (!pszName || lstrcmpiA(pszName, "DelayFirstActivateKeyboardLayout") != 0)
+        return E_INVALIDARG;
+    g_dwAppCompatibility |= CTF_COMPAT_DELAY_FIRST_ACTIVATE;
+    return S_OK;
+}
+
+/***********************************************************************
+ *      TF_CheckThreadInputIdle (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C LONG WINAPI
+TF_CheckThreadInputIdle(_In_ DWORD dwThreadId, _In_ DWORD dwMilliseconds)
+{
+    FIXME("(%lu, %lu)\n", dwThreadId, dwMilliseconds);
+    return -1;
+}
+
+/***********************************************************************
+ *      TF_ClearLangBarAddIns (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_ClearLangBarAddIns(_In_ REFGUID guid)
+{
+    FIXME("(%p)\n", guid);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_InvalidAssemblyListCache (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_InvalidAssemblyListCache(VOID)
+{
+    FIXME("()\n");
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_IsInMarshaling (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_IsInMarshaling(_In_ DWORD dwThreadId)
+{
+    FIXME("(%lu)\n", dwThreadId);
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_PostAllThreadMsg (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_PostAllThreadMsg(_In_opt_ WPARAM wParam, _In_ DWORD dwFlags)
+{
+    FIXME("(%p, 0x%X)\n", wParam, dwFlags);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      TF_InitSystem (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_InitSystem(VOID)
+{
+    FIXME("()\n");
+    return FALSE;
+}
+
+/***********************************************************************
+ *      TF_UninitSystem (MSCTF.@)
+ *
+ * @unimplemented
+ */
+EXTERN_C BOOL WINAPI
+TF_UninitSystem(VOID)
+{
+    FIXME("()\n");
+    return FALSE;
 }
 
 /***********************************************************************
