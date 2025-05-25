@@ -28,8 +28,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
-#define TIMER_ID_LANG_CHANGED_DELAY 1000
-#define TIMER_ID_WINDOW_ACTIVATED_DELAY 1001
+#define TIMER_ID_LANG_CHANGED_DELAYED 1000
+#define TIMER_ID_WINDOW_ACTIVATED_DELAYED 1001
 
 #define TIMER_LANG_CHANGED_DELAY 200
 #define TIMER_WINDOW_ACTIVATED_DELAY 200
@@ -745,14 +745,14 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_TIMER:
         {
             /* Delayed actions */
-            if (wParam == TIMER_ID_LANG_CHANGED_DELAY)
+            if (wParam == TIMER_ID_LANG_CHANGED_DELAYED)
             {
                 KillTimer(hwnd, wParam);
                 HKL hKL = GetActiveKL();
                 UpdateLayoutList(hKL);
                 UpdateLanguageDisplay(hwnd, hKL);
             }
-            else if (wParam == TIMER_ID_WINDOW_ACTIVATED_DELAY)
+            else if (wParam == TIMER_ID_WINDOW_ACTIVATED_DELAYED)
             {
                 KillTimer(hwnd, wParam);
                 HWND hwndFore = GetForegroundWindow();
@@ -766,8 +766,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
             /* Delayed action */
-            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAY);
-            SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAY, TIMER_LANG_CHANGED_DELAY, NULL);
+            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
+            SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED, TIMER_LANG_CHANGED_DELAY, NULL);
             break;
         }
 
@@ -775,8 +775,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             TRACE("WM_WINDOW_ACTIVATE: wParam:%p, lParam:%p\n", wParam, lParam);
             /* Delayed action */
-            KillTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAY);
-            SetTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAY, TIMER_WINDOW_ACTIVATED_DELAY, NULL);
+            KillTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAYED);
+            SetTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAYED, TIMER_WINDOW_ACTIVATED_DELAY, NULL);
             break;
         }
 
