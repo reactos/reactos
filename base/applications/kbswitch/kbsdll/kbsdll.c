@@ -1,8 +1,10 @@
 /*
- * PROJECT:         ReactOS Keyboard Layout Switcher
- * FILE:            base/applications/kbswitch/kbsdll/kbsdll.c
- * PROGRAMMER:      Dmitry Chapyshev <dmitry@reactos.org>
- *
+ * PROJECT:     ReactOS Keyboard Layout Switcher
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Switching Keyboard Layouts
+ * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright Colin Finck (mail@colinfinck.de)
+ *              Copyright 2022-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "../kbswitch.h"
@@ -19,13 +21,11 @@ PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
     PostMessage(hKbSwitchWnd, Msg, wParam, lParam);
 }
 
-LRESULT CALLBACK
-WinHookProc(int code, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK
+WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
-    {
         return CallNextHookEx(hWinHook, code, wParam, lParam);
-    }
 
     switch (code)
     {
@@ -41,13 +41,11 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hWinHook, code, wParam, lParam);
 }
 
-LRESULT CALLBACK
-ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK
+ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
-    {
         return CallNextHookEx(hShellHook, code, wParam, lParam);
-    }
 
     switch (code)
     {
@@ -66,8 +64,8 @@ ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hShellHook, code, wParam, lParam);
 }
 
-LRESULT CALLBACK
-KeyboardLLHook(int code, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK
+KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
         return CallNextHookEx(hKeyboardLLHook, code, wParam, lParam);
@@ -75,11 +73,14 @@ KeyboardLLHook(int code, WPARAM wParam, LPARAM lParam)
     if (code == HC_ACTION)
     {
         KBDLLHOOKSTRUCT *pKbStruct = (KBDLLHOOKSTRUCT *)lParam;
-        BOOL bAltPressed = GetAsyncKeyState(VK_MENU) < 0;
-        BOOL bShiftPressed = GetAsyncKeyState(VK_SHIFT) < 0;
         if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
         {
+            BOOL bShiftPressed = GetAsyncKeyState(VK_SHIFT) < 0;
+            BOOL bAltPressed = GetAsyncKeyState(VK_MENU) < 0;
+            BOOL bCtrlPressed = GetAsyncKeyState(VK_CONTROL) < 0;
+            // Detect Alt+Shift and Ctrl+Shift
             if ((bAltPressed && bShiftPressed) ||
+                (bCtrlPressed && bShiftPressed) ||
                 (pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
                 (pKbStruct->vkCode == VK_MENU && bShiftPressed))
             {
@@ -91,36 +92,34 @@ KeyboardLLHook(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hKeyboardLLHook, code, wParam, lParam);
 }
 
-BOOL WINAPI
-KbSwitchSetHooks(VOID)
+BOOL APIENTRY
+KbSwitchSetHooks(_In_ BOOL bHook)
 {
-    hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, hInstance, 0);
-    hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, hInstance, 0);
-    hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, hInstance, 0);
-
-    if (!hWinHook || !hShellHook)
-        return FALSE;
-
-    return TRUE;
-}
-
-VOID WINAPI
-KbSwitchDeleteHooks(VOID)
-{
-    if (hKeyboardLLHook)
+    if (bHook)
     {
-        UnhookWindowsHookEx(hKeyboardLLHook);
-        hKeyboardLLHook = NULL;
+        hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, hInstance, 0);
+        hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, hInstance, 0);
+        hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, hInstance, 0);
+        return (hWinHook && hShellHook && hKeyboardLLHook);
     }
-    if (hWinHook)
+    else /* Unhook */
     {
-        UnhookWindowsHookEx(hWinHook);
-        hWinHook = NULL;
-    }
-    if (hShellHook)
-    {
-        UnhookWindowsHookEx(hShellHook);
-        hShellHook = NULL;
+        if (hKeyboardLLHook)
+        {
+            UnhookWindowsHookEx(hKeyboardLLHook);
+            hKeyboardLLHook = NULL;
+        }
+        if (hShellHook)
+        {
+            UnhookWindowsHookEx(hShellHook);
+            hShellHook = NULL;
+        }
+        if (hWinHook)
+        {
+            UnhookWindowsHookEx(hWinHook);
+            hWinHook = NULL;
+        }
+        return TRUE;
     }
 }
 
@@ -136,9 +135,7 @@ DllMain(IN HINSTANCE hinstDLL,
             hInstance = hinstDLL;
             hKbSwitchWnd = FindWindow(szKbSwitcherName, NULL);
             if (!hKbSwitchWnd)
-            {
                 return FALSE;
-            }
         }
         break;
     }

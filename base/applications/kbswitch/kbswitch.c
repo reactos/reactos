@@ -30,26 +30,26 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
 
 #define TIMER_ID_LANG_CHANGED_DELAYED 1000
 #define TIMER_ID_WINDOW_ACTIVATED_DELAYED 1001
+#define TIMER_ID_WATCH_CONSOLE 1002
 
 #define TIMER_LANG_CHANGED_DELAY 200
 #define TIMER_WINDOW_ACTIVATED_DELAY 200
+#define TIMER_WATCH_CONSOLE_INTERVAL 800
 
-PKBSWITCHSETHOOKS    KbSwitchSetHooks    = NULL;
-PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
+FN_KbSwitchSetHooks KbSwitchSetHooks = NULL;
 UINT ShellHookMessage = 0;
 
-HINSTANCE hInst;
-HANDLE    hProcessHeap;
+HINSTANCE g_hInst = NULL;
 HMODULE   g_hHookDLL = NULL;
 INT       g_nCurrentLayoutNum = 1;
 HICON     g_hTrayIcon = NULL;
 HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
+BOOL      g_bOnConsole = FALSE;
 
 /* Debug logging */
-ULONG
-NTAPI
+ULONG NTAPI
 vDbgPrintExWithPrefix(IN PCCH Prefix,
                       IN ULONG ComponentId,
                       IN ULONG Level,
@@ -57,17 +57,20 @@ vDbgPrintExWithPrefix(IN PCCH Prefix,
                       IN va_list ap)
 {
     CHAR Buffer[512];
-
     SIZE_T PrefixLength = strlen(Prefix);
     strncpy(Buffer, Prefix, PrefixLength);
-
-    _vsnprintf(Buffer + PrefixLength,
-               sizeof(Buffer) - PrefixLength,
-               Format,
-               ap);
-
+    _vsnprintf(Buffer + PrefixLength, sizeof(Buffer) - PrefixLength, Format, ap);
     OutputDebugStringA(Buffer);
     return 0;
+}
+
+static BOOL IsConsoleWnd(_In_opt_ HWND hwndTarget)
+{
+    TCHAR szClass[32];
+    GetClassName(hwndTarget, szClass, _countof(szClass));
+    if (lstrcmpi(szClass, TEXT("ConsoleWindowClass")) != 0)
+        return FALSE;
+    return TRUE;
 }
 
 typedef struct
@@ -126,7 +129,7 @@ static VOID LoadSpecialIds(VOID)
 
         if (g_cSpecialIds >= _countof(g_SpecialIds))
         {
-            OutputDebugStringA("g_SpecialIds is full!");
+            ERR("g_SpecialIds is full!");
             break;
         }
     }
@@ -167,6 +170,10 @@ static HKL GetActiveKL(VOID)
 {
     HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
     DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
+    if (IsConsoleWnd(hwndTarget))
+    {
+        // TODO: Get correct HKL
+    }
     return GetKeyboardLayout(dwTID);
 }
 
@@ -175,9 +182,7 @@ static VOID UpdateLayoutList(HKL hKL OPTIONAL)
     INT iKL;
 
     if (!hKL)
-    {
         hKL = GetActiveKL();
-    }
 
     g_cKLs = GetKeyboardLayoutList(_countof(g_ahKLs), g_ahKLs);
 
@@ -201,15 +206,9 @@ static VOID UpdateLayoutList(HKL hKL OPTIONAL)
 static HKL GetHKLFromLayoutNum(INT nLayoutNum)
 {
     if (0 <= (nLayoutNum - 1) && (nLayoutNum - 1) < g_cKLs)
-    {
         return g_ahKLs[nLayoutNum - 1];
-    }
     else
-    {
-        HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
-        DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
-        return GetKeyboardLayout(dwTID);
-    }
+        return GetActiveKL();
 }
 
 static VOID
@@ -597,11 +596,9 @@ SetHooks(VOID)
     }
 
 #define IHOOK_SET 1
-#define IHOOK_DELETE 2
-    KbSwitchSetHooks    = (PKBSWITCHSETHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(IHOOK_SET));
-    KbSwitchDeleteHooks = (PKBSWITCHDELETEHOOKS) GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(IHOOK_DELETE));
+    KbSwitchSetHooks = (FN_KbSwitchSetHooks)GetProcAddress(g_hHookDLL, MAKEINTRESOURCEA(IHOOK_SET));
 
-    if (!KbSwitchSetHooks || !KbSwitchDeleteHooks || !KbSwitchSetHooks())
+    if (!KbSwitchSetHooks || !KbSwitchSetHooks(TRUE))
     {
         ERR("SetHooks failed\n");
         return FALSE;
@@ -614,10 +611,10 @@ SetHooks(VOID)
 VOID
 DeleteHooks(VOID)
 {
-    if (KbSwitchDeleteHooks)
+    if (KbSwitchSetHooks)
     {
-        KbSwitchDeleteHooks();
-        KbSwitchDeleteHooks = NULL;
+        KbSwitchSetHooks(FALSE);
+        KbSwitchSetHooks = NULL;
     }
 
     if (g_hHookDLL)
@@ -648,6 +645,33 @@ GetNextLayout(VOID)
     return (g_nCurrentLayoutNum % g_cKLs) + 1;
 }
 
+HWND
+GetTargetWindow(HWND hwndFore)
+{
+    HWND hwndTarget = hwndFore;
+    if (hwndTarget == NULL)
+        hwndTarget = GetForegroundWindow();
+
+    TCHAR szClass[64];
+    GetClassName(hwndTarget, szClass, _countof(szClass));
+    if (_tcsicmp(szClass, szKbSwitcherName) == 0)
+        hwndTarget = g_hwndLastActive;
+
+    return hwndTarget;
+}
+
+static VOID
+StartWatchConsole(HWND hwnd)
+{
+    SetTimer(hwnd, TIMER_ID_WATCH_CONSOLE, TIMER_WATCH_CONSOLE_INTERVAL, NULL);
+}
+
+static VOID
+StopWatchConsole(HWND hwnd)
+{
+    KillTimer(hwnd, TIMER_ID_WATCH_CONSOLE);
+}
+
 UINT
 UpdateLanguageDisplay(HWND hwnd, HKL hKL)
 {
@@ -660,24 +684,13 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
     UpdateTrayIcon(hwnd, szKLID, szLangName);
     g_nCurrentLayoutNum = GetLayoutNum(hKL);
 
+    g_bOnConsole = IsConsoleWnd(GetTargetWindow(NULL));
+    if (g_bOnConsole)
+        StartWatchConsole(hwnd);
+    else
+        StopWatchConsole(hwnd);
+
     return 0;
-}
-
-HWND
-GetTargetWindow(HWND hwndFore)
-{
-    TCHAR szClass[64];
-    HWND hwndIME;
-    HWND hwndTarget = hwndFore;
-    if (hwndTarget == NULL)
-        hwndTarget = GetForegroundWindow();
-
-    GetClassName(hwndTarget, szClass, _countof(szClass));
-    if (_tcsicmp(szClass, szKbSwitcherName) == 0)
-        hwndTarget = g_hwndLastActive;
-
-    hwndIME = ImmGetDefaultIMEWnd(hwndTarget);
-    return (hwndIME ? hwndIME : hwndTarget);
 }
 
 UINT
@@ -703,13 +716,6 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
         _tcsicmp(szClass, TEXT("Shell_TrayWnd")) == 0)
     {
         return FALSE; /* Special window */
-    }
-
-    /* FIXME: CONWND needs special handling */
-    if (_tcsicmp(szClass, TEXT("ConsoleWindowClass")) == 0)
-    {
-        HKL hKL = GetKeyboardLayout(0);
-        UpdateLanguageDisplay(hwnd, hKL);
     }
 
     g_hwndLastActive = hwndFore;
@@ -741,6 +747,10 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
             s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+
+            HWND hwndTarget = GetTargetWindow(NULL);
+            if (IsConsoleWnd(hwndTarget))
+                StartWatchConsole(hwnd);
             break;
         }
 
@@ -760,6 +770,12 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 HWND hwndFore = GetForegroundWindow();
                 if (RememberLastActive(hwnd, hwndFore))
                     return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
+            }
+            else if (wParam == TIMER_ID_WATCH_CONSOLE)
+            {
+                HKL hKL = GetActiveKL();
+                UpdateLayoutList(hKL);
+                UpdateLanguageDisplay(hwnd, hKL);
             }
             break;
         }
@@ -789,29 +805,39 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case WM_RBUTTONUP:
                 case WM_LBUTTONUP:
                 {
+                    if (g_bOnConsole)
+                        StopWatchConsole(hwnd);
+
                     UpdateLayoutList(NULL);
 
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
 
+                    INT nID;
                     if (lParam == WM_LBUTTONUP)
                     {
                         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
                         hLeftPopupMenu = BuildLeftPopupMenu();
-                        TrackPopupMenu(hLeftPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                        nID = TrackPopupMenu(hLeftPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
                         DestroyMenu(hLeftPopupMenu);
                     }
                     else
                     {
                         if (!s_hRightPopupMenu)
                         {
-                            s_hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP));
+                            s_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
                             s_hRightPopupMenu = GetSubMenu(s_hMenu, 0);
                         }
-                        TrackPopupMenu(s_hRightPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
+                        nID = TrackPopupMenu(s_hRightPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
                     }
 
                     PostMessage(hwnd, WM_NULL, 0, 0);
+
+                    if (nID)
+                        PostMessage(hwnd, WM_COMMAND, nID, 0);
+
+                    if (g_bOnConsole)
+                        StartWatchConsole(hwnd);
                     break;
                 }
             }
@@ -843,16 +869,13 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     DWORD dwThreadID;
                     HKL hKL;
                     UINT uNum;
-                    TCHAR szClass[64];
                     BOOL bCONWND = FALSE;
 
                     if (hwndTarget == NULL)
                         hwndTarget = g_hwndLastActive;
 
                     /* FIXME: CONWND needs special handling */
-                    if (hwndTarget &&
-                        GetClassName(hwndTarget, szClass, _countof(szClass)) &&
-                        _tcsicmp(szClass, TEXT("ConsoleWindowClass")) == 0)
+                    if (IsConsoleWnd(hwndTarget))
                     {
                         bCONWND = TRUE;
                         hwndTargetSave = hwndTarget;
@@ -924,7 +947,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
                 if (wParam == HSHELL_LANGUAGE)
                     PostMessage(hwnd, WM_LANG_CHANGED, LANG_CHANGED_FROM_SHELL_MSG, 0);
-                else if (wParam == HSHELL_WINDOWACTIVATED)
+                else if (wParam == HSHELL_WINDOWACTIVATED || wParam == HSHELL_RUDEAPPACTIVATED)
                     PostMessage(hwnd, WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_SHELL_MSG, 0);
 
                 break;
@@ -968,8 +991,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
         return 1;
     }
 
-    hInst = hInstance;
-    hProcessHeap = GetProcessHeap();
+    g_hInst = hInstance;
 
     ZeroMemory(&WndClass, sizeof(WndClass));
     WndClass.lpfnWndProc   = WndProc;
