@@ -31,6 +31,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
+#define TIMER_ID_LANG_CHANGED_DELAYED 0x10000
+#define TIMER_LANG_CHANGED_DELAY 200
+
 FN_KbSwitchSetHooks KbSwitchSetHooks = NULL;
 UINT ShellHookMessage = 0;
 
@@ -707,16 +710,27 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
+        case WM_TIMER:
+        {
+            if (wParam == TIMER_ID_LANG_CHANGED_DELAYED)
+            {
+                KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
+                HKL hKL = GetActiveKL();
+                UpdateLayoutList(hKL);
+                UpdateLanguageDisplay(hwnd, hKL);
+            }
+            break;
+        }
+
         // WM_LANG_CHANGED message:
         //   wParam: HWND hwndTarget or zero
         //   lParam: HKL hKL or zero
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
-            //HWND hwndTarget = GetTargetWindow(IsWindow((HWND)wParam) ? (HWND)wParam : NULL);
-            HKL hKL = lParam ? (HKL)lParam : GetActiveKL();
-            UpdateLayoutList(hKL);
-            UpdateLanguageDisplay(hwnd, hKL);
+            /* Delayed action */
+            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
+            SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED, TIMER_LANG_CHANGED_DELAY, NULL);
             break;
         }
 
@@ -819,6 +833,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
         {
+            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
             DeleteHooks();
             DestroyMenu(s_hMenu);
             DeleteTrayIcon(hwnd);
