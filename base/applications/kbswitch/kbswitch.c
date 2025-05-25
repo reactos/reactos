@@ -76,7 +76,7 @@ typedef struct
     TCHAR szKLID[CCH_LAYOUT_ID + 1];
 } SPECIAL_ID, *PSPECIAL_ID;
 
-SPECIAL_ID g_SpecialIds[80];
+SPECIAL_ID g_SpecialIds[256];
 INT g_cSpecialIds = 0;
 
 static VOID LoadSpecialIds(VOID)
