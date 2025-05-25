@@ -707,6 +707,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
+        // WM_LANG_CHANGED message:
+        //   wParam: HWND hwndTarget or zero
+        //   lParam: HKL hKL or zero
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
@@ -717,6 +720,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
+        // WM_WINDOW_ACTIVATE message:
+        //   wParam: HWND hwndTarget or zero
+        //   lParam: zero
         case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_WINDOW_ACTIVATE: wParam:%p, lParam:%p\n", wParam, lParam);

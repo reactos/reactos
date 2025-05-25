@@ -14,22 +14,10 @@
 
 #include "resource.h"
 
-// Character Count of a layout ID like "00000409"
-#define CCH_LAYOUT_ID    8
+#define CCH_LAYOUT_ID       8   // Character Count of a layout ID like "00000409"
+#define CCH_ULONG_DEC       10  // Maximum Character Count of a ULONG in decimal
 
-// Maximum Character Count of a ULONG in decimal
-#define CCH_ULONG_DEC    10
-
-#define WM_KEY_PRESSED     (WM_USER + 10100)
-
-// WM_LANG_CHANGED message:
-//   wParam: HWND hwndTarget or NULL
-//   lParam: HKL hConsoleKL or NULL
 #define WM_LANG_CHANGED    (WM_USER + 10200)
-
-// WM_WINDOW_ACTIVATE message:
-//   wParam: HWND hwndTarget or NULL
-//   lParam: NULL
 #define WM_WINDOW_ACTIVATE (WM_USER + 10300)
 
 typedef BOOL (APIENTRY *FN_KbSwitchSetHooks)(BOOL bHook);
