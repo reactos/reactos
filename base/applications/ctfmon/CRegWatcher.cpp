@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 #include "CRegWatcher.h"
+#include <ime/indicml.h>
 
 // The event handles to use in watching
 HANDLE CRegWatcher::s_ahWatchEvents[WATCHENTRY_MAX] = { NULL };
@@ -206,7 +207,7 @@ CRegWatcher::KillInternat()
     }
 
     // Kill the "Indicator" window (that internat.exe creates)
-    HWND hwndInternat = ::FindWindow(TEXT("Indicator"), NULL);
+    HWND hwndInternat = ::FindWindow(INDICATOR_CLASS, NULL);
     if (hwndInternat)
         ::PostMessage(hwndInternat, WM_CLOSE, 0, 0);
 }
