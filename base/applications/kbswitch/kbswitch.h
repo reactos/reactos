@@ -20,12 +20,12 @@
 #define WM_LANG_CHANGED    (WM_USER + 10200)
 #define WM_WINDOW_ACTIVATE (WM_USER + 10300)
 
-typedef BOOL (APIENTRY *FN_KbSwitchSetHooks)(BOOL bHook);
+typedef BOOL (APIENTRY *FN_KbSwitchSetHooks)(BOOL bDoHook);
 
 const TCHAR szKbSwitcherName[] = INDICATOR_CLASS;
 
 static inline BOOL
-CheckWndClassName(_In_opt_ HWND hwndTarget, PCTSTR pszName)
+IsWndClassName(_In_opt_ HWND hwndTarget, PCTSTR pszName)
 {
     TCHAR szClass[32];
     GetClassName(hwndTarget, szClass, _countof(szClass));
@@ -35,5 +35,5 @@ CheckWndClassName(_In_opt_ HWND hwndTarget, PCTSTR pszName)
 static inline BOOL
 IsConsoleWnd(_In_opt_ HWND hwndTarget)
 {
-    return CheckWndClassName(hwndTarget, TEXT("ConsoleWindowClass"));
+    return IsWndClassName(hwndTarget, TEXT("ConsoleWindowClass"));
 }

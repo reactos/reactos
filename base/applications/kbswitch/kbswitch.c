@@ -650,7 +650,7 @@ HWND
 GetTargetWindow(HWND hwndFore OPTIONAL)
 {
     HWND hwndTarget = (hwndFore ? hwndFore : GetForegroundWindow());
-    if (CheckWndClassName(hwndTarget, szKbSwitcherName))
+    if (IsWndClassName(hwndTarget, szKbSwitcherName))
         hwndTarget = g_hwndLastActive;
     return hwndTarget;
 }
@@ -672,8 +672,8 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
     if (!IsWindowVisible(hwndFore))
         return FALSE;
 
-    if (CheckWndClassName(hwndFore, szKbSwitcherName) ||
-        CheckWndClassName(hwndFore, TEXT("Shell_TrayWnd")))
+    if (IsWndClassName(hwndFore, szKbSwitcherName) ||
+        IsWndClassName(hwndFore, TEXT("Shell_TrayWnd")))
     {
         return FALSE; /* Special window */
     }

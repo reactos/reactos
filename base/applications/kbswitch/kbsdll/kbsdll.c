@@ -94,34 +94,35 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
 }
 
 BOOL APIENTRY
-KbSwitchSetHooks(_In_ BOOL bHook)
+KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
-    if (bHook)
+    if (bDoHook)
     {
         hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, hInstance, 0);
         hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, hInstance, 0);
         hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, hInstance, 0);
-        return (hWinHook && hShellHook && hKeyboardLLHook);
+
+        if (hWinHook && hShellHook && hKeyboardLLHook)
+            return TRUE;
     }
-    else /* Unhook */
+
+    /* Unhook */
+    if (hKeyboardLLHook)
     {
-        if (hKeyboardLLHook)
-        {
-            UnhookWindowsHookEx(hKeyboardLLHook);
-            hKeyboardLLHook = NULL;
-        }
-        if (hShellHook)
-        {
-            UnhookWindowsHookEx(hShellHook);
-            hShellHook = NULL;
-        }
-        if (hWinHook)
-        {
-            UnhookWindowsHookEx(hWinHook);
-            hWinHook = NULL;
-        }
-        return TRUE;
+        UnhookWindowsHookEx(hKeyboardLLHook);
+        hKeyboardLLHook = NULL;
     }
+    if (hShellHook)
+    {
+        UnhookWindowsHookEx(hShellHook);
+        hShellHook = NULL;
+    }
+    if (hWinHook)
+    {
+        UnhookWindowsHookEx(hWinHook);
+        hWinHook = NULL;
+    }
+    return !bDoHook;
 }
 
 BOOL WINAPI
