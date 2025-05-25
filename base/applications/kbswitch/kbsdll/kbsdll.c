@@ -36,8 +36,8 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
             {
                 PostMessageToMainWnd(WM_WINDOW_ACTIVATE, 2, 0);
             }
+            break;
         }
-        break;
     }
 
     return CallNextHookEx(hWinHook, code, wParam, lParam);
@@ -56,12 +56,13 @@ ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
         case HSHELL_WINDOWACTIVATED:
         {
             PostMessageToMainWnd(WM_WINDOW_ACTIVATE, 3, 0);
+            break;
         }
         case HSHELL_LANGUAGE:
         {
             PostMessageToMainWnd(WM_LANG_CHANGED, 1, 0);
+            break;
         }
-        break;
     }
 
     return CallNextHookEx(hShellHook, code, wParam, lParam);
