@@ -24,16 +24,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
  * It needs special care.
  *
  * We use global hook by our kbsdll.dll, to watch the shell and the windows.
+ *
+ * It might not work correctly on Vista+ because keyboard layout change notification
+ * won't be generated in Vista+.
  */
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
-#define TIMER_ID_LANG_CHANGED_DELAYED 1000
-#define TIMER_ID_WINDOW_ACTIVATED_DELAYED 1001
 #define TIMER_ID_WATCH_CONSOLE 1002
 
-#define TIMER_LANG_CHANGED_DELAY 200
-#define TIMER_WINDOW_ACTIVATED_DELAY 200
 #define TIMER_WATCH_CONSOLE_INTERVAL 800
 
 FN_KbSwitchSetHooks KbSwitchSetHooks = NULL;
@@ -62,15 +61,6 @@ vDbgPrintExWithPrefix(IN PCCH Prefix,
     _vsnprintf(Buffer + PrefixLength, sizeof(Buffer) - PrefixLength, Format, ap);
     OutputDebugStringA(Buffer);
     return 0;
-}
-
-static BOOL IsConsoleWnd(_In_opt_ HWND hwndTarget)
-{
-    TCHAR szClass[32];
-    GetClassName(hwndTarget, szClass, _countof(szClass));
-    if (lstrcmpi(szClass, TEXT("ConsoleWindowClass")) != 0)
-        return FALSE;
-    return TRUE;
 }
 
 typedef struct
@@ -170,10 +160,6 @@ static HKL GetActiveKL(VOID)
 {
     HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
     DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
-    if (IsConsoleWnd(hwndTarget))
-    {
-        // TODO: Get correct HKL
-    }
     return GetKeyboardLayout(dwTID);
 }
 
@@ -756,22 +742,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_TIMER:
         {
-            /* Delayed actions */
-            if (wParam == TIMER_ID_LANG_CHANGED_DELAYED)
-            {
-                KillTimer(hwnd, wParam);
-                HKL hKL = GetActiveKL();
-                UpdateLayoutList(hKL);
-                UpdateLanguageDisplay(hwnd, hKL);
-            }
-            else if (wParam == TIMER_ID_WINDOW_ACTIVATED_DELAYED)
-            {
-                KillTimer(hwnd, wParam);
-                HWND hwndFore = GetForegroundWindow();
-                if (RememberLastActive(hwnd, hwndFore))
-                    return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
-            }
-            else if (wParam == TIMER_ID_WATCH_CONSOLE)
+            if (wParam == TIMER_ID_WATCH_CONSOLE)
             {
                 HKL hKL = GetActiveKL();
                 UpdateLayoutList(hKL);
@@ -783,18 +754,19 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
-            /* Delayed action */
-            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
-            SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED, TIMER_LANG_CHANGED_DELAY, NULL);
+
+            HKL hKL = lParam ? (HKL)lParam : GetActiveKL();
+            UpdateLayoutList(hKL);
+            UpdateLanguageDisplay(hwnd, hKL);
             break;
         }
 
         case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
         {
             TRACE("WM_WINDOW_ACTIVATE: wParam:%p, lParam:%p\n", wParam, lParam);
-            /* Delayed action */
-            KillTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAYED);
-            SetTimer(hwnd, TIMER_ID_WINDOW_ACTIVATED_DELAYED, TIMER_WINDOW_ACTIVATED_DELAY, NULL);
+            HWND hwndFore = wParam ? (HWND)wParam : GetForegroundWindow();
+            if (RememberLastActive(hwnd, hwndFore))
+                return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
             break;
         }
 
@@ -919,7 +891,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam == SPI_SETNONCLIENTMETRICS)
             {
-                PostMessage(hwnd, WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_SETTING, 0);
+                PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
                 break;
             }
         }
@@ -946,9 +918,9 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             {
                 TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
                 if (wParam == HSHELL_LANGUAGE)
-                    PostMessage(hwnd, WM_LANG_CHANGED, LANG_CHANGED_FROM_SHELL_MSG, 0);
+                    PostMessage(hwnd, WM_LANG_CHANGED, 0, 0);
                 else if (wParam == HSHELL_WINDOWACTIVATED || wParam == HSHELL_RUDEAPPACTIVATED)
-                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_SHELL_MSG, 0);
+                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
 
                 break;
             }

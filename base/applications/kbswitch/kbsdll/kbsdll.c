@@ -29,11 +29,12 @@ WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
 
     switch (code)
     {
+        case HCBT_ACTIVATE:
         case HCBT_SETFOCUS:
         {
             HWND hwndFocus = (HWND)wParam;
             if (hwndFocus && hwndFocus != hKbSwitchWnd)
-                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_FOCUS, 0);
+                PostMessageToMainWnd(WM_WINDOW_ACTIVATE, (WPARAM)hwndFocus, 0);
             break;
         }
     }
@@ -51,12 +52,15 @@ ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
     {
         case HSHELL_WINDOWACTIVATED:
         {
-            PostMessageToMainWnd(WM_WINDOW_ACTIVATE, WINDOW_ACTIVATE_FROM_SHELL, 0);
+            PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, 0);
             break;
         }
         case HSHELL_LANGUAGE:
         {
-            PostMessageToMainWnd(WM_LANG_CHANGED, LANG_CHANGED_FROM_SHELL, 0);
+            if ((HWND)wParam && IsConsoleWnd((HWND)wParam))
+                PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
+            else
+                PostMessageToMainWnd(WM_LANG_CHANGED, wParam, 0);
             break;
         }
     }
@@ -84,7 +88,7 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
                 (pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
                 (pKbStruct->vkCode == VK_MENU && bShiftPressed))
             {
-                PostMessageToMainWnd(WM_LANG_CHANGED, LANG_CHANGED_FROM_KBD_LL, 0);
+                PostMessageToMainWnd(WM_LANG_CHANGED, 0, 0);
             }
         }
     }

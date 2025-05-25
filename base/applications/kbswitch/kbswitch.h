@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdarg.h>
+#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -21,20 +21,27 @@
 #define CCH_ULONG_DEC    10
 
 #define WM_KEY_PRESSED     (WM_USER + 10100)
+
+// WM_LANG_CHANGED message:
+//   wParam: HWND hwndTarget or NULL
+//   lParam: HKL hConsoleKL or NULL
 #define WM_LANG_CHANGED    (WM_USER + 10200)
+
+// WM_WINDOW_ACTIVATE message:
+//   wParam: HWND hwndTarget or NULL
+//   lParam: NULL
 #define WM_WINDOW_ACTIVATE (WM_USER + 10300)
-
-// wParam for WM_LANG_CHANGED
-#define LANG_CHANGED_FROM_SHELL_MSG     0x10000
-#define LANG_CHANGED_FROM_SHELL         0x10001
-#define LANG_CHANGED_FROM_KBD_LL        0x10002
-
-// wParam for WM_WINDOW_ACTIVATE
-#define WINDOW_ACTIVATE_FROM_SETTING    0x20000
-#define WINDOW_ACTIVATE_FROM_SHELL_MSG  0x20001
-#define WINDOW_ACTIVATE_FROM_FOCUS      0x20002
-#define WINDOW_ACTIVATE_FROM_SHELL      0x20003
 
 typedef BOOL (APIENTRY *FN_KbSwitchSetHooks)(BOOL bHook);
 
 const TCHAR szKbSwitcherName[] = INDICATOR_CLASS;
+
+static inline BOOL
+IsConsoleWnd(_In_opt_ HWND hwndTarget)
+{
+    TCHAR szClass[32];
+    GetClassName(hwndTarget, szClass, _countof(szClass));
+    if (lstrcmpi(szClass, TEXT("ConsoleWindowClass")) != 0)
+        return FALSE;
+    return TRUE;
+}
