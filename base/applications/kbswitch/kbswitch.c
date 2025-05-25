@@ -47,6 +47,7 @@ HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
 
+/* Debug logging */
 ULONG
 NTAPI
 vDbgPrintExWithPrefix(IN PCCH Prefix,
@@ -160,7 +161,7 @@ GetKLIDFromHKL(HKL hKL, LPTSTR szKLID, SIZE_T KLIDLength)
     }
 }
 
-HKL GetActiveKL(VOID)
+static HKL GetActiveKL(VOID)
 {
     HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
     DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
