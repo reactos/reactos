@@ -154,7 +154,7 @@ GetKLIDFromHKL(HKL hKL, LPTSTR szKLID, SIZE_T KLIDLength)
 
 static HKL GetActiveKL(VOID)
 {
-    /* FIXME: Get console window's HKL */
+    /* FIXME: Get correct console window's HKL when console window */
     HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
     DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
     return GetKeyboardLayout(dwTID);
@@ -783,43 +783,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                                                         NULL, SW_SHOWNORMAL);
                     if (ret <= 32)
                         MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_ICONERROR);
-                    break;
-                }
-
-                case ID_NEXTLAYOUT:
-                {
-                    HWND hwndTarget = (HWND)lParam, hwndTargetSave = NULL;
-                    DWORD dwThreadID;
-                    HKL hKL;
-                    UINT uNum;
-                    BOOL bCONWND = FALSE;
-
-                    if (hwndTarget == NULL)
-                        hwndTarget = g_hwndLastActive;
-
-                    /* FIXME: CONWND needs special handling */
-                    if (IsConsoleWnd(hwndTarget))
-                    {
-                        bCONWND = TRUE;
-                        hwndTargetSave = hwndTarget;
-                        hwndTarget = NULL;
-                    }
-
-                    if (hwndTarget)
-                    {
-                        dwThreadID = GetWindowThreadProcessId(hwndTarget, NULL);
-                        hKL = GetKeyboardLayout(dwThreadID);
-                        uNum = GetLayoutNum(hKL);
-                        if (uNum != 0)
-                            g_nCurrentLayoutNum = uNum;
-                    }
-
-                    ActivateLayout(hwnd, GetNextLayout(), hwndTarget, TRUE);
-
-                    /* FIXME: CONWND needs special handling */
-                    if (bCONWND)
-                        ActivateLayout(hwnd, g_nCurrentLayoutNum, hwndTargetSave, TRUE);
-
                     break;
                 }
 
