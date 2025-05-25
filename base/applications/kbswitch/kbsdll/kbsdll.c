@@ -83,7 +83,9 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
             if ((bAltPressed && bShiftPressed) ||
                 (bCtrlPressed && bShiftPressed) ||
                 (pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
-                (pKbStruct->vkCode == VK_MENU && bShiftPressed))
+                (pKbStruct->vkCode == VK_MENU && bShiftPressed) ||
+                (pKbStruct->vkCode == VK_SHIFT && bCtrlPressed) ||
+                (pKbStruct->vkCode == VK_CONTROL && bShiftPressed))
             {
                 PostMessageToMainWnd(WM_LANG_CHANGED, 0, 0);
             }
