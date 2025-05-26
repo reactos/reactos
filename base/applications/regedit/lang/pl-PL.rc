@@ -23,25 +23,25 @@ END
 /* Command-line strings */
 STRINGTABLE
 BEGIN
-    STRING_USAGE "Użycie:\n\
-  regedit [opcje] [nazwa pliku] [klucz rejestru]\n\n\
+    STRING_USAGE "Sposób użycia:\n\
+  regedit [opcje] [nazwa_pliku] [klucz_rejestru]\n\n\
 Opcje:\n\
-  [puste]            Uruchom graficzną wersje tego programu.\n\
+  [brak opcji]            Uruchom graficzną wersje tego programu.\n\
   /L:system.dat      Lokalizacja pliku system.dat do modyfikacji..\n\
-                     Kompatybilny z innymi opcjami. Ignorowane.\n\
+                     Zgodne z innymi opcjami. Ignorowane.\n\
   /R:user.dat        Lokalizacja pliku user.dat do modyfikacji.\n\
-                     Kompatybilny z innymi opcjami. Ignorowane.\n\
+                     Zgodne z innymi opcjami. Ignorowane.\n\
   /C                 Importuj zawartość pliku rejestru.\n\
-  /D                 Usuń konkretny klucz rejestru.\n\
-  /E                 Exportuj zawartość konkretnego klucza rejstru do pliku.\n\
-                     Jeżeli nie podano konkretnego klucza, cały rejestr zostanie eksportowany.\n\
-  /S                 Tryb Cichy. Wiadomości nie będą wyświetlane.\n\
-  /V                 Uruchom GUI w trybie zaawansowanym. Ignored.\n\
-  /?                 Wyświetl tą informacje i wyjdź.\n\
-  [nazwa pliku]      Lokalizacja pliku posiadającego informacje rejestru do importu.\n\
-                     Kiedy użte z [/E], ta opcja określa lokalizacje pliku, gdzie\n\
+  /D                 Usuń określony klucz rejestru.\n\
+  /E                 Eksportuj zawartość określonego klucza rejstru do pliku.\n\
+                     Jeżeli nie określono klucza, cały rejestr zostanie eksportowany.\n\
+  /S                 Tryb Cichy. Komunikaty nie będą wyświetlane.\n\
+  /V                 Uruchom interfejs graficzny w trybie zaawansowanym. Ignorowane.\n\
+  /?                 Wyświetl tę informację i zakończ.\n\
+  [nazwa_pliku]      Lokalizacja pliku posiadającego informacje rejestru do importu.\n\
+                     Kiedy użyte z [/E], ta opcja określa lokalizację pliku, gdzie\n\
                      informacje rejestru będą eksportowane.\n\
-  [klucz rejestru]   Wspomniany Klucz rejestru do modyfikacji.\n\
+  [klucz_rejestru]   Klucz rejestru do modyfikacji.\n\
 \n\
 Usage examples:\n\
   regedit ""import.reg""\n\
@@ -378,9 +378,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     RTEXT "Typ:", IDC_STATIC, 10, 10, 61, 8
     LTEXT "", IDC_REQ_INT_TYPE, 77, 10, 76, 8
-    RTEXT "Minimalny Wektor:", IDC_STATIC, 10, 20, 61, 8
+    RTEXT "Minimalny wektor:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_INT_MIN, 77, 20, 76, 8
-    RTEXT "Maksymalny Wektor:", IDC_STATIC, 10, 30, 61, 8
+    RTEXT "Maksymalny wektor:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_INT_MAX, 77, 30, 76, 8
     RTEXT "Share Disposition:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_INT_SHARE, 77, 40, 76, 8
@@ -518,7 +518,7 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Wszystkie pliki (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
-    IDS_FLT_TXTFILES "Pliki Tekstowe (*.txt)"
+    IDS_FLT_TXTFILES "Pliki tekstowe (*.txt)"
     IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
@@ -618,13 +618,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_FIELD_KEY_NAME "Nazwa klucza:"
-    IDS_FIELD_CLASS_NAME "Nazwa Klasy:"
+    IDS_FIELD_CLASS_NAME "Nazwa klasy:"
     IDS_NO_CLASS_NAME "<BRAK KLASY>"
     IDS_NULL_TIMESTAMP "<NULL>"
     IDS_FIELD_NAME "  Nazwa:"
     IDS_FIELD_TYPE "  Typ:"
     IDS_FIELD_DATA "  Dane:"
-    IDS_FIELD_LASTWRITE "Ostatni czas Zapisu:"
+    IDS_FIELD_LASTWRITE "Czas ostatniego wpisu:"
     IDS_UNKNOWN "<NIEZNANE>"
     IDS_VALUE_INDEX "Wartość %d"
 END
