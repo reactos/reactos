@@ -117,7 +117,7 @@ add_library(msvcrt_shared
     ${msvcrt_shared_asm}
 )
 
-target_compile_definitions(msvcrt_shared PRIVATE _MSVCR_VER=0)
+target_compile_definitions(msvcrt_shared PRIVATE _MSVCR_VER=0 __UCRTSUPPORT__)
 add_dependencies(msvcrt_shared psdk asm)
 
 ###############################################################################
