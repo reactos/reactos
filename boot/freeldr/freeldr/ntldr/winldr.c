@@ -104,20 +104,44 @@ AllocateAndInitLPB(
 
     WinLdrSystemBlock->OsVersion = VersionToBoot;
 
-    LoaderBlock = &WinLdrSystemBlock->u1.LoaderBlockVista;
-    LoaderBlock1 = &WinLdrSystemBlock->u1.LoaderBlockVista.Block1;
-    LoaderBlock2 = &WinLdrSystemBlock->u1.LoaderBlockVista.Block2;
-    *SetupBlockPtr = &WinLdrSystemBlock->u1.LoaderBlockVista.SetupLdrBlock;
+    if (VersionToBoot >= _WIN32_WINNT_WIN7)
+    {
+        PLOADER_PARAMETER_EXTENSION_WIN7 Extension;
 
-    /* Initialize the Loader Block Extension */
-    Extension = &WinLdrSystemBlock->u2.ExtensionVista;
-    Extension->Extension1.Size = sizeof(LOADER_PARAMETER_EXTENSION_VISTA);
-    LoaderBlock2->Extension = Extension;
-    Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
-    Extension->MinorVersion = (VersionToBoot & 0xFF);
+        LoaderBlock1 = &WinLdrSystemBlock->u1.LoaderBlockWin7.Block1;
+        LoaderBlock2 = &WinLdrSystemBlock->u1.LoaderBlockWin7.Block2;
+        *SetupBlockPtr = NULL;
 
-    Extension1 = &Extension->Extension1;
-    Extension2 = &Extension->Extension2;
+        /* Initialize the Loader Block Extension */
+        Extension = &WinLdrSystemBlock->u2.ExtensionWin7;
+        Extension->Extension1.Size = sizeof(LOADER_PARAMETER_EXTENSION_WIN7);
+        LoaderBlock2->Extension = Extension;
+
+        WinLdrSystemBlock->u1.LoaderBlockWin7.OsMajorVersion = (VersionToBoot & 0xFF00) >> 8;
+        WinLdrSystemBlock->u1.LoaderBlockWin7.OsMinorVersion = (VersionToBoot & 0xFF);
+        WinLdrSystemBlock->u1.LoaderBlockWin7.Size = sizeof(LOADER_PARAMETER_BLOCK_WIN7);
+
+        Extension1 = &Extension->Extension1;
+        Extension2 = &Extension->Extension2;
+    }
+    else
+    {
+        PLOADER_PARAMETER_EXTENSION_VISTA Extension;
+
+        LoaderBlock1 = &WinLdrSystemBlock->u1.LoaderBlockVista.Block1;
+        LoaderBlock2 = &WinLdrSystemBlock->u1.LoaderBlockVista.Block2;
+        *SetupBlockPtr = &WinLdrSystemBlock->u1.LoaderBlockVista.SetupLdrBlock;
+
+        /* Initialize the Loader Block Extension */
+        Extension = &WinLdrSystemBlock->u2.ExtensionVista;
+        Extension->Extension1.Size = sizeof(LOADER_PARAMETER_EXTENSION_VISTA);
+        LoaderBlock2->Extension = Extension;
+        Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
+        Extension->MinorVersion = (VersionToBoot & 0xFF);
+
+        Extension1 = &Extension->Extension1;
+        Extension2 = &Extension->Extension2;
+    }
 
     LoaderBlock1->NlsData = &WinLdrSystemBlock->NlsDataBlock;
 
@@ -311,6 +335,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
 
         InitializeListHead(&Extension2->BootApplicationPersistentData);
         List_PaToVa(&Extension2->BootApplicationPersistentData);
+
+        InitializeListHead(&Extension2->AttachedHives);
+        List_PaToVa(&Extension2->AttachedHives);
+
+        Extension2->TpmBootEntropyResult.ResultCode = TpmBootEntropyNoTpmFound;
+        Extension2->TpmBootEntropyResult.ResultStatus = STATUS_NOT_IMPLEMENTED;
     }
 
 #ifdef _M_IX86
@@ -1083,6 +1113,10 @@ LoadAndBootWindows(
     else if (_stricmp(ArgValue, "WindowsVista") == 0)
     {
         OperatingSystemVersion = _WIN32_WINNT_VISTA;
+    }
+    else if (_stricmp(ArgValue, "Windows7") == 0)
+    {
+        OperatingSystemVersion = _WIN32_WINNT_WIN7;
     }
     else
     {
