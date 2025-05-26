@@ -170,10 +170,10 @@ BEGIN
     STRING_LINE_COLUMN "Linia %d, kolumna %d"
     STRING_PRINTERROR "Nie można wydrukować pliku '%s'.\n\nUpewnij się, że drukarka jest włączona i poprawnie skonfigurowana."
     STRING_DEFAULTFONT "Lucida Console"
-    STRING_LINE_NUMBER_OUT_OF_RANGE "Określona liczba jest poza zasięgiem."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "Określona liczba jest poza zakresem."
     STRING_NOWPRINTING "Trwa drukowanie strony..."
     STRING_PRINTCANCELING "Zadanie druku jest anulowane..."
-    STRING_PRINTCOMPLETE "Drukowanie zakończyło się powodzeniem."
+    STRING_PRINTCOMPLETE "Drukowanie ukończone pomyślnie."
     STRING_PRINTCANCELED "Drukowanie zostało anulowane."
     STRING_PRINTFAILED "Drukowanie nie powiodło się."
 
