@@ -1391,6 +1391,15 @@ typedef struct _RTL_PERTHREAD_CURDIR
     PVOID Environment;
 } RTL_PERTHREAD_CURDIR, *PRTL_PERTHREAD_CURDIR;
 
+typedef struct _RTL_ACE_DATA
+{
+    UCHAR AceType;
+    UCHAR InheritFlags;
+    UCHAR AceFlags;
+    ACCESS_MASK Mask;
+    PSID *Sid;
+} RTL_ACE_DATA, *PRTL_ACE_DATA;
+
 //
 // Private State structure for RtlAcquirePrivilege/RtlReleasePrivilege
 //
