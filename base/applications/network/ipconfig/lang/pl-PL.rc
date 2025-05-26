@@ -62,14 +62,14 @@ STRINGTABLE
 BEGIN
     IDS_DNSNORECORD         "\tNo records of type %ls\n\n"
     IDS_DNSNONAME           "\tNazwa DNS nie istnieje.\n\n"
-    IDS_DNSFLUSHERROR       "Nie można wyczyścić DNS Resolver Cache: "
-    IDS_DNSFLUSHSUCCESS     "Pomyślnie wyczyszczono DNS Resolver Cache.\n"
-    IDS_DHCPNOTCONNECTED    "Nie można wykonać operacji na %ls podczas gdy połączenie jest rozłączone.\n"
-    IDS_DHCPNOTENABLED      "Adapter %ls nie jest włączony dla DHCP.\n"
-    IDS_DHCPNOADAPTER       "Operacja nie powiodła się as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "adres IP dla adapteru %ls został zwolniony.\n"
-    IDS_DHCPRELEASEERROR    "Wystąpił błąd przy zwalnianiu interfejsu %ls: "
-    IDS_DHCPRENEWERROR      "Wystąpił błąd przy wznawianiu interfejsu %ls: "
+    IDS_DNSFLUSHERROR       "Nie można wyczyścić buforu programu rozpoznającego nazwy DNS: "
+    IDS_DNSFLUSHSUCCESS     "Bufor programu rozpoznającego nazwy DNS został \npomyślnie wyczyszczony.\n"
+    IDS_DHCPNOTCONNECTED    "Nie można wykonywać operacji na karcie %ls podczas gdy \nnośnik tej karty jest odłączony.\n"
+    IDS_DHCPNOTENABLED      "Karta %ls nie jest włączona dla DHCP.\n"
+    IDS_DHCPNOADAPTER       "Operacja nie powiodła się, ponieważ żadna karta nie jest \nw stanie zezwalającym na tę operację.\n"
+    IDS_DHCPRELEASED        "Adres IP dla karty %ls został zwolniony.\n"
+    IDS_DHCPRELEASEERROR    "Wystąpił błąd podczas zwalniania interfejsu %ls: "
+    IDS_DHCPRENEWERROR      "Wystąpił błąd podczas zwalniania interfejsu %ls: "
 END
 
 STRINGTABLE
