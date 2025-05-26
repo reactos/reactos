@@ -739,10 +739,13 @@ static void set_mxcsr( unsigned int val )
 }
 #endif
 
+#ifdef __REACTOS__
+__ATTRIBUTE_SSE__
+#endif
 static void _setfp_sse( unsigned int *cw, unsigned int cw_mask,
         unsigned int *sw, unsigned int sw_mask )
 {
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
     unsigned int old_fpword, fpword = get_mxcsr();
     unsigned int flags;
 
