@@ -177,8 +177,8 @@ BEGIN
     IDS_WELCOME_URL "https://reactos.org"
 
     IDS_APPWIZ_TITLE "Dodaj/Usuń programy"
-    IDS_APPWIZ_TEXT1 "Wybierz ""Aplikacje"" lub ""Aktualizacje" by wyświetlić listę aplikacji lub aktualizacji w Twoim systemie."
-    IDS_APPWIZ_TEXT2 "Aby usunąć program lub zmodyfikować jego komponenty, wybierz program w liście i naciśnij ""Odinstaluj"" lub ""Modyfikuj""."
+    IDS_APPWIZ_TEXT1 "Wybierz ""Aplikacje"" lub ""Aktualizacje"" by wyświetlić listę aplikacji lub aktualizacji w Twoim systemie."
+    IDS_APPWIZ_TEXT2 "Aby usunąć program lub zmodyfikować jego komponenty, wybierz program z listy i kliknij ""Odinstaluj"" lub ""Modyfikuj""."
 END
 
 STRINGTABLE
@@ -211,7 +211,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "Szczegóły"
     IDS_APP_DISPLAY_LIST "Lista"
     IDS_APP_DISPLAY_TILE "Kafelki"
-    IDS_NO_SEARCH_RESULTS "Brak rezultatów wyszukiwania"
+    IDS_NO_SEARCH_RESULTS "Brak wyników wyszukiwania"
     IDS_CFG_SAVE_WINDOW_POS "Zapisz pozycję okna"
     IDS_CFG_UPDATE_AVLIST "Aktualizuj listę dostępnych programów przy każdym uruchomieniu"
     IDS_CFG_LOG_ENABLED "Zapisuj dziennik instalacji i usuwania programów"
@@ -269,5 +269,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Czy na pewno chcesz odinstalować %s?"
-    IDS_INSTGEN_CONFIRMINSTRUNAPP "Instalacja zakończona, uruchomić %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Instalacja ukończona, czy chcesz teraz uruchomić %s?"
 END
