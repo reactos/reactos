@@ -177,7 +177,7 @@ START_TEST(SHSimpleIDListFromPath)
     }
 
     LPITEMIDLIST pidl;
-    ok_int((pidl = SHSimpleIDListFromPath(L"c:")) != NULL, TRUE);
+    ok_int((pidl = SHSimpleIDListFromPath(L"c:")) != NULL, LOBYTE(GetVersion()) >= 6);
     ILFree(pidl);
     ok_int((pidl = SHSimpleIDListFromPath(L"c:\\")) != NULL, TRUE);
     ILFree(pidl);
