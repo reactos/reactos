@@ -13,6 +13,12 @@
 
 #include "appshim_apitest.h"
 
+#ifdef _M_IX86
+#define ok_ptr_dualforx86(expression, ptr1, ptr2) ok(expression == ptr1 || expression == ptr2, "Unexpected handle value: %p\n", expression)
+#else
+#define ok_ptr_dualforx86(expression, ptr1, ptr2) ok_ptr(expression, ptr1)
+#endif
+
 static DWORD g_WinVersion;
 static tGETHOOKAPIS pGetHookAPIs;
 static HMODULE g_hSentinelModule = (HMODULE)&pGetHookAPIs;  /* Not a valid hmodule, so a nice sentinel */
@@ -106,13 +112,13 @@ static void test_LoadLibraryA(PHOOKAPI hook)
 
     /* Exact names return what is specified */
     ok_ptr(proc("test123.dll"), g_h123);
-    ok_ptr(proc("test111"), g_h111);
+    ok_ptr_dualforx86(proc("test111"), g_h111, g_hSentinelModule);
     /* Extension is not added */
     ok_ptr(proc("test111.dll"), g_hSentinelModule);
     /* Zero can be specified */
-    ok_ptr(proc("Something.mark"), g_h0);
+    ok_ptr_dualforx86(proc("Something.mark"), g_h0, g_hSentinelModule);
     /* Or default returned */
-    ok_ptr(proc("empty"), g_h0);
+    ok_ptr_dualforx86(proc("empty"), g_h0, g_hSentinelModule);
 
     /* Paths, do not have to be valid */
     ok_ptr(proc("\\test123.dll"), g_h123);
@@ -142,13 +148,13 @@ static void test_LoadLibraryW(PHOOKAPI hook)
 
     /* Exact names return what is specified */
     ok_ptr(proc(L"test123.dll"), g_h123);
-    ok_ptr(proc(L"test111"), g_h111);
+    ok_ptr_dualforx86(proc(L"test111"), g_h111, g_hSentinelModule);
     /* Extension is not added */
     ok_ptr(proc(L"test111.dll"), g_hSentinelModule);
     /* Zero can be specified */
-    ok_ptr(proc(L"Something.mark"), g_h0);
+    ok_ptr_dualforx86(proc(L"Something.mark"), g_h0, g_hSentinelModule);
     /* Or default returned */
-    ok_ptr(proc(L"empty"), g_h0);
+    ok_ptr_dualforx86(proc(L"empty"), g_h0, g_hSentinelModule);
 
     /* Paths, do not have to be valid */
     ok_ptr(proc(L"\\test123.dll"), g_h123);
@@ -178,13 +184,13 @@ static void test_LoadLibraryExA(PHOOKAPI hook)
 
     /* Exact names return what is specified */
     ok_ptr(proc("test123.dll", INVALID_HANDLE_VALUE, 0), g_h123);
-    ok_ptr(proc("test111", INVALID_HANDLE_VALUE, 0), g_h111);
+    ok_ptr_dualforx86(proc("test111", INVALID_HANDLE_VALUE, 0), g_h111, g_hSentinelModule);
     /* Extension is not added */
     ok_ptr(proc("test111.dll", INVALID_HANDLE_VALUE, 0), g_hSentinelModule);
     /* Zero can be specified */
-    ok_ptr(proc("Something.mark", INVALID_HANDLE_VALUE, 0), g_h0);
+    ok_ptr_dualforx86(proc("Something.mark", INVALID_HANDLE_VALUE, 0), g_h0, g_hSentinelModule);
     /* Or default returned */
-    ok_ptr(proc("empty", INVALID_HANDLE_VALUE, 0), g_h0);
+    ok_ptr_dualforx86(proc("empty", INVALID_HANDLE_VALUE, 0), g_h0, g_hSentinelModule);
 
     /* Paths, do not have to be valid */
     ok_ptr(proc("\\test123.dll", INVALID_HANDLE_VALUE, 0), g_h123);
@@ -214,13 +220,13 @@ static void test_LoadLibraryExW(PHOOKAPI hook)
 
     /* Exact names return what is specified */
     ok_ptr(proc(L"test123.dll", INVALID_HANDLE_VALUE, 0), g_h123);
-    ok_ptr(proc(L"test111", INVALID_HANDLE_VALUE, 0), g_h111);
+    ok_ptr_dualforx86(proc(L"test111", INVALID_HANDLE_VALUE, 0), g_h111, g_hSentinelModule);
     /* Extension is not added */
     ok_ptr(proc(L"test111.dll", INVALID_HANDLE_VALUE, 0), g_hSentinelModule);
     /* Zero can be specified */
-    ok_ptr(proc(L"Something.mark", INVALID_HANDLE_VALUE, 0), g_h0);
+    ok_ptr_dualforx86(proc(L"Something.mark", INVALID_HANDLE_VALUE, 0), g_h0, g_hSentinelModule);
     /* Or default returned */
-    ok_ptr(proc(L"empty", INVALID_HANDLE_VALUE, 0), g_h0);
+    ok_ptr_dualforx86(proc(L"empty", INVALID_HANDLE_VALUE, 0), g_h0, g_hSentinelModule);
 
     /* Paths, do not have to be valid */
     ok_ptr(proc(L"\\test123.dll", INVALID_HANDLE_VALUE, 0), g_h123);
