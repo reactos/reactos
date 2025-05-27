@@ -25,6 +25,7 @@ list(APPEND SOURCE
     JapaneseCalendar.c
     LCMapString.c
     LoadLibraryExW.c
+    LocaleNameToLCID.c
     lstrcpynW.c
     lstrlen.c
     Mailslot.c
