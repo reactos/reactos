@@ -1,5 +1,0 @@
-CTF
----
-
-Codename Cicero
-TSF
