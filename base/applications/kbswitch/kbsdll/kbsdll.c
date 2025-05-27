@@ -80,9 +80,7 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
             BOOL bAltPressed = GetAsyncKeyState(VK_MENU) < 0;
             BOOL bCtrlPressed = GetAsyncKeyState(VK_CONTROL) < 0;
             // Detect Alt+Shift and Ctrl+Shift
-            if ((bAltPressed && bShiftPressed) ||
-                (bCtrlPressed && bShiftPressed) ||
-                (pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
+            if ((pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
                 (pKbStruct->vkCode == VK_MENU && bShiftPressed) ||
                 (pKbStruct->vkCode == VK_SHIFT && bCtrlPressed) ||
                 (pKbStruct->vkCode == VK_CONTROL && bShiftPressed))
