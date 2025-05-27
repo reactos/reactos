@@ -294,7 +294,7 @@
 /dll/win32/kernel32/client/vdm.c        @reactos573 @HBelusca
 /dll/win32/kernel32/include/vdm.h       @reactos573 @HBelusca
 /sdk/include/reactos/subsys/win/vdm.h   @reactos573 @HBelusca
-/ntoskrnl/vdm                           @reactos573 @HBelusca
+/ntoskrnl/vdm/                          @reactos573 @HBelusca
 /sdk/include/reactos/libs/fast486/      @reactos573 @HBelusca
 /sdk/lib/fast486/                       @reactos573 @HBelusca
 /subsystems/mvdm/                       @reactos573 @HBelusca
@@ -428,21 +428,21 @@
 /modules/rosapps/applications/cmdutils/vfdcmd/  @HeisSpiter
 /modules/rosapps/drivers/vfd/                   @HeisSpiter
 
-# Win32 file functions
-#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
-#   R: HBelusca, Hermès Bélusca-Maïto
-#   S: Maintained
-/dll/win32/kernel32/client/file/        @HeisSpiter
-/dll/win32/kernel32/client/file/find.c  @HBelusca
-
-# Win32 Subsystem - User Server
+# Win32 Subsystem
 #   M:
 #   R: HBelusca, Hermès Bélusca-Maïto
 #   S: Maintained
 /win32ss/user/winsrv/
 /win32ss/user/winsrv/usersrv/harderror.c    @HBelusca
 
-# Win32 Subsystem Shutdown
+# Win32 Subsystem - File functions
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
+#   R: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/dll/win32/kernel32/client/file/        @HeisSpiter
+/dll/win32/kernel32/client/file/find.c  @HBelusca
+
+# Win32 Subsystem - Shutdown
 #   M: HBelusca, Hermès Bélusca-Maïto
 #   R: EricKohl, ekohl, Eric Kohl
 #   S: Maintained
