@@ -519,7 +519,7 @@ void __winetest_cdecl winetest_win_skip( const char *msg, ... )
     __winetest_va_list valist;
     __winetest_va_start(valist, msg);
     if ((strcmp(winetest_platform, "windows") == 0)
-#ifndef USE_WINE_TODOS
+#if !defined(USE_WINE_TODOS) || defined(USE_WIN_SKIP)
     || (strcmp(winetest_platform, "reactos") == 0)
 #endif
     )
