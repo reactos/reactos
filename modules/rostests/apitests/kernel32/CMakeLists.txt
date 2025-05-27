@@ -17,6 +17,7 @@ list(APPEND SOURCE
     GetCPInfo.c
     GetCurrentDirectory.c
     GetDriveType.c
+    GetLocaleInfo.c
     GetModuleFileName.c
     GetVolumeInformation.c
     InitOnce.c
