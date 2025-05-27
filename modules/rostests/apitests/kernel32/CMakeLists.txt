@@ -14,6 +14,7 @@ list(APPEND SOURCE
     FLS.c
     FormatMessage.c
     GetComputerNameEx.c
+    GetCPInfo.c
     GetCurrentDirectory.c
     GetDriveType.c
     GetModuleFileName.c
