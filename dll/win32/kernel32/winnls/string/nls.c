@@ -2054,6 +2054,7 @@ GetCPInfo(UINT CodePage,
         {
             case CP_UTF7:
             case CP_UTF8:
+                RtlZeroMemory(CodePageInfo, sizeof(*CodePageInfo));
                 CodePageInfo->DefaultChar[0] = 0x3f;
                 CodePageInfo->DefaultChar[1] = 0;
                 CodePageInfo->LeadByte[0] = CodePageInfo->LeadByte[1] = 0;
@@ -2066,6 +2067,7 @@ GetCPInfo(UINT CodePage,
         return FALSE;
     }
 
+    RtlZeroMemory(CodePageInfo, sizeof(*CodePageInfo));
     if (CodePageEntry->CodePageTable.DefaultChar & 0xff00)
     {
         CodePageInfo->DefaultChar[0] = (CodePageEntry->CodePageTable.DefaultChar & 0xff00) >> 8;
