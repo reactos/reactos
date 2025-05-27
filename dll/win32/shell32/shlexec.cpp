@@ -55,7 +55,7 @@ static UINT_PTR InvokeOpenWith(HWND hWndOwner, SHELLEXECUTEINFOW &sei)
 
     HANDLE *phProc = (sei.fMask & SEE_MASK_NOCLOSEPROCESS) ? &sei.hProcess : NULL;
     UINT fCmic = (sei.fMask & SEE_CMIC_COMMON_BASICFLAGS) | CMIC_MASK_FLAG_NO_UI;
-    CMINVOKECOMMANDINFO ici = { sizeof ici, fCmic, hWndOwner };
+    CMINVOKECOMMANDINFO ici = { sizeof(ici), fCmic, hWndOwner };
     ici.nShow = SW_SHOW;
     HRESULT hr = SH32_InvokeOpenWith(sei.lpFile, &ici, phProc);
     SetLastError(ERROR_NO_ASSOCIATION);
@@ -712,7 +712,7 @@ static UINT SHELL_FindExecutableByVerb(LPCWSTR lpVerb, LPWSTR key, LPWSTR classn
     HKEY hkeyClass;
     WCHAR verb[MAX_PATH];
 
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, classname, 0, MAXIMUM_ALLOWED, &hkeyClass))
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, classname, 0, KEY_READ, &hkeyClass))
         return SE_ERR_NOASSOC;
     if (!HCR_GetDefaultVerbW(hkeyClass, lpVerb, verb, ARRAY_SIZE(verb)))
         return SE_ERR_NOASSOC;

@@ -103,7 +103,7 @@ HRESULT SH32_InvokeOpenWith(_In_ PCWSTR pszPath, _In_ LPCMINVOKECOMMANDINFO pici
         return HResultFromWin32(ERROR_INVALID_PARAMETER);
 
     HRESULT hr = HResultFromWin32(ERROR_NO_ASSOCIATION);
-    SHELLEXECUTEINFOW sei = { sizeof sei, CmicFlagsToSeeFlags(pici->fMask), pici->hwnd };
+    SHELLEXECUTEINFOW sei = { sizeof(sei), CmicFlagsToSeeFlags(pici->fMask), pici->hwnd };
     sei.fMask |= SEE_MASK_CLASSKEY | SEE_MASK_NOZONECHECKS;
     sei.lpFile = pszPath;
     sei.nShow = pici->nShow;
