@@ -685,13 +685,13 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
 }
 
 // WM_CREATE
-static BOOL
+static INT
 KbSwitch_OnCreate(HWND hwnd)
 {
     if (!SetHooks())
     {
         MessageBox(NULL, TEXT("SetHooks failed."), NULL, MB_ICONERROR);
-        return FALSE;
+        return -1; /* Failed */
     }
 
     LoadSpecialIds();
@@ -702,7 +702,7 @@ KbSwitch_OnCreate(HWND hwnd)
     ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
     g_uTaskbarRestartMsg = RegisterWindowMessage(TEXT("TaskbarCreated"));
 
-    return TRUE;
+    return 0; /* Success */
 }
 
 // WM_DESTROY
@@ -861,9 +861,7 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_CREATE:
-            if (!KbSwitch_OnCreate(hwnd))
-                return -1;
-            break;
+            return KbSwitch_OnCreate(hwnd);
 
         case WM_TIMER:
             KbSwitch_OnTimer(hwnd, (UINT_PTR)wParam);
