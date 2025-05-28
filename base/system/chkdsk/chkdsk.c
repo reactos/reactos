@@ -320,22 +320,22 @@ ChkdskCallback(
 //
 // LoadFMIFSEntryPoints
 //
-// Loads FMIFS.DLL and locates the entry point(s) we are going to use
+// Loads FMIFS.DLL and locates the entry point(s) we are going to use.
+//
+// Failure means the library or 1+ function is not loaded/assigned.
 //
 //----------------------------------------------------------------------
-static BOOLEAN
+static BOOL
 LoadFMIFSEntryPoints(VOID)
 {
+    // Let program termination free the library.
     HMODULE hFmifs = LoadLibraryW(L"fmifs.dll");
-    if (hFmifs == NULL)
+    if (!hFmifs)
         return FALSE;
 
     Chkdsk = (PCHKDSK)GetProcAddress(hFmifs, "Chkdsk");
     if (!Chkdsk)
-    {
-        FreeLibrary(hFmifs);
         return FALSE;
-    }
 
     return TRUE;
 }
