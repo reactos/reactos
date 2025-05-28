@@ -43,9 +43,9 @@ Imm32StrToUInt(
     _Out_ PDWORD pdwValue,
     _In_ ULONG nBase)
 {
-    *pdwValue = 0;
     NTSTATUS Status;
     UNICODE_STRING UnicodeString;
+    *pdwValue = 0;
     RtlInitUnicodeString(&UnicodeString, pszText);
     Status = RtlUnicodeStringToInteger(&UnicodeString, nBase, pdwValue);
     if (!NT_SUCCESS(Status))
