@@ -45,7 +45,8 @@ HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
 
-static HMENU s_hMenu = NULL, s_hRightPopupMenu = NULL;
+static HMENU s_hMenu = NULL;
+static HMENU s_hRightPopupMenu = NULL;
 static UINT s_uTaskbarRestart;
 
 /* Debug logging */
@@ -712,7 +713,8 @@ Indic_OnDestroy(HWND hwnd)
 {
     KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
     DeleteHooks();
-    DestroyMenu(s_hMenu);
+    if (s_hMenu)
+        DestroyMenu(s_hMenu);
     DeleteTrayIcon(hwnd);
     PostQuitMessage(0);
 }
@@ -775,10 +777,8 @@ Indic_OnCommand(HWND hwnd, UINT nID)
     switch (nID)
     {
         case ID_EXIT:
-        {
             PostMessage(hwnd, WM_CLOSE, 0, 0);
             break;
-        }
 
         case ID_PREFERENCES:
         {
