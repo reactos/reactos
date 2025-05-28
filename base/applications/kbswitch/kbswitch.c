@@ -720,7 +720,7 @@ KbSwitch_OnDestroy(HWND hwnd)
 
 // WM_TIMER
 static void
-KbSwitch_OnTimer(HWND hwnd, UINT nTimerID)
+KbSwitch_OnTimer(HWND hwnd, UINT_PTR nTimerID)
 {
     if (nTimerID == TIMER_ID_LANG_CHANGED_DELAYED)
     {
@@ -867,7 +867,7 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_TIMER:
-            KbSwitch_OnTimer(hwnd, (UINT)wParam);
+            KbSwitch_OnTimer(hwnd, (UINT_PTR)wParam);
             break;
 
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
