@@ -35,7 +35,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
 #define TIMER_LANG_CHANGED_DELAY 200
 
 FN_KbSwitchSetHooks KbSwitchSetHooks = NULL;
-UINT ShellHookMessage = 0;
 
 HINSTANCE g_hInst = NULL;
 HMODULE   g_hHookDLL = NULL;
@@ -44,9 +43,9 @@ HICON     g_hTrayIcon = NULL;
 HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
-
-static HMENU s_hMenu = NULL;
-static UINT s_uTaskbarRestart;
+HMENU     g_hPopupMenu = NULL;
+UINT      g_uTaskbarRestartMsg = 0;
+UINT      g_uShellHookMessage = 0;
 
 /* Debug logging */
 ULONG NTAPI
@@ -701,7 +700,7 @@ KbSwitch_OnCreate(HWND hwnd)
     AddTrayIcon(hwnd);
 
     ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
-    s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+    g_uTaskbarRestartMsg = RegisterWindowMessage(TEXT("TaskbarCreated"));
 
     return TRUE;
 }
@@ -712,8 +711,8 @@ KbSwitch_OnDestroy(HWND hwnd)
 {
     KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
     DeleteHooks();
-    if (s_hMenu)
-        DestroyMenu(s_hMenu);
+    if (g_hPopupMenu)
+        DestroyMenu(g_hPopupMenu);
     DeleteTrayIcon(hwnd);
     PostQuitMessage(0);
 }
@@ -755,10 +754,10 @@ KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
     }
     else /* WM_RBUTTONUP */
     {
-        if (!s_hMenu)
-            s_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
+        if (!g_hPopupMenu)
+            g_hPopupMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
 
-        HMENU hSubMenu = GetSubMenu(s_hMenu, 0);
+        HMENU hSubMenu = GetSubMenu(g_hPopupMenu, 0);
         nID = TrackPopupMenu(hSubMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
     }
 
@@ -836,16 +835,16 @@ KbSwitch_OnSettingChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 KbSwitch_OnDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uMsg == s_uTaskbarRestart)
+    if (uMsg == g_uTaskbarRestartMsg)
     {
         UpdateLayoutList(NULL);
         AddTrayIcon(hwnd);
         return 0;
     }
 
-    if (uMsg == ShellHookMessage)
+    if (uMsg == g_uShellHookMessage)
     {
-        TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
+        TRACE("g_uShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
         if (wParam == HSHELL_LANGUAGE)
             PostMessage(hwnd, WM_LANG_CHANGED, 0, 0);
         else if (wParam == HSHELL_WINDOWACTIVATED || wParam == HSHELL_RUDEAPPACTIVATED)
@@ -945,7 +944,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     }
 
     hwnd = CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
-    ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
+    g_uShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
     if (!RegisterShellHookWindow(hwnd))
     {
         ERR("RegisterShellHookWindow failed\n");
