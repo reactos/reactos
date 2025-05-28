@@ -818,7 +818,7 @@ Indic_OnLangChanged(HWND hwnd, HWND hwndTarget OPTIONAL, HKL hKL OPTIONAL)
 
 // WM_WINDOW_ACTIVATE
 static LRESULT
-Indic_OnWindowActivate(HWND hwnd, HWND hwndTarget, LPARAM lParam)
+Indic_OnWindowActivate(HWND hwnd, HWND hwndTarget OPTIONAL, LPARAM lParam OPTIONAL)
 {
     TRACE("WM_WINDOW_ACTIVATE: hwndTarget:%p, lParam:%p\n", hwndTarget, lParam);
     HWND hwndFore = hwndTarget ? hwndTarget : GetForegroundWindow();
@@ -827,6 +827,7 @@ Indic_OnWindowActivate(HWND hwnd, HWND hwndTarget, LPARAM lParam)
     return 0;
 }
 
+// WM_SETTINGCHANGE
 static void
 Indic_OnSettingChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
