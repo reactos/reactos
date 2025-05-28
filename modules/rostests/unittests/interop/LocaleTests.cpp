@@ -278,8 +278,8 @@ static void TEST_PartMatches(void)
         }
 
         ok(wcscmp(szP1, szP2) == 0,
-           "Locale 0x%04lX, Mismatching pairs s%02d:i%u s%02d:i%u, '%S' vs. '%S'\n",
-           curLcid, match.p1.Num, match.p1.Idx, match.p2.Num, match.p2.Idx, szP1, szP2);
+           "Locale 0x%04lX, Mismatching pairs s%02d:i%u s%02d:i%u, '%S'(l=%Iu) vs. '%S'(l=%Iu)\n",
+           curLcid, match.p1.Num, match.p1.Idx, match.p2.Num, match.p2.Idx, szP1, wcslen(szP1), szP2, wcslen(szP2));
     }
 }
 
