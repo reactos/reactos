@@ -800,12 +800,24 @@ static void test_ApplicationAttributes(void)
     switch (num)
     {
     case 26:
-        // 2k3
+        // Win2k3
         g_AttrInfoSize = 26;
         break;
+    case 27:
+        // WinVista
+        g_AttrInfoSize = 27;
+        break;
     case 28:
-        // Win7+ (and maybe vista, but who cares about that?)
+        // Win7
         g_AttrInfoSize = 28;
+        break;
+    case 38:
+        // Win10
+        g_AttrInfoSize = 38;
+        break;
+    case 43:
+        // Win8.1
+        g_AttrInfoSize = 43;
         break;
     default:
         ok(0, "Unknown attrinfo size: %u\n", num);
@@ -1089,6 +1101,10 @@ START_TEST(apphelp)
     test_ApplicationAttributes();
     test_SdbTagToString();
     test_SdbTagToStringAllTags();
+#ifdef _M_AMD64
+    skip("Need new SdbGetAppPatchDir() for amd64!\n");
+#else
     if (pSdbGetAppPatchDir)
         test_SdbGetAppPatchDir();
+#endif
 }
