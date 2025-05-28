@@ -230,6 +230,14 @@ BOOL WINAPI ImmSetActiveContext(_In_ HWND hwnd, _In_ HIMC hIMC, _In_ BOOL fFlag)
 BOOL WINAPI ImmLoadIME(_In_ HKL hKL);
 DWORD WINAPI ImmProcessKey(_In_ HWND, _In_ HKL, _In_ UINT, _In_ LPARAM, _In_ DWORD);
 LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC);
+BOOL WINAPI ImmWINNLSGetEnableStatus(_In_opt_ HWND hWnd);
+BOOL WINAPI ImmSetActiveContextConsoleIME(_In_ HWND hwnd, _In_ BOOL fFlag);
+
+LRESULT WINAPI
+ImmSystemHandler(
+    _In_ HIMC hIMC,
+    _Inout_opt_ WPARAM wParam,
+    _Inout_opt_ LPARAM lParam);
 
 BOOL WINAPI ImmIMPGetIMEA(_In_opt_ HWND hWnd, _Out_ LPIMEPROA pImePro);
 BOOL WINAPI ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro);
@@ -251,9 +259,9 @@ VOID WINAPI CtfImmCoUninitialize(VOID);
 VOID WINAPI CtfImmEnterCoInitCountSkipMode(VOID);
 BOOL WINAPI CtfImmLeaveCoInitCountSkipMode(VOID);
 HRESULT WINAPI CtfImmLastEnabledWndDestroy(_In_ BOOL bCreate);
-BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
 HRESULT WINAPI CtfImmTIMActivate(_In_ HKL hKL);
 BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
+BOOL WINAPI CtfImmIsCiceroEnabled(VOID);
 
 LRESULT WINAPI
 CtfImmDispatchDefImeMessage(
