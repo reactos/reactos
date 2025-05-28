@@ -22,13 +22,24 @@ list(APPEND SOURCE
     ../crt/log.c
     ../crt/log10.c
     ../crt/round.c
+    ../crt/setjmp.c
     ../crt/sin.c
     ../crt/sqrt.c
     ../crt/tan.c
     testlist.c
 )
 
-add_executable(ucrtbase_apitest ${SOURCE})
+if(ARCH STREQUAL "i386")
+    add_asm_files(ucrtbase_apitest_asm
+        ../crt/i386/setjmp_helper.s
+    )
+elseif(ARCH STREQUAL "amd64")
+    add_asm_files(ucrtbase_apitest_asm
+        ../crt/amd64/setjmp_helper.s
+    )
+endif()
+
+add_executable(ucrtbase_apitest ${SOURCE} ${ucrtbase_apitest_asm})
 set_module_type(ucrtbase_apitest win32cui)
 
 target_link_libraries(ucrtbase_apitest ${PSEH_LIB} chkstk)
@@ -37,5 +48,5 @@ if(NOT MSVC)
     target_link_libraries(ucrtbase_apitest -lgcc)
 endif()
 
-add_importlibs(ucrtbase_apitest ucrtbase kernel32 ntdll)
+add_importlibs(ucrtbase_apitest ucrtbase kernel32)
 add_rostests_file(TARGET ucrtbase_apitest)
