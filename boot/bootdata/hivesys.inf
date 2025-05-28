@@ -1131,7 +1131,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0810",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0411",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0412",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0413",0x00000000,"l_intl.nls"
-HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0414",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0813",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0414",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0814",0x00000000,"l_intl.nls"
