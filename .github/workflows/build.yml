@@ -28,7 +28,7 @@ jobs:
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
     - name: Get RosBE
       id: get_rosbe
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: RosBE-CI
         key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
@@ -52,7 +52,7 @@ jobs:
       with:
         path: src
     - name: Set up cache for ccache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ccache
         key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
@@ -76,7 +76,7 @@ jobs:
     - name: Print ccache statistics
       run: ccache -s
     - name: Upload ISOs
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
@@ -130,14 +130,14 @@ jobs:
     - name: Generate ISOs
       run: cmake --build build --target bootcd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: build/msvc_pdb
@@ -218,7 +218,7 @@ jobs:
       if: ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target dll/cpl/all -- -k0
     - name: Upload compiled binaries
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
@@ -245,7 +245,7 @@ jobs:
           !**/*.tlb
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
@@ -297,14 +297,14 @@ jobs:
     - name: Generate ISOs
       run: cmake --build build --target bootcd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
           build/bootcd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-syms-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
