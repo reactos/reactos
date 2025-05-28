@@ -425,6 +425,7 @@ static const struct knownFolderDef known_folders[] = {
                  NULL,
                  FILE_ATTRIBUTE_READONLY,
                  KFDF_PRECREATE),
+#ifndef __REACTOS__
     KNOWN_FOLDER(FOLDERID_CommonStartup,
                  CSIDL_COMMON_STARTUP,
                  "Common Startup",
@@ -434,6 +435,17 @@ static const struct knownFolderDef known_folders[] = {
                  NULL,
                  FILE_ATTRIBUTE_READONLY,
                  KFDF_PRECREATE),
+#else // s/StartUp/Startup/
+    KNOWN_FOLDER(FOLDERID_CommonStartup,
+                 CSIDL_COMMON_STARTUP,
+                 "Common Startup",
+                 KF_CATEGORY_COMMON,
+                 FOLDERID_CommonPrograms, GUID_NULL,
+                 "Startup",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+#endif
     KNOWN_FOLDER(FOLDERID_CommonTemplates,
                  CSIDL_COMMON_TEMPLATES,
                  "Common Templates",
@@ -1123,6 +1135,7 @@ static const struct knownFolderDef known_folders[] = {
                  NULL,
                  FILE_ATTRIBUTE_READONLY,
                  KFDF_PRECREATE),
+#ifndef __REACTOS__
     KNOWN_FOLDER(FOLDERID_Startup,
                  CSIDL_STARTUP,
                  "Startup",
@@ -1132,6 +1145,17 @@ static const struct knownFolderDef known_folders[] = {
                  NULL,
                  FILE_ATTRIBUTE_READONLY,
                  KFDF_PRECREATE),
+#else // s/StartUp/Startup/
+    KNOWN_FOLDER(FOLDERID_Startup,
+                 CSIDL_STARTUP,
+                 "Startup",
+                 KF_CATEGORY_PERUSER,
+                 FOLDERID_Programs, GUID_NULL,
+                 "Startup\0",
+                 NULL,
+                 FILE_ATTRIBUTE_READONLY,
+                 KFDF_PRECREATE),
+#endif
     KNOWN_FOLDER(FOLDERID_SyncManagerFolder,
                  NO_CSIDL,
                  "SyncCenterFolder",
