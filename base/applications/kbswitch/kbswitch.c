@@ -844,7 +844,8 @@ Indic_OnDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         AddTrayIcon(hwnd);
         return 0;
     }
-    else if (uMsg == ShellHookMessage)
+
+    if (uMsg == ShellHookMessage)
     {
         TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
         if (wParam == HSHELL_LANGUAGE)
@@ -853,6 +854,7 @@ Indic_OnDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
         return 0;
     }
+
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
