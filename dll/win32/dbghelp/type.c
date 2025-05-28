@@ -22,7 +22,9 @@
  * upon which full support for datatype handling will eventually be built.
  */
 
+#if !defined(__REACTOS__) || !defined(NONAMELESSUNION) /* Required to avoid a warning when NOT CMAKE_CROSSCOMPILING */
 #define NONAMELESSUNION
+#endif
 
 #include <stdlib.h>
 #include <stdarg.h>
