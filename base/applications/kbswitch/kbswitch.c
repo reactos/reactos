@@ -45,6 +45,9 @@ HWND      g_hwndLastActive = NULL;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
 
+static HMENU s_hMenu = NULL, s_hRightPopupMenu = NULL;
+static UINT s_uTaskbarRestart;
+
 /* Debug logging */
 ULONG NTAPI
 vDbgPrintExWithPrefix(IN PCCH Prefix,
@@ -682,185 +685,214 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
     return TRUE;
 }
 
-LRESULT CALLBACK
-WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+// WM_CREATE
+static BOOL
+Indic_OnCreate(HWND hwnd)
 {
-    static HMENU s_hMenu = NULL, s_hRightPopupMenu = NULL;
-    static UINT s_uTaskbarRestart;
-    POINT pt;
-    HMENU hLeftPopupMenu;
-
-    switch (Message)
+    if (!SetHooks())
     {
-        case WM_CREATE:
+        MessageBox(NULL, TEXT("SetHooks failed."), NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    LoadSpecialIds();
+
+    UpdateLayoutList(NULL);
+    AddTrayIcon(hwnd);
+
+    ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
+    s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+
+    return TRUE;
+}
+
+// WM_DESTROY
+static void
+Indic_OnDestroy(HWND hwnd)
+{
+    KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
+    DeleteHooks();
+    DestroyMenu(s_hMenu);
+    DeleteTrayIcon(hwnd);
+    PostQuitMessage(0);
+}
+
+// WM_TIMER
+static void
+Indic_OnTimer(HWND hwnd, UINT nTimerID)
+{
+    if (nTimerID == TIMER_ID_LANG_CHANGED_DELAYED)
+    {
+        KillTimer(hwnd, nTimerID);
+        HKL hKL = GetActiveKL();
+        UpdateLayoutList(hKL);
+        UpdateLanguageDisplay(hwnd, hKL);
+    }
+}
+
+// WM_NOTIFYICONMSG
+static void
+Indic_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
+{
+    if (uMouseMsg != WM_LBUTTONUP && uMouseMsg != WM_RBUTTONUP)
+        return;
+
+    UpdateLayoutList(NULL);
+
+    POINT pt;
+    GetCursorPos(&pt);
+
+    SetForegroundWindow(hwnd);
+
+    INT nID;
+    if (uMouseMsg == WM_LBUTTONUP)
+    {
+        /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
+        HMENU hLeftPopupMenu = BuildLeftPopupMenu();
+        nID = TrackPopupMenu(hLeftPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+        DestroyMenu(hLeftPopupMenu);
+    }
+    else
+    {
+        if (!s_hRightPopupMenu)
         {
-            if (!SetHooks())
-            {
-                MessageBox(NULL, TEXT("SetHooks failed."), NULL, MB_ICONERROR);
-                return -1;
-            }
+            s_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
+            s_hRightPopupMenu = GetSubMenu(s_hMenu, 0);
+        }
+        nID = TrackPopupMenu(s_hRightPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+    }
 
-            LoadSpecialIds();
+    PostMessage(hwnd, WM_NULL, 0, 0);
 
-            UpdateLayoutList(NULL);
-            AddTrayIcon(hwnd);
+    if (nID)
+        PostMessage(hwnd, WM_COMMAND, nID, 0);
+}
 
-            ActivateLayout(hwnd, g_nCurrentLayoutNum, NULL, TRUE);
-            s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+// WM_COMMAND
+static void
+Indic_OnCommand(HWND hwnd, WPARAM wParam)
+{
+    switch (LOWORD(wParam))
+    {
+        case ID_EXIT:
+        {
+            PostMessage(hwnd, WM_CLOSE, 0, 0);
             break;
         }
 
-        case WM_TIMER:
+        case ID_PREFERENCES:
         {
-            if (wParam == TIMER_ID_LANG_CHANGED_DELAYED)
-            {
-                KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
-                HKL hKL = GetActiveKL();
-                UpdateLayoutList(hKL);
-                UpdateLanguageDisplay(hwnd, hKL);
-            }
-            break;
-        }
-
-        // WM_LANG_CHANGED message:
-        //   wParam: HWND hwndTarget or zero
-        //   lParam: HKL hKL or zero
-        case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
-        {
-            TRACE("WM_LANG_CHANGED: wParam:%p, lParam:%p\n", wParam, lParam);
-            /* Delayed action */
-            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
-            SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED, TIMER_LANG_CHANGED_DELAY, NULL);
-            break;
-        }
-
-        // WM_WINDOW_ACTIVATE message:
-        //   wParam: HWND hwndTarget or zero
-        //   lParam: zero
-        case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
-        {
-            TRACE("WM_WINDOW_ACTIVATE: wParam:%p, lParam:%p\n", wParam, lParam);
-            HWND hwndFore = wParam ? (HWND)wParam : GetForegroundWindow();
-            if (RememberLastActive(hwnd, hwndFore))
-                return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
-            break;
-        }
-
-        case WM_NOTIFYICONMSG:
-        {
-            switch (lParam)
-            {
-                case WM_RBUTTONUP:
-                case WM_LBUTTONUP:
-                {
-                    UpdateLayoutList(NULL);
-
-                    GetCursorPos(&pt);
-                    SetForegroundWindow(hwnd);
-
-                    INT nID;
-                    if (lParam == WM_LBUTTONUP)
-                    {
-                        /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
-                        hLeftPopupMenu = BuildLeftPopupMenu();
-                        nID = TrackPopupMenu(hLeftPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
-                        DestroyMenu(hLeftPopupMenu);
-                    }
-                    else
-                    {
-                        if (!s_hRightPopupMenu)
-                        {
-                            s_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
-                            s_hRightPopupMenu = GetSubMenu(s_hMenu, 0);
-                        }
-                        nID = TrackPopupMenu(s_hRightPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
-                    }
-
-                    PostMessage(hwnd, WM_NULL, 0, 0);
-
-                    if (nID)
-                        PostMessage(hwnd, WM_COMMAND, nID, 0);
-
-                    break;
-                }
-            }
-            break;
-        }
-
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case ID_EXIT:
-                {
-                    PostMessage(hwnd, WM_CLOSE, 0, 0);
-                    break;
-                }
-
-                case ID_PREFERENCES:
-                {
-                    INT_PTR ret = (INT_PTR)ShellExecute(hwnd, NULL,
-                                                        TEXT("control.exe"), TEXT("input.dll"),
-                                                        NULL, SW_SHOWNORMAL);
-                    if (ret <= 32)
-                        MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_ICONERROR);
-                    break;
-                }
-
-                default:
-                {
-                    if (1 <= LOWORD(wParam) && LOWORD(wParam) <= 1000)
-                    {
-                        if (!IsWindow(g_hwndLastActive))
-                        {
-                            g_hwndLastActive = NULL;
-                        }
-                        ActivateLayout(hwnd, LOWORD(wParam), g_hwndLastActive, FALSE);
-                    }
-                    break;
-                }
-            }
-            break;
-
-        case WM_SETTINGCHANGE:
-        {
-            if (wParam == SPI_SETNONCLIENTMETRICS)
-            {
-                PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
-                break;
-            }
-        }
-        break;
-
-        case WM_DESTROY:
-        {
-            KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
-            DeleteHooks();
-            DestroyMenu(s_hMenu);
-            DeleteTrayIcon(hwnd);
-            PostQuitMessage(0);
+            INT_PTR ret = (INT_PTR)ShellExecute(hwnd, NULL,
+                                                TEXT("control.exe"), TEXT("input.dll"),
+                                                NULL, SW_SHOWNORMAL);
+            if (ret <= 32)
+                MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_ICONERROR);
             break;
         }
 
         default:
         {
-            if (Message == s_uTaskbarRestart)
+            if (1 <= LOWORD(wParam) && LOWORD(wParam) <= 1000)
             {
-                UpdateLayoutList(NULL);
-                AddTrayIcon(hwnd);
-                break;
+                if (!IsWindow(g_hwndLastActive))
+                {
+                    g_hwndLastActive = NULL;
+                }
+                ActivateLayout(hwnd, LOWORD(wParam), g_hwndLastActive, FALSE);
             }
-            else if (Message == ShellHookMessage)
-            {
-                TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
-                if (wParam == HSHELL_LANGUAGE)
-                    PostMessage(hwnd, WM_LANG_CHANGED, 0, 0);
-                else if (wParam == HSHELL_WINDOWACTIVATED || wParam == HSHELL_RUDEAPPACTIVATED)
-                    PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
-
-                break;
-            }
-            return DefWindowProc(hwnd, Message, wParam, lParam);
+            break;
         }
+    }
+}
+
+// WM_LANG_CHANGED
+static LRESULT
+Indic_OnLangChanged(HWND hwnd, HWND hwndTarget OPTIONAL, HKL hKL OPTIONAL)
+{
+    TRACE("WM_LANG_CHANGED: hwndTarget:%p, hKL:%p\n", hwndTarget, hKL);
+    /* Delayed action */
+    KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
+    SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED, TIMER_LANG_CHANGED_DELAY, NULL);
+    return 0;
+}
+
+// WM_WINDOW_ACTIVATE
+static LRESULT
+Indic_OnWindowActivate(HWND hwnd, HWND hwndTarget, LPARAM lParam)
+{
+    TRACE("WM_WINDOW_ACTIVATE: hwndTarget:%p, lParam:%p\n", hwndTarget, lParam);
+    HWND hwndFore = hwndTarget ? hwndTarget : GetForegroundWindow();
+    if (RememberLastActive(hwnd, hwndFore))
+        return UpdateLanguageDisplayCurrent(hwnd, hwndFore);
+    return 0;
+}
+
+static void
+Indic_OnSettingChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+    if (wParam == SPI_SETNONCLIENTMETRICS)
+        PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
+}
+
+static LRESULT
+Indic_OnDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == s_uTaskbarRestart)
+    {
+        UpdateLayoutList(NULL);
+        AddTrayIcon(hwnd);
+        return 0;
+    }
+    else if (uMsg == ShellHookMessage)
+    {
+        TRACE("ShellHookMessage: wParam:%p, lParam:%p\n", wParam, lParam);
+        if (wParam == HSHELL_LANGUAGE)
+            PostMessage(hwnd, WM_LANG_CHANGED, 0, 0);
+        else if (wParam == HSHELL_WINDOWACTIVATED || wParam == HSHELL_RUDEAPPACTIVATED)
+            PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
+        return 0;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK
+WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_CREATE:
+            if (!Indic_OnCreate(hwnd))
+                return -1;
+            break;
+
+        case WM_TIMER:
+            Indic_OnTimer(hwnd, (UINT)wParam);
+            break;
+
+        case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
+            return Indic_OnLangChanged(hwnd, (HWND)wParam, (HKL)lParam);
+
+        case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
+            return Indic_OnWindowActivate(hwnd, (HWND)wParam, lParam);
+
+        case WM_NOTIFYICONMSG:
+            Indic_OnNotifyIconMsg(hwnd, (UINT)lParam);
+            break;
+
+        case WM_COMMAND:
+            Indic_OnCommand(hwnd, wParam);
+            break;
+
+        case WM_SETTINGCHANGE:
+            Indic_OnSettingChange(hwnd, wParam, lParam);
+            break;
+
+        case WM_DESTROY:
+            Indic_OnDestroy(hwnd);
+            break;
+
+        default:
+            return Indic_OnDefault(hwnd, uMsg, wParam, lParam);
     }
 
     return 0;
