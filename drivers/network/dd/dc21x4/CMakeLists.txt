@@ -1,7 +1,7 @@
 
 add_definitions(
-    -DNDIS_MINIPORT_DRIVER
-    -DNDIS51_MINIPORT=1)
+    -DNDIS51_MINIPORT
+    -DNDIS_MINIPORT_DRIVER)
 
 list(APPEND SOURCE
     dc21x4.c
