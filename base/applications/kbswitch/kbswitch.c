@@ -770,9 +770,9 @@ Indic_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
 
 // WM_COMMAND
 static void
-Indic_OnCommand(HWND hwnd, WPARAM wParam)
+Indic_OnCommand(HWND hwnd, UINT nID)
 {
-    switch (LOWORD(wParam))
+    switch (nID)
     {
         case ID_EXIT:
         {
@@ -792,13 +792,13 @@ Indic_OnCommand(HWND hwnd, WPARAM wParam)
 
         default:
         {
-            if (1 <= LOWORD(wParam) && LOWORD(wParam) <= 1000)
+            if (1 <= nID && nID <= 1000)
             {
                 if (!IsWindow(g_hwndLastActive))
                 {
                     g_hwndLastActive = NULL;
                 }
-                ActivateLayout(hwnd, LOWORD(wParam), g_hwndLastActive, FALSE);
+                ActivateLayout(hwnd, nID, g_hwndLastActive, FALSE);
             }
             break;
         }
@@ -883,7 +883,7 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            Indic_OnCommand(hwnd, wParam);
+            Indic_OnCommand(hwnd, LOWORD(wParam));
             break;
 
         case WM_SETTINGCHANGE:
