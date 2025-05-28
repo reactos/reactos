@@ -616,23 +616,28 @@ EngpUpdateMonitorDevices(
         pGraphicsDevice->pvMonDev = NULL;
         pGraphicsDevice->dwMonCnt = 0;
     }
-    pGraphicsDevice->pvMonDev = ExAllocatePoolZero(PagedPool,
-                                                   monitorCount * sizeof(VIDEO_MONITOR_DEVICE),
-                                                   GDITAG_GDEVICE);
-    if (!pGraphicsDevice->pvMonDev)
+
+    if (monitorCount > 0)
     {
-        for (i = 0; pMonitorDevices[i].pdo; ++i)
-            ObDereferenceObject(pMonitorDevices[i].pdo);
-        ExFreePool(pMonitorDevices);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        pGraphicsDevice->pvMonDev = ExAllocatePoolZero(PagedPool,
+                                                       monitorCount * sizeof(VIDEO_MONITOR_DEVICE),
+                                                       GDITAG_GDEVICE);
+        if (!pGraphicsDevice->pvMonDev)
+        {
+            for (i = 0; pMonitorDevices[i].pdo; ++i)
+                ObDereferenceObject(pMonitorDevices[i].pdo);
+            ExFreePool(pMonitorDevices);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Copy data */
+        for (i = 0; i < monitorCount; i++)
+        {
+            TRACE("%S\\Monitor%u: PDO %p HwID %u\n", pGraphicsDevice->szWinDeviceName, i, pMonitorDevices[i].pdo, pMonitorDevices[i].HwID);
+            pGraphicsDevice->pvMonDev[pGraphicsDevice->dwMonCnt++] = pMonitorDevices[i];
+        }
     }
 
-    /* Copy data */
-    for (i = 0; i < monitorCount; i++)
-    {
-        TRACE("%S\\Monitor%u: PDO %p HwID %u\n", pGraphicsDevice->szWinDeviceName, i, pMonitorDevices[i].pdo, pMonitorDevices[i].HwID);
-        pGraphicsDevice->pvMonDev[pGraphicsDevice->dwMonCnt++] = pMonitorDevices[i];
-    }
     ExFreePool(pMonitorDevices);
     return STATUS_SUCCESS;
 }
