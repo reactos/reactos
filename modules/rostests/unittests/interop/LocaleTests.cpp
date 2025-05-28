@@ -224,7 +224,7 @@ static void TEST_NumParts(void)
         LoadStringWrapW(mod[m], p.second.id, szBuffer, _countof(szBuffer));
         p.second.gotParts = CountParts(szBuffer);
 
-        ok(p.second.nParts == p.second.gotParts, "Locale 0x%lX: Num parts mismatch %d - expected %lu, got %lu\n",
+        ok(p.second.nParts == p.second.gotParts, "Locale 0x%04lX: Num parts mismatch %d - expected %lu, got %lu\n",
            curLcid, p.first, p.second.nParts, p.second.gotParts);
     }
 }
@@ -277,7 +277,7 @@ static void TEST_PartMatches(void)
             continue;
         }
 
-        ok(wcscmp(szP1, szP2) == 0, "Locale 0x%lX: Mismatching pairs %u:%u / %u:%u '%S' vs. '%S'\n",
+        ok(wcscmp(szP1, szP2) == 0, "Locale 0x%04lX: Mismatching pairs %u:%u / %u:%u '%S' vs. '%S'\n",
            curLcid, match.p1.Num, match.p1.Idx, match.p2.Num, match.p2.Idx, szP1, szP2);
     }
 }
