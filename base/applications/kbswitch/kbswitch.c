@@ -46,7 +46,6 @@ INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
 
 static HMENU s_hMenu = NULL;
-static HMENU s_hRightPopupMenu = NULL;
 static UINT s_uTaskbarRestart;
 
 /* Debug logging */
@@ -754,14 +753,12 @@ Indic_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
         nID = TrackPopupMenu(hLeftPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
         DestroyMenu(hLeftPopupMenu);
     }
-    else
+    else /* WM_RBUTTONUP */
     {
-        if (!s_hRightPopupMenu)
-        {
+        if (!s_hMenu)
             s_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
-            s_hRightPopupMenu = GetSubMenu(s_hMenu, 0);
-        }
-        nID = TrackPopupMenu(s_hRightPopupMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+
+        nID = TrackPopupMenu(GetSubMenu(s_hMenu, 0), TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
     }
 
     PostMessage(hwnd, WM_NULL, 0, 0);
