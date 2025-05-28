@@ -26,18 +26,23 @@ enum E_MODULE
 
 enum E_STRING
 {
+    // s00.
     SH32_PROGRAMS,
     SH32_STARTUP,
     SH32_STARTMENU,
     SH32_PROGRAM_FILES,
     SH32_PROGRAM_FILES_COMMON,
     SH32_ADMINTOOLS,
+    // s06.
     UENV_STARTMENU,
     UENV_PROGRAMS,
     UENV_STARTUP,
+    // s09.
     SYSS_PROGRAMFILES,
     SYSS_COMMONFILES,
+    // s11.
     MMSY_STARTMENU,
+    // s12.
     EOLD_PROGRAMS,
 };
 
@@ -224,7 +229,8 @@ static void TEST_NumParts(void)
         LoadStringWrapW(mod[m], p.second.id, szBuffer, _countof(szBuffer));
         p.second.gotParts = CountParts(szBuffer);
 
-        ok(p.second.nParts == p.second.gotParts, "Locale 0x%04lX: Num parts mismatch %d - expected %lu, got %lu\n",
+        ok(p.second.gotParts == p.second.nParts,
+           "Locale 0x%04lX, Num parts mismatch s%02d, expected %lu got %lu\n",
            curLcid, p.first, p.second.nParts, p.second.gotParts);
     }
 }
@@ -265,19 +271,20 @@ static void TEST_PartMatches(void)
 
         if (!LoadPart(&match.p1, szP1, _countof(szP1)))
         {
-            skip("%s for match test %d (pair 1)\n", GetLastError() == ERROR_FILE_NOT_FOUND
+            skip("%s for match test s%02d (pair 1)\n", GetLastError() == ERROR_FILE_NOT_FOUND
                 ? "No module" : "Invalid data", match.p1.Num);
             continue;
         }
 
         if (!LoadPart(&match.p2, szP2, _countof(szP2)))
         {
-            skip("%s for match test %d (pair 2)\n", GetLastError() == ERROR_FILE_NOT_FOUND
+            skip("%s for match test s%02d (pair 2)\n", GetLastError() == ERROR_FILE_NOT_FOUND
                 ? "No module" : "Invalid data", match.p2.Num);
             continue;
         }
 
-        ok(wcscmp(szP1, szP2) == 0, "Locale 0x%04lX: Mismatching pairs %u:%u / %u:%u '%S' vs. '%S'\n",
+        ok(wcscmp(szP1, szP2) == 0,
+           "Locale 0x%04lX, Mismatching pairs s%02d:i%u s%02d:i%u, '%S' vs. '%S'\n",
            curLcid, match.p1.Num, match.p1.Idx, match.p2.Num, match.p2.Idx, szP1, szP2);
     }
 }
