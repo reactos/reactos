@@ -126,6 +126,7 @@
 @ cdecl __initialize_lconv_for_unsigned_char()
 @ cdecl -stub __intrinsic_abnormal_termination() # CHECKME
 @ cdecl -stub -norelay __intrinsic_setjmp(ptr) # _setjmp
+@ cdecl -impsym _setjmp(long ptr) __intrinsic_setjmp
 @ cdecl -stub -arch=!i386 -norelay __intrinsic_setjmpex(ptr ptr) # _setjmpex
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
