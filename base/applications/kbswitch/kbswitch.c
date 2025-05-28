@@ -758,7 +758,8 @@ Indic_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
         if (!s_hMenu)
             s_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
 
-        nID = TrackPopupMenu(GetSubMenu(s_hMenu, 0), TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
+        HMENU hSubMenu = GetSubMenu(s_hMenu, 0);
+        nID = TrackPopupMenu(hSubMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, NULL);
     }
 
     PostMessage(hwnd, WM_NULL, 0, 0);
