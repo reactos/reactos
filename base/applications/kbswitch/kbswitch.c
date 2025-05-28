@@ -687,7 +687,7 @@ static BOOL RememberLastActive(HWND hwnd, HWND hwndFore)
 
 // WM_CREATE
 static BOOL
-Indic_OnCreate(HWND hwnd)
+KbSwitch_OnCreate(HWND hwnd)
 {
     if (!SetHooks())
     {
@@ -708,7 +708,7 @@ Indic_OnCreate(HWND hwnd)
 
 // WM_DESTROY
 static void
-Indic_OnDestroy(HWND hwnd)
+KbSwitch_OnDestroy(HWND hwnd)
 {
     KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
     DeleteHooks();
@@ -720,7 +720,7 @@ Indic_OnDestroy(HWND hwnd)
 
 // WM_TIMER
 static void
-Indic_OnTimer(HWND hwnd, UINT nTimerID)
+KbSwitch_OnTimer(HWND hwnd, UINT nTimerID)
 {
     if (nTimerID == TIMER_ID_LANG_CHANGED_DELAYED)
     {
@@ -733,7 +733,7 @@ Indic_OnTimer(HWND hwnd, UINT nTimerID)
 
 // WM_NOTIFYICONMSG
 static void
-Indic_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
+KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
 {
     if (uMouseMsg != WM_LBUTTONUP && uMouseMsg != WM_RBUTTONUP)
         return;
@@ -770,7 +770,7 @@ Indic_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
 
 // WM_COMMAND
 static void
-Indic_OnCommand(HWND hwnd, UINT nID)
+KbSwitch_OnCommand(HWND hwnd, UINT nID)
 {
     switch (nID)
     {
@@ -805,7 +805,7 @@ Indic_OnCommand(HWND hwnd, UINT nID)
 
 // WM_LANG_CHANGED
 static LRESULT
-Indic_OnLangChanged(HWND hwnd, HWND hwndTarget OPTIONAL, HKL hKL OPTIONAL)
+KbSwitch_OnLangChanged(HWND hwnd, HWND hwndTarget OPTIONAL, HKL hKL OPTIONAL)
 {
     TRACE("WM_LANG_CHANGED: hwndTarget:%p, hKL:%p\n", hwndTarget, hKL);
     /* Delayed action */
@@ -816,7 +816,7 @@ Indic_OnLangChanged(HWND hwnd, HWND hwndTarget OPTIONAL, HKL hKL OPTIONAL)
 
 // WM_WINDOW_ACTIVATE
 static LRESULT
-Indic_OnWindowActivate(HWND hwnd, HWND hwndTarget OPTIONAL, LPARAM lParam OPTIONAL)
+KbSwitch_OnWindowActivate(HWND hwnd, HWND hwndTarget OPTIONAL, LPARAM lParam OPTIONAL)
 {
     TRACE("WM_WINDOW_ACTIVATE: hwndTarget:%p, lParam:%p\n", hwndTarget, lParam);
     HWND hwndFore = hwndTarget ? hwndTarget : GetForegroundWindow();
@@ -827,14 +827,14 @@ Indic_OnWindowActivate(HWND hwnd, HWND hwndTarget OPTIONAL, LPARAM lParam OPTION
 
 // WM_SETTINGCHANGE
 static void
-Indic_OnSettingChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
+KbSwitch_OnSettingChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     if (wParam == SPI_SETNONCLIENTMETRICS)
         PostMessage(hwnd, WM_WINDOW_ACTIVATE, 0, 0);
 }
 
 static LRESULT
-Indic_OnDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+KbSwitch_OnDefault(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (uMsg == s_uTaskbarRestart)
     {
@@ -862,38 +862,38 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_CREATE:
-            if (!Indic_OnCreate(hwnd))
+            if (!KbSwitch_OnCreate(hwnd))
                 return -1;
             break;
 
         case WM_TIMER:
-            Indic_OnTimer(hwnd, (UINT)wParam);
+            KbSwitch_OnTimer(hwnd, (UINT)wParam);
             break;
 
         case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
-            return Indic_OnLangChanged(hwnd, (HWND)wParam, (HKL)lParam);
+            return KbSwitch_OnLangChanged(hwnd, (HWND)wParam, (HKL)lParam);
 
         case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
-            return Indic_OnWindowActivate(hwnd, (HWND)wParam, lParam);
+            return KbSwitch_OnWindowActivate(hwnd, (HWND)wParam, lParam);
 
         case WM_NOTIFYICONMSG:
-            Indic_OnNotifyIconMsg(hwnd, (UINT)lParam);
+            KbSwitch_OnNotifyIconMsg(hwnd, (UINT)lParam);
             break;
 
         case WM_COMMAND:
-            Indic_OnCommand(hwnd, LOWORD(wParam));
+            KbSwitch_OnCommand(hwnd, LOWORD(wParam));
             break;
 
         case WM_SETTINGCHANGE:
-            Indic_OnSettingChange(hwnd, wParam, lParam);
+            KbSwitch_OnSettingChange(hwnd, wParam, lParam);
             break;
 
         case WM_DESTROY:
-            Indic_OnDestroy(hwnd);
+            KbSwitch_OnDestroy(hwnd);
             break;
 
         default:
-            return Indic_OnDefault(hwnd, uMsg, wParam, lParam);
+            return KbSwitch_OnDefault(hwnd, uMsg, wParam, lParam);
     }
 
     return 0;
