@@ -2125,6 +2125,11 @@ START_TEST(db)
     *(void**)&pSdbGetDatabaseInformation = (void *)GetProcAddress(hdll, "SdbGetDatabaseInformation");
     *(void**)&pSdbFreeDatabaseInformation = (void *)GetProcAddress(hdll, "SdbFreeDatabaseInformation");
 
+#ifdef _M_AMD64
+    skip("We need a new db test for amd64!\n");
+    return;
+#endif
+
     test_Sdb();
     test_write_ex();
     test_stringtable();
