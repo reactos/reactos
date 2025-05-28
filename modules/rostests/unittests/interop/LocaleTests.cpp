@@ -8,6 +8,8 @@
 
 #include "interop.h"
 
+#include <versionhelpers.h>
+
 #include <winnls.h>
 #include <strsafe.h>
 #include <shlwapi.h>
@@ -96,10 +98,9 @@ static void InitParts(void)
         { MMSY_STARTMENU, { mmsys, 5851 /* IDS_STARTMENU "Start Menu" */, 1 } },
         { EOLD_PROGRAMS, { explorer_old, 10 /* IDS_PROGRAMS "Programs" */, 1 } },
     };
+
     for (auto& pair : s_pairs)
-    {
         parts.insert(std::make_pair(pair.eString, pair.part_test));
-    }
 }
 
 static PART_MATCH PartMatches[] =
@@ -220,7 +221,7 @@ static void TEST_NumParts(void)
 
         if (!mod[m])
         {
-            skip("No module for test %d\n", p.first);
+            // trace("No module for test %d\n", p.first); // Already reported by TEST_LocaleTests().
             continue;
         }
 
@@ -230,25 +231,25 @@ static void TEST_NumParts(void)
         p.second.gotParts = CountParts(szBuffer);
 
         ok(p.second.gotParts == p.second.nParts,
-           "Locale 0x%04lX, Num parts mismatch s%02d, expected %lu got %lu\n",
+           "Locale 0x%04lX, Num parts mismatch s%02d, expected %lu got %lu. Will skip related checks\n",
            curLcid, p.first, p.second.nParts, p.second.gotParts);
     }
 }
 
-static BOOL LoadPart(_In_ PART* p, _Out_ LPWSTR str, _In_ SIZE_T size)
+static BOOL LoadPart(_In_ int pn, _In_ PART* p, _Out_ LPWSTR str, _In_ SIZE_T size)
 {
     auto s = parts[p->Num];
     E_MODULE m = s.eModule;
 
     if (!mod[m])
     {
-        SetLastError(ERROR_FILE_NOT_FOUND);
+        // trace("No module for match test s%02d (pair %d)\n", p->Num, pn); // Already reported by TEST_LocaleTests().
         return FALSE;
     }
 
     if (s.nParts != s.gotParts)
     {
-        SetLastError(ERROR_INVALID_DATA);
+        // trace("Invalid data for match test s%02d (pair %d)\n", p->Num, pn); // Already reported by TEST_NumParts().
         return FALSE;
     }
 
@@ -269,17 +270,10 @@ static void TEST_PartMatches(void)
     {
         WCHAR szP1[MAX_PATH], szP2[MAX_PATH];
 
-        if (!LoadPart(&match.p1, szP1, _countof(szP1)))
+        if (!LoadPart(1, &match.p1, szP1, _countof(szP1)) ||
+            !LoadPart(2, &match.p2, szP2, _countof(szP2)))
         {
-            skip("%s for match test s%02d (pair 1)\n", GetLastError() == ERROR_FILE_NOT_FOUND
-                ? "No module" : "Invalid data", match.p1.Num);
-            continue;
-        }
-
-        if (!LoadPart(&match.p2, szP2, _countof(szP2)))
-        {
-            skip("%s for match test s%02d (pair 2)\n", GetLastError() == ERROR_FILE_NOT_FOUND
-                ? "No module" : "Invalid data", match.p2.Num);
+            // Failures are already reported.
             continue;
         }
 
@@ -340,7 +334,11 @@ static void TEST_LocaleTests(void)
         mod[m] = LoadLibraryExW(lib[m], NULL, LOAD_LIBRARY_AS_DATAFILE);
         if (!mod[m])
         {
-            trace("Failed to load '%S', error %lu\n", lib[m], GetLastError());
+            // Special case explorer_old, which exists on ReactOS only.
+            if (m == explorer_old && !IsReactOS())
+                skip("Failed to load '%S', error %lu. Will skip related checks\n", lib[m], GetLastError());
+            else
+                ok(FALSE, "Failed to load '%S', error %lu. Will skip related checks\n", lib[m], GetLastError());
             continue;
         }
 
