@@ -245,12 +245,7 @@ UserEnumDisplayDevices(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (!pustrDevice)
-    {
-        ASSERT(pGraphicsDevice->PhysDeviceHandle);
-        pdo = pGraphicsDevice->PhysDeviceHandle;
-    }
-    else
+    if (pustrDevice)
     {
         EngpUpdateMonitorDevices(pGraphicsDevice);
         if (iDevNum >= pGraphicsDevice->dwMonCnt)
@@ -258,7 +253,6 @@ UserEnumDisplayDevices(
             TRACE("No monitor #%u for '%wZ'\n", iDevNum + 1, pustrDevice);
             return STATUS_UNSUCCESSFUL;
         }
-        pdo = pGraphicsDevice->pvMonDev[iDevNum].pdo;
     }
 
 
