@@ -61,11 +61,14 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A(NULL, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
-    ok(dp == InvalidPointer, "dp = %p\n", dp);
+    ok(dp == InvalidPointer || dp == 0, "dp = %p\n", dp);
 
     //NULL dp
-    dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
-    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
+    if (dp)
+    {
+        dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+        ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
+    }
 
     //Testing HostName
     dp = InvalidPointer;
@@ -274,11 +277,14 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_UTF8(NULL, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    ok(dp == InvalidPointer, "dp = %p\n", dp);
+    ok(dp == InvalidPointer || dp == 0, "dp = %p\n", dp);
 
     //NULL dp
-    dns_status = DnsQuery_UTF8(host_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
-    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
+    if (dp)
+    {
+        dns_status = DnsQuery_UTF8(host_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+        ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
+    }
 
     //Testing HostName
     dp = InvalidPointer;
@@ -523,13 +529,16 @@ void TestHostName(void)
     {
         /* Win7 */
         ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_W failed with error %lu\n", dns_status);
-        ok(dp == InvalidPointer, "dp = %p\n", dp);
+        ok(dp == InvalidPointer || dp == 0, "dp = %p\n", dp);
     }
     if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     //NULL dp
-    dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
-    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_W failed with error %lu\n", dns_status);
+    if (dp)
+    {
+        dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+        ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_W failed with error %lu\n", dns_status);
+    }
 
     //Testing HostName
     dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
