@@ -245,7 +245,11 @@ UserEnumDisplayDevices(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (pustrDevice)
+    if (!pustrDevice)
+    {
+        pdo = pGraphicsDevice->PhysDeviceHandle;
+    }
+    else
     {
         EngpUpdateMonitorDevices(pGraphicsDevice);
         if (iDevNum >= pGraphicsDevice->dwMonCnt)
@@ -253,6 +257,7 @@ UserEnumDisplayDevices(
             TRACE("No monitor #%u for '%wZ'\n", iDevNum + 1, pustrDevice);
             return STATUS_UNSUCCESSFUL;
         }
+        pdo = pGraphicsDevice->pvMonDev[iDevNum].pdo;
     }
 
 
@@ -282,7 +287,6 @@ UserEnumDisplayDevices(
         RtlStringCbCopyW(pdispdev->DeviceName, sizeof(pdispdev->DeviceName), pGraphicsDevice->szWinDeviceName);
         RtlStringCbCopyW(pdispdev->DeviceString, sizeof(pdispdev->DeviceString), pGraphicsDevice->pwszDescription);
         pdispdev->StateFlags = pGraphicsDevice->StateFlags;
-        pdo = pGraphicsDevice->PhysDeviceHandle;
     }
     else
     {
@@ -298,7 +302,6 @@ UserEnumDisplayDevices(
                 pdispdev->DeviceString[0] = UNICODE_NULL;
         }
         pdispdev->StateFlags = pGraphicsDevice->pvMonDev[iDevNum].flag;
-        pdo = pGraphicsDevice->pvMonDev[iDevNum].pdo;
     }
     pdispdev->DeviceID[0] = UNICODE_NULL;
 
