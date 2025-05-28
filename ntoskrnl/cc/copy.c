@@ -294,6 +294,8 @@ Clear:
 
 /*
  * @unimplemented
+ *
+ * 'Retrying' is actually used as a CC_CAN_WRITE_RETRY.
  */
 BOOLEAN
 NTAPI
@@ -306,7 +308,7 @@ CcCanIWrite (
     KIRQL OldIrql;
     KEVENT WaitEvent;
     ULONG Length, Pages;
-    BOOLEAN PerFileDefer;
+    BOOLEAN IsNotThrottling, PerFileDefer;
     DEFERRED_WRITE Context;
     PFSRTL_COMMON_FCB_HEADER Fcb;
     CC_CAN_WRITE_RETRY TryContext;
@@ -321,7 +323,9 @@ CcCanIWrite (
         return TRUE;
     }
 
+    /* Alias from BOOLEAN to CC_CAN_WRITE_RETRY */
     TryContext = Retrying;
+
     /* Allow remote file if not from posted */
     if (IoIsFileOriginRemote(FileObject) && TryContext < RetryAllowRemote)
     {
@@ -375,18 +379,19 @@ CcCanIWrite (
     }
 
     /* So, now allow write if:
-     * - Not the first try or we have no throttling yet
+     * - Not throttling yet or not the first try
      * AND:
      * - We don't exceed threshold!
      * - We don't exceed what Mm can allow us to use
      *   + If we're above top, that's fine
      *   + If we're above bottom with limited modified pages, that's fine
-     *   + Otherwise, throttle!
+     + - Per file limits are not blocking
      */
-    if ((TryContext != FirstTry || IsListEmpty(&CcDeferredWrites)) &&
+    IsNotThrottling = IsListEmpty(&CcDeferredWrites);
+    if ((IsNotThrottling || Retrying) &&
         CcTotalDirtyPages + Pages < CcDirtyPageThreshold &&
         (MmAvailablePages > MmThrottleTop ||
-         (MmModifiedPageListHead.Total < 1000 && MmAvailablePages > MmThrottleBottom)) &&
+         (MmAvailablePages > MmThrottleBottom && MmModifiedPageListHead.Total < 1000)) &&
         !PerFileDefer)
     {
         return TRUE;
@@ -401,10 +406,9 @@ CcCanIWrite (
     }
 
     /* Otherwise, if there are no deferred writes yet, start the lazy writer */
-    if (IsListEmpty(&CcDeferredWrites))
+    /* Optimized to avoid always locking to check LazyWriter.ScanActive */
+    if (IsNotThrottling)
     {
-        KIRQL OldIrql;
-
         OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
         CcScheduleLazyWriteScan(TRUE);
         KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
@@ -438,17 +442,34 @@ CcCanIWrite (
     }
 
 #if DBG
-    DPRINT1("Actively deferring write for: %p\n", FileObject);
+    DPRINT1("Actively deferring write for: %p \"%wZ\"\n", FileObject, &FileObject->FileName);
     DPRINT1("Because:\n");
+    if (!IsNotThrottling && !Retrying)
+        DPRINT1("    First try while already throttling\n");
     if (CcTotalDirtyPages + Pages >= CcDirtyPageThreshold)
-        DPRINT1("    There are too many cache dirty pages: %x + %x >= %x\n", CcTotalDirtyPages, Pages, CcDirtyPageThreshold);
+    {
+        DPRINT1("    There are too many cache dirty pages: 0x%lx + 0x%lx >= 0x%lx\n",
+                CcTotalDirtyPages, Pages, CcDirtyPageThreshold);
+    }
     if (MmAvailablePages <= MmThrottleTop)
-        DPRINT1("    Available pages are below throttle top: %lx <= %lx\n", MmAvailablePages, MmThrottleTop);
-    if (MmModifiedPageListHead.Total >= 1000)
-        DPRINT1("    There are too many modified pages: %lu >= 1000\n", MmModifiedPageListHead.Total);
-    if (MmAvailablePages <= MmThrottleBottom)
-        DPRINT1("    Available pages are below throttle bottom: %lx <= %lx\n", MmAvailablePages, MmThrottleBottom);
+    {
+        if (MmAvailablePages <= MmThrottleBottom)
+        {
+            DPRINT1("    Available pages are below throttle bottom: 0x%Ix <= 0x%lx\n",
+                    MmAvailablePages, MmThrottleBottom);
+        }
+        else if (MmModifiedPageListHead.Total >= 1000)
+        {
+            DPRINT1("    Available pages are below throttle top: 0x%Ix <= 0x%lx\n",
+                    MmAvailablePages, MmThrottleTop);
+            DPRINT1("     + There are too many modified pages: %Iu >= 1000\n",
+                    MmModifiedPageListHead.Total);
+        }
+    }
+    if (PerFileDefer)
+        DPRINT1("    Per file limits are blocking\n");
 #endif
+
     /* Now, we'll loop until our event is set. When it is set, it means that caller
      * can immediately write, and has to
      */
