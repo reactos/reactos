@@ -445,7 +445,6 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
         if (!NewList)
         {
             /* Fail */
-            ExFreePool(PnpBusTypeGuidList);
             goto Quickie;
         }
 
