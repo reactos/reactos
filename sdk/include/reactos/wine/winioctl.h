@@ -433,7 +433,7 @@ typedef struct _FILE_FS_DEVICE_INFORMATION {
 
 /* FileFsAttributeInformation = 5 */
 typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
-	ULONG	FileSystemAttribute;
+	ULONG	FileSystemAttributes;
 	LONG	MaximumComponentNameLength;
 	ULONG	FileSystemNameLength;
 	WCHAR	FileSystemName[1];
