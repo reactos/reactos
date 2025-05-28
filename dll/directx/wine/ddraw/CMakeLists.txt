@@ -32,6 +32,11 @@ add_library(ddraw MODULE
     ddraw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)
 
+if(MSVC)
+    # Disable C5286: implicit conversion from enum type 'x' to enum type 'y';
+    target_compile_options(ddraw PRIVATE /wd5286)
+endif()
+
 set_module_type(ddraw win32dll)
 target_link_libraries(ddraw wine uuid dxguid ${PSEH_LIB})
 add_importlibs(ddraw advapi32 gdi32 user32 d3dwine msvcrt kernel32 ntdll)
