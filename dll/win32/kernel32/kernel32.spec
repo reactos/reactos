@@ -900,8 +900,8 @@
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
-@ stdcall -version=0x600+ QueryFullProcessImageNameA(ptr long str ptr)
-@ stdcall -version=0x600+ QueryFullProcessImageNameW(ptr long wstr ptr)
+@ stdcall -version=0x600+ QueryFullProcessImageNameA(ptr long ptr ptr)
+@ stdcall -version=0x600+ QueryFullProcessImageNameW(ptr long ptr ptr)
 @ stub -version=0x600+ QueryIdleProcessorCycleTime
 @ stdcall QueryInformationJobObject(long long ptr long ptr)
 @ stdcall QueryMemoryResourceNotification(ptr ptr)
