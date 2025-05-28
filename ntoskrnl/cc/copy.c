@@ -405,6 +405,36 @@ CcCanIWrite (
         return FALSE;
     }
 
+#if DBG
+    /* Output to debug log, before handling the lazy write */
+    DPRINT1("Actively deferring write for: %p \"%wZ\"\n", FileObject, &FileObject->FileName);
+    DPRINT1("Because:\n");
+    if (!IsNotThrottling && !Retrying)
+        DPRINT1("    First try while already throttling\n");
+    if (CcTotalDirtyPages + Pages >= CcDirtyPageThreshold)
+    {
+        DPRINT1("    There are too many cache dirty pages: 0x%lx + 0x%lx >= 0x%lx\n",
+                CcTotalDirtyPages, Pages, CcDirtyPageThreshold);
+    }
+    if (MmAvailablePages <= MmThrottleTop)
+    {
+        if (MmAvailablePages <= MmThrottleBottom)
+        {
+            DPRINT1("    Available pages are below throttle bottom: 0x%Ix <= 0x%lx\n",
+                    MmAvailablePages, MmThrottleBottom);
+        }
+        else if (MmModifiedPageListHead.Total >= 1000)
+        {
+            DPRINT1("    Available pages are below throttle top: 0x%Ix <= 0x%lx\n",
+                    MmAvailablePages, MmThrottleTop);
+            DPRINT1("     + There are too many modified pages: %Iu >= 1000\n",
+                    MmModifiedPageListHead.Total);
+        }
+    }
+    if (PerFileDefer)
+        DPRINT1("    Per file limits are blocking\n");
+#endif
+
     /* Otherwise, if there are no deferred writes yet, start the lazy writer */
     /* Optimized to avoid always locking to check LazyWriter.ScanActive */
     if (IsNotThrottling)
@@ -440,35 +470,6 @@ CcCanIWrite (
                                     &Context.DeferredWriteLinks,
                                     &CcDeferredWriteSpinLock);
     }
-
-#if DBG
-    DPRINT1("Actively deferring write for: %p \"%wZ\"\n", FileObject, &FileObject->FileName);
-    DPRINT1("Because:\n");
-    if (!IsNotThrottling && !Retrying)
-        DPRINT1("    First try while already throttling\n");
-    if (CcTotalDirtyPages + Pages >= CcDirtyPageThreshold)
-    {
-        DPRINT1("    There are too many cache dirty pages: 0x%lx + 0x%lx >= 0x%lx\n",
-                CcTotalDirtyPages, Pages, CcDirtyPageThreshold);
-    }
-    if (MmAvailablePages <= MmThrottleTop)
-    {
-        if (MmAvailablePages <= MmThrottleBottom)
-        {
-            DPRINT1("    Available pages are below throttle bottom: 0x%Ix <= 0x%lx\n",
-                    MmAvailablePages, MmThrottleBottom);
-        }
-        else if (MmModifiedPageListHead.Total >= 1000)
-        {
-            DPRINT1("    Available pages are below throttle top: 0x%Ix <= 0x%lx\n",
-                    MmAvailablePages, MmThrottleTop);
-            DPRINT1("     + There are too many modified pages: %Iu >= 1000\n",
-                    MmModifiedPageListHead.Total);
-        }
-    }
-    if (PerFileDefer)
-        DPRINT1("    Per file limits are blocking\n");
-#endif
 
     /* Now, we'll loop until our event is set. When it is set, it means that caller
      * can immediately write, and has to
