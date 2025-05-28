@@ -28,6 +28,11 @@ add_library(d3d9 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def)
 
+if(MSVC)
+    # Disable C5286: implicit conversion from enum type 'x' to enum type 'y';
+    target_compile_options(d3d9 PRIVATE /wd5286)
+endif()
+
 set_module_type(d3d9 win32dll UNICODE)
 target_link_libraries(d3d9 wine)
 add_importlibs(d3d9 d3dwine user32 msvcrt kernel32 ntdll)

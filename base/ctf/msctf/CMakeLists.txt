@@ -28,6 +28,11 @@ add_library(msctf MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)
 
+if(MSVC)
+    # Disable C5286: implicit conversion from enum type 'x' to enum type 'y';
+    target_compile_options(msctf PRIVATE /wd5286)
+endif()
+
 set_module_type(msctf win32dll UNICODE)
 target_link_libraries(msctf uuid wine cicero)
 add_importlibs(msctf user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
