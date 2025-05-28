@@ -54,6 +54,13 @@ if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_CRT_TESTS
         ../crt/__getmainargs.c # FIXME: Moved here because it doesn't work on x64
     )
+    list(APPEND ASM_SOURCE_CRT_TESTS
+        ../crt/i386/setjmp_helper.s
+    )
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ASM_SOURCE_CRT_TESTS
+        ../crt/amd64/setjmp_helper.s
+    )
 elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE_CRT_TESTS
         ../crt/__rt_div.c
@@ -61,9 +68,11 @@ elseif(ARCH STREQUAL "arm")
         ../crt/__64tof.c
     )
 endif()
+add_asm_files(crt_asm ${ASM_SOURCE_CRT_TESTS})
 
 list(APPEND SOURCE
     ${SOURCE_CRT_TESTS}
+    ${crt_asm}
     CommandLine.c
     ieee.c
     popen.c
@@ -71,6 +80,7 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(msvcrt_apitest ${SOURCE})
+add_dependencies(msvcrt_apitest asm)
 target_compile_definitions(msvcrt_apitest PRIVATE TEST_MSVCRT)
 target_link_libraries(msvcrt_apitest wine ${PSEH_LIB})
 set_module_type(msvcrt_apitest win32cui)
