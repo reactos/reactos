@@ -2576,7 +2576,6 @@ EXTERN_C HINSTANCE WINAPI WOWShellExecute(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFil
 EXTERN_C void WINAPI
 OpenAs_RunDLLW(HWND hwnd, HINSTANCE hinst, LPCWSTR cmdline, int cmdshow)
 {
-    CCoInit ComStaInit;
     OPENASINFO info = { cmdline, NULL, OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC };
     TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_w(cmdline), cmdshow);
     SHOpenWithDialog(hwnd, &info);
