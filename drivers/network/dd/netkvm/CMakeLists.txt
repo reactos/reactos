@@ -4,7 +4,7 @@ include_directories(BEFORE Common
 
 add_definitions(
    -DNDIS_MINIPORT_DRIVER
-   -DNDIS51_MINIPORT=1)
+   -DNDIS51_MINIPORT)
 
 list(APPEND SOURCE
     Common/ParaNdis-Common.c
