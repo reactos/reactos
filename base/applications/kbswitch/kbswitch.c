@@ -55,12 +55,23 @@ vDbgPrintExWithPrefix(IN PCCH Prefix,
                       IN PCCH Format,
                       IN va_list ap)
 {
-    CHAR Buffer[512];
-    SIZE_T PrefixLength = strlen(Prefix);
-    strncpy(Buffer, Prefix, PrefixLength);
-    _vsnprintf(Buffer + PrefixLength, _countof(Buffer) - PrefixLength, Format, ap);
-    Buffer[_countof(Buffer) - 1] = ANSI_NULL; /* Avoid buffer overrun */
-    OutputDebugStringA(Buffer);
+    static CHAR s_szBuffer[256] = "";
+    SIZE_T cch;
+
+    UNREFERENCED_PARAMETER(Prefix);
+    UNREFERENCED_PARAMETER(ComponentId);
+    UNREFERENCED_PARAMETER(Level);
+
+    cch = strlen(s_szBuffer);
+    StringCchVPrintfA(&s_szBuffer[cch], _countof(s_szBuffer) - cch, Format, ap);
+
+    cch = strlen(s_szBuffer);
+    if (cch && (s_szBuffer[cch - 1] == '\n' || cch == _countof(s_szBuffer) - 1))
+    {
+        OutputDebugStringA(s_szBuffer);
+        s_szBuffer[0] = ANSI_NULL;
+    }
+
     return 0;
 }
 
