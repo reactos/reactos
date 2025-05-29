@@ -7,5 +7,6 @@
 #define IDR_POPUP 12000
 
 /* Menu items */
-#define ID_EXIT        10001
-#define ID_PREFERENCES 10002
+#define ID_EXIT        101
+#define ID_PREFERENCES 102
+#define ID_LANG_BASE   10000
