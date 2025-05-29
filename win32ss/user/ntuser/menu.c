@@ -4398,25 +4398,26 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     return executedMenuId;
 }
 
-static VOID FASTCALL MENU_TerminateOldMenuTracking(VOID)
+static VOID FASTCALL
+MENU_TerminateOldMenuTracking(VOID)
 {
     PWND pOldWnd = MENU_IsMenuActive();
-    if (pOldWnd)
-    {
-        HWND hwndOld = UserHMGetHandle(pOldWnd);
-        MENU_EndMenu(pOldWnd);
+    if (!pOldWnd)
+        return;
 
-        /*
-         * Wait for closing hwndOld.
-         * FIXME: We shouldn't wait for closing, that will be a slow-down.
-         *        However there are some global variables for tracking
-         */
-        MSG msg;
-        while (IntIsWindow(hwndOld) &&
-               co_IntGetPeekMessage(&msg, hwndOld, 0, 0, PM_REMOVE, TRUE))
-        {
-            IntDispatchMessage(&msg);
-        }
+    HWND hwndOld = UserHMGetHandle(pOldWnd);
+    MENU_EndMenu(pOldWnd);
+
+    /*
+     * Wait for closing hwndOld.
+     * FIXME: We shouldn't wait for closing, that will be a slow-down.
+     *        However there are some global variables for tracking
+     */
+    MSG msg;
+    while (IntIsWindow(hwndOld) &&
+           co_IntGetPeekMessage(&msg, hwndOld, 0, 0, PM_REMOVE, TRUE))
+    {
+        IntDispatchMessage(&msg);
     }
 }
 
