@@ -11,31 +11,68 @@
 extern "C" {
 #endif
 
+
+typedef enum AppPolicyMediaFoundationCodecLoading
+{
+    AppPolicyMediaFoundationCodecLoading_All       = 0,
+    AppPolicyMediaFoundationCodecLoading_InboxOnly = 1,
+} AppPolicyMediaFoundationCodecLoading;
+
 typedef enum AppPolicyProcessTerminationMethod
 {
-    AppPolicyProcessTerminationMethod_ExitProcess = 0,
+    AppPolicyProcessTerminationMethod_ExitProcess      = 0,
     AppPolicyProcessTerminationMethod_TerminateProcess = 1,
 } AppPolicyProcessTerminationMethod;
 
 typedef enum AppPolicyThreadInitializationType
 {
-    AppPolicyThreadInitializationType_None = 0,
+    AppPolicyThreadInitializationType_None            = 0,
     AppPolicyThreadInitializationType_InitializeWinRT = 1,
 } AppPolicyThreadInitializationType;
 
 typedef enum AppPolicyShowDeveloperDiagnostic
 {
-    AppPolicyShowDeveloperDiagnostic_None = 0,
+    AppPolicyShowDeveloperDiagnostic_None   = 0,
     AppPolicyShowDeveloperDiagnostic_ShowUI = 1,
 } AppPolicyShowDeveloperDiagnostic;
 
 typedef enum AppPolicyWindowingModel
 {
-    AppPolicyWindowingModel_None = 0,
-    AppPolicyWindowingModel_Universal = 1,
+    AppPolicyWindowingModel_None           = 0,
+    AppPolicyWindowingModel_Universal      = 1,
     AppPolicyWindowingModel_ClassicDesktop = 2,
-    AppPolicyWindowingModel_ClassicPhone = 3
+    AppPolicyWindowingModel_ClassicPhone   = 3
 } AppPolicyWindowingModel;
+
+typedef struct PACKAGE_VERSION
+{
+    union
+    {
+        UINT64 Version;
+        struct
+        {
+            USHORT Revision;
+            USHORT Build;
+            USHORT Minor;
+            USHORT Major;
+        }
+        DUMMYSTRUCTNAME;
+    }
+    DUMMYUNIONNAME;
+}
+PACKAGE_VERSION;
+
+typedef struct PACKAGE_ID
+{
+    UINT32 reserved;
+    UINT32 processorArchitecture;
+    PACKAGE_VERSION version;
+    WCHAR *name;
+    WCHAR *publisher;
+    WCHAR *resourceId;
+    WCHAR *publisherId;
+}
+PACKAGE_ID;
 
 WINBASEAPI
 _Check_return_

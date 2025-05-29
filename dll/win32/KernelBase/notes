@@ -1,0 +1,11 @@
+wine/actctx.c - ours is better
+wine/comm.c ? maybe syncable
+wine/lzexpand.c syncable - Kernel32
+wine/profile.c syncable - kernel32
+wine/res.c - loader.c - kernelbase
+wine/timezone.c ?
+winnls/string/fold.c <-Locale - unsyncable until we have more kernel apis
+winnls/string/format_msg.c <- Locale - unsyncable until we have more kernel apis
+winnls/string/lcformat.c <- Locale - unsyncable until we have more kernel apis
+winnls/string/locale.c <- Locale - unsyncable until we have more kernel apis
+winnls/string/sortkey.c <- Locale - unsyncable until we have more kernel apis

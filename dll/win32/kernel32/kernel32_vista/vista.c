@@ -156,55 +156,6 @@ GetApplicationRestart(IN HANDLE hProcess,
 }
 
 
-/*
- * @unimplemented
- */
-VOID
-WINAPI
-ApplicationRecoveryFinished(IN BOOL bSuccess)
-{
-    UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT
-WINAPI
-ApplicationRecoveryInProgress(OUT PBOOL pbCancelled)
-{
-    UNIMPLEMENTED;
-    return E_FAIL;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT
-WINAPI
-RegisterApplicationRecoveryCallback(IN APPLICATION_RECOVERY_CALLBACK pRecoveryCallback,
-                                    IN PVOID pvParameter  OPTIONAL,
-                                    DWORD dwPingInterval,
-                                    DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return E_FAIL;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT
-WINAPI
-RegisterApplicationRestart(IN PCWSTR pwzCommandline  OPTIONAL,
-                           IN DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return E_FAIL;
-}
 
 
 /*
@@ -686,18 +637,6 @@ GetThreadPreferredUILanguages(
 /*
  * @unimplemented
  */
-LANGID
-WINAPI
-GetThreadUILanguage(VOID)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 WINAPI
 GetUILanguageInfo(
@@ -729,10 +668,6 @@ GetUserPreferredUILanguages(
     return FALSE;
 }
 
-/*
- * @unimplemented
- */
-#if 0 // Tis is Windows 7+
 BOOL
 WINAPI
 SetProcessPreferredUILanguages(
@@ -744,7 +679,6 @@ SetProcessPreferredUILanguages(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
-#endif
 
 /*
  * @unimplemented

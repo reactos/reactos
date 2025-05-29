@@ -24,7 +24,9 @@
 #include "windows.h"
 #include "appmodel.h"
 #include "shlwapi.h"
+#ifndef __REACTOS__
 #include "perflib.h"
+#endif
 #include "winternl.h"
 
 #include "wine/debug.h"
@@ -34,9 +36,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(kernelbase);
 
+#ifdef __REACTOS__
+const GUID IID_IUnknown           = {0x00000000, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
+#endif
 
 BOOL is_wow64 = FALSE;
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           DllMain
  */
@@ -47,39 +53,16 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
         DisableThreadLibraryCalls( hinst );
         IsWow64Process( GetCurrentProcess(), &is_wow64 );
         init_global_data();
-        init_locale( hinst );
+     //   init_locale( hinst );
         init_startup_info( NtCurrentTeb()->Peb->ProcessParameters );
+#ifndef __REACTOS__
         init_console();
+#endif
     }
     return TRUE;
 }
+#endif
 
-
-/***********************************************************************
- *           MulDiv   (kernelbase.@)
- */
-INT WINAPI MulDiv( INT a, INT b, INT c )
-{
-    LONGLONG ret;
-
-    if (!c) return -1;
-
-    /* We want to deal with a positive divisor to simplify the logic. */
-    if (c < 0)
-    {
-        a = -a;
-        c = -c;
-    }
-
-    /* If the result is positive, we "add" to round. else, we subtract to round. */
-    if ((a < 0 && b < 0) || (a >= 0 && b >= 0))
-        ret = (((LONGLONG)a * b) + (c / 2)) / c;
-    else
-        ret = (((LONGLONG)a * b) - (c / 2)) / c;
-
-    if (ret > 2147483647 || ret < -2147483647) return -1;
-    return ret;
-}
 
 /***********************************************************************
  *          AppPolicyGetMediaFoundationCodecLoading (KERNELBASE.@)
@@ -147,34 +130,8 @@ LONG WINAPI AppPolicyGetWindowingModel(HANDLE token, AppPolicyWindowingModel *po
     return ERROR_SUCCESS;
 }
 
-struct counterset_template
-{
-    PERF_COUNTERSET_INFO counterset;
-    PERF_COUNTER_INFO counter[1];
-};
 
-struct counterset_instance
-{
-    struct list entry;
-    struct counterset_template *template;
-    PERF_COUNTERSET_INSTANCE instance;
-};
-
-struct perf_provider
-{
-    GUID guid;
-    PERFLIBREQUEST callback;
-    struct counterset_template **countersets;
-    unsigned int counterset_count;
-
-    struct list instance_list;
-};
-
-static struct perf_provider *perf_provider_from_handle(HANDLE prov)
-{
-    return (struct perf_provider *)prov;
-}
-
+#ifndef __REACTOS__
 /***********************************************************************
  *           PerfCreateInstance   (KERNELBASE.@)
  */
@@ -395,7 +352,7 @@ ULONG WINAPI PerfStopProvider(HANDLE handle)
     heap_free( prov );
     return STATUS_SUCCESS;
 }
-
+#endif
 /***********************************************************************
  *           QuirkIsEnabled   (KERNELBASE.@)
  */

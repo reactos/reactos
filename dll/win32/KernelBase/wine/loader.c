@@ -28,7 +28,9 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winternl.h"
+#ifndef __REACTOS__
 #include "ddk/ntddk.h"
+#endif
 #include "kernelbase.h"
 #include "wine/list.h"
 #include "wine/asm.h"
@@ -60,6 +62,7 @@ static CRITICAL_SECTION exclusive_datafile_list_section = { &critsect_debug, -1,
  * Modules
  ***********************************************************************/
 
+#ifndef __REACTOS__ // Let use the reactos implementation of this
 
 /******************************************************************
  *      get_proc_address
@@ -492,12 +495,19 @@ FARPROC WINAPI DECLSPEC_HOTPATCH GetProcAddress( HMODULE module, LPCSTR function
 
 #endif /* __x86_64__ */
 
+#endif
 
 /***********************************************************************
  *	IsApiSetImplemented   (kernelbase.@)
  */
 BOOL WINAPI IsApiSetImplemented( LPCSTR name )
 {
+#ifdef __REACTOS__
+    return TRUE;
+    /*
+     * ReactOS always has API sets on now?
+     */
+#else
     UNICODE_STRING str;
     NTSTATUS status;
     BOOLEAN in_schema, present;
@@ -506,8 +516,10 @@ BOOL WINAPI IsApiSetImplemented( LPCSTR name )
     status = ApiSetQueryApiSetPresenceEx( &str, &in_schema, &present );
     RtlFreeUnicodeString( &str );
     return !status && present;
+#endif
 }
 
+#ifndef __REACTOS__
 
 /***********************************************************************
  *	LoadLibraryA   (kernelbase.@)
@@ -566,6 +578,7 @@ HMODULE WINAPI DECLSPEC_HOTPATCH LoadLibraryExW( LPCWSTR name, HANDLE file, DWOR
     return module;
 }
 
+#endif
 
 /***********************************************************************
  *      LoadPackagedLibrary    (kernelbase.@)
@@ -932,7 +945,7 @@ done:
     return ret;
 }
 
-
+#ifndef __REACTOS__
 /**********************************************************************
  *	EnumResourceNamesW	(kernelbase.@)
  */
@@ -941,7 +954,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH EnumResourceNamesW( HMODULE module, LPCWSTR type,
 {
     return EnumResourceNamesExW( module, type, func, param, 0, 0 );
 }
-
+#endif
 
 /**********************************************************************
  *	EnumResourceTypesExA	(kernelbase.@)
@@ -1045,7 +1058,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH EnumResourceTypesExW( HMODULE module, ENUMRESTYPEP
     return ret;
 }
 
-
+#ifndef __REACTOS__
 /**********************************************************************
  *	    FindResourceExW  (kernelbase.@)
  */
@@ -1221,7 +1234,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetCurrentActCtx( HANDLE *pcontext )
     return set_ntstatus( RtlGetActiveActivationContext( pcontext ));
 }
 
-
+#endif
 /***********************************************************************
  *          QueryActCtxSettingsW    (kernelbase.@)
  */
@@ -1232,8 +1245,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH QueryActCtxSettingsW( DWORD flags, HANDLE ctx, con
     return set_ntstatus( RtlQueryActivationContextApplicationSettings( flags, ctx, ns, settings,
                                                                        buffer, size, written ));
 }
-
-
+#ifndef __REACTOS__
 /***********************************************************************
  *          QueryActCtxW    (kernelbase.@)
  */
@@ -1261,3 +1273,4 @@ BOOL WINAPI DECLSPEC_HOTPATCH ZombifyActCtx( HANDLE context )
 {
     return set_ntstatus( RtlZombifyActivationContext( context ));
 }
+#endif

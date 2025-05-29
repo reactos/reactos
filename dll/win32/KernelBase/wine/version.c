@@ -68,6 +68,7 @@ struct version_info
     DWORD build;
 };
 
+#ifndef __REACTOS__
 /***********************************************************************
  * Version Info Structure
  */
@@ -1541,7 +1542,7 @@ BOOL WINAPI GetVersionExW( OSVERSIONINFOW *info )
     }
     return TRUE;
 }
-
+#endif
 
 /***********************************************************************
  *         GetCurrentPackageFamilyName   (kernelbase.@)

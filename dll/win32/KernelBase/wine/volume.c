@@ -33,10 +33,14 @@
 #include "winnls.h"
 #include "winternl.h"
 #include "winioctl.h"
+#ifdef __REACTOS__
+#include <mountmgr.h>
+#else
 #include "ntddcdrm.h"
 #define WINE_MOUNTMGR_EXTENSIONS
 #include "ddk/mountmgr.h"
 #include "ddk/wdm.h"
+#endif
 #include "kernelbase.h"
 #include "wine/debug.h"
 
@@ -119,6 +123,7 @@ static BOOL open_device_root( LPCWSTR root, HANDLE *handle )
     return set_ntstatus( status );
 }
 
+#ifndef __REACTOS__
 /* query the type of a drive from the mount manager */
 static DWORD get_mountmgr_drive_type( LPCWSTR root )
 {
@@ -147,7 +152,7 @@ static DWORD get_mountmgr_drive_type( LPCWSTR root )
     CloseHandle( mgr );
     return data.type;
 }
-
+#endif
 
 /***********************************************************************
  *           GetVolumeInformationW   (kernelbase.@)
@@ -568,7 +573,7 @@ UINT WINAPI DECLSPEC_HOTPATCH GetLogicalDriveStringsW( UINT len, LPWSTR buffer )
     return count * 4;
 }
 
-
+#ifndef __REACTOS__
 /***********************************************************************
  *           GetDriveTypeW   (kernelbase.@)
  */
@@ -629,7 +634,7 @@ UINT WINAPI DECLSPEC_HOTPATCH GetDriveTypeA( LPCSTR root )
     if (root && !(rootW = file_name_AtoW( root, FALSE ))) return DRIVE_NO_ROOT_DIR;
     return GetDriveTypeW( rootW );
 }
-
+#endif
 
 /***********************************************************************
  *           GetDiskFreeSpaceExW   (kernelbase.@)

@@ -80,7 +80,6 @@ static const WCHAR szLangGroupsKeyName[] = {
     'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
 };
 
-#if (WINVER >= 0x0600)
 /* Charset to codepage map, sorted by name. */
 static const struct charset_entry
 {
@@ -141,7 +140,6 @@ static const struct charset_entry
     { "KOI8U", 21866 },
     { "UTF8", CP_UTF8 }
 };
-#endif
 
 
 struct locale_name
@@ -332,7 +330,6 @@ static const union cptable *get_codepage_table( unsigned int codepage )
 }
 #endif // !__REACTOS__
 
-#if (WINVER >= 0x0600)
 /***********************************************************************
  *              charset_cmp (internal)
  */
@@ -362,7 +359,6 @@ static UINT find_charset( const WCHAR *name )
     if (entry) return entry->codepage;
     return 0;
 }
-#endif // (WINVER >= 0x0600)
 
 static LANGID get_default_sublang( LANGID lang )
 {
@@ -382,7 +378,6 @@ static LANGID get_default_sublang( LANGID lang )
     return lang;
 }
 
-#if (WINVER >= 0x0600)
 /***********************************************************************
  *           find_locale_id_callback
  */
@@ -576,7 +571,6 @@ done:
     EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING, (LPCWSTR)LOCALE_ILANGUAGE,
                             find_locale_id_callback, (LPARAM)name );
 }
-#endif
 
 
 /***********************************************************************
@@ -1332,7 +1326,6 @@ BOOL WINAPI GetThreadPreferredUILanguages( DWORD flags, ULONG *count, WCHAR *buf
     return get_dummy_preferred_ui_language( flags, count, buf, size );
 }
 
-#if (WINVER >= 0x0600)
 /******************************************************************************
  *             GetUserPreferredUILanguages (KERNEL32.@)
  */
@@ -1358,7 +1351,6 @@ BOOL WINAPI GetUserPreferredUILanguages( DWORD flags, ULONG *count, WCHAR *buffe
 
     return get_dummy_preferred_ui_language( flags, count, buffer, size );
 }
-#endif // (WINVER >= 0x0600)
 #endif // !__REACTOS__
 
 /***********************************************************************
@@ -1399,7 +1391,6 @@ LANGID WINAPI GetSystemDefaultUILanguage(void)
     return lang;
 }
 
-#if (WINVER >= 0x0600)
 /***********************************************************************
  *           LocaleNameToLCID  (KERNEL32.@)
  */
@@ -1441,8 +1432,6 @@ INT WINAPI LCIDToLocaleName( LCID lcid, LPWSTR name, INT count, DWORD flags )
 
     return GetLocaleInfoW( lcid, LOCALE_SNAME | LOCALE_NOUSEROVERRIDE, name, count );
 }
-#endif
-
 
 /******************************************************************************
  *		get_locale_registry_value
@@ -1806,7 +1795,6 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     return ret;
 }
 
-#if (WINVER >= 0x0600)
 /******************************************************************************
  *           GetLocaleInfoEx (KERNEL32.@)
  */
@@ -1860,7 +1848,6 @@ GetUserDefaultLocaleName(
     TRACE( "GetUserDefaultLocaleName not implemented (lpLocaleName=%s, cchLocaleName=%d)\n", debugstr_w(lpLocaleName), cchLocaleName);
     return 0;
 }
-#endif
 
 /******************************************************************************
  *		SetLocaleInfoA	[KERNEL32.@]
@@ -4152,8 +4139,7 @@ INT WINAPI CompareStringA(LCID lcid, DWORD flags,
     if (str2W != buf2W) HeapFree(GetProcessHeap(), 0, str2W);
     return ret;
 }
-
-#if (WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
 /******************************************************************************
  *           CompareStringOrdinal    (KERNEL32.@)
  */
@@ -4174,8 +4160,7 @@ INT WINAPI CompareStringOrdinal(const WCHAR *str1, INT len1, const WCHAR *str2, 
     if (ret > 0) return CSTR_GREATER_THAN;
     return CSTR_EQUAL;
 }
-#endif // (WINVER >= 0x0600)
-
+#endif
 #ifndef __REACTOS__
 /*************************************************************************
  *           lstrcmp     (KERNEL32.@)

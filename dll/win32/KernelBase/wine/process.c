@@ -31,13 +31,15 @@
 
 #include "kernelbase.h"
 #include "wine/debug.h"
+#ifndef __REACTOS__
 #include "wine/condrv.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(process);
 
 static DWORD shutdown_flags = 0;
 static DWORD shutdown_priority = 0x280;
-
+#ifndef __REACTOS__
 /***********************************************************************
  * Processes
  ***********************************************************************/
@@ -233,6 +235,8 @@ static RTL_USER_PROCESS_PARAMETERS *create_process_params( const WCHAR *filename
     if (envW != env) RtlFreeHeap( GetProcessHeap(), 0, envW );
     return params;
 }
+#endif
+
 
 struct proc_thread_attr
 {
@@ -251,6 +255,7 @@ struct _PROC_THREAD_ATTRIBUTE_LIST
     struct proc_thread_attr attrs[1];
 };
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           create_nt_process
  */
@@ -838,7 +843,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetPriorityClass( HANDLE process )
     default: return 0;
     }
 }
-
+#endif
 
 /***********************************************************************
  *           GetProcessGroupAffinity   (kernelbase.@)
@@ -850,6 +855,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetProcessGroupAffinity( HANDLE process, USHORT *c
     return FALSE;
 }
 
+#ifndef __REACTOS__
 
 /******************************************************************
  *           GetProcessHandleCount   (kernelbase.@)
@@ -1742,6 +1748,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetEnvironmentVariableW( LPCWSTR name, LPCWSTR val
     return set_ntstatus( status );
 }
 
+#endif
 
 /***********************************************************************
  * Process/thread attribute lists
@@ -1868,5 +1875,9 @@ void WINAPI DECLSPEC_HOTPATCH DeleteProcThreadAttributeList( struct _PROC_THREAD
  */
 BOOL WINAPI DECLSPEC_HOTPATCH CompareObjectHandles( HANDLE first, HANDLE second )
 {
+#ifndef __REACTOS__
     return set_ntstatus( NtCompareObjects( first, second ));
+#else
+    return FALSE; //NtCompareObjects is not implemented in ReactOS
+#endif
 }

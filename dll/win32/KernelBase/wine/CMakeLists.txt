@@ -39,9 +39,22 @@ endif()
 
 list(APPEND SOURCE_STATIC
     #console.c #looks like ReactOS console.c is nothing like wine.
+    debug.c
+    file.c
+    loader.c
+    main.c
+    memory.c
+    process.c
+    # registry.c use advapi32 lib instead for now.
+    security.c
+    string.c
+    sync.c
+    thread.c
+    version.c #mostly Version.dll
+    volume.c
     )
 
-add_library(kernelbase_static ${SOURCE_PATH})
+add_library(kernelbase_static ${SOURCE_STATIC})
 target_link_libraries(kernelbase_static kernelbase_path psapi_static ${PSEH_LIB})
 add_dependencies(kernelbase_static psdk)
 

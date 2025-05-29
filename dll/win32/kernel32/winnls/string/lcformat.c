@@ -2163,7 +2163,6 @@ BOOL WINAPI EnumTimeFormatsW(TIMEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
     return NLS_EnumTimeFormats(&ctxt);
 }
 
-#if _WIN32_WINNT >= 0x600
 /**************************************************************************
  *              EnumTimeFormatsEx	(KERNEL32.@)
  */
@@ -2180,7 +2179,6 @@ BOOL WINAPI EnumTimeFormatsEx(TIMEFMT_ENUMPROCEX proc, const WCHAR *locale, DWOR
 
     return NLS_EnumTimeFormats(&ctxt);
 }
-#endif /* _WIN32_WINNT >= 0x600 */
 
 struct enumcalendar_context {
     enum enum_callback_type type;  /* callback kind */

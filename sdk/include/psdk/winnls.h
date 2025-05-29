@@ -495,7 +495,7 @@ extern "C" {
 #define LGRPID_GEORGIAN 16
 #define LGRPID_ARMENIAN 17
 
-#if (WINVER >= 0x0500)
+#if 1//(WINVER >= 0x0500)
 #define LOCALE_SYEARMONTH 0x1006
 #define LOCALE_SENGCURRNAME 0x1007
 #define LOCALE_SNATIVECURRNAME 0x1008
@@ -513,7 +513,7 @@ extern "C" {
 #define CAL_RETURN_NUMBER LOCALE_RETURN_NUMBER
 #define CAL_USE_CP_ACP LOCALE_USE_CP_ACP
 #endif /* (WINVER >= 0x0500) */
-#if WINVER >= 0x0600
+#if 1//WINVER >= 0x0600
 #define IDN_ALLOW_UNASSIGNED 0x1
 #define IDN_USE_STD3_ASCII_RULES 0x2
 #define VS_ALLOW_LATIN 0x1
@@ -523,7 +523,7 @@ extern "C" {
 typedef long LONG_PTR;
 #endif
 
-#if (WINVER >= 0x0600)
+#if 1//(WINVER >= 0x0600)
 #define MUI_FULL_LANGUAGE             0x01
 #define MUI_LANGUAGE_ID               0x04
 #define MUI_LANGUAGE_NAME             0x08

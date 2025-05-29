@@ -49,6 +49,7 @@ static PTOP_LEVEL_EXCEPTION_FILTER top_filter;
 
 void *dummy = RtlUnwind;  /* force importing RtlUnwind from ntdll */
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           CheckRemoteDebuggerPresent   (kernelbase.@)
  */
@@ -768,7 +769,7 @@ LONG WINAPI UnhandledExceptionFilter( EXCEPTION_POINTERS *epointers )
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-
+#endif
 /***********************************************************************
  *         WerGetFlags   (kernelbase.@)
  */
@@ -849,7 +850,7 @@ HRESULT WINAPI /* DECLSPEC_HOTPATCH */ WerUnregisterRuntimeExceptionModule( cons
     return S_OK;
 }
 
-
+#ifndef __REACTOS__
 /***********************************************************************
  * psapi functions
  ***********************************************************************/
@@ -1669,7 +1670,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetWsChanges( HANDLE process, PSAPI_WS_WATCH_INFOR
     TRACE( "(%p, %p, %ld)\n", process, info, size );
     return set_ntstatus( NtQueryInformationProcess( process, ProcessWorkingSetWatch, info, size, NULL ));
 }
-
+#endif
 
 /***********************************************************************
  *         GetWsChangesEx   (kernelbase.@)
@@ -1684,6 +1685,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetWsChangesEx( HANDLE process, PSAPI_WS_WATCH_INF
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *         InitializeProcessForWsWatch   (kernelbase.@)
  *         K32InitializeProcessForWsWatch   (kernelbase.@)
@@ -1693,7 +1695,6 @@ BOOL WINAPI /* DECLSPEC_HOTPATCH */ InitializeProcessForWsWatch( HANDLE process 
     FIXME( "(process=%p): stub\n", process );
     return TRUE;
 }
-
 
 /***********************************************************************
  *         QueryWorkingSet   (kernelbase.@)
@@ -1717,7 +1718,6 @@ BOOL WINAPI QueryWorkingSetEx( HANDLE process, void *buffer, DWORD size )
     return set_ntstatus( NtQueryVirtualMemory( process, NULL, MemoryWorkingSetExInformation,
                                                buffer, size, NULL ));
 }
-
 
 /******************************************************************
  *         QueryFullProcessImageNameA   (kernelbase.@)
@@ -1818,3 +1818,4 @@ cleanup:
     HeapFree( GetProcessHeap(), 0, dynamic_buffer );
     return set_ntstatus( status );
 }
+#endif

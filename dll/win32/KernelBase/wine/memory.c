@@ -22,17 +22,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#ifndef __REACTOS__
 #include <sys/types.h>
-
 #include "ntstatus.h"
+#endif
 #define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
 #include "winternl.h"
+#ifndef __REACTOS__
 #include "winerror.h"
 #include "ddk/wdm.h"
-
+#endif
 #include "kernelbase.h"
 #include "wine/exception.h"
 #include "wine/debug.h"
@@ -41,7 +43,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(heap);
 WINE_DECLARE_DEBUG_CHANNEL(virtual);
 WINE_DECLARE_DEBUG_CHANNEL(globalmem);
 
-
+#ifdef __REACTOS__
+#define STATUS_INFO_LENGTH_MISMATCH             ((NTSTATUS)0xC0000004)
+#define STATUS_BUFFER_TOO_SMALL          ((NTSTATUS)0xC0000023L)
+#endif
+#ifndef __REACTOS__
 
 static CROSS_PROCESS_WORK_LIST *open_cross_process_connection( HANDLE process )
 {
@@ -1442,7 +1448,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetLogicalProcessorInformation( SYSTEM_LOGICAL_PRO
     if (status == STATUS_INFO_LENGTH_MISMATCH) status = STATUS_BUFFER_TOO_SMALL;
     return set_ntstatus( status );
 }
-
+#endif
 
 /***********************************************************************
  *           GetLogicalProcessorInformationEx   (kernelbase.@)
@@ -1457,13 +1463,17 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetLogicalProcessorInformationEx( LOGICAL_PROCESSO
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
+#ifdef __REACTOS__
+    status = NtQuerySystemInformation( SystemLogicalProcessorInformationEx, buffer, *len, len ); //NtQuerySystemInformationEx is required.
+#else
     status = NtQuerySystemInformationEx( SystemLogicalProcessorInformationEx, &relationship,
                                          sizeof(relationship), buffer, *len, len );
+#endif
     if (status == STATUS_INFO_LENGTH_MISMATCH) status = STATUS_BUFFER_TOO_SMALL;
     return set_ntstatus( status );
 }
 
-
+#ifndef __REACTOS__
 /***********************************************************************
  *           GetSystemCpuSetInformation   (kernelbase.@)
  */
@@ -1830,3 +1840,4 @@ UINT WINAPI GetSystemFirmwareTable( DWORD provider, DWORD id, void *buffer, DWOR
 
     return get_firmware_table( provider, SystemFirmwareTable_Get, id, buffer, size );
 }
+#endif

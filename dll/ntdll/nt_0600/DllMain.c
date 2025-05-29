@@ -1,5 +1,8 @@
 #include "ntdll_vista.h"
 
+VOID NTAPI
+RtlpInitializeThreadPooling();
+
 BOOL
 WINAPI
 DllMain(HANDLE hDll,
@@ -10,6 +13,7 @@ DllMain(HANDLE hDll,
     {
         LdrDisableThreadCalloutsForDll(hDll);
         RtlpInitializeKeyedEvent();
+        RtlpInitializeThreadPooling();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
