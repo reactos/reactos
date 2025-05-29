@@ -43,7 +43,6 @@ HWND      g_hwndLastActive = NULL;
 INT       g_iKL = 0;
 INT       g_cKLs = 0;
 HKL       g_ahKLs[64];
-HMENU     g_hPopupMenu = NULL;
 UINT      g_uTaskbarRestartMsg = 0;
 UINT      g_uShellHookMessage = 0;
 
@@ -695,8 +694,6 @@ KbSwitch_OnDestroy(HWND hwnd)
 {
     KillTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED);
     DeleteHooks();
-    if (g_hPopupMenu)
-        DestroyMenu(g_hPopupMenu);
     DeleteTrayIcon(hwnd);
     PostQuitMessage(0);
 }
@@ -732,17 +729,16 @@ KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
     if (uMouseMsg == WM_LBUTTONDOWN)
     {
         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
-        HMENU hLeftPopupMenu = BuildLeftPopupMenu();
-        nID = TrackPopupMenu(hLeftPopupMenu, TPM_RETURNCMD | TPM_LEFTBUTTON, pt.x, pt.y, 0, hwnd, NULL);
-        DestroyMenu(hLeftPopupMenu);
+        HMENU hPopupMenu = BuildLeftPopupMenu();
+        nID = TrackPopupMenuEx(hPopupMenu, TPM_RETURNCMD | TPM_LEFTBUTTON, pt.x, pt.y, hwnd, NULL);
+        DestroyMenu(hPopupMenu);
     }
     else /* WM_RBUTTONDOWN */
     {
-        if (!g_hPopupMenu)
-            g_hPopupMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
-
-        HMENU hSubMenu = GetSubMenu(g_hPopupMenu, 0);
-        nID = TrackPopupMenu(hSubMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, NULL);
+        HMENU hPopupMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
+        HMENU hSubMenu = GetSubMenu(hPopupMenu, 0);
+        nID = TrackPopupMenuEx(hSubMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, hwnd, NULL);
+        DestroyMenu(hPopupMenu);
     }
 
     PostMessage(hwnd, WM_NULL, 0, 0);
