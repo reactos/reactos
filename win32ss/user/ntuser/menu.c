@@ -4398,7 +4398,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     return executedMenuId;
 }
 
-static VOID MENU_TerminateOldMenuTracking(VOID)
+static VOID FASTCALL MENU_TerminateOldMenuTracking(VOID)
 {
     PWND pOldWnd = MENU_IsMenuActive();
     if (pOldWnd)
