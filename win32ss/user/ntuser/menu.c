@@ -4406,6 +4406,11 @@ static VOID MENU_TerminateOldMenuTracking(VOID)
         HWND hwndOld = UserHMGetHandle(pOldWnd);
         MENU_EndMenu(pOldWnd);
 
+        /*
+         * Wait for closing hwndOld.
+         * FIXME: We shouldn't wait for closing, that will be a slow-down.
+         *        However there are some global variables for tracking
+         */
         MSG msg;
         while (IntIsWindow(hwndOld) &&
                co_IntGetPeekMessage(&msg, hwndOld, 0, 0, PM_REMOVE, TRUE))
