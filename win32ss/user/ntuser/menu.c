@@ -4608,6 +4608,7 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
             UserHMGetHandle(menu), wFlags, x, y, UserHMGetHandle(pWnd), lpTpm); //,
             //lpTpm ? wine_dbgstr_rect( &lpTpm->rcExclude) : "-" );
 
+    /* Defaulting to TPM_RIGHTBUTTON will make behaviour better */
     if (!(wFlags & (TPM_LEFTBUTTON | TPM_RIGHTBUTTON)))
         wFlags |= TPM_RIGHTBUTTON;
 
