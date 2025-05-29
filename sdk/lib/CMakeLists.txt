@@ -38,7 +38,6 @@ endif()
 add_subdirectory(ioevent)
 add_subdirectory(lsalib)
 add_subdirectory(nt)
-add_subdirectory(pathcch)
 add_subdirectory(pseh)
 
 if(KDBG)

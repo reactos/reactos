@@ -843,6 +843,14 @@ BOOL WINAPI PathCanonicalizeA(_Out_writes_(MAX_PATH) LPSTR, _In_ LPCSTR);
 BOOL WINAPI PathCanonicalizeW(_Out_writes_(MAX_PATH) LPWSTR, _In_ LPCWSTR);
 #define PathCanonicalize WINELIB_NAME_AW(PathCanonicalize)
 
+HRESULT WINAPI PathMatchSpecExA(LPCSTR,LPCSTR,DWORD);
+HRESULT WINAPI PathMatchSpecExW(LPCWSTR,LPCWSTR,DWORD);
+#define PathMatchSpecEx WINELIB_NAME_AW(PathMatchSpecEx)
+
+HRESULT WINAPI PathMatchSpecExA(LPCSTR,LPCSTR,DWORD);
+HRESULT WINAPI PathMatchSpecExW(LPCWSTR,LPCWSTR,DWORD);
+#define PathMatchSpecEx WINELIB_NAME_AW(PathMatchSpecEx)
+
 LPSTR
 WINAPI
 PathCombineA(
@@ -1260,6 +1268,9 @@ typedef enum {
 
 #define URL_FILE_USE_PATHURL         0x00010000
 #define URL_ESCAPE_AS_UTF8           0x00040000
+
+#define URL_UNESCAPE_AS_UTF8           URL_ESCAPE_AS_UTF8
+#define URL_UNESCAPE_URI_COMPONENT     URL_UNESCAPE_AS_UTF8
 
 #define URL_ESCAPE_SEGMENT_ONLY      0x00002000
 #define URL_ESCAPE_PERCENT           0x00001000

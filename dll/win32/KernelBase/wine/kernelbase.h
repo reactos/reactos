@@ -24,6 +24,11 @@
 #include "windef.h"
 #include "winbase.h"
 
+#ifdef __REACTOS__
+#include "synchacks.h"
+#endif
+
+
 struct pseudo_console
 {
     HANDLE signal;
