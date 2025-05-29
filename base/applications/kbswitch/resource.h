@@ -9,4 +9,4 @@
 /* Menu items */
 #define ID_EXIT        101
 #define ID_PREFERENCES 102
-#define ID_LANG_BASE   10000
+#define ID_LANG_BASE   1000
