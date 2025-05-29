@@ -730,8 +730,7 @@ KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
     {
         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
         HMENU hPopupMenu = BuildLeftPopupMenu();
-        /* CORE-5065: Should we use TPM_RIGHTBUTTON instead of TPM_LEFTBUTTON here? */
-        nID = TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+        nID = TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON,
                                pt.x, pt.y, hwnd, NULL);
         DestroyMenu(hPopupMenu);
     }
