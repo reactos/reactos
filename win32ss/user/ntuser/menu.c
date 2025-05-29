@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Menus
- * FILE:             win32ss/user/ntuser/menu.c
- * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ * PROJECT:     ReactOS kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Menus
+ * COPYRIGHT:   Copyright Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -22,20 +22,14 @@ static SIZE MenuCharSize;
 static HWND top_popup = NULL;
 static HMENU top_popup_hmenu = NULL;
 
-BOOL fInsideMenuLoop = FALSE;
-BOOL fInEndMenu = FALSE;
-
 /* internal popup menu window messages */
-
 #define MM_SETMENUHANDLE        (WM_USER + 0)
 #define MM_GETMENUHANDLE        (WM_USER + 1)
 
 /* internal flags for menu tracking */
-
 #define TF_ENDMENU              0x10000
 #define TF_SUSPENDPOPUP         0x20000
 #define TF_SKIPREMOVE           0x40000
-
 
 /* maximum allowed depth of any branch in the menu tree.
  * This value is slightly larger than in windows (25) to
@@ -2661,23 +2655,22 @@ PWND MENU_IsMenuActive(VOID)
  */
 void MENU_EndMenu( PWND pwnd )
 {
-    PMENU menu = NULL;
-    menu = UserGetMenuObject(top_popup_hmenu);
-    if ( menu && ( UserHMGetHandle(pwnd) == menu->hWnd || pwnd == menu->spwndNotify ) )
+    PMENU menu = UserGetMenuObject(top_popup_hmenu);
+    if (menu && (UserHMGetHandle(pwnd) == menu->hWnd || pwnd == menu->spwndNotify))
     {
-       if (fInsideMenuLoop && top_popup)
-       {
-          fInsideMenuLoop = FALSE;
+        if (menu->fInsideMenuLoop && top_popup)
+        {
+            menu->fInsideMenuLoop = FALSE;
 
-          if (fInEndMenu)
-          {
-             ERR("Already in End loop\n");
-             return;
-          }
+            if (menu->fInEndMenu)
+            {
+                ERR("Already in End loop\n");
+                return;
+            }
 
-          fInEndMenu = TRUE;
-          UserPostMessage( top_popup, WM_CANCELMODE, 0, 0);
-       }
+            menu->fInEndMenu = TRUE;
+            UserPostMessage( top_popup, WM_CANCELMODE, 0, 0);
+        }
     }
 }
 
@@ -4082,10 +4075,11 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     {
         /* Get the result in order to start the tracking or not */
         fRemove = MENU_ButtonDown( &mt, pmenu, wFlags );
-        fInsideMenuLoop = fRemove;
+        pmenu->fInsideMenuLoop = fRemove;
     }
 
-    if (wFlags & TF_ENDMENU) fInsideMenuLoop = FALSE;
+    if (wFlags & TF_ENDMENU)
+        pmenu->fInsideMenuLoop = FALSE;
 
     if (wFlags & TPM_POPUPMENU && pmenu->cItems == 0) // Tracking empty popup menu...
     {
@@ -4097,7 +4091,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
 
     capture_win = IntGetCapture();
 
-    while (fInsideMenuLoop)
+    while (pmenu->fInsideMenuLoop)
     {
         BOOL ErrorExit = FALSE;
         if (!VerifyMenu( mt.CurrentMenu )) /* sometimes happens if I do a window manager close */
@@ -4142,7 +4136,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
         if (msg.message == WM_CANCELMODE)
         {
             /* we are now out of the loop */
-            fInsideMenuLoop = FALSE;
+            pmenu->fInsideMenuLoop = FALSE;
 
             /* remove the message from the queue */
             co_IntGetPeekMessage( &msg, 0, msg.message, msg.message, PM_REMOVE, FALSE );
@@ -4178,7 +4172,8 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                 case WM_RBUTTONDOWN:
                      if (!(wFlags & TPM_RIGHTBUTTON))
                      {
-                        if ( msg.message == WM_RBUTTONDBLCLK ) fInsideMenuLoop = FALSE; // Must exit or loop forever!
+                        if (msg.message == WM_RBUTTONDBLCLK)
+                            pmenu->fInsideMenuLoop = FALSE; // Must exit or loop forever!
                         break;
                      }
                     /* fall through */
@@ -4194,9 +4189,9 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     else
                         fRemove = MENU_ButtonDown(&mt, pmMouse, wFlags);
 
-                    fInsideMenuLoop = fRemove;
+                    pmenu->fInsideMenuLoop = fRemove;
                     if (msg.message == WM_RBUTTONDBLCLK)
-                        fInsideMenuLoop = FALSE; // Must exit or loop forever
+                        pmenu->fInsideMenuLoop = FALSE; // Must exit or loop forever
                     break;
                 }
 
@@ -4212,7 +4207,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                         if (!firstClick && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
                         {
                             fRemove = TRUE;
-                            fInsideMenuLoop = FALSE;
+                            pmenu->fInsideMenuLoop = FALSE;
                         }
                         else
                         {
@@ -4220,7 +4215,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                             /* or if the job was done (executedMenuId = 0). */
                             executedMenuId = MENU_ButtonUp( &mt, pmMouse, wFlags);
                             fRemove = (executedMenuId != -1);
-                            fInsideMenuLoop = !fRemove;
+                            pmenu->fInsideMenuLoop = !fRemove;
                             firstClick = FALSE;
                         }
                     }
@@ -4228,7 +4223,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* if the function was called by TrackPopupMenu, continue
                        with the menu tracking. If not, stop it */
                     else
-                        fInsideMenuLoop = ((wFlags & TPM_POPUPMENU) ? TRUE : FALSE);
+                        pmenu->fInsideMenuLoop = ((wFlags & TPM_POPUPMENU) ? TRUE : FALSE);
 
                     break;
 
@@ -4237,7 +4232,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* the mouse moves. */
 
                     if (pmMouse)
-                        fInsideMenuLoop |= MENU_MouseMove( &mt, pmMouse, wFlags );
+                        pmenu->fInsideMenuLoop |= MENU_MouseMove(&mt, pmMouse, wFlags);
 
 	    } /* switch(msg.message) - mouse */
         }
@@ -4252,7 +4247,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                 {
                     case VK_MENU:
                     case VK_F10:
-                        fInsideMenuLoop = FALSE;
+                        pmenu->fInsideMenuLoop = FALSE;
                         break;
 
                     case VK_HOME:
@@ -4278,7 +4273,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                         break;
 
                     case VK_ESCAPE:
-                        fInsideMenuLoop = !MENU_KeyEscape(&mt, wFlags);
+                        pmenu->fInsideMenuLoop = !MENU_KeyEscape(&mt, wFlags);
                         break;
 
                     case VK_F1:
@@ -4313,7 +4308,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     {
                         executedMenuId = MENU_ExecFocusedItem(&mt, mt.CurrentMenu, wFlags);
                         fEndMenu = (executedMenuId != -2);
-                        fInsideMenuLoop = !fEndMenu;
+                        pmenu->fInsideMenuLoop = !fEndMenu;
                         break;
                     }
 
@@ -4323,14 +4318,15 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
 
                     pos = MENU_FindItemByKey(mt.OwnerWnd, mt.CurrentMenu, LOWORD(msg.wParam), FALSE);
 
-                    if (pos == (UINT)-2) fInsideMenuLoop = FALSE;
+                    if (pos == (UINT)-2)
+                        pmenu->fInsideMenuLoop = FALSE;
                     else if (pos == (UINT)-1) UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0); //MessageBeep(0);
                     else
                     {
                         MENU_SelectItem(mt.OwnerWnd, mt.CurrentMenu, pos, TRUE, 0);
                         executedMenuId = MENU_ExecFocusedItem(&mt, mt.CurrentMenu, wFlags);
                         fEndMenu = (executedMenuId != -2);
-                        fInsideMenuLoop = !fEndMenu;
+                        pmenu->fInsideMenuLoop = !fEndMenu;
                     }
                 }
                 break;
@@ -4343,7 +4339,8 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
             continue;
         }
 
-        if (fInsideMenuLoop) fRemove = TRUE;
+        if (pmenu->fInsideMenuLoop)
+            fRemove = TRUE;
 
         /* finally remove message from the queue */
 
@@ -4448,8 +4445,8 @@ static BOOL FASTCALL MENU_InitTracking(PWND pWnd, PMENU Menu, BOOL bPopup, UINT 
     top_popup = Menu->hWnd;
     top_popup_hmenu = UserHMGetHandle(Menu);
 
-    fInsideMenuLoop = TRUE;
-    fInEndMenu = FALSE;
+    Menu->fInsideMenuLoop = TRUE;
+    Menu->fInEndMenu = FALSE;
 
     /* Send WM_ENTERMENULOOP and WM_INITMENU message only if TPM_NONOTIFY flag is not specified */
     if (!(wFlags & TPM_NONOTIFY))
@@ -5917,6 +5914,8 @@ NtUserEnableMenuItem(
 BOOL APIENTRY
 NtUserEndMenu(VOID)
 {
+    PMENU menu = UserGetMenuObject(top_popup_hmenu);
+
    //PWND pWnd;
    TRACE("Enter NtUserEndMenu\n");
    UserEnterExclusive();
@@ -5931,14 +5930,14 @@ NtUserEndMenu(VOID)
        else
           gptiCurrent->pMenuState->fInsideMenuLoop = FALSE;
    }*/
-   if (fInsideMenuLoop && top_popup)
-   {
-      fInsideMenuLoop = FALSE;
-      UserPostMessage( top_popup, WM_CANCELMODE, 0, 0);
-   }
-   UserLeave();
-   TRACE("Leave NtUserEndMenu\n");
-   return TRUE;
+    if (menu && menu->fInsideMenuLoop && top_popup)
+    {
+        menu->fInsideMenuLoop = FALSE;
+        UserPostMessage(top_popup, WM_CANCELMODE, 0, 0);
+    }
+    UserLeave();
+    TRACE("Leave NtUserEndMenu\n");
+    return TRUE;
 }
 
 /*

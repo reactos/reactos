@@ -436,6 +436,8 @@ typedef struct tagMENU
     LIST_ENTRY ListEntry;
     HWND hWnd; /* Window containing the menu, use POPUPMENU */
     BOOL TimeToHide;
+    BOOL fInsideMenuLoop; /* Valid only on top menu */
+    BOOL fInEndMenu; /* Valid only on top menu */
 } MENU, *PMENU;
 
 typedef struct tagPOPUPMENU
