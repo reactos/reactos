@@ -715,7 +715,7 @@ KbSwitch_OnTimer(HWND hwnd, UINT_PTR nTimerID)
 static void
 KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
 {
-    if (uMouseMsg != WM_LBUTTONDOWN && uMouseMsg != WM_RBUTTONDOWN)
+    if (uMouseMsg != WM_LBUTTONUP && uMouseMsg != WM_RBUTTONUP && uMouseMsg != WM_CONTEXTMENU)
         return;
 
     UpdateLayoutList(NULL);
@@ -726,18 +726,21 @@ KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
     SetForegroundWindow(hwnd);
 
     INT nID;
-    if (uMouseMsg == WM_LBUTTONDOWN)
+    if (uMouseMsg == WM_LBUTTONUP)
     {
         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
         HMENU hPopupMenu = BuildLeftPopupMenu();
-        nID = TrackPopupMenuEx(hPopupMenu, TPM_RETURNCMD | TPM_LEFTBUTTON, pt.x, pt.y, hwnd, NULL);
+        /* CORE-5065: Should we use TPM_RIGHTBUTTON instead of TPM_LEFTBUTTON here? */
+        nID = TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                               pt.x, pt.y, hwnd, NULL);
         DestroyMenu(hPopupMenu);
     }
-    else /* WM_RBUTTONDOWN */
+    else /* WM_RBUTTONUP or WM_CONTEXTMENU */
     {
         HMENU hPopupMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
         HMENU hSubMenu = GetSubMenu(hPopupMenu, 0);
-        nID = TrackPopupMenuEx(hSubMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, hwnd, NULL);
+        nID = TrackPopupMenuEx(hSubMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                               pt.x, pt.y, hwnd, NULL);
         DestroyMenu(hPopupMenu);
     }
 
