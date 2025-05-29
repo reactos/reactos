@@ -4398,6 +4398,23 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     return executedMenuId;
 }
 
+static VOID MENU_TerminateOldMenuTracking(VOID)
+{
+    PWND pOldWnd = MENU_IsMenuActive();
+    if (pOldWnd)
+    {
+        HWND hwndOld = UserHMGetHandle(pOldWnd);
+        MENU_EndMenu(pOldWnd);
+
+        MSG msg;
+        while (IntIsWindow(hwndOld) &&
+               co_IntGetPeekMessage(&msg, hwndOld, 0, 0, PM_REMOVE, TRUE))
+        {
+            IntDispatchMessage(&msg);
+        }
+    }
+}
+
 /***********************************************************************
  *           MenuInitTracking
  */
@@ -4405,7 +4422,6 @@ static BOOL FASTCALL MENU_InitTracking(PWND pWnd, PMENU Menu, BOOL bPopup, UINT 
 {
     HWND capture_win;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-    PWND pOldWnd;
 
     TRACE("hwnd=%p hmenu=%p\n", UserHMGetHandle(pWnd), UserHMGetHandle(Menu));
 
@@ -4421,19 +4437,7 @@ static BOOL FASTCALL MENU_InitTracking(PWND pWnd, PMENU Menu, BOOL bPopup, UINT 
     }
 
     /* We have to finish old menu tracking before starting new tracking */
-    pOldWnd = MENU_IsMenuActive();
-    if (pOldWnd)
-    {
-        HWND hwndOld = UserHMGetHandle(pOldWnd);
-        MENU_EndMenu(pOldWnd);
-
-        MSG msg;
-        while (IntIsWindow(hwndOld) &&
-               co_IntGetPeekMessage(&msg, hwndOld, 0, 0, PM_REMOVE, TRUE))
-        {
-            IntDispatchMessage(&msg);
-        }
-    }
+    MENU_TerminateOldMenuTracking();
 
     top_popup = Menu->hWnd;
     top_popup_hmenu = UserHMGetHandle(Menu);
