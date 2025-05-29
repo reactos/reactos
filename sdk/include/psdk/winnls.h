@@ -666,7 +666,7 @@ typedef struct _numberfmtW {
 	LPWSTR lpThousandSep;
 	UINT NegativeOrder;
 } NUMBERFMTW,*LPNUMBERFMTW;
-#if (WINVER >= 0x0600)
+#if 1//(WINVER >= 0x0600)
 typedef enum _NORM_FORM {
 	NormalizationOther = 0,
 	NormalizationC = 0x1,
@@ -1042,7 +1042,7 @@ LANGID WINAPI GetUserDefaultUILanguage(void);
 BOOL WINAPI IsValidLanguageGroup(_In_ LGRPID, _In_ DWORD);
 #endif /* (WINVER >= 0x0500) */
 
-#if (WINVER >= 0x0600)
+#if 1//(WINVER >= 0x0600) 
 
 _Success_(return != FALSE)
 BOOL
@@ -1200,6 +1200,8 @@ LCMapStringEx(
     _In_opt_ LPARAM sortHandle);
 
 LCID WINAPI LocaleNameToLCID(_In_ LPCWSTR, _In_ DWORD);
+
+WINBASEAPI INT WINAPI CompareStringOrdinal(const WCHAR *,INT,const WCHAR *,INT,BOOL);
 
 #endif /* (WINVER >= 0x0600) */
 
