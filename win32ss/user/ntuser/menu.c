@@ -4405,6 +4405,7 @@ static BOOL FASTCALL MENU_InitTracking(PWND pWnd, PMENU Menu, BOOL bPopup, UINT 
 {
     HWND capture_win;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PWND pOldWnd;
 
     TRACE("hwnd=%p hmenu=%p\n", UserHMGetHandle(pWnd), UserHMGetHandle(Menu));
 
@@ -4419,10 +4420,23 @@ static BOOL FASTCALL MENU_InitTracking(PWND pWnd, PMENU Menu, BOOL bPopup, UINT 
         Menu->hWnd = UserHMGetHandle(pWnd);
     }
 
-    if (!top_popup) {
-       top_popup = Menu->hWnd;
-       top_popup_hmenu = UserHMGetHandle(Menu);
+    /* We have to finish old menu tracking before starting new tracking */
+    pOldWnd = MENU_IsMenuActive();
+    if (pOldWnd)
+    {
+        HWND hwndOld = UserHMGetHandle(pOldWnd);
+        MENU_EndMenu(pOldWnd);
+
+        MSG msg;
+        while (IntIsWindow(hwndOld) &&
+               co_IntGetPeekMessage(&msg, hwndOld, 0, 0, PM_REMOVE, TRUE))
+        {
+            IntDispatchMessage(&msg);
+        }
     }
+
+    top_popup = Menu->hWnd;
+    top_popup_hmenu = UserHMGetHandle(Menu);
 
     fInsideMenuLoop = TRUE;
     fInEndMenu = FALSE;
@@ -4472,7 +4486,7 @@ static BOOL FASTCALL MENU_ExitTracking(PWND pWnd, BOOL bPopup, UINT wFlags)
 
     co_UserShowCaret(0);
 
-    top_popup = 0;
+    top_popup = NULL;
     top_popup_hmenu = NULL;
 
     return TRUE;
@@ -4589,6 +4603,9 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
     TRACE("hmenu %p flags %04x (%d,%d) hwnd %p lpTpm %p \n", //rect %s\n",
             UserHMGetHandle(menu), wFlags, x, y, UserHMGetHandle(pWnd), lpTpm); //,
             //lpTpm ? wine_dbgstr_rect( &lpTpm->rcExclude) : "-" );
+
+    if (!(wFlags & (TPM_LEFTBUTTON | TPM_RIGHTBUTTON)))
+        wFlags |= TPM_RIGHTBUTTON;
 
     if (menu->hWnd && IntIsWindow(menu->hWnd))
     {
