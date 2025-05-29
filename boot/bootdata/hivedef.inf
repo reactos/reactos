@@ -2154,6 +2154,29 @@ HKCU,"AppEvents\EventLabels\WindowsLogoff","DispFileName",0x00000000,"@mmsys.cpl
 HKCU,"AppEvents\EventLabels\WindowsLogon","",0x00000000,"%EVENT_LABEL_27%"
 HKCU,"AppEvents\EventLabels\WindowsLogon","DispFileName",0x00000000,"@mmsys.cpl,-5853"
 
+; Sysdm.cpl Visual Effects
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow,ValueName,,ListviewShadow
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow,RegPath,,Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow,Text,,"@shell32.dll,-30541"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow,Type,,checkbox
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow,DefaultValue,0x00010001,1
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow,CheckedValue,0x00010001,1
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow,UncheckedValue,0x00010001,0
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows,SPIActionSet,0x00010001,37
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows,SPIActionGet,0x00010001,38
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows,Text,,"@shell32.dll,-30533"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows,Type,,checkbox
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows,DefaultValue,0x00010001,1
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows,CheckedValue,0x00010001,1
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows,UncheckedValue,0x00010001,0
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing,SPIActionSet,0x00010001,75
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing,SPIActionGet,0x00010001,74
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing,Text,,"@shell32.dll,-30535"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing,Type,,checkbox
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing,DefaultValue,0x00010001,1
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing,CheckedValue,0x00010001,1
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing,UncheckedValue,0x00010001,0
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
