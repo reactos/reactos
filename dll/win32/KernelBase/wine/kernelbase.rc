@@ -1,0 +1,46 @@
+/*
+ * Copyright 2020 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep po
+
+#include <winresrc.h>
+#include <winnls.h>
+
+/* @makedep: kernelbase.rgs */
+1 WINE_REGISTRY kernelbase.rgs
+
+STRINGTABLE LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+{
+    LGRPID_WESTERN_EUROPE "Western Europe and United States"
+    LGRPID_CENTRAL_EUROPE "Central Europe"
+    LGRPID_BALTIC "Baltic"
+    LGRPID_GREEK "Greek"
+    LGRPID_CYRILLIC "Cyrillic"
+    LGRPID_TURKISH "Turkic"
+    LGRPID_JAPANESE "Japanese"
+    LGRPID_KOREAN "Korean"
+    LGRPID_TRADITIONAL_CHINESE "Traditional Chinese"
+    LGRPID_SIMPLIFIED_CHINESE "Simplified Chinese"
+    LGRPID_THAI "Thai"
+    LGRPID_HEBREW "Hebrew"
+    LGRPID_ARABIC "Arabic"
+    LGRPID_VIETNAMESE "Vietnamese"
+    LGRPID_INDIC "Indic"
+    LGRPID_GEORGIAN "Georgian"
+    LGRPID_ARMENIAN "Armenian"
+}
