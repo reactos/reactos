@@ -178,9 +178,7 @@ void Test_SetWindowExtEx()
     /* Check the viewport now, should not be the same */
     GetViewportExtEx(hDC, &ViewportExt);
     ok_long(ViewportExt.cx,  GetDeviceCaps(GetDC(0), VERTRES));
-    /* The bit magic below (* 0x55555556LL >> 32) divides by 3, but avoids some
-     * off-by-one errors that can occur at some vertical resolutions. */
-    ok_long(ViewportExt.cy, -GetDeviceCaps(GetDC(0), VERTRES) * 0x55555556LL >> 32);
+    ok_long(ViewportExt.cy, -MulDiv(GetDeviceCaps(GetDC(0), VERTRES), 1, 3));
 
     /* again isotropic mode with 1:3 res */
     SetViewportExtEx(hDC, 6000, 3000, 0);
