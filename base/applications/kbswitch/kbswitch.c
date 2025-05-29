@@ -495,7 +495,7 @@ ActivateLayout(HWND hwnd, INT iKL, HWND hwndTarget OPTIONAL, BOOL bNoActivate)
     TCHAR szKLID[CCH_LAYOUT_ID + 1], szLangName[MAX_PATH];
     LANGID LangID;
 
-    if (iKL < 0 || iKL >= _countof(g_ahKLs)) /* Invalid */
+    if (iKL < 0 || iKL >= g_cKLs) /* Invalid */
         return;
 
     GetKLIDFromLayoutNum(iKL, szKLID, _countof(szKLID));
