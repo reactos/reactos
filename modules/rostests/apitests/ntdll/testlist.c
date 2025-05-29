@@ -125,6 +125,7 @@ extern void func_RtlxUnicodeStringToOemSize(void);
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
 extern void func_UserModeException(void);
+extern void func_NtNotifyChangeMultipleKeys(void);
 
 const struct test winetest_testlist[] =
 {
@@ -255,6 +256,7 @@ const struct test winetest_testlist[] =
 #ifdef _M_AMD64
     { "RtlCaptureContext",              func_RtlCaptureContext },
 #endif
+    { "NtNotifyChangeMultipleKeys", func_NtNotifyChangeMultipleKeys },
 
     { 0, 0 }
 };
