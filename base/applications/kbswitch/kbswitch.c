@@ -40,8 +40,8 @@ HINSTANCE g_hInst = NULL;
 HMODULE   g_hHookDLL = NULL;
 HICON     g_hTrayIcon = NULL;
 HWND      g_hwndLastActive = NULL;
-INT       g_iKL = 0;
-INT       g_cKLs = 0;
+UINT      g_iKL = 0;
+UINT      g_cKLs = 0;
 HKL       g_ahKLs[64];
 UINT      g_uTaskbarRestartMsg = 0;
 UINT      g_uShellHookMessage = 0;
@@ -166,7 +166,7 @@ static HKL GetActiveKL(VOID)
 
 static VOID UpdateLayoutList(HKL hKL OPTIONAL)
 {
-    INT iKL;
+    UINT iKL;
 
     if (!hKL)
         hKL = GetActiveKL();
@@ -184,13 +184,13 @@ static VOID UpdateLayoutList(HKL hKL OPTIONAL)
     }
 }
 
-static HKL GetHKLFromLayoutNum(INT iKL)
+static HKL GetHKLFromLayoutNum(UINT iKL)
 {
-    return (0 <= iKL && iKL < g_cKLs) ? g_ahKLs[iKL] : GetActiveKL();
+    return (iKL < g_cKLs) ? g_ahKLs[iKL] : GetActiveKL();
 }
 
 static VOID
-GetKLIDFromLayoutNum(INT iKL, LPTSTR szKLID, SIZE_T KLIDLength)
+GetKLIDFromLayoutNum(UINT iKL, LPTSTR szKLID, SIZE_T KLIDLength)
 {
     GetKLIDFromHKL(GetHKLFromLayoutNum(iKL), szKLID, KLIDLength);
 }
@@ -207,7 +207,7 @@ GetSystemLibraryPath(LPTSTR szPath, SIZE_T cchPath, LPCTSTR FileName)
 }
 
 static BOOL
-GetLayoutName(INT iKL, LPTSTR szName, SIZE_T NameLength)
+GetLayoutName(UINT iKL, LPTSTR szName, SIZE_T NameLength)
 {
     HKEY hKey;
     HRESULT hr;
@@ -488,13 +488,13 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
 }
 
 static VOID
-ActivateLayout(HWND hwnd, INT iKL, HWND hwndTarget OPTIONAL, BOOL bNoActivate)
+ActivateLayout(HWND hwnd, UINT iKL, HWND hwndTarget OPTIONAL, BOOL bNoActivate)
 {
     HKL hKl;
     TCHAR szKLID[CCH_LAYOUT_ID + 1], szLangName[MAX_PATH];
     LANGID LangID;
 
-    if (iKL < 0 || iKL >= g_cKLs) /* Invalid */
+    if (iKL >= g_cKLs) /* Invalid */
         return;
 
     GetKLIDFromLayoutNum(iKL, szKLID, _countof(szKLID));
@@ -532,7 +532,7 @@ BuildLeftPopupMenu(VOID)
     TCHAR szName[MAX_PATH], szKLID[CCH_LAYOUT_ID + 1], szImeFile[80];
     HICON hIcon;
     MENUITEMINFO mii = { sizeof(mii) };
-    INT iKL;
+    UINT iKL;
 
     for (iKL = 0; iKL < g_cKLs; ++iKL)
     {
@@ -605,7 +605,7 @@ DeleteHooks(VOID)
 
 static UINT GetLayoutNum(HKL hKL)
 {
-    INT iKL;
+    UINT iKL;
 
     for (iKL = 0; iKL < g_cKLs; ++iKL)
     {
