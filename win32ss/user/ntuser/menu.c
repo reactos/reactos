@@ -4395,29 +4395,6 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     return executedMenuId;
 }
 
-static VOID FASTCALL
-MENU_TerminateOldMenuTracking(VOID)
-{
-    PWND pOldWnd = MENU_IsMenuActive();
-    if (!pOldWnd)
-        return;
-
-    HWND hwndOld = UserHMGetHandle(pOldWnd);
-    MENU_EndMenu(pOldWnd);
-
-    /*
-     * Wait for closing hwndOld.
-     * FIXME: We shouldn't wait for closing, that will be a slow-down.
-     *        However there are some global variables for tracking
-     */
-    MSG msg;
-    while (IntIsWindow(hwndOld) &&
-           co_IntGetPeekMessage(&msg, hwndOld, 0, 0, PM_REMOVE, TRUE))
-    {
-        IntDispatchMessage(&msg);
-    }
-}
-
 /***********************************************************************
  *           MenuInitTracking
  */
@@ -4435,12 +4412,12 @@ static BOOL FASTCALL MENU_InitTracking(PWND pWnd, PMENU Menu, BOOL bPopup, UINT 
      * but there are some bugs left that need to be fixed in this case.
      */
     if (!bPopup)
-    {
         Menu->hWnd = UserHMGetHandle(pWnd);
-    }
 
     /* We have to finish old menu tracking before starting new tracking */
-    MENU_TerminateOldMenuTracking();
+    PWND pOldWnd = MENU_IsMenuActive();
+    if (pOldWnd)
+        MENU_EndMenu(pOldWnd);
 
     top_popup = Menu->hWnd;
     top_popup_hmenu = UserHMGetHandle(Menu);
