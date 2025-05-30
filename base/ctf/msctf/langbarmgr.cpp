@@ -16,7 +16,6 @@
 #include <ctfutb.h>
 #include <msctf.h>
 #include <msctf_undoc.h>
-#include <shellutils.h>
 
 // Cicero
 #include <cicreg.h>
