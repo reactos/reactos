@@ -285,12 +285,7 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
             }
             break;
         }
-        default:
-        {
-            assert(0);
-            DEFAULT_UNREACHABLE;
-            break;
-        }
+        DEFAULT_UNREACHABLE;
     }
 
     ok(lstrcmpA(checks, answer) == 0,
