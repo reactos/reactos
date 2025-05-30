@@ -30,7 +30,8 @@ SYSTEM_PERFORMANCE_INFORMATION             SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION                   SystemBasicInfo;
 SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
 ULONG                                      SystemNumberOfHandles;
-PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
+/* Handle up to 32 processors */
+SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION   SystemProcessorTimeInfo[32] = { 0 };
 PSID                                       SystemUserSid = NULL;
 
 PCMD_LINE_CACHE global_cache = NULL;
@@ -90,10 +91,6 @@ void PerfDataUninitialize(void)
         pEntry = CONTAINING_RECORD(pCur, SIDTOUSERNAME, List);
         pCur = pCur->Flink;
         HeapFree(GetProcessHeap(), 0, pEntry);
-    }
-
-    if (SystemProcessorTimeInfo) {
-        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
 }
 
@@ -214,6 +211,11 @@ void PerfDataRefresh(void)
     if (status != STATUS_INFO_LENGTH_MISMATCH)
         SysHandleInfoData.NumberOfHandles = SystemNumberOfHandles;
 
+    /*
+     * Save system handle info
+     */
+    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
+
     /* Get process information
      * We don't know how much data there is so just keep
      * increasing the buffer size until the call succeeds
@@ -247,15 +249,9 @@ void PerfDataRefresh(void)
     /*
      * Save system processor time info
      */
-    if (SystemProcessorTimeInfo) {
-        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
-    }
-    SystemProcessorTimeInfo = SysProcessorTimeInfo;
-
-    /*
-     * Save system handle info
-     */
-    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
+    if (SystemBasicInfo.NumberOfProcessors <=  _countof(SystemProcessorTimeInfo))
+        memcpy(&SystemProcessorTimeInfo, &SysProcessorTimeInfo,
+               sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
 
     for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
@@ -424,6 +420,10 @@ ClearInfo:
     }
     pPerfDataOld = pPerfData;
     LeaveCriticalSection(&PerfDataCriticalSection);
+
+    if (SysProcessorTimeInfo) {
+        HeapFree(GetProcessHeap(), 0, SysProcessorTimeInfo);
+    }
 }
 
 ULONG PerfDataGetProcessIndex(ULONG pid)
