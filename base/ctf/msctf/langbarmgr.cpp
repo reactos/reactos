@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Cicero
+ * PROJECT:     ReactOS CTF
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     ITfLangBarMgr implementation
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
