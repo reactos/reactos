@@ -47,23 +47,6 @@ HMENU     g_hPopupMenu = NULL;
 UINT      g_uTaskbarRestartMsg = 0;
 UINT      g_uShellHookMessage = 0;
 
-/* Debug logging */
-ULONG NTAPI
-vDbgPrintExWithPrefix(IN PCCH Prefix,
-                      IN ULONG ComponentId,
-                      IN ULONG Level,
-                      IN PCCH Format,
-                      IN va_list ap)
-{
-    CHAR Buffer[512];
-    SIZE_T PrefixLength = strlen(Prefix);
-    strncpy(Buffer, Prefix, PrefixLength);
-    _vsnprintf(Buffer + PrefixLength, _countof(Buffer) - PrefixLength, Format, ap);
-    Buffer[_countof(Buffer) - 1] = ANSI_NULL; /* Avoid buffer overrun */
-    OutputDebugStringA(Buffer);
-    return 0;
-}
-
 typedef struct tagSPECIAL_ID
 {
     DWORD dwLayoutId;
