@@ -176,12 +176,7 @@ static BOOL InitSHCN(HWND hwnd)
             events = EVENTS;
             break;
         }
-        default:
-        {
-            assert(0);
-            DEFAULT_UNREACHABLE;
-            break;
-        }
+        DEFAULT_UNREACHABLE;
     }
 
     s_uRegID = SHChangeNotifyRegister(hwnd, sources, events, WM_SHELL_NOTIFY, 1, &entry);
