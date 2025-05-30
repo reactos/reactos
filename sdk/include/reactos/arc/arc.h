@@ -261,6 +261,7 @@ typedef struct _ARC_DISK_SIGNATURE
     BOOLEAN IsGpt;
     BOOLEAN Reserved;
     CHAR GptSignature[16];
+    PVOID Unknown;
 } ARC_DISK_SIGNATURE, *PARC_DISK_SIGNATURE;
 
 typedef struct _ARC_DISK_INFORMATION
@@ -381,6 +382,25 @@ typedef struct _LOADER_PERFORMANCE_DATA
     ULONGLONG StartTime;
     ULONGLONG EndTime;
 } LOADER_PERFORMANCE_DATA, *PLOADER_PERFORMANCE_DATA;
+
+typedef enum _TPM_BOOT_ENTROPY_RESULT_CODE
+{
+    TpmBootEntropyStructureUninitialized = 0,
+    TpmBootEntropyDisabledByPolicy = 1,
+    TpmBootEntropyNoTpmFound = 2,
+    TpmBootEntropyTpmError = 3,
+    TpmBootEntropySuccess = 4
+} TPM_BOOT_ENTROPY_RESULT_CODE;
+
+typedef struct _TPM_BOOT_ENTROPY_LDR_RESULT
+{
+    ULONGLONG Policy;
+    TPM_BOOT_ENTROPY_RESULT_CODE ResultCode;
+    LONG ResultStatus;
+    ULONGLONG Time;
+    ULONG EntropyLength;
+    UCHAR EntropyData[40];
+} TPM_BOOT_ENTROPY_LDR_RESULT, *PTPM_BOOT_ENTROPY_LDR_RESULT;
 
 //
 // Extended Loader Parameter Block

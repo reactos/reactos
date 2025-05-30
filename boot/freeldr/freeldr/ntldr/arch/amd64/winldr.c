@@ -371,14 +371,14 @@ WinLdrSetProcessorContext(
     TRACE("leave WinLdrSetProcessorContext\n");
 }
 
-void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
+void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK2 LoaderBlock2)
 {
     PVOID SharedUserDataAddress = NULL;
     ULONG_PTR Tss = 0;
     ULONG BlockSize, NumPages;
 
-    LoaderBlock->u.I386.CommonDataArea = (PVOID)DbgPrint; // HACK
-    LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
+    LoaderBlock2->u.I386.CommonDataArea = (PVOID)DbgPrint; // HACK
+    LoaderBlock2->u.I386.MachineType = MACHINE_TYPE_ISA;
 
     /* Allocate 1 page for SharedUserData */
     SharedUserDataAddress = MmAllocateMemoryWithType(MM_PAGE_SIZE, LoaderStartupPcrPage);

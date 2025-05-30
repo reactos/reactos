@@ -43,10 +43,24 @@ typedef struct _ARC_DISK_SIGNATURE_EX
 
 #define MAX_OPTIONS_LENGTH 255
 
+#include <nt_loader_block.h>
+
+typedef union _LOADER_SYSTEM_U1
+{
+    LOADER_PARAMETER_BLOCK_VISTA LoaderBlockVista;
+    LOADER_PARAMETER_BLOCK_WIN7 LoaderBlockWin7;
+} LOADER_SYSTEM_U1, *PLOADER_SYSTEM_U1;
+
+typedef union _LOADER_SYSTEM_U2
+{
+    LOADER_PARAMETER_EXTENSION_VISTA ExtensionVista;
+    LOADER_PARAMETER_EXTENSION_WIN7 ExtensionWin7;
+} LOADER_SYSTEM_U2, *PLOADER_SYSTEM_U2;
+
 typedef struct _LOADER_SYSTEM_BLOCK
 {
-    LOADER_PARAMETER_BLOCK LoaderBlock;
-    LOADER_PARAMETER_EXTENSION Extension;
+    LOADER_SYSTEM_U1 u1;
+    LOADER_SYSTEM_U2 u2;
     SETUP_LOADER_BLOCK SetupBlock;
 #ifdef _M_IX86
     HEADLESS_LOADER_BLOCK HeadlessLoaderBlock;
@@ -59,6 +73,13 @@ typedef struct _LOADER_SYSTEM_BLOCK
     CHAR NtHalPathName[MAX_PATH+1];
     ARC_DISK_INFORMATION ArcDiskInformation;
     LOADER_PERFORMANCE_DATA LoaderPerformanceData;
+    USHORT OsVersion;
+    PVOID LoaderBlock;
+    PLOADER_PARAMETER_BLOCK1 LoaderBlock1;
+    PLOADER_PARAMETER_BLOCK2 LoaderBlock2;
+    PLOADER_PARAMETER_EXTENSION1 Extension1;
+    PLOADER_PARAMETER_EXTENSION2 Extension2;
+    PSETUP_LOADER_BLOCK* SetupBlockPtr;
 } LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
 
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
@@ -89,21 +110,21 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, PULONG Size,
 
 // wlmemory.c
 BOOLEAN
-WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock);
+WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK1 LoaderBlock1);
 
 // wlregistry.c
 BOOLEAN
 WinLdrInitSystemHive(
-    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN OUT PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
     IN PCSTR SystemRoot,
     IN BOOLEAN Setup);
 
-BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
                              IN PCSTR SystemRoot);
 
 BOOLEAN
 WinLdrLoadNLSData(
-    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _Inout_ PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
     _In_ PCSTR DirectoryPath,
     _In_ PCUNICODE_STRING AnsiFileName,
     _In_ PCUNICODE_STRING OemFileName,
@@ -122,30 +143,39 @@ WinLdrAddDriverToList(
 
 // winldr.c
 VOID
-WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
+WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
+                       PLOADER_PARAMETER_BLOCK2 LoaderBlock2,
+                       PSETUP_LOADER_BLOCK* SetupBlockPtr,
+                       PLOADER_PARAMETER_EXTENSION1 Extension1,
+                       PLOADER_PARAMETER_EXTENSION2 Extension2,
                        PCSTR Options,
-                       PCSTR SystemPath,
+                       PCSTR SystemRoot,
                        PCSTR BootPath,
                        USHORT VersionToBoot);
 
 VOID
-WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
+WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK1 LoaderBlock1);
 
 VOID
-WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock);
+WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK1 LoaderBlock1);
 
 VOID
-WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
+WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK1 LoaderBlock1);
 
 ARC_STATUS
 LoadAndBootWindowsCommon(
     IN USHORT OperatingSystemVersion,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PVOID LoaderBlock,
+    IN PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
+    IN PLOADER_PARAMETER_BLOCK2 LoaderBlock2,
+    IN PSETUP_LOADER_BLOCK* SetupBlockPtr,
+    IN PLOADER_PARAMETER_EXTENSION1 Extension1,
+    IN PLOADER_PARAMETER_EXTENSION2 Extension2,
     IN PCSTR BootOptions,
     IN PCSTR BootPath);
 
 VOID
-WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
+WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK2 LoaderBlock2);
 
 VOID
 WinLdrSetProcessorContext(
