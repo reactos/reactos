@@ -6,7 +6,7 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#define INITGUID
+#include <initguid.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
