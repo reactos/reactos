@@ -70,7 +70,7 @@ protected:
     static HRESULT s_ShowFloating(_In_ DWORD dwFlags);
 };
 
-// The groups of exclusive bits
+// The groups of mutually exclusive TF_SFT_... bits
 #define TF_SFT_VISIBILITY_GROUP \
     (TF_SFT_SHOWNORMAL | TF_SFT_DOCK | TF_SFT_MINIMIZED | TF_SFT_HIDDEN | TF_SFT_DESKBAND)
 #define TF_SFT_TRANSPARENCY_GROUP \
