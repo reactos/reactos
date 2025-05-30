@@ -550,6 +550,7 @@
 #define IDD_ACTION       37
 #define IDD_FOLDER_CUSTOMIZE    38
 #define IDD_LINK_PROBLEM 39
+#define IDD_INSERT_DISK 40
 
 /* Control IDs for IDD_FOLDER_CUSTOMIZE dialog */
 #define IDC_FOLDERCUST_COMBOBOX             14001
@@ -564,6 +565,10 @@
 #define IDC_LINK_PROBLEM_ICON               14008
 #define IDC_LINK_PROBLEM_LABEL1             14009
 #define IDC_LINK_PROBLEM_LABEL2             14010
+
+/* Control IDs for IDD_INSERT_DISK dialog */
+#define IDC_INSERT_DISK_ICON               14011
+#define IDC_INSERT_DISK_LABEL             14012
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29
