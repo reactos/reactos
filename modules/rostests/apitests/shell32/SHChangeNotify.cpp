@@ -213,7 +213,7 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
     }
 
     LPCSTR answer = NULL;
-    INT lineno;
+    INT lineno = 0;
     switch (iStage)
     {
         case 0:
@@ -285,11 +285,7 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
             }
             break;
         }
-        default:
-        {
-            assert(0);
-            break;
-        }
+        DEFAULT_UNREACHABLE;
     }
 
     ok(lstrcmpA(checks, answer) == 0,
