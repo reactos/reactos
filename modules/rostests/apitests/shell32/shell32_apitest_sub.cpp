@@ -91,8 +91,8 @@ static BOOL InitSHCN(HWND hwnd)
     assert(s_iStage < NUM_STAGE);
 
     SHChangeNotifyEntry entry;
-    INT sources;
-    LONG events;
+    INT sources = 0;
+    LONG events = EVENTS;
     switch (s_iStage)
     {
         case 0:
@@ -179,8 +179,7 @@ static BOOL InitSHCN(HWND hwnd)
         default:
         {
             assert(0);
-            sources = 0;
-            events = EVENTS;
+            DEFAULT_UNREACHABLE;
             break;
         }
     }
