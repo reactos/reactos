@@ -269,7 +269,7 @@ CLangBarMgr::GetPrevShowFloatingStatus(_Inout_ DWORD* pdwStatus)
 //*****************************************************************************************
 
 EXTERN_C HRESULT
-LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut) DECLSPEC_HIDDEN
+LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 {
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
