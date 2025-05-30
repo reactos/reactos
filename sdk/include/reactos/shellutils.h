@@ -62,7 +62,7 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
     Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 #ifdef __cplusplus
-#   define IID_PPV_ARG(Itype, ppType) IID_##Itype, reinterpret_cast<void**>((reinterpret_cast<Itype**>(ppType)))
+#   define IID_PPV_ARG(Itype, ppType) IID_##Itype, reinterpret_cast<void**>(ppType)
 #   define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, reinterpret_cast<void**>((reinterpret_cast<Itype**>(ppType)))
 #else
 #   define IID_PPV_ARG(Itype, ppType) &IID_##Itype, (void**)(ppType)
