@@ -2,7 +2,7 @@
 #ifndef __DDRAW_INCLUDED__
 #define __DDRAW_INCLUDED__
 
-#if defined(_WIN32) && !defined(_NO_COM )
+#if defined(_WIN32) && !defined(_NO_COM)
   #define COM_NO_WINDOWS_H
   #include <objbase.h>
 #else
