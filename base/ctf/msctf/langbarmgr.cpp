@@ -2,12 +2,12 @@
  * PROJECT:     ReactOS CTF
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     ITfLangBarMgr implementation
- * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2010 Justin Chevrier
+ *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #define INITGUID
-
-#include <wine/debug.h>
+#include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <msctf.h>
@@ -23,6 +23,7 @@ extern "C"
 #include "msctf_internal.h"
 }
 
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 //*****************************************************************************************
