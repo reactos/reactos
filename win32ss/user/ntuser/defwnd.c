@@ -310,7 +310,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          {
             IntSystemSetCursor(pWnd->pcls->spcur);
          }
-         return FALSE;
+         return TRUE;
       }
 
       case HTLEFT:
@@ -356,9 +356,18 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          IntSystemSetCursor(SYSTEMCUR(SIZENESW));
          return TRUE;
        }
+       case HTHELP:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+             break;
+         }
+         IntSystemSetCursor(SYSTEMCUR(HELP));
+         return TRUE;
+       }
    }
    IntSystemSetCursor(SYSTEMCUR(ARROW));
-   return FALSE;
+   return TRUE;
 }
 
 /* Win: xxxDWPPrint */
