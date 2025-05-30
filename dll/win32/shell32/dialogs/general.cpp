@@ -95,9 +95,9 @@ SHELL32_ReadRegShellState(PREGSHELLSTATE prss)
 static BOOL IntSetUnderlineState(BOOL bUnderlineHover)
 {
     LSTATUS Status;
-    DWORD dwValue = bUnderlineHover ? UNDERLINE_HOVER : UNDERLINE_IE, dwSize = sizeof(DWORD);
+    DWORD dwValue = bUnderlineHover ? UNDERLINE_HOVER : UNDERLINE_IE;
     Status = SHRegSetUSValue(s_pszExplorerKey, L"IconUnderline", REG_NONE,
-                             &dwValue, dwSize, SHREGSET_FORCE_HKCU | SHREGSET_HKLM);
+                             &dwValue, sizeof(dwValue), SHREGSET_FORCE_HKCU | SHREGSET_HKLM);
     if (Status != ERROR_SUCCESS)
         return FALSE;
 
@@ -105,9 +105,10 @@ static BOOL IntSetUnderlineState(BOOL bUnderlineHover)
     return TRUE;
 }
 
-static UINT IntGetRawIconUnderlineValue(VOID)
+static UINT IntGetRawIconUnderlineValue()
 {
-    DWORD dwValue, dwDefault = UNDERLINE_ON, dwSize = sizeof(DWORD);
+    DWORD dwValue, dwDefault = UNDERLINE_ON;
+    DWORD dwSize = sizeof(dwValue);
     SHRegGetUSValue(s_pszExplorerKey, L"IconUnderline", NULL, &dwValue, &dwSize, FALSE, &dwDefault, sizeof(DWORD));
     return dwValue;
 }
@@ -118,7 +119,7 @@ static UINT SHELL_GetIconUnderlineMode()
     if (mode < UNDERLINE_IE)
         return mode;
 
-    WCHAR buf[42];
+    WCHAR buf[sizeof("hoverX")];
     *buf = UNICODE_NULL;
     DWORD cb = sizeof(buf);
     SHRegGetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",

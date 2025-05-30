@@ -3473,7 +3473,7 @@ UINT CDefView::GetItemActivateFlags()
     SHELLSTATE ss;
     SHGetSetSettings(&ss, SSF_DOUBLECLICKINWEBVIEW | SSF_WIN95CLASSIC, FALSE);
     return ((m_FolderSettings.fFlags & FWF_SINGLECLICKACTIVATE) || (!ss.fDoubleClickInWebView && !ss.fWin95Classic))
-            ? (LVS_EX_TRACKSELECT | LVS_EX_ONECLICKACTIVATE) : (0);
+            ? (LVS_EX_TRACKSELECT | LVS_EX_ONECLICKACTIVATE) : 0;
 }
 
 HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
