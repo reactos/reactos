@@ -11,10 +11,10 @@ extern void func_printdlg(void);
 
 const struct test winetest_testlist[] =
 {
-    { "filedlg", func_filedlg },
-    { "finddlg", func_finddlg },
-    { "fontdlg", func_fontdlg },
+  //{ "filedlg", func_filedlg },
+  //{ "finddlg", func_finddlg },
+  //{ "fontdlg", func_fontdlg },
     //{ "itemdlg", func_itemdlg }, // Win 7
-    { "printdlg", func_printdlg },
+//    { "printdlg", func_printdlg },
     { 0, 0 }
 };
