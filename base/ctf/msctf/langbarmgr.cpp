@@ -18,10 +18,7 @@
 #include <cicreg.h>
 #include <cicutb.h>
 
-extern "C"
-{
 #include "msctf_internal.h"
-}
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
