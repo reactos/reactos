@@ -14,9 +14,9 @@
 #include <msctf_undoc.h>
 
 // Cicero
+#include <cicbase.h>
 #include <cicreg.h>
 #include <cicutb.h>
-#include <cicuif.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
