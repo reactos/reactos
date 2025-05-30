@@ -19,6 +19,8 @@
 #ifndef __ROS_SHELL_UTILS_H
 #define __ROS_SHELL_UTILS_H
 
+#pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
