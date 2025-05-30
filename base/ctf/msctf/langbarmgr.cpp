@@ -13,6 +13,11 @@
 #include <msctf.h>
 #include <msctf_undoc.h>
 
+extern "C"
+{
+    #include "msctf_internal.h"
+}
+
 // Cicero
 #include <cicbase.h>
 #include <cicreg.h>
@@ -264,9 +269,7 @@ CLangBarMgr::GetPrevShowFloatingStatus(_Inout_ DWORD* pdwStatus)
 //*****************************************************************************************
 
 EXTERN_C HRESULT
-LangBarMgr_Constructor(
-    _In_opt_ IUnknown *pUnkOuter,
-    _Out_ IUnknown **ppOut) DECLSPEC_HIDDEN
+LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut) DECLSPEC_HIDDEN
 {
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
