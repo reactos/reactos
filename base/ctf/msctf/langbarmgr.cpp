@@ -20,6 +20,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
+//*****************************************************************************************
+
 class CLangBarMgr : public ITfLangBarMgr_P
 {
 public:
@@ -78,18 +80,20 @@ protected:
 #define TF_SFT_LABEL_GROUP (TF_SFT_LABELS | TF_SFT_NOLABELS)
 #define TF_SFT_EXTRA_ICON_GROUP (TF_SFT_EXTRAICONSONMINIMIZED | TF_SFT_NOEXTRAICONSONMINIMIZED)
 
+static inline BOOL
+IsSingleBitSet(DWORD dwValue)
+{
+    return (dwValue != 0) && ((dwValue & (dwValue - 1)) == 0);
+}
+
+//*****************************************************************************************
+
 CLangBarMgr::CLangBarMgr() : m_cRefs(1)
 {
 }
 
 CLangBarMgr::~CLangBarMgr()
 {
-}
-
-static inline BOOL
-IsSingleBitSet(DWORD dwValue)
-{
-    return (dwValue != 0) && ((dwValue & (dwValue - 1)) == 0);
 }
 
 BOOL CLangBarMgr::CheckFloatingBits(_In_ DWORD dwBits)
