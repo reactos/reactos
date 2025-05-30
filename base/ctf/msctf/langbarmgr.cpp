@@ -13,15 +13,15 @@
 #include <msctf.h>
 #include <msctf_undoc.h>
 
-extern "C"
-{
-    #include "msctf_internal.h"
-}
-
 // Cicero
 #include <cicbase.h>
 #include <cicreg.h>
 #include <cicutb.h>
+
+extern "C"
+{
+#include "msctf_internal.h"
+}
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
