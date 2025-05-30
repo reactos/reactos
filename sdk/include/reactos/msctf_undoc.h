@@ -14,6 +14,95 @@
 extern "C" {
 #endif
 
+DEFINE_GUID(IID_ITfRangeAnchor, 0x8B99712B, 0x5815, 0x4BCC, 0xB9, 0xA9, 0x53, 0xDB, 0x1C, 0x8D, 0x67, 0x55);
+
+#define INTERFACE ITfRangeAnchor
+DECLARE_INTERFACE_(ITfRangeAnchor, IUnknown)
+{
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+
+    STDMETHOD(GetFormattedText)(
+        _In_ TfEditCookie ec,
+        _Out_ IDataObject **ppDataObject) PURE;
+    STDMETHOD(GetEmbedded)(
+        _In_ TfEditCookie ec,
+        _In_ REFGUID rguidService,
+        _In_ REFIID riid,
+        _Out_ IUnknown **ppunk) PURE;
+    STDMETHOD(InsertEmbedded)(
+        _In_ TfEditCookie ec,
+        _In_ DWORD dwFlags,
+        _In_ IDataObject *pDataObject) PURE;
+    STDMETHOD(ShiftStart)(
+        _In_ TfEditCookie ec,
+        _In_ LONG cchReq,
+        _Out_ LONG *pcch,
+        _In_ const TF_HALTCOND *pHalt) PURE;
+    STDMETHOD(ShiftEnd)(
+        _In_ TfEditCookie ec,
+        _In_ LONG cchReq,
+        _Out_ LONG *pcch,
+        _In_ const TF_HALTCOND *pHalt) PURE;
+    STDMETHOD(ShiftStartToRange)(
+        _In_ TfEditCookie ec,
+        _Inout_ ITfRange *pRange,
+        _In_ TfAnchor aPos) PURE;
+    STDMETHOD(ShiftEndToRange)(
+        _In_ TfEditCookie ec,
+        _Inout_ ITfRange *pRange,
+        _In_ TfAnchor aPos) PURE;
+    STDMETHOD(ShiftStartRegion)(
+        _In_ TfEditCookie ec,
+        _In_ TfShiftDir dir,
+        _Out_ BOOL *pfNoRegion) PURE;
+    STDMETHOD(ShiftEndRegion)(
+        _In_ TfEditCookie ec,
+        _In_ TfShiftDir dir,
+        _Out_ BOOL *pfNoRegion) PURE;
+    STDMETHOD(IsEmpty)(
+        _In_ TfEditCookie ec,
+        _Out_ BOOL *pfEmpty) PURE;
+    STDMETHOD(Collapse)(
+        _In_ TfEditCookie ec,
+        _In_ TfAnchor aPos) PURE;
+    STDMETHOD(IsEqualStart)(
+        _In_ TfEditCookie ec,
+        _In_ ITfRange *pWith,
+        _In_ TfAnchor aPos,
+        _Out_ BOOL *pfEqual) PURE;
+    STDMETHOD(IsEqualEnd)(
+        _In_ TfEditCookie ec,
+        _In_ ITfRange *pWith,
+        _In_ TfAnchor aPos,
+        _Out_ BOOL *pfEqual) PURE;
+    STDMETHOD(CompareStart)(
+        _In_ TfEditCookie ec,
+        _Inout_ ITfRange *pWith,
+        _In_ TfAnchor aPos,
+        _Out_ LONG *plResult) PURE;
+    STDMETHOD(CompareEnd)(
+        _In_ TfEditCookie ec,
+        _In_ ITfRange *pWith,
+        _In_ TfAnchor aPos,
+        _Out_ LONG *plResult) PURE;
+    STDMETHOD(AdjustForInsert)(
+        _In_ TfEditCookie ec,
+        _In_ ULONG cchInsert,
+        _Out_ BOOL *pfInsertOk) PURE;
+    STDMETHOD(GetGravity)(
+        _Out_ TfGravity *pgStart,
+        _Out_ TfGravity *pgEnd) PURE;
+    STDMETHOD(SetGravity)(
+        _In_ TfEditCookie ec,
+        _In_ TfGravity gStart,
+        _In_ TfGravity gEnd) PURE;
+    STDMETHOD(Clone)(_Out_ ITfRange **ppClone) PURE;
+    STDMETHOD(GetContext)(_Out_ ITfContext **ppContext) PURE;
+};
+#undef INTERFACE
+
 BOOL WINAPI TF_InitSystem(VOID);
 BOOL WINAPI TF_UninitSystem(VOID);
 HRESULT WINAPI TF_GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMgr);
