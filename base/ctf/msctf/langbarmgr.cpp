@@ -10,10 +10,6 @@
 #include <wine/debug.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-#include <ctffunc.h>
-#include <ctfutb.h>
 #include <msctf.h>
 #include <msctf_undoc.h>
 
