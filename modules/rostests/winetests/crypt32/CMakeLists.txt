@@ -1,6 +1,20 @@
 
 add_definitions(-DUSE_WINE_TODOS)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(
+        /wd4101
+        /wd5287
+        /wd4477
+)
+elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
+       CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(
+        -Wno-format
+        -Wno-unused-variable
+)
+endif()
+
 list(APPEND SOURCE
     base64.c
     cert.c
