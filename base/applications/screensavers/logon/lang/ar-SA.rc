@@ -1,0 +1,7 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "شاشة توقف تسجيل الدخول"
+    IDS_TEXT "لا توجد خيارات تحتاج إلى تعيين."
+END
