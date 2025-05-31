@@ -198,15 +198,15 @@ int WINAPI wWinMain(HINSTANCE hInstance,
 
     if (ProcessCmdLine(GetCommandLineW()))
         return 0;
-
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
+     switch (GetUserDefaultUILanguage())
+        {
+            case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            case MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT): // Added case for Arabic
+                SetProcessDefaultLayout(LAYOUT_RTL);
             break;
-        default:
-            break;
-    }
+    default:
+        break;
+        }
     /* Store instance handle in our global variable */
     hInst = hInstance;
 
