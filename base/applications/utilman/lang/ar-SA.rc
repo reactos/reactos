@@ -1,0 +1,14 @@
+/*
+ * PROJECT:          ReactOS Utility Manager (Accessibility)
+ * LICENSE:          GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:          Arabic (Saudi Arabia) translation resource
+ * COPYRIGHT:        Copyright 2025 [ Mahmoud ] <waltabs>
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_FAIL_INIT "فشل تهيئة مكتبة مدير الأدوات! رمز الخطأ هو %lu."
+    IDS_FAIL_INIT_TITLE "فشل التهيئة"
+END
