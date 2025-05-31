@@ -15,53 +15,53 @@ END
 /* Command-line strings */
 STRINGTABLE
 BEGIN
-    STRING_USAGE "طريقة الاستخدام:\n\
-  regedit [خيارات] [اسم_الملف] [مفتاح_التسجيل]\n\n\
+    STRING_USAGE "الاستخدام:\n\
+    regedit [خيارات] [اسم_الملف] [مفتاح_السجل]\n\n\
 الخيارات:\n\
-  [بدون خيار]    تشغيل النسخة الرسومية من البرنامج.\n\
-  /L:system.dat  موقع ملف system.dat المراد تعديله.\n\
-                 متوافق مع أي مفتاح آخر. يتم تجاهله.\n\
-  /R:user.dat    موقع ملف user.dat المراد تعديله.\n\
-                 متوافق مع أي مفتاح آخر. يتم تجاهله.\n\
-  /C             استيراد محتويات ملف التسجيل.\n\
-  /D             حذف مفتاح تسجيل محدد.\n\
-  /E             تصدير محتويات مفتاح تسجيل محدد إلى ملف.\n\
-                 إذا لم يتم تحديد مفتاح، يتم تصدير كامل التسجيل.\n\
-  /S             الوضع الصامت. لن يتم عرض أي رسائل.\n\
-  /V             تشغيل الواجهة الرسومية في الوضع المتقدم. يتم تجاهله.\n\
-  /?             عرض هذه المعلومات والخروج.\n\
-  [اسم_الملف]     موقع الملف الذي يحتوي على معلومات التسجيل المراد\n\
-                 استيرادها. عند استخدامه مع [/E]، يحدد هذا الخيار\n\
-                 موقع الملف حيث سيتم تصدير معلومات التسجيل.\n\
-  [مفتاح_التسجيل]  مفتاح التسجيل المراد تعديله.\n\
+    [لا يوجد خيار]          تشغيل الإصدار الرسومي من هذا البرنامج.\n\
+    /L:system.dat          موقع ملف system.dat المراد تعديله.\n\
+                           متوافق مع أي مفتاح آخر. يتم تجاهله.\n\
+    /R:user.dat            موقع ملف user.dat المراد تعديله.\n\
+                           متوافق مع أي مفتاح آخر. يتم تجاهله.\n\
+    /C                     استيراد محتويات ملف السجل.\n\
+    /D                     حذف مفتاح سجل محدد.\n\
+    /E                     تصدير محتويات مفتاح سجل محدد إلى ملف.\n\
+                           إذا لم يتم تحديد مفتاح، فسيتم تصدير السجل بأكمله.\n\
+    /S                     وضع صامت. لن يتم عرض أي رسائل.\n\
+    /V                     تشغيل الواجهة الرسومية في الوضع المتقدم. يتم تجاهله.\n\
+    /?                     عرض هذه المعلومات والخروج.\n\
+    [اسم_الملف]            موقع الملف الذي يحتوي على معلومات السجل المراد\n\
+                           استيرادها. عند الاستخدام مع [/E]، يحدد هذا الخيار\n\
+                           موقع الملف الذي سيتم تصدير معلومات السجل إليه.\n\
+    [مفتاح_السجل]          مفتاح السجل المراد تعديله.\n\
 \n\
-أمثلة للاستخدام:\n\
-  regedit ""import.reg""\n\
-  regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
-  regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
-    STRING_INVALID_SWITCH "regedit: مفتاح غير صالح أو غير معروف [%1]\n"
-    STRING_HELP "اكتب ""regedit /?"" للمساعدة.\n"
+أمثلة الاستخدام:\n\
+    regedit ""import.reg""\n\
+    regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
+    regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
+    STRING_INVALID_SWITCH "regedit: مفتاح تبديل غير صالح أو غير معروف [%1]\n"
+    STRING_HELP "اكتب ""regedit /؟"" للمساعدة.\n"
     STRING_NO_FILENAME "regedit: لم يتم تحديد اسم ملف.\n"
-    STRING_NO_REG_KEY "regedit: لم يتم تحديد مفتاح تسجيل للحذف.\n"
-    STRING_FILE_NOT_FOUND "regedit: الملف '%1' غير موجود.\n"
+    STRING_NO_REG_KEY "regedit: لم يتم تحديد مفتاح سجل للإزالة.\n"
+    STRING_FILE_NOT_FOUND "regedit: الملف '%1' لم يتم العثور عليه.\n"
     STRING_CANNOT_OPEN_FILE "regedit: تعذر فتح الملف '%1'.\n"
     STRING_UNHANDLED_ACTION "regedit: إجراء غير معالج.\n"
-    STRING_OUT_OF_MEMORY "regedit: نفاد الذاكرة! (%1!S!, سطر %2!u!)\n"
-    STRING_INVALID_HEX "regedit: قيمة ست عشرية غير صالحة.\n"
-    STRING_CSV_HEX_ERROR "regedit: تعذر تحويل البيانات الست عشرية. تمت مواجهة قيمة غير صالحة عند '%1'.\n"
+    STRING_OUT_OF_MEMORY "regedit: نفاد الذاكرة! (%1!S!, السطر %2!u!)\n"
+    STRING_INVALID_HEX "regedit: قيمة سداسية عشرية غير صالحة.\n"
+    STRING_CSV_HEX_ERROR "regedit: تعذر تحويل البيانات السداسية العشرية. تم العثور على قيمة غير صالحة في '%1'.\n"
     STRING_ESCAPE_SEQUENCE "regedit: تسلسل هروب غير معروف [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: نوع بيانات تسجيل غير مدعوم [0x%1!x!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: نوع بيانات سجل غير مدعوم [0x%1!x!]\n"
     STRING_UNEXPECTED_EOL "regedit: نهاية سطر غير متوقعة في '%1'.\n"
-    STRING_UNRECOGNIZED_LINE "regedit: السطر '%1' غير معروف.\n"
-    STRING_SETVALUE_FAILED "regedit: تعذر إضافة قيمة التسجيل '%1' إلى '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: تعذر فتح مفتاح التسجيل '%1'.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: تمت مواجهة نوع بيانات تسجيل غير مدعوم [0x%1!x!] في '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: سيتم تصدير قيمة التسجيل '%1' كبيانات ثنائية.\n"
+    STRING_UNRECOGNIZED_LINE "regedit: السطر '%1' لم يتم التعرف عليه.\n"
+    STRING_SETVALUE_FAILED "regedit: تعذر إضافة قيمة السجل '%1' إلى '%2'.\n"
+    STRING_OPEN_KEY_FAILED "regedit: تعذر فتح مفتاح السجل '%1'.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: نوع بيانات سجل غير مدعوم [0x%1!x!] تم العثور عليه في '%2'.\n"
+    STRING_EXPORT_AS_BINARY "regedit: سيتم تصدير قيمة السجل '%1' كبيانات ثنائية.\n"
     STRING_INVALID_SYSTEM_KEY "regedit: مفتاح نظام غير صالح [%1]\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: تعذر تصدير '%1'. لم يتم العثور على مفتاح التسجيل المحدد.\n"
-    STRING_DELETE_FAILED "regedit: تعذر حذف مفتاح التسجيل '%1'.\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: تعذر تصدير '%1'. لم يتم العثور على مفتاح السجل المحدد.\n"
+    STRING_DELETE_FAILED "regedit: تعذر حذف مفتاح السجل '%1'.\n"
     STRING_UNKNOWN_TYPE "نوع غير معروف"
-    STRING_INVALID_LINE_SYNTAX, "regedit: السطر يحتوي على صيغة غير صالحة.\n"
+    STRING_INVALID_LINE_SYNTAX, "regedit: السطر يحتوي على بناء جملة غير صالح.\n"
 END
 
 /* Menus */
@@ -73,15 +73,15 @@ BEGIN
         MENUITEM "&استيراد...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&تصدير...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "&تحميل خلية...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "&إلغاء تحميل خلية...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "&تحميل القرص الصلب...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "&إلغاء تحميل القرص الصلب...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&الاتصال بتسجيل الشبكة...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "&قطع الاتصال بتسجيل الشبكة...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&الاتصال بسجل الشبكة...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&قطع الاتصال بسجل الشبكة...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&طباعة...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&خروج", ID_REGISTRY_EXIT
+        MENUITEM "خ&روج", ID_REGISTRY_EXIT
     END
     POPUP "&تحرير"
     BEGIN
@@ -91,11 +91,11 @@ BEGIN
         BEGIN
             MENUITEM "&مفتاح", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "قيمة &سلسلة", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "قيمة &ثنائية", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "قيمة &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "قيمة &متعددة السلاسل", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "قيمة سلسلة &قابلة للتوسيع", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&قيمة سلسلة", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&قيمة ثنائية", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&قيمة DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&قيمة متعددة السلاسل", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&قيمة سلسلة قابلة للتوسيع", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&أذونات...", ID_EDIT_PERMISSIONS
@@ -106,13 +106,13 @@ BEGIN
         MENUITEM "&نسخ اسم المفتاح", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&بحث...\tCtrl+F", ID_EDIT_FIND
-        MENUITEM "البحث التال&ي\tF3", ID_EDIT_FINDNEXT
+        MENUITEM "بحث ت&الي\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&عرض"
     BEGIN
-        MENUITEM "شريط الح&الة", ID_VIEW_STATUSBAR
+        MENUITEM "&شريط الحالة", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "ت&قسيم", ID_VIEW_SPLIT
+        MENUITEM "تقس&يم", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&تحديث\tF5", ID_VIEW_REFRESH
     END
@@ -121,11 +121,11 @@ BEGIN
         MENUITEM "&إضافة إلى المفضلة", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&إزالة من المفضلة", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&مساعدة"
+    POPUP "&تعليمات"
     BEGIN
         MENUITEM "&مواضيع المساعدة\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&حول محرر التسجيل", ID_HELP_ABOUT
+        MENUITEM "&حول محرر السجل", ID_HELP_ABOUT
     END
 END
 
@@ -145,11 +145,11 @@ BEGIN
         BEGIN
             MENUITEM "&مفتاح", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "قيمة &سلسلة", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "قيمة &ثنائية", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "قيمة &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "قيمة &متعددة السلاسل", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "قيمة سلسلة &قابلة للتوسيع", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&قيمة سلسلة", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&قيمة ثنائية", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&قيمة DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&قيمة متعددة السلاسل", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&قيمة سلسلة قابلة للتوسيع", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -159,11 +159,11 @@ BEGIN
         BEGIN
             MENUITEM "&مفتاح", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "قيمة &سلسلة", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "قيمة &ثنائية", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "قيمة &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "قيمة &متعددة السلاسل", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "قيمة سلسلة &قابلة للتوسيع", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&قيمة سلسلة", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&قيمة ثنائية", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&قيمة DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&قيمة متعددة السلاسل", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&قيمة سلسلة قابلة للتوسيع", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&بحث...", ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -181,11 +181,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&تصدير", ID_TREE_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "إلغاء تحميل خلية...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "إلغاء تحميل القرص الصلب...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN
-        MENUITEM "&قص", ID_HEXEDIT_CUT
+        MENUITEM "ق&ص", ID_HEXEDIT_CUT
         MENUITEM "&نسخ", ID_HEXEDIT_COPY
         MENUITEM "&لصق", ID_HEXEDIT_PASTE
         MENUITEM "&حذف", ID_HEXEDIT_DELETE
@@ -198,15 +198,15 @@ END
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "تعديل السلسلة"
+CAPTION "تعديل سلسلة"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "اسم القيمة:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "اسم &القيمة:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "بيانات القيمة:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "بيانات &القيمة:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "موافق", IDOK, 142, 64, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 196, 64, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 196, 64, 50, 14
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
@@ -214,13 +214,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "تعديل سلسلة متعددة"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "اسم القيمة:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "اسم &القيمة:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "بيانات القيمة:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "بيانات &القيمة:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON "موافق", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 196, 154, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
@@ -228,12 +228,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "تعديل قيمة ثنائية"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "اسم القيمة:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "اسم &القيمة:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "بيانات القيمة:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "بيانات &القيمة:", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
     DEFPUSHBUTTON "موافق", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 196, 154, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
@@ -241,15 +241,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "تعديل DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "اسم القيمة:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "اسم &القيمة:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "بيانات القيمة:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "بيانات &القيمة:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
     GROUPBOX "الأساس", IDC_STATIC, 130, 35, 116, 39
-    AUTORADIOBUTTON "&ست عشري", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
+    AUTORADIOBUTTON "&سداسي عشري", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
     AUTORADIOBUTTON "&عشري", IDC_FORMAT_DEC, 141, 59, 60, 10
     DEFPUSHBUTTON "موافق", IDOK, 142, 82, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 196, 82, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 196, 82, 50, 14
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
@@ -274,10 +274,10 @@ BEGIN
     LTEXT "مقاطعة:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "ذاكرة:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "الذاكرة:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "منفذ:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "المنفذ:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
     LTEXT "بيانات خاصة بالجهاز:", IDC_STATIC, 10, 177, 80, 8
@@ -286,8 +286,8 @@ BEGIN
     GROUPBOX "الاستخدام", IDC_STATIC, 10, 219, 125, 39
     LTEXT "غير محدد", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "مشترك", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "حصري للجهاز", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "حصري للسائق", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    LTEXT "خاص بالجهاز", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "خاص بالمحرك", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "نوع الواجهة:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
     RTEXT "رقم الناقل:", IDC_STATIC, 151, 230, 51, 8
@@ -332,9 +332,9 @@ BEGIN
     LTEXT "", IDC_REQ_PORT_MIN, 77, 40, 76, 8
     RTEXT "الحد الأقصى للعنوان:", IDC_STATIC, 10, 50, 61, 8
     LTEXT "", IDC_REQ_PORT_MAX, 77, 50, 76, 8
-    RTEXT "حالة المشاركة:", IDC_STATIC, 10, 60, 61, 8
+    RTEXT "توزيع المشاركة:", IDC_STATIC, 10, 60, 61, 8
     LTEXT "", IDC_REQ_PORT_SHARE, 77, 60, 76, 8
-    GROUPBOX "خيارات", IDC_STATIC, 10, 72, 83, 39
+    GROUPBOX "الخيارات", IDC_STATIC, 10, 72, 83, 39
     LTEXT "بديل", IDC_REQ_PORT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
     LTEXT "مفضل", IDC_REQ_PORT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "موافق", IDOK, 58, 117, 40, 14
@@ -355,9 +355,9 @@ BEGIN
     LTEXT "", IDC_REQ_MEMORY_MIN, 77, 40, 76, 8
     RTEXT "الحد الأقصى للعنوان:", IDC_STATIC, 10, 50, 61, 8
     LTEXT "", IDC_REQ_MEMORY_MAX, 77, 50, 76, 8
-    RTEXT "حالة المشاركة:", IDC_STATIC, 10, 60, 61, 8
+    RTEXT "توزيع المشاركة:", IDC_STATIC, 10, 60, 61, 8
     LTEXT "", IDC_REQ_MEMORY_SHARE, 77, 60, 76, 8
-    GROUPBOX "خيارات", IDC_STATIC, 10, 72, 83, 39
+    GROUPBOX "الخيارات", IDC_STATIC, 10, 72, 83, 39
     LTEXT "بديل", IDC_REQ_MEMORY_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
     LTEXT "مفضل", IDC_REQ_MEMORY_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "موافق", IDOK, 58, 117, 40, 14
@@ -374,9 +374,9 @@ BEGIN
     LTEXT "", IDC_REQ_INT_MIN, 77, 20, 76, 8
     RTEXT "الحد الأقصى للمتجه:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_INT_MAX, 77, 30, 76, 8
-    RTEXT "حالة المشاركة:", IDC_STATIC, 10, 40, 61, 8
+    RTEXT "توزيع المشاركة:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_INT_SHARE, 77, 40, 76, 8
-    GROUPBOX "خيارات", IDC_STATIC, 10, 72, 83, 39
+    GROUPBOX "الخيارات", IDC_STATIC, 10, 72, 83, 39
     LTEXT "بديل", IDC_REQ_INT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
     LTEXT "مفضل", IDC_REQ_INT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "موافق", IDOK, 58, 117, 40, 14
@@ -391,9 +391,9 @@ BEGIN
     LTEXT "", IDC_REQ_DMA_MIN, 77, 10, 76, 8
     RTEXT "الحد الأقصى للقناة:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_DMA_MAX, 77, 20, 76, 8
-    RTEXT "حالة المشاركة:", IDC_STATIC, 10, 30, 61, 8
+    RTEXT "توزيع المشاركة:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_DMA_SHARE, 77, 30, 76, 8
-    GROUPBOX "خيارات", IDC_STATIC, 10, 72, 83, 39
+    GROUPBOX "الخيارات", IDC_STATIC, 10, 72, 83, 39
     LTEXT "بديل", IDC_REQ_DMA_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
     LTEXT "مفضل", IDC_REQ_DMA_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "موافق", IDOK, 58, 117, 40, 14
@@ -410,53 +410,54 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "محرر التسجيل"
+    IDS_APP_TITLE "محرر السجل"
     IDC_REGEDIT "REGEDIT"
     IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "يحتوي على أوامر للعمل مع التسجيل كاملاً"
+    ID_REGISTRY_MENU "يحتوي على أوامر للعمل مع السجل بأكمله"
     ID_EDIT_MENU "يحتوي على أوامر لتحرير القيم أو المفاتيح"
-    ID_VIEW_MENU "يحتوي على أوامر لتخصيص نافذة التسجيل"
-    ID_FAVOURITES_MENU "يحتوي على أوامر للوصول إلى المفاتيح المستخدمة بكثرة"
-    ID_HELP_MENU "يحتوي على أوامر لعرض المساعدة والمعلومات حول محرر التسجيل"
+    ID_VIEW_MENU "يحتوي على أوامر لتخصيص نافذة السجل"
+    ID_FAVOURITES_MENU "يحتوي على أوامر للوصول إلى المفاتيح المستخدمة بشكل متكرر"
+    ID_HELP_MENU "يحتوي على أوامر لعرض المساعدة والمعلومات حول محرر السجل"
     ID_EDIT_NEW_MENU "يحتوي على أوامر لإنشاء مفاتيح أو قيم جديدة"
 END
 
 STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY "يعدل بيانات القيمة"
-    ID_EDIT_NEW_KEY "يضيف مفتاحاً جديداً"
+    ID_EDIT_NEW_KEY "يضيف مفتاحًا جديدًا"
     ID_EDIT_NEW_STRINGVALUE "يضيف قيمة سلسلة جديدة"
     ID_EDIT_NEW_BINARYVALUE "يضيف قيمة ثنائية جديدة"
-    ID_EDIT_NEW_DWORDVALUE "يضيف قيمة DWORD جديدة"
-    ID_EDIT_NEW_MULTISTRINGVALUE "يضيف قيمة متعددة السلاسل جديدة"
+    ID_EDIT_NEW_DWORDVALUE "يضيف قيمة كلمة مزدوجة جديدة"
+    ID_EDIT_NEW_MULTISTRINGVALUE "يضيف قيمة سلسلة متعددة جديدة"
     ID_EDIT_NEW_EXPANDABLESTRINGVALUE "يضيف قيمة سلسلة قابلة للتوسيع جديدة"
-    ID_REGISTRY_IMPORTREGISTRYFILE "يستورد ملف نصي إلى التسجيل"
-    ID_REGISTRY_EXPORTREGISTRYFILE "يصدّر كل أو جزء من التسجيل إلى ملف نصي"
-    ID_REGISTRY_LOADHIVE "يحمل ملف خلية إلى التسجيل"
-    ID_REGISTRY_UNLOADHIVE "يفرغ خلية من التسجيل"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "يتصل بتسجيل كمبيوتر بعيد"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "يفصل الاتصال بتسجيل كمبيوتر بعيد"
-    ID_REGISTRY_PRINT "يطبع كل أو جزء من التسجيل"
-    ID_HELP_ABOUT "يعرض معلومات البرنامج، رقم الإصدار وحقوق النشر"
+    ID_REGISTRY_IMPORTREGISTRYFILE "يستورد ملفًا نصيًا إلى السجل"
+    ID_REGISTRY_EXPORTREGISTRYFILE "يصدر كل أو جزء من السجل إلى ملف نصي"
+    ID_REGISTRY_LOADHIVE "يتحمل ملف قرص صلب إلى السجل"
+    ID_REGISTRY_UNLOADHIVE "يفك تحميل قرص صلب من السجل"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "يتصل بسجل كمبيوتر بعيد"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "يقطع الاتصال بسجل كمبيوتر بعيد"
+    ID_REGISTRY_PRINT "يطبع كل أو جزء من السجل"
+//    ID_HELP_HELPTOPICS "يفتح مساعدة محرر السجل"
+    ID_HELP_ABOUT "يعرض معلومات البرنامج ورقم الإصدار وحقوق النشر"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "يغلق محرر التسجيل"
-    ID_FAVOURITES_ADDTOFAVOURITES "يضيف مفاتيح إلى قائمة المفضلة"
-    ID_FAVOURITES_REMOVEFAVOURITE "يزيل مفاتيح من قائمة المفضلة"
-    ID_VIEW_STATUSBAR "إظهار أو إخفاء شريط الحالة"
-    ID_VIEW_SPLIT "تغيير موضع الفاصل بين الجزئين"
-    ID_VIEW_REFRESH "تحديث النافذة"
-    ID_EDIT_DELETE "حذف المحدد"
-    ID_EDIT_RENAME "إعادة تسمية المحدد"
-    ID_EDIT_COPYKEYNAME "نسخ اسم المفتاح المحدد إلى الحافظة"
-    ID_EDIT_FIND "البحث عن نص في مفتاح أو قيمة أو بيانات"
-    ID_EDIT_FINDNEXT "البحث عن التكرار التالي للنص المحدد في البحث السابق"
+    ID_REGISTRY_EXIT "يغلق محرر السجل"
+    ID_FAVOURITES_ADDTOFAVOURITES "يضيف المفاتيح إلى قائمة المفضلة"
+    ID_FAVOURITES_REMOVEFAVOURITE "يزيل المفاتيح من قائمة المفضلة"
+    ID_VIEW_STATUSBAR "يعرض أو يخفي شريط الحالة"
+    ID_VIEW_SPLIT "تغيير موضع الفصل بين جزأين"
+    ID_VIEW_REFRESH "ينعش النافذة"
+    ID_EDIT_DELETE "يحذف التحديد"
+    ID_EDIT_RENAME "يعيد تسمية التحديد"
+    ID_EDIT_COPYKEYNAME "ينسخ اسم المفتاح المحدد إلى الحافظة"
+    ID_EDIT_FIND "يبحث عن سلسلة نصية في مفتاح أو قيمة أو بيانات"
+    ID_EDIT_FINDNEXT "يبحث عن التكرار التالي للنص المحدد في البحث السابق"
 END
 
 STRINGTABLE
@@ -465,9 +466,9 @@ BEGIN
     IDS_WARNING "تحذير"
     IDS_BAD_KEY "لا يمكن الاستعلام عن المفتاح '%s'"
     IDS_BAD_VALUE "لا يمكن الاستعلام عن القيمة '%s'"
-    IDS_UNSUPPORTED_TYPE "لا يمكن تعديل مفاتيح من هذا النوع (%ld)"
-    IDS_TOO_BIG_VALUE "القيمة كبيرة جدًا (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "بيانات نوع REG_MULTI_SZ لا يمكن أن تحتوي على سلاسل فارغة.\nتمت إزالة السلاسل الفارغة من القائمة."
+    IDS_UNSUPPORTED_TYPE "لا يمكن تحرير مفاتيح من هذا النوع (%ld)"
+    IDS_TOO_BIG_VALUE "القيمة كبيرة جداً (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "بيانات من نوع REG_MULTI_SZ لا يمكن أن تحتوي على سلاسل فارغة.\nتمت إزالة السلاسل الفارغة من القائمة."
     IDS_QUERY_DELETE_KEY_ONE "هل أنت متأكد أنك تريد حذف هذا المفتاح؟"
     IDS_QUERY_DELETE_KEY_MORE "هل أنت متأكد أنك تريد حذف هذه المفاتيح؟"
     IDS_QUERY_DELETE_KEY_CONFIRM "تأكيد حذف المفتاح"
@@ -477,8 +478,8 @@ BEGIN
     IDS_ERR_DELVAL_CAPTION "خطأ في حذف القيم"
     IDS_ERR_DELETEVALUE "تعذر حذف جميع القيم المحددة!"
     IDS_ERR_RENVAL_CAPTION "خطأ في إعادة تسمية القيمة"
-    IDS_ERR_RENVAL_TOEMPTY "لا يمكن إعادة تسمية %s. اسم القيمة المحدد فارغ. حاول استخدام اسم آخر وحاول مرة أخرى."
-    IDS_QUERY_IMPORT_HIVE_CAPTION "تأكيد استعادة المفتاح"
+    IDS_ERR_RENVAL_TOEMPTY "لا يمكن إعادة تسمية %s. اسم القيمة المحدد فارغ. حاول باسم آخر وحاول مرة أخرى."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "تأكيد استعادة القرص الصلب"
     IDS_QUERY_IMPORT_HIVE_MSG "سيتم استعادة مفتاح فوق المفتاح المحدد حاليًا.\nسيتم حذف جميع القيم والمفاتيح الفرعية لهذا المفتاح.\nهل تريد متابعة العملية؟"
     IDS_NEW_KEY "مفتاح جديد #%d"
     IDS_NEW_VALUE "قيمة جديدة #%d"
@@ -488,22 +489,22 @@ STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY "(قيمة ثنائية بطول صفر)"
     IDS_DEFAULT_VALUE_NAME "(افتراضي)"
-    IDS_VALUE_NOT_SET "(قيمة غير مضبوطة)"
+    IDS_VALUE_NOT_SET "(لم يتم تعيين القيمة)"
     IDS_UNKNOWN_TYPE "نوع غير معروف: (0x%lx)"
-    IDS_MY_COMPUTER "جهاز الكمبيوتر"
-    IDS_IMPORT_REG_FILE "استيراد ملف التسجيل"
-    IDS_EXPORT_REG_FILE "تصدير ملف التسجيل"
-    IDS_LOAD_HIVE "تحميل خلية"
-    IDS_UNLOAD_HIVE "إلغاء تحميل خلية"
+    IDS_MY_COMPUTER "جهازي الكمبيوتر"
+    IDS_IMPORT_REG_FILE "استيراد ملف السجل"
+    IDS_EXPORT_REG_FILE "تصدير ملف السجل"
+    IDS_LOAD_HIVE "تحميل القرص الصلب"
+    IDS_UNLOAD_HIVE "إلغاء تحميل القرص الصلب"
     IDS_INVALID_DWORD "(قيمة DWORD غير صالحة)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE "ملف تسجيل"
+    IDS_FLT_REGFILE "ملف التسجيل"
     IDS_FLT_REGFILES "ملفات التسجيل (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "ملفات خلية التسجيل (*.*)"
+    IDS_FLT_HIVFILES "ملفات قرص السجل الصلب (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
     IDS_FLT_REGEDIT4 "ملفات تسجيل Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
@@ -521,12 +522,12 @@ BEGIN
     IDS_ACCESS_SETVALUE "تعيين قيمة"
     IDS_ACCESS_CREATESUBKEY "إنشاء مفتاح فرعي"
     IDS_ACCESS_ENUMERATESUBKEYS "تعداد المفاتيح الفرعية"
-    IDS_ACCESS_NOTIFY "إشعار"
+    IDS_ACCESS_NOTIFY "إعلام"
     IDS_ACCESS_CREATELINK "إنشاء رابط"
     IDS_ACCESS_DELETE "حذف"
     IDS_ACCESS_WRITEDAC "كتابة DAC"
     IDS_ACCESS_WRITEOWNER "كتابة المالك"
-    IDS_ACCESS_READCONTROL "قراءة التحكم"
+    IDS_ACCESS_READCONTROL "تحكم في القراءة"
 END
 
 STRINGTABLE
@@ -540,34 +541,34 @@ STRINGTABLE
 BEGIN
     IDS_EXPAND "&توسيع"
     IDS_COLLAPSE "&طي"
-    IDS_GOTO_SUGGESTED_KEY "&الانتقال إلى '%s'"
-    IDS_FINISHEDFIND "تم الانتهاء من البحث في السجل."
+    IDS_GOTO_SUGGESTED_KEY "&اذهب إلى '%s'"
+    IDS_FINISHEDFIND "انتهى البحث في السجل."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "إضافة معلومات يمكن أن تغير أو تحذف قيمًا بطريقة غير مقصودة وتتسبب في توقف المكونات عن العمل بشكل صحيح.\nإذا كنت لا تثق في مصدر هذه المعلومات في '%s'، لا تضيفها إلى السجل.\n\nهل أنت متأكد أنك تريد المتابعة؟"
+    IDS_IMPORT_PROMPT "يمكن أن يؤدي إضافة المعلومات عن غير قصد إلى تغيير القيم أو حذفها وتسبب في توقف المكونات عن العمل بشكل صحيح.\nإذا كنت لا تثق بمصدر هذه المعلومات في '%s'، فلا تضفها إلى السجل.\n\nهل أنت متأكد أنك تريد المتابعة؟"
     IDS_IMPORT_OK "تمت إضافة المفاتيح والقيم الموجودة في '%s' إلى السجل بنجاح."
-    IDS_IMPORT_ERROR "تعذر استيراد '%s': خطأ في فتح الملف. قد يكون هناك خطأ في القرص أو نظام الملفات أو قد لا يكون الملف موجودًا."
-    IDS_EXPORT_ERROR "تعذر تصدير '%s': خطأ في إنشاء الملف أو الكتابة إليه. قد يكون هناك خطأ في القرص أو نظام الملفات."
+    IDS_IMPORT_ERROR "لا يمكن استيراد '%s': خطأ في فتح الملف. قد يكون هناك خطأ في القرص أو نظام الملفات أو قد لا يكون الملف موجودًا."
+    IDS_EXPORT_ERROR "لا يمكن تصدير '%s': خطأ في إنشاء الملف أو الكتابة إليه. قد يكون هناك خطأ في القرص أو نظام الملفات."
 END
 
 STRINGTABLE
 BEGIN
     IDS_BUSNUMBER "رقم الناقل"
-    IDS_INTERFACE "واجهة"
-    IDS_DMA_CHANNEL "قناة"
-    IDS_DMA_PORT "منفذ"
-    IDS_INTERRUPT_VECTOR "متجه"
-    IDS_INTERRUPT_LEVEL "مستوى"
-    IDS_INTERRUPT_AFFINITY "انتماء"
-    IDS_INTERRUPT_TYPE "نوع"
-    IDS_MEMORY_ADDRESS "عنوان فيزيائي"
-    IDS_MEMORY_LENGTH "طول"
-    IDS_MEMORY_ACCESS "وصول"
-    IDS_PORT_ADDRESS "عنوان فيزيائي"
-    IDS_PORT_LENGTH "طول"
-    IDS_PORT_ACCESS "وصول"
+    IDS_INTERFACE "الواجهة"
+    IDS_DMA_CHANNEL "القناة"
+    IDS_DMA_PORT "المنفذ"
+    IDS_INTERRUPT_VECTOR "المتجه"
+    IDS_INTERRUPT_LEVEL "المستوى"
+    IDS_INTERRUPT_AFFINITY "التوافق"
+    IDS_INTERRUPT_TYPE "النوع"
+    IDS_MEMORY_ADDRESS "العنوان الفعلي"
+    IDS_MEMORY_LENGTH "الطول"
+    IDS_MEMORY_ACCESS "الوصول"
+    IDS_PORT_ADDRESS "العنوان الفعلي"
+    IDS_PORT_LENGTH "الطول"
+    IDS_PORT_ACCESS "الوصول"
     IDS_SPECIFIC_RESERVED1 "محجوز 1"
     IDS_SPECIFIC_RESERVED2 "محجوز 2"
     IDS_SPECIFIC_DATASIZE "حجم البيانات"
@@ -575,8 +576,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO "منفذ"
-    IDS_PORT_MEMORY_IO "ذاكرة"
+    IDS_PORT_PORT_IO "المنفذ"
+    IDS_PORT_MEMORY_IO "الذاكرة"
     IDS_INTERRUPT_EDGE_SENSITIVE "حساس للحافة"
     IDS_INTERRUPT_LEVEL_SENSITIVE "حساس للمستوى"
     IDS_MEMORY_READ_ONLY "قراءة فقط"
@@ -612,53 +613,53 @@ BEGIN
     IDS_FIELD_CLASS_NAME "اسم الفئة:"
     IDS_NO_CLASS_NAME "<لا يوجد فئة>"
     IDS_NULL_TIMESTAMP "<فارغ>"
-    IDS_FIELD_NAME "  الاسم:"
-    IDS_FIELD_TYPE "  النوع:"
-    IDS_FIELD_DATA "  البيانات:"
+    IDS_FIELD_NAME " الاسم:"
+    IDS_FIELD_TYPE " النوع:"
+    IDS_FIELD_DATA " البيانات:"
     IDS_FIELD_LASTWRITE "وقت آخر كتابة:"
     IDS_UNKNOWN "<غير معروف>"
-    IDS_VALUE_INDEX "قيمة %d"
+    IDS_VALUE_INDEX "القيمة %d"
 END
 
 STRINGTABLE
 BEGIN
     IDS_REQALTERNATIVELIST "قائمة بديلة"
     IDS_REQRESOURCELIST "قائمة الموارد"
-    IDS_REQDESCRIPTOR "مواصف"
+    IDS_REQDESCRIPTOR "واصف"
     IDS_REQDEVICETYPE "نوع الجهاز"
-    IDS_TYPE_PORT "منفذ"
+    IDS_TYPE_PORT "المنفذ"
     IDS_TYPE_INTERRUPT "مقاطعة"
-    IDS_TYPE_MEMORY "ذاكرة"
+    IDS_TYPE_MEMORY "الذاكرة"
     IDS_TYPE_DMA "DMA"
-    IDS_SHARE_DEVICE_EXCLUSIVE "حصري للجهاز"
-    IDS_SHARE_DRIVER_EXCLUSIVE "حصري للسائق"
+    IDS_SHARE_DEVICE_EXCLUSIVE "خاص بالجهاز"
+    IDS_SHARE_DRIVER_EXCLUSIVE "خاص بالمحرك"
     IDS_SHARE_SHARED "مشترك"
     IDS_SHARE_UNDETERMINED "غير محدد"
 END
 
 /*****************************************************************/
 
-/* صناديق الحوار */
+/* Dialogs */
 
 IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "نطاق التصدير", IDC_STATIC, 2, 0, 366, 48
-    AUTORADIOBUTTON "ال&كامل", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "ال&فرع المحدد", IDC_EXPORT_BRANCH, 10, 22, 99, 11
+    AUTORADIOBUTTON "&الكل", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "الف&رع المحدد", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "تحميل خلية"
+CAPTION "تحميل القرص الصلب"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&مفتاح:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "موافق", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
@@ -667,7 +668,7 @@ CAPTION "إضافة إلى المفضلة"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "موافق", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 129, 24, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 129, 24, 50, 14
     LTEXT "&اسم المفضلة:", IDC_STATIC, 7, 7, 70, 10
     EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
@@ -678,10 +679,10 @@ CAPTION "إزالة المفضلة"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "موافق", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 7, 114, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 7, 114, 50, 14
     CONTROL "", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
             WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "حدد المفضلة:", IDC_STATIC, 7, 7, 99, 12
+    LTEXT "تحديد المفضلة (المفضلة):", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -689,20 +690,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "بحث"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&بحث عن التالي", IDOK, 197, 7, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 197, 24, 50, 14
-    GROUPBOX "ابحث في", IDC_STATIC, 7, 25, 63, 51
-    LTEXT "&ابحث عن:", IDC_STATIC, 7, 8, 37, 10
+    DEFPUSHBUTTON "&بحث التالي", IDOK, 197, 7, 50, 14
+    PUSHBUTTON "إلغاء الأمر", IDCANCEL, 197, 24, 50, 14
+    GROUPBOX "البحث في", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "البحث &عن:", IDC_STATIC, 7, 8, 37, 10
     EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
-    CONTROL "&مفاتيح", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+    CONTROL "&المفاتيح", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 35, 8
-    CONTROL "&قيم", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+    CONTROL "&القيم", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 48, 36, 8
-    CONTROL "&بيانات", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+    CONTROL "&البيانات", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 60, 42, 8
-    CONTROL "مطابقة ال&سلسلة بالكامل فقط", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+    CONTROL "تطابق &السلسلة بأكملها فقط", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 32, 94, 13
-    CONTROL "مطابقة ال&حالة", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+    CONTROL "تطابق &حالة الأحرف", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 48, 90, 12
 END
 
@@ -712,6 +713,6 @@ CAPTION "بحث"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "إلغاء", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "إلغاء الأمر", IDCANCEL, 93, 29, 45, 14
     LTEXT "جارٍ البحث في السجل...", IDC_STATIC, 33, 12, 83, 8
 END
