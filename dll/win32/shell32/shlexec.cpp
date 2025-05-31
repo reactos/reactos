@@ -1639,6 +1639,7 @@ static LONG ShellExecute_FromContextMenuHandlers( LPSHELLEXECUTEINFOW sei )
     if (!hkey)
         return ERROR_FUNCTION_FAILED;
 
+    // FIXME: Words cannot describe how broken this is, all of it needs to die
     r = RegOpenKeyW(hkey, L"shellex\\ContextMenuHandlers", &hkeycm);
     if (r == ERROR_SUCCESS)
     {
@@ -2179,7 +2180,10 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         CHeapPtr<WCHAR, CLocalAllocator> buf;
         DWORD size = MAX_PATH;
         if (!buf.Allocate(size) || FAILED(PathCreateFromUrlW(sei_tmp.lpFile, buf, &size, 0)))
-            return SE_ERR_OOM;
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
 
         wszApplicationName.Attach(buf.Detach());
         sei_tmp.lpFile = wszApplicationName;
@@ -2374,7 +2378,10 @@ ShellExecute_Normal(_Inout_ LPSHELLEXECUTEINFOW sei)
     if (SHELL_execute(sei, SHELL_ExecuteW))
         return ERROR_SUCCESS;
     DWORD err = GetLastError();
-    assert(err);
+#if DBG
+    if (!err)
+        DbgPrint("FIXME: Failed with error 0 on '%ls'\n", sei->lpFile);
+#endif
     return err ? err : ERROR_FILE_NOT_FOUND;
 }
 
