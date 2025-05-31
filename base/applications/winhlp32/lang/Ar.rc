@@ -1,0 +1,108 @@
+/*
+ * Help Viewer (Arabic Resource)
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+MAIN_MENU MENU
+{
+    POPUP "&ملف" {
+        MENUITEM "&فتح...", MNID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&طباعة...", MNID_FILE_PRINT
+        MENUITEM "إعدادات الطاب&عة...", MNID_FILE_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "خ&روج", MNID_FILE_EXIT
+    }
+    POPUP "&تحرير" {
+        MENUITEM "&نسخ", MNID_EDIT_COPYDLG
+        MENUITEM SEPARATOR
+        MENUITEM "&تعليق...", MNID_EDIT_ANNOTATE
+    }
+    POPUP "&إشارة مرجعية" {
+        MENUITEM "&تعريف...", MNID_BKMK_DEFINE
+    }
+    POPUP "&خيارات" {
+        MENUITEM "دائماً في الأ&على", MNID_HELP_HELPTOP
+        MENUITEM "السجل",           MNID_OPTS_HISTORY
+        POPUP    "الخطوط"
+        BEGIN
+            MENUITEM "صغير",           MNID_OPTS_FONTS_SMALL
+            MENUITEM "عادي",           MNID_OPTS_FONTS_NORMAL
+            MENUITEM "كبير",           MNID_OPTS_FONTS_LARGE
+        END
+    }
+    POPUP "&مساعدة" {
+        MENUITEM "&مساعدة حول المساعدة\tF1", MNID_HELP_HELPON
+        MENUITEM "&حول عارض المساعدة", MNID_HELP_ABOUT
+    }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "تعليق...",           MNID_CTXT_ANNOTATE
+        MENUITEM "نسخ",                MNID_CTXT_COPY
+        MENUITEM "طباعة...",           MNID_CTXT_PRINT
+        POPUP    "الخطوط"
+        BEGIN
+            MENUITEM "صغير",           MNID_CTXT_FONTS_SMALL
+            MENUITEM "عادي",           MNID_CTXT_FONTS_NORMAL
+            MENUITEM "كبير",           MNID_CTXT_FONTS_LARGE
+        END
+    END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP,             "مساعدة ReactOS"
+STID_WHERROR,               "خطأ"
+STID_WARNING,               "تحذير"
+STID_INFO,                  "معلومات"
+STID_NOT_IMPLEMENTED,       "لم يتم التطبيق بعد"
+STID_HLPFILE_ERROR_s,       "خطأ أثناء قراءة ملف المساعدة `%s`"
+STID_INDEX,                 "الفهر&س"
+STID_CONTENTS,              "المحتويا&ت"
+STID_BACK,                  "ال&رجوع"
+STID_ALL_FILES,             "كل الملفات (*.*)"
+STID_HELP_FILES_HLP,        "ملفات المساعدة (*.hlp)"
+STID_FILE_NOT_FOUND_s       "تعذر العثور على '%s'. هل تريد العثور على هذا الملف بنفسك؟"
+STID_NO_RICHEDIT            "تعذر العثور على تطبيق RichEdit... جاري الإلغاء"
+STID_PSH_INDEX,             "مواضيع المساعدة: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+FONT 8, "MS Shell Dlg"
+CAPTION "الفهرس"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+FONT 8, "MS Shell Dlg"
+CAPTION "بحث"
+{
+    LTEXT  "لم يتم التطبيق بعد", -1, 10, 10, 180, 150
+}
