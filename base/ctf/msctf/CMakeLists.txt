@@ -11,7 +11,6 @@ list(APPEND SOURCE
     displayattributemgr.c
     documentmgr.c
     inputprocessor.c
-    langbarmgr.c
     msctf.c
     range.c
     threadmgr.c
@@ -19,6 +18,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    langbarmgr.cpp
     mlng.cpp
     utils.cpp)
 
