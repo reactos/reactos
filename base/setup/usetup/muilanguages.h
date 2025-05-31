@@ -41,9 +41,9 @@
 // #ifdef LANGUAGE_AR_QA
     // #include "lang/ar-QA.h"
 // #endif
-// #ifdef LANGUAGE_AR_SA
-    // #include "lang/ar-SA.h"
-// #endif
+#ifdef LANGUAGE_AR_SA
+    #include "lang/ar-SA.h"
+#endif
 // #ifdef LANGUAGE_AR_SY
     // #include "lang/ar-SY.h"
 // #endif
