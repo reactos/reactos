@@ -4,8 +4,9 @@
 #define IDI_MAIN 100
 
 /* Menus */
-#define IDR_POPUP 12000
+#define IDR_POPUP 100
 
 /* Menu items */
-#define ID_EXIT        10001
-#define ID_PREFERENCES 10002
+#define ID_EXIT        100
+#define ID_PREFERENCES 101
+#define ID_LANG_BASE   1000
