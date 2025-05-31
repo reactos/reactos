@@ -268,7 +268,7 @@ BOOL IsAltTabWindow(HWND hwnd)
         return FALSE;
 
     // must not be WS_EX_TOOLWINDOW nor WS_EX_NOACTIVATE
-    ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    ExStyle = (DWORD)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
     if (ExStyle & (WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE))
         return FALSE;
 
@@ -286,7 +286,7 @@ BOOL IsAltTabWindow(HWND hwnd)
     }
 
     // must not be an IME-related window
-    ClassStyle = GetClassLongPtrW(hwnd, GCL_STYLE);
+    ClassStyle = (DWORD)GetClassLongPtrW(hwnd, GCL_STYLE);
     if (ClassStyle & CS_IME)
         return FALSE;
 
