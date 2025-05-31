@@ -26,6 +26,8 @@ add_executable(msvcrt_winetest
 
 target_compile_definitions(msvcrt_winetest PRIVATE
     WINETEST_USE_DBGSTR_LONGLONG
+    USE_WINE_TODOS
+    USE_WIN_SKIP
     _CRT_NONSTDC_NO_DEPRECATE
     _USE_MATH_DEFINES
     WIN32_NO_STATUS=
