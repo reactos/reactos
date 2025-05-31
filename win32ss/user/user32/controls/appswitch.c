@@ -258,7 +258,7 @@ static HWND GetNiceRootOwner(HWND hwnd)
 // c.f. https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863
 BOOL IsAltTabWindow(HWND hwnd)
 {
-    DWORD ClassStyle, ExStyle;
+    LONG_PTR ExStyle, ClassStyle;
     RECT rc;
     HWND hwndTry, hwndWalk;
     WCHAR szClass[64];
@@ -268,7 +268,7 @@ BOOL IsAltTabWindow(HWND hwnd)
         return FALSE;
 
     // must not be WS_EX_TOOLWINDOW nor WS_EX_NOACTIVATE
-    ExStyle = (DWORD)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
     if (ExStyle & (WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE))
         return FALSE;
 
@@ -286,7 +286,7 @@ BOOL IsAltTabWindow(HWND hwnd)
     }
 
     // must not be an IME-related window
-    ClassStyle = (DWORD)GetClassLongPtrW(hwnd, GCL_STYLE);
+    ClassStyle = GetClassLongPtrW(hwnd, GCL_STYLE);
     if (ClassStyle & CS_IME)
         return FALSE;
 
