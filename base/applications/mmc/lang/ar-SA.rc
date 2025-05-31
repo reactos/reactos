@@ -1,0 +1,43 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&جديد\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&فتح...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "خ&روج\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&مساعدة"
+    BEGIN
+        MENUITEM "&حول وحدة تحكم إدارة ReactOS", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&جديد\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&فتح...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&حفظ", IDM_FILE_SAVE
+        MENUITEM "حفظ &باسم...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "خ&روج\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&النوافذ"
+    BEGIN
+        MENUITEM "قائمة", IDM_WINDOWS_LIST
+    END
+    POPUP "&مساعدة"
+    BEGIN
+        MENUITEM "&حول وحدة تحكم إدارة ReactOS", IDM_HELP_ABOUT
+    D
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "وحدة تحكم إدارة ReactOS"
+    IDS_CONSOLETITLE "وحدة التحكم%1!u!"
+END
