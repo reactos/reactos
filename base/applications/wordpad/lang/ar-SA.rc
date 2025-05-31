@@ -4,52 +4,52 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&ملف"
     BEGIN
-        MENUITEM "&جديد...\tCtrl+N",       ID_FILE_NEW
-        MENUITEM "&فتح...\tCtrl+O",      ID_FILE_OPEN
-        MENUITEM "&حفظ\tCtrl+S",         ID_FILE_SAVE
-        MENUITEM "حفظ &باسم...",           ID_FILE_SAVEAS
+        MENUITEM "&جديد...\tCtrl+N",          ID_FILE_NEW
+        MENUITEM "&فتح...\tCtrl+O",          ID_FILE_OPEN
+        MENUITEM "&حفظ\tCtrl+S",            ID_FILE_SAVE
+        MENUITEM "حفظ &باسم...",             ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&طباعة...\tCtrl+P",     ID_PRINT
-        MENUITEM "معاينة الطباع&ة",        ID_PREVIEW
-        MENUITEM "ت&هيئة الصفحة...",        ID_PRINTSETUP
+        MENUITEM "&طباعة...\tCtrl+P",        ID_PRINT
+        MENUITEM "معاينة الطباع&ة",           ID_PREVIEW
+        MENUITEM "ت&هيئة الصفحة...",           ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "&خروج",                 ID_FILE_EXIT
+        MENUITEM "&خروج",                    ID_FILE_EXIT
     END
     POPUP "&تحرير"
     BEGIN
-        MENUITEM "&تراجع\tCtrl+Z",               ID_EDIT_UNDO
-        MENUITEM "إعا&دة\tCtrl+Y",               ID_EDIT_REDO
+        MENUITEM "&تراجع\tCtrl+Z",                 ID_EDIT_UNDO
+        MENUITEM "إعا&دة\tCtrl+Y",                 ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "&قص\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&نسخ\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&لصق\tCtrl+V",              ID_EDIT_PASTE
-        MENUITEM "&مسح\tDel",                 ID_EDIT_CLEAR
-        MENUITEM "تحديد ال&كل\tCtrl+A",         ID_EDIT_SELECTALL
+        MENUITEM "&قص\tCtrl+X",                   ID_EDIT_CUT
+        MENUITEM "&نسخ\tCtrl+C",                   ID_EDIT_COPY
+        MENUITEM "&لصق\tCtrl+V",                   ID_EDIT_PASTE
+        MENUITEM "&مسح\tDel",                     ID_EDIT_CLEAR
+        MENUITEM "تحديد ال&كل\tCtrl+A",             ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&بحث...\tCtrl+F",            ID_FIND
+        MENUITEM "&بحث...\tCtrl+F",                ID_FIND
         MENUITEM "البحث عن التا&لي\tF3",              ID_FIND_NEXT
-        MENUITEM "&استبدال...\tCtrl+H",         ID_REPLACE
+        MENUITEM "&استبدال...\tCtrl+H",              ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "للقراءة &فقط",                  ID_EDIT_READONLY
-        MENUITEM "&معدل",                   ID_EDIT_MODIFIED
+        MENUITEM "للقراءة &فقط",                   ID_EDIT_READONLY
+        MENUITEM "&معدل",                      ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "إ&ضافات"
         BEGIN
-            MENUITEM "معلومات التحدي&د",             ID_EDIT_SELECTIONINFO
-            MENUITEM "تنسيق الح&رف",           ID_EDIT_CHARFORMAT
-            MENUITEM "تنسيق الحرف ال&افتراضي",           ID_EDIT_DEFCHARFORMAT
-            MENUITEM "تنسيق الفق&رة",           ID_EDIT_PARAFORMAT
-            MENUITEM "&الحصول على النص",                   ID_EDIT_GETTEXT
+            MENUITEM "معلومات التحدي&د",              ID_EDIT_SELECTIONINFO
+            MENUITEM "تنسيق الح&رف",              ID_EDIT_CHARFORMAT
+            MENUITEM "تنسيق الحرف ال&افتراضي",              ID_EDIT_DEFCHARFORMAT
+            MENUITEM "تنسيق الفق&رة",              ID_EDIT_PARAFORMAT
+            MENUITEM "&الحصول على النص",                      ID_EDIT_GETTEXT
         END
     END
     POPUP "&عرض"
     BEGIN
-        MENUITEM "&شريط الأدوات",        ID_TOGGLE_TOOLBAR
-        MENUITEM "شريط الت&نسيق",     ID_TOGGLE_FORMATBAR
-        MENUITEM "الم&سطرة",          ID_TOGGLE_RULER
-        MENUITEM "شريط الح&الة",     ID_TOGGLE_STATUSBAR
+        MENUITEM "&شريط الأدوات",            ID_TOGGLE_TOOLBAR
+        MENUITEM "شريط الت&نسيق",         ID_TOGGLE_FORMATBAR
+        MENUITEM "الم&سطرة",              ID_TOGGLE_RULER
+        MENUITEM "شريط الح&الة",         ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "خ&يارات...",     ID_VIEWPROPERTIES
+        MENUITEM "خ&يارات...",            ID_VIEWPROPERTIES
     END
     POPUP "&إدراج"
     BEGIN
@@ -57,13 +57,13 @@ BEGIN
     END
     POPUP "ت&نسيق"
     BEGIN
-        MENUITEM "&خط...",                     ID_FONTSETTINGS
-        MENUITEM "&نقاط تعداد",               ID_BULLET
-        MENUITEM "&فقرة...",                ID_PARAFORMAT
-        MENUITEM "&علامات الجدولة...",                     ID_TABSTOPS
+        MENUITEM "&خط...",                        ID_FONTSETTINGS
+        MENUITEM "&نقاط تعداد",                  ID_BULLET
+        MENUITEM "&فقرة...",                    ID_PARAFORMAT
+        MENUITEM "&علامات الجدولة...",                      ID_TABSTOPS
         POPUP "خلفي&ة"
         BEGIN
-            MENUITEM "الن&ظام\tCtrl+1",         ID_BACK_1
+            MENUITEM "الن&ظام\tCtrl+1",            ID_BACK_1
             MENUITEM "أصفر &فاتح\tCtrl+2",    ID_BACK_2
         END
     END
@@ -77,12 +77,12 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "ق&ص",                ID_EDIT_CUT
-        MENUITEM "&نسخ",               ID_EDIT_COPY
-        MENUITEM "&لصق",              ID_EDIT_PASTE
+        MENUITEM "ق&ص",                    ID_EDIT_CUT
+        MENUITEM "&نسخ",                   ID_EDIT_COPY
+        MENUITEM "&لصق",                  ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&نقاط تعداد",      ID_BULLET
-        MENUITEM "&فقرة...",       ID_PARAFORMAT
+        MENUITEM "&نقاط تعداد",          ID_BULLET
+        MENUITEM "&فقرة...",           ID_PARAFORMAT
     END
 END
 
@@ -93,17 +93,17 @@ BEGIN
         MENUITEM "أسود",      ID_COLOR_BLACK
         MENUITEM "كستنائي",     ID_COLOR_MAROON
         MENUITEM "أخضر",      ID_COLOR_GREEN
-        MENUITEM "زيتوني",      ID_COLOR_OLIVE
+        MENUITEM "زيتوني",     ID_COLOR_OLIVE
         MENUITEM "أزرق داكن",       ID_COLOR_NAVY
         MENUITEM "بنفسجي",     ID_COLOR_PURPLE
         MENUITEM "أزرق مخضر",       ID_COLOR_TEAL
         MENUITEM "رمادي",       ID_COLOR_GRAY
-        MENUITEM "فضي",     ID_COLOR_SILVER
+        MENUITEM "فضي",      ID_COLOR_SILVER
         MENUITEM "أحمر",        ID_COLOR_RED
         MENUITEM "أخضر ليموني",       ID_COLOR_LIME
-        MENUITEM "أصفر",     ID_COLOR_YELLOW
-        MENUITEM "أزرق",       ID_COLOR_BLUE
-        MENUITEM "فوشي",    ID_COLOR_FUCHSIA
+        MENUITEM "أصفر",      ID_COLOR_YELLOW
+        MENUITEM "أزرق",        ID_COLOR_BLUE
+        MENUITEM "فوشي",     ID_COLOR_FUCHSIA
         MENUITEM "أزرق مائي",       ID_COLOR_AQUA
         MENUITEM "أبيض",      ID_COLOR_WHITE
         MENUITEM "تلقائي",  ID_COLOR_AUTOMATIC
@@ -112,8 +112,8 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_ALL_FILES,              "كل الملفات (*.*)"
-    STRING_TEXT_FILES_TXT,         "مستندات نصية (*.txt)"
+    STRING_ALL_FILES,            "كل الملفات (*.*)"
+    STRING_TEXT_FILES_TXT,       "مستندات نصية (*.txt)"
     STRING_TEXT_FILES_UNICODE_TXT, "مستند نصي يونيكود (*.txt)"
     STRING_RICHTEXT_FILES_RTF,     "تنسيق النص المنسق (*.rtf)"
     STRING_NEWFILE_RICHTEXT,       "مستند نص منسق"
@@ -124,9 +124,9 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_ALIGN_LEFT,            "يسار"
-    STRING_ALIGN_RIGHT,           "يمين"
-    STRING_ALIGN_CENTER,          "وسط"
+    STRING_ALIGN_LEFT,           "يسار"
+    STRING_ALIGN_RIGHT,          "يمين"
+    STRING_ALIGN_CENTER,         "وسط"
 END
 
 STRINGTABLE
@@ -163,38 +163,41 @@ BEGIN
     STRING_SAVE_LOSEFORMATTING,  "لقد اخترت الحفظ بتنسيق نص عادي، مما سيؤدي إلى فقد كل التنسيق. هل أنت متأكد أنك تريد المتابعة؟"
     STRING_INVALID_NUMBER,       "تنسيق رقم غير صالح."
     STRING_OLE_STORAGE_NOT_SUPPORTED, "مستندات تخزين OLE غير مدعومة."
-    STRING_WRITE_FAILED,              "تعذر حفظ الملف."
-    STRING_WRITE_ACCESS_DENIED,       "ليس لديك صلاحية لحفظ الملف."
-    STRING_OPEN_FAILED,               "تعذر فتح الملف."
-    STRING_OPEN_ACCESS_DENIED,        "ليس لديك صلاحية لفتح الملف."
-    STRING_PRINTING_NOT_IMPLEMENTED,  "الطباعة غير مطبقة."
-    STRING_MAX_TAB_STOPS,             "لا يمكن إضافة أكثر من 32 علامة جدولة."
+    STRING_WRITE_FAILED,                 "تعذر حفظ الملف."
+    STRING_WRITE_ACCESS_DENIED,          "ليس لديك صلاحية لحفظ الملف."
+    STRING_OPEN_FAILED,                  "تعذر فتح الملف."
+    STRING_OPEN_ACCESS_DENIED,           "ليس لديك صلاحية لفتح الملف."
+    STRING_PRINTING_NOT_IMPLEMENTED, "الطباعة غير مطبقة."
+    STRING_MAX_TAB_STOPS,                "لا يمكن إضافة أكثر من 32 علامة جدولة."
 END
 
 IDD_DATETIME DIALOGEX 30, 20, 130, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "التاريخ والوقت"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT        "التنسيقات المتاحة",-1,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    LTEXT          "التنسيقات المتاحة",-1,3,2,100,15
+    LISTBOX        IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     DEFPUSHBUTTON "موافق",IDOK,87,12,40,12
-    PUSHBUTTON   "إلغاء",IDCANCEL,87,26,40,12
+    PUSHBUTTON     "إلغاء",IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOGEX 30, 20, 140, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "جديد"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT        "نوع المستند الجديد",-1,3,2,100,15
-    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    LTEXT          "نوع المستند الجديد",-1,3,2,100,15
+    LISTBOX        IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     DEFPUSHBUTTON "موافق",IDOK,97,12,40,12
-    PUSHBUTTON   "إلغاء",IDCANCEL,97,26,40,12
+    PUSHBUTTON     "إلغاء",IDCANCEL,97,26,40,12
 END
 
 IDD_PARAFORMAT DIALOGEX 30, 20, 220, 110
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "تنسيق الفقرة"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -213,6 +216,7 @@ END
 
 IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "علامات الجدولة"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -227,6 +231,7 @@ END
 
 IDD_FORMATOPTS DIALOGEX 0, 0, 280, 110
 STYLE DS_SHELLFONT | DS_SYSMODAL
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
