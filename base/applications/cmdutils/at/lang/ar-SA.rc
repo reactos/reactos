@@ -31,7 +31,7 @@ AT [\\\\اسم_الكمبيوتر] وقت [/INTERACTIVE]\n\
     IDS_NO_ENTRIES "لا توجد إدخالات في القائمة.\n"
 
     IDS_CONFIRM_QUESTION "هل تريد متابعة هذه العملية؟ (ن/ل) [ل]: "
-    IDS_CONFIRM_INVALID  "\nهذه استجابة غير صالحة.\n"
+    IDS_CONFIRM_INVALID "\nهذه استجابة غير صالحة.\n"
     IDS_CONFIRM_YES "ن"
     IDS_CONFIRM_NO "ل"
 
