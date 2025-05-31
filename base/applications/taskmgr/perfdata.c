@@ -30,8 +30,7 @@ SYSTEM_PERFORMANCE_INFORMATION             SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION                   SystemBasicInfo;
 SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
 ULONG                                      SystemNumberOfHandles;
-/* Handle up to 32 processors */
-SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION   SystemProcessorTimeInfo[32] = { 0 };
+PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
 PSID                                       SystemUserSid = NULL;
 
 PCMD_LINE_CACHE global_cache = NULL;
@@ -65,6 +64,14 @@ BOOL PerfDataInitialize(void)
      * Create the SYSTEM Sid
      */
     AllocateAndInitializeSid(&NtSidAuthority, 1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0, &SystemUserSid);
+
+    /*
+     * Set up global info storage
+     */
+    SystemProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)HeapAlloc(GetProcessHeap(),
+                               0, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)
+                               * SystemBasicInfo.NumberOfProcessors);
+
     return TRUE;
 }
 
@@ -91,6 +98,10 @@ void PerfDataUninitialize(void)
         pEntry = CONTAINING_RECORD(pCur, SIDTOUSERNAME, List);
         pCur = pCur->Flink;
         HeapFree(GetProcessHeap(), 0, pEntry);
+    }
+
+    if (SystemProcessorTimeInfo) {
+        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
 }
 
@@ -211,11 +222,6 @@ void PerfDataRefresh(void)
     if (status != STATUS_INFO_LENGTH_MISMATCH)
         SysHandleInfoData.NumberOfHandles = SystemNumberOfHandles;
 
-    /*
-     * Save system handle info
-     */
-    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
-
     /* Get process information
      * We don't know how much data there is so just keep
      * increasing the buffer size until the call succeeds
@@ -249,9 +255,13 @@ void PerfDataRefresh(void)
     /*
      * Save system processor time info
      */
-    if (SystemBasicInfo.NumberOfProcessors <=  _countof(SystemProcessorTimeInfo))
-        memcpy(&SystemProcessorTimeInfo, &SysProcessorTimeInfo,
-               sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+    memcpy(SystemProcessorTimeInfo, SysProcessorTimeInfo,
+           sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+
+    /*
+     * Save system handle info
+     */
+    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
 
     for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
