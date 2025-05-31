@@ -3,13 +3,13 @@ LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
-CAPTION "أداة تشخيص ReactX"
+CAPTION "أداة ReactX التشخيصية"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "تبويب1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
+    CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&مساعدة", IDC_BUTTON_HELP, 2, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
     DEFPUSHBUTTON "&الصفحة التالية", IDC_BUTTON_NEXT, 257, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&حفظ كل المعلومات...", IDC_BUTTON_SAVE_INFO, 311, 260, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "&حفظ جميع المعلومات...", IDC_BUTTON_SAVE_INFO, 311, 260, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "&خروج", IDC_BUTTON_EXIT, 425, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
@@ -18,7 +18,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "تقدم هذه الأداة معلومات مفصلة عن مكونات ReactX وبرامج التشغيل المثبتة على نظامك.", IDC_STATIC, 5, 0, 443, 17
-    LTEXT "إذا كنت تواجه مشكلة مع ReactX وتعرف ما هي، فانقر فوق علامة التبويب المناسبة أعلاه. إذا لم تكن تعرف، يمكنك النقر فوق زر \"الصفحة التالية\" أدناه لزيارة كل صفحة بالتسلسل.", IDC_STATIC, 5, 15, 443, 25
+    LTEXT "إذا كنت تواجه مشكلة مع ReactX وتعرف ما هي، فانقر فوق علامة التبويب المناسبة أعلاه. إذا لم تكن تعرف، يمكنك النقر فوق زر ""الصفحة التالية"" أدناه لزيارة كل صفحة بالتسلسل.", IDC_STATIC, 5, 15, 443, 25
     GROUPBOX "معلومات النظام", IDC_STATIC, 5, 35, 452, 150, SS_RIGHT
     LTEXT "التاريخ/الوقت الحالي:", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
     LTEXT "اسم الكمبيوتر:", IDC_STATIC, 70, 60, 80, 10, SS_RIGHT
@@ -68,7 +68,7 @@ BEGIN
     RTEXT "برنامج التشغيل الرئيسي:", IDC_STATIC, 275, 10, 55, 10
     RTEXT "الإصدار:", IDC_STATIC, 275, 20, 55, 10
     RTEXT "التاريخ:", IDC_STATIC, 275, 30, 55, 10
-    RTEXT "شعار WHQL:", IDC_STATIC, 275, 40, 55, 10
+    RTEXT "WHQL موقّع:", IDC_STATIC, 275, 40, 55, 10
     RTEXT "Mini VDD:", IDC_STATIC, 275, 50, 55, 10
     RTEXT "VDD:", IDC_STATIC, 275, 60, 55, 10
     RTEXT "إصدار DDI:", IDC_STATIC, 275, 70, 55, 10
@@ -118,7 +118,7 @@ BEGIN
     RTEXT "التاريخ:", IDC_STATIC, 275, 30, 55, 10
     RTEXT "شعار WHQL:", IDC_STATIC, 275, 40, 55, 10
     RTEXT "ملفات أخرى:", IDC_STATIC, 275, 50, 55, 10
-    RTEXT "المزود:", IDC_STATIC, 275, 60, 55, 10
+    RTEXT "الموفر:", IDC_STATIC, 275, 60, 55, 10
     EDITTEXT IDC_STATIC_DSOUND_DRIVER, 335, 10, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_DSOUND_VERSION, 335, 20, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_DSOUND_DATE, 335, 30, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -127,7 +127,7 @@ BEGIN
     EDITTEXT IDC_STATIC_ADAPTER_PROVIDER, 335, 60, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "ميزات ReactX", IDC_STATIC, 5, 97, 452, 70
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 110, 125, 80, 17
-    RTEXT "مستوى تسريع الصوت\nبالعتاد:", IDC_STATIC, 10, 125, 90, 20, WS_DISABLED
+    RTEXT "مستوى تسريع\nالصوت بالأجهزة:", IDC_STATIC, 10, 125, 90, 20, WS_DISABLED
     PUSHBUTTON "اختبار DirectSound", IDC_BUTTON_TESTDSOUND, 270, 125, 80, 14, WS_DISABLED
     GROUPBOX "ملاحظات", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_TEXT_DSOUNDINFO, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
@@ -137,7 +137,7 @@ IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "مجموعة MIDI العامة DLS:", IDC_STATIC, 0, 0, 100, 10
+    RTEXT "مجموعة General MIDI DLS:", IDC_STATIC, 0, 0, 100, 10
     EDITTEXT IDC_MIDI_DLS_COLLECTION, 105, 0, 250, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "منافذ الموسيقى", IDC_STATIC, 5, 10, 452, 85
     GROUPBOX "ميزات ReactX", IDC_STATIC, 5, 97, 452, 70
@@ -170,9 +170,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "موفرو خدمة DirectPlay المسجلون", IDC_STATIC, 5, 0, 452, 75
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 15, 12, 432, 55
-    GROUPBOX "تطبيقات DirectPlay القابلة للوبي المسجلة", IDC_STATIC, 5, 77, 452, 55
+    GROUPBOX "تطبيقات DirectPlay القابلة للتجميع المسجلة", IDC_STATIC, 5, 77, 452, 55
     GROUPBOX "ميزات ReactX", IDC_STATIC, 5, 133, 452, 35
-    PUSHBUTTON "خيارات DirectPlay للصوت", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
+    PUSHBUTTON "خيارات صوت DirectPlay", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
     PUSHBUTTON "اختبار DirectPlay", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
     GROUPBOX "ملاحظات", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_NETWORK_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
@@ -182,16 +182,15 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "لا تزال غير قادر على العثور على المعلومات التي تبحث عنها؟ إليك بعض الأشياء الإضافية التي يمكنك القيام بها:", IDC_STATIC, 5, 0, 300, 10
+    LTEXT "ما زلت لا تجد المعلومات التي تبحث عنها؟ إليك بعض الأشياء الإضافية التي يمكنك القيام بها:", IDC_STATIC, 5, 0, 300, 10
     PUSHBUTTON "معلومات النظام", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
-    LTEXT "يعرض معلومات إضافية عن النظام", IDC_STATIC, 90, 23, 300, 10
+    LTEXT "يعرض معلومات نظام إضافية", IDC_STATIC, 90, 23, 300, 10
     PUSHBUTTON "تجاوز معدل التحديث", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
     LTEXT "يتجاوز معدل التحديث لـ DirectDraw", IDC_STATIC, 90, 43, 300, 10
 END
-
 STRINGTABLE
 BEGIN
-    IDS_MAIN_DIALOG "أداة تشخيص ReactX"
+    IDS_MAIN_DIALOG "أداة ReactX التشخيصية"
     IDS_SYSTEM_DIALOG "النظام"
     IDS_DISPLAY_DIALOG "العرض"
     IDS_SOUND_DIALOG "الصوت"
@@ -199,50 +198,47 @@ BEGIN
     IDS_INPUT_DIALOG "الإدخال"
     IDS_NETWORK_DIALOG "الشبكة"
     IDS_HELP_DIALOG "مساعدة"
-    IDS_FORMAT_MB "%I64uميجابايت ذاكرة"
-    IDS_FORMAT_SWAP "%I64u ميجابايت مستخدمة، %I64u ميجابايت متاحة"
-    IDS_FORMAT_UNIPROC "%s (%u معالج)"
-    IDS_FORMAT_MPPROC "%s (%u معالجات)"
-    IDS_VERSION_UNKNOWN "إصدار غير معروف"
-    IDS_DEVICE_STATUS_ATTACHED "متصل"
-    IDS_DEVICE_STATUS_MISSING "غير متصل"
-    IDS_DEVICE_STATUS_UNKNOWN "غير معروف"
+    IDS_FORMAT_MB "%I64u ميغابايت ذاكرة وصول عشوائي"
+    IDS_FORMAT_SWAP "%I64u ميغابايت مستخدمة، %I64u ميغابايت متاحة"
+    IDS_FORMAT_UNIPROC "%s (%u وحدة معالجة مركزية)"
+    IDS_FORMAT_MPPROC "%s (%u وحدات معالجة مركزية)"
+    IDS_VERSION_UNKNOWN "غير معروف"
     IDS_DEVICE_NAME "اسم الجهاز"
     IDS_DEVICE_STATUS "الحالة"
-    IDS_DEVICE_CONTROLLER "معرف المتحكم"
+    IDS_DEVICE_CONTROLLER "معرف وحدة التحكم"
     IDS_DEVICE_MANUFACTURER "معرف الشركة المصنعة"
     IDS_DEVICE_PRODUCT "معرف المنتج"
-    IDS_DEVICE_FORCEFEEDBACK "برنامج ردود الفعل القوية"
-    IDS_NOT_APPLICABLE "غير متاح"
+    IDS_DEVICE_FORCEFEEDBACK "برنامج تشغيل ردود الفعل القسرية"
+    IDS_NOT_APPLICABLE "لا ينطبق"
     IDS_OPTION_YES "نعم"
     IDS_DIRECTPLAY_COL_NAME1 "الاسم"
     IDS_DIRECTPLAY_COL_NAME2 "السجل"
     IDS_DIRECTPLAY_COL_NAME3 "الملف"
     IDS_DIRECTPLAY_COL_NAME4 "الإصدار"
-    IDS_DIRECTPLAY8_MODEMSP "موفر خدمة DirectPlay8 للمودم"
-    IDS_DIRECTPLAY8_SERIALSP "موفر خدمة DirectPlay8 التسلسلي"
-    IDS_DIRECTPLAY8_IPXSP "موفر خدمة DirectPlay8 لـ IPX"
-    IDS_DIRECTPLAY8_TCPSP "موفر خدمة DirectPlay8 لـ TCP/IP"
-    IDS_DIRECTPLAY_TCPCONN "اتصال TCP/IP عبر الإنترنت لـ DirectPlay"
+    IDS_DIRECTPLAY8_MODEMSP "موفر خدمة مودم DirectPlay8"
+    IDS_DIRECTPLAY8_SERIALSP "موفر خدمة تسلسلي DirectPlay8"
+    IDS_DIRECTPLAY8_IPXSP "موفر خدمة IPX لـ DirectPlay8"
+    IDS_DIRECTPLAY8_TCPSP "موفر خدمة TCP/IP لـ DirectPlay8"
+    IDS_DIRECTPLAY_TCPCONN "اتصال TCP/IP للإنترنت لـ DirectPlay"
     IDS_DIRECTPLAY_IPXCONN "اتصال IPX لـ DirectPlay"
-    IDS_DIRECTPLAY_MODEMCONN "اتصال المودم لـ DirectPlay"
+    IDS_DIRECTPLAY_MODEMCONN "اتصال مودم لـ DirectPlay"
     IDS_DIRECTPLAY_SERIALCONN "اتصال تسلسلي لـ DirectPlay"
-    IDS_REG_SUCCESS "تم بنجاح"
+    IDS_REG_SUCCESS "موافق"
     IDS_REG_FAIL "خطأ"
-    IDS_DDTEST_ERROR "فشل اختبار عرض DirectDraw.\nالرجاء مراجعة الملاحظات لمزيد من المعلومات."
-    IDS_DDTEST_DESCRIPTION "سيبدأ هذا اختبار واجهة DirectDraw. هل ترغب في المتابعة؟"
-    IDS_DDPRIMARY_DESCRIPTION "سيستخدم هذا الاختبار DirectDraw للرسم على السطح الأساسي.\nيجب رسم مستطيلات سوداء وبيضاء. هل ترغب في المتابعة؟"
+    IDS_DDTEST_ERROR "فشل اختبار عرض DirectDraw.\nيرجى مراجعة الملاحظات لمزيد من المعلومات."
+    IDS_DDTEST_DESCRIPTION "سيؤدي هذا إلى بدء اختبار واجهة DirectDraw. هل ترغب في المتابعة؟"
+    IDS_DDPRIMARY_DESCRIPTION "سيستخدم هذا الاختبار DirectDraw للرسم على السطح الأساسي.\nيجب رسم مستطيلات باللونين الأسود والأبيض. هل ترغب في المتابعة؟"
     IDS_DDPRIMARY_RESULT "هل رأيت مستطيلات سوداء وبيضاء؟"
     IDS_DDOFFSCREEN_DESCRIPTION "سيستخدم هذا الاختبار DirectDraw للرسم في مخزن مؤقت خارج الشاشة. يجب رسم مستطيل أبيض متحرك. هل ترغب في المتابعة؟"
-    IDS_DDOFFSCREEN_RESULT "هل رأيت مستطيلاً أبيض متحركاً؟"
+    IDS_DDOFFSCREEN_RESULT "هل رأيت مستطيلاً أبيض متحركًا؟"
     IDS_DDFULLSCREEN_DESCRIPTION "سيستخدم هذا الاختبار DirectDraw للرسم في وضع ملء الشاشة. يجب رسم مستطيل أبيض متحرك. هل ترغب في المتابعة؟"
-    IDS_DDFULLSCREEN_RESULT "هل رأيت مستطيلاً أبيض متحركاً في وضع ملء الشاشة؟"
-    IDS_FORMAT_ADAPTER_MEM "%u ميجابايت"
-    IDS_FORMAT_ADAPTER_MODE "%d × %d (%u بت)(%uهرتز)"
+    IDS_DDFULLSCREEN_RESULT "هل رأيت مستطيلاً أبيض متحركًا في وضع ملء الشاشة؟"
+    IDS_FORMAT_ADAPTER_MEM "%u ميغابايت"
+    IDS_FORMAT_ADAPTER_MODE "%d × %d (%u بت)(%u هرتز)"
     IDS_OPTION_NO "لا"
-    IDS_D3DTEST_DESCRIPTION "سيبدأ هذا اختبار واجهة Direct3D. هل ترغب في المتابعة؟"
-    IDS_D3DTEST_D3Dx "سيستخدم هذا الاختبار واجهة Direct3D %u المعجلة بالعتاد."
-    IDS_OS_VERSION "%s %s (%d.%d، بناء %d)"
+    IDS_D3DTEST_DESCRIPTION "سيؤدي هذا إلى بدء اختبار واجهة Direct3D. هل ترغب في المتابعة؟"
+    IDS_D3DTEST_D3Dx "سيستخدم هذا الاختبار واجهة Direct3D %u المسرّعة بالأجهزة."
+    IDS_OS_VERSION "%s %s (الإصدار %d.%d، البنية %d)"
     IDS_DMUSIC_DESC "الوصف"
     IDS_DMUSIC_TYPE "النوع"
     IDS_DMUSIC_KERNEL "وضع النواة"
@@ -250,5 +246,5 @@ BEGIN
     IDS_DMUSIC_DLS "يدعم DLS"
     IDS_DMUSIC_EXT "خارجي"
     IDS_DMUSIC_PORT "المنفذ الافتراضي"
-    IDS_DDDISABLE_MSG "سيؤدي هذا إلى تعطيل كل تسريع العتاد لـ DirectDraw على جميع أجهزة العرض.\nهل ترغب في المتابعة؟\n"
+    IDS_DDDISABLE_MSG "سيؤدي هذا إلى تعطيل جميع تسريع الأجهزة لـ DirectDraw على جميع أجهزة العرض.\nهل ترغب في المتابعة؟\n"
 END
