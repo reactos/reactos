@@ -11,6 +11,7 @@
 #include <pseh/pseh2.h>
 #include <setjmp.h>
 #include <assert.h>
+#include <rtlfuncs.h>
 
 static jmp_buf g_jmp_buf;
 
@@ -58,7 +59,7 @@ static void TEST_setjmp_normal(void)
         case 3:
             ok_int(value, 333);
 #ifdef _M_AMD64 // This is broken on Windows 2003 x64
-            if (_winver >= _WIN32_WINNT_VISTA)
+            if (NtCurrentPeb()->OSMajorVersion >= 6)
 #endif
             {
                 ok_int(finally_called, TRUE);
