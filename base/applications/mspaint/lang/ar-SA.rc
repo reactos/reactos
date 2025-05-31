@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Arabic (Kingdom of Saudi Arabia) resource file
+ * TRANSLATORS: Copyright 2025 Mahmoud <waltabs>
+ */
+
 LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
 
 IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar.bmp"
