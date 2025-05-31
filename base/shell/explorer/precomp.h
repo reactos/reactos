@@ -132,6 +132,7 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
 #define TWM_GETTASKSWITCH (WM_USER + 236)
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
+#define TWM_SETZORDER (WM_USER + 338)
 #define TWM_PULSE (WM_USER + 400)
 
 extern const GUID IID_IShellDesktopTray;
