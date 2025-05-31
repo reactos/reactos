@@ -2682,6 +2682,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
             SetProcessDefaultLayout(LAYOUT_RTL);
             break;
+        case MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT): // Added case for Arabic
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
 
         default:
             break;
