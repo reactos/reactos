@@ -1,0 +1,11 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "إنهاء جلسة.\n\n\
+    /v\t\tيعرض معلومات حول الإجراءات التي تم تنفيذها.\n\
+    /؟\t\tيعرض هذه المعلومات.\n\n"
+    IDS_LOGOFF_REMOTE "إنهاء الجلسة على الجهاز البعيد."
+    IDS_LOGOFF_LOCAL "إنهاء الجلسة الحالية على هذا الجهاز."
+    IDS_ILLEGAL_PARAM "معامل (معاملات) غير صالحة\n"
+END
