@@ -1,0 +1,31 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE01 "استخدام RUNAS\n\n"
+    IDS_USAGE02 "RUNAS [ [/noprofile | /profile] [/env] [/savecred | /netonly] ]\n"
+    IDS_USAGE03 "      /user:<اسم_المستخدم> برنامج\n\n"
+    IDS_USAGE04 "RUNAS [ [/noprofile | /profile] [/env] [/savecred | /netonly] ]\n"
+    IDS_USAGE05 "      /smartcard [/user:<اسم_المستخدم>] برنامج\n\n"
+    IDS_USAGE06 "   /noprofile          يحدد أنه لا ينبغي تحميل ملف تعريف المستخدم.\n"
+    IDS_USAGE07 "                       هذا يجعل التطبيق يحمل بسرعة أكبر، ولكن\n"
+    IDS_USAGE08 "                       يمكن أن يتسبب في تعطل بعض التطبيقات.\n"
+    IDS_USAGE09 "   /profile            يحدد أنه يجب تحميل ملف تعريف المستخدم.\n"
+    IDS_USAGE10 "                       هذا هو الافتراضي.\n"
+    IDS_USAGE11 "   /env                لاستخدام البيئة الحالية بدلاً من بيئة المستخدم.\n"
+    IDS_USAGE12 "   /netonly            استخدم هذا إذا كانت بيانات الاعتماد المحددة مخصصة للوصول\n"
+    IDS_USAGE13 "                       عن بعد فقط.\n"
+    IDS_USAGE14 "   /savecred           لم يتم التطبيق بعد.\n"
+    IDS_USAGE15 "   /smartcard          لم يتم التطبيق بعد.\n"
+    IDS_USAGE16 "   /user               <اسم_المستخدم> يجب أن يكون بالشكل USER@DOMAIN أو DOMAIN\\USER\n"
+    IDS_USAGE17 "   program             سطر الأوامر لملف EXE. انظر أدناه للأمثلة\n\n"
+    IDS_USAGE18 "مثال:\n"
+    IDS_USAGE19 "> runas /noprofile /user:mymachine\\administrator cmd\n\n"
+    IDS_USAGE20 "ملاحظة: /profile غير متوافق مع /netonly.\n"
+
+    IDS_START           "جاري محاولة بدء %s كمستخدم ""%s\\%s""...\n"
+    IDS_RUN_ERROR       "خطأ RUNAS: تعذر تشغيل %s\n"
+    IDS_INTERNAL_ERROR  "خطأ RUNAS: خطأ داخلي %ld\n"
+
+    IDS_PASSWORD        "أدخل كلمة المرور لـ ""%s\\%s"": "
+END
