@@ -1,0 +1,38 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS - أهلاً بك"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "أهلاً بك في نظام تشغيل ReactOS.\n\nانقر على موضوع على اليسار."
+    IDS_FONTNAME "Tahoma"
+    IDS_CHECKTEXT "&إظهار هذا الحوار مرة أخرى"
+    IDS_CLOSETEXT "&خروج"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "&تثبيت ReactOS"
+    IDS_TOPIC_BUTTON1 "&استعراض هذا القرص المضغوط"
+    IDS_TOPIC_BUTTON2 "&خروج"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "تثبيت ReactOS"
+    IDS_TOPIC_TITLE1 "استعراض هذا القرص المضغوط"
+    IDS_TOPIC_TITLE2 "خروج"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "أنشئ تثبيت ReactOS جديداً على جهاز الكمبيوتر الخاص بك أو قم بترقية تثبيت موجود."
+    IDS_TOPIC_DESC1 "استعرض القرص المضغوط."
+    IDS_TOPIC_DESC2 "انقر للخروج من هذا التطبيق."
+END
