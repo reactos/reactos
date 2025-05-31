@@ -1,0 +1,243 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDM_MAINMENU MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&جديد...\tCtrl+N",       ID_FILE_NEW
+        MENUITEM "&فتح...\tCtrl+O",      ID_FILE_OPEN
+        MENUITEM "&حفظ\tCtrl+S",         ID_FILE_SAVE
+        MENUITEM "حفظ &باسم...",           ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&طباعة...\tCtrl+P",     ID_PRINT
+        MENUITEM "معاينة الطباع&ة",        ID_PREVIEW
+        MENUITEM "ت&هيئة الصفحة...",        ID_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&خروج",                 ID_FILE_EXIT
+    END
+    POPUP "&تحرير"
+    BEGIN
+        MENUITEM "&تراجع\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "إعا&دة\tCtrl+Y",               ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "&قص\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&نسخ\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&لصق\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "&مسح\tDel",                 ID_EDIT_CLEAR
+        MENUITEM "تحديد ال&كل\tCtrl+A",         ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&بحث...\tCtrl+F",            ID_FIND
+        MENUITEM "البحث عن التا&لي\tF3",              ID_FIND_NEXT
+        MENUITEM "&استبدال...\tCtrl+H",         ID_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "للقراءة &فقط",                  ID_EDIT_READONLY
+        MENUITEM "&معدل",                   ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "إ&ضافات"
+        BEGIN
+            MENUITEM "معلومات التحدي&د",             ID_EDIT_SELECTIONINFO
+            MENUITEM "تنسيق الح&رف",           ID_EDIT_CHARFORMAT
+            MENUITEM "تنسيق الحرف ال&افتراضي",           ID_EDIT_DEFCHARFORMAT
+            MENUITEM "تنسيق الفق&رة",           ID_EDIT_PARAFORMAT
+            MENUITEM "&الحصول على النص",                   ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "&عرض"
+    BEGIN
+        MENUITEM "&شريط الأدوات",        ID_TOGGLE_TOOLBAR
+        MENUITEM "شريط الت&نسيق",     ID_TOGGLE_FORMATBAR
+        MENUITEM "الم&سطرة",          ID_TOGGLE_RULER
+        MENUITEM "شريط الح&الة",     ID_TOGGLE_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "خ&يارات...",     ID_VIEWPROPERTIES
+    END
+    POPUP "&إدراج"
+    BEGIN
+        MENUITEM "&التاريخ والوقت...",  ID_DATETIME
+    END
+    POPUP "ت&نسيق"
+    BEGIN
+        MENUITEM "&خط...",                     ID_FONTSETTINGS
+        MENUITEM "&نقاط تعداد",               ID_BULLET
+        MENUITEM "&فقرة...",                ID_PARAFORMAT
+        MENUITEM "&علامات الجدولة...",                     ID_TABSTOPS
+        POPUP "خلفي&ة"
+        BEGIN
+            MENUITEM "الن&ظام\tCtrl+1",         ID_BACK_1
+            MENUITEM "أصفر &فاتح\tCtrl+2",    ID_BACK_2
+        END
+    END
+    POPUP "&مساعدة"
+    BEGIN
+        MENUITEM "&حول Wine Wordpad",      ID_ABOUT
+    END
+END
+
+IDM_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "ق&ص",                ID_EDIT_CUT
+        MENUITEM "&نسخ",               ID_EDIT_COPY
+        MENUITEM "&لصق",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&نقاط تعداد",      ID_BULLET
+        MENUITEM "&فقرة...",       ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "أسود",      ID_COLOR_BLACK
+        MENUITEM "كستنائي",     ID_COLOR_MAROON
+        MENUITEM "أخضر",      ID_COLOR_GREEN
+        MENUITEM "زيتوني",      ID_COLOR_OLIVE
+        MENUITEM "أزرق داكن",       ID_COLOR_NAVY
+        MENUITEM "بنفسجي",     ID_COLOR_PURPLE
+        MENUITEM "أزرق مخضر",       ID_COLOR_TEAL
+        MENUITEM "رمادي",       ID_COLOR_GRAY
+        MENUITEM "فضي",     ID_COLOR_SILVER
+        MENUITEM "أحمر",        ID_COLOR_RED
+        MENUITEM "أخضر ليموني",       ID_COLOR_LIME
+        MENUITEM "أصفر",     ID_COLOR_YELLOW
+        MENUITEM "أزرق",       ID_COLOR_BLUE
+        MENUITEM "فوشي",    ID_COLOR_FUCHSIA
+        MENUITEM "أزرق مائي",       ID_COLOR_AQUA
+        MENUITEM "أبيض",      ID_COLOR_WHITE
+        MENUITEM "تلقائي",  ID_COLOR_AUTOMATIC
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALL_FILES,              "كل الملفات (*.*)"
+    STRING_TEXT_FILES_TXT,         "مستندات نصية (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "مستند نصي يونيكود (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "تنسيق النص المنسق (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "مستند نص منسق"
+    STRING_NEWFILE_TXT,            "مستند نصي"
+    STRING_NEWFILE_TXT_UNICODE,    "مستند نصي يونيكود"
+    STRING_PRINTER_FILES_PRN,      "ملفات الطابعة (*.prn)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "يسار"
+    STRING_ALIGN_RIGHT,           "يمين"
+    STRING_ALIGN_CENTER,          "وسط"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_VIEWPROPS_TITLE,          "خيارات"
+    STRING_VIEWPROPS_TEXT,           "نص"
+    STRING_VIEWPROPS_RICHTEXT,       "نص منسق"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PREVIEW_PRINT,            "طباعة"
+    STRING_PREVIEW_NEXTPAGE,         "الصفحة التالية"
+    STRING_PREVIEW_PREVPAGE,         "الصفحة السابقة"
+    STRING_PREVIEW_TWOPAGES,         "صفحتان"
+    STRING_PREVIEW_ONEPAGE,          "صفحة واحدة"
+    STRING_PREVIEW_ZOOMIN,           "تكبير"
+    STRING_PREVIEW_ZOOMOUT,          "تصغير"
+    STRING_PREVIEW_CLOSE,            "إغلاق"
+    STRING_PREVIEW_PAGE,             "صفحة"
+    STRING_PREVIEW_PAGES,            "صفحات"
+    STRING_UNITS_CM,                 "سم"
+    STRING_UNITS_IN,                 "بوصة"
+    STRING_UNITS_INCH,               "بوصة"
+    STRING_UNITS_PT,                 "نقطة"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_DEFAULT_FILENAME,     "مستند"
+    STRING_PROMPT_SAVE_CHANGES,  "حفظ التغييرات على '%s'؟"
+    STRING_SEARCH_FINISHED,      "تم الانتهاء من البحث في المستند."
+    STRING_LOAD_RICHED_FAILED,   "فشل تحميل مكتبة RichEdit."
+    STRING_SAVE_LOSEFORMATTING,  "لقد اخترت الحفظ بتنسيق نص عادي، مما سيؤدي إلى فقد كل التنسيق. هل أنت متأكد أنك تريد المتابعة؟"
+    STRING_INVALID_NUMBER,       "تنسيق رقم غير صالح."
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "مستندات تخزين OLE غير مدعومة."
+    STRING_WRITE_FAILED,              "تعذر حفظ الملف."
+    STRING_WRITE_ACCESS_DENIED,       "ليس لديك صلاحية لحفظ الملف."
+    STRING_OPEN_FAILED,               "تعذر فتح الملف."
+    STRING_OPEN_ACCESS_DENIED,        "ليس لديك صلاحية لفتح الملف."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "الطباعة غير مطبقة."
+    STRING_MAX_TAB_STOPS,             "لا يمكن إضافة أكثر من 32 علامة جدولة."
+END
+
+IDD_DATETIME DIALOGEX 30, 20, 130, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "التاريخ والوقت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "التنسيقات المتاحة",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "موافق",IDOK,87,12,40,12
+    PUSHBUTTON   "إلغاء",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOGEX 30, 20, 140, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "جديد"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "نوع المستند الجديد",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "موافق",IDOK,97,12,40,12
+    PUSHBUTTON   "إلغاء",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOGEX 30, 20, 220, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "تنسيق الفقرة"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "المسافة البادئة", -1, 10, 10, 140, 68
+    LTEXT "يسار", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "يمين", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "السطر الأول", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "المحاذاة", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "موافق", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "إلغاء", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "علامات الجدولة"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "علامات الجدولة", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "&إضافة", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "&إزالة", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "موافق", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "إلغاء", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "إزالة ال&كل", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOGEX 0, 0, 280, 110
+STYLE DS_SHELLFONT | DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "التفاف النص", -1, 5, 10, 145, 85
+    RADIOBUTTON "&لا يوجد التفاف للنص", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "التفاف النص حسب &حافة النافذة", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "التفاف النص حسب ال&هامش", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "أشرطة الأدوات", -1, 155, 10, 115, 85
+    CHECKBOX "&شريط الأدوات", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "شريط الت&نسيق", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "الم&سطرة", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "شريط الح&الة", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+END
