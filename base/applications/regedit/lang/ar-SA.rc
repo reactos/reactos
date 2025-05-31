@@ -448,7 +448,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "يغلق محرر التسجيل"
     ID_FAVOURITES_ADDTOFAVOURITES "يضيف مفاتيح إلى قائمة المفضلة"
-    ID_FAVOURITES_REMOVEFAVOURITE "يزيل مفات
+    ID_FAVOURITES_REMOVEFAVOURITE "يزيل مفاتيح من قائمة المفضلة"
     ID_VIEW_STATUSBAR "إظهار أو إخفاء شريط الحالة"
     ID_VIEW_SPLIT "تغيير موضع الفاصل بين الجزئين"
     ID_VIEW_REFRESH "تحديث النافذة"
