@@ -347,8 +347,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     add_subdirectory(sdk/include/xdk)
     add_subdirectory(sdk/include/psdk)
     add_subdirectory(sdk/include/dxsdk)
-    add_subdirectory(sdk/include/reactos/wine)
-    add_subdirectory(sdk/include/reactos/mc)
+    add_subdirectory(sdk/include/reactos)
     add_subdirectory(sdk/include/asm)
 
     if(ARCH MATCHES "64$")
