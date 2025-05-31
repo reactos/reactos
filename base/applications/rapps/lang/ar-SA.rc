@@ -1,8 +1,8 @@
 /*
- * PROJECT:      ReactOS Applications Manager
- * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:      Arabic (Saudi Arabia) resource file
- * TRANSLATORS:  [ Mahmoud ] <waltabs>
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Arabic (Saudi Arabia) resource file
+ * TRANSLATORS: [ Mahmoud ] <waltabs>
  */
 
 LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
@@ -45,6 +45,7 @@ END
 
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "الإعدادات"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -73,6 +74,7 @@ END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "تثبيت البرنامج"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -85,6 +87,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "جارٍ تنزيل %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -209,7 +212,6 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "التفاصيل"
     IDS_APP_DISPLAY_LIST "قائمة"
     IDS_APP_DISPLAY_TILE "بلاط"
-    IDS_NO_SEARCH_RESULTS "لا توجد نتائج بحث"
     IDS_CFG_SAVE_WINDOW_POS "حفظ موضع النافذة"
     IDS_CFG_UPDATE_AVLIST "تحديث قائمة البرامج المتوفرة عند البدء"
     IDS_CFG_LOG_ENABLED "سجل تثبيت وإزالة البرامج"
