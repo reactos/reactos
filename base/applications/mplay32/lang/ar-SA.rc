@@ -1,0 +1,67 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&فتح...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&إغلاق\tCtrl+W", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "خ&روج", IDM_EXIT
+    END
+    POPUP "&تشغيل"
+    BEGIN
+        MENUITEM "تشغيل/إ&يقاف مؤقت\tCtrl+P", IDC_PLAY
+        MENUITEM "إيقا&ف\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "تكرار\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&عرض"
+    BEGIN
+        MENUITEM "وضع النافذة &الواحدة", IDM_SWITCHVIEW
+    END
+    POPUP "&جهاز"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&خصائص", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&التحكم في مستوى الصوت", IDM_VOLUMECTL
+    END
+    POPUP "&مساعدة"
+    BEGIN
+        MENUITEM "&حول", IDM_ABOUT
+    END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MODE_UNKNOWN "غير معروف"
+    IDS_MODE_OPEN "مفتوح"
+    IDS_MODE_STOP "متوقف"
+    IDS_MODE_PLAY "قيد التشغيل"
+    IDS_MODE_PAUSE "متوقف مؤقتًا"
+    IDS_MODE_RECORD "قيد التسجيل"
+    IDS_MODE_SEEK "جاري البحث"
+    IDS_MODE_NOT_READY "غير جاهز"
+    IDS_ALL_TYPES_FILTER "جميع الأنواع المدعومة"
+    IDS_TOOLTIP_PLAY "تشغيل"
+    IDS_TOOLTIP_STOP "إيقاف"
+    IDS_TOOLTIP_EJECT "إخراج"
+    IDS_TOOLTIP_BACKWARD "تخطي للخلف"
+    IDS_TOOLTIP_SEEKBACK "البحث للخلف"
+    IDS_TOOLTIP_SEEKFORW "البحث للأمام"
+    IDS_TOOLTIP_FORWARD "تخطي للأمام"
+    IDS_TOOLTIP_PAUSE "إيقاف مؤقت"
+    IDS_APPTITLE "مشغل الوسائط المتعددة ReactOS"
+    IDS_PLAY "تشغيل"
+    IDS_DEFAULTMCIERRMSG "لا يوجد وصف متاح لهذا الخطأ."
+END
