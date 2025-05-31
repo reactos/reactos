@@ -11,11 +11,11 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 STRINGTABLE
 {
     STRING_USAGE, "Kullanım:\n\
-  REG [islem] [secenekler]\n\n\
+  REG [işlem] [seçenekler]\n\n\
 Desteklenen işlemler:\n\
   ADD | COPY | DELETE | EXPORT | IMPORT | QUERY\n\n\
 Belirli bir işlemle ilgili yardım için şunu yazın:\n\
-  REG [islem] /?\n\n"
+  REG [işlem] /?\n\n"
 
     STRING_ADD_USAGE, "REG ADD <anahtar> [/v deger_adı | /ve] [/t tür] [/s ayirici] [/d veri] [/f]\n\n\
   Kayıt defterine bir anahtar ekler veya belirli bir kayıt defteri anahtarına yeni bir değer ekler.\n\n\
@@ -35,9 +35,9 @@ Belirli bir işlemle ilgili yardım için şunu yazın:\n\
   /ve\n\
      Adsız bir kayıt defteri değeri ekleyin. Bu seçenek, (Varsayılan)\n\
      kayıt defteri değerini değiştirir.\n\n\
-  /t <tur>\n\
+  /t <tür>\n\
      Kayıt defterine eklenecek veri türü. [/t] belirtilirse,\n\
-     <tur> aşağıdakilerden biri olmalıdır:\n\n\
+     <tür> aşağıdakilerden biri olmalıdır:\n\n\
          REG_SZ    | REG_MULTI_SZ | REG_EXPAND_SZ\n\
          REG_DWORD | REG_BINARY   | REG_NONE\n\n\
      [/t] belirtilmezse, varsayılan veri türü REG_SZ'dir.\n\n\
