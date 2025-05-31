@@ -3448,12 +3448,12 @@ static void test_query_attribute_information_file(void)
 
     ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %d\n", status);
     ok(U(io).Status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %d\n", U(io).Status);
-    ok(ffai->FileSystemAttribute != 0, "Missing FileSystemAttribute\n");
+    ok(ffai->FileSystemAttributes != 0, "Missing FileSystemAttributes\n");
     ok(ffai->MaximumComponentNameLength != 0, "Missing MaximumComponentNameLength\n");
     ok(ffai->FileSystemNameLength != 0, "Missing FileSystemNameLength\n");
 
-    trace("FileSystemAttribute: %x MaximumComponentNameLength: %x FileSystemName: %s\n",
-          ffai->FileSystemAttribute, ffai->MaximumComponentNameLength,
+    trace("FileSystemAttributes: %x MaximumComponentNameLength: %x FileSystemName: %s\n",
+          ffai->FileSystemAttributes, ffai->MaximumComponentNameLength,
           wine_dbgstr_wn(ffai->FileSystemName, ffai->FileSystemNameLength / sizeof(WCHAR)));
 
     CloseHandle( dir );

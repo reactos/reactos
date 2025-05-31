@@ -25,9 +25,17 @@ extern "C" {
 
 typedef void *DLL_DIRECTORY_COOKIE, **PDLL_DIRECTORY_COOKIE;
 
+#ifdef __REACTOS__
+DLL_DIRECTORY_COOKIE WINAPI AddDllDirectory(const WCHAR *);
+BOOL WINAPI RemoveDllDirectory(DLL_DIRECTORY_COOKIE);
+BOOL WINAPI SetDefaultDllDirectories(DWORD);
+INT WINAPI FindStringOrdinal(DWORD, const WCHAR *, INT, const WCHAR *, INT, BOOL);
+#else
 WINBASEAPI DLL_DIRECTORY_COOKIE WINAPI AddDllDirectory(const WCHAR *);
 WINBASEAPI BOOL WINAPI RemoveDllDirectory(DLL_DIRECTORY_COOKIE);
 WINBASEAPI BOOL WINAPI SetDefaultDllDirectories(DWORD);
+WINBASEAPI INT WINAPI FindStringOrdinal(DWORD, const WCHAR *, INT, const WCHAR *, INT, BOOL);
+#endif
 
 #ifdef __cplusplus
 }
