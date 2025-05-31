@@ -1,0 +1,28 @@
+/*
+ * PROJECT:     ReactOS Attrib Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Arabic (Saudi Arabia) resource file
+ * TRANSLATORS: Copyright 2005 Magnus Olsen <magnus@greatlord.com>
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "يعرض أو يغير سمات الملفات.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] ملف ...\n\
+       [/S [/D]]\n\n\
+  +   تعيين سمة\n\
+  -   مسح سمة\n\
+  R   سمة ملف للقراءة فقط\n\
+  A   سمة ملف الأرشيف\n\
+  S   سمة ملف النظام\n\
+  H   سمة ملف مخفي\n\
+  /S  يعالج الملفات المطابقة في الدليل الحالي\n\
+      وجميع الدلائل الفرعية\n\
+  /D  يعالج الدلائل أيضاً\n\n\
+اكتب ATTRIB بدون معامل لعرض سمات جميع الملفات.\n"
+    STRING_CONSOLE_ERROR "خطأ غير معروف: %d\n"
+    STRING_FILE_NOT_FOUND "لم يتم العثور على الملف - '%s'\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "تنسيق معلمة غير صالح - %s\n"
+END
