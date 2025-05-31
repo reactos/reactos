@@ -1,0 +1,103 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+/* Dialog */
+IDD_GUI DIALOGEX 0, 0, 240, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "إيقاف التشغيل عن بعد"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&موافق", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "&إلغاء", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "&أجهزة الكمبيوتر:", IDC_STATIC, 9, 9, 35, 36
+    LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
+    PUSHBUTTON "&إضافة...", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "&إزالة", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "&استعراض...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    LTEXT "الإجراء", IDC_ACTION, 11, 81, 20, 14
+    COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
+    CHECKBOX "تحذير المستخدمين", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "عرض تحذير لمدة", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
+    LTEXT "ثانية (ثوانٍ)", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "متتبع حدث إيقاف التشغيل", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "السبب:", IDC_STATIC, 16, 130, 27, 8
+    CHECKBOX "مخطط", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
+    LTEXT "ت&عليق:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
+END
+
+/* Information and error messages */
+STRINGTABLE
+BEGIN
+    IDS_USAGE "أداة إيقاف تشغيل ReactOS\n\
+\n\
+الاستخدام: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
+\n\
+    لا توجد وسائط أو /؟   عرض هذه المساعدة.\n\
+    /i      إظهار واجهة المستخدم الرسومية (GUI). يجب أن يكون هذا الخيار هو\n\
+            الأول.\n\
+    /l      تسجيل الخروج من النظام المحلي فقط. لا يمكن استخدامه مع /m أو /d.\n\
+    /s      إيقاف تشغيل الكمبيوتر.\n\
+    /r      إعادة تشغيل الكمبيوتر.\n\
+    /g      إعادة تشغيل الكمبيوتر وإعادة تشغيل جميع التطبيقات المسجلة.\n\
+    /a      إلغاء إيقاف تشغيل مؤجل. يمكن استخدامه فقط خلال فترة التأخير.\n\
+    /p      إيقاف تشغيل الكمبيوتر المحلي بدون أي مهلة أو تحذير. يمكن استخدامه\n\
+            مع /d أو /f.\n\
+    /h      وضع الكمبيوتر المحلي في وضع السبات. يمكن استخدامه مع /f.\n\
+    /e      توثيق سبب إيقاف تشغيل الكمبيوتر غير المتوقع.\n\
+    /m \\\\computer  تحديد الكمبيوتر الهدف (عنوان UNC/IP).\n\
+    /t xxx  تعيين فترة المهلة إلى xxx ثانية قبل إيقاف التشغيل.\n\
+            النطاق الصالح يبدأ من 0 إلى 315360000 (10 سنوات)،\n\
+            30 هي القيمة الافتراضية.\n\
+    /c ""comment""  التعليق على سبب إيقاف التشغيل أو إعادة التشغيل.\n\
+            512 حرف كحد أقصى مسموح به.\n\
+    /f      إجبار التطبيقات قيد التشغيل على الإغلاق بدون تحذير المستخدمين. إذا لم\n\
+            تحدد أي معلمة أخرى، فسيقوم هذا الخيار بتسجيل الخروج أيضاً.\n\
+    /d [p|u:]xx:yy  إعطاء رمز السبب لإيقاف التشغيل أو إعادة التشغيل.\n\
+            p يشير إلى أن إيقاف التشغيل أو إعادة التشغيل مخطط له.\n\
+            u يشير إلى أن السبب معرف من قبل المستخدم.\n\
+            إذا لم يتم تحديد p أو u، فإن إيقاف التشغيل أو إعادة التشغيل غير\n\
+            مخطط له.\n\
+            xx هو رمز السبب الرئيسي (عدد صحيح موجب أصغر من 256).\n\
+            yy هو رمز السبب الثانوي (عدد صحيح موجب أصغر من 65536).\n"
+
+    IDS_ERROR_SHUTDOWN_REBOOT "خطأ: لا يمكن إيقاف التشغيل وإعادة التشغيل في نفس الوقت.\n"
+    IDS_ERROR_TIMEOUT "خطأ: قيمة المهلة %u خارج النطاق (0-315360000).\n"
+    IDS_ERROR_ABORT "خطأ: تعذر إلغاء إيقاف تشغيل النظام.\n"
+    IDS_ERROR_LOGOFF "خطأ: تعذر تسجيل الخروج من النظام.\n"
+    IDS_ERROR_SHUTDOWN "خطأ: تعذر إيقاف تشغيل النظام.\n"
+    IDS_ERROR_RESTART "خطأ: تعذر إعادة تشغيل النظام.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "خطأ: طول التعليق يتجاوز الحد الأقصى للأحرف المحددة بواسطة النظام.\n"
+    IDS_ERROR_HIBERNATE "خطأ: تعذر إرسال النظام إلى وضع السبات.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "خطأ: لا يمكن بدء وضع السبات عن بعد.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "خطأ: وضع السبات غير ممكّن.\n"
+    IDS_ERROR_DIALOG_CAPTION "إيقاف التشغيل عن بعد"
+    IDS_ERROR_DIALOG_INIT "تعذر عرض واجهة المستخدم الرسومية."
+END
+
+/* Remote shutdown action strings */
+STRINGTABLE
+BEGIN
+    IDS_ACTION_SHUTDOWN "إيقاف تشغيل النظام"
+    IDS_ACTION_RESTART "إعادة تشغيل النظام"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "التعليق على إيقاف التشغيل غير المتوقع"
+END
+
+/* Remote shutdown reason strings */
+STRINGTABLE
+BEGIN
+    IDS_REASON_OTHER "أخرى"
+    IDS_REASON_HARDWARE_MAINTENANCE "الأجهزة: صيانة"
+    IDS_REASON_HARDWARE_INSTALL "الأجهزة: تثبيت"
+    IDS_REASON_OS_RECOVER "نظام التشغيل: استعادة"
+    IDS_REASON_OS_RECONFIGURE "نظام التشغيل: إعادة تكوين"
+    IDS_REASON_APP_MAINTENANCE "التطبيق: صيانة"
+    IDS_REASON_APP_INSTALL "التطبيق: تثبيت"
+    IDS_REASON_APP_UNRESPONSIVE "التطبيق: لا يستجيب"
+    IDS_REASON_APP_UNSTABLE "التطبيق: غير مستقر"
+    IDS_REASON_SECURITY "مشكلة أمنية"
+    IDS_REASON_NETWORK "فقدان اتصال الشبكة"
+END
