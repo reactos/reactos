@@ -1,10 +1,3 @@
-/*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Arabic (Saudi Arabia) resource file
- * TRANSLATORS: Mahmoud Ahmed ()
- */
-
 LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
 
 IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar.bmp"
@@ -26,41 +19,41 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "إرسال...", IDM_FILESEND
         MENUITEM SEPARATOR
-        MENUITEM "تعيين كخلفية (متكرر)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "تعيين كخلفية (وسط)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "تعيين كخلفية (ممتد)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "تعيين كخلفية (مكررة)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "تعيين كخلفية (مركزة)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "تعيين كخلفية (ممتدة)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "الملف المستخدم مؤخراً", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "آخر ملف مستخدم", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "خ&روج\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&خروج\tAlt+F4", IDM_FILEEXIT
     END
-    POPUP "ت&حرير"
+    POPUP "&تحرير"
     BEGIN
-        MENUITEM "ت&راجع\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "إ&عادة\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&تراجع\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "إعا&دة\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "&قص\tCtrl+X", IDM_EDITCUT
         MENUITEM "&نسخ\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&لصق\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "قص التحديد", IDM_CROPSELECTION
+        MENUITEM "قص التحدي&د", IDM_CROPSELECTION
         MENUITEM "ح&ذف التحديد\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "عكس التحديد", IDM_EDITINVERTSELECTION
+        MENUITEM "ع&كس التحديد", IDM_EDITINVERTSELECTION
         MENUITEM "تحديد ال&كل\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "نسخ إ&لى...", IDM_EDITCOPYTO
-        MENUITEM "لصق &من...", IDM_EDITPASTEFROM
+        MENUITEM "لصق م&ن...", IDM_EDITPASTEFROM
     END
     POPUP "&عرض"
     BEGIN
-        MENUITEM "صندوق الأ&دوات\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "لوحة الأ&لوان\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "شريط ال&حالة", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "شريط أدوات ال&نص", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "&صندوق الأدوات\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "لو&نة الألوان\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "شريط الح&الة", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "شريط أدوات الن&ص", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "ت&كبير"
+        POPUP "&تكبير/تصغير"
         BEGIN
-            POPUP "تحديد المست&خدم"
+            POPUP "&محدد من قبل المستخدم"
             BEGIN
                 MENUITEM "12.5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -71,54 +64,54 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "إظهار ال&شبكة\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "إظهار المصغرة", IDM_VIEWSHOWMINIATURE
+            MENUITEM "إظهار الشبك&ة\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "إظهار صورة &مصغرة", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "ملء الشاشة\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "&ملء الشاشة\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    POPUP "ال&صورة"
+    POPUP "&صورة"
     BEGIN
-        MENUITEM "تدوير/&عكس...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "ت&مديد/إمالة...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&قص", IDM_IMAGECROP
-        MENUITEM "عكس الأ&لوان\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "ال&خصائص...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "مسح الصورة\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "رسم غير شفاف", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "تدوير/ع&كس...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&تمديد/إمالة...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "ق&ص", IDM_IMAGECROP
+        MENUITEM "ع&كس الألوان\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "خصائ&ص...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "&مسح الصورة\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "رسم &غير شفاف", IDM_IMAGEDRAWOPAQUE
     END
-    POPUP "الأ&لوان"
+    POPUP "أل&وان"
     BEGIN
-        MENUITEM "تحرير لوحة الألوان...", IDM_COLORSEDITPALETTE
+        MENUITEM "&تحرير اللوحة...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "لوحة الألوان الحديثة", IDM_COLORSMODERNPALETTE
-        MENUITEM "لوحة الألوان القديمة", IDM_COLORSOLDPALETTE
+        MENUITEM "لوحة حديثة", IDM_COLORSMODERNPALETTE
+        MENUITEM "لوحة قديمة", IDM_COLORSOLDPALETTE
     END
-    POPUP "م&ساعدة"
+    POPUP "&مساعدة"
     BEGIN
         MENUITEM "مواضيع المساعدة", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "حول", IDM_HELPINFO
+        MENUITEM "&معلومات", IDM_HELPINFO
     END
 END
 
 ID_POPUPMENU MENU
 BEGIN
-    POPUP "Popup #0"
+    POPUP "قائمة منبثقة #0"
     BEGIN
-        MENUITEM "&قص\tCtrl+X", IDM_EDITCUT
+        MENUITEM "ق&ص\tCtrl+X", IDM_EDITCUT
         MENUITEM "&نسخ\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&لصق\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "قص التحديد", IDM_CROPSELECTION
+        MENUITEM "قص التحدي&د", IDM_CROPSELECTION
         MENUITEM "ح&ذف التحديد\tDel", IDM_EDITDELETESELECTION
         MENUITEM "تحديد ال&كل\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "نسخ إ&لى...", IDM_EDITCOPYTO
-        MENUITEM "لصق &من...", IDM_EDITPASTEFROM
+        MENUITEM "لصق م&ن...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "تدوير/&عكس...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "ت&مديد/إمالة...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "عكس الأ&لوان\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "تدوير/ع&كس...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&تمديد/إمالة...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "ع&كس الألوان\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -155,9 +148,9 @@ FONT 8, "MS Shell Dlg"
 CAPTION "تدوير وعكس الصورة"
 BEGIN
     GROUPBOX "تدوير أو عكس", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
-    AUTORADIOBUTTON "عكس &أفقي", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
-    AUTORADIOBUTTON "عكس &عمودي", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "تدوير &بزاوية", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "عكس أفقي&اً", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "عكس رأس&ياً", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "تدوير بزاوية", IDD_MIRRORROTATERB3, 12, 42, 100, 10
     AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
     AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
     AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
@@ -168,28 +161,28 @@ END
 IDD_ATTRIBUTES DIALOGEX 100, 100, 225, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "الخصائص"
+CAPTION "خصائص"
 BEGIN
     LTEXT "ال&عرض:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
-    LTEXT "الا&رتفاع:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
+    LTEXT "ال&ارتفاع:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "تاريخ الملف:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "حجم الملف:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "الدقة:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "غير متوفر", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "غير متوفر", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "نقطة/بوصة", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "غير متاح", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "غير متاح", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "نقطة في البوصة", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* يجب أن تطابق هذه الوحدة IDS_PRINTRES */
     GROUPBOX "الوحدات", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "&بوصة", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "&سم", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
-    AUTORADIOBUTTON "بك&سل", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    AUTORADIOBUTTON "بوص&ة", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
+    AUTORADIOBUTTON "س&م", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "ب&كسل", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "الألوان", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "أ&سود وأبيض", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "أ&لوان", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
+    AUTORADIOBUTTON "أبيض وأسو&د", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "أل&وان", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
     DEFPUSHBUTTON "موافق", IDOK, 170, 8, 48, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "اف&تراضي", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "إفتراضي", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
@@ -198,65 +191,78 @@ FONT 8, "MS Shell Dlg"
 CAPTION "تمديد وإمالة الصورة"
 BEGIN
     GROUPBOX "تمديد", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
-    ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONSTRSTCH, 12, 18, 32, 32
-    LTEXT "أفقي:", IDD_STRETCHSKEWTEXTSTRCHHORT, 45, 24, 40, 10
-    EDITTEXT IDD_STRETCHSKEWEDITSTRCHHORT, 90, 23, 32, 12
-    LTEXT "%", IDD_STRETCHSKEWTEXTSTRCHHORTEND, 125, 24, 15, 10
-    ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONSTRCVRT, 12, 43, 32, 32
-    LTEXT "عمودي:", IDD_STRETCHSKEWTEXTSTRCHVERT, 45, 49, 40, 10
-    EDITTEXT IDD_STRETCHSKEWEDITSTRCVERT, 90, 48, 32, 12
-    LTEXT "%", IDD_STRETCHSKEWTEXTSTRCHVERTEND, 125, 49, 15, 10
+    ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
+    LTEXT "أفقياً:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTHPERCENT, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONVSTRETCH, 12, 43, 32, 32
+    LTEXT "رأسياً:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
     GROUPBOX "إمالة", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
-    ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONSKEWHORT, 12, 88, 32, 32
-    LTEXT "أفقي:", IDD_STRETCHSKEWTEXTSKEWHORT, 45, 94, 40, 10
-    EDITTEXT IDD_STRETCHSKEWEDITSKEWHORT, 90, 93, 32, 12
-    LTEXT "درجة", IDD_STRETCHSKEWTEXTSKEWHORTEND, 125, 94, 30, 10
-    ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONSKEYVRT, 12, 113, 32, 32
-    LTEXT "عمودي:", IDD_STRETCHSKEWTEXTSKEWVERT, 45, 119, 40, 10
-    EDITTEXT IDD_STRETCHSKEWEDITSKEWVERT, 90, 118, 32, 12
-    LTEXT "درجة", IDD_STRETCHSKEWTEXTSKEWVERTEND, 125, 119, 30, 10
+    ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
+    LTEXT "أفقياً:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
+    LTEXT "درجة", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
+    LTEXT "رأسياً:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
+    LTEXT "درجة", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "موافق", IDOK, 170, 8, 48, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "الخطوط"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME "الرسام"
-    IDS_WINDOWTITLE "%s - الرسام"
-    IDS_INFOTITLE "الرسام لريأكت أو إس"
-    IDS_INFOTEXT "الرسام لريأكت أو إس متاح تحت رخصة LGPL-2.0-or-later (www.gnu.org/licenses/lgpl-2.0.html)"
-    IDS_SAVEPROMPTTEXT "هل تريد حفظ التغييرات في %s؟"
-    IDS_DEFAULTFILENAME "بدون عنوان.bmp"
-    IDS_MINIATURETITLE "المصغرة"
+    IDS_PROGRAMNAME "الرسم"
+    IDS_WINDOWTITLE "%s - الرسم"
+    IDS_INFOTITLE "برنامج الرسم لـ ReactOS"
+    IDS_INFOTEXT "متاح تحت رخصة جنو العمومية الصغرى (LGPL، انظر www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "هل تريد حفظ التغييرات على %s؟"
+    IDS_DEFAULTFILENAME "غير مسمى"
+    IDS_MINIATURETITLE "صورة مصغرة"
     IDS_TOOLTIP1 "تحديد حر"
     IDS_TOOLTIP2 "تحديد"
     IDS_TOOLTIP3 "ممحاة"
-    IDS_TOOLTIP4 "تعبئة باللون"
+    IDS_TOOLTIP4 "ملء باللون"
     IDS_TOOLTIP5 "اختيار اللون"
-    IDS_TOOLTIP6 "تكبير"
-    IDS_TOOLTIP7 "قلم"
+    IDS_TOOLTIP6 "تكبير/تصغير"
+    IDS_TOOLTIP7 "قلم رصاص"
     IDS_TOOLTIP8 "فرشاة"
-    IDS_TOOLTIP9 "قلم رصاص"
+    IDS_TOOLTIP9 "رشاش"
     IDS_TOOLTIP10 "نص"
     IDS_TOOLTIP11 "خط"
-    IDS_TOOLTIP12 "منحنى بيزيه"
+    IDS_TOOLTIP12 "منحنى بيزير"
     IDS_TOOLTIP13 "مستطيل"
     IDS_TOOLTIP14 "مضلع"
-    IDS_TOOLTIP15 "بيضاوي"
-    IDS_TOOLTIP16 "مستطيل مستدير الزوايا"
+    IDS_TOOLTIP15 "قطع ناقص"
+    IDS_TOOLTIP16 "مستطيل مدور"
     IDS_ALLFILES "كل الملفات"
     IDS_ALLPICTUREFILES "كل ملفات الصور"
     IDS_FILESIZE "%d بايت"
     IDS_INTNUMBERS "الرجاء إدخال أرقام صحيحة فقط!"
-    IDS_PERCENTAGE "النسبة المئوية يجب أن تكون بين 1 و 500."
-    IDS_ANGLE "الزاوية يجب أن تكون بين -89 و 89."
-    IDS_LOADERRORTEXT "لا يمكن تحميل الملف %s."
-    IDS_SAVEERRORTEXT "لا يمكن حفظ الملف %s."
-    IDS_PRINTRES "%d × %d نقطة/بوصة"
-    IDS_INPROPPANEL " في لوحة الخصائص"
-    IDS_BENDDOT "انحناء النقطة"
-    IDS_BENDLINE "انحناء الخط"
-    IDS_PIXELWIDTH "عرض البكسل: %d"
-    IDS_PREVIEWWND "نافذة المعاينة"
-    IDS_MOUSECOORDS "إحداثيات الماوس: (%d, %d)"
-END 
+    IDS_PERCENTAGE "يجب أن تكون النسبة بين 1 و 500."
+    IDS_ANGLE "يجب أن تكون الزاوية بين -89 و 89."
+    IDS_LOADERRORTEXT "تعذر تحميل الملف %s."
+    IDS_ENLARGEPROMPTTEXT "الصورة في الحافظة أكبر من الصورة النقطية.\nهل تريد تكبير الصورة النقطية؟"
+    IDS_BOLD "عريض"
+    IDS_ITALIC "مائل"
+    IDS_UNDERLINE "تحته خط"
+    IDS_VERTICAL "عمودي"
+    IDS_PRINTRES "%d × %d نقطة في البوصة"
+    IDS_CANTPASTE "فشل اللصق من الحافظة. تنسيق البيانات غير صحيح أو غير مدعوم."
+    IDS_SAVEERROR "فشل حفظ الصورة النقطية في الملف:\n\n%s"
+    IDS_CANTSENDMAIL "فشل إرسال البريد."
+    IDS_LOSECOLOR "سيتم فقدان معلومات الألوان في هذه العملية. هل أنت متأكد من المتابعة؟"
+END
