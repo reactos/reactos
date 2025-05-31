@@ -1,0 +1,60 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_EX_LAYOUTRTL
+CAPTION "إيقاف تشغيل الكمبيوتر"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "من الآمن الآن إيقاف تشغيل جهاز الكمبيوتر الخاص بك.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&إعادة التشغيل", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_EX_LAYOUTRTL
+CAPTION "فشل واجهة المستخدم"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "فشل تحميل مكتبة الارتباطات الديناميكية (DLL) لواجهة مستخدم تسجيل الدخول %s.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "اتصل بمسؤول النظام لاستبدال DLL، أو استعادة DLL الأصلي.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&إعادة التشغيل", 1, 80, 91, 68, 14
+END
+
+IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP | WS_EX_LAYOUTRTL
+CAPTION "إيقاف تشغيل النظام"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
+    LTEXT "تم بدء إيقاف تشغيل النظام. الرجاء حفظ جميع أعمالك وإنهاء جلستك. سيتم فقدان جميع الأعمال غير المحفوظة عند إيقاف تشغيل النظام.", -1, 38, 7, 135, 40
+    LTEXT "سيتم إيقاف تشغيل النظام خلال:", -1, 38, 50, 90, 8
+    LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
+    LTEXT "رسالة:", -1, 38, 65, 135, 8
+    EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "جاري إعداد اتصالات الشبكة..."
+    IDS_APPLYINGCOMPUTERSETTINGS "جاري تطبيق إعدادات الكمبيوتر..."
+    IDS_RUNNINGSTARTUPSCRIPTS "جاري تشغيل نصوص بدء التشغيل..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "جاري تشغيل نصوص إيقاف التشغيل..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "جاري تطبيق إعداداتك الشخصية..."
+    IDS_RUNNINGLOGOFFSCRIPTS "جاري تشغيل نصوص تسجيل الخروج..."
+    IDS_RUNNINGLOGONSCRIPTS "جاري تشغيل نصوص تسجيل الدخول..."
+    IDS_LOADINGYOURPERSONALSETTINGS "جاري تحميل إعداداتك الشخصية..."
+    IDS_CLOSINGNETWORKCONNECTIONS "جاري إغلاق اتصالات الشبكة..."
+    IDS_REACTOSISRESTARTING "جاري إعادة التشغيل..."
+    IDS_REACTOSISSHUTTINGDOWN "جاري إيقاف التشغيل..."
+    IDS_PREPARETOSTANDBY "جاري التحضير لوضع الاستعداد..."
+    IDS_PREPARETOHIBERNATE "جاري التحضير لوضع السبات..."
+    IDS_SAVEYOURSETTINGS "جاري حفظ إعداداتك..."
+    IDS_REACTOSISSTARTINGUP "ReactOS قيد التشغيل..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d أيام"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "فشل Winlogon في تنشيط صدفة المستخدم!"
+END
