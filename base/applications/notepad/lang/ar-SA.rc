@@ -1,0 +1,187 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F3, CMD_SEARCH_PREV, VIRTKEY, SHIFT
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&جديد\tCtrl+N", CMD_NEW
+        MENUITEM "نافذة &جديدة\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "&فتح...\tCtrl+O", CMD_OPEN
+        MENUITEM "&حفظ\tCtrl+S", CMD_SAVE
+        MENUITEM "حفظ &باسم...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "إ&عداد الصفحة...", CMD_PAGE_SETUP
+        MENUITEM "&طباعة...\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "خ&روج", CMD_EXIT
+    END
+    POPUP "ت&حرير"
+    BEGIN
+        MENUITEM "&تراجع\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&قص\tCtrl+X", CMD_CUT
+        MENUITEM "&نسخ\tCtrl+C", CMD_COPY
+        MENUITEM "ل&صق\tCtrl+V", CMD_PASTE
+        MENUITEM "&حذف\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&بحث...\tCtrl+F", CMD_SEARCH
+        MENUITEM "بحث عن ال&تالي\tF3", CMD_SEARCH_NEXT
+        MENUITEM "اس&تبدال...\tCtrl+H", CMD_REPLACE
+        MENUITEM "ا&نتقال إلى...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "تحديد ال&كل\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "الوقت/ال&تاريخ\tF5", CMD_TIME_DATE
+    END
+    POPUP "ت&نسيق"
+    BEGIN
+        MENUITEM "التفاف ال&كلمات", CMD_WRAP
+        MENUITEM "ال&خط...", CMD_FONT
+    END
+    POPUP "&عرض"
+    BEGIN
+        MENUITEM "شريط ال&حالة", CMD_STATUSBAR
+    END
+    POPUP "م&ساعدة"
+    BEGIN
+        MENUITEM "عرض ال&مساعدة", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "&حول المفكرة", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+CAPTION "إعداد الصفحة"
+BEGIN
+    GROUPBOX "معاينة", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "الورق", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "ال&حجم:", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "ال&درج:", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "الاتجاه", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&عمودي", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&أفقي", rad2, 16, 100, 52, 12
+    GROUPBOX "الهوامش", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "ي&سار:", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&يمين:", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "أ&على:", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "أ&سفل:", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "رأس ال&صفحة:", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "تذييل ال&صفحة:", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "مساعدة", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "موافق", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "إلغاء", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "ال&طابعة...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "الترميز"
+BEGIN
+    COMBOBOX ID_ENCODING, 124, 0, 125, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "الترميز:", 0x155, 65, 2, 41, 12
+    COMBOBOX ID_EOLN, 124, 18, 125, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "نهايات السطور:", 0x156, 65, 20, 41, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "انتقال إلى سطر"
+BEGIN
+    LTEXT "رقم السطر:", 0x155, 5, 12, 41, 12
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
+    DEFPUSHBUTTON "موافق", IDOK, 75, 30, 40, 15
+    PUSHBUTTON "إلغاء", IDCANCEL, 120, 30, 40, 15
+END
+
+DIALOG_PRINTING DIALOG 0, 0, 160, 100
+CAPTION "جاري الطباعة"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT "بدء مهمة الطباعة...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(اسم الملف)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "صفحة %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    PUSHBUTTON "إلغاء", IDCANCEL, 50, 75, 60, 20
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&f"
+    STRING_PAGESETUP_FOOTERVALUE "صفحة &p"
+    STRING_NOTEPAD "المفكرة"
+    STRING_ERROR "خطأ"
+    STRING_WARNING "تحذير"
+    STRING_INFO "معلومات"
+    STRING_UNTITLED "بدون عنوان"
+    STRING_ALL_FILES "كل الملفات (*.*)"
+    STRING_TEXT_FILES_TXT "ملفات نصية (*.txt)"
+    STRING_TOOLARGE "الملف '%s' كبير جداً للمفكرة.\n\
+الرجاء استخدام محرر آخر."
+    STRING_NOTEXT "لم تقم بإدخال أي نص.\n\
+الرجاء كتابة شيء والمحاولة مرة أخرى"
+    STRING_DOESNOTEXIST "الملف '%s'\nغير موجود\n\n\
+هل تريد إنشاء ملف جديد؟"
+    STRING_NOTSAVED "تم تعديل الملف '%s'\n\n\
+هل تريد حفظ التغييرات؟"
+    STRING_NOTFOUND "لا يمكن العثور على '%s'."
+    STRING_OUT_OF_MEMORY "لا توجد ذاكرة كافية لإكمال هذه المهمة.\n\
+أغلق تطبيق واحد أو أكثر لزيادة مساحة\nالذاكرة الحرة."
+    STRING_CANNOTFIND "لا يمكن العثور على '%s'"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "يونيكود"
+    STRING_UNICODE_BE "يونيكود (big endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 مع BOM"
+    STRING_CRLF "ويندوز (CR + LF)"
+    STRING_LF "يونكس (LF)"
+    STRING_CR "ماك (CR)"
+    STRING_LINE_COLUMN "سطر %d، عمود %d"
+    STRING_PRINTERROR "لا يمكن طباعة الملف '%s'.\n\nتأكد من أن الطابعة قيد التشغيل ومضبوطة بشكل صحيح."
+    STRING_DEFAULTFONT "Lucida Console"
+    STRING_LINE_NUMBER_OUT_OF_RANGE "رقم السطر المحدد خارج النطاق."
+    STRING_NOWPRINTING "جاري طباعة الصفحة..."
+    STRING_PRINTCANCELING "جاري إلغاء مهمة الطباعة..."
+    STRING_PRINTCOMPLETE "تمت الطباعة بنجاح."
+    STRING_PRINTCANCELED "تم إلغاء الطباعة."
+    STRING_PRINTFAILED "فشلت الطباعة."
+
+    STRING_TEXT_DOCUMENT "مستند نصي"
+    STRING_NOTEPAD_AUTHORS "حقوق النشر 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
+END 

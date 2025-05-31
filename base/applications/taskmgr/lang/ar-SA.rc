@@ -1,0 +1,525 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDR_TASKMANAGER MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&مهمة جديدة (تشغيل...)", ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "إ&نهاء مدير المهام", ID_FILE_EXIT
+    END
+    POPUP "&خيارات"
+    BEGIN
+        MENUITEM "&دائماً في المقدمة", ID_OPTIONS_ALWAYSONTOP
+        , CHECKED
+        MENUITEM "&تصغير عند الاستخدام", ID_OPTIONS_MINIMIZEONUSE
+        , CHECKED
+        MENUITEM "إ&خفاء عند التصغير", ID_OPTIONS_HIDEWHENMINIMIZED
+        , CHECKED
+        MENUITEM "إظهار مهام &16 بت", ID_OPTIONS_SHOW16BITTASKS
+        , CHECKED
+    END
+    POPUP "&عرض"
+    BEGIN
+        MENUITEM "ت&حديث الآن", ID_VIEW_REFRESH
+        POPUP "&سرعة التحديث"
+        BEGIN
+            MENUITEM "&عالية", ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "عا&دية", ID_VIEW_UPDATESPEED_NORMAL
+            , CHECKED
+            MENUITEM "&منخفضة", ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&متوقف", ID_VIEW_UPDATESPEED_PAUSED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "رموز &كبيرة", ID_VIEW_LARGE
+        MENUITEM "رموز &صغيرة", ID_VIEW_SMALL
+        MENUITEM "&تفاصيل", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&تحديد الأعمدة...", ID_VIEW_SELECTCOLUMNS
+        POPUP "&سجل وحدة المعالجة"
+        BEGIN
+            MENUITEM "&معالج واحد", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "رسم بياني &لكل معالج", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            , CHECKED
+        END
+        MENUITEM "إظهار أوقات ال&نواة", ID_VIEW_SHOWKERNELTIMES
+    END
+    POPUP "نوا&فذ"
+    BEGIN
+        MENUITEM "ترتيب أ&فقي", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "ترتيب &عمودي", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "ت&صغير", ID_WINDOWS_MINIMIZE
+        MENUITEM "ت&كبير", ID_WINDOWS_MAXIMIZE
+        MENUITEM "ت&داخل", ID_WINDOWS_CASCADE
+        MENUITEM "جلب للأ&مام", ID_WINDOWS_BRINGTOFRONT
+    END
+    POPUP "إ&غلاق الكمبيوتر"
+    BEGIN
+        MENUITEM "وضع الاست&عداد",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "إس&بات",                   ID_SHUTDOWN_HIBERNATE
+        MENUITEM "إي&قاف التشغيل",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "إعادة الت&شغيل",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "تس&جيل الخروج من %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "ت&بديل المستخدم\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "قفل ال&كمبيوتر\tWinKey+L",      ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "قطع الات&صال",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "إ&خراج الكمبيوتر",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
+    POPUP "م&ساعدة"
+    BEGIN
+        MENUITEM "مواضيع تعليمات مدير ال&مهام", ID_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&حول مدير المهام", ID_HELP_ABOUT
+    END
+END
+
+IDR_TASKMANAGER_POPUP MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&استعادة", ID_RESTORE
+        MENUITEM "&إغلاق", ID_WINDOW_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "&دائماً في المقدمة", ID_OPTIONS_ALWAYSONTOP
+    END
+END
+
+IDR_APPLICATION_PAGE_CONTEXT MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&مهمة جديدة (تشغيل...)", ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "رموز &كبيرة", ID_VIEW_LARGE
+        MENUITEM "رموز &صغيرة", ID_VIEW_SMALL
+        MENUITEM "&تفاصيل", ID_VIEW_DETAILS, CHECKED
+    END
+END
+
+IDR_TRAY_POPUP MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&استعادة", ID_RESTORE
+        MENUITEM "&إغلاق", ID_FILE_EXIT
+        MENUITEM SEPARATOR
+        MENUITEM "&دائماً في المقدمة", ID_OPTIONS_ALWAYSONTOP
+    END
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "حول مدير مهام ريأكت أو إس"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "مدير مهام ريأكت أو إس V1.0\nحقوق النشر (C) 1999 - 2001\nبواسطة Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    DEFPUSHBUTTON "موافق", IDOK, 183, 189, 44, 14
+    ICON IDI_TASKMANAGER, IDC_STATIC, 19, 30, 20, 20
+    EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "مدير المهام"
+MENU IDR_TASKMANAGER
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+END
+
+IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&مهمة جديدة...", IDC_NEWTASK, 187, 189, 53, 14
+    PUSHBUTTON "&تبديل إلى", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "إ&نهاء المهمة", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+END
+
+IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&إنهاء العملية", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "&إظهار عمليات كل المستخدمين", IDC_SHOWALLPROCESSES, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
+END
+
+/* Columns in the Applications page */
+IDD_APPLICATIONS_PAGE_COLUMNS DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "أعمدة التطبيقات", IDC_STATIC, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&تحريك لأعلى", IDC_UPBUTTON, 187, 189, 53, 14
+    PUSHBUTTON "تحريك لأ&سفل", IDC_DOWNBUTTON, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&إظهار", IDC_SHOWBUTTON, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "إ&خفاء", IDC_HIDEBUTTON, 19, 189, 53, 14, WS_DISABLED
+END
+
+/* Columns in the Processes page */
+IDD_PROCESSES_PAGE_COLUMNS DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "أعمدة العمليات", IDC_STATIC, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&تحريك لأعلى", IDC_UPBUTTON, 187, 189, 53, 14
+    PUSHBUTTON "تحريك لأ&سفل", IDC_DOWNBUTTON, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&إظهار", IDC_SHOWBUTTON, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "إ&خفاء", IDC_HIDEBUTTON, 19, 189, 53, 14, WS_DISABLED
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "مدير المهام"
+    IDC_TASKMGR "مدير المهام"
+    IDS_IDLE_PROCESS "عملية خاملة"
+    IDS_WARNING_TITLE "تحذير"
+    IDS_ERROR_TITLE "خطأ"
+    IDS_SWITCH_TO "تبديل إلى"
+    IDS_SWITCH_TO_2 "تبديل إلى %s"
+    IDS_RUNNING "قيد التشغيل"
+    IDS_NOT_RESPONDING "لا يستجيب"
+    IDS_MENU_ALWAYS_ON_TOP "دائماً في المقدمة"
+    IDS_MENU_DEBUG "تصحيح الأخطاء"
+    IDS_MENU_ABOUT "حول مدير المهام..."
+    IDS_MENU_AFFINITY "تعيين الارتباط..."
+    IDS_MENU_PERFORMANCE_GRAPHS "مخططات الأداء"
+    IDS_MENU_PRIORITY "تعيين الأولوية"
+    IDS_MENU_PRIORITY_REALTIME "وقت حقيقي"
+    IDS_MENU_PRIORITY_HIGH "عالية"
+    IDS_MENU_PRIORITY_ABOVENORMAL "فوق العادية"
+    IDS_MENU_PRIORITY_NORMAL "عادية"
+    IDS_MENU_PRIORITY_BELOWNORMAL "تحت العادية"
+    IDS_MENU_PRIORITY_LOW "منخفضة"
+    IDS_MENU_COLUMNS "تحديد الأعمدة..."
+    IDS_MENU_VIEW_HIDESELECTEDAPPS "إخفاء التطبيقات المحددة"
+    IDS_MENU_VIEW "عرض"
+    IDS_MENU_WINDOWS "نوافذ"
+    IDS_MENU_RUN "تشغيل..."
+    IDS_MENU_REFRESH_RATE "معدل التحديث"
+    IDS_MENU_REFRESH_RATE_HIGH "عالي"
+    IDS_MENU_REFRESH_RATE_NORMAL "عادي"
+    IDS_MENU_REFRESH_RATE_LOW "منخفض"
+    IDS_MENU_REFRESH_RATE_PAUSED "متوقف"
+    IDS_CREATENEWTASK "إنشاء مهمة جديدة"
+    IDS_CREATENEWTASK_DESC "اكتب اسم البرنامج أو المجلد أو المستند أو عنوان الإنترنت الذي تريد فتحه."
+    IDS_MSG_ACCESSPROCESSAFF "لا يمكن الوصول إلى/تعديل ارتباط العملية"
+    IDS_MSG_PROCESSONEPRO "يجب أن تكون العملية مرتبطة بمعالج واحد على الأقل."
+    IDS_MSG_INVALIDOPTION "خيار غير صالح"
+    IDS_MSG_UNABLEDEBUGPROCESS "لا يمكن تصحيح أخطاء العملية"
+    IDS_MSG_WARNINGDEBUG "تحذير: تصحيح أخطاء هذه العملية قد يؤدي إلى فقدان البيانات.\nهل أنت متأكد من أنك تريد تصحيح الأخطاء؟"
+    IDS_MSG_TASKMGRWARNING "تحذير مدير المهام"
+    IDS_MSG_WARNINGTERMINATING "تحذير: إنهاء العملية يمكن أن يؤدي إلى\nفقدان البيانات وعدم استقرار النظام.\nلن يتم سؤال العملية عن حفظ حالتها.\nهل أنت متأكد من أنك تريد إنهاء العملية؟"
+    IDS_MSG_UNABLETERMINATEPRO "لا يمكن إنهاء العملية"
+    IDS_MSG_CLOSESYSTEMPROCESS "هذه عملية نظام حساسة. لن يقوم مدير المهام بإنهاء هذه العملية."
+    IDS_MSG_UNABLECHANGEPRIORITY "لا يمكن تغيير الأولوية"
+    IDS_MSG_WARNINGCHANGEPRIORITY "تحذير: تغيير أولوية هذه العملية قد\nيؤدي إلى عدم استقرار النظام.\nهل أنت متأكد من أنك تريد تغيير الأولوية؟"
+    IDS_MSG_TRAYICONCPUUSAGE "استخدام وحدة المعالجة: %d%%"
+    IDS_STATUS_MEMUSAGE "استخدام الذاكرة: %s / %s (%d%%)"
+    IDS_STATUS_CPUUSAGE "استخدام وحدة المعالجة: %3d%%"
+    IDS_STATUS_PROCESSES "العمليات: %d"
+    IDS_NOT_RESPONDING2 "لا يستجيب"
+    IDS_RUNNING2 "قيد التشغيل"
+    IDS_SUSPENDED "معلق"
+
+    IDS_COL_IMAGENAME "اسم الصورة"
+    IDS_COL_PID "معرف العملية"
+    IDS_COL_CPUUSAGE "استخدام وحدة المعالجة"
+    IDS_COL_CPUTIME "وقت وحدة المعالجة"
+    IDS_COL_MEMUSAGE "استخدام الذاكرة"
+    IDS_COL_MEMUSAGE_PEAK "ذروة استخدام الذاكرة"
+    IDS_COL_MEMWRITEDELTA "تغير الكتابة في الذاكرة"
+    IDS_COL_PAGEFAULT "أخطاء الصفحة"
+    IDS_COL_PAGEFAULTDELTA "تغير أخطاء الصفحة"
+    IDS_COL_VIRTUALMEM "الذاكرة الافتراضية"
+    IDS_COL_PAGEFILE "ملف الصفحة"
+    IDS_COL_PRIOPEAK "أولوية الذروة"
+    IDS_COL_PRIORITY "الأولوية"
+    IDS_COL_BASEPRI "الأولوية الأساسية"
+    IDS_COL_HANDLES "المقابض"
+    IDS_COL_THREADS "المواضيع"
+    IDS_COL_USEROBJ "كائنات المستخدم"
+    IDS_COL_IOREADS "قراءات الإدخال/الإخراج"
+    IDS_COL_IOWRITES "كتابات الإدخال/الإخراج"
+    IDS_COL_IOOTHER "عمليات الإدخال/الإخراج الأخرى"
+    IDS_COL_IOREAD_BYTES "بايتات قراءة الإدخال/الإخراج"
+    IDS_COL_IOWRITE_BYTES "بايتات كتابة الإدخال/الإخراج"
+    IDS_COL_IOOTHER_BYTES "بايتات الإدخال/الإخراج الأخرى"
+    IDS_COL_SERVICE "الخدمة"
+    IDS_COL_DESCRIPTION "الوصف"
+    IDS_COL_STATUS "الحالة"
+    IDS_COL_USERNAME "اسم المستخدم"
+    IDS_COL_SESSIONID "معرف الجلسة"
+    IDS_COL_WINDOWTITLE "عنوان النافذة"
+    IDS_COL_WINDOWSTATION "محطة النوافذ"
+    IDS_COL_DESKTOP "سطح المكتب"
+    IDS_COL_SEARCHRESULT "نتيجة البحث"
+END 
+
+IDR_WINDOWSMENU MENU
+BEGIN
+    MENUITEM "ترتيب أ&فقي", ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "ترتيب &عمودي", ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "ت&صغير", ID_WINDOWS_MINIMIZE
+    MENUITEM "ت&كبير", ID_WINDOWS_MAXIMIZE
+    MENUITEM "ت&داخل", ID_WINDOWS_CASCADE
+    MENUITEM "جلب للأ&مام", ID_WINDOWS_BRINGTOFRONT
+END
+
+IDR_APPLICATION_PAGE_CONTEXT1 MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&مهمة جديدة (تشغيل...)", ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "رموز &كبيرة", ID_VIEW_LARGE
+        MENUITEM "رموز &صغيرة", ID_VIEW_SMALL
+        MENUITEM "&تفاصيل", ID_VIEW_DETAILS, CHECKED
+    END
+END
+
+IDR_APPLICATION_PAGE_CONTEXT2 MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "ت&بديل إلى", ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "جلب للأ&مام", ID_WINDOWS_BRINGTOFRONT
+        MENUITEM SEPARATOR
+        MENUITEM "ترتيب أ&فقي", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "ترتيب &عمودي", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "ت&صغير", ID_WINDOWS_MINIMIZE
+        MENUITEM "ت&كبير", ID_WINDOWS_MAXIMIZE
+        MENUITEM "ت&داخل", ID_WINDOWS_CASCADE
+        MENUITEM SEPARATOR
+        MENUITEM "إ&نهاء المهمة", ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "الانتقال إلى ال&عملية", ID_APPLICATION_PAGE_GOTOPROCESS
+    END
+END
+
+IDR_PROCESS_PAGE_CONTEXT MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "إ&نهاء العملية", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "إنهاء شجرة ال&عمليات", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "ت&صحيح الأخطاء", ID_PROCESS_PAGE_DEBUG
+        MENUITEM SEPARATOR
+        POPUP "تعيين الأ&ولوية"
+        BEGIN
+            MENUITEM "وقت &حقيقي", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "&عالية", ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "فوق ال&عادية", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&عادية", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "تحت ال&عادية", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "من&خفضة", ID_PROCESS_PAGE_SETPRIORITY_LOW
+        END
+        MENUITEM "تعيين الارت&باط...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM SEPARATOR
+        MENUITEM "ال&خصائص", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "فتح موقع ال&ملف", ID_PROCESS_PAGE_OPENFILELOCATION
+    END
+END
+
+IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "استخدام وحدة المعالجة", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "استخدام الذاكرة", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX "المجاميع", IDC_TOTALS_FRAME, 5, 122, 114, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "حجم الالتزام (ك.ب)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 114, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "الذاكرة الفيزيائية (ك.ب)", IDC_PHYSICAL_MEMORY_FRAME, 128, 122, 114, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "ذاكرة النواة (ك.ب)", IDC_KERNEL_MEMORY_FRAME, 128, 166, 114, 39, 0, WS_EX_TRANSPARENT
+    LTEXT "المقابض", IDS_TOTALS_HANDLE_COUNT, 12, 131, 57, 8
+    LTEXT "المواضيع", IDS_TOTALS_THREAD_COUNT, 12, 140, 57, 8
+    LTEXT "العمليات", IDS_TOTALS_PROCESS_COUNT, 12, 149, 57, 8
+    EDITTEXT IDC_TOTALS_HANDLE_COUNT, 69, 131, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_THREAD_COUNT, 69, 140, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_PROCESS_COUNT, 69, 149, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "الإجمالي", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 57, 8
+    LTEXT "الحد", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 57, 8, NOT WS_BORDER
+    LTEXT "الذروة", IDS_COMMIT_CHARGE_PEAK, 12, 193, 57, 8
+    EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 69, 174, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_LIMIT, 69, 184, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_PEAK, 69, 193, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "الإجمالي", IDS_PHYSICAL_MEMORY_TOTAL, 134, 131, 57, 8
+    LTEXT "المتاح", IDS_PHYSICAL_MEMORY_AVAILABLE, 134, 140, 57, 8
+    LTEXT "ذاكرة التخزين المؤقت", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 134, 149, 57, 8
+    EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 192, 131, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 192, 140, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, 192, 149, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "الإجمالي", IDS_KERNEL_MEMORY_TOTAL, 134, 174, 57, 8
+    LTEXT "مؤقت", IDS_KERNEL_MEMORY_PAGED, 134, 184, 57, 8
+    LTEXT "غير مؤقت", IDS_KERNEL_MEMORY_NONPAGED, 134, 193, 57, 8
+    EDITTEXT IDC_KERNEL_MEMORY_TOTAL, 192, 174, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_PAGED, 192, 184, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 192, 193, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX "سجل استخدام وحدة المعالجة", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "سجل استخدام الذاكرة", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
+    PUSHBUTTON "عرض استخدام وحدة المعالجة", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "عرض استخدام الذاكرة", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "سجل استخدام وحدة المعالجة", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "سجل استخدام الذاكرة", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+END
+
+IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 195, 199
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "تحديد الأعمدة"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "موافق", IDOK, 84, 178, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 138, 178, 50, 14
+    LTEXT "حدد الأعمدة التي ستظهر في صفحة العمليات في مدير المهام.", IDC_STATIC, 7, 7, 181, 17
+    AUTOCHECKBOX "اسم ال&صورة", IDC_IMAGENAME, 7, 28, 56, 10, WS_DISABLED | WS_TABSTOP
+    AUTOCHECKBOX "&معرف العملية (PID)", IDC_PID, 7, 39, 88, 10
+    AUTOCHECKBOX "استخدام وحدة المعال&جة", IDC_CPUUSAGE, 7, 50, 53, 10
+    AUTOCHECKBOX "وقت وحدة المعال&جة", IDC_CPUTIME, 7, 61, 48, 10
+    AUTOCHECKBOX "استخدام ال&ذاكرة", IDC_MEMORYUSAGE, 7, 72, 63, 10
+    AUTOCHECKBOX "تغير استخدام الذا&كرة", IDC_MEMORYUSAGEDELTA, 7, 83, 82, 10
+    AUTOCHECKBOX "ذروة استخدام الذا&كرة", IDC_PEAKMEMORYUSAGE, 7, 94, 82, 10
+    AUTOCHECKBOX "أخطاء ال&صفحة", IDC_PAGEFAULTS, 7, 105, 53, 10
+    AUTOCHECKBOX "كائنات ال&مستخدم", IDC_USEROBJECTS, 7, 116, 62, 10
+    AUTOCHECKBOX "قراءات الإدخال/الإخراج", IDC_IOREADS, 7, 127, 49, 10
+    AUTOCHECKBOX "بايتات قراءة الإدخال/الإخراج", IDC_IOREADBYTES, 7, 138, 65, 10
+    AUTOCHECKBOX "معرف ال&جلسة", IDC_SESSIONID, 7, 149, 50, 10
+    AUTOCHECKBOX "اسم المست&خدم", IDC_USERNAME, 7, 160, 51, 10
+    AUTOCHECKBOX "تغير أخطاء الصف&حة", IDC_PAGEFAULTSDELTA, 107, 28, 72, 10
+    AUTOCHECKBOX "حجم الذاكرة الافترا&ضية", IDC_VIRTUALMEMORYSIZE, 107, 39, 77, 10
+    AUTOCHECKBOX "التجميع المؤ&قت", IDC_PAGEDPOOL, 107, 50, 53, 10
+    AUTOCHECKBOX "التجميع غير المؤ&قت", IDC_NONPAGEDPOOL, 107, 61, 67, 10
+    AUTOCHECKBOX "الأولوية الأسا&سية", IDC_BASEPRIORITY, 107, 72, 55, 10
+    AUTOCHECKBOX "عدد المقا&بض", IDC_HANDLECOUNT, 107, 83, 59, 10
+    AUTOCHECKBOX "عدد المواض&يع", IDC_THREADCOUNT, 107, 94, 59, 10
+    AUTOCHECKBOX "كائنات GDI", IDC_GDIOBJECTS, 107, 105, 55, 10
+    AUTOCHECKBOX "كتابات الإدخال/الإخراج", IDC_IOWRITES, 107, 116, 49, 10
+    AUTOCHECKBOX "بايتات كتابة الإدخال/الإخراج", IDC_IOWRITEBYTES, 107, 127, 65, 10
+    AUTOCHECKBOX "إدخال/إخراج آخر", IDC_IOOTHER, 107, 138, 46, 10
+    AUTOCHECKBOX "بايتات الإدخال/الإخراج الأخرى", IDC_IOOTHERBYTES, 107, 149, 65, 10
+    AUTOCHECKBOX "سطر الأوا&مر", IDC_COMMANDLINE, 107, 160, 65, 10
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_NEW "تشغيل برنامج جديد"
+    ID_OPTIONS_ALWAYSONTOP "يبقى مدير المهام أمام كل النوافذ الأخرى ما لم يتم تصغيره"
+    ID_OPTIONS_MINIMIZEONUSE "يتم تصغير مدير المهام عند تنفيذ عملية التبديل"
+    ID_OPTIONS_HIDEWHENMINIMIZED "إخفاء مدير المهام عند تصغيره"
+    ID_VIEW_REFRESH "إجبار مدير المهام على التحديث الآن، بغض النظر عن إعداد سرعة التحديث"
+    ID_VIEW_LARGE "عرض المهام باستخدام رموز كبيرة"
+    ID_VIEW_SMALL "عرض المهام باستخدام رموز صغيرة"
+    ID_VIEW_DETAILS "عرض معلومات عن كل مهمة"
+    ID_VIEW_UPDATESPEED_HIGH "تحديث العرض مرتين في الثانية"
+    ID_VIEW_UPDATESPEED_NORMAL "تحديث العرض كل ثانيتين"
+    ID_VIEW_UPDATESPEED_LOW "تحديث العرض كل أربع ثوان"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_UPDATESPEED_PAUSED "لا يتم التحديث تلقائياً"
+    ID_WINDOWS_TILEHORIZONTALLY "ترتيب النوافذ أفقياً على سطح المكتب"
+    ID_WINDOWS_TILEVERTICALLY "ترتيب النوافذ عمودياً على سطح المكتب"
+    ID_WINDOWS_MINIMIZE "تصغير النوافذ"
+    ID_WINDOWS_MAXIMIZE "تكبير النوافذ"
+    ID_WINDOWS_CASCADE "ترتيب النوافذ بشكل متداخل على سطح المكتب"
+    ID_WINDOWS_BRINGTOFRONT "جلب النافذة للمقدمة دون التبديل إليها"
+    ID_HELP_TOPICS "عرض مواضيع المساعدة لمدير المهام"
+    ID_HELP_ABOUT "عرض معلومات البرنامج، رقم الإصدار، وحقوق النشر"
+    ID_FILE_EXIT "إنهاء تطبيق مدير المهام"
+    ID_OPTIONS_SHOW16BITTASKS "عرض مهام 16 بت تحت ntvdm.exe المرتبط"
+    ID_VIEW_SELECTCOLUMNS "تحديد الأعمدة التي ستكون مرئية في صفحة العمليات"
+    ID_VIEW_SHOWKERNELTIMES "عرض وقت النواة في مخططات الأداء"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "مخطط سجل واحد يعرض إجمالي استخدام وحدة المعالجة"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "لكل وحدة معالجة مخطط سجل خاص بها"
+    ID_APPLICATION_PAGE_SWITCHTO "جلب المهمة للمقدمة وتحويل التركيز إليها"
+END
+
+STRINGTABLE
+BEGIN
+    ID_ENDTASK "إخبار المهام المحددة بالإغلاق"
+    ID_GOTOPROCESS "تحويل التركيز إلى عملية المهمة المحددة"
+    ID_RESTORE "استعادة مدير المهام من حالته المخفية"
+    ID_PROCESS_PAGE_ENDPROCESS "إزالة العملية من النظام"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "إزالة هذه العملية وكل العمليات المتفرعة منها من النظام"
+    ID_PROCESS_PAGE_DEBUG "إرفاق المصحح بهذه العملية"
+    ID_PROCESS_PAGE_SETAFFINITY "التحكم في المعالجات التي يُسمح للعملية بالتشغيل عليها"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "تعيين العملية إلى فئة أولوية الوقت الحقيقي"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "تعيين العملية إلى فئة الأولوية العالية"
+    IDS_TAB_APPS "التطبيقات"
+    IDS_TAB_PROCESSES "العمليات"
+    IDS_TAB_PERFORMANCE "الأداء"
+    IDS_TAB_TASK "المهمة"
+    IDS_TAB_STATUS "الحالة"
+    IDS_TAB_IMAGENAME "اسم الصورة"
+    IDS_TAB_PID "معرف العملية"
+    IDS_TAB_USERNAME "اسم المستخدم"
+    IDS_TAB_SESSIONID "معرف الجلسة"
+    IDS_TAB_CPU "وحدة المعالجة"
+    IDS_TAB_CPUTIME "وقت وحدة المعالجة"
+    IDS_TAB_MEMUSAGE "استخدام الذاكرة"
+    IDS_TAB_PEAKMEMUSAGE "ذروة استخدام الذاكرة"
+    IDS_TAB_MEMDELTA "تغير الذاكرة"
+    IDS_TAB_PAGEFAULT "أخطاء الصفحة"
+    IDS_TAB_PFDELTA "تغير أخطاء الصفحة"
+    IDS_TAB_VMSIZE "حجم الذاكرة الافتراضية"
+    IDS_TAB_PAGEDPOOL "التجميع المؤقت"
+    IDS_TAB_NPPOOL "التجميع غير المؤقت"
+    IDS_TAB_BASEPRI "الأولوية الأساسية"
+    IDS_TAB_HANDLES "المقابض"
+    IDS_TAB_THREADS "المواضيع"
+    IDS_TAB_USERPBJECTS "كائنات المستخدم"
+    IDS_TAB_GDIOBJECTS "كائنات GDI"
+    IDS_TAB_IOREADS "قراءات الإدخال/الإخراج"
+    IDS_TAB_IOWRITES "كتابات الإدخال/الإخراج"
+    IDS_TAB_IOOTHER "إدخال/إخراج آخر"
+    IDS_TAB_IOREADBYTES "بايتات قراءة الإدخال/الإخراج"
+    IDS_TAB_IOWRITESBYTES "بايتات كتابة الإدخال/الإخراج"
+    IDS_TAB_IOOTHERBYTES "بايتات الإدخال/الإخراج الأخرى"
+    IDS_TAB_COMMANDLINE "سطر الأوامر"
+    IDS_MENU_SELECTCOLUMNS "تحديد الأعمدة..."
+    IDS_MENU_16BITTASK "عرض مهام 16 بت"
+    IDS_MENU_WINDOWS "النوافذ"
+    IDS_MENU_LARGEICONS "رموز كبيرة"
+    IDS_MENU_SMALLICONS "رموز صغيرة"
+    IDS_MENU_DETAILS "تفاصيل"
+    IDS_MENU_ONEGRAPHALLCPUS "مخطط واحد، كل وحدات المعالجة"
+    IDS_MENU_ONEGRAPHPERCPU "مخطط لكل وحدة معالجة"
+    IDS_MENU_CPUHISTORY "سجل وحدة المعالجة"
+    IDS_MENU_SHOWKERNELTIMES "عرض أوقات النواة"
+    IDS_CREATENEWTASK "إنشاء مهمة جديدة"
+    IDS_CREATENEWTASK_DESC "اكتب اسم برنامج أو مجلد أو مستند أو عنوان إنترنت، وسيقوم مدير المهام بفتحه لك."
+    IDS_MSG_ACCESSPROCESSAFF "تعذر الوصول إلى/تعيين ارتباط العملية"
+    IDS_MSG_PROCESSONEPRO "يجب أن تكون العملية مرتبطة بمعالج واحد على الأقل."
+    IDS_MSG_INVALIDOPTION "خيار غير صالح"
+    IDS_MSG_UNABLEDEBUGPROCESS "تعذر تصحيح أخطاء العملية"
+    IDS_MSG_WARNINGDEBUG "تحذير: تصحيح أخطاء هذه العملية قد يؤدي إلى فقدان البيانات.\nهل أنت متأكد من أنك تريد إرفاق المصحح؟"
+    IDS_MSG_TASKMGRWARNING "تحذير مدير المهام"
+    IDS_MSG_WARNINGTERMINATING "تحذير: إنهاء العملية يمكن أن يؤدي إلى\nفقدان البيانات وعدم استقرار النظام.\nلن يتم سؤال العملية عن حفظ حالتها.\nهل أنت متأكد من أنك تريد إنهاء العملية؟"
+    IDS_MSG_UNABLETERMINATEPRO "تعذر إنهاء العملية"
+    IDS_MSG_CLOSESYSTEMPROCESS "هذه عملية نظام حساسة. لن يقوم مدير المهام بإنهاء هذه العملية."
+    IDS_MSG_UNABLECHANGEPRIORITY "تعذر تغيير الأولوية"
+    IDS_MSG_WARNINGCHANGEPRIORITY "تحذير: تغيير أولوية هذه العملية قد\nيؤدي إلى عدم استقرار النظام.\nهل أنت متأكد من أنك تريد تغيير الأولوية؟"
+    IDS_MSG_TRAYICONCPUUSAGE "استخدام وحدة المعالجة: %d%%"
+    IDS_STATUS_MEMUSAGE "استخدام الذاكرة: %s / %s (%d%%)"
+    IDS_STATUS_CPUUSAGE "استخدام وحدة المعالجة: %3d%%"
+    IDS_STATUS_PROCESSES "العمليات: %d"
+    IDS_NOT_RESPONDING "لا يستجيب"
+    IDS_RUNNING "قيد التشغيل"
+END 

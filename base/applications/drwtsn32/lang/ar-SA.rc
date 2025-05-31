@@ -1,0 +1,13 @@
+/*
+ * PROJECT:     ReactOS Crash Reporter
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Arabic (Saudi Arabia) resource file
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "مراقب الأعطال في ريأكت أو إس"
+    IDS_USER_ALERT_MESSAGE "تعطل التطبيق %ls. تم حفظ معلومات عن هذا العطل في:\n\n%ls"
+END 

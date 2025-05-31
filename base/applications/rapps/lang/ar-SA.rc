@@ -1,0 +1,265 @@
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "إ&عدادات", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "&خروج", ID_EXIT
+    END
+    POPUP "&برامج"
+    BEGIN
+        MENUITEM "&تثبيت\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&إلغاء التثبيت\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&تعديل", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "إ&زالة من السجل", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "ت&حديث\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "تحديث قاع&دة البيانات\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "مساعدة"
+    BEGIN
+        MENUITEM "مساعدة\tF1", ID_HELP, GRAYED
+        MENUITEM "&حول", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&فتح الرابط في المتصفح", ID_OPEN_LINK
+        MENUITEM "&نسخ الرابط إلى الحافظة", ID_COPY_LINK
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "إعدادات"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "عام", -1, 4, 2, 240, 61
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
+    GROUPBOX "التنزيل", -1, 4, 65, 240, 51
+    LTEXT "مجلد التنزيلات:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&اختيار", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&حذف برنامج التثبيت بعد التثبيت", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "مصدر البرامج", -1, 4, 118, 240, 46
+    AUTORADIOBUTTON "استخدام الافتراضي", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "مصدر محدد", IDC_USE_SOURCE, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "الوكيل", -1, 4, 166, 240, 76
+    AUTORADIOBUTTON "إعدادات الوكيل للنظام", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "اتصال مباشر (بدون وكيل)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "وكيل", IDC_USE_PROXY, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "لا وكيل لـ", -1, 26, 226, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "افتراضي", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "موافق", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 181, 245, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "تثبيت البرنامج"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&تثبيت من قرص (CD أو DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&تنزيل وتثبيت", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    DEFPUSHBUTTON "موافق", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+CAPTION "جاري تنزيل %ls…"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "إلغاء", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "تثبيت"
+    IDS_TOOLTIP_UNINSTALL "إلغاء التثبيت"
+    IDS_TOOLTIP_MODIFY "تعديل"
+    IDS_TOOLTIP_SELECT_ALL "تحديد/إلغاء تحديد الكل"
+    IDS_TOOLTIP_SETTINGS "إعدادات"
+    IDS_TOOLTIP_REFRESH "تحديث"
+    IDS_TOOLTIP_UPDATE_DB "تحديث قاعدة البيانات"
+    IDS_TOOLTIP_EXIT "خروج"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "الاسم"
+    IDS_APP_INST_VERSION "الإصدار"
+    IDS_APP_DESCRIPTION "الوصف"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nالإصدار: "
+    IDS_INFO_DESCRIPTION "\nالوصف: "
+    IDS_INFO_PUBLISHER "\nالناشر: "
+    IDS_INFO_HELPLINK "\nرابط المساعدة: "
+    IDS_INFO_HELPPHONE "\nهاتف المساعدة: "
+    IDS_INFO_README "\nملف القراءة: "
+    IDS_INFO_REGOWNER "\nالمالك المسجل: "
+    IDS_INFO_PRODUCTID "\nمعرف المنتج: "
+    IDS_INFO_CONTACT "\nالاتصال: "
+    IDS_INFO_UPDATEINFO "\nمعلومات التحديث: "
+    IDS_INFO_INFOABOUT "\nمعلومات عن: "
+    IDS_INFO_COMMENTS "\nتعليقات: "
+    IDS_INFO_INSTLOCATION "\nموقع التثبيت: "
+    IDS_INFO_INSTALLSRC "\nمصدر التثبيت: "
+    IDS_INFO_UNINSTALLSTR "\nسلسلة إلغاء التثبيت: "
+    IDS_INFO_MODIFYPATH "\مسار التعديل: "
+    IDS_INFO_INSTALLDATE "\nتاريخ التثبيت: "
+    IDS_AINFO_PACKAGE_NAME "\nاسم الحزمة: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nالإصدار: "
+    IDS_AINFO_AVAILABLEVERSION "\nالإصدار المتاح: "
+    IDS_AINFO_DESCRIPTION "\nالوصف: "
+    IDS_AINFO_SIZE "\nالحجم: "
+    IDS_AINFO_URLSITE "\nالصفحة الرئيسية: "
+    IDS_AINFO_LICENSE "\nالترخيص: "
+    IDS_AINFO_URLDOWNLOAD "\nالتنزيل: "
+    IDS_AINFO_LANGUAGES "\nاللغات: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "صوت"
+    IDS_CAT_DEVEL "تطوير"
+    IDS_CAT_DRIVERS "برامج تشغيل"
+    IDS_CAT_EDU "تعليم وترفيه"
+    IDS_CAT_ENGINEER "هندسة"
+    IDS_CAT_FINANCE "مالية"
+    IDS_CAT_GAMES "ألعاب وترفيه"
+    IDS_CAT_GRAPHICS "رسومات"
+    IDS_CAT_INTERNET "إنترنت وشبكات"
+    IDS_CAT_LIBS "مكتبات"
+    IDS_CAT_OFFICE "مكتب"
+    IDS_CAT_OTHER "أخرى"
+    IDS_CAT_SCIENCE "علوم"
+    IDS_CAT_TOOLS "أدوات"
+    IDS_CAT_VIDEO "فيديو"
+    IDS_CAT_THEMES "سمات"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "مدير تطبيقات ReactOS"
+    IDS_APP_AUTHORS "حقوق النشر 2009 Dmitry Chapyshev"
+    IDS_WELCOME_TITLE "مرحبًا بكم في مدير تطبيقات ReactOS!"
+    IDS_WELCOME_TEXT "اختر فئة من اليسار، ثم اختر تطبيقًا لتثبيته أو إلغاء تثبيته.\nموقع ReactOS: "
+    IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "إضافة/إزالة برامج"
+    IDS_APPWIZ_TEXT1 "اختر \"تطبيقات\" أو \"تحديثات\" لعرض قائمة التطبيقات أو التحديثات المثبتة على نظامك."
+    IDS_APPWIZ_TEXT2 "لإزالة برنامج أو تعديل مكوناته المثبتة، حدده من القائمة وانقر على \"إلغاء التثبيت\" أو \"تعديل\"."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "بحث…"
+    IDS_APPS_COUNT "عدد التطبيقات: %d"
+    IDS_APPS_SELECT_COUNT "; المحدد: %d"
+    IDS_INSTALLED "مثبت"
+    IDS_AVAILABLEFORINST "متاح للتثبيت"
+    IDS_UPDATES "تحديثات"
+    IDS_APPLICATIONS "تطبيقات"
+    IDS_CHOOSE_FOLDER_TEXT "اختر مجلدًا لتخزين التنزيلات:"
+    IDS_CHOOSE_FOLDER_ERROR "المجلد الذي حددته غير موجود. هل تريد إنشاؤه؟"
+    IDS_URL_INVALID "عنوان URL الذي حددته غير صالح أو غير مدعوم. يرجى تصحيحه!"
+    IDS_APP_REG_REMOVE "هل أنت متأكد أنك تريد حذف بيانات البرنامج المثبت من السجل؟"
+    IDS_INFORMATION "معلومات"
+    IDS_UNABLE_TO_DOWNLOAD "تعذر تنزيل الحزمة! العنوان غير موجود!"
+    IDS_UNABLE_TO_DOWNLOAD2 "تعذر تنزيل الحزمة! تحقق من اتصال الإنترنت!"
+    IDS_UNABLE_TO_REMOVE "تعذر إزالة بيانات البرنامج من السجل!"
+    IDS_UNABLE_TO_INSTALL "تعذر فتح برنامج التثبيت!"
+    IDS_UNABLE_TO_QUERY_CERT "تعذر استرداد معلومات الشهادة.\n\nهل تريد المتابعة على أي حال؟"
+    IDS_INTEG_CHECK_TITLE "التحقق من سلامة الحزمة…"
+    IDS_INTEG_CHECK_FAIL "فشلت الحزمة في اختبار السلامة، قد تكون تالفة أو تم العبث بها أثناء التنزيل. لا ينصح بتشغيل البرنامج."
+    IDS_INTERRUPTED_DOWNLOAD "تم مقاطعة التنزيل. تحقق من اتصال الإنترنت."
+    IDS_UNABLE_TO_WRITE "تعذر الكتابة على القرص. قد يكون القرص ممتلئًا."
+    IDS_INSTALL_SELECTED "تثبيت المحدد"
+    IDS_SELECTEDFORINST "محدد للتثبيت"
+    IDS_MISMATCH_CERT_INFO "الشهادة المستخدمة غير معروفة:\nالموضوع: %s\nالمصدر: %s\nهل تريد المتابعة على أي حال؟"
+    IDS_UNABLE_PATH "تنسيق المسار غير صحيح."
+    IDS_APP_DISPLAY_DETAILS "تفاصيل"
+    IDS_APP_DISPLAY_LIST "قائمة"
+    IDS_APP_DISPLAY_TILE "بلاط"
+    IDS_NO_SEARCH_RESULTS "لا توجد نتائج بحث"
+    IDS_CFG_SAVE_WINDOW_POS "حفظ موضع النافذة"
+    IDS_CFG_UPDATE_AVLIST "تحديث قائمة البرامج المتاحة عند البدء"
+    IDS_CFG_LOG_ENABLED "سجل تثبيت وإزالة البرامج"
+    IDS_CFG_SMALL_ICONS "أيقونات صغيرة"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "مثبت"
+    IDS_STATUS_NOTINSTALLED "غير مثبت"
+    IDS_STATUS_DOWNLOADED "تم التنزيل"
+    IDS_STATUS_UPDATE_AVAILABLE "تحديث متاح"
+    IDS_STATUS_DOWNLOADING "جاري التنزيل…"
+    IDS_STATUS_INSTALLING "جاري التثبيت…"
+    IDS_STATUS_WAITING "في انتظار التثبيت…"
+    IDS_STATUS_FINISHED "تم الانتهاء"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "مفتوح المصدر"
+    IDS_LICENSE_FREEWARE "مجاني"
+    IDS_LICENSE_TRIAL "تجريبي/عرض"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "يدعم لغتك"
+    IDS_LANGUAGE_NO_TRANSLATION "يدعم لغات أخرى"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "يدعم الإنجليزية"
+    IDS_LANGUAGE_SINGLE "لغة واحدة"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d أخرى)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d متاحة)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "قاعدة بيانات التطبيقات"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "جاري تحديث قاعدة البيانات…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "جاري تحديث قاعدة البيانات… (مصدر غير رسمي)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "طريقة الاستخدام: "
+    IDS_CMD_NEED_PACKAGE_NAME "خطأ: الخيار %1 يتطلب اسم حزمة واحدة أو أكثر.\n"
+    IDS_CMD_NEED_FILE_NAME "خطأ: الخيار %1 يتطلب اسم ملف.\n"
+    IDS_CMD_NEED_PARAMS "خطأ: الخيار %1 يتطلب معلمة واحدة أو أكثر.\n"
+    IDS_CMD_INVALID_OPTION "خطأ: تم تحديد خيار سطر أوامر غير معروف أو غير صالح.\n"
+    IDS_CMD_FIND_RESULT_FOR "نتيجة البحث عن %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "فشل العثور على الحزمة %1.\n"
+    IDS_CMD_PACKAGE_INFO "معلومات عن الحزمة %1:\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "هل أنت متأكد أنك تريد إلغاء تثبيت %s؟"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "اكتمل التثبيت، هل تريد تشغيل %s الآن؟"
+END

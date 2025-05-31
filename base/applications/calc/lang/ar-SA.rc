@@ -1,0 +1,117 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+/* Dialogs */
+
+IDD_DIALOG_SCIENTIFIC DIALOGEX CW_USEDEFAULT16, 0, 316, 163
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "الحاسبة"
+MENU IDR_MENU_SCIENTIFIC_1
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "", IDC_STATIC, 5 ,14, 141, 20
+    AUTORADIOBUTTON "ست عشري", IDC_RADIO_HEX, 8, 21, 30, 10
+    AUTORADIOBUTTON "عشري", IDC_RADIO_DEC, 41, 21, 30, 10
+    AUTORADIOBUTTON "ثماني", IDC_RADIO_OCT, 74, 21, 30, 10
+    AUTORADIOBUTTON "ثنائي", IDC_RADIO_BIN, 107, 21, 30, 10
+    GROUPBOX "", IDC_STATIC, 5, 34, 84, 20
+    CONTROL "عكس", IDC_CHECK_INV, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 41, 26, 10
+    CONTROL "زائد", IDC_CHECK_HYP, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 49, 41, 29, 10
+    CTEXT "", IDC_TEXT_PARENT, 93, 38, 18, 16, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
+    CTEXT "", IDC_TEXT_MEMORY, 126, 38, 18, 16, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
+    // ... existing code for buttons and controls ...
+END
+
+/* Menus */
+
+IDR_MENU_SCIENTIFIC_1 MENU
+BEGIN
+    POPUP "ت&حرير"
+    BEGIN
+        MENUITEM "&نسخ\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "ل&صق\tCtrl+V", IDM_EDIT_PASTE
+    END
+    POPUP "عر&ض"
+    BEGIN
+        MENUITEM "&قياسي", IDM_VIEW_STANDARD
+        MENUITEM "&علمي", IDM_VIEW_SCIENTIFIC
+        MENUITEM "ت&حويل", IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "ست &عشري\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "&عشري\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&ثماني\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "&ثنائي\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&درجات\tF2", IDM_VIEW_DEG, CHECKED
+        MENUITEM "&راديان\tF3", IDM_VIEW_RAD, CHECKED
+        MENUITEM "&تدرج\tF4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "تجميع الأر&قام", IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "م&ساعدة"
+    BEGIN
+        MENUITEM "مواضيع الم&ساعدة", IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&حول حاسبة ريأكت أو إس", IDM_HELP_ABOUT
+    END
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_MATH_ERROR "خطأ"
+    IDS_QUICKHELP "مساعدة سريعة"
+END
+
+/* About */
+STRINGTABLE
+BEGIN
+    IDS_CALC_NAME "حاسبة ريأكت أو إس"
+    IDS_AUTHOR "كتبها Carlo Bramini"
+END
+
+/* Types of conversion */
+STRINGTABLE
+BEGIN
+    IDS_CONV_ANGLE "زاوية"
+    IDS_CONV_AREA "مساحة"
+    IDS_CONV_CONSUMPTION "استهلاك (محركات)"
+    IDS_CONV_CURRENCY "عملات"
+    IDS_CONV_ENERGY "طاقة"
+    IDS_CONV_LENGTH "أطوال"
+    IDS_CONV_POWER "قدرة"
+    IDS_CONV_PRESSURE "ضغط"
+    IDS_CONV_TEMPERATURE "درجة حرارة"
+    IDS_CONV_TIME "وقت"
+    IDS_CONV_VELOCITY "سرعة"
+    IDS_CONV_VOLUME "حجم"
+    IDS_CONV_WEIGHT "أوزان"
+END
+
+/* Angles */
+STRINGTABLE
+BEGIN
+    IDS_ANGLE_ARCMINUTES "دقيقة قوسية"
+    IDS_ANGLE_ARCSECONDS "ثانية قوسية"
+    IDS_ANGLE_DEGREES "درجات"
+    IDS_ANGLE_GRADIANS "تدرج"
+    IDS_ANGLE_RADIANS "راديان"
+END
+
+/* Areas */
+STRINGTABLE
+BEGIN
+    IDS_AREA_ACRES "فدان"
+    IDS_AREA_ACRES_BRAZIL "فدان (البرازيل)"
+    IDS_AREA_ACRES_FRANCE "فدان (فرنسا)"
+    IDS_AREA_ACRES_SCOTS "فدان (اسكتلندا)"
+    IDS_AREA_ACRES_US "فدان (الولايات المتحدة)"
+    IDS_AREA_ARES "آر"
+    IDS_AREA_CHOU "تشو"
+    IDS_AREA_DANBO "دانبو"
+    IDS_AREA_HECTARES "هكتار"
+    IDS_AREA_JEONGBO "جيونغبو"
+    IDS_AREA_MORGEN_HUNGARY "مورغن (المجر)"
+    IDS_AREA_MU "مو"
+    IDS_AREA_PING "بينغ"
+END 

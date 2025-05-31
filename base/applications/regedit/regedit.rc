@@ -29,6 +29,9 @@ IDI_ARROW ICON "res/arrow.ico"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_AR_SA
+    #include "lang/ar-SA.rc"
+#endif
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif

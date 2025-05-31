@@ -1,0 +1,56 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDD_CHARMAP DIALOGEX 6, 6, 292, 224
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
+BEGIN
+    LTEXT "ال&خط:", IDC_STATIC, 6, 7, 24, 9
+    COMBOBOX IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+             WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+    PUSHBUTTON "م&ساعدة", IDC_CMHELP, 249, 5, 35, 13
+    CONTROL "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+            WS_VSCROLL, 20, 22, 266, 156
+    LTEXT "الأ&حرف المراد نسخها:", IDC_STATIC, 6, 188, 66, 9
+    CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
+    DEFPUSHBUTTON "ت&حديد", IDC_SELECT, 194, 186, 44, 13
+    PUSHBUTTON "ن&سخ", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+    CONTROL "عرض مت&قدم", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 8, 208, 95, 10
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 292, 64
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "مجموعة الأ&حرف:", IDC_STATIC, 8, 8, 48, 8
+    COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "تجميع &حسب:", IDC_STATIC, 8, 28, 50, 8
+    COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "ب&حث", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+    EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
+    LTEXT "بحث &عن:", IDC_STATIC, 8, 48, 42, 8
+    LTEXT "يوني&كود:", IDC_STATIC, 200, 8, 30, 8
+    EDITTEXT IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
+CAPTION "حول خريطة الأحرف"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+    LTEXT "خريطة الأحرف الإصدار 0.1\nحقوق النشر (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+    PUSHBUTTON "إ&غلاق", IDOK, 75, 162, 44, 15
+    ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL |
+             WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE "هذا البرنامج حر؛ يمكنك إعادة توزيعه و/أو تعديله بموجب شروط رخصة جنو العمومية العامة كما نشرتها مؤسسة البرمجيات الحرة؛ سواء الإصدار 2 من الرخصة، أو (حسب رغبتك) أي إصدار أحدث.\r\n\r\nيوزع هذا البرنامج على أمل أن يكون مفيداً، ولكن دون أية ضمانات؛ دون حتى الضمان الضمني لصلاحية التسويق أو الملاءمة لغرض معين. انظر رخصة جنو العمومية العامة لمزيد من التفاصيل.\r\n\r\nيجب أن تكون قد تلقيت نسخة من رخصة جنو العمومية العامة مع هذا البرنامج؛ إذا لم يكن الأمر كذلك، فاكتب إلى: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_ABOUT "&حول..."
+    IDS_TITLE "خريطة الأحرف"
+    IDS_UNICODE "يونيكود"
+    IDS_ALL "الكل"
+END 

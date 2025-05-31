@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     ReactOS Find String Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Arabic (Saudi Arabia) resource file
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "FINDSTR: يطبع جميع الأسطر في ملف تحتوي على سلسلة نصية.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""سلسلة نصية"" [ ملف... ]\n\
+    /C  عد عدد الأسطر التي تحتوي على السلسلة النصية\n\
+    /I  تجاهل حالة الأحرف\n\
+    /N  ترقيم الأسطر المعروضة، بدءاً من 1\n\
+    /V  طباعة الأسطر التي لا تحتوي على السلسلة النصية"
+    IDS_NO_SUCH_FILE "FINDSTR: %s: لا يوجد مثل هذا الملف\n"
+    IDS_CANNOT_OPEN "FINDSTR: %s: لا يمكن فتح الملف\n"
+END 

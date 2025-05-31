@@ -1,0 +1,13 @@
+/*
+ * PROJECT:      ReactOS Version Program
+ * LICENSE:      MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:      Arabic (Saudi Arabia) resource file
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_OSINFO_COMPAT_FORMAT "يعمل كـ NT %s (الإصدار %s%s)"
+    IDS_OSINFO_SPK_FORMAT ": %s"
+END 
