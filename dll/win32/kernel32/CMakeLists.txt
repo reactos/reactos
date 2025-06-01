@@ -13,7 +13,7 @@ list(APPEND SOURCE
     client/file/mailslot.c
     client/file/tape.c
     wine/lzexpand.c
-    wine/res.c
+    wine/resource.c
     k32.h)
 
 
@@ -25,7 +25,7 @@ add_library(kernel32 MODULE
 
 if(MSVC)
     # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
-    set_source_files_properties(wine/res.c PROPERTIES COMPILE_OPTIONS "/wd4146")
+    set_source_files_properties(wine/resource.c PROPERTIES COMPILE_OPTIONS "/wd4146")
 endif()
 
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
