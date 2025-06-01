@@ -19,6 +19,7 @@ list(APPEND RTL_WINE_SOURCE
     threadpool.c
 )
 list(APPEND RTL_WINE_SOURCE_VISTA
+    product.c
     threadpool.c
 )
 set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)

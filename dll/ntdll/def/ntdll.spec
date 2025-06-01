@@ -902,7 +902,7 @@
 @ stdcall RtlGetOwnerSecurityDescriptor(ptr ptr ptr)
 @ stdcall -stub -version=0x600+ RtlGetParentLocaleName(wstr long long long)
 @ stdcall RtlGetProcessHeaps(long ptr)
-@ stub -version=0x600+ RtlGetProductInfo
+@ stdcall -version=0x600+ RtlGetProductInfo(long long long long ptr)
 @ stdcall RtlGetSaclSecurityDescriptor(ptr ptr ptr ptr)
 @ stdcall RtlGetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlGetSetBootStatusData(ptr long long ptr long long)

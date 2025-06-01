@@ -1,6 +1,7 @@
 @ stdcall LdrRegisterDllNotification(long ptr ptr ptr)
 @ stdcall LdrUnregisterDllNotification(ptr)
 
+@ stdcall RtlGetProductInfo(long long long long ptr)
 @ stdcall RtlInitializeConditionVariable(ptr)
 @ stdcall RtlWakeConditionVariable(ptr)
 @ stdcall RtlWakeAllConditionVariable(ptr)
