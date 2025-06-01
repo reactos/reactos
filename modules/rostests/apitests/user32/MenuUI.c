@@ -478,6 +478,20 @@ ThreadFunc(LPVOID arg)
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     AutoKey(AUTO_KEY_UP, VK_SHIFT);
 
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(!hwndActive, "hwndActive was %p\n", hwndActive);
+    ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
+    ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(hwndActive == hwnd2, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd2, "hwndFocus was %p\n", hwndCapture);
+
     ok(!IsWindowVisible(hwndMenu1), "hwndMenu1 was visible\n");
     AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
     AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
@@ -497,6 +511,20 @@ ThreadFunc(LPVOID arg)
     AutoClick(AUTO_LEFT_CLICK, xMenuBar, yMenuBar);
     AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
     AutoKey(AUTO_KEY_DOWN_UP, VK_ESCAPE);
+
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(!hwndActive, "hwndActive was %p\n", hwndActive);
+    ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
+    ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
 
     Sleep(INTERVAL);
     ok(GetHitID(hwnd1) == 0, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
