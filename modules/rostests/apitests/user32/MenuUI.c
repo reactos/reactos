@@ -158,12 +158,9 @@ FindMenuSub(HWND hwndMenuTarget)
     return data.hwndMenuSub;
 }
 
-static DWORD WINAPI
-ThreadFunc(LPVOID arg)
+static VOID
+CloseSubPrograms(VOID)
 {
-    HWND hwnd = FindWindowW(L"MenuUITest", L"MenuUITest");
-    ShowWindow(hwnd, SW_HIDE);
-
     for (INT i = 0; i < 10; ++i)
     {
         HWND hwnd1 = FindWindowW(L"user32_apitest_menuui", L"#1");
@@ -180,12 +177,47 @@ ThreadFunc(LPVOID arg)
         PostMessage(hwnd2, WM_CLOSE, 0, 0);
         Sleep(INTERVAL);
     }
+}
+
+static HWND
+GetThreadActiveWnd(DWORD dwThreadID)
+{
+    GUITHREADINFO info = { sizeof(info) };
+    GetGUIThreadInfo(dwThreadID, &info);
+    return info.hwndActive;
+}
+
+static HWND
+GetThreadFocus(DWORD dwThreadID)
+{
+    GUITHREADINFO info = { sizeof(info) };
+    GetGUIThreadInfo(dwThreadID, &info);
+    return info.hwndFocus;
+}
+
+static HWND
+GetThreadCapture(DWORD dwThreadID)
+{
+    GUITHREADINFO info = { sizeof(info) };
+    GetGUIThreadInfo(dwThreadID, &info);
+    return info.hwndCapture;
+}
+
+static DWORD WINAPI
+ThreadFunc(LPVOID arg)
+{
+    HWND hwnd = FindWindowW(L"MenuUITest", L"MenuUITest");
+    ShowWindow(hwnd, SW_MINIMIZE);
+    trace("hwnd: %p\n", hwnd);
+
+    CloseSubPrograms();
 
     SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS };
 
     sei.lpFile = SUB_PROGRAM;
     sei.nShow = SW_SHOWNORMAL;
 
+    // Start up sub program #1
     sei.lpParameters = L"#1";
     if (!s_pShellExecuteExW(&sei))
     {
@@ -195,6 +227,7 @@ ThreadFunc(LPVOID arg)
     WaitForInputIdle(sei.hProcess, INFINITE);
     CloseHandle(sei.hProcess);
 
+    // Start up sub program #2
     sei.lpParameters = L"#2";
     if (!s_pShellExecuteExW(&sei))
     {
@@ -207,10 +240,15 @@ ThreadFunc(LPVOID arg)
     Sleep(INTERVAL);
     HWND hwnd1 = FindWindowW(L"user32_apitest_menuui", L"#1");
     HWND hwnd2 = FindWindowW(L"user32_apitest_menuui", L"#2");
+    trace("hwnd1: %p\n", hwnd1);
+    trace("hwnd2: %p\n", hwnd2);
     ok(hwnd != NULL, "hwnd was NULL\n");
     ok(hwnd1 != NULL, "hwnd1 was NULL\n");
     ok(hwnd2 != NULL, "hwnd2 was NULL\n");
     ok(hwnd1 != hwnd2, "hwnd1 == hwnd2\n");
+
+    DWORD dwTID1 = GetWindowThreadProcessId(hwnd1, NULL);
+    DWORD dwTID2 = GetWindowThreadProcessId(hwnd2, NULL);
 
     RECT rcWork;
     SystemParametersInfoW(SPI_GETWORKAREA, 0, &rcWork, 0);
@@ -227,24 +265,59 @@ ThreadFunc(LPVOID arg)
     AutoClick(AUTO_RIGHT_CLICK, pt1.x, pt1.y);
     Sleep(INTERVAL);
 
+    HWND hwndActive, hwndFocus, hwndCapture;
+
     HWND hwndMenu1 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
+
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
 
     HWND hwndMenu2 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu2: %p\n", hwndMenu2);
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
     ok(hwndMenu1 != hwndMenu2, "hwndMenu1 == hwndMenu2\n");
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(hwndActive == hwnd2, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd2, "hwndCapture was %p\n", hwndCapture);
 
     AutoKey(AUTO_KEY_DOWN_UP, VK_ESCAPE);
 
     Sleep(INTERVAL);
+
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(hwndActive == NULL, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == NULL, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == NULL, "hwndCapture was %p\n", hwndCapture);
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(hwndActive == hwnd2, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == NULL, "hwndCapture was %p\n", hwndCapture);
+
     ok(GetHitID(hwnd2) == 0, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
     HWND hwndMenu0 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu0: %p\n", hwndMenu0);
     ok(!IsWindowVisible(hwndMenu0), "hwndMenu0 was visible\n");
 
     AutoClick(AUTO_RIGHT_CLICK, pt1.x, pt1.y);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible");
 
     RECT rcMenu1;
@@ -254,18 +327,22 @@ ThreadFunc(LPVOID arg)
     // Clicking on separator is not effective
     AutoClick(AUTO_LEFT_CLICK, ptMenu1.x, ptMenu1.y);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
 
     AutoClick(AUTO_LEFT_DOUBLE_CLICK, ptMenu1.x, ptMenu1.y);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
 
     AutoClick(AUTO_RIGHT_CLICK, ptMenu1.x, ptMenu1.y);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
 
     AutoClick(AUTO_RIGHT_DOUBLE_CLICK, ptMenu1.x, ptMenu1.y);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
+    trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
 
     POINT pt1_3 = { ptMenu1.x, (2 * rcMenu1.top + 1 * rcMenu1.bottom) / (1 + 2) }; // First item
@@ -332,9 +409,9 @@ ThreadFunc(LPVOID arg)
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
     ok(!IsWindowVisible(hwndMenu1), "hwndMenu1 was visible\n");
 
+    // Click on menu bar
     MENUBARINFO mbi = { sizeof(mbi) };
     GetMenuBarInfo(hwnd1, OBJID_MENU, 0, &mbi);
-
     INT xMenuBar = mbi.rcBar.left + 16;
     INT yMenuBar = (mbi.rcBar.top + mbi.rcBar.bottom) / 2;
     AutoClick(AUTO_LEFT_CLICK, xMenuBar, yMenuBar);
@@ -342,6 +419,13 @@ ThreadFunc(LPVOID arg)
     Sleep(INTERVAL);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
+
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
 
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
 
@@ -351,11 +435,39 @@ ThreadFunc(LPVOID arg)
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
     ok(hwndMenu1 != hwndMenu2, "hwndMenu1 == hwndMenu2\n");
 
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(!hwndActive, "hwndActive was %p\n", hwndActive);
+    ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
+    ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(hwndActive == hwnd2, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd2, "hwndFocus was %p\n", hwndCapture);
+
     AutoClick(AUTO_LEFT_CLICK, xMenuBar, yMenuBar);
 
     Sleep(INTERVAL);
     ok(!IsWindowVisible(hwndMenu2), "hwndMenu2 was visible\n");
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
+
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(!hwndActive, "hwndActive was %p\n", hwndActive);
+    ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
+    ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
 
     AutoKey(AUTO_KEY_DOWN, VK_SHIFT);
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
@@ -372,8 +484,8 @@ ThreadFunc(LPVOID arg)
 
     PostMessageW(hwnd1, WM_CLOSE, 0, 0);
     PostMessageW(hwnd2, WM_CLOSE, 0, 0);
-    ShowWindow(hwnd, SW_SHOWNORMAL);
 
+    ShowWindow(hwnd, SW_RESTORE);
     PostMessage(hwnd, WM_CLOSE, 0, 0);
     return 0;
 }
@@ -471,6 +583,8 @@ START_TEST(MenuUI)
     }
 
     TEST_MenuUI();
+
+    CloseSubPrograms();
 
     FreeLibrary(hShell32);
 }
