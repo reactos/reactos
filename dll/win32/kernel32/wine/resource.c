@@ -51,7 +51,9 @@ static __inline BOOL set_ntstatus( NTSTATUS status )
 DEBUG_CHANNEL(resource);
 
 /* we don't want to include winuser.h just for this */
+#ifndef IS_INTRESOURCE
 #define IS_INTRESOURCE(x)   (((ULONG_PTR)(x) >> 16) == 0)
+#endif 
 
 /* retrieve the resource name to pass to the ntdll functions */
 static NTSTATUS get_res_nameA( LPCSTR name, UNICODE_STRING *str )

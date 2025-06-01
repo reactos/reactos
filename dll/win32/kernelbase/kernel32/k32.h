@@ -63,18 +63,18 @@
 #include <mountmgr.h>
 
 /* Internal Kernel32 Header */
-#include "kernel32/include/kernel32.h"
+#include "include/kernel32.h"
 
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
 /* Base Macros */
-#include "kernel32/include/base_x.h"
+#include "include/base_x.h"
 
 /* Console API Client Definitions */
-#include "kernel32/include/console.h"
+#include "include/console.h"
 
 /* Virtual DOS Machines (VDM) Support Definitions */
-#include "kernel32/include/vdm.h"
+#include "include/vdm.h"
 
 #endif /* __K32_H */
