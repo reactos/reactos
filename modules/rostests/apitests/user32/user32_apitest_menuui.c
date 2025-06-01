@@ -6,18 +6,22 @@
  */
 
 #include "precomp.h"
-#include <winnls.h>
 
 #define CLASSNAME L"user32_apitest_menuui"
+
+#define MENUID_100 100
+#define MENUID_101 101
+#define MENUID_200 200
+#define MENUID_201 201
 
 static HMENU
 CreateMyMenuBarMenu(VOID)
 {
     HMENU hMenu = CreateMenu();
     HMENU hSubMenu = CreatePopupMenu();
-    InsertMenuW(hSubMenu, -1, MF_BYPOSITION | MF_STRING, 200, L"Item 200");
+    InsertMenuW(hSubMenu, -1, MF_BYPOSITION | MF_STRING, MENUID_200, L"Item 200");
     InsertMenuW(hSubMenu, -1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-    InsertMenuW(hSubMenu, -1, MF_BYPOSITION | MF_STRING, 201, L"Item 201");
+    InsertMenuW(hSubMenu, -1, MF_BYPOSITION | MF_STRING, MENUID_201, L"Item 201");
     InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)hSubMenu, L"&File");
     return hMenu;
 }
@@ -29,15 +33,15 @@ CreateMyPopupMenu(BOOL bShift)
     if (bShift)
     {
         HMENU hSubMenu = CreateMyPopupMenu(FALSE);
-        InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_STRING, 100, L"Item 100");
+        InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_STRING, MENUID_100, L"Item 100");
         InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
         InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)hSubMenu, L"Sub Menu");
     }
     else
     {
-        InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_STRING, 100, L"Item 100");
+        InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_STRING, MENUID_100, L"Item 100");
         InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-        InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_STRING, 101, L"Item 101");
+        InsertMenuW(hMenu, -1, MF_BYPOSITION | MF_STRING, MENUID_101, L"Item 101");
     }
     return hMenu;
 }
@@ -77,6 +81,9 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             DestroyMenu(hMenu);
             break;
         }
+        case WM_INITMENU:
+            SetPropW(hwnd, L"Hit", NULL);
+            break;
         case WM_COMMAND:
             OnCommand(hwnd, LOWORD(wParam));
             break;

@@ -12,6 +12,11 @@
 #define CLASSNAME L"MenuUITest"
 #define MENUCLASS L"#32768"
 
+#define MENUID_100 100
+#define MENUID_101 101
+#define MENUID_200 200
+#define MENUID_201 201
+
 typedef BOOL (WINAPI *FN_ShellExecuteExW)(SHELLEXECUTEINFOW *);
 static FN_ShellExecuteExW s_pShellExecuteExW = NULL;
 
@@ -351,7 +356,7 @@ ThreadFunc(LPVOID arg)
     Sleep(INTERVAL);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
     ok(!IsWindowVisible(hwndMenu1), "hwndMenu1 was visible\n");
-    ok(GetHitID(hwnd1) == 100, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
+    ok(GetHitID(hwnd1) == MENUID_100, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
 
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
@@ -366,7 +371,7 @@ ThreadFunc(LPVOID arg)
     Sleep(INTERVAL);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(!IsWindowVisible(hwndMenu2), "hwndMenu2 was visible");
-    ok(GetHitID(hwnd2) == 100, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
+    ok(GetHitID(hwnd2) == MENUID_100, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
 
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
@@ -480,7 +485,21 @@ ThreadFunc(LPVOID arg)
     AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
     AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
     AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
-    ok(GetHitID(hwnd2) == 101, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
+    ok(GetHitID(hwnd2) == MENUID_101, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
+
+    AutoClick(AUTO_LEFT_CLICK, xMenuBar, yMenuBar);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
+
+    Sleep(INTERVAL);
+    ok(GetHitID(hwnd1) == MENUID_200, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
+
+    AutoClick(AUTO_LEFT_CLICK, xMenuBar, yMenuBar);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_ESCAPE);
+
+    Sleep(INTERVAL);
+    ok(GetHitID(hwnd1) == 0, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
 
     PostMessageW(hwnd1, WM_CLOSE, 0, 0);
     PostMessageW(hwnd2, WM_CLOSE, 0, 0);
