@@ -583,9 +583,9 @@
 @ stdcall GetProfileStringW(wstr wstr wstr ptr long) kernel32_win7.GetProfileStringW
 @ stdcall GetQueuedCompletionStatus(long ptr ptr ptr long) kernel32_win7.GetQueuedCompletionStatus
 @ stub -version=0x600+ GetQueuedCompletionStatusEx
-@ stdcall GetShortPathNameA(str ptr long) kernel32_win7.GetShortPathNameA
+@ stdcall GetShortPathNameA(str ptr long)
 @ stdcall GetShortPathNameW(wstr ptr long) kernel32_win7.GetShortPathNameW
-@ stdcall GetStartupInfoA(ptr) kernel32_win7.GetStartupInfoA
+@ stdcall GetStartupInfoA(ptr)
 @ stdcall GetStartupInfoW(ptr) kernel32_win7.GetStartupInfoW
 @ stdcall GetStdHandle(long) kernel32_win7.GetStdHandle
 @ stub -version=0x600+ GetStringScripts
@@ -791,17 +791,17 @@
 @ stdcall LCMapStringA(long long str long ptr long) kernel32_win7.LCMapStringA
 @ stdcall -version=0x600+ LCMapStringEx(long long wstr long ptr long ptr ptr long) kernel32_win7.LCMapStringEx
 @ stdcall LCMapStringW(long long wstr long ptr long) kernel32_win7.LCMapStringW
-@ stdcall LZClose(long) kernel32_win7.LZClose
-@ stdcall LZCloseFile(long) kernel32_win7.LZCloseFile
-@ stdcall LZCopy(long long) kernel32_win7.LZCopy
-@ stdcall LZCreateFileW(ptr long long long ptr) kernel32_win7.LZCreateFileW
-@ stdcall LZDone() kernel32_win7.LZDone
-@ stdcall LZInit(long) kernel32_win7.LZInit
-@ stdcall LZOpenFileA(str ptr long) kernel32_win7.LZOpenFileA
-@ stdcall LZOpenFileW(wstr ptr long) kernel32_win7.LZOpenFileW
-@ stdcall LZRead(long str long) kernel32_win7.LZRead
-@ stdcall LZSeek(long long long) kernel32_win7.LZSeek
-@ stdcall LZStart() kernel32_win7.LZStart
+@ stdcall LZClose(long)
+@ stdcall LZCloseFile(long)
+@ stdcall LZCopy(long long)
+@ stdcall LZCreateFileW(ptr long long long ptr)
+@ stdcall LZDone()
+@ stdcall LZInit(long)
+@ stdcall LZOpenFileA(str ptr long) 
+@ stdcall LZOpenFileW(wstr ptr long)
+@ stdcall LZRead(long str long)
+@ stdcall LZSeek(long long long)
+@ stdcall LZStart() 
 @ stdcall LeaveCriticalSection(ptr) ntdll.RtlLeaveCriticalSection
 @ stub -version=0x600+ LeaveCriticalSectionWhenCallbackReturns
 @ stdcall LoadLibraryA(str) kernel32_win7.LoadLibraryA
@@ -1182,7 +1182,7 @@
 @ stdcall -ret64 VerSetConditionMask(long long long long) ntdll.VerSetConditionMask
 @ stdcall VerifyConsoleIoHandle(long) kernel32_win7.VerifyConsoleIoHandle
 @ stub -version=0x600+ VerifyScripts
-@ stdcall VerifyVersionInfoA(long long double) kernel32_win7.VerifyVersionInfoA
+@ stdcall VerifyVersionInfoA(long long double)
 @ stdcall VerifyVersionInfoW(long long double) kernel32_win7.VerifyVersionInfoW
 @ stdcall VirtualAlloc(ptr long long long) kernel32_win7.VirtualAlloc
 @ stdcall VirtualAllocEx(long ptr long long long) kernel32_win7.VirtualAllocEx
