@@ -2379,6 +2379,7 @@ UserRegisterSystemClasses(VOID)
         }
         else
         {
+           ASSERT(DefaultServerClasses[i].fiId < FNID_FIRST + FNID_NUMSERVERPROC);
            wc.lpfnWndProc = GETPFNSERVER(DefaultServerClasses[i].fiId);
            wc.hInstance = hModClient;
         }
