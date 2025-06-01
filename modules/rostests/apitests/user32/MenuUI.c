@@ -20,6 +20,8 @@
 typedef BOOL (WINAPI *FN_ShellExecuteExW)(SHELLEXECUTEINFOW *);
 static FN_ShellExecuteExW s_pShellExecuteExW = NULL;
 
+typedef HRESULT (WINAPI *FN_DwmGetWindowAttribute)(HWND, DWORD, PVOID, DWORD);
+
 #define DELAY 100
 #define INTERVAL 500
 static HANDLE s_hThread = NULL;
@@ -593,6 +595,7 @@ ThreadFunc(LPVOID arg)
 
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
 
+    Sleep(INTERVAL);
     hwndFore = GetForegroundWindow();
     ok(hwndFore == hwnd1, "hwndFore was %p\n", hwndFore);
 
@@ -612,6 +615,7 @@ ThreadFunc(LPVOID arg)
 
     AutoClick(AUTO_LEFT_CLICK, xMenuBar2, yMenuBar2);
 
+    Sleep(INTERVAL);
     hwndFore = GetForegroundWindow();
     ok(hwndFore == hwnd2, "hwndFore was %p\n", hwndFore);
 
@@ -631,6 +635,7 @@ ThreadFunc(LPVOID arg)
 
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
 
+    Sleep(INTERVAL);
     hwndFore = GetForegroundWindow();
     ok(hwndFore == hwnd1, "hwndFore was %p\n", hwndFore);
 
@@ -647,6 +652,65 @@ ThreadFunc(LPVOID arg)
     ok(!hwndActive, "hwndActive was %p\n", hwndActive);
     ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
     ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
+
+    TITLEBARINFO titleInfo = { sizeof(titleInfo) };
+    RECT rcTitleBar1, rcTitleBar2;
+    GetTitleBarInfo(hwnd1, &titleInfo);
+    rcTitleBar1 = titleInfo.rcTitleBar;
+    GetTitleBarInfo(hwnd2, &titleInfo);
+    rcTitleBar2 = titleInfo.rcTitleBar;
+
+    POINT ptTitleBar1 = CenterPoint(&rcTitleBar1);
+    POINT ptTitleBar2 = CenterPoint(&rcTitleBar2);
+
+    AutoClick(AUTO_RIGHT_CLICK, ptTitleBar2.x, ptTitleBar2.y);
+
+    Sleep(INTERVAL);
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(!hwndActive, "hwndActive was %p\n", hwndActive);
+    ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
+    ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(hwndActive == hwnd2, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd2, "hwndFocus was %p\n", hwndCapture);
+
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
+
+    AutoClick(AUTO_RIGHT_CLICK, ptTitleBar1.x, ptTitleBar1.y);
+
+    Sleep(INTERVAL);
+    hwndActive = GetThreadActiveWnd(dwTID1);
+    hwndFocus = GetThreadFocus(dwTID1);
+    hwndCapture = GetThreadCapture(dwTID1);
+    ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
+    ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
+    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+
+    hwndActive = GetThreadActiveWnd(dwTID2);
+    hwndFocus = GetThreadFocus(dwTID2);
+    hwndCapture = GetThreadCapture(dwTID2);
+    ok(!hwndActive, "hwndActive was %p\n", hwndActive);
+    ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
+    ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
+
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
+
+    POINT ptSysMenu = { rcTitleBar1.left - GetSystemMetrics(SM_CXSMICON) / 2, ptTitleBar1.y };
+    ok(IsWindowVisible(hwnd1), "hwnd1 not visible\n");
+    AutoClick(AUTO_LEFT_DOUBLE_CLICK, ptSysMenu.x, ptSysMenu.y);
+
+    Sleep(INTERVAL);
+    ok(!IsWindowVisible(hwnd1), "hwnd1 was visible\n");
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 0, "nMenuCount was %d\n", nMenuCount);
 
     PostMessageW(hwnd1, WM_CLOSE, 0, 0);
     PostMessageW(hwnd2, WM_CLOSE, 0, 0);
