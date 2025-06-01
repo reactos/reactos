@@ -23,7 +23,7 @@ static FN_ShellExecuteExW s_pShellExecuteExW = NULL;
 typedef HRESULT (WINAPI *FN_DwmGetWindowAttribute)(HWND, DWORD, PVOID, DWORD);
 
 #define DELAY 100
-#define INTERVAL 500
+#define INTERVAL 300
 static HANDLE s_hThread = NULL;
 
 typedef enum tagAUTO_CLICK
