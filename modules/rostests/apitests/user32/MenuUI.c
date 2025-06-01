@@ -446,7 +446,7 @@ ThreadFunc(LPVOID arg)
     hwndCapture = GetThreadCapture(dwTID1);
     ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
     ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
-    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+    ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
 
@@ -487,7 +487,7 @@ ThreadFunc(LPVOID arg)
     hwndCapture = GetThreadCapture(dwTID1);
     ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
     ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
-    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+    ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
     hwndActive = GetThreadActiveWnd(dwTID2);
     hwndFocus = GetThreadFocus(dwTID2);
@@ -545,7 +545,7 @@ ThreadFunc(LPVOID arg)
     hwndCapture = GetThreadCapture(dwTID1);
     ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
     ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
-    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+    ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
     hwndActive = GetThreadActiveWnd(dwTID2);
     hwndFocus = GetThreadFocus(dwTID2);
@@ -567,7 +567,7 @@ ThreadFunc(LPVOID arg)
     hwndCapture = GetThreadCapture(dwTID1);
     ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
     ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
-    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+    ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
     hwndActive = GetThreadActiveWnd(dwTID2);
     hwndFocus = GetThreadFocus(dwTID2);
@@ -605,7 +605,7 @@ ThreadFunc(LPVOID arg)
     hwndCapture = GetThreadCapture(dwTID1);
     ok(hwndActive == hwnd1, "hwndActive was %p\n", hwndActive);
     ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
-    ok(hwndCapture == hwnd1, "hwndFocus was %p\n", hwndCapture);
+    ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
     hwndActive = GetThreadActiveWnd(dwTID2);
     hwndFocus = GetThreadFocus(dwTID2);
