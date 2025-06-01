@@ -24,10 +24,12 @@
 @ stdcall BackupSeek(ptr long long ptr ptr ptr)
 @ stdcall BackupWrite(ptr ptr long ptr long long ptr)
 @ stdcall BaseCheckAppcompatCache(wstr ptr wstr ptr)
+@ stdcall BaseGetNamedObjectDirectory()
 @ stdcall BaseCheckRunApp(long ptr long long long long long long long long)
 @ stdcall BaseCleanupAppcompatCacheSupport(ptr)
 @ stdcall BaseDumpAppcompatCache()
 @ stdcall BaseFlushAppcompatCache()
+@ stdcall BaseFormatObjectAttributes(ptr ptr wstr)
 @ stub BaseGenerateAppCompatData
 @ stdcall BaseInitAppcompatCacheSupport()
 @ stdcall BaseIsAppcompatInfrastructureDisabled() IsShimInfrastructureDisabled
@@ -228,6 +230,7 @@
 @ stdcall EnumResourceLanguagesExW(long wstr wstr ptr long long long)
 @ stdcall EnumResourceNamesExA(long str ptr long long long)
 @ stdcall EnumResourceNamesExW(long wstr ptr long long long)
+@ stdcall EnumResourceNamesW(long wstr ptr long)
 @ stdcall EnumResourceTypesExA(long ptr long long long)
 @ stdcall EnumResourceTypesExW(long ptr long long long)
 @ stdcall EnumSystemCodePagesA(ptr long)
@@ -298,6 +301,7 @@
 @ stdcall FindNextVolumeMountPointW(long wstr long)
 @ stdcall FindNextVolumeW(long ptr long)
 @ stdcall FindResourceExW(long wstr wstr long)
+@ stdcall FindResourceW(long wstr wstr)
 @ stdcall FindVolumeClose(ptr)
 @ stdcall FindVolumeMountPointClose(ptr)
 @ stdcall FlsAlloc(ptr)
@@ -1242,3 +1246,7 @@
 ;@ stdcall -arch=x86_64 uaw_wcsicmp(wstr wstr)
 ;@ stdcall -arch=x86_64 uaw_wcslen(wstr)
 ;@ stdcall -arch=x86_64 uaw_wcsrchr(wstr long)
+
+; ReactOS Specific
+@ stdcall BaseSetLastNTError(long)
+@ stdcall Basep8BitStringToDynamicUnicodeString(wstr str)

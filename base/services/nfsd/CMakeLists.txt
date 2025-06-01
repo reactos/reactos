@@ -62,7 +62,7 @@ endif()
 target_link_libraries(nfsd oldnames)
 
 set_module_type(nfsd win32cui)
-add_importlibs(nfsd advapi32 iphlpapi kernel32_vista libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll)
+add_importlibs(nfsd advapi32 iphlpapi libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll)
 add_pch(nfsd precomp.h SOURCE)
 
 add_cd_file(TARGET nfsd DESTINATION reactos/system32 FOR all)
