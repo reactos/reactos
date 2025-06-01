@@ -3991,6 +3991,28 @@ typedef BOOL
   _Inout_opt_ PVOID Parameter,
   _Outptr_opt_result_maybenull_ PVOID *Context);
 
+typedef struct _REASON_CONTEXT
+{
+    ULONG Version;
+    DWORD Flags;
+    union
+    {
+        struct
+        {
+            HMODULE LocalizedReasonModule;
+            ULONG LocalizedReasonId;
+            ULONG ReasonStringCount;
+            LPWSTR *ReasonStrings;
+        } Detailed;
+        LPWSTR SimpleReasonString;
+    } Reason;
+} REASON_CONTEXT, *PREASON_CONTEXT;
+
+#define RESOURCE_ENUM_LN          0x0001
+#define RESOURCE_ENUM_MUI         0x0002
+#define RESOURCE_ENUM_MUI_SYSTEM  0x0004
+#define RESOURCE_ENUM_VALIDATE    0x0008
+
 #if _WIN32_WINNT >= 0x0601
 
 #define COPYFILE2_MESSAGE_COPY_OFFLOAD 0x00000001L

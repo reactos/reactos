@@ -224,12 +224,12 @@
 @ stdcall EnumDateFormatsW(ptr long long)
 @ stdcall EnumLanguageGroupLocalesA(ptr long long ptr)
 @ stdcall EnumLanguageGroupLocalesW(ptr long long ptr)
-@ stub EnumResourceLanguagesExA
-@ stub EnumResourceLanguagesExW
-@ stub EnumResourceNamesExA
-@ stub EnumResourceNamesExW
-@ stub EnumResourceTypesExA
-@ stub EnumResourceTypesExW
+@ stdcall EnumResourceLanguagesExA(long str str ptr long long long)
+@ stdcall EnumResourceLanguagesExW(long wstr wstr ptr long long long)
+@ stdcall EnumResourceNamesExA(long str ptr long long long)
+@ stdcall EnumResourceNamesExW(long wstr ptr long long long)
+@ stdcall EnumResourceTypesExA(long ptr long long long)
+@ stdcall EnumResourceTypesExW(long ptr long long long)
 @ stdcall EnumSystemCodePagesA(ptr long)
 @ stdcall EnumSystemCodePagesW(ptr long)
 @ stdcall EnumSystemFirmwareTables(long ptr long)
