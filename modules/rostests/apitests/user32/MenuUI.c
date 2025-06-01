@@ -8,7 +8,7 @@
 #include "precomp.h"
 #include <shellapi.h>
 
-#define SUB_PROGRAM L"MenuUITestSub.exe"
+#define SUB_PROGRAM L"user32_apitest_menuui.exe"
 #define CLASSNAME L"MenuUITest"
 #define MENUCLASS L"#32768"
 
@@ -166,7 +166,7 @@ ThreadFunc(LPVOID arg)
 
     for (INT i = 0; i < 10; ++i)
     {
-        HWND hwnd1 = FindWindowW(L"MenuUITestSub", L"#1");
+        HWND hwnd1 = FindWindowW(L"user32_apitest_menuui", L"#1");
         if (!hwnd1)
             break;
         PostMessage(hwnd1, WM_CLOSE, 0, 0);
@@ -174,7 +174,7 @@ ThreadFunc(LPVOID arg)
     }
     for (INT i = 0; i < 10; ++i)
     {
-        HWND hwnd2 = FindWindowW(L"MenuUITestSub", L"#2");
+        HWND hwnd2 = FindWindowW(L"user32_apitest_menuui", L"#2");
         if (!hwnd2)
             break;
         PostMessage(hwnd2, WM_CLOSE, 0, 0);
@@ -205,8 +205,8 @@ ThreadFunc(LPVOID arg)
     CloseHandle(sei.hProcess);
 
     Sleep(INTERVAL);
-    HWND hwnd1 = FindWindowW(L"MenuUITestSub", L"#1");
-    HWND hwnd2 = FindWindowW(L"MenuUITestSub", L"#2");
+    HWND hwnd1 = FindWindowW(L"user32_apitest_menuui", L"#1");
+    HWND hwnd2 = FindWindowW(L"user32_apitest_menuui", L"#2");
     ok(hwnd != NULL, "hwnd was NULL\n");
     ok(hwnd1 != NULL, "hwnd1 was NULL\n");
     ok(hwnd2 != NULL, "hwnd2 was NULL\n");

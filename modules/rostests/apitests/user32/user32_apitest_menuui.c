@@ -8,7 +8,7 @@
 #include "precomp.h"
 #include <winnls.h>
 
-#define CLASSNAME L"MenuUITestSub"
+#define CLASSNAME L"user32_apitest_menuui"
 
 static HMENU
 CreateMyMenuBarMenu(VOID)
@@ -105,7 +105,7 @@ wWinMain(HINSTANCE   hInstance,
     if (!RegisterClassW(&wc))
         return 1;
 
-    LPCWSTR pszText = (lpCmdLine && lpCmdLine[0]) ? lpCmdLine : L"MenuUITestSub";
+    LPCWSTR pszText = (lpCmdLine && lpCmdLine[0]) ? lpCmdLine : L"user32_apitest_menuui";
 
     HMENU hMenu = CreateMyMenuBarMenu();
     HWND hwnd = CreateWindowW(CLASSNAME, pszText, WS_OVERLAPPEDWINDOW,
