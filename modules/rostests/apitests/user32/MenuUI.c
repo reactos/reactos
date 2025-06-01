@@ -265,14 +265,15 @@ ThreadFunc(LPVOID arg)
     POINT pt1 = CenterPoint(&rc1);
     POINT pt2 = CenterPoint(&rc2);
 
+    // Right click on hwnd1
     AutoClick(AUTO_RIGHT_CLICK, pt1.x, pt1.y);
     Sleep(INTERVAL);
-
-    HWND hwndFore, hwndActive, hwndFocus, hwndCapture;
 
     HWND hwndMenu1 = FindWindowW(MENUCLASS, L"");
     trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
+
+    HWND hwndFore, hwndActive, hwndFocus, hwndCapture;
 
     hwndFore = GetForegroundWindow();
     ok(hwndFore == hwnd1, "hwndFore was %p\n", hwndFore);
@@ -284,7 +285,9 @@ ThreadFunc(LPVOID arg)
     ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
     ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
+    // Right click on hwnd2
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
+    Sleep(INTERVAL);
 
     HWND hwndMenu2 = FindWindowW(MENUCLASS, L"");
     trace("hwndMenu2: %p\n", hwndMenu2);
@@ -301,8 +304,8 @@ ThreadFunc(LPVOID arg)
     ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
     ok(hwndCapture == hwnd2, "hwndCapture was %p\n", hwndCapture);
 
+    // Type Esc key
     AutoKey(AUTO_KEY_DOWN_UP, VK_ESCAPE);
-
     Sleep(INTERVAL);
 
     hwndFore = GetForegroundWindow();
@@ -327,6 +330,7 @@ ThreadFunc(LPVOID arg)
     trace("hwndMenu0: %p\n", hwndMenu0);
     ok(!IsWindowVisible(hwndMenu0), "hwndMenu0 was visible\n");
 
+    // Click on hwnd1
     AutoClick(AUTO_RIGHT_CLICK, pt1.x, pt1.y);
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
     trace("hwndMenu1: %p\n", hwndMenu1);
@@ -357,47 +361,50 @@ ThreadFunc(LPVOID arg)
     trace("hwndMenu1: %p\n", hwndMenu1);
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
 
+    // Click on first item of hwnd1 context menu
     POINT pt1_3 = { ptMenu1.x, (2 * rcMenu1.top + 1 * rcMenu1.bottom) / (1 + 2) }; // First item
     AutoClick(AUTO_LEFT_CLICK, pt1_3.x, pt1_3.y);
-
     Sleep(INTERVAL);
+
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
     ok(!IsWindowVisible(hwndMenu1), "hwndMenu1 was visible\n");
     ok(GetHitID(hwnd1) == MENUID_100, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
 
+    // Click on hwnd2
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN); // Down key
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
-
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN); // Enter key
     Sleep(INTERVAL);
+
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(!IsWindowVisible(hwndMenu2), "hwndMenu2 was visible");
     ok(GetHitID(hwnd2) == MENUID_100, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
 
+    // Click on hwnd2
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_UP);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_UP); // Up key
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
-
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN); // Enter key
     Sleep(INTERVAL);
+
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(!IsWindowVisible(hwndMenu2), "hwndMenu2 was visible");
     ok(GetHitID(hwnd2) == 101, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
 
     INT nMenuCount;
 
-    Sleep(INTERVAL);
+    // Shift + Right click on hwnd2
     AutoKey(AUTO_KEY_DOWN, VK_SHIFT);
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     AutoKey(AUTO_KEY_UP, VK_SHIFT);
@@ -406,27 +413,29 @@ ThreadFunc(LPVOID arg)
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_UP);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_UP); // Up key
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN); // Enter key
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 2, "nMenuCount was %d\n", nMenuCount);
 
+    // Right click on hwnd1
     AutoClick(AUTO_RIGHT_CLICK, pt1.x, pt1.y);
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
-    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
-
+    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN); // Down key
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN); // Enter key
     Sleep(INTERVAL);
+
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
     ok(!IsWindowVisible(hwndMenu1), "hwndMenu1 was visible\n");
 
+    // Getting menu bar info
     MENUBARINFO mbi = { sizeof(mbi) };
     GetMenuBarInfo(hwnd1, OBJID_MENU, 0, &mbi);
     INT xMenuBar1 = mbi.rcBar.left + 16;
@@ -437,8 +446,8 @@ ThreadFunc(LPVOID arg)
 
     // Click on menu bar
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
-
     Sleep(INTERVAL);
+
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu1), "hwndMenu1 not visible\n");
 
@@ -452,9 +461,10 @@ ThreadFunc(LPVOID arg)
     ok(hwndFocus == hwnd1, "hwndFocus was %p\n", hwndFocus);
     ok(hwndCapture == hwnd1, "hwndCapture was %p\n", hwndCapture);
 
+    // Right click on hwnd2
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
-
     Sleep(INTERVAL);
+
     ok(!IsWindowVisible(hwndMenu1), "hwndMenu1 was visible\n");
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
@@ -477,9 +487,10 @@ ThreadFunc(LPVOID arg)
     ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
     ok(hwndCapture == hwnd2, "hwndFocus was %p\n", hwndCapture);
 
+    // Click on hwnd1 menu bar
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
-
     Sleep(INTERVAL);
+
     ok(!IsWindowVisible(hwndMenu2), "hwndMenu2 was visible\n");
     hwndMenu1 = FindWindowW(MENUCLASS, L"");
 
@@ -500,6 +511,7 @@ ThreadFunc(LPVOID arg)
     ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
     ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
 
+    // Shift + Right click on hwnd2
     AutoKey(AUTO_KEY_DOWN, VK_SHIFT);
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     AutoKey(AUTO_KEY_UP, VK_SHIFT);
@@ -530,45 +542,48 @@ ThreadFunc(LPVOID arg)
     AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
     ok(GetHitID(hwnd2) == MENUID_101, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
 
+    // Shift + Right click on hwnd2
     AutoKey(AUTO_KEY_DOWN, VK_SHIFT);
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     AutoKey(AUTO_KEY_UP, VK_SHIFT);
-
     Sleep(INTERVAL);
+
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_UP);
-    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
-
+    AutoKey(AUTO_KEY_DOWN_UP, VK_UP); // Up key
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN); // Enter key
     Sleep(INTERVAL);
+
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 2, "nMenuCount was %d\n", nMenuCount);
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_LEFT);
-
+    AutoKey(AUTO_KEY_DOWN_UP, VK_LEFT); // Left key
     Sleep(INTERVAL);
+
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_RIGHT);
-
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RIGHT); // Right key
     Sleep(INTERVAL);
+
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 2, "nMenuCount was %d\n", nMenuCount);
 
+    // Left click on hwnd1 menu bar
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
-
     Sleep(INTERVAL);
+
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
-    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
-    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
-
+    AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN); // Down key
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN); // Enter key
     Sleep(INTERVAL);
+
     ok(GetHitID(hwnd1) == MENUID_200, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
 
+    // Left click on hwnd1 menu bar
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
     AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
     AutoKey(AUTO_KEY_DOWN_UP, VK_ESCAPE);
@@ -593,9 +608,10 @@ ThreadFunc(LPVOID arg)
     Sleep(INTERVAL);
     ok(GetHitID(hwnd1) == 0, "GetHitID(hwnd1) was %d\n", GetHitID(hwnd1));
 
+    // Left click on hwnd1 menu bar
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
-
     Sleep(INTERVAL);
+
     hwndFore = GetForegroundWindow();
     ok(hwndFore == hwnd1, "hwndFore was %p\n", hwndFore);
 
@@ -613,9 +629,10 @@ ThreadFunc(LPVOID arg)
     ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
     ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
 
+    // Left click on hwnd2 menu bar
     AutoClick(AUTO_LEFT_CLICK, xMenuBar2, yMenuBar2);
-
     Sleep(INTERVAL);
+
     hwndFore = GetForegroundWindow();
     ok(hwndFore == hwnd2, "hwndFore was %p\n", hwndFore);
 
@@ -633,9 +650,10 @@ ThreadFunc(LPVOID arg)
     ok(hwndFocus == hwnd2, "hwndFocus was %p\n", hwndFocus);
     ok(hwndCapture == hwnd2, "hwndFocus was %p\n", hwndCapture);
 
+    // Left click on hwnd1 menu bar
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
-
     Sleep(INTERVAL);
+
     hwndFore = GetForegroundWindow();
     ok(hwndFore == hwnd1, "hwndFore was %p\n", hwndFore);
 
@@ -653,19 +671,20 @@ ThreadFunc(LPVOID arg)
     ok(!hwndFocus, "hwndFocus was %p\n", hwndFocus);
     ok(!hwndCapture, "hwndFocus was %p\n", hwndCapture);
 
+    // Get title bar info
     TITLEBARINFO titleInfo = { sizeof(titleInfo) };
     RECT rcTitleBar1, rcTitleBar2;
     GetTitleBarInfo(hwnd1, &titleInfo);
     rcTitleBar1 = titleInfo.rcTitleBar;
     GetTitleBarInfo(hwnd2, &titleInfo);
     rcTitleBar2 = titleInfo.rcTitleBar;
-
     POINT ptTitleBar1 = CenterPoint(&rcTitleBar1);
     POINT ptTitleBar2 = CenterPoint(&rcTitleBar2);
 
+    // Right click on hwnd2 title bar
     AutoClick(AUTO_RIGHT_CLICK, ptTitleBar2.x, ptTitleBar2.y);
-
     Sleep(INTERVAL);
+
     hwndActive = GetThreadActiveWnd(dwTID1);
     hwndFocus = GetThreadFocus(dwTID1);
     hwndCapture = GetThreadCapture(dwTID1);
@@ -683,9 +702,10 @@ ThreadFunc(LPVOID arg)
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
+    // Right click on hwnd1 title bar
     AutoClick(AUTO_RIGHT_CLICK, ptTitleBar1.x, ptTitleBar1.y);
-
     Sleep(INTERVAL);
+
     hwndActive = GetThreadActiveWnd(dwTID1);
     hwndFocus = GetThreadFocus(dwTID1);
     hwndCapture = GetThreadCapture(dwTID1);
@@ -703,11 +723,12 @@ ThreadFunc(LPVOID arg)
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
+    // Left double click on hwnd1 system menu icon (it will close hwnd1)
     POINT ptSysMenu = { rcTitleBar1.left - GetSystemMetrics(SM_CXSMICON) / 2, ptTitleBar1.y };
     ok(IsWindowVisible(hwnd1), "hwnd1 not visible\n");
     AutoClick(AUTO_LEFT_DOUBLE_CLICK, ptSysMenu.x, ptSysMenu.y);
-
     Sleep(INTERVAL);
+
     ok(!IsWindowVisible(hwnd1), "hwnd1 was visible\n");
     nMenuCount = CountMenuWnds();
     ok(nMenuCount == 0, "nMenuCount was %d\n", nMenuCount);
