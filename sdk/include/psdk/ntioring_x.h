@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Alexandre Julliard
+ * Copyright (C) 2023 Paul Gofman for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,22 +16,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _APISETLIBLOADER_
-#define _APISETLIBLOADER_
+#ifndef __NTIORING_X_H_
+#define __NTIORING_X_H_
 
-#ifdef __cplusplus
-extern "C" {
+enum IORING_VERSION
+{
+    IORING_VERSION_INVALID = 0,
+    IORING_VERSION_1       = 1,
+    IORING_VERSION_2       = 2,
+    IORING_VERSION_3       = 300,
+};
+typedef enum IORING_VERSION IORING_VERSION;
+
+enum IORING_FEATURE_FLAGS
+{
+    IORING_FEATURE_FLAGS_NONE           = 0,
+    IORING_FEATURE_UM_EMULATION         = 0x00000001,
+    IORING_FEATURE_SET_COMPLETION_EVENT = 0x00000002,
+};
+typedef enum IORING_FEATURE_FLAGS IORING_FEATURE_FLAGS;
+
 #endif
-
-typedef void *DLL_DIRECTORY_COOKIE, **PDLL_DIRECTORY_COOKIE;
-
-WINBASEAPI DLL_DIRECTORY_COOKIE WINAPI AddDllDirectory(const WCHAR *);
-WINBASEAPI BOOL WINAPI RemoveDllDirectory(DLL_DIRECTORY_COOKIE);
-WINBASEAPI BOOL WINAPI SetDefaultDllDirectories(DWORD);
-WINBASEAPI INT  WINAPI FindStringOrdinal(DWORD, const WCHAR *, INT, const WCHAR *, INT, BOOL);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif  /* _APISETLIBLOADER_ */
