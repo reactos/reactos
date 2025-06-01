@@ -23,6 +23,10 @@
 
 #include "wine/list.h"
 
+#if defined(__REACTOS__) && defined(__cplusplus)
+extern "C" {
+#endif
+
 #define COOKIE_MAGIC_TMSINK  0x0010
 #define COOKIE_MAGIC_CONTEXTSINK 0x0020
 #define COOKIE_MAGIC_GUIDATOM 0x0030
@@ -97,5 +101,9 @@ void free_sinks(struct list *sink_list) DECLSPEC_HIDDEN;
 
 extern const WCHAR szwSystemTIPKey[] DECLSPEC_HIDDEN;
 extern const WCHAR szwSystemCTFKey[] DECLSPEC_HIDDEN;
+
+#if defined(__REACTOS__) && defined(__cplusplus)
+} // extern "C"
+#endif
 
 #endif /* __WINE_MSCTF_I_H */
