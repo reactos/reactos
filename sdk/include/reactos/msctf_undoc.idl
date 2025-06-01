@@ -5,7 +5,6 @@
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-
 import "msctf.idl";
 import "inputscope.idl";
 
