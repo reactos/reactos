@@ -1,0 +1,133 @@
+/*
+ * PROJECT:     ReactOS header
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Private header for msctf.dll
+ * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
+import "msctf.idl";
+import "inputscope.idl";
+
+[
+    object,
+    uuid(8b99712b-5815-4bcc-b9a9-53db1c8d6755),
+    pointer_default(unique)
+]
+interface ITfRangeAnchor : IUnknown
+{
+    HRESULT GetFormattedText(
+        [in] TfEditCookie ec,
+        [out] IDataObject **ppDataObject);
+    HRESULT GetEmbedded(
+        [in] TfEditCookie ec,
+        [in] REFGUID rguidService,
+        [in] REFIID riid,
+        [out] IUnknown **ppunk);
+    HRESULT InsertEmbedded(
+        [in] TfEditCookie ec,
+        [in] DWORD dwFlags,
+        [in] IDataObject *pDataObject);
+    HRESULT ShiftStart(
+        [in] TfEditCookie ec,
+        [in] LONG cchReq,
+        [out] LONG *pcch,
+        [in] const TF_HALTCOND *pHalt);
+    HRESULT ShiftEnd(
+        [in] TfEditCookie ec,
+        [in] LONG cchReq,
+        [out] LONG *pcch,
+        [in] const TF_HALTCOND *pHalt);
+    HRESULT ShiftStartToRange(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pRange,
+        [in] TfAnchor aPos);
+    HRESULT ShiftEndToRange(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pRange,
+        [in] TfAnchor aPos);
+    HRESULT ShiftStartRegion(
+        [in] TfEditCookie ec,
+        [in] TfShiftDir dir,
+        [out] BOOL *pfNoRegion);
+    HRESULT ShiftEndRegion(
+        [in] TfEditCookie ec,
+        [in] TfShiftDir dir,
+        [out] BOOL *pfNoRegion);
+    HRESULT IsEmpty(
+        [in] TfEditCookie ec,
+        [out] BOOL *pfEmpty);
+    HRESULT Collapse(
+        [in] TfEditCookie ec,
+        [in] TfAnchor aPos);
+    HRESULT IsEqualStart(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] BOOL *pfEqual);
+    HRESULT IsEqualEnd(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] BOOL *pfEqual);
+    HRESULT CompareStart(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] LONG *plResult);
+    HRESULT CompareEnd(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] LONG *plResult);
+    HRESULT AdjustForInsert(
+        [in] TfEditCookie ec,
+        [in] ULONG cchInsert,
+        [out] BOOL *pfInsertOk);
+    HRESULT GetGravity(
+        [out] TfGravity *pgStart,
+        [out] TfGravity *pgEnd);
+    HRESULT SetGravity(
+        [in] TfEditCookie ec,
+        [in] TfGravity gStart,
+        [in] TfGravity gEnd);
+    HRESULT Clone([out] ITfRange **ppClone);
+    HRESULT GetContext([out] ITfContext **ppContext);
+}
+
+cpp_quote("BOOL WINAPI TF_InitSystem(VOID);")
+cpp_quote("BOOL WINAPI TF_UninitSystem(VOID);")
+cpp_quote("HRESULT WINAPI TF_GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMgr);")
+cpp_quote("HRESULT WINAPI TF_PostAllThreadMsg(_In_opt_ WPARAM wParam, _In_ DWORD dwFlags);")
+cpp_quote("HANDLE WINAPI TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon);")
+cpp_quote("HRESULT WINAPI TF_InvalidAssemblyListCache(VOID);")
+cpp_quote("HRESULT WINAPI TF_InvalidAssemblyListCacheIfExist(VOID);")
+cpp_quote("HICON WINAPI TF_GetLangIcon(_In_ LANGID LangID, _Out_writes_(cchText) PWSTR pszText, _In_ INT cchText);")
+cpp_quote("VOID WINAPI TF_InitMlngInfo(VOID);")
+cpp_quote("INT WINAPI TF_MlngInfoCount(VOID);")
+cpp_quote("INT WINAPI TF_GetMlngIconIndex(_In_ INT iKL);")
+cpp_quote("HICON WINAPI TF_InatExtractIcon(_In_ INT iKL);")
+cpp_quote("HRESULT WINAPI TF_RunInputCPL(VOID);")
+cpp_quote("LONG WINAPI TF_CheckThreadInputIdle(_In_ DWORD dwThreadId, _In_ DWORD dwMilliseconds);")
+cpp_quote("BOOL WINAPI TF_IsInMarshaling(_In_ DWORD dwThreadId);")
+
+cpp_quote("// This is intentionally misspelled to match the original name:")
+cpp_quote("BOOL WINAPI TF_IsFullScreenWindowAcitvated(VOID);")
+
+cpp_quote("HRESULT WINAPI TF_CUASAppFix(_In_ LPCSTR pszName);")
+cpp_quote("HRESULT WINAPI TF_ClearLangBarAddIns(_In_ REFGUID rguid);")
+cpp_quote("HRESULT WINAPI TF_GetInputScope(_In_opt_ HWND hWnd, _Out_ ITfInputScope **ppInputScope);")
+cpp_quote("BOOL WINAPI TF_DllDetachInOther(VOID);")
+
+cpp_quote("BOOL WINAPI")
+cpp_quote("TF_GetMlngHKL(")
+cpp_quote("    _In_ INT iKL,")
+cpp_quote("    _Out_opt_ HKL *phKL,")
+cpp_quote("    _Out_writes_opt_(cchText) LPWSTR pszText,")
+cpp_quote("    _In_ INT cchText);")
+
+cpp_quote("BOOL WINAPI")
+cpp_quote("TF_GetThreadFlags(")
+cpp_quote("    _In_ DWORD dwThreadId,")
+cpp_quote("    _Out_ LPDWORD pdwFlags1,")
+cpp_quote("    _Out_ LPDWORD pdwFlags2,")
+cpp_quote("    _Out_ LPDWORD pdwFlags3);")
