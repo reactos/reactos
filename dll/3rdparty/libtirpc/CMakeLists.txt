@@ -107,7 +107,7 @@ endif()
 
 set_module_type(libtirpc win32dll)
 target_link_libraries(libtirpc oldnames)
-add_importlibs(libtirpc user32 advapi32 kernel32_vista ws2_32 msvcrt kernel32 ntdll)
+add_importlibs(libtirpc user32 advapi32 ws2_32 msvcrt kernel32_win7 ntdll)
 add_delay_importlibs(libtirpc secur32)
 add_pch(libtirpc precomp.h SOURCE)
 add_cd_file(TARGET libtirpc DESTINATION reactos/system32 FOR all)

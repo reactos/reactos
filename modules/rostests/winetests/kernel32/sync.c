@@ -2654,7 +2654,7 @@ START_TEST(sync)
     HMODULE hdll = GetModuleHandleA("kernel32.dll");
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
 #ifdef __REACTOS__
-    HMODULE hdll_vista = GetModuleHandleA("kernel32_vista.dll");
+    HMODULE hdll_vista = GetModuleHandleA("kernel32_win7.dll");
 #endif
 
     pInitOnceInitialize = (void *)GetProcAddress(hdll, "InitOnceInitialize");

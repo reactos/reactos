@@ -1,3 +1,8 @@
+if (DLL_EXPORT_VERSION LESS 0x601)
+    set(kernelbase_name kernel32_win7)
+else()
+    set(kernelbase_name kernelbase)
+endif()
 
 add_subdirectory(wine)
 add_subdirectory(kernel32)
@@ -6,8 +11,7 @@ add_definitions(-D_KERNEL32_
                 -D_KERNELBASE_)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 include_directories(kernel32/)
-spec2def(kernel32_win7.dll kernel32_win7.spec ADD_IMPORTLIB)
-
+spec2def(${kernelbase_name}.dll kernelbase.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     kernel32/client/actctx.c
@@ -87,9 +91,6 @@ list(APPEND SOURCE
     kernel32/k32.h)
 
 if(MSVC)
-    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
-    set_source_files_properties(kernel32/wine/res.c PROPERTIES COMPILE_OPTIONS "/wd4146")
-
     # Disable warning C4267: 'initializing': conversion from 'size_t' to 'DWORD', possible loss of data
     set_source_files_properties(kernel32/winnls/string/locale.c PROPERTIES COMPILE_OPTIONS "/wd4267")
 else()
@@ -110,23 +111,23 @@ elseif(ARCH STREQUAL "arm")
         kernel32/client/arm/thread.S)
 endif()
 
-add_asm_files(kernel32_win7_asm ${ASM_SOURCE})
+add_asm_files(kernelbase_asm ${ASM_SOURCE})
 # This isn't called KernelBase because apps will explode and we aren't win7 yet.
-add_library(kernel32_win7 MODULE
+add_library(${kernelbase_name} MODULE
     ${SOURCE}
-    ${kernel32_win7_asm}
-    kernel32_win7.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32_win7_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32_win7.def)
+    ${kernelbase_asm}
+    kernelbase.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/${kernelbase_name}_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/${kernelbase_name}.def)
 
-set_module_type(kernel32_win7 win32dll ENTRYPOINT DllMain 12)
+set_module_type(${kernelbase_name} win32dll ENTRYPOINT DllMain 12)
 #############################################
 ## HACK FOR MSVC COMPILATION WITH win32dll ##
-set_subsystem(kernel32_win7 console)
+set_subsystem(${kernelbase_name} console)
 ################# END  HACK #################
 
-target_link_libraries(kernel32_win7 kernel32_vista_static kernelbase_static wine chkstk ${PSEH_LIB})
-add_importlibs(kernel32_win7 ntdll_vista ntdll)
-add_pch(kernel32_win7 kernel32/k32.h SOURCE)
-add_dependencies(kernel32_win7 psdk errcodes asm)
-add_cd_file(TARGET kernel32_win7 DESTINATION reactos/system32 FOR all)
+target_link_libraries(${kernelbase_name} kernel32_vista_static kernelbase_static wine chkstk ${PSEH_LIB})
+add_importlibs(${kernelbase_name} ntdll_vista ntdll)
+add_pch(${kernelbase_name} kernel32/k32.h SOURCE)
+add_dependencies(${kernelbase_name} psdk errcodes asm)
+add_cd_file(TARGET ${kernelbase_name} DESTINATION reactos/system32 FOR all)
