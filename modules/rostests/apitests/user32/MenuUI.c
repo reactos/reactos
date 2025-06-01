@@ -130,14 +130,13 @@ GetHitID(HWND hwndTarget)
     return HandleToUlong(GetPropW(hwndTarget, L"Hit"));
 }
 
-typedef struct tagFINDMENUSUB
+typedef struct tagCOUNTMENUWND
 {
-    HWND hwndMenuTarget;
-    HWND hwndMenuSub;
-} FINDMENUSUB, *PFINDMENU2SUB;
+    INT nMenuCount;
+} COUNTMENUWND, *PCOUNTMENUWND;
 
 static BOOL CALLBACK
-FindMenuSubProc(HWND hwnd, LPARAM lParam)
+CountMenuWndProc(HWND hwnd, LPARAM lParam)
 {
     if (!IsWindowVisible(hwnd))
         return TRUE;
@@ -147,20 +146,17 @@ FindMenuSubProc(HWND hwnd, LPARAM lParam)
     if (lstrcmpiW(szClass, MENUCLASS) != 0)
         return TRUE;
 
-    PFINDMENU2SUB pData = (PFINDMENU2SUB)lParam;
-    if (hwnd == pData->hwndMenuTarget)
-        return TRUE;
-
-    pData->hwndMenuSub = hwnd;
-    return FALSE;
+    PCOUNTMENUWND pData = (PCOUNTMENUWND)lParam;
+    pData->nMenuCount += 1;
+    return TRUE;
 }
 
-static HWND
-FindMenuSub(HWND hwndMenuTarget)
+static INT
+CountMenuWnds(VOID)
 {
-    FINDMENUSUB data = { hwndMenuTarget, NULL };
-    EnumWindows(FindMenuSubProc, (LPARAM)&data);
-    return data.hwndMenuSub;
+    COUNTMENUWND data = { 0 };
+    EnumWindows(CountMenuWndProc, (LPARAM)&data);
+    return data.nMenuCount;
 }
 
 static VOID
@@ -397,11 +393,16 @@ ThreadFunc(LPVOID arg)
     ok(!IsWindowVisible(hwndMenu2), "hwndMenu2 was visible");
     ok(GetHitID(hwnd2) == 101, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
 
+    INT nMenuCount;
+
+    Sleep(INTERVAL);
     AutoKey(AUTO_KEY_DOWN, VK_SHIFT);
     AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
     AutoKey(AUTO_KEY_UP, VK_SHIFT);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
 
     AutoKey(AUTO_KEY_DOWN_UP, VK_UP);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
@@ -410,12 +411,13 @@ ThreadFunc(LPVOID arg)
     AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
     hwndMenu2 = FindWindowW(MENUCLASS, L"");
     ok(IsWindowVisible(hwndMenu2), "hwndMenu2 not visible\n");
-    HWND hwndMenu2Sub = FindMenuSub(hwndMenu2);
-    ok(IsWindowVisible(hwndMenu2Sub), "hwndMenu2Sub not visible\n");
-    ok(hwndMenu2 != hwndMenu2Sub, "hwndMenu2 == hwndMenu2Sub\n");
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 2, "nMenuCount was %d\n", nMenuCount);
 
     AutoClick(AUTO_RIGHT_CLICK, pt1.x, pt1.y);
-    ok(!IsWindowVisible(hwndMenu2Sub), "hwndMenu2Sub was visible\n");
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
+
     AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
     AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
 
@@ -526,7 +528,39 @@ ThreadFunc(LPVOID arg)
     AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
     ok(GetHitID(hwnd2) == MENUID_101, "GetHitID(hwnd2) was %d\n", GetHitID(hwnd2));
 
+    AutoKey(AUTO_KEY_DOWN, VK_SHIFT);
+    AutoClick(AUTO_RIGHT_CLICK, pt2.x, pt2.y);
+    AutoKey(AUTO_KEY_UP, VK_SHIFT);
+
+    Sleep(INTERVAL);
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
+
+    AutoKey(AUTO_KEY_DOWN_UP, VK_UP);
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
+
+    Sleep(INTERVAL);
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 2, "nMenuCount was %d\n", nMenuCount);
+
+    AutoKey(AUTO_KEY_DOWN_UP, VK_LEFT);
+
+    Sleep(INTERVAL);
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
+
+    AutoKey(AUTO_KEY_DOWN_UP, VK_RIGHT);
+
+    Sleep(INTERVAL);
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 2, "nMenuCount was %d\n", nMenuCount);
+
     AutoClick(AUTO_LEFT_CLICK, xMenuBar1, yMenuBar1);
+
+    Sleep(INTERVAL);
+    nMenuCount = CountMenuWnds();
+    ok(nMenuCount == 1, "nMenuCount was %d\n", nMenuCount);
+
     AutoKey(AUTO_KEY_DOWN_UP, VK_DOWN);
     AutoKey(AUTO_KEY_DOWN_UP, VK_RETURN);
 
