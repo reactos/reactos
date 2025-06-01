@@ -10,4 +10,4 @@ list(APPEND SOURCE
     msctf_undoc.idl)
 
 add_idl_headers(reactos_idls ${SOURCE})
-add_dependencies(reactos_include psdk)
+add_dependencies(reactos_idls psdk)
