@@ -3750,7 +3750,22 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   
     case WM_SYSCOLORCHANGE:
       COMCTL32_RefreshSysColors();
+#ifndef __REACTOS__
       return FALSE;
+#else
+    case WM_DISPLAYCHANGE:
+    case WM_WININICHANGE:
+    {
+      PropSheetInfo* psInfo = GetPropW(hwnd, PropSheetInfoStr);
+      INT i;
+      for (i = 0; i < psInfo->nPages; i++)
+      {
+         HWND hwndPage = psInfo->proppage[i].hwndPage;
+         SendMessageW(hwndPage, uMsg, wParam, lParam);
+      }
+      return FALSE;
+    }
+#endif
 
     case PSM_GETCURRENTPAGEHWND:
     {
