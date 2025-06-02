@@ -1209,7 +1209,7 @@ NtUserSetImeInfoEx(_In_ const IMEINFOEX *pImeInfoEx)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pImeInfoEx);
+        ERR("Exception in NtUserSetImeInfoEx: pImeInfoEx=%p\n", pImeInfoEx);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
