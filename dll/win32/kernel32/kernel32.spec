@@ -237,16 +237,16 @@
 @ stdcall EnumLanguageGroupLocalesA(ptr long long ptr) kernel32_win7.EnumLanguageGroupLocalesA
 @ stdcall EnumLanguageGroupLocalesW(ptr long long ptr) kernel32_win7.EnumLanguageGroupLocalesW
 @ stdcall EnumResourceLanguagesA(long str str ptr long)
-@ stub -version=0x600+ EnumResourceLanguagesExA
-@ stub -version=0x600+ EnumResourceLanguagesExW
+@ stdcall -version=0x600+ EnumResourceLanguagesExA(long str str ptr long long long) kernel32_win7.EnumResourceLanguagesExA
+@ stdcall -version=0x600+ EnumResourceLanguagesExW(long wstr wstr ptr long long long) kernel32_win7.EnumResourceLanguagesExW
 @ stdcall EnumResourceLanguagesW(long wstr wstr ptr long)
 @ stdcall EnumResourceNamesA(long str ptr long)
-@ stub -version=0x600+ EnumResourceNamesExA
-@ stub -version=0x600+ EnumResourceNamesExW
+@ stdcall -version=0x600+ EnumResourceNamesExA(long str ptr long long long) kernel32_win7.EnumResourceNamesExA
+@ stdcall -version=0x600+ EnumResourceNamesExW(long wstr ptr long long long) kernel32_win7.EnumResourceNamesExW
 @ stdcall EnumResourceNamesW(long wstr ptr long) kernel32_win7.EnumResourceNamesW
 @ stdcall EnumResourceTypesA(long ptr long)
-@ stub -version=0x600+ EnumResourceTypesExA
-@ stub -version=0x600+ EnumResourceTypesExW
+@ stdcall -version=0x600+ EnumResourceTypesExA(long ptr long long long) kernel32_win7.EnumResourceTypesExA
+@ stdcall -version=0x600+ EnumResourceTypesExW(long ptr long long long) kernel32_win7.EnumResourceTypesExW
 @ stdcall EnumResourceTypesW(long ptr long)
 @ stdcall EnumSystemCodePagesA(ptr long) kernel32_win7.EnumSystemCodePagesA
 @ stdcall EnumSystemCodePagesW(ptr long) kernel32_win7.EnumSystemCodePagesW
