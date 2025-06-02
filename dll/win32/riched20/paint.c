@@ -110,10 +110,12 @@ void editor_draw( ME_TextEditor *editor, HDC hDC, const RECT *update )
   if (oldRgn) DeleteObject( oldRgn );
   ME_DestroyContext( &c );
 
-  if (editor->nTotalLength != editor->nLastTotalLength || editor->nTotalWidth != editor->nLastTotalWidth)
-    ME_SendRequestResize(editor, FALSE);
-  editor->nLastTotalLength = editor->nTotalLength;
-  editor->nLastTotalWidth = editor->nTotalWidth;
+  if (editor->in_place_active) {
+    if (editor->nTotalLength != editor->nLastTotalLength || editor->nTotalWidth != editor->nLastTotalWidth)
+      ME_SendRequestResize(editor, FALSE);
+    editor->nLastTotalLength = editor->nTotalLength;
+    editor->nLastTotalWidth = editor->nTotalWidth;
+  }
 }
 
 void ME_Repaint(ME_TextEditor *editor)
@@ -123,7 +125,8 @@ void ME_Repaint(ME_TextEditor *editor)
     ME_UpdateScrollBar(editor);
     FIXME("ME_Repaint had to call ME_WrapMarkedParagraphs\n");
   }
-  ITextHost_TxViewChange(editor->texthost, TRUE);
+  if (!editor->freeze_count)
+    ITextHost_TxViewChange(editor->texthost, TRUE);
 }
 
 void ME_UpdateRepaint(ME_TextEditor *editor, BOOL update_now)
@@ -140,7 +143,8 @@ void ME_UpdateRepaint(ME_TextEditor *editor, BOOL update_now)
 
   update_caret( editor );
 
-  ITextHost_TxViewChange(editor->texthost, update_now);
+  if (!editor->freeze_count)
+    ITextHost_TxViewChange(editor->texthost, update_now);
 
   ME_SendSelChange(editor);
 
@@ -459,7 +463,7 @@ static void draw_run( ME_Context *c, int x, int y, ME_Cursor *cursor )
   ME_Row *row;
   ME_Run *run = cursor->run;
   int runofs = run_char_ofs( run, cursor->nOffset );
-  int nSelFrom, nSelTo;
+  LONG nSelFrom, nSelTo;
 
   if (run->nFlags & MERF_HIDDEN) return;
 
@@ -1210,6 +1214,8 @@ void editor_ensure_visible( ME_TextEditor *editor, ME_Cursor *cursor )
   ME_Paragraph *para = cursor->para;
   int x, y, yheight;
 
+  if (!editor->in_place_active)
+    return;
 
   if (editor->scrollbars & ES_AUTOHSCROLL)
   {
@@ -1248,7 +1254,7 @@ ME_InvalidateSelection(ME_TextEditor *editor)
 {
   ME_Paragraph *sel_start, *sel_end;
   ME_Paragraph *repaint_start = NULL, *repaint_end = NULL;
-  int nStart, nEnd;
+  LONG nStart, nEnd;
   int len = ME_GetTextLength(editor);
 
   ME_GetSelectionOfs(editor, &nStart, &nEnd);

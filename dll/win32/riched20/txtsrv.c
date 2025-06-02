@@ -66,7 +66,7 @@ static ULONG WINAPI ITextServicesImpl_AddRef(IUnknown *iface)
     struct text_services *services = impl_from_IUnknown( iface );
     LONG ref = InterlockedIncrement( &services->ref );
 
-    TRACE( "(%p) ref = %d\n", services, ref );
+    TRACE( "(%p) ref = %ld\n", services, ref );
 
     return ref;
 }
@@ -76,13 +76,13 @@ static ULONG WINAPI ITextServicesImpl_Release(IUnknown *iface)
     struct text_services *services = impl_from_IUnknown( iface );
     LONG ref = InterlockedDecrement( &services->ref );
 
-    TRACE( "(%p) ref = %d\n", services, ref );
+    TRACE( "(%p) ref = %ld\n", services, ref );
 
     if (!ref)
     {
         richole_release_children( services );
         ME_DestroyEditor( services->editor );
-        CoTaskMemFree( services );
+        free( services );
     }
     return ref;
 }
@@ -118,7 +118,7 @@ static ULONG WINAPI fnTextSrv_Release(ITextServices *iface)
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSendMessage,20)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSendMessage( ITextServices *iface, UINT msg, WPARAM wparam,
+HRESULT __thiscall fnTextSrv_TxSendMessage( ITextServices *iface, UINT msg, WPARAM wparam,
                                                             LPARAM lparam, LRESULT *result )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -151,7 +151,7 @@ static HRESULT update_client_rect( struct text_services *services, const RECT *c
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxDraw,52)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD aspect, LONG index, void *aspect_info,
+HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD aspect, LONG index, void *aspect_info,
                                                      DVTARGETDEVICE *td, HDC draw, HDC target,
                                                      const RECTL *bounds, const RECTL *mf_bounds, RECT *update,
                                                      BOOL (CALLBACK *continue_fn)(DWORD), DWORD continue_param,
@@ -162,12 +162,14 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD
     HDC dc = draw;
     BOOL rewrap = FALSE;
 
-    TRACE( "%p: aspect %d, %d, %p, %p, draw %p, target %p, bounds %s, mf_bounds %s, update %s, %p, %d, view %d\n",
+    TRACE( "%p: aspect %ld, %ld, %p, %p, draw %p, target %p, bounds %s, mf_bounds %s, update %s, %p, %ld, view %ld\n",
            services, aspect, index, aspect_info, td, draw, target, wine_dbgstr_rect( (RECT *)bounds ),
            wine_dbgstr_rect( (RECT *)mf_bounds ), wine_dbgstr_rect( update ), continue_fn, continue_param, view_id );
 
     if (aspect != DVASPECT_CONTENT || aspect_info || td || target || mf_bounds || continue_fn )
         FIXME( "Many arguments are ignored\n" );
+
+    if (view_id == TXTVIEW_ACTIVE && services->editor->freeze_count) return E_UNEXPECTED;
 
     hr = update_client_rect( services, (RECT *)bounds );
     if (FAILED( hr )) return hr;
@@ -193,7 +195,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetHScroll,24)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetHScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
+HRESULT __thiscall fnTextSrv_TxGetHScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
                                                            LONG *page, BOOL *enabled )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -207,7 +209,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetHScroll( ITextServices *iface,
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetVScroll,24)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetVScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
+HRESULT __thiscall fnTextSrv_TxGetVScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
                                                            LONG *page, BOOL *enabled )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -221,13 +223,13 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetVScroll( ITextServices *iface,
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxSetCursor,40)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxSetCursor( ITextServices *iface, DWORD aspect, LONG index,
+HRESULT __thiscall fnTextSrv_OnTxSetCursor( ITextServices *iface, DWORD aspect, LONG index,
                                                             void *aspect_info, DVTARGETDEVICE *td, HDC draw,
                                                             HDC target, const RECT *client, INT x, INT y )
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
-    TRACE( "%p: %d, %d, %p, %p, draw %p target %p client %s pos (%d, %d)\n", services, aspect, index, aspect_info, td, draw,
+    TRACE( "%p: %ld, %ld, %p, %p, draw %p target %p client %s pos (%d, %d)\n", services, aspect, index, aspect_info, td, draw,
            target, wine_dbgstr_rect( client ), x, y );
 
     if (aspect != DVASPECT_CONTENT || index || aspect_info || td || draw || target || client)
@@ -239,7 +241,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxSetCursor( ITextServices *iface
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxQueryHitPoint,44)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxQueryHitPoint(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
+HRESULT __thiscall fnTextSrv_TxQueryHitPoint(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
                                                              void *pvAspect, DVTARGETDEVICE *ptd, HDC hdcDraw,
                                                              HDC hicTargetDev, LPCRECT lprcClient, INT x, INT y,
                                                              DWORD *pHitResult)
@@ -251,7 +253,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxQueryHitPoint(ITextServices *ifac
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceActivate,8)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceActivate( ITextServices *iface, const RECT *client )
+HRESULT __thiscall fnTextSrv_OnTxInPlaceActivate( ITextServices *iface, const RECT *client )
 {
     struct text_services *services = impl_from_ITextServices( iface );
     HRESULT hr;
@@ -271,7 +273,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceActivate( ITextServices 
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceDeactivate,4)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceDeactivate(ITextServices *iface)
+HRESULT __thiscall fnTextSrv_OnTxInPlaceDeactivate(ITextServices *iface)
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -281,7 +283,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceDeactivate(ITextServices
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIActivate(ITextServices *iface)
+HRESULT __thiscall fnTextSrv_OnTxUIActivate(ITextServices *iface)
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -290,7 +292,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIActivate(ITextServices *iface
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIDeactivate(ITextServices *iface)
+HRESULT __thiscall fnTextSrv_OnTxUIDeactivate(ITextServices *iface)
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -299,7 +301,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIDeactivate(ITextServices *ifa
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetText( ITextServices *iface, BSTR *text )
+HRESULT __thiscall fnTextSrv_TxGetText( ITextServices *iface, BSTR *text )
 {
     struct text_services *services = impl_from_ITextServices( iface );
     int length;
@@ -322,7 +324,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetText( ITextServices *iface, BS
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSetText( ITextServices *iface, const WCHAR *text )
+HRESULT __thiscall fnTextSrv_TxSetText( ITextServices *iface, const WCHAR *text )
 {
     struct text_services *services = impl_from_ITextServices( iface );
     ME_Cursor cursor;
@@ -340,7 +342,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSetText( ITextServices *iface, co
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurTargetX,8)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCurTargetX(ITextServices *iface, LONG *x)
+HRESULT __thiscall fnTextSrv_TxGetCurTargetX(ITextServices *iface, LONG *x)
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -349,7 +351,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCurTargetX(ITextServices *ifac
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetBaseLinePos(ITextServices *iface, LONG *x)
+HRESULT __thiscall fnTextSrv_TxGetBaseLinePos(ITextServices *iface, LONG *x)
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -358,7 +360,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetBaseLinePos(ITextServices *ifa
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *iface, DWORD aspect, HDC draw,
+HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *iface, DWORD aspect, HDC draw,
                                                                HDC target, DVTARGETDEVICE *td, DWORD mode,
                                                                const SIZEL *extent, LONG *width, LONG *height )
 {
@@ -368,7 +370,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *if
     BOOL rewrap = FALSE;
     HRESULT hr;
 
-    TRACE( "%p: aspect %d, draw %p, target %p, td %p, mode %08x, extent %s, *width %d, *height %d\n", services,
+    TRACE( "%p: aspect %ld, draw %p, target %p, td %p, mode %08lx, extent %s, *width %ld, *height %ld\n", services,
            aspect, draw, target, td, mode, wine_dbgstr_point( (POINT *)extent ), *width, *height );
 
     if (aspect != DVASPECT_CONTENT || target || td || mode != TXTNS_FITTOCONTENT )
@@ -398,7 +400,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *if
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetDropTarget(ITextServices *iface, IDropTarget **ppDropTarget)
+HRESULT __thiscall fnTextSrv_TxGetDropTarget(ITextServices *iface, IDropTarget **ppDropTarget)
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -407,14 +409,14 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetDropTarget(ITextServices *ifac
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxPropertyBitsChange,12)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServices *iface, DWORD mask, DWORD bits )
+HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServices *iface, DWORD mask, DWORD bits )
 {
     struct text_services *services = impl_from_ITextServices( iface );
     DWORD scrollbars;
     HRESULT hr;
     BOOL repaint = FALSE;
 
-    TRACE( "%p, mask %08x, bits %08x\n", services, mask, bits );
+    TRACE( "%p, mask %08lx, bits %08lx\n", services, mask, bits );
 
     services->editor->props = (services->editor->props & ~mask) | (bits & mask);
     if (mask & (TXTBIT_WORDWRAP | TXTBIT_MULTILINE))
@@ -471,7 +473,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServic
 }
 
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCachedSize,12)
-DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *iface, DWORD *pdwWidth, DWORD *pdwHeight)
+HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *iface, DWORD *pdwWidth, DWORD *pdwHeight)
 {
     struct text_services *services = impl_from_ITextServices( iface );
 
@@ -581,7 +583,7 @@ HRESULT create_text_services( IUnknown *outer, ITextHost *text_host, IUnknown **
     TRACE( "%p %p --> %p\n", outer, text_host, unk );
     if (text_host == NULL) return E_POINTER;
 
-    services = CoTaskMemAlloc( sizeof(*services) );
+    services = malloc( sizeof(*services) );
     if (services == NULL) return E_OUTOFMEMORY;
     services->ref = 1;
     services->IUnknown_inner.lpVtbl = &textservices_inner_vtbl;
