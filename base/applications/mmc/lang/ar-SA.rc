@@ -33,7 +33,7 @@ BEGIN
     POPUP "&مساعدة"
     BEGIN
         MENUITEM "&حول وحدة تحكم إدارة ReactOS", IDM_HELP_ABOUT
-    D
+    END
 END
 
 STRINGTABLE
