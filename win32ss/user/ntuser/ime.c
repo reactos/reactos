@@ -65,7 +65,7 @@ IntGetImeHotKeyLanguageScore(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception in IntGetImeHotKeyLanguageScore: %p\n", NtCurrentTeb());
+        ERR("Exception in IntGetImeHotKeyLanguageScore: TEB=%p, hKL=%p, HotKeyLangId=0x%04x\n", NtCurrentTeb(), hKL, HotKeyLangId);
         lcid = MAKELCID(LANGID_NEUTRAL, SORT_DEFAULT);
     }
     _SEH2_END;
