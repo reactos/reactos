@@ -2461,7 +2461,8 @@ IntNotifyImeShowStatus(PWND pImeWnd)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p, %p\n", pImeWnd, pimeui);
+        ERR("Exception in IntCheckImeShowStatus: pImeWnd=%p, pimeui=%p, ptiIME=%p, fCtrlShowStatus=%d, gfIMEShowStatus=%d\n", 
+            pImeWnd, pimeui, ptiIME, SafeImeUI.fCtrlShowStatus, gfIMEShowStatus);
 
         if (pti != ptiIME)
             KeDetachProcess();
