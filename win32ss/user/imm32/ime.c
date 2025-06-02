@@ -16,7 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 RTL_CRITICAL_SECTION gcsImeDpi;
 PIMEDPI gpImeDpiList = NULL;
 
-PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
+PIMEDPI Imm32FindImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
@@ -31,7 +31,7 @@ PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
     return pImeDpi;
 }
 
-VOID APIENTRY Imm32FreeIME(PIMEDPI pImeDpi, BOOL bDestroy)
+VOID Imm32FreeIME(PIMEDPI pImeDpi, BOOL bDestroy)
 {
     if (pImeDpi->hInst == NULL)
         return;
@@ -41,7 +41,7 @@ VOID APIENTRY Imm32FreeIME(PIMEDPI pImeDpi, BOOL bDestroy)
     pImeDpi->hInst = NULL;
 }
 
-BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
+BOOL Imm32InquireIme(PIMEDPI pImeDpi)
 {
     WCHAR szUIClass[64];
     WNDCLASSW wcW;

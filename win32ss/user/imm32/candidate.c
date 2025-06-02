@@ -11,7 +11,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
-DWORD APIENTRY
+DWORD
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
 {
@@ -80,7 +80,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, D
     return dwBufLen;
 }
 
-DWORD APIENTRY
+DWORD
 CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
                         UINT uCodePage)
 {

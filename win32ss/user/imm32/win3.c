@@ -31,7 +31,7 @@ Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
 
 typedef LRESULT (WINAPI *FN_SendMessage)(HWND, UINT, WPARAM, LPARAM);
 
-DWORD APIENTRY
+DWORD
 WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
                         LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
@@ -170,7 +170,7 @@ DoDefault:
     return ret;
 }
 
-DWORD APIENTRY
+DWORD
 WINNLSTranslateMessageK(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
                         LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
@@ -178,7 +178,7 @@ WINNLSTranslateMessageK(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC
     return dwCount;
 }
 
-DWORD APIENTRY
+DWORD
 WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;

@@ -849,7 +849,7 @@ Fail:
     return FALSE;
 }
 
-LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
+LPINPUTCONTEXT Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
 {
     HANDLE hIC;
     LPINPUTCONTEXT pIC = NULL;
@@ -1305,7 +1305,7 @@ UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId)
 }
 
 #ifndef NDEBUG
-VOID APIENTRY Imm32UnitTest(VOID)
+VOID Imm32UnitTest(VOID)
 {
     if (0)
     {

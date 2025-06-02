@@ -369,7 +369,7 @@ Quit:
     return TRUE;
 }
 
-BOOL APIENTRY Imm32SendNotification(BOOL bProcess)
+BOOL Imm32SendNotification(BOOL bProcess)
 {
     return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendNotificationProc, 0);
 }
