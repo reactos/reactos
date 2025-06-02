@@ -1859,7 +1859,7 @@ NtUserUpdateInputContext(
     pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC)
     {
-        ERR("Invalid hIMC %p\n", hIMC);
+        ERR("Invalid HIMC %p\n", hIMC);
         goto Quit;
     }
 
