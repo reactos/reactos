@@ -202,7 +202,7 @@ FOR %متغير IN (مجموعة) DO أمر [معلمات]\n\
 FOR /L %متغير IN (بداية,خطوة,نهاية) DO أمر [معلمات]\n\
 FOR /D %متغير IN (مجموعة) DO أمر [معلمات]\n\
 FOR /R [[محرك:]مسار] IN (مجموعة) DO أمر [معلمات]\n\
-FOR /F [\"خيارات\"] IN (مجموعة) DO أمر [معلمات]\n\n\
+FOR /F [""خيارات""] IN (مجموعة) DO أمر [معلمات]\n\n\
   /L   ينشئ تسلسلاً رقمياً من البداية إلى النهاية بزيادة الخطوة.\n\
   /D   يعدل المجموعة للإشارة إلى الدلائل بدلاً من الملفات.\n\
   /R   ينفذ الأمر للملفات في المجموعة في المسار المحدد (أو الحالي\n\
@@ -347,9 +347,9 @@ SET [متغير[=][سلسلة]]\n\n\
   سلسلة        تحدد سلسلة من الأحرف لتعيينها للمتغير.\n\n\
 اكتب SET بدون معلمات لعرض متغيرات البيئة الحالية.\n"
     STRING_START_HELP1 "يبدأ أمراً.\n\n\
-START [\"عنوان\"] [/D مسار] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+START [""عنوان""] [/D مسار] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
       [أمر/برنامج] [معلمات]\n\n\
-  \"عنوان\"      عنوان النافذة.\n\
+  ""عنوان""      عنوان النافذة.\n\
   مسار         يحدد دليل بدء التشغيل.\n\
   I            يستخدم البيئة الأصلية المعطاة لـ cmd.exe،\n\
                بدلاً من البيئة الحالية.\n\
@@ -497,13 +497,13 @@ RESTORE        استعادة النافذة\n\
     STRING_ERROR_UNEXPECTED "%s كان غير متوقع.\n"
     STRING_ERROR_WHILE_PROCESSING "حدث خطأ أثناء المعالجة: %s.\n"
     STRING_SET_ENV_ERROR "متغير البيئة '%s' غير معرف\n"
-    STRING_CMD_INFOLINE "  موجه أوامر ReactOS                  اكتب HELP = مساعدة  "
+    STRING_CMD_INFOLINE "  موجه أوامر ReactOS                   اكتب HELP = مساعدة  "
     STRING_CMD_COPYRIGHT "(C) حقوق النشر 1996-%s فريق ReactOS.\n"
     STRING_REACTOS_VERSION "ReactOS [الإصدار %s %s]\n"
     STRING_CMD_SHELLINFO "\nمترجم سطر أوامر ReactOS\nالإصدار %s %s"
     STRING_VERSION_RUNNING_ON "يعمل على: "
     STRING_VERSION_RUNVER "%s [الإصدار %d.%d.%d] %s"
-    STRING_COPY_FILE "       %d ملف (ملفات) تم نسخها\n"
+    STRING_COPY_FILE "      %d ملف (ملفات) تم نسخها\n"
     STRING_DELETE_WIPE "تم مسحها"
     STRING_FOR_ERROR "تحديد متغير سيء.\n"
     STRING_SCREEN_COL "قيمة غير صالحة للعمود\n"
