@@ -1244,11 +1244,18 @@ typedef struct _IMEWND
 
 DWORD
 NTAPI
-NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags);
+NtUserAssociateInputContext(
+    _In_ HWND hWnd,
+    _In_opt_ HIMC hIMC,
+    _In_ DWORD dwFlags);
 
 NTSTATUS
 NTAPI
-NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount);
+NtUserBuildHimcList(
+    _In_ DWORD dwThreadId,
+    _In_ DWORD dwCount,
+    _Out_ HIMC *phList,
+    _Out_ LPDWORD pdwCount);
 
 DWORD
 NTAPI
@@ -1768,8 +1775,8 @@ NtUserCheckWindowThreadDesktop(
 DWORD
 NTAPI
 NtUserCheckImeHotKey(
-    UINT uVirtualKey,
-    LPARAM lParam);
+    _In_ UINT uVirtualKey,
+    _In_ LPARAM lParam);
 
 HWND NTAPI
 NtUserChildWindowFromPointEx(
@@ -1861,7 +1868,7 @@ NtUserCreateDesktop(
 
 HIMC
 NTAPI
-NtUserCreateInputContext(ULONG_PTR dwClientImcData);
+NtUserCreateInputContext(_In_ ULONG_PTR dwClientImcData);
 
 NTSTATUS
 NTAPI
@@ -1955,7 +1962,7 @@ NtUserDestroyCursor(
 
 BOOL
 NTAPI
-NtUserDestroyInputContext(HIMC hIMC);
+NtUserDestroyInputContext(_In_ HIMC hIMC);
 
 BOOLEAN
 NTAPI
@@ -1965,7 +1972,7 @@ NtUserDestroyWindow(
 BOOL
 NTAPI
 NtUserDisableThreadIme(
-    DWORD dwThreadID);
+    _In_ DWORD dwThreadID);
 
 LRESULT
 NTAPI
@@ -2148,7 +2155,7 @@ NtUserGetAncestor(
 
 DWORD
 NTAPI
-NtUserGetAppImeLevel(HWND hWnd);
+NtUserGetAppImeLevel(_In_ HWND hWnd);
 
 SHORT
 NTAPI
@@ -2312,16 +2319,17 @@ NtUserGetIconSize(
 
 BOOL
 NTAPI
-NtUserGetImeHotKey(DWORD dwHotKeyId,
-                   LPUINT lpuModifiers,
-                   LPUINT lpuVirtualKey,
-                   LPHKL lphKL);
+NtUserGetImeHotKey(
+    _In_ DWORD dwHotKeyId,
+    _Out_ PUINT lpuModifiers,
+    _Out_ PUINT lpuVirtualKey,
+    _Out_ PHKL lphKL);
 
 BOOL
 NTAPI
 NtUserGetImeInfoEx(
-    PIMEINFOEX pImeInfoEx,
-    IMEINFOEXCLASS SearchType);
+    _Inout_ PIMEINFOEX pImeInfoEx,
+    _In_ IMEINFOEXCLASS SearchType);
 
 DWORD
 NTAPI
@@ -2703,7 +2711,10 @@ NtUserMoveWindow(
 
 DWORD
 NTAPI
-NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion);
+NtUserNotifyIMEStatus(
+    _In_ HWND hwnd,
+    _In_ BOOL fOpen,
+    _In_ DWORD dwConversion);
 
 BOOL
 NTAPI
@@ -3120,20 +3131,20 @@ NtUserSetFocus(
 BOOL
 NTAPI
 NtUserSetImeHotKey(
-    DWORD dwHotKeyId,
-    UINT uModifiers,
-    UINT uVirtualKey,
-    HKL hKL,
-    DWORD dwAction);
+    _In_ DWORD dwHotKeyId,
+    _In_ UINT uModifiers,
+    _In_ UINT uVirtualKey,
+    _In_ HKL hKL,
+    _In_ DWORD dwAction);
 
 BOOL
 NTAPI
 NtUserSetImeInfoEx(
-    PIMEINFOEX pImeInfoEx);
+    _In_ const IMEINFOEX *pImeInfoEx);
 
 BOOL
 NTAPI
-NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus);
+NtUserSetImeOwnerWindow(_In_ HWND hImeWnd, _In_opt_ HWND hwndFocus);
 
 DWORD
 NTAPI
@@ -3257,7 +3268,9 @@ NtUserSetSystemTimer(
 
 DWORD
 NTAPI
-NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL);
+NtUserSetThreadLayoutHandles(
+    _In_ HKL hNewKL,
+    _In_ HKL hOldKL);
 
 UINT_PTR
 NTAPI
