@@ -661,7 +661,7 @@ IntImmProcessKey(
     if (!IS_IMM_MODE())
     {
         if (dwHotKeyId != INVALID_HOTKEY)
-            WARN("!IS_IMM_MODE()\n");
+            WARN("!IS_IMM_MODE(): dwHotKeyId 0x%X\n", dwHotKeyId);
 
         return 0;
     }
