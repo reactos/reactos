@@ -65,7 +65,7 @@ IntGetImeHotKeyLanguageScore(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", NtCurrentTeb());
+        ERR("Exception in IntGetImeHotKeyLanguageScore: %p\n", NtCurrentTeb());
         lcid = MAKELCID(LANGID_NEUTRAL, SORT_DEFAULT);
     }
     _SEH2_END;
@@ -443,7 +443,7 @@ NtUserGetImeHotKey(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p, %p, %p\n", lpuModifiers, lpuVirtualKey, lphKL);
+        ERR("Exception in NtUserGetImeHotKey: %p, %p, %p\n", lpuModifiers, lpuVirtualKey, lphKL);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -461,7 +461,7 @@ NtUserGetImeHotKey(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p, %p, %p, %p\n", pNode, lpuModifiers, lpuVirtualKey, lphKL);
+        ERR("Exception in NtUserGetImeHotKey: %p, %p, %p, %p\n", pNode, lpuModifiers, lpuVirtualKey, lphKL);
         pNode = NULL;
     }
     _SEH2_END;
@@ -767,7 +767,7 @@ NtUserBuildHimcList(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p, %p\n", phList, pdwCount);
+        ERR("Exception in NtUserBuildHimcList: %p, %p\n", phList, pdwCount);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -1085,7 +1085,7 @@ NtUserGetImeInfoEx(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pImeInfoEx);
+        ERR("Exception in NtUserGetImeInfoEx: %p\n", pImeInfoEx);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -1102,7 +1102,7 @@ NtUserGetImeInfoEx(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pImeInfoEx);
+        ERR("Exception in NtUserGetImeInfoEx: %p\n", pImeInfoEx);
         ret = FALSE;
     }
     _SEH2_END;
@@ -2002,7 +2002,7 @@ BOOL IntFindNonImeRelatedWndOfSameThread(PWND pwndParent, PWND pwndTarget)
 
 // Determines whether the target window needs the IME window.
 BOOL FASTCALL
-IntWantImeWindow(PWND pwndTarget)
+IntWantImeWindow(_In_ PWND pwndTarget)
 {
     PDESKTOP rpdesk;
     PWINSTATION_OBJECT rpwinstaParent;
@@ -2042,7 +2042,9 @@ IntWantImeWindow(PWND pwndTarget)
 
 // Create the default IME window for the target window.
 PWND FASTCALL
-co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
+co_IntCreateDefaultImeWindow(
+    _In_ PWND pwndTarget,
+    _In_ HINSTANCE hInst)
 {
     LARGE_UNICODE_STRING WindowName;
     UNICODE_STRING ClassName;
@@ -2094,7 +2096,7 @@ co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ERR("Exception: %p\n", pimeui);
+            ERR("Exception in co_IntCreateDefaultImeWindow: %p\n", pimeui);
         }
         _SEH2_END;
     }
@@ -2105,7 +2107,9 @@ co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
 
 // Determines whether the system can destroy the default IME window for the target child window.
 BOOL FASTCALL
-IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
+IntImeCanDestroyDefIMEforChild(
+    _In_ PWND pImeWnd,
+    _In_ PWND pwndTarget)
 {
     PWND pwndNode;
     PIMEUI pimeui;
@@ -2125,7 +2129,7 @@ IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pimeui);
+        ERR("Exception in IntImeCanDestroyDefIMEforChild: %p\n", pimeui);
     }
     _SEH2_END;
 
@@ -2150,7 +2154,9 @@ IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
 
 // Determines whether the system can destroy the default IME window for the non-child target window.
 BOOL FASTCALL
-IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
+IntImeCanDestroyDefIME(
+    _In_ PWND pImeWnd,
+    _In_ PWND pwndTarget)
 {
     PWND pwndNode;
     PIMEUI pimeui;
@@ -2170,7 +2176,7 @@ IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pimeui);
+        ERR("Exception in IntImeCanDestroyDefIME: %p\n", pimeui);
     }
     _SEH2_END;
 
@@ -2281,7 +2287,7 @@ IntCheckImeShowStatus(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ERR("Exception: %p\n", pimeui);
+            ERR("Exception in IntCheckImeShowStatus: %p\n", pimeui);
             pwndIMC = NULL;
         }
         _SEH2_END;
@@ -2341,7 +2347,7 @@ IntSendMessageToUI(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pimeui);
+        ERR("Exception in IntSendMessageToUI: %p\n", pimeui);
         pwndUI = NULL;
     }
     _SEH2_END;
@@ -2358,7 +2364,7 @@ IntSendMessageToUI(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pimeui);
+        ERR("Exception in IntSendMessageToUI: %p\n", pimeui);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -2383,7 +2389,7 @@ IntSendMessageToUI(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception: %p\n", pimeui);
+        ERR("Exception in IntSendMessageToUI: %p\n", pimeui);
         _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
@@ -2418,7 +2424,7 @@ IntSendOpenStatusNotify(PTHREADINFO ptiIME, PIMEUI pimeui, PWND pWnd, BOOL bOpen
 
 // Update the IME status and send a notification.
 VOID FASTCALL
-IntNotifyImeShowStatus(PWND pImeWnd)
+IntNotifyImeShowStatus(_In_ PWND pImeWnd)
 {
     PIMEUI pimeui;
     PWND pWnd;
@@ -2461,7 +2467,7 @@ IntNotifyImeShowStatus(PWND pImeWnd)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception in IntCheckImeShowStatus: pImeWnd=%p, pimeui=%p, ptiIME=%p, fCtrlShowStatus=%d, gfIMEShowStatus=%d\n", 
+        ERR("Exception in IntNotifyImeShowStatus: %p, %p, %p, %d, %d\n", 
             pImeWnd, pimeui, ptiIME, SafeImeUI.fCtrlShowStatus, gfIMEShowStatus);
 
         if (pti != ptiIME)
@@ -2487,7 +2493,9 @@ IntNotifyImeShowStatus(PWND pImeWnd)
 }
 
 BOOL FASTCALL
-IntBroadcastImeShowStatusChange(PWND pImeWnd, _In_ BOOL bShow)
+IntBroadcastImeShowStatusChange(
+    _In_ PWND pImeWnd,
+    _In_ BOOL bShow)
 {
     if (gfIMEShowStatus == bShow || !IS_IMM_MODE())
         return TRUE;
@@ -2498,7 +2506,7 @@ IntBroadcastImeShowStatusChange(PWND pImeWnd, _In_ BOOL bShow)
 }
 
 VOID FASTCALL
-IntCheckImeShowStatusInThread(PWND pImeWnd)
+IntCheckImeShowStatusInThread(_In_ PWND pImeWnd)
 {
     if (IS_IMM_MODE() && !(pImeWnd->state2 & WNDS2_INDESTROY))
         IntCheckImeShowStatus(pImeWnd, pImeWnd->head.pti);
