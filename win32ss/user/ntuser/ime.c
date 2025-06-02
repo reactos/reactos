@@ -40,8 +40,8 @@ typedef struct tagIMEHOTKEY
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcidSystem = 0;
 
-DWORD FASTCALL
-IntGetImeCompatFlags(_In_ PTHREADINFO pti)
+static DWORD FASTCALL
+IntGetImeCompatFlags(_In_opt_ PTHREADINFO pti)
 {
     if (!pti)
         pti = PsGetCurrentThreadWin32Thread();
