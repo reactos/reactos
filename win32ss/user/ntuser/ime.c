@@ -1831,7 +1831,7 @@ UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
             break;
 
         default:
-            FIXME("dwType: %lu\n", dwType);
+            ERR("Unhandled dwType: %lu\n", dwType);
             return FALSE;
     }
 
