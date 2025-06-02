@@ -212,12 +212,12 @@ DWORD WINAPI ImmGetIMCLockCount(_In_ HIMC hIMC);
 /* IMCC */
 
 HIMCC  WINAPI ImmCreateIMCC(_In_ DWORD size);
-HIMCC  WINAPI ImmDestroyIMCC(_In_ HIMCC block);
-LPVOID WINAPI ImmLockIMCC(_In_ HIMCC imcc);
+HIMCC  WINAPI ImmDestroyIMCC(_In_opt_ HIMCC block);
+LPVOID WINAPI ImmLockIMCC(_In_opt_ HIMCC imcc);
 BOOL   WINAPI ImmUnlockIMCC(_In_ HIMCC imcc);
 DWORD  WINAPI ImmGetIMCCLockCount(_In_ HIMCC imcc);
-HIMCC  WINAPI ImmReSizeIMCC(_In_ HIMCC imcc, _In_ DWORD size);
-DWORD  WINAPI ImmGetIMCCSize(_In_ HIMCC imcc);
+HIMCC  WINAPI ImmReSizeIMCC(_In_opt_ HIMCC imcc, _In_ DWORD size);
+DWORD  WINAPI ImmGetIMCCSize(_In_opt_ HIMCC imcc);
 
 /* Messaging */
 

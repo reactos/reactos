@@ -9,9 +9,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-// Win: ImmGetGuideLineWorker
-DWORD APIENTRY
-ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsi)
+static DWORD
+ImmGetGuideLineAW(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPVOID lpBuf,
+    _In_ DWORD dwBufLen,
+    _In_ BOOL bAnsi)
 {
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXT pIC;
@@ -187,7 +191,12 @@ Quit:
 /***********************************************************************
  *		ImmGetGuideLineA (IMM32.@)
  */
-DWORD WINAPI ImmGetGuideLineA(HIMC hIMC, DWORD dwIndex, LPSTR lpBuf, DWORD dwBufLen)
+DWORD WINAPI
+ImmGetGuideLineA(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPSTR lpBuf,
+    _In_ DWORD dwBufLen)
 {
     TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
     return ImmGetGuideLineAW(hIMC, dwIndex, lpBuf, dwBufLen, TRUE);
@@ -196,7 +205,12 @@ DWORD WINAPI ImmGetGuideLineA(HIMC hIMC, DWORD dwIndex, LPSTR lpBuf, DWORD dwBuf
 /***********************************************************************
  *		ImmGetGuideLineW (IMM32.@)
  */
-DWORD WINAPI ImmGetGuideLineW(HIMC hIMC, DWORD dwIndex, LPWSTR lpBuf, DWORD dwBufLen)
+DWORD WINAPI
+ImmGetGuideLineW(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPWSTR lpBuf,
+    _In_ DWORD dwBufLen)
 {
     TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
     return ImmGetGuideLineAW(hIMC, dwIndex, lpBuf, dwBufLen, FALSE);

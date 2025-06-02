@@ -1208,7 +1208,8 @@ typedef struct IMM_DELAY_SET_LANG_BAND
 } IMM_DELAY_SET_LANG_BAND, *PIMM_DELAY_SET_LANG_BAND;
 
 /* Sends a message to set the language band with delay. */
-static DWORD APIENTRY Imm32DelaySetLangBandProc(LPVOID arg)
+static DWORD WINAPI
+Imm32DelaySetLangBandProc(LPVOID arg)
 {
     HWND hwndDefIME;
     WPARAM wParam;

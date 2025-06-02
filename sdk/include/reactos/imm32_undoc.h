@@ -113,7 +113,7 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 #define IMEDPI_FLAG_LOCKED 0x2
 
 PIMEDPI WINAPI ImmLockImeDpi(_In_ HKL hKL);
-VOID WINAPI ImmUnlockImeDpi(_Inout_ PIMEDPI pImeDpi);
+VOID WINAPI ImmUnlockImeDpi(_Inout_opt_ PIMEDPI pImeDpi);
 
 /* unconfirmed */
 typedef struct tagCLIENTIMC
@@ -226,12 +226,19 @@ ImmGetImeInfoEx(
 
 BOOL WINAPI ImmLoadLayout(_In_ HKL hKL, _Inout_ PIMEINFOEX pImeInfoEx);
 DWORD WINAPI ImmGetAppCompatFlags(_In_ HIMC hIMC);
-BOOL WINAPI ImmSetActiveContext(_In_ HWND hwnd, _In_ HIMC hIMC, _In_ BOOL fFlag);
+BOOL WINAPI ImmSetActiveContext(_In_ HWND hwnd, _In_opt_ HIMC hIMC, _In_ BOOL fFlag);
 BOOL WINAPI ImmLoadIME(_In_ HKL hKL);
 DWORD WINAPI ImmProcessKey(_In_ HWND, _In_ HKL, _In_ UINT, _In_ LPARAM, _In_ DWORD);
 LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC);
 BOOL WINAPI ImmWINNLSGetEnableStatus(_In_opt_ HWND hWnd);
 BOOL WINAPI ImmSetActiveContextConsoleIME(_In_ HWND hwnd, _In_ BOOL fFlag);
+BOOL WINAPI ImmActivateLayout(_In_ HKL hKL);
+BOOL WINAPI ImmFreeLayout(_In_ HKL hKL);
+
+BOOL WINAPI
+ImmWINNLSEnableIME(
+    _In_opt_ HWND hWnd,
+    _In_ BOOL enable);
 
 LRESULT WINAPI
 ImmSystemHandler(
@@ -245,6 +252,16 @@ BOOL WINAPI ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro);
 BOOL WINAPI ImmIMPQueryIMEW(_Inout_ LPIMEPROW pImePro);
 BOOL WINAPI ImmIMPSetIMEA(_In_opt_ HWND hWnd, _Inout_ LPIMEPROA pImePro);
 BOOL WINAPI ImmIMPSetIMEW(_In_opt_ HWND hWnd, _Inout_ LPIMEPROW pImePro);
+
+WORD WINAPI
+ImmSendIMEMessageExA(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam);
+
+WORD WINAPI
+ImmSendIMEMessageExW(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam);
 
 HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
 HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
@@ -274,10 +291,12 @@ CtfImmDispatchDefImeMessage(
     #define ImmIMPGetIME ImmIMPGetIMEW
     #define ImmIMPQueryIME ImmIMPQueryIMEW
     #define ImmIMPSetIME ImmIMPSetIMEW
+    #define ImmSendIMEMessageEx ImmSendIMEMessageExW
 #else
     #define ImmIMPGetIME ImmIMPGetIMEA
     #define ImmIMPQueryIME ImmIMPQueryIMEA
     #define ImmIMPSetIME ImmIMPSetIMEA
+    #define ImmSendIMEMessageEx ImmSendIMEMessageExA
 #endif
 
 #ifdef __cplusplus
