@@ -427,7 +427,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"00000801", L"Arabic (Iraq)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_EG
-    {L"00000C01", L"Arabic (Egypt)", arEGPages, arEGErrorEntries, arEGStrings},
+    {L"00000C01", L"Arabic (Egypt)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_LY
     {L"00001001", L"Arabic (Libya)", enUSPages, enUSErrorEntries, enUSStrings},
