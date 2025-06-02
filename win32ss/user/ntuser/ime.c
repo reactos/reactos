@@ -428,7 +428,7 @@ NtUserGetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _Out_ PUINT lpuModifiers,
     _Out_ PUINT lpuVirtualKey,
-    _Out_ PHKL lphKL)
+    _Out_ LPHKL lphKL)
 {
     PIMEHOTKEY pNode = NULL;
 
