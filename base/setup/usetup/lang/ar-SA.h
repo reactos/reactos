@@ -1,6 +1,7 @@
-LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+#pragma once
+/* Saudi Arabic text is in visual order */
 
-static MUI_ENTRY enUSSetupInitPageEntries[] =
+static MUI_ENTRY arSASetupInitPageEntries[] =
 {
     {
         4,
@@ -38,7 +39,7 @@ static MUI_ENTRY enUSSetupInitPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSLanguagePageEntries[] =
+static MUI_ENTRY arSALanguagePageEntries[] =
 {
     {
         4,
@@ -90,7 +91,7 @@ static MUI_ENTRY enUSLanguagePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSWelcomePageEntries[] =
+static MUI_ENTRY arSAWelcomePageEntries[] =
 {
     {
         4,
@@ -177,7 +178,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSIntroPageEntries[] =
+static MUI_ENTRY arSAIntroPageEntries[] =
 {
     {
         4,
@@ -257,7 +258,7 @@ static MUI_ENTRY enUSIntroPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSLicensePageEntries[] =
+static MUI_ENTRY arSALicensePageEntries[] =
 {
     {
         4,
@@ -400,7 +401,7 @@ static MUI_ENTRY enUSLicensePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSDevicePageEntries[] =
+static MUI_ENTRY arSADevicePageEntries[] =
 {
     {
         4,
@@ -507,7 +508,7 @@ static MUI_ENTRY enUSDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSRepairPageEntries[] =
+static MUI_ENTRY arSARepairPageEntries[] =
 {
     {
         4,
@@ -580,7 +581,7 @@ static MUI_ENTRY enUSRepairPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSUpgradePageEntries[] =
+static MUI_ENTRY arSAUpgradePageEntries[] =
 {
     {
         4,
@@ -660,7 +661,7 @@ static MUI_ENTRY enUSUpgradePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSComputerPageEntries[] =
+static MUI_ENTRY arSAComputerPageEntries[] =
 {
     {
         4,
@@ -719,7 +720,7 @@ static MUI_ENTRY enUSComputerPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSFlushPageEntries[] =
+static MUI_ENTRY arSAFlushPageEntries[] =
 {
     {
         4,
@@ -764,7 +765,7 @@ static MUI_ENTRY enUSFlushPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSQuitPageEntries[] =
+static MUI_ENTRY arSAQuitPageEntries[] =
 {
     {
         4,
@@ -816,7 +817,7 @@ static MUI_ENTRY enUSQuitPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSDisplayPageEntries[] =
+static MUI_ENTRY arSADisplayPageEntries[] =
 {
     {
         4,
@@ -835,9 +836,9 @@ static MUI_ENTRY enUSDisplayPageEntries[] =
     {
         8,
         10,
-         "\x07  اضغط مفتاح UP أو DOWN لتحديد نوع الشاشة المطلوب.",
-         TEXT_STYLE_NORMAL,
-         TEXT_ID_STATIC
+        "\x07  اضغط مفتاح UP أو DOWN لتحديد نوع الشاشة المطلوب.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
@@ -875,7 +876,7 @@ static MUI_ENTRY enUSDisplayPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSSuccessPageEntries[] =
+static MUI_ENTRY arSASuccessPageEntries[] =
 {
     {
         4,
@@ -927,7 +928,7 @@ static MUI_ENTRY enUSSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSSelectPartitionEntries[] =
+static MUI_ENTRY arSASelectPartitionEntries[] =
 {
     {
         4,
@@ -1000,7 +1001,7 @@ static MUI_ENTRY enUSSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSChangeSystemPartition[] =
+static MUI_ENTRY arSAChangeSystemPartition[] =
 {
     {
         4,
@@ -1122,7 +1123,7 @@ static MUI_ENTRY enUSChangeSystemPartition[] =
     }
 };
 
-static MUI_ENTRY enUSConfirmDeleteSystemPartitionEntries[] =
+static MUI_ENTRY arSAConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -1230,7 +1231,7 @@ static MUI_ENTRY enUSConfirmDeleteSystemPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSFormatPartitionEntries[] =
+static MUI_ENTRY arSAFormatPartitionEntries[] =
 {
     {
         4,
@@ -1268,7 +1269,7 @@ static MUI_ENTRY enUSFormatPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSCheckFSEntries[] =
+static MUI_ENTRY arSACheckFSEntries[] =
 {
     {
         4,
@@ -1299,7 +1300,7 @@ static MUI_ENTRY enUSCheckFSEntries[] =
     }
 };
 
-static MUI_ENTRY enUSInstallDirectoryEntries[] =
+static MUI_ENTRY arSAInstallDirectoryEntries[] =
 {
     {
         4,
@@ -1358,7 +1359,7 @@ static MUI_ENTRY enUSInstallDirectoryEntries[] =
     }
 };
 
-static MUI_ENTRY enUSFileCopyEntries[] =
+static MUI_ENTRY arSAFileCopyEntries[] =
 {
     {
         4,
@@ -1403,7 +1404,7 @@ static MUI_ENTRY enUSFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootLoaderSelectPageEntries[] =
+static MUI_ENTRY arSABootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1462,7 +1463,7 @@ static MUI_ENTRY enUSBootLoaderSelectPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootLoaderInstallPageEntries[] =
+static MUI_ENTRY arSABootLoaderInstallPageEntries[] =
 {
     {
         4,
@@ -1493,7 +1494,7 @@ static MUI_ENTRY enUSBootLoaderInstallPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootLoaderRemovableDiskPageEntries[] =
+static MUI_ENTRY arSABootLoaderRemovableDiskPageEntries[] =
 {
     {
         4,
@@ -1539,7 +1540,7 @@ static MUI_ENTRY enUSBootLoaderRemovableDiskPageEntries[] =
 
 };
 
-static MUI_ENTRY enUSKeyboardSettingsEntries[] =
+static MUI_ENTRY arSAKeyboardSettingsEntries[] =
 {
     {
         4,
@@ -1598,7 +1599,7 @@ static MUI_ENTRY enUSKeyboardSettingsEntries[] =
     }
 };
 
-static MUI_ENTRY enUSLayoutSettingsEntries[] =
+static MUI_ENTRY arSALayoutSettingsEntries[] =
 {
     {
         4,
@@ -1658,7 +1659,7 @@ static MUI_ENTRY enUSLayoutSettingsEntries[] =
 
 };
 
-static MUI_ENTRY enUSPrepareCopyEntries[] =
+static MUI_ENTRY arSAPrepareCopyEntries[] =
 {
     {
         4,
@@ -1690,7 +1691,7 @@ static MUI_ENTRY enUSPrepareCopyEntries[] =
 
 };
 
-static MUI_ENTRY enUSSelectFSEntries[] =
+static MUI_ENTRY arSASelectFSEntries[] =
 {
     {
         4,
@@ -1738,7 +1739,7 @@ static MUI_ENTRY enUSSelectFSEntries[] =
     }
 };
 
-static MUI_ENTRY enUSDeletePartitionEntries[] =
+static MUI_ENTRY arSADeletePartitionEntries[] =
 {
     {
         4,
@@ -1790,7 +1791,7 @@ static MUI_ENTRY enUSDeletePartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSRegistryEntries[] =
+static MUI_ENTRY arSARegistryEntries[] =
 {
     {
         4,
@@ -1822,7 +1823,7 @@ static MUI_ENTRY enUSRegistryEntries[] =
 
 };
 
-MUI_ERROR enUSErrorEntries[] =
+MUI_ERROR arSAErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
@@ -2073,123 +2074,123 @@ MUI_ERROR enUSErrorEntries[] =
     }
 };
 
-MUI_PAGE enUSPages[] =
+MUI_PAGE arSAPages[] =
 {
     {
         SETUP_INIT_PAGE,
-        enUSSetupInitPageEntries
+        arSASetupInitPageEntries
     },
     {
         LANGUAGE_PAGE,
-        enUSLanguagePageEntries
+        arSALanguagePageEntries
     },
     {
         WELCOME_PAGE,
-        enUSWelcomePageEntries
+        arSAWelcomePageEntries
     },
     {
         INSTALL_INTRO_PAGE,
-        enUSIntroPageEntries
+        arSAIntroPageEntries
     },
     {
         LICENSE_PAGE,
-        enUSLicensePageEntries
+        arSALicensePageEntries
     },
     {
         DEVICE_SETTINGS_PAGE,
-        enUSDevicePageEntries
+        arSADevicePageEntries
     },
     {
         REPAIR_INTRO_PAGE,
-        enUSRepairPageEntries
+        arSARepairPageEntries
     },
     {
         UPGRADE_REPAIR_PAGE,
-        enUSUpgradePageEntries
+        arSAUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
-        enUSComputerPageEntries
+        arSAComputerPageEntries
     },
     {
         DISPLAY_SETTINGS_PAGE,
-        enUSDisplayPageEntries
+        arSADisplayPageEntries
     },
     {
         FLUSH_PAGE,
-        enUSFlushPageEntries
+        arSAFlushPageEntries
     },
     {
         SELECT_PARTITION_PAGE,
-        enUSSelectPartitionEntries
+        arSASelectPartitionEntries
     },
     {
         CHANGE_SYSTEM_PARTITION,
-        enUSChangeSystemPartition
+        arSAChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        enUSConfirmDeleteSystemPartitionEntries
+        arSAConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
-        enUSSelectFSEntries
+        arSASelectFSEntries
     },
     {
         FORMAT_PARTITION_PAGE,
-        enUSFormatPartitionEntries
+        arSAFormatPartitionEntries
     },
     {
         CHECK_FILE_SYSTEM_PAGE,
-        enUSCheckFSEntries
+        arSACheckFSEntries
     },
     {
         DELETE_PARTITION_PAGE,
-        enUSDeletePartitionEntries
+        arSADeletePartitionEntries
     },
     {
         INSTALL_DIRECTORY_PAGE,
-        enUSInstallDirectoryEntries
+        arSAInstallDirectoryEntries
     },
     {
         PREPARE_COPY_PAGE,
-        enUSPrepareCopyEntries
+        arSAPrepareCopyEntries
     },
     {
         FILE_COPY_PAGE,
-        enUSFileCopyEntries
+        arSAFileCopyEntries
     },
     {
         KEYBOARD_SETTINGS_PAGE,
-        enUSKeyboardSettingsEntries
+        arSAKeyboardSettingsEntries
     },
     {
         BOOTLOADER_SELECT_PAGE,
-        enUSBootLoaderSelectPageEntries
+        arSABootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
-        enUSLayoutSettingsEntries
+        arSALayoutSettingsEntries
     },
     {
         QUIT_PAGE,
-        enUSQuitPageEntries
+        arSAQuitPageEntries
     },
     {
         SUCCESS_PAGE,
-        enUSSuccessPageEntries
+        arSASuccessPageEntries
     },
     {
         BOOTLOADER_INSTALL_PAGE,
-        enUSBootLoaderInstallPageEntries
+        arSABootLoaderInstallPageEntries
     },
     {
         BOOTLOADER_REMOVABLE_DISK_PAGE,
-        enUSBootLoaderRemovableDiskPageEntries
+        arSABootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
-        enUSRegistryEntries
+        arSARegistryEntries
     },
     {
         -1,
@@ -2197,121 +2198,121 @@ MUI_PAGE enUSPages[] =
     }
 };
 
-MUI_STRING enUSStrings[] =
+MUI_STRING arSAStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   الرجاء الانتظار..."},
-    {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = تثبيت   C = إنشاء أساسي   E = إنشاء ممتد   F3 = إنهاء"},
-    {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = تثبيت   C = إنشاء قسم منطقي   F3 = إنهاء"},
-    {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = تثبيت   D = حذف القسم   F3 = إنهاء"},
-    {STRING_DELETEPARTITION,
-     "   D = حذف القسم   F3 = إنهاء"},
-    {STRING_PARTITIONSIZE,
-     "حجم القسم الجديد:"},
-    {STRING_CHOOSE_NEW_PARTITION,
-     "لقد اخترت إنشاء قسم أساسي على"},
-    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "لقد اخترت إنشاء قسم ممتد على"},
-    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "لقد اخترت إنشاء قسم منطقي على"},
-    {STRING_HDPARTSIZE,
-    "الرجاء إدخال حجم القسم الجديد بالميجابايت."},
-    {STRING_CREATEPARTITION,
-     "   ENTER = إنشاء قسم   ESC = إلغاء   F3 = إنهاء"},
-    {STRING_NEWPARTITION,
-    "الإعداد أنشأ قسماً جديداً على"},
-    {STRING_PARTFORMAT,
-    "سيتم تنسيق هذا القسم لاحقاً."},
-    {STRING_NONFORMATTEDPART,
-    "لقد اخترت تثبيت ReactOS على قسم جديد أو غير منسق."},
-    {STRING_NONFORMATTEDSYSTEMPART,
-    "قسم النظام لم يتم تنسيقه بعد."},
-    {STRING_NONFORMATTEDOTHERPART,
-    "القسم الجديد لم يتم تنسيقه بعد."},
-    {STRING_INSTALLONPART,
-    "الإعداد يثبت ReactOS على القسم"},
-    {STRING_CONTINUE,
-    "ENTER = متابعة"},
-    {STRING_QUITCONTINUE,
-    "F3 = إنهاء  ENTER = متابعة"},
-    {STRING_REBOOTCOMPUTER,
-    "ENTER = إعادة تشغيل الكمبيوتر"},
-    {STRING_DELETING,
-     "   جاري حذف الملف: %S"},
-    {STRING_MOVING,
-     "   جاري نقل الملف: %S إلى: %S"},
-    {STRING_RENAMING,
-     "   جاري إعادة تسمية الملف: %S إلى: %S"},
-    {STRING_COPYING,
-     "   جاري نسخ الملف: %S"},
-    {STRING_SETUPCOPYINGFILES,
-     "الإعداد ينسخ الملفات..."},
-    {STRING_REGHIVEUPDATE,
-    "   جاري تحديث سجلات الريجستري..."},
-    {STRING_IMPORTFILE,
-    "   جاري استيراد %S..."},
-    {STRING_DISPLAYSETTINGSUPDATE,
-    "   جاري تحديث إعدادات سجل العرض..."},
-    {STRING_LOCALESETTINGSUPDATE,
-    "   جاري تحديث إعدادات اللغة..."},
-    {STRING_KEYBOARDSETTINGSUPDATE,
-    "   جاري تحديث إعدادات تخطيط لوحة المفاتيح..."},
-    {STRING_CODEPAGEINFOUPDATE,
-    "   جاري إضافة معلومات صفحة الرمز..."},
-    {STRING_DONE,
-    "   تم..."},
-    {STRING_REBOOTCOMPUTER2,
-    "   ENTER = إعادة تشغيل الكمبيوتر"},
-    {STRING_REBOOTPROGRESSBAR,
-    " سيتم إعادة تشغيل جهاز الكمبيوتر الخاص بك في %li ثانية (ثوانٍ)... "},
-    {STRING_CONSOLEFAIL1,
-    "تعذر فتح وحدة التحكم\r\n\r\n"},
-    {STRING_CONSOLEFAIL2,
-    "السبب الأكثر شيوعاً لذلك هو استخدام لوحة مفاتيح USB\r\n"},
-    {STRING_CONSOLEFAIL3,
-    "لوحات مفاتيح USB غير مدعومة بالكامل بعد\r\n"},
-    {STRING_FORMATTINGPART,
-    "الإعداد يقوم بتنسيق القسم..."},
-    {STRING_CHECKINGDISK,
-    "الإعداد يتحقق من القرص..."},
-    {STRING_FORMATDISK1,
-    " تنسيق القسم كنظام ملفات %S (تنسيق سريع) "},
-    {STRING_FORMATDISK2,
-    " تنسيق القسم كنظام ملفات %S "},
-    {STRING_KEEPFORMAT,
-    " الاحتفاظ بنظام الملفات الحالي (لا توجد تغييرات) "},
-    {STRING_HDDISK1,
-    "%s."},
-    {STRING_HDDISK2,
-    "على %s."},
-    {STRING_PARTTYPE,
-    "النوع 0x%02x"},
-    {STRING_HDDINFO1,
-    "%I64u %s القرص الصلب %lu (المنفذ=%hu، الناقل=%hu، المعرف=%hu) على %wZ [%s]"},
-    {STRING_HDDINFO2,
-    "%I64u %s القرص الصلب %lu (المنفذ=%hu، الناقل=%hu، المعرف=%hu) [%s]"},
-    {STRING_UNPSPACE,
-    "مساحة غير مقسمة"},
-    {STRING_MAXSIZE,
-    "ميجابايت (الحد الأقصى %lu ميجابايت)"},
-    {STRING_EXTENDED_PARTITION,
-    "قسم ممتد"},
-    {STRING_UNFORMATTED,
-    "جديد (غير منسق)"},
-    {STRING_FORMATUNUSED,
-    "غير مستخدم"},
-    {STRING_FORMATUNKNOWN,
-    "غير معروف"},
-    {STRING_KB,
-    "ك.ب"},
-    {STRING_MB,
-    "م.ب"},
-    {STRING_GB,
-    "ج.ب"},
-    {STRING_ADDKBLAYOUTS,
-    "جاري إضافة تخطيطات لوحة المفاتيح"},
-    {0, 0}
+        "   الرجاء الانتظار..."},
+        {STRING_INSTALLCREATEPARTITION,
+            "   ENTER = تثبيت   C = إنشاء أساسي   E = إنشاء ممتد   F3 = إنهاء"},
+            {STRING_INSTALLCREATELOGICAL,
+                "   ENTER = تثبيت   C = إنشاء قسم منطقي   F3 = إنهاء"},
+                {STRING_INSTALLDELETEPARTITION,
+                    "   ENTER = تثبيت   D = حذف القسم   F3 = إنهاء"},
+                    {STRING_DELETEPARTITION,
+                        "   D = حذف القسم   F3 = إنهاء"},
+                        {STRING_PARTITIONSIZE,
+                            "حجم القسم الجديد:"},
+                            {STRING_CHOOSE_NEW_PARTITION,
+                                "لقد اخترت إنشاء قسم أساسي على"},
+                                {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+                                    "لقد اخترت إنشاء قسم ممتد على"},
+                                    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+                                        "لقد اخترت إنشاء قسم منطقي على"},
+                                        {STRING_HDPARTSIZE,
+                                            "الرجاء إدخال حجم القسم الجديد بالميجابايت."},
+                                            {STRING_CREATEPARTITION,
+                                                "   ENTER = إنشاء قسم   ESC = إلغاء   F3 = إنهاء"},
+                                                {STRING_NEWPARTITION,
+                                                    "الإعداد أنشأ قسماً جديداً على"},
+                                                    {STRING_PARTFORMAT,
+                                                        "سيتم تنسيق هذا القسم لاحقاً."},
+                                                        {STRING_NONFORMATTEDPART,
+                                                            "لقد اخترت تثبيت ReactOS على قسم جديد أو غير منسق."},
+                                                            {STRING_NONFORMATTEDSYSTEMPART,
+                                                                "قسم النظام لم يتم تنسيقه بعد."},
+                                                                {STRING_NONFORMATTEDOTHERPART,
+                                                                    "القسم الجديد لم يتم تنسيقه بعد."},
+                                                                    {STRING_INSTALLONPART,
+                                                                        "الإعداد يثبت ReactOS على القسم"},
+                                                                        {STRING_CONTINUE,
+                                                                            "ENTER = متابعة"},
+                                                                            {STRING_QUITCONTINUE,
+                                                                                "F3 = إنهاء  ENTER = متابعة"},
+                                                                                {STRING_REBOOTCOMPUTER,
+                                                                                    "ENTER = إعادة تشغيل الكمبيوتر"},
+                                                                                    {STRING_DELETING,
+                                                                                        "   جاري حذف الملف: %S"},
+                                                                                        {STRING_MOVING,
+                                                                                            "   جاري نقل الملف: %S إلى: %S"},
+                                                                                            {STRING_RENAMING,
+                                                                                                "   جاري إعادة تسمية الملف: %S إلى: %S"},
+                                                                                                {STRING_COPYING,
+                                                                                                    "   جاري نسخ الملف: %S"},
+                                                                                                    {STRING_SETUPCOPYINGFILES,
+                                                                                                        "الإعداد ينسخ الملفات..."},
+                                                                                                        {STRING_REGHIVEUPDATE,
+                                                                                                            "   جاري تحديث سجلات الريجستري..."},
+                                                                                                            {STRING_IMPORTFILE,
+                                                                                                                "   جاري استيراد %S..."},
+                                                                                                                {STRING_DISPLAYSETTINGSUPDATE,
+                                                                                                                    "   جاري تحديث إعدادات سجل العرض..."},
+                                                                                                                    {STRING_LOCALESETTINGSUPDATE,
+                                                                                                                        "   جاري تحديث إعدادات اللغة..."},
+                                                                                                                        {STRING_KEYBOARDSETTINGSUPDATE,
+                                                                                                                            "   جاري تحديث إعدادات تخطيط لوحة المفاتيح..."},
+                                                                                                                            {STRING_CODEPAGEINFOUPDATE,
+                                                                                                                                "   جاري إضافة معلومات صفحة الرمز..."},
+                                                                                                                                {STRING_DONE,
+                                                                                                                                    "   تم..."},
+                                                                                                                                    {STRING_REBOOTCOMPUTER2,
+                                                                                                                                        "   ENTER = إعادة تشغيل الكمبيوتر"},
+                                                                                                                                        {STRING_REBOOTPROGRESSBAR,
+                                                                                                                                            " سيتم إعادة تشغيل جهاز الكمبيوتر الخاص بك في %li ثانية (ثوانٍ)... "},
+                                                                                                                                            {STRING_CONSOLEFAIL1,
+                                                                                                                                                "تعذر فتح وحدة التحكم\r\n\r\n"},
+                                                                                                                                                {STRING_CONSOLEFAIL2,
+                                                                                                                                                    "السبب الأكثر شيوعاً لذلك هو استخدام لوحة مفاتيح USB\r\n"},
+                                                                                                                                                    {STRING_CONSOLEFAIL3,
+                                                                                                                                                        "لوحات مفاتيح USB غير مدعومة بالكامل بعد\r\n"},
+                                                                                                                                                        {STRING_FORMATTINGPART,
+                                                                                                                                                            "الإعداد يقوم بتنسيق القسم..."},
+                                                                                                                                                            {STRING_CHECKINGDISK,
+                                                                                                                                                                "الإعداد يتحقق من القرص..."},
+                                                                                                                                                                {STRING_FORMATDISK1,
+                                                                                                                                                                    " تنسيق القسم كنظام ملفات %S (تنسيق سريع) "},
+                                                                                                                                                                    {STRING_FORMATDISK2,
+                                                                                                                                                                        " تنسيق القسم كنظام ملفات %S "},
+                                                                                                                                                                        {STRING_KEEPFORMAT,
+                                                                                                                                                                            " الاحتفاظ بنظام الملفات الحالي (لا توجد تغييرات) "},
+                                                                                                                                                                            {STRING_HDDISK1,
+                                                                                                                                                                                "%s."},
+                                                                                                                                                                                {STRING_HDDISK2,
+                                                                                                                                                                                    "على %s."},
+                                                                                                                                                                                    {STRING_PARTTYPE,
+                                                                                                                                                                                        "النوع 0x%02x"},
+                                                                                                                                                                                        {STRING_HDDINFO1,
+                                                                                                                                                                                            "%I64u %s القرص الصلب %lu (المنفذ=%hu، الناقل=%hu، المعرف=%hu) على %wZ [%s]"},
+                                                                                                                                                                                            {STRING_HDDINFO2,
+                                                                                                                                                                                                "%I64u %s القرص الصلب %lu (المنفذ=%hu، الناقل=%hu، المعرف=%hu) [%s]"},
+                                                                                                                                                                                                {STRING_UNPSPACE,
+                                                                                                                                                                                                    "مساحة غير مقسمة"},
+                                                                                                                                                                                                    {STRING_MAXSIZE,
+                                                                                                                                                                                                        "ميجابايت (الحد الأقصى %lu ميجابايت)"},
+                                                                                                                                                                                                        {STRING_EXTENDED_PARTITION,
+                                                                                                                                                                                                            "قسم ممتد"},
+                                                                                                                                                                                                            {STRING_UNFORMATTED,
+                                                                                                                                                                                                                "جديد (غير منسق)"},
+                                                                                                                                                                                                                {STRING_FORMATUNUSED,
+                                                                                                                                                                                                                    "غير مستخدم"},
+                                                                                                                                                                                                                    {STRING_FORMATUNKNOWN,
+                                                                                                                                                                                                                        "غير معروف"},
+                                                                                                                                                                                                                        {STRING_KB,
+                                                                                                                                                                                                                            "ك.ب"},
+                                                                                                                                                                                                                            {STRING_MB,
+                                                                                                                                                                                                                                "م.ب"},
+                                                                                                                                                                                                                                {STRING_GB,
+                                                                                                                                                                                                                                    "ج.ب"},
+                                                                                                                                                                                                                                    {STRING_ADDKBLAYOUTS,
+                                                                                                                                                                                                                                        "جاري إضافة تخطيطات لوحة المفاتيح"},
+                                                                                                                                                                                                                                        {0, 0}
 };
