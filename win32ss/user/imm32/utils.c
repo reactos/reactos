@@ -612,7 +612,7 @@ ImmLockIMCC(_In_opt_ HIMCC imcc)
  *		ImmUnlockIMCC(IMM32.@)
  */
 BOOL WINAPI
-ImmUnlockIMCC(_In_ HIMCC imcc)
+ImmUnlockIMCC(_In_opt_ HIMCC imcc)
 {
     if (imcc)
         return LocalUnlock(imcc);
@@ -623,7 +623,7 @@ ImmUnlockIMCC(_In_ HIMCC imcc)
  *		ImmGetIMCCLockCount(IMM32.@)
  */
 DWORD WINAPI
-ImmGetIMCCLockCount(_In_ HIMCC imcc)
+ImmGetIMCCLockCount(_In_opt_ HIMCC imcc)
 {
     return LocalFlags(imcc) & LMEM_LOCKCOUNT;
 }
