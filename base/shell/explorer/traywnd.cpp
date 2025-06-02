@@ -1462,14 +1462,13 @@ GetPrimaryScreenRect:
                    without user interaction. */
                 rcTray = m_TrayRects[m_Position];
 
-                if (g_TaskbarSettings.sr.AutoHide)
+                if (IsAutoHideState())
                 {
                     rcTray.left += m_AutoHideOffset.cx;
                     rcTray.right += m_AutoHideOffset.cx;
                     rcTray.top += m_AutoHideOffset.cy;
                     rcTray.bottom += m_AutoHideOffset.cy;
                 }
-
             }
 
 ChangePos:
@@ -1543,7 +1542,7 @@ ChangePos:
 
         /* If AutoHide is false then change the workarea to exclude
            the area that the taskbar covers. */
-        if (!g_TaskbarSettings.sr.AutoHide)
+        if (!IsAutoHideState())
         {
             switch (m_Position)
             {
@@ -1902,20 +1901,17 @@ ChangePos:
 
     void ProcessMouseTracking()
     {
-        RECT rcCurrent;
         POINT pt;
-        BOOL over;
-        UINT state = m_AutoHideState;
-
         GetCursorPos(&pt);
+
+        RECT rcCurrent;
         GetWindowRect(&rcCurrent);
-        over = PtInRect(&rcCurrent, pt);
 
-        if (m_StartButton.SendMessage( BM_GETSTATE, 0, 0) != BST_UNCHECKED)
-        {
+        BOOL over = PtInRect(&rcCurrent, pt);
+        if (m_StartButton.SendMessage(BM_GETSTATE, 0, 0) != BST_UNCHECKED)
             over = TRUE;
-        }
 
+        UINT state = m_AutoHideState;
         if (over)
         {
             if (state == AUTOHIDE_HIDING)
@@ -1994,7 +1990,6 @@ ChangePos:
 
             /* fallthrough */
         case AUTOHIDE_HIDDEN:
-
             switch (m_Position)
             {
             case ABE_LEFT:
@@ -2054,7 +2049,6 @@ ChangePos:
 
             /* fallthrough */
         case AUTOHIDE_SHOWN:
-
             KillTimer(TIMER_ID_AUTOHIDE);
             m_AutoHideState = AUTOHIDE_SHOWN;
             break;
@@ -2062,10 +2056,6 @@ ChangePos:
 
         SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
     }
-
-
-
-
 
     /**********************************************************
      *    ##### taskbar drawing #####
@@ -2127,10 +2117,6 @@ ChangePos:
         ReleaseDC(hdc);
         return 0;
     }
-
-
-
-
 
     /*
      * ITrayWindow
@@ -2370,7 +2356,7 @@ ChangePos:
 
         InitShellServices(&m_ShellServices);
 
-        if (g_TaskbarSettings.sr.AutoHide)
+        if (IsAutoHideState())
         {
             m_AutoHideState = AUTOHIDE_HIDING;
             SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
@@ -2689,6 +2675,7 @@ ChangePos:
             /* Remove the clipping on multi monitor systems while dragging around */
             ApplyClipping(FALSE);
         }
+        m_PreviousMonitor = m_Monitor;
         return TRUE;
     }
 
@@ -3081,6 +3068,13 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    // TWM_SETZORDER
+    LRESULT OnSetZOrder(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return ::SetWindowPos(m_hWnd, (HWND)wParam, 0, 0, 0, 0,
+                              SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    }
+
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return HandleHotKey(wParam);
@@ -3189,7 +3183,7 @@ HandleTrayContextMenu:
     {
         SendMessage(m_TrayNotify, uMsg, wParam, lParam);
 
-        if (g_TaskbarSettings.sr.AutoHide)
+        if (IsAutoHideState())
         {
             SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
         }
@@ -3288,6 +3282,25 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    // WM_ACTIVATE
+    LRESULT OnActivate(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        OnAppBarActivationChange2(m_hWnd, m_Position);
+        if (!wParam) // !(Activate || Minimized)
+        {
+            SendMessage(WM_CHANGEUISTATE, MAKELONG(UIS_SET, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
+            IUnknown_UIActivateIO(m_TrayBandSite, FALSE, NULL);
+        }
+        return 0;
+    }
+
+    // WM_SETFOCUS
+    LRESULT OnSetFocus(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        IUnknown_UIActivateIO(m_TrayBandSite, TRUE, NULL);
+        return 0;
+    }
+
     LRESULT OnRebarAutoSize(INT code, LPNMHDR nmhdr, BOOL& bHandled)
     {
 #if 0
@@ -3348,27 +3361,13 @@ HandleTrayContextMenu:
         ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
 
         /* Toggle autohide */
-        if (newSettings->sr.AutoHide != g_TaskbarSettings.sr.AutoHide)
-        {
-            g_TaskbarSettings.sr.AutoHide = newSettings->sr.AutoHide;
-            memset(&m_AutoHideOffset, 0, sizeof(m_AutoHideOffset));
-            m_AutoHideState = AUTOHIDE_SHOWN;
-            if (!newSettings->sr.AutoHide)
-                SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
-            else
-                SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
-        }
+        SetAutoHideState(newSettings->sr.AutoHide);
 
         /* Toggle lock state */
         Lock(newSettings->bLock);
 
         /* Toggle OnTop state */
-        if (newSettings->sr.AlwaysOnTop != g_TaskbarSettings.sr.AlwaysOnTop)
-        {
-            g_TaskbarSettings.sr.AlwaysOnTop = newSettings->sr.AlwaysOnTop;
-            HWND hWndInsertAfter = newSettings->sr.AlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM;
-            SetWindowPos(hWndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-        }
+        UpdateAlwaysOnTop(newSettings->sr.AlwaysOnTop);
 
         /* Adjust taskbar size */
         CheckTrayWndPosition();
@@ -3436,10 +3435,13 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
+        MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)
+        MESSAGE_HANDLER(TWM_SETZORDER, OnSetZOrder)
         MESSAGE_HANDLER(TWM_PULSE, OnPulse)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
@@ -3576,16 +3578,36 @@ protected:
     // See also: appbar.cpp
     // TODO: freedesktop _NET_WM_STRUT integration
     // TODO: find when a fullscreen app is in the foreground and send FULLSCREENAPP notifications
-    // TODO: detect changes in the screen size and send ABN_POSCHANGED ?
     // TODO: multiple monitor support
 
     BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
     BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
-    HMONITOR GetMonitor() const override { return m_Monitor; }
-    HMONITOR GetPreviousMonitor() const override { return m_PreviousMonitor; }
+    BOOL IsAlwaysOnTop() const override { return g_TaskbarSettings.sr.AlwaysOnTop; }
+    HMONITOR& GetMonitor() override { return m_Monitor; }
+    HMONITOR& GetPreviousMonitor() override { return m_PreviousMonitor; }
     INT GetPosition() const override { return m_Position; }
     const RECT* GetTrayRect() override { return &m_TrayRects[m_Position]; }
+    HWND GetTrayWnd() const override { return m_hWnd; }
     HWND GetDesktopWnd() const override { return m_DesktopWnd; }
+
+    void SetAutoHideState(_In_ BOOL bAutoHide) override
+    {
+        g_TaskbarSettings.sr.AutoHide = bAutoHide;
+        ZeroMemory(&m_AutoHideOffset, sizeof(m_AutoHideOffset));
+
+        m_AutoHideState = AUTOHIDE_SHOWN;
+        if (bAutoHide)
+            SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
+        else
+            SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
+    }
+
+    void UpdateAlwaysOnTop(_In_ BOOL bAlwaysOnTop) override
+    {
+        g_TaskbarSettings.sr.AlwaysOnTop = bAlwaysOnTop;
+        HWND hwndInsertAfter = (bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST);
+        SetWindowPos(hwndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    }
 };
 
 class CTrayWindowCtxMenu :
