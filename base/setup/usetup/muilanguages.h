@@ -421,13 +421,13 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"0000041C", L"Albanian (Albania)", sqALPages, sqALErrorEntries, sqALStrings},
 #endif
 #ifdef LANGUAGE_AR_SA
-    {L"00000401", L"Arabic (Saudi Arabia)", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"00000401", L"Arabic (Saudi Arabia)", arSAPages, arSAErrorEntries, arSAStrings},
 #endif
 #ifdef LANGUAGE_AR_IQ
     {L"00000801", L"Arabic (Iraq)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_EG
-    {L"00000C01", L"Arabic (Egypt)", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"00000C01", L"Arabic (Egypt)", arEGPages, arEGErrorEntries, arEGStrings},
 #endif
 #ifdef LANGUAGE_AR_LY
     {L"00001001", L"Arabic (Libya)", enUSPages, enUSErrorEntries, enUSStrings},
