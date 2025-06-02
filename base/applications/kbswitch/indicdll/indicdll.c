@@ -14,6 +14,8 @@ HHOOK hShellHook = NULL;
 HHOOK hKeyboardLLHook = NULL;
 HINSTANCE hInstance = NULL;
 HWND hKbSwitchWnd = NULL;
+UINT g_nHotID = 0;
+DWORD_PTR g_dwHotMenuItemData = 0;
 
 static VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -32,6 +34,7 @@ WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
         case HCBT_ACTIVATE:
         case HCBT_SETFOCUS:
         {
+            OutputDebugStringA("HCBT_ACTIVATE / HCBT_SETFOCUS\n");
             HWND hwndFocus = (HWND)wParam;
             if (hwndFocus && hwndFocus != hKbSwitchWnd)
                 PostMessageToMainWnd(WM_WINDOW_ACTIVATE, (WPARAM)hwndFocus, 0);
@@ -52,11 +55,13 @@ ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
     {
         case HSHELL_WINDOWACTIVATED:
         {
+            OutputDebugStringA("HSHELL_WINDOWACTIVATED\n");
             PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, 0);
             break;
         }
         case HSHELL_LANGUAGE:
         {
+            OutputDebugStringA("HSHELL_LANGUAGE\n");
             PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
             break;
         }
@@ -79,7 +84,7 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
 
     if (code == HC_ACTION)
     {
-        KBDLLHOOKSTRUCT *pKbStruct = (KBDLLHOOKSTRUCT *)lParam;
+        PKBDLLHOOKSTRUCT pKbStruct = (PKBDLLHOOKSTRUCT)lParam;
         if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
         {
             BOOL bShiftPressed = GetAsyncKeyState(VK_SHIFT) < 0;
@@ -110,7 +115,10 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
         hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, hInstance, 0);
 
         if (hWinHook && hShellHook && hKeyboardLLHook)
+        {
+            OutputDebugStringA("Hooked\n");
             return TRUE;
+        }
     }
 
     /* Unhook */
@@ -132,6 +140,22 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
     return !bDoHook;
 }
 
+// indicdll!12
+VOID APIENTRY
+GetIndicMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
+{
+    *pnID = g_nHotID;
+    *pdwItemData = g_dwHotMenuItemData;
+}
+
+// indicdll!14
+VOID APIENTRY
+SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
+{
+    g_nHotID = nID;
+    g_dwHotMenuItemData = dwItemData;
+}
+
 BOOL WINAPI
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
@@ -142,7 +166,7 @@ DllMain(IN HINSTANCE hinstDLL,
         case DLL_PROCESS_ATTACH:
         {
             hInstance = hinstDLL;
-            hKbSwitchWnd = FindWindow(szKbSwitcherName, NULL);
+            hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
             if (!hKbSwitchWnd)
                 return FALSE;
         }
