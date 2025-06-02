@@ -171,8 +171,8 @@ BOOL FASTCALL GetLayeredStatus(PWND pWnd);
 /************** INPUT CONTEXT **************/
 
 PIMC FASTCALL UserCreateInputContext(_In_ ULONG_PTR dwClientImcData);
-VOID UserFreeInputContext(_Out_ PVOID Object);
-BOOLEAN UserDestroyInputContext(_Out_ PVOID Object);
+VOID UserFreeInputContext(_In_opt_ PVOID Object);
+BOOLEAN UserDestroyInputContext(_In_opt_ PVOID Object);
 
 PVOID
 AllocInputContextObject(

@@ -1526,7 +1526,7 @@ AllocInputContextObject(
 }
 
 VOID
-UserFreeInputContext(_Out_ PVOID Object)
+UserFreeInputContext(_In_opt_ PVOID Object)
 {
     PTHRDESKHEAD ObjHead = Object;
     PDESKTOP pDesk = ObjHead->rpdesk;
@@ -1554,7 +1554,7 @@ UserFreeInputContext(_Out_ PVOID Object)
 }
 
 BOOLEAN
-UserDestroyInputContext(_Out_ PVOID Object)
+UserDestroyInputContext(_In_opt_ PVOID Object)
 {
     PIMC pIMC = Object;
     if (!pIMC)
