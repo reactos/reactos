@@ -1,11 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            win32ss/user/user32/controls/appswitch.c
- * PURPOSE:         app switching functionality
- * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
- *                  David Quintana (gigaherz@gmail.com)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS user32.dll
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     App switching functionality
+ * COPYRIGHT:   Copyright Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              Copyright David Quintana (gigaherz@gmail.com)
+ *              Copyright Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 //
@@ -259,7 +258,7 @@ static HWND GetNiceRootOwner(HWND hwnd)
 // c.f. https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863
 BOOL IsAltTabWindow(HWND hwnd)
 {
-    DWORD ExStyle;
+    LONG_PTR ExStyle, ClassStyle;
     RECT rc;
     HWND hwndTry, hwndWalk;
     WCHAR szClass[64];
@@ -269,7 +268,7 @@ BOOL IsAltTabWindow(HWND hwnd)
         return FALSE;
 
     // must not be WS_EX_TOOLWINDOW nor WS_EX_NOACTIVATE
-    ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
     if (ExStyle & (WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE))
         return FALSE;
 
@@ -285,6 +284,11 @@ BOOL IsAltTabWindow(HWND hwnd)
     {
         return TRUE;
     }
+
+    // must not be an IME-related window
+    ClassStyle = GetClassLongPtrW(hwnd, GCL_STYLE);
+    if (ClassStyle & CS_IME)
+        return FALSE;
 
     // get 'nice' root owner
     hwndWalk = GetNiceRootOwner(hwnd);
