@@ -39,6 +39,7 @@
 #include <shlguid_undoc.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <shellutils.h>
 
 #include "pidl.h"
 #include "shell32_main.h"
@@ -2653,7 +2654,7 @@ LPITEMIDLIST* _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida)
 
     for (i = 0; i < cida->cidl; i++)
     {
-        PITEMID_CHILD clone = ILClone((LPCITEMIDLIST)(&((const BYTE*)cida)[cida->aoffset[i + 1]]));
+        PITEMID_CHILD clone = ILClone(HIDA_GetPIDLItem(cida, i));
         if ((dst[i] = clone) == NULL)
         {
             _ILFreeaPidl(dst, i);
@@ -2663,7 +2664,7 @@ LPITEMIDLIST* _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida)
 
     if (pidl)
     {
-        *pidl = ILClone((LPCITEMIDLIST)(&((const BYTE*)cida)[cida->aoffset[0]]));
+        *pidl = ILClone(HIDA_GetPIDLFolder(cida));
         if (!*pidl)
         {
             _ILFreeaPidl(dst, cida->cidl);
