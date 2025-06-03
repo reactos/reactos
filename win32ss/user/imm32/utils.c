@@ -590,7 +590,7 @@ ImmCreateIMCC(_In_ DWORD size)
  *       ImmDestroyIMCC(IMM32.@)
  */
 HIMCC WINAPI
-ImmDestroyIMCC(_In_opt_ HIMCC block)
+ImmDestroyIMCC(_In_ HIMCC block)
 {
     if (block)
         return LocalFree(block);
@@ -601,7 +601,7 @@ ImmDestroyIMCC(_In_opt_ HIMCC block)
  *		ImmLockIMCC(IMM32.@)
  */
 LPVOID WINAPI
-ImmLockIMCC(_In_opt_ HIMCC imcc)
+ImmLockIMCC(_In_ HIMCC imcc)
 {
     if (imcc)
         return LocalLock(imcc);
@@ -612,7 +612,7 @@ ImmLockIMCC(_In_opt_ HIMCC imcc)
  *		ImmUnlockIMCC(IMM32.@)
  */
 BOOL WINAPI
-ImmUnlockIMCC(_In_opt_ HIMCC imcc)
+ImmUnlockIMCC(_In_ HIMCC imcc)
 {
     if (imcc)
         return LocalUnlock(imcc);
@@ -623,7 +623,7 @@ ImmUnlockIMCC(_In_opt_ HIMCC imcc)
  *		ImmGetIMCCLockCount(IMM32.@)
  */
 DWORD WINAPI
-ImmGetIMCCLockCount(_In_opt_ HIMCC imcc)
+ImmGetIMCCLockCount(_In_ HIMCC imcc)
 {
     return LocalFlags(imcc) & LMEM_LOCKCOUNT;
 }
@@ -633,7 +633,7 @@ ImmGetIMCCLockCount(_In_opt_ HIMCC imcc)
  */
 HIMCC WINAPI
 ImmReSizeIMCC(
-    _In_opt_ HIMCC imcc,
+    _In_ HIMCC imcc,
     _In_ DWORD size)
 {
     if (!imcc)
@@ -645,7 +645,7 @@ ImmReSizeIMCC(
  *		ImmGetIMCCSize(IMM32.@)
  */
 DWORD WINAPI
-ImmGetIMCCSize(_In_opt_ HIMCC imcc)
+ImmGetIMCCSize(_In_ HIMCC imcc)
 {
     if (imcc)
         return LocalSize(imcc);
