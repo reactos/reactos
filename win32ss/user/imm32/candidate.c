@@ -11,7 +11,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
-DWORD APIENTRY
+DWORD
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
 {
@@ -80,8 +80,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, D
     return dwBufLen;
 }
 
-// Win: InternalGetCandidateListAtoW
-DWORD APIENTRY
+DWORD
 CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
                         UINT uCodePage)
 {
@@ -149,10 +148,13 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     return dwBufLen;
 }
 
-// Win: ImmGetCandidateListWorker
-static DWORD APIENTRY
-ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen,
-                      BOOL bAnsi)
+static DWORD
+ImmGetCandidateListAW(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPCANDIDATELIST lpCandList,
+    _In_ DWORD dwBufLen,
+    _In_ BOOL bAnsi)
 {
     DWORD dwSize, ret = 0;
     UINT uCodePage;
@@ -242,9 +244,11 @@ Quit:
     return ret;
 }
 
-// Win: ImmGetCandidateListCountWorker
-DWORD APIENTRY
-ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
+static DWORD
+ImmGetCandidateListCountAW(
+    _In_ HIMC hIMC,
+    _Out_ LPDWORD lpdwListCount,
+    _In_ BOOL bAnsi)
 {
     DWORD ret = 0, cbGot, dwIndex;
     PCLIENTIMC pClientImc;
@@ -341,7 +345,11 @@ Quit:
  *		ImmGetCandidateListA (IMM32.@)
  */
 DWORD WINAPI
-ImmGetCandidateListA(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen)
+ImmGetCandidateListA(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPCANDIDATELIST lpCandList,
+    _In_ DWORD dwBufLen)
 {
     return ImmGetCandidateListAW(hIMC, dwIndex, lpCandList, dwBufLen, TRUE);
 }
@@ -349,7 +357,10 @@ ImmGetCandidateListA(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD
 /***********************************************************************
  *		ImmGetCandidateListCountA (IMM32.@)
  */
-DWORD WINAPI ImmGetCandidateListCountA(HIMC hIMC, LPDWORD lpdwListCount)
+DWORD WINAPI
+ImmGetCandidateListCountA(
+    _In_ HIMC hIMC,
+    _Out_ LPDWORD lpdwListCount)
 {
     return ImmGetCandidateListCountAW(hIMC, lpdwListCount, TRUE);
 }
@@ -357,7 +368,10 @@ DWORD WINAPI ImmGetCandidateListCountA(HIMC hIMC, LPDWORD lpdwListCount)
 /***********************************************************************
  *		ImmGetCandidateListCountW (IMM32.@)
  */
-DWORD WINAPI ImmGetCandidateListCountW(HIMC hIMC, LPDWORD lpdwListCount)
+DWORD WINAPI
+ImmGetCandidateListCountW(
+    _In_ HIMC hIMC,
+    _Out_ LPDWORD lpdwListCount)
 {
     return ImmGetCandidateListCountAW(hIMC, lpdwListCount, FALSE);
 }
@@ -366,7 +380,11 @@ DWORD WINAPI ImmGetCandidateListCountW(HIMC hIMC, LPDWORD lpdwListCount)
  *		ImmGetCandidateListW (IMM32.@)
  */
 DWORD WINAPI
-ImmGetCandidateListW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen)
+ImmGetCandidateListW(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPCANDIDATELIST lpCandList,
+    _In_ DWORD dwBufLen)
 {
     return ImmGetCandidateListAW(hIMC, dwIndex, lpCandList, dwBufLen, FALSE);
 }
@@ -375,7 +393,10 @@ ImmGetCandidateListW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD
  *		ImmGetCandidateWindow (IMM32.@)
  */
 BOOL WINAPI
-ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
+ImmGetCandidateWindow(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_ LPCANDIDATEFORM lpCandidate)
 {
     BOOL ret = FALSE;
     LPINPUTCONTEXT pIC;
@@ -408,7 +429,10 @@ ImmGetCandidateWindow(HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
 /***********************************************************************
  *		ImmSetCandidateWindow (IMM32.@)
  */
-BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
+BOOL WINAPI
+ImmSetCandidateWindow(
+    _In_ HIMC hIMC,
+    _In_ LPCANDIDATEFORM lpCandidate)
 {
     HWND hWnd;
     LPINPUTCONTEXT pIC;

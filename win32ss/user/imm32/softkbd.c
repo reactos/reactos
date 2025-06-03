@@ -192,7 +192,7 @@ T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
 
 #if DBG
     GetTextFaceW(hDC, _countof(szFace), szFace);
-    TRACE("szFace: %S\n", szFace);
+    TRACE("szFace: %s\n", debugstr_w(szFace));
 #endif
 
     GetTextMetricsW(hDC, ptm);

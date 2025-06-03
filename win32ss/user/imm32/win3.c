@@ -11,8 +11,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #ifdef IMM_WIN3_SUPPORT /* 3.x support */
 
-/* Win: JTransCompositionA */
-DWORD APIENTRY
+DWORD
 Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
@@ -21,8 +20,7 @@ Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
     return 1;
 }
 
-/* Win: JTransCompositionW */
-DWORD APIENTRY
+DWORD
 Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
@@ -33,7 +31,7 @@ Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
 
 typedef LRESULT (WINAPI *FN_SendMessage)(HWND, UINT, WPARAM, LPARAM);
 
-DWORD APIENTRY
+DWORD
 WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
                         LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
@@ -172,7 +170,7 @@ DoDefault:
     return ret;
 }
 
-DWORD APIENTRY
+DWORD
 WINNLSTranslateMessageK(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
                         LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
@@ -180,7 +178,7 @@ WINNLSTranslateMessageK(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC
     return dwCount;
 }
 
-DWORD APIENTRY
+DWORD
 WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
@@ -213,7 +211,10 @@ WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi
 /***********************************************************************
  *		ImmSendIMEMessageExA(IMM32.@)
  */
-WORD WINAPI ImmSendIMEMessageExA(HWND hWnd, LPARAM lParam)
+WORD WINAPI
+ImmSendIMEMessageExA(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam)
 {
     FIXME("(%p, %p)\n", hWnd, lParam);
     return 0;
@@ -222,7 +223,10 @@ WORD WINAPI ImmSendIMEMessageExA(HWND hWnd, LPARAM lParam)
 /***********************************************************************
  *		ImmSendIMEMessageExW(IMM32.@)
  */
-WORD WINAPI ImmSendIMEMessageExW(HWND hWnd, LPARAM lParam)
+WORD WINAPI
+ImmSendIMEMessageExW(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam)
 {
     FIXME("(%p, %p)\n", hWnd, lParam);
     return 0;

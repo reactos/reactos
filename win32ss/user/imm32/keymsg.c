@@ -14,8 +14,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-/* Win: IMENonIMEToggle */
-BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, BOOL bNowIME, LANGID LangID)
+static BOOL
+Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, BOOL bNowIME, LANGID LangID)
 {
     HKL hOldKL, LayoutList[32], hFoundKL = NULL;
     UINT iLayout, nLayoutCount;
@@ -64,8 +64,8 @@ BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, BOOL bNowIME, 
 }
 
 /* Open or close the IME on Chinese or Taiwanese */
-/* Win: CIMENonIMEToggle */
-BOOL APIENTRY Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
+static BOOL
+Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
@@ -95,8 +95,8 @@ BOOL APIENTRY Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID
 }
 
 /* Toggle shape mode on Chinese or Taiwanese */
-/* Win: TShapeToggle */
-BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
+static BOOL
+Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
@@ -126,8 +126,8 @@ BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
-/* Win: CSymbolToggle */
-BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
+static BOOL
+Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
@@ -158,7 +158,8 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 }
 
 /* Open or close Japanese IME */
-BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
+static BOOL
+Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     BOOL fOpen;
     LPINPUTCONTEXTDX pIC;
@@ -184,8 +185,8 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
     return TRUE;
 }
 
-/* Win: KShapeToggle */
-BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
+static BOOL
+Imm32KShapeToggle(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
     DWORD dwConversion, dwSentence;
@@ -207,8 +208,8 @@ BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
     return TRUE;
 }
 
-/* Win: KHanjaConvert */
-BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
+static BOOL
+Imm32KHanjaConvert(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
     DWORD dwConversion, dwSentence;
@@ -225,8 +226,8 @@ BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
     return TRUE;
 }
 
-/* Win: KEnglishHangul */
-BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
+static BOOL
+Imm32KEnglish(HIMC hIMC)
 {
     LPINPUTCONTEXT pIC;
     DWORD dwConversion, dwSentence;
@@ -247,8 +248,8 @@ BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
     return TRUE;
 }
 
-/* Win: HotKeyIDDispatcher */
-BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
+static BOOL
+Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     PIMEDPI pImeDpi;
     BOOL ret;
@@ -305,9 +306,13 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
     return ret;
 }
 
-/* Win: ImmIsUIMessageWorker */
-static BOOL APIENTRY
-ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
+static BOOL
+ImmIsUIMessageAW(
+    _In_opt_ HWND hWndIME,
+    _In_ UINT msg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam,
+    _In_ BOOL bAnsi)
 {
     switch (msg)
     {
@@ -364,12 +369,12 @@ Quit:
     return TRUE;
 }
 
-BOOL APIENTRY Imm32SendNotification(BOOL bProcess)
+BOOL Imm32SendNotification(BOOL bProcess)
 {
     return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendNotificationProc, 0);
 }
 
-LRESULT APIENTRY
+static LRESULT
 Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bAnsiAPI)
 {
     HWND hWnd;
@@ -578,8 +583,12 @@ Quit:
     return ret;
 }
 
-/* Win: ImmRequestMessageWorker */
-LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
+static LRESULT
+ImmRequestMessageAW(
+    _In_ HIMC hIMC,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam,
+    _In_ BOOL bAnsi)
 {
     LRESULT ret = 0;
     LPINPUTCONTEXT pIC;
@@ -607,7 +616,12 @@ LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BO
 /***********************************************************************
  *		ImmIsUIMessageA (IMM32.@)
  */
-BOOL WINAPI ImmIsUIMessageA(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI
+ImmIsUIMessageA(
+    _In_opt_ HWND hWndIME,
+    _In_ UINT msg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     TRACE("(%p, 0x%X, %p, %p)\n", hWndIME, msg, wParam, lParam);
     return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, TRUE);
@@ -616,7 +630,12 @@ BOOL WINAPI ImmIsUIMessageA(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam
 /***********************************************************************
  *		ImmIsUIMessageW (IMM32.@)
  */
-BOOL WINAPI ImmIsUIMessageW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI
+ImmIsUIMessageW(
+    _In_opt_ HWND hWndIME,
+    _In_ UINT msg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     TRACE("(%p, 0x%X, %p, %p)\n", hWndIME, msg, wParam, lParam);
     return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, FALSE);
@@ -626,8 +645,11 @@ BOOL WINAPI ImmIsUIMessageW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam
  *              ImmGetHotKey(IMM32.@)
  */
 BOOL WINAPI
-ImmGetHotKey(IN DWORD dwHotKey, OUT LPUINT lpuModifiers, OUT LPUINT lpuVKey,
-             OUT LPHKL lphKL)
+ImmGetHotKey(
+    _In_ DWORD dwHotKey,
+    _Out_ LPUINT lpuModifiers,
+    _Out_ LPUINT lpuVKey,
+    _Out_ LPHKL lphKL)
 {
     TRACE("(0x%lX, %p, %p, %p)\n", dwHotKey, lpuModifiers, lpuVKey, lphKL);
     if (lpuModifiers && lpuVKey)
@@ -638,7 +660,8 @@ ImmGetHotKey(IN DWORD dwHotKey, OUT LPUINT lpuModifiers, OUT LPUINT lpuVKey,
 /***********************************************************************
  *              ImmWINNLSGetIMEHotkey (IMM32.@)
  */
-UINT WINAPI ImmWINNLSGetIMEHotkey(HWND hwndIme)
+UINT WINAPI
+ImmWINNLSGetIMEHotkey(_In_ HWND hwndIme)
 {
     TRACE("(%p)\n", hwndIme);
     UNREFERENCED_PARAMETER(hwndIme);
@@ -648,7 +671,10 @@ UINT WINAPI ImmWINNLSGetIMEHotkey(HWND hwndIme)
 /***********************************************************************
  *		ImmSimulateHotKey (IMM32.@)
  */
-BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
+BOOL WINAPI
+ImmSimulateHotKey(
+    _In_ HWND hWnd,
+    _In_ DWORD dwHotKeyID)
 {
     HIMC hIMC;
     DWORD dwThreadId;
@@ -668,7 +694,8 @@ BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
 /***********************************************************************
  *		ImmGetVirtualKey (IMM32.@)
  */
-UINT WINAPI ImmGetVirtualKey(HWND hWnd)
+UINT WINAPI
+ImmGetVirtualKey(_In_ HWND hWnd)
 {
     HIMC hIMC;
     LPINPUTCONTEXTDX pIC;
@@ -691,7 +718,8 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 /***********************************************************************
  *		ImmGetAppCompatFlags (IMM32.@)
  */
-DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
+DWORD WINAPI
+ImmGetAppCompatFlags(_In_ HIMC hIMC)
 {
     PCLIENTIMC pClientIMC;
     DWORD dwFlags;
@@ -712,7 +740,12 @@ DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
  *       ( Undocumented, called from user32.dll )
  */
 DWORD WINAPI
-ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
+ImmProcessKey(
+    _In_ HWND hWnd,
+    _In_ HKL hKL,
+    _In_ UINT vKey,
+    _In_ LPARAM lParam,
+    _In_ DWORD dwHotKeyID)
 {
     DWORD ret = 0;
     HIMC hIMC;
@@ -841,7 +874,8 @@ ImmSystemHandler(
 /***********************************************************************
  *		ImmGenerateMessage(IMM32.@)
  */
-BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
+BOOL WINAPI
+ImmGenerateMessage(_In_ HIMC hIMC)
 {
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXT pIC;
@@ -918,8 +952,12 @@ Quit:
     return TRUE;
 }
 
-VOID APIENTRY
-ImmPostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
+static VOID
+ImmPostMessages(
+    _In_ HWND hwnd,
+    _In_ HIMC hIMC,
+    _In_ DWORD dwCount,
+    _In_ LPTRANSMSG lpTransMsg)
 {
     DWORD dwIndex;
     PCLIENTIMC pClientImc;
@@ -978,7 +1016,12 @@ ImmPostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
  *       ImmTranslateMessage(IMM32.@)
  *       ( Undocumented, call internally and from user32.dll )
  */
-BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyData)
+BOOL WINAPI
+ImmTranslateMessage(
+    _In_ HWND hwnd,
+    _In_ UINT msg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lKeyData)
 {
 #define MSG_COUNT 0x100
     BOOL ret = FALSE;
@@ -1115,7 +1158,11 @@ Quit:
 /***********************************************************************
  *              ImmRequestMessageA(IMM32.@)
  */
-LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI
+ImmRequestMessageA(
+    _In_ HIMC hIMC,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
     return ImmRequestMessageAW(hIMC, wParam, lParam, TRUE);
@@ -1124,7 +1171,11 @@ LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 /***********************************************************************
  *              ImmRequestMessageW(IMM32.@)
  */
-LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI
+ImmRequestMessageW(
+    _In_ HIMC hIMC,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
     return ImmRequestMessageAW(hIMC, wParam, lParam, FALSE);
