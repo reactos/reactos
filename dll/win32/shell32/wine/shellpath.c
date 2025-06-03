@@ -3438,7 +3438,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
     *ppszPath = NULL;
 
     if ((dwFlags & KF_FLAG_DEFAULT_PATH) && (hToken == NULL))
-        hToken = (HANDLE)-1;
+        hToken = INVALID_HANDLE_VALUE;
 
     for (i = 0; i < ARRAY_SIZE(CSIDL_Data); ++i)
     {
@@ -3451,7 +3451,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
 
     if (mapped_csidl == -1)
     {
-        TRACE("Unknown known folder GUID requested\n");
+        ERR("Unknown known folder GUID requested\n");
         return E_INVALIDARG;
     }
 
@@ -3521,9 +3521,9 @@ HRESULT WINAPI SHGetKnownFolderPath(
             }
             break;
         case CSIDL_Type_SystemX86Path:
-            if (!GetSystemWow64DirectoryW(szPath, MAX_PATH))
+            if (!GetSystemWow64DirectoryW(szPath, _countof(szPath)))
             {
-                if (!GetSystemDirectoryW(szPath, MAX_PATH))
+                if (!GetSystemDirectoryW(szPath, _countof(szPath)))
                 {
                     hr = HRESULT_FROM_WIN32(GetLastError());
                 } 
