@@ -811,8 +811,8 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 struct DIRTREESTATS
 {
-    DWORD *pDirCount, *pFileCount;
-    ULARGE_INTEGER *pTotVirtSize, *pTotPhysSize;
+    PDWORD pDirCount, pFileCount;
+    PULARGE_INTEGER pTotVirtSize, pTotPhysSize;
     UINT nTick;
     UINT fAttribSet, fAttribAll;
     BOOL bMultipleTypes;
@@ -955,7 +955,7 @@ CFileDefExt::InitMultifilePageThread()
         if (!pidl)
             return;
         PWSTR pszAbsPath;
-        HRESULT hr = SH32_DisplayNameOf(NULL, pidl, SHGDN_FORPARSING, &pszAbsPath);
+        HRESULT hr = SHELL_DisplayNameOf(NULL, pidl, SHGDN_FORPARSING, &pszAbsPath);
         ILFree(pidl);
         if (FAILED(hr))
             return;
@@ -973,7 +973,7 @@ CFileDefExt::InitMultifilePageThread()
     PWSTR pszDir = NULL;
     HRESULT hr = E_FAIL;
     if (!Stats.bDeepRecurse)
-        hr = SH32_DisplayNameOf(NULL, m_pidlFolder, SHGDN_FORPARSING | SHGDN_FORADDRESSBAR, &pszDir);
+        hr = SHELL_DisplayNameOf(NULL, m_pidlFolder, SHGDN_FORPARSING | SHGDN_FORADDRESSBAR, &pszDir);
     if (SUCCEEDED(hr))
     {
         SetDlgItemTextW(m_hWndDirStatsDlg, 14009, pszDir);
@@ -995,6 +995,7 @@ CFileDefExt::InitMultifilePageThread()
     SetMultifileDlgFileAttr(FILE_ATTRIBUTE_READONLY, 14021);
     SetMultifileDlgFileAttr(FILE_ATTRIBUTE_HIDDEN, 14022);
     SetMultifileDlgFileAttr(FILE_ATTRIBUTE_ARCHIVE, 14023);
+    #undef SetMultifileDlgFileAttr
 }
 
 DWORD CALLBACK

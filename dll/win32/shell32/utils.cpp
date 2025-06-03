@@ -403,9 +403,11 @@ SHELL_GetUIObjectOfAbsoluteItem(
 }
 
 HRESULT
-SH32_DisplayNameOf(
-    _In_opt_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl,
-    _In_opt_ UINT Flags, _Out_ PWSTR *ppStr)
+SHELL_DisplayNameOf(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ UINT Flags,
+    _Out_ PWSTR *ppStr)
 {
     HRESULT hr;
     CComPtr<IShellFolder> psfRoot;

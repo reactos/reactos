@@ -176,8 +176,7 @@ SHELL32_ShowFilesystemItemPropertiesDialogAsync(IDataObject *pDO)
         pClsid = &CLSID_ShellFileDefExt;
         InitFunc = FSFolderItemPropDialogInitCallback;
     }
-    ShellPropSheetDialog Dialog;
-    return Dialog.ShowAsync(pClsid, pDO, InitFunc, InitString);
+    return ShellPropSheetDialog().ShowAsync(pClsid, pDO, InitFunc, InitString);
 }
 
 HRESULT
@@ -193,8 +192,7 @@ SHELL32_ShowShellExtensionProperties(const CLSID *pClsid, IDataObject *pDO)
 {
     WCHAR ClassBuf[6 + 38 + 1] = L"CLSID\\";
     StringFromGUID2(*pClsid, ClassBuf + 6, 38 + 1);
-    ShellPropSheetDialog Dialog;
-    return Dialog.ShowAsync(NULL, pDO, ClassPropDialogInitCallback, ClassBuf);
+    return ShellPropSheetDialog().ShowAsync(NULL, pDO, ClassPropDialogInitCallback, ClassBuf);
 }
 
 HRESULT
@@ -227,6 +225,5 @@ SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags)
     if (DataObject_GetHIDACount(pDataObject) == 1)
         return SHELL32_ShowFilesystemItemPropertiesDialogAsync(pDataObject);
 
-    ShellPropSheetDialog Dialog;
-    return Dialog.ShowAsync(&CLSID_ShellFileDefExt, pDataObject, NULL, NULL);
+    return ShellPropSheetDialog().ShowAsync(&CLSID_ShellFileDefExt, pDataObject, NULL, NULL);
 }
