@@ -117,3 +117,11 @@ void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
             Sleep(250);
     }
 }
+
+void CloseNewWindows(PWINDOW_LIST InitialList)
+{
+    WINDOW_LIST newwindows;
+    GetWindowListForClose(&newwindows);
+    CloseNewWindows(InitialList, &newwindows);
+    FreeWindowList(&newwindows);
+}

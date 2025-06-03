@@ -17,4 +17,5 @@ void GetWindowList(PWINDOW_LIST pList);
 void GetWindowListForClose(PWINDOW_LIST pList);
 HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2);
 void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2);
+void CloseNewWindows(PWINDOW_LIST InitialList);
 void FreeWindowList(PWINDOW_LIST pList);

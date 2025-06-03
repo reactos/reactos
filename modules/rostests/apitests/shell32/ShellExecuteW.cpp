@@ -31,18 +31,12 @@ static void CloseWindow(HINSTANCE hInstance, PCWSTR ClassName, PCWSTR Title)
         }
 
         if (!hWnd || !PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
-        {
-            WINDOW_LIST newwindows;
-            GetWindowList(&newwindows);
-            CloseNewWindows(&g_winlist, &newwindows);
-            FreeWindowList(&newwindows);
-        }
+            CloseNewWindows(&g_winlist);
     }
 }
 
 START_TEST(ShellExecuteW)
 {
-    GetWindowList(&g_winlist);
     INT ret;
     HINSTANCE hInstance;
     WCHAR WinDir[MAX_PATH], SysDir[MAX_PATH], SysDrive[MAX_PATH];
@@ -65,6 +59,7 @@ START_TEST(ShellExecuteW)
         SysDrive[2] = 0;
     }
     PathAddBackslashW(SysDrive);
+    GetWindowList(&g_winlist);
 
     // TEST #1: Open Control Panel
     hInstance = ShellExecuteW(NULL, L"open", L"rundll32.exe", L"shell32.dll,Control_RunDLL desk.cpl",
@@ -123,6 +118,7 @@ START_TEST(ShellExecuteW)
     trace("TEST #8 ret: %d.\n", ret);
     CloseWindow(hInstance, L"CabinetWClass", NULL);
 
+    CloseNewWindows(&g_winlist);
     FreeWindowList(&g_winlist);
 }
 
