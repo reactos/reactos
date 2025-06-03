@@ -5,6 +5,7 @@
 
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+#define COBJMACROS
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS

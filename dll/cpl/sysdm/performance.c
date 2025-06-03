@@ -7,7 +7,6 @@
  *
  */
 
-#define COBJMACROS
 #include "precomp.h"
 #include <shlguid_undoc.h> // CLSID_CRegTreeOptions
 #include <shlobj_undoc.h> // IRegTreeOptions
@@ -53,7 +52,7 @@ RegTreeOpt_OnTreeViewKeyDown(IRegTreeOptions *pRTO, HWND hWndTree, TV_KEYDOWN *p
 static INT_PTR CALLBACK
 VisualEffectsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    IRegTreeOptions *pRTO = (IRegTreeOptions*)GetWindowLongPtr(hDlg, DWLP_USER);
+    IRegTreeOptions *pRTO = (IRegTreeOptions*)GetWindowLongPtrW(hDlg, DWLP_USER);
     HWND hWndTree = GetDlgItem(hDlg, IDC_TREE);
 
     switch (uMsg)
@@ -65,15 +64,23 @@ VisualEffectsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                            &IID_IRegTreeOptions, (void**)&pRTO)))
             {
                 LPCSTR pszPath = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects";
-                SetWindowLongPtr(hDlg, DWLP_USER, (LPARAM)pRTO);
+                SetWindowLongPtrW(hDlg, DWLP_USER, (LPARAM)pRTO);
                 IRegTreeOptions_InitTree(pRTO, hWndTree, HKEY_LOCAL_MACHINE, pszPath, NULL);
+            }
+            else
+            {
+                // Without IRegTreeOptions, our page is pointless so we remove it.
+                // MSDN says we have to post the remove message from inside WM_INITDIALOG.
+                HWND hWndPS = GetParent(hDlg);
+                int iPage = PropSheet_HwndToIndex(hWndPS, hDlg);
+                PostMessage(hWndPS, PSM_REMOVEPAGE, 0, SendMessageW(hWndPS, PSM_INDEXTOPAGE, iPage, 0));
             }
             return TRUE;
         }
 
         case WM_DESTROY:
             RegTreeOpt_OnDestroy(pRTO);
-            SetWindowLongPtr(hDlg, DWLP_USER, (LPARAM)NULL);
+            SetWindowLongPtrW(hDlg, DWLP_USER, (LPARAM)NULL);
             break;
 
         case WM_NOTIFY:
@@ -118,7 +125,7 @@ AdvancedDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDC_CHANGESWAP:
-                    DialogBox(hApplet, MAKEINTRESOURCE(IDD_VIRTMEM), hDlg, VirtMemDlgProc);
+                    DialogBoxW(hApplet, MAKEINTRESOURCEW(IDD_VIRTMEM), hDlg, VirtMemDlgProc);
                     break;
             }
             break;
