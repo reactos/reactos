@@ -117,13 +117,13 @@ HWND FASTCALL IntFindWindow(PWND Parent, PWND ChildAfter, RTL_ATOM ClassAtom,
 
 extern BOOL gfIMEShowStatus;
 
-BOOL FASTCALL IntWantImeWindow(PWND pwndTarget);
-PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst);
-BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget);
-BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget);
-BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow);
-VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd);
-VOID FASTCALL IntCheckImeShowStatusInThread(PWND pImeWnd);
+BOOL FASTCALL IntWantImeWindow(_In_ PWND pwndTarget);
+PWND FASTCALL co_IntCreateDefaultImeWindow(_In_ PWND pwndTarget, _In_ HINSTANCE hInst);
+BOOL FASTCALL IntImeCanDestroyDefIMEforChild(_In_ PWND pImeWnd, _In_ PWND pwndTarget);
+BOOL FASTCALL IntImeCanDestroyDefIME(_In_ PWND pImeWnd, _In_ PWND pwndTarget);
+BOOL FASTCALL IntBroadcastImeShowStatusChange(_In_ PWND pImeWnd, _In_ BOOL bShow);
+VOID FASTCALL IntNotifyImeShowStatus(_In_ PWND pImeWnd);
+VOID FASTCALL IntCheckImeShowStatusInThread(_In_ PWND pImeWnd);
 
 static inline
 VOID
