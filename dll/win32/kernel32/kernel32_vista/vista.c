@@ -446,28 +446,6 @@ CreateSymbolicLinkA(IN LPCSTR lpSymlinkFileName,
 
 
 /*
- * @unimplemented
- */
-DWORD
-WINAPI
-GetFinalPathNameByHandleW(IN HANDLE hFile,
-                          OUT LPWSTR lpszFilePath,
-                          IN DWORD cchFilePath,
-                          IN DWORD dwFlags)
-{
-    if (dwFlags & ~(VOLUME_NAME_DOS | VOLUME_NAME_GUID | VOLUME_NAME_NT |
-                    VOLUME_NAME_NONE | FILE_NAME_NORMALIZED | FILE_NAME_OPENED))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
-/*
  * @implemented
  */
 DWORD
@@ -533,7 +511,6 @@ GetFinalPathNameByHandleA(IN HANDLE hFile,
 
     return Ret;
 }
-
 
 /*
  * @unimplemented
