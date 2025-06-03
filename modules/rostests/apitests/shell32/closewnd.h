@@ -28,6 +28,7 @@ typedef struct WINDOW_LIST
     HWND *m_phWnds;
 } WINDOW_LIST, *PWINDOW_LIST;
 
+
 static inline VOID FreeWindowList(PWINDOW_LIST pList)
 {
     free(pList->m_phWnds);
@@ -126,6 +127,16 @@ static inline VOID CloseNewWindows(PWINDOW_LIST pExisting, PWINDOW_LIST pNew)
         }
     }
 }
+
+#ifdef __cplusplus
+void CloseNewWindows(PWINDOW_LIST InitialList)
+{
+    WINDOW_LIST newwindows;
+    GetWindowListForClose(&newwindows);
+    CloseNewWindows(InitialList, &newwindows);
+    FreeWindowList(&newwindows);
+}
+#endif
 
 static inline HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
 {
