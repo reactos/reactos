@@ -11,6 +11,7 @@ list(APPEND SOURCE
     EnumSystemLocalesEx.c
     GetLocaleInfoEx.c
     GetFileInformationByHandleEx.c
+    GetFinalPathNameByHandle.c
     GetTickCount64.c
     GetUserDefaultLocaleName.c
     InitOnce.c
