@@ -3,6 +3,7 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     "Secure" shell path manipulation functions
  * COPYRIGHT:   MinGW-64 and Microsoft Corporation.
+ *              Copyright 2023-2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /**
@@ -12,7 +13,6 @@
 
 #pragma once
 
-
 #ifndef WINBASEAPI
 #ifndef _KERNEL32_
 #define WINBASEAPI DECLSPEC_IMPORT
@@ -20,7 +20,6 @@
 #define WINBASEAPI
 #endif
 #endif
-
 
 #ifndef WINPATHCCHAPI
 #ifndef STATIC_PATHCCH
@@ -35,15 +34,17 @@
 extern "C" {
 #endif
 
-// typedef enum PATHCCH_OPTIONS
-#define PATHCCH_NONE                            0x00
-#define PATHCCH_ALLOW_LONG_PATHS                0x01
-#define PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS  0x02
-#define PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS 0x04
-#define PATHCCH_DO_NOT_NORMALIZE_SEGMENTS       0x08
-#define PATHCCH_ENSURE_IS_EXTENDED_LENGTH_PATH  0x10
-#define PATHCCH_ENSURE_TRAILING_SLASH           0x20
-// DEFINE_ENUM_FLAG_OPERATORS(PATHCCH_OPTIONS)
+typedef enum PATHCCH_OPTIONS
+{
+    PATHCCH_NONE                            = 0x00,
+    PATHCCH_ALLOW_LONG_PATHS                = 0x01,
+    PATHCCH_FORCE_ENABLE_LONG_NAME_PROCESS  = 0x02,
+    PATHCCH_FORCE_DISABLE_LONG_NAME_PROCESS = 0x04,
+    PATHCCH_DO_NOT_NORMALIZE_SEGMENTS       = 0x08,
+    PATHCCH_ENSURE_IS_EXTENDED_LENGTH_PATH  = 0x10,
+    PATHCCH_ENSURE_TRAILING_SLASH           = 0x20,
+} PATHCCH_OPTIONS;
+DEFINE_ENUM_FLAG_OPERATORS(PATHCCH_OPTIONS)
 
 #define VOLUME_PREFIX       L"\\\\?\\Volume"
 #define VOLUME_PREFIX_LEN   (ARRAYSIZE(VOLUME_PREFIX) - 1)
