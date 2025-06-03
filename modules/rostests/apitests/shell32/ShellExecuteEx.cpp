@@ -200,7 +200,7 @@ static TEST_RESULT TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
 static void
 TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline)
 {
-    WINDOW_LIST newwindows = {}, existingwindows = {};
+    WINDOW_LIST existingwindows;
     GetWindowList(&existingwindows);
     HWND hWndForeground = GetForegroundWindow();
 
@@ -214,9 +214,7 @@ TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline)
             Sleep(250);
     }
 
-    GetWindowListForClose(&newwindows);
-    CloseNewWindows(&existingwindows, &newwindows);
-    FreeWindowList(&newwindows);
+    CloseNewWindows(&existingwindows);
     FreeWindowList(&existingwindows);
 }
 
