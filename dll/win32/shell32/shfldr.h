@@ -207,4 +207,6 @@ HRESULT inline SHSetStrRet(LPSTRRET pStrRet, DWORD resId)
 
 #endif
 
+UINT SHELL_GetIconUnderlineFlags();
+
 #endif /* _SHFLDR_H_ */
