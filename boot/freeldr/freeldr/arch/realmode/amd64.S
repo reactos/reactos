@@ -29,14 +29,17 @@ Startup:
     mov byte ptr ds:[BSS_BootPartition], dh
 
     /* Setup a real mode stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, STACK16ADDR
+
+    /* Enable A20 address line */
+    call EnableA20
+
+    /* Relocate FreeLdr if necessary */
+    call RelocateFreeLdr
 
     /* Output first status */
     mov si, offset Msg_Starting
     call writestr
-
-    /* Enable A20 address line */
-    call EnableA20
 
     /* Check the CPU */
     call CheckFor64BitSupport
@@ -363,7 +366,7 @@ CallbackTable:
 
     /* 16-bit stack pointer */
 stack16:
-    .word STACK16ADDR
+    .word 0
 
 
 #include "int386.inc"

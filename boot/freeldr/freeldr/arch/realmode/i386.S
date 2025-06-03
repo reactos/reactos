@@ -25,10 +25,17 @@ RealModeEntryPoint:
     mov ss, ax
 
     /* Setup the stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, STACK16ADDR
 
     /* Enable A20 address line */
     call EnableA20
+
+    /* Relocate FreeLdr if necessary */
+    call RelocateFreeLdr
+
+    /* Output first status */
+    mov si, offset Msg_Starting
+    call writestr
 
     /* Save real mode entry point in shared memory */
     mov dword ptr ds:[BSS_RealModeEntry], offset switch_to_real16
@@ -54,6 +61,8 @@ RealModeEntryPoint:
 
     jmp exit_to_protected
 
+Msg_Starting:
+    .ascii "Starting FreeLoader...", CR, LF, NUL
 
 /* This is the entry point from protected mode */
 switch_to_real16:
@@ -153,7 +162,7 @@ CallbackTable:
 
     /* 16-bit stack pointer */
 stack16:
-    .word    STACK16ADDR
+    .word 0
 
 
 .align 4    /* force 4-byte alignment */
