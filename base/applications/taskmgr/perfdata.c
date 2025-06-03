@@ -72,7 +72,7 @@ BOOL PerfDataInitialize(void)
                                0, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)
                                * SystemBasicInfo.NumberOfProcessors);
 
-    return TRUE;
+    return SystemProcessorTimeInfo != NULL;
 }
 
 void PerfDataUninitialize(void)
