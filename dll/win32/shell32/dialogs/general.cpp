@@ -109,7 +109,7 @@ static UINT IntGetRawIconUnderlineValue()
 {
     DWORD dwValue, dwDefault = UNDERLINE_ON;
     DWORD dwSize = sizeof(dwValue);
-    SHRegGetUSValue(s_pszExplorerKey, L"IconUnderline", NULL, &dwValue, &dwSize, FALSE, &dwDefault, sizeof(DWORD));
+    SHRegGetUSValue(s_pszExplorerKey, L"IconUnderline", NULL, &dwValue, &dwSize, FALSE, &dwDefault, sizeof(dwDefault));
     return dwValue;
 }
 
