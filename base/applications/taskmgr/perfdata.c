@@ -69,8 +69,7 @@ BOOL PerfDataInitialize(void)
      * Set up global info storage
      */
     SystemProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)HeapAlloc(GetProcessHeap(),
-                               0, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)
-                               * SystemBasicInfo.NumberOfProcessors);
+                               0, sizeof(*SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
 
     return SystemProcessorTimeInfo != NULL;
 }
@@ -256,7 +255,11 @@ void PerfDataRefresh(void)
      * Save system processor time info
      */
     memcpy(SystemProcessorTimeInfo, SysProcessorTimeInfo,
-           sizeof(SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+           sizeof(*SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+
+    if (SysProcessorTimeInfo) {
+        HeapFree(GetProcessHeap(), 0, SysProcessorTimeInfo);
+    }
 
     /*
      * Save system handle info
@@ -430,10 +433,6 @@ ClearInfo:
     }
     pPerfDataOld = pPerfData;
     LeaveCriticalSection(&PerfDataCriticalSection);
-
-    if (SysProcessorTimeInfo) {
-        HeapFree(GetProcessHeap(), 0, SysProcessorTimeInfo);
-    }
 }
 
 ULONG PerfDataGetProcessIndex(ULONG pid)
