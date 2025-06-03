@@ -522,8 +522,8 @@ IntGetTopLevelWindow(_In_ PWND pwnd)
     return pwnd;
 }
 
-HIMC FASTCALL
-IntAssociateInputContext(PWND pWnd, PIMC pImc)
+static HIMC FASTCALL
+IntAssociateInputContext(_Inout_ PWND pWnd, _In_ PIMC pImc)
 {
     HIMC hOldImc = pWnd->hImc;
     pWnd->hImc = (pImc ? UserHMGetHandle(pImc) : NULL);
@@ -562,7 +562,10 @@ Quit:
 }
 
 DWORD FASTCALL
-UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
+UserBuildHimcList(
+    _Inout_ PTHREADINFO pti,
+    _In_ DWORD dwCount,
+    _Inout_ HIMC *phList)
 {
     PIMC pIMC;
     DWORD dwRealCount = 0;
@@ -596,11 +599,11 @@ UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
 
 UINT FASTCALL
 IntImmProcessKey(
-    PUSER_MESSAGE_QUEUE MessageQueue,
-    PWND pWnd,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam)
+    _In_ PUSER_MESSAGE_QUEUE MessageQueue,
+    _In_ PWND pWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     UINT uVirtualKey, ret;
     DWORD dwHotKeyId;
@@ -1280,8 +1283,8 @@ IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOwner)
 }
 
 // Get the last non-IME-like top-most window on the desktop.
-PWND FASTCALL
-IntGetLastTopMostWindowNoIME(PWND pImeWnd)
+static PWND FASTCALL
+IntGetLastTopMostWindowNoIME(_In_ PWND pImeWnd)
 {
     PWND pwndNode, pwndOwner, pwndLastTopMost = NULL;
     BOOL bFound;
@@ -1317,8 +1320,8 @@ IntGetLastTopMostWindowNoIME(PWND pImeWnd)
 }
 
 // Adjust the ordering of the windows around the IME window.
-VOID FASTCALL
-IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefore)
+static VOID FASTCALL
+IntImeSetTopMost(_In_ PWND pImeWnd, _In_ BOOL bTopMost, _In_ PWND pwndInsertBefore)
 {
     PWND pwndParent, pwndChild, pwndNode, pwndNext, pwndInsertAfter = NULL;
     PWND pwndInsertAfterSave;
@@ -1407,8 +1410,8 @@ IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefore)
 }
 
 // Make the IME window top-most if necessary.
-VOID FASTCALL
-IntImeCheckTopmost(PWND pImeWnd)
+static VOID FASTCALL
+IntImeCheckTopmost(_In_ PWND pImeWnd)
 {
     BOOL bTopMost;
     PWND pwndOwner = pImeWnd->spwndOwner, pwndInsertBefore = NULL;
@@ -1565,8 +1568,8 @@ UserDestroyInputContext(_In_opt_ PVOID Object)
     return TRUE;
 }
 
-BOOL
-IntDestroyInputContext(PIMC pIMC)
+static BOOL
+IntDestroyInputContext(_In_ PIMC pIMC)
 {
     HIMC hIMC = UserHMGetHandle(pIMC);
     PTHREADINFO pti = pIMC->head.pti;
@@ -1706,8 +1709,8 @@ Quit:
     return ret;
 }
 
-DWORD FASTCALL
-IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
+static DWORD FASTCALL
+IntAssociateInputContextEx(_In_ PWND pWnd, _In_ PIMC pIMC, _In_ DWORD dwFlags)
 {
     DWORD ret = 0;
     PWINDOWLIST pwl;
@@ -1805,8 +1808,8 @@ Quit:
     return ret;
 }
 
-BOOL FASTCALL
-UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
+static BOOL FASTCALL
+UserUpdateInputContext(_In_ PIMC pIMC, _In_ DWORD dwType, _In_ DWORD_PTR dwValue)
 {
     PTHREADINFO pti = GetW32ThreadInfo();
     PTHREADINFO ptiIMC = pIMC->head.pti;
@@ -2440,11 +2443,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
 
     // Attach to the process if necessary
     if (pti != ptiIME)
-    {
-        TRACE("Attaching process... %p\n", ptiIME);
         KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
-        TRACE("Attached\n");
-    }
 
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
@@ -2479,11 +2478,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
 
     // Detach from the process if necessary
     if (pti != ptiIME)
-    {
-        TRACE("Detaching process... %p\n", ptiIME);
         KeDetachProcess();
-        TRACE("Detached\n");
-    }
 
     if (bSendNotify)
         IntSendOpenStatusNotify(ptiIME, &SafeImeUI, pWnd, bShow);

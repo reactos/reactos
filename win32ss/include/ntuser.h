@@ -1255,7 +1255,7 @@ NtUserBuildHimcList(
     _In_ DWORD dwThreadId,
     _In_ DWORD dwCount,
     _Out_ HIMC *phList,
-    _Out_ LPDWORD pdwCount);
+    _Out_ PDWORD pdwCount);
 
 DWORD
 NTAPI
