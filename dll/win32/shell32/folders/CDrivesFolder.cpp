@@ -101,7 +101,7 @@ static INT8 GetDriveNumber(PCWSTR DrivePath)
 
 UINT g_IsFloppyCache = 0;
 
-static UINT GetCachedDriveType(int DrvNum)
+static UINT GetCachedDriveType(INT8 DrvNum)
 {
     if (DrvNum < 0 || DrvNum >= 26)
         return DRIVE_UNKNOWN;
@@ -130,7 +130,7 @@ static bool IsFloppyDrive(PCWSTR DrivePath)
 
 INT8 GetDrivePath(PCUITEMID_CHILD pidl, PWSTR Path)
 {
-    int number = GetDriveNumber(pidl);
+    INT8 number = GetDriveNumber(pidl);
     if (number < 0)
         return number;
     Path[0] = 'A' + number;
@@ -171,7 +171,7 @@ static UINT SHELL_GetAutoRunInfPath(PCWSTR DrvPath, PWSTR AriPath, BOOL ForInvok
     return wsprintfW(AriPath, L"%c:\\autorun.inf", DrvPath[0]);
 }
 
-#if 0 // TODO
+#if 0 // TODO: Call this when the shell is notified about insert disc events
 bool SHELL_CanInvokeAutoRunOnDrive(PCWSTR DrvPath)
 {
     INT8 DrvNum = GetDriveNumber(DrvPath);
