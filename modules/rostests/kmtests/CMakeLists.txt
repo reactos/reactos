@@ -44,6 +44,7 @@ list(APPEND KMTEST_DRV_SOURCE
     kmtest_drv/kmtest_drv.c
     kmtest_drv/structs.c
     kmtest_drv/testlist.c
+    kmtest_drv/vm_detect.c
 
     example/Example.c
     example/KernelType.c
@@ -118,6 +119,14 @@ list(APPEND KMTEST_DRV_SOURCE
     ${COMMON_SOURCE}
 
     kmtest_drv/kmtest_drv.rc)
+
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+    add_asm_files(KMTEST_DRV_ASM
+        kmtest_drv/vm_detect.S)
+    list(APPEND KMTEST_DRV_SOURCE
+        ${KMTEST_DRV_ASM}
+        hal/HalPortIo.c)
+endif()
 
 add_library(kmtest_drv MODULE ${KMTEST_DRV_SOURCE})
 set_module_type(kmtest_drv kernelmodedriver)

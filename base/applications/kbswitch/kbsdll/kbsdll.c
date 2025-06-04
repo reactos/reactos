@@ -65,6 +65,12 @@ ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hShellHook, code, wParam, lParam);
 }
 
+static inline BOOL
+CheckVirtualKey(UINT vKey, UINT vKey1, UINT vKey2)
+{
+    return vKey == vKey1 || vKey == vKey2;
+}
+
 static LRESULT CALLBACK
 KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
 {
@@ -80,10 +86,11 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
             BOOL bAltPressed = GetAsyncKeyState(VK_MENU) < 0;
             BOOL bCtrlPressed = GetAsyncKeyState(VK_CONTROL) < 0;
             // Detect Alt+Shift and Ctrl+Shift
-            if ((pKbStruct->vkCode == VK_SHIFT && bAltPressed) ||
-                (pKbStruct->vkCode == VK_MENU && bShiftPressed) ||
-                (pKbStruct->vkCode == VK_SHIFT && bCtrlPressed) ||
-                (pKbStruct->vkCode == VK_CONTROL && bShiftPressed))
+            UINT vkCode = pKbStruct->vkCode;
+            if ((bAltPressed && CheckVirtualKey(vkCode, VK_LSHIFT, VK_RSHIFT)) ||
+                (bShiftPressed && CheckVirtualKey(vkCode, VK_LMENU, VK_RMENU)) ||
+                (bCtrlPressed && CheckVirtualKey(vkCode, VK_LSHIFT, VK_RSHIFT)) ||
+                (bShiftPressed && CheckVirtualKey(vkCode, VK_LCONTROL, VK_RCONTROL)))
             {
                 PostMessageToMainWnd(WM_LANG_CHANGED, 0, 0);
             }

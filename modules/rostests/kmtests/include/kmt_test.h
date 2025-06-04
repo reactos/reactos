@@ -156,6 +156,7 @@ typedef struct
 
 extern BOOLEAN KmtIsCheckedBuild;
 extern BOOLEAN KmtIsMultiProcessorBuild;
+extern BOOLEAN KmtIsVirtualMachine;
 extern PCSTR KmtMajorFunctionNames[];
 extern PDRIVER_OBJECT KmtDriverObject;
 
