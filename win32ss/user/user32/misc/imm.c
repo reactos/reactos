@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS user32.dll
- * FILE:            win32ss/user/user32/misc/imm.c
- * PURPOSE:         User32.dll Imm functions
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS user32.dll
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     User32.dll Imm functions
+ * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <user32.h>
@@ -17,11 +16,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define MAX_CANDIDATEFORM 4
 
 /* Is != NULL when we have loaded the IMM ourselves */
-HINSTANCE ghImm32 = NULL; // Win: ghImm32
+HINSTANCE ghImm32 = NULL;
 
-BOOL gbImmInitializing = FALSE; // Win: bImmInitializing
+BOOL gbImmInitializing = FALSE;
 
-INT gfConIme = -1; // Win: gfConIme
+INT gfConIme = -1;
 
 HWND FASTCALL IntGetTopLevelWindow(HWND hWnd)
 {
@@ -43,7 +42,6 @@ HWND FASTCALL IntGetTopLevelWindow(HWND hWnd)
     static type WINAPI IMMSTUB_##name params { IMM_RETURN_##retkind((type)retval); }
 #include "immtable.h"
 
-// Win: gImmApiEntries
 Imm32ApiTable gImmApiEntries = {
 /* initialize by stubs */
 #undef DEFINE_IMM_ENTRY
@@ -54,7 +52,7 @@ Imm32ApiTable gImmApiEntries = {
 
 HRESULT
 User32GetSystemFilePath(
-    _Out_ PWSTR lpBuffer,
+    _Out_writes_(cchBuffer) PWSTR lpBuffer,
     _In_ SIZE_T cchBuffer,
     _In_ PCWSTR pszFileName)
 {
@@ -65,11 +63,11 @@ User32GetSystemFilePath(
         return StringCchCatW(lpBuffer, cchBuffer, pszFileName);
     }
     ERR("GetSystemDirectoryW failed (error %lu)\n", GetLastError());
-    return StringCchCopyW(lpBuffer, cchBuffer, pszFileName);
+    StringCchCopyW(lpBuffer, cchBuffer, pszFileName);
+    return E_FAIL;
 }
 
 // @unimplemented
-// Win: _InitializeImmEntryTable
 static BOOL IntInitializeImmEntryTable(VOID)
 {
     WCHAR ImmFile[MAX_PATH];
@@ -118,14 +116,12 @@ static BOOL IntInitializeImmEntryTable(VOID)
     return TRUE;
 }
 
-// Win: InitializeImmEntryTable
 BOOL WINAPI InitializeImmEntryTable(VOID)
 {
     gbImmInitializing = TRUE;
     return IntInitializeImmEntryTable();
 }
 
-// Win: User32InitializeImmEntryTable
 BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 {
     TRACE("Imm (%x)\n", magic);
@@ -154,21 +150,18 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     return IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
 }
 
-// Win: ImeIsUsableContext
 static BOOL User32CanSetImeWindowToImc(HIMC hIMC, HWND hImeWnd)
 {
     PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
     return pIMC && (!pIMC->hImeWnd || pIMC->hImeWnd == hImeWnd || !ValidateHwnd(pIMC->hImeWnd));
 }
 
-// Win: GetIMEShowStatus
 static BOOL User32GetImeShowStatus(VOID)
 {
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_GETIMESHOWSTATUS);
 }
 
 /* Sends a message to the IME UI window. */
-/* Win: SendMessageToUI(pimeui, uMsg, wParam, lParam, !unicode) */
 static LRESULT
 User32SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
 {
@@ -198,7 +191,6 @@ User32SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, B
     return ret;
 }
 
-// Win: SendOpenStatusNotify
 static VOID User32NotifyOpenStatus(PIMEUI pimeui, HWND hwndIMC, BOOL bOpen)
 {
     WPARAM wParam = (bOpen ? IMN_OPENSTATUSWINDOW : IMN_CLOSESTATUSWINDOW);
@@ -213,7 +205,6 @@ static VOID User32NotifyOpenStatus(PIMEUI pimeui, HWND hwndIMC, BOOL bOpen)
         User32SendImeUIMessage(pimeui, WM_IME_NOTIFY, wParam, 0, TRUE);
 }
 
-// Win: ImeMarkUsedContext
 static VOID User32SetImeWindowOfImc(HIMC hIMC, HWND hImeWnd)
 {
     PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
@@ -223,7 +214,6 @@ static VOID User32SetImeWindowOfImc(HIMC hIMC, HWND hImeWnd)
     NtUserUpdateInputContext(hIMC, UIC_IMEWINDOW, (ULONG_PTR)hImeWnd);
 }
 
-// Win: ImeSetImc
 static VOID User32UpdateImcOfImeUI(PIMEUI pimeui, HIMC hNewIMC)
 {
     HWND hImeWnd;
@@ -245,7 +235,6 @@ static VOID User32UpdateImcOfImeUI(PIMEUI pimeui, HIMC hNewIMC)
 }
 
 /* Handles WM_IME_NOTIFY message of the default IME window. */
-/* Win: ImeNotifyHandler */
 static LRESULT ImeWnd_OnImeNotify(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
@@ -296,7 +285,6 @@ static LRESULT ImeWnd_OnImeNotify(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 }
 
 /* Creates the IME UI window. */
-/* Win: CreateIMEUI */
 static HWND User32CreateImeUIWindow(PIMEUI pimeui, HKL hKL)
 {
     IMEINFOEX ImeInfoEx;
@@ -342,7 +330,6 @@ Quit:
 }
 
 /* Initializes the default IME window. */
-/* Win: ImeWndCreateHandler */
 static INT ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
 {
     PWND pParentWnd, pWnd = pimeui->spwnd;
@@ -374,7 +361,6 @@ static INT ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
 }
 
 /* Destroys the IME UI window. */
-/* Win: DestroyIMEUI */
 static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
 {
     HWND hwndUI = pimeui->hwndUI;
@@ -390,7 +376,6 @@ static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
 }
 
 /* Handles WM_IME_SELECT message of the default IME window. */
-/* Win: ImeSelectHandler */
 static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     HKL hKL;
@@ -425,7 +410,6 @@ static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 }
 
 /* Handles WM_IME_CONTROL message of the default IME window. */
-/* Win: ImeControlHandler(pimeui, wParam, lParam, !unicode) */
 static LRESULT
 ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
 {
@@ -561,7 +545,6 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
 }
 
 /* Modify the IME activation status. */
-/* Win: FocusSetIMCContext */
 static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
 {
     HIMC hIMC;
@@ -577,7 +560,6 @@ static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
     IMM_FN(ImmReleaseContext)(hWnd, hIMC);
 }
 
-/* Win: CtfLoadThreadLayout */
 VOID FASTCALL CtfLoadThreadLayout(PIMEUI pimeui)
 {
     IMM_FN(CtfImmTIMActivate)(pimeui->hKL);
@@ -848,7 +830,6 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 }
 
 /* Handles WM_IME_SETCONTEXT message of the default IME window. */
-/* Win: ImeSetContextHandler */
 LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret;
@@ -1003,7 +984,6 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 }
 
 /* The window procedure of the default IME window */
-/* Win: ImeWndProcWorker(pWnd, msg, wParam, lParam, !unicode) */
 LRESULT WINAPI
 ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // ReactOS
 {
@@ -1159,19 +1139,16 @@ Finish:
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
-// Win: ImeWndProcA
 LRESULT WINAPI ImeWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ImeWndProc_common(hwnd, msg, wParam, lParam, FALSE);
 }
 
-// Win: ImeWndProcW
 LRESULT WINAPI ImeWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ImeWndProc_common(hwnd, msg, wParam, lParam, TRUE);
 }
 
-// Win: UpdatePerUserImmEnabling
 BOOL WINAPI UpdatePerUserImmEnabling(VOID)
 {
     HMODULE imm32;
