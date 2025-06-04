@@ -111,6 +111,9 @@
 #define IDC_COMBO_TO                    1092
 #define IDC_BUTTON_RSH                  1093
 #define IDC_BUTTON_XrY                  1094
+#define IDC_BUTTON_LSR                  1095
+#define IDC_BUTTON_ROL                  1096
+#define IDC_BUTTON_ROR                  1097
 
 /* TYPES OF CONVERSIONS */
 #define IDS_CONV_ANGLE                  2000
@@ -390,3 +393,4 @@
 #define IDM_VIEW_BYTE                   40018
 #define IDM_VIEW_DWORD                  40019
 #define IDM_VIEW_CONVERSION             40020
+#define IDM_VIEW_PROGRAMMER             40021

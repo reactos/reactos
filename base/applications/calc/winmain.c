@@ -139,6 +139,10 @@ static const key3code_t key2code[] = {
     { IDC_BUTTON_RIGHTPAR, ')',     MAKE_BITMASK5(  1,  0,  0,  1,  1,  1,  1), CALC_CLR_PURP, },
     { IDC_BUTTON_MOD,      '%',     MAKE_BITMASK5(  1,  0,  0,  1,  1,  1,  1), CALC_CLR_RED,  },
     { IDC_BUTTON_PERCENT,  '%',     MAKE_BITMASK5(  1,  0,  0,  0,  1,  0,  0), CALC_CLR_BLUE, },
+    { IDC_BUTTON_RSH,      0,       MAKE_BITMASK5(  1,  0,  0,  1,  1,  1,  1), CALC_CLR_RED,  }, /* Key 0 for now, will be handled by INV+LSH or dedicated key later if needed */
+    { IDC_BUTTON_LSR,      0,       MAKE_BITMASK5(  1,  0,  0,  1,  1,  1,  1), CALC_CLR_PURP, },
+    { IDC_BUTTON_ROL,      0,       MAKE_BITMASK5(  1,  0,  0,  1,  1,  1,  1), CALC_CLR_PURP, },
+    { IDC_BUTTON_ROR,      0,       MAKE_BITMASK5(  1,  0,  0,  1,  1,  1,  1), CALC_CLR_PURP, },
     /*----------------------------------------------------------------------*/
     { IDC_BUTTON_DAT,  VK_INSERT,   MAKE_BITMASK5(  0,  1,  0,  1,  1,  1,  1), CALC_CLR_BLUE, },
     { IDC_BUTTON_EQU,  VK_RETURN,   MAKE_BITMASK5(  0,  0,  0,  1,  1,  1,  1), CALC_CLR_RED,  },
@@ -175,6 +179,9 @@ static const WORD operator_codes[] = {
     IDC_BUTTON_AND,     // RPN_OPERATOR_AND
     IDC_BUTTON_LSH,     // RPN_OPERATOR_LSH
     IDC_BUTTON_RSH,     // RPN_OPERATOR_RSH
+    IDC_BUTTON_LSR,     // RPN_OPERATOR_LSR
+    IDC_BUTTON_ROL,     // RPN_OPERATOR_ROL
+    IDC_BUTTON_ROR,     // RPN_OPERATOR_ROR
     IDC_BUTTON_ADD,     // RPN_OPERATOR_ADD
     IDC_BUTTON_SUB,     // RPN_OPERATOR_SUB
     IDC_BUTTON_MULT,    // RPN_OPERATOR_MULT
@@ -712,6 +719,7 @@ static const struct _update_check_menus {
     { &calc.layout, IDM_VIEW_STANDARD,   CALC_LAYOUT_STANDARD },
     { &calc.layout, IDM_VIEW_SCIENTIFIC, CALC_LAYOUT_SCIENTIFIC },
     { &calc.layout, IDM_VIEW_CONVERSION, CALC_LAYOUT_CONVERSION },
+    { &calc.layout, IDM_VIEW_PROGRAMMER, CALC_LAYOUT_PROGRAMMER },
     /*-----------------------------------------*/
     { &calc.base, IDM_VIEW_HEX, IDC_RADIO_HEX, },
     { &calc.base, IDM_VIEW_DEC, IDC_RADIO_DEC, },
@@ -763,36 +771,92 @@ static const radio_config_t radio_setup[] = {
 
 static void enable_allowed_controls(HWND hwnd, DWORD base)
 {
-    BYTE mask;
+    BYTE mask_for_base;
     int  n;
 
+    // Define controls specific to layouts (Scientific vs Programmer)
+    // These are controls on the IDD_DIALOG_SCIENTIFIC template
+    WORD scientific_only_controls[] = {
+        IDC_CHECK_HYP, IDC_BUTTON_STA, IDC_BUTTON_AVE, IDC_BUTTON_SUM, IDC_BUTTON_S, IDC_BUTTON_DAT,
+        IDC_BUTTON_FE, IDC_BUTTON_DMS, IDC_BUTTON_SIN, IDC_BUTTON_COS, IDC_BUTTON_TAN,
+        IDC_BUTTON_LEFTPAR, IDC_BUTTON_RIGHTPAR, IDC_BUTTON_EXP, IDC_BUTTON_XeY,
+        IDC_BUTTON_Xe2, IDC_BUTTON_Xe3, IDC_BUTTON_LN, IDC_BUTTON_LOG, IDC_BUTTON_NF,
+        IDC_BUTTON_PI, IDC_BUTTON_RX // 1/x
+        // IDC_RADIO_DEG, IDC_RADIO_RAD, IDC_RADIO_GRAD are handled by update_radio visibility
+    };
+    WORD programmer_only_controls[] = { // These are the NEW buttons for programmer mode
+        IDC_BUTTON_LSR, IDC_BUTTON_ROL, IDC_BUTTON_ROR, IDC_BUTTON_RSH
+        // Existing bitwise ops like AND, OR, LSH, NOT, XOR, MOD are part of common set for now
+        // Hex digits A-F are also part of common set enabled by base
+        // IDC_RADIO_QWORD, IDC_RADIO_DWORD, IDC_RADIO_WORD, IDC_RADIO_BYTE are handled by update_radio visibility
+    };
+
+    // 1. Show/Hide controls based on layout (CALC_LAYOUT_PROGRAMMER vs CALC_LAYOUT_SCIENTIFIC)
+    if (calc.layout == CALC_LAYOUT_PROGRAMMER)
+    {
+        for (n = 0; n < SIZEOF(scientific_only_controls); n++)
+            ShowWindow(GetDlgItem(hwnd, scientific_only_controls[n]), SW_HIDE);
+        for (n = 0; n < SIZEOF(programmer_only_controls); n++) // Ensure programmer buttons are shown
+            ShowWindow(GetDlgItem(hwnd, programmer_only_controls[n]), SW_SHOW);
+        // Ensure other common programmer controls are shown (they might have been hidden if previously in a different mode)
+        // This includes existing bitwise ops, hex digits A-F. Their visibility is generally assumed to be ON by default in scientific template.
+        // Explicitly show LSH as RSH might use its INV state.
+        ShowWindow(GetDlgItem(hwnd, IDC_BUTTON_LSH), SW_SHOW);
+    }
+    else if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
+    {
+        for (n = 0; n < SIZEOF(scientific_only_controls); n++)
+            ShowWindow(GetDlgItem(hwnd, scientific_only_controls[n]), SW_SHOW);
+        // Programmer buttons are also on the scientific dialog, so ensure they are shown.
+        // Some might be hidden by default if we change the RC later, but for now, they are visible.
+        // Or, if they were hidden by Programmer mode previously.
+        for (n = 0; n < SIZEOF(programmer_only_controls); n++)
+             ShowWindow(GetDlgItem(hwnd, programmer_only_controls[n]), SW_SHOW);
+        ShowWindow(GetDlgItem(hwnd, IDC_BUTTON_LSH), SW_SHOW); // Ensure LSH is shown
+    }
+
+    // 2. Determine the current base mask
     switch (base) {
     case IDC_RADIO_DEC:
-        mask = BITMASK_DEC_MASK;
+        mask_for_base = BITMASK_DEC_MASK;
         break;
     case IDC_RADIO_HEX:
-        mask = BITMASK_HEX_MASK;
+        mask_for_base = BITMASK_HEX_MASK;
         break;
     case IDC_RADIO_OCT:
-        mask = BITMASK_OCT_MASK;
+        mask_for_base = BITMASK_OCT_MASK;
         break;
     case IDC_RADIO_BIN:
-        mask = BITMASK_BIN_MASK;
+        mask_for_base = BITMASK_BIN_MASK;
         break;
     default:
         return;
     }
-    for (n=0; n<SIZEOF(key2code); n++) {
-        if (key2code[n].mask != 0) {
-            HWND hCtlWnd = GetDlgItem(hwnd, key2code[n].idc);
-            BOOL current;
 
-            if ((key2code[n].mask & BITMASK_IS_STATS))
-                current = IsWindow(calc.hStatWnd) ? TRUE : FALSE;
-            else
-                current = (key2code[n].mask & mask) ? TRUE : FALSE;
-            if (IsWindowEnabled(hCtlWnd) != current)
-                EnableWindow(hCtlWnd, current);
+    // 3. Enable/Disable controls based on the current base (using key2code masks)
+    // This loop iterates over ALL controls in key2code. If a control was just hidden
+    // by layout logic above, enabling/disabling it here has no visual effect but is harmless.
+    for (n = 0; n < SIZEOF(key2code); n++) {
+        if (key2code[n].mask != 0) { // -1 color or 0 mask means don't touch by this logic
+            HWND hCtlWnd = GetDlgItem(hwnd, key2code[n].idc);
+            if (hCtlWnd) // Check if control exists
+            {
+                BOOL bShouldBeEnabled;
+                if ((key2code[n].mask & BITMASK_IS_STATS))
+                    bShouldBeEnabled = IsWindow(calc.hStatWnd) ? TRUE : FALSE;
+                else
+                    bShouldBeEnabled = (key2code[n].mask & mask_for_base) ? TRUE : FALSE;
+
+                // Special handling for INV checkbox in programmer mode (usually not relevant)
+                if (calc.layout == CALC_LAYOUT_PROGRAMMER && key2code[n].idc == IDC_CHECK_INV) {
+                     // RSH uses LSH+INV. If LSH is disabled for a base, INV might not make sense for it.
+                     // However, INV might be used for other things. For now, let INV follow its own mask.
+                     // If LSH is disabled, then INV+LSH (RSH) won't work anyway.
+                }
+
+                if (IsWindowEnabled(hCtlWnd) != bShouldBeEnabled)
+                    EnableWindow(hCtlWnd, bShouldBeEnabled);
+            }
         }
     }
 }
@@ -1456,9 +1520,22 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         calc.degr = IDC_RADIO_DEG;
         calc.ptr  = calc.buffer;
         calc.is_nan = FALSE;
-        enable_allowed_controls(hWnd, IDC_RADIO_DEC);
-        update_radio(hWnd, IDC_RADIO_DEC);
-        update_menu(hWnd);
+
+        if (calc.layout == CALC_LAYOUT_PROGRAMMER)
+        {
+            calc.base = IDC_RADIO_HEX; // Default to HEX
+            calc.size = IDC_RADIO_DWORD; // Default to DWORD
+        }
+        else // Default for Scientific and Standard (though Standard doesn't show base/size radios)
+        {
+            calc.base = IDC_RADIO_DEC;
+            calc.size = IDC_RADIO_QWORD; // Default for scientific non-decimal
+            calc.degr = IDC_RADIO_DEG;
+        }
+
+        enable_allowed_controls(hWnd, calc.base); // Call this BEFORE update_radio for visibility
+        update_radio(hWnd, calc.base); // Sets the correct radio states and can change menu
+        update_menu(hWnd); // Ensure menu items are checked correctly
         display_rpn_result(hWnd, &calc.code);
         update_memory_flag(hWnd, calc.is_memory);
         /* remove keyboard focus */
@@ -1529,6 +1606,11 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDM_VIEW_SCIENTIFIC:
             calc.layout = CALC_LAYOUT_SCIENTIFIC;
             calc.action = IDM_VIEW_SCIENTIFIC;
+            DestroyWindow(hWnd);
+            return TRUE;
+        case IDM_VIEW_PROGRAMMER:
+            calc.layout = CALC_LAYOUT_PROGRAMMER;
+            calc.action = IDM_VIEW_PROGRAMMER; // To ensure dialog recreation
             DestroyWindow(hWnd);
             return TRUE;
         case IDM_VIEW_CONVERSION:
@@ -1974,7 +2056,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
     do {
         /* ignore hwnd: dialogs are already visible! */
-        if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
+        if (calc.layout == CALC_LAYOUT_SCIENTIFIC || calc.layout == CALC_LAYOUT_PROGRAMMER)
             dwLayout = IDD_DIALOG_SCIENTIFIC;
         else
         if (calc.layout == CALC_LAYOUT_CONVERSION)

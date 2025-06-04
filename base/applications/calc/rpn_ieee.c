@@ -62,6 +62,9 @@ static void rpn_or_i (calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_xor_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_shl_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_shr_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
+static void rpn_lsr_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
+static void rpn_rol_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
+static void rpn_ror_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 
 /* Percentage mode calculations */
 static void rpn_add_p(calc_number_t *r, calc_number_t *a, calc_number_t *b);
@@ -78,6 +81,9 @@ static const calc_operator_t operator_list[] = {
     { 3, rpn_and_f, rpn_and_i, NULL,      }, // RPN_OPERATOR_AND
     { 4, rpn_shl_f, rpn_shl_i, NULL,      }, // RPN_OPERATOR_LSH
     { 4, rpn_shr_f, rpn_shr_i, NULL,      }, // RPN_OPERATOR_RSH
+    { 4, NULL,      rpn_lsr_i, NULL,      }, // RPN_OPERATOR_LSR
+    { 4, NULL,      rpn_rol_i, NULL,      }, // RPN_OPERATOR_ROL
+    { 4, NULL,      rpn_ror_i, NULL,      }, // RPN_OPERATOR_ROR
     { 5, rpn_add_f, rpn_add_i, rpn_add_p, }, // RPN_OPERATOR_ADD
     { 5, rpn_sub_f, rpn_sub_i, rpn_sub_p, }, // RPN_OPERATOR_SUB
     { 6, rpn_mul_f, rpn_mul_i, rpn_mul_p, }, // RPN_OPERATOR_MULT
@@ -285,6 +291,55 @@ static void rpn_shl_i(calc_number_t *r, calc_number_t *a, calc_number_t *b)
 static void rpn_shr_i(calc_number_t *r, calc_number_t *a, calc_number_t *b)
 {
     r->i = a->i >> b->i;
+}
+
+static void rpn_lsr_i(calc_number_t *r, calc_number_t *a, calc_number_t *b) {
+    if (b->i < 0) { r->i = a->i; calc.is_nan = TRUE; return; } // Shift count cannot be negative
+    if (b->i >= 64) { r->i = 0; return; } // Shift is out of QWORD range
+    r->i = (INT64)((UINT64)a->i >> (UINT64)b->i);
+    // apply_int_mask will be called by run_operator
+}
+
+static void rpn_rol_i(calc_number_t *r, calc_number_t *a, calc_number_t *b) {
+    UINT64 val = (UINT64)a->i;
+    UINT shift = (UINT)b->i; // Implicitly takes lower bits, negative becomes large positive
+    UINT bits;
+    UINT64 mask;
+
+    if (b->i < 0) { r->i = a->i; calc.is_nan = TRUE; return; } // Shift count cannot be negative
+
+    switch (calc.size) {
+        case IDC_RADIO_DWORD: bits = 32; mask = 0xFFFFFFFFULL; break;
+        case IDC_RADIO_WORD:  bits = 16; mask = 0xFFFFULL;     break;
+        case IDC_RADIO_BYTE:  bits = 8;  mask = 0xFFULL;       break;
+        case IDC_RADIO_QWORD: default: bits = 64; mask = 0xFFFFFFFFFFFFFFFFULL; break;
+    }
+    val &= mask;
+    if (bits == 0) { r->i = (INT64)val; return; } // Should not happen with current calc.size values
+    shift %= bits;
+    if (shift == 0) { r->i = (INT64)val; return; }
+    r->i = (INT64)(((val << shift) | (val >> (bits - shift))) & mask);
+}
+
+static void rpn_ror_i(calc_number_t *r, calc_number_t *a, calc_number_t *b) {
+    UINT64 val = (UINT64)a->i;
+    UINT shift = (UINT)b->i; // Implicitly takes lower bits, negative becomes large positive
+    UINT bits;
+    UINT64 mask;
+
+    if (b->i < 0) { r->i = a->i; calc.is_nan = TRUE; return; } // Shift count cannot be negative
+
+    switch (calc.size) {
+        case IDC_RADIO_DWORD: bits = 32; mask = 0xFFFFFFFFULL; break;
+        case IDC_RADIO_WORD:  bits = 16; mask = 0xFFFFULL;     break;
+        case IDC_RADIO_BYTE:  bits = 8;  mask = 0xFFULL;       break;
+        case IDC_RADIO_QWORD: default: bits = 64; mask = 0xFFFFFFFFFFFFFFFFULL; break;
+    }
+    val &= mask;
+    if (bits == 0) { r->i = (INT64)val; return; } // Should not happen
+    shift %= bits;
+    if (shift == 0) { r->i = (INT64)val; return; }
+    r->i = (INT64)(((val >> shift) | (val << (bits - shift))) & mask);
 }
 
 /* Percent mode calculations */
