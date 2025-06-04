@@ -62,7 +62,7 @@
 62 stub -noname ServerClearStockObjects
 63 stub -noname MarkSelection
 #64 ProcessLoadTheme_RunDLLW
-#65 SetSystemVisualStyle
+65 stdcall -noname SetSystemVisualStyle(wstr wstr wstr long)
 #66 ServiceClearStockObjects
 67 stdcall GetThemeIntList(ptr long long long ptr)
 68 stdcall GetThemeMargins(ptr ptr long long long ptr ptr)
