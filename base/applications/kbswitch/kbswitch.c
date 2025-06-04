@@ -32,11 +32,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
  * won't be generated in Vista+.
  */
 
-#define WM_NOTIFYICONMSG (WM_USER + 248)
-#define WM_PENICONMSG (WM_USER + 300)
+#define WM_NOTIFYICONMSG 0x8064
+#define WM_PENICONMSG 0x8065
 
-#define NOTIFY_ID_INDICATOR_ICON 1
-#define NOTIFY_ID_PEN_ICON 2
+#define NOTIFY_ICON_ID_LANGUAGE 223
+#define NOTIFY_ICON_ID_SYSTEM_PEN 224
 
 #define TIMER_ID_LANG_CHANGED_DELAYED 0x10000
 #define TIMER_LANG_CHANGED_DELAY 200
@@ -530,13 +530,13 @@ LoadDefaultPenIcon(PCWSTR szImeFile, HKL hKL)
     if (nIconID < 0)
         return NULL;
 
-    return LoadIcon(g_hInst, MAKEINTRESOURCE(nIconID));
+    return LoadIcon(g_hHookDLL, MAKEINTRESOURCE(nIconID));
 }
 
 static VOID
 DeletePenNotifyIcon(HWND hwnd)
 {
-    NOTIFYICONDATA nid = { sizeof(nid), hwnd, NOTIFY_ID_PEN_ICON };
+    NOTIFYICONDATA nid = { sizeof(nid), hwnd, NOTIFY_ICON_ID_SYSTEM_PEN };
     Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
@@ -577,7 +577,7 @@ UpdatePenIcon(HWND hwnd, UINT iKL)
     }
 
     // Add pen icon
-    NOTIFYICONDATA nid = { sizeof(nid), hwnd, NOTIFY_ID_PEN_ICON };
+    NOTIFYICONDATA nid = { sizeof(nid), hwnd, NOTIFY_ICON_ID_SYSTEM_PEN };
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_PENICONMSG;
     nid.hIcon = g_ahSysPenIcons[iKL];
@@ -690,7 +690,10 @@ CreateTrayIcon(LPTSTR szKLID, LPCTSTR szImeFile OPTIONAL)
 static VOID
 AddTrayIcon(HWND hwnd)
 {
-    NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, 1, NIF_ICON | NIF_MESSAGE | NIF_TIP };
+    NOTIFYICONDATA tnid =
+    {
+        sizeof(tnid), hwnd, NOTIFY_ICON_ID_LANGUAGE, NIF_ICON | NIF_MESSAGE | NIF_TIP
+    };
     TCHAR szKLID[CCH_LAYOUT_ID + 1], szName[MAX_PATH], szImeFile[80];
 
     GetKLIDFromLayoutNum(g_iKL, szKLID, _countof(szKLID));
@@ -711,7 +714,7 @@ AddTrayIcon(HWND hwnd)
 static VOID
 DeleteTrayIcon(HWND hwnd)
 {
-    NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, NOTIFY_ID_INDICATOR_ICON };
+    NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, NOTIFY_ICON_ID_LANGUAGE };
     Shell_NotifyIcon(NIM_DELETE, &tnid);
 
     if (g_hTrayIcon)
@@ -724,7 +727,10 @@ DeleteTrayIcon(HWND hwnd)
 static VOID
 UpdateTrayIcon(HWND hwnd, LPTSTR szKLID, LPTSTR szName)
 {
-    NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, NOTIFY_ID_INDICATOR_ICON, NIF_ICON | NIF_MESSAGE | NIF_TIP };
+    NOTIFYICONDATA tnid =
+    {
+        sizeof(tnid), hwnd, NOTIFY_ICON_ID_LANGUAGE, NIF_ICON | NIF_MESSAGE | NIF_TIP
+    };
     TCHAR szImeFile[80];
 
     GetImeFile(szImeFile, _countof(szImeFile), szKLID);
@@ -990,16 +996,16 @@ KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
     {
         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
         HMENU hPopupMenu = BuildLeftPopupMenu();
-        nID = TrackPopupMenuEx(hPopupMenu, TPM_VERTICAL | TPM_RETURNCMD | TPM_LEFTBUTTON,
-                               pt.x, pt.y, hwnd, &params);
+        UINT uFlags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON;
+        nID = TrackPopupMenuEx(hPopupMenu, uFlags, pt.x, pt.y, hwnd, &params);
         DestroyMenu(hPopupMenu);
     }
     else /* WM_RBUTTONUP */
     {
         HMENU hPopupMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_POPUP));
         HMENU hSubMenu = GetSubMenu(hPopupMenu, 0);
-        nID = TrackPopupMenuEx(hSubMenu, TPM_VERTICAL | TPM_RETURNCMD | TPM_RIGHTBUTTON,
-                               pt.x, pt.y, hwnd, &params);
+        UINT uFlags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON;
+        nID = TrackPopupMenuEx(hSubMenu, uFlags, pt.x, pt.y, hwnd, &params);
         DestroyMenu(hPopupMenu);
     }
 
@@ -1061,7 +1067,7 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
         }
     }
 
-    UINT uFlags = TPM_VERTICAL | TPM_RETURNCMD;
+    UINT uFlags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RETURNCMD;
     uFlags |= (bRightButton ? TPM_RIGHTBUTTON : TPM_LEFTBUTTON);
 
     TPMPARAMS params = { sizeof(params) };

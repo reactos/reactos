@@ -1,6 +1,9 @@
 
 spec2def(indicdll.dll indicdll.spec)
 
+file(GLOB indicdll_rc_deps res/*.*)
+add_rc_deps(indicdll.rc ${indicdll_rc_deps})
+
 list(APPEND SOURCE
     indicdll.c
     indicdll.rc

@@ -8,26 +8,35 @@
  */
 
 #include "../kbswitch.h"
+#include "resource.h"
 
-HHOOK hWinHook = NULL;
-HHOOK hShellHook = NULL;
-HHOOK hKeyboardLLHook = NULL;
-HINSTANCE hInstance = NULL;
-HWND hKbSwitchWnd = NULL;
-UINT g_nHotID = 0;
-DWORD_PTR g_dwHotMenuItemData = 0;
+typedef struct tagSHARED_DATA
+{
+    HHOOK hWinHook;
+    HHOOK hShellHook;
+    HHOOK hKeyboardLLHook;
+    HWND hKbSwitchWnd;
+    UINT nHotID;
+    DWORD_PTR dwHotMenuItemData;
+    CRITICAL_SECTION csLock;
+} SHARED_DATA, *PSHARED_DATA;
+
+HINSTANCE g_hInstance = NULL;
+HANDLE g_hShared = NULL;
+PSHARED_DATA g_pShared = NULL;
+BOOL g_bCriticalSectionInitialized = 0;
 
 static VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    PostMessage(hKbSwitchWnd, Msg, wParam, lParam);
+    PostMessage(g_pShared->hKbSwitchWnd, Msg, wParam, lParam);
 }
 
 static LRESULT CALLBACK
 WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
-        return CallNextHookEx(hWinHook, code, wParam, lParam);
+        return CallNextHookEx(g_pShared->hWinHook, code, wParam, lParam);
 
     switch (code)
     {
@@ -36,20 +45,20 @@ WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
         {
             OutputDebugStringA("HCBT_ACTIVATE / HCBT_SETFOCUS\n");
             HWND hwndFocus = (HWND)wParam;
-            if (hwndFocus && hwndFocus != hKbSwitchWnd)
+            if (hwndFocus && hwndFocus != g_pShared->hKbSwitchWnd)
                 PostMessageToMainWnd(WM_WINDOW_ACTIVATE, (WPARAM)hwndFocus, 0);
             break;
         }
     }
 
-    return CallNextHookEx(hWinHook, code, wParam, lParam);
+    return CallNextHookEx(g_pShared->hWinHook, code, wParam, lParam);
 }
 
 static LRESULT CALLBACK
 ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
-        return CallNextHookEx(hShellHook, code, wParam, lParam);
+        return CallNextHookEx(g_pShared->hShellHook, code, wParam, lParam);
 
     switch (code)
     {
@@ -67,7 +76,7 @@ ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    return CallNextHookEx(hShellHook, code, wParam, lParam);
+    return CallNextHookEx(g_pShared->hShellHook, code, wParam, lParam);
 }
 
 static inline BOOL
@@ -80,7 +89,7 @@ static LRESULT CALLBACK
 KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
-        return CallNextHookEx(hKeyboardLLHook, code, wParam, lParam);
+        return CallNextHookEx(g_pShared->hKeyboardLLHook, code, wParam, lParam);
 
     if (code == HC_ACTION)
     {
@@ -102,58 +111,67 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    return CallNextHookEx(hKeyboardLLHook, code, wParam, lParam);
+    return CallNextHookEx(g_pShared->hKeyboardLLHook, code, wParam, lParam);
 }
 
 BOOL APIENTRY
 KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
+    EnterCriticalSection(&g_pShared->csLock);
     if (bDoHook)
     {
-        hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, hInstance, 0);
-        hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, hInstance, 0);
-        hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, hInstance, 0);
+        g_pShared->hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, g_hInstance, 0);
+        g_pShared->hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, g_hInstance, 0);
+        g_pShared->hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, g_hInstance, 0);
 
-        if (hWinHook && hShellHook && hKeyboardLLHook)
+        if (g_pShared->hWinHook &&
+            g_pShared->hShellHook &&
+            g_pShared->hKeyboardLLHook)
         {
-            OutputDebugStringA("Hooked\n");
+            LeaveCriticalSection(&g_pShared->csLock);
             return TRUE;
         }
     }
 
     /* Unhook */
-    if (hKeyboardLLHook)
+    if (g_pShared->hKeyboardLLHook)
     {
-        UnhookWindowsHookEx(hKeyboardLLHook);
-        hKeyboardLLHook = NULL;
+        UnhookWindowsHookEx(g_pShared->hKeyboardLLHook);
+        g_pShared->hKeyboardLLHook = NULL;
     }
-    if (hShellHook)
+    if (g_pShared->hShellHook)
     {
-        UnhookWindowsHookEx(hShellHook);
-        hShellHook = NULL;
+        UnhookWindowsHookEx(g_pShared->hShellHook);
+        g_pShared->hShellHook = NULL;
     }
-    if (hWinHook)
+    if (g_pShared->hWinHook)
     {
-        UnhookWindowsHookEx(hWinHook);
-        hWinHook = NULL;
+        UnhookWindowsHookEx(g_pShared->hWinHook);
+        g_pShared->hWinHook = NULL;
     }
+
+    LeaveCriticalSection(&g_pShared->csLock);
     return !bDoHook;
 }
 
 // indicdll!12
 VOID APIENTRY
-GetIndicMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
+GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
 {
-    *pnID = g_nHotID;
-    *pdwItemData = g_dwHotMenuItemData;
+    EnterCriticalSection(&g_pShared->csLock);
+    *pnID = g_pShared->nHotID;
+    *pdwItemData = g_pShared->dwHotMenuItemData;
+    LeaveCriticalSection(&g_pShared->csLock);
 }
 
 // indicdll!14
 VOID APIENTRY
 SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
 {
-    g_nHotID = nID;
-    g_dwHotMenuItemData = dwItemData;
+    EnterCriticalSection(&g_pShared->csLock);
+    g_pShared->nHotID = nID;
+    g_pShared->dwHotMenuItemData = dwItemData;
+    LeaveCriticalSection(&g_pShared->csLock);
 }
 
 BOOL WINAPI
@@ -165,12 +183,37 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
         {
-            hInstance = hinstDLL;
-            hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
-            if (!hKbSwitchWnd)
+            g_hInstance = hinstDLL;
+            g_hShared = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                          0, sizeof(SHARED_DATA), TEXT("InternatSHData"));
+            if (!g_hShared)
                 return FALSE;
+
+            BOOL bAlreadyExists = GetLastError() == ERROR_ALREADY_EXISTS;
+
+            g_pShared = (PSHARED_DATA)MapViewOfFile(g_hShared, FILE_MAP_WRITE, 0, 0, 0);
+            if (!g_pShared)
+                return FALSE;
+
+            if (!bAlreadyExists)
+            {
+                ZeroMemory(g_pShared, sizeof(*g_pShared));
+                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
+                InitializeCriticalSection(&g_pShared->csLock);
+                g_bCriticalSectionInitialized = TRUE;
+            }
+            break;
         }
-        break;
+        case DLL_PROCESS_DETACH:
+        {
+            if (g_bCriticalSectionInitialized)
+            {
+                DeleteCriticalSection(&g_pShared->csLock);
+            }
+            UnmapViewOfFile(g_pShared);
+            CloseHandle(g_hShared);
+            break;
+        }
     }
 
     return TRUE;

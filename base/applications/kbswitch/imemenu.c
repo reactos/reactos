@@ -8,6 +8,9 @@
 #include "kbswitch.h"
 #include "imemenu.h"
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(internat);
+
 PIMEMENUNODE g_pMenuList = NULL;
 INT g_nNextMenuID = 0;
 
@@ -79,17 +82,21 @@ CreateImeMenu(
     DWORD cbItems = sizeof(IMEMENUITEMINFO) * itemCount;
     PIMEMENUITEMINFO pImeMenuItems = LocalAlloc(LPTR, cbItems);
     if (!pImeMenuItems)
+    {
+        LocalFree(pMenu);
         return NULL;
+    }
 
-    DWORD newItemCount = ImmGetImeMenuItems(hIMC, dwFlags, dwTypes, lpImeParentMenu, pImeMenuItems, cbItems);
-    if (!newItemCount)
+    itemCount = ImmGetImeMenuItems(hIMC, dwFlags, dwTypes, lpImeParentMenu, pImeMenuItems, cbItems);
+    if (!itemCount)
     {
         LocalFree(pImeMenuItems);
+        LocalFree(pMenu);
         return NULL;
     }
 
     PIMEMENUITEM pItems = pMenu->m_Items;
-    for (DWORD iItem = 0; iItem < newItemCount; ++iItem)
+    for (DWORD iItem = 0; iItem < itemCount; ++iItem)
     {
         GetImeMenuItem(hIMC, &pImeMenuItems[iItem], bRightMenu, &pItems[iItem]);
     }
@@ -98,7 +105,7 @@ CreateImeMenu(
     return pMenu;
 }
 
-static VOID
+static BOOL
 FillImeMenuItem(_Out_ LPMENUITEMINFO pItemInfo, _In_ const IMEMENUITEM *pItem)
 {
     ZeroMemory(pItemInfo, sizeof(MENUITEMINFO));
@@ -122,7 +129,12 @@ FillImeMenuItem(_Out_ LPMENUITEMINFO pItemInfo, _In_ const IMEMENUITEM *pItem)
     {
         pItemInfo->fMask |= MIIM_SUBMENU;
         pItemInfo->hSubMenu = CreatePopupMenu();
-        MakeImeMenu(pItemInfo->hSubMenu, pItem->m_pSubMenu);
+        if (!MakeImeMenu(pItemInfo->hSubMenu, pItem->m_pSubMenu))
+        {
+            DestroyMenu(pItemInfo->hSubMenu);
+            pItemInfo->hSubMenu = NULL;
+            return FALSE;
+        }
     }
 
     if (pItem->m_Info.hbmpChecked && pItem->m_Info.hbmpUnchecked)
@@ -145,6 +157,8 @@ FillImeMenuItem(_Out_ LPMENUITEMINFO pItemInfo, _In_ const IMEMENUITEM *pItem)
         pItemInfo->dwTypeData = (PTSTR)szString;
         pItemInfo->cch = lstrlen(szString);
     }
+
+    return TRUE;
 }
 
 static BOOL
@@ -156,8 +170,16 @@ MakeImeMenu(_In_ HMENU hMenu, _In_ const IMEMENUNODE *pMenu)
     for (INT iItem = 0; iItem < pMenu->m_nItems; ++iItem)
     {
         MENUITEMINFO mi = { sizeof(mi) };
-        FillImeMenuItem(&mi, &pMenu->m_Items[iItem]);
-        InsertMenuItem(hMenu, iItem, TRUE, &mi);
+        if (!FillImeMenuItem(&mi, &pMenu->m_Items[iItem]))
+        {
+            ERR("FillImeMenuItem failed\n");
+            return FALSE;
+        }
+        if (!InsertMenuItem(hMenu, iItem, TRUE, &mi))
+        {
+            ERR("InsertMenuItem failed\n");
+            return FALSE;
+        }
     }
 
     return TRUE;

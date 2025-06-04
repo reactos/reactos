@@ -13,6 +13,7 @@
 #include <ime/indicml.h> /* INDICATOR_CLASS, INDICM_... */
 
 #include "resource.h"
+#include "indicdll/resource.h"
 
 #define CCH_LAYOUT_ID       8   // Character Count of a layout ID like "00000409"
 #define CCH_ULONG_DEC       10  // Maximum Character Count of a ULONG in decimal
