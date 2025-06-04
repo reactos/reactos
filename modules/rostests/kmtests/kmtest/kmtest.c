@@ -112,19 +112,33 @@ ListTests(
     IN BOOLEAN IncludeHidden)
 {
     DWORD Error = ERROR_SUCCESS;
-    CHAR Buffer[1024];
-    DWORD BytesRead;
-    PCSTR TestName = Buffer;
+    PSTR Buffer = NULL;
+    DWORD BufferSize = 1024;
+    DWORD BytesRead = BufferSize;
+    PCSTR TestName;
     PCKMT_TEST TestEntry = TestList;
     PCSTR NextTestName;
 
     puts("Valid test names:");
 
     // get test list from driver
-    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_GET_TESTS, NULL, 0, Buffer, sizeof Buffer, &BytesRead, NULL))
-        error_goto(Error, cleanup);
+    while (TRUE)
+    {
+        Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
+        if (!Buffer)
+            error_goto(Error, cleanup);
+
+        if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_GET_TESTS, NULL, 0, Buffer, BufferSize, &BytesRead, NULL))
+            error_goto(Error, cleanup);
+        if (BytesRead < BufferSize)
+            break;
+
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        BufferSize *= 2;
+    }
 
     // output test list plus user-mode tests
+    TestName = Buffer;
     while (TestEntry->TestName || *TestName)
     {
         if (!TestEntry->TestName)
@@ -167,6 +181,9 @@ ListTests(
     }
 
 cleanup:
+    if (Buffer)
+        HeapFree(GetProcessHeap(), 0, Buffer);
+
     return Error;
 }
 
