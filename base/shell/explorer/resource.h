@@ -197,6 +197,8 @@
 #define IDC_SHOWEMAIL                       1322
 #define IDC_EMAILDEFAULTAPP                 1323
 
+#define IDC_STARTMENU_SEARCHBOX             40701 /UNHANDLED_TAG: Add new control ID for Start Menu Search Box
+
 /*******************************************************************************\
 |*                            Accelerator Resources                            *|
 \*******************************************************************************/
@@ -223,3 +225,10 @@
 #define ID_SHELL_CMD_RESTORE_ALL        (413)
 #define ID_SHELL_CMD_FIRST              ID_SHELL_CMD_PROPERTIES
 #define ID_SHELL_CMD_LAST               ID_SHELL_CMD_RESTORE_ALL
+
+/*******************************************************************************\
+|*                           Custom Verb Command IDs                           *|
+\*******************************************************************************/
+
+#define CMD_PIN_TO_STARTMENU                50100
+#define CMD_UNPIN_FROM_STARTMENU            50101
