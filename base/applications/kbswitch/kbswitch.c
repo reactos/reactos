@@ -23,7 +23,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
  * process boundary, so we cannot activate the IME keyboard layout from the outer process.
  * It needs special care.
  *
- * We use global hook by our kbsdll.dll, to watch the shell and the windows.
+ * We use global hook by our indicdll.dll, to watch the shell and the windows.
  *
  * It might not work correctly on Vista+ because keyboard layout change notification
  * won't be generated in Vista+.
@@ -549,7 +549,7 @@ BuildLeftPopupMenu(VOID)
 static BOOL
 SetHooks(VOID)
 {
-    g_hHookDLL = LoadLibrary(_T("kbsdll.dll"));
+    g_hHookDLL = LoadLibrary(_T("indicdll.dll"));
     if (!g_hHookDLL)
     {
         return FALSE;
@@ -832,10 +832,10 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             KbSwitch_OnTimer(hwnd, (UINT_PTR)wParam);
             break;
 
-        case WM_LANG_CHANGED: /* Comes from kbsdll.dll and this module */
+        case WM_LANG_CHANGED: /* Comes from indicdll.dll and this module */
             return KbSwitch_OnLangChanged(hwnd, (HWND)wParam, (HKL)lParam);
 
-        case WM_WINDOW_ACTIVATE: /* Comes from kbsdll.dll and this module */
+        case WM_WINDOW_ACTIVATE: /* Comes from indicdll.dll and this module */
             return KbSwitch_OnWindowActivate(hwnd, (HWND)wParam, lParam);
 
         case WM_NOTIFYICONMSG:

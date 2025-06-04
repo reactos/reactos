@@ -6,4 +6,4 @@ target_link_libraries(kbswitch wine)
 add_importlibs(kbswitch advapi32 imm32 user32 shell32 shlwapi gdi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET kbswitch DESTINATION reactos/system32 FOR all)
 
-add_subdirectory(kbsdll)
+add_subdirectory(indicdll)
