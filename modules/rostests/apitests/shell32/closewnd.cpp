@@ -110,7 +110,7 @@ void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
         WaitForForegroundWindow(hWnd);
 
         DWORD_PTR result;
-        if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, 0, 3000, &result))
+        if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG, 3000, &result))
             PostMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
 
         for (UINT j = 0; j < 3000 && IsWindowVisible(hWnd); j += 250)
