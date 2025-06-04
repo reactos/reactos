@@ -942,7 +942,35 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     col = ((ich < 0) ? 0 : (dwStart - ich));
 
     StringCchPrintf(buff, _countof(buff), Globals.szStatusBarLineCol, line + 1, col + 1);
-    SendMessage(Globals.hStatusBar, SB_SETTEXT, SBPART_CURPOS, (LPARAM)buff);
+
+    /* Get all text from the edit control to count words */
+    INT cchTotalText = GetWindowTextLengthW(Globals.hEdit);
+    LPWSTR pszTotalText = NULL;
+    UINT uiWordCount = 0;
+
+    if (cchTotalText > 0)
+    {
+        pszTotalText = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (cchTotalText + 1) * sizeof(WCHAR));
+        if (pszTotalText)
+        {
+            GetWindowTextW(Globals.hEdit, pszTotalText, cchTotalText + 1);
+            uiWordCount = CountWordsInText(pszTotalText);
+            HeapFree(GetProcessHeap(), 0, pszTotalText);
+        }
+        // If HeapAlloc fails, uiWordCount remains 0, which is acceptable.
+    }
+    // If cchTotalText is 0, uiWordCount remains 0, which is correct for an empty document.
+
+    /* Format the word count string */
+    WCHAR szWordCountPart[64];
+    WCHAR szWordCountFormat[32];
+    LoadStringW(Globals.hInstance, STRING_WORD_COUNT, szWordCountFormat, _countof(szWordCountFormat));
+    StringCchPrintfW(szWordCountPart, _countof(szWordCountPart), szWordCountFormat, uiWordCount);
+
+    /* Concatenate word count part to the existing line/col string */
+    StringCchCatW(buff, _countof(buff), szWordCountPart);
+
+    SendMessageW(Globals.hStatusBar, SB_SETTEXTW, SBPART_CURPOS, (LPARAM)buff);
 }
 
 VOID DIALOG_ViewStatusBar(VOID)

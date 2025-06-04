@@ -10,6 +10,7 @@
 
 #include "notepad.h"
 #include <assert.h>
+#include <wctype.h>
 
 static BOOL IsTextNonZeroASCII(LPCVOID pText, DWORD dwSize)
 {
@@ -22,6 +23,46 @@ static BOOL IsTextNonZeroASCII(LPCVOID pText, DWORD dwSize)
         ++pch;
     }
     return TRUE;
+}
+
+/*
+ * CountWordsInText
+ *
+ * Counts the number of words in a given wide character string.
+ * Words are sequences of alphanumeric characters separated by whitespace or punctuation.
+ *
+ * Parameters:
+ *   pszText - Pointer to the null-terminated wide character string.
+ *
+ * Returns:
+ *   The number of words in the string. Returns 0 if the string is NULL or empty.
+ */
+UINT CountWordsInText(LPCWSTR pszText)
+{
+    UINT word_count = 0;
+    BOOL in_word = FALSE;
+
+    if (!pszText || !*pszText)
+        return 0;
+
+    while (*pszText)
+    {
+        if (iswalnum(*pszText))
+        {
+            if (!in_word)
+            {
+                word_count++;
+                in_word = TRUE;
+            }
+        }
+        else
+        {
+            in_word = FALSE;
+        }
+        pszText++;
+    }
+
+    return word_count;
 }
 
 static ENCODING AnalyzeEncoding(const BYTE *pBytes, DWORD dwSize)
