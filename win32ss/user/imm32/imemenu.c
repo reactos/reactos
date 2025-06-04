@@ -610,11 +610,14 @@ ImmGetImeMenuItemsAW(
 
     /* Get IME menu items from the IME */
     ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, pNewParent, pNewItems, dwSize);
-    if (!ret || !lpImeMenuItems)
+    if (!ret)
     {
-        ERR("%d, %p\n", ret, lpImeMenuItems);
+        ERR("ImeGetImeMenuItems failed\n");
         goto Quit;
     }
+
+    if (!lpImeMenuItems)
+        goto Quit;
 
     if (bImcIsAnsi != bTargetIsAnsi) /* Are text types different? */
     {

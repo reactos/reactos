@@ -52,17 +52,20 @@ Imm32ApiTable gImmApiEntries = {
 #include "immtable.h"
 };
 
-// Win: GetImmFileName
 HRESULT
-User32GetImmFileName(_Out_ LPWSTR lpBuffer, _In_ size_t cchBuffer)
+User32GetSystemFilePath(
+    _Out_ PWSTR lpBuffer,
+    _In_ SIZE_T cchBuffer,
+    _In_ PCWSTR pszFileName)
 {
     UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
     if (length && length < cchBuffer)
     {
         StringCchCatW(lpBuffer, cchBuffer, L"\\");
-        return StringCchCatW(lpBuffer, cchBuffer, L"imm32.dll");
+        return StringCchCatW(lpBuffer, cchBuffer, pszFileName);
     }
-    return StringCchCopyW(lpBuffer, cchBuffer, L"imm32.dll");
+    ERR("GetSystemDirectoryW failed (error %lu)\n", GetLastError());
+    return StringCchCopyW(lpBuffer, cchBuffer, pszFileName);
 }
 
 // @unimplemented
@@ -76,7 +79,7 @@ static BOOL IntInitializeImmEntryTable(VOID)
     if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
-    User32GetImmFileName(ImmFile, _countof(ImmFile));
+    User32GetSystemFilePath(ImmFile, _countof(ImmFile), L"imm32.dll");
     TRACE("File %S\n", ImmFile);
 
     /* If IMM32 is already loaded, use it without increasing reference count. */
@@ -139,7 +142,7 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     if (ghImm32 == NULL && !gbImmInitializing)
     {
         WCHAR ImmFile[MAX_PATH];
-        User32GetImmFileName(ImmFile, _countof(ImmFile));
+        User32GetSystemFilePath(ImmFile, _countof(ImmFile), L"imm32.dll");
         ghImm32 = LoadLibraryW(ImmFile);
         if (ghImm32 == NULL)
         {
@@ -636,6 +639,59 @@ ImeWnd_SwitchSoftKbdProc(_In_ HIMC hIMC, _In_ LPARAM lParam)
     return TRUE;
 }
 
+// indicdll!12
+typedef VOID (CALLBACK *FN_GetPenMenuData)(PUINT pnID, PDWORD_PTR pdwMenuData);
+static FN_GetPenMenuData s_pGetPenMenuData = NULL;
+#define IFN_GetPenMenuData 12
+
+static BOOL CALLBACK
+User32GetPenMenuData(_Out_ PUINT pnID, _Out_ PDWORD_PTR pdwMenuData)
+{
+    if (!s_pGetPenMenuData)
+    {
+        WCHAR szPath[MAX_PATH];
+        HMODULE hIndicDll = GetModuleHandleW(L"indicdll.dll");
+        if (!hIndicDll)
+        {
+            User32GetSystemFilePath(szPath, _countof(szPath), L"indicdll.dll");
+            hIndicDll = LoadLibraryW(szPath);
+        }
+        if (!hIndicDll)
+        {
+            ERR("indicdll.dll not loaded: %s\n", debugstr_w(szPath));
+            return FALSE;
+        }
+
+        s_pGetPenMenuData =
+            (FN_GetPenMenuData)GetProcAddress(hIndicDll, MAKEINTRESOURCEA(IFN_GetPenMenuData));
+    }
+
+    if (!s_pGetPenMenuData)
+        return FALSE;
+
+    s_pGetPenMenuData(pnID, pdwMenuData);
+    return TRUE;
+}
+
+// IMS_IMEMENUITEMSELECTED
+static VOID
+User32ImeMenuItemSelected(HWND hwndTarget)
+{
+    if (!IsWindow(hwndTarget))
+        return;
+
+    HIMC hIMC = IMM_FN(ImmGetContext)(hwndTarget);
+    if (!hIMC)
+        return;
+
+    UINT nID = 0;
+    DWORD_PTR dwMenuData = 0;
+    if (User32GetPenMenuData(&nID, &dwMenuData))
+        IMM_FN(ImmNotifyIME)(hIMC, NI_IMEMENUSELECTED, nID, dwMenuData);
+
+    IMM_FN(ImmReleaseContext)(hwndTarget, hIMC);
+}
+
 /* Handles WM_IME_SYSTEM message of the default IME window. */
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
@@ -765,8 +821,8 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             ret = IMM_FN(ImmPutImeMenuItemsIntoMappedFile)((HIMC)lParam);
             break;
 
-        case 0x1D:
-            FIXME("\n");
+        case IMS_IMEMENUITEMSELECTED:
+            User32ImeMenuItemSelected((HWND)lParam);
             break;
 
         case IMS_GETCONTEXT:
