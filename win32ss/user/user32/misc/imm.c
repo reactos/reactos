@@ -62,9 +62,10 @@ User32GetSystemFilePath(
         StringCchCatW(lpBuffer, cchBuffer, L"\\");
         return StringCchCatW(lpBuffer, cchBuffer, pszFileName);
     }
-    ERR("GetSystemDirectoryW failed (error %lu)\n", GetLastError());
+    DWORD dwError = GetLastError();
+    ERR("GetSystemDirectoryW failed (error %lu)\n", dwError);
     StringCchCopyW(lpBuffer, cchBuffer, pszFileName);
-    return E_FAIL;
+    return HRESULT_FROM_WIN32(dwError);
 }
 
 // @unimplemented
