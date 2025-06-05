@@ -1124,7 +1124,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         ::SendMessage(fCurrentShellViewWindow, WM_SETREDRAW, 1, 0);
         if (windowUpdateIsLocked)
             LockWindowUpdate(FALSE);
-        ::RedrawWindow(fCurrentShellViewWindow, NULL, NULL, RDW_INVALIDATE);
         SetCursor(saveCursor);
         return hResult;
     }

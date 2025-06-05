@@ -3874,7 +3874,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
     RECT rcView = *prcView;
     Create(m_hWndParent, rcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
     if (m_hWnd == NULL)
-        return HRESULT_FROM_WIN32(ERROR_CANCELLED);
+        return E_FAIL;
 
     *hwnd = m_hWnd;
 

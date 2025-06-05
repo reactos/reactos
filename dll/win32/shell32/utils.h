@@ -106,6 +106,8 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
     return SHELL_CreateShell32DefaultExtractIcon(id > 1 ? -id : 0, riid, ppvOut);
 }
 
+HRESULT SHELL_FindAnyFile(LPCWSTR lpFilePath);
+
 #ifdef __cplusplus
 struct ClipboardViewerChain
 {

@@ -993,7 +993,7 @@ HRESULT WINAPI CFSFolder::EnumObjects(
 {
     HRESULT hr;
 
-    if (FAILED(SHFindFirstFile(m_sPathTarget)))
+    if (FAILED(SHELL_FindAnyFile(m_sPathTarget)))
     {
         RETRY_DATA* retryData;
         retryData = (RETRY_DATA*)SHAlloc(sizeof(RETRY_DATA));
@@ -2231,29 +2231,11 @@ INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 EndDialog(hwndDlg, IDCANCEL);
             break;
         case WM_TIMER:
-            if(SUCCEEDED(SHFindFirstFile(retryData->szDrive)))
+            if(SUCCEEDED(SHELL_FindAnyFile(retryData->szDrive)))
                 EndDialog(retryData->hDlg, 4);
             break;
         default:
             return false;
     }
     return true;
-}
-
-HRESULT SHFindFirstFile(LPCWSTR lpFilePath)
-{
-    WIN32_FIND_DATAW stffile;
-    HANDLE hFile;
-    WCHAR szPath[MAX_PATH];
-
-    wcscpy(szPath, lpFilePath);
-    PathAddBackslashW(szPath);
-    wcscat(szPath, L"*.*");
-
-    hFile = FindFirstFileW(szPath, &stffile);
-    if (hFile == INVALID_HANDLE_VALUE)
-        return E_FAIL;
-    else
-        FindClose(hFile);
-    return S_OK;
 }
