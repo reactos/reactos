@@ -2048,7 +2048,7 @@ HRESULT SHELL_FindAnyFile(LPCWSTR lpFilePath)
 {
     WIN32_FIND_DATAW stffile;
     HANDLE hFile;
-    WCHAR szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH + sizeof("\\*.*")];
 
     wcscpy(szPath, lpFilePath);
     PathAddBackslashW(szPath);
@@ -2057,7 +2057,6 @@ HRESULT SHELL_FindAnyFile(LPCWSTR lpFilePath)
     hFile = FindFirstFileW(szPath, &stffile);
     if (hFile == INVALID_HANDLE_VALUE)
         return E_FAIL;
-    else
-        FindClose(hFile);
+    FindClose(hFile);
     return S_OK;
 }

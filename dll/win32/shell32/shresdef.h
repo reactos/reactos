@@ -567,8 +567,8 @@
 #define IDC_LINK_PROBLEM_LABEL2             14010
 
 /* Control IDs for IDD_INSERT_DISK dialog */
-#define IDC_INSERT_DISK_ICON               14011
-#define IDC_INSERT_DISK_LABEL              14012
+#define IDC_INSERT_DISK_ICON                14011
+#define IDC_INSERT_DISK_LABEL               14012
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29

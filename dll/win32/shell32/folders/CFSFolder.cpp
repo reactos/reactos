@@ -995,8 +995,7 @@ HRESULT WINAPI CFSFolder::EnumObjects(
 
     if (FAILED(SHELL_FindAnyFile(m_sPathTarget)))
     {
-        RETRY_DATA* retryData;
-        retryData = (RETRY_DATA*)SHAlloc(sizeof(RETRY_DATA));
+        RETRY_DATA retryData;
         StringCchCopyW(retryData->szDrive, MAX_PATH, m_sPathTarget);
         hr = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCE(IDD_INSERT_DISK), hwndOwner, RetryDlgProc, (LPARAM)retryData);
         if (hr == IDCANCEL)
