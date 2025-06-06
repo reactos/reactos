@@ -15,7 +15,7 @@
 #include <windows.h>
 #include <oleacc.h>
 #include <imm.h>
-#include <undocuser.h>
+#include <imm32_undoc.h>
 #include <cguid.h>
 #include <msctf.h>
 #include <msctf_undoc.h>
