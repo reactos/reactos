@@ -652,9 +652,6 @@ public:
         return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
     }
 };
-
-
-
 #endif /* __cplusplus */
 
 #define S_LESSTHAN 0xffff

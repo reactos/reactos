@@ -235,7 +235,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
-    LTEXT "Type of file:", 14004, 8, 40, 55, 10
+    LTEXT "Type:", 14004, 8, 40, 55, 10
     CONTROL "Folder", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Location:", 14008, 8, 56, 55, 10
@@ -983,7 +983,10 @@ BEGIN
     IDS_PRINT_VERB "Print"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Files, %u Folders"
+
     IDS_PRINTERS "Printers"
     IDS_FONTS "Fonts"
     IDS_INSTALLNEWFONT "Install New Font..."

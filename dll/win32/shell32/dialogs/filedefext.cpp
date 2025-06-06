@@ -29,54 +29,92 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
-BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
+static BOOL SH32_GetFileFindData(PCWSTR pszPath, WIN32_FIND_DATAW *pWFD)
 {
-    UNICODE_STRING FileName;
-    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hFind = FindFirstFileW(pszPath, pWFD);
+    return hFind != INVALID_HANDLE_VALUE ? FindClose(hFind) : FALSE;
+}
+
+BOOL GetPhysicalFileSize(LPCWSTR pszPath, PULARGE_INTEGER Size)
+{
+    HANDLE hFile = CreateFileW(pszPath, FILE_READ_ATTRIBUTES, FILE_SHARE_READ |
+                               FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+                               FILE_FLAG_OPEN_NO_RECALL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        ERR("Failed to open file for GetPhysicalFileSize\n");
+        return FALSE;
+    }
+
     IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
     FILE_STANDARD_INFORMATION FileInfo;
+    NTSTATUS Status = NtQueryInformationFile(hFile, &IoStatusBlock, &FileInfo,
+                                             sizeof(FileInfo), FileStandardInformation);
+    if (NT_SUCCESS(Status))
+    {
+        Size->QuadPart = FileInfo.AllocationSize.QuadPart;
+    }
+    else
+    {
+        ERR("NtQueryInformationFile failed for %S (Status: %08lX)\n", pszPath, Status);
+    }
+    CloseHandle(hFile);
+    return NT_SUCCESS(Status);
+}
+
+static UINT
+GetFileStats(HANDLE hFile, PULARGE_INTEGER pVirtSize, PULARGE_INTEGER pPhysSize)
+{
     NTSTATUS Status;
-
-    if (!RtlDosPathNameToNtPathName_U(PathBuffer, &FileName, NULL, NULL))
-    {
-        ERR("RtlDosPathNameToNtPathName_U failed\n");
-        return FALSE;
-    }
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenFile(&FileHandle,
-                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    RtlFreeUnicodeString(&FileName);
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION BasicInfo;
+    Status = NtQueryInformationFile(hFile, &IoStatusBlock, &BasicInfo, sizeof(BasicInfo), FileBasicInformation);
     if (!NT_SUCCESS(Status))
+        return INVALID_FILE_ATTRIBUTES;
+
+    if ((pVirtSize || pPhysSize) && !(BasicInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
     {
-        ERR("NtOpenFile failed for %S (Status 0x%08lx)\n", PathBuffer, Status);
-        return FALSE;
+        FILE_STANDARD_INFORMATION FileInfo;
+        Status = NtQueryInformationFile(hFile, &IoStatusBlock, &FileInfo,
+                                        sizeof(FileInfo), FileStandardInformation);
+        if (!NT_SUCCESS(Status))
+            return INVALID_FILE_ATTRIBUTES;
+        if (pVirtSize)
+            pVirtSize->QuadPart = FileInfo.EndOfFile.QuadPart;
+        if (pPhysSize)
+            pPhysSize->QuadPart = FileInfo.AllocationSize.QuadPart;
+    }
+    return BasicInfo.FileAttributes;
+}
+
+static UINT
+GetFileStats(PCWSTR pszPath, PULARGE_INTEGER pVirtSize, PULARGE_INTEGER pPhysSize)
+{
+    HANDLE hFile = CreateFileW(pszPath, FILE_READ_ATTRIBUTES, FILE_SHARE_READ |
+                               FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+                               FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_NO_RECALL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        UINT Attrib = GetFileStats(hFile, pVirtSize, pPhysSize);
+        CloseHandle(hFile);
+        return Attrib;
     }
 
-    /* Query the file size */
-    Status = NtQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    &FileInfo,
-                                    sizeof(FileInfo),
-                                    FileStandardInformation);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
+    WIN32_FIND_DATAW Data;
+    if (!SH32_GetFileFindData(pszPath, &Data))
+        return INVALID_FILE_ATTRIBUTES;
+    if (pVirtSize)
     {
-        ERR("NtQueryInformationFile failed for %S (Status: %08lX)\n", PathBuffer, Status);
-        return FALSE;
+        pVirtSize->u.LowPart = Data.nFileSizeLow;
+        pVirtSize->u.HighPart = Data.nFileSizeHigh;
     }
-
-    Size->QuadPart = FileInfo.AllocationSize.QuadPart;
-    return TRUE;
+    if (pPhysSize)
+    {
+        pPhysSize->u.LowPart = Data.nFileSizeLow;
+        pPhysSize->u.HighPart = Data.nFileSizeHigh;
+        // TODO: Should we round up to cluster size?
+    }
+    return Data.dwFileAttributes;
 }
 
 BOOL CFileVersionInfo::Load(LPCWSTR pwszPath)
@@ -545,18 +583,9 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
      * structure for both the GetFileAttributesEx and FindFirstFile calls.
      */
 
-    Success = GetFileAttributesExW(m_wszPath,
-                                   GetFileExInfoStandard,
+    Success = GetFileAttributesExW(m_wszPath, GetFileExInfoStandard,
                                    (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
-    if (!Success)
-    {
-        HANDLE hFind = FindFirstFileW(m_wszPath, &FileInfo);
-        Success = (hFind != INVALID_HANDLE_VALUE);
-        if (Success)
-            FindClose(hFind);
-    }
-
-    if (Success)
+    if (Success || (Success = SH32_GetFileFindData(m_wszPath, &FileInfo)) != FALSE)
     {
         /* Update attribute checkboxes */
         if (FileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
@@ -600,29 +629,11 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
 
     if (m_bDir)
     {
-        /* For directories files have to be counted */
-
-        _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(_CountFolderAndFilesData)));
-        data->This = this;
-        data->pwszBuf = static_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WCHAR) * MAX_PATH));
-        data->hwndDlg = hwndDlg;
-        this->AddRef();
-        StringCchCopyW(data->pwszBuf, MAX_PATH, m_wszPath);
-
-        SHCreateThread(CFileDefExt::_CountFolderAndFilesThreadProc, data, NULL, NULL);
-
-        /* Update size field */
-        if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
-            SetDlgItemTextW(hwndDlg, 14011, wszBuf);
-
-        if (SH_FormatFileSizeWithBytes(&m_DirSizeOnDisc, wszBuf, _countof(wszBuf)))
-            SetDlgItemTextW(hwndDlg, 14012, wszBuf);
-
-        /* Display files and folders count */
-        WCHAR wszFormat[256];
-        LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
-        StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
-        SetDlgItemTextW(hwndDlg, 14027, wszBuf);
+        // For directories, files have to be counted
+        m_hWndDirStatsDlg = hwndDlg;
+        AddRef();
+        if (!SHCreateThread(_CountFolderAndFilesThreadProc, this, 0, NULL))
+            Release();
     }
 
     /* Hide Advanced button. TODO: Implement advanced dialog and enable this button if filesystem supports compression or encryption */
@@ -787,10 +798,277 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             pFileDefExt->InitGeneralPage(hwndDlg);
             return FALSE;   // continue
         }
-        default:
+        case WM_DESTROY:
+            InterlockedIncrement(&pFileDefExt->m_Destroyed);
+            break;
+        case WM_UPDATEDIRSTATS:
+            pFileDefExt->UpdateDirStatsResults();
             break;
     }
 
+    return FALSE;
+}
+
+struct DIRTREESTATS
+{
+    PDWORD pDirCount, pFileCount;
+    PULARGE_INTEGER pTotVirtSize, pTotPhysSize;
+    UINT nTick;
+    UINT fAttribSet, fAttribAll;
+    BOOL bMultipleTypes;
+    BOOL bDeepRecurse;
+    WCHAR szType[max(100, RTL_FIELD_SIZE(SHFILEINFOA, szTypeName))];
+};
+
+void
+CFileDefExt::UpdateDirStatsResults()
+{
+    WCHAR fmt[200], buf[200];
+    LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, fmt, _countof(fmt));
+    wsprintfW(buf, fmt, m_cFiles, m_cFolders - (m_bMultifile ? 0 : 1));
+    SetDlgItemTextW(m_hWndDirStatsDlg, m_bMultifile ? 14001 : 14027, buf);
+
+    if (SH_FormatFileSizeWithBytes(&m_DirSize, buf, _countof(buf)))
+        SetDlgItemTextW(m_hWndDirStatsDlg, 14011, buf);
+    if (SH_FormatFileSizeWithBytes(&m_DirSizeOnDisc, buf, _countof(buf)))
+        SetDlgItemTextW(m_hWndDirStatsDlg, 14012, buf);
+}
+
+void
+CFileDefExt::InitDirStats(struct DIRTREESTATS *pStats)
+{
+    pStats->pDirCount = &m_cFolders;
+    pStats->pFileCount = &m_cFiles;
+    pStats->pTotVirtSize = &m_DirSize;
+    pStats->pTotPhysSize = &m_DirSizeOnDisc;
+    pStats->nTick = GetTickCount();
+    pStats->fAttribSet = ~0ul;
+    pStats->fAttribAll = 0;
+    pStats->bDeepRecurse = FALSE;
+    pStats->bMultipleTypes = !m_bMultifile; // Only the Multifile page wants to know
+    pStats->szType[0] = UNICODE_NULL;
+}
+
+static UINT
+ProcessDirStatsItem(PCWSTR pszPath, DIRTREESTATS &Stats, WIN32_FIND_DATAW *pWFD)
+{
+    UINT fAttrib;
+    ULARGE_INTEGER nVirtSize, nPhysSize;
+    if (pWFD && (pWFD->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        fAttrib = pWFD->dwFileAttributes;
+    }
+    else
+    {
+        fAttrib = GetFileStats(pszPath, &nVirtSize, &nPhysSize);
+        if (fAttrib == INVALID_FILE_ATTRIBUTES)
+            return fAttrib;
+    }
+
+    Stats.fAttribSet &= fAttrib;
+    Stats.fAttribAll |= fAttrib;
+    if (fAttrib & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        (*Stats.pDirCount)++;
+    }
+    else
+    {
+        (*Stats.pFileCount)++;
+        Stats.pTotVirtSize->QuadPart += nVirtSize.QuadPart;
+        Stats.pTotPhysSize->QuadPart += nPhysSize.QuadPart;
+    }
+
+    if (!Stats.bMultipleTypes)
+    {
+        SHFILEINFOW shfi;
+        if (!SHGetFileInfoW(pszPath, fAttrib, &shfi, sizeof(shfi),
+                            SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
+            Stats.bMultipleTypes = TRUE;
+        else if (!Stats.szType[0])
+            wcscpy(Stats.szType, shfi.szTypeName);
+        else
+            Stats.bMultipleTypes = lstrcmpW(Stats.szType, shfi.szTypeName);
+    }
+    return fAttrib;
+}
+
+BOOL
+CFileDefExt::WalkDirTree(PCWSTR pszBase, struct DIRTREESTATS *pStats, WIN32_FIND_DATAW *pWFD)
+{
+    WIN32_FIND_DATAW wfd;
+    wfd.dwFileAttributes = ProcessDirStatsItem(pszBase, *pStats, pWFD);
+    if (wfd.dwFileAttributes == INVALID_FILE_ATTRIBUTES)
+        return FALSE;
+    if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        return TRUE;
+
+    BOOL bSuccess = TRUE;
+    SIZE_T cch = lstrlenW(pszBase);
+    PWSTR pszFull = (PWSTR)SHAlloc((cch + MAX_PATH) * sizeof(*pszFull));
+    if (!pszFull)
+        return FALSE;
+    PWSTR pszFile = pszFull + cch;
+    wcscpy(pszFull, pszBase);
+    wcscpy(pszFile++, L"\\*");
+    HANDLE hFind = FindFirstFileW(pszFull, &wfd);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        for (; bSuccess && !IsDestroyed();)
+        {
+            UINT nTickNow = GetTickCount();
+            if (nTickNow - pStats->nTick >= 500)
+            {
+                pStats->nTick = nTickNow;
+                SendMessageW(m_hWndDirStatsDlg, WM_UPDATEDIRSTATS, 0, 0);
+            }
+
+            wcscpy(pszFile, wfd.cFileName);
+            if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            {
+                bSuccess = ProcessDirStatsItem(pszFull, *pStats, NULL);
+            }
+            else if (!PathIsDotOrDotDotW(wfd.cFileName))
+            {
+                bSuccess = WalkDirTree(pszFull, pStats, &wfd);
+                pStats->bDeepRecurse |= bSuccess;
+            }
+
+            if (!FindNextFileW(hFind, &wfd))
+                break;
+        }
+        FindClose(hFind);
+    }
+    SHFree(pszFull);
+    return bSuccess;
+}
+
+void
+CFileDefExt::InitMultifilePageThread()
+{
+    DIRTREESTATS Stats;
+    InitDirStats(&Stats);
+
+    // MSDN says CFSTR_SHELLIDLIST and SHGDN_FORPARSING must be supported so that is what we use
+    for (SIZE_T i = 0; i < m_cidl; ++i)
+    {
+        PIDLIST_ABSOLUTE pidl = ILCombine(m_pidlFolder, m_pidls[i]);
+        if (!pidl)
+            return;
+        PWSTR pszAbsPath;
+        HRESULT hr = SHELL_DisplayNameOf(NULL, pidl, SHGDN_FORPARSING, &pszAbsPath);
+        ILFree(pidl);
+        if (FAILED(hr))
+            return;
+        BOOL bSuccess = WalkDirTree(pszAbsPath, &Stats, NULL);
+        SHFree(pszAbsPath);
+        if (!bSuccess)
+            return;
+    }
+
+    UpdateDirStatsResults();
+    if (Stats.bMultipleTypes)
+        LoadStringW(shell32_hInstance, IDS_MULTIPLETYPES, Stats.szType, _countof(Stats.szType));
+    SetDlgItemTextW(m_hWndDirStatsDlg, 14005, Stats.szType);
+
+    PWSTR pszDir = NULL;
+    HRESULT hr = E_FAIL;
+    if (!Stats.bDeepRecurse)
+        hr = SHELL_DisplayNameOf(NULL, m_pidlFolder, SHGDN_FORPARSING | SHGDN_FORADDRESSBAR, &pszDir);
+    if (SUCCEEDED(hr))
+    {
+        SetDlgItemTextW(m_hWndDirStatsDlg, 14009, pszDir);
+    }
+    else
+    {
+        LoadStringW(shell32_hInstance, IDS_VARIOUSFOLDERS, Stats.szType, _countof(Stats.szType));
+        SetDlgItemTextW(m_hWndDirStatsDlg, 14009, Stats.szType);
+    }
+    SHFree(pszDir);
+
+    #define SetMultifileDlgFileAttr(attr, id) do \
+    { \
+        if (Stats.fAttribSet & (attr)) \
+            CheckDlgButton(m_hWndDirStatsDlg, (id), BST_CHECKED); \
+        else if (Stats.fAttribAll & (attr)) \
+            CheckDlgButton(m_hWndDirStatsDlg, (id), BST_INDETERMINATE); \
+    } while (0)
+    SetMultifileDlgFileAttr(FILE_ATTRIBUTE_READONLY, 14021);
+    SetMultifileDlgFileAttr(FILE_ATTRIBUTE_HIDDEN, 14022);
+    SetMultifileDlgFileAttr(FILE_ATTRIBUTE_ARCHIVE, 14023);
+    #undef SetMultifileDlgFileAttr
+}
+
+DWORD CALLBACK
+CFileDefExt::_InitializeMultifileThreadProc(LPVOID lpParameter)
+{
+    CFileDefExt *pThis = static_cast<CFileDefExt*>(lpParameter);
+    pThis->InitMultifilePageThread();
+    return pThis->Release();
+}
+
+void
+CFileDefExt::InitMultifilePage(HWND hwndDlg)
+{
+    m_hWndDirStatsDlg = hwndDlg;
+    HICON hIco = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_MULTIPLE_FILES));
+    SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)hIco, 0);
+
+    // We are lazy and just reuse the directory page so we must tweak some controls
+    HWND hCtrl = GetDlgItem(hwndDlg, 14001);
+    SetWindowLongPtrW(hCtrl, GWL_STYLE, GetWindowLongPtrW(GetDlgItem(hwndDlg, 14027), GWL_STYLE));
+    SetWindowLongPtrW(hCtrl, GWL_EXSTYLE, 0);
+    SendMessageW(hCtrl, EM_SETREADONLY, TRUE, 0);
+    SetDlgItemTextW(hwndDlg, 14005, NULL);
+    
+    static const WORD idAttr[] = { 14021, 14022, 14023 };
+    for (SIZE_T i = 0; i < _countof(idAttr); ++i)
+    {
+        hCtrl = GetDlgItem(hwndDlg, idAttr[i]);
+        SendMessageW(hCtrl, BM_SETSTYLE, BS_AUTO3STATE, TRUE);
+        EnableWindow(hCtrl, FALSE);
+    }
+
+    static const WORD idUnused[] = { 14026, 14027, 14028, 14014, 14015 };
+    for (SIZE_T i = 0; i < _countof(idUnused); ++i)
+        DestroyWindow(GetDlgItem(hwndDlg, idUnused[i]));
+
+    if (!m_cidl)
+        return;
+
+    AddRef();
+    if (!SHCreateThread(_InitializeMultifileThreadProc, this, CTF_COINIT, NULL))
+        Release();
+}
+
+/*************************************************************************
+ *
+ * CFileDefExt::MultifilePageProc
+ *
+ */
+
+INT_PTR CALLBACK
+CFileDefExt::MultifilePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            LPPROPSHEETPAGEW ppsp = (LPPROPSHEETPAGEW)lParam;
+            if (ppsp == NULL || !ppsp->lParam)
+                break;
+            pFileDefExt = reinterpret_cast<CFileDefExt *>(ppsp->lParam);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pFileDefExt);
+            pFileDefExt->InitMultifilePage(hwndDlg);
+            break;
+        }
+        case WM_DESTROY:
+            InterlockedIncrement(&pFileDefExt->m_Destroyed);
+            break;
+        case WM_UPDATEDIRSTATS:
+            pFileDefExt->UpdateDirStatsResults();
+            break;
+    }
     return FALSE;
 }
 
@@ -956,12 +1234,6 @@ CFileDefExt::VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
                 return TRUE;
             }
-            break;
-        case WM_DESTROY:
-            break;
-        case PSM_QUERYSIBLINGS:
-            return FALSE;   // continue
-        default:
             break;
     }
 
@@ -1216,7 +1488,7 @@ BOOL CFileDefExt::OnFolderCustApply(HWND hwndDlg)
 /*****************************************************************************/
 
 CFileDefExt::CFileDefExt():
-    m_bDir(FALSE), m_cFiles(0), m_cFolders(0)
+    m_bDir(FALSE), m_bMultifile(FALSE), m_cFiles(0), m_cFolders(0)
 {
     m_wszPath[0] = L'\0';
     m_DirSize.QuadPart = 0ull;
@@ -1230,7 +1502,8 @@ CFileDefExt::CFileDefExt():
 
 CFileDefExt::~CFileDefExt()
 {
-
+    _ILFreeaPidl(m_pidls, m_cidl);
+    ILFree(m_pidlFolder);
 }
 
 HRESULT WINAPI
@@ -1244,6 +1517,19 @@ CFileDefExt::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKE
 
     if (!pDataObj)
         return E_FAIL;
+
+    int count = DataObject_GetHIDACount(pDataObj);
+    m_bMultifile = count > 1;
+    if (m_bMultifile)
+    {
+        CDataObjectHIDA cida(pDataObj);
+        if (SUCCEEDED(cida.hr()))
+        {
+            m_pidls = _ILCopyCidaToaPidl(&m_pidlFolder, cida);
+            if (m_pidls)
+                m_cidl = cida->cidl;
+        }
+    }
 
     format.cfFormat = CF_HDROP;
     format.ptd = NULL;
@@ -1265,8 +1551,8 @@ CFileDefExt::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKE
     ReleaseStgMedium(&stgm);
 
     TRACE("File properties %ls\n", m_wszPath);
-    m_bDir = PathIsDirectoryW(m_wszPath) ? TRUE : FALSE;
-    if (!m_bDir)
+    m_bDir = !m_bMultifile && PathIsDirectoryW(m_wszPath);
+    if (!m_bDir && !m_bMultifile)
         m_VerInfo.Load(m_wszPath);
 
     return S_OK;
@@ -1297,15 +1583,19 @@ HRESULT WINAPI
 CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
     HPROPSHEETPAGE hPage;
-    WORD wResId = m_bDir ? IDD_FOLDER_PROPERTIES : IDD_FILE_PROPERTIES;
+    WORD wResId = (m_bDir || m_bMultifile) ? IDD_FOLDER_PROPERTIES : IDD_FILE_PROPERTIES;
+    DLGPROC pfnFirstPage = m_bMultifile ? MultifilePageProc : GeneralPageProc;
 
-    hPage = SH_CreatePropertySheetPageEx(wResId, GeneralPageProc, (LPARAM)this, NULL,
+    hPage = SH_CreatePropertySheetPageEx(wResId, pfnFirstPage, (LPARAM)this, NULL,
                                          &PropSheetPageLifetimeCallback<CFileDefExt>);
     HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
     else
         AddRef(); // For PropSheetPageLifetimeCallback
+
+    if (m_bMultifile)
+        return S_OK;
 
     if (!m_bDir && GetFileVersionInfoSizeW(m_wszPath, NULL))
     {
@@ -1335,127 +1625,19 @@ CFileDefExt::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPAR
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI
-CFileDefExt::SetSite(IUnknown *punk)
+void
+CFileDefExt::CountFolderAndFiles()
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    DIRTREESTATS Stats;
+    InitDirStats(&Stats);
+    WalkDirTree(m_wszPath, &Stats, NULL);
+    UpdateDirStatsResults();
 }
 
-HRESULT WINAPI
-CFileDefExt::GetSite(REFIID iid, void **ppvSite)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-DWORD WINAPI
+DWORD CALLBACK
 CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
 {
-    _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(lpParameter);
-    DWORD ticks = 0;
-    data->This->CountFolderAndFiles(data->hwndDlg, data->pwszBuf, &ticks);
-
-    //Release the CFileDefExt and data object holds in the copying thread.
-    data->This->Release();
-    HeapFree(GetProcessHeap(), 0, data->pwszBuf);
-    HeapFree(GetProcessHeap(), 0, data);
-
-    return 0;
-}
-
-BOOL
-CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPCWSTR pwszBuf, DWORD *ticks)
-{
-    CString sBuf = pwszBuf;
-    sBuf += L"\\" ;
-    CString sSearch = sBuf;
-    sSearch += L"*" ;
-    CString sFileName;
-
-    WIN32_FIND_DATAW wfd;
-    HANDLE hFind = FindFirstFileW(sSearch, &wfd);
-    if (hFind == INVALID_HANDLE_VALUE)
-    {
-        ERR("FindFirstFileW %ls failed\n", sSearch.GetString());
-        return FALSE;
-    }
-
-    BOOL root = FALSE;
-    if (*ticks == 0) {
-        *ticks = GetTickCount();
-        root = TRUE;
-    }
-
-    do
-    {
-        sFileName = sBuf;
-        sFileName += wfd.cFileName;
-        if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-            /* Don't process "." and ".." items */
-            if (!wcscmp(wfd.cFileName, L".") || !wcscmp(wfd.cFileName, L".."))
-                continue;
-
-            ++m_cFolders;
-
-            CountFolderAndFiles(hwndDlg, sFileName, ticks);
-        }
-        else
-        {
-            m_cFiles++;
-
-            ULARGE_INTEGER FileSize;
-            FileSize.u.LowPart  = wfd.nFileSizeLow;
-            FileSize.u.HighPart = wfd.nFileSizeHigh;
-            m_DirSize.QuadPart += FileSize.QuadPart;
-            // Calculate size on disc
-            if (!GetPhysicalFileSize(sFileName.GetString(), &FileSize))
-                ERR("GetPhysicalFileSize failed for %ls\n", sFileName.GetString());
-            m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
-        }
-        if (GetTickCount() - *ticks > (DWORD) 300)
-        {
-            /* FIXME Using IsWindow is generally ill advised */
-            if (IsWindow(hwndDlg))
-            {
-                WCHAR wszBuf[100];
-
-                if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
-                    SetDlgItemTextW(hwndDlg, 14011, wszBuf);
-
-                if (SH_FormatFileSizeWithBytes(&m_DirSizeOnDisc, wszBuf, _countof(wszBuf)))
-                    SetDlgItemTextW(hwndDlg, 14012, wszBuf);
-
-                /* Display files and folders count */
-                WCHAR wszFormat[100];
-                LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
-                StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
-                SetDlgItemTextW(hwndDlg, 14027, wszBuf);
-                *ticks = GetTickCount();
-            }
-            else
-                break;
-        }
-    } while(FindNextFileW(hFind, &wfd));
-
-    if (root && IsWindow(hwndDlg))
-    {
-        WCHAR wszBuf[100];
-
-        if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
-            SetDlgItemTextW(hwndDlg, 14011, wszBuf);
-
-        if (SH_FormatFileSizeWithBytes(&m_DirSizeOnDisc, wszBuf, _countof(wszBuf)))
-            SetDlgItemTextW(hwndDlg, 14012, wszBuf);
-
-        /* Display files and folders count */
-        WCHAR wszFormat[100];
-        LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
-        StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
-        SetDlgItemTextW(hwndDlg, 14027, wszBuf);
-    }
-
-    FindClose(hFind);
-    return TRUE;
+    CFileDefExt *pThis = static_cast<CFileDefExt*>(lpParameter);
+    pThis->CountFolderAndFiles();
+    return pThis->Release();
 }

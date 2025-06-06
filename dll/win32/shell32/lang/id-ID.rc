@@ -973,7 +973,10 @@ BEGIN
     IDS_PRINT_VERB "Cetak"
     IDS_CMD_VERB "Perintah Cepat di sini"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Berkas, %u Folder"
+
     IDS_PRINTERS "Printer"
     IDS_FONTS "Fon"
     IDS_INSTALLNEWFONT "Memasang fon baru..."

@@ -984,7 +984,10 @@ BEGIN
     IDS_PRINT_VERB "Imprimare"
     IDS_CMD_VERB "Deschidere Panou de control aici"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u fişiere, %u foldere"
+
     IDS_PRINTERS "Imprimante"
     IDS_FONTS "Fonturi"
     IDS_INSTALLNEWFONT "Instalare font nou…"

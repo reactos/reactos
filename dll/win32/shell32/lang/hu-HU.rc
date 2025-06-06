@@ -975,7 +975,10 @@ BEGIN
     IDS_PRINT_VERB "Nyomtatás"
     IDS_CMD_VERB "Parancssor indítása innen"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u fájl, %u mappa"
+
     IDS_PRINTERS "Nyomtatók"
     IDS_FONTS "Betűtípusok"
     IDS_INSTALLNEWFONT "Új betűtípus telepítése..."
