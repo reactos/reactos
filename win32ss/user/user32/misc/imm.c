@@ -79,7 +79,7 @@ static BOOL IntInitializeImmEntryTable(VOID)
         return TRUE;
 
     User32GetSystemFilePath(ImmFile, _countof(ImmFile), L"imm32.dll");
-    TRACE("File %S\n", ImmFile);
+    TRACE("File %s\n", debugstr_w(ImmFile));
 
     /* If IMM32 is already loaded, use it without increasing reference count. */
     if (imm32 == NULL)
