@@ -6686,6 +6686,7 @@ NtUserTrackPopupMenuEx(
       }
       _SEH2_END
    }
+
    UserRefObjectCo(pWnd, &Ref);
    Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, lptpm ? &tpm : NULL);
    UserDerefObjectCo(pWnd);
