@@ -1425,7 +1425,7 @@ NtUserThunkedMenuItemInfo(
 BOOL
 NTAPI
 NtUserTrackPopupMenuEx(
-    _In_ HMENU hmenu,
+    _In_ HMENU hMenu,
     _In_ UINT fuFlags,
     _In_ INT x,
     _In_ INT y,

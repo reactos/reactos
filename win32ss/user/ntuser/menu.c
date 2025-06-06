@@ -6647,7 +6647,7 @@ NtUserTrackPopupMenuEx(
    PWND pWnd;
    TPMPARAMS tpm;
    BOOL Ret = FALSE;
-    USER_REFERENCE_ENTRY Ref1, Ref2;
+    USER_REFERENCE_ENTRY WndRef, MenuRef;
 
    TRACE("Enter NtUserTrackPopupMenuEx\n");
    UserEnterExclusive();
@@ -6687,8 +6687,8 @@ NtUserTrackPopupMenuEx(
       _SEH2_END
    }
 
-    UserRefObjectCo(pWnd, &Ref1);
-    UserRefObjectCo(menu, &Ref2);
+    UserRefObjectCo(pWnd, &WndRef);
+    UserRefObjectCo(menu, &MenuRef);
     Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, lptpm ? &tpm : NULL);
     UserDerefObjectCo(menu);
     UserDerefObjectCo(pWnd);
