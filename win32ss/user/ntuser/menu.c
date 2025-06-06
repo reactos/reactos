@@ -4582,7 +4582,7 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
 
     if (lpTpm && lpTpm->cbSize != sizeof(*lpTpm))
     {
-        ERR("cbSize was %u\n", lpTpm->cbSize);
+        ERR("Invalid TPMPARAMS size: got %u, expected %zu\n", lpTpm->cbSize, sizeof(*lpTpm));
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
