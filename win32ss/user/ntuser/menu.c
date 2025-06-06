@@ -6624,6 +6624,12 @@ Cleanup:
    return Ret;
 }
 
+#define VALID_TPM_FLAGS ( \
+    TPM_LAYOUTRTL | TPM_NOANIMATION | TPM_VERNEGANIMATION | TPM_VERPOSANIMATION | \
+    0x200 | TPM_NONOTIFY | TPM_VERTICAL | TPM_BOTTOMALIGN | TPM_VCENTERALIGN | \
+    TPM_RIGHTALIGN | TPM_CENTERALIGN | TPM_RIGHTBUTTON | TPM_RECURSE \
+)
+
 /*
  * @implemented
  */
@@ -6644,6 +6650,13 @@ NtUserTrackPopupMenuEx(
 
     TRACE("Enter NtUserTrackPopupMenuEx\n");
     UserEnterExclusive();
+
+    if (fuFlags & ~VALID_TPM_FLAGS)
+    {
+        ERR("TPME : Invalid flags 0x%X\n", fuFlags);
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        goto Exit;
+    }
 
     /* Parameter check */
     if (!(menu = UserGetMenuObject( hMenu )))
