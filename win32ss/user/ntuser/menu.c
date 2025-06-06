@@ -6689,7 +6689,7 @@ NtUserTrackPopupMenuEx(
 
     UserRefObjectCo(pWnd, &WndRef);
     UserRefObjectCo(menu, &MenuRef);
-    Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, lptpm ? &tpm : NULL);
+    Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, (lptpm ? &tpm : NULL));
     UserDerefObjectCo(menu);
     UserDerefObjectCo(pWnd);
 
