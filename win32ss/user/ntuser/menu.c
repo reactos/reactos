@@ -4580,6 +4580,13 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
     BOOL ret = FALSE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
+    if (lpTpm && lpTpm->cbSize != sizeof(*lpTpm))
+    {
+        ERR("Invalid TPMPARAMS size: got %u, expected %zu\n", lpTpm->cbSize, sizeof(*lpTpm));
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     if (pti != pWnd->head.pti)
     {
        ERR("Must be the same pti!\n");
