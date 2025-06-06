@@ -2199,8 +2199,8 @@ INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 {
     SHFILEINFOW* psfi;
     RETRY_DATA* retryData;
-    WCHAR szFormat[MAX_PATH] = {0};
-    WCHAR szDrive[MAX_PATH] = {0};
+    WCHAR szFormat[MAX_PATH];
+    WCHAR szDrive[MAX_PATH];
 
     retryData = (RETRY_DATA*)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -2219,10 +2219,9 @@ INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             /* set icon */
             StringCchCopyW(szDrive, MAX_PATH, retryData->szDrive);
             PathStripToRoot(szDrive);
-            psfi = (SHFILEINFOW*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHFILEINFOW));
-            SHGetFileInfoW(szDrive, FILE_ATTRIBUTE_DIRECTORY, psfi, sizeof(SHFILEINFOW), SHGFI_ICON | SHGFI_ADDOVERLAYS);
-            SendDlgItemMessageW(hwndDlg, IDC_INSERT_DISK_ICON, STM_SETICON, (WPARAM)psfi->hIcon, 0);
-            HeapFree(GetProcessHeap(), 0, psfi);
+            SHFILEINFOW sfi = {};
+            SHGetFileInfoW(szDrive, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_ADDOVERLAYS);
+            SendDlgItemMessageW(hwndDlg, IDC_INSERT_DISK_ICON, STM_SETICON, (WPARAM)sfi.hIcon, 0);
             SetTimer(hwndDlg, 1, 2000, NULL);
             break;
         case WM_COMMAND:
@@ -2231,7 +2230,7 @@ INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             break;
         case WM_TIMER:
             if(SUCCEEDED(SHELL_FindAnyFile(retryData->szDrive)))
-                EndDialog(retryData->hDlg, 4);
+                EndDialog(retryData->hDlg, IDOK);
             break;
         default:
             return false;
