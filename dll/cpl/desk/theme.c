@@ -204,7 +204,7 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
                                 0);
     if (!ret) return FALSE;
 
-    /* Show shadows under menus */
+    /* Show shadows under windows */
     ret = SystemParametersInfoW(SPI_GETDROPSHADOW,
                                 0,
                                 &scheme->Effects.bDropShadow,
@@ -402,7 +402,7 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     /* Use large icons */
     //SYS_CONFIG(SPI_GETDRAGFULLWINDOWS,   (PVOID) g->SchemeAdv.Effects.bMenuFade);
 
-    /* Show shadows under menus */
+    /* Show shadows under windows */
     SYS_CONFIG(SPI_SETDROPSHADOW,                0, IntToPtr(scheme->Effects.bDropShadow));
 
     /* Show window contents while dragging */

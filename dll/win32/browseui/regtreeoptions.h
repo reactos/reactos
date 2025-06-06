@@ -22,6 +22,10 @@ public:
     ~CRegTreeOptions();
 
     void AddItemsFromRegistry(HKEY hKey, HTREEITEM hParent, HTREEITEM hInsertAfter);
+    HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOOL Set);
+    HRESULT GetCheckState(HKEY hKey, BOOL UseDefault = FALSE);
+    HRESULT SaveCheckState(HKEY hKey, BOOL Checked);
+    void WalkTree(WALK_TREE_CMD Command, HWND hTree, HTREEITEM hTI);
 
     // *** IRegTreeOptions methods ***
     STDMETHOD(InitTree)(HWND hTV, HKEY hKey, LPCSTR SubKey, char const *pUnknown) override;
