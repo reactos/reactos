@@ -59,6 +59,10 @@ typedef struct _LOADER_SYSTEM_BLOCK
     CHAR NtHalPathName[MAX_PATH+1];
     ARC_DISK_INFORMATION ArcDiskInformation;
     LOADER_PERFORMANCE_DATA LoaderPerformanceData;
+    struct {
+        LOADER_PARAMETER_BLOCK_WIN7 LoaderBlockWin7;
+        LOADER_PARAMETER_EXTENSION_WIN7 ExtensionWin7;
+    } *LoaderVersions;
 } LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
 
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;

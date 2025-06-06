@@ -66,7 +66,7 @@ PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 // ARC Disk Information
 ULONG reactos_disk_count = 0;
-ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[32];
+ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[32] = {0};
 
 /* FUNCTIONS ******************************************************************/
 
