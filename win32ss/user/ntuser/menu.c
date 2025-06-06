@@ -6634,14 +6634,14 @@ Cleanup:
 /*
  * @implemented
  */
-BOOL APIENTRY
+BOOL NTAPI
 NtUserTrackPopupMenuEx(
-   HMENU hMenu,
-   UINT fuFlags,
-   int x,
-   int y,
-   HWND hWnd,
-   LPTPMPARAMS lptpm)
+    _In_ HMENU hMenu,
+    _In_ UINT fuFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ HWND hWnd,
+    _In_opt_ LPTPMPARAMS lptpm)
 {
    PMENU menu;
    PWND pWnd;
@@ -6652,12 +6652,12 @@ NtUserTrackPopupMenuEx(
    TRACE("Enter NtUserTrackPopupMenuEx\n");
    UserEnterExclusive();
 
-   if (fuFlags & ~VALID_TPM_FLAGS)
-   {
-      ERR("TPME : Invalid flags 0x%X\n", fuFlags);
-      EngSetLastError(ERROR_INVALID_FLAGS);
-      goto Exit;
-   }
+    if (fuFlags & ~VALID_TPM_FLAGS)
+    {
+        ERR("TPME : Invalid flags 0x%X\n", fuFlags);
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        goto Exit;
+    }
 
    /* Parameter check */
    if (!(menu = UserGetMenuObject( hMenu )))
