@@ -4571,11 +4571,14 @@ track_menu:
     MENU_ExitTracking( pwnd, FALSE, wFlags);
 }
 
-/**********************************************************************
- *           TrackPopupMenuEx   (USER32.@)
- */
-BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
-                              PWND pWnd, LPTPMPARAMS lpTpm)
+BOOL
+IntTrackPopupMenuEx(
+    _Inout_ PMENU menu,
+    _In_ UINT wFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ PWND pWnd,
+    _In_opt_ const TPMPARAMS *lpTpm)
 {
     BOOL ret = FALSE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -6631,9 +6634,7 @@ Cleanup:
     TPM_RIGHTALIGN | TPM_CENTERALIGN | TPM_RIGHTBUTTON | TPM_RECURSE \
 )
 
-/*
- * @implemented
- */
+/* @implemented */
 BOOL NTAPI
 NtUserTrackPopupMenuEx(
     _In_ HMENU hMenu,
@@ -6698,5 +6699,3 @@ Exit:
    UserLeave();
    return Ret;
 }
-
-/* EOF */
