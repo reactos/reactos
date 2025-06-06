@@ -128,7 +128,7 @@ VOID DeleteFrameBrushes(VOID);
 BOOL WINAPI GdiValidateHandle(HGDIOBJ);
 HANDLE FASTCALL UserGetProp(HWND hWnd, ATOM Atom, BOOLEAN SystemProp);
 BOOL WINAPI InitializeImmEntryTable(VOID);
-HRESULT User32GetImmFileName(_Out_ LPWSTR lpBuffer, _In_ size_t cchBuffer);
+HRESULT User32GetSystemFilePath(_Out_writes_(cchBuffer) PWSTR lpBuffer, _In_ SIZE_T cchBuffer, _In_ PCWSTR pszFileName);
 BOOL WINAPI UpdatePerUserImmEnabling(VOID);
 VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL);
 VOID IntLoadPreloadKeyboardLayouts(VOID);

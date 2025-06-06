@@ -110,6 +110,7 @@ typedef struct tagGUIDELINE {
 #define IMS_IMEDEACTIVATE       0x18
 #define IMS_ACTIVATELAYOUT      0x19
 #define IMS_GETIMEMENU          0x1C
+#define IMS_IMEMENUITEMSELECTED 0x1D
 #define IMS_GETCONTEXT          0x1E
 #define IMS_SENDNOTIFICATION    0x1F
 #define IMS_COMPLETECOMPSTR     0x20
