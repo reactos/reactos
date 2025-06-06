@@ -61,6 +61,7 @@ extern void func_SwitchToThisWindow(void);
 extern void func_SystemParametersInfo(void);
 extern void func_SystemMenu(void);
 extern void func_TrackMouseEvent(void);
+extern void func_TrackPopupMenuEx(void);
 extern void func_VirtualKey(void);
 extern void func_WndProc(void);
 extern void func_wsprintf(void);
@@ -125,6 +126,7 @@ const struct test winetest_testlist[] =
     { "SystemMenu", func_SystemMenu },
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
+    { "TrackPopupMenuEx", func_TrackPopupMenuEx },
     { "VirtualKey", func_VirtualKey },
     { "WndProc", func_WndProc },
     { "wsprintfApi", func_wsprintf },

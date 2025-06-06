@@ -4571,11 +4571,14 @@ track_menu:
     MENU_ExitTracking( pwnd, FALSE, wFlags);
 }
 
-/**********************************************************************
- *           TrackPopupMenuEx   (USER32.@)
- */
-BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
-                              PWND pWnd, LPTPMPARAMS lpTpm)
+BOOL
+IntTrackPopupMenuEx(
+    _Inout_ PMENU menu,
+    _In_ UINT wFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ PWND pWnd,
+    _In_opt_ const TPMPARAMS *lpTpm)
 {
     BOOL ret = FALSE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -6626,34 +6629,33 @@ Cleanup:
 
 #define VALID_TPM_FLAGS ( \
     TPM_LAYOUTRTL | TPM_NOANIMATION | TPM_VERNEGANIMATION | TPM_VERPOSANIMATION | \
-    0x200 | TPM_NONOTIFY | TPM_VERTICAL | TPM_BOTTOMALIGN | TPM_VCENTERALIGN | \
+    TPM_HORNEGANIMATION | TPM_HORPOSANIMATION | TPM_RETURNCMD | \
+    TPM_NONOTIFY | TPM_VERTICAL | TPM_BOTTOMALIGN | TPM_VCENTERALIGN | \
     TPM_RIGHTALIGN | TPM_CENTERALIGN | TPM_RIGHTBUTTON | TPM_RECURSE \
 )
 
-/*
- * @implemented
- */
-BOOL APIENTRY
+/* @implemented */
+BOOL NTAPI
 NtUserTrackPopupMenuEx(
-   HMENU hMenu,
-   UINT fuFlags,
-   int x,
-   int y,
-   HWND hWnd,
-   LPTPMPARAMS lptpm)
+    _In_ HMENU hMenu,
+    _In_ UINT fuFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ HWND hWnd,
+    _In_opt_ LPTPMPARAMS lptpm)
 {
     PMENU menu;
     PWND pWnd;
     TPMPARAMS tpm;
     BOOL Ret = FALSE;
-    USER_REFERENCE_ENTRY Ref;
+    USER_REFERENCE_ENTRY WndRef, MenuRef;
 
     TRACE("Enter NtUserTrackPopupMenuEx\n");
     UserEnterExclusive();
 
     if (fuFlags & ~VALID_TPM_FLAGS)
     {
-        ERR("TPME : Invalid flags 0x%X\n", fuFlags);
+        ERR("TPME : Invalid flags 0x%X (valid flags are 0x%X)\n", fuFlags, VALID_TPM_FLAGS);
         EngSetLastError(ERROR_INVALID_FLAGS);
         goto Exit;
     }
@@ -6686,8 +6688,10 @@ NtUserTrackPopupMenuEx(
         _SEH2_END
     }
 
-    UserRefObjectCo(pWnd, &Ref);
-    Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, lptpm ? &tpm : NULL);
+    UserRefObjectCo(pWnd, &WndRef);
+    UserRefObjectCo(menu, &MenuRef);
+    Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, (lptpm ? &tpm : NULL));
+    UserDerefObjectCo(menu);
     UserDerefObjectCo(pWnd);
 
 Exit:
@@ -6695,5 +6699,3 @@ Exit:
     UserLeave();
     return Ret;
 }
-
-/* EOF */
