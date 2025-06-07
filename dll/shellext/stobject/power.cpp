@@ -182,14 +182,17 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     SetMenuDefaultItem(hPopup, IDS_PWR_PROPERTIES, FALSE);
 
     SetForegroundWindow(pSysTray->GetHWnd());
-    DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
+
+    TPMPARAMS params = { sizeof(params) };
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    HWND hNotifyWnd = FindWindowExW(hTrayWnd, NULL, L"TrayNotifyWnd", NULL);
+    GetWindowRect(hNotifyWnd, &params.rcExclude);
+
     POINT pt;
     GetCursorPos(&pt);
 
-    DWORD id = TrackPopupMenuEx(hPopup, flags,
-        pt.x, pt.y,
-        pSysTray->GetHWnd(), NULL);
-
+    DWORD flags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY;
+    UINT id = TrackPopupMenuEx(hPopup, flags, pt.x, pt.y, pSysTray->GetHWnd(), &params);
     switch (id)
     {
         case IDS_PWR_PROPERTIES:
