@@ -39,7 +39,7 @@ TEST_InvalidFlags(VOID)
             SetLastError(0xBEEFCAFE);
             ret = TrackPopupMenuEx(hMenu, uFlags, 0, 0, hwnd, NULL);
             ok_int(ret, FALSE);
-            if (uFlags == TPM_WORKAREA && IsWindowsVistaOrGreater())
+            if (uFlags == TPM_WORKAREA && IsWindows7OrGreater())
                 ok_err(ERROR_INVALID_PARAMETER);
             else
                 ok_err(ERROR_INVALID_FLAGS);
