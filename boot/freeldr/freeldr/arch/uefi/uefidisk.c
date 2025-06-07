@@ -431,30 +431,23 @@ UefiSetupBlockDevices(VOID)
         }
         else if (handles[i] == PublicBootHandle)
         {
-            ULONG increment = 0;
-            ULONG i;
-
-            /* 3) Grab the offset into the array of handles and decrement per volume (valid partition) */
-            for (increment = OffsetToBoot; increment > 0; increment--)
+            GlobalSystemTable->BootServices->HandleProtocol(handles[i], &bioGuid, (void**)&bio);
+            if (bio->Media->LogicalPartition == FALSE)
             {
-                GlobalSystemTable->BootServices->HandleProtocol(handles[increment], &bioGuid, (void**)&bio);
-                if (bio->Media->LogicalPartition == FALSE)
+                ULONG j;
+
+                TRACE("Found root at index %u\n", i);
+                UefiBootRootIdentifier = i;
+
+                for (j = 0; j <= PcBiosDiskCount; ++j)
                 {
-                    TRACE("Found root at increment %u\n", increment);
-                    UefiBootRootIdentifier = increment;
-
-                    for (i = 0; i <= PcBiosDiskCount; ++i)
+                    /* Now only of the root drive number is equal to this drive we found above */
+                    if (InternalUefiDisk[j].UefiRootNumber == UefiBootRootIdentifier)
                     {
-                        /* Now only of the root drive number is equal to this drive we found above */
-                        if (InternalUefiDisk[i].UefiRootNumber == UefiBootRootIdentifier)
-                        {
-                            InternalUefiDisk[i].IsThisTheBootDrive = TRUE;
-                            PublicBootArcDisk = i;
-                            TRACE("Found Boot drive\n");
-                        }
+                        InternalUefiDisk[j].IsThisTheBootDrive = TRUE;
+                        PublicBootArcDisk = j;
+                        TRACE("Found Boot drive\n");
                     }
-
-                    break;
                 }
             }
         }
