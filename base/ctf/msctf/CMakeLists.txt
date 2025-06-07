@@ -17,7 +17,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
 list(APPEND PCH_SKIP_SOURCE
-    inputcontext.cpp
     langbarmgr.cpp
     mlng.cpp
     range.cpp

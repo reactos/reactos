@@ -18,7 +18,7 @@
 #include <cicreg.h>
 #include <cicutb.h>
 
-#include "inputcontext.h"
+class CInputContext;
 #include "range.h"
 #include "msctf_internal.h"
 
@@ -39,7 +39,6 @@ CRange::CRange(
     m_pAnchorStart = pAnchorStart;
     m_pAnchorEnd = pAnchorEnd;
     m_pInputContext = pIC;
-    m_pContext = NULL;
     m_dwCookie = MAXDWORD;
     m_gravity = gravity;
     m_cRefs = 1;
@@ -327,17 +326,8 @@ STDMETHODIMP CRange::Clone(
 STDMETHODIMP CRange::GetContext(
     _Out_ ITfContext **ppContext)
 {
-    TRACE("%p\n", ppContext);
-
-    if (!ppContext)
-        return E_INVALIDARG;
-
-    *ppContext = m_pContext;
-    if (!*ppContext)
-        return E_FAIL;
-
-    m_pContext->AddRef();
-    return S_OK;
+    FIXME("%p\n", ppContext);
+    return E_NOTIMPL;
 }
 
 ////////////////////////////////////////////////////////////////////////////

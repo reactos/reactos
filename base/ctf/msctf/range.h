@@ -1,6 +1,5 @@
 #pragma once
 
-#include "inputcontext.h"
 DEFINE_GUID(IID_PRIV_CRANGE, 0xB68832F0, 0x34B9, 0x11D3, 0xA7, 0x45, 0x00, 0x50, 0x04, 0x0A, 0xB4, 0x07);
 
 class CRange
@@ -13,7 +12,6 @@ protected:
     IAnchor *m_pAnchorStart;
     IAnchor *m_pAnchorEnd;
     CInputContext *m_pInputContext;
-    ITfContext *m_pContext;
     DWORD m_dwCookie;
     TfGravity m_gravity;
     LONG m_cRefs;
