@@ -991,6 +991,16 @@ HRESULT WINAPI CFSFolder::EnumObjects(
     DWORD dwFlags,
     LPENUMIDLIST *ppEnumIDList)
 {
+    HRESULT hr;
+
+    if (FAILED(SHELL_FindAnyFile(m_sPathTarget)))
+    {
+        RETRY_DATA retryData;
+        StringCchCopyW(retryData.szDrive, MAX_PATH, m_sPathTarget);
+        hr = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCE(IDD_INSERT_DISK), hwndOwner, RetryDlgProc, (LPARAM)&retryData);
+        if (hr == IDCANCEL)
+            return HRESULT_FROM_WIN32(ERROR_CANCELLED);
+    }
     return ShellObjectCreatorInit<CFileSysEnum>(m_sPathTarget, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
@@ -2184,4 +2194,47 @@ HRESULT CFSFolder::FormatSize(UINT64 size, LPWSTR Buf, UINT cchBuf)
     if (cchBuf)
         *Buf = UNICODE_NULL;
     return E_FAIL;
+}
+
+INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    SHFILEINFOW* psfi;
+    RETRY_DATA* retryData;
+    WCHAR szFormat[MAX_PATH];
+    WCHAR szDrive[MAX_PATH];
+
+    retryData = (RETRY_DATA*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            retryData = reinterpret_cast<RETRY_DATA*>(lParam);
+            retryData->hDlg = hwndDlg;
+            SetWindowLong(hwndDlg, DWLP_USER, lParam);
+
+            /* set message text */
+            GetDlgItemTextW(hwndDlg, IDC_INSERT_DISK_LABEL, szFormat, MAX_PATH);
+            StringCchPrintfW(szDrive, MAX_PATH, szFormat, retryData->szDrive[0]);
+            SetDlgItemTextW(hwndDlg, IDC_INSERT_DISK_LABEL, szDrive);
+
+            /* set icon */
+            StringCchCopyW(szDrive, MAX_PATH, retryData->szDrive);
+            PathStripToRoot(szDrive);
+            SHFILEINFOW sfi = {};
+            SHGetFileInfoW(szDrive, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_ADDOVERLAYS);
+            SendDlgItemMessageW(hwndDlg, IDC_INSERT_DISK_ICON, STM_SETICON, (WPARAM)sfi.hIcon, 0);
+            SetTimer(hwndDlg, 1, 2000, NULL);
+            break;
+        case WM_COMMAND:
+            if (wParam == IDCANCEL)
+                EndDialog(hwndDlg, IDCANCEL);
+            break;
+        case WM_TIMER:
+            if(SUCCEEDED(SHELL_FindAnyFile(retryData->szDrive)))
+                EndDialog(retryData->hDlg, IDOK);
+            break;
+        default:
+            return false;
+    }
+    return true;
 }

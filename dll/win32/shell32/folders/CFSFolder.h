@@ -11,6 +11,15 @@
 #ifndef _CFSFOLDER_H_
 #define _CFSFOLDER_H_
 
+struct RETRY_DATA
+{
+    HWND    hDlg;
+    WCHAR   szDrive[MAX_PATH];
+};
+
+INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+HRESULT SHFindFirstFile(LPCWSTR lpFilePath);
+
 class CFSFolder :
     public CComCoClass<CFSFolder, &CLSID_ShellFSFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
