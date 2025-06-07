@@ -17,6 +17,23 @@ WINAPI
 SetThreadStackGuarantee(
     _Inout_ PULONG StackSizeInBytes);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
+FORCEINLINE
+HANDLE
+GetCurrentProcessToken(
+    VOID)
+{
+    return (HANDLE)(LONG_PTR)-4;
+}
+
+FORCEINLINE
+HANDLE
+GetCurrentThreadToken(
+    VOID)
+{
+    return (HANDLE)(LONG_PTR)-5;
+}
+
 FORCEINLINE
 HANDLE
 GetCurrentThreadEffectiveToken(
@@ -24,6 +41,7 @@ GetCurrentThreadEffectiveToken(
 {
     return (HANDLE)(LONG_PTR)-6;
 }
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
 
 #ifdef __cplusplus
 } // extern "C"
