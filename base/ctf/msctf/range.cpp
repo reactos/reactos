@@ -69,7 +69,7 @@ HRESULT CRange::_CompareX(
 ////////////////////////////////////////////////////////////////////////////
 // ** IUnknown methods **
 
-STDMETHODIMP CRange::CRange::QueryInterface(REFIID riid, void **ppvObj)
+STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
 {
     if (IsEqualGUID(riid, IID_PRIV_CRANGE))
     {
