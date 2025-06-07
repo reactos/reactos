@@ -324,6 +324,7 @@ TEST_Tracking(VOID)
         DestroyWindow(hwnd);
         return;
     }
+    CloseHandle(hThread);
 
     MSG msg;
     while (GetMessageW(&msg, NULL, 0, 0))
