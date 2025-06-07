@@ -71,7 +71,7 @@ HRESULT CRange::_CompareX(
 
 STDMETHODIMP CRange::CRange::QueryInterface(REFIID riid, void **ppvObj)
 {
-    if (&IID_PRIV_CRANGE == &riid || IsEqualGUID(riid, IID_PRIV_CRANGE))
+    if (IsEqualGUID(riid, IID_PRIV_CRANGE))
     {
         *ppvObj = this;
         return S_OK; // No AddRef
