@@ -19,11 +19,16 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 VOID
 AllocateAndInitLPB(
     IN USHORT VersionToBoot,
-    OUT PLOADER_PARAMETER_BLOCK* OutLoaderBlock);
+    OUT PVOID* OutLoaderBlock,
+    OUT PLOADER_PARAMETER_BLOCK1* OutLoaderBlock1,
+    OUT PLOADER_PARAMETER_BLOCK2* OutLoaderBlock2,
+    OUT PSETUP_LOADER_BLOCK** SetupBlockPtr,
+    OUT PLOADER_PARAMETER_EXTENSION1* OutExtension1,
+    OUT PLOADER_PARAMETER_EXTENSION2* OutExtension2);
 
 static VOID
 SetupLdrLoadNlsData(
-    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _Inout_ PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
     _In_ HINF InfHandle,
     _In_ PCSTR SearchPath)
 {
@@ -76,7 +81,7 @@ SetupLdrLoadNlsData(
           &AnsiFileName, &OemFileName, &LangFileName, &OemHalFileName);
 
     /* Load NLS data */
-    Success = WinLdrLoadNLSData(LoaderBlock,
+    Success = WinLdrLoadNLSData(LoaderBlock1,
                                 SearchPath,
                                 &AnsiFileName,
                                 &OemFileName,
@@ -95,7 +100,7 @@ Quit:
 static
 BOOLEAN
 SetupLdrInitErrataInf(
-    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN OUT PLOADER_PARAMETER_EXTENSION2 Extension2,
     IN HINF InfHandle,
     IN PCSTR SystemRoot)
 {
@@ -128,8 +133,8 @@ SetupLdrInitErrataInf(
         return FALSE;
     }
 
-    LoaderBlock->Extension->EmInfFileImage = PaToVa(PhysicalBase);
-    LoaderBlock->Extension->EmInfFileSize  = FileSize;
+    Extension2->EmInfFileImage = PaToVa(PhysicalBase);
+    Extension2->EmInfFileSize  = (ULONG_PTR)FileSize;
 
     return TRUE;
 }
@@ -488,8 +493,13 @@ LoadReactOSSetup(
     HINF InfHandle;
     INFCONTEXT InfContext;
     ULONG i, ErrorLine;
-    PLOADER_PARAMETER_BLOCK LoaderBlock;
+    PVOID LoaderBlock;
+    PLOADER_PARAMETER_BLOCK1 LoaderBlock1;
+    PLOADER_PARAMETER_BLOCK2 LoaderBlock2;
+    PSETUP_LOADER_BLOCK* SetupBlockPtr;
     PSETUP_LOADER_BLOCK SetupBlock;
+    PLOADER_PARAMETER_EXTENSION1 Extension1;
+    PLOADER_PARAMETER_EXTENSION2 Extension2;
     CHAR BootPath[MAX_PATH];
     CHAR FilePath[MAX_PATH];
     CHAR UserBootOptions[256];
@@ -773,18 +783,19 @@ LoadReactOSSetup(
         UiResetForSOS();
 
     /* Allocate and minimally-initialize the Loader Parameter Block */
-    AllocateAndInitLPB(_WIN32_WINNT_WS03, &LoaderBlock);
+    AllocateAndInitLPB(_WIN32_WINNT_WS03, &LoaderBlock, 
+                       &LoaderBlock1, &LoaderBlock2, &SetupBlockPtr, &Extension1, &Extension2);
 
     /* Allocate and initialize the setup loader block */
     SetupBlock = &WinLdrSystemBlock->SetupBlock;
-    LoaderBlock->SetupLdrBlock = SetupBlock;
+    *SetupBlockPtr = SetupBlock;
 
     /* Set textmode setup flag */
     SetupBlock->Flags = SETUPLDR_TEXT_MODE;
 
     /* Load the "setupreg.hiv" setup system hive */
     UiUpdateProgressBar(15, "Loading setup system hive...");
-    Success = WinLdrInitSystemHive(LoaderBlock, BootPath, TRUE);
+    Success = WinLdrInitSystemHive(LoaderBlock1, BootPath, TRUE);
     TRACE("Setup SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */
     if (!Success)
@@ -793,17 +804,17 @@ LoadReactOSSetup(
     /* Load NLS data, they are in the System32 directory of the installation medium */
     RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
     RtlStringCbCatA(FilePath, sizeof(FilePath), "system32\\");
-    SetupLdrLoadNlsData(LoaderBlock, InfHandle, FilePath);
+    SetupLdrLoadNlsData(LoaderBlock1, InfHandle, FilePath);
 
     /* Load the Firmware Errata file from the installation medium */
-    Success = SetupLdrInitErrataInf(LoaderBlock, InfHandle, BootPath);
+    Success = SetupLdrInitErrataInf(Extension2, InfHandle, BootPath);
     TRACE("Firmware Errata file %s\n", (Success ? "loaded" : "not loaded"));
     /* Not necessarily fatal if not found - carry on going */
 
     // UiDrawStatusText("Press F6 if you need to install a 3rd-party SCSI or RAID driver...");
 
     /* Get a list of boot drivers */
-    SetupLdrScanBootDrivers(&LoaderBlock->BootDriverListHead, InfHandle, BootPath);
+    SetupLdrScanBootDrivers(&LoaderBlock1->BootDriverListHead, InfHandle, BootPath);
 
     /* Close the inf file */
     InfCloseFile(InfHandle);
@@ -813,6 +824,11 @@ LoadReactOSSetup(
     /* Finish loading */
     return LoadAndBootWindowsCommon(_WIN32_WINNT_WS03,
                                     LoaderBlock,
+                                    LoaderBlock1,
+                                    LoaderBlock2,
+                                    SetupBlockPtr,
+                                    Extension1,
+                                    Extension2,
                                     BootOptions,
                                     BootPath);
 }

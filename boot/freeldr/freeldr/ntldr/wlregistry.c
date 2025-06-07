@@ -43,7 +43,7 @@ typedef enum _BAD_HIVE_REASON
 
 static BOOLEAN
 WinLdrLoadSystemHive(
-    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _Inout_ PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
     _In_ PCSTR DirectoryPath,
     _In_ PCSTR HiveName,
     _Out_ PBAD_HIVE_REASON Reason)
@@ -101,8 +101,8 @@ WinLdrLoadSystemHive(
     HiveDataVirtual = PaToVa(HiveDataPhysical);
 
     /* Fill LoaderBlock's entries */
-    LoaderBlock->RegistryLength = HiveFileSize;
-    LoaderBlock->RegistryBase = HiveDataVirtual;
+    LoaderBlock1->RegistryLength = HiveFileSize;
+    LoaderBlock1->RegistryBase = HiveDataVirtual;
 
     /* Finally read from file to the memory */
     Status = ArcRead(FileId, HiveDataPhysical, HiveFileSize, &BytesRead);
@@ -123,7 +123,7 @@ WinLdrLoadSystemHive(
 
 BOOLEAN
 WinLdrInitSystemHive(
-    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN OUT PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
     IN PCSTR SystemRoot,
     IN BOOLEAN Setup)
 {
@@ -147,7 +147,7 @@ WinLdrInitSystemHive(
     }
 
     TRACE("WinLdrInitSystemHive: loading hive %s%s\n", SearchPath, HiveName);
-    Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName, &Reason);
+    Success = WinLdrLoadSystemHive(LoaderBlock1, SearchPath, HiveName, &Reason);
     if (!Success)
     {
         /* Check whether the SYSTEM hive does not exist or is too corrupt to be read */
@@ -163,7 +163,7 @@ WinLdrInitSystemHive(
     }
 
     /* Import what was loaded */
-    Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength, SearchPath, FALSE);
+    Success = RegImportBinaryHive(VaToPa(LoaderBlock1->RegistryBase), LoaderBlock1->RegistryLength, SearchPath, FALSE);
     if (!Success)
     {
         /*
@@ -192,7 +192,7 @@ WinLdrInitSystemHive(
          */
 LoadAlternateHive:
         HiveName = "SYSTEM.ALT";
-        Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName, &Reason);
+        Success = WinLdrLoadSystemHive(LoaderBlock1, SearchPath, HiveName, &Reason);
         if (!Success)
         {
             UiMessageBox("Could not load %s hive!", HiveName);
@@ -200,7 +200,7 @@ LoadAlternateHive:
         }
 
         /* Retry importing it again */
-        Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength, SearchPath, TRUE);
+        Success = RegImportBinaryHive(VaToPa(LoaderBlock1->RegistryBase), LoaderBlock1->RegistryLength, SearchPath, TRUE);
         if (!Success)
         {
             UiMessageBox("Importing binary hive failed!");
@@ -212,7 +212,7 @@ LoadAlternateHive:
          * on our side by loading the alternate variant of the hive.
          */
         WARN("SYSTEM hive does not exist or is corrupt and SYSTEM.ALT has been loaded!\n");
-        ChunkBase = VaToPa(LoaderBlock->RegistryBase);
+        ChunkBase = VaToPa(LoaderBlock1->RegistryBase);
         ((PHBASE_BLOCK)ChunkBase)->BootRecover = HBOOT_BOOT_RECOVERED_BY_ALTERNATE_HIVE;
     }
 
@@ -228,7 +228,7 @@ LoadAlternateHive:
     return TRUE;
 }
 
-BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
                              IN PCSTR SystemRoot)
 {
     BOOLEAN Success;
@@ -239,7 +239,7 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     CHAR SearchPath[1024];
 
     /* Scan registry and prepare boot drivers list */
-    Success = WinLdrScanRegistry(&LoaderBlock->BootDriverListHead);
+    Success = WinLdrScanRegistry(&LoaderBlock1->BootDriverListHead);
     if (!Success)
     {
         UiMessageBox("Failed to load boot drivers!");
@@ -264,7 +264,7 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Load NLS data */
     RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
     RtlStringCbCatA(SearchPath, sizeof(SearchPath), "system32\\");
-    Success = WinLdrLoadNLSData(LoaderBlock,
+    Success = WinLdrLoadNLSData(LoaderBlock1,
                                 SearchPath,
                                 &AnsiFileName,
                                 &OemFileName,
@@ -404,7 +404,7 @@ Quit:
 
 BOOLEAN
 WinLdrLoadNLSData(
-    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _Inout_ PLOADER_PARAMETER_BLOCK1 LoaderBlock1,
     _In_ PCSTR DirectoryPath,
     _In_ PCUNICODE_STRING AnsiFileName,
     _In_ PCUNICODE_STRING OemFileName,
@@ -498,27 +498,27 @@ WinLdrLoadNLSData(
         goto Quit;
 
     NlsVirtual = PaToVa(NlsDataBase);
-    LoaderBlock->NlsData->AnsiCodePageData = NlsVirtual;
+    LoaderBlock1->NlsData->AnsiCodePageData = NlsVirtual;
 
-    LoaderBlock->NlsData->OemCodePageData =
+    LoaderBlock1->NlsData->OemCodePageData =
         (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT));
 
-    LoaderBlock->NlsData->UnicodeCodePageData =
+    LoaderBlock1->NlsData->UnicodeCodePageData =
         (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT) +
         (MM_SIZE_TO_PAGES(OemFileSize)  << MM_PAGE_SHIFT));
 
     /* ANSI and OEM data are the same - just set pointers to the same area */
     if (AnsiEqualsOem)
-        LoaderBlock->NlsData->OemCodePageData = LoaderBlock->NlsData->AnsiCodePageData;
+        LoaderBlock1->NlsData->OemCodePageData = LoaderBlock1->NlsData->AnsiCodePageData;
 
     /* Now actually read the data into memory, starting with the ANSI file */
     RtlStringCbPrintfA(FileName, sizeof(FileName), "%s%wZ",
                        DirectoryPath, AnsiFileName);
     NtLdrOutputLoadMsg(FileName, NULL);
     Status = ArcRead(AnsiFileId,
-                     VaToPa(LoaderBlock->NlsData->AnsiCodePageData),
+                     VaToPa(LoaderBlock1->NlsData->AnsiCodePageData),
                      AnsiFileSize, &BytesRead);
     if (Status != ESUCCESS)
     {
@@ -533,7 +533,7 @@ WinLdrLoadNLSData(
                            DirectoryPath, OemFileName);
         NtLdrOutputLoadMsg(FileName, NULL);
         Status = ArcRead(OemFileId,
-                         VaToPa(LoaderBlock->NlsData->OemCodePageData),
+                         VaToPa(LoaderBlock1->NlsData->OemCodePageData),
                          OemFileSize, &BytesRead);
         if (Status != ESUCCESS)
         {
@@ -547,7 +547,7 @@ WinLdrLoadNLSData(
                        DirectoryPath, LangFileName);
     NtLdrOutputLoadMsg(FileName, NULL);
     Status = ArcRead(LangFileId,
-                     VaToPa(LoaderBlock->NlsData->UnicodeCodePageData),
+                     VaToPa(LoaderBlock1->NlsData->UnicodeCodePageData),
                      LangFileSize, &BytesRead);
     if (Status != ESUCCESS)
     {
@@ -558,10 +558,10 @@ WinLdrLoadNLSData(
     //
     // THIS IS a HACK and should be replaced by actually loading the OEMHAL file!
     //
-    LoaderBlock->OemFontFile = VaToPa(LoaderBlock->NlsData->UnicodeCodePageData);
+    LoaderBlock1->OemFontFile = VaToPa(LoaderBlock1->NlsData->UnicodeCodePageData);
 
     /* Convert NlsTables address to VA */
-    LoaderBlock->NlsData = PaToVa(LoaderBlock->NlsData);
+    LoaderBlock1->NlsData = PaToVa(LoaderBlock1->NlsData);
 
 Quit:
     if (LangFileId != -1)
@@ -792,14 +792,14 @@ WinLdrAddDriverToList(
          * parameter pointer, since it does not need it, except for this
          * very place. So instead, use the global WinLdrSystemBlock pointer.
          */
-        PLOADER_PARAMETER_BLOCK LoaderBlock =
-            (WinLdrSystemBlock ? &WinLdrSystemBlock->LoaderBlock : NULL);
+        PLOADER_PARAMETER_BLOCK1 LoaderBlock1 =
+            (WinLdrSystemBlock ? WinLdrSystemBlock->LoaderBlock1 : NULL);
 
-        if (!LoaderBlock || !LoaderBlock->RegistryBase || !LoaderBlock->RegistryLength ||
+        if (!LoaderBlock1 || !LoaderBlock1->RegistryBase || !LoaderBlock1->RegistryLength ||
             ((ULONG_PTR)DriverNode->Group.Buffer <
-                (ULONG_PTR)VaToPa(LoaderBlock->RegistryBase)) ||
+                (ULONG_PTR)VaToPa(LoaderBlock1->RegistryBase)) ||
             ((ULONG_PTR)DriverNode->Group.Buffer >=
-                (ULONG_PTR)VaToPa(LoaderBlock->RegistryBase) + LoaderBlock->RegistryLength))
+                (ULONG_PTR)VaToPa(LoaderBlock1->RegistryBase) + LoaderBlock1->RegistryLength))
         {
             RtlFreeUnicodeString(&DriverNode->Group);
         }

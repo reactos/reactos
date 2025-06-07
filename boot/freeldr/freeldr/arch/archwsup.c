@@ -87,6 +87,7 @@ AddReactOSArcDiskInfo(
     reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
     reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
     reactos_arc_disk_info[reactos_disk_count].DiskSignature.ValidPartitionTable = ValidPartitionTable;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.Unknown = NULL;
 
     strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, ArcName);
     reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
