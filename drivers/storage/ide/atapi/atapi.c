@@ -13,6 +13,7 @@
 
 UNICODE_STRING AtapDriverRegistryPath;
 BOOLEAN AtapInPEMode;
+BOOLEAN AtapInLiveCD;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -332,7 +333,8 @@ NTAPI
 AtaAddChannel(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PDEVICE_OBJECT PhysicalDeviceObject,
-    _Out_ PATAPORT_CHANNEL_EXTENSION *FdoExtension)
+    _Out_ PATAPORT_CHANNEL_EXTENSION *FdoExtension,
+    _In_ UCHAR Type)
 {
     NTSTATUS Status;
     PDEVICE_OBJECT Fdo;
@@ -371,10 +373,15 @@ AtaAddChannel(
     ChanExt->Common.Flags = DO_IS_FDO;
     ChanExt->Common.Self = Fdo;
 
-    if (FdoExtension)
+    if (Type != 0)
     {
         *FdoExtension = ChanExt;
-        ChanExt->Common.Flags |= DO_IS_LEGACY_IDE;
+
+        if (Type == 1)
+            ChanExt->Common.Flags |= DO_IS_LEGACY_IDE;
+
+        if (Type == 2)
+            ChanExt->Common.Flags |= DO_IS_AHCI;
     }
 
     ChanExt->Ldo = IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
@@ -425,7 +432,7 @@ AtaAddDevice(
 
     DbgPrint("ATAPI AtaAddDevice\n");
 
-    return AtaAddChannel(DriverObject, PhysicalDeviceObject, NULL);
+    return AtaAddChannel(DriverObject, PhysicalDeviceObject, NULL, 0);
 }
 
 static
@@ -455,6 +462,29 @@ AtaInPEMode(VOID)
     }
 
     return FALSE;
+}
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaInLiveCD(VOID)
+{
+    UNICODE_STRING CommandLine = { 0 };
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { 0 };
+
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+    QueryTable[0].Name = L"CmdLine";
+    QueryTable[0].EntryContext = &CommandLine;
+    QueryTable[0].DefaultType = REG_SZ;
+    QueryTable[0].DefaultLength = 0;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                           L"\\Registry\\Machine\\System\\Setup",
+                           QueryTable,
+                           NULL,
+                           NULL);
+
+    return (wcsstr(CommandLine.Buffer, L" -mini") != NULL);
 }
 
 static
@@ -524,10 +554,13 @@ DriverEntry(
     AtaCreateIdeDirectory();
 
     AtapInPEMode = AtaInPEMode();
+    AtapInLiveCD = AtaInLiveCD();
 
-#if defined(ATA_DETECT_LEGACY_DEVICES)
+    DbgPrint("AtapInLiveCD %d\n", AtapInLiveCD);
+
+/* #if defined(ATA_DETECT_LEGACY_DEVICES) */
     AtaDetectLegacyChannels(DriverObject);
-#endif
+/* #endif */
 
     return STATUS_SUCCESS;
 }
