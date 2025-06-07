@@ -193,6 +193,17 @@ end:
 	return hres;
 }
 
+HRESULT WINAPI SHExtCoCreateInstance(
+    _In_opt_ LPCWSTR aclsid,
+    _In_opt_ const CLSID *clsid,
+    _In_opt_ LPUNKNOWN pUnkOuter,
+    _In_ REFIID refiid,
+    _Out_ LPVOID *ppv)
+{
+    // TODO: Verify that this CLSID is allowed if REST_ENFORCESHELLEXTSECURITY is active
+    return SHCoCreateInstance(aclsid, clsid, pUnkOuter, refiid, ppv);
+}
+
 #ifndef __REACTOS__
 /*************************************************************************
  * DllGetClassObject     [SHELL32.@]

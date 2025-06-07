@@ -672,6 +672,7 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         }
         case IDS_NET_STATUS:
         {
+            // TODO: Windows does not display this with an owner window
             return ShowNetConnectionStatus(m_lpOleCmd, m_pidl, lpcmi->hwnd);
         }
         case IDS_NET_REPAIR:
@@ -833,27 +834,6 @@ HRESULT WINAPI CNetworkConnections::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
         return E_POINTER;
 
     *pidl = ILClone(m_pidlRoot);
-
-    return S_OK;
-}
-
-/************************************************************************
- *	ISF_NetConnect_ShellExecuteHookW_Execute
- */
-HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
-{
-    PCUITEMID_CHILD pidl = ILFindLastID((ITEMIDLIST*)pei->lpIDList);
-    PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
-    if (!pdata)
-    {
-        ERR("Got invalid pidl\n");
-        return E_FAIL;
-    }
-
-    if (pdata->Status == NCS_CONNECTED)
-    {
-        return ShowNetConnectionStatus(m_lpOleCmd, pidl, pei->hwnd);
-    }
 
     return S_OK;
 }

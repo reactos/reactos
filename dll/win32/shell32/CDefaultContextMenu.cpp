@@ -1397,10 +1397,9 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
     if (!sei.lpClass && (lpcmi->fMask & (CMIC_MASK_HASLINKNAME | CMIC_MASK_HASTITLE)) && unicode)
         sei.lpClass = lpcmi->lpTitleW; // Forward .lnk path from CShellLink::DoOpen (for consrv STARTF_TITLEISLINKNAME)
 
-    ShellExecuteExW(&sei);
+    HRESULT hr = ShellExecuteExW(&sei) ? S_OK : HResultFromWin32(GetLastError());
     ILFree(pidlFull);
-
-    return S_OK;
+    return hr;
 }
 
 HRESULT

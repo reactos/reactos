@@ -673,7 +673,7 @@ public:
 #define CmicFlagsToSeeFlags(flags)  ((flags) & SEE_CMIC_COMMON_FLAGS)
 static inline UINT SeeFlagsToCmicFlags(UINT flags)
 {
-    if (flags & SEE_MASK_CLASSNAME)
+    if ((flags & (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)) == SEE_MASK_CLASSNAME)
         flags &= ~(SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE);
     return flags & SEE_CMIC_COMMON_FLAGS;
 }
