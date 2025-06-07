@@ -92,13 +92,6 @@ UINT g_uKeyTipHotKeyModifiers = 0;
 UINT g_uKeyTipHotKeyVKey = 0;
 UINT g_uKeyTipHotKeyVKey2 = 0;
 
-extern "C" void
-__cxa_pure_virtual(void)
-{
-    ERR("__cxa_pure_virtual\n");
-    DebugBreak();
-}
-
 /**
  * @implemented
  */

@@ -84,7 +84,7 @@ STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
     }
 
     if (IsEqualGUID(riid, IID_ITfRange) || IsEqualGUID(riid, IID_IUnknown))
-        *ppvObj = static_cast<ITfRange *>(this);
+        *ppvObj = this;
     else if (IsEqualGUID(riid, IID_ITfRangeACP))
         *ppvObj = static_cast<ITfRangeACP *>(this);
     else if (IsEqualGUID(riid, IID_ITfRangeAnchor))
@@ -230,7 +230,7 @@ STDMETHODIMP CRange::IsEmpty(
     _Out_ BOOL *pfEmpty)
 {
     TRACE("(%d, %p)\n", ec, pfEmpty);
-    return IsEqualStart(ec, static_cast<ITfRange *>(this), TF_ANCHOR_END, pfEmpty);
+    return IsEqualStart(ec, static_cast<ITfRangeACP *>(this), TF_ANCHOR_END, pfEmpty);
 }
 
 STDMETHODIMP CRange::Collapse(
@@ -319,7 +319,7 @@ STDMETHODIMP CRange::Clone(
     if (!pCloned)
         return E_OUTOFMEMORY;
 
-    *ppClone = pCloned;
+    *ppClone = static_cast<ITfRangeACP *>(pCloned);
     return S_OK;
 }
 
