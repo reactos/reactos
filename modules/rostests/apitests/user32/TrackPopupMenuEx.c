@@ -24,6 +24,10 @@ TEST_InvalidFlags(VOID)
 {
     HWND hwnd = GetDesktopWindow();
     HMENU hMenu = CreatePopupMenu();
+    BOOL ret;
+
+    ret = AppendMenuW(hMenu, MF_STRING, 100, L"(Dummy)");
+    ok_int(ret, TRUE);
 
     INT iBit;
     UINT uFlags;
@@ -33,7 +37,7 @@ TEST_InvalidFlags(VOID)
         if (uFlags & ~VALID_TPM_FLAGS)
         {
             SetLastError(0xBEEFCAFE);
-            BOOL ret = TrackPopupMenuEx(hMenu, uFlags, 0, 0, hwnd, NULL);
+            ret = TrackPopupMenuEx(hMenu, uFlags, 0, 0, hwnd, NULL);
             ok_int(ret, FALSE);
             if (uFlags == TPM_WORKAREA && IsWindowsVistaOrGreater())
                 ok_err(ERROR_INVALID_PARAMETER);
@@ -55,6 +59,9 @@ TEST_InvalidSize(VOID)
     BOOL ret;
 
     ZeroMemory(&params, sizeof(params));
+
+    ret = AppendMenuW(hMenu, MF_STRING, 100, L"(Dummy)");
+    ok_int(ret, TRUE);
 
     SetLastError(0xBEEFCAFE);
     params.cbSize = 0;
