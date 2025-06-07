@@ -98,6 +98,7 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
     // Blow away the mapping
     //
     MiAddressToPte(Address)->u.Long = 0;
+    KeFlushSingleTb(Address, FALSE);
 
     //
     // Release the hyperlock
@@ -138,7 +139,6 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
         //
         Offset = MI_ZERO_PTES;
         PointerPte->u.Hard.PageFrameNumber = Offset;
-        KeFlushProcessTb();
     }
 
     //
@@ -205,5 +205,6 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
     // Blow away the mapped zero PTEs
     //
     RtlZeroMemory(PointerPte, NumberOfPages * sizeof(MMPTE));
+    KeFlushRangeTb(VirtualAddress, NumberOfPages, TRUE);
 }
 
