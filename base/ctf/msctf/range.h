@@ -8,6 +8,7 @@ class CRange
     , public ITfRangeAnchor
     , public ITfSource
 {
+protected:
     DWORD m_dwLockType;
     IAnchor *m_pAnchorStart;
     IAnchor *m_pAnchorEnd;
