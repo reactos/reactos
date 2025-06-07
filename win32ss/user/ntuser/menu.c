@@ -6636,49 +6636,51 @@ NtUserTrackPopupMenuEx(
    HWND hWnd,
    LPTPMPARAMS lptpm)
 {
-   PMENU menu;
-   PWND pWnd;
-   TPMPARAMS tpm;
-   BOOL Ret = FALSE;
-   USER_REFERENCE_ENTRY Ref;
+    PMENU menu;
+    PWND pWnd;
+    TPMPARAMS tpm;
+    BOOL Ret = FALSE;
+    USER_REFERENCE_ENTRY Ref;
 
-   TRACE("Enter NtUserTrackPopupMenuEx\n");
-   UserEnterExclusive();
-   /* Parameter check */
-   if (!(menu = UserGetMenuObject( hMenu )))
-   {
-      ERR("TPME : Invalid Menu handle.\n");
-      EngSetLastError( ERROR_INVALID_MENU_HANDLE );
-      goto Exit;
-   }
+    TRACE("Enter NtUserTrackPopupMenuEx\n");
+    UserEnterExclusive();
 
-   if (!(pWnd = UserGetWindowObject(hWnd)))
-   {
-      ERR("TPME : Invalid Window handle.\n");
-      goto Exit;
-   }
+    /* Parameter check */
+    if (!(menu = UserGetMenuObject( hMenu )))
+    {
+        ERR("TPME : Invalid Menu handle.\n");
+        EngSetLastError( ERROR_INVALID_MENU_HANDLE );
+        goto Exit;
+    }
 
-   if (lptpm)
-   {
-      _SEH2_TRY
-      {
-         ProbeForRead(lptpm, sizeof(TPMPARAMS), sizeof(ULONG));
-         tpm = *lptpm;
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      { 
-         _SEH2_YIELD(goto Exit);
-      }
-      _SEH2_END
-   }
-   UserRefObjectCo(pWnd, &Ref);
-   Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, lptpm ? &tpm : NULL);
-   UserDerefObjectCo(pWnd);
+    if (!(pWnd = UserGetWindowObject(hWnd)))
+    {
+        ERR("TPME : Invalid Window handle.\n");
+        goto Exit;
+    }
+
+    if (lptpm)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(lptpm, sizeof(TPMPARAMS), sizeof(ULONG));
+            tpm = *lptpm;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        { 
+            _SEH2_YIELD(goto Exit);
+        }
+        _SEH2_END
+    }
+
+    UserRefObjectCo(pWnd, &Ref);
+    Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, lptpm ? &tpm : NULL);
+    UserDerefObjectCo(pWnd);
 
 Exit:
-   TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n",Ret);
-   UserLeave();
-   return Ret;
+    TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n",Ret);
+    UserLeave();
+    return Ret;
 }
 
 /* EOF */
