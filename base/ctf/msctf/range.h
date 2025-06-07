@@ -8,17 +8,22 @@ class CRange
     , public ITfRangeAnchor
     , public ITfSource
 {
-    DWORD m_dwUnknown1;
+    DWORD m_dwLockType;
     IAnchor *m_pAnchorStart;
     IAnchor *m_pAnchorEnd;
     CInputContext *m_pInputContext;
     ITfContext *m_pContext;
     DWORD m_dwCookie;
-    DWORD m_dwUnknown2;
+    TfGravity m_gravity;
     LONG m_cRefs;
 
 public:
-    CRange(CInputContext *pIC, DWORD lockType, IAnchor *pAnchorStart, IAnchor *pAnchorEnd, TfGravity grav);
+    CRange(
+        CInputContext *pIC,
+        DWORD dwLockType,
+        IAnchor *pAnchorStart,
+        IAnchor *pAnchorEnd,
+        TfGravity gravity);
     virtual ~CRange();
 
     // ** IUnknown methods **

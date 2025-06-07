@@ -28,13 +28,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 ////////////////////////////////////////////////////////////////////////////
 // CRange
 
-CRange::CRange(CInputContext *pIC, DWORD lockType, IAnchor *pAnchorStart, IAnchor *pAnchorEnd, TfGravity grav)
+CRange::CRange(
+    CInputContext *pIC,
+    DWORD dwLockType,
+    IAnchor *pAnchorStart,
+    IAnchor *pAnchorEnd,
+    TfGravity gravity)
 {
+    m_dwLockType = dwLockType;
     m_pAnchorStart = pAnchorStart;
     m_pAnchorEnd = pAnchorEnd;
     m_pInputContext = pIC;
     m_pContext = NULL;
     m_dwCookie = MAXDWORD;
+    m_gravity = gravity;
     m_cRefs = 1;
 }
 
