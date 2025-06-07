@@ -76,12 +76,8 @@ public:
         _In_ TfEditCookie ec,
         _In_ TfShiftDir dir,
         _Out_ BOOL *pfNoRegion) override;
-    STDMETHODIMP IsEmpty(
-        _In_ TfEditCookie ec,
-        _Out_ BOOL *pfEmpty) override;
-    STDMETHODIMP Collapse(
-        _In_ TfEditCookie ec,
-        _In_ TfAnchor aPos) override;
+    STDMETHODIMP IsEmpty(_In_ TfEditCookie ec, _Out_ BOOL *pfEmpty) override;
+    STDMETHODIMP Collapse(_In_ TfEditCookie ec, _In_ TfAnchor aPos) override;
     STDMETHODIMP IsEqualStart(
         _In_ TfEditCookie ec,
         _In_ ITfRange *pWith,
@@ -106,17 +102,13 @@ public:
         _In_ TfEditCookie ec,
         _In_ ULONG cchInsert,
         _Out_ BOOL *pfInsertOk) override;
-    STDMETHODIMP GetGravity(
-        _Out_ TfGravity *pgStart,
-        _Out_ TfGravity *pgEnd) override;
+    STDMETHODIMP GetGravity(_Out_ TfGravity *pgStart, _Out_ TfGravity *pgEnd) override;
     STDMETHODIMP SetGravity(
         _In_ TfEditCookie ec,
         _In_ TfGravity gStart,
         _In_ TfGravity gEnd) override;
-    STDMETHODIMP Clone(
-        _Out_ ITfRange **ppClone) override;
-    STDMETHODIMP GetContext(
-        _Out_ ITfContext **ppContext) override;
+    STDMETHODIMP Clone(_Out_ ITfRange **ppClone) override;
+    STDMETHODIMP GetContext(_Out_ ITfContext **ppContext) override;
 
     // ** ITfRangeACP methods **
     STDMETHODIMP GetExtent(_Out_ LONG *pacpAnchor, _Out_ LONG *pcch) override;
@@ -125,12 +117,8 @@ public:
     // ** ITfRangeAnchor methods duplicate ITfRange **
 
     // ** ITfSource methods **
-    STDMETHODIMP AdviseSink(
-        _In_ REFIID riid,
-        _In_ IUnknown *punk,
-        _Out_ DWORD *pdwCookie) override;
-    STDMETHODIMP UnadviseSink(
-        _In_ DWORD dwCookie) override;
+    STDMETHODIMP AdviseSink(_In_ REFIID riid, _In_ IUnknown *punk, _Out_ DWORD *pdwCookie) override;
+    STDMETHODIMP UnadviseSink(_In_ DWORD dwCookie) override;
 
 protected:
     CRange *_Clone();
