@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-
 #include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
@@ -77,7 +75,7 @@ static ULONG WINAPI EnumFormatImpl_AddRef(IEnumFORMATETC *iface)
 {
     EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -85,11 +83,11 @@ static ULONG WINAPI EnumFormatImpl_Release(IEnumFORMATETC *iface)
 {
     EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         GlobalFree(This->fmtetc);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -100,7 +98,7 @@ static HRESULT WINAPI EnumFormatImpl_Next(IEnumFORMATETC *iface, ULONG celt,
 {
     EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG count = 0;
-    TRACE("(%p)->(%d %p %p)\n", This, celt, rgelt, pceltFetched);
+    TRACE("(%p)->(%ld %p %p)\n", This, celt, rgelt, pceltFetched);
 
     if(!rgelt)
         return E_INVALIDARG;
@@ -119,7 +117,7 @@ static HRESULT WINAPI EnumFormatImpl_Skip(IEnumFORMATETC *iface, ULONG celt)
 {
     EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG count = 0;
-    TRACE("(%p)->(%d)\n", This, celt);
+    TRACE("(%p)->(%ld)\n", This, celt);
 
     count = min(celt, This->fmtetc_cnt-This->cur);
     This->cur += count;
@@ -165,7 +163,7 @@ static HRESULT EnumFormatImpl_Create(const FORMATETC *fmtetc, UINT fmtetc_cnt,
     EnumFormatImpl *ret;
     TRACE("\n");
 
-    ret = heap_alloc(sizeof(EnumFormatImpl));
+    ret = malloc(sizeof(EnumFormatImpl));
     ret->IEnumFORMATETC_iface.lpVtbl = &VT_EnumFormatImpl;
     ret->ref = 1;
     ret->cur = 0;
@@ -194,7 +192,7 @@ static ULONG WINAPI DataObjectImpl_AddRef(IDataObject* iface)
 {
     DataObjectImpl *This = impl_from_IDataObject(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -202,13 +200,13 @@ static ULONG WINAPI DataObjectImpl_Release(IDataObject* iface)
 {
     DataObjectImpl *This = impl_from_IDataObject(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
-    TRACE("(%p) ref=%d\n",This, ref);
+    TRACE("(%p) ref=%ld\n",This, ref);
 
     if(!ref) {
         if(This->unicode) GlobalFree(This->unicode);
         if(This->rtf) GlobalFree(This->rtf);
         if(This->fmtetc) GlobalFree(This->fmtetc);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -217,7 +215,7 @@ static ULONG WINAPI DataObjectImpl_Release(IDataObject* iface)
 static HRESULT WINAPI DataObjectImpl_GetData(IDataObject* iface, FORMATETC *pformatetc, STGMEDIUM *pmedium)
 {
     DataObjectImpl *This = impl_from_IDataObject(iface);
-    TRACE("(%p)->(fmt=0x%08x tym=0x%08x)\n", This, pformatetc->cfFormat, pformatetc->tymed);
+    TRACE("(%p)->(fmt=0x%08x tym=0x%08lx)\n", This, pformatetc->cfFormat, pformatetc->tymed);
 
     if(pformatetc->lindex != -1)
         return DV_E_LINDEX;
@@ -226,9 +224,9 @@ static HRESULT WINAPI DataObjectImpl_GetData(IDataObject* iface, FORMATETC *pfor
         return DV_E_TYMED;
 
     if(This->unicode && pformatetc->cfFormat == CF_UNICODETEXT)
-        pmedium->u.hGlobal = This->unicode;
+        pmedium->hGlobal = This->unicode;
     else if(This->rtf && pformatetc->cfFormat == cfRTF)
-        pmedium->u.hGlobal = This->rtf;
+        pmedium->hGlobal = This->rtf;
     else
         return DV_E_FORMATETC;
 
@@ -250,7 +248,7 @@ static HRESULT WINAPI DataObjectImpl_QueryGetData(IDataObject* iface, FORMATETC 
     DataObjectImpl *This = impl_from_IDataObject(iface);
     UINT i;
     BOOL foundFormat = FALSE;
-    TRACE("(%p)->(fmt=0x%08x tym=0x%08x)\n", This, pformatetc->cfFormat, pformatetc->tymed);
+    TRACE("(%p)->(fmt=0x%08x tym=0x%08lx)\n", This, pformatetc->cfFormat, pformatetc->tymed);
 
     if(pformatetc->lindex != -1)
         return DV_E_LINDEX;
@@ -290,10 +288,10 @@ static HRESULT WINAPI DataObjectImpl_EnumFormatEtc(IDataObject* iface, DWORD dwD
                                                    IEnumFORMATETC **ppenumFormatEtc)
 {
     DataObjectImpl *This = impl_from_IDataObject(iface);
-    TRACE("(%p)->(%d)\n", This, dwDirection);
+    TRACE("(%p)->(%ld)\n", This, dwDirection);
 
     if(dwDirection != DATADIR_GET) {
-        FIXME("Unsupported direction: %d\n", dwDirection);
+        FIXME("Unsupported direction: %ld\n", dwDirection);
         /* WinXP riched20 also returns E_NOTIMPL in this case */
         *ppenumFormatEtc = NULL;
         return E_NOTIMPL;
@@ -375,7 +373,7 @@ static DWORD CALLBACK ME_AppendToHGLOBAL(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG
     if (pData->nLength+cb+1 >= cb) {
         /* round up to 2^17 */
         int nNewSize = (((nMaxSize+cb+1)|0x1FFFF)+1) & 0xFFFE0000;
-        pData->hData = GlobalReAlloc(pData->hData, nNewSize, 0);
+        pData->hData = GlobalReAlloc(pData->hData, nNewSize, GMEM_MOVEABLE);
     }
     pDest = GlobalLock(pData->hData);
     memcpy(pDest + pData->nLength, lpBuff, cb);
@@ -397,7 +395,7 @@ static HGLOBAL get_rtf_text(ME_TextEditor *editor, const ME_Cursor *start, int n
     es.dwCookie = (DWORD_PTR)&gds;
     es.pfnCallback = ME_AppendToHGLOBAL;
     ME_StreamOutRange(editor, SF_RTF, start, nChars, &es);
-    GlobalReAlloc(gds.hData, gds.nLength+1, 0);
+    GlobalReAlloc(gds.hData, gds.nLength+1, GMEM_MOVEABLE);
     return gds.hData;
 }
 
@@ -407,7 +405,7 @@ HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start, int nCha
     DataObjectImpl *obj;
     TRACE("(%p,%d,%d)\n", editor, ME_GetCursorOfs(start), nChars);
 
-    obj = heap_alloc(sizeof(DataObjectImpl));
+    obj = malloc(sizeof(DataObjectImpl));
     if(cfRTF == 0)
         cfRTF = RegisterClipboardFormatA("Rich Text Format");
 

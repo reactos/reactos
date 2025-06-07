@@ -123,16 +123,16 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item)
       list_remove(&item->member.run.reobj->entry);
       ME_DeleteReObject(item->member.run.reobj);
     }
-    heap_free( item->member.run.glyphs );
-    heap_free( item->member.run.clusters );
+    free(item->member.run.glyphs);
+    free(item->member.run.clusters);
     ME_ReleaseStyle(item->member.run.style);
   }
-  heap_free(item);
+  free(item);
 }
 
 ME_DisplayItem *ME_MakeDI(ME_DIType type)
 {
-  ME_DisplayItem *item = heap_alloc_zero(sizeof(*item));
+  ME_DisplayItem *item = calloc(1, sizeof(*item));
 
   item->type = type;
   item->prev = item->next = NULL;

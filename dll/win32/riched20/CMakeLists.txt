@@ -1,6 +1,5 @@
 
 remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
-add_definitions(-D__ROS_LONG64__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(riched20.dll riched20.spec ADD_IMPORTLIB)
 
@@ -44,7 +43,7 @@ endif()
 add_typelib(riched_tom.idl)
 add_dependencies(riched20 stdole2)
 set_module_type(riched20 win32dll)
-target_link_libraries(riched20 wine uuid)
+target_link_libraries(riched20 wine uuid oldnames)
 add_importlibs(riched20 ole32 oleaut32 usp10 imm32 user32 gdi32 msvcrt kernel32 ntdll)
 add_pch(riched20 precomp.h SOURCE)
 add_cd_file(TARGET riched20 DESTINATION reactos/system32 FOR all)

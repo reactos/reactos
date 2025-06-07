@@ -23,43 +23,37 @@
 #ifndef __WINE_WINE_RBTREE_H
 #define __WINE_WINE_RBTREE_H
 
-#ifdef __GNUC__
-# define WINE_RB_ENTRY_VALUE(element, type, field) ({       \
-     const typeof(((type *)0)->field) *__ptr = (element);   \
-     (type *)((char *)__ptr - offsetof(type, field)); })
-#else
-# define WINE_RB_ENTRY_VALUE(element, type, field) \
-     ((type *)((char *)(element) - offsetof(type, field)))
-#endif
+#define RB_ENTRY_VALUE(element, type, field) \
+    ((type *)((char *)(element) - offsetof(type, field)))
 
-struct wine_rb_entry
+struct rb_entry
 {
-    struct wine_rb_entry *parent;
-    struct wine_rb_entry *left;
-    struct wine_rb_entry *right;
+    struct rb_entry *parent;
+    struct rb_entry *left;
+    struct rb_entry *right;
     unsigned int flags;
 };
 
-typedef int (*wine_rb_compare_func_t)(const void *key, const struct wine_rb_entry *entry);
+typedef int (*rb_compare_func_t)(const void *key, const struct rb_entry *entry);
 
-struct wine_rb_tree
+struct rb_tree
 {
-    wine_rb_compare_func_t compare;
-    struct wine_rb_entry *root;
+    rb_compare_func_t compare;
+    struct rb_entry *root;
 };
 
-typedef void (wine_rb_traverse_func_t)(struct wine_rb_entry *entry, void *context);
+typedef void (rb_traverse_func_t)(struct rb_entry *entry, void *context);
 
-#define WINE_RB_FLAG_RED                0x1
+#define RB_FLAG_RED                0x1
 
-static inline int wine_rb_is_red(struct wine_rb_entry *entry)
+static inline int rb_is_red(struct rb_entry *entry)
 {
-    return entry && (entry->flags & WINE_RB_FLAG_RED);
+    return entry && (entry->flags & RB_FLAG_RED);
 }
 
-static inline void wine_rb_rotate_left(struct wine_rb_tree *tree, struct wine_rb_entry *e)
+static inline void rb_rotate_left(struct rb_tree *tree, struct rb_entry *e)
 {
-    struct wine_rb_entry *right = e->right;
+    struct rb_entry *right = e->right;
 
     if (!e->parent)
         tree->root = right;
@@ -75,9 +69,9 @@ static inline void wine_rb_rotate_left(struct wine_rb_tree *tree, struct wine_rb
     e->parent = right;
 }
 
-static inline void wine_rb_rotate_right(struct wine_rb_tree *tree, struct wine_rb_entry *e)
+static inline void rb_rotate_right(struct rb_tree *tree, struct rb_entry *e)
 {
-    struct wine_rb_entry *left = e->left;
+    struct rb_entry *left = e->left;
 
     if (!e->parent)
         tree->root = left;
@@ -93,42 +87,42 @@ static inline void wine_rb_rotate_right(struct wine_rb_tree *tree, struct wine_r
     e->parent = left;
 }
 
-static inline void wine_rb_flip_color(struct wine_rb_entry *entry)
+static inline void rb_flip_color(struct rb_entry *entry)
 {
-    entry->flags ^= WINE_RB_FLAG_RED;
-    entry->left->flags ^= WINE_RB_FLAG_RED;
-    entry->right->flags ^= WINE_RB_FLAG_RED;
+    entry->flags ^= RB_FLAG_RED;
+    entry->left->flags ^= RB_FLAG_RED;
+    entry->right->flags ^= RB_FLAG_RED;
 }
 
-static inline struct wine_rb_entry *wine_rb_head(struct wine_rb_entry *iter)
+static inline struct rb_entry *rb_head(struct rb_entry *iter)
 {
     if (!iter) return NULL;
     while (iter->left) iter = iter->left;
     return iter;
 }
 
-static inline struct wine_rb_entry *wine_rb_tail(struct wine_rb_entry *iter)
+static inline struct rb_entry *rb_tail(struct rb_entry *iter)
 {
     if (!iter) return NULL;
     while (iter->right) iter = iter->right;
     return iter;
 }
 
-static inline struct wine_rb_entry *wine_rb_next(struct wine_rb_entry *iter)
+static inline struct rb_entry *rb_next(struct rb_entry *iter)
 {
-    if (iter->right) return wine_rb_head(iter->right);
+    if (iter->right) return rb_head(iter->right);
     while (iter->parent && iter->parent->right == iter) iter = iter->parent;
     return iter->parent;
 }
 
-static inline struct wine_rb_entry *wine_rb_prev(struct wine_rb_entry *iter)
+static inline struct rb_entry *rb_prev(struct rb_entry *iter)
 {
-    if (iter->left) return wine_rb_tail(iter->left);
+    if (iter->left) return rb_tail(iter->left);
     while (iter->parent && iter->parent->left == iter) iter = iter->parent;
     return iter->parent;
 }
 
-static inline struct wine_rb_entry *wine_rb_postorder_head(struct wine_rb_entry *iter)
+static inline struct rb_entry *rb_postorder_head(struct rb_entry *iter)
 {
     if (!iter) return NULL;
 
@@ -139,70 +133,65 @@ static inline struct wine_rb_entry *wine_rb_postorder_head(struct wine_rb_entry 
     }
 }
 
-static inline struct wine_rb_entry *wine_rb_postorder_next(struct wine_rb_entry *iter)
+static inline struct rb_entry *rb_postorder_next(struct rb_entry *iter)
 {
     if (!iter->parent) return NULL;
     if (iter == iter->parent->right || !iter->parent->right) return iter->parent;
-    return wine_rb_postorder_head(iter->parent->right);
+    return rb_postorder_head(iter->parent->right);
 }
 
 /* iterate through the tree */
-#define WINE_RB_FOR_EACH(cursor, tree) \
-    for ((cursor) = wine_rb_head((tree)->root); (cursor); (cursor) = wine_rb_next(cursor))
+#define RB_FOR_EACH(cursor, tree) \
+    for ((cursor) = rb_head((tree)->root); (cursor); (cursor) = rb_next(cursor))
 
 /* iterate through the tree using a tree entry */
-#define WINE_RB_FOR_EACH_ENTRY(elem, tree, type, field) \
-    for ((elem) = WINE_RB_ENTRY_VALUE(wine_rb_head((tree)->root), type, field); \
-         (elem) != WINE_RB_ENTRY_VALUE(0, type, field); \
-         (elem) = WINE_RB_ENTRY_VALUE(wine_rb_next(&elem->field), type, field))
+#define RB_FOR_EACH_ENTRY(elem, tree, type, field) \
+    for ((elem) = RB_ENTRY_VALUE(rb_head((tree)->root), type, field); \
+         (elem) != RB_ENTRY_VALUE(0, type, field); \
+         (elem) = RB_ENTRY_VALUE(rb_next(&elem->field), type, field))
 
 /* iterate through the tree using using postorder, making it safe to free the entry */
-#define WINE_RB_FOR_EACH_DESTRUCTOR(cursor, cursor2, tree) \
-    for ((cursor) = wine_rb_postorder_head((tree)->root); \
-         (cursor) && (((cursor2) = wine_rb_postorder_next(cursor)) || 1); \
+#define RB_FOR_EACH_DESTRUCTOR(cursor, cursor2, tree) \
+    for ((cursor) = rb_postorder_head((tree)->root); \
+         (cursor) && (((cursor2) = rb_postorder_next(cursor)) || 1); \
          (cursor) = (cursor2))
 
 /* iterate through the tree using a tree entry and postorder, making it safe to free the entry */
-#define WINE_RB_FOR_EACH_ENTRY_DESTRUCTOR(elem, elem2, tree, type, field) \
-    for ((elem) = WINE_RB_ENTRY_VALUE(wine_rb_postorder_head((tree)->root), type, field); \
-         (elem) != WINE_RB_ENTRY_VALUE(0, type, field) \
-             && (((elem2) = WINE_RB_ENTRY_VALUE(wine_rb_postorder_next(&(elem)->field), type, field)) || 1); \
+#define RB_FOR_EACH_ENTRY_DESTRUCTOR(elem, elem2, tree, type, field) \
+    for ((elem) = RB_ENTRY_VALUE(rb_postorder_head((tree)->root), type, field); \
+         (elem) != RB_ENTRY_VALUE(0, type, field) \
+             && (((elem2) = RB_ENTRY_VALUE(rb_postorder_next(&(elem)->field), type, field)) || 1); \
          (elem) = (elem2))
 
 
-static inline void wine_rb_postorder(struct wine_rb_tree *tree, wine_rb_traverse_func_t *callback, void *context)
+static inline void rb_postorder(struct rb_tree *tree, rb_traverse_func_t *callback, void *context)
 {
-    struct wine_rb_entry *iter, *next;
-    WINE_RB_FOR_EACH_DESTRUCTOR(iter, next, tree) callback(iter, context);
+    struct rb_entry *iter, *next;
+    RB_FOR_EACH_DESTRUCTOR(iter, next, tree) callback(iter, context);
 }
 
-static inline void wine_rb_init(struct wine_rb_tree *tree, wine_rb_compare_func_t compare)
+static inline void rb_init(struct rb_tree *tree, rb_compare_func_t compare)
 {
     tree->compare = compare;
     tree->root = NULL;
 }
 
-static inline void wine_rb_for_each_entry(struct wine_rb_tree *tree, wine_rb_traverse_func_t *callback, void *context)
+static inline void rb_for_each_entry(struct rb_tree *tree, rb_traverse_func_t *callback, void *context)
 {
-    struct wine_rb_entry *iter;
-    WINE_RB_FOR_EACH(iter, tree) callback(iter, context);
+    struct rb_entry *iter;
+    RB_FOR_EACH(iter, tree) callback(iter, context);
 }
 
-static inline void wine_rb_clear(struct wine_rb_tree *tree, wine_rb_traverse_func_t *callback, void *context)
+static inline void rb_destroy(struct rb_tree *tree, rb_traverse_func_t *callback, void *context)
 {
     /* Note that we use postorder here because the callback will likely free the entry. */
-    if (callback) wine_rb_postorder(tree, callback, context);
+    if (callback) rb_postorder(tree, callback, context);
     tree->root = NULL;
 }
 
-static inline void wine_rb_destroy(struct wine_rb_tree *tree, wine_rb_traverse_func_t *callback, void *context)
+static inline struct rb_entry *rb_get(const struct rb_tree *tree, const void *key)
 {
-    wine_rb_clear(tree, callback, context);
-}
-
-static inline struct wine_rb_entry *wine_rb_get(const struct wine_rb_tree *tree, const void *key)
-{
-    struct wine_rb_entry *entry = tree->root;
+    struct rb_entry *entry = tree->root;
     while (entry)
     {
         int c = tree->compare(key, entry);
@@ -212,9 +201,9 @@ static inline struct wine_rb_entry *wine_rb_get(const struct wine_rb_tree *tree,
     return NULL;
 }
 
-static inline int wine_rb_put(struct wine_rb_tree *tree, const void *key, struct wine_rb_entry *entry)
+static inline int rb_put(struct rb_tree *tree, const void *key, struct rb_entry *entry)
 {
-    struct wine_rb_entry **iter = &tree->root, *parent = tree->root;
+    struct rb_entry **iter = &tree->root, *parent = tree->root;
 
     while (*iter)
     {
@@ -227,19 +216,19 @@ static inline int wine_rb_put(struct wine_rb_tree *tree, const void *key, struct
         else iter = &parent->right;
     }
 
-    entry->flags = WINE_RB_FLAG_RED;
+    entry->flags = RB_FLAG_RED;
     entry->parent = parent;
     entry->left = NULL;
     entry->right = NULL;
     *iter = entry;
 
-    while (wine_rb_is_red(entry->parent))
+    while (rb_is_red(entry->parent))
     {
         if (entry->parent == entry->parent->parent->left)
         {
-            if (wine_rb_is_red(entry->parent->parent->right))
+            if (rb_is_red(entry->parent->parent->right))
             {
-                wine_rb_flip_color(entry->parent->parent);
+                rb_flip_color(entry->parent->parent);
                 entry = entry->parent->parent;
             }
             else
@@ -247,18 +236,18 @@ static inline int wine_rb_put(struct wine_rb_tree *tree, const void *key, struct
                 if (entry == entry->parent->right)
                 {
                     entry = entry->parent;
-                    wine_rb_rotate_left(tree, entry);
+                    rb_rotate_left(tree, entry);
                 }
-                entry->parent->flags &= ~WINE_RB_FLAG_RED;
-                entry->parent->parent->flags |= WINE_RB_FLAG_RED;
-                wine_rb_rotate_right(tree, entry->parent->parent);
+                entry->parent->flags &= ~RB_FLAG_RED;
+                entry->parent->parent->flags |= RB_FLAG_RED;
+                rb_rotate_right(tree, entry->parent->parent);
             }
         }
         else
         {
-            if (wine_rb_is_red(entry->parent->parent->left))
+            if (rb_is_red(entry->parent->parent->left))
             {
-                wine_rb_flip_color(entry->parent->parent);
+                rb_flip_color(entry->parent->parent);
                 entry = entry->parent->parent;
             }
             else
@@ -266,23 +255,23 @@ static inline int wine_rb_put(struct wine_rb_tree *tree, const void *key, struct
                 if (entry == entry->parent->left)
                 {
                     entry = entry->parent;
-                    wine_rb_rotate_right(tree, entry);
+                    rb_rotate_right(tree, entry);
                 }
-                entry->parent->flags &= ~WINE_RB_FLAG_RED;
-                entry->parent->parent->flags |= WINE_RB_FLAG_RED;
-                wine_rb_rotate_left(tree, entry->parent->parent);
+                entry->parent->flags &= ~RB_FLAG_RED;
+                entry->parent->parent->flags |= RB_FLAG_RED;
+                rb_rotate_left(tree, entry->parent->parent);
             }
         }
     }
 
-    tree->root->flags &= ~WINE_RB_FLAG_RED;
+    tree->root->flags &= ~RB_FLAG_RED;
 
     return 0;
 }
 
-static inline void wine_rb_remove(struct wine_rb_tree *tree, struct wine_rb_entry *entry)
+static inline void rb_remove(struct rb_tree *tree, struct rb_entry *entry)
 {
-    struct wine_rb_entry *iter, *child, *parent, *w;
+    struct rb_entry *iter, *child, *parent, *w;
     int need_fixup;
 
     if (entry->right && entry->left)
@@ -302,7 +291,7 @@ static inline void wine_rb_remove(struct wine_rb_tree *tree, struct wine_rb_entr
     if (child) child->parent = iter->parent;
     parent = iter->parent;
 
-    need_fixup = !wine_rb_is_red(iter);
+    need_fixup = !rb_is_red(iter);
 
     if (entry != iter)
     {
@@ -321,32 +310,32 @@ static inline void wine_rb_remove(struct wine_rb_tree *tree, struct wine_rb_entr
 
     if (need_fixup)
     {
-        while (parent && !wine_rb_is_red(child))
+        while (parent && !rb_is_red(child))
         {
             if (child == parent->left)
             {
                 w = parent->right;
-                if (wine_rb_is_red(w))
+                if (rb_is_red(w))
                 {
-                    w->flags &= ~WINE_RB_FLAG_RED;
-                    parent->flags |= WINE_RB_FLAG_RED;
-                    wine_rb_rotate_left(tree, parent);
+                    w->flags &= ~RB_FLAG_RED;
+                    parent->flags |= RB_FLAG_RED;
+                    rb_rotate_left(tree, parent);
                     w = parent->right;
                 }
-                if (wine_rb_is_red(w->left) || wine_rb_is_red(w->right))
+                if (rb_is_red(w->left) || rb_is_red(w->right))
                 {
-                    if (!wine_rb_is_red(w->right))
+                    if (!rb_is_red(w->right))
                     {
-                        w->left->flags &= ~WINE_RB_FLAG_RED;
-                        w->flags |= WINE_RB_FLAG_RED;
-                        wine_rb_rotate_right(tree, w);
+                        w->left->flags &= ~RB_FLAG_RED;
+                        w->flags |= RB_FLAG_RED;
+                        rb_rotate_right(tree, w);
                         w = parent->right;
                     }
-                    w->flags = (w->flags & ~WINE_RB_FLAG_RED) | (parent->flags & WINE_RB_FLAG_RED);
-                    parent->flags &= ~WINE_RB_FLAG_RED;
+                    w->flags = (w->flags & ~RB_FLAG_RED) | (parent->flags & RB_FLAG_RED);
+                    parent->flags &= ~RB_FLAG_RED;
                     if (w->right)
-                        w->right->flags &= ~WINE_RB_FLAG_RED;
-                    wine_rb_rotate_left(tree, parent);
+                        w->right->flags &= ~RB_FLAG_RED;
+                    rb_rotate_left(tree, parent);
                     child = NULL;
                     break;
                 }
@@ -354,45 +343,79 @@ static inline void wine_rb_remove(struct wine_rb_tree *tree, struct wine_rb_entr
             else
             {
                 w = parent->left;
-                if (wine_rb_is_red(w))
+                if (rb_is_red(w))
                 {
-                    w->flags &= ~WINE_RB_FLAG_RED;
-                    parent->flags |= WINE_RB_FLAG_RED;
-                    wine_rb_rotate_right(tree, parent);
+                    w->flags &= ~RB_FLAG_RED;
+                    parent->flags |= RB_FLAG_RED;
+                    rb_rotate_right(tree, parent);
                     w = parent->left;
                 }
-                if (wine_rb_is_red(w->left) || wine_rb_is_red(w->right))
+                if (rb_is_red(w->left) || rb_is_red(w->right))
                 {
-                    if (!wine_rb_is_red(w->left))
+                    if (!rb_is_red(w->left))
                     {
-                        w->right->flags &= ~WINE_RB_FLAG_RED;
-                        w->flags |= WINE_RB_FLAG_RED;
-                        wine_rb_rotate_left(tree, w);
+                        w->right->flags &= ~RB_FLAG_RED;
+                        w->flags |= RB_FLAG_RED;
+                        rb_rotate_left(tree, w);
                         w = parent->left;
                     }
-                    w->flags = (w->flags & ~WINE_RB_FLAG_RED) | (parent->flags & WINE_RB_FLAG_RED);
-                    parent->flags &= ~WINE_RB_FLAG_RED;
+                    w->flags = (w->flags & ~RB_FLAG_RED) | (parent->flags & RB_FLAG_RED);
+                    parent->flags &= ~RB_FLAG_RED;
                     if (w->left)
-                        w->left->flags &= ~WINE_RB_FLAG_RED;
-                    wine_rb_rotate_right(tree, parent);
+                        w->left->flags &= ~RB_FLAG_RED;
+                    rb_rotate_right(tree, parent);
                     child = NULL;
                     break;
                 }
             }
-            w->flags |= WINE_RB_FLAG_RED;
+            w->flags |= RB_FLAG_RED;
             child = parent;
             parent = child->parent;
         }
-        if (child) child->flags &= ~WINE_RB_FLAG_RED;
+        if (child) child->flags &= ~RB_FLAG_RED;
     }
 
-    if (tree->root) tree->root->flags &= ~WINE_RB_FLAG_RED;
+    if (tree->root) tree->root->flags &= ~RB_FLAG_RED;
 }
 
-static inline void wine_rb_remove_key(struct wine_rb_tree *tree, const void *key)
+static inline void rb_remove_key(struct rb_tree *tree, const void *key)
 {
-    struct wine_rb_entry *entry = wine_rb_get(tree, key);
-    if (entry) wine_rb_remove(tree, entry);
+    struct rb_entry *entry = rb_get(tree, key);
+    if (entry) rb_remove(tree, entry);
 }
+
+static inline void rb_replace(struct rb_tree *tree, struct rb_entry *dst, struct rb_entry *src)
+{
+    if (!(src->parent = dst->parent))
+        tree->root = src;
+    else if (dst->parent->left == dst)
+        dst->parent->left = src;
+    else
+        dst->parent->right = src;
+
+    if ((src->left = dst->left))
+        src->left->parent = src;
+    if ((src->right = dst->right))
+        src->right->parent = src;
+    src->flags = dst->flags;
+}
+
+/* old names for backwards compatibility */
+#define wine_rb_entry rb_entry
+#define wine_rb_tree rb_tree
+#define wine_rb_init rb_init
+#define wine_rb_for_each_entry rb_for_each_entry
+#define wine_rb_destroy rb_destroy
+#define wine_rb_get rb_get
+#define wine_rb_put rb_put
+#define wine_rb_remove rb_remove
+#define wine_rb_remove_key rb_remove_key
+#define wine_rb_replace rb_replace
+#define WINE_RB_ENTRY_VALUE RB_ENTRY_VALUE
+#define WINE_RB_FOR_EACH_ENTRY RB_FOR_EACH_ENTRY
+#define WINE_RB_FOR_EACH_ENTRY_DESTRUCTOR RB_FOR_EACH_ENTRY_DESTRUCTOR
+#ifdef __REACTOS__
+#define wine_rb_clear rb_destroy
+#endif
 
 #endif  /* __WINE_WINE_RBTREE_H */
