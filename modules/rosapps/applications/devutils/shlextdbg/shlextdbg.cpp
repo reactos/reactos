@@ -732,8 +732,8 @@ int wmain(int argc, WCHAR **argv)
                     }
                     else if (isCmd(argc, argv, n, L"FILL"))
                     {
-                        sei.hInstApp = (HINSTANCE)0xCAFE;
-                        sei.hProcess = (HANDLE)0xDEADF00D;
+                        sei.hInstApp = (HINSTANCE)UlongToHandle(0xCAFE);
+                        sei.hProcess = UlongToHandle(0xDEADF00D);
                     }
                     else
                         wprintf(L"WARN: Ignoring switch %s\n", argv[n]);
