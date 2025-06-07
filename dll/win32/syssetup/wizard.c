@@ -1455,11 +1455,11 @@ WriteUserLocale(VOID)
 {
     HKEY hKey;
     LCID lcid;
-    WCHAR Locale[12];
+    WCHAR Locale[9] = L"0000";
 
     lcid = GetSystemDefaultLCID();
 
-    if (GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Locale, ARRAYSIZE(Locale)) != 0)
+    if (GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, &Locale[4], _countof(Locale) - 4) != 0)
     {
         if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Control Panel\\International",
                             0, NULL, REG_OPTION_NON_VOLATILE,
