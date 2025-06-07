@@ -297,7 +297,7 @@ static void test_readmode( BOOL ascii_mode )
 
     fd = open ("fdopen.tst", O_WRONLY | O_CREAT | O_BINARY, _S_IREAD |_S_IWRITE);
     /* an internal buffer of BUFSIZ is maintained, so make a file big
-     * enough to test operations that cross the buffer boundary
+     * enough to test operations that cross the buffer boundary 
      */
     j = (2*BUFSIZ-4)/strlen(padbuffer);
     for (i=0; i<j; i++)
@@ -315,7 +315,7 @@ static void test_readmode( BOOL ascii_mode )
     ok(_doserrno == ERROR_ACCESS_DENIED, "doserrno = %ld\n", _doserrno);
 
     close (fd);
-
+    
     fd = open ("fdopen.tst", O_RDONLY, _S_IREAD |_S_IWRITE);
     errno = 0xdeadbeef;
     ok(dup2(fd, -1) == -1, "dup2(fd, -1) succeeded\n");
@@ -333,7 +333,7 @@ static void test_readmode( BOOL ascii_mode )
         file = fdopen (fd, "rb");
         ao = 0;
     }
-
+    
     /* first is a test of fgets, ftell, fseek */
     ok(ftell(file) == 0,"Did not start at beginning of file in %s\n", IOMODE);
     ok(fgets(buffer,2*BUFSIZ+256,file) !=0,"padding line fgets failed unexpected in %s\n", IOMODE);
@@ -372,7 +372,7 @@ static void test_readmode( BOOL ascii_mode )
     ok(write(fd, buffer, 1) == -1, "read succeeded on write-only file\n");
     ok(errno == EBADF, "errno = %d\n", errno);
     ok(_doserrno == ERROR_ACCESS_DENIED, "doserrno = %ld\n", _doserrno);
-
+    
     /* test fread across buffer boundary */
     rewind(file);
     ok(ftell(file) == 0,"Did not start at beginning of file in %s\n", IOMODE);
@@ -878,7 +878,7 @@ static void test_fgetwc( void )
   ok(*wptr == '\n', "Carriage return was not skipped\n");
   fclose(tempfh);
   unlink(tempf);
-
+  
   tempfh = fopen(tempf,"wb");
   j = 'a';
   /* pad to almost the length of the internal buffer. Use an odd number of bytes
@@ -1339,7 +1339,7 @@ static void test_ctrlz( void )
   ok(l==j, "ftell expected %d got %ld\n", j, l);
   ok(feof(tempfh), "did not get EOF\n");
   fclose(tempfh);
-
+  
   tempfh = fopen(tempf,"rb"); /* open in BINARY mode */
   ok(fgets(buffer,256,tempfh) != 0,"fgets failed unexpected\n");
   i=strlen(buffer);
@@ -1662,7 +1662,7 @@ static void test_file_inherit_child_no(const char* fd_s)
     int ret;
 
     ret = write(fd, "Success", 8);
-    ok( ret == -1 && errno == EBADF,
+    ok( ret == -1 && errno == EBADF, 
        "Wrong write result in child process on %d (%s)\n", fd, strerror(errno));
 }
 
@@ -1778,7 +1778,7 @@ static void test_file_inherit( const char* selfname )
     ok(read(fd, buffer, sizeof (buffer)) == 8 && memcmp(buffer, "Success", 8) == 0, "Couldn't read back the data\n");
     close (fd);
     ok(unlink("fdopen.tst") == 0, "Couldn't unlink\n");
-
+    
     fd = open ("fdopen.tst", O_CREAT | O_RDWR | O_BINARY | O_NOINHERIT, _S_IREAD |_S_IWRITE);
     ok(fd != -1, "Couldn't create test file\n");
     arg_v[1] = "file";
@@ -1802,6 +1802,14 @@ static void test_file_inherit( const char* selfname )
     arg_v[2] = "inherit";
     arg_v[3] = buffer; sprintf(buffer, "%d", fd);
     arg_v[4] = 0;
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        skip("Skipping test_file_inherit pipe test, because it hangs on ReactOS\n");
+    }
+    else
+    {
+#endif
     ret = _spawnvp(_P_WAIT, selfname, arg_v);
     ok(ret == 0, "_spawnvp returned %Id, errno %d\n", ret, errno);
     ret = tell(fd);
@@ -1815,7 +1823,9 @@ static void test_file_inherit( const char* selfname )
     CloseHandle(thread_handle);
     close(pipefds[0]);
     close(pipefds[1]);
-
+#ifdef __REACTOS__
+    }
+#endif
     /* make file handle inheritable */
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
@@ -2049,7 +2059,7 @@ static void test_chsize( void )
     ok( _filelength( fd ) == sizeof(temptext) / 2, "Wrong file size\n" );
 
     /* enlarge the file */
-    ok( _chsize( fd, sizeof(temptext) * 2 ) == 0, "_chsize() failed\n" );
+    ok( _chsize( fd, sizeof(temptext) * 2 ) == 0, "_chsize() failed\n" ); 
 
     pos = _lseek( fd, 0, SEEK_CUR );
     ok( cur == pos, "File pointer changed from: %ld to: %ld\n", cur, pos );
@@ -2084,7 +2094,7 @@ static void test_fopen_fclose_fcloseall( void )
        "filename is empty, errno = %d (expected 2 or 22)\n", errno);
     errno = 0xfaceabad;
     stream4 = fopen(NULL, "w+");
-    ok(stream4 == NULL && (errno == EINVAL || errno == ENOENT),
+    ok(stream4 == NULL && (errno == EINVAL || errno == ENOENT), 
        "filename is NULL, errno = %d (expected 2 or 22)\n", errno);
 
     /* testing fclose() */
@@ -2513,7 +2523,13 @@ static void test_pipes(const char* selfname)
     char expected[4096];
     int r;
     int i;
-
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        win_skip("Skipping test_pipes, because it hangs on ReactOS\n");
+        return;
+    }
+#endif
     /* Test reading from a pipe with read() */
     if (_pipe(pipes, 1024, O_BINARY) < 0)
     {

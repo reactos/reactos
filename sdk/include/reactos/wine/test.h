@@ -519,7 +519,7 @@ void __winetest_cdecl winetest_win_skip( const char *msg, ... )
     __winetest_va_list valist;
     __winetest_va_start(valist, msg);
     if ((strcmp(winetest_platform, "windows") == 0)
-#ifndef USE_WINE_TODOS
+#if !defined(USE_WINE_TODOS) || defined(USE_WIN_SKIP)
     || (strcmp(winetest_platform, "reactos") == 0)
 #endif
     )
@@ -1000,6 +1000,9 @@ int main( int argc, char **argv )
 #define ok_int_(file, line, expression, result) ok_dec_(file, line, expression, result)
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
 #define ok_hdl ok_ptr
+
+#define is_reactos() \
+    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
 
 #ifdef __cplusplus
 } /* extern "C" */
