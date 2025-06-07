@@ -175,14 +175,17 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     }
 
     SetForegroundWindow(pSysTray->GetHWnd());
-    DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
+
+    TPMPARAMS params = { sizeof(params) };
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    HWND hNotifyWnd = FindWindowExW(hTrayWnd, NULL, L"TrayNotifyWnd", NULL);
+    GetWindowRect(hNotifyWnd, &params.rcExclude);
+
+    DWORD flags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY;
     POINT pt;
     GetCursorPos(&pt);
 
-    DWORD id = TrackPopupMenuEx(hPopup, flags,
-        pt.x, pt.y,
-        pSysTray->GetHWnd(), NULL);
-
+    DWORD id = TrackPopupMenuEx(hPopup, flags, pt.x, pt.y, pSysTray->GetHWnd(), &params);
     if (id > 0)
     {
         id--; // since array indices starts from zero.
@@ -218,18 +221,19 @@ static void _ShowContextMenuR(CSysTray * pSysTray)
     SetMenuDefaultItem(hPopup, IDS_HOTPLUG_REMOVE_2, FALSE);
 
     SetForegroundWindow(pSysTray->GetHWnd());
-    DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
+
+    TPMPARAMS params = { sizeof(params) };
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    HWND hNotifyWnd = FindWindowExW(hTrayWnd, NULL, L"TrayNotifyWnd", NULL);
+    GetWindowRect(hNotifyWnd, &params.rcExclude);
+
+    DWORD flags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY;
     POINT pt;
     GetCursorPos(&pt);
 
-    DWORD id = TrackPopupMenuEx(hPopup, flags,
-        pt.x, pt.y,
-        pSysTray->GetHWnd(), NULL);
-
+    DWORD id = TrackPopupMenuEx(hPopup, flags, pt.x, pt.y, pSysTray->GetHWnd(), &params);
     if (id == IDS_HOTPLUG_REMOVE_2)
-    {
         _RunHotplug(pSysTray);
-    }
 
     DestroyMenu(hPopup);
 }

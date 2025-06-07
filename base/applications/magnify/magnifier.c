@@ -465,18 +465,34 @@ void Draw(HDC aDc)
     ReleaseDC(hDesktopWindow, desktopHdc);
 }
 
-void HandleNotifyIconMessage(HWND hWnd, WPARAM wParam, LPARAM lParam)
+static VOID
+HandleRightContextMenu(HWND hWnd)
 {
     POINT pt;
+    GetCursorPos(&pt);
 
+    SetForegroundWindow(hWnd);
+
+    TPMPARAMS params = { sizeof(params) };
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    HWND hNotifyWnd = FindWindowExW(hTrayWnd, NULL, L"TrayNotifyWnd", NULL);
+    GetWindowRect(hNotifyWnd, &params.rcExclude);
+
+    UINT uFlags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RIGHTBUTTON;
+    TrackPopupMenuEx(notifyMenu, uFlags, pt.x, pt.y, hWnd, &params);
+
+    PostMessage(hWnd, WM_NULL, 0, 0);
+}
+
+void HandleNotifyIconMessage(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
     switch(lParam)
     {
         case WM_LBUTTONUP:
             PostMessage(hMainWnd, WM_COMMAND, IDM_OPTIONS, 0);
             break;
         case WM_RBUTTONUP:
-            GetCursorPos(&pt);
-            TrackPopupMenu(notifyMenu, 0, pt.x, pt.y, 0, hWnd, NULL);
+            HandleRightContextMenu(hWnd);
             break;
     }
 }

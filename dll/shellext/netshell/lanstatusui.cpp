@@ -924,10 +924,15 @@ VOID ShowNetworkIconContextMenu(
         }
     }
 
-    TrackPopupMenuEx(hMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, hwndOwner, NULL);
+    TPMPARAMS params = { sizeof(params) };
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    HWND hNotifyWnd = FindWindowEx(hTrayWnd, NULL, L"TrayNotifyWnd", NULL);
+    GetWindowRect(hNotifyWnd, &params.rcExclude);
+
+    UINT uFlags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RIGHTBUTTON;
+    TrackPopupMenuEx(hMenu, uFlags, pt.x, pt.y, hwndOwner, &params);
 
     PostMessage(hwndOwner, WM_NULL, 0, 0);
-
     DestroyMenu(hMenu);
 }
 
