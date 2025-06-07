@@ -3,6 +3,7 @@
 
 class CInputContext : public ITfContext
 {
+public:
     CInputContext() { }
     virtual ~CInputContext() { }
 
