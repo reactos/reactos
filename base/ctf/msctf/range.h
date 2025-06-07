@@ -19,11 +19,12 @@ class CRange
 
 public:
     CRange(
-        CInputContext *pIC,
-        DWORD dwLockType,
-        IAnchor *pAnchorStart,
-        IAnchor *pAnchorEnd,
-        TfGravity gravity);
+        _In_ CInputContext *pIC,
+        _In_ DWORD dwLockType,
+        _In_ IAnchor *pAnchorStart,
+        _In_ IAnchor *pAnchorEnd,
+        _In_ TfGravity gravity);
+
     virtual ~CRange();
 
     // ** IUnknown methods **
