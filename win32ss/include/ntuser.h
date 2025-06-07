@@ -1425,12 +1425,12 @@ NtUserThunkedMenuItemInfo(
 BOOL
 NTAPI
 NtUserTrackPopupMenuEx(
-    HMENU hmenu,
-    UINT fuFlags,
-    int x,
-    int y,
-    HWND hwnd,
-    LPTPMPARAMS lptpm);
+    _In_ HMENU hMenu,
+    _In_ UINT fuFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ HWND hwnd,
+    _In_opt_ LPTPMPARAMS lptpm);
 
 HKL
 NTAPI
