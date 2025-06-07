@@ -1071,6 +1071,7 @@ DoGenericAction(
             {
                 if (!HandleLogon(Session))
                 {
+                    Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
                     CallNotificationDlls(Session, LogonHandler);
                 }
@@ -1132,12 +1133,14 @@ DoGenericAction(
                 if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
+                    Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
                 }
             }
             else
             {
                 RemoveStatusMessage(Session);
+                Session->LogonState = STATE_LOGGED_OFF;
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             }
             break;
