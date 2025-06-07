@@ -25,16 +25,17 @@ TEST_InvalidFlags(VOID)
     HWND hwnd = GetDesktopWindow();
     HMENU hMenu = CreatePopupMenu();
 
-    DWORD iBit, dwFlag;
+    INT iBit;
+    UINT uFlags;
     for (iBit = 0; iBit < sizeof(DWORD) * CHAR_BIT; ++iBit)
     {
-        dwFlag = (1 << iBit);
-        if (dwFlag & ~VALID_TPM_FLAGS)
+        uFlags = (1 << iBit);
+        if (uFlags & ~VALID_TPM_FLAGS)
         {
             SetLastError(0xBEEFCAFE);
-            BOOL ret = TrackPopupMenuEx(hMenu, dwFlag, 0, 0, hwnd, NULL);
+            BOOL ret = TrackPopupMenuEx(hMenu, uFlags, 0, 0, hwnd, NULL);
             ok_int(ret, FALSE);
-            if (dwFlag == TPM_WORKAREA && IsWindowsVistaOrGreater())
+            if (uFlags == TPM_WORKAREA && IsWindowsVistaOrGreater())
                 ok_err(ERROR_INVALID_PARAMETER);
             else
                 ok_err(ERROR_INVALID_FLAGS);
@@ -44,7 +45,40 @@ TEST_InvalidFlags(VOID)
     DestroyMenu(hMenu);
 }
 
+static VOID
+TEST_InvalidSize(VOID)
+{
+    HWND hwnd = GetDesktopWindow();
+    HMENU hMenu = CreatePopupMenu();
+    TPMPARAMS params;
+    UINT uFlags = TPM_RIGHTBUTTON;
+    BOOL ret;
+
+    ZeroMemory(&params, sizeof(params));
+
+    SetLastError(0xBEEFCAFE);
+    params.cbSize = 0;
+    ret = TrackPopupMenuEx(hMenu, uFlags, 0, 0, hwnd, &params);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    params.cbSize = sizeof(params) - 1;
+    ret = TrackPopupMenuEx(hMenu, uFlags, 0, 0, hwnd, &params);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    params.cbSize = sizeof(params) + 1;
+    ret = TrackPopupMenuEx(hMenu, uFlags, 0, 0, hwnd, &params);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    DestroyMenu(hMenu);
+}
+
 START_TEST(TrackPopupMenuEx)
 {
     TEST_InvalidFlags();
+    TEST_InvalidSize();
 }
