@@ -300,3 +300,37 @@ interface ITextStoreACP : IUnknown
         [in] TsViewCookie vcView,
         [out] HWND *phwnd);
 };
+
+[
+  object,
+  uuid(0feb7e34-5a60-4356-8ef7-abdec2ff7cf8),
+  pointer_default(unique)
+]
+interface IAnchor : IUnknown
+{
+    const DWORD TS_SHIFT_COUNT_HIDDEN = 0x1;
+    const DWORD TS_SHIFT_HALT_HIDDEN  = 0x2;
+    const DWORD TS_SHIFT_HALT_VISIBLE = 0x4;
+    const DWORD TS_SHIFT_COUNT_ONLY   = 0x8;
+
+    const DWORD TS_CH_PRECEDING_DEL = 1;
+    const DWORD TS_CH_FOLLOWING_DEL = 2;
+
+    typedef [uuid(daa8601e-7695-426f-9bb7-498a6aa64b68)]
+    enum { TS_GR_BACKWARD = 0, TS_GR_FORWARD = 1 } TsGravity;
+
+    typedef [uuid(898e19df-4fb4-4af3-8daf-9b3c1145c79d)]
+    enum { TS_SD_BACKWARD = 0, TS_SD_FORWARD = 1 } TsShiftDir;
+
+    HRESULT SetGravity([in] TsGravity gravity);
+    HRESULT GetGravity([out] TsGravity *pgravity);
+    HRESULT IsEqual([in] IAnchor *paWith, [out] BOOL *pfEqual);
+    HRESULT Compare([in] IAnchor *paWith, [out] LONG *plResult);
+    HRESULT Shift([in] DWORD dwFlags, [in] LONG cchReq, [out] LONG *pcch, [in] IAnchor *paHaltAnchor);
+    HRESULT ShiftTo([in] IAnchor *paSite);
+    HRESULT ShiftRegion([in] DWORD dwFlags, [in] TsShiftDir dir, [out] BOOL *pfNoRegion);
+    HRESULT SetChangeHistoryMask([in] DWORD dwMask);
+    HRESULT GetChangeHistory([out] DWORD *pdwHistory);
+    HRESULT ClearChangeHistory();
+    HRESULT Clone([out] IAnchor **ppaClone);
+};

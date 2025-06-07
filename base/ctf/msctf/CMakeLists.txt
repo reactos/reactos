@@ -12,7 +12,6 @@ list(APPEND SOURCE
     documentmgr.c
     inputprocessor.c
     msctf.c
-    range.c
     threadmgr.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
@@ -20,6 +19,7 @@ list(APPEND SOURCE
 list(APPEND PCH_SKIP_SOURCE
     langbarmgr.cpp
     mlng.cpp
+    range.cpp
     utils.cpp)
 
 add_library(msctf MODULE
