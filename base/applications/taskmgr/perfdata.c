@@ -64,7 +64,14 @@ BOOL PerfDataInitialize(void)
      * Create the SYSTEM Sid
      */
     AllocateAndInitializeSid(&NtSidAuthority, 1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0, &SystemUserSid);
-    return TRUE;
+
+    /*
+     * Set up global info storage
+     */
+    SystemProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)HeapAlloc(GetProcessHeap(),
+                               0, sizeof(*SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+
+    return SystemProcessorTimeInfo != NULL;
 }
 
 void PerfDataUninitialize(void)
@@ -247,10 +254,12 @@ void PerfDataRefresh(void)
     /*
      * Save system processor time info
      */
-    if (SystemProcessorTimeInfo) {
-        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
+    memcpy(SystemProcessorTimeInfo, SysProcessorTimeInfo,
+           sizeof(*SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+
+    if (SysProcessorTimeInfo) {
+        HeapFree(GetProcessHeap(), 0, SysProcessorTimeInfo);
     }
-    SystemProcessorTimeInfo = SysProcessorTimeInfo;
 
     /*
      * Save system handle info
