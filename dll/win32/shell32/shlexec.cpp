@@ -52,9 +52,19 @@ static int Win32ErrFromHInst(HINSTANCE hInst)
         return ERROR_DDE_FAIL;
     case SE_ERR_DLLNOTFOUND:
         return ERROR_DLL_NOT_FOUND;
-    case SE_ERR_ASSOCINCOMPLETE:
+    //case SE_ERR_ASSOCINCOMPLETE: Note: Windows treats this as a success code
     case SE_ERR_NOASSOC:
         return ERROR_NO_ASSOCIATION;
+    case 10:
+        return ERROR_OLD_WIN_VERSION;
+    case 12:
+        return ERROR_APP_WRONG_OS;
+    case 15:
+        return ERROR_RMODE_APP;
+    case 16:
+        return ERROR_SINGLE_INSTANCE_APP;
+    case 20:
+        return ERROR_INVALID_DLL;
     }
     return -1;
 }
@@ -2049,10 +2059,13 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     HRESULT hr = TryShellExecuteHooks(sei);
     if (hr != S_FALSE)
     {
-        if ((SIZE_T)sei->hInstApp > 32 || !sei->hInstApp)
-            return TRUE;
         int err = Win32ErrFromHInst(sei->hInstApp);
-        SetLastError(err > 0 ? err : ERROR_ACCESS_DENIED);
+        if (err <= 0)
+        {
+            sei->hInstApp = (HINSTANCE)UlongToHandle(42);
+            return TRUE;
+        }
+        SetLastError(err);
         return FALSE;
     }
 
