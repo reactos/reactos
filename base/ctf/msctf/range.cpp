@@ -18,7 +18,7 @@
 #include <cicreg.h>
 #include <cicutb.h>
 
-#include "inputcontext.h"
+class CInputContext;
 #include "range.h"
 #include "msctf_internal.h"
 
@@ -28,13 +28,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 ////////////////////////////////////////////////////////////////////////////
 // CRange
 
-CRange::CRange(CInputContext *pIC, DWORD lockType, IAnchor *pAnchorStart, IAnchor *pAnchorEnd, TfGravity grav)
+CRange::CRange(
+    _In_ CInputContext *pIC,
+    _In_ DWORD dwLockType,
+    _In_ IAnchor *pAnchorStart,
+    _In_ IAnchor *pAnchorEnd,
+    _In_ TfGravity gravity)
 {
+    m_dwLockType = dwLockType;
     m_pAnchorStart = pAnchorStart;
     m_pAnchorEnd = pAnchorEnd;
     m_pInputContext = pIC;
-    m_pContext = NULL;
     m_dwCookie = MAXDWORD;
+    m_gravity = gravity;
     m_cRefs = 1;
 }
 
@@ -69,9 +75,9 @@ HRESULT CRange::_CompareX(
 ////////////////////////////////////////////////////////////////////////////
 // ** IUnknown methods **
 
-STDMETHODIMP CRange::CRange::QueryInterface(REFIID riid, void **ppvObj)
+STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
 {
-    if (&IID_PRIV_CRANGE == &riid || IsEqualGUID(riid, IID_PRIV_CRANGE))
+    if (IsEqualGUID(riid, IID_PRIV_CRANGE))
     {
         *ppvObj = this;
         return S_OK; // No AddRef
@@ -320,17 +326,8 @@ STDMETHODIMP CRange::Clone(
 STDMETHODIMP CRange::GetContext(
     _Out_ ITfContext **ppContext)
 {
-    TRACE("%p\n", ppContext);
-
-    if (!ppContext)
-        return E_INVALIDARG;
-
-    *ppContext = m_pContext;
-    if (!*ppContext)
-        return E_FAIL;
-
-    m_pContext->AddRef();
-    return S_OK;
+    FIXME("%p\n", ppContext);
+    return E_NOTIMPL;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -343,6 +340,21 @@ STDMETHODIMP CRange::GetExtent(_Out_ LONG *pacpAnchor, _Out_ LONG *pcch)
 }
 
 STDMETHODIMP CRange::SetExtent(_In_ LONG acpAnchor, _In_ LONG cch)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// ** ITfRangeAnchor methods **
+
+STDMETHODIMP CRange::GetExtent(_Out_ IAnchor **ppStart, _Out_ IAnchor **ppEnd)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CRange::SetExtent(_In_ IAnchor *pAnchorStart, _In_ IAnchor *pAnchorEnd)
 {
     FIXME("\n");
     return E_NOTIMPL;

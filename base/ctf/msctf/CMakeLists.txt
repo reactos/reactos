@@ -18,7 +18,6 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     langbarmgr.cpp
-    inputcontext.cpp
     mlng.cpp
     range.cpp
     utils.cpp)
@@ -35,7 +34,7 @@ if(MSVC)
 endif()
 
 set_module_type(msctf win32dll UNICODE)
-target_link_libraries(msctf uuid wine cicero atl)
+target_link_libraries(msctf uuid wine cicero)
 add_importlibs(msctf user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
 add_delay_importlibs(msctf shell32 shlwapi ole32 oleaut32 imm32 gdi32)
 add_pch(msctf precomp.h SOURCE)

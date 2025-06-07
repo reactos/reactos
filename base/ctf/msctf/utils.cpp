@@ -32,7 +32,6 @@
 #include "mlng.h"
 
 #include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 BOOL gf_CRT_INIT = FALSE;
@@ -92,6 +91,13 @@ UINT g_uLangHotKeyVKey2 = 0;
 UINT g_uKeyTipHotKeyModifiers = 0;
 UINT g_uKeyTipHotKeyVKey = 0;
 UINT g_uKeyTipHotKeyVKey2 = 0;
+
+extern "C" void
+__cxa_pure_virtual(void)
+{
+    ERR("__cxa_pure_virtual\n");
+    DebugBreak();
+}
 
 /**
  * @implemented

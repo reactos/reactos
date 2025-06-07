@@ -1,6 +1,5 @@
 #pragma once
 
-#include "inputcontext.h"
 DEFINE_GUID(IID_PRIV_CRANGE, 0xB68832F0, 0x34B9, 0x11D3, 0xA7, 0x45, 0x00, 0x50, 0x04, 0x0A, 0xB4, 0x07);
 
 class CRange
@@ -8,17 +7,23 @@ class CRange
     , public ITfRangeAnchor
     , public ITfSource
 {
-    DWORD m_dwUnknown1;
+protected:
+    DWORD m_dwLockType;
     IAnchor *m_pAnchorStart;
     IAnchor *m_pAnchorEnd;
     CInputContext *m_pInputContext;
-    ITfContext *m_pContext;
     DWORD m_dwCookie;
-    DWORD m_dwUnknown2;
+    TfGravity m_gravity;
     LONG m_cRefs;
 
 public:
-    CRange(CInputContext *pIC, DWORD lockType, IAnchor *pAnchorStart, IAnchor *pAnchorEnd, TfGravity grav);
+    CRange(
+        _In_ CInputContext *pIC,
+        _In_ DWORD dwLockType,
+        _In_ IAnchor *pAnchorStart,
+        _In_ IAnchor *pAnchorEnd,
+        _In_ TfGravity gravity);
+
     virtual ~CRange();
 
     // ** IUnknown methods **
@@ -114,7 +119,9 @@ public:
     STDMETHODIMP GetExtent(_Out_ LONG *pacpAnchor, _Out_ LONG *pcch) override;
     STDMETHODIMP SetExtent(_In_ LONG acpAnchor, _In_ LONG cch) override;
 
-    // ** ITfRangeAnchor methods duplicate ITfRange **
+    // ** ITfRangeAnchor methods **
+    STDMETHODIMP GetExtent(_Out_ IAnchor **ppStart, _Out_ IAnchor **ppEnd) override;
+    STDMETHODIMP SetExtent(_In_ IAnchor *pAnchorStart, _In_ IAnchor *pAnchorEnd) override;
 
     // ** ITfSource methods **
     STDMETHODIMP AdviseSink(_In_ REFIID riid, _In_ IUnknown *punk, _Out_ DWORD *pdwCookie) override;
