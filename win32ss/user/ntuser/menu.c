@@ -6655,7 +6655,7 @@ NtUserTrackPopupMenuEx(
 
     if (fuFlags & ~VALID_TPM_FLAGS)
     {
-        ERR("TPME : Invalid flags 0x%X\n", fuFlags);
+        ERR("TPME : Invalid flags 0x%X (valid flags are 0x%X)\n", fuFlags, VALID_TPM_FLAGS);
         EngSetLastError(ERROR_INVALID_FLAGS);
         goto Exit;
     }
