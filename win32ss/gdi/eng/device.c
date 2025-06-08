@@ -572,6 +572,7 @@ EngpUpdateMonitorDevices(
     PVIDEO_MONITOR_DEVICE pMonitorDevices;
     ULONG i, bytesWritten, monitorCount;
     NTSTATUS Status;
+    ERR("EngpUpdateMonitorDevices(%p)\n", pGraphicsDevice);
 
     /* Request right PDO for device relations */
     Status = EngpPnPTargetRelationRequest(pGraphicsDevice->DeviceObject, &pDeviceRelations);
@@ -605,13 +606,18 @@ EngpUpdateMonitorDevices(
 
     /* Count number of available monitors */
     for (monitorCount = 0; pMonitorDevices[monitorCount].pdo; ++monitorCount)
-        ;
+        ERR("- got monitor PDO %p\n", pMonitorDevices[monitorCount].pdo);
+    ERR("Got %d monitors\n", monitorCount);
 
     if (pGraphicsDevice->pvMonDev)
     {
         /* Erase everything */
+        ERR("Erasing existing list (%d monitors)\n", pGraphicsDevice->dwMonCnt);
         for (i = 0; i < pGraphicsDevice->dwMonCnt; i++)
+        {
+            ERR("- dereferencing PDO %p\n", pGraphicsDevice->pvMonDev[i].pdo);
             ObDereferenceObject(pGraphicsDevice->pvMonDev[i].pdo);
+        }
         ExFreePoolWithTag(pGraphicsDevice->pvMonDev, GDITAG_GDEVICE);
         pGraphicsDevice->pvMonDev = NULL;
         pGraphicsDevice->dwMonCnt = 0;
@@ -624,6 +630,7 @@ EngpUpdateMonitorDevices(
                                                        GDITAG_GDEVICE);
         if (!pGraphicsDevice->pvMonDev)
         {
+            ERR("Failed to allocate memory for %d monitors\n", monitorCount);
             for (i = 0; pMonitorDevices[i].pdo; ++i)
                 ObDereferenceObject(pMonitorDevices[i].pdo);
             ExFreePool(pMonitorDevices);
@@ -633,9 +640,10 @@ EngpUpdateMonitorDevices(
         /* Copy data */
         for (i = 0; i < monitorCount; i++)
         {
-            TRACE("%S\\Monitor%u: PDO %p HwID %u\n", pGraphicsDevice->szWinDeviceName, i, pMonitorDevices[i].pdo, pMonitorDevices[i].HwID);
+            ERR("- %S\\Monitor%u: PDO %p HwID %u\n", pGraphicsDevice->szWinDeviceName, i, pMonitorDevices[i].pdo, pMonitorDevices[i].HwID);
             pGraphicsDevice->pvMonDev[pGraphicsDevice->dwMonCnt++] = pMonitorDevices[i];
         }
+        ERR("Current monitor count is %d\n", pGraphicsDevice->dwMonCnt);
     }
 
     ExFreePool(pMonitorDevices);
