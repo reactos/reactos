@@ -2207,6 +2207,7 @@ INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             retryData = reinterpret_cast<RETRY_DATA*>(lParam);
             SetWindowLong(hwndDlg, DWLP_USER, lParam);
 
@@ -2223,6 +2224,7 @@ INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             SendDlgItemMessageW(hwndDlg, IDC_INSERT_DISK_ICON, STM_SETICON, (WPARAM)sfi.hIcon, 0);
             SetTimer(hwndDlg, 1, 2000, NULL);
             break;
+        }
         case WM_COMMAND:
             if (wParam == IDCANCEL)
                 EndDialog(hwndDlg, IDCANCEL);
