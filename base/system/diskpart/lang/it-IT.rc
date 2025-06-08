@@ -112,7 +112,7 @@ END
 /* RESCAN command string */
 STRINGTABLE
 BEGIN
-    IDS_RESCAN_START "\Si prega di attendere mentre DiskPart esanima la tua configurazione...\n"
+    IDS_RESCAN_START "\nSi prega di attendere mentre DiskPart esanima la tua configurazione...\n"
     IDS_RESCAN_END "\nDiskPart ha finito di esaminare la tua configurazione.\n\n"
 END
 
@@ -157,7 +157,7 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "Gli argomenti specificati per questo commando non sono validi.\Per ulteriori informazioni sui comandi, digitare:"
+    IDS_MSG_ARG_SYNTAX_ERROR "Gli argomenti specificati per questo commando non sono validi.\nPer ulteriori informazioni sui comandi, digitare:"
 END
 
 /* Help Command Descriptions */
