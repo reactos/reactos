@@ -20,6 +20,15 @@ DWORD gdwLanguageToggleKey = 1;
 INT gLayoutToggleKeyState = 0;
 DWORD gdwLayoutToggleKey = 2;
 
+/* State for Alt+Numpad character entry */
+static enum {
+    ALTNUM_INACTIVE,
+    ALTNUM_ACTIVE,
+    ALTNUM_OEM_PREFIX
+} gAltNumPadState = ALTNUM_INACTIVE;
+
+static ULONG gAltNumPadValue = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -904,6 +913,94 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
     /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
     wSimpleVk = IntSimplifyVk(wVk);
+	
+	/*
+     * Handle Alt+Numpad character composition.
+     * TODO: Inserting unicode characters
+     */
+    if (bIsDown &&
+        IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
+        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
+    {
+        /* Check if the incoming key is a numpad digit */
+        if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9)
+        {
+            UINT uDigit = wVk - VK_NUMPAD0;
+
+            if (gAltNumPadState == ALTNUM_INACTIVE)
+            {
+                gAltNumPadState = (uDigit == 0) ? ALTNUM_ACTIVE : ALTNUM_OEM_PREFIX;
+            }
+
+            if (gAltNumPadState != ALTNUM_OEM_PREFIX || gAltNumPadValue != 0)
+            {
+                /* Protect against overflow */
+                if (gAltNumPadValue < (MAXULONG / 10))
+                {
+                    gAltNumPadValue = (gAltNumPadValue * 10) + uDigit;
+                }
+            }
+
+            return TRUE;
+        }
+        /* Check if the incoming key is not the menu key itself/alone */
+        else if (wVk != VK_MENU)
+        {
+            gAltNumPadState = ALTNUM_INACTIVE;
+            gAltNumPadValue = 0;
+        }
+    }
+
+    /*
+     * Check for the end of an Alt+Numpad sequence, which is triggered by the
+     * release of the ALT key.
+     */
+    if (!bIsDown && (wSimpleVk == VK_MENU) && (gAltNumPadState != ALTNUM_INACTIVE))
+    {
+        PUSER_MESSAGE_QUEUE pQueue = IntGetFocusMessageQueue();
+
+        if (gAltNumPadValue != 0 && pQueue && pQueue->ptiKeyboard)
+        {
+            NTSTATUS Status;
+            WCHAR wchUnicodeChar;
+            CHAR cAnsiChar = (CHAR)(gAltNumPadValue % 256);
+            MSG msgChar;
+
+            if (gAltNumPadState == ALTNUM_OEM_PREFIX)
+            {
+                /* The sequence started with '0', use the OEM->Unicode function */
+                Status = RtlOemToUnicodeN(&wchUnicodeChar,
+                                            sizeof(wchUnicodeChar),
+                                            NULL,
+                                            &cAnsiChar,
+                                            sizeof(cAnsiChar));
+            }
+            else
+            {
+                 /* Otherwise, use the standard MultiByte->Unicode function (uses ACP) */
+                Status = RtlMultiByteToUnicodeN(&wchUnicodeChar,
+                                                sizeof(wchUnicodeChar),
+                                                NULL,
+                                                &cAnsiChar,
+                                                sizeof(cAnsiChar));
+            }
+
+            if (NT_SUCCESS(Status))
+             {
+                msgChar.hwnd = pQueue->spwndFocus ? UserHMGetHandle(pQueue->spwndFocus) : NULL;
+                msgChar.message = WM_CHAR;
+                msgChar.wParam = wchUnicodeChar;
+                msgChar.lParam = 1;
+                msgChar.time = dwTime;
+                msgChar.pt = gpsi->ptCursor;
+
+                MsqPostMessage(pQueue->ptiKeyboard, &msgChar, FALSE, QS_KEY, 0, 0);
+            }
+        }
+
+        gAltNumPadState = ALTNUM_INACTIVE;
+        gAltNumPadValue = 0;
+    }
 
     if (PRIMARYLANGID(gusLanguageID) == LANG_JAPANESE)
     {
