@@ -1,7 +1,7 @@
 #pragma once
 
 /* Icons */
-#define IDI_MAIN 100
+#define IDI_MAIN 150
 
 /* Menus */
 #define IDR_POPUP 100
