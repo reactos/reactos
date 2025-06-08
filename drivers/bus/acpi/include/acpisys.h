@@ -42,6 +42,7 @@ typedef struct _PDO_DEVICE_DATA
     // An array of (zero terminated wide character strings).
     // The array itself also null terminated
     PWCHAR      HardwareIDs;
+    BOOLEAN     DockDevice;
     // Link point to hold all the PDOs for a single bus together
     LIST_ENTRY  Link;
     ULONG       InterfaceRefCount;
