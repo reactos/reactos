@@ -22,16 +22,7 @@ static HWND s_hImeWnd = NULL;
 static WNDPROC s_fnOldEditWndProc = NULL;
 static WNDPROC s_fnOldImeWndProc = NULL;
 
-static void MsgDumpPrintf(LPCSTR fmt, ...)
-{
-    static char s_szText[1024];
-    va_list va;
-    va_start(va, fmt);
-    StringCbVPrintfA(s_szText, sizeof(s_szText), fmt, va);
-    trace("%s", s_szText);
-    va_end(va);
-}
-#define MSGDUMP_TPRINTF MsgDumpPrintf
+#define MSGDUMP_PRINTF trace
 #define MSGDUMP_PREFIX s_prefix
 #include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
 
