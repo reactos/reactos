@@ -13,7 +13,6 @@
 
 struct RETRY_DATA
 {
-    HWND    hDlg;
     WCHAR   szDrive[MAX_PATH];
 };
 
