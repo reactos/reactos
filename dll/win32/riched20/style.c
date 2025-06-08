@@ -120,7 +120,7 @@ BOOL cf2w_to_cfany(CHARFORMAT2W *to, const CHARFORMAT2W *from)
 
 ME_Style *ME_MakeStyle(CHARFORMAT2W *style)
 {
-  ME_Style *s = heap_alloc(sizeof(*s));
+  ME_Style *s = malloc(sizeof(*s));
 
   assert(style->cbSize == sizeof(CHARFORMAT2W));
   s->fmt = *style;
@@ -264,12 +264,12 @@ void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048])
     p += sprintf(p, "N/A");
 
   if (pFmt->dwMask & CFM_SIZE)
-    p += sprintf(p, "\nFont size:            %d\n", pFmt->yHeight);
+    p += sprintf(p, "\nFont size:            %ld\n", pFmt->yHeight);
   else
     p += sprintf(p, "\nFont size:            N/A\n");
 
   if (pFmt->dwMask & CFM_OFFSET)
-    p += sprintf(p, "Char offset:          %d\n", pFmt->yOffset);
+    p += sprintf(p, "Char offset:          %ld\n", pFmt->yOffset);
   else
     p += sprintf(p, "Char offset:          N/A\n");
 
@@ -429,7 +429,7 @@ void select_style( ME_Context *c, ME_Style *s )
         c->orig_font = NULL;
     }
 
-    if (c->current_style)
+    if (c->current_style && c->current_style->font_cache)
     {
         release_font_cache( c->current_style->font_cache );
         c->current_style->font_cache = NULL;
@@ -448,7 +448,7 @@ void ME_DestroyStyle(ME_Style *s)
     s->font_cache = NULL;
   }
   ScriptFreeCache( &s->script_cache );
-  heap_free(s);
+  free(s);
 }
 
 void ME_AddRefStyle(ME_Style *s)
