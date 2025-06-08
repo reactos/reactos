@@ -1049,7 +1049,15 @@ HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IData
     enum { IDC_PROPERTIES };
     if (uMsg == DFM_INVOKECOMMAND && wParam == (pdtobj ? DFM_CMD_PROPERTIES : IDC_PROPERTIES))
     {
-        return SHELL_ExecuteControlPanelCPL(hwndOwner, L"desk.cpl") ? S_OK : E_FAIL;
+        if (pdtobj)
+        {
+            PIDLIST_ABSOLUTE pidl = SHELL_DataObject_ILCloneFullItem(pdtobj, 0);
+            BOOL bIsSelf = _ILIsDesktop(pidl); // Context menu on Desktop item in the shell tree?
+            ILFree(pidl);
+            if (!bIsSelf)
+                return SHELL32_ShowPropertiesDialog(pdtobj); // File selection
+        }
+        return SHELL_ExecuteControlPanelCPL(hwndOwner, L"desk.cpl") ? S_OK : E_FAIL; // Background
     }
     else if (uMsg == DFM_MERGECONTEXTMENU && !pdtobj) // Add Properties item when called for directory background
     {

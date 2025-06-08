@@ -976,7 +976,10 @@ BEGIN
     IDS_PRINT_VERB "Imprimir"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Arquivos, %u Pastas"
+
     IDS_PRINTERS "Impressoras"
     IDS_FONTS "Fontes"
     IDS_INSTALLNEWFONT "Instalar Nova Fonte..."

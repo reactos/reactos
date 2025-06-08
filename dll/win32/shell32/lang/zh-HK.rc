@@ -984,7 +984,10 @@ BEGIN
     IDS_PRINT_VERB "列印"
     IDS_CMD_VERB "在這裡開啟命令提示字元"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u 個檔案，%u 個檔案夾"
+
     IDS_PRINTERS "印表機"
     IDS_FONTS "字型"
     IDS_INSTALLNEWFONT "安裝新字型..."

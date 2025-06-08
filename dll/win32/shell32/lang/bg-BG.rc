@@ -976,7 +976,10 @@ BEGIN
     IDS_PRINT_VERB "Разпечатване"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u файла, %u папки"
+
     IDS_PRINTERS "Печатачи"
     IDS_FONTS "Шрифтове"
     IDS_INSTALLNEWFONT "Слагане на нов шрифт..."

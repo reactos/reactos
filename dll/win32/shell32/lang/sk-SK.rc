@@ -976,7 +976,10 @@ BEGIN
     IDS_PRINT_VERB "Tlačiť"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "súbory: %u, priečinky: %u"
+
     IDS_PRINTERS "Tlačiarne"
     IDS_FONTS "Písma"
     IDS_INSTALLNEWFONT "&Nainštalovať nové písmo..."

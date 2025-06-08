@@ -985,7 +985,10 @@ BEGIN
     IDS_PRINT_VERB "Drukuj"
     IDS_CMD_VERB "&Otwórz wiersz polecenia tutaj"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u Plików, %u Katalogów"
+
     IDS_PRINTERS "Drukarki"
     IDS_FONTS "Czcionki"
     IDS_INSTALLNEWFONT "Zainstaluj nową czcionkę..."

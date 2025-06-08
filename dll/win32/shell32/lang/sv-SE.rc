@@ -976,7 +976,10 @@ BEGIN
     IDS_PRINT_VERB "Skriv ut"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u filer, %u mappar"
+
     IDS_PRINTERS "Skrivare"
     IDS_FONTS "Teckensnitt"
     IDS_INSTALLNEWFONT "Installera nytt teckensnitt..."
