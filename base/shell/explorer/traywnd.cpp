@@ -3301,6 +3301,16 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    // WM_GETMINMAXINFO
+    LRESULT OnGetMinMaxInfo(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        PMINMAXINFO pInfo = (PMINMAXINFO)lParam;
+        SIZE StartSize = m_StartButton.GetSize();
+        pInfo->ptMinTrackSize.x = StartSize.cx + 2 * GetSystemMetrics(SM_CXFRAME);
+        pInfo->ptMinTrackSize.y = StartSize.cy + 2 * GetSystemMetrics(SM_CYFRAME);
+        return 0;
+    }
+
     LRESULT OnRebarAutoSize(INT code, LPNMHDR nmhdr, BOOL& bHandled)
     {
 #if 0
@@ -3437,6 +3447,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
         MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+        MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
