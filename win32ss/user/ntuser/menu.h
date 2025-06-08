@@ -170,7 +170,7 @@ void MENU_EndMenu( PWND pwnd );
 void FASTCALL MENU_InitSysMenuPopup(PMENU menu, DWORD style, DWORD clsStyle, LONG HitTest );
 INT FASTCALL IntMenuItemFromPoint(PWND pWnd, HMENU hMenu, POINT ptScreen);
 
-BOOL
+BOOL FASTCALL
 IntTrackPopupMenuEx(
     _Inout_ PMENU menu,
     _In_ UINT wFlags,
