@@ -2197,7 +2197,6 @@ HRESULT CFSFolder::FormatSize(UINT64 size, LPWSTR Buf, UINT cchBuf)
 
 INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    SHFILEINFOW* psfi;
     RETRY_DATA* retryData;
     WCHAR szFormat[MAX_PATH];
     WCHAR szDrive[MAX_PATH];
