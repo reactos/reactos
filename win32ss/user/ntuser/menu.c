@@ -4571,7 +4571,7 @@ track_menu:
     MENU_ExitTracking( pwnd, FALSE, wFlags);
 }
 
-BOOL
+BOOL FASTCALL
 IntTrackPopupMenuEx(
     _Inout_ PMENU menu,
     _In_ UINT wFlags,
