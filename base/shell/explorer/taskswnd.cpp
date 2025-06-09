@@ -1944,7 +1944,7 @@ public:
             bFullOpening = ::EqualRect(&rc, &rcMon);
         }
 
-        ::PostMessage(pData->pTray->GetHWND(), TWM_NOTIFYFULLSCREENAPP, (WPARAM)hMonitor, bFullOpening);
+        ::PostMessageW(pData->pTray->GetHWND(), TWM_NOTIFYFULLSCREENAPP, (WPARAM)hMonitor, bFullOpening);
         return TRUE;
     }
 
