@@ -40,6 +40,7 @@
 #define TIMER_ID_VALIDATE_RUDE_APP_2 7
 #define TIMER_ID_VALIDATE_RUDE_APP_3 8
 #define TIMER_ID_VALIDATE_RUDE_APP_4 9
+#define VALIDATE_RUDE_INTERVAL 1000
 
 static BOOL
 SHELL_GetMonitorRect(
@@ -1991,7 +1992,7 @@ public:
     LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         // Start rude app validation
-        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, 1000, NULL);
+        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
         return 0;
     }
 
@@ -1999,7 +2000,7 @@ public:
     void OnWindowActivated(_In_ HWND hwndTarget)
     {
         // Start rude app validation
-        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, 1000, NULL);
+        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
     }
 
     // HSHELL_WINDOWDESTROYED
@@ -2191,7 +2192,7 @@ public:
                 }
                 KillTimer(wParam);
                 if (!hwndRude && wParam < TIMER_ID_VALIDATE_RUDE_APP_4)
-                    SetTimer(wParam + 1, 1000, NULL); // Next timer
+                    SetTimer(wParam + 1, VALIDATE_RUDE_INTERVAL, NULL); // Next timer
                 break;
             }
         }
