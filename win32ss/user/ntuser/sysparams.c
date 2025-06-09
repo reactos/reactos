@@ -643,6 +643,9 @@ SpiGetUserPref(DWORD dwMask, PVOID pvParam, FLONG fl)
     return SpiGetInt(pvParam, &iValue, fl);
 }
 
+HBITMAP
+IntStretchWallpaper(HBITMAP hBitmap);
+
 static
 UINT_PTR
 SpiSetWallpaper(PVOID pvParam, FLONG fl)
@@ -775,7 +778,16 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     }
 
     /* Set the new wallpaper */
-    gspv.hbmWallpaper = hbmp;
+    if (gspv.WallpaperMode == wmStretch ||
+        gspv.WallpaperMode == wmFit ||
+        gspv.WallpaperMode == wmFill)
+    {
+        gspv.hbmWallpaper = IntStretchWallpaper(hbmp);
+    }
+    else
+    {
+        gspv.hbmWallpaper = hbmp;
+    }
 
     NtUserRedrawWindow(UserGetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
