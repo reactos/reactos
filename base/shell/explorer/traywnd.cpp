@@ -17,12 +17,12 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 #define TIMER_ID_AUTOHIDE 1
 #define TIMER_ID_MOUSETRACK 2
 
-// Timer IDs for rude apps detection
-#define TIMER_ID_DETECT_RUDE_APP_0 5
-#define TIMER_ID_DETECT_RUDE_APP_1 6
-#define TIMER_ID_DETECT_RUDE_APP_2 7
-#define TIMER_ID_DETECT_RUDE_APP_3 8
-#define TIMER_ID_DETECT_RUDE_APP_4 9
+// Timer IDs for validating rude apps
+#define TIMER_ID_VALIDATE_RUDE_APP_0 5
+#define TIMER_ID_VALIDATE_RUDE_APP_1 6
+#define TIMER_ID_VALIDATE_RUDE_APP_2 7
+#define TIMER_ID_VALIDATE_RUDE_APP_3 8
+#define TIMER_ID_VALIDATE_RUDE_APP_4 9
 
 #define MOUSETRACK_INTERVAL 100
 #define AUTOHIDE_DELAY_HIDE 2000
@@ -3166,8 +3166,8 @@ HandleTrayContextMenu:
     // HSHELL_WINDOWACTIVATED, HSHELL_RUDEAPPACTIVATED
     void OnWindowActivated(_In_ HWND hwndTarget)
     {
-        // Start rude apps detection
-        SetTimer(TIMER_ID_DETECT_RUDE_APP_0, 1000, NULL);
+        // Start rude app validation
+        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, 1000, NULL);
     }
 
     // HSHELL_WINDOWDESTROYED
@@ -3186,8 +3186,8 @@ HandleTrayContextMenu:
     // WM_WINDOWPOSCHANGED
     LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        // Start rude apps detection
-        SetTimer(TIMER_ID_DETECT_RUDE_APP_0, 1000, NULL);
+        // Start rude app validation
+        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, 1000, NULL);
         return 0;
     }
 
@@ -3336,11 +3336,11 @@ HandleTrayContextMenu:
             case TIMER_ID_AUTOHIDE:
                 ProcessAutoHide();
                 break;
-            case TIMER_ID_DETECT_RUDE_APP_0:
-            case TIMER_ID_DETECT_RUDE_APP_1:
-            case TIMER_ID_DETECT_RUDE_APP_2:
-            case TIMER_ID_DETECT_RUDE_APP_3:
-            case TIMER_ID_DETECT_RUDE_APP_4:
+            case TIMER_ID_VALIDATE_RUDE_APP_0:
+            case TIMER_ID_VALIDATE_RUDE_APP_1:
+            case TIMER_ID_VALIDATE_RUDE_APP_2:
+            case TIMER_ID_VALIDATE_RUDE_APP_3:
+            case TIMER_ID_VALIDATE_RUDE_APP_4:
             {
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
@@ -3348,7 +3348,7 @@ HandleTrayContextMenu:
                 if (hwndRude && !(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
                     SwitchToThisWindow(hwndRude, TRUE);
                 KillTimer(wParam);
-                if (!hwndRude && wParam < TIMER_ID_DETECT_RUDE_APP_4)
+                if (!hwndRude && wParam < TIMER_ID_VALIDATE_RUDE_APP_4)
                     SetTimer(wParam + 1, 1000, NULL); // Next timer
                 break;
             }
