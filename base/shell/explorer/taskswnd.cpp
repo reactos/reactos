@@ -1923,6 +1923,7 @@ public:
         return FALSE; // Finish
     }
 
+    // Internal structure for FullScreenEnumProc
     typedef struct tagFULLSCREENDATA
     {
         const RECT *pRect;
