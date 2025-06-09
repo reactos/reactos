@@ -16,6 +16,14 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 
 #define TIMER_ID_AUTOHIDE 1
 #define TIMER_ID_MOUSETRACK 2
+
+// Timer IDs for rude apps detection
+#define TIMER_ID_DETECT_RUDE_APP_0 5
+#define TIMER_ID_DETECT_RUDE_APP_1 6
+#define TIMER_ID_DETECT_RUDE_APP_2 7
+#define TIMER_ID_DETECT_RUDE_APP_3 8
+#define TIMER_ID_DETECT_RUDE_APP_4 9
+
 #define MOUSETRACK_INTERVAL 100
 #define AUTOHIDE_DELAY_HIDE 2000
 #define AUTOHIDE_DELAY_SHOW 50
@@ -169,11 +177,81 @@ struct MINWNDPOS
 };
 CSimpleArray<MINWNDPOS>  g_MinimizedAll;
 
-/*
- * ITrayWindow
- */
+//************************************************************************
+// Fullscreen windows (a.k.a rude apps) checker
 
-const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
+static BOOL
+SHELL_GetMonitorRect(HMONITOR hMonitor, PRECT prcDest, BOOL bWorkAreaOnly)
+{
+    MONITORINFO mi = { sizeof(mi) };
+    if (!hMonitor || !GetMonitorInfoW(hMonitor, &mi))
+    {
+        if (prcDest)
+            SetRect(prcDest, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        return FALSE;
+    }
+
+    if (prcDest)
+        *prcDest = (bWorkAreaOnly ? mi.rcWork : mi.rcMonitor);
+    return TRUE;
+}
+
+static BOOL
+SHELL_IsParentOwnerOrSelf(HWND hwndTarget, HWND hWnd)
+{
+    for (;;)
+    {
+        if (!hWnd)
+            return E_FAIL;
+        if (hWnd == hwndTarget)
+            break;
+        hWnd = GetParent(hWnd);
+    }
+
+    return S_OK;
+}
+
+static BOOL
+SHELL_IsRudeWindowActive(HWND hWnd)
+{
+    HWND hwndFore = GetForegroundWindow();
+    DWORD dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
+    return dwThreadId == GetWindowThreadProcessId(hwndFore, NULL) ||
+           SHELL_IsParentOwnerOrSelf(hWnd, hwndFore) == S_OK;
+}
+
+static BOOL
+SHELL_IsRudeWindow(HMONITOR hMonitor, HWND hWnd, BOOL bDontCheckActive)
+{
+    if (!IsWindowVisible(hWnd) || hWnd == GetDesktopWindow())
+        return FALSE;
+
+    RECT rcMonitor;
+    SHELL_GetMonitorRect(hMonitor, &rcMonitor, FALSE);
+
+    DWORD style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+
+#define CHECK_STYLE (WS_THICKFRAME | WS_DLGFRAME | WS_BORDER)
+
+    RECT rcWnd;
+    if ((style & CHECK_STYLE) == CHECK_STYLE)
+    {
+        GetClientRect(hWnd, &rcWnd); // Ignore frame
+        MapWindowPoints(hWnd, NULL, (PPOINT)&rcWnd, sizeof(RECT) / sizeof(POINT));
+    }
+    else
+    {
+        GetWindowRect(hWnd, &rcWnd);
+    }
+
+    RECT rcUnion;
+    UnionRect(&rcUnion, &rcWnd, &rcMonitor);
+
+    return EqualRect(&rcUnion, &rcWnd) && (bDontCheckActive || SHELL_IsRudeWindowActive(hWnd));
+}
+
+//************************************************************************
+// CStartButton
 
 class CStartButton
     : public CWindowImpl<CStartButton>
@@ -300,8 +378,12 @@ public:
     BEGIN_MSG_MAP(CStartButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
     END_MSG_MAP()
-
 };
+
+//************************************************************************
+// CTrayWindow
+
+const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
 class CTrayWindow :
     public CComCoClass<CTrayWindow>,
@@ -362,7 +444,6 @@ public:
             DWORD InSizeMove : 1;
             DWORD IsDragging : 1;
             DWORD NewPosSize : 1;
-            DWORD IgnorePulse : 1;
         };
     };
 
@@ -391,7 +472,6 @@ public:
         ZeroMemory(&m_TraySize, sizeof(m_TraySize));
         ZeroMemory(&m_AutoHideOffset, sizeof(m_AutoHideOffset));
         ZeroMemory(&m_MouseTrackingInfo, sizeof(m_MouseTrackingInfo));
-        IgnorePulse = TRUE;
     }
 
     virtual ~CTrayWindow()
@@ -2392,12 +2472,8 @@ ChangePos:
         return TRUE;
     }
 
-#define TIMER_ID_IGNOREPULSERESET 888
-#define TIMER_IGNOREPULSERESET_TIMEOUT 200
-
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
         return 0;
     }
 
@@ -3035,36 +3111,90 @@ HandleTrayContextMenu:
         return (LRESULT)m_TaskSwitch;
     }
 
-    void RestoreMinimizedNonTaskWnds(BOOL bDestroyed, HWND hwndActive)
+    typedef struct tagRUDEAPPDATA
     {
-        for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
-        {
-            HWND hwnd = g_MinimizedAll[i].hwnd;
-            if (!hwnd || hwndActive == hwnd)
-                continue;
+        HMONITOR hTargetMonitor;
+        HWND hwndFound;
+        HWND hwndFirstCheck;
+    } RUDEAPPDATA, *PRUDEAPPDATA;
 
-            if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd) &&
-                (!IsTaskWnd(hwnd) || !::IsWindowEnabled(hwnd)))
-            {
-                ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl); // Restore
-            }
+    // Find any rude app
+    static BOOL CALLBACK
+    IsRudeEnumProc(HWND hwnd, LPARAM lParam)
+    {
+        PRUDEAPPDATA pData = (PRUDEAPPDATA)lParam;
+
+        HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        if (!hMon ||
+            (pData->hTargetMonitor && pData->hTargetMonitor != hMon) ||
+            !SHELL_IsRudeWindow(hMon, hwnd, (hwnd == pData->hwndFirstCheck)))
+        {
+            return TRUE; // Continue
         }
 
-        if (bDestroyed)
-            g_MinimizedAll.RemoveAll();
-        else
-            ::SetForegroundWindow(hwndActive);
+        pData->hwndFound = hwnd;
+        return FALSE; // Finish
     }
 
+    HWND _FindRudeApp(HWND hwndFirstCheck)
+    {
+        // Quick check
+        HMONITOR hMon = MonitorFromWindow(hwndFirstCheck, MONITOR_DEFAULTTONEAREST);
+        RUDEAPPDATA data = { hMon, NULL, hwndFirstCheck };
+        if (::IsWindow(hwndFirstCheck) && !IsRudeEnumProc(hwndFirstCheck, (LPARAM)&data))
+            return hwndFirstCheck;
+
+        // Slow check
+        ::EnumWindows(IsRudeEnumProc, (LPARAM)&data);
+
+        return data.hwndFound;
+    }
+
+    void OnWindowActivated(HWND hwndTarget)
+    {
+        // Start rude apps detection
+        SetTimer(TIMER_ID_DETECT_RUDE_APP_0, 1000, NULL);
+    }
+
+    void OnWindowDestroyed(HWND hwndTarget)
+    {
+        HWND hwndRude = _FindRudeApp(hwndTarget);
+        HandleFullScreenApp(hwndRude);
+        if (hwndRude)
+        {
+            DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
+            if (!(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
+                SwitchToThisWindow(hwndRude, TRUE); // Not rude!
+        }
+    }
+
+    // WM_WINDOWPOSCHANGED
+    LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        // Start rude apps detection
+        SetTimer(TIMER_ID_DETECT_RUDE_APP_0, 1000, NULL);
+        return 0;
+    }
+
+    // TWM_PULSE
     LRESULT OnPulse(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (IgnorePulse)
-            return 0;
-
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
-        IgnorePulse = TRUE;
-        RestoreMinimizedNonTaskWnds((BOOL)wParam, (HWND)lParam);
-        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
+        HWND hwndTarget = (HWND)lParam;
+        switch (wParam)
+        {
+            case 0:
+                break;
+            case HSHELL_RUDEAPPACTIVATED:
+            case HSHELL_WINDOWACTIVATED:
+                OnWindowActivated(hwndTarget);
+                break;
+            case HSHELL_WINDOWDESTROYED:
+                OnWindowDestroyed(hwndTarget);
+                break;
+            default:
+                WARN("%p\n", wParam);
+                break;
+        }
         return 0;
     }
 
@@ -3126,9 +3256,6 @@ HandleTrayContextMenu:
 
     VOID MinimizeAll(BOOL bShowDesktop = FALSE)
     {
-        IgnorePulse = TRUE;
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
-
         MINIMIZE_INFO info;
         info.hwndDesktop = GetDesktopWindow();;
         info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
@@ -3139,7 +3266,6 @@ HandleTrayContextMenu:
 
         ::SetForegroundWindow(m_DesktopWnd);
         ::SetFocus(m_DesktopWnd);
-        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
     }
 
     VOID ShowDesktop()
@@ -3149,9 +3275,6 @@ HandleTrayContextMenu:
 
     VOID RestoreAll()
     {
-        IgnorePulse = TRUE;
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
-
         for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
             HWND hwnd = g_MinimizedAll[i].hwnd;
@@ -3160,7 +3283,6 @@ HandleTrayContextMenu:
         }
 
         g_MinimizedAll.RemoveAll();
-        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
     }
 
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3201,10 +3323,17 @@ HandleTrayContextMenu:
         {
             ProcessAutoHide();
         }
-        else if (wParam == TIMER_ID_IGNOREPULSERESET)
+        else if (TIMER_ID_DETECT_RUDE_APP_0 <= wParam && wParam <= TIMER_ID_DETECT_RUDE_APP_4)
         {
-            KillTimer(TIMER_ID_IGNOREPULSERESET);
-            IgnorePulse = FALSE;
+            // Wait 5 seconds for rude app detection
+            HWND hwndRude = _FindRudeApp(NULL);
+            HandleFullScreenApp(hwndRude);
+            DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
+            if (hwndRude && !(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
+                SwitchToThisWindow(hwndRude, TRUE);
+            KillTimer(wParam);
+            if (!hwndRude && wParam < TIMER_ID_DETECT_RUDE_APP_4)
+                SetTimer(wParam + 1, 1000, NULL);
         }
         return 0;
     }
@@ -3430,6 +3559,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_MOVING, OnMoving)
         MESSAGE_HANDLER(WM_SIZING, OnSizing)
         MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChanging)
+        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
         MESSAGE_HANDLER(WM_ENTERSIZEMOVE, OnEnterSizeMove)
         MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
         MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnNcLButtonDown)
@@ -3572,6 +3702,56 @@ HandleTrayContextMenu:
         m_Position = (DWORD) -1;
     }
 
+    typedef struct tagFULLSCREENDATA
+    {
+        PRECT prc;
+        HMONITOR hTargetMonitor;
+        CTrayWindow *pThis;
+    } FULLSCREENDATA, *PFULLSCREENDATA;
+
+    // Notify ABN_FULLSCREENAPP for each monitor
+    static BOOL CALLBACK
+    FullScreenEnumProc(HMONITOR hMonitor, HDC hDC, LPRECT prc, LPARAM lParam)
+    {
+        PFULLSCREENDATA pData = (PFULLSCREENDATA)lParam;
+
+        BOOL bFullOpening = (pData->hTargetMonitor == hMonitor);
+        if (!bFullOpening && pData->prc)
+        {
+            RECT rc, rcMon;
+            SHELL_GetMonitorRect(hMonitor, &rcMon, FALSE);
+            ::IntersectRect(&rc, &rcMon, pData->prc);
+            bFullOpening = ::EqualRect(&rc, &rcMon);
+        }
+
+        pData->pThis->OnAppBarNotifyAll(hMonitor, NULL, ABN_FULLSCREENAPP, bFullOpening);
+        return TRUE;
+    }
+
+    void HandleFullScreenApp(HWND hwndRude)
+    {
+        // Notify ABN_FULLSCREENAPP for every monitor
+        RECT rc;
+        FULLSCREENDATA Data = { NULL };
+        if (hwndRude && ::GetWindowRect(hwndRude, &rc))
+        {
+            Data.prc = &rc;
+            Data.hTargetMonitor = ::MonitorFromWindow(hwndRude, MONITOR_DEFAULTTONULL);
+        }
+        Data.pThis = this;
+        ::EnumDisplayMonitors(NULL, NULL, FullScreenEnumProc, (LPARAM)&Data);
+
+        // Bring up / sink taskbar
+        UINT uFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREPOSITION;
+        if (hwndRude)
+            SetWindowPos(HWND_BOTTOM, 0, 0, 0, 0, uFlags);
+        else
+            SetWindowPos(HWND_TOP, 0, 0, 0, 0, uFlags);
+
+        // FIXME: NIN_BALLOONHIDE
+        // FIXME: NIN_POPUPCLOSE
+    }
+
     DECLARE_NOT_AGGREGATABLE(CTrayWindow)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -3620,6 +3800,9 @@ protected:
         SetWindowPos(hwndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 };
+
+//************************************************************************
+// CTrayWindowCtxMenu
 
 class CTrayWindowCtxMenu :
     public CComCoClass<CTrayWindowCtxMenu>,
