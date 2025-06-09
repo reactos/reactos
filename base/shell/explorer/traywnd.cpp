@@ -181,10 +181,13 @@ CSimpleArray<MINWNDPOS>  g_MinimizedAll;
 // Fullscreen windows (a.k.a. rude apps) checker
 
 static BOOL
-SHELL_GetMonitorRect(HMONITOR hMonitor, PRECT prcDest, BOOL bWorkAreaOnly)
+SHELL_GetMonitorRect(
+    _In_opt_ HMONITOR hMonitor,
+    _Out_opt_ PRECT prcDest,
+    _In_ BOOL bWorkAreaOnly)
 {
     MONITORINFO mi = { sizeof(mi) };
-    if (!hMonitor || !GetMonitorInfoW(hMonitor, &mi))
+    if (!hMonitor || !::GetMonitorInfoW(hMonitor, &mi))
     {
         if (prcDest)
             SetRect(prcDest, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
@@ -197,7 +200,7 @@ SHELL_GetMonitorRect(HMONITOR hMonitor, PRECT prcDest, BOOL bWorkAreaOnly)
 }
 
 static BOOL
-SHELL_IsParentOwnerOrSelf(HWND hwndTarget, HWND hWnd)
+SHELL_IsParentOwnerOrSelf(_In_ HWND hwndTarget, _In_ HWND hWnd)
 {
     for (;;)
     {
@@ -205,38 +208,38 @@ SHELL_IsParentOwnerOrSelf(HWND hwndTarget, HWND hWnd)
             return FALSE;
         if (hWnd == hwndTarget)
             break;
-        hWnd = GetParent(hWnd);
+        hWnd = ::GetParent(hWnd);
     }
     return TRUE;
 }
 
 static BOOL
-SHELL_IsRudeWindowActive(HWND hWnd)
+SHELL_IsRudeWindowActive(_In_ HWND hWnd)
 {
-    HWND hwndFore = GetForegroundWindow();
-    DWORD dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
-    return dwThreadId == GetWindowThreadProcessId(hwndFore, NULL) ||
+    HWND hwndFore = ::GetForegroundWindow();
+    DWORD dwThreadId = ::GetWindowThreadProcessId(hWnd, NULL);
+    return dwThreadId == ::GetWindowThreadProcessId(hwndFore, NULL) ||
            SHELL_IsParentOwnerOrSelf(hWnd, hwndFore);
 }
 
 static BOOL
-SHELL_IsRudeWindow(HMONITOR hMonitor, HWND hWnd, BOOL bDontCheckActive)
+SHELL_IsRudeWindow(_In_opt_ HMONITOR hMonitor, _In_ HWND hWnd, _In_ BOOL bDontCheckActive)
 {
-    if (!IsWindowVisible(hWnd) || hWnd == GetDesktopWindow())
+    if (!::IsWindowVisible(hWnd) || hWnd == ::GetDesktopWindow())
         return FALSE;
 
     RECT rcMonitor;
     SHELL_GetMonitorRect(hMonitor, &rcMonitor, FALSE);
 
-    DWORD style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+    DWORD style = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
 
 #define CHECK_STYLE (WS_THICKFRAME | WS_DLGFRAME | WS_BORDER)
 
     RECT rcWnd;
     if ((style & CHECK_STYLE) == CHECK_STYLE)
     {
-        GetClientRect(hWnd, &rcWnd); // Ignore frame
-        MapWindowPoints(hWnd, NULL, (PPOINT)&rcWnd, sizeof(RECT) / sizeof(POINT));
+        ::GetClientRect(hWnd, &rcWnd); // Ignore frame
+        ::MapWindowPoints(hWnd, NULL, (PPOINT)&rcWnd, sizeof(RECT) / sizeof(POINT));
     }
     else
     {
@@ -244,9 +247,9 @@ SHELL_IsRudeWindow(HMONITOR hMonitor, HWND hWnd, BOOL bDontCheckActive)
     }
 
     RECT rcUnion;
-    UnionRect(&rcUnion, &rcWnd, &rcMonitor);
+    ::UnionRect(&rcUnion, &rcWnd, &rcMonitor);
 
-    return EqualRect(&rcUnion, &rcWnd) && (bDontCheckActive || SHELL_IsRudeWindowActive(hWnd));
+    return ::EqualRect(&rcUnion, &rcWnd) && (bDontCheckActive || SHELL_IsRudeWindowActive(hWnd));
 }
 
 //************************************************************************
@@ -3110,6 +3113,7 @@ HandleTrayContextMenu:
         return (LRESULT)m_TaskSwitch;
     }
 
+    // Internal structure for FindRudeApp
     typedef struct tagRUDEAPPDATA
     {
         HMONITOR hTargetMonitor;
@@ -3119,7 +3123,7 @@ HandleTrayContextMenu:
 
     // Find any rude app
     static BOOL CALLBACK
-    IsRudeEnumProc(HWND hwnd, LPARAM lParam)
+    IsRudeEnumProc(_In_ HWND hwnd, _In_ LPARAM lParam)
     {
         PRUDEAPPDATA pData = (PRUDEAPPDATA)lParam;
 
@@ -3135,7 +3139,7 @@ HandleTrayContextMenu:
         return FALSE; // Finish
     }
 
-    HWND _FindRudeApp(HWND hwndFirstCheck)
+    HWND FindRudeApp(_In_opt_ HWND hwndFirstCheck)
     {
         // Quick check
         HMONITOR hMon = MonitorFromWindow(hwndFirstCheck, MONITOR_DEFAULTTONEAREST);
@@ -3149,15 +3153,17 @@ HandleTrayContextMenu:
         return data.hwndFound;
     }
 
-    void OnWindowActivated(HWND hwndTarget)
+    // HSHELL_WINDOWACTIVATED, HSHELL_RUDEAPPACTIVATED
+    void OnWindowActivated(_In_ HWND hwndTarget)
     {
         // Start rude apps detection
         SetTimer(TIMER_ID_DETECT_RUDE_APP_0, 1000, NULL);
     }
 
-    void OnWindowDestroyed(HWND hwndTarget)
+    // HSHELL_WINDOWDESTROYED
+    void OnWindowDestroyed(_In_ HWND hwndTarget)
     {
-        HWND hwndRude = _FindRudeApp(hwndTarget);
+        HWND hwndRude = FindRudeApp(hwndTarget);
         HandleFullScreenApp(hwndRude);
         if (hwndRude)
         {
@@ -3323,7 +3329,7 @@ HandleTrayContextMenu:
         else if (TIMER_ID_DETECT_RUDE_APP_0 <= wParam && wParam <= TIMER_ID_DETECT_RUDE_APP_4)
         {
             // Wait 5 seconds for rude app detection
-            HWND hwndRude = _FindRudeApp(NULL);
+            HWND hwndRude = FindRudeApp(NULL);
             HandleFullScreenApp(hwndRude);
             DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
             if (hwndRude && !(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
