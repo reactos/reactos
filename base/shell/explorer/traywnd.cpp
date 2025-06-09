@@ -190,7 +190,17 @@ SHELL_GetMonitorRect(
     if (!hMonitor || !::GetMonitorInfoW(hMonitor, &mi))
     {
         if (prcDest)
-            SetRect(prcDest, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        {
+            if (bWorkAreaOnly)
+            {
+                SystemParametersInfoW(SPI_GETWORKAREA, 0, prcDest, 0);
+            }
+            else
+            {
+                SetRect(prcDest, 0, 0,
+                        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+            }
+        }
         return FALSE;
     }
 
