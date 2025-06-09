@@ -134,8 +134,6 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
 #define TWM_SETZORDER (WM_USER + 338)
 #define TWM_PULSE (WM_USER + 400) // wParam: type of pulse. lParam: target window
-#define PULSE_ACTIVATE 0
-#define PULSE_DESTROYED 1
 
 extern const GUID IID_IShellDesktopTray;
 
