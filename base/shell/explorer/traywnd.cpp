@@ -202,13 +202,12 @@ SHELL_IsParentOwnerOrSelf(HWND hwndTarget, HWND hWnd)
     for (;;)
     {
         if (!hWnd)
-            return E_FAIL;
+            return FALSE;
         if (hWnd == hwndTarget)
             break;
         hWnd = GetParent(hWnd);
     }
-
-    return S_OK;
+    return TRUE;
 }
 
 static BOOL
@@ -217,7 +216,7 @@ SHELL_IsRudeWindowActive(HWND hWnd)
     HWND hwndFore = GetForegroundWindow();
     DWORD dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
     return dwThreadId == GetWindowThreadProcessId(hwndFore, NULL) ||
-           SHELL_IsParentOwnerOrSelf(hWnd, hwndFore) == S_OK;
+           SHELL_IsParentOwnerOrSelf(hWnd, hwndFore);
 }
 
 static BOOL
@@ -3704,7 +3703,7 @@ HandleTrayContextMenu:
 
     typedef struct tagFULLSCREENDATA
     {
-        PRECT prc;
+        const RECT *pRect;
         HMONITOR hTargetMonitor;
         CTrayWindow *pThis;
     } FULLSCREENDATA, *PFULLSCREENDATA;
@@ -3716,11 +3715,11 @@ HandleTrayContextMenu:
         PFULLSCREENDATA pData = (PFULLSCREENDATA)lParam;
 
         BOOL bFullOpening = (pData->hTargetMonitor == hMonitor);
-        if (!bFullOpening && pData->prc)
+        if (!bFullOpening && pData->pRect)
         {
             RECT rc, rcMon;
             SHELL_GetMonitorRect(hMonitor, &rcMon, FALSE);
-            ::IntersectRect(&rc, &rcMon, pData->prc);
+            ::IntersectRect(&rc, &rcMon, pData->pRect);
             bFullOpening = ::EqualRect(&rc, &rcMon);
         }
 
@@ -3732,10 +3731,10 @@ HandleTrayContextMenu:
     {
         // Notify ABN_FULLSCREENAPP for every monitor
         RECT rc;
-        FULLSCREENDATA Data = { NULL };
+        FULLSCREENDATA Data = { NULL, NULL, NULL };
         if (hwndRude && ::GetWindowRect(hwndRude, &rc))
         {
-            Data.prc = &rc;
+            Data.pRect = &rc;
             Data.hTargetMonitor = ::MonitorFromWindow(hwndRude, MONITOR_DEFAULTTONULL);
         }
         Data.pThis = this;
