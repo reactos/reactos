@@ -1674,7 +1674,6 @@ public:
         TaskItem = FindTaskItemByIndex((INT) wIndex);
         if (TaskItem != NULL)
         {
-            SendPulseToTray(0, TaskItem->hWnd);
             HandleTaskItemClick(TaskItem);
             return TRUE;
         }
