@@ -2183,9 +2183,12 @@ public:
             {
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
-                DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
-                if (hwndRude && !(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
-                    SwitchToThisWindow(hwndRude, TRUE);
+                if (hwndRude)
+                {
+                    DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
+                    if (!(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
+                        SwitchToThisWindow(hwndRude, TRUE);
+                }
                 KillTimer(wParam);
                 if (!hwndRude && wParam < TIMER_ID_VALIDATE_RUDE_APP_4)
                     SetTimer(wParam + 1, 1000, NULL); // Next timer
