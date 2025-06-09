@@ -178,7 +178,7 @@ struct MINWNDPOS
 CSimpleArray<MINWNDPOS>  g_MinimizedAll;
 
 //************************************************************************
-// Fullscreen windows (a.k.a rude apps) checker
+// Fullscreen windows (a.k.a. rude apps) checker
 
 static BOOL
 SHELL_GetMonitorRect(HMONITOR hMonitor, PRECT prcDest, BOOL bWorkAreaOnly)
