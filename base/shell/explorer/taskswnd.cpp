@@ -1472,10 +1472,10 @@ public:
         return TRUE;
     }
 
-    VOID SendPulseToTray(BOOL bDelete, HWND hwndActive)
+    VOID SendPulseToTray(UINT uType, HWND hwndActive)
     {
         HWND hwndTray = m_Tray->GetHWND();
-        ::SendMessage(hwndTray, TWM_PULSE, bDelete, (LPARAM)hwndActive);
+        ::PostMessage(hwndTray, TWM_PULSE, uType, (LPARAM)hwndActive);
     }
 
     static BOOL InvokeRegistryAppKeyCommand(UINT uAppCmd)
@@ -1554,19 +1554,19 @@ public:
             break;
 
         case HSHELL_WINDOWCREATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
+            SendPulseToTray((UINT)wParam, (HWND)lParam);
             AddTask((HWND) lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
-            SendPulseToTray(TRUE, (HWND)lParam);
+            SendPulseToTray((UINT)wParam, (HWND)lParam);
             DeleteTask((HWND)lParam);
             break;
 
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
+            SendPulseToTray((UINT)wParam, (HWND)lParam);
             ActivateTask((HWND)lParam);
             break;
 
@@ -1674,7 +1674,7 @@ public:
         TaskItem = FindTaskItemByIndex((INT) wIndex);
         if (TaskItem != NULL)
         {
-            SendPulseToTray(FALSE, TaskItem->hWnd);
+            SendPulseToTray(0, TaskItem->hWnd);
             HandleTaskItemClick(TaskItem);
             return TRUE;
         }
