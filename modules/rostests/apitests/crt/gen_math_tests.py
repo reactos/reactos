@@ -11,6 +11,7 @@ import struct
 import argparse
 import math
 import array
+import sys
 
 # Set precision (e.g., 100 decimal places)
 mp.dps = 100
@@ -176,6 +177,21 @@ def generate_exp_table(func_name = "exp", typecode = 'd'):
 def generate_expf_table():
     generate_exp_table("expf", 'f')
 
+def generate_log_table(func_name = "log", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.log, 0.0, sys.float_info.epsilon, 5, 1)
+    gen_table_range(func_name, typecode, mp.log, sys.float_info.epsilon, 0.99, 5, 1)
+    gen_table_range(func_name, typecode, mp.log, 1.0, 9.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log, 10.0, 99.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log, 100.0, 999.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log, 1000.0, 9999.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log, 10000.0, 99999.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log, 100000.0, 999999.9, 5, 1)
+    print("};\n")
+
+def generate_logf_table():
+    generate_log_table("logf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
@@ -188,6 +204,8 @@ TABLE_FUNCTIONS = {
     "cosf": generate_cosf_table,
     "exp": generate_exp_table,
     "expf": generate_expf_table,
+    "log": generate_log_table,
+    "logf": generate_logf_table,
 }
 
 def main():
