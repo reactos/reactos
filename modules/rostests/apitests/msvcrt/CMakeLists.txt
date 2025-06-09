@@ -27,6 +27,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/exp.c
     ../crt/fabs.c
     ../crt/floor.c
+    ../crt/log.c
     ../crt/mbstowcs.c
     ../crt/mbtowc.c
     ../crt/rand_s.c
