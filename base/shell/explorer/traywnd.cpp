@@ -3165,6 +3165,9 @@ HandleTrayContextMenu:
             case TIMER_ID_AUTOHIDE:
                 ProcessAutoHide();
                 break;
+            default:
+                WARN("wParam: %p\n", (void *)wParam);
+                break;
         }
         return 0;
     }
