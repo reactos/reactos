@@ -13,86 +13,11 @@ import "inputscope.idl";
     uuid(8b99712b-5815-4bcc-b9a9-53db1c8d6755),
     pointer_default(unique)
 ]
-interface ITfRangeAnchor : IUnknown
+interface ITfRangeAnchor : ITfRange
 {
-    HRESULT GetFormattedText(
-        [in] TfEditCookie ec,
-        [out] IDataObject **ppDataObject);
-    HRESULT GetEmbedded(
-        [in] TfEditCookie ec,
-        [in] REFGUID rguidService,
-        [in] REFIID riid,
-        [out] IUnknown **ppunk);
-    HRESULT InsertEmbedded(
-        [in] TfEditCookie ec,
-        [in] DWORD dwFlags,
-        [in] IDataObject *pDataObject);
-    HRESULT ShiftStart(
-        [in] TfEditCookie ec,
-        [in] LONG cchReq,
-        [out] LONG *pcch,
-        [in] const TF_HALTCOND *pHalt);
-    HRESULT ShiftEnd(
-        [in] TfEditCookie ec,
-        [in] LONG cchReq,
-        [out] LONG *pcch,
-        [in] const TF_HALTCOND *pHalt);
-    HRESULT ShiftStartToRange(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pRange,
-        [in] TfAnchor aPos);
-    HRESULT ShiftEndToRange(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pRange,
-        [in] TfAnchor aPos);
-    HRESULT ShiftStartRegion(
-        [in] TfEditCookie ec,
-        [in] TfShiftDir dir,
-        [out] BOOL *pfNoRegion);
-    HRESULT ShiftEndRegion(
-        [in] TfEditCookie ec,
-        [in] TfShiftDir dir,
-        [out] BOOL *pfNoRegion);
-    HRESULT IsEmpty(
-        [in] TfEditCookie ec,
-        [out] BOOL *pfEmpty);
-    HRESULT Collapse(
-        [in] TfEditCookie ec,
-        [in] TfAnchor aPos);
-    HRESULT IsEqualStart(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pWith,
-        [in] TfAnchor aPos,
-        [out] BOOL *pfEqual);
-    HRESULT IsEqualEnd(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pWith,
-        [in] TfAnchor aPos,
-        [out] BOOL *pfEqual);
-    HRESULT CompareStart(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pWith,
-        [in] TfAnchor aPos,
-        [out] LONG *plResult);
-    HRESULT CompareEnd(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pWith,
-        [in] TfAnchor aPos,
-        [out] LONG *plResult);
-    HRESULT AdjustForInsert(
-        [in] TfEditCookie ec,
-        [in] ULONG cchInsert,
-        [out] BOOL *pfInsertOk);
-    HRESULT GetGravity(
-        [out] TfGravity *pgStart,
-        [out] TfGravity *pgEnd);
-    HRESULT SetGravity(
-        [in] TfEditCookie ec,
-        [in] TfGravity gStart,
-        [in] TfGravity gEnd);
-    HRESULT Clone([out] ITfRange **ppClone);
-    HRESULT GetContext([out] ITfContext **ppContext);
-}
+    HRESULT GetExtent([out] IAnchor **ppStart, [out] IAnchor **ppEnd);
+    HRESULT SetExtent([in] IAnchor *pAnchorStart, [in] IAnchor *pAnchorEnd);
+};
 
 cpp_quote("BOOL WINAPI TF_InitSystem(VOID);")
 cpp_quote("BOOL WINAPI TF_UninitSystem(VOID);")
