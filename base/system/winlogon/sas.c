@@ -501,9 +501,14 @@ HandleLogon(
 
     /* Loading personal settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
+
     ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
-    if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+    if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
     {
+        HKEY hKey;
+        LONG lError;
+        BOOL bNoPopups = FALSE;
+
         if (Session->Profile == NULL
          || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
           && Session->Profile->dwType != WLX_PROFILE_TYPE_V2_0))
@@ -512,10 +517,28 @@ HandleLogon(
             goto cleanup;
         }
 
+        /* Check whether error messages may be displayed when loading the user profile */
+        lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                               L"System\\CurrentControlSet\\Control\\Windows",
+                               0,
+                               KEY_QUERY_VALUE,
+                               &hKey);
+        if (lError == ERROR_SUCCESS)
+        {
+            DWORD dwValue, dwType, cbData = sizeof(dwValue);
+            lError = RegQueryValueExW(hKey, L"NoPopupsOnBoot", NULL,
+                                      &dwType, (PBYTE)&dwValue, &cbData);
+            if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (cbData == sizeof(dwValue)))
+                bNoPopups = !!dwValue;
+
+            RegCloseKey(hKey);
+        }
+
         /* Load the user profile */
-        ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
-        ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-        ProfileInfo.dwFlags = 0;
+        ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
+        ProfileInfo.dwSize = sizeof(ProfileInfo);
+        if (bNoPopups)
+            ProfileInfo.dwFlags |= PI_NOUI;
         ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
         ProfileInfo.lpProfilePath = Session->Profile->pszProfile;
         if (Session->Profile->dwType >= WLX_PROFILE_TYPE_V2_0)
