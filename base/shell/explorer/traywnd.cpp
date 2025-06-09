@@ -3318,25 +3318,30 @@ HandleTrayContextMenu:
 
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (wParam == TIMER_ID_MOUSETRACK)
+        switch (wParam)
         {
-            ProcessMouseTracking();
-        }
-        else if (wParam == TIMER_ID_AUTOHIDE)
-        {
-            ProcessAutoHide();
-        }
-        else if (TIMER_ID_DETECT_RUDE_APP_0 <= wParam && wParam <= TIMER_ID_DETECT_RUDE_APP_4)
-        {
-            // Wait 5 seconds for rude app detection
-            HWND hwndRude = FindRudeApp(NULL);
-            HandleFullScreenApp(hwndRude);
-            DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
-            if (hwndRude && !(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
-                SwitchToThisWindow(hwndRude, TRUE);
-            KillTimer(wParam);
-            if (!hwndRude && wParam < TIMER_ID_DETECT_RUDE_APP_4)
-                SetTimer(wParam + 1, 1000, NULL);
+            case TIMER_ID_MOUSETRACK:
+                ProcessMouseTracking();
+                break;
+            case TIMER_ID_AUTOHIDE:
+                ProcessAutoHide();
+                break;
+            case TIMER_ID_DETECT_RUDE_APP_0:
+            case TIMER_ID_DETECT_RUDE_APP_1:
+            case TIMER_ID_DETECT_RUDE_APP_2:
+            case TIMER_ID_DETECT_RUDE_APP_3:
+            case TIMER_ID_DETECT_RUDE_APP_4:
+            {
+                HWND hwndRude = FindRudeApp(NULL);
+                HandleFullScreenApp(hwndRude);
+                DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
+                if (hwndRude && !(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
+                    SwitchToThisWindow(hwndRude, TRUE);
+                KillTimer(wParam);
+                if (!hwndRude && wParam < TIMER_ID_DETECT_RUDE_APP_4)
+                    SetTimer(wParam + 1, 1000, NULL);
+                break;
+            }
         }
         return 0;
     }
