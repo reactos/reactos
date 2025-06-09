@@ -3181,8 +3181,6 @@ HandleTrayContextMenu:
         HWND hwndTarget = (HWND)lParam;
         switch (wParam)
         {
-            case 0:
-                break;
             case HSHELL_RUDEAPPACTIVATED:
             case HSHELL_WINDOWACTIVATED:
                 OnWindowActivated(hwndTarget);
