@@ -3189,7 +3189,7 @@ HandleTrayContextMenu:
                 OnWindowDestroyed(hwndTarget);
                 break;
             default:
-                WARN("%p\n", wParam);
+                WARN("%u\n", (UINT)wParam);
                 break;
         }
         return 0;
