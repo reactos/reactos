@@ -198,7 +198,7 @@ InitMetrics(VOID)
         gpsi->dwSRVIFlags |= SRVINFO_IMM32; /* IME Support */
 
     if (UserIsCTFIMEEnabled())
-        gpsi->dwSRVIFlags |= SRVINFO_CICERO_ENABLED; /* Cicero support */
+        gpsi->dwSRVIFlags |= SRVINFO_CTFIME_ENABLED; /* CTF IME support */
 
     Setup = TRUE;
 
