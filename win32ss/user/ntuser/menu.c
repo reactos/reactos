@@ -6650,7 +6650,6 @@ NtUserTrackPopupMenuEx(
     USER_REFERENCE_ENTRY WndRef, MenuRef;
 
     TRACE("Enter NtUserTrackPopupMenuEx\n");
-    UserEnterExclusive();
 
     if (fuFlags & ~VALID_TPM_FLAGS)
     {
@@ -6658,6 +6657,8 @@ NtUserTrackPopupMenuEx(
         EngSetLastError(ERROR_INVALID_FLAGS);
         goto Exit;
     }
+
+    UserEnterExclusive();
 
     /* Parameter check */
     if (!(menu = UserGetMenuObject( hMenu )))
