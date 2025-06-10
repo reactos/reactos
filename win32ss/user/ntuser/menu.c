@@ -5763,56 +5763,55 @@ NtUserGetTitleBarInfo(
 {
     PWND WindowObject;
     TITLEBARINFO bartitleinfo;
-    BOOLEAN retValue = TRUE;
+    BOOLEAN retValue = FALSE;
 
     TRACE("Enter NtUserGetTitleBarInfo\n");
     UserEnterExclusive();
 
-    /* Vaildate the windows handle */
+    /* Validate the window handle */
     if (!(WindowObject = UserGetWindowObject(hwnd)))
     {
         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-        retValue = FALSE;
+        goto Exit;
     }
 
+    /* Copy user mode buffer to local buffer */
     _SEH2_TRY
     {
-        /* Copy our usermode buffer bti to local buffer bartitleinfo */
         ProbeForRead(bti, sizeof(TITLEBARINFO), 1);
         RtlCopyMemory(&bartitleinfo, bti, sizeof(TITLEBARINFO));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Fail copy the data */
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        retValue = FALSE;
+        _SEH2_YIELD(goto Exit);
     }
     _SEH2_END
 
     /* Get the tile bar info */
-    if (retValue)
+    retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
+    if (!retValue)
     {
-        retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
-        if (retValue)
-        {
-            _SEH2_TRY
-            {
-                /* Copy our buffer to user mode buffer bti */
-                ProbeForWrite(bti, sizeof(TITLEBARINFO), 1);
-                RtlCopyMemory(bti, &bartitleinfo, sizeof(TITLEBARINFO));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Fail copy the data */
-                EngSetLastError(ERROR_INVALID_PARAMETER);
-                retValue = FALSE;
-            }
-            _SEH2_END
-        }
+        // intGetTitleBarInfo() set LastError.
+        goto Exit;
     }
 
-    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n", retValue);
+    /* Copy local buffer back to user mode buffer */
+    _SEH2_TRY
+    {
+        ProbeForWrite(bti, sizeof(TITLEBARINFO), 1);
+        RtlCopyMemory(bti, &bartitleinfo, sizeof(TITLEBARINFO));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        retValue = FALSE;
+    }
+    _SEH2_END;
+
+Exit:
     UserLeave();
+    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n", retValue);
     return retValue;
 }
 
