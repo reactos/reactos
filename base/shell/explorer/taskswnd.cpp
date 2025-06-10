@@ -1946,9 +1946,10 @@ public:
             bFullOpening = ::EqualRect(&rc, &rcMon);
         }
 
-        // We have to communicate with tray somehow.
-        // I decided to use newly-defined TWM_NOTIFYFULLSCREENAPP message.
-        ::PostMessageW(pData->pTray->GetHWND(), TWM_NOTIFYFULLSCREENAPP, (WPARAM)hMonitor, bFullOpening);
+        // We have to communicate with tray somehow, in order to notify ABN_FULLSCREENAPP.
+        // I decided to use newly-defined TWM_NOTIFYFULLSCREENAPP message (ReactOS-specific).
+        HWND hwndTray = pData->pTray->GetHWND();
+        ::PostMessageW(hwndTray, TWM_NOTIFYFULLSCREENAPP, (WPARAM)hMonitor, bFullOpening);
         return TRUE;
     }
 
