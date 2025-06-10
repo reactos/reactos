@@ -1965,7 +1965,7 @@ public:
         Data.pTray = m_Tray;
         ::EnumDisplayMonitors(NULL, NULL, FullScreenEnumProc, (LPARAM)&Data);
 
-        // Bring up / sink taskbar
+        // Make the taskbar bottom or top
         UINT uFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREPOSITION;
         HWND hwndTray = m_Tray->GetHWND();
         if (hwndRude)
