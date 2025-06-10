@@ -1977,7 +1977,7 @@ public:
         ::EnumDisplayMonitors(NULL, NULL, FullScreenEnumProc, (LPARAM)&Data);
 
         // Make the taskbar bottom or top
-        UINT uFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREPOSITION;
+        UINT uFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER;
         HWND hwndTray = m_Tray->GetHWND();
         ::SetWindowPos(hwndTray, (hwndRude ? HWND_BOTTOM : HWND_TOP), 0, 0, 0, 0, uFlags);
 
