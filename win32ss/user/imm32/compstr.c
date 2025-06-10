@@ -44,7 +44,7 @@ Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPWSTR lpBuf, DWORD dwBufLen, UINT 
     DWORD ret = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, psz, cb / sizeof(CHAR),
                                     lpBuf, dwBufLen / sizeof(WCHAR));
     if (lpBuf && (ret + 1) * sizeof(WCHAR) <= dwBufLen)
-        lpBuf[ret] = 0;
+        lpBuf[ret] = UNICODE_NULL;
     return ret * sizeof(WCHAR);
 }
 
@@ -54,7 +54,7 @@ Imm32CompStrWideToAnsi(LPCWSTR psz, DWORD cb, LPSTR lpBuf, DWORD dwBufLen, UINT 
     DWORD ret = WideCharToMultiByte(uCodePage, 0, psz, cb / sizeof(WCHAR),
                                     lpBuf, dwBufLen / sizeof(CHAR), NULL, NULL);
     if (lpBuf && (ret + 1) * sizeof(CHAR) <= dwBufLen)
-        lpBuf[ret] = 0;
+        lpBuf[ret] = ANSI_NULL;
     return ret * sizeof(CHAR);
 }
 

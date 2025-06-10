@@ -263,7 +263,7 @@ ImmGetRegisterWordStyleA(
                                        NULL, NULL);
             if (cchA > _countof(pDestA->szDescription) - 1)
                 cchA = _countof(pDestA->szDescription) - 1;
-            pDestA->szDescription[cchA] = 0;
+            pDestA->szDescription[cchA] = ANSI_NULL;
         }
     }
 
@@ -325,7 +325,7 @@ ImmGetRegisterWordStyleW(
                                        pDestW->szDescription, _countof(pDestW->szDescription));
             if (cchW > _countof(pDestW->szDescription) - 1)
                 cchW = _countof(pDestW->szDescription) - 1;
-            pDestW->szDescription[cchW] = 0;
+            pDestW->szDescription[cchW] = UNICODE_NULL;
         }
     }
 

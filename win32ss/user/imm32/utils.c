@@ -100,7 +100,7 @@ LPWSTR Imm32WideFromAnsi(UINT uCodePage, LPCSTR pszA)
     if (IS_NULL_UNEXPECTEDLY(pszW))
         return NULL;
     cch = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pszA, cch, pszW, cch + 1);
-    pszW[cch] = 0;
+    pszW[cch] = UNICODE_NULL;
     return pszW;
 }
 
@@ -112,7 +112,7 @@ LPSTR Imm32AnsiFromWide(UINT uCodePage, LPCWSTR pszW)
     if (IS_NULL_UNEXPECTEDLY(pszA))
         return NULL;
     cchA = WideCharToMultiByte(uCodePage, 0, pszW, cchW, pszA, cchA, NULL, NULL);
-    pszA[cchA] = 0;
+    pszA[cchA] = ANSI_NULL;
     return pszA;
 }
 
@@ -170,7 +170,7 @@ VOID LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
                               plfW->lfFaceName, _countof(plfW->lfFaceName));
     if (cch > _countof(plfW->lfFaceName) - 1)
         cch = _countof(plfW->lfFaceName) - 1;
-    plfW->lfFaceName[cch] = 0;
+    plfW->lfFaceName[cch] = UNICODE_NULL;
 }
 
 VOID LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
@@ -182,7 +182,7 @@ VOID LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
                               plfA->lfFaceName, _countof(plfA->lfFaceName), NULL, NULL);
     if (cch > _countof(plfA->lfFaceName) - 1)
         cch = _countof(plfA->lfFaceName) - 1;
-    plfA->lfFaceName[cch] = 0;
+    plfA->lfFaceName[cch] = ANSI_NULL;
 }
 
 static PVOID FASTCALL DesktopPtrToUser(PVOID ptr)
@@ -504,7 +504,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     pchDest = (LPWSTR)((LPBYTE)pDest + pDest->dwStrOffset);
     cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen,
                                   pchDest, cchDest);
-    pchDest[cchDest] = 0;
+    pchDest[cchDest] = UNICODE_NULL;
 
     TRACE("cbDest: 0x%X\n", cbDest);
     return cbDest;
@@ -569,7 +569,7 @@ Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     pchDest = (LPSTR)pDest + pDest->dwStrOffset;
     cchDest = WideCharToMultiByte(uCodePage, 0, pchSrc, pSrc->dwStrLen,
                                   pchDest, cchDest, NULL, NULL);
-    pchDest[cchDest] = 0;
+    pchDest[cchDest] = ANSI_NULL;
 
     TRACE("cchDest: 0x%X\n", cchDest);
     return cbDest;

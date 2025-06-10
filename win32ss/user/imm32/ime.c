@@ -657,7 +657,7 @@ ImmGetDescriptionA(
     cch = WideCharToMultiByte(CP_ACP, 0, info.wszImeDescription, (INT)cch,
                               lpszDescription, uBufLen, NULL, NULL);
     if (uBufLen)
-        lpszDescription[cch] = 0;
+        lpszDescription[cch] = ANSI_NULL;
     return (UINT)cch;
 }
 
@@ -707,7 +707,7 @@ ImmGetIMEFileNameA(
     {
         ERR("\n");
         if (uBufLen > 0)
-            lpszFileName[0] = 0;
+            lpszFileName[0] = ANSI_NULL;
         return 0;
     }
 
@@ -721,7 +721,7 @@ ImmGetIMEFileNameA(
     if (cch > uBufLen - 1)
         cch = uBufLen - 1;
 
-    lpszFileName[cch] = 0;
+    lpszFileName[cch] = ANSI_NULL;
     return (UINT)cch;
 }
 
@@ -743,7 +743,7 @@ ImmGetIMEFileNameW(
     {
         ERR("\n");
         if (uBufLen > 0)
-            lpszFileName[0] = 0;
+            lpszFileName[0] = UNICODE_NULL;
         return 0;
     }
 
@@ -756,7 +756,7 @@ ImmGetIMEFileNameW(
     if (cch > uBufLen - 1)
         cch = uBufLen - 1;
 
-    lpszFileName[cch] = 0;
+    lpszFileName[cch] = UNICODE_NULL;
     return (UINT)cch;
 }
 
@@ -884,7 +884,7 @@ ImmEscapeA(
                 szW[_countof(szW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
                 WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, -1,
                                     lpData, MAX_IMM_FILENAME, NULL, NULL);
-                ((LPSTR)lpData)[MAX_IMM_FILENAME - 1] = 0;
+                ((LPSTR)lpData)[MAX_IMM_FILENAME - 1] = ANSI_NULL; // Avoid buffer overrun
             }
             break;
 
@@ -964,7 +964,7 @@ ImmEscapeW(
             ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szA, hKL);
             if (ret)
             {
-                szA[_countof(szA) - 1] = 0;
+                szA[_countof(szA) - 1] = ANSI_NULL; // Avoid buffer overrun
                 MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                     szA, -1, lpData, MAX_IMM_FILENAME);
                 ((LPWSTR)lpData)[MAX_IMM_FILENAME - 1] = UNICODE_NULL; /* Avoid buffer overrun */
@@ -975,7 +975,7 @@ ImmEscapeW(
         case IME_ESC_HANJA_MODE:
             WideCharToMultiByte(pImeDpi->uCodePage, 0,
                                 lpData, -1, szA, _countof(szA), NULL, NULL);
-            szA[_countof(szA) - 1] = 0;
+            szA[_countof(szA) - 1] = ANSI_NULL; // Avoid buffer overrun
             ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szA, hKL);
             break;
 

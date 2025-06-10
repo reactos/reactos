@@ -68,7 +68,7 @@ Imm32ImeMenuAnsiToWide(
     pItemW->dwItemData = pItemA->dwItemData;
     ret = MultiByteToWideChar(uCodePage, 0, pItemA->szString, -1,
                               pItemW->szString, _countof(pItemW->szString));
-    pItemW->szString[_countof(pItemW->szString) - 1] = UNICODE_NULL;
+    pItemW->szString[_countof(pItemW->szString) - 1] = UNICODE_NULL; // Avoid buffer overrun
     return !!ret;
 }
 
@@ -90,7 +90,7 @@ Imm32ImeMenuWideToAnsi(
     pItemA->hbmpItem = pItemW->hbmpItem;
     ret = WideCharToMultiByte(uCodePage, 0, pItemW->szString, -1,
                               pItemA->szString, _countof(pItemA->szString), NULL, NULL);
-    pItemA->szString[_countof(pItemA->szString) - 1] = ANSI_NULL;
+    pItemA->szString[_countof(pItemA->szString) - 1] = ANSI_NULL; // Avoid buffer overrun
     return !!ret;
 }
 
