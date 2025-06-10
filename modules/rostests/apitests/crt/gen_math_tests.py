@@ -192,6 +192,21 @@ def generate_log_table(func_name = "log", typecode = 'd'):
 def generate_logf_table():
     generate_log_table("logf", 'f')
 
+def generate_log10_table(func_name = "log10", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.log10, 0.0, sys.float_info.epsilon, 5, 1)
+    gen_table_range(func_name, typecode, mp.log10, sys.float_info.epsilon, 0.99, 5, 1)
+    gen_table_range(func_name, typecode, mp.log10, 1.0, 9.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log10, 10.0, 99.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log10, 100.0, 999.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log10, 1000.0, 9999.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log10, 10000.0, 99999.9, 5, 1)
+    gen_table_range(func_name, typecode, mp.log10, 100000.0, 999999.9, 5, 1)
+    print("};\n")
+
+def generate_log10f_table():
+    generate_log10_table("log10f", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
@@ -206,6 +221,8 @@ TABLE_FUNCTIONS = {
     "expf": generate_expf_table,
     "log": generate_log_table,
     "logf": generate_logf_table,
+    "log10": generate_log10_table,
+    "log10f": generate_log10f_table,
 }
 
 def main():

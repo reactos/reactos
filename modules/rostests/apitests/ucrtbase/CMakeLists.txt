@@ -18,6 +18,7 @@ list(APPEND SOURCE
     ../crt/cos.c
     ../crt/exp.c
     ../crt/log.c
+    ../crt/log10.c
     ../crt/round.c
     testlist.c
 )
