@@ -2202,9 +2202,11 @@ public:
             {
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
+
+                // Retry with next timer id if any when no rude detected
                 KillTimer(wParam);
                 if (!hwndRude && wParam < TIMER_ID_VALIDATE_RUDE_APP_4)
-                    SetTimer(wParam + 1, VALIDATE_RUDE_INTERVAL, NULL); // Next timer
+                    SetTimer(wParam + 1, VALIDATE_RUDE_INTERVAL, NULL);
                 break;
             }
         }
