@@ -24,6 +24,7 @@ extern void func_fabs(void);
 extern void func_floor(void);
 extern void func_fpcontrol(void);
 extern void func_log(void);
+extern void func_log10(void);
 extern void func_mbstowcs(void);
 extern void func_mbtowc(void);
 extern void func_rand_s(void);
@@ -73,6 +74,7 @@ const struct test winetest_testlist[] =
     { "fabs", func_fabs },
     { "floor", func_floor },
     { "log", func_log },
+    { "log10", func_log10 },
     { "mbstowcs", func_mbstowcs },
     { "mbtowc", func_mbtowc },
     { "rand_s", func_rand_s },
