@@ -6650,14 +6650,15 @@ NtUserTrackPopupMenuEx(
     USER_REFERENCE_ENTRY WndRef, MenuRef;
 
     TRACE("Enter NtUserTrackPopupMenuEx\n");
-    UserEnterExclusive();
 
     if (fuFlags & ~VALID_TPM_FLAGS)
     {
         ERR("TPME : Invalid flags 0x%X (valid flags are 0x%X)\n", fuFlags, VALID_TPM_FLAGS);
         EngSetLastError(ERROR_INVALID_FLAGS);
-        goto Exit;
+        goto Exit0;
     }
+
+    UserEnterExclusive();
 
     /* Parameter check */
     if (!(menu = UserGetMenuObject( hMenu )))
@@ -6694,7 +6695,9 @@ NtUserTrackPopupMenuEx(
     UserDerefObjectCo(pWnd);
 
 Exit:
-    TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n",Ret);
     UserLeave();
+
+Exit0:
+    TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n", Ret);
     return Ret;
 }
