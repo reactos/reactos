@@ -1933,7 +1933,7 @@ public:
 
     // Notify ABN_FULLSCREENAPP for each monitor
     static BOOL CALLBACK
-    FullScreenEnumProc(HMONITOR hMonitor, HDC hDC, LPRECT prc, LPARAM lParam)
+    FullScreenEnumProc(_In_ HMONITOR hMonitor, _In_opt_ HDC hDC, _In_ LPRECT prc, _In_ LPARAM lParam)
     {
         PFULLSCREENDATA pData = (PFULLSCREENDATA)lParam;
 
@@ -1953,7 +1953,7 @@ public:
         return TRUE;
     }
 
-    void HandleFullScreenApp(HWND hwndRude)
+    void HandleFullScreenApp(_In_opt_ HWND hwndRude)
     {
         // Notify ABN_FULLSCREENAPP for every monitor
         RECT rc;
