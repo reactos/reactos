@@ -20,6 +20,7 @@ list(APPEND SOURCE
     ../crt/log.c
     ../crt/log10.c
     ../crt/round.c
+    ../crt/sin.c
     testlist.c
 )
 
