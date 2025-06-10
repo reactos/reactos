@@ -1044,23 +1044,24 @@ NtQueryInformationProcess(
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
+#ifdef _WIN64
             /* Make sure the process isn't dying */
             if (ExAcquireRundownProtection(&Process->RundownProtect))
             {
                 /* Get the WOW64 process structure */
-#ifdef _WIN64
                 Wow64 = (ULONG_PTR)Process->Wow64Process;
-#else
-                Wow64 = 0;
-#endif
                 /* Release the lock */
                 ExReleaseRundownProtection(&Process->RundownProtect);
             }
+#endif
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
 
             /* Protect write with SEH */
             _SEH2_TRY
             {
-                /* Return whether or not we have a debug port */
+                /* Return the Wow64 process information */
                 *(PULONG_PTR)ProcessInformation = Wow64;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1069,9 +1070,6 @@ NtQueryInformationProcess(
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
-
-            /* Dereference the process */
-            ObDereferenceObject(Process);
             break;
         }
 
