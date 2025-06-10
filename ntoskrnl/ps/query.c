@@ -907,7 +907,7 @@ NtQueryInformationProcess(
 
         case ProcessDebugObjectHandle:
         {
-            HANDLE DebugPort = 0;
+            HANDLE DebugPort = NULL;
 
             if (ProcessInformationLength != sizeof(HANDLE))
             {
@@ -927,7 +927,7 @@ NtQueryInformationProcess(
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
-            /* Get the debug port */
+            /* Get the debug port. Continue even if this fails. */
             Status = DbgkOpenProcessDebugPort(Process, PreviousMode, &DebugPort);
 
             /* Let go of the process */
@@ -941,7 +941,11 @@ NtQueryInformationProcess(
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Get the exception code */
+                if (DebugPort)
+                    ObCloseHandle(DebugPort, PreviousMode);
+
+                /* Get the exception code.
+                 * Note: This overwrites any previous failure status. */
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
