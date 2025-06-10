@@ -30,7 +30,6 @@ BOOL FASTCALL UserIsIMMEnabled(VOID)
 
 BOOL FASTCALL UserIsCiceroEnabled(VOID)
 {
-    // "LoadCTFIME" is a dummy setting. Real setting is "DontLoadCTFIME".
     if (RegGetSectionDWORD(L"IMM", L"DontLoadCTFIME", FALSE))
         return FALSE;
 
