@@ -28,7 +28,7 @@ BOOL FASTCALL UserIsIMMEnabled(VOID)
     return !!RegGetSectionDWORD(L"IMM", L"LoadIMM", FALSE);
 }
 
-BOOL FASTCALL UserIsCiceroEnabled(VOID)
+BOOL FASTCALL UserIsCTFIMEEnabled(VOID)
 {
     if (RegGetSectionDWORD(L"IMM", L"DontLoadCTFIME", FALSE))
         return FALSE;
@@ -197,7 +197,7 @@ InitMetrics(VOID)
     if (UserIsIMMEnabled())
         gpsi->dwSRVIFlags |= SRVINFO_IMM32; /* IME Support */
 
-    if (UserIsCiceroEnabled())
+    if (UserIsCTFIMEEnabled())
         gpsi->dwSRVIFlags |= SRVINFO_CICERO_ENABLED; /* Cicero support */
 
     Setup = TRUE;
