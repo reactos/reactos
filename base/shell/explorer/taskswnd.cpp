@@ -1994,6 +1994,7 @@ public:
     {
         // Start rude app validation
         SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
+        bHandled = FALSE;
         return 0;
     }
 
