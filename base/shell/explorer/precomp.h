@@ -173,7 +173,7 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_ExecContextMenuCmd(p,a) (p)->lpVtbl->ExecContextMenuCmd(p,a)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)
 #define ITrayWindow_IsTaskWnd(p,a)          (p)->lpVtbl->IsTaskWnd(p,a)
-#define ITrayWindow_NotifyFullScreenToAppBars(p,a,b) (p)->lpVtbl->(p,a,b)
+#define ITrayWindow_NotifyFullScreenToAppBars(p,a,b) (p)->lpVtbl->NotifyFullScreenToAppBars(p,a,b)
 #endif
 
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray);
