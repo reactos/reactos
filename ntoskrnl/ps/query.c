@@ -889,6 +889,9 @@ NtQueryInformationProcess(
             /* Set the length required and validate it */
             Length = sizeof(SECTION_IMAGE_INFORMATION);
 
+            /* Indicate success */
+            Status = STATUS_SUCCESS;
+
             /* Enter SEH to protect write */
             _SEH2_TRY
             {
@@ -900,9 +903,6 @@ NtQueryInformationProcess(
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
-
-            /* Indicate success */
-            Status = STATUS_SUCCESS;
             break;
 
         case ProcessDebugObjectHandle:
