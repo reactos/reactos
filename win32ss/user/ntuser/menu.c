@@ -6580,12 +6580,10 @@ NtUserThunkedMenuItemInfo(
    BOOL Ret = FALSE;
 
    TRACE("Enter NtUserThunkedMenuItemInfo\n");
+
+   lstrCaption.Buffer = NULL;
+
    UserEnterExclusive();
-
-   /* lpszCaption may be NULL, check for it and call RtlInitUnicodeString()
-      if bInsert == TRUE call UserInsertMenuItem() else UserSetMenuItemInfo()   */
-
-   RtlInitEmptyUnicodeString(&lstrCaption, NULL, 0);
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
@@ -6610,19 +6608,21 @@ NtUserThunkedMenuItemInfo(
    if (bInsert)
    {
       Ret = UserInsertMenuItem(Menu, uItem, fByPosition, lpmii, &lstrCaption);
-      goto Cleanup;
+   }
+   else
+   {
+      Ret = UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption);
    }
 
-   Ret = UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption);
-
 Cleanup:
+   UserLeave();
+
    if (lstrCaption.Buffer)
    {
       ReleaseCapturedUnicodeString(&lstrCaption, UserMode);
    }
 
    TRACE("Leave NtUserThunkedMenuItemInfo, ret=%i\n", Ret);
-   UserLeave();
    return Ret;
 }
 
