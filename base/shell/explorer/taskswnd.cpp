@@ -2198,7 +2198,7 @@ public:
         case TIMER_ID_VALIDATE_RUDE_APP_2:
         case TIMER_ID_VALIDATE_RUDE_APP_3:
         case TIMER_ID_VALIDATE_RUDE_APP_4:
-            // Activation of rude app might take some time after HSHELL_...ACTIVATED.
+            // Real activation of rude app might take some time after HSHELL_...ACTIVATED.
             // Wait up to 5 seconds with validating the rude app at each second.
             {
                 HWND hwndRude = FindRudeApp(NULL);
