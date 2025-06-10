@@ -3038,7 +3038,10 @@ HandleTrayContextMenu:
                               SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 
-    // TWM_NOTIFYFULLSCREENAPP
+    // TWM_NOTIFYFULLSCREENAPP (ReactOS-specific)
+    // @param wParam The target monitor.
+    // @param lParam A BOOL flag that indicates whether the rude app is shown or not.
+    // @return Zero.
     LRESULT OnNotifyFullScreenApp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HMONITOR hMonitor = (HMONITOR)wParam;
@@ -3166,7 +3169,7 @@ HandleTrayContextMenu:
                 ProcessAutoHide();
                 break;
             default:
-                WARN("wParam: %p\n", (void *)wParam);
+                WARN("Invalid timer ID: %u\n", (UINT)wParam);
                 break;
         }
         return 0;
