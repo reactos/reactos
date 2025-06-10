@@ -16,7 +16,6 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 
 #define TIMER_ID_AUTOHIDE 1
 #define TIMER_ID_MOUSETRACK 2
-
 #define MOUSETRACK_INTERVAL 100
 #define AUTOHIDE_DELAY_HIDE 2000
 #define AUTOHIDE_DELAY_SHOW 50
@@ -170,8 +169,11 @@ struct MINWNDPOS
 };
 CSimpleArray<MINWNDPOS>  g_MinimizedAll;
 
-//************************************************************************
-// CStartButton
+/*
+ * ITrayWindow
+ */
+
+const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
 class CStartButton
     : public CWindowImpl<CStartButton>
@@ -299,11 +301,6 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
     END_MSG_MAP()
 };
-
-//************************************************************************
-// CTrayWindow
-
-const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
 class CTrayWindow :
     public CComCoClass<CTrayWindow>,
@@ -3586,9 +3583,6 @@ protected:
         SetWindowPos(hwndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 };
-
-//************************************************************************
-// CTrayWindowCtxMenu
 
 class CTrayWindowCtxMenu :
     public CComCoClass<CTrayWindowCtxMenu>,
