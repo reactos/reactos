@@ -55,18 +55,14 @@ SHELL_GetMonitorRect(
     MONITORINFO mi = { sizeof(mi) };
     if (!hMonitor || !::GetMonitorInfoW(hMonitor, &mi))
     {
-        if (prcDest)
-        {
-            if (bWorkAreaOnly)
-            {
-                ::SystemParametersInfoW(SPI_GETWORKAREA, 0, prcDest, 0);
-            }
-            else
-            {
-                ::SetRect(prcDest, 0, 0,
-                          GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-            }
-        }
+        if (!prcDest)
+            return FALSE;
+
+        if (bWorkAreaOnly)
+            ::SystemParametersInfoW(SPI_GETWORKAREA, 0, prcDest, 0);
+        else
+            ::SetRect(prcDest, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+
         return FALSE;
     }
 
