@@ -59,12 +59,12 @@ SHELL_GetMonitorRect(
         {
             if (bWorkAreaOnly)
             {
-                SystemParametersInfoW(SPI_GETWORKAREA, 0, prcDest, 0);
+                ::SystemParametersInfoW(SPI_GETWORKAREA, 0, prcDest, 0);
             }
             else
             {
-                SetRect(prcDest, 0, 0,
-                        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+                ::SetRect(prcDest, 0, 0,
+                          GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
             }
         }
         return FALSE;
@@ -119,7 +119,7 @@ SHELL_IsRudeWindow(_In_opt_ HMONITOR hMonitor, _In_ HWND hWnd, _In_ BOOL bDontCh
     }
     else
     {
-        GetWindowRect(hWnd, &rcWnd);
+        ::GetWindowRect(hWnd, &rcWnd);
     }
 
     RECT rcUnion;
@@ -1923,7 +1923,7 @@ public:
     {
         PRUDEAPPDATA pData = (PRUDEAPPDATA)lParam;
 
-        HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        HMONITOR hMon = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
         if (!hMon ||
             (pData->hTargetMonitor && pData->hTargetMonitor != hMon) ||
             !SHELL_IsRudeWindow(hMon, hwnd, (hwnd == pData->hwndFirstCheck)))
@@ -1987,7 +1987,7 @@ public:
         {
             DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
             if (!(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
-                SwitchToThisWindow(hwndRude, TRUE);
+                ::SwitchToThisWindow(hwndRude, TRUE);
         }
 
         // FIXME: NIN_BALLOONHIDE
