@@ -3161,6 +3161,7 @@ HandleTrayContextMenu:
                 break;
             default:
                 WARN("Invalid timer ID: %u\n", (UINT)wParam);
+                bHandled = FALSE;
                 break;
         }
         return 0;
