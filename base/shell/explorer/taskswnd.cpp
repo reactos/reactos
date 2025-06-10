@@ -35,11 +35,15 @@
 // Fullscreen windows (a.k.a. rude apps) checker
 
 // Timer IDs for validating rude apps
-#define TIMER_ID_VALIDATE_RUDE_APP_0 5
-#define TIMER_ID_VALIDATE_RUDE_APP_1 6
-#define TIMER_ID_VALIDATE_RUDE_APP_2 7
-#define TIMER_ID_VALIDATE_RUDE_APP_3 8
-#define TIMER_ID_VALIDATE_RUDE_APP_4 9
+enum
+{
+    TIMER_ID_VALIDATE_RUDE_APP_0 = 5,
+    TIMER_ID_VALIDATE_RUDE_APP_1,
+    TIMER_ID_VALIDATE_RUDE_APP_2,
+    TIMER_ID_VALIDATE_RUDE_APP_3,
+    TIMER_ID_VALIDATE_RUDE_APP_4,
+};
+
 #define VALIDATE_RUDE_INTERVAL 1000
 
 static BOOL
@@ -1559,6 +1563,12 @@ public:
     {
         m_IsDestroying = TRUE;
 
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_0);
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_1);
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_2);
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_3);
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_4);
+
         /* Unregister the shell hook */
         RegisterShellHook(m_hWnd, FALSE);
 
@@ -1974,6 +1984,13 @@ public:
         else
             ::SetWindowPos(hwndTray, HWND_TOP, 0, 0, 0, 0, uFlags);
 
+        if (hwndRude)
+        {
+            DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
+            if (!(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
+                SwitchToThisWindow(hwndRude, TRUE);
+        }
+
         // FIXME: NIN_BALLOONHIDE
         // FIXME: NIN_POPUPCLOSE
     }
@@ -2015,12 +2032,6 @@ public:
     {
         HWND hwndRude = FindRudeApp(hwndTarget);
         HandleFullScreenApp(hwndRude);
-        if (hwndRude)
-        {
-            DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
-            if (!(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
-                SwitchToThisWindow(hwndRude, TRUE); // Not rude!
-        }
     }
 
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -2193,12 +2204,6 @@ public:
             {
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
-                if (hwndRude)
-                {
-                    DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
-                    if (!(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
-                        SwitchToThisWindow(hwndRude, TRUE);
-                }
                 KillTimer(wParam);
                 if (!hwndRude && wParam < TIMER_ID_VALIDATE_RUDE_APP_4)
                     SetTimer(wParam + 1, VALIDATE_RUDE_INTERVAL, NULL); // Next timer
