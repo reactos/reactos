@@ -2200,6 +2200,7 @@ public:
         case TIMER_ID_VALIDATE_RUDE_APP_4:
             // Real activation of rude app might take some time after HSHELL_...ACTIVATED.
             // Wait up to 5 seconds with validating the rude app at each second.
+            // This is the same behavior as Windows Explorer.
             {
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
