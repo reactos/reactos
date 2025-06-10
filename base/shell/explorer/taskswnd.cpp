@@ -1946,6 +1946,8 @@ public:
             bFullOpening = ::EqualRect(&rc, &rcMon);
         }
 
+        // We have to communicate with tray somehow.
+        // I decided to use newly-defined TWM_NOTIFYFULLSCREENAPP message.
         ::PostMessageW(pData->pTray->GetHWND(), TWM_NOTIFYFULLSCREENAPP, (WPARAM)hMonitor, bFullOpening);
         return TRUE;
     }
@@ -1992,7 +1994,8 @@ public:
     // WM_WINDOWPOSCHANGED
     LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        // Start rude app validation
+        // Re-start rude app validation
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_0);
         SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
         bHandled = FALSE;
         return 0;
@@ -2001,7 +2004,8 @@ public:
     // HSHELL_WINDOWACTIVATED, HSHELL_RUDEAPPACTIVATED
     void OnWindowActivated(_In_ HWND hwndTarget)
     {
-        // Start rude app validation
+        // Re-start rude app validation
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_0);
         SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
     }
 

@@ -133,7 +133,7 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
 #define TWM_SETZORDER (WM_USER + 338)
-#define TWM_NOTIFYFULLSCREENAPP (WM_USER + 999) /* ReactOS-specific */
+#define TWM_NOTIFYFULLSCREENAPP (WM_USER + 777) /* ReactOS-specific */
 
 extern const GUID IID_IShellDesktopTray;
 
