@@ -525,7 +525,8 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IME Compatibility",,0x0000001
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","IME File",2,"msctfime.ime"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,0 ; "LoadIMM" means Cicero despite its name
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadCTFIME",0x00010003,0
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadCTFIME",0x00010003,0 ; Dummy setting, use DontLoadCTFIME
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","DontLoadCTFIME",0x00010003,1 ; Real setting
 
 ; DOS Device ports
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","COM1:",2,"9600,n,8,1"
