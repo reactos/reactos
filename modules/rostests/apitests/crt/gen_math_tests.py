@@ -207,6 +207,18 @@ def generate_log10_table(func_name = "log10", typecode = 'd'):
 def generate_log10f_table():
     generate_log10_table("log10f", 'f')
 
+def generate_sin_table(func_name = "sin", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.sin, -10000*mp.pi, -10200*mp.pi, 9, 1)
+    gen_table_range(func_name, typecode, mp.sin, -100*mp.pi, -98*mp.pi, 9, 1)
+    gen_table_range(func_name, typecode, mp.sin, -math.pi, math.pi, 57, 1)
+    gen_table_range(func_name, typecode, mp.sin, 2000*mp.pi, 2002*mp.pi, 9, 1)
+    gen_table_range(func_name, typecode, mp.sin, 2000000*mp.pi, 2070000*mp.pi, 9, 1)
+    print("};\n")
+
+def generate_sinf_table():
+    generate_sin_table("sinf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
@@ -223,6 +235,8 @@ TABLE_FUNCTIONS = {
     "logf": generate_logf_table,
     "log10": generate_log10_table,
     "log10f": generate_log10f_table,
+    "sin": generate_sin_table,
+    "sinf": generate_sinf_table,
 }
 
 def main():

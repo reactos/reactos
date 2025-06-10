@@ -33,6 +33,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/mbtowc.c
     ../crt/rand_s.c
     ../crt/setjmp.c
+    ../crt/sin.c
     ../crt/sprintf.c
     ../crt/static_construct.cpp
     ../crt/static_init.c
