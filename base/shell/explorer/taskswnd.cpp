@@ -1979,10 +1979,7 @@ public:
         // Make the taskbar bottom or top
         UINT uFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREPOSITION;
         HWND hwndTray = m_Tray->GetHWND();
-        if (hwndRude)
-            ::SetWindowPos(hwndTray, HWND_BOTTOM, 0, 0, 0, 0, uFlags);
-        else
-            ::SetWindowPos(hwndTray, HWND_TOP, 0, 0, 0, 0, uFlags);
+        ::SetWindowPos(hwndTray, (hwndRude ? HWND_BOTTOM : HWND_TOP), 0, 0, 0, 0, uFlags);
 
         if (hwndRude)
         {
