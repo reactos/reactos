@@ -133,7 +133,7 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
 #define TWM_SETZORDER (WM_USER + 338)
-#define TWM_NOTIFYFULLSCREENAPP (WM_USER + 777) /* ReactOS-specific */
+#define TWM_NotifyFullScreenToAppBars (WM_USER + 777) /* ReactOS-specific */
 
 extern const GUID IID_IShellDesktopTray;
 
@@ -154,6 +154,7 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
     STDMETHOD_(BOOL, ExecContextMenuCmd) (THIS_ UINT uiCmd) PURE;
     STDMETHOD_(BOOL, Lock) (THIS_ BOOL bLock) PURE;
     STDMETHOD_(BOOL, IsTaskWnd) (THIS_ HWND hWnd) PURE;
+    STDMETHOD_(HRESULT, NotifyFullScreenToAppBars)(THIS_ HMONITOR hMonitor, BOOL bFullOpening) PURE;
 };
 #undef INTERFACE
 
@@ -172,6 +173,7 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_ExecContextMenuCmd(p,a) (p)->lpVtbl->ExecContextMenuCmd(p,a)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)
 #define ITrayWindow_IsTaskWnd(p,a)          (p)->lpVtbl->IsTaskWnd(p,a)
+#define ITrayWindow_NotifyFullScreenToAppBars(p,a,b) (p)->lpVtbl->(p,a,b)
 #endif
 
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray);

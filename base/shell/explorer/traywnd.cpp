@@ -3035,16 +3035,10 @@ HandleTrayContextMenu:
                               SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 
-    // TWM_NOTIFYFULLSCREENAPP (ReactOS-specific)
-    // @param wParam The target monitor.
-    // @param lParam A BOOL flag that indicates whether the rude app is shown or not.
-    // @return Zero.
-    LRESULT OnNotifyFullScreenApp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    STDMETHODIMP NotifyFullScreenToAppBars(HMONITOR hMonitor, BOOL bFullOpening) override
     {
-        HMONITOR hMonitor = (HMONITOR)wParam;
-        BOOL bFullOpening = (BOOL)lParam;
         OnAppBarNotifyAll(hMonitor, NULL, ABN_FULLSCREENAPP, bFullOpening);
-        return 0;
+        return S_OK;
     }
 
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3416,7 +3410,6 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)
         MESSAGE_HANDLER(TWM_SETZORDER, OnSetZOrder)
-        MESSAGE_HANDLER(TWM_NOTIFYFULLSCREENAPP, OnNotifyFullScreenApp)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
