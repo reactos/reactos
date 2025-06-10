@@ -1133,18 +1133,22 @@ NtQueryInformationProcess(
             Status = STATUS_INVALID_INFO_CLASS;
     }
 
-    /* Protect write with SEH */
-    _SEH2_TRY
+    /* Check if caller wants the return length and if there is one */
+    if (ReturnLength != NULL && Length != 0)
     {
-        /* Check if caller wanted return length */
-        if ((ReturnLength) && (Length)) *ReturnLength = Length;
+        /* Protect write with SEH */
+        _SEH2_TRY
+        {
+            *ReturnLength = Length;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Get exception code.
+             * Note: This overwrites any previous failure status. */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get exception code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
 
     return Status;
 }
