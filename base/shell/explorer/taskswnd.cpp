@@ -1559,15 +1559,17 @@ public:
         return TRUE;
     }
 
+    void KillValidateRudeTimers()
+    {
+        for (INT id = TIMER_ID_VALIDATE_RUDE_APP_0; id <= TIMER_ID_VALIDATE_RUDE_APP_4; ++id)
+            KillTimer(id);
+    }
+
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         m_IsDestroying = TRUE;
 
-        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_0);
-        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_1);
-        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_2);
-        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_3);
-        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_4);
+        KillValidateRudeTimers();
 
         /* Unregister the shell hook */
         RegisterShellHook(m_hWnd, FALSE);
@@ -2010,7 +2012,7 @@ public:
     LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         // Re-start rude app validation
-        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_0);
+        KillValidateRudeTimers();
         SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
         bHandled = FALSE;
         return 0;
@@ -2020,7 +2022,7 @@ public:
     void OnWindowActivated(_In_ HWND hwndTarget)
     {
         // Re-start rude app validation
-        KillTimer(TIMER_ID_VALIDATE_RUDE_APP_0);
+        KillValidateRudeTimers();
         SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
     }
 
