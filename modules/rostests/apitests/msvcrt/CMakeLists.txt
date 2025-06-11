@@ -9,6 +9,7 @@ endif()
 list(APPEND SOURCE_CRT_TESTS
     ../crt/fpcontrol.c
     ../crt/_finite.c
+    ../crt/_isnan.c
     ../crt/_mbsncmp.c
     ../crt/_mbsstr.c
     ../crt/_snprintf.c
