@@ -63,6 +63,18 @@ typedef struct _TESTENTRY_FLT
     unsigned long result;
 } TESTENTRY_FLT;
 
+typedef struct _TESTENTRY_DBL_INT
+{
+    unsigned long long x;
+    int result;
+} TESTENTRY_DBL_INT;
+
+typedef struct _TESTENTRY_FLT_INT
+{
+    unsigned long x;
+    int result;
+} TESTENTRY_FLT_INT;
+
 typedef struct _PRECISE_VALUE
 {
     double rounded;
