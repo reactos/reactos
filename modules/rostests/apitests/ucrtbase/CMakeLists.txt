@@ -11,6 +11,7 @@ add_definitions(
 )
 
 list(APPEND SOURCE
+    ../crt/_finite.c
     ../crt/acos.c
     ../crt/asin.c
     ../crt/atan.c
