@@ -105,9 +105,8 @@ SHELL_IsRudeWindow(_In_opt_ HMONITOR hMonitor, _In_ HWND hWnd, _In_ BOOL bDontCh
 
     DWORD style = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
 
-#define CHECK_STYLE (WS_THICKFRAME | WS_DLGFRAME | WS_BORDER)
-
     RECT rcWnd;
+    enum { CHECK_STYLE = WS_THICKFRAME | WS_DLGFRAME | WS_BORDER };
     if ((style & CHECK_STYLE) == CHECK_STYLE)
     {
         ::GetClientRect(hWnd, &rcWnd); // Ignore frame
