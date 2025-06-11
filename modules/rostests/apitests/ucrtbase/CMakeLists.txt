@@ -22,6 +22,7 @@ list(APPEND SOURCE
     ../crt/round.c
     ../crt/sin.c
     ../crt/sqrt.c
+    ../crt/tan.c
     testlist.c
 )
 

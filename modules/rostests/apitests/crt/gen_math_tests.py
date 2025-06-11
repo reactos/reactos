@@ -233,6 +233,19 @@ def generate_sqrt_table(func_name = "sqrt", typecode = 'd'):
 def generate_sqrtf_table():
     generate_sqrt_table("sqrtf", 'f')
 
+def generate_tan_table(func_name = "tan", typecode = 'd'):
+    gen_table_header(func_name)
+    gen_table_range(func_name, typecode, mp.tan, -0.5 * mp.pi, -0.499, 23, 1)
+    gen_table_range(func_name, typecode, mp.tan, -0.5, -2 * sys.float_info.epsilon, 23, 1)
+    gen_table_range(func_name, typecode, mp.tan, -sys.float_info.epsilon, sys.float_info.epsilon, 7, 1)
+    gen_table_range(func_name, typecode, mp.tan, 2 * sys.float_info.epsilon, 0.5, 23, 1)
+    gen_table_range(func_name, typecode, mp.tan, 0.501, 0.5 * mp.pi, 23, 1)
+    gen_table_range(func_name, typecode, mp.tan, 10.501 * mp.pi, 11.499 * mp.pi, 5, 1)
+    print("};\n")
+
+def generate_tanf_table():
+    generate_tan_table("tanf", 'f')
+
 # Dictionary to map math function names to generator functions
 TABLE_FUNCTIONS = {
     "acos": generate_acos_table,
@@ -253,6 +266,8 @@ TABLE_FUNCTIONS = {
     "sinf": generate_sinf_table,
     "sqrt": generate_sqrt_table,
     "sqrtf": generate_sqrtf_table,
+    "tan": generate_tan_table,
+    "tanf": generate_tanf_table,
 }
 
 def main():
