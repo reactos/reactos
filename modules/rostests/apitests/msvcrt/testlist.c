@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func__finite(void);
 extern void func__mbsncmp(void);
 extern void func__mbsstr(void);
 extern void func__snprintf(void);
@@ -57,6 +58,7 @@ extern void func_splitpath(void);
 
 const struct test winetest_testlist[] =
 {
+    { "_finite", func__finite },
     { "_mbsncmp", func__mbsncmp },
     { "_mbsstr", func__mbsstr },
     { "_snprintf", func__snprintf },
