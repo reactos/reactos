@@ -42,6 +42,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/strlen.c
     ../crt/strtoul.c
     ../crt/system.c
+    ../crt/tan.c
     ../crt/wcstombs.c
     ../crt/wcstoul.c
     ../crt/wctomb.c
