@@ -37,6 +37,7 @@ extern void func_strcpy(void);
 extern void func_strlen(void);
 extern void func_strtoul(void);
 extern void func_system(void);
+extern void func_tan(void);
 extern void func_wcstombs(void);
 extern void func_wcstoul(void);
 extern void func_wctomb(void);
@@ -88,6 +89,7 @@ const struct test winetest_testlist[] =
     { "strlen", func_strlen },
     { "strtoul", func_strtoul },
     { "system", func_system },
+    { "tan", func_tan },
     { "wcstombs", func_wcstombs },
     { "wcstoul", func_wcstoul },
     { "wctomb", func_wctomb },
