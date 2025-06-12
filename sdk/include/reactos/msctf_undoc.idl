@@ -19,6 +19,16 @@ interface ITfRangeAnchor : ITfRange
     HRESULT SetExtent([in] IAnchor *pAnchorStart, [in] IAnchor *pAnchorEnd);
 };
 
+[
+    object,
+    uuid(4e3d2d48-3c17-457d-84a1-f209476de897),
+    pointer_default(unique)
+]
+interface ITfDisplayAttributeCollectionMgr : IUnknown
+{
+    HRESULT UnknownMethod([in] DWORD unused); /* FIXME */
+};
+
 cpp_quote("BOOL WINAPI TF_InitSystem(VOID);")
 cpp_quote("BOOL WINAPI TF_UninitSystem(VOID);")
 cpp_quote("HRESULT WINAPI TF_GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMgr);")

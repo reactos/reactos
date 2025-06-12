@@ -8,7 +8,6 @@ list(APPEND SOURCE
     categorymgr.c
     compartmentmgr.c
     context.c
-    displayattributemgr.c
     documentmgr.c
     inputprocessor.c
     msctf.c
@@ -17,6 +16,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    displayattributemgr.cpp
     langbarmgr.cpp
     mlng.cpp
     range.cpp
