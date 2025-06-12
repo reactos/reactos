@@ -3847,30 +3847,28 @@ NtQuerySection(
     {
         case SectionBasicInformation:
         {
-            SECTION_BASIC_INFORMATION Sbi;
+            SECTION_BASIC_INFORMATION Sbi = { 0 };
 
             Sbi.Size = Section->SizeOfSection;
             Sbi.BaseAddress = (PVOID)Section->Address.StartingVpn;
 
-            Sbi.Attributes = 0;
             if (Section->u.Flags.File)
                 Sbi.Attributes |= SEC_FILE;
             if (Section->u.Flags.Image)
                 Sbi.Attributes |= SEC_IMAGE;
-
-            /* Those are not set *************
             if (Section->u.Flags.Commit)
                 Sbi.Attributes |= SEC_COMMIT;
             if (Section->u.Flags.Reserve)
                 Sbi.Attributes |= SEC_RESERVE;
-            **********************************/
+            if (Section->u.Flags.Based)
+                Sbi.Attributes |= SEC_BASED;
 
             if (Section->u.Flags.Image)
             {
                 if (MiIsRosSectionObject(Section))
                 {
                     PMM_IMAGE_SECTION_OBJECT ImageSectionObject = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment);
-                    Sbi.BaseAddress = 0;
+                    Sbi.BaseAddress = NULL;
                     Sbi.Size.QuadPart = ImageSectionObject->ImageInformation.ImageFileSize;
                 }
                 else
@@ -3886,7 +3884,7 @@ NtQuerySection(
             }
             else
             {
-                DPRINT1("Unimplemented code path\n");
+                Sbi.BaseAddress = Section->Segment->BasedAddress;
             }
 
             _SEH2_TRY
