@@ -1914,10 +1914,8 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 
     SetCaretPos(pt.x, pt.y);
 
-    if (!ImmIsIME(hKL))
-        return;
-
-    EDIT_ImmSetCompositionWindow(es, pt);
+    if (IS_IME_HKL(hKL))
+        EDIT_ImmSetCompositionWindow(es, pt);
 #else
 	TRACE("%d - %dx%d\n", pos, (short)LOWORD(res), (short)HIWORD(res));
 	SetCaretPos((short)LOWORD(res), (short)HIWORD(res));
@@ -4038,7 +4036,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 		ShowCaret(es->hwndSelf);
 	}
 #ifdef __REACTOS__
-    if (ImmIsIME(GetKeyboardLayout(0)))
+    if (IS_IME_HKL(GetKeyboardLayout(0)))
     {
         LOGFONTW lf;
         HIMC hIMC = ImmGetContext(es->hwndSelf);
@@ -5387,7 +5385,8 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	/* IME messages to make the edit control IME aware */
 	case WM_IME_SETCONTEXT:
 #ifdef __REACTOS__
-        if (FALSE) /* FIXME: Condition */
+        /* Korean doesn't want composition window */
+        if (PRIMARYLANGID(LOWORD(GetKeyboardLayout(0))) == LANG_KOREAN)
             lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
 
         if (wParam)
@@ -5410,8 +5409,10 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	case WM_IME_STARTCOMPOSITION:
 #ifdef __REACTOS__
-        if (FALSE) /* FIXME: Condition */
+        /* Korean doesn't want composition window */
+        if (PRIMARYLANGID(LOWORD(GetKeyboardLayout(0))) == LANG_KOREAN)
             return TRUE;
+
         result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
 #else
 		es->composition_start = es->selection_end;
