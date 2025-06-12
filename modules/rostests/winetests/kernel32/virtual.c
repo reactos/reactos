@@ -4007,8 +4007,8 @@ static void test_NtQuerySection(void)
     ok(info.image.MaximumStackSize == nt->OptionalHeader.SizeOfStackReserve, "expected %#lx, got %#lx\n", (SIZE_T)nt->OptionalHeader.SizeOfStackReserve, info.image.MaximumStackSize);
     ok(info.image.CommittedStackSize == nt->OptionalHeader.SizeOfStackCommit, "expected %#lx, got %#lx\n", (SIZE_T)nt->OptionalHeader.SizeOfStackCommit, info.image.CommittedStackSize);
     ok(info.image.SubSystemType == nt->OptionalHeader.Subsystem, "expected %#x, got %#x\n", nt->OptionalHeader.Subsystem, info.image.SubSystemType);
-    ok(info.image.SubsystemVersionLow == nt->OptionalHeader.MinorSubsystemVersion, "expected %#x, got %#x\n", nt->OptionalHeader.MinorSubsystemVersion, info.image.SubsystemVersionLow);
-    ok(info.image.SubsystemVersionHigh == nt->OptionalHeader.MajorSubsystemVersion, "expected %#x, got %#x\n", nt->OptionalHeader.MajorSubsystemVersion, info.image.SubsystemVersionHigh);
+    ok(info.image.MinorSubsystemVersion == nt->OptionalHeader.MinorSubsystemVersion, "expected %#x, got %#x\n", nt->OptionalHeader.MinorSubsystemVersion, info.image.MinorSubsystemVersion);
+    ok(info.image.MajorSubsystemVersion == nt->OptionalHeader.MajorSubsystemVersion, "expected %#x, got %#x\n", nt->OptionalHeader.MajorSubsystemVersion, info.image.MajorSubsystemVersion);
     ok(info.image.ImageCharacteristics == nt->FileHeader.Characteristics, "expected %#x, got %#x\n", nt->FileHeader.Characteristics, info.image.ImageCharacteristics);
     ok(info.image.DllCharacteristics == nt->OptionalHeader.DllCharacteristics, "expected %#x, got %#x\n", nt->OptionalHeader.DllCharacteristics, info.image.DllCharacteristics);
     ok(info.image.Machine == nt->FileHeader.Machine, "expected %#x, got %#x\n", nt->FileHeader.Machine, info.image.Machine);

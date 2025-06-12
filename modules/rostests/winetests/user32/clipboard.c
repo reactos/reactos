@@ -26,10 +26,6 @@
 #include "winuser.h"
 #include "winnls.h"
 
-#ifdef __REACTOS__
-#define WM_CLIPBOARDUPDATE 0x031D
-#endif
-
 static BOOL (WINAPI *pAddClipboardFormatListener)(HWND hwnd);
 static BOOL (WINAPI *pRemoveClipboardFormatListener)(HWND hwnd);
 static BOOL (WINAPI *pGetUpdatedClipboardFormats)( UINT *formats, UINT count, UINT *out_count );

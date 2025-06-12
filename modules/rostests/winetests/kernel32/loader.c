@@ -379,12 +379,12 @@ static BOOL query_image_section( int id, const char *dll_name, const IMAGE_NT_HE
         ok( image.SubSystemType == nt_header->OptionalHeader.Subsystem,
             "%u: SubSystemType wrong %08x / %08x\n", id,
             image.SubSystemType, nt_header->OptionalHeader.Subsystem );
-    ok( image.SubsystemVersionLow == nt_header->OptionalHeader.MinorSubsystemVersion,
+    ok( image.MinorSubsystemVersion == nt_header->OptionalHeader.MinorSubsystemVersion,
         "%u: SubsystemVersionLow wrong %04x / %04x\n", id,
-        image.SubsystemVersionLow, nt_header->OptionalHeader.MinorSubsystemVersion );
-    ok( image.SubsystemVersionHigh == nt_header->OptionalHeader.MajorSubsystemVersion,
+        image.MinorSubsystemVersion, nt_header->OptionalHeader.MinorSubsystemVersion );
+    ok( image.MajorSubsystemVersion == nt_header->OptionalHeader.MajorSubsystemVersion,
         "%u: SubsystemVersionHigh wrong %04x / %04x\n", id,
-        image.SubsystemVersionHigh, nt_header->OptionalHeader.MajorSubsystemVersion );
+        image.MajorSubsystemVersion, nt_header->OptionalHeader.MajorSubsystemVersion );
     ok( image.ImageCharacteristics == nt_header->FileHeader.Characteristics,
         "%u: ImageCharacteristics wrong %04x / %04x\n", id,
         image.ImageCharacteristics, nt_header->FileHeader.Characteristics );
@@ -3652,7 +3652,7 @@ static void test_InMemoryOrderModuleList(void)
     PEB_LDR_DATA *ldr = NtCurrentTeb()->Peb->LdrData;
     LIST_ENTRY *entry1, *mark1 = &ldr->InLoadOrderModuleList;
     LIST_ENTRY *entry2, *mark2 = &ldr->InMemoryOrderModuleList;
-    LDR_MODULE *module1, *module2;
+    LDR_DATA_TABLE_ENTRY *module1, *module2;
 
     ok(ldr->Initialized == TRUE, "expected TRUE, got %u\n", ldr->Initialized);
 
@@ -3660,8 +3660,8 @@ static void test_InMemoryOrderModuleList(void)
          entry1 != mark1 && entry2 != mark2;
          entry1 = entry1->Flink, entry2 = entry2->Flink)
     {
-        module1 = CONTAINING_RECORD(entry1, LDR_MODULE, InLoadOrderModuleList);
-        module2 = CONTAINING_RECORD(entry2, LDR_MODULE, InMemoryOrderModuleList);
+        module1 = CONTAINING_RECORD(entry1, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        module2 = CONTAINING_RECORD(entry2, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
         ok(module1 == module2, "expected module1 == module2, got %p and %p\n", module1, module2);
     }
     ok(entry1 == mark1, "expected entry1 == mark1, got %p and %p\n", entry1, mark1);
@@ -3703,13 +3703,13 @@ static void test_HashLinks(void)
     static WCHAR kernel32W[] = {'k','e','r','n','e','l','3','2','.','d','l','l',0};
 
     LIST_ENTRY *hash_map, *entry, *mark;
-    LDR_MODULE *module;
+    LDR_DATA_TABLE_ENTRY *module;
     BOOL found;
 
     entry = &NtCurrentTeb()->Peb->LdrData->InLoadOrderModuleList;
     entry = entry->Flink;
 
-    module = CONTAINING_RECORD(entry, LDR_MODULE, InLoadOrderModuleList);
+    module = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
     entry = module->HashLinks.Blink;
 
     hash_map = entry - hash_basename(module->BaseDllName.Buffer);
@@ -3718,7 +3718,7 @@ static void test_HashLinks(void)
     found = FALSE;
     for (entry = mark->Flink; entry != mark; entry = entry->Flink)
     {
-        module = CONTAINING_RECORD(entry, LDR_MODULE, HashLinks);
+        module = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, HashLinks);
         if (!lstrcmpiW(module->BaseDllName.Buffer, ntdllW))
         {
             found = TRUE;
@@ -3731,7 +3731,7 @@ static void test_HashLinks(void)
     found = FALSE;
     for (entry = mark->Flink; entry != mark; entry = entry->Flink)
     {
-        module = CONTAINING_RECORD(entry, LDR_MODULE, HashLinks);
+        module = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, HashLinks);
         if (!lstrcmpiW(module->BaseDllName.Buffer, kernel32W))
         {
             found = TRUE;
