@@ -103,7 +103,7 @@ extern "C" {
         UNICODE_STRING      ShellInfo;
         UNICODE_STRING      RuntimeInfo;
         RTL_DRIVE_LETTER_CURDIR DLCurrentDirectory[0x20];
-    } RTL_USER_PROCESS_PARAMETERS, * PRTL_USER_PROCESS_PARAMETERS;
+            } RTL_USER_PROCESS_PARAMETERS, * PRTL_USER_PROCESS_PARAMETERS;
 
     typedef struct _PEB_LDR_DATA
     {
@@ -150,6 +150,12 @@ extern "C" {
         struct _TEB_ACTIVE_FRAME* Previous;
         TEB_ACTIVE_FRAME_CONTEXT* Context;
     } TEB_ACTIVE_FRAME, * PTEB_ACTIVE_FRAME;
+
+    typedef struct _TEB_FLS_DATA
+    {
+        LIST_ENTRY      fls_list_entry;
+        void          **fls_data_chunks[8];
+    } TEB_FLS_DATA, *PTEB_FLS_DATA;
 
     typedef struct _PEB
     {                                                                 /* win32/win64 */
@@ -293,7 +299,7 @@ extern "C" {
         ULONG                        HeapVirtualAffinity;               /* fa8/17b0 */
         PVOID                        CurrentTransactionHandle;          /* fac/17b8 */
         TEB_ACTIVE_FRAME* ActiveFrame;                       /* fb0/17c0 */
-        PVOID* FlsSlots;                          /* fb4/17c8 */
+        TEB_FLS_DATA* FlsSlots;                          /* fb4/17c8 */
     } TEB, * PTEB;
 
     NTSYSAPI PVOID     WINAPI RtlAllocateHeap(HANDLE, ULONG, SIZE_T) __WINE_ALLOC_SIZE(3);

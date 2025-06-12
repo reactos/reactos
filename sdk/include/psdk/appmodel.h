@@ -37,6 +37,32 @@ typedef enum AppPolicyWindowingModel
     AppPolicyWindowingModel_ClassicPhone = 3
 } AppPolicyWindowingModel;
 
+typedef struct PACKAGE_VERSION
+{
+    union
+    {
+        UINT64 Version;
+        struct
+        {
+            USHORT Revision;
+            USHORT Build;
+            USHORT Minor;
+            USHORT Major;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+} PACKAGE_VERSION;
+
+typedef struct PACKAGE_ID
+{
+    UINT32          reserved;
+    UINT32          processorArchitecture;
+    PACKAGE_VERSION version;
+    PWSTR           name;
+    PWSTR           publisher;
+    PWSTR           resourceId;
+    PWSTR           publisherId;
+} PACKAGE_ID;
+
 WINBASEAPI
 _Check_return_
 _Success_(return == ERROR_SUCCESS)

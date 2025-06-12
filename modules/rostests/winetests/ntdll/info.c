@@ -635,21 +635,21 @@ static void test_query_cache(void)
     for (i = sizeof(buffer); i>= expected; i--)
     {
         ReturnLength = 0xdeadbeef;
-        status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+        status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
         ok(!status && (ReturnLength == expected),
             "%d: got 0x%x and %u (expected STATUS_SUCCESS and %u)\n", i, status, ReturnLength, expected);
     }
 
     /* buffer too small for the full result.
        Up to win7, the function succeeds with a partial result. */
-    status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+    status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
     if (!status)
     {
         expected = offsetof(SYSTEM_CACHE_INFORMATION, MinimumWorkingSet);
         for (; i>= expected; i--)
         {
             ReturnLength = 0xdeadbeef;
-            status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+            status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
             ok(!status && (ReturnLength == expected),
                 "%d: got 0x%x and %u (expected STATUS_SUCCESS and %u)\n", i, status, ReturnLength, expected);
         }
@@ -657,7 +657,7 @@ static void test_query_cache(void)
 
     /* buffer too small for the result, this call will always fail */
     ReturnLength = 0xdeadbeef;
-    status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+    status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH &&
         ((ReturnLength == expected) || broken(!ReturnLength) || broken(ReturnLength == 0xfffffff0)),
         "%d: got 0x%x and %u (expected STATUS_INFO_LENGTH_MISMATCH and %u)\n", i, status, ReturnLength, expected);
@@ -665,7 +665,7 @@ static void test_query_cache(void)
     if (0) {
         /* this crashes on some vista / win7 machines */
         ReturnLength = 0xdeadbeef;
-        status = pNtQuerySystemInformation(SystemCacheInformation, sci, 0, &ReturnLength);
+        status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, 0, &ReturnLength);
         ok( status == STATUS_INFO_LENGTH_MISMATCH &&
             ((ReturnLength == expected) || broken(!ReturnLength) || broken(ReturnLength == 0xfffffff0)),
             "0: got 0x%x and %u (expected STATUS_INFO_LENGTH_MISMATCH and %u)\n", status, ReturnLength, expected);
@@ -1987,7 +1987,7 @@ static void test_queryvirtualmemory(void)
     module = GetModuleHandleA( "ntdll.dll" );
     memset(msn, 0, sizeof(*msn));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(*msn), &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemoryMappedFilenameInformation, msn, sizeof(*msn), &readcount);
     ok( status == STATUS_BUFFER_OVERFLOW, "Expected STATUS_BUFFER_OVERFLOW, got %08x\n", status);
     ok( readcount > 0, "Expected readcount to be > 0\n");
 
@@ -1995,7 +1995,7 @@ static void test_queryvirtualmemory(void)
     module = GetModuleHandleA( "ntdll.dll" );
     memset(msn, 0, sizeof(*msn));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(*msn) - 1, &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemoryMappedFilenameInformation, msn, sizeof(*msn) - 1, &readcount);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
     ok( readcount > 0, "Expected readcount to be > 0\n");
 
@@ -2004,7 +2004,7 @@ static void test_queryvirtualmemory(void)
     memset(msn, 0x55, sizeof(*msn));
     memset(buffer_name, 0x77, sizeof(buffer_name));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(buffer_name), &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemoryMappedFilenameInformation, msn, sizeof(buffer_name), &readcount);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( readcount > 0, "Expected readcount to be > 0\n");
     trace ("Section Name: %s\n", wine_dbgstr_w(msn->SectionFileName.Buffer));
@@ -2016,7 +2016,7 @@ static void test_queryvirtualmemory(void)
     trace("Check section name of non mapped memory\n");
     memset(msn, 0, sizeof(buffer_name));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemorySectionName, msn, sizeof(buffer_name), &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemoryMappedFilenameInformation, msn, sizeof(buffer_name), &readcount);
     ok( status == STATUS_INVALID_ADDRESS, "Expected STATUS_INVALID_ADDRESS, got %08x\n", status);
     ok( readcount == 0 || broken(readcount != 0) /* wow64 */, "Expected readcount to be 0\n");
 
