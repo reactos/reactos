@@ -43,7 +43,6 @@ WinHookProc(INT code, WPARAM wParam, LPARAM lParam)
         case HCBT_ACTIVATE:
         case HCBT_SETFOCUS:
         {
-            OutputDebugStringA("HCBT_ACTIVATE / HCBT_SETFOCUS\n");
             HWND hwndFocus = (HWND)wParam;
             if (hwndFocus && hwndFocus != g_pShared->hKbSwitchWnd)
                 PostMessageToMainWnd(WM_WINDOW_ACTIVATE, (WPARAM)hwndFocus, 0);
@@ -64,13 +63,11 @@ ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
     {
         case HSHELL_WINDOWACTIVATED:
         {
-            OutputDebugStringA("HSHELL_WINDOWACTIVATED\n");
             PostMessageToMainWnd(WM_WINDOW_ACTIVATE, wParam, 0);
             break;
         }
         case HSHELL_LANGUAGE:
         {
-            OutputDebugStringA("HSHELL_LANGUAGE\n");
             PostMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
             break;
         }

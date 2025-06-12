@@ -41,6 +41,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(internat);
 #define TIMER_ID_LANG_CHANGED_DELAYED 0x10000
 #define TIMER_LANG_CHANGED_DELAY 200
 
+#define IME_HKL_MASK 0xF000FFFF
+#define IS_KOREAN_IME_HKL(hKL) ((HandleToUlong(hKL) & IME_HKL_MASK) == 0xE0000412)
+
 #define MAX_KLS 64
 
 typedef BOOL (APIENTRY *FN_KbSwitchSetHooks)(BOOL bDoHook);
@@ -189,7 +192,7 @@ static HKL GetActiveKL(VOID)
 {
     /* FIXME: Get correct console window's HKL when console window */
     HWND hwndTarget = GetTargetWindow(NULL);
-    ERR("hwndTarget: %p\n", hwndTarget);
+    TRACE("hwndTarget: %p\n", hwndTarget);
     DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
     return GetKeyboardLayout(dwTID);
 }
@@ -490,7 +493,7 @@ LoadDefaultPenIcon(PCWSTR szImeFile, HKL hKL)
     DWORD dwImeStatus = GetImeStatus(hwndTarget);
 
     INT nIconID = -1;
-    if ((HandleToUlong(hKL) & 0xF000FFFF) == 0xE0000412) // Special Korean IME
+    if (IS_KOREAN_IME_HKL(hKL)) // Korean IME?
     {
         if (dwImeStatus != IME_STATUS_NO_IME)
         {
@@ -1015,6 +1018,53 @@ KbSwitch_OnNotifyIconMsg(HWND hwnd, UINT uMouseMsg)
         PostMessage(hwnd, WM_COMMAND, nID, 0);
 }
 
+static BOOL
+IsRegImeToolbarShown(VOID)
+{
+    HKEY hKey;
+    LSTATUS error = RegOpenKey(HKEY_CURRENT_USER, TEXT("Control Panel\\Input Method"), &hKey);
+    if (error)
+    {
+        ERR("Cannot open regkey: 0x%lX\n", error);
+        return TRUE;
+    }
+
+    WCHAR szText[8];
+    DWORD cbValue = sizeof(szText);
+    error = RegQueryValueEx(hKey, TEXT("Show Status"), NULL, NULL, (PBYTE)szText, &cbValue);
+    if (error)
+    {
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+
+    BOOL ret = !!_wtoi(szText);
+    RegCloseKey(hKey);
+    return ret;
+}
+
+static VOID
+ShowImeToolbar(HWND hwndTarget, BOOL bShowToolbar)
+{
+    HKEY hKey;
+    LSTATUS error = RegOpenKey(HKEY_CURRENT_USER, TEXT("Control Panel\\Input Method"), &hKey);
+    if (error)
+    {
+        ERR("Cannot open regkey: 0x%lX\n", error);
+        return;
+    }
+
+    WCHAR szText[8];
+    StringCchPrintf(szText, _countof(szText), TEXT("%d"), bShowToolbar);
+
+    DWORD cbValue = (lstrlen(szText) + 1) * sizeof(TCHAR);
+    RegSetValueEx(hKey, TEXT("Show Status"), 0, REG_SZ, (PBYTE)szText, cbValue);
+    RegCloseKey(hKey);
+
+    HWND hwndIme = ImmGetDefaultIMEWnd(hwndTarget);
+    PostMessage(hwndIme, WM_IME_SYSTEM, IMS_NOTIFYIMESHOW, bShowToolbar);
+}
+
 // WM_PENICONMSG
 static VOID
 KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
@@ -1028,10 +1078,12 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
     POINT pt;
     GetCursorPos(&pt);
 
-    ERR("g_hwndLastActive: %p\n", g_hwndLastActive);
+    // Get target window
+    TRACE("g_hwndLastActive: %p\n", g_hwndLastActive);
     HWND hwndTarget = GetTargetWindow(g_hwndLastActive);
-    ERR("hwndTarget: %p\n", hwndTarget);
+    TRACE("hwndTarget: %p\n", hwndTarget);
 
+    // Get default IME window
     HWND hwndIme = ImmGetDefaultIMEWnd(hwndTarget);
     if (!hwndIme)
     {
@@ -1039,6 +1091,7 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
         return;
     }
 
+    // Get IME context from another process
     HIMC hIMC = (HIMC)SendMessage(hwndIme, WM_IME_SYSTEM, IMS_GETCONTEXT, (LPARAM)hwndTarget);
     if (!hIMC)
     {
@@ -1046,40 +1099,95 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
         return;
     }
 
+    // Workaround of TrackPopupMenu's bug
     SetForegroundWindow(hwnd);
 
+    // Create IME menu
     BOOL bRightButton = (uMouseMsg == WM_RBUTTONUP);
     PIMEMENUNODE pImeMenu = CreateImeMenu(hIMC, NULL, bRightButton);
     HMENU hMenu = MenuFromImeMenu(pImeMenu);
 
+    HKL hKL = g_ahKLs[g_iKL];
+    DWORD dwImeStatus = GetImeStatus(hwndTarget);
+    BOOL bImeOn = FALSE, bSoftOn = FALSE, bShowToolbar = FALSE;
+    TCHAR szText[128];
     if (bRightButton)
     {
-        if (!(g_anFlags[g_iKL] & LAYOUTF_REMOVE_RIGHT_DEF_MENU))
+        if (!(g_anFlags[g_iKL] & LAYOUTF_REMOVE_RIGHT_DEF_MENU)) // Add default menu items?
         {
-            // FIXME: Add default menu items
+            if (GetMenuItemCount(hMenu))
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL); // Separator
+
+            // "Input System (IME) configuration..."
+            LoadString(g_hInst, IDS_INPUTSYSTEM, szText, _countof(szText));
+            AppendMenu(hMenu, MF_STRING, ID_INPUTSYSTEM, szText);
         }
     }
     else
     {
-        if (!(g_anFlags[g_iKL] & LAYOUTF_REMOVE_LEFT_DEF_MENU))
+        if (!(g_anFlags[g_iKL] & LAYOUTF_REMOVE_LEFT_DEF_MENU)) // Add default menu items?
         {
-            // FIXME: Add default menu items
+            if (GetMenuItemCount(hMenu))
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL); // Separator
+
+            if (!IS_KOREAN_IME_HKL(hKL)) // Not Korean IME?
+            {
+                // "IME ON / OFF"
+                bImeOn = (dwImeStatus == IME_STATUS_IME_OPEN);
+                UINT nId = (bImeOn ? IDS_IME_ON : IDS_IME_OFF);
+                LoadString(g_hInst, nId, szText, _countof(szText));
+                AppendMenu(hMenu, MF_STRING, ID_IMEONOFF, szText);
+            }
+
+            if ((ImmGetProperty(hKL, IGP_CONVERSION) & IME_CMODE_SOFTKBD) &&
+                IsWindow(hwndIme)) // Is Soft Keyboard available?
+            {
+                // "Soft Keyboard ON / OFF"
+                bSoftOn = (SendMessage(hwndIme, WM_IME_SYSTEM, IMS_GETCONVSTATUS, 0) & IME_CMODE_SOFTKBD);
+                UINT nId = (bSoftOn ? IDS_SOFTKBD_ON : IDS_SOFTKBD_OFF);
+                LoadString(g_hInst, nId, szText, _countof(szText));
+                AppendMenu(hMenu, MF_STRING, ID_SOFTKBDONOFF, szText);
+            }
+
+            if (GetMenuItemCount(hMenu))
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL); // Separator
+
+            // "Show toolbar"
+            LoadString(g_hInst, IDS_SHOWTOOLBAR, szText, _countof(szText));
+            AppendMenu(hMenu, MF_STRING, ID_SHOWTOOLBAR, szText);
+            bShowToolbar = IsRegImeToolbarShown();
+            if (bShowToolbar)
+                CheckMenuItem(hMenu, ID_SHOWTOOLBAR, MF_CHECKED);
         }
     }
 
+    if (!GetMenuItemCount(hMenu)) // No items?
+    {
+        // Clean up
+        DestroyMenu(hMenu);
+        CleanupImeMenus();
+
+        SetForegroundWindow(hwndTarget);
+        return;
+    }
+
+    // TrackPopupMenuEx flags
     UINT uFlags = TPM_VERTICAL | TPM_RIGHTALIGN | TPM_RETURNCMD;
     uFlags |= (bRightButton ? TPM_RIGHTBUTTON : TPM_LEFTBUTTON);
 
+    // Exclude the notification area
     TPMPARAMS params = { sizeof(params) };
     GetWindowRect(g_hTrayNotifyWnd, &params.rcExclude);
 
+    // Show the popup menu
     INT nID = TrackPopupMenuEx(hMenu, uFlags, pt.x, pt.y, hwnd, &params);
 
+    // Workaround of TrackPopupMenu's bug
     PostMessage(hwnd, WM_NULL, 0, 0);
 
-    if (nID)
+    if (nID) // Action!
     {
-        if (nID >= ID_STARTIMEMENU)
+        if (nID >= ID_STARTIMEMENU) // IME internal menu ID?
         {
             MENUITEMINFO mii = { sizeof(mii), MIIM_DATA };
             GetMenuItemInfo(hMenu, nID, FALSE, &mii);
@@ -1090,15 +1198,35 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
             if (SetPenMenuData)
                 SetPenMenuData(nID, mii.dwItemData);
 
-            if (IsWindow(hwndIme))
-                SendMessage(hwndIme, WM_IME_SYSTEM, IMS_IMEMENUITEMSELECTED, (LPARAM)hwndTarget);
+            PostMessage(hwndIme, WM_IME_SYSTEM, IMS_IMEMENUITEMSELECTED, (LPARAM)hwndTarget);
         }
-        else
+        else // Otherwise action of IME menu item
         {
-            PostMessage(hwnd, WM_COMMAND, nID, 0);
+            switch (nID)
+            {
+                case ID_INPUTSYSTEM:
+                    if (IS_IME_HKL(hKL))
+                        PostMessage(hwndIme, WM_IME_SYSTEM, IMS_CONFIGURE, (LPARAM)hKL);
+                    break;
+                case ID_IMEONOFF:
+                    ImmSetOpenStatus(hIMC, !bImeOn);
+                    break;
+                case ID_SOFTKBDONOFF:
+                    PostMessage(hwndIme, WM_IME_SYSTEM, IMS_SOFTKBDONOFF, !bSoftOn);
+                    break;
+                case ID_SHOWTOOLBAR:
+                    ShowImeToolbar(hwndTarget, !bShowToolbar);
+                    break;
+                default:
+                {
+                    PostMessage(hwnd, WM_COMMAND, nID, 0);
+                    break;
+                }
+            }
         }
     }
 
+    // Clean up
     DestroyMenu(hMenu);
     CleanupImeMenus();
 
@@ -1140,7 +1268,7 @@ KbSwitch_OnCommand(HWND hwnd, UINT nID)
     }
 }
 
-// WM_LANG_CHANGED
+// WM_LANG_CHANGED (HSHELL_LANGUAGE)
 static LRESULT
 KbSwitch_OnLangChanged(HWND hwnd, HWND hwndTarget OPTIONAL, HKL hKL OPTIONAL)
 {
@@ -1151,7 +1279,7 @@ KbSwitch_OnLangChanged(HWND hwnd, HWND hwndTarget OPTIONAL, HKL hKL OPTIONAL)
     return 0;
 }
 
-// WM_WINDOW_ACTIVATE
+// WM_WINDOW_ACTIVATE (HCBT_ACTIVATE / HCBT_SETFOCUS / HSHELL_WINDOWACTIVATED)
 static LRESULT
 KbSwitch_OnWindowActivate(HWND hwnd, HWND hwndTarget OPTIONAL, LPARAM lParam OPTIONAL)
 {
