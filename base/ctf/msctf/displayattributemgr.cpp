@@ -148,7 +148,7 @@ HRESULT DisplayAttributeMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
         return CLASS_E_NOAGGREGATION;
 
     CDisplayAttributeMgr *This = new(cicNoThrow) CDisplayAttributeMgr();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     HRESULT hr = This->QueryInterface(IID_ITfDisplayAttributeMgr, (void **)ppOut);
