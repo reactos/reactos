@@ -30,8 +30,8 @@ public:
 
 protected:
     LONG m_cRefs;
-    CicArray<IUnknown*> m_array1;
-    CicArrayBase m_array2;
+    CicArray<IUnknown *> m_array1;
+    CicArray<DWORD> m_array2;
 
     BOOL _IsInCollection(REFGUID rguid);
     void _AdviseMarkupCollection(ITfTextInputProcessor *pProcessor, DWORD dwCookie);
