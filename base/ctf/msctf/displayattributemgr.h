@@ -26,7 +26,7 @@ public:
         _Out_ CLSID *pclsidOwner) override;
 
     // ** ITfDisplayAttributeCollectionMgr methods **
-    STDMETHODIMP UnknownMethod(_In_ DWORD unused) override;
+    STDMETHODIMP UnknownMethod(_In_ DWORD unused) override; // FIXME
 
 protected:
     LONG m_cRefs;
