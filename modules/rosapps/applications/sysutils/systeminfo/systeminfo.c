@@ -200,7 +200,7 @@ ULONGLONG GetSeconds(VOID)
         return pGetTickCount64() / 1000;
     }
 
-    hModule = LoadLibraryW(L"kernel32_vista.dll");
+    hModule = LoadLibraryW(L"kernel32_win7.dll");
 
     if (!hModule)
     {
