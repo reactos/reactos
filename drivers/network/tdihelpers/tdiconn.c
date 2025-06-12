@@ -9,6 +9,16 @@
  */
 
 #include <afd.h>
+#ifdef UNIMPLEMENTED
+#undef UNIMPLEMENTED
+#endif
+
+/* If you want to see the DPRINT() output in your debugger,
+ * remove the following line (or comment it out):
+ */
+#define NDEBUG 1
+
+#include <reactos/debug.h>
 
 UINT TdiAddressSizeFromType( UINT AddressType ) {
     switch( AddressType ) {
@@ -38,7 +48,7 @@ UINT TaLengthOfAddress( PTA_ADDRESS Addr )
 
     AddrLen += 2 * sizeof( USHORT );
 
-    AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
+    DPRINT("AddrLen %x\n");
 
     return AddrLen;
 }
@@ -52,7 +62,7 @@ UINT TaLengthOfTransportAddress( PTRANSPORT_ADDRESS Addr )
 
     AddrLen += sizeof(ULONG);
 
-    AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
+    DPRINT("AddrLen %x\n", AddrLen);
 
     return AddrLen;
 }
@@ -66,7 +76,7 @@ UINT TaLengthOfTransportAddressByType(UINT AddressType)
 
     AddrLen += sizeof(ULONG) + 2 * sizeof(USHORT);
 
-    AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
+    DPRINT("AddrLen %x\n", AddrLen);
 
     return AddrLen;
 }
@@ -151,7 +161,7 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
     TdiAddressSize = TaLengthOfTransportAddressByType(Type);
     if (!TdiAddressSize)
     {
-        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
+        DPRINT("Invalid parameter\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -159,7 +169,8 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
                   sizeof(TDI_CONNECTION_INFORMATION) +
                   TdiAddressSize);
 
-    ConnInfo->OptionsLength = sizeof(ULONG);
+/* TODO: !! */
+//    ConnInfo->OptionsLength = sizeof(ULONG);
     ConnInfo->RemoteAddressLength = TdiAddressSize;
     ConnInfo->RemoteAddress = TransportAddress =
         (PTRANSPORT_ADDRESS)&ConnInfo[1];
@@ -186,7 +197,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 
     TdiAddressSize = TaLengthOfTransportAddressByType(Type);
     if (!TdiAddressSize) {
-        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
+        DPRINT("Invalid parameter\n");
         *ConnectionInfo = NULL;
         return STATUS_INVALID_PARAMETER;
     }
