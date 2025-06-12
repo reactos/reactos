@@ -121,13 +121,15 @@ wWinMain(HINSTANCE hThisInstance,
 
     switch (GetUserDefaultUILanguage())
     {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-      SetProcessDefaultLayout(LAYOUT_RTL);
-      break;
+        case MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT):
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
 
-    default:
-      break;
+        default:
+        break;
     }
+
 
     g_hInstance = hThisInstance;
 
