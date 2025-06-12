@@ -74,15 +74,12 @@ SHELL_GetMonitorRect(
 static BOOL
 SHELL_IsParentOwnerOrSelf(_In_ HWND hwndTarget, _In_ HWND hWnd)
 {
-    for (;;)
+    for (; hWnd; hWnd = ::GetParent(hWnd))
     {
-        if (!hWnd)
-            return FALSE;
         if (hWnd == hwndTarget)
-            break;
-        hWnd = ::GetParent(hWnd);
+            return TRUE;
     }
-    return TRUE;
+    return FALSE;
 }
 
 static BOOL
