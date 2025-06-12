@@ -85,7 +85,7 @@ BOOL NTAPI InitMetrics(VOID);
 LONG NTAPI UserGetSystemMetrics(ULONG Index);
 BOOL FASTCALL UserIsDBCSEnabled(VOID);
 BOOL FASTCALL UserIsIMMEnabled(VOID);
-BOOL FASTCALL UserIsCiceroEnabled(VOID);
+BOOL FASTCALL UserIsCTFIMEEnabled(VOID);
 
 /*************** KEYBOARD.C ***************/
 
