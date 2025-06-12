@@ -2446,6 +2446,19 @@ interface IObjectWithSelection : IUnknown
     HRESULT GetSelection([in] REFIID riid, [out, iid_is(riid)] void **ppv);
 };
 
+/*****************************************************************************
+ * IRegTreeItem interface
+ */
+[
+    uuid(A9521922-0812-4d44-9EC3-7FD38C726F3D),
+    pointer_default(unique)
+]
+interface IRegTreeItem : IUnknown
+{
+    HRESULT GetCheckState([out] BOOL *pbCheck);
+    HRESULT SetCheckState([in] BOOL bCheck);
+};
+
 
 /*****************************************************************************
  * IOpenControlPanel interface (Vista+)
