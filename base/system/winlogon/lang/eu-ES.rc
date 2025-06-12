@@ -57,6 +57,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Preparando para hibernar..."
     IDS_SAVEYOURSETTINGS "Gordetzen zure pertsonal konfigurazioa..."
     IDS_REACTOSISSTARTINGUP "Itzaron, ReactOS hasi da..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d egunak"
 END

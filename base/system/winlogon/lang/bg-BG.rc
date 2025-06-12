@@ -50,6 +50,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Приготвяне за сън..."
     IDS_SAVEYOURSETTINGS "Записване на настройките ви..."
     IDS_REACTOSISSTARTINGUP "ReactOS тръгва..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d days"
 END

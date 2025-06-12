@@ -52,6 +52,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "מתכונן לשינה..."
     IDS_SAVEYOURSETTINGS "שומר את הגדרותיך..."
     IDS_REACTOSISSTARTINGUP "ReactOS מופעל..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d days"
 END

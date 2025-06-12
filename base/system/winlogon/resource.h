@@ -33,6 +33,7 @@
 #define IDS_PREPARETOHIBERNATE           1686
 #define IDS_SAVEYOURSETTINGS             1687
 #define IDS_REACTOSISSTARTINGUP          1690
+#define IDS_LOGGINGOFF                   1691
 #define IDS_TIMEOUTSHORTFORMAT           1695
 #define IDS_TIMEOUTLONGFORMAT            1696
 #define IDS_REACTOSISRESTARTING          1697

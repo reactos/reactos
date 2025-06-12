@@ -52,6 +52,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Hibernando..."
     IDS_SAVEYOURSETTINGS "Guardando su configuración personal..."
     IDS_REACTOSISSTARTINGUP "ReactOS se está iniciando..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d días"
 END

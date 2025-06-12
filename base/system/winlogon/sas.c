@@ -642,8 +642,6 @@ HandleLogon(
         goto cleanup;
     }
 
-    CallNotificationDlls(Session, LogonHandler);
-
     /* Enable per-user settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
     UpdatePerUserSystemParameters(0, TRUE);
@@ -662,19 +660,22 @@ HandleLogon(
         goto cleanup;
     }
 
+    CallNotificationDlls(Session, LogonHandler);
+
     /* Connect remote resources */
     RestoreAllConnections(Session);
 
+    /* Start the user shell */
+    CallNotificationDlls(Session, StartShellHandler);
     if (!StartUserShell(Session))
     {
         //WCHAR StatusMsg[256];
         WARN("WL: WlxActivateUserShell() failed\n");
-        //LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg) / sizeof(StatusMsg[0]));
+        //LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, ARRAYSIZE(StatusMsg));
         //MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
         goto cleanup;
     }
-
-    CallNotificationDlls(Session, StartShellHandler);
+    CallNotificationDlls(Session, PostShellHandler);
 
     if (!InitializeScreenSaver(Session))
         WARN("WL: Failed to initialize screen saver\n");
@@ -1039,6 +1040,13 @@ HandleLogoff(
         return Status;
     }
 
+    /* Invoke Logoff notifications on the application desktop */
+    SwitchDesktop(Session->ApplicationDesktop);
+    DisplayStatusMessage(Session, Session->ApplicationDesktop, IDS_LOGGINGOFF);
+    CallNotificationDlls(Session, LogoffHandler);
+    RemoveStatusMessage(Session);
+
+    /* The remaining Logoff steps run on the Winlogon desktop */
     SwitchDesktop(Session->WinlogonDesktop);
 
     PlayLogoffShutdownSound(Session, WLX_SHUTTINGDOWN(wlxAction));
@@ -1051,9 +1059,6 @@ HandleLogoff(
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
-
-    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
-    CallNotificationDlls(Session, LogoffHandler);
 
     /* Kill remaining COM processes that may have been started by logoff scripts */
     hThread = CreateThread(psa, 0, KillComProcesses, (PVOID)Session->UserToken, 0, NULL);
@@ -1205,7 +1210,6 @@ DoGenericAction(
                 {
                     Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-                    CallNotificationDlls(Session, LogonHandler);
                 }
             }
             break;
@@ -1246,8 +1250,16 @@ DoGenericAction(
         case WLX_SAS_ACTION_FORCE_LOGOFF: /* 0x09 */
         case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
         case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
-            if (Session->LogonState != STATE_LOGGED_OFF)
+            if ((Session->LogonState != STATE_INIT) &&
+                (Session->LogonState != STATE_LOGGED_OFF) &&
+                (Session->LogonState != STATE_LOGGED_OFF_SAS) &&
+                (Session->LogonState != STATE_SHUT_DOWN))
             {
+                ASSERT((Session->LogonState == STATE_LOGGED_ON) ||
+                       (Session->LogonState == STATE_LOGGED_ON_SAS) ||
+                       (Session->LogonState == STATE_LOCKED) ||
+                       (Session->LogonState == STATE_LOCKED_SAS));
+
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
                 if (!NT_SUCCESS(HandleLogoff(Session, wlxAction)))
