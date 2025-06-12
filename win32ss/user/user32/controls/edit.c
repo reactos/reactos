@@ -5385,35 +5385,43 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	/* IME messages to make the edit control IME aware */
 	case WM_IME_SETCONTEXT:
 #ifdef __REACTOS__
-        /* Korean doesn't want composition window */
-        if (PRIMARYLANGID(LOWORD(GetKeyboardLayout(0))) == LANG_KOREAN)
-            lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
-
-        if (wParam)
         {
-            HIMC hIMC = ImmGetContext(hwnd);
-            LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-            if (pIC)
-            {
-                pIC->dwUIFlags &= ~0x40000;
-                ImmUnlockIMC(hIMC);
-            }
-            if (GetWin32ClientInfo()->CI_flags & CI_WOW)
-                ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
-            ImmReleaseContext(hwnd, hIMC);
-        }
+            HKL hKL = GetKeyboardLayout(0);
 
-        result = DefWindowProcT(hwnd, WM_IME_SETCONTEXT, wParam, lParam, unicode);
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+
+            if (wParam)
+            {
+                HIMC hIMC = ImmGetContext(hwnd);
+                LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+                if (pIC)
+                {
+                    pIC->dwUIFlags &= ~0x40000;
+                    ImmUnlockIMC(hIMC);
+                }
+                if (GetWin32ClientInfo()->CI_flags & CI_WOW)
+                    ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+                ImmReleaseContext(hwnd, hIMC);
+            }
+
+            result = DefWindowProcT(hwnd, WM_IME_SETCONTEXT, wParam, lParam, unicode);
+        }
 #endif
 		break;
 
 	case WM_IME_STARTCOMPOSITION:
 #ifdef __REACTOS__
-        /* Korean doesn't want composition window */
-        if (PRIMARYLANGID(LOWORD(GetKeyboardLayout(0))) == LANG_KOREAN)
-            return TRUE;
+        {
+            HKL hKL = GetKeyboardLayout(0);
 
-        result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                return TRUE;
+
+            result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+        }
 #else
 		es->composition_start = es->selection_end;
 		es->composition_len = 0;

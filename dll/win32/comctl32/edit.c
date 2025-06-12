@@ -5179,35 +5179,43 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     /* IME messages to make the edit control IME aware */
     case WM_IME_SETCONTEXT:
 #ifdef __REACTOS__
-        /* Korean doesn't want composition window */
-        if (PRIMARYLANGID(LOWORD(GetKeyboardLayout(0))) == LANG_KOREAN)
-            lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
-
-        if (wParam)
         {
-            HIMC hIMC = ImmGetContext(hwnd);
-            LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-            if (pIC)
-            {
-                pIC->dwUIFlags &= ~0x40000;
-                ImmUnlockIMC(hIMC);
-            }
-            if (FALSE) /* FIXME: Condition */
-                ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
-            ImmReleaseContext(hwnd, hIMC);
-        }
+            HKL hKL = GetKeyboardLayout(0);
 
-        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+
+            if (wParam)
+            {
+                HIMC hIMC = ImmGetContext(hwnd);
+                LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+                if (pIC)
+                {
+                    pIC->dwUIFlags &= ~0x40000;
+                    ImmUnlockIMC(hIMC);
+                }
+                if (FALSE) /* FIXME: Condition */
+                    ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+                ImmReleaseContext(hwnd, hIMC);
+            }
+
+            result = DefWindowProcW(hwnd, msg, wParam, lParam);
+        }
 #endif
         break;
 
     case WM_IME_STARTCOMPOSITION:
 #ifdef __REACTOS__
-        /* Korean doesn't want composition window */
-        if (PRIMARYLANGID(LOWORD(GetKeyboardLayout(0))) == LANG_KOREAN)
-            return TRUE;
+        {
+            HKL hKL = GetKeyboardLayout(0);
 
-        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                return TRUE;
+
+            result = DefWindowProcW(hwnd, msg, wParam, lParam);
+        }
 #else
         es->composition_start = es->selection_end;
         es->composition_len = 0;
