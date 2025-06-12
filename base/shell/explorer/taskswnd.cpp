@@ -34,17 +34,9 @@
 //************************************************************************
 // Fullscreen windows (a.k.a. rude apps) checker
 
-// Timer IDs for validating rude apps
-enum
-{
-    TIMER_ID_VALIDATE_RUDE_APP_0 = 5,
-    TIMER_ID_VALIDATE_RUDE_APP_1,
-    TIMER_ID_VALIDATE_RUDE_APP_2,
-    TIMER_ID_VALIDATE_RUDE_APP_3,
-    TIMER_ID_VALIDATE_RUDE_APP_4,
-};
-
+#define TIMER_ID_VALIDATE_RUDE_APP 5
 #define VALIDATE_RUDE_INTERVAL 1000
+#define VALIDATE_RUDE_MAX_COUNT 5
 
 static BOOL
 SHELL_GetMonitorRect(
@@ -413,6 +405,8 @@ class CTaskSwitchWnd :
     BOOL m_IsGroupingEnabled;
     BOOL m_IsDestroying;
 
+    INT m_nRudeAppValidationCounter;
+
     SIZE m_ButtonSize;
 
     UINT m_uHardErrorMsg;
@@ -431,7 +425,8 @@ public:
         m_ButtonCount(0),
         m_ImageList(NULL),
         m_IsGroupingEnabled(FALSE),
-        m_IsDestroying(FALSE)
+        m_IsDestroying(FALSE),
+        m_nRudeAppValidationCounter(0)
     {
         ZeroMemory(&m_ButtonSize, sizeof(m_ButtonSize));
         m_uHardErrorMsg = RegisterWindowMessageW(L"HardError");
@@ -1551,17 +1546,11 @@ public:
         return TRUE;
     }
 
-    void KillValidateRudeTimers()
-    {
-        for (INT id = TIMER_ID_VALIDATE_RUDE_APP_0; id <= TIMER_ID_VALIDATE_RUDE_APP_4; ++id)
-            KillTimer(id);
-    }
-
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         m_IsDestroying = TRUE;
 
-        KillValidateRudeTimers();
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP);
 
         /* Unregister the shell hook */
         RegisterShellHook(m_hWnd, FALSE);
@@ -1901,7 +1890,7 @@ public:
         return Ret;
     }
 
-    // Internal structure for FindRudeApp
+    // Internal structure for IsRudeEnumProc
     typedef struct tagRUDEAPPDATA
     {
         HMONITOR hTargetMonitor;
@@ -2002,8 +1991,9 @@ public:
     LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         // Re-start rude app validation
-        KillValidateRudeTimers();
-        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP);
+        SetTimer(TIMER_ID_VALIDATE_RUDE_APP, VALIDATE_RUDE_INTERVAL, NULL);
+        m_nRudeAppValidationCounter = 0;
         bHandled = FALSE;
         return 0;
     }
@@ -2012,8 +2002,9 @@ public:
     void OnWindowActivated(_In_ HWND hwndTarget)
     {
         // Re-start rude app validation
-        KillValidateRudeTimers();
-        SetTimer(TIMER_ID_VALIDATE_RUDE_APP_0, VALIDATE_RUDE_INTERVAL, NULL);
+        KillTimer(TIMER_ID_VALIDATE_RUDE_APP);
+        SetTimer(TIMER_ID_VALIDATE_RUDE_APP, VALIDATE_RUDE_INTERVAL, NULL);
+        m_nRudeAppValidationCounter = 0;
     }
 
     // HSHELL_WINDOWDESTROYED
@@ -2183,22 +2174,18 @@ public:
             DumpTasks();
             break;
 #endif
-        case TIMER_ID_VALIDATE_RUDE_APP_0:
-        case TIMER_ID_VALIDATE_RUDE_APP_1:
-        case TIMER_ID_VALIDATE_RUDE_APP_2:
-        case TIMER_ID_VALIDATE_RUDE_APP_3:
-        case TIMER_ID_VALIDATE_RUDE_APP_4:
+        case TIMER_ID_VALIDATE_RUDE_APP:
             // Real activation of rude app might take some time after HSHELL_...ACTIVATED.
             // Wait up to 5 seconds with validating the rude app at each second.
-            // This is the same behavior as Windows Explorer.
             {
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
 
                 // Retry with next timer id if any when no rude detected
                 KillTimer(wParam);
-                if (!hwndRude && wParam < TIMER_ID_VALIDATE_RUDE_APP_4)
-                    SetTimer(wParam + 1, VALIDATE_RUDE_INTERVAL, NULL);
+                ++m_nRudeAppValidationCounter;
+                if (!hwndRude && m_nRudeAppValidationCounter < VALIDATE_RUDE_MAX_COUNT)
+                    SetTimer(wParam, VALIDATE_RUDE_INTERVAL, NULL);
                 break;
             }
         }
