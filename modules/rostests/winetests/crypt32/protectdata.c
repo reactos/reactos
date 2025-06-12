@@ -27,13 +27,9 @@
 
 #include "wine/test.h"
 
-static BOOL (WINAPI *pCryptProtectData)(DATA_BLOB*,LPCWSTR,DATA_BLOB*,PVOID,CRYPTPROTECT_PROMPTSTRUCT*,DWORD,DATA_BLOB*);
-static BOOL (WINAPI *pCryptUnprotectData)(DATA_BLOB*,LPWSTR*,DATA_BLOB*,PVOID,CRYPTPROTECT_PROMPTSTRUCT*,DWORD,DATA_BLOB*);
-
 static char  secret[]     = "I am a super secret string that no one can see!";
 static char  secret2[]    = "I am a super secret string indescribable string";
 static char  key[]        = "Wibble wibble wibble";
-static const WCHAR desc[] = {'U','l','t','r','a',' ','s','e','c','r','e','t',' ','t','e','s','t',' ','m','e','s','s','a','g','e',0};
 static BOOL protected = FALSE; /* if true, the unprotect tests can run */
 static DATA_BLOB cipher;
 static DATA_BLOB cipher_entropy;
@@ -52,32 +48,28 @@ static void test_cryptprotectdata(void)
     entropy.cbData=strlen(key)+1;
 
     SetLastError(0xDEADBEEF);
-    protected = pCryptProtectData(NULL,desc,NULL,NULL,NULL,0,&cipher);
+    protected = CryptProtectData(NULL, L"Ultra secret test message", NULL, NULL, NULL, 0, &cipher);
     ok(!protected, "Encrypting without plain data source.\n");
     r = GetLastError();
-    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%u) GetLastError seen\n",r);
+    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%lu) GetLastError seen\n",r);
 
     SetLastError(0xDEADBEEF);
-    protected = pCryptProtectData(&plain,desc,NULL,NULL,NULL,0,NULL);
+    protected = CryptProtectData(&plain, L"Ultra secret test message", NULL, NULL, NULL, 0, NULL);
     ok(!protected, "Encrypting without cipher destination.\n");
     r = GetLastError();
-    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%u) GetLastError seen\n",r);
+    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%lu) GetLastError seen\n",r);
 
     cipher.pbData=NULL;
     cipher.cbData=0;
 
     /* without entropy */
     SetLastError(0xDEADBEEF);
-    protected = pCryptProtectData(&plain,desc,NULL,NULL,NULL,0,&cipher);
-    ok(protected ||
-     broken(!protected), /* Win9x/NT4 */
-     "Encrypting without entropy.\n");
+    protected = CryptProtectData(&plain, L"Ultra secret test message", NULL, NULL, NULL, 0, &cipher);
+    ok(protected, "Encrypting without entropy.\n");
     if (protected)
     {
         r = GetLastError();
-        ok(r == ERROR_SUCCESS ||
-           r == ERROR_IO_PENDING, /* win2k */
-           "Expected ERROR_SUCCESS or ERROR_IO_PENDING, got %d\n",r);
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n",r);
     }
 
     cipher_entropy.pbData=NULL;
@@ -85,10 +77,8 @@ static void test_cryptprotectdata(void)
 
     /* with entropy */
     SetLastError(0xDEADBEEF);
-    protected = pCryptProtectData(&plain,desc,&entropy,NULL,NULL,0,&cipher_entropy);
-    ok(protected ||
-     broken(!protected), /* Win9x/NT4 */
-     "Encrypting with entropy.\n");
+    protected = CryptProtectData(&plain, L"Ultra secret test message", &entropy, NULL, NULL, 0, &cipher_entropy);
+    ok(protected, "Encrypting with entropy.\n");
 
     cipher_no_desc.pbData=NULL;
     cipher_no_desc.cbData=0;
@@ -97,13 +87,8 @@ static void test_cryptprotectdata(void)
     plain.pbData=(void*)secret2;
     plain.cbData=strlen(secret2)+1;
     SetLastError(0xDEADBEEF);
-    protected = pCryptProtectData(&plain,NULL,&entropy,NULL,NULL,0,&cipher_no_desc);
-    if (!protected)
-    {
-        /* fails in win2k */
-        ok(GetLastError() == ERROR_INVALID_PARAMETER,
-           "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
-    }
+    protected = CryptProtectData(&plain,NULL,&entropy,NULL,NULL,0,&cipher_no_desc);
+    ok(protected, "Encrypting with entropy.\n");
 }
 
 static void test_cryptunprotectdata(void)
@@ -117,36 +102,29 @@ static void test_cryptunprotectdata(void)
     entropy.pbData=(void*)key;
     entropy.cbData=strlen(key)+1;
 
-    /* fails in win2k */
-    if (!protected)
-    {
-        skip("CryptProtectData failed to run\n");
-        return;
-    }
-
     plain.pbData=NULL;
     plain.cbData=0;
 
     SetLastError(0xDEADBEEF);
-    okay = pCryptUnprotectData(&cipher,NULL,NULL,NULL,NULL,0,NULL);
+    okay = CryptUnprotectData(&cipher,NULL,NULL,NULL,NULL,0,NULL);
     ok(!okay,"Decrypting without destination\n");
     r = GetLastError();
-    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%u) GetLastError seen\n",r);
+    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%lu) GetLastError seen\n",r);
 
     SetLastError(0xDEADBEEF);
-    okay = pCryptUnprotectData(NULL,NULL,NULL,NULL,NULL,0,&plain);
+    okay = CryptUnprotectData(NULL,NULL,NULL,NULL,NULL,0,&plain);
     ok(!okay,"Decrypting without source\n");
     r = GetLastError();
-    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%u) GetLastError seen\n",r);
+    ok(r == ERROR_INVALID_PARAMETER, "Wrong (%lu) GetLastError seen\n",r);
 
     plain.pbData=NULL;
     plain.cbData=0;
 
     SetLastError(0xDEADBEEF);
-    okay = pCryptUnprotectData(&cipher_entropy,NULL,NULL,NULL,NULL,0,&plain);
+    okay = CryptUnprotectData(&cipher_entropy,NULL,NULL,NULL,NULL,0,&plain);
     ok(!okay,"Decrypting without needed entropy\n");
     r = GetLastError();
-    ok(r == ERROR_INVALID_DATA, "Wrong (%u) GetLastError seen\n", r);
+    ok(r == ERROR_INVALID_DATA, "Wrong (%lu) GetLastError seen\n", r);
 
     plain.pbData=NULL;
     plain.cbData=0;
@@ -154,14 +132,14 @@ static void test_cryptunprotectdata(void)
 
     /* without entropy */
     SetLastError(0xDEADBEEF);
-    okay = pCryptUnprotectData(&cipher,&data_desc,NULL,NULL,NULL,0,&plain);
+    okay = CryptUnprotectData(&cipher,&data_desc,NULL,NULL,NULL,0,&plain);
     ok(okay,"Decrypting without entropy\n");
 
     ok(plain.pbData!=NULL,"Plain DATA_BLOB missing data\n");
     ok(plain.cbData==strlen(secret)+1,"Plain DATA_BLOB wrong length\n");
     ok(!strcmp((const char*)plain.pbData,secret),"Plain does not match secret\n");
     ok(data_desc!=NULL,"Description not allocated\n");
-    ok(!lstrcmpW(data_desc,desc),"Description does not match\n");
+    ok(!lstrcmpW(data_desc, L"Ultra secret test message"),"Description does not match\n");
 
     LocalFree(plain.pbData);
     LocalFree(data_desc);
@@ -172,21 +150,21 @@ static void test_cryptunprotectdata(void)
 
     /* with wrong entropy */
     SetLastError(0xDEADBEEF);
-    okay = pCryptUnprotectData(&cipher_entropy,&data_desc,&cipher_entropy,NULL,NULL,0,&plain);
+    okay = CryptUnprotectData(&cipher_entropy,&data_desc,&cipher_entropy,NULL,NULL,0,&plain);
     ok(!okay,"Decrypting with wrong entropy\n");
     r = GetLastError();
-    ok(r == ERROR_INVALID_DATA, "Wrong (%u) GetLastError seen\n",r);
+    ok(r == ERROR_INVALID_DATA, "Wrong (%lu) GetLastError seen\n",r);
 
     /* with entropy */
     SetLastError(0xDEADBEEF);
-    okay = pCryptUnprotectData(&cipher_entropy,&data_desc,&entropy,NULL,NULL,0,&plain);
+    okay = CryptUnprotectData(&cipher_entropy,&data_desc,&entropy,NULL,NULL,0,&plain);
     ok(okay,"Decrypting with entropy\n");
 
     ok(plain.pbData!=NULL,"Plain DATA_BLOB missing data\n");
     ok(plain.cbData==strlen(secret)+1,"Plain DATA_BLOB wrong length\n");
     ok(!strcmp((const char*)plain.pbData,secret),"Plain does not match secret\n");
     ok(data_desc!=NULL,"Description not allocated\n");
-    ok(!lstrcmpW(data_desc,desc),"Description does not match\n");
+    ok(!lstrcmpW(data_desc, L"Ultra secret test message"),"Description does not match\n");
 
     LocalFree(plain.pbData);
     LocalFree(data_desc);
@@ -197,7 +175,7 @@ static void test_cryptunprotectdata(void)
 
     /* with entropy but no description */
     SetLastError(0xDEADBEEF);
-    okay = pCryptUnprotectData(&cipher_no_desc,&data_desc,&entropy,NULL,NULL,0,&plain);
+    okay = CryptUnprotectData(&cipher_no_desc,&data_desc,&entropy,NULL,NULL,0,&plain);
     ok(okay,"Decrypting with entropy and no description\n");
 
     ok(plain.pbData!=NULL,"Plain DATA_BLOB missing data\n");
@@ -224,18 +202,12 @@ static void test_simpleroundtrip(const char *plaintext)
     emptyW[0] = 0;
     input.pbData = (unsigned char *)plaintext;
     input.cbData = strlen(plaintext);
-    res = pCryptProtectData(&input, emptyW, NULL, NULL, NULL, 0, &encrypted);
-    ok(res != 0 || broken(!res), "can't protect\n");
-    if (!res)
-    {
-        /* Fails on Win9x, NT4 */
-        win_skip("CryptProtectData failed\n");
-        return;
-    }
+    res = CryptProtectData(&input, emptyW, NULL, NULL, NULL, 0, &encrypted);
+    ok(res != 0, "can't protect\n");
 
-    res = pCryptUnprotectData(&encrypted, NULL, NULL, NULL, NULL, 0, &output);
-    ok(res != 0, "can't unprotect; last error %u\n", GetLastError());
-    ok(output.cbData == strlen(plaintext), "output wrong length %d for input '%s', wanted %d\n", output.cbData, plaintext, lstrlenA(plaintext));
+    res = CryptUnprotectData(&encrypted, NULL, NULL, NULL, NULL, 0, &output);
+    ok(res != 0, "can't unprotect; last error %lu\n", GetLastError());
+    ok(output.cbData == strlen(plaintext), "output wrong length %ld for input '%s', wanted %d\n", output.cbData, plaintext, lstrlenA(plaintext));
     ok(!memcmp(plaintext, (char *)output.pbData, output.cbData), "output wrong contents for input '%s'\n", plaintext);
     LocalFree(output.pbData);
     LocalFree(encrypted.pbData);
@@ -243,16 +215,7 @@ static void test_simpleroundtrip(const char *plaintext)
 
 START_TEST(protectdata)
 {
-    HMODULE hCrypt32 = GetModuleHandleA("crypt32.dll");
-    pCryptProtectData = (void*)GetProcAddress(hCrypt32, "CryptProtectData");
-    pCryptUnprotectData = (void*)GetProcAddress(hCrypt32, "CryptUnprotectData");
-    if (!pCryptProtectData || !pCryptUnprotectData)
-    {
-        win_skip("Crypt(Un)ProtectData() is not available\n");
-        return;
-    }
-
-    protected=FALSE;
+    protected = FALSE;
     test_cryptprotectdata();
     test_cryptunprotectdata();
     test_simpleroundtrip("");
