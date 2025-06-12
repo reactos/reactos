@@ -82,6 +82,7 @@ CDisplayAttributeMgr::QueryInterface(REFIID riid, void **ppvObj)
     if (!*ppvObj)
         return E_NOINTERFACE;
 
+    AddRef();
     return S_OK;
 }
 
