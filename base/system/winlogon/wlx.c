@@ -411,10 +411,14 @@ WlxSwitchDesktopToUser(
     HANDLE hWlx)
 {
     PWLSESSION Session = (PWLSESSION)hWlx;
+    BOOL bRet;
 
     TRACE("WlxSwitchDesktopToUser()\n");
 
-    return (int)SwitchDesktop(Session->ApplicationDesktop);
+    bRet = SwitchDesktop(Session->ApplicationDesktop);
+    if (bRet)
+        SetThreadDesktop(Session->ApplicationDesktop);
+    return (int)bRet;
 }
 
 /*
@@ -426,10 +430,14 @@ WlxSwitchDesktopToWinlogon(
     HANDLE hWlx)
 {
     PWLSESSION Session = (PWLSESSION)hWlx;
+    BOOL bRet;
 
     TRACE("WlxSwitchDesktopToWinlogon()\n");
 
-    return (int)SwitchDesktop(Session->WinlogonDesktop);
+    bRet = SwitchDesktop(Session->WinlogonDesktop);
+    if (bRet)
+        SetThreadDesktop(Session->WinlogonDesktop);
+    return (int)bRet;
 }
 
 /*
