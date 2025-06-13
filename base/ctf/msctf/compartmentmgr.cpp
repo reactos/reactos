@@ -45,6 +45,15 @@ CCompartmentValue::~CCompartmentValue()
     }
 }
 
+void CCompartmentValue::set(ITfCompartment *compartment)
+{
+    if (m_compartment && m_compartment != compartment)
+        m_compartment->Release();
+    m_compartment = compartment;
+    if (compartment)
+        compartment->AddRef();
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // CEnumCompartment
 
@@ -399,35 +408,34 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     }
 
     // Not found, create a new one
-    CCompartmentValue *newValue = new (cicNoThrow) CCompartmentValue();
-    if (!newValue)
+    CCompartmentValue *value = new (cicNoThrow) CCompartmentValue();
+    if (!value)
         return E_OUTOFMEMORY;
 
-    newValue->m_guid = rguid;
-    newValue->m_owner = 0; // Will be set by CCompartment::SetValue
+    value->m_guid = rguid;
+    value->m_owner = 0; // Will be set by CCompartment::SetValue
 
-    CCompartment *newCompart = new (cicNoThrow) CCompartment();
-    if (!newCompart)
+    CCompartment *compartment = new (cicNoThrow) CCompartment();
+    if (!compartment)
     {
-        delete newValue;
+        delete value;
         return E_OUTOFMEMORY;
     }
 
-    HRESULT hr = newCompart->Init(newValue);
+    HRESULT hr = compartment->Init(value);
     if (FAILED(hr))
     {
-        delete newCompart;
-        delete newValue;
+        delete compartment;
+        delete value;
         *ppcomp = NULL;
         return hr;
     }
+    value->set(compartment);
 
-    newValue->m_compartment = newCompart;
+    list_add_head(&m_values, &value->m_entry);
 
-    list_add_head(&m_values, &newValue->m_entry);
-
-    *ppcomp = newCompart;
-    newCompart->AddRef();
+    *ppcomp = compartment;
+    compartment->AddRef();
 
     return hr;
 }

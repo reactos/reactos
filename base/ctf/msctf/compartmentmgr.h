@@ -20,6 +20,8 @@ struct CCompartmentValue
 
     CCompartmentValue();
     virtual ~CCompartmentValue();
+
+    void set(ITfCompartment *compartment);
 };
 
 ////////////////////////////////////////////////////////////////////////////
