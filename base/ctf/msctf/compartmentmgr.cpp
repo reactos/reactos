@@ -121,7 +121,10 @@ STDMETHODIMP CEnumCompartment::Next(ULONG celt, GUID *rgelt, ULONG *pceltFetched
     ULONG fetched = 0;
 
     if (!rgelt)
+    {
+        ERR("!rgelt\n");
         return E_POINTER;
+    }
 
     for (; fetched < celt && m_cursor != m_valuesHead; m_cursor = m_cursor->next)
     {
@@ -162,12 +165,18 @@ STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
     TRACE("%p -> (%p)\n", this, ppenum);
 
     if (!ppenum)
+    {
+        ERR("!ppenum\n");
         return E_POINTER;
+    }
 
     *ppenum = NULL;
     CEnumCompartment *newEnum = new(cicNoThrow) CEnumCompartment();
     if (!newEnum)
+    {
+        ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
+    }
 
     HRESULT hr = newEnum->Init(m_valuesHead);
     if (FAILED(hr))
@@ -305,6 +314,7 @@ STDMETHODIMP CCompartment::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCoo
         return advise_sink(&m_compartmentEventSink, IID_ITfCompartmentEventSink,
                            COOKIE_MAGIC_COMPARTMENTSINK, punk, pdwCookie);
 
+    ERR("E_NOTIMPL\n");
     return E_NOTIMPL;
 }
 
@@ -391,7 +401,10 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     TRACE("%p -> (%s, %p)\n", this, wine_dbgstr_guid(&rguid), ppcomp);
 
     if (!ppcomp)
+    {
+        ERR("!ppcomp\n");
         return E_POINTER;
+    }
     *ppcomp = NULL;
 
     // Search for existing compartment
@@ -410,7 +423,10 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     // Not found, create a new one
     CCompartmentValue *value = new (cicNoThrow) CCompartmentValue();
     if (!value)
+    {
+        ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
+    }
 
     value->m_guid = rguid;
     value->m_owner = 0; // Will be set by CCompartment::SetValue
@@ -418,6 +434,7 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     CCompartment *compartment = new (cicNoThrow) CCompartment();
     if (!compartment)
     {
+        ERR("E_OUTOFMEMORY\n");
         delete value;
         return E_OUTOFMEMORY;
     }
@@ -452,13 +469,17 @@ STDMETHODIMP CCompartmentMgr::ClearCompartment(TfClientId tid, REFGUID rguid)
             continue;
 
         if (value->m_owner && tid != value->m_owner)
+        {
+            ERR("E_UNEXPECTED\n");
             return E_UNEXPECTED;
+        }
 
         list_remove(cursor);
         delete value;
         return S_OK;
     }
 
+    ERR("OLE_E_NOCONNECTION\n");
     return OLE_E_NOCONNECTION;
 }
 
@@ -493,16 +514,25 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
     TRACE("(%p, %s, %p)\n", pUnkOuter, wine_dbgstr_guid(&riid), ppOut);
 
     if (!ppOut)
+    {
+        ERR("!ppOut\n");
         return E_POINTER;
+    }
 
     *ppOut = NULL;
 
     if (pUnkOuter && !IsEqualIID(riid, IID_IUnknown))
+    {
+        ERR("CLASS_E_NOAGGREGATION\n");
         return CLASS_E_NOAGGREGATION;
+    }
 
     CCompartmentMgr *newMgr = new (cicNoThrow) CCompartmentMgr(pUnkOuter);
     if (!newMgr)
+    {
+        ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
+    }
 
     if (pUnkOuter)
     {
@@ -515,7 +545,10 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
     // Non-aggregated: QueryInterface for the requested IID
     HRESULT hr = newMgr->QueryInterface(riid, (void **)ppOut);
     if (FAILED(hr))
+    {
+        ERR("hr: 0x%lX\n", hr);
         delete newMgr;
+    }
 
     return hr;
 }
