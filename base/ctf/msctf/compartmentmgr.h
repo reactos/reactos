@@ -40,7 +40,7 @@ public:
     CEnumCompartment();
     virtual ~CEnumCompartment();
 
-    HRESULT Init(struct list *valuesHead, struct list *current_cursor = NULL);
+    HRESULT Init(struct list *valueList, struct list *current_cursor = NULL);
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppvOut) override;
@@ -55,7 +55,7 @@ public:
 
 private:
     LONG m_cRefs;
-    struct list m_valuesHead;
+    struct list m_valueList;
     struct list *m_cursor;
 };
 
