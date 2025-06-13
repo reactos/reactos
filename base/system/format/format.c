@@ -270,35 +270,29 @@ FormatExCallback(
 //
 // LoadFMIFSEntryPoints
 //
-// Loads FMIFS.DLL and locates the entry point(s) we are going to use
+// Loads FMIFS.DLL and locates the entry point(s) we are going to use.
+//
+// Failure means the library or 1+ function is not loaded/assigned.
 //
 //----------------------------------------------------------------------
-static BOOLEAN LoadFMIFSEntryPoints(VOID)
+static BOOL LoadFMIFSEntryPoints(VOID)
 {
-    HMODULE hFmifs = LoadLibraryW( L"fmifs.dll");
-    if (hFmifs == NULL)
+    // Let program termination free the library.
+    HMODULE hFmifs = LoadLibraryW(L"fmifs.dll");
+    if (!hFmifs)
         return FALSE;
 
     FormatEx = (PFORMATEX)GetProcAddress(hFmifs, "FormatEx");
     if (!FormatEx)
-    {
-        FreeLibrary(hFmifs);
         return FALSE;
-    }
 
     EnableVolumeCompression = (PENABLEVOLUMECOMPRESSION)GetProcAddress(hFmifs, "EnableVolumeCompression");
     if (!EnableVolumeCompression)
-    {
-        FreeLibrary(hFmifs);
         return FALSE;
-    }
 
     QueryAvailableFileSystemFormat = (PQUERYAVAILABLEFILESYSTEMFORMAT)GetProcAddress(hFmifs, "QueryAvailableFileSystemFormat");
     if (!QueryAvailableFileSystemFormat)
-    {
-        FreeLibrary(hFmifs);
         return FALSE;
-    }
 
     return TRUE;
 }
