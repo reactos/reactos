@@ -53,7 +53,7 @@ protected:
     ITfCompartmentMgr *m_pCompartmentMgr;
     ITfContext *m_contextStack[2]; // limit of 2 contexts
     ITfThreadMgrEventSink *m_pThreadMgrSink;
-    struct list m_TransitoryExtensionSink;
+    struct list m_transitoryExtensionSink;
 };
 
 ////////////////////////////////////////////////////////////////////////////
