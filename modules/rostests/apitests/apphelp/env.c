@@ -95,6 +95,25 @@ typedef struct ShimData_Win7
     DWORD unknown;  // 0x14c
 } ShimData_Win7;
 
+// Needs to be verified. This is a guess.
+typedef struct ShimData_Win8
+{
+    WCHAR szModule[260];
+    DWORD dwSize;
+    DWORD dwMagic;
+    DWORD unk1;
+    SDBQUERYRESULT_VISTA Query;
+    WCHAR szLayer[MAX_LAYER_LENGTH];
+    char padding1[0x200];
+    char padding2[0x404];
+    DWORD unk2;
+    DWORD unk3;
+    WCHAR processname[MAX_PATH];
+    WCHAR szLayerEnv[MAX_LAYER_LENGTH];
+    WCHAR unk4[MAX_LAYER_LENGTH];
+    char padding4[112];
+} ShimData_Win8;
+
 typedef struct ShimData_Win10_v1
 {
     WCHAR szModule[260];
@@ -150,6 +169,7 @@ typedef struct ShimData_QueryOffset
 
 C_ASSERT(sizeof(ShimData_Win2k3) == 392);
 C_ASSERT(sizeof(ShimData_Win7) == 1500);
+C_ASSERT(sizeof(ShimData_Win8) == 4704);
 C_ASSERT(sizeof(ShimData_Win10_v1) == 4712);
 C_ASSERT(sizeof(ShimData_Win10_v2) == 3976);
 
@@ -349,6 +369,35 @@ static void Validate_ShimData_Win7(PVOID data, WCHAR szApphelp[256], size_t coun
     ok(pShimData->unknown == 0x14c, "Expected pShimData->unknown to be 0x14c, was 0x%x\n", pShimData->unknown);
 }
 
+static void Validate_ShimData_Win8(PVOID data, WCHAR szApphelp[256], size_t count, const char* layers[])
+{
+    size_t n;
+    ShimData_Win8* pShimData = (ShimData_Win8*)data;
+
+    ok(!lstrcmpiW(pShimData->szModule, szApphelp), "Expected pShimData->Module to be %s, was %s\n",
+        wine_dbgstr_w(szApphelp), wine_dbgstr_w(pShimData->szModule));
+    ok(pShimData->dwSize == sizeof(ShimData_Win8), "Expected pShimData->dwSize to be %u, was %u\n",
+        sizeof(ShimData_Win8), pShimData->dwSize);
+    if (pShimData->Query.dwLayerCount != min(count, SDB_MAX_LAYERS))
+    {
+        char buf[250] = {0};
+        GetEnvironmentVariableA("__COMPAT_LAYER", buf, _countof(buf));
+        trace("At test: %s\n", buf);
+    }
+    ok(pShimData->Query.dwLayerCount == min(count, SDB_MAX_LAYERS),
+        "Expected LayerCount to be %u, was %u\n", min(count, SDB_MAX_LAYERS), pShimData->Query.dwLayerCount);
+    for (n = 0; n < SDB_MAX_LAYERS; ++n)
+    {
+        if (n < count)
+        {
+            ok(pShimData->Query.atrLayers[n] != 0, "Expected to find a valid layer in index %u / %u\n", n, count);
+            ValidateShim(pShimData->Query.atrLayers[n], layers[n]);
+        }
+        else
+            ok(pShimData->Query.atrLayers[n] == 0, "Expected to find an empty layer in index %u / %u\n", n, count);
+    }
+}
+
 static void Validate_ShimData_Win10_v2(PVOID data, WCHAR szApphelp[256], size_t count, const char* layers[])
 {
     size_t n;
@@ -419,6 +468,19 @@ static void Validate_ShimData_Win10(PVOID data, WCHAR szApphelp[256], size_t cou
     }
 }
 
+static void Validate_EmptyShimData_Win8(PVOID data)
+{
+    ShimData_Win10_v1* pShimData = (ShimData_Win10_v1*)data;
+    ok(pShimData != NULL, "Expected pShimData\n");
+    if (!pShimData)
+        return;
+
+    ok(!lstrcmpiW(pShimData->szModule, L""), "Expected pShimData->Module to be '', was %s\n", wine_dbgstr_w(pShimData->szModule));
+    ok(!lstrcmpiW(pShimData->szLayer, L""), "Expected pShimData->szLayer to be '', was %s\n", wine_dbgstr_w(pShimData->szLayer));
+    ok(pShimData->dwSize == sizeof(ShimData_Win8), "Expected pShimData->dwSize to be %u, was %u\n", sizeof(ShimData_Win8), pShimData->dwSize);
+    ok(!memcmp(&pShimData->Query, &empty_result, sizeof(empty_result)), "Expected result to be empty\n");
+}
+
 static void Validate_EmptyShimData_Win10(PVOID data)
 {
     ShimData_Win10_v1* pShimData = (ShimData_Win10_v1*)data;
@@ -480,9 +542,13 @@ static void Test_layers(WCHAR szApphelp[256])
             ok(info.AppCompatFlags.QuadPart == 0, "Expected AppCompatFlags to be 0, was: %s\n", wine_dbgstr_longlong(info.AppCompatFlags.QuadPart));
             ok(info.AppCompatFlagsUser.QuadPart == 0, "Expected AppCompatFlagsUser to be 0, was: %s\n", wine_dbgstr_longlong(info.AppCompatFlagsUser.QuadPart));
             ok(info.AppCompatInfo == NULL, "Expected AppCompatInfo to be NULL, was: %p\n", info.AppCompatInfo);
-            if (g_WinVersion < WINVER_WIN10)
+            if (g_WinVersion < WINVER_WIN8)
             {
                 ok(info.pShimData == NULL, "Expected pShimData to be NULL, was: %p\n", info.pShimData);
+            }
+            else if (g_WinVersion < WINVER_WIN10)
+            {
+                Validate_EmptyShimData_Win8(info.pShimData);
             }
             else
             {
@@ -502,8 +568,10 @@ static void Test_layers(WCHAR szApphelp[256])
                     Validate_ShimData_Win2k3(info.pShimData, n, layers);
                 else if (g_WinVersion == WINVER_VISTA)
                     Validate_ShimData_WinVista(info.pShimData, n, layers);
-                else if (g_WinVersion < WINVER_WIN10)
+                else if (g_WinVersion < WINVER_WIN8)
                     Validate_ShimData_Win7(info.pShimData, szApphelp, n, layers);
+                else if (g_WinVersion < WINVER_WIN10)
+                    Validate_ShimData_Win8(info.pShimData, szApphelp, n, layers);
                 else
                     Validate_ShimData_Win10(info.pShimData, szApphelp, n, layers);
             }
@@ -551,8 +619,10 @@ static void Test_repeatlayer(WCHAR szApphelp[256])
                 Validate_ShimData_Win2k3(info.pShimData, SDB_MAX_LAYERS, layers);
             else if (g_WinVersion == WINVER_VISTA)
                 Validate_ShimData_WinVista(info.pShimData, SDB_MAX_LAYERS, layers);
-            else if (g_WinVersion < WINVER_WIN10)
+            else if (g_WinVersion < WINVER_WIN8)
                 Validate_ShimData_Win7(info.pShimData, szApphelp, SDB_MAX_LAYERS, layers);
+            else if (g_WinVersion < WINVER_WIN10)
+                Validate_ShimData_Win8(info.pShimData, szApphelp, SDB_MAX_LAYERS, layers);
             else
                 Validate_ShimData_Win10(info.pShimData, szApphelp, 1, layers);
         }
@@ -650,6 +720,7 @@ static void Test_Shimdata(SDBQUERYRESULT_VISTA* result, const WCHAR* szLayer)
     {
         ShimData_Win2k3* pWin2k3;
         ShimData_Win7* pWin7;
+        ShimData_Win8* pWin8;
         ShimData_Win10_v1* pWin10;
         ShimData_Win10_v2* pWin10_v2;
         SDBQUERYRESULT_VISTA result2 = { { 0 } };
@@ -672,6 +743,14 @@ static void Test_Shimdata(SDBQUERYRESULT_VISTA* result, const WCHAR* szLayer)
             ok_int(pWin7->dwSize, dwSize);
             ok(!memcmp(&pWin7->Query, result, sizeof(*result)), "Expected pWin7->Query to equal result\n");
             ok_wstr(pWin7->szLayer, szLayer);
+            break;
+        case sizeof(ShimData_Win8):
+            pWin8 = (ShimData_Win8*)pData;
+            ok_hex(pWin8->dwMagic, SHIMDATA_MAGIC);
+            ok_int(pWin8->dwSize, dwSize);
+            ok(!memcmp(&pWin8->Query, result, sizeof(*result)), "Expected pWin10->Query to equal result\n");
+            ok_wstr(pWin8->szLayerEnv, szLayer);
+            ok_wstr(pWin8->szLayer, L"");
             break;
         case sizeof(ShimData_Win10_v1):
             pWin10 = (ShimData_Win10_v1*)pData;
@@ -1290,6 +1369,8 @@ START_TEST(env)
     case WINVER_WIN7:
         pApphelpCheckRunAppEx_w7 = (void*)GetProcAddress(hdll, "ApphelpCheckRunAppEx");
         break;
+    case WINVER_WIN8:
+    case WINVER_WIN81:
     case WINVER_WIN10:
         pApphelpCheckRunAppEx_w10 = (void*)GetProcAddress(hdll, "ApphelpCheckRunAppEx");
         break;
@@ -1309,7 +1390,7 @@ START_TEST(env)
     QueryOffset.dwSize_7_10 = 2;
     QueryOffset.dwSize_10_v2 = 3;
 
-    g_ShimDataSize = g_WinVersion < WINVER_WIN10 ? 4096 : 8192;
+    g_ShimDataSize = g_WinVersion < WINVER_WIN8 ? 4096 : 8192;
     _SEH2_TRY
     {
         ShimDataType = pSdbGetAppCompatDataSize(&QueryOffset);
