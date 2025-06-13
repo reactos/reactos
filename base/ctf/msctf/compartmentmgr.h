@@ -13,13 +13,13 @@
 
 struct CCompartmentValue
 {
-    struct list m_entry;
-    GUID m_guid;
     TfClientId m_owner;
     ITfCompartment *m_compartment;
+    struct list m_entry;
+    GUID m_guid;
 
     CCompartmentValue();
-    ~CCompartmentValue();
+    virtual ~CCompartmentValue();
 };
 
 ////////////////////////////////////////////////////////////////////////////
