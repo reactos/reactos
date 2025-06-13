@@ -1151,22 +1151,30 @@ HandleShutdown(
     IN DWORD wlxAction)
 {
     NTSTATUS Status;
+    UINT uMsgId;
     BOOLEAN Old;
 
-    // SwitchDesktop(Session->WinlogonDesktop);
-
-    /* If the system is rebooting, show the appropriate string */
+    /* Display the appropriate shutdown or reboot message */
     if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
-        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISRESTARTING);
+        uMsgId = IDS_REACTOSISRESTARTING;
     else
-        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
+        uMsgId = IDS_REACTOSISSHUTTINGDOWN;
+
+    // SwitchDesktop(Session->WinlogonDesktop);
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, uMsgId);
+
+    /* Invoke Shutdown notifications and notify GINA */
+    CallNotificationDlls(Session, ShutdownHandler);
+    Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
 
     /* Run the shutdown thread. *IGNORE* all failures as we want to force shutting down! */
     Status = RunLogoffShutdownThread(Session, NULL, wlxAction);
     if (!NT_SUCCESS(Status))
         ERR("Failed to start the Shutdown thread, Status 0x%08lx\n", Status);
 
-    CallNotificationDlls(Session, ShutdownHandler);
+    /* Show again the shutdown message */
+    // SwitchDesktop(Session->WinlogonDesktop); // Re-enable if you notice the desktop may have switched to something else.
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, uMsgId);
 
     /* Destroy SAS window */
     UninitializeSAS(Session);
@@ -1271,9 +1279,6 @@ DoGenericAction(
             }
             if (WLX_SHUTTINGDOWN(wlxAction))
             {
-                // FIXME: WlxShutdown should be done from inside HandleShutdown,
-                // after having displayed "ReactOS is shutting down" message.
-                Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
                 if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
