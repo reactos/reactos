@@ -83,7 +83,13 @@ typedef struct ShimData_Win2k3
     GUID rgGuidDB[SDB_MAX_SDBS];
 } ShimData_Win2k3;
 
-
+typedef struct ShimData_WinVista
+{
+    WCHAR szModule[260];
+    DWORD dwSize;
+    DWORD dwMagic;
+    SDBQUERYRESULT_VISTA Query;
+} ShimData_WinVista;
 
 typedef struct ShimData_Win7
 {
@@ -95,7 +101,6 @@ typedef struct ShimData_Win7
     DWORD unknown;  // 0x14c
 } ShimData_Win7;
 
-// Needs to be verified. This is a guess.
 typedef struct ShimData_Win8
 {
     WCHAR szModule[260];
@@ -168,6 +173,7 @@ typedef struct ShimData_QueryOffset
 
 
 C_ASSERT(sizeof(ShimData_Win2k3) == 392);
+C_ASSERT(sizeof(ShimData_WinVista) == 984);
 C_ASSERT(sizeof(ShimData_Win7) == 1500);
 C_ASSERT(sizeof(ShimData_Win8) == 4704);
 C_ASSERT(sizeof(ShimData_Win10_v1) == 4712);
@@ -330,11 +336,37 @@ static void Validate_ShimData_Win2k3(PVOID data, size_t count, const char* layer
 
 static void Validate_ShimData_WinVista(PVOID data, size_t count, const char* layers[])
 {
-    // This is a hack, we need a ShimData_WinVista structure.
-    PWSTR ModuleName = PathFindFileNameW(data);
+    size_t n;
+    ShimData_WinVista* pShimData = (ShimData_WinVista*)data;
+    WCHAR szShimEng[MAX_PATH];
+    HMODULE hShimEngDll = LoadLibraryA("ShimEng.dll");
 
-    ok(!lstrcmpW(ModuleName, L"ShimEng.dll"), "Expected pShimData->Module to be %s, was %s\n", wine_dbgstr_w(L"ShimEng.dll"), wine_dbgstr_w(ModuleName));
-    skip("FIXME: Validate_ShimData_WinVista is a stub.\n");
+    GetModuleFileNameW(hShimEngDll, szShimEng, _countof(szShimEng));
+
+    ok(!lstrcmpW(pShimData->szModule, szShimEng), "Expected pShimData->Module to be %s, was %s\n",
+            wine_dbgstr_w(szShimEng), wine_dbgstr_w(pShimData->szModule));
+    ok(pShimData->dwMagic == SHIMDATA_MAGIC, "Expected pShimData->dwMagic to be 0x%x, was 0x%x\n",
+        SHIMDATA_MAGIC, pShimData->dwMagic);
+    ok(pShimData->dwSize == sizeof(ShimData_WinVista), "Expected pShimData->dwSize to be %u, was %u\n",
+        sizeof(ShimData_WinVista), pShimData->dwSize);
+    if (pShimData->Query.dwLayerCount != min(count, SDB_MAX_LAYERS))
+    {
+        char buf[250] = {0};
+        GetEnvironmentVariableA("__COMPAT_LAYER", buf, _countof(buf));
+        trace("At test: %s\n", buf);
+    }
+    ok(pShimData->Query.dwLayerCount == min(count, SDB_MAX_LAYERS),
+        "Expected LayerCount to be %u, was %u\n", min(count, SDB_MAX_LAYERS), pShimData->Query.dwLayerCount);
+    for (n = 0; n < SDB_MAX_LAYERS; ++n)
+    {
+        if (n < count)
+        {
+            ok(pShimData->Query.atrLayers[n] != 0, "Expected to find a valid layer in index %u / %u\n", n, count);
+            ValidateShim(pShimData->Query.atrLayers[n], layers[n]);
+        }
+        else
+            ok(pShimData->Query.atrLayers[n] == 0, "Expected to find an empty layer in index %u / %u\n", n, count);
+    }
 }
 
 static void Validate_ShimData_Win7(PVOID data, WCHAR szApphelp[256], size_t count, const char* layers[])
@@ -719,6 +751,7 @@ static void Test_Shimdata(SDBQUERYRESULT_VISTA* result, const WCHAR* szLayer)
     if (pData)
     {
         ShimData_Win2k3* pWin2k3;
+        ShimData_WinVista* pWinVista;
         ShimData_Win7* pWin7;
         ShimData_Win8* pWin8;
         ShimData_Win10_v1* pWin10;
@@ -736,6 +769,12 @@ static void Test_Shimdata(SDBQUERYRESULT_VISTA* result, const WCHAR* szLayer)
             ok(pWin2k3->dwCustomSDBMap == 1, "Expected pWin2k3->dwCustomSDBMap to equal 1, was %u for %s\n", pWin2k3->dwCustomSDBMap, wine_dbgstr_w(szLayer));
             //ok(!memcmp(&pWin2k3->Query, result, sizeof(SDBQUERYRESULT_2k3)), "Expected pWin2k3->Query to equal result\n");
             //ok_wstr(pWin7->szLayer, szLayer);
+            break;
+        case sizeof(ShimData_WinVista):
+            pWinVista = (ShimData_WinVista*)pData;
+            ok_hex(pWinVista->dwMagic, SHIMDATA_MAGIC);
+            ok_int(pWinVista->dwSize, dwSize);
+            ok(!memcmp(&pWinVista->Query, result, sizeof(*result)), "Expected pWinVista->Query to equal result\n");
             break;
         case sizeof(ShimData_Win7):
             pWin7 = (ShimData_Win7*)pData;
