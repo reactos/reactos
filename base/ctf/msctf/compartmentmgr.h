@@ -13,16 +13,21 @@
 
 struct CCompartmentValue
 {
+    LONG m_cRefs;
     TfClientId m_owner;
     ITfCompartment *m_compartment;
     GUID m_guid;
     struct list m_entry;
 
-    CCompartmentValue();
-    CCompartmentValue(REFGUID rguid, TfClientId owner);
+    CCompartmentValue(
+        _In_opt_ const GUID *guid = NULL,
+        _In_ TfClientId owner = 0,
+        _In_opt_ ITfCompartment *compartment = NULL);
     virtual ~CCompartmentValue();
 
     HRESULT Clone(CCompartmentValue **ppValue);
+    ULONG AddRef();
+    ULONG Release();
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -50,7 +55,7 @@ public:
 
 private:
     LONG m_cRefs;
-    struct list *m_valuesHead;
+    struct list m_valuesHead;
     struct list *m_cursor;
 };
 
@@ -65,7 +70,7 @@ public:
     CCompartment();
     virtual ~CCompartment();
 
-    HRESULT Init(CCompartmentValue *valueData_in);
+    HRESULT Init(CCompartmentValue *value);
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppvOut) override;
@@ -83,7 +88,7 @@ public:
 private:
     LONG m_cRefs;
     VARIANT m_variant; // Must be in VT_BSTR, VT_I4, or VT_UNKNOWN
-    CCompartmentValue *m_valueData; // Raw pointer, owned by CCompartmentMgr
+    CCompartmentValue *m_value;
     struct list m_compartmentEventSink; // Placeholder for sink management
 };
 

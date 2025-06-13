@@ -9,7 +9,6 @@
 #include <initguid.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
 #include <oleauto.h>
 #include <msctf.h>
 #include <msctf_undoc.h>
@@ -17,8 +16,6 @@
 
 // Cicero
 #include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
 
 #include "compartmentmgr.h"
 #include "msctf_internal.h"
@@ -29,20 +26,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 ////////////////////////////////////////////////////////////////////////////
 // CCompartmentValue
 
-CCompartmentValue::CCompartmentValue()
-    : m_owner(0)
-    , m_compartment(NULL)
+CCompartmentValue::CCompartmentValue(
+    _In_opt_ const GUID *guid,
+    _In_ TfClientId owner,
+    _In_opt_ ITfCompartment *compartment) : m_cRefs(1), m_owner(owner)
 {
-    ZeroMemory(&m_guid, sizeof(m_guid));
-    list_init(&m_entry);
-}
+    if (guid)
+        m_guid = *guid;
+    else
+        ZeroMemory(&m_guid, sizeof(m_guid));
 
-CCompartmentValue::CCompartmentValue(REFGUID rguid, TfClientId owner)
-    : m_owner(owner)
-    , m_compartment(NULL)
-{
-    m_guid = rguid;
     list_init(&m_entry);
+
+    m_compartment = compartment;
+    if (m_compartment)
+        m_compartment->AddRef();
 }
 
 CCompartmentValue::~CCompartmentValue()
@@ -62,21 +60,28 @@ HRESULT CCompartmentValue::Clone(CCompartmentValue **ppValue)
         return E_POINTER;
     }
 
-    CCompartmentValue *pCloned = new(cicNoThrow) CCompartmentValue(m_guid, m_owner);
+    CCompartmentValue *pCloned = new(cicNoThrow) CCompartmentValue(&m_guid, m_owner, m_compartment);
     if (!pCloned)
     {
         ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
     }
 
-    if (m_compartment)
-    {
-        pCloned->m_compartment = m_compartment;
-        m_compartment->AddRef();
-    }
-
     *ppValue = pCloned;
     return TRUE;
+}
+
+ULONG CCompartmentValue::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+ULONG CCompartmentValue::Release()
+{
+    ULONG ref = ::InterlockedDecrement(&m_cRefs);
+    if (!ref)
+        delete this;
+    return ref;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -84,14 +89,15 @@ HRESULT CCompartmentValue::Clone(CCompartmentValue **ppValue)
 
 CEnumCompartment::CEnumCompartment()
     : m_cRefs(1)
-    , m_valuesHead(NULL)
-    , m_cursor(NULL)
 {
+    list_init(&m_valuesHead);
+    m_cursor = list_head(&m_valuesHead);
 }
 
 HRESULT
 CEnumCompartment::Init(struct list *valuesHead, struct list *current_cursor)
 {
+    // Duplicate values
     ULONG iItem = 0, iSelected = 0;
     for (struct list *cursor = list_head(valuesHead); cursor != valuesHead;
          cursor = list_next(valuesHead, cursor))
@@ -108,15 +114,23 @@ CEnumCompartment::Init(struct list *valuesHead, struct list *current_cursor)
             return hr;
         }
 
-        list_add_head(m_valuesHead, &newValue->m_entry);
+        list_add_head(&m_valuesHead, &newValue->m_entry);
         ++iItem;
     }
 
+    // Positioning
     return iSelected ? Skip(iSelected) : S_OK;
 }
 
 CEnumCompartment::~CEnumCompartment()
 {
+    struct list *cursor, *cursor2;
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &m_valuesHead)
+    {
+        CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
+        list_remove(cursor);
+        value->Release();
+    }
 }
 
 STDMETHODIMP CEnumCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
@@ -125,7 +139,7 @@ STDMETHODIMP CEnumCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
 
     *ppvOut = NULL;
 
-    if (IsEqualIID(iid, IID_IUnknown) || IsEqualIID(iid, IID_IEnumGUID))
+    if (iid == IID_IUnknown || iid == IID_IEnumGUID)
         *ppvOut = static_cast<IEnumGUID *>(this);
 
     if (*ppvOut)
@@ -164,8 +178,8 @@ STDMETHODIMP CEnumCompartment::Next(ULONG celt, GUID *rgelt, ULONG *pceltFetched
     }
 
     ULONG fetched;
-    for (fetched = 0; fetched < celt && m_cursor != m_valuesHead;
-         m_cursor = list_next(m_valuesHead, m_cursor))
+    for (fetched = 0; fetched < celt && m_cursor != &m_valuesHead;
+         m_cursor = list_next(&m_valuesHead, m_cursor))
     {
         CCompartmentValue *value = LIST_ENTRY(m_cursor, CCompartmentValue, m_entry);
         if (!value)
@@ -186,15 +200,15 @@ STDMETHODIMP CEnumCompartment::Skip(ULONG celt)
 {
     TRACE("%p -> (%lu)\n", this, celt);
     ULONG i;
-    for (i = 0; i < celt && m_cursor != m_valuesHead; ++i)
-        m_cursor = list_next(m_valuesHead, m_cursor);
+    for (i = 0; i < celt && m_cursor != &m_valuesHead; ++i)
+        m_cursor = list_next(&m_valuesHead, m_cursor);
     return (i == celt) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP CEnumCompartment::Reset()
 {
     TRACE("%p -> ()\n", this);
-    m_cursor = list_head(m_valuesHead); // Reset to the first element
+    m_cursor = list_head(&m_valuesHead); // Reset to the first element
     return S_OK;
 }
 
@@ -217,11 +231,11 @@ STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
         return E_OUTOFMEMORY;
     }
 
-    HRESULT hr = pCloned->Init(m_valuesHead, m_cursor);
+    HRESULT hr = pCloned->Init(&m_valuesHead, m_cursor);
     if (FAILED(hr))
     {
         ERR("hr: 0x%lX\n", hr);
-        delete pCloned;
+        pCloned->Release();
         return hr;
     }
 
@@ -234,7 +248,7 @@ STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
 
 CCompartment::CCompartment()
     : m_cRefs(1)
-    , m_valueData(NULL)
+    , m_value(NULL)
 {
     ::VariantInit(&m_variant);
     list_init(&m_compartmentEventSink);
@@ -244,16 +258,23 @@ CCompartment::~CCompartment()
 {
     ::VariantClear(&m_variant);
     free_sinks(&m_compartmentEventSink);
+
+    if (m_value)
+    {
+        m_value->Release();
+        m_value = NULL;
+    }
 }
 
-HRESULT CCompartment::Init(CCompartmentValue *valueData_in)
+HRESULT CCompartment::Init(CCompartmentValue *value)
 {
-    if (!valueData_in)
+    if (!value)
     {
-        ERR("!valueData_in\n");
+        ERR("!value\n");
         return E_INVALIDARG;
     }
-    m_valueData = valueData_in;
+    m_value = value;
+    m_value->AddRef();
     return S_OK;
 }
 
@@ -263,9 +284,9 @@ STDMETHODIMP CCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
 
     *ppvOut = NULL;
 
-    if (IsEqualIID(iid, IID_IUnknown) || IsEqualIID(iid, IID_ITfCompartment))
+    if (iid == IID_IUnknown || iid == IID_ITfCompartment)
         *ppvOut = static_cast<ITfCompartment *>(this);
-    else if (IsEqualIID(iid, IID_ITfSource))
+    else if (iid == IID_ITfSource)
         *ppvOut = static_cast<ITfSource *>(this);
 
     if (*ppvOut)
@@ -310,8 +331,8 @@ STDMETHODIMP CCompartment::SetValue(TfClientId tid, const VARIANT *pvarValue)
         return E_INVALIDARG;
     }
 
-    if (!m_valueData->m_owner)
-        m_valueData->m_owner = tid;
+    if (!m_value->m_owner)
+        m_value->m_owner = tid;
 
     ::VariantCopy(&m_variant, (LPVARIANT)pvarValue);
 
@@ -319,7 +340,7 @@ STDMETHODIMP CCompartment::SetValue(TfClientId tid, const VARIANT *pvarValue)
     ITfCompartmentEventSink *sink;
     SINK_FOR_EACH(cursor, &m_compartmentEventSink, ITfCompartmentEventSink, sink)
     {
-        sink->OnChange(m_valueData->m_guid);
+        sink->OnChange(m_value->m_guid);
     }
 
     return S_OK;
@@ -352,7 +373,7 @@ STDMETHODIMP CCompartment::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCoo
         return E_INVALIDARG;
     }
 
-    if (IsEqualIID(riid, IID_ITfCompartmentEventSink))
+    if (riid == IID_ITfCompartmentEventSink)
         return advise_sink(&m_compartmentEventSink, IID_ITfCompartmentEventSink,
                            COOKIE_MAGIC_COMPARTMENTSINK, punk, pdwCookie);
 
@@ -384,12 +405,11 @@ CCompartmentMgr::CCompartmentMgr(IUnknown *pUnkOuter_in)
 CCompartmentMgr::~CCompartmentMgr()
 {
     struct list *cursor, *cursor2;
-
     LIST_FOR_EACH_SAFE(cursor, cursor2, &m_values)
     {
         CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
         list_remove(cursor);
-        delete value;
+        value->Release();
     }
 }
 
@@ -402,7 +422,7 @@ STDMETHODIMP CCompartmentMgr::QueryInterface(REFIID iid, LPVOID *ppvOut)
 
     *ppvOut = NULL;
 
-    if (IsEqualIID(iid, IID_IUnknown) || IsEqualIID(iid, IID_ITfCompartmentMgr))
+    if (iid == IID_IUnknown || iid == IID_ITfCompartmentMgr)
         *ppvOut = static_cast<ITfCompartmentMgr *>(this);
 
     if (*ppvOut)
@@ -454,16 +474,16 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     LIST_FOR_EACH(cursor, &m_values)
     {
         CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
-        if (!IsEqualGUID(rguid, value->m_guid))
+        if (rguid != value->m_guid)
             continue;
 
         *ppcomp = value->m_compartment;
         (*ppcomp)->AddRef();
-        return S_OK;
+        return S_OK; // Found
     }
 
     // Not found, create a new one
-    CCompartmentValue *value = new (cicNoThrow) CCompartmentValue(rguid, 0);
+    CCompartmentValue *value = new (cicNoThrow) CCompartmentValue(&rguid);
     if (!value)
     {
         ERR("E_OUTOFMEMORY\n");
@@ -474,22 +494,23 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     if (!compartment)
     {
         ERR("E_OUTOFMEMORY\n");
-        delete value;
+        value->Release();
         return E_OUTOFMEMORY;
     }
 
     HRESULT hr = compartment->Init(value);
     if (FAILED(hr))
     {
-        delete compartment;
-        delete value;
-        *ppcomp = NULL;
+        compartment->Release();
+        value->Release();
         return hr;
     }
+
     value->m_compartment = compartment;
     compartment->AddRef();
 
     list_add_head(&m_values, &value->m_entry);
+
     *ppcomp = compartment;
     return hr;
 }
@@ -502,7 +523,7 @@ STDMETHODIMP CCompartmentMgr::ClearCompartment(TfClientId tid, REFGUID rguid)
     LIST_FOR_EACH(cursor, &m_values)
     {
         CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
-        if (!IsEqualGUID(rguid, value->m_guid))
+        if (rguid != value->m_guid)
             continue;
 
         if (value->m_owner && tid != value->m_owner)
@@ -512,7 +533,7 @@ STDMETHODIMP CCompartmentMgr::ClearCompartment(TfClientId tid, REFGUID rguid)
         }
 
         list_remove(cursor);
-        delete value;
+        value->Release();
         return S_OK;
     }
 
@@ -542,7 +563,7 @@ STDMETHODIMP CCompartmentMgr::EnumCompartments(IEnumGUID **ppEnum)
     if (FAILED(hr))
     {
         ERR("hr: 0x%lX\n", hr);
-        delete pEnum;
+        pEnum->Release();
         return hr;
     }
 
@@ -562,7 +583,7 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
 
     *ppOut = NULL;
 
-    if (pUnkOuter && !IsEqualIID(riid, IID_IUnknown))
+    if (pUnkOuter && riid != IID_IUnknown)
     {
         ERR("CLASS_E_NOAGGREGATION\n");
         return CLASS_E_NOAGGREGATION;
@@ -575,20 +596,19 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
         return E_OUTOFMEMORY;
     }
 
-    if (pUnkOuter)
+    if (pUnkOuter) // Aggregated object?
     {
-        // Aggregated object
         *ppOut = static_cast<ITfCompartmentMgr *>(pManager);
         pManager->AddRef();
         return S_OK;
     }
 
-    // Otherwise, non-aggregated object
+    // Non-aggregated object
     HRESULT hr = pManager->QueryInterface(riid, (void **)ppOut);
     if (FAILED(hr))
     {
         ERR("hr: 0x%lX\n", hr);
-        delete pManager;
+        pManager->Release();
     }
 
     return hr;
@@ -605,6 +625,7 @@ HRESULT CompartmentMgr_Constructor(IUnknown *pUnkOuter, REFIID riid, IUnknown **
 EXTERN_C
 HRESULT CompartmentMgr_Destructor(ITfCompartmentMgr *iface)
 {
-    iface->Release();
+    if (iface)
+        iface->Release();
     return S_OK;
 }
