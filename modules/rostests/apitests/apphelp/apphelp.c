@@ -753,8 +753,6 @@ static void test_crc2_imp(DWORD len, int fill, DWORD expected)
         pSdbFreeFileAttributes(pattrinfo);
 }
 
-
-
 static void test_ApplicationAttributes(void)
 {
     static const WCHAR path[] = {'t','e','s','t','x','x','.','e','x','e',0};
@@ -825,8 +823,11 @@ static void test_ApplicationAttributes(void)
     }
 
     ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
-
+#ifndef _M_IX86
+    if (num == g_AttrInfoSize && ret && g_WinVersion < WINVER_WIN7)
+#else
     if (num == g_AttrInfoSize && ret)
+#endif
     {
         expect_tag_dword(pattrinfo, TAG_SIZE, 0x800);
         expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0x178bd629);
@@ -872,7 +873,14 @@ static void test_ApplicationAttributes(void)
     if (num == g_AttrInfoSize && ret)
     {
         expect_tag_dword(pattrinfo, TAG_SIZE, 0x800);
+#ifndef _M_IX86
+        if (g_WinVersion < WINVER_WIN7)
+            expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xea7caffd);
+        else
+            expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xea7cf1fd);
+#else
         expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xea7caffd);
+#endif
         //expect_tag_skip_range(pattrinfo, 2, 16);
         expect_tag_dword(pattrinfo, TAG_MODULE_TYPE, 0x3); /* Win32 */
         expect_tag_dword(pattrinfo, TAG_PE_CHECKSUM, 0xBAAD);
