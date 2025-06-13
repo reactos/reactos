@@ -1049,7 +1049,10 @@ HandleShutdown(
             DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER),
                       GetDesktopWindow(), ShutdownComputerWindowProc);
         }
-        NtShutdownSystem(ShutdownNoReboot);
+        if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+            NtShutdownSystem(ShutdownPowerOff);
+        else // if (wlxAction == WLX_SAS_ACTION_SHUTDOWN)
+            NtShutdownSystem(ShutdownNoReboot);
     }
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
     return STATUS_SUCCESS;
