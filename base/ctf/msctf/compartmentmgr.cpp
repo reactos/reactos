@@ -442,7 +442,7 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
     }
 
     // Non-aggregated: QueryInterface for the requested IID
-    HRESULT hr = newMgr->QueryInterface(riid, (void**)ppOut);
+    HRESULT hr = newMgr->QueryInterface(riid, (void **)ppOut);
     if (FAILED(hr))
         delete newMgr;
 
