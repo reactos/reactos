@@ -748,7 +748,7 @@ static void Test_Shimdata(SDBQUERYRESULT_VISTA* result, const WCHAR* szLayer)
             pWin8 = (ShimData_Win8*)pData;
             ok_hex(pWin8->dwMagic, SHIMDATA_MAGIC);
             ok_int(pWin8->dwSize, dwSize);
-            ok(!memcmp(&pWin8->Query, result, sizeof(*result)), "Expected pWin10->Query to equal result\n");
+            ok(!memcmp(&pWin8->Query, result, sizeof(*result)), "Expected pWin8->Query to equal result\n");
             ok_wstr(pWin8->szLayerEnv, szLayer);
             ok_wstr(pWin8->szLayer, L"");
             break;
