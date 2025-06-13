@@ -15,11 +15,14 @@ struct CCompartmentValue
 {
     TfClientId m_owner;
     ITfCompartment *m_compartment;
-    struct list m_entry;
     GUID m_guid;
+    struct list m_entry;
 
     CCompartmentValue();
+    CCompartmentValue(REFGUID rguid, TfClientId owner);
     virtual ~CCompartmentValue();
+
+    HRESULT Clone(CCompartmentValue **ppValue);
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -32,7 +35,7 @@ public:
     CEnumCompartment();
     virtual ~CEnumCompartment();
 
-    HRESULT Init(struct list* values_head);
+    HRESULT Init(struct list *valuesHead, struct list *current_cursor = NULL);
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppvOut) override;
