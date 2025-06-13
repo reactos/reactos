@@ -110,15 +110,15 @@ STDMETHODIMP CEnumCompartment::Next(ULONG celt, GUID *rgelt, ULONG *pceltFetched
 {
     TRACE("%p -> (%lu, %s, %p)\n", this, celt, wine_dbgstr_guid(rgelt), pceltFetched);
 
-    ULONG fetched = 0;
-
     if (!rgelt)
     {
         ERR("!rgelt\n");
         return E_POINTER;
     }
 
-    for (; fetched < celt && m_cursor != m_valuesHead; m_cursor = m_cursor->next)
+    ULONG fetched;
+    for (fetched = 0; fetched < celt && m_cursor != m_valuesHead;
+         m_cursor = list_next(m_valuesHead, m_cursor))
     {
         CCompartmentValue *value = LIST_ENTRY(m_cursor, CCompartmentValue, m_entry);
         if (!value)
@@ -138,11 +138,10 @@ STDMETHODIMP CEnumCompartment::Next(ULONG celt, GUID *rgelt, ULONG *pceltFetched
 STDMETHODIMP CEnumCompartment::Skip(ULONG celt)
 {
     TRACE("%p -> (%lu)\n", this, celt);
-    for (ULONG i = 0; i < celt && m_cursor != m_valuesHead; ++i)
-    {
-        m_cursor = m_cursor->next;
-    }
-    return S_OK;
+    ULONG i;
+    for (i = 0; i < celt && m_cursor != m_valuesHead; ++i)
+        m_cursor = list_next(m_valuesHead, m_cursor);
+    return (i == celt) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP CEnumCompartment::Reset()

@@ -79,7 +79,7 @@ public:
 
 private:
     LONG m_cRefs;
-    VARIANT m_variant;
+    VARIANT m_variant; // Must be in VT_BSTR, VT_I4, or VT_UNKNOWN
     CCompartmentValue *m_valueData; // Raw pointer, owned by CCompartmentMgr
     struct list m_compartmentEventSink; // Placeholder for sink management
 };
