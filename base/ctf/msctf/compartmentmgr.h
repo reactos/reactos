@@ -96,12 +96,12 @@ public:
 
     static HRESULT CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnknown **ppOut);
 
-    // IUnknown
+    // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppvOut) override;
     STDMETHODIMP_(ULONG) AddRef() override;
     STDMETHODIMP_(ULONG) Release() override;
 
-    // ITfCompartmentMgr
+    // ** ITfCompartmentMgr methods **
     STDMETHODIMP GetCompartment(REFGUID rguid, ITfCompartment **ppcomp) override;
     STDMETHODIMP ClearCompartment(TfClientId tid, REFGUID rguid) override;
     STDMETHODIMP EnumCompartments(IEnumGUID **ppEnum) override;
