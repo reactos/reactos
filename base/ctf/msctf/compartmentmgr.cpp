@@ -90,17 +90,17 @@ ULONG CCompartmentValue::Release()
 CEnumCompartment::CEnumCompartment()
     : m_cRefs(1)
 {
-    list_init(&m_valuesHead);
-    m_cursor = list_head(&m_valuesHead);
+    list_init(&m_valueList);
+    m_cursor = list_head(&m_valueList);
 }
 
 HRESULT
-CEnumCompartment::Init(struct list *valuesHead, struct list *current_cursor)
+CEnumCompartment::Init(struct list *valueList, struct list *current_cursor)
 {
     // Duplicate values
     ULONG iItem = 0, iSelected = 0;
-    for (struct list *cursor = list_head(valuesHead); cursor != valuesHead;
-         cursor = list_next(valuesHead, cursor))
+    for (struct list *cursor = list_head(valueList); cursor != valueList;
+         cursor = list_next(valueList, cursor))
     {
         CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
         if (current_cursor && cursor == current_cursor)
@@ -114,7 +114,7 @@ CEnumCompartment::Init(struct list *valuesHead, struct list *current_cursor)
             return hr;
         }
 
-        list_add_head(&m_valuesHead, &newValue->m_entry);
+        list_add_head(&m_valueList, &newValue->m_entry);
         ++iItem;
     }
 
@@ -125,7 +125,7 @@ CEnumCompartment::Init(struct list *valuesHead, struct list *current_cursor)
 CEnumCompartment::~CEnumCompartment()
 {
     struct list *cursor, *cursor2;
-    LIST_FOR_EACH_SAFE(cursor, cursor2, &m_valuesHead)
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &m_valueList)
     {
         CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
         list_remove(cursor);
@@ -178,8 +178,8 @@ STDMETHODIMP CEnumCompartment::Next(ULONG celt, GUID *rgelt, ULONG *pceltFetched
     }
 
     ULONG fetched;
-    for (fetched = 0; fetched < celt && m_cursor != &m_valuesHead;
-         m_cursor = list_next(&m_valuesHead, m_cursor))
+    for (fetched = 0; fetched < celt && m_cursor != &m_valueList;
+         m_cursor = list_next(&m_valueList, m_cursor))
     {
         CCompartmentValue *value = LIST_ENTRY(m_cursor, CCompartmentValue, m_entry);
         if (!value)
@@ -200,15 +200,15 @@ STDMETHODIMP CEnumCompartment::Skip(ULONG celt)
 {
     TRACE("%p -> (%lu)\n", this, celt);
     ULONG i;
-    for (i = 0; i < celt && m_cursor != &m_valuesHead; ++i)
-        m_cursor = list_next(&m_valuesHead, m_cursor);
+    for (i = 0; i < celt && m_cursor != &m_valueList; ++i)
+        m_cursor = list_next(&m_valueList, m_cursor);
     return (i == celt) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP CEnumCompartment::Reset()
 {
     TRACE("%p -> ()\n", this);
-    m_cursor = list_head(&m_valuesHead); // Reset to the first element
+    m_cursor = list_head(&m_valueList); // Reset to the first element
     return S_OK;
 }
 
@@ -231,7 +231,7 @@ STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
         return E_OUTOFMEMORY;
     }
 
-    HRESULT hr = pCloned->Init(&m_valuesHead, m_cursor);
+    HRESULT hr = pCloned->Init(&m_valueList, m_cursor);
     if (FAILED(hr))
     {
         ERR("hr: 0x%lX\n", hr);
