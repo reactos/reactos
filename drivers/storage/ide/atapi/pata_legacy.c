@@ -1,0 +1,1145 @@
+/*
+ * PROJECT:     ReactOS ATA Port Driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Legacy (non-PnP) IDE controllers support
+ * COPYRIGHT:   Copyright 2024-2025 Dmitry Borisov <di.sean@protonmail.com>
+ */
+
+/* INCLUDES *******************************************************************/
+
+#include "atapi.h"
+
+/* GLOBALS ********************************************************************/
+
+typedef struct _ATA_LEGACY_CHANNEL
+{
+    ULONG IoBase;
+    ULONG Irq;
+} ATA_LEGACY_CHANNEL, *PATA_LEGACY_CHANNEL;
+
+/* FUNCTIONS ******************************************************************/
+
+static
+CODE_SEG("INIT")
+VOID
+AtaLegacyFetchIdentifyData(
+    _In_ PIDE_REGISTERS Registers)
+{
+    UCHAR Buffer[512];
+
+    ATA_READ_BLOCK_16((PUSHORT)Registers->Data,
+                      (PUSHORT)Buffer,
+                      sizeof(Buffer) / sizeof(USHORT));
+}
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaLegacyIdentifyDevice(
+    _In_ PIDE_REGISTERS Registers,
+    _In_ ULONG DeviceNumber,
+    _In_ UCHAR Command)
+{
+    UCHAR IdeStatus;
+
+    /* Select the device */
+    ATA_WRITE(Registers->Device, ((DeviceNumber << 4) | IDE_DRIVE_SELECT));
+    ATA_IO_WAIT();
+
+    IdeStatus = ATA_READ(Registers->Status);
+    if (!ATA_WAIT_ON_BUSY(Registers, &IdeStatus, ATA_TIME_BUSY_IDENTIFY))
+    {
+        TRACE("Timeout, status 0x%02x\n", IdeStatus);
+        return FALSE;
+    }
+
+    ATA_WRITE(Registers->Features, 0);
+    ATA_WRITE(Registers->SectorCount, 0);
+    ATA_WRITE(Registers->LbaLow, 0);
+    ATA_WRITE(Registers->LbaMid, 0);
+    ATA_WRITE(Registers->LbaHigh, 0);
+    ATA_WRITE(Registers->Command, Command);
+
+    /* Need to wait for a valid status */
+    ATA_IO_WAIT();
+
+    /* Now wait for busy to clear */
+    IdeStatus = ATA_READ(Registers->Status);
+    if (!ATA_WAIT_ON_BUSY(Registers, &IdeStatus, ATA_TIME_BUSY_IDENTIFY))
+    {
+        TRACE("Timeout, status 0x%02x\n", IdeStatus);
+        return FALSE;
+    }
+    if (IdeStatus & ((IDE_STATUS_ERROR | IDE_STATUS_DEVICE_FAULT)))
+    {
+        TRACE("Command 0x%02x aborted, status 0x%02x, error 0x%02x\n",
+              Command,
+              IdeStatus,
+              ATA_READ(Registers->Error));
+        return FALSE;
+    }
+    if (!(IdeStatus & IDE_STATUS_DRQ))
+    {
+        ERR("DRQ not set, status 0x%02x\n", IdeStatus);
+        return FALSE;
+    }
+
+    /* Complete the data transfer */
+    AtaLegacyFetchIdentifyData(Registers);
+
+    /* All data has been transferred, wait for DRQ to clear */
+    IdeStatus = ATA_READ(Registers->Status);
+    if (!ATA_WAIT_FOR_IDLE(Registers, &IdeStatus))
+    {
+        ERR("DRQ not cleared, status 0x%02x\n", IdeStatus);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaLegacyPerformSoftwareReset(
+    _In_ PIDE_REGISTERS Registers,
+    _In_ ULONG DeviceNumber)
+{
+    UCHAR IdeStatus;
+    ULONG i;
+
+    /* Perform a software reset */
+    ATA_WRITE(Registers->Control, IDE_DC_RESET_CONTROLLER);
+    KeStallExecutionProcessor(20);
+    ATA_WRITE(Registers->Control, IDE_DC_DISABLE_INTERRUPTS);
+    KeStallExecutionProcessor(20);
+
+    /* The reset will cause the master device to be selected */
+    if ((DeviceNumber & 1) != 0)
+    {
+        for (i = ATA_TIME_RESET_SELECT; i > 0; i--)
+        {
+            /* Select the device again */
+            ATA_WRITE(Registers->Device, ((DeviceNumber << 4) | IDE_DRIVE_SELECT));
+            ATA_IO_WAIT();
+
+            /* Check whether the selection was successful */
+            ATA_WRITE(Registers->ByteCountLow, 0xAA);
+            ATA_WRITE(Registers->ByteCountLow, 0x55);
+            ATA_WRITE(Registers->ByteCountLow, 0xAA);
+            if (ATA_READ(Registers->ByteCountLow) == 0xAA)
+                break;
+
+            KeStallExecutionProcessor(10);
+        }
+        if (i == 0)
+        {
+            TRACE("Selection timeout\n");
+            return FALSE;
+        }
+    }
+
+    /* Now wait for busy to clear */
+    IdeStatus = ATA_READ(Registers->Status);
+    if (!ATA_WAIT_ON_BUSY(Registers, &IdeStatus, ATA_TIME_BUSY_RESET))
+    {
+        ERR("Timeout, status 0x%02x\n", IdeStatus);
+        return FALSE;
+    }
+
+    return FALSE;
+}
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaLegacyFindAtaDevice(
+    _In_ PIDE_REGISTERS Registers,
+    _In_ ULONG DeviceNumber)
+{
+    UCHAR IdeStatus, SignatureLow, SignatureHigh;
+
+    /* Select the device */
+    ATA_WRITE(Registers->Device, ((DeviceNumber << 4) | IDE_DRIVE_SELECT));
+    ATA_IO_WAIT();
+
+    /* Do a quick check first */
+    IdeStatus = ATA_READ(Registers->Status);
+    if (IdeStatus == 0xFF || IdeStatus == 0x7F)
+        return FALSE;
+
+    /* Look at controller */
+    ATA_WRITE(Registers->ByteCountLow, 0x55);
+    ATA_WRITE(Registers->ByteCountLow, 0xAA);
+    ATA_WRITE(Registers->ByteCountLow, 0x55);
+    if (ATA_READ(Registers->ByteCountLow) != 0x55)
+        return FALSE;
+    ATA_WRITE(Registers->ByteCountHigh, 0xAA);
+    ATA_WRITE(Registers->ByteCountHigh, 0x55);
+    ATA_WRITE(Registers->ByteCountHigh, 0xAA);
+    if (ATA_READ(Registers->ByteCountHigh) != 0xAA)
+        return FALSE;
+
+    /* Wait for busy to clear */
+    if (!ATA_WAIT_ON_BUSY(Registers, &IdeStatus, ATA_TIME_BUSY_SELECT))
+    {
+        WARN("Device is busy, attempting to recover %02x\n", IdeStatus);
+
+        if (!AtaLegacyPerformSoftwareReset(Registers, DeviceNumber))
+        {
+            ERR("Failed to reset device %02x\n", ATA_READ(Registers->Status));
+            return FALSE;
+        }
+    }
+
+    /* Check for ATA */
+    if (AtaLegacyIdentifyDevice(Registers, DeviceNumber, IDE_COMMAND_IDENTIFY))
+        return TRUE;
+
+    SignatureLow = ATA_READ(Registers->SignatureLow);
+    SignatureHigh = ATA_READ(Registers->SignatureHigh);
+
+    TRACE("SL = 0x%02x, SH = 0x%02x\n", SignatureLow, SignatureHigh);
+
+    /* Check for ATAPI */
+    if (SignatureLow == 0x14 && SignatureHigh == 0xEB)
+        return TRUE;
+
+    /*
+     * ATAPI devices abort the IDENTIFY command and return an ATAPI signature
+     * in the task file registers. However the NEC CDR-260 drive doesn't return
+     * the correct signature, but instead shows up with zeroes.
+     * This drive also reports an ATA signature after device reset.
+     * To overcome this behavior, we try the ATAPI IDENTIFY command.
+     * It should be successfully completed or failed (aborted or time-out).
+     */
+    if (AtaLegacyIdentifyDevice(Registers, DeviceNumber, IDE_COMMAND_ATAPI_IDENTIFY))
+        return TRUE;
+
+    return FALSE;
+}
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaLegacyChannelPresent(
+    _In_ PIDE_REGISTERS Registers)
+{
+    ULONG i;
+
+    /* Check for the PC-98 on-board IDE interface */
+    if (IsNEC_98)
+        return (ATA_READ((PUCHAR)0x432) != 0xFF);
+
+    /*
+     * The only reliable way to detect the legacy IDE channel
+     * is to check for devices attached to the bus.
+     */
+    for (i = 0; i < CHANNEL_PCAT_MAX_DEVICES; ++i)
+    {
+        if (AtaLegacyFindAtaDevice(Registers, i))
+        {
+            TRACE("Found IDE device\n");
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+static
+inline
+CODE_SEG("INIT")
+VOID
+AtaLegacyMakePortResource(
+    _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ ULONG IoBase,
+    _In_ ULONG Length)
+{
+    Descriptor->Type = CmResourceTypePort;
+    Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    Descriptor->Flags = CM_RESOURCE_PORT_IO | CM_RESOURCE_PORT_16_BIT_DECODE;
+    Descriptor->u.Port.Start.u.LowPart = IoBase;
+    Descriptor->u.Port.Length = Length;
+}
+
+static
+inline
+CODE_SEG("INIT")
+VOID
+AtaLegacyMakeInterruptResource(
+    _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ ULONG Level)
+{
+    Descriptor->Type = CmResourceTypeInterrupt;
+    Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    Descriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+    Descriptor->u.Interrupt.Level = Level;
+    Descriptor->u.Interrupt.Vector = Level;
+    Descriptor->u.Interrupt.Affinity = (KAFFINITY)-1;
+}
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaLegacyChannelBuildResources(
+    _In_ PATA_LEGACY_CHANNEL LegacyChannel,
+    _Inout_ PCM_RESOURCE_LIST ResourceList)
+{
+    PCONFIGURATION_INFORMATION ConfigInfo = IoGetConfigurationInformation();
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+    ULONG i;
+
+    Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
+
+    if (IsNEC_98)
+    {
+        if (ConfigInfo->AtDiskPrimaryAddressClaimed || ConfigInfo->AtDiskSecondaryAddressClaimed)
+            return FALSE;
+
+#define CHANNEL_PC98_RESOURCE_COUNT    12
+        /*
+         * Create the resource list for the internal IDE interface:
+         *
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:640, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:74C, Len 1
+         * [ShareDisposition 1, Flags 1]  INT: Lev 9 Vec 9 Aff FFFFFFFF
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:642, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:644, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:646, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:648, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:64A, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:64C, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:64E, Len 1
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:432, Len 2
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:435, Len 1
+         */
+        AtaLegacyMakePortResource(Descriptor++, 0x640, 1);
+        AtaLegacyMakePortResource(Descriptor++, 0x74C, 1);
+        AtaLegacyMakeInterruptResource(Descriptor++, 9);
+        for (i = 0; i < 7; ++i)
+        {
+            AtaLegacyMakePortResource(Descriptor++, 0x642 + i * 2, 1);
+        }
+        AtaLegacyMakePortResource(Descriptor++, 0x432, 2);
+        AtaLegacyMakePortResource(Descriptor++, 0x435, 1);
+    }
+    else
+    {
+        if (LegacyChannel->IoBase == 0x1F0 && ConfigInfo->AtDiskPrimaryAddressClaimed)
+            return FALSE;
+
+        if (LegacyChannel->IoBase == 0x170 && ConfigInfo->AtDiskSecondaryAddressClaimed)
+            return FALSE;
+
+#define CHANNEL_PCAT_RESOURCE_COUNT    3
+        /*
+         * For example, the following resource list is created for the primary IDE channel:
+         *
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:1F0, Len 8
+         * [ShareDisposition 1, Flags 11] IO:  Start 0:3F6, Len 1
+         * [ShareDisposition 1, Flags 1]  INT: Lev A Vec A Aff FFFFFFFF
+         */
+        AtaLegacyMakePortResource(Descriptor++, LegacyChannel->IoBase, 8);
+        AtaLegacyMakePortResource(Descriptor++, LegacyChannel->IoBase + 0x206, 1);
+        AtaLegacyMakeInterruptResource(Descriptor++, LegacyChannel->Irq);
+    }
+
+    return TRUE;
+}
+
+static
+CODE_SEG("INIT")
+VOID
+AtaLegacyChannelTranslateResources(
+    _Inout_ PCM_RESOURCE_LIST ResourceList,
+    _In_ PUCHAR CommandPortBase,
+    _In_ PUCHAR ControlPortBase)
+{
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+    KIRQL Irql;
+
+    Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
+
+    /* Move on to the interrupt descriptor */
+    if (IsNEC_98)
+    {
+        Descriptor += 2;
+    }
+    else
+    {
+        Descriptor->u.Port.Start.QuadPart = (ULONG_PTR)CommandPortBase;
+        ++Descriptor;
+
+        Descriptor->u.Port.Start.QuadPart = (ULONG_PTR)ControlPortBase;
+        ++Descriptor;
+    }
+    ASSERT(Descriptor->Type == CmResourceTypeInterrupt);
+
+    Descriptor->u.Interrupt.Vector = HalGetInterruptVector(Isa,
+                                                           0,
+                                                           Descriptor->u.Interrupt.Level,
+                                                           Descriptor->u.Interrupt.Vector,
+                                                           &Irql,
+                                                           &Descriptor->u.Interrupt.Affinity);
+    Descriptor->u.Interrupt.Level = Irql;
+}
+
+static
+CODE_SEG("INIT")
+PVOID
+AtaLegacyTranslateBusAddress(
+    _In_ ULONG Address,
+    _In_ ULONG NumberOfBytes,
+    _Out_ PBOOLEAN IsAddressMmio)
+{
+    ULONG AddressSpace;
+    BOOLEAN Success;
+    PHYSICAL_ADDRESS BusAddress, TranslatedAddress;
+
+    BusAddress.QuadPart = Address;
+    AddressSpace = 1; /* I/O space */
+    Success = HalTranslateBusAddress(Isa,
+                                     0,
+                                     BusAddress,
+                                     &AddressSpace,
+                                     &TranslatedAddress);
+    if (!Success)
+        return NULL;
+
+    /* I/O space */
+    if (AddressSpace != 0)
+    {
+        *IsAddressMmio = FALSE;
+        return (PVOID)(ULONG_PTR)TranslatedAddress.QuadPart;
+    }
+    else
+    {
+        *IsAddressMmio = TRUE;
+        return MmMapIoSpace(TranslatedAddress, NumberOfBytes, MmNonCached);
+    }
+}
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaLegacyClaimHardwareResources(
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PCM_RESOURCE_LIST ResourceList,
+    _In_ ULONG ResourceListSize)
+{
+    NTSTATUS Status;
+    BOOLEAN ConflictDetected;
+
+    Status = IoReportResourceForDetection(DriverObject,
+                                          ResourceList,
+                                          ResourceListSize,
+                                          NULL,
+                                          NULL,
+                                          0,
+                                          &ConflictDetected);
+    /* HACK: We really need to fix a number of resource bugs in the kernel */
+    if (IsNEC_98)
+        return TRUE;
+
+#if defined(_M_AMD64)
+    if (!AtapInLiveCD)
+        return TRUE;
+#endif
+
+    if (!NT_SUCCESS(Status) || ConflictDetected)
+        return FALSE;
+
+    return TRUE;
+}
+
+static
+CODE_SEG("INIT")
+VOID
+AtaLegacyReleaseHardwareResources(
+    _In_ PDRIVER_OBJECT DriverObject)
+{
+    BOOLEAN Dummy;
+
+    IoReportResourceForDetection(DriverObject, NULL, 0, NULL, NULL, 0, &Dummy);
+}
+
+static
+CODE_SEG("INIT")
+VOID
+AtaLegacyDetectChannel(
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PATA_LEGACY_CHANNEL LegacyChannel,
+    _In_ PCM_RESOURCE_LIST ResourceList,
+    _In_ ULONG ResourceListSize)
+{
+    NTSTATUS Status;
+    BOOLEAN IsAddressMmio[2];
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PATAPORT_CHANNEL_EXTENSION ChanExt;
+    IDE_REGISTERS Registers;
+    ULONG Spare;
+
+    TRACE("IDE Channel IO %lx, Irq %lu\n", LegacyChannel->IoBase, LegacyChannel->Irq);
+
+    if (!AtaLegacyChannelBuildResources(LegacyChannel, ResourceList))
+    {
+        TRACE("Failed to build the resource list\n");
+        return;
+    }
+
+    if (!AtaLegacyClaimHardwareResources(DriverObject, ResourceList, ResourceListSize))
+    {
+        TRACE("Failed to claim resources\n");
+        return;
+    }
+
+    Status = STATUS_SUCCESS;
+    IsAddressMmio[0] = FALSE;
+    IsAddressMmio[1] = FALSE;
+
+    if (IsNEC_98)
+    {
+        /* No translation required for the C-Bus I/O space */
+        Registers.Data = (PVOID)0x640;
+        Registers.Control = (PVOID)0x74C;
+
+        Spare = 2;
+    }
+    else
+    {
+        Registers.Data = AtaLegacyTranslateBusAddress(LegacyChannel->IoBase,
+                                                      8,
+                                                      &IsAddressMmio[0]);
+        if (!Registers.Data)
+        {
+            TRACE("Failed to map command port\n");
+
+            Status = STATUS_UNSUCCESSFUL;
+            goto ReleaseResources;
+        }
+
+        Registers.Control = AtaLegacyTranslateBusAddress(LegacyChannel->IoBase + 0x206,
+                                                         1,
+                                                         &IsAddressMmio[1]);
+        if (!Registers.Control)
+        {
+            TRACE("Failed to map control port\n");
+
+            Status = STATUS_UNSUCCESSFUL;
+            goto ReleaseResources;
+        }
+
+        Spare = 1;
+    }
+    Registers.Error       = (PVOID)((ULONG_PTR)Registers.Data + 1 * Spare);
+    Registers.SectorCount = (PVOID)((ULONG_PTR)Registers.Data + 2 * Spare);
+    Registers.LbaLow      = (PVOID)((ULONG_PTR)Registers.Data + 3 * Spare);
+    Registers.LbaMid      = (PVOID)((ULONG_PTR)Registers.Data + 4 * Spare);
+    Registers.LbaHigh     = (PVOID)((ULONG_PTR)Registers.Data + 5 * Spare);
+    Registers.Device      = (PVOID)((ULONG_PTR)Registers.Data + 6 * Spare);
+    Registers.Status      = (PVOID)((ULONG_PTR)Registers.Data + 7 * Spare);
+
+    if (!AtaLegacyChannelPresent(&Registers))
+    {
+        TRACE("No IDE devices found\n");
+        Status = STATUS_UNSUCCESSFUL;
+    }
+
+ReleaseResources:
+    AtaLegacyReleaseHardwareResources(DriverObject);
+
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
+    PhysicalDeviceObject = NULL;
+    Status = IoReportDetectedDevice(DriverObject,
+                                    InterfaceTypeUndefined,
+                                    (ULONG)-1,
+                                    (ULONG)-1,
+                                    ResourceList,
+                                    NULL,
+                                    0,
+                                    &PhysicalDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("IoReportDetectedDevice() failed with status 0x%lx\n", Status);
+        goto Cleanup;
+    }
+
+    Status = AtaAddChannel(DriverObject, PhysicalDeviceObject, &ChanExt, 1);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to add the legacy channel 0x%lx, status 0x%lx\n",
+            LegacyChannel->IoBase, Status);
+        goto Cleanup;
+    }
+
+    AtaLegacyChannelTranslateResources(ResourceList, Registers.Data, Registers.Control);
+
+    Status = AtaFdoStartDevice(ChanExt, ResourceList);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to start the legacy channel 0x%lx, status 0x%lx\n",
+            LegacyChannel->IoBase, Status);
+
+        AtaFdoRemoveDevice(ChanExt, NULL, TRUE);
+    }
+
+Cleanup:
+    if (IsAddressMmio[0] && Registers.Data)
+    {
+        MmUnmapIoSpace(Registers.Data, 8);
+    }
+
+    if (IsAddressMmio[1] && Registers.Control)
+    {
+        MmUnmapIoSpace(Registers.Control, 1);
+    }
+}
+
+#if defined(_M_AMD64)
+static
+BOOLEAN
+AtaLegacyReadPciBar(
+    ULONG BusNumber,
+    ULONG PciSlot,
+    ULONG Offset,
+    PULONG OriginalValue,
+    PULONG NewValue)
+{
+    ULONG Size;
+    ULONG AllOnes;
+
+    /* Read the original value */
+    Size = HalGetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 OriginalValue,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    /* Write all ones to determine which bits are held to zero */
+    AllOnes = MAXULONG;
+    Size = HalSetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 &AllOnes,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    /* Get the range length */
+    Size = HalGetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 NewValue,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    /* Restore original value */
+    Size = HalSetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 OriginalValue,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static
+BOOLEAN
+AtaLegacyGetRangeLength(
+    ULONG BusNumber,
+    ULONG PciSlot,
+    UCHAR Bar,
+    PULONGLONG Base,
+    PULONGLONG Length,
+    PULONG Flags,
+    /* PUCHAR NextBar, */
+    PULONGLONG MaximumAddress)
+{
+#define PCI_ADDRESS_MEMORY_ADDRESS_MASK_64     0xfffffffffffffff0ull
+#define PCI_ADDRESS_IO_ADDRESS_MASK_64         0xfffffffffffffffcull
+    union {
+        struct {
+            ULONG Bar0;
+            ULONG Bar1;
+        } Bars;
+        ULONGLONG Bar;
+    } OriginalValue;
+    union {
+        struct {
+            ULONG Bar0;
+            ULONG Bar1;
+        } Bars;
+        ULONGLONG Bar;
+    } NewValue;
+    ULONG Offset;
+    ULONGLONG Size;
+
+    /* Compute the offset of this BAR in PCI config space */
+    Offset = 0x10 + Bar * 4;
+
+    /* Assume this is a 32-bit BAR until we find wrong */
+    /* *NextBar = Bar + 1; */
+
+    /* Initialize BAR values to zero */
+    OriginalValue.Bar = 0ULL;
+    NewValue.Bar = 0ULL;
+
+    /* Read the first BAR */
+    if (!AtaLegacyReadPciBar(BusNumber, PciSlot, Offset,
+                             &OriginalValue.Bars.Bar0,
+                             &NewValue.Bars.Bar0))
+    {
+        return FALSE;
+    }
+
+    /* Check if this is a memory BAR */
+    if (!(OriginalValue.Bars.Bar0 & PCI_ADDRESS_IO_SPACE))
+    {
+        /* Write the maximum address if the caller asked for it */
+        if (MaximumAddress != NULL)
+        {
+            if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_32BIT)
+            {
+                *MaximumAddress = 0x00000000FFFFFFFFULL;
+            }
+            else if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
+            {
+                *MaximumAddress = 0x00000000000FFFFFULL;
+            }
+            else if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+            {
+                *MaximumAddress = 0xFFFFFFFFFFFFFFFFULL;
+            }
+        }
+
+        /* Check if this is a 64-bit BAR */
+        if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+        {
+            /* We've now consumed the next BAR too */
+            /* *NextBar = Bar + 2; */
+
+            /* Read the next BAR */
+            if (!AtaLegacyReadPciBar(BusNumber, PciSlot, Offset + 4,
+                                     &OriginalValue.Bars.Bar1,
+                                     &NewValue.Bars.Bar1))
+            {
+                return FALSE;
+            }
+        }
+    }
+    else
+    {
+        /* Write the maximum I/O port address */
+        if (MaximumAddress != NULL)
+        {
+            *MaximumAddress = 0x00000000FFFFFFFFULL;
+        }
+    }
+
+    if (NewValue.Bar == 0)
+    {
+        WARN("Unused address register\n");
+        *Base = 0;
+        *Length = 0;
+        *Flags = 0;
+        return TRUE;
+    }
+
+    *Base = ((OriginalValue.Bar & PCI_ADDRESS_IO_SPACE)
+             ? (OriginalValue.Bar & PCI_ADDRESS_IO_ADDRESS_MASK_64)
+             : (OriginalValue.Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK_64));
+
+    Size = (NewValue.Bar & PCI_ADDRESS_IO_SPACE)
+           ? (NewValue.Bar & PCI_ADDRESS_IO_ADDRESS_MASK_64)
+           : (NewValue.Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK_64);
+    *Length = Size & ~(Size - 1);
+
+    *Flags = (NewValue.Bar & PCI_ADDRESS_IO_SPACE)
+             ? (NewValue.Bar & ~PCI_ADDRESS_IO_ADDRESS_MASK_64)
+             : (NewValue.Bar & ~PCI_ADDRESS_MEMORY_ADDRESS_MASK_64);
+
+    return TRUE;
+}
+
+static
+CODE_SEG("INIT")
+VOID
+AtaLegacyDetectAhciController(
+    _In_ PDRIVER_OBJECT DriverObject)
+{
+    ULONG BusNumber, DeviceNumber, FunctionNumber;
+
+    for (BusNumber = 0; BusNumber < 0xFF; ++BusNumber)
+    {
+        for (DeviceNumber = 0; DeviceNumber < PCI_MAX_DEVICES; ++DeviceNumber)
+        {
+            for (FunctionNumber = 0; FunctionNumber < PCI_MAX_FUNCTION; ++FunctionNumber)
+            {
+                PCI_SLOT_NUMBER PciSlot;
+                ULONG BytesRead;
+                PCI_COMMON_HEADER PciConfig;
+
+                PciSlot.u.AsULONG = 0;
+                PciSlot.u.bits.DeviceNumber = DeviceNumber;
+                PciSlot.u.bits.FunctionNumber = FunctionNumber;
+
+                BytesRead = HalGetBusDataByOffset(PCIConfiguration,
+                                                  BusNumber,
+                                                  PciSlot.u.AsULONG,
+                                                  &PciConfig,
+                                                  0,
+                                                  PCI_COMMON_HDR_LENGTH);
+                if (BytesRead != PCI_COMMON_HDR_LENGTH ||
+                    PciConfig.VendorID == PCI_INVALID_VENDORID ||
+                    PciConfig.VendorID == 0)
+                {
+                    if (FunctionNumber == 0)
+                    {
+                        /* This slot has no single- or a multi-function device */
+                        break;
+                    }
+                    else
+                    {
+                        /* Continue scanning the functions */
+                        continue;
+                    }
+                }
+
+                if ((PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE) &&
+                    (PciConfig.BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+                    (PciConfig.SubClass == PCI_SUBCLASS_MSC_AHCI_CTLR) &&
+                    (PciConfig.u.type0.InterruptPin != 0) &&
+                    (PciConfig.u.type0.InterruptLine != 0) &&
+                    (PciConfig.u.type0.InterruptLine != 0xFF))
+                {
+                    ULONG ListSize;
+                    ULONG ResourceCount;
+                    NTSTATUS Status;
+                    PDEVICE_OBJECT PhysicalDeviceObject;
+                    PATAPORT_CHANNEL_EXTENSION ChanExt;
+                    PCM_RESOURCE_LIST ResourceList;
+                    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+                    ULONGLONG Base;
+                    ULONGLONG Length;
+                    ULONG Flags;
+                    USHORT Command;
+                    KIRQL Irql;
+                    UCHAR Irq;
+
+                    ResourceCount = 2;
+                    ListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors) +
+                               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * ResourceCount;
+
+                    ResourceList = ExAllocatePoolZero(PagedPool, ListSize, ATAPORT_TAG);
+                    if (!ResourceList)
+                    {
+                        ASSERT(0);
+                    }
+                    ResourceList->Count = 1;
+                    ResourceList->List[0].InterfaceType = PCIBus;
+                    ResourceList->List[0].BusNumber = BusNumber;
+                    ResourceList->List[0].PartialResourceList.Version = 1;
+                    ResourceList->List[0].PartialResourceList.Revision = 1;
+                    ResourceList->List[0].PartialResourceList.Count = ResourceCount;
+
+                    if (!AtaLegacyGetRangeLength(BusNumber,
+                                                 PciSlot.u.AsULONG,
+                                                 5,
+                                                 &Base,
+                                                 &Length,
+                                                 &Flags,
+                                                 NULL))
+                    {
+                        goto Next;
+                    }
+
+                    if (Flags & PCI_ADDRESS_IO_SPACE)
+                        goto Next;
+
+                    Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
+                    Descriptor->Type = CmResourceTypeMemory;
+                    Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                        (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
+                    Descriptor->u.Memory.Start.QuadPart = (ULONGLONG)Base;
+                    Descriptor->u.Memory.Length = Length;
+
+                    Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[1];
+                    Descriptor->Type = CmResourceTypeInterrupt;
+                    Descriptor->ShareDisposition = CmResourceShareShared;
+                    Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+                    Descriptor->u.Interrupt.Level = PciConfig.u.type0.InterruptLine;
+                    Descriptor->u.Interrupt.Vector = PciConfig.u.type0.InterruptLine;
+                    Descriptor->u.Interrupt.Affinity = (KAFFINITY)-1;
+                    ERR("PciConfig.u.type0.InterruptLine %x\n", PciConfig.u.type0.InterruptLine);
+
+                    PhysicalDeviceObject = NULL;
+                    Status = IoReportDetectedDevice(DriverObject,
+                                                    InterfaceTypeUndefined,
+                                                    (ULONG)-1,
+                                                    (ULONG)-1,
+                                                    ResourceList,
+                                                    NULL,
+                                                    0,
+                                                    &PhysicalDeviceObject);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ERR("IoReportDetectedDevice() failed with status 0x%lx\n", Status);
+                        goto Next;
+                    }
+
+                    Irq = (UCHAR)Descriptor->u.Interrupt.Vector;
+                    HalSetBusDataByOffset(PCIConfiguration,
+                                          BusNumber,
+                                          PciSlot.u.AsULONG,
+                                          &Irq,
+                                          0x3c /* PCI_INTERRUPT_LINE */,
+                                          sizeof(UCHAR));
+
+                    Command = PCI_ENABLE_IO_SPACE | PCI_ENABLE_MEMORY_SPACE | PCI_ENABLE_BUS_MASTER;
+                    HalSetBusDataByOffset(PCIConfiguration,
+                                          BusNumber,
+                                          PciSlot.u.AsULONG,
+                                          &Command,
+                                          FIELD_OFFSET(PCI_COMMON_CONFIG, Command),
+                                          sizeof(USHORT));
+
+                    Descriptor->u.Interrupt.Vector = HalGetInterruptVector(PCIBus,
+                                                                           BusNumber,
+                                                                           Descriptor->u.Interrupt.Level,
+                                                                           Descriptor->u.Interrupt.Vector,
+                                                                           &Irql,
+                                                                           &Descriptor->u.Interrupt.Affinity);
+                    Descriptor->u.Interrupt.Level = Irql;
+
+                    Status = AtaAddChannel(DriverObject, PhysicalDeviceObject, &ChanExt, 2);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ERR("Failed to add the legacy channel 0x%lx, status 0x%lx\n",
+                            Descriptor->u.Memory.Start.LowPart, Status);
+                        goto Next;
+                    }
+
+                    ChanExt->DeviceID = PciConfig.DeviceID;
+                    ChanExt->VendorID = PciConfig.VendorID;
+
+                    Status = AtaFdoStartDevice(ChanExt, ResourceList);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ERR("Failed to start the legacy channel 0x%lx, status 0x%lx\n",
+                            Descriptor->u.Memory.Start.LowPart, Status);
+
+                        AtaFdoRemoveDevice(ChanExt, NULL, TRUE);
+                    }
+                }
+
+Next:
+                if (!PCI_MULTIFUNCTION_DEVICE(&PciConfig))
+                {
+                    /* The device is a single function device */
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
+#endif // defined(_M_AMD64)
+
+static
+CODE_SEG("INIT")
+BOOLEAN
+AtaLegacyShouldDetectChannels(VOID)
+{
+    NTSTATUS Status;
+    ULONG KeyValue;
+    BOOLEAN PerformDetection;
+    HANDLE SoftKeyHandle, ParamsKeyHandle;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    UNICODE_STRING ParametersKeyName = RTL_CONSTANT_STRING(L"Parameters");
+    static const WCHAR MapperKeyPath[] =
+        L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Pnp";
+
+    PAGED_CODE();
+
+#if defined(_M_AMD64)
+    /* HACK for amd64 BootCD */
+    if (AtapInLiveCD)
+        return FALSE;
+    else
+        goto Skip;
+#endif
+
+    /*
+     * Read the firmware mapper key. If the firmware mapper is disabled,
+     * it is the responsibility of PnP drivers (ACPI, PCI, and others)
+     * to detect and enumerate IDE channels.
+     */
+    KeyValue = 0;
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Name = L"DisableFirmwareMapper";
+    QueryTable[0].EntryContext = &KeyValue;
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE, MapperKeyPath, QueryTable, NULL, NULL);
+    if (NT_SUCCESS(Status) && (KeyValue != 0))
+    {
+        TRACE("Skipping legacy detection on a PnP system\n");
+        return FALSE;
+    }
+
+    /* Open the driver's software key */
+    Status = AtaOpenRegistryKey(&SoftKeyHandle,
+                                NULL,
+                                &AtapDriverRegistryPath,
+                                FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open the '%wZ' key, status 0x%lx\n", &AtapDriverRegistryPath, Status);
+        return FALSE;
+    }
+
+    /* Open the 'Parameters' key */
+    Status = AtaOpenRegistryKey(&ParamsKeyHandle,
+                                SoftKeyHandle,
+                                &ParametersKeyName,
+                                FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open the 'Parameters' key, status 0x%lx\n", Status);
+
+        ZwClose(SoftKeyHandle);
+        return FALSE;
+    }
+
+    /* Check whether it's the first time we detect IDE channels */
+    KeyValue = 0;
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+    QueryTable[0].Name = L"LegacyDetection";
+    QueryTable[0].EntryContext = &KeyValue;
+    RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                           (PWSTR)ParamsKeyHandle,
+                           QueryTable,
+                           NULL,
+                           NULL);
+    PerformDetection = (KeyValue != 0);
+
+    /* Don't detect devices again on subsequent boots after driver installation */
+    if (PerformDetection)
+    {
+        KeyValue = 0;
+        RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
+                              (PWSTR)ParamsKeyHandle,
+                              L"LegacyDetection",
+                              REG_DWORD,
+                              &KeyValue,
+                              sizeof(KeyValue));
+    }
+
+    ZwClose(ParamsKeyHandle);
+    ZwClose(SoftKeyHandle);
+
+    return PerformDetection;
+#if defined(_M_AMD64)
+Skip:
+    return TRUE;
+#endif
+}
+
+CODE_SEG("INIT")
+VOID
+AtaDetectLegacyChannels(
+    _In_ PDRIVER_OBJECT DriverObject)
+{
+    ATA_LEGACY_CHANNEL LegacyChannel[4 + 1] = { 0 };
+    PCM_RESOURCE_LIST ResourceList;
+    ULONG i, ListSize, ResourceCount;
+
+    if (!AtaLegacyShouldDetectChannels())
+        return;
+
+    if (IsNEC_98)
+    {
+        /* Internal IDE interface */
+        LegacyChannel[0].IoBase = 0x640;
+        LegacyChannel[0].Irq = 9;
+
+        ResourceCount = CHANNEL_PC98_RESOURCE_COUNT;
+    }
+    else
+    {
+        /* Primary IDE channel */
+        LegacyChannel[0].IoBase = 0x1F0;
+        LegacyChannel[0].Irq = 14;
+
+        /* Secondary IDE channel */
+        LegacyChannel[1].IoBase = 0x170;
+        LegacyChannel[1].Irq = 15;
+
+        /* Tertiary IDE channel */
+        LegacyChannel[2].IoBase = 0x1E8;
+        LegacyChannel[2].Irq = 11;
+
+        /* Quaternary IDE channel */
+        LegacyChannel[3].IoBase = 0x168;
+        LegacyChannel[3].Irq = 10;
+
+        ResourceCount = CHANNEL_PCAT_RESOURCE_COUNT;
+    }
+
+    ListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors) +
+               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * ResourceCount;
+
+    ResourceList = ExAllocatePoolZero(PagedPool, ListSize, ATAPORT_TAG);
+    if (!ResourceList)
+    {
+        ERR("Failed to allocate the resource list\n");
+        return;
+    }
+    ResourceList->Count = 1;
+    ResourceList->List[0].InterfaceType = Isa;
+    ResourceList->List[0].BusNumber = 0;
+    ResourceList->List[0].PartialResourceList.Version = 1;
+    ResourceList->List[0].PartialResourceList.Revision = 1;
+    ResourceList->List[0].PartialResourceList.Count = ResourceCount;
+
+    for (i = 0; LegacyChannel[i].IoBase != 0; ++i)
+    {
+        AtaLegacyDetectChannel(DriverObject, &LegacyChannel[i], ResourceList, ListSize);
+    }
+
+    ExFreePoolWithTag(ResourceList, ATAPORT_TAG);
+
+    /* HACK for amd64 BootCD */
+#if defined(_M_AMD64)
+    if (!AtapInLiveCD)
+    {
+        AtaLegacyDetectAhciController(DriverObject);
+    }
+#endif
+}
