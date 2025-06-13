@@ -45,15 +45,6 @@ CCompartmentValue::~CCompartmentValue()
     }
 }
 
-void CCompartmentValue::set(ITfCompartment *compartment)
-{
-    if (m_compartment && m_compartment != compartment)
-        m_compartment->Release();
-    m_compartment = compartment;
-    if (compartment)
-        compartment->AddRef();
-}
-
 ////////////////////////////////////////////////////////////////////////////
 // CEnumCompartment
 
@@ -447,12 +438,12 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
         *ppcomp = NULL;
         return hr;
     }
-    value->set(compartment);
+    value->m_compartment = compartment;
+    compartment->AddRef();
 
     list_add_head(&m_values, &value->m_entry);
 
     *ppcomp = compartment;
-    compartment->AddRef();
 
     return hr;
 }
