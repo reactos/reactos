@@ -28,10 +28,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 ////////////////////////////////////////////////////////////////////////////
 // CCompartmentValue
 
-CCompartmentValue::CCompartmentValue() : m_owner(0)
+CCompartmentValue::CCompartmentValue()
+    : m_owner(0)
+    , m_compartment(NULL)
 {
     list_init(&m_entry);
-    m_compartment = NULL;
 }
 
 CCompartmentValue::~CCompartmentValue()
