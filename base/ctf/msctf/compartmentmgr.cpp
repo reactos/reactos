@@ -68,7 +68,7 @@ HRESULT CEnumCompartment::Init(struct list *values_head)
         return E_INVALIDARG;
     }
     m_valuesHead = values_head;
-    m_cursor = list_head(m_valuesHead); // Start from the first element after the head
+    m_cursor = list_head(m_valuesHead); // Start from the first element
     return S_OK;
 }
 
@@ -177,7 +177,7 @@ STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
         return hr;
     }
 
-    pEnum->m_cursor = m_cursor; // Clone the current cursor position
+    pEnum->m_cursor = m_cursor; // Clone the current position
     *ppenum = pEnum;
     return hr;
 }
@@ -445,7 +445,6 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     list_add_head(&m_values, &value->m_entry);
 
     *ppcomp = compartment;
-
     return hr;
 }
 
@@ -528,13 +527,13 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
 
     if (pUnkOuter)
     {
-        // Aggregated object: return the inner unknown (the ITfCompartmentMgr interface itself)
+        // An aggregated object
         *ppOut = static_cast<ITfCompartmentMgr *>(pManager);
         pManager->AddRef();
         return S_OK;
     }
 
-    // Non-aggregated: QueryInterface for the requested IID
+    // Otherwise, non-aggregated object
     HRESULT hr = pManager->QueryInterface(riid, (void **)ppOut);
     if (FAILED(hr))
     {
