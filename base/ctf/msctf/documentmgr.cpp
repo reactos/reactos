@@ -39,8 +39,8 @@ CDocumentMgr::CDocumentMgr(ITfThreadMgrEventSink *threadMgrSink)
     list_init(&m_TransitoryExtensionSink);
 
     ITfDocumentMgr *pDocMgr = static_cast<ITfDocumentMgr *>(this);
-    ITfCompartmentMgr *pCompMgr = static_cast<ITfCompartmentMgr *>(m_pCompartmentMgr);
-    CompartmentMgr_Constructor(pDocMgr, IID_IUnknown, reinterpret_cast<IUnknown **>(&pCompMgr));
+    ITfCompartmentMgr **ppCompMgr = static_cast<ITfCompartmentMgr **>(&m_pCompartmentMgr);
+    CompartmentMgr_Constructor(pDocMgr, IID_IUnknown, reinterpret_cast<IUnknown **>(ppCompMgr));
 }
 
 CDocumentMgr::~CDocumentMgr()
@@ -150,8 +150,8 @@ CDocumentMgr::CreateContext(
     ITfContext **ppic,
     TfEditCookie *pecTextStore)
 {
-    FIXME("%p -> (%d, 0x%lX, %p, %p, %p)\n", this, tidOwner, dwFlags, punk, ppic, pecTextStore);
-    return E_NOTIMPL;
+    TRACE("%p -> (%d, 0x%lX, %p, %p, %p)\n", this, tidOwner, dwFlags, punk, ppic, pecTextStore);
+    return Context_Constructor(tidOwner, punk, this, ppic, pecTextStore);
 }
 
 STDMETHODIMP CDocumentMgr::Push(ITfContext *pic)
