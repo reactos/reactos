@@ -162,22 +162,22 @@ STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
     }
 
     *ppenum = NULL;
-    CEnumCompartment *newEnum = new(cicNoThrow) CEnumCompartment();
-    if (!newEnum)
+    CEnumCompartment *pEnum = new(cicNoThrow) CEnumCompartment();
+    if (!pEnum)
     {
         ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
     }
 
-    HRESULT hr = newEnum->Init(m_valuesHead);
+    HRESULT hr = pEnum->Init(m_valuesHead);
     if (FAILED(hr))
     {
-        delete newEnum;
+        delete pEnum;
         return hr;
     }
 
-    newEnum->m_cursor = m_cursor; // Clone the current cursor position
-    *ppenum = newEnum;
+    pEnum->m_cursor = m_cursor; // Clone the current cursor position
+    *ppenum = pEnum;
     return hr;
 }
 
@@ -485,18 +485,18 @@ STDMETHODIMP CCompartmentMgr::EnumCompartments(IEnumGUID **ppEnum)
     }
     *ppEnum = NULL;
 
-    CEnumCompartment *newEnum = new (cicNoThrow) CEnumCompartment();
-    if (!newEnum)
+    CEnumCompartment *pEnum = new (cicNoThrow) CEnumCompartment();
+    if (!pEnum)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = newEnum->Init(&m_values);
+    HRESULT hr = pEnum->Init(&m_values);
     if (FAILED(hr))
     {
-        delete newEnum;
+        delete pEnum;
         return hr;
     }
 
-    *ppEnum = newEnum;
+    *ppEnum = pEnum;
     return hr;
 }
 
@@ -518,8 +518,8 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
         return CLASS_E_NOAGGREGATION;
     }
 
-    CCompartmentMgr *newMgr = new (cicNoThrow) CCompartmentMgr(pUnkOuter);
-    if (!newMgr)
+    CCompartmentMgr *pManager = new (cicNoThrow) CCompartmentMgr(pUnkOuter);
+    if (!pManager)
     {
         ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
@@ -528,17 +528,17 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
     if (pUnkOuter)
     {
         // Aggregated object: return the inner unknown (the ITfCompartmentMgr interface itself)
-        *ppOut = static_cast<ITfCompartmentMgr *>(newMgr);
-        newMgr->AddRef();
+        *ppOut = static_cast<ITfCompartmentMgr *>(pManager);
+        pManager->AddRef();
         return S_OK;
     }
 
     // Non-aggregated: QueryInterface for the requested IID
-    HRESULT hr = newMgr->QueryInterface(riid, (void **)ppOut);
+    HRESULT hr = pManager->QueryInterface(riid, (void **)ppOut);
     if (FAILED(hr))
     {
         ERR("hr: 0x%lX\n", hr);
-        delete newMgr;
+        delete pManager;
     }
 
     return hr;
