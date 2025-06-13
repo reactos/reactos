@@ -335,7 +335,7 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     struct list *cursor;
     LIST_FOR_EACH(cursor, &m_values)
     {
-        CCompartmentValue* value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
+        CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
         if (!IsEqualGUID(rguid, value->m_guid))
             continue;
 
@@ -345,14 +345,14 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     }
 
     // Not found, create a new one
-    CCompartmentValue* newValue = new (cicNoThrow) CCompartmentValue();
+    CCompartmentValue *newValue = new (cicNoThrow) CCompartmentValue();
     if (!newValue)
         return E_OUTOFMEMORY;
 
     newValue->m_guid = rguid;
     newValue->m_owner = 0; // Will be set by CCompartment::SetValue
 
-    CCompartment* newCompart = new (cicNoThrow) CCompartment();
+    CCompartment *newCompart = new (cicNoThrow) CCompartment();
     if (!newCompart)
     {
         delete newValue;
@@ -383,7 +383,7 @@ STDMETHODIMP CCompartmentMgr::ClearCompartment(TfClientId tid, REFGUID rguid)
     struct list *cursor;
     LIST_FOR_EACH(cursor, &m_values)
     {
-        CCompartmentValue* value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
+        CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
         if (!IsEqualGUID(rguid, value->m_guid))
             continue;
 
@@ -404,7 +404,7 @@ STDMETHODIMP CCompartmentMgr::EnumCompartments(IEnumGUID **ppEnum)
         return E_INVALIDARG;
     *ppEnum = NULL;
 
-    CEnumCompartment* newEnum = new (cicNoThrow) CEnumCompartment();
+    CEnumCompartment *newEnum = new (cicNoThrow) CEnumCompartment();
     if (!newEnum)
         return E_OUTOFMEMORY;
 
