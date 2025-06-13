@@ -268,7 +268,7 @@ static unsigned int get_type_alignment(ULONG *pFlags, VARTYPE vt)
 }
 
 /* WdtpInterfacePointer_UserSize takes care of 2 additional DWORDs to store marshalling buffer size */
-static unsigned interface_variant_size(ULONG *pFlags, REFIID riid, IUnknown *punk)
+static unsigned interface_user_size(ULONG *pFlags, ULONG Start, REFIID riid, IUnknown *punk)
 {
     ULONG size = 0;
 
@@ -283,7 +283,7 @@ static unsigned interface_variant_size(ULONG *pFlags, REFIID riid, IUnknown *pun
     }
     size += sizeof(ULONG);
     TRACE("wire-size extra of interface variant is %d\n", size);
-    return size;
+    return Start + size;
 }
 
 static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
@@ -304,13 +304,13 @@ static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
   case VT_VARIANT | VT_BYREF:
     return VARIANT_UserSize(pFlags, Start, V_VARIANTREF(pvar));
   case VT_UNKNOWN:
-    return Start + interface_variant_size(pFlags, &IID_IUnknown, V_UNKNOWN(pvar));
+    return interface_user_size(pFlags, Start, &IID_IUnknown, V_UNKNOWN(pvar));
   case VT_UNKNOWN | VT_BYREF:
-    return Start + interface_variant_size(pFlags, &IID_IUnknown, *V_UNKNOWNREF(pvar));
+    return interface_user_size(pFlags, Start, &IID_IUnknown, *V_UNKNOWNREF(pvar));
   case VT_DISPATCH:
-    return Start + interface_variant_size(pFlags, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
+    return interface_user_size(pFlags, Start, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
   case VT_DISPATCH | VT_BYREF:
-    return Start + interface_variant_size(pFlags, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
+    return interface_user_size(pFlags, Start, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
   case VT_RECORD:
     FIXME("wire-size record\n");
     return Start;
@@ -324,7 +324,7 @@ static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
 }
 
 /* helper: called for VT_DISPATCH variants to marshal the IDispatch* into the buffer */
-static unsigned char* interface_variant_marshal(ULONG *pFlags, unsigned char *Buffer,
+static unsigned char* interface_user_marshal(ULONG *pFlags, unsigned char *Buffer,
                                                 REFIID riid, IUnknown *punk)
 {
   TRACE("pFlags=%d, Buffer=%p, pUnk=%p\n", *pFlags, Buffer, punk);
@@ -345,7 +345,7 @@ static unsigned char* interface_variant_marshal(ULONG *pFlags, unsigned char *Bu
 }
 
 /* helper: called for VT_DISPATCH / VT_UNKNOWN variants to unmarshal the buffer */
-static unsigned char *interface_variant_unmarshal(ULONG *pFlags, unsigned char *Buffer,
+static unsigned char *interface_user_unmarshal(ULONG *pFlags, unsigned char *Buffer,
                                                   REFIID riid, IUnknown **ppunk)
 {
   DWORD ptr;
@@ -459,16 +459,16 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
             Pos = VARIANT_UserMarshal(pFlags, Pos, V_VARIANTREF(pvar));
             break;
         case VT_UNKNOWN:
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWN(pvar));
+            Pos = interface_user_marshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWN(pvar));
             break;
         case VT_UNKNOWN | VT_BYREF:
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IUnknown, *V_UNKNOWNREF(pvar));
+            Pos = interface_user_marshal(pFlags, Pos, &IID_IUnknown, *V_UNKNOWNREF(pvar));
             break;
         case VT_DISPATCH:
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
+            Pos = interface_user_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
             break;
         case VT_DISPATCH | VT_BYREF:
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
+            Pos = interface_user_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
             break;
         case VT_RECORD:
             FIXME("handle BRECORD by val\n");
@@ -590,16 +590,16 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffe
             Pos = VARIANT_UserUnmarshal(pFlags, Pos, V_VARIANTREF(pvar));
             break;
         case VT_UNKNOWN:
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IUnknown, &V_UNKNOWN(pvar));
+            Pos = interface_user_unmarshal(pFlags, Pos, &IID_IUnknown, &V_UNKNOWN(pvar));
             break;
         case VT_UNKNOWN | VT_BYREF:
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWNREF(pvar));
+            Pos = interface_user_unmarshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWNREF(pvar));
             break;
         case VT_DISPATCH:
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)&V_DISPATCH(pvar));
+            Pos = interface_user_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)&V_DISPATCH(pvar));
             break;
         case VT_DISPATCH | VT_BYREF:
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)V_DISPATCHREF(pvar));
+            Pos = interface_user_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)V_DISPATCHREF(pvar));
             break;
         case VT_RECORD:
             FIXME("handle BRECORD by val\n");
@@ -733,22 +733,40 @@ static inline SF_TYPE SAFEARRAY_GetUnionType(SAFEARRAY *psa)
 
 static DWORD elem_wire_size(LPSAFEARRAY lpsa, SF_TYPE sftype)
 {
-    if (sftype == SF_BSTR)
+    switch (sftype)
+    {
+    case SF_BSTR:
+    case SF_HAVEIID:
+    case SF_UNKNOWN:
+    case SF_DISPATCH:
         return sizeof(DWORD);
-    else if (sftype == SF_VARIANT)
+
+    case SF_VARIANT:
         return sizeof(variant_wire_t) - sizeof(DWORD);
-    else
+
+    default:
         return lpsa->cbElements;
+    }
 }
 
 static DWORD elem_mem_size(wireSAFEARRAY wiresa, SF_TYPE sftype)
 {
-    if (sftype == SF_BSTR)
+    switch (sftype)
+    {
+    case SF_HAVEIID:
+    case SF_UNKNOWN:
+    case SF_DISPATCH:
+        return sizeof(void *);
+
+    case SF_BSTR:
         return sizeof(BSTR);
-    else if (sftype == SF_VARIANT)
+
+    case SF_VARIANT:
         return sizeof(VARIANT);
-    else
+
+    default:
         return wiresa->cbElements;
+    }
 }
 
 ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY *ppsa)
@@ -795,8 +813,22 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
             case SF_DISPATCH:
             case SF_UNKNOWN:
             case SF_HAVEIID:
-                FIXME("size interfaces\n");
+            {
+                IUnknown **lpUnk;
+                GUID guid;
+
+                if (sftype == SF_HAVEIID)
+                    SafeArrayGetIID(psa, &guid);
+                else if (sftype == SF_UNKNOWN)
+                    guid = IID_IUnknown;
+                else
+                    guid = IID_IDispatch;
+
+                for (lpUnk = psa->pvData; ulCellCount; ulCellCount--, lpUnk++)
+                    size = interface_user_size(pFlags, size, &guid, *lpUnk);
+
                 break;
+            }
             case SF_VARIANT:
             {
                 VARIANT* lpVariant;
@@ -870,7 +902,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
         Buffer += sizeof(ULONG);
 
         hr = SafeArrayGetVartype(psa, &vt);
-        if (FAILED(hr)) vt = 0;
+        if ((psa->fFeatures & FADF_HAVEIID) || FAILED(hr)) vt = 0;
 
         *(ULONG *)Buffer = (USHORT)psa->cLocks | (vt << 16);
         Buffer += sizeof(ULONG);
@@ -916,8 +948,22 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
                 case SF_DISPATCH:
                 case SF_UNKNOWN:
                 case SF_HAVEIID:
-                    FIXME("marshal interfaces\n");
+                {
+                    IUnknown **lpUnk;
+                    const GUID *iid;
+
+                    if (sftype == SF_HAVEIID)
+                        iid = &guid;
+                    else if (sftype == SF_UNKNOWN)
+                        iid = &IID_IUnknown;
+                    else
+                        iid = &IID_IDispatch;
+
+                    for (lpUnk = psa->pvData; ulCellCount; ulCellCount--, lpUnk++)
+                            Buffer = interface_user_marshal(pFlags, Buffer, iid, *lpUnk);
+
                     break;
+                }
                 case SF_VARIANT:
                 {
                     VARIANT* lpVariant;
@@ -1093,8 +1139,22 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
             case SF_DISPATCH:
             case SF_UNKNOWN:
             case SF_HAVEIID:
-                FIXME("marshal interfaces\n");
+            {
+                IUnknown **lpUnk;
+                const GUID *iid;
+
+                if (sftype == SF_HAVEIID)
+                    iid = &guid;
+                else if (sftype == SF_UNKNOWN)
+                    iid = &IID_IUnknown;
+                else
+                    iid = &IID_IDispatch;
+
+                for (lpUnk = (*ppsa)->pvData; cell_count; cell_count--, lpUnk++)
+                    Buffer = interface_user_unmarshal(pFlags, Buffer, iid, lpUnk);
+
                 break;
+            }
             case SF_VARIANT:
             {
                 VARIANT* lpVariant;
