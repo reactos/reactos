@@ -95,7 +95,7 @@ CEnumCompartment::CEnumCompartment()
 }
 
 HRESULT
-CEnumCompartment::Init(struct list *valueList, struct list *current_cursor)
+CEnumCompartment::Init(_In_ struct list *valueList, _In_opt_ struct list *current_cursor)
 {
     // Duplicate values
     ULONG iItem = 0, iSelected = 0;
@@ -266,7 +266,7 @@ CCompartment::~CCompartment()
     }
 }
 
-HRESULT CCompartment::Init(CCompartmentValue *value)
+HRESULT CCompartment::Init(_In_ CCompartmentValue *value)
 {
     if (!value)
     {
