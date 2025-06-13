@@ -36,7 +36,7 @@ CDocumentMgr::CDocumentMgr(ITfThreadMgrEventSink *threadMgrSink)
 {
     m_contextStack[1] = m_contextStack[0] = NULL;
 
-    list_init(&m_TransitoryExtensionSink);
+    list_init(&m_transitoryExtensionSink);
 
     ITfDocumentMgr *pDocMgr = static_cast<ITfDocumentMgr *>(this);
     ITfCompartmentMgr **ppCompMgr = static_cast<ITfCompartmentMgr **>(&m_pCompartmentMgr);
@@ -67,7 +67,7 @@ CDocumentMgr::~CDocumentMgr()
         m_contextStack[1] = NULL;
     }
 
-    free_sinks(&m_TransitoryExtensionSink);
+    free_sinks(&m_transitoryExtensionSink);
 
     if (m_pCompartmentMgr)
     {
@@ -291,7 +291,7 @@ STDMETHODIMP CDocumentMgr::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCoo
         return E_NOTIMPL;
     }
 
-    return advise_sink(&m_TransitoryExtensionSink, IID_ITfTransitoryExtensionSink,
+    return advise_sink(&m_transitoryExtensionSink, IID_ITfTransitoryExtensionSink,
                        COOKIE_MAGIC_DMSINK, punk, pdwCookie);
 
 }
