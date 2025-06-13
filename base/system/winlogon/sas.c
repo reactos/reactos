@@ -719,15 +719,15 @@ WINAPI
 LogoffShutdownThread(
     LPVOID Parameter)
 {
-    DWORD ret = 1;
     PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+    HANDLE UserToken = LSData->Session->UserToken;
+    DWORD ret = TRUE;
     UINT uFlags;
 
-    if (LSData->Session->UserToken != NULL &&
-        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    if (UserToken && !ImpersonateLoggedOnUser(UserToken))
     {
         ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-        return 0;
+        return FALSE;
     }
 
     // FIXME: To be really fixed: need to check what needs to be kept and what needs to be removed there.
@@ -746,16 +746,95 @@ LogoffShutdownThread(
     if (!ExitWindowsEx(uFlags, 0))
     {
         ERR("Unable to kill user apps, error %lu\n", GetLastError());
-        ret = 0;
+        ret = FALSE;
     }
 
     /* Cancel all the user connections */
     WNetClearConnections(NULL);
 
-    if (LSData->Session->UserToken)
+    if (UserToken)
         RevertToSelf();
 
     return ret;
+}
+
+static
+NTSTATUS
+RunLogoffShutdownThread(
+    _In_ PWLSESSION Session,
+    _In_opt_ PSECURITY_ATTRIBUTES psa,
+    _In_ DWORD wlxAction)
+{
+    PCSTR pDescName;
+    PLOGOFF_SHUTDOWN_DATA LSData;
+    HANDLE hThread;
+    DWORD dwExitCode;
+
+    /* Validate the action */
+    if (WLX_LOGGINGOFF(wlxAction))
+    {
+        pDescName = "Logoff";
+    }
+    else if (WLX_SHUTTINGDOWN(wlxAction))
+    {
+        pDescName = "Shutdown";
+    }
+    else
+    {
+        ASSERT(FALSE);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Prepare data for the logoff/shutdown thread */
+    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(*LSData));
+    if (!LSData)
+    {
+        ERR("Failed to allocate %s thread data\n", pDescName);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Set the flags accordingly */
+    if (WLX_LOGGINGOFF(wlxAction))
+    {
+        LSData->Flags = EWX_LOGOFF;
+        if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
+            LSData->Flags |= EWX_FORCE;
+    }
+    else // if (WLX_SHUTTINGDOWN(wlxAction))
+    {
+        /* Because we are shutting down the OS, force processes termination too */
+        LSData->Flags = EWX_SHUTDOWN | EWX_FORCE;
+        if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+            LSData->Flags |= EWX_POWEROFF;
+        else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+            LSData->Flags |= EWX_REBOOT;
+    }
+
+    LSData->Session = Session;
+
+    /* Run the logoff/shutdown thread */
+    hThread = CreateThread(psa, 0, LogoffShutdownThread, LSData, 0, NULL);
+    if (!hThread)
+    {
+        ERR("Unable to create %s thread, error %lu\n", pDescName, GetLastError());
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+    WaitForSingleObject(hThread, INFINITE);
+    HeapFree(GetProcessHeap(), 0, LSData);
+    if (!GetExitCodeThread(hThread, &dwExitCode))
+    {
+        ERR("Unable to get %s thread exit code (error %lu)\n", pDescName, GetLastError());
+        CloseHandle(hThread);
+        return STATUS_UNSUCCESSFUL;
+    }
+    CloseHandle(hThread);
+    if (dwExitCode == 0)
+    {
+        ERR("%s thread returned failure\n", pDescName);
+        return STATUS_UNSUCCESSFUL;
+    }
+    return STATUS_SUCCESS;
 }
 
 static
@@ -764,30 +843,30 @@ WINAPI
 KillComProcesses(
     LPVOID Parameter)
 {
-    DWORD ret = 1;
-    PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+    HANDLE UserToken = (HANDLE)Parameter;
+    DWORD ret = TRUE;
 
     TRACE("In KillComProcesses\n");
 
-    if (LSData->Session->UserToken != NULL &&
-        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    if (UserToken && !ImpersonateLoggedOnUser(UserToken))
     {
         ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-        return 0;
+        return FALSE;
     }
 
     /* Attempt to kill remaining processes. No notifications needed. */
     if (!ExitWindowsEx(EWX_CALLER_WINLOGON | EWX_NONOTIFY | EWX_FORCE | EWX_LOGOFF, 0))
     {
         ERR("Unable to kill COM apps, error %lu\n", GetLastError());
-        ret = 0;
+        ret = FALSE;
     }
 
-    if (LSData->Session->UserToken)
+    if (UserToken)
         RevertToSelf();
 
     return ret;
 }
+
 
 static
 NTSTATUS
@@ -921,61 +1000,28 @@ HandleLogoff(
     _Inout_ PWLSESSION Session,
     _In_ DWORD wlxAction)
 {
-    PLOGOFF_SHUTDOWN_DATA LSData;
     PSECURITY_ATTRIBUTES psa;
     HANDLE hThread;
-    DWORD exitCode;
     NTSTATUS Status;
-
-    /* Prepare data for logoff thread */
-    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-    if (!LSData)
-    {
-        ERR("Failed to allocate mem for thread data\n");
-        return STATUS_NO_MEMORY;
-    }
-
-    LSData->Flags = EWX_LOGOFF;
-    if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
-    {
-        LSData->Flags |= EWX_FORCE;
-    }
-
-    LSData->Session = Session;
 
     Status = CreateLogoffSecurityAttributes(&psa);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Failed to create a required security descriptor. Status 0x%08lx\n", Status);
-        HeapFree(GetProcessHeap(), 0, LSData);
+        ERR("Failed to create Logoff security descriptor. Status 0x%08lx\n", Status);
         return Status;
     }
 
-    /* Run logoff thread */
-    hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
-    if (!hThread)
+    /* Run the Logoff thread. Log off as well if we are
+     * invoked as part of a shutdown operation. */
+    Status = RunLogoffShutdownThread(Session, psa,
+                                     WLX_LOGGINGOFF(wlxAction)
+                                        ? wlxAction
+                                        : WLX_SAS_ACTION_LOGOFF);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Unable to create logoff thread, error %lu\n", GetLastError());
+        ERR("Failed to start the Logoff thread, Status 0x%08lx\n", Status);
         DestroyLogoffSecurityAttributes(psa);
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
-    }
-    WaitForSingleObject(hThread, INFINITE);
-    if (!GetExitCodeThread(hThread, &exitCode))
-    {
-        ERR("Unable to get exit code of logoff thread (error %lu)\n", GetLastError());
-        CloseHandle(hThread);
-        DestroyLogoffSecurityAttributes(psa);
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
-    }
-    CloseHandle(hThread);
-    if (exitCode == 0)
-    {
-        ERR("Logoff thread returned failure\n");
-        DestroyLogoffSecurityAttributes(psa);
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
+        return Status;
     }
 
     SwitchDesktop(Session->WinlogonDesktop);
@@ -991,8 +1037,8 @@ HandleLogoff(
     // FIXME: Closing network connections!
     // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
 
-    /* Kill remaining COM apps. Only at logoff! */
-    hThread = CreateThread(psa, 0, KillComProcesses, (LPVOID)LSData, 0, NULL);
+    /* Kill remaining COM processes that may have been started by logoff scripts */
+    hThread = CreateThread(psa, 0, KillComProcesses, (PVOID)Session->UserToken, 0, NULL);
     if (hThread)
     {
         WaitForSingleObject(hThread, INFINITE);
@@ -1001,9 +1047,6 @@ HandleLogoff(
 
     /* We're done with the SECURITY_DESCRIPTOR */
     DestroyLogoffSecurityAttributes(psa);
-    psa = NULL;
-
-    HeapFree(GetProcessHeap(), 0, LSData);
 
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
@@ -1080,9 +1123,7 @@ HandleShutdown(
     IN OUT PWLSESSION Session,
     IN DWORD wlxAction)
 {
-    PLOGOFF_SHUTDOWN_DATA LSData;
-    HANDLE hThread;
-    DWORD exitCode;
+    NTSTATUS Status;
     BOOLEAN Old;
 
     // SwitchDesktop(Session->WinlogonDesktop);
@@ -1093,48 +1134,10 @@ HandleShutdown(
     else
         DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
-    /* Prepare data for shutdown thread */
-    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-    if (!LSData)
-    {
-        ERR("Failed to allocate mem for thread data\n");
-        return STATUS_NO_MEMORY;
-    }
-    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
-        LSData->Flags = EWX_POWEROFF;
-    else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
-        LSData->Flags = EWX_REBOOT;
-    else
-        LSData->Flags = EWX_SHUTDOWN;
-    LSData->Session = Session;
-
-    // FIXME: We may need to specify this flag to really force application kill
-    // (we are shutting down ReactOS, not just logging off so no hangs, etc...
-    // should be allowed).
-    // LSData->Flags |= EWX_FORCE;
-
-    /* Run shutdown thread */
-    hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
-    if (!hThread)
-    {
-        ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
-    }
-    WaitForSingleObject(hThread, INFINITE);
-    HeapFree(GetProcessHeap(), 0, LSData);
-    if (!GetExitCodeThread(hThread, &exitCode))
-    {
-        ERR("Unable to get exit code of shutdown thread (error %lu)\n", GetLastError());
-        CloseHandle(hThread);
-        return STATUS_UNSUCCESSFUL;
-    }
-    CloseHandle(hThread);
-    if (exitCode == 0)
-    {
-        ERR("Shutdown thread returned failure\n");
-        return STATUS_UNSUCCESSFUL;
-    }
+    /* Run the shutdown thread. *IGNORE* all failures as we want to force shutting down! */
+    Status = RunLogoffShutdownThread(Session, NULL, wlxAction);
+    if (!NT_SUCCESS(Status))
+        ERR("Failed to start the Shutdown thread, Status 0x%08lx\n", Status);
 
     CallNotificationDlls(Session, ShutdownHandler);
 

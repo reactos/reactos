@@ -277,17 +277,19 @@ typedef enum _NOTIFICATION_TYPE
 extern HINSTANCE hAppInstance;
 extern PWLSESSION WLSession;
 
-#define WLX_SHUTTINGDOWN(Status) \
-  (((Status) == WLX_SAS_ACTION_SHUTDOWN) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_REBOOT) \
-  )
+#define WLX_LOGGINGOFF(wlxAction) \
+  (((wlxAction) == WLX_SAS_ACTION_LOGOFF) || \
+   ((wlxAction) == WLX_SAS_ACTION_FORCE_LOGOFF))
 
-#define WLX_SUSPENDING(Status) \
-  (((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
-  )
+#define WLX_SHUTTINGDOWN(wlxAction) \
+  (((wlxAction) == WLX_SAS_ACTION_SHUTDOWN) || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF) || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_REBOOT))
+
+#define WLX_SUSPENDING(wlxAction) \
+  (((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_SLEEP)  || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE))
 
 FORCEINLINE
 VOID
