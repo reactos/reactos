@@ -8,7 +8,6 @@ list(APPEND SOURCE
     categorymgr.c
     compartmentmgr.c
     context.c
-    documentmgr.c
     inputprocessor.c
     msctf.c
     threadmgr.c
@@ -17,6 +16,7 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     displayattributemgr.cpp
+    documentmgr.cpp
     langbarmgr.cpp
     mlng.cpp
     range.cpp
