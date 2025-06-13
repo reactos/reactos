@@ -34,6 +34,7 @@ CCompartmentValue::CCompartmentValue()
     , m_compartment(NULL)
 {
     list_init(&m_entry);
+    ZeroMemory(&m_guid, sizeof(m_guid));
 }
 
 CCompartmentValue::~CCompartmentValue()
