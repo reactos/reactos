@@ -81,7 +81,7 @@ private:
     LONG m_cRefs;
     VARIANT m_variant;
     CCompartmentValue *m_valueData; // Raw pointer, owned by CCompartmentMgr
-    struct list m_CompartmentEventSink; // Placeholder for sink management
+    struct list m_compartmentEventSink; // Placeholder for sink management
 };
 
 ////////////////////////////////////////////////////////////////////////////

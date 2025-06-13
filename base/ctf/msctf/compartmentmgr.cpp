@@ -165,13 +165,13 @@ CCompartment::CCompartment()
     , m_valueData(NULL)
 {
     ::VariantInit(&m_variant);
-    list_init(&m_CompartmentEventSink);
+    list_init(&m_compartmentEventSink);
 }
 
 CCompartment::~CCompartment()
 {
     ::VariantClear(&m_variant);
-    free_sinks(&m_CompartmentEventSink);
+    free_sinks(&m_compartmentEventSink);
 }
 
 HRESULT CCompartment::Init(CCompartmentValue *valueData_in)
@@ -227,8 +227,8 @@ STDMETHODIMP CCompartment::SetValue(TfClientId tid, const VARIANT *pvarValue)
 
     ::VariantCopy(&m_variant, (VARIANT *)pvarValue);
 
-    struct list *cursor = m_CompartmentEventSink.next;
-    while (cursor != &m_CompartmentEventSink)
+    struct list *cursor = m_compartmentEventSink.next;
+    while (cursor != &m_compartmentEventSink)
         cursor = cursor->next;
 
     return S_OK;
@@ -252,7 +252,7 @@ STDMETHODIMP CCompartment::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCoo
         return E_INVALIDARG;
 
     if (IsEqualIID(riid, IID_ITfCompartmentEventSink))
-        return advise_sink(&m_CompartmentEventSink, IID_ITfCompartmentEventSink,
+        return advise_sink(&m_compartmentEventSink, IID_ITfCompartmentEventSink,
                            COOKIE_MAGIC_COMPARTMENTSINK, punk, pdwCookie);
 
     return E_NOTIMPL;
