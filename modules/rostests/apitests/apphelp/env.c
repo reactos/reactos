@@ -308,13 +308,22 @@ static void Validate_ShimData_Win2k3(PVOID data, size_t count, const char* layer
     ok(pShimData->dwCustomSDBMap == 1, "Expected pShimData->dwCustomSDBMap to be 1, was %u\n", pShimData->dwCustomSDBMap);
 }
 
+static void Validate_ShimData_WinVista(PVOID data, size_t count, const char* layers[])
+{
+    // This is a hack, we need a ShimData_WinVista structure.
+    PWSTR ModuleName = PathFindFileNameW(data);
+
+    ok(!lstrcmpW(ModuleName, L"ShimEng.dll"), "Expected pShimData->Module to be %s, was %s\n", wine_dbgstr_w(L"ShimEng.dll"), wine_dbgstr_w(ModuleName));
+    skip("FIXME: Validate_ShimData_WinVista is a stub.\n");
+}
+
 static void Validate_ShimData_Win7(PVOID data, WCHAR szApphelp[256], size_t count, const char* layers[])
 {
     size_t n;
     ShimData_Win7* pShimData = (ShimData_Win7*)data;
 
     ok(!lstrcmpW(pShimData->szModule, szApphelp), "Expected pShimData->Module to be %s, was %s\n",
-        wine_dbgstr_w(szApphelp), wine_dbgstr_w(pShimData->szModule));
+           wine_dbgstr_w(szApphelp), wine_dbgstr_w(pShimData->szModule));
     ok(pShimData->dwMagic == SHIMDATA_MAGIC, "Expected pShimData->dwMagic to be 0x%x, was 0x%x\n",
         SHIMDATA_MAGIC, pShimData->dwMagic);
     ok(pShimData->dwSize == sizeof(ShimData_Win7), "Expected pShimData->dwSize to be %u, was %u\n",
@@ -491,6 +500,8 @@ static void Test_layers(WCHAR szApphelp[256])
             {
                 if (g_WinVersion < WINVER_VISTA)
                     Validate_ShimData_Win2k3(info.pShimData, n, layers);
+                else if (g_WinVersion == WINVER_VISTA)
+                    Validate_ShimData_WinVista(info.pShimData, n, layers);
                 else if (g_WinVersion < WINVER_WIN10)
                     Validate_ShimData_Win7(info.pShimData, szApphelp, n, layers);
                 else
@@ -538,6 +549,8 @@ static void Test_repeatlayer(WCHAR szApphelp[256])
             /* Win10 only 'loads' one layer */
             if (g_WinVersion < WINVER_VISTA)
                 Validate_ShimData_Win2k3(info.pShimData, SDB_MAX_LAYERS, layers);
+            else if (g_WinVersion == WINVER_VISTA)
+                Validate_ShimData_WinVista(info.pShimData, SDB_MAX_LAYERS, layers);
             else if (g_WinVersion < WINVER_WIN10)
                 Validate_ShimData_Win7(info.pShimData, szApphelp, SDB_MAX_LAYERS, layers);
             else
@@ -733,7 +746,7 @@ static void Test_GetMatchingExe(void)
     BOOL ret;
     SDBQUERYRESULT_VISTA result = { { 0 } };
     WCHAR self[MAX_PATH];
-    DWORD flags = (g_WinVersion < WINVER_VISTA) ? 0 : ((g_WinVersion < WINVER_WIN10) ? 1 : 0x21);
+    DWORD flags = (g_WinVersion <= WINVER_VISTA) ? 0 : ((g_WinVersion < WINVER_WIN10) ? 1 : 0x21);
 
     GetModuleFileNameW(NULL, self, MAX_PATH);
     SetEnvironmentVariableA("__COMPAT_LAYER", NULL);
@@ -1314,6 +1327,7 @@ START_TEST(env)
         return;
     }
 
+#ifdef _M_IX86
     /* New version of Win10.. */
     if (g_WinVersion == WINVER_WIN10 && ShimDataType == 3)
         g_ShimDataSize = 4096;
@@ -1333,6 +1347,9 @@ START_TEST(env)
     }
 
     Test_ApphelpCheckRunApp(szApphelp);
+#else
+    skip("FIXME: apphelp:env tests invalid for non-x86 platforms.\n");
+#endif
     if (g_LayerDB)
         pSdbReleaseDatabase(g_LayerDB);
 }

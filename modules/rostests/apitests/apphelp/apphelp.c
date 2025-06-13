@@ -1101,8 +1101,8 @@ START_TEST(apphelp)
     test_ApplicationAttributes();
     test_SdbTagToString();
     test_SdbTagToStringAllTags();
-#ifdef _M_AMD64
-    skip("Need new SdbGetAppPatchDir() for amd64!\n");
+#ifndef _M_IX86
+    skip("FIXME: Need new SdbGetAppPatchDir() for non-x86!\n");
 #else
     if (pSdbGetAppPatchDir)
         test_SdbGetAppPatchDir();

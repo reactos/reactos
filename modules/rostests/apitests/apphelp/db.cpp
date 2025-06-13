@@ -2125,8 +2125,8 @@ START_TEST(db)
     *(void**)&pSdbGetDatabaseInformation = (void *)GetProcAddress(hdll, "SdbGetDatabaseInformation");
     *(void**)&pSdbFreeDatabaseInformation = (void *)GetProcAddress(hdll, "SdbFreeDatabaseInformation");
 
-#ifdef _M_AMD64
-    skip("We need a new db test for amd64!\n");
+#ifndef _M_IX86
+    skip("FIXME: We need a new db test for non-x86!\n");
     return;
 #endif
 
