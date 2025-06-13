@@ -429,7 +429,8 @@ PlayEventSound(
 
 static
 VOID
-RestoreAllConnections(PWLSESSION Session)
+RestoreAllConnections(
+    _In_ PWLSESSION Session)
 {
     DWORD dRet;
     HANDLE hEnum;
@@ -441,9 +442,7 @@ RestoreAllConnections(PWLSESSION Session)
 
     UserProfile = (Session && Session->UserToken);
     if (!UserProfile)
-    {
         return;
-    }
 
     if (!ImpersonateLoggedOnUser(Session->UserToken))
     {
@@ -471,7 +470,7 @@ RestoreAllConnections(PWLSESSION Session)
         dSize = 0x1000;
         dCount = -1;
 
-        memset(lpRes, 0, dSize);
+        ZeroMemory(lpRes, dSize);
         dRet = WNetEnumResource(hEnum, &dCount, lpRes, &dSize);
         if (dRet == WN_SUCCESS || dRet == WN_MORE_DATA)
         {
@@ -488,6 +487,17 @@ RestoreAllConnections(PWLSESSION Session)
     WNetCloseEnum(hEnum);
 
 quit:
+    RevertToSelf();
+}
+
+static
+VOID
+CloseAllConnections(
+    _In_ PWLSESSION Session)
+{
+    if (!Session->UserToken || !ImpersonateLoggedOnUser(Session->UserToken))
+        return;
+    WNetClearConnections(NULL);
     RevertToSelf();
 }
 
@@ -756,9 +766,6 @@ LogoffShutdownThread(
         ERR("Unable to kill user apps, error %lu\n", GetLastError());
         ret = FALSE;
     }
-
-    /* Cancel all the user connections */
-    WNetClearConnections(NULL);
 
     if (UserToken)
         RevertToSelf();
@@ -1036,14 +1043,17 @@ HandleLogoff(
 
     PlayLogoffShutdownSound(Session, WLX_SHUTTINGDOWN(wlxAction));
 
+    /* Close all user network connections */
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
+    CloseAllConnections(Session);
+    // TODO: Do any other user-specific network-related cleaning:
+    // user-added NetAPI message aliases; user cached credentials (remote login)...
+
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
 
     // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
     CallNotificationDlls(Session, LogoffHandler);
-
-    // FIXME: Closing network connections!
-    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
 
     /* Kill remaining COM processes that may have been started by logoff scripts */
     hThread = CreateThread(psa, 0, KillComProcesses, (PVOID)Session->UserToken, 0, NULL);
