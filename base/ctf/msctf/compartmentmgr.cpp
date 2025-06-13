@@ -33,8 +33,16 @@ CCompartmentValue::CCompartmentValue()
     : m_owner(0)
     , m_compartment(NULL)
 {
-    list_init(&m_entry);
     ZeroMemory(&m_guid, sizeof(m_guid));
+    list_init(&m_entry);
+}
+
+CCompartmentValue::CCompartmentValue(REFGUID rguid, TfClientId owner)
+    : m_owner(owner)
+    , m_compartment(NULL)
+{
+    m_guid = rguid;
+    list_init(&m_entry);
 }
 
 CCompartmentValue::~CCompartmentValue()
@@ -44,6 +52,31 @@ CCompartmentValue::~CCompartmentValue()
         m_compartment->Release();
         m_compartment = NULL;
     }
+}
+
+HRESULT CCompartmentValue::Clone(CCompartmentValue **ppValue)
+{
+    if (!ppValue)
+    {
+        ERR("E_POINTER\n");
+        return E_POINTER;
+    }
+
+    CCompartmentValue *pCloned = new(cicNoThrow) CCompartmentValue(m_guid, m_owner);
+    if (!pCloned)
+    {
+        ERR("E_OUTOFMEMORY\n");
+        return E_OUTOFMEMORY;
+    }
+
+    if (m_compartment)
+    {
+        pCloned->m_compartment = m_compartment;
+        m_compartment->AddRef();
+    }
+
+    *ppValue = pCloned;
+    return TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -56,20 +89,34 @@ CEnumCompartment::CEnumCompartment()
 {
 }
 
-CEnumCompartment::~CEnumCompartment()
+HRESULT
+CEnumCompartment::Init(struct list *valuesHead, struct list *current_cursor)
 {
+    ULONG iItem = 0, iSelected = 0;
+    for (struct list *cursor = list_head(valuesHead); cursor != valuesHead;
+         cursor = list_next(valuesHead, cursor))
+    {
+        CCompartmentValue *value = LIST_ENTRY(cursor, CCompartmentValue, m_entry);
+        if (current_cursor && cursor == current_cursor)
+            iSelected = iItem;
+
+        CCompartmentValue *newValue;
+        HRESULT hr = value->Clone(&newValue);
+        if (FAILED(hr))
+        {
+            ERR("hr: 0x%lX\n", hr);
+            return hr;
+        }
+
+        list_add_head(m_valuesHead, &newValue->m_entry);
+        ++iItem;
+    }
+
+    return iSelected ? Skip(iSelected) : S_OK;
 }
 
-HRESULT CEnumCompartment::Init(struct list *values_head)
+CEnumCompartment::~CEnumCompartment()
 {
-    if (!values_head)
-    {
-        ERR("!values_head\n");
-        return E_INVALIDARG;
-    }
-    m_valuesHead = values_head;
-    m_cursor = list_head(m_valuesHead); // Start from the first element
-    return S_OK;
 }
 
 STDMETHODIMP CEnumCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
@@ -162,23 +209,24 @@ STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
     }
 
     *ppenum = NULL;
-    CEnumCompartment *pEnum = new(cicNoThrow) CEnumCompartment();
-    if (!pEnum)
+
+    CEnumCompartment *pCloned = new(cicNoThrow) CEnumCompartment();
+    if (!pCloned)
     {
         ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
     }
 
-    HRESULT hr = pEnum->Init(m_valuesHead);
+    HRESULT hr = pCloned->Init(m_valuesHead, m_cursor);
     if (FAILED(hr))
     {
-        delete pEnum;
+        ERR("hr: 0x%lX\n", hr);
+        delete pCloned;
         return hr;
     }
 
-    pEnum->m_cursor = m_cursor; // Clone the current position
-    *ppenum = pEnum;
-    return hr;
+    *ppenum = pCloned;
+    return S_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -415,15 +463,12 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     }
 
     // Not found, create a new one
-    CCompartmentValue *value = new (cicNoThrow) CCompartmentValue();
+    CCompartmentValue *value = new (cicNoThrow) CCompartmentValue(rguid, 0);
     if (!value)
     {
         ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
     }
-
-    value->m_guid = rguid;
-    value->m_owner = 0; // Will be set by CCompartment::SetValue
 
     CCompartment *compartment = new (cicNoThrow) CCompartment();
     if (!compartment)
@@ -445,7 +490,6 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
     compartment->AddRef();
 
     list_add_head(&m_values, &value->m_entry);
-
     *ppcomp = compartment;
     return hr;
 }
@@ -497,6 +541,7 @@ STDMETHODIMP CCompartmentMgr::EnumCompartments(IEnumGUID **ppEnum)
     HRESULT hr = pEnum->Init(&m_values);
     if (FAILED(hr))
     {
+        ERR("hr: 0x%lX\n", hr);
         delete pEnum;
         return hr;
     }
@@ -532,7 +577,7 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
 
     if (pUnkOuter)
     {
-        // An aggregated object
+        // Aggregated object
         *ppOut = static_cast<ITfCompartmentMgr *>(pManager);
         pManager->AddRef();
         return S_OK;
