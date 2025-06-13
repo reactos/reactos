@@ -87,7 +87,7 @@ STDMETHODIMP CEnumCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
         return S_OK;
     }
 
-    ERR("E_NOINTERFACE\n");
+    ERR("E_NOINTERFACE: %s\n", wine_dbgstr_guid(&iid));
     return E_NOINTERFACE;
 }
 
@@ -227,7 +227,7 @@ STDMETHODIMP CCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
         return S_OK;
     }
 
-    ERR("E_NOINTERFACE\n");
+    ERR("E_NOINTERFACE: %s\n", wine_dbgstr_guid(&iid));
     return E_NOINTERFACE;
 }
 
@@ -266,11 +266,14 @@ STDMETHODIMP CCompartment::SetValue(TfClientId tid, const VARIANT *pvarValue)
     if (!m_valueData->m_owner)
         m_valueData->m_owner = tid;
 
-    ::VariantCopy(&m_variant, (VARIANT *)pvarValue);
+    ::VariantCopy(&m_variant, (LPVARIANT)pvarValue);
 
-    struct list *cursor = m_compartmentEventSink.next;
-    while (cursor != &m_compartmentEventSink)
-        cursor = cursor->next;
+    struct list *cursor;
+    ITfCompartmentEventSink *sink;
+    SINK_FOR_EACH(cursor, &m_compartmentEventSink, ITfCompartmentEventSink, sink)
+    {
+        sink->OnChange(m_valueData->m_guid);
+    }
 
     return S_OK;
 }
@@ -361,7 +364,7 @@ STDMETHODIMP CCompartmentMgr::QueryInterface(REFIID iid, LPVOID *ppvOut)
         return S_OK;
     }
 
-    ERR("E_NOINTERFACE\n");
+    ERR("E_NOINTERFACE: %s\n", wine_dbgstr_guid(&iid));
     return E_NOINTERFACE;
 }
 
@@ -408,7 +411,7 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
             continue;
 
         *ppcomp = value->m_compartment;
-        value->m_compartment->AddRef();
+        (*ppcomp)->AddRef();
         return S_OK;
     }
 
@@ -487,7 +490,10 @@ STDMETHODIMP CCompartmentMgr::EnumCompartments(IEnumGUID **ppEnum)
 
     CEnumCompartment *pEnum = new (cicNoThrow) CEnumCompartment();
     if (!pEnum)
+    {
+        ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
+    }
 
     HRESULT hr = pEnum->Init(&m_values);
     if (FAILED(hr))
