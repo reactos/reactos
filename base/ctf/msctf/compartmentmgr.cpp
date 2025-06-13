@@ -10,6 +10,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <oleauto.h>
 #include <msctf.h>
 #include <msctf_undoc.h>
 #include <wine/list.h>
