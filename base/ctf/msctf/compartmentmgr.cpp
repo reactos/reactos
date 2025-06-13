@@ -82,7 +82,7 @@ HRESULT CEnumCompartment::Init(struct list *values_head)
 
 STDMETHODIMP CEnumCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
 {
-    TRACE("(%s, %p)\n", wine_dbgstr_guid(&iid), ppvOut);
+    TRACE("%p -> (%s, %p)\n", this, wine_dbgstr_guid(&iid), ppvOut);
 
     *ppvOut = NULL;
 
@@ -101,13 +101,13 @@ STDMETHODIMP CEnumCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
 
 STDMETHODIMP_(ULONG) CEnumCompartment::AddRef()
 {
-    TRACE("()\n");
+    TRACE("%p -> ()\n", this);
     return ::InterlockedIncrement(&m_cRefs);
 }
 
 STDMETHODIMP_(ULONG) CEnumCompartment::Release()
 {
-    TRACE("()\n");
+    TRACE("%p -> ()\n", this);
     ULONG ret = ::InterlockedDecrement(&m_cRefs);
     if (!ret)
         delete this;
@@ -116,7 +116,7 @@ STDMETHODIMP_(ULONG) CEnumCompartment::Release()
 
 STDMETHODIMP CEnumCompartment::Next(ULONG celt, GUID *rgelt, ULONG *pceltFetched)
 {
-    TRACE("(%lu, %s, %p)\n", celt, wine_dbgstr_guid(rgelt), pceltFetched);
+    TRACE("%p -> (%lu, %s, %p)\n", this, celt, wine_dbgstr_guid(rgelt), pceltFetched);
 
     ULONG fetched = 0;
 
@@ -142,7 +142,7 @@ STDMETHODIMP CEnumCompartment::Next(ULONG celt, GUID *rgelt, ULONG *pceltFetched
 
 STDMETHODIMP CEnumCompartment::Skip(ULONG celt)
 {
-    TRACE("(%lu)\n", celt);
+    TRACE("%p -> (%lu)\n", this, celt);
     for (ULONG i = 0; i < celt && m_cursor != m_valuesHead; ++i)
     {
         m_cursor = m_cursor->next;
@@ -152,14 +152,14 @@ STDMETHODIMP CEnumCompartment::Skip(ULONG celt)
 
 STDMETHODIMP CEnumCompartment::Reset()
 {
-    TRACE("()\n");
+    TRACE("%p -> ()\n", this);
     m_cursor = list_head(m_valuesHead); // Reset to the first element
     return S_OK;
 }
 
 STDMETHODIMP CEnumCompartment::Clone(IEnumGUID **ppenum)
 {
-    TRACE("(%p)\n", ppenum);
+    TRACE("%p -> (%p)\n", this, ppenum);
 
     if (!ppenum)
         return E_POINTER;
@@ -211,7 +211,7 @@ HRESULT CCompartment::Init(CCompartmentValue *valueData_in)
 
 STDMETHODIMP CCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
 {
-    TRACE("(%s, %p)\n", wine_dbgstr_guid(&iid), ppvOut);
+    TRACE("%p -> (%s, %p)\n", this, wine_dbgstr_guid(&iid), ppvOut);
 
     *ppvOut = NULL;
 
@@ -232,13 +232,13 @@ STDMETHODIMP CCompartment::QueryInterface(REFIID iid, LPVOID *ppvOut)
 
 STDMETHODIMP_(ULONG) CCompartment::AddRef()
 {
-    TRACE("()\n");
+    TRACE("%p -> ()\n", this);
     return ::InterlockedIncrement(&m_cRefs);
 }
 
 STDMETHODIMP_(ULONG) CCompartment::Release()
 {
-    TRACE("()\n");
+    TRACE("%p -> ()\n", this);
     ULONG ret = ::InterlockedDecrement(&m_cRefs);
     if (!ret)
         delete this;
@@ -247,7 +247,7 @@ STDMETHODIMP_(ULONG) CCompartment::Release()
 
 STDMETHODIMP CCompartment::SetValue(TfClientId tid, const VARIANT *pvarValue)
 {
-    TRACE("(%d, %p)\n", tid, pvarValue);
+    TRACE("%p -> (%d, %p)\n", this, tid, pvarValue);
 
     if (!pvarValue)
     {
@@ -276,7 +276,7 @@ STDMETHODIMP CCompartment::SetValue(TfClientId tid, const VARIANT *pvarValue)
 
 STDMETHODIMP CCompartment::GetValue(VARIANT *pvarValue)
 {
-    TRACE("(%p)\n", pvarValue);
+    TRACE("%p -> (%p)\n", this, pvarValue);
 
     if (!pvarValue)
     {
@@ -293,7 +293,7 @@ STDMETHODIMP CCompartment::GetValue(VARIANT *pvarValue)
 
 STDMETHODIMP CCompartment::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
-    TRACE("(%s, %p, %p)\n", wine_dbgstr_guid(&riid), punk, pdwCookie);
+    TRACE("%p -> (%s, %p, %p)\n", this, wine_dbgstr_guid(&riid), punk, pdwCookie);
 
     if (!punk || !pdwCookie)
     {
@@ -310,7 +310,7 @@ STDMETHODIMP CCompartment::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCoo
 
 STDMETHODIMP CCompartment::UnadviseSink(DWORD pdwCookie)
 {
-    TRACE("(%p)\n", pdwCookie);
+    TRACE("%p -> (%p)\n", this, pdwCookie);
     if (get_Cookie_magic(pdwCookie) != COOKIE_MAGIC_COMPARTMENTSINK)
     {
         ERR("Invalid cookie\n");
@@ -343,7 +343,7 @@ CCompartmentMgr::~CCompartmentMgr()
 
 STDMETHODIMP CCompartmentMgr::QueryInterface(REFIID iid, LPVOID *ppvOut)
 {
-    TRACE("(%s, %p)\n", wine_dbgstr_guid(&iid), ppvOut);
+    TRACE("%p -> (%s, %p)\n", this, wine_dbgstr_guid(&iid), ppvOut);
 
     if (m_pUnkOuter)
         return m_pUnkOuter->QueryInterface(iid, ppvOut);
@@ -365,7 +365,7 @@ STDMETHODIMP CCompartmentMgr::QueryInterface(REFIID iid, LPVOID *ppvOut)
 
 STDMETHODIMP_(ULONG) CCompartmentMgr::AddRef()
 {
-    TRACE("()\n");
+    TRACE("%p -> ()\n", this);
 
     if (m_pUnkOuter)
         return m_pUnkOuter->AddRef();
@@ -375,7 +375,7 @@ STDMETHODIMP_(ULONG) CCompartmentMgr::AddRef()
 
 STDMETHODIMP_(ULONG) CCompartmentMgr::Release()
 {
-    TRACE("()\n");
+    TRACE("%p -> ()\n", this);
 
     if (m_pUnkOuter)
         return m_pUnkOuter->Release();
@@ -388,7 +388,7 @@ STDMETHODIMP_(ULONG) CCompartmentMgr::Release()
 
 STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppcomp)
 {
-    TRACE("(%s, %p)\n", wine_dbgstr_guid(&rguid), ppcomp);
+    TRACE("%p -> (%s, %p)\n", this, wine_dbgstr_guid(&rguid), ppcomp);
 
     if (!ppcomp)
         return E_POINTER;
@@ -442,7 +442,7 @@ STDMETHODIMP CCompartmentMgr::GetCompartment(REFGUID rguid, ITfCompartment **ppc
 
 STDMETHODIMP CCompartmentMgr::ClearCompartment(TfClientId tid, REFGUID rguid)
 {
-    TRACE("(%d, %s)\n", tid, wine_dbgstr_guid(&rguid));
+    TRACE("%p -> (%d, %s)\n", this, tid, wine_dbgstr_guid(&rguid));
 
     struct list *cursor;
     LIST_FOR_EACH(cursor, &m_values)
@@ -464,7 +464,7 @@ STDMETHODIMP CCompartmentMgr::ClearCompartment(TfClientId tid, REFGUID rguid)
 
 STDMETHODIMP CCompartmentMgr::EnumCompartments(IEnumGUID **ppEnum)
 {
-    TRACE("(%p)\n", ppEnum);
+    TRACE("%p -> (%p)\n", this, ppEnum);
 
     if (!ppEnum)
     {
