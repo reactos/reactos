@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS CTF
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Implementation of ITfDocumentMgr and IEnumTfContexts 
+ * PURPOSE:     Implementation of ITfDocumentMgr and IEnumTfContexts
  * COPYRIGHT:   Copyright 2009 Aric Stewart, CodeWeavers
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
@@ -146,15 +146,15 @@ STDMETHODIMP
 CDocumentMgr::CreateContext(
     TfClientId tidOwner,
     DWORD dwFlags,
-    IUnknown* punk,
-    ITfContext** ppic,
-    TfEditCookie* pecTextStore)
+    IUnknown *punk,
+    ITfContext **ppic,
+    TfEditCookie *pecTextStore)
 {
     FIXME("%p -> (%d, 0x%lX, %p, %p, %p)\n", this, tidOwner, dwFlags, punk, ppic, pecTextStore);
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CDocumentMgr::Push(ITfContext* pic)
+STDMETHODIMP CDocumentMgr::Push(ITfContext *pic)
 {
     TRACE("%p -> (%p)\n", this, pic);
 
@@ -217,7 +217,7 @@ STDMETHODIMP CDocumentMgr::Pop(DWORD dwFlags)
         return E_INVALIDARG;
     }
 
-    if (!m_contextStack[1]) /* Cannot pop last context */
+    if (!m_contextStack[1]) // Cannot pop last context
     {
         ERR("!m_contextStack[1]\n");
         return E_FAIL;
@@ -238,7 +238,7 @@ STDMETHODIMP CDocumentMgr::Pop(DWORD dwFlags)
     return S_OK;
 }
 
-STDMETHODIMP CDocumentMgr::GetTop(ITfContext** ppic)
+STDMETHODIMP CDocumentMgr::GetTop(ITfContext **ppic)
 {
     TRACE("%p -> (%p)\n", this, ppic);
 
@@ -255,7 +255,7 @@ STDMETHODIMP CDocumentMgr::GetTop(ITfContext** ppic)
     return S_OK;
 }
 
-STDMETHODIMP CDocumentMgr::GetBase(ITfContext** ppic)
+STDMETHODIMP CDocumentMgr::GetBase(ITfContext **ppic)
 {
     TRACE("%p -> (%p)\n", this, ppic);
 
@@ -272,13 +272,13 @@ STDMETHODIMP CDocumentMgr::GetBase(ITfContext** ppic)
     return S_OK;
 }
 
-STDMETHODIMP CDocumentMgr::EnumContexts(IEnumTfContexts** ppEnum)
+STDMETHODIMP CDocumentMgr::EnumContexts(IEnumTfContexts **ppEnum)
 {
     TRACE("%p -> (%p)\n", this, ppEnum);
     return EnumTfContext_Constructor(this, ppEnum);
 }
 
-STDMETHODIMP CDocumentMgr::AdviseSink(REFIID riid, IUnknown* punk, DWORD* pdwCookie)
+STDMETHODIMP CDocumentMgr::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     TRACE("%p -> (%s, %p, %p)\n", this, wine_dbgstr_guid(&riid), punk, pdwCookie);
 
@@ -309,7 +309,7 @@ STDMETHODIMP CDocumentMgr::UnadviseSink(DWORD pdwCookie)
 ////////////////////////////////////////////////////////////////////////////
 // CEnumTfContext
 
-CEnumTfContext::CEnumTfContext(_In_opt_ CDocumentMgr* mgr)
+CEnumTfContext::CEnumTfContext(_In_opt_ CDocumentMgr *mgr)
     : m_cRefs(1)
     , m_index(0)
     , m_pDocMgr(mgr)
@@ -327,7 +327,7 @@ CEnumTfContext::~CEnumTfContext()
     }
 }
 
-HRESULT CEnumTfContext::CreateInstance(_In_opt_ CDocumentMgr* mgr, _Out_ IEnumTfContexts** ppOut)
+HRESULT CEnumTfContext::CreateInstance(_In_opt_ CDocumentMgr *mgr, _Out_ IEnumTfContexts **ppOut)
 {
     if (!ppOut)
     {
@@ -354,7 +354,7 @@ STDMETHODIMP CEnumTfContext::QueryInterface(REFIID iid, LPVOID *ppvObject)
     *ppvObject = NULL;
 
     if (iid == IID_IUnknown || iid == IID_IEnumTfContexts)
-        *ppvObject = static_cast<IEnumTfContexts*>(this);
+        *ppvObject = static_cast<IEnumTfContexts *>(this);
 
     if (*ppvObject)
     {
@@ -381,7 +381,7 @@ STDMETHODIMP_(ULONG) CEnumTfContext::Release()
     return ret;
 }
 
-STDMETHODIMP CEnumTfContext::Next(ULONG ulCount, ITfContext** rgContext, ULONG* pcFetched)
+STDMETHODIMP CEnumTfContext::Next(ULONG ulCount, ITfContext **rgContext, ULONG *pcFetched)
 {
     TRACE("%p -> (%lu, %p, %p)\n",this, ulCount, rgContext, pcFetched);
 
