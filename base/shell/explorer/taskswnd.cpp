@@ -2181,10 +2181,10 @@ public:
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
 
-                // Retry with next timer id if any when no rude detected
+                // Check counter and retry when no rude app detected
                 KillTimer(wParam);
                 ++m_nRudeAppValidationCounter;
-                if (!hwndRude && m_nRudeAppValidationCounter < VALIDATE_RUDE_MAX_COUNT)
+                if (m_nRudeAppValidationCounter < VALIDATE_RUDE_MAX_COUNT && !hwndRude)
                     SetTimer(wParam, VALIDATE_RUDE_INTERVAL, NULL);
                 break;
             }
