@@ -4445,8 +4445,8 @@ SHCreateShellPalette(_In_opt_ HDC hdc)
     HDC hdcMem;
     HPALETTE hHalftonePalette;
     LOGPALETTEMAX data;
-    const SIZE_T nExtractCount = 10;
-    const SIZE_T nSecondBlockStart = _countof(data.palPalEntry) - nExtractCount;
+    const UINT nExtractCount = 10;
+    const UINT nSecondBlockStart = _countof(data.palPalEntry) - nExtractCount;
 
     TRACE("(%p)\n", hdc);
 
