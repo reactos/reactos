@@ -89,6 +89,9 @@ typedef struct _BUTTON_INFO
     INT              note_length;
     DWORD            image_type; /* IMAGE_BITMAP or IMAGE_ICON */
     BUTTON_IMAGELIST imagelist;
+    UINT             split_style;
+    HIMAGELIST       glyph;      /* this is a font character code when split_style doesn't have BCSS_IMAGE */
+    SIZE             glyph_size;
     RECT             text_margin;
     union
     {
@@ -261,6 +264,21 @@ static inline WCHAR *get_button_text( const BUTTON_INFO *infoPtr )
     if (buffer)
         GetWindowTextW( infoPtr->hwnd, buffer, len + 1 );
     return buffer;
+}
+
+/* get the default glyph size for split buttons */
+static LONG get_default_glyph_size(const BUTTON_INFO *infoPtr)
+{
+    if (infoPtr->split_style & BCSS_IMAGE)
+    {
+        /* Size it to fit, including the left and right edges */
+        int w, h;
+        if (!ImageList_GetIconSize(infoPtr->glyph, &w, &h)) w = 0;
+        return w + GetSystemMetrics(SM_CXEDGE) * 2;
+    }
+
+    /* The glyph size relies on the default menu font's cell height */
+    return GetSystemMetrics(SM_CYMENUCHECK);
 }
 
 static void init_custom_draw(NMCUSTOMDRAW *nmcd, const BUTTON_INFO *infoPtr, HDC hdc, const RECT *rc)
@@ -1228,6 +1246,34 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         if (!imagelist) return FALSE;
 
         *imagelist = infoPtr->imagelist;
+        return TRUE;
+    }
+
+    case BCM_SETSPLITINFO:
+    {
+        BUTTON_SPLITINFO *info = (BUTTON_SPLITINFO*)lParam;
+
+        if (!info) return TRUE;
+
+        if (info->mask & (BCSIF_GLYPH | BCSIF_IMAGE))
+        {
+            infoPtr->split_style &= ~BCSS_IMAGE;
+            if (!(info->mask & BCSIF_GLYPH))
+                infoPtr->split_style |= BCSS_IMAGE;
+            infoPtr->glyph = info->himlGlyph;
+            infoPtr->glyph_size.cx = infoPtr->glyph_size.cy = 0;
+        }
+
+        if (info->mask & BCSIF_STYLE)
+            infoPtr->split_style = info->uSplitStyle;
+        if (info->mask & BCSIF_SIZE)
+            infoPtr->glyph_size = info->size;
+
+        /* Calculate fitting value for cx if invalid (cy is untouched) */
+        if (infoPtr->glyph_size.cx <= 0)
+            infoPtr->glyph_size.cx = get_default_glyph_size(infoPtr);
+
+        /* Windows doesn't invalidate or redraw it, so we don't, either */
         return TRUE;
     }
 
