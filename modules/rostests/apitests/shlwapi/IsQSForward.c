@@ -81,16 +81,17 @@ IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD 
 
 START_TEST(IsQSForward)
 {
-    OLECMD cmds[1];
-    LONG cmdID;
+    OLECMD cmds[2];
+    LONG cmdID, cmdID2;
     LONG ret1, ret2;
     ULONG cCmds;
     const GUID *pGUID = NULL;
+    enum { LOW_VALUE = -99, HIGH_VALUE = OLECMDID_MEDIA_PLAYBACK };
 
     cmds[0].cmdf = 0;
 
     cCmds = 0;
-    for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
         ret1 = IsQSForward(pGUID, cCmds, cmds);
@@ -98,8 +99,8 @@ START_TEST(IsQSForward)
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
     }
 
-    cCmds = _countof(cmds);
-    for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
+    cCmds = 1;
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
         ret1 = IsQSForward(pGUID, cCmds, cmds);
@@ -108,7 +109,7 @@ START_TEST(IsQSForward)
     }
 
     pGUID = &CGID_Explorer;
-    for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
         ret1 = IsQSForward(pGUID, cCmds, cmds);
@@ -117,11 +118,51 @@ START_TEST(IsQSForward)
     }
 
     pGUID = &IID_IUnknown;
-    for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
         ret1 = IsQSForward(pGUID, cCmds, cmds);
         ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+    }
+
+    cCmds = 2;
+    pGUID = NULL;
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
+    {
+        for (cmdID2 = LOW_VALUE; cmdID2 <= HIGH_VALUE; ++cmdID2)
+        {
+            cmds[0].cmdID = cmdID;
+            cmds[1].cmdID = cmdID2;
+            ret1 = IsQSForward(pGUID, cCmds, cmds);
+            ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+            ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+        }
+    }
+
+    pGUID = &CGID_Explorer;
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
+    {
+        cmds[0].cmdID = cmdID;
+        for (cmdID2 = LOW_VALUE; cmdID2 <= HIGH_VALUE; ++cmdID2)
+        {
+            cmds[1].cmdID = cmdID2;
+            ret1 = IsQSForward(pGUID, cCmds, cmds);
+            ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+            ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+        }
+    }
+
+    pGUID = &IID_IUnknown;
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
+    {
+        cmds[0].cmdID = cmdID;
+        for (cmdID2 = LOW_VALUE; cmdID2 <= HIGH_VALUE; ++cmdID2)
+        {
+            cmds[1].cmdID = cmdID2;
+            ret1 = IsQSForward(pGUID, cCmds, cmds);
+            ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+            ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+        }
     }
 }
