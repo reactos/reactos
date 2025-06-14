@@ -1316,16 +1316,18 @@ static RECT BUTTON_GetTextRect(const BUTTON_INFO *infoPtr, HDC hdc, const WCHAR 
 static BOOL show_image_only(const BUTTON_INFO *infoPtr)
 {
     LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
-    return (style & (BS_ICON | BS_BITMAP)) && infoPtr->u.image;
+    return (style & (BS_ICON | BS_BITMAP)) && (infoPtr->u.image || infoPtr->imagelist.himl);
 }
 
 static BOOL show_image_and_text(const BUTTON_INFO *infoPtr)
 {
     LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     UINT type = get_button_type(style);
-    return !(style & (BS_ICON | BS_BITMAP)) && infoPtr->u.image
-           && (type == BS_PUSHBUTTON || type == BS_DEFPUSHBUTTON || type == BS_USERBUTTON || type == BS_SPLITBUTTON
-               || type == BS_DEFSPLITBUTTON || type == BS_COMMANDLINK || type == BS_DEFCOMMANDLINK);
+    return !(style & (BS_ICON | BS_BITMAP))
+           && ((infoPtr->u.image
+                && (type == BS_PUSHBUTTON || type == BS_DEFPUSHBUTTON || type == BS_USERBUTTON || type == BS_SPLITBUTTON
+                    || type == BS_DEFSPLITBUTTON || type == BS_COMMANDLINK || type == BS_DEFCOMMANDLINK))
+               || (infoPtr->imagelist.himl && type != BS_GROUPBOX));
 }
 
 static BOOL show_image(const BUTTON_INFO *infoPtr)
@@ -1418,13 +1420,35 @@ static void BUTTON_PositionRect(LONG style, const RECT *outerRect, RECT *innerRe
     }
 }
 
+/* Convert imagelist align style to button align style */
+static UINT BUTTON_ILStoBS(UINT align)
+{
+    switch (align)
+    {
+    case BUTTON_IMAGELIST_ALIGN_TOP:
+        return BS_CENTER | BS_TOP;
+    case BUTTON_IMAGELIST_ALIGN_BOTTOM:
+        return BS_CENTER | BS_BOTTOM;
+    case BUTTON_IMAGELIST_ALIGN_CENTER:
+        return BS_CENTER | BS_VCENTER;
+    case BUTTON_IMAGELIST_ALIGN_RIGHT:
+        return BS_RIGHT | BS_VCENTER;
+    case BUTTON_IMAGELIST_ALIGN_LEFT:
+    default:
+        return BS_LEFT | BS_VCENTER;
+    }
+}
+
 static SIZE BUTTON_GetImageSize(const BUTTON_INFO *infoPtr)
 {
     ICONINFO iconInfo;
     BITMAP bm = {0};
     SIZE size = {0};
 
-    if (infoPtr->u.image)
+    /* ImageList has priority over image */
+    if (infoPtr->imagelist.himl)
+        ImageList_GetIconSize(infoPtr->imagelist.himl, &size.cx, &size.cy);
+    else if (infoPtr->u.image)
     {
         if (infoPtr->image_type == IMAGE_ICON)
         {
@@ -1464,10 +1488,12 @@ static UINT BUTTON_CalcLayoutRects(const BUTTON_INFO *infoPtr, HDC hdc, RECT *la
 {
    LONG style = GetWindowLongW( infoPtr->hwnd, GWL_STYLE );
    LONG ex_style = GetWindowLongW( infoPtr->hwnd, GWL_EXSTYLE );
+   LONG split_style = infoPtr->imagelist.himl ? BUTTON_ILStoBS(infoPtr->imagelist.uAlign) : style;
    WCHAR *text = get_button_text(infoPtr);
    SIZE imageSize = BUTTON_GetImageSize(infoPtr);
    UINT dtStyle = BUTTON_BStoDT(style, ex_style);
-   RECT labelRect, imageRect, textRect;
+   RECT labelRect, imageRect, imageRectWithMargin, textRect;
+   LONG imageMarginWidth, imageMarginHeight;
    RECT emptyMargin = {0}, oneMargin = {1, 1, 1, 1};
    LONG maxTextWidth;
 
@@ -1487,6 +1513,14 @@ static UINT BUTTON_CalcLayoutRects(const BUTTON_INFO *infoPtr, HDC hdc, RECT *la
    }
 
    SetRect(&imageRect, 0, 0, imageSize.cx, imageSize.cy);
+   imageRectWithMargin = imageRect;
+   if (infoPtr->imagelist.himl)
+   {
+       imageRectWithMargin.top -= infoPtr->imagelist.margin.top;
+       imageRectWithMargin.bottom += infoPtr->imagelist.margin.bottom;
+       imageRectWithMargin.left -= infoPtr->imagelist.margin.left;
+       imageRectWithMargin.right += infoPtr->imagelist.margin.right;
+   }
 
    /* Show image only */
    if (show_image_only(infoPtr))
@@ -1509,30 +1543,53 @@ static UINT BUTTON_CalcLayoutRects(const BUTTON_INFO *infoPtr, HDC hdc, RECT *la
            RECT boundingLabelRect, boundingImageRect, boundingTextRect;
 
            /* Get label rect */
-           /* Get a label bounding rect to position the label in the user specified label rect because text and
-            * image need to align together. */
-           boundingLabelRect = BUTTON_GetBoundingLabelRect(style, &textRect, &imageRect);
-           BUTTON_PositionRect(style, labelRc, &boundingLabelRect, &emptyMargin);
-           labelRect = boundingLabelRect;
-
-           /* Get image rect */
-           /* Split the label rect to two halves as two bounding rects for image and text */
-           boundingImageRect = labelRect;
-           if ((style & BS_CENTER) == BS_RIGHT)
-               boundingImageRect.left = boundingImageRect.right - imageSize.cx;
-           else if ((style & BS_CENTER) == BS_LEFT)
-               boundingImageRect.right = boundingImageRect.left + imageSize.cx;
-           else if ((style & BS_VCENTER) == BS_BOTTOM)
-               boundingImageRect.top = boundingImageRect.bottom - imageSize.cy;
-           else if ((style & BS_VCENTER) == BS_TOP)
-               boundingImageRect.bottom = boundingImageRect.top + imageSize.cy;
+           /* Image list may have different alignment than the button, use the whole rect for label in this case */
+           if (infoPtr->imagelist.himl)
+               labelRect = *labelRc;
            else
-               boundingImageRect.right = boundingImageRect.left + imageSize.cx;
-           BUTTON_PositionRect(style, &boundingImageRect, &imageRect, &emptyMargin);
+           {
+               /* Get a label bounding rectangle to position the label in the user specified label rectangle because
+                * text and image need to align together. */
+               boundingLabelRect = BUTTON_GetBoundingLabelRect(split_style, &textRect, &imageRectWithMargin);
+               BUTTON_PositionRect(split_style, labelRc, &boundingLabelRect, &emptyMargin);
+               labelRect = boundingLabelRect;
+           }
 
-           /* Get text rect */
-           SubtractRect(&boundingTextRect, &labelRect, &boundingImageRect);
-           BUTTON_PositionRect(style, &boundingTextRect, &textRect, &oneMargin);
+           /* When imagelist has center align, use the whole rect for imagelist and text */
+           if(infoPtr->imagelist.himl && infoPtr->imagelist.uAlign == BUTTON_IMAGELIST_ALIGN_CENTER)
+           {
+               boundingImageRect = labelRect;
+               boundingTextRect = labelRect;
+               BUTTON_PositionRect(split_style, &boundingImageRect, &imageRect,
+                                   infoPtr->imagelist.himl ? &infoPtr->imagelist.margin : &emptyMargin);
+               /* Text doesn't use imagelist align */
+               BUTTON_PositionRect(style, &boundingTextRect, &textRect, &oneMargin);
+           }
+           else
+           {
+               /* Get image rect */
+               /* Split the label rect to two halves as two bounding rectangles for image and text */
+               boundingImageRect = labelRect;
+               imageMarginWidth = imageRectWithMargin.right - imageRectWithMargin.left;
+               imageMarginHeight = imageRectWithMargin.bottom - imageRectWithMargin.top;
+               if ((split_style & BS_CENTER) == BS_RIGHT)
+                   boundingImageRect.left = boundingImageRect.right - imageMarginWidth;
+               else if ((split_style & BS_CENTER) == BS_LEFT)
+                   boundingImageRect.right = boundingImageRect.left + imageMarginWidth;
+               else if ((split_style & BS_VCENTER) == BS_BOTTOM)
+                   boundingImageRect.top = boundingImageRect.bottom - imageMarginHeight;
+               else if ((split_style & BS_VCENTER) == BS_TOP)
+                   boundingImageRect.bottom = boundingImageRect.top + imageMarginHeight;
+               else
+                   boundingImageRect.right = boundingImageRect.left + imageMarginWidth;
+               BUTTON_PositionRect(split_style, &boundingImageRect, &imageRect,
+                                   infoPtr->imagelist.himl ? &infoPtr->imagelist.margin : &emptyMargin);
+
+               /* Get text rect */
+               SubtractRect(&boundingTextRect, &labelRect, &boundingImageRect);
+               /* Text doesn't use imagelist align */
+               BUTTON_PositionRect(style, &boundingTextRect, &textRect, &oneMargin);
+           }
        }
        /* Show text only */
        else
@@ -1594,6 +1651,7 @@ static void BUTTON_DrawLabel(const BUTTON_INFO *infoPtr, HDC hdc, UINT dtFlags, 
    UINT flags = IsWindowEnabled(infoPtr->hwnd) ? DSS_NORMAL : DSS_DISABLED;
    UINT imageFlags;
    LONG state = infoPtr->state;
+   LONG draw_state;
    LONG style = GetWindowLongW( infoPtr->hwnd, GWL_STYLE );
    WCHAR *text = NULL;
 
@@ -1602,34 +1660,45 @@ static void BUTTON_DrawLabel(const BUTTON_INFO *infoPtr, HDC hdc, UINT dtFlags, 
     * I don't have Win31 on hand to verify that, so I leave it as is.
     */
 
-#ifdef __REACTOS__
-    RECT rcText = *textRect;
-    BUTTON_DrawIml(hdc, &infoPtr->imagelist, &rcText, FALSE, 0);
-#endif
-
    if ((style & BS_PUSHLIKE) && (state & BST_INDETERMINATE))
    {
       hbr = GetSysColorBrush(COLOR_GRAYTEXT);
       flags |= DSS_MONO;
    }
 
-   switch (infoPtr->image_type)
-   {
-   case IMAGE_ICON:
-       imageFlags = flags | DST_ICON;
-       lp = (LPARAM)infoPtr->u.icon;
-       break;
-   case IMAGE_BITMAP:
-       imageFlags = flags | DST_BITMAP;
-       lp = (LPARAM)infoPtr->u.bitmap;
-       break;
-   default:
-       return;
-   }
-
    if (show_image(infoPtr))
-       DrawStateW(hdc, hbr, lpOutputProc, lp, wp, imageRect->left, imageRect->top,
-                  imageRect->right - imageRect->left, imageRect->bottom - imageRect->top, imageFlags);
+   {
+       if (infoPtr->imagelist.himl)
+       {
+           if (ImageList_GetImageCount(infoPtr->imagelist.himl) == 1)
+               ImageList_Draw(infoPtr->imagelist.himl, 0, hdc, imageRect->left, imageRect->top, ILD_NORMAL);
+           else
+           {
+               draw_state = get_draw_state(infoPtr);
+               ImageList_Draw(infoPtr->imagelist.himl, draw_state - 1, hdc, imageRect->left, imageRect->top,
+                              ILD_NORMAL);
+           }
+       }
+       else
+       {
+           switch (infoPtr->image_type)
+           {
+           case IMAGE_ICON:
+               imageFlags = flags | DST_ICON;
+               lp = (LPARAM)infoPtr->u.icon;
+               break;
+           case IMAGE_BITMAP:
+               imageFlags = flags | DST_BITMAP;
+               lp = (LPARAM)infoPtr->u.bitmap;
+               break;
+           default:
+               return;
+           }
+
+           DrawStateW(hdc, hbr, lpOutputProc, lp, wp, imageRect->left, imageRect->top,
+                      imageRect->right - imageRect->left, imageRect->bottom - imageRect->top, imageFlags);
+       }
+   }
 
    if (show_image_only(infoPtr)) return;
 
@@ -1642,13 +1711,8 @@ static void BUTTON_DrawLabel(const BUTTON_INFO *infoPtr, HDC hdc, UINT dtFlags, 
    if (dtFlags & DT_HIDEPREFIX)
        flags |= DSS_HIDEPREFIX;
 #endif
-#ifdef __REACTOS__
-   DrawStateW(hdc, hbr, lpOutputProc, lp, wp, rcText.left, rcText.top,
-              rcText.right - rcText.left, rcText.bottom - rcText.top, flags);
-#else
    DrawStateW(hdc, hbr, lpOutputProc, lp, wp, textRect->left, textRect->top, textRect->right - textRect->left,
               textRect->bottom - textRect->top, flags);
-#endif
    heap_free(text);
 }
 
