@@ -2064,7 +2064,9 @@ static void CB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
     HBRUSH hBrush;
     int delta, text_offset, checkBoxWidth, checkBoxHeight;
     UINT dtFlags;
+    LRESULT cdrf;
     HFONT hFont;
+    NMCUSTOMDRAW nmcd;
     LONG state = infoPtr->state;
     LONG style = GetWindowLongW( infoPtr->hwnd, GWL_STYLE );
     LONG ex_style = GetWindowLongW( infoPtr->hwnd, GWL_EXSTYLE );
@@ -2105,9 +2107,20 @@ static void CB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
         rbox.right = checkBoxWidth;
     }
 
+    init_custom_draw(&nmcd, infoPtr, hDC, &client);
+
+    /* Send erase notifications */
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
     /* Since WM_ERASEBKGND does nothing, first prepare background */
     if (action == ODA_SELECT) FillRect( hDC, &rbox, hBrush );
     if (action == ODA_DRAWENTIRE) FillRect( hDC, &client, hBrush );
+    if (cdrf & CDRF_NOTIFYPOSTERASE)
+    {
+        nmcd.dwDrawStage = CDDS_POSTERASE;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
 
     /* Draw label */
     client = labelRect;
@@ -2120,57 +2133,79 @@ static void CB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
         rbox.bottom = labelRect.bottom;
     }
 
+    /* Send paint notifications */
+    nmcd.dwDrawStage = CDDS_PREPAINT;
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
     /* Draw the check-box bitmap */
-    if (action == ODA_DRAWENTIRE || action == ODA_SELECT)
+    if (!(cdrf & CDRF_DOERASE))
     {
-	UINT flags;
+        if (action == ODA_DRAWENTIRE || action == ODA_SELECT)
+        {
+            UINT flags;
 
-	if ((get_button_type(style) == BS_RADIOBUTTON) ||
-	    (get_button_type(style) == BS_AUTORADIOBUTTON)) flags = DFCS_BUTTONRADIO;
-	else if (state & BST_INDETERMINATE) flags = DFCS_BUTTON3STATE;
-	else flags = DFCS_BUTTONCHECK;
+            if ((get_button_type(style) == BS_RADIOBUTTON) ||
+                (get_button_type(style) == BS_AUTORADIOBUTTON)) flags = DFCS_BUTTONRADIO;
+            else if (state & BST_INDETERMINATE) flags = DFCS_BUTTON3STATE;
+            else flags = DFCS_BUTTONCHECK;
 
-	if (state & (BST_CHECKED | BST_INDETERMINATE)) flags |= DFCS_CHECKED;
-	if (state & BST_PUSHED) flags |= DFCS_PUSHED;
+            if (state & (BST_CHECKED | BST_INDETERMINATE)) flags |= DFCS_CHECKED;
+            if (state & BST_PUSHED)  flags |= DFCS_PUSHED;
+            if (style & WS_DISABLED) flags |= DFCS_INACTIVE;
 
-	if (style & WS_DISABLED) flags |= DFCS_INACTIVE;
+            /* rbox must have the correct height */
+            delta = rbox.bottom - rbox.top - checkBoxHeight;
 
-	/* rbox must have the correct height */
-	delta = rbox.bottom - rbox.top - checkBoxHeight;
+            if ((style & BS_VCENTER) == BS_TOP)
+            {
+                if (delta > 0)
+                    rbox.bottom = rbox.top + checkBoxHeight;
+                else
+                {
+                    rbox.top -= -delta / 2 + 1;
+                    rbox.bottom = rbox.top + checkBoxHeight;
+                }
+            }
+            else if ((style & BS_VCENTER) == BS_BOTTOM)
+            {
+                if (delta > 0)
+                    rbox.top = rbox.bottom - checkBoxHeight;
+                else
+                {
+                    rbox.bottom += -delta / 2 + 1;
+                    rbox.top = rbox.bottom - checkBoxHeight;
+                }
+            }
+            else  /* Default */
+            {
+                if (delta > 0)
+                {
+                    int ofs = delta / 2;
+                    rbox.bottom -= ofs + 1;
+                    rbox.top = rbox.bottom - checkBoxHeight;
+                }
+                else if (delta < 0)
+                {
+                    int ofs = -delta / 2;
+                    rbox.top -= ofs + 1;
+                    rbox.bottom = rbox.top + checkBoxHeight;
+                }
+            }
 
-	if ((style & BS_VCENTER) == BS_TOP) {
-	    if (delta > 0) {
-		rbox.bottom = rbox.top + checkBoxHeight;
-	    } else {
-		rbox.top -= -delta/2 + 1;
-		rbox.bottom = rbox.top + checkBoxHeight;
-	    }
-	} else if ((style & BS_VCENTER) == BS_BOTTOM) {
-	    if (delta > 0) {
-		rbox.top = rbox.bottom - checkBoxHeight;
-	    } else {
-		rbox.bottom += -delta/2 + 1;
-		rbox.top = rbox.bottom - checkBoxHeight;
-	    }
-	} else { /* Default */
-	    if (delta > 0) {
-		int ofs = (delta / 2);
-		rbox.bottom -= ofs + 1;
-		rbox.top = rbox.bottom - checkBoxHeight;
-	    } else if (delta < 0) {
-		int ofs = (-delta / 2);
-		rbox.top -= ofs + 1;
-		rbox.bottom = rbox.top + checkBoxHeight;
-	    }
-	}
+            DrawFrameControl(hDC, &rbox, DFC_BUTTON, flags);
+        }
 
-	DrawFrameControl( hDC, &rbox, DFC_BUTTON, flags );
+        if (dtFlags != (UINT)-1L) /* Something to draw */
+            if (action == ODA_DRAWENTIRE) BUTTON_DrawLabel(infoPtr, hDC, dtFlags, &imageRect, &textRect);
     }
 
-    if (dtFlags == (UINT)-1L) /* Noting to draw */
-	return;
-
-    if (action == ODA_DRAWENTIRE) BUTTON_DrawLabel(infoPtr, hDC, dtFlags, &imageRect, &textRect);
+    if (cdrf & CDRF_NOTIFYPOSTPAINT)
+    {
+        nmcd.dwDrawStage = CDDS_POSTPAINT;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+    if ((cdrf & CDRF_SKIPPOSTPAINT) || dtFlags == (UINT)-1L) goto cleanup;
 
     /* ... and focus */
     if (action == ODA_FOCUS || (state & BST_FOCUS))
@@ -2180,6 +2215,8 @@ static void CB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
         IntersectRect(&labelRect, &labelRect, &client);
         DrawFocusRect(hDC, &labelRect);
     }
+
+cleanup:
     SelectClipRgn( hDC, hrgn );
     if (hrgn) DeleteObject( hrgn );
 }
