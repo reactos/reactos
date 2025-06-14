@@ -111,7 +111,11 @@ static void CB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void GB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void UB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void OB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
+static void SB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void BUTTON_CheckAutoRadioButton( HWND hwnd );
+static void get_split_button_rects(const BUTTON_INFO*, const RECT*, RECT*, RECT*);
+static BOOL notify_split_button_dropdown(const BUTTON_INFO*, const POINT*, HWND);
+static void draw_split_button_dropdown_glyph(const BUTTON_INFO*, HDC, RECT*);
 
 #define MAX_BTN_TYPE  16
 
@@ -162,8 +166,8 @@ static const pfPaint btnPaintFunc[MAX_BTN_TYPE] =
     CB_Paint,    /* BS_AUTORADIOBUTTON */
     NULL,        /* BS_PUSHBOX */
     OB_Paint,    /* BS_OWNERDRAW */
-    PB_Paint,    /* BS_SPLITBUTTON */
-    PB_Paint,    /* BS_DEFSPLITBUTTON */
+    SB_Paint,    /* BS_SPLITBUTTON */
+    SB_Paint,    /* BS_DEFSPLITBUTTON */
     PB_Paint,    /* BS_COMMANDLINK */
     PB_Paint     /* BS_DEFCOMMANDLINK */
 };
@@ -859,6 +863,11 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
             infoPtr->state |= BUTTON_BTNPRESSED;
             SetCapture( hWnd );
 	}
+        else if (wParam == VK_UP || wParam == VK_DOWN)
+        {
+            /* Up and down arrows work on every button, and even with BCSS_NOSPLIT */
+            notify_split_button_dropdown(infoPtr, NULL, hWnd);
+        }
 	break;
 
     case WM_LBUTTONDBLCLK:
@@ -872,8 +881,14 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         }
         /* fall through */
     case WM_LBUTTONDOWN:
-        SetCapture( hWnd );
         SetFocus( hWnd );
+
+        if ((btn_type == BS_SPLITBUTTON || btn_type == BS_DEFSPLITBUTTON) &&
+            !(infoPtr->split_style & BCSS_NOSPLIT) &&
+            notify_split_button_dropdown(infoPtr, &pt, hWnd))
+            break;
+
+        SetCapture( hWnd );
         infoPtr->state |= BUTTON_BTNPRESSED;
         SendMessageW( hWnd, BM_SETSTATE, TRUE, 0 );
         break;
@@ -884,6 +899,8 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	/* fall through */
     case WM_LBUTTONUP:
         state = infoPtr->state;
+        if (state & BST_DROPDOWNPUSHED)
+            SendMessageW(hWnd, BCM_SETDROPDOWNSTATE, FALSE, 0);
         if (!(state & BUTTON_BTNPRESSED)) break;
         infoPtr->state &= BUTTON_NSTATES;
         if (!(state & BST_PUSHED))
@@ -2496,6 +2513,245 @@ static void OB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
     if (hrgn) DeleteObject( hrgn );
 }
 
+
+/**********************************************************************
+ *       Split Button Functions
+ */
+static void SB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
+{
+    LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
+    LONG state = infoPtr->state;
+    UINT dtFlags = (UINT)-1L;
+
+    RECT rc, push_rect, dropdown_rect;
+    NMCUSTOMDRAW nmcd;
+    HPEN pen, old_pen;
+    HBRUSH old_brush;
+    INT old_bk_mode;
+    LRESULT cdrf;
+    HWND parent;
+    HRGN hrgn;
+
+    GetClientRect(infoPtr->hwnd, &rc);
+
+    /* Send WM_CTLCOLOR to allow changing the font (the colors are fixed) */
+    if (infoPtr->font) SelectObject(hDC, infoPtr->font);
+    if (!(parent = GetParent(infoPtr->hwnd))) parent = infoPtr->hwnd;
+    SendMessageW(parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)infoPtr->hwnd);
+
+    hrgn = set_control_clipping(hDC, &rc);
+
+    pen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_WINDOWFRAME));
+    old_pen = SelectObject(hDC, pen);
+    old_brush = SelectObject(hDC, GetSysColorBrush(COLOR_BTNFACE));
+    old_bk_mode = SetBkMode(hDC, TRANSPARENT);
+
+    init_custom_draw(&nmcd, infoPtr, hDC, &rc);
+
+    /* Send erase notifications */
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    if (get_button_type(style) == BS_DEFSPLITBUTTON)
+    {
+        if (action != ODA_FOCUS)
+            Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
+        InflateRect(&rc, -1, -1);
+        /* The split will now be off by 1 pixel, but
+           that's exactly what Windows does as well */
+    }
+
+    get_split_button_rects(infoPtr, &rc, &push_rect, &dropdown_rect);
+    if (infoPtr->split_style & BCSS_NOSPLIT)
+        push_rect = rc;
+
+    /* Skip the frame drawing if only focus has changed */
+    if (action != ODA_FOCUS)
+    {
+        UINT flags = DFCS_BUTTONPUSH;
+
+        if (style & BS_FLAT) flags |= DFCS_MONO;
+        else if (state & BST_PUSHED)
+            flags |= (get_button_type(style) == BS_DEFSPLITBUTTON)
+                     ? DFCS_FLAT : DFCS_PUSHED;
+
+        if (state & (BST_CHECKED | BST_INDETERMINATE))
+            flags |= DFCS_CHECKED;
+
+        if (infoPtr->split_style & BCSS_NOSPLIT)
+            DrawFrameControl(hDC, &push_rect, DFC_BUTTON, flags);
+        else
+        {
+            UINT dropdown_flags = flags & ~DFCS_CHECKED;
+
+            if (state & BST_DROPDOWNPUSHED)
+                dropdown_flags = (dropdown_flags & ~DFCS_FLAT) | DFCS_PUSHED;
+
+            /* Adjust for shadow and draw order so it looks properly */
+            if (infoPtr->split_style & BCSS_ALIGNLEFT)
+            {
+                dropdown_rect.right++;
+                DrawFrameControl(hDC, &dropdown_rect, DFC_BUTTON, dropdown_flags);
+                dropdown_rect.right--;
+                DrawFrameControl(hDC, &push_rect, DFC_BUTTON, flags);
+            }
+            else
+            {
+                push_rect.right++;
+                DrawFrameControl(hDC, &push_rect, DFC_BUTTON, flags);
+                push_rect.right--;
+                DrawFrameControl(hDC, &dropdown_rect, DFC_BUTTON, dropdown_flags);
+            }
+        }
+    }
+
+    if (cdrf & CDRF_NOTIFYPOSTERASE)
+    {
+        nmcd.dwDrawStage = CDDS_POSTERASE;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+
+    /* Send paint notifications */
+    nmcd.dwDrawStage = CDDS_PREPAINT;
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    /* Shrink push button rect so that the content won't touch the surrounding frame */
+    InflateRect(&push_rect, -2, -2);
+
+    if (!(cdrf & CDRF_DOERASE) && action != ODA_FOCUS)
+    {
+        COLORREF old_color = SetTextColor(hDC, GetSysColor(COLOR_BTNTEXT));
+        RECT label_rect = push_rect, image_rect, text_rect;
+
+        dtFlags = BUTTON_CalcLayoutRects(infoPtr, hDC, &label_rect, &image_rect, &text_rect);
+
+        if (dtFlags != (UINT)-1L)
+            BUTTON_DrawLabel(infoPtr, hDC, dtFlags, &image_rect, &text_rect);
+
+        draw_split_button_dropdown_glyph(infoPtr, hDC, &dropdown_rect);
+        SetTextColor(hDC, old_color);
+    }
+
+    if (cdrf & CDRF_NOTIFYPOSTPAINT)
+    {
+        nmcd.dwDrawStage = CDDS_POSTPAINT;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+    if ((cdrf & CDRF_SKIPPOSTPAINT) || dtFlags == (UINT)-1L) goto cleanup;
+
+    if (action == ODA_FOCUS || (state & BST_FOCUS))
+        DrawFocusRect(hDC, &push_rect);
+
+cleanup:
+    SelectObject(hDC, old_pen);
+    SelectObject(hDC, old_brush);
+    SetBkMode(hDC, old_bk_mode);
+    SelectClipRgn(hDC, hrgn);
+    if (hrgn) DeleteObject(hrgn);
+    DeleteObject(pen);
+}
+
+/* Given the full button rect of the split button, retrieve the push part and the dropdown part */
+static inline void get_split_button_rects(const BUTTON_INFO *infoPtr, const RECT *button_rect,
+                                          RECT *push_rect, RECT *dropdown_rect)
+{
+    *push_rect = *dropdown_rect = *button_rect;
+
+    /* The dropdown takes priority if the client rect is too small, it will only have a dropdown */
+    if (infoPtr->split_style & BCSS_ALIGNLEFT)
+    {
+        dropdown_rect->right = min(button_rect->left + infoPtr->glyph_size.cx, button_rect->right);
+        push_rect->left = dropdown_rect->right;
+    }
+    else
+    {
+        dropdown_rect->left = max(button_rect->right - infoPtr->glyph_size.cx, button_rect->left);
+        push_rect->right = dropdown_rect->left;
+    }
+}
+
+/* Notify the parent if the point is within the dropdown and return TRUE (always notify if NULL) */
+static BOOL notify_split_button_dropdown(const BUTTON_INFO *infoPtr, const POINT *pt, HWND hwnd)
+{
+    NMBCDROPDOWN nmbcd;
+
+    GetClientRect(hwnd, &nmbcd.rcButton);
+    if (pt)
+    {
+        RECT push_rect, dropdown_rect;
+
+        get_split_button_rects(infoPtr, &nmbcd.rcButton, &push_rect, &dropdown_rect);
+        if (!PtInRect(&dropdown_rect, *pt))
+            return FALSE;
+
+        /* If it's already down (set manually via BCM_SETDROPDOWNSTATE), fake the notify */
+        if (infoPtr->state & BST_DROPDOWNPUSHED)
+            return TRUE;
+    }
+    SendMessageW(hwnd, BCM_SETDROPDOWNSTATE, TRUE, 0);
+
+    nmbcd.hdr.hwndFrom = hwnd;
+    nmbcd.hdr.idFrom   = GetWindowLongPtrW(hwnd, GWLP_ID);
+    nmbcd.hdr.code     = BCN_DROPDOWN;
+    SendMessageW(GetParent(hwnd), WM_NOTIFY, nmbcd.hdr.idFrom, (LPARAM)&nmbcd);
+
+    SendMessageW(hwnd, BCM_SETDROPDOWNSTATE, FALSE, 0);
+    return TRUE;
+}
+
+/* Draw the split button dropdown glyph or image */
+static void draw_split_button_dropdown_glyph(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rect)
+{
+    if (infoPtr->split_style & BCSS_IMAGE)
+    {
+        int w, h;
+
+        /* When the glyph is an image list, Windows is very buggy with BCSS_STRETCH,
+           positions it weirdly and doesn't even stretch it, but instead extends the
+           image, leaking into other images in the list (or black if none). Instead,
+           we'll ignore this and just position it at center as without BCSS_STRETCH. */
+        if (!ImageList_GetIconSize(infoPtr->glyph, &w, &h)) return;
+
+        ImageList_Draw(infoPtr->glyph,
+                       (ImageList_GetImageCount(infoPtr->glyph) == 1) ? 0 : get_draw_state(infoPtr) - 1,
+                       hdc, rect->left + (rect->right  - rect->left - w) / 2,
+                            rect->top  + (rect->bottom - rect->top  - h) / 2, ILD_NORMAL);
+    }
+    else if (infoPtr->glyph_size.cy >= 0)
+    {
+        /* infoPtr->glyph is a character code from Marlett */
+        HFONT font, old_font;
+        LOGFONTW logfont = { 0, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET, 0, 0, 0, 0,
+                             { 'M','a','r','l','e','t','t',0 } };
+        if (infoPtr->glyph_size.cy)
+        {
+            /* BCSS_STRETCH preserves aspect ratio, uses minimum as size */
+            if (infoPtr->split_style & BCSS_STRETCH)
+                logfont.lfHeight = min(infoPtr->glyph_size.cx, infoPtr->glyph_size.cy);
+            else
+            {
+                logfont.lfWidth  = infoPtr->glyph_size.cx;
+                logfont.lfHeight = infoPtr->glyph_size.cy;
+            }
+        }
+        else logfont.lfHeight = infoPtr->glyph_size.cx;
+
+        if ((font = CreateFontIndirectW(&logfont)))
+        {
+            old_font = SelectObject(hdc, font);
+            DrawTextW(hdc, (const WCHAR*)&infoPtr->glyph, 1, rect,
+                      DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP | DT_NOPREFIX);
+            SelectObject(hdc, old_font);
+            DeleteObject(font);
+        }
+    }
+}
+
+
+/**********************************************************************
+ *       Themed Paint Functions
+ */
 #ifdef __REACTOS__ /* r73885 */
 static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused, LPARAM prfFlag)
 #else
