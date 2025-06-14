@@ -2170,14 +2170,14 @@ public:
         switch (wParam)
         {
 #if DUMP_TASKS != 0
-        case 1:
-            DumpTasks();
-            break;
+            case 1:
+                DumpTasks();
+                break;
 #endif
-        case TIMER_ID_VALIDATE_RUDE_APP:
-            // Real activation of rude app might take some time after HSHELL_...ACTIVATED.
-            // Wait up to 5 seconds with validating the rude app at each second.
+            case TIMER_ID_VALIDATE_RUDE_APP:
             {
+                // Real activation of rude app might take some time after HSHELL_...ACTIVATED.
+                // Wait up to 5 seconds with validating the rude app at each second.
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
 
@@ -2186,6 +2186,11 @@ public:
                 ++m_nRudeAppValidationCounter;
                 if (m_nRudeAppValidationCounter < VALIDATE_RUDE_MAX_COUNT && !hwndRude)
                     SetTimer(wParam, VALIDATE_RUDE_INTERVAL, NULL);
+                break;
+            }
+            default:
+            {
+                WARN("Unknown timer ID: %p\n", wParam);
                 break;
             }
         }
