@@ -152,8 +152,8 @@ START_TEST(IsQSForward)
         }
         _SEH2_END;
 
-        ok_int(bExcept1, TRUE);
-        ok_int(bExcept2, TRUE);
+        ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+        ok((bExcept1 && bExcept2), "cmdID: %ld (%d vs %d)\n", cmdID, bExcept1, bExcept2);
     }
 
     pGUID = &CGID_Explorer;
