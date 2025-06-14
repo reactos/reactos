@@ -646,6 +646,7 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         infoPtr = heap_alloc_zero( sizeof(*infoPtr) );
         SetWindowLongPtrW( hWnd, 0, (LONG_PTR)infoPtr );
         infoPtr->hwnd = hWnd;
+        infoPtr->parent = GetParent(hWnd);
 #ifdef __REACTOS__
         SetRect(&infoPtr->rcTextMargin, 1,1,1,1);
 #endif
