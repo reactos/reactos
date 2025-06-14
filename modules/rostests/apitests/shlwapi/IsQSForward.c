@@ -13,6 +13,8 @@
 #include <pseh/pseh2.h>
 #include <versionhelpers.h>
 
+static BOOL g_bVista = FALSE;
+
 static HRESULT
 IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
 {
@@ -61,7 +63,7 @@ IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD 
     {
         if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
         {
-            if (IsWindowsVistaOrGreater())
+            if (g_bVista)
                 return OLECMDERR_E_UNKNOWNGROUP;
             else
                 return OLECMDERR_E_NOTSUPPORTED;
@@ -85,31 +87,28 @@ IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD 
     return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, cmdFlags);
 }
 
-START_TEST(IsQSForward)
+static VOID TEST_IsQSForward(VOID)
 {
     OLECMD cmds[2];
     LONG cmdID, cmdID2;
     HRESULT ret1, ret2;
     ULONG cCmds;
     BOOL bExcept1, bExcept2;
-    const GUID *pGUID = NULL;
-    enum { LOW_VALUE = -99, HIGH_VALUE = OLECMDID_MEDIA_PLAYBACK };
+    const GUID *pGUID;
+    enum { LOW_VALUE = -1, HIGH_VALUE = OLECMDID_CLOSE };
 
     cmds[0].cmdf = 0;
 
     cCmds = 0;
+    pGUID = NULL;
     for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
+
         ret1 = IsQSForward(pGUID, cCmds, cmds);
         ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
-    }
 
-    // cCmds = 0 and NULL cmds
-    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
-    {
-        cmds[0].cmdID = cmdID;
         ret1 = IsQSForward(pGUID, cCmds, NULL);
         ret2 = IsQSForwardMockup(pGUID, cCmds, NULL);
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
@@ -119,15 +118,11 @@ START_TEST(IsQSForward)
     for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
+
+        pGUID = NULL;
         ret1 = IsQSForward(pGUID, cCmds, cmds);
         ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
-    }
-
-    // cCmds = 1 and NULL cmds
-    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
-    {
-        cmds[0].cmdID = cmdID;
 
         ret1 = ret2 = 0xDEADFACE;
         bExcept1 = bExcept2 = FALSE;
@@ -154,57 +149,33 @@ START_TEST(IsQSForward)
 
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
         ok((bExcept1 && bExcept2), "cmdID: %ld (%d vs %d)\n", cmdID, bExcept1, bExcept2);
-    }
 
-    pGUID = &CGID_Explorer;
-    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
-    {
-        cmds[0].cmdID = cmdID;
+        pGUID = &CGID_Explorer;
         ret1 = IsQSForward(pGUID, cCmds, cmds);
         ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
-    }
 
-    pGUID = &IID_IUnknown;
-    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
-    {
-        cmds[0].cmdID = cmdID;
+        pGUID = &IID_IUnknown;
         ret1 = IsQSForward(pGUID, cCmds, cmds);
         ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
     }
 
     cCmds = 2;
-    pGUID = NULL;
-    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
-    {
-        for (cmdID2 = LOW_VALUE; cmdID2 <= HIGH_VALUE; ++cmdID2)
-        {
-            cmds[0].cmdID = cmdID;
-            cmds[1].cmdID = cmdID2;
-            ret1 = IsQSForward(pGUID, cCmds, cmds);
-            ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
-            ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
-        }
-    }
-
-    pGUID = &CGID_Explorer;
     for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
-        for (cmdID2 = LOW_VALUE; cmdID2 <= HIGH_VALUE; ++cmdID2)
-        {
-            cmds[1].cmdID = cmdID2;
-            ret1 = IsQSForward(pGUID, cCmds, cmds);
-            ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
-            ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
-        }
-    }
 
-    pGUID = &IID_IUnknown;
-    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
-    {
-        cmds[0].cmdID = cmdID;
+        pGUID = NULL;
+        for (cmdID2 = LOW_VALUE; cmdID2 <= HIGH_VALUE; ++cmdID2)
+        {
+            cmds[1].cmdID = cmdID2;
+            ret1 = IsQSForward(pGUID, cCmds, cmds);
+            ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+            ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+        }
+
+        pGUID = &CGID_Explorer;
         for (cmdID2 = LOW_VALUE; cmdID2 <= HIGH_VALUE; ++cmdID2)
         {
             cmds[1].cmdID = cmdID2;
@@ -213,4 +184,11 @@ START_TEST(IsQSForward)
             ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
         }
     }
+}
+
+START_TEST(IsQSForward)
+{
+    g_bVista = IsWindowsVistaOrGreater();
+
+    TEST_IsQSForward();
 }
