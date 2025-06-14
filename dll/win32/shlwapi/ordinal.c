@@ -2239,8 +2239,11 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
     DWORD ret = 0;
     OLECMDID cmdID;
     ULONG iCmd;
-    // FIXME: Give these flags better names
-    enum { SUPPORTED_1 = 0x1, SUPPORTED_2 = 0x2, NOT_SUPPORTED = 0x4 };
+    enum {
+        CMD_FLAG_SUPPORTED_BASIC = 0x1,
+        CMD_FLAG_SUPPORTED_ADVANCED = 0x2,
+        CMD_FLAG_NOT_SUPPORTED = 0x4,
+    };
 
     TRACE("(%s, %lu, %p)\n", wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds);
 
@@ -2254,24 +2257,24 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
             cmdID = prgCmds[iCmd].cmdID;
             if (cmdID <= OLECMDID_PROPERTIES)
             {
-                ret |= NOT_SUPPORTED; // Not supported
+                ret |= CMD_FLAG_NOT_SUPPORTED; // Not supported
                 continue;
             }
 
             if (cmdID <= OLECMDID_PASTE || cmdID == OLECMDID_SELECTALL)
             {
-                ret |= SUPPORTED_1;
+                ret |= CMD_FLAG_SUPPORTED_BASIC;
                 continue;
             }
 
             if (cmdID <= OLECMDID_UPDATECOMMANDS ||
                 (OLECMDID_HIDETOOLBARS <= cmdID && cmdID != OLECMDID_ENABLE_INTERACTION))
             {
-                ret |= NOT_SUPPORTED; // Not supported
+                ret |= CMD_FLAG_NOT_SUPPORTED; // Not supported
                 continue;
             }
 
-            ret |= SUPPORTED_2;
+            ret |= CMD_FLAG_SUPPORTED_ADVANCED;
         }
     }
     else
@@ -2291,13 +2294,13 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
             if (cmdID == OLECMDID_SELECTALL ||
                 (OLECMDID_SHOWFIND <= cmdID && cmdID <= OLECMDID_SHOWPRINT))
             {
-                ret |= SUPPORTED_1;
+                ret |= CMD_FLAG_SUPPORTED_BASIC;
                 break;
             }
         }
     }
 
-    if (!ret || (ret & NOT_SUPPORTED))
+    if (!ret || (ret & CMD_FLAG_NOT_SUPPORTED))
         return OLECMDERR_E_NOTSUPPORTED; // Not supported
 
     return ret;
