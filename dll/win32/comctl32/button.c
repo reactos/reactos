@@ -29,8 +29,6 @@
  *  - WM_NCCREATE: Turns any BS_OWNERDRAW button into a BS_PUSHBUTTON button.
  *  - WM_SYSKEYUP
  *  - BCM_GETIDEALSIZE
- *  - BCM_GETTEXTMARGIN
- *  - BCM_SETTEXTMARGIN
  *
  *  Notifications
  *  - BCN_HOTITEMCHANGE
@@ -45,8 +43,6 @@
  *  Structures/Macros/Definitions
  *  - NMBCHOTITEM
  *  - Button_GetIdealSize
- *  - Button_GetTextMargin
- *  - Button_SetTextMargin
  */
 
 #include <stdarg.h>
@@ -96,6 +92,7 @@ typedef struct _BUTTON_INFO
     INT              note_length;
     DWORD            image_type; /* IMAGE_BITMAP or IMAGE_ICON */
     BUTTON_IMAGELIST imagelist;
+    RECT             text_margin;
     union
     {
         HICON   icon;
@@ -105,7 +102,6 @@ typedef struct _BUTTON_INFO
 
 #ifdef __REACTOS__
     DWORD ui_state;
-    RECT rcTextMargin;
 #endif
 } BUTTON_INFO;
 
@@ -451,8 +447,8 @@ BOOL BUTTON_GetIdealSize(BUTTON_INFO *infoPtr, HTHEME theme, SIZE* psize)
     if (hPrevFont)
         SelectObject( hdc, hPrevFont );
 
-    TextSize.cy += infoPtr->rcTextMargin.top + infoPtr->rcTextMargin.bottom;
-    TextSize.cx += infoPtr->rcTextMargin.left + infoPtr->rcTextMargin.right;
+    TextSize.cy += infoPtr->text_margin.top + infoPtr->text_margin.bottom;
+    TextSize.cx += infoPtr->text_margin.left + infoPtr->text_margin.right;
 
     if (infoPtr->imagelist.himl && ImageList_GetIconSize(infoPtr->imagelist.himl, &ImageSize.cx, &ImageSize.cy))
     {
@@ -649,7 +645,7 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         infoPtr->parent = cs->hwndParent;
         infoPtr->style = cs->style;
 #ifdef __REACTOS__
-        SetRect(&infoPtr->rcTextMargin, 1,1,1,1);
+        SetRect(&infoPtr->text_margin, 1,1,1,1);
 #endif
         return DefWindowProcW(hWnd, uMsg, wParam, lParam);
     }
@@ -925,22 +921,6 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
     }
 
 #ifdef __REACTOS__
-    case BCM_GETTEXTMARGIN:
-    {
-        RECT* prc = (RECT*)lParam;
-        if (!prc)
-            return FALSE;
-        *prc = infoPtr->rcTextMargin;
-        return TRUE;
-    }
-    case BCM_SETTEXTMARGIN:
-    {
-        RECT* prc = (RECT*)lParam;
-        if (!prc)
-            return FALSE;
-        infoPtr->rcTextMargin = *prc;
-        return TRUE;
-    }
     case BCM_GETIDEALSIZE:
     {
         HTHEME theme = GetWindowTheme(hWnd);
@@ -1251,6 +1231,26 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
             paint_button( infoPtr, btn_type, ODA_DRAWENTIRE );
         break;
 #endif
+
+    case BCM_SETTEXTMARGIN:
+    {
+        RECT *text_margin = (RECT *)lParam;
+
+        if (!text_margin) return FALSE;
+
+        infoPtr->text_margin = *text_margin;
+        return TRUE;
+    }
+
+    case BCM_GETTEXTMARGIN:
+    {
+        RECT *text_margin = (RECT *)lParam;
+
+        if (!text_margin) return FALSE;
+
+        *text_margin = infoPtr->text_margin;
+        return TRUE;
+    }
 
     case WM_NCHITTEST:
         if(btn_type == BS_GROUPBOX) return HTTRANSPARENT;
