@@ -1,0 +1,14 @@
+/*
+ * PROJECT:      ReactOS Version Program
+ * LICENSE:      MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:      Turkish resource file
+ * TRANSLATOR:   Copyright 2025 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_OSINFO_COMPAT_FORMAT "NT %s (Derleme %s%s) raporlanıyor"
+    IDS_OSINFO_SPK_FORMAT ": %s"
+END
