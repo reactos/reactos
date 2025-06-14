@@ -302,9 +302,6 @@ static UINT BUTTON_BStoDT( DWORD style, DWORD ex_style )
             default:         dtStyle |= DT_VCENTER; break;
         }
     }
-    else
-        /* GroupBox's text is always single line and is top aligned. */
-        dtStyle |= DT_SINGLELINE;
 
     return dtStyle;
 }
