@@ -2204,6 +2204,28 @@ VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown)
  *      @	[SHLWAPI.200]
  *
  */
+#ifdef __REACTOS__
+HRESULT WINAPI
+MayQSForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT iUnk,
+    _In_opt_ REFGUID riidCmdGrp,
+    _In_ ULONG cCmds,
+    _Inout_ OLECMD *prgCmds,
+    _Inout_ OLECMDTEXT *pCmdText)
+{
+    HRESULT hr;
+
+    TRACE("(%p, %d, %s, %d, %p, %p) - stub\n",
+          lpUnknown, iUnk, wine_dbgstr_guid(riidCmdGrp), cCmds, prgCmds, pCmdText);
+
+    hr = IsQSForward(riidCmdGrp, cCmds, prgCmds);
+    if (FAILED(hr) || !HRESULT_CODE(hr) || iUnk <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    return IUnknown_QueryStatus(lpUnknown, riidCmdGrp, cCmds, prgCmds, pCmdText);
+}
+#else
 HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved,
                             REFGUID riidCmdGrp, ULONG cCmds,
                             OLECMD *prgCmds, OLECMDTEXT* pCmdText)
@@ -2214,11 +2236,35 @@ HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved,
   /* FIXME: Calls IsQSForward & IUnknown_QueryStatus */
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.201]
  *
  */
+#ifdef __REACTOS__
+HRESULT WINAPI
+MayExecForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT iUnk,
+    _In_opt_ REFGUID pguidCmdGroup,
+    _In_ DWORD nCmdID,
+    _In_ DWORD nCmdexecopt,
+    _In_ VARIANT *pvaIn,
+    _Inout_ VARIANT *pvaOut)
+{
+    HRESULT hr;
+
+    TRACE("(%p, %d, %s, %d, %d, %p, %p) - stub!\n", lpUnknown, iUnk,
+          wine_dbgstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+    hr = IsQSForward(pguidCmdGroup, 1u, (OLECMD *)&nCmdID);
+    if (FAILED(hr) || !HRESULT_CODE(hr) || iUnk <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    return IUnknown_Exec(lpUnknown, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+}
+#else
 HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGroup,
                            DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn,
                            VARIANT* pvaOut)
@@ -2227,6 +2273,7 @@ HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGro
         nCmdID, nCmdexecopt, pvaIn, pvaOut);
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.202]
