@@ -10,6 +10,7 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
+#include <pseh/pseh2.h>
 #include <versionhelpers.h>
 
 static HRESULT
@@ -90,6 +91,7 @@ START_TEST(IsQSForward)
     LONG cmdID, cmdID2;
     HRESULT ret1, ret2;
     ULONG cCmds;
+    BOOL bExcept1, bExcept2;
     const GUID *pGUID = NULL;
     enum { LOW_VALUE = -99, HIGH_VALUE = OLECMDID_MEDIA_PLAYBACK };
 
@@ -104,7 +106,7 @@ START_TEST(IsQSForward)
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
     }
 
-    // NULL cmds
+    // cCmds = 0 and NULL cmds
     for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
@@ -120,6 +122,37 @@ START_TEST(IsQSForward)
         ret1 = IsQSForward(pGUID, cCmds, cmds);
         ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+    }
+
+    // cCmds = 1 and NULL cmds
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
+    {
+        cmds[0].cmdID = cmdID;
+
+        ret1 = ret2 = 0xDEADFACE;
+        bExcept1 = bExcept2 = FALSE;
+        _SEH2_TRY
+        {
+            ret1 = IsQSForward(pGUID, cCmds, NULL);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            bExcept1 = TRUE;
+        }
+        _SEH2_END;
+
+        _SEH2_TRY
+        {
+            ret2 = IsQSForwardMockup(pGUID, cCmds, NULL);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            bExcept2 = TRUE;
+        }
+        _SEH2_END;
+
+        ok_int(bExcept1, TRUE);
+        ok_int(bExcept2, TRUE);
     }
 
     pGUID = &CGID_Explorer;
