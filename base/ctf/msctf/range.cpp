@@ -118,16 +118,19 @@ STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
         return S_OK;
     }
 
+    ERR("E_NOINTERFACE: %s\n", wine_dbgstr(&riid));
     return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) CRange::AddRef()
 {
+    TRACE("%p -> ()\n", this);
     return InterlockedIncrement(&m_cRefs);
 }
 
 STDMETHODIMP_(ULONG) CRange::Release()
 {
+    TRACE("%p -> ()\n", this);
     if (InterlockedDecrement(&m_cRefs) == 0)
     {
         delete this;
