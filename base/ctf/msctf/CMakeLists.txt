@@ -6,7 +6,6 @@ spec2def(msctf.dll msctf.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     categorymgr.c
-    compartmentmgr.c
     context.c
     documentmgr.c
     inputprocessor.c
@@ -16,6 +15,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    compartmentmgr.cpp
     displayattributemgr.cpp
     langbarmgr.cpp
     mlng.cpp
