@@ -774,17 +774,23 @@ static void Test_RtlLocaleNameToLcid(void)
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER_1);
     ok_eq_hex(Lcid, 0xDEADBEEF);
 
-    // Test NULL LocaleName
+    // Test NULL LocaleName (aka LOCALE_NAME_USER_DEFAULT)
     Lcid = 0xDEADBEEF;
     Status = pRtlLocaleNameToLcid(NULL, &Lcid, 0);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER_1);
     ok_eq_hex(Lcid, 0xDEADBEEF);
 
-    // Test empty LocaleName
+    // Test empty LocaleName (aka LOCALE_NAME_INVARIANT)
     Lcid = 0xDEADBEEF;
     Status = pRtlLocaleNameToLcid(L"", &Lcid, 0);
     ok_ntstatus(Status, STATUS_SUCCESS);
     ok_eq_hex(Lcid, LOCALE_INVARIANT);
+
+    // Test LOCALE_NAME_SYSTEM_DEFAULT
+    Lcid = 0xDEADBEEF;
+    Status = pRtlLocaleNameToLcid(L"!sys-default-locale", &Lcid, 0);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_1);
+    ok_eq_hex(Lcid, 0xDEADBEEF);
 
     // Test invalid LocaleName
     Lcid = 0xDEADBEEF;

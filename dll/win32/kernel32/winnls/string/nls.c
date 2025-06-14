@@ -2047,6 +2047,7 @@ GetCPInfo(UINT CodePage,
         return FALSE;
     }
 
+    RtlZeroMemory(CodePageInfo, sizeof(*CodePageInfo));
     CodePageEntry = IntGetCodePageEntry(CodePage);
     if (CodePageEntry == NULL)
     {
