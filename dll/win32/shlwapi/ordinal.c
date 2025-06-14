@@ -2239,6 +2239,7 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
     DWORD ret = 0;
     OLECMDID cmdID;
     ULONG iCmd;
+    // FIXME: Give these flags better names
     enum { SUPPORTED_1 = 0x1, SUPPORTED_2 = 0x2, NOT_SUPPORTED = 0x4 };
 
     TRACE("(%s, %lu, %p)\n", wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds);
@@ -2254,7 +2255,7 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
             if (cmdID <= OLECMDID_PROPERTIES)
             {
                 ret |= NOT_SUPPORTED; // Not supported
-                break;
+                continue;
             }
 
             if (cmdID <= OLECMDID_PASTE || cmdID == OLECMDID_SELECTALL)
@@ -2267,7 +2268,7 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
                 (OLECMDID_HIDETOOLBARS <= cmdID && cmdID != OLECMDID_ENABLE_INTERACTION))
             {
                 ret |= NOT_SUPPORTED; // Not supported
-                break;
+                continue;
             }
 
             ret |= SUPPORTED_2;
