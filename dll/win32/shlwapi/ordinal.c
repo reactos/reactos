@@ -2238,7 +2238,8 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
 {
     DWORD ret = 0;
     OLECMDID cmdID;
-    ULONG i;
+    ULONG iCmd;
+    enum { SUPPORTED_1 = 0x1, SUPPORTED_2 = 0x2, NOT_SUPPORTED = 0x4 };
 
     TRACE("(%s, %lu, %p)\n", wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds);
 
@@ -2247,29 +2248,29 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
 
     if (!pguidCmdGroup)
     {
-        for (i = 0; i < cCmds; ++i)
+        for (iCmd = 0; iCmd < cCmds; ++iCmd)
         {
-            cmdID = prgCmds[i].cmdID;
+            cmdID = prgCmds[iCmd].cmdID;
             if (cmdID <= OLECMDID_PROPERTIES)
             {
-                ret |= 4; // Supported
+                ret |= NOT_SUPPORTED; // Not supported
                 break;
             }
 
             if (cmdID <= OLECMDID_PASTE || cmdID == OLECMDID_SELECTALL)
             {
-                ret |= 1; // Supported
+                ret |= SUPPORTED_1;
                 continue;
             }
 
             if (cmdID <= OLECMDID_UPDATECOMMANDS ||
                 (OLECMDID_HIDETOOLBARS <= cmdID && cmdID != OLECMDID_ENABLE_INTERACTION))
             {
-                ret |= 4; // Not supported
+                ret |= NOT_SUPPORTED; // Not supported
                 break;
             }
 
-            ret |= 2;
+            ret |= SUPPORTED_2;
         }
     }
     else
@@ -2277,19 +2278,19 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
         if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
             return OLECMDERR_E_NOTSUPPORTED;
 
-        for (i = 0; i < cCmds; ++i)
+        for (iCmd = 0; iCmd < cCmds; ++iCmd)
         {
-            cmdID = prgCmds[i].cmdID;
+            cmdID = prgCmds[iCmd].cmdID;
             if (cmdID == OLECMDID_SELECTALL ||
                 (OLECMDID_SHOWFIND <= cmdID && cmdID <= OLECMDID_SHOWPRINT))
             {
-                ret |= 1; // Supported
+                ret |= SUPPORTED_1;
                 break;
             }
         }
     }
 
-    if (!ret || (ret & 4))
+    if (!ret || (ret & NOT_SUPPORTED))
         return OLECMDERR_E_NOTSUPPORTED; // Not supported
 
     return ret;
