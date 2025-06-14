@@ -2233,6 +2233,7 @@ HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGro
  *
  */
 #ifdef __REACTOS__
+/* NOTE: The return value of this function is "a bit irregular". */
 HRESULT WINAPI
 IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
 {
