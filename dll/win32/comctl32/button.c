@@ -181,6 +181,7 @@ static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, i
 static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 static void SB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
+static void CL_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 
 #else
 typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
@@ -189,6 +190,7 @@ static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, i
 static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 static void SB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
+static void CL_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 
 #endif
 
@@ -208,8 +210,8 @@ static const pfThemedPaint btnThemedPaintFunc[MAX_BTN_TYPE] =
     NULL,           /* BS_OWNERDRAW */
     SB_ThemedPaint, /* BS_SPLITBUTTON */
     SB_ThemedPaint, /* BS_DEFSPLITBUTTON */
-    NULL,           /* BS_COMMANDLINK */
-    NULL,           /* BS_DEFCOMMANDLINK */
+    CL_ThemedPaint, /* BS_COMMANDLINK */
+    CL_ThemedPaint  /* BS_DEFCOMMANDLINK */
 };
 
 typedef BOOL (*pfGetIdealSize)(BUTTON_INFO *infoPtr, SIZE *size);
@@ -3321,6 +3323,133 @@ static void SB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, in
         push_rect.right -= margins.cxRightWidth;
         push_rect.bottom -= margins.cyBottomHeight;
         DrawFocusRect(hDC, &push_rect);
+    }
+
+cleanup:
+    if (old_font) SelectObject(hDC, old_font);
+}
+
+#ifdef __REACTOS__
+static void CL_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused, LPARAM prfFlag)
+#else
+static void CL_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused)
+#endif
+{
+    HFONT old_font = infoPtr->font ? SelectObject(hDC, infoPtr->font) : NULL;
+    NMCUSTOMDRAW nmcd;
+    LRESULT cdrf;
+    HWND parent;
+    RECT rc;
+
+    GetClientRect(infoPtr->hwnd, &rc);
+    init_custom_draw(&nmcd, infoPtr, hDC, &rc);
+
+    parent = GetParent(infoPtr->hwnd);
+    if (!parent) parent = infoPtr->hwnd;
+
+    /* Send erase notifications */
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    if (IsThemeBackgroundPartiallyTransparent(theme, BP_COMMANDLINK, state))
+        DrawThemeParentBackground(infoPtr->hwnd, hDC, NULL);
+    DrawThemeBackground(theme, hDC, BP_COMMANDLINK, state, &rc, NULL);
+
+    if (cdrf & CDRF_NOTIFYPOSTERASE)
+    {
+        nmcd.dwDrawStage = CDDS_POSTERASE;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+
+    /* Send paint notifications */
+    nmcd.dwDrawStage = CDDS_PREPAINT;
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    if (!(cdrf & CDRF_DOERASE))
+    {
+        RECT r, img_rect;
+        UINT txt_h = 0;
+        SIZE img_size;
+        WCHAR *text;
+
+        GetThemeBackgroundContentRect(theme, hDC, BP_COMMANDLINK, state, &rc, &r);
+
+        /* The text alignment and styles are fixed and don't depend on button styles */
+        dtFlags = DT_TOP | DT_LEFT | DT_WORDBREAK;
+
+        /* Command Links ignore the margins of the image list or its alignment */
+        if (infoPtr->u.image || infoPtr->imagelist.himl)
+            img_size = BUTTON_GetImageSize(infoPtr);
+        else
+            GetThemePartSize(theme, NULL, BP_COMMANDLINKGLYPH, state, NULL, TS_DRAW, &img_size);
+
+        img_rect = r;
+        if (img_size.cx) r.left += img_size.cx + command_link_margin;
+
+        /* Draw the text */
+        if ((text = get_button_text(infoPtr)))
+        {
+            UINT len = lstrlenW(text);
+            RECT text_rect;
+
+            GetThemeTextExtent(theme, hDC, BP_COMMANDLINK, state, text, len,
+                               dtFlags | DT_END_ELLIPSIS, &r, &text_rect);
+            DrawThemeText(theme, hDC, BP_COMMANDLINK, state, text, len,
+                          dtFlags | DT_END_ELLIPSIS, 0, &r);
+
+            txt_h = text_rect.bottom - text_rect.top;
+            heap_free(text);
+        }
+
+        /* Draw the note */
+        if (infoPtr->note)
+        {
+            DTTOPTS opts;
+
+            r.top += txt_h;
+            opts.dwSize = sizeof(opts);
+            opts.dwFlags = DTT_FONTPROP;
+            opts.iFontPropId = TMT_BODYFONT;
+            DrawThemeTextEx(theme, hDC, BP_COMMANDLINK, state,
+                            infoPtr->note, infoPtr->note_length,
+                            dtFlags | DT_NOPREFIX, &r, &opts);
+        }
+
+        /* Position the image at the vertical center of the drawn text (not note) */
+        txt_h = min(txt_h, img_rect.bottom - img_rect.top);
+        if (img_size.cy < txt_h) img_rect.top += (txt_h - img_size.cy) / 2;
+
+        img_rect.right = img_rect.left + img_size.cx;
+        img_rect.bottom = img_rect.top + img_size.cy;
+
+        if (infoPtr->u.image || infoPtr->imagelist.himl)
+            BUTTON_DrawImage(infoPtr, hDC, NULL,
+                             (state == CMDLS_DISABLED) ? DSS_DISABLED : DSS_NORMAL,
+                             &img_rect);
+        else
+            DrawThemeBackground(theme, hDC, BP_COMMANDLINKGLYPH, state, &img_rect, NULL);
+    }
+
+    if (cdrf & CDRF_NOTIFYPOSTPAINT)
+    {
+        nmcd.dwDrawStage = CDDS_POSTPAINT;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+    if (cdrf & CDRF_SKIPPOSTPAINT) goto cleanup;
+
+    if (focused)
+    {
+        MARGINS margins;
+
+        /* The focus rect has margins of a push button rather than command link... */
+        GetThemeMargins(theme, hDC, BP_PUSHBUTTON, state, TMT_CONTENTMARGINS, NULL, &margins);
+
+        rc.left += margins.cxLeftWidth;
+        rc.top += margins.cyTopHeight;
+        rc.right -= margins.cxRightWidth;
+        rc.bottom -= margins.cyBottomHeight;
+        DrawFocusRect(hDC, &rc);
     }
 
 cleanup:
