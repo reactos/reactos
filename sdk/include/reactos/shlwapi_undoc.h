@@ -116,8 +116,8 @@ MayQSForward(
     _In_ INT iUnk,
     _In_opt_ REFGUID riidCmdGrp,
     _In_ ULONG cCmds,
-    _In_ OLECMD *prgCmds,
-    _In_ OLECMDTEXT *pCmdText);
+    _Inout_ OLECMD *prgCmds,
+    _Inout_ OLECMDTEXT *pCmdText);
 
 HRESULT WINAPI
 MayExecForward(
@@ -127,7 +127,7 @@ MayExecForward(
     _In_ DWORD nCmdID,
     _In_ DWORD nCmdexecopt,
     _In_ VARIANT *pvaIn,
-    _Out_ VARIANT *pvaOut);
+    _Inout_ VARIANT *pvaOut);
 
 HRESULT WINAPI IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
