@@ -4450,10 +4450,10 @@ SHCreateShellPalette(_In_opt_ HDC hdc)
 
     TRACE("(%p)\n", hdc);
 
+    /* Get the colors of the halftone palette */
     hHalftonePalette = CreateHalftonePalette(hdc);
     if (!hHalftonePalette)
         return NULL;
-
     data.palVersion = 0x300;
     data.palNumEntries = GetPaletteEntries(hHalftonePalette, 0,
                                            _countof(data.palPalEntry), data.palPalEntry);
@@ -4472,6 +4472,7 @@ SHCreateShellPalette(_In_opt_ HDC hdc)
     if (hdcMem && hdc != hdcMem)
         DeleteDC(hdcMem);
 
+    /* Create a palette from the modified color entries */
     return CreatePalette((PLOGPALETTE)&data);
 }
 #else
