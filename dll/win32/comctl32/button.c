@@ -1722,7 +1722,6 @@ static UINT BUTTON_CalcLayoutRects(const BUTTON_INFO *infoPtr, HDC hdc, RECT *la
        /* Get text rect */
        maxTextWidth = labelRc->right - labelRc->left;
        textRect = BUTTON_GetTextRect(infoPtr, hdc, text, maxTextWidth);
-       heap_free(text);
 
        /* Show image and text */
        if (show_image_and_text(infoPtr))
@@ -1795,6 +1794,7 @@ static UINT BUTTON_CalcLayoutRects(const BUTTON_INFO *infoPtr, HDC hdc, RECT *la
            SetRectEmpty(&imageRect);
        }
    }
+   heap_free(text);
 
    CopyRect(labelRc, &labelRect);
    CopyRect(imageRc, &imageRect);
