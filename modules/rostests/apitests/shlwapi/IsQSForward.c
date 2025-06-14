@@ -131,6 +131,7 @@ START_TEST(IsQSForward)
 
         ret1 = ret2 = 0xDEADFACE;
         bExcept1 = bExcept2 = FALSE;
+
         _SEH2_TRY
         {
             ret1 = IsQSForward(pGUID, cCmds, NULL);
