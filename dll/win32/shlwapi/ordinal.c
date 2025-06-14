@@ -2232,11 +2232,86 @@ HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGro
  *      @	[SHLWAPI.202]
  *
  */
+#ifdef __REACTOS__
+HRESULT WINAPI
+IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
+{
+    DWORD cmdFlags = 0;
+    OLECMDID cmdID;
+    ULONG iCmd;
+    enum {
+        CMD_FLAG_SUPPORTED_BASIC = 0x1,
+        CMD_FLAG_SUPPORTED_ADVANCED = 0x2,
+        CMD_FLAG_NOT_SUPPORTED = 0x4,
+    };
+
+    TRACE("(%s, %lu, %p)\n", wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds);
+
+    if ((LONG)cCmds <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    if (!pguidCmdGroup)
+    {
+        for (iCmd = 0; iCmd < cCmds; ++iCmd)
+        {
+            cmdID = prgCmds[iCmd].cmdID;
+            if (cmdID <= OLECMDID_PROPERTIES)
+            {
+                cmdFlags |= CMD_FLAG_NOT_SUPPORTED; // Not supported
+                continue;
+            }
+
+            if (cmdID <= OLECMDID_PASTE || cmdID == OLECMDID_SELECTALL)
+            {
+                cmdFlags |= CMD_FLAG_SUPPORTED_BASIC;
+                continue;
+            }
+
+            if (cmdID <= OLECMDID_UPDATECOMMANDS ||
+                (OLECMDID_HIDETOOLBARS <= cmdID && cmdID != OLECMDID_ENABLE_INTERACTION))
+            {
+                cmdFlags |= CMD_FLAG_NOT_SUPPORTED; // Not supported
+                continue;
+            }
+
+            cmdFlags |= CMD_FLAG_SUPPORTED_ADVANCED;
+        }
+    }
+    else
+    {
+        if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
+        {
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+            return OLECMDERR_E_UNKNOWNGROUP;
+#else
+            return OLECMDERR_E_NOTSUPPORTED;
+#endif
+        }
+
+        for (iCmd = 0; iCmd < cCmds; ++iCmd)
+        {
+            cmdID = prgCmds[iCmd].cmdID;
+            if (cmdID == OLECMDID_SELECTALL ||
+                (OLECMDID_SHOWFIND <= cmdID && cmdID <= OLECMDID_SHOWPRINT))
+            {
+                cmdFlags |= CMD_FLAG_SUPPORTED_BASIC;
+                break;
+            }
+        }
+    }
+
+    if (!cmdFlags || (cmdFlags & CMD_FLAG_NOT_SUPPORTED))
+        return OLECMDERR_E_NOTSUPPORTED; // Not supported
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, cmdFlags);
+}
+#else
 HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds)
 {
   FIXME("(%p,%d,%p) - stub!\n", pguidCmdGroup, cCmds, prgCmds);
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  * @	[SHLWAPI.204]
