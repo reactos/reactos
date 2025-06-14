@@ -4427,7 +4427,7 @@ VOID WINAPI ColorRGBToHLS(COLORREF cRGB, LPWORD pwHue,
 }
 
 #ifdef __REACTOS__
-typedef struct tagLOGPALETTEMAX
+typedef struct tagLOGPALETTEMAX /* Compatible with LOGPALETTE but extended */
 {
     WORD palVersion;
     WORD palNumEntries;
