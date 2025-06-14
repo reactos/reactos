@@ -4426,13 +4426,54 @@ VOID WINAPI ColorRGBToHLS(COLORREF cRGB, LPWORD pwHue,
     *pwSaturation = wSaturation;
 }
 
+#ifdef __REACTOS__
+typedef struct tagLOGPALETTEMAX
+{
+    WORD palVersion;
+    WORD palNumEntries;
+    PALETTEENTRY palPalEntry[256];
+} LOGPALETTEMAX, *PLOGPALETTEMAX;
+#endif
+
 /*************************************************************************
  *      SHCreateShellPalette	[SHLWAPI.@]
  */
 HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
 {
+#ifdef __REACTOS__
+    HDC hdcMem;
+    HPALETTE hHalftonePalette;
+    LOGPALETTEMAX data;
+    const INT nExtractCount = 10;
+    const INT nRemainder = 256 - nExtractCount;
+
+    TRACE("(%p)\n", hdc);
+
+    hHalftonePalette = CreateHalftonePalette(hdc);
+    if (!hHalftonePalette)
+        return NULL;
+
+    data.palVersion = 0x300;
+    data.palNumEntries = GetPaletteEntries(hHalftonePalette, 0,
+                                           _countof(data.palPalEntry), data.palPalEntry);
+    DeleteObject(hHalftonePalette);
+
+    hdcMem = hdc ? hdc : CreateCompatibleDC(NULL);
+
+    if (hdcMem)
+    {
+        GetSystemPaletteEntries(hdcMem, 0, nExtractCount, data.palPalEntry);
+        GetSystemPaletteEntries(hdcMem, nRemainder, nExtractCount, &data.palPalEntry[nRemainder]);
+    }
+
+    if (hdcMem && hdc != hdcMem)
+        DeleteDC(hdcMem);
+
+    return CreatePalette((PLOGPALETTE)&data);
+#else
 	FIXME("stub\n");
 	return CreateHalftonePalette(hdc);
+#endif
 }
 
 /*************************************************************************
