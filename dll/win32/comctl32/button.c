@@ -1158,9 +1158,6 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
     case WM_KILLFOCUS:
         TRACE("WM_KILLFOCUS %p\n",hWnd);
         infoPtr->state &= ~BST_FOCUS;
-#ifndef __REACTOS__
-        paint_button( infoPtr, btn_type, ODA_FOCUS );
-#endif
 
         if ((infoPtr->state & BUTTON_BTNPRESSED) && GetCapture() == hWnd)
             ReleaseCapture();
