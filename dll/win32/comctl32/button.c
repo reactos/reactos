@@ -2481,13 +2481,11 @@ static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, in
     UINT btn_type = get_button_type( dwStyle );
     int part = (btn_type == BS_RADIOBUTTON) || (btn_type == BS_AUTORADIOBUTTON) ? BP_RADIOBUTTON : BP_CHECKBOX;
     WCHAR *text = get_button_text(infoPtr);
+    NMCUSTOMDRAW nmcd;
+    LRESULT cdrf;
     LOGFONTW lf;
-    BOOL created_font = FALSE;
-#ifdef __REACTOS__
     HWND parent;
-    HBRUSH hBrush;
-    DWORD cdrf;
-#endif
+    BOOL created_font = FALSE;
 
     HRESULT hr = GetThemeFont(theme, hDC, part, state, TMT_FONT, &lf);
     if (SUCCEEDED(hr)) {
@@ -2500,11 +2498,7 @@ static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, in
             created_font = TRUE;
         }
     } else {
-#ifdef __REACTOS__ /* r73885 */
-        font = infoPtr->font;
-#else
         font = (HFONT)SendMessageW(infoPtr->hwnd, WM_GETFONT, 0, 0);
-#endif
         hPrevFont = SelectObject(hDC, font);
     }
 
@@ -2513,27 +2507,8 @@ static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, in
 
     GetClientRect(infoPtr->hwnd, &bgRect);
 
-#ifdef __REACTOS__
-    if (prfFlag == 0)
-    {
-        DrawThemeParentBackground(infoPtr->hwnd, hDC, NULL);
-    }
-
-    parent = GetParent(infoPtr->hwnd);
-    if (!parent) parent = infoPtr->hwnd;
-    hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
-                                 (WPARAM)hDC, (LPARAM)infoPtr->hwnd);
-    if (!hBrush) /* did the app forget to call defwindowproc ? */
-        hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
-                                        (WPARAM)hDC, (LPARAM)infoPtr->hwnd );
-    FillRect( hDC, &bgRect, hBrush );
-
-    cdrf = BUTTON_SendCustomDraw(infoPtr, hDC, CDDS_PREERASE, &bgRect);
-    if (cdrf == CDRF_SKIPDEFAULT)
-        goto cleanup;
-#endif
-
     GetThemeBackgroundContentRect(theme, hDC, part, state, &bgRect, &textRect);
+    init_custom_draw(&nmcd, infoPtr, hDC, &bgRect);
 
     if (dtFlags & DT_SINGLELINE) /* Center the checkbox / radio button to the text. */
         bgRect.top = bgRect.top + (textRect.bottom - textRect.top - sz.cy) / 2;
@@ -2543,24 +2518,39 @@ static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, in
     bgRect.right = bgRect.left + sz.cx;
     textRect.left = bgRect.right + 6;
 
-#ifdef __REACTOS__
-    DrawThemeBackground(theme, hDC, part, state, &bgRect, NULL);
+    parent = GetParent(infoPtr->hwnd);
+    if (!parent) parent = infoPtr->hwnd;
 
-    if (cdrf == CDRF_NOTIFYPOSTERASE)
-        BUTTON_SendCustomDraw(infoPtr, hDC, CDDS_POSTERASE, &bgRect);
+    /* Send erase notifications */
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
 
-    cdrf = BUTTON_SendCustomDraw(infoPtr, hDC, CDDS_PREPAINT, &bgRect);
-    if (cdrf == CDRF_SKIPDEFAULT)
-        goto cleanup;
-
-#else
     DrawThemeParentBackground(infoPtr->hwnd, hDC, NULL);
     DrawThemeBackground(theme, hDC, part, state, &bgRect, NULL);
-#endif
-    if (text)
+
+    if (cdrf & CDRF_NOTIFYPOSTERASE)
     {
+        nmcd.dwDrawStage = CDDS_POSTERASE;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+
+    /* Send paint notifications */
+    nmcd.dwDrawStage = CDDS_PREPAINT;
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    if (!(cdrf & CDRF_DOERASE) && text)
         DrawThemeText(theme, hDC, part, state, text, lstrlenW(text), dtFlags, 0, &textRect);
 
+    if (cdrf & CDRF_NOTIFYPOSTPAINT)
+    {
+        nmcd.dwDrawStage = CDDS_POSTPAINT;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+    if (cdrf & CDRF_SKIPPOSTPAINT) goto cleanup;
+
+    if (text)
+    {
         if (focused)
         {
             RECT focusRect;
@@ -2581,10 +2571,8 @@ static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, in
 #endif
     }
 
-#ifdef __REACTOS__
-    if (cdrf == CDRF_NOTIFYPOSTPAINT)
-        BUTTON_SendCustomDraw(infoPtr, hDC, CDDS_POSTPAINT, &bgRect);
 cleanup:
+#ifdef __REACTOS__
     if (text) heap_free(text);
 #endif
     if (created_font) DeleteObject(font);
