@@ -2214,12 +2214,10 @@ MayQSForward(
     _Inout_ OLECMD *prgCmds,
     _Inout_ OLECMDTEXT *pCmdText)
 {
-    HRESULT hr;
-
     TRACE("(%p, %d, %s, %d, %p, %p)\n",
           lpUnknown, iUnk, wine_dbgstr_guid(riidCmdGrp), cCmds, prgCmds, pCmdText);
 
-    hr = IsQSForward(riidCmdGrp, cCmds, prgCmds);
+    HRESULT hr = IsQSForward(riidCmdGrp, cCmds, prgCmds);
     if (FAILED(hr) || !HRESULT_CODE(hr) || iUnk <= 0)
         return OLECMDERR_E_NOTSUPPORTED;
 
@@ -2253,12 +2251,11 @@ MayExecForward(
     _In_ VARIANT *pvaIn,
     _Inout_ VARIANT *pvaOut)
 {
-    HRESULT hr;
-
     TRACE("(%p, %d, %s, %d, %d, %p, %p)\n", lpUnknown, iUnk,
           wine_dbgstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
 
-    hr = IsQSForward(pguidCmdGroup, 1, (OLECMD *)&nCmdID); /* Dirty cast but effective */
+    OLECMD cmd = { nCmdID };
+    HRESULT hr = IsQSForward(pguidCmdGroup, 1, &cmd);
     if (FAILED(hr) || !HRESULT_CODE(hr) || iUnk <= 0)
         return OLECMDERR_E_NOTSUPPORTED;
 
