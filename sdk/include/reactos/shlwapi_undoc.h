@@ -113,7 +113,7 @@ VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown);
 HRESULT WINAPI
 MayQSForward(
     _In_ IUnknown *lpUnknown,
-    _In_ INT iUnk,
+    _In_ INT nUnknown,
     _In_opt_ REFGUID riidCmdGrp,
     _In_ ULONG cCmds,
     _Inout_ OLECMD *prgCmds,
@@ -122,7 +122,7 @@ MayQSForward(
 HRESULT WINAPI
 MayExecForward(
     _In_ IUnknown *lpUnknown,
-    _In_ INT iUnk,
+    _In_ INT nUnknown,
     _In_opt_ REFGUID pguidCmdGroup,
     _In_ DWORD nCmdID,
     _In_ DWORD nCmdexecopt,
