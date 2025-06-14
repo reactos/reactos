@@ -118,7 +118,7 @@ STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
         return S_OK;
     }
 
-    ERR("E_NOINTERFACE: %s\n", wine_dbgstr(&riid));
+    ERR("E_NOINTERFACE: %s\n", wine_dbgstr_guid(&riid));
     return E_NOINTERFACE;
 }
 
