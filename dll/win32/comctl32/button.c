@@ -216,6 +216,7 @@ typedef BOOL (*pfGetIdealSize)(BUTTON_INFO *infoPtr, SIZE *size);
 static BOOL PB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
 static BOOL CB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
 static BOOL GB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
+static BOOL SB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
 
 static const pfGetIdealSize btnGetIdealSizeFunc[MAX_BTN_TYPE] = {
     PB_GetIdealSize, /* BS_PUSHBUTTON */
@@ -230,9 +231,9 @@ static const pfGetIdealSize btnGetIdealSizeFunc[MAX_BTN_TYPE] = {
     CB_GetIdealSize, /* BS_AUTORADIOBUTTON */
     GB_GetIdealSize, /* BS_PUSHBOX */
     GB_GetIdealSize, /* BS_OWNERDRAW */
+    SB_GetIdealSize, /* BS_SPLITBUTTON */
+    SB_GetIdealSize, /* BS_DEFSPLITBUTTON */
     /* GetIdealSize() for following types are unimplemented, use BS_PUSHBUTTON's for now */
-    PB_GetIdealSize, /* BS_SPLITBUTTON */
-    PB_GetIdealSize, /* BS_DEFSPLITBUTTON */
     PB_GetIdealSize, /* BS_COMMANDLINK */
     PB_GetIdealSize  /* BS_DEFCOMMANDLINK */
 };
@@ -1768,6 +1769,25 @@ static BOOL PB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
 
     return TRUE;
 #endif
+}
+
+static BOOL SB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
+{
+    LONG extra_width = infoPtr->glyph_size.cx * 2 + GetSystemMetrics(SM_CXEDGE);
+    SIZE label_size;
+
+    if (SendMessageW(infoPtr->hwnd, WM_GETTEXTLENGTH, 0, 0) == 0)
+    {
+        BUTTON_GetClientRectSize(infoPtr, size);
+        size->cx = max(size->cx, extra_width);
+    }
+    else
+    {
+        BUTTON_GetLabelIdealSize(infoPtr, size->cx, &label_size);
+        size->cx = label_size.cx + ((size->cx == 0) ? extra_width : 0);
+        size->cy = label_size.cy;
+    }
+    return TRUE;
 }
 
 /**********************************************************************
