@@ -1062,13 +1062,10 @@ GUILoggedOnSAS(
 
     if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
     {
-        /* Nothing to do for WLX_SAS_TYPE_TIMEOUT ; the dialog will
+        /* Nothing to do for WLX_SAS_TYPE_TIMEOUT; the dialog will
          * close itself thanks to the use of WlxDialogBoxParam */
         return WLX_SAS_ACTION_NONE;
     }
-
-    pgContext->pWlxFuncs->WlxSwitchDesktopToWinlogon(
-        pgContext->hWlx);
 
     result = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
@@ -1082,12 +1079,6 @@ GUILoggedOnSAS(
         result > WLX_SAS_ACTION_SWITCH_CONSOLE)
     {
         result = WLX_SAS_ACTION_NONE;
-    }
-
-    if (result == WLX_SAS_ACTION_NONE)
-    {
-        pgContext->pWlxFuncs->WlxSwitchDesktopToUser(
-            pgContext->hWlx);
     }
 
     return result;
