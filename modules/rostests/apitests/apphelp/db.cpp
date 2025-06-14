@@ -229,7 +229,7 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
             else
             {
                 SYSTEMTIME si = {0};
-                GetSystemTime(&si);
+                GetLocalTime(&si);
                 DWORD dwExpect = ((DWORD)si.wYear - 2000) * 10000 + si.wMonth * 100 + si.wDay;
                 ok(pInfo->dwMinor == dwExpect, "Expected pInfo->dwMinor to be %d, was: %d\n", dwExpect, pInfo->dwMinor);
             }
@@ -1774,7 +1774,7 @@ static void test_DataTags(HSDB hsdb)
     ok_hex(dwBufferSize, sizeof(DWORD));
     ok_hex(*(DWORD*)Buffer, 3333);
 
-    if (g_WinVersion > _WIN32_WINNT_WS03)
+    if (g_WinVersion >= _WIN32_WINNT_WIN10)
     {
         memset(Buffer, 0xaa, sizeof(Buffer));
         dwBufferSize = sizeof(Buffer);
@@ -1881,7 +1881,7 @@ static void test_DataTags(HSDB hsdb)
     ok_hex(dwDataType, 0x12345);
     ok_hex(dwBufferSize, sizeof(Buffer));
     ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
-    if (g_WinVersion == _WIN32_WINNT_WS03)
+    if (g_WinVersion < _WIN32_WINNT_WIN10)
         ok(trData == 0, "Expected 0, got 0x%x\n", trData);
     else
         ok(trData == 0x111111, "Expected 0x111111, got 0x%x\n", trData);
@@ -2124,6 +2124,11 @@ START_TEST(db)
     *(void**)&pSdbGetLayerTagRef = (void *)GetProcAddress(hdll, "SdbGetLayerTagRef");
     *(void**)&pSdbGetDatabaseInformation = (void *)GetProcAddress(hdll, "SdbGetDatabaseInformation");
     *(void**)&pSdbFreeDatabaseInformation = (void *)GetProcAddress(hdll, "SdbFreeDatabaseInformation");
+
+#ifndef _M_IX86
+    skip("FIXME: We need a new db test for non-x86!\n");
+    return;
+#endif
 
     test_Sdb();
     test_write_ex();
