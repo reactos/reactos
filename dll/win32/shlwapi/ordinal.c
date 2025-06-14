@@ -4462,6 +4462,7 @@ HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
 
     if (hdcMem)
     {
+        /* The first 10 and last 10 entries are considered important */
         GetSystemPaletteEntries(hdcMem, 0, nExtractCount, data.palPalEntry);
         GetSystemPaletteEntries(hdcMem, nSecondBlockStart, nExtractCount,
                                 &data.palPalEntry[nSecondBlockStart]);
