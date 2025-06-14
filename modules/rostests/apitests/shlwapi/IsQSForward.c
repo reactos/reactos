@@ -104,6 +104,15 @@ START_TEST(IsQSForward)
         ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
     }
 
+    // NULL cmds
+    for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
+    {
+        cmds[0].cmdID = cmdID;
+        ret1 = IsQSForward(pGUID, cCmds, NULL);
+        ret2 = IsQSForwardMockup(pGUID, cCmds, NULL);
+        ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+    }
+
     cCmds = 1;
     for (cmdID = LOW_VALUE; cmdID <= HIGH_VALUE; ++cmdID)
     {
