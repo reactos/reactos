@@ -4444,8 +4444,8 @@ HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
     HDC hdcMem;
     HPALETTE hHalftonePalette;
     LOGPALETTEMAX data;
-    const INT nExtractCount = 10;
-    const INT nRemainder = 256 - nExtractCount;
+    const SIZE_T nExtractCount = 10;
+    const SIZE_T nSecondBlockStart = _countof(data.palPalEntry) - nExtractCount;
 
     TRACE("(%p)\n", hdc);
 
@@ -4463,7 +4463,8 @@ HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
     if (hdcMem)
     {
         GetSystemPaletteEntries(hdcMem, 0, nExtractCount, data.palPalEntry);
-        GetSystemPaletteEntries(hdcMem, nRemainder, nExtractCount, &data.palPalEntry[nRemainder]);
+        GetSystemPaletteEntries(hdcMem, nSecondBlockStart, nExtractCount,
+                                &data.palPalEntry[nSecondBlockStart]);
     }
 
     if (hdcMem && hdc != hdcMem)
