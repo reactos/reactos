@@ -135,15 +135,16 @@ static const WORD maxCheckState[MAX_BTN_TYPE] =
     BST_UNCHECKED       /* BS_DEFCOMMANDLINK */
 };
 
-/* These are indices into a states array to determine the theme state for a given theme part. */
-typedef enum
+/* Generic draw states, use get_draw_state() to get specific state for button type */
+enum draw_state
 {
     STATE_NORMAL,
     STATE_DISABLED,
     STATE_HOT,
     STATE_PRESSED,
-    STATE_DEFAULTED
-} ButtonState;
+    STATE_DEFAULTED,
+    DRAW_STATE_COUNT
+};
 
 typedef void (*pfPaint)( const BUTTON_INFO *infoPtr, HDC hdc, UINT action );
 
@@ -169,18 +170,18 @@ static const pfPaint btnPaintFunc[MAX_BTN_TYPE] =
 
 
 #ifdef __REACTOS__ /* r73885 */
-typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
+typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 
-static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
-static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
-static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
+static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
+static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
+static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 
 #else
-typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused);
+typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 
-static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused);
-static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused);
-static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, ButtonState drawState, UINT dtflags, BOOL focused);
+static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
+static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
+static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 
 #endif
 
@@ -308,13 +309,14 @@ static UINT BUTTON_BStoDT( DWORD style, DWORD ex_style )
 
 
 #ifdef __REACTOS__
+static int get_draw_state(const BUTTON_INFO *infoPtr);
 BOOL BUTTON_PaintWithTheme(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hParamDC, LPARAM prfFlag)
 {
     DWORD dwStyle;
     DWORD dwStyleEx;
     DWORD type;
     UINT dtFlags;
-    ButtonState drawState;
+    int drawState;
     pfThemedPaint paint;
 
     /* Don't draw with themes on a button with BS_ICON or BS_BITMAP */
@@ -334,18 +336,7 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hParamD
     dwStyleEx = GetWindowLongW(infoPtr->hwnd, GWL_EXSTYLE);
     dtFlags = BUTTON_BStoDT(dwStyle, dwStyleEx);
 
-    if(dwStyle & WS_DISABLED)
-        drawState = STATE_DISABLED;
-    else if(infoPtr->state & BST_PUSHED) 
-        drawState = STATE_PRESSED;
-    else if ((dwStyle & BS_PUSHLIKE) && (infoPtr->state & (BST_CHECKED|BST_INDETERMINATE))) 
-        drawState = STATE_PRESSED;
-    else if(infoPtr->state & BST_HOT) 
-        drawState = STATE_HOT;
-    else if((infoPtr->state & BST_FOCUS) || (dwStyle & BS_DEFPUSHBUTTON))
-        drawState = STATE_DEFAULTED;
-    else
-        drawState = STATE_NORMAL;
+    drawState = get_draw_state(infoPtr);
 
     if (paint == PB_ThemedPaint || paint == CB_ThemedPaint)
     {
@@ -585,6 +576,63 @@ static BOOL button_update_uistate(BUTTON_INFO *infoPtr)
 }
 #endif
 
+static int get_draw_state(const BUTTON_INFO *infoPtr)
+{
+    static const int pb_states[DRAW_STATE_COUNT] = { PBS_NORMAL, PBS_DISABLED, PBS_HOT, PBS_PRESSED, PBS_DEFAULTED };
+    static const int cb_states[3][DRAW_STATE_COUNT] =
+    {
+        { CBS_UNCHECKEDNORMAL, CBS_UNCHECKEDDISABLED, CBS_UNCHECKEDHOT, CBS_UNCHECKEDPRESSED, CBS_UNCHECKEDNORMAL },
+        { CBS_CHECKEDNORMAL, CBS_CHECKEDDISABLED, CBS_CHECKEDHOT, CBS_CHECKEDPRESSED, CBS_CHECKEDNORMAL },
+        { CBS_MIXEDNORMAL, CBS_MIXEDDISABLED, CBS_MIXEDHOT, CBS_MIXEDPRESSED, CBS_MIXEDNORMAL }
+    };
+    static const int rb_states[2][DRAW_STATE_COUNT] =
+    {
+        { RBS_UNCHECKEDNORMAL, RBS_UNCHECKEDDISABLED, RBS_UNCHECKEDHOT, RBS_UNCHECKEDPRESSED, RBS_UNCHECKEDNORMAL },
+        { RBS_CHECKEDNORMAL, RBS_CHECKEDDISABLED, RBS_CHECKEDHOT, RBS_CHECKEDPRESSED, RBS_CHECKEDNORMAL }
+    };
+    static const int gb_states[DRAW_STATE_COUNT] = { GBS_NORMAL, GBS_DISABLED, GBS_NORMAL, GBS_NORMAL, GBS_NORMAL };
+    LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
+    UINT type = get_button_type(style);
+    int check_state = infoPtr->state & 3;
+    enum draw_state state;
+
+    if (!IsWindowEnabled(infoPtr->hwnd))
+        state = STATE_DISABLED;
+    else if (infoPtr->state & BST_PUSHED)
+        state = STATE_PRESSED;
+    else if (infoPtr->state & BST_HOT)
+        state = STATE_HOT;
+    else if (infoPtr->state & BST_FOCUS)
+        state = STATE_DEFAULTED;
+    else
+        state = STATE_NORMAL;
+
+    switch (type)
+    {
+    case BS_PUSHBUTTON:
+    case BS_DEFPUSHBUTTON:
+    case BS_USERBUTTON:
+    case BS_SPLITBUTTON:
+    case BS_DEFSPLITBUTTON:
+    case BS_COMMANDLINK:
+    case BS_DEFCOMMANDLINK:
+        return pb_states[state];
+    case BS_CHECKBOX:
+    case BS_AUTOCHECKBOX:
+        return cb_states[check_state][state];
+    case BS_RADIOBUTTON:
+    case BS_3STATE:
+    case BS_AUTO3STATE:
+    case BS_AUTORADIOBUTTON:
+        return rb_states[check_state][state];
+    case BS_GROUPBOX:
+        return gb_states[state];
+    default:
+        WARN("Unsupported button type 0x%08x\n", type);
+        return PBS_NORMAL;
+    }
+}
+
 static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     BUTTON_INFO *infoPtr = (BUTTON_INFO *)GetWindowLongPtrW(hWnd, 0);
@@ -716,20 +764,9 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 #else
         if (theme && btnThemedPaintFunc[btn_type])
         {
-            ButtonState drawState;
-            UINT dtflags;
+            int drawState = get_draw_state(infoPtr);
+            UINT dtflags = BUTTON_BStoDT(style, GetWindowLongW(hWnd, GWL_EXSTYLE));
 
-            if (IsWindowEnabled( hWnd ))
-            {
-                if (infoPtr->state & BST_PUSHED) drawState = STATE_PRESSED;
-                else if (infoPtr->state & BST_HOT) drawState = STATE_HOT;
-                else if (infoPtr->state & BST_FOCUS) drawState = STATE_DEFAULTED;
-                else drawState = STATE_NORMAL;
-            }
-            else
-                drawState = STATE_DISABLED;
-
-            dtflags = BUTTON_BStoDT(style, GetWindowLongW(hWnd, GWL_EXSTYLE));
             btnThemedPaintFunc[btn_type](theme, infoPtr, hdc, drawState, dtflags, infoPtr->state & BST_FOCUS);
         }
 #endif
@@ -1885,17 +1922,14 @@ static void OB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
 }
 
 #ifdef __REACTOS__ /* r73885 */
-static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
+static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused, LPARAM prfFlag)
 #else
-static void PB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
+static void PB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused)
 #endif
 {
-    static const int states[] = { PBS_NORMAL, PBS_DISABLED, PBS_HOT, PBS_PRESSED, PBS_DEFAULTED };
-
     RECT bgRect, textRect;
     HFONT font = infoPtr->font;
     HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
-    int state = states[ drawState ];
     WCHAR *text = get_button_text(infoPtr);
 #ifdef __REACTOS__
     HWND parent;
@@ -1927,7 +1961,7 @@ static void PB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, Bu
     if (cdrf == CDRF_SKIPDEFAULT)
         goto cleanup;
 
-    BUTTON_DrawIml(hDC, &infoPtr->imagelist, &textRect, FALSE, drawState);
+    BUTTON_DrawIml(hDC, &infoPtr->imagelist, &textRect, FALSE, state);
 #else
     GetClientRect(infoPtr->hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &bgRect, &textRect);
@@ -1972,34 +2006,17 @@ cleanup:
 }
 
 #ifdef __REACTOS__ /* r73885 */
-static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
+static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused, LPARAM prfFlag)
 #else
-static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
+static void CB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused)
 #endif
 {
-    static const int cb_states[3][5] =
-    {
-        { CBS_UNCHECKEDNORMAL, CBS_UNCHECKEDDISABLED, CBS_UNCHECKEDHOT, CBS_UNCHECKEDPRESSED, CBS_UNCHECKEDNORMAL },
-        { CBS_CHECKEDNORMAL, CBS_CHECKEDDISABLED, CBS_CHECKEDHOT, CBS_CHECKEDPRESSED, CBS_CHECKEDNORMAL },
-        { CBS_MIXEDNORMAL, CBS_MIXEDDISABLED, CBS_MIXEDHOT, CBS_MIXEDPRESSED, CBS_MIXEDNORMAL }
-    };
-
-    static const int rb_states[2][5] =
-    {
-        { RBS_UNCHECKEDNORMAL, RBS_UNCHECKEDDISABLED, RBS_UNCHECKEDHOT, RBS_UNCHECKEDPRESSED, RBS_UNCHECKEDNORMAL },
-        { RBS_CHECKEDNORMAL, RBS_CHECKEDDISABLED, RBS_CHECKEDHOT, RBS_CHECKEDPRESSED, RBS_CHECKEDNORMAL }
-    };
-
     SIZE sz;
     RECT bgRect, textRect;
     HFONT font, hPrevFont = NULL;
-    int checkState = infoPtr->state & 3;
     DWORD dwStyle = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     UINT btn_type = get_button_type( dwStyle );
     int part = (btn_type == BS_RADIOBUTTON) || (btn_type == BS_AUTORADIOBUTTON) ? BP_RADIOBUTTON : BP_CHECKBOX;
-    int state = (part == BP_CHECKBOX)
-              ? cb_states[ checkState ][ drawState ]
-              : rb_states[ checkState ][ drawState ];
     WCHAR *text = get_button_text(infoPtr);
     LOGFONTW lf;
     BOOL created_font = FALSE;
@@ -2112,15 +2129,12 @@ cleanup:
 }
 
 #ifdef __REACTOS__ /* r73885 */
-static void GB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
+static void GB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused, LPARAM prfFlag)
 #else
-static void GB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
+static void GB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused)
 #endif
 {
-    static const int states[] = { GBS_NORMAL, GBS_DISABLED, GBS_NORMAL, GBS_NORMAL, GBS_NORMAL };
-
     RECT bgRect, textRect, contentRect;
-    int state = states[ drawState ];
     WCHAR *text = get_button_text(infoPtr);
     LOGFONTW lf;
     HFONT font, hPrevFont = NULL;
