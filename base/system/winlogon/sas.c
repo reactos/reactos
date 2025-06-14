@@ -1135,9 +1135,14 @@ DoGenericAction(
             }
             break;
         case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
-            SwitchDesktop(Session->ApplicationDesktop);
-            Session->LogonState = STATE_LOGGED_ON;
-            StartTaskManager(Session);
+            if ((Session->LogonState == STATE_LOGGED_ON) ||
+                (Session->LogonState == STATE_LOGGED_ON_SAS))
+            {
+                /* Start a Task-Manager instance on the application desktop.
+                 * If the user pressed Ctrl-Shift-Esc while being on the
+                 * Logged-On SAS dialog (on the Winlogon desktop), stay there. */
+                StartTaskManager(Session);
+            }
             break;
         case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
             SwitchDesktop(Session->ApplicationDesktop);
@@ -1193,7 +1198,26 @@ DispatchSAS(
 
                 case STATE_LOGGED_ON:
                     Session->LogonState = STATE_LOGGED_ON_SAS;
+                    SwitchDesktop(Session->WinlogonDesktop);
                     wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
+                    if ((wlxAction == WLX_SAS_ACTION_NONE) ||
+                        (wlxAction == WLX_SAS_ACTION_TASKLIST))
+                    {
+                        /*
+                         * If the user canceled (WLX_SAS_ACTION_NONE) the
+                         * Logged-On SAS dialog, or clicked on the Task-Manager
+                         * button (WLX_SAS_ACTION_TASKLIST), switch back to
+                         * the application desktop and return to log-on state.
+                         * In the latter case, the Task-Manager is launched
+                         * by DoGenericAction(WLX_SAS_ACTION_TASKLIST), which
+                         * doesn't automatically do the switch back, because
+                         * the user may have also pressed on Ctrl-Shift-Esc
+                         * to start it while being on the Logged-On SAS dialog
+                         * and wanting to stay there.
+                         */
+                        SwitchDesktop(Session->ApplicationDesktop);
+                        Session->LogonState = STATE_LOGGED_ON;
+                    }
                     break;
 
                 case STATE_LOGGED_ON_SAS:
@@ -1361,8 +1385,7 @@ SASWindowProc(
                 case IDHK_CTRL_SHIFT_ESC:
                 {
                     TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
-                    if (Session->LogonState == STATE_LOGGED_ON)
-                        DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
                     return TRUE;
                 }
                 case IDHK_WIN_L:
