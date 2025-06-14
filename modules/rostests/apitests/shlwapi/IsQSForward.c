@@ -75,25 +75,25 @@ IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD 
 
 START_TEST(IsQSForward)
 {
-    OLECMD cmd[1];
+    OLECMD cmds[1];
     LONG cmdID;
     DWORD ret1, ret2;
 
-    cmd[0].cmdf = 0;
+    cmds[0].cmdf = 0;
 
     for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
     {
-        cmd[0].cmdID = cmdID;
-        ret1 = IsQSForward(NULL, _countof(cmd), cmd);
-        ret2 = IsQSForwardMockup(NULL, _countof(cmd), cmd);
+        cmds[0].cmdID = cmdID;
+        ret1 = IsQSForward(NULL, _countof(cmds), cmds);
+        ret2 = IsQSForwardMockup(NULL, _countof(cmds), cmds);
         ok(ret1 == ret2, "cmdID: %lu", cmdID);
     }
 
     for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
     {
-        cmd[0].cmdID = cmdID;
-        ret1 = IsQSForward(&CGID_Explorer, _countof(cmd), cmd);
-        ret2 = IsQSForwardMockup(&CGID_Explorer, _countof(cmd), cmd);
+        cmds[0].cmdID = cmdID;
+        ret1 = IsQSForward(&CGID_Explorer, _countof(cmds), cmds);
+        ret2 = IsQSForwardMockup(&CGID_Explorer, _countof(cmds), cmds);
         ok(ret1 == ret2, "cmdID: %lu", cmdID);
     }
 }
