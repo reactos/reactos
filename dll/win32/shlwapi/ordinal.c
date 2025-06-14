@@ -2277,7 +2277,13 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
     else
     {
         if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
+        {
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+            return OLECMDERR_E_UNKNOWNGROUP;
+#else
             return OLECMDERR_E_NOTSUPPORTED;
+#endif
+        }
 
         for (iCmd = 0; iCmd < cCmds; ++iCmd)
         {

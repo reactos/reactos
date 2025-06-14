@@ -10,6 +10,7 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
+#include <versionhelpers.h>
 
 static DWORD
 IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
@@ -53,7 +54,12 @@ IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD 
     else
     {
         if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
-            return OLECMDERR_E_NOTSUPPORTED;
+        {
+            if (IsWindowsVistaOrGreater())
+                return OLECMDERR_E_UNKNOWNGROUP;
+            else
+                return OLECMDERR_E_NOTSUPPORTED;
+        }
 
         for (iCmd = 0; iCmd < cCmds; ++iCmd)
         {
@@ -77,23 +83,45 @@ START_TEST(IsQSForward)
 {
     OLECMD cmds[1];
     LONG cmdID;
-    DWORD ret1, ret2;
+    LONG ret1, ret2;
+    ULONG cCmds;
+    const GUID *pGUID = NULL;
 
     cmds[0].cmdf = 0;
 
+    cCmds = 0;
     for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
-        ret1 = IsQSForward(NULL, _countof(cmds), cmds);
-        ret2 = IsQSForwardMockup(NULL, _countof(cmds), cmds);
-        ok(ret1 == ret2, "cmdID: %lu", cmdID);
+        ret1 = IsQSForward(pGUID, cCmds, cmds);
+        ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+        ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
     }
 
+    cCmds = _countof(cmds);
     for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
     {
         cmds[0].cmdID = cmdID;
-        ret1 = IsQSForward(&CGID_Explorer, _countof(cmds), cmds);
-        ret2 = IsQSForwardMockup(&CGID_Explorer, _countof(cmds), cmds);
-        ok(ret1 == ret2, "cmdID: %lu", cmdID);
+        ret1 = IsQSForward(pGUID, cCmds, cmds);
+        ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+        ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+    }
+
+    pGUID = &CGID_Explorer;
+    for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
+    {
+        cmds[0].cmdID = cmdID;
+        ret1 = IsQSForward(pGUID, cCmds, cmds);
+        ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+        ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
+    }
+
+    pGUID = &IID_IUnknown;
+    for (cmdID = -999; cmdID <= OLECMDID_MEDIA_PLAYBACK; ++cmdID)
+    {
+        cmds[0].cmdID = cmdID;
+        ret1 = IsQSForward(pGUID, cCmds, cmds);
+        ret2 = IsQSForwardMockup(pGUID, cCmds, cmds);
+        ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
     }
 }
