@@ -2258,7 +2258,7 @@ MayExecForward(
     TRACE("(%p, %d, %s, %d, %d, %p, %p) - stub!\n", lpUnknown, iUnk,
           wine_dbgstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
 
-    hr = IsQSForward(pguidCmdGroup, 1u, (OLECMD *)&nCmdID);
+    hr = IsQSForward(pguidCmdGroup, 1, (OLECMD *)&nCmdID); /* Dirty cast but effective */
     if (FAILED(hr) || !HRESULT_CODE(hr) || iUnk <= 0)
         return OLECMDERR_E_NOTSUPPORTED;
 
