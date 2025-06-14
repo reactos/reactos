@@ -220,6 +220,7 @@ static BOOL PB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
 static BOOL CB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
 static BOOL GB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
 static BOOL SB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
+static BOOL CL_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
 
 static const pfGetIdealSize btnGetIdealSizeFunc[MAX_BTN_TYPE] = {
     PB_GetIdealSize, /* BS_PUSHBUTTON */
@@ -236,9 +237,8 @@ static const pfGetIdealSize btnGetIdealSizeFunc[MAX_BTN_TYPE] = {
     GB_GetIdealSize, /* BS_OWNERDRAW */
     SB_GetIdealSize, /* BS_SPLITBUTTON */
     SB_GetIdealSize, /* BS_DEFSPLITBUTTON */
-    /* GetIdealSize() for following types are unimplemented, use BS_PUSHBUTTON's for now */
-    PB_GetIdealSize, /* BS_COMMANDLINK */
-    PB_GetIdealSize  /* BS_DEFCOMMANDLINK */
+    CL_GetIdealSize, /* BS_COMMANDLINK */
+    CL_GetIdealSize  /* BS_DEFCOMMANDLINK */
 };
 
 /* Fixed margin for command links, regardless of DPI (based on tests done on Windows) */
@@ -1784,6 +1784,137 @@ static BOOL SB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
         size->cx = label_size.cx + ((size->cx == 0) ? extra_width : 0);
         size->cy = label_size.cy;
     }
+    return TRUE;
+}
+
+static BOOL CL_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
+{
+    HTHEME theme = GetWindowTheme(infoPtr->hwnd);
+    HDC hdc = GetDC(infoPtr->hwnd);
+    LONG w, text_w = 0, text_h = 0;
+    UINT flags = DT_TOP | DT_LEFT;
+    HFONT font, old_font = NULL;
+    RECT text_bound = { 0 };
+    SIZE img_size;
+    RECT margin;
+    WCHAR *text;
+
+    /* Get the image size */
+    if (infoPtr->u.image || infoPtr->imagelist.himl)
+        img_size = BUTTON_GetImageSize(infoPtr);
+    else
+    {
+        if (theme)
+            GetThemePartSize(theme, NULL, BP_COMMANDLINKGLYPH, CMDLS_NORMAL, NULL, TS_DRAW, &img_size);
+        else
+            img_size.cx = img_size.cy = command_link_defglyph_size;
+    }
+
+    /* Get the content margins */
+    if (theme)
+    {
+        RECT r = { 0, 0, 0xffff, 0xffff };
+        GetThemeBackgroundContentRect(theme, hdc, BP_COMMANDLINK, CMDLS_NORMAL, &r, &margin);
+        margin.left  -= r.left;
+        margin.top   -= r.top;
+        margin.right  = r.right  - margin.right;
+        margin.bottom = r.bottom - margin.bottom;
+    }
+    else
+    {
+        margin.left = margin.right = command_link_margin;
+        margin.top = margin.bottom = command_link_margin;
+    }
+
+    /* Account for the border margins and the margin between image and text */
+    w = margin.left + margin.right + (img_size.cx ? (img_size.cx + command_link_margin) : 0);
+
+    /* If a rectangle with a specific width was requested, bound the text to it */
+    if (size->cx > w)
+    {
+        text_bound.right = size->cx - w;
+        flags |= DT_WORDBREAK;
+    }
+
+    if (theme)
+    {
+        if (infoPtr->font) old_font = SelectObject(hdc, infoPtr->font);
+
+        /* Find the text's rect */
+        if ((text = get_button_text(infoPtr)))
+        {
+            RECT r;
+            GetThemeTextExtent(theme, hdc, BP_COMMANDLINK, CMDLS_NORMAL,
+                               text, -1, flags, &text_bound, &r);
+            heap_free(text);
+            text_w = r.right - r.left;
+            text_h = r.bottom - r.top;
+        }
+
+        /* Find the note's rect */
+        if (infoPtr->note)
+        {
+            DTTOPTS opts;
+
+            opts.dwSize = sizeof(opts);
+            opts.dwFlags = DTT_FONTPROP | DTT_CALCRECT;
+            opts.iFontPropId = TMT_BODYFONT;
+            DrawThemeTextEx(theme, hdc, BP_COMMANDLINK, CMDLS_NORMAL,
+                            infoPtr->note, infoPtr->note_length,
+                            flags | DT_NOPREFIX | DT_CALCRECT, &text_bound, &opts);
+            text_w = max(text_w, text_bound.right - text_bound.left);
+            text_h += text_bound.bottom - text_bound.top;
+        }
+    }
+    else
+    {
+        NONCLIENTMETRICSW ncm;
+
+        ncm.cbSize = sizeof(ncm);
+        if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+        {
+            LONG note_weight = ncm.lfMessageFont.lfWeight;
+
+            /* Find the text's rect */
+            ncm.lfMessageFont.lfWeight = FW_BOLD;
+            if ((font = CreateFontIndirectW(&ncm.lfMessageFont)))
+            {
+                if ((text = get_button_text(infoPtr)))
+                {
+                    RECT r = text_bound;
+                    old_font = SelectObject(hdc, font);
+                    DrawTextW(hdc, text, -1, &r, flags | DT_CALCRECT);
+                    heap_free(text);
+
+                    text_w = r.right - r.left;
+                    text_h = r.bottom - r.top;
+                }
+                DeleteObject(font);
+            }
+
+            /* Find the note's rect */
+            ncm.lfMessageFont.lfWeight = note_weight;
+            if (infoPtr->note && (font = CreateFontIndirectW(&ncm.lfMessageFont)))
+            {
+                HFONT tmp = SelectObject(hdc, font);
+                if (!old_font) old_font = tmp;
+
+                DrawTextW(hdc, infoPtr->note, infoPtr->note_length, &text_bound,
+                          flags | DT_NOPREFIX | DT_CALCRECT);
+                DeleteObject(font);
+
+                text_w = max(text_w, text_bound.right - text_bound.left);
+                text_h += text_bound.bottom - text_bound.top + 2;
+            }
+        }
+    }
+    w += text_w;
+
+    size->cx = min(size->cx, w);
+    size->cy = max(text_h, img_size.cy) + margin.top + margin.bottom;
+
+    if (old_font) SelectObject(hdc, old_font);
+    ReleaseDC(infoPtr->hwnd, hdc);
     return TRUE;
 }
 
