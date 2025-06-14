@@ -4438,9 +4438,10 @@ typedef struct tagLOGPALETTEMAX
 /*************************************************************************
  *      SHCreateShellPalette	[SHLWAPI.@]
  */
-HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
-{
 #ifdef __REACTOS__
+HPALETTE WINAPI
+SHCreateShellPalette(_In_opt_ HDC hdc)
+{
     HDC hdcMem;
     HPALETTE hHalftonePalette;
     LOGPALETTEMAX data;
@@ -4458,7 +4459,7 @@ HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
                                            _countof(data.palPalEntry), data.palPalEntry);
     DeleteObject(hHalftonePalette);
 
-    hdcMem = hdc ? hdc : CreateCompatibleDC(NULL);
+    hdcMem = (hdc ? hdc : CreateCompatibleDC(NULL));
 
     if (hdcMem)
     {
@@ -4472,11 +4473,14 @@ HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
         DeleteDC(hdcMem);
 
     return CreatePalette((PLOGPALETTE)&data);
+}
 #else
+HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
+{
 	FIXME("stub\n");
 	return CreateHalftonePalette(hdc);
-#endif
 }
+#endif
 
 /*************************************************************************
  *	SHGetInverseCMAP (SHLWAPI.@)
