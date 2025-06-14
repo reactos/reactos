@@ -1283,6 +1283,17 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         break;
 #endif
 
+    case BCM_SETDROPDOWNSTATE:
+        new_state = wParam ? BST_DROPDOWNPUSHED : 0;
+
+        if ((infoPtr->state ^ new_state) & BST_DROPDOWNPUSHED)
+        {
+            infoPtr->state &= ~BST_DROPDOWNPUSHED;
+            infoPtr->state |= new_state;
+            InvalidateRect(hWnd, NULL, FALSE);
+        }
+        break;
+
     case BCM_SETTEXTMARGIN:
     {
         RECT *text_margin = (RECT *)lParam;
