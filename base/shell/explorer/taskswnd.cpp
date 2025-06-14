@@ -2181,7 +2181,6 @@ public:
                 HWND hwndRude = FindRudeApp(NULL);
                 HandleFullScreenApp(hwndRude);
 
-                // Check counter and retry when no rude app detected
                 KillTimer(wParam);
                 ++m_nRudeAppValidationCounter;
                 if (m_nRudeAppValidationCounter < VALIDATE_RUDE_MAX_COUNT && !hwndRude)
