@@ -2216,7 +2216,7 @@ MayQSForward(
 {
     HRESULT hr;
 
-    TRACE("(%p, %d, %s, %d, %p, %p) - stub\n",
+    TRACE("(%p, %d, %s, %d, %p, %p)\n",
           lpUnknown, iUnk, wine_dbgstr_guid(riidCmdGrp), cCmds, prgCmds, pCmdText);
 
     hr = IsQSForward(riidCmdGrp, cCmds, prgCmds);
@@ -2255,7 +2255,7 @@ MayExecForward(
 {
     HRESULT hr;
 
-    TRACE("(%p, %d, %s, %d, %d, %p, %p) - stub!\n", lpUnknown, iUnk,
+    TRACE("(%p, %d, %s, %d, %d, %p, %p)\n", lpUnknown, iUnk,
           wine_dbgstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
 
     hr = IsQSForward(pguidCmdGroup, 1, (OLECMD *)&nCmdID); /* Dirty cast but effective */
