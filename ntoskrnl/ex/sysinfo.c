@@ -2508,7 +2508,7 @@ QSI_DEF(SystemExtendedHandleInformation)
     DPRINT("NtQuerySystemInformation - SystemExtendedHandleInformation\n");
 
     /* Set initial required buffer size */
-    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle);
+    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handles);
 
     /* Check user's buffer size */
     if (Size < *ReqSize)
@@ -2530,7 +2530,7 @@ QSI_DEF(SystemExtendedHandleInformation)
     }
 
     /* Reset of count of handles */
-    HandleInformation->Count = 0;
+    HandleInformation->NumberOfHandles = 0;
 
     /* Enter a critical region */
     KeEnterCriticalRegion();
@@ -2555,7 +2555,7 @@ QSI_DEF(SystemExtendedHandleInformation)
                 (HandleTableEntry->NextFreeTableEntry != -2))
             {
                 /* Increase of count of handles */
-                ++HandleInformation->Count;
+                ++HandleInformation->NumberOfHandles;
 
                 /* Lock the entry */
                 if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
@@ -2573,30 +2573,30 @@ QSI_DEF(SystemExtendedHandleInformation)
                         POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
                         /* Filling handle information */
-                        HandleInformation->Handle[Index].UniqueProcessId =
+                        HandleInformation->Handles[Index].UniqueProcessId =
                             (USHORT)(ULONG_PTR) HandleTable->UniqueProcessId;
 
-                        HandleInformation->Handle[Index].CreatorBackTraceIndex = 0;
+                        HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
 
 #if 0 /* FIXME!!! Type field corrupted */
                         HandleInformation->Handles[Index].ObjectTypeIndex =
                             (UCHAR) ObjectHeader->Type->Index;
 #else
-                        HandleInformation->Handle[Index].ObjectTypeIndex = 0;
+                        HandleInformation->Handles[Index].ObjectTypeIndex = 0;
 #endif
 
-                        HandleInformation->Handle[Index].HandleAttributes =
+                        HandleInformation->Handles[Index].HandleAttributes =
                             HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
 
-                        HandleInformation->Handle[Index].HandleValue =
+                        HandleInformation->Handles[Index].HandleValue =
                             (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
 
-                        HandleInformation->Handle[Index].Object = &ObjectHeader->Body;
+                        HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
 
-                        HandleInformation->Handle[Index].GrantedAccess =
+                        HandleInformation->Handles[Index].GrantedAccess =
                             HandleTableEntry->GrantedAccess;
 
-                        HandleInformation->Handle[Index].Reserved = 0;
+                        HandleInformation->Handles[Index].Reserved = 0;
 
                         ++Index;
                     }
