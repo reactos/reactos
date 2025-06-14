@@ -1093,12 +1093,19 @@ DoGenericAction(
             }
             break;
         case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
-            if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
+            if ((Session->LogonState == STATE_LOGGED_ON) ||
+                (Session->LogonState == STATE_LOGGED_ON_SAS))
             {
-                SwitchDesktop(Session->WinlogonDesktop);
-                Session->LogonState = STATE_LOCKED;
-                Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
-                CallNotificationDlls(Session, LockHandler);
+                if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
+                {
+                    Session->LogonState = STATE_LOCKED;
+                    SwitchDesktop(Session->WinlogonDesktop);
+                    /* We may be on the Logged-On SAS dialog, in which case
+                     * we need to close it if the lock action came via Win-L */
+                    CloseAllDialogWindows();
+                    CallNotificationDlls(Session, LockHandler);
+                    Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
+                }
             }
             break;
         case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
@@ -1145,9 +1152,13 @@ DoGenericAction(
             }
             break;
         case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
-            SwitchDesktop(Session->ApplicationDesktop);
-            Session->LogonState = STATE_LOGGED_ON;
-            CallNotificationDlls(Session, UnlockHandler);
+            if ((Session->LogonState == STATE_LOCKED) ||
+                (Session->LogonState == STATE_LOCKED_SAS))
+            {
+                CallNotificationDlls(Session, UnlockHandler);
+                SwitchDesktop(Session->ApplicationDesktop);
+                Session->LogonState = STATE_LOGGED_ON;
+            }
             break;
         default:
             WARN("Unknown SAS action 0x%lx\n", wlxAction);
