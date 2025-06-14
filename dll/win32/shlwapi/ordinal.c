@@ -2232,11 +2232,75 @@ HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGro
  *      @	[SHLWAPI.202]
  *
  */
+#ifdef __REACTOS__
+DWORD WINAPI
+IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
+{
+    DWORD ret = 0;
+    OLECMDID cmdID;
+    ULONG i;
+
+    TRACE("(%s, %lu, %p)\n", wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds);
+
+    if ((LONG)cCmds <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    if (!pguidCmdGroup)
+    {
+        for (i = 0; i < cCmds; ++i)
+        {
+            cmdID = prgCmds[i].cmdID;
+            if (cmdID <= OLECMDID_PROPERTIES)
+            {
+                ret |= 4; // Supported
+                break;
+            }
+
+            if (cmdID <= OLECMDID_PASTE || cmdID == OLECMDID_SELECTALL)
+            {
+                ret |= 1; // Supported
+                continue;
+            }
+
+            if (cmdID <= OLECMDID_UPDATECOMMANDS ||
+                (OLECMDID_HIDETOOLBARS <= cmdID && cmdID != OLECMDID_ENABLE_INTERACTION))
+            {
+                ret |= 4; // Not supported
+                break;
+            }
+
+            ret |= 2;
+        }
+    }
+    else
+    {
+        if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
+            return OLECMDERR_E_NOTSUPPORTED;
+
+        for (i = 0; i < cCmds; ++i)
+        {
+            cmdID = prgCmds[i].cmdID;
+            if (cmdID == OLECMDID_SELECTALL ||
+                (OLECMDID_SHOWFIND <= cmdID && cmdID <= OLECMDID_SHOWPRINT))
+            {
+                ret |= 1; // Supported
+                break;
+            }
+        }
+    }
+
+    if (!ret || (ret & 4))
+        return OLECMDERR_E_NOTSUPPORTED; // Not supported
+
+    return ret;
+}
+#else
 HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds)
 {
   FIXME("(%p,%d,%p) - stub!\n", pguidCmdGroup, cCmds, prgCmds);
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  * @	[SHLWAPI.204]
