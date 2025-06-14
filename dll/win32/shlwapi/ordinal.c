@@ -4426,14 +4426,62 @@ VOID WINAPI ColorRGBToHLS(COLORREF cRGB, LPWORD pwHue,
     *pwSaturation = wSaturation;
 }
 
+#ifdef __REACTOS__
+typedef struct tagLOGPALETTEMAX /* Compatible with LOGPALETTE but extended */
+{
+    WORD palVersion;
+    WORD palNumEntries;
+    PALETTEENTRY palPalEntry[256];
+} LOGPALETTEMAX, *PLOGPALETTEMAX;
+#endif
+
 /*************************************************************************
  *      SHCreateShellPalette	[SHLWAPI.@]
  */
+#ifdef __REACTOS__
+HPALETTE WINAPI
+SHCreateShellPalette(_In_opt_ HDC hdc)
+{
+    HDC hdcMem;
+    HPALETTE hHalftonePalette;
+    LOGPALETTEMAX data;
+    const UINT nExtractCount = 10;
+    const UINT nSecondBlockStart = _countof(data.palPalEntry) - nExtractCount;
+
+    TRACE("(%p)\n", hdc);
+
+    /* Get the colors of the halftone palette */
+    hHalftonePalette = CreateHalftonePalette(hdc);
+    if (!hHalftonePalette)
+        return NULL;
+    data.palVersion = 0x300;
+    data.palNumEntries = GetPaletteEntries(hHalftonePalette, 0,
+                                           _countof(data.palPalEntry), data.palPalEntry);
+    DeleteObject(hHalftonePalette);
+
+    hdcMem = (hdc ? hdc : CreateCompatibleDC(NULL));
+
+    if (hdcMem)
+    {
+        /* The first 10 and last 10 entries in the system colors are considered important */
+        GetSystemPaletteEntries(hdcMem, 0, nExtractCount, data.palPalEntry);
+        GetSystemPaletteEntries(hdcMem, nSecondBlockStart, nExtractCount,
+                                &data.palPalEntry[nSecondBlockStart]);
+    }
+
+    if (hdcMem && hdc != hdcMem)
+        DeleteDC(hdcMem);
+
+    /* Create a palette from the modified color entries */
+    return CreatePalette((PLOGPALETTE)&data);
+}
+#else
 HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
 {
 	FIXME("stub\n");
 	return CreateHalftonePalette(hdc);
 }
+#endif
 
 /*************************************************************************
  *	SHGetInverseCMAP (SHLWAPI.@)
