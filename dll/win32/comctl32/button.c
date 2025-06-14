@@ -1685,20 +1685,16 @@ static BOOL GB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
 static BOOL CB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
 {
     LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
-    WCHAR *text = get_button_text(infoPtr);
     HDC hdc;
     HFONT hfont;
     SIZE labelSize;
     INT textOffset;
-    INT textLength = 0;
     double scaleX;
     double scaleY;
     LONG checkboxWidth, checkboxHeight;
     LONG maxWidth = 0;
 
-    if (text) textLength = lstrlenW(text);
-    heap_free(text);
-    if (textLength == 0)
+    if (SendMessageW(infoPtr->hwnd, WM_GETTEXTLENGTH, 0, 0) == 0)
     {
         BUTTON_GetClientRectSize(infoPtr, size);
         return TRUE;
@@ -1747,26 +1743,18 @@ static BOOL PB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
 
     return TRUE;
 #else
-    WCHAR *text = get_button_text(infoPtr);
     SIZE labelSize;
-    INT textLength = 0;
 
-    if (text) textLength = lstrlenW(text);
-
-    if (textLength == 0)
-    {
+    if (SendMessageW(infoPtr->hwnd, WM_GETTEXTLENGTH, 0, 0) == 0)
         BUTTON_GetClientRectSize(infoPtr, size);
-        heap_free(text);
-        return TRUE;
+    else
+    {
+        /* Ideal size include text size even if image only flags(BS_ICON, BS_BITMAP) are specified */
+        BUTTON_GetLabelIdealSize(infoPtr, size->cx, &labelSize);
+
+        size->cx = labelSize.cx;
+        size->cy = labelSize.cy;
     }
-    heap_free(text);
-
-    /* Ideal size include text size even if image only flags(BS_ICON, BS_BITMAP) are specified */
-    BUTTON_GetLabelIdealSize(infoPtr, size->cx, &labelSize);
-
-    size->cx = labelSize.cx;
-    size->cy = labelSize.cy;
-
     return TRUE;
 #endif
 }
