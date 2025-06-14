@@ -1930,6 +1930,39 @@ static UINT BUTTON_CalcLayoutRects(const BUTTON_INFO *infoPtr, HDC hdc, RECT *la
 
 
 /**********************************************************************
+ *       BUTTON_DrawImage
+ *
+ *   Draw the button's image into the specified rectangle.
+ */
+static void BUTTON_DrawImage(const BUTTON_INFO *infoPtr, HDC hdc, HBRUSH hbr, UINT flags, const RECT *rect)
+{
+    if (infoPtr->imagelist.himl)
+    {
+        int i = (ImageList_GetImageCount(infoPtr->imagelist.himl) == 1) ? 0 : get_draw_state(infoPtr) - 1;
+
+        ImageList_Draw(infoPtr->imagelist.himl, i, hdc, rect->left, rect->top, ILD_NORMAL);
+    }
+    else
+    {
+        switch (infoPtr->image_type)
+        {
+        case IMAGE_ICON:
+            flags |= DST_ICON;
+            break;
+        case IMAGE_BITMAP:
+            flags |= DST_BITMAP;
+            break;
+        default:
+            return;
+        }
+
+        DrawStateW(hdc, hbr, NULL, (LPARAM)infoPtr->u.image, 0, rect->left, rect->top,
+                   rect->right - rect->left, rect->bottom - rect->top, flags);
+    }
+}
+
+
+/**********************************************************************
  *       BUTTON_DrawTextCallback
  *
  *   Callback function used by DrawStateW function.
@@ -1956,75 +1989,33 @@ static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int 
 static void BUTTON_DrawLabel(const BUTTON_INFO *infoPtr, HDC hdc, UINT dtFlags, const RECT *imageRect,
                              const RECT *textRect)
 {
-   DRAWSTATEPROC lpOutputProc = NULL;
-   LPARAM lp;
-   WPARAM wp = 0;
    HBRUSH hbr = 0;
    UINT flags = IsWindowEnabled(infoPtr->hwnd) ? DSS_NORMAL : DSS_DISABLED;
-   UINT imageFlags;
-   LONG state = infoPtr->state;
-   LONG draw_state;
    LONG style = GetWindowLongW( infoPtr->hwnd, GWL_STYLE );
-   WCHAR *text = NULL;
+   WCHAR *text;
 
    /* FIXME: To draw disabled label in Win31 look-and-feel, we probably
     * must use DSS_MONO flag and COLOR_GRAYTEXT brush (or maybe DSS_UNION).
     * I don't have Win31 on hand to verify that, so I leave it as is.
     */
 
-   if ((style & BS_PUSHLIKE) && (state & BST_INDETERMINATE))
+   if ((style & BS_PUSHLIKE) && (infoPtr->state & BST_INDETERMINATE))
    {
       hbr = GetSysColorBrush(COLOR_GRAYTEXT);
       flags |= DSS_MONO;
    }
 
-   if (show_image(infoPtr))
-   {
-       if (infoPtr->imagelist.himl)
-       {
-           if (ImageList_GetImageCount(infoPtr->imagelist.himl) == 1)
-               ImageList_Draw(infoPtr->imagelist.himl, 0, hdc, imageRect->left, imageRect->top, ILD_NORMAL);
-           else
-           {
-               draw_state = get_draw_state(infoPtr);
-               ImageList_Draw(infoPtr->imagelist.himl, draw_state - 1, hdc, imageRect->left, imageRect->top,
-                              ILD_NORMAL);
-           }
-       }
-       else
-       {
-           switch (infoPtr->image_type)
-           {
-           case IMAGE_ICON:
-               imageFlags = flags | DST_ICON;
-               lp = (LPARAM)infoPtr->u.icon;
-               break;
-           case IMAGE_BITMAP:
-               imageFlags = flags | DST_BITMAP;
-               lp = (LPARAM)infoPtr->u.bitmap;
-               break;
-           default:
-               return;
-           }
-
-           DrawStateW(hdc, hbr, lpOutputProc, lp, wp, imageRect->left, imageRect->top,
-                      imageRect->right - imageRect->left, imageRect->bottom - imageRect->top, imageFlags);
-       }
-   }
-
+   if (show_image(infoPtr)) BUTTON_DrawImage(infoPtr, hdc, hbr, flags, imageRect);
    if (show_image_only(infoPtr)) return;
 
    /* DST_COMPLEX -- is 0 */
-   lpOutputProc = BUTTON_DrawTextCallback;
    if (!(text = get_button_text(infoPtr))) return;
-   lp = (LPARAM)text;
-   wp = dtFlags;
 #ifdef __REACTOS__
    if (dtFlags & DT_HIDEPREFIX)
        flags |= DSS_HIDEPREFIX;
 #endif
-   DrawStateW(hdc, hbr, lpOutputProc, lp, wp, textRect->left, textRect->top, textRect->right - textRect->left,
-              textRect->bottom - textRect->top, flags);
+   DrawStateW(hdc, hbr, BUTTON_DrawTextCallback, (LPARAM)text, dtFlags, textRect->left, textRect->top,
+              textRect->right - textRect->left, textRect->bottom - textRect->top, flags);
    heap_free(text);
 }
 
