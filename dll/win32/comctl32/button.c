@@ -28,7 +28,6 @@
  *  - WM_SETFOCUS: For (manual or automatic) radio buttons, send the parent window BN_CLICKED
  *  - WM_NCCREATE: Turns any BS_OWNERDRAW button into a BS_PUSHBUTTON button.
  *  - WM_SYSKEYUP
- *  - BCM_GETIDEALSIZE
  *
  *  Notifications
  *  - BCN_HOTITEMCHANGE
@@ -42,7 +41,6 @@
  *
  *  Structures/Macros/Definitions
  *  - NMBCHOTITEM
- *  - Button_GetIdealSize
  */
 
 #include <stdarg.h>
@@ -203,6 +201,32 @@ static const pfThemedPaint btnThemedPaintFunc[MAX_BTN_TYPE] =
     NULL,           /* BS_DEFSPLITBUTTON */
     NULL,           /* BS_COMMANDLINK */
     NULL,           /* BS_DEFCOMMANDLINK */
+};
+
+typedef BOOL (*pfGetIdealSize)(BUTTON_INFO *infoPtr, SIZE *size);
+
+static BOOL PB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
+static BOOL CB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
+static BOOL GB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size);
+
+static const pfGetIdealSize btnGetIdealSizeFunc[MAX_BTN_TYPE] = {
+    PB_GetIdealSize, /* BS_PUSHBUTTON */
+    PB_GetIdealSize, /* BS_DEFPUSHBUTTON */
+    CB_GetIdealSize, /* BS_CHECKBOX */
+    CB_GetIdealSize, /* BS_AUTOCHECKBOX */
+    CB_GetIdealSize, /* BS_RADIOBUTTON */
+    GB_GetIdealSize, /* BS_3STATE */
+    GB_GetIdealSize, /* BS_AUTO3STATE */
+    GB_GetIdealSize, /* BS_GROUPBOX */
+    PB_GetIdealSize, /* BS_USERBUTTON */
+    CB_GetIdealSize, /* BS_AUTORADIOBUTTON */
+    GB_GetIdealSize, /* BS_PUSHBOX */
+    GB_GetIdealSize, /* BS_OWNERDRAW */
+    /* GetIdealSize() for following types are unimplemented, use BS_PUSHBUTTON's for now */
+    PB_GetIdealSize, /* BS_SPLITBUTTON */
+    PB_GetIdealSize, /* BS_DEFSPLITBUTTON */
+    PB_GetIdealSize, /* BS_COMMANDLINK */
+    PB_GetIdealSize  /* BS_DEFCOMMANDLINK */
 };
 
 static inline UINT get_button_type( LONG window_style )
@@ -954,36 +978,6 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 #endif
     }
 
-#ifdef __REACTOS__
-    case BCM_GETIDEALSIZE:
-    {
-        HTHEME theme = GetWindowTheme(hWnd);
-        BOOL ret = FALSE;
-        SIZE* pSize = (SIZE*)lParam;
-
-        if (!pSize)
-        {
-            return FALSE;
-        }
-
-        if (btn_type == BS_PUSHBUTTON || 
-            btn_type == BS_DEFPUSHBUTTON ||
-            btn_type == BS_USERBUTTON)
-        {
-            ret = BUTTON_GetIdealSize(infoPtr, theme, pSize);
-        }
-
-        if (!ret)
-        {
-            GetClientRect(hWnd, &rect);
-            pSize->cx = rect.right;
-            pSize->cy = rect.bottom;
-        }
-
-        return TRUE;
-    }
-#endif
-
     case WM_SETTEXT:
     {
         /* Clear an old text here as Windows does */
@@ -1286,6 +1280,15 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         return TRUE;
     }
 
+    case BCM_GETIDEALSIZE:
+    {
+        SIZE *size = (SIZE *)lParam;
+
+        if (!size) return FALSE;
+
+        return btnGetIdealSizeFunc[btn_type](infoPtr, size);
+    }
+
     case WM_NCHITTEST:
         if(btn_type == BS_GROUPBOX) return HTTRANSPARENT;
         /* fall through */
@@ -1476,6 +1479,178 @@ static const RECT *BUTTON_GetTextMargin(const BUTTON_INFO *infoPtr)
         return &infoPtr->text_margin;
     else
         return &oneMargin;
+}
+
+static void BUTTON_GetClientRectSize(BUTTON_INFO *infoPtr, SIZE *size)
+{
+    RECT rect;
+    GetClientRect(infoPtr->hwnd, &rect);
+    size->cx = rect.right - rect.left;
+    size->cy = rect.bottom - rect.top;
+}
+
+static void BUTTON_GetTextIdealSize(BUTTON_INFO *infoPtr, LONG maxWidth, SIZE *size)
+{
+    WCHAR *text = get_button_text(infoPtr);
+    HDC hdc;
+    RECT rect;
+    const RECT *margin = BUTTON_GetTextMargin(infoPtr);
+
+    if (maxWidth != 0)
+    {
+        maxWidth -= margin->right + margin->right;
+        if (maxWidth <= 0) maxWidth = 1;
+    }
+
+    hdc = GetDC(infoPtr->hwnd);
+    rect = BUTTON_GetTextRect(infoPtr, hdc, text, maxWidth);
+    ReleaseDC(infoPtr->hwnd, hdc);
+    heap_free(text);
+
+    size->cx = rect.right - rect.left + margin->left + margin->right;
+    size->cy = rect.bottom - rect.top + margin->top + margin->bottom;
+}
+
+static void BUTTON_GetLabelIdealSize(BUTTON_INFO *infoPtr, LONG maxWidth, SIZE *size)
+{
+    LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
+    SIZE imageSize;
+    SIZE textSize;
+    BOOL horizontal;
+
+    imageSize = BUTTON_GetImageSize(infoPtr);
+    if (infoPtr->imagelist.himl)
+    {
+        imageSize.cx += infoPtr->imagelist.margin.left + infoPtr->imagelist.margin.right;
+        imageSize.cy += infoPtr->imagelist.margin.top + infoPtr->imagelist.margin.bottom;
+        if (infoPtr->imagelist.uAlign == BUTTON_IMAGELIST_ALIGN_TOP
+            || infoPtr->imagelist.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
+            horizontal = FALSE;
+        else
+            horizontal = TRUE;
+    }
+    else
+    {
+        /* horizontal alignment flags has priority over vertical ones if both are specified */
+        if (!(style & (BS_CENTER | BS_VCENTER)) || ((style & BS_CENTER) && (style & BS_CENTER) != BS_CENTER)
+            || !(style & BS_VCENTER) || (style & BS_VCENTER) == BS_VCENTER)
+            horizontal = TRUE;
+        else
+            horizontal = FALSE;
+    }
+
+    if (horizontal)
+    {
+        if (maxWidth != 0)
+        {
+            maxWidth -= imageSize.cx;
+            if (maxWidth <= 0) maxWidth = 1;
+        }
+        BUTTON_GetTextIdealSize(infoPtr, maxWidth, &textSize);
+        size->cx = textSize.cx + imageSize.cx;
+        size->cy = max(textSize.cy, imageSize.cy);
+    }
+    else
+    {
+        BUTTON_GetTextIdealSize(infoPtr, maxWidth, &textSize);
+        size->cx = max(textSize.cx, imageSize.cx);
+        size->cy = textSize.cy + imageSize.cy;
+    }
+}
+
+static BOOL GB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
+{
+    BUTTON_GetClientRectSize(infoPtr, size);
+    return TRUE;
+}
+
+static BOOL CB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
+{
+    LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
+    WCHAR *text = get_button_text(infoPtr);
+    HDC hdc;
+    HFONT hfont;
+    SIZE labelSize;
+    INT textOffset;
+    INT textLength = 0;
+    double scaleX;
+    double scaleY;
+    LONG checkboxWidth, checkboxHeight;
+    LONG maxWidth = 0;
+
+    if (text) textLength = lstrlenW(text);
+    heap_free(text);
+    if (textLength == 0)
+    {
+        BUTTON_GetClientRectSize(infoPtr, size);
+        return TRUE;
+    }
+
+    hdc = GetDC(infoPtr->hwnd);
+    scaleX = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0;
+    scaleY = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0;
+    if ((hfont = infoPtr->font)) SelectObject(hdc, hfont);
+    GetCharWidthW(hdc, '0', '0', &textOffset);
+    textOffset /= 2;
+    ReleaseDC(infoPtr->hwnd, hdc);
+
+    checkboxWidth = 12 * scaleX + 1;
+    checkboxHeight = 12 * scaleY + 1;
+    if (size->cx)
+    {
+        maxWidth = size->cx - checkboxWidth - textOffset;
+        if (maxWidth <= 0) maxWidth = 1;
+    }
+
+    /* Checkbox doesn't support both image(but not image list) and text */
+    if (!(style & (BS_ICON | BS_BITMAP)) && infoPtr->u.image)
+        BUTTON_GetTextIdealSize(infoPtr, maxWidth, &labelSize);
+    else
+        BUTTON_GetLabelIdealSize(infoPtr, maxWidth, &labelSize);
+
+    size->cx = labelSize.cx + checkboxWidth + textOffset;
+    size->cy = max(labelSize.cy, checkboxHeight);
+
+    return TRUE;
+}
+
+static BOOL PB_GetIdealSize(BUTTON_INFO *infoPtr, SIZE *size)
+{
+#ifdef __REACTOS__
+    HTHEME theme = GetWindowTheme(infoPtr->hwnd);
+    BOOL ret = BUTTON_GetIdealSize(infoPtr, theme, size);
+    if (!ret)
+    {
+        RECT rect;
+        GetClientRect(infoPtr->hwnd, &rect);
+        size->cx = rect.right;
+        size->cy = rect.bottom;
+    }
+
+    return TRUE;
+#else
+    WCHAR *text = get_button_text(infoPtr);
+    SIZE labelSize;
+    INT textLength = 0;
+
+    if (text) textLength = lstrlenW(text);
+
+    if (textLength == 0)
+    {
+        BUTTON_GetClientRectSize(infoPtr, size);
+        heap_free(text);
+        return TRUE;
+    }
+    heap_free(text);
+
+    /* Ideal size include text size even if image only flags(BS_ICON, BS_BITMAP) are specified */
+    BUTTON_GetLabelIdealSize(infoPtr, size->cx, &labelSize);
+
+    size->cx = labelSize.cx;
+    size->cy = labelSize.cy;
+
+    return TRUE;
+#endif
 }
 
 /**********************************************************************
