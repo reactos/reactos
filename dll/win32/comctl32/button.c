@@ -29,9 +29,7 @@
  *  - WM_NCCREATE: Turns any BS_OWNERDRAW button into a BS_PUSHBUTTON button.
  *  - WM_SYSKEYUP
  *  - BCM_GETIDEALSIZE
- *  - BCM_GETIMAGELIST
  *  - BCM_GETTEXTMARGIN
- *  - BCM_SETIMAGELIST
  *  - BCM_SETTEXTMARGIN
  *
  *  Notifications
@@ -45,12 +43,9 @@
  *  - NM_CUSTOMDRAW
  *
  *  Structures/Macros/Definitions
- *  - BUTTON_IMAGELIST
  *  - NMBCHOTITEM
  *  - Button_GetIdealSize
- *  - Button_GetImageList
  *  - Button_GetTextMargin
- *  - Button_SetImageList
  *  - Button_SetTextMargin
  */
 
@@ -92,14 +87,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(button);
 
 typedef struct _BUTTON_INFO
 {
-    HWND        hwnd;
-    HWND        parent;
-    LONG        style;
-    LONG        state;
-    HFONT       font;
-    WCHAR      *note;
-    INT         note_length;
-    DWORD       image_type; /* IMAGE_BITMAP or IMAGE_ICON */
+    HWND             hwnd;
+    HWND             parent;
+    LONG             style;
+    LONG             state;
+    HFONT            font;
+    WCHAR           *note;
+    INT              note_length;
+    DWORD            image_type; /* IMAGE_BITMAP or IMAGE_ICON */
+    BUTTON_IMAGELIST imagelist;
     union
     {
         HICON   icon;
@@ -110,7 +106,6 @@ typedef struct _BUTTON_INFO
 #ifdef __REACTOS__
     DWORD ui_state;
     RECT rcTextMargin;
-    BUTTON_IMAGELIST imlData;
 #endif
 } BUTTON_INFO;
 
@@ -459,10 +454,10 @@ BOOL BUTTON_GetIdealSize(BUTTON_INFO *infoPtr, HTHEME theme, SIZE* psize)
     TextSize.cy += infoPtr->rcTextMargin.top + infoPtr->rcTextMargin.bottom;
     TextSize.cx += infoPtr->rcTextMargin.left + infoPtr->rcTextMargin.right;
 
-    if (infoPtr->imlData.himl && ImageList_GetIconSize(infoPtr->imlData.himl, &ImageSize.cx, &ImageSize.cy))
+    if (infoPtr->imagelist.himl && ImageList_GetIconSize(infoPtr->imagelist.himl, &ImageSize.cx, &ImageSize.cy))
     {
-        ImageSize.cx += infoPtr->imlData.margin.left + infoPtr->imlData.margin.right;
-        ImageSize.cy += infoPtr->imlData.margin.top + infoPtr->imlData.margin.bottom;
+        ImageSize.cx += infoPtr->imagelist.margin.left + infoPtr->imagelist.margin.right;
+        ImageSize.cy += infoPtr->imagelist.margin.top + infoPtr->imagelist.margin.bottom;
     }
     else
     {
@@ -946,22 +941,6 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         infoPtr->rcTextMargin = *prc;
         return TRUE;
     }
-    case BCM_SETIMAGELIST:
-    {
-        BUTTON_IMAGELIST * pimldata = (BUTTON_IMAGELIST *)lParam;
-        if (!pimldata || !pimldata->himl)
-            return FALSE;
-        infoPtr->imlData = *pimldata;
-        return TRUE;
-    }
-    case BCM_GETIMAGELIST:
-    {
-        BUTTON_IMAGELIST * pimldata = (BUTTON_IMAGELIST *)lParam;
-        if (!pimldata)
-            return FALSE;
-        *pimldata = infoPtr->imlData;
-        return TRUE;
-    }
     case BCM_GETIDEALSIZE:
     {
         HTHEME theme = GetWindowTheme(hWnd);
@@ -1201,6 +1180,26 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
     case BM_GETIMAGE:
         return (LRESULT)infoPtr->u.image;
 
+    case BCM_SETIMAGELIST:
+    {
+        BUTTON_IMAGELIST *imagelist = (BUTTON_IMAGELIST *)lParam;
+
+        if (!imagelist) return FALSE;
+
+        infoPtr->imagelist = *imagelist;
+        return TRUE;
+    }
+
+    case BCM_GETIMAGELIST:
+    {
+        BUTTON_IMAGELIST *imagelist = (BUTTON_IMAGELIST *)lParam;
+
+        if (!imagelist) return FALSE;
+
+        *imagelist = infoPtr->imagelist;
+        return TRUE;
+    }
+
     case BM_GETCHECK:
         return infoPtr->state & 3;
 
@@ -1283,7 +1282,7 @@ static UINT BUTTON_CalcLabelRect(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rc)
    RECT        r = *rc;
    INT         n;
 #ifdef __REACTOS__
-    BOOL bHasIml = BUTTON_DrawIml(hdc, &infoPtr->imlData, &r, TRUE, 0);
+    BOOL bHasIml = BUTTON_DrawIml(hdc, &infoPtr->imagelist, &r, TRUE, 0);
 #endif
 
    /* Calculate label rectangle according to label type */
@@ -1335,14 +1334,14 @@ static UINT BUTTON_CalcLabelRect(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rc)
 #ifdef __REACTOS__
    if (bHasIml)
    {
-     if (infoPtr->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
-         r.left = infoPtr->imlData.margin.left;
-     else if (infoPtr->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
-         r.right = infoPtr->imlData.margin.right;
-     else if (infoPtr->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
-         r.top = infoPtr->imlData.margin.top;
-     else if (infoPtr->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
-         r.bottom = infoPtr->imlData.margin.bottom;
+     if (infoPtr->imagelist.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
+         r.left = infoPtr->imagelist.margin.left;
+     else if (infoPtr->imagelist.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
+         r.right = infoPtr->imagelist.margin.right;
+     else if (infoPtr->imagelist.uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
+         r.top = infoPtr->imagelist.margin.top;
+     else if (infoPtr->imagelist.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
+         r.bottom = infoPtr->imagelist.margin.bottom;
    }
 #endif
 
@@ -1422,7 +1421,7 @@ static void BUTTON_DrawLabel(const BUTTON_INFO *infoPtr, HDC hdc, UINT dtFlags, 
 
 #ifdef __REACTOS__
     RECT rcText = *rc;
-    BUTTON_DrawIml(hdc, &infoPtr->imlData, &rcText, FALSE, 0);
+    BUTTON_DrawIml(hdc, &infoPtr->imagelist, &rcText, FALSE, 0);
 #endif
 
    if ((style & BS_PUSHLIKE) && (state & BST_INDETERMINATE))
@@ -1931,7 +1930,7 @@ static void PB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, Bu
     if (cdrf == CDRF_SKIPDEFAULT)
         goto cleanup;
 
-    BUTTON_DrawIml(hDC, &infoPtr->imlData, &textRect, FALSE, drawState);
+    BUTTON_DrawIml(hDC, &infoPtr->imagelist, &textRect, FALSE, drawState);
 #else
     GetClientRect(infoPtr->hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &bgRect, &textRect);
