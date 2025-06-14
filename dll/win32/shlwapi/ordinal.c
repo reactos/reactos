@@ -2236,7 +2236,7 @@ HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGro
 HRESULT WINAPI
 IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
 {
-    DWORD code = 0;
+    DWORD cmdFlags = 0;
     OLECMDID cmdID;
     ULONG iCmd;
     enum {
@@ -2257,24 +2257,24 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
             cmdID = prgCmds[iCmd].cmdID;
             if (cmdID <= OLECMDID_PROPERTIES)
             {
-                code |= CMD_FLAG_NOT_SUPPORTED; // Not supported
+                cmdFlags |= CMD_FLAG_NOT_SUPPORTED; // Not supported
                 continue;
             }
 
             if (cmdID <= OLECMDID_PASTE || cmdID == OLECMDID_SELECTALL)
             {
-                code |= CMD_FLAG_SUPPORTED_BASIC;
+                cmdFlags |= CMD_FLAG_SUPPORTED_BASIC;
                 continue;
             }
 
             if (cmdID <= OLECMDID_UPDATECOMMANDS ||
                 (OLECMDID_HIDETOOLBARS <= cmdID && cmdID != OLECMDID_ENABLE_INTERACTION))
             {
-                code |= CMD_FLAG_NOT_SUPPORTED; // Not supported
+                cmdFlags |= CMD_FLAG_NOT_SUPPORTED; // Not supported
                 continue;
             }
 
-            code |= CMD_FLAG_SUPPORTED_ADVANCED;
+            cmdFlags |= CMD_FLAG_SUPPORTED_ADVANCED;
         }
     }
     else
@@ -2294,16 +2294,16 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
             if (cmdID == OLECMDID_SELECTALL ||
                 (OLECMDID_SHOWFIND <= cmdID && cmdID <= OLECMDID_SHOWPRINT))
             {
-                code |= CMD_FLAG_SUPPORTED_BASIC;
+                cmdFlags |= CMD_FLAG_SUPPORTED_BASIC;
                 break;
             }
         }
     }
 
-    if (!code || (code & CMD_FLAG_NOT_SUPPORTED))
+    if (!cmdFlags || (cmdFlags & CMD_FLAG_NOT_SUPPORTED))
         return OLECMDERR_E_NOTSUPPORTED; // Not supported
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, code);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, cmdFlags);
 }
 #else
 HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds)
