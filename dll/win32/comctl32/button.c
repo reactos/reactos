@@ -1732,6 +1732,8 @@ static void PB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
 
     /* draw button label */
     labelRect = rc;
+    /* Shrink label rect at all sides by 2 so that the content won't touch the surrounding frame */
+    InflateRect(&labelRect, -2, -2);
     dtFlags = BUTTON_CalcLayoutRects(infoPtr, hDC, &labelRect, &imageRect, &textRect);
 
     if (dtFlags == (UINT)-1L)
