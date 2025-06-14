@@ -24,6 +24,8 @@ IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD 
         CMD_FLAG_NOT_SUPPORTED = 0x4,
     };
 
+    //TRACE("(%s, %lu, %p)\n", wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds);
+
     if ((LONG)cCmds <= 0)
         return OLECMDERR_E_NOTSUPPORTED;
 
