@@ -37,7 +37,6 @@
  *  - BN_PAINT
  *  + BN_SETFOCUS: is it OK?
  *  - BN_UNPUSHED/BN_UNHILITE
- *  - NM_CUSTOMDRAW
  *
  *  Structures/Macros/Definitions
  *  - NMBCHOTITEM
@@ -2318,7 +2317,9 @@ static void UB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
 {
     RECT rc;
     HBRUSH hBrush;
+    LRESULT cdrf;
     HFONT hFont;
+    NMCUSTOMDRAW nmcd;
     LONG state = infoPtr->state;
     HWND parent;
 
@@ -2332,10 +2333,39 @@ static void UB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
     if (!hBrush) /* did the app forget to call defwindowproc ? */
         hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)infoPtr->hwnd);
 
+    if (action == ODA_FOCUS || (state & BST_FOCUS))
+    {
+        init_custom_draw(&nmcd, infoPtr, hDC, &rc);
+
+        /* Send erase notifications */
+        cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+        if (cdrf & CDRF_SKIPDEFAULT) goto notify;
+    }
+
     FillRect( hDC, &rc, hBrush );
     if (action == ODA_FOCUS || (state & BST_FOCUS))
-        DrawFocusRect( hDC, &rc );
+    {
+        if (cdrf & CDRF_NOTIFYPOSTERASE)
+        {
+            nmcd.dwDrawStage = CDDS_POSTERASE;
+            SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+        }
 
+        /* Send paint notifications */
+        nmcd.dwDrawStage = CDDS_PREPAINT;
+        cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+        if (cdrf & CDRF_SKIPDEFAULT) goto notify;
+        if (cdrf & CDRF_NOTIFYPOSTPAINT)
+        {
+            nmcd.dwDrawStage = CDDS_POSTPAINT;
+            SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+        }
+
+        if (!(cdrf & CDRF_SKIPPOSTPAINT))
+            DrawFocusRect( hDC, &rc );
+    }
+
+notify:
     switch (action)
     {
     case ODA_FOCUS:
