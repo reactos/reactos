@@ -905,7 +905,7 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         if (state & BST_DROPDOWNPUSHED)
             SendMessageW(hWnd, BCM_SETDROPDOWNSTATE, FALSE, 0);
         if (!(state & BUTTON_BTNPRESSED)) break;
-        infoPtr->state &= BUTTON_NSTATES;
+        infoPtr->state &= BUTTON_NSTATES | BST_HOT;
         if (!(state & BST_PUSHED))
         {
             ReleaseCapture();
