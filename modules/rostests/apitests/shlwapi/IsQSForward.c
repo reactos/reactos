@@ -12,10 +12,10 @@
 #include <shlwapi_undoc.h>
 #include <versionhelpers.h>
 
-static DWORD
+static HRESULT
 IsQSForwardMockup(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
 {
-    DWORD ret = 0;
+    HRESULT ret = S_OK;
     OLECMDID cmdID;
     ULONG iCmd;
     enum {
@@ -88,7 +88,7 @@ START_TEST(IsQSForward)
 {
     OLECMD cmds[2];
     LONG cmdID, cmdID2;
-    LONG ret1, ret2;
+    HRESULT ret1, ret2;
     ULONG cCmds;
     const GUID *pGUID = NULL;
     enum { LOW_VALUE = -99, HIGH_VALUE = OLECMDID_MEDIA_PLAYBACK };

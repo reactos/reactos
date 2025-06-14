@@ -111,7 +111,7 @@ int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int 
 VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown);
 HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved, REFGUID riidCmdGrp, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
 HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-DWORD WINAPI IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds);
+HRESULT WINAPI IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
