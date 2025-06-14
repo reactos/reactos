@@ -305,3 +305,8 @@ DEFINE_POLICY( REST_USEDESKTOPINICACHE,             "Explorer",         "UseDesk
 
 // NOTE: This is a SHDOCVW-only policy.
 // DEFINE_POLICY( 0x50000024,   "Explorer",     "NoFileUrl" ),
+
+#if defined(__REACTOS__) && defined(_SHELL32_)
+// Internal SHELL32 policies (keep these at the end of the list)
+DEFINE_POLICY( REST_SH32_ENABLESHELLEXECUTEHOOKS,   "Explorer",         "EnableShellExecuteHooks"          ),
+#endif

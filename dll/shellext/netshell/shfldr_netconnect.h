@@ -14,8 +14,7 @@ class CNetworkConnections:
     public IShellExtInit,
     public IShellFolder2,
     public IOleCommandTarget,
-    public IShellFolderViewCB,
-    public IShellExecuteHookW
+    public IShellFolderViewCB
 {
     public:
         CNetworkConnections();
@@ -57,9 +56,6 @@ class CNetworkConnections:
         // IShellFolderViewCB
         STDMETHOD(MessageSFVCB)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-        // IShellExecuteHookW
-        STDMETHOD(Execute)(LPSHELLEXECUTEINFOW pei) override;
-
     private:
 
         /* both paths are parsible from the desktop */
@@ -77,7 +73,6 @@ class CNetworkConnections:
             COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
             COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
             COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
-            COM_INTERFACE_ENTRY_IID(IID_IShellExecuteHookW, IShellExecuteHookW)
         END_COM_MAP()
 
         DECLARE_NO_REGISTRY()
