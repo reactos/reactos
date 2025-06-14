@@ -179,6 +179,7 @@ typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc
 static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
+static void SB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused, LPARAM prfFlag);
 
 #else
 typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
@@ -186,6 +187,7 @@ typedef void (*pfThemedPaint)( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc
 static void PB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 static void CB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 static void GB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
+static void SB_ThemedPaint( HTHEME theme, const BUTTON_INFO *infoPtr, HDC hdc, int drawState, UINT dtflags, BOOL focused);
 
 #endif
 
@@ -203,8 +205,8 @@ static const pfThemedPaint btnThemedPaintFunc[MAX_BTN_TYPE] =
     CB_ThemedPaint, /* BS_AUTORADIOBUTTON */
     NULL,           /* BS_PUSHBOX */
     NULL,           /* BS_OWNERDRAW */
-    NULL,           /* BS_SPLITBUTTON */
-    NULL,           /* BS_DEFSPLITBUTTON */
+    SB_ThemedPaint, /* BS_SPLITBUTTON */
+    SB_ThemedPaint, /* BS_DEFSPLITBUTTON */
     NULL,           /* BS_COMMANDLINK */
     NULL,           /* BS_DEFCOMMANDLINK */
 };
@@ -3026,6 +3028,118 @@ static void GB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, in
 
     if (created_font) DeleteObject(font);
     if (hPrevFont) SelectObject(hDC, hPrevFont);
+}
+
+#ifdef __REACTOS__
+static void SB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused, LPARAM prfFlag)
+#else
+static void SB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, int state, UINT dtFlags, BOOL focused)
+#endif
+{
+    HFONT old_font = infoPtr->font ? SelectObject(hDC, infoPtr->font) : NULL;
+    RECT rc, content_rect, push_rect, dropdown_rect;
+    NMCUSTOMDRAW nmcd;
+    LRESULT cdrf;
+    HWND parent;
+
+    GetClientRect(infoPtr->hwnd, &rc);
+    init_custom_draw(&nmcd, infoPtr, hDC, &rc);
+
+    parent = GetParent(infoPtr->hwnd);
+    if (!parent) parent = infoPtr->hwnd;
+
+    /* Send erase notifications */
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state))
+        DrawThemeParentBackground(infoPtr->hwnd, hDC, NULL);
+
+    /* The zone outside the content is ignored for the dropdown (draws over) */
+    GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &rc, &content_rect);
+    get_split_button_rects(infoPtr, &rc, &push_rect, &dropdown_rect);
+
+    if (infoPtr->split_style & BCSS_NOSPLIT)
+    {
+        push_rect = rc;
+        DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, state, &rc, NULL);
+    }
+    else
+    {
+        RECT r = { dropdown_rect.left, content_rect.top, dropdown_rect.right, content_rect.bottom };
+        UINT edge = (infoPtr->split_style & BCSS_ALIGNLEFT) ? BF_RIGHT : BF_LEFT;
+        const RECT *clip = NULL;
+
+        /* If only the dropdown is pressed, we need to draw it separately */
+        if (state != PBS_PRESSED && (infoPtr->state & BST_DROPDOWNPUSHED))
+        {
+            DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, PBS_PRESSED, &rc, &dropdown_rect);
+            clip = &push_rect;
+        }
+        DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, state, &rc, clip);
+
+        /* Draw the separator */
+        DrawThemeEdge(theme, hDC, BP_PUSHBUTTON, state, &r, EDGE_ETCHED, edge, NULL);
+
+        /* The content rect should be the content area of the push button */
+        GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &push_rect, &content_rect);
+    }
+
+    if (cdrf & CDRF_NOTIFYPOSTERASE)
+    {
+        nmcd.dwDrawStage = CDDS_POSTERASE;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+
+    /* Send paint notifications */
+    nmcd.dwDrawStage = CDDS_PREPAINT;
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    if (!(cdrf & CDRF_DOERASE))
+    {
+        COLORREF old_color, color;
+        INT old_bk_mode;
+        WCHAR *text;
+
+        if ((text = get_button_text(infoPtr)))
+        {
+            DrawThemeText(theme, hDC, BP_PUSHBUTTON, state, text, lstrlenW(text), dtFlags, 0, &content_rect);
+            heap_free(text);
+        }
+
+        GetThemeColor(theme, BP_PUSHBUTTON, state, TMT_TEXTCOLOR, &color);
+        old_bk_mode = SetBkMode(hDC, TRANSPARENT);
+        old_color = SetTextColor(hDC, color);
+
+        draw_split_button_dropdown_glyph(infoPtr, hDC, &dropdown_rect);
+
+        SetTextColor(hDC, old_color);
+        SetBkMode(hDC, old_bk_mode);
+    }
+
+    if (cdrf & CDRF_NOTIFYPOSTPAINT)
+    {
+        nmcd.dwDrawStage = CDDS_POSTPAINT;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+    if (cdrf & CDRF_SKIPPOSTPAINT) goto cleanup;
+
+    if (focused)
+    {
+        MARGINS margins;
+
+        GetThemeMargins(theme, hDC, BP_PUSHBUTTON, state, TMT_CONTENTMARGINS, NULL, &margins);
+
+        push_rect.left += margins.cxLeftWidth;
+        push_rect.top += margins.cyTopHeight;
+        push_rect.right -= margins.cxRightWidth;
+        push_rect.bottom -= margins.cyBottomHeight;
+        DrawFocusRect(hDC, &push_rect);
+    }
+
+cleanup:
+    if (old_font) SelectObject(hDC, old_font);
 }
 
 void BUTTON_Register(void)
