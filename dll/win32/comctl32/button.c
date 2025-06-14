@@ -112,6 +112,7 @@ static void GB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void UB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void OB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void SB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
+static void CL_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action );
 static void BUTTON_CheckAutoRadioButton( HWND hwnd );
 static void get_split_button_rects(const BUTTON_INFO*, const RECT*, RECT*, RECT*);
 static BOOL notify_split_button_dropdown(const BUTTON_INFO*, const POINT*, HWND);
@@ -168,8 +169,8 @@ static const pfPaint btnPaintFunc[MAX_BTN_TYPE] =
     OB_Paint,    /* BS_OWNERDRAW */
     SB_Paint,    /* BS_SPLITBUTTON */
     SB_Paint,    /* BS_DEFSPLITBUTTON */
-    PB_Paint,    /* BS_COMMANDLINK */
-    PB_Paint     /* BS_DEFCOMMANDLINK */
+    CL_Paint,    /* BS_COMMANDLINK */
+    CL_Paint     /* BS_DEFCOMMANDLINK */
 };
 
 
@@ -237,6 +238,12 @@ static const pfGetIdealSize btnGetIdealSizeFunc[MAX_BTN_TYPE] = {
     PB_GetIdealSize, /* BS_COMMANDLINK */
     PB_GetIdealSize  /* BS_DEFCOMMANDLINK */
 };
+
+/* Fixed margin for command links, regardless of DPI (based on tests done on Windows) */
+enum { command_link_margin = 6 };
+
+/* The width and height for the default command link glyph (when there's no image) */
+enum { command_link_defglyph_size = 17 };
 
 static inline UINT get_button_type( LONG window_style )
 {
@@ -2747,6 +2754,186 @@ static void draw_split_button_dropdown_glyph(const BUTTON_INFO *infoPtr, HDC hdc
             DeleteObject(font);
         }
     }
+}
+
+
+/**********************************************************************
+ *       Command Link Functions
+ */
+static void CL_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
+{
+    LONG style = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
+    LONG state = infoPtr->state;
+
+    RECT rc, content_rect;
+    NMCUSTOMDRAW nmcd;
+    HPEN pen, old_pen;
+    HBRUSH old_brush;
+    INT old_bk_mode;
+    LRESULT cdrf;
+    HWND parent;
+    HRGN hrgn;
+
+    GetClientRect(infoPtr->hwnd, &rc);
+
+    /* Command Links are not affected by the button's font, and are based
+       on the default message font. Furthermore, they are not affected by
+       any of the alignment styles (and always align with the top-left). */
+    if (!(parent = GetParent(infoPtr->hwnd))) parent = infoPtr->hwnd;
+    SendMessageW(parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)infoPtr->hwnd);
+
+    hrgn = set_control_clipping(hDC, &rc);
+
+    pen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_WINDOWFRAME));
+    old_pen = SelectObject(hDC, pen);
+    old_brush = SelectObject(hDC, GetSysColorBrush(COLOR_BTNFACE));
+    old_bk_mode = SetBkMode(hDC, TRANSPARENT);
+
+    init_custom_draw(&nmcd, infoPtr, hDC, &rc);
+
+    /* Send erase notifications */
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+    content_rect = rc;
+
+    if (get_button_type(style) == BS_DEFCOMMANDLINK)
+    {
+        if (action != ODA_FOCUS)
+            Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
+        InflateRect(&rc, -1, -1);
+    }
+
+    /* Skip the frame drawing if only focus has changed */
+    if (action != ODA_FOCUS)
+    {
+        if (!(state & (BST_HOT | BST_PUSHED | BST_CHECKED | BST_INDETERMINATE)))
+            FillRect(hDC, &rc, GetSysColorBrush(COLOR_BTNFACE));
+        else
+        {
+            UINT flags = DFCS_BUTTONPUSH;
+
+            if (style & BS_FLAT) flags |= DFCS_MONO;
+            else if (state & BST_PUSHED) flags |= DFCS_PUSHED;
+
+            if (state & (BST_CHECKED | BST_INDETERMINATE))
+                flags |= DFCS_CHECKED;
+            DrawFrameControl(hDC, &rc, DFC_BUTTON, flags);
+        }
+    }
+
+    if (cdrf & CDRF_NOTIFYPOSTERASE)
+    {
+        nmcd.dwDrawStage = CDDS_POSTERASE;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+
+    /* Send paint notifications */
+    nmcd.dwDrawStage = CDDS_PREPAINT;
+    cdrf = SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    if (cdrf & CDRF_SKIPDEFAULT) goto cleanup;
+
+    if (!(cdrf & CDRF_DOERASE) && action != ODA_FOCUS)
+    {
+        UINT flags = IsWindowEnabled(infoPtr->hwnd) ? DSS_NORMAL : DSS_DISABLED;
+        COLORREF old_color = SetTextColor(hDC, GetSysColor(flags == DSS_NORMAL ?
+                                                           COLOR_BTNTEXT : COLOR_GRAYTEXT));
+        HIMAGELIST defimg = NULL;
+        NONCLIENTMETRICSW ncm;
+        UINT txt_h = 0;
+        SIZE img_size;
+
+        /* Command Links ignore the margins of the image list or its alignment */
+        if (infoPtr->u.image || infoPtr->imagelist.himl)
+            img_size = BUTTON_GetImageSize(infoPtr);
+        else
+        {
+            img_size.cx = img_size.cy = command_link_defglyph_size;
+            defimg = ImageList_LoadImageW(COMCTL32_hModule, (LPCWSTR)MAKEINTRESOURCE(IDB_CMDLINK),
+                                          img_size.cx, 3, CLR_NONE, IMAGE_BITMAP, LR_CREATEDIBSECTION);
+        }
+
+        /* Shrink rect by the command link margin, except on bottom (just the frame) */
+        InflateRect(&content_rect, -command_link_margin, -command_link_margin);
+        content_rect.bottom += command_link_margin - 2;
+
+        ncm.cbSize = sizeof(ncm);
+        if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+        {
+            LONG note_weight = ncm.lfMessageFont.lfWeight;
+            RECT r = content_rect;
+            WCHAR *text;
+            HFONT font;
+
+            if (img_size.cx) r.left += img_size.cx + command_link_margin;
+
+            /* Draw the text */
+            ncm.lfMessageFont.lfWeight = FW_BOLD;
+            if ((font = CreateFontIndirectW(&ncm.lfMessageFont)))
+            {
+                if ((text = get_button_text(infoPtr)))
+                {
+                    SelectObject(hDC, font);
+                    txt_h = DrawTextW(hDC, text, -1, &r,
+                                      DT_TOP | DT_LEFT | DT_WORDBREAK | DT_END_ELLIPSIS);
+                    heap_free(text);
+                }
+                DeleteObject(font);
+            }
+
+            /* Draw the note */
+            ncm.lfMessageFont.lfWeight = note_weight;
+            if (infoPtr->note && (font = CreateFontIndirectW(&ncm.lfMessageFont)))
+            {
+                r.top += txt_h + 2;
+                SelectObject(hDC, font);
+                DrawTextW(hDC, infoPtr->note, infoPtr->note_length, &r,
+                          DT_TOP | DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
+                DeleteObject(font);
+            }
+        }
+
+        /* Position the image at the vertical center of the drawn text (not note) */
+        txt_h = min(txt_h, content_rect.bottom - content_rect.top);
+        if (img_size.cy < txt_h) content_rect.top += (txt_h - img_size.cy) / 2;
+
+        content_rect.right = content_rect.left + img_size.cx;
+        content_rect.bottom = content_rect.top + img_size.cy;
+
+        if (defimg)
+        {
+            int i = 0;
+            if (flags == DSS_DISABLED) i = 2;
+            else if (state & BST_HOT)  i = 1;
+
+            ImageList_Draw(defimg, i, hDC, content_rect.left, content_rect.top, ILD_NORMAL);
+            ImageList_Destroy(defimg);
+        }
+        else
+            BUTTON_DrawImage(infoPtr, hDC, NULL, flags, &content_rect);
+
+        SetTextColor(hDC, old_color);
+    }
+
+    if (cdrf & CDRF_NOTIFYPOSTPAINT)
+    {
+        nmcd.dwDrawStage = CDDS_POSTPAINT;
+        SendMessageW(parent, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
+    }
+    if (cdrf & CDRF_SKIPPOSTPAINT) goto cleanup;
+
+    if (action == ODA_FOCUS || (state & BST_FOCUS))
+    {
+        InflateRect(&rc, -2, -2);
+        DrawFocusRect(hDC, &rc);
+    }
+
+cleanup:
+    SelectObject(hDC, old_pen);
+    SelectObject(hDC, old_brush);
+    SetBkMode(hDC, old_bk_mode);
+    SelectClipRgn(hDC, hrgn);
+    if (hrgn) DeleteObject(hrgn);
+    DeleteObject(pen);
 }
 
 
