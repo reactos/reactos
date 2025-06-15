@@ -634,6 +634,14 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
                           BufferSize);
         }
     }
+#if (WINVER >= _WIN32_WINNT_WS03)
+    else if (Property == PNP_PROPERTY_LOCATION_PATHS)
+    {
+        UNIMPLEMENTED;
+        BufferSize = 0;
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+#endif
     else
     {
         switch (Property)
@@ -673,14 +681,6 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
             case PNP_PROPERTY_INSTALL_STATE:
                 DeviceProperty = DevicePropertyInstallState;
                 break;
-
-#if (WINVER >= _WIN32_WINNT_WS03)
-            case PNP_PROPERTY_LOCATION_PATHS:
-                UNIMPLEMENTED;
-                BufferSize = 0;
-                Status = STATUS_NOT_IMPLEMENTED;
-                break;
-#endif
 
 #if (WINVER >= _WIN32_WINNT_WIN7)
             case PNP_PROPERTY_CONTAINERID:
@@ -1025,8 +1025,8 @@ IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
     PWCHAR Buffer, Ptr;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("IopGetDeviceRelations() called\n");
-    DPRINT("Device name: %wZ\n", &RelationsData->DeviceInstance);
+    DPRINT1("IopGetDeviceRelations() called\n");
+    DPRINT1("Device name: %wZ\n", &RelationsData->DeviceInstance);
     DPRINT("Relations: %lu\n", RelationsData->Relations);
     DPRINT("BufferSize: %lu\n", RelationsData->BufferSize);
     DPRINT("Buffer: %p\n", RelationsData->Buffer);
@@ -1096,7 +1096,7 @@ IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
 
     DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
 
-    DPRINT("Found %d device relations\n", DeviceRelations->Count);
+    DPRINT1("Found %d device relations\n", DeviceRelations->Count);
 
     _SEH2_TRY
     {
