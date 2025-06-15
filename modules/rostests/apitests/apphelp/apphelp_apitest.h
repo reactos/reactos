@@ -31,6 +31,7 @@ extern DWORD g_WinVersion;
 #define WINVER_VISTA   0x0600
 #define WINVER_WIN7    0x0601
 #define WINVER_WIN8    0x0602
+#define WINVER_WIN81   0x0603
 #define WINVER_WIN10   0x0a00
 
 
