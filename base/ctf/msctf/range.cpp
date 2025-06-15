@@ -29,19 +29,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 // CRange
 
 CRange::CRange(
-    _In_ CInputContext *pIC,
-    _In_ DWORD dwLockType,
-    _In_ IAnchor *pAnchorStart,
-    _In_ IAnchor *pAnchorEnd,
-    _In_ TfGravity gravity)
+    _In_ ITfContext *context,
+    _In_ ITextStoreACP *textstore,
+    _In_ DWORD lockType,
+    _In_ TfAnchor anchorStart,
+    _In_ TfAnchor anchorEnd
+)
+    : m_pContext(context)
+    , m_pTextStore(textstore)
+    , m_dwLockType(lockType)
+    , m_anchorStart(anchorStart)
+    , m_anchorEnd(anchorEnd)
+    , m_dwCookie(MAXDWORD)
+    , m_cRefs(1)
 {
-    m_dwLockType = dwLockType;
-    m_pAnchorStart = pAnchorStart;
-    m_pAnchorEnd = pAnchorEnd;
-    m_pInputContext = pIC;
-    m_dwCookie = MAXDWORD;
-    m_gravity = gravity;
-    m_cRefs = 1;
 }
 
 CRange::~CRange()
@@ -50,7 +51,8 @@ CRange::~CRange()
 
 CRange *CRange::_Clone()
 {
-    CRange *pRange = new(cicNoThrow) CRange(m_pInputContext, 0, m_pAnchorStart, m_pAnchorEnd, (TfGravity)2);
+    CRange *pRange = new(cicNoThrow) CRange(m_pContext, m_pTextStore, m_dwLockType,
+                                            m_anchorStart, m_anchorEnd);
     if (!pRange)
         return NULL;
     pRange->m_dwCookie = m_dwCookie;
@@ -70,6 +72,22 @@ HRESULT CRange::_CompareX(
     LONG *plResult)
 {
     return E_NOTIMPL;
+}
+
+HRESULT CRange::TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp)
+{
+    if (!tf || !tsAcp || !tf->range)
+    {
+        ERR("E_INVALIDARG: %p, %p, %p\n", tf, tsAcp, tf->range);
+        return E_INVALIDARG;
+    }
+
+    CRange *This = static_cast<CRange *>(static_cast<ITfRangeACP *>(tf->range));
+    tsAcp->acpStart = This->m_anchorStart;
+    tsAcp->acpEnd = This->m_anchorEnd;
+    tsAcp->style.ase = static_cast<TsActiveSelEnd>(tf->style.ase);
+    tsAcp->style.fInterimChar = tf->style.fInterimChar;
+    return S_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -100,16 +118,19 @@ STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
         return S_OK;
     }
 
+    ERR("E_NOINTERFACE: %s\n", wine_dbgstr_guid(&riid));
     return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) CRange::AddRef()
 {
+    TRACE("%p -> ()\n", this);
     return InterlockedIncrement(&m_cRefs);
 }
 
 STDMETHODIMP_(ULONG) CRange::Release()
 {
+    TRACE("%p -> ()\n", this);
     if (InterlockedDecrement(&m_cRefs) == 0)
     {
         delete this;
@@ -382,9 +403,17 @@ STDMETHODIMP CRange::UnadviseSink(
 ////////////////////////////////////////////////////////////////////////////
 
 EXTERN_C
-HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD lockType, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut)
+HRESULT
+Range_Constructor(ITfContext *context, ITextStoreACP *textstore,
+                  DWORD lockType, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut)
 {
-    return E_NOTIMPL;
+    CRange *This = new(cicNoThrow) CRange(context, textstore, lockType,
+                                          (TfAnchor)anchorStart, (TfAnchor)anchorEnd);
+    if (!This)
+        return E_OUTOFMEMORY;
+
+    *ppOut = static_cast<ITfRangeACP *>(This);
+    return S_OK;
 }
 
 /* Internal conversion functions */
@@ -392,5 +421,5 @@ HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD l
 EXTERN_C
 HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp)
 {
-    return E_NOTIMPL;
+    return CRange::TF_SELECTION_to_TS_SELECTION_ACP(tf, tsAcp);
 }
