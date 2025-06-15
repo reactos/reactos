@@ -2204,6 +2204,26 @@ VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown)
  *      @	[SHLWAPI.200]
  *
  */
+#ifdef __REACTOS__
+HRESULT WINAPI
+MayQSForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID riidCmdGrp,
+    _In_ ULONG cCmds,
+    _Inout_ OLECMD *prgCmds,
+    _Inout_ OLECMDTEXT *pCmdText)
+{
+    TRACE("(%p, %d, %s, %d, %p, %p)\n",
+          lpUnknown, nUnknown, wine_dbgstr_guid(riidCmdGrp), cCmds, prgCmds, pCmdText);
+
+    HRESULT hr = IsQSForward(riidCmdGrp, cCmds, prgCmds);
+    if (FAILED(hr) || !HRESULT_CODE(hr) || nUnknown <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    return IUnknown_QueryStatus(lpUnknown, riidCmdGrp, cCmds, prgCmds, pCmdText);
+}
+#else
 HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved,
                             REFGUID riidCmdGrp, ULONG cCmds,
                             OLECMD *prgCmds, OLECMDTEXT* pCmdText)
@@ -2214,19 +2234,43 @@ HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved,
   /* FIXME: Calls IsQSForward & IUnknown_QueryStatus */
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.201]
  *
  */
-HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGroup,
+#ifdef __REACTOS__
+HRESULT WINAPI
+MayExecForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID pguidCmdGroup,
+    _In_ DWORD nCmdID,
+    _In_ DWORD nCmdexecopt,
+    _In_ VARIANT *pvaIn,
+    _Inout_ VARIANT *pvaOut)
+{
+    TRACE("(%p, %d, %s, %d, %d, %p, %p)\n", lpUnknown, nUnknown,
+          wine_dbgstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+    OLECMD cmd = { nCmdID };
+    HRESULT hr = IsQSForward(pguidCmdGroup, 1, &cmd);
+    if (FAILED(hr) || !HRESULT_CODE(hr) || nUnknown <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    return IUnknown_Exec(lpUnknown, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+}
+#else
+HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT nUnknown, REFGUID pguidCmdGroup,
                            DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn,
                            VARIANT* pvaOut)
 {
-  FIXME("(%p,%d,%p,%d,%d,%p,%p) - stub!\n", lpUnknown, iUnk, pguidCmdGroup,
+  FIXME("(%p,%d,%p,%d,%d,%p,%p) - stub!\n", lpUnknown, nUnknown, pguidCmdGroup,
         nCmdID, nCmdexecopt, pvaIn, pvaOut);
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.202]
