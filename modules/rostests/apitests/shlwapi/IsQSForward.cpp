@@ -293,7 +293,7 @@ static VOID TEST_MayQSForwardMockup(VOID)
     OLECMDTEXT cmdText;
     HRESULT ret1, ret2;
 
-    // OLECMDID_PROPERTIES
+    // Testing OLECMDID_PROPERTIES support
     cmds[0].cmdID = cmdID = OLECMDID_PROPERTIES;
 
     g_bQueryStatus = g_bExec = FALSE;
@@ -308,7 +308,7 @@ static VOID TEST_MayQSForwardMockup(VOID)
 
     ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
 
-    // OLECMDID_SHOWFIND
+    // Testing OLECMDID_SHOWFIND support
     cmds[0].cmdID = cmdID = OLECMDID_SHOWFIND;
 
     g_bQueryStatus = g_bExec = FALSE;
@@ -330,7 +330,7 @@ static VOID TEST_MayExecForwardMockup(VOID)
     LONG cmdID;
     HRESULT ret1, ret2;
 
-    // OLECMDID_PROPERTIES
+    // Testing OLECMDID_PROPERTIES support
     cmdID = OLECMDID_PROPERTIES;
 
     g_bQueryStatus = g_bExec = FALSE;
@@ -345,7 +345,7 @@ static VOID TEST_MayExecForwardMockup(VOID)
 
     ok(ret1 == ret2, "cmdID: %ld (%ld vs %ld)\n", cmdID, ret1, ret2);
 
-    // OLECMDID_SHOWFIND
+    // Testing OLECMDID_SHOWFIND support
     cmdID = OLECMDID_SHOWFIND;
 
     g_bQueryStatus = g_bExec = FALSE;
