@@ -37,6 +37,9 @@ IDI_WINHELP ICON "res/winhelp.ico"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_AR_SA
+    #include "lang/Ar.rc"
+#endif
 #ifdef LANGUAGE_BG_BG
     #include "lang/Bg.rc"
 #endif
