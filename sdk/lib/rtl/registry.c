@@ -20,6 +20,9 @@
 
 extern SIZE_T RtlpAllocDeallocQueryBufferSize;
 
+#define RTL_QUERY_REGISTRY_TYPECHECK        0x00000100
+#define RTL_QUERY_REGISTRY_TYPECHECK_SHIFT  24
+
 /* DATA **********************************************************************/
 
 PCWSTR RtlpRegPaths[RTL_REGISTRY_MAXIMUM] =
@@ -196,6 +199,19 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
     }
     else
     {
+        if (QueryTable->Flags & RTL_QUERY_REGISTRY_TYPECHECK)
+        {
+            ULONG ExpectedType = QueryTable->DefaultType >> RTL_QUERY_REGISTRY_TYPECHECK_SHIFT;
+
+            /* Check if an expected type was specified and if it mismatches the actual type */
+            if (ExpectedType != REG_NONE && KeyValueInfo->Type != ExpectedType)
+            {
+                DPRINT1("RTL: Registry type mismatch for value '%S'. Expected %lu, got %lu.\n",
+                        QueryTable->Name, ExpectedType, KeyValueInfo->Type);
+                return STATUS_OBJECT_TYPE_MISMATCH;
+            }
+        }
+
         /* Check if we have length */
         if (KeyValueInfo->DataLength)
         {
