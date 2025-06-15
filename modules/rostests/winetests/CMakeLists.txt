@@ -69,7 +69,7 @@ add_subdirectory(mpr)
 add_subdirectory(msacm32)
 add_subdirectory(mscms)
 add_subdirectory(mscoree)
-add_subdirectory(msctf)
+#add_subdirectory(msctf) # msctf_winetest is not trustworthy
 add_subdirectory(mshtml)
 add_subdirectory(msi)
 add_subdirectory(msrle32)
