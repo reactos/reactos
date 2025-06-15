@@ -518,47 +518,6 @@ typedef struct _KSYSTEM_TIME
     LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
-#define MAXIMUM_XSTATE_FEATURES             64
-
-typedef struct _XSTATE_FEATURE
-{
-    ULONG Offset;
-    ULONG Size;
-} XSTATE_FEATURE, *PXSTATE_FEATURE;
-
-typedef struct _XSTATE_CONFIGURATION
-{
-    ULONG64 EnabledFeatures;
-#if (NTDDI_VERSION >= NTDDI_WINBLUE)
-    ULONG64 EnabledVolatileFeatures;
-#endif
-    ULONG Size;
-    union
-    {
-        ULONG ControlFlags;
-        struct
-        {
-            ULONG OptimizedSave:1;
-            ULONG CompactionEnabled:1; // WIN10+
-        };
-    };
-    XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
-#if (NTDDI_VERSION >= NTDDI_WIN10)
-    ULONG64 EnabledSupervisorFeatures;
-    ULONG64 AlignedFeatures;
-    ULONG AllFeatureSize;
-    ULONG AllFeatures[MAXIMUM_XSTATE_FEATURES];
-#endif
-#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
-    ULONG64 EnabledUserVisibleSupervisorFeatures;
-#endif
-#if (NTDDI_VERSION >= NTDDI_WIN11)
-    ULONG64 ExtendedFeatureDisableFeatures;
-    ULONG AllNonLargeFeatureSize;
-    ULONG Spare;
-#endif
-} XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
-
 //
 // Shared Kernel User Data
 // Keep in sync with sdk/include/xdk/ketypes.h
@@ -847,6 +806,9 @@ typedef struct _KUSER_SHARED_DATA
     ULONG64 UserPointerAuthMask;                            // 0x730
 #endif // NTDDI_VERSION >= NTDDI_WIN11_NI
 
+#if (NTDDI_VERSION < NTDDI_WIN7) && defined(__REACTOS__)
+    XSTATE_CONFIGURATION XState;
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 //
@@ -1809,6 +1771,9 @@ typedef struct _KTHREAD
 #elif (NTDDI_VERSION >= NTDDI_LONGHORN) // ][
     PVOID MdlForLockedTeb;
 #endif // ]
+#if defined(__REACTOS__) && defined(_M_AMD64) // HACK!
+    XSAVE_FORMAT* StateSaveArea;
+#endif
 } KTHREAD;
 
 #else // not (NTDDI_VERSION < NTDDI_WIN8)

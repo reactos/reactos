@@ -28,6 +28,11 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:memcmp>)
 endif()
 
+if((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
+    # Enable xsave feature
+    add_compile_options(-mxsave)
+endif()
+
 list(APPEND PCH_SKIP_SOURCE
     guid.c)
 
