@@ -190,7 +190,7 @@ MMixerAddMixerControl(
 
             DPRINT("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
 
-            MaxRange = Range->Bounds.UnsignedMaximum  - Range->Bounds.UnsignedMinimum;
+            MaxRange = Range->Bounds.SignedMaximum - Range->Bounds.SignedMinimum;
 
             if (MaxRange)
             {
@@ -218,10 +218,10 @@ MMixerAddMixerControl(
                 }
 
                 Value = Range->Bounds.SignedMinimum;
-                for(Index = 0; Index < Steps; Index++)
+                for (Index = 0; Index < Steps; Index++)
                 {
                     VolumeData->Values[Index] = Value;
-                    Value += Range->SteppingDelta;
+                    Value += Range->SteppingDelta - 1;
                 }
                 MixerControl->ExtraData = VolumeData;
            }
