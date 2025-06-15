@@ -1035,7 +1035,7 @@ SeValidSecurityDescriptor(
 
     if (Length < SECURITY_DESCRIPTOR_MIN_LENGTH)
     {
-        DPRINT1("Invalid Security Descriptor revision\n");
+        DPRINT1("Invalid Security Descriptor length\n");
         return FALSE;
     }
 
@@ -1051,7 +1051,7 @@ SeValidSecurityDescriptor(
         return FALSE;
     }
 
-    SdLength = sizeof(SECURITY_DESCRIPTOR);
+    SdLength = sizeof(*SecurityDescriptor);
 
     /* Check Owner SID */
     if (!SecurityDescriptor->Owner)
