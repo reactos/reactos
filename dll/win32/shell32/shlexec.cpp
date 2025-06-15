@@ -33,6 +33,42 @@ EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
                 const SHELLEXECUTEINFOW *sei, LPSHELLEXECUTEINFOW sei_out);
 
+static int Win32ErrFromHInst(HINSTANCE hInst)
+{
+    if ((SIZE_T)hInst > 32)
+        return ERROR_SUCCESS;
+    switch ((SIZE_T)hInst)
+    {
+    case SE_ERR_FNF:
+    case SE_ERR_PNF:
+    case SE_ERR_ACCESSDENIED:
+    case SE_ERR_OOM:
+        return (UINT)(SIZE_T)hInst;
+    case SE_ERR_SHARE:
+        return ERROR_SHARING_VIOLATION;
+    case SE_ERR_DDETIMEOUT:
+    case SE_ERR_DDEFAIL:
+    case SE_ERR_DDEBUSY:
+        return ERROR_DDE_FAIL;
+    case SE_ERR_DLLNOTFOUND:
+        return ERROR_DLL_NOT_FOUND;
+    //case SE_ERR_ASSOCINCOMPLETE: Note: Windows treats this as a success code
+    case SE_ERR_NOASSOC:
+        return ERROR_NO_ASSOCIATION;
+    case 10:
+        return ERROR_OLD_WIN_VERSION;
+    case 12:
+        return ERROR_APP_WRONG_OS;
+    case 15:
+        return ERROR_RMODE_APP;
+    case 16:
+        return ERROR_SINGLE_INSTANCE_APP;
+    case 20:
+        return ERROR_INVALID_DLL;
+    }
+    return -1;
+}
+
 // Is the current process a rundll32.exe?
 static BOOL SHELL_InRunDllProcess(VOID)
 {
@@ -58,6 +94,57 @@ static UINT_PTR InvokeOpenWith(HWND hWndOwner, SHELLEXECUTEINFOW &sei)
     HRESULT hr = SH32_InvokeOpenWith(sei.lpFile, &ici, phProc);
     SetLastError(ERROR_NO_ASSOCIATION);
     return SUCCEEDED(hr) ? 42 : SE_ERR_NOASSOC;
+}
+
+static HRESULT InvokeShellExecuteHook(PCWSTR pszClsid, LPSHELLEXECUTEINFOW pSEI)
+{
+    CComPtr<IUnknown> pUnk;
+    if (FAILED(SHExtCoCreateInstance(pszClsid, NULL, NULL, IID_PPV_ARG(IUnknown, &pUnk))))
+        return S_FALSE;
+    CComPtr<IShellExecuteHookW> pWide;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_PPV_ARG(IShellExecuteHookW, &pWide))))
+        return pWide->Execute(pSEI);
+    HRESULT hr = S_FALSE;
+#if 0 // TODO
+    CComPtr<IShellExecuteHookA> pAnsi;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_PPV_ARG(IShellExecuteHookA, &pAnsi))))
+    {
+        SHELLEXECUTEINFOA sei = *(SHELLEXECUTEINFOA*)pSEI;
+        // TODO: Convert the strings
+        hr = pAnsi->Execute(sei);
+        pSEI->hProcess = sei.hProcess;
+        pSEI->hInstApp = sei.hInstApp;
+    }
+#endif
+    return hr;
+}
+
+static HRESULT TryShellExecuteHooks(LPSHELLEXECUTEINFOW pSEI)
+{
+    // https://devblogs.microsoft.com/oldnewthing/20080910-00/?p=20933 claims hooks
+    // were removed in Vista but this is incorrect, they are disabled by default.
+    // https://groups.google.com/g/microsoft.public.platformsdk.shell/c/ixdOX1--IKk
+    // says they are now controlled by the EnableShellExecuteHooks policy.
+    if (pSEI->fMask & SEE_MASK_NO_HOOKS)
+        return S_FALSE;
+    if (LOBYTE(GetVersion()) >= 6 && !SH32_InternalRestricted(REST_SH32_ENABLESHELLEXECUTEHOOKS))
+        return S_FALSE;
+
+    HRESULT hr = S_FALSE;
+    HKEY hKey;
+    LRESULT res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGSTR_PATH_EXPLORER L"\\ShellExecuteHooks", 0, KEY_READ, &hKey);
+    if (res != ERROR_SUCCESS)
+        return S_FALSE;
+    for (UINT i = 0; hr == S_FALSE; ++i)
+    {
+        WCHAR szClsid[42];
+        DWORD cch = _countof(szClsid);
+        if (RegEnumValueW(hKey, i, szClsid, &cch, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+            break;
+        hr = InvokeShellExecuteHook(szClsid, pSEI);
+    }
+    RegCloseKey(hKey);
+    return hr;
 }
 
 static void ParseNoTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used, int argNum)
@@ -1968,6 +2055,20 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
           ((sei_tmp.fMask & SEE_MASK_CLASSALL) == SEE_MASK_CLASSNAME) ?
           debugstr_w(sei_tmp.lpClass) : "not used");
 
+    // Call hooks before expanding and resolving strings
+    HRESULT hr = TryShellExecuteHooks(sei);
+    if (hr != S_FALSE)
+    {
+        int err = Win32ErrFromHInst(sei->hInstApp);
+        if (err <= 0)
+        {
+            sei->hInstApp = (HINSTANCE)UlongToHandle(42);
+            return TRUE;
+        }
+        SetLastError(err);
+        return FALSE;
+    }
+
     /* make copies of all path/command strings */
     CHeapPtr<WCHAR, CLocalAllocator> wszApplicationName;
     DWORD dwApplicationNameLen = MAX_PATH + 2;
@@ -2083,16 +2184,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
     {
         LPCITEMIDLIST pidl = (LPCITEMIDLIST)sei_tmp.lpIDList;
-
-        CComPtr<IShellExecuteHookW> pSEH;
-        HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
-        if (SUCCEEDED(hr))
-        {
-            hr = pSEH->Execute(&sei_tmp);
-            if (hr == S_OK)
-                return TRUE;
-        }
-
         hr = SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, wszApplicationName, dwApplicationNameLen, NULL);
         if (FAILED(hr))
         {
@@ -2117,7 +2208,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if ((sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) == SEE_MASK_INVOKEIDLIST)
     {
-        HRESULT hr = ShellExecute_ContextMenuVerb(&sei_tmp);
+        hr = ShellExecute_ContextMenuVerb(&sei_tmp);
         if (SUCCEEDED(hr))
         {
             sei->hInstApp = (HINSTANCE)42;
@@ -2157,7 +2248,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
          StrCmpNW(sei_tmp.lpFile, L"::{", 3) == 0))
     {
         CComHeapPtr<ITEMIDLIST> pidlParsed;
-        HRESULT hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, 0, NULL);
+        hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, 0, NULL);
         if (SUCCEEDED(hr) && SHELL_InvokePidl(&sei_tmp, pidlParsed))
         {
             sei_tmp.hInstApp = (HINSTANCE)UlongToHandle(42);
@@ -2352,7 +2443,7 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
           debugstr_a(lpParameters), debugstr_a(lpDirectory), iShowCmd);
 
     sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_FLAG_NO_UI;
+    sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
     sei.hwnd = hWnd;
     sei.lpVerb = lpVerb;
     sei.lpFile = lpFile;
@@ -2520,7 +2611,7 @@ HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpVerb, LPCWSTR lpFile,
 
     TRACE("\n");
     sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_FLAG_NO_UI;
+    sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
     sei.hwnd = hwnd;
     sei.lpVerb = lpVerb;
     sei.lpFile = lpFile;
