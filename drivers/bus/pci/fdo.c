@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern BOOLEAN PciInLiveCD;
+
 /*** PRIVATE *****************************************************************/
 
 static NTSTATUS
@@ -129,6 +131,25 @@ FdoEnumerateDevices(
                     continue;
                 }
             }
+
+#if defined(_M_AMD64)
+            // HACK: Do not install a driver for storage controllers
+            if (!PciInLiveCD)
+            {
+                if ((PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE) &&
+                    (PciConfig.BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+                    (PciConfig.SubClass == PCI_SUBCLASS_MSC_AHCI_CTLR))
+                {
+                    continue;
+                }
+
+                if ((PciConfig.BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+                    (PciConfig.SubClass == PCI_SUBCLASS_MSC_IDE_CTLR))
+                {
+                    continue;
+                }
+            }
+#endif
 
             DPRINT("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
                    DeviceExtension->BusNumber,
