@@ -300,7 +300,6 @@ public:
     BEGIN_MSG_MAP(CStartButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
     END_MSG_MAP()
-
 };
 
 class CTrayWindow :
@@ -362,7 +361,6 @@ public:
             DWORD InSizeMove : 1;
             DWORD IsDragging : 1;
             DWORD NewPosSize : 1;
-            DWORD IgnorePulse : 1;
         };
     };
 
@@ -391,7 +389,6 @@ public:
         ZeroMemory(&m_TraySize, sizeof(m_TraySize));
         ZeroMemory(&m_AutoHideOffset, sizeof(m_AutoHideOffset));
         ZeroMemory(&m_MouseTrackingInfo, sizeof(m_MouseTrackingInfo));
-        IgnorePulse = TRUE;
     }
 
     virtual ~CTrayWindow()
@@ -2392,12 +2389,8 @@ ChangePos:
         return TRUE;
     }
 
-#define TIMER_ID_IGNOREPULSERESET 888
-#define TIMER_IGNOREPULSERESET_TIMEOUT 200
-
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
         return 0;
     }
 
@@ -3035,44 +3028,17 @@ HandleTrayContextMenu:
         return (LRESULT)m_TaskSwitch;
     }
 
-    void RestoreMinimizedNonTaskWnds(BOOL bDestroyed, HWND hwndActive)
-    {
-        for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
-        {
-            HWND hwnd = g_MinimizedAll[i].hwnd;
-            if (!hwnd || hwndActive == hwnd)
-                continue;
-
-            if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd) &&
-                (!IsTaskWnd(hwnd) || !::IsWindowEnabled(hwnd)))
-            {
-                ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl); // Restore
-            }
-        }
-
-        if (bDestroyed)
-            g_MinimizedAll.RemoveAll();
-        else
-            ::SetForegroundWindow(hwndActive);
-    }
-
-    LRESULT OnPulse(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        if (IgnorePulse)
-            return 0;
-
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
-        IgnorePulse = TRUE;
-        RestoreMinimizedNonTaskWnds((BOOL)wParam, (HWND)lParam);
-        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
-        return 0;
-    }
-
     // TWM_SETZORDER
     LRESULT OnSetZOrder(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return ::SetWindowPos(m_hWnd, (HWND)wParam, 0, 0, 0, 0,
                               SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    }
+
+    STDMETHODIMP NotifyFullScreenToAppBars(HMONITOR hMonitor, BOOL bFullOpening) override
+    {
+        OnAppBarNotifyAll(hMonitor, NULL, ABN_FULLSCREENAPP, bFullOpening);
+        return S_OK;
     }
 
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3126,9 +3092,6 @@ HandleTrayContextMenu:
 
     VOID MinimizeAll(BOOL bShowDesktop = FALSE)
     {
-        IgnorePulse = TRUE;
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
-
         MINIMIZE_INFO info;
         info.hwndDesktop = GetDesktopWindow();;
         info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
@@ -3139,7 +3102,6 @@ HandleTrayContextMenu:
 
         ::SetForegroundWindow(m_DesktopWnd);
         ::SetFocus(m_DesktopWnd);
-        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
     }
 
     VOID ShowDesktop()
@@ -3149,9 +3111,6 @@ HandleTrayContextMenu:
 
     VOID RestoreAll()
     {
-        IgnorePulse = TRUE;
-        KillTimer(TIMER_ID_IGNOREPULSERESET);
-
         for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
             HWND hwnd = g_MinimizedAll[i].hwnd;
@@ -3160,7 +3119,6 @@ HandleTrayContextMenu:
         }
 
         g_MinimizedAll.RemoveAll();
-        SetTimer(TIMER_ID_IGNOREPULSERESET, TIMER_IGNOREPULSERESET_TIMEOUT, NULL);
     }
 
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -3193,18 +3151,18 @@ HandleTrayContextMenu:
 
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (wParam == TIMER_ID_MOUSETRACK)
+        switch (wParam)
         {
-            ProcessMouseTracking();
-        }
-        else if (wParam == TIMER_ID_AUTOHIDE)
-        {
-            ProcessAutoHide();
-        }
-        else if (wParam == TIMER_ID_IGNOREPULSERESET)
-        {
-            KillTimer(TIMER_ID_IGNOREPULSERESET);
-            IgnorePulse = FALSE;
+            case TIMER_ID_MOUSETRACK:
+                ProcessMouseTracking();
+                break;
+            case TIMER_ID_AUTOHIDE:
+                ProcessAutoHide();
+                break;
+            default:
+                WARN("Invalid timer ID: %u\n", (UINT)wParam);
+                bHandled = FALSE;
+                break;
         }
         return 0;
     }
@@ -3453,7 +3411,6 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)
         MESSAGE_HANDLER(TWM_SETZORDER, OnSetZOrder)
-        MESSAGE_HANDLER(TWM_PULSE, OnPulse)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
