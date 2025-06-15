@@ -29,7 +29,8 @@ BOOL g_bCriticalSectionInitialized = 0;
 static VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    PostMessage(g_pShared->hKbSwitchWnd, Msg, wParam, lParam);
+    if (g_pShared->hKbSwitchWnd)
+        PostMessage(g_pShared->hKbSwitchWnd, Msg, wParam, lParam);
 }
 
 static LRESULT CALLBACK
@@ -195,10 +196,12 @@ DllMain(IN HINSTANCE hinstDLL,
             if (!bAlreadyExists)
             {
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
-                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
                 InitializeCriticalSection(&g_pShared->csLock);
                 g_bCriticalSectionInitialized = TRUE;
             }
+
+            if (!g_pShared->hKbSwitchWnd)
+                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
             break;
         }
         case DLL_PROCESS_DETACH:
