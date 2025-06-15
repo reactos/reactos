@@ -200,6 +200,8 @@ BOOL WINAPI IsThemeDialogTextureEnabled(HWND);
 BOOL WINAPI IsThemePartDefined(HTHEME,int,int);
 HTHEME WINAPI OpenThemeData(HWND,LPCWSTR);
 HTHEME WINAPI OpenThemeDataEx(HWND,LPCWSTR,DWORD);
+HTHEME WINAPI OpenThemeDataForDpi(_In_opt_ HWND hwnd, _In_ LPCWSTR pszClassList, _In_ UINT dpi);
+
 void WINAPI SetThemeAppProperties(DWORD);
 HRESULT WINAPI SetWindowTheme(HWND,LPCWSTR,LPCWSTR);
 
