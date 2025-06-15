@@ -1,0 +1,1245 @@
+/*
+ * Copyright 2012 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#define DO_NO_IMPORTS
+import "oaidl.idl";
+import "oleacc.idl";
+
+enum NavigateDirection {
+    NavigateDirection_Parent          = 0x0000,
+    NavigateDirection_NextSibling     = 0x0001,
+    NavigateDirection_PreviousSibling = 0x0002,
+    NavigateDirection_FirstChild      = 0x0003,
+    NavigateDirection_LastChild       = 0x0004,
+};
+
+enum ProviderOptions {
+    ProviderOptions_ClientSideProvider    = 0x0001,
+    ProviderOptions_ServerSideProvider    = 0x0002,
+    ProviderOptions_NonClientAreaProvider = 0x0004,
+    ProviderOptions_OverrideProvider      = 0x0008,
+    ProviderOptions_ProviderOwnsSetFocus  = 0x0010,
+    ProviderOptions_UseComThreading       = 0x0020,
+    ProviderOptions_RefuseNonClientSupport = 0x0040,
+    ProviderOptions_HasNativeIAccessible   = 0x0080,
+    ProviderOptions_UseClientCoordinates   = 0x0100,
+};
+
+enum StructureChangeType {
+    StructureChangeType_ChildAdded          = 0x0000,
+    StructureChangeType_ChildRemoved        = 0x0001,
+    StructureChangeType_ChildrenInvalidated = 0x0002,
+    StructureChangeType_ChildrenBulkAdded   = 0x0003,
+    StructureChangeType_ChildrenBulkRemoved = 0x0004,
+    StructureChangeType_ChildrenReordered   = 0x0005,
+};
+
+enum TextEditChangeType {
+    TextEditChangeType_None                 = 0x0000,
+    TextEditChangeType_AutoCorrect          = 0x0001,
+    TextEditChangeType_Composition          = 0x0002,
+    TextEditChangeType_CompositionFinalized = 0x0003,
+    TextEditChangeType_AutoComplete         = 0x0004,
+};
+
+enum OrientationType {
+    OrientationType_None       = 0x0000,
+    OrientationType_Horizontal = 0x0001,
+    OrientationType_Vertical   = 0x0002,
+};
+
+enum DockPosition {
+    DockPosition_Top    = 0x0000,
+    DockPosition_Left   = 0x0001,
+    DockPosition_Bottom = 0x0002,
+    DockPosition_Right  = 0x0003,
+    DockPosition_Fill   = 0x0004,
+    DockPosition_None   = 0x0005,
+};
+
+enum ExpandCollapseState {
+    ExpandCollapseState_Collapsed         = 0x0000,
+    ExpandCollapseState_Expanded          = 0x0001,
+    ExpandCollapseState_PartiallyExpanded = 0x0002,
+    ExpandCollapseState_LeafNode          = 0x0003,
+};
+
+enum ScrollAmount {
+    ScrollAmount_LargeDecrement = 0x0000,
+    ScrollAmount_SmallDecrement = 0x0001,
+    ScrollAmount_NoAmount       = 0x0002,
+    ScrollAmount_LargeIncrement = 0x0003,
+    ScrollAmount_SmallIncrement = 0x0004,
+};
+
+enum RowOrColumnMajor {
+    RowOrColumnMajor_RowMajor      = 0x0000,
+    RowOrColumnMajor_ColumnMajor   = 0x0001,
+    RowOrColumnMajor_Indeterminate = 0x0002,
+};
+
+enum ToggleState {
+    ToggleState_Off           = 0x0000,
+    ToggleState_On            = 0x0001,
+    ToggleState_Indeterminate = 0x0002,
+};
+
+enum WindowVisualState {
+    WindowVisualState_Normal    = 0x0000,
+    WindowVisualState_Maximized = 0x0001,
+    WindowVisualState_Minimized = 0x0002,
+};
+
+enum SynchronizedInputType {
+    SynchronizedInputType_KeyUp          = 0x0001,
+    SynchronizedInputType_KeyDown        = 0x0002,
+    SynchronizedInputType_LeftMouseUp    = 0x0004,
+    SynchronizedInputType_LeftMouseDown  = 0x0008,
+    SynchronizedInputType_RightMouseUp   = 0x0010,
+    SynchronizedInputType_RightMouseDown = 0x0020,
+};
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(SynchronizedInputType)")
+
+enum WindowInteractionState {
+    WindowInteractionState_Running                 = 0x0000,
+    WindowInteractionState_Closing                 = 0x0001,
+    WindowInteractionState_ReadyForUserInteraction = 0x0002,
+    WindowInteractionState_BlockedByModalWindow    = 0x0003,
+    WindowInteractionState_NotResponding           = 0x0004,
+};
+
+enum TextUnit {
+    TextUnit_Character = 0x0000,
+    TextUnit_Format    = 0x0001,
+    TextUnit_Word      = 0x0002,
+    TextUnit_Line      = 0x0003,
+    TextUnit_Paragraph = 0x0004,
+    TextUnit_Page      = 0x0005,
+    TextUnit_Document  = 0x0006,
+};
+
+enum TextPatternRangeEndpoint {
+    TextPatternRangeEndpoint_Start = 0x0000,
+    TextPatternRangeEndpoint_End   = 0x0001,
+};
+
+enum SupportedTextSelection {
+    SupportedTextSelection_None     = 0x0000,
+    SupportedTextSelection_Single   = 0x0001,
+    SupportedTextSelection_Multiple = 0x0002,
+};
+
+enum LiveSetting {
+    Off       = 0x0000,
+    Polite    = 0x0001,
+    Assertive = 0x0002,
+};
+
+enum ZoomUnit {
+    ZoomUnit_NoAmount       = 0x0000,
+    ZoomUnit_LargeDecrement = 0x0001,
+    ZoomUnit_SmallDecrement = 0x0002,
+    ZoomUnit_LargeIncrement = 0x0003,
+    ZoomUnit_SmallIncrement = 0x0004,
+};
+
+enum NotificationProcessing {
+    NotificationProcessing_ImportantAll          = 0x0000,
+    NotificationProcessing_ImportantMostRecent   = 0x0001,
+    NotificationProcessing_All                   = 0x0002,
+    NotificationProcessing_MostRecent            = 0x0003,
+    NotificationProcessing_CurrentThenMostRecent = 0x0004,
+};
+
+enum NotificationKind {
+    NotificationKind_ItemAdded       = 0x0000,
+    NotificationKind_ItemRemoved     = 0x0001,
+    NotificationKind_ActionCompleted = 0x0002,
+    NotificationKind_ActionAborted   = 0x0003,
+    NotificationKind_Other           = 0x0004,
+};
+
+typedef int PROPERTYID;
+typedef int PATTERNID;
+typedef int EVENTID;
+typedef int TEXTATTRIBUTEID;
+typedef int CONTROLTYPEID;
+typedef int LANDMARKTYPEID;
+typedef int METADATAID;
+typedef int HEADINGLEVELID;
+
+struct UiaRect {
+    double left;
+    double top;
+    double width;
+    double height;
+};
+
+struct UiaPoint {
+    double x;
+    double y;
+};
+
+struct UiaChangeInfo {
+    int     uiaId;
+    VARIANT payload;
+    VARIANT extraInfo;
+};
+
+[
+    version(1.0),
+    uuid(930299ce-9965-4dec-b0f4-a54848d4b667),
+    lcid(0),
+    id(3),
+    hidden
+]
+library UIA
+{
+    importlib("stdole2.tlb");
+
+    [
+        object,
+        uuid(d6dd68d1-86fd-4332-8666-9abedea2d24c),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderSimple : IUnknown
+    {
+        [propget] HRESULT ProviderOptions([out, retval] enum ProviderOptions *pRetVal);
+
+        HRESULT GetPatternProvider(
+                [in] PATTERNID patternId,
+                [out, retval] IUnknown **pRetVal);
+
+        HRESULT GetPropertyValue(
+                [in] PROPERTYID propertyId,
+                [out, retval] VARIANT *pRetVal);
+
+        [propget] HRESULT HostRawElementProvider([out, retval] IRawElementProviderSimple **pRetVal);
+    }
+
+    [
+        object,
+        uuid(a0a839a9-8da1-4a82-806a-8e0d44e79f56),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderSimple2 : IRawElementProviderSimple
+    {
+        HRESULT ShowContextMenu();
+    }
+
+    [
+        object,
+        uuid(fcf5d820-d7ec-4613-bdf6-42a84ce7daaf),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderSimple3 : IRawElementProviderSimple2
+    {
+        HRESULT GetMetadataValue(
+                [in] int targetId,
+                [in] METADATAID metadataId,
+                [out, retval] VARIANT *returnVal);
+    }
+
+    [
+        object,
+        uuid(f8b80ada-2c44-48d0-89be-5ff23c9cd875),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IAccessibleEx : IUnknown
+    {
+        HRESULT GetObjectForChild(
+                [in] long idChild,
+                [out, retval] IAccessibleEx **pRetVal);
+
+        HRESULT GetIAccessiblePair(
+                [out] IAccessible **ppAcc,
+                [out] long *pidChild);
+
+        HRESULT GetRuntimeId(
+                [out, retval] SAFEARRAY(int) *pRetVal);
+
+        HRESULT ConvertReturnedElement(
+                [in] IRawElementProviderSimple *pIn,
+                [out] IAccessibleEx **ppRetValOut);
+    }
+
+    interface IRawElementProviderFragmentRoot;
+
+    [
+        object,
+        uuid(f7063da8-8359-439c-9297-bbc5299a7d87),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderFragment : IUnknown
+    {
+        HRESULT Navigate(
+                [in] enum NavigateDirection direction,
+                [out, retval] IRawElementProviderFragment **pRetVal);
+
+        HRESULT GetRuntimeId([out, retval] SAFEARRAY(int) *pRetVal);
+        HRESULT get_BoundingRectangle([out, retval] struct UiaRect *pRetVal);
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderFragmentRoot *) instead of
+         * SAFEARRAY(VARIANT). The new type is currently unsupported
+         * in widl, we should switch to it when it is.
+         */
+        HRESULT GetEmbeddedFragmentRoots([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+        HRESULT SetFocus();
+
+        [propget] HRESULT FragmentRoot([out, retval] IRawElementProviderFragmentRoot **pRetVal);
+    }
+
+    [
+        object,
+        uuid(620ce2a5-ab8f-40a9-86cb-de3c75599b58),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderFragmentRoot : IUnknown
+    {
+        HRESULT ElementProviderFromPoint(
+                [in] double x,
+                [in] double y,
+                [out, retval] IRawElementProviderFragment **pRetVal);
+
+        HRESULT GetFocus([out, retval] IRawElementProviderFragment **pRetVal);
+    }
+
+
+    [
+        object,
+        uuid(1d5df27c-8947-4425-b8d9-79787bb460b8),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderHwndOverride : IUnknown
+    {
+        HRESULT GetOverrideProviderForHwnd(
+                [in] HWND hwnd,
+                [out, retval] IRawElementProviderSimple **pRetVal);
+    }
+
+    [
+        object,
+        uuid(a407b27b-0f6d-4427-9292-473c7bf93258),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderAdviseEvents : IUnknown
+    {
+        HRESULT AdviseEventAdded(
+                [in] EVENTID eventId,
+                [in] SAFEARRAY(PROPERTYID) propertyIDs);
+        HRESULT AdviseEventRemoved(
+                [in] EVENTID eventId,
+                [in] SAFEARRAY(PROPERTYID) propertyIDs);
+    }
+
+    [
+        object,
+        uuid(4fd82b78-a43e-46ac-9803-0a6969c7c183),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IProxyProviderWinEventSink : IUnknown
+    {
+        HRESULT AddAutomationPropertyChangedEvent(
+                [in] IRawElementProviderSimple *pProvider,
+                [in] PROPERTYID id,
+                [in] VARIANT newValue);
+
+        HRESULT AddAutomationEvent(
+                [in] IRawElementProviderSimple *pProvider,
+                [in] EVENTID id);
+
+        HRESULT AddStructureChangedEvent(
+                [in] IRawElementProviderSimple *pProvider,
+                [in] enum StructureChangeType structureChangeType,
+                [in] SAFEARRAY(int) runtimeId);
+    }
+
+    [
+        object,
+        uuid(89592ad4-f4e0-43d5-a3b6-bad7e111b435),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IProxyProviderWinEventHandler : IUnknown
+    {
+        HRESULT RespondToWinEvent(
+                [in] DWORD idWinEvent,
+                [in] HWND hwnd,
+                [in] LONG idObject,
+                [in] LONG idChild,
+                [in] IProxyProviderWinEventSink *pSink);
+    }
+
+    [
+        object,
+        uuid(0a2a93cc-bfad-42ac-9b2e-0991fb0d3ea0),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderWindowlessSite : IUnknown
+    {
+        HRESULT GetAdjacentFragment(
+                [in] enum NavigateDirection direction,
+                [out, retval] IRawElementProviderFragment **ppParent);
+
+        HRESULT GetRuntimeIdPrefix([out, retval] SAFEARRAY(int) *pRetVal);
+    }
+
+    [
+        object,
+        uuid(33ac331b-943e-4020-b295-db37784974a3),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IAccessibleHostingElementProviders : IUnknown
+    {
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT). The new type is currently unsupported
+         * in widl, we should switch to it when it is.
+         */
+        HRESULT GetEmbeddedFragmentRoots([out,retval] SAFEARRAY(VARIANT) *pRetVal);
+
+        HRESULT GetObjectIdForProvider (
+                [in] IRawElementProviderSimple *pProvider,
+                [out] long *pidObject);
+    }
+
+    [
+        object,
+        uuid(24be0b07-d37d-487a-98cf-a13ed465e9b3),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRawElementProviderHostingAccessibles : IUnknown
+    {
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IAccessible *) instead of
+         * SAFEARRAY(VARIANT). The new type is currently unsupported
+         * in widl, we should switch to it when it is.
+         */
+        HRESULT GetEmbeddedAccessibles([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+    }
+
+    [
+        object,
+        uuid(e44c3566-915d-4070-99c6-047bff5a08f5),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ILegacyIAccessibleProvider : IUnknown
+    {
+        HRESULT Select(long flagsSelect);
+        HRESULT DoDefaultAction();
+        HRESULT SetValue(LPCWSTR szValue);
+        HRESULT GetIAccessible([out, retval] IAccessible **ppAccessible);
+
+        [propget] HRESULT ChildId([out, retval] int *pRetVal);
+        [propget] HRESULT Name([out, retval] BSTR *pszName);
+        [propget] HRESULT Value([out, retval] BSTR *pszValue);
+        [propget] HRESULT Description([out, retval] BSTR *pszDescription);
+        [propget] HRESULT Role([out, retval] DWORD *pdwRole);
+        [propget] HRESULT State([out, retval] DWORD *pdwState);
+        [propget] HRESULT Help([out, retval] BSTR *pszHelp);
+        [propget] HRESULT KeyboardShortcut([out, retval] BSTR *pszKeyboardShortcut);
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT). The new type is currently unsupported
+         * in widl, we should switch to it when it is.
+         */
+        HRESULT GetSelection([out, retval] SAFEARRAY(VARIANT) *pvarSelectedChildren);
+        [propget] HRESULT DefaultAction([out, retval] BSTR *pszDefaultAction);
+    }
+
+    [
+        object,
+        uuid(159bc72c-4ad3-485e-9637-d7052edf0146),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IDockProvider : IUnknown
+    {
+        HRESULT SetDockPosition([in] enum DockPosition dockPosition);
+        [propget] HRESULT DockPosition([out, retval] enum DockPosition *pRetVal);
+    };
+
+    [
+        object,
+        uuid(d847d3a5-cab0-4a98-8c32-ecb45c59ad24),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IExpandCollapseProvider : IUnknown
+    {
+        HRESULT Expand();
+        HRESULT Collapse();
+        [propget] HRESULT ExpandCollapseState([out, retval] enum ExpandCollapseState *pRetVal);
+    };
+
+    [
+        object,
+        uuid(b17d6187-0907-464b-a168-0ef17a1572b1),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IGridProvider : IUnknown
+    {
+        HRESULT GetItem(
+                [in] int row,
+                [in] int column,
+                [out, retval] IRawElementProviderSimple **pRetVal);
+
+        [propget] HRESULT RowCount([out, retval] int *pRetVal);
+        [propget] HRESULT ColumnCount([out, retval] int *pRetVal);
+    };
+
+    [
+        object,
+        uuid(d02541f1-fb81-4d64-ae32-f520f8a6dbd1),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IGridItemProvider : IUnknown
+    {
+        [propget] HRESULT Row([out, retval] int *pRetVal);
+        [propget] HRESULT Column([out, retval] int *pRetVal);
+        [propget] HRESULT RowSpan([out, retval] int *pRetVal);
+        [propget] HRESULT ColumnSpan([out, retval] int *pRetVal);
+        [propget] HRESULT ContainingGrid([out, retval] IRawElementProviderSimple **pRetVal);
+    };
+
+    [
+        object,
+        uuid(54fcb24b-e18e-47a2-b4d3-eccbe77599a2),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IInvokeProvider : IUnknown
+    {
+        HRESULT Invoke();
+    };
+
+    [
+        object,
+        uuid(6278cab1-b556-4a1a-b4e0-418acc523201),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IMultipleViewProvider : IUnknown
+    {
+        HRESULT GetViewName(
+                [in] int viewId,
+                [out, retval] BSTR *pRetVal);
+
+        HRESULT SetCurrentView([in] int viewId);
+        [propget] HRESULT CurrentView([out, retval] int *pRetVal);
+        HRESULT GetSupportedViews([out, retval] SAFEARRAY(int) *pRetVal);
+    };
+
+    [
+        object,
+        uuid(36dc7aef-33e6-4691-afe1-2be7274b3d33),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IRangeValueProvider : IUnknown
+    {
+        HRESULT SetValue([in] double val);
+        [propget] HRESULT Value([out, retval] double *pRetVal);
+        [propget] HRESULT IsReadOnly([out, retval] BOOL *pRetVal);
+        [propget] HRESULT Maximum([out, retval] double *pRetVal);
+        [propget] HRESULT Minimum([out, retval] double *pRetVal);
+        [propget] HRESULT LargeChange([out, retval] double *pRetVal);
+        [propget] HRESULT SmallChange([out, retval] double *pRetVal);
+    };
+
+    [
+        object,
+        uuid(2360c714-4bf1-4b26-ba65-9b21316127eb),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IScrollItemProvider : IUnknown
+    {
+        HRESULT ScrollIntoView();
+    };
+
+    [
+        object,
+        uuid(fb8b03af-3bdf-48d4-bd36-1a65793be168),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ISelectionProvider : IUnknown
+    {
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT).
+         */
+        HRESULT GetSelection([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+        [propget] HRESULT CanSelectMultiple([out, retval] BOOL *pRetVal);
+        [propget] HRESULT IsSelectionRequired([out, retval] BOOL *pRetVal);
+    };
+
+    [
+        object,
+        uuid(14f68475-ee1c-44f6-a869-d239381f0fe7),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ISelectionProvider2 : ISelectionProvider
+    {
+        [propget] HRESULT FirstSelectedItem([out, retval] IRawElementProviderSimple **val);
+        [propget] HRESULT LastSelectedItem([out, retval] IRawElementProviderSimple **val);
+        [propget] HRESULT CurrentSelectedItem([out, retval] IRawElementProviderSimple **val);
+        [propget] HRESULT ItemCount([out, retval] int *val);
+    }
+
+    [
+        object,
+        uuid(b38b8077-1fc3-42a5-8cae-d40c2215055a),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IScrollProvider : IUnknown
+    {
+        HRESULT Scroll(
+                [in] enum ScrollAmount horizontalAmount,
+                [in] enum ScrollAmount verticalAmount);
+        HRESULT SetScrollPercent(
+                [in] double horizontalPercent,
+                [in] double verticalPercent);
+
+        [propget] HRESULT HorizontalScrollPercent([out, retval] double *pRetVal);
+        [propget] HRESULT VerticalScrollPercent([out, retval] double *pRetVal);
+        [propget] HRESULT HorizontalViewSize([out, retval] double *pRetVal);
+        [propget] HRESULT VerticalViewSize([out, retval] double *pRetVal);
+        [propget] HRESULT HorizontallyScrollable([out, retval] BOOL *pRetVal);
+        [propget] HRESULT VerticallyScrollable([out, retval] BOOL *pRetVal);
+    };
+
+    [
+        object,
+        uuid(2acad808-b2d4-452d-a407-91ff1ad167b2),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ISelectionItemProvider : IUnknown
+    {
+        HRESULT Select();
+        HRESULT AddToSelection();
+        HRESULT RemoveFromSelection();
+        [propget] HRESULT IsSelected([out, retval] BOOL *pRetVal);
+        [propget] HRESULT SelectionContainer([out, retval] IRawElementProviderSimple **pRetVal);
+    };
+
+    [
+        object,
+        uuid(29db1a06-02ce-4cf7-9b42-565d4fab20ee),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ISynchronizedInputProvider : IUnknown
+    {
+        HRESULT StartListening([in] enum SynchronizedInputType inputType);
+        HRESULT Cancel();
+    };
+
+    [
+        object,
+        uuid(9c860395-97b3-490a-b52a-858cc22af166),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITableProvider : IUnknown
+    {
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT).
+         */
+        HRESULT GetRowHeaders([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+        HRESULT GetColumnHeaders([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+        [propget] HRESULT RowOrColumnMajor([out, retval] enum RowOrColumnMajor *pRetVal);
+    };
+
+    [
+        object,
+        uuid(b9734fa6-771f-4d78-9c90-2517999349cd),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITableItemProvider : IUnknown
+    {
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT).
+         */
+        HRESULT GetRowHeaderItems([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+        HRESULT GetColumnHeaderItems([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+    };
+
+    [
+        object,
+        uuid(56d00bd0-c4f4-433c-a836-1a52a57e0892),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IToggleProvider : IUnknown
+    {
+        HRESULT Toggle();
+        [propget] HRESULT ToggleState([out, retval] enum ToggleState *pRetVal);
+    };
+
+    [
+        object,
+        uuid(6829ddc4-4f91-4ffa-b86f-bd3e2987cb4c),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITransformProvider : IUnknown
+    {
+        HRESULT Move(
+                [in] double x,
+                [in] double y);
+        HRESULT Resize(
+                [in] double width,
+                [in] double height);
+
+        HRESULT Rotate([in] double degrees);
+        [propget] HRESULT CanMove([out, retval] BOOL *pRetVal);
+        [propget] HRESULT CanResize([out, retval] BOOL *pRetVal);
+        [propget] HRESULT CanRotate([out, retval] BOOL *pRetVal);
+    };
+
+    [
+        object,
+        uuid(c7935180-6fb3-4201-b174-7df73adbf64a),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IValueProvider : IUnknown
+    {
+        HRESULT SetValue([in] LPCWSTR val);
+        [propget] HRESULT Value([out, retval] BSTR *pRetVal);
+        [propget] HRESULT IsReadOnly([out, retval] BOOL *pRetVal);
+    };
+
+    [
+        object,
+        uuid(987df77b-db06-4d77-8f8a-86a9c3bb90b9),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IWindowProvider : IUnknown
+    {
+        HRESULT SetVisualState([in] enum WindowVisualState state);
+        HRESULT Close();
+
+        HRESULT WaitForInputIdle(
+                [in] int milliseconds,
+                [out, retval] BOOL *pRetVal);
+
+        [propget] HRESULT CanMaximize([out, retval] BOOL *pRetVal);
+        [propget] HRESULT CanMinimize([out, retval] BOOL *pRetVal);
+        [propget] HRESULT IsModal([out, retval] BOOL *pRetVal);
+        [propget] HRESULT WindowVisualState([out, retval] enum WindowVisualState *pRetVal);
+        [propget] HRESULT WindowInteractionState([out, retval] enum WindowInteractionState *pRetVal);
+        [propget] HRESULT IsTopmost([out, retval] BOOL *pRetVal);
+    };
+
+    [
+        object,
+        uuid(e747770b-39ce-4382-ab30-d8fb3f336f24),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IItemContainerProvider : IUnknown
+    {
+        HRESULT FindItemByProperty(
+                [in] IRawElementProviderSimple *pStartAfter,
+                [in] PROPERTYID propertyId,
+                [in] VARIANT value,
+                [out, retval] IRawElementProviderSimple **pFound);
+    };
+
+    [
+        object,
+        uuid(cb98b665-2d35-4fac-ad35-f3c60d0c0b8b),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IVirtualizedItemProvider : IUnknown
+    {
+        HRESULT Realize();
+    };
+
+    [
+        object,
+        uuid(3ad86ebd-f5ef-483d-bb18-b1042a475d64),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IObjectModelProvider : IUnknown
+    {
+        HRESULT GetUnderlyingObjectModel([out, retval] IUnknown **ppUnknown);
+    };
+
+    [
+        object,
+        uuid(f95c7e80-bd63-4601-9782-445ebff011fc),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IAnnotationProvider : IUnknown
+    {
+        [propget] HRESULT AnnotationTypeId([out, retval] int *retVal);
+        [propget] HRESULT AnnotationTypeName([out, retval] BSTR *retVal);
+        [propget] HRESULT Author([out, retval] BSTR *retVal);
+        [propget] HRESULT DateTime([out, retval] BSTR *retVal);
+        [propget] HRESULT Target([out, retval] IRawElementProviderSimple **retVal);
+    };
+
+    [
+        object,
+        uuid(19b6b649-f5d7-4a6d-bdcb-129252be588a),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IStylesProvider : IUnknown
+    {
+        [propget] HRESULT StyleId([out, retval] int *retVal);
+        [propget] HRESULT StyleName([out, retval] BSTR *retVal);
+        [propget] HRESULT FillColor([out, retval] int *retVal);
+        [propget] HRESULT FillPatternStyle([out, retval] BSTR *retVal);
+        [propget] HRESULT Shape([out, retval] BSTR *retVal);
+        [propget] HRESULT FillPatternColor([out, retval] int *retVal);
+        [propget] HRESULT ExtendedProperties([out, retval] BSTR *retVal);
+    };
+
+    [
+        object,
+        uuid(6f6b5d35-5525-4f80-b758-85473832ffc7),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ISpreadsheetProvider : IUnknown
+    {
+        HRESULT GetItemByName(
+                [in] LPCWSTR name,
+                [out, retval] IRawElementProviderSimple **pRetVal);
+    };
+
+    [
+        object,
+        uuid(eaed4660-7b3d-4879-a2e6-365ce603f3d0),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ISpreadsheetItemProvider : IUnknown
+    {
+        [propget] HRESULT Formula([out, retval] BSTR *pRetVal);
+
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT).
+         */
+        HRESULT GetAnnotationObjects([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+        HRESULT GetAnnotationTypes([out, retval] SAFEARRAY(int) *pRetVal);
+    };
+
+    [
+        object,
+        uuid(4758742f-7ac2-460c-bc48-09fc09308a93),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITransformProvider2 : ITransformProvider
+    {
+        HRESULT Zoom([in] double zoom);
+        [propget] HRESULT CanZoom([out, retval] BOOL *pRetVal);
+        [propget] HRESULT ZoomLevel([out, retval] double *pRetVal);
+        [propget] HRESULT ZoomMinimum([out, retval] double *pRetVal);
+        [propget] HRESULT ZoomMaximum([out, retval] double *pRetVal);
+        HRESULT ZoomByUnit([in] enum ZoomUnit zoomUnit);
+    }
+
+    [
+        object,
+        uuid(6aa7bbbb-7ff9-497d-904f-d20b897929d8),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IDragProvider : IUnknown
+    {
+        [propget] HRESULT IsGrabbed([out, retval] BOOL *pRetVal);
+        [propget] HRESULT DropEffect([out, retval] BSTR *pRetVal);
+        [propget] HRESULT DropEffects([out, retval] SAFEARRAY(BSTR) *pRetVal);
+
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT).
+         */
+        HRESULT GetGrabbedItems([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+    };
+
+    [
+        object,
+        uuid(bae82bfd-358a-481c-85a0-d8b4d90a5d61),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IDropTargetProvider : IUnknown
+    {
+        [propget] HRESULT DropTargetEffect([out, retval] BSTR *pRetVal);
+        [propget] HRESULT DropTargetEffects([out, retval] SAFEARRAY(BSTR) *pRetVal);
+    };
+
+    interface ITextRangeProvider;
+    [
+        object,
+        uuid(3589c92c-63f3-4367-99bb-ada653b77cf2),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITextProvider : IUnknown
+    {
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(ITextRangeProvider *) instead of
+         * SAFEARRAY(VARIANT).
+         */
+        HRESULT GetSelection([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+        HRESULT GetVisibleRanges([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+
+        HRESULT RangeFromChild(
+                [in] IRawElementProviderSimple *childElement,
+                [out, retval] ITextRangeProvider **pRetVal);
+        HRESULT RangeFromPoint(
+                [in] struct UiaPoint point,
+                [out, retval] ITextRangeProvider **pRetVal);
+
+        [propget] HRESULT DocumentRange([out, retval] ITextRangeProvider **pRetVal);
+        [propget] HRESULT SupportedTextSelection([out, retval] enum SupportedTextSelection *pRetVal);
+    };
+
+    [
+        object,
+        uuid(0dc5e6ed-3e16-4bf1-8f9a-a979878bc195),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITextProvider2 : ITextProvider
+    {
+        HRESULT RangeFromAnnotation(
+                [in] IRawElementProviderSimple *annotationElement,
+                [out, retval] ITextRangeProvider **pRetVal);
+        HRESULT GetCaretRange(
+                [out] BOOL *isActive,
+                [out, retval] ITextRangeProvider **pRetVal);
+    }
+
+    [
+        object,
+        uuid(ea3605b4-3a05-400e-b5f9-4e91b40f6176),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITextEditProvider : ITextProvider
+    {
+        HRESULT GetActiveComposition([out, retval] ITextRangeProvider **pRetVal);
+        HRESULT GetConversionTarget([out, retval] ITextRangeProvider **pRetVal);
+    }
+
+    [
+        object,
+        uuid(5347ad7b-c355-46f8-aff5-909033582f63),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITextRangeProvider : IUnknown
+    {
+        HRESULT Clone([out, retval] ITextRangeProvider **pRetVal);
+
+        HRESULT Compare(
+                [in] ITextRangeProvider *range,
+                [out, retval] BOOL *pRetVal);
+        HRESULT CompareEndpoints(
+                [in] enum TextPatternRangeEndpoint endpoint,
+                [in] ITextRangeProvider *targetRange,
+                [in] enum TextPatternRangeEndpoint targetEndpoint,
+                [out, retval] int *pRetVal);
+
+        HRESULT ExpandToEnclosingUnit([in] enum TextUnit unit);
+
+        HRESULT FindAttribute(
+                [in] TEXTATTRIBUTEID attributeId,
+                [in] VARIANT val,
+                [in] BOOL backward,
+                [out, retval] ITextRangeProvider **pRetVal);
+        HRESULT FindText(
+                [in] BSTR text,
+                [in] BOOL backward,
+                [in] BOOL ignoreCase,
+                [out, retval] ITextRangeProvider **pRetVal);
+
+        HRESULT GetAttributeValue(
+                [in] TEXTATTRIBUTEID attributeId,
+                [out, retval] VARIANT *pRetVal);
+
+        HRESULT GetBoundingRectangles([out, retval] SAFEARRAY(double) *pRetVal);
+        HRESULT GetEnclosingElement([out, retval] IRawElementProviderSimple **pRetVal);
+
+        HRESULT GetText(
+                [in] int maxLength,
+                [out, retval] BSTR *pRetVal);
+
+        HRESULT Move(
+                [in] enum TextUnit unit,
+                [in] int count,
+                [out, retval] int *pRetVal);
+        HRESULT MoveEndpointByUnit(
+                [in] enum TextPatternRangeEndpoint endpoint,
+                [in] enum TextUnit unit,
+                [in] int count,
+                [out, retval] int *pRetVal);
+        HRESULT MoveEndpointByRange(
+                [in] enum TextPatternRangeEndpoint endpoint,
+                [in] ITextRangeProvider *targetRange,
+                [in] enum TextPatternRangeEndpoint targetEndpoint);
+
+        HRESULT Select();
+        HRESULT AddToSelection();
+        HRESULT RemoveFromSelection();
+        HRESULT ScrollIntoView([in] BOOL alignToTop);
+
+        /*
+         * FIXME: Current versions of Windows SDK use
+         * SAFEARRAY(IRawElementProviderSimple *) instead of
+         * SAFEARRAY(VARIANT).
+         */
+        HRESULT GetChildren([out, retval] SAFEARRAY(VARIANT) *pRetVal);
+    };
+
+    [
+        object,
+        uuid(9bbce42c-1921-4f18-89ca-dba1910a0386),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITextRangeProvider2 : ITextRangeProvider
+    {
+        HRESULT ShowContextMenu();
+    }
+
+    [
+        object,
+        uuid(4c2de2b9-c88f-4f88-a111-f1d336b7d1a9),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ITextChildProvider : IUnknown
+    {
+        [propget] HRESULT TextContainer([out, retval] IRawElementProviderSimple **pRetVal);
+        [propget] HRESULT TextRange([out, retval] ITextRangeProvider **pRetVal);
+    };
+
+    [
+        object,
+        uuid(2062a28a-8c07-4b94-8e12-7037c622aeb8),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface ICustomNavigationProvider : IUnknown
+    {
+        HRESULT Navigate(
+                [in] enum NavigateDirection direction,
+                [out, retval] IRawElementProviderSimple **pRetVal);
+    }
+
+    enum UIAutomationType {
+        UIAutomationType_Int     = 0x01,
+        UIAutomationType_Bool    = 0x02,
+        UIAutomationType_String  = 0x03,
+        UIAutomationType_Double  = 0x04,
+        UIAutomationType_Point   = 0x05,
+        UIAutomationType_Rect    = 0x06,
+        UIAutomationType_Element = 0x07,
+
+        UIAutomationType_Array = 0x00010000,
+        UIAutomationType_Out   = 0x00020000,
+
+        UIAutomationType_IntArray    = ( UIAutomationType_Int    | UIAutomationType_Array ),
+        UIAutomationType_BoolArray   = ( UIAutomationType_Bool   | UIAutomationType_Array ),
+        UIAutomationType_StringArray = ( UIAutomationType_String | UIAutomationType_Array ),
+        UIAutomationType_DoubleArray = ( UIAutomationType_Double | UIAutomationType_Array ),
+        UIAutomationType_PointArray  = ( UIAutomationType_Point  | UIAutomationType_Array ),
+        UIAutomationType_RectArray   = ( UIAutomationType_Rect   | UIAutomationType_Array ),
+        UIAutomationType_ElementArray = ( UIAutomationType_Element | UIAutomationType_Array ),
+
+        UIAutomationType_OutInt    = ( UIAutomationType_Int    | UIAutomationType_Out ),
+        UIAutomationType_OutBool   = ( UIAutomationType_Bool   | UIAutomationType_Out ),
+        UIAutomationType_OutString = ( UIAutomationType_String | UIAutomationType_Out ),
+        UIAutomationType_OutDouble = ( UIAutomationType_Double | UIAutomationType_Out ),
+        UIAutomationType_OutPoint  = ( UIAutomationType_Point  | UIAutomationType_Out ),
+        UIAutomationType_OutRect   = ( UIAutomationType_Rect   | UIAutomationType_Out ),
+        UIAutomationType_OutElement = ( UIAutomationType_Element | UIAutomationType_Out ),
+
+        UIAutomationType_OutIntArray    = ( UIAutomationType_Int    | UIAutomationType_Array | UIAutomationType_Out ),
+        UIAutomationType_OutBoolArray   = ( UIAutomationType_Bool   | UIAutomationType_Array | UIAutomationType_Out ),
+        UIAutomationType_OutStringArray = ( UIAutomationType_String | UIAutomationType_Array | UIAutomationType_Out ),
+        UIAutomationType_OutDoubleArray = ( UIAutomationType_Double | UIAutomationType_Array | UIAutomationType_Out ),
+        UIAutomationType_OutPointArray  = ( UIAutomationType_Point  | UIAutomationType_Array | UIAutomationType_Out ),
+        UIAutomationType_OutRectArray   = ( UIAutomationType_Rect   | UIAutomationType_Array | UIAutomationType_Out ),
+        UIAutomationType_OutElementArray = ( UIAutomationType_Element | UIAutomationType_Array | UIAutomationType_Out ),
+    };
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(UIAutomationType)")
+
+    struct UIAutomationParameter {
+        enum UIAutomationType type;
+        void *pData;
+    };
+
+    struct UIAutomationPropertyInfo {
+        GUID guid;
+        LPCWSTR pProgrammaticName;
+        enum UIAutomationType type;
+    };
+
+    struct UIAutomationEventInfo {
+        GUID guid;
+        LPCWSTR pProgrammaticName;
+    };
+
+    struct UIAutomationMethodInfo {
+        LPCWSTR pProgrammaticName;
+        BOOL doSetFocus;
+        UINT cInParameters;
+        UINT cOutParameters;
+        [size_is(cInParameters + cOutParameters)]enum UIAutomationType *pParameterTypes;
+        [size_is(cInParameters + cOutParameters)]LPCWSTR *pParameterNames;
+    };
+
+    [
+        object,
+        uuid(c03a7fe4-9431-409f-bed8-ae7c2299bc8d),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IUIAutomationPatternInstance : IUnknown
+    {
+        [local] HRESULT GetProperty(
+                        [in] UINT index,
+                        [in] BOOL cached,
+                        [in] enum UIAutomationType type,
+                        [out] void *pPtr);
+
+        [local] HRESULT CallMethod(
+                        [in] UINT index,
+                        [in] const struct UIAutomationParameter *pParams,
+                        [in] UINT cParams);
+    }
+
+    [
+        object,
+        uuid(d97022f3-a947-465e-8b2a-ac4315fa54e8),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IUIAutomationPatternHandler : IUnknown
+    {
+        HRESULT CreateClientWrapper(
+                [in] IUIAutomationPatternInstance *pPatternInstance,
+                [out] IUnknown **pClientWrapper);
+
+        [local] HRESULT Dispatch(
+                        [in] IUnknown *pTarget,
+                        [in] UINT index,
+                        [in] const struct UIAutomationParameter *pParams,
+                        [in] UINT cParams);
+    }
+
+    struct UIAutomationPatternInfo {
+        GUID guid;
+        LPCWSTR pProgrammaticName;
+        GUID providerInterfaceId;
+        GUID clientInterfaceId;
+        UINT cProperties;
+        [size_is(cProperties)]struct UIAutomationPropertyInfo *pProperties;
+        UINT cMethods;
+        [size_is(cMethods)]struct UIAutomationMethodInfo *pMethods;
+        UINT cEvents;
+        [size_is(cEvents)]struct UIAutomationEventInfo *pEvents;
+        IUIAutomationPatternHandler *pPatternHandler;
+    };
+
+    [
+        object,
+        uuid(8609c4ec-4a1a-4d88-a357-5a66e060e1cf),
+        pointer_default(unique),
+        oleautomation
+    ]
+    interface IUIAutomationRegistrar : IUnknown
+    {
+        HRESULT RegisterProperty(
+                [in] const struct UIAutomationPropertyInfo *property,
+                [out] PROPERTYID *propertyId);
+
+        HRESULT RegisterEvent(
+                [in] const struct UIAutomationEventInfo *event,
+                [out] EVENTID *eventId);
+
+        HRESULT RegisterPattern(
+                [in] const struct UIAutomationPatternInfo *pattern,
+                [out] PATTERNID *pPatternId,
+                [out] PROPERTYID *pPatternAvailablePropertyId,
+                [in] UINT propertyIdCount,
+                [out, size_is(propertyIdCount)] PROPERTYID *pPropertyIds,
+                [in] UINT eventIdCount,
+                [out, size_is(eventIdCount)] EVENTID *pEventIds);
+    };
+
+    [
+        uuid(6e29fabf-9977-42d1-8d0e-ca7e61ad87e6),
+        version(1.0),
+        threading(both)
+    ]
+    coclass CUIAutomationRegistrar
+    {
+        [default] interface IUIAutomationRegistrar;
+    }
+}
