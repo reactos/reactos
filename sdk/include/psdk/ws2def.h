@@ -360,11 +360,7 @@ typedef USHORT ADDRESS_FAMILY;
 #define NI_MAXSERV      32
 
 typedef struct sockaddr {
-#if (_WIN32_WINNT < 0x0600)
-  u_short sa_family;
-#else
   ADDRESS_FAMILY sa_family;
-#endif
   CHAR sa_data[14];
 } SOCKADDR, *PSOCKADDR, FAR *LPSOCKADDR;
 
@@ -524,17 +520,9 @@ typedef struct _WSAMSG {
   LPSOCKADDR name;
   INT namelen;
   LPWSABUF lpBuffers;
-#if (_WIN32_WINNT >= 0x0600)
   ULONG dwBufferCount;
-#else
-  DWORD dwBufferCount;
-#endif
   WSABUF Control;
-#if (_WIN32_WINNT >= 0x0600)
   ULONG dwFlags;
-#else
-  DWORD dwFlags;
-#endif
 } WSAMSG, *PWSAMSG, *FAR LPWSAMSG;
 
 #if (_WIN32_WINNT >= 0x0600)
@@ -547,9 +535,7 @@ typedef struct _WSACMSGHDR {
   INT cmsg_type;
 } WSACMSGHDR, *PWSACMSGHDR, FAR *LPWSACMSGHDR;
 
-#if (_WIN32_WINNT >= 0x0600)
 typedef WSACMSGHDR CMSGHDR, *PCMSGHDR;
-#endif
 
 #define WSA_CMSGHDR_ALIGN(length) (((length) + TYPE_ALIGNMENT(WSACMSGHDR)-1) &  \
                                    (~(TYPE_ALIGNMENT(WSACMSGHDR)-1)))
