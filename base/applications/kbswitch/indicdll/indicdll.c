@@ -10,6 +10,9 @@
 #include "../kbswitch.h"
 #include "resource.h"
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(internat);
+
 typedef struct tagSHARED_DATA
 {
     HHOOK hWinHook;
@@ -114,6 +117,8 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
 BOOL APIENTRY
 KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
+    TRACE("bDoHook: %d\n", bDoHook);
+
     EnterCriticalSection(&g_csLock);
     if (bDoHook)
     {
@@ -180,28 +185,42 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
         {
+            TRACE("DLL_PROCESS_ATTACH\n");
             g_hInstance = hinstDLL;
+
             InitializeCriticalSection(&g_csLock);
+
             g_hShared = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
                                           0, sizeof(SHARED_DATA), TEXT("InternatSHData"));
             if (!g_hShared)
+            {
+                ERR("!g_hShared\n");
                 return FALSE;
+            }
 
             BOOL bAlreadyExists = GetLastError() == ERROR_ALREADY_EXISTS;
+            TRACE("bAlreadyExists: %d\n", bAlreadyExists);
 
             g_pShared = (PSHARED_DATA)MapViewOfFile(g_hShared, FILE_MAP_WRITE, 0, 0, 0);
             if (!g_pShared)
+            {
+                ERR("!g_pShared\n");
                 return FALSE;
+            }
 
             if (!bAlreadyExists)
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
 
             if (!g_pShared->hKbSwitchWnd)
+            {
                 g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
+                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
+            }
             break;
         }
         case DLL_PROCESS_DETACH:
         {
+            TRACE("DLL_PROCESS_DETACH\n");
             UnmapViewOfFile(g_pShared);
             CloseHandle(g_hShared);
             DeleteCriticalSection(&g_csLock);
