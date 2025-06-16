@@ -274,7 +274,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
 
     // Search from the registry key
     DWORD dwCompatFlags = 0;
-    szText[0] = ANSI_NULL; // The 1st try is for the parent key
+    szText[0] = ANSI_NULL; // The 1st try is for the non-sub key
     for (DWORD dwIndex = 0; error == ERROR_SUCCESS;)
     {
         // Open the sub-key
