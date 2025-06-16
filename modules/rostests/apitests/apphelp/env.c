@@ -344,7 +344,7 @@ static void Validate_ShimData_WinVista(PVOID data, size_t count, const char* lay
     GetModuleFileNameW(hShimEngDll, szShimEng, _countof(szShimEng));
 
     ok(!lstrcmpW(pShimData->szModule, szShimEng), "Expected pShimData->Module to be %s, was %s\n",
-            wine_dbgstr_w(szShimEng), wine_dbgstr_w(pShimData->szModule));
+        wine_dbgstr_w(szShimEng), wine_dbgstr_w(pShimData->szModule));
     ok(pShimData->dwMagic == SHIMDATA_MAGIC, "Expected pShimData->dwMagic to be 0x%x, was 0x%x\n",
         SHIMDATA_MAGIC, pShimData->dwMagic);
     ok(pShimData->dwSize == sizeof(ShimData_WinVista), "Expected pShimData->dwSize to be %u, was %u\n",
@@ -375,7 +375,7 @@ static void Validate_ShimData_Win7(PVOID data, WCHAR szApphelp[256], size_t coun
     ShimData_Win7* pShimData = (ShimData_Win7*)data;
 
     ok(!lstrcmpW(pShimData->szModule, szApphelp), "Expected pShimData->Module to be %s, was %s\n",
-           wine_dbgstr_w(szApphelp), wine_dbgstr_w(pShimData->szModule));
+        wine_dbgstr_w(szApphelp), wine_dbgstr_w(pShimData->szModule));
     ok(pShimData->dwMagic == SHIMDATA_MAGIC, "Expected pShimData->dwMagic to be 0x%x, was 0x%x\n",
         SHIMDATA_MAGIC, pShimData->dwMagic);
     ok(pShimData->dwSize == sizeof(ShimData_Win7), "Expected pShimData->dwSize to be %u, was %u\n",
@@ -1448,7 +1448,7 @@ START_TEST(env)
     }
 
 #ifdef _M_IX86
-    /* New version of Win10.. */
+    /* New version of Win10 */
     if (g_WinVersion == WINVER_WIN10 && ShimDataType == 3)
         g_ShimDataSize = 4096;
 
