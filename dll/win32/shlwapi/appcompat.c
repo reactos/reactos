@@ -130,8 +130,8 @@ typedef struct tagWNDCOMPATINFO
 static WNDCOMPATINFO g_wndCompatInfo[] =
 {
     // The first byte indicates the string length
-    { "\x09" "bosa_sdm_", 0x1000100 },
-    { "\x18" "File Open Message Window", 0x1000100 },
+    { "\x09" "bosa_sdm_", SHACF_UNKNOWN1 | SHACF_UNKNOWN2 },
+    { "\x18" "File Open Message Window", SHACF_UNKNOWN1 | SHACF_UNKNOWN2 },
 };
 
 // Internal structure for SHLWAPI_WndCompatEnumProc
