@@ -241,7 +241,7 @@ SHLWAPI_IsAppCompatVersion(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVersio
         }
 
         if (!ret)
-            ret = (lstrcmpiA(pszModuleVersion, pszEntryVersion) == 0); // Full match?
+            ret = (lstrcmpiA(pszModuleVersion, pszEntryVersion) == 0); // Whole match?
     }
 
     LocalFree(pszModuleVersion);
