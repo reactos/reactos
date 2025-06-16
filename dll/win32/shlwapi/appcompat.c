@@ -179,27 +179,56 @@ SHLWAPI_WndCompatEnumProc(_In_ HWND hWnd, _In_ LPARAM lParam)
 // Swedish (Sweden) Western European
 #define PRODUCT_VER_SWEDISH_WE          "\\StringFileInfo\\041D04B0\\ProductVersion"
 
+typedef struct tagLANGANDCODEPAGE {
+    WORD wLanguage;
+    WORD wCodePage;
+} LANGANDCODEPAGE, *PLANGANDCODEPAGE;
+
 static HRESULT
 SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 {
     DWORD dwHandle;
     BYTE Data[4096];
-    PVOID pszA;
+    PVOID pData;
 
     *ppszDest = NULL;
 
     UINT size = GetFileVersionInfoSizeA(pszFileName, &dwHandle);
-    if (size <= _countof(Data) &&
-        GetFileVersionInfoA(pszFileName, dwHandle, sizeof(Data), Data) &&
-        (VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_UTF16,     &pszA, &size) ||
-         VerQueryValueA(Data, PRODUCT_VER_GERMAN_UTF16,         &pszA, &size) ||
-         VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_WE,        &pszA, &size) ||
-         VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_NEUTRAL,   &pszA, &size) ||
-         VerQueryValueA(Data, PRODUCT_VER_SWEDISH_WE,           &pszA, &size)) &&
-        size && Str_SetPtrA(ppszDest, (PSTR)pszA))
+    if (size > _countof(Data) ||
+        !GetFileVersionInfoA(pszFileName, dwHandle, sizeof(Data), Data))
     {
-        // NOTE: *ppszDest must be freed using LocalFree later
-        return S_OK;
+        return E_FAIL;
+    }
+
+    if (VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_UTF16,     &pData, &size) ||
+        VerQueryValueA(Data, PRODUCT_VER_GERMAN_UTF16,         &pData, &size) ||
+        VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_WE,        &pData, &size) ||
+        VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_NEUTRAL,   &pData, &size) ||
+        VerQueryValueA(Data, PRODUCT_VER_SWEDISH_WE,           &pData, &size))
+    {
+        if (size && Str_SetPtrA(ppszDest, (PSTR)pData))
+        {
+            // NOTE: *ppszDest must be freed using LocalFree later
+            return S_OK;
+        }
+    }
+    else if (VerQueryValueA(Data, "\\VarFileInfo\\Translation", &pData, &size))
+    {
+        PLANGANDCODEPAGE pEntry = (PLANGANDCODEPAGE)pData;
+        for (; (PBYTE)pEntry + sizeof(LANGANDCODEPAGE) <= (PBYTE)pData + size; ++pEntry)
+        {
+            CHAR szPath[MAX_PATH];
+            wnsprintfA(szPath, _countof(szPath), "\\StringFileInfo\\%04X%04X\\ProductVersion",
+                       pEntry->wLanguage, pEntry->wCodePage);
+            if (!VerQueryValueA(Data, szPath, &pData, &size))
+                continue;
+
+            if (size && Str_SetPtrA(ppszDest, (PSTR)pData))
+            {
+                // NOTE: *ppszDest must be freed using LocalFree later
+                return S_OK;
+            }
+        }
     }
 
     return E_OUTOFMEMORY;
@@ -422,6 +451,7 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
         // Add the target flags if a match is found
         if (data.iFound >= 0)
             dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
+
         dwAppCompatFlags |= SHACF_UNKNOWN3;
 
         InterlockedExchange((PLONG)&g_dwAppCompatFlags, dwAppCompatFlags);
