@@ -215,8 +215,9 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
     }
     else if (VerQueryValueA(Data, "\\VarFileInfo\\Translation", &pData, &size))
     {
+        PVOID pDataSaved = pData;
         PLANGANDCODEPAGE pEntry = (PLANGANDCODEPAGE)pData;
-        for (; (PBYTE)pEntry + sizeof(LANGANDCODEPAGE) <= (PBYTE)pData + size; ++pEntry)
+        for (; (PBYTE)pEntry + sizeof(LANGANDCODEPAGE) <= (PBYTE)pDataSaved + size; ++pEntry)
         {
             CHAR szPath[MAX_PATH];
             wnsprintfA(szPath, _countof(szPath), "\\StringFileInfo\\%04X%04X\\ProductVersion",
