@@ -211,7 +211,7 @@ DllMain(IN HINSTANCE hinstDLL,
             if (!bAlreadyExists)
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
 
-            if (!g_pShared->hKbSwitchWnd)
+            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
             {
                 g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
                 TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
