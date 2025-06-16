@@ -27,8 +27,8 @@ static DWORD g_dwAppCompatFlags = 0; // Cached compatibility flags
 
 // Exclusive Control
 CRITICAL_SECTION g_csAppCompatLock; // Critical section (initialized in shlwapi_main.c)
-#define AppCompat_Lock()    EnterCriticalSection(&g_csAppCompatLock);
-#define AppCompat_Unlock()  LeaveCriticalSection(&g_csAppCompatLock);
+#define AppCompat_Lock()    EnterCriticalSection(&g_csAppCompatLock)
+#define AppCompat_Unlock()  LeaveCriticalSection(&g_csAppCompatLock)
 
 // SHACF flags and their corresponding names
 typedef struct tagFLAGMAP
