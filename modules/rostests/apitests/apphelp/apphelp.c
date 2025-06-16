@@ -963,6 +963,7 @@ static void test_ApplicationAttributes(void)
     }
 
     ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+
 #ifndef _M_IX86
     if (num == g_AttrInfoSize && ret && g_WinVersion < WINVER_WIN7)
 #else
