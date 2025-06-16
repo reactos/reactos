@@ -4891,6 +4891,12 @@ typedef struct {
     _Inout_ LPWSTR *ppsz,
     _In_opt_ LPCWSTR psz);
 
+#ifdef UNICODE
+#define Str_SetPtr Str_SetPtrW
+#else
+#define Str_SetPtr Str_SetPtrA
+#endif
+
 typedef struct _DPASTREAMINFO {
   int iPos;
   void *pvItem;

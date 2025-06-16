@@ -168,21 +168,25 @@ static HRESULT
 SHLWAPI_GetModuleVersionString(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 {
     DWORD dwHandle;
-    PSTR pszBuffA;
-    BYTE data[4096];
+    BYTE Data[4096];
+    PVOID pszA;
 
     *ppszDest = NULL;
 
-    UINT cbLength = GetFileVersionInfoSizeA(pszFileName, &dwHandle);
-
-    if (cbLength <= _countof(data) &&
-        GetFileVersionInfoA(pszFileName, dwHandle, sizeof(data), data) &&
-        (VerQueryValueA(data, "\\StringFileInfo\\040904E4\\ProductVersion", (PVOID *)&pszBuffA, &cbLength) ||
-         VerQueryValueA(data, "\\StringFileInfo\\040704E4\\ProductVersion", (PVOID *)&pszBuffA, &cbLength) ||
-         VerQueryValueA(data, "\\StringFileInfo\\040904B0\\ProductVersion", (PVOID *)&pszBuffA, &cbLength) ||
-         VerQueryValueA(data, "\\StringFileInfo\\04090000\\ProductVersion", (PVOID *)&pszBuffA, &cbLength) ||
-         VerQueryValueA(data, "\\StringFileInfo\\041D04B0\\ProductVersion", (PVOID *)&pszBuffA, &cbLength)) &&
-        cbLength && Str_SetPtrA(ppszDest, pszBuffA))
+    UINT size = GetFileVersionInfoSizeA(pszFileName, &dwHandle);
+    if (size <= _countof(Data) &&
+        GetFileVersionInfoA(pszFileName, dwHandle, sizeof(Data), Data) &&
+        (// English (US) UTF-16
+         VerQueryValueA(Data, "\\StringFileInfo\\040904E4\\ProductVersion", &pszA, &size) ||
+         // German (Germany) UTF-16
+         VerQueryValueA(Data, "\\StringFileInfo\\040704E4\\ProductVersion", &pszA, &size) ||
+         // English (US) Western European
+         VerQueryValueA(Data, "\\StringFileInfo\\040904B0\\ProductVersion", &pszA, &size) ||
+         // English (US) Neutral
+         VerQueryValueA(Data, "\\StringFileInfo\\04090000\\ProductVersion", &pszA, &size) ||
+         // Swedish (Sweden) Western European
+         VerQueryValueA(Data, "\\StringFileInfo\\041D04B0\\ProductVersion", &pszA, &size)) &&
+        size && Str_SetPtrA(ppszDest, (PSTR)pszA))
     {
         return S_OK;
     }
