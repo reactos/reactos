@@ -35,6 +35,7 @@ DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 
 #ifdef __REACTOS__
 extern CRITICAL_SECTION g_csBagCacheLock;
+extern CRITICAL_SECTION g_csAppCompatLock;
 VOID FreeViewStatePropertyBagCache(VOID);
 #endif
 
@@ -69,6 +70,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
 #ifdef __REACTOS__
 	    InitializeCriticalSection(&g_csBagCacheLock);
+	    InitializeCriticalSection(&g_csAppCompatLock);
 #endif
 	    break;
 	  case DLL_PROCESS_DETACH:
@@ -76,6 +78,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 #ifdef __REACTOS__
 	    FreeViewStatePropertyBagCache();
 	    DeleteCriticalSection(&g_csBagCacheLock);
+	    DeleteCriticalSection(&g_csAppCompatLock);
 #endif
 	    if (SHLWAPI_ThreadRef_index != TLS_OUT_OF_INDEXES) TlsFree(SHLWAPI_ThreadRef_index);
 	    break;

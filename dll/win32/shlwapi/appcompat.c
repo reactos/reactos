@@ -23,6 +23,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static BOOL g_bInitAppCompat = FALSE; // Is it initialized?
 static DWORD g_dwAppCompatFlags = 0; // The cached compatibility flags
 
+// Exclusive Control
+CRITICAL_SECTION g_csAppCompatLock; // A critical section
+#define AppCompat_Lock()    EnterCriticalSection(&g_csAppCompatLock);
+#define AppCompat_Unlock()  LeaveCriticalSection(&g_csAppCompatLock);
+
 // The SHACF_... flags and flag names
 typedef struct tagFLAGMAP
 {
@@ -290,6 +295,8 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
         if (error == ERROR_SUCCESS)
         {
             PathCombineA(szText, szBaseDir, szRequired);
+            TRACE("RequiredFile: %s\n", wine_dbgstr_a(szRequired));
+            TRACE("szText: %s\n", wine_dbgstr_a(szText));
             // Now szText is a full path
         }
 
@@ -298,6 +305,9 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
         {
             // Check version if necessary
             error = SHGetValueA(hSubKey, NULL, "Version", NULL, szText, &cbData);
+            if (error != ERROR_SUCCESS)
+                WARN("Version not found\n");
+
             if (SHLWAPI_DoesModuleMatchVersion(pszPath, ((error != ERROR_SUCCESS) ? NULL : szText)))
             {
                 // Add additional flags from the registry key
@@ -382,15 +392,20 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
     TRACE("(0x%lX)\n", dwMask);
 
     // Initialize and get flags if necessary
+    AppCompat_Lock();
     if (!g_bInitAppCompat && (dwMask & SHACF_TO_INIT))
     {
         SHLWAPI_InitAppCompat();
         g_bInitAppCompat = TRUE; // Remember
     }
+    AppCompat_Unlock();
 
     // Get additional flags if necessary
+    AppCompat_Lock();
     if (g_dwAppCompatFlags && (dwMask & (SHACF_UNKNOWN1 | SHACF_UNKNOWN2)))
     {
+        AppCompat_Unlock();
+
         // Find the target window and flags by using g_wndCompatInfo
         APPCOMPATENUM data =
         {
@@ -399,11 +414,12 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
         EnumWindows(SHLWAPI_WndCompatEnumProc, (LPARAM)&data);
 
         // Add the target flags if found
+        AppCompat_Lock();
         if (data.iFound >= 0)
             g_dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
-
         g_dwAppCompatFlags |= SHACF_UNKNOWN3;
     }
+    AppCompat_Unlock();
 
     return g_dwAppCompatFlags;
 }
