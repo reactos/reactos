@@ -433,7 +433,7 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
         dwAppCompatFlags |= SHACF_UNKNOWN3;
 
         AppCompat_Lock();
-        g_dwAppCompatFlags = dwAppCompatFlags;
+        InterlockedExchange((PLONG)&g_dwAppCompatFlags, dwAppCompatFlags);
         AppCompat_Unlock();
     }
 
