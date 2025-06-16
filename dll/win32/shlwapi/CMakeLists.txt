@@ -8,6 +8,7 @@ add_definitions(
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    appcompat.c
     clist.c
     istream.c
     msgbox.c
@@ -23,7 +24,6 @@ list(APPEND SOURCE
     url.c)
 
 list(APPEND PCH_SKIP_SOURCE
-    appcompat.c
     assoc.c
     propbag.cpp
     utils.cpp

@@ -5,19 +5,12 @@
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winnls.h>
+#include "precomp.h"
 #include <winreg.h>
+#include <winver.h>
 #include <commctrl.h>
-#include <shlobj.h>
-#include <shlwapi.h>
 #include <shlwapi_undoc.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 // Indicates if the compatibility system has been initialized
