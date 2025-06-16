@@ -294,20 +294,24 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
         if (error != ERROR_SUCCESS)
             break;
 
-        // Build required file path to szText
+        // Get the "RequiredFile" value
         CHAR szRequired[MAX_PATH];
         DWORD cbData = sizeof(szRequired);
         error = SHGetValueA(hSubKey, NULL, "RequiredFile", NULL, szRequired, &cbData);
-        if (error == ERROR_SUCCESS)
+        BOOL bValueExists = (error == ERROR_SUCCESS);
+        BOOL bRequiredFileExists = FALSE;
+        if (bValueExists) // "RequiredFile" value exists?
         {
+            // Build required file path to szText
             PathCombineA(szText, szBaseDir, szRequired);
             TRACE("RequiredFile: %s\n", wine_dbgstr_a(szRequired));
             TRACE("szText: %s\n", wine_dbgstr_a(szText));
             // Now szText is a full path
+            bRequiredFileExists = (GetFileAttributesA(szText) != INVALID_FILE_ATTRIBUTES);
         }
 
-        // Check the file existence if necessary
-        if (error != ERROR_SUCCESS || GetFileAttributesA(szText) != INVALID_FILE_ATTRIBUTES)
+        // The "RequiredFile" value doesn't exist, or the file of szText exists?
+        if (!bValueExists || bRequiredFileExists)
         {
             // Check version if necessary
             error = SHGetValueA(hSubKey, NULL, "Version", NULL, szText, &cbData);
@@ -397,23 +401,18 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
 {
     TRACE("(0x%lX)\n", dwMask);
 
-    AppCompat_Lock();
-
     // Initialize and get flags if necessary
     if (!g_bInitAppCompat && (dwMask & SHACF_TO_INIT))
     {
+        AppCompat_Lock();
         SHLWAPI_InitAppCompat();
         g_bInitAppCompat = TRUE; // Remember
+        AppCompat_Unlock();
     }
 
-    AppCompat_Unlock();
-
     // Get additional flags if necessary
-    AppCompat_Lock();
     if (g_dwAppCompatFlags && (dwMask & (SHACF_UNKNOWN1 | SHACF_UNKNOWN2)))
     {
-        AppCompat_Unlock();
-
         // Find the target window and flags by using g_wndCompatInfo
         APPCOMPATENUM data =
         {
@@ -426,8 +425,8 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
         if (data.iFound >= 0)
             g_dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
         g_dwAppCompatFlags |= SHACF_UNKNOWN3;
+        AppCompat_Unlock();
     }
-    AppCompat_Unlock();
 
     return g_dwAppCompatFlags;
 }
