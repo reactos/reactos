@@ -76,6 +76,7 @@ SHLWAPI_GetMappedFlags(_In_ HKEY hKey, _In_ const FLAGMAP *pEntries, _In_ UINT n
 #define MAJOR_VER_ONLY "\x01" // A mark to indicate that only major version will be compared.
 
 // App compatibility info
+// Extracted from: https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/getappcompatflags.htm
 typedef struct tagAPPCOMPATINFO
 {
     PCSTR pszAppName;
