@@ -502,7 +502,7 @@ static void Validate_ShimData_Win10(PVOID data, WCHAR szApphelp[256], size_t cou
 
 static void Validate_EmptyShimData_Win8(PVOID data)
 {
-    ShimData_Win10_v1* pShimData = (ShimData_Win10_v1*)data;
+    ShimData_Win8* pShimData = (ShimData_Win8*)data;
     ok(pShimData != NULL, "Expected pShimData\n");
     if (!pShimData)
         return;

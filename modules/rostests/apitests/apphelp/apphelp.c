@@ -939,31 +939,27 @@ static void test_ApplicationAttributes(void)
     //    trace("%S\n", pSdbTagToString(pattrinfo[n].type));
     //}
 
-    switch (num)
+    switch(g_WinVersion)
     {
-    case 26:
-        // Win2k3
-        g_AttrInfoSize = 26;
-        break;
-    case 27:
-        // WinVista
-        g_AttrInfoSize = 27;
-        break;
-    case 28:
-        // Win7
-        g_AttrInfoSize = 28;
-        break;
-    case 38:
-        // Win10
-        g_AttrInfoSize = 38;
-        break;
-    case 43:
-        // Win8.1
-        g_AttrInfoSize = 43;
-        break;
-    default:
-        ok(0, "Unknown attrinfo size: %u\n", num);
-        break;
+        case WINVER_2003:
+            g_AttrInfoSize = 26;
+            break;
+        case WINVER_VISTA:
+            g_AttrInfoSize = 27;
+            break;
+        case WINVER_WIN7:
+            g_AttrInfoSize = 28;
+            break;
+        case WINVER_WIN8:
+        case WINVER_WIN81:
+            g_AttrInfoSize = 43;
+            break;
+        case WINVER_WIN10:
+            g_AttrInfoSize = 38;
+            break;
+        default: 
+            ok(0, "Unknown attrinfo size: %u\n", num);
+            break;
     }
 
     ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
