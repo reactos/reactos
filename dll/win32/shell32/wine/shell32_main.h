@@ -38,7 +38,7 @@ extern HINSTANCE shell32_hInstance DECLSPEC_HIDDEN;
 extern int (WINAPI* SHELL_StrCmpLogical)(PCWSTR s1, PCWSTR s2);
 
 enum {
-    REST_SH32_ENABLESHELLEXECUTEHOOKS = 0x00060001,
+    REST_SH32_ENABLESHELLEXECUTEHOOKS = 0x00060001, // POLID_EnableShellExecuteHooks
 };
 DWORD SH32_InternalRestricted(DWORD rest);
 
