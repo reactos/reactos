@@ -18,11 +18,6 @@ static BOOL g_fAppCompatInitialized = FALSE;
 
 static DWORD g_dwAppCompatFlags = 0; // Cached compatibility flags
 
-// Exclusive Control
-CRITICAL_SECTION g_csAppCompatLock; // Critical section (initialized in shlwapi_main.c)
-#define AppCompat_Lock()    EnterCriticalSection(&g_csAppCompatLock)
-#define AppCompat_Unlock()  LeaveCriticalSection(&g_csAppCompatLock)
-
 // SHACF flags and their corresponding names
 typedef struct tagFLAGMAP
 {
@@ -337,20 +332,21 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
     return dwCompatFlags;
 }
 
-static VOID
+static DWORD
 SHLWAPI_InitAppCompat(VOID)
 {
     if (GetProcessVersion(0) >= MAKELONG(0, 5))
-        return; // Flags are not needed
+        return 0; // Flags are not needed
 
     // Get module pathname
     CHAR szModulePathA[MAX_PATH];
     if (!GetModuleFileNameA(NULL, szModulePathA, _countof(szModulePathA)))
-        return;
+        return 0;
 
     PCSTR pszFileName = PathFindFileNameA(szModulePathA); // Get the file title from the path
 
     // Search the file title from g_appCompatInfo
+    DWORD dwAppCompatFlags = 0;
     for (UINT iItem = 0; iItem < _countof(g_appCompatInfo); ++iItem)
     {
         const APPCOMPATINFO *pInfo = &g_appCompatInfo[iItem];
@@ -358,13 +354,15 @@ SHLWAPI_InitAppCompat(VOID)
             SHLWAPI_DoesModuleVersionMatch(pszFileName, pInfo->pszAppVersion))
         {
             // Found, set the flags
-            g_dwAppCompatFlags = g_appCompatInfo[iItem].dwCompatFlags;
+            dwAppCompatFlags = g_appCompatInfo[iItem].dwCompatFlags;
             break;
         }
     }
 
     // Add additional flags from the registry
-    g_dwAppCompatFlags |= SHLWAPI_GetRegistryCompatFlags(pszFileName);
+    dwAppCompatFlags |= SHLWAPI_GetRegistryCompatFlags(pszFileName);
+
+    return dwAppCompatFlags;
 }
 
 // These flags require SHLWAPI_InitAppCompat
@@ -401,13 +399,13 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
     // Initialize and retrieve flags if necessary
     if (dwMask & SHACF_TO_INIT)
     {
-        AppCompat_Lock();
         if (!g_fAppCompatInitialized)
         {
-            SHLWAPI_InitAppCompat();
+            DWORD dwAppCompatFlags = SHLWAPI_InitAppCompat();
+            InterlockedExchange((PLONG)&g_dwAppCompatFlags, dwAppCompatFlags);
+
             g_fAppCompatInitialized = TRUE; // Mark as initialized
         }
-        AppCompat_Unlock();
     }
 
     // Retrieve additional flags if necessary
@@ -426,9 +424,7 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
             dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
         dwAppCompatFlags |= SHACF_UNKNOWN3;
 
-        AppCompat_Lock();
         InterlockedExchange((PLONG)&g_dwAppCompatFlags, dwAppCompatFlags);
-        AppCompat_Unlock();
     }
 
     return dwAppCompatFlags;
