@@ -218,14 +218,14 @@ SHLWAPI_IsAppCompatVersion(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVersio
     if (pszEntryVersion[0] == MAJOR_VER_ONLY[0]) // Special handling?
     {
         // Truncate at comma (',') if any
-        PSTR commaPos = StrChrA(pszModuleVersion, ',');
-        if (commaPos)
-            *commaPos = ANSI_NULL;
+        PSTR pchComma = StrChrA(pszModuleVersion, ',');
+        if (pchComma)
+            *pchComma = ANSI_NULL;
 
         // Truncate at dot ('.') if any
-        PSTR dotPos = StrChrA(pszModuleVersion, '.');
-        if (dotPos)
-            *dotPos = ANSI_NULL;
+        PSTR pchDot = StrChrA(pszModuleVersion, '.');
+        if (pchDot)
+            *pchDot = ANSI_NULL;
 
         ret = (lstrcmpiA(pszModuleVersion, &pszEntryVersion[1]) == 0);
     }
