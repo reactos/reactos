@@ -20,7 +20,9 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static BOOL g_fAppCompatInitialized = FALSE; // Indicates if the compatibility system has been initialized
+// Indicates if the compatibility system has been initialized
+static BOOL g_fAppCompatInitialized = FALSE;
+
 static DWORD g_dwAppCompatFlags = 0; // Cached compatibility flags
 
 // Exclusive Control
