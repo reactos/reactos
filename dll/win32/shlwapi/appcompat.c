@@ -204,47 +204,47 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 }
 
 static BOOL
-SHLWAPI_IsAppCompatVersion(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszStart)
+SHLWAPI_IsAppCompatVersion(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVersion)
 {
-    if (!pszStart)
+    if (!pszEntryVersion)
         return TRUE;
 
-    PSTR moduleVersion = NULL;
-    HRESULT hr = SHLWAPI_GetModuleVersion(pszFileName, &moduleVersion);
+    PSTR pszModuleVersion = NULL;
+    HRESULT hr = SHLWAPI_GetModuleVersion(pszFileName, &pszModuleVersion);
     if (FAILED(hr))
         return FALSE;
 
     BOOL ret = FALSE;
-    if (*pszStart == MAJOR_VER_ONLY[0]) // Special handling?
+    if (pszEntryVersion[0] == MAJOR_VER_ONLY[0]) // Special handling?
     {
-        // Truncate at ','
-        PSTR commaPos = StrChrA(moduleVersion, ',');
+        // Truncate at ',' if any
+        PSTR commaPos = StrChrA(pszModuleVersion, ',');
         if (commaPos)
             *commaPos = ANSI_NULL;
 
-        // Truncate at '.'
-        PSTR dotPos = StrChrA(moduleVersion, '.');
+        // Truncate at '.' if any
+        PSTR dotPos = StrChrA(pszModuleVersion, '.');
         if (dotPos)
             *dotPos = ANSI_NULL;
 
-        ret = (lstrcmpiA(moduleVersion, &pszStart[1]) == 0);
+        ret = (lstrcmpiA(pszModuleVersion, &pszEntryVersion[1]) == 0);
     }
-    else
+    else // Otherwise normal match
     {
-        PSTR asteriskPos = StrChrA(pszStart, '*'); // Find an asterisk (*)
-        if (asteriskPos) // Found?
+        PSTR asteriskPos = StrChrA(pszEntryVersion, '*'); // Find an asterisk (*)
+        if (asteriskPos) // Found an asterisk?
         {
             // Check matching with ignoring the trailing substring from '*'
-            INT prefixLength = (INT)(asteriskPos - pszStart);
-            if (prefixLength > 0)
-                ret = (StrCmpNIA(moduleVersion, pszStart, prefixLength) == 0);
+            INT cchPrefix = (INT)(asteriskPos - pszEntryVersion);
+            if (cchPrefix > 0)
+                ret = (StrCmpNIA(pszModuleVersion, pszEntryVersion, cchPrefix) == 0);
         }
 
         if (!ret)
-            ret = (lstrcmpiA(moduleVersion, pszStart) == 0); // Full match?
+            ret = (lstrcmpiA(pszModuleVersion, pszEntryVersion) == 0); // Full match?
     }
 
-    LocalFree(moduleVersion);
+    LocalFree(pszModuleVersion);
     return ret;
 }
 
