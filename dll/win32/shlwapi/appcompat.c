@@ -179,7 +179,8 @@ SHLWAPI_WndCompatEnumProc(_In_ HWND hWnd, _In_ LPARAM lParam)
 // Swedish (Sweden) Western European
 #define PRODUCT_VER_SWEDISH_WE          "\\StringFileInfo\\041D04B0\\ProductVersion"
 
-typedef struct tagLANGANDCODEPAGE {
+typedef struct tagLANGANDCODEPAGE
+{
     WORD wLanguage;
     WORD wCodePage;
 } LANGANDCODEPAGE, *PLANGANDCODEPAGE;
