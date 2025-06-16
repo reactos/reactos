@@ -24,7 +24,7 @@ static BOOL g_bInitAppCompat = FALSE; // Is it initialized?
 static DWORD g_dwAppCompatFlags = 0; // The cached compatibility flags
 
 // Exclusive Control
-CRITICAL_SECTION g_csAppCompatLock; // A critical section
+CRITICAL_SECTION g_csAppCompatLock; // A critical section (initialized in shlwapi_main.c)
 #define AppCompat_Lock()    EnterCriticalSection(&g_csAppCompatLock);
 #define AppCompat_Unlock()  LeaveCriticalSection(&g_csAppCompatLock);
 
