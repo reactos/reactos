@@ -315,11 +315,14 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
         {
             // Check the "Version" value if necessary
             error = SHGetValueA(hSubKey, NULL, "Version", NULL, szText, &cbData);
-            PCSTR pszVersion = ((error == ERROR_SUCCESS) ? szText : NULL);
-            if (!pszVersion)
+            PCSTR pszVersionPattern = ((error == ERROR_SUCCESS) ? szText : NULL);
+            if (!pszVersionPattern)
                 WARN("Version not found\n");
+            else
+                TRACE("pszVersionPattern: %s\n", wine_dbgstr_a(pszVersionPattern));
 
-            if (SHLWAPI_DoesModuleMatchVersion(pszPath, pszVersion))
+            // Does the pattern match?
+            if (SHLWAPI_DoesModuleMatchVersion(pszPath, pszVersionPattern))
             {
                 // Add additional flags from the registry key
                 dwCompatFlags |= SHLWAPI_GetMappedFlags(hSubKey, g_appCompatFlagMaps,
