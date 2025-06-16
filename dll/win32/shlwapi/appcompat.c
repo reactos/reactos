@@ -20,15 +20,15 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static BOOL g_bInitAppCompat = FALSE; // Is it initialized?
-static DWORD g_dwAppCompatFlags = 0; // The cached compatibility flags
+static BOOL g_fAppCompatInitialized = FALSE; // Indicates if the compatibility system has been initialized
+static DWORD g_dwAppCompatFlags = 0; // Cached compatibility flags
 
 // Exclusive Control
-CRITICAL_SECTION g_csAppCompatLock; // A critical section (initialized in shlwapi_main.c)
+CRITICAL_SECTION g_csAppCompatLock; // Critical section (initialized in shlwapi_main.c)
 #define AppCompat_Lock()    EnterCriticalSection(&g_csAppCompatLock);
 #define AppCompat_Unlock()  LeaveCriticalSection(&g_csAppCompatLock);
 
-// The SHACF_... flags and flag names
+// SHACF flags and their corresponding names
 typedef struct tagFLAGMAP
 {
     DWORD flags;
@@ -127,7 +127,7 @@ typedef struct tagWNDCOMPATINFO
 } WNDCOMPATINFO, *PWNDCOMPATINFO;
 static WNDCOMPATINFO g_wndCompatInfo[] =
 {
-    // The first byte is the length of string
+    // The first byte indicates the string length
     { "\x09" "bosa_sdm_", 0x1000100 },
     { "\x18" "File Open Message Window", 0x1000100 },
 };
@@ -148,33 +148,33 @@ SHLWAPI_WndCompatEnumProc(_In_ HWND hWnd, _In_ LPARAM lParam)
 
     CHAR szClass[256];
     if (!pEnum->nItems || !GetClassNameA(hWnd, szClass, _countof(szClass)))
-        return TRUE; // Ignore it, continue
+        return TRUE; // Ignore and continue
 
-    // Search the target window from pEnum
+    // Search for the target window in pEnum
     const INT cchClass = lstrlenA(szClass);
     for (UINT iItem = 0; iItem < pEnum->nItems; ++iItem)
     {
         PCSTR pszLengthAndClassName = pEnum->pItems[iItem].pszLengthAndClassName;
 
-        INT cchLength = pszLengthAndClassName[0]; // First byte is length
+        INT cchLength = pszLengthAndClassName[0]; // The first byte represents the length
         if (cchClass < cchLength)
-            cchLength = cchClass; // Ignore the trailing
+            cchLength = cchClass; // Ignore trailing characters
 
         // Compare the string
-        if (StrCmpNA(szClass, &pszLengthAndClassName[1], cchLength) == 0) // Class name matched?
+        if (StrCmpNA(szClass, &pszLengthAndClassName[1], cchLength) == 0) // Class name matched
         {
             // Get the process ID
             DWORD dwProcessId;
             GetWindowThreadProcessId(hWnd, &dwProcessId);
-            if (dwProcessId == pEnum->dwProcessId) // Same process?
+            if (dwProcessId == pEnum->dwProcessId) // Same process
             {
                 pEnum->iFound = iItem; // Found
-                return FALSE; // Quit
+                return FALSE; // Quit enumeration
             }
         }
     }
 
-    return TRUE; // Continue
+    return TRUE; // Continue enumeration
 }
 
 // English (US) UTF-16
@@ -207,7 +207,7 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
          VerQueryValueA(Data, PRODUCT_VER_SWEDISH_WE,           &pszA, &size)) &&
         size && Str_SetPtrA(ppszDest, (PSTR)pszA))
     {
-        // NOTE: You have to LocalFree *ppszDest later
+        // NOTE: *ppszDest must be freed using LocalFree later
         return S_OK;
     }
 
@@ -226,33 +226,33 @@ SHLWAPI_DoesModuleVersionMatch(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszVersion
         return FALSE;
 
     BOOL ret = FALSE;
-    if (pszVersionPattern[0] == MAJOR_VER_ONLY[0]) // Special handling?
+    if (pszVersionPattern[0] == MAJOR_VER_ONLY[0]) // Special handling for major version only
     {
-        // Truncate at comma (',') if any
+        // Truncate at comma (',') if present
         PSTR pchComma = StrChrA(pszModuleVersion, ',');
         if (pchComma)
             *pchComma = ANSI_NULL;
 
-        // Truncate at dot ('.') if any
+        // Truncate at dot ('.') if present
         PSTR pchDot = StrChrA(pszModuleVersion, '.');
         if (pchDot)
             *pchDot = ANSI_NULL;
 
         ret = (lstrcmpiA(pszModuleVersion, &pszVersionPattern[1]) == 0);
     }
-    else // Otherwise normal match
+    else // Otherwise, perform a normal match
     {
         PSTR pchAsterisk = StrChrA(pszVersionPattern, '*'); // Find an asterisk ('*')
-        if (pchAsterisk) // Found an asterisk?
+        if (pchAsterisk) // Asterisk found
         {
-            // Check matching with ignoring the trailing substring from '*'
+            // Check for a match, ignoring the substring after '*'
             INT cchPrefix = (INT)(pchAsterisk - pszVersionPattern);
             if (cchPrefix > 0)
                 ret = (StrCmpNIA(pszModuleVersion, pszVersionPattern, cchPrefix) == 0);
         }
 
         if (!ret)
-            ret = (lstrcmpiA(pszModuleVersion, pszVersionPattern) == 0); // Whole match?
+            ret = (lstrcmpiA(pszModuleVersion, pszVersionPattern) == 0); // Full match
     }
 
     LocalFree(pszModuleVersion);
@@ -262,7 +262,7 @@ SHLWAPI_DoesModuleVersionMatch(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszVersion
 static DWORD
 SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
 {
-    // Build the path of the "application compatibility" registry key
+    // Build the path to the "application compatibility" registry key
     CHAR szText[MAX_PATH];
     wnsprintfA(szText, _countof(szText),
                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ShellCompatibility\\Applications\\%s",
@@ -285,7 +285,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
 
     // Search from the registry key
     DWORD dwCompatFlags = 0;
-    szText[0] = ANSI_NULL; // The 1st try is for the non-sub key
+    szText[0] = ANSI_NULL; // The first attempt is for the non-subkey path
     for (DWORD dwIndex = 0; error == ERROR_SUCCESS;)
     {
         // Open the sub-key
@@ -300,7 +300,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
         error = SHGetValueA(hSubKey, NULL, "RequiredFile", NULL, szRequired, &cbData);
         BOOL bValueExists = (error == ERROR_SUCCESS);
         BOOL bRequiredFileExists = FALSE;
-        if (bValueExists) // "RequiredFile" value exists?
+        if (bValueExists) // Does the "RequiredFile" value exist?
         {
             // Build required file path to szText
             PathCombineA(szText, szBaseDir, szRequired);
@@ -310,7 +310,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
             bRequiredFileExists = (GetFileAttributesA(szText) != INVALID_FILE_ATTRIBUTES);
         }
 
-        // The "RequiredFile" value doesn't exist, or the file of szText exists?
+        // If the "RequiredFile" value doesn't exist, or the file specified by szText exists:
         if (!bValueExists || bRequiredFileExists)
         {
             // Check the "Version" value if necessary
@@ -327,10 +327,10 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
             }
         }
 
-        // Close sub-key
+        // Close the sub-key
         RegCloseKey(hSubKey);
 
-        // Go to the next sub-key
+        // Proceed to the next sub-key
         ++dwIndex;
         error = RegEnumKeyA(hKey, dwIndex, szText, _countof(szText));
     }
@@ -345,14 +345,14 @@ static VOID
 SHLWAPI_InitAppCompat(VOID)
 {
     if (GetProcessVersion(0) >= 0x50000)
-        return; // No need of flags
+        return; // Flags are not needed
 
     // Get module pathname
     CHAR szModulePathA[MAX_PATH];
     if (!GetModuleFileNameA(NULL, szModulePathA, _countof(szModulePathA)))
         return;
 
-    PCSTR pszFileName = PathFindFileNameA(szModulePathA); // Get the file title
+    PCSTR pszFileName = PathFindFileNameA(szModulePathA); // Get the file title from the path
 
     // Search the file title from g_appCompatInfo
     for (UINT iItem = 0; iItem < _countof(g_appCompatInfo); ++iItem)
@@ -361,13 +361,13 @@ SHLWAPI_InitAppCompat(VOID)
         if (lstrcmpiA(pInfo->pszAppName, pszFileName) == 0 &&
             SHLWAPI_DoesModuleVersionMatch(pszFileName, pInfo->pszAppVersion))
         {
-            // Found. Set flags
+            // Found. Set the flags
             g_dwAppCompatFlags = g_appCompatInfo[iItem].dwCompatFlags;
             break;
         }
     }
 
-    // Add more flags from registry
+    // Add additional flags from the registry
     g_dwAppCompatFlags |= SHLWAPI_GetRegistryCompatFlags(pszFileName);
 }
 
@@ -402,26 +402,26 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
 {
     TRACE("(0x%lX)\n", dwMask);
 
-    // Initialize and get flags if necessary
-    if (!g_bInitAppCompat && (dwMask & SHACF_TO_INIT))
+    // Initialize and retrieve flags if necessary
+    if (!g_fAppCompatInitialized && (dwMask & SHACF_TO_INIT))
     {
         AppCompat_Lock();
         SHLWAPI_InitAppCompat();
-        g_bInitAppCompat = TRUE; // Remember
+        g_fAppCompatInitialized = TRUE; // Mark as initialized
         AppCompat_Unlock();
     }
 
-    // Get additional flags if necessary
+    // Retrieve additional flags if necessary
     if (g_dwAppCompatFlags && (dwMask & (SHACF_UNKNOWN1 | SHACF_UNKNOWN2)))
     {
-        // Find the target window and flags by using g_wndCompatInfo
+        // Find the target window and its flags using g_wndCompatInfo
         APPCOMPATENUM data =
         {
             g_wndCompatInfo, _countof(g_wndCompatInfo), GetCurrentProcessId(), -1
         };
         EnumWindows(SHLWAPI_WndCompatEnumProc, (LPARAM)&data);
 
-        // Add the target flags if found
+        // Add the target flags if a match is found
         AppCompat_Lock();
         if (data.iFound >= 0)
             g_dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
