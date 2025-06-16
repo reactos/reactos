@@ -222,7 +222,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer","NoSimpleStartMenu",0x00010003,1
 
-; app compatibility
+; Application compatibility
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\coolcat.exe",,0x00000012
