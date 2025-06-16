@@ -16,8 +16,8 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
-#include <wine/debug.h>
 
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static BOOL g_bInitAppCompat = FALSE; // Is it initialized?
@@ -177,6 +177,17 @@ SHLWAPI_WndCompatEnumProc(_In_ HWND hWnd, _In_ LPARAM lParam)
     return TRUE; // Continue
 }
 
+// English (US) UTF-16
+#define PRODUCT_VER_ENGLISH_US_UTF16    "\\StringFileInfo\\040904E4\\ProductVersion"
+// German (Germany) UTF-16
+#define PRODUCT_VER_GERMAN_UTF16        "\\StringFileInfo\\040704E4\\ProductVersion"
+// English (US) Western European
+#define PRODUCT_VER_ENGLISH_US_WE       "\\StringFileInfo\\040904B0\\ProductVersion"
+// English (US) Neutral
+#define PRODUCT_VER_ENGLISH_US_NEUTRAL  "\\StringFileInfo\\04090000\\ProductVersion"
+// Swedish (Sweden) Western European
+#define PRODUCT_VER_SWEDISH_WE          "\\StringFileInfo\\041D04B0\\ProductVersion"
+
 static HRESULT
 SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 {
@@ -189,16 +200,11 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
     UINT size = GetFileVersionInfoSizeA(pszFileName, &dwHandle);
     if (size <= _countof(Data) &&
         GetFileVersionInfoA(pszFileName, dwHandle, sizeof(Data), Data) &&
-        (// English (US) UTF-16
-         VerQueryValueA(Data, "\\StringFileInfo\\040904E4\\ProductVersion", &pszA, &size) ||
-         // German (Germany) UTF-16
-         VerQueryValueA(Data, "\\StringFileInfo\\040704E4\\ProductVersion", &pszA, &size) ||
-         // English (US) Western European
-         VerQueryValueA(Data, "\\StringFileInfo\\040904B0\\ProductVersion", &pszA, &size) ||
-         // English (US) Neutral
-         VerQueryValueA(Data, "\\StringFileInfo\\04090000\\ProductVersion", &pszA, &size) ||
-         // Swedish (Sweden) Western European
-         VerQueryValueA(Data, "\\StringFileInfo\\041D04B0\\ProductVersion", &pszA, &size)) &&
+        (VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_UTF16,     &pszA, &size) ||
+         VerQueryValueA(Data, PRODUCT_VER_GERMAN_UTF16,         &pszA, &size) ||
+         VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_WE,        &pszA, &size) ||
+         VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_NEUTRAL,   &pszA, &size) ||
+         VerQueryValueA(Data, PRODUCT_VER_SWEDISH_WE,           &pszA, &size)) &&
         size && Str_SetPtrA(ppszDest, (PSTR)pszA))
     {
         // NOTE: You have to LocalFree *ppszDest later
@@ -391,13 +397,15 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
 {
     TRACE("(0x%lX)\n", dwMask);
 
-    // Initialize and get flags if necessary
     AppCompat_Lock();
+
+    // Initialize and get flags if necessary
     if (!g_bInitAppCompat && (dwMask & SHACF_TO_INIT))
     {
         SHLWAPI_InitAppCompat();
         g_bInitAppCompat = TRUE; // Remember
     }
+
     AppCompat_Unlock();
 
     // Get additional flags if necessary
