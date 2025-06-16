@@ -215,7 +215,7 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 }
 
 static BOOL
-SHLWAPI_DoesModuleMatchVersion(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVersion)
+SHLWAPI_DoesModuleVersionMatch(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVersion)
 {
     if (!pszEntryVersion)
         return TRUE;
@@ -319,7 +319,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
             TRACE("pszVersionPattern: %s\n", wine_dbgstr_a(pszVersionPattern));
 
             // Does the pattern match?
-            if (SHLWAPI_DoesModuleMatchVersion(pszPath, pszVersionPattern))
+            if (SHLWAPI_DoesModuleVersionMatch(pszPath, pszVersionPattern))
             {
                 // Add additional flags from the registry key
                 dwCompatFlags |= SHLWAPI_GetMappedFlags(hSubKey, g_appCompatFlagMaps,
@@ -359,7 +359,7 @@ SHLWAPI_InitAppCompat(VOID)
     {
         const APPCOMPATINFO *pInfo = &g_appCompatInfo[iItem];
         if (lstrcmpiA(pInfo->pszAppName, pszFileName) == 0 &&
-            SHLWAPI_DoesModuleMatchVersion(pszFileName, pInfo->pszAppVersion))
+            SHLWAPI_DoesModuleVersionMatch(pszFileName, pInfo->pszAppVersion))
         {
             // Found. Set flags
             g_dwAppCompatFlags = g_appCompatInfo[iItem].dwCompatFlags;
