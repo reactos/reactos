@@ -4881,6 +4881,12 @@ typedef struct {
 
   WINCOMMCTRLAPI
   BOOL
+  WINAPI Str_SetPtrA(
+    _Inout_ LPSTR *ppsz,
+    _In_opt_ LPCSTR psz);
+
+  WINCOMMCTRLAPI
+  BOOL
   WINAPI Str_SetPtrW(
     _Inout_ LPWSTR *ppsz,
     _In_opt_ LPCWSTR psz);

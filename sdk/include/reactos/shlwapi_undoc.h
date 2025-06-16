@@ -396,8 +396,28 @@ HRESULT WINAPI SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ PCWSTR pszClie
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
-#define SHACF_WIN95SHLEXEC 0x00000200 /* Geoff Chappell */
-DWORD WINAPI SHGetAppCompatFlags(DWORD dwMask);
+/* Flags for SHGetAppCompatFlags */
+#define SHACF_CONTEXTMENU 0x1
+#define SHACF_DOCOBJECT 0x2
+#define SHACF_CORELINTERNETENUM 0x4
+#define SHACF_MYCOMPUTERFIRST 0x8
+#define SHACF_OLDREGITEMGDN 0x10
+#define SHACF_LOADCOLUMNHANDLER 0x40
+#define SHACF_ANSI 0x80
+#define SHACF_UNKNOWN1 0x100
+#define SHACF_WIN95SHLEXEC 0x200
+#define SHACF_STAROFFICE5PRINTER 0x400
+#define SHACF_NOVALIDATEFSIDS 0x800
+#define SHACF_FILEOPENNEEDSEXT 0x1000
+#define SHACF_WIN95BINDTOOBJECT 0x2000
+#define SHACF_IGNOREENUMRESET 0x4000
+#define SHACF_ANSIDISPLAYNAMES 0x10000
+#define SHACF_FILEOPENBOGUSCTRLID 0x20000
+#define SHACF_FORCELFNIDLIST 0x40000
+#define SHACF_UNKNOWN2 0x1000000
+#define SHACF_UNKNOWN3 0x80000000
+
+DWORD WINAPI SHGetAppCompatFlags(_In_ DWORD dwMask);
 
 /*****************************************************************************
  * IAssociationElementOld interface
