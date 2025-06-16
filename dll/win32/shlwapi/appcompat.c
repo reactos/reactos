@@ -198,6 +198,7 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
     if (size > _countof(Data) ||
         !GetFileVersionInfoA(pszFileName, dwHandle, sizeof(Data), Data))
     {
+        TRACE("No version info\n");
         return E_FAIL;
     }
 
@@ -233,6 +234,7 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
         }
     }
 
+    TRACE("No ProductVersion info\n");
     return E_OUTOFMEMORY;
 }
 
