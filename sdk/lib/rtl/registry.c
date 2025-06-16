@@ -199,7 +199,8 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
     }
     else
     {
-        if (QueryTable->Flags & RTL_QUERY_REGISTRY_TYPECHECK)
+        if ((QueryTable->Flags & (RTL_QUERY_REGISTRY_TYPECHECK | RTL_QUERY_REGISTRY_DIRECT)) ==
+           (RTL_QUERY_REGISTRY_TYPECHECK | RTL_QUERY_REGISTRY_DIRECT))
         {
             ULONG ExpectedType = QueryTable->DefaultType >> RTL_QUERY_REGISTRY_TYPECHECK_SHIFT;
 
