@@ -363,7 +363,7 @@ SHLWAPI_InitAppCompat(VOID)
         if (lstrcmpiA(pInfo->pszAppName, pszFileName) == 0 &&
             SHLWAPI_DoesModuleVersionMatch(pszFileName, pInfo->pszAppVersion))
         {
-            // Found. Set the flags
+            // Found, set the flags
             g_dwAppCompatFlags = g_appCompatInfo[iItem].dwCompatFlags;
             break;
         }
