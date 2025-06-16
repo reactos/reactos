@@ -346,7 +346,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
 static VOID
 SHLWAPI_InitAppCompat(VOID)
 {
-    if (GetProcessVersion(0) >= 0x50000)
+    if (GetProcessVersion(0) >= MAKELONG(0, 5))
         return; // Flags are not needed
 
     // Get module pathname
