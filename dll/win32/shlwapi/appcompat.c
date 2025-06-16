@@ -66,7 +66,7 @@ SHLWAPI_GetMappedFlags(_In_ HKEY hKey, _In_ const FLAGMAP *pEntries, _In_ UINT n
     return flags;
 }
 
-#define MAJOR_VER_ONLY "\x01" // A special mark
+#define MAJOR_VER_ONLY "\x01" // A mark to indicate that only major version will be compared.
 
 // App compatibility info
 typedef struct tagAPPCOMPATINFO
