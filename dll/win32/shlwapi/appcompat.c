@@ -405,16 +405,20 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
     TRACE("(0x%lX)\n", dwMask);
 
     // Initialize and retrieve flags if necessary
-    if (!g_fAppCompatInitialized && (dwMask & SHACF_TO_INIT))
+    if (dwMask & SHACF_TO_INIT)
     {
         AppCompat_Lock();
-        SHLWAPI_InitAppCompat();
-        g_fAppCompatInitialized = TRUE; // Mark as initialized
+        if (!g_fAppCompatInitialized)
+        {
+            SHLWAPI_InitAppCompat();
+            g_fAppCompatInitialized = TRUE; // Mark as initialized
+        }
         AppCompat_Unlock();
     }
 
     // Retrieve additional flags if necessary
-    if (g_dwAppCompatFlags && (dwMask & (SHACF_UNKNOWN1 | SHACF_UNKNOWN2)))
+    DWORD dwAppCompatFlags = g_dwAppCompatFlags;
+    if (dwAppCompatFlags && (dwMask & (SHACF_UNKNOWN1 | SHACF_UNKNOWN2)))
     {
         // Find the target window and its flags using g_wndCompatInfo
         APPCOMPATENUM data =
@@ -424,14 +428,16 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
         EnumWindows(SHLWAPI_WndCompatEnumProc, (LPARAM)&data);
 
         // Add the target flags if a match is found
-        AppCompat_Lock();
         if (data.iFound >= 0)
-            g_dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
-        g_dwAppCompatFlags |= SHACF_UNKNOWN3;
+            dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
+        dwAppCompatFlags |= SHACF_UNKNOWN3;
+
+        AppCompat_Lock();
+        g_dwAppCompatFlags = dwAppCompatFlags;
         AppCompat_Unlock();
     }
 
-    return g_dwAppCompatFlags;
+    return dwAppCompatFlags;
 }
 
 // FIXME: SHGetObjectCompatFlags
