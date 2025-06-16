@@ -231,11 +231,11 @@ SHLWAPI_IsAppCompatVersion(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVersio
     }
     else // Otherwise normal match
     {
-        PSTR asteriskPos = StrChrA(pszEntryVersion, '*'); // Find an asterisk (*)
-        if (asteriskPos) // Found an asterisk?
+        PSTR pchAsterisk = StrChrA(pszEntryVersion, '*'); // Find an asterisk ('*')
+        if (pchAsterisk) // Found an asterisk?
         {
             // Check matching with ignoring the trailing substring from '*'
-            INT cchPrefix = (INT)(asteriskPos - pszEntryVersion);
+            INT cchPrefix = (INT)(pchAsterisk - pszEntryVersion);
             if (cchPrefix > 0)
                 ret = (StrCmpNIA(pszModuleVersion, pszEntryVersion, cchPrefix) == 0);
         }
