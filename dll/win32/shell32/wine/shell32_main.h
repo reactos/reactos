@@ -37,7 +37,10 @@ extern HMODULE	huser32 DECLSPEC_HIDDEN;
 extern HINSTANCE shell32_hInstance DECLSPEC_HIDDEN;
 extern int (WINAPI* SHELL_StrCmpLogical)(PCWSTR s1, PCWSTR s2);
 
-BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
+enum {
+    REST_SH32_ENABLESHELLEXECUTEHOOKS = 0x00060001, // POLID_EnableShellExecuteHooks
+};
+DWORD SH32_InternalRestricted(DWORD rest);
 
 /* Iconcache */
 #define INVALID_INDEX -1
@@ -48,6 +51,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags ) DE
 extern INT ShellLargeIconSize;
 extern INT ShellSmallIconSize;
 extern INT ShellIconBPP;
+BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
 /* Classes Root */
 HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowFallback);

@@ -27,7 +27,7 @@ SHELL_InitializeExtension(REFCLSID clsid, PCIDLIST_ABSOLUTE pidlFolder, IDataObj
 {
     *ppv = NULL;
     IUnknown *pUnk;
-    HRESULT hr = SHCoCreateInstance(NULL, &clsid, NULL, riid, (void**)&pUnk);
+    HRESULT hr = SHExtCoCreateInstance(NULL, &clsid, NULL, riid, (void**)&pUnk);
     if (SUCCEEDED(hr))
     {
         CComPtr<IShellExtInit> Init;
