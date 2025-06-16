@@ -18,13 +18,12 @@ typedef struct tagSHARED_DATA
     HWND hKbSwitchWnd;
     UINT nHotID;
     DWORD_PTR dwHotMenuItemData;
-    CRITICAL_SECTION csLock;
 } SHARED_DATA, *PSHARED_DATA;
 
 HINSTANCE g_hInstance = NULL;
 HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
-BOOL g_bCriticalSectionInitialized = 0;
+CRITICAL_SECTION g_csLock;
 
 static VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -115,7 +114,7 @@ KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
 BOOL APIENTRY
 KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
-    EnterCriticalSection(&g_pShared->csLock);
+    EnterCriticalSection(&g_csLock);
     if (bDoHook)
     {
         g_pShared->hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, g_hInstance, 0);
@@ -126,7 +125,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
             g_pShared->hShellHook &&
             g_pShared->hKeyboardLLHook)
         {
-            LeaveCriticalSection(&g_pShared->csLock);
+            LeaveCriticalSection(&g_csLock);
             return TRUE;
         }
     }
@@ -148,7 +147,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
         g_pShared->hWinHook = NULL;
     }
 
-    LeaveCriticalSection(&g_pShared->csLock);
+    LeaveCriticalSection(&g_csLock);
     return !bDoHook;
 }
 
@@ -156,20 +155,20 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
 VOID APIENTRY
 GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
 {
-    EnterCriticalSection(&g_pShared->csLock);
+    EnterCriticalSection(&g_csLock);
     *pnID = g_pShared->nHotID;
     *pdwItemData = g_pShared->dwHotMenuItemData;
-    LeaveCriticalSection(&g_pShared->csLock);
+    LeaveCriticalSection(&g_csLock);
 }
 
 // indicdll!14
 VOID APIENTRY
 SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
 {
-    EnterCriticalSection(&g_pShared->csLock);
+    EnterCriticalSection(&g_csLock);
     g_pShared->nHotID = nID;
     g_pShared->dwHotMenuItemData = dwItemData;
-    LeaveCriticalSection(&g_pShared->csLock);
+    LeaveCriticalSection(&g_csLock);
 }
 
 BOOL WINAPI
@@ -182,6 +181,7 @@ DllMain(IN HINSTANCE hinstDLL,
         case DLL_PROCESS_ATTACH:
         {
             g_hInstance = hinstDLL;
+            InitializeCriticalSection(&g_csLock);
             g_hShared = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
                                           0, sizeof(SHARED_DATA), TEXT("InternatSHData"));
             if (!g_hShared)
@@ -194,11 +194,7 @@ DllMain(IN HINSTANCE hinstDLL,
                 return FALSE;
 
             if (!bAlreadyExists)
-            {
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
-                InitializeCriticalSection(&g_pShared->csLock);
-                g_bCriticalSectionInitialized = TRUE;
-            }
 
             if (!g_pShared->hKbSwitchWnd)
                 g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
@@ -206,12 +202,9 @@ DllMain(IN HINSTANCE hinstDLL,
         }
         case DLL_PROCESS_DETACH:
         {
-            if (g_bCriticalSectionInitialized)
-            {
-                DeleteCriticalSection(&g_pShared->csLock);
-            }
             UnmapViewOfFile(g_pShared);
             CloseHandle(g_hShared);
+            DeleteCriticalSection(&g_csLock);
             break;
         }
     }
