@@ -2638,8 +2638,39 @@ PNP_GetInterfaceDeviceAlias(
     PNP_RPC_STRING_LEN *pulTransferLen,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA PlugPlayData;
+    DWORD ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_GetInterfaceDeviceAlias(%p %S %p %p %p %p 0x%08lx)\n",
+           hBinding, pszInterfaceDevice, AliasInterfaceGuid, pszAliasInterfaceDevice, pulLength,
+           pulTransferLen, ulFlags);
+
+    if ((AliasInterfaceGuid == NULL) ||
+        (pulLength == NULL))
+        return  CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceAlias,
+                               &PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.AliasSymbolicLinkNameLength;
+        *pulTransferLen = *pulLength + 1;
+    }
+    else
+    {
+        *pulLength = 0;
+        ret = NtStatusToCrError(Status);
+    }
+
+    DPRINT("PNP_GetInterfaceDeviceAlias() done (returns %lx)\n", ret);
+    return ret;
 }
 
 
