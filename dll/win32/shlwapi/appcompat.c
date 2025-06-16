@@ -316,10 +316,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
             // Check the "Version" value if necessary
             error = SHGetValueA(hSubKey, NULL, "Version", NULL, szText, &cbData);
             PCSTR pszVersionPattern = ((error == ERROR_SUCCESS) ? szText : NULL);
-            if (!pszVersionPattern)
-                WARN("Version not found\n");
-            else
-                TRACE("pszVersionPattern: %s\n", wine_dbgstr_a(pszVersionPattern));
+            TRACE("pszVersionPattern: %s\n", wine_dbgstr_a(pszVersionPattern));
 
             // Does the pattern match?
             if (SHLWAPI_DoesModuleMatchVersion(pszPath, pszVersionPattern))
