@@ -215,9 +215,9 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 }
 
 static BOOL
-SHLWAPI_DoesModuleVersionMatch(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVersion)
+SHLWAPI_DoesModuleVersionMatch(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszVersionPattern)
 {
-    if (!pszEntryVersion)
+    if (!pszVersionPattern)
         return TRUE;
 
     PSTR pszModuleVersion = NULL;
@@ -226,7 +226,7 @@ SHLWAPI_DoesModuleVersionMatch(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVe
         return FALSE;
 
     BOOL ret = FALSE;
-    if (pszEntryVersion[0] == MAJOR_VER_ONLY[0]) // Special handling?
+    if (pszVersionPattern[0] == MAJOR_VER_ONLY[0]) // Special handling?
     {
         // Truncate at comma (',') if any
         PSTR pchComma = StrChrA(pszModuleVersion, ',');
@@ -238,21 +238,21 @@ SHLWAPI_DoesModuleVersionMatch(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszEntryVe
         if (pchDot)
             *pchDot = ANSI_NULL;
 
-        ret = (lstrcmpiA(pszModuleVersion, &pszEntryVersion[1]) == 0);
+        ret = (lstrcmpiA(pszModuleVersion, &pszVersionPattern[1]) == 0);
     }
     else // Otherwise normal match
     {
-        PSTR pchAsterisk = StrChrA(pszEntryVersion, '*'); // Find an asterisk ('*')
+        PSTR pchAsterisk = StrChrA(pszVersionPattern, '*'); // Find an asterisk ('*')
         if (pchAsterisk) // Found an asterisk?
         {
             // Check matching with ignoring the trailing substring from '*'
-            INT cchPrefix = (INT)(pchAsterisk - pszEntryVersion);
+            INT cchPrefix = (INT)(pchAsterisk - pszVersionPattern);
             if (cchPrefix > 0)
-                ret = (StrCmpNIA(pszModuleVersion, pszEntryVersion, cchPrefix) == 0);
+                ret = (StrCmpNIA(pszModuleVersion, pszVersionPattern, cchPrefix) == 0);
         }
 
         if (!ret)
-            ret = (lstrcmpiA(pszModuleVersion, pszEntryVersion) == 0); // Whole match?
+            ret = (lstrcmpiA(pszModuleVersion, pszVersionPattern) == 0); // Whole match?
     }
 
     LocalFree(pszModuleVersion);
