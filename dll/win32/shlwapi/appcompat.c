@@ -313,12 +313,13 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
         // The "RequiredFile" value doesn't exist, or the file of szText exists?
         if (!bValueExists || bRequiredFileExists)
         {
-            // Check version if necessary
+            // Check the "Version" value if necessary
             error = SHGetValueA(hSubKey, NULL, "Version", NULL, szText, &cbData);
-            if (error != ERROR_SUCCESS)
+            PCSTR pszVersion = ((error == ERROR_SUCCESS) ? szText : NULL);
+            if (!pszVersion)
                 WARN("Version not found\n");
 
-            if (SHLWAPI_DoesModuleMatchVersion(pszPath, ((error != ERROR_SUCCESS) ? NULL : szText)))
+            if (SHLWAPI_DoesModuleMatchVersion(pszPath, pszVersion))
             {
                 // Add additional flags from the registry key
                 dwCompatFlags |= SHLWAPI_GetMappedFlags(hSubKey, g_appCompatFlagMaps,
