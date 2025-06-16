@@ -1,5 +1,11 @@
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Shell application compatibility flags
+ * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 #include <stdarg.h>
-#include <assert.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -10,42 +16,43 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
-#include <wine/unicode.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static DWORD g_dwAppCompatFlags = 0;
+static BOOL g_bInitAppCompat = FALSE; // Is it initialized?
+static DWORD g_dwAppCompatFlags = 0; // The cached compatibility flags
 
+// The SHACF_... flags and flag names
 typedef struct tagFLAGMAP
 {
     DWORD flags;
     LPCSTR name;
 } FLAGMAP, *PFLAGMAP;
-
 static FLAGMAP g_appCompatFlagMaps[] =
 {
-    { 0x1, "CONTEXTMENU" },
-    { 0x4, "CORELINTERNETENUM" },
-    { 0x4, "OLDCREATEVIEWWND" },
-    { 0x4, "WIN95DEFVIEW" },
-    { 0x2, "DOCOBJECT" },
-    { 0x1, "FLUSHNOWAITALWAYS" },
-    { 0x8, "MYCOMPUTERFIRST" },
-    { 0x10, "OLDREGITEMGDN" },
-    { 0x40, "LOADCOLUMNHANDLER" },
-    { 0x80, "ANSI" },
-    { 0x400, "STAROFFICE5PRINTER" },
-    { 0x800, "NOVALIDATEFSIDS" },
-    { 0x200, "WIN95SHLEXEC" },
-    { 0x1000, "FILEOPENNEEDSEXT" },
-    { 0x2000, "WIN95BINDTOOBJECT" },
-    { 0x4000, "IGNOREENUMRESET" },
-    { 0x10000, "ANSIDISPLAYNAMES" },
-    { 0x20000, "FILEOPENBOGUSCTRLID" },
-    { 0x40000, "FORCELFNIDLIST" },
+    { SHACF_CONTEXTMENU, "CONTEXTMENU" },
+    { SHACF_CORELINTERNETENUM, "CORELINTERNETENUM" },
+    { SHACF_OLDCREATEVIEWWND, "OLDCREATEVIEWWND" },
+    { SHACF_WIN95DEFVIEW, "WIN95DEFVIEW" },
+    { SHACF_DOCOBJECT, "DOCOBJECT" },
+    { SHACF_FLUSHNOWAITALWAYS, "FLUSHNOWAITALWAYS" },
+    { SHACF_MYCOMPUTERFIRST, "MYCOMPUTERFIRST" },
+    { SHACF_OLDREGITEMGDN, "OLDREGITEMGDN" },
+    { SHACF_LOADCOLUMNHANDLER, "LOADCOLUMNHANDLER" },
+    { SHACF_ANSI, "ANSI" },
+    { SHACF_STAROFFICE5PRINTER, "STAROFFICE5PRINTER" },
+    { SHACF_NOVALIDATEFSIDS, "NOVALIDATEFSIDS" },
+    { SHACF_WIN95SHLEXEC, "WIN95SHLEXEC" },
+    { SHACF_FILEOPENNEEDSEXT, "FILEOPENNEEDSEXT" },
+    { SHACF_WIN95BINDTOOBJECT, "WIN95BINDTOOBJECT" },
+    { SHACF_IGNOREENUMRESET, "IGNOREENUMRESET" },
+    { SHACF_ANSIDISPLAYNAMES, "ANSIDISPLAYNAMES" },
+    { SHACF_FILEOPENBOGUSCTRLID, "FILEOPENBOGUSCTRLID" },
+    { SHACF_FORCELFNIDLIST, "FORCELFNIDLIST" },
 };
 
+// Get compatibility flags from registry values
 static DWORD
 SHLWAPI_GetMappedFlags(_In_ HKEY hKey, _In_ const FLAGMAP *pEntries, _In_ UINT nEntries)
 {
@@ -59,103 +66,104 @@ SHLWAPI_GetMappedFlags(_In_ HKEY hKey, _In_ const FLAGMAP *pEntries, _In_ UINT n
     return flags;
 }
 
+#define MAJOR_VER_ONLY "\x01" // A special mark
+
+// App compatibility info
 typedef struct tagAPPCOMPATINFO
 {
     PCSTR pszAppName;
     PCSTR pszAppVersion;
     DWORD dwCompatFlags;
 } APPCOMPATINFO, *PAPPCOMPATINFO;
-
-#define SPECIAL_MARK "\x01"
-
 static APPCOMPATINFO g_appCompatInfo[] =
 {
-    { "WPWIN7.EXE", NULL, 0x5 },
-    { "PRWIN70.EXE", NULL, 0x5 },
-    { "PS80.EXE", NULL, 0x15 },
-    { "QPW.EXE", SPECIAL_MARK "7", 0x1 },
-    { "QFINDER.EXE", NULL, 0x14 },
-    { "PFIM80.EXE", NULL, 0x15 },
-    { "UA80.EXE", NULL, 0x15 },
-    { "PDXWIN32.EXE", NULL, 0x15 },
-    { "SITEBUILDER.EXE", NULL, 0x15 },
-    { "HOTDOG4.EXE", NULL, 0x2 },
-    { "RNAAPP.EXE", NULL, 0x1 },
-    { "PDEXPLO.EXE", SPECIAL_MARK "2", 0x9 },
-    { "PDEXPLO.EXE", SPECIAL_MARK "1", 0x9 },
-    { "PDEXPLO.EXE", SPECIAL_MARK "3", 0x18 },
-    { "SIZEMGR.EXE", SPECIAL_MARK "3", 0x14 },
-    { "SMARTCTR.EXE", "96.0", 0x1 },
-    { "WPWIN8.EXE", NULL, 0x14 },
-    { "PRWIN8.EXE", NULL, 0x14 },
-    { "UE32.EXE", "2.00.0.0", 0x10 },
-    { "PP70.EXE", NULL, 0x40 },
-    { "PP80.EXE", NULL, 0x40 },
-    { "PS80.EXE", NULL, 0x10 },
-    { "ABCMM.EXE", NULL, 0x40 },
-    { "QPW.EXE", SPECIAL_MARK "8", 0x10014 },
-    { "CORELDRW.EXE", SPECIAL_MARK "7", 10 },
-    { "FILLER51.EXE", NULL, 0x10 },
-    { "AUTORUN.EXE", "4.10.1998", 0x80 },
-    { "AUTORUN.EXE", "4.00.950", 0x80 },
-    { "POWERPNT.EXE", SPECIAL_MARK "8", 0x200 },
-    { "MSMONEY.EXE", "7.05.1107", 0x200 },
-    { "soffice.EXE", SPECIAL_MARK "5", 0x400 },
-    { "WPWIN9.EXE", SPECIAL_MARK "9", 0x4 },
-    { "QPW.EXE", SPECIAL_MARK "9", 0x4 },
-    { "PRWIN9.EXE", SPECIAL_MARK "9", 0x4 },
-    { "DAD9.EXE", SPECIAL_MARK "9", 0x4 },
+    { "wpwin7.exe", NULL, SHACF_CONTEXTMENU | SHACF_CORELINTERNETENUM },
+    { "prwin70.exe", NULL, SHACF_CONTEXTMENU | SHACF_CORELINTERNETENUM },
+    { "ps80.exe", NULL, SHACF_CONTEXTMENU | SHACF_CORELINTERNETENUM | SHACF_OLDREGITEMGDN },
+    { "qpw.exe", MAJOR_VER_ONLY "7", SHACF_CONTEXTMENU },
+    { "qfinder.exe", NULL, SHACF_CORELINTERNETENUM | SHACF_OLDREGITEMGDN },
+    { "pfim80.exe", NULL, SHACF_CONTEXTMENU | SHACF_CORELINTERNETENUM  | SHACF_OLDREGITEMGDN },
+    { "ua80.exe", NULL, SHACF_CONTEXTMENU | SHACF_CORELINTERNETENUM  | SHACF_OLDREGITEMGDN },
+    { "pdxwin32.exe", NULL, SHACF_CONTEXTMENU | SHACF_CORELINTERNETENUM  | SHACF_OLDREGITEMGDN },
+    { "sitebuilder.exe", NULL, SHACF_CONTEXTMENU | SHACF_CORELINTERNETENUM  | SHACF_OLDREGITEMGDN },
+    { "hotdog4.exe", NULL, SHACF_DOCOBJECT },
+    { "rnaapp.exe", NULL, SHACF_CONTEXTMENU },
+    { "pdexplo.exe", MAJOR_VER_ONLY "2", SHACF_CONTEXTMENU | SHACF_MYCOMPUTERFIRST },
+    { "pdexplo.exe", MAJOR_VER_ONLY "1", SHACF_CONTEXTMENU | SHACF_MYCOMPUTERFIRST },
+    { "pdexplo.exe", MAJOR_VER_ONLY "3", SHACF_MYCOMPUTERFIRST | SHACF_OLDREGITEMGDN },
+    { "sizemgr.exe", MAJOR_VER_ONLY "3", SHACF_CORELINTERNETENUM | SHACF_OLDREGITEMGDN },
+    { "smartctr.exe", "96.0", SHACF_CONTEXTMENU },
+    { "wpwin8.exe", NULL, SHACF_CORELINTERNETENUM | SHACF_OLDREGITEMGDN },
+    { "prwin8.exe", NULL, SHACF_CORELINTERNETENUM | SHACF_OLDREGITEMGDN },
+    { "ue32.exe", "2.00.0.0", SHACF_OLDREGITEMGDN },
+    { "pp70.exe", NULL, SHACF_LOADCOLUMNHANDLER },
+    { "pp80.exe", NULL, SHACF_LOADCOLUMNHANDLER },
+    { "ps80.exe", NULL, SHACF_OLDREGITEMGDN },
+    { "abcmm.exe", NULL, SHACF_LOADCOLUMNHANDLER },
+    { "qpw.exe", MAJOR_VER_ONLY "8", SHACF_CORELINTERNETENUM | SHACF_OLDREGITEMGDN | SHACF_ANSIDISPLAYNAMES },
+    { "coreldrw.exe", MAJOR_VER_ONLY "7", SHACF_OLDREGITEMGDN },
+    { "filler51.exe", NULL, SHACF_OLDREGITEMGDN },
+    { "autorun.exe", "4.10.1998", SHACF_ANSI },
+    { "autorun.exe", "4.00.950", SHACF_ANSI },
+    { "powerpnt.exe", MAJOR_VER_ONLY "8", SHACF_WIN95SHLEXEC },
+    { "msmoney.exe", "7.05.1107", SHACF_WIN95SHLEXEC },
+    { "soffice.exe", MAJOR_VER_ONLY "5", SHACF_STAROFFICE5PRINTER },
+    { "wpwin9.exe", MAJOR_VER_ONLY "9", SHACF_CORELINTERNETENUM },
+    { "qpw.exe", MAJOR_VER_ONLY "9", SHACF_CORELINTERNETENUM },
+    { "prwin9.exe", MAJOR_VER_ONLY "9", SHACF_CORELINTERNETENUM },
+    { "dad9.exe", MAJOR_VER_ONLY "9", SHACF_CORELINTERNETENUM },
 };
 
-typedef struct tagAPPCOMPATINFO2
+// Window class name and compatibility flags
+typedef struct tagWNDCOMPATINFO
 {
     PCSTR pszLengthAndClassName;
-    DWORD dwFlags;
-} APPCOMPATINFO2, *PAPPCOMPATINFO2;
-
-static APPCOMPATINFO2 g_appCompatInfo2[] =
+    DWORD dwCompatFlags;
+} WNDCOMPATINFO, *PWNDCOMPATINFO;
+static WNDCOMPATINFO g_wndCompatInfo[] =
 {
-    /* The first byte is the length of string */
+    // The first byte is the length of string
     { "\x09" "bosa_sdm_", 0x1000100 },
     { "\x18" "File Open Message Window", 0x1000100 },
 };
 
+// Internal structure for SHLWAPI_WndCompatEnumProc
 typedef struct tagAPPCOMPATENUM
 {
-    PAPPCOMPATINFO2 pItems;
-    UINT nItems;
+    PWNDCOMPATINFO pItems;
+    SIZE_T nItems;
     DWORD dwProcessId;
     INT iFound;
 } APPCOMPATENUM, *PAPPCOMPATENUM;
 
-static BOOL g_bAppCompatInit = FALSE;
-
 static BOOL CALLBACK
-SHLWAPI_AppCompatEnumWndProc(_In_ HWND hWnd, _In_ LPARAM lParam)
+SHLWAPI_WndCompatEnumProc(_In_ HWND hWnd, _In_ LPARAM lParam)
 {
     PAPPCOMPATENUM pEnum = (PAPPCOMPATENUM)lParam;
 
     CHAR szClass[256];
     if (!pEnum->nItems || !GetClassNameA(hWnd, szClass, _countof(szClass)))
-        return TRUE; // Continue
+        return TRUE; // Ignore it, continue
 
-    INT cchClass = lstrlenA(szClass);
-
-    UINT iItem;
-    for (iItem = 0; iItem < pEnum->nItems; ++iItem)
+    // Search the target window from pEnum
+    const INT cchClass = lstrlenA(szClass);
+    for (UINT iItem = 0; iItem < pEnum->nItems; ++iItem)
     {
         PCSTR pszLengthAndClassName = pEnum->pItems[iItem].pszLengthAndClassName;
-        INT cchLength = *pszLengthAndClassName;
-        if (cchClass < cchLength)
-            cchLength = cchClass;
 
-        DWORD dwProcessId;
-        if (!StrCmpNA(szClass, &pszLengthAndClassName[1], cchLength))
+        INT cchLength = pszLengthAndClassName[0]; // First byte is length
+        if (cchClass < cchLength)
+            cchLength = cchClass; // Ignore the trailing
+
+        // Compare the string
+        if (StrCmpNA(szClass, &pszLengthAndClassName[1], cchLength) == 0) // Class name matched?
         {
+            // Get the process ID
+            DWORD dwProcessId;
             GetWindowThreadProcessId(hWnd, &dwProcessId);
-            if (dwProcessId == pEnum->dwProcessId)
+            if (dwProcessId == pEnum->dwProcessId) // Same process?
             {
-                pEnum->iFound = iItem;
+                pEnum->iFound = iItem; // Found
                 return FALSE; // Quit
             }
         }
@@ -165,7 +173,7 @@ SHLWAPI_AppCompatEnumWndProc(_In_ HWND hWnd, _In_ LPARAM lParam)
 }
 
 static HRESULT
-SHLWAPI_GetModuleVersionString(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
+SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 {
     DWORD dwHandle;
     BYTE Data[4096];
@@ -188,6 +196,7 @@ SHLWAPI_GetModuleVersionString(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
          VerQueryValueA(Data, "\\StringFileInfo\\041D04B0\\ProductVersion", &pszA, &size)) &&
         size && Str_SetPtrA(ppszDest, (PSTR)pszA))
     {
+        // NOTE: You have to LocalFree *ppszDest later
         return S_OK;
     }
 
@@ -201,118 +210,147 @@ SHLWAPI_IsAppCompatVersion(_In_ PCSTR pszFileName, _In_opt_ PCSTR pszStart)
         return TRUE;
 
     PSTR moduleVersion = NULL;
-    if (SHLWAPI_GetModuleVersionString(pszFileName, &moduleVersion) < 0)
+    HRESULT hr = SHLWAPI_GetModuleVersion(pszFileName, &moduleVersion);
+    if (FAILED(hr))
         return FALSE;
 
-    BOOL bCompat = FALSE;
-
-    if (*pszStart == SPECIAL_MARK[0]) // Special handling
+    BOOL ret = FALSE;
+    if (*pszStart == MAJOR_VER_ONLY[0]) // Special handling?
     {
+        // Truncate at ','
         PSTR commaPos = StrChrA(moduleVersion, ',');
         if (commaPos)
             *commaPos = ANSI_NULL;
 
+        // Truncate at '.'
         PSTR dotPos = StrChrA(moduleVersion, '.');
         if (dotPos)
             *dotPos = ANSI_NULL;
 
-        bCompat = (lstrcmpiA(moduleVersion, &pszStart[1]) == 0);
+        ret = (lstrcmpiA(moduleVersion, &pszStart[1]) == 0);
     }
     else
     {
-        PSTR asteriskPos = StrChrA(pszStart, '*');
-        if (asteriskPos)
+        PSTR asteriskPos = StrChrA(pszStart, '*'); // Find an asterisk (*)
+        if (asteriskPos) // Found?
         {
-            INT prefixLength = asteriskPos - pszStart;
+            // Check matching with ignoring the trailing substring from '*'
+            INT prefixLength = (INT)(asteriskPos - pszStart);
             if (prefixLength > 0)
-                bCompat = (StrCmpNIA(moduleVersion, pszStart, prefixLength) == 0);
+                ret = (StrCmpNIA(moduleVersion, pszStart, prefixLength) == 0);
         }
 
-        if (!bCompat)
-            bCompat = (lstrcmpiA(moduleVersion, pszStart) == 0);
+        if (!ret)
+            ret = (lstrcmpiA(moduleVersion, pszStart) == 0); // Full match?
     }
 
     LocalFree(moduleVersion);
-    return bCompat;
+    return ret;
 }
 
 static DWORD
 SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
 {
-    DWORD dwFlags = 0;
-    PCSTR pszFileNameA = PathFindFileNameA(pszPath);
-
+    // Build the path of the "application compatibility" registry key
     CHAR szText[MAX_PATH];
     wnsprintfA(szText, _countof(szText),
                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ShellCompatibility\\Applications\\%s",
-               pszFileNameA);
+               PathFindFileNameA(pszPath));
 
+    // Open the key
     HKEY hKey;
     const REGSAM samDesired = KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS;
     LSTATUS error = RegOpenKeyExA(HKEY_LOCAL_MACHINE, szText, 0, samDesired, &hKey);
-    if (!error)
-        return dwFlags;
+    if (error != ERROR_SUCCESS)
+    {
+        ERR("error: %lu\n", error);
+        return 0; // Failed
+    }
 
+    // Build the base directory
     CHAR szBaseDir[MAX_PATH];
     lstrcpynA(szBaseDir, pszPath, _countof(szBaseDir));
     PathRemoveFileSpecA(szBaseDir);
 
-    szText[0] = ANSI_NULL;
-    for (DWORD dwIndex = 0; !error; ++dwIndex)
+    // Search from the registry key
+    DWORD dwCompatFlags = 0;
+    szText[0] = ANSI_NULL; // The 1st try is for the parent key
+    for (DWORD dwIndex = 0; error == ERROR_SUCCESS;)
     {
+        // Open the sub-key
         HKEY hSubKey;
         error = RegOpenKeyExA(hKey, szText, 0, KEY_QUERY_VALUE, &hSubKey);
-        if (error)
+        if (error != ERROR_SUCCESS)
             break;
 
-        DWORD cbData = sizeof(szText);
-        error = SHGetValueA(hSubKey, NULL, "RequiredFile", NULL, szText, &cbData);
-        if (!error)
-            PathCombineA(szText, szBaseDir, szText);
-
-        if (error || GetFileAttributesA(szText) != INVALID_FILE_ATTRIBUTES)
+        // Build required file path to szText
+        CHAR szRequired[MAX_PATH];
+        DWORD cbData = sizeof(szRequired);
+        error = SHGetValueA(hSubKey, NULL, "RequiredFile", NULL, szRequired, &cbData);
+        if (error == ERROR_SUCCESS)
         {
+            PathCombineA(szText, szBaseDir, szRequired);
+            // Now szText is a full path
+        }
+
+        // Check the file existence if necessary
+        if (error != ERROR_SUCCESS || GetFileAttributesA(szText) != INVALID_FILE_ATTRIBUTES)
+        {
+            // Check version if necessary
             error = SHGetValueA(hSubKey, NULL, "Version", NULL, szText, &cbData);
-            if (SHLWAPI_IsAppCompatVersion(pszPath, error ? NULL : szText))
+            if (SHLWAPI_IsAppCompatVersion(pszPath, ((error != ERROR_SUCCESS) ? NULL : szText)))
             {
-                dwFlags |= SHLWAPI_GetMappedFlags(hSubKey,
-                    g_appCompatFlagMaps, _countof(g_appCompatFlagMaps));
+                // Add additional flags from the registry key
+                dwCompatFlags |= SHLWAPI_GetMappedFlags(hSubKey, g_appCompatFlagMaps,
+                                                        _countof(g_appCompatFlagMaps));
             }
         }
+
+        // Close sub-key
         RegCloseKey(hSubKey);
 
+        // Go to the next sub-key
+        ++dwIndex;
         error = RegEnumKeyA(hKey, dwIndex, szText, _countof(szText));
     }
 
+    // Close the key
     RegCloseKey(hKey);
-    return dwFlags;
+
+    return dwCompatFlags;
 }
 
 static VOID
 SHLWAPI_InitAppCompat(VOID)
 {
     if (GetProcessVersion(0) >= 0x50000)
-        return;
+        return; // No need of flags
 
+    // Get module pathname
     CHAR szModulePathA[MAX_PATH];
     if (!GetModuleFileNameA(NULL, szModulePathA, _countof(szModulePathA)))
         return;
 
-    PCSTR pszFileName = PathFindFileNameA(szModulePathA);
+    PCSTR pszFileName = PathFindFileNameA(szModulePathA); // Get the file title
+
+    // Search the file title from g_appCompatInfo
     for (UINT iItem = 0; iItem < _countof(g_appCompatInfo); ++iItem)
     {
         const APPCOMPATINFO *pInfo = &g_appCompatInfo[iItem];
         if (lstrcmpiA(pInfo->pszAppName, pszFileName) == 0 &&
             SHLWAPI_IsAppCompatVersion(pszFileName, pInfo->pszAppVersion))
         {
+            // Found. Set flags
             g_dwAppCompatFlags = g_appCompatInfo[iItem].dwCompatFlags;
             break;
         }
     }
 
+    // Add more flags from registry
     g_dwAppCompatFlags |= SHLWAPI_GetRegistryCompatFlags(pszFileName);
 }
 
+// These flags require SHLWAPI_InitAppCompat
 #define SHACF_TO_INIT ( \
     SHACF_CONTEXTMENU | \
     SHACF_DOCOBJECT | \
@@ -335,7 +373,7 @@ SHLWAPI_InitAppCompat(VOID)
 /*************************************************************************
  * SHGetAppCompatFlags [SHLWAPI.461]
  *
- * Thanks for Geoff Chappell.
+ * Thanks to Geoff Chappell.
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/getappcompatflags.htm
  */
 DWORD WINAPI
@@ -343,23 +381,26 @@ SHGetAppCompatFlags(_In_ DWORD dwMask)
 {
     TRACE("(0x%lX)\n", dwMask);
 
-    if ((dwMask & SHACF_TO_INIT) && !g_bAppCompatInit)
+    // Initialize and get flags if necessary
+    if (!g_bInitAppCompat && (dwMask & SHACF_TO_INIT))
     {
         SHLWAPI_InitAppCompat();
-        g_bAppCompatInit = TRUE;
+        g_bInitAppCompat = TRUE; // Remember
     }
 
+    // Get additional flags if necessary
     if (g_dwAppCompatFlags && (dwMask & (SHACF_UNKNOWN1 | SHACF_UNKNOWN2)))
     {
-        APPCOMPATENUM data;
-        data.iFound = -1;
-        data.dwProcessId = GetCurrentProcessId();
-        data.pItems = g_appCompatInfo2;
-        data.nItems = _countof(g_appCompatInfo2);
-        EnumWindows(SHLWAPI_AppCompatEnumWndProc, (LPARAM)&data);
+        // Find the target window and flags by using g_wndCompatInfo
+        APPCOMPATENUM data =
+        {
+            g_wndCompatInfo, _countof(g_wndCompatInfo), GetCurrentProcessId(), -1
+        };
+        EnumWindows(SHLWAPI_WndCompatEnumProc, (LPARAM)&data);
 
+        // Add the target flags if found
         if (data.iFound >= 0)
-            g_dwAppCompatFlags |= g_appCompatInfo2[data.iFound].dwFlags;
+            g_dwAppCompatFlags |= g_wndCompatInfo[data.iFound].dwCompatFlags;
 
         g_dwAppCompatFlags |= SHACF_UNKNOWN3;
     }
