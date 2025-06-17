@@ -115,6 +115,7 @@ add_asm_files(msvcrt_shared_asm ${SHARED_ASM_SOURCE})
 add_library(msvcrt_shared
     ${SHARED_SOURCE}
     ${msvcrt_shared_asm}
+    reactos/ucrt_tls_sup.c
 )
 
 target_compile_definitions(msvcrt_shared PRIVATE _MSVCR_VER=0 __UCRTSUPPORT__)
