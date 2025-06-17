@@ -112,16 +112,20 @@ UINT DCMA_InsertMenuItems(
 
 HRESULT DCMA_InvokeCommand(HDCMA hDCMA, CMINVOKECOMMANDINFO *pICI)
 {
+    HRESULT hr = S_FALSE;
     for (UINT i = 0;; ++i)
     {
         DCMENTRY *p = DCMA_GetEntry(hDCMA, i);
         if (!p)
-            return S_FALSE;
-        if (!IS_INTRESOURCE(pICI->lpVerb))
-            return p->pCM->InvokeCommand(pICI);
+            return hr;
 
         UINT id = LOWORD(pICI->lpVerb);
-        if (id >= p->idCmdFirst && id <= p->idCmdLast)
+        if (!IS_INTRESOURCE(pICI->lpVerb))
+        {
+            if (SUCCEEDED(hr = p->pCM->InvokeCommand(pICI)))
+                return hr;
+        }
+        else if (id >= p->idCmdFirst && id <= p->idCmdLast)
         {
             CMINVOKECOMMANDINFOEX ici;
             CopyMemory(&ici, pICI, min(sizeof(ici), pICI->cbSize));
