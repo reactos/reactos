@@ -93,6 +93,7 @@ list(APPEND VCRT_RUNTIME_SOURCES
     ${vcrt_runtime_asm}
     __std_terminate.c
     __vcrt_init.c
+    purecall.cpp
 )
 
 # Runtime library (linked into ucrtbase)
