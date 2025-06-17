@@ -14,7 +14,7 @@ typedef struct tagSHARED_DATA
 {
     HHOOK hWinHook;
     HHOOK hShellHook;
-    HHOOK hKeyboardLLHook;
+    HHOOK hKeyboardHook;
     HWND hKbSwitchWnd;
     UINT nHotID;
     DWORD_PTR dwHotMenuItemData;
@@ -77,38 +77,38 @@ ShellHookProc(INT code, WPARAM wParam, LPARAM lParam)
 }
 
 static inline BOOL
-CheckVirtualKey(UINT vKey, UINT vKey1, UINT vKey2)
+CheckVirtualKey(UINT vKey, UINT vKey0, UINT vKey1, UINT vKey2)
 {
-    return vKey == vKey1 || vKey == vKey2;
+    return vKey == vKey0 || vKey == vKey1 || vKey == vKey2;
 }
 
 static LRESULT CALLBACK
-KeyboardLLHook(INT code, WPARAM wParam, LPARAM lParam)
+KeyboardProc(INT code, WPARAM wParam, LPARAM lParam)
 {
     if (code < 0)
-        return CallNextHookEx(g_pShared->hKeyboardLLHook, code, wParam, lParam);
+        return CallNextHookEx(g_pShared->hKeyboardHook, code, wParam, lParam);
 
     if (code == HC_ACTION)
     {
-        PKBDLLHOOKSTRUCT pKbStruct = (PKBDLLHOOKSTRUCT)lParam;
-        if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+        UINT vKey = (UINT)wParam;
+        LONG keyFlags = HIWORD(lParam);
+        if (!(keyFlags & KF_UP) && !(keyFlags & KF_REPEAT))
         {
-            BOOL bShiftPressed = GetAsyncKeyState(VK_SHIFT) < 0;
-            BOOL bAltPressed = GetAsyncKeyState(VK_MENU) < 0;
-            BOOL bCtrlPressed = GetAsyncKeyState(VK_CONTROL) < 0;
+            BOOL bShiftPressed = (GetKeyState(VK_SHIFT) < 0);
+            BOOL bAltPressed = (keyFlags & KF_ALTDOWN) || (GetKeyState(VK_MENU) < 0);
+            BOOL bCtrlPressed = (GetKeyState(VK_CONTROL) < 0);
             // Detect Alt+Shift and Ctrl+Shift
-            UINT vkCode = pKbStruct->vkCode;
-            if ((bAltPressed && CheckVirtualKey(vkCode, VK_LSHIFT, VK_RSHIFT)) ||
-                (bShiftPressed && CheckVirtualKey(vkCode, VK_LMENU, VK_RMENU)) ||
-                (bCtrlPressed && CheckVirtualKey(vkCode, VK_LSHIFT, VK_RSHIFT)) ||
-                (bShiftPressed && CheckVirtualKey(vkCode, VK_LCONTROL, VK_RCONTROL)))
+            if ((bAltPressed && CheckVirtualKey(vKey, VK_SHIFT, VK_LSHIFT, VK_RSHIFT)) ||
+                (bShiftPressed && CheckVirtualKey(vKey, VK_MENU, VK_LMENU, VK_RMENU)) ||
+                (bCtrlPressed && CheckVirtualKey(vKey, VK_SHIFT, VK_LSHIFT, VK_RSHIFT)) ||
+                (bShiftPressed && CheckVirtualKey(vKey, VK_CONTROL, VK_LCONTROL, VK_RCONTROL)))
             {
                 PostMessageToMainWnd(WM_LANG_CHANGED, 0, 0);
             }
         }
     }
 
-    return CallNextHookEx(g_pShared->hKeyboardLLHook, code, wParam, lParam);
+    return CallNextHookEx(g_pShared->hKeyboardHook, code, wParam, lParam);
 }
 
 BOOL APIENTRY
@@ -119,11 +119,11 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
     {
         g_pShared->hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, g_hInstance, 0);
         g_pShared->hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, g_hInstance, 0);
-        g_pShared->hKeyboardLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardLLHook, g_hInstance, 0);
+        g_pShared->hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD, KeyboardProc, g_hInstance, 0);
 
         if (g_pShared->hWinHook &&
             g_pShared->hShellHook &&
-            g_pShared->hKeyboardLLHook)
+            g_pShared->hKeyboardHook)
         {
             LeaveCriticalSection(&g_pShared->csLock);
             return TRUE;
@@ -131,10 +131,10 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
     }
 
     /* Unhook */
-    if (g_pShared->hKeyboardLLHook)
+    if (g_pShared->hKeyboardHook)
     {
-        UnhookWindowsHookEx(g_pShared->hKeyboardLLHook);
-        g_pShared->hKeyboardLLHook = NULL;
+        UnhookWindowsHookEx(g_pShared->hKeyboardHook);
+        g_pShared->hKeyboardHook = NULL;
     }
     if (g_pShared->hShellHook)
     {
