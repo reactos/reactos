@@ -179,7 +179,7 @@ HRESULT CRegTreeOptions::GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD 
     WCHAR szTemp[42];
     CLSID clsid;
     if (SUCCEEDED(GetRegString(hKey, L"CLSID", szTemp, _countof(szTemp))) &&
-        SUCCEEDED(CLSIDFromStringWrap(szTemp, &clsid)))
+        SUCCEEDED(CLSIDFromString(szTemp, &clsid)))
     {
         IRegTreeItem *pRTI;
         if (SUCCEEDED(hr = IUnknown_QueryService(m_pUnkSite, clsid, IID_PPV_ARG(IRegTreeItem, &pRTI))) ||

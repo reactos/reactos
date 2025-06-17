@@ -448,6 +448,29 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebView
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","DefaultValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade",Grayed,0x10001,6
 
+; Sysdm.cpl Visual Effects
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","ValueName",,"ListviewShadow"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","RegPath",,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","Text",,"@shell32.dll,-30541"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","Type",,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","DefaultValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","CheckedValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","UncheckedValue",0x00010001,0
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","SPIActionSet",0x00010001,37
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","SPIActionGet",0x00010001,38
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","Text",,"@shell32.dll,-30533"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","Type",,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","DefaultValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","CheckedValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","UncheckedValue",0x00010001,0
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","SPIActionSet",0x00010001,75
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","SPIActionGet",0x00010001,74
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","Text",,"@shell32.dll,-30535"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","Type",,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","DefaultValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","CheckedValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","UncheckedValue",0x00010001,0
+
 ; Common shell folders
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012

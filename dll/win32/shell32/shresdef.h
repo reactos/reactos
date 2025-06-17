@@ -369,7 +369,7 @@
 #define IDS_FILE_NOT_FOUND                          30530 // FIXME: "Animations in taskbar"
 #define IDS_LINK_INVALID                            30531
 #define IDS_COPYTOMENU                              30532
-#define IDS_COPYTOTITLE                             60005
+#define IDS_COPYTOTITLE                             60005 // Outside of any Microsoft range to avoid collisions
 #define IDS_COPYITEMS                               30534
 #define IDS_COPYBUTTON                              60007
 #define IDS_MOVETOMENU                              30536
