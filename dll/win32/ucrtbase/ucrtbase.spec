@@ -124,7 +124,7 @@
 @ cdecl -stub __fpe_flt_rounds()
 @ cdecl __fpecode()
 @ cdecl __initialize_lconv_for_unsigned_char()
-@ cdecl -stub __intrinsic_abnormal_termination() # CHECKME
+@ cdecl __intrinsic_abnormal_termination()
 @ cdecl -norelay __intrinsic_setjmp(ptr)
 @ cdecl -impsym _setjmp(long ptr) __intrinsic_setjmp
 @ cdecl -arch=!i386 -norelay __intrinsic_setjmpex(ptr ptr)
@@ -429,7 +429,7 @@
 @ cdecl _get_osfhandle(long)
 @ cdecl _get_pgmptr(ptr)
 @ cdecl _get_printf_count_output()
-@ cdecl -stub _get_purecall_handler()
+@ cdecl _get_purecall_handler()
 @ cdecl _get_stream_buffer_pointers(ptr ptr ptr ptr)
 @ cdecl _get_terminate()
 @ cdecl _get_thread_local_invalid_parameter_handler()
