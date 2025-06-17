@@ -139,10 +139,24 @@ list(APPEND SOURCE
     precomp.h)
 
 if(ARCH STREQUAL "i386")
-    add_asm_files(ntdll_apitest_asm i386/NtContinue.S)
+    list(APPEND SOURCE
+        RtlRemoteCall.c
+    )
+    list(APPEND ASM_SOURCE
+        i386/NtContinue.S
+        i386/RtlRemoteCall.S
+    )
 elseif(ARCH STREQUAL "amd64")
-    add_asm_files(ntdll_apitest_asm amd64/NtContinue.S)
+    list(APPEND SOURCE
+        RtlRemoteCall.c
+    )
+    list(APPEND ASM_SOURCE
+        amd64/NtContinue.S
+        amd64/RtlRemoteCall.S
+    )
 endif()
+
+add_asm_files(ntdll_apitest_asm ${ASM_SOURCE})
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
