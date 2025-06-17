@@ -697,6 +697,31 @@ IntDefWindowProc(
          UserDerefObjectCo(Wnd->spwndParent);
          break;
 
+      case WM_POPUPSYSTEMMENU:
+      {
+         /* This is an undocumented message used by the windows taskbar to
+            display the system menu of windows that belong to other processes. */
+         USER_REFERENCE_ENTRY MenuRef, WndRef;
+         PMENU pMenu;
+
+         ERR("WM_POPUPSYSTEMMENU\n");
+
+         pMenu = IntGetSystemMenu(Wnd, FALSE);
+         if (!pMenu)
+             break;
+
+         UserRefObjectCo(pMenu, &MenuRef);
+         UserRefObjectCo(Wnd, &WndRef);
+
+         co_IntSetForegroundWindow(Wnd);
+         IntTrackPopupMenuEx(pMenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_SYSTEM_MENU,
+                             LOWORD(lParam), HIWORD(lParam), Wnd, NULL);
+
+         UserDerefObjectCo(pMenu);
+         UserDerefObjectCo(Wnd);
+         break;
+      }
+
       case WM_KEYF1:
       {
          HELPINFO hi;
