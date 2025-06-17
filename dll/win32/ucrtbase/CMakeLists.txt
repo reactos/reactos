@@ -35,9 +35,10 @@ set_entrypoint(ucrtbase __acrt_DllMain 12)
 
 target_link_libraries(ucrtbase
     ucrt
-    ucrtsupport
+    msvcrt_shared
     crtmath
     vcruntime
+    chkstk
     wine
 )
 
