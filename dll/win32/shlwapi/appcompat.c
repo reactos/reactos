@@ -363,7 +363,6 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
         error = RegEnumKeyA(hKey, dwIndex, szText, _countof(szText));
     }
 
-    // Close the key
     RegCloseKey(hKey);
 
     return dwCompatFlags;
