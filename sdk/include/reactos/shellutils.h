@@ -652,6 +652,24 @@ public:
         return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
     }
 };
+
+#if defined(__WINE_SHLWAPI_H) && !defined(NO_SHLWAPI)
+struct CScopedSetObjectWithSite
+{
+    IUnknown *m_pObj;
+    explicit CScopedSetObjectWithSite(IUnknown *pObj, IUnknown *pSite) : m_pObj(pObj)
+    {
+        if (pSite)
+            IUnknown_SetSite(pObj, pSite);
+        else
+            m_pObj = NULL;
+    }
+    ~CScopedSetObjectWithSite()
+    {
+        IUnknown_SetSite(m_pObj, NULL);
+    }
+};
+#endif
 #endif /* __cplusplus */
 
 #define S_LESSTHAN 0xffff
