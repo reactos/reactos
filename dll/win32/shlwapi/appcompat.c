@@ -356,7 +356,6 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
             }
         }
 
-        // Close the sub-key
         RegCloseKey(hSubKey);
 
         // Proceed to the next sub-key
