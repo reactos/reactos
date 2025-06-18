@@ -588,7 +588,7 @@ co_UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
     PMENU pMenu;
     UINT uDefaultCmd;
 
-    ERR("co_UserPopupSystemMenu\n"); // This message is useful for debugging
+    FIXME("co_UserPopupSystemMenu() called\n"); // Useful trace, while working on CORE-20238
 
     UserRefObjectCo(pWnd, &WndRef);
 
