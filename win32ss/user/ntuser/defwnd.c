@@ -582,16 +582,17 @@ DefWndScreenshot(PWND pWnd)
 
 // WM_POPUPSYSTEMMENU
 static BOOL
-UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
+co_UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
 {
     USER_REFERENCE_ENTRY MenuRef, WndRef;
     PMENU pMenu;
-    UINT uDefCmd;
+    UINT uDefaultCmd;
 
-    ERR("UserPopupSystemMenu\n"); // This message is useful for debugging
+    ERR("co_UserPopupSystemMenu\n"); // This message is useful for debugging
 
     UserRefObjectCo(pWnd, &WndRef);
 
+    // Check style and make window foreground
     if ((pWnd->style & WS_DISABLED) ||
         (pWnd->head.pti->MessageQueue != gpqForeground && !co_IntSetForegroundWindow(pWnd)))
     {
@@ -599,7 +600,7 @@ UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
         return FALSE;
     }
 
-    // Get system menu
+    // Get system menu from window
     pMenu = IntGetSystemMenu(pWnd, FALSE);
     if (!pMenu)
     {
@@ -610,12 +611,12 @@ UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
 
     // Set default menu item
     if (puCmdType)
-        uDefCmd = *puCmdType;
+        uDefaultCmd = *puCmdType;
     else if (pWnd->style & (WS_MINIMIZE | WS_MAXIMIZE))
-        uDefCmd = SC_RESTORE;
+        uDefaultCmd = SC_RESTORE;
     else
-        uDefCmd = SC_MAXIMIZE;
-    UserSetMenuDefaultItem(pMenu, uDefCmd, FALSE);
+        uDefaultCmd = SC_MAXIMIZE;
+    UserSetMenuDefaultItem(pMenu, uDefaultCmd, FALSE);
 
     if (nClickPos == -1) // Input from keyboard?
         FIXME("Use WM_KLUDGEMINRECT and TPM_VERTICAL\n");
@@ -749,7 +750,7 @@ IntDefWindowProc(
       case WM_POPUPSYSTEMMENU:
          /* This is an undocumented message used by the windows taskbar to
             display the system menu of windows that belong to other processes. */
-         UserPopupSystemMenu(Wnd, (LONG)lParam, NULL);
+         co_UserPopupSystemMenu(Wnd, (LONG)lParam, NULL);
          break;
 
       case WM_KEYF1:
