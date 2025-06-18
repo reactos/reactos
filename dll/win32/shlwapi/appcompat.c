@@ -189,53 +189,59 @@ static HRESULT
 SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 {
     DWORD dwHandle;
-    BYTE Data[4096];
-    PVOID pData;
+    PBYTE pbData;
+    PVOID pvData;
 
     *ppszDest = NULL;
 
     UINT size = GetFileVersionInfoSizeA(pszFileName, &dwHandle);
-    if (size > _countof(Data) ||
-        !GetFileVersionInfoA(pszFileName, dwHandle, sizeof(Data), Data))
+    if (!size)
     {
         TRACE("No version info\n");
         return E_FAIL;
     }
-
-    if (VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_UTF16,     &pData, &size) ||
-        VerQueryValueA(Data, PRODUCT_VER_GERMAN_UTF16,         &pData, &size) ||
-        VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_WE,        &pData, &size) ||
-        VerQueryValueA(Data, PRODUCT_VER_ENGLISH_US_NEUTRAL,   &pData, &size) ||
-        VerQueryValueA(Data, PRODUCT_VER_SWEDISH_WE,           &pData, &size))
+    pbData = (PBYTE)LocalAlloc(LPTR, size);
+    if (!pbData)
     {
-        if (size && Str_SetPtrA(ppszDest, (PSTR)pData))
-        {
-            // NOTE: *ppszDest must be freed using LocalFree later
-            return S_OK;
-        }
+        ERR("E_OUTOFMEMORY\n");
+        return E_OUTOFMEMORY;
     }
-    else if (VerQueryValueA(Data, "\\VarFileInfo\\Translation", &pData, &size))
+    GetFileVersionInfoA(pszFileName, dwHandle, size, pbData);
+
+    if ((VerQueryValueA(pbData, PRODUCT_VER_ENGLISH_US_UTF16,   &pvData, &size) ||
+         VerQueryValueA(pbData, PRODUCT_VER_GERMAN_UTF16,       &pvData, &size) ||
+         VerQueryValueA(pbData, PRODUCT_VER_ENGLISH_US_WE,      &pvData, &size) ||
+         VerQueryValueA(pbData, PRODUCT_VER_ENGLISH_US_NEUTRAL, &pvData, &size) ||
+         VerQueryValueA(pbData, PRODUCT_VER_SWEDISH_WE,         &pvData, &size)) && size)
     {
-        PVOID pDataSaved = pData;
-        PLANGANDCODEPAGE pEntry = (PLANGANDCODEPAGE)pData;
+        // NOTE: *ppszDest must be freed using LocalFree later
+        *ppszDest = StrDupA((PSTR)pvData);
+        if (!*ppszDest)
+            ERR("E_OUTOFMEMORY\n");
+    }
+    if (VerQueryValueA(pbData, "\\VarFileInfo\\Translation", &pvData, &size))
+    {
+        PVOID pDataSaved = pvData;
+        PLANGANDCODEPAGE pEntry = (PLANGANDCODEPAGE)pvData;
         for (; (PBYTE)pEntry + sizeof(LANGANDCODEPAGE) <= (PBYTE)pDataSaved + size; ++pEntry)
         {
             CHAR szPath[MAX_PATH];
             wnsprintfA(szPath, _countof(szPath), "\\StringFileInfo\\%04X%04X\\ProductVersion",
                        pEntry->wLanguage, pEntry->wCodePage);
-            if (!VerQueryValueA(Data, szPath, &pData, &size))
-                continue;
-
-            if (size && Str_SetPtrA(ppszDest, (PSTR)pData))
+            if (VerQueryValueA(pbData, szPath, &pvData, &size) && size)
             {
                 // NOTE: *ppszDest must be freed using LocalFree later
-                return S_OK;
+                *ppszDest = StrDupA((PSTR)pvData);
+                if (!*ppszDest)
+                    ERR("E_OUTOFMEMORY\n");
             }
         }
     }
 
-    TRACE("No ProductVersion info\n");
-    return E_OUTOFMEMORY;
+    if (!*ppszDest)
+        TRACE("No ProductVersion\n");
+    LocalFree(pbData);
+    return *ppszDest ? S_OK : E_OUTOFMEMORY;
 }
 
 static BOOL
