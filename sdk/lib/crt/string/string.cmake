@@ -1,31 +1,41 @@
 
 list(APPEND LIBCNTPR_STRING_SOURCE
     string/_splitpath.c
+    string/_stricmp_nt.c
+    string/_strlwr_nt.c
+    string/_strnicmp_nt.c
+    string/_strupr_nt.c
     string/_wsplitpath.c
-    string/ctype.c
-    string/is_wctype.c
-    string/scanf.c
-    string/strcspn.c
-    string/strrev.c
-    string/strset.c
-    string/strstr.c
-    string/strpbrk.c
-    string/strspn.c
-    string/atoi64.c
     string/atoi.c
+    string/atoi64.c
     string/atol.c
+    string/ctype.c
+    #string/is_wctype.c
+    string/iswctype_nt.c
     string/itoa.c
     string/itow.c
+    string/mbstowcs_nt.c
+    string/scanf.c
+    string/strcspn.c
+    string/strpbrk.c
+    string/strrev.c
+    string/strset.c
+    string/strspn.c
+    string/strstr.c
     string/strtoi64.c
     string/strtol.c
     string/strtoul.c
     string/strtoull.c
+    string/tolower_nt.c
+    string/toupper_nt_mb.c
+    string/towupper_nt.c
     string/wcs.c
     string/wcstol.c
+    string/wcstombs_nt.c
     string/wcstoul.c
     string/wctype.c
-    string/wtoi64.c
     string/wtoi.c
+    string/wtoi64.c
     string/wtol.c
     string/winesup.c
 )
@@ -77,51 +87,6 @@ else()
         string/wcsrchr.c
     )
 endif()
-
-list(APPEND CRT_STRING_SOURCE
-    ${LIBCNTPR_STRING_SOURCE}
-    string/_mbsnlen.c
-    string/_mbstrnlen.c
-    string/_splitpath_s.c
-    string/_wcslwr_s.c
-    string/_wsplitpath_s.c
-    string/atof.c
-    string/iswctype.c
-    string/mbstowcs_s.c
-    string/strcoll.c
-    string/strdup.c
-    string/strerror.c
-    string/stricmp.c
-    string/string.c
-    string/strlwr.c
-    string/strncoll.c
-    string/strnicmp.c
-    string/strtod.c
-    string/strtok.c
-    string/strtok_s.c
-    string/strtoul.c
-    string/strupr.c
-    string/strxfrm.c
-    string/wcstombs_s.c
-    string/wtof.c
-)
-
-list(APPEND CRT_STRING_ASM_SOURCE
-    ${LIBCNTPR_STRING_ASM_SOURCE}
-)
-
-list(APPEND LIBCNTPR_STRING_SOURCE
-    string/_stricmp_nt.c
-    string/_strlwr_nt.c
-    string/_strnicmp_nt.c
-    string/_strupr_nt.c
-    string/iswctype_nt.c
-    string/mbstowcs_nt.c
-    string/tolower_nt.c
-    string/toupper_nt_mb.c
-    string/towupper_nt.c
-    string/wcstombs_nt.c
-)
 
 # Used by acpi.sys
 add_library(strtol
