@@ -601,7 +601,7 @@ co_UserPopupSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmd
         return FALSE;
     }
 
-    // Get system menu from window
+    // Get the window's system menu
     pMenu = IntGetSystemMenu(pWnd, FALSE);
     if (!pMenu)
     {
