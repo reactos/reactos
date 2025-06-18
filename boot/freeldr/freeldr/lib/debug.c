@@ -202,6 +202,7 @@ VOID DebugPrintChar(UCHAR Character)
     if (Character == '\n')
         DebugStartOfLine = TRUE;
 
+#if !defined(_M_AMD64) // Causes massive slowdown in virtual machines
     if (DebugPort & RS232)
     {
         if (Character == '\n')
@@ -209,6 +210,7 @@ VOID DebugPrintChar(UCHAR Character)
 
         Rs232PortPutByte(Character);
     }
+#endif
     if (DebugPort & BOCHS)
     {
         WRITE_PORT_UCHAR((PUCHAR)BOCHS_OUTPUT_PORT, Character);
