@@ -318,7 +318,6 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
     szText[0] = ANSI_NULL; // The first attempt is for the non-subkey path
     for (DWORD dwIndex = 0; error == ERROR_SUCCESS;)
     {
-        // Open the sub-key
         HKEY hSubKey;
         error = RegOpenKeyExA(hKey, szText, 0, KEY_QUERY_VALUE, &hSubKey);
         if (error != ERROR_SUCCESS)
