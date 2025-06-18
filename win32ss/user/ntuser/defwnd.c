@@ -582,12 +582,11 @@ DefWndScreenshot(PWND pWnd)
 
 // WM_POPUPSYSTEMMENU
 static BOOL
-UserPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
+UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
 {
     USER_REFERENCE_ENTRY MenuRef, WndRef;
     PMENU pMenu;
-
-    UNREFERENCED_PARAMETER(wParam);
+    UINT uDefCmd;
 
     ERR("UserPopupSystemMenu\n"); // This message is useful for debugging
 
@@ -600,6 +599,7 @@ UserPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
         return FALSE;
     }
 
+    // Get system menu
     pMenu = IntGetSystemMenu(pWnd, FALSE);
     if (!pMenu)
     {
@@ -608,16 +608,21 @@ UserPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
     }
     UserRefObjectCo(pMenu, &MenuRef);
 
-    if (pWnd->style & (WS_MINIMIZE | WS_MAXIMIZE))
-        UserSetMenuDefaultItem(pMenu, SC_RESTORE, FALSE);
+    // Set default menu item
+    if (puCmdType)
+        uDefCmd = *puCmdType;
+    else if (pWnd->style & (WS_MINIMIZE | WS_MAXIMIZE))
+        uDefCmd = SC_RESTORE;
     else
-        UserSetMenuDefaultItem(pMenu, SC_MAXIMIZE, FALSE);
+        uDefCmd = SC_MAXIMIZE;
+    UserSetMenuDefaultItem(pMenu, uDefCmd, FALSE);
 
-    if ((LONG)lParam == -1) // Input from keyboard?
+    if (nClickPos == -1) // Input from keyboard?
         FIXME("Use WM_KLUDGEMINRECT and TPM_VERTICAL\n");
 
+    // Show menu and wait for finish of menu tracking
     IntTrackPopupMenuEx(pMenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_SYSTEM_MENU,
-                        LOWORD(lParam), HIWORD(lParam), pWnd, NULL);
+                        LOWORD(nClickPos), HIWORD(nClickPos), pWnd, NULL);
 
     UserDerefObjectCo(pMenu);
     UserDerefObjectCo(pWnd);
@@ -744,7 +749,7 @@ IntDefWindowProc(
       case WM_POPUPSYSTEMMENU:
          /* This is an undocumented message used by the windows taskbar to
             display the system menu of windows that belong to other processes. */
-         UserPopupSystemMenu(Wnd, wParam, lParam);
+         UserPopupSystemMenu(Wnd, (LONG)lParam, NULL);
          break;
 
       case WM_KEYF1:
