@@ -2537,7 +2537,10 @@ NtUserMessageCall( HWND hWnd,
     PWND Window = NULL;
     USER_REFERENCE_ENTRY Ref;
 
-    UserEnterExclusive();
+    if (dwType == FNID_DEFWINDOWPROC && Msg == WM_POPUPSYSTEMMENU)
+        UserEnterShared();
+    else
+        UserEnterExclusive();
 
     switch(dwType)
     {

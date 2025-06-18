@@ -580,6 +580,50 @@ DefWndScreenshot(PWND pWnd)
     UserCloseClipboard();
 }
 
+static BOOL
+IntPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+    USER_REFERENCE_ENTRY MenuRef, WndRef;
+    PMENU pMenu;
+
+    /* This is an undocumented message used by the windows taskbar to
+       display the system menu of windows that belong to other processes. */
+
+    ERR("WM_POPUPSYSTEMMENU\n"); // This message is useful for debugging
+
+    UserRefObjectCo(pWnd, &WndRef);
+
+    if ((pWnd->style & WS_DISABLED) ||
+        (pWnd->head.pti->MessageQueue != gpqForeground && !co_IntSetForegroundWindow(pWnd)))
+    {
+        UserDerefObjectCo(pWnd);
+        return FALSE;
+    }
+
+    pMenu = IntGetSystemMenu(pWnd, FALSE);
+    if (!pMenu)
+    {
+        UserDerefObjectCo(pWnd);
+        return FALSE;
+    }
+    UserRefObjectCo(pMenu, &MenuRef);
+
+    if (pWnd->style & (WS_MINIMIZE | WS_MAXIMIZE))
+        UserSetMenuDefaultItem(pMenu, SC_RESTORE, FALSE);
+    else
+        UserSetMenuDefaultItem(pMenu, SC_MAXIMIZE, FALSE);
+
+    if ((LONG)lParam == -1)
+        FIXME("lParam == -1\n");
+
+    IntTrackPopupMenuEx(pMenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_SYSTEM_MENU,
+                        LOWORD(lParam), HIWORD(lParam), pWnd, NULL);
+
+    UserDerefObjectCo(pMenu);
+    UserDerefObjectCo(pWnd);
+    return TRUE;
+}
+
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -698,28 +742,8 @@ IntDefWindowProc(
          break;
 
       case WM_POPUPSYSTEMMENU:
-      {
-         /* This is an undocumented message used by the windows taskbar to
-            display the system menu of windows that belong to other processes. */
-         USER_REFERENCE_ENTRY MenuRef;
-         PMENU pMenu;
-
-         // This message is useful for debugging
-         ERR("WM_POPUPSYSTEMMENU\n");
-
-         pMenu = IntGetSystemMenu(Wnd, FALSE);
-         if (!pMenu)
-            break;
-
-         UserRefObjectCo(pMenu, &MenuRef);
-
-         co_IntSetForegroundWindow(Wnd);
-         IntTrackPopupMenuEx(pMenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_SYSTEM_MENU,
-                             LOWORD(lParam), HIWORD(lParam), Wnd, NULL);
-
-         UserDerefObjectCo(pMenu);
+         IntPopupSystemMenu(Wnd, wParam, lParam);
          break;
-      }
 
       case WM_KEYF1:
       {
