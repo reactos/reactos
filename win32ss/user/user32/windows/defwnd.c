@@ -783,7 +783,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_WINDOWPOSCHANGED:
         case WM_APPCOMMAND:
         case WM_SETCURSOR:
-        case WM_POPUPSYSTEMMENU:
+        case WM_SYSMENU:
 GoSS:
         {
             LRESULT lResult;
