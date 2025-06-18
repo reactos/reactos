@@ -582,7 +582,7 @@ DefWndScreenshot(PWND pWnd)
 
 // WM_POPUPSYSTEMMENU
 static BOOL
-co_UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
+co_UserPopupSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmdType)
 {
     USER_REFERENCE_ENTRY MenuRef, WndRef;
     PMENU pMenu;
