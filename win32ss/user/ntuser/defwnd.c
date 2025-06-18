@@ -622,7 +622,7 @@ co_UserPopupSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmd
     if (nClickPos == -1) // Input from keyboard?
         FIXME("Use WM_KLUDGEMINRECT and TPM_VERTICAL\n");
 
-    // Show menu and wait for finish of menu tracking
+    // Show the menu and wait for menu tracking ending
     IntTrackPopupMenuEx(pMenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_SYSTEM_MENU,
                         LOWORD(nClickPos), HIWORD(nClickPos), pWnd, NULL);
 
