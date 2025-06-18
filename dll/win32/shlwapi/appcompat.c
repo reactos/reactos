@@ -358,7 +358,7 @@ SHLWAPI_GetRegistryCompatFlags(_In_ PCSTR pszPath)
 
         RegCloseKey(hSubKey);
 
-        // Proceed to the next sub-key
+        // Go to the next sub-key
         ++dwIndex;
         error = RegEnumKeyA(hKey, dwIndex, szText, _countof(szText));
     }
