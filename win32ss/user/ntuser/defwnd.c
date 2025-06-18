@@ -587,6 +587,8 @@ UserPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
     USER_REFERENCE_ENTRY MenuRef, WndRef;
     PMENU pMenu;
 
+    UNREFERENCED_PARAMETER(wParam);
+
     ERR("UserPopupSystemMenu\n"); // This message is useful for debugging
 
     UserRefObjectCo(pWnd, &WndRef);
@@ -611,8 +613,8 @@ UserPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
     else
         UserSetMenuDefaultItem(pMenu, SC_MAXIMIZE, FALSE);
 
-    if ((LONG)lParam == -1)
-        FIXME("lParam == -1\n");
+    if ((LONG)lParam == -1) // Input from keyboard?
+        FIXME("Use WM_KLUDGEMINRECT and TPM_VERTICAL\n");
 
     IntTrackPopupMenuEx(pMenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_SYSTEM_MENU,
                         LOWORD(lParam), HIWORD(lParam), pWnd, NULL);
