@@ -19,6 +19,10 @@
 #include <mbctype.h>
 #include <sys/stat.h>
 #include <internal/wine/msvcrt.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <mbstring.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(crtdll);
@@ -28,11 +32,6 @@ extern void __getmainargs( int *argc, char ***argv, char ***envp,
                            int expand_wildcards, int *new_mode );
 
 /* EXTERNAL PROTOTYPES ********************************************************/
-
-BOOL crt_process_init(void);
-
-extern void FreeEnvironment(char **environment);
-
 
 unsigned int CRTDLL__basemajor_dll = 0;
 unsigned int CRTDLL__baseminor_dll = 0;
@@ -82,75 +81,6 @@ static void convert_struct_stat( struct crtdll_stat *dst, const struct _stat *sr
     dst->st_atime = src->st_atime;
     dst->st_mtime = src->st_mtime;
     dst->st_ctime = src->st_ctime;
-}
-
-/* LIBRARY ENTRY POINT ********************************************************/
-
-BOOL
-WINAPI
-DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
-{
-    DWORD version;
-    switch (dwReason)
-    {
-    case DLL_PROCESS_ATTACH:
-        version = GetVersion();
-
-        /* initialize version info */
-        CRTDLL__basemajor_dll   = (version >> 24) & 0xFF;
-        CRTDLL__baseminor_dll   = (version >> 16) & 0xFF;
-        CRTDLL__baseversion_dll = (version >> 16);
-        CRTDLL__cpumode_dll     = 1; /* FIXME */
-        CRTDLL__osmajor_dll     = (version >>8) & 0xFF;
-        CRTDLL__osminor_dll     = (version & 0xFF);
-        CRTDLL__osmode_dll      = 1; /* FIXME */
-        CRTDLL__osversion_dll   = (version & 0xFFFF);
-
-        if (!crt_process_init())
-        {
-            ERR("crt_init() failed!\n");
-            return FALSE;
-        }
-
-        TRACE("Attach done\n");
-        break;
-    case DLL_THREAD_ATTACH:
-        break;
-
-    case DLL_THREAD_DETACH:
-        msvcrt_free_tls_mem();
-        break;
-
-    case DLL_PROCESS_DETACH:
-        TRACE("Detach\n");
-        /* Deinit of the WINE code */
-        msvcrt_free_io();
-        if (reserved) break;
-        msvcrt_free_popen_data();
-        msvcrt_free_mt_locks();
-        //msvcrt_free_console();
-        //msvcrt_free_args();
-        //msvcrt_free_signals();
-        msvcrt_free_tls_mem();
-        if (!msvcrt_free_tls())
-          return FALSE;
-        //MSVCRT__free_locale(MSVCRT_locale);
-
-        if (__winitenv && __winitenv != _wenviron)
-            FreeEnvironment((char**)__winitenv);
-        if (_wenviron)
-            FreeEnvironment((char**)_wenviron);
-
-        if (__initenv && __initenv != _environ)
-            FreeEnvironment(__initenv);
-        if (_environ)
-            FreeEnvironment(_environ);
-
-        TRACE("Detach done\n");
-        break;
-    }
-
-    return TRUE;
 }
 
 
@@ -246,5 +176,149 @@ char *_strspnp( const char *str1, const char *str2)
     str1 += strspn( str1, str2 );
     return *str1 ? (char*)str1 : NULL;
 }
+
+/*********************************************************************
+ *    _mbsstr (CRTDLL.@)
+ */
+unsigned char* CRTDLL__mbsstr(const unsigned char* Str, const unsigned char* Substr)
+{
+    if (!*Str && !*Substr)
+        return NULL;
+    return (unsigned char*)strstr((const char*)Str, (const char*)Substr);
+}
+
+/*********************************************************************
+ *    sprintf (CRTDLL.@)
+ */
+int CRTDLL_sprintf(char* buffer, const char* format, ...)
+{
+    va_list args;
+    int ret;
+
+    /* Access both buffers to emulate CRTDLL exception behavior */
+    (void)*(volatile char*)buffer;
+    (void)*(volatile char*)format;
+
+    va_start(args, format);
+    ret = vsprintf(buffer, format, args);
+    va_end(args);
+    return ret;
+}
+
+/*********************************************************************
+ *    strtoul (CRTDLL.@)
+ */
+unsigned long CRTDLL_strtoul(const char* nptr, char** endptr, int base)
+{
+    /* Access nptr to emulate CRTDLL exception behavior */
+    (void)*(volatile char*)nptr;
+    return strtoul(nptr, endptr, base);
+}
+
+/*********************************************************************
+ *    wcstoul (CRTDLL.@)
+ */
+unsigned long CRTDLL_wcstoul(const wchar_t* nptr, wchar_t** endptr, int base)
+{
+    /* Access nptr to emulate CRTDLL exception behavior */
+    (void)*(volatile wchar_t*)nptr;
+    return wcstoul(nptr, endptr, base);
+}
+
+/*********************************************************************
+ *    system (CRTDLL.@)
+ */
+int CRTDLL_system(const char* command)
+{
+    if (command != NULL)
+    {
+        errno = 0;
+    }
+    return system(command);
+}
+
+/*********************************************************************
+ *    _mbsnbcat (CRTDLL.@)
+ */
+unsigned char* CRTDLL__mbsnbcat(unsigned char* dest, const unsigned char* src, size_t n)
+{
+    if (n)
+    {
+        /* Access both buffers to emulate CRTDLL exception behavior */
+        (void)*(volatile char*)dest;
+        (void)*(volatile char*)src;
+    }
+
+    return _mbsnbcat(dest, src, n);
+}
+
+/*********************************************************************
+ *    _mbsncat (CRTDLL.@)
+ */
+unsigned char* CRTDLL__mbsncat(unsigned char* dest, const unsigned char* src, size_t n)
+{
+    if (n)
+    {
+        /* Access both buffers to emulate CRTDLL exception behavior */
+        (void)*(volatile char*)dest;
+        (void)*(volatile char*)src;
+    }
+
+    return _mbsncat(dest, src, n);
+}
+
+/*********************************************************************
+ *    _vsnprintf (CRTDLL.@)
+ */
+int CRTDLL__vsnprintf(char* buffer, size_t count, const char* format, va_list argptr)
+{
+    (void)*(volatile char*)format;
+    if (count)
+    {
+        (void)*(volatile char*)buffer;
+    }
+    int ret = _vsnprintf(buffer, count, format, argptr);
+    if (ret > (int)count)
+        ret = -1;
+    errno = 0;;
+    return ret;
+}
+
+/*********************************************************************
+ *    _snprintf (CRTDLL.@)
+ */
+int CRTDLL__snprintf(char* buffer, size_t count, const char* format, ...)
+{
+    va_list args;
+    int ret;
+    va_start(args, format);
+    ret = CRTDLL__vsnprintf(buffer, count, format, args);
+    va_end(args);
+    return ret;
+}
+
+/*********************************************************************
+ *    _vsnwprintf (CRTDLL.@)
+ */
+int CRTDLL__vsnwprintf(wchar_t* buffer, size_t count, const wchar_t* format, va_list argptr)
+{
+    (void)*(volatile wchar_t*)format;
+    int ret = _vsnwprintf(buffer, count, format, argptr);
+    if ((ret > (int)count) || !buffer)
+        ret = -1;
+    errno = 0;;
+    return ret;
+}
+
+
+/* Dummy for rand_s, not used. */
+BOOLEAN
+WINAPI
+SystemFunction036(PVOID pbBuffer, ULONG dwLen)
+{
+    assert(FALSE);
+    return 0;
+}
+
 
 /* EOF */
