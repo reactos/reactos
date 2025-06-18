@@ -38,6 +38,7 @@ static void DCMA_DestroyEntry(DCMENTRY &dcme)
         return;
     IUnknown_SetSite(dcme.pCM, NULL);
     dcme.pCM->Release();
+    dcme.pCM = NULL;
 }
 
 void DCMA_Destroy(HDCMA hDCMA)

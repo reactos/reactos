@@ -237,7 +237,6 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
     HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
     if (!hmenu)
         return E_OUTOFMEMORY;
-
     HMENU hpopupmenu = GetSubMenu(hmenu, 0);
 
     SHELL_LimitDropEffectToItemAttributes(pDataObject, &dwAvailableEffects);
@@ -304,18 +303,25 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
             ici.fMask |= CMIC_MASK_CONTROL_DOWN;
         DCMA_InvokeCommand(hDCMA, &ici);
         hr = S_OK;
+        *pdwEffect = DROPEFFECT_NONE;
     }
     else if (uCommand == 0)
+    {
         hr = S_OK;
+        *pdwEffect = DROPEFFECT_NONE;
+    }
     else if (uCommand == IDM_COPYHERE)
         *pdwEffect = DROPEFFECT_COPY;
     else if (uCommand == IDM_MOVEHERE)
         *pdwEffect = DROPEFFECT_MOVE;
     else if (uCommand == IDM_LINKHERE)
         *pdwEffect = DROPEFFECT_LINK;
+    else
+        hr = E_UNEXPECTED;
 
     DCMA_Destroy(hDCMA);
     DCIA_Destroy(hDCIA);
+    DestroyMenu(hmenu);
     return hr;
 }
 
