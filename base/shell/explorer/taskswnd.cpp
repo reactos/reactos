@@ -1780,7 +1780,7 @@ public:
         if (GetForegroundWindow() != TaskItem->hWnd)
             ERR("HandleTaskItemRightClick detected the window did not become foreground\n");
 
-        ::SendMessageCallbackW(TaskItem->hWnd, WM_SYSMENU, 0, MAKELPARAM(pt.x, pt.y),
+        ::SendMessageCallbackW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y),
                                SendAsyncProc, (ULONG_PTR)TaskItem);
     }
 

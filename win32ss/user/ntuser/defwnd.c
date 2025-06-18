@@ -580,7 +580,7 @@ DefWndScreenshot(PWND pWnd)
     UserCloseClipboard();
 }
 
-// WM_SYSMENU
+// WM_POPUPSYSTEMMENU
 static BOOL
 co_UserPopupSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmdType)
 {
@@ -748,7 +748,7 @@ IntDefWindowProc(
          UserDerefObjectCo(Wnd->spwndParent);
          break;
 
-      case WM_SYSMENU:
+      case WM_POPUPSYSTEMMENU:
          /* This is an undocumented message used by the windows taskbar to
             display the system menu of windows that belong to other processes. */
          co_UserTrackSystemMenu(Wnd, (LONG)lParam, NULL);
