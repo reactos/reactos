@@ -11,9 +11,9 @@ if(ARCH STREQUAL "i386")
         mem/i386/memmove_asm.s
         mem/i386/memset_asm.s
     )
-    list(APPEND CRT_MEM_ASM_SOURCE
-        ${LIBCNTPR_MEM_ASM_SOURCE}
-    )
+    #list(APPEND CRT_MEM_ASM_SOURCE
+    #    ${LIBCNTPR_MEM_ASM_SOURCE}
+    #)
 else()
     list(APPEND LIBCNTPR_MEM_SOURCE
         mem/memchr.c
@@ -23,9 +23,9 @@ else()
     )
 endif()
 
-list(APPEND CRT_MEM_SOURCE
-    ${LIBCNTPR_MEM_SOURCE}
-)
+#list(APPEND CRT_MEM_SOURCE
+#    ${LIBCNTPR_MEM_SOURCE}
+#)
 
 # Needed by ext2fs. Should use RtlCompareMemory instead?
 add_library(memcmp mem/memcmp.c)
