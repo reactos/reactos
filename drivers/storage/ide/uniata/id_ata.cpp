@@ -35,7 +35,7 @@ Revision History:
          Chuck Park (ChuckP)
 
     Some parts of code were taken from FreeBSD 4.3-6.1 ATA driver by
-         Søren Schmidt, Copyright (c) 1998-2007
+         SÃ¸ren Schmidt, Copyright (c) 1998-2007
 
     All parts of code are significantly changed/updated by
          Alter, Copyright (c) 2002-2014:
