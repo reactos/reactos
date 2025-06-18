@@ -588,7 +588,7 @@ co_UserPopupSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmd
     PMENU pMenu;
     UINT uDefaultCmd;
 
-    FIXME("co_UserPopupSystemMenu() called\n"); // Useful trace, while working on CORE-20238
+    FIXME("co_UserPopupSystemMenu() called\n"); // Useful trace, while working on CORE-3247
 
     UserRefObjectCo(pWnd, &WndRef);
 
