@@ -580,16 +580,14 @@ DefWndScreenshot(PWND pWnd)
     UserCloseClipboard();
 }
 
+// WM_POPUPSYSTEMMENU
 static BOOL
-IntPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
+UserPopupSystemMenu(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
     USER_REFERENCE_ENTRY MenuRef, WndRef;
     PMENU pMenu;
 
-    /* This is an undocumented message used by the windows taskbar to
-       display the system menu of windows that belong to other processes. */
-
-    ERR("WM_POPUPSYSTEMMENU\n"); // This message is useful for debugging
+    ERR("UserPopupSystemMenu\n"); // This message is useful for debugging
 
     UserRefObjectCo(pWnd, &WndRef);
 
@@ -742,7 +740,9 @@ IntDefWindowProc(
          break;
 
       case WM_POPUPSYSTEMMENU:
-         IntPopupSystemMenu(Wnd, wParam, lParam);
+         /* This is an undocumented message used by the windows taskbar to
+            display the system menu of windows that belong to other processes. */
+         UserPopupSystemMenu(Wnd, wParam, lParam);
          break;
 
       case WM_KEYF1:
