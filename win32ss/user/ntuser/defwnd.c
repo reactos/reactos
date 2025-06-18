@@ -704,7 +704,7 @@ IntDefWindowProc(
          USER_REFERENCE_ENTRY MenuRef;
          PMENU pMenu;
 
-         ERR("WM_POPUPSYSTEMMENU\n");
+         DPRINTF("WM_POPUPSYSTEMMENU\n");
 
          pMenu = IntGetSystemMenu(Wnd, FALSE);
          if (!pMenu)
