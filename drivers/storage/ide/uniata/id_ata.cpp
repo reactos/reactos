@@ -9610,13 +9610,7 @@ reject_srb:
                             inquiryData->CommandQueue = 1;
 
                             // Fill in vendor identification fields.
-#ifdef __REACTOS__
                             FillDeviceIdentificationString(inquiryData, identifyData);
-#else
-                            for (i = 0; i < 24; i += 2) {
-                                MOV_DW_SWP(inquiryData->DeviceIdentificationString[i], ((PUCHAR)identifyData->ModelNumber)[i]);
-                            }
-#endif
 
                             // Move firmware revision from IDENTIFY data to
                             // product revision in INQUIRY data.
