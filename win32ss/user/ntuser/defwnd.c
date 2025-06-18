@@ -594,6 +594,7 @@ co_UserPopupSystemMenu(PWND pWnd, LONG nClickPos, UINT *puCmdType OPTIONAL)
 
     // Check style and make window foreground
     if ((pWnd->style & WS_DISABLED) ||
+        (pWnd->state2 & WNDS2_INDESTROY) ||
         (pWnd->head.pti->MessageQueue != gpqForeground && !co_IntSetForegroundWindow(pWnd)))
     {
         UserDerefObjectCo(pWnd);
