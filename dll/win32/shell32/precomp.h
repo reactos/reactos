@@ -190,6 +190,7 @@ typedef struct _DCMENTRY
 void DCMA_Destroy(HDCMA hDCMA);
 #define DCMA_GetEntry(hDCMA, iItem) ( (DCMENTRY*)DSA_GetItemPtr((HDSA)(hDCMA), (iItem)) )
 HRESULT DCMA_InvokeCommand(HDCMA hDCMA, CMINVOKECOMMANDINFO *pICI);
+
 UINT
 DCMA_InsertMenuItems(
     _In_ HDCMA hDCMA,
