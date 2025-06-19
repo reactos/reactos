@@ -69,53 +69,26 @@ NTSTATUS process_detach( void *args )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hash_init( struct hash *hash )
-{
-#ifndef __REACTOS__
-    if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
-#endif
-    switch (hash->alg_id)
-    {
-    case ALG_ID_MD5:
-        mbedtls_md5_init(&hash->u.md5_ctx);
-        mbedtls_md5_starts(&hash->u.md5_ctx);
-        break;
-
-    case ALG_ID_SHA1:
-        mbedtls_sha1_init(&hash->u.sha1_ctx);
-        mbedtls_sha1_starts(&hash->u.sha1_ctx);
-        break;
-
-    case ALG_ID_SHA256:
-        mbedtls_sha256_init(&hash->u.sha256_ctx);
-        mbedtls_sha256_starts(&hash->u.sha256_ctx, FALSE);
-        break;
-
-    case ALG_ID_SHA384:
-    case ALG_ID_SHA512:
-        mbedtls_sha512_init(&hash->u.sha512_ctx);
-        mbedtls_sha512_starts(&hash->u.sha512_ctx, hash->alg_id==ALG_ID_SHA384);
-        break;
-
-    default:
-        ERR( "unhandled id %u\n", hash->alg_id );
-        return STATUS_NOT_IMPLEMENTED;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS hmac_init( struct hash *hash, UCHAR *key, ULONG key_size )
+NTSTATUS hash_init_internal( struct hash *hash, UCHAR *key, ULONG key_size )
 {
     const mbedtls_md_info_t *md_info;
     mbedtls_md_type_t md_type;
+    BOOL hmac = (key != NULL && key_size > 0);
     int ret;
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    mbedtls_md_init(&hash->u.hmac_ctx);
+    mbedtls_md_init(&hash->u.hash_ctx);
     switch (hash->alg_id)
     {
+    case ALG_ID_MD2:
+        md_type = MBEDTLS_MD_MD2;
+        break;
+
+    case ALG_ID_MD4:
+        md_type = MBEDTLS_MD_MD4;
+        break;
+
     case ALG_ID_MD5:
         md_type = MBEDTLS_MD_MD5;
         break;
@@ -142,19 +115,37 @@ NTSTATUS hmac_init( struct hash *hash, UCHAR *key, ULONG key_size )
     }
     if ((md_info = mbedtls_md_info_from_type(md_type)) == NULL)
     {
-        mbedtls_md_free(&hash->u.hmac_ctx);
+        mbedtls_md_free(&hash->u.hash_ctx);
         return STATUS_INTERNAL_ERROR;
     }
 
-    if ((ret = mbedtls_md_setup(&hash->u.hmac_ctx, md_info, 1)) != 0)
+    if ((ret = mbedtls_md_setup(&hash->u.hash_ctx, md_info, hmac)) != 0)
     {
-        mbedtls_md_free(&hash->u.hmac_ctx);
+        mbedtls_md_free(&hash->u.hash_ctx);
         return STATUS_INTERNAL_ERROR;
     }
 
-    mbedtls_md_hmac_starts(&hash->u.hmac_ctx, key, key_size);
+    hash->hmac = hmac;
+    if (hmac)
+    {
+        mbedtls_md_hmac_starts(&hash->u.hash_ctx, key, key_size);
+    }
+    else
+    {
+        mbedtls_md_starts(&hash->u.hash_ctx);
+    }
 
     return STATUS_SUCCESS;
+}
+
+NTSTATUS hash_init( struct hash *hash )
+{
+    return hash_init_internal( hash, NULL, 0 );
+}
+
+NTSTATUS hmac_init( struct hash *hash, UCHAR *key, ULONG key_size )
+{
+    return hash_init_internal( hash, key, key_size );
 }
 
 NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
@@ -162,88 +153,116 @@ NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    switch (hash->alg_id)
-    {
-    case ALG_ID_MD5:
-        mbedtls_md5_update(&hash->u.md5_ctx, input, size);
-        break;
+    mbedtls_md_update(&hash->u.hash_ctx, input, size);
 
-    case ALG_ID_SHA1:
-        mbedtls_sha1_update(&hash->u.sha1_ctx, input, size);
-        break;
-
-    case ALG_ID_SHA256:
-        mbedtls_sha256_update(&hash->u.sha256_ctx, input, size);
-        break;
-
-    case ALG_ID_SHA384:
-    case ALG_ID_SHA512:
-        mbedtls_sha512_update(&hash->u.sha512_ctx, input, size);
-        break;
-
-    default:
-        ERR( "unhandled id %u\n", hash->alg_id );
-        return STATUS_NOT_IMPLEMENTED;
-    }
-
-    return STATUS_SUCCESS;
-}
+    return STATUS_SUCCESS;}
 
 NTSTATUS hmac_update( struct hash *hash, UCHAR *input, ULONG size )
 {
-#ifndef __REACTOS__
-    if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
-#endif
-    mbedtls_md_update(&hash->u.hmac_ctx, input, size);
-
-    return STATUS_SUCCESS;
+    return hash_update( hash, input, size );
 }
 
-NTSTATUS hash_finish( struct hash *hash, UCHAR *output, ULONG size )
+NTSTATUS hash_finish( struct hash *hash, UCHAR *output )
 {
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    switch (hash->alg_id)
+    if (hash->hmac)
     {
-    case ALG_ID_MD5:
-        mbedtls_md5_finish(&hash->u.md5_ctx, output);
-        mbedtls_md5_free(&hash->u.md5_ctx);
-        break;
-
-    case ALG_ID_SHA1:
-        mbedtls_sha1_finish(&hash->u.sha1_ctx, output);
-        mbedtls_sha1_free(&hash->u.sha1_ctx);
-        break;
-
-    case ALG_ID_SHA256:
-        mbedtls_sha256_finish(&hash->u.sha256_ctx, output);
-        mbedtls_sha256_free(&hash->u.sha256_ctx);
-        break;
-
-    case ALG_ID_SHA384:
-    case ALG_ID_SHA512:
-        mbedtls_sha512_finish(&hash->u.sha512_ctx, output);
-        mbedtls_sha512_free(&hash->u.sha512_ctx);
-        break;
-
-    default:
-        ERR( "unhandled id %u\n", hash->alg_id );
-        return STATUS_NOT_IMPLEMENTED;
+        mbedtls_md_hmac_finish(&hash->u.hash_ctx, output);
     }
+    else
+    {
+        mbedtls_md_finish(&hash->u.hash_ctx, output);
+    }
+    mbedtls_md_free(&hash->u.hash_ctx);
 
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hmac_finish( struct hash *hash, UCHAR *output, ULONG size )
+NTSTATUS hmac_finish( struct hash *hash, UCHAR *output )
 {
-#ifndef __REACTOS__
-    if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
-#endif
-    mbedtls_md_hmac_finish(&hash->u.hmac_ctx, output);
-    mbedtls_md_free(&hash->u.hmac_ctx);
+    return hash_finish( hash, output );
+}
 
-    return STATUS_SUCCESS;
+NTSTATUS key_symmetric_set_auth_data( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_vector_reset( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_encrypt_internal( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_decrypt_internal( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_get_tag( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_destroy( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_generate( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_export( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_import( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_verify( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_sign( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_destroy( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_duplicate( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_decrypt( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_encrypt( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_derive_key( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 #endif /* SONAME_LIBMBEDTLS */

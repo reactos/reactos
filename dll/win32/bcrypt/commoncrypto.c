@@ -152,4 +152,84 @@ NTSTATUS hmac_finish( struct hash *hash, UCHAR *output, ULONG size )
     return STATUS_SUCCESS;
 }
 
+NTSTATUS key_symmetric_set_auth_data( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_vector_reset( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_encrypt_internal( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_decrypt_internal( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_get_tag( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_symmetric_destroy( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_generate( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_export( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_import( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_verify( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_sign( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_destroy( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_duplicate( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_decrypt( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_encrypt( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS key_asymmetric_derive_key( void *args )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 #endif /* HAVE_COMMONCRYPTO_COMMONDIGEST_H */

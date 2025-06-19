@@ -65,7 +65,6 @@ struct algorithm
 {
     struct object   hdr;
     enum alg_id     id;
-    BOOL            hmac;
     enum chain_mode mode;
     unsigned        flags;
 };
@@ -241,6 +240,9 @@ struct hash
     struct object    hdr;
     enum alg_id      alg_id;
     BOOL hmac;
+    ULONG             flags;
+    UCHAR            *secret;
+    ULONG             secret_len;
     union
     {
         gnutls_hash_hd_t hash_handle;
@@ -253,13 +255,12 @@ struct hash
     struct object hdr;
     enum alg_id   alg_id;
     BOOL hmac;
+    ULONG             flags;
+    UCHAR            *secret;
+    ULONG             secret_len;
     union
     {
-        mbedtls_md5_context    md5_ctx;
-        mbedtls_sha1_context   sha1_ctx;
-        mbedtls_sha256_context sha256_ctx;
-        mbedtls_sha512_context sha512_ctx;
-        mbedtls_md_context_t   hmac_ctx;
+        mbedtls_md_context_t   hash_ctx;
     } u;
 };
 #else
@@ -268,39 +269,40 @@ struct hash
     struct object hdr;
     enum alg_id   alg_id;
     BOOL hmac;
-    union
-    {
-        CC_MD5_CTX    md5_ctx;
-        CC_SHA1_CTX   sha1_ctx;
-        CC_SHA256_CTX sha256_ctx;
-        CC_SHA512_CTX sha512_ctx;
-        CCHmacContext hmac_ctx;
-    } u;
+    ULONG             flags;
+    UCHAR            *secret;
+    ULONG             secret_len;
 };
 #endif
-
-static const struct {
-    ULONG hash_length;
-    const WCHAR *alg_name;
-} alg_props[] = {
-    /* ALG_ID_MD5    */ { 16, BCRYPT_MD5_ALGORITHM },
-    /* ALG_ID_RNG    */ {  0, BCRYPT_RNG_ALGORITHM },
-    /* ALG_ID_SHA1   */ { 20, BCRYPT_SHA1_ALGORITHM },
-    /* ALG_ID_SHA256 */ { 32, BCRYPT_SHA256_ALGORITHM },
-    /* ALG_ID_SHA384 */ { 48, BCRYPT_SHA384_ALGORITHM },
-    /* ALG_ID_SHA512 */ { 64, BCRYPT_SHA512_ALGORITHM },
-    /* ALG_ID_ECDSA_P256 */ { 0, BCRYPT_ECDSA_P256_ALGORITHM },
-    /* ALG_ID_ECDSA_P384 */ { 0, BCRYPT_ECDSA_P384_ALGORITHM },
-};
 
 extern NTSTATUS hash_init( struct hash *hash );
 extern NTSTATUS hmac_init( struct hash *hash, UCHAR *key, ULONG key_size );
 extern NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size );
 extern NTSTATUS hmac_update( struct hash *hash, UCHAR *input, ULONG size );
-extern NTSTATUS hash_finish( struct hash *hash, UCHAR *output, ULONG size );
-extern NTSTATUS hmac_finish( struct hash *hash, UCHAR *output, ULONG size );
+extern NTSTATUS hash_finish( struct hash *hash, UCHAR *output );
+extern NTSTATUS hmac_finish( struct hash *hash, UCHAR *output );
 
 extern NTSTATUS process_detach( void *args );
 extern NTSTATUS process_attach( void *args );
+extern NTSTATUS key_symmetric_set_auth_data( void *args );
+extern NTSTATUS key_symmetric_vector_reset( void *args );
+extern NTSTATUS key_symmetric_encrypt_internal( void *args );
+extern NTSTATUS key_symmetric_decrypt_internal( void *args );
+extern NTSTATUS key_symmetric_get_tag( void *args );
+extern NTSTATUS key_symmetric_destroy( void *args );
+extern NTSTATUS key_asymmetric_generate( void *args );
+extern NTSTATUS key_asymmetric_export( void *args );
+extern NTSTATUS key_asymmetric_import( void *args );
+extern NTSTATUS key_asymmetric_verify( void *args );
+extern NTSTATUS key_asymmetric_sign( void *args );
+extern NTSTATUS key_asymmetric_destroy( void *args );
+extern NTSTATUS key_asymmetric_duplicate( void *args );
+extern NTSTATUS key_asymmetric_decrypt( void *args );
+extern NTSTATUS key_asymmetric_encrypt( void *args );
+extern NTSTATUS key_asymmetric_derive_key( void *args );
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE ARRAYSIZE
+#endif
 
 #endif /* __BCRYPT_INTERNAL_H */
