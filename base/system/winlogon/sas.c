@@ -491,6 +491,61 @@ quit:
     RevertToSelf();
 }
 
+/**
+ * @brief
+ * Frees the Profile information structure (WLX_PROFILE_V1_0
+ * or WLX_PROFILE_V2_0) allocated by the GINA.
+ **/
+static VOID
+FreeWlxProfileInfo(
+    _Inout_ PVOID Profile)
+{
+    PWLX_PROFILE_V2_0 pProfile = (PWLX_PROFILE_V2_0)Profile;
+
+    if (pProfile->dwType != WLX_PROFILE_TYPE_V1_0
+     && pProfile->dwType != WLX_PROFILE_TYPE_V2_0)
+    {
+        ERR("WL: Wrong profile info\n");
+        return;
+    }
+
+    if (pProfile->pszProfile)
+        LocalFree(pProfile->pszProfile);
+    if (pProfile->dwType >= WLX_PROFILE_TYPE_V2_0)
+    {
+        if (pProfile->pszPolicy)
+            LocalFree(pProfile->pszPolicy);
+        if (pProfile->pszNetworkDefaultUserProfile)
+            LocalFree(pProfile->pszNetworkDefaultUserProfile);
+        if (pProfile->pszServerName)
+            LocalFree(pProfile->pszServerName);
+        if (pProfile->pszEnvironment)
+            LocalFree(pProfile->pszEnvironment);
+    }
+}
+
+/**
+ * @brief
+ * Frees the MPR information structure allocated by the GINA.
+ *
+ * @note
+ * Currently used only in HandleLogon(), but will also be used
+ * by WlxChangePasswordNotify(Ex) once implemented.
+ **/
+static VOID
+FreeWlxMprInfo(
+    _Inout_ PWLX_MPR_NOTIFY_INFO MprNotifyInfo)
+{
+    if (MprNotifyInfo->pszUserName)
+        LocalFree(MprNotifyInfo->pszUserName);
+    if (MprNotifyInfo->pszDomain)
+        LocalFree(MprNotifyInfo->pszDomain);
+    if (MprNotifyInfo->pszPassword)
+        LocalFree(MprNotifyInfo->pszPassword);
+    if (MprNotifyInfo->pszOldPassword)
+        LocalFree(MprNotifyInfo->pszOldPassword);
+}
+
 static
 BOOL
 HandleLogon(
@@ -611,10 +666,13 @@ HandleLogon(
 cleanup:
     if (Session->Profile)
     {
-        HeapFree(GetProcessHeap(), 0, Session->Profile->pszProfile);
-        HeapFree(GetProcessHeap(), 0, Session->Profile);
+        FreeWlxProfileInfo(Session->Profile);
+        LocalFree(Session->Profile);
+        Session->Profile = NULL;
     }
-    Session->Profile = NULL;
+    FreeWlxMprInfo(&Session->MprNotifyInfo);
+    ZeroMemory(&Session->MprNotifyInfo, sizeof(Session->MprNotifyInfo));
+
     if (!ret && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
     {
         UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
