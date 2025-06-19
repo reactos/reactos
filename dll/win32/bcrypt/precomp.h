@@ -1,0 +1,33 @@
+
+#ifndef _BCRYPT_PRECOMP_H
+#define _BCRYPT_PRECOMP_H
+
+#include <wine/config.h>
+#include <wine/port.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <ntsecapi.h>
+#include <wincrypt.h>
+#include <bcrypt.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+#include <wine/library.h>
+
+#if defined(HAVE_GNUTLS_HASH)
+#include <gnutls/gnutls.h>
+#elif defined(SONAME_LIBMBEDTLS)
+#include <mbedtls/md.h>
+#include <mbedtls/md.h>
+#include <mbedtls/md5.h>
+#include <mbedtls/sha1.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/sha512.h>
+#endif
+
+#include "bcrypt_internal.h"
+
+#endif /* !_BCRYPT_PRECOMP_H */
