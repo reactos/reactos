@@ -1298,6 +1298,28 @@ PiControlQueryRemoveDevice(
     return Status;
 }
 
+static
+NTSTATUS
+PiControlGetInterfaceDeviceAlias(
+    _In_ PPLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA ControlData)
+{
+    UNICODE_STRING AliasSymbolicLinkName;
+
+    DPRINT("PiControlGetInterfaceDeviceAlias()\n");
+    DPRINT("SymbolicLinkName: %wZ\n", &ControlData->SymbolicLinkName);
+    DPRINT("AliasInterfaceClassGuid: %p\n", ControlData->AliasInterfaceClassGuid);
+    DPRINT("AliasSymbolicLinkName: %p\n", ControlData->AliasSymbolicLinkName);
+    DPRINT("AliasSymbolicLinkNameLength: %lu\n", ControlData->AliasSymbolicLinkNameLength);
+
+    AliasSymbolicLinkName.Length = 0;
+    AliasSymbolicLinkName.MaximumLength = ControlData->AliasSymbolicLinkNameLength;
+    AliasSymbolicLinkName.Buffer = ControlData->AliasSymbolicLinkName;
+    return IoGetDeviceInterfaceAlias(&ControlData->SymbolicLinkName,
+                                     ControlData->AliasInterfaceClassGuid,
+                                     &AliasSymbolicLinkName);
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1580,7 +1602,10 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                 return STATUS_INVALID_PARAMETER;
             return IopGetRelatedDevice((PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA)Buffer);
 
-//        case PlugPlayControlGetInterfaceDeviceAlias:
+        case PlugPlayControlGetInterfaceDeviceAlias:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return PiControlGetInterfaceDeviceAlias((PPLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA)Buffer);
 
         case PlugPlayControlDeviceStatus:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_STATUS_DATA))
