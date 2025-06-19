@@ -340,7 +340,6 @@ BEGIN
    GROUPBOX "Распределение времени процессора", IDC_STATIC, 7, 8, 213, 46
    LTEXT "Оптимизировать работу:", IDC_STATIC, 14, 23, 199, 8
    AUTORADIOBUTTON "&Программ", IDC_CPUCLIENT, 14, 36, 75, 12
-   AUTORADIOBUTTON "Background &services", IDC_CPUSERVER, 96, 36, 85, 12
    AUTORADIOBUTTON "&Служб, работающих в фоновом режиме", IDC_CPUSERVER, 96, 36, 85, 12
    GROUPBOX "Виртуальная память", IDC_STATIC, 7, 60, 213, 57
    LTEXT "Файл подкачки - это область на жестком диске используемая для хранения страниц виртуальной памяти.", IDC_STATIC, 14, 74, 199, 16
