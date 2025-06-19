@@ -2655,6 +2655,11 @@ PNP_GetInterfaceDeviceAlias(
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
 
+    RtlInitUnicodeString(&PlugPlayData.SymbolicLinkName, pszInterfaceDevice);
+    PlugPlayData.AliasInterfaceClassGuid = AliasInterfaceGuid;
+    PlugPlayData.AliasSymbolicLinkName = pszAliasInterfaceDevice;
+    PlugPlayData.AliasSymbolicLinkNameLength = *pulTransferLen;
+
     Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceAlias,
                                &PlugPlayData,
                                sizeof(PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA));
@@ -2666,6 +2671,7 @@ PNP_GetInterfaceDeviceAlias(
     else
     {
         *pulLength = 0;
+        *pulTransferLen = 0;
         ret = NtStatusToCrError(Status);
     }
 
