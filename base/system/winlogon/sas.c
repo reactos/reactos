@@ -541,9 +541,19 @@ FreeWlxMprInfo(
     if (MprNotifyInfo->pszDomain)
         LocalFree(MprNotifyInfo->pszDomain);
     if (MprNotifyInfo->pszPassword)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(MprNotifyInfo->pszPassword) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(MprNotifyInfo->pszPassword, pwdLen);
         LocalFree(MprNotifyInfo->pszPassword);
+    }
     if (MprNotifyInfo->pszOldPassword)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(MprNotifyInfo->pszOldPassword) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(MprNotifyInfo->pszOldPassword, pwdLen);
         LocalFree(MprNotifyInfo->pszOldPassword);
+    }
 }
 
 static
