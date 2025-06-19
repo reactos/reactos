@@ -318,6 +318,14 @@ BEGIN
   IDS_TOOLTIP_UNINSTALL     "Uninstall"
 END
 
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
+END
+
 /* Hints */
 STRINGTABLE
 BEGIN
