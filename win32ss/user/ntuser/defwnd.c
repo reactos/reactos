@@ -582,13 +582,13 @@ DefWndScreenshot(PWND pWnd)
 
 // WM_POPUPSYSTEMMENU
 static BOOL
-co_UserPopupSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmdType)
+co_UserTrackSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmdType)
 {
     USER_REFERENCE_ENTRY MenuRef, WndRef;
     PMENU pMenu;
     UINT uDefaultCmd;
 
-    FIXME("co_UserPopupSystemMenu() called\n"); // Useful trace, while working on CORE-3247
+    FIXME("co_UserTrackSystemMenu() called\n"); // Useful trace, while working on CORE-3247
 
     UserRefObjectCo(pWnd, &WndRef);
 
