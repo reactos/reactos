@@ -490,10 +490,21 @@ void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, 
         AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
         AddClassKeyToArray(L"Directory", array, cKeys);
     }
+    else if (_ILIsDrive(pidl))
+    {
+        AddClassKeyToArray(L"Drive", array, cKeys);
+        AddClassKeyToArray(L"Folder", array, cKeys);
+    }
     else
     {
         ERR("Got non FS pidl\n");
     }
+}
+
+void AddPidlClassKeysToArray(LPCITEMIDLIST pidl, HKEY* array, UINT* cKeys)
+{
+    if ((pidl = ILFindLastID(pidl)) != NULL)
+        AddFSClassKeysToArray(1, &pidl, array, cKeys);
 }
 
 HRESULT SH_GetApidlFromDataObject(IDataObject *pDataObject, PIDLIST_ABSOLUTE* ppidlfolder, PUITEMID_CHILD **apidlItems, UINT *pcidl)

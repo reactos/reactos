@@ -32,6 +32,112 @@ static BOOL InsertMenuItemAt(HMENU hMenu, UINT Pos, UINT Flags)
     return InsertMenuItemW(hMenu, Pos, TRUE, &mii);
 }
 
+static void DCMA_DestroyEntry(DCMENTRY &dcme)
+{
+    if (!dcme.pCM)
+        return;
+    IUnknown_SetSite(dcme.pCM, NULL);
+    dcme.pCM->Release();
+    dcme.pCM = NULL;
+}
+
+void DCMA_Destroy(HDCMA hDCMA)
+{
+    UINT i = 0;
+    for (DCMENTRY *p; (p = DCMA_GetEntry(hDCMA, i)) != NULL; ++i)
+        DCMA_DestroyEntry(*p);
+    DSA_Destroy(hDCMA);
+}
+
+UINT DCMA_InsertMenuItems(
+    _In_ HDCMA hDCMA,
+    _In_ HDCIA hDCIA,
+    _In_opt_ LPCITEMIDLIST pidlFolder,
+    _In_opt_ IDataObject *pDO,
+    _In_opt_ HKEY *pKeys,
+    _In_opt_ UINT nKeys,
+    _In_ QCMINFO *pQCMI,
+    _In_opt_ UINT fCmf,
+    _In_opt_ IUnknown *pUnkSite)
+{
+    UINT idCmdBase = pQCMI->idCmdFirst, idCmdFirst = idCmdBase;
+    UINT nOffset = 0;
+
+    // Insert in reverse order
+    for (int iCls = DCIA_GetCount(hDCIA) - 1; iCls >= 0; --iCls)
+    {
+        REFCLSID clsid = *DCIA_GetEntry(hDCIA, iCls);
+        if (fCmf & CMF_DEFAULTONLY)
+        {
+            WCHAR szKey[MAX_PATH];
+            wcscpy(szKey, L"CLSID\\");
+            StringFromGUID2(clsid, szKey + _countof(L"CLSID\\") - 1, CHARS_IN_GUID);
+            wcscpy(szKey + _countof(L"CLSID\\") - 1 + CHARS_IN_GUID - 1, L"\\shellex\\MayChangeDefaultMenu");
+            if (!RegKeyExists(HKEY_CLASSES_ROOT, szKey))
+                continue;
+        }
+
+        for (UINT iKey = 0; iKey < nKeys; ++iKey)
+        {
+            CComPtr<IShellExtInit> pInit;
+            HRESULT hr = SHExtCoCreateInstance(NULL, &clsid, NULL, IID_PPV_ARG(IShellExtInit, &pInit));
+            if (FAILED(hr))
+                break;
+            if (FAILED(hr = pInit->Initialize(pidlFolder, pDO, pKeys[iKey])))
+                continue;
+
+            IContextMenu *pCM;
+            if (FAILED(hr = pInit->QueryInterface(IID_PPV_ARG(IContextMenu, &pCM))))
+                break;
+            IUnknown_SetSite(pCM, pUnkSite);
+
+            hr = pCM->QueryContextMenu(pQCMI->hmenu, pQCMI->indexMenu + nOffset, idCmdFirst, pQCMI->idCmdLast, fCmf);
+            const UINT nCount = HRESULT_CODE(hr);
+            const UINT idThisFirst = idCmdFirst - idCmdBase;
+            DCMENTRY dcme = { pCM, idThisFirst, idThisFirst + nCount - 1 };
+            if (hr > 0)
+            {
+                idCmdFirst += nCount;
+                if (DSA_AppendItem(hDCMA, &dcme) >= 0)
+                {
+                    if (nOffset == 0 && GetMenuDefaultItem(pQCMI->hmenu, TRUE, 0) == 0)
+                        nOffset++; // Insert new items below the default
+                    break;
+                }
+            }
+            DCMA_DestroyEntry(dcme);
+        }
+    }
+    return idCmdFirst;
+}
+
+HRESULT DCMA_InvokeCommand(HDCMA hDCMA, CMINVOKECOMMANDINFO *pICI)
+{
+    HRESULT hr = S_FALSE;
+    for (UINT i = 0;; ++i)
+    {
+        DCMENTRY *p = DCMA_GetEntry(hDCMA, i);
+        if (!p)
+            return hr;
+
+        UINT id = LOWORD(pICI->lpVerb);
+        if (!IS_INTRESOURCE(pICI->lpVerb))
+        {
+            if (SUCCEEDED(hr = p->pCM->InvokeCommand(pICI)))
+                return hr;
+        }
+        else if (id >= p->idCmdFirst && id <= p->idCmdLast)
+        {
+            CMINVOKECOMMANDINFOEX ici;
+            CopyMemory(&ici, pICI, min(sizeof(ici), pICI->cbSize));
+            ici.cbSize = min(sizeof(ici), pICI->cbSize);
+            ici.lpVerb = MAKEINTRESOURCEA(id - p->idCmdFirst);
+            ici.lpVerbW = (PWSTR)ici.lpVerb;
+            return p->pCM->InvokeCommand((CMINVOKECOMMANDINFO*)&ici);
+        }
+    }
+}
+
 typedef struct _DynamicShellEntry_
 {
     UINT iIdCmdFirst;

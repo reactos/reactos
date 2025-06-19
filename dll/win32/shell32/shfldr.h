@@ -184,6 +184,7 @@ void CloseRegKeyArray(HKEY* array, UINT cKeys);
 LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys);
 LSTATUS AddClsidKeyToArray(REFCLSID clsid, HKEY* array, UINT* cKeys);
 void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, UINT* cKeys);
+void AddPidlClassKeysToArray(LPCITEMIDLIST pidl, HKEY* array, UINT* cKeys);
 
 #ifdef __cplusplus
 

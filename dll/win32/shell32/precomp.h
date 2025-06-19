@@ -179,6 +179,30 @@ SHELL32_ShowShellExtensionProperties(const CLSID *pClsid, IDataObject *pDO);
 HRESULT
 SHELL_ShowItemIDListProperties(LPCITEMIDLIST pidl);
 
+typedef HDSA HDCMA; // DynamicContextMenuArray
+typedef struct _DCMENTRY
+{
+    IContextMenu *pCM;
+    UINT idCmdFirst;
+    UINT idCmdLast;
+} DCMENTRY;
+#define DCMA_Create() ( (HDCMA)DSA_Create(sizeof(DCMENTRY), 4) )
+void DCMA_Destroy(HDCMA hDCMA);
+#define DCMA_GetEntry(hDCMA, iItem) ( (DCMENTRY*)DSA_GetItemPtr((HDSA)(hDCMA), (iItem)) )
+HRESULT DCMA_InvokeCommand(HDCMA hDCMA, CMINVOKECOMMANDINFO *pICI);
+
+UINT
+DCMA_InsertMenuItems(
+    _In_ HDCMA hDCMA,
+    _In_ HDCIA hDCIA,
+    _In_opt_ LPCITEMIDLIST pidlFolder,
+    _In_opt_ IDataObject *pDO,
+    _In_opt_ HKEY *pKeys,
+    _In_opt_ UINT nKeys,
+    _In_ QCMINFO *pQCMI,
+    _In_opt_ UINT fCmf,
+    _In_opt_ IUnknown *pUnkSite);
+
 HRESULT
 SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg);
 UINT
