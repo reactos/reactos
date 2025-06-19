@@ -194,6 +194,7 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
 
     *ppszDest = NULL;
 
+    // Obtain the version info
     UINT size = GetFileVersionInfoSizeA(pszFileName, &dwHandle);
     if (!size)
     {
@@ -208,6 +209,7 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
     }
     GetFileVersionInfoA(pszFileName, dwHandle, size, pbData);
 
+    // Getting the product version
     HRESULT hr = E_FAIL;
     if ((VerQueryValueA(pbData, PRODUCT_VER_ENGLISH_US_UTF16,   &pvData, &size) ||
          VerQueryValueA(pbData, PRODUCT_VER_GERMAN_UTF16,       &pvData, &size) ||
@@ -219,7 +221,7 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
         *ppszDest = StrDupA((PSTR)pvData);
         hr = *ppszDest ? S_OK : E_OUTOFMEMORY;
     }
-    if (VerQueryValueA(pbData, "\\VarFileInfo\\Translation", &pvData, &size))
+    else if (VerQueryValueA(pbData, "\\VarFileInfo\\Translation", &pvData, &size))
     {
         PVOID pDataSaved = pvData;
         PLANGANDCODEPAGE pEntry = (PLANGANDCODEPAGE)pvData;
