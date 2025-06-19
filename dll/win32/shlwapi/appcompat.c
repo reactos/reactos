@@ -238,7 +238,8 @@ SHLWAPI_GetModuleVersion(_In_ PCSTR pszFileName, _Out_ PSTR *ppszDest)
     }
 
     if (FAILED(hr))
-        ERR("hr: 0x%lX\n", hr);
+        WARN("hr: 0x%lX\n", hr);
+
     LocalFree(pbData);
     return hr;
 }
