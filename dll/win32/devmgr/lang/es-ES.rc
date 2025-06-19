@@ -282,7 +282,7 @@ BEGIN
     BEGIN
         MENUITEM "Dispositivos por tipo",        IDM_DEVBYTYPE
         MENUITEM "Dispositivos por conexión",    IDM_DEVBYCONN
-        MENUITEM "Recursos por tipo",            IDM_RESBYTYPE, GRAYED
+        MENUITEM "Recursos por tipo",            IDM_RESBYTYPE
         MENUITEM "Recursos por conexión",        IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Mostrar dispositivos ocultos", IDM_SHOWHIDDEN

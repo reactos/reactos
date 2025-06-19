@@ -282,7 +282,7 @@ BEGIN
     BEGIN
         MENUITEM "Dispozitive după tip",        IDM_DEVBYTYPE
         MENUITEM "Dispozitive după conexiune",  IDM_DEVBYCONN
-        MENUITEM "Resurse după tip",            IDM_RESBYTYPE, GRAYED
+        MENUITEM "Resurse după tip",            IDM_RESBYTYPE
         MENUITEM "Resurse după conexiune",      IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Dispozitive ascunse",         IDM_SHOWHIDDEN

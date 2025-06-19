@@ -275,7 +275,7 @@ BEGIN
     BEGIN
         MENUITEM "&Türe Göre Aygıtlar",         IDM_DEVBYTYPE
         MENUITEM "&Bağlantıya Göre Aygıtlar",   IDM_DEVBYCONN
-        MENUITEM "T&üre Göre Kaynaklar",        IDM_RESBYTYPE, GRAYED
+        MENUITEM "T&üre Göre Kaynaklar",        IDM_RESBYTYPE
         MENUITEM "B&ağlantıya Göre Kaynaklar",  IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Gizli Aygıtları Göster",     IDM_SHOWHIDDEN

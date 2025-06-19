@@ -281,7 +281,7 @@ BEGIN
     BEGIN
         MENUITEM "Devices by type",             IDM_DEVBYTYPE
         MENUITEM "Devices by connection",       IDM_DEVBYCONN
-        MENUITEM "Resources by type",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Resources by type",           IDM_RESBYTYPE
         MENUITEM "Resources by connection",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Show hidden devices",         IDM_SHOWHIDDEN

@@ -284,7 +284,7 @@ BEGIN
     BEGIN
         MENUITEM "Urządzenia według typów",             IDM_DEVBYTYPE
         MENUITEM "Urządzenia według połączeń",       IDM_DEVBYCONN
-        MENUITEM "Zasoby według typów",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Zasoby według typów",           IDM_RESBYTYPE
         MENUITEM "Zasoby według połączeń",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Pokaż ukryte urządzenia",         IDM_SHOWHIDDEN

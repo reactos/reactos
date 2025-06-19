@@ -274,7 +274,7 @@ BEGIN
     BEGIN
         MENUITEM "Périphériques par type",            IDM_DEVBYTYPE
         MENUITEM "Périphériques par connexion",       IDM_DEVBYCONN
-        MENUITEM "Ressources par type",               IDM_RESBYTYPE, GRAYED
+        MENUITEM "Ressources par type",               IDM_RESBYTYPE
         MENUITEM "Ressources par connexion",          IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Afficher les périphériques cachés", IDM_SHOWHIDDEN

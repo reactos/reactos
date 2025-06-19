@@ -282,7 +282,7 @@ BEGIN
     BEGIN
         MENUITEM "按类型设备",             IDM_DEVBYTYPE
         MENUITEM "依连接排序设备",       IDM_DEVBYCONN
-        MENUITEM "依类型排序资源",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "依类型排序资源",           IDM_RESBYTYPE
         MENUITEM "依连接排序资源",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "显示隐藏的设备",         IDM_SHOWHIDDEN

@@ -280,7 +280,7 @@ BEGIN
     BEGIN
         MENUITEM "Seadmed &tüübi järgi",         IDM_DEVBYTYPE
         MENUITEM "Seadmed &ühenduse järgi",      IDM_DEVBYCONN
-        MENUITEM "R&essursid tüübi järgi",       IDM_RESBYTYPE, GRAYED
+        MENUITEM "R&essursid tüübi järgi",       IDM_RESBYTYPE
         MENUITEM "&Ressursid ühenduse järgi",    IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Näita peidetud seadmeid",     IDM_SHOWHIDDEN

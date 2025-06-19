@@ -1,6 +1,8 @@
 #ifndef __DEVMGR_H
 #define __DEVMGR_H
 
+WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
+
 extern HINSTANCE hDllInstance;
 
 typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);

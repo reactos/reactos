@@ -278,7 +278,7 @@ BEGIN
     BEGIN
         MENUITEM "Zařízení podle typu",             IDM_DEVBYTYPE
         MENUITEM "Zařízení podle připojení",       IDM_DEVBYCONN
-        MENUITEM "Prostředky podle typu",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Prostředky podle typu",           IDM_RESBYTYPE
         MENUITEM "Prostředky podle připojení",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "SZobrazit skrytá zařízení",         IDM_SHOWHIDDEN

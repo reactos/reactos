@@ -275,7 +275,7 @@ BEGIN
     BEGIN
         MENUITEM "&Устройства по типу",          IDM_DEVBYTYPE
         MENUITEM "Устройства по под&ключению",   IDM_DEVBYCONN
-        MENUITEM "&Ресурсы по типу",             IDM_RESBYTYPE, GRAYED
+        MENUITEM "&Ресурсы по типу",             IDM_RESBYTYPE
         MENUITEM "Ресурсы по подк&лючению",      IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Показать &скрытые устройства", IDM_SHOWHIDDEN

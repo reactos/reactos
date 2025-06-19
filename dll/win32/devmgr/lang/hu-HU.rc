@@ -274,7 +274,7 @@ BEGIN
     BEGIN
         MENUITEM "Eszközök típus szerint",          IDM_DEVBYTYPE
         MENUITEM "Eszközök kapcsolódás szerint",    IDM_DEVBYCONN
-        MENUITEM "Erőforrások típus szerint",       IDM_RESBYTYPE, GRAYED
+        MENUITEM "Erőforrások típus szerint",       IDM_RESBYTYPE
         MENUITEM "Erőforrások kapcsolódás szerint", IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Rejtett eszközök megjelenítése",  IDM_SHOWHIDDEN

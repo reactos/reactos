@@ -281,7 +281,7 @@ BEGIN
     BEGIN
         MENUITEM "裝置（按類型）(&E)",             IDM_DEVBYTYPE
         MENUITEM "裝置（按連線）(&V)",       IDM_DEVBYCONN
-        MENUITEM "資源（按類型）(&Y)",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "資源（按類型）(&Y)",           IDM_RESBYTYPE
         MENUITEM "資源（按連線）(&N)",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "顯示隱藏的裝置(&W)",         IDM_SHOWHIDDEN

@@ -273,7 +273,7 @@ BEGIN
     BEGIN
         MENUITEM "種類別デバイス(&E)",           IDM_DEVBYTYPE
         MENUITEM "接続別デバイス(&V)",           IDM_DEVBYCONN
-        MENUITEM "種類別リソース(&Y)",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "種類別リソース(&Y)",           IDM_RESBYTYPE
         MENUITEM "接続別リソース(&N)",           IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "隠しデバイスを表示(&W)",       IDM_SHOWHIDDEN
