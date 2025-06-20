@@ -179,17 +179,6 @@ public:
         return hwnd;
     }
 
-    static INT DoMainLoop()
-    {
-        MSG msg;
-        while (GetMessage(&msg, NULL, 0, 0))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        return (INT)msg.wParam;
-    }
-
     static Window *GetAppbarData(HWND hwnd)
     {
         return (Window *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -1307,5 +1296,10 @@ START_TEST(SHAppBarMessage)
 
     PostMessageW(hwnd1, WM_COMMAND, ID_ACTION, 0);
 
-    Window::DoMainLoop();
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 }
