@@ -838,15 +838,13 @@ WskBind(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG F
 
     if (ta == NULL)
     {
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto err_out;
     }
     if (s->LocalAddressHandle != NULL)
     {
-        ZwClose(s->LocalAddressHandle);
-        s->LocalAddressHandle = NULL;
-        s->LocalAddressFile = NULL;
+        status = STATUS_INVALID_PARAMETER;
+        goto err_out;
     }
 
     status = TdiOpenAddressFile(&s->TdiName,
@@ -979,6 +977,10 @@ WskReleaseUdp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATAGRAM_INDICATION DatagramInd
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
+
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -988,6 +990,10 @@ WskReleaseTcp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATA_INDICATION DataIndication)
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
+
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+
     return STATUS_NOT_IMPLEMENTED;
 }
 

@@ -1,7 +1,8 @@
 
 spec2def(netio.sys netio.spec ADD_IMPORTLIB)
 
-# TODO: dependency on afd.h should go away ...
+# Including AFD is needed by the TDI helpers. They have been
+# part of AFD before.
 
 include_directories(
     BEFORE include

@@ -15,7 +15,6 @@ NTSTATUS TdiBuildConnectionInfo(PTDI_CONNECTION_INFORMATION * ConnectionInfo, PT
 NTSTATUS TdiBuildNullConnectionInfoInPlace(PTDI_CONNECTION_INFORMATION ConnInfo, ULONG Type);
 NTSTATUS TdiBuildNullConnectionInfo(PTDI_CONNECTION_INFORMATION * ConnectionInfo, ULONG Type);
 
-/* Taken from afd.h: */
 /* tdi.c */
 
 NTSTATUS TdiOpenAddressFile(PUNICODE_STRING DeviceName,
