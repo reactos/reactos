@@ -1255,14 +1255,14 @@ START_TEST(SHAppBarMessage)
     trace("s_rcTaskBar: %ld, %ld, %ld, %ld\n", rc.left, rc.top, rc.right, rc.bottom);
 
     // Work area
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
-    trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n",
-          s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, FALSE);
+    s_rcWorkArea = rc;
+    trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n", rc.left, rc.top, rc.right, rc.bottom);
 
     // Primary monitor
-    SetRect(&s_rcPrimaryMonitor, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-    trace("s_rcPrimaryMonitor: %ld, %ld, %ld, %ld\n",
-          s_rcPrimaryMonitor.left, s_rcPrimaryMonitor.top, s_rcPrimaryMonitor.right, s_rcPrimaryMonitor.bottom);
+    SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    s_rcPrimaryMonitor = rc;
+    trace("s_rcPrimaryMonitor: %ld, %ld, %ld, %ld\n", rc.left, rc.top, rc.right, rc.bottom);
 
     if (rc.left > s_rcPrimaryMonitor.left ||
         rc.right < s_rcPrimaryMonitor.right ||
