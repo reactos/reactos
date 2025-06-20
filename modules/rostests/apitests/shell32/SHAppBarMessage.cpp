@@ -997,11 +997,23 @@ protected:
 public:
     void DoAction()
     {
+        trace("DoAction\n");
+
+        TEST_Main();
+        TEST_Dragging();
+        TEST_AutoHide();
+        TEST_FullScreen();
+
+        Quit();
+    }
+
+    void TEST_Main()
+    {
+        trace("TEST_Main\n");
+        Sleep(INTERVAL);
+
         POINT pt;
         RECT rc1, rc2, rcWork;
-
-        trace("DoAction\n");
-        Sleep(INTERVAL);
 
         BOOL ret = AppBar_GetTaskBarPos(s_hwnd1, &rc1);
         ok_int(ret, TRUE);
@@ -1098,12 +1110,18 @@ public:
         ok_long(rcWork.right, s_rcWorkArea.right);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         Sleep(INTERVAL);
+    }
 
-        // dragging
-        trace("Testing dragging\n");
-        GetWindowRect(s_hwnd2, &rc2);
-        pt.x = (rc2.left + rc2.right) / 2;
-        pt.y = (rc2.top + rc2.bottom) / 2;
+    void TEST_Dragging()
+    {
+        trace("TEST_Dragging\n");
+
+        RECT rc, rcWork;
+        POINT pt;
+
+        GetWindowRect(s_hwnd2, &rc);
+        pt.x = (rc.left + rc.right) / 2;
+        pt.y = (rc.top + rc.bottom) / 2;
         MOVE(pt.x, pt.y);
         LEFT_DOWN();
         Sleep(INTERVAL);
@@ -1119,18 +1137,23 @@ public:
         LEFT_UP();
         Sleep(LONG_INTERVAL);
 
-        GetWindowRect(s_hwnd2, &rc2);
+        GetWindowRect(s_hwnd2, &rc);
         GetWorkArea(&rcWork);
-        ok_long(rc2.left, s_rcWorkArea.right - 30);
-        ok_long(rc2.top, s_rcWorkArea.top);
-        ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rc.left, s_rcWorkArea.right - 30);
+        ok_long(rc.top, s_rcWorkArea.top);
+        ok_long(rc.right, s_rcWorkArea.right);
         ok_long(rcWork.left, s_rcWorkArea.left);
         ok_long(rcWork.top, s_rcWorkArea.top);
         ok_long(rcWork.right, s_rcWorkArea.right - 30);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
+    }
 
-        // auto-hide feature
-        trace("Testing auto-hide feature\n");
+    void TEST_AutoHide()
+    {
+        trace("TEST_AutoHide\n");
+
+        RECT rc;
+
         m_cxWidth = 80;
         m_cyHeight = 40;
         AppBar_SetSide(s_hwnd2, ABE_TOP);
@@ -1139,42 +1162,42 @@ public:
         ok_ptr(hwndRet, s_hwnd2);
         Sleep(LONG_INTERVAL);
 
-        GetWindowRect(s_hwnd2, &rc2);
-        ok_long(rc2.left, s_rcWorkArea.left);
-        ok_long(rc2.top, s_rcWorkArea.top);
-        ok_long(rc2.right, s_rcWorkArea.right);
-        ok_long(rc2.bottom, s_rcWorkArea.top + 2);
+        GetWindowRect(s_hwnd2, &rc);
+        ok_long(rc.left, s_rcWorkArea.left);
+        ok_long(rc.top, s_rcWorkArea.top);
+        ok_long(rc.right, s_rcWorkArea.right);
+        ok_long(rc.bottom, s_rcWorkArea.top + 2);
 
         MOVE((s_rcWorkArea.left + s_rcWorkArea.right) / 2, s_rcWorkArea.top);
         LEFT_DOWN();
         LEFT_UP();
         Sleep(LONG_INTERVAL);
 
-        GetWindowRect(s_hwnd2, &rc2);
-        ok_long(rc2.left, s_rcWorkArea.left);
-        ok_long(rc2.top, s_rcWorkArea.top);
-        ok_long(rc2.right, s_rcWorkArea.right);
-        ok_long(rc2.bottom, s_rcWorkArea.top + 40);
+        GetWindowRect(s_hwnd2, &rc);
+        ok_long(rc.left, s_rcWorkArea.left);
+        ok_long(rc.top, s_rcWorkArea.top);
+        ok_long(rc.right, s_rcWorkArea.right);
+        ok_long(rc.bottom, s_rcWorkArea.top + 40);
 
         MOVE((s_rcWorkArea.left + s_rcWorkArea.right) / 2, s_rcWorkArea.bottom - 1);
         LEFT_DOWN();
         LEFT_UP();
         Sleep(LONG_INTERVAL);
 
-        GetWindowRect(s_hwnd2, &rc2);
-        ok_long(rc2.left, s_rcWorkArea.left);
-        ok_long(rc2.top, s_rcWorkArea.top);
-        ok_long(rc2.right, s_rcWorkArea.right);
-        ok_long(rc2.bottom, s_rcWorkArea.top + 2);
+        GetWindowRect(s_hwnd2, &rc);
+        ok_long(rc.left, s_rcWorkArea.left);
+        ok_long(rc.top, s_rcWorkArea.top);
+        ok_long(rc.right, s_rcWorkArea.right);
+        ok_long(rc.bottom, s_rcWorkArea.top + 2);
 
         SetForegroundWindow(s_hwnd2);
         Sleep(LONG_INTERVAL);
 
-        GetWindowRect(s_hwnd2, &rc2);
-        ok_long(rc2.left, s_rcWorkArea.left);
-        ok_long(rc2.top, s_rcWorkArea.top);
-        ok_long(rc2.right, s_rcWorkArea.right);
-        ok_long(rc2.bottom, s_rcWorkArea.top + 40);
+        GetWindowRect(s_hwnd2, &rc);
+        ok_long(rc.left, s_rcWorkArea.left);
+        ok_long(rc.top, s_rcWorkArea.top);
+        ok_long(rc.right, s_rcWorkArea.right);
+        ok_long(rc.bottom, s_rcWorkArea.top + 40);
 
         AppBar_SetSide(s_hwnd2, ABE_RIGHT);
         AppBar_AutoHide(s_hwnd2);
@@ -1182,31 +1205,31 @@ public:
         hwndRet = AppBar_GetAutoHideBar(s_hwnd2, ABE_RIGHT);
         ok_ptr(hwndRet, s_hwnd2);
 
-        GetWindowRect(s_hwnd2, &rc2);
-        ok_long(rc2.left, s_rcWorkArea.right - 2);
-        ok_long(rc2.top, s_rcWorkArea.top);
-        ok_long(rc2.right, s_rcWorkArea.right);
-        ok_long(rc2.bottom, s_rcWorkArea.bottom);
+        GetWindowRect(s_hwnd2, &rc);
+        ok_long(rc.left, s_rcWorkArea.right - 2);
+        ok_long(rc.top, s_rcWorkArea.top);
+        ok_long(rc.right, s_rcWorkArea.right);
+        ok_long(rc.bottom, s_rcWorkArea.bottom);
 
         MOVE(s_rcWorkArea.left, (s_rcWorkArea.top + s_rcWorkArea.bottom) / 2);
         Sleep(LONG_INTERVAL);
 
-        GetWindowRect(s_hwnd2, &rc2);
-        ok_long(rc2.left, s_rcWorkArea.right - 2);
-        ok_long(rc2.top, s_rcWorkArea.top);
-        ok_long(rc2.right, s_rcWorkArea.right);
-        ok_long(rc2.bottom, s_rcWorkArea.bottom);
+        GetWindowRect(s_hwnd2, &rc);
+        ok_long(rc.left, s_rcWorkArea.right - 2);
+        ok_long(rc.top, s_rcWorkArea.top);
+        ok_long(rc.right, s_rcWorkArea.right);
+        ok_long(rc.bottom, s_rcWorkArea.bottom);
+    }
 
-        // fullscreen
-        trace("Testing fullscreen\n");
-        rc1 = s_rcPrimaryMonitor;
+    void TEST_FullScreen()
+    {
+        trace("TEST_FullScreen\n");
+        RECT rc = s_rcPrimaryMonitor;
         ok_int(m_bGotFullScreen, FALSE);
-        MoveWindow(s_hwnd2, rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top, TRUE);
+        MoveWindow(s_hwnd2, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
         Sleep(LONG_INTERVAL);
         ok_int(m_bGotFullScreen, TRUE);
-        MoveWindow(s_hwnd2, rc1.left, rc1.top, 100, 100, TRUE);
-
-        Quit();
+        MoveWindow(s_hwnd2, rc.left, rc.top, 100, 100, TRUE);
     }
 
     static DWORD WINAPI ActionThreadFunc(LPVOID args)
