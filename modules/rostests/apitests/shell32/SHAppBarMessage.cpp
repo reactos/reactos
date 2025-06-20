@@ -1040,7 +1040,7 @@ public:
         ok_long(rcWork.right, s_rcWorkArea.right);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         PostMessageW(s_hwnd1, WM_CLOSE, 0, 0);
-        Sleep(INTERVAL);
+        Sleep(LONG_INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
         GetWorkArea(&rcWork);
