@@ -335,8 +335,7 @@ protected:
 
         case ABN_POSCHANGED:
             {
-                APPBARDATA abd = { sizeof(abd) };
-                abd.hWnd = hwnd;
+                APPBARDATA abd = { sizeof(abd), hwnd };
                 AppBar_PosChanged(&abd);
             }
             break;
@@ -345,27 +344,21 @@ protected:
 
     BOOL AppBar_Register(HWND hwnd)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
-        abd.uCallbackMessage = APPBAR_CALLBACK;
-
+        APPBARDATA abd = { sizeof(abd), hwnd, APPBAR_CALLBACK };
         m_fAppBarRegd = (BOOL)SHAppBarMessage(ABM_NEW, &abd);
         return m_fAppBarRegd;
     }
 
     BOOL AppBar_UnRegister(HWND hwnd)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
-
+        APPBARDATA abd = { sizeof(abd), hwnd };
         m_fAppBarRegd = !SHAppBarMessage(ABM_REMOVE, &abd);
         return !m_fAppBarRegd;
     }
 
     BOOL AppBar_GetTaskBarPos(HWND hwnd, PRECT prc)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
 
         if (!SHAppBarMessage(ABM_GETTASKBARPOS, &abd))
             return FALSE;
@@ -375,8 +368,7 @@ protected:
 
     HWND AppBar_GetAutoHideBar(HWND hwnd, UINT uSide)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
         abd.uEdge = uSide;
 
         return (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAR, &abd);
@@ -392,8 +384,7 @@ protected:
 
     BOOL AppBar_AutoHide(HWND hwnd)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
         abd.uEdge = m_uSide;
 
         HWND hwndAutoHide = (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAR, &abd);
@@ -439,8 +430,7 @@ protected:
 
     BOOL AppBar_NoAutoHide(HWND hwnd)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
         abd.uEdge = m_uSide;
         HWND hwndAutoHide = (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAR, &abd);
         if (hwndAutoHide != hwnd)
@@ -489,8 +479,7 @@ protected:
                 break;
         }
 
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
         AppBar_QuerySetPos(uSide, &rc, &abd, TRUE);
 
         if (fAutoHide)
@@ -567,8 +556,7 @@ protected:
     {
         if (m_fAppBarRegd)
         {
-            APPBARDATA abd = { sizeof(abd) };
-            abd.hWnd = hwnd;
+            APPBARDATA abd = { sizeof(abd), hwnd };
 
             RECT rc;
             GetWindowRect(hwnd, &rc);
@@ -578,8 +566,7 @@ protected:
 
     void AppBar_QueryPos(HWND hwnd, LPRECT lprc)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
         abd.rc = *lprc;
         abd.uEdge = m_uSide;
 
@@ -709,8 +696,7 @@ protected:
 
     void OnActivate(HWND hwnd, UINT state, HWND hwndActDeact, BOOL fMinimized)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
         SHAppBarMessage(ABM_ACTIVATE, &abd);
 
         switch (state)
@@ -729,8 +715,7 @@ protected:
 
     void OnWindowPosChanged(HWND hwnd, const LPWINDOWPOS lpwpos)
     {
-        APPBARDATA abd = { sizeof(abd) };
-        abd.hWnd = hwnd;
+        APPBARDATA abd = { sizeof(abd), hwnd };
         SHAppBarMessage(ABM_WINDOWPOSCHANGED, &abd);
 
         FORWARD_WM_WINDOWPOSCHANGED(hwnd, lpwpos, DefWindowProc);
@@ -973,8 +958,7 @@ protected:
             }
             else
             {
-                APPBARDATA abd = { sizeof(abd) };
-                abd.hWnd = hwnd;
+                APPBARDATA abd = { sizeof(abd), hwnd };
                 AppBar_QuerySetPos(m_uSide, &m_rcDrag, &abd, FALSE);
             }
         }
