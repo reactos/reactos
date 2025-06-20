@@ -212,7 +212,7 @@ WORD DosIfCharYesNo(WORD Char)
     if (Char == YesNoTable[0])
         return 0x0001;
     /* Unknown type */
-        return 0x0002;
+    return 0x0002;
 }
 
 CHAR DosToUpper(CHAR Char)
