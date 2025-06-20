@@ -30,7 +30,8 @@ HANDLE g_hMutex = NULL;
 
 static inline VOID EnterProtectedSection(VOID)
 {
-    g_hMutex = CreateMutex(NULL, TRUE, TEXT("INDICDLL_PROTECTED"));
+    g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
+    WaitForSingleObject(g_hMutex, 5 * 1000);
 }
 
 static inline VOID LeaveProtectedSection(VOID)
