@@ -291,7 +291,7 @@ kernel32 -
   dll/win32/kernel32/wine/comm.c                 # Synced to wine-3.3
   dll/win32/kernel32/wine/lzexpand.c             # Synced to WineStaging-3.3
   dll/win32/kernel32/wine/profile.c              # Synced to WineStaging-3.3
-  dll/win32/kernel32/wine/res.c                  # Partially synced to WineStaging-3.3
+  dll/win32/kernel32/wine/resource.c             # Synced to Wine-10.0
   dll/win32/kernel32/winnls/string/casemap.c     # Synced to WineStaging-3.3
   dll/win32/kernel32/winnls/string/collation.c   # Synced to WineStaging-3.3
   dll/win32/kernel32/winnls/string/digitmap.c    # Synced to WineStaging-3.3

@@ -21,7 +21,6 @@ WaitForInputIdleType UserWaitForInputIdleRoutine;
 UNICODE_STRING BaseUnicodeCommandLine;
 ANSI_STRING BaseAnsiCommandLine;
 UNICODE_STRING BasePathVariableName = RTL_CONSTANT_STRING(L"PATH");
-LPSTARTUPINFOA BaseAnsiStartupInfo = NULL;
 PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 BOOLEAN g_AppCertInitialized;
 BOOLEAN g_HaveAppCerts;
@@ -1315,6 +1314,7 @@ GetStartupInfoW(IN LPSTARTUPINFOW lpStartupInfo)
 /*
  * @implemented
  */
+<<<<<<< HEAD:dll/win32/kernel32/client/proc.c
 VOID
 WINAPI
 GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
@@ -1460,6 +1460,8 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
 /*
  * @implemented
  */
+=======
+>>>>>>> e112048b9dd ([KERNELBASE][KERNEL32] Move most of kernel32 to kernelbase):dll/win32/kernelbase/kernel32/client/proc.c
 BOOL
 WINAPI
 FlushInstructionCache(IN HANDLE hProcess,
