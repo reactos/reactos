@@ -1223,6 +1223,7 @@ public:
         MoveWindow(s_hwnd2, rc1.left, rc1.top, 100, 100, TRUE);
 
         Quit();
+#undef LONG_INTERVAL
 #undef INTERVAL
     }
 
