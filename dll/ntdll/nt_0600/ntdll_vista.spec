@@ -20,3 +20,9 @@
 @ stdcall RtlSendMsgToSm(ptr ptr) SmSendMsgToSm
 @ stdcall RtlLcidToLocaleName(long ptr long long)
 @ stdcall RtlLocaleNameToLcid(wstr ptr long)
+
+@ stdcall LdrAddDllDirectory(ptr ptr)
+@ stdcall LdrSetDllDirectory(ptr)
+@ stdcall LdrGetDllDirectory(ptr)
+@ stdcall LdrRemoveDllDirectory(ptr)
+@ stdcall LdrSetDefaultDllDirectories(long)

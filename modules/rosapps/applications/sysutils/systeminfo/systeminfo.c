@@ -195,7 +195,8 @@ ULONGLONG GetSeconds(VOID)
     if (pGetTickCount64)
         return pGetTickCount64() / 1000;
 
-    hModule = LoadLibraryW(L"kernel32_vista.dll");
+    hModule = LoadLibraryW(L"kernel32_win7.dll");
+
     if (!hModule)
         return GetSecondsQPC();
 

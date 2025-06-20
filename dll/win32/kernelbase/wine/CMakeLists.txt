@@ -1,4 +1,7 @@
-add_definitions(-D__WINESRC__ -D_KERNEL32_ -DWINVER=0x601 -D_WIN32_WINNT=0x601)
+remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
+remove_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
+add_definitions(-D_WIN32_WINNT=0x601 -DWINVER=0x601)
+
 add_definitions(
     -D__WINESRC__
     -D_WINE
@@ -7,7 +10,8 @@ add_definitions(
     -Dwcsicmp=_wcsicmp
     -Dstrnicmp=_strnicmp
     -Dswprintf=_swprintf
-    -D_KERNELBASE_)
+    -D_KERNELBASE_
+    -D_KERNEL32_)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
@@ -24,6 +28,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>)
 endif()
 
+# TODO: Next PR
 #list(APPEND SOURCE_PATH
 #    path.c
 #    )
@@ -32,13 +37,14 @@ endif()
 #target_link_libraries(kernelbase_path ${PSEH_LIB})
 #add_dependencies(kernelbase_path psdk)
 
-if(NOT MSVC)
-    target_compile_options(kernelbase_path PRIVATE -Wno-unused-variable)
-    target_compile_options(kernelbase_path PRIVATE -Wno-unused-function)
-endif()
+#if(NOT MSVC)
+#    target_compile_options(kernelbase_path PRIVATE -Wno-unused-variable)
+#    target_compile_options(kernelbase_path PRIVATE -Wno-unused-function)
+#endif()
 
 list(APPEND SOURCE_STATIC
     #console.c #looks like ReactOS console.c is nothing like wine.
+    loader.c
     )
 
 add_library(kernelbase_static ${SOURCE_STATIC})
