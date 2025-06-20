@@ -4164,10 +4164,10 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
             if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidl)))
                 BrowseObject(pidl, SBSP_ABSOLUTE | SBSP_SAMEBROWSER | SBSP_ACTIVATE_NOFOCUS);
             return 0;
-        #if 0 // TODO: Toggle entire itbar(rebar) after LPTOOLBARITEM->fShow support is added
+#if 0 // TODO: Toggle entire itbar(rebar) after LPTOOLBARITEM->fShow support is added
         case FCIDM_CABINET_TOGGLEITBAR:
             break;
-        #endif
+#endif
     }
 
     if (HIWORD(wParam) == 0 && LOWORD(wParam) < FCIDM_SHVIEWLAST && fCurrentShellViewWindow != NULL)
