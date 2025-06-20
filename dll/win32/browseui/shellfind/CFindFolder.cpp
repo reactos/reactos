@@ -1145,15 +1145,18 @@ STDMETHODIMP CFindFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLE
     if (!pPidlOut)
         return E_INVALIDARG; // Our pidls are special, the caller must get it from us and not from parsing
     *pPidlOut = NULL;
+
     HRESULT hr;
     CComPtr<IShellFolder> pFolder;
     PCUITEMID_CHILD pidlChild;
     if (FAILED_UNEXPECTEDLY(hr = GetFSFolderAndChild(pidl, &pFolder, &pidlChild)))
         return hr;
+
     PCWSTR pszDir = _ILGetPath(pidl);
     PWSTR pszFull = (PWSTR)SHAlloc((wcslen(pszDir) + MAX_PATH) * sizeof(*pszDir));
     if (!pszFull)
         return E_OUTOFMEMORY;
+
     PITEMID_CHILD pidlRawNew = NULL;
     hr = pFolder->SetNameOf(hwndOwner, pidlChild, lpName, dwFlags, &pidlRawNew);
     if (SUCCEEDED(hr) && pidlRawNew)
@@ -1162,7 +1165,8 @@ STDMETHODIMP CFindFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLE
         hr = DisplayNameOfW(pFolder, pidlRawNew, SHGDN_FORPARSING | SHGDN_INFOLDER, szFileName, _countof(szFileName));
         ILFree(pidlRawNew);
         PathCombineW(pszFull, pszDir, szFileName);
-        hr = (SUCCEEDED(hr) && (*pPidlOut = _ILCreate(pszFull)) != NULL) ? S_OK : E_OUTOFMEMORY;
+        if (SUCCEEDED(hr))
+            hr = ((*pPidlOut = _ILCreate(pszFull)) != NULL) ? S_OK : E_OUTOFMEMORY;
     }
     SHFree(pszFull);
     return hr;
