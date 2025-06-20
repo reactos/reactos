@@ -28,19 +28,19 @@ HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
 HANDLE g_hMutex = NULL;
 
-static VOID EnterProtectedSection(VOID)
+static inline VOID EnterProtectedSection(VOID)
 {
     g_hMutex = CreateMutex(NULL, TRUE, TEXT("INDICDLL_PROTECTED"));
 }
 
-static VOID LeaveProtectedSection(VOID)
+static inline VOID LeaveProtectedSection(VOID)
 {
     ReleaseMutex(g_hMutex);
     CloseHandle(g_hMutex);
     g_hMutex = NULL;
 }
 
-static VOID
+static inline VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     if (g_pShared->hKbSwitchWnd)
