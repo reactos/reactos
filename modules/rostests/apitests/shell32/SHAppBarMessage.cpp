@@ -1296,6 +1296,7 @@ START_TEST(SHAppBarMessage)
 
     PostMessageW(hwnd1, WM_COMMAND, ID_ACTION, 0);
 
+    // message loop
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
     {
