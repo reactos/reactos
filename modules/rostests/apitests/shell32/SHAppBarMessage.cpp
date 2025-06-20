@@ -26,6 +26,9 @@
 #define LEFT_UP() mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 #define MOVE(x, y) SetCursorPos((x), (y))
 
+#define INTERVAL 250
+#define LONG_INTERVAL 2500
+
 static const TCHAR s_szName[] = TEXT("AppBarSample");
 static RECT s_rcPrimaryMonitor;
 static RECT s_rcWorkArea;
@@ -148,9 +151,7 @@ public:
     {
     }
 
-    virtual ~Window()
-    {
-    }
+    virtual ~Window() { }
 
     static BOOL DoRegisterClass(HINSTANCE hInstance)
     {
@@ -752,13 +753,9 @@ protected:
             m_rcAppBar = rcWindow;
 
             if (m_uSide == ABE_TOP || m_uSide == ABE_BOTTOM)
-            {
                 m_cyHeight = m_cySave = rcWindow.bottom - rcWindow.top;
-            }
             else
-            {
                 m_cxWidth = m_cxSave = rcWindow.right - rcWindow.left;
-            }
         }
 
         InvalidateRect(hwnd, NULL, TRUE);
@@ -1000,17 +997,13 @@ protected:
 public:
     void DoAction()
     {
-#define INTERVAL 250
-#define LONG_INTERVAL 2500
         POINT pt;
         RECT rc1, rc2, rcWork;
-        BOOL ret;
-        HWND hwndRet;
 
         trace("DoAction\n");
         Sleep(INTERVAL);
 
-        ret = AppBar_GetTaskBarPos(s_hwnd1, &rc1);
+        BOOL ret = AppBar_GetTaskBarPos(s_hwnd1, &rc1);
         ok_int(ret, TRUE);
         ok_int(EqualRect(&rc1, &s_rcTaskBar), TRUE);
 
@@ -1142,7 +1135,7 @@ public:
         m_cyHeight = 40;
         AppBar_SetSide(s_hwnd2, ABE_TOP);
         AppBar_AutoHide(s_hwnd2);
-        hwndRet = AppBar_GetAutoHideBar(s_hwnd2, ABE_TOP);
+        HWND hwndRet = AppBar_GetAutoHideBar(s_hwnd2, ABE_TOP);
         ok_ptr(hwndRet, s_hwnd2);
         Sleep(LONG_INTERVAL);
 
@@ -1214,8 +1207,6 @@ public:
         MoveWindow(s_hwnd2, rc1.left, rc1.top, 100, 100, TRUE);
 
         Quit();
-#undef LONG_INTERVAL
-#undef INTERVAL
     }
 
     static DWORD WINAPI ActionThreadFunc(LPVOID args)
