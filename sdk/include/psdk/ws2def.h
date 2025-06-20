@@ -520,9 +520,17 @@ typedef struct _WSAMSG {
   LPSOCKADDR name;
   INT namelen;
   LPWSABUF lpBuffers;
+#if (_WIN32_WINNT >= 0x0600)
   ULONG dwBufferCount;
+#else
+  DWORD dwBufferCount;
+#endif
   WSABUF Control;
+#if (_WIN32_WINNT >= 0x0600)
   ULONG dwFlags;
+#else
+  DWORD dwFlags;
+#endif
 } WSAMSG, *PWSAMSG, *FAR LPWSAMSG;
 
 #if (_WIN32_WINNT >= 0x0600)
@@ -535,7 +543,9 @@ typedef struct _WSACMSGHDR {
   INT cmsg_type;
 } WSACMSGHDR, *PWSACMSGHDR, FAR *LPWSACMSGHDR;
 
+#if (_WIN32_WINNT >= 0x0600)
 typedef WSACMSGHDR CMSGHDR, *PCMSGHDR;
+#endif
 
 #define WSA_CMSGHDR_ALIGN(length) (((length) + TYPE_ALIGNMENT(WSACMSGHDR)-1) &  \
                                    (~(TYPE_ALIGNMENT(WSACMSGHDR)-1)))

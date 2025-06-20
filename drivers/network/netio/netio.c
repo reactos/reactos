@@ -558,6 +558,7 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
     {
         goto err_out_free_lc_and_disassociate;
     }
+    lc->RequestConnectionInfo->OptionsLength = 0;
 
     lc->ReturnConnectionInfo = NULL;
     TdiBuildNullConnectionInfo(&lc->ReturnConnectionInfo, TDI_ADDRESS_TYPE_IP);
@@ -565,6 +566,8 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
     {
         goto err_out_free_lc_and_req_conn_info;
     }
+    lc->ReturnConnectionInfo->OptionsLength = 0;
+
     SocketGet(ListenSocket);
     SocketGet(AcceptSocket);
 
@@ -675,13 +678,13 @@ WskControlSocket(
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
-                            if (InputSize < 4)
+                            if (InputSize < sizeof(UINT))
                             {
                                 DPRINT1("WskControlSocket: InputBuffer too small for this operation\n");
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
-                            UINT flag = *(UINT *)InputBuffer;
+                            UINT flag = *(PUINT)InputBuffer;
                             if (flag != 0)
                             {
                                 s->Flags |= ControlCode;
@@ -770,8 +773,12 @@ static PTRANSPORT_ADDRESS
 TdiTransportAddressFromSocketAddress(_In_ PSOCKADDR SocketAddress)
 {
     PTRANSPORT_ADDRESS ta;
+    ULONG Size;
 
-    ta = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*ta) + sizeof(SocketAddress->sa_data), TAG_NETIO);
+    Size = FIELD_OFFSET(TRANSPORT_ADDRESS, Address) +
+           FIELD_OFFSET(TA_ADDRESS, Address[sizeof(SocketAddress->sa_data)]);
+
+    ta = ExAllocatePoolUninitialized(NonPagedPool, Size, TAG_NETIO);
     if (ta == NULL)
     {
         DPRINT1("TdiTransportAddressFromSocketAddress: Out of memory\n");
@@ -809,6 +816,7 @@ TdiConnectionInfoFromSocketAddress(_In_ PSOCKADDR SocketAddress)
         }
         return NULL;
     }
+    ConnectionInformation->OptionsLength = 0;
     return ConnectionInformation;
 }
 
@@ -1127,6 +1135,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     {
         goto err_out_free_nc_and_tci;
     }
+    PeerAddrRet->OptionsLength = 0;
     nc->PeerAddrRet = PeerAddrRet;
 
     IoMarkIrpPending(Irp);
