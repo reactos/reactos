@@ -1019,6 +1019,7 @@ public:
         HWND hwndRet;
 
         trace("DoAction\n");
+        Sleep(INTERVAL);
 
         ret = AppBar_GetTaskBarPos(s_hwnd1, &rc1);
         ok_int(ret, TRUE);
