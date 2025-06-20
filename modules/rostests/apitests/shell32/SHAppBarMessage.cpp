@@ -1207,6 +1207,7 @@ public:
         // fullscreen
         trace("Testing fullscreen\n");
         rc1 = s_rcPrimaryMonitor;
+        ok_int(m_bGotFullScreen, FALSE);
         MoveWindow(s_hwnd2, rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top, TRUE);
         Sleep(LONG_INTERVAL);
         ok_int(m_bGotFullScreen, TRUE);
