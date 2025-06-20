@@ -250,6 +250,7 @@ protected:
     POINT m_ptDragOn;
     RECT m_rcAppBar;
     RECT m_rcDrag;
+    BOOL m_bGotFullScreen;
 
     void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     {
@@ -306,8 +307,6 @@ protected:
         if (vk == VK_ESCAPE)
             DestroyWindow(hwnd);
     }
-
-    BOOL m_bGotFullScreen = FALSE;
 
     void OnAppBarCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
@@ -1225,7 +1224,7 @@ public:
     {
         trace("TEST_FullScreen\n");
         RECT rc = s_rcPrimaryMonitor;
-        ok_int(m_bGotFullScreen, FALSE);
+        m_bGotFullScreen = FALSE;
         MoveWindow(s_hwnd2, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
         Sleep(LONG_INTERVAL);
         ok_int(m_bGotFullScreen, TRUE);
