@@ -83,6 +83,9 @@
 #else
 # define __WINE_ALLOC_SIZE(...)
 #endif
+
+#define __WINE_DEALLOC(...)
+#define __WINE_MALLOC
 /*#endif*/
 
 #ifdef __GNUC__
