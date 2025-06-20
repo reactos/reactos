@@ -237,9 +237,8 @@ struct key_asymmetric_derive_key_params
 #if defined(HAVE_GNUTLS_HASH)
 struct hash
 {
-    struct object    hdr;
-    enum alg_id      alg_id;
-    BOOL hmac;
+    struct object     hdr;
+    enum alg_id       alg_id;
     ULONG             flags;
     UCHAR            *secret;
     ULONG             secret_len;
@@ -252,9 +251,8 @@ struct hash
 #elif defined(SONAME_LIBMBEDTLS)
 struct hash
 {
-    struct object hdr;
-    enum alg_id   alg_id;
-    BOOL hmac;
+    struct object     hdr;
+    enum alg_id       alg_id;
     ULONG             flags;
     UCHAR            *secret;
     ULONG             secret_len;
@@ -266,9 +264,8 @@ struct hash
 #else
 struct hash
 {
-    struct object hdr;
-    enum alg_id   alg_id;
-    BOOL hmac;
+    struct object     hdr;
+    enum alg_id       alg_id;
     ULONG             flags;
     UCHAR            *secret;
     ULONG             secret_len;

@@ -73,7 +73,6 @@ NTSTATUS hash_init_internal( struct hash *hash, UCHAR *key, ULONG key_size )
 {
     const mbedtls_md_info_t *md_info;
     mbedtls_md_type_t md_type;
-    BOOL hmac = (key != NULL && key_size > 0);
     int ret;
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
@@ -125,8 +124,7 @@ NTSTATUS hash_init_internal( struct hash *hash, UCHAR *key, ULONG key_size )
         return STATUS_INTERNAL_ERROR;
     }
 
-    hash->hmac = hmac;
-    if (hmac)
+    if (hash->flags & HASH_FLAG_HMAC)
     {
         mbedtls_md_hmac_starts(&hash->u.hash_ctx, key, key_size);
     }
@@ -167,7 +165,7 @@ NTSTATUS hash_finish( struct hash *hash, UCHAR *output )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    if (hash->hmac)
+    if (hash->flags & HASH_FLAG_HMAC)
     {
         mbedtls_md_hmac_finish(&hash->u.hash_ctx, output);
     }
