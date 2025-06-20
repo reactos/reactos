@@ -416,45 +416,6 @@ NTSTATUS WINAPI BCryptGetFipsAlgorithmMode(BOOLEAN *enabled)
     return STATUS_SUCCESS;
 }
 
-#if 0
-static const struct ltc_hash_descriptor *get_hash_descriptor( enum alg_id alg_id )
-{
-    switch (alg_id)
-    {
-    case ALG_ID_MD2: return &md2_desc;
-    case ALG_ID_MD4: return &md4_desc;
-    case ALG_ID_MD5: return &md5_desc;
-    case ALG_ID_SHA1: return &sha1_desc;
-    case ALG_ID_SHA256: return &sha256_desc;
-    case ALG_ID_SHA384: return &sha384_desc;
-    case ALG_ID_SHA512: return &sha512_desc;
-    default:
-        ERR( "unhandled id %u\n", alg_id );
-        return NULL;
-    }
-}
-#endif
-
-#define HASH_FLAG_HMAC      0x01
-#define HASH_FLAG_REUSABLE  0x02
-#if 0
-struct hash
-{
-    struct object     hdr;
-    enum alg_id       alg_id;
-    const struct ltc_hash_descriptor *desc;
-    ULONG             flags;
-    UCHAR            *secret;
-    ULONG             secret_len;
-    hash_state        outer;
-    hash_state        inner;
-};
-#endif
-
-#define BLOCK_LENGTH_RC4        1
-#define BLOCK_LENGTH_3DES       8
-#define BLOCK_LENGTH_AES        16
-
 static NTSTATUS generic_alg_property( enum alg_id id, const WCHAR *prop, UCHAR *buf, ULONG size, ULONG *ret_size )
 {
     if (!wcscmp( prop, BCRYPT_OBJECT_LENGTH ))
@@ -915,18 +876,11 @@ static NTSTATUS hash_create( const struct algorithm *alg, UCHAR *secret, ULONG s
                              struct hash **ret_hash )
 {
     struct hash *hash;
-#if 0
-    const struct ltc_hash_descriptor *desc = get_hash_descriptor( alg->id );
-
-    if (!desc) return STATUS_NOT_IMPLEMENTED;
-#endif
     if (!(hash = calloc( 1, sizeof(*hash) ))) return STATUS_NO_MEMORY;
     hash->hdr.magic = MAGIC_HASH;
     hash->alg_id    = alg->id;
-#if 0
-    hash->desc      = desc;
- #endif
-   if (alg->flags & BCRYPT_ALG_HANDLE_HMAC_FLAG) hash->flags = HASH_FLAG_HMAC;
+
+    if (alg->flags & BCRYPT_ALG_HANDLE_HMAC_FLAG) hash->flags = HASH_FLAG_HMAC;
     if ((alg->flags & BCRYPT_HASH_REUSABLE_FLAG) || (flags & BCRYPT_HASH_REUSABLE_FLAG))
         hash->flags |= HASH_FLAG_REUSABLE;
 
@@ -1090,13 +1044,6 @@ static NTSTATUS key_asymmetric_create( enum alg_id alg_id, ULONG bitlen, struct 
 {
     struct key *key;
 
-#if 0
-    if (!__wine_unixlib_handle)
-    {
-        ERR( "no encryption support\n" );
-        return STATUS_NOT_IMPLEMENTED;
-    }
-#endif
     if (alg_id == ALG_ID_DH && bitlen < 512) return STATUS_INVALID_PARAMETER;
 
     if (!(key = calloc( 1, sizeof(*key) ))) return STATUS_NO_MEMORY;
@@ -2012,13 +1959,6 @@ NTSTATUS WINAPI BCryptGenerateSymmetricKey( BCRYPT_ALG_HANDLE handle, BCRYPT_KEY
 
     TRACE( "%p, %p, %p, %lu, %p, %lu, %#lx\n", handle, ret_handle, object, object_len, secret, secret_len, flags );
     if (object) FIXME( "ignoring object buffer\n" );
-#if 0
-    if (!__wine_unixlib_handle)
-    {
-        ERR( "no encryption support\n" );
-        return STATUS_NOT_IMPLEMENTED;
-    }
-#endif
     if (!alg) return STATUS_INVALID_HANDLE;
     if ((status = key_symmetric_generate( alg, ret_handle, secret, secret_len ))) return status;
     TRACE( "returning handle %p\n", *ret_handle );
