@@ -1123,14 +1123,18 @@ public:
         pt.y = (rc2.top + rc2.bottom) / 2;
         MOVE(pt.x, pt.y);
         LEFT_DOWN();
-        MOVE(pt.x + 64, pt.y + 64);
+        Sleep(INTERVAL);
+
+        pt.x = (s_rcWorkArea.left + s_rcWorkArea.right) / 2;
+        pt.y = s_rcWorkArea.top;
+        MOVE(pt.x, pt.y);
         Sleep(INTERVAL);
 
         pt.x = s_rcWorkArea.right - 1;
         pt.y = (s_rcWorkArea.top + s_rcWorkArea.bottom) / 2;
         MOVE(pt.x, pt.y);
         LEFT_UP();
-        Sleep(INTERVAL);
+        Sleep(LONG_INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
         GetWorkArea(&rcWork);
