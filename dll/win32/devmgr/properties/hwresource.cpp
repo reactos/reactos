@@ -209,9 +209,9 @@ ResourcesProcDriverDlgProc(IN HWND hwndDlg,
     return Ret;
 }
 
-
-PVOID
-GetResourceList(
+static
+PCM_RESOURCE_LIST
+GetAllocatedResourceList(
     LPWSTR pszDeviceID)
 {
     PCM_RESOURCE_LIST pResourceList = NULL;
@@ -248,6 +248,62 @@ GetResourceList(
 done:
     if (hKey != NULL)
         RegCloseKey(hKey);
+
+    return pResourceList;
+}
+
+static
+PCM_RESOURCE_LIST
+GetBootResourceList(
+    LPWSTR pszDeviceID)
+{
+    PCM_RESOURCE_LIST pResourceList = NULL;
+    HKEY hKey = NULL;
+    DWORD dwError, dwSize;
+
+    CStringW keyName = L"SYSTEM\\CurrentControlSet\\Enum\\";
+    keyName += pszDeviceID;
+    keyName += L"\\LogConf";
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &hKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        /* failed to open device instance log conf dir */
+        return NULL;
+    }
+
+    dwSize = 0;
+    RegQueryValueExW(hKey, L"BootConfig", NULL, NULL, NULL, &dwSize);
+    if (dwSize == 0)
+        goto done;
+
+    pResourceList = static_cast<PCM_RESOURCE_LIST>(HeapAlloc(GetProcessHeap(), 0, dwSize));
+    if (pResourceList == NULL)
+        goto done;
+
+    dwError = RegQueryValueExW(hKey, L"BootConfig", NULL, NULL, (LPBYTE)pResourceList, &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, pResourceList);
+        pResourceList = NULL;
+    }
+
+done:
+    if (hKey != NULL)
+        RegCloseKey(hKey);
+
+    return pResourceList;
+}
+
+PVOID
+GetResourceList(
+    LPWSTR pszDeviceID)
+{
+    PCM_RESOURCE_LIST pResourceList = NULL;
+
+    pResourceList = GetAllocatedResourceList(pszDeviceID);
+    if (pResourceList == NULL)
+        pResourceList = GetBootResourceList(pszDeviceID);
 
     return (PVOID)pResourceList;
 }
