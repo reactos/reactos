@@ -1248,18 +1248,18 @@ START_TEST(SHAppBarMessage)
         return;
     }
 
-    // Taskbar position
+    // Taskbar
     RECT rc;
     GetWindowRect(hTrayWnd, &rc);
     s_rcTaskBar = rc;
-    trace("TaskBarPos: %ld, %ld, %ld, %ld\n", rc.left, rc.top, rc.right, rc.bottom);
+    trace("s_rcTaskBar: %ld, %ld, %ld, %ld\n", rc.left, rc.top, rc.right, rc.bottom);
 
     // Work area
     SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
     trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n",
           s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
 
-    // Primary monitor position
+    // Primary monitor
     SetRect(&s_rcPrimaryMonitor, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     trace("s_rcPrimaryMonitor: %ld, %ld, %ld, %ld\n",
           s_rcPrimaryMonitor.left, s_rcPrimaryMonitor.top, s_rcPrimaryMonitor.right, s_rcPrimaryMonitor.bottom);
