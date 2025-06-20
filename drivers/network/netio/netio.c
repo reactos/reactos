@@ -978,9 +978,6 @@ WskReleaseUdp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATAGRAM_INDICATION DatagramInd
 
     UNIMPLEMENTED;
 
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -990,9 +987,6 @@ WskReleaseTcp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATA_INDICATION DataIndication)
     FUNCTION_TRACE;
 
     UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     return STATUS_NOT_IMPLEMENTED;
 }
