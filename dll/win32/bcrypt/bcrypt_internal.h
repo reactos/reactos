@@ -69,6 +69,10 @@ struct algorithm
     unsigned        flags;
 };
 
+#define BLOCK_LENGTH_RC4        1
+#define BLOCK_LENGTH_3DES       8
+#define BLOCK_LENGTH_AES        16
+
 struct key_symmetric
 {
     enum chain_mode  mode;
@@ -233,6 +237,10 @@ struct key_asymmetric_derive_key_params
     ULONG       output_len;
     ULONG      *ret_len;
 };
+
+
+#define HASH_FLAG_HMAC      0x01
+#define HASH_FLAG_REUSABLE  0x02
 
 #if defined(HAVE_GNUTLS_HASH)
 struct hash

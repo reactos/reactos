@@ -118,7 +118,7 @@ NTSTATUS hash_init_internal( struct hash *hash, UCHAR *key, ULONG key_size )
         return STATUS_INTERNAL_ERROR;
     }
 
-    if ((ret = mbedtls_md_setup(&hash->u.hash_ctx, md_info, hmac)) != 0)
+    if ((ret = mbedtls_md_setup(&hash->u.hash_ctx, md_info, hash->flags & HASH_FLAG_HMAC)) != 0)
     {
         mbedtls_md_free(&hash->u.hash_ctx);
         return STATUS_INTERNAL_ERROR;
