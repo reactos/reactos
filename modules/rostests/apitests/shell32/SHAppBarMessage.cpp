@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Test for SHAppBarMessage
- * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2020-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "shelltest.h"
@@ -18,6 +18,7 @@
 #define IDT_AUTOUNHIDE 2
 
 #define ID_ACTION 100
+#define ID_QUIT 999
 
 #define APPBAR_CALLBACK (WM_USER + 100)
 
@@ -26,7 +27,9 @@
 #define MOVE(x, y) SetCursorPos((x), (y))
 
 static const TCHAR s_szName[] = TEXT("AppBarSample");
+static RECT s_rcPrimaryMonitor;
 static RECT s_rcWorkArea;
+static RECT s_rcTaskBar;
 static HWND s_hwnd1 = NULL;
 static HWND s_hwnd2 = NULL;
 
@@ -276,6 +279,12 @@ protected:
                 return;
             }
             CloseHandle(hThread);
+            break;
+        case ID_QUIT:
+            DestroyWindow(s_hwnd1);
+            DestroyWindow(s_hwnd2);
+            PostQuitMessage(0);
+            break;
         }
     }
 
@@ -308,6 +317,8 @@ protected:
             DestroyWindow(hwnd);
     }
 
+    BOOL m_bGotFullScreen = FALSE;
+
     void OnAppBarCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         static HWND s_hwndZOrder = NULL;
@@ -318,6 +329,7 @@ protected:
             break;
 
         case ABN_FULLSCREENAPP:
+            m_bGotFullScreen = TRUE;
             if (lParam)
             {
                 s_hwndZOrder = GetWindow(hwnd, GW_HWNDPREV);
@@ -359,6 +371,26 @@ protected:
 
         m_fAppBarRegd = !SHAppBarMessage(ABM_REMOVE, &abd);
         return !m_fAppBarRegd;
+    }
+
+    BOOL AppBar_GetTaskBarPos(HWND hwnd, PRECT prc)
+    {
+        APPBARDATA abd = { sizeof(abd) };
+        abd.hWnd = hwnd;
+
+        if (!SHAppBarMessage(ABM_GETTASKBARPOS, &abd))
+            return FALSE;
+        *prc = abd.rc;
+        return TRUE;
+    }
+
+    HWND AppBar_GetAutoHideBar(HWND hwnd, UINT uSide)
+    {
+        APPBARDATA abd = { sizeof(abd) };
+        abd.hWnd = hwnd;
+        abd.uEdge = uSide;
+
+        return (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAR, &abd);
     }
 
     BOOL AppBar_SetAutoHide(HWND hwnd, BOOL fHide)
@@ -970,16 +1002,27 @@ protected:
         SystemParametersInfoW(SPI_GETWORKAREA, 0, prc, 0);
     }
 
+    void Quit()
+    {
+        PostMessage(s_hwnd1, WM_COMMAND, ID_QUIT, 0);
+        PostMessage(s_hwnd2, WM_COMMAND, ID_QUIT, 0);
+    }
+
 public:
     void DoAction()
     {
 #define INTERVAL 250
+#define LONG_INTERVAL 2500
         POINT pt;
         RECT rc1, rc2, rcWork;
-        DWORD dwTID = GetWindowThreadProcessId(s_hwnd1, NULL);
+        BOOL ret;
+        HWND hwndRet;
 
         trace("DoAction\n");
-        Sleep(INTERVAL);
+
+        ret = AppBar_GetTaskBarPos(s_hwnd1, &rc1);
+        ok_int(ret, TRUE);
+        ok_int(EqualRect(&rc1, &s_rcTaskBar), TRUE);
 
         GetWindowRect(s_hwnd1, &rc1);
         GetWindowRect(s_hwnd2, &rc2);
@@ -1073,6 +1116,8 @@ public:
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         Sleep(INTERVAL);
 
+        // dragging
+        trace("Testing dragging\n");
         GetWindowRect(s_hwnd2, &rc2);
         pt.x = (rc2.left + rc2.right) / 2;
         pt.y = (rc2.top + rc2.bottom) / 2;
@@ -1081,7 +1126,7 @@ public:
         MOVE(pt.x + 64, pt.y + 64);
         Sleep(INTERVAL);
 
-        pt.x = s_rcWorkArea.right - 80;
+        pt.x = s_rcWorkArea.right - 1;
         pt.y = (s_rcWorkArea.top + s_rcWorkArea.bottom) / 2;
         MOVE(pt.x, pt.y);
         LEFT_UP();
@@ -1096,19 +1141,84 @@ public:
         ok_long(rcWork.top, s_rcWorkArea.top);
         ok_long(rcWork.right, s_rcWorkArea.right - 30);
         ok_long(rcWork.bottom, s_rcWorkArea.bottom);
-        Sleep(INTERVAL);
 
-        SendMessage(s_hwnd2, WM_CLOSE, 0, 0);
-        Sleep(INTERVAL);
+        // auto-hide feature
+        trace("Testing auto-hide feature\n");
+        m_cxWidth = 80;
+        m_cyHeight = 40;
+        AppBar_SetSide(s_hwnd2, ABE_TOP);
+        AppBar_AutoHide(s_hwnd2);
+        hwndRet = AppBar_GetAutoHideBar(s_hwnd2, ABE_TOP);
+        ok_ptr(hwndRet, s_hwnd2);
+        Sleep(LONG_INTERVAL);
 
-        GetWorkArea(&rcWork);
-        ok_long(rcWork.left, s_rcWorkArea.left);
-        ok_long(rcWork.top, s_rcWorkArea.top);
-        ok_long(rcWork.right, s_rcWorkArea.right);
-        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
+        GetWindowRect(s_hwnd2, &rc2);
+        ok_long(rc2.left, s_rcWorkArea.left);
+        ok_long(rc2.top, s_rcWorkArea.top);
+        ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rc2.bottom, s_rcWorkArea.top + 2);
 
-        PostMessageW(s_hwnd2, WM_QUIT, 0, 0);
-        PostThreadMessage(dwTID, WM_QUIT, 0, 0);
+        MOVE((s_rcWorkArea.left + s_rcWorkArea.right) / 2, s_rcWorkArea.top);
+        LEFT_DOWN();
+        LEFT_UP();
+        Sleep(LONG_INTERVAL);
+
+        GetWindowRect(s_hwnd2, &rc2);
+        ok_long(rc2.left, s_rcWorkArea.left);
+        ok_long(rc2.top, s_rcWorkArea.top);
+        ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rc2.bottom, s_rcWorkArea.top + 40);
+
+        MOVE((s_rcWorkArea.left + s_rcWorkArea.right) / 2, s_rcWorkArea.bottom - 1);
+        LEFT_DOWN();
+        LEFT_UP();
+        Sleep(LONG_INTERVAL);
+
+        GetWindowRect(s_hwnd2, &rc2);
+        ok_long(rc2.left, s_rcWorkArea.left);
+        ok_long(rc2.top, s_rcWorkArea.top);
+        ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rc2.bottom, s_rcWorkArea.top + 2);
+
+        SetForegroundWindow(s_hwnd2);
+        Sleep(LONG_INTERVAL);
+
+        GetWindowRect(s_hwnd2, &rc2);
+        ok_long(rc2.left, s_rcWorkArea.left);
+        ok_long(rc2.top, s_rcWorkArea.top);
+        ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rc2.bottom, s_rcWorkArea.top + 40);
+
+        AppBar_SetSide(s_hwnd2, ABE_RIGHT);
+        AppBar_AutoHide(s_hwnd2);
+        SetForegroundWindow(s_hwnd2);
+        hwndRet = AppBar_GetAutoHideBar(s_hwnd2, ABE_RIGHT);
+        ok_ptr(hwndRet, s_hwnd2);
+
+        GetWindowRect(s_hwnd2, &rc2);
+        ok_long(rc2.left, s_rcWorkArea.right - 2);
+        ok_long(rc2.top, s_rcWorkArea.top);
+        ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rc2.bottom, s_rcWorkArea.bottom);
+
+        MOVE(s_rcWorkArea.left, (s_rcWorkArea.top + s_rcWorkArea.bottom) / 2);
+        Sleep(LONG_INTERVAL);
+
+        GetWindowRect(s_hwnd2, &rc2);
+        ok_long(rc2.left, s_rcWorkArea.right - 2);
+        ok_long(rc2.top, s_rcWorkArea.top);
+        ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rc2.bottom, s_rcWorkArea.bottom);
+
+        // fullscreen
+        trace("Testing fullscreen\n");
+        rc1 = s_rcPrimaryMonitor;
+        MoveWindow(s_hwnd2, rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top, TRUE);
+        Sleep(LONG_INTERVAL);
+        ok_int(m_bGotFullScreen, TRUE);
+        MoveWindow(s_hwnd2, rc1.left, rc1.top, 100, 100, TRUE);
+
+        Quit();
 #undef INTERVAL
     }
 
@@ -1124,6 +1234,39 @@ START_TEST(SHAppBarMessage)
 {
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
+    // Check Taskbar
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    if (!IsWindowVisible(hTrayWnd))
+    {
+        skip("Taskbar not found\n");
+        return;
+    }
+
+    // Taskbar position
+    RECT rc;
+    GetWindowRect(hTrayWnd, &rc);
+    s_rcTaskBar = rc;
+    trace("TaskBarPos: %ld, %ld, %ld, %ld\n", rc.left, rc.top, rc.right, rc.bottom);
+
+    // Work area
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
+    trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n",
+          s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
+
+    // Primary monitor position
+    SetRect(&s_rcPrimaryMonitor, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    trace("s_rcPrimaryMonitor: %ld, %ld, %ld, %ld\n",
+          s_rcPrimaryMonitor.left, s_rcPrimaryMonitor.top, s_rcPrimaryMonitor.right, s_rcPrimaryMonitor.bottom);
+
+    if (rc.left > s_rcPrimaryMonitor.left ||
+        rc.right < s_rcPrimaryMonitor.right ||
+        rc.bottom < s_rcPrimaryMonitor.bottom)
+    {
+        // Taskbar must be bottom in this testcase
+        skip("Taskbar was not bottom\n");
+        return;
+    }
+
     if (!Window::DoRegisterClass(hInstance))
     {
         skip("Window::DoRegisterClass failed\n");
@@ -1136,10 +1279,6 @@ START_TEST(SHAppBarMessage)
         skip("Multi-monitor not supported yet\n");
         return;
     }
-
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &s_rcWorkArea, FALSE);
-    trace("s_rcWorkArea: %ld, %ld, %ld, %ld\n",
-          s_rcWorkArea.left, s_rcWorkArea.top, s_rcWorkArea.right, s_rcWorkArea.bottom);
 
     HWND hwnd1 = Window::DoCreateMainWnd(hInstance, TEXT("Test1"), 80, 80,
                                          WS_POPUP | WS_THICKFRAME | WS_CLIPCHILDREN);
