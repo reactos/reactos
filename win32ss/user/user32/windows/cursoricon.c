@@ -1738,7 +1738,22 @@ CURSORICON_LoadImageW(
 
     /* Check if caller wants OEM icons */
     if(!hinst)
+    {
+        #ifndef IDI_SHIELD
+        #define IDI_SHIELD MAKEINTRESOURCE(32518)
+        #endif
+
         hinst = User32Instance;
+
+        /* Map IDI to resource id */
+        if (bIcon && lpszName >= IDI_APPLICATION && lpszName <= IDI_SHIELD)
+        {
+            SIZE_T id = 100 + (SIZE_T)lpszName - (SIZE_T)IDI_APPLICATION;
+            if ((id | 2) == 103)
+                id ^= 2; /* Must swap IDI_ERROR and IDI_WARNING */
+            lpszName = MAKEINTRESOURCEW(id);
+        }
+    }
 
     if(lpszName)
     {
