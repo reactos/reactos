@@ -577,8 +577,8 @@ static void parse_locale_name( const WCHAR *str, struct locale_name *name )
         }
     }
 done:
-    EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING, (LPCWSTR)LOCALE_ILANGUAGE,
-                            find_locale_id_callback, (LPARAM)name );
+    EnumResourceLanguagesExW( kernel32_handle, (LPCWSTR)RT_STRING, (LPCWSTR)LOCALE_ILANGUAGE,
+                            find_locale_id_callback, (LPARAM)name,0,0);
 }
 #endif // 0 See kernel32_vista
 #endif // (WINVER >= 0x0600)
@@ -2986,9 +2986,9 @@ static BOOL CALLBACK enum_lang_proc_w( HMODULE hModule, LPCWSTR type,
 BOOL WINAPI EnumSystemLocalesA( LOCALE_ENUMPROCA lpfnLocaleEnum, DWORD dwFlags )
 {
     TRACE("(%p,%08x)\n", lpfnLocaleEnum, dwFlags);
-    EnumResourceLanguagesA( kernel32_handle, (LPSTR)RT_STRING,
+    EnumResourceLanguagesExA( kernel32_handle, (LPSTR)RT_STRING,
                             (LPCSTR)LOCALE_ILANGUAGE, enum_lang_proc_a,
-                            (LONG_PTR)lpfnLocaleEnum);
+                            (LONG_PTR)lpfnLocaleEnum,0,0);
     return TRUE;
 }
 
@@ -3001,9 +3001,9 @@ BOOL WINAPI EnumSystemLocalesA( LOCALE_ENUMPROCA lpfnLocaleEnum, DWORD dwFlags )
 BOOL WINAPI EnumSystemLocalesW( LOCALE_ENUMPROCW lpfnLocaleEnum, DWORD dwFlags )
 {
     TRACE("(%p,%08x)\n", lpfnLocaleEnum, dwFlags);
-    EnumResourceLanguagesW( kernel32_handle, (LPWSTR)RT_STRING,
+    EnumResourceLanguagesExW( kernel32_handle, (LPWSTR)RT_STRING,
                             (LPCWSTR)LOCALE_ILANGUAGE, enum_lang_proc_w,
-                            (LONG_PTR)lpfnLocaleEnum);
+                            (LONG_PTR)lpfnLocaleEnum,0,0);
     return TRUE;
 }
 
@@ -3051,9 +3051,9 @@ BOOL WINAPI EnumSystemLocalesEx( LOCALE_ENUMPROCEX proc, DWORD flags, LPARAM lpa
     data.proc   = proc;
     data.flags  = flags;
     data.lparam = lparam;
-    EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING,
+    EnumResourceLanguagesExW( kernel32_handle, (LPCWSTR)RT_STRING,
                             (LPCWSTR)MAKEINTRESOURCE((LOCALE_SNAME >> 4) + 1),
-                            enum_locale_ex_proc, (LONG_PTR)&data );
+                            enum_locale_ex_proc, (LONG_PTR)&data,0,0);
     return TRUE;
 }
 #endif
@@ -4964,9 +4964,9 @@ BOOL WINAPI EnumUILanguagesA(UILANGUAGE_ENUMPROCA pUILangEnumProc, DWORD dwFlags
     enum_uilang.flags = dwFlags;
     enum_uilang.param = lParam;
 
-    EnumResourceLanguagesA( kernel32_handle, (LPCSTR)RT_STRING,
+    EnumResourceLanguagesExA( kernel32_handle, (LPCSTR)RT_STRING,
                             (LPCSTR)LOCALE_ILANGUAGE, enum_uilang_proc_a,
-                            (LONG_PTR)&enum_uilang);
+                            (LONG_PTR)&enum_uilang,0,0);
     return TRUE;
 }
 
@@ -4993,9 +4993,9 @@ BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags
     enum_uilang.flags = dwFlags;
     enum_uilang.param = lParam;
 
-    EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING,
+    EnumResourceLanguagesExW( kernel32_handle, (LPCWSTR)RT_STRING,
                             (LPCWSTR)LOCALE_ILANGUAGE, enum_uilang_proc_w,
-                            (LONG_PTR)&enum_uilang);
+                            (LONG_PTR)&enum_uilang,0,0);
     return TRUE;
 }
 

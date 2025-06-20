@@ -2,6 +2,11 @@ remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x601)
 add_definitions(-DNTDDI_VERSION=0x06010000)
 
+list(APPEND NT6_HACKS
+    reactos_nt6hacks.c) 
+add_library(nt6_hacks ${NT6_HACKS})
+add_dependencies(nt6_hacks psdk)
+
 include_directories(
     ${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc
     ${REACTOS_SOURCE_DIR}/drivers/filesystems/nfs
@@ -59,10 +64,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(nfsd PRIVATE -Wno-incompatible-function-pointer-types)
 endif()
 
-target_link_libraries(nfsd oldnames)
+target_link_libraries(nfsd nt6_hacks oldnames)
 
 set_module_type(nfsd win32cui)
-add_importlibs(nfsd advapi32 iphlpapi kernel32_vista libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll)
+add_importlibs(nfsd advapi32 iphlpapi libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll_vista ntdll)
 add_pch(nfsd precomp.h SOURCE)
 
 add_cd_file(TARGET nfsd DESTINATION reactos/system32 FOR all)
