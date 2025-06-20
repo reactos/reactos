@@ -26,7 +26,19 @@ typedef struct tagSHARED_DATA
 HINSTANCE g_hInstance = NULL;
 HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
-CRITICAL_SECTION g_csLock;
+HANDLE g_hMutex = NULL;
+
+static VOID EnterProtectedSection(VOID)
+{
+    g_hMutex = CreateMutex(NULL, TRUE, TEXT("INDICDLL_PROTECTED");
+}
+
+static VOID LeaveProtectedSection(VOID)
+{
+    ReleaseMutex(g_hMutex);
+    CloseHandle(g_hMutex);
+    g_hMutex = NULL;
+}
 
 static VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -119,7 +131,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
     TRACE("bDoHook: %d\n", bDoHook);
 
-    EnterCriticalSection(&g_csLock);
+    EnterProtectedSection();
     if (bDoHook)
     {
         g_pShared->hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, g_hInstance, 0);
@@ -130,7 +142,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
             g_pShared->hShellHook &&
             g_pShared->hKeyboardLLHook)
         {
-            LeaveCriticalSection(&g_csLock);
+            LeaveProtectedSection();
             return TRUE;
         }
     }
@@ -152,7 +164,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
         g_pShared->hWinHook = NULL;
     }
 
-    LeaveCriticalSection(&g_csLock);
+    LeaveProtectedSection();
     return !bDoHook;
 }
 
@@ -160,20 +172,20 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
 VOID APIENTRY
 GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
 {
-    EnterCriticalSection(&g_csLock);
+    EnterProtectedSection();
     *pnID = g_pShared->nHotID;
     *pdwItemData = g_pShared->dwHotMenuItemData;
-    LeaveCriticalSection(&g_csLock);
+    LeaveProtectedSection();
 }
 
 // indicdll!14
 VOID APIENTRY
 SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
 {
-    EnterCriticalSection(&g_csLock);
+    EnterProtectedSection();
     g_pShared->nHotID = nID;
     g_pShared->dwHotMenuItemData = dwItemData;
-    LeaveCriticalSection(&g_csLock);
+    LeaveProtectedSection();
 }
 
 BOOL WINAPI
@@ -187,8 +199,6 @@ DllMain(IN HINSTANCE hinstDLL,
         {
             TRACE("DLL_PROCESS_ATTACH\n");
             g_hInstance = hinstDLL;
-
-            InitializeCriticalSection(&g_csLock);
 
             g_hShared = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
                                           0, sizeof(SHARED_DATA), TEXT("InternatSHData"));
@@ -223,7 +233,6 @@ DllMain(IN HINSTANCE hinstDLL,
             TRACE("DLL_PROCESS_DETACH\n");
             UnmapViewOfFile(g_pShared);
             CloseHandle(g_hShared);
-            DeleteCriticalSection(&g_csLock);
             break;
         }
     }
