@@ -1267,9 +1267,9 @@ START_TEST(SHAppBarMessage)
     s_rcPrimaryMonitor = rc;
     trace("s_rcPrimaryMonitor: %ld, %ld, %ld, %ld\n", rc.left, rc.top, rc.right, rc.bottom);
 
-    if (rc.left > s_rcPrimaryMonitor.left ||
-        rc.right < s_rcPrimaryMonitor.right ||
-        rc.bottom < s_rcPrimaryMonitor.bottom)
+    if (s_rcTaskBar.left > s_rcPrimaryMonitor.left ||
+        s_rcTaskBar.right < s_rcPrimaryMonitor.right ||
+        s_rcTaskBar.bottom < s_rcPrimaryMonitor.bottom)
     {
         // Taskbar must be bottom in this testcase
         skip("Taskbar was not bottom\n");
