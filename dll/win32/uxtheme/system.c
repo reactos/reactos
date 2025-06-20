@@ -547,7 +547,7 @@ static HRESULT UXTHEME_ApplyTheme(PTHEME_FILE tf)
 		(lstrlenW(tf->szThemeFile)+1)*sizeof(WCHAR));
 #ifdef __REACTOS__
         {
-            WCHAR buf[100];
+            WCHAR buf[sizeof("4294967295")];
             UINT cch = wsprintfW(buf, L"%u", GetUserDefaultUILanguage());
             RegSetValueExW(hKey, L"LastUserLangID", 0, REG_SZ, (const BYTE*)buf, ++cch * sizeof(WCHAR));
         }
