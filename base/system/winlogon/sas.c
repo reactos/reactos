@@ -561,18 +561,18 @@ BOOL
 HandleLogon(
     IN OUT PWLSESSION Session)
 {
-    PROFILEINFOW ProfileInfo;
     BOOL ret = FALSE;
 
     /* Loading personal settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
 
-    ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
+    Session->hProfileInfo = NULL;
     if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
     {
         HKEY hKey;
         LONG lError;
         BOOL bNoPopups = FALSE;
+        PROFILEINFOW ProfileInfo;
 
         if (Session->Profile == NULL
          || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
@@ -618,17 +618,19 @@ HandleLogon(
             ERR("WL: LoadUserProfileW() failed\n");
             goto cleanup;
         }
+        Session->hProfileInfo = ProfileInfo.hProfile;
     }
 
     /* Create environment block for the user */
     if (!CreateUserEnvironment(Session))
     {
-        WARN("WL: SetUserEnvironment() failed\n");
+        WARN("WL: CreateUserEnvironment() failed\n");
         goto cleanup;
     }
 
     CallNotificationDlls(Session, LogonHandler);
 
+    /* Enable per-user settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
     UpdatePerUserSystemParameters(0, TRUE);
 
@@ -663,8 +665,6 @@ HandleLogon(
     if (!InitializeScreenSaver(Session))
         WARN("WL: Failed to initialize screen saver\n");
 
-    Session->hProfileInfo = ProfileInfo.hProfile;
-
     /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
 
@@ -683,25 +683,32 @@ cleanup:
     FreeWlxMprInfo(&Session->MprNotifyInfo);
     ZeroMemory(&Session->MprNotifyInfo, sizeof(Session->MprNotifyInfo));
 
-    if (!ret && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
-    {
-        UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
-    }
     RemoveStatusMessage(Session);
+
     if (!ret)
     {
+        if (Session->hProfileInfo)
+            UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+        Session->hProfileInfo = NULL;
+
+        /* Restore default system parameters */
+        UpdatePerUserSystemParameters(0, FALSE);
+
+        // TODO: Remove session access to window station
+        // (revert what security.c!AllowAccessOnSession() does).
         SetWindowStationUser(Session->InteractiveWindowStation,
                              &LuidNone, NULL, 0);
+
+        /* Switch back to default SYSTEM user */
         CloseHandle(Session->UserToken);
         Session->UserToken = NULL;
+        Session->LogonId = LuidNone;
     }
-
-    if (ret)
+    else // if (ret)
     {
         SwitchDesktop(Session->ApplicationDesktop);
         Session->LogonState = STATE_LOGGED_ON;
     }
-
     return ret;
 }
 
@@ -979,6 +986,7 @@ HandleLogoff(
                          &LuidNone, NULL, 0);
 
     // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
+    CallNotificationDlls(Session, LogoffHandler);
 
     // FIXME: Closing network connections!
     // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
@@ -999,14 +1007,22 @@ HandleLogoff(
 
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
-    UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+    if (Session->hProfileInfo)
+        UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+    Session->hProfileInfo = NULL;
 
-    CallNotificationDlls(Session, LogoffHandler);
-
-    CloseHandle(Session->UserToken);
+    /* Restore default system parameters */
     UpdatePerUserSystemParameters(0, FALSE);
-    Session->LogonState = STATE_LOGGED_OFF;
+
+    // TODO: Remove session access to window station
+    // (revert what security.c!AllowAccessOnSession() does).
+
+    /* Switch back to default SYSTEM user */
+    CloseHandle(Session->UserToken);
     Session->UserToken = NULL;
+    Session->LogonId = LuidNone;
+
+    Session->LogonState = STATE_LOGGED_OFF;
 
     return STATUS_SUCCESS;
 }
