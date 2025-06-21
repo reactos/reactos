@@ -49,6 +49,18 @@ elseif(${ARCH} STREQUAL "amd64")
     list(APPEND VCRT_COMMON_SOURCES
         amd64/__security_check_cookie.s
     )
+else()
+    if (MSVC AND MSVC_VERSION GREATER_EQUAL 1944) # MSVC 14.4 or newer
+        if(${ARCH} STREQUAL "arm")
+            list(APPEND VCRT_COMMON_SOURCES
+                arm/interlocked.s
+            )
+        elseif(${ARCH} STREQUAL "arm64")
+            list(APPEND VCRT_COMMON_SOURCES
+                arm64/interlocked.s
+            )
+        endif()
+    endif()
 endif()
 
 # Common between vcstartup and vcruntime
