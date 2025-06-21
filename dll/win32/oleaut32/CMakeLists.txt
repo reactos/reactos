@@ -58,7 +58,7 @@ add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)
 target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB} oldnames)
 add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
-add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
+add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 msvcrt kernel32_win7 ntdll)
 add_pch(oleaut32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(oleaut32) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

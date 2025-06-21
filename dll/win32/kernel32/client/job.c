@@ -74,28 +74,6 @@ OpenJobObjectA(IN DWORD dwDesiredAccess,
  */
 BOOL
 WINAPI
-IsProcessInJob(IN HANDLE ProcessHandle,
-               IN HANDLE JobHandle,
-               OUT PBOOL Result)
-{
-    NTSTATUS Status;
-
-    Status = NtIsProcessInJob(ProcessHandle, JobHandle);
-    if (NT_SUCCESS(Status))
-    {
-        *Result = (Status == STATUS_PROCESS_IN_JOB);
-        return TRUE;
-    }
-
-    BaseSetLastNTError(Status);
-    return FALSE;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
 AssignProcessToJobObject(IN HANDLE hJob,
                          IN HANDLE hProcess)
 {
