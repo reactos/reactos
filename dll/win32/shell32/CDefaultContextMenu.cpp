@@ -180,7 +180,7 @@ static const struct _StaticInvokeCommandMap_
     { "moveto",          FCIDM_SHVIEW_MOVETO },
 };
 
-PCSTR MapFcidmCmdToVerb(_In_ SIZE_T CmdId)
+PCSTR MapFcidmCmdToVerb(_In_ UINT_PTR CmdId)
 {
     for (SIZE_T i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
     {

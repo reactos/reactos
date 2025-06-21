@@ -2160,7 +2160,7 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lp
     {
         if (cmi.lpVerb != MAKEINTRESOURCEA(verbmap[i]))
             continue;
-        if (PCSTR pszverbA = MapFcidmCmdToVerb((SIZE_T)cmi.lpVerb))
+        if (PCSTR pszverbA = MapFcidmCmdToVerb((UINT_PTR)cmi.lpVerb))
         {
             // Map our internal commands to canonical verbs so non-shell32 menus can understand us
             SHAnsiToUnicode(pszverbA, szverbW, _countof(szverbW));

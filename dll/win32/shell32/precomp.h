@@ -206,7 +206,7 @@ DCMA_InsertMenuItems(
 HRESULT
 SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg);
 PCSTR
-MapFcidmCmdToVerb(_In_ SIZE_T CmdId);
+MapFcidmCmdToVerb(_In_ UINT_PTR CmdId);
 UINT
 MapVerbToDfmCmd(_In_ LPCSTR verba);
 UINT
