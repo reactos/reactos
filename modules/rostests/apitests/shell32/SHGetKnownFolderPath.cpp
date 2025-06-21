@@ -4,12 +4,12 @@
  * PURPOSE:     Test for SHGetKnownFolderPath
  * COPYRIGHT:   Copyright 2025 Petru Răzvan (petrurazvan@proton.me)
  */
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 #include "shelltest.h"
 #include <shlobj.h>
 #include <windows.h>
 #include <wchar.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef HRESULT (WINAPI *PSHGETKNOWNFOLDERPATH)(REFKNOWNFOLDERID, DWORD, HANDLE, PWSTR *);
 static PSHGETKNOWNFOLDERPATH pSHGetKnownFolderPath = NULL;
@@ -19,7 +19,7 @@ static BOOL PathStartsWith(PWSTR path, PWSTR base)
     int len = lstrlenW(base);
     if (len == 0)
         return FALSE;
-    return CompareStringOrdinal(path, len, base, len, TRUE) == CSTR_EQUAL;
+    return _wcsnicmp(path, base, len) == 0;
 }
 
 static PWSTR GetUserProfilePath()
@@ -146,9 +146,3 @@ START_TEST(SHGetKnownFolderPath)
 
     CoUninitialize();
 }
-#else
-START_TEST(SHGetKnownFolderPath)
-{
-
-}
-#endif
