@@ -78,6 +78,14 @@ if(ARCH STREQUAL "amd64" AND MSVC_VERSION GREATER 1922)
     add_link_options(/d2:-FH4-)
 endif()
 
+# Workaround: Newer ARM64 builds do not inline interlocked functions by default.
+# A better fix would be to implement the interlocked functions in assembly.
+# See https://devblogs.microsoft.com/cppblog/introducing-the-forceinterlockedfunctions-switch-for-arm64/
+if(ARCH STREQUAL "arm64" AND MSVC_VERSION GREATER_EQUAL 1944)
+    message(STATUS "Forcing interlocked functions to be inlined for ARM64 builds")
+    add_compile_options("/forceInterlockedFunctions-")
+endif()
+
 # Generate Warnings Level 3
 add_compile_options(/W3)
 
