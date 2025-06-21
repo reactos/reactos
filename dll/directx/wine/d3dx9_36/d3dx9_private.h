@@ -23,9 +23,7 @@
 #define __WINE_D3DX9_PRIVATE_H
 
 #include <stdint.h>
-#define NONAMELESSUNION
 #include "wine/debug.h"
-#include "wine/heap.h"
 #include "wine/rbtree.h"
 
 #define COBJMACROS
@@ -33,10 +31,50 @@
 
 #define ULONG64_MAX (~(ULONG64)0)
 
+#define FOURCC_TX_1 0x54580100
+
+#define D3DX9_FILTER_INVALID_BITS 0xff80fff8
+static inline HRESULT d3dx9_validate_filter(uint32_t filter)
+{
+    if ((filter & D3DX9_FILTER_INVALID_BITS) || !(filter & 0x7) || ((filter & 0x7) > D3DX_FILTER_BOX))
+        return D3DERR_INVALIDCALL;
+
+    return D3D_OK;
+}
+
+static inline HRESULT d3dx9_handle_load_filter(DWORD *filter)
+{
+    if (*filter == D3DX_DEFAULT)
+        *filter = D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER;
+
+    return d3dx9_validate_filter(*filter);
+}
+
 struct vec4
 {
     float x, y, z, w;
 };
+
+enum range {
+    RANGE_FULL  = 0,
+    RANGE_UNORM = 1,
+    RANGE_SNORM = 2,
+};
+
+struct d3dx_color
+{
+    struct vec4 value;
+    enum range rgb_range;
+    enum range a_range;
+};
+
+static inline void set_d3dx_color(struct d3dx_color *color, const struct vec4 *value, enum range rgb_range,
+        enum range a_range)
+{
+    color->value = *value;
+    color->rgb_range = rgb_range;
+    color->a_range = a_range;
+}
 
 struct volume
 {
@@ -45,97 +83,255 @@ struct volume
     UINT depth;
 };
 
+static inline void set_volume_struct(struct volume *volume, uint32_t width, uint32_t height, uint32_t depth)
+{
+    volume->width = width;
+    volume->height = height;
+    volume->depth = depth;
+}
+
+/* These values act as indexes into the pixel_format_desc table. */
+enum d3dx_pixel_format_id
+{
+    D3DX_PIXEL_FORMAT_B8G8R8_UNORM,
+    D3DX_PIXEL_FORMAT_B8G8R8A8_UNORM,
+    D3DX_PIXEL_FORMAT_B8G8R8X8_UNORM,
+    D3DX_PIXEL_FORMAT_R8G8B8A8_UNORM,
+    D3DX_PIXEL_FORMAT_R8G8B8X8_UNORM,
+    D3DX_PIXEL_FORMAT_B5G6R5_UNORM,
+    D3DX_PIXEL_FORMAT_B5G5R5X1_UNORM,
+    D3DX_PIXEL_FORMAT_B5G5R5A1_UNORM,
+    D3DX_PIXEL_FORMAT_B2G3R3_UNORM,
+    D3DX_PIXEL_FORMAT_B2G3R3A8_UNORM,
+    D3DX_PIXEL_FORMAT_B4G4R4A4_UNORM,
+    D3DX_PIXEL_FORMAT_B4G4R4X4_UNORM,
+    D3DX_PIXEL_FORMAT_B10G10R10A2_UNORM,
+    D3DX_PIXEL_FORMAT_R10G10B10A2_UNORM,
+    D3DX_PIXEL_FORMAT_R16G16B16_UNORM,
+    D3DX_PIXEL_FORMAT_R16G16B16A16_UNORM,
+    D3DX_PIXEL_FORMAT_R16G16_UNORM,
+    D3DX_PIXEL_FORMAT_A8_UNORM,
+    D3DX_PIXEL_FORMAT_L8A8_UNORM,
+    D3DX_PIXEL_FORMAT_L4A4_UNORM,
+    D3DX_PIXEL_FORMAT_L8_UNORM,
+    D3DX_PIXEL_FORMAT_L16_UNORM,
+    D3DX_PIXEL_FORMAT_DXT1_UNORM,
+    D3DX_PIXEL_FORMAT_DXT2_UNORM,
+    D3DX_PIXEL_FORMAT_DXT3_UNORM,
+    D3DX_PIXEL_FORMAT_DXT4_UNORM,
+    D3DX_PIXEL_FORMAT_DXT5_UNORM,
+    D3DX_PIXEL_FORMAT_R16_FLOAT,
+    D3DX_PIXEL_FORMAT_R16G16_FLOAT,
+    D3DX_PIXEL_FORMAT_R16G16B16A16_FLOAT,
+    D3DX_PIXEL_FORMAT_R32_FLOAT,
+    D3DX_PIXEL_FORMAT_R32G32_FLOAT,
+    D3DX_PIXEL_FORMAT_R32G32B32A32_FLOAT,
+    D3DX_PIXEL_FORMAT_P8_UINT,
+    D3DX_PIXEL_FORMAT_P8_UINT_A8_UNORM,
+    D3DX_PIXEL_FORMAT_U8V8W8Q8_SNORM,
+    D3DX_PIXEL_FORMAT_U16V16W16Q16_SNORM,
+    D3DX_PIXEL_FORMAT_U8V8_SNORM,
+    D3DX_PIXEL_FORMAT_U16V16_SNORM,
+    D3DX_PIXEL_FORMAT_U8V8_SNORM_L8X8_UNORM,
+    D3DX_PIXEL_FORMAT_U10V10W10_SNORM_A2_UNORM,
+    D3DX_PIXEL_FORMAT_R8G8_B8G8_UNORM,
+    D3DX_PIXEL_FORMAT_G8R8_G8B8_UNORM,
+    D3DX_PIXEL_FORMAT_UYVY,
+    D3DX_PIXEL_FORMAT_YUY2,
+    D3DX_PIXEL_FORMAT_COUNT,
+};
+
 /* for internal use */
-enum format_type {
-    FORMAT_ARGB,   /* unsigned */
-    FORMAT_ARGBF16,/* float 16 */
-    FORMAT_ARGBF,  /* float */
-    FORMAT_DXT,
-    FORMAT_INDEX,
-    FORMAT_UNKNOWN
+enum component_type
+{
+    CTYPE_EMPTY,
+    CTYPE_UNORM,
+    CTYPE_SNORM,
+    CTYPE_FLOAT,
+    CTYPE_LUMA,
+    CTYPE_INDEX,
+};
+
+enum format_flag
+{
+    FMT_FLAG_DXT  = 0x01,
+    FMT_FLAG_PACKED = 0x02,
+    /* Internal only format, has no exact D3DFORMAT equivalent. */
+    FMT_FLAG_INTERNAL = 0x04,
 };
 
 struct pixel_format_desc {
-    D3DFORMAT format;
+    enum d3dx_pixel_format_id format;
     BYTE bits[4];
     BYTE shift[4];
     UINT bytes_per_pixel;
     UINT block_width;
     UINT block_height;
     UINT block_byte_count;
-    enum format_type type;
-    void (*from_rgba)(const struct vec4 *src, struct vec4 *dst);
-    void (*to_rgba)(const struct vec4 *src, struct vec4 *dst, const PALETTEENTRY *palette);
+    enum component_type a_type;
+    enum component_type rgb_type;
+    uint32_t flags;
 };
+
+struct d3dx_pixels
+{
+    const void *data;
+    uint32_t row_pitch;
+    uint32_t slice_pitch;
+    const PALETTEENTRY *palette;
+
+    struct volume size;
+    RECT unaligned_rect;
+};
+
+static inline void set_d3dx_pixels(struct d3dx_pixels *pixels, const void *data, uint32_t row_pitch,
+        uint32_t slice_pitch, const PALETTEENTRY *palette, uint32_t width, uint32_t height, uint32_t depth,
+        const RECT *unaligned_rect)
+{
+    pixels->data = data;
+    pixels->row_pitch = row_pitch;
+    pixels->slice_pitch = slice_pitch;
+    pixels->palette = palette;
+    set_volume_struct(&pixels->size, width, height, depth);
+    pixels->unaligned_rect = *unaligned_rect;
+}
+
+#define D3DX_IMAGE_INFO_ONLY 1
+struct d3dx_image
+{
+    D3DRESOURCETYPE resource_type;
+    enum d3dx_pixel_format_id format;
+
+    struct volume size;
+    uint32_t mip_levels;
+    uint32_t layer_count;
+
+    BYTE *pixels;
+    PALETTEENTRY *palette;
+    uint32_t layer_pitch;
+
+    /*
+     * image_buf and image_palette are pointers to allocated memory used to store
+     * image data. If they are non-NULL, they need to be freed when no longer
+     * in use.
+     */
+    void *image_buf;
+    PALETTEENTRY *image_palette;
+
+    D3DXIMAGE_FILEFORMAT image_file_format;
+};
+
+HRESULT d3dx_image_init(const void *src_data, uint32_t src_data_size, struct d3dx_image *image,
+        uint32_t starting_mip_level, uint32_t flags);
+void d3dx_image_cleanup(struct d3dx_image *image);
+HRESULT d3dx_image_get_pixels(struct d3dx_image *image, uint32_t layer, uint32_t mip_level,
+        struct d3dx_pixels *pixels);
+void d3dximage_info_from_d3dx_image(D3DXIMAGE_INFO *info, struct d3dx_image *image);
 
 struct d3dx_include_from_file
 {
     ID3DXInclude ID3DXInclude_iface;
 };
 
-extern CRITICAL_SECTION from_file_mutex DECLSPEC_HIDDEN;
-extern const struct ID3DXIncludeVtbl d3dx_include_from_file_vtbl DECLSPEC_HIDDEN;
+extern CRITICAL_SECTION from_file_mutex;
+extern const struct ID3DXIncludeVtbl d3dx_include_from_file_vtbl;
+
+static inline BOOL is_unknown_format(const struct pixel_format_desc *format)
+{
+    return (format->format == D3DX_PIXEL_FORMAT_COUNT);
+}
+
+static inline BOOL is_index_format(const struct pixel_format_desc *format)
+{
+    return (format->a_type == CTYPE_INDEX || format->rgb_type == CTYPE_INDEX);
+}
+
+static inline BOOL is_compressed_format(const struct pixel_format_desc *format)
+{
+    return !!(format->flags & FMT_FLAG_DXT);
+}
+
+static inline BOOL is_packed_format(const struct pixel_format_desc *format)
+{
+    return !!(format->flags & FMT_FLAG_PACKED);
+}
+
+static inline BOOL format_types_match(const struct pixel_format_desc *src, const struct pixel_format_desc *dst)
+{
+    if ((src->a_type && dst->a_type) && (src->a_type != dst->a_type))
+        return FALSE;
+
+    if ((src->rgb_type && dst->rgb_type) && (src->rgb_type != dst->rgb_type))
+        return FALSE;
+
+    if (src->flags != dst->flags)
+        return FALSE;
+
+    return (src->rgb_type == dst->rgb_type || src->a_type == dst->a_type);
+}
+
+static inline BOOL is_internal_format(const struct pixel_format_desc *format)
+{
+    return !!(format->flags & FMT_FLAG_INTERNAL);
+}
 
 static inline BOOL is_conversion_from_supported(const struct pixel_format_desc *format)
 {
-    if (format->type == FORMAT_ARGB || format->type == FORMAT_ARGBF16
-            || format->type == FORMAT_ARGBF || format->type == FORMAT_DXT)
-        return TRUE;
-    return !!format->to_rgba;
+    return !is_packed_format(format) && !is_unknown_format(format);
 }
 
 static inline BOOL is_conversion_to_supported(const struct pixel_format_desc *format)
 {
-    if (format->type == FORMAT_ARGB || format->type == FORMAT_ARGBF16
-            || format->type == FORMAT_ARGBF || format->type == FORMAT_DXT)
-        return TRUE;
-    return !!format->from_rgba;
+    return !is_index_format(format) && !is_packed_format(format) && !is_unknown_format(format);
 }
 
-HRESULT map_view_of_file(const WCHAR *filename, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
-HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
+HRESULT map_view_of_file(const WCHAR *filename, void **buffer, DWORD *length);
+HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, void **buffer, DWORD *length);
 
-HRESULT write_buffer_to_file(const WCHAR *filename, ID3DXBuffer *buffer) DECLSPEC_HIDDEN;
+HRESULT write_buffer_to_file(const WCHAR *filename, ID3DXBuffer *buffer);
 
-const struct pixel_format_desc *get_format_info(D3DFORMAT format) DECLSPEC_HIDDEN;
-const struct pixel_format_desc *get_format_info_idx(int idx) DECLSPEC_HIDDEN;
+D3DFORMAT d3dformat_from_d3dx_pixel_format_id(enum d3dx_pixel_format_id format);
+enum d3dx_pixel_format_id d3dx_pixel_format_id_from_d3dformat(D3DFORMAT format);
+const struct pixel_format_desc *get_d3dx_pixel_format_info(enum d3dx_pixel_format_id format);
+const struct pixel_format_desc *get_format_info(D3DFORMAT format);
+const struct pixel_format_desc *get_format_info_idx(int idx);
+
+void format_to_d3dx_color(const struct pixel_format_desc *format, const BYTE *src, const PALETTEENTRY *palette,
+        struct d3dx_color *dst);
+void format_from_d3dx_color(const struct pixel_format_desc *format, const struct d3dx_color *src, BYTE *dst);
 
 void copy_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slice_pitch,
     BYTE *dst, UINT dst_row_pitch, UINT dst_slice_pitch, const struct volume *size,
-    const struct pixel_format_desc *format) DECLSPEC_HIDDEN;
+    const struct pixel_format_desc *format);
 void convert_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slice_pitch,
     const struct volume *src_size, const struct pixel_format_desc *src_format,
     BYTE *dst, UINT dst_row_pitch, UINT dst_slice_pitch, const struct volume *dst_size,
-    const struct pixel_format_desc *dst_format, D3DCOLOR color_key, const PALETTEENTRY *palette) DECLSPEC_HIDDEN;
+    const struct pixel_format_desc *dst_format, D3DCOLOR color_key, const PALETTEENTRY *palette);
 void point_filter_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slice_pitch,
     const struct volume *src_size, const struct pixel_format_desc *src_format,
     BYTE *dst, UINT dst_row_pitch, UINT dst_slice_pitch, const struct volume *dst_size,
-    const struct pixel_format_desc *dst_format, D3DCOLOR color_key, const PALETTEENTRY *palette) DECLSPEC_HIDDEN;
+    const struct pixel_format_desc *dst_format, D3DCOLOR color_key, const PALETTEENTRY *palette);
 
-HRESULT load_texture_from_dds(IDirect3DTexture9 *texture, const void *src_data, const PALETTEENTRY *palette,
-        DWORD filter, D3DCOLOR color_key, const D3DXIMAGE_INFO *src_info, unsigned int skip_levels,
-        unsigned int *loaded_miplevels) DECLSPEC_HIDDEN;
-HRESULT load_cube_texture_from_dds(IDirect3DCubeTexture9 *cube_texture, const void *src_data,
-    const PALETTEENTRY *palette, DWORD filter, D3DCOLOR color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
-HRESULT load_volume_from_dds(IDirect3DVolume9 *dst_volume, const PALETTEENTRY *dst_palette,
-    const D3DBOX *dst_box, const void *src_data, const D3DBOX *src_box, DWORD filter, D3DCOLOR color_key,
-    const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
-HRESULT load_volume_texture_from_dds(IDirect3DVolumeTexture9 *volume_texture, const void *src_data,
-    const PALETTEENTRY *palette, DWORD filter, DWORD color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
 HRESULT lock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect, D3DLOCKED_RECT *lock,
-        IDirect3DSurface9 **temp_surface, BOOL write) DECLSPEC_HIDDEN;
+        IDirect3DSurface9 **temp_surface, BOOL write);
 HRESULT unlock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect,
-        IDirect3DSurface9 *temp_surface, BOOL update) DECLSPEC_HIDDEN;
-HRESULT save_dds_texture_to_memory(ID3DXBuffer **dst_buffer, IDirect3DBaseTexture9 *src_texture,
-    const PALETTEENTRY *src_palette) DECLSPEC_HIDDEN;
+        IDirect3DSurface9 *temp_surface, BOOL update);
+HRESULT d3dx_pixels_init(const void *data, uint32_t row_pitch, uint32_t slice_pitch,
+        const PALETTEENTRY *palette, enum d3dx_pixel_format_id format, uint32_t left, uint32_t top, uint32_t right,
+        uint32_t bottom, uint32_t front, uint32_t back, struct d3dx_pixels *pixels);
+HRESULT d3dx_load_pixels_from_pixels(struct d3dx_pixels *dst_pixels,
+       const struct pixel_format_desc *dst_desc, struct d3dx_pixels *src_pixels,
+       const struct pixel_format_desc *src_desc, uint32_t filter_flags, uint32_t color_key);
+void get_aligned_rect(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom, uint32_t width, uint32_t height,
+        const struct pixel_format_desc *fmt_desc, RECT *aligned_rect);
 
-unsigned short float_32_to_16(const float in) DECLSPEC_HIDDEN;
-float float_16_to_32(const unsigned short in) DECLSPEC_HIDDEN;
+unsigned short float_32_to_16(const float in);
+float float_16_to_32(const unsigned short in);
 
 /* debug helpers */
-const char *debug_d3dxparameter_class(D3DXPARAMETER_CLASS c) DECLSPEC_HIDDEN;
-const char *debug_d3dxparameter_type(D3DXPARAMETER_TYPE t) DECLSPEC_HIDDEN;
-const char *debug_d3dxparameter_registerset(D3DXREGISTER_SET r) DECLSPEC_HIDDEN;
+const char *debug_d3dxparameter_class(D3DXPARAMETER_CLASS c);
+const char *debug_d3dxparameter_type(D3DXPARAMETER_TYPE t);
+const char *debug_d3dxparameter_registerset(D3DXREGISTER_SET r);
 
 /* parameter type conversion helpers */
 static inline BOOL get_bool(D3DXPARAMETER_TYPE type, const void *data)
@@ -231,11 +427,8 @@ static inline BOOL is_param_type_sampler(D3DXPARAMETER_TYPE type)
 /* Returns the smallest power of 2 which is greater than or equal to num */
 static inline uint32_t make_pow2(uint32_t num)
 {
-#ifndef __REACTOS__
-    uint32_t index;
-#else
-    unsigned long index;
-#endif
+    DWORD index;
+
     return BitScanReverse(&index, num - 1) ? 1u << (index + 1) : 1;
 }
 
@@ -245,6 +438,7 @@ enum pres_reg_tables
 {
     PRES_REGTAB_IMMED,
     PRES_REGTAB_CONST,
+    PRES_REGTAB_INPUT,
     PRES_REGTAB_OCONST,
     PRES_REGTAB_OBCONST,
     PRES_REGTAB_OICONST,
@@ -323,13 +517,13 @@ struct d3dx_parameter
     void *data;
     D3DXPARAMETER_CLASS class;
     D3DXPARAMETER_TYPE  type;
-    UINT rows;
-    UINT columns;
-    UINT element_count;
-    UINT member_count;
-    DWORD flags;
-    UINT bytes;
-    DWORD object_id;
+    unsigned int rows;
+    unsigned int columns;
+    unsigned int element_count;
+    unsigned int member_count;
+    uint32_t flags;
+    unsigned int bytes;
+    unsigned int object_id;
 
     struct d3dx_parameter *members;
     char *semantic;
@@ -341,7 +535,7 @@ struct d3dx_parameter
 struct d3dx_top_level_parameter
 {
     struct d3dx_parameter param;
-    UINT annotation_count;
+    unsigned int annotation_count;
     struct d3dx_parameter *annotations;
     ULONG64 update_version;
     ULONG64 *version_counter;
@@ -389,29 +583,35 @@ static inline BOOL is_param_dirty(struct d3dx_parameter *param, ULONG64 update_v
     return is_top_level_param_dirty(param->top_level_param, update_version);
 }
 
-struct d3dx_parameter *get_parameter_by_name(struct d3dx_effect *effect,
-        struct d3dx_parameter *parameter, const char *name) DECLSPEC_HIDDEN;
+struct d3dx_parameters_store
+{
+    struct wine_rb_tree tree;
+    struct d3dx_top_level_parameter *parameters;
+    unsigned int count;
 
-#ifdef __REACTOS__
-#define SET_D3D_STATE_(_manager, _device, _method, ...) ((_manager) ? (_manager)->lpVtbl->_method((_manager), __VA_ARGS__) \
-        : (_device)->lpVtbl->_method((_device), __VA_ARGS__))
-#define SET_D3D_STATE(_base_effect, _method, ...) SET_D3D_STATE_((_base_effect)->manager, (_base_effect)->device, _method, __VA_ARGS__)
-#else
-#define SET_D3D_STATE_(manager, device, method, args...) (manager ? manager->lpVtbl->method(manager, args) \
-        : device->lpVtbl->method(device, args))
-#define SET_D3D_STATE(base_effect, args...) SET_D3D_STATE_(base_effect->manager, base_effect->device, args)
-#endif
+    char *full_name_tmp;
+    unsigned int full_name_tmp_size;
+};
 
-HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code,
+HRESULT d3dx_init_parameters_store(struct d3dx_parameters_store *store, unsigned int count);
+void d3dx_parameters_store_cleanup(struct d3dx_parameters_store *store);
+struct d3dx_parameter *get_parameter_by_name(struct d3dx_parameters_store *store,
+        struct d3dx_parameter *parameter, const char *name);
+
+#define SET_D3D_STATE_(manager, device, method, ...) (manager ? manager->lpVtbl->method(manager, __VA_ARGS__) \
+        : device->lpVtbl->method(device, __VA_ARGS__))
+#define SET_D3D_STATE(base_effect, ...) SET_D3D_STATE_(base_effect->manager, base_effect->device, __VA_ARGS__)
+
+HRESULT d3dx_create_param_eval(struct d3dx_parameters_store *parameters, void *byte_code,
         unsigned int byte_code_size, D3DXPARAMETER_TYPE type,
         struct d3dx_param_eval **peval, ULONG64 *version_counter,
-        const char **skip_constants, unsigned int skip_constants_count) DECLSPEC_HIDDEN;
-void d3dx_free_param_eval(struct d3dx_param_eval *peval) DECLSPEC_HIDDEN;
+        const char **skip_constants, unsigned int skip_constants_count);
+void d3dx_free_param_eval(struct d3dx_param_eval *peval);
 HRESULT d3dx_evaluate_parameter(struct d3dx_param_eval *peval,
-        const struct d3dx_parameter *param, void *param_value) DECLSPEC_HIDDEN;
+        const struct d3dx_parameter *param, void *param_value);
 HRESULT d3dx_param_eval_set_shader_constants(ID3DXEffectStateManager *manager, struct IDirect3DDevice9 *device,
-        struct d3dx_param_eval *peval, BOOL update_all) DECLSPEC_HIDDEN;
-BOOL is_param_eval_input_dirty(struct d3dx_param_eval *peval, ULONG64 update_version) DECLSPEC_HIDDEN;
+        struct d3dx_param_eval *peval, BOOL update_all);
+BOOL is_param_eval_input_dirty(struct d3dx_param_eval *peval, ULONG64 update_version);
 
 struct ctab_constant {
     D3DXCONSTANT_DESC desc;
@@ -420,6 +620,6 @@ struct ctab_constant {
 };
 
 const struct ctab_constant *d3dx_shader_get_ctab_constant(ID3DXConstantTable *iface,
-        D3DXHANDLE constant) DECLSPEC_HIDDEN;
+        D3DXHANDLE constant);
 
 #endif /* __WINE_D3DX9_PRIVATE_H */
