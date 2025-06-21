@@ -36,7 +36,9 @@
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #endif
-
+#ifdef __REACTOS__
+#define _iob __iob_func()
+#endif
 #include "vkd3d_memory.h"
 
 #define VKD3D_DEBUG_BUFFER_COUNT 64
