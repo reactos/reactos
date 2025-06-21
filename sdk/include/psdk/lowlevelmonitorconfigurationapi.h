@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Austin English
+ * Copyright 2014 Michael Müller for Pipelight
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,11 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_FILEDESCRIPTION_STR "Wine d3dim700"
-#define WINE_FILENAME_STR "d3dim700.dll"
-#define WINE_FILEVERSION 5,3,2600,5512
-#define WINE_FILEVERSION_STR "5.3.2600.5512"
-#define WINE_PRODUCTVERSION 5,3,2600,5512
-#define WINE_PRODUCTVERSION_STR "5.3.2600.5512"
+#ifndef __WINE_LOWLEVELMONITORCONFIGURATIONAPI_H
+#define __WINE_LOWLEVELMONITORCONFIGURATIONAPI_H
 
-#include "wine/wine_common_ver.rc"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct _MC_TIMING_REPORT
+{
+    BYTE bTimingStatusByte;
+    DWORD dwHorizontalFrequencyInHZ;
+    DWORD dwVerticalFrequencyInHZ;
+} MC_TIMING_REPORT, *LPMC_TIMING_REPORT;
+
+typedef enum _MC_VCP_CODE_TYPE
+{
+    MC_MOMENTARY,
+    MC_SET_PARAMETER
+} MC_VCP_CODE_TYPE, *LPMC_VCP_CODE_TYPE;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __WINE_LOWLEVELMONITORCONFIGURATIONAPI_H */

@@ -3254,8 +3254,16 @@ static void wined3d_cs_mt_submit(struct wined3d_device_context *context, enum wi
 {
     struct wined3d_cs *cs = wined3d_cs_from_context(context);
 
+#ifdef __REACTOS__
+    if (cs->thread_id == GetCurrentThreadId())
+    {
+        wined3d_cs_st_submit(context, queue_id);
+        return;
+    }   
+#else
     if (cs->thread_id == GetCurrentThreadId())
         return wined3d_cs_st_submit(context, queue_id);
+#endif
 
     wined3d_cs_queue_submit(&cs->queue[queue_id], cs);
 }
@@ -3337,8 +3345,16 @@ static void wined3d_cs_mt_finish(struct wined3d_device_context *context, enum wi
     struct wined3d_cs *cs = wined3d_cs_from_context(context);
     unsigned int spin_count = 0;
 
+#ifdef __REACTOS__
+    if (cs->thread_id == GetCurrentThreadId())
+    {
+        wined3d_cs_st_finish(context, queue_id);
+        return;
+    }
+#else
     if (cs->thread_id == GetCurrentThreadId())
         return wined3d_cs_st_finish(context, queue_id);
+#endif
 
     TRACE_(d3d_perf)("Waiting for queue %u to be empty.\n", queue_id);
     while (cs->queue[queue_id].head != *(volatile ULONG *)&cs->queue[queue_id].tail)
@@ -3484,7 +3500,9 @@ static DWORD WINAPI wined3d_cs_run(void *ctx)
     bool run = true;
 
     TRACE("Started.\n");
+#ifndef __REACTOS__
     SetThreadDescription(GetCurrentThread(), L"wined3d_cs");
+#endif
 
     /* Copy the module handle to a local variable to avoid racing with the
      * thread freeing "cs" before the FreeLibraryAndExitThread() call. */

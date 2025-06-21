@@ -1918,6 +1918,23 @@ void vkd3d_shader_free_shader_signature(struct vkd3d_shader_signature *signature
 
 const char *vkd3d_shader_get_version(unsigned int *major, unsigned int *minor)
 {
+#ifdef __REACTOS__
+#define PACKAGE_VERSION_VKD3D "1.14"
+    int x, y;
+
+    TRACE("major %p, minor %p.\n", major, minor);
+
+    if (major || minor)
+    {
+        vkd3d_parse_version(PACKAGE_VERSION_VKD3D, &x, &y);
+        if (major)
+            *major = x;
+        if (minor)
+            *minor = y;
+    }
+
+    return "vkd3d-shader " PACKAGE_VERSION_VKD3D VKD3D_VCS_ID;
+#else
     int x, y;
 
     TRACE("major %p, minor %p.\n", major, minor);
@@ -1932,6 +1949,7 @@ const char *vkd3d_shader_get_version(unsigned int *major, unsigned int *minor)
     }
 
     return "vkd3d-shader " PACKAGE_VERSION VKD3D_VCS_ID;
+#endif
 }
 
 const enum vkd3d_shader_source_type *vkd3d_shader_get_supported_source_types(unsigned int *count)

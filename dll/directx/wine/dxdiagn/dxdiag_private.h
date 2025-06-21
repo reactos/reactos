@@ -23,6 +23,11 @@
 
 #include <stdarg.h>
 
+#ifdef __REACTOS__
+#ifndef NULL
+#define NULL 0
+#endif
+#endif
 #include "wine/list.h"
 #include "dxdiag.h"
 #include "resource.h"

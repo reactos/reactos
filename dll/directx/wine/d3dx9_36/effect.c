@@ -23,7 +23,11 @@
 
 #include "d3dx9_private.h"
 #include "d3dcompiler.h"
+#ifdef __REACTOS__
+#include <wine/winternl.h>
+#else
 #include "winternl.h"
+#endif
 #include "wine/list.h"
 
 /* Constants for special INT/FLOAT conversation */
@@ -1861,7 +1865,12 @@ static HRESULT d3dx_pool_sync_shared_parameter(struct d3dx_effect_pool *pool, st
             else
             {
                 new_size = pool->size * 2;
+#ifdef __REACTOS__
+                new_alloc = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pool->shared_data,
+                sizeof(*pool->shared_data) * new_size);
+#else
                 new_alloc = _recalloc(pool->shared_data, new_size, sizeof(*pool->shared_data));
+#endif
                 if (!new_alloc)
                     goto oom;
                 if (new_alloc != pool->shared_data)
@@ -1888,7 +1897,12 @@ static HRESULT d3dx_pool_sync_shared_parameter(struct d3dx_effect_pool *pool, st
         struct d3dx_top_level_parameter **new_alloc;
 
         new_size = pool->shared_data[i].size ? pool->shared_data[i].size * 2 : INITIAL_SHARED_DATA_SIZE;
+#ifdef __REACTOS__
+        new_alloc = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pool->shared_data[i].parameters,
+        sizeof(*pool->shared_data[i].parameters) * new_size);
+#else
         new_alloc = _recalloc(pool->shared_data[i].parameters, new_size, sizeof(*pool->shared_data[i].parameters));
+#endif
         if (!new_alloc)
             goto oom;
         pool->shared_data[i].parameters = new_alloc;

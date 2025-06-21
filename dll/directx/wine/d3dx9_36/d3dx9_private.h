@@ -29,6 +29,21 @@
 #define COBJMACROS
 #include "d3dx9.h"
 
+#ifdef __REACTOS__
+#include <float.h>
+#define fminf min
+#define fmaxf max
+                                        
+#define fmin min
+#define fmax max
+#define ssize_t size_t
+  #define isnan _isnan
+  #ifndef M_PI
+  #define M_PI (3.1415926)
+  #endif
+  int isinf(double x);
+#endif
+
 #define ULONG64_MAX (~(ULONG64)0)
 
 #define FOURCC_TX_1 0x54580100
@@ -598,9 +613,15 @@ void d3dx_parameters_store_cleanup(struct d3dx_parameters_store *store);
 struct d3dx_parameter *get_parameter_by_name(struct d3dx_parameters_store *store,
         struct d3dx_parameter *parameter, const char *name);
 
-#define SET_D3D_STATE_(manager, device, method, ...) (manager ? manager->lpVtbl->method(manager, __VA_ARGS__) \
-        : device->lpVtbl->method(device, __VA_ARGS__))
-#define SET_D3D_STATE(base_effect, ...) SET_D3D_STATE_(base_effect->manager, base_effect->device, __VA_ARGS__)
+#ifdef __REACTOS__
+#define SET_D3D_STATE_(_manager, _device, _method, ...) ((_manager) ? (_manager)->lpVtbl->_method((_manager), __VA_ARGS__) \
+        : (_device)->lpVtbl->_method((_device), __VA_ARGS__))
+#define SET_D3D_STATE(_base_effect, _method, ...) SET_D3D_STATE_((_base_effect)->manager, (_base_effect)->device, _method, __VA_ARGS__)
+#else
+#define SET_D3D_STATE_(manager, device, method, args...) (manager ? manager->lpVtbl->method(manager, args) \
+        : device->lpVtbl->method(device, args))
+#define SET_D3D_STATE(base_effect, args...) SET_D3D_STATE_(base_effect->manager, base_effect->device, args)
+#endif
 
 HRESULT d3dx_create_param_eval(struct d3dx_parameters_store *parameters, void *byte_code,
         unsigned int byte_code_size, D3DXPARAMETER_TYPE type,

@@ -22,8 +22,49 @@
 #include "devenum_private.h"
 #include "rpcproxy.h"
 #include "wine/debug.h"
+enum device_type
+{
+    DEVICE_FILTER,
+    DEVICE_CODEC,
+    DEVICE_DMO,
+};
+
+struct moniker
+{
+    IMoniker IMoniker_iface;
+    LONG ref;
+    CLSID class;
+    BOOL has_class;
+    enum device_type type;
+    WCHAR *name;    /* for filters and codecs */
+    CLSID clsid;    /* for DMOs */
+
+    IPropertyBag IPropertyBag_iface;
+};
+
+  HINSTANCE instance;
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
+
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{ 
+    TRACE("(%p %d %p)\n", hInstDLL, fdwReason, lpvReserved);
+
+    switch (fdwReason) {
+    case DLL_PROCESS_ATTACH:
+        TRACE("DLL_PROCESS_ATTACH\n");
+        instance = hInstDLL;
+        DisableThreadLibraryCalls(hInstDLL);
+        break;
+    case DLL_PROCESS_DETACH:
+        TRACE("DLL_PROCESS_DETACH\n");
+        break;
+    default:
+        TRACE("UNKNOWN REASON\n");
+        break;
+    }
+    return TRUE;
+}
 
 struct class_factory
 {
@@ -122,7 +163,7 @@ HRESULT WINAPI DllRegisterServer(void)
 
     TRACE("\n");
 
-    res = __wine_register_resources();
+    res = __wine_register_resources(instance);
     if (FAILED(res))
         return res;
 
@@ -154,5 +195,5 @@ HRESULT WINAPI DllRegisterServer(void)
 HRESULT WINAPI DllUnregisterServer(void)
 {
     FIXME("stub!\n");
-    return __wine_unregister_resources();
+    return __wine_unregister_resources(instance);
 }

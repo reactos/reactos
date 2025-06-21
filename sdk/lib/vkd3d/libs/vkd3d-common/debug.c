@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS__
 #ifdef _WIN32
 # define _WIN32_WINNT 0x0600    /* For InitOnceExecuteOnce(). */
+#endif
 #endif
 
 #include "vkd3d_common.h"

@@ -1,5 +1,11 @@
 /*
- * Copyright 2020 Austin English
+ * Direct3D wine internal private include file
+ *
+ * Copyright 2002-2003 The wine-d3d team
+ * Copyright 2002-2003 Raphael Junqueira
+ * Copyright 2002-2003, 2004 Jason Edmeades
+ * Copyright 2005 Oliver Stieber
+ * Copyright 2006-2011, 2013 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,11 +22,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_FILEDESCRIPTION_STR "Wine d3d8thk"
-#define WINE_FILENAME_STR "d3d8thk.dll"
-#define WINE_FILEVERSION 5,3,2600,5512
-#define WINE_FILEVERSION_STR "5.3.2600.5512"
-#define WINE_PRODUCTVERSION 5,3,2600,5512
-#define WINE_PRODUCTVERSION_STR "5.3.2600.5512"
-
-#include "wine/wine_common_ver.rc"
+ #ifndef __WINE_WINED3D_PRECOMP_H
+ #define __WINE_WINED3D_PRECOMP_H
+ 
+ #include <wine/config.h>
+ #include <wine/port.h>
+ 
+ #ifdef HAVE_FLOAT_H
+ # include <float.h>
+ #endif
+ 
+ #include <stdio.h>
+ 
+ #define _INC_WINDOWS
+ #define COM_NO_WINDOWS_H
+ 
+ #include "wined3d_private.h"
+ 
+ #include <reactos/undocuser.h>
+ 
+ #endif /* !__WINE_WINED3D_PRECOMP_H */
+ 

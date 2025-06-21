@@ -21,7 +21,11 @@
 #include "d3dx10.h"
 #include "d3dcompiler.h"
 #include "dxhelpers.h"
+#ifdef __REACTOS__
+#include "wine/winternl.h"
+#else
 #include "winternl.h"
+#endif
 
 #include "wine/debug.h"
 #include "wine/list.h"

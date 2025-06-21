@@ -1,0 +1,3 @@
+#include "version.rc"
+
+1 WINE_REGISTRY ddraw_classes.rgs

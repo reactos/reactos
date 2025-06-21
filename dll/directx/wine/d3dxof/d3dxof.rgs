@@ -1,0 +1,13 @@
+HKCR
+{
+    NoRemove Interface
+    {
+    }
+    NoRemove CLSID
+    {
+        '{4516EC43-8F20-11D0-9B6D-0000C0781BC3}' = s 'DirectX File'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+    }
+}

@@ -20,6 +20,21 @@
 
 %code requires
 {
+#define _S_IEXEC  0x0040
+#define _S_IWRITE 0x0080
+#define _S_IREAD  0x0100
+#define _S_IFIFO  0x1000
+#define _S_IFCHR  0x2000
+#define _S_IFDIR  0x4000
+#define _S_IFREG  0x8000
+#define _S_IFMT   0xF000
+#define S_IFMT   _S_IFMT
+#define S_IFDIR  _S_IFDIR
+#define S_IFCHR  _S_IFCHR
+#define S_IFREG  _S_IFREG
+#define S_IREAD  _S_IREAD
+#define S_IWRITE _S_IWRITE
+#define S_IEXEC  _S_IEXEC
 
 #include "vkd3d_shader_private.h"
 #include "preproc.h"
@@ -157,7 +172,11 @@ static int default_open_include(const char *filename, bool local,
 {
     uint8_t *data, *new_data;
     size_t size = 4096;
+#ifdef __REACTOS__
+    struct _stat st;
+#else
     struct stat st;
+#endif
     size_t pos = 0;
     size_t ret;
     FILE *f;
@@ -167,8 +186,11 @@ static int default_open_include(const char *filename, bool local,
         ERR("Unable to open %s for reading.\n", debugstr_a(filename));
         return VKD3D_ERROR;
     }
-
+#ifdef __REACTOS__
+    if (_fstat(_fileno(f), &st) == -1)
+#else
     if (fstat(fileno(f), &st) == -1)
+#endif
     {
         ERR("Could not stat file %s.\n", debugstr_a(filename));
         fclose(f);
