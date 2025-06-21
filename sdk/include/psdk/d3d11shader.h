@@ -21,6 +21,21 @@
 
 #include "d3dcommon.h"
 
+/* If not defined set d3dcompiler_47 by default. */
+#ifndef D3D_COMPILER_VERSION
+#define D3D_COMPILER_VERSION 47
+#endif
+
+#define D3D_SHADER_REQUIRES_DOUBLES                         0x00000001
+#define D3D_SHADER_REQUIRES_EARLY_DEPTH_STENCIL             0x00000002
+#define D3D_SHADER_REQUIRES_UAVS_AT_EVERY_STAGE             0x00000004
+#define D3D_SHADER_REQUIRES_64_UAVS                         0x00000008
+#define D3D_SHADER_REQUIRES_MINIMUM_PRECISION               0x00000010
+#define D3D_SHADER_REQUIRES_11_1_DOUBLE_EXTENSIONS          0x00000020
+#define D3D_SHADER_REQUIRES_11_1_SHADER_EXTENSIONS          0x00000040
+#define D3D_SHADER_REQUIRES_LEVEL_9_COMPARISON_FILTERING    0x00000080
+#define D3D_SHADER_REQUIRES_TILED_RESOURCES                 0x00000100
+
 /* These are defined as version-neutral in d3dcommon.h */
 typedef D3D_CBUFFER_TYPE D3D11_CBUFFER_TYPE;
 
@@ -130,6 +145,9 @@ typedef struct _D3D11_SIGNATURE_PARAMETER_DESC
     BYTE Mask;
     BYTE ReadWriteMask;
     UINT Stream;
+#if D3D_COMPILER_VERSION >= 46
+    D3D_MIN_PRECISION MinPrecision;
+#endif
 } D3D11_SIGNATURE_PARAMETER_DESC;
 
 DEFINE_GUID(IID_ID3D11ShaderReflectionType, 0x6e6ffa6a, 0x9bae, 0x4613, 0xa5, 0x1e, 0x91, 0x65, 0x2d, 0x50, 0x8c, 0x21);
@@ -174,7 +192,13 @@ DECLARE_INTERFACE(ID3D11ShaderReflectionConstantBuffer)
 };
 #undef INTERFACE
 
+#if D3D_COMPILER_VERSION <= 42
+DEFINE_GUID(IID_ID3D11ShaderReflection, 0x17f27486, 0xa342, 0x4d10, 0x88, 0x42, 0xab, 0x08, 0x74, 0xe7, 0xf6, 0x70);
+#elif D3D_COMPILER_VERSION == 43
 DEFINE_GUID(IID_ID3D11ShaderReflection, 0x0a233719, 0x3960, 0x4578, 0x9d, 0x7c, 0x20, 0x3b, 0x8b, 0x1d, 0x9c, 0xc1);
+#else
+DEFINE_GUID(IID_ID3D11ShaderReflection, 0x8d536ca1, 0x0cca, 0x4956, 0xa8, 0x37, 0x78, 0x69, 0x63, 0x75, 0x55, 0x84);
+#endif
 
 #define INTERFACE ID3D11ShaderReflection
 DECLARE_INTERFACE_(ID3D11ShaderReflection, IUnknown)
@@ -203,6 +227,63 @@ DECLARE_INTERFACE_(ID3D11ShaderReflection, IUnknown)
     STDMETHOD(GetMinFeatureLevel)(THIS_ enum D3D_FEATURE_LEVEL *level) PURE;
     STDMETHOD_(UINT, GetThreadGroupSize)(THIS_ UINT *sizex, UINT *sizey, UINT *sizez) PURE;
     STDMETHOD_(UINT64, GetRequiresFlags)(THIS) PURE;
+};
+#undef INTERFACE
+
+DEFINE_GUID(IID_ID3D11ModuleInstance, 0x469e07f7, 0x45a, 0x48d5, 0xaa, 0x12, 0x68, 0xa4, 0x78, 0xcd, 0xf7, 0x5d);
+
+#define INTERFACE ID3D11ModuleInstance
+DECLARE_INTERFACE_(ID3D11ModuleInstance, IUnknown)
+{
+    STDMETHOD(QueryInterface)(THIS_ REFIID iid, void **out) PURE;
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+    /* ID3D11ModuleInstance methods */
+    STDMETHOD(BindConstantBuffer)(THIS_ UINT srcslot, UINT dstslot, UINT dstoffset) PURE;
+    STDMETHOD(BindConstantBufferByName)(THIS_ const char *name, UINT dstslot, UINT dstoffset) PURE;
+
+    STDMETHOD(BindResource)(THIS_ UINT srcslot, UINT dstslot, UINT count) PURE;
+    STDMETHOD(BindResourceByName)(THIS_ const char *name, UINT dstslot, UINT count) PURE;
+
+    STDMETHOD(BindSampler)(THIS_ UINT srcslot,  UINT dstslot,  UINT count) PURE;
+    STDMETHOD(BindSamplerByName)(THIS_ const char *name,  UINT dstslot, UINT count) PURE;
+
+    STDMETHOD(BindUnorderedAccessView)(THIS_ UINT srcslot,  UINT dstslot, UINT count) PURE;
+    STDMETHOD(BindUnorderedAccessViewByName)(THIS_ const char *name, UINT dstslot, UINT count) PURE;
+
+    STDMETHOD(BindResourceAsUnorderedAccessView)(THIS_ UINT srcslot, UINT dstslot, UINT count) PURE;
+    STDMETHOD(BindResourceAsUnorderedAccessViewByName)(THIS_ const char *name, UINT dstslot, UINT count) PURE;
+};
+#undef INTERFACE
+
+DEFINE_GUID(IID_ID3D11Module, 0xcac701ee, 0x80fc, 0x4122, 0x82, 0x42, 0x10, 0xb3, 0x9c, 0x8c, 0xec, 0x34);
+
+#define INTERFACE ID3D11Module
+DECLARE_INTERFACE_(ID3D11Module, IUnknown)
+{
+    STDMETHOD(QueryInterface)(THIS_ REFIID iid, void **out) PURE;
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+    /* ID3D11Module methods */
+    STDMETHOD(CreateInstance)(THIS_ const char *instnamespace, ID3D11ModuleInstance **moduleinstance) PURE;
+};
+#undef INTERFACE
+
+DEFINE_GUID(IID_ID3D11Linker, 0x59a6cd0e, 0xe10d, 0x4c1f, 0x88, 0xc0, 0x63, 0xab, 0xa1, 0xda, 0xf3, 0x0e);
+
+#define INTERFACE ID3D11Linker
+DECLARE_INTERFACE_(ID3D11Linker, IUnknown)
+{
+    STDMETHOD(QueryInterface)(THIS_ REFIID iid, void **out) PURE;
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+    /* ID3D11Linker methods */
+    STDMETHOD(Link)(THIS_ ID3D11ModuleInstance *instance, LPCSTR instname, LPCSTR targetname, UINT flags, ID3DBlob **shader, ID3DBlob **error) PURE;
+    STDMETHOD(UseLibrary)(THIS_ ID3D11ModuleInstance *libinstance) PURE;
+    STDMETHOD(AddClipPlaneFromCBuffer)(THIS_ UINT bufferslot, UINT bufferentry) PURE;
 };
 #undef INTERFACE
 

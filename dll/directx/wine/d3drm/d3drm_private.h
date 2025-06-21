@@ -21,8 +21,6 @@
 #ifndef __D3DRM_PRIVATE_INCLUDED__
 #define __D3DRM_PRIVATE_INCLUDED__
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #define COBJMACROS
 #include <assert.h>
 #include <math.h>
@@ -30,7 +28,6 @@
 #include "d3drmwin.h"
 #include "rmxfguid.h"
 #include "wine/debug.h"
-#include "wine/heap.h"
 #include "wine/list.h"
 
 struct d3drm_matrix
@@ -64,6 +61,13 @@ struct d3drm_texture
     IDirect3DRM *d3drm;
     D3DRMIMAGE *image;
     IDirectDrawSurface *surface;
+    LONG decal_x;
+    LONG decal_y;
+    DWORD max_colors;
+    DWORD max_shades;
+    BOOL transparency;
+    D3DVALUE decal_width;
+    D3DVALUE decal_height;
 };
 
 struct d3drm_frame
@@ -165,6 +169,7 @@ struct d3drm_mesh_builder
     DWORD nb_materials;
     struct mesh_material *materials;
     DWORD *material_indices;
+    D3DRMRENDERQUALITY quality;
 };
 
 struct mesh_group
@@ -265,39 +270,39 @@ struct d3drm_wrap
     LONG ref;
 };
 
-HRESULT d3drm_device_create(struct d3drm_device **device, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
+HRESULT d3drm_device_create(struct d3drm_device **device, IDirect3DRM *d3drm);
 HRESULT d3drm_device_create_surfaces_from_clipper(struct d3drm_device *object, IDirectDraw *ddraw,
-        IDirectDrawClipper *clipper, int width, int height, IDirectDrawSurface **surface) DECLSPEC_HIDDEN;
-void d3drm_device_destroy(struct d3drm_device *device) DECLSPEC_HIDDEN;
+        IDirectDrawClipper *clipper, int width, int height, IDirectDrawSurface **surface);
+void d3drm_device_destroy(struct d3drm_device *device);
 HRESULT d3drm_device_init(struct d3drm_device *device, UINT version, IDirectDraw *ddraw,
-        IDirectDrawSurface *surface, BOOL create_z_surface) DECLSPEC_HIDDEN;
+        IDirectDrawSurface *surface, BOOL create_z_surface);
 
-void d3drm_object_init(struct d3drm_object *object, const char *classname) DECLSPEC_HIDDEN;
-HRESULT d3drm_object_add_destroy_callback(struct d3drm_object *object, D3DRMOBJECTCALLBACK cb, void *ctx) DECLSPEC_HIDDEN;
-HRESULT d3drm_object_delete_destroy_callback(struct d3drm_object *object, D3DRMOBJECTCALLBACK cb, void *ctx) DECLSPEC_HIDDEN;
-HRESULT d3drm_object_get_class_name(struct d3drm_object *object, DWORD *size, char *name) DECLSPEC_HIDDEN;
-HRESULT d3drm_object_get_name(struct d3drm_object *object, DWORD *size, char *name) DECLSPEC_HIDDEN;
-HRESULT d3drm_object_set_name(struct d3drm_object *object, const char *name) DECLSPEC_HIDDEN;
-void d3drm_object_cleanup(IDirect3DRMObject *iface, struct d3drm_object *object) DECLSPEC_HIDDEN;
+void d3drm_object_init(struct d3drm_object *object, const char *classname);
+HRESULT d3drm_object_add_destroy_callback(struct d3drm_object *object, D3DRMOBJECTCALLBACK cb, void *ctx);
+HRESULT d3drm_object_delete_destroy_callback(struct d3drm_object *object, D3DRMOBJECTCALLBACK cb, void *ctx);
+HRESULT d3drm_object_get_class_name(struct d3drm_object *object, DWORD *size, char *name);
+HRESULT d3drm_object_get_name(struct d3drm_object *object, DWORD *size, char *name);
+HRESULT d3drm_object_set_name(struct d3drm_object *object, const char *name);
+void d3drm_object_cleanup(IDirect3DRMObject *iface, struct d3drm_object *object);
 
-struct d3drm_frame *unsafe_impl_from_IDirect3DRMFrame(IDirect3DRMFrame *iface) DECLSPEC_HIDDEN;
-struct d3drm_frame *unsafe_impl_from_IDirect3DRMFrame3(IDirect3DRMFrame3 *iface) DECLSPEC_HIDDEN;
+struct d3drm_frame *unsafe_impl_from_IDirect3DRMFrame(IDirect3DRMFrame *iface);
+struct d3drm_frame *unsafe_impl_from_IDirect3DRMFrame3(IDirect3DRMFrame3 *iface);
 
-struct d3drm_device *unsafe_impl_from_IDirect3DRMDevice3(IDirect3DRMDevice3 *iface) DECLSPEC_HIDDEN;
+struct d3drm_device *unsafe_impl_from_IDirect3DRMDevice3(IDirect3DRMDevice3 *iface);
 
-HRESULT d3drm_texture_create(struct d3drm_texture **texture, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_frame_create(struct d3drm_frame **frame, IUnknown *parent_frame, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_face_create(struct d3drm_face **face) DECLSPEC_HIDDEN;
-HRESULT d3drm_viewport_create(struct d3drm_viewport **viewport, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_mesh_builder_create(struct d3drm_mesh_builder **mesh_builder, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_light_create(struct d3drm_light **light, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_material_create(struct d3drm_material **material, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_mesh_create(struct d3drm_mesh **mesh, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_animation_create(struct d3drm_animation **animation, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
-HRESULT d3drm_wrap_create(struct d3drm_wrap **wrap, IDirect3DRM *d3drm) DECLSPEC_HIDDEN;
+HRESULT d3drm_texture_create(struct d3drm_texture **texture, IDirect3DRM *d3drm);
+HRESULT d3drm_frame_create(struct d3drm_frame **frame, IUnknown *parent_frame, IDirect3DRM *d3drm);
+HRESULT d3drm_face_create(struct d3drm_face **face);
+HRESULT d3drm_viewport_create(struct d3drm_viewport **viewport, IDirect3DRM *d3drm);
+HRESULT d3drm_mesh_builder_create(struct d3drm_mesh_builder **mesh_builder, IDirect3DRM *d3drm);
+HRESULT d3drm_light_create(struct d3drm_light **light, IDirect3DRM *d3drm);
+HRESULT d3drm_material_create(struct d3drm_material **material, IDirect3DRM *d3drm);
+HRESULT d3drm_mesh_create(struct d3drm_mesh **mesh, IDirect3DRM *d3drm);
+HRESULT d3drm_animation_create(struct d3drm_animation **animation, IDirect3DRM *d3drm);
+HRESULT d3drm_wrap_create(struct d3drm_wrap **wrap, IDirect3DRM *d3drm);
 
 HRESULT load_mesh_data(IDirect3DRMMeshBuilder3 *iface, IDirectXFileData *data,
-                       D3DRMLOADTEXTURECALLBACK load_texture_proc, void *arg) DECLSPEC_HIDDEN;
+                       D3DRMLOADTEXTURECALLBACK load_texture_proc, void *arg);
 
 struct d3drm_file_header
 {
@@ -306,7 +311,7 @@ struct d3drm_file_header
     DWORD flags;
 };
 
-extern char templates[] DECLSPEC_HIDDEN;
+extern char templates[];
 
 static inline BYTE d3drm_color_component(float c)
 {
@@ -323,6 +328,6 @@ static inline void d3drm_set_color(D3DCOLOR *color, float r, float g, float b, f
             d3drm_color_component(b), d3drm_color_component(a));
 }
 
-BOOL d3drm_array_reserve(void **elements, SIZE_T *capacity, SIZE_T element_count, SIZE_T element_size) DECLSPEC_HIDDEN;
+BOOL d3drm_array_reserve(void **elements, SIZE_T *capacity, SIZE_T element_count, SIZE_T element_size);
 
 #endif /* __D3DRM_PRIVATE_INCLUDED__ */

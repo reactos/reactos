@@ -23,7 +23,8 @@
 #include <stdarg.h>
 
 #define COBJMACROS
-
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
 #include "wtypes.h"
@@ -31,9 +32,11 @@
 #include "winuser.h"
 #include "dshow.h"
 #include "qedit.h"
+#include "wine/strmbase.h"
 
-HRESULT AMTimeline_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT MediaDet_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT SampleGrabber_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+HRESULT timeline_create(IUnknown *outer, IUnknown **out);
+HRESULT media_detector_create(IUnknown *outer, IUnknown **out);
+HRESULT null_renderer_create(IUnknown *outer, IUnknown **out);
+HRESULT sample_grabber_create(IUnknown *outer, IUnknown **out);
 
 #endif /* __QEDIT_PRIVATE_INCLUDED__ */

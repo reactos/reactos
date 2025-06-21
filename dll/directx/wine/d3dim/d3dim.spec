@@ -1,0 +1,13 @@
+@ stub D3DFree
+@ stub D3DMalloc
+@ stub D3DRealloc
+@ stub Direct3DCreate
+@ stub Direct3DCreateDevice
+@ stub Direct3DCreateTexture
+@ stub Direct3DGetSWRastZPixFmts
+@ stub Direct3D_HALCleanUp
+@ stub FlushD3DDevices2
+@ stub FlushD3DDevices
+@ stub PaletteAssociateNotify
+@ stub PaletteUpdateNotify
+@ stub SurfaceFlipNotify

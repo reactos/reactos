@@ -22,8 +22,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
@@ -43,7 +41,7 @@ static void dump_wined3d_vertex_element(const struct wined3d_vertex_element *ele
 
 ULONG CDECL wined3d_vertex_declaration_incref(struct wined3d_vertex_declaration *declaration)
 {
-    ULONG refcount = InterlockedIncrement(&declaration->ref);
+    unsigned int refcount = InterlockedIncrement(&declaration->ref);
 
     TRACE("%p increasing refcount to %u.\n", declaration, refcount);
 
@@ -54,21 +52,25 @@ static void wined3d_vertex_declaration_destroy_object(void *object)
 {
     struct wined3d_vertex_declaration *declaration = object;
 
-    heap_free(declaration->elements);
-    heap_free(declaration);
+    TRACE("declaration %p.\n", declaration);
+
+    free(declaration->elements);
+    free(declaration);
 }
 
 ULONG CDECL wined3d_vertex_declaration_decref(struct wined3d_vertex_declaration *declaration)
 {
-    ULONG refcount = InterlockedDecrement(&declaration->ref);
+    unsigned int refcount = InterlockedDecrement(&declaration->ref);
 
     TRACE("%p decreasing refcount to %u.\n", declaration, refcount);
 
     if (!refcount)
     {
+        wined3d_mutex_lock();
         declaration->parent_ops->wined3d_object_destroyed(declaration->parent);
         wined3d_cs_destroy_object(declaration->device->cs,
                 wined3d_vertex_declaration_destroy_object, declaration);
+        wined3d_mutex_unlock();
     }
 
     return refcount;
@@ -114,15 +116,6 @@ static BOOL declaration_element_valid_ffp(const struct wined3d_vertex_element *e
                 case WINED3DFMT_R16G16B16A16_SINT:
                 case WINED3DFMT_R16G16_FLOAT:
                 case WINED3DFMT_R16G16B16A16_FLOAT:
-                    return TRUE;
-                default:
-                    return FALSE;
-            }
-
-        case WINED3D_DECL_USAGE_BLEND_INDICES:
-            switch(element->format)
-            {
-                case WINED3DFMT_R8G8B8A8_UINT:
                     return TRUE;
                 default:
                     return FALSE;
@@ -182,7 +175,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         struct wined3d_device *device, const struct wined3d_vertex_element *elements, UINT element_count,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_adapter *adapter = device->adapter;
     unsigned int i;
 
     if (TRACE_ON(d3d_decl))
@@ -197,7 +190,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
     declaration->parent = parent;
     declaration->parent_ops = parent_ops;
     declaration->device = device;
-    if (!(declaration->elements = heap_calloc(element_count, sizeof(*declaration->elements))))
+    if (!(declaration->elements = calloc(element_count, sizeof(*declaration->elements))))
     {
         ERR("Failed to allocate elements memory.\n");
         return E_OUTOFMEMORY;
@@ -209,8 +202,9 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
     for (i = 0; i < element_count; ++i)
     {
         struct wined3d_vertex_declaration_element *e = &declaration->elements[i];
+        unsigned int alignment;
 
-        e->format = wined3d_get_format(gl_info, elements[i].format, 0);
+        e->format = wined3d_get_format(adapter, elements[i].format, 0);
         e->ffp_valid = declaration_element_valid_ffp(&elements[i]);
         e->input_slot = elements[i].input_slot;
         e->offset = elements[i].offset;
@@ -221,19 +215,33 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         e->usage = elements[i].usage;
         e->usage_idx = elements[i].usage_idx;
 
+        if ((alignment = e->format->byte_count) > 4)
+            alignment = 4;
+
         if (e->usage == WINED3D_DECL_USAGE_POSITIONT)
-            declaration->position_transformed = TRUE;
+            declaration->position_transformed = true;
+        else if (e->usage == WINED3D_DECL_USAGE_PSIZE)
+            declaration->point_size = true;
+        else if (e->usage == WINED3D_DECL_USAGE_COLOR && !e->usage_idx)
+            declaration->diffuse = true;
+        else if (e->usage == WINED3D_DECL_USAGE_COLOR && e->usage_idx == 1)
+            declaration->specular = true;
+        else if (e->usage == WINED3D_DECL_USAGE_NORMAL)
+            declaration->normal = true;
+        else if (e->usage == WINED3D_DECL_USAGE_TEXCOORD)
+            declaration->texcoords |= (1u << e->usage_idx);
 
         /* Find the streams used in the declaration. The vertex buffers have
-         * to be loaded when drawing, but filter tesselation pseudo streams. */
-        if (e->input_slot >= MAX_STREAMS) continue;
+         * to be loaded when drawing, but filter tessellation pseudo streams. */
+        if (e->input_slot >= WINED3D_MAX_STREAMS)
+            continue;
 
-        if (!e->format->gl_vtx_format)
+        if (!(e->format->caps[WINED3D_GL_RES_TYPE_BUFFER] & WINED3D_FORMAT_CAP_VERTEX_ATTRIBUTE))
         {
-            FIXME("The application tries to use an unsupported format (%s), returning E_FAIL.\n",
+            FIXME("The application tries to use an unsupported format (%s).\n",
                     debug_d3dformat(elements[i].format));
-            heap_free(declaration->elements);
-            return E_FAIL;
+            free(declaration->elements);
+            return E_INVALIDARG;
         }
 
         if (e->offset == WINED3D_APPEND_ALIGNED_ELEMENT)
@@ -247,22 +255,18 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
                 prev = &declaration->elements[i - j];
                 if (prev->input_slot == e->input_slot)
                 {
-                    e->offset = (prev->offset + prev->format->byte_count + 3) & ~3;
+                    e->offset = (prev->offset + prev->format->byte_count + alignment - 1) & ~(alignment - 1);
                     break;
                 }
             }
         }
 
-        if (e->offset & 0x3)
+        if (e->offset & (alignment - 1))
         {
-            WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL.\n", i, e->offset);
-            heap_free(declaration->elements);
-            return E_FAIL;
-        }
-
-        if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
-        {
-            if (!gl_info->supported[ARB_HALF_FLOAT_VERTEX]) declaration->half_float_conv_needed = TRUE;
+            WARN("Declaration element %u with format %s and offset %u is not %u byte aligned.\n",
+                    i, debug_d3dformat(elements[i].format), e->offset, alignment);
+            free(declaration->elements);
+            return E_INVALIDARG;
         }
     }
 
@@ -279,14 +283,14 @@ HRESULT CDECL wined3d_vertex_declaration_create(struct wined3d_device *device,
     TRACE("device %p, elements %p, element_count %u, parent %p, parent_ops %p, declaration %p.\n",
             device, elements, element_count, parent, parent_ops, declaration);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     hr = vertexdeclaration_init(object, device, elements, element_count, parent, parent_ops);
     if (FAILED(hr))
     {
-        WARN("Failed to initialize vertex declaration, hr %#x.\n", hr);
-        heap_free(object);
+        WARN("Failed to initialize vertex declaration, hr %#lx.\n", hr);
+        free(object);
         return hr;
     }
 
@@ -298,10 +302,10 @@ HRESULT CDECL wined3d_vertex_declaration_create(struct wined3d_device *device,
 
 struct wined3d_fvf_convert_state
 {
-    const struct wined3d_gl_info *gl_info;
+    const struct wined3d_adapter *adapter;
     struct wined3d_vertex_element *elements;
-    UINT offset;
-    UINT idx;
+    unsigned int offset;
+    unsigned int idx;
 };
 
 static void append_decl_element(struct wined3d_fvf_convert_state *state,
@@ -322,13 +326,13 @@ static void append_decl_element(struct wined3d_fvf_convert_state *state,
     elements[idx].usage = usage;
     elements[idx].usage_idx = usage_idx;
 
-    format = wined3d_get_format(state->gl_info, format_id, 0);
-    state->offset += format->attribute_size;
+    format = wined3d_get_format(state->adapter, format_id, 0);
+    state->offset += format->byte_count;
     ++state->idx;
 }
 
-static unsigned int convert_fvf_to_declaration(const struct wined3d_gl_info *gl_info,
-        DWORD fvf, struct wined3d_vertex_element **elements)
+static unsigned int convert_fvf_to_declaration(const struct wined3d_adapter *adapter,
+        uint32_t fvf, struct wined3d_vertex_element **elements)
 {
     BOOL has_pos = !!(fvf & WINED3DFVF_POSITION_MASK);
     BOOL has_blend = (fvf & WINED3DFVF_XYZB5) > WINED3DFVF_XYZRHW;
@@ -341,20 +345,20 @@ static unsigned int convert_fvf_to_declaration(const struct wined3d_gl_info *gl_
     BOOL has_diffuse = !!(fvf & WINED3DFVF_DIFFUSE);
     BOOL has_specular = !!(fvf & WINED3DFVF_SPECULAR);
 
-    DWORD num_textures = (fvf & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
-    DWORD texcoords = (fvf & 0xffff0000) >> 16;
+    unsigned int num_textures = (fvf & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
+    unsigned int texcoords = (fvf & 0xffff0000) >> 16;
     struct wined3d_fvf_convert_state state;
     unsigned int size;
     unsigned int idx;
-    DWORD num_blends = 1 + (((fvf & WINED3DFVF_XYZB5) - WINED3DFVF_XYZB1) >> 1);
+    unsigned int num_blends = 1 + (((fvf & WINED3DFVF_XYZB5) - WINED3DFVF_XYZB1) >> 1);
     if (has_blend_idx) num_blends--;
 
     /* Compute declaration size */
     size = has_pos + (has_blend && num_blends > 0) + has_blend_idx + has_normal +
            has_psize + has_diffuse + has_specular + num_textures;
 
-    state.gl_info = gl_info;
-    if (!(state.elements = heap_calloc(size, sizeof(*state.elements))))
+    state.adapter = adapter;
+    if (!(state.elements = calloc(size, sizeof(*state.elements))))
         return ~0u;
     state.offset = 0;
     state.idx = 0;
@@ -439,7 +443,7 @@ static unsigned int convert_fvf_to_declaration(const struct wined3d_gl_info *gl_
 }
 
 HRESULT CDECL wined3d_vertex_declaration_create_from_fvf(struct wined3d_device *device,
-        DWORD fvf, void *parent, const struct wined3d_parent_ops *parent_ops,
+        uint32_t fvf, void *parent, const struct wined3d_parent_ops *parent_ops,
         struct wined3d_vertex_declaration **declaration)
 {
     struct wined3d_vertex_element *elements;
@@ -449,10 +453,11 @@ HRESULT CDECL wined3d_vertex_declaration_create_from_fvf(struct wined3d_device *
     TRACE("device %p, fvf %#x, parent %p, parent_ops %p, declaration %p.\n",
             device, fvf, parent, parent_ops, declaration);
 
-    size = convert_fvf_to_declaration(&device->adapter->gl_info, fvf, &elements);
-    if (size == ~0U) return E_OUTOFMEMORY;
+    size = convert_fvf_to_declaration(device->adapter, fvf, &elements);
+    if (size == ~0u)
+        return E_OUTOFMEMORY;
 
     hr = wined3d_vertex_declaration_create(device, elements, size, parent, parent_ops, declaration);
-    heap_free(elements);
+    free(elements);
     return hr;
 }
