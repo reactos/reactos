@@ -2624,7 +2624,7 @@ HRESULT wined3d_output_get_gamma_ramp(struct wined3d_output *output, struct wine
 #endif
 
 #ifdef _WIN64
-#define MAX_PERSISTENT_MAPPED_BYTES I64_MAX
+#define MAX_PERSISTENT_MAPPED_BYTES  0xffffffffffffffff
 #else
 #define MAX_PERSISTENT_MAPPED_BYTES (128 * 1024 * 1024)
 #endif
