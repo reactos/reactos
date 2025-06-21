@@ -473,7 +473,9 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             wined3d_settings.ffp_hlsl = tmpvalue;
         }
     }
-
+#ifdef WINE_DDRAW_SW
+    wined3d_settings.renderer = WINED3D_RENDERER_NO3D;
+#endif
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
 
