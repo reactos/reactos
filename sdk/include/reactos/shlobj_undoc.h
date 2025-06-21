@@ -47,6 +47,39 @@ struct persistState
 	ULONG									pidlSize;
 };
 
+/****************************************************************************
+ * IShellView/IShellBrowser/CabinetWClass WM_COMMAND identifiers
+ */
+#define FCIDM_SHVIEW_CREATELINK         0x7010
+#define FCIDM_SHVIEW_DELETE             0x7011
+#define FCIDM_SHVIEW_RENAME             0x7012
+#define FCIDM_SHVIEW_PROPERTIES         0x7013
+#define FCIDM_SHVIEW_CUT                0x7018
+#define FCIDM_SHVIEW_COPY               0x7019
+#define FCIDM_SHVIEW_INSERT             0x701A
+#define FCIDM_SHVIEW_UNDO               0x701B
+#define FCIDM_SHVIEW_INSERTLINK         0x701C
+#define FCIDM_SHVIEW_COPYTO             0x701E
+#define FCIDM_SHVIEW_MOVETO             0x701F
+#define FCIDM_SHVIEW_SELECTALL          0x7021
+#define FCIDM_SHVIEW_INVERTSELECTION    0x7022
+#define FCIDM_SHVIEW_DESELECTALL        0x7023
+#define FCIDM_SHVIEW_ARRANGE_AUTO       0x7051 // IShellFolderView::AutoArrange
+#define FCIDM_SHVIEW_ARRANGE_GRID       0x7052 // IShellFolderView::ArrangeGrid => LVA_SNAPTOGRID
+#define FCIDM_SHVIEW_SHOWDESKTOPICONS   0x7053
+#define FCIDM_SHVIEW_ARRANGE_AUTOGRID   0x7054
+#define FCIDM_SHVIEW_REFRESH            0x7103
+#define FCIDM_SHVIEW_SHOWINGROUPS       0x7601
+#define FCIDM_SHBROWSER_REFRESH         0xA065
+#define FCIDM_SHBROWSER_MAPNETDRIVE     0xA081
+#define FCIDM_SHBROWSER_UNMAPNETDRIVE   0xA082
+#define FCIDM_SHBROWSER_FINDFILES       0xA085
+#define FCIDM_SHBROWSER_OPTIONS         0xA123
+#define FCIDM_CABINET_NT5_GOTO_DRIVES   0xA132
+#define FCIDM_CABINET_TOGGLEITBAR       0xA201
+#define FCIDM_CABINET_TOGGLESTATUSBAR   0xA202
+#define FCIDM_CABINET_REFRESH           0xA220
+
 /*****************************************************************************
  * CGID_Explorer (IShellBrowser OLECMD IDs)
  */

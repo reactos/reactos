@@ -2566,25 +2566,14 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
     switch (dwCmdID)
     {
-        case FCIDM_SHVIEW_SMALLICON:
-            m_FolderSettings.ViewMode = FVM_SMALLICON;
-            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_SMALLICON);
-            CheckToolbar();
-            break;
-        case FCIDM_SHVIEW_BIGICON:
-            m_FolderSettings.ViewMode = FVM_ICON;
-            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_ICON);
-            CheckToolbar();
-            break;
-        case FCIDM_SHVIEW_LISTVIEW:
-            m_FolderSettings.ViewMode = FVM_LIST;
-            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_LIST);
-            CheckToolbar();
-            break;
-        case FCIDM_SHVIEW_REPORTVIEW:
-            m_FolderSettings.ViewMode = FVM_DETAILS;
-            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_REPORT);
-            CheckToolbar();
+        case FCIDM_SHVIEW_BIGICON:    C_ASSERT(FCIDM_SHVIEW_BIGICON == 0x7029);
+        case FCIDM_SHVIEW_SMALLICON:  C_ASSERT(FCIDM_SHVIEW_SMALLICON == 0x702A);
+        case FCIDM_SHVIEW_LISTVIEW:   C_ASSERT(FCIDM_SHVIEW_LISTVIEW == 0x702B);
+        case FCIDM_SHVIEW_REPORTVIEW: C_ASSERT(FCIDM_SHVIEW_REPORTVIEW == 0x702C);
+        case 0x702D:
+        case FCIDM_SHVIEW_TILEVIEW:   C_ASSERT(FCIDM_SHVIEW_TILEVIEW == 0x702E);
+        case 0x702F:
+            SetCurrentViewMode(dwCmdID - FCIDM_SHVIEW_BIGICON + 1);
             break;
         case FCIDM_SHVIEW_SNAPTOGRID:
             m_ListView.Arrange(LVA_SNAPTOGRID);
@@ -2610,6 +2599,9 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             for (int i=0; i < nCount; i++)
                 m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ^ LVIS_SELECTED, LVIS_SELECTED);
             break;
+        case FCIDM_SHVIEW_DESELECTALL:
+            m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
+            break;
         case FCIDM_SHVIEW_REFRESH:
             Refresh();
             break;
@@ -2621,8 +2613,8 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             if (SHRestricted(REST_NOVIEWCONTEXTMENU))
                 return 0;
             return OnExplorerCommand(dwCmdID, TRUE);
-        case FCIDM_SHVIEW_COPYTO:
-        case FCIDM_SHVIEW_MOVETO:
+        case FCIDM_SHVIEW_COPYTO: C_ASSERT(FCIDM_SHVIEW_COPYTO == 0x701e);
+        case FCIDM_SHVIEW_MOVETO: C_ASSERT(FCIDM_SHVIEW_MOVETO == 0x701f);
             _DoCopyToMoveToFolder(dwCmdID == FCIDM_SHVIEW_COPYTO);
             return 0;
         case FCIDM_SHVIEW_INSERT:
@@ -3636,24 +3628,14 @@ HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
        means. */
     switch (ViewMode)
     {
-        case FVM_ICON:
-            dwStyle = LVS_ICON;
-            break;
-        case FVM_DETAILS:
-            dwStyle = LVS_REPORT;
-            break;
-        case FVM_SMALLICON:
-            dwStyle = LVS_SMALLICON;
-            break;
-        case FVM_LIST:
-            dwStyle = LVS_LIST;
-            break;
+        case FVM_ICON:      dwStyle = LVS_ICON;      break;
+        case FVM_SMALLICON: dwStyle = LVS_SMALLICON; break;
+        case FVM_LIST:      dwStyle = LVS_LIST;      break;
+        case FVM_DETAILS:   dwStyle = LVS_REPORT;    break;
         default:
-        {
             FIXME("ViewMode %d not implemented\n", ViewMode);
             dwStyle = LVS_LIST;
             break;
-        }
     }
 
     m_ListView.ModifyStyle(LVS_TYPEMASK, dwStyle);
@@ -3661,7 +3643,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
     /* This will not necessarily be the actual mode set above.
        This mimics the behavior of Windows XP. */
     m_FolderSettings.ViewMode = ViewMode;
-
+    CheckToolbar();
     return S_OK;
 }
 
