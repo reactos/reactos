@@ -1405,7 +1405,7 @@ static
 NTSTATUS
 MiCreateDataFileMap(IN PFILE_OBJECT File,
                     OUT PSEGMENT *Segment,
-                    IN PSIZE_T MaximumSize,
+                    IN PLARGE_INTEGER MaximumSize,
                     IN ULONG SectionPageProtection,
                     IN ULONG AllocationAttributes,
                     IN ULONG IgnoreFileSizing)
@@ -1419,7 +1419,7 @@ MiCreateDataFileMap(IN PFILE_OBJECT File,
 static
 NTSTATUS
 MiCreatePagingFileMap(OUT PSEGMENT *Segment,
-                      IN PLARGE_INTEGER MaximumSize,
+                      IN ULONG64 MaximumSize,
                       IN ULONG ProtectionMask,
                       IN ULONG AllocationAttributes)
 {
@@ -1436,7 +1436,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
 
     /* Pagefile-backed sections need a known size */
-    if (!MaximumSize || !MaximumSize->QuadPart || MaximumSize->QuadPart < 0)
+    if (MaximumSize == 0)
         return STATUS_INVALID_PARAMETER_4;
 
     /* Calculate the maximum size possible, given the Prototype PTEs we'll need */
@@ -1445,13 +1445,13 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     SizeLimit <<= PAGE_SHIFT;
 
     /* Fail if this size is too big */
-    if (MaximumSize->QuadPart > SizeLimit)
+    if (MaximumSize > SizeLimit)
     {
         return STATUS_SECTION_TOO_BIG;
     }
 
     /* Calculate how many Prototype PTEs will be needed */
-    PteCount = (PFN_COUNT)((MaximumSize->QuadPart + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    PteCount = (PFN_COUNT)((MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
     /* For commited memory, we must have a valid protection mask */
     if (AllocationAttributes & SEC_COMMIT) ASSERT(ProtectionMask != 0);
@@ -2239,7 +2239,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
         /* So we always create a data file map */
         Status = MiCreateDataFileMap(File,
                                      &Segment,
-                                     (PSIZE_T)InputMaximumSize,
+                                     InputMaximumSize,
                                      SectionPageProtection,
                                      AllocationAttributes,
                                      KernelCall);
@@ -2307,7 +2307,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
         /* So this must be a pagefile-backed section, create the mappings needed */
         Status = MiCreatePagingFileMap(&NewSegment,
-                                       InputMaximumSize,
+                                       InputMaximumSize->QuadPart,
                                        ProtectionMask,
                                        AllocationAttributes);
         if (!NT_SUCCESS(Status)) return Status;
