@@ -723,7 +723,7 @@ co_UserActivateKeyboardLayout(
     }
 
     /* Send shell message if necessary */
-    if (gptiForeground && (gptiForeground->ppi == pti->ppi) && ISITHOOKED(WH_SHELL))
+    if (gptiForeground && (gptiForeground->ppi == pti->ppi) && UserIsItHooked(WH_SHELL))
     {
         /* Send the HKL if needed and remember it */
         if (ghKLSentToShell != pKL->hkl)
@@ -839,7 +839,7 @@ co_IntUnloadKeyboardLayoutEx(
 
     UserDerefObjectCo(pKL); /* Release reference */
 
-    if (ISITHOOKED(WH_SHELL))
+    if (UserIsItHooked(WH_SHELL))
     {
         co_IntShellHookNotify(HSHELL_LANGUAGE, 0, 0);
         ghKLSentToShell = NULL;
