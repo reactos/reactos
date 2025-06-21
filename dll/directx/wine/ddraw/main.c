@@ -21,9 +21,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #define DDRAW_INIT_GUID
 #include "ddraw_private.h"
 #include "rpcproxy.h"
@@ -39,6 +36,8 @@ static HINSTANCE instance;
 
 /* value of ForceRefreshRate */
 DWORD force_refresh_rate = 0;
+
+struct ddraw_handle_table global_handle_table;
 
 /* Structure for converting DirectDrawEnumerateA to DirectDrawEnumerateExA */
 struct callback_info
@@ -60,39 +59,65 @@ static void ddraw_enumerate_secondary_devices(struct wined3d *wined3d, LPDDENUMC
                                               void *context)
 {
     struct wined3d_adapter_identifier adapter_id;
+    struct wined3d_adapter *wined3d_adapter;
     struct wined3d_output_desc output_desc;
+    struct wined3d_output *wined3d_output;
+    unsigned int interface_count = 0;
+    unsigned int adapter_idx = 0;
+    unsigned int output_idx;
     BOOL cont_enum = TRUE;
-    HRESULT hr = S_OK;
-    UINT adapter = 0;
+    HRESULT hr;
 
-    for (adapter = 0; SUCCEEDED(hr) && cont_enum; adapter++)
+    while (cont_enum && (wined3d_adapter = wined3d_get_adapter(wined3d, adapter_idx)))
     {
-        char DriverName[512] = "", DriverDescription[512] = "";
+        char device_name[512] = "", description[512] = "";
 
         /* The Battle.net System Checker expects the GetAdapterIdentifier DeviceName to match the
          * Driver Name, so obtain the DeviceName and GUID from D3D. */
         memset(&adapter_id, 0x0, sizeof(adapter_id));
-        adapter_id.device_name = DriverName;
-        adapter_id.device_name_size = sizeof(DriverName);
-        adapter_id.description = DriverDescription;
-        adapter_id.description_size = sizeof(DriverDescription);
+        adapter_id.description = description;
+        adapter_id.description_size = sizeof(description);
+
         wined3d_mutex_lock();
-        if (SUCCEEDED(hr = wined3d_get_adapter_identifier(wined3d, adapter, 0x0, &adapter_id)))
-            hr = wined3d_get_output_desc(wined3d, adapter, &output_desc);
-        wined3d_mutex_unlock();
-        if (SUCCEEDED(hr))
+        if (FAILED(hr = wined3d_adapter_get_identifier(wined3d_adapter, 0x0, &adapter_id)))
         {
-            TRACE("Interface %d: %s\n", adapter, wine_dbgstr_guid(&adapter_id.device_identifier));
-            cont_enum = callback(&adapter_id.device_identifier, adapter_id.description,
-                    adapter_id.device_name, context, output_desc.monitor);
+            WARN("Failed to get adapter identifier, hr %#lx.\n", hr);
+            wined3d_mutex_unlock();
+            break;
         }
+        wined3d_mutex_unlock();
+
+        for (output_idx = 0; cont_enum && (wined3d_output = wined3d_adapter_get_output(
+                wined3d_adapter, output_idx)); ++output_idx)
+        {
+            wined3d_mutex_lock();
+            if (FAILED(hr = wined3d_output_get_desc(wined3d_output, &output_desc)))
+            {
+                WARN("Failed to get output description, hr %#lx.\n", hr);
+                wined3d_mutex_unlock();
+                break;
+            }
+            wined3d_mutex_unlock();
+
+            TRACE("Interface %u: %s\n", interface_count++,
+                    wine_dbgstr_guid(&adapter_id.device_identifier));
+            WideCharToMultiByte(CP_ACP, 0, output_desc.device_name, -1, device_name,
+                    sizeof(device_name), NULL, NULL);
+            cont_enum = callback(&adapter_id.device_identifier, adapter_id.description,
+                    device_name, context, output_desc.monitor);
+        }
+
+        if (FAILED(hr))
+            break;
+
+        ++adapter_idx;
     }
 }
 
 /* Handle table functions */
 BOOL ddraw_handle_table_init(struct ddraw_handle_table *t, UINT initial_size)
 {
-    if (!(t->entries = heap_alloc_zero(initial_size * sizeof(*t->entries))))
+    if (!(t->entries = calloc(initial_size, sizeof(*t->entries))))
     {
         ERR("Failed to allocate handle table memory.\n");
         return FALSE;
@@ -106,13 +131,16 @@ BOOL ddraw_handle_table_init(struct ddraw_handle_table *t, UINT initial_size)
 
 void ddraw_handle_table_destroy(struct ddraw_handle_table *t)
 {
-    heap_free(t->entries);
+    free(t->entries);
     memset(t, 0, sizeof(*t));
 }
 
 DWORD ddraw_allocate_handle(struct ddraw_handle_table *t, void *object, enum ddraw_handle_type type)
 {
     struct ddraw_handle_entry *entry;
+
+    if (!t)
+        t = &global_handle_table;
 
     if (t->free_entries)
     {
@@ -121,7 +149,7 @@ DWORD ddraw_allocate_handle(struct ddraw_handle_table *t, void *object, enum ddr
         entry = t->free_entries;
         if (entry->type != DDRAW_HANDLE_FREE)
         {
-            ERR("Handle %#x (%p) is in the free list, but has type %#x.\n", idx, entry->object, entry->type);
+            ERR("Handle %#lx (%p) is in the free list, but has type %#x.\n", idx, entry->object, entry->type);
             return DDRAW_INVALID_HANDLE;
         }
         t->free_entries = entry->object;
@@ -137,7 +165,7 @@ DWORD ddraw_allocate_handle(struct ddraw_handle_table *t, void *object, enum ddr
         UINT new_size = t->table_size + (t->table_size >> 1);
         struct ddraw_handle_entry *new_entries;
 
-        if (!(new_entries = heap_realloc(t->entries, new_size * sizeof(*t->entries))))
+        if (!(new_entries = realloc(t->entries, new_size * sizeof(*t->entries))))
         {
             ERR("Failed to grow the handle table.\n");
             return DDRAW_INVALID_HANDLE;
@@ -158,16 +186,19 @@ void *ddraw_free_handle(struct ddraw_handle_table *t, DWORD handle, enum ddraw_h
     struct ddraw_handle_entry *entry;
     void *object;
 
+    if (!t)
+        t = &global_handle_table;
+
     if (handle == DDRAW_INVALID_HANDLE || handle >= t->entry_count)
     {
-        WARN("Invalid handle %#x passed.\n", handle);
+        WARN("Invalid handle %#lx passed.\n", handle);
         return NULL;
     }
 
     entry = &t->entries[handle];
     if (entry->type != type)
     {
-        WARN("Handle %#x (%p) is not of type %#x.\n", handle, entry->object, type);
+        WARN("Handle %#lx (%p) is not of type %#x.\n", handle, entry->object, type);
         return NULL;
     }
 
@@ -183,16 +214,19 @@ void *ddraw_get_object(struct ddraw_handle_table *t, DWORD handle, enum ddraw_ha
 {
     struct ddraw_handle_entry *entry;
 
+    if (!t)
+        t = &global_handle_table;
+
     if (handle == DDRAW_INVALID_HANDLE || handle >= t->entry_count)
     {
-        WARN("Invalid handle %#x passed.\n", handle);
+        WARN("Invalid handle %#lx passed.\n", handle);
         return NULL;
     }
 
     entry = &t->entries[handle];
     if (entry->type != type)
     {
-        WARN("Handle %#x (%p) is not of type %#x.\n", handle, entry->object, type);
+        WARN("Handle %#lx (%p) is not of type %#x.\n", handle, entry->object, type);
         return NULL;
     }
 
@@ -256,62 +290,52 @@ HRESULT WINAPI GetSurfaceFromDC(HDC dc, IDirectDrawSurface4 **surface, HDC *devi
  *  E_OUTOFMEMORY if some allocation failed
  *
  ***********************************************************************/
-static HRESULT
-DDRAW_Create(const GUID *guid,
-             void **DD,
-             IUnknown *UnkOuter,
-             REFIID iid)
+static HRESULT DDRAW_Create(const GUID *guid, void **out, IUnknown *outer_unknown, REFIID iid)
 {
     enum wined3d_device_type device_type;
     struct ddraw *ddraw;
-    HRESULT hr;
     DWORD flags = 0;
+    HRESULT hr;
 
     TRACE("driver_guid %s, ddraw %p, outer_unknown %p, interface_iid %s.\n",
-            debugstr_guid(guid), DD, UnkOuter, debugstr_guid(iid));
+            debugstr_guid(guid), out, outer_unknown, debugstr_guid(iid));
 
-    *DD = NULL;
+    *out = NULL;
 
     if (guid == (GUID *) DDCREATE_EMULATIONONLY)
     {
-        /* Use the reference device id. This doesn't actually change anything,
-         * WineD3D always uses OpenGL for D3D rendering. One could make it request
-         * indirect rendering
-         */
         device_type = WINED3D_DEVICE_TYPE_REF;
     }
-    else if(guid == (GUID *) DDCREATE_HARDWAREONLY)
+    else if (guid == (GUID *) DDCREATE_HARDWAREONLY)
     {
         device_type = WINED3D_DEVICE_TYPE_HAL;
     }
     else
     {
-        device_type = 0;
+        device_type = WINED3D_DEVICE_TYPE_HAL;
     }
 
     /* DDraw doesn't support aggregation, according to msdn */
-    if (UnkOuter != NULL)
+    if (outer_unknown != NULL)
         return CLASS_E_NOAGGREGATION;
 
     if (!IsEqualGUID(iid, &IID_IDirectDraw7))
         flags = WINED3D_LEGACY_FFP_LIGHTING;
 
-    /* DirectDraw creation comes here */
-    if (!(ddraw = heap_alloc_zero(sizeof(*ddraw))))
+    if (!(ddraw = calloc(1, sizeof(*ddraw))))
     {
-        ERR("Out of memory when creating DirectDraw\n");
+        ERR("Out of memory when creating DirectDraw.\n");
         return E_OUTOFMEMORY;
     }
 
-    hr = ddraw_init(ddraw, flags, device_type);
-    if (FAILED(hr))
+    if (FAILED(hr = ddraw_init(ddraw, flags, device_type)))
     {
-        WARN("Failed to initialize ddraw object, hr %#x.\n", hr);
-        heap_free(ddraw);
+        WARN("Failed to initialize ddraw object, hr %#lx.\n", hr);
+        free(ddraw);
         return hr;
     }
 
-    hr = IDirectDraw7_QueryInterface(&ddraw->IDirectDraw7_iface, iid, DD);
+    hr = IDirectDraw7_QueryInterface(&ddraw->IDirectDraw7_iface, iid, out);
     IDirectDraw7_Release(&ddraw->IDirectDraw7_iface);
     if (SUCCEEDED(hr))
         list_add_head(&global_ddraw_list, &ddraw->ddraw_list_entry);
@@ -429,7 +453,7 @@ HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *contex
 {
     struct wined3d *wined3d;
 
-    TRACE("callback %p, context %p, flags %#x.\n", callback, context, flags);
+    TRACE("callback %p, context %p, flags %#lx.\n", callback, context, flags);
 
     if (flags & ~(DDENUM_ATTACHEDSECONDARYDEVICES |
                   DDENUM_DETACHEDSECONDARYDEVICES |
@@ -437,7 +461,7 @@ HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *contex
         return DDERR_INVALIDPARAMS;
 
     if (flags & ~DDENUM_ATTACHEDSECONDARYDEVICES)
-        FIXME("flags 0x%08x not handled\n", flags & ~DDENUM_ATTACHEDSECONDARYDEVICES);
+        FIXME("flags %#lx not handled\n", flags & ~DDENUM_ATTACHEDSECONDARYDEVICES);
 
     TRACE("Enumerating ddraw interfaces\n");
     if (!(wined3d = wined3d_create(DDRAW_WINED3D_FLAGS)))
@@ -503,7 +527,7 @@ HRESULT WINAPI DirectDrawEnumerateW(LPDDENUMCALLBACKW callback, void *context)
  ***********************************************************************/
 HRESULT WINAPI DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW callback, void *context, DWORD flags)
 {
-    TRACE("callback %p, context %p, flags %#x.\n", callback, context, flags);
+    TRACE("callback %p, context %p, flags %#lx.\n", callback, context, flags);
 
     return DDERR_UNSUPPORTED;
 }
@@ -645,7 +669,7 @@ static ULONG WINAPI ddraw_class_factory_AddRef(IClassFactory *iface)
     struct ddraw_class_factory *factory = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedIncrement(&factory->ref);
 
-    TRACE("%p increasing refcount to %u.\n", factory, ref);
+    TRACE("%p increasing refcount to %lu.\n", factory, ref);
 
     return ref;
 }
@@ -665,10 +689,10 @@ static ULONG WINAPI ddraw_class_factory_Release(IClassFactory *iface)
     struct ddraw_class_factory *factory = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedDecrement(&factory->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", factory, ref);
+    TRACE("%p decreasing refcount to %lu.\n", factory, ref);
 
     if (!ref)
-        heap_free(factory);
+        free(factory);
 
     return ref;
 }
@@ -752,7 +776,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **out)
         return CLASS_E_CLASSNOTAVAILABLE;
     }
 
-    if (!(factory = heap_alloc_zero(sizeof(*factory))))
+    if (!(factory = calloc(1, sizeof(*factory))))
         return E_OUTOFMEMORY;
 
     factory->IClassFactory_iface.lpVtbl = &IClassFactory_Vtbl;
@@ -764,31 +788,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **out)
     return S_OK;
 }
 
-
-/*******************************************************************************
- * DllCanUnloadNow [DDRAW.@]  Determines whether the DLL is in use.
- *
- * RETURNS
- *    Success: S_OK
- *    Failure: S_FALSE
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    TRACE("\n");
-
-    return S_FALSE;
-}
-
-
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( instance );
-}
-
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( instance );
-}
 
 /***********************************************************************
  * DllMain (DDRAW.0)
@@ -823,7 +822,13 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
         wc.lpszClassName = DDRAW_WINDOW_CLASS_NAME;
         if (!RegisterClassA(&wc))
         {
-            ERR("Failed to register ddraw window class, last error %#x.\n", GetLastError());
+            ERR("Failed to register ddraw window class, last error %#lx.\n", GetLastError());
+            return FALSE;
+        }
+
+        if (!ddraw_handle_table_init(&global_handle_table, 64))
+        {
+            UnregisterClassA(DDRAW_WINDOW_CLASS_NAME, inst);
             return FALSE;
         }
 
@@ -854,7 +859,7 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
             size = sizeof(data);
             if (!RegQueryValueExA(hkey, "ForceRefreshRate", NULL, &type, (BYTE *)&data, &size) && type == REG_DWORD)
             {
-                TRACE("ForceRefreshRate set; overriding refresh rate to %d Hz\n", data);
+                TRACE("ForceRefreshRate set; overriding refresh rate to %ld Hz\n", data);
                 force_refresh_rate = data;
             }
             RegCloseKey( hkey );
@@ -865,9 +870,7 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
          * an application would unload ddraw from the WM_DESTROY handler for
          * that window, it would return to unmapped memory and die. Apparently
          * this is supposed to work on Windows. */
-
-        /* ReactOS r61844: Comment out usage of GET_MODULE_HANDLE_EX_FLAG_PIN because it doesn't work */
-        if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS /*| GET_MODULE_HANDLE_EX_FLAG_PIN*/,
+        if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
                 (const WCHAR *)&ddraw_self, &ddraw_self))
             ERR("Failed to get own module handle.\n");
 
@@ -880,24 +883,53 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
         if (WARN_ON(ddraw))
         {
             struct ddraw *ddraw;
+            unsigned int i;
 
             LIST_FOR_EACH_ENTRY(ddraw, &global_ddraw_list, struct ddraw, ddraw_list_entry)
             {
                 struct ddraw_surface *surface;
 
-                WARN("DirectDraw object %p has reference counts {%u, %u, %u, %u, %u}.\n",
+                WARN("DirectDraw object %p has reference counts {%lu, %lu, %lu, %lu, %lu}.\n",
                         ddraw, ddraw->ref7, ddraw->ref4, ddraw->ref3, ddraw->ref2, ddraw->ref1);
 
-                if (ddraw->d3ddevice)
-                    WARN("DirectDraw object %p has Direct3D device %p attached.\n", ddraw, ddraw->d3ddevice);
+                if (!list_empty(&ddraw->d3ddevice_list))
+                    WARN("DirectDraw object %p has Direct3D device(s) attached.\n", ddraw);
 
                 LIST_FOR_EACH_ENTRY(surface, &ddraw->surface_list, struct ddraw_surface, surface_list_entry)
                 {
-                    WARN("Surface %p has reference counts {%u, %u, %u, %u, %u, %u}.\n",
+                    WARN("Surface %p has reference counts {%lu, %lu, %lu, %lu, %lu, %lu}.\n",
                             surface, surface->ref7, surface->ref4, surface->ref3,
                             surface->ref2, surface->ref1, surface->gamma_count);
                 }
             }
+
+            for (i = 0; i < global_handle_table.entry_count; ++i)
+            {
+                struct ddraw_handle_entry *entry = &global_handle_table.entries[i];
+
+                switch (entry->type)
+                {
+                    case DDRAW_HANDLE_FREE:
+                        break;
+
+                    case DDRAW_HANDLE_MATERIAL:
+                        WARN("Material handle %#x (%p) not unset properly.\n", i + 1, entry->object);
+                        break;
+
+                    case DDRAW_HANDLE_SURFACE:
+                        WARN("Texture handle %#x (%p) not unset properly.\n", i + 1, entry->object);
+                        break;
+
+                    case DDRAW_HANDLE_MATRIX:
+                        WARN("Leftover matrix handle %#x (%p), deleting.\n", i + 1, entry->object);
+                        break;
+
+                    default:
+                        WARN("Handle %#x (%p) has unknown type %#x.\n", i + 1, entry->object, entry->type);
+                        break;
+                }
+            }
+            ddraw_handle_table_destroy(&global_handle_table);
         }
 
         if (reserved) break;

@@ -82,7 +82,7 @@ static ULONG WINAPI IDirectPlaySPImpl_AddRef( IDirectPlaySP *iface )
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
   ULONG ref = InterlockedIncrement( &This->ref );
 
-  TRACE( "(%p) ref=%d\n", This, ref );
+  TRACE( "(%p) ref=%ld\n", This, ref );
 
   return ref;
 }
@@ -92,13 +92,13 @@ static ULONG WINAPI IDirectPlaySPImpl_Release( IDirectPlaySP *iface )
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
   ULONG ref = InterlockedDecrement( &This->ref );
 
-  TRACE( "(%p) ref=%d\n", This, ref );
+  TRACE( "(%p) ref=%ld\n", This, ref );
 
   if( !ref )
   {
-    HeapFree( GetProcessHeap(), 0, This->remote_data );
-    HeapFree( GetProcessHeap(), 0, This->local_data );
-    HeapFree( GetProcessHeap(), 0, This );
+    free( This->remote_data );
+    free( This->local_data );
+    free( This );
   }
 
   return ref;
@@ -111,7 +111,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_AddMRUEntry( IDirectPlaySP *iface, LPCWS
 
   /* Should be able to call the comctl32 undocumented MRU routines.
      I suspect that the interface works appropriately */
-  FIXME( "(%p)->(%p,%p%p,0x%08x,0x%08x): stub\n",
+  FIXME( "(%p)->(%p,%p%p,0x%08lx,0x%08lx): stub\n",
          This, lpSection, lpKey, lpData, dwDataSize, dwMaxEntries );
 
   return DP_OK;
@@ -123,7 +123,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_CreateAddress( IDirectPlaySP *iface, REF
 {
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
 
-  FIXME( "(%p)->(%s,%s,%p,0x%08x,%p,%p): stub\n",
+  FIXME( "(%p)->(%s,%s,%p,0x%08lx,%p,%p): stub\n",
          This, debugstr_guid(guidSP), debugstr_guid(guidDataType),
          lpData, dwDataSize, lpAddress, lpdwAddressSize );
 
@@ -136,7 +136,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_EnumAddress( IDirectPlaySP *iface,
 {
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
 
-  TRACE( "(%p)->(%p,%p,0x%08x,%p)\n",
+  TRACE( "(%p)->(%p,%p,0x%08lx,%p)\n",
          This, lpEnumAddressCallback, lpAddress, dwAddressSize, lpContext );
 
   DPL_EnumAddress( lpEnumAddressCallback, lpAddress, dwAddressSize, lpContext );
@@ -162,7 +162,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetPlayerFlags( IDirectPlaySP *iface, DP
 {
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
 
-  FIXME( "(%p)->(0x%08x,%p): stub\n",
+  FIXME( "(%p)->(0x%08lx,%p): stub\n",
          This, idPlayer, lpdwPlayerFlags );
 
   return DP_OK;
@@ -175,7 +175,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetSPPlayerData( IDirectPlaySP *iface, D
   HRESULT hr;
   LPDP_SPPLAYERDATA lpPlayerData;
 
-  TRACE( "(%p)->(0x%08x,%p,%p,0x%08x)\n",
+  TRACE( "(%p)->(0x%08lx,%p,%p,0x%08lx)\n",
          This, idPlayer, lplpData, lpdwDataSize, dwFlags );
 
   hr = DP_GetSPPlayerData( This->dplay, idPlayer, (void**)&lpPlayerData );
@@ -216,18 +216,28 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage( IDirectPlaySP *iface, voi
   WORD wVersion;
   DPSP_REPLYDATA data;
 
-  FIXME( "(%p)->(%p,0x%08x,%p): mostly stub\n",
+  TRACE( "(%p)->(%p,0x%08lx,%p)\n",
          This, lpMessageBody, dwMessageBodySize, lpMessageHeader );
+
+  if ( dwMessageBodySize < sizeof( DPMSG_SENDENVELOPE ) )
+    return DPERR_GENERIC;
+
+  if ( lpMsg->dwMagic != DPMSGMAGIC_DPLAYMSG )
+  {
+    LPDPMSG_SYSMSGENVELOPE gameMsg = lpMessageBody;
+    return DP_HandleGameMessage( This->dplay, lpMessageBody, dwMessageBodySize,
+                                 gameMsg->dwPlayerFrom, gameMsg->dwPlayerTo );
+  }
 
   wCommandId = lpMsg->wCommandId;
   wVersion   = lpMsg->wVersion;
 
-  TRACE( "Incoming message has envelope of 0x%08x, %u, %u\n",
+  TRACE( "Incoming message has envelope of 0x%08lx, %u, %u\n",
          lpMsg->dwMagic, wCommandId, wVersion );
 
   if( lpMsg->dwMagic != DPMSGMAGIC_DPLAYMSG )
   {
-    ERR( "Unknown magic 0x%08x!\n", lpMsg->dwMagic );
+    ERR( "Unknown magic 0x%08lx!\n", lpMsg->dwMagic );
     return DPERR_GENERIC;
   }
 
@@ -522,7 +532,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_SetSPPlayerData( IDirectPlaySP *iface, D
   LPDP_SPPLAYERDATA lpPlayerEntry;
   LPVOID            lpPlayerData;
 
-  TRACE( "(%p)->(0x%08x,%p,0x%08x,0x%08x)\n", This, idPlayer, lpData, dwDataSize, dwFlags );
+  TRACE( "(%p)->(0x%08lx,%p,0x%08lx,0x%08lx)\n", This, idPlayer, lpData, dwDataSize, dwFlags );
 
   hr = DP_GetSPPlayerData( This->dplay, idPlayer, (void**)&lpPlayerEntry );
   if( FAILED(hr) )
@@ -531,7 +541,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_SetSPPlayerData( IDirectPlaySP *iface, D
     return DPERR_INVALIDPLAYER;
   }
 
-  lpPlayerData = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwDataSize );
+  lpPlayerData = malloc( dwDataSize );
   CopyMemory( lpPlayerData, lpData, dwDataSize );
 
   if( dwFlags == DPSET_LOCAL )
@@ -556,7 +566,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_CreateCompoundAddress( IDirectPlaySP *if
 {
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
 
-  FIXME( "(%p)->(%p,0x%08x,%p,%p): stub\n",
+  FIXME( "(%p)->(%p,0x%08lx,%p,%p): stub\n",
          This, lpElements, dwElementCount, lpAddress, lpdwAddressSize );
 
   return DP_OK;
@@ -568,7 +578,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetSPData( IDirectPlaySP *iface, void **
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
   HRESULT hr = DP_OK;
 
-  TRACE( "(%p)->(%p,%p,0x%08x)\n", This, lplpData, lpdwDataSize, dwFlags );
+  TRACE( "(%p)->(%p,%p,0x%08lx)\n", This, lplpData, lpdwDataSize, dwFlags );
 
 #if 0
   /* This is what the documentation says... */
@@ -583,7 +593,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetSPData( IDirectPlaySP *iface, void **
    */
   if( dwFlags != DPSET_REMOTE )
   {
-    TRACE( "Undocumented dwFlags 0x%08x used\n", dwFlags );
+    TRACE( "Undocumented dwFlags 0x%08lx used\n", dwFlags );
   }
 #endif
 
@@ -616,7 +626,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_SetSPData( IDirectPlaySP *iface, void *l
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
   LPVOID lpSpData;
 
-  TRACE( "(%p)->(%p,0x%08x,0x%08x)\n", This, lpData, dwDataSize, dwFlags );
+  TRACE( "(%p)->(%p,0x%08lx,0x%08lx)\n", This, lpData, dwDataSize, dwFlags );
 
 #if 0
   /* This is what the documentation says... */
@@ -631,23 +641,23 @@ static HRESULT WINAPI IDirectPlaySPImpl_SetSPData( IDirectPlaySP *iface, void *l
    */
   if( dwFlags != DPSET_REMOTE )
   {
-    TRACE( "Undocumented dwFlags 0x%08x used\n", dwFlags );
+    TRACE( "Undocumented dwFlags 0x%08lx used\n", dwFlags );
   }
 #endif
 
-  lpSpData = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwDataSize );
+  lpSpData = malloc( dwDataSize );
   CopyMemory( lpSpData, lpData, dwDataSize );
 
   /* If we have data already allocated, free it and replace it */
   if( dwFlags == DPSET_REMOTE )
   {
-    HeapFree( GetProcessHeap(), 0, This->remote_data );
+    free( This->remote_data );
     This->remote_data_size = dwDataSize;
     This->remote_data = lpSpData;
   }
   else if ( dwFlags == DPSET_LOCAL )
   {
-    HeapFree( GetProcessHeap(), 0, This->local_data );
+    free( This->local_data );
     This->local_data = lpSpData;
     This->local_data_size = dwDataSize;
   }
@@ -660,7 +670,7 @@ static void WINAPI IDirectPlaySPImpl_SendComplete( IDirectPlaySP *iface, void *u
 {
   IDirectPlaySPImpl *This = impl_from_IDirectPlaySP( iface );
 
-  FIXME( "(%p)->(%p,0x%08x): stub\n",
+  FIXME( "(%p)->(%p,0x%08lx): stub\n",
          This, unknownA, unknownB );
 }
 
@@ -691,7 +701,7 @@ HRESULT dplaysp_create( REFIID riid, void **ppv, IDirectPlayImpl *dp )
   TRACE( "(%s, %p)\n", debugstr_guid( riid ), ppv );
 
   *ppv = NULL;
-  obj = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof( *obj ) );
+  obj = calloc( 1, sizeof( *obj ) );
   if ( !obj )
     return DPERR_OUTOFMEMORY;
 
@@ -711,6 +721,5 @@ HRESULT dplaysp_create( REFIID riid, void **ppv, IDirectPlayImpl *dp )
 LPVOID DPSP_CreateSPPlayerData(void)
 {
   TRACE( "Creating SPPlayer data struct\n" );
-  return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
-                    sizeof( DP_SPPLAYERDATA ) );
+  return calloc( 1, sizeof( DP_SPPLAYERDATA ) );
 }

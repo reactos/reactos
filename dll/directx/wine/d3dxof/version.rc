@@ -23,6 +23,4 @@
 #define WINE_PRODUCTVERSION 5,0,2135,1
 #define WINE_PRODUCTVERSION_STR "5.0.2135.1"
 
-1 WINE_REGISTRY d3dxof.rgs
-
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"

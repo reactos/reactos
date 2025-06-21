@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * Direct3D X 9 main file
  *
@@ -26,7 +23,6 @@
 
 #include "initguid.h"
 #include "d3dx9_private.h"
-#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 

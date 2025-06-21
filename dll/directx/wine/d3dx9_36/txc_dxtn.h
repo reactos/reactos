@@ -25,9 +25,7 @@
 #ifndef _TXC_DXTN_H
 #define _TXC_DXTN_H
 
-#ifndef __REACTOS__
 #include "winternl.h"
-#endif
 #include "wine/wgl.h"
 
 typedef GLubyte GLchan;

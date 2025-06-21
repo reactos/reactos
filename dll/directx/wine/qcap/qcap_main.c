@@ -1,8 +1,9 @@
 /*
- * Qcap implementation, dllentry points
+ * DirectShow capture
  *
  * Copyright (C) 2003 Dominik Strasser
  * Copyright (C) 2005 Rolf Kalbermatter
+ * Copyright (C) 2019 Zebediah Figura
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,155 +19,218 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
+#define WINE_NO_NAMELESS_EXTENSION
 
-#define COBJMACROS
+#include "qcap_private.h"
+#include "rpcproxy.h"
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winerror.h"
-#include "objbase.h"
-#include "uuids.h"
-#include "strmif.h"
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
-#include "qcap_main.h"
-
-#include "wine/unicode.h"
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(qcap);
-
-static LONG objects_ref = 0;
-
-static const WCHAR wAudioCaptureFilter[] =
-{'A','u','d','i','o',' ','C','a','p','t','u','r','e',' ','F','i','l','t','e','r',0};
-static const WCHAR wAVICompressor[] =
-{'A','V','I',' ','C','o','m','p','r','e','s','s','o','r',0};
-static const WCHAR wVFWCaptFilter[] =
-{'V','F','W',' ','C','a','p','t','u','r','e',' ','F','i','l','t','e','r',0};
-static const WCHAR wVFWCaptFilterProp[] =
-{'V','F','W',' ','C','a','p','t','u','r','e',' ','F','i','l','t','e','r',' ',
- 'P','r','o','p','e','r','t','y',' ','P','a','g','e',0};
-static const WCHAR wAVIMux[] =
-{'A','V','I',' ','m','u','x',0};
-static const WCHAR wAVIMuxPropPage[] =
-{'A','V','I',' ','m','u','x',' ','P','r','o','p','e','r','t','y',' ','P','a','g','e',0};
-static const WCHAR wAVIMuxPropPage1[] =
-{'A','V','I',' ','m','u','x',' ','P','r','o','p','e','r','t','y',' ','P','a','g','e','1',0};
-static const WCHAR wFileWriter[] =
-{'F','i','l','e',' ','W','r','i','t','e','r',0};
-static const WCHAR wCaptGraphBuilder[] =
-{'C','a','p','t','u','r','e',' ','G','r','a','p','h',' ','B','u','i','l','d','e','r',0};
-static const WCHAR wCaptGraphBuilder2[] =
-{'C','a','p','t','u','r','e',' ','G','r','a','p','h',' ','B','u','i','l','d','e','r','2',0};
-static const WCHAR wInfPinTeeFilter[] =
-{'I','n','f','i','n','i','t','e',' ','P','i','n',' ','T','e','e',' ','F','i',
- 'l','t','e','r',0};
-static const WCHAR wSmartTeeFilter[] =
-{'S','m','a','r','t',' ','T','e','e',' ','F','i','l','t','e','r',0};
-static const WCHAR wAudioInMixerProp[] =
-{'A','u','d','i','o','I','n','p','u','t','M','i','x','e','r',' ','P','r','o',
- 'p','e','r','t','y',' ','P','a','g','e',0};
- 
-FactoryTemplate const g_Templates[] = {
-    {
-        wAudioCaptureFilter,
-        &CLSID_AudioRecord,
-        QCAP_createAudioCaptureFilter,
-        NULL
-    },{
-        wAVICompressor,
-        &CLSID_AVICo,
-        QCAP_createAVICompressor,
-        NULL
-    },{
-        wVFWCaptFilter,
-        &CLSID_VfwCapture,
-        QCAP_createVFWCaptureFilter,
-        NULL
-    },{
-        wVFWCaptFilterProp,
-        &CLSID_CaptureProperties,
-        NULL, /* FIXME: Implement QCAP_createVFWCaptureFilterPropertyPage */
-        NULL
-    },{
-        wAVIMux,
-        &CLSID_AviDest,
-        QCAP_createAVIMux,
-        NULL
-    },{
-        wAVIMuxPropPage,
-        &CLSID_AviMuxProptyPage,
-        NULL, /* FIXME: Implement QCAP_createAVIMuxPropertyPage */
-        NULL
-    },{
-        wAVIMuxPropPage1,
-        &CLSID_AviMuxProptyPage1,
-        NULL, /* FIXME: Implement QCAP_createAVIMuxPropertyPage1 */
-        NULL
-    },{
-        wFileWriter,
-        &CLSID_FileWriter,
-        NULL, /* FIXME: Implement QCAP_createFileWriter */
-        NULL
-    },{
-        wCaptGraphBuilder,
-        &CLSID_CaptureGraphBuilder,
-        QCAP_createCaptureGraphBuilder2,
-        NULL
-    },{
-        wCaptGraphBuilder2,
-        &CLSID_CaptureGraphBuilder2,
-        QCAP_createCaptureGraphBuilder2,
-        NULL
-    },{
-        wInfPinTeeFilter, 
-        &CLSID_InfTee,
-        NULL, /* FIXME: Implement QCAP_createInfinitePinTeeFilter */
-        NULL
-    },{
-        wSmartTeeFilter,
-        &CLSID_SmartTee,
-        QCAP_createSmartTeeFilter,
-        NULL
-    },{
-        wAudioInMixerProp,
-        &CLSID_AudioInputMixerProperties,
-        NULL, /* FIXME: Implement QCAP_createAudioInputMixerPropertyPage */
-        NULL
-    }
+struct class_factory
+{
+    IClassFactory IClassFactory_iface;
+    HRESULT (*create_instance)(IUnknown *outer, IUnknown **out);
 };
 
-int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
-
-/***********************************************************************
- *    Dll EntryPoint (QCAP.@)
- */
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+static inline struct class_factory *impl_from_IClassFactory(IClassFactory *iface)
 {
-    return STRMBASE_DllMain(hInstDLL,fdwReason,lpv);
+    return CONTAINING_RECORD(iface, struct class_factory, IClassFactory_iface);
 }
 
-/***********************************************************************
- *    DllGetClassObject
- */
-HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+static HRESULT WINAPI class_factory_QueryInterface(IClassFactory *iface, REFIID iid, void **out)
 {
-    return STRMBASE_DllGetClassObject( rclsid, riid, ppv );
+    TRACE("iface %p, iid %s, out %p.\n", iface, debugstr_guid(iid), out);
+
+    if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_IClassFactory))
+    {
+        *out = iface;
+        IClassFactory_AddRef(iface);
+        return S_OK;
+    }
+
+    *out = NULL;
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(iid));
+    return E_NOINTERFACE;
 }
+
+static ULONG WINAPI class_factory_AddRef(IClassFactory *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI class_factory_Release(IClassFactory *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI class_factory_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID iid, void **out)
+{
+    struct class_factory *factory = impl_from_IClassFactory(iface);
+    IUnknown *unk;
+    HRESULT hr;
+
+    TRACE("iface %p, outer %p, iid %s, out %p.\n", iface, outer, debugstr_guid(iid), out);
+
+    if (outer && !IsEqualGUID(iid, &IID_IUnknown))
+        return E_NOINTERFACE;
+
+    *out = NULL;
+    if (SUCCEEDED(hr = factory->create_instance(outer, &unk)))
+    {
+        hr = IUnknown_QueryInterface(unk, iid, out);
+        IUnknown_Release(unk);
+    }
+    return hr;
+}
+
+static HRESULT WINAPI class_factory_LockServer(IClassFactory *iface, BOOL lock)
+{
+    TRACE("iface %p, lock %d.\n", iface, lock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl class_factory_vtbl =
+{
+    class_factory_QueryInterface,
+    class_factory_AddRef,
+    class_factory_Release,
+    class_factory_CreateInstance,
+    class_factory_LockServer,
+};
+
+static struct class_factory audio_record_cf = {{&class_factory_vtbl}, audio_record_create};
+static struct class_factory avi_compressor_cf = {{&class_factory_vtbl}, avi_compressor_create};
+static struct class_factory avi_mux_cf = {{&class_factory_vtbl}, avi_mux_create};
+static struct class_factory capture_graph_cf = {{&class_factory_vtbl}, capture_graph_create};
+static struct class_factory file_writer_cf = {{&class_factory_vtbl}, file_writer_create};
+static struct class_factory smart_tee_cf = {{&class_factory_vtbl}, smart_tee_create};
+static struct class_factory vfw_capture_cf = {{&class_factory_vtbl}, vfw_capture_create};
+
+HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID iid, void **out)
+{
+    struct class_factory *factory;
+
+    TRACE("clsid %s, iid %s, out %p.\n", debugstr_guid(clsid), debugstr_guid(iid), out);
+
+    if (IsEqualGUID(clsid, &CLSID_AudioRecord))
+        factory = &audio_record_cf;
+    else if (IsEqualGUID(clsid, &CLSID_AVICo))
+        factory = &avi_compressor_cf;
+    else if (IsEqualGUID(clsid, &CLSID_AviDest))
+        factory = &avi_mux_cf;
+    else if (IsEqualGUID(clsid, &CLSID_CaptureGraphBuilder))
+        factory = &capture_graph_cf;
+    else if (IsEqualGUID(clsid, &CLSID_CaptureGraphBuilder2))
+        factory = &capture_graph_cf;
+    else if (IsEqualGUID(clsid, &CLSID_FileWriter))
+        factory = &file_writer_cf;
+    else if (IsEqualGUID(clsid, &CLSID_SmartTee))
+        factory = &smart_tee_cf;
+    else if (IsEqualGUID(clsid, &CLSID_VfwCapture))
+        factory = &vfw_capture_cf;
+    else
+    {
+        FIXME("%s not implemented, returning CLASS_E_CLASSNOTAVAILABLE.\n", debugstr_guid(clsid));
+        return CLASS_E_CLASSNOTAVAILABLE;
+    }
+
+    return IClassFactory_QueryInterface(&factory->IClassFactory_iface, iid, out);
+}
+
+static const REGPINTYPES reg_avi_mux_sink_mt = {&MEDIATYPE_Stream, &MEDIASUBTYPE_Avi};
+
+static const REGFILTERPINS2 reg_avi_mux_pins[1] =
+{
+    {
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_avi_mux_sink_mt,
+    },
+};
+
+static const REGFILTER2 reg_avi_mux =
+{
+    .dwVersion = 2,
+    .dwMerit = MERIT_DO_NOT_USE,
+    .u.s2.cPins2 = 1,
+    .u.s2.rgPins2 = reg_avi_mux_pins,
+};
+
+static const REGPINTYPES reg_video_mt = {&MEDIATYPE_Video, &GUID_NULL};
+
+static const REGFILTERPINS2 reg_smart_tee_pins[3] =
+{
+    {
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_video_mt,
+    },
+    {
+        .dwFlags = REG_PINFLAG_B_OUTPUT,
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_video_mt,
+    },
+    {
+        .dwFlags = REG_PINFLAG_B_OUTPUT,
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_video_mt,
+    },
+};
+
+static const REGFILTER2 reg_smart_tee =
+{
+    .dwVersion = 2,
+    .dwMerit = MERIT_DO_NOT_USE,
+    .u.s2.cPins2 = 3,
+    .u.s2.rgPins2 = reg_smart_tee_pins,
+};
+
+static const REGPINTYPES reg_file_writer_sink_mt = {&GUID_NULL, &GUID_NULL};
+
+static const REGFILTERPINS2 reg_file_writer_pins[1] =
+{
+    {
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_file_writer_sink_mt,
+    },
+};
+
+static const REGFILTER2 reg_file_writer =
+{
+    .dwVersion = 2,
+    .dwMerit = MERIT_DO_NOT_USE,
+    .u.s2.cPins2 = 1,
+    .u.s2.rgPins2 = reg_file_writer_pins,
+};
 
 /***********************************************************************
  *    DllRegisterServer (QCAP.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    TRACE("()\n");
-    return AMovieDllRegisterServer2(TRUE);
+    IFilterMapper2 *mapper;
+    HRESULT hr;
+
+    if (FAILED(hr = __wine_register_resources()))
+        return hr;
+
+    if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IFilterMapper2, (void **)&mapper)))
+        return hr;
+
+    IFilterMapper2_RegisterFilter(mapper, &CLSID_AviDest, L"AVI Mux",
+            NULL, NULL, NULL, &reg_avi_mux);
+    IFilterMapper2_RegisterFilter(mapper, &CLSID_FileWriter, L"File writer",
+            NULL, NULL, NULL, &reg_file_writer);
+    IFilterMapper2_RegisterFilter(mapper, &CLSID_SmartTee, L"Smart Tee",
+            NULL, NULL, NULL, &reg_smart_tee);
+
+    IFilterMapper2_Release(mapper);
+    return S_OK;
 }
 
 /***********************************************************************
@@ -174,25 +238,20 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    TRACE("\n");
-    return AMovieDllRegisterServer2(FALSE);
-}
+    IFilterMapper2 *mapper;
+    HRESULT hr;
 
-/***********************************************************************
- *    DllCanUnloadNow (QCAP.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    TRACE("\n");
+    if (FAILED(hr = __wine_unregister_resources()))
+        return hr;
 
-    if (STRMBASE_DllCanUnloadNow() == S_OK && objects_ref == 0)
-        return S_OK;
-    return S_FALSE;
-}
+    if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IFilterMapper2, (void **)&mapper)))
+        return hr;
 
-DWORD ObjectRefCount(BOOL increment)
-{
-    if (increment)
-        return InterlockedIncrement(&objects_ref);
-    return InterlockedDecrement(&objects_ref);
+    IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_AviDest);
+    IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_FileWriter);
+    IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_SmartTee);
+
+    IFilterMapper2_Release(mapper);
+    return S_OK;
 }

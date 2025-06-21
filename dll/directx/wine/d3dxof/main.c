@@ -18,41 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <string.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
-
-#include "ole2.h"
-#include "rpcproxy.h"
-#include "uuids.h"
-
 #include "d3dxof_private.h"
-#include "dxfile.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dxof);
-
-static HINSTANCE instance;
-
-/* For the moment, do nothing here. */
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
-{
-    switch(fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            instance = hInstDLL;
-            DisableThreadLibraryCalls(hInstDLL);
-	    break;
-    }
-    return TRUE;
-}
 
 /******************************************************************************
  * DirectX File ClassFactory
@@ -217,28 +185,4 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     *ppv = &(factory->IClassFactory_iface);
     return S_OK;
-}
-
-/***********************************************************************
- *              DllCanUnloadNow (D3DXOF.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-
-/***********************************************************************
- *		DllRegisterServer (D3DXOF.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( instance );
-}
-
-/***********************************************************************
- *		DllUnregisterServer (D3DXOF.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( instance );
 }

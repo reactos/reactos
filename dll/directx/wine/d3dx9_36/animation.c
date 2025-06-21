@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * Animation Controller operations specific to D3DX9.
  *
@@ -23,7 +20,6 @@
 
 
 #include "d3dx9_private.h"
-#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -65,7 +61,7 @@ static ULONG WINAPI d3dx9_animation_controller_AddRef(ID3DXAnimationController *
     struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
     ULONG refcount = InterlockedIncrement(&animation->ref);
 
-    TRACE("%p increasing refcount to %u.\n", animation, refcount);
+    TRACE("%p increasing refcount to %lu.\n", animation, refcount);
 
     return refcount;
 }
@@ -75,11 +71,11 @@ static ULONG WINAPI d3dx9_animation_controller_Release(ID3DXAnimationController 
     struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
     ULONG refcount = InterlockedDecrement(&animation->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", animation, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", animation, refcount);
 
     if (!refcount)
     {
-        HeapFree(GetProcessHeap(), 0, animation);
+        free(animation);
     }
 
     return refcount;
@@ -325,7 +321,7 @@ static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_KeyTrackBlend(ID3DXAnim
 
 static HRESULT WINAPI d3dx9_animation_controller_UnkeyEvent(ID3DXAnimationController *iface, D3DXEVENTHANDLE event)
 {
-    FIXME("iface %p, event %u stub.\n", iface, event);
+    FIXME("iface %p, event %lu stub.\n", iface, event);
 
     return E_NOTIMPL;
 }
@@ -362,7 +358,7 @@ static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_GetCurrentPriorityBlend
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_GetUpcomingTrackEvent(ID3DXAnimationController *iface,
         UINT track, D3DXEVENTHANDLE event)
 {
-    FIXME("iface %p, track %u, event %u stub.\n", iface, track, event);
+    FIXME("iface %p, track %u, event %lu stub.\n", iface, track, event);
 
     return 0;
 }
@@ -370,14 +366,14 @@ static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_GetUpcomingTrackEvent(I
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_GetUpcomingPriorityBlend(ID3DXAnimationController *iface,
         D3DXEVENTHANDLE event)
 {
-    FIXME("iface %p, event %u stub.\n", iface, event);
+    FIXME("iface %p, event %lu stub.\n", iface, event);
 
     return 0;
 }
 
 static HRESULT WINAPI d3dx9_animation_controller_ValidateEvent(ID3DXAnimationController *iface, D3DXEVENTHANDLE event)
 {
-    FIXME("iface %p, event %u stub.\n", iface, event);
+    FIXME("iface %p, event %lu stub.\n", iface, event);
 
     return E_NOTIMPL;
 }
@@ -385,7 +381,7 @@ static HRESULT WINAPI d3dx9_animation_controller_ValidateEvent(ID3DXAnimationCon
 static HRESULT WINAPI d3dx9_animation_controller_GetEventDesc(ID3DXAnimationController *iface,
         D3DXEVENTHANDLE event, D3DXEVENT_DESC *desc)
 {
-    FIXME("iface %p, event %u, desc %p stub.\n", iface, event, desc);
+    FIXME("iface %p, event %lu, desc %p stub.\n", iface, event, desc);
 
     return E_NOTIMPL;
 }
@@ -456,7 +452,7 @@ HRESULT WINAPI D3DXCreateAnimationController(UINT max_outputs, UINT max_sets,
     if (!max_outputs || !max_sets || !max_tracks || !max_events || !controller)
         return D3D_OK;
 
-    object = HeapAlloc(GetProcessHeap(), 0, sizeof(*object));
+    object = calloc(1, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
@@ -514,7 +510,7 @@ static ULONG WINAPI d3dx9_keyframed_animation_AddRef(ID3DXKeyframedAnimationSet 
     struct d3dx9_keyframed_animation_set *set = impl_from_ID3DXKeyframedAnimationSet(iface);
     ULONG refcount = InterlockedIncrement(&set->ref);
 
-    TRACE("%p increasing refcount to %u.\n", set, refcount);
+    TRACE("%p increasing refcount to %lu.\n", set, refcount);
 
     return refcount;
 }
@@ -524,12 +520,12 @@ static ULONG WINAPI d3dx9_keyframed_animation_Release(ID3DXKeyframedAnimationSet
     struct d3dx9_keyframed_animation_set *set = impl_from_ID3DXKeyframedAnimationSet(iface);
     ULONG refcount = InterlockedDecrement(&set->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", set, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", set, refcount);
 
     if (!refcount)
     {
-        heap_free((char *)set->name);
-        heap_free(set);
+        free((char *)set->name);
+        free(set);
     }
 
     return refcount;
@@ -600,7 +596,7 @@ static HRESULT WINAPI d3dx9_keyframed_animation_GetCallback(ID3DXKeyframedAnimat
 {
     struct d3dx9_keyframed_animation_set *set = impl_from_ID3DXKeyframedAnimationSet(iface);
 
-    FIXME("set %p, position %.16e, flags %#x, callback_position %p, callback_data %p stub.\n",
+    FIXME("set %p, position %.16e, flags %#lx, callback_position %p, callback_data %p stub.\n",
             set, position, flags, callback_position, callback_data);
     return E_NOTIMPL;
 }
@@ -807,7 +803,7 @@ static HRESULT WINAPI d3dx9_keyframed_animation_Compress(ID3DXKeyframedAnimation
 {
     struct d3dx9_keyframed_animation_set *set = impl_from_ID3DXKeyframedAnimationSet(iface);
 
-    FIXME("set %p, flags %#x, lossiness %.8e, hierarchy %p, compressed_data %p stub.\n",
+    FIXME("set %p, flags %#lx, lossiness %.8e, hierarchy %p, compressed_data %p stub.\n",
             set, flags, lossiness, hierarchy, compressed_data);
     return E_NOTIMPL;
 }
@@ -864,7 +860,6 @@ HRESULT WINAPI D3DXCreateKeyframedAnimationSet(const char *name, double ticks_pe
         const D3DXKEY_CALLBACK *callback_keys, ID3DXKeyframedAnimationSet **animation_set)
 {
     struct d3dx9_keyframed_animation_set *object;
-    char *string;
 
     TRACE("name %s, ticks_per_second %.16e, playback_type %u, animation_count %u, "
             "callback_key_count %u, callback_keys %p, animation_set %p.\n",
@@ -874,18 +869,16 @@ HRESULT WINAPI D3DXCreateKeyframedAnimationSet(const char *name, double ticks_pe
     if (!animation_count)
         return D3DERR_INVALIDCALL;
 
-    if (!(object = heap_alloc(sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->ID3DXKeyframedAnimationSet_iface.lpVtbl = &d3dx9_keyframed_animation_vtbl;
     object->ref = 1;
-    if (!(string = heap_alloc(strlen(name) + 1)))
+    if (!(object->name = strdup(name)))
     {
-        heap_free(object);
+        free(object);
         return E_OUTOFMEMORY;
     }
-    strcpy(string, name);
-    object->name = string;
     object->ticks_per_second = ticks_per_second;
     object->playback_type = playback_type;
     object->animation_count = animation_count;

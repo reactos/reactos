@@ -18,17 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/debug.h"
-
-#define COBJMACROS
-
-#include "winbase.h"
-#include "wingdi.h"
-
 #include "d3dxof_private.h"
-#include "dxfile.h"
-
-#include <stdio.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dxof);
 WINE_DECLARE_DEBUG_CHANNEL(d3dxof_dump);
@@ -81,46 +71,49 @@ static inline IDirectXFileImpl *impl_from_IDirectXFile(IDirectXFile *iface)
     return CONTAINING_RECORD(iface, IDirectXFileImpl, IDirectXFile_iface);
 }
 
-/*** IUnknown methods ***/
-static HRESULT WINAPI IDirectXFileImpl_QueryInterface(IDirectXFile* iface, REFIID riid, void** ppvObject)
+static HRESULT WINAPI IDirectXFileImpl_QueryInterface(IDirectXFile *iface, REFIID riid, void **out)
 {
-  IDirectXFileImpl *This = impl_from_IDirectXFile(iface);
+    IDirectXFileImpl *object = impl_from_IDirectXFile(iface);
 
-  TRACE("(%p/%p)->(%s,%p)\n", iface, This, debugstr_guid(riid), ppvObject);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-  if (IsEqualGUID(riid, &IID_IUnknown)
-      || IsEqualGUID(riid, &IID_IDirectXFile))
-  {
-    IUnknown_AddRef(iface);
-    *ppvObject = &This->IDirectXFile_iface;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_IDirectXFile))
+    {
+        *out = &object->IDirectXFile_iface;
+    }
+    else
+    {
+        *out = NULL;
+        WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*out);
     return S_OK;
-  }
-
-  ERR("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppvObject);
-  return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirectXFileImpl_AddRef(IDirectXFile* iface)
+static ULONG WINAPI IDirectXFileImpl_AddRef(IDirectXFile *iface)
 {
-  IDirectXFileImpl *This = impl_from_IDirectXFile(iface);
-  ULONG ref = InterlockedIncrement(&This->ref);
+    IDirectXFileImpl *object = impl_from_IDirectXFile(iface);
+    ULONG refcount = InterlockedIncrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
-  return ref;
+    return refcount;
 }
 
-static ULONG WINAPI IDirectXFileImpl_Release(IDirectXFile* iface)
+static ULONG WINAPI IDirectXFileImpl_Release(IDirectXFile *iface)
 {
-  IDirectXFileImpl *This = impl_from_IDirectXFile(iface);
-  ULONG ref = InterlockedDecrement(&This->ref);
+    IDirectXFileImpl *object = impl_from_IDirectXFile(iface);
+    ULONG refcount = InterlockedDecrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
-  if (!ref)
-    HeapFree(GetProcessHeap(), 0, This);
+    if (!refcount)
+        HeapFree(GetProcessHeap(), 0, object);
 
-  return ref;
+    return refcount;
 }
 
 /*** IDirectXFile methods ***/
@@ -133,7 +126,7 @@ static HRESULT WINAPI IDirectXFileImpl_CreateEnumObject(IDirectXFile* iface, LPV
   DWORD file_size;
   DWORD bytes_written;
 
-  TRACE("(%p/%p)->(%p,%x,%p)\n", This, iface, pvSource, dwLoadOptions, ppEnumObj);
+  TRACE("iface %p, source %p, load_options %#lx, out %p.\n", iface, pvSource, dwLoadOptions, ppEnumObj);
 
   if (!ppEnumObj)
     return DXFILEERR_BADVALUE;
@@ -212,19 +205,19 @@ static HRESULT WINAPI IDirectXFileImpl_CreateEnumObject(IDirectXFile* iface, LPV
   {
     LPDXFILELOADMEMORY lpdxflm = pvSource;
 
-    TRACE("Source in memory at %p with size %d\n", lpdxflm->lpMemory, lpdxflm->dSize);
+    TRACE("Source in memory at %p with size %ld.\n", lpdxflm->lpMemory, lpdxflm->dSize);
 
     file_buffer = lpdxflm->lpMemory;
     file_size = lpdxflm->dSize;
   }
   else
   {
-    FIXME("Source type %d is not handled yet\n", dwLoadOptions);
+    FIXME("Source type %ld not handled yet.\n", dwLoadOptions);
     hr = DXFILEERR_NOTDONEYET;
     goto error;
   }
 
-  TRACE("File size is %d bytes\n", file_size);
+  TRACE("File size is %lu bytes.\n", file_size);
 
   if (TRACE_ON(d3dxof_dump))
   {
@@ -261,7 +254,7 @@ static HRESULT WINAPI IDirectXFileImpl_CreateEnumObject(IDirectXFile* iface, LPV
   if (TRACE_ON(d3dxof))
   {
     ULONG i;
-    TRACE("Registered templates (%d):\n", This->nb_xtemplates);
+    TRACE("Registered templates (%lu):\n", This->nb_xtemplates);
     for (i = 1; i < This->nb_xtemplates; i++)
       TRACE("%s - %s\n", This->xtemplates[i].name, debugstr_guid(&This->xtemplates[i].class_id));
   }
@@ -277,21 +270,22 @@ error:
   return hr;
 }
 
-static HRESULT WINAPI IDirectXFileImpl_CreateSaveObject(IDirectXFile* iface, LPCSTR szFileName, DXFILEFORMAT dwFileFormat, LPDIRECTXFILESAVEOBJECT* ppSaveObj)
+static HRESULT WINAPI IDirectXFileImpl_CreateSaveObject(IDirectXFile *iface, const char *filename,
+        DXFILEFORMAT format, LPDIRECTXFILESAVEOBJECT *out)
 {
-  IDirectXFileImpl *This = impl_from_IDirectXFile(iface);
-  IDirectXFileSaveObjectImpl *object;
-  HRESULT hr;
+    IDirectXFileSaveObjectImpl *object;
+    HRESULT hr;
 
-  FIXME("(%p/%p)->(%s,%x,%p) partial stub!\n", This, iface, szFileName, dwFileFormat, ppSaveObj);
+    FIXME("iface %p, filename %s, format %lu, out %p partial stub!\n", iface, debugstr_a(filename),
+            format, out);
 
-  if (!szFileName || !ppSaveObj)
-    return E_POINTER;
+    if (!filename || !out)
+        return E_POINTER;
 
-  hr = IDirectXFileSaveObjectImpl_Create(&object);
-  if (SUCCEEDED(hr))
-    *ppSaveObj = &object->IDirectXFileSaveObject_iface;
-  return hr;
+    hr = IDirectXFileSaveObjectImpl_Create(&object);
+    if (SUCCEEDED(hr))
+        *out = &object->IDirectXFileSaveObject_iface;
+    return hr;
 }
 
 static HRESULT WINAPI IDirectXFileImpl_RegisterTemplates(IDirectXFile* iface, LPVOID pvData, DWORD cbSize)
@@ -307,7 +301,7 @@ static HRESULT WINAPI IDirectXFileImpl_RegisterTemplates(IDirectXFile* iface, LP
   buf.rem_bytes = cbSize;
   buf.pdxf = This;
 
-  TRACE("(%p/%p)->(%p,%d)\n", This, iface, pvData, cbSize);
+  TRACE("iface %p, data %p, size %lu.\n", iface, pvData, cbSize);
 
   if (!pvData)
     return DXFILEERR_BADVALUE;
@@ -339,10 +333,11 @@ static HRESULT WINAPI IDirectXFileImpl_RegisterTemplates(IDirectXFile* iface, LP
 
   if (TRACE_ON(d3dxof))
   {
-    ULONG i;
-    TRACE("Registered templates (%d):\n", This->nb_xtemplates);
-    for (i = 1; i < This->nb_xtemplates; i++)
-      TRACE("%s - %s\n", This->xtemplates[i].name, debugstr_guid(&This->xtemplates[i].class_id));
+      unsigned int i;
+
+      TRACE("Registered templates (%lu):\n", This->nb_xtemplates);
+      for (i = 1; i < This->nb_xtemplates; ++i)
+          TRACE("%s - %s\n", This->xtemplates[i].name, debugstr_guid(&This->xtemplates[i].class_id));
   }
 
   hr = DXFILE_OK;
@@ -384,99 +379,91 @@ static inline IDirectXFileBinaryImpl *impl_from_IDirectXFileBinary(IDirectXFileB
     return CONTAINING_RECORD(iface, IDirectXFileBinaryImpl, IDirectXFileBinary_iface);
 }
 
-/*** IUnknown methods ***/
-static HRESULT WINAPI IDirectXFileBinaryImpl_QueryInterface(IDirectXFileBinary* iface, REFIID riid, void** ppvObject)
+static HRESULT WINAPI IDirectXFileBinaryImpl_QueryInterface(IDirectXFileBinary *iface,
+        REFIID riid, void **out)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
+    IDirectXFileBinaryImpl *object = impl_from_IDirectXFileBinary(iface);
 
-  TRACE("(%p/%p)->(%s,%p)\n", iface, This, debugstr_guid(riid), ppvObject);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-  if (IsEqualGUID(riid, &IID_IUnknown)
-      || IsEqualGUID(riid, &IID_IDirectXFileObject)
-      || IsEqualGUID(riid, &IID_IDirectXFileBinary))
-  {
-    IUnknown_AddRef(iface);
-    *ppvObject = &This->IDirectXFileBinary_iface;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_IDirectXFileObject)
+            || IsEqualGUID(riid, &IID_IDirectXFileBinary))
+    {
+        *out = &object->IDirectXFileBinary_iface;
+    }
+    else
+    {
+        *out = NULL;
+        /* Do not print an error for interfaces that can be queried to
+         * retrieve the type of the object */
+        if (!IsEqualGUID(riid, &IID_IDirectXFileData) && !IsEqualGUID(riid, &IID_IDirectXFileDataReference))
+            WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*out);
     return S_OK;
-  }
-
-  /* Do not print an error for interfaces that can be queried to retrieve the type of the object */
-  if (!IsEqualGUID(riid, &IID_IDirectXFileData)
-      && !IsEqualGUID(riid, &IID_IDirectXFileDataReference))
-    ERR("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppvObject);
-
-  return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirectXFileBinaryImpl_AddRef(IDirectXFileBinary* iface)
+static ULONG WINAPI IDirectXFileBinaryImpl_AddRef(IDirectXFileBinary *iface)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
-  ULONG ref = InterlockedIncrement(&This->ref);
+    IDirectXFileBinaryImpl *object = impl_from_IDirectXFileBinary(iface);
+    ULONG refcount = InterlockedIncrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
-  return ref;
+    return refcount;
 }
 
-static ULONG WINAPI IDirectXFileBinaryImpl_Release(IDirectXFileBinary* iface)
+static ULONG WINAPI IDirectXFileBinaryImpl_Release(IDirectXFileBinary *iface)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
-  ULONG ref = InterlockedDecrement(&This->ref);
+    IDirectXFileBinaryImpl *object = impl_from_IDirectXFileBinary(iface);
+    ULONG refcount = InterlockedDecrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
-  if (!ref)
-    HeapFree(GetProcessHeap(), 0, This);
+    if (!refcount)
+        HeapFree(GetProcessHeap(), 0, object);
 
-  return ref;
+    return refcount;
 }
 
-/*** IDirectXFileObject methods ***/
-static HRESULT WINAPI IDirectXFileBinaryImpl_GetName(IDirectXFileBinary* iface, LPSTR pstrNameBuf, LPDWORD pdwBufLen)
-
+static HRESULT WINAPI IDirectXFileBinaryImpl_GetName(IDirectXFileBinary *iface, char *name,
+        DWORD *length)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
+    FIXME("iface %p, name %p, length %p stub!\n", iface, name, length);
 
-  FIXME("(%p/%p)->(%p,%p) stub!\n", This, iface, pstrNameBuf, pdwBufLen);
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-static HRESULT WINAPI IDirectXFileBinaryImpl_GetId(IDirectXFileBinary* iface, LPGUID pGuid)
+static HRESULT WINAPI IDirectXFileBinaryImpl_GetId(IDirectXFileBinary *iface, GUID *guid)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
+    FIXME("iface %p, guid %p stub!\n", iface, guid);
 
-  FIXME("(%p/%p)->(%p) stub!\n", This, iface, pGuid); 
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-/*** IDirectXFileBinary methods ***/
-static HRESULT WINAPI IDirectXFileBinaryImpl_GetSize(IDirectXFileBinary* iface, DWORD* pcbSize)
+static HRESULT WINAPI IDirectXFileBinaryImpl_GetSize(IDirectXFileBinary *iface, DWORD *size)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
+    FIXME("iface %p, size %p stub!\n", iface, size);
 
-  FIXME("(%p/%p)->(%p) stub!\n", This, iface, pcbSize); 
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-static HRESULT WINAPI IDirectXFileBinaryImpl_GetMimeType(IDirectXFileBinary* iface, LPCSTR* pszMimeType)
+static HRESULT WINAPI IDirectXFileBinaryImpl_GetMimeType(IDirectXFileBinary *iface, LPCSTR *mimetype)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
+    FIXME("iface %p, mimetype %p stub!\n", iface, mimetype);
 
-  FIXME("(%p/%p)->(%p) stub!\n", This, iface, pszMimeType);
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-static HRESULT WINAPI IDirectXFileBinaryImpl_Read(IDirectXFileBinary* iface, LPVOID pvData, DWORD cbSize, LPDWORD pcbRead)
+static HRESULT WINAPI IDirectXFileBinaryImpl_Read(IDirectXFileBinary *iface, void *data,
+        DWORD size, DWORD *count)
 {
-  IDirectXFileBinaryImpl *This = impl_from_IDirectXFileBinary(iface);
+    FIXME("iface %p, data %p, size %lu, count %p stub!\n", iface, data, size, count);
 
-  FIXME("(%p/%p)->(%p, %d, %p) stub!\n", This, iface, pvData, cbSize, pcbRead);
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
 static const IDirectXFileBinaryVtbl IDirectXFileBinary_Vtbl =
@@ -514,62 +501,65 @@ static inline IDirectXFileDataImpl *impl_from_IDirectXFileData(IDirectXFileData 
     return CONTAINING_RECORD(iface, IDirectXFileDataImpl, IDirectXFileData_iface);
 }
 
-/*** IUnknown methods ***/
-static HRESULT WINAPI IDirectXFileDataImpl_QueryInterface(IDirectXFileData* iface, REFIID riid, void** ppvObject)
+static HRESULT WINAPI IDirectXFileDataImpl_QueryInterface(IDirectXFileData *iface, REFIID riid,
+        void **out)
 {
-  IDirectXFileDataImpl *This = impl_from_IDirectXFileData(iface);
+    IDirectXFileDataImpl *data = impl_from_IDirectXFileData(iface);
 
-  TRACE("(%p/%p)->(%s,%p)\n", iface, This, debugstr_guid(riid), ppvObject);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-  if (IsEqualGUID(riid, &IID_IUnknown)
-      || IsEqualGUID(riid, &IID_IDirectXFileObject)
-      || IsEqualGUID(riid, &IID_IDirectXFileData))
-  {
-    IUnknown_AddRef(iface);
-    *ppvObject = &This->IDirectXFileData_iface;
-    return S_OK;
-  }
-
-  /* Do not print an error for interfaces that can be queried to retrieve the type of the object */
-  if (!IsEqualGUID(riid, &IID_IDirectXFileBinary)
-      && !IsEqualGUID(riid, &IID_IDirectXFileDataReference))
-    ERR("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppvObject);
-
-  return E_NOINTERFACE;
-}
-
-static ULONG WINAPI IDirectXFileDataImpl_AddRef(IDirectXFileData* iface)
-{
-  IDirectXFileDataImpl *This = impl_from_IDirectXFileData(iface);
-  ULONG ref = InterlockedIncrement(&This->ref);
-
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
-
-  return ref;
-}
-
-static ULONG WINAPI IDirectXFileDataImpl_Release(IDirectXFileData* iface)
-{
-  IDirectXFileDataImpl *This = impl_from_IDirectXFileData(iface);
-  ULONG ref = InterlockedDecrement(&This->ref);
-
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
-
-  if (!ref)
-  {
-    if (!This->level && !This->from_ref)
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_IDirectXFileObject)
+            || IsEqualGUID(riid, &IID_IDirectXFileData))
     {
-      HeapFree(GetProcessHeap(), 0, This->pstrings);
-      if (This->pobj)
-      {
-        HeapFree(GetProcessHeap(), 0, This->pobj->pdata);
-        HeapFree(GetProcessHeap(), 0, This->pobj);
-      }
+        *out = &data->IDirectXFileData_iface;
     }
-    HeapFree(GetProcessHeap(), 0, This);
-  }
+    else
+    {
+        *out = NULL;
+        /* Do not print an error for interfaces that can be queried to
+         * retrieve the type of the object */
+        if (!IsEqualGUID(riid, &IID_IDirectXFileBinary) && !IsEqualGUID(riid, &IID_IDirectXFileDataReference))
+            WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
 
-  return ref;
+    IUnknown_AddRef((IUnknown *)*out);
+    return S_OK;
+}
+
+static ULONG WINAPI IDirectXFileDataImpl_AddRef(IDirectXFileData *iface)
+{
+    IDirectXFileDataImpl *data = impl_from_IDirectXFileData(iface);
+    ULONG refcount = InterlockedIncrement(&data->ref);
+
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
+
+    return refcount;
+}
+
+static ULONG WINAPI IDirectXFileDataImpl_Release(IDirectXFileData *iface)
+{
+    IDirectXFileDataImpl *data = impl_from_IDirectXFileData(iface);
+    ULONG refcount = InterlockedDecrement(&data->ref);
+
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
+
+    if (!refcount)
+    {
+        if (!data->level && !data->from_ref)
+        {
+            HeapFree(GetProcessHeap(), 0, data->pstrings);
+            if (data->pobj)
+            {
+                HeapFree(GetProcessHeap(), 0, data->pobj->pdata);
+                HeapFree(GetProcessHeap(), 0, data->pobj);
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, data);
+    }
+
+    return refcount;
 }
 
 /*** IDirectXFileObject methods ***/
@@ -724,31 +714,29 @@ static HRESULT WINAPI IDirectXFileDataImpl_GetNextObject(IDirectXFileData* iface
   return DXFILE_OK;
 }
 
-static HRESULT WINAPI IDirectXFileDataImpl_AddDataObject(IDirectXFileData* iface, LPDIRECTXFILEDATA pDataObj)
+static HRESULT WINAPI IDirectXFileDataImpl_AddDataObject(IDirectXFileData *iface, LPDIRECTXFILEDATA data)
 {
-  IDirectXFileDataImpl *This = impl_from_IDirectXFileData(iface);
+    FIXME("iface %p, data %p stub!\n", iface, data);
 
-  FIXME("(%p/%p)->(%p) stub!\n", This, iface, pDataObj); 
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-static HRESULT WINAPI IDirectXFileDataImpl_AddDataReference(IDirectXFileData* iface, LPCSTR szRef, const GUID* pguidRef)
+static HRESULT WINAPI IDirectXFileDataImpl_AddDataReference(IDirectXFileData *iface,
+        const char *reference, const GUID *guidref)
 {
-  IDirectXFileDataImpl *This = impl_from_IDirectXFileData(iface);
+    FIXME("iface %p, reference %s, guid reference %s stub!\n", iface, debugstr_a(reference),
+            debugstr_guid(guidref));
 
-  FIXME("(%p/%p)->(%s,%p) stub!\n", This, iface, szRef, pguidRef); 
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-static HRESULT WINAPI IDirectXFileDataImpl_AddBinaryObject(IDirectXFileData* iface, LPCSTR szName, const GUID* pguid, LPCSTR szMimeType, LPVOID pvData, DWORD cbSize)
+static HRESULT WINAPI IDirectXFileDataImpl_AddBinaryObject(IDirectXFileData *iface, const char *name,
+        const GUID *guid, const char *mimetype, void *data, DWORD size)
 {
-  IDirectXFileDataImpl *This = impl_from_IDirectXFileData(iface);
+    FIXME("iface %p, name %s, guid %s, mimetype %s, data %p, size %lu stub!\n", iface, debugstr_a(name),
+            debugstr_guid(guid), debugstr_a(mimetype), data, size);
 
-  FIXME("(%p/%p)->(%s,%p,%s,%p,%d) stub!\n", This, iface, szName, pguid, szMimeType, pvData, cbSize);
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
 static const IDirectXFileDataVtbl IDirectXFileData_Vtbl =
@@ -789,51 +777,54 @@ static inline IDirectXFileDataReferenceImpl *impl_from_IDirectXFileDataReference
     return CONTAINING_RECORD(iface, IDirectXFileDataReferenceImpl, IDirectXFileDataReference_iface);
 }
 
-/*** IUnknown methods ***/
-static HRESULT WINAPI IDirectXFileDataReferenceImpl_QueryInterface(IDirectXFileDataReference* iface, REFIID riid, void** ppvObject)
+static HRESULT WINAPI IDirectXFileDataReferenceImpl_QueryInterface(IDirectXFileDataReference *iface,
+        REFIID riid, void **out)
 {
-  IDirectXFileDataReferenceImpl *This = impl_from_IDirectXFileDataReference(iface);
+    IDirectXFileDataReferenceImpl *object = impl_from_IDirectXFileDataReference(iface);
 
-  TRACE("(%p/%p)->(%s,%p)\n", iface, This, debugstr_guid(riid), ppvObject);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-  if (IsEqualGUID(riid, &IID_IUnknown)
-      || IsEqualGUID(riid, &IID_IDirectXFileObject)
-      || IsEqualGUID(riid, &IID_IDirectXFileDataReference))
-  {
-    IUnknown_AddRef(iface);
-    *ppvObject = &This->IDirectXFileDataReference_iface;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_IDirectXFileObject)
+            || IsEqualGUID(riid, &IID_IDirectXFileDataReference))
+    {
+        *out = &object->IDirectXFileDataReference_iface;
+    }
+    else
+    {
+        /* Do not print an error for interfaces that can be queried to
+         * retrieve the type of the object */
+        *out = NULL;
+        if (!IsEqualGUID(riid, &IID_IDirectXFileData) && !IsEqualGUID(riid, &IID_IDirectXFileBinary))
+            WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*out);
     return S_OK;
-  }
-
-  /* Do not print an error for interfaces that can be queried to retrieve the type of the object */
-  if (!IsEqualGUID(riid, &IID_IDirectXFileData)
-      && !IsEqualGUID(riid, &IID_IDirectXFileBinary))
-    ERR("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppvObject);
-
-  return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirectXFileDataReferenceImpl_AddRef(IDirectXFileDataReference* iface)
+static ULONG WINAPI IDirectXFileDataReferenceImpl_AddRef(IDirectXFileDataReference *iface)
 {
-  IDirectXFileDataReferenceImpl *This = impl_from_IDirectXFileDataReference(iface);
-  ULONG ref = InterlockedIncrement(&This->ref);
+    IDirectXFileDataReferenceImpl *object = impl_from_IDirectXFileDataReference(iface);
+    ULONG refcount = InterlockedIncrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
-  return ref;
+    return refcount;
 }
 
-static ULONG WINAPI IDirectXFileDataReferenceImpl_Release(IDirectXFileDataReference* iface)
+static ULONG WINAPI IDirectXFileDataReferenceImpl_Release(IDirectXFileDataReference *iface)
 {
-  IDirectXFileDataReferenceImpl *This = impl_from_IDirectXFileDataReference(iface);
-  ULONG ref = InterlockedDecrement(&This->ref);
+    IDirectXFileDataReferenceImpl *object = impl_from_IDirectXFileDataReference(iface);
+    ULONG refcount = InterlockedDecrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
-  if (!ref)
-    HeapFree(GetProcessHeap(), 0, This);
+    if (!refcount)
+        HeapFree(GetProcessHeap(), 0, object);
 
-  return ref;
+    return refcount;
 }
 
 /*** IDirectXFileObject methods ***/
@@ -864,18 +855,19 @@ static HRESULT WINAPI IDirectXFileDataReferenceImpl_GetName(IDirectXFileDataRefe
   return DXFILE_OK;
 }
 
-static HRESULT WINAPI IDirectXFileDataReferenceImpl_GetId(IDirectXFileDataReference* iface, LPGUID pGuid)
+static HRESULT WINAPI IDirectXFileDataReferenceImpl_GetId(IDirectXFileDataReference *iface,
+        GUID *guid)
 {
-  IDirectXFileDataReferenceImpl *This = impl_from_IDirectXFileDataReference(iface);
+    IDirectXFileDataReferenceImpl *object = impl_from_IDirectXFileDataReference(iface);
 
-  TRACE("(%p/%p)->(%p)\n", This, iface, pGuid);
+    TRACE("iface %p, guid %p.\n", iface, guid);
 
-  if (!pGuid)
-    return DXFILEERR_BADVALUE;
+    if (!guid)
+        return DXFILEERR_BADVALUE;
 
-  *pGuid = This->ptarget->class_id;
+    *guid = object->ptarget->class_id;
 
-  return DXFILE_OK;
+    return DXFILE_OK;
 }
 
 /*** IDirectXFileDataReference ***/
@@ -937,54 +929,59 @@ static inline IDirectXFileEnumObjectImpl *impl_from_IDirectXFileEnumObject(IDire
     return CONTAINING_RECORD(iface, IDirectXFileEnumObjectImpl, IDirectXFileEnumObject_iface);
 }
 
-/*** IUnknown methods ***/
-static HRESULT WINAPI IDirectXFileEnumObjectImpl_QueryInterface(IDirectXFileEnumObject* iface, REFIID riid, void** ppvObject)
+static HRESULT WINAPI IDirectXFileEnumObjectImpl_QueryInterface(IDirectXFileEnumObject *iface,
+        REFIID riid, void **out)
 {
-  IDirectXFileEnumObjectImpl *This = impl_from_IDirectXFileEnumObject(iface);
+    IDirectXFileEnumObjectImpl *object = impl_from_IDirectXFileEnumObject(iface);
 
-  TRACE("(%p/%p)->(%s,%p)\n", iface, This, debugstr_guid(riid), ppvObject);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-  if (IsEqualGUID(riid, &IID_IUnknown)
-      || IsEqualGUID(riid, &IID_IDirectXFileEnumObject))
-  {
-    IUnknown_AddRef(iface);
-    *ppvObject = &This->IDirectXFileEnumObject_iface;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_IDirectXFileEnumObject))
+    {
+        *out = &object->IDirectXFileEnumObject_iface;
+    }
+    else
+    {
+        *out = NULL;
+        WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*out);
     return S_OK;
-  }
-
-  ERR("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppvObject);
-  return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirectXFileEnumObjectImpl_AddRef(IDirectXFileEnumObject* iface)
+static ULONG WINAPI IDirectXFileEnumObjectImpl_AddRef(IDirectXFileEnumObject *iface)
 {
-  IDirectXFileEnumObjectImpl *This = impl_from_IDirectXFileEnumObject(iface);
-  ULONG ref = InterlockedIncrement(&This->ref);
+    IDirectXFileEnumObjectImpl *object = impl_from_IDirectXFileEnumObject(iface);
+    ULONG refcount = InterlockedIncrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
-  return ref;
+    return refcount;
 }
 
-static ULONG WINAPI IDirectXFileEnumObjectImpl_Release(IDirectXFileEnumObject* iface)
+static ULONG WINAPI IDirectXFileEnumObjectImpl_Release(IDirectXFileEnumObject *iface)
 {
-  IDirectXFileEnumObjectImpl *This = impl_from_IDirectXFileEnumObject(iface);
-  ULONG ref = InterlockedDecrement(&This->ref);
+    IDirectXFileEnumObjectImpl *object = impl_from_IDirectXFileEnumObject(iface);
+    ULONG refcount = InterlockedDecrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
-  if (!ref)
-  {
-    ULONG i;
-    for (i = 0; i < This->nb_xobjects; i++)
-      IDirectXFileData_Release(This->pRefObjects[i]);
-    if (This->mapped_memory)
-      UnmapViewOfFile(This->mapped_memory);
-    HeapFree(GetProcessHeap(), 0, This->decomp_buffer);
-    HeapFree(GetProcessHeap(), 0, This);
-  }
+    if (!refcount)
+    {
+        unsigned int i;
 
-  return ref;
+        for (i = 0; i < object->nb_xobjects; ++i)
+            IDirectXFileData_Release(object->pRefObjects[i]);
+        if (object->mapped_memory)
+            UnmapViewOfFile(object->mapped_memory);
+        HeapFree(GetProcessHeap(), 0, object->decomp_buffer);
+        HeapFree(GetProcessHeap(), 0, object);
+    }
+
+    return refcount;
 }
 
 /*** IDirectXFileEnumObject methods ***/
@@ -1071,22 +1068,20 @@ error:
   return hr;
 }
 
-static HRESULT WINAPI IDirectXFileEnumObjectImpl_GetDataObjectById(IDirectXFileEnumObject* iface, REFGUID rguid, LPDIRECTXFILEDATA* ppDataObj)
+static HRESULT WINAPI IDirectXFileEnumObjectImpl_GetDataObjectById(IDirectXFileEnumObject *iface,
+        REFGUID guid, LPDIRECTXFILEDATA *data)
 {
-  IDirectXFileEnumObjectImpl *This = impl_from_IDirectXFileEnumObject(iface);
+    FIXME("iface %p, guid %s, data %p stub!\n", iface, debugstr_guid(guid), data);
 
-  FIXME("(%p/%p)->(%p,%p) stub!\n", This, iface, rguid, ppDataObj);
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-static HRESULT WINAPI IDirectXFileEnumObjectImpl_GetDataObjectByName(IDirectXFileEnumObject* iface, LPCSTR szName, LPDIRECTXFILEDATA* ppDataObj)
+static HRESULT WINAPI IDirectXFileEnumObjectImpl_GetDataObjectByName(IDirectXFileEnumObject *iface,
+        const char *name, LPDIRECTXFILEDATA *data)
 {
-  IDirectXFileEnumObjectImpl *This = impl_from_IDirectXFileEnumObject(iface);
+    FIXME("iface %p, name %s, data %p stub!\n", iface, debugstr_a(name), data);
 
-  FIXME("(%p/%p)->(%s,%p) stub!\n", This, iface, szName, ppDataObj);
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
 static const IDirectXFileEnumObjectVtbl IDirectXFileEnumObject_Vtbl =
@@ -1122,73 +1117,73 @@ static inline IDirectXFileSaveObjectImpl *impl_from_IDirectXFileSaveObject(IDire
     return CONTAINING_RECORD(iface, IDirectXFileSaveObjectImpl, IDirectXFileSaveObject_iface);
 }
 
-/*** IUnknown methods ***/
-static HRESULT WINAPI IDirectXFileSaveObjectImpl_QueryInterface(IDirectXFileSaveObject* iface, REFIID riid, void** ppvObject)
+static HRESULT WINAPI IDirectXFileSaveObjectImpl_QueryInterface(IDirectXFileSaveObject *iface,
+        REFIID riid, void **out)
 {
-  IDirectXFileSaveObjectImpl *This = impl_from_IDirectXFileSaveObject(iface);
+    IDirectXFileSaveObjectImpl *object = impl_from_IDirectXFileSaveObject(iface);
 
-  TRACE("(%p/%p)->(%s,%p)\n", iface, This, debugstr_guid(riid), ppvObject);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-  if (IsEqualGUID(riid, &IID_IUnknown)
-      || IsEqualGUID(riid, &IID_IDirectXFileSaveObject))
-  {
-    IUnknown_AddRef(iface);
-    *ppvObject = &This->IDirectXFileSaveObject_iface;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_IDirectXFileSaveObject))
+    {
+        *out = &object->IDirectXFileSaveObject_iface;
+    }
+    else
+    {
+        WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*out);
     return S_OK;
-  }
-
-  ERR("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppvObject);
-  return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirectXFileSaveObjectImpl_AddRef(IDirectXFileSaveObject* iface)
+static ULONG WINAPI IDirectXFileSaveObjectImpl_AddRef(IDirectXFileSaveObject *iface)
 {
-  IDirectXFileSaveObjectImpl *This = impl_from_IDirectXFileSaveObject(iface);
-  ULONG ref = InterlockedIncrement(&This->ref);
+    IDirectXFileSaveObjectImpl *object = impl_from_IDirectXFileSaveObject(iface);
+    ULONG refcount = InterlockedIncrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
-  return ref;
+    return refcount;
 }
 
-static ULONG WINAPI IDirectXFileSaveObjectImpl_Release(IDirectXFileSaveObject* iface)
+static ULONG WINAPI IDirectXFileSaveObjectImpl_Release(IDirectXFileSaveObject *iface)
 {
-  IDirectXFileSaveObjectImpl *This = impl_from_IDirectXFileSaveObject(iface);
-  ULONG ref = InterlockedDecrement(&This->ref);
+    IDirectXFileSaveObjectImpl *object = impl_from_IDirectXFileSaveObject(iface);
+    ULONG refcount = InterlockedDecrement(&object->ref);
 
-  TRACE("(%p/%p)->(): new ref %d\n", iface, This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
-  if (!ref)
-    HeapFree(GetProcessHeap(), 0, This);
+    if (!refcount)
+        HeapFree(GetProcessHeap(), 0, object);
 
-  return ref;
+    return refcount;
 }
 
-static HRESULT WINAPI IDirectXFileSaveObjectImpl_SaveTemplates(IDirectXFileSaveObject* iface, DWORD cTemplates, const GUID** ppguidTemplates)
+static HRESULT WINAPI IDirectXFileSaveObjectImpl_SaveTemplates(IDirectXFileSaveObject *iface,
+        DWORD count, const GUID **templates)
 {
-  IDirectXFileSaveObjectImpl *This = impl_from_IDirectXFileSaveObject(iface);
+    FIXME("iface %p, count %lu, templates %p stub!\n", iface, count, templates);
 
-  FIXME("(%p/%p)->(%d,%p) stub!\n", This, iface, cTemplates, ppguidTemplates);
-
-  return DXFILE_OK;
+    return DXFILE_OK;
 }
 
-static HRESULT WINAPI IDirectXFileSaveObjectImpl_CreateDataObject(IDirectXFileSaveObject* iface, REFGUID rguidTemplate, LPCSTR szName, const GUID* pguid, DWORD cbSize, LPVOID pvData, LPDIRECTXFILEDATA* ppDataObj)
+static HRESULT WINAPI IDirectXFileSaveObjectImpl_CreateDataObject(IDirectXFileSaveObject *iface, REFGUID template,
+        const char *name, const GUID *guid, DWORD size, void *data, LPDIRECTXFILEDATA *dataobj)
 {
-  IDirectXFileSaveObjectImpl *This = impl_from_IDirectXFileSaveObject(iface);
+    FIXME("iface %p, template %s, name %s, guid %s, size %lu, data %p, dataobj %p stub!\n",
+            iface, debugstr_guid(template), debugstr_a(name), debugstr_guid(guid), size, data, dataobj);
 
-  FIXME("(%p/%p)->(%p,%s,%p,%d,%p,%p) stub!\n", This, iface, rguidTemplate, szName, pguid, cbSize, pvData, ppDataObj);
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
-static HRESULT WINAPI IDirectXFileSaveObjectImpl_SaveData(IDirectXFileSaveObject* iface, LPDIRECTXFILEDATA ppDataObj)
+static HRESULT WINAPI IDirectXFileSaveObjectImpl_SaveData(IDirectXFileSaveObject *iface, LPDIRECTXFILEDATA data)
 {
-  IDirectXFileSaveObjectImpl *This = impl_from_IDirectXFileSaveObject(iface);
+    FIXME("iface %p, data %p stub!\n", iface, data);
 
-  FIXME("(%p/%p)->(%p) stub!\n", This, iface, ppDataObj); 
-
-  return DXFILEERR_BADVALUE;
+    return DXFILEERR_BADVALUE;
 }
 
 static const IDirectXFileSaveObjectVtbl IDirectXFileSaveObject_Vtbl =
