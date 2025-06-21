@@ -17,6 +17,7 @@ extern void func_GetComputerNameEx(void);
 extern void func_GetCPInfo(void);
 extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
+extern void func_GetFinalPathNameByHandle(void);
 extern void func_GetLocaleInfo(void);
 extern void func_GetModuleFileName(void);
 extern void func_GetVolumeInformation(void);
@@ -58,6 +59,7 @@ const struct test winetest_testlist[] =
     { "GetCPInfo",                   func_GetCPInfo },
     { "GetCurrentDirectory",         func_GetCurrentDirectory },
     { "GetDriveType",                func_GetDriveType },
+    { "GetFinalPathNameByHandle",    func_GetFinalPathNameByHandle },
     { "GetLocaleInfo",               func_GetLocaleInfo },
     { "GetModuleFileName",           func_GetModuleFileName },
     { "GetVolumeInformation",        func_GetVolumeInformation },
