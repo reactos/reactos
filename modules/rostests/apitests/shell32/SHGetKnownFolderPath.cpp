@@ -4,6 +4,7 @@
  * PURPOSE:     Test for SHGetKnownFolderPath
  * COPYRIGHT:   Copyright 2025 Petru Răzvan (petrurazvan@proton.me)
  */
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 #include "shelltest.h"
 #include <shlobj.h>
 #include <windows.h>
@@ -145,3 +146,9 @@ START_TEST(SHGetKnownFolderPath)
 
     CoUninitialize();
 }
+#else
+START_TEST(SHGetKnownFolderPath)
+{
+
+}
+#endif
