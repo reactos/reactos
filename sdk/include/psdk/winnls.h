@@ -458,6 +458,20 @@ extern "C" {
 #define CAL_SABBREVMONTHNAME11 44
 #define CAL_SABBREVMONTHNAME12 45
 #define CAL_SABBREVMONTHNAME13 46
+#define CAL_SYEARMONTH 47
+#define CAL_ITWODIGITYEARMAX 48
+#define CAL_SSHORTESTDAYNAME1 49
+#define CAL_SSHORTESTDAYNAME2 50
+#define CAL_SSHORTESTDAYNAME3 51
+#define CAL_SSHORTESTDAYNAME4 52
+#define CAL_SSHORTESTDAYNAME5 53
+#define CAL_SSHORTESTDAYNAME6 54
+#define CAL_SSHORTESTDAYNAME7 55
+#define CAL_SMONTHDAY 56
+#define CAL_SABBREVERASTRING 57
+#define CAL_SRELATIVELONGDATE 58
+#define CAL_SENGLISHERANAME 59
+#define CAL_SENGLISHABBREVERANAME 60
 #define CAL_GREGORIAN 1
 #define CAL_GREGORIAN_US 2
 #define CAL_JAPAN 3
@@ -524,13 +538,35 @@ typedef long LONG_PTR;
 #endif
 
 #if (WINVER >= 0x0600)
-#define MUI_FULL_LANGUAGE             0x01
-#define MUI_LANGUAGE_ID               0x04
-#define MUI_LANGUAGE_NAME             0x08
-#define MUI_MERGE_SYSTEM_FALLBACK     0x10
-#define MUI_MERGE_USER_FALLBACK       0x20
-#define MUI_UI_FALLBACK               MUI_MERGE_SYSTEM_FALLBACK | MUI_MERGE_USER_FALLBACK
-#define MUI_MACHINE_LANGUAGE_SETTINGS 0x400
+#define MUI_FULL_LANGUAGE                   0x01
+#define MUI_LANGUAGE_ID                     0x04
+#define MUI_LANGUAGE_NAME                   0x08
+#define MUI_MERGE_SYSTEM_FALLBACK           0x10
+#define MUI_MERGE_USER_FALLBACK             0x20
+#define MUI_UI_FALLBACK                     MUI_MERGE_SYSTEM_FALLBACK | MUI_MERGE_USER_FALLBACK
+#define MUI_THREAD_LANGUAGES                0x40
+#define MUI_CONSOLE_FILTER                  0x100
+#define MUI_COMPLEX_SCRIPT_FILTER           0x200
+#define MUI_RESET_FILTERS                   0x001
+#define MUI_USER_PREFERRED_UI_LANGUAGES     0x10
+#define MUI_USE_INSTALLED_LANGUAGES         0x20
+#define MUI_USE_SEARCH_ALL_LANGUAGES        0x40
+#define MUI_LANG_NEUTRAL_PE_FILE            0x100
+#define MUI_NON_LANG_NEUTRAL_FILE           0x200
+#define MUI_MACHINE_LANGUAGE_SETTINGS       0x400
+#define MUI_FILETYPE_NOT_LANGUAGE_NEUTRAL   0x001
+#define MUI_FILETYPE_LANGUAGE_NEUTRAL_MAIN  0x002
+#define MUI_FILETYPE_LANGUAGE_NEUTRAL_MUI   0x004
+#define MUI_QUERY_TYPE                      0x001
+#define MUI_QUERY_CHECKSUM                  0x002
+#define MUI_QUERY_LANGUAGE_NAME             0x004
+#define MUI_QUERY_RESOURCE_TYPES            0x008
+#define MUI_FILEINFO_VERSION                0x001
+#define MUI_FULL_LANGUAGE                   0x01
+#define MUI_PARTIAL_LANGUAGE                0x02
+#define MUI_LIP_LANGUAGE                    0x04
+#define MUI_LANGUAGE_INSTALLED              0x20
+#define MUI_LANGUAGE_LICENSED               0x40
 #endif /* (WINVER >= 0x0600) */
 
 #ifndef RC_INVOKED
@@ -573,7 +609,8 @@ enum NLS_FUNCTION {
 typedef enum NLS_FUNCTION NLS_FUNCTION;
 enum SYSGEOCLASS {
 	GEOCLASS_NATION = 16,
-	GEOCLASS_REGION = 14
+	GEOCLASS_REGION = 14,
+  GEOCLASS_ALL = 0
 };
 
 /* Geographic Information types */
@@ -594,7 +631,11 @@ enum SYSGEOTYPE
     GEO_PARENT,
     GEO_DIALINGCODE,
     GEO_CURRENCYCODE,
-    GEO_CURRENCYSYMBOL
+    GEO_CURRENCYSYMBOL,
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+    GEO_NAME,
+    GEO_ID
+#endif
 };
 
 typedef struct _cpinfo {
@@ -638,11 +679,23 @@ typedef struct _currencyfmtW {
 	UINT PositiveOrder;
 	LPWSTR lpCurrencySymbol;
 } CURRENCYFMTW,*LPCURRENCYFMTW;
-typedef struct nlsversioninfo {
-	DWORD dwNLSVersionInfoSize;
-	DWORD dwNLSVersion;
-	DWORD dwDefinedVersion;
-} NLSVERSIONINFO,*LPNLSVERSIONINFO;
+#if (WINVER >= _WIN32_WINNT_WIN8)
+typedef struct _nlsversioninfo
+{
+    DWORD dwNLSVersionInfoSize;
+    DWORD dwNLSVersion;
+    DWORD dwDefinedVersion;
+    DWORD dwEffectiveId;
+    GUID  guidCustomVersion;
+} NLSVERSIONINFO, *LPNLSVERSIONINFO;
+#else
+typedef struct _nlsversioninfo
+{
+    DWORD dwNLSVersionInfoSize;
+    DWORD dwNLSVersion;
+    DWORD dwDefinedVersion;
+} NLSVERSIONINFO, *LPNLSVERSIONINFO;
+#endif
 typedef struct _nlsversioninfoex {
     DWORD dwNLSVersionInfoSize;
     DWORD dwNLSVersion;
