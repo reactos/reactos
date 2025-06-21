@@ -10,6 +10,9 @@
 #include "../kbswitch.h"
 #include "resource.h"
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(internat);
+
 typedef struct tagSHARED_DATA
 {
     HHOOK hWinHook;
@@ -18,18 +21,31 @@ typedef struct tagSHARED_DATA
     HWND hKbSwitchWnd;
     UINT nHotID;
     DWORD_PTR dwHotMenuItemData;
-    CRITICAL_SECTION csLock;
 } SHARED_DATA, *PSHARED_DATA;
 
 HINSTANCE g_hInstance = NULL;
 HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
-BOOL g_bCriticalSectionInitialized = 0;
+HANDLE g_hMutex = NULL;
 
-static VOID
+static inline VOID EnterProtectedSection(VOID)
+{
+    g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
+    WaitForSingleObject(g_hMutex, 5 * 1000);
+}
+
+static inline VOID LeaveProtectedSection(VOID)
+{
+    ReleaseMutex(g_hMutex);
+    CloseHandle(g_hMutex);
+    g_hMutex = NULL;
+}
+
+static inline VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    PostMessage(g_pShared->hKbSwitchWnd, Msg, wParam, lParam);
+    if (g_pShared->hKbSwitchWnd)
+        PostMessage(g_pShared->hKbSwitchWnd, Msg, wParam, lParam);
 }
 
 static LRESULT CALLBACK
@@ -114,7 +130,9 @@ KeyboardProc(INT code, WPARAM wParam, LPARAM lParam)
 BOOL APIENTRY
 KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
-    EnterCriticalSection(&g_pShared->csLock);
+    TRACE("bDoHook: %d\n", bDoHook);
+
+    EnterProtectedSection();
     if (bDoHook)
     {
         g_pShared->hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, g_hInstance, 0);
@@ -125,7 +143,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
             g_pShared->hShellHook &&
             g_pShared->hKeyboardHook)
         {
-            LeaveCriticalSection(&g_pShared->csLock);
+            LeaveProtectedSection();
             return TRUE;
         }
     }
@@ -147,7 +165,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
         g_pShared->hWinHook = NULL;
     }
 
-    LeaveCriticalSection(&g_pShared->csLock);
+    LeaveProtectedSection();
     return !bDoHook;
 }
 
@@ -155,20 +173,20 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
 VOID APIENTRY
 GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
 {
-    EnterCriticalSection(&g_pShared->csLock);
+    EnterProtectedSection();
     *pnID = g_pShared->nHotID;
     *pdwItemData = g_pShared->dwHotMenuItemData;
-    LeaveCriticalSection(&g_pShared->csLock);
+    LeaveProtectedSection();
 }
 
 // indicdll!14
 VOID APIENTRY
 SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
 {
-    EnterCriticalSection(&g_pShared->csLock);
+    EnterProtectedSection();
     g_pShared->nHotID = nID;
     g_pShared->dwHotMenuItemData = dwItemData;
-    LeaveCriticalSection(&g_pShared->csLock);
+    LeaveProtectedSection();
 }
 
 BOOL WINAPI
@@ -180,33 +198,40 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
         {
+            TRACE("DLL_PROCESS_ATTACH\n");
             g_hInstance = hinstDLL;
+
             g_hShared = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
                                           0, sizeof(SHARED_DATA), TEXT("InternatSHData"));
             if (!g_hShared)
+            {
+                ERR("!g_hShared\n");
                 return FALSE;
+            }
 
             BOOL bAlreadyExists = GetLastError() == ERROR_ALREADY_EXISTS;
+            TRACE("bAlreadyExists: %d\n", bAlreadyExists);
 
             g_pShared = (PSHARED_DATA)MapViewOfFile(g_hShared, FILE_MAP_WRITE, 0, 0, 0);
             if (!g_pShared)
+            {
+                ERR("!g_pShared\n");
                 return FALSE;
+            }
 
             if (!bAlreadyExists)
-            {
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
+
+            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
+            {
                 g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
-                InitializeCriticalSection(&g_pShared->csLock);
-                g_bCriticalSectionInitialized = TRUE;
+                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
             }
             break;
         }
         case DLL_PROCESS_DETACH:
         {
-            if (g_bCriticalSectionInitialized)
-            {
-                DeleteCriticalSection(&g_pShared->csLock);
-            }
+            TRACE("DLL_PROCESS_DETACH\n");
             UnmapViewOfFile(g_pShared);
             CloseHandle(g_hShared);
             break;
