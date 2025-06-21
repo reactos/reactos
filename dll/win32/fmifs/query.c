@@ -57,27 +57,27 @@ QueryAvailableFileSystemFormat(
  * @param[in] DriveRoot
  * String which contains a DOS device name,
  *
- * @param[in,out] DeviceInformation
- * Pointer to buffer with DEVICE_INFORMATION structure which will receive data.
+ * @param[out] DeviceInformation
+ * Pointer to buffer which will receive DEVICE_INFORMATION data.
  *
  * @param[in] BufferSize
- * Size of buffer in bytes.
+ * Size of DeviceInformation buffer, in bytes.
  *
  * @return
- * TRUE if the buffer was large enough and was filled with
+ * TRUE if the buffer was large enough (pre-Vista at least, Vista+ if possible) and was filled with
  * the requested information, FALSE otherwise.
  *
  * @remarks
- * The returned information is mostly related to Sony Memory Stick devices.
- * On Vista+ the returned information is disk sector size and volume length in sectors,
+ * The returned flags are mostly related to Sony Memory Stick devices.
+ * On Vista+, the returned information is disk sector size and volume length in sectors,
  * regardless of the type of disk.
- * ReactOS implementation returns DEVICE_HOTPLUG flag if inspected device is a hotplug device
+ * ReactOS returns DEVICE_HOTPLUG flag if inspected device is a hotplug device,
  * as well as sector size and volume length of disk device.
  */
 BOOL
 NTAPI
 QueryDeviceInformation(
-    _In_ PWCHAR DriveRoot,
+    _In_ PCWSTR DriveRoot,
     _Out_ PVOID DeviceInformation,
     _In_ ULONG BufferSize)
 {
@@ -94,7 +94,7 @@ QueryDeviceInformation(
     WCHAR DriveName[MAX_PATH];
 
     /* Buffer should be able to at least hold DeviceFlags */
-    if (BufferSize < sizeof(ULONG) ||
+    if (BufferSize < RTL_SIZEOF_THROUGH_FIELD(DEVICE_INFORMATION, DeviceFlags) ||
         !NT_SUCCESS(RtlStringCchCopyW(DriveName, ARRAYSIZE(DriveName), DriveRoot)))
     {
         return FALSE;
@@ -157,10 +157,10 @@ QueryDeviceInformation(
         DeviceInfo->DeviceFlags |= DEVICE_HOTPLUG;
     }
 
-    /* Other flags that would be set here are related to Sony "Memory Stick"
-     * type of devices which we do not have any special support for */
+    /* UNIMPLEMENTED: Other flags that would be set here are related to Sony "Memory Stick"
+     * type of devices, which we do not have any special support for */
 
-    if (BufferSize >= sizeof(DEVICE_INFORMATION))
+    if (BufferSize >= RTL_SIZEOF_THROUGH_FIELD(DEVICE_INFORMATION, SectorCount))
     {
         /* This is the Vista+ version of the structure.
          * We need to also provide disk sector size and volume length in sectors. */
