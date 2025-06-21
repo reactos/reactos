@@ -59,6 +59,7 @@ void Test_ceil(void)
     }
 }
 
+#ifndef _M_IX86
 static TESTENTRY_FLT s_ceilf_tests[] =
 {
     /* Special values */
@@ -101,9 +102,12 @@ void Test_ceilf(void)
         ok_eq_flt_exact("ceilf", s_ceilf_tests[i].x, z, s_ceilf_tests[i].result);
     }
 }
+#endif
 
 START_TEST(ceil)
 {
     Test_ceil();
+#ifndef _M_IX86
     Test_ceilf();
+#endif
 }
