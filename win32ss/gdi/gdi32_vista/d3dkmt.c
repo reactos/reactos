@@ -6,7 +6,6 @@
  */
 
 #include <gdi32_vista.h>
-#include <d3dkmddi.h>
 #include <d3dkmthk.h>
 #include <debug.h>
 
@@ -18,7 +17,7 @@ D3DKMTCreateDevice(_Inout_ D3DKMT_CREATEDEVICE* unnamedParam1)
     Status = NtGdiDdDDICreateDevice(unnamedParam1);
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
-        /* Fallback to XDDM */
+        return STATUS_SUCCESS;
     }
     return Status;
 }
@@ -32,6 +31,7 @@ D3DKMTDestroyDevice(_In_ CONST D3DKMT_DESTROYDEVICE* unnamedParam1)
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
         /* Fallback to XDDM */
+          return STATUS_SUCCESS;
     }
     return Status;
 }
@@ -45,6 +45,7 @@ D3DKMTCloseAdapter(_In_ CONST D3DKMT_CLOSEADAPTER* unnamedParam1)
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
         /* Fallback to XDDM */
+          return STATUS_SUCCESS;
     }
     return Status;
 }
@@ -58,6 +59,7 @@ D3DKMTSetVidPnSourceOwner(_In_ CONST D3DKMT_SETVIDPNSOURCEOWNER* unnamedParam1)
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
         /* Fallback to XDDM */
+          return STATUS_SUCCESS;
     }
     return Status;
 }
@@ -67,15 +69,14 @@ NTSTATUS
 WINAPI
 D3DKMTOpenAdapterFromGdiDisplayName(_Inout_ D3DKMT_OPENADAPTERFROMGDIDISPLAYNAME* unnamedParam1)
 {
-    return STATUS_PROCEDURE_NOT_FOUND;
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS
 WINAPI
 D3DKMTOpenAdapterFromLuid(_Inout_ CONST D3DKMT_OPENADAPTERFROMLUID* unnamedParam1)
 {
-    DbgBreakPoint();
-    return 0;
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -83,6 +84,31 @@ WINAPI
 D3DKMTQueryVideoMemoryInfo(
     D3DKMT_QUERYVIDEOMEMORYINFO *unnamedParam1)
 {
-    /* fallback here is perfectly fine! */
-    return 1;
+    //TODO: Call the win7+ syscall NtGdiDdQueryVideoMemoryInfo
+    NTSTATUS Status;
+    DD_GETAVAILDRIVERMEMORYDATA Data;
+    RtlZeroMemory(&Data, sizeof(Data));
+
+    switch (unnamedParam1->MemorySegmentGroup)
+    {
+        case D3DKMT_MEMORY_SEGMENT_GROUP_LOCAL:
+            Data.DDSCaps.dwCaps = DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM;
+            break;
+        case D3DKMT_MEMORY_SEGMENT_GROUP_NON_LOCAL:
+            Data.DDSCaps.dwCaps = DDSCAPS_VIDEOMEMORY | DDSCAPS_NONLOCALVIDMEM;
+            break;
+        default:
+            Data.DDSCaps.dwCaps = DDSCAPS_VIDEOMEMORY;
+            break;
+    }
+
+    /* Call Dxg to gather this information */
+    Status = NtGdiDdGetAvailDriverMemory(NtGdiDdCreateDirectDrawObject(NtGdiCreateCompatibleDC(NULL)), (DD_GETAVAILDRIVERMEMORYDATA*)&Data);
+    unnamedParam1->Budget = Data.dwTotal;
+    unnamedParam1->CurrentUsage = Data.dwTotal - Data.dwFree;
+    unnamedParam1->CurrentReservation = 0;
+    unnamedParam1->AvailableForReservation = Data.dwFree;
+
+
+    return Status;	
 }
