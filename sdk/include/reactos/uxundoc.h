@@ -81,9 +81,17 @@ HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName,
 
 HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile);
 
+#define UXTAPPLYFLAG_LOADSYSTEMMETRICS  0x01 // https://stackoverflow.com/a/1036903
+#define UXTAPPLYFLAG_APPLYSYSTEMMETRICS 0x20 // https://stackoverflow.com/a/1036903
+
 HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile,
-                          char *unknown,
+                          UINT Flags,
                           HWND hWnd);
+
+HRESULT WINAPI SetSystemVisualStyle(PCWSTR pszStyleFile,
+                                    PCWSTR pszColor,
+                                    PCWSTR pszSize,
+                                    UINT Flags);
 
 HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName,
                                 LPWSTR pszColorName,
