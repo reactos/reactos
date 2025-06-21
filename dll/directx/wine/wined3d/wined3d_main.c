@@ -474,7 +474,19 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
         }
     }
 #ifdef WINE_DDRAW_SW
-    wined3d_settings.renderer = WINED3D_RENDERER_NO3D;
+    char app_name[MAX_PATH];
+    if (wined3d_get_app_name(app_name, sizeof(app_name)))
+    {
+        if (!stricmp(app_name, "Game.exe") || !stricmp(app_name, "Diablo II.exe"))
+        {
+            TRACE("Detected Diablo II, enabling 3D support.\n");
+        }
+    }
+    else
+    {
+        ERR("Normal ddraw: disabling 3D support.\n");
+        wined3d_settings.renderer = WINED3D_RENDERER_NO3D;
+    }
 #endif
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
