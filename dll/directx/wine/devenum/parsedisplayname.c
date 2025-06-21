@@ -27,8 +27,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
-static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(IParseDisplayName *iface,
-        REFIID riid, void **ppv)
+static HRESULT WINAPI devenum_parser_QueryInterface(IParseDisplayName *iface, REFIID riid, void **ppv)
 {
     TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
 
@@ -48,60 +47,47 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(IParseDisplayName
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI DEVENUM_IParseDisplayName_AddRef(IParseDisplayName *iface)
+static ULONG WINAPI devenum_parser_AddRef(IParseDisplayName *iface)
 {
     TRACE("\n");
-
-    DEVENUM_LockModule();
 
     return 2; /* non-heap based object */
 }
 
-static ULONG WINAPI DEVENUM_IParseDisplayName_Release(IParseDisplayName *iface)
+static ULONG WINAPI devenum_parser_Release(IParseDisplayName *iface)
 {
     TRACE("\n");
-
-    DEVENUM_UnlockModule();
 
     return 1; /* non-heap based object */
 }
 
-/**********************************************************************
- * DEVENUM_IParseDisplayName_ParseDisplayName
- *
- *  Creates a moniker referenced to by the display string argument
- *
- * POSSIBLE BUGS:
- *  Might not handle more complicated strings properly (ie anything
- *  not in "@device:sw:{CLSID1}\<filter name or CLSID>" format
- */
-static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(IParseDisplayName *iface,
+static HRESULT WINAPI devenum_parser_ParseDisplayName(IParseDisplayName *iface,
         IBindCtx *pbc, LPOLESTR name, ULONG *eaten, IMoniker **ret)
 {
+    struct moniker *moniker;
     WCHAR buffer[MAX_PATH];
     enum device_type type;
-    MediaCatMoniker *mon;
-    CLSID class;
+    GUID class, clsid;
 
     TRACE("(%p, %s, %p, %p)\n", pbc, debugstr_w(name), eaten, ret);
 
     *ret = NULL;
     if (eaten)
-        *eaten = lstrlenW(name);
+        *eaten = wcslen(name);
 
     name = wcschr(name, ':') + 1;
 
-    if (!wcsncmp(name, swW, 3))
+    if (!wcsncmp(name, L"sw:", 3))
     {
         type = DEVICE_FILTER;
         name += 3;
     }
-    else if (!wcsncmp(name, cmW, 3))
+    else if (!wcsncmp(name, L"cm:", 3))
     {
         type = DEVICE_CODEC;
         name += 3;
     }
-    else if (!wcsncmp(name, dmoW, 4))
+    else if (!wcsncmp(name, L"dmo:", 4))
     {
         type = DEVICE_DMO;
         name += 4;
@@ -112,47 +98,42 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(IParseDisplayNa
         return MK_E_SYNTAX;
     }
 
-    if (!(mon = DEVENUM_IMediaCatMoniker_Construct()))
-        return E_OUTOFMEMORY;
-
     if (type == DEVICE_DMO)
     {
         lstrcpynW(buffer, name, CHARS_IN_GUID);
-        if (FAILED(CLSIDFromString(buffer, &mon->clsid)))
-        {
-            IMoniker_Release(&mon->IMoniker_iface);
+        if (FAILED(CLSIDFromString(buffer, &clsid)))
             return MK_E_SYNTAX;
-        }
 
         lstrcpynW(buffer, name + CHARS_IN_GUID - 1, CHARS_IN_GUID);
-        if (FAILED(CLSIDFromString(buffer, &mon->class)))
-        {
-            IMoniker_Release(&mon->IMoniker_iface);
+        if (FAILED(CLSIDFromString(buffer, &class)))
             return MK_E_SYNTAX;
-        }
+
+        moniker = dmo_moniker_create(class, clsid);
     }
     else
     {
         lstrcpynW(buffer, name, CHARS_IN_GUID);
         if (CLSIDFromString(buffer, &class) == S_OK)
         {
-            mon->has_class = TRUE;
-            mon->class = class;
             name += CHARS_IN_GUID;
+            if (type == DEVICE_FILTER)
+                moniker = filter_moniker_create(&class, name);
+            else
+                moniker = codec_moniker_create(&class, name);
         }
-
-        if (!(mon->name = CoTaskMemAlloc((lstrlenW(name) + 1) * sizeof(WCHAR))))
+        else
         {
-            IMoniker_Release(&mon->IMoniker_iface);
-            return E_OUTOFMEMORY;
+            if (type == DEVICE_FILTER)
+                moniker = filter_moniker_create(NULL, name);
+            else
+                moniker = codec_moniker_create(NULL, name);
         }
-        lstrcpyW(mon->name, name);
     }
 
-    mon->type = type;
+    if (!moniker)
+        return E_OUTOFMEMORY;
 
-    *ret = &mon->IMoniker_iface;
-
+    *ret = &moniker->IMoniker_iface;
     return S_OK;
 }
 
@@ -161,11 +142,11 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(IParseDisplayNa
  */
 static const IParseDisplayNameVtbl IParseDisplayName_Vtbl =
 {
-    DEVENUM_IParseDisplayName_QueryInterface,
-    DEVENUM_IParseDisplayName_AddRef,
-    DEVENUM_IParseDisplayName_Release,
-    DEVENUM_IParseDisplayName_ParseDisplayName
+    devenum_parser_QueryInterface,
+    devenum_parser_AddRef,
+    devenum_parser_Release,
+    devenum_parser_ParseDisplayName,
 };
 
 /* The one instance of this class */
-IParseDisplayName DEVENUM_ParseDisplayName = { &IParseDisplayName_Vtbl };
+IParseDisplayName devenum_parser = { &IParseDisplayName_Vtbl };

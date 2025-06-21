@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * libtxc_dxtn
  * Version:  1.0
@@ -28,7 +25,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "txc_dxtn.h"
-#endif /* __REACTOS__ */
 
 /* weights used for error function, basically weights (unsquared 2/4/1) according to rgb->luminance conversion
    not sure if this really reflects visual perception */

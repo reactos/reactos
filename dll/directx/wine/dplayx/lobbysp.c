@@ -60,7 +60,7 @@ static ULONG WINAPI IDPLobbySPImpl_AddRef( IDPLobbySP *iface )
   IDPLobbySPImpl *This = impl_from_IDPLobbySP( iface );
   ULONG ref = InterlockedIncrement( &This->ref );
 
-  TRACE( "(%p) ref=%d\n", This, ref );
+  TRACE( "(%p) ref=%ld\n", This, ref );
 
   return ref;
 }
@@ -70,10 +70,10 @@ static ULONG WINAPI IDPLobbySPImpl_Release( IDPLobbySP *iface )
   IDPLobbySPImpl *This = impl_from_IDPLobbySP( iface );
   ULONG ref = InterlockedDecrement( &This->ref );
 
-  TRACE( "(%p) ref=%d\n", This, ref );
+  TRACE( "(%p) ref=%ld\n", This, ref );
 
   if( !ref )
-    HeapFree( GetProcessHeap(), 0, This );
+    free( This );
 
   return ref;
 }
@@ -235,7 +235,7 @@ HRESULT dplobbysp_create( REFIID riid, void **ppv, IDirectPlayImpl *dp )
   TRACE( "(%s, %p)\n", debugstr_guid( riid ), ppv );
 
   *ppv = NULL;
-  obj = HeapAlloc( GetProcessHeap(), 0, sizeof( *obj ) );
+  obj = malloc( sizeof( *obj ) );
   if ( !obj )
     return DPERR_OUTOFMEMORY;
 

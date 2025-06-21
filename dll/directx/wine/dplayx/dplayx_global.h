@@ -26,35 +26,35 @@
 #include "winuser.h"
 #include "dplay.h"
 
-BOOL DPLAYX_ConstructData(void) DECLSPEC_HIDDEN;
-BOOL DPLAYX_DestructData(void) DECLSPEC_HIDDEN;
+BOOL DPLAYX_ConstructData(void);
+BOOL DPLAYX_DestructData(void);
 
 HRESULT DPLAYX_GetConnectionSettingsA ( DWORD dwAppID,
                                         LPVOID lpData,
-                                        LPDWORD lpdwDataSize ) DECLSPEC_HIDDEN;
+                                        LPDWORD lpdwDataSize );
 HRESULT DPLAYX_GetConnectionSettingsW ( DWORD dwAppID,
                                         LPVOID lpData,
-                                        LPDWORD lpdwDataSize ) DECLSPEC_HIDDEN;
+                                        LPDWORD lpdwDataSize );
 
 HRESULT DPLAYX_SetConnectionSettingsA ( DWORD dwFlags,
                                         DWORD dwAppID,
-                                        const DPLCONNECTION *lpConn ) DECLSPEC_HIDDEN;
+                                        const DPLCONNECTION *lpConn );
 HRESULT DPLAYX_SetConnectionSettingsW ( DWORD dwFlags,
                                         DWORD dwAppID,
-                                        const DPLCONNECTION *lpConn ) DECLSPEC_HIDDEN;
+                                        const DPLCONNECTION *lpConn );
 
-BOOL DPLAYX_CreateLobbyApplication( DWORD dwAppID ) DECLSPEC_HIDDEN;
+BOOL DPLAYX_CreateLobbyApplication( DWORD dwAppID );
 
-BOOL DPLAYX_WaitForConnectionSettings( BOOL bWait ) DECLSPEC_HIDDEN;
-BOOL DPLAYX_AnyLobbiesWaitingForConnSettings(void) DECLSPEC_HIDDEN;
+BOOL DPLAYX_WaitForConnectionSettings( BOOL bWait );
+BOOL DPLAYX_AnyLobbiesWaitingForConnSettings(void);
 
 BOOL DPLAYX_SetLobbyHandles( DWORD dwAppID,
-                             HANDLE hStart, HANDLE hDeath, HANDLE hConnRead ) DECLSPEC_HIDDEN;
+                             HANDLE hStart, HANDLE hDeath, HANDLE hConnRead );
 
-BOOL DPLAYX_SetLobbyMsgThreadId( DWORD dwAppId, DWORD dwThreadId ) DECLSPEC_HIDDEN;
+BOOL DPLAYX_SetLobbyMsgThreadId( DWORD dwAppId, DWORD dwThreadId );
 
 
 /* Convert a DP or DPL HRESULT code into a string for human consumption */
-LPCSTR DPLAYX_HresultToString( HRESULT hr ) DECLSPEC_HIDDEN;
+LPCSTR DPLAYX_HresultToString( HRESULT hr );
 
 #endif /* __WINE_DPLAYX_GLOBAL */

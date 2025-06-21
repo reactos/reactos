@@ -22,32 +22,10 @@
  * - Private file where devenum globals are declared
  */
 
-#pragma once
-
-#ifndef RC_INVOKED
-#include <stdarg.h>
-#endif
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
-
 #define COBJMACROS
-
-#include "ole2.h"
-#include "strmif.h"
-#include "olectl.h"
-#include "uuids.h"
-
-/**********************************************************************
- * Dll lifetime tracking declaration for devenum.dll
- */
-extern LONG dll_refs DECLSPEC_HIDDEN;
-static inline void DEVENUM_LockModule(void) { InterlockedIncrement(&dll_refs); }
-static inline void DEVENUM_UnlockModule(void) { InterlockedDecrement(&dll_refs); }
+#include "dshow.h"
+#include "dmo.h"
+#include "dmodshow.h"
 
 enum device_type
 {
@@ -56,38 +34,24 @@ enum device_type
     DEVICE_DMO,
 };
 
-typedef struct
+struct moniker
 {
     IMoniker IMoniker_iface;
     LONG ref;
     CLSID class;
     BOOL has_class;
     enum device_type type;
-    union
-    {
-        WCHAR *name;    /* for filters and codecs */
-        CLSID clsid;    /* for DMOs */
-    };
-} MediaCatMoniker;
+    WCHAR *name;    /* for filters and codecs */
+    CLSID clsid;    /* for DMOs */
 
-MediaCatMoniker * DEVENUM_IMediaCatMoniker_Construct(void) DECLSPEC_HIDDEN;
-HRESULT create_EnumMoniker(REFCLSID class, IEnumMoniker **enum_mon) DECLSPEC_HIDDEN;
+    IPropertyBag IPropertyBag_iface;
+};
 
-extern ICreateDevEnum DEVENUM_CreateDevEnum DECLSPEC_HIDDEN;
-extern IParseDisplayName DEVENUM_ParseDisplayName DECLSPEC_HIDDEN;
+HRESULT create_filter_data(VARIANT *var, REGFILTER2 *rgf);
+struct moniker *dmo_moniker_create(const GUID class, const GUID clsid);
+struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name);
+struct moniker *filter_moniker_create(const GUID *class, const WCHAR *name);
+HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **enum_mon);
 
-/**********************************************************************
- * Global string constant declarations
- */
-
-static const WCHAR backslashW[] = {'\\',0};
-static const WCHAR clsidW[] = {'C','L','S','I','D',0};
-static const WCHAR instanceW[] = {'\\','I','n','s','t','a','n','c','e',0};
-static const WCHAR wszActiveMovieKey[] = {'S','o','f','t','w','a','r','e','\\',
-                                          'M','i','c','r','o','s','o','f','t','\\',
-                                          'A','c','t','i','v','e','M','o','v','i','e','\\',
-                                          'd','e','v','e','n','u','m','\\',0};
-static const WCHAR deviceW[] = {'@','d','e','v','i','c','e',':',0};
-static const WCHAR dmoW[] = {'d','m','o',':',0};
-static const WCHAR swW[] = {'s','w',':',0};
-static const WCHAR cmW[] = {'c','m',':',0};
+extern ICreateDevEnum devenum_factory;
+extern IParseDisplayName devenum_parser;

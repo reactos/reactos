@@ -22,6 +22,7 @@
 #define AMCONTROL_USED 0x00000001
 #define AMCONTROL_PAD_TO_4x3 0x00000002
 #define AMCONTROL_PAD_TO_16x9 0x00000004
+#define AMCONTROL_COLORINFO_PRESENT 0x00000080
 
 typedef struct tagVIDEOINFOHEADER2 {
     RECT rcSource;
@@ -40,5 +41,29 @@ typedef struct tagVIDEOINFOHEADER2 {
     DWORD dwReserved2;
     BITMAPINFOHEADER bmiHeader;
 } VIDEOINFOHEADER2;
+
+typedef struct tagMPEG2VIDEOINFO {
+    VIDEOINFOHEADER2 hdr;
+    DWORD dwStartTimeCode;
+    DWORD cbSequenceHeader;
+    DWORD dwProfile;
+    DWORD dwLevel;
+    DWORD dwFlags;
+    DWORD dwSequenceHeader[1];
+} MPEG2VIDEOINFO;
+
+#define AMINTERLACE_IsInterlaced          0x0001
+#define AMINTERLACE_1FieldPerSample       0x0002
+#define AMINTERLACE_Field1First           0x0004
+#define AMINTERLACE_UNUSED                0x0008
+#define AMINTERLACE_FieldPatField1Only    0x0000
+#define AMINTERLACE_FieldPatField2Only    0x0010
+#define AMINTERLACE_FieldPatBothRegular   0x0020
+#define AMINTERLACE_FieldPatBothIrregular 0x0030
+#define AMINTERLACE_FieldPatternMask      0x0030
+#define AMINTERLACE_DisplayModeBobOnly    0x0000
+#define AMINTERLACE_DisplayModeWeaveOnly  0x0040
+#define AMINTERLACE_DisplayModeBobOrWeave 0x0080
+#define AMINTERLACE_DisplayModeMask       0x00c0
 
 #endif /* __DVDMEDIA_H__ */
