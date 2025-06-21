@@ -23,10 +23,11 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-
+#ifdef __REACTOS__
+#ifndef NULL
+#define NULL 0
+#endif
+#endif
 #include "wine/list.h"
 #include "dxdiag.h"
 #include "resource.h"
@@ -70,18 +71,18 @@ struct IDxDiagContainerImpl {
 /**
  * factories
  */
-extern HRESULT DXDiag_CreateDXDiagProvider(LPCLASSFACTORY iface, LPUNKNOWN punkOuter, REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT DXDiag_CreateDXDiagProvider(LPCLASSFACTORY iface, LPUNKNOWN punkOuter, REFIID riid, LPVOID *ppobj);
 
 /** internal factory */
-extern HRESULT DXDiag_CreateDXDiagContainer(REFIID riid, IDxDiagContainerImpl_Container *cont, IDxDiagProvider *pProv, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT DXDiag_CreateDXDiagContainer(REFIID riid, IDxDiagContainerImpl_Container *cont, IDxDiagProvider *pProv, LPVOID *ppobj);
 
 /**********************************************************************
  * Dll lifetime tracking declaration for dxdiagn.dll
  */
-extern LONG DXDIAGN_refCount DECLSPEC_HIDDEN;
+extern LONG DXDIAGN_refCount;
 static inline void DXDIAGN_LockModule(void) { InterlockedIncrement( &DXDIAGN_refCount ); }
 static inline void DXDIAGN_UnlockModule(void) { InterlockedDecrement( &DXDIAGN_refCount ); }
 
-extern HINSTANCE dxdiagn_instance DECLSPEC_HIDDEN;
+extern HINSTANCE dxdiagn_instance;
 
 #endif
