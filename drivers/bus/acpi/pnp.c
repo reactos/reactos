@@ -422,6 +422,8 @@ Bus_InitializePdo (
     PPDO_DEVICE_DATA pdoData;
     int acpistate;
     DEVICE_POWER_STATE ntState;
+    ACPI_HANDLE handle = 0;
+    ACPI_STATUS status = 0;
 
     PAGED_CODE ();
 
@@ -467,6 +469,17 @@ Bus_InitializePdo (
 
     pdoData->Common.DevicePowerState = ntState;
     pdoData->Common.SystemPowerState = FdoData->Common.SystemPowerState;
+
+    /* Identify the dock device */
+    if (pdoData->AcpiHandle)
+    {
+        status = AcpiGetHandle(pdoData->AcpiHandle, "_DCK", &handle);
+        if (ACPI_SUCCESS(status))
+        {
+            DPRINT("Found _DCK method!");
+            pdoData->DockDevice = TRUE;
+        }
+    }
 
     ExAcquireFastMutex (&FdoData->Mutex);
     InsertTailList(&FdoData->ListOfPDOs, &pdoData->Link);

@@ -419,6 +419,10 @@ Bus_PDO_QueryDeviceCaps(
        deviceCapabilities->Address = device->pnp.bus_address;
     }
 
+    if (DeviceData->DockDevice)
+        deviceCapabilities->DockDevice = TRUE;
+    DPRINT("DockDevice: %u\n", deviceCapabilities->DockDevice);
+
     if (!device ||
         (device->flags.hardware_id &&
          (strstr(device->pnp.hardware_id, ACPI_BUTTON_HID_LID) ||

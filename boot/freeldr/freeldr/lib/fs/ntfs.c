@@ -525,18 +525,16 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     if (strlen(FileName) != EntryFileNameLength)
         return FALSE;
 
-    /* Do case-sensitive compares for Posix file names. */
-    if (IndexEntry->FileName.FileNameType == NTFS_FILE_NAME_POSIX)
+    /*
+     * Always perform case-insensitive comparison for file names.
+     * This is necessary, because when modifying e.g. on Linux a Windows NTFS
+     * partition formatted with Windows itself, the NTLDR/BOOTMGR will boot
+     * normally ignoring the case of the paths.
+     */
+    for (i = 0; i < EntryFileNameLength; i++)
     {
-        for (i = 0; i < EntryFileNameLength; i++)
-            if (EntryFileName[i] != FileName[i])
-                return FALSE;
-    }
-    else
-    {
-        for (i = 0; i < EntryFileNameLength; i++)
-            if (tolower(EntryFileName[i]) != tolower(FileName[i]))
-                return FALSE;
+        if (tolower(EntryFileName[i]) != tolower(FileName[i]))
+            return FALSE;
     }
 
     return TRUE;

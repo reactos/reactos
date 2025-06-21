@@ -8,6 +8,7 @@
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
+#include <windows.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
@@ -18,6 +19,11 @@
 #include <powrprof.h>
 #include <ndk/rtlfuncs.h>
 #include <strsafe.h>
+#include <setupapi.h>
+#include <batclass.h>
+#include <debug.h>
+#include <initguid.h>
+#include <devguid.h>
 
 #include "resource.h"
 
@@ -38,5 +44,6 @@ INT_PTR CALLBACK PowerSchemesDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 INT_PTR CALLBACK AlarmsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AdvancedDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK HibernateDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK PowerMeterDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #endif /* _POWERCFG_H */

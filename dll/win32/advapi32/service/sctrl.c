@@ -551,6 +551,9 @@ ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
     DWORD dwError = ERROR_SUCCESS;
+    DWORD dwControl;
+    DWORD dwEventType = 0;
+    PVOID pEventData = NULL;
 
     TRACE("ScControlService(%p %p)\n",
           lpService, ControlPacket);
@@ -564,25 +567,41 @@ ScControlService(PACTIVE_SERVICE lpService,
     /* Set service tag */
     NtCurrentTeb()->SubProcessTag = UlongToPtr(lpService->dwServiceTag);
 
+    dwControl = ControlPacket->dwControl;
+
     if (lpService->HandlerFunction)
     {
-        _SEH2_TRY
+        if (((dwControl >= SERVICE_CONTROL_STOP) && (dwControl <= SERVICE_CONTROL_NETBINDDISABLE)) ||
+            ((dwControl >= 128) && (dwControl <= 255)))
         {
-            (lpService->HandlerFunction)(ControlPacket->dwControl);
+            _SEH2_TRY
+            {
+                (lpService->HandlerFunction)(dwControl);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                dwError = ERROR_EXCEPTION_IN_SERVICE;
+            }
+            _SEH2_END;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        else
         {
-            dwError = ERROR_EXCEPTION_IN_SERVICE;
+            dwError = ERROR_INVALID_SERVICE_CONTROL;
         }
-        _SEH2_END;
     }
     else if (lpService->HandlerFunctionEx)
     {
+        if (dwControl == SERVICE_CONTROL_DEVICEEVENT)
+        {
+            dwEventType = *(LPDWORD)((ULONG_PTR)ControlPacket + sizeof(SCM_CONTROL_PACKET));
+            pEventData = (PVOID)((ULONG_PTR)ControlPacket + sizeof(SCM_CONTROL_PACKET) + sizeof(DWORD));
+        }
+
         _SEH2_TRY
         {
-            /* FIXME: Send correct 2nd and 3rd parameters */
-            (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
-                                           0, NULL,
+            (lpService->HandlerFunctionEx)(dwControl,
+                                           dwEventType,
+                                           pEventData,
                                            lpService->HandlerContext);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

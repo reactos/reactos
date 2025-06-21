@@ -889,6 +889,9 @@ NtQueryInformationProcess(
             /* Set the length required and validate it */
             Length = sizeof(SECTION_IMAGE_INFORMATION);
 
+            /* Indicate success */
+            Status = STATUS_SUCCESS;
+
             /* Enter SEH to protect write */
             _SEH2_TRY
             {
@@ -900,14 +903,11 @@ NtQueryInformationProcess(
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
-
-            /* Indicate success */
-            Status = STATUS_SUCCESS;
             break;
 
         case ProcessDebugObjectHandle:
         {
-            HANDLE DebugPort = 0;
+            HANDLE DebugPort = NULL;
 
             if (ProcessInformationLength != sizeof(HANDLE))
             {
@@ -927,7 +927,7 @@ NtQueryInformationProcess(
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
-            /* Get the debug port */
+            /* Get the debug port. Continue even if this fails. */
             Status = DbgkOpenProcessDebugPort(Process, PreviousMode, &DebugPort);
 
             /* Let go of the process */
@@ -941,7 +941,11 @@ NtQueryInformationProcess(
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Get the exception code */
+                if (DebugPort)
+                    ObCloseHandle(DebugPort, PreviousMode);
+
+                /* Get the exception code.
+                 * Note: This overwrites any previous failure status. */
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
@@ -1040,23 +1044,24 @@ NtQueryInformationProcess(
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
+#ifdef _WIN64
             /* Make sure the process isn't dying */
             if (ExAcquireRundownProtection(&Process->RundownProtect))
             {
                 /* Get the WOW64 process structure */
-#ifdef _WIN64
                 Wow64 = (ULONG_PTR)Process->Wow64Process;
-#else
-                Wow64 = 0;
-#endif
                 /* Release the lock */
                 ExReleaseRundownProtection(&Process->RundownProtect);
             }
+#endif
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
 
             /* Protect write with SEH */
             _SEH2_TRY
             {
-                /* Return whether or not we have a debug port */
+                /* Return the Wow64 process information */
                 *(PULONG_PTR)ProcessInformation = Wow64;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1065,9 +1070,6 @@ NtQueryInformationProcess(
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
-
-            /* Dereference the process */
-            ObDereferenceObject(Process);
             break;
         }
 
@@ -1086,7 +1088,8 @@ NtQueryInformationProcess(
 
             if (ProcessHandle != NtCurrentProcess())
             {
-                return STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
+                break;
             }
 
             /* Get the options */
@@ -1130,18 +1133,22 @@ NtQueryInformationProcess(
             Status = STATUS_INVALID_INFO_CLASS;
     }
 
-    /* Protect write with SEH */
-    _SEH2_TRY
+    /* Check if caller wants the return length and if there is one */
+    if (ReturnLength != NULL && Length != 0)
     {
-        /* Check if caller wanted return length */
-        if ((ReturnLength) && (Length)) *ReturnLength = Length;
+        /* Protect write with SEH */
+        _SEH2_TRY
+        {
+            *ReturnLength = Length;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Get exception code.
+             * Note: This overwrites any previous failure status. */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get exception code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
 
     return Status;
 }

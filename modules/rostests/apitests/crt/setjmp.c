@@ -11,6 +11,7 @@
 #include <pseh/pseh2.h>
 #include <setjmp.h>
 #include <assert.h>
+#include <rtlfuncs.h>
 
 static jmp_buf g_jmp_buf;
 
@@ -57,8 +58,13 @@ static void TEST_setjmp_normal(void)
 #endif /* ndef __clang__ */
         case 3:
             ok_int(value, 333);
-            ok_int(finally_called, TRUE);
-            ok_int(abnormal, TRUE);
+#ifdef _M_AMD64 // This is broken on Windows 2003 x64
+            if (NtCurrentPeb()->OSMajorVersion >= 6)
+#endif
+            {
+                ok_int(finally_called, TRUE);
+                ok_int(abnormal, TRUE);
+            }
             stage = 4;
 #ifdef __clang__ /* avoiding clang build hung up */
             skip("avoiding clang build crash\n");

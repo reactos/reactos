@@ -34,7 +34,8 @@ add_library(gdiplus MODULE
 if(MSVC)
     # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
     # Disable warning C4305: '=': truncation from 'double' to 'REAL'
-    target_compile_options(gdiplus PRIVATE /wd4146 /wd4305)
+    # Disable warning C5286: implicit conversion from enum type 'x' to enum type 'y';
+    target_compile_options(gdiplus PRIVATE /wd4146 /wd4305 /wd5286)
 endif()
 
 set_module_type(gdiplus win32dll)

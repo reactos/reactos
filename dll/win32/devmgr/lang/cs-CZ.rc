@@ -278,7 +278,7 @@ BEGIN
     BEGIN
         MENUITEM "Zařízení podle typu",             IDM_DEVBYTYPE
         MENUITEM "Zařízení podle připojení",       IDM_DEVBYCONN
-        MENUITEM "Prostředky podle typu",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Prostředky podle typu",           IDM_RESBYTYPE
         MENUITEM "Prostředky podle připojení",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "SZobrazit skrytá zařízení",         IDM_SHOWHIDDEN
@@ -317,6 +317,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Zakázat"
   IDS_TOOLTIP_UPDATE        "Aktualizovat software ovladače"
   IDS_TOOLTIP_UNINSTALL     "Odinstalovat"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

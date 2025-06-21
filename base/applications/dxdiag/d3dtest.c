@@ -13,11 +13,11 @@
 #define WIDTH   800
 #define HEIGHT  600
 
-BOOL D3D7Test(HWND hWnd);
-BOOL D3D8Test(HWND hWnd);
-BOOL D3D9Test(HWND hWnd);
+BOOL D3D7Test(GUID *lpDevice, HWND hWnd);
+BOOL D3D8Test(GUID *lpDevice, HWND hWnd);
+BOOL D3D9Test(GUID *lpDevice, HWND hWnd);
 
-BOOL StartD3DTest(HWND hWnd, HINSTANCE hInstance, WCHAR* pszCaption, INT TestNr)
+BOOL StartD3DTest(GUID *lpDevice, HWND hWnd, HINSTANCE hInstance, WCHAR* pszCaption, INT TestNr)
 {
     WCHAR szTestDescriptionRaw[256];
     WCHAR szTestDescription[256];
@@ -39,13 +39,13 @@ BOOL StartD3DTest(HWND hWnd, HINSTANCE hInstance, WCHAR* pszCaption, INT TestNr)
 
     switch(TestNr){
         case 7:
-            Result = D3D7Test(hWnd);
+            Result = D3D7Test(lpDevice, hWnd);
             break;
         case 8:
-            Result = D3D8Test(hWnd);
+            Result = D3D8Test(lpDevice, hWnd);
             break;
         case 9:
-            Result = D3D9Test(hWnd);
+            Result = D3D9Test(lpDevice, hWnd);
             break;
         default:
             Result = FALSE;
@@ -70,7 +70,7 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-VOID D3DTests()
+VOID D3DTests(GUID *lpDevice)
 {
     WNDCLASSEX winClass;
     HWND hWnd;
@@ -116,9 +116,9 @@ VOID D3DTests()
     if(MessageBox(NULL, szDescription, szCaption, MB_YESNO | MB_ICONQUESTION) == IDNO)
         goto cleanup;
 
-    StartD3DTest(hWnd, hInstance, szCaption, 7);
-    StartD3DTest(hWnd, hInstance, szCaption, 8);
-    StartD3DTest(hWnd, hInstance, szCaption, 9);
+    StartD3DTest(lpDevice, hWnd, hInstance, szCaption, 7);
+    StartD3DTest(lpDevice, hWnd, hInstance, szCaption, 8);
+    StartD3DTest(lpDevice, hWnd, hInstance, szCaption, 9);
 
 cleanup:
     DestroyWindow(hWnd);

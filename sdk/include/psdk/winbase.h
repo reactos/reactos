@@ -1,14 +1,20 @@
 #ifndef _WINBASE_
 #define _WINBASE_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if !defined(_ADVAPI32_)
+#define WINADVAPI DECLSPEC_IMPORT
+#else
+#define WINADVAPI
+#endif
+
 #if !defined(_KERNEL32_)
 #define WINBASEAPI DECLSPEC_IMPORT
 #else
 #define WINBASEAPI
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 #include <libloaderapi.h>
@@ -530,6 +536,9 @@ extern "C" {
 #define STARTF_TITLEISAPPID     0x00001000
 #define STARTF_PREVENTPINNING   0x00002000
 #endif /* (WINVER >= 0x400) */
+#if (WINVER >= 0x0600)
+#define STARTF_UNTRUSTEDSOURCE  0x00008000
+#endif /* (WINVER >= 0x0600) */
 
 #define TC_NORMAL 0
 #define TC_HARDERR 1
@@ -4183,4 +4192,4 @@ WCHAR * CDECL wine_get_dos_file_name(LPCSTR str);
 #include <synchapi.h>
 #include <processthreadsapi.h>
 
-#endif /* _WINBASE_H */
+#endif /* _WINBASE_ */

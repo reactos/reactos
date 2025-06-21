@@ -92,17 +92,21 @@ Quit:
  *		ImmEnumRegisterWordA (IMM32.@)
  */
 UINT WINAPI
-ImmEnumRegisterWordA(HKL hKL, REGISTERWORDENUMPROCA lpfnEnumProc,
-                     LPCSTR lpszReading, DWORD dwStyle,
-                     LPCSTR lpszRegister, LPVOID lpData)
+ImmEnumRegisterWordA(
+    _In_ HKL hKL,
+    _In_ REGISTERWORDENUMPROCA lpfnEnumProc,
+    _In_opt_ LPCSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_opt_ LPCSTR lpszRegister,
+    _Inout_opt_ LPVOID lpData)
 {
     UINT ret = 0;
     LPWSTR pszReadingW = NULL, pszRegisterW = NULL;
     ENUM_WORD_W2A EnumDataW2A;
     PIMEDPI pImeDpi;
 
-    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, lpszReading,
-          dwStyle, lpszRegister, lpData);
+    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, debugstr_a(lpszReading),
+          dwStyle, debugstr_a(lpszRegister), lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -149,17 +153,21 @@ Quit:
  *		ImmEnumRegisterWordW (IMM32.@)
  */
 UINT WINAPI
-ImmEnumRegisterWordW(HKL hKL, REGISTERWORDENUMPROCW lpfnEnumProc,
-                     LPCWSTR lpszReading, DWORD dwStyle,
-                     LPCWSTR lpszRegister, LPVOID lpData)
+ImmEnumRegisterWordW(
+    _In_ HKL hKL,
+    _In_ REGISTERWORDENUMPROCW lpfnEnumProc,
+    _In_opt_ LPCWSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_opt_ LPCWSTR lpszRegister,
+    _Inout_opt_ LPVOID lpData)
 {
     UINT ret = 0;
     LPSTR pszReadingA = NULL, pszRegisterA = NULL;
     ENUM_WORD_A2W EnumDataA2W;
     PIMEDPI pImeDpi;
 
-    TRACE("(%p, %p, %S, 0x%lX, %S, %p)\n", hKL, lpfnEnumProc, lpszReading,
-          dwStyle, lpszRegister, lpData);
+    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, debugstr_w(lpszReading),
+          dwStyle, debugstr_w(lpszRegister), lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -206,7 +214,11 @@ Quit:
 /***********************************************************************
  *		ImmGetRegisterWordStyleA (IMM32.@)
  */
-UINT WINAPI ImmGetRegisterWordStyleA(HKL hKL, UINT nItem, LPSTYLEBUFA lpStyleBuf)
+UINT WINAPI
+ImmGetRegisterWordStyleA(
+    _In_ HKL hKL,
+    _In_ UINT nItem,
+    _Out_writes_(nItem) LPSTYLEBUFA lpStyleBuf)
 {
     UINT iItem, ret = 0;
     PIMEDPI pImeDpi;
@@ -251,7 +263,7 @@ UINT WINAPI ImmGetRegisterWordStyleA(HKL hKL, UINT nItem, LPSTYLEBUFA lpStyleBuf
                                        NULL, NULL);
             if (cchA > _countof(pDestA->szDescription) - 1)
                 cchA = _countof(pDestA->szDescription) - 1;
-            pDestA->szDescription[cchA] = 0;
+            pDestA->szDescription[cchA] = ANSI_NULL;
         }
     }
 
@@ -265,7 +277,11 @@ Quit:
 /***********************************************************************
  *		ImmGetRegisterWordStyleW (IMM32.@)
  */
-UINT WINAPI ImmGetRegisterWordStyleW(HKL hKL, UINT nItem, LPSTYLEBUFW lpStyleBuf)
+UINT WINAPI
+ImmGetRegisterWordStyleW(
+    _In_ HKL hKL,
+    _In_ UINT nItem,
+    _Out_writes_(nItem) LPSTYLEBUFW lpStyleBuf)
 {
     UINT iItem, ret = 0;
     PIMEDPI pImeDpi;
@@ -309,7 +325,7 @@ UINT WINAPI ImmGetRegisterWordStyleW(HKL hKL, UINT nItem, LPSTYLEBUFW lpStyleBuf
                                        pDestW->szDescription, _countof(pDestW->szDescription));
             if (cchW > _countof(pDestW->szDescription) - 1)
                 cchW = _countof(pDestW->szDescription) - 1;
-            pDestW->szDescription[cchW] = 0;
+            pDestW->szDescription[cchW] = UNICODE_NULL;
         }
     }
 
@@ -324,13 +340,17 @@ Quit:
  *		ImmRegisterWordA (IMM32.@)
  */
 BOOL WINAPI
-ImmRegisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszRegister)
+ImmRegisterWordA(
+    _In_ HKL hKL,
+    _In_opt_ LPCSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_opt_ LPCSTR lpszRegister)
 {
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPWSTR pszReadingW = NULL, pszRegisterW = NULL;
 
-    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, lpszReading, dwStyle, lpszRegister);
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle, debugstr_a(lpszRegister));
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -371,13 +391,18 @@ Quit:
  *		ImmRegisterWordW (IMM32.@)
  */
 BOOL WINAPI
-ImmRegisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegister)
+ImmRegisterWordW(
+    _In_ HKL hKL,
+    _In_opt_ LPCWSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_opt_ LPCWSTR lpszRegister)
 {
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszRegisterA = NULL;
 
-    TRACE("(%p, %S, 0x%lX, %S)\n", hKL, lpszReading, dwStyle, lpszRegister);
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
+          debugstr_w(lpszRegister));
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -418,13 +443,18 @@ Quit:
  *		ImmUnregisterWordA (IMM32.@)
  */
 BOOL WINAPI
-ImmUnregisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszUnregister)
+ImmUnregisterWordA(
+    _In_ HKL hKL,
+    _In_opt_ LPCSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_opt_ LPCSTR lpszUnregister)
 {
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPWSTR pszReadingW = NULL, pszUnregisterW = NULL;
 
-    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, lpszReading, dwStyle, lpszUnregister);
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
+          debugstr_a(lpszUnregister));
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
@@ -465,13 +495,18 @@ Quit:
  *		ImmUnregisterWordW (IMM32.@)
  */
 BOOL WINAPI
-ImmUnregisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszUnregister)
+ImmUnregisterWordW(
+    _In_ HKL hKL,
+    _In_opt_ LPCWSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_opt_ LPCWSTR lpszUnregister)
 {
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszUnregisterA = NULL;
 
-    TRACE("(%p, %S, 0x%lX, %S)\n", hKL, lpszReading, dwStyle, lpszUnregister);
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
+          debugstr_w(lpszUnregister));
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))

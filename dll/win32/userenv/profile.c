@@ -2007,12 +2007,12 @@ LoadUserProfileW(
     _Inout_ LPPROFILEINFOW lpProfileInfo)
 {
     WCHAR szUserHivePath[MAX_PATH];
+    DWORD dwLength = _countof(szUserHivePath);
     PTOKEN_USER UserSid = NULL;
     UNICODE_STRING SidString = { 0, 0, NULL };
     HANDLE hProfileMutex = NULL;
-    LONG Error;
+    DWORD dwError = MAXDWORD;
     BOOL ret = FALSE;
-    DWORD dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);
 
     DPRINT("LoadUserProfileW(%p %p)\n", hToken, lpProfileInfo);
 
@@ -2083,15 +2083,15 @@ LoadUserProfileW(
             if (GetTokenInformation(hToken, TokenUser, NULL, 0, &dwLength) ||
                 GetLastError() != ERROR_INSUFFICIENT_BUFFER)
             {
-                DPRINT1 ("GetTokenInformation() failed\n");
+                DPRINT1("GetTokenInformation() failed\n");
                 goto cleanup;
             }
 
             UserSid = (PTOKEN_USER)HeapAlloc(GetProcessHeap(), 0, dwLength);
             if (!UserSid)
             {
+                dwError = ERROR_NOT_ENOUGH_MEMORY;
                 DPRINT1("HeapAlloc() failed\n");
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 goto cleanup;
             }
 
@@ -2108,6 +2108,7 @@ LoadUserProfileW(
                 DPRINT1("CreateUserProfileW() failed\n");
                 goto cleanup;
             }
+            ret = FALSE;
         }
 
         /* Acquire restore privilege */
@@ -2117,20 +2118,19 @@ LoadUserProfileW(
             goto cleanup;
         }
 
-        /* Load user registry hive */
-        Error = RegLoadKeyW(HKEY_USERS,
-                            SidString.Buffer,
-                            szUserHivePath);
+        /* Load the user registry hive */
+        dwError = RegLoadKeyW(HKEY_USERS,
+                              SidString.Buffer,
+                              szUserHivePath);
         AcquireRemoveRestorePrivilege(FALSE);
 
         /* HACK: Do not fail if the profile has already been loaded! */
-        if (Error == ERROR_SHARING_VIOLATION)
-            Error = ERROR_SUCCESS;
+        if (dwError == ERROR_SHARING_VIOLATION)
+            dwError = ERROR_SUCCESS;
 
-        if (Error != ERROR_SUCCESS)
+        if (dwError != ERROR_SUCCESS)
         {
-            DPRINT1("RegLoadKeyW() failed (Error %ld)\n", Error);
-            SetLastError((DWORD)Error);
+            DPRINT1("RegLoadKeyW() failed (Error %ld)\n", dwError);
             goto cleanup;
         }
 
@@ -2140,29 +2140,30 @@ LoadUserProfileW(
     }
 
     /* Open future HKEY_CURRENT_USER */
-    Error = RegOpenKeyExW(HKEY_USERS,
-                          SidString.Buffer,
-                          0,
-                          MAXIMUM_ALLOWED,
-                          (PHKEY)&lpProfileInfo->hProfile);
-    if (Error != ERROR_SUCCESS)
+    dwError = RegOpenKeyExW(HKEY_USERS,
+                            SidString.Buffer,
+                            0,
+                            MAXIMUM_ALLOWED,
+                            (PHKEY)&lpProfileInfo->hProfile);
+    if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("RegOpenKeyExW() failed (Error %ld)\n", Error);
-        SetLastError((DWORD)Error);
+        DPRINT1("RegOpenKeyExW() failed (Error %ld)\n", dwError);
         goto cleanup;
     }
 
-    Error = IncrementRefCount(SidString.Buffer, NULL);
-    if (Error != ERROR_SUCCESS)
+    dwError = IncrementRefCount(SidString.Buffer, NULL);
+    if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("IncrementRefCount() failed (Error %ld)\n", Error);
-        SetLastError((DWORD)Error);
+        DPRINT1("IncrementRefCount() failed (Error %ld)\n", dwError);
         goto cleanup;
     }
 
     ret = TRUE;
 
 cleanup:
+    if (dwError == MAXDWORD)
+        dwError = GetLastError();
+
     if (UserSid != NULL)
         HeapFree(GetProcessHeap(), 0, UserSid);
 
@@ -2174,7 +2175,19 @@ cleanup:
 
     RtlFreeUnicodeString(&SidString);
 
+    /* Report any error occurred */
+    if (!ret)
+    {
+        // TODO: Use a localized *.mc resource message* error.
+        ReportError(lpProfileInfo->dwFlags,
+                    L"ReactOS could not load the locally stored user profile. "
+                    L"Possible causes of this error include insufficient security rights or a corrupt local profile.\n"
+                    L"\nError: %lu\n",
+                    dwError);
+    }
+
     DPRINT("LoadUserProfileW() done\n");
+    SetLastError(dwError);
     return ret;
 }
 

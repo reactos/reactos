@@ -98,7 +98,7 @@
 99 stdcall -noname SetAppStartingCursor(long long)
 100 stdcall SHRestricted(long)
 101 stdcall OpenAs_RunDLLA(long long str long)
-102 stdcall SHCoCreateInstance(wstr ptr long ptr ptr)
+102 stdcall SHCoCreateInstance(wstr ptr ptr ptr ptr)
 103 stdcall SignalFileOpen(ptr)
 104 stdcall OpenAs_RunDLLW(long long wstr long)
 105 stdcall Activate_RunDLL(ptr ptr wstr long)
@@ -466,4 +466,5 @@
 754 stub -noname SHLimitInputEditWithFlags
 755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)
 756 stub -noname DeleteFileThumbnail
-757 stdcall -version=0x600+ DisplayNameOfW(ptr ptr long ptr long)
+757 stdcall -noname -version=0x600+ DisplayNameOfW(ptr ptr long ptr long)
+866 stdcall -noname -version=0x600+ SHExtCoCreateInstance(wstr ptr ptr ptr ptr)

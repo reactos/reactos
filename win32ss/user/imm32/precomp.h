@@ -84,15 +84,6 @@
 
 #define REGKEY_KEYBOARD_LAYOUTS     L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
 
-#define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
-
-typedef struct REG_IME
-{
-    HKL hKL;
-    WCHAR szImeKey[20];     /* "E0XXYYYY": "E0XX" is the device handle. "YYYY" is a LANGID. */
-    WCHAR szFileName[80];   /* The IME module filename */
-} REG_IME, *PREG_IME;
-
 extern HMODULE ghImm32Inst;
 extern RTL_CRITICAL_SECTION gcsImeDpi;
 extern PIMEDPI gpImeDpiList;
@@ -102,35 +93,36 @@ extern HANDLE ghImmHeap;
 extern DWORD g_aimm_compat_flags;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
-VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
-VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA);
+VOID LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
+VOID LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA);
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType);
 LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType);
 #define ValidateHwndNoErr(hwnd) ValidateHandleNoErr((hwnd), TYPE_WINDOW)
 #define ValidateHwnd(hwnd) ValidateHandle((hwnd), TYPE_WINDOW)
-BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
+BOOL Imm32CheckImcProcess(PIMC pIMC);
 
 LPVOID ImmLocalAlloc(_In_ DWORD dwFlags, _In_ DWORD dwBytes);
 #define ImmLocalFree(lpData) HeapFree(ghImmHeap, 0, (lpData))
 
-LPWSTR APIENTRY Imm32WideFromAnsi(UINT uCodePage, LPCSTR pszA);
-LPSTR APIENTRY Imm32AnsiFromWide(UINT uCodePage, LPCWSTR pszW);
-LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
-LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
-PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL);
-LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
-BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
+LPWSTR Imm32WideFromAnsi(UINT uCodePage, LPCSTR pszA);
+LPSTR Imm32AnsiFromWide(UINT uCodePage, LPCWSTR pszW);
+LONG IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
+LONG IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
+PIMEDPI Imm32FindOrLoadImeDpi(HKL hKL);
+LPINPUTCONTEXT Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
+BOOL Imm32ReleaseIME(_In_ HKL hKL);
 BOOL Imm32IsSystemJapaneseOrKorean(VOID);
-BOOL APIENTRY Imm32IsCrossThreadAccess(HIMC hIMC);
-BOOL APIENTRY Imm32IsCrossProcessAccess(HWND hWnd);
+BOOL Imm32IsCrossThreadAccess(HIMC hIMC);
+BOOL Imm32IsCrossProcessAccess(HWND hWnd);
 BOOL Imm32IsImcAnsi(HIMC hIMC);
+BOOL Imm32LoadImeVerInfo(_Out_ PIMEINFOEX pImeInfoEx);
 
 #define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
 
-DWORD APIENTRY
+DWORD
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage);
-DWORD APIENTRY
+DWORD
 CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
                         UINT uCodePage);
 
@@ -144,28 +136,34 @@ Imm32MakeIMENotify(
     _In_ DWORD dwCommand,
     _Inout_opt_ DWORD_PTR dwData);
 
-DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList);
+DWORD Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList);
 
-PIME_STATE APIENTRY Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL);
-PIME_SUBSTATE APIENTRY Imm32FetchImeSubState(PIME_STATE pState, HKL hKL);
+PIME_STATE Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL);
+PIME_SUBSTATE Imm32FetchImeSubState(PIME_STATE pState, HKL hKL);
 
-BOOL APIENTRY
+BOOL
 Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL);
-BOOL APIENTRY
+BOOL
 Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL);
 
-DWORD APIENTRY
+DWORD
 Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage);
-DWORD APIENTRY
+DWORD
 Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage);
 
-HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
-HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
-BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
-UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts);
-BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayoutText);
-HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
-BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
+HRESULT
+Imm32StrToUInt(
+    _In_ PCWSTR pszText,
+    _Out_ PDWORD pdwValue,
+    _In_ ULONG nBase);
+
+HRESULT
+Imm32UIntToStr(
+    _In_ DWORD dwValue,
+    _In_ ULONG nBase,
+    _Out_ PWSTR pszBuff,
+    _In_ USHORT cchBuff);
+
 PTHREADINFO FASTCALL Imm32CurrentPti(VOID);
 
 HRESULT CtfImmTIMCreateInputContext(_In_ HIMC hIMC);

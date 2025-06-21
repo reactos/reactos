@@ -13,7 +13,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-BOOL APIENTRY
+BOOL
 Imm32OpenICAndCS(HIMC hIMC, LPINPUTCONTEXT *ppIC, LPCOMPOSITIONSTRING *ppCS)
 {
     LPINPUTCONTEXT pIC;
@@ -38,27 +38,27 @@ Imm32OpenICAndCS(HIMC hIMC, LPINPUTCONTEXT *ppIC, LPCOMPOSITIONSTRING *ppCS)
     return TRUE;
 }
 
-static inline LONG APIENTRY
+static inline LONG
 Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPWSTR lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
     DWORD ret = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, psz, cb / sizeof(CHAR),
                                     lpBuf, dwBufLen / sizeof(WCHAR));
     if (lpBuf && (ret + 1) * sizeof(WCHAR) <= dwBufLen)
-        lpBuf[ret] = 0;
+        lpBuf[ret] = UNICODE_NULL;
     return ret * sizeof(WCHAR);
 }
 
-static inline LONG APIENTRY
+static inline LONG
 Imm32CompStrWideToAnsi(LPCWSTR psz, DWORD cb, LPSTR lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
     DWORD ret = WideCharToMultiByte(uCodePage, 0, psz, cb / sizeof(WCHAR),
                                     lpBuf, dwBufLen / sizeof(CHAR), NULL, NULL);
     if (lpBuf && (ret + 1) * sizeof(CHAR) <= dwBufLen)
-        lpBuf[ret] = 0;
+        lpBuf[ret] = ANSI_NULL;
     return ret * sizeof(CHAR);
 }
 
-static INT APIENTRY
+static INT
 Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
                         INT str_len, LPBYTE dst, INT dst_len, UINT uCodePage)
 {
@@ -94,7 +94,7 @@ end:
     return rc * sizeof(BYTE);
 }
 
-static INT APIENTRY
+static INT
 Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
                         INT str_len, LPBYTE dst, INT dst_len, UINT uCodePage)
 {
@@ -129,7 +129,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
     return rc * sizeof(BYTE);
 }
 
-static INT APIENTRY
+static INT
 Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCSTR text,
                           LPDWORD target, INT tlen, UINT uCodePage)
 {
@@ -160,7 +160,7 @@ Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCSTR text,
     return rc;
 }
 
-static INT APIENTRY
+static INT
 Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCWSTR text,
                           LPDWORD target, INT tlen, UINT uCodePage)
 {
@@ -214,8 +214,7 @@ Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCWSTR text,
 #define CS_DoAttr CS_DoStrA
 #define CS_DoClause CS_DoStrA
 
-// Win: InternalGetCompositionStringA
-LONG APIENTRY
+static LONG
 Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                  LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage)
 {
@@ -365,8 +364,7 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
     return dwBufLen;
 }
 
-// Win: InternalGetCompositionStringW
-LONG APIENTRY
+static LONG
 Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                  LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage)
 {
@@ -515,10 +513,15 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
     return dwBufLen;
 }
 
-// Win: ImmSetCompositionStringWorker
-BOOL APIENTRY
-ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLen,
-                          LPVOID pRead, DWORD dwReadLen, BOOL bAnsiAPI)
+static BOOL
+ImmSetCompositionStringAW(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Inout_updates_bytes_opt_(dwCompLen) LPVOID pComp,
+    _In_ DWORD dwCompLen,
+    _Inout_updates_bytes_opt_(dwReadLen) LPVOID pRead,
+    _In_ DWORD dwReadLen,
+    _In_ BOOL bAnsiAPI)
 {
     BOOL ret = FALSE, bAnsiClient;
     LPVOID pCompNew = NULL, pReadNew = NULL;
@@ -853,7 +856,12 @@ Quit:
 /***********************************************************************
  *		ImmGetCompositionStringA (IMM32.@)
  */
-LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen)
+LONG WINAPI
+ImmGetCompositionStringA(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPVOID lpBuf,
+    _In_ DWORD dwBufLen)
 {
     LONG ret = 0;
     LPINPUTCONTEXT pIC;
@@ -896,7 +904,12 @@ LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
 /***********************************************************************
  *		ImmGetCompositionStringW (IMM32.@)
  */
-LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen)
+LONG WINAPI
+ImmGetCompositionStringW(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Out_writes_bytes_opt_(dwBufLen) LPVOID lpBuf,
+    _In_ DWORD dwBufLen)
 {
     LONG ret = 0;
     LPINPUTCONTEXT pIC;
@@ -940,8 +953,13 @@ LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
  *		ImmSetCompositionStringA (IMM32.@)
  */
 BOOL WINAPI
-ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLen,
-                         LPVOID lpRead, DWORD dwReadLen)
+ImmSetCompositionStringA(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
+    _In_ DWORD dwCompLen,
+    _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
+    _In_ DWORD dwReadLen)
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
@@ -952,8 +970,13 @@ ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLe
  *		ImmSetCompositionStringW (IMM32.@)
  */
 BOOL WINAPI
-ImmSetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLen,
-                         LPVOID lpRead, DWORD dwReadLen)
+ImmSetCompositionStringW(
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
+    _In_ DWORD dwCompLen,
+    _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
+    _In_ DWORD dwReadLen)
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);

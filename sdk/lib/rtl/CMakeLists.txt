@@ -132,6 +132,7 @@ add_dependencies(rtl psdk asm)
 
 list(APPEND SOURCE_VISTA
     condvar.c
+    locale.c
     runonce.c
     srw.c
     utf8.c)

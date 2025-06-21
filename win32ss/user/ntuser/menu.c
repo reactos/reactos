@@ -4571,14 +4571,24 @@ track_menu:
     MENU_ExitTracking( pwnd, FALSE, wFlags);
 }
 
-/**********************************************************************
- *           TrackPopupMenuEx   (USER32.@)
- */
-BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
-                              PWND pWnd, LPTPMPARAMS lpTpm)
+BOOL FASTCALL
+IntTrackPopupMenuEx(
+    _Inout_ PMENU menu,
+    _In_ UINT wFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ PWND pWnd,
+    _In_opt_ const TPMPARAMS *lpTpm)
 {
     BOOL ret = FALSE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
+    if (lpTpm && lpTpm->cbSize != sizeof(*lpTpm))
+    {
+        ERR("Invalid TPMPARAMS size: got %u, expected %zu\n", lpTpm->cbSize, sizeof(*lpTpm));
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     if (pti != pWnd->head.pti)
     {
@@ -6617,61 +6627,75 @@ Cleanup:
    return Ret;
 }
 
-/*
- * @implemented
- */
-BOOL APIENTRY
+#define VALID_TPM_FLAGS ( \
+    TPM_LAYOUTRTL | TPM_NOANIMATION | TPM_VERNEGANIMATION | TPM_VERPOSANIMATION | \
+    TPM_HORNEGANIMATION | TPM_HORPOSANIMATION | TPM_RETURNCMD | \
+    TPM_NONOTIFY | TPM_VERTICAL | TPM_BOTTOMALIGN | TPM_VCENTERALIGN | \
+    TPM_RIGHTALIGN | TPM_CENTERALIGN | TPM_RIGHTBUTTON | TPM_RECURSE \
+)
+
+/* @implemented */
+BOOL NTAPI
 NtUserTrackPopupMenuEx(
-   HMENU hMenu,
-   UINT fuFlags,
-   int x,
-   int y,
-   HWND hWnd,
-   LPTPMPARAMS lptpm)
+    _In_ HMENU hMenu,
+    _In_ UINT fuFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ HWND hWnd,
+    _In_opt_ LPTPMPARAMS lptpm)
 {
-   PMENU menu;
-   PWND pWnd;
-   TPMPARAMS tpm;
-   BOOL Ret = FALSE;
-   USER_REFERENCE_ENTRY Ref;
+    PMENU menu;
+    PWND pWnd;
+    TPMPARAMS tpm;
+    BOOL Ret = FALSE;
+    USER_REFERENCE_ENTRY WndRef, MenuRef;
 
-   TRACE("Enter NtUserTrackPopupMenuEx\n");
-   UserEnterExclusive();
-   /* Parameter check */
-   if (!(menu = UserGetMenuObject( hMenu )))
-   {
-      ERR("TPME : Invalid Menu handle.\n");
-      EngSetLastError( ERROR_INVALID_MENU_HANDLE );
-      goto Exit;
-   }
+    TRACE("Enter NtUserTrackPopupMenuEx\n");
+    UserEnterExclusive();
 
-   if (!(pWnd = UserGetWindowObject(hWnd)))
-   {
-      ERR("TPME : Invalid Window handle.\n");
-      goto Exit;
-   }
+    if (fuFlags & ~VALID_TPM_FLAGS)
+    {
+        ERR("TPME : Invalid flags 0x%X (valid flags are 0x%X)\n", fuFlags, VALID_TPM_FLAGS);
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        goto Exit;
+    }
 
-   if (lptpm)
-   {
-      _SEH2_TRY
-      {
-         ProbeForRead(lptpm, sizeof(TPMPARAMS), sizeof(ULONG));
-         tpm = *lptpm;
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      { 
-         _SEH2_YIELD(goto Exit);
-      }
-      _SEH2_END
-   }
-   UserRefObjectCo(pWnd, &Ref);
-   Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, lptpm ? &tpm : NULL);
-   UserDerefObjectCo(pWnd);
+    /* Parameter check */
+    if (!(menu = UserGetMenuObject( hMenu )))
+    {
+        ERR("TPME : Invalid Menu handle.\n");
+        EngSetLastError( ERROR_INVALID_MENU_HANDLE );
+        goto Exit;
+    }
+
+    if (!(pWnd = UserGetWindowObject(hWnd)))
+    {
+        ERR("TPME : Invalid Window handle.\n");
+        goto Exit;
+    }
+
+    if (lptpm)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(lptpm, sizeof(TPMPARAMS), sizeof(ULONG));
+            tpm = *lptpm;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        { 
+            _SEH2_YIELD(goto Exit);
+        }
+        _SEH2_END
+    }
+
+    UserRefObjectCo(pWnd, &WndRef);
+    UserRefObjectCo(menu, &MenuRef);
+    Ret = IntTrackPopupMenuEx(menu, fuFlags, x, y, pWnd, (lptpm ? &tpm : NULL));
+    UserDerefObjectCo(menu);
+    UserDerefObjectCo(pWnd);
 
 Exit:
-   TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n",Ret);
-   UserLeave();
-   return Ret;
+    TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n",Ret);
+    UserLeave();
+    return Ret;
 }
-
-/* EOF */

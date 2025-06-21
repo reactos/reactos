@@ -104,7 +104,7 @@ CloseAllDialogWindows(VOID)
                                     DIALOG_LIST_ENTRY,
                                     Entry);
 
-        PostMessage(Current->hWnd, WLX_WM_SAS, 0, 0);
+        PostMessage(Current->hWnd, WLX_WM_SAS, WLX_SAS_TYPE_TIMEOUT, 0);
 
         ListEntry = ListEntry->Flink;
     }
@@ -141,8 +141,25 @@ DefaultWlxWindowProc(
 
     if (uMsg == WLX_WM_SAS)
     {
-        EndDialog(hwndDlg, WLX_DLG_SAS);
-        return 0;
+        /* Determine which result to return */
+        switch (wParam)
+        {
+            case WLX_SAS_TYPE_CTRL_ALT_DEL:
+            default:
+                ret = WLX_DLG_SAS;
+                break;
+            case WLX_SAS_TYPE_TIMEOUT:
+                ret = WLX_DLG_INPUT_TIMEOUT;
+                break;
+            case WLX_SAS_TYPE_SCRNSVR_TIMEOUT:
+                ret = WLX_DLG_SCREEN_SAVER_TIMEOUT;
+                break;
+            case WLX_SAS_TYPE_USER_LOGOFF:
+                ret = WLX_DLG_USER_LOGOFF;
+                break;
+        }
+        EndDialog(hwndDlg, ret);
+        return TRUE;
     }
 
     ret = ListEntry->DlgProc(hwndDlg, uMsg, wParam, lParam);
@@ -394,10 +411,14 @@ WlxSwitchDesktopToUser(
     HANDLE hWlx)
 {
     PWLSESSION Session = (PWLSESSION)hWlx;
+    BOOL bRet;
 
     TRACE("WlxSwitchDesktopToUser()\n");
 
-    return (int)SwitchDesktop(Session->ApplicationDesktop);
+    bRet = SwitchDesktop(Session->ApplicationDesktop);
+    if (bRet)
+        SetThreadDesktop(Session->ApplicationDesktop);
+    return (int)bRet;
 }
 
 /*
@@ -409,10 +430,14 @@ WlxSwitchDesktopToWinlogon(
     HANDLE hWlx)
 {
     PWLSESSION Session = (PWLSESSION)hWlx;
+    BOOL bRet;
 
     TRACE("WlxSwitchDesktopToWinlogon()\n");
 
-    return (int)SwitchDesktop(Session->WinlogonDesktop);
+    bRet = SwitchDesktop(Session->WinlogonDesktop);
+    if (bRet)
+        SetThreadDesktop(Session->WinlogonDesktop);
+    return (int)bRet;
 }
 
 /*

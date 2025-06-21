@@ -648,6 +648,37 @@ BOOL WINAPI IsThemeActive(void)
     return bActive;
 }
 
+typedef HRESULT (WINAPI* DWMISCOMPOSITIONENABLED)(BOOL *enabled);
+
+/************************************************************
+*       IsCompositionActive   (UXTHEME.@)
+*/
+BOOL WINAPI IsCompositionActive(void)
+{
+    BOOL bIsCompositionActive;
+    DWMISCOMPOSITIONENABLED pDwmIsCompositionEnabled;
+    HMODULE hdwmapi = GetModuleHandleW(L"dwmapi.dll");
+
+    if (!hdwmapi)
+    {
+        hdwmapi = LoadLibraryW(L"dwmapi.dll");
+        if (!hdwmapi)
+        {
+            ERR("Failed to load dwmapi\n");
+            return FALSE;
+        }
+
+        pDwmIsCompositionEnabled = (DWMISCOMPOSITIONENABLED)GetProcAddress(hdwmapi, "DwmIsCompositionEnabled");
+    }
+    if (!pDwmIsCompositionEnabled)
+        return FALSE;
+    
+    if (pDwmIsCompositionEnabled(&bIsCompositionActive) == S_OK)
+        return bIsCompositionActive;
+
+    return FALSE;
+}
+
 /***********************************************************************
  *      EnableTheming                                       (UXTHEME.@)
  *
@@ -847,9 +878,23 @@ HTHEME WINAPI OpenThemeDataFromFile(HTHEMEFILE hThemeFile, HWND hwnd, LPCWSTR ps
 /***********************************************************************
  *      OpenThemeData                                       (UXTHEME.@)
  */
-HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR classlist)
+HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
 {
-    return OpenThemeDataInternal(g_ActiveThemeFile, hwnd, classlist, 0);
+    return OpenThemeDataInternal(g_ActiveThemeFile, hwnd, pszClassList, 0);
+}
+
+/***********************************************************************
+ *      OpenThemeDataForDpi                                 (UXTHEME.@)
+ */
+HTHEME
+WINAPI
+OpenThemeDataForDpi(
+    _In_ HWND hwnd,
+    _In_ LPCWSTR pszClassList,
+    _In_ UINT dpi)
+{
+    FIXME("dpi (%x) is currently ignored", dpi);
+    return OpenThemeDataInternal(g_ActiveThemeFile, hwnd, pszClassList, 0);
 }
 
 /***********************************************************************
@@ -902,6 +947,23 @@ HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
     UXTHEME_broadcast_theme_changed (hwnd, TRUE);
     return hr;
 }
+
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+/***********************************************************************
+ *      SetWindowThemeAttribute                             (UXTHEME.@)
+ */
+HRESULT
+WINAPI
+SetWindowThemeAttribute(
+    _In_ HWND hwnd,
+    _In_ enum WINDOWTHEMEATTRIBUTETYPE eAttribute,
+    _In_ PVOID pvAttribute,
+    _In_ DWORD cbAttribute)
+{
+   FIXME("(%p,%d,%p,%ld): stub\n", hwnd, eAttribute, pvAttribute, cbAttribute);
+   return E_NOTIMPL;
+}
+#endif /* (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA) */
 
 /***********************************************************************
  *      GetCurrentThemeName                                 (UXTHEME.@)

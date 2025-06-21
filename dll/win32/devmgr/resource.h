@@ -90,10 +90,11 @@
 #define IDS_HINT_SYS_MAXIMIZE   134
 #define IDS_HINT_SYS_CLOSE      135
 
-
-
-
-
+/* resource type strings */
+#define IDS_TYPE_MEMORY         136
+#define IDS_TYPE_PORT           137
+#define IDS_TYPE_DMA            138
+#define IDS_TYPE_IRQ            139
 
 
 

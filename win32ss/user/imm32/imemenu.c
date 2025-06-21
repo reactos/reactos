@@ -68,7 +68,7 @@ Imm32ImeMenuAnsiToWide(
     pItemW->dwItemData = pItemA->dwItemData;
     ret = MultiByteToWideChar(uCodePage, 0, pItemA->szString, -1,
                               pItemW->szString, _countof(pItemW->szString));
-    pItemW->szString[_countof(pItemW->szString) - 1] = UNICODE_NULL;
+    pItemW->szString[_countof(pItemW->szString) - 1] = UNICODE_NULL; // Avoid buffer overrun
     return !!ret;
 }
 
@@ -90,7 +90,7 @@ Imm32ImeMenuWideToAnsi(
     pItemA->hbmpItem = pItemW->hbmpItem;
     ret = WideCharToMultiByte(uCodePage, 0, pItemW->szString, -1,
                               pItemA->szString, _countof(pItemA->szString), NULL, NULL);
-    pItemA->szString[_countof(pItemA->szString) - 1] = ANSI_NULL;
+    pItemA->szString[_countof(pItemA->szString) - 1] = ANSI_NULL; // Avoid buffer overrun
     return !!ret;
 }
 
@@ -610,11 +610,14 @@ ImmGetImeMenuItemsAW(
 
     /* Get IME menu items from the IME */
     ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, pNewParent, pNewItems, dwSize);
-    if (!ret || !lpImeMenuItems)
+    if (!ret)
     {
-        ERR("%d, %p\n", ret, lpImeMenuItems);
+        ERR("ImeGetImeMenuItems failed\n");
         goto Quit;
     }
+
+    if (!lpImeMenuItems)
+        goto Quit;
 
     if (bImcIsAnsi != bTargetIsAnsi) /* Are text types different? */
     {

@@ -1270,11 +1270,6 @@ typedef struct _CONTEXT {
 #define EXCEPTION_WRITE_FAULT   1
 #define EXCEPTION_EXECUTE_FAULT 8
 
-typedef struct DECLSPEC_ALIGN(16) _M128A {
-    ULONGLONG Low;
-    LONGLONG High;
-} M128A, *PM128A;
-
 typedef struct _XMM_SAVE_AREA32 {
     WORD ControlWord;
     WORD StatusWord;

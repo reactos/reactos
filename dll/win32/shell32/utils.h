@@ -54,6 +54,20 @@ RegKeyExists(HKEY hKey, LPCWSTR Path)
     return ret;
 }
 
+inline UINT
+RegQueryDword(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, DWORD *pnVal)
+{
+    DWORD cb = sizeof(*pnVal);
+    return RegGetValueW(hKey, pszPath, pszName, RRF_RT_REG_DWORD, NULL, pnVal, &cb);
+}
+
+inline DWORD
+RegGetDword(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, DWORD nDefVal)
+{
+    DWORD nVal;
+    return RegQueryDword(hKey, pszPath, pszName, &nVal) == ERROR_SUCCESS ? nVal : nDefVal;
+}
+
 inline DWORD
 RegSetOrDelete(HKEY hKey, LPCWSTR Name, DWORD Type, LPCVOID Data, DWORD Size)
 {
@@ -107,6 +121,14 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
 }
 
 HRESULT SHELL_FindAnyFile(LPCWSTR lpFilePath);
+
+typedef HDSA HDCIA; // DynamicClassIdArray
+#define DCIA_Create() ( (HDCIA)DSA_Create(sizeof(CLSID), 4) )
+#define DCIA_Destroy(hDCIA) DSA_Destroy((HDSA)(hDCIA))
+#define DCIA_GetCount(hDCIA) DSA_GetItemCount((HDSA)(hDCIA))
+#define DCIA_GetEntry(hDCIA, iItem) ( (const CLSID*)DSA_GetItemPtr((HDSA)(hDCIA), (iItem)) )
+int DCIA_AddEntry(HDCIA hDCIA, REFCLSID rClsId);
+void DCIA_AddShellExSubkey(HDCIA hDCIA, HKEY hProgId, PCWSTR pszSubkey);
 
 #ifdef __cplusplus
 struct ClipboardViewerChain

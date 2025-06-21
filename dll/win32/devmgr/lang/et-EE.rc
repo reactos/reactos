@@ -280,7 +280,7 @@ BEGIN
     BEGIN
         MENUITEM "Seadmed &tüübi järgi",         IDM_DEVBYTYPE
         MENUITEM "Seadmed &ühenduse järgi",      IDM_DEVBYCONN
-        MENUITEM "R&essursid tüübi järgi",       IDM_RESBYTYPE, GRAYED
+        MENUITEM "R&essursid tüübi järgi",       IDM_RESBYTYPE
         MENUITEM "&Ressursid ühenduse järgi",    IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Näita peidetud seadmeid",     IDM_SHOWHIDDEN
@@ -319,6 +319,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Keela"
   IDS_TOOLTIP_UPDATE        "Draiveritarkvara värskendamine"
   IDS_TOOLTIP_UNINSTALL     "Desinstalli"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

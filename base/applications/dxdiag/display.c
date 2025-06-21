@@ -305,56 +305,89 @@ InitializeDialog(HWND hwndDlg, PDISPLAY_DEVICEW pDispDevice)
     return TRUE;
 }
 
-void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext)
+
+static BOOL WINAPI
+DDEnumerateCallback(
+    IN GUID *lpGuid,
+    IN LPSTR lpDriverName,
+    IN LPSTR lpDriverDescription,
+    IN LPVOID lpContext,
+    IN HMONITOR hMonitor)
 {
     DISPLAY_DEVICEW DispDevice;
-    HWND * hDlgs;
+    LPWSTR lpDriverDescriptionW;
+    PDXDIAG_CONTEXT pContext = lpContext;
+    PDXDIAG_DISPLAY *pDisplayAdapters;
+    PDXDIAG_DISPLAY pDisplayAdapter;
     HWND hwndDlg;
     WCHAR szDisplay[20];
     WCHAR szText[30];
-    DWORD dwOffset = 0;
+    int len;
+    BOOL ret;
 
-    while(TRUE)
+    /* Convert lpDriverDescription to WCHAR */
+    len = MultiByteToWideChar(CP_ACP, 0, lpDriverDescription, strlen(lpDriverDescription), NULL, 0);
+    if (!len)
+        return FALSE;
+    lpDriverDescriptionW = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+    if (!lpDriverDescriptionW)
+        return FALSE;
+    MultiByteToWideChar(CP_ACP, 0, lpDriverDescription, strlen(lpDriverDescription), lpDriverDescriptionW, len);
+    lpDriverDescriptionW[len] = UNICODE_NULL;
+
+    /* Get associated display device */
+    ZeroMemory(&DispDevice, sizeof(DispDevice));
+    DispDevice.cb = sizeof(DispDevice);
+    ret = EnumDisplayDevicesW(lpDriverDescriptionW, 0, &DispDevice, 0);
+    HeapFree(GetProcessHeap(), 0, lpDriverDescriptionW);
+    if (!ret)
+        return TRUE;
+
+    pDisplayAdapter = HeapAlloc(GetProcessHeap(), 0, sizeof(DXDIAG_DISPLAY));
+    if (!pDisplayAdapter)
+        return FALSE;
+
+    if (pContext->NumDisplayAdapter)
+        pDisplayAdapters = HeapReAlloc(GetProcessHeap(), 0, pContext->DisplayAdapters, (pContext->NumDisplayAdapter + 1) * sizeof(PDXDIAG_DISPLAY));
+    else
+        pDisplayAdapters = HeapAlloc(GetProcessHeap(), 0, (pContext->NumDisplayAdapter + 1) * sizeof(PDXDIAG_DISPLAY));
+
+    if (!pDisplayAdapters)
     {
-        ZeroMemory(&DispDevice, sizeof(DISPLAY_DEVICEW));
-        DispDevice.cb = sizeof(DISPLAY_DEVICEW);
-        if (!EnumDisplayDevicesW(NULL, pContext->NumDisplayAdapter + dwOffset, &DispDevice, 0))
-            return;
-
-        /* skip devices not attached to the desktop and mirror drivers */
-        if (!(DispDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) || (DispDevice.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER))
-        {
-            dwOffset++;
-            continue;
-        }
-        if (pContext->NumDisplayAdapter)
-            hDlgs = HeapReAlloc(GetProcessHeap(), 0, pContext->hDisplayWnd, (pContext->NumDisplayAdapter + 1) * sizeof(HWND));
-        else
-            hDlgs = HeapAlloc(GetProcessHeap(), 0, (pContext->NumDisplayAdapter + 1) * sizeof(HWND));
-
-        if (!hDlgs)
-            break;
-
-        pContext->hDisplayWnd = hDlgs;
-        hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), pContext->hMainDialog, DisplayPageWndProc, (LPARAM)pContext); EnableDialogTheme(hwndDlg);
-        if (!hwndDlg)
-           break;
-
-        /* initialize the dialog */
-        InitializeDialog(hwndDlg, &DispDevice);
-
-        szDisplay[0] = L'\0';
-        LoadStringW(hInst, IDS_DISPLAY_DIALOG, szDisplay, sizeof(szDisplay)/sizeof(WCHAR));
-        szDisplay[(sizeof(szDisplay)/sizeof(WCHAR))-1] = L'\0';
-
-        wsprintfW (szText, L"%s %u", szDisplay, pContext->NumDisplayAdapter + 1);
-        InsertTabCtrlItem(GetDlgItem(pContext->hMainDialog, IDC_TAB_CONTROL), pContext->NumDisplayAdapter + 1, szText);
-
-        hDlgs[pContext->NumDisplayAdapter] = hwndDlg;
-        pContext->NumDisplayAdapter++;
+        HeapFree(GetProcessHeap(), 0, pDisplayAdapter);
+        return FALSE;
     }
 
+    pContext->DisplayAdapters = pDisplayAdapters;
+    hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), pContext->hMainDialog, DisplayPageWndProc, (LPARAM)pDisplayAdapter);
+    EnableDialogTheme(hwndDlg);
+    if (!hwndDlg)
+    {
+        HeapFree(GetProcessHeap(), 0, pDisplayAdapter);
+        return FALSE;
+    }
 
+    /* initialize the dialog */
+    InitializeDialog(hwndDlg, &DispDevice);
+
+    szDisplay[0] = UNICODE_NULL;
+    LoadStringW(hInst, IDS_DISPLAY_DIALOG, szDisplay, ARRAYSIZE(szDisplay));
+    szDisplay[ARRAYSIZE(szDisplay) - 1] = UNICODE_NULL;
+
+    wsprintfW(szText, L"%s %u", szDisplay, pContext->NumDisplayAdapter + 1);
+    InsertTabCtrlItem(GetDlgItem(pContext->hMainDialog, IDC_TAB_CONTROL), pContext->NumDisplayAdapter + 1, szText);
+
+    pDisplayAdapter->hDisplayWnd = hwndDlg;
+    if (lpGuid)
+        pDisplayAdapter->guid = *lpGuid;
+    pContext->DisplayAdapters[pContext->NumDisplayAdapter++] = pDisplayAdapter;
+    return TRUE;
+}
+
+
+void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext)
+{
+    DirectDrawEnumerateExA(DDEnumerateCallback, pContext, DDENUM_ATTACHEDSECONDARYDEVICES);
 }
 
 
@@ -362,13 +395,14 @@ INT_PTR CALLBACK
 DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rect;
-    PDXDIAG_CONTEXT pContext = (PDXDIAG_CONTEXT)GetWindowLongPtr(hDlg, DWLP_USER);
+    HWND hMainDialog;
+    PDXDIAG_DISPLAY pDisplay = (PDXDIAG_DISPLAY)GetWindowLongPtr(hDlg, DWLP_USER);
     switch (message)
     {
         case WM_INITDIALOG:
         {
-            pContext = (PDXDIAG_CONTEXT) lParam;
-            SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pContext);
+            pDisplay = (PDXDIAG_DISPLAY) lParam;
+            SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pDisplay);
             SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
             return TRUE;
         }
@@ -378,13 +412,14 @@ DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 case IDC_BUTTON_TESTDD:
                 case IDC_BUTTON_TEST3D:
-                    GetWindowRect(pContext->hMainDialog, &rect);
+                    hMainDialog = GetWindow(hDlg, GW_OWNER);
+                    GetWindowRect(hMainDialog, &rect);
                     /* FIXME log result errors */
                     if (IDC_BUTTON_TESTDD == LOWORD(wParam))
-                        DDTests();
+                        DDTests(&pDisplay->guid);
                     else if (IDC_BUTTON_TEST3D == LOWORD(wParam))
-                        D3DTests();
-                    SetWindowPos(pContext->hMainDialog, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+                        D3DTests(&pDisplay->guid);
+                    SetWindowPos(hMainDialog, NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
                     break;
             }
             break;

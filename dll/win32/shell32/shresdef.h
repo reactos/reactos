@@ -262,6 +262,10 @@
 #define IDS_SHORTCUT_RUN_MIN     4168
 #define IDS_SHORTCUT_RUN_MAX     4169
 
+/* FS property sheet */
+#define IDS_MULTIPLETYPES       8705
+#define IDS_VARIOUSFOLDERS      8709
+
 #define IDS_MENU_EMPTY           34561
 
 /* Note: those strings are referenced from the registry */
@@ -361,20 +365,23 @@
 
 #define IDS_REMOVE_EXT                              30522
 
+#define IDS_VISEFFECT_DRAGFULL                      30533
+#define IDS_VISEFFECT_FONTSMOOTHING                 30535
+#define IDS_VISEFFECT_LISTVIEWSHADOW                30541
+
 #define IDS_NO_ICONS                                30529
 #define IDS_FILE_NOT_FOUND                          30530 // FIXME: "Animations in taskbar"
 #define IDS_LINK_INVALID                            30531
 #define IDS_COPYTOMENU                              30532
-#define IDS_COPYTOTITLE                             30533
+#define IDS_COPYTOTITLE                             60005 // Outside of any Microsoft range to avoid collisions
 #define IDS_COPYITEMS                               30534
-#define IDS_COPYBUTTON                              30535
+#define IDS_COPYBUTTON                              60007
 #define IDS_MOVETOMENU                              30536
 #define IDS_MOVETOTITLE                             30537
 #define IDS_MOVEITEMS                               30538
 #define IDS_MOVEBUTTON                              30539 // FIXME: "Slide open combo boxes"
 
 #define IDS_SYSTEMFOLDER                            30540 // FIXME: "Show translucent selection rectangle"
-#define IDS_DESKTOPLABELDROPSHADOW                  30541
 #define IDS_FOLDERTYPEBACKGROUNDIMAGE               30543
 
 #define IDS_LOG_OFF_DESC                            35000

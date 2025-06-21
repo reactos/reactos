@@ -1490,6 +1490,7 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
             }
         }
     }
+    // TODO: else if "AlwaysShowExt"
 
     return doHide;
 }

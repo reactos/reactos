@@ -20,7 +20,7 @@ SHAREDINFO gSharedInfo = { NULL };
 BYTE gfImmInitialized = FALSE; /* Is IMM32 initialized? */
 ULONG_PTR gHighestUserAddress = 0;
 
-static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
+static BOOL ImmInitializeGlobals(HMODULE hMod)
 {
     NTSTATUS status;
     SYSTEM_BASIC_INFORMATION SysInfo;
@@ -54,7 +54,10 @@ static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
  *		ImmRegisterClient(IMM32.@)
  *       ( Undocumented, called from user32.dll )
  */
-BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
+BOOL WINAPI
+ImmRegisterClient(
+    _Inout_ PSHAREDINFO ptr,
+    _In_ HINSTANCE hMod)
 {
     gSharedInfo = *ptr;
     gpsi = gSharedInfo.psi;
@@ -64,7 +67,10 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 /***********************************************************************
  *		ImmLoadLayout (IMM32.@)
  */
-BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
+BOOL WINAPI
+ImmLoadLayout(
+    _In_ HKL hKL,
+    _Inout_ PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData, dwType;
     HKEY hKey;
@@ -114,7 +120,8 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
  *
  * NOTE: HKL_SWITCH_TO_NON_IME and HKL_RELEASE_IME are special values for hKL.
  */
-BOOL WINAPI ImmFreeLayout(HKL hKL)
+BOOL WINAPI
+ImmFreeLayout(_In_ HKL hKL)
 {
     WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
@@ -180,7 +187,8 @@ Retry:
     return TRUE;
 }
 
-VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
+static VOID
+Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 {
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXTDX pIC;
@@ -422,7 +430,6 @@ typedef struct SELECT_LAYOUT
     HKL hOldKL;
 } SELECT_LAYOUT, *LPSELECT_LAYOUT;
 
-// Win: SelectContextProc
 static BOOL CALLBACK Imm32SelectContextProc(HIMC hIMC, LPARAM lParam)
 {
     LPSELECT_LAYOUT pSelect = (LPSELECT_LAYOUT)lParam;
@@ -430,7 +437,6 @@ static BOOL CALLBACK Imm32SelectContextProc(HIMC hIMC, LPARAM lParam)
     return TRUE;
 }
 
-// Win: NotifyIMEProc
 static BOOL CALLBACK Imm32NotifyIMEProc(HIMC hIMC, LPARAM lParam)
 {
     ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, (DWORD)lParam, 0);
@@ -440,7 +446,8 @@ static BOOL CALLBACK Imm32NotifyIMEProc(HIMC hIMC, LPARAM lParam)
 /***********************************************************************
  *		ImmActivateLayout (IMM32.@)
  */
-BOOL WINAPI ImmActivateLayout(HKL hKL)
+BOOL WINAPI
+ImmActivateLayout(_In_ HKL hKL)
 {
     PIMEDPI pImeDpi;
     HKL hOldKL;
@@ -489,7 +496,10 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
 /***********************************************************************
  *		ImmAssociateContext (IMM32.@)
  */
-HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
+HIMC WINAPI
+ImmAssociateContext(
+    _In_ HWND hWnd,
+    _In_opt_ HIMC hIMC)
 {
     PWND pWnd;
     HWND hwndFocus;
@@ -538,7 +548,11 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 /***********************************************************************
  *              ImmAssociateContextEx (IMM32.@)
  */
-BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
+BOOL WINAPI
+ImmAssociateContextEx(
+    _In_ HWND hWnd,
+    _In_opt_ HIMC hIMC,
+    _In_ DWORD dwFlags)
 {
     HWND hwndFocus;
     PWND pFocusWnd;
@@ -588,7 +602,8 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 /***********************************************************************
  *		ImmCreateContext (IMM32.@)
  */
-HIMC WINAPI ImmCreateContext(void)
+HIMC WINAPI
+ImmCreateContext(VOID)
 {
     PCLIENTIMC pClientImc;
     HIMC hIMC;
@@ -619,8 +634,8 @@ HIMC WINAPI ImmCreateContext(void)
     return hIMC;
 }
 
-// Win: DestroyImeModeSaver
-static VOID APIENTRY Imm32DestroyImeModeSaver(LPINPUTCONTEXTDX pIC)
+static VOID
+Imm32DestroyImeModeSaver(LPINPUTCONTEXTDX pIC)
 {
     PIME_STATE pState, pNext;
     PIME_SUBSTATE pSubState, pSubNext;
@@ -641,8 +656,8 @@ static VOID APIENTRY Imm32DestroyImeModeSaver(LPINPUTCONTEXTDX pIC)
     pIC->pState = NULL;
 }
 
-// Win: DestroyInputContext
-BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
+static BOOL
+Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
     PIMEDPI pImeDpi;
     LPINPUTCONTEXTDX pIC;
@@ -733,8 +748,7 @@ Finish:
 }
 
 // NOTE: Windows does recursive call ImmLockIMC here but we don't do so.
-// Win: BOOL CreateInputContext(HIMC hIMC, HKL hKL, BOOL fSelect)
-BOOL APIENTRY
+static BOOL
 Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HKL hKL, BOOL fSelect)
 {
     DWORD dwIndex, cbPrivate;
@@ -835,7 +849,7 @@ Fail:
     return FALSE;
 }
 
-LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
+LPINPUTCONTEXT Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
 {
     HANDLE hIC;
     LPINPUTCONTEXT pIC = NULL;
@@ -913,7 +927,8 @@ Failure:
 /***********************************************************************
  *		ImmDestroyContext (IMM32.@)
  */
-BOOL WINAPI ImmDestroyContext(HIMC hIMC)
+BOOL WINAPI
+ImmDestroyContext(_In_ HIMC hIMC)
 {
     HKL hKL;
 
@@ -935,7 +950,8 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 /***********************************************************************
  *		ImmLockClientImc (IMM32.@)
  */
-PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
+PCLIENTIMC WINAPI
+ImmLockClientImc(_In_ HIMC hImc)
 {
     PIMC pIMC;
     PCLIENTIMC pClientImc;
@@ -981,7 +997,8 @@ Finish:
 /***********************************************************************
  *		ImmUnlockClientImc (IMM32.@)
  */
-VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
+VOID WINAPI
+ImmUnlockClientImc(_Inout_ PCLIENTIMC pClientImc)
 {
     LONG cLocks;
     HANDLE hInputContext;
@@ -1000,8 +1017,10 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     ImmLocalFree(pClientImc);
 }
 
-// Win: ImmGetSaveContext
-static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
+static HIMC
+ImmGetSaveContext(
+    _In_opt_ HWND hWnd,
+    _In_ DWORD dwContextFlags)
 {
     HIMC hIMC;
     PCLIENTIMC pClientImc;
@@ -1042,7 +1061,8 @@ Quit:
 /***********************************************************************
  *		ImmGetContext (IMM32.@)
  */
-HIMC WINAPI ImmGetContext(HWND hWnd)
+HIMC WINAPI
+ImmGetContext(_In_ HWND hWnd)
 {
     TRACE("(%p)\n", hWnd);
     if (IS_NULL_UNEXPECTEDLY(hWnd))
@@ -1055,7 +1075,8 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
  *
  * NOTE: This is not ImmLockIMCC. Don't confuse.
  */
-LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
+LPINPUTCONTEXT WINAPI
+ImmLockIMC(_In_ HIMC hIMC)
 {
     TRACE("(%p)\n", hIMC);
     return Imm32InternalLockIMC(hIMC, TRUE);
@@ -1064,7 +1085,8 @@ LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 /***********************************************************************
 *		ImmUnlockIMC(IMM32.@)
 */
-BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
+BOOL WINAPI
+ImmUnlockIMC(_In_ HIMC hIMC)
 {
     PCLIENTIMC pClientImc;
 
@@ -1083,7 +1105,10 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 /***********************************************************************
  *		ImmReleaseContext (IMM32.@)
  */
-BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
+BOOL WINAPI
+ImmReleaseContext(
+    _In_ HWND hWnd,
+    _In_ HIMC hIMC)
 {
     TRACE("(%p, %p)\n", hWnd, hIMC);
     UNREFERENCED_PARAMETER(hWnd);
@@ -1094,7 +1119,11 @@ BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 /***********************************************************************
  *              ImmEnumInputContext(IMM32.@)
  */
-BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lParam)
+BOOL WINAPI
+ImmEnumInputContext(
+    _In_ DWORD dwThreadId,
+    _In_ IMCENUMPROC lpfn,
+    _In_ LPARAM lParam)
 {
     HIMC *phList;
     DWORD dwIndex, dwCount;
@@ -1122,7 +1151,11 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
 /***********************************************************************
  *              ImmSetActiveContext(IMM32.@)
  */
-BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
+BOOL WINAPI
+ImmSetActiveContext(
+    _In_ HWND hWnd,
+    _In_opt_ HIMC hIMC,
+    _In_ BOOL fActive)
 {
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXTDX pIC;
@@ -1219,8 +1252,8 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 /***********************************************************************
  *              ImmWINNLSGetEnableStatus (IMM32.@)
  */
-
-BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
+BOOL WINAPI
+ImmWINNLSGetEnableStatus(_In_opt_ HWND hWnd)
 {
     if (!Imm32IsSystemJapaneseOrKorean())
     {
@@ -1234,7 +1267,10 @@ BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
 /***********************************************************************
  *              ImmSetActiveContextConsoleIME(IMM32.@)
  */
-BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
+BOOL WINAPI
+ImmSetActiveContextConsoleIME(
+    _In_ HWND hwnd,
+    _In_ BOOL fFlag)
 {
     HIMC hIMC;
     TRACE("(%p, %d)\n", hwnd, fFlag);
@@ -1269,7 +1305,7 @@ UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId)
 }
 
 #ifndef NDEBUG
-VOID APIENTRY Imm32UnitTest(VOID)
+VOID Imm32UnitTest(VOID)
 {
     if (0)
     {

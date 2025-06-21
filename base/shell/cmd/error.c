@@ -141,6 +141,13 @@ VOID error_out_of_memory(VOID)
     nErrorLevel = 1;
 }
 
+VOID error_cant_exec_program(VOID)
+{
+    /* TODO: Windows uses the custom string "The system cannot execute the specified program" here */
+    ErrorMessage(ERROR_NO_ASSOCIATION, NULL);
+    nErrorLevel = 1;
+}
+
 
 VOID error_invalid_parameter_format(PCWSTR s)
 {

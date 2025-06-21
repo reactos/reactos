@@ -35,9 +35,10 @@
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define MAKEINTATOM(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 #define WINBASEAPI
-#define STARTF_USESHOWWINDOW 1
-#define STARTF_USESIZE 2
-#define STARTF_USEPOSITION 4
+#define STARTF_USESHOWWINDOW    0x00000001
+#define STARTF_USESIZE          0x00000002
+#define STARTF_USEPOSITION      0x00000004
+#define STARTF_USEHOTKEY        0x00000200
 #include <windef.h>
 
 // Needed because windef.h messes up CDECL for whatever

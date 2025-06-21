@@ -133,10 +133,7 @@ AdvancedPageProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDC_PERFOR:
-                    DialogBox(hApplet,
-                              MAKEINTRESOURCE(IDD_VIRTMEM),
-                              hwndDlg,
-                              VirtMemDlgProc);
+                    ShowPerformanceOptions(hwndDlg);
                     break;
 
                 case IDC_USERPROFILE:

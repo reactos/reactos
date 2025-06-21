@@ -9,17 +9,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static HRESULT
-SHELL_GetShellExtensionRegCLSID(HKEY hKey, LPCWSTR KeyName, CLSID &clsid)
+HRESULT
+SHELL_GetShellExtensionRegCLSID(HKEY hKey, LPCWSTR KeyName, CLSID *pClsId)
 {
     // First try the key name
-    if (SUCCEEDED(SHCLSIDFromStringW(KeyName, &clsid)))
+    if (SUCCEEDED(SHCLSIDFromStringW(KeyName, pClsId)))
         return S_OK;
     WCHAR buf[42];
     DWORD cb = sizeof(buf);
     // and then the default value
     DWORD err = RegGetValueW(hKey, KeyName, NULL, RRF_RT_REG_SZ, NULL, buf, &cb);
-    return !err ? SHCLSIDFromStringW(buf, &clsid) : HRESULT_FROM_WIN32(err);
+    return !err ? SHCLSIDFromStringW(buf, pClsId) : HRESULT_FROM_WIN32(err);
 }
 
 static HRESULT
@@ -27,7 +27,7 @@ SHELL_InitializeExtension(REFCLSID clsid, PCIDLIST_ABSOLUTE pidlFolder, IDataObj
 {
     *ppv = NULL;
     IUnknown *pUnk;
-    HRESULT hr = SHCoCreateInstance(NULL, &clsid, NULL, riid, (void**)&pUnk);
+    HRESULT hr = SHExtCoCreateInstance(NULL, &clsid, NULL, riid, (void**)&pUnk);
     if (SUCCEEDED(hr))
     {
         CComPtr<IShellExtInit> Init;
@@ -148,7 +148,7 @@ SHELL32_OpenPropSheet(LPCWSTR pszCaption, HKEY *ahKeys, UINT cKeys,
             if (err)
                 break;
             CLSID clsid;
-            if (SUCCEEDED(SHELL_GetShellExtensionRegCLSID(hKey, KeyName, clsid)))
+            if (SUCCEEDED(SHELL_GetShellExtensionRegCLSID(hKey, KeyName, &clsid)))
                 AddPropSheetHandlerPages(clsid, pDO, hKeyProgID, psh);
         }
         RegCloseKey(hKey);
