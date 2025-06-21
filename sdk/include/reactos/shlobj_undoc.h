@@ -50,7 +50,6 @@ struct persistState
 /*****************************************************************************
  * CGID_Explorer (IShellBrowser OLECMD IDs)
  */
-enum { SBSC_HIDE, SBSC_SHOW, SBSC_TOGGLE, SBSC_QUERY };
 #define SBCMDID_ENABLESHOWTREE      0 // (First ID from NT4 SDK)
 #define SBCMDID_SHOWCONTROL         1 // VT_I4:MAKELONG(FCW_*, SBSC_*)
 #define SBCMDID_CANCELNAVIGATION    2
