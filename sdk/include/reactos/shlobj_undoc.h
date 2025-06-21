@@ -50,15 +50,17 @@ struct persistState
 /*****************************************************************************
  * CGID_Explorer (IShellBrowser OLECMD IDs)
  */
+enum { SBSC_HIDE, SBSC_SHOW, SBSC_TOGGLE, SBSC_QUERY };
+#define SBCMDID_ENABLESHOWTREE      0 // (First ID from NT4 SDK)
+#define SBCMDID_SHOWCONTROL         1 // VT_I4:MAKELONG(FCW_*, SBSC_*)
+#define SBCMDID_CANCELNAVIGATION    2
+#define SBCMDID_MAYSAVECHANGES      3 // About to close and may save changes
+#define SBCMDID_SETHLINKFRAME       4 // VT_I4:phlinkframe
+#define SBCMDID_ENABLESTOP          5 // VT_BOOL:fEnable
+#define SBCMDID_OPTIONS             6 // (Last ID from NT4 SDK)
 #define SBCMDID_EXPLORERBARFOLDERS 35 // Query/Toggle
 #define SBCMDID_MIXEDZONE 39
 #define SBCMDID_ONVIEWMOVETOTOP 60
-//SBCMDID_ENABLESHOWTREE ?
-//SBCMDID_SHOWCONTROL ?
-//SBCMDID_CANCELNAVIGATION ?
-//SBCMDID_MAYSAVECHANGES ?
-//SBCMDID_SETHLINKFRAME ?
-//SBCMDID_ENABLESTOP ?
 //SBCMDID_SELECTHISTPIDL ?
 //SBCMDID_GETPANE ? // This is in the official SDK but only the panes are defined
 #define PANE_NONE       ((DWORD)-1)
@@ -68,9 +70,12 @@ struct persistState
 #define PANE_SSL        4
 #define PANE_NAVIGATION 5
 #define PANE_PROGRESS   6
-#if (_WIN32_IE >= _WIN32_IE_IE60)
-#define PANE_PRIVACY    7
-#endif
+#define PANE_PRIVACY    7 // (_WIN32_IE >= _WIN32_IE_IE60)
+
+/*****************************************************************************
+ * CGID_ShellDocView OLECMD IDs
+ */
+#define SHDVID_FINALTITLEAVAIL  0 // BSTR
 
 /*****************************************************************************
  * CGID_DefView OLECMD IDs
