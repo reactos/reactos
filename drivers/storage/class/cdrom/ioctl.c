@@ -412,7 +412,7 @@ Return Value:
             mediaTypes->MediaInfoCount += 1;
 
             mediaInfo++;
-            mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType = RemovableMedia;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType = (STORAGE_MEDIA_TYPE)RemovableMedia;
             mediaInfo->DeviceSpecific.RemovableDiskInfo.NumberMediaSides = 1;
             mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics = MEDIA_READ_WRITE;
             mediaInfo->DeviceSpecific.RemovableDiskInfo.Cylinders.QuadPart = DeviceExtension->DiskGeometry.Cylinders.QuadPart;

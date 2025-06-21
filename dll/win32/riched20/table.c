@@ -546,7 +546,7 @@ void table_move_from_row_start( ME_TextEditor *editor )
 
 struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor)
 {
-  RTFTable *tableDef = heap_alloc_zero(sizeof(*tableDef));
+  RTFTable *tableDef = calloc(1, sizeof(*tableDef));
 
   if (!editor->bEmulateVersion10) /* v4.1 */
     tableDef->gapH = 10;

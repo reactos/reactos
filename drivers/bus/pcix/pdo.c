@@ -570,7 +570,7 @@ PciPdoCreate(IN PPCI_FDO_EXTENSION DeviceExtension,
     PdoExtension->IrpDispatchTable = &PciPdoDispatchTable;
     PdoExtension->PhysicalDeviceObject = DeviceObject;
     PdoExtension->Slot = Slot;
-    PdoExtension->PowerState.CurrentSystemState = PowerDeviceD0;
+    PdoExtension->PowerState.CurrentSystemState = PowerSystemWorking;
     PdoExtension->PowerState.CurrentDeviceState = PowerDeviceD0;
     PdoExtension->ParentFdoExtension = DeviceExtension;
 

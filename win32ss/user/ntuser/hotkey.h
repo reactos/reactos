@@ -27,7 +27,7 @@ VOID FASTCALL UnregisterThreadHotKeys(PTHREADINFO pti);
 BOOL NTAPI co_UserProcessHotKeys(WORD wVk, BOOL bIsDown);
 UINT FASTCALL DefWndGetHotKey(PWND pWnd);
 INT FASTCALL DefWndSetHotKey(PWND pWnd, WPARAM wParam);
-VOID FASTCALL StartDebugHotKeys(VOID);
+VOID FASTCALL SetDebugHotKeys(VOID);
 BOOL FASTCALL UserRegisterHotKey(PWND pWnd,int id,UINT fsModifiers,UINT vk);
 BOOL FASTCALL UserUnregisterHotKey(PWND pWnd, int id);
 

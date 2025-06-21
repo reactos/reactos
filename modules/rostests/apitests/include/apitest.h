@@ -55,7 +55,7 @@
 #define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), "%I64d")
 #define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), "%I64u")
 #endif /* defined _WIN64 */
-#define ok_eq_hex(value, expected)          ok_eq_print(value, expected, "0x%08lx")
+#define ok_eq_hex(value, expected)          ok_eq_print((unsigned long)value, (unsigned long)expected, "0x%08lx")
 #define ok_bool_true(value, desc)           ok((value) == TRUE, desc " FALSE, expected TRUE\n")
 #define ok_bool_false(value, desc)          ok((value) == FALSE, desc " TRUE, expected FALSE\n")
 #define ok_eq_bool(value, expected)         ok((value) == (expected), #value " = %s, expected %s\n", \
@@ -67,7 +67,7 @@
 
 #define ok_eq_hex_(file, line, value, expected) ok_eq_print_(file, line, value, expected, "0x%08lx")
 #define ok_eq_hex64_(file, line, value, expected) ok_eq_print_(file, line, value, expected, "%I64x")
-#define ok_eq_hex64(value, expected)        ok_eq_print(value, expected, "%I64x")
+#define ok_eq_hex64(value, expected)        ok_eq_print((unsigned long long)value, (unsigned long long)expected, "%I64x")
 #define ok_eq_xmm(value, expected)          ok((value).Low == (expected).Low, #value " = %I64x'%08I64x, expected %I64x'%08I64x\n", (value).Low, (value).High, (expected).Low, (expected).High)
 
 #endif /* _APITEST_H */

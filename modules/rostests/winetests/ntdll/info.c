@@ -1582,12 +1582,20 @@ static void test_query_process_debug_object_handle(int argc, char **argv)
     debug_object = (HANDLE)0xdeadbeef;
     status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugObjectHandle,
             &debug_object, sizeof(debug_object), NULL);
+#ifndef __REACTOS__
     todo_wine
+#endif
     ok(status == STATUS_SUCCESS,
        "Expected NtQueryInformationProcess to return STATUS_SUCCESS, got 0x%08x\n", status);
+#ifndef __REACTOS__
     todo_wine
+#endif
     ok(debug_object != NULL,
        "Expected debug object handle to be non-NULL, got %p\n", debug_object);
+#ifdef __REACTOS__
+    status = NtClose( debug_object );
+    ok( !status, "NtClose failed %x\n", status );
+#endif
 
     for (;;)
     {

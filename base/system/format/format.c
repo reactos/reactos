@@ -323,14 +323,6 @@ static VOID Usage(LPWSTR ProgramName)
 
     K32LoadStringW(GetModuleHandle(NULL), STRING_HELP, szMsg, ARRAYSIZE(szMsg));
 
-#ifndef FMIFS_IMPORT_DLL
-    if (!LoadFMIFSEntryPoints())
-    {
-        ConPrintf(StdOut, szMsg, ProgramName, L"");
-        return;
-    }
-#endif
-
     szFormats[0] = 0;
     while (QueryAvailableFileSystemFormat(Index++, szFormatW, &dummy, &dummy, &latestVersion))
     {

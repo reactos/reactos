@@ -26,6 +26,11 @@ add_library(d3d8 MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 
+if(MSVC)
+    # Disable C5286: implicit conversion from enum type 'x' to enum type 'y';
+    target_compile_options(d3d8 PRIVATE /wd5286)
+endif()
+
 set_module_type(d3d8 win32dll UNICODE)
 target_link_libraries(d3d8 uuid wine)
 add_importlibs(d3d8 d3dwine msvcrt kernel32 ntdll)

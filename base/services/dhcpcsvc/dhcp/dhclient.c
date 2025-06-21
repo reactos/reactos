@@ -1075,7 +1075,7 @@ state_panic(void *ipp)
 
 	note("No DHCPOFFERS received.");
 
-    if (!Adapter->NteContext)
+    if (Adapter && !Adapter->NteContext)
     {
         /* Generate an automatic private address */
         DbgPrint("DHCPCSVC: Failed to receive a response from a DHCP server. An automatic private address will be assigned.\n");

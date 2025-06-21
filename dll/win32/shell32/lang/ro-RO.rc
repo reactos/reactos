@@ -984,7 +984,10 @@ BEGIN
     IDS_PRINT_VERB "Imprimare"
     IDS_CMD_VERB "Deschidere Panou de control aici"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u fişiere, %u foldere"
+
     IDS_PRINTERS "Imprimante"
     IDS_FONTS "Fonturi"
     IDS_INSTALLNEWFONT "Instalare font nou…"
@@ -1047,6 +1050,10 @@ BEGIN
     IDS_ADVANCED_DISPLAY_RUN "Se afişează Executare"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Se afişează Instrumente de administrare"
     IDS_ADVANCED_SMALL_START_MENU "Se afişează Pictograme mici în Meniul Start"
+
+    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
+    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Complex"
     IDS_NEWEXT_ADVANCED_RIGHT "&Complex >>"

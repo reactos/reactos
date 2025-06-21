@@ -86,6 +86,7 @@ BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 #define SHAboutInfo SHAboutInfoA
 #endif
 
+HRESULT WINAPI CLSIDFromStringWrap(_In_ LPCWSTR idstr, _Out_ CLSID *id);
 HMODULE WINAPI SHPinDllOfCLSID(REFIID refiid);
 HRESULT WINAPI IUnknown_QueryStatus(IUnknown *lpUnknown, REFGUID pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT* pCmdText);
 HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn, VARIANT* pvaOut);
@@ -109,12 +110,31 @@ HRESULT WINAPI SHIsExpandableFolder(LPSHELLFOLDER lpFolder, LPCITEMIDLIST pidl);
 DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
 int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
 VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown);
-HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved, REFGUID riidCmdGrp, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
-HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
+
+HRESULT WINAPI
+MayQSForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID riidCmdGrp,
+    _In_ ULONG cCmds,
+    _Inout_ OLECMD *prgCmds,
+    _Inout_ OLECMDTEXT *pCmdText);
+
+HRESULT WINAPI
+MayExecForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID pguidCmdGroup,
+    _In_ DWORD nCmdID,
+    _In_ DWORD nCmdexecopt,
+    _In_ VARIANT *pvaIn,
+    _Inout_ VARIANT *pvaOut);
+
+HRESULT WINAPI IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
+EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
 

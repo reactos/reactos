@@ -26,8 +26,10 @@
 #define WINLOGON_SAS_CLASS L"SAS Window class"
 #define WINLOGON_SAS_TITLE L"SAS window"
 
-#define HK_CTRL_ALT_DEL   0
-#define HK_CTRL_SHIFT_ESC 1
+#define IDHK_CTRL_ALT_DEL   0
+#define IDHK_CTRL_SHIFT_ESC 1
+#define IDHK_WIN_L          2
+#define IDHK_WIN_U          3
 
 // #define EWX_FLAGS_MASK  0x00000014
 // #define EWX_ACTION_MASK ~EWX_FLAGS_MASK
@@ -499,9 +501,14 @@ HandleLogon(
 
     /* Loading personal settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
+
     ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
-    if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+    if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
     {
+        HKEY hKey;
+        LONG lError;
+        BOOL bNoPopups = FALSE;
+
         if (Session->Profile == NULL
          || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
           && Session->Profile->dwType != WLX_PROFILE_TYPE_V2_0))
@@ -510,10 +517,28 @@ HandleLogon(
             goto cleanup;
         }
 
+        /* Check whether error messages may be displayed when loading the user profile */
+        lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                               L"System\\CurrentControlSet\\Control\\Windows",
+                               0,
+                               KEY_QUERY_VALUE,
+                               &hKey);
+        if (lError == ERROR_SUCCESS)
+        {
+            DWORD dwValue, dwType, cbData = sizeof(dwValue);
+            lError = RegQueryValueExW(hKey, L"NoPopupsOnBoot", NULL,
+                                      &dwType, (PBYTE)&dwValue, &cbData);
+            if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (cbData == sizeof(dwValue)))
+                bNoPopups = !!dwValue;
+
+            RegCloseKey(hKey);
+        }
+
         /* Load the user profile */
-        ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
-        ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-        ProfileInfo.dwFlags = 0;
+        ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
+        ProfileInfo.dwSize = sizeof(ProfileInfo);
+        if (bNoPopups)
+            ProfileInfo.dwFlags |= PI_NOUI;
         ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
         ProfileInfo.lpProfilePath = Session->Profile->pszProfile;
         if (Session->Profile->dwType >= WLX_PROFILE_TYPE_V2_0)
@@ -1047,7 +1072,10 @@ HandleShutdown(
             DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER),
                       GetDesktopWindow(), ShutdownComputerWindowProc);
         }
-        NtShutdownSystem(ShutdownNoReboot);
+        if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+            NtShutdownSystem(ShutdownPowerOff);
+        else // if (wlxAction == WLX_SAS_ACTION_SHUTDOWN)
+            NtShutdownSystem(ShutdownNoReboot);
     }
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
     return STATUS_SUCCESS;
@@ -1066,6 +1094,7 @@ DoGenericAction(
             {
                 if (!HandleLogon(Session))
                 {
+                    Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
                     CallNotificationDlls(Session, LogonHandler);
                 }
@@ -1088,12 +1117,19 @@ DoGenericAction(
             }
             break;
         case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
-            if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
+            if ((Session->LogonState == STATE_LOGGED_ON) ||
+                (Session->LogonState == STATE_LOGGED_ON_SAS))
             {
-                SwitchDesktop(Session->WinlogonDesktop);
-                Session->LogonState = STATE_LOCKED;
-                Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
-                CallNotificationDlls(Session, LockHandler);
+                if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
+                {
+                    Session->LogonState = STATE_LOCKED;
+                    SwitchDesktop(Session->WinlogonDesktop);
+                    /* We may be on the Logged-On SAS dialog, in which case
+                     * we need to close it if the lock action came via Win-L */
+                    CloseAllDialogWindows();
+                    CallNotificationDlls(Session, LockHandler);
+                    Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
+                }
             }
             break;
         case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
@@ -1120,24 +1156,35 @@ DoGenericAction(
                 if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
+                    Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
                 }
             }
             else
             {
                 RemoveStatusMessage(Session);
+                Session->LogonState = STATE_LOGGED_OFF;
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             }
             break;
         case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
-            SwitchDesktop(Session->ApplicationDesktop);
-            Session->LogonState = STATE_LOGGED_ON;
-            StartTaskManager(Session);
+            if ((Session->LogonState == STATE_LOGGED_ON) ||
+                (Session->LogonState == STATE_LOGGED_ON_SAS))
+            {
+                /* Start a Task-Manager instance on the application desktop.
+                 * If the user pressed Ctrl-Shift-Esc while being on the
+                 * Logged-On SAS dialog (on the Winlogon desktop), stay there. */
+                StartTaskManager(Session);
+            }
             break;
         case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
-            SwitchDesktop(Session->ApplicationDesktop);
-            Session->LogonState = STATE_LOGGED_ON;
-            CallNotificationDlls(Session, UnlockHandler);
+            if ((Session->LogonState == STATE_LOCKED) ||
+                (Session->LogonState == STATE_LOCKED_SAS))
+            {
+                CallNotificationDlls(Session, UnlockHandler);
+                SwitchDesktop(Session->ApplicationDesktop);
+                Session->LogonState = STATE_LOGGED_ON;
+            }
             break;
         default:
             WARN("Unknown SAS action 0x%lx\n", wlxAction);
@@ -1188,7 +1235,26 @@ DispatchSAS(
 
                 case STATE_LOGGED_ON:
                     Session->LogonState = STATE_LOGGED_ON_SAS;
+                    SwitchDesktop(Session->WinlogonDesktop);
                     wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
+                    if ((wlxAction == WLX_SAS_ACTION_NONE) ||
+                        (wlxAction == WLX_SAS_ACTION_TASKLIST))
+                    {
+                        /*
+                         * If the user canceled (WLX_SAS_ACTION_NONE) the
+                         * Logged-On SAS dialog, or clicked on the Task-Manager
+                         * button (WLX_SAS_ACTION_TASKLIST), switch back to
+                         * the application desktop and return to log-on state.
+                         * In the latter case, the Task-Manager is launched
+                         * by DoGenericAction(WLX_SAS_ACTION_TASKLIST), which
+                         * doesn't automatically do the switch back, because
+                         * the user may have also pressed on Ctrl-Shift-Esc
+                         * to start it while being on the Logged-On SAS dialog
+                         * and wanting to stay there.
+                         */
+                        SwitchDesktop(Session->ApplicationDesktop);
+                        Session->LogonState = STATE_LOGGED_ON;
+                    }
                     break;
 
                 case STATE_LOGGED_ON_SAS:
@@ -1246,17 +1312,28 @@ RegisterHotKeys(
     IN PWLSESSION Session,
     IN HWND hwndSAS)
 {
-    /* Register Ctrl+Alt+Del Hotkey */
-    if (!RegisterHotKey(hwndSAS, HK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
+    /* Register Ctrl+Alt+Del hotkey */
+    if (!RegisterHotKey(hwndSAS, IDHK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
     {
-        ERR("WL: Unable to register Ctrl+Alt+Del hotkey!\n");
+        ERR("WL: Unable to register Ctrl+Alt+Del hotkey\n");
         return FALSE;
     }
 
-    /* Register Ctrl+Shift+Esc (optional) */
-    Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
+    /* Register Ctrl+Shift+Esc "Task Manager" hotkey (optional) */
+    Session->TaskManHotkey = RegisterHotKey(hwndSAS, IDHK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
     if (!Session->TaskManHotkey)
-        WARN("WL: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
+        WARN("WL: Unable to register Ctrl+Shift+Esc hotkey\n");
+
+    /* Register Win+L "Lock Workstation" hotkey (optional) */
+    Session->LockWkStaHotkey = RegisterHotKey(hwndSAS, IDHK_WIN_L, MOD_WIN, 'L');
+    if (!Session->LockWkStaHotkey)
+        WARN("WL: Unable to register Win+L hotkey\n");
+
+    /* Register Win+U "Accessibility Utility" hotkey (optional) */
+    Session->UtilManHotkey = RegisterHotKey(hwndSAS, IDHK_WIN_U, MOD_WIN, 'U');
+    if (!Session->UtilManHotkey)
+        WARN("WL: Unable to register Win+U hotkey\n");
+
     return TRUE;
 }
 
@@ -1266,11 +1343,17 @@ UnregisterHotKeys(
     IN PWLSESSION Session,
     IN HWND hwndSAS)
 {
-    /* Unregister hotkeys */
-    UnregisterHotKey(hwndSAS, HK_CTRL_ALT_DEL);
+    /* Unregister the hotkeys */
+    UnregisterHotKey(hwndSAS, IDHK_CTRL_ALT_DEL);
 
     if (Session->TaskManHotkey)
-        UnregisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC);
+        UnregisterHotKey(hwndSAS, IDHK_CTRL_SHIFT_ESC);
+
+    if (Session->LockWkStaHotkey)
+        UnregisterHotKey(hwndSAS, IDHK_WIN_L);
+
+    if (Session->UtilManHotkey)
+        UnregisterHotKey(hwndSAS, IDHK_WIN_U);
 
     return TRUE;
 }
@@ -1326,9 +1409,9 @@ SASWindowProc(
     {
         case WM_HOTKEY:
         {
-            switch (lParam)
+            switch (wParam)
             {
-                case MAKELONG(MOD_CONTROL | MOD_ALT, VK_DELETE):
+                case IDHK_CTRL_ALT_DEL:
                 {
                     TRACE("SAS: CONTROL+ALT+DELETE\n");
                     if (!Session->Gina.UseCtrlAltDelete)
@@ -1336,11 +1419,22 @@ SASWindowProc(
                     PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
                     return TRUE;
                 }
-                case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
+                case IDHK_CTRL_SHIFT_ESC:
                 {
                     TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
-                    if (Session->LogonState == STATE_LOGGED_ON)
-                        DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    return TRUE;
+                }
+                case IDHK_WIN_L:
+                {
+                    TRACE("SAS: WIN+L\n");
+                    PostMessageW(Session->SASWindow, WM_LOGONNOTIFY, LN_LOCK_WORKSTATION, 0);
+                    return TRUE;
+                }
+                case IDHK_WIN_U:
+                {
+                    TRACE("SAS: WIN+U\n");
+                    // PostMessageW(Session->SASWindow, WM_LOGONNOTIFY, LN_ACCESSIBILITY, 0);
                     return TRUE;
                 }
             }
@@ -1397,6 +1491,13 @@ SASWindowProc(
                     DispatchSAS(Session, WLX_SAS_TYPE_SCRNSVR_TIMEOUT);
                     break;
                 }
+#if 0
+                case LN_ACCESSIBILITY:
+                {
+                    ERR("LN_ACCESSIBILITY(lParam = %lu)\n", lParam);
+                    break;
+                }
+#endif
                 case LN_LOCK_WORKSTATION:
                 {
                     DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);

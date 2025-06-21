@@ -47,8 +47,8 @@
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
-#include <reactos/undocuser.h>
-#include <reactos/undocmpr.h>
+#include <undocuser.h>
+#include <undocmpr.h>
 
 BOOL
 WINAPI
@@ -223,6 +223,8 @@ typedef struct _WLSESSION
     DWORD SASAction;
     BOOL SuppressStatus;
     BOOL TaskManHotkey;
+    BOOL LockWkStaHotkey;
+    BOOL UtilManHotkey;
     HWND SASWindow;
     HWINSTA InteractiveWindowStation;
     LPWSTR InteractiveWindowStationName;

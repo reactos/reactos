@@ -4283,11 +4283,60 @@ CM_Get_Device_Interface_Alias_ExA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    FIXME("CM_Get_Device_Interface_Alias_ExA(%p %p %p %p %lx %p)\n",
+    LPWSTR pszDeviceInterfaceW = NULL;
+    LPWSTR pszAliasDeviceInterfaceW = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("CM_Get_Device_Interface_Alias_ExA(%p %p %p %p %lx %p)\n",
           pszDeviceInterface, AliasInterfaceGuid,
           pszAliasDeviceInterface, pulLength, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (pszDeviceInterface == NULL ||
+        AliasInterfaceGuid == NULL ||
+        pszAliasDeviceInterface == NULL ||
+        pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (!pSetupCaptureAndConvertAnsiArg(pszDeviceInterface, &pszDeviceInterfaceW))
+        return CR_INVALID_POINTER;
+
+    pszAliasDeviceInterfaceW = MyMalloc(*pulLength * sizeof(WCHAR));
+    if (pszAliasDeviceInterfaceW == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto Done;
+    }
+
+    ret = CM_Get_Device_Interface_Alias_ExW(pszDeviceInterfaceW,
+                                            AliasInterfaceGuid,
+                                            pszAliasDeviceInterfaceW,
+                                            pulLength,
+                                            ulFlags,
+                                            hMachine);
+    if (ret != CR_SUCCESS)
+        goto Done;
+
+    if (WideCharToMultiByte(CP_ACP,
+                            0,
+                            pszAliasDeviceInterfaceW,
+                            *pulLength + 1,
+                            pszAliasDeviceInterface,
+                            *pulLength + 1,
+                            NULL,
+                            NULL) == 0)
+        ret = CR_FAILURE;
+
+Done:
+    if (pszAliasDeviceInterfaceW != NULL)
+        MyFree(pszAliasDeviceInterfaceW);
+
+    if (pszDeviceInterfaceW != NULL)
+        MyFree(pszDeviceInterfaceW);
+
+    return ret;
 }
 
 

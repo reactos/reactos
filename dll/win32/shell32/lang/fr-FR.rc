@@ -976,7 +976,10 @@ BEGIN
     IDS_PRINT_VERB "Imprimer"
     IDS_CMD_VERB "Ouvrir l'invite de commandes"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u fichiers, %u répertoires"
+
     IDS_PRINTERS "Imprimantes"
     IDS_FONTS "Polices"
     IDS_INSTALLNEWFONT "Installer une nouvelle police..."
@@ -1039,6 +1042,10 @@ BEGIN
     IDS_ADVANCED_DISPLAY_RUN "Display Run"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
     IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+
+    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
+    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vancé"
     IDS_NEWEXT_ADVANCED_RIGHT "A&vancé >>"

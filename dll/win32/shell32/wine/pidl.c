@@ -39,6 +39,7 @@
 #include <shlguid_undoc.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <shellutils.h>
 
 #include "pidl.h"
 #include "shell32_main.h"
@@ -2606,11 +2607,9 @@ DWORD _ILGetFileAttributes(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
  */
 void _ILFreeaPidl(LPITEMIDLIST * apidl, UINT cidl)
 {
-    UINT   i;
-
     if (apidl)
     {
-        for (i = 0; i < cidl; i++)
+        for (UINT i = 0; i < cidl; i++)
             SHFree(apidl[i]);
         SHFree(apidl);
     }
@@ -2623,17 +2622,21 @@ void _ILFreeaPidl(LPITEMIDLIST * apidl, UINT cidl)
  */
 PITEMID_CHILD* _ILCopyaPidl(PCUITEMID_CHILD_ARRAY apidlsrc, UINT cidl)
 {
-    UINT i;
     PITEMID_CHILD *apidldest;
 
     if (!apidlsrc)
         return NULL;
 
     apidldest = SHAlloc(cidl * sizeof(PITEMID_CHILD));
-
-    for (i = 0; i < cidl; i++)
-        apidldest[i] = ILClone(apidlsrc[i]);
-
+    for (UINT i = 0; i < cidl; i++)
+    {
+        PITEMID_CHILD clone = ILClone(apidlsrc[i]);
+        if ((apidldest[i] = clone) == NULL)
+        {
+            _ILFreeaPidl(apidldest, i);
+            return NULL;
+        }
+    }
     return apidldest;
 }
 
@@ -2645,17 +2648,28 @@ PITEMID_CHILD* _ILCopyaPidl(PCUITEMID_CHILD_ARRAY apidlsrc, UINT cidl)
 LPITEMIDLIST* _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida)
 {
     UINT i;
-    LPITEMIDLIST *dst;
-
-    dst = SHAlloc(cida->cidl * sizeof(LPITEMIDLIST));
+    LPITEMIDLIST *dst = SHAlloc(cida->cidl * sizeof(LPITEMIDLIST));
     if (!dst)
         return NULL;
 
-    if (pidl)
-        *pidl = ILClone((LPCITEMIDLIST)(&((const BYTE*)cida)[cida->aoffset[0]]));
-
     for (i = 0; i < cida->cidl; i++)
-        dst[i] = ILClone((LPCITEMIDLIST)(&((const BYTE*)cida)[cida->aoffset[i + 1]]));
+    {
+        PITEMID_CHILD clone = ILClone(HIDA_GetPIDLItem(cida, i));
+        if ((dst[i] = clone) == NULL)
+        {
+            _ILFreeaPidl(dst, i);
+            return NULL;
+        }
+    }
 
+    if (pidl)
+    {
+        *pidl = ILClone(HIDA_GetPIDLFolder(cida));
+        if (!*pidl)
+        {
+            _ILFreeaPidl(dst, cida->cidl);
+            return NULL;
+        }
+    }
     return dst;
 }

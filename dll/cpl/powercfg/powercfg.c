@@ -120,6 +120,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     {
         InitPropSheetPage(&psh, IDD_POWERSCHEMESPAGE_ACDC, PowerSchemesDlgProc);
         InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, AlarmsDlgProc);
+        InitPropSheetPage(&psh, IDD_PROPPAGEPOWERMETER, PowerMeterDlgProc);
 
         /* FIXME: Add battery page */
     }

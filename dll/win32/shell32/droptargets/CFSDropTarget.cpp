@@ -237,7 +237,6 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
     HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
     if (!hmenu)
         return E_OUTOFMEMORY;
-
     HMENU hpopupmenu = GetSubMenu(hmenu, 0);
 
     SHELL_LimitDropEffectToItemAttributes(pDataObject, &dwAvailableEffects);
@@ -256,7 +255,19 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
     else if (dwAvailableEffects & DROPEFFECT_LINK)
         SetMenuDefaultItem(hpopupmenu, IDM_LINKHERE, FALSE);
 
-    /* FIXME: We need to support shell extensions here */
+    CRegKeyHandleArray keys;
+    HDCIA hDCIA = DCIA_Create();
+    HDCMA hDCMA = DCMA_Create();
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlFolder(SHELL32_CreateSimpleIDListFromPath(m_sPathTarget, FILE_ATTRIBUTE_DIRECTORY));
+    if (hDCMA && hDCIA && pidlFolder)
+    {
+        AddPidlClassKeysToArray(pidlFolder, keys, keys);
+        for (UINT i = 0; i < keys; ++i)
+            DCIA_AddShellExSubkey(hDCIA, keys[i], L"DragDropHandlers");
+
+        QCMINFO qcmi = { hpopupmenu, 0, DROPIDM_EXTFIRST, DROPIDM_EXTLAST };
+        DCMA_InsertMenuItems(hDCMA, hDCIA, pidlFolder, pDataObject, keys, keys, &qcmi, 0, m_site);
+    }
 
     /* We shouldn't use the site window here because the menu should work even when we don't have a site */
     HWND hwndDummy = CreateWindowEx(0,
@@ -279,16 +290,39 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
 
     DestroyWindow(hwndDummy);
 
-    if (uCommand == 0)
-        return S_FALSE;
+    HRESULT hr = S_FALSE; // S_FALSE means we did not handle the command
+    C_ASSERT(IDM_COPYHERE < DROPIDM_EXTFIRST && IDM_MOVEHERE < DROPIDM_EXTFIRST &&
+             IDM_LINKHERE < DROPIDM_EXTFIRST && DROPIDM_EXTFIRST > 0);
+    if (uCommand >= DROPIDM_EXTFIRST && uCommand <= DROPIDM_EXTLAST)
+    {
+        CMINVOKECOMMANDINFO ici = { sizeof(ici), 0, m_hwndSite, MAKEINTRESOURCEA(uCommand - DROPIDM_EXTFIRST) };
+        ici.nShow = SW_SHOW;
+        if (m_grfKeyState & MK_SHIFT)
+            ici.fMask |= CMIC_MASK_SHIFT_DOWN;
+        if (m_grfKeyState & MK_CONTROL)
+            ici.fMask |= CMIC_MASK_CONTROL_DOWN;
+        DCMA_InvokeCommand(hDCMA, &ici);
+        hr = S_OK;
+        *pdwEffect = DROPEFFECT_NONE;
+    }
+    else if (uCommand == 0)
+    {
+        hr = S_OK;
+        *pdwEffect = DROPEFFECT_NONE;
+    }
     else if (uCommand == IDM_COPYHERE)
         *pdwEffect = DROPEFFECT_COPY;
     else if (uCommand == IDM_MOVEHERE)
         *pdwEffect = DROPEFFECT_MOVE;
     else if (uCommand == IDM_LINKHERE)
         *pdwEffect = DROPEFFECT_LINK;
+    else
+        hr = E_UNEXPECTED;
 
-    return S_OK;
+    DCMA_Destroy(hDCMA);
+    DCIA_Destroy(hDCIA);
+    DestroyMenu(hmenu);
+    return hr;
 }
 
 HRESULT CFSDropTarget::_RepositionItems(IShellFolderView *psfv, IDataObject *pdtobj, POINTL pt)
@@ -461,7 +495,7 @@ HRESULT WINAPI CFSDropTarget::Drop(IDataObject *pDataObject,
     if (m_grfKeyState & MK_RBUTTON)
     {
         HRESULT hr = _GetEffectFromMenu(pDataObject, pt, pdwEffect, dwAvailableEffects);
-        if (FAILED_UNEXPECTEDLY(hr) || hr == S_FALSE)
+        if (FAILED_UNEXPECTEDLY(hr) || hr == S_OK)
             return hr;
     }
 

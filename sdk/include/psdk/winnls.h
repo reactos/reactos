@@ -22,6 +22,11 @@ extern "C" {
 #define LOCALE_RETURN_NUMBER	0x20000000
 #endif
 #define LOCALE_RETURN_GENITIVE_NAMES  0x10000000
+#define LOCALE_ALLOW_NEUTRAL_NAMES    0x08000000
+#define LOCALE_SLOCALIZEDDISPLAYNAME  0x00000002
+#if (WINVER >= _WIN32_WINNT_VISTA)
+#define LOCALE_SLOCALIZEDLANGUAGENAME 0x0000006f
+#endif
 #define LOCALE_ILANGUAGE	1
 #define LOCALE_SLANGUAGE	2
 #define LOCALE_SENGLANGUAGE	0x1001
@@ -166,6 +171,10 @@ extern "C" {
 #define LOCALE_SOPENTYPELANGUAGETAG 0x007a
 #define LOCALE_SSORTLOCALE          0x007b
 //#endif /* (WINVER >= _WIN32_WINNT_WIN7) */
+#define LOCALE_SRELATIVELONGDATE    0x007C // Win8
+#define LOCALE_SSHORTESTAM          0x007E
+#define LOCALE_SSHORTESTPM          0x007F
+
 
 #if (WINVER >= 0x0600)
 #define LOCALE_NAME_USER_DEFAULT    NULL
@@ -180,9 +189,11 @@ extern "C" {
 #define NORM_IGNORENONSPACE	2
 #define NORM_IGNORESYMBOLS	4
 #define NORM_IGNOREWIDTH	131072
-#define LINGUISTIC_IGNORECASE 0x00000010
+#define LINGUISTIC_IGNORECASE      0x00000010
+#define LINGUISTIC_IGNOREDIACRITIC 0x00000020
 #define NORM_LINGUISTIC_CASING 0x08000000
 #define SORT_STRINGSORT	4096
+#define SORT_DIGITSASNUMBERS 0x00000008 // _WIN32_WINNT_WIN7
 #define LCMAP_LOWERCASE 0x00000100
 #define LCMAP_UPPERCASE 0x00000200
 #define LCMAP_SORTKEY 0x00000400
@@ -203,6 +214,11 @@ extern "C" {
 #define LCID_INSTALLED 1
 #define LCID_SUPPORTED 2
 #define LCID_ALTERNATE_SORTS 4
+
+#define FIND_STARTSWITH 0x00100000
+#define FIND_ENDSWITH   0x00200000
+#define FIND_FROMSTART  0x00400000
+#define FIND_FROMEND    0x00800000
 
 #define LOCALE_ALL                  0x00
 #define LOCALE_WINDOWS              0x01
@@ -454,6 +470,8 @@ extern "C" {
 #define CAL_GREGORIAN_ARABIC 10
 #define CAL_GREGORIAN_XLIT_ENGLISH 11
 #define CAL_GREGORIAN_XLIT_FRENCH 12
+#define CAL_PERSIAN 22
+#define CAL_UMALQURA 23
 #define CSTR_LESS_THAN 1
 #define CSTR_EQUAL 2
 #define CSTR_GREATER_THAN 3
@@ -648,7 +666,7 @@ typedef struct _numberfmtW {
 	LPWSTR lpThousandSep;
 	UINT NegativeOrder;
 } NUMBERFMTW,*LPNUMBERFMTW;
-#if (WINVER >= 0x0600)
+#if 1//(WINVER >= 0x0600)
 typedef enum _NORM_FORM {
 	NormalizationOther = 0,
 	NormalizationC = 0x1,
@@ -726,6 +744,33 @@ EnumSystemLocalesEx(
 
 BOOL WINAPI EnumTimeFormatsA(_In_ TIMEFMT_ENUMPROCA, _In_ LCID, _In_ DWORD);
 BOOL WINAPI EnumTimeFormatsW(_In_ TIMEFMT_ENUMPROCW, _In_ LCID, _In_ DWORD);
+
+WINBASEAPI
+int
+WINAPI
+FindNLSString(
+    _In_ LCID Locale,
+    _In_ DWORD dwFindNLSStringFlags,
+    _In_reads_(cchSource) LPCWSTR lpStringSource,
+    _In_ int cchSource,
+    _In_reads_(cchValue) LPCWSTR lpStringValue,
+    _In_ int cchValue,
+    _Out_opt_ LPINT pcchFound);
+
+WINBASEAPI
+int
+WINAPI
+FindNLSStringEx(
+    _In_opt_ LPCWSTR lpLocaleName,
+    _In_ DWORD dwFindNLSStringFlags,
+    _In_reads_(cchSource) LPCWSTR lpStringSource,
+    _In_ int cchSource,
+    _In_reads_(cchValue) LPCWSTR lpStringValue,
+    _In_ int cchValue,
+    _Out_opt_ LPINT pcchFound,
+    _In_opt_ LPNLSVERSIONINFO lpVersionInformation,
+    _In_opt_ LPVOID lpReserved,
+    _In_opt_ LPARAM sortHandle);
 
 int
 WINAPI
@@ -997,7 +1042,7 @@ LANGID WINAPI GetUserDefaultUILanguage(void);
 BOOL WINAPI IsValidLanguageGroup(_In_ LGRPID, _In_ DWORD);
 #endif /* (WINVER >= 0x0500) */
 
-#if (WINVER >= 0x0600)
+#if 1//(WINVER >= 0x0600) 
 
 _Success_(return != FALSE)
 BOOL
@@ -1155,6 +1200,8 @@ LCMapStringEx(
     _In_opt_ LPARAM sortHandle);
 
 LCID WINAPI LocaleNameToLCID(_In_ LPCWSTR, _In_ DWORD);
+
+WINBASEAPI INT WINAPI CompareStringOrdinal(const WCHAR *,INT,const WCHAR *,INT,BOOL);
 
 #endif /* (WINVER >= 0x0600) */
 

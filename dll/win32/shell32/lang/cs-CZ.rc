@@ -984,7 +984,10 @@ BEGIN
     IDS_PRINT_VERB "Tisknout"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u souborů, %u složek"
+
     IDS_PRINTERS "Tiskárny"
     IDS_FONTS "Písma"
     IDS_INSTALLNEWFONT "Nainstalovat nové písmo..."
@@ -1047,6 +1050,10 @@ BEGIN
     IDS_ADVANCED_DISPLAY_RUN "Display Run"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
     IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+
+    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
+    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
     IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"

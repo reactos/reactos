@@ -973,7 +973,10 @@ BEGIN
     IDS_PRINT_VERB "印刷"
     IDS_CMD_VERB "ここでコマンドプロンプトを開く"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u 個のファイル、 %u 個のフォルダ"
+
     IDS_PRINTERS "プリンタ"
     IDS_FONTS "フォント"
     IDS_INSTALLNEWFONT "新しいフォントのインストール..."
@@ -1036,6 +1039,10 @@ BEGIN
     IDS_ADVANCED_DISPLAY_RUN "「ファイル名を指定して実行」を表示"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "「管理者ツール」を表示"
     IDS_ADVANCED_SMALL_START_MENU "小さいアイコンでスタートメニューを表示"
+
+    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
+    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< 高度な設定(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "高度な設定(&V) >>"

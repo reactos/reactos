@@ -624,6 +624,51 @@ VideoPortUseDeviceInSession(
 
 static
 NTSTATUS
+VideoPortEnumMonitorPdo(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PVIDEO_MONITOR_DEVICE *ppMonitorDevices,
+    _Out_ PULONG_PTR Information)
+{
+    PVIDEO_MONITOR_DEVICE pMonitorDevices;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
+    ULONG i;
+    PLIST_ENTRY CurrentEntry;
+
+    /* Count the children */
+    i = 0;
+    CurrentEntry = DeviceExtension->ChildDeviceList.Flink;
+    while (CurrentEntry != &DeviceExtension->ChildDeviceList)
+    {
+        i++;
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    pMonitorDevices = ExAllocatePoolZero(PagedPool,
+                                         sizeof(VIDEO_MONITOR_DEVICE) * (i + 1),
+                                         TAG_VIDEO_PORT);
+    if (!pMonitorDevices)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Add the children */
+    i = 0;
+    CurrentEntry = DeviceExtension->ChildDeviceList.Flink;
+    while (CurrentEntry != &DeviceExtension->ChildDeviceList)
+    {
+        ChildExtension = CONTAINING_RECORD(CurrentEntry, VIDEO_PORT_CHILD_EXTENSION, ListEntry);
+
+        ObReferenceObject(ChildExtension->PhysicalDeviceObject);
+        pMonitorDevices[i++].pdo = ChildExtension->PhysicalDeviceObject;
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    *ppMonitorDevices = pMonitorDevices;
+    *Information = sizeof(pMonitorDevices);
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
 VideoPortInitWin32kCallbacks(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PVIDEO_WIN32K_CALLBACKS Win32kCallbacks,
@@ -791,8 +836,10 @@ IntVideoPortDispatchDeviceControl(
             break;
 
         case IOCTL_VIDEO_ENUM_MONITOR_PDO:
-            WARN_(VIDEOPRT, "- IOCTL_VIDEO_ENUM_MONITOR_PDO is UNIMPLEMENTED!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            INFO_(VIDEOPRT, "- IOCTL_VIDEO_ENUM_MONITOR_PDO\n");
+            Status = VideoPortEnumMonitorPdo(DeviceObject,
+                                             Irp->AssociatedIrp.SystemBuffer,
+                                             &Irp->IoStatus.Information);
             break;
 
         case IOCTL_VIDEO_INIT_WIN32K_CALLBACKS:

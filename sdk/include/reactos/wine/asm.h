@@ -78,6 +78,48 @@
 
 #define __ASM_GLOBAL_FUNC(name,code) __ASM_DEFINE_FUNC(__ASM_NAME(#name),code)
 
+/* import variables */
+
+#ifdef __WINE_PE_BUILD
+# ifdef __arm64ec__
+#  define __ASM_DEFINE_IMPORT(name) \
+    asm( ".data\n\t" \
+         ".balign 8\n\t" \
+         ".globl __imp_" name "\n" \
+         "__imp_" name ":\n\t" \
+         ".quad \"#" name "\"\n\t" \
+         ".globl __imp_aux_" name "\n" \
+         "__imp_aux_" name ":\n\t" \
+         ".quad " name "\n\t" \
+         ".text" );
+# elif defined(_WIN64)
+#  define __ASM_DEFINE_IMPORT(name) \
+    __ASM_BLOCK_BEGIN(__LINE__) \
+    asm( ".data\n\t" \
+         ".balign 8\n\t" \
+         ".globl __imp_" name "\n" \
+         "__imp_" name ":\n\t" \
+         ".quad " name "\n\t" \
+         ".text"); \
+    __ASM_BLOCK_END
+# else
+#  define __ASM_DEFINE_IMPORT(name) \
+    __ASM_BLOCK_BEGIN(__LINE__) \
+    asm( ".data\n\t" \
+         ".balign 4\n\t" \
+         ".globl __imp_" name "\n" \
+         "__imp_" name ":\n\t" \
+         ".long " name "\n\t" \
+         ".text"); \
+    __ASM_BLOCK_END
+# endif
+# define __ASM_GLOBAL_IMPORT(name) __ASM_DEFINE_IMPORT(__ASM_NAME(#name))
+#else
+# define __ASM_GLOBAL_IMPORT(name) /* nothing */
+#endif
+
+/* stdcall support */
+
 #define __ASM_STDCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(__ASM_STDCALL(#name,args),code)
 
 /* fastcall support */

@@ -985,7 +985,10 @@ BEGIN
     IDS_PRINT_VERB "Печать"
     IDS_CMD_VERB "Командная строка"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u файлов, %u папок"
+
     IDS_PRINTERS "Принтеры"
     IDS_FONTS "Шрифты"
     IDS_INSTALLNEWFONT "Установить новый шрифт..."
@@ -1048,6 +1051,10 @@ BEGIN
     IDS_ADVANCED_DISPLAY_RUN "Отображать команду ""Выполнить"""
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Отображать меню ""Администрирование"""
     IDS_ADVANCED_SMALL_START_MENU "Мелкие значки в главном меню"
+
+    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
+    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< До&полнительно"
     IDS_NEWEXT_ADVANCED_RIGHT "До&полнительно >>"

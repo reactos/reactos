@@ -97,7 +97,7 @@ struct host *host_create( HWND hwnd, CREATESTRUCTW *cs, BOOL emulate_10 )
 {
     struct host *texthost;
 
-    texthost = CoTaskMemAlloc(sizeof(*texthost));
+    texthost = malloc( sizeof(*texthost) );
     if (!texthost) return NULL;
 
     texthost->ITextHost_iface.lpVtbl = &textHostVtbl;
@@ -164,41 +164,41 @@ static ULONG WINAPI ITextHostImpl_Release( ITextHost2 *iface )
     {
         SetWindowLongPtrW( host->window, 0, 0 );
         ITextServices_Release( host->text_srv );
-        CoTaskMemFree( host );
+        free( host );
     }
     return ref;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetDC,4)
-DECLSPEC_HIDDEN HDC __thiscall ITextHostImpl_TxGetDC( ITextHost2 *iface )
+HDC __thiscall ITextHostImpl_TxGetDC( ITextHost2 *iface )
 {
     struct host *host = impl_from_ITextHost( iface );
     return GetDC( host->window );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxReleaseDC,8)
-DECLSPEC_HIDDEN INT __thiscall ITextHostImpl_TxReleaseDC( ITextHost2 *iface, HDC hdc )
+INT __thiscall ITextHostImpl_TxReleaseDC( ITextHost2 *iface, HDC hdc )
 {
     struct host *host = impl_from_ITextHost( iface );
     return ReleaseDC( host->window, hdc );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxShowScrollBar,12)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxShowScrollBar( ITextHost2 *iface, INT bar, BOOL show )
+BOOL __thiscall ITextHostImpl_TxShowScrollBar( ITextHost2 *iface, INT bar, BOOL show )
 {
     struct host *host = impl_from_ITextHost( iface );
     return ShowScrollBar( host->window, bar, show );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxEnableScrollBar,12)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxEnableScrollBar( ITextHost2 *iface, INT bar, INT arrows )
+BOOL __thiscall ITextHostImpl_TxEnableScrollBar( ITextHost2 *iface, INT bar, INT arrows )
 {
     struct host *host = impl_from_ITextHost( iface );
     return EnableScrollBar( host->window, bar, arrows );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetScrollRange,20)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetScrollRange( ITextHost2 *iface, INT bar, LONG min_pos, INT max_pos, BOOL redraw )
+BOOL __thiscall ITextHostImpl_TxSetScrollRange( ITextHost2 *iface, INT bar, LONG min_pos, INT max_pos, BOOL redraw )
 {
     struct host *host = impl_from_ITextHost( iface );
     SCROLLINFO info = { .cbSize = sizeof(info), .fMask = SIF_PAGE | SIF_RANGE };
@@ -223,7 +223,7 @@ DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetScrollRange( ITextHost2 *ifac
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetScrollPos,16)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetScrollPos( ITextHost2 *iface, INT bar, INT pos, BOOL redraw )
+BOOL __thiscall ITextHostImpl_TxSetScrollPos( ITextHost2 *iface, INT bar, INT pos, BOOL redraw )
 {
     struct host *host = impl_from_ITextHost( iface );
     DWORD style = GetWindowLongW( host->window, GWL_STYLE );
@@ -248,28 +248,28 @@ DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetScrollPos( ITextHost2 *iface,
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxInvalidateRect,12)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxInvalidateRect( ITextHost2 *iface, const RECT *rect, BOOL mode )
+void __thiscall ITextHostImpl_TxInvalidateRect( ITextHost2 *iface, const RECT *rect, BOOL mode )
 {
     struct host *host = impl_from_ITextHost( iface );
     InvalidateRect( host->window, rect, mode );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxViewChange,8)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxViewChange( ITextHost2 *iface, BOOL update )
+void __thiscall ITextHostImpl_TxViewChange( ITextHost2 *iface, BOOL update )
 {
     struct host *host = impl_from_ITextHost( iface );
     if (update) UpdateWindow( host->window );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxCreateCaret,16)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxCreateCaret( ITextHost2 *iface, HBITMAP bitmap, INT width, INT height )
+BOOL __thiscall ITextHostImpl_TxCreateCaret( ITextHost2 *iface, HBITMAP bitmap, INT width, INT height )
 {
     struct host *host = impl_from_ITextHost( iface );
     return CreateCaret( host->window, bitmap, width, height );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxShowCaret,8)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxShowCaret( ITextHost2 *iface, BOOL show )
+BOOL __thiscall ITextHostImpl_TxShowCaret( ITextHost2 *iface, BOOL show )
 {
     struct host *host = impl_from_ITextHost( iface );
     if (show) return ShowCaret( host->window );
@@ -277,27 +277,27 @@ DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxShowCaret( ITextHost2 *iface, BO
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCaretPos,12)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetCaretPos( ITextHost2 *iface, INT x, INT y )
+BOOL __thiscall ITextHostImpl_TxSetCaretPos( ITextHost2 *iface, INT x, INT y )
 {
     return SetCaretPos(x, y);
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetTimer,12)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetTimer( ITextHost2 *iface, UINT id, UINT timeout )
+BOOL __thiscall ITextHostImpl_TxSetTimer( ITextHost2 *iface, UINT id, UINT timeout )
 {
     struct host *host = impl_from_ITextHost( iface );
     return SetTimer( host->window, id, timeout, NULL ) != 0;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxKillTimer,8)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxKillTimer( ITextHost2 *iface, UINT id )
+void __thiscall ITextHostImpl_TxKillTimer( ITextHost2 *iface, UINT id )
 {
     struct host *host = impl_from_ITextHost( iface );
     KillTimer( host->window, id );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxScrollWindowEx,32)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxScrollWindowEx( ITextHost2 *iface, INT dx, INT dy, const RECT *scroll,
+void __thiscall ITextHostImpl_TxScrollWindowEx( ITextHost2 *iface, INT dx, INT dy, const RECT *scroll,
                                                                 const RECT *clip, HRGN update_rgn, RECT *update_rect,
                                                                 UINT flags )
 {
@@ -306,7 +306,7 @@ DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxScrollWindowEx( ITextHost2 *ifac
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCapture,8)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxSetCapture( ITextHost2 *iface, BOOL capture )
+void __thiscall ITextHostImpl_TxSetCapture( ITextHost2 *iface, BOOL capture )
 {
     struct host *host = impl_from_ITextHost( iface );
     if (capture) SetCapture( host->window );
@@ -314,34 +314,34 @@ DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxSetCapture( ITextHost2 *iface, B
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetFocus,4)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxSetFocus( ITextHost2 *iface )
+void __thiscall ITextHostImpl_TxSetFocus( ITextHost2 *iface )
 {
     struct host *host = impl_from_ITextHost( iface );
     SetFocus( host->window );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCursor,12)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxSetCursor( ITextHost2 *iface, HCURSOR cursor, BOOL text )
+void __thiscall ITextHostImpl_TxSetCursor( ITextHost2 *iface, HCURSOR cursor, BOOL text )
 {
     SetCursor( cursor );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxScreenToClient,8)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxScreenToClient( ITextHost2 *iface, POINT *pt )
+BOOL __thiscall ITextHostImpl_TxScreenToClient( ITextHost2 *iface, POINT *pt )
 {
     struct host *host = impl_from_ITextHost( iface );
     return ScreenToClient( host->window, pt );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxClientToScreen,8)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxClientToScreen( ITextHost2 *iface, POINT *pt )
+BOOL __thiscall ITextHostImpl_TxClientToScreen( ITextHost2 *iface, POINT *pt )
 {
     struct host *host = impl_from_ITextHost( iface );
     return ClientToScreen( host->window, pt );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxActivate,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxActivate( ITextHost2 *iface, LONG *old_state )
+HRESULT __thiscall ITextHostImpl_TxActivate( ITextHost2 *iface, LONG *old_state )
 {
     struct host *host = impl_from_ITextHost( iface );
     *old_state = HandleToLong( SetActiveWindow( host->window ) );
@@ -349,14 +349,14 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxActivate( ITextHost2 *iface, 
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxDeactivate,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxDeactivate( ITextHost2 *iface, LONG new_state )
+HRESULT __thiscall ITextHostImpl_TxDeactivate( ITextHost2 *iface, LONG new_state )
 {
     HWND ret = SetActiveWindow( LongToHandle( new_state ) );
     return ret ? S_OK : E_FAIL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetClientRect,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetClientRect( ITextHost2 *iface, RECT *rect )
+HRESULT __thiscall ITextHostImpl_TxGetClientRect( ITextHost2 *iface, RECT *rect )
 {
     struct host *host = impl_from_ITextHost( iface );
 
@@ -372,20 +372,20 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetClientRect( ITextHost2 *if
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetViewInset,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetViewInset( ITextHost2 *iface, RECT *rect )
+HRESULT __thiscall ITextHostImpl_TxGetViewInset( ITextHost2 *iface, RECT *rect )
 {
     SetRectEmpty( rect );
     return S_OK;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetCharFormat,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetCharFormat( ITextHost2 *iface, const CHARFORMATW **ppCF )
+HRESULT __thiscall ITextHostImpl_TxGetCharFormat( ITextHost2 *iface, const CHARFORMATW **ppCF )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetParaFormat,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetParaFormat( ITextHost2 *iface, const PARAFORMAT **fmt )
+HRESULT __thiscall ITextHostImpl_TxGetParaFormat( ITextHost2 *iface, const PARAFORMAT **fmt )
 {
     struct host *host = impl_from_ITextHost( iface );
     *fmt = (const PARAFORMAT *)&host->para_fmt;
@@ -393,7 +393,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetParaFormat( ITextHost2 *if
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSysColor,8)
-DECLSPEC_HIDDEN COLORREF __thiscall ITextHostImpl_TxGetSysColor( ITextHost2 *iface, int index )
+COLORREF __thiscall ITextHostImpl_TxGetSysColor( ITextHost2 *iface, int index )
 {
     struct host *host = impl_from_ITextHost( iface );
 
@@ -402,21 +402,21 @@ DECLSPEC_HIDDEN COLORREF __thiscall ITextHostImpl_TxGetSysColor( ITextHost2 *ifa
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetBackStyle,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetBackStyle( ITextHost2 *iface, TXTBACKSTYLE *style )
+HRESULT __thiscall ITextHostImpl_TxGetBackStyle( ITextHost2 *iface, TXTBACKSTYLE *style )
 {
     *style = TXTBACK_OPAQUE;
     return S_OK;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetMaxLength,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetMaxLength( ITextHost2 *iface, DWORD *length )
+HRESULT __thiscall ITextHostImpl_TxGetMaxLength( ITextHost2 *iface, DWORD *length )
 {
     *length = INFINITE;
     return S_OK;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetScrollBars,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetScrollBars( ITextHost2 *iface, DWORD *scrollbars )
+HRESULT __thiscall ITextHostImpl_TxGetScrollBars( ITextHost2 *iface, DWORD *scrollbars )
 {
     struct host *host = impl_from_ITextHost( iface );
 
@@ -425,7 +425,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetScrollBars( ITextHost2 *if
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetPasswordChar,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetPasswordChar( ITextHost2 *iface, WCHAR *c )
+HRESULT __thiscall ITextHostImpl_TxGetPasswordChar( ITextHost2 *iface, WCHAR *c )
 {
     struct host *host = impl_from_ITextHost( iface );
 
@@ -434,32 +434,32 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetPasswordChar( ITextHost2 *
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetAcceleratorPos,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetAcceleratorPos( ITextHost2 *iface, LONG *pos )
+HRESULT __thiscall ITextHostImpl_TxGetAcceleratorPos( ITextHost2 *iface, LONG *pos )
 {
     *pos = -1;
     return S_OK;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetExtent,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetExtent( ITextHost2 *iface, SIZEL *extent )
+HRESULT __thiscall ITextHostImpl_TxGetExtent( ITextHost2 *iface, SIZEL *extent )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_OnTxCharFormatChange,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_OnTxCharFormatChange( ITextHost2 *iface, const CHARFORMATW *pcf )
+HRESULT __thiscall ITextHostImpl_OnTxCharFormatChange( ITextHost2 *iface, const CHARFORMATW *pcf )
 {
     return S_OK;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_OnTxParaFormatChange,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_OnTxParaFormatChange( ITextHost2 *iface, const PARAFORMAT *ppf )
+HRESULT __thiscall ITextHostImpl_OnTxParaFormatChange( ITextHost2 *iface, const PARAFORMAT *ppf )
 {
     return S_OK;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetPropertyBits,12)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetPropertyBits( ITextHost2 *iface, DWORD mask, DWORD *bits )
+HRESULT __thiscall ITextHostImpl_TxGetPropertyBits( ITextHost2 *iface, DWORD mask, DWORD *bits )
 {
     struct host *host = impl_from_ITextHost( iface );
 
@@ -468,7 +468,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetPropertyBits( ITextHost2 *
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxNotify,12)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxNotify( ITextHost2 *iface, DWORD iNotify, void *pv )
+HRESULT __thiscall ITextHostImpl_TxNotify( ITextHost2 *iface, DWORD iNotify, void *pv )
 {
     struct host *host = impl_from_ITextHost( iface );
     UINT id;
@@ -525,21 +525,21 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxNotify( ITextHost2 *iface, DW
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmGetContext,4)
-DECLSPEC_HIDDEN HIMC __thiscall ITextHostImpl_TxImmGetContext( ITextHost2 *iface )
+HIMC __thiscall ITextHostImpl_TxImmGetContext( ITextHost2 *iface )
 {
     struct host *host = impl_from_ITextHost( iface );
     return ImmGetContext( host->window );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmReleaseContext,8)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxImmReleaseContext( ITextHost2 *iface, HIMC context )
+void __thiscall ITextHostImpl_TxImmReleaseContext( ITextHost2 *iface, HIMC context )
 {
     struct host *host = impl_from_ITextHost( iface );
     ImmReleaseContext( host->window, context );
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSelectionBarWidth,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetSelectionBarWidth( ITextHost2 *iface, LONG *width )
+HRESULT __thiscall ITextHostImpl_TxGetSelectionBarWidth( ITextHost2 *iface, LONG *width )
 {
     struct host *host = impl_from_ITextHost( iface );
 
@@ -548,13 +548,13 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetSelectionBarWidth( ITextHo
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxIsDoubleClickPending,4)
-DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxIsDoubleClickPending( ITextHost2 *iface )
+BOOL __thiscall ITextHostImpl_TxIsDoubleClickPending( ITextHost2 *iface )
 {
     return FALSE;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetWindow,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetWindow( ITextHost2 *iface, HWND *hwnd )
+HRESULT __thiscall ITextHostImpl_TxGetWindow( ITextHost2 *iface, HWND *hwnd )
 {
     struct host *host = impl_from_ITextHost( iface );
     *hwnd = host->window;
@@ -562,61 +562,61 @@ DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetWindow( ITextHost2 *iface,
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetForegroundWindow,4)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxSetForegroundWindow( ITextHost2 *iface )
+HRESULT __thiscall ITextHostImpl_TxSetForegroundWindow( ITextHost2 *iface )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetPalette,4)
-DECLSPEC_HIDDEN HPALETTE __thiscall ITextHostImpl_TxGetPalette( ITextHost2 *iface )
+HPALETTE __thiscall ITextHostImpl_TxGetPalette( ITextHost2 *iface )
 {
     return NULL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetEastAsianFlags,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetEastAsianFlags( ITextHost2 *iface, LONG *flags )
+HRESULT __thiscall ITextHostImpl_TxGetEastAsianFlags( ITextHost2 *iface, LONG *flags )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCursor2,12)
-DECLSPEC_HIDDEN HCURSOR __thiscall ITextHostImpl_TxSetCursor2( ITextHost2 *iface, HCURSOR cursor, BOOL text )
+HCURSOR __thiscall ITextHostImpl_TxSetCursor2( ITextHost2 *iface, HCURSOR cursor, BOOL text )
 {
     return NULL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxFreeTextServicesNotification,4)
-DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxFreeTextServicesNotification( ITextHost2 *iface )
+void __thiscall ITextHostImpl_TxFreeTextServicesNotification( ITextHost2 *iface )
 {
     return;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetEditStyle,12)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetEditStyle( ITextHost2 *iface, DWORD item, DWORD *data )
+HRESULT __thiscall ITextHostImpl_TxGetEditStyle( ITextHost2 *iface, DWORD item, DWORD *data )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetWindowStyles,12)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetWindowStyles( ITextHost2 *iface, DWORD *style, DWORD *ex_style )
+HRESULT __thiscall ITextHostImpl_TxGetWindowStyles( ITextHost2 *iface, DWORD *style, DWORD *ex_style )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxShowDropCaret,16)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxShowDropCaret( ITextHost2 *iface, BOOL show, HDC hdc, const RECT *rect )
+HRESULT __thiscall ITextHostImpl_TxShowDropCaret( ITextHost2 *iface, BOOL show, HDC hdc, const RECT *rect )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxDestroyCaret,4)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxDestroyCaret( ITextHost2 *iface )
+HRESULT __thiscall ITextHostImpl_TxDestroyCaret( ITextHost2 *iface )
 {
     return E_NOTIMPL;
 }
 
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetHorzExtent,8)
-DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetHorzExtent( ITextHost2 *iface, LONG *horz_extent )
+HRESULT __thiscall ITextHostImpl_TxGetHorzExtent( ITextHost2 *iface, LONG *horz_extent )
 {
     return E_NOTIMPL;
 }
@@ -900,7 +900,7 @@ static HRESULT get_lineA( ITextServices *text_srv, WPARAM wparam, LPARAM lparam,
     sizeA = *(WORD *)lparam;
     *(WORD *)lparam = 0;
     if (!sizeA) return S_OK;
-    buf = heap_alloc( len * sizeof(WCHAR) );
+    buf = malloc( len * sizeof(WCHAR) );
     if (!buf) return E_OUTOFMEMORY;
     *(WORD *)buf = len;
     hr = ITextServices_TxSendMessage( text_srv, EM_GETLINE, wparam, (LPARAM)buf, &len );
@@ -911,7 +911,7 @@ static HRESULT get_lineA( ITextServices *text_srv, WPARAM wparam, LPARAM lparam,
         if (len < sizeA) ((char *)lparam)[len] = '\0';
         *res = len;
     }
-    heap_free( buf );
+    free( buf );
     return hr;
 }
 
@@ -930,7 +930,7 @@ static HRESULT get_text_rangeA( struct host *host, TEXTRANGEA *rangeA, LRESULT *
         range.chrg.cpMax = len;
     if (range.chrg.cpMin >= range.chrg.cpMax) return S_OK;
     count = range.chrg.cpMax - range.chrg.cpMin + 1;
-    range.lpstrText = heap_alloc( count * sizeof(WCHAR) );
+    range.lpstrText = malloc( count * sizeof(WCHAR) );
     if (!range.lpstrText) return E_OUTOFMEMORY;
     hr = ITextServices_TxSendMessage( host->text_srv, EM_GETTEXTRANGE, 0, (LPARAM)&range, &len );
     if (hr == S_OK && len)
@@ -944,7 +944,7 @@ static HRESULT get_text_rangeA( struct host *host, TEXTRANGEA *rangeA, LRESULT *
             rangeA->lpstrText[*res] = '\0';
         }
     }
-    heap_free( range.lpstrText );
+    free( range.lpstrText );
     return hr;
 }
 
@@ -1086,7 +1086,7 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
     HRESULT hr = S_OK;
     LRESULT res = 0;
 
-    TRACE( "enter hwnd %p msg %04x (%s) %lx %lx, unicode %d\n",
+    TRACE( "enter hwnd %p msg %04x (%s) %Ix %Ix, unicode %d\n",
            hwnd, msg, get_msg_name(msg), wparam, lparam, unicode );
 
     host = (struct host *)GetWindowLongPtrW( hwnd, 0 );
@@ -1096,7 +1096,7 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
         {
             CREATESTRUCTW *pcs = (CREATESTRUCTW *)lparam;
 
-            TRACE( "WM_NCCREATE: hwnd %p style 0x%08x\n", hwnd, pcs->style );
+            TRACE( "WM_NCCREATE: hwnd %p style 0x%08lx\n", hwnd, pcs->style );
             return create_windowed_editor( hwnd, pcs, FALSE );
         }
         else return DefWindowProcW( hwnd, msg, wparam, lparam );
@@ -1110,7 +1110,7 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
         res = send_msg_filter( host, msg, &wparam, &lparam );
         if (!--host->notify_level && host->defer_release)
         {
-            TRACE( "exit (filtered deferred release) hwnd %p msg %04x (%s) %lx %lx -> 0\n",
+            TRACE( "exit (filtered deferred release) hwnd %p msg %04x (%s) %Ix %Ix -> 0\n",
                    hwnd, msg, get_msg_name(msg), wparam, lparam );
             ITextHost2_Release( &host->ITextHost_iface );
             return 0;
@@ -1118,7 +1118,7 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
 
         if (res)
         {
-            TRACE( "exit (filtered %lu) hwnd %p msg %04x (%s) %lx %lx -> 0\n",
+            TRACE( "exit (filtered %Iu) hwnd %p msg %04x (%s) %Ix %Ix -> 0\n",
                    res, hwnd, msg, get_msg_name(msg), wparam, lparam );
             return 0;
         }
@@ -1144,6 +1144,7 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
         WCHAR *textW = NULL;
         LONG codepage = unicode ? CP_UNICODE : CP_ACP;
         int len;
+        LRESULT evmask;
 
         ITextServices_OnTxInPlaceActivate( host->text_srv, NULL );
 
@@ -1152,7 +1153,10 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
             text = unicode ? (void *)createW->lpszName : (void *)createA->lpszName;
             textW = ME_ToUnicode( codepage, text, &len );
         }
+        ITextServices_TxSendMessage( host->text_srv, EM_GETEVENTMASK, 0, 0, &evmask );
+        ITextServices_TxSendMessage( host->text_srv, EM_SETEVENTMASK, 0, evmask & ~ENM_CHANGE, &evmask );
         ITextServices_TxSetText( host->text_srv, textW );
+        ITextServices_TxSendMessage( host->text_srv, EM_SETEVENTMASK, 0, evmask, NULL );
         if (lparam) ME_EndToUnicode( codepage, textW );
         break;
     }
@@ -1310,22 +1314,27 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
         HDC hdc;
         RECT rc, client, update;
         PAINTSTRUCT ps;
-        HBRUSH brush = CreateSolidBrush( ITextHost_TxGetSysColor( &host->ITextHost_iface, COLOR_WINDOW ) );
+        HBRUSH brush, old_brush;
+        LONG view_id;
 
         ITextHost_TxGetClientRect( &host->ITextHost_iface, &client );
 
         if (msg == WM_PAINT)
         {
+            /* TODO retrieve if the text document is frozen */
             hdc = BeginPaint( hwnd, &ps );
             update = ps.rcPaint;
+            view_id = TXTVIEW_ACTIVE;
         }
         else
         {
             hdc = (HDC)wparam;
             update = client;
+            view_id = TXTVIEW_INACTIVE;
         }
 
-        brush = SelectObject( hdc, brush );
+        brush = CreateSolidBrush( ITextHost_TxGetSysColor( &host->ITextHost_iface, COLOR_WINDOW ) );
+        old_brush = SelectObject( hdc, brush );
 
         /* Erase area outside of the formatting rectangle */
         if (update.top < client.top)
@@ -1358,8 +1367,9 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
         }
 
         ITextServices_TxDraw( host->text_srv, DVASPECT_CONTENT, 0, NULL, NULL, hdc, NULL, NULL, NULL,
-                              &update, NULL, 0, TXTVIEW_ACTIVE );
-        DeleteObject( SelectObject( hdc, brush ) );
+                              &update, NULL, 0, view_id );
+        SelectObject( hdc, old_brush );
+        DeleteObject( brush );
         if (msg == WM_PAINT) EndPaint( hwnd, &ps );
         return 0;
     }
@@ -1499,7 +1509,7 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
     if (hr == S_FALSE)
         res = DefWindowProcW( hwnd, msg, wparam, lparam );
 
-    TRACE( "exit hwnd %p msg %04x (%s) %lx %lx, unicode %d -> %lu\n",
+    TRACE( "exit hwnd %p msg %04x (%s) %Ix %Ix, unicode %d -> %Iu\n",
            hwnd, msg, get_msg_name(msg), wparam, lparam, unicode, res );
 
     return res;
@@ -1538,7 +1548,7 @@ LRESULT WINAPI RichEdit10ANSIWndProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM
     {
         CREATESTRUCTW *pcs = (CREATESTRUCTW *)lparam;
 
-        TRACE( "WM_NCCREATE: hwnd %p style 0x%08x\n", hwnd, pcs->style );
+        TRACE( "WM_NCCREATE: hwnd %p style 0x%08lx\n", hwnd, pcs->style );
         return create_windowed_editor( hwnd, pcs, TRUE );
     }
     return RichEditANSIWndProc( hwnd, msg, wparam, lparam );
@@ -1547,7 +1557,7 @@ LRESULT WINAPI RichEdit10ANSIWndProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM
 static LRESULT WINAPI REComboWndProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
     /* FIXME: Not implemented */
-    TRACE( "hwnd %p msg %04x (%s) %08lx %08lx\n",
+    TRACE( "hwnd %p msg %04x (%s) %08Ix %08Ix\n",
            hwnd, msg, get_msg_name( msg ), wparam, lparam );
     return DefWindowProcW( hwnd, msg, wparam, lparam );
 }
@@ -1555,7 +1565,7 @@ static LRESULT WINAPI REComboWndProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM
 static LRESULT WINAPI REListWndProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
     /* FIXME: Not implemented */
-    TRACE( "hwnd %p msg %04x (%s) %08lx %08lx\n",
+    TRACE( "hwnd %p msg %04x (%s) %08Ix %08Ix\n",
            hwnd, msg, get_msg_name( msg ), wparam, lparam );
     return DefWindowProcW( hwnd, msg, wparam, lparam );
 }
@@ -1658,7 +1668,6 @@ BOOL WINAPI DllMain( HINSTANCE instance, DWORD reason, void *reserved )
     case DLL_PROCESS_ATTACH:
         dll_instance = instance;
         DisableThreadLibraryCalls( instance );
-        me_heap = HeapCreate( 0, 0x10000, 0 );
         if (!register_classes( instance )) return FALSE;
         LookupInit();
         break;
@@ -1672,7 +1681,6 @@ BOOL WINAPI DllMain( HINSTANCE instance, DWORD reason, void *reserved )
         if (listbox_registered) UnregisterClassW( L"REListBox20W", 0 );
         if (combobox_registered) UnregisterClassW( L"REComboBox20W", 0 );
         LookupCleanup();
-        HeapDestroy( me_heap );
         release_typelib();
         break;
     }

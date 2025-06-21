@@ -46,10 +46,6 @@ FolderOptionsFileTypesDlg(
 
 HBITMAP Create24BppBitmap(HDC hDC, INT cx, INT cy);
 HBITMAP BitmapFromIcon(HICON hIcon, INT cx, INT cy);
-HBITMAP CreateCheckImage(HDC hDC, BOOL bCheck, BOOL bEnabled = TRUE);
-HBITMAP CreateCheckMask(HDC hDC);
-HBITMAP CreateRadioImage(HDC hDC, BOOL bCheck, BOOL bEnabled = TRUE);
-HBITMAP CreateRadioMask(HDC hDC);
 
 extern LPCWSTR g_pszShell32;
 extern LPCWSTR g_pszSpace;

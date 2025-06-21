@@ -139,8 +139,10 @@ DECLARE_INTERFACE_(IBanneredBar, IUnknown)//, "596A9A94-013E-11d1-8D34-00A0C90F2
  */
 struct DEFFOLDERSETTINGS
 {
+#ifdef __cplusplus
     enum { SIZE_NT4 = 8, SIZE_IE4 = 36, SIZE_XP = 40 };
     enum { VER_98 = 0, VER_2000 = 3, VER_XP = 4 }; // Win98SE with IE5 writes 0, not 3 as the version
+#endif
     UINT Statusbar : 1; // "StatusBarOther" is the new location for this
     UINT Toolbar : 1; // Not used when Explorer uses ReBar
     FOLDERSETTINGS FolderSettings;
@@ -453,11 +455,13 @@ DECLARE_INTERFACE_(IExplorerToolbar, IUnknown)
  */
 typedef enum tagWALK_TREE_CMD
 {
-	WALK_TREE_OPTION0 = 0,
-	WALK_TREE_OPTION1 = 1,
-	WALK_TREE_OPTION2 = 2,
-	WALK_TREE_OPTION3 = 3
+	WALK_TREE_SAVE = 0,
+	WALK_TREE_DESTROY = 1,
+	WALK_TREE_DEFAULT = 2,
+	WALK_TREE_REFRESH = 3
 } WALK_TREE_CMD;
+
+#define HKEY_REGTREEOPTION_GRAYED ( (HKEY)INVALID_HANDLE_VALUE ) /* ROS extension */
 
 #define INTERFACE IRegTreeOptions
 DECLARE_INTERFACE_(IRegTreeOptions, IUnknown)
@@ -467,10 +471,10 @@ DECLARE_INTERFACE_(IRegTreeOptions, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** IRegTreeOptions ***/
-	STDMETHOD(InitTree)(THIS_ HWND paramC, HKEY param10, char const *param14, char const *param18) PURE;
-	STDMETHOD(WalkTree)(THIS_ WALK_TREE_CMD paramC) PURE;
-	STDMETHOD(ToggleItem)(THIS_ HTREEITEM paramC) PURE;
-	STDMETHOD(ShowHelp)(THIS_ HTREEITEM paramC, unsigned long param10) PURE;
+	STDMETHOD(InitTree)(THIS_ HWND hTV, HKEY hKey, LPCSTR SubKey, char const *pUnknown) PURE;
+	STDMETHOD(WalkTree)(THIS_ WALK_TREE_CMD Command) PURE;
+	STDMETHOD(ToggleItem)(THIS_ HTREEITEM hTI) PURE;
+	STDMETHOD(ShowHelp)(THIS_ HTREEITEM hTI, unsigned long Unknown) PURE;
 };
 #undef INTERFACE
 

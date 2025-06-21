@@ -207,6 +207,13 @@ KiInitializeCpu(PKIPCR Pcr)
     /* Disable x87 fpu exceptions */
     __writecr0(__readcr0() & ~CR0_NE);
 
+    /* Check if XSAVE is supported */
+    if (FeatureBits & KF_XSTATE)
+    {
+        /* Enable CR4.OSXSAVE[Bit 18] */
+        __writecr4(__readcr4() | CR4_XSAVE);
+    }
+
     /* LDT is unused */
     __lldt(0);
 
@@ -346,7 +353,7 @@ KiInitializeKernelMachineDependent(
     IN PKPRCB Prcb,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG64 FeatureBits;
+    ULONG64 FeatureBits = KeFeatureBits;
 
     /* Set boot-level flags */
     KeI386CpuType = Prcb->CpuType;
@@ -355,8 +362,6 @@ KiInitializeKernelMachineDependent(
     KeProcessorLevel = (USHORT)Prcb->CpuType;
     if (Prcb->CpuID)
         KeProcessorRevision = Prcb->CpuStep;
-
-    FeatureBits = Prcb->FeatureBits | (ULONG64)Prcb->FeatureBitsHigh << 32;
 
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
@@ -380,7 +385,8 @@ KiInitializeKernelMachineDependent(
         (FeatureBits & KF_CMPXCHG16B) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_COMPARE64_EXCHANGE128] = FALSE; // ???
     SharedUserData->ProcessorFeatures[PF_CHANNELS_ENABLED] = FALSE; // ???
-    SharedUserData->ProcessorFeatures[PF_XSAVE_ENABLED] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_XSAVE_ENABLED] =
+        (FeatureBits & KF_XSTATE) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_SECOND_LEVEL_ADDRESS_TRANSLATION] =
         (FeatureBits & KF_SLAT) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_VIRT_FIRMWARE_ENABLED] =
@@ -399,9 +405,12 @@ KiInitializeKernelMachineDependent(
         (FeatureBits & KF_SSE4_1) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_SSE4_2_INSTRUCTIONS_AVAILABLE] =
         (FeatureBits & KF_SSE4_2) ? TRUE : FALSE;
-    SharedUserData->ProcessorFeatures[PF_AVX_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
-    SharedUserData->ProcessorFeatures[PF_AVX2_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
-    SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_AVX_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_AVX2_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX2) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX512F) ? TRUE : FALSE;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
@@ -506,11 +515,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set the PRCB for this Processor */
     KiProcessorBlock[Cpu] = &Pcr->Prcb;
 
-    /* Align stack to 16 bytes */
-    LoaderBlock->KernelStack &= ~(16 - 1);
-
-    /* Save the initial thread and stack */
-    InitialStack = LoaderBlock->KernelStack; // Checkme
+    /* Save the initial thread */
     InitialThread = (PKTHREAD)LoaderBlock->Thread;
 
     /* Set us as the current process */
@@ -522,6 +527,10 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initial setup for the boot CPU */
     if (Cpu == 0)
     {
+        /* Set global feature bits */
+        KeFeatureBits = (ULONG64)Pcr->Prcb.FeatureBitsHigh << 32 |
+                        Pcr->Prcb.FeatureBits;
+
         /* Initialize the module list (ntos, hal, kdcom) */
         KiInitModuleList(LoaderBlock);
 
@@ -560,7 +569,13 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Machine specific kernel initialization */
     if (Cpu == 0) KiInitializeKernelMachineDependent(&Pcr->Prcb, LoaderBlock);
 
+    /* Initialize extended state management */
+    KiInitializeXStateConfiguration(Cpu);
+
+    /* Calculate the initial stack pointer */
+    InitialStack = ALIGN_DOWN_BY(LoaderBlock->KernelStack - KeXStateLength, 64);
+
     /* Switch to new kernel stack and start kernel bootstrapping */
-    KiSwitchToBootStack(InitialStack & ~3);
+    KiSwitchToBootStack(InitialStack);
 }
 

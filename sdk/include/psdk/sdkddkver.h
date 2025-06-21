@@ -126,12 +126,17 @@ Abstract:
 #define NTDDI_WIN10_MN                      0x0A000009      // Windows 10.0.19042 / 20H2 / Manganese
 #define NTDDI_WIN10_FE                      0x0A00000A      // Windows 10.0.19043 / 21H1 / Ferrum
 #define NTDDI_WIN10_CO                      0x0A00000B      // Windows 10.0.19044 / 21H2 / Cobalt
-#define NTDDI_WIN11_CO                      NTDDI_WIN10_CO  // Windows 10.0.22000 / 21H2 / Cobalt
-#define NTDDI_WIN11                         NTDDI_WIN11_CO
+#define NTDDI_WIN11_CO                      NTDDI_WIN10_CO  // Windows 10.0.21277-22000 / 21H2 / Cobalt
+#define NTDDI_WIN11                         NTDDI_WIN11_CO  // Windows 10.0.22000 / 21H2 / Cobalt
 #define NTDDI_WIN10_NI                      0x0A00000C      // Windows 10.0.22621 / 22H2 / Nickel
-#define NTDDI_WIN11_NI                      NTDDI_WIN10_NI
+#define NTDDI_WIN11_NI                      NTDDI_WIN10_NI  // Windows 10.0.22449-22631 / 22H2 23H2 / Nickel
 #define NTDDI_WIN10_CU                      0x0A00000D      // Windows 10.0.22621 / 22H2 / Copper
-// NTDDI_WIN11_CU
+#define NTDDI_WIN11_CU                      NTDDI_WIN10_CU  // Windows 10.0.25057-25236 / Copper
+#define NTDDI_WIN11_ZN                      0x0A00000E      // Windows 10.0.25246-25398 / 23H2 / Zinc
+#define NTDDI_WIN11_GA                      0x0A00000F      // Windows 10.0.25905-25941 / 24H1 / Gallium
+#define NTDDI_WIN11_GE                      0x0A000010      // Windows 10.0.25947-26100 / 24H2 / Germanium
+                                                            // Windows 10.0.27548-27686 / 25H1 / "Dilithium"
+#define NTDDI_WIN11_SE                      0x0A000011      // Windows 10.0.27695-?     / 25H2 / Selenium
 
 /* Version Fields in NTDDI_VERSION */
 #define OSVERSION_MASK                      0xFFFF0000UL
