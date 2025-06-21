@@ -38,7 +38,7 @@ endif()
 
 set_module_type(ddraw win32dll)
 target_link_libraries(ddraw wine uuid dxguid ${PSEH_LIB})
-add_importlibs(ddraw advapi32 gdi32 user32 d3dwine msvcrt kernel32 ntdll)
+add_importlibs(ddraw advapi32 gdi32 user32 ddraw_d3dwine msvcrt kernel32 ntdll)
 add_dependencies(ddraw wineheaders)
 #add_pch(ddraw precomp.h SOURCE)
 add_cd_file(TARGET ddraw DESTINATION reactos/system32 FOR all)

@@ -61,6 +61,16 @@
 #define ssize_t size_t
 
 #define RTL_CRITICAL_SECTION_DEBUG CRITICAL_SECTION_DEBUG
+
+ 
+#include <float.h>
+#define ssize_t size_t
+  #define isnan _isnan
+  #ifndef M_PI
+  #define M_PI (3.1415926)
+  #endif
+  int isinf(double x);
+ int isfinite(double x);   
 #endif
 
 static inline size_t align(size_t addr, size_t alignment)
