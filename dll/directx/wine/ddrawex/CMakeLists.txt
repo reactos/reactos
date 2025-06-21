@@ -27,6 +27,6 @@ add_library(ddrawex MODULE
 
 set_module_type(ddrawex win32dll)
 target_link_libraries(ddrawex wine_dll_register wine uuid dxguid ${PSEH_LIB})
-add_importlibs(ddrawex ddraw advapi32 gdi32 user32 d3dwine msvcrt kernel32 ntdll)
+add_importlibs(ddrawex ddraw advapi32 gdi32 user32 ddraw_d3dwine msvcrt kernel32 ntdll)
 add_dependencies(ddrawex wineheaders)
 add_cd_file(TARGET ddrawex DESTINATION reactos/system32 FOR all)
