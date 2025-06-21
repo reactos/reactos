@@ -1754,7 +1754,7 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
         ExFreePoolWithTag(HwndList, USERTAG_WINDOWLIST);
     }
 
-    if (ISITHOOKED(WH_SHELL))
+    if (UserIsItHooked(WH_SHELL))
     {
         co_HOOK_CallHooks(WH_SHELL, Message, wParam, lParam);
     }
