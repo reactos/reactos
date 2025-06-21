@@ -2,22 +2,22 @@
 
 .code64
 
-PUBLIC _InterlockedCompareExchangePointer
+PUBLIC InterlockedCompareExchangePointer
     ret
 END
 
-PUBLIC _InterlockedExchangePointer
+PUBLIC InterlockedExchangePointer
     ret
 END
 
-PUBLIC _InterlockedExchangeAdd
+PUBLIC InterlockedExchangeAdd
     ret
 END
 
-PUBLIC _InterlockedIncrement
+PUBLIC InterlockedIncrement
     ret
 END
 
-PUBLIC _InterlockedDecrement
+PUBLIC InterlockedDecrement
     ret
 END
