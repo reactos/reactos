@@ -22,13 +22,6 @@
 
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#ifdef __REACTOS__
-#include <wchar.h>
-#endif
-
 #include "dxdiag_private.h"
 #include "winver.h"
 #include "objidl.h"
@@ -38,6 +31,7 @@
 #include "d3d9.h"
 #include "strmif.h"
 #include "initguid.h"
+#include "mmdeviceapi.h"
 #include "wine/fil_data.h"
 #include "psapi.h"
 #include "wbemcli.h"
@@ -47,58 +41,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 
-static const WCHAR szEmpty[] = {0};
-
 static HRESULT build_information_tree(IDxDiagContainerImpl_Container **pinfo_root);
 static void free_information_tree(IDxDiagContainerImpl_Container *node);
-
-static const WCHAR szDescription[] = {'s','z','D','e','s','c','r','i','p','t','i','o','n',0};
-static const WCHAR szDeviceName[] = {'s','z','D','e','v','i','c','e','N','a','m','e',0};
-static const WCHAR szKeyDeviceID[] = {'s','z','K','e','y','D','e','v','i','c','e','I','D',0};
-static const WCHAR szKeyDeviceKey[] = {'s','z','K','e','y','D','e','v','i','c','e','K','e','y',0};
-static const WCHAR szVendorId[] = {'s','z','V','e','n','d','o','r','I','d',0};
-static const WCHAR szDeviceId[] = {'s','z','D','e','v','i','c','e','I','d',0};
-static const WCHAR szDeviceIdentifier[] = {'s','z','D','e','v','i','c','e','I','d','e','n','t','i','f','i','e','r',0};
-static const WCHAR dwWidth[] = {'d','w','W','i','d','t','h',0};
-static const WCHAR dwHeight[] = {'d','w','H','e','i','g','h','t',0};
-static const WCHAR dwBpp[] = {'d','w','B','p','p',0};
-static const WCHAR szDisplayMemoryLocalized[] = {'s','z','D','i','s','p','l','a','y','M','e','m','o','r','y','L','o','c','a','l','i','z','e','d',0};
-static const WCHAR szDisplayMemoryEnglish[] = {'s','z','D','i','s','p','l','a','y','M','e','m','o','r','y','E','n','g','l','i','s','h',0};
-static const WCHAR szDisplayModeLocalized[] = {'s','z','D','i','s','p','l','a','y','M','o','d','e','L','o','c','a','l','i','z','e','d',0};
-static const WCHAR szDisplayModeEnglish[] = {'s','z','D','i','s','p','l','a','y','M','o','d','e','E','n','g','l','i','s','h',0};
-static const WCHAR szDriverName[] = {'s','z','D','r','i','v','e','r','N','a','m','e',0};
-static const WCHAR szDriverVersion[] = {'s','z','D','r','i','v','e','r','V','e','r','s','i','o','n',0};
-static const WCHAR szSubSysId[] = {'s','z','S','u','b','S','y','s','I','d',0};
-static const WCHAR szRevisionId[] = {'s','z','R','e','v','i','s','i','o','n','I','d',0};
-static const WCHAR dwRefreshRate[] = {'d','w','R','e','f','r','e','s','h','R','a','t','e',0};
-static const WCHAR szManufacturer[] = {'s','z','M','a','n','u','f','a','c','t','u','r','e','r',0};
-static const WCHAR szChipType[] = {'s','z','C','h','i','p','T','y','p','e',0};
-static const WCHAR szDACType[] = {'s','z','D','A','C','T','y','p','e',0};
-static const WCHAR szRevision[] = {'s','z','R','e','v','i','s','i','o','n',0};
-static const WCHAR szMonitorName[] = {'s','z','M','o','n','i','t','o','r','N','a','m','e',0};
-static const WCHAR szMonitorMaxRes[] = {'s','z','M','o','n','i','t','o','r','M','a','x','R','e','s',0};
-static const WCHAR szDriverAttributes[] = {'s','z','D','r','i','v','e','r','A','t','t','r','i','b','u','t','e','s',0};
-static const WCHAR szDriverLanguageEnglish[] = {'s','z','D','r','i','v','e','r','L','a','n','g','u','a','g','e','E','n','g','l','i','s','h',0};
-static const WCHAR szDriverLanguageLocalized[] = {'s','z','D','r','i','v','e','r','L','a','n','g','u','a','g','e','L','o','c','a','l','i','z','e','d',0};
-static const WCHAR szDriverDateEnglish[] = {'s','z','D','r','i','v','e','r','D','a','t','e','E','n','g','l','i','s','h',0};
-static const WCHAR szDriverDateLocalized[] = {'s','z','D','r','i','v','e','r','D','a','t','e','L','o','c','a','l','i','z','e','d',0};
-static const WCHAR lDriverSize[] = {'l','D','r','i','v','e','r','S','i','z','e',0};
-static const WCHAR szMiniVdd[] = {'s','z','M','i','n','i','V','d','d',0};
-static const WCHAR szMiniVddDateLocalized[] = {'s','z','M','i','n','i','V','d','d','D','a','t','e','L','o','c','a','l','i','z','e','d',0};
-static const WCHAR szMiniVddDateEnglish[] = {'s','z','M','i','n','i','V','d','d','D','a','t','e','E','n','g','l','i','s','h',0};
-static const WCHAR lMiniVddSize[] = {'l','M','i','n','i','V','d','d','S','i','z','e',0};
-static const WCHAR szVdd[] = {'s','z','V','d','d',0};
-static const WCHAR bCanRenderWindow[] = {'b','C','a','n','R','e','n','d','e','r','W','i','n','d','o','w',0};
-static const WCHAR bDriverBeta[] = {'b','D','r','i','v','e','r','B','e','t','a',0};
-static const WCHAR bDriverDebug[] = {'b','D','r','i','v','e','r','D','e','b','u','g',0};
-static const WCHAR bDriverSigned[] = {'b','D','r','i','v','e','r','S','i','g','n','e','d',0};
-static const WCHAR bDriverSignedValid[] = {'b','D','r','i','v','e','r','S','i','g','n','e','d','V','a','l','i','d',0};
-static const WCHAR szDriverSignDate[] = {'s','z','D','r','i','v','e','r','S','i','g','n','D','a','t','e',0};
-static const WCHAR dwDDIVersion[] = {'d','w','D','D','I','V','e','r','s','i','o','n',0};
-static const WCHAR szDDIVersionEnglish[] = {'s','z','D','D','I','V','e','r','s','i','o','n','E','n','g','l','i','s','h',0};
-static const WCHAR szDDIVersionLocalized[] = {'s','z','D','D','I','V','e','r','s','i','o','n','L','o','c','a','l','i','z','e','d',0};
-static const WCHAR iAdapter[] = {'i','A','d','a','p','t','e','r',0};
-static const WCHAR dwWHQLLevel[] = {'d','w','W','H','Q','L','L','e','v','e','l',0};
 
 struct IDxDiagProviderImpl
 {
@@ -125,7 +69,7 @@ static HRESULT WINAPI IDxDiagProviderImpl_QueryInterface(IDxDiagProvider *iface,
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDxDiagProvider)) {
         IUnknown_AddRef(iface);
-        *ppobj = This;
+        *ppobj = &This->IDxDiagProvider_iface;
         return S_OK;
     }
 
@@ -139,7 +83,7 @@ static ULONG WINAPI IDxDiagProviderImpl_AddRef(IDxDiagProvider *iface)
     IDxDiagProviderImpl *This = impl_from_IDxDiagProvider(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%u)\n", This, refCount - 1);
+    TRACE("(%p)->(ref before=%lu)\n", This, refCount - 1);
 
     DXDIAGN_LockModule();
 
@@ -151,7 +95,7 @@ static ULONG WINAPI IDxDiagProviderImpl_Release(IDxDiagProvider *iface)
     IDxDiagProviderImpl *This = impl_from_IDxDiagProvider(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%u)\n", This, refCount + 1);
+    TRACE("(%p)->(ref before=%lu)\n", This, refCount + 1);
 
     if (!refCount) {
         free_information_tree(This->info_root);
@@ -486,8 +430,6 @@ static BOOL get_process_name_from_pid(DWORD pid, WCHAR *buf, DWORD chars)
 /* dxdiagn's detection scheme is simply to look for a process called conf.exe. */
 static BOOL is_netmeeting_running(void)
 {
-    static const WCHAR conf_exe[] = {'c','o','n','f','.','e','x','e',0};
-
     DWORD list_count;
     DWORD *pid_list = enumerate_processes(&list_count);
 
@@ -499,7 +441,7 @@ static BOOL is_netmeeting_running(void)
         for (i = 0; i < list_count; i++)
         {
             if (get_process_name_from_pid(pid_list[i], process_name, ARRAY_SIZE(process_name)) &&
-                !lstrcmpW(conf_exe, process_name))
+                    !lstrcmpW(L"conf.exe", process_name))
             {
                 HeapFree(GetProcessHeap(), 0, pid_list);
                 return TRUE;
@@ -513,11 +455,6 @@ static BOOL is_netmeeting_running(void)
 
 static HRESULT fill_language_information(IDxDiagContainerImpl_Container *node)
 {
-    static const WCHAR regional_setting_engW[] = {'R','e','g','i','o','n','a','l',' ','S','e','t','t','i','n','g',0};
-    static const WCHAR languages_fmtW[] = {'%','s',' ','(','%','s',':',' ','%','s',')',0};
-    static const WCHAR szLanguagesLocalized[] = {'s','z','L','a','n','g','u','a','g','e','s','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szLanguagesEnglish[] = {'s','z','L','a','n','g','u','a','g','e','s','E','n','g','l','i','s','h',0};
-
     WCHAR system_lang[80], regional_setting[100], user_lang[80], language_str[300];
     HRESULT hr;
 
@@ -526,10 +463,10 @@ static HRESULT fill_language_information(IDxDiagContainerImpl_Container *node)
     LoadStringW(dxdiagn_instance, IDS_REGIONAL_SETTING, regional_setting, ARRAY_SIZE(regional_setting));
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SNATIVELANGNAME, user_lang, ARRAY_SIZE(user_lang));
 
-    swprintf(language_str, languages_fmtW, system_lang, regional_setting,
-              user_lang);
+    swprintf(language_str, ARRAY_SIZE(language_str), L"%s (%s: %s)", system_lang, regional_setting,
+            user_lang);
 
-    hr = add_bstr_property(node, szLanguagesLocalized, language_str);
+    hr = add_bstr_property(node, L"szLanguagesLocalized", language_str);
     if (FAILED(hr))
         return hr;
 
@@ -537,10 +474,10 @@ static HRESULT fill_language_information(IDxDiagContainerImpl_Container *node)
     GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_SENGLANGUAGE, system_lang, ARRAY_SIZE(system_lang));
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SENGLANGUAGE, user_lang, ARRAY_SIZE(user_lang));
 
-    swprintf(language_str, languages_fmtW, system_lang,
-              regional_setting_engW, user_lang);
+    swprintf(language_str, ARRAY_SIZE(language_str), L"%s (%s: %s)", system_lang,
+            L"Regional Setting", user_lang);
 
-    hr = add_bstr_property(node, szLanguagesEnglish, language_str);
+    hr = add_bstr_property(node, L"szLanguagesEnglish", language_str);
     if (FAILED(hr))
         return hr;
 
@@ -549,35 +486,29 @@ static HRESULT fill_language_information(IDxDiagContainerImpl_Container *node)
 
 static HRESULT fill_datetime_information(IDxDiagContainerImpl_Container *node)
 {
-    static const WCHAR date_fmtW[] = {'M','\'','/','\'','d','\'','/','\'','y','y','y','y',0};
-    static const WCHAR time_fmtW[] = {'H','H','\'',':','\'','m','m','\'',':','\'','s','s',0};
-    static const WCHAR datetime_fmtW[] = {'%','s',',',' ','%','s',0};
-    static const WCHAR szTimeLocalized[] = {'s','z','T','i','m','e','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szTimeEnglish[] = {'s','z','T','i','m','e','E','n','g','l','i','s','h',0};
-
     SYSTEMTIME curtime;
     WCHAR date_str[80], time_str[80], datetime_str[200];
     HRESULT hr;
 
     GetLocalTime(&curtime);
 
-    GetTimeFormatW(LOCALE_NEUTRAL, 0, &curtime, time_fmtW, time_str, ARRAY_SIZE(time_str));
+    GetTimeFormatW(LOCALE_NEUTRAL, 0, &curtime, L"HH':'mm':'ss", time_str, ARRAY_SIZE(time_str));
 
     /* szTimeLocalized */
     GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &curtime, NULL, date_str, ARRAY_SIZE(date_str));
 
-    swprintf(datetime_str, datetime_fmtW, date_str, time_str);
+    swprintf(datetime_str, ARRAY_SIZE(datetime_str), L"%s, %s", date_str, time_str);
 
-    hr = add_bstr_property(node, szTimeLocalized, datetime_str);
+    hr = add_bstr_property(node, L"szTimeLocalized", datetime_str);
     if (FAILED(hr))
         return hr;
 
     /* szTimeEnglish */
-    GetDateFormatW(LOCALE_NEUTRAL, 0, &curtime, date_fmtW, date_str, ARRAY_SIZE(date_str));
+    GetDateFormatW(LOCALE_NEUTRAL, 0, &curtime, L"M'/'d'/'yyyy", date_str, ARRAY_SIZE(date_str));
 
-    swprintf(datetime_str, datetime_fmtW, date_str, time_str);
+    swprintf(datetime_str, ARRAY_SIZE(datetime_str), L"%s, %s", date_str, time_str);
 
-    hr = add_bstr_property(node, szTimeEnglish, datetime_str);
+    hr = add_bstr_property(node, L"szTimeEnglish", datetime_str);
     if (FAILED(hr))
         return hr;
 
@@ -586,17 +517,11 @@ static HRESULT fill_datetime_information(IDxDiagContainerImpl_Container *node)
 
 static HRESULT fill_os_string_information(IDxDiagContainerImpl_Container *node, OSVERSIONINFOW *info)
 {
-    static const WCHAR winxpW[] = {'W','i','n','d','o','w','s',' ','X','P',' ','P','r','o','f','e','s','s','i','o','n','a','l',0};
-    static const WCHAR szOSLocalized[] = {'s','z','O','S','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szOSExLocalized[] = {'s','z','O','S','E','x','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szOSExLongLocalized[] = {'s','z','O','S','E','x','L','o','n','g','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szOSEnglish[] = {'s','z','O','S','E','n','g','l','i','s','h',0};
-    static const WCHAR szOSExEnglish[] = {'s','z','O','S','E','x','E','n','g','l','i','s','h',0};
-    static const WCHAR szOSExLongEnglish[] = {'s','z','O','S','E','x','L','o','n','g','E','n','g','l','i','s','h',0};
-
-    static const WCHAR *prop_list[] = {szOSLocalized, szOSExLocalized, szOSExLongLocalized,
-                                       szOSEnglish, szOSExEnglish, szOSExLongEnglish};
-
+    static const WCHAR *prop_list[] =
+    {
+        L"szOSLocalized", L"szOSExLocalized", L"szOSExLongLocalized",
+        L"szOSEnglish", L"szOSExEnglish", L"szOSExLongEnglish"
+    };
     size_t i;
     HRESULT hr;
 
@@ -604,7 +529,7 @@ static HRESULT fill_os_string_information(IDxDiagContainerImpl_Container *node, 
      * should contain translated versions of the "build" phrase. */
     for (i = 0; i < ARRAY_SIZE(prop_list); i++)
     {
-        hr = add_bstr_property(node, prop_list[i], winxpW);
+        hr = add_bstr_property(node, prop_list[i], L"Windows XP Professional");
         if (FAILED(hr))
             return hr;
     }
@@ -614,16 +539,6 @@ static HRESULT fill_os_string_information(IDxDiagContainerImpl_Container *node, 
 
 static HRESULT fill_processor_information(IDxDiagContainerImpl_Container *node)
 {
-    static const WCHAR szProcessorEnglish[] = {'s','z','P','r','o','c','e','s','s','o','r','E','n','g','l','i','s','h',0};
-
-    static const WCHAR cimv2W[] = {'\\','\\','.','\\','r','o','o','t','\\','c','i','m','v','2',0};
-    static const WCHAR proc_classW[] = {'W','i','n','3','2','_','P','r','o','c','e','s','s','o','r',0};
-    static const WCHAR nameW[] = {'N','a','m','e',0};
-    static const WCHAR max_clock_speedW[] = {'M','a','x','C','l','o','c','k','S','p','e','e','d',0};
-    static const WCHAR cpu_noW[] = {'N','u','m','b','e','r','O','f','L','o','g','i','c','a','l','P','r','o','c','e','s','s','o','r','s',0};
-
-    static const WCHAR processor_fmtW[] = {'%','s','(','%','d',' ','C','P','U','s',')',',',' ','~','%','d','M','H','z',0};
-
     IWbemLocator *wbem_locator;
     IWbemServices *wbem_service;
     IWbemClassObject *wbem_class;
@@ -638,7 +553,7 @@ static HRESULT fill_processor_information(IDxDiagContainerImpl_Container *node)
     if(FAILED(hr))
         return hr;
 
-    bstr = SysAllocString(cimv2W);
+    bstr = SysAllocString(L"\\\\.\\root\\cimv2");
     if(!bstr) {
         IWbemLocator_Release(wbem_locator);
         return E_OUTOFMEMORY;
@@ -649,7 +564,7 @@ static HRESULT fill_processor_information(IDxDiagContainerImpl_Container *node)
     if(FAILED(hr))
         return hr;
 
-    bstr = SysAllocString(proc_classW);
+    bstr = SysAllocString(L"Win32_Processor");
     if(!bstr) {
         IWbemServices_Release(wbem_service);
         return E_OUTOFMEMORY;
@@ -665,68 +580,32 @@ static HRESULT fill_processor_information(IDxDiagContainerImpl_Container *node)
     if(FAILED(hr))
         return hr;
 
-    hr = IWbemClassObject_Get(wbem_class, cpu_noW, 0, &cpu_no, NULL, NULL);
+    hr = IWbemClassObject_Get(wbem_class, L"NumberOfLogicalProcessors", 0, &cpu_no, NULL, NULL);
     if(FAILED(hr)) {
         IWbemClassObject_Release(wbem_class);
         return hr;
     }
-    hr = IWbemClassObject_Get(wbem_class, max_clock_speedW, 0, &clock_speed, NULL, NULL);
+    hr = IWbemClassObject_Get(wbem_class, L"MaxClockSpeed", 0, &clock_speed, NULL, NULL);
     if(FAILED(hr)) {
         IWbemClassObject_Release(wbem_class);
         return hr;
     }
-    hr = IWbemClassObject_Get(wbem_class, nameW, 0, &cpu_name, NULL, NULL);
+    hr = IWbemClassObject_Get(wbem_class, L"Name", 0, &cpu_name, NULL, NULL);
     IWbemClassObject_Release(wbem_class);
     if(FAILED(hr))
         return hr;
 
-    swprintf(print_buf, processor_fmtW,
+    swprintf(print_buf, ARRAY_SIZE(print_buf), L"%s(%d CPUs), ~%dMHz",
              V_BSTR(&cpu_name), V_I4(&cpu_no), V_I4(&clock_speed));
     VariantClear(&cpu_name);
     VariantClear(&cpu_no);
     VariantClear(&clock_speed);
 
-    return add_bstr_property(node, szProcessorEnglish, print_buf);
+    return add_bstr_property(node, L"szProcessorEnglish", print_buf);
 }
 
 static HRESULT build_systeminfo_tree(IDxDiagContainerImpl_Container *node)
 {
-    static const WCHAR dwDirectXVersionMajor[] = {'d','w','D','i','r','e','c','t','X','V','e','r','s','i','o','n','M','a','j','o','r',0};
-    static const WCHAR dwDirectXVersionMinor[] = {'d','w','D','i','r','e','c','t','X','V','e','r','s','i','o','n','M','i','n','o','r',0};
-    static const WCHAR szDirectXVersionLetter[] = {'s','z','D','i','r','e','c','t','X','V','e','r','s','i','o','n','L','e','t','t','e','r',0};
-    static const WCHAR szDirectXVersionLetter_v[] = {'c',0};
-    static const WCHAR bDebug[] = {'b','D','e','b','u','g',0};
-    static const WCHAR bNECPC98[] = {'b','N','E','C','P','C','9','8',0};
-    static const WCHAR szDirectXVersionEnglish[] = {'s','z','D','i','r','e','c','t','X','V','e','r','s','i','o','n','E','n','g','l','i','s','h',0};
-    static const WCHAR szDirectXVersionEnglish_v[] = {'4','.','0','9','.','0','0','0','0','.','0','9','0','4',0};
-    static const WCHAR szDirectXVersionLongEnglish[] = {'s','z','D','i','r','e','c','t','X','V','e','r','s','i','o','n','L','o','n','g','E','n','g','l','i','s','h',0};
-    static const WCHAR szDirectXVersionLongEnglish_v[] = {'=',' ','"','D','i','r','e','c','t','X',' ','9','.','0','c',' ','(','4','.','0','9','.','0','0','0','0','.','0','9','0','4',')',0};
-    static const WCHAR ullPhysicalMemory[] = {'u','l','l','P','h','y','s','i','c','a','l','M','e','m','o','r','y',0};
-    static const WCHAR ullUsedPageFile[]   = {'u','l','l','U','s','e','d','P','a','g','e','F','i','l','e',0};
-    static const WCHAR ullAvailPageFile[]  = {'u','l','l','A','v','a','i','l','P','a','g','e','F','i','l','e',0};
-    static const WCHAR bNetMeetingRunning[] = {'b','N','e','t','M','e','e','t','i','n','g','R','u','n','n','i','n','g',0};
-    static const WCHAR szWindowsDir[] = {'s','z','W','i','n','d','o','w','s','D','i','r',0};
-    static const WCHAR dwOSMajorVersion[] = {'d','w','O','S','M','a','j','o','r','V','e','r','s','i','o','n',0};
-    static const WCHAR dwOSMinorVersion[] = {'d','w','O','S','M','i','n','o','r','V','e','r','s','i','o','n',0};
-    static const WCHAR dwOSBuildNumber[] = {'d','w','O','S','B','u','i','l','d','N','u','m','b','e','r',0};
-    static const WCHAR dwOSPlatformID[] = {'d','w','O','S','P','l','a','t','f','o','r','m','I','D',0};
-    static const WCHAR szCSDVersion[] = {'s','z','C','S','D','V','e','r','s','i','o','n',0};
-    static const WCHAR szPhysicalMemoryEnglish[] = {'s','z','P','h','y','s','i','c','a','l','M','e','m','o','r','y','E','n','g','l','i','s','h',0};
-    static const WCHAR szPageFileLocalized[] = {'s','z','P','a','g','e','F','i','l','e','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szPageFileEnglish[] = {'s','z','P','a','g','e','F','i','l','e','E','n','g','l','i','s','h',0};
-    static const WCHAR szMachineNameLocalized[] = {'s','z','M','a','c','h','i','n','e','N','a','m','e','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szMachineNameEnglish[] = {'s','z','M','a','c','h','i','n','e','N','a','m','e','E','n','g','l','i','s','h',0};
-    static const WCHAR szSystemManufacturerEnglish[] = {'s','z','S','y','s','t','e','m','M','a','n','u','f','a','c','t','u','r','e','r','E','n','g','l','i','s','h',0};
-    static const WCHAR szSystemModelEnglish[] = {'s','z','S','y','s','t','e','m','M','o','d','e','l','E','n','g','l','i','s','h',0};
-    static const WCHAR szBIOSEnglish[] = {'s','z','B','I','O','S','E','n','g','l','i','s','h',0};
-    static const WCHAR szSetupParamEnglish[] = {'s','z','S','e','t','u','p','P','a','r','a','m','E','n','g','l','i','s','h',0};
-    static const WCHAR szDxDiagVersion[] = {'s','z','D','x','D','i','a','g','V','e','r','s','i','o','n',0};
-
-    static const WCHAR notpresentW[] = {'N','o','t',' ','p','r','e','s','e','n','t',0};
-
-    static const WCHAR pagefile_fmtW[] = {'%','u','M','B',' ','u','s','e','d',',',' ','%','u','M','B',' ','a','v','a','i','l','a','b','l','e',0};
-    static const WCHAR physmem_fmtW[] = {'%','u','M','B',' ','R','A','M',0};
-
     HRESULT hr;
     MEMORYSTATUSEX msex;
     OSVERSIONINFOW info;
@@ -734,80 +613,83 @@ static HRESULT build_systeminfo_tree(IDxDiagContainerImpl_Container *node)
     WCHAR buffer[MAX_PATH], computer_name[MAX_COMPUTERNAME_LENGTH + 1], print_buf[200], localized_pagefile_fmt[200];
     DWORD_PTR args[2];
 
-    hr = add_ui4_property(node, dwDirectXVersionMajor, 9);
+    hr = add_ui4_property(node, L"dwDirectXVersionMajor", 9);
     if (FAILED(hr))
         return hr;
 
-    hr = add_ui4_property(node, dwDirectXVersionMinor, 0);
+    hr = add_ui4_property(node, L"dwDirectXVersionMinor", 0);
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szDirectXVersionLetter, szDirectXVersionLetter_v);
+    hr = add_bstr_property(node, L"szDirectXVersionLetter", L"c");
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szDirectXVersionEnglish, szDirectXVersionEnglish_v);
+    hr = add_bstr_property(node, L"szDirectXVersionEnglish", L"4.09.0000.0904");
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szDirectXVersionLongEnglish, szDirectXVersionLongEnglish_v);
+    hr = add_bstr_property(node, L"szDirectXVersionLongEnglish", L"= \"DirectX 9.0c (4.09.0000.0904)");
     if (FAILED(hr))
         return hr;
 
-    hr = add_bool_property(node, bDebug, FALSE);
+    hr = add_bool_property(node, L"bDebug", FALSE);
     if (FAILED(hr))
         return hr;
 
-    hr = add_bool_property(node, bNECPC98, FALSE);
+    hr = add_bool_property(node, L"bIsD3DDebugRuntime", FALSE);
+    if (FAILED(hr))
+        return hr;
+
+    hr = add_bool_property(node, L"bNECPC98", FALSE);
     if (FAILED(hr))
         return hr;
 
     msex.dwLength = sizeof(msex);
     GlobalMemoryStatusEx(&msex);
 
-    hr = add_ull_as_bstr_property(node, ullPhysicalMemory, msex.ullTotalPhys);
+    hr = add_ull_as_bstr_property(node, L"ullPhysicalMemory", msex.ullTotalPhys);
     if (FAILED(hr))
         return hr;
 
-    hr = add_ull_as_bstr_property(node, ullUsedPageFile, msex.ullTotalPageFile - msex.ullAvailPageFile);
+    hr = add_ull_as_bstr_property(node, L"ullUsedPageFile", msex.ullTotalPageFile - msex.ullAvailPageFile);
     if (FAILED(hr))
         return hr;
 
-    hr = add_ull_as_bstr_property(node, ullAvailPageFile, msex.ullAvailPageFile);
+    hr = add_ull_as_bstr_property(node, L"ullAvailPageFile", msex.ullAvailPageFile);
     if (FAILED(hr))
         return hr;
 
-    hr = add_bool_property(node, bNetMeetingRunning, is_netmeeting_running());
+    hr = add_bool_property(node, L"bNetMeetingRunning", is_netmeeting_running());
     if (FAILED(hr))
         return hr;
 
     info.dwOSVersionInfoSize = sizeof(info);
     GetVersionExW(&info);
 
-    hr = add_ui4_property(node, dwOSMajorVersion, info.dwMajorVersion);
+    hr = add_ui4_property(node, L"dwOSMajorVersion", info.dwMajorVersion);
     if (FAILED(hr))
         return hr;
 
-    hr = add_ui4_property(node, dwOSMinorVersion, info.dwMinorVersion);
+    hr = add_ui4_property(node, L"dwOSMinorVersion", info.dwMinorVersion);
     if (FAILED(hr))
         return hr;
 
-    hr = add_ui4_property(node, dwOSBuildNumber, info.dwBuildNumber);
+    hr = add_ui4_property(node, L"dwOSBuildNumber", info.dwBuildNumber);
     if (FAILED(hr))
         return hr;
 
-    hr = add_ui4_property(node, dwOSPlatformID, info.dwPlatformId);
+    hr = add_ui4_property(node, L"dwOSPlatformID", info.dwPlatformId);
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szCSDVersion, info.szCSDVersion);
+    hr = add_bstr_property(node, L"szCSDVersion", info.szCSDVersion);
     if (FAILED(hr))
         return hr;
 
     /* FIXME: Roundoff should not be done with truncated division. */
-    swprintf(print_buf, physmem_fmtW,
-              (DWORD)(msex.ullTotalPhys / (1024 * 1024)));
-    hr = add_bstr_property(node, szPhysicalMemoryEnglish, print_buf);
+    swprintf(print_buf, ARRAY_SIZE(print_buf), L"%I64uMB RAM", msex.ullTotalPhys / (1024 * 1024));
+    hr = add_bstr_property(node, L"szPhysicalMemoryEnglish", print_buf);
     if (FAILED(hr))
         return hr;
 
@@ -818,21 +700,21 @@ static HRESULT build_systeminfo_tree(IDxDiagContainerImpl_Container *node)
     args[0] = usedpage_mb;
     args[1] = availpage_mb;
     FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY, localized_pagefile_fmt,
-                   0, 0, print_buf, ARRAY_SIZE(print_buf), (__ms_va_list*)args);
+                   0, 0, print_buf, ARRAY_SIZE(print_buf), (va_list *)args);
 
-    hr = add_bstr_property(node, szPageFileLocalized, print_buf);
+    hr = add_bstr_property(node, L"szPageFileLocalized", print_buf);
     if (FAILED(hr))
         return hr;
 
-    swprintf(print_buf, pagefile_fmtW, usedpage_mb, availpage_mb);
+    swprintf(print_buf, ARRAY_SIZE(print_buf), L"%uMB used, %uMB available", usedpage_mb, availpage_mb);
 
-    hr = add_bstr_property(node, szPageFileEnglish, print_buf);
+    hr = add_bstr_property(node, L"szPageFileEnglish", print_buf);
     if (FAILED(hr))
         return hr;
 
     GetWindowsDirectoryW(buffer, MAX_PATH);
 
-    hr = add_bstr_property(node, szWindowsDir, buffer);
+    hr = add_bstr_property(node, L"szWindowsDir", buffer);
     if (FAILED(hr))
         return hr;
 
@@ -840,23 +722,23 @@ static HRESULT build_systeminfo_tree(IDxDiagContainerImpl_Container *node)
     if (!GetComputerNameW(computer_name, &count))
         return E_FAIL;
 
-    hr = add_bstr_property(node, szMachineNameLocalized, computer_name);
+    hr = add_bstr_property(node, L"szMachineNameLocalized", computer_name);
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szMachineNameEnglish, computer_name);
+    hr = add_bstr_property(node, L"szMachineNameEnglish", computer_name);
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szSystemManufacturerEnglish, szEmpty);
+    hr = add_bstr_property(node, L"szSystemManufacturerEnglish", L"");
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szSystemModelEnglish, szEmpty);
+    hr = add_bstr_property(node, L"szSystemModelEnglish", L"");
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szBIOSEnglish, szEmpty);
+    hr = add_bstr_property(node, L"szBIOSEnglish", L"");
     if (FAILED(hr))
         return hr;
 
@@ -864,11 +746,11 @@ static HRESULT build_systeminfo_tree(IDxDiagContainerImpl_Container *node)
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szSetupParamEnglish, notpresentW);
+    hr = add_bstr_property(node, L"szSetupParamEnglish", L"Not present");
     if (FAILED(hr))
         return hr;
 
-    hr = add_bstr_property(node, szDxDiagVersion, szEmpty);
+    hr = add_bstr_property(node, L"szDxDiagVersion", L"");
     if (FAILED(hr))
         return hr;
 
@@ -913,7 +795,7 @@ static BOOL get_texture_memory(GUID *adapter, DWORD *available_mem)
     if (SUCCEEDED(hr))
     {
         dd_caps.dwCaps = DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY;
-        dd_caps.dwCaps2 = dd_caps.dwCaps3 = dd_caps.u1.dwCaps4 = 0;
+        dd_caps.dwCaps2 = dd_caps.dwCaps3 = dd_caps.dwCaps4 = 0;
         hr = IDirectDraw7_GetAvailableVidMem(pDirectDraw, &dd_caps, available_mem, NULL);
         IDirectDraw7_Release(pDirectDraw);
         if (SUCCEEDED(hr))
@@ -926,13 +808,6 @@ static BOOL get_texture_memory(GUID *adapter, DWORD *available_mem)
 static const WCHAR *vendor_id_to_manufacturer_string(DWORD vendor_id)
 {
     unsigned int i;
-
-    static const WCHAR atiW[] = {'A','T','I',' ','T','e','c','h','n','o','l','o','g','i','e','s',' ','I','n','c','.',0};
-    static const WCHAR nvidiaW[] = {'N','V','I','D','I','A',0};
-    static const WCHAR intelW[] = {'I','n','t','e','l',' ','C','o','r','p','o','r','a','t','i','o','n',0};
-    static const WCHAR vmwareW[] = {'V','M','w','a','r','e',0};
-    static const WCHAR redhatW[] = {'R','e','d',' ','H','a','t',0};
-    static const WCHAR unknownW[] = {'U','n','k','n','o','w','n',0};
     static const struct
     {
         DWORD id;
@@ -940,11 +815,11 @@ static const WCHAR *vendor_id_to_manufacturer_string(DWORD vendor_id)
     }
     vendors[] =
     {
-        {0x1002, atiW},
-        {0x10de, nvidiaW},
-        {0x15ad, vmwareW},
-        {0x1af4, redhatW},
-        {0x8086, intelW},
+        {0x1002, L"ATI Technologies Inc."},
+        {0x10de, L"NVIDIA"},
+        {0x15ad, L"VMware"},
+        {0x1af4, L"Red Hat"},
+        {0x8086, L"Intel Corporation"},
     };
 
     for (i = 0; i < ARRAY_SIZE(vendors); ++i)
@@ -953,9 +828,9 @@ static const WCHAR *vendor_id_to_manufacturer_string(DWORD vendor_id)
             return vendors[i].name;
     }
 
-    FIXME("Unknown PCI vendor ID 0x%04x.\n", vendor_id);
+    FIXME("Unknown PCI vendor ID 0x%04lx.\n", vendor_id);
 
-    return unknownW;
+    return L"Unknown";
 }
 
 static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node)
@@ -973,32 +848,13 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
     count = IDirect3D9_GetAdapterCount(pDirect3D9);
     for (index = 0; index < count; index++)
     {
-        static const WCHAR adapterid_fmtW[] = {'%','u',0};
-        static const WCHAR driverversion_fmtW[] = {'%','u','.','%','u','.','%','0','4','u','.','%','0','4','u',0};
-        static const WCHAR id_fmtW[] = {'0','x','%','0','4','x',0};
-        static const WCHAR subsysid_fmtW[] = {'0','x','%','0','8','x',0};
-        static const WCHAR mem_fmt[] = {'%','.','1','f',' ','M','B',0};
-        static const WCHAR b3DAccelerationExists[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','x','i','s','t','s',0};
-        static const WCHAR b3DAccelerationEnabled[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
-        static const WCHAR bDDAccelerationEnabled[] = {'b','D','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
-        static const WCHAR bNoHardware[] = {'b','N','o','H','a','r','d','w','a','r','e',0};
-        static const WCHAR mode_fmtW[] = {'%','d',' ','x',' ','%','d',' ','(','%','d',' ','b','i','t',')',' ','(','%','d','H','z',')',0};
-        static const WCHAR gernericPNPMonitorW[] = {'G','e','n','e','r','i','c',' ','P','n','P',' ','M','o','n','i','t','o','r',0};
-        static const WCHAR failedToGetParameterW[] = {'F','a','i','l','e','d',' ','t','o',' ','g','e','t',' ','p','a','r','a','m','e','t','e','r',0};
-        static const WCHAR driverAttributesW[] = {'F','i','n','a','l',' ','R','e','t','a','i','l',0};
-        static const WCHAR englishW[] = {'E','n','g','l','i','s','h',0};
-        static const WCHAR driverDateEnglishW[] = {'1','/','1','/','2','0','1','6',' ','1','0',':','0','0',':','0','0',0};
-        static const WCHAR driverDateLocalW[] = {'1','/','1','/','2','0','1','6',' ','1','0',':','0','0',':','0','0',' ','A','M',0};
-        static const WCHAR naW[] = {'n','/','a',0};
-        static const WCHAR ddi11W[] = {'1','1',0};
-
         D3DADAPTER_IDENTIFIER9 adapter_info;
         D3DDISPLAYMODE adapter_mode;
         D3DCAPS9 device_caps;
         DWORD available_mem = 0;
         BOOL hardware_accel;
 
-        swprintf(buffer, adapterid_fmtW, index);
+        swprintf(buffer, ARRAY_SIZE(buffer), L"%u", index);
         display_adapter = allocate_information_node(buffer);
         if (!display_adapter)
         {
@@ -1021,52 +877,53 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
             MultiByteToWideChar(CP_ACP, 0, adapter_info.DeviceName, -1, devicenameW,
                                 ARRAY_SIZE(devicenameW));
 
-            hr = add_bstr_property(display_adapter, szDriverName, driverW);
+            hr = add_bstr_property(display_adapter, L"szDriverName", driverW);
             if (FAILED(hr))
                 goto cleanup;
 
-            hr = add_bstr_property(display_adapter, szDescription, descriptionW);
+            hr = add_bstr_property(display_adapter, L"szDescription", descriptionW);
             if (FAILED(hr))
                 goto cleanup;
 
-            hr = add_bstr_property(display_adapter, szDeviceName, devicenameW);
+            hr = add_bstr_property(display_adapter, L"szDeviceName", devicenameW);
             if (FAILED(hr))
                 goto cleanup;
 
-            swprintf(buffer, driverversion_fmtW,
-                      HIWORD(adapter_info.DriverVersion.u.HighPart), LOWORD(adapter_info.DriverVersion.u.HighPart),
-                      HIWORD(adapter_info.DriverVersion.u.LowPart), LOWORD(adapter_info.DriverVersion.u.LowPart));
+            swprintf(buffer, ARRAY_SIZE(buffer), L"%u.%u.%04u.%04u",
+                    HIWORD(adapter_info.DriverVersion.HighPart), LOWORD(adapter_info.DriverVersion.HighPart),
+                    HIWORD(adapter_info.DriverVersion.LowPart), LOWORD(adapter_info.DriverVersion.LowPart));
 
-            hr = add_bstr_property(display_adapter, szDriverVersion, buffer);
+            hr = add_bstr_property(display_adapter, L"szDriverVersion", buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            swprintf(buffer, id_fmtW, adapter_info.VendorId);
-            hr = add_bstr_property(display_adapter, szVendorId, buffer);
+            swprintf(buffer, ARRAY_SIZE(buffer), L"0x%04x", adapter_info.VendorId);
+            hr = add_bstr_property(display_adapter, L"szVendorId", buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            swprintf(buffer, id_fmtW, adapter_info.DeviceId);
-            hr = add_bstr_property(display_adapter, szDeviceId, buffer);
+            swprintf(buffer, ARRAY_SIZE(buffer), L"0x%04x", adapter_info.DeviceId);
+            hr = add_bstr_property(display_adapter, L"szDeviceId", buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            swprintf(buffer, subsysid_fmtW, adapter_info.SubSysId);
-            hr = add_bstr_property(display_adapter, szSubSysId, buffer);
+            swprintf(buffer, ARRAY_SIZE(buffer), L"0x%08x", adapter_info.SubSysId);
+            hr = add_bstr_property(display_adapter, L"szSubSysId", buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            swprintf(buffer, id_fmtW, adapter_info.Revision);
-            hr = add_bstr_property(display_adapter, szRevisionId, buffer);
+            swprintf(buffer, ARRAY_SIZE(buffer), L"0x%04x", adapter_info.Revision);
+            hr = add_bstr_property(display_adapter, L"szRevisionId", buffer);
             if (FAILED(hr))
                 goto cleanup;
 
             StringFromGUID2(&adapter_info.DeviceIdentifier, buffer, 39);
-            hr = add_bstr_property(display_adapter, szDeviceIdentifier, buffer);
+            hr = add_bstr_property(display_adapter, L"szDeviceIdentifier", buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            hr = add_bstr_property(display_adapter, szManufacturer, vendor_id_to_manufacturer_string(adapter_info.VendorId));
+            hr = add_bstr_property(display_adapter, L"szManufacturer",
+                    vendor_id_to_manufacturer_string(adapter_info.VendorId));
             if (FAILED(hr))
                 goto cleanup;
         }
@@ -1074,179 +931,192 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
         hr = IDirect3D9_GetAdapterDisplayMode(pDirect3D9, index, &adapter_mode);
         if (SUCCEEDED(hr))
         {
-            hr = add_ui4_property(display_adapter, dwWidth, adapter_mode.Width);
+            hr = add_ui4_property(display_adapter, L"dwWidth", adapter_mode.Width);
             if (FAILED(hr))
                 goto cleanup;
 
-            hr = add_ui4_property(display_adapter, dwHeight, adapter_mode.Height);
+            hr = add_ui4_property(display_adapter, L"dwHeight", adapter_mode.Height);
             if (FAILED(hr))
                 goto cleanup;
 
-            hr = add_ui4_property(display_adapter, dwRefreshRate, adapter_mode.RefreshRate);
+            hr = add_ui4_property(display_adapter, L"dwRefreshRate", adapter_mode.RefreshRate);
             if (FAILED(hr))
                 goto cleanup;
 
-            hr = add_ui4_property(display_adapter, dwBpp, depth_for_pixelformat(adapter_mode.Format));
+            hr = add_ui4_property(display_adapter, L"dwBpp", depth_for_pixelformat(adapter_mode.Format));
             if (FAILED(hr))
                 goto cleanup;
 
-            swprintf(buffer, mode_fmtW, adapter_mode.Width, adapter_mode.Height,
-                      depth_for_pixelformat(adapter_mode.Format), adapter_mode.RefreshRate);
+            swprintf(buffer, ARRAY_SIZE(buffer), L"%d x %d (%d bit) (%dHz)", adapter_mode.Width,
+                    adapter_mode.Height, depth_for_pixelformat(adapter_mode.Format),
+                    adapter_mode.RefreshRate);
 
-            hr = add_bstr_property(display_adapter, szDisplayModeLocalized, buffer);
+            hr = add_bstr_property(display_adapter, L"szDisplayModeLocalized", buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            hr = add_bstr_property(display_adapter, szDisplayModeEnglish, buffer);
+            hr = add_bstr_property(display_adapter, L"szDisplayModeEnglish", buffer);
             if (FAILED(hr))
                 goto cleanup;
         }
 
-        hr = add_bstr_property(display_adapter, szKeyDeviceKey, szEmpty);
+        hr = add_bstr_property(display_adapter, L"szKeyDeviceKey", L"");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szKeyDeviceID, szEmpty);
+        hr = add_bstr_property(display_adapter, L"szKeyDeviceID", L"");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szChipType, szEmpty);
+        hr = add_bstr_property(display_adapter, L"szChipType", L"");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDACType, szEmpty);
+        hr = add_bstr_property(display_adapter, L"szDACType", L"");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szRevision, szEmpty);
+        hr = add_bstr_property(display_adapter, L"szRevision", L"");
         if (FAILED(hr))
             goto cleanup;
 
         if (!get_texture_memory(&adapter_info.DeviceIdentifier, &available_mem))
             WARN("get_texture_memory helper failed\n");
 
-        swprintf(buffer, mem_fmt, available_mem / 1000000.0f);
+        swprintf(buffer, ARRAY_SIZE(buffer), L"%.1f MB", available_mem / 1000000.0f);
 
-        hr = add_bstr_property(display_adapter, szDisplayMemoryLocalized, buffer);
+        hr = add_bstr_property(display_adapter, L"szDisplayMemoryLocalized", buffer);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDisplayMemoryEnglish, buffer);
+        hr = add_bstr_property(display_adapter, L"szDisplayMemoryEnglish", buffer);
         if (FAILED(hr))
             goto cleanup;
 
         hr = IDirect3D9_GetDeviceCaps(pDirect3D9, index, D3DDEVTYPE_HAL, &device_caps);
         hardware_accel = SUCCEEDED(hr);
 
-        hr = add_bool_property(display_adapter, b3DAccelerationEnabled, hardware_accel);
+        hr = add_bool_property(display_adapter, L"b3DAccelerationEnabled", hardware_accel);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, b3DAccelerationExists, hardware_accel);
+        hr = add_bool_property(display_adapter, L"b3DAccelerationExists", hardware_accel);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, bDDAccelerationEnabled, hardware_accel);
+        hr = add_bool_property(display_adapter, L"bAGPEnabled", hardware_accel);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, bNoHardware, FALSE);
+        hr = add_bool_property(display_adapter, L"bAGPExistenceValid", hardware_accel);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, bCanRenderWindow, TRUE);
+        hr = add_bool_property(display_adapter, L"bAGPExists", hardware_accel);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szMonitorName, gernericPNPMonitorW);
+        hr = add_bool_property(display_adapter, L"bDDAccelerationEnabled", hardware_accel);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szMonitorMaxRes, failedToGetParameterW);
+        hr = add_bool_property(display_adapter, L"bNoHardware", FALSE);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDriverAttributes, driverAttributesW);
+        hr = add_bool_property(display_adapter, L"bCanRenderWindow", TRUE);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDriverLanguageEnglish, englishW);
+        hr = add_bstr_property(display_adapter, L"szMonitorName", L"Generic PnP Monitor");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDriverLanguageLocalized, englishW);
+        hr = add_bstr_property(display_adapter, L"szMonitorMaxRes", L"Failed to get parameter");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDriverDateEnglish, driverDateEnglishW);
+        hr = add_bstr_property(display_adapter, L"szDriverAttributes", L"Final Retail");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDriverDateLocalized, driverDateLocalW);
+        hr = add_bstr_property(display_adapter, L"szDriverLanguageEnglish", L"English");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_i4_property(display_adapter, lDriverSize, 10 * 1024 * 1024);
+        hr = add_bstr_property(display_adapter, L"szDriverLanguageLocalized", L"English");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szMiniVdd, naW);
+        hr = add_bstr_property(display_adapter, L"szDriverDateEnglish", L"1/1/2016 10:00:00");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szMiniVddDateLocalized, naW);
+        hr = add_bstr_property(display_adapter, L"szDriverDateLocalized", L"1/1/2016 10:00:00 AM");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szMiniVddDateEnglish, naW);
+        hr = add_i4_property(display_adapter, L"lDriverSize", 10 * 1024 * 1024);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_i4_property(display_adapter, lMiniVddSize, 0);
+        hr = add_bstr_property(display_adapter, L"szMiniVdd", L"n/a");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szVdd, naW);
+        hr = add_bstr_property(display_adapter, L"szMiniVddDateLocalized", L"n/a");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, bDriverBeta, FALSE);
+        hr = add_bstr_property(display_adapter, L"szMiniVddDateEnglish", L"n/a");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, bDriverDebug, FALSE);
+        hr = add_i4_property(display_adapter, L"lMiniVddSize", 0);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, bDriverSigned, TRUE);
+        hr = add_bstr_property(display_adapter, L"szVdd", L"n/a");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(display_adapter, bDriverSignedValid, TRUE);
+        hr = add_bool_property(display_adapter, L"bDriverBeta", FALSE);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDriverSignDate, naW);
+        hr = add_bool_property(display_adapter, L"bDriverDebug", FALSE);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_ui4_property(display_adapter, dwDDIVersion, 11);
+        hr = add_bool_property(display_adapter, L"bDriverSigned", TRUE);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDDIVersionEnglish, ddi11W);
+        hr = add_bool_property(display_adapter, L"bDriverSignedValid", TRUE);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDDIVersionLocalized, ddi11W);
+        hr = add_bstr_property(display_adapter, L"szDriverSignDate", L"n/a");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_ui4_property(display_adapter, iAdapter, index);
+        hr = add_ui4_property(display_adapter, L"dwDDIVersion", 11);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_ui4_property(display_adapter, dwWHQLLevel, 0);
+        hr = add_bstr_property(display_adapter, L"szDDIVersionEnglish", L"11");
+        if (FAILED(hr))
+            goto cleanup;
+
+        hr = add_bstr_property(display_adapter, L"szDDIVersionLocalized", L"11");
+        if (FAILED(hr))
+            goto cleanup;
+
+        hr = add_ui4_property(display_adapter, L"iAdapter", index);
+        if (FAILED(hr))
+            goto cleanup;
+
+        hr = add_ui4_property(display_adapter, L"dwWHQLLevel", 0);
         if (FAILED(hr))
             goto cleanup;
     }
@@ -1259,11 +1129,12 @@ cleanup:
 
 static HRESULT fill_display_information_fallback(IDxDiagContainerImpl_Container *node)
 {
-    static const WCHAR szAdapterID[] = {'0',0};
-    static const WCHAR *empty_properties[] = {szDeviceIdentifier, szVendorId, szDeviceId,
-                                              szKeyDeviceKey, szKeyDeviceID, szDriverName,
-                                              szDriverVersion, szSubSysId, szRevisionId,
-                                              szManufacturer, szChipType, szDACType, szRevision};
+    static const WCHAR *empty_properties[] =
+    {
+        L"szDeviceIdentifier", L"szVendorId", L"szDeviceId", L"szKeyDeviceKey",
+        L"szKeyDeviceID", L"szDriverName", L"szDriverVersion", L"szSubSysId",
+        L"szRevisionId", L"szManufacturer", L"szChipType", L"szDACType", L"szRevision"
+    };
 
     IDxDiagContainerImpl_Container *display_adapter;
     HRESULT hr;
@@ -1274,7 +1145,7 @@ static HRESULT fill_display_information_fallback(IDxDiagContainerImpl_Container 
     DWORD tmp;
     WCHAR buffer[256];
 
-    display_adapter = allocate_information_node(szAdapterID);
+    display_adapter = allocate_information_node(L"0");
     if (!display_adapter)
         return E_OUTOFMEMORY;
 
@@ -1283,11 +1154,11 @@ static HRESULT fill_display_information_fallback(IDxDiagContainerImpl_Container 
     disp_dev.cb = sizeof(disp_dev);
     if (EnumDisplayDevicesW( NULL, 0, &disp_dev, 0 ))
     {
-        hr = add_bstr_property(display_adapter, szDeviceName, disp_dev.DeviceName);
+        hr = add_bstr_property(display_adapter, L"szDeviceName", disp_dev.DeviceName);
         if (FAILED(hr))
             return hr;
 
-        hr = add_bstr_property(display_adapter, szDescription, disp_dev.DeviceString);
+        hr = add_bstr_property(display_adapter, L"szDescription", disp_dev.DeviceString);
         if (FAILED(hr))
             return hr;
     }
@@ -1298,19 +1169,17 @@ static HRESULT fill_display_information_fallback(IDxDiagContainerImpl_Container 
         return S_OK;
 
     dd_caps.dwCaps = DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY;
-    dd_caps.dwCaps2 = dd_caps.dwCaps3 = dd_caps.u1.dwCaps4 = 0;
+    dd_caps.dwCaps2 = dd_caps.dwCaps3 = dd_caps.dwCaps4 = 0;
     hr = IDirectDraw7_GetAvailableVidMem(pDirectDraw, &dd_caps, &tmp, NULL);
     if (SUCCEEDED(hr))
     {
-        static const WCHAR mem_fmt[] = {'%','.','1','f',' ','M','B',0};
+        swprintf(buffer, ARRAY_SIZE(buffer), L"%.1f MB", tmp / 1000000.0f);
 
-        swprintf(buffer, mem_fmt, tmp / 1000000.0f);
-
-        hr = add_bstr_property(display_adapter, szDisplayMemoryLocalized, buffer);
+        hr = add_bstr_property(display_adapter, L"szDisplayMemoryLocalized", buffer);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(display_adapter, szDisplayMemoryEnglish, buffer);
+        hr = add_bstr_property(display_adapter, L"szDisplayMemoryEnglish", buffer);
         if (FAILED(hr))
             goto cleanup;
     }
@@ -1321,33 +1190,34 @@ static HRESULT fill_display_information_fallback(IDxDiagContainerImpl_Container 
     {
         if (surface_descr.dwFlags & DDSD_WIDTH)
         {
-            hr = add_ui4_property(display_adapter, dwWidth, surface_descr.dwWidth);
+            hr = add_ui4_property(display_adapter, L"dwWidth", surface_descr.dwWidth);
             if (FAILED(hr))
                 goto cleanup;
         }
 
         if (surface_descr.dwFlags & DDSD_HEIGHT)
         {
-            hr = add_ui4_property(display_adapter, dwHeight, surface_descr.dwHeight);
+            hr = add_ui4_property(display_adapter, L"dwHeight", surface_descr.dwHeight);
             if (FAILED(hr))
                 goto cleanup;
         }
 
         if (surface_descr.dwFlags & DDSD_PIXELFORMAT)
         {
-            hr = add_ui4_property(display_adapter, dwBpp, surface_descr.u4.ddpfPixelFormat.u1.dwRGBBitCount);
+            hr = add_ui4_property(display_adapter, L"dwBpp",
+                    surface_descr.ddpfPixelFormat.dwRGBBitCount);
             if (FAILED(hr))
                 goto cleanup;
         }
     }
 
-    hr = add_ui4_property(display_adapter, dwRefreshRate, 60);
+    hr = add_ui4_property(display_adapter, L"dwRefreshRate", 60);
     if (FAILED(hr))
         goto cleanup;
 
     for (tmp = 0; tmp < ARRAY_SIZE(empty_properties); tmp++)
     {
-        hr = add_bstr_property(display_adapter, empty_properties[tmp], szEmpty);
+        hr = add_bstr_property(display_adapter, empty_properties[tmp], L"");
         if (FAILED(hr))
             goto cleanup;
     }
@@ -1373,22 +1243,15 @@ static HRESULT build_displaydevices_tree(IDxDiagContainerImpl_Container *node)
 struct enum_context
 {
     IDxDiagContainerImpl_Container *cont;
+    IMMDeviceCollection *devices;
     HRESULT hr;
     int index;
 };
 
-static const WCHAR szGUIDFmt[] =
-{
-    '%','0','8','x','-','%','0','4','x','-','%','0','4','x','-','%','0',
-    '2','x','%','0','2','x','-','%','0','2','x','%','0','2','x','%','0','2',
-    'x','%','0','2','x','%','0','2','x','%','0','2','x',0
-};
-
 static LPWSTR guid_to_string(LPWSTR lpwstr, REFGUID lpcguid)
 {
-    wsprintfW(lpwstr, szGUIDFmt, lpcguid->Data1, lpcguid->Data2,
-        lpcguid->Data3, lpcguid->Data4[0], lpcguid->Data4[1],
-        lpcguid->Data4[2], lpcguid->Data4[3], lpcguid->Data4[4],
+    wsprintfW(lpwstr, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", lpcguid->Data1, lpcguid->Data2,
+        lpcguid->Data3, lpcguid->Data4[0], lpcguid->Data4[1], lpcguid->Data4[2], lpcguid->Data4[3], lpcguid->Data4[4],
         lpcguid->Data4[5], lpcguid->Data4[6], lpcguid->Data4[7]);
 
     return lpwstr;
@@ -1396,19 +1259,16 @@ static LPWSTR guid_to_string(LPWSTR lpwstr, REFGUID lpcguid)
 
 BOOL CALLBACK dsound_enum(LPGUID guid, LPCWSTR desc, LPCWSTR module, LPVOID context)
 {
-    static const WCHAR deviceid_fmtW[] = {'%','u',0};
-    static const WCHAR szGuidDeviceID[] = {'s','z','G','u','i','d','D','e','v','i','c','e','I','D',0};
-    static const WCHAR szDriverPath[] = {'s','z','D','r','i','v','e','r','P','a','t','h',0};
-
     struct enum_context *enum_ctx = context;
     IDxDiagContainerImpl_Container *device;
     WCHAR buffer[256];
     const WCHAR *p, *name;
+    UINT32 i, count;
 
     /* the default device is enumerated twice, one time without GUID */
     if (!guid) return TRUE;
 
-    _snwprintf(buffer, sizeof(buffer)/sizeof(WCHAR), deviceid_fmtW, enum_ctx->index);
+    swprintf(buffer, ARRAY_SIZE(buffer), L"%u", enum_ctx->index);
     device = allocate_information_node(buffer);
     if (!device)
     {
@@ -1419,15 +1279,15 @@ BOOL CALLBACK dsound_enum(LPGUID guid, LPCWSTR desc, LPCWSTR module, LPVOID cont
     add_subcontainer(enum_ctx->cont, device);
 
     guid_to_string(buffer, guid);
-    enum_ctx->hr = add_bstr_property(device, szGuidDeviceID, buffer);
+    enum_ctx->hr = add_bstr_property(device, L"szGuidDeviceID", buffer);
     if (FAILED(enum_ctx->hr))
         return FALSE;
 
-    enum_ctx->hr = add_bstr_property(device, szDescription, desc);
+    enum_ctx->hr = add_bstr_property(device, L"szDescription", desc);
     if (FAILED(enum_ctx->hr))
         return FALSE;
 
-    enum_ctx->hr = add_bstr_property(device, szDriverPath, module);
+    enum_ctx->hr = add_bstr_property(device, L"szDriverPath", module);
     if (FAILED(enum_ctx->hr))
         return FALSE;
 
@@ -1435,9 +1295,65 @@ BOOL CALLBACK dsound_enum(LPGUID guid, LPCWSTR desc, LPCWSTR module, LPVOID cont
     if ((p = wcsrchr(name, '\\'))) name = p + 1;
     if ((p = wcsrchr(name, '/'))) name = p + 1;
 
-    enum_ctx->hr = add_bstr_property(device, szDriverName, name);
+    enum_ctx->hr = add_bstr_property(device, L"szDriverName", name);
     if (FAILED(enum_ctx->hr))
         return FALSE;
+
+    if (enum_ctx->devices && SUCCEEDED(IMMDeviceCollection_GetCount(enum_ctx->devices, &count)))
+    {
+        static const PROPERTYKEY devicepath_key =
+        {
+            {0xb3f8fa53, 0x0004, 0x438e, {0x90, 0x03, 0x51, 0xa4, 0x6e, 0x13, 0x9b, 0xfc}}, 2
+        };
+        IPropertyStore *ps;
+        WCHAR *start, *end;
+        IMMDevice *mmdev;
+        PROPVARIANT pv;
+        HRESULT hr;
+
+        for (i = 0; i < count; ++i)
+        {
+            mmdev = NULL;
+            ps = NULL;
+            hr = IMMDeviceCollection_Item(enum_ctx->devices, i, &mmdev);
+            if (SUCCEEDED(hr))
+                hr = IMMDevice_OpenPropertyStore(mmdev, STGM_READ, &ps);
+            PropVariantInit(&pv);
+            if (SUCCEEDED(hr))
+                hr = IPropertyStore_GetValue(ps, (const PROPERTYKEY*)&PKEY_AudioEndpoint_GUID, &pv);
+            if (SUCCEEDED(hr))
+            {
+                StringFromGUID2(guid, buffer, ARRAY_SIZE(buffer));
+                hr = pv.vt == VT_LPWSTR && !wcsicmp(buffer, pv.pwszVal) ? S_OK : E_FAIL;
+                PropVariantClear(&pv);
+            }
+            PropVariantInit(&pv);
+            if (SUCCEEDED(hr))
+                hr = IPropertyStore_GetValue(ps, &devicepath_key, &pv);
+            if (SUCCEEDED(hr) && pv.vt == VT_LPWSTR)
+            {
+                if ((start = wcsstr(pv.pwszVal, L"}.")))
+                    start += 2;
+                else
+                    start = pv.pwszVal;
+                if (wcsnicmp(start, L"ROOT", 4) && (end = wcschr(start, '\\')) && (end = wcschr(end + 1, '\\'))
+                        && end - start < ARRAY_SIZE(buffer))
+                {
+                    memcpy(buffer, start, (end - start) * sizeof(WCHAR));
+                    buffer[end - start] = 0;
+                    start = buffer;
+                }
+                add_bstr_property(device, L"szHardwareID", start);
+                PropVariantClear(&pv);
+            }
+            if (ps)
+                IPropertyStore_Release(ps);
+            if (mmdev)
+                IMMDevice_Release(mmdev);
+            if (SUCCEEDED(hr))
+                break;
+        }
+    }
 
     enum_ctx->index++;
     return TRUE;
@@ -1445,13 +1361,11 @@ BOOL CALLBACK dsound_enum(LPGUID guid, LPCWSTR desc, LPCWSTR module, LPVOID cont
 
 static HRESULT build_directsound_tree(IDxDiagContainerImpl_Container *node)
 {
-    static const WCHAR DxDiag_SoundDevices[] = {'D','x','D','i','a','g','_','S','o','u','n','d','D','e','v','i','c','e','s',0};
-    static const WCHAR DxDiag_SoundCaptureDevices[] = {'D','x','D','i','a','g','_','S','o','u','n','d','C','a','p','t','u','r','e','D','e','v','i','c','e','s',0};
-
     struct enum_context enum_ctx;
     IDxDiagContainerImpl_Container *cont;
+    IMMDeviceEnumerator *mmdevenum;
 
-    cont = allocate_information_node(DxDiag_SoundDevices);
+    cont = allocate_information_node(L"DxDiag_SoundDevices");
     if (!cont)
         return E_OUTOFMEMORY;
 
@@ -1461,11 +1375,24 @@ static HRESULT build_directsound_tree(IDxDiagContainerImpl_Container *node)
     enum_ctx.hr = S_OK;
     enum_ctx.index = 0;
 
+    enum_ctx.devices = NULL;
+    if (SUCCEEDED(CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_INPROC_SERVER, &IID_IMMDeviceEnumerator,
+            (void **)&mmdevenum)))
+    {
+        IMMDeviceEnumerator_EnumAudioEndpoints(mmdevenum, eAll, DEVICE_STATE_ACTIVE, &enum_ctx.devices);
+        IMMDeviceEnumerator_Release(mmdevenum);
+    }
+
     DirectSoundEnumerateW(dsound_enum, &enum_ctx);
+    if (enum_ctx.devices)
+    {
+        IMMDeviceCollection_Release(enum_ctx.devices);
+        enum_ctx.devices = NULL;
+    }
     if (FAILED(enum_ctx.hr))
         return enum_ctx.hr;
 
-    cont = allocate_information_node(DxDiag_SoundCaptureDevices);
+    cont = allocate_information_node(L"DxDiag_SoundCaptureDevices");
     if (!cont)
         return E_OUTOFMEMORY;
 
@@ -1504,23 +1431,6 @@ static HRESULT build_systemdevices_tree(IDxDiagContainerImpl_Container *node)
 
 static HRESULT fill_file_description(IDxDiagContainerImpl_Container *node, const WCHAR *szFilePath, const WCHAR *szFileName)
 {
-    static const WCHAR szSlashSep[] = {'\\',0};
-    static const WCHAR szPath[] = {'s','z','P','a','t','h',0};
-    static const WCHAR szName[] = {'s','z','N','a','m','e',0};
-    static const WCHAR szVersion[] = {'s','z','V','e','r','s','i','o','n',0};
-    static const WCHAR szAttributes[] = {'s','z','A','t','t','r','i','b','u','t','e','s',0};
-    static const WCHAR szLanguageEnglish[] = {'s','z','L','a','n','g','u','a','g','e','E','n','g','l','i','s','h',0};
-    static const WCHAR dwFileTimeHigh[] = {'d','w','F','i','l','e','T','i','m','e','H','i','g','h',0};
-    static const WCHAR dwFileTimeLow[] = {'d','w','F','i','l','e','T','i','m','e','L','o','w',0};
-    static const WCHAR bBeta[] = {'b','B','e','t','a',0};
-    static const WCHAR bDebug[] = {'b','D','e','b','u','g',0};
-    static const WCHAR bExists[] = {'b','E','x','i','s','t','s',0};
-
-    /* Values */
-    static const WCHAR szFinal_Retail_v[] = {'F','i','n','a','l',' ','R','e','t','a','i','l',0};
-    static const WCHAR szEnglish_v[] = {'E','n','g','l','i','s','h',0};
-    static const WCHAR szVersionFormat[] = {'%','u','.','%','0','2','u','.','%','0','4','u','.','%','0','4','u',0};
-
     HRESULT hr;
     WCHAR *szFile;
     WCHAR szVersion_v[1024];
@@ -1539,7 +1449,7 @@ static HRESULT fill_file_description(IDxDiagContainerImpl_Container *node, const
         return E_OUTOFMEMORY;
 
     lstrcpyW(szFile, szFilePath);
-    lstrcatW(szFile, szSlashSep);
+    lstrcatW(szFile, L"\\");
     lstrcatW(szFile, szFileName);
 
     retval = GetFileVersionInfoSizeW(szFile, &hdl);
@@ -1553,55 +1463,57 @@ static HRESULT fill_file_description(IDxDiagContainerImpl_Container *node, const
         }
 
         if (GetFileVersionInfoW(szFile, 0, retval, pVersionInfo) &&
-            VerQueryValueW(pVersionInfo, szSlashSep, (void **)&pFileInfo, &uiLength))
+            VerQueryValueW(pVersionInfo, L"\\", (void **)&pFileInfo, &uiLength))
             boolret = TRUE;
     }
 
-    hr = add_bstr_property(node, szPath, szFile);
+    hr = add_bstr_property(node, L"szPath", szFile);
     if (FAILED(hr))
         goto cleanup;
 
-    hr = add_bstr_property(node, szName, szFileName);
+    hr = add_bstr_property(node, L"szName", szFileName);
     if (FAILED(hr))
         goto cleanup;
 
-    hr = add_bool_property(node, bExists, boolret);
+    hr = add_bool_property(node, L"bExists", boolret);
     if (FAILED(hr))
         goto cleanup;
 
     if (boolret)
     {
-        swprintf(szVersion_v, szVersionFormat,
-                  HIWORD(pFileInfo->dwFileVersionMS), LOWORD(pFileInfo->dwFileVersionMS),
-                  HIWORD(pFileInfo->dwFileVersionLS), LOWORD(pFileInfo->dwFileVersionLS));
+        swprintf(szVersion_v, ARRAY_SIZE(szVersion_v), L"%u.%02u.%04u.%04u",
+                HIWORD(pFileInfo->dwFileVersionMS), LOWORD(pFileInfo->dwFileVersionMS),
+                HIWORD(pFileInfo->dwFileVersionLS), LOWORD(pFileInfo->dwFileVersionLS));
 
         TRACE("Found version as (%s)\n", debugstr_w(szVersion_v));
 
-        hr = add_bstr_property(node, szVersion, szVersion_v);
+        hr = add_bstr_property(node, L"szVersion", szVersion_v);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(node, szAttributes, szFinal_Retail_v);
+        hr = add_bstr_property(node, L"szAttributes", L"Final Retail");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bstr_property(node, szLanguageEnglish, szEnglish_v);
+        hr = add_bstr_property(node, L"szLanguageEnglish", L"English");
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_ui4_property(node, dwFileTimeHigh, pFileInfo->dwFileDateMS);
+        hr = add_ui4_property(node, L"dwFileTimeHigh", pFileInfo->dwFileDateMS);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_ui4_property(node, dwFileTimeLow, pFileInfo->dwFileDateLS);
+        hr = add_ui4_property(node, L"dwFileTimeLow", pFileInfo->dwFileDateLS);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(node, bBeta, ((pFileInfo->dwFileFlags & pFileInfo->dwFileFlagsMask) & VS_FF_PRERELEASE) != 0);
+        hr = add_bool_property(node, L"bBeta",
+                ((pFileInfo->dwFileFlags & pFileInfo->dwFileFlagsMask) & VS_FF_PRERELEASE) != 0);
         if (FAILED(hr))
             goto cleanup;
 
-        hr = add_bool_property(node, bDebug, ((pFileInfo->dwFileFlags & pFileInfo->dwFileFlagsMask) & VS_FF_DEBUG) != 0);
+        hr = add_bool_property(node, L"bDebug",
+                ((pFileInfo->dwFileFlags & pFileInfo->dwFileFlagsMask) & VS_FF_DEBUG) != 0);
         if (FAILED(hr))
             goto cleanup;
     }
@@ -1617,26 +1529,26 @@ static HRESULT build_directxfiles_tree(IDxDiagContainerImpl_Container *node)
 {
     static const WCHAR dlls[][15] =
     {
-        {'d','3','d','8','.','d','l','l',0},
-        {'d','3','d','9','.','d','l','l',0},
-        {'d','d','r','a','w','.','d','l','l',0},
-        {'d','e','v','e','n','u','m','.','d','l','l',0},
-        {'d','i','n','p','u','t','8','.','d','l','l',0},
-        {'d','i','n','p','u','t','.','d','l','l',0},
-        {'d','m','b','a','n','d','.','d','l','l',0},
-        {'d','m','c','o','m','p','o','s','.','d','l','l',0},
-        {'d','m','i','m','e','.','d','l','l',0},
-        {'d','m','l','o','a','d','e','r','.','d','l','l',0},
-        {'d','m','s','c','r','i','p','t','.','d','l','l',0},
-        {'d','m','s','t','y','l','e','.','d','l','l',0},
-        {'d','m','s','y','n','t','h','.','d','l','l',0},
-        {'d','m','u','s','i','c','.','d','l','l',0},
-        {'d','p','l','a','y','x','.','d','l','l',0},
-        {'d','p','n','e','t','.','d','l','l',0},
-        {'d','s','o','u','n','d','.','d','l','l',0},
-        {'d','s','w','a','v','e','.','d','l','l',0},
-        {'d','x','d','i','a','g','n','.','d','l','l',0},
-        {'q','u','a','r','t','z','.','d','l','l',0}
+        L"d3d8.dll",
+        L"d3d9.dll",
+        L"ddraw.dll",
+        L"devenum.dll",
+        L"dinput8.dll",
+        L"dinput.dll",
+        L"dmband.dll",
+        L"dmcompos.dll",
+        L"dmime.dll",
+        L"dmloader.dll",
+        L"dmscript.dll",
+        L"dmstyle.dll",
+        L"dmsynth.dll",
+        L"dmusic.dll",
+        L"dplayx.dll",
+        L"dpnet.dll",
+        L"dsound.dll",
+        L"dswave.dll",
+        L"dxdiagn.dll",
+        L"quartz.dll"
     };
 
     HRESULT hr;
@@ -1647,12 +1559,10 @@ static HRESULT build_directxfiles_tree(IDxDiagContainerImpl_Container *node)
 
     for (i = 0; i < ARRAY_SIZE(dlls); i++)
     {
-        static const WCHAR szFormat[] = {'%','d',0};
-
         WCHAR szFileID[5];
         IDxDiagContainerImpl_Container *file_container;
 
-        swprintf(szFileID, szFormat, i);
+        swprintf(szFileID, ARRAY_SIZE(szFileID), L"%d", i);
 
         file_container = allocate_information_node(szFileID);
         if (!file_container)
@@ -1673,19 +1583,16 @@ static HRESULT build_directxfiles_tree(IDxDiagContainerImpl_Container *node)
 
 static HRESULT read_property_names(IPropertyBag *pPropBag, VARIANT *friendly_name, VARIANT *clsid_name)
 {
-    static const WCHAR wszFriendlyName[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
-    static const WCHAR wszClsidName[] = {'C','L','S','I','D',0};
-
     HRESULT hr;
 
     VariantInit(friendly_name);
     VariantInit(clsid_name);
 
-    hr = IPropertyBag_Read(pPropBag, wszFriendlyName, friendly_name, 0);
+    hr = IPropertyBag_Read(pPropBag, L"FriendlyName", friendly_name, 0);
     if (FAILED(hr))
         return hr;
 
-    hr = IPropertyBag_Read(pPropBag, wszClsidName, clsid_name, 0);
+    hr = IPropertyBag_Read(pPropBag, L"CLSID", clsid_name, 0);
     if (FAILED(hr))
     {
         VariantClear(friendly_name);
@@ -1697,12 +1604,6 @@ static HRESULT read_property_names(IPropertyBag *pPropBag, VARIANT *friendly_nam
 
 static HRESULT fill_filter_data_information(IDxDiagContainerImpl_Container *subcont, BYTE *pData, ULONG cb)
 {
-    static const WCHAR szVersionW[] = {'s','z','V','e','r','s','i','o','n',0};
-    static const WCHAR dwInputs[] = {'d','w','I','n','p','u','t','s',0};
-    static const WCHAR dwOutputs[] = {'d','w','O','u','t','p','u','t','s',0};
-    static const WCHAR dwMeritW[] = {'d','w','M','e','r','i','t',0};
-    static const WCHAR szVersionFormat[] = {'v','%','d',0};
-
     HRESULT hr;
     IFilterMapper2 *pFileMapper = NULL;
     IAMFilterData *pFilterData = NULL;
@@ -1727,37 +1628,37 @@ static HRESULT fill_filter_data_information(IDxDiagContainerImpl_Container *subc
         goto cleanup;
     pRF = ((REGFILTER2**)ppRF)[0];
 
-    swprintf(bufferW, szVersionFormat, pRF->dwVersion);
-    hr = add_bstr_property(subcont, szVersionW, bufferW);
+    swprintf(bufferW, ARRAY_SIZE(bufferW), L"v%d", pRF->dwVersion);
+    hr = add_bstr_property(subcont, L"szVersion", bufferW);
     if (FAILED(hr))
         goto cleanup;
 
     if (pRF->dwVersion == 1)
     {
-        for (j = 0; j < pRF->u.s1.cPins; j++)
-            if (pRF->u.s1.rgPins[j].bOutput)
+        for (j = 0; j < pRF->cPins; j++)
+            if (pRF->rgPins[j].bOutput)
                 dwNOutputs++;
             else
                 dwNInputs++;
     }
     else if (pRF->dwVersion == 2)
     {
-        for (j = 0; j < pRF->u.s2.cPins2; j++)
-            if (pRF->u.s2.rgPins2[j].dwFlags & REG_PINFLAG_B_OUTPUT)
+        for (j = 0; j < pRF->cPins2; j++)
+            if (pRF->rgPins2[j].dwFlags & REG_PINFLAG_B_OUTPUT)
                 dwNOutputs++;
             else
                 dwNInputs++;
     }
 
-    hr = add_ui4_property(subcont, dwInputs, dwNInputs);
+    hr = add_ui4_property(subcont, L"dwInputs", dwNInputs);
     if (FAILED(hr))
         goto cleanup;
 
-    hr = add_ui4_property(subcont, dwOutputs, dwNOutputs);
+    hr = add_ui4_property(subcont, L"dwOutputs", dwNOutputs);
     if (FAILED(hr))
         goto cleanup;
 
-    hr = add_ui4_property(subcont, dwMeritW, pRF->dwMerit);
+    hr = add_ui4_property(subcont, L"dwMerit", pRF->dwMerit);
     if (FAILED(hr))
         goto cleanup;
 
@@ -1772,10 +1673,6 @@ cleanup:
 
 static HRESULT fill_filter_container(IDxDiagContainerImpl_Container *subcont, IMoniker *pMoniker)
 {
-    static const WCHAR szName[] = {'s','z','N','a','m','e',0};
-    static const WCHAR ClsidFilterW[] = {'C','l','s','i','d','F','i','l','t','e','r',0};
-    static const WCHAR wszFilterDataName[] = {'F','i','l','t','e','r','D','a','t','a',0};
-
     HRESULT hr;
     IPropertyBag *pPropFilterBag = NULL;
     BYTE *pData;
@@ -1798,15 +1695,15 @@ static HRESULT fill_filter_container(IDxDiagContainerImpl_Container *subcont, IM
     TRACE("Name = %s\n", debugstr_w(V_BSTR(&friendly_name)));
     TRACE("CLSID = %s\n", debugstr_w(V_BSTR(&clsid_name)));
 
-    hr = add_bstr_property(subcont, szName, V_BSTR(&friendly_name));
+    hr = add_bstr_property(subcont, L"szName", V_BSTR(&friendly_name));
     if (FAILED(hr))
         goto cleanup;
 
-    hr = add_bstr_property(subcont, ClsidFilterW, V_BSTR(&clsid_name));
+    hr = add_bstr_property(subcont, L"ClsidFilter", V_BSTR(&clsid_name));
     if (FAILED(hr))
         goto cleanup;
 
-    hr = IPropertyBag_Read(pPropFilterBag, wszFilterDataName, &v, NULL);
+    hr = IPropertyBag_Read(pPropFilterBag, L"FilterData", &v, NULL);
     if (FAILED(hr))
         goto cleanup;
 
@@ -1831,10 +1728,6 @@ cleanup:
 
 static HRESULT build_directshowfilters_tree(IDxDiagContainerImpl_Container *node)
 {
-    static const WCHAR szCatName[] = {'s','z','C','a','t','N','a','m','e',0};
-    static const WCHAR ClsidCatW[] = {'C','l','s','i','d','C','a','t',0};
-    static const WCHAR szIdFormat[] = {'%','d',0};
-
     HRESULT hr;
     int i = 0;
     ICreateDevEnum *pCreateDevEnum;
@@ -1848,7 +1741,7 @@ static HRESULT build_directshowfilters_tree(IDxDiagContainerImpl_Container *node
         return hr;
 
     hr = ICreateDevEnum_CreateClassEnumerator(pCreateDevEnum, &CLSID_ActiveMovieCategories, &pEmCat, 0);
-    if (FAILED(hr))
+    if (hr != S_OK)
         goto cleanup;
 
     while (IEnumMoniker_Next(pEmCat, 1, &pMCat, NULL) == S_OK)
@@ -1899,7 +1792,7 @@ static HRESULT build_directshowfilters_tree(IDxDiagContainerImpl_Container *node
             WCHAR bufferW[10];
             IDxDiagContainerImpl_Container *subcont;
 
-            swprintf(bufferW, szIdFormat, i);
+            swprintf(bufferW, ARRAY_SIZE(bufferW), L"%d", i);
             subcont = allocate_information_node(bufferW);
             if (!subcont)
             {
@@ -1908,7 +1801,7 @@ static HRESULT build_directshowfilters_tree(IDxDiagContainerImpl_Container *node
                 break;
             }
 
-            hr = add_bstr_property(subcont, szCatName, V_BSTR(&vCatName));
+            hr = add_bstr_property(subcont, L"szCatName", V_BSTR(&vCatName));
             if (FAILED(hr))
             {
                 free_information_tree(subcont);
@@ -1916,7 +1809,7 @@ static HRESULT build_directshowfilters_tree(IDxDiagContainerImpl_Container *node
                 break;
             }
 
-            hr = add_bstr_property(subcont, ClsidCatW, V_BSTR(&vCatClsid));
+            hr = add_bstr_property(subcont, L"ClsidCat", V_BSTR(&vCatClsid));
             if (FAILED(hr))
             {
                 free_information_tree(subcont);
@@ -1960,33 +1853,22 @@ static HRESULT build_logicaldisks_tree(IDxDiagContainerImpl_Container *node)
 
 static HRESULT build_information_tree(IDxDiagContainerImpl_Container **pinfo_root)
 {
-    static const WCHAR DxDiag_SystemInfo[] = {'D','x','D','i','a','g','_','S','y','s','t','e','m','I','n','f','o',0};
-    static const WCHAR DxDiag_DisplayDevices[] = {'D','x','D','i','a','g','_','D','i','s','p','l','a','y','D','e','v','i','c','e','s',0};
-    static const WCHAR DxDiag_DirectSound[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','o','u','n','d',0};
-    static const WCHAR DxDiag_DirectMusic[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','M','u','s','i','c',0};
-    static const WCHAR DxDiag_DirectInput[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','I','n','p','u','t',0};
-    static const WCHAR DxDiag_DirectPlay[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','P','l','a','y',0};
-    static const WCHAR DxDiag_SystemDevices[] = {'D','x','D','i','a','g','_','S','y','s','t','e','m','D','e','v','i','c','e','s',0};
-    static const WCHAR DxDiag_DirectXFiles[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','X','F','i','l','e','s',0};
-    static const WCHAR DxDiag_DirectShowFilters[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','h','o','w','F','i','l','t','e','r','s',0};
-    static const WCHAR DxDiag_LogicalDisks[] = {'D','x','D','i','a','g','_','L','o','g','i','c','a','l','D','i','s','k','s',0};
-
     static const struct
     {
         const WCHAR *name;
         HRESULT (*initfunc)(IDxDiagContainerImpl_Container *);
     } root_children[] =
     {
-        {DxDiag_SystemInfo, build_systeminfo_tree},
-        {DxDiag_DisplayDevices, build_displaydevices_tree},
-        {DxDiag_DirectSound, build_directsound_tree},
-        {DxDiag_DirectMusic, build_directmusic_tree},
-        {DxDiag_DirectInput, build_directinput_tree},
-        {DxDiag_DirectPlay, build_directplay_tree},
-        {DxDiag_SystemDevices, build_systemdevices_tree},
-        {DxDiag_DirectXFiles, build_directxfiles_tree},
-        {DxDiag_DirectShowFilters, build_directshowfilters_tree},
-        {DxDiag_LogicalDisks, build_logicaldisks_tree},
+        {L"DxDiag_SystemInfo", build_systeminfo_tree},
+        {L"DxDiag_DisplayDevices", build_displaydevices_tree},
+        {L"DxDiag_DirectSound", build_directsound_tree},
+        {L"DxDiag_DirectMusic", build_directmusic_tree},
+        {L"DxDiag_DirectInput", build_directinput_tree},
+        {L"DxDiag_DirectPlay", build_directplay_tree},
+        {L"DxDiag_SystemDevices", build_systemdevices_tree},
+        {L"DxDiag_DirectXFiles", build_directxfiles_tree},
+        {L"DxDiag_DirectShowFilters", build_directshowfilters_tree},
+        {L"DxDiag_LogicalDisks", build_logicaldisks_tree},
     };
 
     IDxDiagContainerImpl_Container *info_root;

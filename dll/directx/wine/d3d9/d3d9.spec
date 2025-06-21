@@ -12,3 +12,4 @@
 @ stdcall DebugSetMute()
 @ stdcall Direct3DCreate9(long)
 @ stdcall Direct3DCreate9Ex(long ptr)
+@ stdcall Direct3DCreate9On12(long ptr long)

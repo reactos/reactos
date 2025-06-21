@@ -21,7 +21,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
-#include "devenum_private.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -33,5 +32,3 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION_STR "6.5"
 
 #include "wine/wine_common_ver.rc"
-
-1 WINE_REGISTRY devenum_classes.rgs

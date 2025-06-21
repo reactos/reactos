@@ -21,14 +21,14 @@
 #ifndef __D3DXOF_PRIVATE_INCLUDED__
 #define __D3DXOF_PRIVATE_INCLUDED__
 
+#define COBJMACROS
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
-#include "wtypes.h"
-#include "wingdi.h"
-#include "winuser.h"
 #include "dxfile.h"
+
+#include "wine/debug.h"
 
 #define MAX_NAME_LEN 40
 #define MAX_ARRAY_DIM 4
@@ -160,12 +160,12 @@ typedef struct {
     LONG ref;
 } IDirectXFileSaveObjectImpl;
 
-HRESULT IDirectXFileImpl_Create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+HRESULT IDirectXFileImpl_Create(IUnknown *pUnkOuter, LPVOID *ppObj);
 
-HRESULT parse_header(parse_buffer *buf, BYTE **decomp_buffer_ptr) DECLSPEC_HIDDEN;
-BOOL parse_object(parse_buffer * buf) DECLSPEC_HIDDEN;
-BOOL parse_templates(parse_buffer * buf, BOOL templates_only) DECLSPEC_HIDDEN;
+HRESULT parse_header(parse_buffer *buf, BYTE **decomp_buffer_ptr);
+BOOL parse_object(parse_buffer * buf);
+BOOL parse_templates(parse_buffer * buf, BOOL templates_only);
 
-int mszip_decompress(int inlen, int outlen, char* inbuffer, char* outbuffer) DECLSPEC_HIDDEN;
+int mszip_decompress(int inlen, int outlen, char* inbuffer, char* outbuffer);
 
 #endif /* __D3DXOF_PRIVATE_INCLUDED__ */

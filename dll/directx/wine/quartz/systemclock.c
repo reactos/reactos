@@ -21,349 +21,299 @@
 #include "quartz_private.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include <assert.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
-typedef struct SystemClockAdviseEntry SystemClockAdviseEntry;
-struct SystemClockAdviseEntry {
-  SystemClockAdviseEntry* next;
-  SystemClockAdviseEntry* prev;
+static LONG cookie_counter;
 
-  HANDLE           hEvent;
-  REFERENCE_TIME   rtBaseTime;
-  REFERENCE_TIME   rtIntervalTime;
+struct advise_sink
+{
+    struct list entry;
+    HANDLE handle;
+    REFERENCE_TIME due_time, period;
+    int cookie;
 };
 
-typedef struct SystemClockImpl {
-  IReferenceClock IReferenceClock_iface;
-  LONG ref;
-
-  /** IReferenceClock */
-  HANDLE         adviseThread;
-  DWORD          adviseThreadId;
-  BOOL           adviseThreadActive;
-  REFERENCE_TIME lastRefTime;
-  DWORD	         lastTimeTickCount;
-  CRITICAL_SECTION safe;
-
-  SystemClockAdviseEntry* pSingleShotAdvise;
-  SystemClockAdviseEntry* pPeriodicAdvise;
-} SystemClockImpl;
-
-static inline SystemClockImpl *impl_from_IReferenceClock(IReferenceClock *iface)
+struct system_clock
 {
-    return CONTAINING_RECORD(iface, SystemClockImpl, IReferenceClock_iface);
+    IReferenceClock IReferenceClock_iface;
+    IUnknown IUnknown_inner;
+    IUnknown *outer_unk;
+    LONG refcount;
+
+    LONG thread_created;
+    BOOL thread_stopped;
+    HANDLE thread;
+    REFERENCE_TIME last_time;
+    CRITICAL_SECTION cs;
+    CONDITION_VARIABLE cv;
+
+    struct list sinks;
+};
+
+static REFERENCE_TIME get_current_time(void)
+{
+    return (REFERENCE_TIME)timeGetTime() * 10000;
 }
 
-
-static void QUARTZ_RemoveAviseEntryFromQueue(SystemClockImpl* This, SystemClockAdviseEntry* pEntry) {
-  if (pEntry->prev) pEntry->prev->next = pEntry->next;
-  if (pEntry->next) pEntry->next->prev = pEntry->prev;
-  if (This->pSingleShotAdvise == pEntry) This->pSingleShotAdvise = pEntry->next;
-  if (This->pPeriodicAdvise == pEntry)    This->pPeriodicAdvise = pEntry->next;
+static inline struct system_clock *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, struct system_clock, IUnknown_inner);
 }
 
-static void QUARTZ_InsertAviseEntryFromQueue(SystemClockImpl* This, SystemClockAdviseEntry* pEntry, SystemClockAdviseEntry** pQueue) {
-  SystemClockAdviseEntry* prev_it = NULL;
-  SystemClockAdviseEntry* it = NULL;
-  REFERENCE_TIME bornTime =  pEntry->rtBaseTime + pEntry->rtIntervalTime;
+static HRESULT WINAPI system_clock_inner_QueryInterface(IUnknown *iface, REFIID iid, void **out)
+{
+    struct system_clock *clock = impl_from_IUnknown(iface);
+    TRACE("clock %p, iid %s, out %p.\n", clock, debugstr_guid(iid), out);
 
-  for (it = *pQueue; NULL != it && (it->rtBaseTime + it->rtIntervalTime) < bornTime; it = it->next) {
-    prev_it = it;
-  }
-  if (NULL == prev_it) {
-    pEntry->prev = NULL;
-    if (NULL != (*pQueue)) pEntry->next = (*pQueue)->next;
-    /*assert( NULL == pEntry->next->prev );*/
-    if (NULL != pEntry->next) pEntry->next->prev = pEntry;
-    (*pQueue) = pEntry;
-  } else {
-    pEntry->prev = prev_it;
-    pEntry->next = prev_it->next;
-    prev_it->next = pEntry;
-    if (NULL != pEntry->next) pEntry->next->prev = pEntry;
-  }
-}
-
-#define MAX_REFTIME            (REFERENCE_TIME)(0x7FFFFFFFFFFFFFFF)
-#define ADVISE_EXIT            (WM_APP + 0)
-#define ADVISE_REMOVE          (WM_APP + 2)
-#define ADVISE_ADD_SINGLESHOT  (WM_APP + 4)
-#define ADVISE_ADD_PERIODIC    (WM_APP + 8)
-
-static DWORD WINAPI SystemClockAdviseThread(LPVOID lpParam) {
-  SystemClockImpl* This = lpParam;
-  DWORD timeOut = INFINITE;
-  DWORD tmpTimeOut;
-  MSG msg;
-  HRESULT hr;
-  REFERENCE_TIME curTime;
-  SystemClockAdviseEntry* it = NULL;
-
-  TRACE("(%p): Main Loop\n", This);
-
-  while (TRUE) {
-    if (timeOut > 0) MsgWaitForMultipleObjects(0, NULL, FALSE, timeOut, QS_POSTMESSAGE|QS_SENDMESSAGE|QS_TIMER);
-    
-    EnterCriticalSection(&This->safe);
-    /*timeOut = IReferenceClock_OnTimerUpdated(This); */
-    hr = IReferenceClock_GetTime(&This->IReferenceClock_iface, &curTime);
-    if (FAILED(hr)) {
-      timeOut = INFINITE;
-      goto outrefresh;
+    if (IsEqualGUID(iid, &IID_IUnknown))
+        *out = iface;
+    else if (IsEqualGUID(iid, &IID_IReferenceClock))
+        *out = &clock->IReferenceClock_iface;
+    else
+    {
+        WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(iid));
+        *out = NULL;
+        return E_NOINTERFACE;
     }
 
-    /** First SingleShots Advice: sorted list */
-    it = This->pSingleShotAdvise;
-    while ((NULL != it) && (it->rtBaseTime + it->rtIntervalTime) <= curTime) {
-      SystemClockAdviseEntry* nextit = it->next;
-      /** send event ... */
-      SetEvent(it->hEvent);
-      /** ... and Release it */
-      QUARTZ_RemoveAviseEntryFromQueue(This, it);
-      CoTaskMemFree(it);
-      it = nextit;
-    }
-    if (NULL != it) timeOut = (DWORD) ((it->rtBaseTime + it->rtIntervalTime) - curTime) / (REFERENCE_TIME)10000;
-    else timeOut = INFINITE;
-
-    /** Now Periodics Advice: semi sorted list (sort cannot be used) */
-    for (it = This->pPeriodicAdvise; NULL != it; it = it->next) {
-      if (it->rtBaseTime <= curTime) {
-	DWORD nPeriods = (DWORD) ((curTime - it->rtBaseTime) / it->rtIntervalTime);
-	/** Release the semaphore ... */
-	ReleaseSemaphore(it->hEvent, nPeriods, NULL);
-	/** ... and refresh time */
-	it->rtBaseTime += nPeriods * it->rtIntervalTime;
-	/*assert( it->rtBaseTime + it->rtIntervalTime < curTime );*/
-      }
-      tmpTimeOut = (DWORD) ((it->rtBaseTime + it->rtIntervalTime) - curTime) / (REFERENCE_TIME)10000;
-      if (timeOut > tmpTimeOut) timeOut = tmpTimeOut; 
-    }
-
-outrefresh:
-    LeaveCriticalSection(&This->safe);
-    
-    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-      /** if hwnd we suppose that is a windows event ... */
-      if  (NULL != msg.hwnd) {
-	TranslateMessage(&msg);
-	DispatchMessageW(&msg);
-      } else {
-	switch (msg.message) {	    
-	case WM_QUIT:
-	case ADVISE_EXIT:
-	  goto outofthread;
-	case ADVISE_ADD_SINGLESHOT:
-	case ADVISE_ADD_PERIODIC:
-	  /** set timeout to 0 to do a rescan now */
-	  timeOut = 0;
-	  break;
-	case ADVISE_REMOVE:
-	  /** hmmmm what we can do here ... */
-	  timeOut = INFINITE;
-	  break;
-	default:
-	  ERR("Unhandled message %u. Critical Path\n", msg.message);
-	  break;
-	}
-      }
-    }
-  }
-
-outofthread:
-  TRACE("(%p): Exiting\n", This);
-  return 0;
-}
-/*static DWORD WINAPI SystemClockAdviseThread(LPVOID lpParam) { */
-
-static BOOL SystemClockPostMessageToAdviseThread(SystemClockImpl* This, UINT iMsg) {
-  if (FALSE == This->adviseThreadActive) {
-    BOOL res;
-    This->adviseThread = CreateThread(NULL, 0, SystemClockAdviseThread, This, 0, &This->adviseThreadId);
-    if (NULL == This->adviseThread) return FALSE;
-    SetThreadPriority(This->adviseThread, THREAD_PRIORITY_TIME_CRITICAL);
-    This->adviseThreadActive = TRUE;
-    while(1) {
-      res = PostThreadMessageW(This->adviseThreadId, iMsg, 0, 0);
-      /* Let the thread creates its message queue (with MsgWaitForMultipleObjects call) by yielding and retrying */
-      if (!res && (GetLastError() == ERROR_INVALID_THREAD_ID))
-	Sleep(0);
-      else
-	break;
-    }
-    return res;
-  }
-  return PostThreadMessageW(This->adviseThreadId, iMsg, 0, 0);
-}
-
-static ULONG WINAPI SystemClockImpl_AddRef(IReferenceClock* iface) {
-  SystemClockImpl *This = impl_from_IReferenceClock(iface);
-  ULONG ref = InterlockedIncrement(&This->ref);
-
-  TRACE("(%p): AddRef from %d\n", This, ref - 1);
-
-  return ref;
-}
-
-static HRESULT WINAPI SystemClockImpl_QueryInterface(IReferenceClock* iface, REFIID riid, void** ppobj) {
-  SystemClockImpl *This = impl_from_IReferenceClock(iface);
-  TRACE("(%p, %s,%p)\n", This, debugstr_guid(riid), ppobj);
-  
-  if (IsEqualIID (riid, &IID_IUnknown) || 
-      IsEqualIID (riid, &IID_IReferenceClock)) {
-    SystemClockImpl_AddRef(iface);
-    *ppobj = &This->IReferenceClock_iface;
+    IUnknown_AddRef((IUnknown *)*out);
     return S_OK;
-  }
-  
-  *ppobj = NULL;
-  WARN("(%p, %s,%p): not found\n", This, debugstr_guid(riid), ppobj);
-  return E_NOINTERFACE;
 }
 
-static ULONG WINAPI SystemClockImpl_Release(IReferenceClock* iface) {
-  SystemClockImpl *This = impl_from_IReferenceClock(iface);
-  ULONG ref = InterlockedDecrement(&This->ref);
-  TRACE("(%p): ReleaseRef to %d\n", This, ref);
-  if (ref == 0) {
-    if (This->adviseThreadActive && SystemClockPostMessageToAdviseThread(This, ADVISE_EXIT)) {
-      WaitForSingleObject(This->adviseThread, INFINITE);
-      CloseHandle(This->adviseThread);
+static ULONG WINAPI system_clock_inner_AddRef(IUnknown *iface)
+{
+    struct system_clock *clock = impl_from_IUnknown(iface);
+    ULONG refcount = InterlockedIncrement(&clock->refcount);
+
+    TRACE("%p increasing refcount to %lu.\n", clock, refcount);
+
+    return refcount;
+}
+
+static ULONG WINAPI system_clock_inner_Release(IUnknown *iface)
+{
+    struct system_clock *clock = impl_from_IUnknown(iface);
+    ULONG refcount = InterlockedDecrement(&clock->refcount);
+    struct advise_sink *sink, *cursor;
+
+    TRACE("%p decreasing refcount to %lu.\n", clock, refcount);
+
+    if (!refcount)
+    {
+        if (clock->thread)
+        {
+            EnterCriticalSection(&clock->cs);
+            clock->thread_stopped = TRUE;
+            LeaveCriticalSection(&clock->cs);
+            WakeConditionVariable(&clock->cv);
+            WaitForSingleObject(clock->thread, INFINITE);
+            CloseHandle(clock->thread);
+        }
+
+        LIST_FOR_EACH_ENTRY_SAFE(sink, cursor, &clock->sinks, struct advise_sink, entry)
+        {
+            list_remove(&sink->entry);
+            heap_free(sink);
+        }
+
+        clock->cs.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&clock->cs);
+        heap_free(clock);
     }
-    This->safe.DebugInfo->Spare[0] = 0;
-    DeleteCriticalSection(&This->safe);
-    CoTaskMemFree(This);
-  }
-  return ref;
+    return refcount;
 }
 
-static HRESULT WINAPI SystemClockImpl_GetTime(IReferenceClock* iface, REFERENCE_TIME* pTime) {
-  SystemClockImpl *This = impl_from_IReferenceClock(iface);
-  DWORD curTimeTickCount;
-  HRESULT hr = S_OK;
+static const IUnknownVtbl system_clock_inner_vtbl =
+{
+    system_clock_inner_QueryInterface,
+    system_clock_inner_AddRef,
+    system_clock_inner_Release,
+};
 
-  TRACE("(%p, %p)\n", This, pTime);
-
-  if (NULL == pTime) {
-    return E_POINTER;
-  }
-
-  curTimeTickCount = GetTickCount();
-
-  EnterCriticalSection(&This->safe);
-  if (This->lastTimeTickCount == curTimeTickCount) hr = S_FALSE;
-  This->lastRefTime += (REFERENCE_TIME) (DWORD) (curTimeTickCount - This->lastTimeTickCount) * (REFERENCE_TIME) 10000;
-  This->lastTimeTickCount = curTimeTickCount;
-  *pTime = This->lastRefTime;
-  LeaveCriticalSection(&This->safe);
-  return hr;
+static inline struct system_clock *impl_from_IReferenceClock(IReferenceClock *iface)
+{
+    return CONTAINING_RECORD(iface, struct system_clock, IReferenceClock_iface);
 }
 
-static HRESULT WINAPI SystemClockImpl_AdviseTime(IReferenceClock* iface, REFERENCE_TIME rtBaseTime, REFERENCE_TIME rtStreamTime, HEVENT hEvent, DWORD_PTR* pdwAdviseCookie) {
-  SystemClockImpl *This = impl_from_IReferenceClock(iface);
-  SystemClockAdviseEntry* pEntry = NULL;
+static DWORD WINAPI SystemClockAdviseThread(void *param)
+{
+    struct system_clock *clock = param;
+    struct advise_sink *sink, *cursor;
+    REFERENCE_TIME current_time;
 
-  TRACE("(%p, 0x%s, 0x%s, %ld, %p)\n", This, wine_dbgstr_longlong(rtBaseTime),
-      wine_dbgstr_longlong(rtStreamTime), hEvent, pdwAdviseCookie);
+    TRACE("Starting advise thread for clock %p.\n", clock);
+    SetThreadDescription(GetCurrentThread(), L"wine_qz_clock_advise");
 
-  if (!hEvent) {
-    return E_INVALIDARG;
-  }
-  if (0 >= rtBaseTime + rtStreamTime) {
-    return E_INVALIDARG;
-  }
-  if (NULL == pdwAdviseCookie) {
-    return E_POINTER;
-  }
-  pEntry = CoTaskMemAlloc(sizeof(SystemClockAdviseEntry));
-  if (NULL == pEntry) {
-    return E_OUTOFMEMORY;
-  }
-  ZeroMemory(pEntry, sizeof(SystemClockAdviseEntry));
+    for (;;)
+    {
+        DWORD timeout = INFINITE;
 
-  pEntry->hEvent = (HANDLE) hEvent;
-  pEntry->rtBaseTime = rtBaseTime + rtStreamTime;
-  pEntry->rtIntervalTime = 0;
+        EnterCriticalSection(&clock->cs);
 
-  EnterCriticalSection(&This->safe);
-  QUARTZ_InsertAviseEntryFromQueue(This, pEntry, &This->pSingleShotAdvise);
-  LeaveCriticalSection(&This->safe);
+        current_time = get_current_time();
 
-  SystemClockPostMessageToAdviseThread(This, ADVISE_ADD_SINGLESHOT);
+        LIST_FOR_EACH_ENTRY_SAFE(sink, cursor, &clock->sinks, struct advise_sink, entry)
+        {
+            if (sink->due_time <= current_time)
+            {
+                if (sink->period)
+                {
+                    DWORD periods = ((current_time - sink->due_time) / sink->period) + 1;
+                    ReleaseSemaphore(sink->handle, periods, NULL);
+                    sink->due_time += periods * sink->period;
+                }
+                else
+                {
+                    SetEvent(sink->handle);
+                    list_remove(&sink->entry);
+                    heap_free(sink);
+                    continue;
+                }
+            }
 
-  *pdwAdviseCookie = (DWORD_PTR) (pEntry);
-  return S_OK;
-}
+            timeout = min(timeout, (sink->due_time - current_time) / 10000);
+        }
 
-static HRESULT WINAPI SystemClockImpl_AdvisePeriodic(IReferenceClock* iface, REFERENCE_TIME rtStartTime, REFERENCE_TIME rtPeriodTime, HSEMAPHORE hSemaphore, DWORD_PTR* pdwAdviseCookie) {
-  SystemClockImpl *This = impl_from_IReferenceClock(iface);
-  SystemClockAdviseEntry* pEntry = NULL;
-
-  TRACE("(%p, 0x%s, 0x%s, %ld, %p)\n", This, wine_dbgstr_longlong(rtStartTime),
-      wine_dbgstr_longlong(rtPeriodTime), hSemaphore, pdwAdviseCookie);
-
-  if (!hSemaphore) {
-    return E_INVALIDARG;
-  }
-  if (0 >= rtStartTime || 0 >= rtPeriodTime) {
-    return E_INVALIDARG;
-  }
-  if (NULL == pdwAdviseCookie) {
-    return E_POINTER;
-  }
-  pEntry = CoTaskMemAlloc(sizeof(SystemClockAdviseEntry));
-  if (NULL == pEntry) {
-    return E_OUTOFMEMORY;
-  }
-  ZeroMemory(pEntry, sizeof(SystemClockAdviseEntry));
-
-  pEntry->hEvent = (HANDLE) hSemaphore;
-  pEntry->rtBaseTime = rtStartTime;
-  pEntry->rtIntervalTime = rtPeriodTime;
-
-  EnterCriticalSection(&This->safe);
-  QUARTZ_InsertAviseEntryFromQueue(This, pEntry, &This->pPeriodicAdvise);
-  LeaveCriticalSection(&This->safe);
-
-  SystemClockPostMessageToAdviseThread(This, ADVISE_ADD_PERIODIC);
-
-  *pdwAdviseCookie = (DWORD_PTR) (pEntry);
-  return S_OK;
-}
-
-static HRESULT WINAPI SystemClockImpl_Unadvise(IReferenceClock* iface, DWORD_PTR dwAdviseCookie) {
-  SystemClockImpl *This = impl_from_IReferenceClock(iface);
-  SystemClockAdviseEntry* pEntry = NULL;
-  SystemClockAdviseEntry* it = NULL;
-  HRESULT ret = S_OK;
-  TRACE("(%p, %lu)\n", This, dwAdviseCookie);
-
-  pEntry = (SystemClockAdviseEntry*) dwAdviseCookie;
-
-  EnterCriticalSection(&This->safe);
-  for (it = This->pPeriodicAdvise; NULL != it && it != pEntry; it = it->next) ;
-  if (it != pEntry) {
-    for (it = This->pSingleShotAdvise; NULL != it && it != pEntry; it = it->next) ;
-    if (it != pEntry) {
-      ret = S_FALSE;
-      goto out;
+        SleepConditionVariableCS(&clock->cv, &clock->cs, timeout);
+        if (clock->thread_stopped)
+        {
+            LeaveCriticalSection(&clock->cs);
+            return 0;
+        }
+        LeaveCriticalSection(&clock->cs);
     }
-  }
-
-  QUARTZ_RemoveAviseEntryFromQueue(This, pEntry);
-  CoTaskMemFree(pEntry);
-
-  SystemClockPostMessageToAdviseThread(This, ADVISE_REMOVE);
-
-out:
-  LeaveCriticalSection(&This->safe);
-  return ret;
 }
 
-static const IReferenceClockVtbl SystemClock_Vtbl = 
+static HRESULT add_sink(struct system_clock *clock, DWORD_PTR handle,
+        REFERENCE_TIME due_time, REFERENCE_TIME period, DWORD_PTR *cookie)
+{
+    struct advise_sink *sink;
+
+    if (!handle)
+        return E_INVALIDARG;
+
+    if (!cookie)
+        return E_POINTER;
+
+    if (!(sink = heap_alloc_zero(sizeof(*sink))))
+        return E_OUTOFMEMORY;
+
+    sink->handle = (HANDLE)handle;
+    sink->due_time = due_time;
+    sink->period = period;
+    sink->cookie = InterlockedIncrement(&cookie_counter);
+    *cookie = sink->cookie;
+
+    EnterCriticalSection(&clock->cs);
+    list_add_tail(&clock->sinks, &sink->entry);
+    LeaveCriticalSection(&clock->cs);
+
+    if (!InterlockedCompareExchange(&clock->thread_created, TRUE, FALSE))
+    {
+        clock->thread = CreateThread(NULL, 0, SystemClockAdviseThread, clock, 0, NULL);
+    }
+    WakeConditionVariable(&clock->cv);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI SystemClockImpl_QueryInterface(IReferenceClock *iface, REFIID iid, void **out)
+{
+    struct system_clock *clock = impl_from_IReferenceClock(iface);
+    return IUnknown_QueryInterface(clock->outer_unk, iid, out);
+}
+
+static ULONG WINAPI SystemClockImpl_AddRef(IReferenceClock *iface)
+{
+    struct system_clock *clock = impl_from_IReferenceClock(iface);
+    return IUnknown_AddRef(clock->outer_unk);
+}
+
+static ULONG WINAPI SystemClockImpl_Release(IReferenceClock *iface)
+{
+    struct system_clock *clock = impl_from_IReferenceClock(iface);
+    return IUnknown_Release(clock->outer_unk);
+}
+
+static HRESULT WINAPI SystemClockImpl_GetTime(IReferenceClock *iface, REFERENCE_TIME *time)
+{
+    struct system_clock *clock = impl_from_IReferenceClock(iface);
+    REFERENCE_TIME ret;
+    HRESULT hr;
+
+    if (!time) {
+        return E_POINTER;
+    }
+
+    ret = get_current_time();
+
+    EnterCriticalSection(&clock->cs);
+
+    hr = (ret == clock->last_time) ? S_FALSE : S_OK;
+    *time = clock->last_time = ret;
+
+    LeaveCriticalSection(&clock->cs);
+
+    TRACE("clock %p, time %p, returning %s.\n", clock, time, debugstr_time(ret));
+    return hr;
+}
+
+static HRESULT WINAPI SystemClockImpl_AdviseTime(IReferenceClock *iface,
+        REFERENCE_TIME base, REFERENCE_TIME offset, HEVENT event, DWORD_PTR *cookie)
+{
+    struct system_clock *clock = impl_from_IReferenceClock(iface);
+
+    TRACE("clock %p, base %s, offset %s, event %#Ix, cookie %p.\n",
+            clock, debugstr_time(base), debugstr_time(offset), event, cookie);
+
+    if (base + offset <= 0)
+        return E_INVALIDARG;
+
+    return add_sink(clock, event, base + offset, 0, cookie);
+}
+
+static HRESULT WINAPI SystemClockImpl_AdvisePeriodic(IReferenceClock* iface,
+        REFERENCE_TIME start, REFERENCE_TIME period, HSEMAPHORE semaphore, DWORD_PTR *cookie)
+{
+    struct system_clock *clock = impl_from_IReferenceClock(iface);
+
+    TRACE("clock %p, start %s, period %s, semaphore %#Ix, cookie %p.\n",
+            clock, debugstr_time(start), debugstr_time(period), semaphore, cookie);
+
+    if (start <= 0 || period <= 0)
+        return E_INVALIDARG;
+
+    return add_sink(clock, semaphore, start, period, cookie);
+}
+
+static HRESULT WINAPI SystemClockImpl_Unadvise(IReferenceClock *iface, DWORD_PTR cookie)
+{
+    struct system_clock *clock = impl_from_IReferenceClock(iface);
+    struct advise_sink *sink;
+
+    TRACE("clock %p, cookie %#Ix.\n", clock, cookie);
+
+    EnterCriticalSection(&clock->cs);
+
+    LIST_FOR_EACH_ENTRY(sink, &clock->sinks, struct advise_sink, entry)
+    {
+        if (sink->cookie == cookie)
+        {
+            list_remove(&sink->entry);
+            heap_free(sink);
+            LeaveCriticalSection(&clock->cs);
+            return S_OK;
+        }
+    }
+
+    LeaveCriticalSection(&clock->cs);
+
+    return S_FALSE;
+}
+
+static const IReferenceClockVtbl SystemClock_vtbl =
 {
     SystemClockImpl_QueryInterface,
     SystemClockImpl_AddRef,
@@ -374,24 +324,28 @@ static const IReferenceClockVtbl SystemClock_Vtbl =
     SystemClockImpl_Unadvise
 };
 
-HRESULT QUARTZ_CreateSystemClock(IUnknown * pUnkOuter, LPVOID * ppv) {
-  SystemClockImpl* obj = NULL;
+HRESULT system_clock_create(IUnknown *outer, IUnknown **out)
+{
+    struct system_clock *object;
   
-  TRACE("(%p,%p)\n", ppv, pUnkOuter);
-  
-  obj = CoTaskMemAlloc(sizeof(SystemClockImpl));
-  if (NULL == obj) 	{
-    *ppv = NULL;
-    return E_OUTOFMEMORY;
-  }
-  ZeroMemory(obj, sizeof(SystemClockImpl));
+    TRACE("outer %p, out %p.\n", outer, out);
 
-  obj->IReferenceClock_iface.lpVtbl = &SystemClock_Vtbl;
-  obj->ref = 0;  /* will be inited by QueryInterface */
+    if (!(object = heap_alloc_zero(sizeof(*object))))
+    {
+        *out = NULL;
+        return E_OUTOFMEMORY;
+    }
 
-  obj->lastTimeTickCount = GetTickCount();
-  InitializeCriticalSection(&obj->safe);
-  obj->safe.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": SystemClockImpl.safe");
+    object->IReferenceClock_iface.lpVtbl = &SystemClock_vtbl;
+    object->IUnknown_inner.lpVtbl = &system_clock_inner_vtbl;
+    object->outer_unk = outer ? outer : &object->IUnknown_inner;
+    object->refcount = 1;
+    list_init(&object->sinks);
+    InitializeCriticalSectionEx(&object->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
+    object->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": SystemClockImpl.cs");
 
-  return SystemClockImpl_QueryInterface(&obj->IReferenceClock_iface, &IID_IReferenceClock, ppv);
+    TRACE("Created system clock %p.\n", object);
+    *out = &object->IUnknown_inner;
+
+    return S_OK;
 }
