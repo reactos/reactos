@@ -1,5 +1,5 @@
 This is Wine DirectX support.
-It works in Reactos and Windows.
+It works in ReactOS and Windows.
 When ReactOS own ReactX are in-place
 this file will be removed from our SVN
 for now they stay as temporary solutions.
