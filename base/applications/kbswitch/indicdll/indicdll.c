@@ -30,7 +30,6 @@ HANDLE g_hMutex = NULL;
 
 static inline VOID EnterProtectedSection(VOID)
 {
-    g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
     DWORD dwWaitResult = WaitForSingleObject(g_hMutex, 5 * 1000);
     if (dwWaitResult == WAIT_OBJECT_0)
     {
@@ -50,8 +49,6 @@ static inline VOID EnterProtectedSection(VOID)
 static inline VOID LeaveProtectedSection(VOID)
 {
     ReleaseMutex(g_hMutex);
-    CloseHandle(g_hMutex);
-    g_hMutex = NULL;
 }
 
 static inline VOID
@@ -240,11 +237,15 @@ DllMain(IN HINSTANCE hinstDLL,
                 g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
                 TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
             }
+
+            g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
             break;
         }
         case DLL_PROCESS_DETACH:
         {
             TRACE("DLL_PROCESS_DETACH\n");
+            if (g_hMutex)
+                CloseHandle(g_hMutex);
             UnmapViewOfFile(g_pShared);
             CloseHandle(g_hShared);
             break;
