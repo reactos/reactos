@@ -24,6 +24,10 @@ add_executable(mshtml_winetest
     ${PCH_SKIP_SOURCE}
     rsrc.rc)
 
+if(NOT MSVC)
+    target_compile_options(mshtml_winetest PRIVATE -Wno-unused-function)
+endif()
+
 list(APPEND mshtml_winetest_rc_deps
     ${CMAKE_CURRENT_BINARY_DIR}/test_tlb.tlb
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.html
