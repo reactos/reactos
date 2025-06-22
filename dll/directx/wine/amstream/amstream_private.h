@@ -32,7 +32,9 @@
 #include "mmstream.h"
 #include "austream.h"
 #include "amstream.h"
-
+#ifdef __REACTOS__
+#define CONDITION_VARIABLE RTL_CONDITION_VARIABLE
+#endif
 HRESULT multimedia_stream_create(IUnknown *outer, void **out);
 HRESULT AMAudioData_create(IUnknown *pUnkOuter, LPVOID *ppObj);
 HRESULT filter_create(IUnknown *outer, void **out);

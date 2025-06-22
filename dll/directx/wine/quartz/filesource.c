@@ -381,7 +381,9 @@ static DWORD CALLBACK io_thread(void *arg)
     DWORD size;
     BOOL ret;
 
+#ifndef __REACTOS__
     SetThreadDescription(GetCurrentThread(), L"wine_qz_async_reader_io");
+#endif
 
     for (;;)
     {
@@ -909,7 +911,11 @@ static HRESULT WINAPI FileAsyncReader_BeginFlush(IAsyncReader * iface)
     filter->flushing = TRUE;
     for (i = 0; i < filter->max_requests; ++i)
         filter->requests[i].sample = NULL;
+#ifdef __REACTOS__
+    CancelIo(filter->file);
+#else
     CancelIoEx(filter->file, NULL);
+#endif
     WakeAllConditionVariable(&filter->sample_cv);
 
     LeaveCriticalSection(&filter->sample_cs);

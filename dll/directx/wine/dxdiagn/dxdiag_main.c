@@ -128,14 +128,6 @@ static const IClassFactoryVtbl DXDiagCF_Vtbl = {
 static IClassFactoryImpl DXDiag_CF = { { &DXDiagCF_Vtbl } };
 
 /***********************************************************************
- *             DllCanUnloadNow (DXDIAGN.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-  return DXDIAGN_refCount != 0 ? S_FALSE : S_OK;
-}
-
-/***********************************************************************
  *		DllGetClassObject (DXDIAGN.@)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)

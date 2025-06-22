@@ -2213,7 +2213,9 @@ static void set_window_state(struct wined3d_window_state *s)
     }
     else if ((thread = CreateThread(NULL, 0, set_window_state_thread, s, 0, NULL)))
     {
+#ifndef __REACTOS__
         SetThreadDescription(thread, L"wined3d_set_window_state");
+#endif
         CloseHandle(thread);
     }
     else

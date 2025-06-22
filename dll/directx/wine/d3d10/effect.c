@@ -244,7 +244,11 @@ static void pres_log(float **args, unsigned int n, const struct preshader_instr 
     unsigned int i;
 
     for (i = 0; i < instr->comp_count; ++i)
+#ifdef __REACTOS__
+        retval[i] = (args[0][i] == 0.0f ? 0.0f : log2f_hack(fabsf(args[0][i])));
+#else
         retval[i] = (args[0][i] == 0.0f ? 0.0f : log2f(fabsf(args[0][i])));
+#endif
 }
 
 static void pres_rsq(float **args, unsigned int n, const struct preshader_instr *instr)
@@ -1452,7 +1456,11 @@ static BOOL fx10_get_string(const char *data, size_t data_size, uint32_t offset,
     }
 
     max_len = data_size - offset;
+#ifdef __REACTOS__
+    if (!(len = strlen(data + offset)))
+#else
     if (!(len = strnlen(data + offset, max_len)))
+#endif
     {
         *s = NULL;
         *l = 0;

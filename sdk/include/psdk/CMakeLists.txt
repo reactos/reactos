@@ -59,7 +59,6 @@ list(APPEND SOURCE
     d3d12shader.idl
     d3d12video.idl
     d3dx11core.idl
-    ddstream.idl
 #   dbccmd.idl
 #   dbcses.idl
 #   dbdsad.idl
@@ -67,6 +66,7 @@ list(APPEND SOURCE
 #   dbprop.idl
 #   dbs.idl
     dcommon.idl
+    ddstream.idl
     devenum.idl
     devicetopology.idl
     dimm.idl

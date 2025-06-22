@@ -46,3 +46,4 @@
 #include "dxdiag.h"
 #include "dxfile.h"
 #include "rmxfguid.h"
+#include "dmoreg.h"

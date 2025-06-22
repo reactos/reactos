@@ -51,6 +51,18 @@
 #include "wine/list.h"
 #include "wine/rbtree.h"
 
+
+#ifdef __REACTOS__
+
+#ifndef DCX_USESTYLE
+#define DCX_USESTYLE         0x00010000
+#endif
+
+#define ssize_t size_t
+
+#define RTL_CRITICAL_SECTION_DEBUG CRITICAL_SECTION_DEBUG
+#endif
+
 static inline size_t align(size_t addr, size_t alignment)
 {
     return (addr + (alignment - 1)) & ~(alignment - 1);
@@ -2591,8 +2603,18 @@ struct wined3d_output
 
 HRESULT wined3d_output_get_gamma_ramp(struct wined3d_output *output, struct wined3d_gamma_ramp *ramp);
 
+#ifdef __REACTOS__
+#define USHRT_MAX   0xffff
+#define ULONG_MAX   0xffffffffUL
+#define ULLONG_MAX  0xffffffffffffffffULL 
+#define _UI64_MAX   0xffffffffffffffffULL
+#define UI64_MAX _UI64_MAX
+
+#define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
+#endif
+
 #ifdef _WIN64
-#define MAX_PERSISTENT_MAPPED_BYTES I64_MAX
+#define MAX_PERSISTENT_MAPPED_BYTES  0xffffffffffffffff
 #else
 #define MAX_PERSISTENT_MAPPED_BYTES (128 * 1024 * 1024)
 #endif

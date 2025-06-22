@@ -27,10 +27,14 @@
 #include <stdbool.h>
 #include "dshow.h"
 #include "winternl.h"
+#ifndef __REACTOS__
 #include "wine/unixlib.h"
+#endif
 #include "wine/debug.h"
 #include "wine/strmbase.h"
-
+#ifdef __REACTOS__
+#define CONDITION_VARIABLE RTL_CONDITION_VARIABLE
+#endif
 HRESULT audio_record_create(IUnknown *outer, IUnknown **out);
 HRESULT avi_compressor_create(IUnknown *outer, IUnknown **out);
 HRESULT avi_mux_create(IUnknown *outer, IUnknown **out);

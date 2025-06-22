@@ -18,7 +18,9 @@
  */
 
 #include "d3d11_private.h"
-#include "winternl.h"
+#ifdef __REACTOS__
+#include "wine/winternl.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d11);
 
@@ -1002,7 +1004,7 @@ static HRESULT validate_stream_output_entries(const D3D11_SO_DECLARATION_ENTRY *
                 continue;
 
             if (e1->Stream == e2->Stream
-                    && !stricmp(e1->SemanticName, e2->SemanticName)
+                    && !_stricmp(e1->SemanticName, e2->SemanticName)
                     && e1->SemanticIndex == e2->SemanticIndex
                     && e1->StartComponent < e2->StartComponent + e2->ComponentCount
                     && e1->StartComponent + e1->ComponentCount > e2->StartComponent)

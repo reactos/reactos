@@ -26,5 +26,11 @@
 
 #include "wine/wine_common_ver.rc"
 
+1 TYPELIB control_tlb.tlb
+
 /* @makedep: quartz.rgs */
 1 WINE_REGISTRY quartz.rgs
+
+
+2 WINE_REGISTRY control_tlb.rgs
+3 WINE_REGISTRY quartz_strmif.rgs

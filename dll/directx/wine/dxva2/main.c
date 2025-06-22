@@ -47,7 +47,14 @@ struct device_handle
     unsigned int flags;
     IDirect3DStateBlock9 *state_block;
 };
-
+#ifdef __REACTOS__
+typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
+typedef RTL_CONDITION_VARIABLE CONDITION_VARIABLE, *PCONDITION_VARIABLE;
+VOID WINAPI WakeConditionVariable(PCONDITION_VARIABLE);
+VOID WINAPI WakeAllConditionVariable(PCONDITION_VARIABLE);
+VOID WINAPI InitializeConditionVariable(PCONDITION_VARIABLE);
+BOOL WINAPI SleepConditionVariableCS(PCONDITION_VARIABLE,PCRITICAL_SECTION,DWORD);
+#endif
 struct device_manager
 {
     IDirect3DDeviceManager9 IDirect3DDeviceManager9_iface;

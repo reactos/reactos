@@ -788,6 +788,29 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **out)
     return S_OK;
 }
 
+#ifdef __REACTOS__
+
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+    TRACE("\n");
+
+    return S_FALSE;
+}
+
+
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
+}
+
+
+#endif
+
 
 /***********************************************************************
  * DllMain (DDRAW.0)

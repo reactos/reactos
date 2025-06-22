@@ -207,6 +207,27 @@ static const REGFILTER2 reg_file_writer =
     .u.s2.rgPins2 = reg_file_writer_pins,
 };
 
+#ifdef __REACTOS__
+static HINSTANCE QCap_instance;
+BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved)
+{
+    switch(reason)
+    {
+      case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(inst);
+        CoInitialize(NULL);
+        QCap_instance = inst;
+        break;
+      case DLL_PROCESS_DETACH:
+#ifdef __REACTOS__
+        CoUninitialize();
+#endif
+        break;
+    }
+    return TRUE;
+}
+
+#endif
 /***********************************************************************
  *    DllRegisterServer (QCAP.@)
  */
@@ -215,7 +236,7 @@ HRESULT WINAPI DllRegisterServer(void)
     IFilterMapper2 *mapper;
     HRESULT hr;
 
-    if (FAILED(hr = __wine_register_resources()))
+    if (FAILED(hr = __wine_register_resources(QCap_instance)))
         return hr;
 
     if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
@@ -241,7 +262,7 @@ HRESULT WINAPI DllUnregisterServer(void)
     IFilterMapper2 *mapper;
     HRESULT hr;
 
-    if (FAILED(hr = __wine_unregister_resources()))
+    if (FAILED(hr = __wine_unregister_resources(QCap_instance)))
         return hr;
 
     if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,

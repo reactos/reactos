@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+1 WINE_REGISTRY dplayx.rgs
+
 #define WINE_FILEDESCRIPTION_STR "Wine DirectPlay"
 #define WINE_FILENAME_STR "dplayx.dll"
 #define WINE_FILEVERSION 5,3,1,904

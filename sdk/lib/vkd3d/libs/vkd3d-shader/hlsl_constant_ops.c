@@ -352,7 +352,11 @@ static bool fold_log2(struct hlsl_ctx *ctx, struct hlsl_constant_value *dst, con
                     hlsl_warning(ctx, loc, VKD3D_SHADER_WARNING_HLSL_NON_FINITE_RESULT,
                             "Indefinite logarithm result.");
                 }
+#ifdef __REACTOS__
+                dst->u[k].f = log2f_hack(src->value.u[k].f);
+#else
                 dst->u[k].f = log2f(src->value.u[k].f);
+#endif
                 if (ctx->profile->major_version < 4 && !isfinite(dst->u[k].f))
                 {
                     hlsl_error(ctx, loc, VKD3D_SHADER_ERROR_HLSL_NON_FINITE_RESULT,

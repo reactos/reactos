@@ -312,7 +312,11 @@ static HRESULT DP_MSG_ReadString( char *data, DWORD *inoutOffset, DWORD maxSize,
       return DPERR_GENERIC;
 
     maxLength = (maxSize - offset) / sizeof( WCHAR );
+#ifdef __REACTOS__
+    length = wcslen( (WCHAR *) &data[ offset ] );
+#else
     length = wcsnlen( (WCHAR *) &data[ offset ], maxLength );
+#endif
     if( length == maxLength )
       return DPERR_GENERIC;
 

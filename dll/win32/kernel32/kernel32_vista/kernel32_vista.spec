@@ -56,3 +56,8 @@
 @ stdcall RegisterApplicationRestart(wstr long)
 @ stdcall SetFileBandwidthReservation(ptr long long long ptr ptr)
 @ stdcall SetThreadPreferredUILanguages(long wstr ptr)
+
+@ stdcall WaitForThreadpoolWorkCallbacks(ptr long) ntdll_vista.TpWaitForWork
+@ stdcall CreateThreadpoolWork(ptr ptr ptr)
+@ stdcall TrySubmitThreadpoolCallback(ptr ptr ptr)
+@ stdcall SubmitThreadpoolWork(ptr) ntdll_vista.TpPostWork

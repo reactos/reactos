@@ -24,6 +24,23 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d10);
 
+#ifdef __REACTOS__
+float log2f_hack(float x)
+{
+    return (float)log2((double)x);
+}
+
+float
+__cdecl
+exp2f(
+    _In_ float x)
+{
+    /* This below avoids clang to optimize our pow call to exp2 */
+    static const float TWO = 2.0f;
+    return powf(TWO, x);
+}
+
+#endif
 #define WINE_D3D10_TO_STR(x) case x: return #x
 
 static const char *debug_d3d10_driver_type(D3D10_DRIVER_TYPE driver_type)

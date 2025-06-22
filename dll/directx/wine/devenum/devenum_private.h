@@ -27,26 +27,6 @@
 #include "dmo.h"
 #include "dmodshow.h"
 
-enum device_type
-{
-    DEVICE_FILTER,
-    DEVICE_CODEC,
-    DEVICE_DMO,
-};
-
-struct moniker
-{
-    IMoniker IMoniker_iface;
-    LONG ref;
-    CLSID class;
-    BOOL has_class;
-    enum device_type type;
-    WCHAR *name;    /* for filters and codecs */
-    CLSID clsid;    /* for DMOs */
-
-    IPropertyBag IPropertyBag_iface;
-};
-
 HRESULT create_filter_data(VARIANT *var, REGFILTER2 *rgf);
 struct moniker *dmo_moniker_create(const GUID class, const GUID clsid);
 struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name);

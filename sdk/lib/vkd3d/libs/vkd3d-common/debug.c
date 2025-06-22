@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS__
 #ifdef _WIN32
 # define _WIN32_WINNT 0x0600    /* For InitOnceExecuteOnce(). */
+#endif
 #endif
 
 #include "vkd3d_common.h"
@@ -34,12 +36,14 @@
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #endif
-
+#ifdef __REACTOS__
+#define _iob __iob_func()
+#endif
 #include "vkd3d_memory.h"
 
 #define VKD3D_DEBUG_BUFFER_COUNT 64
 #define VKD3D_DEBUG_BUFFER_SIZE 512
-
+VKD3D_DEBUG_ENV_NAME("VKD3D_DEBUG");
 extern const char *const vkd3d_dbg_env_name;
 
 static const char *const debug_level_names[] =
