@@ -6,7 +6,6 @@
  */
 
 #include <gdi32_vista.h>
-#include <d3dkmddi.h>
 #include <d3dkmthk.h>
 #include <debug.h>
 
@@ -18,7 +17,7 @@ D3DKMTCreateDevice(_Inout_ D3DKMT_CREATEDEVICE* unnamedParam1)
     Status = NtGdiDdDDICreateDevice(unnamedParam1);
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
-        /* Fallback to XDDM */
+        return STATUS_SUCCESS;
     }
     return Status;
 }
@@ -32,6 +31,7 @@ D3DKMTDestroyDevice(_In_ CONST D3DKMT_DESTROYDEVICE* unnamedParam1)
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
         /* Fallback to XDDM */
+         return STATUS_SUCCESS;
     }
     return Status;
 }
@@ -45,6 +45,7 @@ D3DKMTCloseAdapter(_In_ CONST D3DKMT_CLOSEADAPTER* unnamedParam1)
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
         /* Fallback to XDDM */
+        return STATUS_SUCCESS;
     }
     return Status;
 }
@@ -58,11 +59,11 @@ D3DKMTSetVidPnSourceOwner(_In_ CONST D3DKMT_SETVIDPNSOURCEOWNER* unnamedParam1)
     if (Status == STATUS_PROCEDURE_NOT_FOUND)
     {
         /* Fallback to XDDM */
+        return STATUS_SUCCESS;
     }
     return Status;
 }
 
-/* Not just a syscall even in wine. */
 NTSTATUS
 WINAPI
 D3DKMTOpenAdapterFromGdiDisplayName(_Inout_ D3DKMT_OPENADAPTERFROMGDIDISPLAYNAME* unnamedParam1)
@@ -82,6 +83,57 @@ WINAPI
 D3DKMTQueryVideoMemoryInfo(
     D3DKMT_QUERYVIDEOMEMORYINFO *unnamedParam1)
 {
-    /* fallback here is perfectly fine! */
-    return 1;
+    //TODO: Call the win7+ syscall NtGdiDdQueryVideoMemoryInfo
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    DD_GETAVAILDRIVERMEMORYDATA Data = {0};
+    HDC hdc = NULL;
+    HANDLE hDirectDraw = NULL;
+
+    if (!unnamedParam1)
+        return STATUS_INVALID_PARAMETER;
+
+    switch (unnamedParam1->MemorySegmentGroup)
+    {
+        case D3DKMT_MEMORY_SEGMENT_GROUP_LOCAL:
+            Data.DDSCaps.dwCaps = DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM;
+            break;
+        case D3DKMT_MEMORY_SEGMENT_GROUP_NON_LOCAL:
+            Data.DDSCaps.dwCaps = DDSCAPS_VIDEOMEMORY | DDSCAPS_NONLOCALVIDMEM;
+            break;
+        default:
+            Data.DDSCaps.dwCaps = DDSCAPS_VIDEOMEMORY;
+            break;
+    }
+
+    hdc = NtGdiCreateCompatibleDC(NULL);
+    if (!hdc)
+        return STATUS_UNSUCCESSFUL;
+
+    hDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
+    if (!hDirectDraw)
+    {
+        NtGdiDeleteObjectApp(hdc);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Status = NtGdiDdGetAvailDriverMemory(hDirectDraw, &Data);
+
+    if (NT_SUCCESS(Status))
+    {
+        unnamedParam1->Budget = Data.dwTotal;
+        unnamedParam1->CurrentUsage = Data.dwTotal - Data.dwFree;
+        unnamedParam1->CurrentReservation = 0;
+        unnamedParam1->AvailableForReservation = Data.dwFree;
+    }
+    else
+    {
+        unnamedParam1->Budget = 0;
+        unnamedParam1->CurrentUsage = 0;
+        unnamedParam1->CurrentReservation = 0;
+        unnamedParam1->AvailableForReservation = 0;
+    }
+
+    NtGdiDeleteObjectApp(hdc);
+
+    return Status;
 }
