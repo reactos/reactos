@@ -27,7 +27,8 @@ HINSTANCE g_hInstance = NULL;
 HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
 HANDLE g_hMutex = NULL;
-#define MUTEX_TIMEOUT_MS (5 * 1000)
+
+#define MUTEX_TIMEOUT_MS (4 * 1000)
 
 static inline BOOL EnterProtectedSection(VOID)
 {
@@ -139,7 +140,9 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
     TRACE("bDoHook: %d\n", bDoHook);
 
-    EnterProtectedSection();
+    if (!EnterProtectedSection())
+        return FALSE;
+
     if (bDoHook)
     {
         g_pShared->hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, g_hInstance, 0);
@@ -180,20 +183,24 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
 VOID APIENTRY
 GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
 {
-    EnterProtectedSection();
-    *pnID = g_pShared->nHotID;
-    *pdwItemData = g_pShared->dwHotMenuItemData;
-    LeaveProtectedSection();
+    if (EnterProtectedSection())
+    {
+        *pnID = g_pShared->nHotID;
+        *pdwItemData = g_pShared->dwHotMenuItemData;
+        LeaveProtectedSection();
+    }
 }
 
 // indicdll!14
 VOID APIENTRY
 SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
 {
-    EnterProtectedSection();
-    g_pShared->nHotID = nID;
-    g_pShared->dwHotMenuItemData = dwItemData;
-    LeaveProtectedSection();
+    if (EnterProtectedSection())
+    {
+        g_pShared->nHotID = nID;
+        g_pShared->dwHotMenuItemData = dwItemData;
+        LeaveProtectedSection();
+    }
 }
 
 BOOL WINAPI
