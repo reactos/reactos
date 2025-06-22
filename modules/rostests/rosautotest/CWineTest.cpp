@@ -6,6 +6,10 @@
  */
 
 #include "precomp.h"
+#if 1
+#include <stdio.h>
+#include "closewnd.h"
+#endif
 
 static const DWORD ListTimeout = 10000;
 
@@ -327,6 +331,9 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     string tailString;
     CPipe Pipe;
     char Buffer[1024];
+#if 1
+    WINDOW_LIST s_List1, s_List2;
+#endif
 
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
     StringOut(ss.str());
@@ -334,6 +341,9 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     SetCurrentDirectoryW(m_TestPath.c_str());
 
     StartTime = GetTickCount();
+#if 1
+    GetWindowList(&s_List1);
+#endif
 
     try
     {
@@ -379,6 +389,22 @@ CWineTest::RunTest(CTestInfo* TestInfo)
         TestInfo->Log += e.GetMessage();
     }
 
+#if 1
+    GetWindowList(&s_List2);
+    if (HWND hwndFound = FindNewWindow(&s_List1, &s_List2))
+    {
+        RECT rc;
+        GetWindowRect(hwndFound, &rc);
+        CHAR szText[64];
+        GetWindowTextA(hwndFound, szText, 64);
+        CHAR szClass[64];
+        GetClassNameA(hwndFound, szClass, 64);
+        char Buf[MAX_PATH];
+        sprintf(Buf, "FindNewWindow %p '%s', '%s' { %ld, %ld, %ld, %ld }\n", hwndFound, szText, szClass, rc.left, rc.top, rc.right, rc.bottom);
+        tailString += Buf;
+    }
+#endif
+
     /* Print what's left */
     if(!tailString.empty())
         StringOut(tailString);
@@ -388,6 +414,11 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
     StringOut(ssFinish.str());
     TestInfo->Log += ssFinish.str();
+
+#if 1
+    FreeWindowList(&s_List1);
+    FreeWindowList(&s_List2);
+#endif
 }
 
 /**
