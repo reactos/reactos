@@ -374,7 +374,7 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     SHELLDETAILS sd;
     WCHAR wszItem1[MAX_PATH], wszItem2[MAX_PATH];
     HRESULT hres;
-    UINT col = LOWORD(lParam); // Column index without SHCIDS_* flags
+    UINT col = (UINT)(lParam & SHCIDS_COLUMNMASK); // Column index without SHCIDS_* flags
 
     hres = isf->GetDetailsOf(pidl1, col, &sd);
     if (FAILED(hres))
@@ -397,6 +397,51 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
         return SHELL32_CompareChildren(isf, lParam, pidl1, pidl2);
 
     return MAKE_COMPARE_HRESULT(ret);
+}
+
+HRESULT SHELL_CompareAllFields(IShellFolder* psf,
+                               LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+                               UINT Count, int Skip)
+{
+    for (UINT i = 0; i < Count; ++i)
+    {
+        if (Skip == (int)i)
+            continue;
+        HRESULT hr = psf->CompareIDs(i, pidl1, pidl2);
+        if (hr && SUCCEEDED(hr))
+            return hr;
+    }
+    return MAKE_COMPARE_HRESULT(0);
+}
+
+/***********************************************************************
+ *    SHELL32_FolderImplCompareIDsTiebreaker
+ *
+ * Used to compare other columns if the initial column passed to
+ * IShellFolder::CompareIDs compared equal.
+ * NT5 compares the name column first in this case.
+ * Next, all columns are compared if the caller requested ALLFIELDS.
+ * Finally, compare the children (if any).
+ */
+HRESULT SHELL32_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
+                                               LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+                                               UINT Count, int Canonical)
+{
+    if ((lParam & SHCIDS_COLUMNMASK) != Canonical && Canonical >= 0 && LOBYTE(GetVersion()) < 6)
+    {
+        LPARAM flags = (lParam & SHCIDS_BITMASK) & ~SHCIDS_ALLFIELDS;
+        HRESULT hr = psf->CompareIDs(Canonical | flags, pidl1, pidl2);
+        if (hr && SUCCEEDED(hr))
+            return hr;
+    }
+    if (lParam & SHCIDS_ALLFIELDS)
+    {
+        HRESULT hr = SHELL_CompareAllFields(psf, pidl1, pidl2, Count, lParam & SHCIDS_COLUMNMASK);
+        if (hr && SUCCEEDED(hr))
+            return hr;
+    }
+    // We are not passing the column index because the columns in a child folder might not have the same meaning
+    return SHELL32_CompareChildren(psf, lParam & SHCIDS_BITMASK, pidl1, pidl2);
 }
 
 void CloseRegKeyArray(HKEY* array, UINT cKeys)
