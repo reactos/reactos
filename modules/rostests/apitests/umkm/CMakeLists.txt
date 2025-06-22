@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 list(APPEND SOURCE
+    Exceptions.c
     SystemCall.c
     XStateConfig.cpp
     XStateSave.c
