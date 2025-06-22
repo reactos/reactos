@@ -667,3 +667,7 @@
 @ stdcall -version=0x600+ D3DKMTWaitForIdle(ptr) NtGdiDdDDIWaitForIdle
 @ stdcall -version=0x600+ D3DKMTWaitForSynchronizationObject(ptr) NtGdiDdDDIWaitForSynchronizationObject
 @ stdcall -version=0x600+ D3DKMTWaitForVerticalBlankEvent(ptr) NtGdiDdDDIWaitForVerticalBlankEvent
+
+@ stdcall -version=0x602+ D3DKMTOpenAdapterFromLuid(ptr) 
+@ stdcall -version=0x602+ D3DKMTQueryVideoMemoryInfo(ptr) 
+ 
