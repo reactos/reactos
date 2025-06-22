@@ -654,6 +654,7 @@ public:
     LRESULT OnGoTravel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnToggleExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCabinetStateChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -706,10 +707,10 @@ public:
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LINKSBAR, OnToggleLinksBandVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_TEXTLABELS, OnToggleTextLabels)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_CUSTOMIZE, OnToolbarCustomize)
-        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_SEARCH, OnExplorerBar)
-        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_FOLDERS, OnExplorerBar)
-        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_HISTORY, OnExplorerBar)
-        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_FAVORITES, OnExplorerBar)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_SEARCH, OnToggleExplorerBar)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_FOLDERS, OnToggleExplorerBar)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_HISTORY, OnToggleExplorerBar)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_FAVORITES, OnToggleExplorerBar)
         COMMAND_ID_HANDLER(IDM_BACKSPACE, OnBackspace)
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
@@ -2857,7 +2858,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::OnCreate(struct tagCREATESTRUCTW *pcs)
 
 LRESULT STDMETHODCALLTYPE CShellBrowser::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-    return 0;
+    return SendMessage(WM_COMMAND, wParam, lParam);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::OnDestroy()
@@ -3919,6 +3920,7 @@ LRESULT CShellBrowser::OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &b
 
 LRESULT CShellBrowser::OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
+    C_ASSERT(FCIDM_SHBROWSER_OPTIONS == IDM_TOOLS_FOLDEROPTIONS && FCIDM_SHBROWSER_OPTIONS == 0xA123);
     HRESULT hResult = DoFolderOptions();
     if (FAILED(hResult))
         TRACE("DoFolderOptions failed with hResult=%08lx\n", hResult);
@@ -4102,6 +4104,7 @@ LRESULT CShellBrowser::OnToolbarCustomize(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CShellBrowser::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
+    C_ASSERT(FCIDM_CABINET_REFRESH == IDM_VIEW_REFRESH && FCIDM_CABINET_REFRESH == 0xA220);
     if (fCurrentShellView)
         fCurrentShellView->Refresh();
     return 0;
@@ -4125,29 +4128,48 @@ LRESULT CShellBrowser::OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
         bHandled = TRUE;
         return 1;
     }
+    return 0;
+}
+
+LRESULT CShellBrowser::OnToggleExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    UINT sbci = 0;
     switch (wID)
     {
-    case IDM_EXPLORERBAR_SEARCH:
-        ShowBand(CLSID_FileSearchBand, true);
-        break;
-    case IDM_EXPLORERBAR_FOLDERS:
-        ShowBand(CLSID_ExplorerBand, true);
-        break;
-    case IDM_EXPLORERBAR_HISTORY:
-        ShowBand(CLSID_SH_HistBand, true);
-        break;
-    case IDM_EXPLORERBAR_FAVORITES:
-        ShowBand(CLSID_SH_FavBand, true);
-        break;
-    default:
-        WARN("Unknown id %x\n", wID);
+        case IDM_EXPLORERBAR_SEARCH:    sbci = 0x1c; break;
+        case IDM_EXPLORERBAR_FAVORITES: sbci = 0x1e; break;
+        case IDM_EXPLORERBAR_HISTORY:   sbci = 0x1d; break;
+        case IDM_EXPLORERBAR_FOLDERS:   sbci = SBCMDID_EXPLORERBARFOLDERS; break;
+        default: WARN("Unknown id %x\n", wID);
     }
-    bHandled = TRUE;
-    return 1;
+    if (sbci)
+    {
+        this->Exec(&CGID_Explorer, sbci, OLECMDEXECOPT_DONTPROMPTUSER, NULL, NULL);
+        bHandled = TRUE;
+    }
+    return TRUE;
 }
 
 LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    CComHeapPtr<ITEMIDLIST> pidl;
+    switch (LOWORD(wParam))
+    {
+        case FCIDM_SHBROWSER_REFRESH:
+            wParam = FCIDM_SHVIEW_REFRESH;
+            break;
+        case FCIDM_SHBROWSER_FINDFILES:
+            return OnCommand(IDM_EXPLORERBAR_SEARCH, 0);
+        case FCIDM_CABINET_NT5_GOTO_DRIVES:
+            if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidl)))
+                BrowseObject(pidl, SBSP_ABSOLUTE | SBSP_SAMEBROWSER | SBSP_ACTIVATE_NOFOCUS);
+            return 0;
+#if 0 // TODO: Toggle entire itbar(rebar) after LPTOOLBARITEM->fShow support is added
+        case FCIDM_CABINET_TOGGLEITBAR:
+            break;
+#endif
+    }
+
     if (HIWORD(wParam) == 0 && LOWORD(wParam) < FCIDM_SHVIEWLAST && fCurrentShellViewWindow != NULL)
         return SendMessage(fCurrentShellViewWindow, uMsg, wParam, lParam);
     return 0;
