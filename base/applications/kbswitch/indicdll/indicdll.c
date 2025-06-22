@@ -31,7 +31,20 @@ HANDLE g_hMutex = NULL;
 static inline VOID EnterProtectedSection(VOID)
 {
     g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
-    WaitForSingleObject(g_hMutex, 5 * 1000);
+    DWORD dwWaitResult = WaitForSingleObject(g_hMutex, 5 * 1000);
+    if (dwWaitResult == WAIT_OBJECT_0)
+    {
+        // Mutex acquired successfully
+        return;
+    }
+    else if (dwWaitResult == WAIT_TIMEOUT)
+    {
+        WARN("Timeout while waiting for mutex.\n");
+    }
+    else
+    {
+        ERR("Failed to acquire mutex. Error code: %lu\n", GetLastError());
+    }
 }
 
 static inline VOID LeaveProtectedSection(VOID)
