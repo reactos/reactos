@@ -1819,6 +1819,38 @@ WSPAccept(
         }
     }
 
+    /* AcceptSocket asynchronous events */
+    if (Socket->SharedData->NonBlocking)
+    {
+        /* The socket created by the accept function has the same
+         * properties as the listening socket used to accept it. */
+        if (Socket->SharedData->AsyncEvents)
+        {
+            Status = WSPAsyncSelect(AcceptSocket,
+                                    Socket->SharedData->hWnd,
+                                    Socket->SharedData->wMsg,
+                                    Socket->SharedData->AsyncEvents,
+                                    lpErrno);
+        }
+        else if (Socket->NetworkEvents)
+        {
+            Status = WSPEventSelect(AcceptSocket,
+                                    Socket->EventObject,
+                                    Socket->NetworkEvents,
+                                    lpErrno);
+        }
+        else
+        {
+            Status = ERROR_SUCCESS;
+        }
+		
+        if (Status != ERROR_SUCCESS)
+        {
+            if (lpErrno) *lpErrno = Status;
+            return SOCKET_ERROR;
+        }
+    }
+
     if (lpErrno) *lpErrno = NO_ERROR;
 
     /* Return Socket */
