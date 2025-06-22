@@ -27,10 +27,11 @@ HINSTANCE g_hInstance = NULL;
 HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
 HANDLE g_hMutex = NULL;
+#define MUTEX_TIMEOUT_MS (5 * 1000)
 
 static inline BOOL EnterProtectedSection(VOID)
 {
-    DWORD dwWaitResult = WaitForSingleObject(g_hMutex, 5 * 1000);
+    DWORD dwWaitResult = WaitForSingleObject(g_hMutex, MUTEX_TIMEOUT_MS);
     if (dwWaitResult == WAIT_OBJECT_0)
         return TRUE;
 
