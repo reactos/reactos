@@ -352,7 +352,7 @@ BEGIN
    AUTORADIOBUTTON "&Programy", IDC_CPUCLIENT, 14, 36, 75, 12
    AUTORADIOBUTTON "&Usługi działające w tle", IDC_CPUSERVER, 96, 36, 85, 12
    GROUPBOX "Pamięć wirtualna", IDC_STATIC, 7, 60, 213, 57
-   LTEXT "Plik stronicowania to obszar twardego dysku używany przez system Reactos tak, jakby była to pamięć RAM.", IDC_STATIC, 14, 74, 199, 16
+   LTEXT "Plik stronicowania to obszar twardego dysku używany przez system ReactOS tak, jakby była to pamięć RAM.", IDC_STATIC, 14, 74, 199, 16
    PUSHBUTTON "Z&mień...", IDC_CHANGESWAP, 163, 97, 50, 14
 END
 
