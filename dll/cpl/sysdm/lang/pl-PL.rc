@@ -338,7 +338,7 @@ CAPTION "Efekty wizualne"
 FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
-   LTEXT "Wybierz ustawienia wyglądu i wydajności systemu Reactos, których chcesz używać na tym komputerze.", IDC_STATIC, 7, 6, 208, 18
+   LTEXT "Wybierz ustawienia wyglądu i wydajności systemu ReactOS, których chcesz używać na tym komputerze.", IDC_STATIC, 7, 6, 208, 18
    CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
 END
 
