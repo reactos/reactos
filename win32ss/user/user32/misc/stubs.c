@@ -435,15 +435,6 @@ WORD WINAPI InitializeWin32EntryTable(UCHAR* EntryTablePlus0x1000)
 /*
  * @unimplemented
  */
-BOOL WINAPI IsServerSideWindow(HWND wnd)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 VOID WINAPI AllowForegroundActivation(VOID)
 {
   UNIMPLEMENTED;
