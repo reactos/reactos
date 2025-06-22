@@ -192,8 +192,8 @@ GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
     else
     {
         WARN("EnterProtectedSection failed\n");
-        *pnID = g_pShared->nHotID;
-        *pdwItemData = g_pShared->dwHotMenuItemData;
+        *pnID = 0;
+        *pdwItemData = 0;
     }
 }
 
@@ -210,8 +210,6 @@ SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
     else
     {
         WARN("EnterProtectedSection failed\n");
-        g_pShared->nHotID = nID;
-        g_pShared->dwHotMenuItemData = dwItemData;
     }
 }
 
