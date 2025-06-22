@@ -37,7 +37,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Préparation des connections réseau..."
+    IDS_PREPARENETWORKCONNECTIONS "Préparation des connexions réseau..."
     IDS_APPLYINGCOMPUTERSETTINGS "Application des paramètres de l'ordinateur..."
     IDS_RUNNINGSTARTUPSCRIPTS "Exécution des scripts de démarrage..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Exécution des scripts de fermeture..."
@@ -45,7 +45,7 @@ BEGIN
     IDS_RUNNINGLOGOFFSCRIPTS "Exécution des scripts de fermeture de session..."
     IDS_RUNNINGLOGONSCRIPTS "Exécution des scripts d'ouverture de session..."
     IDS_LOADINGYOURPERSONALSETTINGS "Chargement de vos paramètres personnels..."
-    IDS_CLOSINGNETWORKCONNECTIONS "Fermeture des connections réseau..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Fermeture des connexions réseau..."
     IDS_REACTOSISRESTARTING "Redémarrage..."
     IDS_REACTOSISSHUTTINGDOWN "Arrêt en cours..."
     IDS_PREPARETOSTANDBY "Préparation de la Mise en Veille..."
