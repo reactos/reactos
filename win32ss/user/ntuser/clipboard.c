@@ -1190,13 +1190,17 @@ NtUserConvertMemHandle(
 {
     HANDLE hMem = NULL;
     PCLIPBOARDDATA pMemObj;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     UserEnterExclusive();
 
     /* Create Clipboard data object */
     pMemObj = UserCreateObject(gHandleTable, NULL, NULL, &hMem, TYPE_CLIPDATA, sizeof(CLIPBOARDDATA) + cbData);
     if (!pMemObj)
+    {
+        SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
         goto cleanup;
+    }
 
     pMemObj->cbData = cbData;
 
@@ -1208,7 +1212,7 @@ NtUserConvertMemHandle(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        pMemObj = NULL;
+        Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
 
@@ -1216,10 +1220,11 @@ NtUserConvertMemHandle(
     UserDereferenceObject(pMemObj);
 
     /* If we failed to copy data, remove handle */
-    if (!pMemObj)
+    if (!NT_SUCCESS(Status))
     {
         UserDeleteObject(hMem, TYPE_CLIPDATA);
         hMem = NULL;
+        SetLastNtError(Status);
     }
 
 cleanup:
