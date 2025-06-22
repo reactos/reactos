@@ -28,22 +28,18 @@ HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
 HANDLE g_hMutex = NULL;
 
-static inline VOID EnterProtectedSection(VOID)
+static inline BOOL EnterProtectedSection(VOID)
 {
     DWORD dwWaitResult = WaitForSingleObject(g_hMutex, 5 * 1000);
     if (dwWaitResult == WAIT_OBJECT_0)
-    {
-        // Mutex acquired successfully
-        return;
-    }
-    else if (dwWaitResult == WAIT_TIMEOUT)
-    {
+        return TRUE;
+
+    if (dwWaitResult == WAIT_TIMEOUT)
         WARN("Timeout while waiting for mutex.\n");
-    }
     else
-    {
         ERR("Failed to acquire mutex. Error code: %lu\n", GetLastError());
-    }
+
+    return FALSE;
 }
 
 static inline VOID LeaveProtectedSection(VOID)
