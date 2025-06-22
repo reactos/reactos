@@ -39,7 +39,7 @@ static inline BOOL EnterProtectedSection(VOID)
     if (dwWaitResult == WAIT_TIMEOUT)
         WARN("Timeout while waiting for mutex.\n");
     else
-        ERR("Failed to acquire mutex. Error code: %lu\n", GetLastError());
+        WARN("Failed to acquire mutex. Error code: %lu\n", GetLastError());
 
     return FALSE;
 }
@@ -189,6 +189,12 @@ GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
         *pdwItemData = g_pShared->dwHotMenuItemData;
         LeaveProtectedSection();
     }
+    else
+    {
+        WARN("EnterProtectedSection failed\n");
+        *pnID = g_pShared->nHotID;
+        *pdwItemData = g_pShared->dwHotMenuItemData;
+    }
 }
 
 // indicdll!14
@@ -200,6 +206,12 @@ SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
         g_pShared->nHotID = nID;
         g_pShared->dwHotMenuItemData = dwItemData;
         LeaveProtectedSection();
+    }
+    else
+    {
+        WARN("EnterProtectedSection failed\n");
+        g_pShared->nHotID = nID;
+        g_pShared->dwHotMenuItemData = dwItemData;
     }
 }
 
