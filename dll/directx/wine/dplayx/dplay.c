@@ -37,6 +37,21 @@
 #include "wine/dplaysp.h"
 #include "dplay_global.h"
 
+
+#ifdef __REACTOS__
+LSTATUS WINAPI RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
+  DWORD dwFlags, LPDWORD pdwType, PVOID pvData,
+  LPDWORD pcbData );
+
+  LSTATUS WINAPI
+RegGetValueW(HKEY hKey,
+             LPCWSTR pszSubKey,
+             LPCWSTR pszValue,
+             DWORD dwFlags,
+             LPDWORD pdwType,
+             PVOID pvData,
+             LPDWORD pcbData);
+#endif
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 /* FIXME: Should this be externed? */

@@ -4121,7 +4121,11 @@ static struct wined3d_context *adapter_gl_acquire_context(struct wined3d_device 
 
 static void adapter_gl_release_context(struct wined3d_context *context)
 {
+#ifdef __REACTOS__
+    wined3d_context_gl_release(wined3d_context_gl(context));
+#else
     return wined3d_context_gl_release(wined3d_context_gl(context));
+#endif
 }
 
 static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)

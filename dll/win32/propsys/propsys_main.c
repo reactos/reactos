@@ -474,10 +474,3 @@ HRESULT WINAPI PSCreateMemoryPropertyStore(REFIID riid, void **ppv)
 
     return PropertyStore_CreateInstance(NULL, riid, ppv);
 }
-
-#ifdef __REACTOS__
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-#endif

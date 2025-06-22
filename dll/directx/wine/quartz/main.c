@@ -57,10 +57,15 @@ bool array_reserve(void **elements, size_t *capacity, size_t count, size_t size)
 
 BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void *reserved)
 {
+    if (reason == DLL_PROCESS_ATTACH)
+        CoInitialize(NULL);
     if (reason == DLL_PROCESS_DETACH && !reserved)
     {
         video_window_unregister_class();
         strmbase_release_typelibs();
+#ifdef __REACTOS__
+        CoUninitialize();
+#endif
     }
     return QUARTZ_DllMain(instance, reason, reserved);
 }
@@ -727,7 +732,11 @@ DWORD WINAPI AMGetErrorTextW(HRESULT hr, LPWSTR buffer, DWORD maxlen)
     TRACE("hr %#lx, buffer %p, maxlen %lu.\n", hr, buffer, maxlen);
 
     if (!buffer) return 0;
+#ifdef __REACTOS__
+    swprintf(error, L"Error: 0x%lx", hr);
+#else
     swprintf(error, ARRAY_SIZE(error), L"Error: 0x%lx", hr);
+#endif
     if ((len = wcslen(error)) >= maxlen)
         return 0;
     wcscpy(buffer, error);

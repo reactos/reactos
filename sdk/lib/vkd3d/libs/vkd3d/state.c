@@ -1945,7 +1945,11 @@ static HRESULT pipeline_state_desc_from_d3d12_stream_desc(struct d3d12_pipeline_
     }
     subobject_info[] =
     {
+#ifdef __REACTOS__
+#define DCL_SUBOBJECT_INFO(type, field) {__alignof(type), sizeof(type), offsetof(struct d3d12_pipeline_state_desc, field)}
+#else
 #define DCL_SUBOBJECT_INFO(type, field) {__alignof__(type), sizeof(type), offsetof(struct d3d12_pipeline_state_desc, field)}
+#endif
         [D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE]  = DCL_SUBOBJECT_INFO(ID3D12RootSignature *, root_signature),
         [D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS]              = DCL_SUBOBJECT_INFO(D3D12_SHADER_BYTECODE, vs),
         [D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PS]              = DCL_SUBOBJECT_INFO(D3D12_SHADER_BYTECODE, ps),

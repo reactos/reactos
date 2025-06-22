@@ -144,7 +144,9 @@ static DWORD WINAPI SystemClockAdviseThread(void *param)
     REFERENCE_TIME current_time;
 
     TRACE("Starting advise thread for clock %p.\n", clock);
+#ifndef __REACTOS__
     SetThreadDescription(GetCurrentThread(), L"wine_qz_clock_advise");
+#endif
 
     for (;;)
     {

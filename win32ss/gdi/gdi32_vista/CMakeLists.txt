@@ -22,7 +22,7 @@ add_dependencies(gdi32_vista_static psdk)
 
 target_link_libraries(gdi32_vista win32ksys)
 
-#add_importlibs(gdi32_vista user32 advapi32 kernel32 ntdll)
+add_importlibs(gdi32_vista user32 advapi32 kernel32 ntdll)
 #add_pch(gdi32_vista include/precomp.h SOURCE)
 add_dependencies(gdi32_vista psdk)
 add_cd_file(TARGET gdi32_vista DESTINATION reactos/system32 FOR all)

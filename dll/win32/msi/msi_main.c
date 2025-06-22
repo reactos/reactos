@@ -210,6 +210,7 @@ HRESULT WINAPI DllGetVersion(DLLVERSIONINFO *pdvi)
     return S_OK;
 }
 
+#ifndef __REACTOS__
 /******************************************************************
  * DllCanUnloadNow            [MSI.@]
  */
@@ -217,3 +218,4 @@ HRESULT WINAPI DllCanUnloadNow(void)
 {
     return dll_count == 0 ? S_OK : S_FALSE;
 }
+#endif

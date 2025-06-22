@@ -22,6 +22,10 @@
 #include <stdio.h>
 #include <math.h>
 
+#ifdef __REACTOS__
+#define M_PI 3.141592653589793238462643
+#endif
+
 /* TODO: remove when no longer needed, only used for new_offset_instr_from_deref() */
 static struct hlsl_ir_node *new_offset_from_path_index(struct hlsl_ctx *ctx, struct hlsl_block *block,
         struct hlsl_type *type, struct hlsl_ir_node *base_offset, struct hlsl_ir_node *idx,
@@ -4065,9 +4069,13 @@ static bool lower_discard_neg(struct hlsl_ctx *ctx, struct hlsl_ir_node *instr, 
     {
         if (!(load = hlsl_add_load_component(ctx, &block, cmp, i, &instr->loc)))
             return false;
-
+#ifdef __REACTOS__
+            if (!(or = hlsl_new_binary_expr(ctx, HLSL_OP2_LOGIC_OR, or, load)))
+                return FALSE;
+#else
         if (!(or = hlsl_new_binary_expr(ctx, HLSL_OP2_LOGIC_OR, or, load)))
                 return NULL;
+#endif
         hlsl_block_add_instr(&block, or);
     }
 

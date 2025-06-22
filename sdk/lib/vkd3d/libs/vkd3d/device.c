@@ -45,8 +45,12 @@ static const void *vkd3d_find_struct_(const struct vkd3d_struct *chain,
 static uint32_t vkd3d_get_vk_version(void)
 {
     int major, minor;
-
+#ifdef __REACTOS__
+#define PACKAGE_VERSION_VKD3D "1.14"
+    vkd3d_parse_version(PACKAGE_VERSION_VKD3D, &major, &minor);
+#else
     vkd3d_parse_version(PACKAGE_VERSION, &major, &minor);
+#endif
     return VK_MAKE_VERSION(major, minor, 0);
 }
 
@@ -483,7 +487,9 @@ static HRESULT vkd3d_init_vk_global_procs(struct vkd3d_instance *instance,
         PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr)
 {
     HRESULT hr;
-
+#ifdef __REACTOS__
+#define SONAME_LIBVULKAN "vulkan-1.dll"
+#endif
     if (!vkGetInstanceProcAddr)
     {
         if (!(instance->libvulkan = vkd3d_dlopen(SONAME_LIBVULKAN)))
@@ -587,8 +593,10 @@ static HRESULT vkd3d_instance_init(struct vkd3d_instance *instance,
     VkInstance vk_instance;
     VkResult vr;
     HRESULT hr;
-
-    TRACE("Build: " PACKAGE_STRING VKD3D_VCS_ID ".\n");
+#ifdef __REACTOS__
+#define PACKAGE_STRING_VK "vkd3d 1.14"
+#endif
+    TRACE("Build: " PACKAGE_STRING_VK VKD3D_VCS_ID ".\n");
 
     if (!create_info->pfn_signal_event)
     {

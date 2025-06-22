@@ -20,6 +20,15 @@
 
 #include "d3dxof_private.h"
 
+#ifdef __REACTOS__
+#ifndef __MSABI_LONG
+# if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
+#  define __MSABI_LONG(x)         x ## l
+# else
+#  define __MSABI_LONG(x)         x
+# endif
+#endif
+#endif
 WINE_DEFAULT_DEBUG_CHANNEL(d3dxof);
 WINE_DECLARE_DEBUG_CHANNEL(d3dxof_dump);
 

@@ -41,6 +41,14 @@
 #include <limits.h>
 #include <stdbool.h>
 
+#ifdef __REACTOS__
+int
+__cdecl
+_isnan(
+  _In_ double);
+  #define isnan _isnan
+#endif
+
 #define VK_CALL(f) (vk_procs->f)
 
 #define VKD3D_DESCRIPTOR_MAGIC_FREE    0x00000000u
@@ -835,7 +843,7 @@ struct d3d12_descriptor_heap
 
     unsigned int volatile dirty_list_head;
 
-    uint8_t DECLSPEC_ALIGN(sizeof(void *)) descriptors[];
+    uint8_t descriptors[sizeof(PVOID)]; //HACK: CHECKME
 };
 
 void d3d12_desc_flush_vk_heap_updates_locked(struct d3d12_descriptor_heap *descriptor_heap, struct d3d12_device *device);

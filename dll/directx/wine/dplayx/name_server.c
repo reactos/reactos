@@ -105,7 +105,11 @@ void NS_AddRemoteComputerAsNameServer( LPCVOID                      lpcNSAddrHdr
     return;
 
   maxNameLength = (msgSize - sizeof( DPMSG_ENUMSESSIONSREPLY )) / sizeof( WCHAR );
+#ifdef __REACTOS__
+  nameLength = wcslen( (WCHAR *) (lpcMsg + 1) );
+#else
   nameLength = wcsnlen( (WCHAR *) (lpcMsg + 1), maxNameLength );
+#endif
   if ( nameLength == maxNameLength )
     return;
 

@@ -18,14 +18,16 @@
  */
 
 #include "d3d11_private.h"
-#include "winternl.h"
+#ifdef __REACTOS__
+#include "wine/winternl.h"
+#endif
 #include <vkd3d_shader.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d11);
 
 static BOOL is_vs_sysval_semantic(const struct vkd3d_shader_signature_element *e)
 {
-    return !stricmp(e->semantic_name, "sv_instanceid") || !stricmp(e->semantic_name, "sv_vertexid");
+    return !_stricmp(e->semantic_name, "sv_instanceid") || !_stricmp(e->semantic_name, "sv_vertexid");
 }
 
 static unsigned int find_input_element(const D3D11_INPUT_ELEMENT_DESC *element_descs, unsigned int element_count,
@@ -40,7 +42,7 @@ static unsigned int find_input_element(const D3D11_INPUT_ELEMENT_DESC *element_d
     for (i = 0; i < element_count; ++i)
     {
         f = &element_descs[i];
-        if (!stricmp(ise->semantic_name, f->SemanticName) && ise->semantic_index == f->SemanticIndex)
+        if (!_stricmp(ise->semantic_name, f->SemanticName) && ise->semantic_index == f->SemanticIndex)
             return i;
     }
     return element_count;

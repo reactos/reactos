@@ -3143,7 +3143,7 @@ static void STDMETHODCALLTYPE d3d11_video_context_GetDevice(ID3D11VideoContext *
 {
     struct d3d11_device_context *context = impl_from_ID3D11VideoContext(iface);
 
-    return d3d11_device_context_GetDevice(&context->ID3D11DeviceContext1_iface, device);
+    d3d11_device_context_GetDevice(&context->ID3D11DeviceContext1_iface, device);
 }
 
 static HRESULT STDMETHODCALLTYPE d3d11_video_context_GetPrivateData(

@@ -30,7 +30,7 @@
 @ stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
 @ stdcall D3DXConvertMeshSubsetToSingleStrip(ptr long long ptr ptr)
 @ stub D3DXConvertMeshSubsetToStrips(ptr long long ptr ptr ptr ptr)
-@ stdcall D3DXCpuOptimizations(long)
+@ stdcall D3DXCpuOptimizations(long) d3dx9_30.D3DXCpuOptimizations
 @ stdcall D3DXCreateAnimationController(long long long long ptr)
 @ stdcall D3DXCreateBox(ptr float float float ptr ptr)
 @ stdcall D3DXCreateBuffer(long ptr)

@@ -22,7 +22,46 @@
 
 #include <stdio.h>
 #include <math.h>
+#ifdef __REACTOS__
+float log2f_hack(float x)
+{
+    return (float)log2((double)x);
+}
 
+float
+__cdecl
+exp2f(
+    _In_ float x)
+{
+    /* This below avoids clang to optimize our pow call to exp2 */
+    static const float TWO = 2.0f;
+    return powf(TWO, x);
+}
+
+ 
+void* CDECL _recalloc(void *mem, size_t num, size_t size)
+{
+    size_t old_size;
+    void *ret;
+
+    if(!mem)
+        return calloc(num, size);
+
+    size = num*size;
+    old_size = _msize(mem);
+
+    ret = realloc(mem, size);
+    if(!ret) {
+        *_errno() = ENOMEM;
+        return NULL;
+    }
+
+    if(size>old_size)
+        memset((BYTE*)ret+old_size, 0, size-old_size);
+    return ret;
+}
+
+#endif
 static inline int char_to_int(char c)
 {
     if ('0' <= c && c <= '9')
@@ -1918,6 +1957,23 @@ void vkd3d_shader_free_shader_signature(struct vkd3d_shader_signature *signature
 
 const char *vkd3d_shader_get_version(unsigned int *major, unsigned int *minor)
 {
+#ifdef __REACTOS__
+#define PACKAGE_VERSION_VKD3D "1.14"
+    int x, y;
+
+    TRACE("major %p, minor %p.\n", major, minor);
+
+    if (major || minor)
+    {
+        vkd3d_parse_version(PACKAGE_VERSION_VKD3D, &x, &y);
+        if (major)
+            *major = x;
+        if (minor)
+            *minor = y;
+    }
+
+    return "vkd3d-shader " PACKAGE_VERSION_VKD3D VKD3D_VCS_ID;
+#else
     int x, y;
 
     TRACE("major %p, minor %p.\n", major, minor);
@@ -1932,6 +1988,7 @@ const char *vkd3d_shader_get_version(unsigned int *major, unsigned int *minor)
     }
 
     return "vkd3d-shader " PACKAGE_VERSION VKD3D_VCS_ID;
+#endif
 }
 
 const enum vkd3d_shader_source_type *vkd3d_shader_get_supported_source_types(unsigned int *count)

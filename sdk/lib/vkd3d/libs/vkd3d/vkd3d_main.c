@@ -18,8 +18,6 @@
 
 #include "vkd3d_private.h"
 
-VKD3D_DEBUG_ENV_NAME("VKD3D_DEBUG");
-
 HRESULT vkd3d_create_device(const struct vkd3d_device_create_info *create_info,
         REFIID iid, void **device)
 {

@@ -267,7 +267,11 @@ static void vkd3d_log_callback(const char *fmt, va_list args)
     char buffer[1024];
 
     vsnprintf(buffer, sizeof(buffer), fmt, args);
+#ifdef __REACTOS__
+    TRACE("%s\n", buffer);
+#else
     __wine_dbg_output(buffer);
+#endif
 }
 
 static BOOL wined3d_dll_init(HINSTANCE hInstDLL)

@@ -1,4 +1,3 @@
-
 spec2def(msdmo.dll msdmo.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#ifndef __REACTOS__
 #include <dlfcn.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -38,6 +39,7 @@
 #include <sys/time.h>
 #ifdef HAVE_ASM_TYPES_H
 #include <asm/types.h>
+#endif
 #endif
 #ifdef HAVE_LINUX_VIDEODEV2_H
 #include <linux/videodev2.h>

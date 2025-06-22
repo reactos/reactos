@@ -1107,7 +1107,9 @@ static DWORD CALLBACK notification_thread_func(void *stop_event)
     struct wined3d_video_memory_info info;
     HRESULT hr;
 
+#ifndef __REACTOS__
     SetThreadDescription(GetCurrentThread(), L"wined3d_budget_change_notification");
+#endif
 
     while (TRUE)
     {

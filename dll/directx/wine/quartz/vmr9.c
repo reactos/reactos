@@ -223,7 +223,7 @@ static HRESULT vmr_render(struct strmbase_renderer *iface, IMediaSample *sample)
     unsigned int data_size, width, depth, src_pitch;
     const BITMAPINFOHEADER *bitmap_header;
     REFERENCE_TIME start_time, end_time;
-    VMR9PresentationInfo info = {};
+    VMR9PresentationInfo info = {0};
     D3DLOCKED_RECT locked_rect;
     D3DSURFACE_DESC dst_desc;
     BYTE *data = NULL;
@@ -380,7 +380,7 @@ static HRESULT initialize_device(struct quartz_vmr *filter, VMR9AllocationInfo *
 
 static HRESULT allocate_surfaces(struct quartz_vmr *filter, const AM_MEDIA_TYPE *mt)
 {
-    VMR9AllocationInfo info = {};
+    VMR9AllocationInfo info = {0};
     HRESULT hr = E_FAIL;
     DWORD count = 1;
     unsigned int i;
@@ -1832,9 +1832,11 @@ static HRESULT WINAPI mixer_bitmap9_SetAlphaBitmap(IVMRMixerBitmap9 *iface,
         const VMR9AlphaBitmap *bitmap)
 {
     FIXME("iface %p, bitmap %p, stub!\n", iface, bitmap);
+#ifndef __REACTOS__
     TRACE("dwFlags %#lx, hdc %p, pDDS %p, rSrc %s, rDest %s, fAlpha %.8e, clrSrcKey #%06lx, dwFilterMode %#lx.\n",
             bitmap->dwFlags, bitmap->hdc, bitmap->pDDS, wine_dbgstr_rect(&bitmap->rSrc),
             debugstr_normalized_rect(&bitmap->rDest), bitmap->fAlpha, bitmap->clrSrcKey, bitmap->dwFilterMode);
+#endif
     return E_NOTIMPL;
 }
 
