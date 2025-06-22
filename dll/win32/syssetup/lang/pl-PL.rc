@@ -2,8 +2,7 @@
  * PROJECT:     ReactOS System Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Polish resource file
- * TRANSLATORS:
- * Updated by pithwz - Piotr  Hetnarowicz (piotrhwz@gmail.com) (June, 2025)
+ * TRANSLATORS: Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (June, 2025)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
