@@ -91,6 +91,21 @@ NtGdiDdDDIOpenAdapterFromDeviceName(_Inout_ D3DKMT_OPENADAPTERFROMDEVICENAME* un
     return 0;
 }
 
+/* wine required */
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromLuid(_Inout_ const D3DKMT_OPENADAPTERFROMLUID *unnamedParam1)
+{
+    return 0;
+}
+
+NTSTATUS
+APIENTRY
+NtGdiDdQueryVideoMemoryInfo(_Inout_ D3DKMT_QUERYVIDEOMEMORYINFO *unnamedParam1)
+{
+    return 0;
+}
+
 
 /*
  * The following APIs all have the same idea.

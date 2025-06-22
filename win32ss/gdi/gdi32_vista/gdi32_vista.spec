@@ -2,11 +2,11 @@
 @ stdcall D3DKMTDestroyDCFromMemory(ptr)
 
 ; XDDM Translation
-@ stdcall D3DKMTCreateDevice(ptr)
-@ stdcall D3DKMTDestroyDevice(ptr)
-@ stdcall D3DKMTOpenAdapterFromGdiDisplayName(ptr)
-@ stdcall D3DKMTCloseAdapter(ptr)
-@ stdcall D3DKMTSetVidPnSourceOwner(ptr)
-@ stdcall D3DKMTOpenAdapterFromLuid(ptr)
-@ stdcall D3DKMTQueryVideoMemoryInfo(ptr)
-@ stdcall D3DKMTQueryAdapterInfo(ptr) NtGdiDdDDIQueryAdapterInfo
+@ stdcall -version=0x502 D3DKMTCloseAdapter(ptr)
+@ stdcall -version=0x502 D3DKMTCreateDevice(ptr)
+@ stdcall -version=0x502 D3DKMTDestroyDevice(ptr)
+@ stdcall -version=0x502-0x601 D3DKMTOpenAdapterFromLuid(ptr)
+@ stdcall -version=0x502 D3DKMTOpenAdapterFromGdiDisplayName(ptr)
+@ stdcall -version=0x502 D3DKMTQueryAdapterInfo(ptr) NtGdiDdDDIQueryAdapterInfo
+@ stdcall -version=0x502-0x601 D3DKMTQueryVideoMemoryInfo(ptr)
+@ stdcall -version=0x502 D3DKMTSetVidPnSourceOwner(ptr)
