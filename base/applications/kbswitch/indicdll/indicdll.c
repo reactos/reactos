@@ -235,6 +235,11 @@ DllMain(IN HINSTANCE hinstDLL,
             }
 
             g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
+            if (!g_hMutex)
+            {
+                ERR("Failed to create mutex\n");
+                return FALSE;
+            }
             break;
         }
         case DLL_PROCESS_DETACH:
