@@ -118,7 +118,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Rejestracja składników", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Rejestrowanie składników", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Instaluje elementy menu Start", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "Zapisuje ustawienia", IDC_TASKTEXT3, 65, 51, 232, 8
     LTEXT "Usuwa użyte pliki tymnczasowe", IDC_TASKTEXT4, 65, 63, 232, 8
