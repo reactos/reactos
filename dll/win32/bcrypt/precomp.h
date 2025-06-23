@@ -21,11 +21,6 @@
 #include <gnutls/gnutls.h>
 #elif defined(SONAME_LIBMBEDTLS)
 #include <mbedtls/md.h>
-#include <mbedtls/md.h>
-#include <mbedtls/md5.h>
-#include <mbedtls/sha1.h>
-#include <mbedtls/sha256.h>
-#include <mbedtls/sha512.h>
 #endif
 
 #include "bcrypt_internal.h"
