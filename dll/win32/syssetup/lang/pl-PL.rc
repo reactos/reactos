@@ -119,9 +119,9 @@ CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Rejestrowanie składników", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Instaluje elementy menu Start", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Zapisuje ustawienia", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Usuwa użyte pliki tymnczasowe", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Instalowanie elementów menu Start", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Zapisywanie ustawień", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Usuwanie plików tymczasowych", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
