@@ -80,7 +80,7 @@ NTSTATUS
 APIENTRY
 NtGdiDdDDIOpenAdapterFromHdc(_Inout_ D3DKMT_OPENADAPTERFROMHDC* unnamedParam1)
 {
-    return 0;
+    return STATUS_PROCEDURE_NOT_FOUND;
 }
 
 
