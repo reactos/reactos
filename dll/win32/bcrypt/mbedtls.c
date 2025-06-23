@@ -8,20 +8,26 @@ static void *libmbedtls_handle;
 
 #define MAKE_FUNCPTR(f) static typeof(f) * p##f
 MAKE_FUNCPTR(mbedtls_md_init);
+MAKE_FUNCPTR(mbedtls_md_info_from_type);
+MAKE_FUNCPTR(mbedtls_md_get_size);
 MAKE_FUNCPTR(mbedtls_md_setup);
 MAKE_FUNCPTR(mbedtls_md_update);
 MAKE_FUNCPTR(mbedtls_md_starts);
-MAKE_FUNCPTR(mbedtls_md_hmac_starts);
 MAKE_FUNCPTR(mbedtls_md_finish);
+MAKE_FUNCPTR(mbedtls_md_hmac_update);
+MAKE_FUNCPTR(mbedtls_md_hmac_starts);
 MAKE_FUNCPTR(mbedtls_md_hmac_finish);
 MAKE_FUNCPTR(mbedtls_md_free);
 #undef MAKE_FUNCPTR
 
 #define mbedtls_md_init                 pmbedtls_md_init
+#define mbedtls_md_info_from_type       pmbedtls_md_info_from_type
+#define mbedtls_md_get_size             pmbedtls_md_get_size
 #define mbedtls_md_setup                pmbedtls_md_setup
 #define mbedtls_md_update               pmbedtls_md_update
 #define mbedtls_md_starts               pmbedtls_md_starts
 #define mbedtls_md_finish               pmbedtls_md_finish
+#define mbedtls_md_hmac_update          pmbedtls_md_hmac_update
 #define mbedtls_md_hmac_starts          pmbedtls_md_hmac_starts
 #define mbedtls_md_hmac_finish          pmbedtls_md_hmac_finish
 #define mbedtls_md_free                 pmbedtls_md_free
@@ -42,10 +48,13 @@ NTSTATUS process_attach( void *args )
     }
 
     LOAD_FUNCPTR(mbedtls_md_init)
+    LOAD_FUNCPTR(mbedtls_md_info_from_type)
+    LOAD_FUNCPTR(mbedtls_md_get_size)
     LOAD_FUNCPTR(mbedtls_md_setup)
     LOAD_FUNCPTR(mbedtls_md_update)
     LOAD_FUNCPTR(mbedtls_md_starts)
     LOAD_FUNCPTR(mbedtls_md_finish)
+    LOAD_FUNCPTR(mbedtls_md_hmac_update)
     LOAD_FUNCPTR(mbedtls_md_hmac_starts)
     LOAD_FUNCPTR(mbedtls_md_hmac_finish)
     LOAD_FUNCPTR(mbedtls_md_free);
@@ -69,7 +78,7 @@ NTSTATUS process_detach( void *args )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hash_init_internal( struct hash *hash, UCHAR *key, ULONG key_size )
+NTSTATUS hash_init( struct hash *hash )
 {
     const mbedtls_md_info_t *md_info;
     mbedtls_md_type_t md_type;
@@ -77,7 +86,7 @@ NTSTATUS hash_init_internal( struct hash *hash, UCHAR *key, ULONG key_size )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    mbedtls_md_init(&hash->u.hash_ctx);
+    mbedtls_md_init(&hash->hash_ctx);
     switch (hash->alg_id)
     {
     case ALG_ID_MD2:
@@ -114,36 +123,22 @@ NTSTATUS hash_init_internal( struct hash *hash, UCHAR *key, ULONG key_size )
     }
     if ((md_info = mbedtls_md_info_from_type(md_type)) == NULL)
     {
-        mbedtls_md_free(&hash->u.hash_ctx);
+        mbedtls_md_free(&hash->hash_ctx);
         return STATUS_INTERNAL_ERROR;
     }
 
-    if ((ret = mbedtls_md_setup(&hash->u.hash_ctx, md_info, hash->flags & HASH_FLAG_HMAC)) != 0)
+    if ((ret = mbedtls_md_setup(&hash->hash_ctx, md_info, hash->flags & HASH_FLAG_HMAC)) != 0)
     {
-        mbedtls_md_free(&hash->u.hash_ctx);
+        mbedtls_md_free(&hash->hash_ctx);
         return STATUS_INTERNAL_ERROR;
     }
 
     if (hash->flags & HASH_FLAG_HMAC)
-    {
-        mbedtls_md_hmac_starts(&hash->u.hash_ctx, key, key_size);
-    }
+        mbedtls_md_hmac_starts(&hash->hash_ctx, hash->secret, hash->secret_len);
     else
-    {
-        mbedtls_md_starts(&hash->u.hash_ctx);
-    }
+        mbedtls_md_starts(&hash->hash_ctx);
 
     return STATUS_SUCCESS;
-}
-
-NTSTATUS hash_init( struct hash *hash )
-{
-    return hash_init_internal( hash, NULL, 0 );
-}
-
-NTSTATUS hmac_init( struct hash *hash, UCHAR *key, ULONG key_size )
-{
-    return hash_init_internal( hash, key, key_size );
 }
 
 NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
@@ -151,13 +146,12 @@ NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    mbedtls_md_update(&hash->u.hash_ctx, input, size);
+    if (hash->flags & HASH_FLAG_HMAC)
+        mbedtls_md_hmac_update(&hash->hash_ctx, input, size);
+    else
+        mbedtls_md_update(&hash->hash_ctx, input, size);
 
-    return STATUS_SUCCESS;}
-
-NTSTATUS hmac_update( struct hash *hash, UCHAR *input, ULONG size )
-{
-    return hash_update( hash, input, size );
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS hash_finish( struct hash *hash, UCHAR *output )
@@ -166,21 +160,25 @@ NTSTATUS hash_finish( struct hash *hash, UCHAR *output )
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
     if (hash->flags & HASH_FLAG_HMAC)
-    {
-        mbedtls_md_hmac_finish(&hash->u.hash_ctx, output);
-    }
+        mbedtls_md_hmac_finish(&hash->hash_ctx, output);
     else
-    {
-        mbedtls_md_finish(&hash->u.hash_ctx, output);
-    }
-    mbedtls_md_free(&hash->u.hash_ctx);
+        mbedtls_md_finish(&hash->hash_ctx, output);
+
+    mbedtls_md_free(&hash->hash_ctx);
 
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hmac_finish( struct hash *hash, UCHAR *output )
+NTSTATUS hash_get_size( struct hash *hash, ULONG *output )
 {
-    return hash_finish( hash, output );
+#ifndef __REACTOS__
+    if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
+#endif
+    if (!hash->hash_ctx.md_info) return STATUS_INTERNAL_ERROR;
+    if (!output) return STATUS_INTERNAL_ERROR;
+    *output = mbedtls_md_get_size(hash->hash_ctx.md_info);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS key_symmetric_set_auth_data( void *args )

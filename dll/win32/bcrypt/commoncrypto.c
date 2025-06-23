@@ -114,7 +114,7 @@ NTSTATUS hmac_update( struct hash *hash, UCHAR *input, ULONG size )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hash_finish( struct hash *hash, UCHAR *output, ULONG size )
+NTSTATUS hash_finish( struct hash *hash, UCHAR *output )
 {
     switch (hash->alg_id)
     {
@@ -145,7 +145,7 @@ NTSTATUS hash_finish( struct hash *hash, UCHAR *output, ULONG size )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hmac_finish( struct hash *hash, UCHAR *output, ULONG size )
+NTSTATUS hmac_finish( struct hash *hash, UCHAR *output )
 {
     CCHmacFinal( &hash->u.hmac_ctx, output );
 
