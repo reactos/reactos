@@ -38,8 +38,8 @@ list(APPEND SOURCE
     #havege.c
     #hkdf.c
     hmac_drbg.c
-    #md2.c
-    #md4.c
+    md2.c
+    md4.c
     md5.c
     md.c
     md_wrap.c
