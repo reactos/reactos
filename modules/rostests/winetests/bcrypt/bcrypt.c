@@ -551,6 +551,7 @@ static const struct
     {  8,  0,        1, 16, password,      NULL,      dk7 }
 };
 
+#ifndef __REACTOS__
 static void test_BcryptDeriveKeyPBKDF2(void)
 {
     BCRYPT_ALG_HANDLE alg;
@@ -592,6 +593,7 @@ static void test_BcryptDeriveKeyPBKDF2(void)
         ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
     }
 }
+#endif
 
 static void test_rng(void)
 {
@@ -624,6 +626,7 @@ static void test_rng(void)
     ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
 }
 
+#ifndef __REACTOS__
 static void test_aes(void)
 {
     BCRYPT_KEY_LENGTHS_STRUCT key_lengths;
@@ -4516,12 +4519,13 @@ static void test_PBKDF2(void)
     status = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(status == STATUS_SUCCESS, "got 0x%x\n", status);
 }
+#endif
 
 START_TEST(bcrypt)
 {
     HMODULE module;
 
-    module = LoadLibraryA("bcrypt.dll");
+    module = LoadLibraryA(".\\bcrypt.dll");
     if (!module)
     {
         win_skip("bcrypt.dll not found\n");
@@ -4564,8 +4568,11 @@ START_TEST(bcrypt)
     test_BCryptGetFipsAlgorithmMode();
     test_hashes();
     test_BcryptHash();
+#ifndef __REACTOS__
     test_BcryptDeriveKeyPBKDF2();
+#endif
     test_rng();
+#ifndef __REACTOS__
     test_3des();
     test_aes();
     test_BCryptGenerateSymmetricKey();
@@ -4577,9 +4584,11 @@ START_TEST(bcrypt)
     test_RSA_SIGN();
     test_ECDH();
     test_DH();
+#endif
 #ifndef __REACTOS__
     test_BCryptEnumContextFunctions();
 #endif
+#ifndef __REACTOS__
     test_BCryptSignHash();
     test_BCryptEnumAlgorithms();
     test_aes_vector();
@@ -4589,6 +4598,7 @@ START_TEST(bcrypt)
     test_rsa_encrypt();
     test_RC4();
     test_PBKDF2();
+#endif
 
     FreeLibrary(module);
 }
