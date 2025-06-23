@@ -66,7 +66,7 @@ struct algorithm
     struct object   hdr;
     enum alg_id     id;
     enum chain_mode mode;
-    unsigned        flags;
+    ULONG           flags;
 };
 
 #define BLOCK_LENGTH_RC4        1
@@ -80,7 +80,7 @@ struct key_symmetric
     UCHAR           *vector;
     ULONG            vector_len;
     UCHAR           *secret;
-    unsigned         secret_len;
+    ULONG            secret_len;
     CRITICAL_SECTION cs;
 };
 
@@ -90,7 +90,7 @@ struct key_symmetric
 struct key_asymmetric
 {
     ULONG             bitlen;     /* ignored for ECC keys */
-    unsigned          flags;
+    ULONG             flags;
     DSSSEED           dss_seed;
 };
 
@@ -156,7 +156,7 @@ struct key_asymmetric_decrypt_params
 {
     struct key  *key;
     UCHAR       *input;
-    unsigned     input_len;
+    ULONG        input_len;
     void        *padding;
     UCHAR       *output;
     ULONG        output_len;
@@ -168,7 +168,7 @@ struct key_asymmetric_encrypt_params
 {
     struct key  *key;
     UCHAR       *input;
-    unsigned     input_len;
+    ULONG        input_len;
     void        *padding;
     UCHAR       *output;
     ULONG        output_len;
@@ -187,11 +187,11 @@ struct key_asymmetric_sign_params
     struct key  *key;
     void        *padding;
     UCHAR       *input;
-    unsigned     input_len;
+    ULONG        input_len;
     UCHAR       *output;
     ULONG        output_len;
     ULONG       *ret_len;
-    unsigned     flags;
+    ULONG        flags;
 };
 
 struct key_asymmetric_verify_params
@@ -199,10 +199,10 @@ struct key_asymmetric_verify_params
     struct key *key;
     void       *padding;
     UCHAR      *hash;
-    unsigned    hash_len;
+    ULONG       hash_len;
     UCHAR      *signature;
     ULONG       signature_len;
-    unsigned    flags;
+    ULONG       flags;
 };
 
 #define KEY_EXPORT_FLAG_PUBLIC        0x00000001
@@ -264,10 +264,7 @@ struct hash
     ULONG             flags;
     UCHAR            *secret;
     ULONG             secret_len;
-    union
-    {
-        mbedtls_md_context_t   hash_ctx;
-    } u;
+    mbedtls_md_context_t   hash_ctx;
 };
 #else
 struct hash
@@ -286,6 +283,7 @@ extern NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size );
 extern NTSTATUS hmac_update( struct hash *hash, UCHAR *input, ULONG size );
 extern NTSTATUS hash_finish( struct hash *hash, UCHAR *output );
 extern NTSTATUS hmac_finish( struct hash *hash, UCHAR *output );
+extern NTSTATUS hash_get_size( struct hash *hash, ULONG *output );
 
 extern NTSTATUS process_detach( void *args );
 extern NTSTATUS process_attach( void *args );
