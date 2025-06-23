@@ -864,12 +864,39 @@ NTSTATUS WINAPI BCryptGetProperty( BCRYPT_HANDLE handle, const WCHAR *prop, UCHA
 
 static void hash_prepare( struct hash *hash )
 {
+#ifndef __REACTOS__
+    UCHAR buffer[MAX_HASH_BLOCK_BITS / 8] = {0};
+    ULONG block_bytes, i;
+    struct hash *hash_temp;
+#endif
+
     /* initialize hash */
     hash_init( hash );
     if (!(hash->flags & HASH_FLAG_HMAC)) return;
 
+#ifndef __REACTOS__
     /* initialize hmac */
-    hmac_init( hash, hash->secret, hash->secret_len );
+    hmac_init( hash );
+    hash_get_size(hash, &block_bytes);
+    memset( buffer, 0, sizeof(buffer) );
+    if (hash->secret_len > block_bytes)
+    {
+        if (!(hash_temp = calloc( 1, sizeof(*hash_temp) ))) return;
+        hash_temp->hdr.magic = MAGIC_HASH;
+        hash_temp->alg_id    = hash->alg_id;
+
+        hash_init( hash_temp );
+        hash_update( hash_temp, hash->secret, hash->secret_len );
+        hash_finish( hash_temp, buffer );
+        free( hash_temp );
+    }
+    else memcpy( buffer, hash->secret, hash->secret_len );
+
+    for (i = 0; i < block_bytes; i++) buffer[i] ^= 0x5c;
+    hmac_update( hash, buffer, block_bytes );
+    for (i = 0; i < block_bytes; i++) buffer[i] ^= (0x5c ^ 0x36);
+    hash_update( hash, buffer, block_bytes );
+#endif
 }
 
 static NTSTATUS hash_create( const struct algorithm *alg, UCHAR *secret, ULONG secret_len, ULONG flags,
@@ -976,35 +1003,45 @@ NTSTATUS WINAPI BCryptHashData( BCRYPT_HASH_HANDLE handle, UCHAR *input, ULONG s
     if (!input) return STATUS_SUCCESS;
 
     if (hash_update( hash, input, size )) return STATUS_INVALID_PARAMETER;
+
     return STATUS_SUCCESS;
 }
 
 static void hash_finalize( struct hash *hash, UCHAR *output, ULONG size )
 {
+#ifndef __REACTOS__
     UCHAR buffer[MAX_HASH_OUTPUT_BYTES];
+    ULONG hash_size;
 
     if (!(hash->flags & HASH_FLAG_HMAC))
     {
+#endif
         hash_finish( hash, output );
         if (hash->flags & HASH_FLAG_REUSABLE) hash_prepare( hash );
+#ifndef __REACTOS__
         return;
     }
 
+    hash_get_size( hash, &hash_size );
     hash_finish( hash, buffer );
-    hmac_update( hash, buffer, size );
+    hmac_update( hash, buffer, hash_size );
     hmac_finish( hash, output );
 
     if (hash->flags & HASH_FLAG_REUSABLE) hash_prepare( hash );
+#endif
 }
 
 NTSTATUS WINAPI BCryptFinishHash( BCRYPT_HASH_HANDLE handle, UCHAR *output, ULONG size, ULONG flags )
 {
     struct hash *hash = get_hash_object( handle );
+    ULONG hash_size;
 
     TRACE( "%p, %p, %lu, %#lx\n", handle, output, size, flags );
 
     if (!hash) return STATUS_INVALID_HANDLE;
     if (!output) return STATUS_INVALID_PARAMETER;
+    hash_get_size( hash, &hash_size );
+    if (size != hash_size) return STATUS_INVALID_PARAMETER;
 
     hash_finalize( hash, output, size );
     return STATUS_SUCCESS;
@@ -2324,17 +2361,14 @@ NTSTATUS WINAPI BCryptDeriveKeyCapi( BCRYPT_HASH_HANDLE handle, BCRYPT_ALG_HANDL
 {
     struct hash *hash = get_hash_object( handle );
     UCHAR buf[MAX_HASH_OUTPUT_BYTES * 2];
-#if 0
-    ULONG len;
-#endif
+    ULONG len, hash_size;
 
     TRACE( "%p, %p, %p, %lu, %#lx\n", handle, halg, key, keylen, flags );
 
     if (!hash) return STATUS_INVALID_HANDLE;
     if (!key || !keylen) return STATUS_INVALID_PARAMETER;
-#if 0
-    if (keylen > hash->desc->hashsize * 2) return STATUS_INVALID_PARAMETER;
-#endif
+    hash_get_size( hash, &hash_size );
+    if (keylen > hash_size * 2) return STATUS_INVALID_PARAMETER;
     if (halg)
     {
         FIXME( "algorithm handle not supported\n" );
@@ -2342,8 +2376,7 @@ NTSTATUS WINAPI BCryptDeriveKeyCapi( BCRYPT_HASH_HANDLE handle, BCRYPT_ALG_HANDL
     }
 
     hash_finalize( hash, buf, sizeof(buf) );
-#if 0
-    len = hash->desc->hashsize;
+    len = hash_size;
     if (len < keylen)
     {
         UCHAR pad1[HMAC_PAD_LEN], pad2[HMAC_PAD_LEN];
@@ -2356,14 +2389,13 @@ NTSTATUS WINAPI BCryptDeriveKeyCapi( BCRYPT_HASH_HANDLE handle, BCRYPT_ALG_HANDL
         }
 
         hash_prepare( hash );
-        hash->desc->process( &hash->inner, pad1, sizeof(pad1) );
-        hash_finalize( hash, buf );
+        hash_update( hash, pad1, sizeof(pad1) );
+        hash_finish( hash, buf );
 
         hash_prepare( hash );
-        hash->desc->process( &hash->inner, pad2, sizeof(pad2) );
-        hash_finalize( hash, buf + len );
+        hash_update( hash, pad2, sizeof(pad2) );
+        hash_finish( hash, buf + len );
     }
-#endif
     memcpy( key, buf, keylen );
     return STATUS_SUCCESS;
 }
