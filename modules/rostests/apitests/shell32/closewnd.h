@@ -66,6 +66,8 @@ static inline VOID CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
             if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG, 3000, &result))
             {
                 SwitchToThisWindow(hWnd, TRUE);
+
+                // SwitchToThisWindow may take time
                 Sleep(500);
 
                 // Alt+F4
@@ -76,6 +78,8 @@ static inline VOID CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
                 inputs[1].ki.wVk = inputs[2].ki.wVk = VK_F4;
                 inputs[2].ki.dwFlags = inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
                 SendInput(_countof(inputs), inputs, sizeof(INPUT));
+
+                // Closing a window may take time
                 Sleep(1000);
             }
         }
