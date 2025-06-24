@@ -57,7 +57,7 @@ static inline VOID CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
     for (SIZE_T i = 0; i < List2->m_chWnds; ++i)
     {
         HWND hWnd = List2->m_phWnds[i];
-        if (!IsWindow(hWnd) || FindInWindowList(*List1, hWnd))
+        if (!IsWindowVisible(hWnd) || FindInWindowList(*List1, hWnd))
             continue;
 
         if (!PostMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
