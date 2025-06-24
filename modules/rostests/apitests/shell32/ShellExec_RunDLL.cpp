@@ -31,7 +31,10 @@ static BOOL CloseNotepad(VOID)
     HWND hwndNew;
     WCHAR szClass[64];
 
+    // Execution can be asynchronous; you have to wait for it to finish.
     Sleep(1000);
+
+    // Close newly-opened window(s)
     GetWindowList(&s_List2);
     hwndNew = FindNewWindow(&s_List1, &s_List2);
     GetClassNameW(hwndNew, szClass, _countof(szClass));

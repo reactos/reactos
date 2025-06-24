@@ -606,9 +606,10 @@ static VOID TEST_ShellExecCmdLine(VOID)
         DoEntry(&s_entries_2[i]);
     }
 
+    // Execution can be asynchronous; you have to wait for it to finish.
     Sleep(2000);
 
-    // Clean up
+    // Close newly-opened window(s)
     GetWindowList(&s_List2);
     CloseNewWindows(&s_List1, &s_List2);
     FreeWindowList(&s_List1);
@@ -678,8 +679,9 @@ START_TEST(ShellExecCmdLine)
 
     TEST_ShellExecCmdLine();
 
-    // clean up
     Sleep(2000);
+
+    // clean up
     ok(DeleteFileW(s_win_test_exe), "failed to delete the test file\n");
     ok(DeleteFileW(s_sys_bat_file), "failed to delete the test file\n");
     ok(DeleteFileA("Test File 1.txt"), "failed to delete the test file\n");

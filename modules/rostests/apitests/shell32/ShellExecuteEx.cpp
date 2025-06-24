@@ -321,6 +321,7 @@ static void TEST_End(void)
     DeleteFileW(s_win_bat_file);
     DeleteFileW(s_sys_bat_file);
 
+    // Execution can be asynchronous; you have to wait for it to finish.
     INT nCount = GetWindowCount();
     for (INT i = 0; i < 100; ++i)
     {
@@ -330,8 +331,9 @@ static void TEST_End(void)
         if (nOldCount == nCount)
             break;
     }
-
     Sleep(3000);
+
+    // Close newly-opened window(s)
     GetWindowList(&s_List2);
     CloseNewWindows(&s_List1, &s_List2);
     FreeWindowList(&s_List1);

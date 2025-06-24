@@ -53,7 +53,10 @@ static void TEST_Start(void)
 
 static void TEST_End(void)
 {
-    Sleep(500);
+    // Execution can be asynchronous; you have to wait for it to finish.
+    Sleep(1000);
+
+    // Close newly-opened window(s)
     GetWindowList(&s_List2);
     CloseNewWindows(&s_List1, &s_List2);
     FreeWindowList(&s_List1);
