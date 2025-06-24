@@ -10,10 +10,13 @@
 #include <stdio.h>
 #include <winbase.h>
 #include <shlwapi.h>
+#include "closewnd.h"
 
 #define WAIT_SLEEP 700
 
 // ShellExecuteW(handle, "open", <path_to_executable>, <parameters>, NULL, SW_SHOWNORMAL);
+
+static WINDOW_LIST s_List1, s_List2;
 
 START_TEST(ShellExecuteW)
 {
@@ -21,6 +24,8 @@ START_TEST(ShellExecuteW)
     HINSTANCE hInstance;
     HWND hWnd;
     WCHAR WinDir[MAX_PATH], SysDir[MAX_PATH], SysDrive[MAX_PATH];
+
+    GetWindowList(&s_List1);
 
     if (!GetWindowsDirectoryW(WinDir, _countof(WinDir)))
     {
@@ -145,6 +150,12 @@ START_TEST(ShellExecuteW)
         hWnd = FindWindowW(L"CabinetWClass", NULL);
         PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
     }
+
+    Sleep(2000);
+    GetWindowList(&s_List2);
+    CloseNewWindows(&s_List1, &s_List2);
+    FreeWindowList(&s_List1);
+    FreeWindowList(&s_List2);
 }
 
 // Windows Server 2003 and Windows XP SP3 return values (Win 7 returns 42 in all cases)
