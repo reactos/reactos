@@ -37,7 +37,8 @@ static BOOL CloseNotepad(VOID)
     // Close newly-opened window(s)
     GetWindowList(&s_List2);
     hwndNew = FindNewWindow(&s_List1, &s_List2);
-    GetClassNameW(hwndNew, szClass, _countof(szClass));
+    if (!GetClassNameW(hwndNew, szClass, _countof(szClass)))
+        szClass[0] = UNICODE_NULL;
     CloseNewWindows(&s_List1, &s_List2);
     FreeWindowList(&s_List1);
     FreeWindowList(&s_List2);
