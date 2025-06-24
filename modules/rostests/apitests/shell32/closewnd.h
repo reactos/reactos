@@ -66,13 +66,17 @@ static inline VOID CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
             if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG, 3000, &result))
             {
                 SwitchToThisWindow(hWnd, TRUE);
-                Sleep(800);
+                Sleep(1000);
 
                 // Alt+F4
-                keybd_event(VK_LMENU, 0, 0, 0);
-                keybd_event(VK_F4, 0, 0, 0);
-                keybd_event(VK_F4, 0, KEYEVENTF_KEYUP, 0);
-                keybd_event(VK_LMENU, 0, KEYEVENTF_KEYUP, 0);
+                INPUT inputs[4];
+                ZeroMemory(&inputs, sizeof(inputs));
+                inputs[0].type = inputs[1].type = inputs[2].type = inputs[3].type = INPUT_KEYBOARD;
+                inputs[0].ki.wVk = inputs[3].ki.wVk = VK_LMENU;
+                inputs[1].ki.wVk = inputs[2].ki.wVk = VK_F4;
+                inputs[2].ki.dwFlags = inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+                SendInput(_countof(inputs), inputs, sizeof(INPUT));
+                Sleep(1000);
             }
         }
     }

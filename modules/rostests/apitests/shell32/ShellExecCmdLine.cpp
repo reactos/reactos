@@ -679,7 +679,8 @@ START_TEST(ShellExecCmdLine)
 
     TEST_ShellExecCmdLine();
 
-    Sleep(2000);
+    // Some process can lock the file of s_win_test_exe
+    Sleep(1000);
 
     // clean up
     ok(DeleteFileW(s_win_test_exe), "failed to delete the test file\n");
