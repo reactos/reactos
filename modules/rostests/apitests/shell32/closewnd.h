@@ -122,7 +122,7 @@ static inline BOOL CALLBACK CountWindowsProc(HWND hwnd, LPARAM lParam)
     if (!IsWindowVisible(hwnd))
         return TRUE;
 
-    *(INT *)lParam += 1;
+    *(PINT)lParam += 1;
     return TRUE;
 }
 
