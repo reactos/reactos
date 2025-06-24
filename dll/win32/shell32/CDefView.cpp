@@ -65,6 +65,7 @@ struct LISTVIEW_SORT_INFO
     bool    bColumnIsFolderColumn;
     UINT8   Reserved; // Unused
     INT     ListColumn;
+    INT     FolderColumn; // Only valid during a sorting operation
 
     enum { UNSPECIFIEDCOLUMN = -1 };
     void Reset()
@@ -1262,7 +1263,7 @@ INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPAR
     PCUIDLIST_RELATIVE pidl2 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam2);
     CDefView *pThis = reinterpret_cast<CDefView*>(lpData);
 
-    HRESULT hres = pThis->m_pSFParent->CompareIDs(pThis->m_sortInfo.ListColumn, pidl1, pidl2);
+    HRESULT hres = pThis->m_pSFParent->CompareIDs(pThis->m_sortInfo.FolderColumn, pidl1, pidl2);
     if (FAILED_UNEXPECTEDLY(hres))
         return 0;
 
@@ -1317,7 +1318,7 @@ BOOL CDefView::_Sort(int Col)
     hColumn.fmt |= (m_sortInfo.Direction > 0 ?  HDF_SORTUP : HDF_SORTDOWN);
     Header_SetItem(hHeader, m_sortInfo.ListColumn, &hColumn);
 
-    /* Sort the list, using the current values of ListColumn and bIsAscending */
+    m_sortInfo.FolderColumn = MapListColumnToFolderColumn(m_sortInfo.ListColumn);
     ASSERT(m_sortInfo.Direction == 1 || m_sortInfo.Direction == -1);
     return m_ListView.SortItems(ListViewCompareItems, this);
 }
