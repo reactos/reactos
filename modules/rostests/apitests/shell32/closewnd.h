@@ -81,6 +81,13 @@ static inline VOID CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
 
                 // Closing a window may take time
                 Sleep(1000);
+
+                if (IsWindowVisible(hWnd))
+                {
+                    CHAR szClass[64];
+                    GetClassNameA(hWnd, szClass, _countof(szClass));
+                    trace("Unable to close window %p (%s)\n", hWnd, szClass);
+                }
             }
         }
     }
