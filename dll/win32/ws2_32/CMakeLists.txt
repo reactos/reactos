@@ -42,6 +42,7 @@ list(APPEND SOURCE
     src/spinstal.c
     src/sputil.c
     src/startup.c
+    src/wine.c
     src/wsautil.c
     inc/ws2_32.h)
 
