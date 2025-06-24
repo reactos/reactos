@@ -66,6 +66,7 @@ static inline VOID CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
             if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG, 3000, &result))
             {
                 SwitchToThisWindow(hWnd, TRUE);
+                Sleep(500);
 
                 // Alt+F4
                 INPUT inputs[4];
