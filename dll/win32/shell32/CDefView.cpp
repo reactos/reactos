@@ -1365,13 +1365,14 @@ int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
         }
         else
         {
-            for (i = 0; i < cItems; i++)
+#if DBG
+            for (i = 0; pidl && i < cItems; i++)
             {
-                //FIXME: ILIsEqual needs absolute pidls!
                 currentpidl = _PidlByItem(i);
-                if (ILIsEqual(pidl, currentpidl))
-                    return i;
+                if (currentpidl && currentpidl->mkid.cb == pidl->mkid.cb && !memcmp(currentpidl, pidl, pidl->mkid.cb))
+                    DbgPrint("Matched item #%d, broken CompareIDs?\n", i);
             }
+#endif
             break;
         }
     }

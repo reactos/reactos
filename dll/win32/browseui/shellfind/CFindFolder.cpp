@@ -845,7 +845,7 @@ STDMETHODIMP CFindFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELL
     if (iColumn == COL_RELEVANCE_INDEX)
     {
         // TODO: Fill once the relevance is calculated
-        return SHSetStrRet(&pDetails->str, "");
+        return SHSetStrRetEmpty(&pDetails->str);
     }
 
     ATLASSERT(iColumn == COL_NAME_INDEX);
@@ -903,8 +903,7 @@ STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PC
         wColumn -= _countof(g_ColumnDefs) - 1;
         break;
     }
-    // FIXME: DefView does not like the way we sort
-    return m_pisfInner->CompareIDs(HIWORD(lParam) | wColumn, _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
+    return m_pisfInner->CompareIDs(MAKELONG(wColumn, HIWORD(lParam)), _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
 }
 
 STDMETHODIMP CFindFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
