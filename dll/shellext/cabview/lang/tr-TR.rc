@@ -13,9 +13,9 @@ BEGIN
     IDS_COL_TYPE    "Tür"
     IDS_COL_SIZE    "Boyut"
     IDS_COL_MDATE   "Değiştirilme Tarihi"
-    IDS_COL_PATH    "Path"
-    IDS_COL_ATT     "Attributes"
+    IDS_COL_PATH    "Yol"
+    IDS_COL_ATT     "Öznitelikler"
 
-    IDS_EXTRACT     "Extract..."
-    IDS_EXTRACTALL  "Extract &All..."
+    IDS_EXTRACT     "Çıkart..."
+    IDS_EXTRACTALL  "&Tümünü Çıkart..."
 END

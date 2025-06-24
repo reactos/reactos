@@ -191,8 +191,8 @@ BEGIN
     IDS_LAYOUTTEXT "Varsayılan metin giriş diliniz ve yönteminiz: %s klavye düzeni"
     IDS_DATETIMETITLE "Tarih ve Saat"
     IDS_DATETIMESUBTITLE "Bilgisayarınız için doğru zamanı ayarlayınız."
-    IDS_PROCESSTITLE "Finishing the Installation"
-    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
+    IDS_PROCESSTITLE "Kurulum Tamamlanıyor"
+    IDS_PROCESSSUBTITLE "Lütfen bekleyiniz, kurulum son adımları tamamlıyor."
     IDS_THEMESELECTIONTITLE "Görünüm"
     IDS_THEMESELECTIONSUBTITLE "İstediğiniz temayı seçiniz."
 END
