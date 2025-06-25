@@ -199,8 +199,9 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
     }
     else
     {
-        if ((QueryTable->Flags & (RTL_QUERY_REGISTRY_TYPECHECK | RTL_QUERY_REGISTRY_DIRECT)) ==
-           (RTL_QUERY_REGISTRY_TYPECHECK | RTL_QUERY_REGISTRY_DIRECT))
+        // TODO: This is the backport behavior. Windows 8+ requires TYPECHECK in some cases.
+        if ((QueryTable->Flags & (RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK)) ==
+                                 (RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK))
         {
             ULONG ExpectedType = QueryTable->DefaultType >> RTL_QUERY_REGISTRY_TYPECHECK_SHIFT;
 
