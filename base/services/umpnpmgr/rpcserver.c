@@ -2788,8 +2788,50 @@ PNP_RegisterDeviceClassAssociation(
     PNP_RPC_STRING_LEN *pulTransferLen,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_RegisterDeviceClassAssociation(%p %S %p %S %S %p %p 0x%08lx)\n",
+           hBinding, pszDeviceID, InterfaceGuid, pszReference, pszSymLink,
+           pulLength, pulTransferLen, ulFlags);
+
+    if ((InterfaceGuid == NULL) ||
+        (pszSymLink == NULL) ||
+        (pulLength == NULL) ||
+        (pulTransferLen == NULL))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance, pszDeviceID);
+    PlugPlayData.InterfaceGuid = InterfaceGuid;
+    RtlInitUnicodeString(&PlugPlayData.Reference, pszReference);
+    PlugPlayData.Register = TRUE;
+    PlugPlayData.SymbolicLinkName = pszSymLink;
+    PlugPlayData.SymbolicLinkNameLength = *pulLength;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceClassAssociation,
+                               &PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.SymbolicLinkNameLength;
+        *pulTransferLen = *pulLength;
+    }
+    else
+    {
+        *pulLength = 0;
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
 }
 
 
