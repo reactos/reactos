@@ -1229,6 +1229,21 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
     return E_NOTIMPL;
 }
 
+//// *** IItemNameLimits methods ***
+STDMETHODIMP CFindFolder::GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
+{
+    CComPtr<IItemNameLimits> pLimits;
+    HRESULT hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IItemNameLimits, &pLimits));
+    return FAILED_UNEXPECTEDLY(hr) ? hr : pLimits->GetMaxLength(pszName, piMaxNameLen);;
+}
+
+STDMETHODIMP CFindFolder::GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
+{
+    CComPtr<IItemNameLimits> pLimits;
+    HRESULT hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IItemNameLimits, &pLimits));
+    return FAILED_UNEXPECTEDLY(hr) ? hr : pLimits->GetValidCharacters(ppwszValidChars, ppwszInvalidChars);
+}
+
 //// *** IPersistFolder2 methods ***
 STDMETHODIMP CFindFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
