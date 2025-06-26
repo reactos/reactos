@@ -586,8 +586,7 @@ IdlePing(VOID)
 
       if ( pti->pDeskInfo && pti == gptiForeground )
       {
-         if ( pti->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) ||
-              pti->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) )
+         if (UserIsItHooked(WH_FOREGROUNDIDLE))
          {
             co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
          }

@@ -420,6 +420,9 @@ CWineTest::Run()
     CTestInfo* TestInfo;
     DWORD ErrorMode;
 
+#if 1 // Hacked by katahiromz
+    SetEnvironmentVariableW(L"DEBUGCHANNEL", L"+UserHook");
+#endif
     /* The virtual test list is of course faster, so it should be preferred over
        the journaled one.
        Enable the journaled one only in case ...

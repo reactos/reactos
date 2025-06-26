@@ -1282,19 +1282,9 @@ SkipToGlobal:
                 TRACE("\nGlobal Hook posting to another Thread! %d\n",HookId );
                 Result = co_IntCallLowLevelHook(Hook, Code, wParam, lParam);
              }
-             else
+             else if (ptiHook->ppi == pti->ppi)
              {
-                if (ptiHook->ppi == pti->ppi)
-                {
-                   TRACE("\nGlobal Hook calling to another thread! %d\n",HookId );
-                }
-                else
-                {
-                   TRACE("\nGlobal Hook calling to another process (pid: 0x%lx vs 0x%lx)! %d\n",
-                         HandleToUlong(PsGetProcessId(ptiHook->ppi->peProcess)),
-                         HandleToUlong(PsGetProcessId(pti->ppi->peProcess)),
-                         HookId);
-                }
+                TRACE("\nGlobal Hook calling to another thread! %d\n",HookId );
 
                 ObReferenceObject(ptiHook->pEThread);
                 IntReferenceThreadInfo(ptiHook);
@@ -1307,6 +1297,33 @@ SkipToGlobal:
                                              Hook->offPfn,
                                              Hook->Ansi,
                                             &Hook->ModuleName);
+                IntDereferenceThreadInfo(ptiHook);
+                ObDereferenceObject(ptiHook->pEThread);
+             }
+             else
+             {
+                KAPC_STATE ApcState;
+
+                TRACE("\nGlobal Hook calling to another process (pid: 0x%lx vs 0x%lx)! %d\n",
+                      HandleToUlong(PsGetProcessId(ptiHook->ppi->peProcess)),
+                      HandleToUlong(PsGetProcessId(pti->ppi->peProcess)),
+                      HookId);
+
+                ObReferenceObject(ptiHook->pEThread);
+                IntReferenceThreadInfo(ptiHook);
+                KeStackAttachProcess(&ptiHook->ppi->peProcess->Pcb, &ApcState);
+
+                Result = co_IntCallHookProc( HookId,
+                                             Code,
+                                             wParam,
+                                             lParam,
+                                             Hook->Proc,
+                                             Hook->ihmod,
+                                             Hook->offPfn,
+                                             Hook->Ansi,
+                                            &Hook->ModuleName);
+
+                KeUnstackDetachProcess(&ApcState);
                 IntDereferenceThreadInfo(ptiHook);
                 ObDereferenceObject(ptiHook->pEThread);
              }
