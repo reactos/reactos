@@ -2843,8 +2843,33 @@ PNP_UnregisterDeviceClassAssociation(
     LPWSTR pszInterfaceDevice,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_UnregisterDeviceClassAssociation(%p %S 0x%08lx)\n",
+           hBinding, pszInterfaceDevice, ulFlags);
+
+    if (pszInterfaceDevice == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    ZeroMemory(&PlugPlayData, sizeof(PlugPlayData));
+    PlugPlayData.Register = FALSE;
+    PlugPlayData.SymbolicLinkName = pszInterfaceDevice;
+    PlugPlayData.SymbolicLinkNameLength = wcslen(pszInterfaceDevice) + 1;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceClassAssociation,
+                               &PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
 }
 
 
