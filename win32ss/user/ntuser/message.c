@@ -586,7 +586,8 @@ IdlePing(VOID)
 
       if ( pti->pDeskInfo && pti == gptiForeground )
       {
-         if (UserIsItHooked(WH_FOREGROUNDIDLE))
+         if ( pti->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) ||
+              pti->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) )
          {
             co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
          }
@@ -760,7 +761,7 @@ IntCallWndProc( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam )
     CREATESTRUCTW Csw;
 
     //// Check for a hook to eliminate overhead. ////
-    if (!UserIsItHooked(WH_CALLWNDPROC))
+    if ( !ISITHOOKED(WH_CALLWNDPROC) && !(Window->head.rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROC)) )
         return;
 
     if (Window->head.pti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread()))
@@ -793,7 +794,7 @@ IntCallWndProcRet( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
     PVOID pszClass = NULL, pszName = NULL;
     CREATESTRUCTW Csw;
 
-    if (!UserIsItHooked(WH_CALLWNDPROCRET))
+    if ( !ISITHOOKED(WH_CALLWNDPROCRET) && !(Window->head.rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET)) )
         return;
 
     if (Window->head.pti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread()))

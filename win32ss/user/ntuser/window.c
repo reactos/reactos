@@ -2318,7 +2318,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Cs->lpszClass = (LPCWSTR) ClassName;
 
    //// Check for a hook to eliminate overhead. ////
-   if (UserIsItHooked(WH_CBT))
+   if ( ISITHOOKED(WH_CBT) ||  (pti->rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CBT)) )
    {
       // Allocate the calling structures Justin Case this goes Global.
       pCsw = ExAllocatePoolWithTag(NonPagedPool, sizeof(CREATESTRUCTW), TAG_HOOK);
