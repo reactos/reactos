@@ -890,11 +890,18 @@ STDMETHODIMP CFindFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserve
 
 STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
+    HRESULT hr;
     WORD wColumn = LOWORD(lParam);
     switch (wColumn)
     {
     case COL_NAME_INDEX: // Name
-        break;
+        C_ASSERT(COL_NAME_INDEX == 0); // SHELL32::SHFSF_COL_NAME
+        // We can have more than one item with the same filename, in this case, look at the path as well.
+        // When DefView wants to identify a specific item, it will use the SHCIDS_CANONICALONLY flag.
+        hr = m_pisfInner->CompareIDs(MAKELONG(0, HIWORD(lParam)), _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
+        if (hr == S_EQUAL && (lParam & (SHCIDS_CANONICALONLY | SHCIDS_ALLFIELDS)))
+            hr = CompareIDs(COL_LOCATION_INDEX, pidl1, pidl2);
+        return hr;
     case COL_LOCATION_INDEX: // Path
         return MAKE_COMPARE_HRESULT(StrCmpW(_ILGetPath(pidl1), _ILGetPath(pidl2)));
     case COL_RELEVANCE_INDEX: // Relevance
