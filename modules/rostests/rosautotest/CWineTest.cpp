@@ -356,6 +356,25 @@ CWineTest::RunTest(CTestInfo* TestInfo)
             else if (dwReadResult == ERROR_BROKEN_PIPE)
             {
                 // The process finished and has been terminated.
+#if 1 // Hacked by katahiromz
+{
+    HWND button_win = CreateWindowA("button", "button", WS_VISIBLE | WS_POPUP,
+            100, 100, 100, 100, 0, NULL, NULL, NULL);
+    POINT pt;
+    pt.x = pt.y = 150;
+    HWND hwnd = WindowFromPoint(pt);
+    if (button_win != hwnd)
+    {
+        StringOut("button_win != hwnd\n");
+        DestroyWindow(button_win);
+        TESTEXCEPTION("Timeout while waiting for the test process\n");
+    }
+    else
+    {
+        DestroyWindow(button_win);
+    }
+}
+#endif
                 break;
             }
             else if (dwReadResult == WAIT_TIMEOUT)
