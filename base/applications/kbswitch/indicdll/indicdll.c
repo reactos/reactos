@@ -153,14 +153,13 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
             g_pShared->hShellHook &&
             g_pShared->hKeyboardHook)
         {
+            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
+            {
+                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
+                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
+            }
             LeaveProtectedSection();
             return TRUE;
-        }
-
-        if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
-        {
-            g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
-            TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
         }
     }
 
