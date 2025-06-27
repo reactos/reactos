@@ -1,8 +1,8 @@
 
-if(ARCH STREQUAL "i386")
+# if(ARCH STREQUAL "i386")
     set(DETECT_LEGACY_DEVICES TRUE)
     add_definitions(-DATA_DETECT_LEGACY_DEVICES)
-endif()
+# endif()
 
 list(APPEND SOURCE
     include/acpi.h

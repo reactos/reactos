@@ -442,6 +442,11 @@ AtaLegacyClaimHardwareResources(
     if (IsNEC_98)
         return TRUE;
 
+#if defined(_M_AMD64)
+    if (!AtapInLiveCD)
+        return TRUE;
+#endif
+
     if (!NT_SUCCESS(Status) || ConflictDetected)
         return FALSE;
 
@@ -562,7 +567,7 @@ ReleaseResources:
         goto Cleanup;
     }
 
-    Status = AtaAddChannel(DriverObject, PhysicalDeviceObject, &ChanExt);
+    Status = AtaAddChannel(DriverObject, PhysicalDeviceObject, &ChanExt, 1);
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to add the legacy channel 0x%lx, status 0x%lx\n",
@@ -593,6 +598,377 @@ Cleanup:
     }
 }
 
+#if defined(_M_AMD64)
+static
+BOOLEAN
+AtaLegacyReadPciBar(
+    ULONG BusNumber,
+    ULONG PciSlot,
+    ULONG Offset,
+    PULONG OriginalValue,
+    PULONG NewValue)
+{
+    ULONG Size;
+    ULONG AllOnes;
+
+    /* Read the original value */
+    Size = HalGetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 OriginalValue,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    /* Write all ones to determine which bits are held to zero */
+    AllOnes = MAXULONG;
+    Size = HalSetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 &AllOnes,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    /* Get the range length */
+    Size = HalGetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 NewValue,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    /* Restore original value */
+    Size = HalSetBusDataByOffset(PCIConfiguration,
+                                 BusNumber,
+                                 PciSlot,
+                                 OriginalValue,
+                                 Offset,
+                                 sizeof(ULONG));
+    if (Size != sizeof(ULONG))
+    {
+        ERR("Wrong size %lu\n", Size);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static
+BOOLEAN
+AtaLegacyGetRangeLength(
+    ULONG BusNumber,
+    ULONG PciSlot,
+    UCHAR Bar,
+    PULONGLONG Base,
+    PULONGLONG Length,
+    PULONG Flags,
+    /* PUCHAR NextBar, */
+    PULONGLONG MaximumAddress)
+{
+#define PCI_ADDRESS_MEMORY_ADDRESS_MASK_64     0xfffffffffffffff0ull
+#define PCI_ADDRESS_IO_ADDRESS_MASK_64         0xfffffffffffffffcull
+    union {
+        struct {
+            ULONG Bar0;
+            ULONG Bar1;
+        } Bars;
+        ULONGLONG Bar;
+    } OriginalValue;
+    union {
+        struct {
+            ULONG Bar0;
+            ULONG Bar1;
+        } Bars;
+        ULONGLONG Bar;
+    } NewValue;
+    ULONG Offset;
+    ULONGLONG Size;
+
+    /* Compute the offset of this BAR in PCI config space */
+    Offset = 0x10 + Bar * 4;
+
+    /* Assume this is a 32-bit BAR until we find wrong */
+    /* *NextBar = Bar + 1; */
+
+    /* Initialize BAR values to zero */
+    OriginalValue.Bar = 0ULL;
+    NewValue.Bar = 0ULL;
+
+    /* Read the first BAR */
+    if (!AtaLegacyReadPciBar(BusNumber, PciSlot, Offset,
+                             &OriginalValue.Bars.Bar0,
+                             &NewValue.Bars.Bar0))
+    {
+        return FALSE;
+    }
+
+    /* Check if this is a memory BAR */
+    if (!(OriginalValue.Bars.Bar0 & PCI_ADDRESS_IO_SPACE))
+    {
+        /* Write the maximum address if the caller asked for it */
+        if (MaximumAddress != NULL)
+        {
+            if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_32BIT)
+            {
+                *MaximumAddress = 0x00000000FFFFFFFFULL;
+            }
+            else if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
+            {
+                *MaximumAddress = 0x00000000000FFFFFULL;
+            }
+            else if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+            {
+                *MaximumAddress = 0xFFFFFFFFFFFFFFFFULL;
+            }
+        }
+
+        /* Check if this is a 64-bit BAR */
+        if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+        {
+            /* We've now consumed the next BAR too */
+            /* *NextBar = Bar + 2; */
+
+            /* Read the next BAR */
+            if (!AtaLegacyReadPciBar(BusNumber, PciSlot, Offset + 4,
+                                     &OriginalValue.Bars.Bar1,
+                                     &NewValue.Bars.Bar1))
+            {
+                return FALSE;
+            }
+        }
+    }
+    else
+    {
+        /* Write the maximum I/O port address */
+        if (MaximumAddress != NULL)
+        {
+            *MaximumAddress = 0x00000000FFFFFFFFULL;
+        }
+    }
+
+    if (NewValue.Bar == 0)
+    {
+        WARN("Unused address register\n");
+        *Base = 0;
+        *Length = 0;
+        *Flags = 0;
+        return TRUE;
+    }
+
+    *Base = ((OriginalValue.Bar & PCI_ADDRESS_IO_SPACE)
+             ? (OriginalValue.Bar & PCI_ADDRESS_IO_ADDRESS_MASK_64)
+             : (OriginalValue.Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK_64));
+
+    Size = (NewValue.Bar & PCI_ADDRESS_IO_SPACE)
+           ? (NewValue.Bar & PCI_ADDRESS_IO_ADDRESS_MASK_64)
+           : (NewValue.Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK_64);
+    *Length = Size & ~(Size - 1);
+
+    *Flags = (NewValue.Bar & PCI_ADDRESS_IO_SPACE)
+             ? (NewValue.Bar & ~PCI_ADDRESS_IO_ADDRESS_MASK_64)
+             : (NewValue.Bar & ~PCI_ADDRESS_MEMORY_ADDRESS_MASK_64);
+
+    return TRUE;
+}
+
+static
+CODE_SEG("INIT")
+VOID
+AtaLegacyDetectAhciController(
+    _In_ PDRIVER_OBJECT DriverObject)
+{
+    ULONG BusNumber, DeviceNumber, FunctionNumber;
+
+    for (BusNumber = 0; BusNumber < 0xFF; ++BusNumber)
+    {
+        for (DeviceNumber = 0; DeviceNumber < PCI_MAX_DEVICES; ++DeviceNumber)
+        {
+            for (FunctionNumber = 0; FunctionNumber < PCI_MAX_FUNCTION; ++FunctionNumber)
+            {
+                PCI_SLOT_NUMBER PciSlot;
+                ULONG BytesRead;
+                PCI_COMMON_HEADER PciConfig;
+
+                PciSlot.u.AsULONG = 0;
+                PciSlot.u.bits.DeviceNumber = DeviceNumber;
+                PciSlot.u.bits.FunctionNumber = FunctionNumber;
+
+                BytesRead = HalGetBusDataByOffset(PCIConfiguration,
+                                                  BusNumber,
+                                                  PciSlot.u.AsULONG,
+                                                  &PciConfig,
+                                                  0,
+                                                  PCI_COMMON_HDR_LENGTH);
+                if (BytesRead != PCI_COMMON_HDR_LENGTH ||
+                    PciConfig.VendorID == PCI_INVALID_VENDORID ||
+                    PciConfig.VendorID == 0)
+                {
+                    if (FunctionNumber == 0)
+                    {
+                        /* This slot has no single- or a multi-function device */
+                        break;
+                    }
+                    else
+                    {
+                        /* Continue scanning the functions */
+                        continue;
+                    }
+                }
+
+                if ((PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE) &&
+                    (PciConfig.BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+                    (PciConfig.SubClass == PCI_SUBCLASS_MSC_AHCI_CTLR) &&
+                    (PciConfig.u.type0.InterruptPin != 0) &&
+                    (PciConfig.u.type0.InterruptLine != 0) &&
+                    (PciConfig.u.type0.InterruptLine != 0xFF))
+                {
+                    ULONG ListSize;
+                    ULONG ResourceCount;
+                    NTSTATUS Status;
+                    PDEVICE_OBJECT PhysicalDeviceObject;
+                    PATAPORT_CHANNEL_EXTENSION ChanExt;
+                    PCM_RESOURCE_LIST ResourceList;
+                    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+                    ULONGLONG Base;
+                    ULONGLONG Length;
+                    ULONG Flags;
+                    USHORT Command;
+                    KIRQL Irql;
+                    UCHAR Irq;
+
+                    ResourceCount = 2;
+                    ListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors) +
+                               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * ResourceCount;
+
+                    ResourceList = ExAllocatePoolZero(PagedPool, ListSize, ATAPORT_TAG);
+                    if (!ResourceList)
+                    {
+                        ASSERT(0);
+                    }
+                    ResourceList->Count = 1;
+                    ResourceList->List[0].InterfaceType = PCIBus;
+                    ResourceList->List[0].BusNumber = BusNumber;
+                    ResourceList->List[0].PartialResourceList.Version = 1;
+                    ResourceList->List[0].PartialResourceList.Revision = 1;
+                    ResourceList->List[0].PartialResourceList.Count = ResourceCount;
+
+                    if (!AtaLegacyGetRangeLength(BusNumber,
+                                                 PciSlot.u.AsULONG,
+                                                 5,
+                                                 &Base,
+                                                 &Length,
+                                                 &Flags,
+                                                 NULL))
+                    {
+                        goto Next;
+                    }
+
+                    if (Flags & PCI_ADDRESS_IO_SPACE)
+                        goto Next;
+
+                    Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
+                    Descriptor->Type = CmResourceTypeMemory;
+                    Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                        (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
+                    Descriptor->u.Memory.Start.QuadPart = (ULONGLONG)Base;
+                    Descriptor->u.Memory.Length = Length;
+
+                    Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[1];
+                    Descriptor->Type = CmResourceTypeInterrupt;
+                    Descriptor->ShareDisposition = CmResourceShareShared;
+                    Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+                    Descriptor->u.Interrupt.Level = PciConfig.u.type0.InterruptLine;
+                    Descriptor->u.Interrupt.Vector = PciConfig.u.type0.InterruptLine;
+                    Descriptor->u.Interrupt.Affinity = (KAFFINITY)-1;
+                    ERR("PciConfig.u.type0.InterruptLine %x\n", PciConfig.u.type0.InterruptLine);
+
+                    PhysicalDeviceObject = NULL;
+                    Status = IoReportDetectedDevice(DriverObject,
+                                                    InterfaceTypeUndefined,
+                                                    (ULONG)-1,
+                                                    (ULONG)-1,
+                                                    ResourceList,
+                                                    NULL,
+                                                    0,
+                                                    &PhysicalDeviceObject);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ERR("IoReportDetectedDevice() failed with status 0x%lx\n", Status);
+                        goto Next;
+                    }
+
+                    Irq = (UCHAR)Descriptor->u.Interrupt.Vector;
+                    HalSetBusDataByOffset(PCIConfiguration,
+                                          BusNumber,
+                                          PciSlot.u.AsULONG,
+                                          &Irq,
+                                          0x3c /* PCI_INTERRUPT_LINE */,
+                                          sizeof(UCHAR));
+
+                    Command = PCI_ENABLE_IO_SPACE | PCI_ENABLE_MEMORY_SPACE | PCI_ENABLE_BUS_MASTER;
+                    HalSetBusDataByOffset(PCIConfiguration,
+                                          BusNumber,
+                                          PciSlot.u.AsULONG,
+                                          &Command,
+                                          FIELD_OFFSET(PCI_COMMON_CONFIG, Command),
+                                          sizeof(USHORT));
+
+                    Descriptor->u.Interrupt.Vector = HalGetInterruptVector(PCIBus,
+                                                                           BusNumber,
+                                                                           Descriptor->u.Interrupt.Level,
+                                                                           Descriptor->u.Interrupt.Vector,
+                                                                           &Irql,
+                                                                           &Descriptor->u.Interrupt.Affinity);
+                    Descriptor->u.Interrupt.Level = Irql;
+
+                    Status = AtaAddChannel(DriverObject, PhysicalDeviceObject, &ChanExt, 2);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ERR("Failed to add the legacy channel 0x%lx, status 0x%lx\n",
+                            Descriptor->u.Memory.Start.LowPart, Status);
+                        goto Next;
+                    }
+
+                    ChanExt->DeviceID = PciConfig.DeviceID;
+                    ChanExt->VendorID = PciConfig.VendorID;
+
+                    Status = AtaFdoStartDevice(ChanExt, ResourceList);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ERR("Failed to start the legacy channel 0x%lx, status 0x%lx\n",
+                            Descriptor->u.Memory.Start.LowPart, Status);
+
+                        AtaFdoRemoveDevice(ChanExt, NULL, TRUE);
+                    }
+                }
+
+Next:
+                if (!PCI_MULTIFUNCTION_DEVICE(&PciConfig))
+                {
+                    /* The device is a single function device */
+                    break;
+                }
+            }
+        }
+    }
+}
+#endif // defined(_M_AMD64)
+
 static
 CODE_SEG("INIT")
 BOOLEAN
@@ -608,6 +984,14 @@ AtaLegacyShouldDetectChannels(VOID)
         L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Pnp";
 
     PAGED_CODE();
+
+#if defined(_M_AMD64)
+    /* HACK for amd64 BootCD */
+    if (AtapInLiveCD)
+        return FALSE;
+    else
+        goto Skip;
+#endif
 
     /*
      * Read the firmware mapper key. If the firmware mapper is disabled,
@@ -673,6 +1057,11 @@ AtaLegacyShouldDetectChannels(VOID)
     ZwClose(SoftKeyHandle);
 
     return PerformDetection;
+
+#if defined(_M_AMD64)
+Skip:
+    return TRUE;
+#endif
 }
 
 CODE_SEG("INIT")
@@ -738,4 +1127,10 @@ AtaDetectLegacyChannels(
     }
 
     ExFreePoolWithTag(ResourceList, ATAPORT_TAG);
+
+    /* HACK for amd64 BootCD */
+#if defined(_M_AMD64)
+    if (!AtapInLiveCD)
+        AtaLegacyDetectAhciController(DriverObject);
+#endif
 }

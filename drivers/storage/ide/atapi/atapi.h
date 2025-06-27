@@ -599,6 +599,7 @@ C_ASSERT(QUEUE_FLAG_FROZEN_QUEUE_LOCK == SRB_FLAGS_BYPASS_LOCKED_QUEUE);
 
 extern UNICODE_STRING AtapDriverRegistryPath;
 extern BOOLEAN AtapInPEMode;
+extern BOOLEAN AtapInLiveCD;
 
 typedef enum
 {
@@ -781,7 +782,8 @@ NTAPI
 AtaAddChannel(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PDEVICE_OBJECT PhysicalDeviceObject,
-    _Out_ PATAPORT_CHANNEL_EXTENSION *FdoExtension);
+    _Out_ PATAPORT_CHANNEL_EXTENSION *FdoExtension,
+    _In_ UCHAR Type);
 
 CODE_SEG("PAGE")
 NTSTATUS
