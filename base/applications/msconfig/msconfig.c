@@ -80,6 +80,14 @@ BOOL EnableDialogTheme(HWND hwnd)
         return FALSE;
     }
 }
+
+VOID DisableAllExcept(HWND hTabDlg, UINT idExcept)
+{
+    HWND hSkip = GetDlgItem(hTabDlg, idExcept);
+    for (HWND hWnd = NULL; (hWnd = FindWindowExW(hTabDlg, hWnd, NULL, NULL)) != NULL;)
+        EnableWindow(hWnd, hWnd == hSkip);
+}
+
 BOOL OnCreate(HWND hWnd)
 {
     TCHAR   szTemp[256];
@@ -135,6 +143,10 @@ BOOL OnCreate(HWND hWnd)
 
     MsConfig_OnTabWndSelChange();
 
+    // FIXME: We don't support applying anything
+    EnableWindow(GetDlgItem(hWnd, IDOK), FALSE);
+    EnableWindow(GetDlgItem(hWnd, IDC_BTN_APPLY), FALSE);
+    EnableWindow(GetDlgItem(hWnd, IDC_BTN_HELP), FALSE);
     return TRUE;
 }
 
