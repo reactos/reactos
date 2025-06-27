@@ -153,6 +153,11 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
             g_pShared->hShellHook &&
             g_pShared->hKeyboardHook)
         {
+            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
+            {
+                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
+                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
+            }
             LeaveProtectedSection();
             return TRUE;
         }
@@ -222,47 +227,43 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
         {
-            TRACE("DLL_PROCESS_ATTACH\n");
+            OutputDebugStringA("DLL_PROCESS_ATTACH\n");
             g_hInstance = hinstDLL;
 
             g_hShared = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
                                           0, sizeof(SHARED_DATA), TEXT("InternatSHData"));
             if (!g_hShared)
             {
-                ERR("!g_hShared\n");
+                OutputDebugStringA("!g_hShared\n");
                 return FALSE;
             }
 
             BOOL bAlreadyExists = GetLastError() == ERROR_ALREADY_EXISTS;
-            TRACE("bAlreadyExists: %d\n", bAlreadyExists);
+            //TRACE("bAlreadyExists: %d\n", bAlreadyExists);
 
             g_pShared = (PSHARED_DATA)MapViewOfFile(g_hShared, FILE_MAP_WRITE, 0, 0, 0);
             if (!g_pShared)
             {
-                ERR("!g_pShared\n");
+                OutputDebugStringA("!g_pShared\n");
                 return FALSE;
             }
 
             if (!bAlreadyExists)
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
 
-            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
-            {
-                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
-                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
-            }
-
+            OutputDebugStringA("?g_hMutex\n");
             g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
             if (!g_hMutex)
             {
-                ERR("Failed to create mutex\n");
+                OutputDebugStringA("Failed to create mutex\n");
                 return FALSE;
             }
+            OutputDebugStringA("g_hMutex\n");
             break;
         }
         case DLL_PROCESS_DETACH:
         {
-            TRACE("DLL_PROCESS_DETACH\n");
+            OutputDebugStringA("DLL_PROCESS_DETACH\n");
             if (g_hMutex)
                 CloseHandle(g_hMutex);
             UnmapViewOfFile(g_pShared);
