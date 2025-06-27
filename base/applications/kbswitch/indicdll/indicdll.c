@@ -153,6 +153,13 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
             g_pShared->hShellHook &&
             g_pShared->hKeyboardHook)
         {
+            // Find kbswitch window if necessary
+            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
+            {
+                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
+                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
+            }
+
             LeaveProtectedSection();
             return TRUE;
         }
@@ -245,12 +252,6 @@ DllMain(IN HINSTANCE hinstDLL,
 
             if (!bAlreadyExists)
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
-
-            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
-            {
-                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
-                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
-            }
 
             g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
             if (!g_hMutex)
