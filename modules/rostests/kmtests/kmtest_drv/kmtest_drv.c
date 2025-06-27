@@ -58,6 +58,7 @@ static PDEVICE_OBJECT MainDeviceObject;
 PDRIVER_OBJECT KmtDriverObject = NULL;
 static KMT_USER_WORK_LIST WorkList;
 static ULONG RequestId = 0;
+static const LONG TimeoutDuration = -10 * (1000 * 1000 * 10); // 10 seconds
 
 /* Entry */
 /**
@@ -440,13 +441,19 @@ DriverIoControl(
         {
             PLIST_ENTRY Entry;
             PKMT_USER_WORK_ENTRY WorkItem;
+            LARGE_INTEGER Timeout;
 
             DPRINT("DriverIoControl. IOCTL_KMTEST_USERMODE_AWAIT_REQ, len=%lu\n",
                     IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength);
 
             /* TODO: prevent multiple concurrent invocations */
-            Status = KeWaitForSingleObject(&WorkList.NewWorkEvent, UserRequest, UserMode, FALSE, NULL);
-            if (Status == STATUS_USER_APC || Status == STATUS_KERNEL_APC)
+            Timeout.QuadPart = TimeoutDuration;
+            Status = KeWaitForSingleObject(&WorkList.NewWorkEvent, UserRequest, UserMode, FALSE, &Timeout);
+
+            if (Status == STATUS_TIMEOUT)
+                DPRINT1("KeWaitForSingleObject timed out!\n");
+
+            if (Status == STATUS_USER_APC || Status == STATUS_KERNEL_APC || Status == STATUS_TIMEOUT)
                 break;
 
             if (IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KMT_CALLBACK_REQUEST_PACKET))
@@ -580,7 +587,7 @@ KmtUserModeCallback(
 
     KeSetEvent(&WorkList.NewWorkEvent, IO_NO_INCREMENT, FALSE);
 
-    Timeout.QuadPart = -10 * 1000 * 1000 * 10; //wait for 10 seconds
+    Timeout.QuadPart = TimeoutDuration;
     Status = KeWaitForSingleObject(&WorkEntry->WorkDoneEvent, Executive, UserMode, FALSE, &Timeout);
 
     if (Status == STATUS_USER_APC || Status == STATUS_KERNEL_APC || Status == STATUS_TIMEOUT)
