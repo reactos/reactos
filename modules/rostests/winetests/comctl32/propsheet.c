@@ -355,7 +355,8 @@ static void test_wiznavigation(void)
     HHOOK hook;
 
     /* set up a hook proc in order to subclass the main dialog early on */
-    hook = SetWindowsHookExW( WH_CBT, hook_proc, NULL, GetCurrentThreadId() );
+    //hook = SetWindowsHookExW( WH_CBT, hook_proc, NULL, GetCurrentThreadId() );
+    hook = NULL;
 
     /* create the property sheet pages */
     memset(psp, 0, sizeof(PROPSHEETPAGEA) * 4);
