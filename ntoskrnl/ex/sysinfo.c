@@ -2363,9 +2363,8 @@ QSI_DEF(SystemSessionProcessesInformation)
 /* Class 54 - Load & map in system space */
 SSI_DEF(SystemLoadGdiDriverInSystemSpaceInformation)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemLoadGdiDriverInSystemSpaceInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* Similar to SystemLoadGdiDriverInformation */
+    return SSI_USE(SystemLoadGdiDriverInformation)(Buffer, Size);
 }
 
 /* Class 55 - NUMA processor information */

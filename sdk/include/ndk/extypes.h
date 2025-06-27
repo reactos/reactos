@@ -1197,6 +1197,7 @@ typedef struct _SYSTEM_MEMORY_INFORMATION
 } SYSTEM_MEMORY_INFORMATION, *PSYSTEM_MEMORY_INFORMATION;
 
 // Class 26
+// See https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/gdi_driver.htm.
 typedef struct _SYSTEM_GDI_DRIVER_INFORMATION
 {
     UNICODE_STRING DriverName;
