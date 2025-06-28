@@ -264,7 +264,7 @@ START_TEST(ObTypes)
             TestWin2003ObjectTypes();
             break;
         default:
-            skip(0, "FIXME: kmtest:ObTypes is invalid for this NT version (0x%X).\n", GetCurrentNTVersion());
+            skip(FALSE, "FIXME: kmtest:ObTypes is invalid for this NT version (0x%X).\n", GetCurrentNTVersion());
             break;
     }
 }

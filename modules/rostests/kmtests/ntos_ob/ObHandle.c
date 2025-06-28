@@ -83,7 +83,7 @@ TestDuplicate(
         if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN7 &&
             Tests[i].RequestedAttributes == OBJ_KERNEL_HANDLE)
         {
-            skip(0, "Invalid on NT 6.1+\n");
+            skip(FALSE, "Invalid on NT 6.1+\n");
             continue;
         }
 

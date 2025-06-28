@@ -139,7 +139,6 @@ ValidateMapping(
     {
         ExpectedValue = (TotalPtes + 2) << 28;
     }
-
     else if (g_IsReactOS || GetCurrentNTVersion() >= _WIN32_WINNT_VISTA)
 #else
     if (g_IsReactOS || GetCurrentNTVersion() >= _WIN32_WINNT_VISTA)
@@ -335,7 +334,8 @@ START_TEST(MmReservedMapping)
 
     g_IsPae = ExIsProcessorFeaturePresent(PF_PAE_ENABLED);
     g_IsReactOS = *(PULONG)(KI_USER_SHARED_DATA + PAGE_SIZE - sizeof(ULONG)) == 0x8eac705;
-    skip(g_IsReactOS == 1, "Not reactos\n");
+    if (!g_IsReactOS)
+        trace("Not ReactOS\n");
 
     pMmAllocatePagesForMdlEx = KmtGetSystemRoutineAddress(L"MmAllocatePagesForMdlEx");
 

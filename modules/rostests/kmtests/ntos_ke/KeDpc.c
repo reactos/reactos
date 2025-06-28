@@ -165,7 +165,7 @@ START_TEST(KeDpc)
     if (!skip(Status == STATUS_SUCCESS, "KeInitializeDpc failed\n") &&
         GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
     {
-        // Inserting NULL in a DPC gives a 0xC7 bugcheck on Windows 8+.
+        // Inserting NULL in a DPC gives a TIMER_OR_DPC_INVALID bugcheck on Windows 8+.
         KeRaiseIrql(HIGH_LEVEL, &Irql);
           Ret = KeInsertQueueDpc(&Dpc, NULL, NULL);
           ok_bool_true(Ret, "KeInsertQueueDpc returned");

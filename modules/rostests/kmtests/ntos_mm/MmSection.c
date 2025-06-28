@@ -113,12 +113,12 @@ TestCreateSection(
 
     if (GetCurrentNTVersion() < _WIN32_WINNT_WIN10)
     {
-        ok_eq_hex(ExceptionStatus, (STATUS_SUCCESS));
+        ok_eq_hex(ExceptionStatus, STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_INVALID_PAGE_PROTECTION);
     }
     else
     {
-        ok_eq_hex(ExceptionStatus, (STATUS_ACCESS_VIOLATION));
+        ok_eq_hex(ExceptionStatus, STATUS_ACCESS_VIOLATION);
         ok_eq_hex(Status, STATUS_SUCCESS);
     }
 
@@ -147,12 +147,12 @@ TestCreateSection(
 
     if (GetCurrentNTVersion() < _WIN32_WINNT_WIN10)
     {
-        ok_eq_hex(ExceptionStatus, (STATUS_SUCCESS));
+        ok_eq_hex(ExceptionStatus, STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_INVALID_PAGE_PROTECTION);
     }
     else
     {
-        ok_eq_hex(ExceptionStatus, (STATUS_ACCESS_VIOLATION));
+        ok_eq_hex(ExceptionStatus, STATUS_ACCESS_VIOLATION);
         ok_eq_hex(Status, STATUS_SUCCESS);
     }
     ok_eq_pointer(SectionObject, KmtInvalidPointer);
@@ -298,7 +298,7 @@ TestCreateSection(
         if (GetCurrentNTVersion() == _WIN32_WINNT_WS03)
             ++PointerCount2;
         else if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
-            PointerCount2--;
+            --PointerCount2;
         CheckObject(FileHandle2, PointerCount2, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, TRUE);
@@ -375,7 +375,7 @@ TestCreateSection(
         if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
-        else if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+        if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
             --PointerCount1;
         CheckObject(FileHandle1, PointerCount1, 1L);
         SectionObject = KmtInvalidPointer;

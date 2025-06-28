@@ -394,7 +394,7 @@ START_TEST(KeSpinLock)
         { CheckQueueHandle, DISPATCH_LEVEL, AcquireInStackQueued, ReleaseInStackQueued, NULL,           AcquireInStackForDpc,  ReleaseInStackForDpc,  NULL },
     };
     CHECK_DATA *TestData;
-    size_t TestDataSize;
+    ULONG TestElements;
     int i, iIrql;
     PKPRCB Prcb;
 
@@ -432,35 +432,28 @@ START_TEST(KeSpinLock)
 
     switch (GetCurrentNTVersion())
     {
+        case _WIN32_WINNT_VISTA:
 #ifdef _M_X64
-        case _WIN32_WINNT_WS03:
-            TestData = TestDataWS03;
-            TestDataSize = sizeof(TestDataWS03);
-            break;
-        case _WIN32_WINNT_VISTA:
-            skip(0, "This test is broken on Vista x64.\n");
+            skip(FALSE, "This test is broken on Vista x64.\n");
             goto done;
-            break;
-#else
-        case _WIN32_WINNT_WS03:
-        case _WIN32_WINNT_VISTA:
-            TestData = TestDataWS03;
-            TestDataSize = sizeof(TestDataWS03);
-            break;
 #endif
+        case _WIN32_WINNT_WS03:
+            TestData = TestDataWS03;
+            TestElements = RTL_NUMBER_OF(TestDataWS03);
+            break;
         case _WIN32_WINNT_WIN7:
         case _WIN32_WINNT_WIN8:
         case _WIN32_WINNT_WINBLUE:
         case _WIN32_WINNT_WIN10:
             TestData = TestDataWin7;
-            TestDataSize = sizeof(TestDataWin7);
+            TestElements = RTL_NUMBER_OF(TestDataWin7);
             break;
         default:
-            skip(0, "Unknown NT version (0x%X).\n", GetCurrentNTVersion());
+            skip(FALSE, "Unknown NT version (0x%X).\n", GetCurrentNTVersion());
             goto done;
     }
 
-    for (i = 0; i < TestDataSize / sizeof(CHECK_DATA); ++i)
+    for (i = 0; i < TestElements; ++i)
     {
         memset(&SpinLock, 0x55, sizeof SpinLock);
         KeInitializeSpinLock(&SpinLock);
