@@ -233,6 +233,8 @@ NdisOpenFile(
   OBJECT_ATTRIBUTES ObjectAttributes;
   PNDIS_HANDLE_OBJECT FileHandleObject = NULL;
   IO_STATUS_BLOCK IoStatusBlock;
+  FILE_STANDARD_INFORMATION StandardInfo;
+  UINT NtFileLength;
   NTSTATUS NtStatus;
 
   ASSERT_IRQL(PASSIVE_LEVEL);
@@ -296,7 +298,28 @@ NdisOpenFile(
   {
     NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x) Name %wZ\n", NtStatus, FileName));
     *Status = NDIS_STATUS_FILE_NOT_FOUND;
+    goto cleanup;
   }
+
+  NtStatus = ZwQueryInformationFile(
+    NtFileHandle,
+    &IoStatusBlock,
+    &StandardInfo,
+    sizeof(StandardInfo),
+    FileStandardInformation);
+  if (!NT_SUCCESS(NtStatus))
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ZwQueryInformationFile failed (%x) Name %wZ\n", NtStatus, FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
+  }
+  if (StandardInfo.EndOfFile.HighPart != 0 || StandardInfo.EndOfFile.LowPart == 0)
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ZwQueryInformationFile failed Name %wZ\n", FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
+  }
+  NtFileLength = StandardInfo.EndOfFile.LowPart;
 
 cleanup:
   if ( FullFileName.Buffer != NULL )
@@ -316,6 +339,7 @@ cleanup:
   {
     FileHandleObject->FileHandle = NtFileHandle;
     *FileHandle = NDIS_POBJECT_TO_HANDLE(FileHandleObject);
+    *FileLength = NtFileLength;
   }
 }
 
