@@ -63,9 +63,6 @@ DesktopWndProcW(HWND Wnd,
           break;
         }
 
-      case WM_SETCURSOR:
-          return (LRESULT)SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
-
       default:
           return DefWindowProcW(Wnd, Msg, wParam, lParam);
    }
