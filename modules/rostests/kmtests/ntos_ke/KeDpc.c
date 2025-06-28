@@ -54,7 +54,7 @@ DpcHandler(
     ok_eq_pointer(Dpc->SystemArgument2, SystemArgument2);
     ok_eq_pointer(Dpc->DpcData, NULL);
 
-    if (GetCurrentNTVersion() == _WIN32_WINNT_WS03)
+    if (GetNTVersion() == _WIN32_WINNT_WS03)
     {
         ok_eq_uint(Prcb->DpcRoutineActive, 1);
         /* this DPC is not in the list anymore, but it was at the head! */
@@ -84,7 +84,7 @@ START_TEST(KeDpc)
     ok_eq_uint(Dpc.Importance, DpcImportance);
     ok_eq_uint(Dpc.Number, 0);
     ok_eq_pointer(Dpc.DpcListEntry.Flink, (LIST_ENTRY *)0x5555555555555555LL);
-    if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+    if (Dpc.DpcListEntry.Blink)
         ok_eq_pointer(Dpc.DpcListEntry.Blink, (LIST_ENTRY *)0x5555555555555555LL);
     ok_eq_pointer(Dpc.DeferredRoutine, DpcHandler);
     ok_eq_pointer(Dpc.DeferredContext, &Dpc);
@@ -92,7 +92,7 @@ START_TEST(KeDpc)
     ok_eq_pointer(Dpc.SystemArgument2, (PVOID)0x5555555555555555LL);
     ok_eq_pointer(Dpc.DpcData, NULL);
 
-    if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
     {
         // Windows 8+ is stricter about misusing DPC, these tests bugcheck there.
 
@@ -163,9 +163,9 @@ START_TEST(KeDpc)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     if (!skip(Status == STATUS_SUCCESS, "KeInitializeDpc failed\n") &&
-        GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+        GetNTVersion() < _WIN32_WINNT_WIN8)
     {
-        // Inserting NULL in a DPC gives a 0xC7 bugcheck on Windows 8+.
+        // Inserting NULL in a DPC gives a TIMER_OR_DPC_INVALID bugcheck on Windows 8+.
         KeRaiseIrql(HIGH_LEVEL, &Irql);
           Ret = KeInsertQueueDpc(&Dpc, NULL, NULL);
           ok_bool_true(Ret, "KeInsertQueueDpc returned");

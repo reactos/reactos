@@ -238,9 +238,9 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
                                                                                     \
     if ((CheckData)->IsAcquired)                                                    \
         ExpectedIrql = (CheckData)->IrqlWhenAcquired;                               \
-    if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)                                  \
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)                                         \
         ok_irql(ExpectedIrql);                                                      \
-    if (GetCurrentNTVersion() == _WIN32_WINNT_WS03)                                 \
+    if (GetNTVersion() == _WIN32_WINNT_WS03)                                        \
         ok_bool_false(KeAreApcsDisabled(), "KeAreApcsDisabled returned");           \
     ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");                 \
 } while (0)
@@ -260,12 +260,12 @@ TestSpinLock(
         ok_eq_ulongptr(*SpinLock, 0);
     CheckData->Acquire(SpinLock, CheckData);
 #ifdef _M_IX86
-    if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
         CheckSpinLock(SpinLock, CheckData, 1);
 #endif
     CheckData->Release(SpinLock, CheckData);
 #ifdef _M_IX86
-    if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
         CheckSpinLock(SpinLock, CheckData, 0);
 #endif
 
@@ -305,7 +305,7 @@ TestSpinLock(
         CheckData->AcquireNoRaise(SpinLock, CheckData);
 #ifdef _M_IX86
         // Fails on x64 and Windows 8+
-        if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
             CheckSpinLock(SpinLock, CheckData, 1);
 #endif
         CheckData->ReleaseNoLower(SpinLock, CheckData);
@@ -315,7 +315,7 @@ TestSpinLock(
         CheckData->AcquireNoRaise(SpinLock, CheckData);
 #ifdef _M_IX86
         // Fails on x64 and Windows 8+
-        if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
             CheckSpinLock(SpinLock, CheckData, 1);
 #endif
         CheckData->Release(SpinLock, CheckData);
@@ -325,7 +325,7 @@ TestSpinLock(
         CheckData->Acquire(SpinLock, CheckData);
 #ifdef _M_IX86
         // Fails on x64 and Windows 8+
-        if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
             CheckSpinLock(SpinLock, CheckData, 1);
 #endif
         CheckData->ReleaseNoLower(SpinLock, CheckData);
@@ -394,7 +394,7 @@ START_TEST(KeSpinLock)
         { CheckQueueHandle, DISPATCH_LEVEL, AcquireInStackQueued, ReleaseInStackQueued, NULL,           AcquireInStackForDpc,  ReleaseInStackForDpc,  NULL },
     };
     CHECK_DATA *TestData;
-    size_t TestDataSize;
+    ULONG TestElements;
     int i, iIrql;
     PKPRCB Prcb;
 
@@ -430,37 +430,30 @@ START_TEST(KeSpinLock)
     if (!KmtIsMultiProcessorBuild && !KmtIsCheckedBuild)
         pSpinLock = NULL;
 
-    switch (GetCurrentNTVersion())
+    switch (GetNTVersion())
     {
+        case _WIN32_WINNT_VISTA:
 #ifdef _M_X64
-        case _WIN32_WINNT_WS03:
-            TestData = TestDataWS03;
-            TestDataSize = sizeof(TestDataWS03);
-            break;
-        case _WIN32_WINNT_VISTA:
-            skip(0, "This test is broken on Vista x64.\n");
+            skip(FALSE, "This test is broken on Vista x64.\n");
             goto done;
-            break;
-#else
-        case _WIN32_WINNT_WS03:
-        case _WIN32_WINNT_VISTA:
-            TestData = TestDataWS03;
-            TestDataSize = sizeof(TestDataWS03);
-            break;
 #endif
+        case _WIN32_WINNT_WS03:
+            TestData = TestDataWS03;
+            TestElements = RTL_NUMBER_OF(TestDataWS03);
+            break;
         case _WIN32_WINNT_WIN7:
         case _WIN32_WINNT_WIN8:
         case _WIN32_WINNT_WINBLUE:
         case _WIN32_WINNT_WIN10:
             TestData = TestDataWin7;
-            TestDataSize = sizeof(TestDataWin7);
+            TestElements = RTL_NUMBER_OF(TestDataWin7);
             break;
         default:
-            skip(0, "Unknown NT version (0x%X).\n", GetCurrentNTVersion());
+            skip(FALSE, "Unknown NT version (0x%X).\n", GetNTVersion());
             goto done;
     }
 
-    for (i = 0; i < TestDataSize / sizeof(CHECK_DATA); ++i)
+    for (i = 0; i < TestElements; ++i)
     {
         memset(&SpinLock, 0x55, sizeof SpinLock);
         KeInitializeSpinLock(&SpinLock);

@@ -212,7 +212,7 @@ TestMmBuildMdlForNonPagedPool(VOID)
     ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
 
     // This fails an assertion on Windows 8+ checked and can bugcheck Windows 10+ free.
-    if (GetCurrentNTVersion() < _WIN32_WINNT_WIN8)
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
     {
         MmBuildMdlForNonPagedPool(Mdl);
         ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");

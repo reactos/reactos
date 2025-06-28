@@ -81,7 +81,7 @@ ValidateMapping(
     ULONG i;
 
 #ifdef _M_AMD64
-    if (skip(GetCurrentNTVersion() < _WIN32_WINNT_WIN10, 
+    if (skip(GetNTVersion() < _WIN32_WINNT_WIN10, 
              "Win10 1607+ breaks these next tests.\n"))
         return Valid;
 #endif
@@ -112,16 +112,16 @@ ValidateMapping(
     CurrentAddress = (PUCHAR)BaseAddress - 1 * PAGE_SIZE;
     PteValue = GET_PTE_VALUE(CurrentAddress);
 
-    if (skip(GetCurrentNTVersion() < _WIN32_WINNT_WIN10, 
+    if (skip(GetNTVersion() < _WIN32_WINNT_WIN10, 
              "DVRT (Win10 1607+) breaks these next tests.\n"))
         return Valid;
 
 #ifdef _M_AMD64
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
         ExpectedValue = ((PoolTag & ~1ULL) + 1) << 28;
-    else if (GetCurrentNTVersion() >= _WIN32_WINNT_VISTA)
+    else if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #else
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_VISTA)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
         ExpectedValue = ((PoolTag & ~1ULL) + 1) << 32;
     else
@@ -135,14 +135,13 @@ ValidateMapping(
     PteValue = GET_PTE_VALUE(CurrentAddress);
 
 #ifdef _M_AMD64
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
     {
         ExpectedValue = (TotalPtes + 2) << 28;
     }
-
-    else if (g_IsReactOS || GetCurrentNTVersion() >= _WIN32_WINNT_VISTA)
+    else if (g_IsReactOS || GetNTVersion() >= _WIN32_WINNT_VISTA)
 #else
-    if (g_IsReactOS || GetCurrentNTVersion() >= _WIN32_WINNT_VISTA)
+    if (g_IsReactOS || GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     {
         /* On ReactOS and on Vista+ the size is stored in
@@ -232,7 +231,7 @@ TestMap(
     ok(BaseAddress != NULL, "MmMapLockedPagesWithReservedMapping failed\n");
     if (!skip(BaseAddress != NULL, "Failed to map MDL\n"))
     {
-        if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+        if (GetNTVersion() >= _WIN32_WINNT_WIN8)
             ok_eq_pointer(BaseAddress, (PVOID)ALIGN_DOWN_BY((PUCHAR)Mapping + sizeof(ULONG), 16));
         else
             ok_eq_pointer(BaseAddress, (PUCHAR)Mapping + sizeof(ULONG));
@@ -335,7 +334,8 @@ START_TEST(MmReservedMapping)
 
     g_IsPae = ExIsProcessorFeaturePresent(PF_PAE_ENABLED);
     g_IsReactOS = *(PULONG)(KI_USER_SHARED_DATA + PAGE_SIZE - sizeof(ULONG)) == 0x8eac705;
-    skip(g_IsReactOS == 1, "Not reactos\n");
+    if (!g_IsReactOS)
+        trace("Not ReactOS\n");
 
     pMmAllocatePagesForMdlEx = KmtGetSystemRoutineAddress(L"MmAllocatePagesForMdlEx");
 

@@ -258,13 +258,13 @@ TestWin2003ObjectTypes(VOID)
 
 START_TEST(ObTypes)
 {
-    switch (GetCurrentNTVersion())
+    switch (GetNTVersion())
     {
         case _WIN32_WINNT_WS03:
             TestWin2003ObjectTypes();
             break;
         default:
-            skip(0, "FIXME: kmtest:ObTypes is invalid for this NT version (0x%X).\n", GetCurrentNTVersion());
+            skip(FALSE, "FIXME: kmtest:ObTypes is invalid for this NT version (0x%X).\n", GetNTVersion());
             break;
     }
 }

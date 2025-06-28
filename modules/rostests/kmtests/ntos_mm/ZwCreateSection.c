@@ -473,7 +473,7 @@ BasicBehaviorChecks(HANDLE FileHandle)
 
     Length.QuadPart = TestStringSize;
     CREATE_SECTION(Section, (SECTION_ALL_ACCESS), NULL, Length, PAGE_READONLY, SEC_COMMIT, FileHandle, STATUS_SUCCESS, NO_HANDLE_CLOSE);
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
 #ifdef _M_IX86
         CheckObject(Section, 33, 1);
 #else

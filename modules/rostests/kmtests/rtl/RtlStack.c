@@ -66,10 +66,10 @@ TestStackWalk4(VOID)
         ExceptionStatus = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
-    if (GetCurrentNTVersion() == _WIN32_WINNT_WS03)
-        ok_eq_hex(ExceptionStatus, (STATUS_ACCESS_VIOLATION));
+    if (GetNTVersion() == _WIN32_WINNT_WS03)
+        ok_eq_hex(ExceptionStatus, STATUS_ACCESS_VIOLATION);
     else
-        ok_eq_hex(ExceptionStatus, (STATUS_SUCCESS));
+        ok_eq_hex(ExceptionStatus, STATUS_SUCCESS);
 
     RtlFillMemory(Frames, sizeof(Frames), 0x55);
     Hash = 0x55555555;

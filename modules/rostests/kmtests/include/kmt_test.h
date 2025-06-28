@@ -18,7 +18,7 @@
 
 #include <kmt_platform.h>
 
-#define GetCurrentNTVersion() ((SharedUserData->NtMajorVersion << 8) | SharedUserData->NtMinorVersion)
+#define GetNTVersion() ((SharedUserData->NtMajorVersion << 8) | SharedUserData->NtMinorVersion)
 
 typedef VOID KMT_TESTFUNC(VOID);
 typedef KMT_TESTFUNC *PKMT_TESTFUNC;

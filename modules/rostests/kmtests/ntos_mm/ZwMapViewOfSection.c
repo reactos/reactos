@@ -10,22 +10,9 @@
 #define IGNORE -99
 #define NEW_CONTENT "NewContent"
 #define NEW_CONTENT_LEN sizeof(NEW_CONTENT)
-#define IsInvalidParamStatus(Status) (        \
-    Status == STATUS_INVALID_PARAMETER     || \
-    Status == STATUS_INVALID_PARAMETER_MIX || \
-    Status == STATUS_INVALID_PARAMETER_1   || \
-    Status == STATUS_INVALID_PARAMETER_2   || \
-    Status == STATUS_INVALID_PARAMETER_3   || \
-    Status == STATUS_INVALID_PARAMETER_4   || \
-    Status == STATUS_INVALID_PARAMETER_5   || \
-    Status == STATUS_INVALID_PARAMETER_6   || \
-    Status == STATUS_INVALID_PARAMETER_7   || \
-    Status == STATUS_INVALID_PARAMETER_8   || \
-    Status == STATUS_INVALID_PARAMETER_9   || \
-    Status == STATUS_INVALID_PARAMETER_10  || \
-    Status == STATUS_INVALID_PARAMETER_11  || \
-    Status == STATUS_INVALID_PARAMETER_12     \
-)
+#define IsInvalidParamStatus(Status) \
+    (Status == STATUS_INVALID_PARAMETER || Status == STATUS_INVALID_PARAMETER_MIX || \
+    (Status >= STATUS_INVALID_PARAMETER_1 && Status <= STATUS_INVALID_PARAMETER_12))
 #define ok_invalid_parameter(Status) ok(IsInvalidParamStatus(Status), "Invalid status code (0x%X)\n", Status)
 
 static UNICODE_STRING FileReadOnlyPath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
@@ -41,7 +28,7 @@ static OBJECT_ATTRIBUTES NtoskrnlFileObject;
 #define TestMapView(SectionHandle, ProcessHandle, BaseAddress2, ZeroBits, CommitSize, SectionOffset, ViewSize2, InheritDisposition, AllocationType, Win32Protect, MapStatus, UnmapStatus) do    \
     {                                                                                                                                                                                           \
         Status = ZwMapViewOfSection(SectionHandle, ProcessHandle, BaseAddress2, ZeroBits, CommitSize, SectionOffset, ViewSize2, InheritDisposition, AllocationType, Win32Protect);              \
-        if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN10 && IsInvalidParamStatus(MapStatus))                                                                                                          \
+        if (GetNTVersion() >= _WIN32_WINNT_WIN10 && IsInvalidParamStatus(MapStatus))                                                                                                            \
             ok_invalid_parameter(MapStatus);                                        \
         else                                                                        \
             ok_eq_hex(Status, MapStatus);                                           \
@@ -186,8 +173,8 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 5, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, -1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_PARAMETER_4, IGNORE);
 #else
-    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, GetCurrentNTVersion() >= _WIN32_WINNT_WIN8 ? STATUS_INVALID_PARAMETER_4 : STATUS_SUCCESS, STATUS_SUCCESS);
-    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 5, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, GetCurrentNTVersion() >= _WIN32_WINNT_WIN8 ? STATUS_INVALID_PARAMETER_4 : STATUS_SUCCESS, STATUS_SUCCESS);
+    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, GetNTVersion() >= _WIN32_WINNT_WIN8 ? STATUS_INVALID_PARAMETER_4 : STATUS_SUCCESS, STATUS_SUCCESS);
+    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 5, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, GetNTVersion() >= _WIN32_WINNT_WIN8 ? STATUS_INVALID_PARAMETER_4 : STATUS_SUCCESS, STATUS_SUCCESS);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, -1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_SUCCESS, IGNORE);
 #endif
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 20, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_NO_MEMORY, IGNORE);
@@ -233,7 +220,7 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
     TestMapView(PageFileSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE, STATUS_INVALID_PARAMETER_9, STATUS_SUCCESS);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, (MEM_RESERVE | MEM_COMMIT), PAGE_READWRITE, STATUS_INVALID_PARAMETER_9, IGNORE);
-    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, (MEM_LARGE_PAGES | MEM_RESERVE), PAGE_READWRITE, (NTSTATUS)(GetCurrentNTVersion() >= _WIN32_WINNT_WIN10 ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS), STATUS_SUCCESS);
+    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, (MEM_LARGE_PAGES | MEM_RESERVE), PAGE_READWRITE, (NTSTATUS)(GetNTVersion() >= _WIN32_WINNT_WIN10 ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS), STATUS_SUCCESS);
 
     //win32protect
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READONLY, STATUS_SUCCESS, STATUS_SUCCESS);
@@ -287,7 +274,7 @@ AdvancedErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
 #ifdef _M_IX86
     NTSTATUS MapStatus;
 
-    switch (GetCurrentNTVersion())
+    switch (GetNTVersion())
     {
         case _WIN32_WINNT_WIN8:
         case _WIN32_WINNT_WINBLUE:
@@ -362,7 +349,7 @@ SystemProcessWorker(PVOID StartContext)
 
     UNREFERENCED_PARAMETER(StartContext);
 
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
 #ifdef _M_IX86
         PtrCnt = 64;
 #else
@@ -381,12 +368,12 @@ SystemProcessWorker(PVOID StartContext)
     {
         CheckObject(SectionHandle, PtrCnt, 2);
         Status = ZwMapViewOfSection(SectionHandle, NtCurrentProcess(), &BaseAddress, 0, TestStringSize, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_READWRITE);
-        if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+        if (GetNTVersion() >= _WIN32_WINNT_WIN8)
             PtrCnt -= 2;
 
         //make sure ZwMapViewofSection doesn't touch the section ref counts.
         CheckObject(SectionHandle, PtrCnt, 2);
-        if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+        if (GetNTVersion() >= _WIN32_WINNT_WIN8)
             PtrCnt--;
 
         if (!skip(NT_SUCCESS(Status), "Error mapping page file view in system process. Error = %p\n", Status))
@@ -424,7 +411,7 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
     SIZE_T ViewSize = 0;
     ULONG PtrCnt;
 
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
 #ifdef _M_IX86
         PtrCnt = 34;
 #else
@@ -439,7 +426,7 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
 
     Status = ZwCreateSection(&WriteSectionHandle, SECTION_ALL_ACCESS, &ObjectAttributes, &MaximumSize, PAGE_READWRITE, SEC_COMMIT, FileHandleWriteOnly);
     CheckObject(WriteSectionHandle, PtrCnt, 1);
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
         PtrCnt -= 2;
     ok(NT_SUCCESS(Status), "Error creating write section from file. Error = %p\n", Status);
 
@@ -581,7 +568,7 @@ PageFileBehaviorChecks()
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG PtrCnt;
 
-    if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
 #ifdef _M_IX86
         PtrCnt = 34;
 #else
@@ -603,7 +590,7 @@ PageFileBehaviorChecks()
     {
         CheckObject(PageFileSectionHandle, PtrCnt, 1);
         Status = ZwMapViewOfSection(PageFileSectionHandle, NtCurrentProcess(), &BaseAddress, 0, TestStringSize, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_READWRITE);
-        if (GetCurrentNTVersion() >= _WIN32_WINNT_WIN8)
+        if (GetNTVersion() >= _WIN32_WINNT_WIN8)
             PtrCnt -= 2;
         if (!skip(NT_SUCCESS(Status), "Error mapping page file view. Error = %p\n", Status))
         {
