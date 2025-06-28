@@ -614,6 +614,26 @@ NextResourceDescriptor(
 
 
 static
+PIO_RESOURCE_LIST
+NextResourceRequirement(
+    _In_ PIO_RESOURCE_LIST pResourceList)
+{
+    LPBYTE pNext = NULL;
+
+    if (pResourceList == NULL)
+        return NULL;
+
+    /* Skip the resource list */
+    pNext = (LPBYTE)pResourceList + sizeof(IO_RESOURCE_LIST);
+
+    /* Skip the resource descriptors */
+    pNext += (pResourceList->Count - 1) * sizeof(IO_RESOURCE_DESCRIPTOR);
+
+    return (PIO_RESOURCE_LIST)pNext;
+}
+
+
+static
 BOOL
 IsCallerInteractive(
     _In_ handle_t hBinding)
@@ -4458,7 +4478,39 @@ PNP_AddEmptyLogConf(
         }
         else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
         {
-            /* FIXME */
+            PIO_RESOURCE_REQUIREMENTS_LIST pRequirementsList = NULL;
+            PIO_RESOURCE_LIST pResourceList = NULL;
+            ULONG ulIndex;
+
+            /* Reallocate a larger buffer in order to add the new configuration */
+            ulNewSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+            pDataBuffer = HeapReAlloc(GetProcessHeap(),
+                                      0,
+                                      pDataBuffer,
+                                      ulDataSize + ulNewSize);
+            if (pDataBuffer == NULL)
+            {
+                ret = CR_OUT_OF_MEMORY;
+                goto done;
+            }
+
+            pRequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)pDataBuffer;
+            pResourceList = (PIO_RESOURCE_LIST)&pRequirementsList->List[0];
+            for (ulIndex = 0; ulIndex < pRequirementsList->AlternativeLists - 1; ulIndex++)
+                pResourceList = NextResourceRequirement(pResourceList);
+
+            pRequirementsList->ListSize = ulDataSize + ulNewSize;
+            pRequirementsList->AlternativeLists++;
+
+            pResourceList->Version = 1;
+            pResourceList->Revision = 1;
+            pResourceList->Count = 1;
+
+            pResourceList->Descriptors[0].Option = IO_RESOURCE_PREFERRED;
+            pResourceList->Descriptors[0].Type = CmResourceTypeConfigData;
+            pResourceList->Descriptors[0].u.ConfigData.Priority = ulPriority;
+
+            *pulLogConfTag = ulIndex;
         }
         else
         {
