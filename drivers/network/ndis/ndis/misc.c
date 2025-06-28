@@ -119,7 +119,6 @@ NdisInterlockedRemoveHeadList(
 
 typedef struct _NDIS_HANDLE_OBJECT
 {
-  HANDLE FileHandle;
   BOOLEAN Mapped;
   ULONG FileLength;
   PVOID MapBuffer;
@@ -203,17 +202,8 @@ NdisCloseFile(
 
   FileHandleObject = NDIS_HANDLE_TO_POBJECT(FileHandle);
 
-  ASSERT ( FileHandleObject->FileHandle );
-
-  if ( FileHandleObject->Mapped )
-    NdisUnmapFile ( FileHandle );
   if ( FileHandleObject->MapBuffer )
     ExFreePool ( FileHandleObject->MapBuffer );
-
-  ZwClose ( FileHandleObject->FileHandle );
-
-  memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
-
   ExFreePool ( FileHandleObject );
 }
 
@@ -349,6 +339,10 @@ NdisOpenFile(
   }
 
 cleanup:
+  if ( NtFileHandle != NULL )
+  {
+    ZwClose( NtFileHandle );
+  }
   if ( FullFileName.Buffer != NULL )
   {
     ExFreePool ( FullFileName.Buffer );
@@ -366,7 +360,6 @@ cleanup:
   }
   else
   {
-    FileHandleObject->FileHandle = NtFileHandle;
     *FileHandle = NDIS_POBJECT_TO_HANDLE(FileHandleObject);
     *FileLength = NtFileLength;
   }
