@@ -389,7 +389,7 @@ AtaPdoPower(
     // TODO: Investigate how to fix this
     // *** Assertion failed: KeGetCurrentThread()->SystemAffinityActive == FALSE
     // ***   Source File: ../ntoskrnl/ke/dpc.c, line 926
-#if 1
+#if 0
     NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(AtaPdoPowerSetSystemPowerState);
