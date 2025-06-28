@@ -228,10 +228,12 @@ NdisOpenFile(
     IN  PNDIS_STRING            FileName,
     IN  NDIS_PHYSICAL_ADDRESS   HighestAcceptableAddress)
 {
+  HANDLE NtFileHandle = NULL;
   NDIS_STRING FullFileName;
   OBJECT_ATTRIBUTES ObjectAttributes;
   PNDIS_HANDLE_OBJECT FileHandleObject = NULL;
   IO_STATUS_BLOCK IoStatusBlock;
+  NTSTATUS NtStatus;
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
@@ -263,10 +265,10 @@ NdisOpenFile(
   memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
 
   memmove ( FullFileName.Buffer, NDIS_FILE_FOLDER, FullFileName.Length );
-  *Status = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
-  if ( !NT_SUCCESS(*Status) )
+  NtStatus = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
+  if ( !NT_SUCCESS(NtStatus) )
   {
-    NDIS_DbgPrint(MIN_TRACE, ("RtlAppendUnicodeStringToString failed (%x)\n", *Status));
+    NDIS_DbgPrint(MIN_TRACE, ("RtlAppendUnicodeStringToString failed (%x)\n", NtStatus));
     *Status = NDIS_STATUS_FAILURE;
     goto cleanup;
   }
@@ -277,8 +279,8 @@ NdisOpenFile(
     NULL,
     NULL );
 
-  *Status = ZwCreateFile (
-    &FileHandleObject->FileHandle,
+  NtStatus = ZwCreateFile (
+    &NtFileHandle,
     FILE_READ_DATA|SYNCHRONIZE,
     &ObjectAttributes,
     &IoStatusBlock,
@@ -290,10 +292,10 @@ NdisOpenFile(
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
 
-  if ( !NT_SUCCESS(*Status) )
+  if ( !NT_SUCCESS(NtStatus) )
   {
-    NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x) Name %wZ\n", *Status, FileName));
-    *Status = NDIS_STATUS_FAILURE;
+    NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x) Name %wZ\n", NtStatus, FileName));
+    *Status = NDIS_STATUS_FILE_NOT_FOUND;
   }
 
 cleanup:
@@ -304,16 +306,17 @@ cleanup:
   }
   if ( !NT_SUCCESS(*Status) )
   {
-    if( FileHandleObject ) {
-	ExFreePool ( FileHandleObject );
-	FileHandleObject = NULL;
+    if ( FileHandleObject )
+    {
+      ExFreePool ( FileHandleObject );
     }
     *FileHandle = NULL;
   }
   else
+  {
+    FileHandleObject->FileHandle = NtFileHandle;
     *FileHandle = NDIS_POBJECT_TO_HANDLE(FileHandleObject);
-
-  return;
+  }
 }
 
 /*
