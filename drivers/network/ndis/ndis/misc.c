@@ -207,6 +207,8 @@ NdisCloseFile(
 
   if ( FileHandleObject->Mapped )
     NdisUnmapFile ( FileHandle );
+  if ( FileHandleObject->MapBuffer )
+    ExFreePool ( FileHandleObject->MapBuffer );
 
   ZwClose ( FileHandleObject->FileHandle );
 
@@ -321,6 +323,31 @@ NdisOpenFile(
   }
   NtFileLength = StandardInfo.EndOfFile.LowPart;
 
+  FileHandleObject->MapBuffer = ExAllocatePool( NonPagedPool, NtFileLength );
+  if (!FileHandleObject->MapBuffer)
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ExAllocatePool failed Name %wZ\n", FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
+  }
+
+  NtStatus = ZwReadFile(
+    NtFileHandle,
+    NULL,
+    NULL,
+    NULL,
+    &IoStatusBlock,
+    FileHandleObject->MapBuffer,
+    NtFileLength,
+    NULL,
+    NULL);
+  if ( !NT_SUCCESS(NtStatus) || IoStatusBlock.Information != NtFileLength )
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ZwReadFile failed (%x) Name %wZ\n", NtStatus, FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
+  }
+
 cleanup:
   if ( FullFileName.Buffer != NULL )
   {
@@ -331,6 +358,8 @@ cleanup:
   {
     if ( FileHandleObject )
     {
+      if ( FileHandleObject->MapBuffer )
+        ExFreePool( FileHandleObject->MapBuffer );
       ExFreePool ( FileHandleObject );
     }
     *FileHandle = NULL;
