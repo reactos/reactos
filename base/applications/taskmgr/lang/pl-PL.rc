@@ -2,10 +2,11 @@
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Polish resource file
- * TRANSLATORS: Copyright: xrogers <xxrogers@users.sourceforge.net>
- *              Copyright 2011 Caemyr
+ * TRANSLATORS: Copyright 2007 Lech Groblewicz <xxrogers@users.sourceforge.net>
+ *              Copyright 2011 Olaf Siejka <caemyr@gmail.com>
  *              Copyright 2014 Adam Stachowicz <saibamenppl@gmail.com>
- *              Copyright 2025 pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (June, 2025)
+ *              Copyright 2017 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
