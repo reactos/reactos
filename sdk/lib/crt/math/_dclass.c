@@ -1,17 +1,15 @@
-//
-// _dclass.c
-//
-//      Copyright (c) 2024 Timo Kreuzer
-//
-// Implementation of _dclass.
-//
-// SPDX-License-Identifier: MIT
-//
+/*
+ * PROJECT:     ReactOS CRT
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Implementation of _dclass.
+ * COPYRIGHT:   Copyright 2025 Timo Kreuzer <timo.kreuzer@reactos.org>
+ */
 
 #include <math.h>
 #include <stdint.h>
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1922)
+_Check_return_ short __cdecl _dclass(_In_ double _X);
 #pragma function(_dclass)
 #endif
 

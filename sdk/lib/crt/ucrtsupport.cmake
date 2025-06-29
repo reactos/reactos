@@ -1,7 +1,5 @@
 
 list(APPEND UCRTSUPP_SOURCE
-    ${CRT_FLOAT_SOURCE}
-    ${CRT_MATH_SOURCE}
     misc/amsg.c
     misc/purecall.c
     misc/tls.c
@@ -11,8 +9,6 @@ list(APPEND UCRTSUPP_SOURCE
 )
 
 list(APPEND UCRTSUPP_ASM_SOURCE
-    ${CRT_FLOAT_ASM_SOURCE}
-    ${CRT_MATH_ASM_SOURCE}
     ${CRT_SETJMP_ASM_SOURCE}
     ${CRT_WINE_ASM_SOURCE}
 )

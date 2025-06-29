@@ -3,11 +3,28 @@ include_directories(libm_sse2)
 
 list(APPEND LIBCNTPR_MATH_SOURCE
     math/_chgsignf.c
+    math/_dclass.c
+    math/_dsign.c
+    math/_dtest.c
+    math/_fdclass.c
+    math/_fdsign.c
+    math/_fdtest.c
+    math/_finite.c
+    math/_finitef.c
+    math/_isnan.c
+    math/_isnanf.c
     math/_invoke_matherr.c
     math/abs.c
     math/div.c
     math/exp2f.c
     math/labs.c
+    math/nextafter.c
+    math/nextafterf.c
+    math/nexttowardf.c
+    math/round.c
+    math/roundf.c
+    math/scalbn.c
+    math/scalbnf.c
     math/sincos.c
 )
 
@@ -22,6 +39,7 @@ if(ARCH STREQUAL "i386")
         math/i386/cisin.c
         math/i386/cisqrt.c
         math/i386/ldexp.c
+        math/i386/libm_sse2.c
     )
     list(APPEND LIBCNTPR_MATH_ASM_SOURCE
         math/i386/alldiv_asm.s

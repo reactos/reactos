@@ -25,6 +25,7 @@ include(wine/wine.cmake)
 include(wstring/wstring.cmake)
 
 include(crt.cmake)
+include(crtmath.cmake)
 include(libcntpr.cmake)
 include(msvcrtex.cmake)
 include(oldnames.cmake)

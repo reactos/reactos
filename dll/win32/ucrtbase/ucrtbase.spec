@@ -133,27 +133,27 @@
 @ cdecl __iswcsym(long)
 @ cdecl __iswcsymf(long)
 @ stdcall -arch=arm __jump_unwind(ptr ptr) ntdll.__jump_unwind
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_acos()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_acosf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_asin()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_asinf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_atan()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_atan2()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_atanf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_cos()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_cosf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_exp()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_expf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_log()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_log10()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_log10f()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_logf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_pow()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_powf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_sin()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_sinf()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_tan()
-@ cdecl -stub -arch=i386 -norelay __libm_sse2_tanf()
+@ cdecl -arch=i386 -norelay __libm_sse2_acos()
+@ cdecl -arch=i386 -norelay __libm_sse2_acosf()
+@ cdecl -arch=i386 -norelay __libm_sse2_asin()
+@ cdecl -arch=i386 -norelay __libm_sse2_asinf()
+@ cdecl -arch=i386 -norelay __libm_sse2_atan()
+@ cdecl -arch=i386 -norelay __libm_sse2_atan2()
+@ cdecl -arch=i386 -norelay __libm_sse2_atanf()
+@ cdecl -arch=i386 -norelay __libm_sse2_cos()
+@ cdecl -arch=i386 -norelay __libm_sse2_cosf()
+@ cdecl -arch=i386 -norelay __libm_sse2_exp()
+@ cdecl -arch=i386 -norelay __libm_sse2_expf()
+@ cdecl -arch=i386 -norelay __libm_sse2_log()
+@ cdecl -arch=i386 -norelay __libm_sse2_log10()
+@ cdecl -arch=i386 -norelay __libm_sse2_log10f()
+@ cdecl -arch=i386 -norelay __libm_sse2_logf()
+@ cdecl -arch=i386 -norelay __libm_sse2_pow()
+@ cdecl -arch=i386 -norelay __libm_sse2_powf()
+@ cdecl -arch=i386 -norelay __libm_sse2_sin()
+@ cdecl -arch=i386 -norelay __libm_sse2_sinf()
+@ cdecl -arch=i386 -norelay __libm_sse2_tan()
+@ cdecl -arch=i386 -norelay __libm_sse2_tanf()
 @ cdecl __p___argc()
 @ cdecl __p___argv()
 @ cdecl __p___wargv()
@@ -306,7 +306,7 @@
 @ cdecl -stub _dpcomp(double double)
 @ cdecl -stub _dpoly(double ptr long)
 @ cdecl -stub _dscale(ptr long)
-@ cdecl -stub _dsign(double)
+@ cdecl _dsign(double)
 @ cdecl -stub _dsin(double long)
 @ cdecl _dtest(ptr)
 @ cdecl -stub _dunscale(ptr ptr)
@@ -349,7 +349,7 @@
 @ cdecl -stub _fdpcomp(float float)
 @ cdecl -stub _fdpoly(float ptr long)
 @ cdecl -stub _fdscale(ptr long)
-@ cdecl -stub _fdsign(float)
+@ cdecl _fdsign(float)
 @ cdecl -stub _fdsin(float long)
 @ cdecl _fdtest(ptr)
 @ cdecl -stub _fdunscale(ptr ptr)
@@ -371,7 +371,7 @@
 @ cdecl _findnext64(long ptr)
 @ cdecl _findnext64i32(long ptr)
 @ cdecl _finite(double)
-@ cdecl -stub -arch=!i386 _finitef(float)
+@ cdecl -arch=!i386 _finitef(float)
 @ cdecl _flushall()
 @ cdecl _fpclass(double)
 @ cdecl -stub -arch=!i386 _fpclassf(float)
@@ -560,7 +560,7 @@
 @ cdecl _ismbstrail(ptr ptr)
 @ cdecl _ismbstrail_l(ptr ptr ptr)
 @ cdecl _isnan(double)
-@ cdecl -stub -arch=x86_64 _isnanf(float)
+@ cdecl -arch=x86_64 _isnanf(float)
 @ cdecl _isprint_l(long ptr)
 @ cdecl _ispunct_l(long ptr)
 @ cdecl _isspace_l(long ptr)
@@ -602,17 +602,17 @@
 @ cdecl _ldunscale(ptr ptr) _dunscale
 @ cdecl _lfind(ptr ptr ptr long ptr)
 @ cdecl _lfind_s(ptr ptr ptr long ptr ptr)
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_acos_precise() #__libm_sse2_acos
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_asin_precise() #__libm_sse2_asin
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_atan_precise() #__libm_sse2_atan
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_cos_precise() #__libm_sse2_cos
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_exp_precise() #__libm_sse2_exp
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_log10_precise() #__libm_sse2_log10
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_log_precise() #__libm_sse2_log
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_pow_precise() #__libm_sse2_pow
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_sin_precise() #__libm_sse2_sin
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_sqrt_precise() #__libm_sse2_sqrt
-@ cdecl -stub -arch=i386 -norelay _libm_sse2_tan_precise() #__libm_sse2_tan
+@ cdecl -arch=i386 -norelay _libm_sse2_acos_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_asin_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_atan_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_cos_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_exp_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_log10_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_log_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_pow_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_sin_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_sqrt_precise()
+@ cdecl -arch=i386 -norelay _libm_sse2_tan_precise()
 @ cdecl _loaddll(str)
 @ cdecl -arch=win64 _local_unwind(ptr ptr) ntdll._local_unwind
 @ cdecl -arch=i386 _local_unwind2(ptr long)
@@ -1792,9 +1792,9 @@
 @ cdecl _o_nextafter(double double) nextafter
 @ cdecl _o_nextafterf(float float) nextafterf
 @ cdecl _o_nextafterl(double double) nextafter
-@ cdecl _o_nexttoward(double double) nexttoward
+@ cdecl _o_nexttoward(double double) nextafter
 @ cdecl _o_nexttowardf(float double) nexttowardf
-@ cdecl _o_nexttowardl(double double) nexttoward
+@ cdecl _o_nexttowardl(double double) nextafter
 @ cdecl _o_pow(double double) pow
 @ cdecl -arch=!i386 _o_powf(float float) powf
 @ cdecl _o_putc(long ptr) putc
@@ -2511,12 +2511,12 @@
 @ cdecl -stub nearbyint(double)
 @ cdecl -stub nearbyintf(float)
 @ cdecl nearbyintl(double) nearbyint
-@ cdecl -stub nextafter(double double)
-@ cdecl -stub nextafterf(float float)
+@ cdecl nextafter(double double)
+@ cdecl nextafterf(float float)
 @ cdecl nextafterl(double double) nextafter
-@ cdecl -stub nexttoward(double double) nexttoward
-@ cdecl -stub nexttowardf(float double) nexttowardf
-@ cdecl nexttowardl(double double) nexttoward
+@ cdecl nexttoward(double double) nextafter
+@ cdecl nexttowardf(float double)
+@ cdecl nexttowardl(double double) nextafter
 @ stub norm
 @ stub normf
 @ stub norml
@@ -2547,14 +2547,14 @@
 @ cdecl -stub rint(double)
 @ cdecl -stub rintf(float)
 @ cdecl rintl(double) rint
-@ cdecl -stub round(double)
-@ cdecl -stub roundf(float)
+@ cdecl round(double)
+@ cdecl roundf(float)
 @ cdecl roundl(double) round
 @ cdecl scalbln(double long) scalbn # double scalbln(double x, long exp);
 @ cdecl scalblnf(float long) scalbnf # float scalblnf(float x, long exp);
 @ cdecl scalblnl(double long) scalbn # long double scalblnl(long double x, long exp);
-@ cdecl -stub scalbn(double long) # double scalbn(double x, int exp);
-@ cdecl -stub scalbnf(float long) # float scalbnf(float x, int exp);
+@ cdecl scalbn(double long) # double scalbn(double x, int exp);
+@ cdecl scalbnf(float long) # float scalbnf(float x, int exp);
 @ cdecl scalbnl(double long) scalbn # long double scalbnl(long double x, int exp);
 @ cdecl set_terminate(ptr)
 @ cdecl set_unexpected(ptr)
