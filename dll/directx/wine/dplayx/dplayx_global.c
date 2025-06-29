@@ -32,8 +32,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define NONAMELESSUNION
-
 #include "wine/debug.h"
 #include "windef.h"
 #include "winbase.h"
@@ -113,7 +111,7 @@ static LPVOID DPLAYX_PrivHeapAlloc( DWORD flags, DWORD size )
 
   if( size > (dwBlockSize - sizeof(BOOL)) )
   {
-    FIXME( "Size exceeded. Request of 0x%08x\n", size );
+    FIXME( "Size exceeded. Request of 0x%08lx\n", size );
     size = dwBlockSize - sizeof(BOOL);
   }
 
@@ -193,7 +191,7 @@ static BOOL DPLAYX_IsAppIdLobbied( DWORD dwAppID, LPDPLAYX_LOBBYDATA* lplpDplDat
   if( dwAppID == 0 )
   {
     dwAppID = GetCurrentProcessId();
-    TRACE( "Translated dwAppID == 0 into 0x%08x\n", dwAppID );
+    TRACE( "Translated dwAppID == 0 into 0x%08lx\n", dwAppID );
   }
 
   for( i=0; i < numSupportedLobbies; i++ )
@@ -201,7 +199,7 @@ static BOOL DPLAYX_IsAppIdLobbied( DWORD dwAppID, LPDPLAYX_LOBBYDATA* lplpDplDat
     if( lobbyData[ i ].dwAppID == dwAppID )
     {
       /* This process is lobbied */
-      TRACE( "Found 0x%08x @ %u\n", dwAppID, i );
+      TRACE( "Found 0x%08lx @ %u\n", dwAppID, i );
       *lplpDplData = &lobbyData[ i ];
       return TRUE;
     }
@@ -229,7 +227,7 @@ BOOL DPLAYX_CreateLobbyApplication( DWORD dwAppID )
     if( lobbyData[ i ].dwAppID == 0 )
     {
       /* This process is now lobbied */
-      TRACE( "Setting lobbyData[%u] for (0x%08x,0x%08x)\n",
+      TRACE( "Setting lobbyData[%u] for (0x%08lx,0x%08lx)\n",
               i, dwAppID, GetCurrentProcessId() );
 
       lobbyData[ i ].dwAppID              = dwAppID;
@@ -386,7 +384,7 @@ BOOL DPLAYX_ConstructData(void)
   }
   else
   {
-    ERR( ": semaphore error %d\n", GetLastError() );
+    ERR( ": semaphore error %ld\n", GetLastError() );
     return FALSE;
   }
 
@@ -409,7 +407,7 @@ BOOL DPLAYX_ConstructData(void)
   }
   else
   {
-    ERR( ": unable to create shared memory (%d)\n", GetLastError() );
+    ERR( ": unable to create shared memory (%ld)\n", GetLastError() );
     DPLAYX_ReleaseSemaphore();
     return FALSE;
   }
@@ -418,9 +416,18 @@ BOOL DPLAYX_ConstructData(void)
                                         FILE_MAP_WRITE,
                                         0, 0, 0, lpDesiredMemoryMapStart );
 
+  if( lpSharedStaticData == NULL && GetLastError() == ERROR_INVALID_ADDRESS )
+  {
+    /* We couldn't map the data where we wanted. Try again, allowing any
+     * location. */
+    lpSharedStaticData = MapViewOfFile( hDplayxSharedMem,
+                                        FILE_MAP_WRITE,
+                                        0, 0, 0 );
+  }
+
   if( lpSharedStaticData == NULL )
   {
-    ERR( ": unable to map static data into process memory space (%d)\n",
+    ERR( ": unable to map static data into process memory space (%ld)\n",
          GetLastError() );
     DPLAYX_ReleaseSemaphore();
     return FALSE;
@@ -553,20 +560,20 @@ static void DPLAYX_CopyConnStructA( LPDPLCONNECTION dest, const DPLCONNECTION *s
     *dest->lpSessionDesc = *src->lpSessionDesc;
 
     /* Session names may or may not exist */
-    if( src->lpSessionDesc->u1.lpszSessionNameA )
+    if( src->lpSessionDesc->lpszSessionNameA )
     {
-      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpSessionDesc->u1.lpszSessionNameA );
-      dest->lpSessionDesc->u1.lpszSessionNameA = (LPSTR)lpStartOfFreeSpace;
+      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpSessionDesc->lpszSessionNameA );
+      dest->lpSessionDesc->lpszSessionNameA = (LPSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=
-        strlen( dest->lpSessionDesc->u1.lpszSessionNameA ) + 1;
+        strlen( dest->lpSessionDesc->lpszSessionNameA ) + 1;
     }
 
-    if( src->lpSessionDesc->u2.lpszPasswordA )
+    if( src->lpSessionDesc->lpszPasswordA )
     {
-      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpSessionDesc->u2.lpszPasswordA );
-      dest->lpSessionDesc->u2.lpszPasswordA = (LPSTR)lpStartOfFreeSpace;
+      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpSessionDesc->lpszPasswordA );
+      dest->lpSessionDesc->lpszPasswordA = (LPSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=
-        strlen( dest->lpSessionDesc->u2.lpszPasswordA ) + 1;
+        strlen( dest->lpSessionDesc->lpszPasswordA ) + 1;
     }
   }
 
@@ -577,20 +584,20 @@ static void DPLAYX_CopyConnStructA( LPDPLCONNECTION dest, const DPLCONNECTION *s
     lpStartOfFreeSpace += sizeof( DPNAME );
     *dest->lpPlayerName = *src->lpPlayerName;
 
-    if( src->lpPlayerName->u1.lpszShortNameA )
+    if( src->lpPlayerName->lpszShortNameA )
     {
-      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpPlayerName->u1.lpszShortNameA );
-      dest->lpPlayerName->u1.lpszShortNameA = (LPSTR)lpStartOfFreeSpace;
+      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpPlayerName->lpszShortNameA );
+      dest->lpPlayerName->lpszShortNameA = (LPSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=
-        strlen( dest->lpPlayerName->u1.lpszShortNameA ) + 1;
+        strlen( dest->lpPlayerName->lpszShortNameA ) + 1;
     }
 
-    if( src->lpPlayerName->u2.lpszLongNameA )
+    if( src->lpPlayerName->lpszLongNameA )
     {
-      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpPlayerName->u2.lpszLongNameA );
-      dest->lpPlayerName->u2.lpszLongNameA = (LPSTR)lpStartOfFreeSpace;
+      strcpy( (LPSTR)lpStartOfFreeSpace, src->lpPlayerName->lpszLongNameA );
+      dest->lpPlayerName->lpszLongNameA = (LPSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=
-        strlen( (LPSTR)dest->lpPlayerName->u2.lpszLongName ) + 1 ;
+        strlen( (LPSTR)dest->lpPlayerName->lpszLongName ) + 1 ;
     }
 
   }
@@ -621,20 +628,20 @@ static void DPLAYX_CopyConnStructW( LPDPLCONNECTION dest, const DPLCONNECTION *s
     *dest->lpSessionDesc = *src->lpSessionDesc;
 
     /* Session names may or may not exist */
-    if( src->lpSessionDesc->u1.lpszSessionName )
+    if( src->lpSessionDesc->lpszSessionName )
     {
-      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpSessionDesc->u1.lpszSessionName );
-      dest->lpSessionDesc->u1.lpszSessionName = (LPWSTR)lpStartOfFreeSpace;
+      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpSessionDesc->lpszSessionName );
+      dest->lpSessionDesc->lpszSessionName = (LPWSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=  sizeof(WCHAR) *
-        ( lstrlenW( dest->lpSessionDesc->u1.lpszSessionName ) + 1 );
+        ( lstrlenW( dest->lpSessionDesc->lpszSessionName ) + 1 );
     }
 
-    if( src->lpSessionDesc->u2.lpszPassword )
+    if( src->lpSessionDesc->lpszPassword )
     {
-      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpSessionDesc->u2.lpszPassword );
-      dest->lpSessionDesc->u2.lpszPassword = (LPWSTR)lpStartOfFreeSpace;
+      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpSessionDesc->lpszPassword );
+      dest->lpSessionDesc->lpszPassword = (LPWSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=  sizeof(WCHAR) *
-        ( lstrlenW( dest->lpSessionDesc->u2.lpszPassword ) + 1 );
+        ( lstrlenW( dest->lpSessionDesc->lpszPassword ) + 1 );
     }
   }
 
@@ -645,20 +652,20 @@ static void DPLAYX_CopyConnStructW( LPDPLCONNECTION dest, const DPLCONNECTION *s
     lpStartOfFreeSpace += sizeof( DPNAME );
     *dest->lpPlayerName = *src->lpPlayerName;
 
-    if( src->lpPlayerName->u1.lpszShortName )
+    if( src->lpPlayerName->lpszShortName )
     {
-      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpPlayerName->u1.lpszShortName );
-      dest->lpPlayerName->u1.lpszShortName = (LPWSTR)lpStartOfFreeSpace;
+      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpPlayerName->lpszShortName );
+      dest->lpPlayerName->lpszShortName = (LPWSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=  sizeof(WCHAR) *
-        ( lstrlenW( dest->lpPlayerName->u1.lpszShortName ) + 1 );
+        ( lstrlenW( dest->lpPlayerName->lpszShortName ) + 1 );
     }
 
-    if( src->lpPlayerName->u2.lpszLongName )
+    if( src->lpPlayerName->lpszLongName )
     {
-      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpPlayerName->u2.lpszLongName );
-      dest->lpPlayerName->u2.lpszLongName = (LPWSTR)lpStartOfFreeSpace;
+      lstrcpyW( (LPWSTR)lpStartOfFreeSpace, src->lpPlayerName->lpszLongName );
+      dest->lpPlayerName->lpszLongName = (LPWSTR)lpStartOfFreeSpace;
       lpStartOfFreeSpace +=  sizeof(WCHAR) *
-        ( lstrlenW( dest->lpPlayerName->u2.lpszLongName ) + 1 );
+        ( lstrlenW( dest->lpPlayerName->lpszLongName ) + 1 );
     }
 
   }
@@ -688,14 +695,14 @@ static DWORD DPLAYX_SizeOfLobbyDataA( const DPLCONNECTION *lpConn )
   {
     dwTotalSize += sizeof( DPSESSIONDESC2 );
 
-    if( lpConn->lpSessionDesc->u1.lpszSessionNameA )
+    if( lpConn->lpSessionDesc->lpszSessionNameA )
     {
-      dwTotalSize += strlen( lpConn->lpSessionDesc->u1.lpszSessionNameA ) + 1;
+      dwTotalSize += strlen( lpConn->lpSessionDesc->lpszSessionNameA ) + 1;
     }
 
-    if( lpConn->lpSessionDesc->u2.lpszPasswordA )
+    if( lpConn->lpSessionDesc->lpszPasswordA )
     {
-      dwTotalSize += strlen( lpConn->lpSessionDesc->u2.lpszPasswordA ) + 1;
+      dwTotalSize += strlen( lpConn->lpSessionDesc->lpszPasswordA ) + 1;
     }
   }
 
@@ -703,14 +710,14 @@ static DWORD DPLAYX_SizeOfLobbyDataA( const DPLCONNECTION *lpConn )
   {
     dwTotalSize += sizeof( DPNAME );
 
-    if( lpConn->lpPlayerName->u1.lpszShortNameA )
+    if( lpConn->lpPlayerName->lpszShortNameA )
     {
-      dwTotalSize += strlen( lpConn->lpPlayerName->u1.lpszShortNameA ) + 1;
+      dwTotalSize += strlen( lpConn->lpPlayerName->lpszShortNameA ) + 1;
     }
 
-    if( lpConn->lpPlayerName->u2.lpszLongNameA )
+    if( lpConn->lpPlayerName->lpszLongNameA )
     {
-      dwTotalSize += strlen( lpConn->lpPlayerName->u2.lpszLongNameA ) + 1;
+      dwTotalSize += strlen( lpConn->lpPlayerName->lpszLongNameA ) + 1;
     }
 
   }
@@ -735,16 +742,16 @@ static DWORD DPLAYX_SizeOfLobbyDataW( const DPLCONNECTION *lpConn )
   {
     dwTotalSize += sizeof( DPSESSIONDESC2 );
 
-    if( lpConn->lpSessionDesc->u1.lpszSessionName )
+    if( lpConn->lpSessionDesc->lpszSessionName )
     {
       dwTotalSize += sizeof( WCHAR ) *
-        ( lstrlenW( lpConn->lpSessionDesc->u1.lpszSessionName ) + 1 );
+        ( lstrlenW( lpConn->lpSessionDesc->lpszSessionName ) + 1 );
     }
 
-    if( lpConn->lpSessionDesc->u2.lpszPassword )
+    if( lpConn->lpSessionDesc->lpszPassword )
     {
       dwTotalSize += sizeof( WCHAR ) *
-        ( lstrlenW( lpConn->lpSessionDesc->u2.lpszPassword ) + 1 );
+        ( lstrlenW( lpConn->lpSessionDesc->lpszPassword ) + 1 );
     }
   }
 
@@ -752,16 +759,16 @@ static DWORD DPLAYX_SizeOfLobbyDataW( const DPLCONNECTION *lpConn )
   {
     dwTotalSize += sizeof( DPNAME );
 
-    if( lpConn->lpPlayerName->u1.lpszShortName )
+    if( lpConn->lpPlayerName->lpszShortName )
     {
       dwTotalSize += sizeof( WCHAR ) *
-        ( lstrlenW( lpConn->lpPlayerName->u1.lpszShortName ) + 1 );
+        ( lstrlenW( lpConn->lpPlayerName->lpszShortName ) + 1 );
     }
 
-    if( lpConn->lpPlayerName->u2.lpszLongName )
+    if( lpConn->lpPlayerName->lpszLongName )
     {
       dwTotalSize += sizeof( WCHAR ) *
-        ( lstrlenW( lpConn->lpPlayerName->u2.lpszLongName ) + 1 );
+        ( lstrlenW( lpConn->lpPlayerName->lpszLongName ) + 1 );
     }
 
   }
@@ -786,7 +793,7 @@ HRESULT DPLAYX_GetConnectionSettingsA
   {
     DPLAYX_ReleaseSemaphore();
 
-    TRACE( "Application 0x%08x is not lobbied\n", dwAppID );
+    TRACE( "Application 0x%08lx is not lobbied\n", dwAppID );
     return DPERR_NOTLOBBIED;
   }
 
@@ -902,7 +909,7 @@ HRESULT DPLAYX_SetConnectionSettingsA
   /* Store information */
   if(  lpConn->dwSize != sizeof(DPLCONNECTION) )
   {
-    ERR(": old/new DPLCONNECTION type? Size=%08x\n", lpConn->dwSize );
+    ERR(": old/new DPLCONNECTION type? Size=%08lx\n", lpConn->dwSize );
 
     return DPERR_INVALIDPARAMS;
   }
@@ -922,7 +929,7 @@ HRESULT DPLAYX_SetConnectionSettingsA
   {
     DPLAYX_ReleaseSemaphore();
 
-    ERR("DPSESSIONDESC passed in? Size=%u\n",
+    ERR("DPSESSIONDESC passed in? Size=%lu\n",
         lpConn->lpSessionDesc?lpConn->lpSessionDesc->dwSize:0 );
 
     return DPERR_INVALIDPARAMS;
@@ -965,7 +972,7 @@ HRESULT DPLAYX_SetConnectionSettingsW
   /* Store information */
   if(  lpConn->dwSize != sizeof(DPLCONNECTION) )
   {
-    ERR(": old/new DPLCONNECTION type? Size=%u\n", lpConn->dwSize );
+    ERR(": old/new DPLCONNECTION type? Size=%lu\n", lpConn->dwSize );
 
     return DPERR_INVALIDPARAMS;
   }
@@ -1199,7 +1206,7 @@ LPCSTR DPLAYX_HresultToString(HRESULT hr)
     default:
       /* For errors not in the list, return HRESULT as a string
          This part is not thread safe */
-      WARN( "Unknown error 0x%08x\n", hr );
+      WARN( "Unknown error 0x%08lx\n", hr );
       wsprintfA( szTempStr, "0x%08x", hr );
       return szTempStr;
   }

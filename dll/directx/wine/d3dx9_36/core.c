@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  *
  * Copyright 2002 Raphael Junqueira
@@ -22,7 +19,6 @@
 
 
 #include "d3dx9_private.h"
-#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -62,7 +58,7 @@ static ULONG WINAPI ID3DXBufferImpl_AddRef(ID3DXBuffer *iface)
     struct ID3DXBufferImpl *This = impl_from_ID3DXBuffer(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("%p increasing refcount to %u\n", This, ref);
+    TRACE("%p increasing refcount to %lu.\n", This, ref);
 
     return ref;
 }
@@ -72,12 +68,12 @@ static ULONG WINAPI ID3DXBufferImpl_Release(ID3DXBuffer *iface)
     struct ID3DXBufferImpl *This = impl_from_ID3DXBuffer(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("%p decreasing refcount to %u\n", This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", This, ref);
 
     if (ref == 0)
     {
-        HeapFree(GetProcessHeap(), 0, This->buffer);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This->buffer);
+        free(This);
     }
 
     return ref;
@@ -118,7 +114,7 @@ static HRESULT d3dx9_buffer_init(struct ID3DXBufferImpl *buffer, DWORD size)
     buffer->ref = 1;
     buffer->size = size;
 
-    buffer->buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+    buffer->buffer = calloc(1, size);
     if (!buffer->buffer)
     {
         ERR("Failed to allocate buffer memory\n");
@@ -133,7 +129,7 @@ HRESULT WINAPI D3DXCreateBuffer(DWORD size, ID3DXBuffer **buffer)
     struct ID3DXBufferImpl *object;
     HRESULT hr;
 
-    TRACE("size %u, buffer %p.\n", size, buffer);
+    TRACE("size %lu, buffer %p.\n", size, buffer);
 
     if (!buffer)
     {
@@ -141,15 +137,15 @@ HRESULT WINAPI D3DXCreateBuffer(DWORD size, ID3DXBuffer **buffer)
         return D3DERR_INVALIDCALL;
     }
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    object = calloc(1, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
     hr = d3dx9_buffer_init(object, size);
     if (FAILED(hr))
     {
-        WARN("Failed to initialize buffer, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, object);
+        WARN("Failed to initialize buffer, hr %#lx.\n", hr);
+        free(object);
         return hr;
     }
 

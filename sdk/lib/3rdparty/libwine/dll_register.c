@@ -45,3 +45,10 @@ HRESULT WINAPI DllUnregisterServer(void)
 {
     return __wine_unregister_resources( image_base() );
 }
+
+
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+ 
+    return S_FALSE;
+}

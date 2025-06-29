@@ -19,6 +19,7 @@ list(APPEND SOURCE
     LCIDToLocaleName.c
     LocaleNameToLCID.c
     sync.c
+    Tp.c
     vista.c)
 
 # These functions are not exported from kernel32_vista (yet).
