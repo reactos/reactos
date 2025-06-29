@@ -24,8 +24,8 @@ endif()
 
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_compile_definitions(
-    WINVER=0x600
-    _WIN32_WINNT=0x600
+    WINVER=0x602
+    _WIN32_WINNT=0x602
     _UCRT
     _CORECRT_BUILD
     _CRT_DECLARE_GLOBAL_VARIABLES_DIRECTLY
