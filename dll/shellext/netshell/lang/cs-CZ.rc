@@ -177,7 +177,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKINITTITLE "Network Install"
-    IDS_NETWORKINITSUBTITLE "Installs reqired networking components."
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "Síťová nastavení"
     IDS_NETWORKSETTINGSSUBTITLE "Instaluje síťový software používaný k připojení k dalším sítím, počítačům a k Internetu."
     IDS_NETWORKCOMPONENTTITLE "Síťové součásti"

@@ -179,7 +179,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKINITTITLE "Network Install"
-    IDS_NETWORKINITSUBTITLE "Installs reqired networking components."
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "Ustawienia sieciowe"
     IDS_NETWORKSETTINGSSUBTITLE "Zainstalowanie oprogramowania sieciowego pozwala na nawiązywanie połączeń z innymi komputerami, sieciami i Internetem."
     IDS_NETWORKCOMPONENTTITLE "Składniki sieciowe"
