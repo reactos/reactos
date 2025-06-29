@@ -264,6 +264,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         {
             /* Grab a page */
             MI_SET_USAGE(MI_USAGE_MDL);
+            MI_SET_PROCESS(0);
             MI_SET_PROCESS2("Kernel");
 
             /* FIXME: This check should be smarter */

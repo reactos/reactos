@@ -492,7 +492,7 @@ MiFillSystemPageDirectory(IN PVOID Base,
         {
             /* Grab a page for it */
             MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
-            MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
+            MI_SET_PROCESS(PsGetCurrentProcess());
             PageFrameIndex = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
             ASSERT(PageFrameIndex);
             TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
@@ -983,7 +983,7 @@ _WARN("MiSessionCommitPageTables halfplemented for amd64")
             /* Acquire the PFN lock and grab a zero page */
             OldIrql = MiAcquirePfnLock();
             MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
-            MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
+            MI_SET_PROCESS(PsGetCurrentProcess());
             Color = (++MmSessionSpace->Color) & MmSecondaryColorMask;
             PageFrameNumber = MiRemoveZeroPage(Color);
             TempPde.u.Hard.PageFrameNumber = PageFrameNumber;

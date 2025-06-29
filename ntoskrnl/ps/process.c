@@ -684,9 +684,18 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
 #if MI_TRACE_PFNS
     /* Copy the process name now that we have it */
+    MiGetPfnEntry(Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT)->Process = Process;
     memcpy(MiGetPfnEntry(Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
-    if (Process->Pcb.DirectoryTableBase[1]) memcpy(MiGetPfnEntry(Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
-    if (Process->WorkingSetPage) memcpy(MiGetPfnEntry(Process->WorkingSetPage)->ProcessName, Process->ImageFileName, 16);
+    if (Process->Pcb.DirectoryTableBase[1])
+    {
+        MiGetPfnEntry(Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT)->Process = Process;
+        memcpy(MiGetPfnEntry(Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
+    }
+    if (Process->WorkingSetPage) 
+    {
+        MiGetPfnEntry(Process->WorkingSetPage)->Process = Process;
+        memcpy(MiGetPfnEntry(Process->WorkingSetPage)->ProcessName, Process->ImageFileName, 16);
+    }
 #endif
 
     /* Check if we have a section object and map the system DLL */
