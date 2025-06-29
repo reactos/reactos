@@ -88,11 +88,13 @@ _Pragma("GCC diagnostic pop")
 #define _SEH2_LEAVE goto __seh2_scope_end__;
 #define _SEH2_VOLATILE volatile
 
+#ifndef __try // Conflict with GCC's x64 Linux STL, affects Clang on Linux x64 compilation as well
 #define __try _SEH2_TRY
 #define __except _SEH2_EXCEPT
 #define __finally _SEH2_FINALLY
 #define __endtry _SEH2_END
 #define __leave _SEH2_LEAVE
+#endif
 #define _exception_code() 0
 #define _exception_info() ((void*)0)
 
