@@ -1,6 +1,6 @@
 /*
  *    Translated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (May, 2014)
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (June, 2025)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -29,7 +29,7 @@ BEGIN
     CHECKBOX "Planowane", IDC_PLANNED, 196, 155, 51, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 21, 168, 226, 105, WS_TABSTOP | CBS_DROPDOWN
     LTEXT "Ko&mentarz:", IDC_COMMENT_CAPTION, 21, 205, 226, 8
-    EDITTEXT IDC_COMMENT_TEXT, 21, 226, 216, 20, WS_VSCROLL
+    EDITTEXT IDC_COMMENT_TEXT, 21, 216, 226, 22, WS_VSCROLL
 END
 
 /* Information and error messages */
