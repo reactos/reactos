@@ -1,10 +1,11 @@
 /*
- * PROJECT:     Kończy procesy
- * LICENSE:     See COPYING in the top level directory
+ * PROJECT:     Task termination utility
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Polish resource file
- * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (June, 2025)
+ * TRANSLATORS: Copyright 2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
