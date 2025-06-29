@@ -1623,15 +1623,15 @@ static void test_query_object_types(void)
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
 
     found = FALSE;
-    for (i = 0; i < shi->Count; i++)
+    for (i = 0; i < shi->NumberOfHandles; i++)
     {
-        if (shi->Handle[i].UniqueProcessId != GetCurrentProcessId())
+        if (shi->Handles[i].UniqueProcessId != GetCurrentProcessId())
             continue;
-        if ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue != handle)
+        if ((HANDLE)(ULONG_PTR)shi->Handles[i].HandleValue != handle)
             continue;
 
-        ok( shi->Handle[i].ObjectTypeIndex == event_type_index, "Event type does not match: %u vs %u\n",
-            shi->Handle[i].ObjectTypeIndex, event_type_index );
+        ok( shi->Handles[i].ObjectTypeIndex == event_type_index, "Event type does not match: %u vs %u\n",
+            shi->Handles[i].ObjectTypeIndex, event_type_index );
 
         found = TRUE;
         break;
