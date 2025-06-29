@@ -39,23 +39,27 @@ MiArchCreateProcessAddressSpace(
      * If that doesn't work, we take the slow path
      * outside of the PFN lock.
      */
+    MI_SET_PROCESS(Process);
     MI_SET_USAGE(MI_USAGE_PAGE_DIRECTORY);
     OldIrql = MiAcquirePfnLock();
     PageColor = MI_GET_NEXT_PROCESS_COLOR(Process);
     HyperPdPfn = MiRemoveZeroPageSafe(PageColor);
     if(!HyperPdPfn)
     {
+        MI_SET_PROCESS(Process);
         MI_SET_USAGE(MI_USAGE_PAGE_DIRECTORY);
         HyperPdPfn = MiRemoveAnyPage(PageColor);
         MiReleasePfnLock(OldIrql);
         MiZeroPhysicalPage(HyperPdPfn);
         OldIrql = MiAcquirePfnLock();
     }
+    MI_SET_PROCESS(Process);
     MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
     PageColor = MI_GET_NEXT_PROCESS_COLOR(Process);
     HyperPtPfn = MiRemoveZeroPageSafe(PageColor);
     if(!HyperPtPfn)
     {
+        MI_SET_PROCESS(Process);
         MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
         HyperPtPfn = MiRemoveAnyPage(PageColor);
         MiReleasePfnLock(OldIrql);
