@@ -53,10 +53,8 @@
 #include "ARM3/miarm.h"
 
 #undef MmSetPageEntrySectionSegment
-#define MmSetPageEntrySectionSegment(S,O,E) do { \
-        DPRINT("SetPageEntrySectionSegment(old,%p,%x,%x)\n",(S),(O)->LowPart,E); \
-        _MmSetPageEntrySectionSegment((S),(O),(E),__FILE__,__LINE__);   \
-	} while (0)
+#define MmSetPageEntrySectionSegment(S,O,E) \
+        _MmSetPageEntrySectionSegment((S),(O),(E),__FILE__,__LINE__)
 
 extern MMSESSION MmSession;
 
@@ -1263,14 +1261,35 @@ MmMakeSegmentResident(
             {
                 /* Dirtify it if it's a resident page and we're asked to */
                 if (SetDirty && !IS_SWAP_FROM_SSE(Entry))
-                    MmSetPageEntrySectionSegment(Segment, &CurrentOffset, DIRTY_SSE(Entry));
+                {
+                    NT_VERIFY(NT_SUCCESS(MmSetPageEntrySectionSegment(Segment, &CurrentOffset, DIRTY_SSE(Entry))));
+                }
                 continue;
             }
 
             ToReadPageBits |= 1UL << ((ChunkOffset - RangeStart) >> PAGE_SHIFT);
 
             /* Put a wait entry here */
-            MmSetPageEntrySectionSegment(Segment, &CurrentOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+            Status = MmSetPageEntrySectionSegment(Segment, &CurrentOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+            if (!NT_SUCCESS(Status))
+            {
+                /* Failed, roll back! */
+                DPRINT1("Failed to set wait entry for segment %p at offset %I64d\n", Segment, ChunkOffset);
+                LARGE_INTEGER RollbackOffset;
+                RollbackOffset.QuadPart = ChunkOffset;
+                while (RollbackOffset.QuadPart > RangeStart)
+                {
+                    RollbackOffset.QuadPart -= PAGE_SIZE;
+                    if (MM_IS_WAIT_PTE(MmGetPageEntrySectionSegment(Segment, &RollbackOffset)))
+                    {
+                        NT_VERIFY(NT_SUCCESS(MmSetPageEntrySectionSegment(Segment, &RollbackOffset, 0)));
+                    }
+                }
+
+                MmUnlockSectionSegment(Segment);
+                return Status;
+            }
+            ASSERT(MM_IS_WAIT_PTE(MmGetPageEntrySectionSegment(Segment, &CurrentOffset)));
         }
         MmUnlockSectionSegment(Segment);
 
