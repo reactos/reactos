@@ -1629,7 +1629,9 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
             return PiControlSyncDeviceAction((PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA)Buffer,
                                              PlugPlayControlClass);
 
-//        case PlugPlayControlUnlockDevice:
+        case PlugPlayControlUnlockDevice:
+            return STATUS_NOT_IMPLEMENTED;
+
         case PlugPlayControlQueryAndRemoveDevice:
               if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_QUERY_REMOVE_DATA))
                   return STATUS_INVALID_PARAMETER;
