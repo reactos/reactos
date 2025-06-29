@@ -1,9 +1,10 @@
 /*
-* PROJECT:     ReactOS TCP/IP Traceroute utility
-* LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
-* PURPOSE:     Polish resource file
-* TRANSLATORS: Updated by pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (June, 2025)
-*/
+ * PROJECT:     ReactOS trace route utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
