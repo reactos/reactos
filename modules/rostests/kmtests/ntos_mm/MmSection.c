@@ -17,6 +17,12 @@
     ok_eq_ulong(ObjectInfo.HandleCount, Handles);                   \
 } while (0)
 
+#ifdef _M_IX86
+#define PTE_BASE    0xC0000000
+#elif defined(_M_AMD64)
+#define PTE_BASE    0xFFFFF68000000000ULL
+#endif
+
 static
 void
 CheckSection_(ULONG Line, PVOID SectionObject, ULONG SectionFlag)
@@ -424,6 +430,8 @@ TestPhysicalMemorySection(VOID)
     PHYSICAL_ADDRESS MyPagePhysical;
     PUCHAR ZeroPageContents;
     PHYSICAL_ADDRESS ZeroPagePhysical;
+    PHYSICAL_ADDRESS PhysPteAddr;
+    PHYSICAL_ADDRESS CurrentPageDirectory;
     PHYSICAL_ADDRESS PhysicalAddress;
     PVOID Mapping;
     SYSTEM_BASIC_INFORMATION BasicInfo;
@@ -466,6 +474,16 @@ TestPhysicalMemorySection(VOID)
 
     RtlCopyMemory(ZeroPageContents, Mapping, PAGE_SIZE);
     MmUnmapIoSpace(Mapping, PAGE_SIZE);
+
+    PhysPteAddr = MmGetPhysicalAddress((PVOID)PTE_BASE);
+    Mapping = MmMapIoSpace(PhysPteAddr, PAGE_SIZE, MmNonCached);
+    skip(Mapping == NULL, "MmMapIoSpace on PTE_BASE failed, expected NULL got 0x%X\n", (ULONG_PTR)Mapping);
+
+    CurrentPageDirectory.QuadPart = __readcr3();
+    Mapping = MmMapIoSpace(CurrentPageDirectory, PAGE_SIZE, MmNonCached);
+    skip(Mapping != NULL, "MmMapIoSpace on running process directory failed, expected mapping got 0x%X\n", (ULONG_PTR)Mapping);
+
+    if (Mapping) MmUnmapIoSpace(Mapping, PAGE_SIZE);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SectionName,
