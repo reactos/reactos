@@ -26,7 +26,8 @@ EXTERN MmDeleteKernelStack:PROC
 EXTERN KdSetOwedBreakpoints:PROC
 EXTERN KeAcquireSpinLockAtDpcLevel:PROC
 EXTERN KeReleaseSpinLockFromDpcLevel:PROC
-
+EXTERN KiSwitchToKernelDebugRegisters:PROC
+EXTERN KiSwitchToUserDebugRegisters:PROC
 
 /* Helper Macros *************************************************************/
 
@@ -852,6 +853,16 @@ PUBLIC KiSystemCallEntry64
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_TrapFrame], rcx
     mov [rax + ThTrapFrame], rdx
 
+    /* Check if debug registers are active */
+    test byte ptr [rax + ThDebugActive], 1
+    jz NoDebugRegisters
+
+    /* Switch to kernel debug registers */
+    lea rcx, [rsp + MAX_SYSCALL_PARAM_SIZE]
+    call KiSwitchToKernelDebugRegisters
+
+NoDebugRegisters:
+
 #if DBG
     /* Check IRQL */
     mov rax, cr8
@@ -875,6 +886,17 @@ GLOBAL_LABEL KiSystemCall64Again
 GLOBAL_LABEL KiSystemServiceExit
 
     ASSERT_TRAP_FRAME_INTS_ENABLED rsp + MAX_SYSCALL_PARAM_SIZE
+
+    /* Check if debug registers are active */
+    mov rcx, gs:[PcCurrentThread]
+    test byte ptr [rcx + ThDebugActive], 1
+    jz NoDebugRegistersExit
+
+    /* Switch to user mode debug registers */
+    lea rcx, [rsp + MAX_SYSCALL_PARAM_SIZE]
+    call KiSwitchToUserDebugRegisters
+
+NoDebugRegistersExit:
 
     /* Check for pending user APCs */
     mov rcx, gs:[PcCurrentThread]
