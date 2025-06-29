@@ -957,7 +957,7 @@ HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
     return hr;
 }
 
-#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA) || defined(UXTHEME_VISTA)
 /***********************************************************************
  *      SetWindowThemeAttribute                             (UXTHEME.@)
  */
