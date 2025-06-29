@@ -1319,6 +1319,63 @@ PiControlGetInterfaceDeviceAlias(
                                      &AliasSymbolicLinkName);
 }
 
+static
+NTSTATUS
+PiControlDeviceClassAssociation(
+    _In_ PPLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA ControlData)
+{
+    PDEVICE_OBJECT DeviceObject = NULL;
+    UNICODE_STRING SymbolicLink;
+    NTSTATUS Status;
+
+    DPRINT("PiControlDeviceClassAssociation()\n");
+    DPRINT("DeviceInstance: %wZ\n", &ControlData->DeviceInstance);
+
+    if (ControlData->Register)
+    {
+        if ((ControlData->DeviceInstance.Buffer == NULL) ||
+            (ControlData->DeviceInstance.Length == 0))
+            return STATUS_INVALID_PARAMETER;
+
+        if (ControlData->InterfaceGuid == NULL)
+            return STATUS_INVALID_PARAMETER;
+
+        DeviceObject = IopGetDeviceObjectFromDeviceInstance(&ControlData->DeviceInstance);
+        if (DeviceObject == NULL)
+            return STATUS_NO_SUCH_DEVICE;
+
+        Status = IoRegisterDeviceInterface(DeviceObject,
+                                           ControlData->InterfaceGuid,
+                                           &ControlData->Reference,
+                                           &SymbolicLink);
+        if (NT_SUCCESS(Status))
+        {
+            if (SymbolicLink.Length + sizeof(WCHAR) <= ControlData->SymbolicLinkNameLength)
+            {
+                RtlCopyMemory(ControlData->SymbolicLinkName, SymbolicLink.Buffer, SymbolicLink.Length);
+                ControlData->SymbolicLinkName[SymbolicLink.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                ControlData->SymbolicLinkNameLength = SymbolicLink.Length + sizeof(WCHAR);
+            }
+            else
+            {
+                ControlData->SymbolicLinkNameLength = SymbolicLink.Length + sizeof(WCHAR);
+                Status = STATUS_BUFFER_TOO_SMALL;
+            }
+
+            ExFreePool(SymbolicLink.Buffer);
+        }
+
+        ObDereferenceObject(DeviceObject);
+    }
+    else
+    {
+        UNIMPLEMENTED;
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+    return Status;
+}
+
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -1595,7 +1652,10 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                 return STATUS_INVALID_PARAMETER;
             return IopGetDeviceProperty((PPLUGPLAY_CONTROL_PROPERTY_DATA)Buffer);
 
-//        case PlugPlayControlDeviceClassAssociation:
+        case PlugPlayControlDeviceClassAssociation:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return PiControlDeviceClassAssociation((PPLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA)Buffer);
 
         case PlugPlayControlGetRelatedDevice:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA))
