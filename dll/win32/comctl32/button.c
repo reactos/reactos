@@ -1542,6 +1542,11 @@ static UINT BUTTON_CalcLayoutRects(const BUTTON_INFO *infoPtr, HDC hdc, RECT *la
            else
                /* GroupBox is always top aligned */
                BUTTON_PositionRect((style & ~BS_VCENTER) | BS_TOP, labelRc, &textRect, &oneMargin);
+#ifdef __REACTOS__
+           /* Fix button text misalignment */
+           textRect.top -= 1;
+           textRect.bottom -= 1;
+#endif
            labelRect = textRect;
            SetRectEmpty(&imageRect);
        }
