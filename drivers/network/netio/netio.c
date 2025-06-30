@@ -110,7 +110,7 @@ typedef struct _WSK_SOCKET_INTERNAL
      * thread.
      */
     struct _WSK_SOCKET_INTERNAL *NextSocketToPut;
-    int NumSocketPuts;
+    ULONG NumSocketPuts;
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
 struct NetioContext
@@ -201,7 +201,7 @@ static VOID NTAPI PutSocketsThread(_In_opt_ void *p)
     NTSTATUS status;
     PWSK_SOCKET_INTERNAL SocketToPut;
     KIRQL flags;
-    int NumSocketPuts;
+    ULONG NumSocketPuts;
 
     FUNCTION_TRACE;
 
@@ -456,11 +456,12 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
     PWSK_CLIENT_LISTEN_DISPATCH ListenDispatch =
         (PWSK_CLIENT_LISTEN_DISPATCH)ListenSocket->ListenDispatch;
 
-        /* A PTRANSPORT_ADDRESS address field has an additional
-         * AddressLength field so the struct sockaddr_in starts
-         * at the AddressType (the address family, 2 for AF_INET)
-         * field.
-         */
+    /* A PTRANSPORT_ADDRESS address field has an additional
+     * AddressLength field so the struct sockaddr_in starts
+     * at the AddressType (the address family, 2 for AF_INET)
+     * field.
+     */
+
     PSOCKADDR RemoteAddress =
         (PSOCKADDR)(&((PTRANSPORT_ADDRESS)l->ReturnConnectionInfo->RemoteAddress)->Address[0].AddressType);
     PVOID AcceptSocketContext;
