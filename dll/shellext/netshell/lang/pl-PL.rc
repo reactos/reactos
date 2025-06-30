@@ -1,11 +1,13 @@
 /*
-* PROJECT:     ReactOS Network Shell Extension
-* LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
-* PURPOSE:     Polish resource file
-* TRANSLATORS: Copyright 2008 Maciej Białas
-*              Copyright 2011 - Caemyr - Olaf Siejka
-*              Copyright 2025 - pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (June, 2020-2025)
-*/
+ * PROJECT:     ReactOS Network Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2008 Maciej Białas <bjauy@tlen.pl>
+ *              Copyright 2011 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2017-2019 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
