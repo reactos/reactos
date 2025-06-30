@@ -101,7 +101,11 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
          Pfn1->PfnUsage == MI_USAGE_PAGE_DIRECTORY ||
          Pfn1->PfnUsage == MI_USAGE_LEGACY_PAGE_DIRECTORY))
     {
-        return NULL;
+        // A process is allowed to map in its own page tables or directories
+        if (Pfn1->Process != PsGetCurrentProcess())
+        {
+            return NULL;
+        } 
     }
 #endif
 
