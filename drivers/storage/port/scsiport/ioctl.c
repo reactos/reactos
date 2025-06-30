@@ -8,6 +8,7 @@
  */
 
 #include "scsiport.h"
+#include <sptilib.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -290,6 +291,56 @@ completeIrp:
 
 static
 NTSTATUS
+PdoHandleScsiPassthrough(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    PSCSI_PORT_LUN_EXTENSION lunExt = DeviceObject->DeviceExtension;
+    PSCSI_PORT_DEVICE_EXTENSION portExt;
+
+    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+    ASSERT(!lunExt->Common.IsFDO);
+
+    /* Skip requests that bypassed the class driver. See also cdrom!RequestHandleScsiPassThrough */
+    if ((IoGetCurrentIrpStackLocation(Irp)->MinorFunction == 0) && lunExt->DeviceClaimed)
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    portExt = lunExt->Common.LowerDevice->DeviceExtension;
+
+    return PassthruHandleScsiPassthru(DeviceObject,
+                                      Irp,
+                                      portExt->PortCapabilities.MaximumTransferLength,
+                                      portExt->PortCapabilities.MaximumPhysicalPages);
+}
+
+static
+NTSTATUS
+FdoHandleScsiPassthrough(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    PSCSI_PORT_DEVICE_EXTENSION portExt;
+    PSCSI_PORT_LUN_EXTENSION lunExt;
+    PSCSI_PASS_THROUGH spt;
+
+    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+
+    if (!VerifyIrpInBufferSize(Irp, RTL_SIZEOF_THROUGH_FIELD(SCSI_PASS_THROUGH, Lun)))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    portExt = DeviceObject->DeviceExtension;
+    ASSERT(portExt->Common.IsFDO);
+
+    spt = Irp->AssociatedIrp.SystemBuffer;
+    lunExt = GetLunByPath(portExt, spt->PathId, spt->TargetId, spt->Lun);
+    if (!lunExt)
+        return STATUS_NO_SUCH_DEVICE;
+
+    return PdoHandleScsiPassthrough(lunExt->Common.DeviceObject, Irp);
+}
+
+static
+NTSTATUS
 FdoHandleQueryProperty(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)
@@ -534,9 +585,16 @@ ScsiPortDeviceControl(
             break;
 
         case IOCTL_SCSI_PASS_THROUGH:
-            DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
-            status = STATUS_NOT_IMPLEMENTED;
+        case IOCTL_SCSI_PASS_THROUGH_DIRECT:
+        {
+            DPRINT("  IOCTL_SCSI_PASS_THROUGH\n");
+
+            if (comExt->IsFDO)
+                status = FdoHandleScsiPassthrough(DeviceObject, Irp);
+            else
+                status = PdoHandleScsiPassthrough(DeviceObject, Irp);
             break;
+        }
 
         case IOCTL_ATA_PASS_THROUGH:
         case IOCTL_ATA_PASS_THROUGH_DIRECT:
