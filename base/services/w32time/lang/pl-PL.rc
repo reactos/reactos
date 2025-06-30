@@ -11,5 +11,5 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_DISPLAYNAME "Usługa Czas"
-    IDS_DESCRIPTION " Utrzymuje synchronizację daty i godziny na wszystkich klientach i serwerach w sieci."
+    IDS_DESCRIPTION "Utrzymuje synchronizację daty i godziny na wszystkich klientach i serwerach w sieci."
 END
