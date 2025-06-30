@@ -925,6 +925,8 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     if (HasIconViewType)
         newFolderSettings.ViewMode = FVM_ICON;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
+    if (hResult == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+        return S_OK;
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
@@ -2408,10 +2410,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT w
         flags |= BTP_UPDATE_CUR_HISTORY;
     if (wFlags & SBSP_ACTIVATE_NOFOCUS)
         flags |= BTP_ACTIVATE_NOFOCUS;
-    HRESULT hr = BrowseToPIDL(pidl, flags);
-    if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
-        return S_OK;
-    return hr;
+    return BrowseToPIDL(pidl, flags);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetViewStateStream(DWORD grfMode, IStream **ppStrm)
