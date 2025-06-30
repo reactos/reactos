@@ -83,6 +83,7 @@ MmZeroPageThread(VOID)
                 PageIndex = MmFreePageListHead.Flink;
                 ASSERT(PageIndex != LIST_HEAD);
                 MI_SET_USAGE(MI_USAGE_ZERO_LOOP);
+                MI_SET_PROCESS(NULL);
                 MI_SET_PROCESS2("Kernel 0 Loop");
                 FreePage = MiRemoveAnyPage(MI_GET_PAGE_COLOR(PageIndex));
 
@@ -119,6 +120,8 @@ MmZeroPageThread(VOID)
             while (Pfn1 != (PMMPFN)LIST_HEAD)
             {
                 MI_SET_USAGE(MI_USAGE_NOT_SET);
+                MI_SET_PROCESS(NULL);
+                MI_SET_PROCESS2("Not Set");
                 PageIndex = MiGetPfnEntryIndex(Pfn1);
                 Pfn1 = (PMMPFN)Pfn1->u1.Flink;
                 MiInsertPageInList(&MmZeroedPageListHead, PageIndex);
