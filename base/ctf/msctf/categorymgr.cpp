@@ -154,7 +154,7 @@ STDMETHODIMP CCategoryMgr::RegisterCategory(
     LSTATUS error;
     HRESULT hr = E_FAIL;
 
-    TRACE("(%p) %s %s %s\n", this, debugstr_guid(&rclsid), debugstr_guid(&rcatid),
+    TRACE("%p -> (%s, %s, %s)\n", this, debugstr_guid(&rclsid), debugstr_guid(&rcatid),
           debugstr_guid(&rguid));
 
     StringFromGUID2(rclsid, szClsid, _countof(szClsid));
@@ -196,7 +196,7 @@ STDMETHODIMP CCategoryMgr::UnregisterCategory(
     HKEY hTipKey = NULL;
     LSTATUS error;
 
-    TRACE("(%p) %s %s %s\n", this, debugstr_guid(&rclsid), debugstr_guid(&rcatid),
+    TRACE("%p -> (%s %s %s)\n", this, debugstr_guid(&rclsid), debugstr_guid(&rcatid),
           debugstr_guid(&rguid));
 
     StringFromGUID2(rclsid, szClsid, _countof(szClsid));
@@ -357,7 +357,7 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
     _In_ REFGUID rguid,
     _Out_ TfGuidAtom *pguidatom)
 {
-    TRACE("(%p) %s %p\n", this, debugstr_guid(&rguid), pguidatom);
+    TRACE("%p -> (%s, %p)\n", this, debugstr_guid(&rguid), pguidatom);
 
     if (!pguidatom)
         return E_INVALIDARG;
@@ -367,7 +367,7 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
     do
     {
         dwCookieId = enumerate_Cookie(COOKIE_MAGIC_GUIDATOM, &dwEnumIndex);
-        if (dwCookieId != 0 && IsEqualGUID(rguid, *(const GUID *)get_Cookie_data(dwCookieId)))
+        if (dwCookieId != 0 && rguid == *(const GUID *)get_Cookie_data(dwCookieId))
         {
             *pguidatom = dwCookieId;
             return S_OK;
@@ -395,7 +395,7 @@ STDMETHODIMP CCategoryMgr::GetGUID(
     _In_ TfGuidAtom guidatom,
     _Out_ GUID *pguid)
 {
-    TRACE("(%p) %i\n", this, guidatom);
+    TRACE("%p -> (%d, %p)\n", this, guidatom, pguid);
 
     if (!pguid)
         return E_INVALIDARG;
@@ -413,7 +413,7 @@ STDMETHODIMP CCategoryMgr::IsEqualTfGuidAtom(
     _In_ REFGUID rguid,
     _Out_ BOOL *pfEqual)
 {
-    TRACE("(%p) %i %s %p\n", this, guidatom, debugstr_guid(&rguid), pfEqual);
+    TRACE("%p -> (%d %s %p)\n", this, guidatom, debugstr_guid(&rguid), pfEqual);
 
     if (!pfEqual)
         return E_INVALIDARG;
@@ -421,7 +421,7 @@ STDMETHODIMP CCategoryMgr::IsEqualTfGuidAtom(
     *pfEqual = FALSE;
     if (get_Cookie_magic(guidatom) == COOKIE_MAGIC_GUIDATOM)
     {
-        if (IsEqualGUID(rguid, *(const GUID *)get_Cookie_data(guidatom)))
+        if (rguid == *(const GUID *)get_Cookie_data(guidatom))
             *pfEqual = TRUE;
     }
 
