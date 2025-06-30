@@ -1,12 +1,15 @@
 /*
-* PROJECT:     ReactOS Device manager
-* LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
-* PURPOSE:     Polish resource file
-* TRANSLATORS: Copyright 2007 - xrogers (13.04.2007)          
-*              Copyright 2008-2011 - Caemyr - Olaf Siejka (Jan 2008, Jan 2010, May, 2011)
-*              Copyright 2011 - Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (November, 2011)
-*              Copyright 2020-2025 - pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (June, 2020-2025)
-*/
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2005 Sebastian Gąsiorek <zebasoftis@reactos.org>
+ *              Copyright 2005 Wiktor Maryniowski
+ *              Copyright 2007 Lech Groblewicz <xxrogers@users.sourceforge.net>
+ *              Copyright 2008-2011 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2011-2014 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2017-2019 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
