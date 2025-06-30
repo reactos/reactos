@@ -112,11 +112,8 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     Error = GetLastError();
 
     ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : ERROR_NOT_FOUND);
-#ifdef _M_AMD64
-    ok_long(Error, ERROR_FILE_NOT_FOUND);
-#else
-    ok_long(Error, 0);
-#endif
+    // Windows 8+ succeeds on x64, Server 2003 x86 returns ERROR_FILE_NOT_FOUND
+    ok(Error == ERROR_FILE_NOT_FOUND || Error == ERROR_SUCCESS, "Unexpected error. (0x%X)\n", Error);
     ok(ulOutBufLen == sizeof(Name),
        "ulOutBufLen is %ld, expected = sizeof(Name)\n",
        ulOutBufLen);
@@ -131,7 +128,10 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
 
     ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_NOT_ENOUGH_MEMORY : ERROR_INSUFFICIENT_BUFFER);
     ok_long(Error, ((GetVersion() & 0xFF) >= 6) ? 0 : 0xbeeffeed);
-    ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + ((GetVersion() & 0xFF) >= 6 ? 2 : 0));
+    if ((GetVersion() & 0xFFFF) != 0x0006)
+        ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + ((GetVersion() & 0xFF) >= 6 ? 2 : 0));
+    else
+        ok_long(ulOutBufLen, 0);
     ok_wstr(L"", Name);
 }
 
@@ -253,7 +253,10 @@ test_NhGetInterfaceNameFromDeviceGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ok(Error == ERROR_SUCCESS,
        "GetLastError() returned %ld, expected ERROR_SUCCESS\n",
        Error);
-    ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + (((GetVersion() & 0xFF) >= 6) ? 2 : 0));
+    if ((GetVersion() & 0xFFFF) != 0x0006)
+        ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + (((GetVersion() & 0xFF) >= 6) ? 2 : 0));
+    else
+        ok_long(ulOutBufLen, 0);
     ok_wstr(L"", Name);
 }
 
