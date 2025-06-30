@@ -113,7 +113,7 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
 
     ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : ERROR_NOT_FOUND);
     // Windows 8+ succeeds on x64, Server 2003 x86 returns ERROR_FILE_NOT_FOUND
-    ok(Error == ERROR_FILE_NOT_FOUND || Error == ERROR_SUCCESS, "Unexpected error. (0x%X)\n", Error);
+    ok(Error == ERROR_FILE_NOT_FOUND || Error == ERROR_SUCCESS, "Unexpected error. (0x%lX)\n", Error);
     ok(ulOutBufLen == sizeof(Name),
        "ulOutBufLen is %ld, expected = sizeof(Name)\n",
        ulOutBufLen);
