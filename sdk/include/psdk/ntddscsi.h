@@ -256,6 +256,7 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT32_EX
 #define ATA_FLAGS_DATA_OUT (1 << 2)
 #define ATA_FLAGS_48BIT_COMMAND (1 << 3)
 #define ATA_FLAGS_USE_DMA (1 << 4)
+#define ATA_FLAGS_NO_MULTIPLE (1 << 5)
 
   typedef struct _SCSI_BUS_DATA {
     UCHAR NumberOfLogicalUnits;
