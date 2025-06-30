@@ -2230,7 +2230,7 @@ INT_PTR CALLBACK RetryDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 EndDialog(hwndDlg, IDCANCEL);
             break;
         case WM_TIMER:
-            if(SUCCEEDED(SHELL_FindAnyFile(retryData->szDrive)))
+            if (SUCCEEDED(SHELL_FindAnyFile(retryData->szDrive)))
                 EndDialog(hwndDlg, IDOK);
             break;
         default:
