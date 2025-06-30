@@ -1,11 +1,14 @@
 /*
  * PROJECT:     ReactOS Power Configuration Applet
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Polish resource file
- * TRANSLATORS: Copyright aart3k <aart3k@gmail.com>
- *              Copyright 2008-2011 Caemyr - Olaf Siejka <caemyr@gmail.com> 
+ * TRANSLATORS: Copyright 2007 Artur Wiśniewski <aart3k@gmail.com>
+ *              Copyright 2008-2011 Olaf Siejka <caemyr@gmail.com> 
+ *              Copyright 2017-2019 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020 Adam Stachowicz <saibamenppl@gmail.com>
  *              Copyright 2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_POWERSCHEMESPAGE_ACDC DIALOGEX 0, 0, 252, 220
