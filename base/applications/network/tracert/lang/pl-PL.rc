@@ -42,5 +42,5 @@ Opcje:\n\
     IDS_DEST_NET_UNREACHABLE  "Sieć docelowa nieosiągalna.\n"
     IDS_BAD_OPTION_VALUE      "Nieprawidłowa wartość dla opcji %1!ls!.\n"
     IDS_MISSING_OPTION_VALUE  "Należy podać wartość dla opcji %1!ls!.\n"
-    IDS_MISSING_TARGET "Musisz podać nazwę lub adres miejsca docelowego.\n"
+    IDS_MISSING_TARGET "Należy określić adres lub nazwę docelową.\n"
 END
