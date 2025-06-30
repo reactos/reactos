@@ -1,12 +1,13 @@
 /*
-* PROJECT:     ReactOS SHIMGVW
-* LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
-* PURPOSE:     Polish resource file
-* TRANSLATORS: 
-*              translation by Rafal Harabien (Apr, 2011)
-*              UTF-8 conversion by Caemyr (May, 2011)
-*              Updated by pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (June, 2025)
-*/
+ * PROJECT:     ReactOS Picture and Fax Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2011 Rafal Harabien <rafalh@reactos.org>
+ *              Copyright 2011 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020-2021 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
