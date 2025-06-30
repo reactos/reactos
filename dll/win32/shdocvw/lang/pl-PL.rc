@@ -3,13 +3,14 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Polish resource file
  * TRANSLATOR:  Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ * TRANSLATOR:  Copyright 2025 pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (June, 2025)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_ADD "Add..."
-    IDS_ORGANIZE "Organize..."
+    IDS_ADD "Dodaj..."
+    IDS_ORGANIZE "Organizuj..."
     IDS_FOLDERSLABEL "Foldery"
 END
