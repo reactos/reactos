@@ -626,7 +626,6 @@ static void test_rng(void)
     ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
 }
 
-#ifndef __REACTOS__
 static void test_aes(void)
 {
     BCRYPT_KEY_LENGTHS_STRUCT key_lengths;
@@ -874,7 +873,7 @@ static void test_BCryptGenerateSymmetricKey(void)
     ret = pBCryptEncrypt(key, NULL, 0, NULL, NULL, 0, NULL, 0, &size, 0);
     ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
     ok(!size, "got %u\n", size);
-
+ 
     size = 0;
     memcpy(ivbuf, iv, sizeof(iv));
     ret = pBCryptEncrypt(key, data, 16, NULL, ivbuf, 16, NULL, 0, &size, 0);
@@ -2227,6 +2226,7 @@ static void test_key_import_export(void)
     ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
 }
 
+#ifndef __REACTOS__
 static BYTE eccPrivkey[] =
 {
     /* X */
@@ -4572,13 +4572,13 @@ START_TEST(bcrypt)
     test_BcryptDeriveKeyPBKDF2();
 #endif
     test_rng();
-#ifndef __REACTOS__
     test_3des();
     test_aes();
     test_BCryptGenerateSymmetricKey();
     test_BCryptEncrypt();
     test_BCryptDecrypt();
     test_key_import_export();
+#ifndef __REACTOS__
     test_ECDSA();
     test_RSA();
     test_RSA_SIGN();
