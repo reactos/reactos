@@ -13,8 +13,6 @@
 #include <pseh/pseh2.h>
 #include <versionhelpers.h>
 
-static BOOL g_bVista = FALSE;
-
 static HRESULT
 IsQSForwardMockup(_In_opt_ const GUID *pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
 {
@@ -63,7 +61,7 @@ IsQSForwardMockup(_In_opt_ const GUID *pguidCmdGroup, _In_ ULONG cCmds, _In_ OLE
     {
         if (!IsEqualGUID(CGID_Explorer, *pguidCmdGroup))
         {
-            if (g_bVista)
+            if (IsWindows8OrGreater())
                 return OLECMDERR_E_UNKNOWNGROUP;
             else
                 return OLECMDERR_E_NOTSUPPORTED;
@@ -363,8 +361,6 @@ static VOID TEST_MayExecForwardMockup(VOID)
 
 START_TEST(IsQSForward)
 {
-    g_bVista = IsWindowsVistaOrGreater();
-
     TEST_IsQSForward();
     TEST_MayQSForwardMockup();
     TEST_MayExecForwardMockup();
