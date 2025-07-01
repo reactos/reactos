@@ -94,7 +94,7 @@ struct key_asymmetric
     DSSSEED           dss_seed;
 };
 
-#define PRIVATE_DATA_SIZE 3
+#define PRIVATE_DATA_SIZE 18
 struct key
 {
     struct object hdr;
@@ -119,7 +119,7 @@ struct key_symmetric_set_auth_data_params
     struct key  *key;
     UCHAR       *auth_data;
     ULONG        len;
-#ifdef __REACTOS__
+#ifdef SONAME_LIBMBEDTLS
     BOOL         encrypt;
 #endif
 };
@@ -147,9 +147,6 @@ struct key_symmetric_get_tag_params
     struct key  *key;
     UCHAR       *tag;
     ULONG        len;
-#ifdef __REACTOS__
-    BOOL         encrypt;
-#endif
 };
 
 struct key_asymmetric_decrypt_params

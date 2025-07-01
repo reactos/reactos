@@ -1009,7 +1009,7 @@ NTSTATUS WINAPI BCryptHashData( BCRYPT_HASH_HANDLE handle, UCHAR *input, ULONG s
 
 static void hash_finalize( struct hash *hash, UCHAR *output, ULONG size )
 {
-#ifndef __REACTOS__
+#ifndef SONAME_LIBMBEDTLS
     UCHAR buffer[MAX_HASH_OUTPUT_BYTES];
     ULONG hash_size;
 
@@ -1018,7 +1018,7 @@ static void hash_finalize( struct hash *hash, UCHAR *output, ULONG size )
 #endif
         hash_finish( hash, output );
         if (hash->flags & HASH_FLAG_REUSABLE) hash_prepare( hash );
-#ifndef __REACTOS__
+#ifndef SONAME_LIBMBEDTLS
         return;
     }
 
@@ -1219,7 +1219,9 @@ static NTSTATUS key_symmetric_decrypt( struct key *key, UCHAR *input, ULONG inpu
     if (key->u.s.mode == CHAIN_MODE_GCM)
     {
         BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth_info = padding;
+#ifndef SONAME_LIBMBEDTLS
         UCHAR tag[16];
+#endif
 
         if (!auth_info) return STATUS_INVALID_PARAMETER;
         if (!auth_info->pbNonce) return STATUS_INVALID_PARAMETER;
@@ -1237,7 +1239,7 @@ static NTSTATUS key_symmetric_decrypt( struct key *key, UCHAR *input, ULONG inpu
         auth_params.key = key;
         auth_params.auth_data = auth_info->pbAuthData;
         auth_params.len = auth_info->cbAuthData;
-#ifdef __REACTOS__
+#ifdef SONAME_LIBMBEDTLS
         auth_params.encrypt = FALSE;
 #endif
         if ((status = key_symmetric_set_auth_data( &auth_params ))) return status;
@@ -1249,11 +1251,18 @@ static NTSTATUS key_symmetric_decrypt( struct key *key, UCHAR *input, ULONG inpu
         decrypt_params.output_len = output_len;
         if ((status = key_symmetric_decrypt_internal( &decrypt_params ))) return status;
 
+#ifndef SONAME_LIBMBEDTLS
         tag_params.key = key;
         tag_params.tag = tag;
         tag_params.len = sizeof(tag);
         if ((status = key_symmetric_get_tag( &tag_params ))) return status;
         if (memcmp( tag, auth_info->pbTag, auth_info->cbTag )) return STATUS_AUTH_TAG_MISMATCH;
+#else
+        tag_params.key = key;
+        tag_params.tag = auth_info->pbTag;
+        tag_params.len = auth_info->cbTag;
+        if ((status = key_symmetric_get_tag( &tag_params ))) return status;
+#endif
 
         return STATUS_SUCCESS;
     }
@@ -1445,7 +1454,7 @@ static NTSTATUS key_symmetric_encrypt( struct key *key,  UCHAR *input, ULONG inp
         auth_params.key = key;
         auth_params.auth_data = auth_info->pbAuthData;
         auth_params.len = auth_info->cbAuthData;
-#ifdef __REACTOS__
+#ifdef SONAME_LIBMBEDTLS
         auth_params.encrypt = TRUE;
 #endif
         if ((status = key_symmetric_set_auth_data( &auth_params ))) return status;

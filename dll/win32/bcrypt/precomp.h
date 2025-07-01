@@ -21,6 +21,9 @@
 #include <gnutls/gnutls.h>
 #elif defined(SONAME_LIBMBEDTLS)
 #include <mbedtls/md.h>
+#include <mbedtls/cipher.h>
+#include <mbedtls/pk.h>
+#include <mbedtls/dhm.h>
 #endif
 
 #include "bcrypt_internal.h"
