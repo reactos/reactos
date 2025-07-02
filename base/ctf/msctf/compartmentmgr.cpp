@@ -220,6 +220,8 @@ STDMETHODIMP_(ULONG) CCompartmentMgr::Release()
 
 HRESULT CCompartmentMgr::GetCompartment(_In_ REFGUID rguid, _Out_ ITfCompartment **ppcomp)
 {
+    if (!ppcomp)
+        return E_POINTER;
     CompartmentValue* value;
     struct list *cursor;
     HRESULT hr;
