@@ -811,7 +811,14 @@ static inline HRESULT ClientRpcChannelBuffer_IsCorrectApartment(ClientRpcChannel
     if (apartment_getoxid(apt, &oxid) != S_OK)
         return S_FALSE;
     if (This->oxid != oxid)
+#ifndef __REACTOS__
         return S_FALSE;
+#else
+        /* HACK: Disabled until the proper oxid generation via rpcss
+         * is implemented at ole32/compobj.c apartment_construct() */
+        FIXME("Apartment oxid mismatch ignored: 0x%s != 0x%s. (CORE-20264)\n",
+              wine_dbgstr_longlong(This->oxid), wine_dbgstr_longlong(oxid));
+#endif
     return S_OK;
 }
 
