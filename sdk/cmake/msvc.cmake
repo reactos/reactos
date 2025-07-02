@@ -40,6 +40,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/X /Zl)
 endif()
 
+# Erase warning C4819 for Far-East users: The file contains characters that cannot be displayed in the current code page
+add_compile_options(/wd4819)
+
 # Disable buffer security checks by default.
 add_compile_options(/GS-)
 
