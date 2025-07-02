@@ -95,6 +95,13 @@ public:
                 if (lstrcmpiW(pszPropName, L"RECTL2.top") == 0)
                     return E_FAIL;
 
+                if (lstrcmpiW(pszPropName, L"Str1") == 0)
+                {
+                    V_VT(pvari) = VT_BSTR;
+                    V_BSTR(pvari) = SysAllocString(L"TestString");
+                    return S_OK;
+                }
+
                 if (lstrcmpiW(pszPropName, L"GUID1") == 0)
                 {
                     V_VT(pvari) = (VT_UI1 | VT_ARRAY);
