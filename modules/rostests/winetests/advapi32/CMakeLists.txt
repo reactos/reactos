@@ -1,6 +1,9 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
+generate_whitelist_code(advapi32_winetest_whitelist.txt)
+add_definitions(-DUSE_WHITELIST)
+
 list(APPEND SOURCE
     cred.c
     crypt.c
@@ -19,6 +22,7 @@ list(APPEND PCH_SKIP_SOURCE
 
 add_executable(advapi32_winetest
     ${SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/whitelist.c
     ${PCH_SKIP_SOURCE})
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
