@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS CryptExt Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Indonesian resource translation
+ * COPYRIGHT:   Copyright 2025 Mas Ahmad Muhammad
+ */
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "Ini bukan file sertifikat yang sah."
+    IDS_CER_FILE "File Sertifikat"
+END
