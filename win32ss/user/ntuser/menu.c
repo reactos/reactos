@@ -5577,8 +5577,8 @@ NtUserCalcMenuBar(
 
     if(!(Window = UserGetWindowObject(hwnd)))
     {
-        EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
         UserLeave();
+        EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
         return 0;
     }
 
@@ -5599,7 +5599,6 @@ NtUserCalcMenuBar(
     UserReleaseDC( 0, hdc, FALSE );
 
     UserLeave();
-
     return ret;
 }
 
@@ -5624,8 +5623,8 @@ NtUserCheckMenuItem(
       Ret = IntCheckMenuItem(Menu, uIDCheckItem, uCheck);
    }
 
-   TRACE("Leave NtUserCheckMenuItem, ret=%lu\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserCheckMenuItem, ret=%lu\n", Ret);
    return Ret;
 }
 
@@ -5650,8 +5649,8 @@ NtUserDeleteMenu(
       Ret = IntRemoveMenuItem(Menu, uPosition, uFlags, TRUE);
    }
 
-   TRACE("Leave NtUserDeleteMenu, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserDeleteMenu, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -5705,8 +5704,8 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
    Ret = UserHMGetHandle(Menu);
 
 Exit:
-   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", Ret);
    return Ret;
 }
 
@@ -5748,8 +5747,8 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
 
 Exit:
-   TRACE("Leave NtUserSetSystemMenu, ret=%i\n", Result);
    UserLeave();
+   TRACE("Leave NtUserSetSystemMenu, ret=%i\n", Result);
    return Result;
 }
 
@@ -5763,56 +5762,55 @@ NtUserGetTitleBarInfo(
 {
     PWND WindowObject;
     TITLEBARINFO bartitleinfo;
-    BOOLEAN retValue = TRUE;
+    BOOLEAN retValue = FALSE;
 
     TRACE("Enter NtUserGetTitleBarInfo\n");
     UserEnterExclusive();
 
-    /* Vaildate the windows handle */
+    /* Validate the window handle */
     if (!(WindowObject = UserGetWindowObject(hwnd)))
     {
         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-        retValue = FALSE;
+        goto Exit;
     }
 
+    /* Copy user mode buffer to local buffer */
     _SEH2_TRY
     {
-        /* Copy our usermode buffer bti to local buffer bartitleinfo */
         ProbeForRead(bti, sizeof(TITLEBARINFO), 1);
         RtlCopyMemory(&bartitleinfo, bti, sizeof(TITLEBARINFO));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Fail copy the data */
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        retValue = FALSE;
+        _SEH2_YIELD(goto Exit);
     }
     _SEH2_END
 
     /* Get the tile bar info */
-    if (retValue)
+    retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
+    if (!retValue)
     {
-        retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
-        if (retValue)
-        {
-            _SEH2_TRY
-            {
-                /* Copy our buffer to user mode buffer bti */
-                ProbeForWrite(bti, sizeof(TITLEBARINFO), 1);
-                RtlCopyMemory(bti, &bartitleinfo, sizeof(TITLEBARINFO));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Fail copy the data */
-                EngSetLastError(ERROR_INVALID_PARAMETER);
-                retValue = FALSE;
-            }
-            _SEH2_END
-        }
+        // intGetTitleBarInfo() set LastError.
+        goto Exit;
     }
 
-    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n", retValue);
+    /* Copy local buffer back to user mode buffer */
+    _SEH2_TRY
+    {
+        ProbeForWrite(bti, sizeof(TITLEBARINFO), 1);
+        RtlCopyMemory(bti, &bartitleinfo, sizeof(TITLEBARINFO));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        retValue = FALSE;
+    }
+    _SEH2_END;
+
+Exit:
     UserLeave();
+    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n", retValue);
     return retValue;
 }
 
@@ -5862,8 +5860,8 @@ NtUserDestroyMenu(
    Ret = IntDestroyMenuObject(Menu, TRUE);
 
 Exit:
-   TRACE("Leave NtUserDestroyMenu, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserDestroyMenu, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -5888,8 +5886,8 @@ NtUserEnableMenuItem(
       Ret = IntEnableMenuItem(Menu, uIDEnableItem, uEnable);
    }
 
-   TRACE("Leave NtUserEnableMenuItem, ret=%u\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserEnableMenuItem, ret=%u\n", Ret);
    return Ret;
 }
 
@@ -6078,8 +6076,8 @@ NtUserGetMenuBarInfo(
 
 Cleanup:
    if (pWnd) UserDerefObjectCo(pWnd);
-   TRACE("Leave NtUserGetMenuBarInfo, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserGetMenuBarInfo, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6114,8 +6112,8 @@ NtUserGetMenuIndex(
    }
 
 Exit:
-   TRACE("Leave NtUserGetMenuIndex, ret=%u\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserGetMenuIndex, ret=%u\n", Ret);
    return Ret;
 }
 
@@ -6200,8 +6198,8 @@ NtUserGetMenuItemRect(
    Ret = TRUE;
 
 Exit:
-   TRACE("Leave NtUserGetMenuItemRect, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserGetMenuItemRect, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6237,8 +6235,8 @@ NtUserHiliteMenuItem(
    Ret = IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite);
 
 Exit:
-   TRACE("Leave NtUserHiliteMenuItem, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserHiliteMenuItem, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6295,8 +6293,8 @@ NtUserDrawMenuBarTemp(
    Ret = IntDrawMenuBarTemp(Window, hDC, &Rect, Menu, hFont);
 
 Exit:
-   ERR("Leave NtUserDrawMenuBarTemp, ret=%lu\n", Ret);
    UserLeave();
+   ERR("Leave NtUserDrawMenuBarTemp, ret=%lu\n", Ret);
    return Ret;
 }
 
@@ -6353,8 +6351,8 @@ NtUserMenuItemFromPoint(
    Ret = (mi ? i : NO_SELECTED_ITEM);
 
 Exit:
-   TRACE("Leave NtUserMenuItemFromPoint, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserMenuItemFromPoint, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6377,8 +6375,8 @@ NtUserPaintMenuBar(
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
-      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       UserLeave();
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
    }
 
@@ -6390,7 +6388,6 @@ NtUserPaintMenuBar(
    ret = MENU_DrawMenuBar(hDC, &Rect, Window, FALSE);
 
    UserLeave();
-
    return ret;
 }
 
@@ -6415,8 +6412,8 @@ NtUserRemoveMenu(
       Ret = IntRemoveMenuItem(Menu, uPosition, uFlags, FALSE);
    }
 
-   TRACE("Leave NtUserRemoveMenu, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserRemoveMenu, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6458,8 +6455,8 @@ NtUserSetMenu(
    Ret = TRUE;
 
 Exit:
-   TRACE("Leave NtUserSetMenu, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserSetMenu, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6483,8 +6480,8 @@ NtUserSetMenuContextHelpId(
       Ret = IntSetMenuContextHelpId(Menu, dwContextHelpId);
    }
 
-   TRACE("Leave NtUserSetMenuContextHelpId, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserSetMenuContextHelpId, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6509,8 +6506,8 @@ NtUserSetMenuDefaultItem(
       Ret = UserSetMenuDefaultItem(Menu, uItem, fByPos);
    }
 
-   TRACE("Leave NtUserSetMenuDefaultItem, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserSetMenuDefaultItem, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6533,8 +6530,8 @@ NtUserSetMenuFlagRtoL(
       Ret = IntSetMenuFlagRtoL(Menu);
    }
 
-   TRACE("Leave NtUserSetMenuFlagRtoL, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserSetMenuFlagRtoL, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6558,8 +6555,8 @@ NtUserThunkedMenuInfo(
       Ret = UserMenuInfo(Menu, (PROSMENUINFO)lpcmi, TRUE);
    }
 
-   TRACE("Leave NtUserThunkedMenuInfo, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserThunkedMenuInfo, ret=%i\n", Ret);
    return Ret;
 }
 
@@ -6577,16 +6574,12 @@ NtUserThunkedMenuItemInfo(
 {
    PMENU Menu;
    NTSTATUS Status;
-   UNICODE_STRING lstrCaption;
+   UNICODE_STRING lstrCaption = { 0 };
    BOOL Ret = FALSE;
 
    TRACE("Enter NtUserThunkedMenuItemInfo\n");
+
    UserEnterExclusive();
-
-   /* lpszCaption may be NULL, check for it and call RtlInitUnicodeString()
-      if bInsert == TRUE call UserInsertMenuItem() else UserSetMenuItemInfo()   */
-
-   RtlInitEmptyUnicodeString(&lstrCaption, NULL, 0);
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
@@ -6611,19 +6604,21 @@ NtUserThunkedMenuItemInfo(
    if (bInsert)
    {
       Ret = UserInsertMenuItem(Menu, uItem, fByPosition, lpmii, &lstrCaption);
-      goto Cleanup;
+   }
+   else
+   {
+      Ret = UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption);
    }
 
-   Ret = UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption);
-
 Cleanup:
+   UserLeave();
+
    if (lstrCaption.Buffer)
    {
       ReleaseCapturedUnicodeString(&lstrCaption, UserMode);
    }
 
    TRACE("Leave NtUserThunkedMenuItemInfo, ret=%i\n", Ret);
-   UserLeave();
    return Ret;
 }
 
@@ -6651,14 +6646,15 @@ NtUserTrackPopupMenuEx(
     USER_REFERENCE_ENTRY WndRef, MenuRef;
 
     TRACE("Enter NtUserTrackPopupMenuEx\n");
-    UserEnterExclusive();
 
     if (fuFlags & ~VALID_TPM_FLAGS)
     {
         ERR("TPME : Invalid flags 0x%X (valid flags are 0x%X)\n", fuFlags, VALID_TPM_FLAGS);
         EngSetLastError(ERROR_INVALID_FLAGS);
-        goto Exit;
+        goto Exit0;
     }
+
+    UserEnterExclusive();
 
     /* Parameter check */
     if (!(menu = UserGetMenuObject( hMenu )))
@@ -6695,7 +6691,9 @@ NtUserTrackPopupMenuEx(
     UserDerefObjectCo(pWnd);
 
 Exit:
-    TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n",Ret);
     UserLeave();
+
+Exit0:
+    TRACE("Leave NtUserTrackPopupMenuEx, ret=%i\n", Ret);
     return Ret;
 }

@@ -4,7 +4,7 @@
  * PURPOSE:     Polish resource file
  * TRANSLATORS: Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
  *              Copyright 2018 Kamil Smoliński <blackdragondev85@gmail.com>
- *              Copyright 2021-2024 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ *              Copyright 2021-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -101,7 +101,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "&Zaznacz", 0
     END
 END
 
@@ -815,7 +815,7 @@ BEGIN
     IDS_DISCONNECT "Odłącz"
     IDS_OPENFILELOCATION "O&twórz lokalizację pliku"
     IDS_SENDTO_MENU "Wyślij d&o"
-    IDS_COPYASPATHMENU "Copy as path"
+    IDS_COPYASPATHMENU "Kopiuj jako ścieżkę"
 
     IDS_MOVEERRORTITLE "Błąd przenoszenia pliku lub folderu"
     IDS_COPYERRORTITLE "Błąd kopiowania pliku lub folderu"
@@ -929,8 +929,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "&Folder"
     FCIDM_SHVIEW_NEWLINK "&Skrót"
     IDS_FOLDER_OPTIONS "Opcje folderów"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "Pasek zadań i menu Start"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Dostosuj menu Start i pasek zadań, na przykład typy wyświetlanych elementów i sposób ich wyświetlania."
     IDS_RECYCLEBIN_LOCATION "Lokalizacja kosza"
     IDS_RECYCLEBIN_DISKSPACE "Pozostało wolnego miejsca"
     IDS_EMPTY_BITBUCKET "Opróżnij Kosz"
@@ -945,8 +945,8 @@ BEGIN
     IDS_CANTDISCONNECT "Nie można odłączyć (kod błędu: %lu)."
     IDS_NONE "(brak)"
 
-    IDS_EXPAND "Exp&and"
-    IDS_COLLAPSE "Coll&apse"
+    IDS_EXPAND "Ro&zwiń"
+    IDS_COLLAPSE "Z&wiń"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
@@ -985,8 +985,8 @@ BEGIN
     IDS_PRINT_VERB "Drukuj"
     IDS_CMD_VERB "&Otwórz wiersz polecenia tutaj"
 
-    IDS_MULTIPLETYPES   "Multiple Types"
-    IDS_VARIOUSFOLDERS  "Various Folders"
+    IDS_MULTIPLETYPES   "Wiele typów"
+    IDS_VARIOUSFOLDERS  "Różne foldery"
     IDS_FILE_FOLDER "%u Plików, %u Katalogów"
 
     IDS_PRINTERS "Drukarki"
@@ -1013,9 +1013,9 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "Przeglądaj..."
 
-    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
-    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Kosz"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "Kosz zawiera pliki, które zostały usunięte z komputera. Pliki te nie są trwale usunięte, dopóki nie opróżnisz Kosza."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&Wyświetl pliki"
 
     IDS_TITLE_MYCOMP "Mój komputer"
     IDS_TITLE_MYNET "Moje miejsca sieciowe"
@@ -1050,7 +1050,11 @@ BEGIN
     IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Rozwiń polecenie Połączenia sieciowe"
     IDS_ADVANCED_DISPLAY_RUN "Wyświetl polecenie Uruchom"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Wyświetl polecenie Narzędzia administracyjne"
-    IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+    IDS_ADVANCED_SMALL_START_MENU "Pokaż małe ikony w menu Start"
+
+    IDS_VISEFFECT_DRAGFULL "Pokaż zawartość okna podczas przeciągania"
+    IDS_VISEFFECT_FONTSMOOTHING "Wygładź krawędzie czcionek ekranowych"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Użyj cieni dla etykiet ikon pulpitu"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Zaawansowane"
     IDS_NEWEXT_ADVANCED_RIGHT "&Zaawansowane >>"

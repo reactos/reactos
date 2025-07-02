@@ -545,12 +545,21 @@ static HRESULT UXTHEME_ApplyTheme(PTHEME_FILE tf)
 		(lstrlenW(tf->pszSelectedSize)+1)*sizeof(WCHAR));
             RegSetValueExW(hKey, szDllName, 0, REG_SZ, (const BYTE*)tf->szThemeFile, 
 		(lstrlenW(tf->szThemeFile)+1)*sizeof(WCHAR));
+#ifdef __REACTOS__
+        {
+            WCHAR buf[sizeof("4294967295")];
+            UINT cch = wsprintfW(buf, L"%u", GetUserDefaultUILanguage());
+            RegSetValueExW(hKey, L"LastUserLangID", 0, REG_SZ, (const BYTE*)buf, ++cch * sizeof(WCHAR));
+        }
+#endif
         }
         else {
             RegDeleteValueW(hKey, szColorName);
             RegDeleteValueW(hKey, szSizeName);
             RegDeleteValueW(hKey, szDllName);
-
+#ifdef __REACTOS__
+            RegDeleteValueW(hKey, L"LastUserLangID");
+#endif
         }
         RegCloseKey(hKey);
     }
@@ -1215,31 +1224,61 @@ HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile)
  *
  * PARAMS
  *     hThemeFile           Handle to theme file
- *     unknown              See notes
+ *     Flags                Unknown flag bits
  *     hWnd                 Window requesting the theme change
  *
  * RETURNS
  *     Success: S_OK
  *     Failure: HRESULT error-code
- *
- * NOTES
- * I'm not sure what the second parameter is (the datatype is likely wrong), other then this:
- * Under XP if I pass
- * char b[] = "";
- *   the theme is applied with the screen redrawing really badly (flickers)
- * char b[] = "\0"; where \0 can be one or more of any character, makes no difference
- *   the theme is applied smoothly (screen does not flicker)
- * char *b = "\0" or NULL; where \0 can be zero or more of any character, makes no difference
- *   the function fails returning invalid parameter... very strange
  */
+#ifdef __REACTOS__
+HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, UINT Flags, HWND hWnd)
+#else
 HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
+#endif
 {
     HRESULT hr;
+#ifdef __REACTOS__
+    TRACE("(%p,%#x,%p)\n", hThemeFile, Flags, hWnd);
+#else
     TRACE("(%p,%s,%p)\n", hThemeFile, unknown, hWnd);
+#endif
     hr = UXTHEME_ApplyTheme(hThemeFile);
     UXTHEME_broadcast_theme_changed (NULL, (g_ActiveThemeFile != NULL));
     return hr;
 }
+
+#ifdef __REACTOS__
+/**********************************************************************
+ *      SetSystemVisualStyle                              (UXTHEME.65)
+ */
+HRESULT WINAPI SetSystemVisualStyle(PCWSTR pszStyleFile, PCWSTR pszColor, PCWSTR pszSize, UINT Flags)
+{
+    PTHEME_FILE pThemeFile = NULL;
+    HRESULT hr;
+
+    if (pszStyleFile)
+    {
+        if (!g_bThemeHooksActive)
+            return E_FAIL;
+
+        if (pszColor && !*pszColor)
+            pszColor = NULL;
+        if (pszSize && !*pszSize)
+            pszSize = NULL;
+
+        hr = MSSTYLES_OpenThemeFile(pszStyleFile, pszColor, pszSize, &pThemeFile);
+        if (FAILED(hr))
+            return hr;
+    }
+    hr = ApplyTheme(pThemeFile, Flags, NULL);
+
+    if (pThemeFile)
+        MSSTYLES_CloseThemeFile(pThemeFile);
+
+    return hr;
+}
+#endif // __REACTOS__
 
 /**********************************************************************
  *      GetThemeDefaults                                   (UXTHEME.7)
@@ -1273,8 +1312,15 @@ HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, NULL, NULL, &pt);
     if(FAILED(hr)) return hr;
 
+#ifdef __REACTOS__
+    if (pszColorName)
+        lstrcpynW(pszColorName, pt->pszSelectedColor, dwColorNameLen);
+    if (pszSizeName)
+        lstrcpynW(pszSizeName, pt->pszSelectedSize, dwSizeNameLen);
+#else
     lstrcpynW(pszColorName, pt->pszSelectedColor, dwColorNameLen);
     lstrcpynW(pszSizeName, pt->pszSelectedSize, dwSizeNameLen);
+#endif
 
     MSSTYLES_CloseThemeFile(pt);
     return S_OK;

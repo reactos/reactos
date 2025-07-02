@@ -10,6 +10,9 @@
 #include "../kbswitch.h"
 #include "resource.h"
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(internat);
+
 typedef struct tagSHARED_DATA
 {
     HHOOK hWinHook;
@@ -18,18 +21,39 @@ typedef struct tagSHARED_DATA
     HWND hKbSwitchWnd;
     UINT nHotID;
     DWORD_PTR dwHotMenuItemData;
-    CRITICAL_SECTION csLock;
 } SHARED_DATA, *PSHARED_DATA;
 
 HINSTANCE g_hInstance = NULL;
 HANDLE g_hShared = NULL;
 PSHARED_DATA g_pShared = NULL;
-BOOL g_bCriticalSectionInitialized = 0;
+HANDLE g_hMutex = NULL;
 
-static VOID
+#define MUTEX_TIMEOUT_MS (4 * 1000)
+
+static inline BOOL EnterProtectedSection(VOID)
+{
+    DWORD dwWaitResult = WaitForSingleObject(g_hMutex, MUTEX_TIMEOUT_MS);
+    if (dwWaitResult == WAIT_OBJECT_0)
+        return TRUE;
+
+    if (dwWaitResult == WAIT_TIMEOUT)
+        WARN("Timeout while waiting for mutex.\n");
+    else
+        WARN("Failed to acquire mutex. Error code: %lu\n", GetLastError());
+
+    return FALSE;
+}
+
+static inline VOID LeaveProtectedSection(VOID)
+{
+    ReleaseMutex(g_hMutex);
+}
+
+static inline VOID
 PostMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    PostMessage(g_pShared->hKbSwitchWnd, Msg, wParam, lParam);
+    if (g_pShared->hKbSwitchWnd)
+        PostMessage(g_pShared->hKbSwitchWnd, Msg, wParam, lParam);
 }
 
 static LRESULT CALLBACK
@@ -114,7 +138,11 @@ KeyboardProc(INT code, WPARAM wParam, LPARAM lParam)
 BOOL APIENTRY
 KbSwitchSetHooks(_In_ BOOL bDoHook)
 {
-    EnterCriticalSection(&g_pShared->csLock);
+    TRACE("bDoHook: %d\n", bDoHook);
+
+    if (!EnterProtectedSection())
+        return FALSE;
+
     if (bDoHook)
     {
         g_pShared->hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, g_hInstance, 0);
@@ -125,7 +153,14 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
             g_pShared->hShellHook &&
             g_pShared->hKeyboardHook)
         {
-            LeaveCriticalSection(&g_pShared->csLock);
+            // Find kbswitch window if necessary
+            if (!g_pShared->hKbSwitchWnd || !IsWindow(g_pShared->hKbSwitchWnd))
+            {
+                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
+                TRACE("hKbSwitchWnd: %p\n", g_pShared->hKbSwitchWnd);
+            }
+
+            LeaveProtectedSection();
             return TRUE;
         }
     }
@@ -147,7 +182,7 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
         g_pShared->hWinHook = NULL;
     }
 
-    LeaveCriticalSection(&g_pShared->csLock);
+    LeaveProtectedSection();
     return !bDoHook;
 }
 
@@ -155,20 +190,34 @@ KbSwitchSetHooks(_In_ BOOL bDoHook)
 VOID APIENTRY
 GetPenMenuData(PUINT pnID, PDWORD_PTR pdwItemData)
 {
-    EnterCriticalSection(&g_pShared->csLock);
-    *pnID = g_pShared->nHotID;
-    *pdwItemData = g_pShared->dwHotMenuItemData;
-    LeaveCriticalSection(&g_pShared->csLock);
+    if (EnterProtectedSection())
+    {
+        *pnID = g_pShared->nHotID;
+        *pdwItemData = g_pShared->dwHotMenuItemData;
+        LeaveProtectedSection();
+    }
+    else
+    {
+        WARN("EnterProtectedSection failed\n");
+        *pnID = 0;
+        *pdwItemData = 0;
+    }
 }
 
 // indicdll!14
 VOID APIENTRY
 SetPenMenuData(_In_ UINT nID, _In_ DWORD_PTR dwItemData)
 {
-    EnterCriticalSection(&g_pShared->csLock);
-    g_pShared->nHotID = nID;
-    g_pShared->dwHotMenuItemData = dwItemData;
-    LeaveCriticalSection(&g_pShared->csLock);
+    if (EnterProtectedSection())
+    {
+        g_pShared->nHotID = nID;
+        g_pShared->dwHotMenuItemData = dwItemData;
+        LeaveProtectedSection();
+    }
+    else
+    {
+        WARN("EnterProtectedSection failed\n");
+    }
 }
 
 BOOL WINAPI
@@ -180,33 +229,43 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
         {
+            TRACE("DLL_PROCESS_ATTACH\n");
             g_hInstance = hinstDLL;
+
             g_hShared = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
                                           0, sizeof(SHARED_DATA), TEXT("InternatSHData"));
             if (!g_hShared)
+            {
+                ERR("!g_hShared\n");
                 return FALSE;
+            }
 
             BOOL bAlreadyExists = GetLastError() == ERROR_ALREADY_EXISTS;
+            TRACE("bAlreadyExists: %d\n", bAlreadyExists);
 
             g_pShared = (PSHARED_DATA)MapViewOfFile(g_hShared, FILE_MAP_WRITE, 0, 0, 0);
             if (!g_pShared)
+            {
+                ERR("!g_pShared\n");
                 return FALSE;
+            }
 
             if (!bAlreadyExists)
-            {
                 ZeroMemory(g_pShared, sizeof(*g_pShared));
-                g_pShared->hKbSwitchWnd = FindWindow(INDICATOR_CLASS, NULL);
-                InitializeCriticalSection(&g_pShared->csLock);
-                g_bCriticalSectionInitialized = TRUE;
+
+            g_hMutex = CreateMutex(NULL, FALSE, TEXT("INDICDLL_PROTECTED"));
+            if (!g_hMutex)
+            {
+                ERR("Failed to create mutex\n");
+                return FALSE;
             }
             break;
         }
         case DLL_PROCESS_DETACH:
         {
-            if (g_bCriticalSectionInitialized)
-            {
-                DeleteCriticalSection(&g_pShared->csLock);
-            }
+            TRACE("DLL_PROCESS_DETACH\n");
+            if (g_hMutex)
+                CloseHandle(g_hMutex);
             UnmapViewOfFile(g_pShared);
             CloseHandle(g_hShared);
             break;

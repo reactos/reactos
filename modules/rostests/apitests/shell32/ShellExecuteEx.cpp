@@ -314,17 +314,30 @@ static BOOL TEST_Start(void)
 
 static void TEST_End(void)
 {
-    GetWindowListForClose(&s_List2);
-    CloseNewWindows(&s_List1, &s_List2);
-    FreeWindowList(&s_List1);
-    FreeWindowList(&s_List2);
-
     DeleteFileW(s_win_test_exe);
     DeleteFileW(s_sys_test_exe);
     DeleteFileW(s_win_txt_file);
     DeleteFileW(s_sys_txt_file);
     DeleteFileW(s_win_bat_file);
     DeleteFileW(s_sys_bat_file);
+
+    // Execution can be asynchronous; you have to wait for it to finish.
+    INT nCount = GetWindowCount();
+    for (INT i = 0; i < 100; ++i)
+    {
+        INT nOldCount = nCount;
+        Sleep(3000);
+        nCount = GetWindowCount();
+        if (nOldCount == nCount)
+            break;
+    }
+    Sleep(3000);
+
+    // Close newly-opened window(s)
+    GetWindowList(&s_List2);
+    CloseNewWindows(&s_List1, &s_List2);
+    FreeWindowList(&s_List1);
+    FreeWindowList(&s_List2);
 }
 
 static void test_properties()

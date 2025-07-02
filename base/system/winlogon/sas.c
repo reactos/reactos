@@ -491,19 +491,89 @@ quit:
     RevertToSelf();
 }
 
+/**
+ * @brief
+ * Frees the Profile information structure (WLX_PROFILE_V1_0
+ * or WLX_PROFILE_V2_0) allocated by the GINA.
+ **/
+static VOID
+FreeWlxProfileInfo(
+    _Inout_ PVOID Profile)
+{
+    PWLX_PROFILE_V2_0 pProfile = (PWLX_PROFILE_V2_0)Profile;
+
+    if (pProfile->dwType != WLX_PROFILE_TYPE_V1_0
+     && pProfile->dwType != WLX_PROFILE_TYPE_V2_0)
+    {
+        ERR("WL: Wrong profile info\n");
+        return;
+    }
+
+    if (pProfile->pszProfile)
+        LocalFree(pProfile->pszProfile);
+    if (pProfile->dwType >= WLX_PROFILE_TYPE_V2_0)
+    {
+        if (pProfile->pszPolicy)
+            LocalFree(pProfile->pszPolicy);
+        if (pProfile->pszNetworkDefaultUserProfile)
+            LocalFree(pProfile->pszNetworkDefaultUserProfile);
+        if (pProfile->pszServerName)
+            LocalFree(pProfile->pszServerName);
+        if (pProfile->pszEnvironment)
+            LocalFree(pProfile->pszEnvironment);
+    }
+}
+
+/**
+ * @brief
+ * Frees the MPR information structure allocated by the GINA.
+ *
+ * @note
+ * Currently used only in HandleLogon(), but will also be used
+ * by WlxChangePasswordNotify(Ex) once implemented.
+ **/
+static VOID
+FreeWlxMprInfo(
+    _Inout_ PWLX_MPR_NOTIFY_INFO MprNotifyInfo)
+{
+    if (MprNotifyInfo->pszUserName)
+        LocalFree(MprNotifyInfo->pszUserName);
+    if (MprNotifyInfo->pszDomain)
+        LocalFree(MprNotifyInfo->pszDomain);
+    if (MprNotifyInfo->pszPassword)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(MprNotifyInfo->pszPassword) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(MprNotifyInfo->pszPassword, pwdLen);
+        LocalFree(MprNotifyInfo->pszPassword);
+    }
+    if (MprNotifyInfo->pszOldPassword)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(MprNotifyInfo->pszOldPassword) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(MprNotifyInfo->pszOldPassword, pwdLen);
+        LocalFree(MprNotifyInfo->pszOldPassword);
+    }
+}
+
 static
 BOOL
 HandleLogon(
     IN OUT PWLSESSION Session)
 {
-    PROFILEINFOW ProfileInfo;
     BOOL ret = FALSE;
 
     /* Loading personal settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
-    ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
-    if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+
+    Session->hProfileInfo = NULL;
+    if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
     {
+        HKEY hKey;
+        LONG lError;
+        BOOL bNoPopups = FALSE;
+        PROFILEINFOW ProfileInfo;
+
         if (Session->Profile == NULL
          || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
           && Session->Profile->dwType != WLX_PROFILE_TYPE_V2_0))
@@ -512,10 +582,28 @@ HandleLogon(
             goto cleanup;
         }
 
+        /* Check whether error messages may be displayed when loading the user profile */
+        lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                               L"System\\CurrentControlSet\\Control\\Windows",
+                               0,
+                               KEY_QUERY_VALUE,
+                               &hKey);
+        if (lError == ERROR_SUCCESS)
+        {
+            DWORD dwValue, dwType, cbData = sizeof(dwValue);
+            lError = RegQueryValueExW(hKey, L"NoPopupsOnBoot", NULL,
+                                      &dwType, (PBYTE)&dwValue, &cbData);
+            if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (cbData == sizeof(dwValue)))
+                bNoPopups = !!dwValue;
+
+            RegCloseKey(hKey);
+        }
+
         /* Load the user profile */
-        ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
-        ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-        ProfileInfo.dwFlags = 0;
+        ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
+        ProfileInfo.dwSize = sizeof(ProfileInfo);
+        if (bNoPopups)
+            ProfileInfo.dwFlags |= PI_NOUI;
         ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
         ProfileInfo.lpProfilePath = Session->Profile->pszProfile;
         if (Session->Profile->dwType >= WLX_PROFILE_TYPE_V2_0)
@@ -530,17 +618,19 @@ HandleLogon(
             ERR("WL: LoadUserProfileW() failed\n");
             goto cleanup;
         }
+        Session->hProfileInfo = ProfileInfo.hProfile;
     }
 
     /* Create environment block for the user */
     if (!CreateUserEnvironment(Session))
     {
-        WARN("WL: SetUserEnvironment() failed\n");
+        WARN("WL: CreateUserEnvironment() failed\n");
         goto cleanup;
     }
 
     CallNotificationDlls(Session, LogonHandler);
 
+    /* Enable per-user settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
     UpdatePerUserSystemParameters(0, TRUE);
 
@@ -575,8 +665,6 @@ HandleLogon(
     if (!InitializeScreenSaver(Session))
         WARN("WL: Failed to initialize screen saver\n");
 
-    Session->hProfileInfo = ProfileInfo.hProfile;
-
     /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
 
@@ -588,29 +676,39 @@ HandleLogon(
 cleanup:
     if (Session->Profile)
     {
-        HeapFree(GetProcessHeap(), 0, Session->Profile->pszProfile);
-        HeapFree(GetProcessHeap(), 0, Session->Profile);
+        FreeWlxProfileInfo(Session->Profile);
+        LocalFree(Session->Profile);
+        Session->Profile = NULL;
     }
-    Session->Profile = NULL;
-    if (!ret && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
-    {
-        UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
-    }
+    FreeWlxMprInfo(&Session->MprNotifyInfo);
+    ZeroMemory(&Session->MprNotifyInfo, sizeof(Session->MprNotifyInfo));
+
     RemoveStatusMessage(Session);
+
     if (!ret)
     {
+        if (Session->hProfileInfo)
+            UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+        Session->hProfileInfo = NULL;
+
+        /* Restore default system parameters */
+        UpdatePerUserSystemParameters(0, FALSE);
+
+        // TODO: Remove session access to window station
+        // (revert what security.c!AllowAccessOnSession() does).
         SetWindowStationUser(Session->InteractiveWindowStation,
                              &LuidNone, NULL, 0);
+
+        /* Switch back to default SYSTEM user */
         CloseHandle(Session->UserToken);
         Session->UserToken = NULL;
+        Session->LogonId = LuidNone;
     }
-
-    if (ret)
+    else // if (ret)
     {
         SwitchDesktop(Session->ApplicationDesktop);
         Session->LogonState = STATE_LOGGED_ON;
     }
-
     return ret;
 }
 
@@ -640,7 +738,7 @@ LogoffShutdownThread(
     uFlags = EWX_CALLER_WINLOGON | (LSData->Flags & 0x0F);
 
     TRACE("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
-        uFlags, ExitReactOSInProgress ? "true" : "false");
+        uFlags, ExitReactOSInProgress ? "TRUE" : "FALSE");
 
     ExitReactOSInProgress = TRUE;
 
@@ -888,6 +986,7 @@ HandleLogoff(
                          &LuidNone, NULL, 0);
 
     // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
+    CallNotificationDlls(Session, LogoffHandler);
 
     // FIXME: Closing network connections!
     // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
@@ -908,14 +1007,22 @@ HandleLogoff(
 
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
-    UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+    if (Session->hProfileInfo)
+        UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+    Session->hProfileInfo = NULL;
 
-    CallNotificationDlls(Session, LogoffHandler);
-
-    CloseHandle(Session->UserToken);
+    /* Restore default system parameters */
     UpdatePerUserSystemParameters(0, FALSE);
-    Session->LogonState = STATE_LOGGED_OFF;
+
+    // TODO: Remove session access to window station
+    // (revert what security.c!AllowAccessOnSession() does).
+
+    /* Switch back to default SYSTEM user */
+    CloseHandle(Session->UserToken);
     Session->UserToken = NULL;
+    Session->LogonId = LuidNone;
+
+    Session->LogonState = STATE_LOGGED_OFF;
 
     return STATUS_SUCCESS;
 }
@@ -1492,49 +1599,44 @@ SASWindowProc(
                      * Our caller (USERSRV) should have added the shutdown flag
                      * when setting also poweroff or reboot.
                      */
-                    if (Action & (EWX_POWEROFF | EWX_REBOOT))
+                    if ((Action & (EWX_POWEROFF | EWX_REBOOT)) && !(Action & EWX_SHUTDOWN))
                     {
-                        if ((Action & EWX_SHUTDOWN) == 0)
-                        {
-                            ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
-                            return STATUS_INVALID_PARAMETER;
-                        }
+                        ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
+                        return STATUS_INVALID_PARAMETER;
+                    }
 
-                        /* Now we can locally remove it for performing checks */
+                    // INVESTIGATE: Our HandleLogoff/HandleShutdown may instead
+                    // take an EWX_* flags combination to determine what to do
+                    // more precisely.
+                    /* Map EWX_* flags to WLX_* actions and check for any unhandled flag */
+                    if (Action & EWX_POWEROFF)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+                        Action &= ~(EWX_SHUTDOWN | EWX_POWEROFF);
+                    }
+                    else if (Action & EWX_REBOOT)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
+                        Action &= ~(EWX_SHUTDOWN | EWX_REBOOT);
+                    }
+                    else if (Action & EWX_SHUTDOWN)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN;
                         Action &= ~EWX_SHUTDOWN;
                     }
-
-                    /* Check parameters */
-                    if (Action & EWX_FORCE)
+                    else // EWX_LOGOFF
                     {
-                        // FIXME!
-                        ERR("FIXME: EWX_FORCE present for Winlogon, what to do?\n");
-                        Action &= ~EWX_FORCE;
-                    }
-                    switch (Action)
-                    {
-                        case EWX_LOGOFF:
+                        if (Action & EWX_FORCE)
+                            wlxAction = WLX_SAS_ACTION_FORCE_LOGOFF;
+                        else
                             wlxAction = WLX_SAS_ACTION_LOGOFF;
-                            break;
-                        case EWX_SHUTDOWN:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN;
-                            break;
-                        case EWX_REBOOT:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
-                            break;
-                        case EWX_POWEROFF:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
-                            break;
-
-                        default:
-                        {
-                            ERR("Invalid ExitWindows action 0x%x\n", Action);
-                            return STATUS_INVALID_PARAMETER;
-                        }
+                        Action &= ~(EWX_LOGOFF | EWX_FORCE);
                     }
+                    if (Action)
+                        ERR("Unhandled EWX_* action flags: 0x%x\n", Action);
 
                     TRACE("In LN_LOGOFF, exit_in_progress == %s\n",
-                        ExitReactOSInProgress ? "true" : "false");
+                        ExitReactOSInProgress ? "TRUE" : "FALSE");
 
                     /*
                      * In case a parallel shutdown request is done (while we are
@@ -1559,8 +1661,8 @@ SASWindowProc(
                 }
                 case LN_LOGOFF_CANCELED:
                 {
-                    ERR("Logoff canceled!!, before: exit_in_progress == %s, after will be false\n",
-                        ExitReactOSInProgress ? "true" : "false");
+                    ERR("Logoff canceled! Before: exit_in_progress == %s; After: FALSE\n",
+                        ExitReactOSInProgress ? "TRUE" : "FALSE");
 
                     ExitReactOSInProgress = FALSE;
                     return 1;

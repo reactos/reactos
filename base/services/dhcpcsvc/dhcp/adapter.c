@@ -371,7 +371,9 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 
             Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
 
-            if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(&Table->table[i])) {
+            if (Adapter &&
+                (Table->table[i].dwType == MIB_IF_TYPE_ETHERNET || Table->table[i].dwType == IF_TYPE_IEEE80211) &&
+                InterfaceConnected(&Table->table[i])) {
                 memcpy( &Adapter->IfMib, &Table->table[i],
                         sizeof(Adapter->IfMib) );
                 Adapter->DhclientInfo.client = &Adapter->DhclientState;

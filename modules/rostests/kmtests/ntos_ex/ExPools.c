@@ -109,54 +109,6 @@ static VOID PoolsTest(VOID)
     ExFreePoolWithTag(Allocs, TAG_POOLTEST);
 }
 
-static VOID PoolsCorruption(VOID)
-{
-    PULONG Ptr;
-    ULONG AllocSize;
-
-    // start with non-paged pool
-    AllocSize = 4096 + 0x10;
-    Ptr = ExAllocatePoolWithTag(NonPagedPool, AllocSize, TAG_POOLTEST);
-
-    // touch all bytes, it shouldn't cause an exception
-    RtlZeroMemory(Ptr, AllocSize);
-
-/* TODO: These fail because accessing invalid memory doesn't necessarily
-         cause an access violation */
-#ifdef THIS_DOESNT_WORK
-    // test buffer overrun, right after our allocation ends
-    _SEH2_TRY
-    {
-        TestPtr = (PULONG)((PUCHAR)Ptr + AllocSize);
-        //Ptr[4] = 0xd33dbeef;
-        *TestPtr = 0xd33dbeef;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the status */
-        Status = _SEH2_GetExceptionCode();
-    } _SEH2_END;
-
-    ok(Status == STATUS_ACCESS_VIOLATION, "Exception should occur, but got Status 0x%08lX\n", Status);
-
-    // test overrun in a distant byte range, but within 4096KB
-    _SEH2_TRY
-    {
-        Ptr[2020] = 0xdeadb33f;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the status */
-        Status = _SEH2_GetExceptionCode();
-    } _SEH2_END;
-
-    ok(Status == STATUS_ACCESS_VIOLATION, "Exception should occur, but got Status 0x%08lX\n", Status);
-#endif
-
-    // free the pool
-    ExFreePoolWithTag(Ptr, TAG_POOLTEST);
-}
-
 static
 VOID
 TestPoolTags(VOID)
@@ -308,7 +260,6 @@ TestBigPoolExpansion(VOID)
 START_TEST(ExPools)
 {
     PoolsTest();
-    PoolsCorruption();
     TestPoolTags();
     TestPoolQuota();
     TestBigPoolExpansion();

@@ -254,7 +254,7 @@ typedef struct _WLSESSION
     /* Logon informations */
     DWORD Options;
     WLX_MPR_NOTIFY_INFO MprNotifyInfo;
-    WLX_PROFILE_V2_0 *Profile;
+    PWLX_PROFILE_V2_0 Profile;
 } WLSESSION, *PWLSESSION;
 
 typedef enum _NOTIFICATION_TYPE

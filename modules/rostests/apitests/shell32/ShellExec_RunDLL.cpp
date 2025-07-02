@@ -26,36 +26,41 @@ static VOID TEST_ShellExec_RunDLLW(VOID)
     ShellExec_RunDLLW(NULL, NULL, L"?0?notepad.exe", SW_SHOWNORMAL);
 }
 
-static VOID CleanupWindowList(VOID)
+static BOOL CloseNotepad(VOID)
 {
-    GetWindowListForClose(&s_List2);
+    HWND hwndNew;
+    WCHAR szClass[64];
+
+    // Execution can be asynchronous; you have to wait for it to finish.
+    Sleep(1000);
+
+    // Close newly-opened window(s)
+    GetWindowList(&s_List2);
+    hwndNew = FindNewWindow(&s_List1, &s_List2);
+    if (!GetClassNameW(hwndNew, szClass, _countof(szClass)))
+        szClass[0] = UNICODE_NULL;
     CloseNewWindows(&s_List1, &s_List2);
     FreeWindowList(&s_List1);
     FreeWindowList(&s_List2);
+    return lstrcmpiW(szClass, L"Notepad") == 0;
 }
 
 START_TEST(ShellExec_RunDLL)
 {
-    HWND hwndNotepad;
+    BOOL ret;
 
     GetWindowList(&s_List1);
     TEST_ShellExec_RunDLL();
-    Sleep(1000);
-    hwndNotepad = FindWindowW(L"Notepad", NULL);
-    ok(hwndNotepad != NULL, "Notepad not found\n");
-    CleanupWindowList();
+    ret = CloseNotepad();
+    ok(ret, "Notepad not found\n");
 
     GetWindowList(&s_List1);
     TEST_ShellExec_RunDLLA();
-    Sleep(1000);
-    hwndNotepad = FindWindowW(L"Notepad", NULL);
-    ok(hwndNotepad != NULL, "Notepad not found\n");
-    CleanupWindowList();
+    ret = CloseNotepad();
+    ok(ret, "Notepad not found\n");
 
     GetWindowList(&s_List1);
     TEST_ShellExec_RunDLLW();
-    Sleep(1000);
-    hwndNotepad = FindWindowW(L"Notepad", NULL);
-    ok(hwndNotepad != NULL, "Notepad not found\n");
-    CleanupWindowList();
+    ret = CloseNotepad();
+    ok(ret, "Notepad not found\n");
 }

@@ -8,6 +8,8 @@ endif()
 
 list(APPEND SOURCE_CRT_TESTS
     ../crt/fpcontrol.c
+    ../crt/_finite.c
+    ../crt/_isnan.c
     ../crt/_mbsncmp.c
     ../crt/_mbsstr.c
     ../crt/_snprintf.c
@@ -17,15 +19,24 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/_vsnprintf.c
     ../crt/_vsnwprintf.c
     ../crt/_wsystem.c
+    ../crt/acos.c
+    ../crt/asin.c
+    ../crt/atan.c
     ../crt/atexit.c
     ../crt/ceil.c
+    ../crt/cos.c
     ../crt/crtdata.c
+    ../crt/exp.c
     ../crt/fabs.c
     ../crt/floor.c
+    ../crt/log.c
+    ../crt/log10.c
     ../crt/mbstowcs.c
     ../crt/mbtowc.c
     ../crt/rand_s.c
     ../crt/setjmp.c
+    ../crt/sin.c
+    ../crt/sqrt.c
     ../crt/sprintf.c
     ../crt/static_construct.cpp
     ../crt/static_init.c
@@ -33,6 +44,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/strlen.c
     ../crt/strtoul.c
     ../crt/system.c
+    ../crt/tan.c
     ../crt/wcstombs.c
     ../crt/wcstoul.c
     ../crt/wctomb.c

@@ -21,6 +21,7 @@ enum {
     STATE_RADIOOFF = TYPE_RADIO * STATEIMAGESPERTYPE,
     STATE_RADIOON,
     STATE_GROUP    = TYPE_GROUP * STATEIMAGESPERTYPE,
+    REG_GET_DIRECT = -1,
 };
 
 C_ASSERT((STATE_CHECKON & 1) && (STATE_RADIOON & 1) && STATE_RADIOON < STATE_GROUP);
@@ -162,7 +163,7 @@ static HRESULT GetDefaultValue(HKEY hKey, DWORD &Type, LPVOID Data, DWORD &Size)
     return HRESULT_FROM_WIN32(Err);
 }
 
-static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOOL Set)
+HRESULT CRegTreeOptions::GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOOL Set)
 {
     HRESULT hr;
     UINT SysParam = GetRegDWORD(hKey, Set ? L"SPIActionSet" : L"SPIActionGet", DWORD(0));
@@ -174,24 +175,24 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
         return S_OK;
     }
 
-#if 0 // TODO
     // learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-iregtreeitem
+    WCHAR szTemp[42];
     CLSID clsid;
-    if (SUCCEEDED(GetRegString(hKey, "CLSID", Temp, _countof(Temp))) && ..(Temp, &clsid))
+    if (SUCCEEDED(GetRegString(hKey, L"CLSID", szTemp, _countof(szTemp))) &&
+        SUCCEEDED(CLSIDFromString(szTemp, &clsid)))
     {
         IRegTreeItem *pRTI;
-        if (SUCCEEDED(hr = IUnknown_QueryService(m_pUnkSite, clsid, IID_PPV_ARG(IRegTreeItem, &pti))) ||
+        if (SUCCEEDED(hr = IUnknown_QueryService(m_pUnkSite, clsid, IID_PPV_ARG(IRegTreeItem, &pRTI))) ||
             SUCCEEDED(hr = SHCoCreateInstance(NULL, &clsid, NULL, IID_PPV_ARG(IRegTreeItem, &pRTI))))
         {
             BOOL *boolptr = (BOOL*)Data;
             Size = sizeof(BOOL);
-            Type = REG_DWORD;
+            Type = REG_GET_DIRECT;
             hr = Set ? pRTI->SetCheckState(*boolptr) : pRTI->GetCheckState(boolptr);
             pRTI->Release();
         }
         return hr;
     }
-#endif
 
     DWORD Mask = ~DWORD(0), Offset = 0;
     BOOL HasMask = GetRegDWORD(hKey, L"Mask", &Mask) == ERROR_SUCCESS;
@@ -286,7 +287,7 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
     return hr;
 }
 
-static HRESULT GetCheckState(HKEY hKey, BOOL UseDefault = FALSE)
+HRESULT CRegTreeOptions::GetCheckState(HKEY hKey, BOOL UseDefault)
 {
     BYTE CurrData[MAXVALUEDATA], CheckData[MAXVALUEDATA];
     DWORD CurrType, CheckType, CurrSize, CheckSize, Err, Checked;
@@ -317,7 +318,11 @@ static HRESULT GetCheckState(HKEY hKey, BOOL UseDefault = FALSE)
 
     CurrType = NormalizeRegType(CurrType);
     CheckType = NormalizeRegType(CheckType);
-    if (CurrType != CheckType)
+    if (CurrType == (UINT)REG_GET_DIRECT)
+    {
+        Checked = *(BOOL*)CurrData;
+    }
+    else if (CurrType != CheckType)
     {
         return HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
     }
@@ -339,7 +344,7 @@ static HRESULT GetCheckState(HKEY hKey, BOOL UseDefault = FALSE)
     return Checked ? S_OK : S_FALSE;
 }
 
-static HRESULT SaveCheckState(HKEY hKey, BOOL Checked)
+HRESULT CRegTreeOptions::SaveCheckState(HKEY hKey, BOOL Checked)
 {
     BYTE Data[MAXVALUEDATA];
     DWORD Type = REG_DWORD, Size = sizeof(Data);
@@ -351,7 +356,7 @@ static HRESULT SaveCheckState(HKEY hKey, BOOL Checked)
     return Err ? HRESULT_FROM_WIN32(Err) : GetSetState(hKey, Type, Data, Size, TRUE);
 }
 
-static void WalkTree(WALK_TREE_CMD Command, HWND hTree, HTREEITEM hTI)
+void CRegTreeOptions::WalkTree(WALK_TREE_CMD Command, HWND hTree, HTREEITEM hTI)
 {
     for (HTREEITEM hChildTI = TreeView_GetChild(hTree, hTI); hChildTI;)
     {
@@ -517,7 +522,7 @@ HRESULT STDMETHODCALLTYPE CRegTreeOptions::WalkTree(WALK_TREE_CMD Command)
 {
     for (HTREEITEM hTI = TreeView_GetRoot(m_hTree); hTI;)
     {
-        ::WalkTree(Command, m_hTree, hTI);
+        WalkTree(Command, m_hTree, hTI);
         hTI = TreeView_GetNextSibling(m_hTree, hTI);
     }
     return S_OK;

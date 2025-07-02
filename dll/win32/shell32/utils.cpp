@@ -1832,6 +1832,35 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
     return initIcon->QueryInterface(riid, ppvOut);
 }
 
+int DCIA_AddEntry(HDCIA hDCIA, REFCLSID rClsId)
+{
+    for (UINT i = 0;; ++i)
+    {
+        const CLSID *pClsId = DCIA_GetEntry(hDCIA, i);
+        if (!pClsId)
+            break;
+        if (IsEqualGUID(*pClsId, rClsId))
+            return i; // Don't allow duplicates
+    }
+    return DSA_AppendItem((HDSA)hDCIA, const_cast<CLSID*>(&rClsId));
+}
+
+void DCIA_AddShellExSubkey(HDCIA hDCIA, HKEY hProgId, PCWSTR pszSubkey)
+{
+    WCHAR szKey[200];
+    PathCombineW(szKey, L"shellex", pszSubkey);
+    HKEY hEnum;
+    if (RegOpenKeyExW(hProgId, szKey, 0, KEY_READ, &hEnum) != ERROR_SUCCESS)
+        return;
+    for (UINT i = 0; RegEnumKeyW(hEnum, i++, szKey, _countof(szKey)) == ERROR_SUCCESS;)
+    {
+        CLSID clsid;
+        if (SUCCEEDED(SHELL_GetShellExtensionRegCLSID(hEnum, szKey, &clsid)))
+            DCIA_AddEntry(hDCIA, clsid);
+    }
+    RegCloseKey(hEnum);
+}
+
 /*************************************************************************
  *  SHIsBadInterfacePtr [SHELL32.84]
  *

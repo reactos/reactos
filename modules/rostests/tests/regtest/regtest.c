@@ -591,8 +591,8 @@ void test5(void)
   NTSTATUS Status;
 
   dprintf("NtOpenKey : \n");
-  dprintf("  \\Registry\\Machine\\Software\\reactos : ");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,L"\\Registry\\Machine\\Software\\reactos");
+  dprintf("  \\Registry\\Machine\\Software\\ReactOS : ");
+  RtlRosInitUnicodeStringFromLiteral(&KeyName,L"\\Registry\\Machine\\Software\\ReactOS");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status=NtOpenKey( &hKey, KEY_ALL_ACCESS, &ObjectAttributes);
@@ -616,8 +616,8 @@ void test6(void)
   ULONG Length,i;
 
   dprintf("Create target key\n");
-  dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Reactos\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Reactos");
+  dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\ReactOS\n");
+  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\ReactOS");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
   Status = NtCreateKey(&hKey, KEY_ALL_ACCESS , &ObjectAttributes
@@ -658,9 +658,9 @@ void test6(void)
     return;
 
   dprintf("Create link value\n");
-  dprintf("  Value: SymbolicLinkValue = '\\Registry\\Machine\\SOFTWARE\\Reactos'\n");
+  dprintf("  Value: SymbolicLinkValue = '\\Registry\\Machine\\SOFTWARE\\ReactOS'\n");
   RtlRosInitUnicodeStringFromLiteral(&ValueName, L"SymbolicLinkValue");
-  Status=NtSetValueKey(hKey,&ValueName,0,REG_LINK,(PVOID)L"\\Registry\\Machine\\SOFTWARE\\Reactos",68);
+  Status=NtSetValueKey(hKey,&ValueName,0,REG_LINK,(PVOID)L"\\Registry\\Machine\\SOFTWARE\\ReactOS",68);
   dprintf("  NtSetValueKey() called (Status %lx)\n",Status);
   if (!NT_SUCCESS(Status))
     {

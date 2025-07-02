@@ -86,6 +86,7 @@ BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 #define SHAboutInfo SHAboutInfoA
 #endif
 
+HRESULT WINAPI CLSIDFromStringWrap(_In_ LPCWSTR idstr, _Out_ CLSID *id);
 HMODULE WINAPI SHPinDllOfCLSID(REFIID refiid);
 HRESULT WINAPI IUnknown_QueryStatus(IUnknown *lpUnknown, REFGUID pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT* pCmdText);
 HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn, VARIANT* pvaOut);
@@ -396,8 +397,34 @@ HRESULT WINAPI SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ PCWSTR pszClie
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
-#define SHACF_WIN95SHLEXEC 0x00000200 /* Geoff Chappell */
-DWORD WINAPI SHGetAppCompatFlags(DWORD dwMask);
+/* Flags for SHGetAppCompatFlags */
+#define SHACF_CONTEXTMENU           0x00000001
+#define SHACF_FLUSHNOWAITALWAYS     SHACF_CONTEXTMENU
+#define SHACF_DOCOBJECT             0x00000002
+#define SHACF_CORELINTERNETENUM     0x00000004
+#define SHACF_OLDCREATEVIEWWND      SHACF_CORELINTERNETENUM
+#define SHACF_WIN95DEFVIEW          SHACF_CORELINTERNETENUM
+#define SHACF_MYCOMPUTERFIRST       0x00000008
+#define SHACF_OLDREGITEMGDN         0x00000010
+// 0x00000020
+#define SHACF_LOADCOLUMNHANDLER     0x00000040
+#define SHACF_ANSI                  0x00000080
+#define SHACF_UNKNOWN1              0x00000100
+#define SHACF_WIN95SHLEXEC          0x00000200
+#define SHACF_STAROFFICE5PRINTER    0x00000400
+#define SHACF_NOVALIDATEFSIDS       0x00000800
+#define SHACF_FILEOPENNEEDSEXT      0x00001000
+#define SHACF_WIN95BINDTOOBJECT     0x00002000
+#define SHACF_IGNOREENUMRESET       0x00004000
+// 0x00008000
+#define SHACF_ANSIDISPLAYNAMES      0x00010000
+#define SHACF_FILEOPENBOGUSCTRLID   0x00020000
+#define SHACF_FORCELFNIDLIST        0x00040000
+// 0x00080000
+#define SHACF_UNKNOWN2              0x01000000
+#define SHACF_UNKNOWN3              0x80000000
+
+DWORD WINAPI SHGetAppCompatFlags(_In_ DWORD dwMask);
 
 /*****************************************************************************
  * IAssociationElementOld interface

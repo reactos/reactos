@@ -8,9 +8,16 @@ spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     firmware.c
+    EnumSystemLocalesEx.c
+    GetLocaleInfoEx.c
     GetFileInformationByHandleEx.c
+    GetFinalPathNameByHandle.c
     GetTickCount64.c
+    GetUserDefaultLocaleName.c
     InitOnce.c
+    IsValidLocaleName.c
+    LCIDToLocaleName.c
+    LocaleNameToLCID.c
     sync.c
     vista.c)
 

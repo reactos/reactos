@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (June, 2025)
+ */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
@@ -17,7 +24,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Twórcy ReactOS chcieliby podziękować następującym projektom Open Source, których to fragmenty zostały wykorzystane do stworzenia ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła ReactOS, musisz przestrzegać postanowień licencji.", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła ReactOS, musisz przestrzegać postanowień licencji.", IDC_STATIC, 15, 110, 230, 19
     PUSHBUTTON "Pokaż &GPL..", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Kliknij Dalej, by kontynuować.", IDC_STATIC, 15, 136, 195, 17
 END
@@ -111,10 +118,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Rejestracja składników", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Rejestrowanie składników", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Instalowanie elementów menu Start", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Zapisywanie ustawień", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Usuwanie plików tymczasowych", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END

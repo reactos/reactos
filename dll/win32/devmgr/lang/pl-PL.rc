@@ -284,7 +284,7 @@ BEGIN
     BEGIN
         MENUITEM "Urządzenia według typów",             IDM_DEVBYTYPE
         MENUITEM "Urządzenia według połączeń",       IDM_DEVBYCONN
-        MENUITEM "Zasoby według typów",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Zasoby według typów",           IDM_RESBYTYPE
         MENUITEM "Zasoby według połączeń",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Pokaż ukryte urządzenia",         IDM_SHOWHIDDEN
@@ -323,6 +323,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Wyłącz"
   IDS_TOOLTIP_UPDATE        "Aktualizuj sterownik"
   IDS_TOOLTIP_UNINSTALL     "Odinstaluj"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

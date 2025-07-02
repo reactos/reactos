@@ -1659,7 +1659,7 @@ cpp_quote("#define CMF_ASYNCVERBSTATE    0x00000400")
 cpp_quote("#define CMF_OPTIMIZEFORINVOKE 0x00000800")
 cpp_quote("#define CMF_SYNCCASCADEMENU   0x00001000")
 cpp_quote("#define CMF_DONOTPICKDEFAULT  0x00002000")
-cpp_quote("#define CMF_RESERVED          0xffff0000")
+cpp_quote("#define CMF_RESERVED          0xffff0000 // View specific")
 
 cpp_quote("#define GCS_VERBA         0x00000000")
 cpp_quote("#define GCS_HELPTEXTA     0x00000001")
@@ -2444,6 +2444,19 @@ interface IObjectWithSelection : IUnknown
 {
     HRESULT SetSelection([in] IShellItemArray *psia);
     HRESULT GetSelection([in] REFIID riid, [out, iid_is(riid)] void **ppv);
+};
+
+/*****************************************************************************
+ * IRegTreeItem interface
+ */
+[
+    uuid(A9521922-0812-4d44-9EC3-7FD38C726F3D),
+    pointer_default(unique)
+]
+interface IRegTreeItem : IUnknown
+{
+    HRESULT GetCheckState([out] BOOL *pbCheck);
+    HRESULT SetCheckState([in] BOOL bCheck);
 };
 
 
