@@ -2966,8 +2966,8 @@ void Test_collided_unwind(void)
         _SEH2_END;
     }
 
-    todo_ros ok(Flags == (1 | 2 | 8), "Flags = %x\n", Flags);
-    todo_ros ok(Count == 2, "Count = %d\n", Count);
+    todo_pseh ok(Flags == (1 | 2 | 8), "Flags = %x\n", Flags);
+    todo_pseh ok(Count == 2, "Count = %d\n", Count);
 #ifdef _M_IX86
     todo_ros ok(__readfsdword(0) == Registration, "SEH registration corrupted!\n");
     *(unsigned int*)NtCurrentTeb() = Registration;
