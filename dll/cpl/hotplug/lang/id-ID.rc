@@ -36,8 +36,8 @@ IDM_POPUP_DEVICE_TREE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Stop", IDM_STOP
-        MENUITEM "Properties", IDM_PROPERTIES
+        MENUITEM "Hentikan", IDM_STOP
+        MENUITEM "Properti", IDM_PROPERTIES
     END
 END
 
@@ -47,7 +47,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Hapus perangkat keras dengan aman"
-    IDS_CPLDESCRIPTION "Safely unplug or eject devices from your computer."
-    IDS_UNKNOWN_DEVICE "Unknown Device"
-    IDS_EJECT_ERROR_FORMAT "Failed to remove device (0x%x)\0"
+    IDS_CPLDESCRIPTION "Cabut perangkat dengan aman dari komputermu."
+    IDS_UNKNOWN_DEVICE "Perangkat Tidak Dikenal"
+    IDS_EJECT_ERROR_FORMAT "Gagal menghapus perangkat (0x%x)\0"
 END
