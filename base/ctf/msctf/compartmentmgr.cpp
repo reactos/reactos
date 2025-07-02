@@ -26,6 +26,11 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
+static inline bool cicIsNullPtr(LPCVOID ptr)
+{
+    return !ptr;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 typedef struct tagCompartmentValue
@@ -540,11 +545,6 @@ STDMETHODIMP CCompartment::GetValue(_Out_ VARIANT *pvarValue)
     if (V_VT(&m_variant) == VT_EMPTY)
         return S_FALSE;
     return ::VariantCopy(pvarValue, &m_variant);
-}
-
-static inline bool cicIsNullPtr(const GUID *guid)
-{
-    return !guid;
 }
 
 STDMETHODIMP CCompartment::AdviseSink(
