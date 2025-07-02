@@ -65,7 +65,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         /* Set bit 63 in XCOMP_BV to mark the area as compacted.
            XRSTORS requires this and will #GP otherwise. */
         PXSAVE_AREA XSaveArea = (PXSAVE_AREA)Thread->StateSaveArea;
-        XSaveArea->Header.Reserved[0] = 0x8000000000000000ULL;
+        XSaveArea->Header.CompactionMask = 0x8000000000000000ULL;
     }
 
     /* Check if this is a With-Context Thread */
