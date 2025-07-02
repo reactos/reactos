@@ -738,7 +738,7 @@ LogoffShutdownThread(
     uFlags = EWX_CALLER_WINLOGON | (LSData->Flags & 0x0F);
 
     TRACE("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
-        uFlags, ExitReactOSInProgress ? "true" : "false");
+        uFlags, ExitReactOSInProgress ? "TRUE" : "FALSE");
 
     ExitReactOSInProgress = TRUE;
 
@@ -1599,49 +1599,44 @@ SASWindowProc(
                      * Our caller (USERSRV) should have added the shutdown flag
                      * when setting also poweroff or reboot.
                      */
-                    if (Action & (EWX_POWEROFF | EWX_REBOOT))
+                    if ((Action & (EWX_POWEROFF | EWX_REBOOT)) && !(Action & EWX_SHUTDOWN))
                     {
-                        if ((Action & EWX_SHUTDOWN) == 0)
-                        {
-                            ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
-                            return STATUS_INVALID_PARAMETER;
-                        }
+                        ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
+                        return STATUS_INVALID_PARAMETER;
+                    }
 
-                        /* Now we can locally remove it for performing checks */
+                    // INVESTIGATE: Our HandleLogoff/HandleShutdown may instead
+                    // take an EWX_* flags combination to determine what to do
+                    // more precisely.
+                    /* Map EWX_* flags to WLX_* actions and check for any unhandled flag */
+                    if (Action & EWX_POWEROFF)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+                        Action &= ~(EWX_SHUTDOWN | EWX_POWEROFF);
+                    }
+                    else if (Action & EWX_REBOOT)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
+                        Action &= ~(EWX_SHUTDOWN | EWX_REBOOT);
+                    }
+                    else if (Action & EWX_SHUTDOWN)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN;
                         Action &= ~EWX_SHUTDOWN;
                     }
-
-                    /* Check parameters */
-                    if (Action & EWX_FORCE)
+                    else // EWX_LOGOFF
                     {
-                        // FIXME!
-                        ERR("FIXME: EWX_FORCE present for Winlogon, what to do?\n");
-                        Action &= ~EWX_FORCE;
-                    }
-                    switch (Action)
-                    {
-                        case EWX_LOGOFF:
+                        if (Action & EWX_FORCE)
+                            wlxAction = WLX_SAS_ACTION_FORCE_LOGOFF;
+                        else
                             wlxAction = WLX_SAS_ACTION_LOGOFF;
-                            break;
-                        case EWX_SHUTDOWN:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN;
-                            break;
-                        case EWX_REBOOT:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
-                            break;
-                        case EWX_POWEROFF:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
-                            break;
-
-                        default:
-                        {
-                            ERR("Invalid ExitWindows action 0x%x\n", Action);
-                            return STATUS_INVALID_PARAMETER;
-                        }
+                        Action &= ~(EWX_LOGOFF | EWX_FORCE);
                     }
+                    if (Action)
+                        ERR("Unhandled EWX_* action flags: 0x%x\n", Action);
 
                     TRACE("In LN_LOGOFF, exit_in_progress == %s\n",
-                        ExitReactOSInProgress ? "true" : "false");
+                        ExitReactOSInProgress ? "TRUE" : "FALSE");
 
                     /*
                      * In case a parallel shutdown request is done (while we are
@@ -1666,8 +1661,8 @@ SASWindowProc(
                 }
                 case LN_LOGOFF_CANCELED:
                 {
-                    ERR("Logoff canceled!!, before: exit_in_progress == %s, after will be false\n",
-                        ExitReactOSInProgress ? "true" : "false");
+                    ERR("Logoff canceled! Before: exit_in_progress == %s; After: FALSE\n",
+                        ExitReactOSInProgress ? "TRUE" : "FALSE");
 
                     ExitReactOSInProgress = FALSE;
                     return 1;
