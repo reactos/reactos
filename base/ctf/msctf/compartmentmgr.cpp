@@ -12,6 +12,7 @@
 #include <winreg.h>
 #include <cguid.h>
 #include <olectl.h>
+#include <oleauto.h>
 #include <msctf.h>
 #include <msctf_undoc.h>
 
