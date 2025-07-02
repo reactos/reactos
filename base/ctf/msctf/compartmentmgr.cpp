@@ -313,7 +313,8 @@ CCompartmentEnumGuid::~CCompartmentEnumGuid()
     TRACE("destroying %p\n", this);
 }
 
-HRESULT CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut)
+HRESULT
+CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut)
 {
     CCompartmentEnumGuid *This = new(cicNoThrow) CCompartmentEnumGuid();
     if (This == NULL)
@@ -327,7 +328,8 @@ HRESULT CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **pp
     return S_OK;
 }
 
-HRESULT CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut, struct list *cursor)
+HRESULT
+CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut, struct list *cursor)
 {
     CCompartmentEnumGuid *This = new(cicNoThrow) CCompartmentEnumGuid();
     if (This == NULL)
