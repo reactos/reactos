@@ -232,6 +232,11 @@ CContext::CContext()
     , m_pITfContextOwnerCompositionSink(NULL)
     , m_currentEditSession(NULL)
 {
+    list_init(&m_pContextKeyEventSink);
+    list_init(&m_pEditTransactionSink);
+    list_init(&m_pStatusSink);
+    list_init(&m_pTextEditSink);
+    list_init(&m_pTextLayoutSink);
 }
 
 CContext::~CContext()
@@ -917,7 +922,7 @@ HRESULT CContext::CreateInstance(
     EditCookie *cookie = (EditCookie *)HeapAlloc(GetProcessHeap(), 0, sizeof(EditCookie));
     if (cookie == NULL)
     {
-        HeapFree(GetProcessHeap(), 0, This);
+        delete This;
         return E_OUTOFMEMORY;
     }
 
