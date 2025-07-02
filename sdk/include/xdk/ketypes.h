@@ -967,7 +967,8 @@ typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
 
 typedef struct DECLSPEC_ALIGN(8) _XSAVE_AREA_HEADER {
   ULONG64 Mask;
-  ULONG64 Reserved[7];
+  ULONG64 CompactionMask;
+  ULONG64 Reserved2[6];
 } XSAVE_AREA_HEADER, *PXSAVE_AREA_HEADER;
 
 typedef struct DECLSPEC_ALIGN(16) _XSAVE_AREA {
