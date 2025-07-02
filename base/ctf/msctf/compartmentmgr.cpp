@@ -304,6 +304,7 @@ CCompartmentEnumGuid::CCompartmentEnumGuid()
 
 CCompartmentEnumGuid::~CCompartmentEnumGuid()
 {
+    TRACE("destroying %p\n", this);
 }
 
 HRESULT CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut)
@@ -433,6 +434,8 @@ CCompartment::CCompartment()
 
 CCompartment::~CCompartment()
 {
+    VariantClear(&m_variant);
+    free_sinks(&m_CompartmentEventSink);
 }
 
 HRESULT CCompartment::CreateInstance(CompartmentValue *valueData, ITfCompartment **ppOut)
