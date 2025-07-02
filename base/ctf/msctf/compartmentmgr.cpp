@@ -541,7 +541,7 @@ STDMETHODIMP CCompartment::GetValue(_Out_ VARIANT *pvarValue)
     return ::VariantCopy(pvarValue, &m_variant);
 }
 
-static inline bool cicIsNull(const GUID *guid)
+static inline bool cicIsNullPtr(const GUID *guid)
 {
     return !guid;
 }
@@ -553,7 +553,7 @@ STDMETHODIMP CCompartment::AdviseSink(
 {
     TRACE("(%p) %s %p %p\n", this, debugstr_guid(&riid), punk, pdwCookie);
 
-    if (cicIsNull(&riid) || !punk || !pdwCookie)
+    if (cicIsNullPtr(&riid) || !punk || !pdwCookie)
         return E_INVALIDARG;
 
     if (riid == IID_ITfCompartmentEventSink)
