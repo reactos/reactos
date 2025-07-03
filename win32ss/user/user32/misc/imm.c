@@ -1009,20 +1009,29 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
         return 0;
     }
 
-    pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
-    if (pimeui == NULL)
+    if (msg == WM_NCCREATE)
     {
         pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
-        if (pimeui == NULL)
+        if (!pimeui)
         {
             ERR("HeapAlloc failed\n");
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
             DestroyWindow(hwnd);
             return 0;
         }
-
         SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
         pimeui->spwnd = pWnd;
+    }
+    else
+    {
+        pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
+        if (!pimeui)
+        {
+            ERR("Invalid IME window\n");
+            NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+            DestroyWindow(hwnd);
+            return 0;
+        }
     }
 
     if (IS_CICERO_MODE())
@@ -1183,7 +1192,7 @@ RegisterIMEClass(VOID)
     WndClass.lpszClassName  = L"IME";
     WndClass.style          = CS_GLOBALCLASS;
     WndClass.lpfnWndProc    = ImeWndProcW;
-    WndClass.cbWndExtra     = sizeof(LONG_PTR);
+    WndClass.cbWndExtra     = sizeof(PIMEUI);
     WndClass.hCursor        = LoadCursorW(NULL, IDC_ARROW);
 
     atom = RegisterClassExWOWW(&WndClass, 0, FNID_IME, 0, FALSE);

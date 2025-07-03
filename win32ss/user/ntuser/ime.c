@@ -9,6 +9,7 @@
 
 #include <win32k.h>
 #include <jpnvkeys.h>
+#include <unaligned.h>
 
 DBG_DEFAULT_CHANNEL(UserMisc);
 
@@ -39,6 +40,11 @@ typedef struct tagIMEHOTKEY
 
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcidSystem = 0;
+
+static inline PIMEUI FASTCALL IntGetImeUIFromWnd(_In_ PWND pwnd)
+{
+    return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)(pwnd + 1));
+}
 
 static DWORD FASTCALL
 IntGetImeCompatFlags(_In_opt_ PTHREADINFO pti)
@@ -2089,7 +2095,7 @@ co_IntCreateDefaultImeWindow(
     pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, (PLARGE_STRING)&WindowName, NULL, WINVER);
     if (pImeWnd)
     {
-        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        pimeui = IntGetImeUIFromWnd(pImeWnd);
         _SEH2_TRY
         {
             ProbeForWrite(pimeui, sizeof(IMEUI), 1);
@@ -2118,7 +2124,7 @@ IntImeCanDestroyDefIMEforChild(
     PIMEUI pimeui;
     IMEUI SafeImeUI;
 
-    pimeui = ((PIMEWND)pImeWnd)->pimeui;
+    pimeui = IntGetImeUIFromWnd(pImeWnd);
     if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
         return FALSE;
 
@@ -2165,7 +2171,7 @@ IntImeCanDestroyDefIME(
     PIMEUI pimeui;
     IMEUI SafeImeUI;
 
-    pimeui = ((PIMEWND)pImeWnd)->pimeui;
+    pimeui = IntGetImeUIFromWnd(pImeWnd);
     if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
         return FALSE;
 
@@ -2257,7 +2263,7 @@ IntCheckImeShowStatus(
             continue;
         }
 
-        pimeui = ((PIMEWND)pwndNode)->pimeui;
+        pimeui = IntGetImeUIFromWnd(pwndNode);
         if (!pimeui || pimeui == (PIMEUI)-1)
             continue;
 
@@ -2448,8 +2454,10 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
-        ProbeForWrite(pImeWnd, sizeof(IMEWND), 1);
-        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        ProbeForRead(pImeWnd, sizeof(*pImeWnd) + sizeof(PIMEUI), 1);
+        pimeui = IntGetImeUIFromWnd(pImeWnd);
+
+        ProbeForRead(pimeui, sizeof(*pimeui), 1);
         SafeImeUI = *pimeui;
 
         bShow = (gfIMEShowStatus == TRUE) && SafeImeUI.fCtrlShowStatus;
