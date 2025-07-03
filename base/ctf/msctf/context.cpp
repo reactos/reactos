@@ -263,7 +263,8 @@ CContext::~CContext()
     free_sinks(&m_pTextEditSink);
     free_sinks(&m_pTextLayoutSink);
 
-    m_CompartmentMgr->Release();
+    if (m_CompartmentMgr)
+        m_CompartmentMgr->Release();
 }
 
 STDMETHODIMP CContext::QueryInterface(REFIID riid, void **ppvObj)
