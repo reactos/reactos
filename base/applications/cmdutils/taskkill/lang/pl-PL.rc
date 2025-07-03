@@ -26,7 +26,7 @@ STRINGTABLE
     STRING_SELF_TERMINATION, "Błąd: Proces nie może zakończyć sam siebie.\n"
     // STRING_CLOSE_CHILD, "Wysłano sygnał zakończenia do procesu o identyfikatorze PID %1!u!, będącego procesem podrzędnym procesu PID %2!u!.\n"
     STRING_CLOSE_CHILD, "Wysłano komunikat zamknięcia do okien najwyższego poziomu procesu PID %1!u!, będącego procesem podrzędnym procesu PID %2!u!.\n"
-    STRING_TERM_CHILD, "Proces o identyfikatorze PID %1!u! (proces podrzędny PID %2!u!) został zakończony.\n"
+    STRING_TERM_CHILD, "Proces o identyfikatorze PID %1!u! (podrzędny procesowi PID %2!u!) został zakończony.\n"
     STRING_TERM_CHILD_FAILED, "Błąd: Nie można zakończyć procesu PID %1!u!, będącego procesem podrzędnym PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Błąd: Nieprawidłowa składnia. Opcja '%1' nie jest dozwolona więcej niż '%2!d!' razy.\n"
     STRING_INVALID_SYNTAX, "Błąd: Nieprawidłowa składnia.\n"
