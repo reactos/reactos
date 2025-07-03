@@ -44,8 +44,8 @@ LCID glcidSystem = 0;
 static inline PIMEUI FASTCALL IntGetImeUIFromWnd(_In_ PWND pWnd)
 {
     ASSERT(pWnd->cbwndExtra >= sizeof(PIMEUI));
-    // (pWnd + 1) points to the window extra bytes where the PIMEUI pointer is stored.
-    return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)(pWnd + 1));
+    return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)((const BYTE *)pWnd +
+                                                             sizeof(WND) + IMEWND_PIMEUI_INDEX));
 }
 
 static DWORD FASTCALL
@@ -2461,7 +2461,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
         pimeui = IntGetImeUIFromWnd(pImeWnd);
         if (!pimeui)
         {
-            ERR("Invalid pimeui pointer: %p\n", pimeui);
+            ERR("Invalid pimeui pointer\n");
             _SEH2_YIELD(goto Skip);
         }
 
