@@ -16,6 +16,8 @@
 // So instead we check on the sign bit (compare result is the low word of the hresult).
 #define SHORT_SIGN_BIT  0x8000
 
+static const BOOL g_bVista = GetNTVersion() == _WIN32_WINNT_VISTA;
+
 static
 VOID
 compare_imp(IShellFolder* psf, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, HRESULT expected)
@@ -108,22 +110,22 @@ TestCompareIDList(IShellFolder* psf)
 
     compare(psf, dir3, desktop, S_LESSTHAN);
     compare(psf, desktop, dir3, S_GREATERTHAN);
-    compare(psf, dir3, programs, S_GREATERTHAN);
-    compare(psf, programs, dir3, S_LESSTHAN);
+    compare(psf, dir3, programs, g_bVista ? S_LESSTHAN : S_GREATERTHAN);
+    compare(psf, programs, dir3, g_bVista ? S_GREATERTHAN : S_LESSTHAN);
     compare(psf, dir3, dir3, S_EQUAL);
 
     compare(psf, dir4, desktop, S_LESSTHAN);
     compare(psf, desktop, dir4, S_GREATERTHAN);
-    compare(psf, dir4, programs, S_GREATERTHAN);
-    compare(psf, programs, dir4, S_LESSTHAN);
+    compare(psf, dir4, programs, g_bVista ? S_LESSTHAN : S_GREATERTHAN);
+    compare(psf, programs, dir4, g_bVista ? S_GREATERTHAN : S_LESSTHAN);
     compare(psf, dir4, dir4, S_EQUAL);
 
     // Now compare the paths against eachother.
     compare(psf, dir1, dir2, S_LESSTHAN);
     compare(psf, dir2, dir1, S_GREATERTHAN);
 
-    compare(psf, dir2, dir3, S_LESSTHAN);
-    compare(psf, dir3, dir2, S_GREATERTHAN);
+    compare(psf, dir2, dir3, g_bVista ? S_GREATERTHAN : S_LESSTHAN);
+    compare(psf, dir3, dir2, g_bVista ? S_LESSTHAN : S_GREATERTHAN);
 
     compare(psf, dir3, dir4, S_LESSTHAN);
     compare(psf, dir4, dir3, S_GREATERTHAN);
