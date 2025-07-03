@@ -43,6 +43,7 @@ LCID glcidSystem = 0;
 
 static inline PIMEUI FASTCALL IntGetImeUIFromWnd(_In_ PWND pwnd)
 {
+    // (pwnd + 1) points to the window extra bytes where the PIMEUI pointer is stored.
     return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)(pwnd + 1));
 }
 
