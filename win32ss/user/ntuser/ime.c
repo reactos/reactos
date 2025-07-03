@@ -2460,7 +2460,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
         if (!pimeui || pimeui == (PIMEUI)-1)
         {
             ERR("Invalid pimeui pointer: %p\n", pimeui);
-            _SEH2_YIELD(return);
+            _SEH2_YIELD(goto Skip);
         }
 
         ProbeForRead(pimeui, sizeof(*pimeui), 1);
@@ -2490,6 +2490,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     }
     _SEH2_END;
 
+Skip:
     // Detach from the process if necessary
     if (pti != ptiIME)
         KeDetachProcess();
