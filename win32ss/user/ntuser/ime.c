@@ -2457,7 +2457,11 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     {
         ProbeForRead(pImeWnd, sizeof(*pImeWnd) + sizeof(PIMEUI), 1);
         pimeui = IntGetImeUIFromWnd(pImeWnd);
-
+        if (!pimeui || pimeui == (PIMEUI)-1)
+        {
+            ERR("Invalid pimeui pointer: %p\n", pimeui);
+            _SEH2_YIELD(return);
+        }
         ProbeForRead(pimeui, sizeof(*pimeui), 1);
         SafeImeUI = *pimeui;
 
