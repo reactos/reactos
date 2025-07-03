@@ -1019,12 +1019,12 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             DestroyWindow(hwnd);
             return 0;
         }
-        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
+        SetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX, (LONG_PTR)pimeui);
         pimeui->spwnd = pWnd;
     }
     else
     {
-        pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
+        pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX);
         if (!pimeui || pimeui == (PIMEUI)-1)
         {
             ERR("Invalid IME window: pimeui was %p\n", pimeui);

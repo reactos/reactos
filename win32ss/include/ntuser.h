@@ -1235,6 +1235,8 @@ typedef struct tagIMEUI
     DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
+#define IMEWND_PIMEUI_INDEX 0
+
 DWORD
 NTAPI
 NtUserAssociateInputContext(
