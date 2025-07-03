@@ -1025,9 +1025,9 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
     else
     {
         pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX);
-        if (!pimeui || pimeui == (PIMEUI)-1)
+        if (!pimeui)
         {
-            ERR("Invalid IME window: pimeui was %p\n", pimeui);
+            ERR("Invalid IME window\n");
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
             DestroyWindow(hwnd);
             return 0;
