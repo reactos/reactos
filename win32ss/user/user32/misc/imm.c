@@ -1011,7 +1011,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
 
     if (msg == WM_NCCREATE)
     {
-        pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
+        pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pimeui));
         if (!pimeui)
         {
             ERR("HeapAlloc failed\n");

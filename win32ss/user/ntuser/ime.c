@@ -41,10 +41,11 @@ typedef struct tagIMEHOTKEY
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcidSystem = 0;
 
-static inline PIMEUI FASTCALL IntGetImeUIFromWnd(_In_ PWND pwnd)
+static inline PIMEUI FASTCALL IntGetImeUIFromWnd(_In_ PWND pWnd)
 {
-    // (pwnd + 1) points to the window extra bytes where the PIMEUI pointer is stored.
-    return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)(pwnd + 1));
+    ASSERT(pWnd->cbwndExtra >= sizeof(PIMEUI));
+    // (pWnd + 1) points to the window extra bytes where the PIMEUI pointer is stored.
+    return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)(pWnd + 1));
 }
 
 static DWORD FASTCALL
@@ -2097,9 +2098,10 @@ co_IntCreateDefaultImeWindow(
     if (pImeWnd)
     {
         pimeui = IntGetImeUIFromWnd(pImeWnd);
+        ASSERT(pimeui != NULL);
         _SEH2_TRY
         {
-            ProbeForWrite(pimeui, sizeof(IMEUI), 1);
+            ProbeForWrite(pimeui, sizeof(*pimeui), 1);
             pimeui->fDefault = TRUE;
             if (IS_WND_CHILD(pwndTarget) && pwndTarget->spwndParent->head.pti != pti)
                 pimeui->fChildThreadDef = TRUE;
@@ -2126,7 +2128,7 @@ IntImeCanDestroyDefIMEforChild(
     IMEUI SafeImeUI;
 
     pimeui = IntGetImeUIFromWnd(pImeWnd);
-    if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
+    if (!pimeui)
         return FALSE;
 
     // Check IMEUI.fChildThreadDef
@@ -2173,7 +2175,7 @@ IntImeCanDestroyDefIME(
     IMEUI SafeImeUI;
 
     pimeui = IntGetImeUIFromWnd(pImeWnd);
-    if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
+    if (!pimeui)
         return FALSE;
 
     // Check IMEUI.fDestroy
@@ -2265,7 +2267,7 @@ IntCheckImeShowStatus(
         }
 
         pimeui = IntGetImeUIFromWnd(pwndNode);
-        if (!pimeui || pimeui == (PIMEUI)-1)
+        if (!pimeui)
             continue;
 
         if (pti && pti != pwndNode->head.pti)
@@ -2455,9 +2457,9 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
-        ProbeForRead(pImeWnd, sizeof(WND) + sizeof(PIMEUI), 1);
+        ProbeForRead(pImeWnd, sizeof(WND) + sizeof(pimeui), 1);
         pimeui = IntGetImeUIFromWnd(pImeWnd);
-        if (!pimeui || pimeui == (PIMEUI)-1)
+        if (!pimeui)
         {
             ERR("Invalid pimeui pointer: %p\n", pimeui);
             _SEH2_YIELD(goto Skip);
