@@ -79,20 +79,20 @@ HRESULT WINAPI CDropTargetHelper::Show(BOOL fShow)
 }
 
 /*************************************************************************
- *      SH32_SimulateDrop (SHELL32.INTERNAL)
+ *      SH32_SimulateDropWithSite [SHELL32.INTERNAL]
  */
-static HRESULT SH32_SimulateDrop(IDropTarget *pDT, IDataObject *pDO, DWORD grfKeyState, PPOINTL pPtl, LPDWORD pdwEffect, IUnknown *pSite)
+static HRESULT SH32_SimulateDropWithSite(IDropTarget *pDT, IDataObject *pDO, DWORD grfKeyState, PPOINTL pPtl, LPDWORD pdwEffect, IUnknown *pSite)
 {
     CScopedSetObjectWithSite site(pDT, pSite);
     return SHSimulateDrop(pDT, pDO, grfKeyState, pPtl, pdwEffect);
 }
 
 /*************************************************************************
- *      SHSimulateDropOnClsid (SHELL32.751)
+ *      SHSimulateDropOnClsid [SHELL32.751]
  */
 EXTERN_C HRESULT WINAPI SHSimulateDropOnClsid(_In_ REFCLSID clsid, _In_opt_ IUnknown* pSite, _In_ IDataObject* pDO)
 {
     CComPtr<IDropTarget> pDT;
     HRESULT hr = SH32_ExtCoCreateInstance(NULL, &clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
-    return SUCCEEDED(hr) ? SH32_SimulateDrop(pDT, pDO, 0, NULL, NULL, pSite) : hr;
+    return SUCCEEDED(hr) ? SH32_SimulateDropWithSite(pDT, pDO, 0, NULL, NULL, pSite) : hr;
 }
