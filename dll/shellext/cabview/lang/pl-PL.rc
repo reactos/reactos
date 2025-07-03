@@ -18,5 +18,5 @@ BEGIN
     IDS_COL_ATT     "Atrybuty"
 
     IDS_EXTRACT     "Wyodrębnij..."
-    IDS_EXTRACTALL  "Wyodrębnij &wszystko..."
+    IDS_EXTRACTALL  "Wy&odrębnij wszystkie..."
 END
