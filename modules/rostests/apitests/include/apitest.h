@@ -12,6 +12,10 @@
 #define InvalidPointer ((PVOID)0x5555555555555555ULL)
 // #define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
+/* Magic pointers come from KUSER_SHARED_DATA; needed to get true NT version on Windows 8+ */
+#define KUSER_SHARED_DATA_UMPTR 0x7FFE0000
+#define GetNTVersion() (((*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C)) << 8) | (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270)))
+
 #include <pseh/pseh2.h>
 
 #define StartSeh()                                  \
