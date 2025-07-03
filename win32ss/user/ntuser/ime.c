@@ -2098,7 +2098,7 @@ co_IntCreateDefaultImeWindow(
     if (pImeWnd)
     {
         pimeui = IntGetImeUIFromWnd(pImeWnd);
-        ASSERT(pimeui != NULL);
+        ASSERT(pimeui);
         _SEH2_TRY
         {
             ProbeForWrite(pimeui, sizeof(*pimeui), 1);
