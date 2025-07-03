@@ -2434,7 +2434,7 @@ IntSendOpenStatusNotify(PTHREADINFO ptiIME, PIMEUI pimeui, PWND pWnd, BOOL bOpen
     }
 }
 
-// Update the IME status and send a notification.
+// Update the IME toolbar visibility and send a notification
 VOID FASTCALL
 IntNotifyImeShowStatus(_In_ PWND pImeWnd)
 {
@@ -2482,7 +2482,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception in IntNotifyImeShowStatus: %p, %p, %p, %d, %d\n", 
+        ERR("Exception in IntNotifyImeShowStatus: %p, %p, %p, %d, %d\n",
             pImeWnd, pimeui, ptiIME, SafeImeUI.fCtrlShowStatus, gfIMEShowStatus);
 
         if (pti != ptiIME)
