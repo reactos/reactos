@@ -2455,7 +2455,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
-        ProbeForRead(pImeWnd, sizeof(*pImeWnd) + sizeof(PIMEUI), 1);
+        ProbeForRead(pImeWnd, sizeof(WND) + sizeof(PIMEUI), 1);
         pimeui = IntGetImeUIFromWnd(pImeWnd);
         if (!pimeui || pimeui == (PIMEUI)-1)
         {
