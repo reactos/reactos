@@ -20,7 +20,7 @@
 #define PASSTHROUGH_CMD_TIMEOUT_MAX_SEC    (30 * 60 * 60) // 30 hours
 /*@}*/
 
-#define GET_IOCTL(IoStack)   (IoStack->Parameters.DeviceIoControl.IoControlCode)
+#define GET_IOCTL(IoStack)   ((IoStack)->Parameters.DeviceIoControl.IoControlCode)
 
 typedef union _PASSTHROUGH_DATA
 {

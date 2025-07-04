@@ -447,10 +447,10 @@ USBSTOR_HandleDeviceControl(
                 break;
             }
 
-            Status = PassthruHandleScsiPassthru(DeviceObject,
-                                                Irp,
-                                                USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH,
-                                                USBSTOR_DEFAULT_MAX_PHYS_PAGES);
+            Status = SptiHandleScsiPassthru(DeviceObject,
+                                            Irp,
+                                            USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH,
+                                            USBSTOR_DEFAULT_MAX_PHYS_PAGES);
             break;
         }
         case IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER:

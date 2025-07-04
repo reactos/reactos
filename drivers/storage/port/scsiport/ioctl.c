@@ -277,7 +277,6 @@ PdoHandleQueryProperty(
         }
         default:
         {
-            UNREACHABLE;
             status = STATUS_NOT_IMPLEMENTED;
             goto completeIrp;
         }
@@ -307,10 +306,10 @@ PdoHandleScsiPassthrough(
 
     portExt = lunExt->Common.LowerDevice->DeviceExtension;
 
-    return PassthruHandleScsiPassthru(DeviceObject,
-                                      Irp,
-                                      portExt->PortCapabilities.MaximumTransferLength,
-                                      portExt->PortCapabilities.MaximumPhysicalPages);
+    return SptiHandleScsiPassthru(DeviceObject,
+                                  Irp,
+                                  portExt->PortCapabilities.MaximumTransferLength,
+                                  portExt->PortCapabilities.MaximumPhysicalPages);
 }
 
 static
@@ -460,6 +459,7 @@ ScsiPortDeviceControl(
     PSCSI_PORT_COMMON_EXTENSION comExt = DeviceObject->DeviceExtension;
     PSCSI_PORT_DEVICE_EXTENSION portExt;
     PSCSI_PORT_LUN_EXTENSION lunExt;
+    ULONG IoControlCode;
     NTSTATUS status;
 
     DPRINT("ScsiPortDeviceControl()\n");
@@ -467,8 +467,9 @@ ScsiPortDeviceControl(
     Irp->IoStatus.Information = 0;
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
+    IoControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
 
-    switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+    switch (IoControlCode)
     {
         case IOCTL_STORAGE_QUERY_PROPERTY:
         {
@@ -587,7 +588,8 @@ ScsiPortDeviceControl(
         case IOCTL_SCSI_PASS_THROUGH:
         case IOCTL_SCSI_PASS_THROUGH_DIRECT:
         {
-            DPRINT("  IOCTL_SCSI_PASS_THROUGH\n");
+            DPRINT("  IOCTL_SCSI_PASS_THROUGH%s\n",
+                   IoControlCode == IOCTL_SCSI_PASS_THROUGH_DIRECT ? "_DIRECT" : "");
 
             if (comExt->IsFDO)
                 status = FdoHandleScsiPassthrough(DeviceObject, Irp);
@@ -605,7 +607,7 @@ ScsiPortDeviceControl(
             break;
 
         default:
-            DPRINT1("unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+            DPRINT1("unknown ioctl code: 0x%lX\n", IoControlCode);
             status = STATUS_NOT_SUPPORTED;
             break;
     }
