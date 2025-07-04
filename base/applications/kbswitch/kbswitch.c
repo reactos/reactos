@@ -971,7 +971,7 @@ KbSwitch_OnDestroy(HWND hwnd)
     DeleteHooks();
     DeleteTrayIcon(hwnd);
     DestroyPenIcons();
-    DeletePenNotifyIcon();
+    DeletePenNotifyIcon(hwnd);
     PostQuitMessage(0);
 }
 
