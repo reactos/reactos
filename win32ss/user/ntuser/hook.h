@@ -5,12 +5,13 @@
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
 #define ISITHOOKED(HookId) (((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks & HOOKID_TO_FLAG(HookId))
 
+BOOL FASTCALL UserIsItHooked(_In_ UINT HookId);
+
 /* NOTE: The following definition is not a real hook but
          a pseudo-id that will be used only for 
          injecting user api hook module to all processes.
          It is used internally in win32k */
 #define WH_APIHOOK WH_MAX + 1
-
 
 typedef struct tagEVENTHOOK
 {

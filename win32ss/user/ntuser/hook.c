@@ -25,6 +25,15 @@ PPROCESSINFO ppiUahServer;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+BOOL FASTCALL UserIsItHooked(_In_ UINT HookId)
+{
+    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    const UINT nFlag = HOOKID_TO_FLAG(HookId);
+    if (pti->fsHooks & nFlag) // Local hook
+        return TRUE;
+    return (pti->pDeskInfo && (pti->pDeskInfo->fsHooks & nFlag)); // Global hook
+}
+
 /* Calls ClientLoadLibrary in user32 in order to load or unload a module */
 BOOL
 IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
@@ -1139,13 +1148,15 @@ co_HOOK_CallHooks( INT HookId,
        goto Exit;
     }
 
-    if ( ISITHOOKED(HookId) )
+    /* Check for local thread hook */
+    if (pti->fsHooks & HOOKID_TO_FLAG(HookId))
     {
        TRACE("Local Hooker %d\n", HookId);
        Local = TRUE;
     }
 
-    if ( pdo->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId) )
+    /* Check for global hook */
+    if (pdo->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId))
     {
        TRACE("Global Hooker %d\n", HookId);
        Global = TRUE;
@@ -1163,8 +1174,8 @@ co_HOOK_CallHooks( INT HookId,
        pLastHead = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
        if (IsListEmpty(pLastHead))
        {
-          ERR("No Local Hook Found!\n");
-          goto Exit;
+          WARN("No Local Hook Found!\n");
+          goto SkipToGlobal;
        }
 
        Hook = CONTAINING_RECORD(pLastHead->Flink, HOOK, Chain);
@@ -1223,11 +1234,12 @@ co_HOOK_CallHooks( INT HookId,
        ObDereferenceObject(pti->pEThread);
     }
 
-    if ( Global )
+SkipToGlobal:
+    if (Global)
     {
        PTHREADINFO ptiHook;
        HHOOK *pHookHandles;
-       unsigned i;
+       UINT i;
 
        /* Keep hooks in array because hooks can be destroyed in user world */
        pHookHandles = IntGetGlobalHookHandles(pdo, HookId);
@@ -1272,7 +1284,8 @@ co_HOOK_CallHooks( INT HookId,
              }
              else if (ptiHook->ppi == pti->ppi)
              {
-                TRACE("\nGlobal Hook calling to another Thread! %d\n",HookId );
+                TRACE("\nGlobal Hook calling to another thread! %d\n",HookId );
+
                 ObReferenceObject(ptiHook->pEThread);
                 IntReferenceThreadInfo(ptiHook);
                 Result = co_IntCallHookProc( HookId,
@@ -1284,6 +1297,31 @@ co_HOOK_CallHooks( INT HookId,
                                              Hook->offPfn,
                                              Hook->Ansi,
                                             &Hook->ModuleName);
+                IntDereferenceThreadInfo(ptiHook);
+                ObDereferenceObject(ptiHook->pEThread);
+             }
+             else
+             {
+                TRACE("\nGlobal Hook calling to another process (pid: 0x%lx vs 0x%lx)! %d\n",
+                      HandleToUlong(PsGetProcessId(ptiHook->ppi->peProcess)),
+                      HandleToUlong(PsGetProcessId(pti->ppi->peProcess)),
+                      HookId);
+
+                ObReferenceObject(ptiHook->pEThread);
+                IntReferenceThreadInfo(ptiHook);
+                KeAttachProcess(&(ptiHook->ppi->peProcess->Pcb));
+
+                Result = co_IntCallHookProc( HookId,
+                                             Code,
+                                             wParam,
+                                             lParam,
+                                             Hook->Proc,
+                                             Hook->ihmod,
+                                             Hook->offPfn,
+                                             Hook->Ansi,
+                                            &Hook->ModuleName);
+
+                KeDetachProcess();
                 IntDereferenceThreadInfo(ptiHook);
                 ObDereferenceObject(ptiHook->pEThread);
              }

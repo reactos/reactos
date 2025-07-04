@@ -127,7 +127,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    LRESULT lResult = 0;
    BOOL Hook = FALSE;
 
-   if (ISITHOOKED(WH_CBT) || (pWnd->head.rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CBT)))
+   if (UserIsItHooked(WH_CBT))
    {
       Hook = TRUE;
       lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
