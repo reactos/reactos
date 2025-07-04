@@ -63,7 +63,7 @@ HKL       g_ahKLs[MAX_KLS] = { NULL };
 WORD      g_aiSysPenIcons[MAX_KLS] = { 0 };
 WORD      g_anToolTipAtoms[MAX_KLS] = { 0 };
 HICON     g_ahSysPenIcons[MAX_KLS] = { NULL };
-BOOL      g_bSysPenAdded = FALSE;
+BOOL      g_bSysPenNotifyAdded = FALSE;
 BYTE      g_anFlags[MAX_KLS] = { 0 };
 UINT      g_uTaskbarRestartMsg = 0;
 UINT      g_uShellHookMessage = 0;
@@ -545,13 +545,13 @@ DeletePenNotifyIcon(HWND hwnd)
     if (!Shell_NotifyIcon(NIM_DELETE, &nid))
         ERR("Shell_NotifyIcon(NIM_DELETE) failed\n");
     else
-        g_bSysPenAdded = FALSE;
+        g_bSysPenNotifyAdded = FALSE;
 }
 
 static VOID
 UpdatePenIcon(HWND hwnd, UINT iKL)
 {
-    BOOL bHadIcon = g_bSysPenAdded;
+    BOOL bHadIcon = g_bSysPenNotifyAdded;
     DeletePenIcon(hwnd, iKL);
 
     // Not Far-East?
@@ -599,7 +599,7 @@ UpdatePenIcon(HWND hwnd, UINT iKL)
     if (!Shell_NotifyIcon((bHadIcon ? NIM_MODIFY : NIM_ADD), &nid))
         ERR("Shell_NotifyIcon failed\n");
     else
-        g_bSysPenAdded = TRUE;
+        g_bSysPenNotifyAdded = TRUE;
 }
 
 static HICON
