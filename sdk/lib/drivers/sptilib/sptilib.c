@@ -76,17 +76,17 @@ SptiCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-__drv_allocatesMem(Mem)
 static
 CODE_SEG("PAGE")
-PPASSTHROUGH_IRP_CONTEXT
+NTSTATUS
 SptiCreateIrpContext(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP OriginalIrp,
     _In_ PVOID DataBuffer,
     _In_ ULONG DataBufferLength,
     _In_ BOOLEAN IsDirectMemoryAccess,
-    _In_ BOOLEAN IsBufferReadAccess)
+    _In_ BOOLEAN IsBufferReadAccess,
+    _Outptr_ __drv_allocatesMem(Mem) PPASSTHROUGH_IRP_CONTEXT* Result)
 {
     PPASSTHROUGH_IRP_CONTEXT IrpContext;
     PIRP Irp;
@@ -94,7 +94,7 @@ SptiCreateIrpContext(
 
     PAGED_CODE();
 
-    IrpContext = ExAllocatePoolZero(NonPagedPool, sizeof(*IrpContext), TAG_SPTI);
+    *Result = IrpContext = ExAllocatePoolZero(NonPagedPool, sizeof(*IrpContext), TAG_SPTI);
     if (!IrpContext)
         goto Failure;
 
@@ -135,12 +135,12 @@ SptiCreateIrpContext(
     IoStack->MajorFunction = IRP_MJ_SCSI;
     IoStack->Parameters.Scsi.Srb = &IrpContext->Srb;
 
-    return IrpContext;
+    return STATUS_SUCCESS;
 
 Failure:
     DPRINT1("Failed to create IRP\n");
 
-    return IrpContext;
+    return STATUS_INSUFFICIENT_RESOURCES;
 }
 
 static
@@ -841,17 +841,15 @@ SptiHandleAtaPassthru(
                TaskFile[6]);
     }
 
-    IrpContext = SptiCreateIrpContext(DeviceObject,
-                                      Irp,
-                                      DataBuffer,
-                                      Apt->DataTransferLength,
-                                      IsDirectMemoryAccess,
-                                      !!(Apt->AtaFlags & ATA_FLAGS_DATA_OUT));
-    if (!IrpContext)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+    Status = SptiCreateIrpContext(DeviceObject,
+                                  Irp,
+                                  DataBuffer,
+                                  Apt->DataTransferLength,
+                                  IsDirectMemoryAccess,
+                                  !!(Apt->AtaFlags & ATA_FLAGS_DATA_OUT),
+                                  &IrpContext);
+    if (!NT_SUCCESS(Status))
         goto Cleanup;
-    }
 
     Status = SptiTranslateAptToSrb(&IrpContext->Srb, Apt, TaskFile);
     if (!NT_SUCCESS(Status))
@@ -965,17 +963,15 @@ SptiHandleScsiPassthru(
            Cdb[8],
            Cdb[9]);
 
-    IrpContext = SptiCreateIrpContext(DeviceObject,
-                                      Irp,
-                                      DataBuffer,
-                                      Spt->DataTransferLength,
-                                      IsDirectMemoryAccess,
-                                      !!(Spt->DataIn == SCSI_IOCTL_DATA_OUT));
-    if (!IrpContext)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+    Status = SptiCreateIrpContext(DeviceObject,
+                                  Irp,
+                                  DataBuffer,
+                                  Spt->DataTransferLength,
+                                  IsDirectMemoryAccess,
+                                  !!(Spt->DataIn == SCSI_IOCTL_DATA_OUT),
+                                  &IrpContext);
+    if (!NT_SUCCESS(Status))
         goto Cleanup;
-    }
 
     Status = SptiTranslateSptToSrb(&IrpContext->Srb, Spt, Cdb);
     if (!NT_SUCCESS(Status))
