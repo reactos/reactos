@@ -18,6 +18,7 @@
 /* GLOBALS ********************************************************************/
 
 KEVENT MmZeroingPageEvent;
+PKTHREAD MiZeroPageThread;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -38,6 +39,9 @@ MmZeroPageThread(VOID)
     PKTHREAD Thread = KeGetCurrentThread();
     PVOID StartAddress, EndAddress;
     PVOID WaitObjects[2];
+
+    ASSERT(MiZeroPageThread == NULL);
+    MiZeroPageThread = Thread;
 
     /* Get the discardable sections to free them */
     MiFindInitializationCode(&StartAddress, &EndAddress);
