@@ -541,6 +541,9 @@ LoadDefaultPenIcon(PCWSTR szImeFile, HKL hKL)
 static VOID
 DeletePenNotifyIcon(HWND hwnd)
 {
+    if (!g_bSysPenNotifyAdded)
+        return;
+
     NOTIFYICONDATA nid = { sizeof(nid), hwnd, NOTIFY_ICON_ID_SYSTEM_PEN };
     if (!Shell_NotifyIcon(NIM_DELETE, &nid))
         ERR("Shell_NotifyIcon(NIM_DELETE) failed\n");
@@ -551,14 +554,12 @@ DeletePenNotifyIcon(HWND hwnd)
 static VOID
 UpdatePenIcon(HWND hwnd, UINT iKL)
 {
-    BOOL bHadIcon = g_bSysPenNotifyAdded;
     DeletePenIcon(hwnd, iKL);
 
     // Not Far-East?
     if (!(g_anFlags[iKL] & LAYOUTF_FAR_EAST))
     {
-        if (bHadIcon)
-            DeletePenNotifyIcon(hwnd);
+        DeletePenNotifyIcon(hwnd);
         return;
     }
 
@@ -567,8 +568,7 @@ UpdatePenIcon(HWND hwnd, UINT iKL)
     GetKLIDFromHKL(g_ahKLs[iKL], szKLID, _countof(szKLID));
     if (!GetImeFile(szImeFile, _countof(szImeFile), szKLID))
     {
-        if (bHadIcon)
-            DeletePenNotifyIcon(hwnd);
+        DeletePenNotifyIcon(hwnd);
         return;
     }
 
@@ -580,8 +580,7 @@ UpdatePenIcon(HWND hwnd, UINT iKL)
         g_ahSysPenIcons[iKL] = LoadDefaultPenIcon(szImeFile, g_ahKLs[iKL]);
     if (!g_ahSysPenIcons[iKL])
     {
-        if (bHadIcon)
-            DeletePenNotifyIcon(hwnd);
+        DeletePenNotifyIcon(hwnd);
         return;
     }
 
@@ -596,7 +595,7 @@ UpdatePenIcon(HWND hwnd, UINT iKL)
     else
         ImmGetDescription(g_ahKLs[iKL], nid.szTip, _countof(nid.szTip));
 
-    if (!Shell_NotifyIcon((bHadIcon ? NIM_MODIFY : NIM_ADD), &nid))
+    if (!Shell_NotifyIcon((g_bSysPenNotifyAdded ? NIM_MODIFY : NIM_ADD), &nid))
         ERR("Shell_NotifyIcon failed\n");
     else
         g_bSysPenNotifyAdded = TRUE;
@@ -972,6 +971,7 @@ KbSwitch_OnDestroy(HWND hwnd)
     DeleteHooks();
     DeleteTrayIcon(hwnd);
     DestroyPenIcons();
+    DeletePenNotifyIcon();
     PostQuitMessage(0);
 }
 
