@@ -468,3 +468,4 @@
 756 stub -noname DeleteFileThumbnail
 757 stdcall -noname -version=0x600+ DisplayNameOfW(ptr ptr long ptr long)
 866 stdcall -noname -version=0x600+ SHExtCoCreateInstance(wstr ptr ptr ptr ptr)
+@ stdcall -version=0x600+ SHGetKnownFolderPath(ptr long ptr ptr)
