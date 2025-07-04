@@ -1444,7 +1444,7 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_INPUTLANGCHANGEREQUEST:
-            TRACE("WM_INPUTLANGCHANGEREQUEST\n");
+            TRACE("WM_INPUTLANGCHANGEREQUEST(%p, %p)\n", wParam, lParam);
             SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED, TIMER_LANG_CHANGED_DELAY, NULL);
             break;
 
