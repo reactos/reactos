@@ -13,6 +13,7 @@
 #include <imm.h>
 #include <immdev.h>
 #include <imm32_undoc.h>
+#include <assert.h>
 #include "imemenu.h"
 
 #include <wine/debug.h>
@@ -62,6 +63,7 @@ HKL       g_ahKLs[MAX_KLS] = { NULL };
 WORD      g_aiSysPenIcons[MAX_KLS] = { 0 };
 WORD      g_anToolTipAtoms[MAX_KLS] = { 0 };
 HICON     g_ahSysPenIcons[MAX_KLS] = { NULL };
+BOOL      g_bSysPenAdded = FALSE;
 BYTE      g_anFlags[MAX_KLS] = { 0 };
 UINT      g_uTaskbarRestartMsg = 0;
 UINT      g_uShellHookMessage = 0;
@@ -540,13 +542,16 @@ static VOID
 DeletePenNotifyIcon(HWND hwnd)
 {
     NOTIFYICONDATA nid = { sizeof(nid), hwnd, NOTIFY_ICON_ID_SYSTEM_PEN };
-    Shell_NotifyIcon(NIM_DELETE, &nid);
+    if (!Shell_NotifyIcon(NIM_DELETE, &nid))
+        ERR("Shell_NotifyIcon(NIM_DELETE) failed\n");
+    else
+        g_bSysPenAdded = FALSE;
 }
 
 static VOID
 UpdatePenIcon(HWND hwnd, UINT iKL)
 {
-    BOOL bHadIcon = (g_ahSysPenIcons[iKL] != NULL);
+    BOOL bHadIcon = g_bSysPenAdded;
     DeletePenIcon(hwnd, iKL);
 
     // Not Far-East?
@@ -568,6 +573,7 @@ UpdatePenIcon(HWND hwnd, UINT iKL)
     }
 
     // Load pen icon
+    assert(!g_ahSysPenIcons[iKL]);
     if (g_anFlags[iKL] & LAYOUTF_IME_ICON)
         g_ahSysPenIcons[iKL] = FakeExtractIcon(szImeFile, g_aiSysPenIcons[iKL]);
     if (!g_ahSysPenIcons[iKL])
@@ -590,7 +596,10 @@ UpdatePenIcon(HWND hwnd, UINT iKL)
     else
         ImmGetDescription(g_ahKLs[iKL], nid.szTip, _countof(nid.szTip));
 
-    Shell_NotifyIcon((bHadIcon ? NIM_MODIFY : NIM_ADD), &nid);
+    if (!Shell_NotifyIcon((bHadIcon ? NIM_MODIFY : NIM_ADD), &nid))
+        ERR("Shell_NotifyIcon failed\n");
+    else
+        g_bSysPenAdded = TRUE;
 }
 
 static HICON
@@ -707,7 +716,8 @@ AddTrayIcon(HWND hwnd)
     tnid.hIcon = CreateTrayIcon(szKLID, szImeFile);
     StringCchCopy(tnid.szTip, _countof(tnid.szTip), szName);
 
-    Shell_NotifyIcon(NIM_ADD, &tnid);
+    if (!Shell_NotifyIcon(NIM_ADD, &tnid))
+        ERR("Shell_NotifyIcon(NIM_ADD) failed\n");
 
     if (g_hTrayIcon)
         DestroyIcon(g_hTrayIcon);
@@ -718,7 +728,8 @@ static VOID
 DeleteTrayIcon(HWND hwnd)
 {
     NOTIFYICONDATA tnid = { sizeof(tnid), hwnd, NOTIFY_ICON_ID_LANGUAGE };
-    Shell_NotifyIcon(NIM_DELETE, &tnid);
+    if (!Shell_NotifyIcon(NIM_DELETE, &tnid))
+        ERR("Shell_NotifyIcon(NIM_DELETE) failed\n");
 
     if (g_hTrayIcon)
     {
@@ -906,10 +917,11 @@ UpdateLanguageDisplay(HWND hwnd, HKL hKL)
 UINT
 UpdateLanguageDisplayCurrent(HWND hwnd, HWND hwndFore)
 {
+    UpdateLayoutList(NULL);
     DWORD dwThreadID = GetWindowThreadProcessId(GetTargetWindow(hwndFore), NULL);
     HKL hKL = GetKeyboardLayout(dwThreadID);
     UpdateLanguageDisplay(hwnd, hKL);
-
+    UpdatePenIcon(hwnd, g_iKL);
     return 0;
 }
 
@@ -1432,6 +1444,8 @@ WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_INPUTLANGCHANGEREQUEST:
+            TRACE("WM_INPUTLANGCHANGEREQUEST\n");
+            SetTimer(hwnd, TIMER_ID_LANG_CHANGED_DELAYED, TIMER_LANG_CHANGED_DELAY, NULL);
             break;
 
         default:
