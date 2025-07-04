@@ -31,7 +31,7 @@ _At_(IrpContext->Srb.SenseInfoBuffer, __drv_freesMem(Mem))
 static
 CODE_SEG("PAGE")
 VOID
-PassthruFreeIrpContext(
+SptiFreeIrpContext(
     _In_opt_ __drv_freesMem(Mem) PPASSTHROUGH_IRP_CONTEXT IrpContext)
 {
     PIRP Irp;
@@ -59,11 +59,11 @@ PassthruFreeIrpContext(
     ExFreePoolWithTag(IrpContext, TAG_SPTI);
 }
 
-static IO_COMPLETION_ROUTINE PassthruCompletion;
+static IO_COMPLETION_ROUTINE SptiCompletion;
 static
 NTSTATUS
 NTAPI
-PassthruCompletion(
+SptiCompletion(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
     _In_reads_opt_(_Inexpressible_("varies")) PVOID Context)
@@ -76,17 +76,17 @@ PassthruCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+__drv_allocatesMem(Mem)
 static
 CODE_SEG("PAGE")
-NTSTATUS
-PassthruCreateIrpContext(
+PPASSTHROUGH_IRP_CONTEXT
+SptiCreateIrpContext(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP OriginalIrp,
     _In_ PVOID DataBuffer,
     _In_ ULONG DataBufferLength,
     _In_ BOOLEAN IsDirectMemoryAccess,
-    _In_ BOOLEAN IsBufferReadAccess,
-    _Outptr_ __drv_allocatesMem(Mem) PPASSTHROUGH_IRP_CONTEXT* Result)
+    _In_ BOOLEAN IsBufferReadAccess)
 {
     PPASSTHROUGH_IRP_CONTEXT IrpContext;
     PIRP Irp;
@@ -94,7 +94,7 @@ PassthruCreateIrpContext(
 
     PAGED_CODE();
 
-    *Result = IrpContext = ExAllocatePoolZero(NonPagedPool, sizeof(*IrpContext), TAG_SPTI);
+    IrpContext = ExAllocatePoolZero(NonPagedPool, sizeof(*IrpContext), TAG_SPTI);
     if (!IrpContext)
         goto Failure;
 
@@ -128,18 +128,38 @@ PassthruCreateIrpContext(
     IrpContext->Srb.OriginalRequest = Irp;
     IrpContext->Srb.DataBuffer = DataBuffer;
     IrpContext->Srb.DataTransferLength = DataBufferLength;
+    IrpContext->Srb.SrbFlags = SRB_FLAGS_NO_QUEUE_FREEZE;
 
     IoStack = IoGetNextIrpStackLocation(Irp);
     IoStack->MinorFunction = IRP_MN_SCSI_CLASS;
     IoStack->MajorFunction = IRP_MJ_SCSI;
     IoStack->Parameters.Scsi.Srb = &IrpContext->Srb;
 
-    return STATUS_SUCCESS;
+    return IrpContext;
 
 Failure:
     DPRINT1("Failed to create IRP\n");
 
-    return STATUS_INSUFFICIENT_RESOURCES;
+    return IrpContext;
+}
+
+static
+CODE_SEG("PAGE")
+VOID
+SptiInitializeOutputBuffer(
+    _In_ PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ULONG OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+    ULONG InputBufferLength = IoStack->Parameters.DeviceIoControl.InputBufferLength;
+
+    PAGED_CODE();
+
+    if (OutputBufferLength > InputBufferLength)
+    {
+        ULONG_PTR BufferStart = (ULONG_PTR)Irp->AssociatedIrp.SystemBuffer + InputBufferLength;
+        RtlZeroMemory((PVOID)BufferStart, OutputBufferLength - InputBufferLength);
+    }
 }
 
 static
@@ -149,26 +169,29 @@ PassthroughCallDriver(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PPASSTHROUGH_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp = IrpContext->Irp;
     KEVENT Event;
     NTSTATUS Status;
 
     PAGED_CODE();
 
+    SptiInitializeOutputBuffer(Irp);
+
     // TODO: Send the IRP in an asynchronous way (do not block the user app thread)
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    IoSetCompletionRoutine(IrpContext->Irp,
-                           PassthruCompletion,
+    IoSetCompletionRoutine(Irp,
+                           SptiCompletion,
                            &Event,
                            TRUE,
                            TRUE,
                            TRUE);
 
-    Status = IoCallDriver(DeviceObject, IrpContext->Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IrpContext->Irp->IoStatus.Status;
+        Status = Irp->IoStatus.Status;
     }
 
     return Status;
@@ -178,7 +201,7 @@ _At_(Srb->SenseInfoBuffer, __drv_allocatesMem(Mem))
 static
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruSrbAppendSenseBuffer(
+SptiSrbAppendSenseBuffer(
     _In_ PSCSI_REQUEST_BLOCK Srb,
     _In_ ULONG BufferSize)
 {
@@ -190,12 +213,13 @@ PassthruSrbAppendSenseBuffer(
         return STATUS_SUCCESS;
     }
 
-    Srb->SenseInfoBufferLength = BufferSize;
     Srb->SenseInfoBuffer = ExAllocatePoolUninitialized(NonPagedPoolCacheAligned,
                                                        BufferSize,
                                                        TAG_SPTI);
     if (!Srb->SenseInfoBuffer)
         return STATUS_INSUFFICIENT_RESOURCES;
+
+    Srb->SenseInfoBufferLength = BufferSize;
 
     return STATUS_SUCCESS;
 }
@@ -203,27 +227,7 @@ PassthruSrbAppendSenseBuffer(
 static
 CODE_SEG("PAGE")
 VOID
-PassthruInitializeOutputBuffer(
-    _In_ PIRP Irp,
-    _In_ PIO_STACK_LOCATION IoStack)
-{
-    ULONG OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-    ULONG InputBufferLength = IoStack->Parameters.DeviceIoControl.InputBufferLength;
-
-    PAGED_CODE();
-
-    if (OutputBufferLength > InputBufferLength)
-    {
-        ULONG_PTR BufferStart = (ULONG_PTR)Irp->AssociatedIrp.SystemBuffer + InputBufferLength;
-
-        RtlZeroMemory((PVOID)BufferStart, OutputBufferLength - InputBufferLength);
-    }
-}
-
-static
-CODE_SEG("PAGE")
-VOID
-PassthruTranslateTaskFileToCdb(
+SptiTranslateTaskFileToCdb(
     _Out_ CDB* __restrict Cdb,
     _In_ UCHAR* __restrict TaskFile,
     _In_ USHORT AtaFlags)
@@ -288,7 +292,7 @@ PassthruTranslateTaskFileToCdb(
 static
 CODE_SEG("PAGE")
 BOOLEAN
-PassthruTranslateAtaStatusReturnToTaskFile(
+SptiTranslateAtaStatusReturnToTaskFile(
     _In_ SCSI_REQUEST_BLOCK* __restrict Srb,
     _In_ DESCRIPTOR_SENSE_DATA* __restrict SenseData,
     _Out_ UCHAR* __restrict TaskFile)
@@ -345,7 +349,7 @@ PassthruTranslateAtaStatusReturnToTaskFile(
 static
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruTranslateAptToSrb(
+SptiTranslateAptToSrb(
     _Out_ SCSI_REQUEST_BLOCK* __restrict Srb,
     _In_ ATA_PASS_THROUGH_EX* __restrict Apt,
     _In_ UCHAR* __restrict TaskFile)
@@ -354,9 +358,9 @@ PassthruTranslateAptToSrb(
 
     PAGED_CODE();
 
-    Status = PassthruSrbAppendSenseBuffer(Srb,
-                                          FIELD_OFFSET(DESCRIPTOR_SENSE_DATA, DescriptorBuffer) +
-                                          sizeof(SCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN));
+    Status = SptiSrbAppendSenseBuffer(Srb,
+                                      FIELD_OFFSET(DESCRIPTOR_SENSE_DATA, DescriptorBuffer) +
+                                      sizeof(SCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN));
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -367,20 +371,19 @@ PassthruTranslateAptToSrb(
     Srb->TargetId = Apt->TargetId;
     Srb->Lun = Apt->Lun;
 
-    Srb->SrbFlags |= SRB_FLAGS_NO_QUEUE_FREEZE;
     if (Apt->AtaFlags & ATA_FLAGS_DATA_IN)
         Srb->SrbFlags |= SRB_FLAGS_DATA_IN;
     if (Apt->AtaFlags & ATA_FLAGS_DATA_OUT)
         Srb->SrbFlags |= SRB_FLAGS_DATA_OUT;
 
-    PassthruTranslateTaskFileToCdb((PCDB)Srb->Cdb, TaskFile, Apt->AtaFlags);
+    SptiTranslateTaskFileToCdb((PCDB)Srb->Cdb, TaskFile, Apt->AtaFlags);
     return STATUS_SUCCESS;
 }
 
 static
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruInitializeApt(
+SptiInitializeApt(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IoStack,
@@ -525,15 +528,13 @@ PassthruInitializeApt(
         }
     }
 
-    PassthruInitializeOutputBuffer(Irp, IoStack);
-
     return STATUS_SUCCESS;
 }
 
 static
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruTranslateSptToSrb(
+SptiTranslateSptToSrb(
     _Out_ SCSI_REQUEST_BLOCK* __restrict Srb,
     _In_ SCSI_PASS_THROUGH* __restrict Spt,
     _In_ UCHAR* __restrict Cdb)
@@ -542,7 +543,7 @@ PassthruTranslateSptToSrb(
 
     PAGED_CODE();
 
-    Status = PassthruSrbAppendSenseBuffer(Srb, Spt->SenseInfoLength);
+    Status = SptiSrbAppendSenseBuffer(Srb, Spt->SenseInfoLength);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -553,7 +554,6 @@ PassthruTranslateSptToSrb(
     Srb->TargetId = Spt->TargetId;
     Srb->Lun = Spt->Lun;
 
-    Srb->SrbFlags |= SRB_FLAGS_NO_QUEUE_FREEZE;
     if (Spt->DataTransferLength != 0)
     {
         switch (Spt->DataIn)
@@ -578,7 +578,7 @@ PassthruTranslateSptToSrb(
 static
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruInitializeSpt(
+SptiInitializeSpt(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IoStack,
@@ -692,7 +692,7 @@ PassthruInitializeSpt(
 
     if (Spt->CdbLength > RTL_FIELD_SIZE(SCSI_REQUEST_BLOCK, Cdb))
     {
-        DPRINT1("Invalide CDB size %u\n", Spt->CdbLength);
+        DPRINT1("Invalid CDB size %u\n", Spt->CdbLength);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -773,8 +773,6 @@ PassthruInitializeSpt(
         }
     }
 
-    PassthruInitializeOutputBuffer(Irp, IoStack);
-
     return STATUS_SUCCESS;
 }
 
@@ -782,7 +780,7 @@ PassthruInitializeSpt(
 
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruHandleAtaPassthru(
+SptiHandleAtaPassthru(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp,
     _In_ ULONG MaximumTransferLength,
@@ -807,16 +805,16 @@ PassthruHandleAtaPassthru(
 
     IsDirectMemoryAccess = (GET_IOCTL(IoStack) == IOCTL_ATA_PASS_THROUGH_DIRECT);
 
-    Status = PassthruInitializeApt(DeviceObject,
-                                   Irp,
-                                   IoStack,
-                                   IsDirectMemoryAccess,
-                                   MaximumTransferLength,
-                                   MaximumPhysicalPages,
-                                   Apt,
-                                   &AptData,
-                                   &TaskFile,
-                                   &DataBuffer);
+    Status = SptiInitializeApt(DeviceObject,
+                               Irp,
+                               IoStack,
+                               IsDirectMemoryAccess,
+                               MaximumTransferLength,
+                               MaximumPhysicalPages,
+                               Apt,
+                               &AptData,
+                               &TaskFile,
+                               &DataBuffer);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -843,17 +841,19 @@ PassthruHandleAtaPassthru(
                TaskFile[6]);
     }
 
-    Status = PassthruCreateIrpContext(DeviceObject,
+    IrpContext = SptiCreateIrpContext(DeviceObject,
                                       Irp,
                                       DataBuffer,
                                       Apt->DataTransferLength,
                                       IsDirectMemoryAccess,
-                                      !!(Apt->AtaFlags & ATA_FLAGS_DATA_OUT),
-                                      &IrpContext);
-    if (!NT_SUCCESS(Status))
+                                      !!(Apt->AtaFlags & ATA_FLAGS_DATA_OUT));
+    if (!IrpContext)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Cleanup;
+    }
 
-    Status = PassthruTranslateAptToSrb(&IrpContext->Srb, Apt, TaskFile);
+    Status = SptiTranslateAptToSrb(&IrpContext->Srb, Apt, TaskFile);
     if (!NT_SUCCESS(Status))
         goto Cleanup;
 
@@ -861,7 +861,7 @@ PassthruHandleAtaPassthru(
 
     Srb = &IrpContext->Srb;
 
-    if (PassthruTranslateAtaStatusReturnToTaskFile(Srb, Srb->SenseInfoBuffer, TaskFile))
+    if (SptiTranslateAtaStatusReturnToTaskFile(Srb, Srb->SenseInfoBuffer, TaskFile))
         Status = STATUS_SUCCESS;
 
     /* Update the output buffer size */
@@ -903,13 +903,13 @@ PassthruHandleAtaPassthru(
     }
 
 Cleanup:
-    PassthruFreeIrpContext(IrpContext);
+    SptiFreeIrpContext(IrpContext);
     return Status;
 }
 
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruHandleScsiPassthru(
+SptiHandleScsiPassthru(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp,
     _In_ ULONG MaximumTransferLength,
@@ -935,17 +935,17 @@ PassthruHandleScsiPassthru(
 
     IsDirectMemoryAccess = (GET_IOCTL(IoStack) == IOCTL_SCSI_PASS_THROUGH_DIRECT);
 
-    Status = PassthruInitializeSpt(DeviceObject,
-                                   Irp,
-                                   IoStack,
-                                   IsDirectMemoryAccess,
-                                   MaximumTransferLength,
-                                   MaximumPhysicalPages,
-                                   Spt,
-                                   &SptData,
-                                   &SenseInfoOffset,
-                                   &Cdb,
-                                   &DataBuffer);
+    Status = SptiInitializeSpt(DeviceObject,
+                               Irp,
+                               IoStack,
+                               IsDirectMemoryAccess,
+                               MaximumTransferLength,
+                               MaximumPhysicalPages,
+                               Spt,
+                               &SptData,
+                               &SenseInfoOffset,
+                               &Cdb,
+                               &DataBuffer);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -965,17 +965,19 @@ PassthruHandleScsiPassthru(
            Cdb[8],
            Cdb[9]);
 
-    Status = PassthruCreateIrpContext(DeviceObject,
+    IrpContext = SptiCreateIrpContext(DeviceObject,
                                       Irp,
                                       DataBuffer,
                                       Spt->DataTransferLength,
                                       IsDirectMemoryAccess,
-                                      !!(Spt->DataIn == SCSI_IOCTL_DATA_OUT),
-                                      &IrpContext);
-    if (!NT_SUCCESS(Status))
+                                      !!(Spt->DataIn == SCSI_IOCTL_DATA_OUT));
+    if (!IrpContext)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Cleanup;
+    }
 
-    Status = PassthruTranslateSptToSrb(&IrpContext->Srb, Spt, Cdb);
+    Status = SptiTranslateSptToSrb(&IrpContext->Srb, Spt, Cdb);
     if (!NT_SUCCESS(Status))
         goto Cleanup;
 
@@ -1037,6 +1039,6 @@ PassthruHandleScsiPassthru(
            (ULONG)Irp->IoStatus.Information);
 
 Cleanup:
-    PassthruFreeIrpContext(IrpContext);
+    SptiFreeIrpContext(IrpContext);
     return Status;
 }

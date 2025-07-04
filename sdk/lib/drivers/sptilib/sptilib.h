@@ -52,7 +52,7 @@
  */
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruHandleAtaPassthru(
+SptiHandleAtaPassthru(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp,
     _In_ ULONG MaximumTransferLength,
@@ -78,7 +78,7 @@ PassthruHandleAtaPassthru(
  */
 CODE_SEG("PAGE")
 NTSTATUS
-PassthruHandleScsiPassthru(
+SptiHandleScsiPassthru(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp,
     _In_ ULONG MaximumTransferLength,
