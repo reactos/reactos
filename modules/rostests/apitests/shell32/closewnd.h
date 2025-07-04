@@ -61,12 +61,14 @@ static inline VOID GetWindowList(PWINDOW_LIST pList)
 static inline VOID GetWindowListForClose(PWINDOW_LIST pList)
 {
     WINDOW_LIST list;
+    pList->m_phWnds = NULL;
+    pList->m_chWnds = 0;
     for (SIZE_T tries = 5, count; tries--;)
     {
         if (tries)
             FreeWindowList(pList);
         GetWindowList(pList);
-        Sleep(500);
+        Sleep(250);
         GetWindowList(&list);
         count = list.m_chWnds;
         FreeWindowList(&list);
@@ -85,7 +87,7 @@ static inline HWND FindInWindowList(const WINDOW_LIST &list, HWND hWnd)
     return NULL;
 }
 
-static inline BOOL SendAltF4()
+static inline BOOL SendAltF4Input()
 {
     INPUT inputs[4];
     ZeroMemory(&inputs, sizeof(inputs));
@@ -105,16 +107,14 @@ static inline VOID CloseNewWindows(PWINDOW_LIST pExisting, PWINDOW_LIST pNew)
             continue;
 
         SwitchToThisWindow(hWnd, TRUE);
-        SetForegroundWindow(hWnd);
         WaitForForegroundWindow(hWnd); // SetForegroundWindow may take some time
         DWORD_PTR result;
         if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG, 3000, &result) &&
             !PostMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
         {
-
             if (WaitForForegroundWindow(hWnd)) // We can't fake keyboard input if the target is not foreground
             {
-                SendAltF4();
+                SendAltF4Input();
                 WaitForWindow(hWnd, IsWindowVisible, 1); // Closing a window may take some time
             }
 
@@ -129,7 +129,7 @@ static inline VOID CloseNewWindows(PWINDOW_LIST pExisting, PWINDOW_LIST pNew)
 }
 
 #ifdef __cplusplus
-void CloseNewWindows(PWINDOW_LIST InitialList)
+static inline VOID CloseNewWindows(PWINDOW_LIST InitialList)
 {
     WINDOW_LIST newwindows;
     GetWindowListForClose(&newwindows);
