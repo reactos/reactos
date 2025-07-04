@@ -71,8 +71,9 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         if (KeFeatureBits & KF_XSAVES)
         {
             /* Set bit 63 in XCOMP_BV to mark the area as compacted.
-               XRSTORS requires this and will #GP otherwise. */
-            XSaveArea->Header.CompactionMask |= 0x8000000000000000ULL;
+               XRSTORS requires this and will #GP otherwise.
+               Also mark legacy FP as compacted. */
+            XSaveArea->Header.CompactionMask |= 0x8000000000000001ULL;
         }
     }
 
