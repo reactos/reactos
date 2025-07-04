@@ -40,7 +40,7 @@ START_TEST(isuncpath)
     DO_TEST(FALSE, L"path1");
     DO_TEST(FALSE, L"c:\\path1");
 
-    if ((GetVersion() & 0xFF) >= 0x06)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
         DO_TEST(FALSE, L"\\\\?\\c:\\path1");
     else
         DO_TEST(TRUE, L"\\\\?\\c:\\path1");
@@ -55,7 +55,7 @@ START_TEST(isuncpath)
     DO_TEST(FALSE, (wchar_t*)NULL);
     DO_TEST(FALSE, L" ");
 
-    if ((GetVersion() & 0xFF) >= 0x06)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
         DO_TEST(FALSE, L"\\\\?\\");
     else
         DO_TEST(TRUE, L"\\\\?\\");

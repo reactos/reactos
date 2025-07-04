@@ -39,7 +39,7 @@ START_TEST(isuncpathserver)
     DO_TEST(FALSE, L"");
     DO_TEST(FALSE, L" ");
 
-    if ((GetVersion() & 0xFF) >= 0x06)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
         DO_TEST(FALSE, L"\\\\?");
     else
         DO_TEST(TRUE, L"\\\\?");
