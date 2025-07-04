@@ -1309,7 +1309,6 @@ SkipToGlobal:
 
                 ObReferenceObject(ptiHook->pEThread);
                 IntReferenceThreadInfo(ptiHook);
-                KeAttachProcess(&(ptiHook->ppi->peProcess->Pcb));
 
                 Result = co_IntCallHookProc( HookId,
                                              Code,
@@ -1321,7 +1320,6 @@ SkipToGlobal:
                                              Hook->Ansi,
                                             &Hook->ModuleName);
 
-                KeDetachProcess();
                 IntDereferenceThreadInfo(ptiHook);
                 ObDereferenceObject(ptiHook->pEThread);
              }
