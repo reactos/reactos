@@ -26,11 +26,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
-static inline bool cicIsNullPtr(LPCVOID ptr)
-{
-    return !ptr;
-}
-
 ////////////////////////////////////////////////////////////////////////////
 
 typedef struct tagCompartmentValue
