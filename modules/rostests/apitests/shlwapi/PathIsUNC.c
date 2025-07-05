@@ -40,8 +40,10 @@ START_TEST(isuncpath)
     DO_TEST(FALSE, L"path1");
     DO_TEST(FALSE, L"c:\\path1");
 
-    /* MSDN says FALSE but the test shows TRUE on Windows 2003, but returns FALSE on Windows 7 */
-    DO_TEST(TRUE, L"\\\\?\\c:\\path1");
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        DO_TEST(FALSE, L"\\\\?\\c:\\path1");
+    else
+        DO_TEST(TRUE, L"\\\\?\\c:\\path1");
 
     DO_TEST(TRUE, L"\\\\path1\\");
     DO_TEST(FALSE, L"//");
@@ -53,6 +55,8 @@ START_TEST(isuncpath)
     DO_TEST(FALSE, (wchar_t*)NULL);
     DO_TEST(FALSE, L" ");
 
-    /* The test shows TRUE on Windows 2003, but returns FALSE on Windows 7 */
-    DO_TEST(TRUE, L"\\\\?\\");
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        DO_TEST(FALSE, L"\\\\?\\");
+    else
+        DO_TEST(TRUE, L"\\\\?\\");
 }
