@@ -21,7 +21,7 @@ list(APPEND SOURCE
 add_library(msvcrt20 MODULE ${SOURCE})
 set_module_type(msvcrt20 win32dll ENTRYPOINT DllMain 12)
 add_dependencies(msvcrt20 psdk)
-target_link_libraries(msvcrt20 crt wine ${PSEH_LIB})
+target_link_libraries(msvcrt20 crt vcruntime wine ${PSEH_LIB})
 
 if(MSVC)
     # export of deleting destructor "name"
