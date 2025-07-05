@@ -42,6 +42,16 @@ enum {
 };
 DWORD SH32_InternalRestricted(DWORD rest);
 
+/* COM */
+HRESULT WINAPI
+SH32_ExtCoCreateInstance(
+    _In_opt_ LPCWSTR aclsid,
+    _In_opt_ const CLSID *clsid,
+    _In_opt_ LPUNKNOWN pUnkOuter,
+    _In_ DWORD dwClsCtx,
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv);
+
 /* Iconcache */
 #define INVALID_INDEX -1
 BOOL SIC_Initialize(void);

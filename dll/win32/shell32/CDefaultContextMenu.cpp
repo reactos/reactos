@@ -1570,12 +1570,11 @@ CDefaultContextMenu::InvokeRegVerb(
             hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
         if (SUCCEEDED(hr))
         {
+            CScopedSetObjectWithSite site(pDT, static_cast<IContextMenu*>(this));
             CComPtr<IPropertyBag> pPB;
             SHCreatePropertyBagOnRegKey(VerbKey, NULL, STGM_READ, IID_PPV_ARG(IPropertyBag, &pPB));
-            IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
             IUnknown_InitializeCommand(pDT, pEntry->Verb.GetString(), pPB);
             hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
-            IUnknown_SetSite(pDT, NULL);
             return hr;
         }
     }

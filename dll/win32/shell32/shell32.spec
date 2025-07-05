@@ -460,7 +460,7 @@
 748 stdcall -noname SHLimitInputCombo(ptr ptr)
 749 stdcall -noname -version=0x501-0x502 SHGetShellStyleHInstance()
 750 stdcall -noname SHGetAttributesFromDataObject(ptr long ptr ptr)
-751 stub -noname SHSimulateDropOnClsid
+751 stdcall -noname SHSimulateDropOnClsid(ptr ptr ptr)
 752 stdcall -noname SHGetComputerDisplayNameW(wstr long ptr long)
 753 stdcall -noname CheckStagingArea()
 754 stub -noname SHLimitInputEditWithFlags
@@ -468,3 +468,4 @@
 756 stub -noname DeleteFileThumbnail
 757 stdcall -noname -version=0x600+ DisplayNameOfW(ptr ptr long ptr long)
 866 stdcall -noname -version=0x600+ SHExtCoCreateInstance(wstr ptr ptr ptr ptr)
+887 stub -noname -version=0x601+ SHExtCoCreateInstanceCheckCategory
