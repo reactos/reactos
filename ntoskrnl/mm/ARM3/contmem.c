@@ -137,6 +137,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             // This PFN is now a used page, set it up
                             //
                             MI_SET_USAGE(MI_USAGE_CONTINOUS_ALLOCATION);
+                            MI_SET_PROCESS(NULL);
                             MI_SET_PROCESS2("Kernel Driver");
                             MiUnlinkFreeOrZeroedPage(Pfn1);
                             Pfn1->u3.e2.ReferenceCount = 1;
