@@ -885,7 +885,7 @@ NtUserNotifyIMEStatus(
         UserSetImeConversionKeyState(pti, (fOpen ? dwConversion : IME_CMODE_ALPHANUMERIC));
     }
 
-    if (ISITHOOKED(WH_SHELL))
+    if (UserIsItHooked(WH_SHELL))
     {
         hKL = (pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL);
         co_HOOK_CallHooks(WH_SHELL, HSHELL_LANGUAGE, (WPARAM)hwnd, (LPARAM)hKL);
