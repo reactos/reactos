@@ -9,6 +9,7 @@
 
 #include <win32k.h>
 #include <jpnvkeys.h>
+#include <unaligned.h>
 
 DBG_DEFAULT_CHANNEL(UserMisc);
 
@@ -39,6 +40,13 @@ typedef struct tagIMEHOTKEY
 
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcidSystem = 0;
+
+static inline PIMEUI FASTCALL IntGetImeUIFromWnd(_In_ PWND pWnd)
+{
+    ASSERT(pWnd->cbwndExtra >= sizeof(PIMEUI));
+    return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)((const BYTE *)pWnd +
+                                                             sizeof(WND) + IMEWND_PIMEUI_INDEX));
+}
 
 static DWORD FASTCALL
 IntGetImeCompatFlags(_In_opt_ PTHREADINFO pti)
@@ -2089,10 +2097,11 @@ co_IntCreateDefaultImeWindow(
     pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, (PLARGE_STRING)&WindowName, NULL, WINVER);
     if (pImeWnd)
     {
-        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        pimeui = IntGetImeUIFromWnd(pImeWnd);
+        ASSERT(pimeui);
         _SEH2_TRY
         {
-            ProbeForWrite(pimeui, sizeof(IMEUI), 1);
+            ProbeForWrite(pimeui, sizeof(*pimeui), 1);
             pimeui->fDefault = TRUE;
             if (IS_WND_CHILD(pwndTarget) && pwndTarget->spwndParent->head.pti != pti)
                 pimeui->fChildThreadDef = TRUE;
@@ -2118,8 +2127,8 @@ IntImeCanDestroyDefIMEforChild(
     PIMEUI pimeui;
     IMEUI SafeImeUI;
 
-    pimeui = ((PIMEWND)pImeWnd)->pimeui;
-    if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
+    pimeui = IntGetImeUIFromWnd(pImeWnd);
+    if (!pimeui)
         return FALSE;
 
     // Check IMEUI.fChildThreadDef
@@ -2165,8 +2174,8 @@ IntImeCanDestroyDefIME(
     PIMEUI pimeui;
     IMEUI SafeImeUI;
 
-    pimeui = ((PIMEWND)pImeWnd)->pimeui;
-    if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
+    pimeui = IntGetImeUIFromWnd(pImeWnd);
+    if (!pimeui)
         return FALSE;
 
     // Check IMEUI.fDestroy
@@ -2257,8 +2266,8 @@ IntCheckImeShowStatus(
             continue;
         }
 
-        pimeui = ((PIMEWND)pwndNode)->pimeui;
-        if (!pimeui || pimeui == (PIMEUI)-1)
+        pimeui = IntGetImeUIFromWnd(pwndNode);
+        if (!pimeui)
             continue;
 
         if (pti && pti != pwndNode->head.pti)
@@ -2425,7 +2434,7 @@ IntSendOpenStatusNotify(PTHREADINFO ptiIME, PIMEUI pimeui, PWND pWnd, BOOL bOpen
     }
 }
 
-// Update the IME status and send a notification.
+// Update the IME toolbar visibility and send a notification
 VOID FASTCALL
 IntNotifyImeShowStatus(_In_ PWND pImeWnd)
 {
@@ -2448,8 +2457,15 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
-        ProbeForWrite(pImeWnd, sizeof(IMEWND), 1);
-        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        ProbeForRead(pImeWnd, sizeof(WND) + sizeof(pimeui), 1);
+        pimeui = IntGetImeUIFromWnd(pImeWnd);
+        if (!pimeui)
+        {
+            ERR("Invalid pimeui pointer\n");
+            _SEH2_YIELD(goto Skip);
+        }
+
+        ProbeForRead(pimeui, sizeof(*pimeui), 1);
         SafeImeUI = *pimeui;
 
         bShow = (gfIMEShowStatus == TRUE) && SafeImeUI.fCtrlShowStatus;
@@ -2466,7 +2482,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception in IntNotifyImeShowStatus: %p, %p, %p, %d, %d\n", 
+        ERR("Exception in IntNotifyImeShowStatus: %p, %p, %p, %d, %d\n",
             pImeWnd, pimeui, ptiIME, SafeImeUI.fCtrlShowStatus, gfIMEShowStatus);
 
         if (pti != ptiIME)
@@ -2476,6 +2492,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     }
     _SEH2_END;
 
+Skip:
     // Detach from the process if necessary
     if (pti != ptiIME)
         KeDetachProcess();

@@ -1235,12 +1235,7 @@ typedef struct tagIMEUI
     DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
-/* Window Extra data container. */
-typedef struct _IMEWND
-{
-    WND wnd;
-    PIMEUI pimeui;
-} IMEWND, *PIMEWND;
+#define IMEWND_PIMEUI_INDEX 0
 
 DWORD
 NTAPI
