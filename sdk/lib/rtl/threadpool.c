@@ -837,6 +837,8 @@ static void WINAPI timer_queue_thread_proc(LPVOID p)
 #endif
 }
 
+#ifndef __REACTOS__
+
 static void queue_destroy_timer(struct queue_timer *t)
 {
     /* We MUST hold the queue cs while calling this function.  */
@@ -1137,7 +1139,7 @@ NTSTATUS WINAPI RtlDeleteTimer(HANDLE TimerQueue, HANDLE Timer,
 
     return status;
 }
-
+#endif
 /***********************************************************************
  *           timerqueue_thread_proc    (internal)
  */
@@ -3380,6 +3382,7 @@ NTSTATUS WINAPI TpQueryPoolStackInformation( TP_POOL *pool, TP_POOL_STACK_INFORM
     return STATUS_SUCCESS;
 }
 
+#ifndef __REACTOS__
 static void CALLBACK rtl_wait_callback( TP_CALLBACK_INSTANCE *instance, void *userdata, TP_WAIT *wait, TP_WAIT_RESULT result )
 {
     struct threadpool_object *object = impl_from_TP_WAIT(wait);
@@ -3502,6 +3505,7 @@ NTSTATUS WINAPI RtlDeregisterWait(HANDLE WaitHandle)
 {
     return RtlDeregisterWaitEx(WaitHandle, NULL);
 }
+#endif
 
 #ifdef __REACTOS__
 VOID
