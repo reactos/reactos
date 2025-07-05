@@ -103,7 +103,7 @@ CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Wybierz, czy mają zostać użyte ustawienia standardowe czy niestandardowe:", IDC_STATIC, 53, 7, 255, 20
+    LTEXT "Wybierz, czy mają zostać użyte ustawienia typowe czy niestandardowe:", IDC_STATIC, 53, 7, 255, 20
     AUTORADIOBUTTON "Ustawienia typowe", IDC_NETWORK_TYPICAL, 53, 27, 253, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Ustawienia niestandardowe", IDC_NETWORK_CUSTOM, 53, 73, 253, 10, WS_TABSTOP
     LTEXT "Tworzy połączenia sieciowe, używając protokołu Klient sieci ReactOS Networks, Udostępniania plików i drukarek w sieciach ReactOS Networks i protokołu transportowego TCP/IP z automatycznym adresowaniem.", IDC_STATIC, 65, 45, 240, 30
