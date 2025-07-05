@@ -10,6 +10,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <winnls.h>
 #include <cguid.h>
 #include <olectl.h>
 #include <oleauto.h>
