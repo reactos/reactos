@@ -447,3 +447,49 @@ _SEH3$_CPP_except_handler(
 {
     return _SEH3$_common_except_handler(ExceptionRecord, EstablisherFrame, ContextRecord, DispatcherContext, _SEH3$_CPP_HANDLER);
 }
+
+void
+__stdcall
+_SEH3$_longjmp_unwind(_JUMP_BUFFER* _Buf)
+{
+    PSEH3$_REGISTRATION_FRAME RegisteredFrame = (PSEH3$_REGISTRATION_FRAME)_Buf->Registration;
+    PSEH3$_REGISTRATION_FRAME CurrentFrame;
+
+    /* Native SEH registers the EH frame at the start of the function, so a call to
+       _setjmp(3) will always save that EH frame. PSEH only registers the frame
+       when entering a try block, so a call to _setjmp outside of a try block
+       would save a previously installed EH frame, which can be of a different
+       type (e.g. native EH3/EH4). We need to check whether the frame is ours
+       by comparing its address to the saved ebp value, which marks the boundary
+       of the stack frame for the caller of _setjmp. */
+    if (_Buf->Registration > _Buf->Ebp)
+    {
+        /* The registration frame is not ours, we don't need to do anything */
+        return;
+    }
+
+    /* Loop all frames for this registration */
+    for (CurrentFrame = RegisteredFrame->EndOfChain;
+         CurrentFrame->TryLevel != _Buf->TryLevel;
+         CurrentFrame = CurrentFrame->Next)
+    {
+        /* Check if this is a termination handler */
+        if (CurrentFrame->ScopeTable->Target == NULL)
+        {
+            /* Call the termination handler */
+            if (RegisteredFrame->Handler == _SEH3$_C_except_handler)
+            {
+#ifdef __clang__
+                _SEH3$_CallFinally(CurrentFrame, _SEH3$_CLANG_HANDLER);
+#else
+                _SEH3$_CallFinally(CurrentFrame, _SEH3$_NESTED_HANDLER);
+#endif
+            }
+            else
+            {
+                ASSERT(CurrentFrame->Handler == _SEH3$_CPP_except_handler);
+                _SEH3$_CallFinally(CurrentFrame, _SEH3$_CPP_HANDLER);
+            }
+        }
+    }
+}
