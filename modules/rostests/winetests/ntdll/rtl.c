@@ -935,9 +935,9 @@ static void test_RtlThreadErrorMode(void)
        "RtlGetThreadErrorMode returned 0x%x, expected 0x%x\n", mode, 0x70);
     if (!is_wow64)
     {
-        ok(NtCurrentTeb()->HardErrorDisabled == 0x70,
+        ok(NtCurrentTeb()->HardErrorMode == 0x70,
            "The TEB contains 0x%x, expected 0x%x\n",
-           NtCurrentTeb()->HardErrorDisabled, 0x70);
+           NtCurrentTeb()->HardErrorMode, 0x70);
     }
 
     status = pRtlSetThreadErrorMode(0, &mode);
@@ -951,9 +951,9 @@ static void test_RtlThreadErrorMode(void)
        "RtlGetThreadErrorMode returned 0x%x, expected 0x%x\n", mode, 0);
     if (!is_wow64)
     {
-        ok(NtCurrentTeb()->HardErrorDisabled == 0,
+        ok(NtCurrentTeb()->HardErrorMode == 0,
            "The TEB contains 0x%x, expected 0x%x\n",
-           NtCurrentTeb()->HardErrorDisabled, 0);
+           NtCurrentTeb()->HardErrorMode, 0);
     }
 
     for (mode = 1; mode; mode <<= 1)

@@ -378,7 +378,7 @@ static BOOL check_live_target(struct process* pcs)
     {
         PEB peb;
         if (!ReadProcessMemory(pcs->handle, pbi.PebBaseAddress, &peb, sizeof(peb), NULL)) return FALSE;
-        base = peb.Reserved[0];
+        base = peb.Reserved;
         ReadProcessMemory(pcs->handle, &peb.ProcessParameters->Environment, &env, sizeof(env), NULL);
     }
 
