@@ -165,7 +165,7 @@ SptiInitializeOutputBuffer(
 static
 CODE_SEG("PAGE")
 NTSTATUS
-PassthroughCallDriver(
+SptiCallDriver(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PPASSTHROUGH_IRP_CONTEXT IrpContext)
 {
@@ -602,7 +602,7 @@ SptiInitializeSpt(
     {
         StructSize = sizeof(SCSI_PASS_THROUGH32);
         SenseInfoOffsetPtr = (PVOID)((ULONG_PTR)Spt +
-                                    FIELD_OFFSET(SCSI_PASS_THROUGH32, SenseInfoOffset));
+                                     FIELD_OFFSET(SCSI_PASS_THROUGH32, SenseInfoOffset));
         *Cdb = (PVOID)((ULONG_PTR)Spt + FIELD_OFFSET(SCSI_PASS_THROUGH32, Cdb));
         IsNativeStructSize = FALSE;
     }
@@ -855,7 +855,7 @@ SptiHandleAtaPassthru(
     if (!NT_SUCCESS(Status))
         goto Cleanup;
 
-    Status = PassthroughCallDriver(DeviceObject, IrpContext);
+    Status = SptiCallDriver(DeviceObject, IrpContext);
 
     Srb = &IrpContext->Srb;
 
@@ -977,7 +977,7 @@ SptiHandleScsiPassthru(
     if (!NT_SUCCESS(Status))
         goto Cleanup;
 
-    Status = PassthroughCallDriver(DeviceObject, IrpContext);
+    Status = SptiCallDriver(DeviceObject, IrpContext);
 
     Srb = &IrpContext->Srb;
 
