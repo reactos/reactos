@@ -6,6 +6,7 @@ if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     spec2def(uxtheme.dll uxtheme_vista.spec ADD_IMPORTLIB)
 else()
     spec2def(uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
+    spec2def(uxtheme_vista.dll uxtheme_vista.spec ADD_IMPORTLIB)
 endif()
 
 list(APPEND SOURCE
@@ -24,7 +25,7 @@ list(APPEND SOURCE
     themehooks.c
     uxini.c
     uxthemep.h
-    ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c)
+)
 
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     add_definitions(-DENABLE_PNG_SUPPORT)
@@ -39,6 +40,7 @@ add_rc_deps(uxtheme.rc ${uxtheme_rc_deps})
 add_library(uxtheme MODULE
     ${SOURCE}
     uxtheme.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def)
 
 set_module_type(uxtheme win32dll)
@@ -51,3 +53,18 @@ else()
 endif()
 add_pch(uxtheme uxthemep.h SOURCE)
 add_cd_file(TARGET uxtheme DESTINATION reactos/system32 FOR all)
+
+if(DLL_EXPORT_VERSION LESS 0x600)
+    add_library(uxtheme_vista MODULE
+        ${SOURCE}
+        uxtheme.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_vista_stubs.c
+        ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_vista.def)
+    target_compile_definitions(uxtheme_vista PRIVATE -DUXTHEME_VISTA)
+    set_module_type(uxtheme_vista win32dll)
+    target_link_libraries(uxtheme_vista wine)
+    add_delay_importlibs(uxtheme_vista msimg32)
+    add_importlibs(uxtheme_vista user32 advapi32 gdiplus gdi32 shlwapi msvcrt kernel32 ntdll)
+    add_pch(uxtheme_vista uxthemep.h SOURCE)
+    add_cd_file(TARGET uxtheme_vista DESTINATION reactos/system32 FOR all)
+endif()
