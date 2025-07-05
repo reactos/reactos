@@ -22,6 +22,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#include <ntndk.h>
+#endif
 #include "wine/test.h"
 #include "windef.h"
 #include "winbase.h"
@@ -29,6 +33,9 @@
 #include "winreg.h"
 #include "wingdi.h"
 #include "winuser.h"
+#ifndef __REACTOS__
+#include "winternl.h"
+#endif
 #include "commctrl.h"
 
 #define NUMCLASSWORDS 4
@@ -37,15 +44,17 @@
 
 #ifdef __i386__
 #define ARCH "x86"
+#elif defined __aarch64__ || defined__arm64ec__
+#define ARCH "arm64"
 #elif defined __x86_64__
 #define ARCH "amd64"
 #elif defined __arm__
 #define ARCH "arm"
-#elif defined __aarch64__
-#define ARCH "arm64"
 #else
 #define ARCH "none"
 #endif
+
+static const BOOL is_win64 = (sizeof(void *) > sizeof(int));
 
 static const char comctl32_manifest[] =
 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
@@ -90,11 +99,14 @@ static void ClassTest(HINSTANCE hInstance, BOOL global)
     WNDCLASSW cls, wc;
     static const WCHAR className[] = {'T','e','s','t','C','l','a','s','s',0};
     static const WCHAR winName[]   = {'W','i','n','C','l','a','s','s','T','e','s','t',0};
+    WNDCLASSW info;
     ATOM test_atom;
     HWND hTestWnd;
     LONG i;
     WCHAR str[20];
     ATOM classatom;
+    HINSTANCE hInstance2;
+    BOOL ret;
 
     cls.style         = CS_HREDRAW | CS_VREDRAW | (global?CS_GLOBALCLASS:0);
     cls.lpfnWndProc   = ClassTest_WndProc;
@@ -118,12 +130,40 @@ static void ClassTest(HINSTANCE hInstance, BOOL global)
         "RegisterClass of the same class should fail for the second time\n");
 
     /* Setup windows */
+    hInstance2 = (HINSTANCE)(((ULONG_PTR)hInstance & ~0xffff) | 0xdead);
+
+    hTestWnd = CreateWindowW (className, winName,
+       WS_OVERLAPPEDWINDOW + WS_HSCROLL + WS_VSCROLL,
+       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 0,
+       0, hInstance2, 0);
+    ok(hTestWnd != 0, "Failed to create window for hInstance %p\n", hInstance2);
+
+    ok((HINSTANCE)GetClassLongPtrA(hTestWnd, GCLP_HMODULE) == hInstance,
+       "Wrong GCL instance %p != %p\n",
+       (HINSTANCE)GetClassLongPtrA(hTestWnd, GCLP_HMODULE), hInstance);
+    ok((HINSTANCE)GetWindowLongPtrA(hTestWnd, GWLP_HINSTANCE) == hInstance2,
+       "Wrong GWL instance %p != %p\n",
+       (HINSTANCE)GetWindowLongPtrA(hTestWnd, GWLP_HINSTANCE), hInstance2);
+
+    DestroyWindow(hTestWnd);
+
+    ret = GetClassInfoW(hInstance2, className, &info);
+    ok(ret, "GetClassInfoW failed: %lu\n", GetLastError());
+
     hTestWnd = CreateWindowW (className, winName,
        WS_OVERLAPPEDWINDOW + WS_HSCROLL + WS_VSCROLL,
        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 0,
        0, hInstance, 0);
 
     ok(hTestWnd!=0, "Failed to create window\n");
+
+    ok((HINSTANCE)GetClassLongPtrA(hTestWnd, GCLP_HMODULE) == hInstance,
+                        "Wrong GCL instance %p/%p\n",
+        (HINSTANCE)GetClassLongPtrA(hTestWnd, GCLP_HMODULE), hInstance);
+    ok((HINSTANCE)GetWindowLongPtrA(hTestWnd, GWLP_HINSTANCE) == hInstance,
+       "Wrong GWL instance %p/%p\n",
+        (HINSTANCE)GetWindowLongPtrA(hTestWnd, GWLP_HINSTANCE), hInstance);
+
 
     /* test initial values of valid classwords */
     for(i=0; i<NUMCLASSWORDS; i++)
@@ -152,9 +192,9 @@ static void ClassTest(HINSTANCE hInstance, BOOL global)
     {
         SetLastError(0);
         ok(!SetClassLongW(hTestWnd,i*sizeof(DWORD),i+1),
-            "GetClassLongW(%d) initial value nonzero!\n",i);
+            "GetClassLongW(%ld) initial value nonzero!\n",i);
         ok(!GetLastError(),
-            "SetClassLongW(%d) failed!\n",i);
+            "SetClassLongW(%ld) failed!\n",i);
     }
 
     /* test values of valid classwords that we set */
@@ -308,7 +348,7 @@ static void check_instance_( int line, const char *name, HINSTANCE inst,
     ok_(__FILE__,line)(!UnregisterClassA(name, inst),
                        "UnregisterClassA should fail while exists a class window\n");
     ok_(__FILE__,line)(GetLastError() == ERROR_CLASS_HAS_WINDOWS,
-                       "GetLastError() should be set to ERROR_CLASS_HAS_WINDOWS not %d\n", GetLastError());
+                       "GetLastError() should be set to ERROR_CLASS_HAS_WINDOWS not %ld\n", GetLastError());
     DestroyWindow(hwnd);
 }
 #define check_instance(name,inst,info_inst,gcl_inst) check_instance_(__LINE__,name,inst,info_inst,gcl_inst)
@@ -340,7 +380,7 @@ static void check_thread_instance( const char *name, HINSTANCE inst, HINSTANCE i
     class_info.gcl_inst = gcl_inst;
 
     hThread = CreateThread(NULL, 0, thread_proc, &class_info, 0, &tid);
-    ok(hThread != NULL, "CreateThread failed, error %d\n", GetLastError());
+    ok(hThread != NULL, "CreateThread failed, error %ld\n", GetLastError());
     ok(WaitForSingleObject(hThread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
     CloseHandle(hThread);
 }
@@ -427,7 +467,7 @@ static void test_instances(void)
 
     /* setting global flag doesn't change status of class */
     hwnd = CreateWindowExA( 0, name, "test", 0, 0, 0, 0, 0, 0, 0, main_module, 0 );
-    ok( hwnd != 0, "CreateWindow failed error %u\n", GetLastError());
+    ok( hwnd != 0, "CreateWindow failed error %lu\n", GetLastError());
     SetClassLongA( hwnd, GCL_STYLE, CS_GLOBALCLASS );
     cls.lpszMenuName  = "kernel32";
     cls.hInstance = kernel32;
@@ -494,7 +534,7 @@ static void test_instances(void)
     DestroyWindow( hwnd2 );
 
     r = GetClassNameA( hwnd, buffer, 4 );
-    ok( r == 3, "expected 3, got %d\n", r );
+    ok( r == 3, "expected 3, got %ld\n", r );
     ok( !strcmp( buffer, "__t"), "name wrong: %s\n", buffer );
 
     ok( UnregisterClassA( name, kernel32 ), "Unregister failed for kernel32\n" );
@@ -511,7 +551,7 @@ static void test_instances(void)
     cls.lpszMenuName  = "null";
     cls.hInstance = 0;
     ok( !RegisterClassA( &cls ), "Succeeded registering local class for null instance\n" );
-    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %ld\n", GetLastError() );
     ok( UnregisterClassA( name, main_module ), "Unregister failed for main module\n" );
 
     ok( RegisterClassA( &cls ), "Failed to register local class for null instance\n" );
@@ -520,17 +560,17 @@ static void test_instances(void)
     check_instance( name, main_module, main_module, main_module );
     check_thread_instance( name, main_module, main_module, main_module );
     ok( !GetClassInfoA( 0, name, &wc ), "Class found with null instance\n" );
-    ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST, "Wrong error code %ld\n", GetLastError() );
     ok( UnregisterClassA( name, 0 ), "Unregister failed for null instance\n" );
 
     /* registering for user32 always fails */
     cls.lpszMenuName = "user32";
     cls.hInstance = user32;
     ok( !RegisterClassA( &cls ), "Succeeded registering local class for user32\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "Wrong error code %ld\n", GetLastError() );
     cls.style |= CS_GLOBALCLASS;
     ok( !RegisterClassA( &cls ), "Succeeded registering global class for user32\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "Wrong error code %ld\n", GetLastError() );
 
     /* unregister is OK though */
     cls.hInstance = main_module;
@@ -545,12 +585,12 @@ static void test_instances(void)
     cls.lpszMenuName  = "kernel32";
     cls.hInstance = kernel32;
     ok( !RegisterClassA( &cls ), "Succeeded registering local class for kernel32\n" );
-    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %ld\n", GetLastError() );
     /* even if global flag is cleared */
     hwnd = CreateWindowExA( 0, name, "test", 0, 0, 0, 0, 0, 0, 0, main_module, 0 );
     SetClassLongA( hwnd, GCL_STYLE, 0 );
     ok( !RegisterClassA( &cls ), "Succeeded registering local class for kernel32\n" );
-    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %ld\n", GetLastError() );
 
     check_class( main_module, name, "main_module" );
     check_class( kernel32, name, "main_module" );
@@ -571,7 +611,7 @@ static void test_instances(void)
     DestroyWindow( hwnd );
     ok( UnregisterClassA( name, (HINSTANCE)0x87654321 ), "Unregister failed for main module global\n" );
     ok( !UnregisterClassA( name, (HINSTANCE)0x87654321 ), "Unregister succeeded the second time\n" );
-    ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST, "Wrong error code %ld\n", GetLastError() );
 
     cls.hInstance = (HINSTANCE)0x12345678;
     ok( RegisterClassA( &cls ), "Failed to register global class for dummy instance\n" );
@@ -589,10 +629,10 @@ static void test_instances(void)
     cls.lpszClassName = "BUTTON";
     cls.hInstance = main_module;
     ok( !RegisterClassA( &cls ), "Succeeded registering global button class for main module\n" );
-    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %ld\n", GetLastError() );
     cls.hInstance = kernel32;
     ok( !RegisterClassA( &cls ), "Succeeded registering global button class for kernel32\n" );
-    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_ALREADY_EXISTS, "Wrong error code %ld\n", GetLastError() );
 
     /* local class is OK however */
     cls.style &= ~CS_GLOBALCLASS;
@@ -620,7 +660,7 @@ static void test_instances(void)
     ok( GetClassInfoA( kernel32, "BUTTON", &wc ), "Button class not found with kernel32\n" );
     ok( UnregisterClassA( "BUTTON", (HINSTANCE)0x12345678 ), "Failed to unregister button\n" );
     ok( !UnregisterClassA( "BUTTON", (HINSTANCE)0x87654321 ), "Unregistered button a second time\n" );
-    ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST, "Wrong error code %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST, "Wrong error code %ld\n", GetLastError() );
     ok( !GetClassInfoA( 0, "BUTTON", &wc ), "Button still exists\n" );
     /* last error not set reliably */
 
@@ -650,7 +690,6 @@ static void test_builtinproc(void)
     static const WCHAR classW[] = {'d','e','f','t','e','s','t',0};
     WCHAR unistring[] = {0x142, 0x40e, 0x3b4, 0};  /* a string that would be destroyed by a W->A->W conversion */
     WNDPROC pDefWindowProcA, pDefWindowProcW;
-    WNDPROC pNtdllDefWindowProcA, pNtdllDefWindowProcW;
     WNDPROC oldproc;
     WNDCLASSEXA cls;  /* the memory layout of WNDCLASSEXA and WNDCLASSEXW is the same */
     WCHAR buf[128];
@@ -660,57 +699,6 @@ static void test_builtinproc(void)
 
     pDefWindowProcA = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "DefWindowProcA");
     pDefWindowProcW = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "DefWindowProcW");
-    pNtdllDefWindowProcA = (void *)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtdllDefWindowProc_A");
-    pNtdllDefWindowProcW = (void *)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtdllDefWindowProc_W");
-
-    /* On Vista+, the user32.dll export DefWindowProcA/W is forwarded to  */
-    /* ntdll.NtdllDefWindowProc_A/W. However, the wndproc returned by     */
-    /* GetClassLong/GetWindowLong points to an unexported user32 function */
-    if (pDefWindowProcA == pNtdllDefWindowProcA &&
-        pDefWindowProcW == pNtdllDefWindowProcW)
-        skip("user32.DefWindowProcX forwarded to ntdll.NtdllDefWindowProc_X\n");
-    else
-    {
-        for (i = 0; i < 4; i++)
-        {
-            ZeroMemory(&cls, sizeof(cls));
-            cls.cbSize = sizeof(cls);
-            cls.hInstance = GetModuleHandleA(NULL);
-            cls.hbrBackground = GetStockObject (WHITE_BRUSH);
-            if (i & 1)
-                cls.lpfnWndProc = pDefWindowProcA;
-            else
-                cls.lpfnWndProc = pDefWindowProcW;
-
-            if (i & 2)
-            {
-                cls.lpszClassName = classA;
-                atom = RegisterClassExA(&cls);
-            }
-            else
-            {
-                cls.lpszClassName = (LPCSTR)classW;
-                atom = RegisterClassExW((WNDCLASSEXW *)&cls);
-            }
-            ok(atom != 0, "Couldn't register class, i=%d, %d\n", i, GetLastError());
-
-            hwnd = CreateWindowA(classA, NULL, 0, 0, 0, 100, 100, NULL, NULL, GetModuleHandleA(NULL), NULL);
-            ok(hwnd != NULL, "Couldn't create window i=%d\n", i);
-
-            ok(GetWindowLongPtrA(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcA, "Wrong ANSI wndproc: %p vs %p\n",
-                (void *)GetWindowLongPtrA(hwnd, GWLP_WNDPROC), pDefWindowProcA);
-            ok(GetClassLongPtrA(hwnd, GCLP_WNDPROC) == (ULONG_PTR)pDefWindowProcA, "Wrong ANSI wndproc: %p vs %p\n",
-                (void *)GetClassLongPtrA(hwnd, GCLP_WNDPROC), pDefWindowProcA);
-
-            ok(GetWindowLongPtrW(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcW, "Wrong Unicode wndproc: %p vs %p\n",
-                (void *)GetWindowLongPtrW(hwnd, GWLP_WNDPROC), pDefWindowProcW);
-            ok(GetClassLongPtrW(hwnd, GCLP_WNDPROC) == (ULONG_PTR)pDefWindowProcW, "Wrong Unicode wndproc: %p vs %p\n",
-                (void *)GetClassLongPtrW(hwnd, GCLP_WNDPROC), pDefWindowProcW);
-
-            DestroyWindow(hwnd);
-            UnregisterClassA((LPSTR)(DWORD_PTR)atom, GetModuleHandleA(NULL));
-        }
-    }
 
     /* built-in winproc - window A/W type automatically detected */
     ZeroMemory(&cls, sizeof(cls));
@@ -876,6 +864,163 @@ static void test_builtinproc(void)
 }
 
 
+static void test_ntdll_wndprocs(void)
+{
+    static const char *classes[] =
+    {
+        "ScrollBar",
+        "Message",
+        "#32768",        /* menu */
+        "#32769",        /* desktop */
+        "DefWindowProc", /* not a real class */
+        "#32772",        /* icon title */
+        "??",            /* ?? */
+        "Button",
+        "ComboBox",
+        "ComboLBox",
+        "#32770",        /* dialog */
+        "Edit",
+        "ListBox",
+        "MDIClient",
+        "Static",
+        "IME",
+        "Ghost",
+    };
+    unsigned int i;
+    void *procsA[ARRAY_SIZE(classes)] = { NULL };
+    void *procsW[ARRAY_SIZE(classes)] = { NULL };
+    const UINT64 *ptr_A, *ptr_W, *ptr_workers;
+    NTSTATUS (WINAPI *pRtlRetrieveNtUserPfn)(const UINT64**,const UINT64**,const UINT64 **);
+
+    pRtlRetrieveNtUserPfn = (void *)GetProcAddress( GetModuleHandleA("ntdll.dll"), "RtlRetrieveNtUserPfn" );
+    if (!pRtlRetrieveNtUserPfn || pRtlRetrieveNtUserPfn( &ptr_A, &ptr_W, &ptr_workers ))
+    {
+        win_skip( "RtlRetrieveNtUserPfn not supported\n" );
+        return;
+    }
+
+    for (i = 0; i < ARRAY_SIZE(classes); i++)
+    {
+        WNDCLASSA wcA;
+        WNDCLASSW wcW;
+        WCHAR buffer[20];
+
+        MultiByteToWideChar( CP_ACP, 0, classes[i], -1, buffer, ARRAY_SIZE(buffer) );
+        if (GetClassInfoA( 0, classes[i], &wcA )) procsA[i] = wcA.lpfnWndProc;
+        if (GetClassInfoW( 0, buffer, &wcW )) procsW[i] = wcW.lpfnWndProc;
+    }
+    procsA[4] = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "DefWindowProcA");
+    procsW[4] = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "DefWindowProcW");
+
+    if (!is_win64 && ptr_A[0] >> 32)  /* some older versions use 32-bit pointers */
+    {
+        const void **ptr_A32 = (const void **)ptr_A, **ptr_W32 = (const void **)ptr_W;
+        for (i = 0; i < ARRAY_SIZE(procsA); i++)
+        {
+            ok( !procsA[i] || procsA[i] == ptr_A32[i],
+                "wrong ptr A %u %s: %p / %p\n", i, classes[i], procsA[i], ptr_A32[i] );
+            ok( !procsW[i] || procsW[i] == ptr_W32[i] ||
+                broken(i == 4),  /* DefWindowProcW can be different on wow64 */
+                "wrong ptr W %u %s: %p / %p\n", i, classes[i], procsW[i], ptr_W32[i] );
+        }
+    }
+    else
+    {
+        for (i = 0; i < ARRAY_SIZE(procsA); i++)
+        {
+            ok( !procsA[i] || (ULONG_PTR)procsA[i] == ptr_A[i],
+                "wrong ptr A %u %s: %p / %I64x\n", i, classes[i], procsA[i], ptr_A[i] );
+            ok( !procsW[i] || (ULONG_PTR)procsW[i] == ptr_W[i] ||
+                broken( !is_win64 && i == 4 ),  /* DefWindowProcW can be different on wow64 */
+                "wrong ptr W %u %s: %p / %I64x\n", i, classes[i], procsW[i], ptr_W[i] );
+        }
+    }
+}
+
+static void test_wndproc_forwards(void)
+{
+    WCHAR path[MAX_PATH];
+    HMODULE user32 = GetModuleHandleA( "user32.dll" );
+    HANDLE map, file;
+    char *base;
+    ULONG i, size, *names, *functions;
+    WORD *ordinals;
+    IMAGE_EXPORT_DIRECTORY *exp;
+
+    /* file on disk contains forwards */
+
+    GetModuleFileNameW( user32, path, ARRAY_SIZE(path) );
+    file = CreateFileW( path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+    ok( file != INVALID_HANDLE_VALUE, "cannot open %s err %lu\n", debugstr_w(path), GetLastError() );
+    map = CreateFileMappingW( file, NULL, PAGE_READONLY | SEC_IMAGE, 0, 0, 0 );
+    ok( map != NULL, "failed to create mapping %lu\n", GetLastError() );
+    base = MapViewOfFile( map, FILE_MAP_READ, 0, 0, 0 );
+    ok( base != NULL, "failed to map file %lu\n", GetLastError() );
+    exp = RtlImageDirectoryEntryToData( (HMODULE)base, TRUE, IMAGE_DIRECTORY_ENTRY_EXPORT, &size );
+    ok( exp != NULL, "no exports\n" );
+    functions = (ULONG *)(base + exp->AddressOfFunctions);
+    names = (ULONG *)(base + exp->AddressOfNames);
+    ordinals = (WORD *)(base + exp->AddressOfNameOrdinals);
+    for (i = 0; i < exp->NumberOfNames; i++)
+    {
+        const char *name = base + names[i];
+        const char *forward = base + functions[ordinals[i]];
+        if (strcmp( name, "DefDlgProcA" ) &&
+            strcmp( name, "DefDlgProcW" ) &&
+            strcmp( name, "DefWindowProcA" ) &&
+            strcmp( name, "DefWindowProcW" )) continue;
+
+        if (!strcmp( name, "DefDlgProcA" ) && !(forward >= (char *)exp && forward < (char *)exp + size))
+        {
+            win_skip( "Windows version too old, not using forwards\n" );
+            UnmapViewOfFile( base );
+            CloseHandle( file );
+            CloseHandle( map );
+            return;
+        }
+        ok( forward >= (char *)exp && forward < (char *)exp + size,
+            "not a forward %s %lx\n", name, functions[ordinals[i]] );
+        ok( !strncmp( forward, "NTDLL.Ntdll", 11 ), "wrong forward %s -> %s\n", name, forward );
+    }
+    UnmapViewOfFile( base );
+    CloseHandle( file );
+    CloseHandle( map );
+
+    /* loaded dll is patched to avoid forwards (on 32-bit) */
+
+    base = (char *)user32;
+    exp = RtlImageDirectoryEntryToData( (HMODULE)base, TRUE, IMAGE_DIRECTORY_ENTRY_EXPORT, &size );
+    ok( exp != NULL, "no exports\n" );
+    functions = (ULONG *)(base + exp->AddressOfFunctions);
+    names = (ULONG *)(base + exp->AddressOfNames);
+    ordinals = (WORD *)(base + exp->AddressOfNameOrdinals);
+    for (i = 0; i < exp->NumberOfNames; i++)
+    {
+        const char *name = base + names[i];
+        const char *forward = base + functions[ordinals[i]];
+        if (strcmp( name, "DefDlgProcA" ) &&
+            strcmp( name, "DefDlgProcW" ) &&
+            strcmp( name, "DefWindowProcA" ) &&
+            strcmp( name, "DefWindowProcW" )) continue;
+        if (is_win64)
+        {
+            ok( forward >= (char *)exp && forward < (char *)exp + size,
+                "not a forward %s %lx\n", name, functions[ordinals[i]] );
+            ok( !strncmp( forward, "NTDLL.Ntdll", 11 ), "wrong forward %s -> %s\n", name, forward );
+        }
+        else
+        {
+            void *expect = GetProcAddress( user32, name );
+            ok( !(forward >= (char *)exp && forward < (char *)exp + size),
+                "%s %lx is a forward\n", name, functions[ordinals[i]] );
+            ok( forward == expect ||
+                broken( !strcmp( name, "DefWindowProcW" )), /* DefWindowProcW can be hooked on first run */
+                "wrong function %s %p / %p\n", name, forward, expect );
+        }
+    }
+}
+
+
 static LRESULT WINAPI TestDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return DefDlgProcA(hWnd, uMsg, wParam, lParam);
@@ -926,15 +1071,11 @@ static const struct
 {
     const char name[9];
     int value;
-    int badvalue;
+    int value64; /* 64-bit Windows use 64-bit size also for 32-bit applications */
 } extra_values[] =
 {
     {"#32770",30,30}, /* Dialog */
-#ifdef _WIN64
-    {"Edit",8,8},
-#else
-    {"Edit",6,8},     /* Windows XP 64-bit returns 8 also to 32-bit applications */
-#endif
+    {"Edit",6,8},
 };
 
 static void test_extra_values(void)
@@ -947,7 +1088,7 @@ static void test_extra_values(void)
 
         ok( ret, "GetClassInfo (0) failed for global class %s\n", extra_values[i].name);
         if (!ret) continue;
-        ok(extra_values[i].value == wcx.cbWndExtra || broken(extra_values[i].badvalue == wcx.cbWndExtra),
+        ok(extra_values[i].value == wcx.cbWndExtra || extra_values[i].value64 == wcx.cbWndExtra,
            "expected %d, got %d\n", extra_values[i].value, wcx.cbWndExtra);
     }
 }
@@ -961,29 +1102,29 @@ static void test_GetClassInfo(void)
 
     SetLastError(0xdeadbeef);
     ret = GetClassInfoA(0, "static", &wc);
-    ok(ret, "GetClassInfoA() error %d\n", GetLastError());
+    ok(ret, "GetClassInfoA() error %ld\n", GetLastError());
 
 if (0) { /* crashes under XP */
     SetLastError(0xdeadbeef);
     ret = GetClassInfoA(0, "static", NULL);
-    ok(ret, "GetClassInfoA() error %d\n", GetLastError());
+    ok(ret, "GetClassInfoA() error %ld\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = GetClassInfoW(0, staticW, NULL);
-    ok(ret, "GetClassInfoW() error %d\n", GetLastError());
+    ok(ret, "GetClassInfoW() error %ld\n", GetLastError());
 }
 
     wcx.cbSize = sizeof(wcx);
     SetLastError(0xdeadbeef);
     ret = GetClassInfoExA(0, "static", &wcx);
-    ok(ret, "GetClassInfoExA() error %d\n", GetLastError());
+    ok(ret, "GetClassInfoExA() error %ld\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = GetClassInfoExA(0, "static", NULL);
     ok(!ret, "GetClassInfoExA() should fail\n");
     ok(GetLastError() == ERROR_NOACCESS ||
        broken(GetLastError() == 0xdeadbeef), /* win9x */
-       "expected ERROR_NOACCESS, got %d\n", GetLastError());
+       "expected ERROR_NOACCESS, got %ld\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = GetClassInfoExW(0, staticW, NULL);
@@ -991,14 +1132,14 @@ if (0) { /* crashes under XP */
     ok(GetLastError() == ERROR_NOACCESS ||
        broken(GetLastError() == 0xdeadbeef) /* NT4 */ ||
        broken(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), /* win9x */
-       "expected ERROR_NOACCESS, got %d\n", GetLastError());
+       "expected ERROR_NOACCESS, got %ld\n", GetLastError());
 
     wcx.cbSize = 0;
     wcx.lpfnWndProc = NULL;
     SetLastError(0xdeadbeef);
     ret = GetClassInfoExA(0, "static", &wcx);
-    ok(ret, "GetClassInfoExA() error %d\n", GetLastError());
-    ok(GetLastError() == 0xdeadbeef, "Unexpected error code %d\n", GetLastError());
+    ok(ret, "GetClassInfoExA() error %ld\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "Unexpected error code %ld\n", GetLastError());
     ok(wcx.cbSize == 0, "expected 0, got %u\n", wcx.cbSize);
     ok(wcx.lpfnWndProc != NULL, "got null proc\n");
 
@@ -1006,7 +1147,7 @@ if (0) { /* crashes under XP */
     wcx.lpfnWndProc = NULL;
     SetLastError(0xdeadbeef);
     ret = GetClassInfoExA(0, "static", &wcx);
-    ok(ret, "GetClassInfoExA() error %d\n", GetLastError());
+    ok(ret, "GetClassInfoExA() error %ld\n", GetLastError());
     ok(wcx.cbSize == sizeof(wcx) - 1, "expected sizeof(wcx)-1, got %u\n", wcx.cbSize);
     ok(wcx.lpfnWndProc != NULL, "got null proc\n");
 
@@ -1014,9 +1155,14 @@ if (0) { /* crashes under XP */
     wcx.lpfnWndProc = NULL;
     SetLastError(0xdeadbeef);
     ret = GetClassInfoExA(0, "static", &wcx);
-    ok(ret, "GetClassInfoExA() error %d\n", GetLastError());
+    ok(ret, "GetClassInfoExA() error %ld\n", GetLastError());
     ok(wcx.cbSize == sizeof(wcx) + 1, "expected sizeof(wcx)+1, got %u\n", wcx.cbSize);
     ok(wcx.lpfnWndProc != NULL, "got null proc\n");
+
+    wcx.cbSize = sizeof(wcx);
+    ret = GetClassInfoExA(0, "stati", &wcx);
+    ok(!ret && GetLastError() == ERROR_CLASS_DOES_NOT_EXIST,
+       "GetClassInfoExA() returned %x %ld\n", ret, GetLastError());
 }
 
 static void test_icons(void)
@@ -1086,7 +1232,7 @@ static void create_manifest_file(const char *filename, const char *manifest)
 
     MultiByteToWideChar( CP_ACP, 0, filename, -1, path, MAX_PATH );
     file = CreateFileW(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %lu\n", GetLastError());
     WriteFile(file, manifest, strlen(manifest), &size, NULL);
     CloseHandle(file);
 }
@@ -1103,10 +1249,10 @@ static HANDLE create_test_actctx(const char *file)
     actctx.lpSource = path;
 
     handle = CreateActCtxW(&actctx);
-    ok(handle != INVALID_HANDLE_VALUE, "failed to create context, error %u\n", GetLastError());
+    ok(handle != INVALID_HANDLE_VALUE, "failed to create context, error %lu\n", GetLastError());
 
-    ok(actctx.cbSize == sizeof(actctx), "cbSize=%d\n", actctx.cbSize);
-    ok(actctx.dwFlags == 0, "dwFlags=%d\n", actctx.dwFlags);
+    ok(actctx.cbSize == sizeof(actctx), "cbSize=%ld\n", actctx.cbSize);
+    ok(actctx.dwFlags == 0, "dwFlags=%ld\n", actctx.dwFlags);
     ok(actctx.lpSource == path, "lpSource=%p\n", actctx.lpSource);
     ok(actctx.wProcessorArchitecture == 0, "wProcessorArchitecture=%d\n", actctx.wProcessorArchitecture);
     ok(actctx.wLangId == 0, "wLangId=%d\n", actctx.wLangId);
@@ -1140,7 +1286,7 @@ static void test_comctl32_class( const char *name )
         create_manifest_file(path, comctl32_manifest);
         context = create_test_actctx(path);
         ret = DeleteFileA(path);
-        ok(ret, "Failed to delete manifest file, error %d.\n", GetLastError());
+        ok(ret, "Failed to delete manifest file, error %ld.\n", GetLastError());
 
         module = GetModuleHandleA( "comctl32" );
         ok( !module, "comctl32 already loaded\n" );
@@ -1251,7 +1397,7 @@ static void test_comctl32_classes(void)
         sprintf( path_name, "%s class %s", argv[0], classes[i] );
         ok( CreateProcessA( NULL, path_name, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info ),
             "CreateProcess failed.\n" );
-        winetest_wait_child_process( info.hProcess );
+        wait_child_process( info.hProcess );
         CloseHandle( info.hProcess );
         CloseHandle( info.hThread );
     }
@@ -1277,10 +1423,10 @@ static void test_IME(void)
     ok(GetModuleHandleA("imm32") != 0, "imm32.dll is not loaded\n");
 
     ret = GetClassInfoA(NULL, "IME", &wnd_class);
-    ok(ret, "GetClassInfo failed: %d\n", GetLastError());
+    ok(ret, "GetClassInfo failed: %ld\n", GetLastError());
 
     size = VirtualQuery(wnd_class.lpfnWndProc, &mbi, sizeof(mbi));
-    ok(size == sizeof(mbi), "VirtualQuery returned %ld\n", size);
+    ok(size == sizeof(mbi), "VirtualQuery returned %Id\n", size);
     if (size == sizeof(mbi)) {
         size = GetModuleFileNameA(mbi.AllocationBase, module_name, sizeof(module_name));
         ok(size, "GetModuleFileName failed\n");
@@ -1291,10 +1437,10 @@ static void test_IME(void)
     }
 
     ret = GetClassInfoW(NULL, ime_classW, &wnd_classw);
-    ok(ret, "GetClassInfo failed: %d\n", GetLastError());
+    ok(ret, "GetClassInfo failed: %ld\n", GetLastError());
 
     size = VirtualQuery(wnd_classw.lpfnWndProc, &mbi, sizeof(mbi));
-    ok(size == sizeof(mbi), "VirtualQuery returned %ld\n", size);
+    ok(size == sizeof(mbi), "VirtualQuery returned %Id\n", size);
     size = GetModuleFileNameA(mbi.AllocationBase, module_name, sizeof(module_name));
     ok(size, "GetModuleFileName failed\n");
     for (ptr = module_name+size-1; ptr > module_name; ptr--)
@@ -1329,7 +1475,7 @@ static void test_actctx_classes(void)
     create_manifest_file(path, main_manifest);
     context = create_test_actctx(path);
     ret = DeleteFileA(path);
-    ok(ret, "Failed to delete manifest file, error %d.\n", GetLastError());
+    ok(ret, "Failed to delete manifest file, error %ld.\n", GetLastError());
 
     ret = ActivateActCtx(context, &cookie);
     ok(ret, "Failed to activate context.\n");
@@ -1464,6 +1610,102 @@ static void test_actctx_classes(void)
     ReleaseActCtx(context);
 }
 
+static void test_uxtheme(void)
+{
+    static const CHAR *class_name = "test_uxtheme_class";
+    BOOL (WINAPI * pIsThemeActive)(void);
+    BOOL dll_loaded, is_theme_active;
+    WNDCLASSEXA class;
+    HMODULE uxtheme;
+    ATOM atom;
+    HWND hwnd;
+
+    memset(&class, 0, sizeof(class));
+    class.cbSize = sizeof(class);
+    class.lpfnWndProc = DefWindowProcA;
+    class.hInstance = GetModuleHandleA(NULL);
+    class.lpszClassName = class_name;
+    atom = RegisterClassExA(&class);
+    ok(atom, "RegisterClassExA failed, error %lu.\n", GetLastError());
+
+    dll_loaded = !!GetModuleHandleA("comctl32.dll");
+    ok(!dll_loaded, "Expected comctl32.dll not loaded.\n");
+    dll_loaded = !!GetModuleHandleA("uxtheme.dll");
+    todo_wine_if(dll_loaded)
+    ok(!dll_loaded, "Expected uxtheme.dll not loaded.\n");
+
+    /* Creating a window triggers uxtheme load when theming is active */
+    hwnd = CreateWindowA(class_name, "Test", WS_POPUP, 0, 0, 1, 1, NULL, NULL,
+                         GetModuleHandleA(NULL), NULL);
+    ok(!!hwnd, "Failed to create a test window, error %lu.\n", GetLastError());
+
+    dll_loaded = !!GetModuleHandleA("comctl32.dll");
+    ok(!dll_loaded, "Expected comctl32.dll not loaded.\n");
+
+    /* Uxtheme is loaded when theming is active */
+    dll_loaded = !!GetModuleHandleA("uxtheme.dll");
+
+    uxtheme = LoadLibraryA("uxtheme.dll");
+    ok(!!uxtheme, "Failed to load uxtheme.dll, error %lu.\n", GetLastError());
+    pIsThemeActive = (void *)GetProcAddress(uxtheme, "IsThemeActive");
+    ok(!!pIsThemeActive, "Failed to load IsThemeActive, error %lu.\n", GetLastError());
+    is_theme_active = pIsThemeActive();
+    FreeLibrary(uxtheme);
+
+    ok(dll_loaded == is_theme_active, "Expected uxtheme %s when theming is %s.\n",
+       is_theme_active ? "loaded" : "not loaded", is_theme_active ? "active" : "inactive");
+
+    DestroyWindow(hwnd);
+    UnregisterClassA(class_name, GetModuleHandleA(NULL));
+}
+
+static void test_class_name(void)
+{
+    WCHAR class_name[] = L"ClassNameTest";
+    HINSTANCE hinst = GetModuleHandleW(0);
+    WNDCLASSEXW wcex;
+    const WCHAR *nameW;
+    const char *nameA;
+    UINT_PTR res;
+    HWND hwnd;
+
+    memset(&wcex, 0, sizeof wcex);
+    wcex.cbSize        = sizeof wcex;
+    wcex.lpfnWndProc   = ClassTest_WndProc;
+    wcex.hIcon         = LoadIconW(0, (LPCWSTR)IDI_APPLICATION);
+    wcex.hInstance     = hinst;
+    wcex.lpszClassName = class_name;
+    wcex.lpszMenuName  = L"menu name";
+    ok(RegisterClassExW(&wcex), "RegisterClassExW returned 0\n");
+    hwnd = CreateWindowExW(0, class_name, NULL, WS_OVERLAPPEDWINDOW,
+                           0, 0, 0, 0, NULL, NULL, hinst, 0);
+    ok(hwnd != NULL, "Window was not created\n");
+
+    nameA = (const char *)GetClassLongPtrA(hwnd, GCLP_MENUNAME);
+    ok(!strcmp(nameA, "menu name"), "unexpected class name %s\n", debugstr_a(nameA));
+    nameW = (const WCHAR *)GetClassLongPtrW(hwnd, GCLP_MENUNAME);
+    ok(!wcscmp(nameW, L"menu name"), "unexpected class name %s\n", debugstr_w(nameW));
+
+    res = SetClassLongPtrA(hwnd, GCLP_MENUNAME, (LONG_PTR)"nameA");
+    todo_wine
+    ok(res, "SetClassLongPtrA returned 0\n");
+    nameA = (const char *)GetClassLongPtrA(hwnd, GCLP_MENUNAME);
+    ok(!strcmp(nameA, "nameA"), "unexpected class name %s\n", debugstr_a(nameA));
+    nameW = (const WCHAR *)GetClassLongPtrW(hwnd, GCLP_MENUNAME);
+    ok(!wcscmp(nameW, L"nameA"), "unexpected class name %s\n", debugstr_w(nameW));
+
+    res = SetClassLongPtrW(hwnd, GCLP_MENUNAME, (LONG_PTR)L"nameW");
+    todo_wine
+    ok(res, "SetClassLongPtrW returned 0\n");
+    nameA = (const char *)GetClassLongPtrA(hwnd, GCLP_MENUNAME);
+    ok(!strcmp(nameA, "nameW"), "unexpected class name %s\n", debugstr_a(nameA));
+    nameW = (const WCHAR *)GetClassLongPtrW(hwnd, GCLP_MENUNAME);
+    ok(!wcscmp(nameW, L"nameW"), "unexpected class name %s\n", debugstr_w(nameW));
+
+    DestroyWindow(hwnd);
+    UnregisterClassW(class_name, hinst);
+}
+
 START_TEST(class)
 {
     char **argv;
@@ -1476,6 +1718,7 @@ START_TEST(class)
         return;
     }
 
+    test_uxtheme();
     test_IME();
     test_GetClassInfo();
     test_extra_values();
@@ -1488,12 +1731,17 @@ START_TEST(class)
 
     ClassTest(hInstance,FALSE);
     ClassTest(hInstance,TRUE);
+    ClassTest((HANDLE)((ULONG_PTR)hInstance | 0x1234), FALSE);
+    ClassTest((HANDLE)((ULONG_PTR)hInstance | 0x1234), TRUE);
     CreateDialogParamTest(hInstance);
     test_styles();
     test_builtinproc();
+    test_ntdll_wndprocs();
+    test_wndproc_forwards();
     test_icons();
     test_comctl32_classes();
     test_actctx_classes();
+    test_class_name();
 
     /* this test unregisters the Button class so it should be executed at the end */
     test_instances();
