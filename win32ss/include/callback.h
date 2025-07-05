@@ -105,6 +105,16 @@ typedef struct _LOADMENU_CALLBACK_ARGUMENTS
   WCHAR MenuName[1];
 } LOADMENU_CALLBACK_ARGUMENTS, *PLOADMENU_CALLBACK_ARGUMENTS;
 
+typedef struct _LOADIMAGE_CALLBACK_ARGUMENTS
+{
+    UINT ImageType;
+    int cxDesired;
+    int cyDesired;
+    UINT fuFlags;
+    LPCWSTR ResourceId;
+    WCHAR ImageName[MAX_PATH];
+} LOADIMAGE_CALLBACK_ARGUMENTS, *PLOADIMAGE_CALLBACK_ARGUMENTS;
+
 typedef struct _COPYIMAGE_CALLBACK_ARGUMENTS
 {
   HANDLE hImage;
@@ -127,6 +137,26 @@ typedef struct _GET_CHARSET_INFO
     LCID Locale;
     CHARSETINFO Cs;
 } GET_CHARSET_INFO, *PGET_CHARSET_INFO;
+
+typedef struct _LOADCURSORS_CALLBACK_ARGUMENTS
+{
+    HCURSOR hCursorArrow;
+    HCURSOR hCursorIbeam;
+    HCURSOR hCursorWait;
+    HCURSOR hCursorCross;
+    HCURSOR hCursorUp;
+    HCURSOR hCursorIcon;
+    HCURSOR hCursorSize;
+    HCURSOR hCursorSizeNwse;
+    HCURSOR hCursorSizeNesw;
+    HCURSOR hCursorSizeWe;
+    HCURSOR hCursorSizeNs;
+    HCURSOR hCursorSizeAll;
+    HCURSOR hCursorNo;
+    HCURSOR hCursorHand;
+    HCURSOR hCursorAppStarting;
+    HCURSOR hCursorHelp;
+} LOADCURSORS_CALLBACK_ARGUMENTS, *PLOADCURSORS_CALLBACK_ARGUMENTS;
 
 typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
 {
@@ -185,6 +215,8 @@ typedef struct _IMMLOADLAYOUT_CALLBACK_OUTPUT
     IMEINFOEX iiex;
 } IMMLOADLAYOUT_CALLBACK_OUTPUT, *PIMMLOADLAYOUT_CALLBACK_OUTPUT;
 
+NTSTATUS WINAPI
+User32CallLoadImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
