@@ -30,6 +30,11 @@ static inline void cicMemFree(LPVOID ptr)
         LocalFree(ptr);
 }
 
+static inline bool cicIsNullPtr(LPCVOID ptr)
+{
+    return !ptr;
+}
+
 struct CicNoThrow { };
 #define cicNoThrow CicNoThrow{}
 

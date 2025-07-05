@@ -26,11 +26,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
-static inline bool cicIsNullPtr(LPCVOID ptr)
-{
-    return !ptr;
-}
-
 ////////////////////////////////////////////////////////////////////////////
 
 class CContext
@@ -626,7 +621,7 @@ STDMETHODIMP CContext::AdviseSink(
 {
     TRACE("(%p) %s %p %p\n", this, debugstr_guid(&riid), punk, pdwCookie);
 
-    if (!&riid || !punk || !pdwCookie)
+    if (cicIsNullPtr(&riid) || !punk || !pdwCookie)
         return E_INVALIDARG;
 
     if (riid == IID_ITfTextEditSink)
