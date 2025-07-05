@@ -626,7 +626,7 @@ STDMETHODIMP CContext::AdviseSink(
 {
     TRACE("(%p) %s %p %p\n", this, debugstr_guid(&riid), punk, pdwCookie);
 
-    if (cicIsNullPtr(&riid) || !punk || !pdwCookie)
+    if (!&riid || !punk || !pdwCookie)
         return E_INVALIDARG;
 
     if (riid == IID_ITfTextEditSink)
