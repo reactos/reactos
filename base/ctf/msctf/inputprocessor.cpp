@@ -1257,7 +1257,7 @@ STDMETHODIMP CEnumTfLanguageProfiles::Clone(_Out_ IEnumTfLanguageProfiles **ppEn
     {
         WCHAR fullkey[168];
         swprintf(fullkey, L"%s\\%s\\0x%08x", m_szwCurrentClsid, L"LanguageProfile", m_langid);
-        RegOpenKeyExW(new_This->m_tipkey, fullkey, 0, KEY_READ | KEY_WRITE, &m_langkey);
+        RegOpenKeyExW(new_This->m_tipkey, fullkey, 0, KEY_READ | KEY_WRITE, &new_This->m_langkey);
         new_This->m_lang_index = m_lang_index;
     }
 
