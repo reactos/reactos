@@ -1,7 +1,13 @@
-// COPYRIGHT: xrogers <xxrogers@users.sourceforge.net>
-//            2011 Caemyr
-//            2014 Adam Stachowicz <saibamenppl@gmail.com>
-// https://sourceforge.net/projects/reactospl
+/*
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2007 Lech Groblewicz <xxrogers@users.sourceforge.net>
+ *              Copyright 2011 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2014 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2017 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -141,8 +147,8 @@ BEGIN
         END
         MENUITEM "Ustaw &koligację...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "&Właściwości", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "O&twórz lokalizację pliku", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -277,40 +283,40 @@ BEGIN
     AUTOCHECKBOX "CPU 31", IDC_CPU31, 175, 119, 41, 10, WS_DISABLED | WS_TABSTOP
 END
 
-IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 195, 199
+IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 210, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Wybierz kolumny"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 84, 178, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 138, 178, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 94, 178, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 148, 178, 50, 14
     LTEXT "Wybierz kolumny do wyświetlania na stronie Proces Menedżera zadań", IDC_STATIC, 7, 7, 181, 17
-    AUTOCHECKBOX "&Nazwa obrazu", IDC_IMAGENAME, 7, 28, 100, 10, WS_DISABLED | WS_TABSTOP
-    AUTOCHECKBOX "PI&D (idewntyfikator procesu)", IDC_PID, 7, 39, 100, 10
-    AUTOCHECKBOX "&Użycie procesora CPU", IDC_CPUUSAGE, 7, 50, 100, 10
-    AUTOCHECKBOX "&Czas procesora CPU", IDC_CPUTIME, 7, 61, 100, 10
-    AUTOCHECKBOX "Zużycie pa&mięci", IDC_MEMORYUSAGE, 7, 72, 100, 10
-    AUTOCHECKBOX "&Zmiana zużycia pamięci", IDC_MEMORYUSAGEDELTA, 7, 83, 100, 10
-    AUTOCHECKBOX "&Szczytowe zużycie pamięci", IDC_PEAKMEMORYUSAGE, 7, 94, 100, 10
-    AUTOCHECKBOX "&Błędy stronic", IDC_PAGEFAULTS, 7, 105, 100, 10
-    AUTOCHECKBOX "Obie&kty USER", IDC_USEROBJECTS, 7, 116, 100, 10
-    AUTOCHECKBOX "Odczyty We/Wy", IDC_IOREADS, 7, 127, 100, 10
-    AUTOCHECKBOX "Odczyty We/Wy w bajtach", IDC_IOREADBYTES, 7, 138, 100, 10
-    AUTOCHECKBOX "&Identyfikator sesji", IDC_SESSIONID, 7, 149, 100, 10
-    AUTOCHECKBOX "Naz&wa użytkownika", IDC_USERNAME, 7, 160, 100, 10
-    AUTOCHECKBOX "Zmi&ana błędów stronic", IDC_PAGEFAULTSDELTA, 107, 28, 85, 10
-    AUTOCHECKBOX "&Rozmiar pamięci wirtualnej", IDC_VIRTUALMEMORYSIZE, 107, 39, 85, 10
-    AUTOCHECKBOX "&Pula stronicowania", IDC_PAGEDPOOL, 107, 50, 85, 10
-    AUTOCHECKBOX "Pula niestr&onicowana", IDC_NONPAGEDPOOL, 107, 61, 85, 10
-    AUTOCHECKBOX "Prior&ytet podstawowy", IDC_BASEPRIORITY, 107, 72, 85, 10
-    AUTOCHECKBOX "&Liczba uchwytów", IDC_HANDLECOUNT, 107, 83, 85, 10
-    AUTOCHECKBOX "Liczba w&ątków", IDC_THREADCOUNT, 107, 94, 85, 10
-    AUTOCHECKBOX "Obiekty &GDI", IDC_GDIOBJECTS, 107, 105, 85, 10
-    AUTOCHECKBOX "Zapisy We/Wy", IDC_IOWRITES, 107, 116, 85, 10
-    AUTOCHECKBOX "Zapisy We/Wy w bajtach", IDC_IOWRITEBYTES, 107, 127, 85, 10
-    AUTOCHECKBOX "Inne We/Wy", IDC_IOOTHER, 107, 138, 85, 10
-    AUTOCHECKBOX "Inne We/Wy w bajtach", IDC_IOOTHERBYTES, 107, 149, 85, 10
-    AUTOCHECKBOX "Linia poleceń", IDC_COMMANDLINE, 107, 160, 85, 10
+    AUTOCHECKBOX "&Nazwa obrazu", IDC_IMAGENAME, 7, 28, 99, 10, WS_DISABLED | WS_TABSTOP
+    AUTOCHECKBOX "PI&D (identyfikator procesu)", IDC_PID, 7, 39, 99, 10
+    AUTOCHECKBOX "&Użycie procesora CPU", IDC_CPUUSAGE, 7, 50, 99, 10
+    AUTOCHECKBOX "&Czas procesora CPU", IDC_CPUTIME, 7, 61, 99, 10
+    AUTOCHECKBOX "Zużycie pa&mięci", IDC_MEMORYUSAGE, 7, 72, 99, 10
+    AUTOCHECKBOX "&Zmiana zużycia pamięci", IDC_MEMORYUSAGEDELTA, 7, 83, 99, 10
+    AUTOCHECKBOX "&Szczytowe zużycie pamięci", IDC_PEAKMEMORYUSAGE, 7, 94, 99, 10
+    AUTOCHECKBOX "&Błędy stronic", IDC_PAGEFAULTS, 7, 105, 99, 10
+    AUTOCHECKBOX "Obie&kty USER", IDC_USEROBJECTS, 7, 116, 99, 10
+    AUTOCHECKBOX "Odczyty We/Wy", IDC_IOREADS, 7, 127, 99, 10
+    AUTOCHECKBOX "Odczyty We/Wy w bajtach", IDC_IOREADBYTES, 7, 138, 99, 10
+    AUTOCHECKBOX "&Identyfikator sesji", IDC_SESSIONID, 7, 149, 99, 10
+    AUTOCHECKBOX "Naz&wa użytkownika", IDC_USERNAME, 7, 160, 99, 10
+    AUTOCHECKBOX "Zmi&ana błędów stronic", IDC_PAGEFAULTSDELTA, 109, 28, 98, 10
+    AUTOCHECKBOX "&Rozmiar pamięci wirtualnej", IDC_VIRTUALMEMORYSIZE, 109, 39, 98, 10
+    AUTOCHECKBOX "&Pula stronicowania", IDC_PAGEDPOOL, 109, 50, 98, 10
+    AUTOCHECKBOX "Pula niestr&onicowana", IDC_NONPAGEDPOOL, 109, 61, 98, 10
+    AUTOCHECKBOX "Prior&ytet podstawowy", IDC_BASEPRIORITY, 109, 72, 98, 10
+    AUTOCHECKBOX "&Liczba uchwytów", IDC_HANDLECOUNT, 109, 83, 98, 10
+    AUTOCHECKBOX "Liczba w&ątków", IDC_THREADCOUNT, 109, 94, 98, 10
+    AUTOCHECKBOX "Obiekty &GDI", IDC_GDIOBJECTS, 109, 105, 98, 10
+    AUTOCHECKBOX "Zapisy We/Wy", IDC_IOWRITES, 109, 116, 98, 10
+    AUTOCHECKBOX "Zapisy We/Wy w bajtach", IDC_IOWRITEBYTES, 109, 127, 98, 10
+    AUTOCHECKBOX "Inne We/Wy", IDC_IOOTHER, 109, 138, 98, 10
+    AUTOCHECKBOX "Inne We/Wy w bajtach", IDC_IOOTHERBYTES, 109, 149, 98, 10
+    AUTOCHECKBOX "Linia poleceń", IDC_COMMANDLINE, 109, 160, 98, 10
 END
 
 /* String Tables */
@@ -372,8 +378,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Ustawia procesowi priorytet normalny"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Ustawia procesowi priorytet poniżej normalnego"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Ustawia procesowi priorytet niski"
-    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
-    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
+    ID_PROCESS_PAGE_PROPERTIES "Wyświetla właściwości pliku procesu"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Otwiera lokalizację pliku procesu"
 END
 
 STRINGTABLE
