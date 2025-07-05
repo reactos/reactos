@@ -538,6 +538,14 @@ ScsiPortDeviceControl(
             status = STATUS_NOT_IMPLEMENTED;
             break;
 
+        case IOCTL_ATA_PASS_THROUGH:
+        case IOCTL_ATA_PASS_THROUGH_DIRECT:
+            /* ATA passthrough IOCTLs not supported by MS scsiport */
+            DPRINT1("ATA passthrough IOCTLs not supported: 0x%lX\n",
+                    Stack->Parameters.DeviceIoControl.IoControlCode);
+            status = STATUS_NOT_SUPPORTED;
+            break;
+
         default:
             DPRINT1("unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
             status = STATUS_NOT_SUPPORTED;
