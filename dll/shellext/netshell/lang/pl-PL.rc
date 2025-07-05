@@ -93,7 +93,7 @@ CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Proszę czekać, system ReactOS instaluje składniki sieciowe..", IDC_STATIC, 53, 7, 240, 20
+    LTEXT "Proszę czekać, system ReactOS instaluje składniki sieciowe.", IDC_STATIC, 53, 7, 240, 20
     CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 58, 275, 11
 END
 
