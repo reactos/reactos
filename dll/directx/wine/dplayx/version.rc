@@ -26,4 +26,4 @@
 #define WINE_PRODUCTVERSION_STR "5.3.1.904"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"

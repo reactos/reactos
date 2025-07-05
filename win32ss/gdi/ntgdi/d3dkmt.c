@@ -80,13 +80,28 @@ NTSTATUS
 APIENTRY
 NtGdiDdDDIOpenAdapterFromHdc(_Inout_ D3DKMT_OPENADAPTERFROMHDC* unnamedParam1)
 {
-    return 0;
+    return STATUS_PROCEDURE_NOT_FOUND;
 }
 
 
 NTSTATUS
 APIENTRY
 NtGdiDdDDIOpenAdapterFromDeviceName(_Inout_ D3DKMT_OPENADAPTERFROMDEVICENAME* unnamedParam1)
+{
+    return 0;
+}
+
+/* wine required */
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromLuid(_Inout_ const D3DKMT_OPENADAPTERFROMLUID *unnamedParam1)
+{
+    return 0;
+}
+
+NTSTATUS
+APIENTRY
+NtGdiDdQueryVideoMemoryInfo(_Inout_ D3DKMT_QUERYVIDEOMEMORYINFO *unnamedParam1)
 {
     return 0;
 }

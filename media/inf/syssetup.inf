@@ -39,6 +39,7 @@ RegisterDlls = EarlyRegisterDlls
 11,,comctl32.dll,2
 11,,ole32.dll,1
 11,,netcfgx.dll,1
+11,,quartz.dll,1
 
 [RegistrationPhase2]
 RegisterDlls = OleControlDlls
@@ -57,6 +58,7 @@ AddReg=Classes
 11,,cryptnet.dll,1
 11,,d3dxof.dll,1
 11,,ddraw.dll,1
+11,,ddrawex.dll,1
 11,,devenum.dll,1
 11,,dinput.dll,1
 11,,dinput8.dll,1
@@ -126,6 +128,7 @@ AddReg=Classes
 11,,shellbtrfs.dll,1
 11,,zipfldr.dll,1
 
+11,,qedit.dll,1
 [TypeLibraries]
 riched20.dll
 stdole2.tlb

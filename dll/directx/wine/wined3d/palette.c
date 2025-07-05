@@ -18,15 +18,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
-#include "wine/port.h"
+
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 ULONG CDECL wined3d_palette_incref(struct wined3d_palette *palette)
 {
-    ULONG refcount = InterlockedIncrement(&palette->ref);
+    unsigned int refcount = InterlockedIncrement(&palette->ref);
 
     TRACE("%p increasing refcount to %u.\n", palette, refcount);
 
@@ -35,23 +34,29 @@ ULONG CDECL wined3d_palette_incref(struct wined3d_palette *palette)
 
 static void wined3d_palette_destroy_object(void *object)
 {
-    heap_free(object);
+    TRACE("object %p.\n", object);
+
+    free(object);
 }
 
 ULONG CDECL wined3d_palette_decref(struct wined3d_palette *palette)
 {
-    ULONG refcount = InterlockedDecrement(&palette->ref);
+    unsigned int refcount = InterlockedDecrement(&palette->ref);
 
     TRACE("%p decreasing refcount to %u.\n", palette, refcount);
 
     if (!refcount)
+    {
+        wined3d_mutex_lock();
         wined3d_cs_destroy_object(palette->device->cs, wined3d_palette_destroy_object, palette);
+        wined3d_mutex_unlock();
+    }
 
     return refcount;
 }
 
 HRESULT CDECL wined3d_palette_get_entries(const struct wined3d_palette *palette,
-        DWORD flags, DWORD start, DWORD count, PALETTEENTRY *entries)
+        uint32_t flags, unsigned int start, unsigned int count, PALETTEENTRY *entries)
 {
     unsigned int i;
     TRACE("palette %p, flags %#x, start %u, count %u, entries %p.\n",
@@ -59,7 +64,7 @@ HRESULT CDECL wined3d_palette_get_entries(const struct wined3d_palette *palette,
 
     if (flags)
         return WINED3DERR_INVALIDCALL; /* unchecked */
-    if (start > palette->size || count > palette->size - start)
+    if (!wined3d_bound_range(start, count, palette->size))
         return WINED3DERR_INVALIDCALL;
 
     if (palette->flags & WINED3D_PALETTE_8BIT_ENTRIES)
@@ -86,25 +91,19 @@ HRESULT CDECL wined3d_palette_get_entries(const struct wined3d_palette *palette,
 void CDECL wined3d_palette_apply_to_dc(const struct wined3d_palette *palette, HDC dc)
 {
     if (SetDIBColorTable(dc, 0, 256, palette->colors) != 256)
-#ifdef __REACTOS__
-    {
-        static int warn_once;
-        if (!warn_once++)
-            ERR("Failed to set DIB color table. (Only printing once)\n");
-    }
-#else
         ERR("Failed to set DIB color table.\n");
-#endif
 }
 
 HRESULT CDECL wined3d_palette_set_entries(struct wined3d_palette *palette,
-        DWORD flags, DWORD start, DWORD count, const PALETTEENTRY *entries)
+        uint32_t flags, unsigned int start, unsigned int count, const PALETTEENTRY *entries)
 {
     unsigned int i;
 
     TRACE("palette %p, flags %#x, start %u, count %u, entries %p.\n",
             palette, flags, start, count, entries);
     TRACE("Palette flags: %#x.\n", palette->flags);
+
+    wined3d_cs_finish(palette->device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
     if (palette->flags & WINED3D_PALETTE_8BIT_ENTRIES)
     {
@@ -141,7 +140,7 @@ HRESULT CDECL wined3d_palette_set_entries(struct wined3d_palette *palette,
 }
 
 static HRESULT wined3d_palette_init(struct wined3d_palette *palette, struct wined3d_device *device,
-        DWORD flags, unsigned int entry_count, const PALETTEENTRY *entries)
+        uint32_t flags, unsigned int entry_count, const PALETTEENTRY *entries)
 {
     HRESULT hr;
 
@@ -152,14 +151,14 @@ static HRESULT wined3d_palette_init(struct wined3d_palette *palette, struct wine
 
     if (FAILED(hr = wined3d_palette_set_entries(palette, 0, 0, entry_count, entries)))
     {
-        WARN("Failed to set palette entries, hr %#x.\n", hr);
+        WARN("Failed to set palette entries, hr %#lx.\n", hr);
         return hr;
     }
 
     return WINED3D_OK;
 }
 
-HRESULT CDECL wined3d_palette_create(struct wined3d_device *device, DWORD flags,
+HRESULT CDECL wined3d_palette_create(struct wined3d_device *device, uint32_t flags,
         unsigned int entry_count, const PALETTEENTRY *entries, struct wined3d_palette **palette)
 {
     struct wined3d_palette *object;
@@ -168,13 +167,13 @@ HRESULT CDECL wined3d_palette_create(struct wined3d_device *device, DWORD flags,
     TRACE("device %p, flags %#x, entry_count %u, entries %p, palette %p.\n",
             device, flags, entry_count, entries, palette);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     if (FAILED(hr = wined3d_palette_init(object, device, flags, entry_count, entries)))
     {
-        WARN("Failed to initialize palette, hr %#x.\n", hr);
-        heap_free(object);
+        WARN("Failed to initialize palette, hr %#lx.\n", hr);
+        free(object);
         return hr;
     }
 

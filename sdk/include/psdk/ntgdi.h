@@ -4311,4 +4311,18 @@ APIENTRY
 NtGdiDdDDIWaitForSynchronizationObject(
     _In_ const D3DKMT_WAITFORSYNCHRONIZATIONOBJECT* unnamedParam1);
 
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdQueryVideoMemoryInfo(
+    _Inout_ D3DKMT_QUERYVIDEOMEMORYINFO *unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromLuid(
+    _Inout_ const D3DKMT_OPENADAPTERFROMLUID *unnamedParam1);
+
 #endif /* _NTGDI_ */
