@@ -55,6 +55,7 @@ if(${ARCH} STREQUAL "i386")
     )
     list(APPEND VCRT_SETJMP_ASM_SOURCES
         i386/__longjmp_nounwind.s
+        i386/_seh_longjmp_unwind.s
         i386/_setjmp.s
         i386/_setjmp3.s
     )
