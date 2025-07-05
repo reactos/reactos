@@ -36,8 +36,12 @@ static inline bool cicIsNullPtr(LPCVOID ptr)
 class CContext
     : public ITfContext
     , public ITfSource
+    // , public ITfContextComposition
     , public ITfContextOwnerCompositionServices
+    // , public ITfContextOwnerServices
     , public ITfInsertAtSelection
+    // , public ITfMouseTracker
+    // , public ITfQueryEmbedded
     , public ITfSourceSingle
     , public ITextStoreACPSink
     , public ITextStoreACPServices
@@ -412,15 +416,13 @@ STDMETHODIMP CContext::GetSelection(
         hr = m_pITextStoreACP->GetSelection(ulIndex + i, 1, &acps, &fetched);
         if (hr == TS_E_NOLOCK)
             return TF_E_NOLOCK;
-        else if (SUCCEEDED(hr))
-        {
-            pSelection[totalFetched].style.ase = (TfActiveSelEnd)acps.style.ase;
-            pSelection[totalFetched].style.fInterimChar = acps.style.fInterimChar;
-            Range_Constructor(this, m_pITextStoreACP, cookie->lockType, acps.acpStart, acps.acpEnd, &pSelection[totalFetched].range);
-            totalFetched++;
-        }
-        else
+        else if (FAILED(hr))
             break;
+
+        pSelection[totalFetched].style.ase = (TfActiveSelEnd)acps.style.ase;
+        pSelection[totalFetched].style.fInterimChar = acps.style.fInterimChar;
+        Range_Constructor(this, m_pITextStoreACP, cookie->lockType, acps.acpStart, acps.acpEnd, &pSelection[totalFetched].range);
+        totalFetched++;
     }
 
     *pcFetched = totalFetched;

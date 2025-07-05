@@ -13,8 +13,8 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     categorymgr.cpp
-    context.cpp
     compartmentmgr.cpp
+    context.cpp
     displayattributemgr.cpp
     documentmgr.cpp
     langbarmgr.cpp
