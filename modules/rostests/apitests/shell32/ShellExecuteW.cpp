@@ -19,20 +19,21 @@ WINDOW_LIST g_winlist;
 
 static void CloseWindow(HINSTANCE hInstance, PCWSTR ClassName, PCWSTR Title)
 {
-    if ((SIZE_T)hInstance > 32)
-    {
-        HWND hWnd = NULL;
-        for (UINT i = 0; i < 1500; i += 250)
-        {
-            hWnd = FindWindowW(ClassName, Title);
-            if (hWnd && IsWindowVisible(hWnd))
-                break;
-            Sleep(250);
-        }
+    if ((SIZE_T)hInstance <= 32)
+        return;
 
-        if (!hWnd || !PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
-            CloseNewWindows(&g_winlist);
+    HWND hWnd = NULL;
+    for (UINT i = 0; i < 1500; i += 250)
+    {
+        hWnd = FindWindowW(ClassName, Title);
+        if (hWnd && IsWindowVisible(hWnd) && !FindInWindowList(g_winlist, hWnd))
+            break;
+        hWnd = NULL;
+        Sleep(250);
     }
+
+    if (!hWnd || !PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
+        CloseNewWindows(&g_winlist);
 }
 
 START_TEST(ShellExecuteW)
@@ -59,7 +60,6 @@ START_TEST(ShellExecuteW)
         SysDrive[2] = 0;
     }
     PathAddBackslashW(SysDrive);
-    GetWindowList(&g_winlist);
 
     GetWindowList(&g_winlist);
 
