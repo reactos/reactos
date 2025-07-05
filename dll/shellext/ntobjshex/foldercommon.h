@@ -452,7 +452,7 @@ public:
 
             if (cidl == 1 && IsFolder(apidl[0]))
             {
-                res = RegOpenKeyEx(HKEY_CLASSES_ROOT, L"Folder", 0, KEY_READ, &keys[0]);
+                res = RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Folder", 0, KEY_READ, &keys[0]);
                 if (!NT_SUCCESS(res))
                     return HRESULT_FROM_WIN32(res);
                 nkeys++;
@@ -460,7 +460,7 @@ public:
 
             HRESULT hr = CDefFolderMenu_Create2(parent, hwndOwner, cidl, apidl, psfParent, DefCtxMenuCallback, nkeys, keys, &pcm);
             for (UINT i = 0; i < nkeys; ++i)
-                RegCloseKey(keys[0]);
+                RegCloseKey(keys[i]);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 

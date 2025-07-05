@@ -299,7 +299,7 @@ class CDefaultContextMenu :
         UINT m_cidl;
         PCUITEMID_CHILD_ARRAY m_apidl;
         CComPtr<IDataObject> m_pDataObj;
-        HKEY m_aKeys[16]; // This value is documented for both the old API and for DEFCONTEXTMENU
+        HKEY m_aKeys[16]; // This limit is documented for both the old API and for DEFCONTEXTMENU
         UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
@@ -444,7 +444,9 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
 
     for (UINT i = 0; i < pdcm->cKeys; ++i)
     {
-        if ((m_aKeys[i] = SHRegDuplicateHKey(pdcm->aKeys[i])) != NULL)
+        if (i >= _countof(m_aKeys))
+            hr = E_INVALIDARG;
+        else if ((m_aKeys[i] = SHRegDuplicateHKey(pdcm->aKeys[i])) != NULL)
             m_cKeys++;
         else
             hr = E_OUTOFMEMORY;

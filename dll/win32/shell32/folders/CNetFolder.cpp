@@ -437,7 +437,7 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
     {
         CRegKeyHandleArray keys;
         IContextMenu * pCm = NULL;
-        AddClassKeyToArray(L"Folder",keys, keys);
+        AddClassKeyToArray(L"Folder", keys, keys);
         hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, this, NetFolderMenuCallback, keys, keys, &pCm);
         pObj = pCm;
     }
