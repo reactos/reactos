@@ -6,7 +6,7 @@ Provider=%ALTERWARE%
 ClassGUID={4D36E97D-E325-11CE-BFC1-08002BE10318}
 Class=System
 ;CatalogFile=uniata.cat
-DriverVer=08/25/2012,0.43.4.2
+DriverVer=10/16/2021,0.47.2.0
 
 
 [DestinationDirs]
