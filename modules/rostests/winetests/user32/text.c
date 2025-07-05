@@ -45,6 +45,8 @@ static void test_DrawTextCalcRect(void)
     static WCHAR emptystringW[] = { 0 };
     static CHAR wordbreak_text[] = "line1 line2";
     static WCHAR wordbreak_textW[] = {'l','i','n','e','1',' ','l','i','n','e','2',0};
+    static WCHAR wordbreak_text_colonW[] = {'l','i','n','e','1',' ','l','i','n','e','2',' ',':',0};
+    static WCHAR wordbreak_text_csbW[] = {'l','i','n','e','1',' ','l','i','n','e','2',' ',']',0};
     static char tabstring[] = "one\ttwo";
     INT textlen, textheight, heightcheck;
     RECT rect = { 0, 0, 100, 0 }, rect2;
@@ -55,9 +57,9 @@ static void test_DrawTextCalcRect(void)
     /* Initialization */
     hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP,
                            0, 0, 200, 200, 0, 0, 0, NULL);
-    ok(hwnd != 0, "CreateWindowExA error %u\n", GetLastError());
+    ok(hwnd != 0, "CreateWindowExA error %lu\n", GetLastError());
     hdc = GetDC(hwnd);
-    ok(hdc != 0, "GetDC error %u\n", GetLastError());
+    ok(hdc != 0, "GetDC error %lu\n", GetLastError());
     trace("hdc %p\n", hdc);
     textlen = lstrlenA(text);
 
@@ -74,23 +76,23 @@ static void test_DrawTextCalcRect(void)
     SetMapMode(hdc, MM_HIENGLISH);
     lf.lfHeight = 100 * 9 / 72; /* 9 point */
     hFont = CreateFontIndirectA(&lf);
-    ok(hFont != 0, "CreateFontIndirectA error %u\n",
+    ok(hFont != 0, "CreateFontIndirectA error %lu\n",
        GetLastError());
     hOldFont = SelectObject(hdc, hFont);
 
     textheight = DrawTextA(hdc, text, textlen, &rect, DT_CALCRECT |
        DT_EXTERNALLEADING | DT_WORDBREAK | DT_NOCLIP | DT_LEFT |
        DT_NOPREFIX);
-    ok( textheight, "DrawTextA error %u\n", GetLastError());
+    ok( textheight, "DrawTextA error %lu\n", GetLastError());
 
-    trace("MM_HIENGLISH rect.bottom %d\n", rect.bottom);
+    trace("MM_HIENGLISH rect.bottom %ld\n", rect.bottom);
     ok(rect.bottom < 0, "In MM_HIENGLISH, DrawText with "
        "DT_CALCRECT should return a negative rectangle bottom. "
-       "(bot=%d)\n", rect.bottom);
+       "(bot=%ld)\n", rect.bottom);
 
     SelectObject(hdc, hOldFont);
     ret = DeleteObject(hFont);
-    ok( ret, "DeleteObject error %u\n", GetLastError());
+    ok( ret, "DeleteObject error %lu\n", GetLastError());
 
 
     /* DrawText in MM_TEXT with DT_CALCRECT */
@@ -98,18 +100,18 @@ static void test_DrawTextCalcRect(void)
     lf.lfHeight = -MulDiv(9, GetDeviceCaps(hdc,
        LOGPIXELSY), 72); /* 9 point */
     hFont = CreateFontIndirectA(&lf);
-    ok(hFont != 0, "CreateFontIndirectA error %u\n",
+    ok(hFont != 0, "CreateFontIndirectA error %lu\n",
        GetLastError());
     hOldFont = SelectObject(hdc, hFont);
 
     textheight = DrawTextA(hdc, text, textlen, &rect, DT_CALCRECT |
        DT_EXTERNALLEADING | DT_WORDBREAK | DT_NOCLIP | DT_LEFT |
        DT_NOPREFIX);
-    ok( textheight, "DrawTextA error %u\n", GetLastError());
+    ok( textheight, "DrawTextA error %lu\n", GetLastError());
 
-    trace("MM_TEXT rect.bottom %d\n", rect.bottom);
+    trace("MM_TEXT rect.bottom %ld\n", rect.bottom);
     ok(rect.bottom > 0, "In MM_TEXT, DrawText with DT_CALCRECT "
-       "should return a positive rectangle bottom. (bot=%d)\n",
+       "should return a positive rectangle bottom. (bot=%ld)\n",
        rect.bottom);
 
     /* empty or null text should in some cases calc an empty rectangle */
@@ -326,12 +328,12 @@ static void test_DrawTextCalcRect(void)
     dtp.iLeftMargin = 8;
     SetRectEmpty(&rect);
     DrawTextExA(hdc, text, -1, &rect, DT_CALCRECT, &dtp);
-    ok(rect.right==dtp.iLeftMargin+textlen  ,"Incorrect left margin calculated  rc(%d,%d)\n", rect.left, rect.right);
+    ok(rect.right==dtp.iLeftMargin+textlen  ,"Incorrect left margin calculated  rc(%ld,%ld)\n", rect.left, rect.right);
     dtp.iLeftMargin = 0;
     dtp.iRightMargin = 8;
     SetRectEmpty(&rect);
     DrawTextExA(hdc, text, -1, &rect, DT_CALCRECT, &dtp);
-    ok(rect.right==dtp.iRightMargin+textlen  ,"Incorrect right margin calculated rc(%d,%d)\n", rect.left, rect.right);
+    ok(rect.right==dtp.iRightMargin+textlen  ,"Incorrect right margin calculated rc(%ld,%ld)\n", rect.left, rect.right);
 
     /* Wide char versions */
     SetRect( &rect, 10,10, 100, 100);
@@ -519,15 +521,38 @@ static void test_DrawTextCalcRect(void)
             ok(textheight==0,"Got textheight from DrawTextExW\n");
             ok(dtp.uiLengthDrawn==1337, "invalid dtp.uiLengthDrawn = %i\n",dtp.uiLengthDrawn);
         }
+
+        /* When passing invalid DC, other parameters must be ignored - no crashes on invalid pointers */
+
+        SetLastError(0xdeadbeef);
+        textheight = DrawTextExW((HDC)0xdeadbeef, (LPWSTR)0xdeadbeef, 100000, &rect, 0, 0);
+        ok(textheight == 0, "Got textheight from DrawTextExW\n");
+        ok(GetLastError() == 0xdeadbeef,"Got error %lu\n", GetLastError());
+
+        SetLastError(0xdeadbeef);
+        textheight = DrawTextExW((HDC)0xdeadbeef, 0, -1, (LPRECT)0xdeadbeef, DT_CALCRECT, 0);
+        ok(textheight == 0, "Got textheight from DrawTextExW\n");
+        ok(GetLastError() == 0xdeadbeef,"Got error %lu\n", GetLastError());
+
+        SetLastError(0xdeadbeef);
+        textheight = DrawTextExA((HDC)0xdeadbeef, 0, -1, (LPRECT)0xdeadbeef, DT_CALCRECT, 0);
+        ok(textheight == 0, "Got textheight from DrawTextExA\n");
+        ok(GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_INVALID_HANDLE,"Got error %lu\n", GetLastError());
+
+        if (0)
+        {
+            /* Crashes */
+            textheight = DrawTextExA((HDC)0xdeadbeef, (LPSTR)0xdeadbeef, 100, &rect, 0, 0);
+        }
     }
 
     /* More test cases from bug 12226 */
     SetRectEmpty(&rect);
     textheight = DrawTextA(hdc, emptystring, -1, &rect, DT_CALCRECT | DT_LEFT | DT_SINGLELINE);
-    ok(textheight, "DrawTextA error %u\n", GetLastError());
-    ok(0 == rect.left, "expected 0, got %d\n", rect.left);
-    ok(0 == rect.right, "expected 0, got %d\n", rect.right);
-    ok(0 == rect.top, "expected 0, got %d\n", rect.top);
+    ok(textheight, "DrawTextA error %lu\n", GetLastError());
+    ok(0 == rect.left, "expected 0, got %ld\n", rect.left);
+    ok(0 == rect.right, "expected 0, got %ld\n", rect.right);
+    ok(0 == rect.top, "expected 0, got %ld\n", rect.top);
     ok(rect.bottom, "rect.bottom should not be 0\n");
 
     SetRectEmpty(&rect);
@@ -538,10 +563,10 @@ static void test_DrawTextCalcRect(void)
     }
     else
     {
-        ok(textheight, "DrawTextW error %u\n", GetLastError());
-        ok(0 == rect.left, "expected 0, got %d\n", rect.left);
-        ok(0 == rect.right, "expected 0, got %d\n", rect.right);
-        ok(0 == rect.top, "expected 0, got %d\n", rect.top);
+        ok(textheight, "DrawTextW error %lu\n", GetLastError());
+        ok(0 == rect.left, "expected 0, got %ld\n", rect.left);
+        ok(0 == rect.right, "expected 0, got %ld\n", rect.right);
+        ok(0 == rect.top, "expected 0, got %ld\n", rect.top);
         ok(rect.bottom, "rect.bottom should not be 0\n");
     }
 
@@ -566,6 +591,36 @@ static void test_DrawTextCalcRect(void)
     textheight = DrawTextW(hdc, wordbreak_textW, -1, &rect, DT_CALCRECT | DT_WORDBREAK | DT_EDITCONTROL);
     ok(textheight >= heightcheck * 6, "Got unexpected textheight %d, expected at least %d.\n",
        textheight, heightcheck * 6);
+
+    /* Word break tests with space before punctuation */
+    SetRect(&rect, 0, 0, 200, 1);
+    textheight = DrawTextW(hdc, wordbreak_text_colonW, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
+    ok(textheight == heightcheck, "Got unexpected textheight %d, expected %d.\n",
+       textheight, heightcheck);
+
+    rect2 = rect;
+    rect.right--;
+
+    textheight = DrawTextW(hdc, wordbreak_text_colonW, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
+    ok(textheight == heightcheck * 2, "Got unexpected textheight %d, expected %d.\n",
+       textheight, heightcheck * 2);
+    ok(rect.right > rect2.right - 10, "Got unexpected textwdith %ld, expected larger than %ld.\n",
+       rect.right, rect2.right - 10);
+
+    SetRect(&rect, 0, 0, 200, 1);
+    textheight = DrawTextW(hdc, wordbreak_text_csbW, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
+    ok(textheight == heightcheck, "Got unexpected textheight %d, expected %d.\n",
+       textheight, heightcheck);
+
+    rect2 = rect;
+    rect.right--;
+
+    textheight = DrawTextW(hdc, wordbreak_text_csbW, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
+    ok(textheight == heightcheck * 2, "Got unexpected textheight %d, expected %d.\n",
+       textheight, heightcheck * 2);
+    ok(rect.right > rect2.right - 10, "Got unexpected textwdith %ld, expected larger than %ld.\n",
+       rect.right, rect2.right - 10);
+
 
     /* DT_TABSTOP | DT_EXPANDTABS tests */
     SetRect( &rect, 0,0, 10, 10);
@@ -595,22 +650,22 @@ static void test_DrawTextCalcRect(void)
     textheight = DrawTextExA(hdc, tabstring, -1, &rect, DT_CALCRECT | DT_TABSTOP | DT_EXPANDTABS, &dtp);
     ok(textheight >= heightcheck, "Got unexpected textheight %d\n", textheight);
     ok(dtp.iTabLength == 8, "invalid dtp.iTabLength = %i\n",dtp.iTabLength);
-    ok(rect.left == rect2.left, "unexpected value %d, got %d\n", rect.left, rect2.left);
+    ok(rect.left == rect2.left, "unexpected value %ld, got %ld\n", rect.left, rect2.left);
     /* XP, 2003 appear to not give the same values. */
-    ok(rect.right == rect2.right || broken(rect.right > rect2.right), "unexpected value %d, got %d\n",rect.right, rect2.right);
-    ok(rect.top == rect2.top, "unexpected value %d, got %d\n", rect.top, rect2.top);
-    ok(rect.bottom == rect2.bottom , "unexpected value %d, got %d\n", rect.bottom, rect2.bottom);
+    ok(rect.right == rect2.right || broken(rect.right > rect2.right), "unexpected value %ld, got %ld\n",rect.right, rect2.right);
+    ok(rect.top == rect2.top, "unexpected value %ld, got %ld\n", rect.top, rect2.top);
+    ok(rect.bottom == rect2.bottom , "unexpected value %ld, got %ld\n", rect.bottom, rect2.bottom);
 
 
     SelectObject(hdc, hOldFont);
     ret = DeleteObject(hFont);
-    ok( ret, "DeleteObject error %u\n", GetLastError());
+    ok( ret, "DeleteObject error %lu\n", GetLastError());
 
     /* Clean up */
     ret = ReleaseDC(hwnd, hdc);
-    ok( ret, "ReleaseDC error %u\n", GetLastError());
+    ok( ret, "ReleaseDC error %lu\n", GetLastError());
     ret = DestroyWindow(hwnd);
-    ok( ret, "DestroyWindow error %u\n", GetLastError());
+    ok( ret, "DestroyWindow error %lu\n", GetLastError());
 }
 
 /* replace tabs by \t */
@@ -631,7 +686,7 @@ static void strfmt( const char *str, char *strout)
     extent = GetTabbedTextExtentA( hdc, string, strlen( string), (tabcount), tabs); \
     strfmt( string, strdisp); \
  /*   trace( "Extent is %08lx\n", extent); */\
-    ok( extent == _exp, "Test case \"%s\". Text extent is 0x%x, expected 0x%x tab %d tabcount %d\n", \
+    ok( extent == _exp, "Test case \"%s\". Text extent is 0x%lx, expected 0x%lx tab %d tabcount %d\n", \
         strdisp, extent, _exp, tabval, tabcount); \
 } \
 
@@ -648,12 +703,12 @@ static void test_TabbedText(void)
     /* Initialization */
     hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP,
                            0, 0, 200, 200, 0, 0, 0, NULL);
-    ok(hwnd != 0, "CreateWindowExA error %u\n", GetLastError());
+    ok(hwnd != 0, "CreateWindowExA error %lu\n", GetLastError());
     hdc = GetDC(hwnd);
-    ok(hdc != 0, "GetDC error %u\n", GetLastError());
+    ok(hdc != 0, "GetDC error %lu\n", GetLastError());
 
     ret = GetTextMetricsA( hdc, &tm);
-    ok( ret, "GetTextMetrics error %u\n", GetLastError());
+    ok( ret, "GetTextMetrics error %lu\n", GetLastError());
 
     extent = GetTabbedTextExtentA( hdc, "x", 0, 1, tabs);
     ok( extent == 0, "GetTabbedTextExtentA returned non-zero on nCount == 0\n");
@@ -721,24 +776,24 @@ static void test_DrawState(void)
     SetLastError(0xdeadbeef);
     ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, (LPARAM)text, strlen(text),
                     0, 0, 10, 10, DST_TEXT);
-    ok(ret, "DrawState error %u\n", GetLastError());
+    ok(ret, "DrawState error %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, (LPARAM)text, 0,
                     0, 0, 10, 10, DST_TEXT);
-    ok(ret, "DrawState error %u\n", GetLastError());
+    ok(ret, "DrawState error %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, 0, strlen(text),
                     0, 0, 10, 10, DST_TEXT);
     ok(!ret || broken(ret) /* win98 */, "DrawState succeeded\n");
-    ok(GetLastError() == 0xdeadbeef, "not expected error %u\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "not expected error %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, 0, 0,
                     0, 0, 10, 10, DST_TEXT);
     ok(!ret || broken(ret) /* win98 */, "DrawState succeeded\n");
-    ok(GetLastError() == 0xdeadbeef, "not expected error %u\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "not expected error %lu\n", GetLastError());
 
     ReleaseDC(hwnd, hdc);
     DestroyWindow(hwnd);
