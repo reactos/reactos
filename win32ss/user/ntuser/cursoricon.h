@@ -108,6 +108,8 @@ extern SYSTEMCURICO gasyscur[];
 #define ROIC_BANG 3
 #define ROIC_NOTE 4
 #define ROIC_WINLOGO 5
+#define ROIC_SHIELD 6
+#define OIC_INTERNAL_WINSMALL 6 /* Note: This needs to change if SHIELD is added to gasysico. */
 
 #define ROCR_ARROW 0
 #define ROCR_IBEAM 1
