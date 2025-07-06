@@ -111,6 +111,11 @@ static UINT GetCachedDriveType(INT8 DrvNum)
     return ::GetDriveTypeW(DrvPath);
 }
 
+static inline UINT GetCachedDriveType(PCWSTR DrivePath)
+{
+    return GetCachedDriveType(GetDriveNumber(DrivePath));
+}
+
 static bool IsFloppyDrive(PCWSTR DrivePath)
 {
     extern BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot);
@@ -309,7 +314,6 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
     PIDLIST_ABSOLUTE pidlFolder;
     PUITEMID_CHILD *apidl;
     UINT cidl;
-    UINT nDriveType;
     DWORD dwFlags;
     HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -323,7 +327,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         _ILFreeaPidl(apidl, cidl);
         return E_FAIL;
     }
-    nDriveType = GetDriveTypeW(szDrive);
+    UINT nDriveType = GetCachedDriveType(szDrive);
     if (!GetVolumeInformationW(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0))
     {
         if (nDriveType >= DRIVE_REMOTE)
@@ -464,7 +468,12 @@ HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
 }
 
 static HRESULT
-getIconLocationForDrive(PCWSTR pszDrivePath, PWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pGilOut)
+getIconLocationForDrive(
+    _In_ PCWSTR pszDrivePath,
+    _Out_writes_z_(cchMax) PWSTR szIconFile,
+    _In_ UINT cchMax,
+    _Out_ int *piIndex,
+    _Out_ UINT *pGilOut)
 {
     WCHAR wszPath[MAX_PATH];
     WCHAR wszAutoRunInfPath[MAX_PATH];
@@ -526,7 +535,12 @@ static HRESULT GetDriveLabel(PCWSTR DrivePath, LPWSTR szLabel, UINT cchMax)
     return hr == S_OK ? S_OK : GetRawDriveLabel(DrivePath, szLabel, cchMax);
 }
 
-static BOOL GetRegCustomizedDriveIcon(INT8 DriveNum, PWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pGilOut)
+static bool GetRegCustomizedDriveIcon(
+    _In_ INT8 DriveNum,
+    _Out_writes_z_(cchMax) PWSTR szIconFile,
+    _In_ UINT cchMax,
+    _Out_ int *piIndex,
+    _Out_ UINT *pGilOut)
 {
     WCHAR szKey[200], chDrv = 'A' + DriveNum;
     wsprintfW(szKey, L"%s\\DriveIcons\\%c\\DefaultIcon", REGSTR_PATH_EXPLORER, chDrv);
@@ -1095,7 +1109,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
         BOOL bAllFirst = m_DriveDisplayMode == 4;
         PWSTR pszLabel = pszPath;
 
-        if (!bNoLetter && (bAllFirst || (bRemoteFirst && GetDriveTypeW(szDrive) == DRIVE_REMOTE)))
+        if (!bNoLetter && (bAllFirst || (bRemoteFirst && GetCachedDriveType(szDrive) == DRIVE_REMOTE)))
         {
             bNoLetter = TRUE; // Handling the letter now, don't append it again later
             if (!bEditLabel)
@@ -1104,7 +1118,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
 
         if (GetDriveLabel(szDrive, pszLabel, MAX_PATH - 7) != S_OK && !bEditLabel)
         {
-            UINT ResId = 0, DrvType = GetDriveTypeW(szDrive);
+            UINT ResId = 0, DrvType = GetCachedDriveType(szDrive);
             if (DrvType == DRIVE_REMOVABLE)
                 ResId = IsFloppyDrive(szDrive) ? IDS_DRIVE_FLOPPY : IDS_DRIVE_REMOVABLE;
             else if (DrvType < _countof(iDriveTypeIds))
