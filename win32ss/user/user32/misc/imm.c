@@ -697,6 +697,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         case IMS_NOTIFYIMESHOW:
             if (User32GetImeShowStatus() == !lParam)
             {
+                ERR("pImeWnd: %p\n", pimeui->spwnd);
                 hImeWnd = UserHMGetHandle(pimeui->spwnd);
                 NtUserCallHwndParamLock(hImeWnd, lParam, TWOPARAM_ROUTINE_IMESHOWSTATUSCHANGE);
             }
@@ -998,6 +999,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
         ERR("hwnd was %p\n", hwnd);
         return 0;
     }
+    ERR("pImeWnd: %p, msg:%u\n", pWnd, msg);
 
     if (!pWnd->fnid)
     {

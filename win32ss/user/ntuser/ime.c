@@ -2097,6 +2097,7 @@ co_IntCreateDefaultImeWindow(
     pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, (PLARGE_STRING)&WindowName, NULL, WINVER);
     if (pImeWnd)
     {
+        ERR("pImeWnd: %p\n", pImeWnd);
         pimeui = IntGetImeUIFromWnd(pImeWnd);
         ASSERT(pimeui);
         _SEH2_TRY
@@ -2457,6 +2458,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
+        ERR("pImeWnd: %p\n", pImeWnd);
         ProbeForRead(pImeWnd, sizeof(WND) + sizeof(pimeui), 1);
         pimeui = IntGetImeUIFromWnd(pImeWnd);
         if (!pimeui)
