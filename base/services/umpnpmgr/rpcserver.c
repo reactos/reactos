@@ -4803,7 +4803,7 @@ PNP_GetNextLogConf(
     LPBYTE lpData = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_GetNextLogConf(%p %S %lu %ul %p 0x%08lx)\n",
+    DPRINT("PNP_GetNextLogConf(%p %S %lu %lu %p 0x%08lx)\n",
            hBinding, pDeviceID, ulLogConfType, ulCurrentTag, pulNextTag, ulFlags);
 
     if (pulNextTag == NULL)
