@@ -4595,7 +4595,9 @@ PNP_FreeLogConf(
 
     if (RegDataType == REG_RESOURCE_LIST)
     {
-        if (((PCM_RESOURCE_LIST)pDataBuffer)->Count <= 1)
+        PCM_RESOURCE_LIST pResourceList = (PCM_RESOURCE_LIST)pDataBuffer;
+
+        if (pResourceList->Count <= 1)
         {
             /* Delete the key if there is only one or no configuration in the key */
             DPRINT("Delete value %S\n", szValueNameBuffer);
@@ -4603,7 +4605,52 @@ PNP_FreeLogConf(
         }
         else
         {
-            /* FIXME */
+            PCM_FULL_RESOURCE_DESCRIPTOR pResource = NULL, pNextResource = NULL;
+            ULONG ulIndex, ulMoveSize;
+            DWORD dwError;
+
+            /* Fail if we try to delete an entry outside of our resource list */
+            if (ulLogConfTag >= pResourceList->Count)
+            {
+                ret = CR_INVALID_LOG_CONF;
+                goto done;
+            }
+
+            /* Get a pointer to the resource descriptor to be deleted */
+            pResource = (PCM_FULL_RESOURCE_DESCRIPTOR)&pResourceList->List[0];
+            for (ulIndex = 0; ulIndex < ulLogConfTag; ulIndex++)
+                pResource = NextResourceDescriptor(pResource);
+
+            /* Delete the resource descriptor */
+            if (ulLogConfTag == pResourceList->Count - 1)
+            {
+                /* Delete the last resource descriptor */
+                ulDataSize = (ULONG)((ULONG_PTR)pResource - (ULONG_PTR)pResourceList);
+            }
+            else
+            {
+                pNextResource = NextResourceDescriptor(pResource);
+
+                ulMoveSize = ulDataSize - (DWORD)((ULONG_PTR)pNextResource - (ULONG_PTR)pResourceList);
+                MoveMemory(pResource, pNextResource, ulMoveSize);
+
+                ulDataSize -= (DWORD)((ULONG_PTR)pNextResource - (ULONG_PTR)pResource);
+            }
+
+            pResourceList->Count--;
+
+            /* Store the new configuration */
+            dwError = RegSetValueEx(hConfigKey,
+                                    szValueNameBuffer,
+                                    0,
+                                    RegDataType,
+                                    pDataBuffer,
+                                    ulDataSize);
+            if (dwError != ERROR_SUCCESS)
+            {
+                ret = CR_REGISTRY_ERROR;
+                goto done;
+            }
         }
     }
     else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
