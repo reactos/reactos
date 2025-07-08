@@ -12,10 +12,13 @@
 #define BIOSCALLBUFFER      HEX(4000) /* Buffer to store temporary data for any Int386() call */
 #define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
 #define BSS_START           HEX(6F00)
-#define STACKLOW            HEX(7000)
+#define STACKLOW            HEX(8000)
 #define STACKADDR           HEX(F000) /* The 32/64-bit stack top will be at 0000:F000, or 0xF000 */
-#define FREELDR_BASE        HEX(F800)
+#define FREELDR_BASE        HEX(F600)
 #define FREELDR_PE_BASE    HEX(10000)
+#define TEMPDATA16_BASE     HEX(7000)
+#define TEMPCODE16_BASE     HEX(7400)
+#define TEMPCODE_BASE     HEX(200000)
 #define MEMORY_MARGIN      HEX(88000) /* We need this much memory */
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
@@ -49,6 +52,7 @@
 #define BSS_PnpResult            (BSS_START + 104)
 #define BSS_BootDrive            (BSS_START + 108) // 1 byte
 #define BSS_BootPartition        (BSS_START + 109) // 1 byte
+#define BSS_CurrentBaseAddress   (BSS_START + 110) // 4 bytes
 
 
 /* Realmode function IDs */
@@ -73,7 +77,9 @@
 #define RMODE_DS    HEX(20)    /* RMode data selector, base 0 limit 64k */
 //#else
 /* Long mode selectors */
-#define LMODE_CS HEX(10)
-#define LMODE_DS HEX(18)
-#define CMODE_CS HEX(30)
+#define LMODE_CS    HEX(10)
+#define LMODE_DS    HEX(18)
+#define L_RMODE_CS  HEX(20)
+#define L_RMODE_DS  HEX(28)
+#define CMODE_CS    HEX(30)
 //#endif
