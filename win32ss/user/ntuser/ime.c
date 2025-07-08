@@ -9,7 +9,6 @@
 
 #include <win32k.h>
 #include <jpnvkeys.h>
-#include <unaligned.h>
 
 DBG_DEFAULT_CHANNEL(UserMisc);
 
@@ -44,8 +43,8 @@ LCID glcidSystem = 0;
 static inline PIMEUI FASTCALL IntGetImeUIFromWnd(_In_ PWND pWnd)
 {
     ASSERT(pWnd->cbwndExtra >= sizeof(PIMEUI));
-    return (PIMEUI)ReadUnalignedUlongPtr((const ULONG_PTR *)((const BYTE *)pWnd +
-                                                             sizeof(WND) + IMEWND_PIMEUI_INDEX));
+    PIMEWND pImeWnd = (PIMEWND)pWnd;
+    return pImeWnd->pimeui;
 }
 
 static DWORD FASTCALL
@@ -2097,7 +2096,6 @@ co_IntCreateDefaultImeWindow(
     pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, (PLARGE_STRING)&WindowName, NULL, WINVER);
     if (pImeWnd)
     {
-        ERR("pImeWnd: %p\n", pImeWnd);
         pimeui = IntGetImeUIFromWnd(pImeWnd);
         ASSERT(pimeui);
         _SEH2_TRY
@@ -2458,8 +2456,6 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
-        ERR("pImeWnd: %p\n", pImeWnd);
-        ProbeForRead(pImeWnd, sizeof(WND) + sizeof(pimeui), 1);
         pimeui = IntGetImeUIFromWnd(pImeWnd);
         if (!pimeui)
         {
@@ -2479,6 +2475,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
         if (pWnd)
         {
             bSendNotify = TRUE;
+            ProbeForWrite(pimeui, sizeof(*pimeui), 1);
             pimeui->fShowStatus = bShow;
         }
     }

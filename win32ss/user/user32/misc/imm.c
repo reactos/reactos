@@ -697,7 +697,6 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         case IMS_NOTIFYIMESHOW:
             if (User32GetImeShowStatus() == !lParam)
             {
-                ERR("pImeWnd: %p\n", pimeui->spwnd);
                 hImeWnd = UserHMGetHandle(pimeui->spwnd);
                 NtUserCallHwndParamLock(hImeWnd, lParam, TWOPARAM_ROUTINE_IMESHOWSTATUSCHANGE);
             }
@@ -999,7 +998,6 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
         ERR("hwnd was %p\n", hwnd);
         return 0;
     }
-    ERR("pImeWnd: %p, msg:%u\n", pWnd, msg);
 
     if (!pWnd->fnid)
     {
@@ -1013,26 +1011,24 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
 
     if (msg == WM_NCCREATE)
     {
-        pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pimeui));
+        pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
         if (!pimeui)
         {
             ERR("HeapAlloc failed\n");
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-            DestroyWindow(hwnd);
-            return 0;
+            return FALSE;
         }
-        SetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX, (LONG_PTR)pimeui);
         pimeui->spwnd = pWnd;
+        SetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX, (LONG_PTR)pimeui);
     }
     else
     {
         pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX);
         if (!pimeui)
         {
-            ERR("Invalid IME window\n");
+            ERR("Invalid IMEWND\n");
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-            DestroyWindow(hwnd);
-            return 0;
+            return FALSE;
         }
     }
 
@@ -1194,7 +1190,7 @@ RegisterIMEClass(VOID)
     WndClass.lpszClassName  = L"IME";
     WndClass.style          = CS_GLOBALCLASS;
     WndClass.lpfnWndProc    = ImeWndProcW;
-    WndClass.cbWndExtra     = sizeof(PIMEUI);
+    WndClass.cbWndExtra     = sizeof(IMEWND) - sizeof(WND);
     WndClass.hCursor        = LoadCursorW(NULL, IDC_ARROW);
 
     atom = RegisterClassExWOWW(&WndClass, 0, FNID_IME, 0, FALSE);

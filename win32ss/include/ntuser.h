@@ -1235,6 +1235,12 @@ typedef struct tagIMEUI
     DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
+typedef struct tagIMEWND
+{
+    WND wnd;
+    PIMEUI pimeui;
+} IMEWND, *PIMEWND;
+
 #define IMEWND_PIMEUI_INDEX 0
 
 DWORD
