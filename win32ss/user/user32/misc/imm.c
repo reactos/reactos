@@ -1028,7 +1028,7 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
         {
             ERR("Invalid IMEWND\n");
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-            return FALSE;
+            return 0;
         }
     }
 
@@ -1180,30 +1180,16 @@ BOOL WINAPI UpdatePerUserImmEnabling(VOID)
     return ret;
 }
 
-BOOL
-WINAPI
-RegisterIMEClass(VOID)
+const struct builtin_class_descr IME_builtin_class =
 {
-    ATOM atom;
-    WNDCLASSEXW WndClass = { sizeof(WndClass) };
-
-    WndClass.lpszClassName  = L"IME";
-    WndClass.style          = CS_GLOBALCLASS;
-    WndClass.lpfnWndProc    = ImeWndProcW;
-    WndClass.cbWndExtra     = sizeof(IMEWND) - sizeof(WND);
-    WndClass.hCursor        = LoadCursorW(NULL, IDC_ARROW);
-
-    atom = RegisterClassExWOWW(&WndClass, 0, FNID_IME, 0, FALSE);
-    if (!atom)
-    {
-        ERR("Failed to register IME Class!\n");
-        return FALSE;
-    }
-
-    RegisterDefaultClasses |= ICLASS_TO_MASK(ICLS_IME);
-    TRACE("RegisterIMEClass atom = %u\n", atom);
-    return TRUE;
-}
+    L"IME",                       /* name */
+    CS_GLOBALCLASS,               /* style */
+    ImeWndProcA,                  /* procA */
+    ImeWndProcW,                  /* procW */
+    sizeof(IMEWND) - sizeof(WND), /* extra */
+    IDC_ARROW,                    /* cursor */
+    NULL                          /* brush */
+};
 
 /*
  * @implemented
