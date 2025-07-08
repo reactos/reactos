@@ -2463,7 +2463,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
-        ProbeForRead(pimeui, sizeof(*pimeui), 1);
+        ProbeForWrite(pimeui, sizeof(*pimeui), 1);
         SafeImeUI = *pimeui;
 
         bShow = (gfIMEShowStatus == TRUE) && SafeImeUI.fCtrlShowStatus;
@@ -2475,8 +2475,6 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
         if (pWnd)
         {
             bSendNotify = TRUE;
-
-            ProbeForWrite(pimeui, sizeof(*pimeui), 1);
             pimeui->fShowStatus = bShow;
         }
     }
