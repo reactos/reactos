@@ -16,7 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "shlguid.h"
+#include "wininet.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "binding.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define NS_IOSERVICE_CLASSNAME "nsIOService"
 #define NS_IOSERVICE_CONTRACTID "@mozilla.org/network/io-service;1"
@@ -596,9 +617,13 @@ static nsresult NSAPI nsChannel_Cancel(nsIHttpChannel *iface, nsresult aStatus)
 {
     nsChannel *This = impl_from_nsIHttpChannel(iface);
 
-    FIXME("(%p)->(%08x)\n", This, aStatus);
+    TRACE("(%p)->(%08x)\n", This, aStatus);
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if(This->binding && This->binding->bsc.binding)
+        IBinding_Abort(This->binding->bsc.binding);
+    else
+        WARN("No binding to cancel\n");
+    return NS_OK;
 }
 
 static nsresult NSAPI nsChannel_Suspend(nsIHttpChannel *iface)
@@ -1705,6 +1730,20 @@ static nsresult NSAPI nsHttpChannelInternal_SetupFallbackChannel(nsIHttpChannelI
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+static nsresult NSAPI nsHttpChannelInternal_GetThirdPartyFlags(nsIHttpChannelInternal *iface, UINT32 *aThirdPartyFlags)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%p)\n", This, aThirdPartyFlags);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannelInternal_SetThirdPartyFlags(nsIHttpChannelInternal *iface, UINT32 aThirdPartyFlags)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%x)\n", This, aThirdPartyFlags);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static nsresult NSAPI nsHttpChannelInternal_GetForceAllowThirdPartyCookie(nsIHttpChannelInternal *iface, cpp_bool *aForceThirdPartyCookie)
 {
     nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
@@ -1887,8 +1926,8 @@ static nsresult NSAPI nsHttpChannelInternal_SetCorsIncludeCredentials(nsIHttpCha
         cpp_bool aCorsIncludeCredentials)
 {
     nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
-    FIXME("(%p)->(%x)\n", This, aCorsIncludeCredentials);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    TRACE("(%p)->(%x)\n", This, aCorsIncludeCredentials);
+    return NS_OK;
 }
 
 static nsresult NSAPI nsHttpChannelInternal_GetCorsMode(nsIHttpChannelInternal *iface, UINT32 *aCorsMode)
@@ -1901,8 +1940,8 @@ static nsresult NSAPI nsHttpChannelInternal_GetCorsMode(nsIHttpChannelInternal *
 static nsresult NSAPI nsHttpChannelInternal_SetCorsMode(nsIHttpChannelInternal *iface, UINT32 aCorsMode)
 {
     nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
-    FIXME("(%p)->(%d)\n", This, aCorsMode);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    TRACE("(%p)->(%d)\n", This, aCorsMode);
+    return NS_OK;
 }
 
 static nsresult NSAPI nsHttpChannelInternal_GetTopWindowURI(nsIHttpChannelInternal *iface, nsIURI **aTopWindowURI)
@@ -1953,6 +1992,8 @@ static const nsIHttpChannelInternalVtbl nsHttpChannelInternalVtbl = {
     nsHttpChannelInternal_TakeAllSecurityMessages,
     nsHttpChannelInternal_SetCookie,
     nsHttpChannelInternal_SetupFallbackChannel,
+    nsHttpChannelInternal_GetThirdPartyFlags,
+    nsHttpChannelInternal_SetThirdPartyFlags,
     nsHttpChannelInternal_GetForceAllowThirdPartyCookie,
     nsHttpChannelInternal_SetForceAllowThirdPartyCookie,
     nsHttpChannelInternal_GetCanceled,

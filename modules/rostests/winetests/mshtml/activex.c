@@ -16,9 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
-#include <test_tlb.h>
+#include <wine/test.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "docobj.h"
+#include "hlink.h"
+#include "dispex.h"
+#include "mshtmhst.h"
+#include "activscp.h"
+#include "objsafe.h"
+#include "mshtmdid.h"
+#include "mshtml_test.h"
+
+#include "initguid.h"
+#include "test_tlb.h"
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
