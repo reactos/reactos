@@ -1241,6 +1241,9 @@ typedef struct tagIMEWND
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
+/* IMEWND assumes this alignment */
+C_ASSERT(sizeof(WND) % sizeof(PVOID) == 0);
+
 #define IMEWND_PIMEUI_INDEX 0
 
 DWORD
