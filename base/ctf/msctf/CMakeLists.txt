@@ -5,7 +5,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 spec2def(msctf.dll msctf.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    inputprocessor.c
     msctf.c
     threadmgr.c
     precomp.h
@@ -17,6 +16,7 @@ list(APPEND PCH_SKIP_SOURCE
     context.cpp
     displayattributemgr.cpp
     documentmgr.cpp
+    inputprocessor.cpp
     langbarmgr.cpp
     mlng.cpp
     range.cpp
