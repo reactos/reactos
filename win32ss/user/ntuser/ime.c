@@ -2449,6 +2449,13 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     pti = PsGetCurrentThreadWin32Thread();
     ptiIME = pImeWnd->head.pti;
 
+    pimeui = IntGetImeUIFromWnd(pImeWnd);
+    if (!pimeui)
+    {
+        ERR("Invalid IMEWND %p\n", pImeWnd);
+        return;
+    }
+
     // Attach to the process if necessary
     if (pti != ptiIME)
         KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
@@ -2456,13 +2463,6 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
     _SEH2_TRY
     {
-        pimeui = IntGetImeUIFromWnd(pImeWnd);
-        if (!pimeui)
-        {
-            ERR("Invalid pimeui pointer\n");
-            _SEH2_YIELD(goto Skip);
-        }
-
         ProbeForRead(pimeui, sizeof(*pimeui), 1);
         SafeImeUI = *pimeui;
 
@@ -2475,6 +2475,7 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
         if (pWnd)
         {
             bSendNotify = TRUE;
+
             ProbeForWrite(pimeui, sizeof(*pimeui), 1);
             pimeui->fShowStatus = bShow;
         }
