@@ -2492,7 +2492,6 @@ IntNotifyImeShowStatus(_In_ PWND pImeWnd)
     }
     _SEH2_END;
 
-Skip:
     // Detach from the process if necessary
     if (pti != ptiIME)
         KeDetachProcess();
