@@ -926,6 +926,8 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     if (HasIconViewType)
         newFolderSettings.ViewMode = FVM_ICON;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
+    if (hResult == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+        return S_OK;
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
