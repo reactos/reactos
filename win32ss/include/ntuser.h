@@ -1241,10 +1241,10 @@ typedef struct tagIMEWND
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
-/* IMEWND assumes this alignment */
-C_ASSERT(sizeof(WND) % sizeof(PVOID) == 0);
+#define GWLP_IMEWND_PIMEUI 0
 
-#define IMEWND_PIMEUI_INDEX 0
+/* IMEWND and GWLP_IMEWND_PIMEUI assume this alignment */
+C_ASSERT(sizeof(WND) % sizeof(PVOID) == 0);
 
 DWORD
 NTAPI

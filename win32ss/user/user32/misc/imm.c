@@ -1019,11 +1019,11 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
             return FALSE;
         }
         pimeui->spwnd = pWnd;
-        SetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX, (LONG_PTR)pimeui);
+        SetWindowLongPtrW(hwnd, GWLP_IMEWND_PIMEUI, (LONG_PTR)pimeui);
     }
     else
     {
-        pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, IMEWND_PIMEUI_INDEX);
+        pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, GWLP_IMEWND_PIMEUI);
         if (!pimeui)
         {
             ERR("Invalid IMEWND\n");
