@@ -1235,12 +1235,16 @@ typedef struct tagIMEUI
     DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
-/* Window Extra data container. */
-typedef struct _IMEWND
+typedef struct tagIMEWND
 {
     WND wnd;
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
+
+#define GWLP_IMEWND_PIMEUI 0
+
+/* IMEWND and GWLP_IMEWND_PIMEUI assume this alignment */
+C_ASSERT(sizeof(WND) % sizeof(PVOID) == 0);
 
 DWORD
 NTAPI
