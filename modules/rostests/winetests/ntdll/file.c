@@ -1813,7 +1813,7 @@ static void test_file_rename_information(void)
     ok( success != 0, "failed to create temp directory\n" );
     pRtlDosPathNameToNtPathName_U( newpath, &name_str, NULL, NULL );
     fri = HeapAlloc( GetProcessHeap(), 0, sizeof(FILE_RENAME_INFORMATION) + name_str.Length );
-    fri->ReplaceIfExists= TRUE;
+    fri->ReplaceIfExists = TRUE;
     fri->RootDirectory = NULL;
     fri->FileNameLength = name_str.Length;
     memcpy( fri->FileName, name_str.Buffer, name_str.Length );
