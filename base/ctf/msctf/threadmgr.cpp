@@ -366,26 +366,28 @@ STDMETHODIMP CThreadMgr::QueryInterface(REFIID iid, LPVOID *ppvObject)
 {
     *ppvObject = NULL;
 
+    IUnknown *pUnk = NULL;
     if (iid == IID_IUnknown || iid == IID_ITfThreadMgr || iid == IID_ITfThreadMgrEx)
-        *ppvObject = static_cast<ITfThreadMgrEx *>(this);
+        pUnk = static_cast<ITfThreadMgrEx *>(this);
     else if (iid == IID_ITfSource)
-        *ppvObject = static_cast<ITfSource *>(this);
+        pUnk = static_cast<ITfSource *>(this);
     else if (iid == IID_ITfKeystrokeMgr)
-        *ppvObject = static_cast<ITfKeystrokeMgr *>(this);
+        pUnk = static_cast<ITfKeystrokeMgr *>(this);
     else if (iid == IID_ITfMessagePump)
-        *ppvObject = static_cast<ITfMessagePump *>(this);
+        pUnk = static_cast<ITfMessagePump *>(this);
     else if (iid == IID_ITfClientId)
-        *ppvObject = static_cast<ITfClientId *>(this);
+        pUnk = static_cast<ITfClientId *>(this);
     else if (iid == IID_ITfCompartmentMgr)
-        *ppvObject = m_CompartmentMgr;
+        pUnk = m_CompartmentMgr;
     else if (iid == IID_ITfUIElementMgr)
-        *ppvObject = static_cast<ITfUIElementMgr *>(this);
+        pUnk = static_cast<ITfUIElementMgr *>(this);
     else if (iid == IID_ITfSourceSingle)
-        *ppvObject = static_cast<ITfSourceSingle *>(this);
+        pUnk = static_cast<ITfSourceSingle *>(this);
 
-    if (*ppvObject)
+    if (pUnk)
     {
-        AddRef();
+        *ppvObject = pUnk;
+        pUnk->AddRef();
         return S_OK;
     }
 
@@ -438,6 +440,9 @@ STDMETHODIMP CThreadMgr::Deactivate()
 STDMETHODIMP CThreadMgr::CreateDocumentMgr(_Out_ ITfDocumentMgr **ppdim)
 {
     TRACE("(%p)\n", this);
+
+    if (!ppdim)
+        return E_INVALIDARG;
 
     DocumentMgrEntry *mgrentry = (DocumentMgrEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DocumentMgrEntry));
     if (!mgrentry)
@@ -604,6 +609,10 @@ STDMETHODIMP CThreadMgr::AssociateFocus(
 STDMETHODIMP CThreadMgr::IsThreadFocus(_Out_ BOOL *pfThreadFocus)
 {
     TRACE("(%p) %p\n", this, pfThreadFocus);
+
+    if (!pfThreadFocus)
+        return E_INVALIDARG;
+
     HWND focus = ::GetFocus();
     *pfThreadFocus = (focus == NULL);
     return S_OK;
@@ -732,10 +741,11 @@ STDMETHODIMP CThreadMgr::UnadviseSink(_In_ DWORD dwCookie)
     TRACE("(%p) %x\n", this, dwCookie);
 
     magic = get_Cookie_magic(dwCookie);
-    if (magic != COOKIE_MAGIC_TMSINK && magic != COOKIE_MAGIC_THREADFOCUSSINK &&
-        magic != COOKIE_MAGIC_KEYTRACESINK && magic != COOKIE_MAGIC_UIELEMENTSINK &&
-        magic != COOKIE_MAGIC_INPUTPROCESSORPROFILEACTIVATIONSINK &&
-        magic != COOKIE_MAGIC_KEYTRACESINK)
+    if (magic != COOKIE_MAGIC_TMSINK &&
+        magic != COOKIE_MAGIC_THREADFOCUSSINK &&
+        magic != COOKIE_MAGIC_KEYTRACESINK &&
+        magic != COOKIE_MAGIC_UIELEMENTSINK &&
+        magic != COOKIE_MAGIC_INPUTPROCESSORPROFILEACTIVATIONSINK)
     {
         return E_INVALIDARG;
     }
@@ -931,13 +941,14 @@ STDMETHODIMP CThreadMgr::PreserveKey(
     newkey->description = NULL;
     if (cchDesc)
     {
-        newkey->description = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchDesc * sizeof(WCHAR));
+        newkey->description = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (cchDesc + 1) * sizeof(WCHAR));
         if (!newkey->description)
         {
             HeapFree(GetProcessHeap(), 0, newkey);
             return E_OUTOFMEMORY;
         }
-        memcpy(newkey->description, pchDesc, cchDesc*sizeof(WCHAR));
+        CopyMemory(newkey->description, pchDesc, cchDesc * sizeof(WCHAR));
+        newkey->description[cchDesc] = UNICODE_NULL;
     }
 
     list_add_head(&m_CurrentPreservedKeys, &newkey->entry);
