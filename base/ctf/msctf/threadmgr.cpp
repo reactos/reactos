@@ -843,6 +843,8 @@ STDMETHODIMP CThreadMgr::TestKeyDown(
     _Out_ BOOL *pfEaten)
 {
     FIXME("STUB:(%p)\n", this);
+    if (!pfEaten)
+        return E_INVALIDARG;
     *pfEaten = FALSE;
     return S_OK;
 }
@@ -853,6 +855,8 @@ STDMETHODIMP CThreadMgr::TestKeyUp(
     _Out_ BOOL *pfEaten)
 {
     FIXME("STUB:(%p)\n", this);
+    if (!pfEaten)
+        return E_INVALIDARG;
     *pfEaten = FALSE;
     return S_OK;
 }
@@ -863,6 +867,9 @@ STDMETHODIMP CThreadMgr::KeyDown(
     _Out_ BOOL *pfEaten)
 {
     FIXME("STUB:(%p)\n", this);
+    if (!pfEaten)
+        return E_INVALIDARG;
+    *pfEaten = FALSE;
     return E_NOTIMPL;
 }
 
@@ -872,6 +879,9 @@ STDMETHODIMP CThreadMgr::KeyUp(
     _Out_ BOOL *pfEaten)
 {
     FIXME("STUB:(%p)\n", this);
+    if (!pfEaten)
+        return E_INVALIDARG;
+    *pfEaten = FALSE;
     return E_NOTIMPL;
 }
 
@@ -1007,6 +1017,9 @@ STDMETHODIMP CThreadMgr::SimulatePreservedKey(
     _Out_ BOOL *pfEaten)
 {
     FIXME("STUB:(%p)\n", this);
+    if (!pfEaten)
+        return E_INVALIDARG;
+    *pfEaten = FALSE;
     return E_NOTIMPL;
 }
 
