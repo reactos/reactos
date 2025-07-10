@@ -3,10 +3,6 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 add_definitions(-DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00 -DNTDDI_VERSION=0x0A000007)
 
-add_definitions(
-    -Dstrcasecmp=_stricmp
-)
-
 list(APPEND SOURCE
     actctx.c
     atom.c
@@ -51,24 +47,14 @@ add_executable(kernel32_winetest
     resource.rc)
 
 if(MSVC)
-    # Disable warning C4477 (printf format warnings)
-    remove_target_compile_option(kernel32_winetest "/we4477")
-    target_compile_options(kernel32_winetest PRIVATE
-    /wd4133
-    /wd4024
-    /wd4101)
-    if(ARCH STREQUAL "amd64")
-        # error C4101: 'is_wow64': unreferenced local variable
-        remove_target_compile_option(kernel32_winetest "/we4101")
-        target_compile_options(kernel32_winetest PRIVATE /wd4101)
-    endif()
+    # error C4101: unreferenced local variable
+    target_compile_options(kernel32_winetest PRIVATE /wd4101)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(kernel32_winetest PRIVATE
         -Wno-format
         -Wno-int-conversion
-        -Wno-incompatible-pointer-types
         -Wno-old-style-declaration
         -Wno-unused)
 endif()
@@ -80,9 +66,10 @@ add_pch(kernel32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET kernel32_winetest)
 target_compile_definitions(kernel32_winetest PRIVATE 
     WINETEST_USE_DBGSTR_LONGLONG
-    __WINESRC__ # Probably wrong, need to fix
+    __WINESRC__
     strnicmp=_strnicmp
     wcsnicmp=_wcsnicmp
     wcsicmp=_wcsicmp
+    strcasecmp=_stricmp
     strncasecmp=_strnicmp
     stricmp=_stricmp)
