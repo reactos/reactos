@@ -153,6 +153,7 @@ typedef struct _CONSRV_CONSOLE
     ULONG   LineMaxSize;                    /* Maximum size of line in characters (including CR+LF) */
     ULONG   LineSize;                       /* Current size of line */
     ULONG   LinePos;                        /* Current position within line */
+    ULONG   LineColumn;
     BOOLEAN LineComplete;                   /* User pressed enter, ready to send back to client */
     BOOLEAN LineUpPressed;
     BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */

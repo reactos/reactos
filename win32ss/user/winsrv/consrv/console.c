@@ -745,7 +745,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     /* Initialize the Input Line Discipline */
     // InitLineInput(Console);
     Console->LineBuffer = NULL;
-    Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
+    Console->LineColumn = Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
     Console->LineComplete = Console->LineUpPressed = FALSE;
     // LineWakeupMask
     Console->LineInsertToggle =

@@ -34,18 +34,43 @@ ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static UINT
+GetTextWidth(PCWSTR Text, UINT TextLength, UINT TextMax)
+{
+    UINT ich, width = 0;
+
+    for (ich = 0; ich < TextLength && ich < TextMax; ++ich)
+    {
+        if (IS_FULL_WIDTH(Text[ich]))
+            width += 2;
+        else
+            ++width;
+    }
+
+    return width;
+}
+
 static VOID
 LineInputSetPos(PCONSRV_CONSOLE Console,
                 UINT Pos)
 {
-    if (Pos != Console->LinePos && (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT))
+    UINT OldColumn = Console->LineColumn;
+    UINT NewColumn;
+
+    if (Console->IsCJK)
+        NewColumn = GetTextWidth(Console->LineBuffer, Pos, Console->LineSize);
+    else
+        NewColumn = Pos;
+
+    if (OldColumn != NewColumn &&
+        (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
         SHORT OldCursorX = Buffer->CursorPosition.X;
         SHORT OldCursorY = Buffer->CursorPosition.Y;
         INT XY = OldCursorY * Buffer->ScreenBufferSize.X + OldCursorX;
 
-        XY += (Pos - Console->LinePos);
+        XY += (NewColumn - OldColumn);
         if (XY < 0)
             XY = 0;
         else if (XY >= Buffer->ScreenBufferSize.Y * Buffer->ScreenBufferSize.X)
@@ -57,6 +82,7 @@ LineInputSetPos(PCONSRV_CONSOLE Console,
     }
 
     Console->LinePos = Pos;
+    Console->LineColumn = NewColumn;
 }
 
 static VOID
@@ -95,7 +121,6 @@ LineInputEdit(PCONSRV_CONSOLE Console,
         {
             TermWriteStream(Console, ActiveBuffer, L" ", 1, TRUE);
         }
-        Console->LinePos = i;
     }
 
     Console->LineSize = NewSize;
@@ -436,7 +461,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
             }
         }
         Console->LineComplete = TRUE;
-        Console->LinePos = 0;
+        Console->LineColumn = Console->LinePos = 0;
     }
     else if (KeyEvent->uChar.UnicodeChar != L'\0')
     {
@@ -447,7 +472,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
             Console->LineBuffer[Console->LineSize++] = L' ';
             Console->LineBuffer[Console->LinePos] = KeyEvent->uChar.UnicodeChar;
             Console->LineComplete = TRUE;
-            Console->LinePos = 0;
+            Console->LineColumn = Console->LinePos = 0;
         }
         else
         {

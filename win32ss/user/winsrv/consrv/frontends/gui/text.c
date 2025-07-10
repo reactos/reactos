@@ -272,15 +272,21 @@ PasteText(
              * convert the character to OEM / multibyte and use MapVirtualKey()
              * on each byte (simulating an Alt-0xxx OEM keyboard press).
              */
+            er.Event.KeyEvent.wVirtualKeyCode = VK_PACKET;
+            er.Event.KeyEvent.wVirtualScanCode = CurChar;
+            er.Event.KeyEvent.uChar.UnicodeChar = CurChar;
+        }
+        else
+        {
+            /* Pressing some control keys */
+
+            /* Pressing the character key, with the control keys maintained pressed */
+            er.Event.KeyEvent.wVirtualKeyCode = LOBYTE(VkKey);
+            er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_VSC);
+            er.Event.KeyEvent.uChar.UnicodeChar = CurChar;
         }
 
-        /* Pressing some control keys */
-
-        /* Pressing the character key, with the control keys maintained pressed */
         er.Event.KeyEvent.bKeyDown = TRUE;
-        er.Event.KeyEvent.wVirtualKeyCode = LOBYTE(VkKey);
-        er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_VSC);
-        er.Event.KeyEvent.uChar.UnicodeChar = CurChar;
         er.Event.KeyEvent.dwControlKeyState = 0;
         if (HIBYTE(VkKey) & 1)
             er.Event.KeyEvent.dwControlKeyState |= SHIFT_PRESSED;
