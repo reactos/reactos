@@ -1140,7 +1140,7 @@ static void test_QueryUnbiasedInterruptTime(void)
     else win_skip( "RtlQueryUnbiasedInterruptTime not supported\n" );
 }
 
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_processor_idle_cycle_time(void)
 {
     unsigned int cpu_count = NtCurrentTeb()->Peb->NumberOfProcessors;
@@ -1240,7 +1240,7 @@ START_TEST(time)
     test_GetTimeZoneInformationForYear();
     test_GetTickCount();
     test_QueryUnbiasedInterruptTime();
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     test_processor_idle_cycle_time();
 #endif
 }

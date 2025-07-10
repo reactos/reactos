@@ -1038,6 +1038,22 @@ IdnToUnicode(
   _Out_writes_opt_(cchUnicodeChar) LPWSTR lpUnicodeCharStr,
   _In_ int cchUnicodeChar);
 
+WINBASEAPI
+int
+WINAPI
+GetSystemDefaultLocaleName(
+  _Out_writes_(cchLocaleName) LPWSTR lpLocaleName,
+  _In_ int cchLocaleName);
+
+WINBASEAPI
+BOOL
+WINAPI
+EnumDateFormatsExEx(
+    _In_ DATEFMT_ENUMPROCEXEX lpDateFmtEnumProcExEx,
+    _In_opt_ LPCWSTR lpLocaleName,
+    _In_ DWORD dwFlags,
+    _In_ LPARAM lParam);
+
 #endif /* WINVER >= 0x0600 */
 
 BOOL WINAPI IsDBCSLeadByte(_In_ BYTE);

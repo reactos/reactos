@@ -2972,7 +2972,7 @@ static void test_LocaleNameToLCID(void)
 
     buffer[0] = 0;
     SetLastError(0xdeadbeef);
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     lcid = LocaleNameToLCID(LOCALE_NAME_SYSTEM_DEFAULT, 0);
     expect = GetSystemDefaultLCID();
     ok(lcid == expect, "Expected lcid == %08lx, got %08lx, error %ld\n", expect, lcid, GetLastError());
@@ -3177,10 +3177,10 @@ static void test_LocaleNameToLCID(void)
 
     if (pRtlLcidToLocaleName)
     {
-#ifdef __REACTOS__
-        WCHAR buffer[128];
-#else
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         WCHAR buffer[128], expect[128];
+#else
+        WCHAR buffer[128];
 #endif
         UNICODE_STRING str;
 
@@ -3224,7 +3224,7 @@ static void test_LocaleNameToLCID(void)
         status = pRtlLcidToLocaleName( LOCALE_SYSTEM_DEFAULT, &str, 0, 0 );
         ok( status == STATUS_SUCCESS, "wrong error %lx\n", status );
         ok( str.Length == wcslen(buffer) * sizeof(WCHAR), "wrong len %u\n", str.Length );
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         LCIDToLocaleName( GetSystemDefaultLCID(), expect, ARRAY_SIZE(expect), 0 );
         ok( !wcscmp( buffer, expect ), "wrong name %s / %s\n", debugstr_w(buffer), debugstr_w(expect) );
 #endif
@@ -3234,7 +3234,7 @@ static void test_LocaleNameToLCID(void)
         status = pRtlLcidToLocaleName( LOCALE_USER_DEFAULT, &str, 0, 0 );
         ok( status == STATUS_SUCCESS, "wrong error %lx\n", status );
         ok( str.Length == wcslen(buffer) * sizeof(WCHAR), "wrong len %u\n", str.Length );
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         LCIDToLocaleName( GetUserDefaultLCID(), expect, ARRAY_SIZE(expect), 0 );
         ok( !wcscmp( buffer, expect ), "wrong name %s / %s\n", debugstr_w(buffer), debugstr_w(expect) );
 #endif
@@ -3250,7 +3250,7 @@ static void test_LocaleNameToLCID(void)
         status = pRtlLcidToLocaleName( LOCALE_CUSTOM_DEFAULT, &str, 0, 0 );
         ok( status == STATUS_SUCCESS, "wrong error %lx\n", status );
         ok( str.Length == wcslen(buffer) * sizeof(WCHAR), "wrong len %u\n", str.Length );
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         LCIDToLocaleName( GetUserDefaultLCID(), expect, ARRAY_SIZE(expect), 0 );
         ok( !wcscmp( buffer, expect ), "wrong name %s / %s\n", debugstr_w(buffer), debugstr_w(expect) );
 #endif
@@ -3849,7 +3849,7 @@ static void test_unicode_sorting(void)
         ok (result == entry->result_sortkey, "Test %d (%s, %s) - Expected %d, got %d\n",
             i, wine_dbgstr_w(entry->first), wine_dbgstr_w(entry->second), entry->result_sortkey, result);
 
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         result = CompareStringEx(entry->locale, entry->flags,  entry->first, -1, entry->second, -1, NULL, NULL, 0);
         ok (result == entry->result_compare, "Test %d (%s, %s) - Expected %d, got %d\n",
             i, wine_dbgstr_w(entry->first), wine_dbgstr_w(entry->second), entry->result_compare, result);
@@ -6035,10 +6035,10 @@ static void test_ResolveLocaleName(void)
         { LOCALE_NAME_INVARIANT, L"" },
     };
     INT i, ret;
-#ifdef __REACTOS__
-    WCHAR buffer[LOCALE_NAME_MAX_LENGTH];
-#else
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     WCHAR buffer[LOCALE_NAME_MAX_LENGTH], system[LOCALE_NAME_MAX_LENGTH];
+#else
+    WCHAR buffer[LOCALE_NAME_MAX_LENGTH];
 #endif
 
     if (!pResolveLocaleName)
@@ -6070,7 +6070,7 @@ static void test_ResolveLocaleName(void)
     memset( buffer, 0xcc, sizeof(buffer) );
     ret = pResolveLocaleName( LOCALE_NAME_SYSTEM_DEFAULT, buffer, ARRAY_SIZE(buffer) );
     ok( ret, "failed err %lu\n", GetLastError() );
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     GetSystemDefaultLocaleName( system, ARRAY_SIZE(system) );
     ok( !wcscmp( buffer, system ), "got wrong syslocale %s / %s\n", debugstr_w(buffer), debugstr_w(system));
     ok( ret == wcslen(system) + 1, "wrong len %u / %Iu\n", ret, wcslen(system) + 1 );
@@ -8644,7 +8644,7 @@ static void dump_sortkeys( char *argv[] )
             while (*p == ' ' || *p == '\t') p++;
         }
         *p = 0;
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         res = LCMapStringEx( locale, flags | LCMAP_SORTKEY, data, pos,
                              (WCHAR *)key, sizeof(key), NULL, NULL, 0 );
         printf( "%s:", buffer );
@@ -8655,7 +8655,7 @@ static void dump_sortkeys( char *argv[] )
     fclose( f );
 }
 
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static BOOL CALLBACK EnumDateFormatsExEx_proc(LPWSTR date_format_string, CALID calendar_id, LPARAM lp)
 {
     return TRUE;
@@ -8762,7 +8762,7 @@ START_TEST(locale)
   test_EnumCalendarInfoExW();
 
   /* Run this test at the end */
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
   test_EnumDateFormatsExEx();
 #endif
 }

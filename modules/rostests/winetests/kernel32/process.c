@@ -116,7 +116,7 @@ static BOOL   (WINAPI *pThread32First)(HANDLE, THREADENTRY32*);
 static BOOL   (WINAPI *pThread32Next)(HANDLE, THREADENTRY32*);
 static BOOL   (WINAPI *pGetLogicalProcessorInformationEx)(LOGICAL_PROCESSOR_RELATIONSHIP,SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*,DWORD*);
 static SIZE_T (WINAPI *pGetLargePageMinimum)(void);
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static BOOL   (WINAPI *pGetSystemCpuSetInformation)(SYSTEM_CPU_SET_INFORMATION*,ULONG,ULONG*,HANDLE,ULONG);
 #endif
 static BOOL   (WINAPI *pInitializeProcThreadAttributeList)(struct _PROC_THREAD_ATTRIBUTE_LIST*, DWORD, DWORD, SIZE_T*);
@@ -305,7 +305,7 @@ static BOOL init(void)
     pThread32Next = (void *)GetProcAddress(hkernel32, "Thread32Next");
     pGetLogicalProcessorInformationEx = (void *)GetProcAddress(hkernel32, "GetLogicalProcessorInformationEx");
     pGetLargePageMinimum = (void *)GetProcAddress(hkernel32, "GetLargePageMinimum");
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     pGetSystemCpuSetInformation = (void *)GetProcAddress(hkernel32, "GetSystemCpuSetInformation");
 #endif
     pInitializeProcThreadAttributeList = (void *)GetProcAddress(hkernel32, "InitializeProcThreadAttributeList");
@@ -4311,7 +4311,7 @@ static void test_GetLogicalProcessorInformationEx(void)
     HeapFree(GetProcessHeap(), 0, info);
 }
 
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_GetSystemCpuSetInformation(void)
 {
     SYSTEM_CPU_SET_INFORMATION *info, *info_nt;
@@ -4498,7 +4498,6 @@ static void test_ProcThreadAttributeList(void)
         expect_list.count++;
     }
 
-#ifndef __REACTOS__
     ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, handles, sizeof(handles[0]), NULL, NULL);
     ok(ret || broken(GetLastError() == ERROR_NOT_SUPPORTED), "got %d gle %ld\n", ret, GetLastError());
 
@@ -4510,7 +4509,6 @@ static void test_ProcThreadAttributeList(void)
         expect_list.attrs[i].size = sizeof(HPCON);
         expect_list.attrs[i].value = handles;
     }
-#endif
 
     ok(!memcmp(&list, &expect_list, size), "mismatch\n");
 
@@ -4722,7 +4720,7 @@ static void test_handle_list_attribute(BOOL child, HANDLE handle1, HANDLE handle
         ret = GetHandleInformation(handle1, &flags);
         ok(ret, "Failed to get handle info, error %ld.\n", GetLastError());
         ok(flags == HANDLE_FLAG_INHERIT, "Unexpected flags %#lx.\n", flags);
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         ret = GetFileInformationByHandleEx(handle1, FileNameInfo, name1, sizeof(name1));
         ok(ret, "Failed to get pipe name, error %ld\n", GetLastError());
 #endif
@@ -4732,7 +4730,7 @@ static void test_handle_list_attribute(BOOL child, HANDLE handle1, HANDLE handle
         if (ret)
         {
             ok(!(flags & HANDLE_FLAG_INHERIT), "Parent's handle shouldn't have been inherited\n");
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
             ret = GetFileInformationByHandleEx(handle2, FileNameInfo, name2, sizeof(name2));
             ok(!ret || strcmp(name1, name2), "Parent's handle shouldn't have been inherited\n");
 #endif
@@ -5571,7 +5569,7 @@ static void test_GetProcessInformation(void)
     ret = pGetProcessInformation(GetCurrentProcess(), ProcessMachineTypeInfo, &mi, sizeof(mi));
     ok(ret, "Unexpected return value %d.\n", ret);
 
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x601
     process = GetCurrentProcess();
     status = NtQuerySystemInformationEx( SystemSupportedProcessorArchitectures, &process, sizeof(process),
             machines, sizeof(machines), NULL );
@@ -5714,7 +5712,7 @@ START_TEST(process)
     test_GetNumaProcessorNode();
     test_session_info();
     test_GetLogicalProcessorInformationEx();
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     test_GetSystemCpuSetInformation();
 #endif
     test_largepages();

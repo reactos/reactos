@@ -1028,7 +1028,7 @@ static void testScreenBuffer(HANDLE hConOut)
     SetConsoleOutputCP(oldcp);
 }
 
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void test_new_screen_buffer_properties(HANDLE hConOut)
 {
     BOOL ret;
@@ -3510,7 +3510,7 @@ static void test_GetCurrentConsoleFont(HANDLE std_output)
        "got %d, expected %d\n", cfi.dwFontSize.Y, csbi.dwMaximumWindowSize.Y);
 }
 
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void test_GetCurrentConsoleFontEx(HANDLE std_output)
 {
     HANDLE hmod;
@@ -3635,6 +3635,7 @@ static void test_GetCurrentConsoleFontEx(HANDLE std_output)
     ok(cfix.dwFontSize.Y == cfi.dwFontSize.Y, "expected values to match\n");
 }
 
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_SetCurrentConsoleFontEx(HANDLE std_output)
 {
     CONSOLE_FONT_INFOEX orig_cfix, cfix;
@@ -3750,6 +3751,7 @@ static void test_SetCurrentConsoleFontEx(HANDLE std_output)
     ok(ret, "got %d, expected non-zero\n", ret);
     ok(GetLastError() == 0xdeadbeef, "got %lu, expected 0xdeadbeef\n", GetLastError());
 }
+#endif
 #endif
 
 static void test_GetConsoleFontSize(HANDLE std_output)
@@ -4263,7 +4265,7 @@ static void test_FreeConsole(void)
     CloseHandle(unbound_output);
 }
 
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void test_SetConsoleScreenBufferInfoEx(HANDLE std_output)
 {
     BOOL ret;
@@ -4914,7 +4916,7 @@ static void test_pseudo_console(void)
     ok(hres == S_OK, "CreatePseudoConsole failed: %08lx\n", hres);
     CloseHandle(console_pipe2);
 
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     InitializeProcThreadAttributeList(NULL, 1, 0, &attr_size);
     startup.lpAttributeList = HeapAlloc(GetProcessHeap(), 0, attr_size);
     InitializeProcThreadAttributeList(startup.lpAttributeList, 1, 0, &attr_size);
@@ -5474,7 +5476,7 @@ START_TEST(console)
         ExitProcess(exit_code);
     }
 
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     if (argc >= 3 && !strcmp(argv[2], "title_test"))
     {
         if (argc == 3)
@@ -5609,7 +5611,7 @@ START_TEST(console)
     testScroll(hConOut, sbi.dwSize);
     /* will test sb creation / modification / codepage handling */
     if (!test_current) testScreenBuffer(hConOut);
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     test_new_screen_buffer_properties(hConOut);
     test_new_screen_buffer_color_attributes(hConOut);
 #endif
@@ -5663,9 +5665,11 @@ START_TEST(console)
     if (!test_current)
     {
         test_GetCurrentConsoleFont(hConOut);
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         test_GetCurrentConsoleFontEx(hConOut);
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
         test_SetCurrentConsoleFontEx(hConOut);
+#endif
 #endif
         test_GetConsoleFontSize(hConOut);
         test_GetLargestConsoleWindowSize(hConOut);
@@ -5673,7 +5677,7 @@ START_TEST(console)
         test_SetConsoleFont(hConOut);
     }
     test_GetConsoleScreenBufferInfoEx(hConOut);
-#ifndef __REACTOS__ // Can't link
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     test_SetConsoleScreenBufferInfoEx(hConOut);
 #endif
     test_file_info(hConIn, hConOut);

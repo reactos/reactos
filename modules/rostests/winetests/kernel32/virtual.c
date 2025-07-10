@@ -31,6 +31,19 @@
 #include "winuser.h"
 #include "excpt.h"
 #include "wine/test.h"
+#ifdef __REACTOS__
+/* The following are from Wine's winnt.h but isn't incompatible with our headers or MS'. */
+struct _EXCEPTION_REGISTRATION_RECORD;
+
+typedef DWORD (CDECL *PEXCEPTION_HANDLER)(PEXCEPTION_RECORD,struct _EXCEPTION_REGISTRATION_RECORD*,
+                                          PCONTEXT,struct _EXCEPTION_REGISTRATION_RECORD **);
+
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+  struct _EXCEPTION_REGISTRATION_RECORD *Prev; // This is 'Next' in MS' headers
+  PEXCEPTION_HANDLER       Handler;
+} EXCEPTION_REGISTRATION_RECORD;
+#endif
 
 #define NUM_THREADS 4
 #define MAPPING_SIZE 0x100000
@@ -53,7 +66,7 @@ static BOOL   (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static NTSTATUS (WINAPI *pNtProtectVirtualMemory)(HANDLE, PVOID *, SIZE_T *, ULONG, ULONG *);
 static NTSTATUS (WINAPI *pNtReadVirtualMemory)(HANDLE,const void *,void *,SIZE_T, SIZE_T *);
 static NTSTATUS (WINAPI *pNtWriteVirtualMemory)(HANDLE, void *, const void *, SIZE_T, SIZE_T *);
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static BOOL  (WINAPI *pPrefetchVirtualMemory)(HANDLE, ULONG_PTR, PWIN32_MEMORY_RANGE_ENTRY, ULONG);
 #endif
 
@@ -2334,7 +2347,6 @@ static void test_stack_commit(void)
 
 #endif  /* defined(__i386__) || defined(__x86_64__) */
 #ifdef __i386__
-#ifndef __REACTOS__
 
 static LONG num_guard_page_calls;
 
@@ -3203,7 +3215,6 @@ out:
         ok( !ret, "NtSetInformationProcess failed with status %08lx\n", ret );
     }
 }
-#endif
 #endif  /* __i386__ */
 
 static void test_VirtualProtect(void)
@@ -4325,7 +4336,7 @@ static void test_shared_memory_ro(BOOL is_child, DWORD child_access)
     CloseHandle(mapping);
 }
 
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_PrefetchVirtualMemory(void)
 {
     WIN32_MEMORY_RANGE_ENTRY entries[2];
@@ -4469,7 +4480,7 @@ START_TEST(virtual)
     pNtProtectVirtualMemory = (void *)GetProcAddress( hntdll, "NtProtectVirtualMemory" );
     pNtReadVirtualMemory = (void *)GetProcAddress( hntdll, "NtReadVirtualMemory" );
     pNtWriteVirtualMemory = (void *)GetProcAddress( hntdll, "NtWriteVirtualMemory" );
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     pPrefetchVirtualMemory = (void *)GetProcAddress( hkernelbase, "PrefetchVirtualMemory" );
 #endif
 
@@ -4495,7 +4506,7 @@ START_TEST(virtual)
     test_IsBadWritePtr();
     test_IsBadCodePtr();
     test_write_watch();
-#ifndef __REACTOS__
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     test_PrefetchVirtualMemory();
 #endif
     test_ReadProcessMemory();
@@ -4503,13 +4514,11 @@ START_TEST(virtual)
     test_stack_commit();
 #endif
 #ifdef __i386__
-#ifndef __REACTOS__
     test_guard_page();
     /* The following tests should be executed as a last step, and in exactly this
      * order, since ATL thunk emulation cannot be enabled anymore on Windows. */
     test_atl_thunk_emulation( MEM_EXECUTE_OPTION_ENABLE );
     test_atl_thunk_emulation( MEM_EXECUTE_OPTION_DISABLE );
     test_atl_thunk_emulation( MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION );
-#endif
 #endif
 }
