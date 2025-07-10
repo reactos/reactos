@@ -34,7 +34,7 @@ static void TEST_GUIDFromStringA(void)
     }
     _SEH2_END;
 
-    if (IsWindowsVistaOrGreater())
+    if (IsWindows8OrGreater())
         ok_int(ret, FALSE);
     else
         ok_int(ret, 0xDEADBEEF);
@@ -81,7 +81,7 @@ static void TEST_GUIDFromStringW(void)
     }
     _SEH2_END;
 
-    if (IsWindowsVistaOrGreater())
+    if (IsWindows8OrGreater())
         ok_int(ret, 0xDEADBEEF);
     else
         ok_int(ret, FALSE);
