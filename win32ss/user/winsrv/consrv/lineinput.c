@@ -42,9 +42,8 @@ GetTextWidth(PCWSTR Text, UINT TextLength, UINT TextMax)
     for (ich = 0; ich < TextLength && ich < TextMax; ++ich)
     {
         if (IS_FULL_WIDTH(Text[ich]))
-            width += 2;
-        else
             ++width;
+        ++width;
     }
 
     return width;
