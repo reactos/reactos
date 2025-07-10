@@ -688,7 +688,10 @@ GuiWriteStream(IN OUT PFRONTEND This,
             {
                 InvalidateCell(GuiData, CursorStartX - 1, CursorStartY);
             }
-            InvalidateCell(GuiData, CursorStartX + 1, CursorStartY);
+            if (CursorStartX + 1 < Buff->ViewSize.X)
+            {
+                InvalidateCell(GuiData, CursorStartX + 1, CursorStartY);
+            }
         }
     }
 
