@@ -682,8 +682,11 @@ GuiWriteStream(IN OUT PFRONTEND This,
             || CursorStartY < Region->Top || Region->Bottom < CursorStartY)
     {
         InvalidateCell(GuiData, CursorStartX, CursorStartY);
-        InvalidateCell(GuiData, CursorStartX - 1, CursorStartY);
-        InvalidateCell(GuiData, CursorStartX + 1, CursorStartY);
+        if (GuiData->Console->IsCJK)
+        {
+            InvalidateCell(GuiData, CursorStartX - 1, CursorStartY);
+            InvalidateCell(GuiData, CursorStartX + 1, CursorStartY);
+        }
     }
 
     CursorEndX = Buff->CursorPosition.X;
@@ -693,8 +696,11 @@ GuiWriteStream(IN OUT PFRONTEND This,
             && (CursorEndX != CursorStartX || CursorEndY != CursorStartY))
     {
         InvalidateCell(GuiData, CursorEndX, CursorEndY);
-        InvalidateCell(GuiData, CursorEndX - 1, CursorEndY);
-        InvalidateCell(GuiData, CursorEndX + 1, CursorEndY);
+        if (GuiData->Console->IsCJK)
+        {
+            InvalidateCell(GuiData, CursorEndX - 1, CursorEndY);
+            InvalidateCell(GuiData, CursorEndX + 1, CursorEndY);
+        }
     }
 
     // HACK!!
