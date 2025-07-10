@@ -685,13 +685,9 @@ GuiWriteStream(IN OUT PFRONTEND This,
         if (GuiData->Console->IsCJK)
         {
             if (CursorStartX > 0)
-            {
                 InvalidateCell(GuiData, CursorStartX - 1, CursorStartY);
-            }
             if (CursorStartX + 1 < Buff->ViewSize.X)
-            {
                 InvalidateCell(GuiData, CursorStartX + 1, CursorStartY);
-            }
         }
     }
 
@@ -707,9 +703,7 @@ GuiWriteStream(IN OUT PFRONTEND This,
             if (CursorEndX > 0)
                 InvalidateCell(GuiData, CursorEndX - 1, CursorEndY);
             if (CursorEndX + 1 < Buff->ViewSize.X)
-            {
                 InvalidateCell(GuiData, CursorEndX + 1, CursorEndY);
-            }
         }
     }
 
