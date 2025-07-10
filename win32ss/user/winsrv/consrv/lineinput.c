@@ -93,7 +93,7 @@ LineInputEdit(PCONSRV_CONSOLE Console,
     PTEXTMODE_SCREEN_BUFFER ActiveBuffer;
     UINT Pos = Console->LinePos;
     UINT NewSize = Console->LineSize - NumToDelete + NumToInsert;
-    UINT i;
+    UINT i, OldColumns, NewColumns;
 
     if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER) return;
     ActiveBuffer = (PTEXTMODE_SCREEN_BUFFER)Console->ActiveBuffer;
@@ -102,10 +102,20 @@ LineInputEdit(PCONSRV_CONSOLE Console,
     if (NewSize + 2 > Console->LineMaxSize)
         return;
 
+    if (Console->IsCJK)
+        OldColumns = GetTextWidth(&Console->LineBuffer[Pos], Console->LineSize - Pos, Console->LineMaxSize);
+    else
+        OldColumns = Console->LineSize - Pos;
+
     memmove(&Console->LineBuffer[Pos + NumToInsert],
             &Console->LineBuffer[Pos + NumToDelete],
             (Console->LineSize - (Pos + NumToDelete)) * sizeof(WCHAR));
     memcpy(&Console->LineBuffer[Pos], Insertion, NumToInsert * sizeof(WCHAR));
+
+    if (Console->IsCJK)
+        NewColumns = GetTextWidth(&Console->LineBuffer[Pos], NewSize - Pos, Console->LineMaxSize);
+    else
+        NewColumns = NewSize - Pos;
 
     if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
     {
@@ -116,10 +126,9 @@ LineInputEdit(PCONSRV_CONSOLE Console,
                             NewSize - Pos,
                             TRUE);
         }
-        for (i = NewSize; i < Console->LineSize; ++i)
-        {
+
+        for (i = NewColumns; i < OldColumns; ++i)
             TermWriteStream(Console, ActiveBuffer, L" ", 1, TRUE);
-        }
     }
 
     Console->LineSize = NewSize;
