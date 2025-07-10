@@ -704,7 +704,8 @@ GuiWriteStream(IN OUT PFRONTEND This,
         InvalidateCell(GuiData, CursorEndX, CursorEndY);
         if (GuiData->Console->IsCJK)
         {
-            InvalidateCell(GuiData, CursorEndX - 1, CursorEndY);
+            if (CursorEndX > 0)
+                InvalidateCell(GuiData, CursorEndX - 1, CursorEndY);
             if (CursorEndX + 1 < Buff->ViewSize.X)
             {
                 InvalidateCell(GuiData, CursorEndX + 1, CursorEndY);
