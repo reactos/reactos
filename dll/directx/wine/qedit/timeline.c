@@ -30,7 +30,7 @@
 #include "qedit_private.h"
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(qedit);
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct {
     IUnknown IUnknown_inner;
@@ -97,25 +97,25 @@ static HRESULT WINAPI Timeline_QueryInterface(IUnknown *iface, REFIID riid, void
 
 static ULONG WINAPI Timeline_AddRef(IUnknown *iface)
 {
-    TimelineImpl *This = impl_from_IUnknown(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    TimelineImpl *timeline = impl_from_IUnknown(iface);
+    ULONG refcount = InterlockedIncrement(&timeline->ref);
 
-    TRACE("(%p) new ref = %u\n", This, ref);
+    TRACE("%p increasing refcount to %lu.\n", timeline, refcount);
 
-    return ref;
+    return refcount;
 }
 
 static ULONG WINAPI Timeline_Release(IUnknown *iface)
 {
-    TimelineImpl *This = impl_from_IUnknown(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    TimelineImpl *timeline = impl_from_IUnknown(iface);
+    ULONG refcount = InterlockedDecrement(&timeline->ref);
 
-    TRACE("(%p) new ref = %u\n", This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", timeline, refcount);
 
-    if (ref == 0)
-        CoTaskMemFree(This);
+    if (!refcount)
+        CoTaskMemFree(timeline);
 
-    return ref;
+    return refcount;
 }
 
 static const IUnknownVtbl timeline_vtbl =
@@ -201,7 +201,7 @@ static HRESULT WINAPI Timeline_IAMTimeline_RemGroupFromList(IAMTimeline *iface, 
 static HRESULT WINAPI Timeline_IAMTimeline_GetGroup(IAMTimeline *iface, IAMTimelineObj **group, LONG index)
 {
     TimelineImpl *This = impl_from_IAMTimeline(iface);
-    FIXME("(%p)->(%p,%d): not implemented!\n", This, group, index);
+    FIXME("(%p)->(%p,%ld): not implemented!\n", This, group, index);
     return E_NOTIMPL;
 }
 
@@ -229,7 +229,7 @@ static HRESULT WINAPI Timeline_IAMTimeline_GetInsertMode(IAMTimeline *iface, LON
 static HRESULT WINAPI Timeline_IAMTimeline_SetInsertMode(IAMTimeline *iface, LONG mode)
 {
     TimelineImpl *This = impl_from_IAMTimeline(iface);
-    FIXME("(%p)->(%d): not implemented!\n", This, mode);
+    FIXME("(%p)->(%ld): not implemented!\n", This, mode);
     return E_NOTIMPL;
 }
 
@@ -317,7 +317,7 @@ static HRESULT WINAPI Timeline_IAMTimeline_GetCountOfType(IAMTimeline *iface, LO
                                                           LONG *value_with_comps, TIMELINE_MAJOR_TYPE type)
 {
     TimelineImpl *This = impl_from_IAMTimeline(iface);
-    FIXME("(%p)->(%d,%p,%p,%04x): not implemented!\n", This, group, value, value_with_comps, type);
+    FIXME("(%p)->(%ld,%p,%p,%#x): not implemented!\n", This, group, value, value_with_comps, type);
     return E_NOTIMPL;
 }
 
@@ -325,7 +325,7 @@ static HRESULT WINAPI Timeline_IAMTimeline_ValidateSourceNames(IAMTimeline *ifac
                                                                LONG_PTR notify_event)
 {
     TimelineImpl *This = impl_from_IAMTimeline(iface);
-    FIXME("(%p)->(%d,%p,%lx): not implemented!\n", This, flags, override, notify_event);
+    FIXME("(%p)->(%ld,%p,%#Ix): not implemented!\n", This, flags, override, notify_event);
     return E_NOTIMPL;
 }
 
@@ -421,7 +421,7 @@ static const IAMTimelineVtbl IAMTimeline_VTable =
     Timeline_IAMTimeline_GetDefaultEffectB,
 };
 
-HRESULT AMTimeline_create(IUnknown *pUnkOuter, LPVOID *ppv)
+HRESULT timeline_create(IUnknown *pUnkOuter, IUnknown **ppv)
 {
     TimelineImpl* obj = NULL;
 
@@ -475,25 +475,25 @@ static HRESULT WINAPI TimelineObj_QueryInterface(IAMTimelineObj *iface, REFIID r
 
 static ULONG WINAPI TimelineObj_AddRef(IAMTimelineObj *iface)
 {
-    TimelineObjImpl *This = impl_from_IAMTimelineObj(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    TimelineObjImpl *obj = impl_from_IAMTimelineObj(iface);
+    ULONG refcount = InterlockedIncrement(&obj->ref);
 
-    TRACE("(%p) new ref = %u\n", This, ref);
+    TRACE("%p increasing refcount to %lu.\n", obj, refcount);
 
-    return ref;
+    return refcount;
 }
 
 static ULONG WINAPI TimelineObj_Release(IAMTimelineObj *iface)
 {
-    TimelineObjImpl *This = impl_from_IAMTimelineObj(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    TimelineObjImpl *obj = impl_from_IAMTimelineObj(iface);
+    ULONG refcount = InterlockedDecrement(&obj->ref);
 
-    TRACE("(%p) new ref = %u\n", This, ref);
+    TRACE("%p decreasing refcount to %lu.\n", obj, refcount);
 
-    if (!ref)
-        CoTaskMemFree(This);
+    if (!refcount)
+        CoTaskMemFree(obj);
 
-    return ref;
+    return refcount;
 }
 
 static HRESULT WINAPI TimelineObj_GetStartStop(IAMTimelineObj *iface, REFERENCE_TIME *start, REFERENCE_TIME *stop)
@@ -629,7 +629,7 @@ static HRESULT WINAPI TimelineObj_GetUserID(IAMTimelineObj *iface, LONG *id)
 static HRESULT WINAPI TimelineObj_SetUserID(IAMTimelineObj *iface, LONG id)
 {
     TimelineObjImpl *This = impl_from_IAMTimelineObj(iface);
-    FIXME("(%p)->(%d): not implemented!\n", This, id);
+    FIXME("(%p)->(%ld): not implemented!\n", This, id);
     return E_NOTIMPL;
 }
 
@@ -664,7 +664,7 @@ static HRESULT WINAPI TimelineObj_GetUserData(IAMTimelineObj *iface, BYTE *data,
 static HRESULT WINAPI TimelineObj_SetUserData(IAMTimelineObj *iface, BYTE *data, LONG size)
 {
     TimelineObjImpl *This = impl_from_IAMTimelineObj(iface);
-    FIXME("(%p)->(%p,%d): not implemented!\n", This, data, size);
+    FIXME("(%p)->(%p,%ld): not implemented!\n", This, data, size);
     return E_NOTIMPL;
 }
 
@@ -912,7 +912,7 @@ static HRESULT WINAPI timelinegrp_GetPreviewMode(IAMTimelineGroup *iface, BOOL *
 static HRESULT WINAPI timelinegrp_SetMediaTypeForVB(IAMTimelineGroup *iface, LONG type)
 {
     TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
-    FIXME("(%p)->(%d)\n", This, type);
+    FIXME("(%p)->(%ld)\n", This, type);
     return E_NOTIMPL;
 }
 

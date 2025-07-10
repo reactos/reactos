@@ -136,6 +136,7 @@ list(APPEND SOURCE_VISTA
     locale.c
     runonce.c
     srw.c
+    threadpool.c
     utf8.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})

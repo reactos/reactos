@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#if 0
+#pragma makedep install
+#endif
+
 cpp_quote("#if 0")
 typedef DWORD IDirectDrawSurface7;
 typedef DWORD IDirectDraw7;
@@ -72,7 +76,7 @@ interface IVMRImagePresenter : IUnknown
     HRESULT StartPresenting([in] DWORD_PTR id);
     HRESULT StopPresenting([in] DWORD_PTR id);
     HRESULT PresentImage([in] DWORD_PTR id, [in] VMRPRESENTATIONINFO *info);
-};
+}
 
 typedef enum _VMRSurfaceAllocationFlags
 {
@@ -109,7 +113,7 @@ interface IVMRSurfaceAllocator : IUnknown
     HRESULT FreeSurface([in] DWORD_PTR id);
     HRESULT PrepareSurface([in] DWORD_PTR id, [in] IDirectDrawSurface7 *surface, [in] DWORD dwSurfaceFlags);
     HRESULT AdviseNotify([in] IVMRSurfaceAllocatorNotify *notify);
-};
+}
 
 [
     local,
@@ -126,7 +130,7 @@ interface IVMRSurfaceAllocatorNotify : IUnknown
     HRESULT RestoreDDrawSurfaces();
     HRESULT NotifyEvent([in] LONG EventCode, [in] LONG_PTR p1, [in] LONG_PTR p2);
     HRESULT SetBorderColor([in] COLORREF border);
-};
+}
 
 typedef enum _VMR_ASPECT_RATIO_MODE
 {
@@ -158,7 +162,7 @@ interface IVMRWindowlessControl : IUnknown
     HRESULT GetBorderColor([out] COLORREF *border);
     HRESULT SetColorKey([in] COLORREF key);
     HRESULT GetColorKey([out] COLORREF *key);
-};
+}
 
 typedef enum _VMRMixerPrefs
 {
@@ -209,7 +213,7 @@ interface IVMRMixerControl : IUnknown
     HRESULT GetBackgroundClr([out] COLORREF *background);
     HRESULT SetMixingPrefs([in] DWORD prefs);
     HRESULT GetMixingPrefs([out] DWORD *prefs);
-};
+}
 
 typedef struct tagVMRGUID
 {
@@ -289,7 +293,7 @@ interface IVMRFilterConfig : IUnknown
     HRESULT GetRenderingPrefs([out] DWORD *prefs);
     HRESULT SetRenderingMode([in] DWORD mode);
     HRESULT GetRenderingMode([out] DWORD *mode);
-};
+}
 
 [
     local,
@@ -302,7 +306,7 @@ interface IVMRAspectRatioControl : IUnknown
 {
     HRESULT GetAspectRatioMode([out] DWORD *armode);
     HRESULT SetAspectRatioMode([in] DWORD armode);
-};
+}
 
 typedef enum _VMRDeinterlacePrefs
 {
@@ -365,7 +369,7 @@ interface IVMRDeinterlaceControl : IUnknown
     HRESULT GetDeinterlacePrefs([out] DWORD *prefs);
     HRESULT SetDeinterlacePrefs([in] DWORD prefs);
     HRESULT GetActualDeinterlaceMode([in] DWORD id, [out] GUID *mode);
-};
+}
 
 typedef struct _VMRALPHABITMAP
 {
@@ -396,7 +400,7 @@ interface IVMRMixerBitmap : IUnknown
     HRESULT SetAlphaBitmap([in] const VMRALPHABITMAP *params);
     HRESULT UpdateAlphaBitmapParameters([in] VMRALPHABITMAP *params);
     HRESULT GetAlphaBitmapParameters([out] VMRALPHABITMAP *params);
-};
+}
 
 typedef struct _VMRVIDEOSTREAMINFO
 {
@@ -424,7 +428,7 @@ interface IVMRImageCompositor : IUnknown
     HRESULT CompositeImage([in] IUnknown *d3ddev, [in] IDirectDrawSurface7 *rendertarget,
                            [in] AM_MEDIA_TYPE *pmt, [in] REFERENCE_TIME start, [in] REFERENCE_TIME stop,
                            [in] DWORD backgrnd, [in] VMRVIDEOSTREAMINFO *info, [in] UINT streams);
-};
+}
 
 [
     local,
@@ -439,7 +443,7 @@ interface IVMRVideoStreamControl : IUnknown
     HRESULT GetColorKey([out] DDCOLORKEY *key);
     HRESULT SetStreamActiveState([in] BOOL active);
     HRESULT GetStreamActiveState([out] BOOL *active);
-};
+}
 
 [
     local,
@@ -452,7 +456,7 @@ interface IVMRImagePresenterConfig : IUnknown
 {
     HRESULT SetRenderingPrefs([in] DWORD prefs);
     HRESULT GetRenderingPrefs([out] DWORD *prefs);
-};
+}
 
 [
     local,
@@ -465,7 +469,7 @@ interface IVMRImagePresenterExclModeConfig : IVMRImagePresenterConfig
 {
     HRESULT SetXlcModeDDObjAndPrimarySurface([in] IDirectDraw7 *dddev, [in] IDirectDrawSurface7 *ddsurface);
     HRESULT GetXlcModeDDObjAndPrimarySurface([out] IDirectDraw7 **dddev, [out] IDirectDrawSurface7 **ddsurface);
-};
+}
 
 [
     local,
@@ -478,4 +482,4 @@ interface IVPManager : IUnknown
 {
     HRESULT SetVideoPortIndex([in] DWORD index);
     HRESULT GetVideoPortIndex([out] DWORD *index);
-};
+}

@@ -8,9 +8,6 @@
 #define _INC_WINDOWS
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include "dplay_global.h"
 #include "dplayx_global.h"
 #include "dplayx_messages.h"

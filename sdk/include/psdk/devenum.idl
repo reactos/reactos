@@ -16,12 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#if 0
+#pragma makedep install
+#endif
+
 import "oaidl.idl";
 
 cpp_quote("#define CDEF_CLASS_DEFAULT 0x0001")
 cpp_quote("#define CDEF_BYPASS_CLASS_MANAGER 0x0002")
 cpp_quote("#define CDEF_CLASS_LEGACY  0x0004")
 cpp_quote("#define CDEF_MERIT_ABOVE_DO_NOT_USE 0x0008")
+
+cpp_quote("#define CDEF_DEVMON_CMGR_DEVICE 0x0010")
+cpp_quote("#define CDEF_DEVMON_DMO 0x0020")
+cpp_quote("#define CDEF_DEVMON_PNP_DEVICE 0x0040")
+cpp_quote("#define CDEF_DEVMON_FILTER 0x0080")
+cpp_quote("#define CDEF_DEVMON_SELECTIVE_MASK 0x00f0")
 
 [
     object,

@@ -39,7 +39,7 @@ HRESULT WINAPI MoCreateMediaType(DMO_MEDIA_TYPE** ppmedia, DWORD cbFormat)
 {
     HRESULT r;
 
-    TRACE("%p %u\n", ppmedia, cbFormat);
+    TRACE("%p %lu\n", ppmedia, cbFormat);
 
     if (!ppmedia)
         return E_POINTER;
@@ -65,7 +65,7 @@ HRESULT WINAPI MoCreateMediaType(DMO_MEDIA_TYPE** ppmedia, DWORD cbFormat)
  */
 HRESULT WINAPI MoInitMediaType(DMO_MEDIA_TYPE* pmedia, DWORD cbFormat)
 {
-    TRACE("%p %u\n", pmedia, cbFormat);
+    TRACE("%p %lu\n", pmedia, cbFormat);
 
     if (!pmedia)
         return E_POINTER;
