@@ -35,7 +35,7 @@ typedef struct
 {
     PCWSTR pszFilePath;
     UINT nIcons;
-} EXTRACTICONTESTS;
+} EXTRACTICONTEST;
 
 BOOL FileExists(LPCSTR FileName)
 {
@@ -95,7 +95,7 @@ BOOL ResourceToFile(INT i, LPCSTR FileName)
     return TRUE;
 }
 
-EXTRACTICONTESTS IconTests[] =
+EXTRACTICONTEST IconTests[] =
 {
     /* Executable file with icon */
     {L"%SystemRoot%\\System32\\cmd.exe", 1},
@@ -106,40 +106,67 @@ EXTRACTICONTESTS IconTests[] =
     /* Non-existing files */
     {L"%SystemRoot%\\non-existent-file.sdf", 0},
 
-    /* Multiple icons in the same EXE file (18 icons) */
-    {L"%SystemRoot%\\explorer.exe", 18},
-
     /* Multiple icons in the same ICO file (6 icons)
      * Per MS: If the file is an .ico file, the return value is 1. */
     {L"sysicon.ico", 1},
 
     /* ICO file with both normal and PNG icons */
-    {L"ROS.ico", 0}
+    {L"ROS.ico", (UINT)(GetNTVersion() >= _WIN32_WINNT_VISTA ? 1 : 0)}
 };
+
+VOID RunExtractIconTest(EXTRACTICONTEST *Test)
+{
+    UINT nReturnedIcons, nExtractedIcons;
+
+    /* Check count of icons returned */
+    nReturnedIcons = ExtractIconExW(Test->pszFilePath, -1, NULL, NULL, 0);
+    ok(nReturnedIcons == Test->nIcons, "ExtractIconExW(L\"%S\"): Expects %u icons, got %u\n", Test->pszFilePath, Test->nIcons, nReturnedIcons);
+
+    /* Check if the 0th icon can be extracted successfully */
+    nExtractedIcons = ExtractIconExW(Test->pszFilePath, 0, NULL, NULL, 1);
+    ok(nExtractedIcons == Test->nIcons, "ExtractIconExW(L\"%S\"): Expects %u icons, got %u\n", Test->pszFilePath, Test->nIcons, nExtractedIcons);
+}
 
 START_TEST(ExtractIconEx)
 {
-    UINT i, nReturnedIcons, nExtractedIcons;
+    UINT i;
     CHAR FileName[2][13] = { "ROS.ico", "sysicon.ico" };
+    EXTRACTICONTEST explorer_exe = {L"%SystemRoot%\\explorer.exe", 0};
 
     if (!ResourceToFile(2, FileName[0]))
         return;
     if (!ResourceToFile(3, FileName[1]))
         return;
 
-    /* Check count of icons returned */
+    /* Run normal tests */
     for (i = 0; i < _countof(IconTests); ++i)
+        RunExtractIconTest(&IconTests[i]);
+
+    /* Run special case checks */
+    switch (GetNTVersion())
     {
-        nReturnedIcons = ExtractIconExW(IconTests[i].pszFilePath, -1, NULL, NULL, 0);
-        ok(nReturnedIcons == IconTests[i].nIcons, "ExtractIconExW(%u): Expects %u icons, got %u\n", i, IconTests[i].nIcons, nReturnedIcons);
+        case _WIN32_WINNT_WS03:
+            explorer_exe.nIcons = 18;
+            break;
+        case _WIN32_WINNT_VISTA:
+            explorer_exe.nIcons = 23;
+            break;
+        case _WIN32_WINNT_WIN7:
+            explorer_exe.nIcons = 25;
+            break;
+        case _WIN32_WINNT_WIN8:
+        case _WIN32_WINNT_WINBLUE:
+            explorer_exe.nIcons = 24;
+            break;
+        case _WIN32_WINNT_WIN10:
+            explorer_exe.nIcons = 28;
+            break;
     }
 
-    /* Check if the 0th icon can be extracted successfully */
-    for (i = 0; i < _countof(IconTests); ++i)
-    {
-        nExtractedIcons = ExtractIconExW(IconTests[i].pszFilePath, 0, NULL, NULL, 1);
-        ok(nExtractedIcons == IconTests[i].nIcons, "ExtractIconExW(%u): Expects %u icons, got %u\n", i, IconTests[i].nIcons, nExtractedIcons);
-    }
+    if (explorer_exe.nIcons)
+        RunExtractIconTest(&explorer_exe);
+    else
+        skip("Unknown NT Version: 0x%lX\n", GetNTVersion());
 
     DeleteFileA(FileName[0]);
     DeleteFileA(FileName[1]);
