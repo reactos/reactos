@@ -3930,7 +3930,7 @@ static DWORD subtest_manifest_res_(int line, const char *manifest_exe, const cha
 
     if (lang)
     {
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         r = LCIDToLocaleName(MAKELCID(lang, SORT_DEFAULT),
                              locale_name, ARRAY_SIZE(locale_name), LOCALE_ALLOW_NEUTRAL_NAMES);
         ok(r > 0, "lang 0x%04x, error %lu.\n", lang, GetLastError());
@@ -4201,7 +4201,7 @@ static void subtest_valid_manifest_resources_locale(LANGID actctx_lang)
         actctx_lang = ConvertDefaultLocale(actctx_lang);
         ok(actctx_lang != MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
            "unexpected neutral locale\n");
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         ret = LCIDToLocaleName(MAKELCID(actctx_lang, SORT_DEFAULT),
                                locale_name, ARRAY_SIZE(locale_name), LOCALE_ALLOW_NEUTRAL_NAMES);
         ok(ret > 0, "error %lu.\n", GetLastError());

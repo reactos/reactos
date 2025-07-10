@@ -589,7 +589,7 @@ static const struct
         IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ }
 };
 
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void create_test_dll( const WCHAR *name )
 {
     DWORD dummy;
@@ -849,7 +849,7 @@ START_TEST(resource)
         DeleteFileA( filename );
     }
     test_find_resource();
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     test_mui();
 #endif
 }
