@@ -56,13 +56,13 @@ CDisplayAttributeMgr::QueryInterface(REFIID riid, void **ppvObj)
 
     *ppvObj = NULL;
 
-    if (IsEqualIID(riid, IID_IUnknown) ||
-        IsEqualIID(riid, IID_ITfDisplayAttributeMgr) ||
-        IsEqualIID(riid, IID_CDisplayAttributeMgr))
+    if (riid == IID_IUnknown ||
+        riid == IID_ITfDisplayAttributeMgr ||
+        riid == IID_CDisplayAttributeMgr)
     {
         *ppvObj = this;
     }
-    else if (IsEqualIID(riid, IID_ITfDisplayAttributeCollectionMgr))
+    else if (riid == IID_ITfDisplayAttributeCollectionMgr)
     {
         *ppvObj = static_cast<ITfDisplayAttributeCollectionMgr *>(this);
     }
