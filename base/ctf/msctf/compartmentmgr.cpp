@@ -328,9 +328,7 @@ STDMETHODIMP CCompartmentEnumGuid::QueryInterface(REFIID iid, LPVOID *ppvObj)
     *ppvObj = NULL;
 
     if (iid == IID_IUnknown || iid == IID_IEnumGUID)
-    {
         *ppvObj = static_cast<IEnumGUID *>(this);
-    }
 
     if (*ppvObj)
     {

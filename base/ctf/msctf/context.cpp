@@ -255,26 +255,28 @@ STDMETHODIMP CContext::QueryInterface(REFIID riid, void **ppvObj)
 {
     *ppvObj = NULL;
 
+    IUnknown *pUnk = NULL;
     if (riid == IID_IUnknown || riid == IID_ITfContext)
-        *ppvObj = static_cast<ITfContext *>(this);
+        pUnk = static_cast<ITfContext *>(this);
     else if (riid == IID_ITfSource)
-        *ppvObj = static_cast<ITfSource *>(this);
+        pUnk = static_cast<ITfSource *>(this);
     else if (riid == IID_ITfContextOwnerCompositionServices)
-        *ppvObj = static_cast<ITfContextOwnerCompositionServices *>(this);
+        pUnk = static_cast<ITfContextOwnerCompositionServices *>(this);
     else if (riid == IID_ITfInsertAtSelection)
-        *ppvObj = static_cast<ITfInsertAtSelection *>(this);
+        pUnk = static_cast<ITfInsertAtSelection *>(this);
     else if (riid == IID_ITfCompartmentMgr)
-        *ppvObj = m_CompartmentMgr;
+        pUnk = m_CompartmentMgr;
     else if (riid == IID_ITfSourceSingle)
-        *ppvObj = static_cast<ITfSourceSingle *>(this);
+        pUnk = static_cast<ITfSourceSingle *>(this);
     else if (riid == IID_ITextStoreACPSink)
-        *ppvObj = static_cast<ITextStoreACPSink *>(this);
+        pUnk = static_cast<ITextStoreACPSink *>(this);
     else if (riid == IID_ITextStoreACPServices)
-        *ppvObj = static_cast<ITextStoreACPServices *>(this);
+        pUnk = static_cast<ITextStoreACPServices *>(this);
 
-    if (*ppvObj)
+    if (pUnk)
     {
-        AddRef();
+        pUnk->AddRef();
+        *ppvObj = pUnk;
         return S_OK;
     }
 
