@@ -1,29 +1,14 @@
 /*
- * Internal header for msctf.dll
- *
- * Copyright 2008 Aric Stewart, CodeWeavers
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS CTF
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Internal header for msctf.dll
+ * COPYRIGHT:   Copyright 2008 Aric Stewart, CodeWeavers
+ *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#ifndef __WINE_MSCTF_I_H
-#define __WINE_MSCTF_I_H
+#pragma once
 
-#include "wine/list.h"
-
-#if defined(__REACTOS__) && defined(__cplusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -102,8 +87,6 @@ void free_sinks(struct list *sink_list) DECLSPEC_HIDDEN;
 extern const WCHAR szwSystemTIPKey[] DECLSPEC_HIDDEN;
 extern const WCHAR szwSystemCTFKey[] DECLSPEC_HIDDEN;
 
-#if defined(__REACTOS__) && defined(__cplusplus)
+#ifdef __cplusplus
 } // extern "C"
 #endif
-
-#endif /* __WINE_MSCTF_I_H */
