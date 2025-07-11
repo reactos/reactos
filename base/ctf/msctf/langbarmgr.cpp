@@ -116,9 +116,9 @@ CLangBarMgr::QueryInterface(
     if (!ppvObj)
         return E_INVALIDARG;
 
-    if (!IsEqualIID(riid, IID_IUnknown) &&
-        !IsEqualIID(riid, IID_ITfLangBarMgr) &&
-        !IsEqualIID(riid, IID_ITfLangBarMgr_P))
+    if (riid != IID_IUnknown &&
+        riid != IID_ITfLangBarMgr &&
+        riid != IID_ITfLangBarMgr_P)
     {
         *ppvObj = NULL;
         return E_NOINTERFACE;

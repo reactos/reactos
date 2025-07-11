@@ -82,19 +82,19 @@ HRESULT CRange::TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELE
 
 STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
 {
-    if (IsEqualGUID(riid, IID_PRIV_CRANGE))
+    if (riid == IID_PRIV_CRANGE)
     {
         *ppvObj = this;
         return S_OK; // No AddRef
     }
 
-    if (IsEqualGUID(riid, IID_ITfRange) || IsEqualGUID(riid, IID_IUnknown))
+    if (riid == IID_ITfRange || riid == IID_IUnknown)
         *ppvObj = this;
-    else if (IsEqualGUID(riid, IID_ITfRangeACP))
+    else if (riid == IID_ITfRangeACP)
         *ppvObj = static_cast<ITfRangeACP *>(this);
-    else if (IsEqualGUID(riid, IID_ITfRangeAnchor))
+    else if (riid == IID_ITfRangeAnchor)
         *ppvObj = static_cast<ITfRangeAnchor *>(this);
-    else if (IsEqualGUID(riid, IID_ITfSource))
+    else if (riid == IID_ITfSource)
         *ppvObj = static_cast<ITfSource *>(this);
     else
         *ppvObj = NULL;

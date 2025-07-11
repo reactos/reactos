@@ -477,7 +477,7 @@ TF_RegisterLangBarAddIn(
 {
     TRACE("(%s, %s, 0x%lX)\n", debugstr_guid(&rguid), debugstr_w(pszFilePath), dwFlags);
 
-    if (!pszFilePath || IsEqualGUID(rguid, GUID_NULL))
+    if (!pszFilePath || rguid == GUID_NULL)
     {
         ERR("E_INVALIDARG\n");
         return E_INVALIDARG;
@@ -513,7 +513,7 @@ TF_UnregisterLangBarAddIn(
 {
     TRACE("(%s, 0x%lX)\n", debugstr_guid(&rguid), dwFlags);
 
-    if (IsEqualGUID(rguid, GUID_NULL))
+    if (rguid == GUID_NULL)
     {
         ERR("E_INVALIDARG\n");
         return E_INVALIDARG;
