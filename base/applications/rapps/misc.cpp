@@ -653,7 +653,7 @@ GuessInstallerType(LPCWSTR Installer, UINT &ExtraInfo)
         // Inno
         enum { INNORCSETUPLDR = 11111 };
         HGLOBAL hGlob;
-        HRSRC hRsrc = FindResource(hMod, MAKEINTRESOURCE(INNORCSETUPLDR), RT_RCDATA);
+        HRSRC hRsrc = FindResourceW(hMod, MAKEINTRESOURCE(INNORCSETUPLDR), RT_RCDATA);
         if (hRsrc && (hGlob = LoadResource(hMod, hRsrc)) != NULL)
         {
             if (BYTE *p = (BYTE*)LockResource(hGlob))
@@ -673,26 +673,33 @@ done:
 BOOL
 GetSilentInstallParameters(InstallerType InstallerType, UINT ExtraInfo, LPCWSTR Installer, CStringW &Parameters)
 {
-    LPCWSTR pszInnoParams = L"/SILENT /VERYSILENT /SP-";
-
-    switch(InstallerType)
+    switch (InstallerType)
     {
         case INSTALLER_MSI:
+        {
             Parameters.Format(L"/i \"%s\" /qn", Installer);
             return TRUE;
+        }
 
         case INSTALLER_INNO:
+        {
+            LPCWSTR pszInnoParams = L"/SILENT /VERYSILENT /SP-";
             if (ExtraInfo)
                 Parameters.Format(L"%s", pszInnoParams);
             else
-                Parameters.Format(L"%s /SUPPRESSMSGBOXES", pszInnoParams); // jrsoftware.org/files/is5.5-whatsnew.htm
+                Parameters.Format(L"%s /SUPPRESSMSGBOXES", pszInnoParams); // https://jrsoftware.org/files/is5.5-whatsnew.htm
             return TRUE;
+        }
 
         case INSTALLER_NSIS:
+        {
             Parameters = L"/S";
             return TRUE;
+        }
 
         default:
+        {
             return FALSE;
+        }
     }
 }

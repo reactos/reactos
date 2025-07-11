@@ -496,8 +496,8 @@ public:
         CComPtr<CDownloadManager> obj;
         if (FAILED(ShellObjectCreator(obj)))
             return NULL;
-        obj->m_fFlags = Flags;
-        obj->m_bModal = Flags & DAF_MODAL;
+        obj->m_fDaf = Flags;
+        obj->m_bModal = !!(Flags & DAF_MODAL);
         return obj.Detach();
     }
 
@@ -528,7 +528,7 @@ public:
     BOOL
     IsSilentDialog()
     {
-        return m_fFlags & DAF_SILENT;
+        return m_fDaf & DAF_SILENT;
     }
 
     void StartWorkerThread();
@@ -551,7 +551,7 @@ protected:
     UINT m_Index;
     BOOL m_bCancelled;
     BOOL m_bModal;
-    UINT m_fFlags = 0;
+    UINT m_fDaf = 0;
     WCHAR m_szCaptionFmt[100];
     ATL::CSimpleArray<DownloadInfo> m_List;
     CDowloadingAppsListView m_ListView;
@@ -596,7 +596,7 @@ CDownloadManager::Show()
 
     // A DialogBox dialog cannot be invisible, it is forced visible after WM_INITDIALOG returns.
     // We therefore use a modeless dialog when we are both modal and silent.
-    for (MSG msg; bModal && bSilent && hDlg && GetMessage(&msg, NULL, 0, 0);)
+    for (MSG msg; bModal && bSilent && hDlg && GetMessageW(&msg, NULL, 0, 0);)
         DispatchMessage(&msg);
 }
 
@@ -1091,10 +1091,8 @@ run:
 
         if (Info.IType == INSTALLER_GENERATE)
         {
-            const CStringW silentparam = bSilentInstall ? L" /S" : L"";
-            params = L"/" + CStringW(CMD_KEY_GENINST) + silentparam + L" \"" +
-                     Info.szPackageName + L"\" \"" +
-                     CStringW(shExInfo.lpFile) + L"\"";
+            params = L"/" CMD_KEY_GENINST + CStringW(bSilentInstall ? L" /S" : L"") +
+                     L" \"" + Info.szPackageName + L"\" \"" + CStringW(shExInfo.lpFile) + L"\"";
             shExInfo.lpParameters = params;
             shExInfo.lpFile = app.GetBuffer(MAX_PATH);
             GetModuleFileNameW(NULL, const_cast<LPWSTR>(shExInfo.lpFile), MAX_PATH);
