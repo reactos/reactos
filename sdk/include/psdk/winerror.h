@@ -18,9 +18,8 @@
 
 #ifndef __WINE_WINERROR_H
 #define __WINE_WINERROR_H
-#ifndef __REACTOS__
+
 #include <specstrings.h>
-#endif
 
 #define FACILITY_NULL                         0
 #define FACILITY_RPC                          1
@@ -213,7 +212,7 @@ static inline HRESULT HRESULT_FROM_WIN32(unsigned int x)
 {
     return (HRESULT)x > 0 ? ((HRESULT) ((x & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)) : (HRESULT)x;
 }
-#endif // __REACTOS__
+#endif // !__REACTOS__
 #define FACILITY_NT_BIT         0x10000000
 #define HRESULT_FROM_NT(x)      ((HRESULT) ((x) | FACILITY_NT_BIT))
 
@@ -2686,6 +2685,12 @@ static inline HRESULT HRESULT_FROM_WIN32(unsigned int x)
 #define DNS_STATUS_FQDN                                    9557
 #define DNS_STATUS_DOTTED_NAME                             9558
 #define DNS_STATUS_SINGLE_PART_NAME                        9559
+#ifdef __REACTOS__
+#define DNS_STATUS_PACKET_UNSECURE                         DNS_ERROR_UNSECURE_PACKET
+#define DNS_ERROR_NO_MEMORY                                ERROR_OUTOFMEMORY
+#define DNS_ERROR_INVALID_NAME                             ERROR_INVALID_NAME
+#define DNS_ERROR_INVALID_DATA                             ERROR_INVALID_DATA
+#endif
 #define DNS_ERROR_INVALID_NAME_CHAR                        9560
 #define DNS_ERROR_NUMERIC_NAME                             9561
 #define DNS_ERROR_NOT_ALLOWED_ON_ROOT_SERVER               9562
@@ -5035,6 +5040,9 @@ static inline HRESULT HRESULT_FROM_WIN32(unsigned int x)
 #define WER_E_INSUFFICIENT_CONSENT                         _HRESULT_TYPEDEF_(0x801B8006)
 #define WER_E_TOO_HEAVY                                    _HRESULT_TYPEDEF_(0x801B8007)
 
+#ifdef __REACTOS__
+#define FILTER_HRESULT_FROM_FLT_NTSTATUS(x) (ASSERT((x & 0xfff0000) == 0x001c0000),(HRESULT)(((x) & 0x8000FFFF) | (FACILITY_USERMODE_FILTER_MANAGER << 16)))
+#endif
 #define ERROR_FLT_IO_COMPLETE                              _HRESULT_TYPEDEF_(0x001F0001)
 #define ERROR_FLT_NO_HANDLER_DEFINED                       _HRESULT_TYPEDEF_(0x801F0001)
 #define ERROR_FLT_CONTEXT_ALREADY_DEFINED                  _HRESULT_TYPEDEF_(0x801F0002)
