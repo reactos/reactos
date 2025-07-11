@@ -56,6 +56,9 @@ protected:
     struct list m_transitoryExtensionSink;
 };
 
+EXTERN_C
+HRESULT EnumTfContext_Constructor(CDocumentMgr *mgr, IEnumTfContexts **ppOut);
+
 ////////////////////////////////////////////////////////////////////////////
 // CEnumTfContext
 

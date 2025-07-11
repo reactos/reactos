@@ -6,25 +6,11 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <oleauto.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-#include <wine/list.h>
-
-// Cicero
-#include <cicbase.h>
-
+#include "precomp.h"
 #include "documentmgr.h"
-#include "msctf_internal.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
-
-EXTERN_C
-HRESULT EnumTfContext_Constructor(CDocumentMgr *mgr, IEnumTfContexts **ppOut);
 
 ////////////////////////////////////////////////////////////////////////////
 // CDocumentMgr

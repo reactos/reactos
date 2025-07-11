@@ -6,19 +6,7 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-
-// Cicero
-#include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
-
-#include "msctf_internal.h"
+#include "precomp.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
