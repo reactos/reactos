@@ -31,6 +31,7 @@ static NTSTATUS NTAPI PciPnpControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 PPCI_DRIVER_EXTENSION DriverExtension = NULL;
 BOOLEAN HasDebuggingDevice = FALSE;
 PCI_TYPE1_CFG_CYCLE_BITS PciDebuggingDevice[2] = {0};
+BOOLEAN PciInLiveCD;
 
 /*** PRIVATE *****************************************************************/
 
@@ -244,6 +245,29 @@ PciLocateKdDevices(VOID)
     }
 }
 
+static
+CODE_SEG("INIT")
+BOOLEAN
+PciCheckInLiveCD(VOID)
+{
+    UNICODE_STRING CommandLine = { 0 };
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { 0 };
+
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+    QueryTable[0].Name = L"CmdLine";
+    QueryTable[0].EntryContext = &CommandLine;
+    QueryTable[0].DefaultType = REG_SZ;
+    QueryTable[0].DefaultLength = 0;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                           L"\\Registry\\Machine\\System\\Setup",
+                           QueryTable,
+                           NULL,
+                           NULL);
+
+    return (wcsstr(CommandLine.Buffer, L" -mini") != NULL);
+}
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -275,6 +299,8 @@ DriverEntry(
     KeInitializeSpinLock(&DriverExtension->BusListLock);
 
     PciLocateKdDevices();
+
+    PciInLiveCD = PciCheckInLiveCD();
 
     return STATUS_SUCCESS;
 }
