@@ -7,8 +7,6 @@
  */
 
 #include "precomp.h"
-
-class CInputContext;
 #include "range.h"
 
 #include <wine/debug.h>
