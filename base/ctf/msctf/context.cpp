@@ -103,17 +103,17 @@ public:
         _In_ TfEditCookie ecWrite,
         _In_ ITfRange *pCompositionRange,
         _In_ ITfCompositionSink *pSink,
-        _Out_ ITfComposition **ppComposition);
-    STDMETHODIMP EnumCompositions(_Out_ IEnumITfCompositionView **ppEnum);
+        _Out_ ITfComposition **ppComposition) override;
+    STDMETHODIMP EnumCompositions(_Out_ IEnumITfCompositionView **ppEnum) override;
     STDMETHODIMP FindComposition(
         _In_ TfEditCookie ecRead,
         _In_ ITfRange *pTestRange,
-        _Out_ IEnumITfCompositionView **ppEnum);
+        _Out_ IEnumITfCompositionView **ppEnum) override;
     STDMETHODIMP TakeOwnership(
         _In_ TfEditCookie ecWrite,
         _In_ ITfCompositionView *pComposition,
         _In_ ITfCompositionSink *pSink,
-        _Out_ ITfComposition **ppComposition);
+        _Out_ ITfComposition **ppComposition) override;
     STDMETHODIMP TerminateComposition(_In_ ITfCompositionView *pComposition) override;
 
     // ** ITfInsertAtSelection methods **
