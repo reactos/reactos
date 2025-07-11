@@ -499,3 +499,15 @@ _Pragma("GCC diagnostic pop") \
 #ifdef __cplusplus
 }; // extern "C"
 #endif
+
+
+#include <intrin.h>
+
+int _setjmp3(jmp_buf env, int count, ...);
+void __stdcall _SEH3$_longjmp_unwind(_JUMP_BUFFER* _Buf);
+
+#undef setjmp
+#define setjmp(env) \
+    _setjmp3(env, 2, (const void*)_SEH3$_longjmp_unwind, _SEH3$_TryLevel)
+
+#define _INC_SETJMPEX
