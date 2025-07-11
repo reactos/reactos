@@ -5,27 +5,15 @@
  * COPYRIGHT:   Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <stdlib.h>
+#include "precomp.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define WIN32_NO_STATUS
-#define COBJMACROS
-#define INITGUID
-#define _EXTYPES_H
-
-#include <windows.h>
 #include <sddl.h>
 #include <imm.h>
-#include <cguid.h>
 #include <tchar.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
 #include <ctffunc.h>
 #include <shlwapi.h>
 #include <strsafe.h>
 
-#include <cicarray.h>
-#include <cicreg.h>
 #include <cicmutex.h>
 #include <cicfmap.h>
 

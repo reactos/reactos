@@ -5,11 +5,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 spec2def(msctf.dll msctf.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    msctf.c
     precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
-
-list(APPEND PCH_SKIP_SOURCE
     categorymgr.cpp
     compartmentmgr.cpp
     context.cpp
@@ -18,9 +14,13 @@ list(APPEND PCH_SKIP_SOURCE
     inputprocessor.cpp
     langbarmgr.cpp
     mlng.cpp
+    msctf.cpp
     range.cpp
     threadmgr.cpp
-    utils.cpp)
+    utils.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
+
+list(APPEND PCH_SKIP_SOURCE)
 
 add_library(msctf MODULE
     ${SOURCE}
