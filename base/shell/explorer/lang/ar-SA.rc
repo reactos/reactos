@@ -1,0 +1,219 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDM_TRAYWND MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&ضبط التاريخ/الوقت", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&تخصيص الإشعارات...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "ت&تالي النوافذ", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "تجانب النوافذ &أفقياً", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "تجانب النوافذ &عمودياً", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&إظهار سطح المكتب", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&تراجع", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "م&دير المهام", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&تأمين شريط المهام", ID_LOCKTASKBAR
+        MENUITEM "خ&صائص", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&البرامج", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(فارغ)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "الم&فضلة", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(فارغ)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&المستندات", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(فارغ)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&الإعدادات", IDM_SETTINGS
+        BEGIN
+            MENUITEM "&لوحة التحكم", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&الأمان...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&اتصالات الشبكة", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&الطابعات والفاكسات", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&شريط المهام وقائمة ابدأ", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        MENUITEM "ب&حث", IDM_SEARCH, MFT_STRING, MFS_ENABLED
+        MENUITEM "&تعليمات ودعم", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&تشغيل...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "م&زامنة", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&تسجيل الخروج %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "ق&طع الاتصال...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "إ&لغاء إرساء الكمبيوتر", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "إ&يقاف التشغيل...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "شريط المهام"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "مظهر شريط المهام", IDC_STATIC, 6, 6, 240, 120
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
+    AUTOCHECKBOX "&تأمين شريط المهام", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "إ&خفاء شريط المهام تلقائياً", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "إبقاء شريط المهام &فوق النوافذ الأخرى", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&تجميع أزرار شريط المهام المتشابهة", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "إظهار &التشغيل السريع", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    AUTOCHECKBOX "استخدام &أيقونات صغيرة", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "قائمة ابدأ"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
+    AUTORADIOBUTTON "&قائمة ابدأ", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "يوفر نمط القائمة هذا وصولاً سهلاً إلى مجلداتك وبرامجك المفضلة والبحث.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    PUSHBUTTON "&تخصيص...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
+    AUTORADIOBUTTON "قائمة &ابدأ الكلاسيكية", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT "يوفر نمط القائمة هذا المظهر والوظائف الكلاسيكية", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    PUSHBUTTON "&تخصيص...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
+END
+
+IDD_TASKBARPROP_NOTIFY DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "منطقة الإعلام"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 6, 229, 24
+    GROUPBOX "الأيقونات", IDC_STATIC, 6, 36, 240, 56
+    LTEXT "يمكنك إبقاء منطقة الإعلام مرتبة عن طريق إخفاء الأيقونات التي لم تنقر عليها مؤخراً.", IDC_STATIC, 13, 48, 223, 16
+    AUTOCHECKBOX "&إخفاء الأيقونات غير النشطة", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
+    PUSHBUTTON "&تخصيص...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14
+    GROUPBOX "أيقونات النظام", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "حدد أيقونات النظام التي تريد إظهارها دائماً.", IDC_STATIC, 13, 113, 223, 8
+    AUTOCHECKBOX "&الساعة", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
+    AUTOCHECKBOX "إظهار الثواني", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "&سطح المكتب", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+END
+
+IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_LAYOUTRTL
+CAPTION "تخصيص الإشعارات"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "يعرض ReactOS أيقونات للإشعارات النشطة والملحة، ويخفي غير النشطة. يمكنك تغيير هذا السلوك للعناصر في القائمة أدناه.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT           "حدد عنصراً، ثم اختر سلوك الإشعار الخاص به:", IDC_STATIC, 6, 40, 220, 10
+    CONTROL         "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
+    COMBOBOX        IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    PUSHBUTTON      "&استعادة الافتراضيات", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
+    DEFPUSHBUTTON   "موافق", IDOK, 122, 220, 50, 14
+    PUSHBUTTON      "إلغاء", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "تخصيص قائمة ابدأ الكلاسيكية"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "قائمة ابدأ", IDC_STATIC, 8, 7, 218, 114
+    ICON            IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
+    LTEXT           "يمكنك تخصيص قائمة ابدأ الخاصة بك عن طريق إضافة أو إزالة عناصر.", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON      "إ&ضافة...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON      "&إزالة...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON      "م&تقدم", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON      "&فرز", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    ICON            IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
+    LTEXT           "لإزالة سجلات المستندات والبرامج ومواقع الويب التي تم الوصول إليها مؤخراً، انقر فوق مسح.", IDC_STATIC, 49, 85, 108, 33
+    PUSHBUTTON      "&مسح", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
+    LTEXT           "خيارات قائمة &ابدأ المتقدمة:", IDC_STATIC, 8, 129, 150, 8
+    CONTROL         "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "موافق", IDOK, 122, 220, 50, 14
+    PUSHBUTTON      "إلغاء", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "تحذير اسم الملف"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&تجاهل", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON      "&إعادة تسمية", IDC_FILE_RENAME, 159, 60, 50, 14
+    LTEXT           "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
+    AUTOCHECKBOX    "&لا تقم بهذا التحقق عند بدء التشغيل", IDC_NOTCHECK, 7, 62, 139, 10
+    ICON            32515, IDC_STATIC, 7, 7, 21, 20
+    LTEXT           "يوجد ملف أو مجلد على جهاز الكمبيوتر الخاص بك يسمى %s قد يتسبب في عدم عمل بعض التطبيقات بشكل صحيح.  ستؤدي إعادة تسميته إلى %s إلى حل هذه المشكلة.  هل ترغب في إعادة تسميته الآن؟", IDC_STATIC, 34, 7, 224, 37
+END
+
+IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
+STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "متقدم"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "إعدادات قائمة ابدأ ", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX    "&فتح القوائم الفرعية عندما أتوقف عليها بالماوس", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX    "تمييز البرامج المثبتة &حديثاً", IDC_HIGHLIGHT, 14, 35, 224, 10
+    LTEXT           "عناصر قائمة &ابدأ:", IDC_STATIC, 7, 53, 238, 8
+    CONTROL         "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
+    GROUPBOX        "المستندات الأخيرة ", IDC_STATIC, 7, 133, 238, 56
+    LTEXT           "حدد هذا الخيار لتوفير وصول سريع إلى المستندات التي فتحتها مؤخراً.  مسح هذه القائمة لا يحذف المستندات.", IDC_STATIC, 14, 144, 224, 21
+    AUTOCHECKBOX    "إدراج &مستنداتي المفتوحة مؤخراً", IDC_RECENTLY, 14, 168, 147, 10
+    PUSHBUTTON      "&مسح القائمة", IDC_CLEAR, 182, 168, 55, 14
+END
+
+IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "عام"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "حدد حجم أيقونة للبرامج ", IDC_STATIC, 7, 7, 238, 37
+    ICON            IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
+    ICON            IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
+    AUTORADIOBUTTON "&أيقونات كبيرة", IDC_CHOOSELARGE, 43, 25, 53, 10
+    AUTORADIOBUTTON "&أيقونات صغيرة", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    GROUPBOX        "البرامج ", IDC_STATIC, 7, 49, 238, 70
+    LTEXT           "تحتوي قائمة ابدأ على اختصارات للبرامج التي تستخدمها غالباً.  مسح قائمة الاختصارات لا يحذف البرامج.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT           "&عدد البرامج في قائمة ابدأ:", IDC_STATIC, 14, 86, 112, 8
+    EDITTEXT        IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
+    CONTROL         "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
+    PUSHBUTTON      "&مسح القائمة", IDC_CLEARLIST, 182, 98, 57, 14
+    GROUPBOX        "إظهار في قائمة ابدأ ", IDC_STATIC, 7, 126, 238, 63
+    AUTOCHECKBOX    "&الإنترنت:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    COMBOBOX        IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+    AUTOCHECKBOX    "&البريد الإلكتروني:", IDC_SHOWEMAIL, 14, 157, 37, 10
+    COMBOBOX        IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    IDS_START "ابدأ"
+    IDS_PROPERTIES "خ&صائص"
+    IDS_OPEN_ALL_USERS "ف&تح جميع المستخدمين"
+    IDS_EXPLORE_ALL_USERS "ا&ستكشاف جميع المستخدمين"
+    IDS_STARTUP_ERROR "لا يمكن للنظام بدء المستكشف لأن السجل تالف أو غير متاح."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "شريط المهام وقائمة ابدأ"
+    IDS_RESTORE_ALL "&إظهار النوافذ المفتوحة"
+    IDS_TRAYWND_UNDO_CASCADE "&التراجع عن التتالي"
+    IDS_TRAYWND_UNDO_TILE "&التراجع عن التجانب"
+    IDS_TRAYDESKBTN_TOOLTIP "إظهار سطح المكتب/النوافذ"
+END

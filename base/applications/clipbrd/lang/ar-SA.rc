@@ -1,0 +1,65 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&فتح...", CMD_OPEN
+        MENUITEM "حفظ &باسم...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "خ&روج", CMD_EXIT
+    END
+    POPUP "ت&حرير"
+    BEGIN
+        MENUITEM "&حذف\tDel", CMD_DELETE
+    END
+    POPUP "&عرض"
+    BEGIN
+        MENUITEM "&تلقائي", CMD_AUTOMATIC
+    END
+    POPUP "م&ساعدة"
+    BEGIN
+        MENUITEM "مواضيع الم&ساعدة", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&حول", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "عارض الحافظة"
+    STRING_CLIPFILE  "عنصر الحافظة"
+    STRING_DELETE_MSG "مسح محتويات الحافظة؟"
+    STRING_DELETE_TITLE "مسح الحافظة"
+    STRING_FORMAT_NT "ملفات الحافظة لريأكت أو إس (*.clp)"
+    STRING_FORMAT_GEN "ملفات الحافظة (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "تنسيق غير معروف"
+    STRING_CF_TEXT "نص"
+    STRING_CF_BITMAP "صورة نقطية"
+    STRING_CF_OEMTEXT "نص OEM"
+    STRING_CF_UNICODETEXT "نص يونيكود"
+    STRING_CF_DIB "صورة نقطية DIB"
+    STRING_CF_LOCALE "بيانات المنطقة"
+    STRING_CF_ENHMETAFILE "ملف تعريف محسن"
+    STRING_CF_METAFILEPICT "ملف تعريف"
+    STRING_CF_PALETTE "لوحة الألوان"
+    STRING_CF_DIBV5 "صورة نقطية DIB (الإصدار 5)"
+    STRING_CF_SYLK "تنسيق الرابط الرمزي"
+    STRING_CF_DIF "تنسيق تبادل البيانات"
+    STRING_CF_HDROP "بيانات الإسقاط"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "تحتوي الحافظة على بيانات بتنسيق لا يمكن عرضه."
+    ERROR_INVALID_FILE_FORMAT "الملف المحدد ليس ملف حافظة صالح."
+END 
