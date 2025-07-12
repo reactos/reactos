@@ -396,7 +396,7 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     WCHAR wszVolumeName[MAX_PATH+1] = {0};
     WCHAR wszFileSystem[MAX_PATH+1] = {0};
     WCHAR wszBuf[128];
-    BOOL bRet;
+    BOOL bRet, bFloppy = FALSE, bHasFS = FALSE;
 
     bRet = GetVolumeInformationW(m_wszDrive, wszVolumeName, _countof(wszVolumeName), NULL, NULL, NULL, wszFileSystem, _countof(wszFileSystem));
     if (bRet)
@@ -404,6 +404,7 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
         /* Set volume label and filesystem */
         SetDlgItemTextW(hwndDlg, 14000, wszVolumeName);
         SetDlgItemTextW(hwndDlg, 14002, wszFileSystem);
+        bHasFS = *wszFileSystem != UNICODE_NULL;
     }
     else
     {
@@ -412,15 +413,15 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     }
 
     /* Set drive type and icon */
+    // TODO: Call SHGetFileInfo to get this info
     UINT DriveType = GetDriveTypeW(m_wszDrive);
-    UINT IconId, TypeStrId = 0;
+    UINT IconId, TypeStrId;
     switch (DriveType)
     {
         case DRIVE_REMOVABLE:
-            if (IsDriveFloppyW(m_wszDrive))
-                IconId = IDI_SHELL_3_14_FLOPPY;
-            else
-                IconId = IDI_SHELL_REMOVEABLE;
+            bFloppy = IsDriveFloppyW(m_wszDrive);
+            IconId = bFloppy ? IDI_SHELL_3_14_FLOPPY : IDI_SHELL_REMOVEABLE;
+            TypeStrId = bFloppy ? IDS_DRIVE_FLOPPY : IDS_DRIVE_REMOVABLE;
             break;
         case DRIVE_CDROM: IconId = IDI_SHELL_CDROM; TypeStrId = IDS_DRIVE_CDROM; break;
         case DRIVE_REMOTE: IconId = IDI_SHELL_NETDRIVE; TypeStrId = IDS_DRIVE_NETWORK; break;
@@ -428,10 +429,10 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
         default: IconId = IDI_SHELL_DRIVE; TypeStrId = IDS_DRIVE_FIXED;
     }
 
-    if (DriveType == DRIVE_CDROM || DriveType == DRIVE_REMOTE)
+    BOOL bCanSetLabel = bHasFS;
+    if (DriveType == DRIVE_CDROM || DriveType == DRIVE_REMOTE || bFloppy)
     {
-        /* volume label textbox */
-        SendMessage(GetDlgItem(hwndDlg, 14000), EM_SETREADONLY, TRUE, 0);
+        bCanSetLabel = bFloppy && bHasFS;
 
         /* disk compression */
         ShowWindow(GetDlgItem(hwndDlg, 14011), FALSE);
@@ -439,6 +440,8 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
         /* index */
         ShowWindow(GetDlgItem(hwndDlg, 14012), FALSE);
     }
+    /* volume label textbox */
+    SendMessage(GetDlgItem(hwndDlg, 14000), EM_SETREADONLY, !bCanSetLabel, 0);
 
     HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
     if (hIcon)
