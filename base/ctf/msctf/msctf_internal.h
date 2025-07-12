@@ -25,42 +25,42 @@ extern "C" {
 #define COOKIE_MAGIC_INPUTPROCESSORPROFILEACTIVATIONSINK 0x00b0
 #define COOKIE_MAGIC_ACTIVELANGSINK 0x00c0
 
-extern DWORD tlsIndex DECLSPEC_HIDDEN;
-extern TfClientId processId DECLSPEC_HIDDEN;
-extern ITfCompartmentMgr *globalCompartmentMgr DECLSPEC_HIDDEN;
+extern DWORD tlsIndex;
+extern TfClientId processId;
+extern ITfCompartmentMgr *globalCompartmentMgr;
 
-extern HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut) DECLSPEC_HIDDEN;
-extern HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink*, ITfDocumentMgr **ppOut) DECLSPEC_HIDDEN;
-extern HRESULT Context_Constructor(TfClientId tidOwner, IUnknown *punk, ITfDocumentMgr *mgr, ITfContext **ppOut, TfEditCookie *pecTextStore) DECLSPEC_HIDDEN;
-extern HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut) DECLSPEC_HIDDEN;
-extern HRESULT CategoryMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut) DECLSPEC_HIDDEN;
-extern HRESULT Range_Constructor(ITfContext *context, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut) DECLSPEC_HIDDEN;
-extern HRESULT CompartmentMgr_Constructor(IUnknown *pUnkOuter, REFIID riid, IUnknown **ppOut) DECLSPEC_HIDDEN;
-extern HRESULT CompartmentMgr_Destructor(ITfCompartmentMgr *This) DECLSPEC_HIDDEN;
-extern HRESULT LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut) DECLSPEC_HIDDEN;
-extern HRESULT DisplayAttributeMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut) DECLSPEC_HIDDEN;
+HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
+HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink*, ITfDocumentMgr **ppOut);
+HRESULT Context_Constructor(TfClientId tidOwner, IUnknown *punk, ITfDocumentMgr *mgr, ITfContext **ppOut, TfEditCookie *pecTextStore);
+HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
+HRESULT CategoryMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
+HRESULT Range_Constructor(ITfContext *context, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut);
+HRESULT CompartmentMgr_Constructor(IUnknown *pUnkOuter, REFIID riid, IUnknown **ppOut);
+HRESULT CompartmentMgr_Destructor(ITfCompartmentMgr *This);
+HRESULT LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
+HRESULT DisplayAttributeMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
 
-extern HRESULT Context_Initialize(ITfContext *cxt, ITfDocumentMgr *manager) DECLSPEC_HIDDEN;
-extern HRESULT Context_Uninitialize(ITfContext *cxt) DECLSPEC_HIDDEN;
-extern void    ThreadMgr_OnDocumentMgrDestruction(ITfThreadMgr *tm, ITfDocumentMgr *mgr) DECLSPEC_HIDDEN;
-extern HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp) DECLSPEC_HIDDEN;
+HRESULT Context_Initialize(ITfContext *cxt, ITfDocumentMgr *manager);
+HRESULT Context_Uninitialize(ITfContext *cxt);
+void ThreadMgr_OnDocumentMgrDestruction(ITfThreadMgr *tm, ITfDocumentMgr *mgr);
+HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp);
 
 /* cookie function */
-extern DWORD  generate_Cookie(DWORD magic, LPVOID data) DECLSPEC_HIDDEN;
-extern DWORD  get_Cookie_magic(DWORD id) DECLSPEC_HIDDEN;
-extern LPVOID get_Cookie_data(DWORD id) DECLSPEC_HIDDEN;
-extern LPVOID remove_Cookie(DWORD id) DECLSPEC_HIDDEN;
-extern DWORD enumerate_Cookie(DWORD magic, DWORD *index) DECLSPEC_HIDDEN;
+DWORD  generate_Cookie(DWORD magic, LPVOID data);
+DWORD  get_Cookie_magic(DWORD id);
+LPVOID get_Cookie_data(DWORD id);
+LPVOID remove_Cookie(DWORD id);
+DWORD enumerate_Cookie(DWORD magic, DWORD *index);
 
 /* activated text services functions */
-extern HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp) DECLSPEC_HIDDEN;
-extern BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *lp) DECLSPEC_HIDDEN;
-extern HRESULT activate_textservices(ITfThreadMgrEx *tm) DECLSPEC_HIDDEN;
-extern HRESULT deactivate_textservices(void) DECLSPEC_HIDDEN;
+HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp);
+BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *lp);
+HRESULT activate_textservices(ITfThreadMgrEx *tm);
+HRESULT deactivate_textservices(void);
 
-extern CLSID get_textservice_clsid(TfClientId tid) DECLSPEC_HIDDEN;
-extern HRESULT get_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown** sink) DECLSPEC_HIDDEN;
-extern HRESULT set_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown* sink) DECLSPEC_HIDDEN;
+CLSID get_textservice_clsid(TfClientId tid);
+HRESULT get_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown** sink);
+HRESULT set_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown* sink);
 
 typedef struct {
     struct list entry;
@@ -80,12 +80,15 @@ typedef struct {
          (cursor) != (list); \
          (cursor) = (cursor)->next, elem = SINK_ENTRY(cursor,type))
 
-HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUnknown *unk, DWORD *cookie) DECLSPEC_HIDDEN;
-HRESULT unadvise_sink(DWORD cookie) DECLSPEC_HIDDEN;
-void free_sinks(struct list *sink_list) DECLSPEC_HIDDEN;
+HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUnknown *unk, DWORD *cookie);
+HRESULT unadvise_sink(DWORD cookie);
+void free_sinks(struct list *sink_list);
 
-extern const WCHAR szwSystemTIPKey[] DECLSPEC_HIDDEN;
-extern const WCHAR szwSystemCTFKey[] DECLSPEC_HIDDEN;
+extern const WCHAR szwSystemTIPKey[];
+extern const WCHAR szwSystemCTFKey[];
+
+HRESULT __wine_register_resources(HMODULE module);
+HRESULT __wine_unregister_resources(HMODULE module);
 
 #ifdef __cplusplus
 } // extern "C"

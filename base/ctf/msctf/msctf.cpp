@@ -584,9 +584,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID iid, LPVOID *ppvOut)
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
-EXTERN_C HRESULT __wine_register_resources( HMODULE module ) DECLSPEC_HIDDEN;
-EXTERN_C HRESULT __wine_unregister_resources( HMODULE module ) DECLSPEC_HIDDEN;
-
 /***********************************************************************
  *		DllRegisterServer (MSCTF.@)
  */
