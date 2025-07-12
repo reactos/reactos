@@ -351,7 +351,7 @@ NTSTATUS
 SptiTranslateAptToSrb(
     _Out_ SCSI_REQUEST_BLOCK* __restrict Srb,
     _In_ ATA_PASS_THROUGH_EX* __restrict Apt,
-    _In_ UCHAR* __restrict TaskFile)
+    _In_ PUCHAR TaskFile)
 {
     NTSTATUS Status;
 
@@ -536,7 +536,7 @@ NTSTATUS
 SptiTranslateSptToSrb(
     _Out_ SCSI_REQUEST_BLOCK* __restrict Srb,
     _In_ SCSI_PASS_THROUGH* __restrict Spt,
-    _In_ UCHAR* __restrict Cdb)
+    _In_ PUCHAR Cdb)
 {
     NTSTATUS Status;
 
