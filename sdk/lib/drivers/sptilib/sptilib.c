@@ -819,25 +819,15 @@ SptiHandleAtaPassthru(
 
     DPRINT("APT: Flags %x DTL %lu\n", Apt->AtaFlags, Apt->DataTransferLength);
     DPRINT("APT: Curr %02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-           TaskFile[8 + 0],
-           TaskFile[8 + 1],
-           TaskFile[8 + 2],
-           TaskFile[8 + 3],
-           TaskFile[8 + 4],
-           TaskFile[8 + 5],
-           TaskFile[8 + 6],
+           TaskFile[8 + 0], TaskFile[8 + 1], TaskFile[8 + 2], TaskFile[8 + 3],
+           TaskFile[8 + 4], TaskFile[8 + 5], TaskFile[8 + 6],
            Apt->AtaFlags,
            Apt->DataTransferLength);
     if (Apt->AtaFlags & ATA_FLAGS_48BIT_COMMAND)
     {
         DPRINT("APT: Prev %02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-               TaskFile[0],
-               TaskFile[1],
-               TaskFile[2],
-               TaskFile[3],
-               TaskFile[4],
-               TaskFile[5],
-               TaskFile[6]);
+               TaskFile[0], TaskFile[1], TaskFile[2], TaskFile[3],
+               TaskFile[4], TaskFile[5], TaskFile[6]);
     }
 
     IrpContext = SptiCreateIrpContext(DeviceObject,
@@ -879,23 +869,13 @@ SptiHandleAtaPassthru(
            Apt->DataTransferLength,
            (ULONG)Irp->IoStatus.Information);
     DPRINT("APT: Return curr %02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-           TaskFile[8 + 0],
-           TaskFile[8 + 1],
-           TaskFile[8 + 2],
-           TaskFile[8 + 3],
-           TaskFile[8 + 4],
-           TaskFile[8 + 5],
-           TaskFile[8 + 6]);
+           TaskFile[8 + 0], TaskFile[8 + 1], TaskFile[8 + 2], TaskFile[8 + 3],
+           TaskFile[8 + 4], TaskFile[8 + 5], TaskFile[8 + 6]);
     if (Apt->AtaFlags & ATA_FLAGS_48BIT_COMMAND)
     {
         DPRINT("APT: Return prev %02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-               TaskFile[0],
-               TaskFile[1],
-               TaskFile[2],
-               TaskFile[3],
-               TaskFile[4],
-               TaskFile[5],
-               TaskFile[6]);
+               TaskFile[0], TaskFile[1], TaskFile[2], TaskFile[3],
+               TaskFile[4], TaskFile[5], TaskFile[6]);
     }
 
 Cleanup:
@@ -950,16 +930,7 @@ SptiHandleScsiPassthru(
            Spt->DataTransferLength,
            Spt->SenseInfoLength);
     DPRINT("SPT: CDB %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-           Cdb[0],
-           Cdb[1],
-           Cdb[2],
-           Cdb[3],
-           Cdb[4],
-           Cdb[5],
-           Cdb[6],
-           Cdb[7],
-           Cdb[8],
-           Cdb[9]);
+           Cdb[0], Cdb[1], Cdb[2], Cdb[3], Cdb[4], Cdb[5], Cdb[6], Cdb[7], Cdb[8], Cdb[9]);
 
     IrpContext = SptiCreateIrpContext(DeviceObject,
                                       Irp,
