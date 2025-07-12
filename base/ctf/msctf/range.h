@@ -120,7 +120,6 @@ public:
 protected:
     LONG m_cRefs;
     ITfContext *m_context;
-    ITextStoreACP *m_pTextStore;
     DWORD m_dwLockType;
     TfAnchor m_anchorStart;
     TfAnchor m_anchorEnd;
