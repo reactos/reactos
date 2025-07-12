@@ -2735,15 +2735,23 @@ MiDecommitPages(IN PVOID StartingAddress,
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @unimplemented
- */
 PVOID
 NTAPI
 MmGetVirtualForPhysical(IN PHYSICAL_ADDRESS PhysicalAddress)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PFN_NUMBER Pfn;
+    PMMPFN Pfn1;
+    ULONG_PTR VirtualAddress;
+
+    Pfn = PhysicalAddress.QuadPart >> PAGE_SHIFT;
+    Pfn1 = MiGetPfnEntry(Pfn);
+    if (Pfn1 == NULL)
+        return NULL;
+
+    VirtualAddress = (ULONG_PTR)MiPteToAddress(Pfn1->PteAddress);
+    VirtualAddress += BYTE_OFFSET(PhysicalAddress.QuadPart);
+
+    return (PVOID)VirtualAddress;
 }
 
 /*
