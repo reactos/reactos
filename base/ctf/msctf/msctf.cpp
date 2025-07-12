@@ -180,8 +180,8 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
         }
         else
         {
-            SIZE_T size = (array_size * 2) * sizeof(CookieInternal);
-            CookieInternal *new_cookies = (CookieInternal *)realloc(cookies, size);
+            CookieInternal *new_cookies = (CookieInternal *)
+                msctf_recalloc(cookies, array_size * 2, sizeof(CookieInternal));
             if (!new_cookies)
             {
                 ERR("Out of memory, Unable to realloc cookies array\n");
