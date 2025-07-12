@@ -133,7 +133,7 @@ CCompartmentMgr::~CCompartmentMgr()
         CompartmentValue *value = LIST_ENTRY(cursor, CompartmentValue, entry);
         list_remove(cursor);
         value->compartment->Release();
-        HeapFree(GetProcessHeap(), 0, value);
+        free(value);
     }
 }
 
@@ -223,7 +223,7 @@ HRESULT CCompartmentMgr::GetCompartment(_In_ REFGUID rguid, _Out_ ITfCompartment
         }
     }
 
-    value = (CompartmentValue *)HeapAlloc(GetProcessHeap(), 0, sizeof(CompartmentValue));
+    value = (CompartmentValue *)malloc(sizeof(CompartmentValue));
     if (!value)
         return E_OUTOFMEMORY;
 
@@ -238,7 +238,7 @@ HRESULT CCompartmentMgr::GetCompartment(_In_ REFGUID rguid, _Out_ ITfCompartment
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, value);
+        free(value);
         *ppcomp = NULL;
     }
 
@@ -260,7 +260,7 @@ HRESULT CCompartmentMgr::ClearCompartment(_In_ TfClientId tid, _In_ REFGUID rgui
                 return E_UNEXPECTED;
             list_remove(cursor);
             value->compartment->Release();
-            HeapFree(GetProcessHeap(), 0, value);
+            free(value);
             return S_OK;
         }
     }

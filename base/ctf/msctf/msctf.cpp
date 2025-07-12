@@ -170,7 +170,7 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
     {
         if (!array_size)
         {
-            cookies = (CookieInternal *)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(CookieInternal) * 10);
+            cookies = (CookieInternal *)calloc(10, sizeof(CookieInternal));
             if (!cookies)
             {
                 ERR("Out of memory, Unable to alloc cookies array\n");
@@ -180,9 +180,8 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
         }
         else
         {
-            CookieInternal *new_cookies = (CookieInternal *)
-                HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cookies,
-                            sizeof(CookieInternal) * (array_size * 2));
+            SIZE_T size = (array_size * 2) * sizeof(CookieInternal);
+            CookieInternal *new_cookies = (CookieInternal *)realloc(cookies, size);
             if (!new_cookies)
             {
                 ERR("Out of memory, Unable to realloc cookies array\n");
@@ -262,15 +261,13 @@ DWORD enumerate_Cookie(DWORD magic, DWORD *index)
 EXTERN_C
 HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUnknown *unk, DWORD *cookie)
 {
-    Sink *sink;
-
-    sink = (Sink *)HeapAlloc(GetProcessHeap(), 0, sizeof(*sink));
+    Sink *sink = (Sink *)malloc(sizeof(*sink));
     if (!sink)
         return E_OUTOFMEMORY;
 
     if (FAILED(unk->QueryInterface(riid, (void **)&sink->interfaces.pIUnknown)))
     {
-        HeapFree(GetProcessHeap(), 0, sink);
+        free(sink);
         return CONNECT_E_CANNOTCONNECT;
     }
 
@@ -284,7 +281,7 @@ static void free_sink(Sink *sink)
 {
     list_remove(&sink->entry);
     sink->interfaces.pIUnknown->Release();
-    HeapFree(GetProcessHeap(), 0, sink);
+    free(sink);
 }
 
 EXTERN_C
@@ -362,8 +359,8 @@ static void deactivate_remove_conflicting_ts(REFCLSID catid)
         {
             deactivate_given_ts(ats->ats);
             list_remove(&ats->entry);
-            HeapFree(GetProcessHeap(),0,ats->ats);
-            HeapFree(GetProcessHeap(),0,ats);
+            free(ats->ats);
+            free(ats);
             /* we are guaranteeing there is only 1 */
             break;
         }
@@ -379,10 +376,12 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     ITfThreadMgrEx *tm = (ITfThreadMgrEx *)TlsGetValue(tlsIndex);
     ITfClientId *clientid;
 
-    if (!tm) return E_UNEXPECTED;
+    if (!tm)
+        return E_UNEXPECTED;
 
-    actsvr = (ActivatedTextService *)HeapAlloc(GetProcessHeap(),0,sizeof(ActivatedTextService));
-    if (!actsvr) return E_OUTOFMEMORY;
+    actsvr = (ActivatedTextService *)malloc(sizeof(ActivatedTextService));
+    if (!actsvr)
+        return E_OUTOFMEMORY;
 
     tm->QueryInterface(IID_ITfClientId, (void **)&clientid);
     clientid->GetClientId(lp->clsid, &actsvr->tid);
@@ -390,7 +389,7 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
 
     if (!actsvr->tid)
     {
-        HeapFree(GetProcessHeap(), 0, actsvr);
+        free(actsvr);
         return E_OUTOFMEMORY;
     }
 
@@ -418,10 +417,10 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     if (activated > 0)
         activate_given_ts(actsvr, tm);
 
-    entry = (AtsEntry *)HeapAlloc(GetProcessHeap(),0,sizeof(AtsEntry));
+    entry = (AtsEntry *)malloc(sizeof(AtsEntry));
     if (!entry)
     {
-        HeapFree(GetProcessHeap(), 0, actsvr);
+        free(actsvr);
         return E_OUTOFMEMORY;
     }
 

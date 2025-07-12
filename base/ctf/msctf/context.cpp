@@ -237,7 +237,7 @@ CContext::~CContext()
     if (m_defaultCookie)
     {
         cookie = (EditCookie *)remove_Cookie(m_defaultCookie);
-        HeapFree(GetProcessHeap(), 0, cookie);
+        free(cookie);
         m_defaultCookie = 0;
     }
 
@@ -429,7 +429,7 @@ CContext::SetSelection(
     if (get_Cookie_magic(ec) != COOKIE_MAGIC_EDITCOOKIE)
         return TF_E_NOLOCK;
 
-    acp = (TS_SELECTION_ACP *)HeapAlloc(GetProcessHeap(), 0, sizeof(TS_SELECTION_ACP) * ulCount);
+    acp = (TS_SELECTION_ACP *)malloc(sizeof(TS_SELECTION_ACP) * ulCount);
     if (!acp)
         return E_OUTOFMEMORY;
 
@@ -438,14 +438,14 @@ CContext::SetSelection(
         if (FAILED(TF_SELECTION_to_TS_SELECTION_ACP(&pSelection[i], &acp[i])))
         {
             TRACE("Selection Conversion Failed\n");
-            HeapFree(GetProcessHeap(), 0 , acp);
+            free(acp);
             return E_FAIL;
         }
     }
 
     hr = m_pITextStoreACP->SetSelection(ulCount, acp);
 
-    HeapFree(GetProcessHeap(), 0, acp);
+    free(acp);
 
     return hr;
 }
@@ -794,14 +794,14 @@ STDMETHODIMP CContext::OnLockGranted(_In_ DWORD dwLockFlags)
         return S_OK;
     }
 
-    cookie = (EditCookie *)HeapAlloc(GetProcessHeap(), 0, sizeof(EditCookie));
+    cookie = (EditCookie *)malloc(sizeof(EditCookie));
     if (!cookie)
         return E_OUTOFMEMORY;
 
-    sinkcookie = (EditCookie *)HeapAlloc(GetProcessHeap(), 0, sizeof(EditCookie));
+    sinkcookie = (EditCookie *)malloc(sizeof(EditCookie));
     if (!sinkcookie)
     {
-        HeapFree(GetProcessHeap(), 0, cookie);
+        free(cookie);
         return E_OUTOFMEMORY;
     }
 
@@ -827,14 +827,14 @@ STDMETHODIMP CContext::OnLockGranted(_In_ DWORD dwLockFlags)
         }
         sinkcookie = (EditCookie *)remove_Cookie(sc);
     }
-    HeapFree(GetProcessHeap(), 0, sinkcookie);
+    free(sinkcookie);
 
     m_currentEditSession->Release();
     m_currentEditSession = NULL;
 
     /* Edit Cookie is only valid during the edit session */
     cookie = (EditCookie *)remove_Cookie(ec);
-    HeapFree(GetProcessHeap(), 0, cookie);
+    free(cookie);
 
     return hr;
 }
@@ -897,7 +897,7 @@ HRESULT CContext::CreateInstance(
     if (This == NULL)
         return E_OUTOFMEMORY;
 
-    EditCookie *cookie = (EditCookie *)HeapAlloc(GetProcessHeap(), 0, sizeof(EditCookie));
+    EditCookie *cookie = (EditCookie *)malloc(sizeof(EditCookie));
     if (cookie == NULL)
     {
         delete This;
