@@ -327,8 +327,8 @@ CThreadMgr::~CThreadMgr()
     {
         PreservedKey* key = LIST_ENTRY(cursor, PreservedKey, entry);
         list_remove(cursor);
-        HeapFree(GetProcessHeap(), 0, key->description);
-        HeapFree(GetProcessHeap(), 0, key);
+        free(key->description);
+        free(key);
     }
 
     LIST_FOR_EACH_SAFE(cursor, cursor2, &m_CreatedDocumentMgrs)
@@ -336,14 +336,14 @@ CThreadMgr::~CThreadMgr()
         DocumentMgrEntry *mgr = LIST_ENTRY(cursor, DocumentMgrEntry, entry);
         list_remove(cursor);
         FIXME("Left Over ITfDocumentMgr.  Should we do something with it?\n");
-        HeapFree(GetProcessHeap(), 0, mgr);
+        free(mgr);
     }
 
     LIST_FOR_EACH_SAFE(cursor, cursor2, &m_AssociatedFocusWindows)
     {
         AssociatedWindow *wnd = LIST_ENTRY(cursor, AssociatedWindow, entry);
         list_remove(cursor);
-        HeapFree(GetProcessHeap(), 0, wnd);
+        free(wnd);
     }
 
     m_CompartmentMgr->Release();
@@ -431,7 +431,7 @@ STDMETHODIMP CThreadMgr::CreateDocumentMgr(_Out_ ITfDocumentMgr **ppdim)
     if (!ppdim)
         return E_INVALIDARG;
 
-    DocumentMgrEntry *mgrentry = (DocumentMgrEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DocumentMgrEntry));
+    DocumentMgrEntry *mgrentry = (DocumentMgrEntry *)malloc(sizeof(DocumentMgrEntry));
     if (!mgrentry)
         return E_OUTOFMEMORY;
 
@@ -443,7 +443,7 @@ STDMETHODIMP CThreadMgr::CreateDocumentMgr(_Out_ ITfDocumentMgr **ppdim)
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, mgrentry);
+        free(mgrentry);
     }
 
     return hr;
@@ -581,7 +581,7 @@ STDMETHODIMP CThreadMgr::AssociateFocus(
         }
     }
 
-    wnd = (AssociatedWindow *)HeapAlloc(GetProcessHeap(), 0, sizeof(AssociatedWindow));
+    wnd = (AssociatedWindow *)malloc(sizeof(AssociatedWindow));
     wnd->hwnd = hwnd;
     wnd->docmgr = pdimNew;
     list_add_head(&m_AssociatedFocusWindows, &wnd->entry);
@@ -928,7 +928,7 @@ STDMETHODIMP CThreadMgr::PreserveKey(
             return TF_E_ALREADY_EXISTS;
     }
 
-    PreservedKey *newkey = (PreservedKey *)HeapAlloc(GetProcessHeap(), 0, sizeof(PreservedKey));
+    PreservedKey *newkey = (PreservedKey *)malloc(sizeof(PreservedKey));
     if (!newkey)
         return E_OUTOFMEMORY;
 
@@ -938,10 +938,10 @@ STDMETHODIMP CThreadMgr::PreserveKey(
     newkey->description = NULL;
     if (cchDesc)
     {
-        newkey->description = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (cchDesc + 1) * sizeof(WCHAR));
+        newkey->description = (LPWSTR)malloc((cchDesc + 1) * sizeof(WCHAR));
         if (!newkey->description)
         {
-            HeapFree(GetProcessHeap(), 0, newkey);
+            free(newkey);
             return E_OUTOFMEMORY;
         }
         CopyMemory(newkey->description, pchDesc, cchDesc * sizeof(WCHAR));
@@ -975,8 +975,8 @@ STDMETHODIMP CThreadMgr::UnpreserveKey(
         return CONNECT_E_NOCONNECTION;
 
     list_remove(&key->entry);
-    HeapFree(GetProcessHeap(), 0, key->description);
-    HeapFree(GetProcessHeap(), 0, key);
+    free(key->description);
+    free(key);
 
     return S_OK;
 }
@@ -1247,7 +1247,7 @@ void CThreadMgr::OnDocumentMgrDestruction(ITfDocumentMgr *mgr)
         if (mgrentry->docmgr == mgr)
         {
             list_remove(cursor);
-            HeapFree(GetProcessHeap(), 0, mgrentry);
+            free(mgrentry);
             return;
         }
     }

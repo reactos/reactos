@@ -356,7 +356,7 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
         }
     } while (dwCookieId != 0);
 
-    GUID *pNewGuid = (GUID *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GUID));
+    GUID *pNewGuid = (GUID *)malloc(sizeof(GUID));
     if (!pNewGuid)
         return E_OUTOFMEMORY;
 
@@ -365,7 +365,7 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
     dwCookieId = generate_Cookie(COOKIE_MAGIC_GUIDATOM, pNewGuid);
     if (dwCookieId == 0)
     {
-        HeapFree(GetProcessHeap(), 0, pNewGuid);
+        free(pNewGuid);
         return E_FAIL;
     }
 
