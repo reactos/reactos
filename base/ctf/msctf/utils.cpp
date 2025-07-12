@@ -292,7 +292,7 @@ EXTERN_C HANDLE WINAPI
 TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon)
 {
     FIXME("(%p)\n", pfWinLogon);
-    if (pfWinLogon == NULL)
+    if (!pfWinLogon)
         return NULL;
     *pfWinLogon = FALSE;
     return NULL;

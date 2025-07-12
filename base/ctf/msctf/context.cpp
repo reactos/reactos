@@ -894,11 +894,11 @@ HRESULT CContext::CreateInstance(
     TfEditCookie *pecTextStore)
 {
     CContext *This = new(cicNoThrow) CContext();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     EditCookie *cookie = (EditCookie *)malloc(sizeof(EditCookie));
-    if (cookie == NULL)
+    if (!cookie)
     {
         delete This;
         return E_OUTOFMEMORY;

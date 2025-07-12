@@ -335,7 +335,7 @@ HRESULT CEnumTfContext::CreateInstance(_In_opt_ CDocumentMgr *mgr, _Out_ IEnumTf
     }
 
     CEnumTfContext *This = new(cicNoThrow) CEnumTfContext(mgr);
-    if (This == NULL)
+    if (!This)
     {
         ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
