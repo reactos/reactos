@@ -972,17 +972,10 @@ static HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf, HWND hwn
 static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, HWND hwnd, UINT cidl,
                                                   PCUITEMID_CHILD_ARRAY apidl, IShellFolder *psf, IContextMenu **ppcm)
 {
-    HKEY hKeys[3];
-    UINT cKeys = 0;
-
+    CRegKeyHandleArray keys;
     const GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
     if (pGuid)
-    {
-        WCHAR key[sizeof("CLSID\\") + 38];
-        wcscpy(key, L"CLSID\\");
-        StringFromGUID2(*pGuid, &key[6], 39);
-        AddClassKeyToArray(key, hKeys, &cKeys);
-    }
+        AddClsidKeyToArray(*pGuid, keys, keys);
 
     // FIXME: CRegFolder should be aggregated by its outer folder and should
     // provide the attributes for all required non-registry folders.
@@ -993,9 +986,9 @@ static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, 
 
     SFGAOF att = (psf && cidl) ? SHGetAttributes(pOuterSF ? pOuterSF.p : psf, apidl[0], SFGAO_FOLDER) : 0;
     if ((att & SFGAO_FOLDER) && (!pGuid || !HasCLSIDShellFolderValue(*pGuid, L"HideFolderVerbs")))
-        AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+        AddClassKeyToArray(L"Folder", keys, keys);
 
-    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
+    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, keys, keys, ppcm);
 }
 
 /* In latest windows version this is exported but it takes different arguments! */

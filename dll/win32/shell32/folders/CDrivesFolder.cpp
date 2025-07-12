@@ -459,12 +459,10 @@ HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
                                           IShellFolder *psf,
                                           IContextMenu **ppcm)
 {
-    HKEY hKeys[2];
-    UINT cKeys = 0;
-    AddClassKeyToArray(L"Drive", hKeys, &cKeys);
-    AddClassKeyToArray(L"Folder", hKeys, &cKeys);
-
-    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, DrivesContextMenuCallback, cKeys, hKeys, ppcm);
+    CRegKeyHandleArray keys;
+    AddClassKeyToArray(L"Drive", keys, keys);
+    AddClassKeyToArray(L"Folder", keys, keys);
+    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, DrivesContextMenuCallback, keys, keys, ppcm);
 }
 
 static HRESULT
