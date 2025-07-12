@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/text.c
  * PURPOSE:         GUI Terminal Front-End - Support for text-mode screen-buffers
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     GÃ© van Geldorp
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -278,8 +278,6 @@ PasteText(
         }
         else
         {
-            /* Pressing some control keys */
-
             /* Pressing the character key, with the control keys maintained pressed */
             er.Event.KeyEvent.wVirtualKeyCode = LOBYTE(VkKey);
             er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_VSC);
