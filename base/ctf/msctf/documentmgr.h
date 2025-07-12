@@ -51,6 +51,7 @@ public:
 protected:
     LONG m_cRefs;
     ITfCompartmentMgr *m_pCompartmentMgr;
+    ITfContext *m_initialContext;
     ITfContext *m_contextStack[2]; // limit of 2 contexts
     ITfThreadMgrEventSink *m_pThreadMgrSink;
     struct list m_transitoryExtensionSink;

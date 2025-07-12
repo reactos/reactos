@@ -9,6 +9,8 @@
 #include <cguid.h>
 #include <msctf.h>
 #include <msctf_undoc.h>
+#include <tchar.h>
+#include <strsafe.h>
 #include <wine/list.h>
 
 // Cicero

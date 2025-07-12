@@ -22,6 +22,7 @@ CDisplayAttributeMgr::CDisplayAttributeMgr()
 
 CDisplayAttributeMgr::~CDisplayAttributeMgr()
 {
+    TRACE("destroying %p\n", this);
 }
 
 BOOL CDisplayAttributeMgr::_IsInCollection(REFGUID rguid)
@@ -44,9 +45,6 @@ void CDisplayAttributeMgr::_SetThis()
 {
     FIXME("()\n");
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** IUnknown methods **
 
 STDMETHODIMP
 CDisplayAttributeMgr::QueryInterface(REFIID riid, void **ppvObj)
@@ -83,12 +81,10 @@ CDisplayAttributeMgr::AddRef()
 STDMETHODIMP_(ULONG)
 CDisplayAttributeMgr::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////
