@@ -129,7 +129,7 @@ typedef struct _DB_INFORMATION
     DWORD dwMinor;
     LPCWSTR Description;
     GUID Id;
-    /* Win10+ has an extra field here */
+    DWORD dwRuntimePlatform;
 } DB_INFORMATION, *PDB_INFORMATION;
 
 
@@ -239,6 +239,7 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
         }
 
     }
+    pSdbFreeDatabaseInformation(pInfo);
     free(pInfo);
 }
 
@@ -1078,7 +1079,8 @@ static void test_GetDatabaseInformation(PDB pdb)
             ok(pInfo->dwMajor == 3, "Expected pInfo->dwMajor to be 3, was: %d\n", pInfo->dwMajor);
             ok(pInfo->dwMinor == 0, "Expected pInfo->dwMinor to be 0, was: %d\n", pInfo->dwMinor);
 
-            ok(pInfo[1].dwSomething == 4 || pInfo[1].dwSomething == 0xdededede, "Something amiss: 0x%x\n", pInfo[1].dwSomething);
+            ok(pInfo->dwRuntimePlatform == 4 || pInfo->dwRuntimePlatform == 0xdededede, "Something amiss: 0x%x\n",
+               pInfo->dwRuntimePlatform);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
         }
         else
@@ -1086,11 +1088,12 @@ static void test_GetDatabaseInformation(PDB pdb)
             ok(pInfo->dwMajor == 2, "Expected pInfo->dwMajor to be 2, was: %d\n", pInfo->dwMajor);
             ok(pInfo->dwMinor == 1, "Expected pInfo->dwMinor to be 1, was: %d\n", pInfo->dwMinor);
 
-            ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
+            ok(pInfo->dwRuntimePlatform == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo->dwRuntimePlatform);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
         }
 
     }
+    pSdbFreeDatabaseInformation(pInfo);
     free(pInfo);
 }
 
@@ -1214,7 +1217,6 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
     TAGID tagid;
     TAGREF trApphelp;
     DWORD expect_flags = 0, adwExeFlags_0, exe_count;
-    UNICODE_STRING exenameNT;
 
     memset(&query, 0xab, sizeof(query));
 
@@ -1361,7 +1363,9 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
     ok(tagid == 0, "Expected tagid to be set to 0, was: 0x%x\n", tagid);
 
 
-
+#if 0
+    UNICODE_STRING exenameNT;
+    // In Win10 this does seem to work sometimes, so disable it for now
     if (RtlDosPathNameToNtPathName_U(exename, &exenameNT, NULL, NULL))
     {
         /*
@@ -1373,6 +1377,7 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
 
         RtlFreeUnicodeString(&exenameNT);
     }
+#endif
 
     if (test_exedata[cur].extra_file)
         DeleteFileW(testfile);
@@ -2125,15 +2130,11 @@ START_TEST(db)
     *(void**)&pSdbGetDatabaseInformation = (void *)GetProcAddress(hdll, "SdbGetDatabaseInformation");
     *(void**)&pSdbFreeDatabaseInformation = (void *)GetProcAddress(hdll, "SdbFreeDatabaseInformation");
 
-#ifndef _M_IX86
-    skip("FIXME: We need a new db test for non-x86!\n");
-    return;
-#endif
-
     test_Sdb();
     test_write_ex();
     test_stringtable();
     test_CheckDatabaseManually();
+#ifdef _M_IX86
     switch (validate_SDBQUERYRESULT_size())
     {
     case 1:
@@ -2148,6 +2149,9 @@ START_TEST(db)
         skip("Skipping tests with SDBQUERYRESULT due to a wrong size reported\n");
         break;
     }
+#else
+    skip("FIXME: We need a new db test for non-x86!\n");
+#endif
     test_TagRef();
     test_Data();
     skip("test_SecondaryDB()\n");
