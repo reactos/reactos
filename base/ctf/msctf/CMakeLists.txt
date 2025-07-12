@@ -20,11 +20,8 @@ list(APPEND SOURCE
     utils.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
-list(APPEND PCH_SKIP_SOURCE)
-
 add_library(msctf MODULE
     ${SOURCE}
-    ${PCH_SKIP_SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)
 
