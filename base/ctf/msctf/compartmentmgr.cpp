@@ -196,12 +196,10 @@ STDMETHODIMP_(ULONG) CCompartmentMgr::Release()
 {
     if (m_pUnkOuter)
         return m_pUnkOuter->Release();
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
 
 HRESULT CCompartmentMgr::GetCompartment(_In_ REFGUID rguid, _Out_ ITfCompartment **ppcomp)
@@ -347,12 +345,10 @@ STDMETHODIMP_(ULONG) CCompartmentEnumGuid::AddRef()
 
 STDMETHODIMP_(ULONG) CCompartmentEnumGuid::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
 
 STDMETHODIMP CCompartmentEnumGuid::Next(

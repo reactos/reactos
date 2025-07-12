@@ -13,36 +13,33 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 ////////////////////////////////////////////////////////////////////////////
-// CRange
 
 CRange::CRange(
     _In_ ITfContext *context,
-    _In_ ITextStoreACP *textstore,
-    _In_ DWORD lockType,
     _In_ TfAnchor anchorStart,
     _In_ TfAnchor anchorEnd
 )
-    : m_pContext(context)
-    , m_pTextStore(textstore)
-    , m_dwLockType(lockType)
+    : m_cRefs(1)
+    , m_context(context)
     , m_anchorStart(anchorStart)
     , m_anchorEnd(anchorEnd)
-    , m_dwCookie(MAXDWORD)
-    , m_cRefs(1)
 {
+    if (context)
+        context->AddRef();
 }
 
 CRange::~CRange()
 {
+    TRACE("destroying %p\n", this);
+    if (m_context)
+        m_context->Release();
 }
 
 CRange *CRange::_Clone()
 {
-    CRange *pRange = new(cicNoThrow) CRange(m_pContext, m_pTextStore, m_dwLockType,
-                                            m_anchorStart, m_anchorEnd);
+    CRange *pRange = new(cicNoThrow) CRange(m_context, m_anchorStart, m_anchorEnd);
     if (!pRange)
         return NULL;
-    pRange->m_dwCookie = m_dwCookie;
     return pRange;
 }
 
@@ -77,9 +74,6 @@ HRESULT CRange::TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELE
     return S_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** IUnknown methods **
-
 STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
 {
     if (riid == IID_PRIV_CRANGE)
@@ -88,9 +82,7 @@ STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
         return S_OK; // No AddRef
     }
 
-    if (riid == IID_ITfRange || riid == IID_IUnknown)
-        *ppvObj = this;
-    else if (riid == IID_ITfRangeACP)
+    if (riid == IID_IUnknown || riid == IID_ITfRange || riid == IID_ITfRangeACP)
         *ppvObj = static_cast<ITfRangeACP *>(this);
     else if (riid == IID_ITfRangeAnchor)
         *ppvObj = static_cast<ITfRangeAnchor *>(this);
@@ -105,29 +97,24 @@ STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
         return S_OK;
     }
 
-    ERR("E_NOINTERFACE: %s\n", wine_dbgstr_guid(&riid));
+    WARN("unsupported interface: %s\n", debugstr_guid(&riid));
     return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) CRange::AddRef()
 {
     TRACE("%p -> ()\n", this);
-    return InterlockedIncrement(&m_cRefs);
+    return ::InterlockedIncrement(&m_cRefs);
 }
 
 STDMETHODIMP_(ULONG) CRange::Release()
 {
     TRACE("%p -> ()\n", this);
-    if (InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfRange methods **
 
 STDMETHODIMP CRange::GetText(
     _In_ TfEditCookie ec,
@@ -338,9 +325,6 @@ STDMETHODIMP CRange::GetContext(
     return E_NOTIMPL;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** ITfRangeACP methods **
-
 STDMETHODIMP CRange::GetExtent(_Out_ LONG *pacpAnchor, _Out_ LONG *pcch)
 {
     FIXME("\n");
@@ -353,9 +337,6 @@ STDMETHODIMP CRange::SetExtent(_In_ LONG acpAnchor, _In_ LONG cch)
     return E_NOTIMPL;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** ITfRangeAnchor methods **
-
 STDMETHODIMP CRange::GetExtent(_Out_ IAnchor **ppStart, _Out_ IAnchor **ppEnd)
 {
     FIXME("\n");
@@ -367,9 +348,6 @@ STDMETHODIMP CRange::SetExtent(_In_ IAnchor *pAnchorStart, _In_ IAnchor *pAnchor
     FIXME("\n");
     return E_NOTIMPL;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfSource methods **
 
 STDMETHODIMP CRange::AdviseSink(
     _In_ REFIID riid,
@@ -391,11 +369,9 @@ STDMETHODIMP CRange::UnadviseSink(
 
 EXTERN_C
 HRESULT
-Range_Constructor(ITfContext *context, ITextStoreACP *textstore,
-                  DWORD lockType, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut)
+Range_Constructor(ITfContext *context, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut)
 {
-    CRange *This = new(cicNoThrow) CRange(context, textstore, lockType,
-                                          (TfAnchor)anchorStart, (TfAnchor)anchorEnd);
+    CRange *This = new(cicNoThrow) CRange(context, (TfAnchor)anchorStart, (TfAnchor)anchorEnd);
     if (!This)
         return E_OUTOFMEMORY;
 

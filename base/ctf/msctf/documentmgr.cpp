@@ -13,7 +13,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 ////////////////////////////////////////////////////////////////////////////
-// CDocumentMgr
 
 CDocumentMgr::CDocumentMgr(ITfThreadMgrEventSink *threadMgrSink)
     : m_cRefs(1)
@@ -308,7 +307,6 @@ STDMETHODIMP CDocumentMgr::UnadviseSink(DWORD pdwCookie)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// CEnumTfContext
 
 CEnumTfContext::CEnumTfContext(_In_opt_ CDocumentMgr *mgr)
     : m_cRefs(1)

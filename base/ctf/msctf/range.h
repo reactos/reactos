@@ -7,20 +7,9 @@ class CRange
     , public ITfRangeAnchor
     , public ITfSource
 {
-protected:
-    ITfContext *m_pContext;
-    ITextStoreACP *m_pTextStore;
-    DWORD m_dwLockType;
-    TfAnchor m_anchorStart;
-    TfAnchor m_anchorEnd;
-    DWORD m_dwCookie;
-    LONG m_cRefs;
-
 public:
     CRange(
         _In_ ITfContext *context,
-        _In_ ITextStoreACP *textstore,
-        _In_ DWORD lockType,
         _In_ TfAnchor anchorStart,
         _In_ TfAnchor anchorEnd);
     virtual ~CRange();
@@ -129,6 +118,14 @@ public:
     STDMETHODIMP UnadviseSink(_In_ DWORD dwCookie) override;
 
 protected:
+    LONG m_cRefs;
+    ITfContext *m_context;
+    ITextStoreACP *m_pTextStore;
+    DWORD m_dwLockType;
+    TfAnchor m_anchorStart;
+    TfAnchor m_anchorEnd;
+    DWORD m_dwCookie;
+
     CRange *_Clone();
 
     HRESULT _IsEqualX(TfEditCookie ec, BOOL bEnd, ITfRange *pWith, TfAnchor aPos, BOOL *pfEqual);

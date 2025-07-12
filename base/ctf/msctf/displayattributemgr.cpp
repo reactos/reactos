@@ -13,7 +13,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 ////////////////////////////////////////////////////////////////////////////
-// CDisplayAttributeMgr
 
 CDisplayAttributeMgr::CDisplayAttributeMgr()
     : m_cRefs(1)
@@ -87,9 +86,6 @@ CDisplayAttributeMgr::Release()
     return ret;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** ITfDisplayAttributeMgr methods **
-
 STDMETHODIMP CDisplayAttributeMgr::OnUpdateInfo()
 {
     FIXME("()\n");
@@ -112,9 +108,6 @@ CDisplayAttributeMgr::GetDisplayAttributeInfo(
     FIXME("(%s, %p, %s)\n", wine_dbgstr_guid(&guid), ppInfo, wine_dbgstr_guid(pclsidOwner));
     return E_NOTIMPL;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfDisplayAttributeCollectionMgr methods **
 
 STDMETHODIMP
 CDisplayAttributeMgr::UnknownMethod(_In_ DWORD unused)

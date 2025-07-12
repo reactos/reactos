@@ -119,7 +119,7 @@ STDMETHODIMP_(ULONG) CClassFactory::AddRef()
 STDMETHODIMP_(ULONG) CClassFactory::Release()
 {
     ULONG ret = InterlockedDecrement(&m_cRefs);
-    if (ret == 0)
+    if (!ret)
         delete this;
     return ret;
 }
