@@ -45,9 +45,9 @@ void *msctf_recalloc(void *mem, size_t num, size_t size);
 #define COOKIE_MAGIC_INPUTPROCESSORPROFILEACTIVATIONSINK 0x00b0
 #define COOKIE_MAGIC_ACTIVELANGSINK 0x00c0
 
-extern DWORD tlsIndex;
-extern TfClientId processId;
-extern ITfCompartmentMgr *globalCompartmentMgr;
+extern DWORD g_tlsIndex;
+extern TfClientId g_processId;
+extern ITfCompartmentMgr *g_globalCompartmentMgr;
 
 HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
 HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink*, ITfDocumentMgr **ppOut);
@@ -104,8 +104,8 @@ HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUn
 HRESULT unadvise_sink(DWORD cookie);
 void free_sinks(struct list *sink_list);
 
-extern const WCHAR szwSystemTIPKey[];
-extern const WCHAR szwSystemCTFKey[];
+#define szwSystemTIPKey L"SOFTWARE\\Microsoft\\CTF\\TIP"
+#define szwSystemCTFKey L"SOFTWARE\\Microsoft\\CTF"
 
 HRESULT __wine_register_resources(HMODULE module);
 HRESULT __wine_unregister_resources(HMODULE module);

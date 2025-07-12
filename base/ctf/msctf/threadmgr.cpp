@@ -308,7 +308,7 @@ CThreadMgr::~CThreadMgr()
     if (m_focusHook)
         UnhookWindowsHookEx(m_focusHook);
 
-    TlsSetValue(tlsIndex, NULL);
+    TlsSetValue(g_tlsIndex, NULL);
     TRACE("destroying %p\n", this);
 
     if (m_focus)
@@ -527,7 +527,7 @@ LRESULT CThreadMgr::_ThreadFocusHookProc(INT nCode, WPARAM wParam, LPARAM lParam
 
 LRESULT CALLBACK CThreadMgr::ThreadFocusHookProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
-    CThreadMgr *This = (CThreadMgr *)TlsGetValue(tlsIndex);
+    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_tlsIndex);
     if (!This)
     {
         ERR("Hook proc but no ThreadMgr for this thread. Serious Error\n");
@@ -627,15 +627,15 @@ STDMETHODIMP CThreadMgr::GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMg
     if (!ppCompMgr)
         return E_INVALIDARG;
 
-    if (!globalCompartmentMgr)
+    if (!g_globalCompartmentMgr)
     {
-        hr = CompartmentMgr_Constructor(NULL, IID_ITfCompartmentMgr, (IUnknown **)&globalCompartmentMgr);
+        hr = CompartmentMgr_Constructor(NULL, IID_ITfCompartmentMgr, (IUnknown **)&g_globalCompartmentMgr);
         if (FAILED(hr))
             return hr;
     }
 
-    globalCompartmentMgr->AddRef();
-    *ppCompMgr = globalCompartmentMgr;
+    g_globalCompartmentMgr->AddRef();
+    *ppCompMgr = g_globalCompartmentMgr;
     return S_OK;
 }
 
@@ -651,16 +651,16 @@ STDMETHODIMP CThreadMgr::ActivateEx(
     if (flags)
         FIXME("Unimplemented flags %#x\n", flags);
 
-    if (!processId)
+    if (!g_processId)
     {
         GUID guid;
         CoCreateGuid(&guid);
-        GetClientId(guid, &processId);
+        GetClientId(guid, &g_processId);
     }
 
     activate_textservices(this);
     ++m_activationCount;
-    *id = processId;
+    *id = g_processId;
     return S_OK;
 }
 
@@ -1215,7 +1215,7 @@ HRESULT CThreadMgr::CreateInstance(IUnknown *pUnkOuter, CThreadMgr **ppOut)
         return CLASS_E_NOAGGREGATION;
 
     /* Only 1 ThreadMgr is created per thread */
-    CThreadMgr *This = (CThreadMgr *)TlsGetValue(tlsIndex);
+    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_tlsIndex);
     if (This)
     {
         This->AddRef();
@@ -1227,7 +1227,7 @@ HRESULT CThreadMgr::CreateInstance(IUnknown *pUnkOuter, CThreadMgr **ppOut)
     if (!This)
         return E_OUTOFMEMORY;
 
-    TlsSetValue(tlsIndex, This);
+    TlsSetValue(g_tlsIndex, This);
 
     ITfCompartmentMgr *pCompMgr = NULL;
     CompartmentMgr_Constructor(static_cast<ITfThreadMgrEx *>(This), IID_IUnknown, (IUnknown **)&pCompMgr);
