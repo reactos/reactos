@@ -1,31 +1,24 @@
 /*
- * PROJECT:     ReactOS msctf.dll
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PROJECT:     ReactOS CTF
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Multi-language handling of Cicero
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#define WIN32_NO_STATUS
+#include "precomp.h"
 
-#include <windows.h>
 #include <shellapi.h>
 #include <imm.h>
 #include <imm32_undoc.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
 #include <strsafe.h>
 #include <assert.h>
 
-#include <cicreg.h>
-#include <cicarray.h>
-
-#include <wine/debug.h>
-
 #include "mlng.h"
 
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 extern CRITICAL_SECTION g_cs;

@@ -6,19 +6,7 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-
-// Cicero
-#include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
-
-#include "msctf_internal.h"
+#include "precomp.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
@@ -117,9 +105,6 @@ HRESULT CLangBarMgr::s_ShowFloating(_In_ DWORD dwFlags)
     return E_NOTIMPL;
 }
 
-//*****************************************************************************************
-// ** IUnknown interface **
-
 STDMETHODIMP
 CLangBarMgr::QueryInterface(
     _In_ REFIID riid,
@@ -128,36 +113,32 @@ CLangBarMgr::QueryInterface(
     if (!ppvObj)
         return E_INVALIDARG;
 
-    if (!IsEqualIID(riid, IID_IUnknown) &&
-        !IsEqualIID(riid, IID_ITfLangBarMgr) &&
-        !IsEqualIID(riid, IID_ITfLangBarMgr_P))
+    *ppvObj = NULL;
+    if (riid == IID_IUnknown || riid == IID_ITfLangBarMgr || riid == IID_ITfLangBarMgr_P)
+        *ppvObj = static_cast<ITfLangBarMgr_P *>(this);
+
+    if (*ppvObj)
     {
-        *ppvObj = NULL;
-        return E_NOINTERFACE;
+        AddRef();
+        return S_OK;
     }
 
-    *ppvObj = this;
-    AddRef();
-    return S_OK;
+    WARN("unsupported interface: %s\n", debugstr_guid(&riid));
+    return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) CLangBarMgr::AddRef()
 {
-    return ++m_cRefs;
+    return ::InterlockedIncrement(&m_cRefs);
 }
 
 STDMETHODIMP_(ULONG) CLangBarMgr::Release()
 {
-    if (!--m_cRefs)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
-
-//*****************************************************************************************
-// ** ITfLangBarMgr interface **
 
 STDMETHODIMP
 CLangBarMgr::AdviseEventSink(
@@ -251,9 +232,6 @@ CLangBarMgr::GetShowFloatingStatus(
 
     return s_GetShowFloatingStatus(pdwFlags);
 }
-
-//*****************************************************************************************
-// ** ITfLangBarMgr_P interface **
 
 STDMETHODIMP
 CLangBarMgr::GetPrevShowFloatingStatus(_Inout_ DWORD* pdwStatus)

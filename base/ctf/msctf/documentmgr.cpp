@@ -6,32 +6,18 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <oleauto.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-#include <wine/list.h>
-
-// Cicero
-#include <cicbase.h>
-
+#include "precomp.h"
 #include "documentmgr.h"
-#include "msctf_internal.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
-EXTERN_C
-HRESULT EnumTfContext_Constructor(CDocumentMgr *mgr, IEnumTfContexts **ppOut);
-
 ////////////////////////////////////////////////////////////////////////////
-// CDocumentMgr
 
 CDocumentMgr::CDocumentMgr(ITfThreadMgrEventSink *threadMgrSink)
     : m_cRefs(1)
     , m_pCompartmentMgr(NULL)
+    , m_initialContext(NULL)
     , m_pThreadMgrSink(threadMgrSink)
 {
     m_contextStack[1] = m_contextStack[0] = NULL;
@@ -41,6 +27,9 @@ CDocumentMgr::CDocumentMgr(ITfThreadMgrEventSink *threadMgrSink)
     ITfDocumentMgr *pDocMgr = static_cast<ITfDocumentMgr *>(this);
     ITfCompartmentMgr **ppCompMgr = static_cast<ITfCompartmentMgr **>(&m_pCompartmentMgr);
     CompartmentMgr_Constructor(pDocMgr, IID_IUnknown, reinterpret_cast<IUnknown **>(ppCompMgr));
+
+    DWORD cookie;
+    Context_Constructor(g_processId, NULL, pDocMgr, &m_initialContext, &cookie);
 }
 
 CDocumentMgr::~CDocumentMgr()
@@ -55,17 +44,12 @@ CDocumentMgr::~CDocumentMgr()
         tm->Release();
     }
 
+    if (m_initialContext)
+        m_initialContext->Release();
     if (m_contextStack[0])
-    {
         m_contextStack[0]->Release();
-        m_contextStack[0] = NULL;
-    }
-
     if (m_contextStack[1])
-    {
         m_contextStack[1]->Release();
-        m_contextStack[1] = NULL;
-    }
 
     free_sinks(&m_transitoryExtensionSink);
 
@@ -110,20 +94,22 @@ STDMETHODIMP CDocumentMgr::QueryInterface(REFIID iid, LPVOID *ppvObject)
     TRACE("%p -> (%s, %p)\n", this, wine_dbgstr_guid(&iid), ppvObject);
     *ppvObject = NULL;
 
+    IUnknown *pUnk = NULL;
     if (iid == IID_IUnknown || iid == IID_ITfDocumentMgr)
-        *ppvObject = static_cast<ITfDocumentMgr *>(this);
+        pUnk = static_cast<ITfDocumentMgr *>(this);
     else if (iid == IID_ITfSource)
-        *ppvObject = static_cast<ITfSource *>(this);
+        pUnk = static_cast<ITfSource *>(this);
     else if (iid == IID_ITfCompartmentMgr)
-        *ppvObject = m_pCompartmentMgr;
+        pUnk = m_pCompartmentMgr;
 
-    if (*ppvObject)
+    if (pUnk)
     {
-        AddRef();
+        pUnk->AddRef();
+        *ppvObject = pUnk;
         return S_OK;
     }
 
-    ERR("E_NOINTERFACE: %s\n", wine_dbgstr_guid(&iid));
+    WARN("unsupported interface: %s\n", debugstr_guid(&iid));
     return E_NOINTERFACE;
 }
 
@@ -248,10 +234,16 @@ STDMETHODIMP CDocumentMgr::GetTop(ITfContext **ppic)
         return E_INVALIDARG;
     }
 
+    ITfContext *target;
     if (m_contextStack[0])
-        m_contextStack[0]->AddRef();
+        target = m_contextStack[0];
+    else
+        target = m_initialContext;
 
-    *ppic = m_contextStack[0];
+    if (target)
+        target->AddRef();
+
+    *ppic = target;
     return S_OK;
 }
 
@@ -265,10 +257,18 @@ STDMETHODIMP CDocumentMgr::GetBase(ITfContext **ppic)
         return E_INVALIDARG;
     }
 
-    ITfContext *target = (m_contextStack[1] ? m_contextStack[1] : m_contextStack[0]);
-    *ppic = target;
+    ITfContext *target;
+    if (m_contextStack[1])
+        target = m_contextStack[1];
+    else if (m_contextStack[0])
+        target = m_contextStack[0];
+    else
+        target = m_initialContext;
+
     if (target)
         target->AddRef();
+
+    *ppic = target;
     return S_OK;
 }
 
@@ -282,18 +282,18 @@ STDMETHODIMP CDocumentMgr::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCoo
 {
     TRACE("%p -> (%s, %p, %p)\n", this, wine_dbgstr_guid(&riid), punk, pdwCookie);
 
-    if (!punk || !pdwCookie)
+    if (cicIsNullPtr(&riid) || !punk || !pdwCookie)
         return E_INVALIDARG;
 
-    if (riid != IID_ITfTransitoryExtensionSink)
+    if (riid == IID_ITfTransitoryExtensionSink)
     {
-        FIXME("E_NOTIMPL: %s\n", wine_dbgstr_guid(&riid));
-        return E_NOTIMPL;
+        WARN("semi-stub for ITfTransitoryExtensionSink: callback won't be used.\n");
+        return advise_sink(&m_transitoryExtensionSink, IID_ITfTransitoryExtensionSink,
+                           COOKIE_MAGIC_DMSINK, punk, pdwCookie);
     }
 
-    return advise_sink(&m_transitoryExtensionSink, IID_ITfTransitoryExtensionSink,
-                       COOKIE_MAGIC_DMSINK, punk, pdwCookie);
-
+    FIXME("(%p) Unhandled Sink: %s\n", this, debugstr_guid(&riid));
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDocumentMgr::UnadviseSink(DWORD pdwCookie)
@@ -307,7 +307,6 @@ STDMETHODIMP CDocumentMgr::UnadviseSink(DWORD pdwCookie)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// CEnumTfContext
 
 CEnumTfContext::CEnumTfContext(_In_opt_ CDocumentMgr *mgr)
     : m_cRefs(1)
@@ -336,7 +335,7 @@ HRESULT CEnumTfContext::CreateInstance(_In_opt_ CDocumentMgr *mgr, _Out_ IEnumTf
     }
 
     CEnumTfContext *This = new(cicNoThrow) CEnumTfContext(mgr);
-    if (This == NULL)
+    if (!This)
     {
         ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;

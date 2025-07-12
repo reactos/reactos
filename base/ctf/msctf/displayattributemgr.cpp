@@ -6,26 +6,13 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-
-// Cicero
-#include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
-
+#include "precomp.h"
 #include "displayattributemgr.h"
-#include "msctf_internal.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 ////////////////////////////////////////////////////////////////////////////
-// CDisplayAttributeMgr
 
 CDisplayAttributeMgr::CDisplayAttributeMgr()
     : m_cRefs(1)
@@ -34,6 +21,7 @@ CDisplayAttributeMgr::CDisplayAttributeMgr()
 
 CDisplayAttributeMgr::~CDisplayAttributeMgr()
 {
+    TRACE("destroying %p\n", this);
 }
 
 BOOL CDisplayAttributeMgr::_IsInCollection(REFGUID rguid)
@@ -57,9 +45,6 @@ void CDisplayAttributeMgr::_SetThis()
     FIXME("()\n");
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** IUnknown methods **
-
 STDMETHODIMP
 CDisplayAttributeMgr::QueryInterface(REFIID riid, void **ppvObj)
 {
@@ -68,13 +53,13 @@ CDisplayAttributeMgr::QueryInterface(REFIID riid, void **ppvObj)
 
     *ppvObj = NULL;
 
-    if (IsEqualIID(riid, IID_IUnknown) ||
-        IsEqualIID(riid, IID_ITfDisplayAttributeMgr) ||
-        IsEqualIID(riid, IID_CDisplayAttributeMgr))
+    if (riid == IID_IUnknown ||
+        riid == IID_ITfDisplayAttributeMgr ||
+        riid == IID_CDisplayAttributeMgr)
     {
         *ppvObj = this;
     }
-    else if (IsEqualIID(riid, IID_ITfDisplayAttributeCollectionMgr))
+    else if (riid == IID_ITfDisplayAttributeCollectionMgr)
     {
         *ppvObj = static_cast<ITfDisplayAttributeCollectionMgr *>(this);
     }
@@ -95,16 +80,11 @@ CDisplayAttributeMgr::AddRef()
 STDMETHODIMP_(ULONG)
 CDisplayAttributeMgr::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfDisplayAttributeMgr methods **
 
 STDMETHODIMP CDisplayAttributeMgr::OnUpdateInfo()
 {
@@ -128,9 +108,6 @@ CDisplayAttributeMgr::GetDisplayAttributeInfo(
     FIXME("(%s, %p, %s)\n", wine_dbgstr_guid(&guid), ppInfo, wine_dbgstr_guid(pclsidOwner));
     return E_NOTIMPL;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfDisplayAttributeCollectionMgr methods **
 
 STDMETHODIMP
 CDisplayAttributeMgr::UnknownMethod(_In_ DWORD unused)

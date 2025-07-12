@@ -1,31 +1,18 @@
 /*
- * PROJECT:     ReactOS msctf.dll
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PROJECT:     ReactOS CTF
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Text Framework Services
  * COPYRIGHT:   Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <stdlib.h>
+#include "precomp.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define WIN32_NO_STATUS
-#define COBJMACROS
-#define INITGUID
-#define _EXTYPES_H
-
-#include <windows.h>
 #include <sddl.h>
 #include <imm.h>
-#include <cguid.h>
-#include <tchar.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
 #include <ctffunc.h>
 #include <shlwapi.h>
-#include <strsafe.h>
+#include <malloc.h>
 
-#include <cicarray.h>
-#include <cicreg.h>
 #include <cicmutex.h>
 #include <cicfmap.h>
 
@@ -97,6 +84,27 @@ extern "C" void __cxa_pure_virtual(void)
 {
     ERR("__cxa_pure_virtual\n");
     DebugBreak();
+}
+
+void *msctf_recalloc(void *mem, size_t num, size_t size)
+{
+    size_t old_size;
+    void *ret;
+
+    if (!mem)
+        return calloc(num, size);
+
+    size_t new_size = num * size;
+    old_size = _msize(mem);
+
+    ret = realloc(mem, new_size);
+    if (!ret)
+        return NULL;
+
+    if (new_size > old_size)
+        memset((PBYTE)ret + old_size, 0, new_size - old_size);
+
+    return ret;
 }
 
 /**
@@ -284,7 +292,7 @@ EXTERN_C HANDLE WINAPI
 TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon)
 {
     FIXME("(%p)\n", pfWinLogon);
-    if (pfWinLogon == NULL)
+    if (!pfWinLogon)
         return NULL;
     *pfWinLogon = FALSE;
     return NULL;
@@ -489,7 +497,7 @@ TF_RegisterLangBarAddIn(
 {
     TRACE("(%s, %s, 0x%lX)\n", debugstr_guid(&rguid), debugstr_w(pszFilePath), dwFlags);
 
-    if (!pszFilePath || IsEqualGUID(rguid, GUID_NULL))
+    if (!pszFilePath || rguid == GUID_NULL)
     {
         ERR("E_INVALIDARG\n");
         return E_INVALIDARG;
@@ -525,7 +533,7 @@ TF_UnregisterLangBarAddIn(
 {
     TRACE("(%s, 0x%lX)\n", debugstr_guid(&rguid), dwFlags);
 
-    if (IsEqualGUID(rguid, GUID_NULL))
+    if (rguid == GUID_NULL)
     {
         ERR("E_INVALIDARG\n");
         return E_INVALIDARG;
