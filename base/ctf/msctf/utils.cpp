@@ -9,10 +9,8 @@
 
 #include <sddl.h>
 #include <imm.h>
-#include <tchar.h>
 #include <ctffunc.h>
 #include <shlwapi.h>
-#include <strsafe.h>
 
 #include <cicmutex.h>
 #include <cicfmap.h>

@@ -87,7 +87,7 @@ class CCompartment
     , public ITfSource
 {
 public:
-    CCompartment();
+    CCompartment(CompartmentValue *valueData);
     virtual ~CCompartment();
 
     static HRESULT CreateInstance(CompartmentValue *valueData, ITfCompartment **ppOut);
@@ -146,12 +146,12 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
         return CLASS_E_NOAGGREGATION;
 
     CCompartmentMgr *This = new(cicNoThrow) CCompartmentMgr(pUnkOuter);
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     if (pUnkOuter)
     {
-        *ppOut = static_cast<IUnknown *>(This);
+        *ppOut = static_cast<ITfCompartmentMgr *>(This);
         TRACE("returning %p\n", *ppOut);
         return S_OK;
     }
@@ -403,7 +403,7 @@ STDMETHODIMP CCompartmentEnumGuid::Clone(_Out_ IEnumGUID **ppenum)
 {
     TRACE("(%p)\n", this);
 
-    if (ppenum == NULL)
+    if (!ppenum)
         return E_POINTER;
 
     return CCompartmentEnumGuid::CreateInstance(m_values, ppenum, m_cursor);
@@ -411,29 +411,26 @@ STDMETHODIMP CCompartmentEnumGuid::Clone(_Out_ IEnumGUID **ppenum)
 
 ////////////////////////////////////////////////////////////////////////////
 
-CCompartment::CCompartment()
+CCompartment::CCompartment(CompartmentValue *valueData)
     : m_cRefs(1)
-    , m_valueData(NULL)
+    , m_valueData(valueData)
 {
     VariantInit(&m_variant);
+    list_init(&m_CompartmentEventSink);
 }
 
 CCompartment::~CCompartment()
 {
+    TRACE("destroying %p\n", this);
     VariantClear(&m_variant);
     free_sinks(&m_CompartmentEventSink);
 }
 
 HRESULT CCompartment::CreateInstance(CompartmentValue *valueData, ITfCompartment **ppOut)
 {
-    CCompartment *This = new(cicNoThrow) CCompartment();
-    if (This == NULL)
+    CCompartment *This = new(cicNoThrow) CCompartment(valueData);
+    if (!This)
         return E_OUTOFMEMORY;
-
-    This->m_valueData = valueData;
-    VariantInit(&This->m_variant);
-
-    list_init(&This->m_CompartmentEventSink);
 
     *ppOut = static_cast<ITfCompartment *>(This);
     TRACE("returning %p\n", *ppOut);
@@ -466,12 +463,10 @@ STDMETHODIMP_(ULONG) CCompartment::AddRef()
 
 STDMETHODIMP_(ULONG) CCompartment::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
 
 STDMETHODIMP CCompartment::SetValue(_In_ TfClientId tid, _In_ const VARIANT *pvarValue)
@@ -484,8 +479,7 @@ STDMETHODIMP CCompartment::SetValue(_In_ TfClientId tid, _In_ const VARIANT *pva
     if (!pvarValue)
         return E_INVALIDARG;
 
-    if (!(V_VT(pvarValue) == VT_BSTR || V_VT(pvarValue) == VT_I4 ||
-          V_VT(pvarValue) == VT_UNKNOWN))
+    if (!(V_VT(pvarValue) == VT_BSTR || V_VT(pvarValue) == VT_I4 || V_VT(pvarValue) == VT_UNKNOWN))
         return E_INVALIDARG;
 
     if (!m_valueData->owner)
