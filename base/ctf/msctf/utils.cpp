@@ -85,6 +85,27 @@ extern "C" void __cxa_pure_virtual(void)
     DebugBreak();
 }
 
+void *msctf_recalloc(void *mem, size_t num, size_t size)
+{
+    size_t old_size;
+    void *ret;
+
+    if (!mem)
+        return calloc(num, size);
+
+    size = num * size;
+    old_size = _msize(mem);
+
+    ret = realloc(mem, size);
+    if (!ret)
+        return NULL;
+
+    if (size > old_size)
+        memset((PBYTE)ret + old_size, 0, size - old_size);
+
+    return ret;
+}
+
 /**
  * @implemented
  */
