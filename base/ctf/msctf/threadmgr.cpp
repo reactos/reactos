@@ -470,7 +470,7 @@ STDMETHODIMP CThreadMgr::GetFocus(_Out_ ITfDocumentMgr **ppdimFocus)
 
     TRACE("->%p\n", m_focus);
 
-    if (m_focus == NULL)
+    if (!m_focus)
         return S_FALSE;
 
     m_focus->AddRef();
@@ -601,7 +601,7 @@ STDMETHODIMP CThreadMgr::IsThreadFocus(_Out_ BOOL *pfThreadFocus)
         return E_INVALIDARG;
 
     HWND focus = ::GetFocus();
-    *pfThreadFocus = (focus == NULL);
+    *pfThreadFocus = !focus;
     return S_OK;
 }
 

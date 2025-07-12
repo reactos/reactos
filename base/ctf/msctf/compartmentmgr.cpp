@@ -295,7 +295,7 @@ HRESULT
 CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut)
 {
     CCompartmentEnumGuid *This = new(cicNoThrow) CCompartmentEnumGuid();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     This->m_values = values;
@@ -310,7 +310,7 @@ HRESULT
 CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut, struct list *cursor)
 {
     CCompartmentEnumGuid *This = new(cicNoThrow) CCompartmentEnumGuid();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     This->m_values = values;
@@ -360,7 +360,7 @@ STDMETHODIMP CCompartmentEnumGuid::Next(
 
     TRACE("(%p)\n", this);
 
-    if (rgelt == NULL)
+    if (!rgelt)
         return E_POINTER;
 
     while (fetched < celt && m_cursor)

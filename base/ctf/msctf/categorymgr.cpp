@@ -230,7 +230,7 @@ STDMETHODIMP CCategoryMgr::FindClosestCategory(
 
     TRACE("(%p)\n", this);
 
-    if (!pcatid || (ulCount && ppcatidList == NULL))
+    if (!pcatid || (ulCount && !ppcatidList))
         return E_INVALIDARG;
 
     StringFromGUID2(rguid, szGuid, _countof(szGuid));
@@ -419,7 +419,7 @@ HRESULT CategoryMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
         return CLASS_E_NOAGGREGATION;
 
     CCategoryMgr *This = new(cicNoThrow) CCategoryMgr();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     *ppOut = static_cast<ITfCategoryMgr *>(This);

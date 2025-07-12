@@ -1164,7 +1164,7 @@ STDMETHODIMP CEnumTfLanguageProfiles::Next(
 
     TRACE("(%p)\n", this);
 
-    if (pProfile == NULL)
+    if (!pProfile)
         return E_POINTER;
 
     if (m_tipkey)

@@ -574,7 +574,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID iid, LPVOID *ppvOut)
     if (iid != IID_IUnknown && iid != IID_IClassFactory)
         return E_NOINTERFACE;
 
-    for (i = 0; ClassesTable[i].clsid != NULL; i++)
+    for (i = 0; ClassesTable[i].clsid; i++)
     {
         if (*ClassesTable[i].clsid == clsid)
             return ClassFactory_Constructor(ClassesTable[i].ctor, ppvOut);
