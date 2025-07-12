@@ -9,10 +9,13 @@
  */
 
 #include "usbstor.h"
+#include <sptilib.h>
 
 #define NDEBUG
 #include <debug.h>
 
+// See CORE-10515 and CORE-10755
+#define USBSTOR_DEFAULT_MAX_PHYS_PAGES    (USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1)
 
 static
 BOOLEAN
@@ -394,7 +397,7 @@ USBSTOR_HandleQueryProperty(
             .Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
             .Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
             .MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH,
-            .MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1, // See CORE-10515 and CORE-10755
+            .MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_PHYS_PAGES,
             .BusType = BusTypeUsb,
             .BusMajorVersion = 2, //FIXME verify
             .BusMinorVersion = 0 //FIXME
@@ -429,13 +432,27 @@ USBSTOR_HandleDeviceControl(
             Status = USBSTOR_HandleQueryProperty(DeviceObject, Irp);
             break;
         case IOCTL_SCSI_PASS_THROUGH:
-            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH NOT implemented\n");
-            Status = STATUS_NOT_SUPPORTED;
-            break;
         case IOCTL_SCSI_PASS_THROUGH_DIRECT:
-            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH_DIRECT NOT implemented\n");
-            Status = STATUS_NOT_SUPPORTED;
+        {
+            PDODeviceExtension = DeviceObject->DeviceExtension;
+
+            ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+            ASSERT(PDODeviceExtension);
+            ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
+            /* Skip requests that bypassed the class driver. See also cdrom!RequestHandleScsiPassThrough */
+            if ((IoGetCurrentIrpStackLocation(Irp)->MinorFunction == 0) && PDODeviceExtension->Claimed)
+            {
+                Status = STATUS_INVALID_DEVICE_REQUEST;
+                break;
+            }
+
+            Status = SptiHandleScsiPassthru(DeviceObject,
+                                            Irp,
+                                            USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH,
+                                            USBSTOR_DEFAULT_MAX_PHYS_PAGES);
             break;
+        }
         case IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER:
             DPRINT1("USBSTOR_HandleDeviceControl IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER NOT implemented\n");
             Status = STATUS_NOT_SUPPORTED;
@@ -461,7 +478,7 @@ USBSTOR_HandleDeviceControl(
             if (Capabilities)
             {
                 Capabilities->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
-                Capabilities->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
+                Capabilities->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_PHYS_PAGES;
                 Capabilities->SupportedAsynchronousEvents = 0;
                 Capabilities->AlignmentMask = 0;
                 Capabilities->TaggedQueuing = FALSE;
