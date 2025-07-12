@@ -47,7 +47,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avancé"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Les privilèges administrateur sont requis pour la plupart de ces paramètres.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT "Certains paramètres demandent d'être administrateur pour être modifiés.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Performances", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Les options de performance contrôlent comment les applications utilisent la mémoire, ce qui affecte la vitesse de l'ordinateur.", IDC_STATIC, 16, 29, 210, 25
     PUSHBUTTON "&Paramètres", IDC_PERFOR, 194, 48, 50, 15
