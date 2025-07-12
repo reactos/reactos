@@ -93,9 +93,6 @@ CCategoryMgr::~CCategoryMgr()
     TRACE("destroying %p\n", this);
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** IUnknown methods **
-
 STDMETHODIMP CCategoryMgr::QueryInterface(REFIID riid, void **ppvObj)
 {
     if (!ppvObj)
@@ -128,9 +125,6 @@ STDMETHODIMP_(ULONG) CCategoryMgr::Release()
         delete this;
     return ret;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfCategoryMgr methods **
 
 STDMETHODIMP CCategoryMgr::RegisterCategory(
     _In_ REFCLSID rclsid,

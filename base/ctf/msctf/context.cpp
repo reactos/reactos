@@ -364,7 +364,6 @@ STDMETHODIMP CContext::GetSelection(
     _Out_ TF_SELECTION *pSelection,
     _Out_ ULONG *pcFetched)
 {
-    EditCookie *cookie;
     ULONG count, i;
     ULONG totalFetched = 0;
     HRESULT hr = S_OK;
@@ -386,8 +385,6 @@ STDMETHODIMP CContext::GetSelection(
         return E_NOTIMPL;
     }
 
-    cookie = (EditCookie *)get_Cookie_data(ec);
-
     count = (ulIndex == (ULONG)TF_DEFAULT_SELECTION) ? 1 : ulCount;
 
     for (i = 0; i < count; i++)
@@ -403,7 +400,7 @@ STDMETHODIMP CContext::GetSelection(
 
         pSelection[totalFetched].style.ase = (TfActiveSelEnd)acps.style.ase;
         pSelection[totalFetched].style.fInterimChar = acps.style.fInterimChar;
-        Range_Constructor(this, m_pITextStoreACP, cookie->lockType, acps.acpStart, acps.acpEnd, &pSelection[totalFetched].range);
+        Range_Constructor(this, acps.acpStart, acps.acpEnd, &pSelection[totalFetched].range);
         totalFetched++;
     }
 
@@ -458,7 +455,6 @@ CContext::GetStart(
     _In_ TfEditCookie ec,
     _Out_ ITfRange **ppStart)
 {
-    EditCookie *cookie;
     TRACE("(%p) %i %p\n", this, ec, ppStart);
 
     if (!ppStart)
@@ -472,8 +468,7 @@ CContext::GetStart(
     if (get_Cookie_magic(ec) != COOKIE_MAGIC_EDITCOOKIE)
         return TF_E_NOLOCK;
 
-    cookie = (EditCookie *)get_Cookie_data(ec);
-    return Range_Constructor(this, m_pITextStoreACP, cookie->lockType, 0, 0, ppStart);
+    return Range_Constructor(this, 0, 0, ppStart);
 }
 
 STDMETHODIMP
@@ -481,7 +476,6 @@ CContext::GetEnd(
     _In_ TfEditCookie ec,
     _Out_ ITfRange **ppEnd)
 {
-    EditCookie *cookie;
     LONG end;
 
     TRACE("(%p) %i %p\n", this, ec, ppEnd);
@@ -503,10 +497,9 @@ CContext::GetEnd(
         return E_NOTIMPL;
     }
 
-    cookie = (EditCookie *)get_Cookie_data(ec);
     m_pITextStoreACP->GetEndACP(&end);
 
-    return Range_Constructor(this, m_pITextStoreACP, cookie->lockType, end, end, ppEnd);
+    return Range_Constructor(this, end, end, ppEnd);
 }
 
 STDMETHODIMP CContext::GetActiveView(_Out_ ITfContextView **ppView)
@@ -702,7 +695,7 @@ STDMETHODIMP CContext::InsertTextAtSelection(
 
     hr = m_pITextStoreACP->InsertTextAtSelection(dwFlags, pchText, cch, &acpStart, &acpEnd, &change);
     if (SUCCEEDED(hr))
-        Range_Constructor(this, m_pITextStoreACP, cookie->lockType, change.acpStart, change.acpNewEnd, ppRange);
+        Range_Constructor(this, change.acpStart, change.acpNewEnd, ppRange);
 
     return hr;
 }
