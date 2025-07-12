@@ -12,10 +12,10 @@ BEGIN
 dan menyiapkan penyetelan bagian kedua.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " INFORMASI PENTING ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS saat ini pada babak Alpha: Fiturnya belum lengkap dan \
+    LTEXT "ReactOS saat ini pada babak Alpha: Fitur belum lengkap dan \
 masih dalam tahap pengembangan besar. Sebaiknya gunakan hanya untuk \
-evaluasi dan pengujian, bukan sebagai OS untuk penggunaan sehari-hari.\n\
-Ini dapat merusak data Anda atau merusak perangkat kerasmu.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+evaluasi dan pengujian, bukan sebagai OS yang digunakan sehari-hari.\n\
+Ini dapat merusak data, bahkan perangkat kerasmu.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
     LTEXT "Cadangkan datamu atau uji pada komputer sekunder \
 jika kamu mencoba menjalankan ReactOS pada perangkat keras yang asli.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
