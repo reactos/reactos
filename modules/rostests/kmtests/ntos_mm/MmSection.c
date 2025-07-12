@@ -544,12 +544,15 @@ TestPhysicalMemorySection(VOID)
     PHYSICAL_ADDRESS MyPagePhysical;
     PUCHAR ZeroPageContents;
     PHYSICAL_ADDRESS ZeroPagePhysical;
+    PHYSICAL_ADDRESS CurrentPageDirectory;
     PHYSICAL_ADDRESS PhysicalAddress;
     PVOID Mapping;
     SYSTEM_BASIC_INFORMATION BasicInfo;
     PUCHAR MappingBytes;
     SIZE_T ViewSize;
     SIZE_T EqualBytes;
+    KAPC_STATE ApcState;
+
     struct
     {
         PVOID Mapping;
@@ -586,6 +589,32 @@ TestPhysicalMemorySection(VOID)
 
     RtlCopyMemory(ZeroPageContents, Mapping, PAGE_SIZE);
     MmUnmapIoSpace(Mapping, PAGE_SIZE);
+
+    /* KeStackAttachProcess sets the address space to that of the process it attaches to. */
+    KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+    /* We retrieve the directory for the System process */
+#if defined(_M_AMD64) || defined(_M_IX86)
+    CurrentPageDirectory.QuadPart = __readcr3();
+#else
+#error Unknown architecture
+#endif
+    /* Then detach from the system process */
+    KeUnstackDetachProcess(&ApcState);
+    /* Now if we try to map the system process' directory it should fail since it is not used by our address space */
+    Mapping = MmMapIoSpace(CurrentPageDirectory, PAGE_SIZE, MmNonCached);
+    ok(Mapping == NULL, "MmMapIoSpace on system process directory unexpectedly succeeded, expected NULL got 0x%X\n", (ULONG_PTR)Mapping);
+    if (Mapping) 
+        MmUnmapIoSpace(Mapping, PAGE_SIZE);
+
+#if defined(_M_AMD64) || defined(_M_IX86)
+    CurrentPageDirectory.QuadPart = __readcr3();
+#else
+#error Unknown architecture
+#endif
+    Mapping = MmMapIoSpace(CurrentPageDirectory, PAGE_SIZE, MmNonCached);
+    ok(Mapping != NULL, "MmMapIoSpace on running process directory failed, expected mapping got NULL\n");
+    if (Mapping) 
+        MmUnmapIoSpace(Mapping, PAGE_SIZE);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SectionName,
