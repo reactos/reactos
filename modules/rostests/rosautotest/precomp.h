@@ -48,6 +48,8 @@ using namespace std;
 #include "CJournaledTestList.h"
 #include "CVirtualTestList.h"
 #include "CWebService.h"
+#include "CWebServiceWinInet.h"
+#include "CWebServiceLibCurl.h"
 #include "CWineTest.h"
 
 #include <rosautotestmsg.h>
