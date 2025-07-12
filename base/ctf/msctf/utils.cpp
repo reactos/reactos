@@ -94,15 +94,15 @@ void *msctf_recalloc(void *mem, size_t num, size_t size)
     if (!mem)
         return calloc(num, size);
 
-    size = num * size;
+    size_t new_size = num * size;
     old_size = _msize(mem);
 
-    ret = realloc(mem, size);
+    ret = realloc(mem, new_size);
     if (!ret)
         return NULL;
 
-    if (size > old_size)
-        memset((PBYTE)ret + old_size, 0, size - old_size);
+    if (new_size > old_size)
+        memset((PBYTE)ret + old_size, 0, new_size - old_size);
 
     return ret;
 }
