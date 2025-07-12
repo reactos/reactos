@@ -29,7 +29,7 @@ CDocumentMgr::CDocumentMgr(ITfThreadMgrEventSink *threadMgrSink)
     CompartmentMgr_Constructor(pDocMgr, IID_IUnknown, reinterpret_cast<IUnknown **>(ppCompMgr));
 
     DWORD cookie;
-    Context_Constructor(processId, NULL, pDocMgr, &m_initialContext, &cookie);
+    Context_Constructor(g_processId, NULL, pDocMgr, &m_initialContext, &cookie);
 }
 
 CDocumentMgr::~CDocumentMgr()

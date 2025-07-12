@@ -41,12 +41,9 @@ static UINT array_size;
 static struct list AtsList = LIST_INIT(AtsList);
 static UINT activated = 0;
 
-DWORD tlsIndex = 0;
-TfClientId processId = 0;
-ITfCompartmentMgr *globalCompartmentMgr = NULL;
-
-const WCHAR szwSystemTIPKey[] = L"SOFTWARE\\Microsoft\\CTF\\TIP";
-const WCHAR szwSystemCTFKey[] = L"SOFTWARE\\Microsoft\\CTF";
+DWORD g_tlsIndex = 0;
+TfClientId g_processId = 0;
+ITfCompartmentMgr *g_globalCompartmentMgr = NULL;
 
 typedef HRESULT (*LPFNCONSTRUCTOR)(IUnknown *pUnkOuter, IUnknown **ppvOut);
 
@@ -265,7 +262,8 @@ HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUn
     if (!sink)
         return E_OUTOFMEMORY;
 
-    if (FAILED(unk->QueryInterface(riid, (void **)&sink->interfaces.pIUnknown)))
+    HRESULT hr = unk->QueryInterface(riid, (void **)&sink->interfaces.pIUnknown);
+    if (FAILED(hr))
     {
         free(sink);
         return CONNECT_E_CANNOTCONNECT;
@@ -373,7 +371,7 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     ActivatedTextService *actsvr;
     ITfCategoryMgr *catmgr;
     AtsEntry *entry;
-    ITfThreadMgrEx *tm = (ITfThreadMgrEx *)TlsGetValue(tlsIndex);
+    ITfThreadMgrEx *tm = (ITfThreadMgrEx *)TlsGetValue(g_tlsIndex);
     ITfClientId *clientid;
 
     if (!tm)
@@ -545,11 +543,11 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     {
         case DLL_PROCESS_ATTACH:
             MSCTF_hinstance = hinst;
-            tlsIndex = TlsAlloc();
+            g_tlsIndex = TlsAlloc();
             break;
         case DLL_PROCESS_DETACH:
             if (fImpLoad) break;
-            TlsFree(tlsIndex);
+            TlsFree(g_tlsIndex);
             break;
     }
     return TRUE;
@@ -605,7 +603,7 @@ HRESULT WINAPI DllUnregisterServer(void)
 HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim)
 {
     TRACE("\n");
-    return ThreadMgr_Constructor(NULL,(IUnknown**)pptim);
+    return ThreadMgr_Constructor(NULL, (IUnknown**)pptim);
 }
 
 /***********************************************************************
@@ -614,7 +612,7 @@ HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim)
 HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
 {
     TRACE("\n");
-    *pptim = (ITfThreadMgr *)TlsGetValue(tlsIndex);
+    *pptim = (ITfThreadMgr *)TlsGetValue(g_tlsIndex);
 
     if (*pptim)
         (*pptim)->AddRef();
@@ -627,7 +625,7 @@ HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
  */
 HRESULT WINAPI SetInputScope(HWND hwnd, InputScope inputscope)
 {
-    FIXME("STUB: %p %i\n",hwnd,inputscope);
+    FIXME("STUB: %p %i\n", hwnd, inputscope);
     return S_OK;
 }
 
@@ -639,11 +637,11 @@ HRESULT WINAPI SetInputScopes(HWND hwnd, const InputScope *pInputScopes,
                               UINT cPhrases, WCHAR *pszRegExp, WCHAR *pszSRGS)
 {
     UINT i;
-    FIXME("STUB: %p ... %s %s\n",hwnd, debugstr_w(pszRegExp), debugstr_w(pszSRGS));
+    FIXME("STUB: %p ... %s %s\n", hwnd, debugstr_w(pszRegExp), debugstr_w(pszSRGS));
     for (i = 0; i < cInputScopes; i++)
-        TRACE("\tScope[%u] = %i\n",i,pInputScopes[i]);
+        TRACE("\tScope[%u] = %i\n", i, pInputScopes[i]);
     for (i = 0; i < cPhrases; i++)
-        TRACE("\tPhrase[%u] = %s\n",i,debugstr_w(ppszPhraseList[i]));
+        TRACE("\tPhrase[%u] = %s\n", i, debugstr_w(ppszPhraseList[i]));
 
     return S_OK;
 }
@@ -654,7 +652,7 @@ HRESULT WINAPI SetInputScopes(HWND hwnd, const InputScope *pInputScopes,
 HRESULT WINAPI TF_CreateInputProcessorProfiles(
                         ITfInputProcessorProfiles **ppipr)
 {
-    return InputProcessorProfiles_Constructor(NULL,(IUnknown**)ppipr);
+    return InputProcessorProfiles_Constructor(NULL, (IUnknown**)ppipr);
 }
 
 /***********************************************************************
@@ -672,7 +670,7 @@ HRESULT WINAPI TF_InvalidAssemblyListCacheIfExist(void)
 HRESULT WINAPI TF_CreateLangBarMgr(ITfLangBarMgr **pppbm)
 {
     TRACE("\n");
-    return LangBarMgr_Constructor(NULL,(IUnknown**)pppbm);
+    return LangBarMgr_Constructor(NULL, (IUnknown**)pppbm);
 }
 
 /***********************************************************************
