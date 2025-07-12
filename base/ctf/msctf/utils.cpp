@@ -11,6 +11,7 @@
 #include <imm.h>
 #include <ctffunc.h>
 #include <shlwapi.h>
+#include <malloc.h>
 
 #include <cicmutex.h>
 #include <cicfmap.h>
