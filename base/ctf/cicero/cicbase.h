@@ -30,7 +30,7 @@ static inline void cicMemFree(LPVOID ptr)
         LocalFree(ptr);
 }
 
-LPVOID cicMemReCalloc(LPVOID mem, SIZE_T num, SIZE_T size)  noexcept;
+LPVOID cicMemReCalloc(LPVOID mem, SIZE_T num, SIZE_T size) noexcept;
 
 static inline bool cicIsNullPtr(LPCVOID ptr)
 {
