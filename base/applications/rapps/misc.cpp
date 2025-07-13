@@ -10,6 +10,8 @@
 #include "rapps.h"
 #include "misc.h"
 
+EXTERN_C NTSTATUS WINAPI NtQueryObject(HANDLE, OBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
+
 static HANDLE hLog = NULL;
 
 UINT
@@ -440,6 +442,32 @@ UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
     ll = Int32x32To64(dwUnixTime, 10000000) + 116444736000000000;
     pFileTime->dwLowDateTime = (DWORD)ll;
     pFileTime->dwHighDateTime = ll >> 32;
+}
+
+static BOOL
+IsSameRegKey(HKEY hKey1, HKEY hKey2)
+{
+    // CompareObjectHandles is Win10+ so we check the path instead.
+    struct NameInfo : UNICODE_STRING
+    {
+        WCHAR Allocation[MAX_PATH];
+        NameInfo() { MaximumLength = sizeof(Allocation); Buffer = Allocation; }
+    };
+    NameInfo Name1, Name2;
+    ULONG Length;
+    return NT_SUCCESS(NtQueryObject(hKey1, ObjectNameInformation, &Name1, sizeof(Name1), &Length)) &&
+           NT_SUCCESS(NtQueryObject(hKey2, ObjectNameInformation, &Name2, sizeof(Name2), &Length)) &&
+           RtlCompareUnicodeString(&Name1, &Name2, TRUE) == 0;
+}
+
+BOOL
+IsSameRegKey(HKEY hRoot, LPCWSTR Path1, REGSAM Sam1, LPCWSTR Path2, REGSAM Sam2)
+{
+    REGSAM WowMask = KEY_WOW64_32KEY | KEY_WOW64_64KEY;
+    CRegKey key1, key2;
+    return key1.Open(hRoot, Path1, MAXIMUM_ALLOWED | (Sam1 & WowMask)) == ERROR_SUCCESS &&
+           key2.Open(hRoot, Path2, MAXIMUM_ALLOWED | (Sam2 & WowMask)) == ERROR_SUCCESS &&
+           IsSameRegKey(key1, key2);
 }
 
 HRESULT

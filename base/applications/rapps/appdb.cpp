@@ -163,15 +163,20 @@ GetRootKeyInfo(UINT Index, REGSAM &RegSam)
 }
 
 HKEY
-CAppDB::EnumInstalledRootKey(UINT Index, REGSAM &RegSam)
+CAppDB::EnumInstalledRootKey(UINT Index, REGSAM &RegSam, UINT &InternalState)
 {
-    // Loop for through all combinations.
+    // HKCU + HKLM (Native) + HKLM (WoW64)
     // Note that HKEY_CURRENT_USER\Software does not have a redirect
     // https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
-    if (Index < (IsSystem64Bit() ? 3 : 2))
-        return GetRootKeyInfo(Index, RegSam);
-    else
-        return NULL;
+    if (Index == 0)
+    {
+        // We don't want to display duplicate entries on systems without WoW64 keys support.
+        // When ROS starts supporting the WOW REGSAM flags,
+        // this code can be changed back to IsSystem64Bit() ? 3 : 2.
+        InternalState = 2 + !IsSameRegKey(HKEY_LOCAL_MACHINE, UNINSTALL_SUBKEY, KEY_WOW64_64KEY,
+                                                              UNINSTALL_SUBKEY, KEY_WOW64_32KEY);
+    }
+    return Index < InternalState ? GetRootKeyInfo(Index, RegSam) : NULL;
 }
 
 CInstalledApplicationInfo *
@@ -209,7 +214,8 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
     ATLASSERT(List || SearchOnly);
     REGSAM wowsam;
     HKEY hRootKey;
-    for (UINT rki = 0; (hRootKey = EnumInstalledRootKey(rki, wowsam)); ++rki)
+    UINT state;
+    for (UINT rki = 0; (hRootKey = EnumInstalledRootKey(rki, wowsam, state)); ++rki)
     {
         CRegKey hKey;
         if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | wowsam) != ERROR_SUCCESS)
