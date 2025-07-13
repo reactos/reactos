@@ -237,7 +237,7 @@ CContext::~CContext()
     if (m_defaultCookie)
     {
         cookie = (EditCookie *)remove_Cookie(m_defaultCookie);
-        free(cookie);
+        cicMemFree(cookie);
         m_defaultCookie = 0;
     }
 
@@ -429,7 +429,7 @@ CContext::SetSelection(
     if (get_Cookie_magic(ec) != COOKIE_MAGIC_EDITCOOKIE)
         return TF_E_NOLOCK;
 
-    acp = (TS_SELECTION_ACP *)malloc(sizeof(TS_SELECTION_ACP) * ulCount);
+    acp = (TS_SELECTION_ACP *)cicMemAlloc(sizeof(TS_SELECTION_ACP) * ulCount);
     if (!acp)
         return E_OUTOFMEMORY;
 
@@ -438,14 +438,14 @@ CContext::SetSelection(
         if (FAILED(TF_SELECTION_to_TS_SELECTION_ACP(&pSelection[i], &acp[i])))
         {
             TRACE("Selection Conversion Failed\n");
-            free(acp);
+            cicMemFree(acp);
             return E_FAIL;
         }
     }
 
     hr = m_pITextStoreACP->SetSelection(ulCount, acp);
 
-    free(acp);
+    cicMemFree(acp);
 
     return hr;
 }
@@ -794,14 +794,14 @@ STDMETHODIMP CContext::OnLockGranted(_In_ DWORD dwLockFlags)
         return S_OK;
     }
 
-    cookie = (EditCookie *)malloc(sizeof(EditCookie));
+    cookie = (EditCookie *)cicMemAlloc(sizeof(EditCookie));
     if (!cookie)
         return E_OUTOFMEMORY;
 
-    sinkcookie = (EditCookie *)malloc(sizeof(EditCookie));
+    sinkcookie = (EditCookie *)cicMemAlloc(sizeof(EditCookie));
     if (!sinkcookie)
     {
-        free(cookie);
+        cicMemFree(cookie);
         return E_OUTOFMEMORY;
     }
 
@@ -827,14 +827,14 @@ STDMETHODIMP CContext::OnLockGranted(_In_ DWORD dwLockFlags)
         }
         sinkcookie = (EditCookie *)remove_Cookie(sc);
     }
-    free(sinkcookie);
+    cicMemFree(sinkcookie);
 
     m_currentEditSession->Release();
     m_currentEditSession = NULL;
 
     /* Edit Cookie is only valid during the edit session */
     cookie = (EditCookie *)remove_Cookie(ec);
-    free(cookie);
+    cicMemFree(cookie);
 
     return hr;
 }
@@ -897,7 +897,7 @@ HRESULT CContext::CreateInstance(
     if (!This)
         return E_OUTOFMEMORY;
 
-    EditCookie *cookie = (EditCookie *)malloc(sizeof(EditCookie));
+    EditCookie *cookie = (EditCookie *)cicMemAlloc(sizeof(EditCookie));
     if (!cookie)
     {
         delete This;

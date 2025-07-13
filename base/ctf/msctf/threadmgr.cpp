@@ -327,8 +327,8 @@ CThreadMgr::~CThreadMgr()
     {
         PreservedKey* key = LIST_ENTRY(cursor, PreservedKey, entry);
         list_remove(cursor);
-        free(key->description);
-        free(key);
+        cicMemFree(key->description);
+        cicMemFree(key);
     }
 
     LIST_FOR_EACH_SAFE(cursor, cursor2, &m_CreatedDocumentMgrs)
@@ -336,14 +336,14 @@ CThreadMgr::~CThreadMgr()
         DocumentMgrEntry *mgr = LIST_ENTRY(cursor, DocumentMgrEntry, entry);
         list_remove(cursor);
         FIXME("Left Over ITfDocumentMgr.  Should we do something with it?\n");
-        free(mgr);
+        cicMemFree(mgr);
     }
 
     LIST_FOR_EACH_SAFE(cursor, cursor2, &m_AssociatedFocusWindows)
     {
         AssociatedWindow *wnd = LIST_ENTRY(cursor, AssociatedWindow, entry);
         list_remove(cursor);
-        free(wnd);
+        cicMemFree(wnd);
     }
 
     m_CompartmentMgr->Release();
@@ -431,7 +431,7 @@ STDMETHODIMP CThreadMgr::CreateDocumentMgr(_Out_ ITfDocumentMgr **ppdim)
     if (!ppdim)
         return E_INVALIDARG;
 
-    DocumentMgrEntry *mgrentry = (DocumentMgrEntry *)malloc(sizeof(DocumentMgrEntry));
+    DocumentMgrEntry *mgrentry = (DocumentMgrEntry *)cicMemAlloc(sizeof(DocumentMgrEntry));
     if (!mgrentry)
         return E_OUTOFMEMORY;
 
@@ -443,7 +443,7 @@ STDMETHODIMP CThreadMgr::CreateDocumentMgr(_Out_ ITfDocumentMgr **ppdim)
     }
     else
     {
-        free(mgrentry);
+        cicMemFree(mgrentry);
     }
 
     return hr;
@@ -581,7 +581,7 @@ STDMETHODIMP CThreadMgr::AssociateFocus(
         }
     }
 
-    wnd = (AssociatedWindow *)malloc(sizeof(AssociatedWindow));
+    wnd = (AssociatedWindow *)cicMemAlloc(sizeof(AssociatedWindow));
     wnd->hwnd = hwnd;
     wnd->docmgr = pdimNew;
     list_add_head(&m_AssociatedFocusWindows, &wnd->entry);
@@ -928,7 +928,7 @@ STDMETHODIMP CThreadMgr::PreserveKey(
             return TF_E_ALREADY_EXISTS;
     }
 
-    PreservedKey *newkey = (PreservedKey *)malloc(sizeof(PreservedKey));
+    PreservedKey *newkey = (PreservedKey *)cicMemAlloc(sizeof(PreservedKey));
     if (!newkey)
         return E_OUTOFMEMORY;
 
@@ -938,10 +938,10 @@ STDMETHODIMP CThreadMgr::PreserveKey(
     newkey->description = NULL;
     if (cchDesc)
     {
-        newkey->description = (LPWSTR)malloc((cchDesc + 1) * sizeof(WCHAR));
+        newkey->description = (LPWSTR)cicMemAlloc((cchDesc + 1) * sizeof(WCHAR));
         if (!newkey->description)
         {
-            free(newkey);
+            cicMemFree(newkey);
             return E_OUTOFMEMORY;
         }
         CopyMemory(newkey->description, pchDesc, cchDesc * sizeof(WCHAR));
@@ -975,8 +975,8 @@ STDMETHODIMP CThreadMgr::UnpreserveKey(
         return CONNECT_E_NOCONNECTION;
 
     list_remove(&key->entry);
-    free(key->description);
-    free(key);
+    cicMemFree(key->description);
+    cicMemFree(key);
 
     return S_OK;
 }
@@ -1247,7 +1247,7 @@ void CThreadMgr::OnDocumentMgrDestruction(ITfDocumentMgr *mgr)
         if (mgrentry->docmgr == mgr)
         {
             list_remove(cursor);
-            free(mgrentry);
+            cicMemFree(mgrentry);
             return;
         }
     }

@@ -356,7 +356,7 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
         }
     } while (dwCookieId != 0);
 
-    GUID *pNewGuid = (GUID *)malloc(sizeof(GUID));
+    GUID *pNewGuid = (GUID *)cicMemAlloc(sizeof(GUID));
     if (!pNewGuid)
         return E_OUTOFMEMORY;
 
@@ -365,7 +365,7 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
     dwCookieId = generate_Cookie(COOKIE_MAGIC_GUIDATOM, pNewGuid);
     if (dwCookieId == 0)
     {
-        free(pNewGuid);
+        cicMemFree(pNewGuid);
         return E_FAIL;
     }
 

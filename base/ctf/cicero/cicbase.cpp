@@ -38,6 +38,27 @@ void operator delete[](void* ptr, size_t size) noexcept
     cicMemFree(ptr);
 }
 
+LPVOID cicMemReCalloc(LPVOID mem, SIZE_T num, SIZE_T size) noexcept
+{
+    SIZE_T old_size;
+    LPVOID ret;
+
+    if (!mem)
+        return cicMemAllocClear(num * size);
+
+    size_t new_size = num * size;
+    old_size = LocalSize(mem);
+
+    ret = cicMemReAlloc(mem, new_size);
+    if (!ret)
+        return NULL;
+
+    if (new_size > old_size)
+        ZeroMemory((PBYTE)ret + old_size, new_size - old_size);
+
+    return ret;
+}
+
 // FIXME
 typedef enum _PROCESSINFOCLASS
 {

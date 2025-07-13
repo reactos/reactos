@@ -178,7 +178,7 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
         else
         {
             CookieInternal *new_cookies = (CookieInternal *)
-                msctf_recalloc(cookies, array_size * 2, sizeof(CookieInternal));
+                cicMemReCalloc(cookies, array_size * 2, sizeof(CookieInternal));
             if (!new_cookies)
             {
                 ERR("Out of memory, Unable to realloc cookies array\n");
@@ -258,14 +258,14 @@ DWORD enumerate_Cookie(DWORD magic, DWORD *index)
 EXTERN_C
 HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUnknown *unk, DWORD *cookie)
 {
-    Sink *sink = (Sink *)malloc(sizeof(*sink));
+    Sink *sink = (Sink *)cicMemAlloc(sizeof(*sink));
     if (!sink)
         return E_OUTOFMEMORY;
 
     HRESULT hr = unk->QueryInterface(riid, (void **)&sink->interfaces.pIUnknown);
     if (FAILED(hr))
     {
-        free(sink);
+        cicMemFree(sink);
         return CONNECT_E_CANNOTCONNECT;
     }
 
@@ -279,7 +279,7 @@ static void free_sink(Sink *sink)
 {
     list_remove(&sink->entry);
     sink->interfaces.pIUnknown->Release();
-    free(sink);
+    cicMemFree(sink);
 }
 
 EXTERN_C
@@ -357,8 +357,8 @@ static void deactivate_remove_conflicting_ts(REFCLSID catid)
         {
             deactivate_given_ts(ats->ats);
             list_remove(&ats->entry);
-            free(ats->ats);
-            free(ats);
+            cicMemFree(ats->ats);
+            cicMemFree(ats);
             /* we are guaranteeing there is only 1 */
             break;
         }
@@ -377,7 +377,7 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     if (!tm)
         return E_UNEXPECTED;
 
-    actsvr = (ActivatedTextService *)malloc(sizeof(ActivatedTextService));
+    actsvr = (ActivatedTextService *)cicMemAlloc(sizeof(ActivatedTextService));
     if (!actsvr)
         return E_OUTOFMEMORY;
 
@@ -387,7 +387,7 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
 
     if (!actsvr->tid)
     {
-        free(actsvr);
+        cicMemFree(actsvr);
         return E_OUTOFMEMORY;
     }
 
@@ -415,10 +415,10 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     if (activated > 0)
         activate_given_ts(actsvr, tm);
 
-    entry = (AtsEntry *)malloc(sizeof(AtsEntry));
+    entry = (AtsEntry *)cicMemAlloc(sizeof(AtsEntry));
     if (!entry)
     {
-        free(actsvr);
+        cicMemFree(actsvr);
         return E_OUTOFMEMORY;
     }
 

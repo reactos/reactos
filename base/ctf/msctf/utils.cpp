@@ -11,7 +11,6 @@
 #include <imm.h>
 #include <ctffunc.h>
 #include <shlwapi.h>
-#include <malloc.h>
 
 #include <cicmutex.h>
 #include <cicfmap.h>
@@ -84,27 +83,6 @@ extern "C" void __cxa_pure_virtual(void)
 {
     ERR("__cxa_pure_virtual\n");
     DebugBreak();
-}
-
-void *msctf_recalloc(void *mem, size_t num, size_t size)
-{
-    size_t old_size;
-    void *ret;
-
-    if (!mem)
-        return calloc(num, size);
-
-    size_t new_size = num * size;
-    old_size = _msize(mem);
-
-    ret = realloc(mem, new_size);
-    if (!ret)
-        return NULL;
-
-    if (new_size > old_size)
-        memset((PBYTE)ret + old_size, 0, new_size - old_size);
-
-    return ret;
 }
 
 /**

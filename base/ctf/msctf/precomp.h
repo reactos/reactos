@@ -30,8 +30,6 @@
 extern "C" {
 #endif
 
-void *msctf_recalloc(void *mem, size_t num, size_t size);
-
 #define COOKIE_MAGIC_TMSINK  0x0010
 #define COOKIE_MAGIC_CONTEXTSINK 0x0020
 #define COOKIE_MAGIC_GUIDATOM 0x0030
