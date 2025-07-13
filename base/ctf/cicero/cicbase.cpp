@@ -40,15 +40,13 @@ void operator delete[](void* ptr, size_t size) noexcept
 
 LPVOID cicMemReCalloc(LPVOID mem, SIZE_T num, SIZE_T size) noexcept
 {
-    SIZE_T old_size;
+    SIZE_T old_size, new_size = num * size;
     LPVOID ret;
 
     if (!mem)
-        return cicMemAllocClear(num * size);
+        return cicMemAllocClear(new_size);
 
-    size_t new_size = num * size;
     old_size = LocalSize(mem);
-
     ret = cicMemReAlloc(mem, new_size);
     if (!ret)
         return NULL;
