@@ -35,7 +35,7 @@ BEGIN
     IDS_ALIAS_MONITORING_USERS_NAME "Użytkownicy Monitora wydajności"
     IDS_ALIAS_MONITORING_USERS_COMMENT "Członkowie tej grupy mają zdalny dostęp do monitorowania tego komputera"
     IDS_ALIAS_LOGGING_USERS_NAME "Użytkownicy dzienników wydajności"
-    IDS_ALIAS_LOGGING_USERS_COMMENT "Członkowie tej grupy mają zdalny dostęp do rejestrowania harmonogramu liczników wydajności na tym komputerze"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "Członkowie tej grupy mają zdalny dostęp do harmonogramu rejestrowania liczników wydajności na tym komputerze"
     /*
      * ATTENTION:
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
