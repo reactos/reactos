@@ -17,18 +17,25 @@ static inline LPVOID cicMemAllocClear(SIZE_T size)
     return LocalAlloc(LMEM_ZEROINIT, size);
 }
 
-static inline LPVOID cicMemReAlloc(LPVOID ptr, SIZE_T newSize)
-{
-    if (!ptr)
-        return LocalAlloc(LMEM_ZEROINIT, newSize);
-    return LocalReAlloc(ptr, newSize, LMEM_ZEROINIT);
-}
-
 static inline void cicMemFree(LPVOID ptr)
 {
     if (ptr)
         LocalFree(ptr);
 }
+
+static inline LPVOID cicMemReAlloc(LPVOID ptr, SIZE_T newSize)
+{
+    if (!newSize)
+    {
+        cicMemFree(ptr);
+        return NULL;
+    }
+    if (!ptr)
+        return LocalAlloc(LMEM_ZEROINIT, newSize);
+    return LocalReAlloc(ptr, newSize, LMEM_ZEROINIT | LMEM_MOVEABLE);
+}
+
+LPVOID cicMemReCalloc(LPVOID mem, SIZE_T num, SIZE_T size) noexcept;
 
 static inline bool cicIsNullPtr(LPCVOID ptr)
 {

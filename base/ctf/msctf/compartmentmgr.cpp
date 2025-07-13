@@ -6,22 +6,7 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <cguid.h>
-#include <olectl.h>
-#include <oleauto.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-
-// Cicero
-#include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
-
-#include "msctf_internal.h"
+#include "precomp.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
@@ -102,7 +87,7 @@ class CCompartment
     , public ITfSource
 {
 public:
-    CCompartment();
+    CCompartment(CompartmentValue *valueData);
     virtual ~CCompartment();
 
     static HRESULT CreateInstance(CompartmentValue *valueData, ITfCompartment **ppOut);
@@ -148,7 +133,7 @@ CCompartmentMgr::~CCompartmentMgr()
         CompartmentValue *value = LIST_ENTRY(cursor, CompartmentValue, entry);
         list_remove(cursor);
         value->compartment->Release();
-        HeapFree(GetProcessHeap(), 0, value);
+        cicMemFree(value);
     }
 }
 
@@ -161,12 +146,12 @@ HRESULT CCompartmentMgr::CreateInstance(IUnknown *pUnkOuter, REFIID riid, IUnkno
         return CLASS_E_NOAGGREGATION;
 
     CCompartmentMgr *This = new(cicNoThrow) CCompartmentMgr(pUnkOuter);
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     if (pUnkOuter)
     {
-        *ppOut = static_cast<IUnknown *>(This);
+        *ppOut = static_cast<ITfCompartmentMgr *>(This);
         TRACE("returning %p\n", *ppOut);
         return S_OK;
     }
@@ -211,12 +196,10 @@ STDMETHODIMP_(ULONG) CCompartmentMgr::Release()
 {
     if (m_pUnkOuter)
         return m_pUnkOuter->Release();
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
 
 HRESULT CCompartmentMgr::GetCompartment(_In_ REFGUID rguid, _Out_ ITfCompartment **ppcomp)
@@ -240,7 +223,7 @@ HRESULT CCompartmentMgr::GetCompartment(_In_ REFGUID rguid, _Out_ ITfCompartment
         }
     }
 
-    value = (CompartmentValue *)HeapAlloc(GetProcessHeap(), 0, sizeof(CompartmentValue));
+    value = (CompartmentValue *)cicMemAlloc(sizeof(CompartmentValue));
     if (!value)
         return E_OUTOFMEMORY;
 
@@ -255,7 +238,7 @@ HRESULT CCompartmentMgr::GetCompartment(_In_ REFGUID rguid, _Out_ ITfCompartment
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, value);
+        cicMemFree(value);
         *ppcomp = NULL;
     }
 
@@ -277,7 +260,7 @@ HRESULT CCompartmentMgr::ClearCompartment(_In_ TfClientId tid, _In_ REFGUID rgui
                 return E_UNEXPECTED;
             list_remove(cursor);
             value->compartment->Release();
-            HeapFree(GetProcessHeap(), 0, value);
+            cicMemFree(value);
             return S_OK;
         }
     }
@@ -312,7 +295,7 @@ HRESULT
 CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut)
 {
     CCompartmentEnumGuid *This = new(cicNoThrow) CCompartmentEnumGuid();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     This->m_values = values;
@@ -327,7 +310,7 @@ HRESULT
 CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut, struct list *cursor)
 {
     CCompartmentEnumGuid *This = new(cicNoThrow) CCompartmentEnumGuid();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     This->m_values = values;
@@ -343,9 +326,7 @@ STDMETHODIMP CCompartmentEnumGuid::QueryInterface(REFIID iid, LPVOID *ppvObj)
     *ppvObj = NULL;
 
     if (iid == IID_IUnknown || iid == IID_IEnumGUID)
-    {
         *ppvObj = static_cast<IEnumGUID *>(this);
-    }
 
     if (*ppvObj)
     {
@@ -364,12 +345,10 @@ STDMETHODIMP_(ULONG) CCompartmentEnumGuid::AddRef()
 
 STDMETHODIMP_(ULONG) CCompartmentEnumGuid::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
 
 STDMETHODIMP CCompartmentEnumGuid::Next(
@@ -381,7 +360,7 @@ STDMETHODIMP CCompartmentEnumGuid::Next(
 
     TRACE("(%p)\n", this);
 
-    if (rgelt == NULL)
+    if (!rgelt)
         return E_POINTER;
 
     while (fetched < celt && m_cursor)
@@ -420,7 +399,7 @@ STDMETHODIMP CCompartmentEnumGuid::Clone(_Out_ IEnumGUID **ppenum)
 {
     TRACE("(%p)\n", this);
 
-    if (ppenum == NULL)
+    if (!ppenum)
         return E_POINTER;
 
     return CCompartmentEnumGuid::CreateInstance(m_values, ppenum, m_cursor);
@@ -428,29 +407,26 @@ STDMETHODIMP CCompartmentEnumGuid::Clone(_Out_ IEnumGUID **ppenum)
 
 ////////////////////////////////////////////////////////////////////////////
 
-CCompartment::CCompartment()
+CCompartment::CCompartment(CompartmentValue *valueData)
     : m_cRefs(1)
-    , m_valueData(NULL)
+    , m_valueData(valueData)
 {
     VariantInit(&m_variant);
+    list_init(&m_CompartmentEventSink);
 }
 
 CCompartment::~CCompartment()
 {
+    TRACE("destroying %p\n", this);
     VariantClear(&m_variant);
     free_sinks(&m_CompartmentEventSink);
 }
 
 HRESULT CCompartment::CreateInstance(CompartmentValue *valueData, ITfCompartment **ppOut)
 {
-    CCompartment *This = new(cicNoThrow) CCompartment();
-    if (This == NULL)
+    CCompartment *This = new(cicNoThrow) CCompartment(valueData);
+    if (!This)
         return E_OUTOFMEMORY;
-
-    This->m_valueData = valueData;
-    VariantInit(&This->m_variant);
-
-    list_init(&This->m_CompartmentEventSink);
 
     *ppOut = static_cast<ITfCompartment *>(This);
     TRACE("returning %p\n", *ppOut);
@@ -483,12 +459,10 @@ STDMETHODIMP_(ULONG) CCompartment::AddRef()
 
 STDMETHODIMP_(ULONG) CCompartment::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
 
 STDMETHODIMP CCompartment::SetValue(_In_ TfClientId tid, _In_ const VARIANT *pvarValue)
@@ -501,8 +475,7 @@ STDMETHODIMP CCompartment::SetValue(_In_ TfClientId tid, _In_ const VARIANT *pva
     if (!pvarValue)
         return E_INVALIDARG;
 
-    if (!(V_VT(pvarValue) == VT_BSTR || V_VT(pvarValue) == VT_I4 ||
-          V_VT(pvarValue) == VT_UNKNOWN))
+    if (!(V_VT(pvarValue) == VT_BSTR || V_VT(pvarValue) == VT_I4 || V_VT(pvarValue) == VT_UNKNOWN))
         return E_INVALIDARG;
 
     if (!m_valueData->owner)

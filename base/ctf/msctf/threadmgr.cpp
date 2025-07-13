@@ -6,20 +6,7 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <oleauto.h>
-#include <olectl.h>
-#include <cguid.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-#include <wine/list.h>
-
-// Cicero
-#include <cicbase.h>
-
-#include "msctf_internal.h"
+#include "precomp.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
@@ -321,7 +308,7 @@ CThreadMgr::~CThreadMgr()
     if (m_focusHook)
         UnhookWindowsHookEx(m_focusHook);
 
-    TlsSetValue(tlsIndex, NULL);
+    TlsSetValue(g_tlsIndex, NULL);
     TRACE("destroying %p\n", this);
 
     if (m_focus)
@@ -340,8 +327,8 @@ CThreadMgr::~CThreadMgr()
     {
         PreservedKey* key = LIST_ENTRY(cursor, PreservedKey, entry);
         list_remove(cursor);
-        HeapFree(GetProcessHeap(), 0, key->description);
-        HeapFree(GetProcessHeap(), 0, key);
+        cicMemFree(key->description);
+        cicMemFree(key);
     }
 
     LIST_FOR_EACH_SAFE(cursor, cursor2, &m_CreatedDocumentMgrs)
@@ -349,14 +336,14 @@ CThreadMgr::~CThreadMgr()
         DocumentMgrEntry *mgr = LIST_ENTRY(cursor, DocumentMgrEntry, entry);
         list_remove(cursor);
         FIXME("Left Over ITfDocumentMgr.  Should we do something with it?\n");
-        HeapFree(GetProcessHeap(), 0, mgr);
+        cicMemFree(mgr);
     }
 
     LIST_FOR_EACH_SAFE(cursor, cursor2, &m_AssociatedFocusWindows)
     {
         AssociatedWindow *wnd = LIST_ENTRY(cursor, AssociatedWindow, entry);
         list_remove(cursor);
-        HeapFree(GetProcessHeap(), 0, wnd);
+        cicMemFree(wnd);
     }
 
     m_CompartmentMgr->Release();
@@ -444,7 +431,7 @@ STDMETHODIMP CThreadMgr::CreateDocumentMgr(_Out_ ITfDocumentMgr **ppdim)
     if (!ppdim)
         return E_INVALIDARG;
 
-    DocumentMgrEntry *mgrentry = (DocumentMgrEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DocumentMgrEntry));
+    DocumentMgrEntry *mgrentry = (DocumentMgrEntry *)cicMemAlloc(sizeof(DocumentMgrEntry));
     if (!mgrentry)
         return E_OUTOFMEMORY;
 
@@ -456,7 +443,7 @@ STDMETHODIMP CThreadMgr::CreateDocumentMgr(_Out_ ITfDocumentMgr **ppdim)
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, mgrentry);
+        cicMemFree(mgrentry);
     }
 
     return hr;
@@ -483,7 +470,7 @@ STDMETHODIMP CThreadMgr::GetFocus(_Out_ ITfDocumentMgr **ppdimFocus)
 
     TRACE("->%p\n", m_focus);
 
-    if (m_focus == NULL)
+    if (!m_focus)
         return S_FALSE;
 
     m_focus->AddRef();
@@ -540,7 +527,7 @@ LRESULT CThreadMgr::_ThreadFocusHookProc(INT nCode, WPARAM wParam, LPARAM lParam
 
 LRESULT CALLBACK CThreadMgr::ThreadFocusHookProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
-    CThreadMgr *This = (CThreadMgr *)TlsGetValue(tlsIndex);
+    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_tlsIndex);
     if (!This)
     {
         ERR("Hook proc but no ThreadMgr for this thread. Serious Error\n");
@@ -594,7 +581,7 @@ STDMETHODIMP CThreadMgr::AssociateFocus(
         }
     }
 
-    wnd = (AssociatedWindow *)HeapAlloc(GetProcessHeap(), 0, sizeof(AssociatedWindow));
+    wnd = (AssociatedWindow *)cicMemAlloc(sizeof(AssociatedWindow));
     wnd->hwnd = hwnd;
     wnd->docmgr = pdimNew;
     list_add_head(&m_AssociatedFocusWindows, &wnd->entry);
@@ -614,7 +601,7 @@ STDMETHODIMP CThreadMgr::IsThreadFocus(_Out_ BOOL *pfThreadFocus)
         return E_INVALIDARG;
 
     HWND focus = ::GetFocus();
-    *pfThreadFocus = (focus == NULL);
+    *pfThreadFocus = !focus;
     return S_OK;
 }
 
@@ -640,15 +627,15 @@ STDMETHODIMP CThreadMgr::GetGlobalCompartment(_Out_ ITfCompartmentMgr **ppCompMg
     if (!ppCompMgr)
         return E_INVALIDARG;
 
-    if (!globalCompartmentMgr)
+    if (!g_globalCompartmentMgr)
     {
-        hr = CompartmentMgr_Constructor(NULL, IID_ITfCompartmentMgr, (IUnknown **)&globalCompartmentMgr);
+        hr = CompartmentMgr_Constructor(NULL, IID_ITfCompartmentMgr, (IUnknown **)&g_globalCompartmentMgr);
         if (FAILED(hr))
             return hr;
     }
 
-    globalCompartmentMgr->AddRef();
-    *ppCompMgr = globalCompartmentMgr;
+    g_globalCompartmentMgr->AddRef();
+    *ppCompMgr = g_globalCompartmentMgr;
     return S_OK;
 }
 
@@ -664,16 +651,16 @@ STDMETHODIMP CThreadMgr::ActivateEx(
     if (flags)
         FIXME("Unimplemented flags %#x\n", flags);
 
-    if (!processId)
+    if (!g_processId)
     {
         GUID guid;
         CoCreateGuid(&guid);
-        GetClientId(guid, &processId);
+        GetClientId(guid, &g_processId);
     }
 
     activate_textservices(this);
     ++m_activationCount;
-    *id = processId;
+    *id = g_processId;
     return S_OK;
 }
 
@@ -941,7 +928,7 @@ STDMETHODIMP CThreadMgr::PreserveKey(
             return TF_E_ALREADY_EXISTS;
     }
 
-    PreservedKey *newkey = (PreservedKey *)HeapAlloc(GetProcessHeap(), 0, sizeof(PreservedKey));
+    PreservedKey *newkey = (PreservedKey *)cicMemAlloc(sizeof(PreservedKey));
     if (!newkey)
         return E_OUTOFMEMORY;
 
@@ -951,10 +938,10 @@ STDMETHODIMP CThreadMgr::PreserveKey(
     newkey->description = NULL;
     if (cchDesc)
     {
-        newkey->description = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (cchDesc + 1) * sizeof(WCHAR));
+        newkey->description = (LPWSTR)cicMemAlloc((cchDesc + 1) * sizeof(WCHAR));
         if (!newkey->description)
         {
-            HeapFree(GetProcessHeap(), 0, newkey);
+            cicMemFree(newkey);
             return E_OUTOFMEMORY;
         }
         CopyMemory(newkey->description, pchDesc, cchDesc * sizeof(WCHAR));
@@ -988,8 +975,8 @@ STDMETHODIMP CThreadMgr::UnpreserveKey(
         return CONNECT_E_NOCONNECTION;
 
     list_remove(&key->entry);
-    HeapFree(GetProcessHeap(), 0, key->description);
-    HeapFree(GetProcessHeap(), 0, key);
+    cicMemFree(key->description);
+    cicMemFree(key);
 
     return S_OK;
 }
@@ -1228,7 +1215,7 @@ HRESULT CThreadMgr::CreateInstance(IUnknown *pUnkOuter, CThreadMgr **ppOut)
         return CLASS_E_NOAGGREGATION;
 
     /* Only 1 ThreadMgr is created per thread */
-    CThreadMgr *This = (CThreadMgr *)TlsGetValue(tlsIndex);
+    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_tlsIndex);
     if (This)
     {
         This->AddRef();
@@ -1240,7 +1227,7 @@ HRESULT CThreadMgr::CreateInstance(IUnknown *pUnkOuter, CThreadMgr **ppOut)
     if (!This)
         return E_OUTOFMEMORY;
 
-    TlsSetValue(tlsIndex, This);
+    TlsSetValue(g_tlsIndex, This);
 
     ITfCompartmentMgr *pCompMgr = NULL;
     CompartmentMgr_Constructor(static_cast<ITfThreadMgrEx *>(This), IID_IUnknown, (IUnknown **)&pCompMgr);
@@ -1260,7 +1247,7 @@ void CThreadMgr::OnDocumentMgrDestruction(ITfDocumentMgr *mgr)
         if (mgrentry->docmgr == mgr)
         {
             list_remove(cursor);
-            HeapFree(GetProcessHeap(), 0, mgrentry);
+            cicMemFree(mgrentry);
             return;
         }
     }
@@ -1306,7 +1293,7 @@ STDMETHODIMP_(ULONG) CEnumTfDocumentMgr::AddRef()
 STDMETHODIMP_(ULONG) CEnumTfDocumentMgr::Release()
 {
     ULONG ret = InterlockedDecrement(&m_cRefs);
-    if (ret == 0)
+    if (!ret)
         delete this;
     return ret;
 }

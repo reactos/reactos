@@ -6,22 +6,7 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <cguid.h>
-#include <olectl.h>
-#include <oleauto.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-
-// Cicero
-#include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
-
-#include "msctf_internal.h"
+#include "precomp.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
@@ -118,17 +103,17 @@ public:
         _In_ TfEditCookie ecWrite,
         _In_ ITfRange *pCompositionRange,
         _In_ ITfCompositionSink *pSink,
-        _Out_ ITfComposition **ppComposition);
-    STDMETHODIMP EnumCompositions(_Out_ IEnumITfCompositionView **ppEnum);
+        _Out_ ITfComposition **ppComposition) override;
+    STDMETHODIMP EnumCompositions(_Out_ IEnumITfCompositionView **ppEnum) override;
     STDMETHODIMP FindComposition(
         _In_ TfEditCookie ecRead,
         _In_ ITfRange *pTestRange,
-        _Out_ IEnumITfCompositionView **ppEnum);
+        _Out_ IEnumITfCompositionView **ppEnum) override;
     STDMETHODIMP TakeOwnership(
         _In_ TfEditCookie ecWrite,
         _In_ ITfCompositionView *pComposition,
         _In_ ITfCompositionSink *pSink,
-        _Out_ ITfComposition **ppComposition);
+        _Out_ ITfComposition **ppComposition) override;
     STDMETHODIMP TerminateComposition(_In_ ITfCompositionView *pComposition) override;
 
     // ** ITfInsertAtSelection methods **
@@ -252,7 +237,7 @@ CContext::~CContext()
     if (m_defaultCookie)
     {
         cookie = (EditCookie *)remove_Cookie(m_defaultCookie);
-        HeapFree(GetProcessHeap(), 0, cookie);
+        cicMemFree(cookie);
         m_defaultCookie = 0;
     }
 
@@ -270,26 +255,28 @@ STDMETHODIMP CContext::QueryInterface(REFIID riid, void **ppvObj)
 {
     *ppvObj = NULL;
 
+    IUnknown *pUnk = NULL;
     if (riid == IID_IUnknown || riid == IID_ITfContext)
-        *ppvObj = static_cast<ITfContext *>(this);
+        pUnk = static_cast<ITfContext *>(this);
     else if (riid == IID_ITfSource)
-        *ppvObj = static_cast<ITfSource *>(this);
+        pUnk = static_cast<ITfSource *>(this);
     else if (riid == IID_ITfContextOwnerCompositionServices)
-        *ppvObj = static_cast<ITfContextOwnerCompositionServices *>(this);
+        pUnk = static_cast<ITfContextOwnerCompositionServices *>(this);
     else if (riid == IID_ITfInsertAtSelection)
-        *ppvObj = static_cast<ITfInsertAtSelection *>(this);
+        pUnk = static_cast<ITfInsertAtSelection *>(this);
     else if (riid == IID_ITfCompartmentMgr)
-        *ppvObj = m_CompartmentMgr;
+        pUnk = m_CompartmentMgr;
     else if (riid == IID_ITfSourceSingle)
-        *ppvObj = static_cast<ITfSourceSingle *>(this);
+        pUnk = static_cast<ITfSourceSingle *>(this);
     else if (riid == IID_ITextStoreACPSink)
-        *ppvObj = static_cast<ITextStoreACPSink *>(this);
+        pUnk = static_cast<ITextStoreACPSink *>(this);
     else if (riid == IID_ITextStoreACPServices)
-        *ppvObj = static_cast<ITextStoreACPServices *>(this);
+        pUnk = static_cast<ITextStoreACPServices *>(this);
 
-    if (*ppvObj)
+    if (pUnk)
     {
-        AddRef();
+        pUnk->AddRef();
+        *ppvObj = pUnk;
         return S_OK;
     }
 
@@ -377,7 +364,6 @@ STDMETHODIMP CContext::GetSelection(
     _Out_ TF_SELECTION *pSelection,
     _Out_ ULONG *pcFetched)
 {
-    EditCookie *cookie;
     ULONG count, i;
     ULONG totalFetched = 0;
     HRESULT hr = S_OK;
@@ -399,8 +385,6 @@ STDMETHODIMP CContext::GetSelection(
         return E_NOTIMPL;
     }
 
-    cookie = (EditCookie *)get_Cookie_data(ec);
-
     count = (ulIndex == (ULONG)TF_DEFAULT_SELECTION) ? 1 : ulCount;
 
     for (i = 0; i < count; i++)
@@ -416,7 +400,7 @@ STDMETHODIMP CContext::GetSelection(
 
         pSelection[totalFetched].style.ase = (TfActiveSelEnd)acps.style.ase;
         pSelection[totalFetched].style.fInterimChar = acps.style.fInterimChar;
-        Range_Constructor(this, m_pITextStoreACP, cookie->lockType, acps.acpStart, acps.acpEnd, &pSelection[totalFetched].range);
+        Range_Constructor(this, acps.acpStart, acps.acpEnd, &pSelection[totalFetched].range);
         totalFetched++;
     }
 
@@ -445,7 +429,7 @@ CContext::SetSelection(
     if (get_Cookie_magic(ec) != COOKIE_MAGIC_EDITCOOKIE)
         return TF_E_NOLOCK;
 
-    acp = (TS_SELECTION_ACP *)HeapAlloc(GetProcessHeap(), 0, sizeof(TS_SELECTION_ACP) * ulCount);
+    acp = (TS_SELECTION_ACP *)cicMemAlloc(sizeof(TS_SELECTION_ACP) * ulCount);
     if (!acp)
         return E_OUTOFMEMORY;
 
@@ -454,14 +438,14 @@ CContext::SetSelection(
         if (FAILED(TF_SELECTION_to_TS_SELECTION_ACP(&pSelection[i], &acp[i])))
         {
             TRACE("Selection Conversion Failed\n");
-            HeapFree(GetProcessHeap(), 0 , acp);
+            cicMemFree(acp);
             return E_FAIL;
         }
     }
 
     hr = m_pITextStoreACP->SetSelection(ulCount, acp);
 
-    HeapFree(GetProcessHeap(), 0, acp);
+    cicMemFree(acp);
 
     return hr;
 }
@@ -471,7 +455,6 @@ CContext::GetStart(
     _In_ TfEditCookie ec,
     _Out_ ITfRange **ppStart)
 {
-    EditCookie *cookie;
     TRACE("(%p) %i %p\n", this, ec, ppStart);
 
     if (!ppStart)
@@ -485,8 +468,7 @@ CContext::GetStart(
     if (get_Cookie_magic(ec) != COOKIE_MAGIC_EDITCOOKIE)
         return TF_E_NOLOCK;
 
-    cookie = (EditCookie *)get_Cookie_data(ec);
-    return Range_Constructor(this, m_pITextStoreACP, cookie->lockType, 0, 0, ppStart);
+    return Range_Constructor(this, 0, 0, ppStart);
 }
 
 STDMETHODIMP
@@ -494,7 +476,6 @@ CContext::GetEnd(
     _In_ TfEditCookie ec,
     _Out_ ITfRange **ppEnd)
 {
-    EditCookie *cookie;
     LONG end;
 
     TRACE("(%p) %i %p\n", this, ec, ppEnd);
@@ -516,10 +497,9 @@ CContext::GetEnd(
         return E_NOTIMPL;
     }
 
-    cookie = (EditCookie *)get_Cookie_data(ec);
     m_pITextStoreACP->GetEndACP(&end);
 
-    return Range_Constructor(this, m_pITextStoreACP, cookie->lockType, end, end, ppEnd);
+    return Range_Constructor(this, end, end, ppEnd);
 }
 
 STDMETHODIMP CContext::GetActiveView(_Out_ ITfContextView **ppView)
@@ -715,7 +695,7 @@ STDMETHODIMP CContext::InsertTextAtSelection(
 
     hr = m_pITextStoreACP->InsertTextAtSelection(dwFlags, pchText, cch, &acpStart, &acpEnd, &change);
     if (SUCCEEDED(hr))
-        Range_Constructor(this, m_pITextStoreACP, cookie->lockType, change.acpStart, change.acpNewEnd, ppRange);
+        Range_Constructor(this, change.acpStart, change.acpNewEnd, ppRange);
 
     return hr;
 }
@@ -814,14 +794,14 @@ STDMETHODIMP CContext::OnLockGranted(_In_ DWORD dwLockFlags)
         return S_OK;
     }
 
-    cookie = (EditCookie *)HeapAlloc(GetProcessHeap(), 0, sizeof(EditCookie));
+    cookie = (EditCookie *)cicMemAlloc(sizeof(EditCookie));
     if (!cookie)
         return E_OUTOFMEMORY;
 
-    sinkcookie = (EditCookie *)HeapAlloc(GetProcessHeap(), 0, sizeof(EditCookie));
+    sinkcookie = (EditCookie *)cicMemAlloc(sizeof(EditCookie));
     if (!sinkcookie)
     {
-        HeapFree(GetProcessHeap(), 0, cookie);
+        cicMemFree(cookie);
         return E_OUTOFMEMORY;
     }
 
@@ -847,14 +827,14 @@ STDMETHODIMP CContext::OnLockGranted(_In_ DWORD dwLockFlags)
         }
         sinkcookie = (EditCookie *)remove_Cookie(sc);
     }
-    HeapFree(GetProcessHeap(), 0, sinkcookie);
+    cicMemFree(sinkcookie);
 
     m_currentEditSession->Release();
     m_currentEditSession = NULL;
 
     /* Edit Cookie is only valid during the edit session */
     cookie = (EditCookie *)remove_Cookie(ec);
-    HeapFree(GetProcessHeap(), 0, cookie);
+    cicMemFree(cookie);
 
     return hr;
 }
@@ -914,11 +894,11 @@ HRESULT CContext::CreateInstance(
     TfEditCookie *pecTextStore)
 {
     CContext *This = new(cicNoThrow) CContext();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
-    EditCookie *cookie = (EditCookie *)HeapAlloc(GetProcessHeap(), 0, sizeof(EditCookie));
-    if (cookie == NULL)
+    EditCookie *cookie = (EditCookie *)cicMemAlloc(sizeof(EditCookie));
+    if (!cookie)
     {
         delete This;
         return E_OUTOFMEMORY;

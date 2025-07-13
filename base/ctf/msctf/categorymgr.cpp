@@ -6,20 +6,7 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <cguid.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-
-// Cicero
-#include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
-
-#include "msctf_internal.h"
+#include "precomp.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
@@ -106,9 +93,6 @@ CCategoryMgr::~CCategoryMgr()
     TRACE("destroying %p\n", this);
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** IUnknown methods **
-
 STDMETHODIMP CCategoryMgr::QueryInterface(REFIID riid, void **ppvObj)
 {
     if (!ppvObj)
@@ -119,11 +103,14 @@ STDMETHODIMP CCategoryMgr::QueryInterface(REFIID riid, void **ppvObj)
     if (riid == IID_IUnknown || riid == IID_ITfCategoryMgr)
         *ppvObj = this;
 
-    if (!*ppvObj)
-        return E_NOINTERFACE;
+    if (*ppvObj)
+    {
+        AddRef();
+        return S_OK;
+    }
 
-    AddRef();
-    return S_OK;
+    WARN("unsupported interface: %s\n", debugstr_guid(&riid));
+    return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) CCategoryMgr::AddRef()
@@ -133,16 +120,11 @@ STDMETHODIMP_(ULONG) CCategoryMgr::AddRef()
 
 STDMETHODIMP_(ULONG) CCategoryMgr::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    ULONG ret = ::InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfCategoryMgr methods **
 
 STDMETHODIMP CCategoryMgr::RegisterCategory(
     _In_ REFCLSID rclsid,
@@ -161,19 +143,19 @@ STDMETHODIMP CCategoryMgr::RegisterCategory(
     StringFromGUID2(rcatid, szCatid, _countof(szCatid));
     StringFromGUID2(rguid, szGuid, _countof(szGuid));
 
-    swprintf(szFullKey, L"%s\\%s", szwSystemTIPKey, szClsid);
+    StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s", szwSystemTIPKey, szClsid);
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ | KEY_WRITE, &hTipKey);
     if (error != ERROR_SUCCESS)
         return E_FAIL;
 
-    swprintf(szFullKey, L"Category\\Category\\%s\\%s", szCatid, szGuid);
+    StringCchPrintfW(szFullKey, _countof(szFullKey), L"Category\\Category\\%s\\%s", szCatid, szGuid);
     error = RegCreateKeyExW(hTipKey, szFullKey, 0, NULL, 0, KEY_READ | KEY_WRITE, NULL,
                             &hCatKey, NULL);
     if (error == ERROR_SUCCESS)
     {
         RegCloseKey(hCatKey);
 
-        swprintf(szFullKey, L"Category\\Item\\%s\\%s", szGuid, szCatid);
+        StringCchPrintfW(szFullKey, _countof(szFullKey), L"Category\\Item\\%s\\%s", szGuid, szCatid);
         error = RegCreateKeyExW(hTipKey, szFullKey, 0, NULL, 0, KEY_READ | KEY_WRITE, NULL,
                                 &hItemKey, NULL);
         if (error == ERROR_SUCCESS)
@@ -203,15 +185,15 @@ STDMETHODIMP CCategoryMgr::UnregisterCategory(
     StringFromGUID2(rcatid, szCatid, _countof(szCatid));
     StringFromGUID2(rguid, szGuid, _countof(szGuid));
 
-    swprintf(szFullKey, L"%s\\%s", szwSystemTIPKey, szClsid);
+    StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s", szwSystemTIPKey, szClsid);
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ | KEY_WRITE, &hTipKey);
     if (error != ERROR_SUCCESS)
         return E_FAIL;
 
-    swprintf(szFullKey, L"Category\\Category\\%s\\%s", szCatid, szGuid);
+    StringCchPrintfW(szFullKey, _countof(szFullKey), L"Category\\Category\\%s\\%s", szCatid, szGuid);
     RegDeleteTreeW(hTipKey, szFullKey);
 
-    swprintf(szFullKey, L"Category\\Item\\%s\\%s", szGuid, szCatid);
+    StringCchPrintfW(szFullKey, _countof(szFullKey), L"Category\\Item\\%s\\%s", szGuid, szCatid);
     RegDeleteTreeW(hTipKey, szFullKey);
 
     RegCloseKey(hTipKey);
@@ -248,11 +230,11 @@ STDMETHODIMP CCategoryMgr::FindClosestCategory(
 
     TRACE("(%p)\n", this);
 
-    if (!pcatid || (ulCount > 0 && ppcatidList == NULL))
+    if (!pcatid || (ulCount && !ppcatidList))
         return E_INVALIDARG;
 
     StringFromGUID2(rguid, szGuid, _countof(szGuid));
-    swprintf(szFullKey, L"%s\\%s\\Category\\Item\\%s", szwSystemTIPKey, szGuid, szGuid);
+    StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s\\Category\\Item\\%s", szwSystemTIPKey, szGuid, szGuid);
     *pcatid = GUID_NULL;
 
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ, &hKey);
@@ -272,7 +254,8 @@ STDMETHODIMP CCategoryMgr::FindClosestCategory(
 
         dwIndex++;
 
-        if (FAILED(CLSIDFromString(szCatidName, &currentCatid)))
+        HRESULT hr2 = CLSIDFromString(szCatidName, &currentCatid);
+        if (FAILED(hr2))
             continue; // Skip invalid GUID strings
 
         if (ulCount <= 0)
@@ -362,19 +345,18 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
     if (!pguidatom)
         return E_INVALIDARG;
 
-    DWORD dwCookieId = 0;
-    DWORD dwEnumIndex = 0;
+    DWORD dwCookieId = 0, dwEnumIndex = 0;
     do
     {
         dwCookieId = enumerate_Cookie(COOKIE_MAGIC_GUIDATOM, &dwEnumIndex);
-        if (dwCookieId != 0 && rguid == *(const GUID *)get_Cookie_data(dwCookieId))
+        if (dwCookieId && rguid == *(const GUID *)get_Cookie_data(dwCookieId))
         {
             *pguidatom = dwCookieId;
             return S_OK;
         }
     } while (dwCookieId != 0);
 
-    GUID *pNewGuid = (GUID *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GUID));
+    GUID *pNewGuid = (GUID *)cicMemAlloc(sizeof(GUID));
     if (!pNewGuid)
         return E_OUTOFMEMORY;
 
@@ -383,7 +365,7 @@ STDMETHODIMP CCategoryMgr::RegisterGUID(
     dwCookieId = generate_Cookie(COOKIE_MAGIC_GUIDATOM, pNewGuid);
     if (dwCookieId == 0)
     {
-        HeapFree(GetProcessHeap(), 0, pNewGuid);
+        cicMemFree(pNewGuid);
         return E_FAIL;
     }
 
@@ -437,7 +419,7 @@ HRESULT CategoryMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
         return CLASS_E_NOAGGREGATION;
 
     CCategoryMgr *This = new(cicNoThrow) CCategoryMgr();
-    if (This == NULL)
+    if (!This)
         return E_OUTOFMEMORY;
 
     *ppOut = static_cast<ITfCategoryMgr *>(This);

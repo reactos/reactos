@@ -1,42 +1,14 @@
 /*
- * MSCTF Server DLL
- *
- * Copyright 2008 Aric Stewart, CodeWeavers
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS CTF
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     MSCTF Server DLL
+ * COPYRIGHT:   Copyright 2008 Aric Stewart, CodeWeavers
+ *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#include "precomp.h"
 
-#define COBJMACROS
-
-#include "wine/debug.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "shlguid.h"
-#include "comcat.h"
-#include "olectl.h"
-#include "rpcproxy.h"
-#include "msctf.h"
-#include "inputscope.h"
-
-#include "msctf_internal.h"
-
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 static HINSTANCE MSCTF_hinstance;
@@ -69,17 +41,14 @@ static UINT array_size;
 static struct list AtsList = LIST_INIT(AtsList);
 static UINT activated = 0;
 
-DWORD tlsIndex = 0;
-TfClientId processId = 0;
-ITfCompartmentMgr *globalCompartmentMgr = NULL;
-
-const WCHAR szwSystemTIPKey[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\','C','T','F','\\','T','I','P',0};
-const WCHAR szwSystemCTFKey[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\','C','T','F',0};
+DWORD g_tlsIndex = 0;
+TfClientId g_processId = 0;
+ITfCompartmentMgr *g_globalCompartmentMgr = NULL;
 
 typedef HRESULT (*LPFNCONSTRUCTOR)(IUnknown *pUnkOuter, IUnknown **ppvOut);
 
 static const struct {
-    REFCLSID clsid;
+    const CLSID *clsid;
     LPFNCONSTRUCTOR ctor;
 } ClassesTable[] = {
     {&CLSID_TF_ThreadMgr, ThreadMgr_Constructor},
@@ -90,95 +59,94 @@ static const struct {
     {NULL, NULL}
 };
 
-typedef struct tagClassFactory
+class CClassFactory
+    : public IClassFactory
 {
-    IClassFactory IClassFactory_iface;
-    LONG   ref;
-    LPFNCONSTRUCTOR ctor;
-} ClassFactory;
+public:
+    CClassFactory(LPFNCONSTRUCTOR ctor);
+    virtual ~CClassFactory();
 
-static inline ClassFactory *impl_from_IClassFactory(IClassFactory *iface)
+    // ** IUnknown methods **
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    // ** IClassFactory methods **
+    STDMETHODIMP CreateInstance(
+        _In_ IUnknown *pUnkOuter,
+        _In_ REFIID riid,
+        _Out_ void **ppvObject) override;
+    STDMETHODIMP LockServer(_In_ BOOL fLock) override;
+
+protected:
+    LONG m_cRefs;
+    LPFNCONSTRUCTOR m_ctor;
+};
+
+CClassFactory::CClassFactory(LPFNCONSTRUCTOR ctor)
+    : m_cRefs(1)
+    , m_ctor(ctor)
 {
-    return CONTAINING_RECORD(iface, ClassFactory, IClassFactory_iface);
 }
 
-static void ClassFactory_Destructor(ClassFactory *This)
+CClassFactory::~CClassFactory()
 {
-    TRACE("Destroying class factory %p\n", This);
-    HeapFree(GetProcessHeap(),0,This);
+    TRACE("Destroying class factory %p\n", this);
 }
 
-static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, LPVOID *ppvOut)
+STDMETHODIMP CClassFactory::QueryInterface(REFIID riid, void **ppvObj)
 {
-    *ppvOut = NULL;
-    if (IsEqualIID(riid, &IID_IClassFactory) || IsEqualIID(riid, &IID_IUnknown)) {
-        IClassFactory_AddRef(iface);
-        *ppvOut = iface;
+    *ppvObj = NULL;
+    if (riid == IID_IClassFactory || riid == IID_IUnknown)
+    {
+        AddRef();
+        *ppvObj = static_cast<IClassFactory *>(this);
         return S_OK;
     }
 
-    WARN("Unknown interface %s\n", debugstr_guid(riid));
+    WARN("Unknown interface %s\n", debugstr_guid(&riid));
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
+STDMETHODIMP_(ULONG) CClassFactory::AddRef()
 {
-    ClassFactory *This = impl_from_IClassFactory(iface);
-    return InterlockedIncrement(&This->ref);
+    return ::InterlockedIncrement(&m_cRefs);
 }
 
-static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
+STDMETHODIMP_(ULONG) CClassFactory::Release()
 {
-    ClassFactory *This = impl_from_IClassFactory(iface);
-    ULONG ret = InterlockedDecrement(&This->ref);
-
-    if (ret == 0)
-        ClassFactory_Destructor(This);
+    ULONG ret = InterlockedDecrement(&m_cRefs);
+    if (!ret)
+        delete this;
     return ret;
 }
 
-static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown *punkOuter, REFIID iid, LPVOID *ppvOut)
+STDMETHODIMP CClassFactory::CreateInstance(
+    _In_ IUnknown *pUnkOuter,
+    _In_ REFIID riid,
+    _Out_ void **ppvObject)
 {
-    ClassFactory *This = impl_from_IClassFactory(iface);
-    HRESULT ret;
-    IUnknown *obj;
+    TRACE("(%p, %p, %s, %p)\n", this, pUnkOuter, debugstr_guid(&riid), ppvObject);
 
-    TRACE("(%p, %p, %s, %p)\n", iface, punkOuter, debugstr_guid(iid), ppvOut);
-    ret = This->ctor(punkOuter, &obj);
+    IUnknown *obj;
+    HRESULT ret = m_ctor(pUnkOuter, &obj);
     if (FAILED(ret))
         return ret;
-    ret = IUnknown_QueryInterface(obj, iid, ppvOut);
-    IUnknown_Release(obj);
+    ret = obj->QueryInterface(riid, ppvObject);
+    obj->Release();
     return ret;
 }
 
-static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
+STDMETHODIMP CClassFactory::LockServer(_In_ BOOL fLock)
 {
-    ClassFactory *This = impl_from_IClassFactory(iface);
-
-    TRACE("(%p)->(%x)\n", This, fLock);
-
+    TRACE("(%p)->(%x)\n", this, fLock);
     return S_OK;
 }
 
-static const IClassFactoryVtbl ClassFactoryVtbl = {
-    /* IUnknown */
-    ClassFactory_QueryInterface,
-    ClassFactory_AddRef,
-    ClassFactory_Release,
-
-    /* IClassFactory*/
-    ClassFactory_CreateInstance,
-    ClassFactory_LockServer
-};
-
 static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
 {
-    ClassFactory *This = HeapAlloc(GetProcessHeap(),0,sizeof(ClassFactory));
-    This->IClassFactory_iface.lpVtbl = &ClassFactoryVtbl;
-    This->ref = 1;
-    This->ctor = ctor;
-    *ppvOut = &This->IClassFactory_iface;
+    CClassFactory *This = new(cicNoThrow) CClassFactory(ctor);
+    *ppvOut = static_cast<IClassFactory *>(This);
     TRACE("Created class factory %p\n", This);
     return S_OK;
 }
@@ -186,6 +154,7 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
 /*************************************************************************
  * DWORD Cookie Management
  */
+EXTERN_C
 DWORD generate_Cookie(DWORD magic, LPVOID data)
 {
     UINT i;
@@ -198,7 +167,7 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
     {
         if (!array_size)
         {
-            cookies = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(CookieInternal) * 10);
+            cookies = (CookieInternal *)cicMemAllocClear(10 * sizeof(CookieInternal));
             if (!cookies)
             {
                 ERR("Out of memory, Unable to alloc cookies array\n");
@@ -208,8 +177,9 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
         }
         else
         {
-            CookieInternal *new_cookies = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cookies,
-                                                      sizeof(CookieInternal) * (array_size * 2));
+            ERR("cookies: %p, array_size: %d\n", cookies, array_size);
+            CookieInternal *new_cookies = (CookieInternal *)
+                cicMemReCalloc(cookies, array_size * 2, sizeof(CookieInternal));
             if (!new_cookies)
             {
                 ERR("Out of memory, Unable to realloc cookies array\n");
@@ -230,6 +200,7 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
     return cookies[i].id;
 }
 
+EXTERN_C
 DWORD get_Cookie_magic(DWORD id)
 {
     UINT index = id - 1;
@@ -243,6 +214,7 @@ DWORD get_Cookie_magic(DWORD id)
     return cookies[index].magic;
 }
 
+EXTERN_C
 LPVOID get_Cookie_data(DWORD id)
 {
     UINT index = id - 1;
@@ -256,6 +228,7 @@ LPVOID get_Cookie_data(DWORD id)
     return cookies[index].data;
 }
 
+EXTERN_C
 LPVOID remove_Cookie(DWORD id)
 {
     UINT index = id - 1;
@@ -270,6 +243,7 @@ LPVOID remove_Cookie(DWORD id)
     return cookies[index].data;
 }
 
+EXTERN_C
 DWORD enumerate_Cookie(DWORD magic, DWORD *index)
 {
     unsigned int i;
@@ -282,17 +256,17 @@ DWORD enumerate_Cookie(DWORD magic, DWORD *index)
     return 0x0;
 }
 
+EXTERN_C
 HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUnknown *unk, DWORD *cookie)
 {
-    Sink *sink;
-
-    sink = HeapAlloc(GetProcessHeap(), 0, sizeof(*sink));
+    Sink *sink = (Sink *)cicMemAlloc(sizeof(*sink));
     if (!sink)
         return E_OUTOFMEMORY;
 
-    if (FAILED(IUnknown_QueryInterface(unk, riid, (void**)&sink->interfaces.pIUnknown)))
+    HRESULT hr = unk->QueryInterface(riid, (void **)&sink->interfaces.pIUnknown);
+    if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, sink);
+        cicMemFree(sink);
         return CONNECT_E_CANNOTCONNECT;
     }
 
@@ -305,15 +279,14 @@ HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUn
 static void free_sink(Sink *sink)
 {
     list_remove(&sink->entry);
-    IUnknown_Release(sink->interfaces.pIUnknown);
-    HeapFree(GetProcessHeap(), 0, sink);
+    sink->interfaces.pIUnknown->Release();
+    cicMemFree(sink);
 }
 
+EXTERN_C
 HRESULT unadvise_sink(DWORD cookie)
 {
-    Sink *sink;
-
-    sink = remove_Cookie(cookie);
+    Sink *sink = (Sink *)remove_Cookie(cookie);
     if (!sink)
         return CONNECT_E_NOCONNECTION;
 
@@ -321,6 +294,7 @@ HRESULT unadvise_sink(DWORD cookie)
     return S_OK;
 }
 
+EXTERN_C
 void free_sinks(struct list *sink_list)
 {
     while(!list_empty(sink_list))
@@ -341,20 +315,20 @@ static HRESULT activate_given_ts(ActivatedTextService *actsvr, ITfThreadMgrEx *t
     if (actsvr->pITfTextInputProcessor)
         return S_OK;
 
-    hr = CoCreateInstance (&actsvr->LanguageProfile.clsid, NULL, CLSCTX_INPROC_SERVER,
-        &IID_ITfTextInputProcessor, (void**)&actsvr->pITfTextInputProcessor);
+    hr = CoCreateInstance(actsvr->LanguageProfile.clsid, NULL, CLSCTX_INPROC_SERVER,
+                          IID_ITfTextInputProcessor, (void **)&actsvr->pITfTextInputProcessor);
     if (FAILED(hr)) return hr;
 
-    hr = ITfTextInputProcessor_Activate(actsvr->pITfTextInputProcessor, (ITfThreadMgr *)tm, actsvr->tid);
+    hr = actsvr->pITfTextInputProcessor->Activate((ITfThreadMgr *)tm, actsvr->tid);
     if (FAILED(hr))
     {
-        ITfTextInputProcessor_Release(actsvr->pITfTextInputProcessor);
+        actsvr->pITfTextInputProcessor->Release();
         actsvr->pITfTextInputProcessor = NULL;
         return hr;
     }
 
     actsvr->pITfThreadMgrEx = tm;
-    ITfThreadMgrEx_AddRef(tm);
+    tm->AddRef();
     return hr;
 }
 
@@ -364,9 +338,9 @@ static HRESULT deactivate_given_ts(ActivatedTextService *actsvr)
 
     if (actsvr->pITfTextInputProcessor)
     {
-        hr = ITfTextInputProcessor_Deactivate(actsvr->pITfTextInputProcessor);
-        ITfTextInputProcessor_Release(actsvr->pITfTextInputProcessor);
-        ITfThreadMgrEx_Release(actsvr->pITfThreadMgrEx);
+        hr = actsvr->pITfTextInputProcessor->Deactivate();
+        actsvr->pITfTextInputProcessor->Release();
+        actsvr->pITfThreadMgrEx->Release();
         actsvr->pITfTextInputProcessor = NULL;
         actsvr->pITfThreadMgrEx = NULL;
     }
@@ -380,38 +354,41 @@ static void deactivate_remove_conflicting_ts(REFCLSID catid)
 
     LIST_FOR_EACH_ENTRY_SAFE(ats, cursor2, &AtsList, AtsEntry, entry)
     {
-        if (IsEqualCLSID(catid,&ats->ats->LanguageProfile.catid))
+        if (catid == ats->ats->LanguageProfile.catid)
         {
             deactivate_given_ts(ats->ats);
             list_remove(&ats->entry);
-            HeapFree(GetProcessHeap(),0,ats->ats);
-            HeapFree(GetProcessHeap(),0,ats);
+            cicMemFree(ats->ats);
+            cicMemFree(ats);
             /* we are guaranteeing there is only 1 */
             break;
         }
     }
 }
 
+EXTERN_C
 HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
 {
     ActivatedTextService *actsvr;
     ITfCategoryMgr *catmgr;
     AtsEntry *entry;
-    ITfThreadMgrEx *tm = TlsGetValue(tlsIndex);
+    ITfThreadMgrEx *tm = (ITfThreadMgrEx *)TlsGetValue(g_tlsIndex);
     ITfClientId *clientid;
 
-    if (!tm) return E_UNEXPECTED;
+    if (!tm)
+        return E_UNEXPECTED;
 
-    actsvr = HeapAlloc(GetProcessHeap(),0,sizeof(ActivatedTextService));
-    if (!actsvr) return E_OUTOFMEMORY;
+    actsvr = (ActivatedTextService *)cicMemAlloc(sizeof(ActivatedTextService));
+    if (!actsvr)
+        return E_OUTOFMEMORY;
 
-    ITfThreadMgrEx_QueryInterface(tm, &IID_ITfClientId, (void **)&clientid);
-    ITfClientId_GetClientId(clientid, &lp->clsid, &actsvr->tid);
-    ITfClientId_Release(clientid);
+    tm->QueryInterface(IID_ITfClientId, (void **)&clientid);
+    clientid->GetClientId(lp->clsid, &actsvr->tid);
+    clientid->Release();
 
     if (!actsvr->tid)
     {
-        HeapFree(GetProcessHeap(),0,actsvr);
+        cicMemFree(actsvr);
         return E_OUTOFMEMORY;
     }
 
@@ -420,15 +397,12 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     actsvr->pITfKeyEventSink = NULL;
 
     /* get TIP category */
-    if (SUCCEEDED(CategoryMgr_Constructor(NULL,(IUnknown**)&catmgr)))
+    if (SUCCEEDED(CategoryMgr_Constructor(NULL, (IUnknown**)&catmgr)))
     {
         static const GUID *list[3] = {&GUID_TFCAT_TIP_SPEECH, &GUID_TFCAT_TIP_KEYBOARD, &GUID_TFCAT_TIP_HANDWRITING};
 
-        ITfCategoryMgr_FindClosestCategory(catmgr,
-                &actsvr->LanguageProfile.clsid, &actsvr->LanguageProfile.catid,
-                list, 3);
-
-        ITfCategoryMgr_Release(catmgr);
+        catmgr->FindClosestCategory(actsvr->LanguageProfile.clsid, &actsvr->LanguageProfile.catid, list, 3);
+        catmgr->Release();
     }
     else
     {
@@ -436,17 +410,16 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
         actsvr->LanguageProfile.catid = GUID_NULL;
     }
 
-    if (!IsEqualGUID(&actsvr->LanguageProfile.catid,&GUID_NULL))
-        deactivate_remove_conflicting_ts(&actsvr->LanguageProfile.catid);
+    if (actsvr->LanguageProfile.catid != GUID_NULL)
+        deactivate_remove_conflicting_ts(actsvr->LanguageProfile.catid);
 
     if (activated > 0)
         activate_given_ts(actsvr, tm);
 
-    entry = HeapAlloc(GetProcessHeap(),0,sizeof(AtsEntry));
-
+    entry = (AtsEntry *)cicMemAlloc(sizeof(AtsEntry));
     if (!entry)
     {
-        HeapFree(GetProcessHeap(),0,actsvr);
+        cicMemFree(actsvr);
         return E_OUTOFMEMORY;
     }
 
@@ -456,13 +429,14 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     return S_OK;
 }
 
+EXTERN_C
 BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *profile)
 {
     AtsEntry *ats;
 
     LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
     {
-        if (IsEqualCLSID(rclsid,&ats->ats->LanguageProfile.clsid))
+        if (rclsid == ats->ats->LanguageProfile.clsid)
         {
             if (profile)
                 *profile = ats->ats->LanguageProfile;
@@ -472,6 +446,7 @@ BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *profile)
     return FALSE;
 }
 
+EXTERN_C
 HRESULT activate_textservices(ITfThreadMgrEx *tm)
 {
     HRESULT hr = S_OK;
@@ -490,6 +465,7 @@ HRESULT activate_textservices(ITfThreadMgrEx *tm)
     return hr;
 }
 
+EXTERN_C
 HRESULT deactivate_textservices(void)
 {
     AtsEntry *ats;
@@ -498,52 +474,62 @@ HRESULT deactivate_textservices(void)
         activated --;
 
     if (activated == 0)
+    {
         LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
             deactivate_given_ts(ats->ats);
-
+    }
     return S_OK;
 }
 
+EXTERN_C
 CLSID get_textservice_clsid(TfClientId tid)
 {
     AtsEntry *ats;
 
     LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
+    {
         if (ats->ats->tid == tid)
             return ats->ats->LanguageProfile.clsid;
+    }
     return GUID_NULL;
 }
 
+EXTERN_C
 HRESULT get_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown **sink)
 {
     AtsEntry *ats;
 
-    if (!IsEqualCLSID(iid,&IID_ITfKeyEventSink))
+    if (iid != IID_ITfKeyEventSink)
         return E_NOINTERFACE;
 
     LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
+    {
         if (ats->ats->tid == tid)
         {
             *sink = (IUnknown*)ats->ats->pITfKeyEventSink;
             return S_OK;
         }
+    }
 
     return E_FAIL;
 }
 
+EXTERN_C
 HRESULT set_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown* sink)
 {
     AtsEntry *ats;
 
-    if (!IsEqualCLSID(iid,&IID_ITfKeyEventSink))
+    if (iid != IID_ITfKeyEventSink)
         return E_NOINTERFACE;
 
     LIST_FOR_EACH_ENTRY(ats, &AtsList, AtsEntry, entry)
+    {
         if (ats->ats->tid == tid)
         {
             ats->ats->pITfKeyEventSink = (ITfKeyEventSink*)sink;
             return S_OK;
         }
+    }
 
     return E_FAIL;
 }
@@ -556,17 +542,13 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     TRACE("%p 0x%x %p\n", hinst, fdwReason, fImpLoad);
     switch (fdwReason)
     {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;   /* prefer native version */
-#endif
         case DLL_PROCESS_ATTACH:
             MSCTF_hinstance = hinst;
-            tlsIndex = TlsAlloc();
+            g_tlsIndex = TlsAlloc();
             break;
         case DLL_PROCESS_DETACH:
             if (fImpLoad) break;
-            TlsFree(tlsIndex);
+            TlsFree(g_tlsIndex);
             break;
     }
     return TRUE;
@@ -588,14 +570,15 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID iid, LPVOID *ppvOut)
     int i;
 
     *ppvOut = NULL;
-    if (!IsEqualIID(iid, &IID_IUnknown) && !IsEqualIID(iid, &IID_IClassFactory))
+    if (iid != IID_IUnknown && iid != IID_IClassFactory)
         return E_NOINTERFACE;
 
-    for (i = 0; ClassesTable[i].clsid != NULL; i++)
-        if (IsEqualCLSID(ClassesTable[i].clsid, clsid)) {
+    for (i = 0; ClassesTable[i].clsid; i++)
+    {
+        if (*ClassesTable[i].clsid == clsid)
             return ClassFactory_Constructor(ClassesTable[i].ctor, ppvOut);
-        }
-    FIXME("CLSID %s not supported\n", debugstr_guid(clsid));
+    }
+    FIXME("CLSID %s not supported\n", debugstr_guid(&clsid));
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
@@ -621,7 +604,7 @@ HRESULT WINAPI DllUnregisterServer(void)
 HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim)
 {
     TRACE("\n");
-    return ThreadMgr_Constructor(NULL,(IUnknown**)pptim);
+    return ThreadMgr_Constructor(NULL, (IUnknown**)pptim);
 }
 
 /***********************************************************************
@@ -630,10 +613,10 @@ HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim)
 HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
 {
     TRACE("\n");
-    *pptim = TlsGetValue(tlsIndex);
+    *pptim = (ITfThreadMgr *)TlsGetValue(g_tlsIndex);
 
     if (*pptim)
-        ITfThreadMgr_AddRef(*pptim);
+        (*pptim)->AddRef();
 
     return S_OK;
 }
@@ -643,7 +626,7 @@ HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
  */
 HRESULT WINAPI SetInputScope(HWND hwnd, InputScope inputscope)
 {
-    FIXME("STUB: %p %i\n",hwnd,inputscope);
+    FIXME("STUB: %p %i\n", hwnd, inputscope);
     return S_OK;
 }
 
@@ -655,11 +638,11 @@ HRESULT WINAPI SetInputScopes(HWND hwnd, const InputScope *pInputScopes,
                               UINT cPhrases, WCHAR *pszRegExp, WCHAR *pszSRGS)
 {
     UINT i;
-    FIXME("STUB: %p ... %s %s\n",hwnd, debugstr_w(pszRegExp), debugstr_w(pszSRGS));
+    FIXME("STUB: %p ... %s %s\n", hwnd, debugstr_w(pszRegExp), debugstr_w(pszSRGS));
     for (i = 0; i < cInputScopes; i++)
-        TRACE("\tScope[%u] = %i\n",i,pInputScopes[i]);
+        TRACE("\tScope[%u] = %i\n", i, pInputScopes[i]);
     for (i = 0; i < cPhrases; i++)
-        TRACE("\tPhrase[%u] = %s\n",i,debugstr_w(ppszPhraseList[i]));
+        TRACE("\tPhrase[%u] = %s\n", i, debugstr_w(ppszPhraseList[i]));
 
     return S_OK;
 }
@@ -670,7 +653,7 @@ HRESULT WINAPI SetInputScopes(HWND hwnd, const InputScope *pInputScopes,
 HRESULT WINAPI TF_CreateInputProcessorProfiles(
                         ITfInputProcessorProfiles **ppipr)
 {
-    return InputProcessorProfiles_Constructor(NULL,(IUnknown**)ppipr);
+    return InputProcessorProfiles_Constructor(NULL, (IUnknown**)ppipr);
 }
 
 /***********************************************************************
@@ -688,9 +671,12 @@ HRESULT WINAPI TF_InvalidAssemblyListCacheIfExist(void)
 HRESULT WINAPI TF_CreateLangBarMgr(ITfLangBarMgr **pppbm)
 {
     TRACE("\n");
-    return LangBarMgr_Constructor(NULL,(IUnknown**)pppbm);
+    return LangBarMgr_Constructor(NULL, (IUnknown**)pppbm);
 }
 
+/***********************************************************************
+ *              TF_CreateLangBarItemMgr (MSCTF.@)
+ */
 HRESULT WINAPI TF_CreateLangBarItemMgr(ITfLangBarItemMgr **pplbim)
 {
     FIXME("stub %p\n", pplbim);
@@ -698,14 +684,3 @@ HRESULT WINAPI TF_CreateLangBarItemMgr(ITfLangBarItemMgr **pplbim)
 
     return E_NOTIMPL;
 }
-
-#ifndef __REACTOS__ /* See mlng.cpp */
-/***********************************************************************
- *              TF_InitMlngInfo (MSCTF.@)
- */
-HRESULT WINAPI TF_InitMlngInfo(void)
-{
-    FIXME("stub\n");
-    return S_OK;
-}
-#endif
