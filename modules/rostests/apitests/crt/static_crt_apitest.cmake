@@ -14,7 +14,6 @@ list(APPEND SOURCE_STATIC
     mbstowcs.c
     mbtowc.c
     rand_s.c
-    setjmp.c
     sprintf.c
     strcpy.c
     strlen.c

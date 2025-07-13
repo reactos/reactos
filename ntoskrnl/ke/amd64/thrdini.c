@@ -58,14 +58,24 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     Thread->StateSaveArea = InitialStack;
     RtlZeroMemory(Thread->StateSaveArea, KeXStateLength);
     Thread->StateSaveArea->MxCsr = INITIAL_MXCSR;
+    Thread->StateSaveArea->ControlWord = INITIAL_FPCSR;
 
-    /* Special initialization for XSAVES */
-    if (KeFeatureBits & KF_XSAVES)
+    /* Check if we use XSAVE */
+    if (KeFeatureBits & KF_XSTATE)
     {
-        /* Set bit 63 in XCOMP_BV to mark the area as compacted.
-           XRSTORS requires this and will #GP otherwise. */
+        /* Enable the mask for legacy floating point state */
         PXSAVE_AREA XSaveArea = (PXSAVE_AREA)Thread->StateSaveArea;
-        XSaveArea->Header.Reserved[0] = 0x8000000000000000ULL;
+        XSaveArea->Header.Mask |= XSTATE_MASK_LEGACY_FLOATING_POINT;
+
+        /* Special initialization for XSAVES */
+        if (KeFeatureBits & KF_XSAVES)
+        {
+            /* Set bit 63 in XCOMP_BV to mark the area as compacted.
+               XRSTORS requires this and will #GP otherwise.
+               Also mark legacy FP as compacted. */
+            XSaveArea->Header.CompactionMask |= 0x8000000000000000ULL |
+                                                XSTATE_MASK_LEGACY_FLOATING_POINT;
+        }
     }
 
     /* Check if this is a With-Context Thread */
