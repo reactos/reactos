@@ -34,8 +34,8 @@ ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static UINT
-GetTextWidth(PCWSTR Text, UINT TextLength, UINT TextMax)
+UINT
+GetTextWidth(_In_ PCWSTR Text, _In_ UINT TextLength, _In_ UINT TextMax)
 {
     UINT ich, width = 0;
 

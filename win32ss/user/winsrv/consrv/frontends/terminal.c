@@ -340,7 +340,8 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
             Console->LineBuffer = ConsoleAllocHeap(0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL) return STATUS_NO_MEMORY;
 
-            Console->LineColumn = Console->LinePos = Console->LineSize = ReadControl->nInitialChars;
+            Console->LinePos = Console->LineSize = ReadControl->nInitialChars;
+            Console->LineColumn = GetTextWidth(Console->LineBuffer, ReadControl->nInitialChars, Console->LineSize);
             Console->LineComplete = Console->LineUpPressed = FALSE;
             Console->LineInsertToggle = Console->InsertMode;
             Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
