@@ -95,7 +95,7 @@ BEGIN
     LTEXT "Nazwa usługi:", IDC_STATIC, 4, 11, 53, 8
     LTEXT "Nazwa wyświetlana:", IDC_STATIC, 4, 32, 65, 8
     LTEXT "Opis:", IDC_STATIC, 4, 48, 53, 8
-    LTEXT "Ścieżka do wykonywalnego:", IDC_STATIC, 6, 76, 91, 8
+    LTEXT "Ścieżka do pliku wykonywalnego:", IDC_STATIC, 6, 76, 91, 8
     LTEXT "Typ uruchomienia:", IDC_STATIC, 6, 109, 59, 8
     LTEXT "Stan usługi:", IDC_STATIC, 4, 138, 53, 8
     LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 8, WS_CHILD | WS_VISIBLE
