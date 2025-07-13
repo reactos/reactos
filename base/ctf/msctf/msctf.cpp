@@ -167,7 +167,7 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
     {
         if (!array_size)
         {
-            cookies = (CookieInternal *)calloc(10, sizeof(CookieInternal));
+            cookies = (CookieInternal *)cicMemAllocClear(10 * sizeof(CookieInternal));
             if (!cookies)
             {
                 ERR("Out of memory, Unable to alloc cookies array\n");
