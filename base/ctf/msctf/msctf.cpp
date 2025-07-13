@@ -177,6 +177,7 @@ DWORD generate_Cookie(DWORD magic, LPVOID data)
         }
         else
         {
+            ERR("cookies: %p, array_size: %d\n", cookies, array_size);
             CookieInternal *new_cookies = (CookieInternal *)
                 cicMemReCalloc(cookies, array_size * 2, sizeof(CookieInternal));
             if (!new_cookies)
