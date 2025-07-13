@@ -108,7 +108,8 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         amd64/debug_asm.S
         amd64/except_asm.S
-        amd64/slist.S)
+        amd64/slist.S
+        amd64/unwind-asm.s)
     list(APPEND SOURCE
         bitmap64.c
         byteswap.c
