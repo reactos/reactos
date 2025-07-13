@@ -1886,6 +1886,27 @@ typedef union _CDB {
     UCHAR Streaming:1;
     UCHAR Control;
   } WRITE12;
+  struct _ATA_PASSTHROUGH12 {
+    UCHAR OperationCode;
+    UCHAR Reserved1:1;
+    UCHAR Protocol:4;
+    UCHAR MultipleCount:3;
+    UCHAR TLength:2;
+    UCHAR ByteBlock:1;
+    UCHAR TDir:1;
+    UCHAR Reserved2:1;
+    UCHAR CkCond:1;
+    UCHAR Offline:2;
+    UCHAR Features;
+    UCHAR SectorCount;
+    UCHAR LbaLow;
+    UCHAR LbaMid;
+    UCHAR LbaHigh;
+    UCHAR Device;
+    UCHAR Command;
+    UCHAR Reserved3;
+    UCHAR Control;
+  } ATA_PASSTHROUGH12;
   struct _READ16 {
     UCHAR OperationCode;
     UCHAR Reserved1:3;
@@ -1944,6 +1965,31 @@ typedef union _CDB {
     UCHAR Reserved2:7;
     UCHAR Control;
   } READ_CAPACITY16;
+  struct _ATA_PASSTHROUGH16 {
+    UCHAR OperationCode;
+    UCHAR Extend:1;
+    UCHAR Protocol:4;
+    UCHAR MultipleCount:3;
+    UCHAR TLength:2;
+    UCHAR ByteBlock:1;
+    UCHAR TDir:1;
+    UCHAR Reserved1:1;
+    UCHAR CkCond:1;
+    UCHAR Offline:2;
+    UCHAR Features15_8;
+    UCHAR Features7_0;
+    UCHAR SectorCount15_8;
+    UCHAR SectorCount7_0;
+    UCHAR LbaLow15_8;
+    UCHAR LbaLow7_0;
+    UCHAR LbaMid15_8;
+    UCHAR LbaMid7_0;
+    UCHAR LbaHigh15_8;
+    UCHAR LbaHigh7_0;
+    UCHAR Device;
+    UCHAR Command;
+    UCHAR Control;
+  } ATA_PASSTHROUGH16;
   struct _TOKEN_OPERATION {
     UCHAR OperationCode;
     UCHAR ServiceAction:5;
