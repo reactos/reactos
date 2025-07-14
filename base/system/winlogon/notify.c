@@ -125,30 +125,30 @@ done:
 static
 VOID
 AddNotificationDll(
-    HKEY hNotifyKey,
-    PWSTR pszKeyName)
+    _In_ HKEY hNotifyKey,
+    _In_ PCWSTR pszKeyName)
 {
     HKEY hDllKey = NULL;
-    PNOTIFICATION_ITEM NotificationDll = NULL;
-    DWORD dwSize, dwType;
-    DWORD dwError;
+    PNOTIFICATION_ITEM NotificationDll;
+    DWORD dwValue, dwSize, dwType;
+    LONG lError;
 
-    TRACE("AddNotificationDll(%p %S)\n", hNotifyKey, pszKeyName);
+    TRACE("AddNotificationDll(0x%p, %S)\n", hNotifyKey, pszKeyName);
 
-    dwError = RegOpenKeyExW(hNotifyKey,
-                            pszKeyName,
-                            0,
-                            KEY_READ,
-                            &hDllKey);
-    if (dwError != ERROR_SUCCESS)
+    lError = RegOpenKeyExW(hNotifyKey,
+                           pszKeyName,
+                           0,
+                           KEY_READ,
+                           &hDllKey);
+    if (lError != ERROR_SUCCESS)
         return;
 
     NotificationDll = RtlAllocateHeap(RtlGetProcessHeap(),
                                       HEAP_ZERO_MEMORY,
-                                      sizeof(NOTIFICATION_ITEM));
+                                      sizeof(*NotificationDll));
     if (NotificationDll == NULL)
     {
-        dwError = ERROR_OUTOFMEMORY;
+        lError = ERROR_OUTOFMEMORY;
         goto done;
     }
 
@@ -157,7 +157,7 @@ AddNotificationDll(
                                                   (wcslen(pszKeyName) + 1) * sizeof(WCHAR));
     if (NotificationDll->pszKeyName == NULL)
     {
-        dwError = ERROR_OUTOFMEMORY;
+        lError = ERROR_OUTOFMEMORY;
         goto done;
     }
 
@@ -172,7 +172,7 @@ AddNotificationDll(
                      &dwSize);
     if (dwSize == 0)
     {
-        dwError = ERROR_FILE_NOT_FOUND;
+        lError = ERROR_FILE_NOT_FOUND;
         goto done;
     }
 
@@ -181,67 +181,79 @@ AddNotificationDll(
                                                   dwSize);
     if (NotificationDll->pszDllName == NULL)
     {
-        dwError = ERROR_OUTOFMEMORY;
+        lError = ERROR_OUTOFMEMORY;
         goto done;
     }
 
-    dwError = RegQueryValueExW(hDllKey,
-                               L"DllName",
-                               NULL,
-                               &dwType,
-                               (PBYTE)NotificationDll->pszDllName,
-                               &dwSize);
-    if (dwError != ERROR_SUCCESS)
+    lError = RegQueryValueExW(hDllKey,
+                              L"DllName",
+                              NULL,
+                              &dwType,
+                              (PBYTE)NotificationDll->pszDllName,
+                              &dwSize);
+    if (lError != ERROR_SUCCESS)
         goto done;
 
     NotificationDll->bEnabled = TRUE;
     NotificationDll->dwMaxWait = 30; /* FIXME: ??? */
 
-    dwSize = sizeof(BOOL);
-    RegQueryValueExW(hDllKey,
-                     L"Asynchronous",
-                     NULL,
-                     &dwType,
-                     (PBYTE)&NotificationDll->bAsynchronous,
-                     &dwSize);
+    dwSize = sizeof(dwValue);
+    lError = RegQueryValueExW(hDllKey,
+                              L"Asynchronous",
+                              NULL,
+                              &dwType,
+                              (PBYTE)&dwValue,
+                              &dwSize);
+    if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
+        NotificationDll->bAsynchronous = !!dwValue;
 
-    dwSize = sizeof(BOOL);
-    RegQueryValueExW(hDllKey,
-                     L"Impersonate",
-                     NULL,
-                     &dwType,
-                     (PBYTE)&NotificationDll->bImpersonate,
-                     &dwSize);
+    dwSize = sizeof(dwValue);
+    lError = RegQueryValueExW(hDllKey,
+                              L"Impersonate",
+                              NULL,
+                              &dwType,
+                              (PBYTE)&dwValue,
+                              &dwSize);
+    if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
+        NotificationDll->bImpersonate = !!dwValue;
 
-    dwSize = sizeof(BOOL);
-    RegQueryValueExW(hDllKey,
-                     L"Safe",
-                     NULL,
-                     &dwType,
-                     (PBYTE)&NotificationDll->bSafe,
-                     &dwSize);
+    dwSize = sizeof(dwValue);
+    lError = RegQueryValueExW(hDllKey,
+                              L"Safe",
+                              NULL,
+                              &dwType,
+                              (PBYTE)&dwValue,
+                              &dwSize);
+    if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
+        NotificationDll->bSafe = !!dwValue;
 
-    dwSize = sizeof(BOOL);
-    RegQueryValueExW(hDllKey,
-                     L"SmartCardLogonNotify",
-                     NULL,
-                     &dwType,
-                     (PBYTE)&NotificationDll->bSmartCardLogon,
-                     &dwSize);
+    dwSize = sizeof(dwValue);
+    lError = RegQueryValueExW(hDllKey,
+                              L"SmartCardLogonNotify",
+                              NULL,
+                              &dwType,
+                              (PBYTE)&dwValue,
+                              &dwSize);
+    if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
+        NotificationDll->bSmartCardLogon = !!dwValue;
 
-    dwSize = sizeof(DWORD);
-    RegQueryValueExW(hDllKey,
-                     L"MaxWait",
-                     NULL,
-                     &dwType,
-                     (PBYTE)&NotificationDll->dwMaxWait,
-                     &dwSize);
+    dwSize = sizeof(dwValue);
+    lError = RegQueryValueExW(hDllKey,
+                              L"MaxWait",
+                              NULL,
+                              &dwType,
+                              (PBYTE)&dwValue,
+                              &dwSize);
+    if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
+        NotificationDll->dwMaxWait = dwValue;
 
     InsertHeadList(&NotificationDllListHead,
                    &NotificationDll->ListEntry);
 
+    lError = ERROR_SUCCESS;
+
 done:
-    if (dwError != ERROR_SUCCESS)
+    if (lError != ERROR_SUCCESS)
     {
         if (NotificationDll)
             DeleteNotification(NotificationDll);
