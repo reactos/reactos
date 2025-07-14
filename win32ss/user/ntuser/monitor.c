@@ -402,7 +402,9 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
 }
 
 HMONITOR FASTCALL
-IntFindBestMonitorFromRect(_In_ LPCRECTL Rect, _In_ DWORD dwFlags)
+IntFindBestMonitorFromRect(
+    _In_ LPCRECTL pRect,
+    _In_ DWORD dwFlags)
 {
     ULONG cMonitors, LargestArea = 0, i;
     PRECTL prcMonitorList = NULL;
@@ -410,25 +412,32 @@ IntFindBestMonitorFromRect(_In_ LPCRECTL Rect, _In_ DWORD dwFlags)
     HMONITOR hMonitor = NULL;
 
     /* Find intersecting monitors */
-    cMonitors = IntGetMonitorsFromRect(Rect, &hMonitor, NULL, 1, dwFlags);
+    cMonitors = IntGetMonitorsFromRect(pRect, &hMonitor, NULL, 1, dwFlags);
     if (cMonitors <= 1)
-        return hMonitor; /* No or one monitor found. Just return handle. */
+    {
+        /* No or one monitor found. Just return handle. */
+        goto cleanup;
+    }
+
+    /* There is more than one monitor. Find monitor with largest intersection.
+       Temporary reset hMonitor */
+    hMonitor = NULL;
 
     /* Allocate helper buffers */
     phMonitorList = ExAllocatePoolWithTag(PagedPool,
                                           sizeof(HMONITOR) * cMonitors,
                                           USERTAG_MONITORRECTS);
-    if (!phMonitorList)
+    if (phMonitorList == NULL)
         goto cleanup;
 
     prcMonitorList = ExAllocatePoolWithTag(PagedPool,
                                            sizeof(RECT) * cMonitors,
                                            USERTAG_MONITORRECTS);
-    if (!prcMonitorList)
+    if (prcMonitorList == NULL)
         goto cleanup;
 
     /* Get intersecting monitors again but now with rectangle list */
-    cMonitors = IntGetMonitorsFromRect(Rect, phMonitorList, prcMonitorList, cMonitors, 0);
+    cMonitors = IntGetMonitorsFromRect(pRect, phMonitorList, prcMonitorList, cMonitors, 0);
 
     /* Find largest intersection */
     for (i = 0; i < cMonitors; i++)
