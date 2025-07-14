@@ -994,12 +994,11 @@ NtUserMonitorFromWindow(
             goto cleanup;
 
         /* Find only monitors which have intersection with given window */
-        Rect.left = Rect.right = pWnd->rcWindow.left;
-        Rect.top = Rect.bottom = pWnd->rcWindow.bottom;
-    }
+        RtlCopyMemory(&Rect, &pWnd->rcWindow, sizeof(RECTL));
 
-    /* Find monitors now */
-    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
+        /* Find monitors now */
+        IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
+    }
 
 cleanup:
     TRACE("Leave NtUserMonitorFromWindow, ret=%p\n", hMonitor);
