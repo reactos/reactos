@@ -965,8 +965,8 @@ cleanup:
 HMONITOR
 APIENTRY
 NtUserMonitorFromWindow(
-    IN HWND hWnd,
-    IN DWORD dwFlags)
+    _In_ HWND hWnd,
+    _In_ DWORD dwFlags)
 {
     PWND pWnd;
     HMONITOR hMonitor;
