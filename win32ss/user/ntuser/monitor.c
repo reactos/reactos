@@ -924,8 +924,8 @@ cleanup:
 HMONITOR
 APIENTRY
 NtUserMonitorFromRect(
-    IN LPCRECTL pRectUnsafe,
-    IN DWORD dwFlags)
+    _In_ LPCRECTL pRectUnsafe,
+    _In_ DWORD dwFlags)
 {
     RECTL Rect;
     NTSTATUS Status;
@@ -942,9 +942,7 @@ NtUserMonitorFromRect(
     /* Copy rectangle to safe buffer */
     Status = MmCopyFromCaller(&Rect, pRectUnsafe, sizeof (RECT));
     if (!NT_SUCCESS(Status))
-    {
         return NULL;
-    }
 
     if (RECTL_bIsEmptyRect(&Rect))
     {
