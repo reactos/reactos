@@ -501,7 +501,9 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
  */
 BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information)
 {
-    if (pdb && information)
+    RtlZeroMemory(information, sizeof(*information));
+
+    if (pdb)
     {
         information->dwFlags = 0;
         information->dwMajor = pdb->major;
