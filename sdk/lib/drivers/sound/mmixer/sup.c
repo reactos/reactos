@@ -315,23 +315,6 @@ MMixerGetMixerControlById(
     return MM_STATUS_UNSUCCESSFUL;
 }
 
-ULONG
-MMixerGetVolumeControlIndex(
-    LPMIXERVOLUME_DATA VolumeData,
-    LONG Value)
-{
-    ULONG Index;
-
-    for(Index = 0; Index < VolumeData->ValuesCount; Index++)
-    {
-        if (VolumeData->Values[Index] > Value)
-        {
-            return VolumeData->InputSteppingDelta * Index;
-        }
-    }
-    return VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
-}
-
 VOID
 MMixerNotifyControlChange(
     IN PMIXER_CONTEXT MixerContext,
@@ -673,7 +656,8 @@ MMixerSetGetVolumeControlDetails(
 {
     LPMIXERCONTROLDETAILS_UNSIGNED Input;
     LONG Value;
-    ULONG Index, Channel;
+    float Ratio;
+    ULONG MaxRange, Channel;
     MIXER_STATUS Status;
     LPMIXERVOLUME_DATA VolumeData;
 
@@ -689,21 +673,20 @@ MMixerSetGetVolumeControlDetails(
     if (!Input)
         return MM_STATUS_UNSUCCESSFUL; /* To prevent dereferencing NULL */
 
+    /* Get maximum available range */
+    MaxRange = VolumeData->SignedMaximum - VolumeData->SignedMinimum;
+
+    /* Get ratio of the hardware range (DB) to the logical units range */
+    Ratio = (float)MaxRange / 0x10000;
+
     /* Loop for each channel */
     for (Channel = 0; Channel < MixerControlDetails->cChannels; Channel++)
     {
         if (bSet)
         {
             /* FIXME SEH */
-            Index = Input[Channel].dwValue / VolumeData->InputSteppingDelta;
-
-            if (Index >= VolumeData->ValuesCount)
-            {
-                DPRINT1("Index %u out of bounds %u \n", Index, VolumeData->ValuesCount);
-                return MM_STATUS_INVALID_PARAMETER;
-            }
-
-            Value = VolumeData->Values[Index];
+            /* Convert from logical units to hardware range (DB) */
+            Value = Input[Channel].dwValue * Ratio - MaxRange + Ratio;
         }
 
         /* Get/set control details */
@@ -712,7 +695,8 @@ MMixerSetGetVolumeControlDetails(
         if (!bSet)
         {
             /* FIXME SEH */
-            Input[Channel].dwValue = MMixerGetVolumeControlIndex(VolumeData, Value);
+            /* Convert from hardware range (DB) to logical units */
+            Input[Channel].dwValue = (Value - (Ratio - 0.5)) / Ratio + 0x10000;
         }
     }
 
