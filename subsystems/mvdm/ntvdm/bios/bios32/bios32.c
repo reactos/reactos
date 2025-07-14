@@ -12,8 +12,8 @@
 #include "ntvdm.h"
 
 /* BIOS Version number and Copyright */
-#include <reactos/buildno.h>
-#include <reactos/version.h>
+#include <ver/buildno.h>
+#include <ver/version.h>
 
 #define NDEBUG
 #include <debug.h>

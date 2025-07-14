@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2000,2001 Emanuele Aliberti
  */
-#include <reactos/buildno.h>
+#include <ver/buildno.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER

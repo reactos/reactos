@@ -323,7 +323,6 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         sdk/include/psdk
         sdk/include/dxsdk
         sdk/include/winrt
-        ${REACTOS_BINARY_DIR}/sdk/include
         ${REACTOS_BINARY_DIR}/sdk/include/psdk
         ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/ddk

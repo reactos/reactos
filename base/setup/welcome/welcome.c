@@ -40,7 +40,7 @@
 #include <shellapi.h>
 #include <strsafe.h>
 
-#include <reactos/buildno.h>
+#include <ver/buildno.h>
 
 #include "resource.h"
 

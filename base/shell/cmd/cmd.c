@@ -142,8 +142,8 @@
  */
 
 #include "precomp.h"
-#include <reactos/buildno.h>
-#include <reactos/version.h>
+#include <ver/buildno.h>
+#include <ver/version.h>
 
 typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);

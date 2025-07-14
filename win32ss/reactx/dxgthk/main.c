@@ -10,7 +10,7 @@
  */
 
 /* DDK/NDK/SDK Headers */
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 NTSTATUS NTAPI
 DriverEntry(IN PVOID Context1,

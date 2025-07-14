@@ -42,8 +42,8 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
-#include <reactos/version.h>
-#include <reactos/buildno.h>
+#include <ver/version.h>
+#include <ver/buildno.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

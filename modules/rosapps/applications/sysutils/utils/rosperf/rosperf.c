@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <reactos/buildno.h>
+#include <ver/buildno.h>
 
 #include "rosperf.h"
 
