@@ -129,6 +129,7 @@ AddNotificationDll(
 {
     HKEY hDllKey = NULL;
     PNOTIFICATION_ITEM NotificationDll;
+    PWSTR pszDllName;
     DWORD dwValue, dwSize, dwType;
     LONG lError;
 
@@ -189,22 +190,24 @@ AddNotificationDll(
     wcscpy(NotificationDll->pszKeyName, pszKeyName);
 
     dwSize = 0;
-    RegQueryValueExW(hDllKey,
-                     L"DllName",
-                     NULL,
-                     &dwType,
-                     NULL,
-                     &dwSize);
-    if (dwSize == 0)
+    lError = RegQueryValueExW(hDllKey,
+                              L"DllName",
+                              NULL,
+                              &dwType,
+                              NULL,
+                              &dwSize);
+    if ((lError != ERROR_SUCCESS) ||
+        (dwType != REG_SZ && dwType != REG_EXPAND_SZ) ||
+        (dwSize == 0) || (dwSize % sizeof(WCHAR)))
     {
         lError = ERROR_FILE_NOT_FOUND;
         goto done;
     }
+    /* Ensure the string can be NUL-terminated */
+    dwSize += sizeof(WCHAR);
 
-    NotificationDll->pszDllName = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                  HEAP_ZERO_MEMORY,
-                                                  dwSize);
-    if (NotificationDll->pszDllName == NULL)
+    pszDllName = RtlAllocateHeap(RtlGetProcessHeap(), 0, dwSize);
+    if (!pszDllName)
     {
         lError = ERROR_OUTOFMEMORY;
         goto done;
@@ -214,10 +217,40 @@ AddNotificationDll(
                               L"DllName",
                               NULL,
                               &dwType,
-                              (PBYTE)NotificationDll->pszDllName,
+                              (PBYTE)pszDllName,
                               &dwSize);
     if (lError != ERROR_SUCCESS)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pszDllName);
         goto done;
+    }
+    /* NUL-terminate */
+    pszDllName[dwSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
+
+    /* Expand the path if applicable. Note that Windows always does the
+     * expansion, independently of the REG_SZ or REG_EXPAND_SZ type. */
+    if (wcschr(pszDllName, L'%') != NULL)
+    {
+        dwSize = ExpandEnvironmentStringsW(pszDllName, NULL, 0);
+        if (dwSize)
+        {
+            PWSTR pszDllPath = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                               dwSize * sizeof(WCHAR));
+            if (!pszDllPath)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, pszDllName);
+                lError = ERROR_OUTOFMEMORY;
+                goto done;
+            }
+            ExpandEnvironmentStringsW(pszDllName, pszDllPath, dwSize);
+
+            /* Free the old buffer and replace it with the expanded path */
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pszDllName);
+            pszDllName = pszDllPath;
+        }
+    }
+
+    NotificationDll->pszDllName = pszDllName;
 
     NotificationDll->bEnabled = TRUE;
     NotificationDll->dwMaxWait = 30; /* FIXME: ??? */
