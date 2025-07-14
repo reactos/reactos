@@ -18,6 +18,48 @@ static HKEY g_RootKeyEnum[3] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_LOCA
 static REGSAM g_RegSamEnum[3] = {0, KEY_WOW64_32KEY, KEY_WOW64_64KEY};
 #define UNINSTALL_SUBKEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 
+static inline HKEY
+GetRootKeyInfo(UINT Index, REGSAM &RegSam)
+{
+    C_ASSERT(_countof(g_RootKeyEnum) == _countof(g_RegSamEnum));
+    if (Index < _countof(g_RootKeyEnum))
+    {
+        RegSam = g_RegSamEnum[Index];
+        return g_RootKeyEnum[Index];
+    }
+    return NULL;
+}
+
+class CEnumInstalledRootKey
+{
+    // HKCU + HKLM (Native) + HKLM (WoW64)
+    // Note that HKEY_CURRENT_USER\Software does not have a redirect
+    // https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
+
+    UINT m_Count;
+    UINT m_Index = 0;
+
+public:
+    CEnumInstalledRootKey()
+    {
+        // We don't want to display duplicate entries on systems without WoW64 keys support.
+        // When ROS starts supporting the WOW REGSAM flags,
+        // this code can be changed back to IsSystem64Bit() ? 3 : 2.
+        m_Count = 2 + !IsSameRegKey(HKEY_LOCAL_MACHINE, UNINSTALL_SUBKEY, KEY_WOW64_64KEY,
+                                                        UNINSTALL_SUBKEY, KEY_WOW64_32KEY);
+    }
+
+    HKEY GetNext(REGSAM &RegSam)
+    {
+        return m_Index < m_Count ? GetRootKeyInfo(m_Index++, RegSam) : NULL;
+    }
+
+    UINT GetKeyIndex() const
+    {
+        return m_Index;
+    }
+};
+
 static VOID
 ClearList(CAtlList<CAppInfo *> &list)
 {
@@ -150,35 +192,6 @@ CAppDB::UpdateAvailable()
     EnumerateFiles();
 }
 
-static inline HKEY
-GetRootKeyInfo(UINT Index, REGSAM &RegSam)
-{
-    C_ASSERT(_countof(g_RootKeyEnum) == _countof(g_RegSamEnum));
-    if (Index < _countof(g_RootKeyEnum))
-    {
-        RegSam = g_RegSamEnum[Index];
-        return g_RootKeyEnum[Index];
-    }
-    return NULL;
-}
-
-HKEY
-CAppDB::EnumInstalledRootKey(UINT Index, REGSAM &RegSam, UINT &InternalState)
-{
-    // HKCU + HKLM (Native) + HKLM (WoW64)
-    // Note that HKEY_CURRENT_USER\Software does not have a redirect
-    // https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
-    if (Index == 0)
-    {
-        // We don't want to display duplicate entries on systems without WoW64 keys support.
-        // When ROS starts supporting the WOW REGSAM flags,
-        // this code can be changed back to IsSystem64Bit() ? 3 : 2.
-        InternalState = 2 + !IsSameRegKey(HKEY_LOCAL_MACHINE, UNINSTALL_SUBKEY, KEY_WOW64_64KEY,
-                                                              UNINSTALL_SUBKEY, KEY_WOW64_32KEY);
-    }
-    return Index < InternalState ? GetRootKeyInfo(Index, RegSam) : NULL;
-}
-
 CInstalledApplicationInfo *
 CAppDB::CreateInstalledAppByRegistryKey(LPCWSTR KeyName, HKEY hKeyParent, UINT KeyIndex)
 {
@@ -214,8 +227,7 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
     ATLASSERT(List || SearchOnly);
     REGSAM wowsam;
     HKEY hRootKey;
-    UINT state;
-    for (UINT rki = 0; (hRootKey = EnumInstalledRootKey(rki, wowsam, state)); ++rki)
+    for (CEnumInstalledRootKey RootEnum; (hRootKey = RootEnum.GetNext(wowsam)) != NULL;)
     {
         CRegKey hKey;
         if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | wowsam) != ERROR_SUCCESS)
@@ -233,7 +245,7 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
             if (List || !StrCmpIW(SearchOnly, szKeyName))
             {
                 CInstalledApplicationInfo *Info;
-                Info = CreateInstalledAppByRegistryKey(szKeyName, hKey, rki);
+                Info = CreateInstalledAppByRegistryKey(szKeyName, hKey, RootEnum.GetKeyIndex());
                 if (Info)
                 {
                     if (List)
