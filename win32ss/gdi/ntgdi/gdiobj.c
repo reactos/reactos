@@ -1543,6 +1543,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
     pobj = GDIOBJ_AllocateObject(objt, cjSize, fl);
     if (!pobj)
     {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 

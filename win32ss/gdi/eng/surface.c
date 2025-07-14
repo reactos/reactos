@@ -241,6 +241,7 @@ SURFACE_AllocSurface(
             if (!pso->pvBits)
             {
                 GDIOBJ_vDeleteObject(&psurf->BaseObject);
+                EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return NULL;
             }
         }
@@ -256,6 +257,7 @@ SURFACE_AllocSurface(
             if (!pso->pvBits)
             {
                 GDIOBJ_vDeleteObject(&psurf->BaseObject);
+                EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return NULL;
             }
 
