@@ -969,7 +969,7 @@ NtUserMonitorFromWindow(
     _In_ DWORD dwFlags)
 {
     PWND pWnd;
-    HMONITOR hMonitor;
+    HMONITOR hMonitor = NULL;
     RECTL Rect = { 0, 0, 0, 0 };
 
     TRACE("Enter NtUserMonitorFromWindow\n");
@@ -981,8 +981,6 @@ NtUserMonitorFromWindow(
     {
         return NULL;
     }
-
-    hMonitor = NULL;
 
     UserEnterShared();
 
