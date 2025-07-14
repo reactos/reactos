@@ -969,38 +969,33 @@ NtUserMonitorFromWindow(
     IN DWORD dwFlags)
 {
     PWND pWnd;
-    HMONITOR hMonitor = NULL;
-    RECTL Rect;
+    HMONITOR hMonitor;
 
     TRACE("Enter NtUserMonitorFromWindow\n");
+
+    if (!hWnd)
+        return NULL;
 
     /* Check if flags are valid */
     if (dwFlags != MONITOR_DEFAULTTONULL &&
         dwFlags != MONITOR_DEFAULTTOPRIMARY &&
         dwFlags != MONITOR_DEFAULTTONEAREST)
     {
-        EngSetLastError(ERROR_INVALID_FLAGS);
         return NULL;
     }
 
+    hMonitor = NULL;
+
     UserEnterShared();
 
-    /* If window is given, use it first */
-    if (hWnd)
+    /* Get window object */
+    pWnd = UserGetWindowObject(hWnd);
+    if (pWnd)
     {
-        /* Get window object */
-        pWnd = UserGetWindowObject(hWnd);
-        if (!pWnd)
-            goto cleanup;
-
-        /* Find only monitors which have intersection with given window */
-        RtlCopyMemory(&Rect, &pWnd->rcWindow, sizeof(RECTL));
-
-        /* Find monitors now */
-        IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
+        /* Find the best monitor now */
+        IntGetMonitorsFromRect((LPCRECTL)&pWnd->rcWindow, &hMonitor, NULL, 1, dwFlags);
     }
 
-cleanup:
     TRACE("Leave NtUserMonitorFromWindow, ret=%p\n", hMonitor);
     UserLeave();
     return hMonitor;
