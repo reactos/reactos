@@ -229,7 +229,8 @@ void CAppBarManager::OnAppBarNotifyAll(
             continue;
         }
 
-        if (!hMon || hMon == ::MonitorFromWindow(hwndAppBar, MONITOR_DEFAULTTONULL))
+        HMONITOR hMon2 = ::MonitorFromWindow(hwndAppBar, MONITOR_DEFAULTTONULL);
+        if (!hMon || hMon == hMon2 || !hMon2)
             ::PostMessageW(hwndAppBar, pAppBar->uCallbackMessage, dwNotify, lParam);
     }
 }
