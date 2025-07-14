@@ -162,7 +162,7 @@ MMixerAddMixerControl(
 
         MixerControl->Control.Bounds.dwMinimum = 0;
         MixerControl->Control.Bounds.dwMaximum = 0xFFFF;
-        MixerControl->Control.Metrics.cSteps = 0xC0; /* FIXME */
+        MixerControl->Control.Metrics.cSteps = 0xC0;
 
         Length = sizeof(KSPROPERTY_DESCRIPTION) + sizeof(KSPROPERTY_MEMBERSHEADER) + sizeof(KSPROPERTY_STEPPING_LONG);
         Desc = (PKSPROPERTY_DESCRIPTION)MixerContext->Alloc(Length);
@@ -200,6 +200,11 @@ MMixerAddMixerControl(
                     return MM_STATUS_NO_MEMORY;
 
                 Steps = MaxRange / Range->SteppingDelta + 1;
+                ASSERT(Steps);
+
+                MixerControl->Control.Bounds.dwMinimum = Range->Bounds.UnsignedMinimum;
+                MixerControl->Control.Bounds.dwMaximum = Range->Bounds.UnsignedMaximum;
+                MixerControl->Control.Metrics.cSteps = Steps;
 
                 /* store mixer control info there */
                 VolumeData->Header.dwControlID = MixerControl->Control.dwControlID;
@@ -217,7 +222,7 @@ MMixerAddMixerControl(
                     return MM_STATUS_NO_MEMORY;
                 }
 
-                Value = Range->Bounds.SignedMinimum;
+                Value = Range->Bounds.UnsignedMinimum;
                 for (Index = 0; Index < Steps; Index++)
                 {
                     VolumeData->Values[Index] = Value;
