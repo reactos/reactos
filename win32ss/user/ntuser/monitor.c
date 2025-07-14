@@ -806,55 +806,6 @@ cleanup:
     return bRet;
 }
 
-/* NtUserMonitorFromPoint
- *
- * Returns a handle to the monitor containing the given point.
- *
- * Arguments
- *
- *   pt
- *     Point for which to find monitor
- *
- *   dwFlags
- *     Specifies the behaviour if the point isn't on any of the monitors.
- *
- * Return value
- *   If the point is found a handle to the monitor is returned; if not the
- *   return value depends on dwFlags
- */
-HMONITOR
-APIENTRY
-NtUserMonitorFromPoint(
-    IN POINT pt,
-    IN DWORD dwFlags)
-{
-    RECTL rc;
-    HMONITOR hMonitor = NULL;
-
-    /* Check if flags are valid */
-    if (dwFlags != MONITOR_DEFAULTTONULL &&
-        dwFlags != MONITOR_DEFAULTTOPRIMARY &&
-        dwFlags != MONITOR_DEFAULTTONEAREST)
-    {
-        EngSetLastError(ERROR_INVALID_FLAGS);
-        return NULL;
-    }
-
-    /* Fill rect (bottom-right exclusive) */
-    rc.left = pt.x;
-    rc.right = pt.x + 1;
-    rc.top = pt.y;
-    rc.bottom = pt.y + 1;
-
-    UserEnterShared();
-
-    /* Find intersecting monitor */
-    IntGetMonitorsFromRect(&rc, &hMonitor, NULL, 1, dwFlags);
-
-    UserLeave();
-    return hMonitor;
-}
-
 HMONITOR FASTCALL
 IntFindBestMonitorFromRect(_In_ LPCRECTL Rect, _In_ DWORD dwFlags)
 {
@@ -901,6 +852,54 @@ cleanup:
         ExFreePoolWithTag(phMonitorList, USERTAG_MONITORRECTS);
     if (prcMonitorList)
         ExFreePoolWithTag(prcMonitorList, USERTAG_MONITORRECTS);
+    return hMonitor;
+}
+
+/* NtUserMonitorFromPoint
+ *
+ * Returns a handle to the monitor containing the given point.
+ *
+ * Arguments
+ *
+ *   pt
+ *     Point for which to find monitor
+ *
+ *   dwFlags
+ *     Specifies the behaviour if the point isn't on any of the monitors.
+ *
+ * Return value
+ *   If the point is found a handle to the monitor is returned; if not the
+ *   return value depends on dwFlags
+ */
+HMONITOR
+APIENTRY
+NtUserMonitorFromPoint(
+    _In_ POINT pt,
+    _In_ DWORD dwFlags)
+{
+    RECTL rc;
+    HMONITOR hMonitor = NULL;
+
+    /* Check if flags are valid */
+    if (dwFlags != MONITOR_DEFAULTTONULL &&
+        dwFlags != MONITOR_DEFAULTTOPRIMARY &&
+        dwFlags != MONITOR_DEFAULTTONEAREST)
+    {
+        return NULL;
+    }
+
+    /* Fill rect (bottom-right exclusive) */
+    rc.left = pt.x;
+    rc.right = pt.x + 1;
+    rc.top = pt.y;
+    rc.bottom = pt.y + 1;
+
+    UserEnterShared();
+
+    /* Find intersecting monitor */
+    IntGetMonitorsFromRect(&rc, &hMonitor, NULL, 1, dwFlags);
+
+    UserLeave();
     return hMonitor;
 }
 
