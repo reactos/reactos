@@ -970,7 +970,7 @@ NtUserMonitorFromWindow(
 {
     PWND pWnd;
     HMONITOR hMonitor = NULL;
-    RECTL Rect = { 0, 0, 0, 0 };
+    RECTL Rect = {0, 0, 0, 0};
 
     TRACE("Enter NtUserMonitorFromWindow\n");
 
