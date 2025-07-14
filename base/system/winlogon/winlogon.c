@@ -614,6 +614,7 @@ WinMain(
     CleanupNotifications();
 
     /* We never go there */
-
+    // TODO: Shutdown if we are in session 0, otherwise let the process terminate.
+    SleepEx(INFINITE, FALSE);
     return 0;
 }

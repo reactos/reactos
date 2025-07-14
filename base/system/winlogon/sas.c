@@ -1542,6 +1542,7 @@ SASWindowProc(
         {
             if (!GetSetupType())
                 UnregisterHotKeys(Session, hwndDlg);
+            PostQuitMessage(0);
             return TRUE;
         }
         case WM_SETTINGCHANGE:
