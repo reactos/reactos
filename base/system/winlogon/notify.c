@@ -52,6 +52,24 @@ static LIST_ENTRY NotificationDllListHead;
 
 /* FUNCTIONS *****************************************************************/
 
+/**
+ * @brief
+ * Frees the resources associated to a notification.
+ **/
+static
+VOID
+DeleteNotification(
+    _In_ PNOTIFICATION_ITEM Notification)
+{
+    if (Notification->pszKeyName)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Notification->pszKeyName);
+
+    if (Notification->pszDllName)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Notification->pszDllName);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Notification);
+}
+
 static
 VOID
 AddSfcNotification(VOID)
@@ -233,16 +251,8 @@ AddNotificationDll(
 done:
     if (dwError != ERROR_SUCCESS)
     {
-        if (NotificationDll != NULL)
-        {
-            if (NotificationDll->pszKeyName != NULL)
-                RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll->pszKeyName);
-
-            if (NotificationDll->pszDllName != NULL)
-                RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll->pszDllName);
-
-            RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll);
-        }
+        if (NotificationDll)
+            DeleteNotification(NotificationDll);
     }
 
     RegCloseKey(hDllKey);
@@ -392,7 +402,6 @@ CallNotificationDlls(
     NOTIFICATION_TYPE Type)
 {
     PLIST_ENTRY ListEntry;
-    PNOTIFICATION_ITEM NotificationDll;
     WLX_NOTIFICATION_INFO Info;
     HKEY hNotifyKey = NULL;
     DWORD dwError;
@@ -447,19 +456,14 @@ CallNotificationDlls(
 
     Info.pStatusCallback = NULL;
 
-    ListEntry = NotificationDllListHead.Flink;
-    while (ListEntry != &NotificationDllListHead)
+    for (ListEntry = NotificationDllListHead.Flink;
+         ListEntry != &NotificationDllListHead;
+         ListEntry = ListEntry->Flink)
     {
-TRACE("ListEntry %p\n", ListEntry);
-
-        NotificationDll = CONTAINING_RECORD(ListEntry,
-                                            NOTIFICATION_ITEM,
-                                            ListEntry);
-TRACE("NotificationDll: %p\n", NotificationDll);
-        if (NotificationDll != NULL && NotificationDll->bEnabled)
-            CallNotificationDll(hNotifyKey, NotificationDll, Type, &Info);
-
-        ListEntry = ListEntry->Flink;
+        PNOTIFICATION_ITEM Notification =
+            CONTAINING_RECORD(ListEntry, NOTIFICATION_ITEM, ListEntry);
+        if (Notification->bEnabled)
+            CallNotificationDll(hNotifyKey, Notification, Type, &Info);
     }
 
     RegCloseKey(hNotifyKey);
@@ -469,29 +473,12 @@ TRACE("NotificationDll: %p\n", NotificationDll);
 VOID
 CleanupNotifications(VOID)
 {
-    PLIST_ENTRY ListEntry;
-    PNOTIFICATION_ITEM NotificationDll;
-
-    ListEntry = NotificationDllListHead.Flink;
-    while (ListEntry != &NotificationDllListHead)
+    while (!IsListEmpty(&NotificationDllListHead))
     {
-        NotificationDll = CONTAINING_RECORD(ListEntry,
-                                            NOTIFICATION_ITEM,
-                                            ListEntry);
-        if (NotificationDll != NULL)
-        {
-            if (NotificationDll->pszKeyName != NULL)
-                RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll->pszKeyName);
-
-            if (NotificationDll->pszDllName != NULL)
-                RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll->pszDllName);
-        }
-
-        ListEntry = ListEntry->Flink;
-
-        RemoveEntryList(&NotificationDll->ListEntry);
-
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll);
+        PLIST_ENTRY ListEntry = RemoveHeadList(&NotificationDllListHead);
+        PNOTIFICATION_ITEM Notification =
+            CONTAINING_RECORD(ListEntry, NOTIFICATION_ITEM, ListEntry);
+        DeleteNotification(Notification);
     }
 }
 
