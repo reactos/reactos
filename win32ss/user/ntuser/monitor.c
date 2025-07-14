@@ -970,11 +970,9 @@ NtUserMonitorFromWindow(
 {
     PWND pWnd;
     HMONITOR hMonitor;
+    RECTL Rect = { 0, 0, 0, 0 };
 
     TRACE("Enter NtUserMonitorFromWindow\n");
-
-    if (!hWnd)
-        return NULL;
 
     /* Check if flags are valid */
     if (dwFlags != MONITOR_DEFAULTTONULL &&
@@ -992,9 +990,20 @@ NtUserMonitorFromWindow(
     pWnd = UserGetWindowObject(hWnd);
     if (pWnd)
     {
-        /* Find the best monitor now */
-        IntGetMonitorsFromRect((LPCRECTL)&pWnd->rcWindow, &hMonitor, NULL, 1, dwFlags);
+        if (pWnd->style & WS_MINIMIZE)
+            Rect = pWnd->InternalPos.NormalRect;
+        else
+            Rect = pWnd->rcWindow;
+
+        if (RECTL_bIsEmptyRect(&Rect))
+        {
+            Rect.right = Rect.left + 1;
+            Rect.bottom = Rect.top + 1;
+        }
     }
+
+    /* Find the best monitor now */
+    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
 
     TRACE("Leave NtUserMonitorFromWindow, ret=%p\n", hMonitor);
     UserLeave();
