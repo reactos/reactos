@@ -221,8 +221,7 @@ MMixerAddMixerControl(
                 for (Index = 0; Index < Steps; Index++)
                 {
                     VolumeData->Values[Index] = Value;
-                    // HACK: use '- 1' to make the left and right volume controls behave independently.
-                    Value += Range->SteppingDelta - 1;
+                    Value += Range->SteppingDelta;
                 }
                 MixerControl->ExtraData = VolumeData;
            }
