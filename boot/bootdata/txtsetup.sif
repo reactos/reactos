@@ -87,7 +87,6 @@ FreeSysPartDiskSpace=450
 ; "MouseDrivers.Load" sections.
 ;
 [SourceDisksFiles]
-acpi.sys     = 1,,,,,,,4,1,,,1,4
 nmidebug.sys = 1,,,,,,x,4,,,,1,4
 sacdrv.sys   = 1,,,,,,x,4,,,,1,4
 uniata.sys   = 1,,,,,,x,4,,,,1,4
@@ -138,8 +137,10 @@ mountmgr.sys = 1,,,,,,x,4,,,,1,4
 partmgr.sys  = 1,,,,,,x,4,,,,1,4
 
 [SourceDisksFiles.x86]
+acpi.sys     = 1,,,,,,,4,1,,,1,4
 
 [SourceDisksFiles.amd64]
+acpi.sys     = 1,,,,,,x,4,,,,1,4
 
 ;
 ; The [SystemPartitionFiles] section lists all the files
