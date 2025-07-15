@@ -477,6 +477,7 @@ UserMonitorFromRect(
         dwFlags != MONITOR_DEFAULTTOPRIMARY &&
         dwFlags != MONITOR_DEFAULTTONEAREST)
     {
+        EngSetLastError(ERROR_INVALID_FLAGS);
         return NULL;
     }
 
