@@ -333,8 +333,6 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
         ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
-
-        # Wine is sad if we include this sooner
         sdk/include/dxsdk
         sdk/lib/pseh/include
     )
@@ -345,12 +343,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     add_dependency_header()
 
-    add_subdirectory(sdk/include/ndk/tests)
-    add_subdirectory(sdk/include/xdk)
-    add_subdirectory(sdk/include/psdk)
-    add_subdirectory(sdk/include/dxsdk)
-    add_subdirectory(sdk/include/reactos)
-    add_subdirectory(sdk/include/asm)
+    add_subdirectory(sdk/include)
 
     if(ARCH MATCHES "64$")
         include(sdk/cmake/baseaddress64.cmake)
