@@ -12,7 +12,8 @@ START_TEST(PathIsEqualOrSubFolder)
 {
     ok_int(PathIsEqualOrSubFolder(L"C:", L"C:"), TRUE);
     ok_int(PathIsEqualOrSubFolder(L"C:", L"C:\\"), TRUE);
-    ok_int(PathIsEqualOrSubFolder(L"C:\\", L"C:"), TRUE);
+    if (GetNTVersion() != _WIN32_WINNT_VISTA)
+        ok_int(PathIsEqualOrSubFolder(L"C:\\", L"C:"), TRUE);
     ok_int(PathIsEqualOrSubFolder(L"C:\\", L"C:\\"), TRUE);
     ok_int(PathIsEqualOrSubFolder(L"C:\\", L"C:\\TestTestTest"), TRUE);
     ok_int(PathIsEqualOrSubFolder(L"C:\\TestTestTest", L"C:\\"), FALSE);
