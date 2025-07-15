@@ -265,8 +265,8 @@ InitNotifications(VOID)
     HKEY hNotifyKey = NULL;
     LONG lError;
     DWORD dwIndex;
-    WCHAR szKeyName[80];
     DWORD dwKeyName;
+    WCHAR szKeyName[80];
 
     TRACE("InitNotifications()\n");
 
@@ -277,7 +277,7 @@ InitNotifications(VOID)
     lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                            L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Notify",
                            0,
-                           KEY_READ | KEY_ENUMERATE_SUB_KEYS,
+                           KEY_READ,
                            &hNotifyKey);
     if (lError != ERROR_SUCCESS)
     {
@@ -285,8 +285,7 @@ InitNotifications(VOID)
         return TRUE;
     }
 
-    dwIndex = 0;
-    for(;;)
+    for (dwIndex = 0; ; ++dwIndex)
     {
         dwKeyName = ARRAYSIZE(szKeyName);
         lError = RegEnumKeyExW(hNotifyKey,
@@ -302,8 +301,6 @@ InitNotifications(VOID)
 
         TRACE("Notification DLL: %S\n", szKeyName);
         AddNotificationDll(hNotifyKey, szKeyName);
-
-        dwIndex++;
     }
 
     RegCloseKey(hNotifyKey);
@@ -411,7 +408,7 @@ CallNotificationDlls(
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Notify",
                             0,
-                            KEY_READ | KEY_ENUMERATE_SUB_KEYS,
+                            KEY_READ,
                             &hNotifyKey);
     if (dwError != ERROR_SUCCESS)
     {
