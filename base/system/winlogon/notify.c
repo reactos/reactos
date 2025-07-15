@@ -190,15 +190,12 @@ AddSfcNotification(VOID)
     if (!NotificationDll)
         return; // If needed: dwError = ERROR_OUTOFMEMORY;
 
-    NotificationDll->pszDllName = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                                                  (wcslen(szSfcPath) + 1) * sizeof(WCHAR));
+    NotificationDll->pszDllName = WlStrDup(szSfcPath);
     if (NotificationDll->pszDllName == NULL)
     {
         dwError = ERROR_OUTOFMEMORY;
         goto done;
     }
-
-    wcscpy(NotificationDll->pszDllName, szSfcPath);
 
     NotificationDll->bEnabled = TRUE;
     NotificationDll->dwMaxWait = 30; /* FIXME: ??? */
@@ -290,15 +287,12 @@ AddNotificationDll(
         goto done;
     }
 
-    NotificationDll->pszKeyName = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                                                  (wcslen(pszKeyName) + 1) * sizeof(WCHAR));
+    NotificationDll->pszKeyName = WlStrDup(pszKeyName);
     if (NotificationDll->pszKeyName == NULL)
     {
         lError = ERROR_OUTOFMEMORY;
         goto done;
     }
-
-    wcscpy(NotificationDll->pszKeyName, pszKeyName);
 
     dwSize = 0;
     lError = RegQueryValueExW(hDllKey,
@@ -560,8 +554,8 @@ CallNotificationDlls(
             break;
     }
 
-    Info.UserName = NULL; //UserName;
-    Info.Domain = NULL; //Domain;
+    Info.UserName = pSession->UserName;
+    Info.Domain = pSession->Domain;
     Info.WindowStation = pSession->InteractiveWindowStationName;
     Info.hToken = pSession->UserToken;
 

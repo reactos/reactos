@@ -621,6 +621,10 @@ HandleLogon(
         Session->hProfileInfo = ProfileInfo.hProfile;
     }
 
+    /* Cache the username and domain */
+    Session->UserName = WlStrDup(Session->MprNotifyInfo.pszUserName);
+    Session->Domain = WlStrDup(Session->MprNotifyInfo.pszDomain);
+
     /* Create environment block for the user */
     if (!CreateUserEnvironment(Session))
     {
@@ -687,6 +691,10 @@ cleanup:
 
     if (!ret)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Session->Domain);
+        Session->UserName = Session->Domain = NULL;
+
         if (Session->hProfileInfo)
             UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
         Session->hProfileInfo = NULL;
@@ -1049,6 +1057,10 @@ HandleLogoff(
     DestroyLogoffSecurityAttributes(psa);
 
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Session->Domain);
+    Session->UserName = Session->Domain = NULL;
 
     if (Session->hProfileInfo)
         UnloadUserProfile(Session->UserToken, Session->hProfileInfo);

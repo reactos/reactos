@@ -21,6 +21,27 @@ PWLSESSION WLSession = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+/**
+ * @brief
+ * Duplicates the given string, allocating a buffer on the heap.
+ **/
+PWSTR
+WlStrDup(
+    _In_opt_ PCWSTR String)
+{
+    PWSTR ptr;
+
+    if (!String)
+        return NULL;
+
+    ptr = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                          (wcslen(String) + 1) * sizeof(WCHAR));
+    if (ptr)
+        wcscpy(ptr, String);
+    return ptr;
+}
+
+
 static
 BOOL
 StartServicesManager(VOID)
