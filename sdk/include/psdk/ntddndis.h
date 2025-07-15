@@ -440,10 +440,12 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 #define NDIS_MAC_OPTION_8021Q_VLAN                       0x00000200
 #define NDIS_MAC_OPTION_RESERVED                         0x80000000
 
-#define IOCTL_NDIS_QUERY_GLOBAL_STATS CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, \
-                                               0,                            \
-                                               METHOD_OUT_DIRECT,            \
-                                               FILE_ANY_ACCESS)
+#define _NDIS_CONTROL_CODE(request, method) \
+    CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, request, method, FILE_ANY_ACCESS)
+
+#define IOCTL_NDIS_QUERY_GLOBAL_STATS   _NDIS_CONTROL_CODE(0x00, METHOD_OUT_DIRECT) // 0x170002
+
+#define IOCTL_NDIS_RESERVED7            _NDIS_CONTROL_CODE(0x0F, METHOD_OUT_DIRECT) // 0x17003e
 
 /* Hardware status codes (OID_GEN_HARDWARE_STATUS) */
 typedef enum _NDIS_HARDWARE_STATUS {
