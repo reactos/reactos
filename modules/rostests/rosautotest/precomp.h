@@ -30,7 +30,7 @@ using namespace std;
 #include <winreg.h>
 
 #include <ndk/rtlfuncs.h>
-#include <ver/buildno.h>
+#include <reactos/buildno.h>
 
 /* Class includes */
 #include "auto_array_ptr.h"

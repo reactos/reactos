@@ -10,7 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <ver/buildno.h>
+#include <reactos/buildno.h>
 
 #define NDEBUG
 #include <debug.h>

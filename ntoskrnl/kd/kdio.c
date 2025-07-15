@@ -10,7 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <ver/buildno.h>
+#include <reactos/buildno.h>
 #include "kd.h"
 #include "kdterminal.h"
 #ifdef KDBG

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ver/buildno.h>
+#include <reactos/buildno.h>
 
 // #ifdef LANGUAGE_AF_ZA
     // #include "lang/af-ZA.h"

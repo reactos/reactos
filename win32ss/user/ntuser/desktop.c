@@ -11,7 +11,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserDesktop);
 
-#include <ver/buildno.h>
+#include <reactos/buildno.h>
 
 static NTSTATUS
 UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta);

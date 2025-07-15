@@ -14,8 +14,8 @@
 #include <debug.h>
 
 /* Driver Version number and Copyright */
-#include <ver/buildno.h>
-#include <ver/version.h>
+#include <reactos/buildno.h>
+#include <reactos/version.h>
 
 #include "emulator.h"
 
