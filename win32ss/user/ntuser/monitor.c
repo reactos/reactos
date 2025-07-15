@@ -402,7 +402,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
 }
 
 HMONITOR FASTCALL
-IntFindBestMonitorFromRect(
+IntGetMonitorFromRect(
     _In_ LPCRECTL pRect,
     _In_ DWORD dwFlags)
 {
@@ -474,7 +474,7 @@ UserMonitorFromRect(
         return NULL;
     }
 
-    hMonitor = IntFindBestMonitorFromRect(pRect, dwFlags);
+    hMonitor = IntGetMonitorFromRect(pRect, dwFlags);
     return UserGetMonitorObject(hMonitor);
 }
 
@@ -838,6 +838,7 @@ NtUserMonitorFromPoint(
         dwFlags != MONITOR_DEFAULTTOPRIMARY &&
         dwFlags != MONITOR_DEFAULTTONEAREST)
     {
+        EngSetLastError(ERROR_INVALID_FLAGS);
         return NULL;
     }
 
@@ -888,13 +889,17 @@ NtUserMonitorFromRect(
         dwFlags != MONITOR_DEFAULTTOPRIMARY &&
         dwFlags != MONITOR_DEFAULTTONEAREST)
     {
+        EngSetLastError(ERROR_INVALID_FLAGS);
         return NULL;
     }
 
     /* Copy rectangle to safe buffer */
     Status = MmCopyFromCaller(&Rect, pRectUnsafe, sizeof (RECT));
     if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
         return NULL;
+    }
 
     if (RECTL_bIsEmptyRect(&Rect))
     {
@@ -903,7 +908,7 @@ NtUserMonitorFromRect(
     }
 
     UserEnterShared();
-    hMonitor = IntFindBestMonitorFromRect(&Rect, dwFlags);
+    hMonitor = IntGetMonitorFromRect(&Rect, dwFlags);
     UserLeave();
 
     return hMonitor;
@@ -927,6 +932,7 @@ NtUserMonitorFromWindow(
         dwFlags != MONITOR_DEFAULTTOPRIMARY &&
         dwFlags != MONITOR_DEFAULTTONEAREST)
     {
+        EngSetLastError(ERROR_INVALID_FLAGS);
         return NULL;
     }
 
@@ -947,7 +953,7 @@ NtUserMonitorFromWindow(
         }
     }
 
-    hMonitor = IntFindBestMonitorFromRect(&Rect, dwFlags);
+    hMonitor = IntGetMonitorFromRect(&Rect, dwFlags);
 
     UserLeave();
 
