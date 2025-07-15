@@ -428,13 +428,19 @@ IntGetMonitorFromRect(
                                           sizeof(HMONITOR) * cMonitors,
                                           USERTAG_MONITORRECTS);
     if (phMonitorList == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
+    }
 
     prcMonitorList = ExAllocatePoolWithTag(PagedPool,
                                            sizeof(RECT) * cMonitors,
                                            USERTAG_MONITORRECTS);
     if (prcMonitorList == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
+    }
 
     /* Get intersecting monitors again but now with rectangle list */
     cMonitors = IntGetMonitorsFromRect(pRect, phMonitorList, prcMonitorList, cMonitors, 0);
