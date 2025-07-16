@@ -2591,21 +2591,16 @@ void IntForceMinimizeWindow(PWND pWnd)
 {
     HRGN hRgn;
     PREGION pRgn;
-    BOOL bParentIsDesktop;
 
     if ((pWnd->style & (WS_MINIMIZE | WS_VISIBLE)) != WS_VISIBLE)
         return;
 
-    pWnd->style &= ~WS_VISIBLE;
+    if (pWnd->state & WNDS_DESTROYED)
+        return;
+
     pWnd->ExStyle &= ~WS_EX_MAKEVISIBLEWHENUNGHOSTED;
 
-    bParentIsDesktop = (pWnd->spwndParent == pWnd->head.rpdesk->pDeskInfo->spwnd);
-
-    if (!(pWnd->state & WNDS_DESTROYED) && (bParentIsDesktop || pWnd->fnid == FNID_DESKTOP))
-        --(pWnd->head.pti->cVisWindows);
-
-    // Delete window DC cache
-    DceFreeWindowDCE(pWnd);
+    IntSetStyle(pWnd, 0, WS_VISIBLE);
 
     // Invalidate and redraw the window region
     hRgn = GreCreateRectRgnIndirect(&pWnd->rcWindow);
@@ -2614,8 +2609,8 @@ void IntForceMinimizeWindow(PWND pWnd)
     REGION_UnlockRgn(pRgn);
     GreDeleteObject(hRgn);
 
-    // Activate the other window
-    if (bParentIsDesktop)
+    // Activate the other window if necessary
+    if (pWnd->spwndParent == pWnd->head.rpdesk->pDeskInfo->spwnd)
         co_WinPosActivateOtherWindow(pWnd);
 }
 
