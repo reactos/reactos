@@ -1391,7 +1391,7 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
     if (_DoFolderViewCB(SFVM_ADDINGOBJECT, 0, (LPARAM)pidl) == S_FALSE)
         return -1;
 
-    lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
+    lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
     lvItem.iItem = m_ListView.GetItemCount();             // add item to lists end
     lvItem.iSubItem = 0;
     lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidl)); // set item's data
@@ -1399,7 +1399,10 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
     lvItem.iImage = I_IMAGECALLBACK;                      // get image on a callback basis
     lvItem.stateMask = LVIS_CUT;
     if (m_HasCutItems)
+    {
+        lvItem.mask |= LVIF_STATE;
         lvItem.state = GetItemAttributes(pidl, SFGAO_HIDDEN | SFGAO_GHOSTED) ? LVIS_CUT : 0;
+    }
 
     return m_ListView.InsertItem(&lvItem);
 }
@@ -1468,13 +1471,16 @@ BOOL CDefView::LV_UpdateItem(INT nItem, PCUITEMID_CHILD pidl)
     {
         _DoFolderViewCB(SFVM_UPDATINGOBJECT, nItem, (LPARAM)pidl);
 
-        lvItem.mask = LVIF_IMAGE | LVIF_STATE;
+        lvItem.mask = LVIF_IMAGE;
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
         lvItem.stateMask = LVIS_CUT;
         if (m_HasCutItems)
+        {
+            lvItem.mask |= LVIF_STATE;
             lvItem.state = GetItemAttributes(pidl, SFGAO_HIDDEN | SFGAO_GHOSTED) ? LVIS_CUT : 0;
+        }
         PCUITEMID_CHILD pidlOld = _PidlByItem(nItem);
         if (pidlOld && (lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidl))) != NULL)
             lvItem.mask |= LVIF_PARAM;
