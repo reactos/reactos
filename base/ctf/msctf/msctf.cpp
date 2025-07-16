@@ -41,7 +41,6 @@ static UINT array_size;
 static struct list AtsList = LIST_INIT(AtsList);
 static UINT activated = 0;
 
-DWORD g_tlsIndex = 0;
 TfClientId g_processId = 0;
 ITfCompartmentMgr *g_globalCompartmentMgr = NULL;
 
@@ -372,7 +371,7 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     ActivatedTextService *actsvr;
     ITfCategoryMgr *catmgr;
     AtsEntry *entry;
-    ITfThreadMgrEx *tm = (ITfThreadMgrEx *)TlsGetValue(g_tlsIndex);
+    ITfThreadMgrEx *tm = (ITfThreadMgrEx *)TlsGetValue(g_dwTLSIndex);
     ITfClientId *clientid;
 
     if (!tm)
@@ -544,11 +543,10 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     {
         case DLL_PROCESS_ATTACH:
             MSCTF_hinstance = hinst;
-            g_tlsIndex = TlsAlloc();
-            break;
+            return ProcessAttach(hinst);
+
         case DLL_PROCESS_DETACH:
-            if (fImpLoad) break;
-            TlsFree(g_tlsIndex);
+            ProcessDetach(hinst);
             break;
     }
     return TRUE;
@@ -613,7 +611,7 @@ HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim)
 HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
 {
     TRACE("\n");
-    *pptim = (ITfThreadMgr *)TlsGetValue(g_tlsIndex);
+    *pptim = (ITfThreadMgr *)TlsGetValue(g_dwTLSIndex);
 
     if (*pptim)
         (*pptim)->AddRef();

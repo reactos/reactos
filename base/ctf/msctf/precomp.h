@@ -43,7 +43,7 @@ extern "C" {
 #define COOKIE_MAGIC_INPUTPROCESSORPROFILEACTIVATIONSINK 0x00b0
 #define COOKIE_MAGIC_ACTIVELANGSINK 0x00c0
 
-extern DWORD g_tlsIndex;
+extern DWORD g_dwTLSIndex;
 extern TfClientId g_processId;
 extern ITfCompartmentMgr *g_globalCompartmentMgr;
 
@@ -107,6 +107,9 @@ void free_sinks(struct list *sink_list);
 
 HRESULT __wine_register_resources(HMODULE module);
 HRESULT __wine_unregister_resources(HMODULE module);
+
+BOOL ProcessAttach(HINSTANCE hinstDLL);
+VOID ProcessDetach(HINSTANCE hinstDLL);
 
 #ifdef __cplusplus
 } // extern "C"

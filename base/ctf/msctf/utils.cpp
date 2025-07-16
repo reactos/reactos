@@ -765,7 +765,7 @@ EXTERN_C VOID TFUninitLib(VOID)
 /**
  * @unimplemented
  */
-BOOL ProcessAttach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
+BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     gf_CRT_INIT = TRUE;
 
