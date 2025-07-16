@@ -7,8 +7,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <wdm.h>
 #include <initguid.h>
+#include <wdm.h>
 #include <poclass.h>
 
 /* EOF */
