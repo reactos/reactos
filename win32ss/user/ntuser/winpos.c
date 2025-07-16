@@ -2690,7 +2690,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 
       case SW_FORCEMINIMIZE:
          IntForceMinimizeWindow(Wnd);
-         return TRUE;
+         return WasVisible;
 
       case SW_SHOWMINNOACTIVE:
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
