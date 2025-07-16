@@ -2840,6 +2840,18 @@ cpp_quote("#define SMC_SETSFOBJECT			0x0000002D")
 cpp_quote("#define SMC_SHCHANGENOTIFY		0x0000002E")
 cpp_quote("#define SMC_CHEVRONGETTIP		0x0000002F")
 cpp_quote("#define SMC_SFDDRESTRICTED		0x00000030")
+cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE70) || defined(__REACTOS__)")
+cpp_quote("#define SMC_SFEXEC_MIDDLE        0x00000031")
+cpp_quote("#define SMC_GETAUTOEXPANDSTATE   0x00000041")
+cpp_quote("#define SMC_AUTOEXPANDCHANGE     0x00000042")
+cpp_quote("#define SMC_GETCONTEXTMENUMODIFIER 0x00000043")
+cpp_quote("#define SMC_GETBKCONTEXTMENU     0x00000044")
+cpp_quote("#define SMC_OPEN                 0x00000045")
+cpp_quote("#define SMAE_EXPANDED            0x00000001")
+cpp_quote("#define SMAE_CONTRACTED          0x00000002")
+cpp_quote("#define SMAE_USER                0x00000004")
+cpp_quote("#define SMAE_VALID               0x00000007")
+cpp_quote("#endif")
 
 [
     uuid(4CA300A1-9B8D-11d1-8B22-00C04FD918D0),
