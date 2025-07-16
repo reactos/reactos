@@ -762,9 +762,7 @@ EXTERN_C VOID TFUninitLib(VOID)
     // Do nothing
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     gf_CRT_INIT = TRUE;
@@ -838,10 +836,8 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     return TRUE;
 }
 
-/**
- * @unimplemented
- */
-VOID ProcessDetach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
+/// @unimplemented
+VOID ProcessDetach(HINSTANCE hinstDLL)
 {
     if (!gf_CRT_INIT)
     {
