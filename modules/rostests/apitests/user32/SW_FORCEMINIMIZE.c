@@ -25,7 +25,7 @@ ThreadFunc(LPVOID arg)
 {
     BOOL ret;
     HWND hwnd = (HWND)arg;
-    DWORD style;
+    DWORD style, exstyle;
 
     Sleep(100);
     ok_long(CheckColor(), RED);
@@ -40,7 +40,8 @@ ThreadFunc(LPVOID arg)
         ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP | WS_MINIMIZE | WS_VISIBLE), "style was 0x%08lX", style);
     else
         ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP), "style was 0x%08lX", style);
-    ok_long(GetWindowLongPtrA(hwnd, GWL_EXSTYLE), 0);
+    exstyle = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
+    ok_long(exstyle, 0);
 
     ShowWindow(hwnd, SW_MINIMIZE);
     Sleep(100);
@@ -53,7 +54,8 @@ ThreadFunc(LPVOID arg)
     ok(CheckColor() != RED, "Color was red\n");
     style = GetWindowLongPtrA(hwnd, GWL_STYLE);
     ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP | WS_MINIMIZE | WS_VISIBLE), "style was 0x%08lX", style);
-    ok_long(GetWindowLongPtrA(hwnd, GWL_EXSTYLE), 0);
+    exstyle = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
+    ok_long(exstyle, 0);
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
     Sleep(100);
@@ -69,7 +71,8 @@ ThreadFunc(LPVOID arg)
         ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP | WS_MINIMIZE | WS_VISIBLE), "style was 0x%08lX", style);
     else
         ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP), "style was 0x%08lX", style);
-    ok_long(GetWindowLongPtrA(hwnd, GWL_EXSTYLE), 0);
+    exstyle = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
+    ok_long(exstyle, 0);
 
     SetWindowLongPtrA(hwnd, GWL_EXSTYLE, WS_EX_MAKEVISIBLEWHENUNGHOSTED);
     ret = ShowWindow(hwnd, SW_FORCEMINIMIZE);
@@ -84,7 +87,8 @@ ThreadFunc(LPVOID arg)
         ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP | WS_MINIMIZE | WS_VISIBLE), "style was 0x%08lX", style);
     else
         ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP), "style was 0x%08lX", style);
-    ok_long(GetWindowLongPtrA(hwnd, GWL_EXSTYLE), 0);
+    exstyle = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
+    ok_long(exstyle, 0);
 
     PostMessageA(hwnd, WM_CLOSE, 0, 0);
     return 0;
