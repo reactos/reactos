@@ -59,6 +59,7 @@ static NTSTATUS (WINAPI *pBCryptDestroySecret)(BCRYPT_SECRET_HANDLE);
 static NTSTATUS (WINAPI *pBCryptEnumAlgorithms)(ULONG, ULONG *, BCRYPT_ALGORITHM_IDENTIFIER **, ULONG);
 static void (WINAPI *pBCryptFreeBuffer)(void *);
 static NTSTATUS (WINAPI *pBCryptDeriveKeyCapi)(BCRYPT_HASH_HANDLE, BCRYPT_ALG_HANDLE, PUCHAR, ULONG, ULONG);
+static NTSTATUS (WINAPI *pBCryptEnumContextFunctions)(ULONG, const WCHAR *, ULONG, ULONG *, CRYPT_CONTEXT_FUNCTIONS **);
 
 static void test_BCryptGenRandom(void)
 {
@@ -593,7 +594,7 @@ static void test_BcryptDeriveKeyPBKDF2(void)
         ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
     }
 }
-#endif
+#endif /* __REACTOS__ */
 
 static void test_rng(void)
 {
@@ -2226,7 +2227,6 @@ static void test_key_import_export(void)
     ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
 }
 
-#ifndef __REACTOS__
 static BYTE eccPrivkey[] =
 {
     /* X */
@@ -2502,7 +2502,6 @@ static struct
         0x5f, 0x8b, 0x96, 0x4b, 0xaf, 0x09, 0x36, 0xdc, 0xc0, 0x84, 0xd3, 0x6f, 0x22, 0xe7, 0xe5, 0x09
     }
 };
-
 
 static UCHAR rsaPublicBlobWithInvalidPublicExpSize[] =
 {
@@ -3505,6 +3504,9 @@ static void test_DH(void)
 }
 
 #ifndef __REACTOS__
+#ifndef NCRYPT_SCHANNEL_INTERFACE
+#define NCRYPT_SCHANNEL_INTERFACE               0x00010002
+#endif
 static void test_BCryptEnumContextFunctions(void)
 {
     CRYPT_CONTEXT_FUNCTIONS *buffer;
@@ -3514,7 +3516,7 @@ static void test_BCryptEnumContextFunctions(void)
     buffer = NULL;
     status = pBCryptEnumContextFunctions( CRYPT_LOCAL, L"SSL", NCRYPT_SCHANNEL_INTERFACE, &buflen, &buffer );
     todo_wine ok( status == STATUS_SUCCESS, "got 0x%08x\n", status);
-    if (status == STATUS_SUCCESS) BCryptFreeBuffer( buffer );
+    if (status == STATUS_SUCCESS) pBCryptFreeBuffer( buffer );
 }
 #endif /* __REACTOS__ */
 
@@ -3739,7 +3741,7 @@ static void test_aes_vector(void)
     ret = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(!ret, "got 0x%x\n", ret);
 }
-
+#ifndef __REACTOS__
 static void test_BcryptDeriveKeyCapi(void)
 {
     static const UCHAR expect[] =
@@ -3820,7 +3822,7 @@ static void test_BcryptDeriveKeyCapi(void)
     ret = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(!ret, "got 0x%x\n", ret);
 }
-
+#endif
 static UCHAR dsaHash[] =
 {
     0x7e,0xe3,0x74,0xe7,0xc5,0x0b,0x6b,0x70,0xdb,0xab,0x32,0x6d,0x1d,0x51,0xd6,0x74,0x79,0x8e,0x5b,0x4b
@@ -3888,6 +3890,11 @@ static void test_DSA(void)
 
     ret = pBCryptImportKeyPair(alg, NULL, BCRYPT_PUBLIC_KEY_BLOB, &key, dsaPublicBlob, sizeof(dsaPublicBlob), 0);
     ok(!ret, "got 0x%x\n", ret);
+    if(ret)
+    {
+        win_skip("BCRYPT_DSA_ALGORITHM not supported\n");
+        goto dsa_end;
+    }
     pBCryptDestroyKey(key);
 
     ret = pBCryptImportKeyPair(alg, NULL, BCRYPT_DSA_PUBLIC_BLOB, &key, dsaPublicBlob, sizeof(dsaPublicBlob), 0);
@@ -3965,7 +3972,7 @@ static void test_DSA(void)
 
     ret = pBCryptDestroyKey(key);
     ok(!ret, "got 0x%x\n", ret);
-
+dsa_end:
     ret = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(!ret, "got 0x%x\n", ret);
 }
@@ -4418,6 +4425,7 @@ static void test_RC4(void)
     ok(status == STATUS_SUCCESS, "got 0x%x\n", status);
 }
 
+#ifndef __REACTOS__
 static void test_PBKDF2(void)
 {
     static char salt[] = "cCxuHMEHLibcglJOG88dIw==";
@@ -4519,7 +4527,7 @@ static void test_PBKDF2(void)
     status = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(status == STATUS_SUCCESS, "got 0x%x\n", status);
 }
-#endif
+#endif /* __REACTOS__ */
 
 START_TEST(bcrypt)
 {
@@ -4563,6 +4571,7 @@ START_TEST(bcrypt)
     pBCryptEnumAlgorithms = (void *)GetProcAddress(module, "BCryptEnumAlgorithms");
     pBCryptFreeBuffer = (void *)GetProcAddress(module, "BCryptFreeBuffer");
     pBCryptDeriveKeyCapi = (void *)GetProcAddress(module, "BCryptDeriveKeyCapi");
+    pBCryptEnumContextFunctions = (void *)GetProcAddress(module, "BCryptEnumContextFunctions");
 
     test_BCryptGenRandom();
     test_BCryptGetFipsAlgorithmMode();
@@ -4570,7 +4579,7 @@ START_TEST(bcrypt)
     test_BcryptHash();
 #ifndef __REACTOS__
     test_BcryptDeriveKeyPBKDF2();
-#endif
+#endif /* __REACTOS__ */
     test_rng();
     test_3des();
     test_aes();
@@ -4578,27 +4587,27 @@ START_TEST(bcrypt)
     test_BCryptEncrypt();
     test_BCryptDecrypt();
     test_key_import_export();
-#ifndef __REACTOS__
     test_ECDSA();
     test_RSA();
     test_RSA_SIGN();
     test_ECDH();
     test_DH();
-#endif
 #ifndef __REACTOS__
     test_BCryptEnumContextFunctions();
 #endif
-#ifndef __REACTOS__
     test_BCryptSignHash();
     test_BCryptEnumAlgorithms();
     test_aes_vector();
+#ifndef __REACTOS__
     test_BcryptDeriveKeyCapi();
+#endif
     test_DSA();
     test_SecretAgreement();
     test_rsa_encrypt();
     test_RC4();
+#ifndef __REACTOS__
     test_PBKDF2();
-#endif
+#endif /* __REACTOS__ */
 
     FreeLibrary(module);
 }
