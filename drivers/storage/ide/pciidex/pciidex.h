@@ -6,8 +6,7 @@
  *              Copyright 2023 Dmitry Borisov <di.sean@protonmail.com>
  */
 
-#ifndef _PCIIDEX_PCH_
-#define _PCIIDEX_PCH_
+#pragma once
 
 #include <ntddk.h>
 #include <ntstrsafe.h>
@@ -15,6 +14,8 @@
 #include <initguid.h>
 #include <wdmguid.h>
 #include <ide.h>
+
+#include <reactos/drivers/ntddata.h>
 
 #define TAG_PCIIDEX    'XedI'
 
@@ -43,8 +44,6 @@
 #define PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE            0x04
 #define PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE_CAPABLE    0x08
 #define PCIIDE_PROGIF_DMA_CAPABLE                              0x80
-
-#define BM_SECONDARY_CHANNEL_OFFSET      8
 
 typedef struct _PDO_DEVICE_EXTENSION    PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
@@ -75,13 +74,17 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT Ldo;
 
     ULONG ControllerNumber;
-    BOOLEAN InNativeMode;
-    BOOLEAN IoBaseMapped;
-    BOOLEAN MiniportStarted;
+    ULONG Flags;
+#define FDO_IN_NATIVE_MODE     0x00000001
+#define FDO_DMA_CAPABLE        0x00000002
+#define FDO_IO_BASE_MAPPED     0x00000004
+#define FDO_MINIPORT_STARTED   0x00000008
 
     FAST_MUTEX DeviceSyncMutex;
     _Guarded_by_(DeviceSyncMutex)
     PPDO_DEVICE_EXTENSION Channels[MAX_IDE_CHANNEL];
+
+    PCM_RESOURCE_LIST ResourceList;
 
     USHORT VendorId;
     USHORT DeviceId;
@@ -92,6 +95,7 @@ typedef struct _FDO_DEVICE_EXTENSION
     BUS_INTERFACE_STANDARD BusInterface;
 
     IDE_CONTROLLER_PROPERTIES Properties;
+    PCONTROLLER_OBJECT ControllerObject;
 
     /* Must be the last entry */
     PUCHAR MiniControllerExtension[0];
@@ -104,6 +108,15 @@ typedef struct _PDO_DEVICE_EXTENSION
     PFDO_DEVICE_EXTENSION ParentController;
     BOOLEAN ReportedMissing;
     PUCHAR IoBase;
+    ULONG Flags;
+#define PDO_PIO_ONLY              0x00000001
+#define PDO_DRIVE0_DMA_CAPABLE    0x00000002
+#define PDO_DRIVE1_DMA_CAPABLE    0x00000004
+
+    PPCIIDE_PRD_TABLE_ENTRY PrdTable;
+    ULONG PrdTablePhysicalAddress;
+    ULONG MapRegisterCount;
+    PDMA_ADAPTER AdapterObject;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 CODE_SEG("PAGE")
@@ -143,4 +156,8 @@ PciIdeXChannelState(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ ULONG Channel);
 
-#endif /* _PCIIDEX_PCH_ */
+NTSTATUS
+NTAPI
+PciIdeXProgramTimingMode(
+    _In_ PVOID DeviceExtension,
+    _Inout_ PPCIIDE_TRANSFER_MODE_SELECT XferMode);
