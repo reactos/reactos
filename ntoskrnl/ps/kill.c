@@ -86,8 +86,15 @@ PspTerminateProcess(IN PEPROCESS Process,
             "Process: %p ExitStatus: %d\n", Process, ExitStatus);
     PSREFTRACE(Process);
 
-    /* Check if this is a Critical Process */
-    if (Process->BreakOnTermination)
+    /*
+     * Check if this is a Critical Process. Bugcheck the system if a non-authorized
+     * caller attempts to terminate it. However if a clean shutdown of the kernel
+     * was inquired and the system is indeed shutting down as ExitStatus indicates
+     * then we have to terminate it.
+     */
+    if (Process->BreakOnTermination &&
+        !PopShutdownCleanly &&
+        ExitStatus != STATUS_SYSTEM_SHUTDOWN)
     {
         /* Break to debugger */
         PspCatchCriticalBreak("Terminating critical process 0x%p (%s)\n",
@@ -132,7 +139,7 @@ PsTerminateProcess(IN PEPROCESS Process,
 
 VOID
 NTAPI
-PspShutdownProcessManager(VOID)
+PsShutdownSystem(VOID)
 {
     PEPROCESS Process = NULL;
 
@@ -508,8 +515,8 @@ PspExitThread(IN NTSTATUS ExitStatus)
     /* Lock the thread */
     ExWaitForRundownProtectionRelease(&Thread->RundownProtect);
 
-    /* Cleanup the power state */
-    PopCleanupPowerState((PPOWER_STATE)&Thread->Tcb.PowerState);
+    /* Cleanup the power request of this thread */
+    PoRundownPowerRequestThread(Thread);
 
     /* Call the WMI Callback for Threads */
     //WmiTraceThread(Thread, NULL, FALSE);
@@ -1093,9 +1100,6 @@ PspExitProcess(IN BOOLEAN LastThread,
         /* Run the Notification Routines */
         PspRunCreateProcessNotifyRoutines(Process, FALSE);
     }
-
-    /* Cleanup the power state */
-    PopCleanupPowerState((PPOWER_STATE)&Process->Pcb.PowerState);
 
     /* Clear the security port */
     if (!Process->SecurityPort)
