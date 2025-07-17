@@ -308,7 +308,7 @@ CThreadMgr::~CThreadMgr()
     if (m_focusHook)
         UnhookWindowsHookEx(m_focusHook);
 
-    TlsSetValue(g_tlsIndex, NULL);
+    TlsSetValue(g_dwTLSIndex, NULL);
     TRACE("destroying %p\n", this);
 
     if (m_focus)
@@ -527,7 +527,7 @@ LRESULT CThreadMgr::_ThreadFocusHookProc(INT nCode, WPARAM wParam, LPARAM lParam
 
 LRESULT CALLBACK CThreadMgr::ThreadFocusHookProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
-    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_tlsIndex);
+    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_dwTLSIndex);
     if (!This)
     {
         ERR("Hook proc but no ThreadMgr for this thread. Serious Error\n");
@@ -1215,7 +1215,7 @@ HRESULT CThreadMgr::CreateInstance(IUnknown *pUnkOuter, CThreadMgr **ppOut)
         return CLASS_E_NOAGGREGATION;
 
     /* Only 1 ThreadMgr is created per thread */
-    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_tlsIndex);
+    CThreadMgr *This = (CThreadMgr *)TlsGetValue(g_dwTLSIndex);
     if (This)
     {
         This->AddRef();
@@ -1227,7 +1227,7 @@ HRESULT CThreadMgr::CreateInstance(IUnknown *pUnkOuter, CThreadMgr **ppOut)
     if (!This)
         return E_OUTOFMEMORY;
 
-    TlsSetValue(g_tlsIndex, This);
+    TlsSetValue(g_dwTLSIndex, This);
 
     ITfCompartmentMgr *pCompMgr = NULL;
     CompartmentMgr_Constructor(static_cast<ITfThreadMgrEx *>(This), IID_IUnknown, (IUnknown **)&pCompMgr);

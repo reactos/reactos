@@ -250,15 +250,13 @@ TF_GetThreadFlags(
 /***********************************************************************
  *      TF_CreateCategoryMgr (MSCTF.@)
  *
- * @unimplemented
+ * @implemented
  */
 EXTERN_C HRESULT WINAPI
 TF_CreateCategoryMgr(_Out_ ITfCategoryMgr **ppcat)
 {
-    FIXME("(%p)\n", ppcat);
-    if (ppcat)
-        *ppcat = NULL;
-    return E_NOTIMPL;
+    TRACE("(%p)\n", ppcat);
+    return CategoryMgr_Constructor(NULL, (IUnknown **)ppcat);
 }
 
 /***********************************************************************
@@ -279,14 +277,13 @@ TF_CreateCicLoadMutex(_Out_ LPBOOL pfWinLogon)
 /***********************************************************************
  *      TF_CreateDisplayAttributeMgr (MSCTF.@)
  *
- * @unimplemented
+ * @implemented
  */
 EXTERN_C HRESULT WINAPI
 TF_CreateDisplayAttributeMgr(_Out_ ITfDisplayAttributeMgr **ppdam)
 {
-    FIXME("(%p)\n", ppdam);
-    *ppdam = NULL;
-    return E_NOTIMPL;
+    TRACE("(%p)\n", ppdam);
+    return DisplayAttributeMgr_Constructor(NULL, (IUnknown **)ppdam);
 }
 
 /***********************************************************************
@@ -765,10 +762,8 @@ EXTERN_C VOID TFUninitLib(VOID)
     // Do nothing
 }
 
-/**
- * @unimplemented
- */
-BOOL ProcessAttach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
+/// @unimplemented
+BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     gf_CRT_INIT = TRUE;
 
@@ -841,10 +836,8 @@ BOOL ProcessAttach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
     return TRUE;
 }
 
-/**
- * @unimplemented
- */
-VOID ProcessDetach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
+/// @unimplemented
+VOID ProcessDetach(HINSTANCE hinstDLL)
 {
     if (!gf_CRT_INIT)
     {
