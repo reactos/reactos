@@ -94,7 +94,7 @@ struct key_asymmetric
     DSSSEED           dss_seed;
 };
 
-#define PRIVATE_DATA_SIZE 18
+#define PRIVATE_DATA_SIZE 70
 struct key
 {
     struct object hdr;
