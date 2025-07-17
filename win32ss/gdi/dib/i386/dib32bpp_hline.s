@@ -24,6 +24,7 @@ _DIB_32BPP_HLine:
                   imul    eax, edi
                   mov     edi, [ecx+32]
                   sub     ebx, edx            // cx  = (x2 - x1) ;
+                  jc      short .exit_here    // cx must not be negative
                   add     eax, edi
                   lea     edx, [eax+edx*4]
                   mov     [esp], edx
@@ -47,7 +48,7 @@ _save_rest:
                   rep stosd                  // The actual fill
                   shr     eax, 16
                   stosw
-
+.exit_here:
                   mov     ebx, [esp+4]
                   mov     edi, [esp+8]
                   add     esp, 12
