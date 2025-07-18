@@ -5,6 +5,8 @@
 
 static LIST_ENTRY ThreadListHead;
 static KSPIN_LOCK ThreadListLock;
+static ERESOURCE GlobalLock;
+static ULONG GlobalLockLevel = 0;
 
 KEVENT TerminationEvent;
 NPAGED_LOOKASIDE_LIST MessageLookasideList;
@@ -32,14 +34,18 @@ u32_t sys_now(void)
 void
 sys_arch_protect(sys_prot_t *lev)
 {
-    /* Preempt the dispatcher */
-    KeRaiseIrql(DISPATCH_LEVEL, lev);
+    /* Acquire the global resource to prevent other CPUs from running */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&GlobalLock);
+    *lev = ++GlobalLockLevel;
 }
 
 void
 sys_arch_unprotect(sys_prot_t lev)
 {
-    KeLowerIrql(lev);
+    /* Release the global resource */
+    ASSERT((GlobalLockLevel > 0) && (lev == GlobalLockLevel));
+    GlobalLockLevel--;
+    ExReleaseResourceAndLeaveCriticalRegion(&GlobalLock);
 }
 
 err_t

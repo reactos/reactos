@@ -15,7 +15,7 @@ typedef struct _sys_mbox_t
     int Valid;
 } sys_mbox_t;
 
-typedef KIRQL sys_prot_t;
+typedef u32_t sys_prot_t;
 
 typedef u32_t sys_thread_t;
 
