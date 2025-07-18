@@ -39,7 +39,6 @@ typedef struct _NOTIFICATION_ITEM
     PWSTR pszDllName;
     BOOL bEnabled;
     BOOL bAsynchronous;
-    BOOL bSafe;
     BOOL bImpersonate;
     BOOL bSmartCardLogon;
     DWORD dwMaxWait;
@@ -143,6 +142,32 @@ AddNotificationDll(
     if (lError != ERROR_SUCCESS)
         return;
 
+    /* In safe-boot mode, load the notification DLL only if it is enabled there */
+    if (GetSystemMetrics(SM_CLEANBOOT) != 0) // TODO: Cache when Winlogon starts
+    {
+        BOOL bSafeMode = FALSE; // Default to NOT loading the DLL in SafeMode.
+
+        dwSize = sizeof(dwValue);
+        lError = RegQueryValueExW(hDllKey,
+                                  L"SafeMode",
+                                  NULL,
+                                  &dwType,
+                                  (PBYTE)&dwValue,
+                                  &dwSize);
+        if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
+            bSafeMode = !!dwValue;
+
+        /* Bail out if the DLL should not be loaded in safe-boot mode.
+         * NOTE: On Win2000 and later, the value is always overridden
+         * to TRUE, and the DLL is loaded unconditionally. This defeats
+         * the whole purpose of this feature... In ReactOS we restore it! */
+        if (!bSafeMode)
+        {
+            RegCloseKey(hDllKey);
+            return;
+        }
+    }
+
     NotificationDll = RtlAllocateHeap(RtlGetProcessHeap(),
                                       HEAP_ZERO_MEMORY,
                                       sizeof(*NotificationDll));
@@ -216,16 +241,6 @@ AddNotificationDll(
                               &dwSize);
     if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
         NotificationDll->bImpersonate = !!dwValue;
-
-    dwSize = sizeof(dwValue);
-    lError = RegQueryValueExW(hDllKey,
-                              L"Safe",
-                              NULL,
-                              &dwType,
-                              (PBYTE)&dwValue,
-                              &dwSize);
-    if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (dwSize == sizeof(dwValue)))
-        NotificationDll->bSafe = !!dwValue;
 
     dwSize = sizeof(dwValue);
     lError = RegQueryValueExW(hDllKey,

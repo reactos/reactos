@@ -1386,15 +1386,12 @@ HRESULT WINAPI DllRegisterServer(VOID)
     dwValue = 0;
     RegSetValueExW(hNotifyKey, L"Impersonate", 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue));
 
-    // dwValue = 1;
-    // RegSetValueExW(hNotifyKey, L"SafeMode", 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue));
+    /* Can be invoked also in SafeMode */
+    dwValue = 1;
+    RegSetValueExW(hNotifyKey, L"SafeMode", 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue));
 
     // dwValue = 600;
     // RegSetValueExW(hNotifyKey, L"MaxWait", 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue));
-
-    // TODO: Purpose TBD.
-    // dwValue = 1;
-    // RegSetValueExW(hNotifyKey, L"Safe", 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue));
 
     for (i = 0; i < _countof(NotifyEvents); ++i)
     {
