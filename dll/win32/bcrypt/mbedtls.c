@@ -35,9 +35,9 @@ union key_data
 #endif
     } a;
 };
-C_ASSERT( sizeof(union key_data) <= sizeof(((struct key *)0)->private) );
+C_ASSERT(sizeof(union key_data) <= sizeof(((struct key *)0)->private));
 
-static union key_data *key_data( struct key *key )
+static union key_data *key_data(struct key *key)
 {
     return (union key_data *)key->private;
 }
@@ -236,18 +236,18 @@ MAKE_FUNCPTR(mbedtls_dsa_free);
 #define mbedtls_dsa_sign                pmbedtls_dsa_sign
 #define mbedtls_dsa_free                pmbedtls_dsa_free
 
-NTSTATUS process_attach( void *args )
+NTSTATUS process_attach(void *args)
 {
-    if (!(libmbedtls_handle = wine_dlopen( SONAME_LIBMBEDTLS, RTLD_NOW, NULL, 0 )))
+    if (!(libmbedtls_handle = wine_dlopen(SONAME_LIBMBEDTLS, RTLD_NOW, NULL, 0)))
     {
-        ERR( "failed to load libmbedtls, no support for crypto hashes\n" );
+        ERR("failed to load libmbedtls, no support for crypto hashes\n");
         return STATUS_DLL_NOT_FOUND;
     }
 
 #define LOAD_FUNCPTR(f) \
-    if (!(p##f = wine_dlsym( libmbedtls_handle, #f, NULL, 0 ))) \
+    if (!(p##f = wine_dlsym(libmbedtls_handle, #f, NULL, 0))) \
     { \
-        ERR( "failed to load %s\n", #f ); \
+        ERR("failed to load %s\n", #f); \
         goto fail; \
     }
 
@@ -354,24 +354,24 @@ NTSTATUS process_attach( void *args )
     return STATUS_SUCCESS;
 
 fail:
-    wine_dlclose( libmbedtls_handle, NULL, 0 );
+    wine_dlclose(libmbedtls_handle, NULL, 0);
     libmbedtls_handle = NULL;
     return STATUS_DLL_NOT_FOUND;
 }
 
-NTSTATUS process_detach( void *args )
+NTSTATUS process_detach(void *args)
 {
     if (libmbedtls_handle)
     {
         mbedtls_entropy_free(&entropy);
         mbedtls_ctr_drbg_free(&ctr_drbg);
-        wine_dlclose( libmbedtls_handle, NULL, 0 );
+        wine_dlclose(libmbedtls_handle, NULL, 0);
         libmbedtls_handle = NULL;
     }
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hash_init( struct hash *hash )
+NTSTATUS hash_init(struct hash *hash)
 {
     const mbedtls_md_info_t *md_info;
     mbedtls_md_type_t md_type;
@@ -434,7 +434,7 @@ NTSTATUS hash_init( struct hash *hash )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
+NTSTATUS hash_update(struct hash *hash, UCHAR *input, ULONG size)
 {
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
@@ -447,7 +447,7 @@ NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hash_finish( struct hash *hash, UCHAR *output )
+NTSTATUS hash_finish(struct hash *hash, UCHAR *output)
 {
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
@@ -462,7 +462,7 @@ NTSTATUS hash_finish( struct hash *hash, UCHAR *output )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS hash_get_size( struct hash *hash, ULONG *output )
+NTSTATUS hash_get_size(struct hash *hash, ULONG *output)
 {
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
@@ -474,12 +474,12 @@ NTSTATUS hash_get_size( struct hash *hash, ULONG *output )
     return STATUS_SUCCESS;
 }
 
-mbedtls_cipher_id_t key_get_cipher( const struct key *key )
+mbedtls_cipher_id_t key_get_cipher(const struct key *key)
 {
     switch (key->alg_id)
     {
         case ALG_ID_3DES:
-            WARN( "handle block size\n" );
+            WARN("handle block size\n");
             switch (key->u.s.mode)
             {
                 case CHAIN_MODE_ECB:
@@ -489,11 +489,11 @@ mbedtls_cipher_id_t key_get_cipher( const struct key *key )
                 default:
                     break;
             }
-            FIXME( "3DES mode %u with key length %u not supported\n", key->u.s.mode, key->u.s.secret_len );
+            FIXME("3DES mode %u with key length %u not supported\n", key->u.s.mode, key->u.s.secret_len);
             return MBEDTLS_CIPHER_NONE;
 
         case ALG_ID_AES:
-            WARN( "handle block size\n" );
+            WARN("handle block size\n");
             switch (key->u.s.mode)
             {
                 case CHAIN_MODE_GCM:
@@ -515,17 +515,17 @@ mbedtls_cipher_id_t key_get_cipher( const struct key *key )
                 default:
                     break;
             }
-            FIXME( "AES mode %u with key length %u not supported\n", key->u.s.mode, key->u.s.secret_len );
+            FIXME("AES mode %u with key length %u not supported\n", key->u.s.mode, key->u.s.secret_len);
             return MBEDTLS_CIPHER_NONE;
 
         default:
-            FIXME( "algorithm %u not supported\n", key->alg_id );
+            FIXME("algorithm %u not supported\n", key->alg_id);
             return MBEDTLS_CIPHER_NONE;
     }
     return MBEDTLS_CIPHER_NONE;
 }
 
-NTSTATUS key_symmetric_vector_reset( void *args )
+NTSTATUS key_symmetric_vector_reset(void *args)
 {
     struct key *key = args;
 
@@ -534,16 +534,16 @@ NTSTATUS key_symmetric_vector_reset( void *args )
 #endif
     if (key_data(key)->s.cipher_ctx.cipher_info != NULL && key->u.s.vector != NULL && key->u.s.vector_len)
     {
-        if (mbedtls_cipher_set_iv( &key_data(key)->s.cipher_ctx, key->u.s.vector, key->u.s.vector_len )) return STATUS_INTERNAL_ERROR;
+        if (mbedtls_cipher_set_iv(&key_data(key)->s.cipher_ctx, key->u.s.vector, key->u.s.vector_len)) return STATUS_INTERNAL_ERROR;
         return STATUS_SUCCESS;
     }
-    TRACE( "invalidating cipher handle\n" );
-    mbedtls_cipher_free( &key_data(key)->s.cipher_ctx );
+    TRACE("invalidating cipher handle\n");
+    mbedtls_cipher_free(&key_data(key)->s.cipher_ctx);
     key_data(key)->s.cipher_ctx.cipher_info = NULL;
     return STATUS_SUCCESS;
 }
 
-NTSTATUS init_cipher_handle( struct key *key, const mbedtls_operation_t operation )
+NTSTATUS init_cipher_handle(struct key *key, const mbedtls_operation_t operation)
 {
     mbedtls_cipher_type_t cipher;
     const mbedtls_cipher_info_t *info;
@@ -553,28 +553,28 @@ NTSTATUS init_cipher_handle( struct key *key, const mbedtls_operation_t operatio
 #endif
     if (key_data(key)->s.cipher_ctx.cipher_info != NULL)
     {
-        if (mbedtls_cipher_get_operation( &key_data(key)->s.cipher_ctx ) == operation) return STATUS_SUCCESS;
-        mbedtls_cipher_free( &key_data(key)->s.cipher_ctx );
+        if (mbedtls_cipher_get_operation(&key_data(key)->s.cipher_ctx) == operation) return STATUS_SUCCESS;
+        mbedtls_cipher_free(&key_data(key)->s.cipher_ctx);
         key_data(key)->s.cipher_ctx.cipher_info = NULL;
     }
-    cipher = key_get_cipher( key );
+    cipher = key_get_cipher(key);
     if (cipher == MBEDTLS_CIPHER_NONE) return STATUS_NOT_SUPPORTED;
 
-    if ((info = mbedtls_cipher_info_from_type( cipher )) == NULL) return STATUS_INTERNAL_ERROR;
-    mbedtls_cipher_init( &key_data(key)->s.cipher_ctx );
-    if (mbedtls_cipher_setup( &key_data(key)->s.cipher_ctx, info ))
+    if ((info = mbedtls_cipher_info_from_type(cipher)) == NULL) return STATUS_INTERNAL_ERROR;
+    mbedtls_cipher_init(&key_data(key)->s.cipher_ctx);
+    if (mbedtls_cipher_setup(&key_data(key)->s.cipher_ctx, info))
     {
-        mbedtls_cipher_free( &key_data(key)->s.cipher_ctx );
+        mbedtls_cipher_free(&key_data(key)->s.cipher_ctx);
         return STATUS_INTERNAL_ERROR;
     }
-    mbedtls_cipher_set_padding_mode( &key_data(key)->s.cipher_ctx, MBEDTLS_PADDING_NONE );
-    if (key->u.s.secret != NULL && key->u.s.secret_len > 0) mbedtls_cipher_setkey( &key_data(key)->s.cipher_ctx, key->u.s.secret, /*mbedtls_cipher_get_key_bitlen( &key_data(key)->cipher_ctx )*/key->u.s.secret_len*8, operation );
-    if (key->u.s.vector != NULL && key->u.s.vector_len > 0) mbedtls_cipher_set_iv( &key_data(key)->s.cipher_ctx, key->u.s.vector, key->u.s.vector_len );
+    mbedtls_cipher_set_padding_mode(&key_data(key)->s.cipher_ctx, MBEDTLS_PADDING_NONE);
+    if (key->u.s.secret != NULL && key->u.s.secret_len > 0) mbedtls_cipher_setkey(&key_data(key)->s.cipher_ctx, key->u.s.secret, key->u.s.secret_len * 8, operation);
+    if (key->u.s.vector != NULL && key->u.s.vector_len > 0) mbedtls_cipher_set_iv(&key_data(key)->s.cipher_ctx, key->u.s.vector, key->u.s.vector_len);
 
     return STATUS_SUCCESS;
 }
 
-NTSTATUS key_symmetric_set_auth_data( void *args )
+NTSTATUS key_symmetric_set_auth_data(void *args)
 {
     struct key_symmetric_set_auth_data_params *auth_params = args;
     NTSTATUS status;
@@ -583,14 +583,14 @@ NTSTATUS key_symmetric_set_auth_data( void *args )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    if ((status = init_cipher_handle( auth_params->key, auth_params->encrypt ? MBEDTLS_ENCRYPT : MBEDTLS_DECRYPT ))) return status;
+    if ((status = init_cipher_handle(auth_params->key, auth_params->encrypt ? MBEDTLS_ENCRYPT : MBEDTLS_DECRYPT))) return status;
 
-    ret = mbedtls_cipher_update_ad( &key_data(auth_params->key)->s.cipher_ctx, auth_params->auth_data, auth_params->len );
+    ret = mbedtls_cipher_update_ad(&key_data(auth_params->key)->s.cipher_ctx, auth_params->auth_data, auth_params->len);
     if (ret) return STATUS_INTERNAL_ERROR;
     return STATUS_SUCCESS;
 }
 
-NTSTATUS key_symmetric_get_tag( void *args )
+NTSTATUS key_symmetric_get_tag(void *args)
 {
     struct key_symmetric_get_tag_params *tag_params = args;
     mbedtls_operation_t operation;
@@ -600,16 +600,16 @@ NTSTATUS key_symmetric_get_tag( void *args )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    operation = mbedtls_cipher_get_operation( &key_data(tag_params->key)->s.cipher_ctx );
-    if ((status = init_cipher_handle( tag_params->key, operation ))) return status;
+    operation = mbedtls_cipher_get_operation(&key_data(tag_params->key)->s.cipher_ctx);
+    if ((status = init_cipher_handle(tag_params->key, operation))) return status;
 
     switch (operation) {
         case MBEDTLS_ENCRYPT:
-            ret = mbedtls_cipher_write_tag( &key_data(tag_params->key)->s.cipher_ctx, tag_params->tag, tag_params->len );
+            ret = mbedtls_cipher_write_tag(&key_data(tag_params->key)->s.cipher_ctx, tag_params->tag, tag_params->len);
             if (ret) return STATUS_INTERNAL_ERROR;
             break;
         case MBEDTLS_DECRYPT:
-            ret = mbedtls_cipher_check_tag( &key_data(tag_params->key)->s.cipher_ctx, tag_params->tag, tag_params->len );
+            ret = mbedtls_cipher_check_tag(&key_data(tag_params->key)->s.cipher_ctx, tag_params->tag, tag_params->len);
             if (ret)
             {
                 if (ret == MBEDTLS_ERR_CIPHER_AUTH_FAILED)
@@ -619,7 +619,7 @@ NTSTATUS key_symmetric_get_tag( void *args )
             }
             break;
         default:
-            FIXME( "AES operation %u not supported\n", operation );
+            FIXME("AES operation %u not supported\n", operation);
             return STATUS_INTERNAL_ERROR;
             break;
     }
@@ -627,7 +627,7 @@ NTSTATUS key_symmetric_get_tag( void *args )
     return status;
 }
 
-NTSTATUS key_symmetric_encrypt_internal( void *args )
+NTSTATUS key_symmetric_encrypt_internal(void *args)
 {
     const struct key_symmetric_encrypt_params *params = args;
     NTSTATUS status;
@@ -637,13 +637,13 @@ NTSTATUS key_symmetric_encrypt_internal( void *args )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    if ((status = init_cipher_handle( params->key, MBEDTLS_ENCRYPT ))) return status;
+    if ((status = init_cipher_handle(params->key, MBEDTLS_ENCRYPT))) return status;
 
-    ret = mbedtls_cipher_update( &key_data(params->key)->s.cipher_ctx,
+    ret = mbedtls_cipher_update(&key_data(params->key)->s.cipher_ctx,
                                     params->input, params->input_len,
                                     params->output, &output_len);
     if (!output_len)
-        ret = mbedtls_cipher_finish( &key_data(params->key)->s.cipher_ctx,
+        ret = mbedtls_cipher_finish(&key_data(params->key)->s.cipher_ctx,
                                     params->output, &output_len);
     if (ret) return STATUS_INTERNAL_ERROR;
 
@@ -652,7 +652,7 @@ NTSTATUS key_symmetric_encrypt_internal( void *args )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS key_symmetric_decrypt_internal( void *args )
+NTSTATUS key_symmetric_decrypt_internal(void *args)
 {
     const struct key_symmetric_decrypt_params *params = args;
     NTSTATUS status;
@@ -662,13 +662,13 @@ NTSTATUS key_symmetric_decrypt_internal( void *args )
 #ifndef __REACTOS__
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
-    if ((status = init_cipher_handle( params->key, MBEDTLS_DECRYPT ))) return status;
+    if ((status = init_cipher_handle(params->key, MBEDTLS_DECRYPT))) return status;
 
-    ret = mbedtls_cipher_update( &key_data(params->key)->s.cipher_ctx,
-                                    params->input, params->input_len,
-                                    params->output, &output_len);
+    ret = mbedtls_cipher_update(&key_data(params->key)->s.cipher_ctx,
+                                params->input, params->input_len,
+                                params->output, &output_len);
     if (!output_len)
-        ret = mbedtls_cipher_finish( &key_data(params->key)->s.cipher_ctx,
+        ret = mbedtls_cipher_finish(&key_data(params->key)->s.cipher_ctx,
                                     params->output, &output_len);
     if (ret) return STATUS_INTERNAL_ERROR;
 
@@ -677,7 +677,7 @@ NTSTATUS key_symmetric_decrypt_internal( void *args )
     return STATUS_SUCCESS;
 }
 
-NTSTATUS key_symmetric_destroy( void *args )
+NTSTATUS key_symmetric_destroy(void *args)
 {
     struct key *key = args;
 
@@ -686,7 +686,7 @@ NTSTATUS key_symmetric_destroy( void *args )
 #endif
     if (key_data(key)->s.cipher_ctx.cipher_info != NULL)
     {
-        mbedtls_cipher_free( &key_data(key)->s.cipher_ctx );
+        mbedtls_cipher_free(&key_data(key)->s.cipher_ctx);
         key_data(key)->s.cipher_ctx.cipher_info = NULL;
     }
     return STATUS_SUCCESS;
@@ -1113,7 +1113,7 @@ static NTSTATUS key_export_dsa_public(struct key *key, mbedtls_dsa_context *dsa_
 
     if (key->u.a.bitlen > 1024)
     {
-        FIXME( "bitlen > 1024 not supported\n" );
+        FIXME("bitlen > 1024 not supported\n");
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -1138,15 +1138,15 @@ static NTSTATUS key_export_dsa_public(struct key *key, mbedtls_dsa_context *dsa_
 
         dsa_blob->dwMagic = BCRYPT_DSA_PUBLIC_MAGIC;
         dsa_blob->cbKey   = size;
-        memset( dsa_blob->Count, 0, sizeof(dsa_blob->Count) ); /* FIXME */
-        memset( dsa_blob->Seed, 0, sizeof(dsa_blob->Seed) ); /* FIXME */
+        memset(dsa_blob->Count, 0, sizeof(dsa_blob->Count)); /* FIXME */
+        memset(dsa_blob->Seed, 0, sizeof(dsa_blob->Seed)); /* FIXME */
     }
     if (len < *ret_len && buf) return STATUS_BUFFER_TOO_SMALL;
 
     return STATUS_SUCCESS;
 }
 
-static void reverse_bytes( UCHAR *buf, ULONG len )
+static void reverse_bytes(UCHAR *buf, ULONG len)
 {
     unsigned int i;
     UCHAR tmp;
@@ -1170,7 +1170,7 @@ static NTSTATUS key_export_dsa_capi_public(struct key *key, mbedtls_dsa_context 
 
     if (key->u.a.bitlen > 1024)
     {
-        FIXME( "bitlen > 1024 not supported\n" );
+        FIXME("bitlen > 1024 not supported\n");
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -1194,22 +1194,22 @@ static NTSTATUS key_export_dsa_capi_public(struct key *key, mbedtls_dsa_context 
 
         dst = (UCHAR *)(dsskey + 1);
         mbedtls_mpi_write_binary(&dsa_key->P, dst, size);
-        reverse_bytes( dst, size );
+        reverse_bytes(dst, size);
         dst += size;
 
         mbedtls_mpi_write_binary(&dsa_key->Q, dst, Q_SIZE);
-        reverse_bytes( dst, Q_SIZE );
+        reverse_bytes(dst, Q_SIZE);
         dst += Q_SIZE;
 
         mbedtls_mpi_write_binary(&dsa_key->G, dst, size);
-        reverse_bytes( dst, size );
+        reverse_bytes(dst, size);
         dst += size;
 
         mbedtls_mpi_write_binary(&dsa_key->Y, dst, size);
-        reverse_bytes( dst, size );
+        reverse_bytes(dst, size);
         dst += size;
 
-        memcpy( dst, &key->u.a.dss_seed, sizeof(key->u.a.dss_seed) );
+        memcpy(dst, &key->u.a.dss_seed, sizeof(key->u.a.dss_seed));
     }
     if (len < *ret_len && buf) return STATUS_BUFFER_TOO_SMALL;
 
@@ -1225,7 +1225,7 @@ static NTSTATUS key_export_dsa(struct key *key, mbedtls_dsa_context *dsa_key, UC
 
     if (key->u.a.bitlen > 1024)
     {
-        FIXME( "bitlen > 1024 not supported\n" );
+        FIXME("bitlen > 1024 not supported\n");
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -1251,8 +1251,8 @@ static NTSTATUS key_export_dsa(struct key *key, mbedtls_dsa_context *dsa_key, UC
 
         dsa_blob->dwMagic = BCRYPT_DSA_PUBLIC_MAGIC;
         dsa_blob->cbKey   = size;
-        memset( dsa_blob->Count, 0, sizeof(dsa_blob->Count) ); /* FIXME */
-        memset( dsa_blob->Seed, 0, sizeof(dsa_blob->Seed) ); /* FIXME */
+        memset(dsa_blob->Count, 0, sizeof(dsa_blob->Count)); /* FIXME */
+        memset(dsa_blob->Seed, 0, sizeof(dsa_blob->Seed)); /* FIXME */
     }
     if (len < *ret_len && buf) return STATUS_BUFFER_TOO_SMALL;
 
@@ -1274,7 +1274,7 @@ static NTSTATUS key_export_dsa_capi(struct key *key, mbedtls_dsa_context *dsa_ke
 
     if (q_size > 21 || x_size > 21)
     {
-        ERR( "can't export key in this format\n" );
+        ERR("can't export key in this format\n");
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -1294,22 +1294,22 @@ static NTSTATUS key_export_dsa_capi(struct key *key, mbedtls_dsa_context *dsa_ke
 
         dst = (UCHAR *)(pubkey + 1);
         mbedtls_mpi_write_binary(&dsa_key->P, dst, size);
-        reverse_bytes( dst, size );
+        reverse_bytes(dst, size);
         dst += size;
 
         mbedtls_mpi_write_binary(&dsa_key->Q, dst, Q_SIZE);
-        reverse_bytes( dst, Q_SIZE );
+        reverse_bytes(dst, Q_SIZE);
         dst += Q_SIZE;
 
         mbedtls_mpi_write_binary(&dsa_key->G, dst, size);
-        reverse_bytes( dst, size );
+        reverse_bytes(dst, size);
         dst += size;
 
         mbedtls_mpi_write_binary(&dsa_key->X, dst, Q_SIZE);
-        reverse_bytes( dst, Q_SIZE );
+        reverse_bytes(dst, Q_SIZE);
         dst += Q_SIZE;
 
-        memcpy( dst, &key->u.a.dss_seed, sizeof(key->u.a.dss_seed) );
+        memcpy(dst, &key->u.a.dss_seed, sizeof(key->u.a.dss_seed));
     }
     if (len < *ret_len && buf) return STATUS_BUFFER_TOO_SMALL;
 
@@ -1346,14 +1346,14 @@ NTSTATUS key_asymmetric_export(void *args)
         if (flags & KEY_EXPORT_FLAG_PUBLIC)
         {
             if (key->u.a.flags & KEY_FLAG_LEGACY_DSA_V2)
-                return key_export_dsa_capi_public( key, &key_data(key)->a.dsa.pubkey, params->buf, params->len, params->ret_len );
-            return key_export_dsa_public( key, &key_data(key)->a.dsa.pubkey, params->buf, params->len, params->ret_len );
+                return key_export_dsa_capi_public(key, &key_data(key)->a.dsa.pubkey, params->buf, params->len, params->ret_len);
+            return key_export_dsa_public(key, &key_data(key)->a.dsa.pubkey, params->buf, params->len, params->ret_len);
         }
         /* if private key is not set return invalid parameter */
         if (mbedtls_mpi_cmp_int(&key_data(key)->a.dsa.privkey.X, 0) == 0) return STATUS_INVALID_PARAMETER;
         if (key->u.a.flags & KEY_FLAG_LEGACY_DSA_V2)
-            return key_export_dsa_capi( key, &key_data(key)->a.dsa.privkey, params->buf, params->len, params->ret_len );
-        return key_export_dsa( key, &key_data(key)->a.dsa.privkey, params->buf, params->len, params->ret_len );
+            return key_export_dsa_capi(key, &key_data(key)->a.dsa.privkey, params->buf, params->len, params->ret_len);
+        return key_export_dsa(key, &key_data(key)->a.dsa.privkey, params->buf, params->len, params->ret_len);
 #endif
 
         case ALG_ID_DH:
@@ -1613,8 +1613,15 @@ static NTSTATUS key_import_dsa_public(struct key *key, mbedtls_dsa_context *dsa_
     mbedtls_mpi_read_binary(&Y, y_data, y_size);
 
     ret = mbedtls_dsa_check_pqg(&P, &Q, &G);
-    ret = mbedtls_dsa_set_group( dsa_key, &P, &Q, &G );
-    if (ret) return STATUS_INTERNAL_ERROR;
+    ret = mbedtls_dsa_set_group(dsa_key, &P, &Q, &G);
+    if (ret)
+    {
+        mbedtls_mpi_free(&P);
+        mbedtls_mpi_free(&Q);
+        mbedtls_mpi_free(&G);
+        mbedtls_mpi_free(&Y);
+        return STATUS_INTERNAL_ERROR;
+    }
 
     mbedtls_mpi_copy(&dsa_key->Y, &Y);
 
@@ -1662,8 +1669,15 @@ static NTSTATUS key_import_dsa(struct key *key, mbedtls_dsa_context *dsa_key, UC
     mbedtls_mpi_read_binary(&X, x_data, x_size);
 
     ret = mbedtls_dsa_check_pqg(&P, &Q, &G);
-    ret = mbedtls_dsa_set_group( dsa_key, &P, &Q, &G );
-    if (ret) return STATUS_INTERNAL_ERROR;
+    ret = mbedtls_dsa_set_group(dsa_key, &P, &Q, &G);
+    if (ret)
+    {
+        mbedtls_mpi_free(&P);
+        mbedtls_mpi_free(&Q);
+        mbedtls_mpi_free(&G);
+        mbedtls_mpi_free(&Y);
+        return STATUS_INTERNAL_ERROR;
+    }
 
     mbedtls_mpi_copy(&dsa_key->Y, &Y);
     mbedtls_mpi_copy(&dsa_key->X, &X);
@@ -1693,7 +1707,7 @@ static NTSTATUS key_import_dsa_capi_public(struct key *key, mbedtls_dsa_context 
     size = pubkey->bitlen / 8;
     if (size > sizeof(p_data))
     {
-        FIXME( "size %u not supported\n", size );
+        FIXME("size %u not supported\n", size);
         return STATUS_NOT_SUPPORTED;
     }
     data = buf + sizeof(*hdr) + sizeof(*pubkey);
@@ -1726,14 +1740,21 @@ static NTSTATUS key_import_dsa_capi_public(struct key *key, mbedtls_dsa_context 
 
 
     ret = mbedtls_dsa_check_pqg(&P, &Q, &G);
-    ret = mbedtls_dsa_set_group( dsa_key, &P, &Q, &G );
-    if (ret) return STATUS_INTERNAL_ERROR;
+    ret = mbedtls_dsa_set_group(dsa_key, &P, &Q, &G);
+    if (ret)
+    {
+        mbedtls_mpi_free(&P);
+        mbedtls_mpi_free(&Q);
+        mbedtls_mpi_free(&G);
+        mbedtls_mpi_free(&Y);
+        return STATUS_INTERNAL_ERROR;
+    }
 
     mbedtls_mpi_copy(&dsa_key->Y, &Y);
 
     ret = mbedtls_dsa_check_pubkey(dsa_key);
 
-    memcpy( &key->u.a.dss_seed, data, sizeof(key->u.a.dss_seed) );
+    memcpy(&key->u.a.dss_seed, data, sizeof(key->u.a.dss_seed));
 
     mbedtls_mpi_free(&P);
     mbedtls_mpi_free(&Q);
@@ -1756,7 +1777,7 @@ static NTSTATUS key_import_dsa_capi(struct key *key, mbedtls_dsa_context *dsa_ke
     pubkey = (DSSPUBKEY *)(buf+sizeof(*hdr));
     if ((size = pubkey->bitlen / 8) > sizeof(p_data))
     {
-        FIXME( "size %u not supported\n", size );
+        FIXME("size %u not supported\n", size);
         return STATUS_NOT_SUPPORTED;
     }
     data = buf + sizeof(*hdr) + sizeof(*pubkey);
@@ -1788,15 +1809,22 @@ static NTSTATUS key_import_dsa_capi(struct key *key, mbedtls_dsa_context *dsa_ke
     mbedtls_mpi_read_binary(&X, x_data, x_size);
 
     ret = mbedtls_dsa_check_pqg(&P, &Q, &G);
-    ret = mbedtls_dsa_set_group( dsa_key, &P, &Q, &G );
-    if (ret) return STATUS_INTERNAL_ERROR;
+    ret = mbedtls_dsa_set_group(dsa_key, &P, &Q, &G);
+    if (ret)
+    {
+        mbedtls_mpi_free(&P);
+        mbedtls_mpi_free(&Q);
+        mbedtls_mpi_free(&G);
+        mbedtls_mpi_free(&X);
+        return STATUS_INTERNAL_ERROR;
+    }
 
     mbedtls_mpi_copy(&dsa_key->X, &X);
 
     ret = mbedtls_dsa_pubkey_from_privkey(dsa_key);
     ret = mbedtls_dsa_check_privkey(dsa_key);
 
-    memcpy( &key->u.a.dss_seed, data, sizeof(key->u.a.dss_seed) );
+    memcpy(&key->u.a.dss_seed, data, sizeof(key->u.a.dss_seed));
 
     mbedtls_mpi_free(&P);
     mbedtls_mpi_free(&Q);
@@ -1873,10 +1901,12 @@ NTSTATUS key_asymmetric_import(void *args)
 
 #ifdef MBEDTLS_DSA_C /* DSA is not supported by mbedtls */
             case ALG_ID_DSA:
+                init_dsa_key(&key_data(key)->a.dsa.privkey, (key->u.a.bitlen + 7) / 8, TRUE);
                 if (key->u.a.flags & KEY_FLAG_LEGACY_DSA_V2)
-                    ret = key_import_dsa_capi( key, &key_data(key)->a.dsa.privkey, params->buf, params->len );
+                    ret = key_import_dsa_capi(key, &key_data(key)->a.dsa.privkey, params->buf, params->len);
                 else
-                    ret = key_import_dsa( key, &key_data(key)->a.dsa.privkey, params->buf, params->len );
+                    ret = key_import_dsa(key, &key_data(key)->a.dsa.privkey, params->buf, params->len);
+                if (ret) status = STATUS_INTERNAL_ERROR;
                 break;
 #endif
             case ALG_ID_DH:
@@ -1908,27 +1938,30 @@ NTSTATUS key_asymmetric_import(void *args)
         case ALG_ID_RSA_SIGN:
             status = init_pk_key(&key_data(key)->a.pk.pubkey, pk_type, TRUE);
             status = key_import_rsa_public(key, params->buf, params->len);
+            if (status) break;
             if (bPrivate)
             {
                 ret = mbedtls_rsa_check_pub_priv(mbedtls_pk_rsa(key_data(key)->a.pk.pubkey), mbedtls_pk_rsa(key_data(key)->a.pk.privkey));
-                if (ret) return STATUS_INTERNAL_ERROR;
+                if (ret) status = STATUS_INTERNAL_ERROR;
             }
             break;
 
 #ifdef MBEDTLS_DSA_C /* DSA is not supported by mbedtls */
         case ALG_ID_DSA:
+            init_dsa_key(&key_data(key)->a.dsa.pubkey, (key->u.a.bitlen + 7) / 8, TRUE);
             if (key->u.a.flags & KEY_FLAG_LEGACY_DSA_V2)
             {
                 if (bPrivate)
                 {
-                    ret = key_import_dsa_capi( key, &key_data(key)->a.dsa.pubkey, params->buf, params->len );
+                    ret = key_import_dsa_capi(key, &key_data(key)->a.dsa.pubkey, params->buf, params->len);
                     mbedtls_mpi_lset(&key_data(key)->a.dsa.pubkey.X, 0);
                 }
                 else
-                    ret = key_import_dsa_capi_public( key, &key_data(key)->a.dsa.pubkey, params->buf, params->len );
+                    ret = key_import_dsa_capi_public(key, &key_data(key)->a.dsa.pubkey, params->buf, params->len);
             }
             else
-                ret = key_import_dsa_public( key, &key_data(key)->a.dsa.pubkey, params->buf, params->len );
+                ret = key_import_dsa_public(key, &key_data(key)->a.dsa.pubkey, params->buf, params->len);
+            if (ret) status = STATUS_INTERNAL_ERROR;
             break;
 #endif
         case ALG_ID_DH:
@@ -1936,11 +1969,12 @@ NTSTATUS key_asymmetric_import(void *args)
             if (params->flags & KEY_IMPORT_FLAG_DH_PARAMETERS)
             {
                 status = key_import_dh_params(key, &key_data(key)->a.dh.pubkey, params->buf, params->len);
+                if (status) break;
                 buf = malloc(1024);
-                if (!buf) return STATUS_INTERNAL_ERROR;
+                if (!buf) return STATUS_NO_MEMORY;
                 ret = mbedtls_dhm_make_params(&key_data(key)->a.dh.pubkey, (key->u.a.bitlen + 7) / 8, buf, &olen, mbedtls_ctr_drbg_random, &ctr_drbg);
                 free(buf);
-                if (ret) return STATUS_INTERNAL_ERROR;
+                if (ret) status = STATUS_INTERNAL_ERROR;
             }
             else
                 status = key_import_dh_public(key, &key_data(key)->a.dh.pubkey, params->buf, params->len);
@@ -2031,7 +2065,7 @@ NTSTATUS key_asymmetric_generate(void *args)
             ret = dh_gen_prime(&key_data(key)->a.dh.privkey, key->u.a.bitlen, mbedtls_ctr_drbg_random, &ctr_drbg);
 #endif
             buf = malloc(1024);
-            if (!buf) return STATUS_INTERNAL_ERROR;
+            if (!buf) return STATUS_NO_MEMORY;
             ret = mbedtls_dhm_make_params(&key_data(key)->a.dh.privkey, (key->u.a.bitlen + 7) / 8, buf, &olen, mbedtls_ctr_drbg_random, &ctr_drbg);
             free(buf);
             if (ret) mbedtls_dhm_free(&key_data(key)->a.dh.privkey);
@@ -2057,7 +2091,7 @@ NTSTATUS key_asymmetric_generate(void *args)
     if (ret) return STATUS_INTERNAL_ERROR;
 
     buf = malloc(1024);
-    if (!buf) return STATUS_INTERNAL_ERROR;
+    if (!buf) return STATUS_NO_MEMORY;
 
     switch (key->alg_id)
     {
@@ -2082,8 +2116,8 @@ NTSTATUS key_asymmetric_generate(void *args)
 #ifdef MBEDTLS_DSA_C /* DSA is not supported by mbedtls */
         case ALG_ID_DSA:
             init_dsa_key(&key_data(key)->a.dsa.pubkey, (key->u.a.bitlen + 7) / 8, FALSE);
-            status = key_export_dsa( key, &key_data(key)->a.dsa.privkey, buf, 1024, &len );
-            status = key_import_dsa_public( key, &key_data(key)->a.dsa.pubkey, buf, len );
+            status = key_export_dsa(key, &key_data(key)->a.dsa.privkey, buf, 1024, &len);
+            status = key_import_dsa_public(key, &key_data(key)->a.dsa.pubkey, buf, len);
             if (status) mbedtls_dsa_free(&key_data(key)->a.dsa.pubkey);
             break;
 #endif
@@ -2202,10 +2236,10 @@ NTSTATUS key_asymmetric_verify(void *args)
 #ifdef MBEDTLS_DSA_C /* DSA is not supported by mbedtls */
         case ALG_ID_DSA:
         {
-            if (params->flags) FIXME( "flags %x not supported\n", params->flags );
+            if (params->flags) FIXME("flags %x not supported\n", params->flags);
             if (params->hash_len != 20)
             {
-                FIXME( "hash size %u not supported\n", params->hash_len );
+                FIXME("hash size %u not supported\n", params->hash_len);
                 return STATUS_INVALID_PARAMETER;
             }
             hash_alg = MBEDTLS_MD_SHA1;
@@ -2225,6 +2259,7 @@ NTSTATUS key_asymmetric_verify(void *args)
     {
         len = params->signature_len / 2;
         out_signature = malloc(params->signature_len + 6);
+        if (!out_signature) return STATUS_NO_MEMORY;
         p = out_signature + params->signature_len + 6;
         start = out_signature;
         ret = mbedtls_asn1_write_raw_buffer(&p, start, params->signature + len, len);
@@ -2371,7 +2406,7 @@ NTSTATUS key_asymmetric_sign(void *args)
     }
 
     output = malloc(1024);
-    if (!output) return STATUS_INTERNAL_ERROR;
+    if (!output) return STATUS_NO_MEMORY;
 #ifdef MBEDTLS_DSA_C /* DSA is not supported by mbedtls */
     if (key->alg_id == ALG_ID_DSA)
         ret = mbedtls_dsa_sign(&key_data(params->key)->a.dsa.privkey, params->input, params->input_len, output, &sig_len,
@@ -2393,7 +2428,6 @@ NTSTATUS key_asymmetric_sign(void *args)
     {
         p = output;
         end = output + sig_len;
-        // expected_len = mbedtls_md_get_size( mbedtls_md_info_from_type( hash_alg ) ) / 2;
         ret = mbedtls_asn1_get_tag(&p, end, &len, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE);
         ret = mbedtls_asn1_get_tag(&p, end, &len, MBEDTLS_ASN1_INTEGER);
         expected_len = (len / 2) * 2;
@@ -2470,7 +2504,7 @@ NTSTATUS key_asymmetric_duplicate(void *args)
 #endif
 
     buf = malloc(1024);
-    if (!buf) return STATUS_INTERNAL_ERROR;
+    if (!buf) return STATUS_NO_MEMORY;
 
     switch (params->key_orig->alg_id)
     {
