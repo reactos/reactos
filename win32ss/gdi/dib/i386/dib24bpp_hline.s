@@ -19,12 +19,12 @@ PUBLIC _DIB_24BPP_HLine
                          sub     esp, 24
                          mov     ebx, [esp+40]
                          mov     edi, [esp+52]
-                         mov     ecx, [esp+44]      // ecx =  LONG x1
+                         mov     ecx, [esp+44]      // ecx = LONG x1
                          mov     eax, [ebx+36]
                          mov     esi, [ebx+32]
-                         mov     edx, [esp+48]      // edx =  LONG x2
+                         mov     edx, [esp+48]      // edx = LONG x2
                          imul    eax, edi
-                         sub     edx, ecx           // cx  = (x2 - x1);
+                         sub     edx, ecx           // cx = (x2 - x1);
                          jc      short .exit_here   // cx must not be negative
                          mov     [esp], edx
                          add     eax, esi
