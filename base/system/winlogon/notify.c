@@ -482,6 +482,8 @@ CallNotificationDll(
     _In_ PWLX_NOTIFICATION_INFO pInfo)
 {
     PWLX_NOTIFY_HANDLER pNotifyHandler;
+    WLX_NOTIFICATION_INFO Info;
+    HANDLE UserToken;
 
     /* Delay-load the DLL if needed */
     if (!NotificationDll->hModule)
@@ -500,10 +502,22 @@ CallNotificationDll(
     if (!pNotifyHandler)
         return;
 
+    /* Capture the notification info structure, since
+     * the notification handler might mess with it */
+    Info = *pInfo;
+
+    /* Impersonate the logged-on user if necessary */
+    UserToken = (NotificationDll->bImpersonate ? Info.hToken : NULL);
+    if (UserToken && !ImpersonateLoggedOnUser(UserToken))
+    {
+        ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        return;
+    }
+
     /* Call the notification handler in SEH to prevent any Winlogon crashes */
     _SEH2_TRY
     {
-        pNotifyHandler(pInfo);
+        pNotifyHandler(&Info);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -511,6 +525,10 @@ CallNotificationDll(
             _SEH2_GetExceptionCode(), NotificationDll->pszDllName, FuncNames[Type]);
     }
     _SEH2_END;
+
+    /* Revert impersonation */
+    if (UserToken)
+        RevertToSelf();
 }
 
 
@@ -527,6 +545,7 @@ CallNotificationDlls(
 
     TRACE("CallNotificationDlls(%s)\n", FuncNames[Type]);
 
+    /* Set up the notification info structure template */
     Info.Size = sizeof(Info);
 
     switch (Type)
