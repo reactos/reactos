@@ -614,6 +614,26 @@ NextResourceDescriptor(
 
 
 static
+PIO_RESOURCE_LIST
+NextResourceRequirement(
+    _In_ PIO_RESOURCE_LIST pResourceList)
+{
+    LPBYTE pNext = NULL;
+
+    if (pResourceList == NULL)
+        return NULL;
+
+    /* Skip the resource list */
+    pNext = (LPBYTE)pResourceList + sizeof(IO_RESOURCE_LIST);
+
+    /* Skip the resource descriptors */
+    pNext += (pResourceList->Count - 1) * sizeof(IO_RESOURCE_DESCRIPTOR);
+
+    return (PIO_RESOURCE_LIST)pNext;
+}
+
+
+static
 BOOL
 IsCallerInteractive(
     _In_ handle_t hBinding)
@@ -2638,8 +2658,45 @@ PNP_GetInterfaceDeviceAlias(
     PNP_RPC_STRING_LEN *pulTransferLen,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA PlugPlayData;
+    DWORD ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_GetInterfaceDeviceAlias(%p %S %p %p %p %p 0x%08lx)\n",
+           hBinding, pszInterfaceDevice, AliasInterfaceGuid, pszAliasInterfaceDevice, pulLength,
+           pulTransferLen, ulFlags);
+
+    if ((AliasInterfaceGuid == NULL) ||
+        (pulLength == NULL))
+        return  CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    RtlInitUnicodeString(&PlugPlayData.SymbolicLinkName, pszInterfaceDevice);
+    PlugPlayData.AliasInterfaceClassGuid = AliasInterfaceGuid;
+    PlugPlayData.AliasSymbolicLinkName = pszAliasInterfaceDevice;
+    PlugPlayData.AliasSymbolicLinkNameLength = *pulTransferLen;
+
+    Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceAlias,
+                               &PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.AliasSymbolicLinkNameLength;
+        *pulTransferLen = *pulLength + 1;
+    }
+    else
+    {
+        *pulLength = 0;
+        *pulTransferLen = 0;
+        ret = NtStatusToCrError(Status);
+    }
+
+    DPRINT("PNP_GetInterfaceDeviceAlias() done (returns %lx)\n", ret);
+    return ret;
 }
 
 
@@ -2751,8 +2808,50 @@ PNP_RegisterDeviceClassAssociation(
     PNP_RPC_STRING_LEN *pulTransferLen,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_RegisterDeviceClassAssociation(%p %S %p %S %S %p %p 0x%08lx)\n",
+           hBinding, pszDeviceID, InterfaceGuid, pszReference, pszSymLink,
+           pulLength, pulTransferLen, ulFlags);
+
+    if ((InterfaceGuid == NULL) ||
+        (pszSymLink == NULL) ||
+        (pulLength == NULL) ||
+        (pulTransferLen == NULL))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance, pszDeviceID);
+    PlugPlayData.InterfaceGuid = InterfaceGuid;
+    RtlInitUnicodeString(&PlugPlayData.Reference, pszReference);
+    PlugPlayData.Register = TRUE;
+    PlugPlayData.SymbolicLinkName = pszSymLink;
+    PlugPlayData.SymbolicLinkNameLength = *pulLength;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceClassAssociation,
+                               &PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.SymbolicLinkNameLength;
+        *pulTransferLen = *pulLength;
+    }
+    else
+    {
+        *pulLength = 0;
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
 }
 
 
@@ -2764,8 +2863,33 @@ PNP_UnregisterDeviceClassAssociation(
     LPWSTR pszInterfaceDevice,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_UnregisterDeviceClassAssociation(%p %S 0x%08lx)\n",
+           hBinding, pszInterfaceDevice, ulFlags);
+
+    if (pszInterfaceDevice == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    ZeroMemory(&PlugPlayData, sizeof(PlugPlayData));
+    PlugPlayData.Register = FALSE;
+    PlugPlayData.SymbolicLinkName = pszInterfaceDevice;
+    PlugPlayData.SymbolicLinkNameLength = wcslen(pszInterfaceDevice) + 1;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceClassAssociation,
+                               &PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
 }
 
 
@@ -4354,7 +4478,39 @@ PNP_AddEmptyLogConf(
         }
         else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
         {
-            /* FIXME */
+            PIO_RESOURCE_REQUIREMENTS_LIST pRequirementsList = NULL;
+            PIO_RESOURCE_LIST pResourceList = NULL;
+            ULONG ulIndex;
+
+            /* Reallocate a larger buffer in order to add the new configuration */
+            ulNewSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+            pDataBuffer = HeapReAlloc(GetProcessHeap(),
+                                      0,
+                                      pDataBuffer,
+                                      ulDataSize + ulNewSize);
+            if (pDataBuffer == NULL)
+            {
+                ret = CR_OUT_OF_MEMORY;
+                goto done;
+            }
+
+            pRequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)pDataBuffer;
+            pResourceList = (PIO_RESOURCE_LIST)&pRequirementsList->List[0];
+            for (ulIndex = 0; ulIndex < pRequirementsList->AlternativeLists - 1; ulIndex++)
+                pResourceList = NextResourceRequirement(pResourceList);
+
+            pRequirementsList->ListSize = ulDataSize + ulNewSize;
+            pRequirementsList->AlternativeLists++;
+
+            pResourceList->Version = 1;
+            pResourceList->Revision = 1;
+            pResourceList->Count = 1;
+
+            pResourceList->Descriptors[0].Option = IO_RESOURCE_PREFERRED;
+            pResourceList->Descriptors[0].Type = CmResourceTypeConfigData;
+            pResourceList->Descriptors[0].u.ConfigData.Priority = ulPriority;
+
+            *pulLogConfTag = ulIndex;
         }
         else
         {
@@ -4439,7 +4595,9 @@ PNP_FreeLogConf(
 
     if (RegDataType == REG_RESOURCE_LIST)
     {
-        if (((PCM_RESOURCE_LIST)pDataBuffer)->Count <= 1)
+        PCM_RESOURCE_LIST pResourceList = (PCM_RESOURCE_LIST)pDataBuffer;
+
+        if (pResourceList->Count <= 1)
         {
             /* Delete the key if there is only one or no configuration in the key */
             DPRINT("Delete value %S\n", szValueNameBuffer);
@@ -4447,7 +4605,52 @@ PNP_FreeLogConf(
         }
         else
         {
-            /* FIXME */
+            PCM_FULL_RESOURCE_DESCRIPTOR pResource = NULL, pNextResource = NULL;
+            ULONG ulIndex, ulMoveSize;
+            DWORD dwError;
+
+            /* Fail if we try to delete an entry outside of our resource list */
+            if (ulLogConfTag >= pResourceList->Count)
+            {
+                ret = CR_INVALID_LOG_CONF;
+                goto done;
+            }
+
+            /* Get a pointer to the resource descriptor to be deleted */
+            pResource = (PCM_FULL_RESOURCE_DESCRIPTOR)&pResourceList->List[0];
+            for (ulIndex = 0; ulIndex < ulLogConfTag; ulIndex++)
+                pResource = NextResourceDescriptor(pResource);
+
+            /* Delete the resource descriptor */
+            if (ulLogConfTag == pResourceList->Count - 1)
+            {
+                /* Delete the last resource descriptor */
+                ulDataSize = (ULONG)((ULONG_PTR)pResource - (ULONG_PTR)pResourceList);
+            }
+            else
+            {
+                pNextResource = NextResourceDescriptor(pResource);
+
+                ulMoveSize = ulDataSize - (DWORD)((ULONG_PTR)pNextResource - (ULONG_PTR)pResourceList);
+                MoveMemory(pResource, pNextResource, ulMoveSize);
+
+                ulDataSize -= (DWORD)((ULONG_PTR)pNextResource - (ULONG_PTR)pResource);
+            }
+
+            pResourceList->Count--;
+
+            /* Store the new configuration */
+            dwError = RegSetValueEx(hConfigKey,
+                                    szValueNameBuffer,
+                                    0,
+                                    RegDataType,
+                                    pDataBuffer,
+                                    ulDataSize);
+            if (dwError != ERROR_SUCCESS)
+            {
+                ret = CR_REGISTRY_ERROR;
+                goto done;
+            }
         }
     }
     else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
@@ -4600,7 +4803,7 @@ PNP_GetNextLogConf(
     LPBYTE lpData = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_GetNextLogConf(%p %S %lu %ul %p 0x%08lx)\n",
+    DPRINT("PNP_GetNextLogConf(%p %S %lu %lu %p 0x%08lx)\n",
            hBinding, pDeviceID, ulLogConfType, ulCurrentTag, pulNextTag, ulFlags);
 
     if (pulNextTag == NULL)

@@ -839,7 +839,7 @@ static void test_CreateStub(IPSFactoryBuffer *ppsf)
 
     vtbl = &create_stub_test_fail_vtbl;
     pstub = create_stub(ppsf, &IID_if1, obj, E_NOINTERFACE);
-    ok(pstub == S_OK, "create_stub failed: %u\n", GetLastError());
+    ok(pstub == NULL, "create_stub failed: %u\n", GetLastError());
 
 }
 

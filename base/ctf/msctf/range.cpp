@@ -6,54 +6,40 @@
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <initguid.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <msctf.h>
-#include <msctf_undoc.h>
-
-// Cicero
-#include <cicbase.h>
-#include <cicreg.h>
-#include <cicutb.h>
-
-class CInputContext;
+#include "precomp.h"
 #include "range.h"
-#include "msctf_internal.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 ////////////////////////////////////////////////////////////////////////////
-// CRange
 
 CRange::CRange(
-    _In_ CInputContext *pIC,
-    _In_ DWORD dwLockType,
-    _In_ IAnchor *pAnchorStart,
-    _In_ IAnchor *pAnchorEnd,
-    _In_ TfGravity gravity)
+    _In_ ITfContext *context,
+    _In_ TfAnchor anchorStart,
+    _In_ TfAnchor anchorEnd
+)
+    : m_cRefs(1)
+    , m_context(context)
+    , m_anchorStart(anchorStart)
+    , m_anchorEnd(anchorEnd)
 {
-    m_dwLockType = dwLockType;
-    m_pAnchorStart = pAnchorStart;
-    m_pAnchorEnd = pAnchorEnd;
-    m_pInputContext = pIC;
-    m_dwCookie = MAXDWORD;
-    m_gravity = gravity;
-    m_cRefs = 1;
+    if (context)
+        context->AddRef();
 }
 
 CRange::~CRange()
 {
+    TRACE("destroying %p\n", this);
+    if (m_context)
+        m_context->Release();
 }
 
 CRange *CRange::_Clone()
 {
-    CRange *pRange = new(cicNoThrow) CRange(m_pInputContext, 0, m_pAnchorStart, m_pAnchorEnd, (TfGravity)2);
+    CRange *pRange = new(cicNoThrow) CRange(m_context, m_anchorStart, m_anchorEnd);
     if (!pRange)
         return NULL;
-    pRange->m_dwCookie = m_dwCookie;
     return pRange;
 }
 
@@ -72,24 +58,35 @@ HRESULT CRange::_CompareX(
     return E_NOTIMPL;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** IUnknown methods **
+HRESULT CRange::TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp)
+{
+    if (!tf || !tsAcp || !tf->range)
+    {
+        ERR("E_INVALIDARG: %p, %p, %p\n", tf, tsAcp, tf->range);
+        return E_INVALIDARG;
+    }
+
+    CRange *This = static_cast<CRange *>(static_cast<ITfRangeACP *>(tf->range));
+    tsAcp->acpStart = This->m_anchorStart;
+    tsAcp->acpEnd = This->m_anchorEnd;
+    tsAcp->style.ase = static_cast<TsActiveSelEnd>(tf->style.ase);
+    tsAcp->style.fInterimChar = tf->style.fInterimChar;
+    return S_OK;
+}
 
 STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
 {
-    if (IsEqualGUID(riid, IID_PRIV_CRANGE))
+    if (riid == IID_PRIV_CRANGE)
     {
         *ppvObj = this;
         return S_OK; // No AddRef
     }
 
-    if (IsEqualGUID(riid, IID_ITfRange) || IsEqualGUID(riid, IID_IUnknown))
-        *ppvObj = this;
-    else if (IsEqualGUID(riid, IID_ITfRangeACP))
+    if (riid == IID_IUnknown || riid == IID_ITfRange || riid == IID_ITfRangeACP)
         *ppvObj = static_cast<ITfRangeACP *>(this);
-    else if (IsEqualGUID(riid, IID_ITfRangeAnchor))
+    else if (riid == IID_ITfRangeAnchor)
         *ppvObj = static_cast<ITfRangeAnchor *>(this);
-    else if (IsEqualGUID(riid, IID_ITfSource))
+    else if (riid == IID_ITfSource)
         *ppvObj = static_cast<ITfSource *>(this);
     else
         *ppvObj = NULL;
@@ -100,26 +97,24 @@ STDMETHODIMP CRange::QueryInterface(REFIID riid, void **ppvObj)
         return S_OK;
     }
 
+    WARN("unsupported interface: %s\n", debugstr_guid(&riid));
     return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) CRange::AddRef()
 {
-    return InterlockedIncrement(&m_cRefs);
+    TRACE("%p -> ()\n", this);
+    return ::InterlockedIncrement(&m_cRefs);
 }
 
 STDMETHODIMP_(ULONG) CRange::Release()
 {
-    if (InterlockedDecrement(&m_cRefs) == 0)
-    {
+    TRACE("%p -> ()\n", this);
+    ULONG ret = InterlockedDecrement(&m_cRefs);
+    if (!ret)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return ret;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfRange methods **
 
 STDMETHODIMP CRange::GetText(
     _In_ TfEditCookie ec,
@@ -330,9 +325,6 @@ STDMETHODIMP CRange::GetContext(
     return E_NOTIMPL;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** ITfRangeACP methods **
-
 STDMETHODIMP CRange::GetExtent(_Out_ LONG *pacpAnchor, _Out_ LONG *pcch)
 {
     FIXME("\n");
@@ -345,9 +337,6 @@ STDMETHODIMP CRange::SetExtent(_In_ LONG acpAnchor, _In_ LONG cch)
     return E_NOTIMPL;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// ** ITfRangeAnchor methods **
-
 STDMETHODIMP CRange::GetExtent(_Out_ IAnchor **ppStart, _Out_ IAnchor **ppEnd)
 {
     FIXME("\n");
@@ -359,9 +348,6 @@ STDMETHODIMP CRange::SetExtent(_In_ IAnchor *pAnchorStart, _In_ IAnchor *pAnchor
     FIXME("\n");
     return E_NOTIMPL;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// ** ITfSource methods **
 
 STDMETHODIMP CRange::AdviseSink(
     _In_ REFIID riid,
@@ -382,9 +368,15 @@ STDMETHODIMP CRange::UnadviseSink(
 ////////////////////////////////////////////////////////////////////////////
 
 EXTERN_C
-HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD lockType, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut)
+HRESULT
+Range_Constructor(ITfContext *context, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut)
 {
-    return E_NOTIMPL;
+    CRange *This = new(cicNoThrow) CRange(context, (TfAnchor)anchorStart, (TfAnchor)anchorEnd);
+    if (!This)
+        return E_OUTOFMEMORY;
+
+    *ppOut = static_cast<ITfRangeACP *>(This);
+    return S_OK;
 }
 
 /* Internal conversion functions */
@@ -392,5 +384,5 @@ HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD l
 EXTERN_C
 HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp)
 {
-    return E_NOTIMPL;
+    return CRange::TF_SELECTION_to_TS_SELECTION_ACP(tf, tsAcp);
 }

@@ -120,6 +120,14 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
     return SHELL_CreateShell32DefaultExtractIcon(id > 1 ? -id : 0, riid, ppvOut);
 }
 
+typedef HDSA HDCIA; // DynamicClassIdArray
+#define DCIA_Create() ( (HDCIA)DSA_Create(sizeof(CLSID), 4) )
+#define DCIA_Destroy(hDCIA) DSA_Destroy((HDSA)(hDCIA))
+#define DCIA_GetCount(hDCIA) DSA_GetItemCount((HDSA)(hDCIA))
+#define DCIA_GetEntry(hDCIA, iItem) ( (const CLSID*)DSA_GetItemPtr((HDSA)(hDCIA), (iItem)) )
+int DCIA_AddEntry(HDCIA hDCIA, REFCLSID rClsId);
+void DCIA_AddShellExSubkey(HDCIA hDCIA, HKEY hProgId, PCWSTR pszSubkey);
+
 #ifdef __cplusplus
 struct ClipboardViewerChain
 {

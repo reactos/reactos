@@ -1559,7 +1559,7 @@ QSI_DEF(SystemInterruptInformation)
 }
 
 /* Class 24 - DPC Behaviour Information */
-QSI_DEF(SystemDpcBehaviourInformation)
+QSI_DEF(SystemDpcBehaviorInformation)
 {
     PSYSTEM_DPC_BEHAVIOR_INFORMATION sdbi = (PSYSTEM_DPC_BEHAVIOR_INFORMATION)Buffer;
 
@@ -1576,10 +1576,10 @@ QSI_DEF(SystemDpcBehaviourInformation)
     return STATUS_SUCCESS;
 }
 
-SSI_DEF(SystemDpcBehaviourInformation)
+SSI_DEF(SystemDpcBehaviorInformation)
 {
     /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemDpcBehaviourInformation not implemented\n");
+    DPRINT1("NtSetSystemInformation - SystemDpcBehaviorInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1755,11 +1755,11 @@ QSI_DEF(SystemSummaryMemoryInformation)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Class 30 - Next Event Id Information */
-QSI_DEF(SystemNextEventIdInformation)
+/* Class 30 - Memory mirroring Information */
+QSI_DEF(SystemMirrorMemoryInformation)
 {
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemNextEventIdInformation not implemented\n");
+    DPRINT1("NtQuerySystemInformation - SystemMirrorMemoryInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1771,11 +1771,11 @@ QSI_DEF(SystemPerformanceTraceInformation)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Class 32 - Crash Dump Information */
-QSI_DEF(SystemCrashDumpInformation)
+/* Class 32 - Obsolete (previously: Crash Dump Information) */
+QSI_DEF(SystemObsolete0)
 {
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemCrashDumpInformation not implemented\n");
+    DPRINT1("NtQuerySystemInformation - SystemObsolete0 not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -2353,7 +2353,7 @@ SSI_DEF(SystemVerifierThunkExtend)
 }
 
 /* Class 53 - A session's processes */
-QSI_DEF(SystemSessionProcessesInformation)
+QSI_DEF(SystemSessionProcessInformation)
 {
     /* FIXME */
     DPRINT1("NtQuerySystemInformation - SystemSessionProcessInformation not implemented\n");
@@ -2361,11 +2361,10 @@ QSI_DEF(SystemSessionProcessesInformation)
 }
 
 /* Class 54 - Load & map in system space */
-SSI_DEF(SystemLoadGdiDriverInSystemSpaceInformation)
+SSI_DEF(SystemLoadGdiDriverInSystemSpace)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemLoadGdiDriverInSystemSpaceInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* Similar to SystemLoadGdiDriverInformation */
+    return SSI_USE(SystemLoadGdiDriverInformation)(Buffer, Size);
 }
 
 /* Class 55 - NUMA processor information */
@@ -2508,7 +2507,7 @@ QSI_DEF(SystemExtendedHandleInformation)
     DPRINT("NtQuerySystemInformation - SystemExtendedHandleInformation\n");
 
     /* Set initial required buffer size */
-    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle);
+    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handles);
 
     /* Check user's buffer size */
     if (Size < *ReqSize)
@@ -2530,7 +2529,7 @@ QSI_DEF(SystemExtendedHandleInformation)
     }
 
     /* Reset of count of handles */
-    HandleInformation->Count = 0;
+    HandleInformation->NumberOfHandles = 0;
 
     /* Enter a critical region */
     KeEnterCriticalRegion();
@@ -2555,7 +2554,7 @@ QSI_DEF(SystemExtendedHandleInformation)
                 (HandleTableEntry->NextFreeTableEntry != -2))
             {
                 /* Increase of count of handles */
-                ++HandleInformation->Count;
+                ++HandleInformation->NumberOfHandles;
 
                 /* Lock the entry */
                 if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
@@ -2573,30 +2572,30 @@ QSI_DEF(SystemExtendedHandleInformation)
                         POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
                         /* Filling handle information */
-                        HandleInformation->Handle[Index].UniqueProcessId =
+                        HandleInformation->Handles[Index].UniqueProcessId =
                             (USHORT)(ULONG_PTR) HandleTable->UniqueProcessId;
 
-                        HandleInformation->Handle[Index].CreatorBackTraceIndex = 0;
+                        HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
 
 #if 0 /* FIXME!!! Type field corrupted */
                         HandleInformation->Handles[Index].ObjectTypeIndex =
                             (UCHAR) ObjectHeader->Type->Index;
 #else
-                        HandleInformation->Handle[Index].ObjectTypeIndex = 0;
+                        HandleInformation->Handles[Index].ObjectTypeIndex = 0;
 #endif
 
-                        HandleInformation->Handle[Index].HandleAttributes =
+                        HandleInformation->Handles[Index].HandleAttributes =
                             HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
 
-                        HandleInformation->Handle[Index].HandleValue =
+                        HandleInformation->Handles[Index].HandleValue =
                             (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
 
-                        HandleInformation->Handle[Index].Object = &ObjectHeader->Body;
+                        HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
 
-                        HandleInformation->Handle[Index].GrantedAccess =
+                        HandleInformation->Handles[Index].GrantedAccess =
                             HandleTableEntry->GrantedAccess;
 
-                        HandleInformation->Handle[Index].Reserved = 0;
+                        HandleInformation->Handles[Index].Reserved = 0;
 
                         ++Index;
                     }
@@ -2836,10 +2835,10 @@ struct _QSSI_CALLS
 // XS    Set
 // XX    unknown behaviour
 //
-#define SI_QS(n) {QSI_USE(n),SSI_USE(n)}
-#define SI_QX(n) {QSI_USE(n),NULL}
-#define SI_XS(n) {NULL,SSI_USE(n)}
-#define SI_XX(n) {NULL,NULL}
+#define SI_QS(n) [n] = {QSI_USE(n),SSI_USE(n)}
+#define SI_QX(n) [n] = {QSI_USE(n),NULL}
+#define SI_XS(n) [n] = {NULL,SSI_USE(n)}
+#define SI_XX(n) [n] = {NULL,NULL}
 
 static
 QSSI_CALLS
@@ -2869,15 +2868,15 @@ CallQS[] =
     SI_QS(SystemFileCacheInformation),
     SI_QX(SystemPoolTagInformation),
     SI_QX(SystemInterruptInformation),
-    SI_QS(SystemDpcBehaviourInformation),
+    SI_QS(SystemDpcBehaviorInformation),
     SI_QX(SystemFullMemoryInformation), /* it should be SI_XX */
     SI_XS(SystemLoadGdiDriverInformation),
     SI_XS(SystemUnloadGdiDriverInformation),
     SI_QS(SystemTimeAdjustmentInformation),
     SI_QX(SystemSummaryMemoryInformation), /* it should be SI_XX */
-    SI_QX(SystemNextEventIdInformation), /* it should be SI_XX */
+    SI_QX(SystemMirrorMemoryInformation), /* it should be SI_XX */
     SI_QX(SystemPerformanceTraceInformation), /* it should be SI_XX */
-    SI_QX(SystemCrashDumpInformation),
+    SI_QX(SystemObsolete0),
     SI_QX(SystemExceptionInformation),
     SI_QX(SystemCrashDumpStateInformation),
     SI_QX(SystemKernelDebuggerInformation),
@@ -2898,8 +2897,8 @@ CallQS[] =
     SI_QX(SystemRangeStartInformation),
     SI_QS(SystemVerifierInformation),
     SI_XS(SystemVerifierThunkExtend),
-    SI_QX(SystemSessionProcessesInformation),
-    SI_XS(SystemLoadGdiDriverInSystemSpaceInformation),
+    SI_QX(SystemSessionProcessInformation),
+    SI_XS(SystemLoadGdiDriverInSystemSpace),
     SI_QX(SystemNumaProcessorMap),
     SI_QX(SystemPrefetcherInformation),
     SI_QX(SystemExtendedProcessInformation),
@@ -2919,7 +2918,7 @@ CallQS[] =
     SI_XX(SystemWatchdogTimerHandler), /* FIXME: not implemented */
     SI_XX(SystemWatchdogTimerInformation), /* FIXME: not implemented */
     SI_QX(SystemLogicalProcessorInformation),
-    SI_XX(SystemWow64SharedInformation), /* FIXME: not implemented */
+    SI_XX(SystemWow64SharedInformationObsolete), /* FIXME: not implemented */
     SI_XX(SystemRegisterFirmwareTableInformationHandler), /* FIXME: not implemented */
     SI_QX(SystemFirmwareTableInformation),
 };

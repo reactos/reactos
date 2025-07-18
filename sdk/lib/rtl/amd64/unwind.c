@@ -1136,30 +1136,77 @@ RtlpCaptureNonVolatileContextPointers(
 }
 
 VOID
+RtlGetUnwindContext(
+    _Out_ PCONTEXT Context,
+    _In_ DWORD64 TargetFrame)
+{
+    KNONVOLATILE_CONTEXT_POINTERS ContextPointers;
+    ULONG ContextFlags = Context->ContextFlags & ~CONTEXT_AMD64;
+
+    /* Capture pointers to the non-volatiles up to the target frame */
+    RtlpCaptureNonVolatileContextPointers(&ContextPointers, TargetFrame);
+
+    /* Copy the nonvolatiles from the captured locations */
+    if (ContextFlags & CONTEXT_INTEGER)
+    {
+        Context->Rbx = *ContextPointers.Rbx;
+        Context->Rsi = *ContextPointers.Rsi;
+        Context->Rdi = *ContextPointers.Rdi;
+        Context->R12 = *ContextPointers.R12;
+        Context->R13 = *ContextPointers.R13;
+        Context->R14 = *ContextPointers.R14;
+        Context->R15 = *ContextPointers.R15;
+    }
+    if (ContextFlags & CONTEXT_FLOATING_POINT)
+    {
+        Context->Xmm6 = *ContextPointers.Xmm6;
+        Context->Xmm7 = *ContextPointers.Xmm7;
+        Context->Xmm8 = *ContextPointers.Xmm8;
+        Context->Xmm9 = *ContextPointers.Xmm9;
+        Context->Xmm10 = *ContextPointers.Xmm10;
+        Context->Xmm11 = *ContextPointers.Xmm11;
+        Context->Xmm12 = *ContextPointers.Xmm12;
+        Context->Xmm13 = *ContextPointers.Xmm13;
+        Context->Xmm14 = *ContextPointers.Xmm14;
+        Context->Xmm15 = *ContextPointers.Xmm15;
+    }
+}
+
+VOID
 RtlSetUnwindContext(
     _In_ PCONTEXT Context,
     _In_ DWORD64 TargetFrame)
 {
     KNONVOLATILE_CONTEXT_POINTERS ContextPointers;
+    ULONG ContextFlags = Context->ContextFlags & ~CONTEXT_AMD64;
 
     /* Capture pointers to the non-volatiles up to the target frame */
     RtlpCaptureNonVolatileContextPointers(&ContextPointers, TargetFrame);
 
     /* Copy the nonvolatiles to the captured locations */
-    *ContextPointers.R12 = Context->R12;
-    *ContextPointers.R13 = Context->R13;
-    *ContextPointers.R14 = Context->R14;
-    *ContextPointers.R15 = Context->R15;
-    *ContextPointers.Xmm6 = Context->Xmm6;
-    *ContextPointers.Xmm7 = Context->Xmm7;
-    *ContextPointers.Xmm8 = Context->Xmm8;
-    *ContextPointers.Xmm9 = Context->Xmm9;
-    *ContextPointers.Xmm10 = Context->Xmm10;
-    *ContextPointers.Xmm11 = Context->Xmm11;
-    *ContextPointers.Xmm12 = Context->Xmm12;
-    *ContextPointers.Xmm13 = Context->Xmm13;
-    *ContextPointers.Xmm14 = Context->Xmm14;
-    *ContextPointers.Xmm15 = Context->Xmm15;
+    if (ContextFlags & CONTEXT_INTEGER)
+    {
+        *ContextPointers.Rbx = Context->Rbx;
+        *ContextPointers.Rsi = Context->Rsi;
+        *ContextPointers.Rdi = Context->Rdi;
+        *ContextPointers.R12 = Context->R12;
+        *ContextPointers.R13 = Context->R13;
+        *ContextPointers.R14 = Context->R14;
+        *ContextPointers.R15 = Context->R15;
+    }
+    if (ContextFlags & CONTEXT_FLOATING_POINT)
+    {
+        *ContextPointers.Xmm6 = Context->Xmm6;
+        *ContextPointers.Xmm7 = Context->Xmm7;
+        *ContextPointers.Xmm8 = Context->Xmm8;
+        *ContextPointers.Xmm9 = Context->Xmm9;
+        *ContextPointers.Xmm10 = Context->Xmm10;
+        *ContextPointers.Xmm11 = Context->Xmm11;
+        *ContextPointers.Xmm12 = Context->Xmm12;
+        *ContextPointers.Xmm13 = Context->Xmm13;
+        *ContextPointers.Xmm14 = Context->Xmm14;
+        *ContextPointers.Xmm15 = Context->Xmm15;
+    }
 }
 
 VOID

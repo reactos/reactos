@@ -948,7 +948,7 @@ typedef LONG_PTR
 #define SRVINFO_DBCSENABLED 0x0002
 #define SRVINFO_IMM32       0x0004
 #define SRVINFO_APIHOOK     0x0010
-#define SRVINFO_CICERO_ENABLED 0x0020
+#define SRVINFO_CTFIME_ENABLED 0x0020
 #define SRVINFO_KBDPREF     0x0080
 
 #define NUM_SYSCOLORS 31
@@ -1210,7 +1210,7 @@ typedef struct tagCURSORDATA
 #define COMPAT_FLAG_2_CICERO_DISABLED 2
 
 #define IS_IMM_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
-#define IS_CICERO_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+#define IS_CICERO_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_CTFIME_ENABLED))
 #define IS_16BIT_MODE() (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 #define IS_CICERO_COMPAT_DISABLED() \
     (GetWin32ClientInfo()->dwCompatFlags2 & COMPAT_FLAG_2_CICERO_DISABLED)
@@ -1235,12 +1235,16 @@ typedef struct tagIMEUI
     DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
-/* Window Extra data container. */
-typedef struct _IMEWND
+typedef struct tagIMEWND
 {
     WND wnd;
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
+
+#define GWLP_IMEWND_PIMEUI 0
+
+/* IMEWND and GWLP_IMEWND_PIMEUI assume this alignment */
+C_ASSERT(sizeof(WND) % sizeof(PVOID) == 0);
 
 DWORD
 NTAPI

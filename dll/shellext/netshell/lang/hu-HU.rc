@@ -177,7 +177,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKINITTITLE "Network Install"
-    IDS_NETWORKINITSUBTITLE "Installs reqired networking components."
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "Hálózati beállítások"
     IDS_NETWORKSETTINGSSUBTITLE "Hálózati szoftverek telepítése, melyek segítségével más hálózatokhoz, számítógépekhez vagy az internethez lehet csatlakozni."
     IDS_NETWORKCOMPONENTTITLE "Hálózati összetevők"

@@ -37,7 +37,20 @@ extern HMODULE	huser32 DECLSPEC_HIDDEN;
 extern HINSTANCE shell32_hInstance DECLSPEC_HIDDEN;
 extern int (WINAPI* SHELL_StrCmpLogical)(PCWSTR s1, PCWSTR s2);
 
-BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
+enum {
+    REST_SH32_ENABLESHELLEXECUTEHOOKS = 0x00060001, // POLID_EnableShellExecuteHooks
+};
+DWORD SH32_InternalRestricted(DWORD rest);
+
+/* COM */
+HRESULT WINAPI
+SH32_ExtCoCreateInstance(
+    _In_opt_ LPCWSTR aclsid,
+    _In_opt_ const CLSID *clsid,
+    _In_opt_ LPUNKNOWN pUnkOuter,
+    _In_ DWORD dwClsCtx,
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv);
 
 /* Iconcache */
 #define INVALID_INDEX -1
@@ -48,6 +61,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags ) DE
 extern INT ShellLargeIconSize;
 extern INT ShellSmallIconSize;
 extern INT ShellIconBPP;
+BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
 /* Classes Root */
 HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowFallback);
@@ -128,6 +142,11 @@ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECL
 HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 HGLOBAL RenderFILENAMEA (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
+
+HRESULT SHELL_GetShellExtensionRegCLSID(
+    HKEY hKey,
+    LPCWSTR KeyName,
+    CLSID *pClsId);
 
 /* Change Notification */
 void InitChangeNotifications(void) DECLSPEC_HIDDEN;

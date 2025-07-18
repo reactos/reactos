@@ -65,6 +65,7 @@ static const struct
 /*    { &ICONTITLE_builtin_class, FNID_ICONTITLE, ICLS_ICONTITLE}, // moved to win32k */
     { &STATIC_builtin_class,    FNID_STATIC,    ICLS_STATIC},
     { &GHOST_builtin_class,     FNID_GHOST,     ICLS_GHOST},
+    { &IME_builtin_class,       FNID_IME,       ICLS_IME},
 };
 
 BOOL WINAPI RegisterSystemControls(VOID)
@@ -81,6 +82,12 @@ BOOL WINAPI RegisterSystemControls(VOID)
 
     for (i = 0; i != sizeof(g_SysClasses) / sizeof(g_SysClasses[0]); i++)
     {
+        if (g_SysClasses[i].fnid == FNID_IME)
+        {
+            if (!IS_IMM_MODE() || (RegisterDefaultClasses & ICLASS_TO_MASK(ICLS_IME)))
+                continue;
+        }
+
         WndClass.lpszClassName = g_SysClasses[i].desc->name;
 
         // Set Global bit!
@@ -97,12 +104,6 @@ BOOL WINAPI RegisterSystemControls(VOID)
                                      FALSE);
         if (atom)
            RegisterDefaultClasses |= ICLASS_TO_MASK(g_SysClasses[i].ClsId);
-    }
-
-    if ( //gpsi->dwSRVIFlags & SRVINFO_IMM32 && Not supported yet, need NlsMbCodePageTag working in Win32k.
-        !(RegisterDefaultClasses & ICLASS_TO_MASK(ICLS_IME))) // So, work like XP.
-    {
-       RegisterIMEClass();
     }
 
     return TRUE;

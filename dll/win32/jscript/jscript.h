@@ -521,8 +521,6 @@ static inline DWORD make_grfdex(script_ctx_t *ctx, DWORD flags)
     return ((ctx->version & 0xff) << 28) | flags;
 }
 
-#define FACILITY_JSCRIPT 10
-
 #define MAKE_JSERROR(code) MAKE_HRESULT(SEVERITY_ERROR, FACILITY_JSCRIPT, code)
 
 #define JS_E_TO_PRIMITIVE            MAKE_JSERROR(IDS_TO_PRIMITIVE)

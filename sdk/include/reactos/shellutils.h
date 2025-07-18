@@ -652,6 +652,24 @@ public:
         return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
     }
 };
+
+#if defined(__WINE_SHLWAPI_H) && !defined(NO_SHLWAPI)
+struct CScopedSetObjectWithSite
+{
+    IUnknown *m_pObj;
+    explicit CScopedSetObjectWithSite(IUnknown *pObj, IUnknown *pSite) : m_pObj(pObj)
+    {
+        if (pSite)
+            IUnknown_SetSite(pObj, pSite);
+        else
+            m_pObj = NULL;
+    }
+    ~CScopedSetObjectWithSite()
+    {
+        IUnknown_SetSite(m_pObj, NULL);
+    }
+};
+#endif
 #endif /* __cplusplus */
 
 #define S_LESSTHAN 0xffff
@@ -670,7 +688,7 @@ public:
 #define CmicFlagsToSeeFlags(flags)  ((flags) & SEE_CMIC_COMMON_FLAGS)
 static inline UINT SeeFlagsToCmicFlags(UINT flags)
 {
-    if (flags & SEE_MASK_CLASSNAME)
+    if ((flags & (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)) == SEE_MASK_CLASSNAME)
         flags &= ~(SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE);
     return flags & SEE_CMIC_COMMON_FLAGS;
 }

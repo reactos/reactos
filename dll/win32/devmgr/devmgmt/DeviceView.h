@@ -2,6 +2,8 @@
 #include "DeviceNode.h"
 #include "ClassNode.h"
 #include "RootNode.h"
+#include "ResourceNode.h"
+#include "ResourceTypeNode.h"
 
 enum ViewType
 {
@@ -100,6 +102,16 @@ private:
     bool ListDevicesByConnection(
         );
     bool ListDevicesByType(
+        );
+    bool ListResourcesByType(
+        );
+
+    bool RecurseResources(
+        _In_ DEVINST ParentDevice,
+        _In_ HTREEITEM hMemoryTreeItem,
+        _In_ HTREEITEM hPortTreeItem,
+        _In_ HTREEITEM hDmaTreeItem,
+        _In_ HTREEITEM hIrqTreeItem
         );
 
     bool GetNextClass(

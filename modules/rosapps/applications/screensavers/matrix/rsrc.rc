@@ -27,6 +27,9 @@ IDI_ICON1        ICON    "icon1.ico"
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/lt-LT.rc"
 #endif

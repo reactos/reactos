@@ -37,14 +37,17 @@
 #include <windef.h>
 #include <winnt.h>
 
+#define ASSERT(exp) if (!(exp)) __int2c();
+
 #include "pseh3.h"
 #include "pseh3_asmdef.h"
 
 /* Make sure the asm definitions match the structures */
 C_ASSERT(SEH3_REGISTRATION_FRAME_Next == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Next));
 C_ASSERT(SEH3_REGISTRATION_FRAME_Handler == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Handler));
-C_ASSERT(SEH3_REGISTRATION_FRAME_EndOfChain == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, EndOfChain));
 C_ASSERT(SEH3_REGISTRATION_FRAME_ScopeTable == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, ScopeTable));
+C_ASSERT(SEH3_REGISTRATION_FRAME_TryLevel == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, TryLevel));
+C_ASSERT(SEH3_REGISTRATION_FRAME_EndOfChain == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, EndOfChain));
 C_ASSERT(SEH3_REGISTRATION_FRAME_ExceptionPointers == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, ExceptionPointers));
 C_ASSERT(SEH3_REGISTRATION_FRAME_ExceptionCode == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, ExceptionCode));
 C_ASSERT(SEH3_REGISTRATION_FRAME_Esp == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Esp));
@@ -61,15 +64,61 @@ C_ASSERT(SEH3_REGISTRATION_FRAME_ReturnAddress == FIELD_OFFSET(SEH3$_REGISTRATIO
 C_ASSERT(SEH3_SCOPE_TABLE_Filter == FIELD_OFFSET(SEH3$_SCOPE_TABLE, Filter));
 C_ASSERT(SEH3_SCOPE_TABLE_Target == FIELD_OFFSET(SEH3$_SCOPE_TABLE, Target));
 
+enum
+{
+    _SEH3$_NESTED_HANDLER = 0,
+    _SEH3$_CPP_HANDLER = 1,
+    _SEH3$_CLANG_HANDLER = 2,
+};
+
 void
 __attribute__((regparm(1)))
 _SEH3$_Unregister(
     volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
-    if (Frame->Handler)
-        _SEH3$_UnregisterFrame(Frame);
+    volatile SEH3$_REGISTRATION_FRAME *CurrentFrame;
+
+    /* Check if the frame has a handler (then it's the registered frame) */
+    if (Frame->Handler != NULL)
+    {
+        /* There shouldn't be any more nested try-level frames */
+        ASSERT(Frame->EndOfChain == Frame);
+
+        /* During unwinding on Windows ExecuteHandler2 installs its own EH frame,
+           so there can be one or even multiple frames before our own one and we
+           need to search for the link that points to our head frame. */
+        CurrentFrame = (SEH3$_REGISTRATION_FRAME*)__readfsdword(0);
+        if (Frame == CurrentFrame)
+        {
+            /* The target frame is the first installed frame, remove it */
+            __writefsdword(0, (ULONG)Frame->Next);
+            return;
+        }
+
+        /* Loop to find the frame that links the target frame */
+        while (CurrentFrame->Next != Frame)
+        {
+            CurrentFrame = CurrentFrame->Next;
+        }
+
+        /* Remove the frame from the linked list */
+        CurrentFrame->Next = Frame->Next;
+    }
     else
-        _SEH3$_UnregisterTryLevel(Frame);
+    {
+        /* Search for the head frame */
+        CurrentFrame = Frame->Next;
+        while (CurrentFrame->Handler == NULL)
+        {
+            CurrentFrame = CurrentFrame->Next;
+        }
+
+        /* Make sure the head frame points to our frame */
+        ASSERT(CurrentFrame->EndOfChain == Frame);
+
+        /* Remove this frame from the internal linked list */
+        CurrentFrame->EndOfChain = Frame->Next;
+    }
 }
 
 static inline
@@ -115,20 +164,21 @@ static inline
 LONG
 _SEH3$_InvokeFilter(
     volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame,
-    PVOID Filter)
+    PVOID Filter,
+    int HandlerType)
 {
     LONG FilterResult;
 
-    if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_NESTED_HANDLER)
+    if (HandlerType == _SEH3$_NESTED_HANDLER)
     {
         return _SEH3$_InvokeNestedFunctionFilter(RegistrationFrame, Filter);
     }
-    else if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_CPP_HANDLER)
+    else if (HandlerType == _SEH3$_CPP_HANDLER)
     {
         /* Call the embedded filter function */
         return _SEH3$_InvokeEmbeddedFilter(RegistrationFrame);
     }
-    else if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_CLANG_HANDLER)
+    else if (HandlerType == _SEH3$_CLANG_HANDLER)
     {
         return _SEH3$_InvokeEmbeddedFilterFromRegistration(RegistrationFrame);
     }
@@ -143,7 +193,25 @@ _SEH3$_InvokeFilter(
 
 void
 __attribute__((regparm(1)))
-_SEH3$_AutoCleanup(
+_SEH3$_C_AutoCleanup(
+    volatile SEH3$_REGISTRATION_FRAME *Frame)
+{
+    _SEH3$_Unregister(Frame);
+
+    /* Check for __finally frames */
+    if (Frame->ScopeTable->Target == NULL)
+    {
+#ifdef __clang__
+        _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter, _SEH3$_CLANG_HANDLER);
+#else
+        _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter, _SEH3$_NESTED_HANDLER);
+#endif
+    }
+}
+
+void
+__attribute__((regparm(1)))
+_SEH3$_CPP_AutoCleanup(
     volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
     if (Frame->Handler)
@@ -154,24 +222,19 @@ _SEH3$_AutoCleanup(
     /* Check for __finally frames */
     if (Frame->ScopeTable->Target == NULL)
     {
-       _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter);
+       _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter, _SEH3$_CPP_HANDLER);
     }
-
 }
+
 
 static inline
 LONG
 _SEH3$_GetFilterResult(
-    PSEH3$_REGISTRATION_FRAME Record)
+    PSEH3$_REGISTRATION_FRAME Record,
+    int HandlerType)
 {
     PVOID Filter = Record->ScopeTable->Filter;
     LONG Result;
-
-    /* Check for __finally frames */
-    if (Record->ScopeTable->Target == NULL)
-    {
-        return EXCEPTION_CONTINUE_SEARCH;
-    }
 
     /* Check if we have a constant filter */
     if (((ULONG)Filter & 0xFFFFFF00) == 0)
@@ -182,7 +245,7 @@ _SEH3$_GetFilterResult(
     else
     {
         /* Call the filter function */
-        Result = _SEH3$_InvokeFilter(Record, Filter);
+        Result = _SEH3$_InvokeFilter(Record, Filter, HandlerType);
     }
 
     /* Normalize the result */
@@ -194,9 +257,10 @@ _SEH3$_GetFilterResult(
 static inline
 VOID
 _SEH3$_CallFinally(
-    PSEH3$_REGISTRATION_FRAME Record)
+    PSEH3$_REGISTRATION_FRAME Record,
+    int HandlerType)
 {
-    _SEH3$_InvokeFilter(Record, Record->ScopeTable->Filter);
+    _SEH3$_InvokeFilter(Record, Record->ScopeTable->Filter, HandlerType);
 }
 
 __attribute__((noreturn))
@@ -205,8 +269,7 @@ void
 _SEH3$_JumpToTarget(
     PSEH3$_REGISTRATION_FRAME RegistrationFrame)
 {
-    if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_CLANG_HANDLER)
-    {
+#ifdef __clang__
         asm volatile (
             /* Load the registers */
             "movl 24(%%ecx), %%esp\n\t"
@@ -226,9 +289,7 @@ _SEH3$_JumpToTarget(
             "a" (RegistrationFrame->ScopeTable),
              [Target] "m" (RegistrationFrame->ScopeTable->Target)
         );
-    }
-    else
-    {
+#else
         asm volatile (
             /* Load the registers */
             "movl 24(%%ecx), %%esp\n\t"
@@ -244,7 +305,7 @@ _SEH3$_JumpToTarget(
             "a" (RegistrationFrame->ScopeTable),
              [Target] "m" (RegistrationFrame->ScopeTable->Target)
         );
-    }
+#endif
 
     __builtin_unreachable();
 }
@@ -255,16 +316,17 @@ _SEH3$_CallRtlUnwind(
     PSEH3$_REGISTRATION_FRAME RegistrationFrame);
 
 
-EXCEPTION_DISPOSITION
+int // EXCEPTION_DISPOSITION
 __cdecl
 #ifndef __clang__
 __attribute__ ((__target__ ("cld")))
 #endif
-_SEH3$_except_handler(
+_SEH3$_common_except_handler(
     struct _EXCEPTION_RECORD * ExceptionRecord,
     PSEH3$_REGISTRATION_FRAME EstablisherFrame,
     struct _CONTEXT * ContextRecord,
-    void * DispatcherContext)
+    void * DispatcherContext,
+    int HandlerType)
 {
     PSEH3$_REGISTRATION_FRAME CurrentFrame, TargetFrame;
     SEH3$_EXCEPTION_POINTERS ExceptionPointers;
@@ -278,7 +340,7 @@ _SEH3$_except_handler(
     ExceptionPointers.ContextRecord = ContextRecord;
 
     /* Check if this is an unwind */
-    if (ExceptionRecord->ExceptionFlags & EXCEPTION_UNWINDING)
+    if (IS_UNWINDING(ExceptionRecord->ExceptionFlags))
     {
         /* Unwind all local frames */
         TargetFrame = EstablisherFrame->Next;
@@ -297,7 +359,7 @@ _SEH3$_except_handler(
                 CurrentFrame->ExceptionCode = ExceptionRecord->ExceptionCode;
 
                 /* Get the filter result */
-                FilterResult = _SEH3$_GetFilterResult(CurrentFrame);
+                FilterResult = _SEH3$_GetFilterResult(CurrentFrame, HandlerType);
 
                 /* Check, if continuuing is requested */
                 if (FilterResult == EXCEPTION_CONTINUE_EXECUTION)
@@ -340,7 +402,7 @@ _SEH3$_except_handler(
             CurrentFrame->ExceptionCode = ExceptionRecord->ExceptionCode;
 
             /* Call the finally function */
-            _SEH3$_CallFinally(CurrentFrame);
+            _SEH3$_CallFinally(CurrentFrame, HandlerType);
         }
     }
 
@@ -360,3 +422,28 @@ _SEH3$_except_handler(
     _SEH3$_JumpToTarget(CurrentFrame);
 }
 
+int // EXCEPTION_DISPOSITION
+__cdecl
+_SEH3$_C_except_handler(
+    struct _EXCEPTION_RECORD* ExceptionRecord,
+    PSEH3$_REGISTRATION_FRAME EstablisherFrame,
+    struct _CONTEXT* ContextRecord,
+    void* DispatcherContext)
+{
+#ifdef __clang__
+    return _SEH3$_common_except_handler(ExceptionRecord, EstablisherFrame, ContextRecord, DispatcherContext, _SEH3$_CLANG_HANDLER);
+#else
+    return _SEH3$_common_except_handler(ExceptionRecord, EstablisherFrame, ContextRecord, DispatcherContext, _SEH3$_NESTED_HANDLER);
+#endif
+}
+
+int // EXCEPTION_DISPOSITION
+__cdecl
+_SEH3$_CPP_except_handler(
+    struct _EXCEPTION_RECORD* ExceptionRecord,
+    PSEH3$_REGISTRATION_FRAME EstablisherFrame,
+    struct _CONTEXT* ContextRecord,
+    void* DispatcherContext)
+{
+    return _SEH3$_common_except_handler(ExceptionRecord, EstablisherFrame, ContextRecord, DispatcherContext, _SEH3$_CPP_HANDLER);
+}

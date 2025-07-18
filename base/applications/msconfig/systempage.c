@@ -94,6 +94,7 @@ SystemPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             hSystemDialog = hDlg;
             SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
             InitializeSystemDialog(hDlg);
+            DisableAllExcept(hDlg, IDC_SYSTEM_TREE); // FIXME: Implement saving
             return TRUE;
         }
     }

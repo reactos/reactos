@@ -1237,28 +1237,17 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
             {
                 hr = CFSDropTarget_CreateInstance(m_sPathTarget, riid, ppvOut);
             }
-            else if (IsEqualIID (riid, IID_IContextMenu))
-            {
-                HKEY hKeys[16];
-                UINT cKeys = 0;
-                AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
-
-                DEFCONTEXTMENU dcm;
-                dcm.hwnd = hwndOwner;
-                dcm.pcmcb = this;
-                dcm.pidlFolder = m_pidlRoot;
-                dcm.psf = this;
-                dcm.cidl = 0;
-                dcm.apidl = NULL;
-                dcm.cKeys = cKeys;
-                dcm.aKeys = hKeys;
-                dcm.punkAssociationInfo = NULL;
-                hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
-            }
             else if (bIsShellView)
             {
-                SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this, NULL, this};
+                SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, this };
                 hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            }
+            else if (IsEqualIID(riid, IID_IContextMenu))
+            {
+                CRegKeyHandleArray keys;
+                AddClassKeyToArray(L"Directory\\Background", keys, keys);
+                DEFCONTEXTMENU dcm = { hwndOwner, this, m_pidlRoot, this, 0, NULL, NULL, keys, keys };
+                hr = SHCreateDefaultContextMenu(&dcm, riid, ppvOut);
             }
             else
             {
@@ -1383,21 +1372,10 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
 
         if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1))
         {
-            HKEY hKeys[16];
-            UINT cKeys = 0;
-            AddFSClassKeysToArray(cidl, apidl, hKeys, &cKeys);
-
-            DEFCONTEXTMENU dcm;
-            dcm.hwnd = hwndOwner;
-            dcm.pcmcb = this;
-            dcm.pidlFolder = m_pidlRoot;
-            dcm.psf = this;
-            dcm.cidl = cidl;
-            dcm.apidl = apidl;
-            dcm.cKeys = cKeys;
-            dcm.aKeys = hKeys;
-            dcm.punkAssociationInfo = NULL;
-            hr = SHCreateDefaultContextMenu (&dcm, riid, &pObj);
+            CRegKeyHandleArray keys;
+            AddFSClassKeysToArray(cidl, apidl, keys, keys);
+            DEFCONTEXTMENU dcm = { hwndOwner, this, m_pidlRoot, this, cidl, apidl, NULL, keys, keys };
+            hr = SHCreateDefaultContextMenu(&dcm, riid, &pObj);
         }
         else if (IsEqualIID (riid, IID_IDataObject))
         {

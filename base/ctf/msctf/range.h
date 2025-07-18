@@ -7,24 +7,14 @@ class CRange
     , public ITfRangeAnchor
     , public ITfSource
 {
-protected:
-    DWORD m_dwLockType;
-    IAnchor *m_pAnchorStart;
-    IAnchor *m_pAnchorEnd;
-    CInputContext *m_pInputContext;
-    DWORD m_dwCookie;
-    TfGravity m_gravity;
-    LONG m_cRefs;
-
 public:
     CRange(
-        _In_ CInputContext *pIC,
-        _In_ DWORD dwLockType,
-        _In_ IAnchor *pAnchorStart,
-        _In_ IAnchor *pAnchorEnd,
-        _In_ TfGravity gravity);
-
+        _In_ ITfContext *context,
+        _In_ TfAnchor anchorStart,
+        _In_ TfAnchor anchorEnd);
     virtual ~CRange();
+
+    static HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp);
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
@@ -128,6 +118,13 @@ public:
     STDMETHODIMP UnadviseSink(_In_ DWORD dwCookie) override;
 
 protected:
+    LONG m_cRefs;
+    ITfContext *m_context;
+    DWORD m_dwLockType;
+    TfAnchor m_anchorStart;
+    TfAnchor m_anchorEnd;
+    DWORD m_dwCookie;
+
     CRange *_Clone();
 
     HRESULT _IsEqualX(TfEditCookie ec, BOOL bEnd, ITfRange *pWith, TfAnchor aPos, BOOL *pfEqual);

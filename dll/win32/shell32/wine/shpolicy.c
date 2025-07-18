@@ -163,7 +163,7 @@ static BOOL SHELL_QueryRestrictionsChanged(VOID)
  *     b: 98Lite 2.0 (which uses many of these policy keys) http://www.98lite.net/
  *     c: 'The Windows 95 Registry', by John Woram, 1996 MIS: Press
  */
-DWORD WINAPI SHRestricted (RESTRICTIONS rest)
+DWORD WINAPI SHRestricted(RESTRICTIONS rest)
 {
     TRACE("(0x%08lX)\n", rest);
 
@@ -175,6 +175,12 @@ DWORD WINAPI SHRestricted (RESTRICTIONS rest)
     }
 
     return SHRestrictionLookup(rest, NULL, s_PolicyTable, g_RestValues);
+}
+
+DWORD SH32_InternalRestricted(DWORD rest)
+{
+    /* assert((rest & 0x00060000) == 0x00060000) */
+    return SHRestricted(rest);
 }
 
 /*************************************************************************

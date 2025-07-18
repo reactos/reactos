@@ -32,6 +32,112 @@ static BOOL InsertMenuItemAt(HMENU hMenu, UINT Pos, UINT Flags)
     return InsertMenuItemW(hMenu, Pos, TRUE, &mii);
 }
 
+static void DCMA_DestroyEntry(DCMENTRY &dcme)
+{
+    if (!dcme.pCM)
+        return;
+    IUnknown_SetSite(dcme.pCM, NULL);
+    dcme.pCM->Release();
+    dcme.pCM = NULL;
+}
+
+void DCMA_Destroy(HDCMA hDCMA)
+{
+    UINT i = 0;
+    for (DCMENTRY *p; (p = DCMA_GetEntry(hDCMA, i)) != NULL; ++i)
+        DCMA_DestroyEntry(*p);
+    DSA_Destroy(hDCMA);
+}
+
+UINT DCMA_InsertMenuItems(
+    _In_ HDCMA hDCMA,
+    _In_ HDCIA hDCIA,
+    _In_opt_ LPCITEMIDLIST pidlFolder,
+    _In_opt_ IDataObject *pDO,
+    _In_opt_ HKEY *pKeys,
+    _In_opt_ UINT nKeys,
+    _In_ QCMINFO *pQCMI,
+    _In_opt_ UINT fCmf,
+    _In_opt_ IUnknown *pUnkSite)
+{
+    UINT idCmdBase = pQCMI->idCmdFirst, idCmdFirst = idCmdBase;
+    UINT nOffset = 0;
+
+    // Insert in reverse order
+    for (int iCls = DCIA_GetCount(hDCIA) - 1; iCls >= 0; --iCls)
+    {
+        REFCLSID clsid = *DCIA_GetEntry(hDCIA, iCls);
+        if (fCmf & CMF_DEFAULTONLY)
+        {
+            WCHAR szKey[MAX_PATH];
+            wcscpy(szKey, L"CLSID\\");
+            StringFromGUID2(clsid, szKey + _countof(L"CLSID\\") - 1, CHARS_IN_GUID);
+            wcscpy(szKey + _countof(L"CLSID\\") - 1 + CHARS_IN_GUID - 1, L"\\shellex\\MayChangeDefaultMenu");
+            if (!RegKeyExists(HKEY_CLASSES_ROOT, szKey))
+                continue;
+        }
+
+        for (UINT iKey = 0; iKey < nKeys; ++iKey)
+        {
+            CComPtr<IShellExtInit> pInit;
+            HRESULT hr = SHExtCoCreateInstance(NULL, &clsid, NULL, IID_PPV_ARG(IShellExtInit, &pInit));
+            if (FAILED(hr))
+                break;
+            if (FAILED(hr = pInit->Initialize(pidlFolder, pDO, pKeys[iKey])))
+                continue;
+
+            IContextMenu *pCM;
+            if (FAILED(hr = pInit->QueryInterface(IID_PPV_ARG(IContextMenu, &pCM))))
+                break;
+            IUnknown_SetSite(pCM, pUnkSite);
+
+            hr = pCM->QueryContextMenu(pQCMI->hmenu, pQCMI->indexMenu + nOffset, idCmdFirst, pQCMI->idCmdLast, fCmf);
+            const UINT nCount = HRESULT_CODE(hr);
+            const UINT idThisFirst = idCmdFirst - idCmdBase;
+            DCMENTRY dcme = { pCM, idThisFirst, idThisFirst + nCount - 1 };
+            if (hr > 0)
+            {
+                idCmdFirst += nCount;
+                if (DSA_AppendItem(hDCMA, &dcme) >= 0)
+                {
+                    if (nOffset == 0 && GetMenuDefaultItem(pQCMI->hmenu, TRUE, 0) == 0)
+                        nOffset++; // Insert new items below the default
+                    break;
+                }
+            }
+            DCMA_DestroyEntry(dcme);
+        }
+    }
+    return idCmdFirst;
+}
+
+HRESULT DCMA_InvokeCommand(HDCMA hDCMA, CMINVOKECOMMANDINFO *pICI)
+{
+    HRESULT hr = S_FALSE;
+    for (UINT i = 0;; ++i)
+    {
+        DCMENTRY *p = DCMA_GetEntry(hDCMA, i);
+        if (!p)
+            return hr;
+
+        UINT id = LOWORD(pICI->lpVerb);
+        if (!IS_INTRESOURCE(pICI->lpVerb))
+        {
+            if (SUCCEEDED(hr = p->pCM->InvokeCommand(pICI)))
+                return hr;
+        }
+        else if (id >= p->idCmdFirst && id <= p->idCmdLast)
+        {
+            CMINVOKECOMMANDINFOEX ici;
+            CopyMemory(&ici, pICI, min(sizeof(ici), pICI->cbSize));
+            ici.cbSize = min(sizeof(ici), pICI->cbSize);
+            ici.lpVerb = MAKEINTRESOURCEA(id - p->idCmdFirst);
+            ici.lpVerbW = (PWSTR)ici.lpVerb;
+            return p->pCM->InvokeCommand((CMINVOKECOMMANDINFO*)&ici);
+        }
+    }
+}
+
 typedef struct _DynamicShellEntry_
 {
     UINT iIdCmdFirst;
@@ -73,6 +179,16 @@ static const struct _StaticInvokeCommandMap_
     { "copyto",          FCIDM_SHVIEW_COPYTO },
     { "moveto",          FCIDM_SHVIEW_MOVETO },
 };
+
+PCSTR MapFcidmCmdToVerb(_In_ UINT_PTR CmdId)
+{
+    for (SIZE_T i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
+    {
+        if (g_StaticInvokeCmdMap[i].IntVerb == CmdId && CmdId)
+            return g_StaticInvokeCmdMap[i].szStringVerb;
+    }
+    return NULL;
+}
 
 UINT MapVerbToDfmCmd(_In_ LPCSTR verba)
 {
@@ -183,7 +299,7 @@ class CDefaultContextMenu :
         UINT m_cidl;
         PCUITEMID_CHILD_ARRAY m_apidl;
         CComPtr<IDataObject> m_pDataObj;
-        HKEY* m_aKeys;
+        HKEY m_aKeys[16]; // This limit is documented for both the old API and for DEFCONTEXTMENU
         UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
@@ -271,8 +387,7 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_cidl(0),
     m_apidl(NULL),
     m_pDataObj(NULL),
-    m_aKeys(NULL),
-    m_cKeys(NULL),
+    m_cKeys(0),
     m_pidlFolder(NULL),
     m_bGroupPolicyActive(0),
     m_iIdQCMFirst(0),
@@ -301,7 +416,6 @@ CDefaultContextMenu::~CDefaultContextMenu()
 
     for (UINT i = 0; i < m_cKeys; i++)
         RegCloseKey(m_aKeys[i]);
-    HeapFree(GetProcessHeap(), 0, m_aKeys);
 
     if (m_pidlFolder)
         CoTaskMemFree(m_pidlFolder);
@@ -312,6 +426,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
 {
     TRACE("cidl %u\n", pdcm->cidl);
 
+    HRESULT hr = S_OK;
     if (!pdcm->pcmcb && !lpfn)
     {
         ERR("CDefaultContextMenu needs a callback!\n");
@@ -327,13 +442,14 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
     m_pfnmcb = lpfn;
     m_hwnd = pdcm->hwnd;
 
-    m_cKeys = pdcm->cKeys;
-    if (pdcm->cKeys)
+    for (UINT i = 0; i < pdcm->cKeys; ++i)
     {
-        m_aKeys = (HKEY*)HeapAlloc(GetProcessHeap(), 0, sizeof(HKEY) * pdcm->cKeys);
-        if (!m_aKeys)
-            return E_OUTOFMEMORY;
-        memcpy(m_aKeys, pdcm->aKeys, sizeof(HKEY) * pdcm->cKeys);
+        if (i >= _countof(m_aKeys))
+            hr = E_INVALIDARG;
+        else if ((m_aKeys[i] = SHRegDuplicateHKey(pdcm->aKeys[i])) != NULL)
+            m_cKeys++;
+        else
+            hr = E_OUTOFMEMORY;
     }
 
     m_psf->GetUIObjectOf(pdcm->hwnd, m_cidl, m_apidl, IID_NULL_PPV_ARG(IDataObject, &m_pDataObj));
@@ -353,7 +469,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
         TRACE("pidlFolder %p\n", m_pidlFolder);
     }
 
-    return S_OK;
+    return hr;
 }
 
 HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam)
@@ -899,7 +1015,7 @@ CDefaultContextMenu::QueryContextMenu(
             return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
 
         /* Add the default part of the menu */
-        HMENU hmenuDefault = LoadMenuW(_AtlBaseModule.GetResourceInstance(), L"MENU_SHV_FILE");
+        HMENU hmenuDefault = LoadMenuW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(MENU_SHV_FILE));
 
         /* Remove uneeded entries */
         if (!(rfg & SFGAO_CANMOVE))
@@ -1397,10 +1513,9 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
     if (!sei.lpClass && (lpcmi->fMask & (CMIC_MASK_HASLINKNAME | CMIC_MASK_HASTITLE)) && unicode)
         sei.lpClass = lpcmi->lpTitleW; // Forward .lnk path from CShellLink::DoOpen (for consrv STARTF_TITLEISLINKNAME)
 
-    ShellExecuteExW(&sei);
+    HRESULT hr = ShellExecuteExW(&sei) ? S_OK : HResultFromWin32(GetLastError());
     ILFree(pidlFull);
-
-    return S_OK;
+    return hr;
 }
 
 HRESULT
@@ -1455,12 +1570,11 @@ CDefaultContextMenu::InvokeRegVerb(
             hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
         if (SUCCEEDED(hr))
         {
+            CScopedSetObjectWithSite site(pDT, static_cast<IContextMenu*>(this));
             CComPtr<IPropertyBag> pPB;
             SHCreatePropertyBagOnRegKey(VerbKey, NULL, STGM_READ, IID_PPV_ARG(IPropertyBag, &pPB));
-            IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
             IUnknown_InitializeCommand(pDT, pEntry->Verb.GetString(), pPB);
             hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
-            IUnknown_SetSite(pDT, NULL);
             return hr;
         }
     }

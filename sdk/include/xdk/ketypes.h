@@ -931,6 +931,9 @@ typedef struct _KSYSTEM_TIME {
   LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
+$endif(_WDMDDK_)
+$if(_WDMDDK_ || _WINNT_)
+
 typedef struct DECLSPEC_ALIGN(16) _M128A {
   ULONGLONG Low;
   LONGLONG High;
@@ -961,6 +964,7 @@ typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
   ULONG Cr0NpxState;
 #endif
 } XSAVE_FORMAT, *PXSAVE_FORMAT;
+typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
 typedef struct DECLSPEC_ALIGN(8) _XSAVE_AREA_HEADER {
   ULONG64 Mask;
@@ -1009,6 +1013,9 @@ typedef struct _XSTATE_SAVE {
   } DUMMYUNIONNAME;
 #endif
 } XSTATE_SAVE, *PXSTATE_SAVE;
+
+$endif(_WDMDDK_ || _WINNT_)
+$if(_WDMDDK_)
 
 #ifdef _X86_
 
@@ -1129,6 +1136,9 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
 } TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+$endif (_NTDDK_)
+$if (_NTDDK_ || _WINNT_)
+
 #define XSTATE_LEGACY_FLOATING_POINT        0
 #define XSTATE_LEGACY_SSE                   1
 #define XSTATE_GSSE                         2
@@ -1221,7 +1231,7 @@ typedef struct _XSTATE_FEATURE {
 typedef struct _XSTATE_CONFIGURATION
 {
     ULONG64 EnabledFeatures;
-#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
     ULONG64 EnabledVolatileFeatures;
 #endif
     ULONG Size;
@@ -1232,24 +1242,28 @@ typedef struct _XSTATE_CONFIGURATION
         {
             ULONG OptimizedSave:1;
             ULONG CompactionEnabled:1; // WIN10+
+            ULONG ExtendedFeatureDisable:1; // Win11+
         };
     };
     XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
-#if (NTDDI_VERSION >= NTDDI_WIN10)
+#if (NTDDI_VERSION >= NTDDI_WIN10) || defined(__REACTOS__)
     ULONG64 EnabledSupervisorFeatures;
     ULONG64 AlignedFeatures;
     ULONG AllFeatureSize;
     ULONG AllFeatures[MAXIMUM_XSTATE_FEATURES];
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5) || defined(__REACTOS__)
     ULONG64 EnabledUserVisibleSupervisorFeatures;
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN11)
+#if (NTDDI_VERSION >= NTDDI_WIN11) || defined(__REACTOS__)
     ULONG64 ExtendedFeatureDisableFeatures;
     ULONG AllNonLargeFeatureSize;
     ULONG Spare;
 #endif
 } XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
+
+$endif (_NTDDK_ || _WINNT_)
+$if (_NTDDK_)
 
 #define MAX_WOW64_SHARED_ENTRIES 16
 
@@ -1551,6 +1565,9 @@ typedef struct _KUSER_SHARED_DATA
     ULONG64 UserPointerAuthMask;                            // 0x730
 #endif // NTDDI_VERSION >= NTDDI_WIN11_NI
 
+#if (NTDDI_VERSION < NTDDI_WIN7) && defined(__REACTOS__)
+    XSTATE_CONFIGURATION XState;
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)

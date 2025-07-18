@@ -88,6 +88,8 @@ extern "C" {
 
 #ifndef __ASM__
 
+extern SIZE_T KeXStateLength;
+
 #include "intrin_i.h"
 
 typedef struct _KIDT_INIT
@@ -472,6 +474,11 @@ KiGetUserModeStackAddress(void)
 }
 
 VOID
+KiGetTrapContext(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _Out_ PCONTEXT Context);
+
+VOID
 KiSetTrapContext(
     _Out_ PKTRAP_FRAME TrapFrame,
     _In_ PCONTEXT Context,
@@ -493,6 +500,11 @@ BOOLEAN
 KiProcessorFreezeHandler(
     _In_ PKTRAP_FRAME TrapFrame,
     _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
+VOID
+NTAPI
+KiInitializeXStateConfiguration(
+    _In_ ULONG Processor);
 
 #ifdef __cplusplus
 } // extern "C"

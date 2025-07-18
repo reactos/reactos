@@ -155,7 +155,7 @@ IntLoadSystenIcons(HICON hcur, DWORD id)
            return;
 
         // Set Small Window Icon and do not link.
-        if ( id == OIC_WINLOGO+1 )
+        if ( id == OIC_INTERNAL_WINSMALL )
         {
             pcur->CURSORF_flags |= CURSORF_GLOBAL;
             UserReferenceObject(pcur);

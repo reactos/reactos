@@ -622,7 +622,7 @@ DoChangePassword(
                            MB_OK | MB_ICONEXCLAMATION,
                            IDS_CHANGEPWDTITLE,
                            IDS_NONMATCHINGPASSWORDS);
-        return FALSE;
+        goto done;
     }
 
     /* Calculate the request buffer size */
@@ -639,7 +639,7 @@ DoChangePassword(
     if (RequestBuffer == NULL)
     {
         ERR("HeapAlloc failed\n");
-        return FALSE;
+        goto done;
     }
 
     /* Initialize the request buffer */
@@ -729,13 +729,27 @@ DoChangePassword(
         (wcscmp(Domain, pgContext->DomainName) == 0) &&
         (wcscmp(OldPassword, pgContext->Password) == 0))
     {
-        ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
+        SecureZeroMemory(pgContext->Password, sizeof(pgContext->Password));
         wcscpy(pgContext->Password, NewPassword1);
     }
 
 done:
+    /* Zero out the password buffers */
+    SecureZeroMemory(&OldPassword, sizeof(OldPassword));
+    SecureZeroMemory(&NewPassword1, sizeof(NewPassword1));
+    SecureZeroMemory(&NewPassword2, sizeof(NewPassword2));
+
     if (RequestBuffer != NULL)
+    {
+        /* Zero out the password buffers before freeing them */
+        SecureZeroMemory(RequestBuffer->OldPassword.Buffer,
+                         RequestBuffer->OldPassword.MaximumLength);
+        SecureZeroMemory(&RequestBuffer->OldPassword, sizeof(RequestBuffer->OldPassword));
+        SecureZeroMemory(RequestBuffer->NewPassword.Buffer,
+                         RequestBuffer->NewPassword.MaximumLength);
+        SecureZeroMemory(&RequestBuffer->NewPassword, sizeof(RequestBuffer->NewPassword));
         HeapFree(GetProcessHeap(), 0, RequestBuffer);
+    }
 
     if (ResponseBuffer != NULL)
         LsaFreeReturnBuffer(ResponseBuffer);
@@ -1062,13 +1076,10 @@ GUILoggedOnSAS(
 
     if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
     {
-        /* Nothing to do for WLX_SAS_TYPE_TIMEOUT ; the dialog will
+        /* Nothing to do for WLX_SAS_TYPE_TIMEOUT; the dialog will
          * close itself thanks to the use of WlxDialogBoxParam */
         return WLX_SAS_ACTION_NONE;
     }
-
-    pgContext->pWlxFuncs->WlxSwitchDesktopToWinlogon(
-        pgContext->hWlx);
 
     result = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
@@ -1082,12 +1093,6 @@ GUILoggedOnSAS(
         result > WLX_SAS_ACTION_SWITCH_CONSOLE)
     {
         result = WLX_SAS_ACTION_NONE;
-    }
-
-    if (result == WLX_SAS_ACTION_NONE)
-    {
-        pgContext->pWlxFuncs->WlxSwitchDesktopToUser(
-            pgContext->hWlx);
     }
 
     return result;
@@ -1152,20 +1157,23 @@ DoLogon(
                  (SubStatus == STATUS_PASSWORD_EXPIRED))
         {
             if (SubStatus == STATUS_PASSWORD_MUST_CHANGE)
+            {
                 ResourceMessageBox(pgContext,
                                    hwndDlg,
                                    MB_OK | MB_ICONSTOP,
                                    IDS_LOGONTITLE,
                                    IDS_PASSWORDMUSTCHANGE);
+            }
             else
+            {
                 ResourceMessageBox(pgContext,
                                    hwndDlg,
                                    MB_OK | MB_ICONSTOP,
                                    IDS_LOGONTITLE,
                                    IDS_PASSWORDEXPIRED);
+            }
 
-            if (!OnChangePassword(hwndDlg,
-                                  pgContext))
+            if (!OnChangePassword(hwndDlg, pgContext))
                 goto done;
 
             Status = DoLoginTasks(pgContext,
@@ -1176,7 +1184,6 @@ DoLogon(
             if (!NT_SUCCESS(Status))
             {
                 TRACE("Login after password change failed! (Status 0x%08lx)\n", Status);
-
                 goto done;
             }
         }
@@ -1229,7 +1236,7 @@ DoLogon(
         goto done;
     }
 
-    ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
+    SecureZeroMemory(pgContext->Password, sizeof(pgContext->Password));
     wcscpy(pgContext->Password, Password);
 
     result = TRUE;
@@ -1241,7 +1248,12 @@ done:
         HeapFree(GetProcessHeap(), 0, UserName);
 
     if (Password != NULL)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(Password) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(Password, pwdLen);
         HeapFree(GetProcessHeap(), 0, Password);
+    }
 
     if (Domain != NULL)
         HeapFree(GetProcessHeap(), 0, Domain);
@@ -1551,7 +1563,12 @@ DoUnlock(
         HeapFree(GetProcessHeap(), 0, UserName);
 
     if (Password != NULL)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(Password) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(Password, pwdLen);
         HeapFree(GetProcessHeap(), 0, Password);
+    }
 
     return res;
 }

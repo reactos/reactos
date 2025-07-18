@@ -7,43 +7,6 @@
 
 #include "precomp.h"
 
-#if 0
-/*
- * RTL_SYSTEM_TIME is almost the same as the SYSTEMTIME structure defined
- * in winbase.h, however we need to define it differently here.
- * This is used by RtlQueryTimeZoneInformation and RtlSetTimeZoneInformation.
- * See: https://social.msdn.microsoft.com/Forums/en-US/home?forum=en-US and
- * Search: Reading TimeZone binary data from registry by Patrick
- *    and then look at the last post showing typedef struct SYSTEMTIME_TZI.
- */
-typedef struct _RTL_SYSTEM_TIME {
-    WORD wYear;
-    WORD wMonth;
-    WORD wDay;                  /* wDayOfWeek was here normally */
-    WORD wHour;
-    WORD wMinute;
-    WORD wSecond;
-    WORD wMilliseconds;
-    WORD wDayOfWeek;            /* wDayOfWeek relocated to here */
-} RTL_SYSTEM_TIME;
-
-/*
- * RTL_TIME_ZONE_INFORMATION is the same as the TIME_ZONE_INFORMATION structure
- * defined in winbase.h, however we need to define RTL_TIME_ZONE_INFORMATION
- * separately here so we don't depend on winbase.h.
- * This is used by RtlQueryTimeZoneInformation and RtlSetTimeZoneInformation.
- */
-typedef struct _RTL_TIME_ZONE_INFORMATION {
-    LONG Bias;
-    WCHAR StandardName[32];
-    RTL_SYSTEM_TIME StandardDate;
-    LONG StandardBias;
-    WCHAR DaylightName[32];
-    RTL_SYSTEM_TIME DaylightDate;
-    LONG DaylightBias;
-} RTL_TIME_ZONE_INFORMATION;
-#endif
-
 static NTSTATUS (WINAPI *pRtlQueryTimeZoneInformation)( RTL_TIME_ZONE_INFORMATION *);
 
 static void test_RtlQueryTimeZoneInformation(void)

@@ -43,12 +43,30 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                            IN PVOID StartContext,
                            IN PCONTEXT Context)
 {
-    //PFX_SAVE_AREA FxSaveArea;
-    //PFXSAVE_FORMAT FxSaveFormat;
     PKSTART_FRAME StartFrame;
     PKSWITCH_FRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
     ULONG ContextFlags;
+    PVOID InitialStack;
+
+    /* Allocate space on the stack for the XSAVE area */
+    InitialStack = (PUCHAR)Thread->InitialStack - KeXStateLength;
+    InitialStack = ALIGN_DOWN_POINTER_BY(InitialStack, 64);
+    Thread->InitialStack = InitialStack;
+
+    /* Initialize the state save area */
+    Thread->StateSaveArea = InitialStack;
+    RtlZeroMemory(Thread->StateSaveArea, KeXStateLength);
+    Thread->StateSaveArea->MxCsr = INITIAL_MXCSR;
+
+    /* Special initialization for XSAVES */
+    if (KeFeatureBits & KF_XSAVES)
+    {
+        /* Set bit 63 in XCOMP_BV to mark the area as compacted.
+           XRSTORS requires this and will #GP otherwise. */
+        PXSAVE_AREA XSaveArea = (PXSAVE_AREA)Thread->StateSaveArea;
+        XSaveArea->Header.Reserved[0] = 0x8000000000000000ULL;
+    }
 
     /* Check if this is a With-Context Thread */
     if (Context)
@@ -66,10 +84,8 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         /* Tell the thread it will run in User Mode */
         Thread->PreviousMode = UserMode;
 
-        // FIXME Setup the Fx Area
-
         /* Set the Thread's NPX State */
-        Thread->NpxState = 0xA;
+        Thread->NpxState = SharedUserData->XState.EnabledFeatures;
         Thread->Header.NpxIrql = PASSIVE_LEVEL;
 
         /* Make sure, we have control registers, disable debug registers */
@@ -123,10 +139,8 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         /* Tell the thread it will run in Kernel Mode */
         Thread->PreviousMode = KernelMode;
 
-        // FIXME Setup the Fx Area
-
         /* No NPX State */
-        Thread->NpxState = 0xA;
+        Thread->NpxState = 0;
 
         /* This must never return! */
         StartFrame->Return = (ULONG64)KiInvalidSystemThreadStartupExit;
@@ -153,8 +167,20 @@ KiSwapContextResume(
     PKPROCESS OldProcess, NewProcess;
 
     /* Setup ring 0 stack pointer */
-    Pcr->TssBase->Rsp0 = (ULONG64)NewThread->InitialStack; // FIXME: NPX save area?
+    Pcr->TssBase->Rsp0 = (ULONG64)NewThread->InitialStack;
     Pcr->Prcb.RspBase = Pcr->TssBase->Rsp0;
+
+    /* Save old thread's extended state */
+    if (OldThread->NpxState != 0)
+    {
+        KiSaveXState(OldThread->StateSaveArea, OldThread->NpxState);
+    }
+
+    /* Load new thread's extended state */
+    if (NewThread->NpxState != 0)
+    {
+        KiRestoreXState(NewThread->StateSaveArea, NewThread->NpxState);
+    }
 
     /* Now we are the new thread. Check if it's in a new process */
     OldProcess = OldThread->ApcState.Process;

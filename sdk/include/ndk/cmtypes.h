@@ -510,6 +510,17 @@ typedef struct _PLUGPLAY_CONTROL_PROPERTY_DATA
     ULONG BufferSize;
 } PLUGPLAY_CONTROL_PROPERTY_DATA, *PPLUGPLAY_CONTROL_PROPERTY_DATA;
 
+// PlugPlayControlDeviceClassAssociation (0x0B)
+typedef struct _PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA
+{
+    UNICODE_STRING DeviceInstance;
+    GUID *InterfaceGuid;
+    UNICODE_STRING Reference;
+    BOOLEAN Register;
+    PWCHAR SymbolicLinkName;
+    ULONG SymbolicLinkNameLength;
+} PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA, *PPLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA;
+
 // PlugPlayControlGetRelatedDevice (0x0C)
 typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
 {
@@ -518,6 +529,15 @@ typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
     PWCHAR RelatedDeviceInstance;
     ULONG RelatedDeviceInstanceLength;
 } PLUGPLAY_CONTROL_RELATED_DEVICE_DATA, *PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA;
+
+// PlugPlayControlGetInterfaceDeviceAlias (0x0D)
+typedef struct _PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA
+{
+    UNICODE_STRING SymbolicLinkName;
+    GUID *AliasInterfaceClassGuid;
+    PWCHAR AliasSymbolicLinkName;
+    ULONG AliasSymbolicLinkNameLength;
+} PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA, *PPLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA;
 
 // PlugPlayControlDeviceStatus (0x0E)
 typedef struct _PLUGPLAY_CONTOL_STATUS_DATA

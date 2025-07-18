@@ -2204,6 +2204,26 @@ VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown)
  *      @	[SHLWAPI.200]
  *
  */
+#ifdef __REACTOS__
+HRESULT WINAPI
+MayQSForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID riidCmdGrp,
+    _In_ ULONG cCmds,
+    _Inout_ OLECMD *prgCmds,
+    _Inout_ OLECMDTEXT *pCmdText)
+{
+    TRACE("(%p, %d, %s, %d, %p, %p)\n",
+          lpUnknown, nUnknown, wine_dbgstr_guid(riidCmdGrp), cCmds, prgCmds, pCmdText);
+
+    HRESULT hr = IsQSForward(riidCmdGrp, cCmds, prgCmds);
+    if (FAILED(hr) || !HRESULT_CODE(hr) || nUnknown <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    return IUnknown_QueryStatus(lpUnknown, riidCmdGrp, cCmds, prgCmds, pCmdText);
+}
+#else
 HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved,
                             REFGUID riidCmdGrp, ULONG cCmds,
                             OLECMD *prgCmds, OLECMDTEXT* pCmdText)
@@ -2214,29 +2234,128 @@ HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved,
   /* FIXME: Calls IsQSForward & IUnknown_QueryStatus */
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.201]
  *
  */
-HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGroup,
+#ifdef __REACTOS__
+HRESULT WINAPI
+MayExecForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID pguidCmdGroup,
+    _In_ DWORD nCmdID,
+    _In_ DWORD nCmdexecopt,
+    _In_ VARIANT *pvaIn,
+    _Inout_ VARIANT *pvaOut)
+{
+    TRACE("(%p, %d, %s, %d, %d, %p, %p)\n", lpUnknown, nUnknown,
+          wine_dbgstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+    OLECMD cmd = { nCmdID };
+    HRESULT hr = IsQSForward(pguidCmdGroup, 1, &cmd);
+    if (FAILED(hr) || !HRESULT_CODE(hr) || nUnknown <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    return IUnknown_Exec(lpUnknown, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+}
+#else
+HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT nUnknown, REFGUID pguidCmdGroup,
                            DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn,
                            VARIANT* pvaOut)
 {
-  FIXME("(%p,%d,%p,%d,%d,%p,%p) - stub!\n", lpUnknown, iUnk, pguidCmdGroup,
+  FIXME("(%p,%d,%p,%d,%d,%p,%p) - stub!\n", lpUnknown, nUnknown, pguidCmdGroup,
         nCmdID, nCmdexecopt, pvaIn, pvaOut);
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.202]
  *
  */
+#ifdef __REACTOS__
+HRESULT WINAPI
+IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds)
+{
+    DWORD cmdFlags = 0;
+    OLECMDID cmdID;
+    ULONG iCmd;
+    enum {
+        CMD_FLAG_SUPPORTED_BASIC = 0x1,
+        CMD_FLAG_SUPPORTED_ADVANCED = 0x2,
+        CMD_FLAG_NOT_SUPPORTED = 0x4,
+    };
+
+    TRACE("(%s, %lu, %p)\n", wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds);
+
+    if ((LONG)cCmds <= 0)
+        return OLECMDERR_E_NOTSUPPORTED;
+
+    if (!pguidCmdGroup)
+    {
+        for (iCmd = 0; iCmd < cCmds; ++iCmd)
+        {
+            cmdID = prgCmds[iCmd].cmdID;
+            if (cmdID <= OLECMDID_PROPERTIES)
+            {
+                cmdFlags |= CMD_FLAG_NOT_SUPPORTED; // Not supported
+                continue;
+            }
+
+            if (cmdID <= OLECMDID_PASTE || cmdID == OLECMDID_SELECTALL)
+            {
+                cmdFlags |= CMD_FLAG_SUPPORTED_BASIC;
+                continue;
+            }
+
+            if (cmdID <= OLECMDID_UPDATECOMMANDS ||
+                (OLECMDID_HIDETOOLBARS <= cmdID && cmdID != OLECMDID_ENABLE_INTERACTION))
+            {
+                cmdFlags |= CMD_FLAG_NOT_SUPPORTED; // Not supported
+                continue;
+            }
+
+            cmdFlags |= CMD_FLAG_SUPPORTED_ADVANCED;
+        }
+    }
+    else
+    {
+        if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
+        {
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+            return OLECMDERR_E_UNKNOWNGROUP;
+#else
+            return OLECMDERR_E_NOTSUPPORTED;
+#endif
+        }
+
+        for (iCmd = 0; iCmd < cCmds; ++iCmd)
+        {
+            cmdID = prgCmds[iCmd].cmdID;
+            if (cmdID == OLECMDID_SELECTALL ||
+                (OLECMDID_SHOWFIND <= cmdID && cmdID <= OLECMDID_SHOWPRINT))
+            {
+                cmdFlags |= CMD_FLAG_SUPPORTED_BASIC;
+                break;
+            }
+        }
+    }
+
+    if (!cmdFlags || (cmdFlags & CMD_FLAG_NOT_SUPPORTED))
+        return OLECMDERR_E_NOTSUPPORTED; // Not supported
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, cmdFlags);
+}
+#else
 HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds)
 {
   FIXME("(%p,%d,%p) - stub!\n", pguidCmdGroup, cCmds, prgCmds);
   return DRAGDROP_E_NOTREGISTERED;
 }
+#endif
 
 /*************************************************************************
  * @	[SHLWAPI.204]
@@ -4426,14 +4545,62 @@ VOID WINAPI ColorRGBToHLS(COLORREF cRGB, LPWORD pwHue,
     *pwSaturation = wSaturation;
 }
 
+#ifdef __REACTOS__
+typedef struct tagLOGPALETTEMAX /* Compatible with LOGPALETTE but extended */
+{
+    WORD palVersion;
+    WORD palNumEntries;
+    PALETTEENTRY palPalEntry[256];
+} LOGPALETTEMAX, *PLOGPALETTEMAX;
+#endif
+
 /*************************************************************************
  *      SHCreateShellPalette	[SHLWAPI.@]
  */
+#ifdef __REACTOS__
+HPALETTE WINAPI
+SHCreateShellPalette(_In_opt_ HDC hdc)
+{
+    HDC hdcMem;
+    HPALETTE hHalftonePalette;
+    LOGPALETTEMAX data;
+    const UINT nExtractCount = 10;
+    const UINT nSecondBlockStart = _countof(data.palPalEntry) - nExtractCount;
+
+    TRACE("(%p)\n", hdc);
+
+    /* Get the colors of the halftone palette */
+    hHalftonePalette = CreateHalftonePalette(hdc);
+    if (!hHalftonePalette)
+        return NULL;
+    data.palVersion = 0x300;
+    data.palNumEntries = GetPaletteEntries(hHalftonePalette, 0,
+                                           _countof(data.palPalEntry), data.palPalEntry);
+    DeleteObject(hHalftonePalette);
+
+    hdcMem = (hdc ? hdc : CreateCompatibleDC(NULL));
+
+    if (hdcMem)
+    {
+        /* The first 10 and last 10 entries in the system colors are considered important */
+        GetSystemPaletteEntries(hdcMem, 0, nExtractCount, data.palPalEntry);
+        GetSystemPaletteEntries(hdcMem, nSecondBlockStart, nExtractCount,
+                                &data.palPalEntry[nSecondBlockStart]);
+    }
+
+    if (hdcMem && hdc != hdcMem)
+        DeleteDC(hdcMem);
+
+    /* Create a palette from the modified color entries */
+    return CreatePalette((PLOGPALETTE)&data);
+}
+#else
 HPALETTE WINAPI SHCreateShellPalette(HDC hdc)
 {
 	FIXME("stub\n");
 	return CreateHalftonePalette(hdc);
 }
+#endif
 
 /*************************************************************************
  *	SHGetInverseCMAP (SHLWAPI.@)
@@ -4558,7 +4725,7 @@ VOID WINAPI FixSlashesAndColonW(LPWSTR lpwstr)
     }
 }
 
-
+#ifndef __REACTOS__ /* See appcompat.c */
 /*************************************************************************
  *      @	[SHLWAPI.461]
  */
@@ -4567,7 +4734,7 @@ DWORD WINAPI SHGetAppCompatFlags(DWORD dwUnknown)
   FIXME("(0x%08x) stub\n", dwUnknown);
   return 0;
 }
-
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.549]

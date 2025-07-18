@@ -580,6 +580,57 @@ DefWndScreenshot(PWND pWnd)
     UserCloseClipboard();
 }
 
+// WM_POPUPSYSTEMMENU
+static BOOL
+co_UserTrackSystemMenu(_In_ PWND pWnd, _In_ LONG nClickPos, _In_opt_ PUINT puCmdType)
+{
+    USER_REFERENCE_ENTRY MenuRef, WndRef;
+    PMENU pMenu;
+    UINT uDefaultCmd;
+
+    FIXME("co_UserTrackSystemMenu() called\n"); // Useful trace, while working on CORE-3247
+
+    UserRefObjectCo(pWnd, &WndRef);
+
+    // Check style and make window foreground
+    if ((pWnd->style & WS_DISABLED) ||
+        (pWnd->state2 & WNDS2_INDESTROY) ||
+        (pWnd->head.pti->MessageQueue != gpqForeground && !co_IntSetForegroundWindow(pWnd)))
+    {
+        UserDerefObjectCo(pWnd);
+        return FALSE;
+    }
+
+    // Get the window's system menu
+    pMenu = IntGetSystemMenu(pWnd, FALSE);
+    if (!pMenu)
+    {
+        UserDerefObjectCo(pWnd);
+        return FALSE;
+    }
+    UserRefObjectCo(pMenu, &MenuRef);
+
+    // Set default menu item
+    if (puCmdType)
+        uDefaultCmd = *puCmdType;
+    else if (pWnd->style & (WS_MINIMIZE | WS_MAXIMIZE))
+        uDefaultCmd = SC_RESTORE;
+    else
+        uDefaultCmd = SC_MAXIMIZE;
+    UserSetMenuDefaultItem(pMenu, uDefaultCmd, FALSE);
+
+    if (nClickPos == -1) // Input from keyboard?
+        FIXME("Use WM_KLUDGEMINRECT and TPM_VERTICAL\n");
+
+    // Show the menu and wait for menu tracking ending
+    IntTrackPopupMenuEx(pMenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_SYSTEM_MENU,
+                        LOWORD(nClickPos), HIWORD(nClickPos), pWnd, NULL);
+
+    UserDerefObjectCo(pMenu);
+    UserDerefObjectCo(pWnd);
+    return TRUE;
+}
+
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -695,6 +746,12 @@ IntDefWindowProc(
          UserRefObjectCo(Wnd->spwndParent, &Ref);
          lResult = co_IntSendMessage(UserHMGetHandle(Wnd->spwndParent), WM_APPCOMMAND, wParam, lParam);
          UserDerefObjectCo(Wnd->spwndParent);
+         break;
+
+      case WM_POPUPSYSTEMMENU:
+         /* This is an undocumented message used by the windows taskbar to
+            display the system menu of windows that belong to other processes. */
+         co_UserTrackSystemMenu(Wnd, (LONG)lParam, NULL);
          break;
 
       case WM_KEYF1:

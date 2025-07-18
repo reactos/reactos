@@ -519,7 +519,7 @@ void __winetest_cdecl winetest_win_skip( const char *msg, ... )
     __winetest_va_list valist;
     __winetest_va_start(valist, msg);
     if ((strcmp(winetest_platform, "windows") == 0)
-#ifndef USE_WINE_TODOS
+#if !defined(USE_WINE_TODOS) || defined(USE_WIN_SKIP)
     || (strcmp(winetest_platform, "reactos") == 0)
 #endif
     )
@@ -764,7 +764,7 @@ const char *wine_dbgstr_guid( const GUID *guid )
     if (!guid) return "(null)";
     res = get_temp_buffer( 39 ); /* CHARS_IN_GUID */
     sprintf( res, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-             guid->Data1, guid->Data2, guid->Data3, guid->Data4[0],
+             (unsigned int)guid->Data1, guid->Data2, guid->Data3, guid->Data4[0],
              guid->Data4[1], guid->Data4[2], guid->Data4[3], guid->Data4[4],
              guid->Data4[5], guid->Data4[6], guid->Data4[7] );
     return res;
@@ -1000,6 +1000,9 @@ int main( int argc, char **argv )
 #define ok_int_(file, line, expression, result) ok_dec_(file, line, expression, result)
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
 #define ok_hdl ok_ptr
+
+#define is_reactos() \
+    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
 
 #ifdef __cplusplus
 } /* extern "C" */

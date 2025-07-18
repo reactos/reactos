@@ -21,26 +21,11 @@ extern "C" {
 #define _SEH3$_FRAME_ALL_NONVOLATILES 1
 #endif
 
-enum
-{
-    _SEH3$_NESTED_HANDLER = 0,
-    _SEH3$_CPP_HANDLER = 1,
-    _SEH3$_CLANG_HANDLER = 2,
-#ifdef __clang__
-    _SEH3$_HANDLER_TYPE = _SEH3$_CLANG_HANDLER,
-#elif defined(__cplusplus)
-    _SEH3$_HANDLER_TYPE = _SEH3$_CPP_HANDLER,
-#else
-    _SEH3$_HANDLER_TYPE = _SEH3$_NESTED_HANDLER,
-#endif
-};
-
 typedef struct _SEH3$_SCOPE_TABLE
 {
-    void *Target;
+    unsigned long EnclosingLevel;
     void *Filter;
-    unsigned char TryLevel;
-    unsigned char HandlerType;
+    void *Target;
 } SEH3$_SCOPE_TABLE, *PSEH3$_SCOPE_TABLE;
 
 typedef struct _SEH3$_EXCEPTION_POINTERS
@@ -55,21 +40,24 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     struct _SEH3$_REGISTRATION_FRAME *Next;
     void *Handler;
 
-    /* Points to the end of the internal registration chain */
-    struct _SEH3$_REGISTRATION_FRAME *EndOfChain;
-
     /* Pointer to the static scope table */
     PSEH3$_SCOPE_TABLE ScopeTable;
+
+    /* Index into ScopeTable array */
+    unsigned long TryLevel;
+
+    /* Points to the end of the internal registration chain */
+    struct _SEH3$_REGISTRATION_FRAME *EndOfChain;
 
     /* Except handler stores pointer to exception pointers here */
     PSEH3$_EXCEPTION_POINTERS volatile ExceptionPointers;
 
-    /* Except handler stores the exception code here */
-    unsigned long ExceptionCode;
-
     /* Registers that we need to save */
     unsigned long Esp;
     unsigned long Ebp;
+
+    /* Except handler stores the exception code here */
+    unsigned long ExceptionCode;
 
     char* AllocaFrame;
 #ifdef _SEH3$_FRAME_ALL_NONVOLATILES
@@ -81,6 +69,22 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     void *ReturnAddress;
 #endif
 } SEH3$_REGISTRATION_FRAME ,*PSEH3$_REGISTRATION_FRAME;
+
+#if defined(__cplusplus)
+    #define _SEH3$_except_handler _SEH3$_CPP_except_handler
+    #define _SEH3$_AutoCleanup _SEH3$_CPP_AutoCleanup
+#else
+    #define _SEH3$_except_handler _SEH3$_C_except_handler
+    #define _SEH3$_AutoCleanup _SEH3$_C_AutoCleanup
+#endif
+
+int
+__cdecl
+_SEH3$_except_handler(
+    struct _EXCEPTION_RECORD * ExceptionRecord,
+    PSEH3$_REGISTRATION_FRAME EstablisherFrame,
+    struct _CONTEXT * ContextRecord,
+    void * DispatcherContext);
 
 /* Prevent gcc from inlining functions that use SEH. */
 static inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH3$_PreventInlining() {}
@@ -106,7 +110,7 @@ void _SEH3$_UnregisterTryLevel(
 
 enum
 {
-    _SEH3$_TryLevel = 0,
+    _SEH3$_TryLevel = -1,
 };
 
 #ifndef __clang__
@@ -146,6 +150,8 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
 
 #define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
     do { \
+        (_TrylevelFrame)->Handler = (void*)_SEH3$_except_handler; \
+        (_TrylevelFrame)->TryLevel = 0; \
         int result = _SEH3$_RegisterFrameWithNonVolatiles(_TrylevelFrame, _DataTable, __builtin_alloca(0)); \
         if (__builtin_expect(result != 0, 0)) \
         { \
@@ -157,6 +163,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
 
 #define _SEH3$_RegisterTryLevel_(_TrylevelFrame, _DataTable) \
     do { \
+        (_TrylevelFrame)->TryLevel = _SEH3$_TryLevel; \
         int result = _SEH3$_RegisterTryLevelWithNonVolatiles(_TrylevelFrame, _DataTable, __builtin_alloca(0)); \
         if (__builtin_expect(result != 0, 0)) \
         { \
@@ -198,11 +205,18 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
 
 /* This is an asm wrapper around _SEH3$_RegisterFrame */
 #define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
-     _SEH3$_CALL_WRAPPER(__SEH3$_RegisterFrame, _TrylevelFrame, _DataTable)
+    do { \
+        (_TrylevelFrame)->Handler = (void*)_SEH3$_except_handler; \
+        (_TrylevelFrame)->TryLevel = 0; \
+        _SEH3$_CALL_WRAPPER(__SEH3$_RegisterFrame, _TrylevelFrame, _DataTable); \
+    } while (0)
 
 /* This is an asm wrapper around _SEH3$_RegisterTryLevel */
 #define _SEH3$_RegisterTryLevel_(_TrylevelFrame, _DataTable) \
-     _SEH3$_CALL_WRAPPER(__SEH3$_RegisterTryLevel, _TrylevelFrame, _DataTable)
+    do { \
+        (_TrylevelFrame)->TryLevel = _SEH3$_TryLevel; \
+        _SEH3$_CALL_WRAPPER(__SEH3$_RegisterTryLevel, _TrylevelFrame, _DataTable); \
+    } while (0)
 
 /* This construct scares GCC so much, that it will stop moving code
    around into places that are never executed. */
@@ -330,7 +344,7 @@ _Pragma("GCC diagnostic pop") \
     { \
         (void)p; \
         /* Unregister the frame */ \
-        if (_SEH3$_TryLevel == 1) _SEH3$_UnregisterFrame(&_SEH3$_TrylevelFrame); \
+        if (_SEH3$_TryLevel == 0) _SEH3$_UnregisterFrame(&_SEH3$_TrylevelFrame); \
         else _SEH3$_UnregisterTryLevel(&_SEH3$_TrylevelFrame); \
 \
         /* Invoke the finally function (an inline dummy in the __except case) */ \
@@ -358,7 +372,7 @@ _Pragma("GCC diagnostic pop") \
         (void)&&_SEH3$_l_BeforeFilterOrFinally; \
         (void)&&_SEH3$_l_FilterOrFinally; \
 \
-        /* Count the try level. Outside of any __try, _SEH3$_TryLevel is 0 */ \
+        /* Count the try level. Outside of any __try, _SEH3$_TryLevel is -1 */ \
         enum { \
             _SEH3$_PreviousTryLevel = _SEH3$_TryLevel, \
             _SEH3$_TryLevel = _SEH3$_PreviousTryLevel + 1, \
@@ -371,13 +385,18 @@ _Pragma("GCC diagnostic pop") \
         volatile SEH3$_REGISTRATION_FRAME _SEH3$_AUTO_CLEANUP _SEH3$_TrylevelFrame; \
 \
         goto _SEH3$_l_BeforeTry; \
+        { \
+            __label__ _SEH3$_l_Leave; \
+            _SEH3$_l_Leave: (void)0; \
         /* Silence warning */ goto _SEH3$_l_AfterTry; \
+        /* Silence warning */ goto _SEH3$_l_Leave; \
 \
     _SEH3$_l_DoTry: \
         if (1)
 
 
 #define _SEH3_EXCEPT(...) \
+        } \
     /* End of the try block */ \
     _SEH3$_l_AfterTry: (void)0; \
         goto _SEH3$_l_EndTry; \
@@ -389,10 +408,10 @@ _Pragma("GCC diagnostic pop") \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FilterFunction); \
 \
         /* Create a static data table that contains the jump target and filter function */ \
-        static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { &&_SEH3$_l_HandlerTarget, _SEH3$_FILTER(&_SEH3$_FilterFunction, (__VA_ARGS__)), _SEH3$_TryLevel, _SEH3$_HANDLER_TYPE }; \
+        static const SEH3$_SCOPE_TABLE __attribute__((section(".xdata$x"))) _SEH3$_ScopeTable = { (unsigned)(_SEH3$_TryLevel - 1), _SEH3$_FILTER(&_SEH3$_FilterFunction, (__VA_ARGS__)), &&_SEH3$_l_HandlerTarget }; \
 \
         /* Register the registration record. */ \
-        if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
+        if (_SEH3$_TryLevel == 0) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
         else _SEH3$_RegisterTryLevel_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
 \
         /* Define an empty inline finally function */ \
@@ -422,6 +441,7 @@ _Pragma("GCC diagnostic pop") \
 
 
 #define _SEH3_FINALLY \
+        } \
     /* End of the try block */ \
     _SEH3$_l_AfterTry: (void)0; \
         /* Set ExceptionPointers to 0, this is used by _abnormal_termination() */ \
@@ -436,10 +456,10 @@ _Pragma("GCC diagnostic pop") \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FinallyFunction); \
 \
         /* Create a static data table that contains the finally function */ \
-        static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { 0, _SEH3$_FINALLY(&_SEH3$_FinallyFunction), _SEH3$_TryLevel, _SEH3$_HANDLER_TYPE }; \
+        static const SEH3$_SCOPE_TABLE __attribute__((section(".xdata$x"))) _SEH3$_ScopeTable = { (unsigned)(_SEH3$_TryLevel - 1), _SEH3$_FINALLY(&_SEH3$_FinallyFunction), 0 }; \
 \
         /* Register the registration record. */ \
-        if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
+        if (_SEH3$_TryLevel == 0) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
         else _SEH3$_RegisterTryLevel_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
         _SEH3$_TrylevelFrame.ExceptionPointers = (PSEH3$_EXCEPTION_POINTERS)1; \
 \
@@ -471,7 +491,7 @@ _Pragma("GCC diagnostic pop") \
     /* Close the outer scope */ \
     }
 
-#define _SEH3_LEAVE goto _SEH3$_l_AfterTry
+#define _SEH3_LEAVE goto _SEH3$_l_Leave
 
 #define _SEH3_VOLATILE volatile
 

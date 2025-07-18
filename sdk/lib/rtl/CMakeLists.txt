@@ -89,6 +89,7 @@ list(APPEND SOURCE
     unicodeprefix.c
     vectoreh.c
     version.c
+    wait.c
     workitem.c
     rtl.h)
 
@@ -132,6 +133,7 @@ add_dependencies(rtl psdk asm)
 
 list(APPEND SOURCE_VISTA
     condvar.c
+    locale.c
     runonce.c
     srw.c
     utf8.c)

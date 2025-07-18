@@ -1052,6 +1052,10 @@ BEGIN
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Отображать меню ""Администрирование"""
     IDS_ADVANCED_SMALL_START_MENU "Мелкие значки в главном меню"
 
+    IDS_VISEFFECT_DRAGFULL "Отображать содержимое окна при перетаскивании"
+    IDS_VISEFFECT_FONTSMOOTHING "Сглаживать неровности экранных шрифтов"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Отбрасывание теней значками на рабочем столе"
+
     IDS_NEWEXT_ADVANCED_LEFT "<< До&полнительно"
     IDS_NEWEXT_ADVANCED_RIGHT "До&полнительно >>"
     IDS_NEWEXT_NEW "<Новый>"

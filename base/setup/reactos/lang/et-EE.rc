@@ -158,7 +158,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS'i paigalduse lõpetamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Reactos'i paigaldusviisardi lõpetamine", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS'i paigaldusviisardi lõpetamine", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS'i paigaldamise esimene järk on edukalt lõpetatud.", IDC_STATIC, 115, 50, 195, 17
     LTEXT "Vajuta Lõpeta, et arvuti taaskäivitada.", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8

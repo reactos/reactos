@@ -7,8 +7,8 @@ extern "C" {
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable:4201)
-#pragma warning(disable:4820)
+#pragma warning(disable:4201) // nameless struct or union
+#pragma warning(disable:4820) // padding after member
 #endif
 
 #if !defined(_USER32_)
@@ -1586,6 +1586,15 @@ extern "C" {
         #define FE_FONTSMOOTHINGORIENTATIONRGB 0x0001
     #endif
 #endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+#define SPI_GETHANDEDNESS 0x2024
+#define SPI_SETHANDEDNESS 0x2025
+typedef enum tagHANDEDNESS
+{
+    HANDEDNESS_LEFT,
+    HANDEDNESS_RIGHT
+} HANDEDNESS, *PHANDEDNESS;
+#endif // (NTDDI_VERSION >= NTDDI_WIN10_RS4)
 
 #define SPIF_UPDATEINIFILE 1
 #define SPIF_SENDCHANGE 2
@@ -1931,6 +1940,7 @@ extern "C" {
 
 #if (_WIN32_WINNT >= 0x0501)
 #define WM_THEMECHANGED 794
+#define WM_CLIPBOARDUPDATE 797
 #endif
 
 #define BM_CLICK 245
@@ -2060,7 +2070,14 @@ extern "C" {
 #define LB_GETITEMDATA 409
 #define LB_GETITEMHEIGHT 417
 #define LB_GETITEMRECT 408
+#if (_WIN32_WINNT >= 0x501)
 #define LB_GETLISTBOXINFO 434
+#define LB_MSGMAX 435
+#elif (WINVER >= 0x400)
+#define LB_MSGMAX 432
+#else
+#define LB_MSGMAX 424
+#endif /* (_WIN32_WINNT >= 0x501) */
 #define LB_GETLOCALE 422
 #define LB_GETSEL 391
 #define LB_GETSELCOUNT 400
@@ -2625,6 +2642,12 @@ extern "C" {
 #define EC_LEFTMARGIN 1
 #define EC_RIGHTMARGIN 2
 #define EC_USEFONTINFO 0xffff
+#if (WINVER >= 0x500)
+#define EMSIS_COMPOSITIONSTRING        1
+#define EIMES_GETCOMPSTRATONCE         1
+#define EIMES_CANCELCOMPSTRINFOCUS     2
+#define EIMES_COMPLETECOMPSTRKILLFOCUS 4
+#endif /* (WINVER >= 0x500) */
 #define DC_HASDEFID 0x534B
 #define DLGC_WANTARROWS 1
 #define DLGC_WANTTAB 2
@@ -2675,6 +2698,9 @@ extern "C" {
 #define FLASHW_TIMERNOFG 12
 #endif /* (WINVER >= 0x0500) */
 #define CURSOR_SHOWING 0x00000001
+#if (WINVER >= 0x602)
+#define CURSOR_SUPPRESSED 0x00000002
+#endif /* (WINVER >= 0x602) */
 #define WS_ACTIVECAPTION 0x00000001
 #if (_WIN32_WINNT >= 0x0400)
 #define INPUT_MOUSE 0

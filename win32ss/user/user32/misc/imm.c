@@ -1009,20 +1009,27 @@ ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicod
         return 0;
     }
 
-    pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, 0);
-    if (pimeui == NULL)
+    if (msg == WM_NCCREATE)
     {
         pimeui = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMEUI));
-        if (pimeui == NULL)
+        if (!pimeui)
         {
             ERR("HeapAlloc failed\n");
             NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-            DestroyWindow(hwnd);
+            return FALSE;
+        }
+        pimeui->spwnd = pWnd;
+        SetWindowLongPtrW(hwnd, GWLP_IMEWND_PIMEUI, (LONG_PTR)pimeui);
+    }
+    else
+    {
+        pimeui = (PIMEUI)GetWindowLongPtrW(hwnd, GWLP_IMEWND_PIMEUI);
+        if (!pimeui)
+        {
+            ERR("Invalid IMEWND\n");
+            NtUserSetWindowFNID(hwnd, FNID_DESTROY);
             return 0;
         }
-
-        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
-        pimeui->spwnd = pWnd;
     }
 
     if (IS_CICERO_MODE())
@@ -1173,30 +1180,16 @@ BOOL WINAPI UpdatePerUserImmEnabling(VOID)
     return ret;
 }
 
-BOOL
-WINAPI
-RegisterIMEClass(VOID)
+const struct builtin_class_descr IME_builtin_class =
 {
-    ATOM atom;
-    WNDCLASSEXW WndClass = { sizeof(WndClass) };
-
-    WndClass.lpszClassName  = L"IME";
-    WndClass.style          = CS_GLOBALCLASS;
-    WndClass.lpfnWndProc    = ImeWndProcW;
-    WndClass.cbWndExtra     = sizeof(LONG_PTR);
-    WndClass.hCursor        = LoadCursorW(NULL, IDC_ARROW);
-
-    atom = RegisterClassExWOWW(&WndClass, 0, FNID_IME, 0, FALSE);
-    if (!atom)
-    {
-        ERR("Failed to register IME Class!\n");
-        return FALSE;
-    }
-
-    RegisterDefaultClasses |= ICLASS_TO_MASK(ICLS_IME);
-    TRACE("RegisterIMEClass atom = %u\n", atom);
-    return TRUE;
-}
+    L"IME",                       /* name */
+    CS_GLOBALCLASS,               /* style */
+    ImeWndProcA,                  /* procA */
+    ImeWndProcW,                  /* procW */
+    sizeof(IMEWND) - sizeof(WND), /* extra */
+    IDC_ARROW,                    /* cursor */
+    NULL                          /* brush */
+};
 
 /*
  * @implemented
