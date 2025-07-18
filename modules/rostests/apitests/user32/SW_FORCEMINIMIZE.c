@@ -33,7 +33,7 @@ ThreadFunc(LPVOID arg)
     SetWindowLongPtrA(hwnd, GWL_EXSTYLE, WS_EX_MAKEVISIBLEWHENUNGHOSTED);
     ret = ShowWindow(hwnd, SW_FORCEMINIMIZE);
     Sleep(100);
-    ok(ret != 0, "ret was FALSE");
+    ok(ret != FALSE, "ret was FALSE\n");
     ok(CheckColor() != RED, "Color was red\n");
     style = GetWindowLongPtrA(hwnd, GWL_STYLE);
     if (IsWindowsVistaOrGreater())
@@ -50,7 +50,7 @@ ThreadFunc(LPVOID arg)
     SetWindowLongPtrA(hwnd, GWL_EXSTYLE, WS_EX_MAKEVISIBLEWHENUNGHOSTED);
     ret = ShowWindow(hwnd, SW_FORCEMINIMIZE);
     Sleep(100);
-    ok(ret != 0, "ret was FALSE");
+    ok(ret != FALSE, "ret was FALSE\n");
     ok(CheckColor() != RED, "Color was red\n");
     style = GetWindowLongPtrA(hwnd, GWL_STYLE);
     ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP | WS_MINIMIZE | WS_VISIBLE), "style was 0x%08lX\n", style);
@@ -64,7 +64,7 @@ ThreadFunc(LPVOID arg)
     SetWindowLongPtrA(hwnd, GWL_EXSTYLE, WS_EX_MAKEVISIBLEWHENUNGHOSTED);
     ret = ShowWindow(hwnd, SW_FORCEMINIMIZE);
     Sleep(100);
-    ok(ret != 0, "ret was FALSE");
+    ok(ret != FALSE, "ret was FALSE\n");
     ok(CheckColor() != RED, "Color was red\n");
     style = GetWindowLongPtrA(hwnd, GWL_STYLE);
     if (IsWindowsVistaOrGreater())
@@ -78,9 +78,9 @@ ThreadFunc(LPVOID arg)
     ret = ShowWindow(hwnd, SW_FORCEMINIMIZE);
     Sleep(100);
     if (IsWindowsVistaOrGreater())
-        ok(ret, "ret was FALSE");
+        ok(ret != FALSE, "ret was FALSE\n");
     else
-        ok(!ret, "ret was TRUE");
+        ok_bool_false(ret, "Return was");
     ok(CheckColor() != RED, "Color was red\n");
     style = GetWindowLongPtrA(hwnd, GWL_STYLE);
     if (IsWindowsVistaOrGreater())
