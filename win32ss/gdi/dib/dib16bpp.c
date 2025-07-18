@@ -73,6 +73,9 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   LONG cx = x1;
   DWORD cc;
 
+  if (x1 >= x2)
+    return;
+
   if (0 != (cx & 0x01))
   {
     *((PWORD) addr) = (WORD)c;

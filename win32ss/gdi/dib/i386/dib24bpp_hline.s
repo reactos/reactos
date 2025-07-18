@@ -24,7 +24,7 @@ PUBLIC _DIB_24BPP_HLine
                          mov     esi, [ebx+32]
                          mov     edx, [esp+48]      // edx =  LONG x2
                          imul    eax, edi
-                         sub     edx, ecx           // cx  = (x2 - x1) ;
+                         sub     edx, ecx           // cx  = (x2 - x1);
                          jc      short .exit_here   // cx must not be negative
                          mov     [esp], edx
                          add     eax, esi

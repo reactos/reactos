@@ -13,7 +13,7 @@
 PUBLIC _DIB_32BPP_HLine
 
 _DIB_32BPP_HLine:
-                  sub     esp, 12            // remember the base is not hex it is dec
+                  sub     esp, 12            // remember the base is decimal
                   mov     ecx, [esp+16]
                   mov     [esp+4], ebx
                   mov     edx, [esp+20]      // edx =  LONG x1
@@ -23,7 +23,7 @@ _DIB_32BPP_HLine:
                   mov     ebx, [esp+24]      // ebx =  LONG x2
                   imul    eax, edi
                   mov     edi, [ecx+32]
-                  sub     ebx, edx           // cx  = (x2 - x1) ;
+                  sub     ebx, edx           // cx  = (x2 - x1);
                   jc      short .exit_here   // cx must not be negative
                   add     eax, edi
                   lea     edx, [eax+edx*4]
