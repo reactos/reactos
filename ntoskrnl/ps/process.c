@@ -376,7 +376,10 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
+    PEJOB Job;
+
     PAGED_CODE();
+
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
 
@@ -712,8 +715,31 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Check if the parent had a job */
     if ((Parent) && (Parent->Job))
     {
-        /* FIXME: We need to insert this process */
-        DPRINT1("Jobs not yet supported\n");
+        Job = Parent->Job;
+
+        if (!(Job->LimitFlags & JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
+        {
+            /* Requested to create it without a job */
+            if (Flags & PROCESS_CREATE_FLAGS_BREAKAWAY)
+            {
+                /* Is this allowed? */
+                if (!(Job->LimitFlags & JOB_OBJECT_LIMIT_BREAKAWAY_OK))
+                {
+                    Status = STATUS_ACCESS_DENIED;
+                    goto CleanupWithRef;
+                }
+            }
+            else if (InterlockedCompareExchangePointer((PVOID)&Process->Job,
+                                                       Parent->Job,
+                                                       NULL) == NULL)
+            {
+                Status = PspAssignProcessToJob(Process, Parent->Job);
+                if (!NT_SUCCESS(Status))
+                {
+                    goto CleanupWithRef;
+                }
+            }
+        }
     }
 
     /* Create PEB only for User-Mode Processes */
