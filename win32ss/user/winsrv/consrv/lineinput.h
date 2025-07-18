@@ -12,3 +12,5 @@ VOID
 LineInputKeyDown(PCONSRV_CONSOLE Console,
                  PUNICODE_STRING ExeName,
                  KEY_EVENT_RECORD *KeyEvent);
+
+UINT GetTextWidth(_In_ PCWSTR Text, _In_ UINT TextLength, _In_ UINT TextMax);
