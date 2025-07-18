@@ -53,7 +53,7 @@ ThreadFunc(LPVOID arg)
     ok(ret != 0, "ret was FALSE");
     ok(CheckColor() != RED, "Color was red\n");
     style = GetWindowLongPtrA(hwnd, GWL_STYLE);
-    ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP | WS_MINIMIZE | WS_VISIBLE), "style was 0x%08lX", style);
+    ok((style & (WS_POPUP | WS_MINIMIZE | WS_VISIBLE)) == (WS_POPUP | WS_MINIMIZE | WS_VISIBLE), "style was 0x%08lX\n", style);
     exstyle = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
     ok_long(exstyle, 0);
 
