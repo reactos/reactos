@@ -31,6 +31,7 @@
 #include <mbedtls/md.h>
 #include <mbedtls/pk.h>
 #include <mbedtls/rsa.h>
+#include <mbedtls/dsa.h>
 #endif
 
 #include "bcrypt_internal.h"
