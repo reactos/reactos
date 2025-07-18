@@ -452,9 +452,10 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
     if( output_size < ctx->len )
         return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
+#ifndef __REACTOS__
     if( ( ret = dhm_check_range( &ctx->GY, &ctx->P ) ) != 0 )
         return( ret );
-
+#endif
     mbedtls_mpi_init( &GYb );
 
     /* Blind peer's value */
