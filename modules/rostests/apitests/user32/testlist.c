@@ -64,7 +64,6 @@ extern void func_TrackMouseEvent(void);
 extern void func_TrackPopupMenuEx(void);
 extern void func_VirtualKey(void);
 extern void func_WndProc(void);
-extern void func_SW_FORCEMINIMIZE(void);
 extern void func_wsprintf(void);
 
 const struct test winetest_testlist[] =
@@ -130,7 +129,6 @@ const struct test winetest_testlist[] =
     { "TrackPopupMenuEx", func_TrackPopupMenuEx },
     { "VirtualKey", func_VirtualKey },
     { "WndProc", func_WndProc },
-    { "SW_FORCEMINIMIZE", func_SW_FORCEMINIMIZE },
     { "wsprintfApi", func_wsprintf },
     { 0, 0 }
 };

@@ -63,7 +63,6 @@ list(APPEND SOURCE
     TrackPopupMenuEx.c
     VirtualKey.c
     WndProc.c
-    SW_FORCEMINIMIZE.c
     wsprintf.c)
 
 list(APPEND PCH_SKIP_SOURCE
