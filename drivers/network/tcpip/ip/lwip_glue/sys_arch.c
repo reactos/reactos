@@ -137,7 +137,7 @@ sys_mbox_new(sys_mbox_t *mbox, int size)
 
     InitializeListHead(&mbox->ListHead);
 
-    KeInitializeEvent(&mbox->Event, NotificationEvent, FALSE);
+    KeInitializeSemaphore(&mbox->Semaphore, 0, MAXLONG);
 
     mbox->Valid = 1;
 
@@ -176,7 +176,7 @@ sys_mbox_post(sys_mbox_t *mbox, void *msg)
                                 &Container->ListEntry,
                                 &mbox->Lock);
 
-    KeSetEvent(&mbox->Event, IO_NO_INCREMENT, FALSE);
+    KeReleaseSemaphore(&mbox->Semaphore, IO_NO_INCREMENT, 1, FALSE);
 }
 
 u32_t
@@ -189,7 +189,7 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     PLWIP_MESSAGE_CONTAINER Container;
     PLIST_ENTRY Entry;
     KIRQL OldIrql;
-    PVOID WaitObjects[] = {&mbox->Event, &TerminationEvent};
+    PVOID WaitObjects[] = {&mbox->Semaphore, &TerminationEvent};
 
     LargeTimeout.QuadPart = Int32x32To64(timeout, -10000);
 
@@ -207,10 +207,8 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     if (Status == STATUS_WAIT_0)
     {
         KeAcquireSpinLock(&mbox->Lock, &OldIrql);
+        ASSERT(!IsListEmpty(&mbox->ListHead));
         Entry = RemoveHeadList(&mbox->ListHead);
-        ASSERT(Entry);
-        if (IsListEmpty(&mbox->ListHead))
-            KeClearEvent(&mbox->Event);
         KeReleaseSpinLock(&mbox->Lock, OldIrql);
 
         Container = CONTAINING_RECORD(Entry, LWIP_MESSAGE_CONTAINER, ListEntry);
