@@ -120,6 +120,8 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
     return SHELL_CreateShell32DefaultExtractIcon(id > 1 ? -id : 0, riid, ppvOut);
 }
 
+HRESULT SHELL_FindAnyFile(LPCWSTR lpFilePath);
+
 typedef HDSA HDCIA; // DynamicClassIdArray
 #define DCIA_Create() ( (HDCIA)DSA_Create(sizeof(CLSID), 4) )
 #define DCIA_Destroy(hDCIA) DSA_Destroy((HDSA)(hDCIA))
