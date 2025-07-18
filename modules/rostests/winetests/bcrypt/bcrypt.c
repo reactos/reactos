@@ -552,7 +552,6 @@ static const struct
     {  8,  0,        1, 16, password,      NULL,      dk7 }
 };
 
-#ifndef __REACTOS__
 static void test_BcryptDeriveKeyPBKDF2(void)
 {
     BCRYPT_ALG_HANDLE alg;
@@ -594,7 +593,6 @@ static void test_BcryptDeriveKeyPBKDF2(void)
         ok(ret == STATUS_SUCCESS, "got 0x%x\n", ret);
     }
 }
-#endif /* __REACTOS__ */
 
 static void test_rng(void)
 {
@@ -3503,7 +3501,6 @@ static void test_DH(void)
     pBCryptDestroySecret(secret);
 }
 
-#ifndef __REACTOS__
 #ifndef NCRYPT_SCHANNEL_INTERFACE
 #define NCRYPT_SCHANNEL_INTERFACE               0x00010002
 #endif
@@ -3518,7 +3515,6 @@ static void test_BCryptEnumContextFunctions(void)
     todo_wine ok( status == STATUS_SUCCESS, "got 0x%08x\n", status);
     if (status == STATUS_SUCCESS) pBCryptFreeBuffer( buffer );
 }
-#endif /* __REACTOS__ */
 
 static BYTE rsapublic[] =
 {
@@ -3741,7 +3737,7 @@ static void test_aes_vector(void)
     ret = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(!ret, "got 0x%x\n", ret);
 }
-#ifndef __REACTOS__
+
 static void test_BcryptDeriveKeyCapi(void)
 {
     static const UCHAR expect[] =
@@ -3822,7 +3818,7 @@ static void test_BcryptDeriveKeyCapi(void)
     ret = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(!ret, "got 0x%x\n", ret);
 }
-#endif
+//#endif
 static UCHAR dsaHash[] =
 {
     0x7e,0xe3,0x74,0xe7,0xc5,0x0b,0x6b,0x70,0xdb,0xab,0x32,0x6d,0x1d,0x51,0xd6,0x74,0x79,0x8e,0x5b,0x4b
@@ -4425,7 +4421,6 @@ static void test_RC4(void)
     ok(status == STATUS_SUCCESS, "got 0x%x\n", status);
 }
 
-#ifndef __REACTOS__
 static void test_PBKDF2(void)
 {
     static char salt[] = "cCxuHMEHLibcglJOG88dIw==";
@@ -4527,13 +4522,12 @@ static void test_PBKDF2(void)
     status = pBCryptCloseAlgorithmProvider(alg, 0);
     ok(status == STATUS_SUCCESS, "got 0x%x\n", status);
 }
-#endif /* __REACTOS__ */
 
 START_TEST(bcrypt)
 {
     HMODULE module;
 
-    module = LoadLibraryA(".\\bcrypt.dll");
+    module = LoadLibraryA("bcrypt.dll");
     if (!module)
     {
         win_skip("bcrypt.dll not found\n");
@@ -4577,9 +4571,7 @@ START_TEST(bcrypt)
     test_BCryptGetFipsAlgorithmMode();
     test_hashes();
     test_BcryptHash();
-#ifndef __REACTOS__
     test_BcryptDeriveKeyPBKDF2();
-#endif /* __REACTOS__ */
     test_rng();
     test_3des();
     test_aes();
@@ -4592,22 +4584,16 @@ START_TEST(bcrypt)
     test_RSA_SIGN();
     test_ECDH();
     test_DH();
-#ifndef __REACTOS__
     test_BCryptEnumContextFunctions();
-#endif
     test_BCryptSignHash();
     test_BCryptEnumAlgorithms();
     test_aes_vector();
-#ifndef __REACTOS__
     test_BcryptDeriveKeyCapi();
-#endif
     test_DSA();
     test_SecretAgreement();
     test_rsa_encrypt();
     test_RC4();
-#ifndef __REACTOS__
     test_PBKDF2();
-#endif /* __REACTOS__ */
 
     FreeLibrary(module);
 }
