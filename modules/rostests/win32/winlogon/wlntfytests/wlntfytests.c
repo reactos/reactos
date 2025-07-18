@@ -1394,10 +1394,6 @@ HRESULT WINAPI DllRegisterServer(VOID)
 
     // TODO: Purpose TBD.
     // dwValue = 1;
-    // RegSetValueExW(hNotifyKey, L"Enabled", 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue));
-
-    // TODO: Purpose TBD.
-    // dwValue = 1;
     // RegSetValueExW(hNotifyKey, L"Safe", 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue));
 
     for (i = 0; i < _countof(NotifyEvents); ++i)

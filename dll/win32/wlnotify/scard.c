@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/wlnotify/scard.c
- * PURPOSE:     SCard logon notifications
+ * PURPOSE:     SmartCard Certificate Propagation logon notifications
  * PROGRAMMER:  Eric Kohl <eric.kohl@reactos.org>
  */
 
@@ -42,6 +42,11 @@ SCardStartCertProp(
     TRACE("hToken: %p\n", pInfo->hToken);
     TRACE("hDesktop: %p\n", pInfo->hDesktop);
     TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    /*
+     * TODO: Check whether certificate propagation is enabled or disabled,
+     * by reading the "Enabled" REG_DWORD value in the registry key:
+     * HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp"
+     */
 }
 
 

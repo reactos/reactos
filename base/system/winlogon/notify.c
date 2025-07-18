@@ -207,14 +207,6 @@ AddNotificationDll(
 
     dwSize = sizeof(BOOL);
     RegQueryValueExW(hDllKey,
-                     L"Enabled",
-                     NULL,
-                     &dwType,
-                     (PBYTE)&NotificationDll->bEnabled,
-                     &dwSize);
-
-    dwSize = sizeof(BOOL);
-    RegQueryValueExW(hDllKey,
                      L"Impersonate",
                      NULL,
                      &dwType,
