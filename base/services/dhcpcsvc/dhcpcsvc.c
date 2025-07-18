@@ -79,19 +79,19 @@ DhcpCApiCleanup(VOID)
 DWORD
 APIENTRY
 DhcpAcquireParameters(
-    _In_ PSTR AdapterName)
+    _In_ PWSTR AdapterName)
 {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
     BOOL Result;
 
-    DPRINT1("DhcpAcquireParameters(%s)\n", AdapterName);
+    DPRINT1("DhcpAcquireParameters(%S)\n", AdapterName);
 
     ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
 
     Req.Type = DhcpReqAcquireParams;
-    strcpy(Req.Body.AcquireParams.AdapterName, AdapterName);
+    wcscpy(Req.Body.AcquireParams.AdapterName, AdapterName);
 
     Result = TransactNamedPipe(PipeHandle,
                                &Req, sizeof(Req),
@@ -110,19 +110,19 @@ DhcpAcquireParameters(
 DWORD
 APIENTRY
 DhcpReleaseParameters(
-    _In_ PSTR AdapterName)
+    _In_ PWSTR AdapterName)
 {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
     BOOL Result;
 
-    DPRINT1("DhcpReleaseParameters(%s)\n", AdapterName);
+    DPRINT1("DhcpReleaseParameters(%S)\n", AdapterName);
 
     ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
 
     Req.Type = DhcpReqReleaseParams;
-    strcpy(Req.Body.AcquireParams.AdapterName, AdapterName);
+    wcscpy(Req.Body.AcquireParams.AdapterName, AdapterName);
 
     Result = TransactNamedPipe(PipeHandle,
                                &Req, sizeof(Req),
