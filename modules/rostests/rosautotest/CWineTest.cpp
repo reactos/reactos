@@ -399,7 +399,7 @@ CWineTest::Run()
     auto_ptr<CTestList> TestList;
     auto_ptr<CWebService> WebService;
     CTestInfo* TestInfo;
-    DWORD ErrorMode;
+    DWORD ErrorMode = 0;
 
     /* The virtual test list is of course faster, so it should be preferred over
        the journaled one.
@@ -419,8 +419,19 @@ CWineTest::Run()
     }
 
     /* Initialize the Web Service interface if required */
-    if(Configuration.DoSubmit())
-        WebService.reset(new CWebService());
+    if (Configuration.DoSubmit())
+    {
+        if (CWebServiceLibCurl::CanUseLibCurl())
+        {
+            StringOut("[ROSAUTOTEST] Using libcurl\n");
+            WebService.reset(new CWebServiceLibCurl());
+        }
+        else
+        {
+            StringOut("[ROSAUTOTEST] Using wininet\n");
+            WebService.reset(new CWebServiceWinInet());
+        }
+    }
 
     /* Disable error dialogs if we're running in non-interactive mode */
     if(!Configuration.IsInteractive())
