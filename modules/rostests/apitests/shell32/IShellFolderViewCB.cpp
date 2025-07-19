@@ -456,7 +456,9 @@ START_TEST(IShellFolderViewCB)
     if (!SUCCEEDED(hr))
         return;
 
-    ok_int(g_AddRef, GetNTVersion() >= _WIN32_WINNT_WIN7 ? 2 : 1);
+    ok(g_AddRef == 2 ||      // Win7+
+       g_AddRef == 1,        // Win2k3-Vista
+       "Wrong value for g_AddRef (0x%lX)\n", g_AddRef);
     ok_int(g_Release, 0);
 
     clear_list();
@@ -586,7 +588,7 @@ START_TEST(IShellFolderViewCB)
         IShellFolderViewCB* oldPtr;
 
         hr = folderView->SetCallback(NULL, &oldPtr);
-        switch(GetNTVersion())
+        switch (GetNTVersion())
         {
             case _WIN32_WINNT_WS03:
             case _WIN32_WINNT_VISTA:
@@ -611,7 +613,7 @@ START_TEST(IShellFolderViewCB)
         /* Last pointer is not optional! */
         IShellFolderViewCB* oldPtr2;
         hr = folderView->SetCallback(oldPtr, &oldPtr2);
-        switch(GetNTVersion())
+        switch (GetNTVersion())
         {
             case _WIN32_WINNT_WS03:
             case _WIN32_WINNT_VISTA:
@@ -635,7 +637,7 @@ START_TEST(IShellFolderViewCB)
     }
 
     ULONG refCount = psv->Release();
-    switch(GetNTVersion())
+    switch (GetNTVersion())
     {
         case _WIN32_WINNT_WS03:
         case _WIN32_WINNT_WIN10:

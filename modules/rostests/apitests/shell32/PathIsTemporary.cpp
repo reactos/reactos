@@ -22,7 +22,7 @@ static void Test_PathIsTemporaryA(void)
 
     if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
     {
-        /* This is not reliable on Vista+. */
+        /* This is not reliable on Vista+ */
         PathAppendA(szPath, "TestTestTest");
         ok_int(PathIsTemporaryA(szPath), FALSE);
     }
@@ -47,7 +47,7 @@ static void Test_PathIsTemporaryW(void)
 
     if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
     {
-        /* This is not reliable on Vista+. */
+        /* This is not reliable on Vista+ */
         PathAppendW(szPath, L"TestTestTest");
         ok_int(PathIsTemporaryW(szPath), FALSE);
     }

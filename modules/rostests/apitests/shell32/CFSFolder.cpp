@@ -120,20 +120,28 @@ VOID TestInitialize()
     PERSIST_FOLDER_TARGET_INFO pfti = {0};
     PERSIST_FOLDER_TARGET_INFO queriedPfti;
     hr = ppf3->InitializeEx(NULL, NULL, NULL);
-    ok(hr == (IsWindowsVistaOrGreater() ? E_INVALIDARG : E_OUTOFMEMORY), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || // Vista+
+       hr == E_OUTOFMEMORY,  // Win2k3
+       "hr = %lx\n", hr);
 
     hr = ppf3->InitializeEx(NULL, NULL, &pfti);
-    ok(hr == (IsWindowsVistaOrGreater() ? E_INVALIDARG : E_OUTOFMEMORY), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || // Vista+
+       hr == E_OUTOFMEMORY,  // Win2k3
+       "hr = %lx\n", hr);
 
     wcscpy(pfti.szTargetParsingName, L"C:\\");
     hr = ppf3->InitializeEx(NULL, NULL, &pfti);
-    ok(hr == (IsWindowsVistaOrGreater() ? E_INVALIDARG : E_OUTOFMEMORY), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || // Vista+
+       hr == E_OUTOFMEMORY,  // Win2k3
+       "hr = %lx\n", hr);
 
     hr = ppf3->InitializeEx(NULL, testpidl, NULL);
     ok(hr == S_OK, "hr = %lx\n", hr);
 
     hr = ppf3->GetFolderTargetInfo(&queriedPfti);
-    ok(hr == (IsWindows7OrGreater() ? E_FAIL : S_OK), "hr = %lx\n", hr);
+    ok(hr == E_FAIL ||       // Win7+
+       hr == S_OK,           // Win2k3-Vista
+       "hr = %lx\n", hr);
 
     hr = psf->GetDisplayNameOf(NULL,SHGDN_FORPARSING,&strretName);
     ok(hr == E_INVALIDARG || hr == E_FAIL, "hr = %lx\n", hr);

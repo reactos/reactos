@@ -96,7 +96,7 @@ START_TEST(CMyComputer)
 
     if (GetNTVersion() < _WIN32_WINNT_VISTA)
     {
-        /* Second create should give us a pointer to the same object. Fails on Vista+. */
+        /* NT5.x returns a pointer to the same object but not NT6.x and newer. */
         hr = CoCreateInstance(CLSID_MyComputer,
                               NULL,
                               CLSCTX_INPROC_SERVER,
