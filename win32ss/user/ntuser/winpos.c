@@ -2586,9 +2586,36 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
    return SwpFlags;
 }
 
+// SW_FORCEMINIMIZE
+void IntForceMinimizeWindow(PWND pWnd)
+{
+    HRGN hRgn;
+    PREGION pRgn;
+
+    if ((pWnd->style & (WS_MINIMIZE | WS_VISIBLE)) != WS_VISIBLE)
+        return;
+
+    if (pWnd->state & WNDS_DESTROYED)
+        return;
+
+    pWnd->ExStyle &= ~WS_EX_MAKEVISIBLEWHENUNGHOSTED;
+
+    IntSetStyle(pWnd, 0, WS_VISIBLE);
+
+    // Invalidate and redraw the window region
+    hRgn = GreCreateRectRgnIndirect(&pWnd->rcWindow);
+    pRgn = REGION_LockRgn(hRgn);
+    co_UserRedrawWindow(UserGetDesktopWindow(), NULL, pRgn, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
+    REGION_UnlockRgn(pRgn);
+    GreDeleteObject(hRgn);
+
+    // Activate the other window if necessary
+    if (pWnd->spwndParent == pWnd->head.rpdesk->pDeskInfo->spwnd)
+        co_WinPosActivateOtherWindow(pWnd);
+}
+
 /*
    ShowWindow does not set SWP_FRAMECHANGED!!! Fix wine msg test_SetParent:WmSetParentSeq_2:23 wParam bits!
-   Win: xxxShowWindow
  */
 BOOLEAN FASTCALL
 co_WinPosShowWindow(PWND Wnd, INT Cmd)
@@ -2661,7 +2688,10 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
             break;
          }
 
-      case SW_FORCEMINIMIZE: /* FIXME: Does not work if thread is hung. */
+      case SW_FORCEMINIMIZE:
+         IntForceMinimizeWindow(Wnd);
+         return WasVisible;
+
       case SW_SHOWMINNOACTIVE:
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
