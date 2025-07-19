@@ -12,6 +12,7 @@
 
 #define WIN32_NO_STATUS
 #include <stdarg.h>
+#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
@@ -21,15 +22,22 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
+//#include <winsock2.h>
+//#include <iptypes.h>
 #include <iphlpapi.h>
 #include <ndk/rtlfuncs.h>
 #include <inaddr.h>
 #include <windns.h>
 #include <windns_undoc.h>
+#include <dhcpcsdk.h>
+#include <dhcpcapi.h>
 #include <strsafe.h>
 #include <conutils.h>
 
 #include "resource.h"
+
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _RECORDTYPE
 {
@@ -218,6 +226,25 @@ VOID DoFormatMessage(LONG ErrorCode)
         _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
         LocalFree(lpMsgBuf);
     }
+}
+
+LPWSTR
+GetUnicodeAdapterName(
+    _In_ LPSTR pszAnsiName)
+{
+    LPWSTR pszUnicodeName;
+    int i, len;
+
+    len = strlen(pszAnsiName);
+    pszUnicodeName = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+    if (pszUnicodeName == NULL)
+        return NULL;
+
+    for (i = 0; i < len; i++)
+        pszUnicodeName[i] = (WCHAR)pszAnsiName[i];
+    pszUnicodeName[i] = UNICODE_NULL;
+
+    return pszUnicodeName;
 }
 
 VOID
@@ -809,24 +836,6 @@ MatchWildcard(
     return TRUE;
 }
 
-static
-VOID
-BuildAdapterMap(
-    PIP_ADAPTER_INDEX_MAP pAdapterMap,
-    PIP_ADAPTER_INFO pAdapterInfo)
-{
-    int i, l1, l2;
-
-    pAdapterMap->Index = pAdapterInfo->Index;
-
-    wcscpy(pAdapterMap->Name, L"\\DEVICE\\TCPIP_");
-    l1 = wcslen(pAdapterMap->Name);
-    l2 = strlen(pAdapterInfo->AdapterName);
-    for (i = 0; i < l2; i++)
-        pAdapterMap->Name[i + l1] = (WCHAR)pAdapterInfo->AdapterName[i];
-    pAdapterMap->Name[i + l1] = UNICODE_NULL;
-}
-
 VOID
 Release(
     LPWSTR pszAdapterName)
@@ -836,9 +845,10 @@ Release(
     ULONG adaptOutBufLen = 0;
     ULONG ret = 0;
     WCHAR szFriendlyName[MAX_PATH];
+    WCHAR szUnicodeAdapterName[MAX_ADAPTER_NAME_LENGTH + 4];
     MIB_IFROW mibEntry;
-    IP_ADAPTER_INDEX_MAP AdapterMap;
     BOOL bFoundAdapter = FALSE;
+    DWORD dwVersion;
 
     ConResPrintf(StdOut, IDS_HEADER);
 
@@ -864,6 +874,8 @@ Release(
         goto done;
     }
 
+    DhcpCApiInitialize(&dwVersion);
+
     pAdapter = pAdapterInfo;
 
     while (pAdapter)
@@ -884,10 +896,11 @@ Release(
                 {
                     if (strcmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0"))
                     {
-                        BuildAdapterMap(&AdapterMap, pAdapter);
+                        mbstowcs(szUnicodeAdapterName, pAdapter->AdapterName, strlen(pAdapter->AdapterName) + 1);
+                        DPRINT1("AdapterName: %S\n", szUnicodeAdapterName);
 
-                        /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-                        ret = IpReleaseAddress(&AdapterMap);
+                        /* Call DhcpReleaseParameters to release the IP address on the specified adapter. */
+                        ret = DhcpReleaseParameters(szUnicodeAdapterName);
                         if (ret != NO_ERROR)
                         {
                             ConResPrintf(StdOut, IDS_DHCPRELEASEERROR, szFriendlyName);
@@ -913,6 +926,8 @@ Release(
         pAdapter = pAdapter->Next;
     }
 
+    DhcpCApiCleanup();
+
     if (bFoundAdapter == FALSE)
     {
         ConResPrintf(StdOut, IDS_DHCPNOADAPTER);
@@ -936,9 +951,10 @@ Renew(
     ULONG adaptOutBufLen = 0;
     ULONG ret = 0;
     WCHAR szFriendlyName[MAX_PATH];
+    WCHAR szUnicodeAdapterName[MAX_ADAPTER_NAME_LENGTH + 4];
     MIB_IFROW mibEntry;
-    IP_ADAPTER_INDEX_MAP AdapterMap;
     BOOL bFoundAdapter = FALSE;
+    DWORD dwVersion;
 
     ConResPrintf(StdOut, IDS_HEADER);
 
@@ -964,6 +980,8 @@ Renew(
         goto done;
     }
 
+    DhcpCApiInitialize(&dwVersion);
+
     pAdapter = pAdapterInfo;
 
     while (pAdapter)
@@ -982,10 +1000,11 @@ Renew(
             {
                 if (pAdapter->DhcpEnabled)
                 {
-                    BuildAdapterMap(&AdapterMap, pAdapter);
+                    mbstowcs(szUnicodeAdapterName, pAdapter->AdapterName, strlen(pAdapter->AdapterName) + 1);
+                    DPRINT1("AdapterName: %S\n", szUnicodeAdapterName);
 
-                    /* Call IpRenewAddress to renew the IP address on the specified adapter. */
-                    ret = IpRenewAddress(&AdapterMap);
+                    /* Call DhcpAcquireParameters to renew the IP address on the specified adapter. */
+                    ret = DhcpAcquireParameters(szUnicodeAdapterName);
                     if (ret != NO_ERROR)
                     {
                         ConResPrintf(StdOut, IDS_DHCPRENEWERROR, szFriendlyName);
@@ -1005,6 +1024,8 @@ Renew(
 
         pAdapter = pAdapter->Next;
     }
+
+    DhcpCApiCleanup();
 
     if (bFoundAdapter == FALSE)
     {
@@ -1239,7 +1260,7 @@ int wmain(int argc, wchar_t *argv[])
         }
         else if (!_tcsnicmp(&argv[1][1], _T("ALL"), _tcslen(&argv[1][1])))
         {
-           DoAll = TRUE;
+            DoAll = TRUE;
         }
         else if (!_tcsnicmp(&argv[1][1], _T("RELEASE"), _tcslen(&argv[1][1])))
         {
