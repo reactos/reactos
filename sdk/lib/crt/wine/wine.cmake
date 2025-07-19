@@ -28,6 +28,6 @@ elseif(ARCH STREQUAL "arm64")
 endif()
 
 # includes for wine code
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
 #set_source_files_properties(${CRT_WINE_SOURCE} PROPERTIES INCLUDE_DIRECTORIES)

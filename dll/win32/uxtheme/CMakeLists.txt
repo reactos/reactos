@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/wine)
 add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
 
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)

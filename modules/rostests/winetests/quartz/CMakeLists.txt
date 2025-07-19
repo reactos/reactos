@@ -1,7 +1,7 @@
 
 add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
 list(APPEND SOURCE
     avisplitter.c

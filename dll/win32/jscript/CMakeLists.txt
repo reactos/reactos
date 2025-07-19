@@ -4,7 +4,7 @@ add_definitions(
     -D__ROS_LONG64__
     -D_USE_MATH_DEFINES)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/wine)
 spec2def(jscript.dll jscript.spec)
 
 list(APPEND SOURCE
