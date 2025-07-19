@@ -20,7 +20,7 @@ add_library(shdocvw MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
 target_include_directories(shdocvw BEFORE PRIVATE
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/wine
 )
 
 set_module_type(shdocvw win32dll UNICODE)

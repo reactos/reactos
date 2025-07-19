@@ -32,21 +32,10 @@
 #include "wine/debug.h"
 #include "wine/library.h"
 
-#include <rtlfuncs.h>
-#include <cmfuncs.h>
+#include "winternl.h"
 
 WINE_DECLARE_DEBUG_CHANNEL(pid);
 WINE_DECLARE_DEBUG_CHANNEL(tid);
-
-ULONG
-NTAPI
-vDbgPrintExWithPrefix(
-  IN LPCSTR Prefix,
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN LPCSTR Format,
-  IN va_list ap);
-
 
 static const char * const debug_classes[] = { "fixme", "err", "warn", "trace" };
 

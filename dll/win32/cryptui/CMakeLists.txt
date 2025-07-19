@@ -2,8 +2,6 @@
 add_definitions(
     -D_WINE
     -D__ROS_LONG64__)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(cryptui.dll cryptui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
