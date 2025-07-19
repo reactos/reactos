@@ -1315,7 +1315,15 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
+        {
+#ifdef _M_IX86
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+#elif defined(_M_AMD64)
+            MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Rip;
+#else
+#error "Unknown architecture"
+#endif
+        }
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -1674,7 +1682,15 @@ MiDispatchFault(IN ULONG FaultCode,
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
+        {
+#ifdef _M_IX86
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+#elif defined(_M_AMD64)
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Rip;
+#else
+#error "Unknown architecture"
+#endif
+        }
         else
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -2254,7 +2270,15 @@ UserFault:
         UserPdeFault = FALSE;
         /* Update debug info */
         if (TrapInformation)
+        {
+#ifdef _M_IX86
             MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+#elif defined(_M_AMD64)
+            MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Rip;
+#else
+#error "Unknown architecture"
+#endif
+        }
         else
             MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -2377,7 +2401,15 @@ UserFault:
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
+        {
+#ifdef _M_IX86
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+#elif defined(_M_AMD64)
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Rip;
+#else
+#error "Unknown architecture"
+#endif
+        }
         else
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif

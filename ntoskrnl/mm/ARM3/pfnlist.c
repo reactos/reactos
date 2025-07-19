@@ -62,6 +62,7 @@ PMMPFNLIST MmPageLocationList[] =
 
 ULONG MI_PFN_CURRENT_USAGE;
 CHAR MI_PFN_CURRENT_PROCESS_NAME[16] = "None yet";
+PEPROCESS MI_PFN_CURRENT_PROCESS;
 
 /* FUNCTIONS ******************************************************************/
 static
@@ -253,9 +254,11 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
 #if MI_TRACE_PFNS
     ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Entry->PfnUsage = MI_PFN_CURRENT_USAGE;
+    Entry->Process = MI_PFN_CURRENT_PROCESS;
     memcpy(Entry->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
     Entry->CallSite = _ReturnAddress();
     MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    MI_SET_PROCESS(NULL);
     MI_SET_PROCESS2("Not Set");
 #endif
 }
@@ -462,9 +465,11 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
 #if MI_TRACE_PFNS
     ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
+    Pfn1->Process = MI_PFN_CURRENT_PROCESS;
     memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
     Pfn1->CallSite = _ReturnAddress();
     MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    MI_SET_PROCESS(NULL);
     MI_SET_PROCESS2("Not Set");
 #endif
 

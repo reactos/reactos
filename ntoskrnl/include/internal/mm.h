@@ -285,18 +285,28 @@ MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 #if MI_TRACE_PFNS
 extern ULONG MI_PFN_CURRENT_USAGE;
 extern CHAR MI_PFN_CURRENT_PROCESS_NAME[16];
+extern PEPROCESS MI_PFN_CURRENT_PROCESS;
 #define MI_SET_USAGE(x)     MI_PFN_CURRENT_USAGE = x
 #define MI_SET_PROCESS2(x)  memcpy(MI_PFN_CURRENT_PROCESS_NAME, x, min(sizeof(x), sizeof(MI_PFN_CURRENT_PROCESS_NAME)))
 FORCEINLINE
 void
 MI_SET_PROCESS(PEPROCESS Process)
 {
-    if (!Process)
+    if (!Process) 
+    {
         MI_SET_PROCESS2("Kernel");
-    else if (Process == (PEPROCESS)1)
+        MI_PFN_CURRENT_PROCESS = PsInitialSystemProcess;
+    }
+    else if (Process == (PEPROCESS)1) 
+    {
         MI_SET_PROCESS2("Hydra");
-    else
+        MI_PFN_CURRENT_PROCESS = PsInitialSystemProcess;
+    }
+    else 
+    {
         MI_SET_PROCESS2(Process->ImageFileName);
+        MI_PFN_CURRENT_PROCESS = Process;
+    }
 }
 
 FORCEINLINE
@@ -444,6 +454,7 @@ typedef struct _MMPFN
 #if MI_TRACE_PFNS
     MI_PFN_USAGES PfnUsage;
     CHAR ProcessName[16];
+    PEPROCESS Process;
 #define MI_SET_PFN_PROCESS_NAME(pfn, x) memcpy(pfn->ProcessName, x, min(sizeof(x), sizeof(pfn->ProcessName)))
     PVOID CallSite;
 #endif
