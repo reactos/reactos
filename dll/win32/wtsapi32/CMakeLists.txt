@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(wtsapi32.dll wtsapi32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

@@ -320,22 +320,23 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     include_directories(
         sdk/include
+        sdk/include/crt
+        sdk/include/ddk
+        sdk/include/ndk
         sdk/include/psdk
-        sdk/include/dxsdk
+        sdk/include/reactos
+        sdk/include/reactos/libs
+        sdk/include/vcruntime
         sdk/include/winrt
         ${REACTOS_BINARY_DIR}/sdk/include
         ${REACTOS_BINARY_DIR}/sdk/include/psdk
-        ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/ddk
+        ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
         ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
-        sdk/include/crt
-        sdk/include/vcruntime
-        sdk/include/ddk
-        sdk/include/ndk
-        sdk/include/reactos
-        sdk/include/reactos/libs
-        sdk/lib/pseh/include)
+        sdk/include/dxsdk
+        sdk/lib/pseh/include
+    )
 
     if(ARCH STREQUAL "arm")
         include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/arm)
@@ -343,12 +344,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     add_dependency_header()
 
-    add_subdirectory(sdk/include/ndk/tests)
-    add_subdirectory(sdk/include/xdk)
-    add_subdirectory(sdk/include/psdk)
-    add_subdirectory(sdk/include/dxsdk)
-    add_subdirectory(sdk/include/reactos)
-    add_subdirectory(sdk/include/asm)
+    add_subdirectory(sdk/include)
 
     if(ARCH MATCHES "64$")
         include(sdk/cmake/baseaddress64.cmake)

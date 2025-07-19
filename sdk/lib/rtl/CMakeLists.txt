@@ -13,8 +13,6 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-missing-braces)
 endif()
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-
 list(APPEND RTL_WINE_SOURCE
     actctx.c
     timerqueue.c
