@@ -245,13 +245,13 @@ public:
 
     HRESULT STDMETHODCALLTYPE CallbackSM(LPSMDATA psmd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-       /*trace ("callback type %d\n", uMsg);*/
+        /*trace ("callback type %d\n", uMsg);*/
 
-       /*
-        * it seems callback 0x10000000 is called for every item added so
-        * we will ignore callbacks of this type
-        * Note: this callback is invoked by shell32.dll!CMenuSFToolbar::_FilterPidl
-        */
+        /*
+         * it seems callback 0x10000000 is called for every item added so
+         * we will ignore callbacks of this type
+         * Note: this callback is invoked by shell32.dll!CMenuSFToolbar::_FilterPidl
+         */
         if (uMsg == 0x10000000 && m_results[m_iCallback-1].uMsg == 0x13)
         {
             return S_OK;
@@ -260,18 +260,18 @@ public:
         m_iCallback++;
         if (m_iCallback > m_testsCount)
         {
-            ok(0, "Got more callbacks than expected! (%d not %d). uMsg: %d\n", m_iCallback, m_testsCount, uMsg);
+            ok(FALSE, "Got more callbacks than expected! (%d not %d). uMsg: %d\n", m_iCallback, m_testsCount, uMsg);
             return S_OK;
         }
 
         struct _test_info *result = &m_results[m_iCallback-1];
 
-        if(!g_IsVista || uMsg != 0x38) // Vista bug
+        if (!g_IsVista || uMsg != 0x38) // Vista bug
             ok(psmd != NULL, "Got NULL psmd\n");
         ok(m_iTest == result->iTest, "Wrong test number (%d not %d)\n", m_iTest, result->iTest);
         ok(result->uMsg == uMsg, "%d: Got wrong uMsg (%d instead of %d)\n", m_iCallback, uMsg, result->uMsg);
 
-        if(uMsg == SMC_CREATE)
+        if (uMsg == SMC_CREATE)
         {
             ok(psmd->dwFlags == 0, "wrong dwFlags\n");
             ok(psmd->dwMask == 0, "wrong dwMask\n");
@@ -327,7 +327,7 @@ void test_CShellMenu_callbacks(IShellFolder *shellFolder, HMENU hmenu)
                                              {4, SMC_GETINFO},
                                              {4, SMC_GETINFO},
                                              {4, SMC_GETINFO},
-                                             {4, SMC_GETINFO}};
+                                             {4, SMC_GETINFO} };
 
         callback = new CMenuCallback(cbtest_info, _countof(cbtest_info));
     }
@@ -350,7 +350,7 @@ void test_CShellMenu_callbacks(IShellFolder *shellFolder, HMENU hmenu)
                                              {4, SMC_GETINFO},
                                              {4, SMC_GETINFO},
                                              {4, SMC_GETINFO},
-                                             {4, SMC_GETINFO}};
+                                             {4, SMC_GETINFO} };
 
         callback = new CMenuCallback(cbtest_info, _countof(cbtest_info));
     }

@@ -238,7 +238,6 @@ static void test_MultipleFiles()
             attributes3 &= dwDefaultAttributeMask_WS03;
             attributes_last &= dwDefaultAttributeMask_WS03;
         }
-
         else
         {
             attributes_first &= dwDefaultAttributeMask;
