@@ -34,6 +34,18 @@ PfnDliHook __pfnDliFailureHook2Default = NULL;
 #endif
 #endif
 
+static
+void
+ReportError(PCSTR Message, DelayLoadInfo* pdli)
+{
+    OutputDebugStringA("Delay load error: ");
+    OutputDebugStringA(Message);
+    OutputDebugStringA(" - DLL: '");
+    OutputDebugStringA(pdli->szDll);
+    OutputDebugStringA("', Function: '");
+    OutputDebugStringA(pdli->dlp.szProcName);
+    OutputDebugStringA("'\n");
+}
 
 /**** Helper functions to convert from RVA to address ****/
 
@@ -117,6 +129,7 @@ __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
                 if (dli.hmodCur == NULL)
                 {
                     ULONG_PTR args[] = { (ULONG_PTR)&dli };
+                    ReportError("Failed to load DLL", &dli);
                     RaiseException(VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND), 0, 1, args);
 
                     /* If we survive the exception, we are expected to use pfnCur directly.. */
@@ -144,6 +157,7 @@ __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
             if (dli.pfnCur == NULL)
             {
                 ULONG_PTR args[] = { (ULONG_PTR)&dli };
+                ReportError("Failed to locate export", &dli);
                 RaiseException(VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND), 0, 1, args);
             }
 
