@@ -11,7 +11,7 @@ typedef struct _sys_mbox_t
 {
     KSPIN_LOCK Lock;
     LIST_ENTRY ListHead;
-    KEVENT Event;
+    KSEMAPHORE Semaphore;
     int Valid;
 } sys_mbox_t;
 
