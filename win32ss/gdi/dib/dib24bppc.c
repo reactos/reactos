@@ -18,6 +18,9 @@ DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   PBYTE addr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
   ULONG Count = x2 - x1;
 
+  if (x1 >= x2)
+    return;
+
   if (Count < 8)
   {
     /* For small fills, don't bother doing anything fancy */

@@ -43,6 +43,9 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   /* This is about 10% faster than the generic C code below */
   LONG Count = x2 - x1;
 
+  if (x1 >= x2)
+    return;
+
   __asm__ __volatile__ (
     "  cld\n"
     "  mov  %0, %%eax\n"
@@ -69,6 +72,9 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 #else /* _M_IX86 */
   LONG cx = x1;
   DWORD cc;
+
+  if (x1 >= x2)
+    return;
 
   if (0 != (cx & 0x01))
   {

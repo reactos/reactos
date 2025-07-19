@@ -36,6 +36,9 @@ DIB_8BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 VOID
 DIB_8BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
+  if (x1 >= x2)
+    return;
+
   memset((PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + x1, (BYTE) c, x2 - x1);
 }
 
