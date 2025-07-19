@@ -173,3 +173,49 @@ HalInitSystem(
     /* All done, return */
     return TRUE;
 }
+
+VOID
+KiSwitchToKernelDebugRegisters(
+    _Inout_ PKTRAP_FRAME TrapFrame)
+{
+    /* Save the user mode debug registers */
+    TrapFrame->Dr0 = __readdr(0);
+    TrapFrame->Dr1 = __readdr(1);
+    TrapFrame->Dr2 = __readdr(2);
+    TrapFrame->Dr3 = __readdr(3);
+    TrapFrame->Dr6 = __readdr(6);
+    TrapFrame->Dr7 = __readdr(7);
+
+    /* Load the kernel mode debug registers */
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKSPECIAL_REGISTERS SpecialRegisters = &Prcb->ProcessorState.SpecialRegisters;
+    __writedr(0, SpecialRegisters->KernelDr0);
+    __writedr(1, SpecialRegisters->KernelDr1);
+    __writedr(2, SpecialRegisters->KernelDr2);
+    __writedr(3, SpecialRegisters->KernelDr3);
+    __writedr(6, SpecialRegisters->KernelDr6);
+    __writedr(7, SpecialRegisters->KernelDr7);
+}
+
+VOID
+KiSwitchToUserDebugRegisters(
+    _Inout_ PKTRAP_FRAME TrapFrame)
+{
+    /* Save the kernel mode debug registers */
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKSPECIAL_REGISTERS SpecialRegisters = &Prcb->ProcessorState.SpecialRegisters;
+    SpecialRegisters->KernelDr0 = __readdr(0);
+    SpecialRegisters->KernelDr1 = __readdr(1);
+    SpecialRegisters->KernelDr2 = __readdr(2);
+    SpecialRegisters->KernelDr3 = __readdr(3);
+    SpecialRegisters->KernelDr6 = __readdr(6);
+    SpecialRegisters->KernelDr7 = __readdr(7);
+
+    /* Load the user mode debug registers */
+    __writedr(0, TrapFrame->Dr0);
+    __writedr(1, TrapFrame->Dr1);
+    __writedr(2, TrapFrame->Dr2);
+    __writedr(3, TrapFrame->Dr3);
+    __writedr(6, TrapFrame->Dr6);
+    __writedr(7, TrapFrame->Dr7);
+}
