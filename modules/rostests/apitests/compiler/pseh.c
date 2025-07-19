@@ -2920,8 +2920,57 @@ static void Test_structs_seh_nested(void)
 
 #endif // _M_IX86
 
+
+void Test_collided_unwind(void)
+{
+    volatile int Flags = 0;
+    volatile int Count = 0;
+    jmp_buf JumpBuffer;
+    int ret;
+
+    ret = setjmp(JumpBuffer);
+    if (ret == 0)
+    {
+        _SEH2_TRY
+        {
+            _SEH2_TRY
+            {
+                _SEH2_TRY
+                {
+                    Flags |= 1;
+                    *((volatile int*)(LONG_PTR)-1) = 123;
+                }
+                _SEH2_FINALLY
+                {
+                    Count++;
+                    Flags |= 2;
+                    if (Count) // This is to prevent the compiler from optimizing stuff out
+                        longjmp(JumpBuffer, 1);
+                    Flags |= 4;
+                }
+                _SEH2_END;
+            }
+            _SEH2_FINALLY
+            {
+                Count++;
+                Flags |= 8;
+            }
+            _SEH2_END;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Flags |= 16;
+        }
+        _SEH2_END;
+    }
+
+    ok(Flags == (1 | 2 | 8), "Flags = %x\n", Flags);
+    ok(Count == 2, "Count = %d\n", Count);
+}
+
 START_TEST(pseh)
 {
+    Test_collided_unwind();
 #ifdef _M_IX86
     Test_structs_no_seh();
     Test_structs_seh_except();
