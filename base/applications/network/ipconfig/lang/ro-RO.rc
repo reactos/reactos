@@ -92,6 +92,8 @@ BEGIN
     IDS_DHCPRELEASED        "Adresa IP pentru adaptorul %ls a fost deja eliberată.\n"
     IDS_DHCPRELEASEERROR    "A apărut o eroare în timpul eliberării interfeței %ls: "
     IDS_DHCPRENEWERROR      "A apărut o eroare în timpul reînnoirii interfeței %ls: "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE

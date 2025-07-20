@@ -1228,7 +1228,110 @@ DisplayDns(VOID)
     }
 }
 
-VOID Usage(VOID)
+VOID
+ShowClassId(
+    LPWSTR pszAdapterName)
+{
+    _tprintf(_T("\nSorry /showclassid adapter is not implemented yet\n"));
+}
+
+VOID
+SetClassId(
+    LPWSTR pszAdapterName,
+    LPWSTR pszClassId)
+{
+    PIP_ADAPTER_INFO pAdapterInfo = NULL;
+    PIP_ADAPTER_INFO pAdapter = NULL, pFoundAdapter = NULL;
+    ULONG adaptOutBufLen = 0;
+    ULONG ret = 0;
+    WCHAR szFriendlyName[MAX_PATH];
+    WCHAR szKeyName[256];
+    MIB_IFROW mibEntry;
+    HKEY hKey;
+
+    ConResPrintf(StdOut, IDS_HEADER);
+
+    /* call GetAdaptersInfo to obtain the adapter info */
+    ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
+    if (ret != ERROR_BUFFER_OVERFLOW)
+    {
+        DoFormatMessage(ret);
+        return;
+    }
+
+    pAdapterInfo = (IP_ADAPTER_INFO *)HeapAlloc(ProcessHeap, 0, adaptOutBufLen);
+    if (pAdapterInfo == NULL)
+    {
+        _tprintf(_T("memory allocation error"));
+        return;
+    }
+
+    ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
+    if (ret != NO_ERROR)
+    {
+        DoFormatMessage(0);
+        goto done;
+    }
+
+    pAdapter = pAdapterInfo;
+    while (pAdapter)
+    {
+        GetAdapterFriendlyName(pAdapter->AdapterName, MAX_PATH, szFriendlyName);
+
+        if (MatchWildcard(pszAdapterName, szFriendlyName))
+        {
+            mibEntry.dwIndex = pAdapter->Index;
+            GetIfEntry(&mibEntry);
+
+            if (mibEntry.dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED ||
+                mibEntry.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
+            {
+                pFoundAdapter = pAdapter;
+                break;
+            }
+        }
+
+        pAdapter = pAdapter->Next;
+    }
+
+    if (pFoundAdapter)
+    {
+        swprintf(szKeyName,
+                 L"System\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%S",
+                 pFoundAdapter->AdapterName);
+
+        ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            szKeyName,
+                            0,
+                            KEY_WRITE,
+                            &hKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            ConResPrintf(StdOut, IDS_DHCPSETIDERROR, szFriendlyName);
+            DoFormatMessage(ret);
+            goto done;
+        }
+
+        if (pszClassId == NULL)
+            pszClassId = L"";
+
+        RegSetValueExW(hKey, L"DhcpClassId", 0, REG_SZ, (LPBYTE)pszClassId, (wcslen(pszClassId) + 1) * sizeof(WCHAR));
+        RegCloseKey(hKey);
+
+        ConResPrintf(StdOut, IDS_DHCPSETIDSUCCESS, szFriendlyName);
+    }
+    else
+    {
+        ConResPrintf(StdOut, IDS_DHCPNOADAPTER);
+    }
+
+done:
+    if (pAdapterInfo)
+        HeapFree(ProcessHeap, 0, pAdapterInfo);
+}
+
+VOID
+Usage(VOID)
 {
     ConResPrintf(StdOut, IDS_USAGE);
 }
@@ -1321,15 +1424,15 @@ int wmain(int argc, wchar_t *argv[])
             else if (DoRenew)
                 Renew(argv[2]);
             else if (DoShowclassid)
-                _tprintf(_T("\nSorry /showclassid adapter is not implemented yet\n"));
+                ShowClassId(argv[2]);
             else if (DoSetclassid)
-                _tprintf(_T("\nSorry /setclassid adapter is not implemented yet\n"));
+                SetClassId(argv[2], NULL);
             else
                 Usage();
             break;
         case 4:  /* Process all the options that can have 2 parameters */
             if (DoSetclassid)
-                _tprintf(_T("\nSorry /setclassid adapter [classid]is not implemented yet\n"));
+                SetClassId(argv[2], argv[3]);
             else
                 Usage();
             break;
