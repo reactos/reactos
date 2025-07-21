@@ -2,9 +2,24 @@
 
 #ifdef SONAME_LIBMBEDTLS
 
+#include <mbedtls/asn1.h>
+#include <mbedtls/asn1write.h>
+#include <mbedtls/cipher.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/dhm.h>
+#include <mbedtls/ecdh.h>
+#include <mbedtls/ecp.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/md.h>
+#include <mbedtls/pk.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/dsa.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(bcrypt);
 
+#ifndef __REACTOS__
 static void *libmbedtls_handle;
+#endif
 static mbedtls_entropy_context entropy;
 static mbedtls_ctr_drbg_context ctr_drbg;
 
@@ -42,202 +57,109 @@ static union key_data *key_data(struct key *key)
     return (union key_data *)key->private;
 }
 
-#define MAKE_FUNCPTR(f) static typeof(f) * p##f
-MAKE_FUNCPTR(mbedtls_md_init);
-MAKE_FUNCPTR(mbedtls_md_info_from_type);
-MAKE_FUNCPTR(mbedtls_md_get_size);
-MAKE_FUNCPTR(mbedtls_md_setup);
-MAKE_FUNCPTR(mbedtls_md_update);
-MAKE_FUNCPTR(mbedtls_md_starts);
-MAKE_FUNCPTR(mbedtls_md_finish);
-MAKE_FUNCPTR(mbedtls_md_hmac_update);
-MAKE_FUNCPTR(mbedtls_md_hmac_starts);
-MAKE_FUNCPTR(mbedtls_md_hmac_finish);
-MAKE_FUNCPTR(mbedtls_md_free);
-MAKE_FUNCPTR(mbedtls_cipher_init);
-MAKE_FUNCPTR(mbedtls_cipher_setup);
-MAKE_FUNCPTR(mbedtls_cipher_info_from_type);
-MAKE_FUNCPTR(mbedtls_cipher_setkey);
-MAKE_FUNCPTR(mbedtls_cipher_set_iv);
-MAKE_FUNCPTR(mbedtls_cipher_set_padding_mode);
-MAKE_FUNCPTR(mbedtls_cipher_update);
-MAKE_FUNCPTR(mbedtls_cipher_update_ad);
-MAKE_FUNCPTR(mbedtls_cipher_check_tag);
-MAKE_FUNCPTR(mbedtls_cipher_write_tag);
-MAKE_FUNCPTR(mbedtls_cipher_finish);
-MAKE_FUNCPTR(mbedtls_cipher_free);
-MAKE_FUNCPTR(mbedtls_ctr_drbg_init);
-MAKE_FUNCPTR(mbedtls_ctr_drbg_random);
-MAKE_FUNCPTR(mbedtls_ctr_drbg_seed);
-MAKE_FUNCPTR(mbedtls_ctr_drbg_free);
-MAKE_FUNCPTR(mbedtls_entropy_init);
-MAKE_FUNCPTR(mbedtls_entropy_func);
-MAKE_FUNCPTR(mbedtls_entropy_free);
-MAKE_FUNCPTR(mbedtls_pk_init);
-MAKE_FUNCPTR(mbedtls_pk_get_type);
-MAKE_FUNCPTR(mbedtls_pk_setup);
-MAKE_FUNCPTR(mbedtls_pk_info_from_type);
-MAKE_FUNCPTR(mbedtls_pk_parse_key);
-MAKE_FUNCPTR(mbedtls_pk_parse_public_key);
-MAKE_FUNCPTR(mbedtls_pk_verify_ext);
-MAKE_FUNCPTR(mbedtls_pk_sign);
-MAKE_FUNCPTR(mbedtls_pk_encrypt);
-MAKE_FUNCPTR(mbedtls_pk_decrypt);
-MAKE_FUNCPTR(mbedtls_pk_free);
-MAKE_FUNCPTR(mbedtls_ecdh_init);
-MAKE_FUNCPTR(mbedtls_ecdh_compute_shared);
-MAKE_FUNCPTR(mbedtls_ecdh_free);
-MAKE_FUNCPTR(mbedtls_rsa_gen_key);
-MAKE_FUNCPTR(mbedtls_rsa_export);
-MAKE_FUNCPTR(mbedtls_rsa_import_raw);
-MAKE_FUNCPTR(mbedtls_rsa_export_raw);
-MAKE_FUNCPTR(mbedtls_rsa_export_crt);
-MAKE_FUNCPTR(mbedtls_rsa_set_padding);
-MAKE_FUNCPTR(mbedtls_rsa_complete);
-MAKE_FUNCPTR(mbedtls_rsa_check_pubkey);
-MAKE_FUNCPTR(mbedtls_rsa_check_privkey);
-MAKE_FUNCPTR(mbedtls_rsa_check_pub_priv);
-MAKE_FUNCPTR(mbedtls_ecp_gen_key);
-MAKE_FUNCPTR(mbedtls_ecp_group_load);
-MAKE_FUNCPTR(mbedtls_ecp_point_read_binary);
-MAKE_FUNCPTR(mbedtls_ecp_point_write_binary);
-MAKE_FUNCPTR(mbedtls_ecp_check_pubkey);
-MAKE_FUNCPTR(mbedtls_ecp_copy);
-MAKE_FUNCPTR(mbedtls_mpi_init);
-MAKE_FUNCPTR(mbedtls_mpi_size);
-MAKE_FUNCPTR(mbedtls_mpi_lset);
-MAKE_FUNCPTR(mbedtls_mpi_copy);
-MAKE_FUNCPTR(mbedtls_mpi_cmp_mpi);
-MAKE_FUNCPTR(mbedtls_mpi_cmp_int);
-MAKE_FUNCPTR(mbedtls_mpi_read_binary);
-MAKE_FUNCPTR(mbedtls_mpi_write_binary);
-MAKE_FUNCPTR(mbedtls_mpi_read_string);
-MAKE_FUNCPTR(mbedtls_mpi_gen_prime);
-MAKE_FUNCPTR(mbedtls_mpi_sub_int);
-MAKE_FUNCPTR(mbedtls_mpi_div_int);
-MAKE_FUNCPTR(mbedtls_mpi_is_prime_ext);
-MAKE_FUNCPTR(mbedtls_mpi_free);
-MAKE_FUNCPTR(mbedtls_asn1_get_len);
-MAKE_FUNCPTR(mbedtls_asn1_get_mpi);
-MAKE_FUNCPTR(mbedtls_asn1_get_tag);
-MAKE_FUNCPTR(mbedtls_asn1_write_len);
-MAKE_FUNCPTR(mbedtls_asn1_write_mpi);
-MAKE_FUNCPTR(mbedtls_asn1_write_tag);
-MAKE_FUNCPTR(mbedtls_asn1_write_raw_buffer);
-MAKE_FUNCPTR(mbedtls_dhm_init);
-MAKE_FUNCPTR(mbedtls_dhm_make_params);
-MAKE_FUNCPTR(mbedtls_dhm_calc_secret);
-MAKE_FUNCPTR(mbedtls_dhm_free);
-MAKE_FUNCPTR(mbedtls_dsa_init);
-MAKE_FUNCPTR(mbedtls_dsa_set_group);
-MAKE_FUNCPTR(mbedtls_dsa_genkey);
-MAKE_FUNCPTR(mbedtls_dsa_check_pqg);
-MAKE_FUNCPTR(mbedtls_dsa_check_pubkey);
-MAKE_FUNCPTR(mbedtls_dsa_check_privkey);
-MAKE_FUNCPTR(mbedtls_dsa_pubkey_from_privkey);
-MAKE_FUNCPTR(mbedtls_dsa_verify);
-MAKE_FUNCPTR(mbedtls_dsa_sign);
-MAKE_FUNCPTR(mbedtls_dsa_free);
+#ifndef __REACTOS__
+#define MAKE_FUNCPTR(f) static typeof(f) * p##f;
+MAKE_FUNCPTR(mbedtls_md_init)
+MAKE_FUNCPTR(mbedtls_md_info_from_type)
+MAKE_FUNCPTR(mbedtls_md_get_size)
+MAKE_FUNCPTR(mbedtls_md_setup)
+MAKE_FUNCPTR(mbedtls_md_update)
+MAKE_FUNCPTR(mbedtls_md_starts)
+MAKE_FUNCPTR(mbedtls_md_finish)
+MAKE_FUNCPTR(mbedtls_md_hmac_update)
+MAKE_FUNCPTR(mbedtls_md_hmac_starts)
+MAKE_FUNCPTR(mbedtls_md_hmac_finish)
+MAKE_FUNCPTR(mbedtls_md_free)
+MAKE_FUNCPTR(mbedtls_cipher_init)
+MAKE_FUNCPTR(mbedtls_cipher_setup)
+MAKE_FUNCPTR(mbedtls_cipher_info_from_type)
+MAKE_FUNCPTR(mbedtls_cipher_setkey)
+MAKE_FUNCPTR(mbedtls_cipher_set_iv)
+MAKE_FUNCPTR(mbedtls_cipher_set_padding_mode)
+MAKE_FUNCPTR(mbedtls_cipher_update)
+MAKE_FUNCPTR(mbedtls_cipher_update_ad)
+MAKE_FUNCPTR(mbedtls_cipher_check_tag)
+MAKE_FUNCPTR(mbedtls_cipher_write_tag)
+MAKE_FUNCPTR(mbedtls_cipher_finish)
+MAKE_FUNCPTR(mbedtls_cipher_free)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_init)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_random)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_seed)
+MAKE_FUNCPTR(mbedtls_ctr_drbg_free)
+MAKE_FUNCPTR(mbedtls_entropy_init)
+MAKE_FUNCPTR(mbedtls_entropy_func)
+MAKE_FUNCPTR(mbedtls_entropy_free)
+MAKE_FUNCPTR(mbedtls_pk_init)
+MAKE_FUNCPTR(mbedtls_pk_get_type)
+MAKE_FUNCPTR(mbedtls_pk_setup)
+MAKE_FUNCPTR(mbedtls_pk_info_from_type)
+MAKE_FUNCPTR(mbedtls_pk_parse_key)
+MAKE_FUNCPTR(mbedtls_pk_parse_public_key)
+MAKE_FUNCPTR(mbedtls_pk_verify_ext)
+MAKE_FUNCPTR(mbedtls_pk_sign)
+MAKE_FUNCPTR(mbedtls_pk_encrypt)
+MAKE_FUNCPTR(mbedtls_pk_decrypt)
+MAKE_FUNCPTR(mbedtls_pk_free)
+MAKE_FUNCPTR(mbedtls_ecdh_init)
+MAKE_FUNCPTR(mbedtls_ecdh_compute_shared)
+MAKE_FUNCPTR(mbedtls_ecdh_free)
+MAKE_FUNCPTR(mbedtls_rsa_gen_key)
+MAKE_FUNCPTR(mbedtls_rsa_export)
+MAKE_FUNCPTR(mbedtls_rsa_import_raw)
+MAKE_FUNCPTR(mbedtls_rsa_export_raw)
+MAKE_FUNCPTR(mbedtls_rsa_export_crt)
+MAKE_FUNCPTR(mbedtls_rsa_set_padding)
+MAKE_FUNCPTR(mbedtls_rsa_complete)
+MAKE_FUNCPTR(mbedtls_rsa_check_pubkey)
+MAKE_FUNCPTR(mbedtls_rsa_check_privkey)
+MAKE_FUNCPTR(mbedtls_rsa_check_pub_priv)
+MAKE_FUNCPTR(mbedtls_ecp_gen_key)
+MAKE_FUNCPTR(mbedtls_ecp_group_load)
+MAKE_FUNCPTR(mbedtls_ecp_point_read_binary)
+MAKE_FUNCPTR(mbedtls_ecp_point_write_binary)
+MAKE_FUNCPTR(mbedtls_ecp_check_pubkey)
+MAKE_FUNCPTR(mbedtls_ecp_copy)
+MAKE_FUNCPTR(mbedtls_mpi_init)
+MAKE_FUNCPTR(mbedtls_mpi_size)
+MAKE_FUNCPTR(mbedtls_mpi_lset)
+MAKE_FUNCPTR(mbedtls_mpi_copy)
+MAKE_FUNCPTR(mbedtls_mpi_cmp_mpi)
+MAKE_FUNCPTR(mbedtls_mpi_cmp_int)
+MAKE_FUNCPTR(mbedtls_mpi_read_binary)
+MAKE_FUNCPTR(mbedtls_mpi_write_binary)
+MAKE_FUNCPTR(mbedtls_mpi_read_string)
+MAKE_FUNCPTR(mbedtls_mpi_gen_prime)
+MAKE_FUNCPTR(mbedtls_mpi_sub_int)
+MAKE_FUNCPTR(mbedtls_mpi_div_int)
+MAKE_FUNCPTR(mbedtls_mpi_is_prime_ext)
+MAKE_FUNCPTR(mbedtls_mpi_free)
+MAKE_FUNCPTR(mbedtls_asn1_get_len)
+MAKE_FUNCPTR(mbedtls_asn1_get_mpi)
+MAKE_FUNCPTR(mbedtls_asn1_get_tag)
+MAKE_FUNCPTR(mbedtls_asn1_write_len)
+MAKE_FUNCPTR(mbedtls_asn1_write_mpi)
+MAKE_FUNCPTR(mbedtls_asn1_write_tag)
+MAKE_FUNCPTR(mbedtls_asn1_write_raw_buffer)
+MAKE_FUNCPTR(mbedtls_dhm_init)
+MAKE_FUNCPTR(mbedtls_dhm_make_params)
+MAKE_FUNCPTR(mbedtls_dhm_calc_secret)
+MAKE_FUNCPTR(mbedtls_dhm_free)
+MAKE_FUNCPTR(mbedtls_dsa_init)
+MAKE_FUNCPTR(mbedtls_dsa_set_group)
+MAKE_FUNCPTR(mbedtls_dsa_genkey)
+MAKE_FUNCPTR(mbedtls_dsa_check_pqg)
+MAKE_FUNCPTR(mbedtls_dsa_check_pubkey)
+MAKE_FUNCPTR(mbedtls_dsa_check_privkey)
+MAKE_FUNCPTR(mbedtls_dsa_pubkey_from_privkey)
+MAKE_FUNCPTR(mbedtls_dsa_verify)
+MAKE_FUNCPTR(mbedtls_dsa_sign)
+MAKE_FUNCPTR(mbedtls_dsa_free)
 #undef MAKE_FUNCPTR
-
-#define mbedtls_md_init                 pmbedtls_md_init
-#define mbedtls_md_info_from_type       pmbedtls_md_info_from_type
-#define mbedtls_md_get_size             pmbedtls_md_get_size
-#define mbedtls_md_setup                pmbedtls_md_setup
-#define mbedtls_md_update               pmbedtls_md_update
-#define mbedtls_md_starts               pmbedtls_md_starts
-#define mbedtls_md_finish               pmbedtls_md_finish
-#define mbedtls_md_hmac_update          pmbedtls_md_hmac_update
-#define mbedtls_md_hmac_starts          pmbedtls_md_hmac_starts
-#define mbedtls_md_hmac_finish          pmbedtls_md_hmac_finish
-#define mbedtls_md_free                 pmbedtls_md_free
-#define mbedtls_cipher_init             pmbedtls_cipher_init
-#define mbedtls_cipher_setup            pmbedtls_cipher_setup
-#define mbedtls_cipher_info_from_type   pmbedtls_cipher_info_from_type
-#define mbedtls_cipher_setkey           pmbedtls_cipher_setkey
-#define mbedtls_cipher_set_iv           pmbedtls_cipher_set_iv
-#define mbedtls_cipher_set_padding_mode pmbedtls_cipher_set_padding_mode
-#define mbedtls_cipher_update           pmbedtls_cipher_update
-#define mbedtls_cipher_update_ad        pmbedtls_cipher_update_ad
-#define mbedtls_cipher_check_tag        pmbedtls_cipher_check_tag
-#define mbedtls_cipher_write_tag        pmbedtls_cipher_write_tag
-#define mbedtls_cipher_finish           pmbedtls_cipher_finish
-#define mbedtls_cipher_free             pmbedtls_cipher_free
-#define mbedtls_ctr_drbg_init           pmbedtls_ctr_drbg_init
-#define mbedtls_ctr_drbg_random         pmbedtls_ctr_drbg_random
-#define mbedtls_ctr_drbg_seed           pmbedtls_ctr_drbg_seed
-#define mbedtls_ctr_drbg_free           pmbedtls_ctr_drbg_free
-#define mbedtls_entropy_init            pmbedtls_entropy_init
-#define mbedtls_entropy_func            pmbedtls_entropy_func
-#define mbedtls_entropy_free            pmbedtls_entropy_free
-#define mbedtls_pk_init                 pmbedtls_pk_init
-#define mbedtls_pk_get_type             pmbedtls_pk_get_type
-#define mbedtls_pk_setup                pmbedtls_pk_setup
-#define mbedtls_pk_info_from_type       pmbedtls_pk_info_from_type
-#define mbedtls_pk_parse_key            pmbedtls_pk_parse_key
-#define mbedtls_pk_parse_public_key     pmbedtls_pk_parse_public_key
-#define mbedtls_pk_verify_ext           pmbedtls_pk_verify_ext
-#define mbedtls_pk_sign                 pmbedtls_pk_sign
-#define mbedtls_pk_encrypt              pmbedtls_pk_encrypt
-#define mbedtls_pk_decrypt              pmbedtls_pk_decrypt
-#define mbedtls_pk_free                 pmbedtls_pk_free
-#define mbedtls_ecdh_init               pmbedtls_ecdh_init
-#define mbedtls_ecdh_compute_shared     pmbedtls_ecdh_compute_shared
-#define mbedtls_ecdh_free               pmbedtls_ecdh_free
-#define mbedtls_rsa_gen_key             pmbedtls_rsa_gen_key
-#define mbedtls_rsa_import_raw          pmbedtls_rsa_import_raw
-#define mbedtls_rsa_export              pmbedtls_rsa_export
-#define mbedtls_rsa_export_raw          pmbedtls_rsa_export_raw
-#define mbedtls_rsa_export_crt          pmbedtls_rsa_export_crt
-#define mbedtls_rsa_set_padding         pmbedtls_rsa_set_padding
-#define mbedtls_rsa_complete            pmbedtls_rsa_complete
-#define mbedtls_rsa_check_pubkey        pmbedtls_rsa_check_pubkey
-#define mbedtls_rsa_check_privkey       pmbedtls_rsa_check_privkey
-#define mbedtls_rsa_check_pub_priv      pmbedtls_rsa_check_pub_priv
-#define mbedtls_ecp_gen_key             pmbedtls_ecp_gen_key
-#define mbedtls_ecp_group_load          pmbedtls_ecp_group_load
-#define mbedtls_ecp_point_read_binary   pmbedtls_ecp_point_read_binary
-#define mbedtls_ecp_point_write_binary  pmbedtls_ecp_point_write_binary
-#define mbedtls_ecp_check_pubkey        pmbedtls_ecp_check_pubkey
-#define mbedtls_ecp_copy                pmbedtls_ecp_copy
-#define mbedtls_mpi_init                pmbedtls_mpi_init
-#define mbedtls_mpi_size                pmbedtls_mpi_size
-#define mbedtls_mpi_lset                pmbedtls_mpi_lset
-#define mbedtls_mpi_copy                pmbedtls_mpi_copy
-#define mbedtls_mpi_cmp_mpi             pmbedtls_mpi_cmp_mpi
-#define mbedtls_mpi_cmp_int             pmbedtls_mpi_cmp_int
-#define mbedtls_mpi_read_binary         pmbedtls_mpi_read_binary
-#define mbedtls_mpi_write_binary        pmbedtls_mpi_write_binary
-#define mbedtls_mpi_read_string         pmbedtls_mpi_read_string
-#define mbedtls_mpi_gen_prime           pmbedtls_mpi_gen_prime
-#define mbedtls_mpi_sub_int             pmbedtls_mpi_sub_int
-#define mbedtls_mpi_div_int             pmbedtls_mpi_div_int
-#define mbedtls_mpi_is_prime_ext        pmbedtls_mpi_is_prime_ext
-#define mbedtls_mpi_free                pmbedtls_mpi_free
-#define mbedtls_asn1_get_len            pmbedtls_asn1_get_len
-#define mbedtls_asn1_get_mpi            pmbedtls_asn1_get_mpi
-#define mbedtls_asn1_get_tag            pmbedtls_asn1_get_tag
-#define mbedtls_asn1_write_len          pmbedtls_asn1_write_len
-#define mbedtls_asn1_write_mpi          pmbedtls_asn1_write_mpi
-#define mbedtls_asn1_write_tag          pmbedtls_asn1_write_tag
-#define mbedtls_asn1_write_raw_buffer   pmbedtls_asn1_write_raw_buffer
-#define mbedtls_dhm_init                pmbedtls_dhm_init
-#define mbedtls_dhm_make_params         pmbedtls_dhm_make_params
-#define mbedtls_dhm_calc_secret         pmbedtls_dhm_calc_secret
-#define mbedtls_dhm_free                pmbedtls_dhm_free
-#define mbedtls_dsa_init                pmbedtls_dsa_init
-#define mbedtls_dsa_set_group           pmbedtls_dsa_set_group
-#define mbedtls_dsa_genkey              pmbedtls_dsa_genkey
-#define mbedtls_dsa_check_pqg           pmbedtls_dsa_check_pqg
-#define mbedtls_dsa_check_pubkey        pmbedtls_dsa_check_pubkey
-#define mbedtls_dsa_check_privkey       pmbedtls_dsa_check_privkey
-#define mbedtls_dsa_pubkey_from_privkey pmbedtls_dsa_pubkey_from_privkey
-#define mbedtls_dsa_verify              pmbedtls_dsa_verify
-#define mbedtls_dsa_sign                pmbedtls_dsa_sign
-#define mbedtls_dsa_free                pmbedtls_dsa_free
+#endif
 
 NTSTATUS process_attach(void *args)
 {
+#ifndef __REACTOS__
     if (!(libmbedtls_handle = wine_dlopen(SONAME_LIBMBEDTLS, RTLD_NOW, NULL, 0)))
     {
         ERR("failed to load libmbedtls, no support for crypto hashes\n");
@@ -347,27 +269,131 @@ NTSTATUS process_attach(void *args)
     LOAD_FUNCPTR(mbedtls_dsa_sign)
     LOAD_FUNCPTR(mbedtls_dsa_free)
 #undef LOAD_FUNCPTR
+#endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
 
     return STATUS_SUCCESS;
-
+#ifndef __REACTOS__
 fail:
     wine_dlclose(libmbedtls_handle, NULL, 0);
     libmbedtls_handle = NULL;
     return STATUS_DLL_NOT_FOUND;
+#endif
 }
+
+#ifndef __REACTOS__
+#define mbedtls_md_init                 pmbedtls_md_init
+#define mbedtls_md_info_from_type       pmbedtls_md_info_from_type
+#define mbedtls_md_get_size             pmbedtls_md_get_size
+#define mbedtls_md_setup                pmbedtls_md_setup
+#define mbedtls_md_update               pmbedtls_md_update
+#define mbedtls_md_starts               pmbedtls_md_starts
+#define mbedtls_md_finish               pmbedtls_md_finish
+#define mbedtls_md_hmac_update          pmbedtls_md_hmac_update
+#define mbedtls_md_hmac_starts          pmbedtls_md_hmac_starts
+#define mbedtls_md_hmac_finish          pmbedtls_md_hmac_finish
+#define mbedtls_md_free                 pmbedtls_md_free
+#define mbedtls_cipher_init             pmbedtls_cipher_init
+#define mbedtls_cipher_setup            pmbedtls_cipher_setup
+#define mbedtls_cipher_info_from_type   pmbedtls_cipher_info_from_type
+#define mbedtls_cipher_setkey           pmbedtls_cipher_setkey
+#define mbedtls_cipher_set_iv           pmbedtls_cipher_set_iv
+#define mbedtls_cipher_set_padding_mode pmbedtls_cipher_set_padding_mode
+#define mbedtls_cipher_update           pmbedtls_cipher_update
+#define mbedtls_cipher_update_ad        pmbedtls_cipher_update_ad
+#define mbedtls_cipher_check_tag        pmbedtls_cipher_check_tag
+#define mbedtls_cipher_write_tag        pmbedtls_cipher_write_tag
+#define mbedtls_cipher_finish           pmbedtls_cipher_finish
+#define mbedtls_cipher_free             pmbedtls_cipher_free
+#define mbedtls_ctr_drbg_init           pmbedtls_ctr_drbg_init
+#define mbedtls_ctr_drbg_random         pmbedtls_ctr_drbg_random
+#define mbedtls_ctr_drbg_seed           pmbedtls_ctr_drbg_seed
+#define mbedtls_ctr_drbg_free           pmbedtls_ctr_drbg_free
+#define mbedtls_entropy_init            pmbedtls_entropy_init
+#define mbedtls_entropy_func            pmbedtls_entropy_func
+#define mbedtls_entropy_free            pmbedtls_entropy_free
+#define mbedtls_pk_init                 pmbedtls_pk_init
+#define mbedtls_pk_get_type             pmbedtls_pk_get_type
+#define mbedtls_pk_setup                pmbedtls_pk_setup
+#define mbedtls_pk_info_from_type       pmbedtls_pk_info_from_type
+#define mbedtls_pk_parse_key            pmbedtls_pk_parse_key
+#define mbedtls_pk_parse_public_key     pmbedtls_pk_parse_public_key
+#define mbedtls_pk_verify_ext           pmbedtls_pk_verify_ext
+#define mbedtls_pk_sign                 pmbedtls_pk_sign
+#define mbedtls_pk_encrypt              pmbedtls_pk_encrypt
+#define mbedtls_pk_decrypt              pmbedtls_pk_decrypt
+#define mbedtls_pk_free                 pmbedtls_pk_free
+#define mbedtls_ecdh_init               pmbedtls_ecdh_init
+#define mbedtls_ecdh_compute_shared     pmbedtls_ecdh_compute_shared
+#define mbedtls_ecdh_free               pmbedtls_ecdh_free
+#define mbedtls_rsa_gen_key             pmbedtls_rsa_gen_key
+#define mbedtls_rsa_import_raw          pmbedtls_rsa_import_raw
+#define mbedtls_rsa_export              pmbedtls_rsa_export
+#define mbedtls_rsa_export_raw          pmbedtls_rsa_export_raw
+#define mbedtls_rsa_export_crt          pmbedtls_rsa_export_crt
+#define mbedtls_rsa_set_padding         pmbedtls_rsa_set_padding
+#define mbedtls_rsa_complete            pmbedtls_rsa_complete
+#define mbedtls_rsa_check_pubkey        pmbedtls_rsa_check_pubkey
+#define mbedtls_rsa_check_privkey       pmbedtls_rsa_check_privkey
+#define mbedtls_rsa_check_pub_priv      pmbedtls_rsa_check_pub_priv
+#define mbedtls_ecp_gen_key             pmbedtls_ecp_gen_key
+#define mbedtls_ecp_group_load          pmbedtls_ecp_group_load
+#define mbedtls_ecp_point_read_binary   pmbedtls_ecp_point_read_binary
+#define mbedtls_ecp_point_write_binary  pmbedtls_ecp_point_write_binary
+#define mbedtls_ecp_check_pubkey        pmbedtls_ecp_check_pubkey
+#define mbedtls_ecp_copy                pmbedtls_ecp_copy
+#define mbedtls_mpi_init                pmbedtls_mpi_init
+#define mbedtls_mpi_size                pmbedtls_mpi_size
+#define mbedtls_mpi_lset                pmbedtls_mpi_lset
+#define mbedtls_mpi_copy                pmbedtls_mpi_copy
+#define mbedtls_mpi_cmp_mpi             pmbedtls_mpi_cmp_mpi
+#define mbedtls_mpi_cmp_int             pmbedtls_mpi_cmp_int
+#define mbedtls_mpi_read_binary         pmbedtls_mpi_read_binary
+#define mbedtls_mpi_write_binary        pmbedtls_mpi_write_binary
+#define mbedtls_mpi_read_string         pmbedtls_mpi_read_string
+#define mbedtls_mpi_gen_prime           pmbedtls_mpi_gen_prime
+#define mbedtls_mpi_sub_int             pmbedtls_mpi_sub_int
+#define mbedtls_mpi_div_int             pmbedtls_mpi_div_int
+#define mbedtls_mpi_is_prime_ext        pmbedtls_mpi_is_prime_ext
+#define mbedtls_mpi_free                pmbedtls_mpi_free
+#define mbedtls_asn1_get_len            pmbedtls_asn1_get_len
+#define mbedtls_asn1_get_mpi            pmbedtls_asn1_get_mpi
+#define mbedtls_asn1_get_tag            pmbedtls_asn1_get_tag
+#define mbedtls_asn1_write_len          pmbedtls_asn1_write_len
+#define mbedtls_asn1_write_mpi          pmbedtls_asn1_write_mpi
+#define mbedtls_asn1_write_tag          pmbedtls_asn1_write_tag
+#define mbedtls_asn1_write_raw_buffer   pmbedtls_asn1_write_raw_buffer
+#define mbedtls_dhm_init                pmbedtls_dhm_init
+#define mbedtls_dhm_make_params         pmbedtls_dhm_make_params
+#define mbedtls_dhm_calc_secret         pmbedtls_dhm_calc_secret
+#define mbedtls_dhm_free                pmbedtls_dhm_free
+#define mbedtls_dsa_init                pmbedtls_dsa_init
+#define mbedtls_dsa_set_group           pmbedtls_dsa_set_group
+#define mbedtls_dsa_genkey              pmbedtls_dsa_genkey
+#define mbedtls_dsa_check_pqg           pmbedtls_dsa_check_pqg
+#define mbedtls_dsa_check_pubkey        pmbedtls_dsa_check_pubkey
+#define mbedtls_dsa_check_privkey       pmbedtls_dsa_check_privkey
+#define mbedtls_dsa_pubkey_from_privkey pmbedtls_dsa_pubkey_from_privkey
+#define mbedtls_dsa_verify              pmbedtls_dsa_verify
+#define mbedtls_dsa_sign                pmbedtls_dsa_sign
+#define mbedtls_dsa_free                pmbedtls_dsa_free
+#endif
 
 NTSTATUS process_detach(void *args)
 {
+#ifndef __REACTOS__
     if (libmbedtls_handle)
     {
+#endif
         mbedtls_entropy_free(&entropy);
         mbedtls_ctr_drbg_free(&ctr_drbg);
+#ifndef __REACTOS__
         wine_dlclose(libmbedtls_handle, NULL, 0);
         libmbedtls_handle = NULL;
     }
+#endif
     return STATUS_SUCCESS;
 }
 
@@ -474,13 +500,13 @@ NTSTATUS hash_get_size(struct hash *hash, ULONG *output)
     return STATUS_SUCCESS;
 }
 
-mbedtls_cipher_id_t key_get_cipher(const struct key *key)
+mbedtls_cipher_type_t key_get_cipher(const struct key *key)
 {
     switch (key->alg_id)
     {
         case ALG_ID_RC4:
             WARN("handle block size\n");
-            return MBEDTLS_CIPHER_ID_ARC4;
+            return MBEDTLS_CIPHER_ARC4_128;
 
         case ALG_ID_3DES:
             WARN("handle block size\n");
