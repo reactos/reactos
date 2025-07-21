@@ -661,6 +661,46 @@ RtlpIsStackPointerValid(
            ((StackPointer & 7) == 0);
 }
 
+EXCEPTION_DISPOSITION
+RtlpExecuteHandlerForUnwindHandler(
+    _Inout_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID EstablisherFrame,
+    _Inout_ PCONTEXT ContextRecord,
+    _In_ PDISPATCHER_CONTEXT DispatcherContext)
+{
+    /* Get a pointer to the register home space for RtlpExecuteHandlerForUnwind */
+    PULONG64 HomeSpace = (PULONG64)EstablisherFrame + 6;
+
+    /* Get the ExceptionFlags value, which was saved in the home space */
+    ULONG ExceptionFlags = (ULONG)HomeSpace[0];
+
+    /* Get the DispatcherContext, which was saved in the home space */
+    PDISPATCHER_CONTEXT PreviousDispatcherContext = (PDISPATCHER_CONTEXT)HomeSpace[3];
+
+    /* Check if the original call to RtlpExecuteHandlerForUnwind was an unwind */
+    if (IS_UNWINDING(ExceptionFlags))
+    {
+        /* Check if the current call to this function is due to unwinding */
+        if (IS_UNWINDING(ExceptionRecord->ExceptionFlags))
+        {
+            /* We are unwinding over the call to a termination handler. This
+               could be due to an exception or longjmp. We need to make sure
+               to not run this termination handler again. To achieve that,
+               we copy the contents of the original dispatcher context back
+               over the current dispatcher context and return
+               ExceptionCollidedUnwind. RtlUnwindInternal will take the
+               original context, and continue unwing there. */
+            *DispatcherContext = *PreviousDispatcherContext;
+            return ExceptionCollidedUnwind;
+        }
+    }
+
+    // TODO: properly handle nested exceptions
+
+    return ExceptionContinueSearch;
+}
+
+
 /*!
     \remark The implementation is based on the description in this blog: http://www.nynaeve.net/?p=106
 
@@ -704,7 +744,8 @@ RtlpUnwindInternal(
     UnwindContext = *ContextRecord;
 
     /* Set up the constant fields of the dispatcher context */
-    DispatcherContext.ContextRecord = &UnwindContext;
+    DispatcherContext.ContextRecord =
+        (HandlerType == UNW_FLAG_UHANDLER) ? ContextRecord : &UnwindContext;
     DispatcherContext.HistoryTable = HistoryTable;
     DispatcherContext.TargetIp = (ULONG64)TargetIp;
 
@@ -793,12 +834,11 @@ RtlpUnwindInternal(
              /* Loop all nested handlers */
             do
             {
-                /// TODO: call RtlpExecuteHandlerForUnwind instead
                 /* Call the language specific handler */
-                Disposition = ExceptionRoutine(ExceptionRecord,
-                                               (PVOID)EstablisherFrame,
-                                               ContextRecord,
-                                               &DispatcherContext);
+                Disposition = RtlpExecuteHandlerForUnwind(ExceptionRecord,
+                                                          (PVOID)EstablisherFrame,
+                                                          ContextRecord,
+                                                          &DispatcherContext);
 
                 /* Clear exception flags for the next iteration */
                 ExceptionRecord->ExceptionFlags &= ~(EXCEPTION_TARGET_UNWIND |
@@ -828,12 +868,39 @@ RtlpUnwindInternal(
 
                 if (Disposition == ExceptionCollidedUnwind)
                 {
-                    /// TODO
-                    __debugbreak();
+                    /* We collided with another unwind, so we need to continue
+                       "after" the handler, skipping the termination handler
+                       that resulted in this unwind. The installed handler has
+                       already copied the original dispatcher context, we now
+                       need to copy back the original context. */
+                    UnwindContext = *ContextRecord = *DispatcherContext.ContextRecord;
+
+                    /* The original context was from "before" the unwind, so we
+                       need to do an additional virtual unwind to restore the
+                       unwind contxt. */
+                    RtlVirtualUnwind(HandlerType,
+                                     DispatcherContext.ImageBase,
+                                     UnwindContext.Rip,
+                                     DispatcherContext.FunctionEntry,
+                                     &UnwindContext,
+                                     &DispatcherContext.HandlerData,
+                                     &EstablisherFrame,
+                                     NULL);
+
+                    /* Restore the context pointer and establisher frame. */
+                    DispatcherContext.ContextRecord = &UnwindContext;
+                    EstablisherFrame = DispatcherContext.EstablisherFrame;
+
+                    /* Set the exception flags to indicate that we collided
+                       with an unwind and continue the handler loop, which
+                       will run any additional handlers from the previous
+                       unwind. */
+                    ExceptionRecord->ExceptionFlags |= EXCEPTION_COLLIDED_UNWIND;
+                    continue;
                 }
 
                 /* This must be ExceptionContinueSearch now */
-                if (Disposition != ExceptionContinueSearch)
+                else if (Disposition != ExceptionContinueSearch)
                 {
                     __debugbreak();
                     RtlRaiseStatus(STATUS_INVALID_DISPOSITION);

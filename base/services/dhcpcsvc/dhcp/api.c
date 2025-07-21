@@ -45,19 +45,18 @@ DSAcquireParams(
 
     DPRINT1("DSAcquireParams()\n");
 
+    Reply.Reply = ERROR_SUCCESS;
+
     ApiLock();
 
     Adapter = AdapterFindName(Req->Body.AcquireParams.AdapterName);
-    DPRINT1("Adapter: %p\n", Adapter);
-
     if (Adapter == NULL || Adapter->DhclientState.state == S_STATIC)
     {
-        Reply.Reply = 0;
-        ApiUnlock();
-        return Send(CommPipe,  &Reply);
+        Reply.Reply = ERROR_FILE_NOT_FOUND;
+        goto done;
     }
 
-    Reply.Reply = 1;
+    DPRINT1("Adapter: %p\n", Adapter);
 
     proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
     if (proto)
@@ -73,6 +72,7 @@ DSAcquireParams(
     if (hAdapterStateChangedEvent != NULL)
         SetEvent(hAdapterStateChangedEvent);
 
+done:
     ApiUnlock();
 
     return Send(CommPipe, &Reply);
@@ -91,37 +91,41 @@ DSReleaseParams(
 
     DPRINT1("DSReleaseParams()\n");
 
+    Reply.Reply = ERROR_SUCCESS;
+
     ApiLock();
 
     Adapter = AdapterFindName(Req->Body.AcquireParams.AdapterName);
-    DPRINT1("Adapter: %p\n", Adapter);
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if (Adapter)
+    if (Adapter == NULL)
     {
-        if (Adapter->NteContext)
-        {
-            DeleteIPAddress(Adapter->NteContext);
-            Adapter->NteContext = 0;
-        }
-        if (Adapter->RouterMib.dwForwardNextHop)
-        {
-            DeleteIpForwardEntry(&Adapter->RouterMib);
-            Adapter->RouterMib.dwForwardNextHop = 0;
-        }
-
-        proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
-        if (proto)
-           remove_protocol(proto);
-
-        Adapter->DhclientInfo.client->active = NULL;
-        Adapter->DhclientInfo.client->state = S_INIT;
-
-        if (hAdapterStateChangedEvent != NULL)
-            SetEvent(hAdapterStateChangedEvent);
+        Reply.Reply = ERROR_FILE_NOT_FOUND;
+        goto done;
     }
 
+    DPRINT1("Adapter: %p\n", Adapter);
+
+    if (Adapter->NteContext)
+    {
+        DeleteIPAddress(Adapter->NteContext);
+        Adapter->NteContext = 0;
+    }
+    if (Adapter->RouterMib.dwForwardNextHop)
+    {
+        DeleteIpForwardEntry(&Adapter->RouterMib);
+        Adapter->RouterMib.dwForwardNextHop = 0;
+    }
+
+    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+    if (proto)
+        remove_protocol(proto);
+
+    Adapter->DhclientInfo.client->active = NULL;
+    Adapter->DhclientInfo.client->state = S_INIT;
+
+    if (hAdapterStateChangedEvent != NULL)
+        SetEvent(hAdapterStateChangedEvent);
+
+done:
     ApiUnlock();
 
     return Send(CommPipe, &Reply);

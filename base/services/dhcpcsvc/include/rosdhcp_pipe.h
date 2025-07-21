@@ -18,7 +18,7 @@ typedef struct _COMM_DHCP_REQ {
     {
         struct
         {
-            CHAR AdapterName[64];
+            WCHAR AdapterName[45];
         } AcquireParams;
         struct {
             BOOL Inserted;

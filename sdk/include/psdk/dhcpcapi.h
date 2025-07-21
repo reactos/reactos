@@ -8,12 +8,12 @@ extern "C" {
 DWORD
 APIENTRY
 DhcpAcquireParameters(
-    _In_ PSTR AdapterName);
+    _In_ PWSTR AdapterName);
 
 DWORD
 APIENTRY
 DhcpReleaseParameters(
-    _In_ PSTR AdapterName);
+    _In_ PWSTR AdapterName);
 
 DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex );
 DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,

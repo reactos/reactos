@@ -94,6 +94,8 @@ BEGIN
     IDS_DHCPRELEASED        "L'adresse IP de l'adaptateur %ls a déjà été libérée.\n"
     IDS_DHCPRELEASEERROR    "Une erreur est survenue lors de la libération de l'interface %ls : "
     IDS_DHCPRENEWERROR      "Une erreur est survenue lors du renouvellement de l'interface %ls : "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE

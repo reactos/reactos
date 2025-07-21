@@ -511,15 +511,17 @@ PDHCP_ADAPTER AdapterFindIndex( unsigned int indx ) {
     return NULL;
 }
 
-PDHCP_ADAPTER AdapterFindName( const CHAR *name ) {
+PDHCP_ADAPTER AdapterFindName( const WCHAR *name ) {
     PDHCP_ADAPTER Adapter;
     PLIST_ENTRY ListEntry;
+    WCHAR UnicodeName[45];
 
     for( ListEntry = AdapterList.Flink;
          ListEntry != &AdapterList;
          ListEntry = ListEntry->Flink ) {
         Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
-        if( !stricmp((const CHAR*)Adapter->IfMib.bDescr, name ) ) return Adapter;
+        mbstowcs(UnicodeName, (const CHAR *)Adapter->IfMib.bDescr, strlen((const CHAR *)Adapter->IfMib.bDescr) + 1);
+        if( !wcsicmp(UnicodeName, name ) ) return Adapter;
     }
 
     return NULL;

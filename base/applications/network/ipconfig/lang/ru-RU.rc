@@ -92,6 +92,8 @@ BEGIN
     IDS_DHCPRELEASED        "IP-адрес для адаптера ""%ls"" уже освобождён.\n"
     IDS_DHCPRELEASEERROR    "Произошла ошибка при освобождении интерфейса ""%ls"": "
     IDS_DHCPRENEWERROR      "Произошла ошибка при обновлении интерфейса ""%ls"": "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE
