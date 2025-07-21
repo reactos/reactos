@@ -2,6 +2,9 @@
 #define __BCRYPT_INTERNAL_H
 
 #include "precomp.h"
+#ifdef SONAME_LIBMBEDTLS
+#include <mbedtls/md.h>
+#endif
 
 #define MAGIC_DSS1 ('D' | ('S' << 8) | ('S' << 16) | ('1' << 24))
 #define MAGIC_DSS2 ('D' | ('S' << 8) | ('S' << 16) | ('2' << 24))
@@ -94,7 +97,8 @@ struct key_asymmetric
     DSSSEED           dss_seed;
 };
 
-#define PRIVATE_DATA_SIZE 32
+#define PRIVATE_DATA_SIZE 64
+
 struct key
 {
     struct object hdr;
