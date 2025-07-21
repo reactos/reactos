@@ -478,6 +478,10 @@ mbedtls_cipher_id_t key_get_cipher(const struct key *key)
 {
     switch (key->alg_id)
     {
+        case ALG_ID_RC4:
+            WARN("handle block size\n");
+            return MBEDTLS_CIPHER_ID_ARC4;
+
         case ALG_ID_3DES:
             WARN("handle block size\n");
             switch (key->u.s.mode)
