@@ -1383,7 +1383,6 @@ HRESULT WINAPI CDrivesFolder::ShouldShow(IShellFolder *psf, PCIDLIST_ABSOLUTE pi
     return S_OK;
 }
 
-<<<<<<< HEAD
 /**************************************************************************
  *    CDrivesFolder::MessageSFVCB (IShellFolderViewCB)
  */
