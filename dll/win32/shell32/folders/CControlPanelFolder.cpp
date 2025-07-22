@@ -679,7 +679,7 @@ HRESULT WINAPI CControlPanelFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARA
     {
         case SFVM_DEFVIEWMODE:
         {
-        #if ROSPOLICY_SHELLFOLDER_DEFLARGEICONS & ( 1 << (PT_CONTROLS_NEWREGITEM >> 4) )
+        #if ROSPOLICY_CONTROLSFOLDER_DEFLARGEICONS
             *((FOLDERVIEWMODE*)lParam) = FVM_ICON;
         #else
             *((FOLDERVIEWMODE*)lParam) = IsOS(OS_SERVERADMINUI) ? FVM_LIST : FVM_ICON;

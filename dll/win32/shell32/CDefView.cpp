@@ -3820,7 +3820,8 @@ HRESULT STDMETHODCALLTYPE CDefView::GetView(SHELLVIEWID *pVid, ULONG view_type)
     if ((int)view_type < 0)
         return E_UNEXPECTED;
 
-    if (!IsSupportedFolderViewMode(view_type += FVM_FIRST))
+    view_type += FVM_FIRST;
+    if (!IsSupportedFolderViewMode(view_type))
         return E_INVALIDARG;
     *pVid = *FolderViewModeToShellViewId(view_type);
     return S_OK;

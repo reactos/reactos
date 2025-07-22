@@ -22,17 +22,19 @@
 #define SHSTDAPI SHSTDAPI_(HRESULT)
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* defined(__cplusplus) */
+
 // Because ReactOS installs as Server by default, we ignore OS_SERVERADMINUI
 // in certain places to present a Client/Server hybrid UI.
 
 // Windows defaults to FVM_DETAILS for Administrators on OS_ANYSERVER (instead of FVM_ICON).
-#define ROSPOLICY_SHELLFOLDER_DEFLARGEICONS ( ~0UL )
+#define ROSPOLICY_DESKTOPFOLDER_DEFLARGEICONS 1
+#define ROSPOLICY_DRIVESFOLDER_DEFLARGEICONS 1
+#define ROSPOLICY_CONTROLSFOLDER_DEFLARGEICONS 1
 
 #define ROSPOLICY_SHELL_NODEFKEYBOARDCUES 1
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* defined(__cplusplus) */
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 #define DBIMF_NOGRIPPER         0x0800

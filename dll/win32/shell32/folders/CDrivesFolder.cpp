@@ -1404,7 +1404,7 @@ STDMETHODIMP CDrivesFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam
                 g_IsFloppyCache = 0;
             }
             break;
-        #if ROSPOLICY_SHELLFOLDER_DEFLARGEICONS & ( 1 << (PT_COMPUTER_REGITEM >> 4) )
+        #if ROSPOLICY_DRIVESFOLDER_DEFLARGEICONS
         case SFVM_DEFVIEWMODE:
             *((FOLDERVIEWMODE*)lParam) = FVM_ICON;
             return S_OK;
