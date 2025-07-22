@@ -17,13 +17,13 @@
 #define T_WIN8    0x20
 #define T_WIN10   0x40
 
-#define T_PRE_VISTA  T_WIN2K|T_WINXP|T_WIN2K3
-#define T_PRE_WIN7   T_PRE_VISTA|T_VISTA
-#define T_PRE_WIN8   T_PRE_WIN7|T_WIN7
+#define T_PRE_VISTA  (T_WIN2K | T_WINXP | T_WIN2K3)
+#define T_PRE_WIN7   (T_PRE_VISTA | T_VISTA)
+#define T_PRE_WIN8   (T_PRE_WIN7 | T_WIN7)
 
-#define T_WIN8_PLUS  T_WIN8|T_WIN10
-#define T_WIN7_PLUS  T_WIN7|T_WIN8_PLUS
-#define T_VISTA_PLUS T_VISTA|T_WIN7_PLUS
+#define T_WIN8_PLUS  (T_WIN8 | T_WIN10)
+#define T_WIN7_PLUS  (T_WIN7 | T_WIN8_PLUS)
+#define T_VISTA_PLUS (T_VISTA | T_WIN7_PLUS)
 
 struct test_data
 {

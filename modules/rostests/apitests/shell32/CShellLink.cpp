@@ -228,7 +228,6 @@ TestShellLink(void)
         Test = linkTestList_WS03;
         TestListCnt = _countof(linkTestList_WS03);
     }
-
     else
     {
         Test = linkTestList_Vista;

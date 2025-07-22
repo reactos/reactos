@@ -83,9 +83,9 @@ static inline VOID CloseNewWindows(PWINDOW_LIST pExisting, PWINDOW_LIST pNew)
         if (!IsWindowVisible(hWnd) || FindInWindowList(*pExisting, hWnd))
             continue;
 
-        if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG, 3000, NULL) &&
-            !PostMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
-            SendMessageW(hWnd, WM_CLOSE, 0, 0);
+        if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, 3000, NULL))
+            PostMessageW(hWnd, WM_CLOSE, 0, 0);
+        /* If this window is still open, you'll need TerminateProcess(). */
     }
 }
 

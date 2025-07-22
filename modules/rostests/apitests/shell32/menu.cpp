@@ -14,8 +14,6 @@
 #define test_S_OK(hres, message) ok(hres == S_OK, "%s (0x%lx instead of S_OK)\n",message, hResult);
 #define test_HRES(hres, hresExpected, message) ok(hres == hresExpected, "%s (0x%lx instead of 0x%lx)\n",message, hResult,hresExpected);
 
-BOOL g_IsVista = GetNTVersion() == _WIN32_WINNT_VISTA;
-
 BOOL CheckWindowClass(HWND hwnd, PCWSTR className)
 {
     ULONG size = (lstrlenW(className) + 1)* sizeof(WCHAR);
@@ -266,7 +264,7 @@ public:
 
         struct _test_info *result = &m_results[m_iCallback-1];
 
-        if (!g_IsVista || uMsg != 0x38) // Vista bug
+        if (!g_bVista || uMsg != 0x38) // Vista bug
             ok(psmd != NULL, "Got NULL psmd\n");
         ok(m_iTest == result->iTest, "Wrong test number (%d not %d)\n", m_iTest, result->iTest);
         ok(result->uMsg == uMsg, "%d: Got wrong uMsg (%d instead of %d)\n", m_iCallback, uMsg, result->uMsg);
