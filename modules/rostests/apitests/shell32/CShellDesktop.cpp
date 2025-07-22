@@ -16,8 +16,6 @@
 // So instead we check on the sign bit (compare result is the low word of the hresult).
 #define SHORT_SIGN_BIT  0x8000
 
-static const BOOL g_bVista = GetNTVersion() == _WIN32_WINNT_VISTA;
-
 static
 VOID
 compare_imp(IShellFolder* psf, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, HRESULT expected)
