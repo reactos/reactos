@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Kernel
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     IPI code for x64
  * COPYRIGHT:   Copyright 2023 Timo Kreuzer <timo.kreuzer@reactos.org>
  */

@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         CONTEXT related functions
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     CONTEXT related functions for x64
+ * COPYRIGHT:   Copyright 2008-2020 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,8 +1,8 @@
 /*
- * FILE:            ntoskrnl/ke/amd64/boot.S
- * COPYRIGHT:       See COPYING in the top level directory
- * PURPOSE:         FreeLDR Wrapper Bootstrap Code and Bootstrap Trampoline
- * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Boot stack switching for x64
+ * COPYRIGHT:   Copyright 2010 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Runtime Library (RTL)
- * FILE:            lib/rtl/amd64/except_asm.S
- * PURPOSE:         Exception support for AMD64
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Runtime Library (RTL)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Exception support for AMD64
+ * COPYRIGHT:   Copyright 2010-2026 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
