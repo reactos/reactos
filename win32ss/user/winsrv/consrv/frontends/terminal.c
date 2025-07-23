@@ -341,6 +341,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
             if (Console->LineBuffer == NULL) return STATUS_NO_MEMORY;
 
             Console->LinePos = Console->LineSize = ReadControl->nInitialChars;
+            Console->LineColumn = GetTextWidth(Console->LineBuffer, ReadControl->nInitialChars, Console->LineSize);
             Console->LineComplete = Console->LineUpPressed = FALSE;
             Console->LineInsertToggle = Console->InsertMode;
             Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
@@ -354,7 +355,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
             if (Console->LineSize >= Console->LineMaxSize)
             {
                 Console->LineComplete = TRUE;
-                Console->LinePos = 0;
+                Console->LineColumn = Console->LinePos = 0;
             }
         }
 
@@ -411,7 +412,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
                 /* The entire line has been read */
                 ConsoleFreeHeap(Console->LineBuffer);
                 Console->LineBuffer = NULL;
-                Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
+                Console->LineColumn = Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
                 // Console->LineComplete = Console->LineUpPressed = FALSE;
                 Console->LineComplete = FALSE;
             }
