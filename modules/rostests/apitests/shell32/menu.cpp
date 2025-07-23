@@ -207,7 +207,7 @@ void test_CShellMenu()
 }
 
 /* The folowing struct holds info about the order callbacks are called */
-/* By passing different arrays of results to CMenuCallback, we can test different sequenses of callbacks */
+/* By passing different arrays of results to CMenuCallback, we can test different sequences of callbacks */
    struct _test_info{
        int iTest;
        UINT uMsg;};
@@ -236,54 +236,55 @@ public:
         m_testsCount = testsCount;
     }
 
-   void SetTest(int i)
-   {
-       m_iTest = i;
-   }
+    void SetTest(int i)
+    {
+        m_iTest = i;
+    }
 
-   HRESULT STDMETHODCALLTYPE CallbackSM(LPSMDATA psmd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-   {
-       /*trace ("callback type %d\n", uMsg);*/
+    HRESULT STDMETHODCALLTYPE CallbackSM(LPSMDATA psmd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        /*trace ("callback type %d\n", uMsg);*/
 
-       /*
-        * it seems callback 0x10000000 is called for every item added so
-        * we will ignore consecutive callbacks of this type
-        * Note: this callback is invoked by shell32.dll!CMenuSFToolbar::_FilterPidl
-        */
-       if (uMsg == 0x10000000 && m_results[m_iCallback-1].uMsg == 0x10000000)
-       {
-           return S_OK;
-       }
+        /*
+         * it seems callback 0x10000000 is called for every item added so
+         * we will ignore callbacks of this type
+         * Note: this callback is invoked by shell32.dll!CMenuSFToolbar::_FilterPidl
+         */
+        if (uMsg == 0x10000000 && m_results[m_iCallback-1].uMsg == 0x13)
+        {
+            return S_OK;
+        }
 
-       m_iCallback++;
-       if (m_iCallback > m_testsCount)
-       {
-           ok(0, "Got more callbacks than expected! (%d not %d). uMsg: %d\n", m_iCallback, m_testsCount, uMsg);
-           return S_OK;
-       }
+        m_iCallback++;
+        if (m_iCallback > m_testsCount)
+        {
+            ok(FALSE, "Got more callbacks than expected! (%d not %d). uMsg: %d\n", m_iCallback, m_testsCount, uMsg);
+            return S_OK;
+        }
 
-       struct _test_info *result = &m_results[m_iCallback-1];
+        struct _test_info *result = &m_results[m_iCallback-1];
 
-       ok(psmd != NULL, "Got NULL psmd\n");
-       ok(m_iTest == result->iTest, "Wrong test number (%d not %d)\n", m_iTest, result->iTest);
-       ok(result->uMsg == uMsg, "%d: Got wrong uMsg (%d instead of %d)\n", m_iCallback, uMsg, result->uMsg);
+        if (!g_bVista || uMsg != 0x38) // Vista bug
+            ok(psmd != NULL, "Got NULL psmd\n");
+        ok(m_iTest == result->iTest, "Wrong test number (%d not %d)\n", m_iTest, result->iTest);
+        ok(result->uMsg == uMsg, "%d: Got wrong uMsg (%d instead of %d)\n", m_iCallback, uMsg, result->uMsg);
 
-       if(uMsg == SMC_CREATE)
-       {
-           ok(psmd->dwFlags == 0, "wrong dwFlags\n");
-           ok(psmd->dwMask == 0, "wrong dwMask\n");
-           ok(psmd->hmenu == 0, "wrong hmenu\n");
-           ok(psmd->hwnd == 0, "wrong hwnd\n");
-           ok(psmd->punk != NULL, "punk is null\n");
-       }
+        if (uMsg == SMC_CREATE)
+        {
+            ok(psmd->dwFlags == 0, "wrong dwFlags\n");
+            ok(psmd->dwMask == 0, "wrong dwMask\n");
+            ok(psmd->hmenu == 0, "wrong hmenu\n");
+            ok(psmd->hwnd == 0, "wrong hwnd\n");
+            ok(psmd->punk != NULL, "punk is null\n");
+        }
 
-       if (uMsg == SMC_GETSFOBJECT)
-       {
-           ok(psmd->psf != 0, "wrong dwFlags\n");
-       }
+        if (uMsg == SMC_GETSFOBJECT)
+        {
+            ok(psmd->psf != 0, "wrong dwFlags\n");
+        }
 
-       return S_FALSE;
-   }
+        return S_FALSE;
+    }
 };
 
 void test_CShellMenu_callbacks(IShellFolder *shellFolder, HMENU hmenu)
@@ -306,25 +307,51 @@ void test_CShellMenu_callbacks(IShellFolder *shellFolder, HMENU hmenu)
         return;
     }
 
-    struct _test_info cbtest_info[] =  { {1, SMC_CREATE},
-                                         {2, SMC_GETSFOBJECT},
-                                         {3, 0x31},
-                                         {4, SMC_INITMENU},
-                                         {4, 53},
-                                         {4, 19},
-                                         {4, 0x10000000},
-                                         {4, SMC_NEWITEM},
-                                         {4, 20},
-                                         {4, 19},
-                                         {4, 6},
-                                         {4, 20},
-                                         {4, 8},
-                                         {4, 24},
-                                         {4, 5},
-                                         {4, 5},
-                                         {4, 5}};
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+    {
+        struct _test_info cbtest_info[] =  { {1, SMC_CREATE},
+                                             {2, SMC_GETSFOBJECT},
+                                             {3, SMC_SFEXEC_MIDDLE},
+                                             {4, SMC_INITMENU},
+                                             {4, 0x35},
+                                             {4, 0x13},
+                                             {4, 0x14},
+                                             {4, 0x13},
+                                             {4, 0x14},
+                                             {4, SMC_GETSFOBJECT},
+                                             {4, 0x18},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO} };
 
-    callback = new CMenuCallback(cbtest_info,18);
+        callback = new CMenuCallback(cbtest_info, _countof(cbtest_info));
+    }
+
+    else
+    {
+        struct _test_info cbtest_info[] =  { {1, SMC_CREATE},
+                                             {2, SMC_GETSFOBJECT},
+                                             {3, SMC_SFEXEC_MIDDLE},
+                                             {4, SMC_INITMENU},
+                                             {4, 0x38},
+                                             {4, 0x35},
+                                             {4, 0x13},
+                                             {4, 0x14},
+                                             {4, 0x13},
+                                             {4, 0x14},
+                                             {4, SMC_GETSFOBJECT},
+                                             {4, 0x18},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO},
+                                             {4, SMC_GETINFO} };
+
+        callback = new CMenuCallback(cbtest_info, _countof(cbtest_info));
+    }
 
     callback->SetTest(1);
     hResult = shellMenu->Initialize(callback, 0,ANCESTORDEFAULT, SMINIT_TOPLEVEL|SMINIT_VERTICAL);

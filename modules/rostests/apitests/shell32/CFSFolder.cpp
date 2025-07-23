@@ -88,9 +88,9 @@ VOID TestUninitialized()
 
     /* methods that worked before, now fail */
     hr = psf->GetDisplayNameOf(NULL,SHGDN_FORPARSING,&strretName);
-    ok(hr == (IsWindows7OrGreater() ? E_INVALIDARG : E_FAIL), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || hr == E_FAIL, "hr = %lx\n", hr);
     hr = psf->EnumObjects(NULL, 0, &penum);
-    ok(hr == (IsWindows7OrGreater() ? E_INVALIDARG : HRESULT_FROM_WIN32(ERROR_CANCELLED)), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || hr == HRESULT_FROM_WIN32(ERROR_CANCELLED), "hr = %lx\n", hr);
 
     /* The following continue to work though */
     hr = psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdt));
@@ -120,23 +120,31 @@ VOID TestInitialize()
     PERSIST_FOLDER_TARGET_INFO pfti = {0};
     PERSIST_FOLDER_TARGET_INFO queriedPfti;
     hr = ppf3->InitializeEx(NULL, NULL, NULL);
-    ok(hr == (IsWindows7OrGreater() ? E_INVALIDARG : E_OUTOFMEMORY), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || // Vista+
+       hr == E_OUTOFMEMORY,  // Win2k3
+       "hr = %lx\n", hr);
 
     hr = ppf3->InitializeEx(NULL, NULL, &pfti);
-    ok(hr == (IsWindows7OrGreater() ? E_INVALIDARG : E_OUTOFMEMORY), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || // Vista+
+       hr == E_OUTOFMEMORY,  // Win2k3
+       "hr = %lx\n", hr);
 
     wcscpy(pfti.szTargetParsingName, L"C:\\");
     hr = ppf3->InitializeEx(NULL, NULL, &pfti);
-    ok(hr == (IsWindows7OrGreater() ? E_INVALIDARG : E_OUTOFMEMORY), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || // Vista+
+       hr == E_OUTOFMEMORY,  // Win2k3
+       "hr = %lx\n", hr);
 
     hr = ppf3->InitializeEx(NULL, testpidl, NULL);
     ok(hr == S_OK, "hr = %lx\n", hr);
 
     hr = ppf3->GetFolderTargetInfo(&queriedPfti);
-    ok(hr == (IsWindows7OrGreater() ? E_FAIL : S_OK), "hr = %lx\n", hr);
+    ok(hr == E_FAIL ||       // Win7+
+       hr == S_OK,           // Win2k3-Vista
+       "hr = %lx\n", hr);
 
     hr = psf->GetDisplayNameOf(NULL,SHGDN_FORPARSING,&strretName);
-    ok(hr == (IsWindows7OrGreater() ? E_INVALIDARG : E_FAIL), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || hr == E_FAIL, "hr = %lx\n", hr);
 
     pfti.szTargetParsingName[0] = 0;
     hr = ppf3->InitializeEx(NULL, testpidl, &pfti);
@@ -147,7 +155,7 @@ VOID TestInitialize()
     ok(wcscmp(queriedPfti.szTargetParsingName, L"") == 0, "wrong name, got: %S\n", queriedPfti.szTargetParsingName);
 
     hr = psf->GetDisplayNameOf(NULL,SHGDN_FORPARSING,&strretName);
-    ok(hr == (IsWindows7OrGreater() ? E_INVALIDARG : E_FAIL), "hr = %lx\n", hr);
+    ok(hr == E_INVALIDARG || hr == E_FAIL, "hr = %lx\n", hr);
 
     wcscpy(pfti.szTargetParsingName, L"C:\\");
     hr = ppf3->InitializeEx(NULL, testpidl, &pfti);

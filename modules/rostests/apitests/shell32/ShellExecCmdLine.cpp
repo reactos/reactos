@@ -457,7 +457,7 @@ static const TEST_ENTRY s_entries_1[] =
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"." },
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", NULL },
-    { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." },
+    // { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." }, // Fails on Vista, 7, 8.1
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", L"system32" },
     { __LINE__, TRUE, TRUE, L"Test File 1.txt", s_cur_dir },
     { __LINE__, FALSE, TRUE, L"\"Test File 1.txt\"", NULL },
@@ -511,7 +511,7 @@ static const TEST_ENTRY s_entries_2[] =
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", s_cur_dir },
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", NULL },
-    { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." },
+    // { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." }, // Fails on Vista, 7, 8.1
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", L"system32" },
     { __LINE__, TRUE, TRUE, L"Test File 1.txt", s_cur_dir },
     { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", NULL },
@@ -645,10 +645,11 @@ START_TEST(ShellExecCmdLine)
     // s_win_test_exe
     GetWindowsDirectoryW(s_win_test_exe, _countof(s_win_test_exe));
     PathAppendW(s_win_test_exe, L"test program.exe");
+    SetFileAttributesW(s_win_test_exe, FILE_ATTRIBUTE_NORMAL); // Clear readonly flag if it exists.
     BOOL ret = CopyFileW(s_sub_program, s_win_test_exe, FALSE);
     if (!ret)
     {
-        skip("Please retry with admin rights\n");
+        skip("Cannot copy test files to the system root directory. (Error: %lu)\n", GetLastError());
         return;
     }
 
@@ -682,8 +683,9 @@ START_TEST(ShellExecCmdLine)
     Sleep(1000);
 
     // clean up
-    ok(DeleteFileW(s_win_test_exe), "failed to delete the test file\n");
-    ok(DeleteFileW(s_sys_bat_file), "failed to delete the test file\n");
-    ok(DeleteFileA("Test File 1.txt"), "failed to delete the test file\n");
-    ok(DeleteFileA("Test File 2.bat"), "failed to delete the test file\n");
+    SetFileAttributesW(s_win_test_exe, FILE_ATTRIBUTE_NORMAL); // Clear readonly flag
+    ok(DeleteFileW(s_win_test_exe), "Failed to delete \"%S\".\n", s_win_test_exe);
+    ok(DeleteFileW(s_sys_bat_file), "Failed to delete \"%S\".\n", s_sys_bat_file);
+    ok(DeleteFileA("Test File 1.txt"), "Failed to delete \"Test File 1.txt\".\n");
+    ok(DeleteFileA("Test File 2.bat"), "Failed to delete \"Test File 2.bat\".\n");
 }

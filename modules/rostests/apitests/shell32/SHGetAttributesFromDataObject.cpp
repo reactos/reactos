@@ -13,10 +13,11 @@
 
 
 static CLIPFORMAT g_DataObjectAttributes = 0;
-static const DWORD dwDefaultAttributeMask = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_STORAGE | SFGAO_CANRENAME | SFGAO_CANDELETE |
-                                     SFGAO_READONLY | SFGAO_STREAM | SFGAO_FOLDER;
+static const DWORD dwDefaultAttributeMask = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_STORAGE | SFGAO_CANRENAME |
+                                            SFGAO_CANDELETE | SFGAO_READONLY | SFGAO_STREAM | SFGAO_FOLDER;
 static_assert(dwDefaultAttributeMask == 0x2044003B, "Unexpected default attribute mask");
-
+static const DWORD dwDefaultAttributeMask_WS03 = dwDefaultAttributeMask | SFGAO_FILESYSTEM | SFGAO_CAPABILITYMASK;
+static_assert(dwDefaultAttributeMask_WS03 == 0x6044017F, "Unexpected default attribute mask for WS03, Vista");
 
 struct TmpFile
 {
@@ -132,7 +133,10 @@ static void test_AttributesRegistration()
         hr = spFolder->GetAttributesOf(1, &child, &attributes);
         ok_hr_ret(hr, S_OK);
 
-        attributes &= dwDefaultAttributeMask;
+        if (GetNTVersion() <= _WIN32_WINNT_VISTA)
+            attributes &= dwDefaultAttributeMask_WS03;
+        else
+            attributes &= dwDefaultAttributeMask;
     }
 
     CComHeapPtr<ITEMIDLIST> parent(ILClone(spPath));
@@ -144,7 +148,7 @@ static void test_AttributesRegistration()
     ok_hr_ret(hr, S_OK);
 
     /* Not registered yet */
-    ok_attributes(spDataObject, DV_E_FORMATETC, 0, 0, 0);
+    ok_attributes(spDataObject, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? DV_E_FORMATETC : E_INVALIDARG, 0, 0, 0);
 
     /* Ask for attributes, without specifying any */
     DWORD dwAttributeMask = 0, dwAttributes = 0;
@@ -227,10 +231,20 @@ static void test_MultipleFiles()
         ok_hr(hr, S_OK);
 
         // Ignore any non-default attributes
-        attributes_first &= dwDefaultAttributeMask;
-        attributes2 &= dwDefaultAttributeMask;
-        attributes3 &= dwDefaultAttributeMask;
-        attributes_last &= dwDefaultAttributeMask;
+        if (GetNTVersion() <= _WIN32_WINNT_VISTA)
+        {
+            attributes_first &= dwDefaultAttributeMask_WS03;
+            attributes2 &= dwDefaultAttributeMask_WS03;
+            attributes3 &= dwDefaultAttributeMask_WS03;
+            attributes_last &= dwDefaultAttributeMask_WS03;
+        }
+        else
+        {
+            attributes_first &= dwDefaultAttributeMask;
+            attributes2 &= dwDefaultAttributeMask;
+            attributes3 &= dwDefaultAttributeMask;
+            attributes_last &= dwDefaultAttributeMask;
+        }
     }
 
     // Only 'single' files have the stream attribute set

@@ -94,17 +94,16 @@ START_TEST(SHShouldShowWizards)
 
     CDummyClass dummy;
     HRESULT hr;
-    const BOOL bVistaPlus = IsWindowsVistaOrGreater();
 
     state.fWebView = FALSE;
     SHGetSetSettings(&state, SSF_WEBVIEW, TRUE);
     SetShowWizardsTEST(FALSE);
     hr = SHShouldShowWizards(dummy.GetUnknown());
-    ok_hex(hr, bVistaPlus ? S_FALSE : S_OK);
+    ok_hex(hr, (GetNTVersion() >= _WIN32_WINNT_WIN8) ? S_FALSE : S_OK);
 
     SetShowWizardsTEST(TRUE);
     hr = SHShouldShowWizards(dummy.GetUnknown());
-    ok_hex(hr, bVistaPlus ? S_FALSE : S_OK);
+    ok_hex(hr, (GetNTVersion() >= _WIN32_WINNT_WIN8) ? S_FALSE : S_OK);
 
     state.fWebView = TRUE;
     SHGetSetSettings(&state, SSF_WEBVIEW, TRUE);
@@ -114,7 +113,7 @@ START_TEST(SHShouldShowWizards)
 
     SetShowWizardsTEST(TRUE);
     hr = SHShouldShowWizards(dummy.GetUnknown());
-    ok_hex(hr, bVistaPlus ? S_FALSE : S_OK);
+    ok_hex(hr, (GetNTVersion() >= _WIN32_WINNT_WIN7) ? S_FALSE : S_OK);
 
     // Restore old values
     state.fWebView = bOldWebView;

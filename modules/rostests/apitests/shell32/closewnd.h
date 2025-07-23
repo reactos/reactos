@@ -10,18 +10,6 @@
 #define WaitForWindow(hWnd, Func, Seconds) \
     for (UINT waited = 0; !Func(hWnd) && waited < (Seconds) * 1000; waited += 250) Sleep(250);
 
-static BOOL WaitForForegroundWindow(HWND hWnd, UINT wait = 500)
-{
-    for (UINT waited = 0, interval = 50; waited < wait; waited += interval)
-    {
-        if (GetForegroundWindow() == hWnd)
-            return TRUE;
-        if (IsWindowVisible(hWnd))
-            Sleep(interval);
-    }
-    return FALSE;
-}
-
 typedef struct WINDOW_LIST
 {
     SIZE_T m_chWnds;
@@ -87,17 +75,6 @@ static inline HWND FindInWindowList(const WINDOW_LIST &list, HWND hWnd)
     return NULL;
 }
 
-static inline BOOL SendAltF4Input()
-{
-    INPUT inputs[4];
-    ZeroMemory(&inputs, sizeof(inputs));
-    inputs[0].type = inputs[1].type = inputs[2].type = inputs[3].type = INPUT_KEYBOARD;
-    inputs[0].ki.wVk = inputs[3].ki.wVk = VK_LMENU;
-    inputs[1].ki.wVk = inputs[2].ki.wVk = VK_F4;
-    inputs[2].ki.dwFlags = inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
-    return SendInput(_countof(inputs), inputs, sizeof(INPUT)) == _countof(inputs);
-}
-
 static inline VOID CloseNewWindows(PWINDOW_LIST pExisting, PWINDOW_LIST pNew)
 {
     for (SIZE_T i = 0; i < pNew->m_chWnds; ++i)
@@ -106,25 +83,9 @@ static inline VOID CloseNewWindows(PWINDOW_LIST pExisting, PWINDOW_LIST pNew)
         if (!IsWindowVisible(hWnd) || FindInWindowList(*pExisting, hWnd))
             continue;
 
-        SwitchToThisWindow(hWnd, TRUE);
-        WaitForForegroundWindow(hWnd); // SetForegroundWindow may take some time
-        DWORD_PTR result;
-        if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG, 3000, &result) &&
-            !PostMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
-        {
-            if (WaitForForegroundWindow(hWnd)) // We can't fake keyboard input if the target is not foreground
-            {
-                SendAltF4Input();
-                WaitForWindow(hWnd, IsWindowVisible, 1); // Closing a window may take some time
-            }
-
-            if (IsWindowVisible(hWnd))
-            {
-                CHAR szClass[64];
-                GetClassNameA(hWnd, szClass, _countof(szClass));
-                trace("Unable to close window %p (%s)\n", hWnd, szClass);
-            }
-        }
+        if (!SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, 3000, NULL))
+            PostMessageW(hWnd, WM_CLOSE, 0, 0);
+        /* If this window is still open, you'll need TerminateProcess(). */
     }
 }
 
