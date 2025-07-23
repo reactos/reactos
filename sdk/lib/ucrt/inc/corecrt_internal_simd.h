@@ -19,22 +19,27 @@
 #if defined _CRT_SIMD_SUPPORT_AVAILABLE
 
 #if defined(__clang__)
-#define _UCRT_ENABLE_EXTENDED_ISA \
+#define _UCRT_ENABLE_SSE2 \
+    _Pragma("clang attribute push(__attribute__((target(\"sse2\"))), apply_to=function)")
+#define _UCRT_ENABLE_AVX2 \
     _Pragma("clang attribute push(__attribute__((target(\"sse2,avx,avx2\"))), apply_to=function)")
 #define _UCRT_RESTORE_DEFAULT_ISA \
     _Pragma("clang attribute pop")
 #elif defined(__GNUC__)
-#define _UCRT_ENABLE_EXTENDED_ISA \
+#define _UCRT_ENABLE_SSE2 \
+    _Pragma("GCC push_options") \
+    _Pragma("GCC target(\"sse2\")")
+#define _UCRT_ENABLE_AVX2 \
     _Pragma("GCC push_options") \
     _Pragma("GCC target(\"avx2\")")
 #define _UCRT_RESTORE_DEFAULT_ISA \
     _Pragma("GCC pop_options")
 #else
-#define _UCRT_ENABLE_EXTENDED_ISA
+#define _UCRT_ENABLE_SSE2
+#define _UCRT_ENABLE_AVX2
 #define _UCRT_RESTORE_DEFAULT_ISA
 #endif
 
-_UCRT_ENABLE_EXTENDED_ISA
 
     extern "C" int __isa_available;
 
@@ -70,6 +75,7 @@ _UCRT_ENABLE_EXTENDED_ISA
     };
 
 
+_UCRT_ENABLE_SSE2
 
     template <>
     struct __crt_simd_cleanup_guard<__crt_simd_isa::sse2>
@@ -120,7 +126,9 @@ _UCRT_ENABLE_EXTENDED_ISA
         }
     };
 
+_UCRT_RESTORE_DEFAULT_ISA
 
+_UCRT_ENABLE_AVX2
 
     template <>
     struct __crt_simd_cleanup_guard<__crt_simd_isa::avx2>
