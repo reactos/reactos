@@ -56,7 +56,7 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
     PMONITOR pMonitor;
 
     if (!Window || !(Window->style & WS_VISIBLE) || (Window->style & WS_CHILD) ||
-        (Window->ExStyle & WS_EX_TOOLWINDOW) || !IntGetWindowRect(Window, &rclWindow))
+        !IntGetWindowRect(Window, &rclWindow))
     {
         return FALSE;
     }
