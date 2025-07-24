@@ -368,11 +368,6 @@ IntEngGradientFillTriangle(
         return FALSE;
     }
 
-    DPRINT("VCMPCLR for Red is %d\n", VCMPCLR(v1, v2, v3,Red));
-    DPRINT("VCMPCLR for Green is %d\n", VCMPCLR(v1, v2, v3,Green));
-    DPRINT("VCMPCLR for Blue is %d\n", VCMPCLR(v1, v2, v3,Blue));
-    DPRINT("VCMPCLRS is %d\n", VCMPCLRS(v1,v2,v3));
-
     if (VCMPCLRS(v1, v2, v3))
     {
       CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
