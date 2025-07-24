@@ -11,6 +11,8 @@
 #include <winsock2.h>
 #include <strsafe.h>
 
+#define STATUS_PENDING ((DWORD)0x00000103)
+
 /*
 ** macro definitions
 */
