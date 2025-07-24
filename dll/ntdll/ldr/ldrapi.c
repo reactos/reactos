@@ -1576,9 +1576,6 @@ LdrProcessRelocationBlock(
     return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
 
-/* FIXME: Add to ntstatus.mc */
-#define STATUS_MUI_FILE_NOT_FOUND        ((NTSTATUS)0xC00B0001L)
-
 /*
  * @implemented
  */
