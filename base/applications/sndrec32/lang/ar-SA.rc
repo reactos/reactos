@@ -1,0 +1,68 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "&ملف"
+    BEGIN
+        MENUITEM "&جديد", ID_FILE_NEW
+        MENUITEM "&فتح...", ID_FILE_OPEN
+        MENUITEM "&حفظ", ID_FILE_SAVE, GRAYED
+        MENUITEM "حفظ &باسم...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "ا&ستعادة...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "خ&صائص", ID_FILE_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "خ&روج", ID_FILE_EXIT
+    END
+    POPUP "ت&حرير"
+    BEGIN
+        MENUITEM "&نسخ", ID_EDIT_COPY
+        MENUITEM "&لصق إدراج", ID_EDIT_PASTE, GRAYED
+        MENUITEM "لصق م&زج", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "إ&دراج ملف...", ID_EDIT_INSERTFILE
+        MENUITEM "م&زج مع ملف...", ID_EDIT_MIXFILE
+        MENUITEM SEPARATOR
+        MENUITEM "حذف &قبل الموضع الحالي", ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "حذف &بعد الموضع الحالي", ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "خصائص ال&صوت", ID_EDIT_AUDIOPROPS
+    END
+    POPUP "تأ&ثيرات"
+    BEGIN
+        MENUITEM "&زيادة مستوى الصوت (بنسبة 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "خ&فض مستوى الصوت", ID_EFFECTS_DECVOL
+        MENUITEM SEPARATOR
+        MENUITEM "زيادة ال&سرعة (بنسبة 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "خفض ال&سرعة", ID_EFFECTS_DECSPD
+        MENUITEM SEPARATOR
+        MENUITEM "إ&ضافة صدى", ID_EFFECTS_ECHO
+        MENUITEM "&عكس", ID_EFFECTS_REVERSE
+    END
+    POPUP "م&ساعدة"
+    BEGIN
+        MENUITEM "&حول", ID_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "مسجل الصوت"
+    IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STRPOS "الموضع: %.2f ث"
+    IDS_STRDUR "المدة: %.2f ث"
+    IDS_STRBUF "المخزن المؤقت: %.2f ك.ب"
+    IDS_STRFMT "%.1f ك.هرتز %u بت"
+    IDS_STRMONO "أحادي"
+    IDS_STRSTEREO "ستيريو"
+    IDS_STRCHAN "%s"
+END 
