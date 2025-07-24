@@ -40,6 +40,7 @@
 #define MODE "\x01"
 
 #define HANDSHAKE_TIMEOUT (3)
+#define STATUS_PENDING ((DWORD)0x00000103)
 
 /*
 ** types

@@ -4,10 +4,8 @@
 #ifndef _THREADPOOLAPISET_H_
 #define _THREADPOOLAPISET_H_
 
-#include <windef.h> // FIXME: use minwindef.h
-
-// HACK: we should include minwinbase.h, but we don't have that
-typedef struct _CRITICAL_SECTION *PCRITICAL_SECTION;
+#include <minwindef.h>
+#include <minwinbase.h>
 
 #ifdef __cplusplus
 extern "C" {
