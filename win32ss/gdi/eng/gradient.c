@@ -416,7 +416,6 @@ IntEngGradientFillTriangle(
     }
 
     /* fill triangle with one solid color */
-    DPRINT("Using Solid Color Logic\n");
 
     Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red >> 8, v1->Green >> 8, v1->Blue >> 8));
     CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
