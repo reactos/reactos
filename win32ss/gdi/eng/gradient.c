@@ -18,12 +18,12 @@ const LONG LINC[2] = {-1, 1};
 #define VERTEX(n) (pVertex + gt->n)
 #define COMPAREVERTEX(a, b) ((a)->x == (b)->x && (a)->y == (b)->y)
 
-/* Check if all three vectors are the same color, either R, G, or B */
-#define VCMPCLR(a,b,c,color) (a->color == b->color && a->color == c->color)
+/* Check if all three vectors have the same color, either R, G, or B */
+#define VCMPCLR(a, b, c, color) (a->color == b->color && a->color == c->color)
 /* Check if all three vectors have the same colors for R, G, and B, then
- * NOT the results because we want to check for not using solid color logic */
-#define VCMPCLRS(a,b,c) \
-  !(VCMPCLR(a,b,c,Red) && VCMPCLR(a,b,c,Green) && VCMPCLR(a,b,c,Blue))
+ * NOT the result because we want to check for not using solid color logic */
+#define VCMPCLRS(a, b, c) \
+  !(VCMPCLR(a, b, c, Red) && VCMPCLR(a, b, c, Green) && VCMPCLR(a, b, c, Blue))
 
 /* Horizontal/Vertical gradients */
 #define HVINITCOL(Col, id) \
