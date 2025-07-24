@@ -260,6 +260,8 @@ IntEngGradientFillRect(
     { \
       Color = XLATEOBJ_iXlate(pxlo, RGB(gc[0], gc[1], gc[2])); \
       DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_PutPixel(psoOutput, g, sy, Color); \
+/* HACK: The line below is necessary to fill some gaps but should not be needed */ \
+      DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_PutPixel(psoOutput, g - 1, sy, Color); \
     } \
     FDOCOL(linefrom, lineto, 0); \
     FDOCOL(linefrom, lineto, 1); \
