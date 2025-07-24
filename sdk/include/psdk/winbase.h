@@ -17,6 +17,7 @@ extern "C" {
 #define WINBASEAPI
 #endif
 
+#include <minwinbase.h>
 #include <libloaderapi.h>
 #include <sysinfoapi.h>
 #include <threadpoolapiset.h>
@@ -107,15 +108,6 @@ extern "C" {
 #define PARITY_EVEN	1024
 #define PARITY_MARK	2048
 #define PARITY_SPACE	4096
-#define EXCEPTION_DEBUG_EVENT	1
-#define CREATE_THREAD_DEBUG_EVENT	2
-#define CREATE_PROCESS_DEBUG_EVENT	3
-#define EXIT_THREAD_DEBUG_EVENT	4
-#define EXIT_PROCESS_DEBUG_EVENT	5
-#define LOAD_DLL_DEBUG_EVENT	6
-#define UNLOAD_DLL_DEBUG_EVENT	7
-#define OUTPUT_DEBUG_STRING_EVENT	8
-#define RIP_EVENT	9
 #define HFILE_ERROR ((HFILE)-1)
 #define FILE_BEGIN	0
 #define FILE_CURRENT	1
@@ -263,9 +255,6 @@ extern "C" {
 #define RESETDEV 7
 #define SETBREAK 8
 #define CLRBREAK 9
-#define STILL_ACTIVE 0x103
-#define FIND_FIRST_EX_CASE_SENSITIVE 1
-#define FIND_FIRST_EX_LARGE_FETCH 2
 #define SCS_32BIT_BINARY 0
 #define SCS_64BIT_BINARY 6
 #define SCS_DOS_BINARY 1
@@ -341,34 +330,6 @@ extern "C" {
 #define GMEM_INVALID_HANDLE 32768
 #define GMEM_LOCKCOUNT 255
 #define GMEM_VALID_FLAGS 32626
-#define EXCEPTION_ACCESS_VIOLATION ((DWORD)0xC0000005)
-#define EXCEPTION_DATATYPE_MISALIGNMENT ((DWORD)0x80000002)
-#define EXCEPTION_BREAKPOINT ((DWORD)0x80000003)
-#define EXCEPTION_SINGLE_STEP ((DWORD)0x80000004)
-#define EXCEPTION_ARRAY_BOUNDS_EXCEEDED ((DWORD)0xC000008C)
-#define EXCEPTION_FLT_DENORMAL_OPERAND ((DWORD)0xC000008D)
-#define EXCEPTION_FLT_DIVIDE_BY_ZERO ((DWORD)0xC000008E)
-#define EXCEPTION_FLT_INEXACT_RESULT ((DWORD)0xC000008F)
-#define EXCEPTION_FLT_INVALID_OPERATION ((DWORD)0xC0000090)
-#define EXCEPTION_FLT_OVERFLOW ((DWORD)0xC0000091)
-#define EXCEPTION_FLT_STACK_CHECK ((DWORD)0xC0000092)
-#define EXCEPTION_FLT_UNDERFLOW ((DWORD)0xC0000093)
-#define EXCEPTION_INT_DIVIDE_BY_ZERO ((DWORD)0xC0000094)
-#define EXCEPTION_INT_OVERFLOW ((DWORD)0xC0000095)
-#define EXCEPTION_PRIV_INSTRUCTION ((DWORD)0xC0000096)
-#define EXCEPTION_IN_PAGE_ERROR ((DWORD)0xC0000006)
-#define EXCEPTION_ILLEGAL_INSTRUCTION ((DWORD)0xC000001D)
-#define EXCEPTION_NONCONTINUABLE_EXCEPTION ((DWORD)0xC0000025)
-#define EXCEPTION_STACK_OVERFLOW ((DWORD)0xC00000FD)
-#define EXCEPTION_INVALID_DISPOSITION ((DWORD)0xC0000026)
-#define EXCEPTION_GUARD_PAGE ((DWORD)0x80000001)
-#define EXCEPTION_INVALID_HANDLE ((DWORD)0xC0000008L)
-#define CONTROL_C_EXIT ((DWORD)0xC000013A)
-#define PROCESS_HEAP_REGION 1
-#define PROCESS_HEAP_UNCOMMITTED_RANGE 2
-#define PROCESS_HEAP_ENTRY_BUSY 4
-#define PROCESS_HEAP_ENTRY_MOVEABLE 16
-#define PROCESS_HEAP_ENTRY_DDESHARE 32
 
 // LoadLibraryEx() dwFlags.
 #define DONT_RESOLVE_DLL_REFERENCES                 0x00000001
@@ -398,25 +359,6 @@ extern "C" {
 #define LOAD_LIBRARY_OS_INTEGRITY_CONTINUITY        0x00008000
 #endif // NTDDI_WIN10_RS2
 
-#define LMEM_FIXED 0
-#define LMEM_MOVEABLE 2
-#define LMEM_NONZEROLHND 2
-#define LMEM_NONZEROLPTR 0
-#define LMEM_DISCARDABLE 3840
-#define LMEM_NOCOMPACT 16
-#define LMEM_NODISCARD 32
-#define LMEM_ZEROINIT 64
-#define LMEM_DISCARDED 16384
-#define LMEM_MODIFY 128
-#define LMEM_INVALID_HANDLE 32768
-#define LMEM_LOCKCOUNT 255
-#define LMEM_VALID_FLAGS 0x0F72
-#define LPTR 64
-#define LHND 66
-#define NONZEROLHND 2
-#define NONZEROLPTR 0
-#define LOCKFILE_FAIL_IMMEDIATELY 1
-#define LOCKFILE_EXCLUSIVE_LOCK 2
 #define LOGON32_PROVIDER_DEFAULT	0
 #define LOGON32_PROVIDER_WINNT35	1
 #define LOGON32_PROVIDER_WINNT40	2
@@ -656,14 +598,6 @@ extern "C" {
 
 #ifndef RC_INVOKED
 
-#ifndef _FILETIME_
-#define _FILETIME_
-typedef struct _FILETIME {
-	DWORD dwLowDateTime;
-	DWORD dwHighDateTime;
-} FILETIME,*PFILETIME,*LPFILETIME;
-#endif
-
 typedef struct _BY_HANDLE_FILE_INFORMATION {
 	DWORD	dwFileAttributes;
 	FILETIME	ftCreationTime;
@@ -761,106 +695,10 @@ typedef struct _COMSTAT {
 	DWORD cbOutQue;
 } COMSTAT,*LPCOMSTAT;
 
-typedef DWORD (WINAPI *LPTHREAD_START_ROUTINE)(LPVOID);
-
-typedef struct _CREATE_PROCESS_DEBUG_INFO {
-	HANDLE hFile;
-	HANDLE hProcess;
-	HANDLE hThread;
-	LPVOID lpBaseOfImage;
-	DWORD dwDebugInfoFileOffset;
-	DWORD nDebugInfoSize;
-	LPVOID lpThreadLocalBase;
-	LPTHREAD_START_ROUTINE lpStartAddress;
-	LPVOID lpImageName;
-	WORD fUnicode;
-} CREATE_PROCESS_DEBUG_INFO,*LPCREATE_PROCESS_DEBUG_INFO;
-
-typedef struct _CREATE_THREAD_DEBUG_INFO {
-	HANDLE hThread;
-	LPVOID lpThreadLocalBase;
-	LPTHREAD_START_ROUTINE lpStartAddress;
-} CREATE_THREAD_DEBUG_INFO,*LPCREATE_THREAD_DEBUG_INFO;
-
-typedef struct _EXCEPTION_DEBUG_INFO {
-	EXCEPTION_RECORD ExceptionRecord;
-	DWORD dwFirstChance;
-} EXCEPTION_DEBUG_INFO,*LPEXCEPTION_DEBUG_INFO;
-
-typedef struct _EXIT_THREAD_DEBUG_INFO {
-	DWORD dwExitCode;
-} EXIT_THREAD_DEBUG_INFO,*LPEXIT_THREAD_DEBUG_INFO;
-
-typedef struct _EXIT_PROCESS_DEBUG_INFO {
-	DWORD dwExitCode;
-} EXIT_PROCESS_DEBUG_INFO,*LPEXIT_PROCESS_DEBUG_INFO;
-
-typedef struct _LOAD_DLL_DEBUG_INFO {
-	HANDLE hFile;
-	LPVOID lpBaseOfDll;
-	DWORD dwDebugInfoFileOffset;
-	DWORD nDebugInfoSize;
-	LPVOID lpImageName;
-	WORD fUnicode;
-} LOAD_DLL_DEBUG_INFO,*LPLOAD_DLL_DEBUG_INFO;
-
-typedef struct _UNLOAD_DLL_DEBUG_INFO {
-	LPVOID lpBaseOfDll;
-} UNLOAD_DLL_DEBUG_INFO,*LPUNLOAD_DLL_DEBUG_INFO;
-
-typedef struct _OUTPUT_DEBUG_STRING_INFO {
-	LPSTR lpDebugStringData;
-	WORD fUnicode;
-	WORD nDebugStringLength;
-} OUTPUT_DEBUG_STRING_INFO,*LPOUTPUT_DEBUG_STRING_INFO;
-
-typedef struct _RIP_INFO {
-	DWORD dwError;
-	DWORD dwType;
-} RIP_INFO,*LPRIP_INFO;
-
-typedef struct _DEBUG_EVENT {
-	DWORD dwDebugEventCode;
-	DWORD dwProcessId;
-	DWORD dwThreadId;
-	union {
-		EXCEPTION_DEBUG_INFO Exception;
-		CREATE_THREAD_DEBUG_INFO CreateThread;
-		CREATE_PROCESS_DEBUG_INFO CreateProcessInfo;
-		EXIT_THREAD_DEBUG_INFO ExitThread;
-		EXIT_PROCESS_DEBUG_INFO ExitProcess;
-		LOAD_DLL_DEBUG_INFO LoadDll;
-		UNLOAD_DLL_DEBUG_INFO UnloadDll;
-		OUTPUT_DEBUG_STRING_INFO DebugString;
-		RIP_INFO RipInfo;
-	} u;
-} DEBUG_EVENT,*LPDEBUG_EVENT;
-
 #ifndef MIDL_PASS
-typedef PCONTEXT LPCONTEXT;
 typedef PEXCEPTION_RECORD LPEXCEPTION_RECORD;
 typedef PEXCEPTION_POINTERS LPEXCEPTION_POINTERS;
 #endif
-
-typedef struct _OVERLAPPED {
-	ULONG_PTR Internal;
-	ULONG_PTR InternalHigh;
-	union {
-		struct {
-			DWORD Offset;
-			DWORD OffsetHigh;
-		} DUMMYSTRUCTNAME;
-		PVOID Pointer;
-	} DUMMYUNIONNAME;
-	HANDLE hEvent;
-} OVERLAPPED, *POVERLAPPED, *LPOVERLAPPED;
-
-typedef struct _OVERLAPPED_ENTRY {
-    ULONG_PTR lpCompletionKey;
-    LPOVERLAPPED lpOverlapped;
-    ULONG_PTR Internal;
-    DWORD dwNumberOfBytesTransferred;
-} OVERLAPPED_ENTRY, *LPOVERLAPPED_ENTRY;
 
 typedef struct _STARTUPINFOA {
 	DWORD	cb;
@@ -911,48 +749,6 @@ typedef struct _PROCESS_INFORMATION {
 	DWORD dwThreadId;
 } PROCESS_INFORMATION,*PPROCESS_INFORMATION,*LPPROCESS_INFORMATION;
 
-typedef struct _CRITICAL_SECTION_DEBUG {
-	WORD Type;
-	WORD CreatorBackTraceIndex;
-	struct _CRITICAL_SECTION *CriticalSection;
-	LIST_ENTRY ProcessLocksList;
-	DWORD EntryCount;
-	DWORD ContentionCount;
-    union
-    {
-        DWORD_PTR WineDebugString;
-        DWORD_PTR Spare[1];
-        struct
-        {
-            DWORD Flags;
-            WORD CreatorBackTraceIndexHigh;
-            WORD SpareWORD;
-        };
-    };
-} CRITICAL_SECTION_DEBUG,*PCRITICAL_SECTION_DEBUG,*LPCRITICAL_SECTION_DEBUG;
-
-typedef struct _CRITICAL_SECTION {
-	PCRITICAL_SECTION_DEBUG DebugInfo;
-	LONG LockCount;
-	LONG RecursionCount;
-	HANDLE OwningThread;
-	HANDLE LockSemaphore;
-	ULONG_PTR SpinCount;
-} CRITICAL_SECTION,*PCRITICAL_SECTION,*LPCRITICAL_SECTION;
-
-#ifndef _SYSTEMTIME_
-#define _SYSTEMTIME_
-typedef struct _SYSTEMTIME {
-	WORD wYear;
-	WORD wMonth;
-	WORD wDayOfWeek;
-	WORD wDay;
-	WORD wHour;
-	WORD wMinute;
-	WORD wSecond;
-	WORD wMilliseconds;
-} SYSTEMTIME,*LPSYSTEMTIME,*PSYSTEMTIME;
-#endif /* _SYSTEMTIME_ */
 #if (_WIN32_WINNT >= 0x0500)
 typedef WAITORTIMERCALLBACKFUNC WAITORTIMERCALLBACK ;
 #endif
@@ -964,30 +760,6 @@ typedef struct _WIN32_FILE_ATTRIBUTE_DATA {
 	DWORD	nFileSizeHigh;
 	DWORD	nFileSizeLow;
 } WIN32_FILE_ATTRIBUTE_DATA,*LPWIN32_FILE_ATTRIBUTE_DATA;
-typedef struct _WIN32_FIND_DATAA {
-	DWORD dwFileAttributes;
-	FILETIME ftCreationTime;
-	FILETIME ftLastAccessTime;
-	FILETIME ftLastWriteTime;
-	DWORD nFileSizeHigh;
-	DWORD nFileSizeLow;
-	DWORD dwReserved0;
-	DWORD dwReserved1;
-	CHAR cFileName[MAX_PATH];
-	CHAR cAlternateFileName[14];
-} WIN32_FIND_DATAA,*PWIN32_FIND_DATAA,*LPWIN32_FIND_DATAA;
-typedef struct _WIN32_FIND_DATAW {
-	DWORD dwFileAttributes;
-	FILETIME ftCreationTime;
-	FILETIME ftLastAccessTime;
-	FILETIME ftLastWriteTime;
-	DWORD nFileSizeHigh;
-	DWORD nFileSizeLow;
-	DWORD dwReserved0;
-	DWORD dwReserved1;
-	WCHAR cFileName[MAX_PATH];
-	WCHAR cAlternateFileName[14];
-} WIN32_FIND_DATAW,*PWIN32_FIND_DATAW,*LPWIN32_FIND_DATAW;
 
 #if (_WIN32_WINNT >= 0x0501)
 typedef enum _STREAM_INFO_LEVELS {
@@ -1025,43 +797,6 @@ typedef struct _FILE_ID_DESCRIPTOR {
         GUID          ObjectId;
     } DUMMYUNIONNAME;
 } FILE_ID_DESCRIPTOR, *LPFILE_ID_DESCRIPTOR;
-
-#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
-typedef enum _FILE_INFO_BY_HANDLE_CLASS {
-    FileBasicInfo,
-    FileStandardInfo,
-    FileNameInfo,
-    FileRenameInfo,
-    FileDispositionInfo,
-    FileAllocationInfo,
-    FileEndOfFileInfo,
-    FileStreamInfo,
-    FileCompressionInfo,
-    FileAttributeTagInfo,
-    FileIdBothDirectoryInfo,
-    FileIdBothDirectoryRestartInfo,
-    FileIoPriorityHintInfo,
-    FileRemoteProtocolInfo,
-    FileFullDirectoryInfo,
-    FileFullDirectoryRestartInfo,
-#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
-    FileStorageInfo,
-    FileAlignmentInfo,
-    FileIdInfo,
-    FileIdExtdDirectoryInfo,
-    FileIdExtdDirectoryRestartInfo,
-#endif
-#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
-    FileDispositionInfoEx,
-    FileRenameInfoEx,
-#endif
-#if (NTDDI_VERSION >= NTDDI_WIN10_19H1) || defined(__REACTOS__)
-    FileCaseSensitiveInfo,
-    FileNormalizedNameInfo,
-#endif
-    MaximumFileInfoByHandleClass
-} FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
-#endif
 
 typedef struct _FILE_ID_BOTH_DIR_INFO {
     DWORD         NextEntryOffset;
@@ -1165,18 +900,7 @@ typedef struct _FILE_REMOTE_PROTOCOL_INFO {
 
 #endif
 
-typedef enum _FINDEX_INFO_LEVELS {
-	FindExInfoStandard,
-	FindExInfoBasic,
-	FindExInfoMaxInfoLevel
-} FINDEX_INFO_LEVELS;
 
-typedef enum _FINDEX_SEARCH_OPS {
-	FindExSearchNameMatch,
-	FindExSearchLimitToDirectories,
-	FindExSearchLimitToDevices,
-	FindExSearchMaxSearchOp
-} FINDEX_SEARCH_OPS;
 
 typedef struct tagHW_PROFILE_INFOA {
 	DWORD dwDockInfo;
@@ -1197,11 +921,6 @@ typedef struct tagHW_PROFILE_INFOW {
 typedef struct _EVENTLOG_FULL_INFORMATION {
     DWORD dwFull;
 } EVENTLOG_FULL_INFORMATION, *LPEVENTLOG_FULL_INFORMATION;
-
-typedef enum _GET_FILEEX_INFO_LEVELS {
-	GetFileExInfoStandard,
-	GetFileExMaxInfoLevel
-} GET_FILEEX_INFO_LEVELS;
 
 typedef struct _SYSTEM_INFO {
 	_ANONYMOUS_UNION union {
@@ -1305,26 +1024,6 @@ typedef struct _LDT_ENTRY {
 	} HighWord;
 } LDT_ENTRY,*PLDT_ENTRY,*LPLDT_ENTRY;
 #endif
-
-typedef struct _PROCESS_HEAP_ENTRY {
-	PVOID lpData;
-	DWORD cbData;
-	BYTE cbOverhead;
-	BYTE iRegionIndex;
-	WORD wFlags;
-	_ANONYMOUS_UNION union {
-		struct {
-			HANDLE hMem;
-			DWORD dwReserved[3];
-		} Block;
-		struct {
-			DWORD dwCommittedSize;
-			DWORD dwUnCommittedSize;
-			LPVOID lpFirstBlock;
-			LPVOID lpLastBlock;
-		} Region;
-	} DUMMYUNIONNAME;
-} PROCESS_HEAP_ENTRY,*PPROCESS_HEAP_ENTRY,*LPPROCESS_HEAP_ENTRY;
 
 typedef struct _OFSTRUCT {
 	BYTE cBytes;
@@ -1489,7 +1188,6 @@ typedef BOOL(CALLBACK *ENUMRESNAMEPROCA)(HMODULE,LPCSTR,LPSTR,LONG_PTR);
 typedef BOOL(CALLBACK *ENUMRESNAMEPROCW)(HMODULE,LPCWSTR,LPWSTR,LONG_PTR);
 typedef BOOL(CALLBACK *ENUMRESTYPEPROCA)(HMODULE,LPSTR,LONG_PTR);
 typedef BOOL(CALLBACK *ENUMRESTYPEPROCW)(HMODULE,LPWSTR,LONG_PTR);
-typedef void(CALLBACK *LPOVERLAPPED_COMPLETION_ROUTINE)(DWORD,DWORD,LPOVERLAPPED);
 typedef LONG(CALLBACK *PTOP_LEVEL_EXCEPTION_FILTER)(LPEXCEPTION_POINTERS);
 typedef PTOP_LEVEL_EXCEPTION_FILTER LPTOP_LEVEL_EXCEPTION_FILTER;
 typedef void(APIENTRY *PAPCFUNC)(ULONG_PTR);
@@ -1747,10 +1445,6 @@ BOOL WINAPI CopyFileA(_In_ LPCSTR, _In_ LPCSTR, _In_ BOOL);
 BOOL WINAPI CopyFileW(_In_ LPCWSTR lpExistingFileName, _In_ LPCWSTR lpNewFileName, _In_ BOOL bFailIfExists);
 BOOL WINAPI CopyFileExA(_In_ LPCSTR, _In_ LPCSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_opt_ LPBOOL, _In_ DWORD);
 BOOL WINAPI CopyFileExW(_In_ LPCWSTR, _In_ LPCWSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_opt_ LPBOOL, _In_ DWORD);
-#define MoveMemory RtlMoveMemory
-#define CopyMemory RtlCopyMemory
-#define FillMemory RtlFillMemory
-#define ZeroMemory RtlZeroMemory
 #define SecureZeroMemory RtlSecureZeroMemory
 BOOL WINAPI CopySid(DWORD,PSID,PSID);
 #if (_WIN32_WINNT >= 0x0501)
@@ -2264,8 +1958,8 @@ BOOL WINAPI GetModuleHandleExW(DWORD,LPCWSTR,HMODULE*);
 #endif
 
 #if _WIN32_WINNT >= 0x0502
-WINBASEAPI WINBOOL WINAPI NeedCurrentDirectoryForExePathA(LPCSTR ExeName);
-WINBASEAPI WINBOOL WINAPI NeedCurrentDirectoryForExePathW(LPCWSTR ExeName);
+WINBASEAPI BOOL WINAPI NeedCurrentDirectoryForExePathA(LPCSTR ExeName);
+WINBASEAPI BOOL WINAPI NeedCurrentDirectoryForExePathW(LPCWSTR ExeName);
 #endif
 
 BOOL
@@ -2727,7 +2421,6 @@ DWORD WINAPI LoadModule(_In_ LPCSTR, _In_ PVOID);
 HGLOBAL WINAPI LoadResource(HINSTANCE,HRSRC);
 HLOCAL WINAPI LocalAlloc(UINT,SIZE_T);
 SIZE_T WINAPI LocalCompact(_In_ UINT); /* Obsolete: Has no effect. */
-#define LocalDiscard(m) (LocalReAlloc((m),0,LMEM_MOVEABLE))
 BOOL WINAPI LocalFileTimeToFileTime(CONST FILETIME *,LPFILETIME);
 UINT WINAPI LocalFlags(_In_ HLOCAL); /* Obsolete: Has no effect. */
 HLOCAL WINAPI LocalFree(HLOCAL);
@@ -3549,7 +3242,6 @@ MapUserPhysicalPagesScatter(
 
 #ifdef UNICODE
 typedef STARTUPINFOW STARTUPINFO,*LPSTARTUPINFO;
-typedef WIN32_FIND_DATAW WIN32_FIND_DATA, *PWIN32_FIND_DATA, *LPWIN32_FIND_DATA;
 typedef HW_PROFILE_INFOW HW_PROFILE_INFO,*LPHW_PROFILE_INFO;
 typedef ENUMRESLANGPROCW ENUMRESLANGPROC;
 typedef ENUMRESNAMEPROCW ENUMRESNAMEPROC;
@@ -3758,7 +3450,6 @@ typedef PCACTCTXW PCACTCTX;
 #define WriteProfileString WriteProfileStringW
 #else
 typedef STARTUPINFOA STARTUPINFO,*LPSTARTUPINFO;
-typedef WIN32_FIND_DATAA WIN32_FIND_DATA, *PWIN32_FIND_DATA, *LPWIN32_FIND_DATA;
 typedef HW_PROFILE_INFOA HW_PROFILE_INFO,*LPHW_PROFILE_INFO;
 #if (_WIN32_WINNT >= 0x0501)
 typedef ACTCTXA ACTCTX,*PACTCTX;
