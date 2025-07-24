@@ -18,9 +18,10 @@ extern "C" {
 #endif
 
 #include <minwinbase.h>
-#include <libloaderapi.h>
+#include <ioapiset.h>
 #include <sysinfoapi.h>
 #include <threadpoolapiset.h>
+#include <libloaderapi.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -1396,11 +1397,6 @@ CallNamedPipeW(
   _In_ DWORD nTimeOut);
 
 BOOL WINAPI CancelDeviceWakeupRequest(_In_ HANDLE);
-BOOL WINAPI CancelIo(HANDLE);
-#if (_WIN32_WINNT >= 0x0600)
-BOOL WINAPI CancelIoEx(HANDLE,LPOVERLAPPED);
-BOOL WINAPI CancelSynchronousIo(HANDLE);
-#endif
 BOOL WINAPI CancelWaitableTimer(HANDLE);
 
 #if (_WIN32_WINNT >= 0x0501)
@@ -1473,7 +1469,6 @@ HANDLE WINAPI CreateFileMappingW(HANDLE,LPSECURITY_ATTRIBUTES,DWORD,DWORD,DWORD,
 BOOL WINAPI CreateHardLinkA(_In_ LPCSTR, _In_ LPCSTR, _Reserved_ LPSECURITY_ATTRIBUTES);
 BOOL WINAPI CreateHardLinkW(_In_ LPCWSTR, _In_ LPCWSTR, _Reserved_ LPSECURITY_ATTRIBUTES);
 #endif
-HANDLE WINAPI CreateIoCompletionPort(HANDLE,HANDLE,ULONG_PTR,DWORD);
 #if (_WIN32_WINNT >= 0x0500)
 _Ret_maybenull_ HANDLE WINAPI CreateJobObjectA(_In_opt_ LPSECURITY_ATTRIBUTES, _In_opt_ LPCSTR);
 _Ret_maybenull_ HANDLE WINAPI CreateJobObjectW(_In_opt_ LPSECURITY_ATTRIBUTES, _In_opt_ LPCWSTR);
@@ -1607,7 +1602,6 @@ BOOL WINAPI DeleteVolumeMountPointW(LPCWSTR);
 #endif
 BOOL WINAPI DeregisterEventSource(_In_ HANDLE);
 BOOL WINAPI DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR*);
-BOOL WINAPI DeviceIoControl(HANDLE,DWORD,PVOID,DWORD,PVOID,DWORD,PDWORD,POVERLAPPED);
 BOOL WINAPI DisableThreadLibraryCalls(HMODULE);
 
 #if (_WIN32_WINNT >= 0x0500)
@@ -2000,7 +1994,6 @@ GetEventLogInformation(
 
 BOOL WINAPI GetNumberOfEventLogRecords(_In_ HANDLE, _Out_ PDWORD);
 BOOL WINAPI GetOldestEventLogRecord(_In_ HANDLE, _Out_ PDWORD);
-BOOL WINAPI GetOverlappedResult(HANDLE,LPOVERLAPPED,PDWORD,BOOL);
 DWORD WINAPI GetPriorityClass(HANDLE);
 BOOL WINAPI GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR,DWORD,PDWORD);
 UINT WINAPI GetPrivateProfileIntA(_In_ LPCSTR, _In_ LPCSTR, _In_ INT, _In_opt_ LPCSTR);
@@ -2129,7 +2122,6 @@ GetProfileStringW(
   _Out_writes_to_opt_(nSize, return + 1) LPWSTR lpReturnedString,
   _In_ DWORD nSize);
 
-BOOL WINAPI GetQueuedCompletionStatus(HANDLE,PDWORD,PULONG_PTR,LPOVERLAPPED*,DWORD);
 BOOL WINAPI GetSecurityDescriptorControl(PSECURITY_DESCRIPTOR,PSECURITY_DESCRIPTOR_CONTROL,PDWORD);
 BOOL WINAPI GetSecurityDescriptorDacl(PSECURITY_DESCRIPTOR,LPBOOL,PACL*,LPBOOL);
 BOOL WINAPI GetSecurityDescriptorGroup(PSECURITY_DESCRIPTOR,PSID*,LPBOOL);
@@ -2638,7 +2630,6 @@ HANDLE WINAPI OpenWaitableTimerW(DWORD,BOOL,LPCWSTR);
 WINBASEAPI void WINAPI OutputDebugStringA(LPCSTR);
 WINBASEAPI void WINAPI OutputDebugStringW(LPCWSTR);
 BOOL WINAPI PeekNamedPipe(HANDLE,PVOID,DWORD,PDWORD,PDWORD,PDWORD);
-BOOL WINAPI PostQueuedCompletionStatus(HANDLE,DWORD,ULONG_PTR,LPOVERLAPPED);
 DWORD WINAPI PrepareTape(_In_ HANDLE, _In_ DWORD, _In_ BOOL);
 BOOL WINAPI PrivilegeCheck (HANDLE,PPRIVILEGE_SET,PBOOL);
 BOOL WINAPI PrivilegedServiceAuditAlarmA(_In_ LPCSTR, _In_ LPCSTR, _In_ HANDLE, _In_ PPRIVILEGE_SET, _In_ BOOL);
