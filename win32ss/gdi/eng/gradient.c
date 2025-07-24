@@ -401,8 +401,8 @@ IntEngGradientFillTriangle(
               ENDLINE(v1, v2, 1);
 
               GOLINE(v2, v3, 2);
-              DOLINE(v2, v3, 2);
               FILLLINE(0, 2);
+              DOLINE(v2, v3, 2);
               ENDLINE(23, v3, 2);
 
               y++;
