@@ -46,7 +46,6 @@
 #define FACILITY_SXS                         23
 #define FACILITY_WINDOWS_CE                  24
 #define FACILITY_HTTP                        25
-#define FACILITY_COMMONLOG                   26
 #define FACILITY_USERMODE_COMMONLOG          26
 #define FACILITY_WER                         27
 #define FACILITY_USERMODE_FILTER_MANAGER     31
