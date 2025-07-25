@@ -254,7 +254,9 @@ IntEngGradientFillRect(
   FINITCOL(linefrom, lineto, 0); \
   FINITCOL(linefrom, lineto, 1); \
   FINITCOL(linefrom, lineto, 2); \
-  for(g = sx[linefrom] - 1; g != sx[lineto] + gxi; g += gxi) \
+  g_start = sx[linefrom] - 1; \
+  g_end = sx[lineto]  + gxi; \
+  for(g = g_start; g != g_end; g += gxi) \
   { \
     if(InY && g >= FillRect.left && g < FillRect.right) \
     { \
@@ -335,6 +337,7 @@ IntEngGradientFillTriangle(
     LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
     LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
     LONG sy, y, bt;
+    LONG g_start, g_end;
     static int warn_once;
 
     if (!warn_once++)
@@ -403,6 +406,7 @@ IntEngGradientFillTriangle(
               GOLINE(v2, v3, 2);
               FILLLINE(0, 2);
               DOLINE(v2, v3, 2);
+              FILLLINE(0, 2);
               ENDLINE(23, v3, 2);
 
               y++;
