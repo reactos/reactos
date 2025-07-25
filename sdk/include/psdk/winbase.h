@@ -1139,6 +1139,15 @@ typedef enum _COMPUTER_NAME_FORMAT {
 } COMPUTER_NAME_FORMAT;
 #endif /* (_WIN32_WINNT >= 0x0500) */
 
+typedef enum _DEP_SYSTEM_POLICY_TYPE
+{
+    DEPPolicyAlwaysOff = 0,
+    DEPPolicyAlwaysOn,
+    DEPPolicyOptIn,
+    DEPPolicyOptOut,
+    DEPTotalPolicyCount
+} DEP_SYSTEM_POLICY_TYPE;
+
 #if (_WIN32_WINNT >= 0x0600)
 typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
 typedef RTL_CONDITION_VARIABLE CONDITION_VARIABLE, *PCONDITION_VARIABLE;
