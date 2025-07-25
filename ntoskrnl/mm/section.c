@@ -1645,8 +1645,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         }
 
         MI_SET_USAGE(MI_USAGE_SECTION);
-        if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-        if (!Process) MI_SET_PROCESS2("Kernel Section");
+        MI_SET_PROCESS(Process); 
+        if (!Process) MI_SET_PROCESS2("Kernel Section");   
         Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
         if (!NT_SUCCESS(Status))
         {
@@ -1766,7 +1766,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         {
             /* We are beyond the data which is on file. Just get a new page. */
             MI_SET_USAGE(MI_USAGE_SECTION);
-            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+            MI_SET_PROCESS(Process); 
             if (!Process) MI_SET_PROCESS2("Kernel Section");
             Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
             if (!NT_SUCCESS(Status))
