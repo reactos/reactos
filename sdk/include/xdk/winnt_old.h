@@ -1278,6 +1278,8 @@ typedef struct _IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY {
     } DUMMYUNIONNAME;
 } IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY, * PIMAGE_ARM64_RUNTIME_FUNCTION_ENTRY;
 
+typedef struct _IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY ARM64_RUNTIME_FUNCTION, *PARM64_RUNTIME_FUNCTION;
+
 /* FIXME: add more machines */
 #if defined(_X86_)
 #define SIZE_OF_80387_REGISTERS    80
@@ -2341,6 +2343,10 @@ typedef struct _DISPATCHER_CONTEXT {
 #else
 #error "undefined processor type"
 #endif
+
+#define CONTEXT_ARM64_UNWOUND_TO_CALL 0x20000000
+#define CONTEXT_ARM64_RET_TO_GUEST    0x04000000
+
 typedef CONTEXT *PCONTEXT;
 
 typedef struct DECLSPEC_ALIGN(16) _ARM64EC_NT_CONTEXT
@@ -4194,7 +4200,8 @@ typedef struct _SYSTEM_BATTERY_STATE {
   BOOLEAN BatteryPresent;
   BOOLEAN Charging;
   BOOLEAN Discharging;
-  BOOLEAN Spare1[4];
+  BOOLEAN Spare1[3];
+  BYTE Tag;
   DWORD MaxCapacity;
   DWORD RemainingCapacity;
   DWORD Rate;
@@ -4637,11 +4644,6 @@ DbgRaiseAssertionFailure(VOID)
 #else
 #error Unknown architecture
 #endif
-
-typedef enum _CPU_SET_INFORMATION_TYPE
-{
-    CpuSetInformation,
-} CPU_SET_INFORMATION_TYPE, *PCPU_SET_INFORMATION_TYPE;
 
 typedef struct _TP_POOL TP_POOL, *PTP_POOL;
 typedef struct _TP_WORK TP_WORK, *PTP_WORK;
