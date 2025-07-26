@@ -139,4 +139,5 @@ BEGIN
     > ipconfig /release *Con*    ... освобождава всички съвпадащи свързвания,\n\
                                      например „Local Area Connection 1“\n\
                                           или „Local Area Connection 2“\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

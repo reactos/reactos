@@ -138,4 +138,5 @@ Contoh:\n\
     > ipconfig /release *Con*    ... melepaskan semua koneksi yang sama,\n\
                                      ""Local Area Connection 1"" atau\n\
                                      ""Local Area Connection 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

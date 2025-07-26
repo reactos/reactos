@@ -144,4 +144,5 @@ Przykłady:\n\
     > ipconfig /release *Poł*    ... Zwalnia wszystkie pasujące połączenia,\n\
                                      np. ""Połączenie lokalne 1""\n\
                                      lub ""Połączenie lokalne 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

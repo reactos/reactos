@@ -142,4 +142,5 @@ IP-адреса для всех адаптеров, для которых сущ
                                     с соответствующим именем, например:\n\
                                     ""Local Area Connection 1"" или\n\
                                     ""Local Area Connection 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

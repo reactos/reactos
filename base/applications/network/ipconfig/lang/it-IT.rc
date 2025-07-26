@@ -137,4 +137,5 @@ Esempi:\n\
     > ipconfig /release *Con*    ... libera tutte le connessioni corrispondenti,\n\
                                      es: ""Connessione area locale 1""\n\
                                      or  ""Connessione area locale 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

@@ -139,4 +139,5 @@ Examples:\n\
     > ipconfig /release *Con*    ... renovo te gjithe lidhjet përputhese,\n\
                                      eg. ""Local Area Connection 1""\n\
                                      or  ""Local Area Connection 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

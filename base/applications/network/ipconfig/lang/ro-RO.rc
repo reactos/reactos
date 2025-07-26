@@ -143,4 +143,5 @@ Exemple:\n\
                                      numele lor secvența ""Con"".\n\
                                      ex. ""Conexiune locală 1""\n\
                                      sau ""Conexiune locală 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

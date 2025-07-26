@@ -138,4 +138,5 @@ Exempel:\n\
     > ipconfig /release *Ans*    ... frigör alla matchande anslutningar,\n\
                                      t.ex. ""Anslutning till lokalt nätverk 1""\n\
                                      eller ""Anslutning till lokalt nätverk 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

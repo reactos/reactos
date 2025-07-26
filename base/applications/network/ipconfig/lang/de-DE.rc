@@ -141,4 +141,5 @@ Beispiele:\n\
     > ipconfig /release *Ver*    ... Gibt alle passenden Verbindungen frei,\n\
                                      z.B. ""Lokale Verbindung 1""\n\
                                      oder ""Lokale Verbindung 2""\n"
+    IDS_CMDLINEERROR "\nFehler: Nicht erkannte oder unvollständige Befehlszeile.\n"
 END

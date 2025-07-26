@@ -137,4 +137,5 @@ Eksempler:\n\
     > ipconfig /release *Til*    ... Frigi alle samsvarende tilkoblinger,\n\
                                      for eksempel ""Lokal tilkobling 1""\n\
                                             eller ""Lokaltilkobling 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

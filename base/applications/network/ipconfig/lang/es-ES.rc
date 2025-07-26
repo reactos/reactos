@@ -140,4 +140,5 @@ Ejemplos:\n\
     > ipconfig /release *Con*    ... Libera todas las conexiones coincidentes,\n\
                                      por ejemplo. ""Conexión de área local 1""\n\
                                                o  ""Conexión de área local 2"".\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

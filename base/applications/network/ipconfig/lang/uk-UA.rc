@@ -140,4 +140,5 @@ IP-адреса звільняється чи оновлюється для вс
                                      всі з'єднання, які містять у назві ""Сon""\n\
                                      напр. ""Local Area Connection 1""\n\
                                         чи ""Local Area Connection 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

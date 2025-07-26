@@ -136,4 +136,5 @@ setclassid の場合、classid が指定されていなければ、classid は�
     > ipconfig /release *Con*    ... すべてのマッチする接続を解放します。\n\
                                      例 ""Local Area Connection 1"" または\n\
                                         ""Local Area Connection 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

@@ -138,4 +138,5 @@ BEGIN
     > ipconfig /release *Con*    ... 释放所有匹配的连接，\n\
                                      如 ""Local Area Connection 1""\n\
                                      或 ""Local Area Connection 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

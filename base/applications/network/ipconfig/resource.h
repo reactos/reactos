@@ -66,6 +66,7 @@
 #define IDS_DNSTYPESRV           179
 
 #define IDS_USAGE                180
+#define IDS_CMDLINEERROR         181
 
 #define IDS_DNSNORECORD          200
 #define IDS_DNSNONAME            201

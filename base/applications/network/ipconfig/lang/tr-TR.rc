@@ -138,4 +138,5 @@ setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmi
     > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n\
                                      Ör: ""Yerel Ağ Bağlantısı 1"" veya\n\
                                          ""Yerel Ağ Bağlantısı 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

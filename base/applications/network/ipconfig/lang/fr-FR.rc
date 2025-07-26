@@ -144,4 +144,5 @@ Exemples :\n\
     > ipconfig /release *Con*    ... Libère toutes les connexions concernées,\n\
                                      par ex. ""Connexion au réseau local 1""\n\
                                          ou  ""Connexion au réseau local 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

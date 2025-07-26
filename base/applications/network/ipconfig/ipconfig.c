@@ -22,8 +22,6 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
-//#include <winsock2.h>
-//#include <iptypes.h>
 #include <iphlpapi.h>
 #include <ndk/rtlfuncs.h>
 #include <inaddr.h>
@@ -1331,8 +1329,11 @@ done:
 }
 
 VOID
-Usage(VOID)
+Usage(
+    _In_ BOOL Error)
 {
+    if (Error)
+        ConResPrintf(StdOut, IDS_CMDLINEERROR);
     ConResPrintf(StdOut, IDS_USAGE);
 }
 
@@ -1402,7 +1403,7 @@ int wmain(int argc, wchar_t *argv[])
             break;
         case 2:  /* Process all the options that take no parameters */
             if (DoUsage)
-                Usage();
+                Usage(FALSE);
             else if (DoAll)
                 ShowInfo(TRUE, TRUE);
             else if (DoRelease)
@@ -1416,7 +1417,7 @@ int wmain(int argc, wchar_t *argv[])
             else if (DoDisplaydns)
                 DisplayDns();
             else
-                Usage();
+                Usage(TRUE);
             break;
         case 3: /* Process all the options that can have 1 parameter */
             if (DoRelease)
@@ -1428,16 +1429,16 @@ int wmain(int argc, wchar_t *argv[])
             else if (DoSetclassid)
                 SetClassId(argv[2], NULL);
             else
-                Usage();
+                Usage(TRUE);
             break;
         case 4:  /* Process all the options that can have 2 parameters */
             if (DoSetclassid)
                 SetClassId(argv[2], argv[3]);
             else
-                Usage();
+                Usage(TRUE);
             break;
         default:
-            Usage();
+            Usage(TRUE);
     }
 
     return 0;

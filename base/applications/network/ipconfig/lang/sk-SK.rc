@@ -137,4 +137,5 @@ Príklady:\n\
     > ipconfig /release *Con*    ... release all matching connections,\n\
                                      napr. ""Lokálne pripojenie 1""\n\
                                      alebo ""Lokálne pripojenie 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END
