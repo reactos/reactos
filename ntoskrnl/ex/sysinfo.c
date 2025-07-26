@@ -2727,7 +2727,7 @@ QSI_DEF(SystemFirmwareTableInformation)
 {
     PSYSTEM_FIRMWARE_TABLE_INFORMATION SysFirmwareInfo = (PSYSTEM_FIRMWARE_TABLE_INFORMATION)Buffer;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG InputBufSize;
+    ULONG DataBufSize;
     ULONG DataSize = 0;
     ULONG TableCount = 0;
 
@@ -2742,7 +2742,7 @@ QSI_DEF(SystemFirmwareTableInformation)
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    InputBufSize = SysFirmwareInfo->TableBufferLength;
+    DataBufSize = Size - *ReqSize;
     switch (SysFirmwareInfo->ProviderSignature)
     {
         /*
@@ -2772,17 +2772,18 @@ QSI_DEF(SystemFirmwareTableInformation)
                 if (SysFirmwareInfo->Action == SystemFirmwareTable_Enumerate)
                 {
                     DataSize = TableCount * sizeof(ULONG);
-                    if (DataSize <= InputBufSize)
+                    if (DataSize <= DataBufSize)
                     {
                         *(ULONG *)SysFirmwareInfo->TableBuffer = 0;
                     }
                 }
                 else if (SysFirmwareInfo->Action == SystemFirmwareTable_Get
-                         && DataSize <= InputBufSize)
+                         && DataSize <= DataBufSize)
                 {
-                    Status = ExpGetRawSMBiosTable(SysFirmwareInfo->TableBuffer, &DataSize, InputBufSize);
+                    Status = ExpGetRawSMBiosTable(SysFirmwareInfo->TableBuffer, &DataSize, DataBufSize);
                 }
                 SysFirmwareInfo->TableBufferLength = DataSize;
+                *ReqSize += DataSize;
             }
             break;
         }
@@ -2790,7 +2791,8 @@ QSI_DEF(SystemFirmwareTableInformation)
         {
             DPRINT1("SystemFirmwareTableInformation: Unsupported provider (0x%x)\n",
                     SysFirmwareInfo->ProviderSignature);
-            Status = STATUS_ILLEGAL_FUNCTION;
+            *ReqSize = 0;
+            Status = STATUS_NOT_IMPLEMENTED;
         }
     }
 
@@ -2801,7 +2803,7 @@ QSI_DEF(SystemFirmwareTableInformation)
             case SystemFirmwareTable_Enumerate:
             case SystemFirmwareTable_Get:
             {
-                if (SysFirmwareInfo->TableBufferLength > InputBufSize)
+                if (SysFirmwareInfo->TableBufferLength > DataBufSize)
                 {
                     Status = STATUS_BUFFER_TOO_SMALL;
                 }
