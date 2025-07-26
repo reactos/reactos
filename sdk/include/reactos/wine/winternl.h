@@ -23,6 +23,7 @@
 
 #ifndef __REACTOS__
 #include <ntdef.h>
+#include "wine/exception.h"
 #endif /* __REACTOS__ */
 #include <windef.h>
 
