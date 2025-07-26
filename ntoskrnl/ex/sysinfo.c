@@ -2852,6 +2852,35 @@ QSI_DEF(SystemFirmwareTableInformation)
     return Status;
 }
 
+/* Class 105 - Processor Brand String */
+QSI_DEF(SystemProcessorBrandString)
+{
+    CHAR BrandString[128];
+    NTSTATUS Status;
+
+    /* Call hal to query the brand string */
+    Status = HalQuerySystemInformation(HalProcessorBrandString,
+                                       sizeof(BrandString),
+                                       BrandString,
+                                       ReqSize);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HalQuerySystemInformation failed: 0x%lx\n", Status);
+        return Status;
+    }
+
+    if (Size < *ReqSize)
+    {
+        DPRINT1("Buffer too small for processor brand string\n");
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Copy the brand string to the user buffer */
+    RtlCopyMemory(Buffer, BrandString, *ReqSize);
+
+    return STATUS_SUCCESS;
+}
+
 /* Query/Set Calls Table */
 typedef
 struct _QSSI_CALLS
@@ -2951,6 +2980,9 @@ CallQS[] =
     SI_XX(SystemWow64SharedInformationObsolete), /* FIXME: not implemented */
     SI_XX(SystemRegisterFirmwareTableInformationHandler), /* FIXME: not implemented */
     SI_QX(SystemFirmwareTableInformation),
+
+    // Vista and later
+    SI_QX(SystemProcessorBrandString),
 };
 
 C_ASSERT(SystemBasicInformation == 0);
