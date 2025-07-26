@@ -12,6 +12,23 @@ DhcpAcquireParameters(
 
 DWORD
 APIENTRY
+DhcpEnumClasses(
+    _In_ DWORD Unknown1,
+    _In_ PWSTR AdapterName,
+    _In_ DWORD Unknown3,
+    _In_ DWORD Unknown4);
+
+DWORD
+APIENTRY
+DhcpHandlePnPEvent(
+    _In_ DWORD Unknown1,
+    _In_ DWORD Unknown2,
+    _In_ LPWSTR AdapterName,
+    _In_ DWORD Unknown4,
+    _In_ DWORD Unknown5);
+
+DWORD
+APIENTRY
 DhcpReleaseParameters(
     _In_ PWSTR AdapterName);
 
