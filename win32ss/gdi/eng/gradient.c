@@ -18,9 +18,12 @@ const LONG LINC[2] = {-1, 1};
 #define VERTEX(n) (pVertex + gt->n)
 #define COMPAREVERTEX(a, b) ((a)->x == (b)->x && (a)->y == (b)->y)
 
-#define VCMPCLR(a,b,c,color) (a->color != b->color || a->color != c->color)
-#define VCMPCLRS(a,b,c) \
-  !(!VCMPCLR(a,b,c,Red) || !VCMPCLR(a,b,c,Green) || !VCMPCLR(a,b,c,Blue))
+/* Check if all three vectors have the same color, either R, G, or B */
+#define VCMPCLR(a, b, c, color) (a->color == b->color && a->color == c->color)
+/* Check if all three vectors have the same colors for R, G, and B, then
+ * NOT the result because we want to check for not using solid color logic */
+#define VCMPCLRS(a, b, c) \
+  !(VCMPCLR(a, b, c, Red) && VCMPCLR(a, b, c, Green) && VCMPCLR(a, b, c, Blue))
 
 /* Horizontal/Vertical gradients */
 #define HVINITCOL(Col, id) \
@@ -225,7 +228,7 @@ IntEngGradientFillRect(
 
 #define STEPCOL(a,b,line,col,id) \
   ec[line][id] += dc[line][id]; \
-  while(ec[line][id] > 0) \
+  while(ec[line][id] > 0 && dy[line] != 0) \
   { \
     c[line][id] += ic[line][id]; \
     ec[line][id] -= dy[line]; \
@@ -251,7 +254,9 @@ IntEngGradientFillRect(
   FINITCOL(linefrom, lineto, 0); \
   FINITCOL(linefrom, lineto, 1); \
   FINITCOL(linefrom, lineto, 2); \
-  for(g = sx[linefrom]; g != sx[lineto]; g += gxi) \
+  g_start = sx[linefrom] - 1; \
+  g_end = sx[lineto]  + gxi; \
+  for(g = g_start; g != g_end; g += gxi) \
   { \
     if(InY && g >= FillRect.left && g < FillRect.right) \
     { \
@@ -286,7 +291,7 @@ IntEngGradientFillRect(
   x[line] = a->x; \
   sx[line] =  a->x + pptlDitherOrg->x; \
   dx[line] = abs(b->x - a->x); \
-  dy[line] = max(abs(b->y - a->y),1); \
+  dy[line] = abs(b->y - a->y); \
   incx[line] = LINC[b->x > a->x]; \
   ex[line] = -(dy[line]>>1); \
   destx[line] = b->x
@@ -332,6 +337,11 @@ IntEngGradientFillTriangle(
     LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
     LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
     LONG sy, y, bt;
+    LONG g_start, g_end;
+    static int warn_once;
+
+    if (!warn_once++)
+        DPRINT1("FIXME: IntEngGradientFillTriangle is broken\n");
 
     v1 = (pVertex + gTriangle->Vertex1);
     v2 = (pVertex + gTriangle->Vertex2);
@@ -355,8 +365,6 @@ IntEngGradientFillTriangle(
     }
 
     DPRINT("Triangle: (%i,%i) (%i,%i) (%i,%i)\n", v1->x, v1->y, v2->x, v2->y, v3->x, v3->y);
-    /* FIXME: commented out because of an endless loop - fix triangles first */
-    DPRINT("FIXME: IntEngGradientFillTriangle is broken\n");
 
     if (!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &psoOutput))
     {
@@ -396,6 +404,7 @@ IntEngGradientFillTriangle(
               ENDLINE(v1, v2, 1);
 
               GOLINE(v2, v3, 2);
+              FILLLINE(0, 2);
               DOLINE(v2, v3, 2);
               FILLLINE(0, 2);
               ENDLINE(23, v3, 2);
