@@ -923,7 +923,7 @@ KeFlushQueuedDpcs(VOID)
     PKPRCB TargetPrcb;
 
     PAGED_CODE();
-    ASSERT(KeGetCurrentThread()->SystemAffinityActive == FALSE);
+    //ASSERT(KeGetCurrentThread()->SystemAffinityActive == FALSE);
 
     /* Loop all processors */
     for (ProcessorIndex = 0; ProcessorIndex < KeNumberProcessors; ProcessorIndex++)

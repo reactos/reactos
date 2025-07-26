@@ -13,21 +13,175 @@
 
 static
 CODE_SEG("PAGE")
+VOID
+PciIdeXPdoFreeDmaResources(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    PDMA_OPERATIONS DmaOperations;
+    PDMA_ADAPTER AdapterObject;
+
+    PAGED_CODE();
+
+    PdoExtension->Flags &= ~(PDO_PIO_ONLY | PDO_DRIVE0_DMA_CAPABLE | PDO_DRIVE1_DMA_CAPABLE);
+
+    AdapterObject = PdoExtension->AdapterObject;
+    if (!AdapterObject)
+        return;
+
+    DmaOperations = AdapterObject->DmaOperations;
+
+    if (PdoExtension->PrdTable)
+    {
+        PHYSICAL_ADDRESS PrdTablePhysicalAddress;
+
+        PrdTablePhysicalAddress.QuadPart = PdoExtension->PrdTablePhysicalAddress;
+
+        DmaOperations->FreeCommonBuffer(AdapterObject,
+                                        PdoExtension->MapRegisterCount *
+                                        sizeof(*PdoExtension->PrdTable),
+                                        PrdTablePhysicalAddress,
+                                        PdoExtension->PrdTable,
+                                        FALSE);
+        PdoExtension->PrdTable = NULL;
+    }
+
+    DmaOperations->PutDmaAdapter(AdapterObject);
+
+    PdoExtension->AdapterObject = NULL;
+}
+
+static
+CODE_SEG("PAGE")
+BOOLEAN
+PciIdeXPdoGetDmaAdapter(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    DEVICE_DESCRIPTION DeviceDescription = { 0 };
+
+    PAGED_CODE();
+
+    DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
+    DeviceDescription.Master = TRUE;
+    DeviceDescription.ScatterGather = TRUE;
+    DeviceDescription.Dma32BitAddresses = TRUE;
+    DeviceDescription.InterfaceType = PCIBus;
+    DeviceDescription.MaximumLength = ATA_MAX_TRANSFER_LENGTH;
+
+    PdoExtension->AdapterObject = IoGetDmaAdapter(PdoExtension->ParentController->Ldo,
+                                                  &DeviceDescription,
+                                                  &PdoExtension->MapRegisterCount);
+    if (!PdoExtension->AdapterObject)
+        return FALSE;
+
+    return TRUE;
+}
+
+static
+CODE_SEG("PAGE")
+BOOLEAN
+PciIdeXPdoAllocatePrdTable(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    PDMA_OPERATIONS DmaOperations = PdoExtension->AdapterObject->DmaOperations;
+    PHYSICAL_ADDRESS LogicalAddress;
+    ULONG BlockSize;
+
+    PAGED_CODE();
+
+    BlockSize = PdoExtension->MapRegisterCount * sizeof(*PdoExtension->PrdTable);
+
+    PdoExtension->PrdTable = DmaOperations->AllocateCommonBuffer(PdoExtension->AdapterObject,
+                                                                 BlockSize,
+                                                                 &LogicalAddress,
+                                                                 TRUE); // Cached
+    if (!PdoExtension->PrdTable)
+        return FALSE;
+    RtlZeroMemory(PdoExtension->PrdTable, BlockSize);
+
+    PdoExtension->PrdTablePhysicalAddress = LogicalAddress.LowPart;
+
+    /* 32-bit DMA */
+    ASSERT(LogicalAddress.HighPart == 0);
+
+    /* The descriptor table must be 4 byte aligned */
+    ASSERT((LogicalAddress.LowPart % sizeof(ULONG)) == 0);
+
+    return TRUE;
+}
+
+static
+CODE_SEG("PAGE")
+VOID
+PciIdeXPdoAllocateDmaResources(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    BOOLEAN Success;
+    UCHAR DmaStatus;
+
+    PAGED_CODE();
+
+    if (!(FdoExtension->Flags & FDO_DMA_CAPABLE))
+        goto DisableDma;
+
+    PdoExtension->IoBase = PdoExtension->ParentController->BusMasterPortBase;
+    if (!IS_PRIMARY_CHANNEL(PdoExtension))
+    {
+        PdoExtension->IoBase += PCIIDE_DMA_SECONDARY_CHANNEL_OFFSET;
+    }
+
+    DmaStatus = READ_PORT_UCHAR(PdoExtension->IoBase + PCIIDE_DMA_STATUS);
+
+    DPRINT("I/O Base %p, status 0x%02x\n", PdoExtension->IoBase, DmaStatus);
+
+    /* The status bits 3:4 must return 0 on reads */
+    if (DmaStatus & (PCIIDE_DMA_STATUS_RESERVED1 | PCIIDE_DMA_STATUS_RESERVED2))
+    {
+        DPRINT1("Unexpected DMA status 0x%02x\n", DmaStatus);
+        goto DisableDma;
+    }
+
+    /* The status bits 5:6 are set by the miniport driver or BIOS firmware at boot */
+    if (DmaStatus & PCIIDE_DMA_STATUS_DRIVE0_DMA_CAPABLE)
+        PdoExtension->Flags |= PDO_DRIVE0_DMA_CAPABLE;
+    if (DmaStatus & PCIIDE_DMA_STATUS_DRIVE1_DMA_CAPABLE)
+        PdoExtension->Flags |= PDO_DRIVE1_DMA_CAPABLE;
+
+    Success = PciIdeXPdoGetDmaAdapter(PdoExtension);
+    if (!Success)
+    {
+        DPRINT1("Unable to get DMA adapter\n");
+        goto DisableDma;
+    }
+
+    Success = PciIdeXPdoAllocatePrdTable(PdoExtension);
+    if (!Success)
+    {
+        DPRINT1("Unable to allocate PRD table\n");
+
+        PciIdeXPdoFreeDmaResources(PdoExtension);
+        goto DisableDma;
+    }
+
+    return;
+
+DisableDma:
+    /* Failed to setup DMA, falling back to PIO mode */
+    PdoExtension->Flags |= PDO_PIO_ONLY;
+}
+
+static
+CODE_SEG("PAGE")
 NTSTATUS
 PciIdeXPdoStartDevice(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
     _In_ PCM_RESOURCE_LIST ResourceList)
 {
-    PUCHAR IoBase;
+    PFDO_DEVICE_EXTENSION FdoExtension = PdoExtension->ParentController;
 
     PAGED_CODE();
 
-    IoBase = PdoExtension->ParentController->BusMasterPortBase;
-    if (!IS_PRIMARY_CHANNEL(PdoExtension))
-    {
-        IoBase += BM_SECONDARY_CHANNEL_OFFSET;
-    }
-    DPRINT("Bus Master Base %p\n", IoBase);
+    PciIdeXPdoAllocateDmaResources(FdoExtension, PdoExtension);
 
     return STATUS_SUCCESS;
 }
@@ -39,6 +193,8 @@ PciIdeXPdoStopDevice(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension)
 {
     PAGED_CODE();
+
+    PciIdeXPdoFreeDmaResources(PdoExtension);
 
     return STATUS_SUCCESS;
 }
@@ -54,6 +210,8 @@ PciIdeXPdoRemoveDevice(
     ULONG i;
 
     PAGED_CODE();
+
+    PciIdeXPdoFreeDmaResources(PdoExtension);
 
     if (FinalRemove && PdoExtension->ReportedMissing)
     {
@@ -266,7 +424,7 @@ PciIdeXPdoQueryResources(
     PAGED_CODE();
 
     FdoExtension = PdoExtension->ParentController;
-    if (FdoExtension->InNativeMode)
+    if (FdoExtension->Flags & FDO_IN_NATIVE_MODE)
         return Irp->IoStatus.Status;
 
     ChannelState = PciIdeXChannelState(FdoExtension, PdoExtension->Channel);
@@ -346,7 +504,7 @@ PciIdeXPdoQueryResourceRequirements(
     PAGED_CODE();
 
     FdoExtension = PdoExtension->ParentController;
-    if (FdoExtension->InNativeMode)
+    if (FdoExtension->Flags & FDO_IN_NATIVE_MODE)
         return Irp->IoStatus.Status;
 
     ChannelState = PciIdeXChannelState(FdoExtension, PdoExtension->Channel);
@@ -751,6 +909,72 @@ PciIdeXPdoQueryDeviceUsageNotification(
 static
 CODE_SEG("PAGE")
 NTSTATUS
+PciIdeXQueryPciIdeInterface(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _In_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IoStack)
+{
+    PPCIIDE_INTERFACE PciIdeInterface;
+
+    PAGED_CODE();
+
+    if (IoStack->Parameters.QueryInterface.Size < sizeof(*PciIdeInterface))
+        return Irp->IoStatus.Status;
+
+    PciIdeInterface = (PPCIIDE_INTERFACE)IoStack->Parameters.QueryInterface.Interface;
+    PciIdeInterface->ChannelNumber = PdoExtension->Channel;
+    PciIdeInterface->DeviceObject = PdoExtension->Common.Self;
+    PciIdeInterface->IoBase = PdoExtension->IoBase;
+    PciIdeInterface->ControllerResources = PdoExtension->ParentController->ResourceList;
+    PciIdeInterface->ProgramTimingMode = PciIdeXProgramTimingMode;
+
+    if (PdoExtension->Flags & PDO_PIO_ONLY)
+    {
+        PciIdeInterface->PrdTable = NULL;
+    }
+    else
+    {
+        PciIdeInterface->PrdTable = PdoExtension->PrdTable;
+        PciIdeInterface->PrdTablePhysicalAddress = PdoExtension->PrdTablePhysicalAddress;
+        PciIdeInterface->MaximumTransferLength = PdoExtension->MapRegisterCount << PAGE_SHIFT;
+        PciIdeInterface->AdapterObject = PdoExtension->AdapterObject;
+        PciIdeInterface->ControllerObject = PdoExtension->ParentController->ControllerObject;
+        PciIdeInterface->MapRegisterCount = PdoExtension->MapRegisterCount;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+PciIdeXPdoQueryInterface(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IsEqualGUIDAligned(IoStack->Parameters.QueryInterface.InterfaceType,
+                           &GUID_PCIIDE_INTERFACE_ROS))
+    {
+        Status = PciIdeXQueryPciIdeInterface(PdoExtension, Irp, IoStack);
+    }
+    else
+    {
+        Status = Irp->IoStatus.Status;
+    }
+
+    return Status;
+}
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
 PciIdeXPdoDispatchPnp(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
     _Inout_ PIRP Irp)
@@ -821,6 +1045,10 @@ PciIdeXPdoDispatchPnp(
 
         case IRP_MN_DEVICE_USAGE_NOTIFICATION:
             Status = PciIdeXPdoQueryDeviceUsageNotification(PdoExtension, Irp);
+            break;
+
+        case IRP_MN_QUERY_INTERFACE:
+            Status = PciIdeXPdoQueryInterface(PdoExtension, Irp);
             break;
 
         default:
