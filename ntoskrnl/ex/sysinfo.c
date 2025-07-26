@@ -2455,9 +2455,17 @@ QSI_DEF(SystemExtendedProcessInformation)
 /* Class 58 - Recommended shared data alignment */
 QSI_DEF(SystemRecommendedSharedDataAlignment)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemRecommendedSharedDataAlignment not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PULONG Alignment = (PULONG)Buffer;
+
+    /* Check user buffer's size */
+    *ReqSize = sizeof(ULONG);
+    if (Size < *ReqSize)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    *Alignment = KeGetRecommendedSharedDataAlignment();
+    return STATUS_SUCCESS;
 }
 
 /* Class 60 - NUMA memory information */
