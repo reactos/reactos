@@ -2491,6 +2491,12 @@ QSI_DEF(SystemNumaAvailableMemory)
     return STATUS_SUCCESS;
 }
 
+/* Class 62 - Emulation Basic Information */
+QSI_DEF(SystemEmulationBasicInformation)
+{
+    return QSISystemBasicInformation(Buffer, Size, ReqSize);
+}
+
 /* Class 64 - Extended handle information */
 QSI_DEF(SystemExtendedHandleInformation)
 {
@@ -2908,7 +2914,7 @@ CallQS[] =
     SI_XX(SystemComPlusPackage),
     SI_QX(SystemNumaAvailableMemory),
     SI_XX(SystemProcessorPowerInformation), /* FIXME: not implemented */
-    SI_XX(SystemEmulationBasicInformation), /* FIXME: not implemented */
+    SI_QX(SystemEmulationBasicInformation),
     SI_XX(SystemEmulationProcessorInformation), /* FIXME: not implemented */
     SI_QX(SystemExtendedHandleInformation),
     SI_XX(SystemLostDelayedWriteInformation), /* FIXME: not implemented */
