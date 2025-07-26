@@ -392,13 +392,13 @@ void ShellDirectory::read_directory(int scan_flags)
 				SFGAOF attribs_before = ~SFGAO_READONLY & ~SFGAO_VALIDATE;
 				SFGAOF attribs = attribs_before;
 				HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
-				bool removeable = false;
+				bool removable = false;
 
 				if (SUCCEEDED(hr) && attribs!=attribs_before) {
 					 // avoid accessing floppy drives when browsing "My Computer"
 					if (attribs & SFGAO_REMOVABLE) {
 						attribs |= SFGAO_HASSUBFOLDER;
-						removeable = true;
+						removable = true;
 					} else if (!(scan_flags & SCAN_DONT_ACCESS)) {
 						SFGAOF attribs2 = SFGAO_READONLY;
 
@@ -411,7 +411,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					attribs = 0;
 
 				bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi,
-												 !(scan_flags&SCAN_DONT_ACCESS) && !removeable);
+												 !(scan_flags&SCAN_DONT_ACCESS) && !removable);
 
 				try {
 					Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry

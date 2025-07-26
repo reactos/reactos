@@ -1622,7 +1622,7 @@ ClasspPowerHandler(
                     if (fdoData->HotplugInfo.MediaRemovable || fdoData->HotplugInfo.MediaHotplug) {
                         /*
                             *  We are suspending device and this drive is either hot-pluggable
-                            *  or contains removeable media.
+                            *  or contains removable media.
                             *  Set the media dirty bit, since the media may change while
                             *  we are suspended.
                             */
