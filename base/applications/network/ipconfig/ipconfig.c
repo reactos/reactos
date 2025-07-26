@@ -174,7 +174,7 @@ _Ret_opt_z_ PWSTR timeToStr(_In_ time_t TimeStamp)
     TotalCchSize = DateCchSize + TimeCchSize;
 
     /* Allocate buffer and format datetime string */
-    DateTimeString = (PTSTR)HeapAlloc(ProcessHeap, 0, TotalCchSize * sizeof(WCHAR));
+    DateTimeString = (PWSTR)HeapAlloc(ProcessHeap, 0, TotalCchSize * sizeof(WCHAR));
     if (!DateTimeString)
     {
         return NULL;
@@ -201,7 +201,9 @@ _Ret_opt_z_ PWSTR timeToStr(_In_ time_t TimeStamp)
 }
 
 
-VOID DoFormatMessage(LONG ErrorCode)
+VOID
+DoFormatMessage(
+    _In_ LONG ErrorCode)
 {
     LPVOID lpMsgBuf;
     //DWORD ErrorCode;
@@ -575,7 +577,7 @@ ShowInfo(
     {
         pszDomainName = HeapAlloc(ProcessHeap,
                                   0,
-                                  dwDomainNameSize * sizeof(TCHAR));
+                                  dwDomainNameSize * sizeof(CHAR));
         if (pszDomainName != NULL)
             GetComputerNameExA(ComputerNameDnsDomain,
                                pszDomainName,
@@ -859,7 +861,7 @@ Release(
     pAdapterInfo = (IP_ADAPTER_INFO *)HeapAlloc(ProcessHeap, 0, adaptOutBufLen);
     if (pAdapterInfo == NULL)
     {
-        printf("memory allocation error");
+        DoFormatMessage(ERROR_NOT_ENOUGH_MEMORY);
         return;
     }
 
@@ -965,7 +967,7 @@ Renew(
     pAdapterInfo = (IP_ADAPTER_INFO *)HeapAlloc(ProcessHeap, 0, adaptOutBufLen);
     if (pAdapterInfo == NULL)
     {
-        printf("memory allocation error");
+        DoFormatMessage(ERROR_NOT_ENOUGH_MEMORY);
         return;
     }
 
@@ -1258,7 +1260,7 @@ SetClassId(
     pAdapterInfo = (IP_ADAPTER_INFO *)HeapAlloc(ProcessHeap, 0, adaptOutBufLen);
     if (pAdapterInfo == NULL)
     {
-        printf("memory allocation error");
+        DoFormatMessage(ERROR_NOT_ENOUGH_MEMORY);
         return;
     }
 
