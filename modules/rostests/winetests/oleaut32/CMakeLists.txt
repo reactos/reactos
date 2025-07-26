@@ -7,7 +7,6 @@ add_definitions(
     -Dstrcasecmp=_stricmp
 )
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_typelib(test_reg.idl test_tlb.idl tmarshal.idl)
 add_idl_Headers(oleaut32_idlheaders test_reg.idl test_tlb.idl tmarshal.idl)
 generate_idl_iids(test_reg.idl test_tlb.idl tmarshal.idl)
