@@ -17,6 +17,7 @@ static HANDLE hLogFile = NULL;
 
 static OVERLAPPED olWrite;
 
+#define STATUS_INTEGER_OVERFLOW ((DWORD)0xC0000095)
 
 // needs work
 static VOID
