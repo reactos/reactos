@@ -881,11 +881,19 @@ QSI_DEF(SystemPathInformation)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Class 5 - Process Information */
-QSI_DEF(SystemProcessInformation)
+/* Class 5 - Process Information / 57 - SystemExtendedProcessInformation  */
+static
+NTSTATUS
+ExpQuerySystemProcessInformation(
+    _Out_writes_bytes_(Size) PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG ReqSize,
+    _In_ BOOLEAN Extended)
 {
+    const ULONG ThreadInfoSize = Extended ? sizeof(SYSTEM_EXTENDED_THREAD_INFORMATION) : sizeof(SYSTEM_THREAD_INFORMATION);
     PSYSTEM_PROCESS_INFORMATION SpiCurrent;
     PSYSTEM_THREAD_INFORMATION ThreadInfo;
+    PSYSTEM_EXTENDED_THREAD_INFORMATION ThreadInfoEx;
     PEPROCESS Process = NULL, SystemProcess;
     PETHREAD CurrentThread;
     ANSI_STRING ImageName;
@@ -952,12 +960,13 @@ QSI_DEF(SystemProcessInformation)
             CurrentEntry = Process->Pcb.ThreadListHead.Flink;
             while (CurrentEntry != &Process->Pcb.ThreadListHead)
             {
+                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
                 ThreadsCount++;
                 CurrentEntry = CurrentEntry->Flink;
             }
 
             // size of the structure for every process
-            CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + sizeof(SYSTEM_THREAD_INFORMATION) * ThreadsCount;
+            CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + ThreadInfoSize * ThreadsCount;
             ImageNameLength = 0;
             Status = SeLocateProcessImageName(Process, &TempProcessImageName);
             ProcessImageName = TempProcessImageName;
@@ -1051,10 +1060,12 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->PagefileUsage = Process->QuotaUsage[PsPageFile];
                 SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[PsPageFile];
                 SpiCurrent->PrivatePageCount = Process->CommitCharge;
-                ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
 
-                CurrentEntry = Process->Pcb.ThreadListHead.Flink;
-                while (CurrentEntry != &Process->Pcb.ThreadListHead)
+                /* Now do the threads */
+                ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
+                for (CurrentEntry = Process->Pcb.ThreadListHead.Flink;
+                     CurrentEntry != &Process->Pcb.ThreadListHead;
+                     CurrentEntry = CurrentEntry->Flink)
                 {
                     CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
 
@@ -1069,9 +1080,17 @@ QSI_DEF(SystemProcessInformation)
                     ThreadInfo->ContextSwitches = CurrentThread->Tcb.ContextSwitches;
                     ThreadInfo->ThreadState = CurrentThread->Tcb.State;
                     ThreadInfo->WaitReason = CurrentThread->Tcb.WaitReason;
+                    if (Extended)
+                    {
+                        ThreadInfoEx = (PSYSTEM_EXTENDED_THREAD_INFORMATION)ThreadInfo;
+                        ThreadInfoEx->StackBase = CurrentThread->Tcb.StackBase;
+                        ThreadInfoEx->StackLimit = (PVOID)CurrentThread->Tcb.StackLimit;
+                        ThreadInfoEx->Win32StartAddress = (CurrentThread->Win32StartAddress ?
+                            CurrentThread->Win32StartAddress : CurrentThread->StartAddress);
+                        ThreadInfoEx->TebBase = CurrentThread->Tcb.Teb;
+                    }
 
-                    ThreadInfo++;
-                    CurrentEntry = CurrentEntry->Flink;
+                    ThreadInfo = (PSYSTEM_THREAD_INFORMATION)((PUCHAR)ThreadInfo + ThreadInfoSize);
                 }
 
                 /* Query total user/kernel times of a process */
@@ -1130,6 +1149,12 @@ Skip:
 
     *ReqSize = TotalSize;
     return Status;
+}
+
+/* Class 5 - Process Information */
+QSI_DEF(SystemProcessInformation)
+{
+    return ExpQuerySystemProcessInformation(Buffer, Size, ReqSize, FALSE);
 }
 
 /* Class 6 - Call Count Information */
@@ -2424,9 +2449,7 @@ QSI_DEF(SystemPrefetcherInformation)
 /* Class 57 - Extended process information */
 QSI_DEF(SystemExtendedProcessInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemExtendedProcessInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    return ExpQuerySystemProcessInformation(Buffer, Size, ReqSize, TRUE);
 }
 
 /* Class 58 - Recommended shared data alignment */
