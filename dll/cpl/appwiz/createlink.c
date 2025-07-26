@@ -533,7 +533,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
 {
     PROPSHEETHEADERW psh;
     HPROPSHEETPAGE ahpsp[2];
-    PROPSHEETPAGE psp;
+    PROPSHEETPAGEW psp;
     UINT nPages = 0;
     UINT nLength;
     PCREATE_LINK_CONTEXT pContext;
@@ -599,22 +599,22 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
     PathAddBackslashW(pContext->szOrigin);
 
     /* Create the Welcome page */
-    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwSize = sizeof(psp);
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.hInstance = hApplet;
     psp.pfnDlgProc = WelcomeDlgProc;
     psp.pszTemplate = MAKEINTRESOURCEW(IDD_SHORTCUT_LOCATION);
     psp.lParam = (LPARAM)pContext;
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    ahpsp[nPages++] = CreatePropertySheetPageW(&psp);
 
     /* Create the Finish page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.pfnDlgProc = FinishDlgProc;
     psp.pszTemplate = MAKEINTRESOURCEW(IDD_SHORTCUT_FINISH);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    ahpsp[nPages++] = CreatePropertySheetPageW(&psp);
 
     /* Create the property sheet */
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwSize = sizeof(psh);
     psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_USEICONID | PSH_USECALLBACK;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_APPINETICO);
@@ -626,7 +626,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
     psh.pfnCallback = PropSheetProc;
 
     /* Display the wizard */
-    PropertySheet(&psh);
+    PropertySheetW(&psh);
 
     CoTaskMemFree(pContext->pidlTarget);
     HeapFree(GetProcessHeap(), 0, pContext);
