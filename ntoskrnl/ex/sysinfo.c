@@ -2120,7 +2120,7 @@ ExpCopyLookasideInformation(
     /* Loop as long as we have lookaside lists and free array elements */
     for (ListEntry = ListHead->Flink;
          (ListEntry != ListHead) && (Remaining > 0);
-         ListEntry = ListEntry->Flink, Remaining--)
+         ListEntry = ListEntry->Flink, Info++, Remaining--)
     {
         LookasideList = CONTAINING_RECORD(ListEntry, GENERAL_LOOKASIDE, ListEntry);
 
@@ -2165,6 +2165,13 @@ QSI_DEF(SystemLookasideInformation)
     KIRQL OldIrql;
     NTSTATUS Status;
 
+    /* Calculate how many items we can store */
+    Remaining = MaxCount = Size / sizeof(SYSTEM_LOOKASIDE_INFORMATION);
+    if (Remaining == 0)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
     /* First we need to lock down the memory, since we are going to access it
        at high IRQL */
     PreviousMode = ExGetPreviousMode();
@@ -2178,13 +2185,6 @@ QSI_DEF(SystemLookasideInformation)
     {
         DPRINT1("Failed to lock the user buffer: 0x%lx\n", Status);
         return Status;
-    }
-
-    /* Calculate how many items we can store */
-    Remaining = MaxCount = Size / sizeof(SYSTEM_LOOKASIDE_INFORMATION);
-    if (Remaining == 0)
-    {
-        goto Leave;
     }
 
     /* Copy info from pool lookaside lists */
