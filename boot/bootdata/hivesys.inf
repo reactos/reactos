@@ -833,7 +833,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Displa
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout File",0x00000000,"kbdinmal.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Text",0x00000000,%MALAYALAM%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5139"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5099"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout File",0x00000000,"kbdinasa.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Text",0x00000000,%ASSAMESE%
