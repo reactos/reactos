@@ -255,7 +255,7 @@ IntEngGradientFillRect(
   FINITCOL(linefrom, lineto, 1); \
   FINITCOL(linefrom, lineto, 2); \
   g_start = sx[linefrom] - 1; \
-  g_end = sx[lineto]  + gxi; \
+  g_end = sx[lineto] + gxi; \
   for(g = g_start; g != g_end; g += gxi) \
   { \
     if(InY && g >= FillRect.left && g < FillRect.right) \
