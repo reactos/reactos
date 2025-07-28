@@ -281,25 +281,20 @@ BatteryClassIoctl(PVOID ClassData,
 
             BattWait = *(PBATTERY_WAIT_STATUS)Irp->AssociatedIrp.SystemBuffer;
 
-            Timeout.QuadPart = Int32x32To64(BattWait.Timeout, -10000);
-
-            BattStatus = Irp->AssociatedIrp.SystemBuffer;
-            Status = BattClass->MiniportInfo.QueryStatus(BattClass->MiniportInfo.Context,
-                                                         BattWait.BatteryTag,
-                                                         BattStatus);
-
-            if (!NT_SUCCESS(Status) ||
-                (BattWait.PowerState == BattStatus->PowerState &&
-                 BattWait.HighCapacity >= BattStatus->Capacity &&
-                 BattWait.LowCapacity <= BattStatus->Capacity))
+            if (BattWait.Timeout != 0)
             {
                 BattNotify.PowerState = BattWait.PowerState;
                 BattNotify.HighCapacity = BattWait.HighCapacity;
                 BattNotify.LowCapacity = BattWait.LowCapacity;
 
-                BattClass->MiniportInfo.SetStatusNotify(BattClass->MiniportInfo.Context,
-                                                        BattWait.BatteryTag,
-                                                        &BattNotify);
+                Status = BattClass->MiniportInfo.SetStatusNotify(BattClass->MiniportInfo.Context,
+                                                                 BattWait.BatteryTag,
+                                                                 &BattNotify);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("SetStatusNotify failed (0x%x)\n", Status);
+                    break;
+                }
 
                 ExAcquireFastMutex(&BattClass->Mutex);
                 BattClass->EventTrigger = EVENT_BATTERY_STATUS;
@@ -307,6 +302,7 @@ BatteryClassIoctl(PVOID ClassData,
                 BattClass->Waiting = TRUE;
                 ExReleaseFastMutex(&BattClass->Mutex);
 
+                Timeout.QuadPart = Int32x32To64(BattWait.Timeout, -10000);
                 Status = KeWaitForSingleObject(&BattClass->WaitEvent,
                                                Executive,
                                                KernelMode,
@@ -321,7 +317,15 @@ BatteryClassIoctl(PVOID ClassData,
 
                 BattClass->MiniportInfo.DisableStatusNotify(BattClass->MiniportInfo.Context);
             }
-            else
+
+            /* Zero the output buffer to prevent leakage of kernel data */
+            BattStatus = Irp->AssociatedIrp.SystemBuffer;
+            RtlZeroMemory(BattStatus, sizeof(BATTERY_STATUS));
+
+            Status = BattClass->MiniportInfo.QueryStatus(BattClass->MiniportInfo.Context,
+                                                         BattWait.BatteryTag,
+                                                         BattStatus);
+            if (NT_SUCCESS(Status))
             {
                 Irp->IoStatus.Information = sizeof(BATTERY_STATUS);
             }
