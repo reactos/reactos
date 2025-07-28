@@ -336,10 +336,6 @@ IntEngGradientFillTriangle(
     LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
     LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
     LONG sy, y, bt, g_end;
-    static int warn_once;
-
-    if (!warn_once++)
-        DPRINT1("FIXME: IntEngGradientFillTriangle is broken\n");
 
     v1 = (pVertex + gTriangle->Vertex1);
     v2 = (pVertex + gTriangle->Vertex2);
