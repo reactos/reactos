@@ -228,7 +228,8 @@ IntEngGradientFillRect(
 
 #define STEPCOL(a,b,line,col,id) \
   ec[line][id] += dc[line][id]; \
-  while(ec[line][id] > 0 && dy[line] != 0) \
+  if(dy[line] != 0) \
+  while(ec[line][id] > 0) \
   { \
     c[line][id] += ic[line][id]; \
     ec[line][id] -= dy[line]; \
@@ -242,7 +243,8 @@ IntEngGradientFillRect(
 
 #define FDOCOL(linefrom,lineto,colid) \
   ge[colid] += gd[colid]; \
-  while(ge[colid] > 0 && gx != 0) \
+  if (gx != 0) \
+  while(ge[colid] > 0) \
   { \
     gc[colid] += gi[colid]; \
     ge[colid] -= gx; \
@@ -288,7 +290,7 @@ IntEngGradientFillRect(
 
 #define INITLINE(a,b,line) \
   x[line] = a->x; \
-  sx[line] =  a->x + pptlDitherOrg->x - 1; \
+  sx[line] = a->x + pptlDitherOrg->x - 1; \
   dx[line] = abs(b->x - a->x); \
   dy[line] = abs(b->y - a->y); \
   incx[line] = LINC[b->x > a->x]; \
