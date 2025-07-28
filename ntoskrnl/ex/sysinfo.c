@@ -1561,7 +1561,8 @@ QSI_DEF(SystemInterruptInformation)
     ULONG ti;
     PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
 
-    if(Size < KeNumberProcessors * sizeof(SYSTEM_INTERRUPT_INFORMATION))
+    *ReqSize = KeNumberProcessors * sizeof(SYSTEM_INTERRUPT_INFORMATION);
+    if (Size < *ReqSize)
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
@@ -1572,7 +1573,7 @@ QSI_DEF(SystemInterruptInformation)
     {
         Prcb = KiProcessorBlock[i];
         sii->ContextSwitches = KeGetContextSwitches(Prcb);
-        sii->DpcCount = Prcb->DpcData[0].DpcCount;
+        sii->DpcCount = Prcb->DpcData[DPC_NORMAL].DpcCount;
         sii->DpcRate = Prcb->DpcRequestRate;
         sii->TimeIncrement = ti;
         sii->DpcBypassCount = 0;
