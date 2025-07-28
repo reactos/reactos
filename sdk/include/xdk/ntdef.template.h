@@ -108,6 +108,10 @@ extern "C" {
 # endif
 #endif /* NOMINMAX */
 
+/* These should be in minwindef.h */
+typedef unsigned char BYTE;
+typedef unsigned short WORD;
+
 /* Tell windef.h that we have defined some basic types */
 #define BASETYPES
 

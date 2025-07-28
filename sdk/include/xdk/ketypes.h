@@ -84,13 +84,17 @@ typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
   RelationCache,
   RelationProcessorPackage,
   RelationGroup,
+  RelationProcessorDie,
+  RelationNumaNodeEx,
+  RelationProcessorModule,
   RelationAll = 0xffff
 } LOGICAL_PROCESSOR_RELATIONSHIP;
 
 typedef struct _PROCESSOR_RELATIONSHIP {
-  UCHAR Flags;
-  UCHAR Reserved[21];
-  USHORT GroupCount;
+  BYTE Flags;
+  BYTE EfficiencyClass;
+  BYTE Reserved[20];
+  WORD GroupCount;
   _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
 } PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
 

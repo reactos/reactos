@@ -2463,6 +2463,15 @@ HANDLE WINAPI GetStdHandle(_In_ DWORD);
 UINT WINAPI GetSystemDirectoryA(LPSTR,UINT);
 UINT WINAPI GetSystemDirectoryW(LPWSTR,UINT);
 
+typedef enum _DEP_SYSTEM_POLICY_TYPE
+{
+    DEPPolicyAlwaysOff = 0,
+    DEPPolicyAlwaysOn,
+    DEPPolicyOptIn,
+    DEPPolicyOptOut,
+    DEPTotalPolicyCount
+} DEP_SYSTEM_POLICY_TYPE;
+
 VOID WINAPI GetSystemInfo(LPSYSTEM_INFO);
 BOOL WINAPI GetSystemPowerStatus(_Out_ LPSYSTEM_POWER_STATUS);
 #if (_WIN32_WINNT >= 0x0502)
