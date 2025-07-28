@@ -86,15 +86,15 @@ static void test_ntncdf(void)
     filter |= FILE_NOTIFY_CHANGE_CREATION;
     filter |= FILE_NOTIFY_CHANGE_SECURITY;
 
-    U(iosb).Status = 1;
+    iosb.Status = 1;
     iosb.Information = 1;
     r = pNtNotifyChangeDirectoryFile(hdir,hEvent,NULL,NULL,&iosb,buffer,sizeof buffer,-1,0);
     ok(r==STATUS_INVALID_PARAMETER, "should return invalid parameter\n");
 
-    ok( U(iosb).Status == 1, "information wrong\n");
+    ok( iosb.Status == 1, "information wrong\n");
     ok( iosb.Information == 1, "information wrong\n");
 
-    U(iosb).Status = 1;
+    iosb.Status = 1;
     iosb.Information = 0;
     r = pNtNotifyChangeDirectoryFile(hdir,hEvent,NULL,NULL,&iosb,buffer,sizeof buffer,filter,0);
     ok(r==STATUS_PENDING, "should return status pending\n");
@@ -114,7 +114,7 @@ static void test_ntncdf(void)
     r = WaitForSingleObject( hEvent, 100 );
     ok( r == WAIT_OBJECT_0, "event should be ready\n" );
 
-    ok( U(iosb).Status == STATUS_SUCCESS, "information wrong\n");
+    ok( iosb.Status == STATUS_SUCCESS, "information wrong\n");
     ok( iosb.Information == 0x12, "information wrong\n");
 
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;
@@ -131,12 +131,12 @@ static void test_ntncdf(void)
 
     filter = FILE_NOTIFY_CHANGE_SIZE;
 
-    U(iosb).Status = 1;
+    iosb.Status = 1;
     iosb.Information = 1;
     r = pNtNotifyChangeDirectoryFile(hdir,0,NULL,NULL,&iosb,NULL,0,filter,0);
     ok(r==STATUS_PENDING, "should status pending\n");
 
-    ok( U(iosb).Status == 1, "information wrong\n");
+    ok( iosb.Status == 1, "information wrong\n");
     ok( iosb.Information == 1, "information wrong\n");
 
     r = WaitForSingleObject( hdir, 0 );
@@ -151,7 +151,7 @@ static void test_ntncdf(void)
     r = WaitForSingleObject( hdir, 100 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok( U(iosb).Status == STATUS_NOTIFY_ENUM_DIR, "information wrong\n");
+    ok( iosb.Status == STATUS_NOTIFY_ENUM_DIR, "information wrong\n");
     ok( iosb.Information == 0, "information wrong\n");
 
     CloseHandle(hdir);
@@ -168,7 +168,7 @@ static void test_ntncdf_async(void)
     HANDLE hdir, hEvent;
     char buffer[0x1000];
     DWORD fflags, filter = 0;
-    IO_STATUS_BLOCK iosb, iosb2;
+    IO_STATUS_BLOCK iosb, iosb2, iosb3;
     WCHAR path[MAX_PATH], subdir[MAX_PATH];
     static const WCHAR szBoo[] = { '\\','b','o','o',0 };
     static const WCHAR szHoo[] = { '\\','h','o','o',0 };
@@ -209,11 +209,11 @@ static void test_ntncdf_async(void)
     filter |= FILE_NOTIFY_CHANGE_SECURITY;
 
 
-    U(iosb).Status   = 0x01234567;
+    iosb.Status   = 0x01234567;
     iosb.Information = 0x12345678;
     r = pNtNotifyChangeDirectoryFile(hdir,0,NULL,NULL,&iosb,buffer,sizeof buffer,filter,0);
     ok(r==STATUS_PENDING, "should status pending\n");
-    ok(U(iosb).Status == 0x01234567, "status set too soon\n");
+    ok(iosb.Status == 0x01234567, "status set too soon\n");
     ok(iosb.Information == 0x12345678, "info set too soon\n");
 
     r = CreateDirectoryW( subdir, NULL );
@@ -222,7 +222,7 @@ static void test_ntncdf_async(void)
     r = WaitForSingleObject( hdir, 100 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok(U(iosb).Status == STATUS_SUCCESS, "status not successful\n");
+    ok(iosb.Status == STATUS_SUCCESS, "status not successful\n");
     ok(iosb.Information == 0x12, "info not set\n");
 
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;
@@ -240,7 +240,7 @@ static void test_ntncdf_async(void)
     r = WaitForSingleObject( hdir, 0 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok(U(iosb).Status == STATUS_SUCCESS, "status not successful\n");
+    ok(iosb.Status == STATUS_SUCCESS, "status not successful\n");
     ok(iosb.Information == 0x12, "info not set\n");
 
     ok( pfni->NextEntryOffset == 0, "offset wrong\n" );
@@ -249,7 +249,7 @@ static void test_ntncdf_async(void)
     ok( !memcmp(pfni->FileName,&szHoo[1],6), "name wrong\n" );
 
     /* check APCs */
-    U(iosb).Status = 0;
+    iosb.Status = 0;
     iosb.Information = 0;
 
     r = pNtNotifyChangeDirectoryFile(hdir,0,NULL,NULL,&iosb,NULL,0,filter,0);
@@ -261,10 +261,10 @@ static void test_ntncdf_async(void)
     r = WaitForSingleObject( hdir, 0 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok(U(iosb).Status == STATUS_NOTIFY_ENUM_DIR, "status not successful\n");
+    ok(iosb.Status == STATUS_NOTIFY_ENUM_DIR, "status not successful\n");
     ok(iosb.Information == 0, "info not set\n");
 
-    U(iosb).Status = 0;
+    iosb.Status = 0;
     iosb.Information = 0;
 
     r = pNtNotifyChangeDirectoryFile(hdir,hEvent,NULL,NULL,&iosb,buffer,sizeof buffer,filter,0);
@@ -276,33 +276,45 @@ static void test_ntncdf_async(void)
     r = WaitForSingleObject( hEvent, 0 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok(U(iosb).Status == STATUS_SUCCESS, "status not successful\n");
+    ok(iosb.Status == STATUS_SUCCESS, "status not successful\n");
     ok(iosb.Information == 0x12, "info not set\n");
 
 
-    U(iosb).Status   = 0x01234567;
+    iosb.Status   = 0x01234567;
     iosb.Information = 0x12345678;
     r = pNtNotifyChangeDirectoryFile(hdir,0,NULL,NULL,&iosb,buffer,sizeof buffer,filter,0);
     ok(r==STATUS_PENDING, "should status pending\n");
 
-    U(iosb2).Status   = 0x01234567;
+    iosb2.Status   = 0x01234567;
     iosb2.Information = 0x12345678;
     r = pNtNotifyChangeDirectoryFile(hdir,0,NULL,NULL,&iosb2,buffer,sizeof buffer,filter,0);
     ok(r==STATUS_PENDING, "should status pending\n");
 
-    ok(U(iosb).Status == 0x01234567, "status set too soon\n");
+    ok(iosb.Status == 0x01234567, "status set too soon\n");
     ok(iosb.Information == 0x12345678, "info set too soon\n");
 
-    r = pNtCancelIoFile(hdir, &iosb);
+    iosb3.Status   = 0x111111;
+    iosb3.Information = 0x222222;
+
+    r = pNtCancelIoFile(hdir, &iosb3);
     ok( r == STATUS_SUCCESS, "cancel failed\n");
 
     CloseHandle(hdir);
 
-    ok(U(iosb).Status == STATUS_SUCCESS, "status wrong\n");
-    ok(U(iosb2).Status == STATUS_CANCELLED, "status wrong %x\n",U(iosb2).Status);
+    ok(iosb.Status == STATUS_CANCELLED, "status wrong %lx\n",iosb.Status);
+    ok(iosb2.Status == STATUS_CANCELLED, "status wrong %lx\n",iosb2.Status);
+    ok(iosb3.Status == STATUS_SUCCESS, "status wrong %lx\n",iosb3.Status);
 
     ok(iosb.Information == 0, "info wrong\n");
     ok(iosb2.Information == 0, "info wrong\n");
+    ok(iosb3.Information == 0, "info wrong\n");
+
+    iosb3.Status   = 0x111111;
+    iosb3.Information = 0x222222;
+    r = pNtCancelIoFile(hdir, &iosb3);
+    ok( r == STATUS_INVALID_HANDLE, "cancel failed %lx\n", r);
+    ok(iosb3.Status == 0x111111, "status wrong %lx\n",iosb3.Status);
+    ok(iosb3.Information == 0x222222, "info wrong\n");
 
     r = RemoveDirectoryW( path );
     ok( r == TRUE, "failed to remove directory\n");
@@ -313,11 +325,6 @@ static void test_ntncdf_async(void)
 START_TEST(change)
 {
     HMODULE hntdll = GetModuleHandleA("ntdll");
-    if (!hntdll)
-    {
-        win_skip("not running on NT, skipping test\n");
-        return;
-    }
 
     pNtNotifyChangeDirectoryFile = (void *)GetProcAddress(hntdll, "NtNotifyChangeDirectoryFile");
     pNtCancelIoFile = (void *)GetProcAddress(hntdll, "NtCancelIoFile");
