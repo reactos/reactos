@@ -1719,9 +1719,9 @@ QSI_DEF(SystemTimeAdjustmentInformation)
         (PSYSTEM_QUERY_TIME_ADJUST_INFORMATION)Buffer;
 
     /* Check if enough storage was provided */
-    if (sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION) > Size)
+    *ReqSize = sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION);
+    if (Size != *ReqSize)
     {
-        * ReqSize = sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
