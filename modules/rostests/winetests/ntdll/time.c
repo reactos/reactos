@@ -18,25 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __REACTOS__
-#define NONAMELESSUNION
-#endif
-#include "ntdll_test.h"
+#include <stdarg.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
 #ifndef __REACTOS__
 #include "ddk/wdm.h"
-#else /* FIXME: Inspect */
+#endif
+#include "intrin.h"
+#include "wine/test.h"
 
+#define TICKSPERSEC        10000000
+#define TICKSPERMSEC       10000
+#define SECSPERDAY         86400
+
+#ifdef __REACTOS__
 typedef struct _KSYSTEM_TIME {
     ULONG LowPart;
     LONG High1Time;
     LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
-
-typedef enum _NT_PRODUCT_TYPE {
-    NtProductWinNt = 1,
-    NtProductLanManNt,
-    NtProductServer
-} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
 #define PROCESSOR_FEATURE_MAX 64
 
@@ -47,66 +51,142 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
    EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
-#define MAX_WOW64_SHARED_ENTRIES 16
+typedef enum _NT_PRODUCT_TYPE {
+    NtProductWinNt = 1,
+    NtProductLanManNt,
+    NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
 typedef struct _KUSER_SHARED_DATA {
-    ULONG TickCountLowDeprecated;
-    ULONG TickCountMultiplier;
-    volatile KSYSTEM_TIME InterruptTime;
-    volatile KSYSTEM_TIME SystemTime;
-    volatile KSYSTEM_TIME TimeZoneBias;
-    USHORT ImageNumberLow;
-    USHORT ImageNumberHigh;
-    WCHAR NtSystemRoot[260];
-    ULONG MaxStackTraceDepth;
-    ULONG CryptoExponent;
-    ULONG TimeZoneId;
-    ULONG LargePageMinimum;
-    ULONG Reserved2[7];
-    NT_PRODUCT_TYPE NtProductType;
-    BOOLEAN ProductTypeIsValid;
-    ULONG NtMajorVersion;
-    ULONG NtMinorVersion;
-    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
-    ULONG Reserved1;
-    ULONG Reserved3;
-    volatile ULONG TimeSlip;
-    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-    LARGE_INTEGER SystemExpirationDate;
-    ULONG SuiteMask;
-    BOOLEAN KdDebuggerEnabled;
-    UCHAR NXSupportPolicy;
-    volatile ULONG ActiveConsoleId;
-    volatile ULONG DismountCount;
-    ULONG ComPlusPackage;
-    ULONG LastSystemRITEventTickCount;
-    ULONG NumberOfPhysicalPages;
-    BOOLEAN SafeBootMode;
-    ULONG TraceLogging;
-    ULONGLONG TestRetInstruction;
-    ULONG SystemCall;
-    ULONG SystemCallReturn;
-    ULONGLONG SystemCallPad[3];
+    ULONG TickCountLowDeprecated;                          /* 0x000 */
+    ULONG TickCountMultiplier;                             /* 0x004 */
+    volatile KSYSTEM_TIME InterruptTime;                   /* 0x008 */
+    volatile KSYSTEM_TIME SystemTime;                      /* 0x014 */
+    volatile KSYSTEM_TIME TimeZoneBias;                    /* 0x020 */
+    USHORT ImageNumberLow;                                 /* 0x02c */
+    USHORT ImageNumberHigh;                                /* 0x02e */
+    WCHAR NtSystemRoot[260];                               /* 0x030 */
+    ULONG MaxStackTraceDepth;                              /* 0x238 */
+    ULONG CryptoExponent;                                  /* 0x23c */
+    ULONG TimeZoneId;                                      /* 0x240 */
+    ULONG LargePageMinimum;                                /* 0x244 */
+    ULONG AitSamplingValue;                                /* 0x248 */
+    ULONG AppCompatFlag;                                   /* 0x24c */
+    ULONGLONG RNGSeedVersion;                              /* 0x250 */
+    ULONG GlobalValidationRunLevel;                        /* 0x258 */
+    volatile ULONG TimeZoneBiasStamp;                      /* 0x25c */
+    ULONG NtBuildNumber;                                   /* 0x260 */
+    NT_PRODUCT_TYPE NtProductType;                         /* 0x264 */
+    BOOLEAN ProductTypeIsValid;                            /* 0x268 */
+    USHORT NativeProcessorArchitecture;                    /* 0x26a */
+    ULONG NtMajorVersion;                                  /* 0x26c */
+    ULONG NtMinorVersion;                                  /* 0x270 */
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];      /* 0x274 */
+    ULONG Reserved1;                                       /* 0x2b4 */
+    ULONG Reserved3;                                       /* 0x2b8 */
+    volatile ULONG TimeSlip;                               /* 0x2bc */
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture; /* 0x2c0 */
+    ULONG BootId;                                          /* 0x2c4 */
+    LARGE_INTEGER SystemExpirationDate;                    /* 0x2c8 */
+    ULONG SuiteMask;                                       /* 0x2d0 */
+    BOOLEAN KdDebuggerEnabled;                             /* 0x2d4 */
+    UCHAR NXSupportPolicy;                                 /* 0x2d5 */
+    USHORT CyclesPerYield;                                 /* 0x2d6 */
+    volatile ULONG ActiveConsoleId;                        /* 0x2d8 */
+    volatile ULONG DismountCount;                          /* 0x2dc */
+    ULONG ComPlusPackage;                                  /* 0x2e0 */
+    ULONG LastSystemRITEventTickCount;                     /* 0x2e4 */
+    ULONG NumberOfPhysicalPages;                           /* 0x2e8 */
+    BOOLEAN SafeBootMode;                                  /* 0x2ec */
+    UCHAR VirtualizationFlags;                             /* 0x2ed */
     union {
-        volatile KSYSTEM_TIME TickCount;
+        ULONG SharedDataFlags;                             /* 0x2f0 */
+        struct {
+            ULONG DbgErrorPortPresent       : 1;
+            ULONG DbgElevationEnabed        : 1;
+            ULONG DbgVirtEnabled            : 1;
+            ULONG DbgInstallerDetectEnabled : 1;
+            ULONG DbgLkgEnabled             : 1;
+            ULONG DbgDynProcessorEnabled    : 1;
+            ULONG DbgConsoleBrokerEnabled   : 1;
+            ULONG DbgSecureBootEnabled      : 1;
+            ULONG DbgMultiSessionSku        : 1;
+            ULONG DbgMultiUsersInSessionSku : 1;
+            ULONG DbgStateSeparationEnabled : 1;
+            ULONG SpareBits                 : 21;
+        } DUMMYSTRUCTNAME2;
+    } DUMMYUNIONNAME2;
+    ULONG DataFlagsPad[1];                                 /* 0x2f4 */
+    ULONGLONG TestRetInstruction;                          /* 0x2f8 */
+    LONGLONG QpcFrequency;                                 /* 0x300 */
+    ULONG SystemCall;                                      /* 0x308 */
+    union {
+        ULONG AllFlags;                                    /* 0x30c */
+        struct {
+            ULONG Win32Process            : 1;
+            ULONG Sgx2Enclave             : 1;
+            ULONG VbsBasicEnclave         : 1;
+            ULONG SpareBits               : 29;
+        } DUMMYSTRUCTNAME;
+    } UserCetAvailableEnvironments;
+    ULONGLONG SystemCallPad[2];                            /* 0x310 */
+    union {
+        volatile KSYSTEM_TIME TickCount;                   /* 0x320 */
         volatile ULONG64 TickCountQuad;
     } DUMMYUNIONNAME;
-    ULONG Cookie;
-    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+    ULONG Cookie;                                          /* 0x330 */
+    ULONG CookiePad[1];                                    /* 0x334 */
+    LONGLONG ConsoleSessionForegroundProcessId;            /* 0x338 */
+    ULONGLONG TimeUpdateLock;                              /* 0x340 */
+    ULONGLONG BaselineSystemTimeQpc;                       /* 0x348 */
+    ULONGLONG BaselineInterruptTimeQpc;                    /* 0x350 */
+    ULONGLONG QpcSystemTimeIncrement;                      /* 0x358 */
+    ULONGLONG QpcInterruptTimeIncrement;                   /* 0x360 */
+    UCHAR QpcSystemTimeIncrementShift;                     /* 0x368 */
+    UCHAR QpcInterruptTimeIncrementShift;                  /* 0x369 */
+    USHORT UnparkedProcessorCount;                         /* 0x36a */
+    ULONG EnclaveFeatureMask[4];                           /* 0x36c */
+    ULONG TelemetryCoverageRound;                          /* 0x37c */
+    USHORT UserModeGlobalLogger[16];                       /* 0x380 */
+    ULONG ImageFileExecutionOptions;                       /* 0x3a0 */
+    ULONG LangGenerationCount;                             /* 0x3a4 */
+    ULONG ActiveProcessorAffinity;                         /* 0x3a8 */
+    volatile ULONGLONG InterruptTimeBias;                  /* 0x3b0 */
+    volatile ULONGLONG QpcBias;                            /* 0x3b8 */
+    ULONG ActiveProcessorCount;                            /* 0x3c0 */
+    volatile UCHAR ActiveGroupCount;                       /* 0x3c4 */
+    union {
+        USHORT QpcData;                                    /* 0x3c6 */
+        struct {
+            UCHAR volatile QpcBypassEnabled;
+            UCHAR QpcShift;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME3;
+    LARGE_INTEGER TimeZoneBiasEffectiveStart;              /* 0x3c8 */
+    LARGE_INTEGER TimeZoneBiasEffectiveEnd;                /* 0x3d0 */
+    XSTATE_CONFIGURATION XState;                           /* 0x3d8 */
 } KSHARED_USER_DATA, *PKSHARED_USER_DATA;
 
+#define SHARED_GLOBAL_FLAGS_QPC_BYPASS_ENABLED 0x01
+#define SHARED_GLOBAL_FLAGS_QPC_BYPASS_USE_HV_PAGE 0x02
+#define SHARED_GLOBAL_FLAGS_QPC_BYPASS_DISABLE_32BIT 0x04
+#define SHARED_GLOBAL_FLAGS_QPC_BYPASS_USE_MFENCE 0x10
+#define SHARED_GLOBAL_FLAGS_QPC_BYPASS_USE_LFENCE 0x20
+#define SHARED_GLOBAL_FLAGS_QPC_BYPASS_A73_ERRATA 0x40
+#define SHARED_GLOBAL_FLAGS_QPC_BYPASS_USE_RDTSCP 0x80
 #endif /* !__REACTOS__ */
-
-#define TICKSPERSEC        10000000
-#define TICKSPERMSEC       10000
-#define SECSPERDAY         86400
 
 static VOID (WINAPI *pRtlTimeToTimeFields)( const LARGE_INTEGER *liTime, PTIME_FIELDS TimeFields) ;
 static VOID (WINAPI *pRtlTimeFieldsToTime)(  PTIME_FIELDS TimeFields,  PLARGE_INTEGER Time) ;
 static NTSTATUS (WINAPI *pNtQueryPerformanceCounter)( LARGE_INTEGER *counter, LARGE_INTEGER *frequency );
+static NTSTATUS (WINAPI *pNtQuerySystemInformation)( SYSTEM_INFORMATION_CLASS class,
+                                                     void *info, ULONG size, ULONG *ret_size );
 static NTSTATUS (WINAPI *pRtlQueryTimeZoneInformation)( RTL_TIME_ZONE_INFORMATION *);
 static NTSTATUS (WINAPI *pRtlQueryDynamicTimeZoneInformation)( RTL_DYNAMIC_TIME_ZONE_INFORMATION *);
-static ULONG (WINAPI *pNtGetTickCount)(void);
+static BOOL     (WINAPI *pRtlQueryUnbiasedInterruptTime)( ULONGLONG *time );
+
+static BOOL     (WINAPI *pRtlQueryPerformanceCounter)(LARGE_INTEGER*);
+static BOOL     (WINAPI *pRtlQueryPerformanceFrequency)(LARGE_INTEGER*);
 
 static const int MonthLengths[2][12] =
 {
@@ -181,77 +261,365 @@ static void test_NtQueryPerformanceCounter(void)
     NTSTATUS status;
 
     status = pNtQueryPerformanceCounter(NULL, NULL);
-    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
+    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08lx\n", status);
     status = pNtQueryPerformanceCounter(NULL, &frequency);
-    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
+    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08lx\n", status);
     status = pNtQueryPerformanceCounter(&counter, (void *)0xdeadbee0);
-    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
+    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08lx\n", status);
     status = pNtQueryPerformanceCounter((void *)0xdeadbee0, &frequency);
-    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
+    ok(status == STATUS_ACCESS_VIOLATION, "expected STATUS_ACCESS_VIOLATION, got %08lx\n", status);
 
     status = pNtQueryPerformanceCounter(&counter, NULL);
-    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08lx\n", status);
     status = pNtQueryPerformanceCounter(&counter, &frequency);
-    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08lx\n", status);
+}
+
+#if (defined(__i386__) || defined(__x86_64__)) && !defined(__arm64ec__)
+
+struct hypervisor_shared_data
+{
+    UINT64 unknown;
+    UINT64 QpcMultiplier;
+    UINT64 QpcBias;
+};
+
+/* 128-bit multiply a by b and return the high 64 bits, same as __umulh */
+static UINT64 multiply_tsc(UINT64 a, UINT64 b)
+{
+    UINT64 ah = a >> 32, al = (UINT32)a, bh = b >> 32, bl = (UINT32)b, m;
+    m = (ah * bl) + (bh * al) + ((al * bl) >> 32);
+    return (ah * bh) + (m >> 32);
+}
+
+static void test_RtlQueryPerformanceCounter(void)
+{
+    struct hypervisor_shared_data *hsd;
+    KSHARED_USER_DATA *usd = (void *)0x7ffe0000;
+    LARGE_INTEGER frequency, counter;
+    NTSTATUS status;
+    UINT64 tsc0, tsc1;
+    ULONG len;
+    BOOL ret;
+
+    if (!pRtlQueryPerformanceCounter || !pRtlQueryPerformanceFrequency)
+    {
+        win_skip( "RtlQueryPerformanceCounter/Frequency not available, skipping tests\n" );
+        return;
+    }
+
+    if (!(usd->QpcBypassEnabled & SHARED_GLOBAL_FLAGS_QPC_BYPASS_ENABLED))
+    {
+        todo_wine win_skip("QpcBypassEnabled is not set, skipping tests\n");
+        return;
+    }
+
+    if ((usd->QpcBypassEnabled & SHARED_GLOBAL_FLAGS_QPC_BYPASS_USE_HV_PAGE))
+    {
+        ok( usd->QpcBypassEnabled == (SHARED_GLOBAL_FLAGS_QPC_BYPASS_ENABLED|SHARED_GLOBAL_FLAGS_QPC_BYPASS_USE_HV_PAGE|SHARED_GLOBAL_FLAGS_QPC_BYPASS_USE_RDTSCP),
+            "unexpected QpcBypassEnabled %x, expected 0x83\n", usd->QpcBypassEnabled );
+        ok( usd->QpcFrequency == 10000000, "unexpected QpcFrequency %I64d, expected 10000000\n", usd->QpcFrequency );
+        ok( !usd->QpcShift, "unexpected QpcShift %d, expected 0\n", usd->QpcShift );
+
+        hsd = NULL;
+        status = pNtQuerySystemInformation( SystemHypervisorSharedPageInformation, &hsd, sizeof(void *), &len );
+        ok( !status, "NtQuerySystemInformation returned %lx\n", status );
+        ok( len == sizeof(void *), "unexpected SystemHypervisorSharedPageInformation length %lu\n", len );
+        ok( !!hsd, "unexpected SystemHypervisorSharedPageInformation address %p\n", hsd );
+
+        tsc0 = __rdtsc();
+        ret = pRtlQueryPerformanceCounter( &counter );
+        tsc1 = __rdtsc();
+        ok( ret, "RtlQueryPerformanceCounter failed\n" );
+
+        tsc0 = multiply_tsc(tsc0, hsd->QpcMultiplier) + hsd->QpcBias + usd->QpcBias;
+        tsc1 = multiply_tsc(tsc1, hsd->QpcMultiplier) + hsd->QpcBias + usd->QpcBias;
+
+        ok( tsc0 <= counter.QuadPart, "rdtscp %I64d and RtlQueryPerformanceCounter %I64d are out of order\n", tsc0, counter.QuadPart );
+        ok( counter.QuadPart <= tsc1, "RtlQueryPerformanceCounter %I64d and rdtscp %I64d are out of order\n", counter.QuadPart, tsc1 );
+    }
+    else
+    {
+        ok( usd->QpcShift == 10, "unexpected QpcShift %d, expected 10\n", usd->QpcShift );
+
+        tsc0 = __rdtsc();
+        ret = pRtlQueryPerformanceCounter( &counter );
+        tsc1 = __rdtsc();
+        ok( ret, "RtlQueryPerformanceCounter failed\n" );
+
+        tsc0 += usd->QpcBias;
+        tsc0 >>= usd->QpcShift;
+        tsc1 += usd->QpcBias;
+        tsc1 >>= usd->QpcShift;
+
+        ok( tsc0 <= counter.QuadPart, "rdtscp %I64d and RtlQueryPerformanceCounter %I64d are out of order\n", tsc0, counter.QuadPart );
+        ok( counter.QuadPart <= tsc1, "RtlQueryPerformanceCounter %I64d and rdtscp %I64d are out of order\n", counter.QuadPart, tsc1 );
+    }
+
+    ret = pRtlQueryPerformanceFrequency( &frequency );
+    ok( ret, "RtlQueryPerformanceFrequency failed\n" );
+    ok( frequency.QuadPart == usd->QpcFrequency,
+        "RtlQueryPerformanceFrequency returned %I64d, expected USD QpcFrequency %I64d\n",
+        frequency.QuadPart, usd->QpcFrequency );
+}
+#endif
+
+#define TIMER_LEEWAY 10
+#define CHECK_CURRENT_TIMER(expected) \
+    do { \
+        ok(status == STATUS_SUCCESS, "NtSetTimerResolution failed %lx\n", status); \
+        ok(cur2 == (expected) || broken(abs((int)((expected) - cur2)) <= TIMER_LEEWAY), "expected new timer resolution %lu, got %lu\n", (expected), cur2); \
+        set = cur2; \
+        min2 = min + 20000; \
+        cur2 = min2 + 1; \
+        max2 = cur2 + 1; \
+        status = NtQueryTimerResolution(&min2, &max2, &cur2); \
+        ok(status == STATUS_SUCCESS, "NtQueryTimerResolution() failed %lx\n", status); \
+        ok(min2 == min, "NtQueryTimerResolution() expected min=%lu, got %lu\n", min, min2); \
+        ok(max2 == max, "NtQueryTimerResolution() expected max=%lu, got %lu\n", max, max2); \
+        ok(cur2 == set, "NtQueryTimerResolution() expected timer resolution %lu, got %lu\n", set, cur2); \
+    } while (0)
+
+static void test_TimerResolution(void)
+{
+    ULONG min, max, cur, min2, max2, cur2, set;
+    NTSTATUS status;
+
+    status = NtQueryTimerResolution(NULL, &max, &cur);
+    ok(status == STATUS_ACCESS_VIOLATION, "NtQueryTimerResolution(NULL,,) success\n");
+
+    status = NtQueryTimerResolution(&min, NULL, &cur);
+    ok(status == STATUS_ACCESS_VIOLATION, "NtQueryTimerResolution(,NULL,) success\n");
+
+    status = NtQueryTimerResolution(&min, &max, NULL);
+    ok(status == STATUS_ACCESS_VIOLATION, "NtQueryTimerResolution(,,NULL) success\n");
+
+    min = 212121;
+    cur = min + 1;
+    max = cur + 1;
+    status = NtQueryTimerResolution(&min, &max, &cur);
+    ok(status == STATUS_SUCCESS, "NtQueryTimerResolution() failed (%lx)\n", status);
+    ok(min == 156250 /* 1/64s HPET */ || min == 156001 /* RTC */,
+       "unexpected minimum timer resolution %lu\n", min);
+    ok(0 < max, "invalid maximum timer resolution, should be 0 < %lu\n", max);
+    ok(max <= cur || broken(max - TIMER_LEEWAY <= cur), "invalid timer resolutions, should be %lu <= %lu\n", max, cur);
+    ok(cur <= min || broken(cur <= min + TIMER_LEEWAY), "invalid timer resolutions, should be %lu <= %lu\n", cur, min);
+
+    status = NtSetTimerResolution(0, FALSE, NULL);
+    ok(status == STATUS_ACCESS_VIOLATION, "NtSetTimerResolution(,,NULL) success\n");
+
+    /* Nothing happens if that pointer is not good */
+    status = NtSetTimerResolution(cur - 1, TRUE, NULL);
+    ok(status == STATUS_ACCESS_VIOLATION, "NtSetTimerResolution() failed %lx\n", status);
+
+    min2 = min + 10000;
+    cur2 = min2 + 1;
+    max2 = cur2 + 1;
+    status = NtQueryTimerResolution(&min2, &max2, &cur2);
+    ok(status == STATUS_SUCCESS, "NtQueryTimerResolution() failed (%lx)\n", status);
+    ok(min2 == min, "NtQueryTimerResolution() expected min=%lu, got %lu\n", min, min2);
+    ok(max2 == max, "NtQueryTimerResolution() expected max=%lu, got %lu\n", max, max2);
+    ok(cur2 == cur, "NtQueryTimerResolution() expected timer resolution %lu, got %lu\n", cur, cur2);
+
+    /* 'fails' until the first valid timer resolution request */
+    cur2 = 7654321;
+    status = NtSetTimerResolution(0, FALSE, &cur2);
+    ok(status == STATUS_TIMER_RESOLUTION_NOT_SET, "NtSetTimerResolution() failed %lx\n", status);
+    /* and returns the current timer resolution */
+    ok(cur2 == cur, "expected requested timer resolution %lu, got %lu\n", cur, cur2);
+
+
+    cur2 = 7654321;
+    status = NtSetTimerResolution(max - 1, TRUE, &cur2);
+    CHECK_CURRENT_TIMER(max);
+
+    /* Rescinds our timer resolution request */
+    cur2 = 7654321;
+    status = NtSetTimerResolution(0, FALSE, &cur2);
+    ok(status == STATUS_SUCCESS, "NtSetTimerResolution() failed %lx\n", status);
+    /* -> the timer resolution was reset to its initial value */
+    ok(cur2 == cur, "expected requested timer resolution %lu, got %lu\n", min, cur2);
+
+    cur2 = 7654321;
+    status = NtSetTimerResolution(0, FALSE, &cur2);
+    ok(status == STATUS_TIMER_RESOLUTION_NOT_SET, "NtSetTimerResolution() failed %lx\n", status);
+    ok(cur2 == cur, "expected requested timer resolution %lu, got %lu\n", cur, cur2);
+
+    cur2 = 7654321;
+    status = NtSetTimerResolution(min + 1, TRUE, &cur2);
+    ok(status == STATUS_SUCCESS, "NtSetTimerResolution() failed %lx\n", status);
+    /* This works because:
+     * - Either cur is the minimum (15.6 ms) resolution already, i.e. the
+     *   closest valid value 'set' is rounded to.
+     * - Or some other application requested a higher timer resolution, cur,
+     *   and any attempt to lower the resolution has no effect until that
+     *   request is rescinded (hopefully after this test is done).
+     */
+    CHECK_CURRENT_TIMER(cur);
+
+    /* The requested resolution may (win7) or may not be rounded */
+    cur2 = 7654321;
+    set = max < cur ? cur - 1 : max;
+    status = NtSetTimerResolution(set, TRUE, &cur2);
+    ok(status == STATUS_SUCCESS, "NtSetTimerResolution() failed %lx\n", status);
+    ok(cur2 <= set || broken(cur2 <= set + TIMER_LEEWAY), "expected new timer resolution %lu <= %lu\n", cur2, set);
+    trace("timer resolution: %lu(max) <= %lu(cur) <= %lu(prev) <= %lu(min)\n", max, cur2, cur, min);
+
+    cur2 = 7654321;
+    status = NtSetTimerResolution(cur + 1, TRUE, &cur2);
+    CHECK_CURRENT_TIMER(cur); /* see min + 1 test */
+
+    /* Cleanup by rescinding the last request */
+    cur2 = 7654321;
+    status = NtSetTimerResolution(0, FALSE, &cur2);
+    ok(status == STATUS_SUCCESS, "NtSetTimerResolution() failed %lx\n", status);
+    ok(cur2 == cur, "expected requested timer resolution %lu, got %lu\n", set, cur2);
 }
 
 static void test_RtlQueryTimeZoneInformation(void)
 {
-    RTL_DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
+    RTL_DYNAMIC_TIME_ZONE_INFORMATION tzinfo, tzinfo2;
     NTSTATUS status;
+    ULONG len;
 
     /* test RtlQueryTimeZoneInformation returns an indirect string,
        e.g. @tzres.dll,-32 (Vista or later) */
     if (!pRtlQueryTimeZoneInformation || !pRtlQueryDynamicTimeZoneInformation)
     {
-        win_skip("Time zone name tests requires Vista or later\n");
+        win_skip("Time zone name tests require Vista or later\n");
         return;
     }
 
-    memset(&tzinfo, 0, sizeof(tzinfo));
+    memset(&tzinfo, 0xcc, sizeof(tzinfo));
     status = pRtlQueryDynamicTimeZoneInformation(&tzinfo);
     ok(status == STATUS_SUCCESS,
-       "RtlQueryDynamicTimeZoneInformation failed, got %08x\n", status);
-    todo_wine ok(tzinfo.StandardName[0] == '@',
+       "RtlQueryDynamicTimeZoneInformation failed, got %08lx\n", status);
+    ok(tzinfo.StandardName[0] == '@' ||
+       broken(tzinfo.StandardName[0]), /* some win10 2004 */
        "standard time zone name isn't an indirect string, got %s\n",
        wine_dbgstr_w(tzinfo.StandardName));
-    todo_wine ok(tzinfo.DaylightName[0] == '@',
+    ok(tzinfo.DaylightName[0] == '@' ||
+       broken(tzinfo.DaylightName[0]), /* some win10 2004 */
        "daylight time zone name isn't an indirect string, got %s\n",
        wine_dbgstr_w(tzinfo.DaylightName));
 
-    memset(&tzinfo, 0, sizeof(tzinfo));
+    memset(&tzinfo2, 0xcc, sizeof(tzinfo2));
+    status = pNtQuerySystemInformation( SystemDynamicTimeZoneInformation, &tzinfo2, sizeof(tzinfo2), &len );
+    ok( !status, "NtQuerySystemInformation failed %lx\n", status );
+    ok( len == sizeof(tzinfo2), "wrong len %lu\n", len );
+    ok( !memcmp( &tzinfo, &tzinfo2, sizeof(tzinfo2) ), "tz data is different\n" );
+
+    memset(&tzinfo, 0xcc, sizeof(tzinfo));
     status = pRtlQueryTimeZoneInformation((RTL_TIME_ZONE_INFORMATION *)&tzinfo);
     ok(status == STATUS_SUCCESS,
-       "RtlQueryTimeZoneInformation failed, got %08x\n", status);
-    todo_wine ok(tzinfo.StandardName[0] == '@',
+       "RtlQueryTimeZoneInformation failed, got %08lx\n", status);
+    ok(tzinfo.StandardName[0] == '@' ||
+       broken(tzinfo.StandardName[0]), /* some win10 2004 */
        "standard time zone name isn't an indirect string, got %s\n",
        wine_dbgstr_w(tzinfo.StandardName));
-    todo_wine ok(tzinfo.DaylightName[0] == '@',
+    ok(tzinfo.DaylightName[0] == '@' ||
+       broken(tzinfo.DaylightName[0]), /* some win10 2004 */
        "daylight time zone name isn't an indirect string, got %s\n",
        wine_dbgstr_w(tzinfo.DaylightName));
+
+    memset(&tzinfo, 0xcc, sizeof(tzinfo));
+    status = pRtlQueryTimeZoneInformation((RTL_TIME_ZONE_INFORMATION *)&tzinfo);
+    ok(status == STATUS_SUCCESS,
+       "RtlQueryTimeZoneInformation failed, got %08lx\n", status);
+    ok(tzinfo.StandardName[0] == '@' ||
+       broken(tzinfo.StandardName[0]), /* some win10 2004 */
+       "standard time zone name isn't an indirect string, got %s\n",
+       wine_dbgstr_w(tzinfo.StandardName));
+    ok(tzinfo.DaylightName[0] == '@' ||
+       broken(tzinfo.DaylightName[0]), /* some win10 2004 */
+       "daylight time zone name isn't an indirect string, got %s\n",
+       wine_dbgstr_w(tzinfo.DaylightName));
+
+    memset(&tzinfo2, 0xcc, sizeof(tzinfo2));
+    status = pNtQuerySystemInformation( SystemCurrentTimeZoneInformation, &tzinfo2,
+                                        sizeof(RTL_TIME_ZONE_INFORMATION), &len );
+    ok( !status, "NtQuerySystemInformation failed %lx\n", status );
+    ok( len == sizeof(RTL_TIME_ZONE_INFORMATION), "wrong len %lu\n", len );
+    ok( !memcmp( &tzinfo, &tzinfo2, sizeof(RTL_TIME_ZONE_INFORMATION) ), "tz data is different\n" );
 }
 
-static void test_NtGetTickCount(void)
+static ULONGLONG read_ksystem_time(volatile KSYSTEM_TIME *time)
 {
-#ifndef _WIN64
+    ULONGLONG high, low;
+    do
+    {
+        high = time->High1Time;
+        low = time->LowPart;
+    }
+    while (high != time->High2Time);
+    return high << 32 | low;
+}
+
+static void test_user_shared_data_time(void)
+{
     KSHARED_USER_DATA *user_shared_data = (void *)0x7ffe0000;
-    LONG diff;
-    int i;
+    SYSTEM_TIMEOFDAY_INFORMATION timeofday;
+    ULONGLONG t1, t2, t3;
+    NTSTATUS status;
+    int i = 0;
 
-    if (!pNtGetTickCount)
+    i = 0;
+    do
     {
-        win_skip("NtGetTickCount is not available\n");
-        return;
+        t1 = GetTickCount();
+        if (user_shared_data->NtMajorVersion <= 5 && user_shared_data->NtMinorVersion <= 1)
+            t2 = (DWORD)((*(volatile ULONG*)&user_shared_data->TickCountLowDeprecated * (ULONG64)user_shared_data->TickCountMultiplier) >> 24);
+        else
+            t2 = (DWORD)((read_ksystem_time(&user_shared_data->TickCount) * user_shared_data->TickCountMultiplier) >> 24);
+        t3 = GetTickCount();
+    } while(t3 < t1 && i++ < 1); /* allow for wrap, but only once */
+
+    ok(t1 <= t2, "USD TickCount / GetTickCount are out of order: %s %s\n",
+       wine_dbgstr_longlong(t1), wine_dbgstr_longlong(t2));
+    ok(t2 <= t3, "USD TickCount / GetTickCount are out of order: %s %s\n",
+       wine_dbgstr_longlong(t2), wine_dbgstr_longlong(t3));
+
+    i = 0;
+    do
+    {
+        LARGE_INTEGER system_time;
+        NtQuerySystemTime(&system_time);
+        t1 = system_time.QuadPart;
+        t2 = read_ksystem_time(&user_shared_data->SystemTime);
+        NtQuerySystemTime(&system_time);
+        t3 = system_time.QuadPart;
+    } while(t3 < t1 && i++ < 1); /* allow for wrap, but only once */
+
+    /* FIXME: not always in order, but should be close */
+    todo_wine_if(t1 > t2 && t1 - t2 < 50 * TICKSPERMSEC)
+    ok(t1 <= t2, "USD SystemTime / NtQuerySystemTime are out of order %s %s\n",
+       wine_dbgstr_longlong(t1), wine_dbgstr_longlong(t2));
+    ok(t2 <= t3, "USD SystemTime / NtQuerySystemTime are out of order %s %s\n",
+       wine_dbgstr_longlong(t2), wine_dbgstr_longlong(t3));
+
+    if (!pRtlQueryUnbiasedInterruptTime)
+        win_skip("skipping RtlQueryUnbiasedInterruptTime tests\n");
+    else
+    {
+        i = 0;
+        do
+        {
+            pRtlQueryUnbiasedInterruptTime(&t1);
+            t2 = read_ksystem_time(&user_shared_data->InterruptTime) - user_shared_data->InterruptTimeBias;
+            pRtlQueryUnbiasedInterruptTime(&t3);
+        } while(t3 < t1 && i++ < 1); /* allow for wrap, but only once */
+
+        ok(t1 <= t2, "USD InterruptTime / RtlQueryUnbiasedInterruptTime are out of order %s %s\n",
+           wine_dbgstr_longlong(t1), wine_dbgstr_longlong(t2));
+        ok(t2 <= t3, "USD InterruptTime / RtlQueryUnbiasedInterruptTime are out of order %s %s\n",
+           wine_dbgstr_longlong(t2), wine_dbgstr_longlong(t3));
     }
 
-    for (i = 0; i < 5; ++i)
-    {
-        diff = (user_shared_data->TickCountQuad * user_shared_data->TickCountMultiplier) >> 24;
-        diff = pNtGetTickCount() - diff;
-        ok(diff < 32, "NtGetTickCount - TickCountQuad too high, expected < 32 got %d\n", diff);
-        Sleep(50);
-    }
-#endif
+    t1 = read_ksystem_time(&user_shared_data->TimeZoneBias);
+    status = NtQuerySystemInformation(SystemTimeOfDayInformation, &timeofday, sizeof(timeofday), NULL);
+    ok(!status, "failed to query time of day, status %#lx\n", status);
+    ok(timeofday.TimeZoneBias.QuadPart == t1, "got USD bias %I64u, ntdll bias %I64u\n",
+            t1, timeofday.TimeZoneBias.QuadPart);
 }
 
 START_TEST(time)
@@ -260,17 +628,24 @@ START_TEST(time)
     pRtlTimeToTimeFields = (void *)GetProcAddress(mod,"RtlTimeToTimeFields");
     pRtlTimeFieldsToTime = (void *)GetProcAddress(mod,"RtlTimeFieldsToTime");
     pNtQueryPerformanceCounter = (void *)GetProcAddress(mod, "NtQueryPerformanceCounter");
-    pNtGetTickCount = (void *)GetProcAddress(mod,"NtGetTickCount");
+    pNtQuerySystemInformation = (void *)GetProcAddress(mod, "NtQuerySystemInformation");
     pRtlQueryTimeZoneInformation =
         (void *)GetProcAddress(mod, "RtlQueryTimeZoneInformation");
     pRtlQueryDynamicTimeZoneInformation =
         (void *)GetProcAddress(mod, "RtlQueryDynamicTimeZoneInformation");
+    pRtlQueryUnbiasedInterruptTime = (void *)GetProcAddress(mod, "RtlQueryUnbiasedInterruptTime");
+    pRtlQueryPerformanceCounter = (void *)GetProcAddress(mod, "RtlQueryPerformanceCounter");
+    pRtlQueryPerformanceFrequency = (void *)GetProcAddress(mod, "RtlQueryPerformanceFrequency");
 
     if (pRtlTimeToTimeFields && pRtlTimeFieldsToTime)
         test_pRtlTimeToTimeFields();
     else
         win_skip("Required time conversion functions are not available\n");
     test_NtQueryPerformanceCounter();
-    test_NtGetTickCount();
     test_RtlQueryTimeZoneInformation();
+    test_user_shared_data_time();
+#if (defined(__i386__) || defined(__x86_64__)) && !defined(__arm64ec__)
+    test_RtlQueryPerformanceCounter();
+#endif
+    test_TimerResolution();
 }

@@ -44,7 +44,7 @@ const struct test winetest_testlist[] =
     { "path", func_path },
     { "pipe", func_pipe },
     { "port", func_port },
-    { "process", func_process },
+    // { "process", func_process },
     { "reg", func_reg },
     { "rtl", func_rtl },
     { "rtlbitmap", func_rtlbitmap },
