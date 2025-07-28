@@ -337,16 +337,188 @@ _NtCurrentTeb(VOID)
     return NtCurrentTeb();
 }
 
+#if defined(_M_X64) || defined(_M_IX86)
+#define RTL_REMOTECALL_MAX_ARG_COUNT 4
+#endif
+
+/**
+ * @brief
+ * Hijacks a remote thread to run at a specified location.
+ *
+ * @param[in] ProcessHandle
+ * A handle to the target process.
+ * Must have PROCESS_VM_WRITE privilege if writing context or arguments to the stack of target thread.
+ *
+ * @param[in] ThreadHandle
+ * A handle to the target thread. Must have THREAD_GET_CONTEXT and THREAD_SET_CONTEXT privileges.
+ * THREAD_SUSPEND_RESUME privilege is required if AlreadySuspended is not set.
+ *
+ * @param[in] CallSite
+ * New location to run.
+ *
+ * @param[in] ArgumentCount
+ * Specifies the number of entries in the Arguments array.
+ * The maximum value is RTL_REMOTECALL_MAX_ARG_COUNT.
+ *
+ * @param[in] Arguments
+ * A pointer to an array of arguments to pass.
+ *
+ * @param[in] PassContext
+ * Passes an additional argument before Arguments, which is a pointer to a CONTEXT structure
+ * captured before hijacking.
+ * x64: The CONTEXT will be always written to target thread's stack regardless of PassContext.
+ * 
+ * @param[in] AlreadySuspended
+ * Indicates the target thread is already suspended. If AlreadySuspended is not set,
+ * RtlRemoteCall will suspend and resume the target thread.
+ * x64: RAX will be set to STATUS_ALERTED if AlreadySuspended is set.
+ *
+ * @remarks
+ * x64: Arguments will be written to R11-R15.
+ * x86: Arguments will be written to the stack in order.
+ * This function's behavior depends on platform, see the implementation and apitest for more details.
+ */
+
 NTSTATUS
 NTAPI
-RtlRemoteCall(IN HANDLE Process,
-              IN HANDLE Thread,
-              IN PVOID CallSite,
-              IN ULONG ArgumentCount,
-              IN PULONG Arguments,
-              IN BOOLEAN PassContext,
-              IN BOOLEAN AlreadySuspended)
+RtlRemoteCall(
+    _In_ HANDLE ProcessHandle,
+    _In_ HANDLE ThreadHandle,
+    _In_ PVOID CallSite,
+    _In_ ULONG ArgumentCount,
+    _In_reads_(ArgumentCount) PULONG_PTR Arguments,
+    _In_ BOOLEAN PassContext,
+    _In_ BOOLEAN AlreadySuspended)
 {
+    /* Implemented on x64 and x86 currently */
+#if !defined(_M_X64) && !defined(_M_IX86)
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+#else
+
+    NTSTATUS Status;
+    CONTEXT Context;
+    ULONG ArgumentSize;
+    ULONG_PTR NewStack, *ArgPtr;
+
+    if (ArgumentCount > RTL_REMOTECALL_MAX_ARG_COUNT)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Suspend target thread if it is not suspended yet */
+    if (!AlreadySuspended)
+    {
+        Status = NtSuspendThread(ThreadHandle, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    /* Get target thread context */
+    Context.ContextFlags = CONTEXT_FULL;
+    Status = NtGetContextThread(ThreadHandle, &Context);
+    if (!NT_SUCCESS(Status))
+    {
+        goto _Exit;
+    }
+
+    /* x64 specific: Set RAX to STATUS_ALERTED if target thread is already suspended */
+#ifdef _M_X64
+    if (AlreadySuspended)
+    {
+        Context.Rax = STATUS_ALERTED;
+    }
+#endif
+
+    /*
+     * Write context to the stack.
+     * x64 specific: ignore PassContext parameter, always write context to the stack.
+     */
+#ifdef _M_X64
+    NewStack = Context.Rsp - sizeof(Context);
+#else
+    NewStack = Context.Esp;
+    if (PassContext)
+    {
+        NewStack -= sizeof(Context);
+#endif
+        Status = NtWriteVirtualMemory(ProcessHandle,
+                                      (PVOID)NewStack,
+                                      &Context,
+                                      sizeof(Context),
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            goto _Exit;
+        }
+#ifdef _M_X64
+        Context.Rsp = NewStack;
+#else
+        Context.Esp = NewStack;
+    }
+#endif
+
+    /*
+     * Write parameters to target thread stack or context, and set new context.
+     * If PassContext is set, the first parameter is a pointer to the context we just written.
+     * x86 specific: write all parameters to the stack.
+     * x64 specific: write parameters to R11-R15 registers.
+     */
+    ArgumentSize = ArgumentCount * sizeof(*Arguments);
+#ifdef _M_X64
+    ArgPtr = &Context.R11;
+    if (PassContext)
+    {
+        *ArgPtr++ = NewStack;
+    }
+    if (ArgumentCount)
+    {
+        RtlCopyMemory(ArgPtr, Arguments, ArgumentSize);
+    }
+    Context.Rip = (ULONG_PTR)CallSite;
+#else
+    ULONG_PTR Args[RTL_REMOTECALL_MAX_ARG_COUNT + 1];
+
+    if (PassContext)
+    {
+        Args[0] = NewStack;
+        if (Arguments)
+        {
+            RtlCopyMemory(&Args[1], Arguments, ArgumentSize);
+        }
+        ArgumentSize += sizeof(*Arguments);
+        ArgPtr = Args;
+    }
+    else
+    {
+        ArgPtr = Arguments;
+    }
+    if (ArgumentSize)
+    {
+        NewStack -= ArgumentSize;
+        Status = NtWriteVirtualMemory(ProcessHandle,
+                                      (PVOID)NewStack,
+                                      ArgPtr,
+                                      ArgumentSize,
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            goto _Exit;
+        }
+        Context.Esp = NewStack;
+    }
+    Context.Eip = (ULONG_PTR)CallSite;
+#endif
+    Status = NtSetContextThread(ThreadHandle, &Context);
+
+_Exit:
+    if (!AlreadySuspended)
+    {
+        NtResumeThread(ThreadHandle, NULL);
+    }
+    return Status;
+
+#endif
 }
