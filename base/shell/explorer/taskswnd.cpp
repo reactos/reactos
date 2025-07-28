@@ -1999,8 +1999,6 @@ public:
     // HSHELL_WINDOWACTIVATED, HSHELL_RUDEAPPACTIVATED
     void OnWindowActivated(_In_ HWND hwndTarget)
     {
-        if (!FindTaskItem(hwndTarget))
-            return;
         // Re-start rude app validation
         KillTimer(TIMER_ID_VALIDATE_RUDE_APP);
         SetTimer(TIMER_ID_VALIDATE_RUDE_APP, VALIDATE_RUDE_INTERVAL, NULL);
