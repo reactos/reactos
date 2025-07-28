@@ -242,7 +242,7 @@ IntEngGradientFillRect(
 
 #define FDOCOL(linefrom,lineto,colid) \
   ge[colid] += gd[colid]; \
-  while(ge[colid] > 0) \
+  while(ge[colid] > 0 && gx != 0) \
   { \
     gc[colid] += gi[colid]; \
     ge[colid] -= gx; \
@@ -254,9 +254,8 @@ IntEngGradientFillRect(
   FINITCOL(linefrom, lineto, 0); \
   FINITCOL(linefrom, lineto, 1); \
   FINITCOL(linefrom, lineto, 2); \
-  g_start = sx[linefrom] - 1; \
   g_end = sx[lineto] + gxi; \
-  for(g = g_start; g != g_end; g += gxi) \
+  for(g = sx[linefrom]; g != g_end; g += gxi) \
   { \
     if(InY && g >= FillRect.left && g < FillRect.right) \
     { \
@@ -289,7 +288,7 @@ IntEngGradientFillRect(
 
 #define INITLINE(a,b,line) \
   x[line] = a->x; \
-  sx[line] =  a->x + pptlDitherOrg->x; \
+  sx[line] =  a->x + pptlDitherOrg->x - 1; \
   dx[line] = abs(b->x - a->x); \
   dy[line] = abs(b->y - a->y); \
   incx[line] = LINC[b->x > a->x]; \
@@ -336,8 +335,7 @@ IntEngGradientFillTriangle(
     LONG x[NLINES], dx[NLINES], dy[NLINES], incx[NLINES], ex[NLINES], destx[NLINES];
     LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
     LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
-    LONG sy, y, bt;
-    LONG g_start, g_end;
+    LONG sy, y, bt, g_end;
     static int warn_once;
 
     if (!warn_once++)
