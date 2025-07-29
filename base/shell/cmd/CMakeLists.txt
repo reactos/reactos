@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 
 list(APPEND SOURCE

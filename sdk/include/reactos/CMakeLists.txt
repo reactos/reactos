@@ -1,5 +1,4 @@
 
-add_subdirectory(wine)
 add_subdirectory(mc)
 
 add_definitions(-D_MIDL_USE_GUIDDEF_)
