@@ -2558,7 +2558,7 @@ struct query_reg_values_test
     ULONG size_limit;
 };
 
-#if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_VISTA
+#if !defined(__REACTOS__) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
 static unsigned int query_routine_calls;
 
 static NTSTATUS WINAPI query_routine(const WCHAR *value_name, ULONG value_type, void *value_data, ULONG value_data_size,
@@ -3081,7 +3081,7 @@ static void test_RtlQueryRegistryValues(void)
 
 START_TEST(reg)
 {
-#if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_VISTA
+#if !defined(__REACTOS__) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
     LSTATUS status;
 #endif
 
@@ -3112,7 +3112,7 @@ START_TEST(reg)
     test_redirection();
     test_NtRenameKey();
     test_NtRegLoadKeyEx();
-#if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_VISTA
+#if !defined(__REACTOS__) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
     test_RtlQueryRegistryValues();
 
     status = RegDeleteTreeW(HKEY_CURRENT_USER, L"WineTest");

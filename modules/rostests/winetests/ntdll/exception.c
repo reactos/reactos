@@ -31,265 +31,21 @@
 #include "winuser.h"
 #include "winternl.h"
 #include "rtlsupportapi.h"
-#ifndef __REACTOS__
 #include "ddk/wdm.h"
 #include "excpt.h"
-#endif
 #include "wine/test.h"
 #include "intrin.h"
 #ifdef __REACTOS__
 #include <wine/exception.h>
-
-#define CONTEXT_i386                     0x10000
-#define CONTEXT_i486                     0x10000
-#define CONTEXT_I386_CONTROL             (CONTEXT_i386|0x00000001L)
-#define CONTEXT_I386_INTEGER             (CONTEXT_i386|0x00000002L)
-#define CONTEXT_I386_SEGMENTS            (CONTEXT_i386|0x00000004L)
-#define CONTEXT_I386_FLOATING_POINT      (CONTEXT_i386|0x00000008L)
-#define CONTEXT_I386_DEBUG_REGISTERS     (CONTEXT_i386|0x00000010L)
-#define CONTEXT_I386_EXTENDED_REGISTERS  (CONTEXT_i386|0x00000020L)
-#define CONTEXT_I386_FULL                (CONTEXT_I386_CONTROL | CONTEXT_I386_INTEGER | CONTEXT_I386_SEGMENTS)
-#define CONTEXT_I386_ALL                 (CONTEXT_I386_CONTROL | CONTEXT_I386_INTEGER | CONTEXT_I386_SEGMENTS | CONTEXT_I386_FLOATING_POINT | CONTEXT_I386_DEBUG_REGISTERS | CONTEXT_I386_EXTENDED_REGISTERS)
-#define CONTEXT_I386_XSTATE              (CONTEXT_i386 | 0x00000040L)
-
-#define CONTEXT_AMD64                    0x100000
-#define CONTEXT_AMD64_CONTROL            (CONTEXT_AMD64 | 0x1L)
-#define CONTEXT_AMD64_INTEGER            (CONTEXT_AMD64 | 0x2L)
-#define CONTEXT_AMD64_SEGMENTS           (CONTEXT_AMD64 | 0x4L)
-#define CONTEXT_AMD64_FLOATING_POINT     (CONTEXT_AMD64 | 0x8L)
-#define CONTEXT_AMD64_DEBUG_REGISTERS    (CONTEXT_AMD64 | 0x10L)
-#define CONTEXT_AMD64_FULL               (CONTEXT_AMD64_CONTROL | CONTEXT_AMD64_INTEGER | CONTEXT_AMD64_FLOATING_POINT)
-#define CONTEXT_AMD64_ALL                (CONTEXT_AMD64_CONTROL | CONTEXT_AMD64_INTEGER | CONTEXT_AMD64_SEGMENTS | CONTEXT_AMD64_FLOATING_POINT | CONTEXT_AMD64_DEBUG_REGISTERS)
-#define CONTEXT_AMD64_XSTATE             (CONTEXT_AMD64 | 0x40L)
-
-#ifdef _M_IX86
-#define CONTEXT_XSTATE             CONTEXT_I386_XSTATE
-#endif
 #ifdef _M_AMD64
-#define CONTEXT_XSTATE             CONTEXT_AMD64_XSTATE
-#undef WOW64_CONTEXT_ALL
-#define WOW64_CONTEXT_ALL          CONTEXT_I386_ALL
-#endif
-
-#define CONTEXT_EXCEPTION_ACTIVE 0x8000000
-#define CONTEXT_SERVICE_ACTIVE 0x10000000
-#define CONTEXT_EXCEPTION_REQUEST 0x40000000
-#define CONTEXT_EXCEPTION_REPORTING 0x80000000
-
-typedef struct _YMMCONTEXT
-{
-    M128A Ymm0;
-    M128A Ymm1;
-    M128A Ymm2;
-    M128A Ymm3;
-    M128A Ymm4;
-    M128A Ymm5;
-    M128A Ymm6;
-    M128A Ymm7;
-    M128A Ymm8;
-    M128A Ymm9;
-    M128A Ymm10;
-    M128A Ymm11;
-    M128A Ymm12;
-    M128A Ymm13;
-    M128A Ymm14;
-    M128A Ymm15;
-}
-YMMCONTEXT, *PYMMCONTEXT;
-
-typedef struct _XSTATE
-{
-    ULONG64 Mask;
-    ULONG64 CompactionMask;
-    ULONG64 Reserved[6];
-    YMMCONTEXT YmmContext;
-} XSTATE, *PXSTATE;
-
-typedef WOW64_FLOATING_SAVE_AREA I386_FLOATING_SAVE_AREA;
-typedef WOW64_CONTEXT I386_CONTEXT;
-
-typedef struct DECLSPEC_ALIGN(16) _AMD64_CONTEXT {
-    DWORD64 P1Home;          /* 000 */
-    DWORD64 P2Home;          /* 008 */
-    DWORD64 P3Home;          /* 010 */
-    DWORD64 P4Home;          /* 018 */
-    DWORD64 P5Home;          /* 020 */
-    DWORD64 P6Home;          /* 028 */
-
-    /* Control flags */
-    DWORD ContextFlags;      /* 030 */
-    DWORD MxCsr;             /* 034 */
-
-    /* Segment */
-    WORD SegCs;              /* 038 */
-    WORD SegDs;              /* 03a */
-    WORD SegEs;              /* 03c */
-    WORD SegFs;              /* 03e */
-    WORD SegGs;              /* 040 */
-    WORD SegSs;              /* 042 */
-    DWORD EFlags;            /* 044 */
-
-    /* Debug */
-    DWORD64 Dr0;             /* 048 */
-    DWORD64 Dr1;             /* 050 */
-    DWORD64 Dr2;             /* 058 */
-    DWORD64 Dr3;             /* 060 */
-    DWORD64 Dr6;             /* 068 */
-    DWORD64 Dr7;             /* 070 */
-
-    /* Integer */
-    DWORD64 Rax;             /* 078 */
-    DWORD64 Rcx;             /* 080 */
-    DWORD64 Rdx;             /* 088 */
-    DWORD64 Rbx;             /* 090 */
-    DWORD64 Rsp;             /* 098 */
-    DWORD64 Rbp;             /* 0a0 */
-    DWORD64 Rsi;             /* 0a8 */
-    DWORD64 Rdi;             /* 0b0 */
-    DWORD64 R8;              /* 0b8 */
-    DWORD64 R9;              /* 0c0 */
-    DWORD64 R10;             /* 0c8 */
-    DWORD64 R11;             /* 0d0 */
-    DWORD64 R12;             /* 0d8 */
-    DWORD64 R13;             /* 0e0 */
-    DWORD64 R14;             /* 0e8 */
-    DWORD64 R15;             /* 0f0 */
-
-    /* Counter */
-    DWORD64 Rip;             /* 0f8 */
-
-    /* Floating point */
-    union {
-        XMM_SAVE_AREA32 FltSave;  /* 100 */
-        struct {
-            M128A Header[2];      /* 100 */
-            M128A Legacy[8];      /* 120 */
-            M128A Xmm0;           /* 1a0 */
-            M128A Xmm1;           /* 1b0 */
-            M128A Xmm2;           /* 1c0 */
-            M128A Xmm3;           /* 1d0 */
-            M128A Xmm4;           /* 1e0 */
-            M128A Xmm5;           /* 1f0 */
-            M128A Xmm6;           /* 200 */
-            M128A Xmm7;           /* 210 */
-            M128A Xmm8;           /* 220 */
-            M128A Xmm9;           /* 230 */
-            M128A Xmm10;          /* 240 */
-            M128A Xmm11;          /* 250 */
-            M128A Xmm12;          /* 260 */
-            M128A Xmm13;          /* 270 */
-            M128A Xmm14;          /* 280 */
-            M128A Xmm15;          /* 290 */
-        } DUMMYSTRUCTNAME;
-    } DUMMYUNIONNAME;
-
-    /* Vector */
-    M128A VectorRegister[26];     /* 300 */
-    DWORD64 VectorControl;        /* 4a0 */
-
-    /* Debug control */
-    DWORD64 DebugControl;         /* 4a8 */
-    DWORD64 LastBranchToRip;      /* 4b0 */
-    DWORD64 LastBranchFromRip;    /* 4b8 */
-    DWORD64 LastExceptionToRip;   /* 4c0 */
-    DWORD64 LastExceptionFromRip; /* 4c8 */
-} AMD64_CONTEXT;
-
-#ifdef _WIN64
-typedef struct DECLSPEC_ALIGN(16) _ARM64_NT_CONTEXT
-{
-    ULONG ContextFlags;                 /* 000 */
-    /* CONTEXT_INTEGER */
-    ULONG Cpsr;                         /* 004 */
-    union
-    {
-        struct
-        {
-            DWORD64 X0;                 /* 008 */
-            DWORD64 X1;                 /* 010 */
-            DWORD64 X2;                 /* 018 */
-            DWORD64 X3;                 /* 020 */
-            DWORD64 X4;                 /* 028 */
-            DWORD64 X5;                 /* 030 */
-            DWORD64 X6;                 /* 038 */
-            DWORD64 X7;                 /* 040 */
-            DWORD64 X8;                 /* 048 */
-            DWORD64 X9;                 /* 050 */
-            DWORD64 X10;                /* 058 */
-            DWORD64 X11;                /* 060 */
-            DWORD64 X12;                /* 068 */
-            DWORD64 X13;                /* 070 */
-            DWORD64 X14;                /* 078 */
-            DWORD64 X15;                /* 080 */
-            DWORD64 X16;                /* 088 */
-            DWORD64 X17;                /* 090 */
-            DWORD64 X18;                /* 098 */
-            DWORD64 X19;                /* 0a0 */
-            DWORD64 X20;                /* 0a8 */
-            DWORD64 X21;                /* 0b0 */
-            DWORD64 X22;                /* 0b8 */
-            DWORD64 X23;                /* 0c0 */
-            DWORD64 X24;                /* 0c8 */
-            DWORD64 X25;                /* 0d0 */
-            DWORD64 X26;                /* 0d8 */
-            DWORD64 X27;                /* 0e0 */
-            DWORD64 X28;                /* 0e8 */
-            DWORD64 Fp;                 /* 0f0 */
-            DWORD64 Lr;                 /* 0f8 */
-        } DUMMYSTRUCTNAME;
-        DWORD64 X[31];                  /* 008 */
-    } DUMMYUNIONNAME;
-    /* CONTEXT_CONTROL */
-    DWORD64 Sp;                         /* 100 */
-    DWORD64 Pc;                         /* 108 */
-    /* CONTEXT_FLOATING_POINT */
-    ARM64_NT_NEON128 V[32];             /* 110 */
-    DWORD Fpcr;                         /* 310 */
-    DWORD Fpsr;                         /* 314 */
-    /* CONTEXT_DEBUG_REGISTERS */
-    DWORD Bcr[ARM64_MAX_BREAKPOINTS];   /* 318 */
-    DWORD64 Bvr[ARM64_MAX_BREAKPOINTS]; /* 338 */
-    DWORD Wcr[ARM64_MAX_WATCHPOINTS];   /* 378 */
-    DWORD64 Wvr[ARM64_MAX_WATCHPOINTS]; /* 380 */
-} ARM64_NT_CONTEXT, *PARM64_NT_CONTEXT;
-
-typedef ARM64_RUNTIME_FUNCTION, *PARM64_RUNTIME_FUNCTION;
-
-typedef struct _DISPATCHER_CONTEXT_ARM64
-{
-    ULONG_PTR                     ControlPc;
-    ULONG_PTR                     ImageBase;
-    PARM64_RUNTIME_FUNCTION       FunctionEntry;
-    ULONG_PTR                     EstablisherFrame;
-    ULONG_PTR                     TargetPc;
-    PARM64_NT_CONTEXT             ContextRecord;
-    PEXCEPTION_ROUTINE            LanguageHandler;
-    PVOID                         HandlerData;
-    struct _UNWIND_HISTORY_TABLE *HistoryTable;
-    DWORD                         ScopeIndex;
-    BOOLEAN                       ControlPcIsUnwound;
-    PBYTE                         NonVolatileRegisters;
-} DISPATCHER_CONTEXT_ARM64, *PDISPATCHER_CONTEXT_ARM64;
-
-#define NONVOL_INT_NUMREG_ARM64 11
-#define NONVOL_FP_NUMREG_ARM64  8
-
-#define NONVOL_INT_SIZE_ARM64 (NONVOL_INT_NUMREG_ARM64 * sizeof(DWORD64))
-#define NONVOL_FP_SIZE_ARM64  (NONVOL_FP_NUMREG_ARM64 * sizeof(double))
-
-typedef union _DISPATCHER_CONTEXT_NONVOLREG_ARM64
-{
-    BYTE  Buffer[NONVOL_INT_SIZE_ARM64 + NONVOL_FP_SIZE_ARM64];
-    struct
-    {
-        DWORD64 GpNvRegs[NONVOL_INT_NUMREG_ARM64];
-        double  FpNvRegs[NONVOL_FP_NUMREG_ARM64];
-    } DUMMYSTRUCTNAME;
-} DISPATCHER_CONTEXT_NONVOLREG_ARM64;
-
-#define CONTEXT_UNWOUND_TO_CALL     0x20000000
-#endif
-#endif
+USHORT __readsegds(void);
+USHORT __readseges(void);
+USHORT __readsegfs(void);
+USHORT __readseggs(void);
+USHORT __readsegss(void);
+void __cld(void);
+#endif // _M_AMD64
+#endif // __REACTOS__
 
 static void *code_mem;
 static HMODULE hntdll;
@@ -1550,7 +1306,13 @@ static void test_debugger(DWORD cont_status, BOOL with_WaitForDebugEventEx)
                 else if (stage == STAGE_SEGMENTS)
                 {
                     USHORT ss;
+#if defined(__REACTOS__) && defined(_MSC_VER)
+                    USHORT segss;
+                    __asm  mov [segss], ss
+                    ss = segss;
+#else
                     __asm__( "movw %%ss,%0" : "=r" (ss) );
+#endif
                     ok( ctx.SegSs == ss, "wrong ss %04lx / %04x\n", ctx.SegSs, ss );
                     ok( ctx.SegFs != ctx.SegSs, "wrong fs %04lx / %04lx\n", ctx.SegFs, ctx.SegSs );
                     if (is_wow64) todo_wine_if( !ctx.SegDs ) /* old wow64 */
@@ -3043,11 +2805,19 @@ static DWORD WINAPI prot_fault_handler( EXCEPTION_RECORD *rec, ULONG64 frame,
     if (!is_arm64ec)
     {
         USHORT ds, es, fs, gs, ss;
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        ds = __readsegds();
+        es = __readseges();
+        fs = __readsegfs();
+        gs = __readseggs();
+        ss = __readsegss();
+#else
         __asm__ volatile( "movw %%ds,%0" : "=g" (ds) );
         __asm__ volatile( "movw %%es,%0" : "=g" (es) );
         __asm__ volatile( "movw %%fs,%0" : "=g" (fs) );
         __asm__ volatile( "movw %%gs,%0" : "=g" (gs) );
         __asm__ volatile( "movw %%ss,%0" : "=g" (ss) );
+#endif
         ok( context->SegDs == ds || !ds, "ds %#x does not match %#x\n", context->SegDs, ds );
         ok( context->SegEs == es || !es, "es %#x does not match %#x\n", context->SegEs, es );
         ok( context->SegFs == fs || !fs, "fs %#x does not match %#x\n", context->SegFs, fs );
@@ -3378,7 +3148,11 @@ static void test_exceptions(void)
     run_exception_test(direction_flag_handler, NULL, direction_flag_code, sizeof(direction_flag_code), 0);
     ok(got_exception == 1, "got %d exceptions, expected 1\n", got_exception);
 #ifndef __arm64ec__
+#if defined(__REACTOS__ ) && defined(_MSC_VER)
+    if (is_arm64ec) __cld();
+#else
     if (is_arm64ec) __asm__ volatile( "cld" ); /* needed on Windows */
+#endif
 #endif
 
     /* test int3 handling */
@@ -3392,11 +3166,19 @@ static void test_exceptions(void)
         ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_SEGMENTS;
         res = pNtGetContextThread( GetCurrentThread(), &ctx );
         ok( res == STATUS_SUCCESS, "NtGetContextThread failed with %lx\n", res );
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        ds = __readsegds();
+        es = __readseges();
+        fs = __readsegfs();
+        gs = __readseggs();
+        ss = __readsegss();
+#else
         __asm__ volatile( "movw %%ds,%0" : "=g" (ds) );
         __asm__ volatile( "movw %%es,%0" : "=g" (es) );
         __asm__ volatile( "movw %%fs,%0" : "=g" (fs) );
         __asm__ volatile( "movw %%gs,%0" : "=g" (gs) );
         __asm__ volatile( "movw %%ss,%0" : "=g" (ss) );
+#endif
         ok( ctx.SegDs == ds, "wrong ds %04x / %04x\n", ctx.SegDs, ds );
         ok( ctx.SegEs == es, "wrong es %04x / %04x\n", ctx.SegEs, es );
         ok( ctx.SegFs == fs, "wrong fs %04x / %04x\n", ctx.SegFs, fs );
@@ -3411,11 +3193,19 @@ static void test_exceptions(void)
         ctx.SegFs = ctx.SegSs;
         res = pNtSetContextThread( GetCurrentThread(), &ctx );
         ok( res == STATUS_SUCCESS, "NtGetContextThread failed with %lx\n", res );
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        ds = __readsegds();
+        es = __readseges();
+        fs = __readsegfs();
+        gs = __readseggs();
+        ss = __readsegss();
+#else
         __asm__ volatile( "movw %%ds,%0" : "=g" (ds) );
         __asm__ volatile( "movw %%es,%0" : "=g" (es) );
         __asm__ volatile( "movw %%fs,%0" : "=g" (fs) );
         __asm__ volatile( "movw %%gs,%0" : "=g" (gs) );
         __asm__ volatile( "movw %%ss,%0" : "=g" (ss) );
+#endif
         res = pNtGetContextThread( GetCurrentThread(), &ctx );
         ok( res == STATUS_SUCCESS, "NtGetContextThread failed with %lx\n", res );
         ok( ctx.SegDs == ds, "wrong ds %04x / %04x\n", ctx.SegDs, ds );
@@ -4058,6 +3848,8 @@ static void test_debugger(DWORD cont_status, BOOL with_WaitForDebugEventEx)
                 {
 #ifdef __arm64ec__
                     USHORT ss = 0x2b;
+#elif defined(__REACTOS__) && defined(_MSC_VER)
+                    USHORT ss = __readsegss();
 #else
                     USHORT ss;
                     __asm__( "movw %%ss,%0" : "=r" (ss) );
@@ -11638,7 +11430,7 @@ static void test_copy_context(void)
 #endif
 
 static volatile int exit_ip_test;
-static WINAPI DWORD ip_test_thread_proc( void *param )
+static DWORD WINAPI ip_test_thread_proc( void *param )
 {
     SetEvent( param );
     while (!exit_ip_test);
@@ -11761,7 +11553,6 @@ struct context_exception_request_thread_param
 static volatile int *p_context_exception_request_value;
 struct context_exception_request_thread_param *context_exception_request_param;
 
-#ifndef __REACTOS__
 static LONG CALLBACK test_context_exception_request_handler( EXCEPTION_POINTERS *info )
 {
     PEXCEPTION_RECORD rec = info->ExceptionRecord;
@@ -11781,7 +11572,6 @@ static LONG CALLBACK test_context_exception_request_handler( EXCEPTION_POINTERS 
 
     return EXCEPTION_CONTINUE_EXECUTION;
 }
-#endif
 
 #ifdef __i386__
 static const BYTE call_func64_code[] =
@@ -11822,7 +11612,6 @@ static const BYTE call_func64_code[] =
     0xcb,                               /* lret */
 };
 
-#ifndef __REACTOS__
 static NTSTATUS call_func64( ULONG64 func64, int nb_args, ULONG64 *args, void *code_mem )
 {
     NTSTATUS (WINAPI *func)( ULONG64 func64, int nb_args, ULONG64 *args ) = code_mem;
@@ -11831,9 +11620,7 @@ static NTSTATUS call_func64( ULONG64 func64, int nb_args, ULONG64 *args, void *c
     return func( func64, nb_args, args );
 }
 #endif
-#endif
 
-#ifndef __REACTOS__
 static DWORD WINAPI test_context_exception_request_thread( void *arg )
 {
 #ifdef __i386__
@@ -12053,7 +11840,6 @@ static void test_context_exception_request(void)
     CloseHandle( thread );
     CloseHandle( p.event );
 }
-#endif // __REACTOS__
 
 START_TEST(exception)
 {
@@ -12349,8 +12135,6 @@ START_TEST(exception)
     test_suspend_process();
     test_unload_trace();
     test_backtrace();
-#ifndef __REACTOS__
     test_context_exception_request();
-#endif
     VirtualFree(code_mem, 0, MEM_RELEASE);
 }

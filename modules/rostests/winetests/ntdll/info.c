@@ -27,19 +27,13 @@
 #include "winbase.h"
 #include "winternl.h"
 #include "winnls.h"
-#ifndef __REACTOS__
 #include "ddk/ntddk.h"
-#endif
 #include "psapi.h"
 #include "wine/test.h"
+
 #ifdef __REACTOS__
-// PROCESS_ACCESS_TOKEN is defined in pstypes.h but I can't include it with how Wine structures their headers.
-typedef struct _PROCESS_ACCESS_TOKEN
-{
-    HANDLE Token;
-    HANDLE Thread;
-} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+#define AlwaysOn DEPPolicyAlwaysOn
 #endif
 
 static NTSTATUS (WINAPI * pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);
@@ -2830,12 +2824,8 @@ static void test_mapprotection(void)
             skip("Unable to turn off noexec\n");
             return;
         }
-#ifdef __REACTOS__
-        /* Wine's definition for DEP_SYSTEM_POLICY_TYPE is incorrect. */
-        if (pGetSystemDEPPolicy && pGetSystemDEPPolicy() == DEPPolicyAlwaysOn)
-#else
+
         if (pGetSystemDEPPolicy && pGetSystemDEPPolicy() == AlwaysOn)
-#endif
         {
             skip("System policy requires noexec\n");
             return;
@@ -4031,7 +4021,7 @@ static void test_process_id(void)
     ok( info.ImageName.Length == image_name->Length, "got %#x, %#x.\n", info.ImageName.Length, image_name->Length );
     ok( !wcscmp( name, image_name->Buffer ), "got %s, %s.\n", debugstr_w(name), debugstr_w(image_name->Buffer) );
 
-#if !defined (__REACTOS__) || _WIN32_WINNT >= 0x601
+#if !defined (__REACTOS__) || (DLL_EXPORT_VERSION >= 0x601)
     bret = EnumProcesses( pids, sizeof(pids), &len );
     ok( bret, "got error %lu.\n", GetLastError() );
     for (i = 0; i < len / sizeof(*pids); ++i)

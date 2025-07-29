@@ -33,12 +33,10 @@
 #include "in6addr.h"
 #include "inaddr.h"
 #include "ip2string.h"
-// #include "ddk/ntifs.h"
-#include "wine/test.h"
-#include "wine/asm.h"
-#include "wine/rbtree.h"
-#ifdef __REACTOS__
-#define FASTCALL
+#ifndef __REACTOS__
+#include "ddk/ntifs.h"
+#else
+#define FASTCALL __fastcall
 NTSYSAPI
 SIZE_T
 NTAPI
@@ -48,6 +46,9 @@ RtlCompareMemoryUlong(
     _In_ ULONG Pattern
 );
 #endif
+#include "wine/test.h"
+#include "wine/asm.h"
+#include "wine/rbtree.h"
 
 #ifndef __WINE_WINTERNL_H
 
@@ -2647,7 +2648,7 @@ static void test_RtlDecompressBuffer(void)
         },
         /* empty input buffer */
         {
-            {},
+            {0},
             0,
             STATUS_BAD_COMPRESSION_BUFFER,
         },
@@ -3017,11 +3018,7 @@ static void test_RtlInitializeCriticalSectionEx(void)
     ok(cs.LockSemaphore == NULL, "expected LockSemaphore == NULL, got %p\n", cs.LockSemaphore);
     ok(cs.SpinCount == 0 || broken(cs.SpinCount != 0) /* >= Win 8 */,
        "expected SpinCount == 0, got %Id\n", cs.SpinCount);
-#ifdef __REACTOS__
-    RtlDeleteCriticalSection((RTL_CRITICAL_SECTION*)(&cs));
-#else
     RtlDeleteCriticalSection(&cs);
-#endif
 
     memset(&cs, 0x11, sizeof(cs));
     pRtlInitializeCriticalSectionEx(&cs, 0, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
@@ -3031,11 +3028,7 @@ static void test_RtlInitializeCriticalSectionEx(void)
     ok(cs.LockSemaphore == NULL, "expected LockSemaphore == NULL, got %p\n", cs.LockSemaphore);
     ok(cs.SpinCount == 0 || broken(cs.SpinCount != 0) /* >= Win 8 */,
        "expected SpinCount == 0, got %Id\n", cs.SpinCount);
-#ifdef __REACTOS__
-    RtlDeleteCriticalSection((RTL_CRITICAL_SECTION*)(&cs));
-#else
     RtlDeleteCriticalSection(&cs);
-#endif
 }
 
 static void test_RtlLeaveCriticalSection(void)
