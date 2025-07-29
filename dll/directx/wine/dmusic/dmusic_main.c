@@ -215,14 +215,6 @@ int even_or_odd (DWORD number) {
 	return (number & 0x1); /* basically, check if bit 0 is set ;) */
 }
 
-/* FOURCC to string conversion for debug messages */
-const char *debugstr_fourcc (DWORD fourcc) {
-    if (!fourcc) return "'null'";
-    return wine_dbg_sprintf ("\'%c%c%c%c\'",
-		(char)(fourcc), (char)(fourcc >> 8),
-        (char)(fourcc >> 16), (char)(fourcc >> 24));
-}
-
 /* DMUS_VERSION struct to string conversion for debug messages */
 static const char *debugstr_dmversion(const DMUS_VERSION *version)
 {

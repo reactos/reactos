@@ -251,8 +251,10 @@ extern "C" {
 #define BCSIF_STYLE 0x00000004
 #define BCSIF_SIZE  0x00000008
 
+#define BCSS_NOSPLIT 0x00000001
 #define BCSS_STRETCH 0x00000002
-#define BCSS_IMAGE   0x00000008
+#define BCSS_ALIGNLEFT 0x00000004
+#define BCSS_IMAGE 0x00000008
 
 #define BCN_FIRST (0U-1250U)
 #define BCN_LAST (0U-1350U)
@@ -557,14 +559,14 @@ extern "C" {
 #define ImageList_ExtractIcon(hi,himl,i) ImageList_GetIcon(himl,i,0)
 #define ImageList_LoadBitmap(hi,lpbmp,cx,cGrow,crMask) ImageList_LoadImage(hi,lpbmp,cx,cGrow,crMask,IMAGE_BITMAP,0)
 
-#ifdef __IStream_INTERFACE_DEFINED__
-  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Read(_In_ LPSTREAM pstm);
-  WINCOMMCTRLAPI BOOL WINAPI ImageList_Write(_In_ HIMAGELIST himl, _In_ LPSTREAM pstm);
+struct IStream;
+
+  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Read(_In_ struct IStream* pstm);
+  WINCOMMCTRLAPI BOOL WINAPI ImageList_Write(_In_ HIMAGELIST himl, _In_ struct IStream* pstm);
 #define ILP_NORMAL 0
 #define ILP_DOWNLEVEL 1
-  WINCOMMCTRLAPI HRESULT WINAPI ImageList_ReadEx(_In_ DWORD dwFlags, _In_ LPSTREAM pstm, _In_ REFIID riid, _Outptr_ PVOID *ppv);
-  WINCOMMCTRLAPI HRESULT WINAPI ImageList_WriteEx(_In_ HIMAGELIST himl, _In_ DWORD dwFlags, _In_ LPSTREAM pstm);
-#endif
+  WINCOMMCTRLAPI HRESULT WINAPI ImageList_ReadEx(_In_ DWORD dwFlags, _In_ struct IStream* pstm, _In_ REFIID riid, _Outptr_ PVOID *ppv);
+  WINCOMMCTRLAPI HRESULT WINAPI ImageList_WriteEx(_In_ HIMAGELIST himl, _In_ DWORD dwFlags, _In_ struct IStream* pstm);
 
 #ifndef IMAGEINFO
   typedef struct _IMAGEINFO {
@@ -2965,6 +2967,14 @@ typedef struct tagNMBCDROPDOWN {
     PUINT puColumns;
   } LVTILEINFO,*PLVTILEINFO;
 
+typedef struct tagLVITEMINDEX
+{
+    int iItem;
+    int iGroup;
+} LVITEMINDEX, *PLVITEMINDEX;
+
+#define LVM_GETNEXTITEMINDEX (LVM_FIRST+211)
+
 #define LVM_SETTILEVIEWINFO (LVM_FIRST+162)
 #define ListView_SetTileViewInfo(hwnd,ptvi) SNDMSG((hwnd),LVM_SETTILEVIEWINFO,0,(LPARAM)ptvi)
 #define LVM_GETTILEVIEWINFO (LVM_FIRST+163)
@@ -4316,6 +4326,7 @@ typedef struct {
 #define MCS_NOTODAY            0x0010
 #define MCS_NOTRAILINGDATES    0x0040
 #define MCS_SHORTDAYSOFWEEK    0x0080
+#define MCS_NOSELCHANGEONNAV   0x0100
 
 #define GMR_VISIBLE 0
 #define GMR_DAYSTATE 1
@@ -4671,6 +4682,7 @@ typedef struct {
   } NMBCHOTITEM,*LPNMBCHOTITEM;
 
 #define BST_HOT 0x200
+#define BST_DROPDOWNPUSHED 0x400
 
 #define BS_SPLITBUTTON    0x0000000C
 #define BS_DEFSPLITBUTTON 0x0000000D
