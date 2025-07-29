@@ -38,6 +38,14 @@ $endif()
 extern "C" {
 #endif
 
+#ifndef DECLSPEC_NOINITALL
+#if defined(_MSC_VER)
+#define DECLSPEC_NOINITALL __pragma(warning(push)) __pragma(warning(disable:4845)) __declspec(no_init_all) __pragma(warning(pop))
+#else
+#define DECLSPEC_NOINITALL
+#endif
+#endif
+
 /* Default to strict */
 #ifndef NO_STRICT
 #ifndef STRICT

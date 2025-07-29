@@ -19,6 +19,7 @@ extern "C" {
 
 #include <minwinbase.h>
 #include <ioapiset.h>
+#include <processthreadsapi.h>
 #include <sysinfoapi.h>
 #include <threadpoolapiset.h>
 #include <libloaderapi.h>
@@ -701,54 +702,17 @@ typedef PEXCEPTION_RECORD LPEXCEPTION_RECORD;
 typedef PEXCEPTION_POINTERS LPEXCEPTION_POINTERS;
 #endif
 
-typedef struct _STARTUPINFOA {
-	DWORD	cb;
-	LPSTR	lpReserved;
-	LPSTR	lpDesktop;
-	LPSTR	lpTitle;
-	DWORD	dwX;
-	DWORD	dwY;
-	DWORD	dwXSize;
-	DWORD	dwYSize;
-	DWORD	dwXCountChars;
-	DWORD	dwYCountChars;
-	DWORD	dwFillAttribute;
-	DWORD	dwFlags;
-	WORD	wShowWindow;
-	WORD	cbReserved2;
-	PBYTE	lpReserved2;
-	HANDLE	hStdInput;
-	HANDLE	hStdOutput;
-	HANDLE	hStdError;
-} STARTUPINFOA,*LPSTARTUPINFOA;
+typedef struct _STARTUPINFOEXA
+{
+    STARTUPINFOA StartupInfo;
+    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
+} STARTUPINFOEXA, *LPSTARTUPINFOEXA;
 
-typedef struct _STARTUPINFOW {
-	DWORD	cb;
-	LPWSTR	lpReserved;
-	LPWSTR	lpDesktop;
-	LPWSTR	lpTitle;
-	DWORD	dwX;
-	DWORD	dwY;
-	DWORD	dwXSize;
-	DWORD	dwYSize;
-	DWORD	dwXCountChars;
-	DWORD	dwYCountChars;
-	DWORD	dwFillAttribute;
-	DWORD	dwFlags;
-	WORD	wShowWindow;
-	WORD	cbReserved2;
-	PBYTE	lpReserved2;
-	HANDLE	hStdInput;
-	HANDLE	hStdOutput;
-	HANDLE	hStdError;
-} STARTUPINFOW,*LPSTARTUPINFOW;
-
-typedef struct _PROCESS_INFORMATION {
-	HANDLE hProcess;
-	HANDLE hThread;
-	DWORD dwProcessId;
-	DWORD dwThreadId;
-} PROCESS_INFORMATION,*PPROCESS_INFORMATION,*LPPROCESS_INFORMATION;
+typedef struct _STARTUPINFOEXW
+{
+    STARTUPINFOW StartupInfo;
+    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
+} STARTUPINFOEXW, *LPSTARTUPINFOEXW;
 
 #if (_WIN32_WINNT >= 0x0500)
 typedef WAITORTIMERCALLBACKFUNC WAITORTIMERCALLBACK ;
@@ -1164,6 +1128,7 @@ typedef enum _PROC_THREAD_ATTRIBUTE_NUM {
   ProcThreadAttributeParentProcess = 0,
   ProcThreadAttributeHandleList = 2,
   ProcThreadAttributeGroupAffinity = 3,
+  ProcThreadAttributePreferredNode = 4,
   ProcThreadAttributeIdealProcessor = 5,
   ProcThreadAttributeUmsThread = 6,
   ProcThreadAttributeMitigationPolicy = 7,
@@ -1174,11 +1139,20 @@ typedef enum _PROC_THREAD_ATTRIBUTE_NUM {
   ProcThreadAttributeAllApplicationPackagesPolicy = 15,
   ProcThreadAttributeWin32kFilter = 16,
   ProcThreadAttributeSafeOpenPromptOriginClaim = 17,
+  ProcThreadAttributeDesktopAppPolicy = 18,
+  ProcThreadAttributePseudoConsole = 22,
+  ProcThreadAttributeMitigationAuditPolicy = 24,
+  ProcThreadAttributeMachineType = 25,
+  ProcThreadAttributeComponentFilter = 26,
+  ProcThreadAttributeEnableOptionalXStateFeatures = 27,
+  ProcThreadAttributeTrustedApp = 29,
+  ProcThreadAttributeSveVectorLength = 30,
 } PROC_THREAD_ATTRIBUTE_NUM;
 
 #define PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR (ProcThreadAttributeIdealProcessor | PROC_THREAD_ATTRIBUTE_THREAD | PROC_THREAD_ATTRIBUTE_INPUT)
 #define PROC_THREAD_ATTRIBUTE_HANDLE_LIST (ProcThreadAttributeHandleList | PROC_THREAD_ATTRIBUTE_INPUT)
 #define PROC_THREAD_ATTRIBUTE_PARENT_PROCESS (ProcThreadAttributeParentProcess | PROC_THREAD_ATTRIBUTE_INPUT)
+#define PROC_THREAD_ATTRIBUTE_MACHINE_TYPE (ProcThreadAttributeMachineType | PROC_THREAD_ATTRIBUTE_INPUT)
 
 typedef DWORD
 (WINAPI *PFE_EXPORT_FUNC)(
@@ -3241,7 +3215,6 @@ MapUserPhysicalPagesScatter(
 #endif
 
 #ifdef UNICODE
-typedef STARTUPINFOW STARTUPINFO,*LPSTARTUPINFO;
 typedef HW_PROFILE_INFOW HW_PROFILE_INFO,*LPHW_PROFILE_INFO;
 typedef ENUMRESLANGPROCW ENUMRESLANGPROC;
 typedef ENUMRESNAMEPROCW ENUMRESNAMEPROC;
@@ -3449,7 +3422,6 @@ typedef PCACTCTXW PCACTCTX;
 #define WriteProfileSection WriteProfileSectionW
 #define WriteProfileString WriteProfileStringW
 #else
-typedef STARTUPINFOA STARTUPINFO,*LPSTARTUPINFO;
 typedef HW_PROFILE_INFOA HW_PROFILE_INFO,*LPHW_PROFILE_INFO;
 #if (_WIN32_WINNT >= 0x0501)
 typedef ACTCTXA ACTCTX,*PACTCTX;
