@@ -4412,7 +4412,7 @@ static void test_file_access_information(void)
 static void test_file_attribute_tag_information(void)
 {
     FILE_ATTRIBUTE_TAG_INFORMATION info;
-    FILE_BASIC_INFORMATION fbi = {};
+    FILE_BASIC_INFORMATION fbi = { 0 };
     IO_STATUS_BLOCK io;
     NTSTATUS status;
     HANDLE h;
@@ -4536,7 +4536,7 @@ static void test_dotfile_file_attributes(void)
 {
     char temppath[MAX_PATH], filename[MAX_PATH];
     WCHAR temppathW[MAX_PATH], filenameW[MAX_PATH];
-    FILE_BASIC_INFORMATION info = {};
+    FILE_BASIC_INFORMATION info = { 0 };
     IO_STATUS_BLOCK io;
     NTSTATUS status;
     DWORD attrs;
