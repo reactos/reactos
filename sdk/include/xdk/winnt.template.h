@@ -62,6 +62,14 @@
 #pragma warning(disable:4214)
 #endif
 
+#ifndef DECLSPEC_NOINITALL
+#if defined(_MSC_VER)
+#define DECLSPEC_NOINITALL __pragma(warning(push)) __pragma(warning(disable:4845)) __declspec(no_init_all) __pragma(warning(pop))
+#else
+#define DECLSPEC_NOINITALL
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
