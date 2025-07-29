@@ -3742,7 +3742,7 @@ typedef struct _IMAGE_LOAD_CONFIG_DIRECTORY32 {
   DWORD ProcessHeapFlags;
   DWORD ProcessAffinityMask;
   WORD CSDVersion;
-  WORD Reserved1;
+  WORD DependentLoadFlags;
   DWORD EditList;
   DWORD SecurityCookie;
   DWORD SEHandlerTable;
@@ -3765,7 +3765,7 @@ typedef struct _IMAGE_LOAD_CONFIG_DIRECTORY64 {
   ULONGLONG ProcessAffinityMask;
   DWORD ProcessHeapFlags;
   WORD CSDVersion;
-  WORD Reserved1;
+  WORD DependentLoadFlags;
   ULONGLONG EditList;
   ULONGLONG SecurityCookie;
   ULONGLONG SEHandlerTable;

@@ -26,15 +26,8 @@
 #include "winbase.h"
 #include "winternl.h"
 #include "winnls.h"
-#ifndef __REACTOS__
 #include "ddk/ntddk.h"
-#endif
 #include "wine/test.h"
-#ifdef __REACTOS__
-/* This is needed because Wine's headers aren't compatible */
-void WINAPI RtlUpperString(STRING*, const STRING*);
-LONG WINAPI RtlCompareString(const STRING*,const STRING*,BOOLEAN);
-#endif
 
 static NTSTATUS (WINAPI *pRtlMultiByteToUnicodeN)( LPWSTR dst, DWORD dstlen, LPDWORD reslen,
                                                    LPCSTR src, DWORD srclen );

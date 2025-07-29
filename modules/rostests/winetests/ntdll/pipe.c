@@ -128,7 +128,9 @@ static BOOL init_func_ptrs(void)
     loadfunc(NtQueryVolumeInformationFile)
     loadfunc(NtSetInformationFile)
     loadfunc(NtCancelIoFile)
+#ifndef __REACTOS__
     loadfunc(NtCancelSynchronousIoFile)
+#endif
     loadfunc(RtlInitUnicodeString)
     loadfunc(NtRemoveIoCompletion)
 
@@ -138,6 +140,9 @@ static BOOL init_func_ptrs(void)
     pOpenThread = (void *)GetProcAddress(module, "OpenThread");
     pQueueUserAPC = (void *)GetProcAddress(module, "QueueUserAPC");
     pIsWow64Process = (void *)GetProcAddress(module, "IsWow64Process");
+#ifdef __REACTOS__
+    pNtCancelSynchronousIoFile = (void *)GetProcAddress(module, "NtCancelSynchronousIoFile");
+#endif
     return TRUE;
 }
 
@@ -683,6 +688,14 @@ static void test_cancelsynchronousio(void)
     HANDLE client;
     IO_STATUS_BLOCK iosb;
     struct synchronousio_thread_args ctx;
+
+#ifdef __REACTOS__
+    if (pNtCancelSynchronousIoFile == NULL)
+    {
+        win_skip("NtCancelSynchronousIoFile not available\n");
+        return;
+    }
+#endif // __REACTOS__
 
     /* bogus values */
     res = pNtCancelSynchronousIoFile((HANDLE)0xdeadbeef, NULL, &iosb);

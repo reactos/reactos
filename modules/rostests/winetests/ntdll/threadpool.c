@@ -2042,7 +2042,7 @@ static DWORD WINAPI io_wait_thread(void *arg)
 static void test_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
-    OVERLAPPED ovl = {}, ovl2 = {};
+    OVERLAPPED ovl = {0}, ovl2 = {0};
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];
@@ -2262,7 +2262,7 @@ static void CALLBACK kernel32_io_cb(TP_CALLBACK_INSTANCE *instance, void *userda
 static void test_kernel32_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
-    OVERLAPPED ovl = {}, ovl2 = {};
+    OVERLAPPED ovl = {0}, ovl2 = {0};
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];
