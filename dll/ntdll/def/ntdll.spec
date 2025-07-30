@@ -821,7 +821,7 @@
 @ stdcall RtlEraseUnicodeString(ptr)
 @ stdcall -stub -version=0x600+ RtlExitUserProcess(long)
 @ stdcall RtlExitUserThread(long)
-@ stdcall -stub -version=0x600+ RtlExpandEnvironmentStrings(long ptr long ptr long ptr)
+@ stdcall -version=0x600+ RtlExpandEnvironmentStrings(long ptr long ptr long ptr)
 @ stdcall RtlExpandEnvironmentStrings_U(ptr ptr ptr ptr)
 @ stdcall -version=0x502 RtlExtendHeap(ptr long ptr ptr)
 @ stdcall -stub -version=0x600+ RtlExtendMemoryBlockLookaside(long)
