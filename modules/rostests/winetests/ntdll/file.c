@@ -962,6 +962,14 @@ static void test_set_io_completion(void)
     SIZE_T size = 3;
     HANDLE h, h2;
 
+#ifdef __REACTOS__
+    if (!pNtSetIoCompletionEx)
+    {
+        win_skip("NtSetIoCompletionEx() is unavailable.\n");
+        return;
+    }
+#endif
+
     if (sizeof(size) > 4) size |= (ULONGLONG)0x12345678 << 32;
 
     res = pNtCreateIoCompletion( &h2, IO_COMPLETION_ALL_ACCESS, NULL, 0 );

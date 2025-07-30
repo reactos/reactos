@@ -4369,6 +4369,15 @@ static void test_wow64_context(void)
     unsigned int i, cs32, cs64;
     ULONG_PTR ecx, rcx;
 
+#ifdef __REACTOS__
+    if ((pRtlWow64GetThreadContext == NULL) ||
+        (pRtlWow64SetThreadContext == NULL))
+    {
+        skip("RtlWow64Get/SetThreadContext not found\n");
+        return;
+    }
+#endif
+
     memset(&ctx, 0x55, sizeof(ctx));
     ctx.ContextFlags = WOW64_CONTEXT_ALL;
     ret = pRtlWow64GetThreadContext( GetCurrentThread(), &ctx );
@@ -8487,6 +8496,15 @@ static void test_debug_registers_wow64(void)
     BOOL is_wow64;
     NTSTATUS ret;
     BOOL bret;
+
+#ifdef __REACTOS__
+    if ((pRtlWow64GetThreadContext == NULL) ||
+        (pRtlWow64SetThreadContext == NULL))
+    {
+        skip("RtlWow64Get/SetThreadContext not found\n");
+        return;
+    }
+#endif
 
     si.cb = sizeof(si);
     bret = CreateProcessA(cmdline, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);

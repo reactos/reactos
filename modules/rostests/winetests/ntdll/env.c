@@ -314,6 +314,9 @@ static void test_RtlExpandEnvironmentStrings(void)
     status = RtlSetEnvironmentVariable(NULL, &us_name, &us_value);
     ok(status == STATUS_SUCCESS, "RtlSetEnvironmentVariable failed with %lx\n", status);
 
+#ifdef __REACTOS__
+    if (pRtlExpandEnvironmentStrings != NULL)
+#endif
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         const struct test_info *test = &tests[i];
