@@ -1291,6 +1291,12 @@ static void test_wcslwrupr(void)
     WCHAR buffer[65536];
     int i;
 
+    if (is_reactos())
+    {
+        ok(FALSE, "Broken!\n");
+        return;
+    }
+
     if (0) /* crashes on native */
     {
         static const WCHAR conststringW[] = {'a','b','r','a','c','a','d','a','b','r','a',0};
