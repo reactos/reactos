@@ -129,33 +129,29 @@ RtlDestroyEnvironment(_In_ PWSTR Environment)
  */
 NTSTATUS
 NTAPI
-RtlExpandEnvironmentStrings_U(
-    _In_z_ PWSTR Environment,
-    _In_ PUNICODE_STRING Source,
-    _Inout_ PUNICODE_STRING Destination,
-    _Out_ PULONG Length)
+RtlExpandEnvironmentStrings(
+    _In_opt_ PVOID Environment,
+    _In_reads_(SourceLength) PCWSTR SourceBuffer,
+    _In_ SIZE_T SourceLength,
+    _Out_writes_(DestMax) PWSTR Destination,
+    _In_ SIZE_T DestMax,
+    _Out_opt_ PSIZE_T Length)
 {
     UNICODE_STRING Variable;
     UNICODE_STRING Value;
     NTSTATUS ReturnStatus = STATUS_SUCCESS;
     NTSTATUS Status;
-    PWSTR SourceBuffer;
     PWSTR DestBuffer;
-    PWSTR CopyBuffer;
-    PWSTR VariableEnd;
-    ULONG SourceLength;
-    ULONG DestMax;
-    ULONG CopyLength;
-    ULONG Tail;
-    ULONG TotalLength = 1; /* for terminating NULL */
+    PCWSTR CopyBuffer;
+    PCWSTR VariableEnd;
+    SIZE_T CopyLength;
+    SIZE_T Tail;
+    SIZE_T TotalLength = 1; /* for terminating NULL */
 
-    DPRINT("RtlExpandEnvironmentStrings_U %p %wZ %p %p\n",
-           Environment, Source, Destination, Length);
+    DPRINT("RtlExpandEnvironmentStrings(%p, %S, %Iu, %p, %Iu, %p)\n",
+           Environment, SourceBuffer, SourceLength, Destination, DestMax, Length);
 
-    SourceLength = Source->Length / sizeof(WCHAR);
-    SourceBuffer = Source->Buffer;
-    DestMax = Destination->MaximumLength / sizeof(WCHAR);
-    DestBuffer = Destination->Buffer;
+    DestBuffer = Destination;
 
     while (SourceLength)
     {
@@ -186,7 +182,7 @@ RtlExpandEnvironmentStrings_U(
             {
                 Variable.MaximumLength =
                     Variable.Length = (USHORT)(VariableEnd - (SourceBuffer + 1)) * sizeof(WCHAR);
-                Variable.Buffer = SourceBuffer + 1;
+                Variable.Buffer = (PWSTR)SourceBuffer + 1;
 
                 Value.Length = 0;
                 Value.MaximumLength = (USHORT)DestMax * sizeof(WCHAR);
@@ -249,15 +245,64 @@ RtlExpandEnvironmentStrings_U(
     else
         ReturnStatus = STATUS_BUFFER_TOO_SMALL;
 
-    Destination->Length = (USHORT)(DestBuffer - Destination->Buffer) * sizeof(WCHAR);
+    if (NT_SUCCESS(ReturnStatus))
+    {
+        ASSERT(TotalLength == (DestBuffer - Destination) + 1);
+        //ASSERT(Destination[TotalLength - 1] == UNICODE_NULL);
+    }
+
     if (Length != NULL)
-        *Length = TotalLength * sizeof(WCHAR);
+        *Length = TotalLength;
 
     DPRINT("Destination %wZ\n", Destination);
 
     return ReturnStatus;
 }
 
+NTSTATUS
+NTAPI
+RtlExpandEnvironmentStrings_U(
+    _In_opt_ PWSTR Environment,
+    _In_ PUNICODE_STRING SourceString,
+    _Inout_ PUNICODE_STRING DestinationString,
+    _In_ PULONG ReturnLength)
+{
+    SIZE_T ResultLength;
+    NTSTATUS Status;
+
+    DPRINT("RtlExpandEnvironmentStrings_U %p %wZ %p %p\n",
+           Environment, SourceString, DestinationString, ReturnLength);
+
+    /* Call the buffer version */
+    Status = RtlExpandEnvironmentStrings(
+        Environment,
+        SourceString->Buffer,
+        SourceString->Length / sizeof(WCHAR),
+        DestinationString->Buffer,
+        DestinationString->MaximumLength / sizeof(WCHAR),
+        &ResultLength);
+
+    /* Make sure the result length does not exceed the maximum */
+    if (ResultLength > UNICODE_STRING_MAX_CHARS)
+    {
+        DPRINT("ReturnLength %lu exceeds maximum\n", ResultLength);
+        Status = STATUS_UNSUCCESSFUL;
+        ResultLength = 0;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        DestinationString->Length =
+            ((USHORT)ResultLength * sizeof(WCHAR)) - sizeof(UNICODE_NULL);
+    }
+
+    if (ReturnLength != NULL)
+    {
+        *ReturnLength = (ULONG)ResultLength * sizeof(WCHAR);
+    }
+
+    return Status;
+}
 
 /*
  * @implemented
