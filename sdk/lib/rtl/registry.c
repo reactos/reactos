@@ -523,10 +523,13 @@ RtlpGetRegistryHandle(IN ULONG RelativeTo,
         if (!NT_SUCCESS(Status)) return Status;
     }
 
-    /* And now append the path */
-    if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE) Path++; // HACK!
-    Status = RtlAppendUnicodeToString(&KeyName, Path);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (Path != NULL)
+    {
+        /* And now append the path */
+        if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE) Path++; // HACK!
+        Status = RtlAppendUnicodeToString(&KeyName, Path);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
 
     /* Initialize the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
