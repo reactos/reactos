@@ -143,7 +143,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y++;
-                if (y == lStyleMax && cStyles && iStyle)
+                if (y == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = y + pulStyles[iStyle];
@@ -158,7 +158,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x++;
-                if (x == lStyleMax && cStyles && iStyle)
+                if (x == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = x + pulStyles[iStyle];
@@ -229,7 +229,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y--;
-                if (y == lStyleMax && cStyles && iStyle)
+                if (y == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = y - pulStyles[iStyle];
@@ -244,7 +244,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x++;
-                if (x == lStyleMax && cStyles && iStyle)
+                if (x == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = x + pulStyles[iStyle];
@@ -315,7 +315,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y++;
-                if (y == lStyleMax && cStyles && iStyle)
+                if (y == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = y + pulStyles[iStyle];
@@ -330,7 +330,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x--;
-                if (x == lStyleMax && cStyles && iStyle)
+                if (x == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = x - pulStyles[iStyle];
@@ -401,7 +401,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y--;
-                if (y == lStyleMax && cStyles && iStyle)
+                if (y == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = y - pulStyles[iStyle];
@@ -416,7 +416,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x--;
-                if (x == lStyleMax && cStyles && iStyle)
+                if (x == lStyleMax && cStyles)
                 {
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = x - pulStyles[iStyle];
