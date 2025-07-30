@@ -113,6 +113,7 @@ list(APPEND CRT_STRING_ASM_SOURCE
 list(APPEND LIBCNTPR_STRING_SOURCE
     string/iswctype_nt.c
     string/mbstowcs_nt.c
+    string/toupper_nt_mb.c
     string/wcstombs_nt.c
 )
 
