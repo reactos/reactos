@@ -188,9 +188,10 @@ MMixerAddMixerControl(
             Members = (PKSPROPERTY_MEMBERSHEADER)(Desc + 1);
             Range = (PKSPROPERTY_STEPPING_LONG)(Members + 1);
 
-            DPRINT("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
+            DPRINT1("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
 
             MaxRange = Range->Bounds.UnsignedMaximum - Range->Bounds.UnsignedMinimum;
+            DPRINT1("MaxRange = %d\n", MaxRange);
 
             if (MaxRange)
             {
@@ -201,6 +202,7 @@ MMixerAddMixerControl(
 
                 Steps = MaxRange / Range->SteppingDelta + 1;
                 ASSERT(Steps);
+                DPRINT1("Steps = %d\n", Steps);
 
                 MixerControl->Control.Bounds.dwMinimum = Range->Bounds.UnsignedMinimum;
                 MixerControl->Control.Bounds.dwMaximum = Range->Bounds.UnsignedMaximum;
@@ -213,6 +215,7 @@ MMixerAddMixerControl(
                 VolumeData->SteppingDelta = Range->SteppingDelta;
                 VolumeData->ValuesCount = Steps;
                 VolumeData->InputSteppingDelta = 0x10000 / Steps;
+                DPRINT1("InputSteppingDelta = %d\n", VolumeData->InputSteppingDelta);
 
                 VolumeData->Values = (PLONG)MixerContext->Alloc(sizeof(LONG) * Steps);
                 if (!VolumeData->Values)

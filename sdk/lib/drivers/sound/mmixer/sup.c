@@ -694,8 +694,11 @@ MMixerSetGetVolumeControlDetails(
     {
         if (bSet)
         {
+            DPRINT1("Value (Set) = %d\n", Input[Channel].dwValue);
+
             /* FIXME SEH */
             Index = Input[Channel].dwValue / VolumeData->InputSteppingDelta;
+            DPRINT1("Index (Set) = %d\n", Index);
 
             if (Index >= VolumeData->ValuesCount || Index < 0)
             {
@@ -714,8 +717,11 @@ MMixerSetGetVolumeControlDetails(
 
         if (!bSet)
         {
+            DPRINT1("Value (Get) = %d\n", Value);
+
             /* FIXME SEH */
             Index = Value / VolumeData->InputSteppingDelta;
+            DPRINT1("Index (Get) = %d\n", Index);
 
             if (Index >= VolumeData->ValuesCount || Index < 0)
             {
