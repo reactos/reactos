@@ -4077,6 +4077,14 @@ static void test_processor_idle_cycle_time(void)
     ok( !status, "got %#lx.\n", status );
     ok( size == cpu_count * sizeof(*buffer), "got %#lx.\n", size );
 
+#ifdef __REACTOS__
+    if (pNtQuerySystemInformationEx == NULL)
+    {
+        win_skip("NtQuerySystemInformationEx is not available.\n");
+        return;
+    }
+#endif
+
     memset( buffer, 0xcc, sizeof(buffer) );
     size = 0xdeadbeef;
     status = pNtQuerySystemInformationEx( SystemProcessorIdleCycleTimeInformation, NULL, 0, buffer, sizeof(buffer), &size );
