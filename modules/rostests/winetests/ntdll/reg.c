@@ -352,6 +352,14 @@ static void test_NtOpenKey(void)
     status = pNtCreateKey( &subkey, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0);
     ok(status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08lx\n", status);
     pNtClose( subkey );
+#ifdef __REACTOS__
+    if (pNtOpenKeyEx == NULL)
+    {
+        pNtClose(key);
+        win_skip("NtOpenKeyEx not available\n");
+        return;
+    }
+#endif
     pRtlInitUnicodeString( &str, L"\xd6\xd3\x14c\x370\xd801\xdc28" );  /* surrogates not supported */
     status = pNtOpenKeyEx(&subkey, KEY_ALL_ACCESS, &attr, 0);
     ok(status == STATUS_OBJECT_NAME_NOT_FOUND, "NtOpenKeyEx failed: 0x%08lx\n", status);
