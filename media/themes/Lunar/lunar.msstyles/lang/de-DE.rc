@@ -1,37 +1,37 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-1000, "ReactOS"
+  1000, "ReactOS"
 }
 
 STRINGTABLE
 {
-2000, "Lunar ReactOS"
+  2000, "Lunar ReactOS"
 }
 
 STRINGTABLE
 {
-3000, "Standardgröße"
-3001, "Groß"
-3002, "Extragroß"
+  3000, "Standard size"
+  3001, "Large"
+  3002, "Extra Large"
 }
 
 STRINGTABLE
 {
-4000, "Standardgröße"
-4001, "Groß"
-4002, "Extragroß"
+  4000, "Standard size"
+  4001, "Large"
+  4002, "Extra Large"
 }
 
 STRINGTABLE
 {
-5000, "Lunar"
-5001, "Visueller Stil"
-5002, "ReactOS Project"
-5003, "Cernodile & Illen, basierend auf Lautus"
-5004, "Veröffentlicht unter GNU/GPL 2.0, 2019"
-5005, "https://reactos.org/"
-5006, "1.1"
-5007, "Visueller Stil füt ReactOS"
+  5000, "Lunar"
+  5001, "Visual Style"
+  5002, "ReactOS Project"
+  5003, "Cernodile & Illen, based on Lautus"
+  5004, "Released under GNU/GPL 2.0, 2019"
+  5005, "https://reactos.org/"
+  5006, "1.1"
+  5007, "Visual Style for ReactOS"
 }
