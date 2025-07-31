@@ -3,7 +3,6 @@ list(APPEND LIBCNTPR_STRING_SOURCE
     string/_splitpath.c
     string/_wsplitpath.c
     string/ctype.c
-    string/iswctype.c
     string/is_wctype.c
     string/scanf.c
     string/strcspn.c
@@ -91,6 +90,7 @@ list(APPEND CRT_STRING_SOURCE
     string/_wcslwr_s.c
     string/_wsplitpath_s.c
     string/atof.c
+    string/iswctype.c
     string/mbstowcs_s.c
     string/strcoll.c
     string/strdup.c
@@ -111,6 +111,7 @@ list(APPEND CRT_STRING_ASM_SOURCE
 )
 
 list(APPEND LIBCNTPR_STRING_SOURCE
+    string/iswctype_nt.c
     string/mbstowcs_nt.c
     string/tolower_nt.c
     string/toupper_nt_mb.c
