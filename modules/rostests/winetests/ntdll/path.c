@@ -575,6 +575,13 @@ static void test_RtlDosPathNameToNtPathName_U(void)
         {L"CONOUT$",        L"\\??\\CONOUT$",               -1, L"\\??\\C:\\windows\\CONOUT$"  /* win7 */ },
         {L"cOnOuT$",        L"\\??\\cOnOuT$",               -1, L"\\??\\C:\\windows\\cOnOuT$"  /* win7 */ },
         {L"CONERR$",        L"\\??\\C:\\windows\\CONERR$",  15},
+#ifdef __REACTOS__
+        {L"/??\\/",         L"\\??\\C:\\??\\",              -1},
+        {L"\\??\\#%!§/*",   L"\\??\\#%!§/*",                 4},
+        {L"FOOBAR$",        L"\\??\\FOOBAR$",               -1, L"\\??\\C:\\windows\\FOOBAR$"   /* win7 */ },
+        {L"FOO$/a",         L"\\??\\C:\\windows\\FOO$\\a",  20},
+        //{L"!%OBAR$",        L"\\??\\FOOBAR$",               -1, L"\\??\\C:\\windows\\FOOBAR$"   /* win7 */ },
+#endif
     };
     static const WCHAR *error_paths[] = {
         NULL, L"", L" ", L"C:\\nonexistent\\nul"
@@ -608,12 +615,22 @@ static void test_RtlDosPathNameToNtPathName_U(void)
             continue;
         }
         ok(ret == TRUE, "%s: Got %d.\n", debugstr_w(tests[i].dos), ret);
+        if (!nameW.Buffer)
+        {
+            //__debugbreak();
+            ret = pRtlDosPathNameToNtPathName_U(tests[i].dos, &nameW, &file_part, NULL);
+        }
 
         if (pRtlDosPathNameToNtPathName_U_WithStatus)
         {
             RtlFreeUnicodeString(&nameW);
             status = pRtlDosPathNameToNtPathName_U_WithStatus(tests[i].dos, &nameW, &file_part, NULL);
             ok(status == STATUS_SUCCESS, "%s: Got status %#lx.\n", debugstr_w(tests[i].dos), status);
+            if (!nameW.Buffer)
+            {
+                //__debugbreak();
+                status = pRtlDosPathNameToNtPathName_U_WithStatus(tests[i].dos, &nameW, &file_part, NULL);
+            }
         }
 
 #ifdef __REACTOS__
@@ -759,10 +776,11 @@ START_TEST(path)
     pRtlDosPathNameToNtPathName_U_WithStatus = (void *)GetProcAddress(mod, "RtlDosPathNameToNtPathName_U_WithStatus");
     pNtOpenFile             = (void *)GetProcAddress(mod, "NtOpenFile");
 
+    //__debugbreak();
     test_RtlDetermineDosPathNameType_U();
     test_RtlIsDosDeviceName_U();
     test_RtlIsNameLegalDOS8Dot3();
     test_RtlGetFullPathName_U();
-    test_RtlDosPathNameToNtPathName_U();
+    test_RtlDosPathNameToNtPathName_U(); // here
     test_nt_names();
 }
