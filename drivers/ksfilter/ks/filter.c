@@ -140,12 +140,12 @@ IKsProcessingObject_fnProcessingObjectWork(
     if (KeGetCurrentIrql() == PASSIVE_LEVEL)
     {
         /* acquire processing mutex */
-        KeWaitForSingleObject(&This->ControlMutex, Executive, KernelMode, FALSE, NULL);
+        KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
     }
     else
     {
         /* dispatch level processing */
-        if (KeReadStateMutex(&This->ControlMutex) == 0)
+        if (KeReadStateMutex(&This->ProcessingMutex) == 0)
         {
             /* some thread was faster */
             DPRINT1("processing object too slow\n");
@@ -154,7 +154,7 @@ IKsProcessingObject_fnProcessingObjectWork(
 
         /* acquire processing mutex */
         TimeOut.QuadPart = 0LL;
-        Status = KeWaitForSingleObject(&This->ControlMutex, Executive, KernelMode, FALSE, &TimeOut);
+        Status = KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, &TimeOut);
 
         if (Status == STATUS_TIMEOUT)
         {
