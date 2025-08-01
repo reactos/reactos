@@ -38,6 +38,14 @@ $endif()
 extern "C" {
 #endif
 
+#ifndef DECLSPEC_NOINITALL
+#if defined(_MSC_VER)
+#define DECLSPEC_NOINITALL __pragma(warning(push)) __pragma(warning(disable:4845)) __declspec(no_init_all) __pragma(warning(pop))
+#else
+#define DECLSPEC_NOINITALL
+#endif
+#endif
+
 /* Default to strict */
 #ifndef NO_STRICT
 #ifndef STRICT
@@ -107,6 +115,10 @@ extern "C" {
 #  define max(a,b) (((a) > (b)) ? (a) : (b))
 # endif
 #endif /* NOMINMAX */
+
+/* These should be in minwindef.h */
+typedef unsigned char BYTE;
+typedef unsigned short WORD;
 
 /* Tell windef.h that we have defined some basic types */
 #define BASETYPES

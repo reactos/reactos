@@ -118,8 +118,8 @@ RtlRandom (IN OUT PULONG Seed)
 
    PAGED_CODE_RTL();
 
-   Rand = (*Seed * LCG_A + LCG_C) % LCG_M;
-   *Seed = (Rand * LCG_A + LCG_C) % LCG_M;
+   Rand = ((ULONG64)*Seed * LCG_A + LCG_C) % LCG_M;
+   *Seed = ((ULONG64)Rand * LCG_A + LCG_C) % LCG_M;
    Pos = *Seed & (sizeof(RtlpRandomConstantVector) / sizeof(RtlpRandomConstantVector[0]) - 1);
    Result = RtlpRandomConstantVector[Pos];
    RtlpRandomConstantVector[Pos] = Rand;
@@ -157,7 +157,7 @@ RtlRandomEx( IN OUT PULONG Seed
 
    Pos = RtlpRandomExAuxVarY & (sizeof(RtlpRandomExConstantVector) / sizeof(RtlpRandomExConstantVector[0]) - 1);
    RtlpRandomExAuxVarY = RtlpRandomExConstantVector[Pos];
-   Rand = (*Seed * LCG_A + LCG_C) % LCG_M;
+   Rand = ((ULONG64)*Seed * LCG_A + LCG_C) % LCG_M;
    RtlpRandomExConstantVector[Pos] = Rand;
    *Seed = Rand;
 
@@ -197,7 +197,7 @@ RtlUniform(IN PULONG Seed)
     ULONG Result;
 
     /* Generate the random number */
-    Result = (*Seed * LCG_A + LCG_C) % LCG_M;
+    Result = ((ULONG64)*Seed * LCG_A + LCG_C) % LCG_M;
 
     /* Return it */
     *Seed = Result;
