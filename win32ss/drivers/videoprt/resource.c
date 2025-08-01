@@ -994,14 +994,21 @@ VideoPortVerifyAccessRanges(
             PartialDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
     }
 
-    /* Try to acquire all resource ranges */
-    Status = IoReportResourceForDetection(
-                DeviceExtension->DriverObject,
-                NULL, 0, /* Driver List */
-                DeviceExtension->PhysicalDeviceObject,
-                ResourceList, ResourceListSize,
-                &ConflictDetected);
-
+    if (DeviceExtension->IsLegacyDevice)
+    {
+        /* Try to acquire all resource ranges */
+        Status = IoReportResourceForDetection(
+                    DeviceExtension->DriverObject,
+                    NULL, 0, /* Driver List */
+                    DeviceExtension->PhysicalDeviceObject,
+                    ResourceList, ResourceListSize,
+                    &ConflictDetected);
+    }
+    else
+    {
+        ConflictDetected = FALSE;
+        Status = NO_ERROR;
+    }
     ExFreePoolWithTag(ResourceList, TAG_VIDEO_PORT);
 
     /* If VgaSave driver is conflicting and we don't explicitely want
