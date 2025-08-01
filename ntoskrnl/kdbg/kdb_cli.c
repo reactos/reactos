@@ -126,7 +126,7 @@ BOOLEAN
     IN PCH Argv[]);
 
 static PKDBG_CLI_ROUTINE KdbCliCallbacks[10];
-static BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
+static BOOLEAN KdbUseIntelSyntax = TRUE; /* Set to TRUE for intel syntax */
 static BOOLEAN KdbBreakOnModuleLoad = FALSE; /* Set to TRUE to break into KDB when a module is loaded */
 
 static ULONG KdbNumberOfRowsPrinted = 0;
