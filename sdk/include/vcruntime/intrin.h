@@ -5,6 +5,7 @@
 #ifndef RC_INVOKED
 
 #include <vcruntime.h>
+#include <intrin0.inl.h>
 #include <setjmp.h>
 #include <stddef.h>
 
