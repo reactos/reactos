@@ -23,6 +23,11 @@
 #include <armintr.h>
 #endif /* _M_ARM */
 
+#if defined(_M_ARM64)
+#include <arm64intr.h>
+//#include <arm64_neon.h>
+#endif /* _M_ARM64 */
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
