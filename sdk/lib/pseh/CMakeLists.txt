@@ -3,10 +3,6 @@ if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
         i386/seh.s
         i386/seh_prolog.s)
-elseif(ARCH STREQUAL "amd64")
-    list(APPEND ASM_SOURCE
-        amd64/seh.s
-        amd64/seh_prolog.s)
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE
         arm/seh_prolog.s)
