@@ -1,7 +1,6 @@
 <SDB>
     <DATABASE>
         <NAME>ReactOS compatibility fix database</NAME>
-        <OS_PLATFORM >1</OS_PLATFORM>
         <DATABASE_ID>{11111111-1111-1111-1111-111111111111}</DATABASE_ID>
         <LIBRARY>
             <INCLUDE MODULE="kernel32.dll" />
