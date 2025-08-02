@@ -1,4 +1,5 @@
 
+add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_idl_headers(sxs_winetest_idlheaders interfaces.idl)
 add_executable(sxs_winetest cache.c name.c sxs.c testlist.c resource.rc)

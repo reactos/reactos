@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(wscript_winetest run.c testlist.c rsrc.rc)
 target_link_libraries(wscript_winetest uuid)
