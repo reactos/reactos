@@ -258,6 +258,15 @@
             <SHIM NAME="VMHorizonSetup">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="MsysDecoy" RUNTIME_PLATFORM="AMD64">
+                <DLLFILE>acgenral.dll</DLLFILE>
+                <DESCRIPTION>Shim RtlGetCurrentDirectory_U so msys2 can recognize it</DESCRIPTION>
+                <INCLUDE MODULE="msys-2.0.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+            </SHIM>
 
             <!--<SHIM NAME="HideShimEnv">
                 <DLLFILE>aclayers.dll</DLLFILE>
@@ -462,6 +471,14 @@
                 <LINK_DATE>0x4a9b2979</LINK_DATE>
             </MATCHING_FILE>
             <SHIM_REF NAME="IgnoreFreeLibrary" COMMAND_LINE="libpng12.dll" />
+        </EXE>
+
+        <!-- X64 MSYS2 (CORE-20159) -->
+        <EXE NAME="*" APP_NAME="MSYS2 Applications" RUNTIME_PLATFORM="AMD64">
+            <MATCHING_FILE NAME="msys-2.0.dll">
+                <MODULE_TYPE>0x3</MODULE_TYPE>
+            </MATCHING_FILE>
+            <SHIM_REF NAME="MsysDecoy" />
         </EXE>
 
         <!-- ReactOS shim used to test the shim engine -->
