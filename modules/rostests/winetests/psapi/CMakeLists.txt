@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 add_definitions(-D__WINESRC__)
 add_executable(psapi_winetest psapi_main.c testlist.c)
 set_module_type(psapi_winetest win32cui)

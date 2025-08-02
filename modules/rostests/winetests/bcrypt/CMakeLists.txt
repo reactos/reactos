@@ -1,4 +1,5 @@
 
+add_definitions(-D__ROS_LONG64__)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_executable(bcrypt_winetest bcrypt.c testlist.c)
 set_module_type(bcrypt_winetest win32cui)

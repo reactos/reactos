@@ -1,4 +1,5 @@
 
+add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(hnetcfg_winetest policy.c testlist.c)
 target_link_libraries(hnetcfg_winetest uuid)
