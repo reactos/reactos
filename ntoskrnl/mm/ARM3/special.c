@@ -336,6 +336,7 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     {
         MI_SET_USAGE(MI_USAGE_NONPAGED_POOL);
     }
+    MI_SET_PROCESS(NULL);
     MI_SET_PROCESS2("Kernel-Special");
     PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
 
