@@ -240,6 +240,7 @@ inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 
 
 $define (_WDMDDK_)
+$include (memaccess.h)
 $include (interlocked.h)
 $include (rtltypes.h)
 $include (ketypes.h)
