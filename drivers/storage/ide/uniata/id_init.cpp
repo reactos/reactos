@@ -658,11 +658,18 @@ for_ugly_chips:
             }
             break;
         default:
+#ifdef __REACTOS__
+            /* I assume:
+             * - RangeStart == 0LL, "always". (CORE-13346)
+             * - It will be updated by UniataAhciDetect() a few lines below...
+             */
+#else
             if(!ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[5].RangeStart)) {
                 KdPrint2((PRINT_PREFIX "No BAR5, try BM\n"));
                 ChipFlags &= ~UNIATA_AHCI;
                 deviceExtension->HwFlags &= ~UNIATA_AHCI;
             }
+#endif
             break;
         }
     }
