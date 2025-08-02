@@ -1,0 +1,34 @@
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Arabic (Saudi Arabia) resource file
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALL "&تثبيت"
+    IDS_PRINT "&طباعة"
+    IDS_STRING "صِف خَلقَ خَودٍ كَمِثلِ الشَّمسِ إِذ بَزَغَت يَحظى الضَّجيعُ بِها نَجلاءَ مِعطارِ. ١٢٣٤٥٦٧٨٩٠"
+    IDS_OPEN "فتح خط..."
+    IDS_ERROR "خطأ"
+    IDS_ERROR_NOMEM "لا توجد ذاكرة كافية لإكمال العملية."
+    IDS_ERROR_NOFONT "الملف %1 ليس ملف خط صالح."
+    IDS_ERROR_NOCLASS "تعذر تهيئة فئة النافذة."
+    IDS_ERROR_ISINSTALLED "هذا الخط مثبت بالفعل!"
+    IDS_ERROR_FONTCPY "فشل نسخ ملف الخط!"
+    IDS_ERROR_OPENKEY "فشل فتح مفتاح سجل الخطوط!"
+    IDS_ERROR_REGISTER "فشل تسجيل الخط الجديد!"
+    IDS_SUCCESS "نجاح"
+    IDS_COMPLETED "اكتمل تثبيت الخط."
+    IDS_FILTER_LIST "كل الخطوط المدعومة (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+ملف خط (*.fon;*.fnt)\0*.fon;*.fnt\0\
+خط TrueType (*.ttf)\0*.ttf\0\
+مجموعة خطوط TrueType (*.ttc)\0*.ttc\0\
+خط OpenType (*.otf)\0*.otf\0\
+مجموعة خطوط OpenType (*.otc)\0*.otc\0\
+كل الملفات (*.*)\0*.*\0"
+    IDS_PREVIOUS "< ال&سابق"
+    IDS_NEXT "ال&تالي >"
+END 
