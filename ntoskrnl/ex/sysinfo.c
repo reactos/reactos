@@ -2120,7 +2120,7 @@ ExpCopyLookasideInformation(
     /* Loop as long as we have lookaside lists and free array elements */
     for (ListEntry = ListHead->Flink;
          (ListEntry != ListHead) && (Remaining > 0);
-         ListEntry = ListEntry->Flink, Remaining--)
+         ListEntry = ListEntry->Flink, Info++, Remaining--)
     {
         LookasideList = CONTAINING_RECORD(ListEntry, GENERAL_LOOKASIDE, ListEntry);
 
@@ -2165,6 +2165,13 @@ QSI_DEF(SystemLookasideInformation)
     KIRQL OldIrql;
     NTSTATUS Status;
 
+    /* Calculate how many items we can store */
+    Remaining = MaxCount = Size / sizeof(SYSTEM_LOOKASIDE_INFORMATION);
+    if (Remaining == 0)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
     /* First we need to lock down the memory, since we are going to access it
        at high IRQL */
     PreviousMode = ExGetPreviousMode();
@@ -2178,13 +2185,6 @@ QSI_DEF(SystemLookasideInformation)
     {
         DPRINT1("Failed to lock the user buffer: 0x%lx\n", Status);
         return Status;
-    }
-
-    /* Calculate how many items we can store */
-    Remaining = MaxCount = Size / sizeof(SYSTEM_LOOKASIDE_INFORMATION);
-    if (Remaining == 0)
-    {
-        goto Leave;
     }
 
     /* Copy info from pool lookaside lists */
@@ -2727,7 +2727,7 @@ QSI_DEF(SystemFirmwareTableInformation)
 {
     PSYSTEM_FIRMWARE_TABLE_INFORMATION SysFirmwareInfo = (PSYSTEM_FIRMWARE_TABLE_INFORMATION)Buffer;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG InputBufSize;
+    ULONG DataBufSize;
     ULONG DataSize = 0;
     ULONG TableCount = 0;
 
@@ -2742,7 +2742,7 @@ QSI_DEF(SystemFirmwareTableInformation)
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    InputBufSize = SysFirmwareInfo->TableBufferLength;
+    DataBufSize = Size - *ReqSize;
     switch (SysFirmwareInfo->ProviderSignature)
     {
         /*
@@ -2772,17 +2772,18 @@ QSI_DEF(SystemFirmwareTableInformation)
                 if (SysFirmwareInfo->Action == SystemFirmwareTable_Enumerate)
                 {
                     DataSize = TableCount * sizeof(ULONG);
-                    if (DataSize <= InputBufSize)
+                    if (DataSize <= DataBufSize)
                     {
                         *(ULONG *)SysFirmwareInfo->TableBuffer = 0;
                     }
                 }
                 else if (SysFirmwareInfo->Action == SystemFirmwareTable_Get
-                         && DataSize <= InputBufSize)
+                         && DataSize <= DataBufSize)
                 {
-                    Status = ExpGetRawSMBiosTable(SysFirmwareInfo->TableBuffer, &DataSize, InputBufSize);
+                    Status = ExpGetRawSMBiosTable(SysFirmwareInfo->TableBuffer, &DataSize, DataBufSize);
                 }
                 SysFirmwareInfo->TableBufferLength = DataSize;
+                *ReqSize += DataSize;
             }
             break;
         }
@@ -2790,7 +2791,8 @@ QSI_DEF(SystemFirmwareTableInformation)
         {
             DPRINT1("SystemFirmwareTableInformation: Unsupported provider (0x%x)\n",
                     SysFirmwareInfo->ProviderSignature);
-            Status = STATUS_ILLEGAL_FUNCTION;
+            *ReqSize = 0;
+            Status = STATUS_NOT_IMPLEMENTED;
         }
     }
 
@@ -2801,7 +2803,7 @@ QSI_DEF(SystemFirmwareTableInformation)
             case SystemFirmwareTable_Enumerate:
             case SystemFirmwareTable_Get:
             {
-                if (SysFirmwareInfo->TableBufferLength > InputBufSize)
+                if (SysFirmwareInfo->TableBufferLength > DataBufSize)
                 {
                     Status = STATUS_BUFFER_TOO_SMALL;
                 }
