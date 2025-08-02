@@ -33,3 +33,20 @@ Author:
 #error Invalid compiler!
 
 #endif
+
+/*
+ * This attribute should be applied to a function that
+ * called from pageable code and raises the IRQL at DISPATCH_LEVEL or higher,
+ * and restores the IRQL before it returns. We must make sure that function is not inlined.
+ */
+#define DECLSPEC_NOINLINE_FROM_PAGED           DECLSPEC_NOINLINE
+
+/*
+ * This attribute should be applied to a function that
+ * called from non-pageable code at IRQL lower than DISPATCH_LEVEL.
+ * We should make sure that function is not inlined. Some compilers (GCC)
+ * can do inlining even if the function is in another section.
+ * See the discussion https://gcc.gnu.org/bugzilla/show_bug.cgi?id=31362
+ * for more details.
+ */
+#define DECLSPEC_NOINLINE_FROM_NOT_PAGED       DECLSPEC_NOINLINE
