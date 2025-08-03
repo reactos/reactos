@@ -131,39 +131,6 @@ done:
     return Send(CommPipe, &Reply);
 }
 
-
-DWORD DSLeaseIpAddress( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
-    PDHCP_ADAPTER Adapter;
-    struct protocol* proto;
-
-    ApiLock();
-
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if( Adapter ) {
-        proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
-        if (proto)
-            remove_protocol(proto);
-
-        add_protocol( Adapter->DhclientInfo.name,
-                      Adapter->DhclientInfo.rfdesc, got_one,
-                      &Adapter->DhclientInfo );
-
-        Adapter->DhclientInfo.client->state = S_INIT;
-        state_reboot(&Adapter->DhclientInfo);
-
-        if (hAdapterStateChangedEvent != NULL)
-            SetEvent(hAdapterStateChangedEvent);
-    }
-
-    ApiUnlock();
-
-    return Send(CommPipe, &Reply );
-}
-
 DWORD DSQueryHWInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
@@ -180,81 +147,6 @@ DWORD DSQueryHWInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
         Reply.QueryHWInfo.Mtu = Adapter->IfMib.dwMtu;
         Reply.QueryHWInfo.Speed = Adapter->IfMib.dwSpeed;
     }
-
-    ApiUnlock();
-
-    return Send(CommPipe,  &Reply );
-}
-
-DWORD DSReleaseIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
-    PDHCP_ADAPTER Adapter;
-    struct protocol* proto;
-
-    ApiLock();
-
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if( Adapter ) {
-        if (Adapter->NteContext)
-        {
-            DeleteIPAddress( Adapter->NteContext );
-            Adapter->NteContext = 0;
-        }
-        if (Adapter->RouterMib.dwForwardNextHop)
-        {
-            DeleteIpForwardEntry( &Adapter->RouterMib );
-            Adapter->RouterMib.dwForwardNextHop = 0;
-        }
-
-        proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
-        if (proto)
-           remove_protocol(proto);
-
-        Adapter->DhclientInfo.client->active = NULL;
-        Adapter->DhclientInfo.client->state = S_INIT;
-
-        if (hAdapterStateChangedEvent != NULL)
-            SetEvent(hAdapterStateChangedEvent);
-    }
-
-    ApiUnlock();
-
-    return Send(CommPipe,  &Reply );
-}
-
-DWORD DSRenewIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
-    PDHCP_ADAPTER Adapter;
-    struct protocol* proto;
-
-    ApiLock();
-
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    if( !Adapter || Adapter->DhclientState.state == S_STATIC ) {
-        Reply.Reply = 0;
-        ApiUnlock();
-        return Send(CommPipe,  &Reply );
-    }
-
-    Reply.Reply = 1;
-
-    proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
-    if (proto)
-        remove_protocol(proto);
-
-    add_protocol( Adapter->DhclientInfo.name,
-                  Adapter->DhclientInfo.rfdesc, got_one,
-                  &Adapter->DhclientInfo );
-
-    Adapter->DhclientInfo.client->state = S_INIT;
-    state_reboot(&Adapter->DhclientInfo);
-
-    if (hAdapterStateChangedEvent != NULL)
-        SetEvent(hAdapterStateChangedEvent);
 
     ApiUnlock();
 

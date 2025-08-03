@@ -32,13 +32,10 @@ APIENTRY
 DhcpReleaseParameters(
     _In_ PWSTR AdapterName);
 
-DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex );
 DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
                                      PDWORD MediaType,
                                      PDWORD Mtu,
                                      PDWORD Speed );
-DWORD APIENTRY DhcpReleaseIpAddressLease( DWORD AdapterIndex );
-DWORD APIENTRY DhcpRenewIpAddressLease( DWORD AdapterIndex );
 DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex,
                                              DWORD Address,
                                              DWORD Netmask );

@@ -4,10 +4,7 @@
 enum {
     DhcpReqAcquireParams,
     DhcpReqReleaseParams,
-    DhcpReqLeaseIpAddress,
     DhcpReqQueryHWInfo,
-    DhcpReqReleaseIpAddress,
-    DhcpReqRenewIpAddress,
     DhcpReqStaticRefreshParams,
 };
 

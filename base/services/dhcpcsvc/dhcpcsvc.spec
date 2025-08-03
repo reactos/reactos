@@ -15,7 +15,7 @@
 @ stdcall DhcpEnumClasses(long wstr long long)
 @ stub DhcpFallbackRefreshParams
 @ stdcall DhcpHandlePnPEvent(long long wstr long long)
-@ stdcall DhcpLeaseIpAddress(long)
+@ stub DhcpLeaseIpAddress
 @ stub DhcpLeaseIpAddressEx
 @ stdcall DhcpNotifyConfigChange(ptr ptr long long long long long)
 @ stub DhcpNotifyConfigChangeEx
@@ -25,11 +25,11 @@
 @ stdcall DhcpQueryHWInfo(long ptr ptr ptr)
 @ stub DhcpRegisterOptions
 @ stub DhcpRegisterParamChange
-@ stdcall DhcpReleaseIpAddressLease(long)
+@ stub DhcpReleaseIpAddressLease
 @ stub DhcpReleaseIpAddressLeaseEx
 @ stdcall DhcpReleaseParameters(wstr)
 @ stub DhcpRemoveDNSRegistrations
-@ stdcall DhcpRenewIpAddressLease(long)
+@ stub DhcpRenewIpAddressLease
 @ stub DhcpRenewIpAddressLeaseEx
 @ stub DhcpRequestOptions
 @ stdcall DhcpRequestParams(long ptr ptr ptr long ptr long ptr ptr ptr ptr)

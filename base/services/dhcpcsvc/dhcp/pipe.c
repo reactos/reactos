@@ -393,18 +393,6 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
                     DSQueryHWInfo(PipeSend, CommPipe, &Req);
                     break;
 
-            case DhcpReqLeaseIpAddress:
-                DSLeaseIpAddress( PipeSend, CommPipe, &Req );
-                break;
-
-            case DhcpReqReleaseIpAddress:
-                DSReleaseIpAddressLease( PipeSend, CommPipe, &Req );
-                break;
-
-            case DhcpReqRenewIpAddress:
-                DSRenewIpAddressLease( PipeSend, CommPipe, &Req );
-                break;
-
             case DhcpReqStaticRefreshParams:
                 DSStaticRefreshParams( PipeSend, CommPipe, &Req );
                 break;
