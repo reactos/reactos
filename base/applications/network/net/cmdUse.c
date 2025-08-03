@@ -228,6 +228,7 @@ cmdUse(
         lpNet.dwType = RESOURCETYPE_DISK;
         lpNet.lpLocalName = (argv[2][0] != L'*') ? argv[2] : NULL;
         lpNet.lpRemoteName = argv[3];
+        lpNet.lpComment = L"";
         lpNet.lpProvider = NULL;
 
         Status = WNetUseConnection(NULL, &lpNet, NULL, NULL, CONNECT_REDIRECT | (Persist ? CONNECT_UPDATE_PROFILE : 0), Access, &Size, &OutFlags);
