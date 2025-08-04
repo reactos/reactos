@@ -17,16 +17,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * History:
- * 24-Apr-2000 BS	- Started from scratch to restructure everything
- *			  and reintegrate the source into the wine-tree.
- * 04-Jan-2000 BS	- Added comments about the lexicographical
- *			  grammar to give some insight in the complexity.
- * 28-Dec-1999 BS	- Eliminated backing-up of the flexer by running
- *			  `flex -b' on the source. This results in some
- *			  weirdo extra rules, but a much faster scanner.
- * 23-Dec-1999 BS	- Started this file
- *
  *-------------------------------------------------------------------------
  * The preprocessor's lexographical grammar (approximately):
  *
@@ -123,7 +113,6 @@
 
 %top{
 #include "config.h"
-#include "wine/port.h"
 }
 
 /*
@@ -150,6 +139,7 @@
 %x pp_macexp
 %x pp_if
 %x pp_ifd
+%x pp_ifignored
 %x pp_endif
 %x pp_line
 %x pp_defined
@@ -162,6 +152,7 @@ ul	[uUlL]|[uUlL][lL]|[lL][uU]|[lL][lL][uU]|[uU][lL][lL]|[lL][uU][lL]
 
 %{
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -170,18 +161,17 @@ ul	[uUlL]|[uUlL][lL]|[lL][uU]|[lL][lL][uU]|[uU][lL][lL]|[lL][uU][lL]
 #include <limits.h>
 
 #ifndef LLONG_MAX
-# define LLONG_MAX  ((long long)0x7fffffff << 32 | 0xffffffff)
+# define LLONG_MAX  ((__int64)0x7fffffff << 32 | 0xffffffff)
 # define LLONG_MIN  (-LLONG_MAX - 1)
 #endif
 #ifndef ULLONG_MAX
-# define ULLONG_MAX ((long long)0xffffffff << 32 | 0xffffffff)
+# define ULLONG_MAX ((__int64)0xffffffff << 32 | 0xffffffff)
 #endif
 
-#ifndef HAVE_UNISTD_H
 #define YY_NO_UNISTD_H
-#endif
 
-#include "wine/wpp.h"
+#include "../tools.h"
+#include "utils.h"
 #include "wpp_private.h"
 #include "ppy.tab.h"
 
@@ -209,7 +199,7 @@ ul	[uUlL]|[uUlL][lL]|[lL][uU]|[lL][lL][uU]|[uU][lL][lL]|[lL][uU][lL]
 
 typedef struct bufferstackentry {
 	YY_BUFFER_STATE	bufferstate;	/* Buffer to switch back to */
-	void		*filehandle;    /* Handle to be used with wpp_callbacks->read */
+	FILE		*file;          /* File handle */
 	pp_entry_t	*define;	/* Points to expanding define or NULL if handling includes */
 	int		line_number;	/* Line that we were handling */
 	int		char_number;	/* The current position on that line */
@@ -250,7 +240,7 @@ typedef struct macexpstackentry {
  * Prototypes
  */
 static void newline(int);
-static int make_number(int radix, YYSTYPE *val, const char *str, int len);
+static int make_number(int radix, PPY_STYPE *val, const char *str, int len);
 static void put_buffer(const char *s, int len);
 /* Buffer management */
 static void push_buffer(pp_entry_t *ppp, char *filename, char *incname, int pop);
@@ -301,59 +291,12 @@ include_state_t pp_incl_state =
     0      /* seen_junk */
 };
 
-includelogicentry_t *pp_includelogiclist = NULL;
+static struct list pp_includelogiclist = LIST_INIT( pp_includelogiclist );
 
 #define YY_INPUT(buf,result,max_size)					     \
 	{								     \
-		result = wpp_callbacks->read(pp_status.file, buf, max_size); \
+		result = fread(buf, 1, max_size, pp_status.file);	     \
 	}
-
-#define BUFFERINITIALCAPACITY 256
-
-void pp_writestring(const char *format, ...)
-{
-	va_list valist;
-	int len;
-	static char *buffer;
-	static int buffercapacity;
-	char *new_buffer;
-
-	if(buffercapacity == 0)
-	{
-		buffer = pp_xmalloc(BUFFERINITIALCAPACITY);
-		if(buffer == NULL)
-			return;
-		buffercapacity = BUFFERINITIALCAPACITY;
-	}
-
-	va_start(valist, format);
-	len = vsnprintf(buffer, buffercapacity,
-			format, valist);
-	va_end(valist);
-        /* If the string is longer than buffersize, vsnprintf returns
-         * the string length with glibc >= 2.1, -1 with glibc < 2.1 */
-	while(len > buffercapacity || len < 0)
-	{
-		do
-		{
-			buffercapacity *= 2;
-		} while(len > buffercapacity);
-
-		new_buffer = pp_xrealloc(buffer, buffercapacity);
-		if(new_buffer == NULL)
-		{
-			va_end(valist);
-			return;
-		}
-		buffer = new_buffer;
-		va_start(valist, format);
-		len = vsnprintf(buffer, buffercapacity,
-				format, valist);
-		va_end(valist);
-	}
-
-	wpp_callbacks->write(buffer, len);
-}
 
 %}
 
@@ -390,7 +333,7 @@ void pp_writestring(const char *format, ...)
 <pp_pp>{ws}*undef{ws}*		if(yy_top_state() != pp_ignore) {yy_pp_state(pp_ifd); return tUNDEF;} else {yy_pp_state(pp_eol);}
 <pp_pp>{ws}*ifdef{ws}*		yy_pp_state(pp_ifd);	return tIFDEF;
 <pp_pp>{ws}*ifndef{ws}*		pp_incl_state.seen_junk--; yy_pp_state(pp_ifd);	return tIFNDEF;
-<pp_pp>{ws}*if{ws}*		yy_pp_state(pp_if);	return tIF;
+<pp_pp>{ws}*if{ws}*		if(yy_top_state() != pp_ignore) {yy_pp_state(pp_if);} else {yy_pp_state(pp_ifignored);} return tIF;
 <pp_pp>{ws}*elif{ws}*		yy_pp_state(pp_if);	return tELIF;
 <pp_pp>{ws}*else{ws}*		yy_pp_state(pp_endif);  return tELSE;
 <pp_pp>{ws}*endif{ws}*		yy_pp_state(pp_endif);  return tENDIF;
@@ -450,11 +393,14 @@ void pp_writestring(const char *format, ...)
 <pp_if>\"			ppy_error("String constants not allowed in conditionals");
 <pp_if>.			return *ppy_text;
 
+<pp_ifignored>[^\n]+		ppy_lval.sint = 0; return tSINT;
+<pp_ifignored>\n		newline(1); yy_pop_state(); return tNL;
+
 	/*
 	 * Handle #ifdef, #ifndef and #undef
 	 * to get only an untranslated/unexpanded identifier
 	 */
-<pp_ifd>{cident}	ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
+<pp_ifd>{cident}	ppy_lval.cptr = xstrdup(ppy_text); return tIDENT;
 <pp_ifd>{ws}+		;
 <pp_ifd>\n		newline(1); yy_pop_state(); return tNL;
 <pp_ifd>\\\r?\n		newline(0);
@@ -473,7 +419,7 @@ void pp_writestring(const char *format, ...)
 	 * This is necessary to get the identifier prior to any
 	 * substitutions.
 	 */
-<pp_defined>{cident}		yy_pop_state(); ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
+<pp_defined>{cident}		yy_pop_state(); ppy_lval.cptr = xstrdup(ppy_text); return tIDENT;
 <pp_defined>{ws}+		;
 <pp_defined>(\()|(\))		return *ppy_text;
 <pp_defined>\\\r?\n		newline(0);
@@ -485,27 +431,27 @@ void pp_writestring(const char *format, ...)
 	 * will act appropriately.
 	 * Comments are stripped from the literal text.
 	 */
-<pp_eol>[^/\\\n]+		if(yy_top_state() != pp_ignore) { ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL; }
-<pp_eol>\/[^/\\\n*]*		if(yy_top_state() != pp_ignore) { ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL; }
-<pp_eol>(\\\r?)|(\/[^/*])	if(yy_top_state() != pp_ignore) { ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL; }
+<pp_eol>[^/\\\n]+		if(yy_top_state() != pp_ignore) { ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL; }
+<pp_eol>\/[^/\\\n*]*		if(yy_top_state() != pp_ignore) { ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL; }
+<pp_eol>(\\\r?)|(\/[^/*])	if(yy_top_state() != pp_ignore) { ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL; }
 <pp_eol>\n			newline(1); yy_pop_state(); if(yy_current_state() != pp_ignore) { return tNL; }
 <pp_eol>\\\r?\n			newline(0);
 
 	/*
 	 * Handle left side of #define
 	 */
-<pp_def>{cident}\(		ppy_lval.cptr = pp_xstrdup(ppy_text); if(ppy_lval.cptr) ppy_lval.cptr[ppy_leng-1] = '\0'; yy_pp_state(pp_macro);  return tMACRO;
-<pp_def>{cident}		ppy_lval.cptr = pp_xstrdup(ppy_text); yy_pp_state(pp_define); return tDEFINE;
+<pp_def>{cident}\(		ppy_lval.cptr = xstrdup(ppy_text); ppy_lval.cptr[ppy_leng-1] = '\0'; yy_pp_state(pp_macro);  return tMACRO;
+<pp_def>{cident}		ppy_lval.cptr = xstrdup(ppy_text); yy_pp_state(pp_define); return tDEFINE;
 <pp_def>{ws}+			;
 <pp_def>\\\r?\n			newline(0);
-<pp_def>(\\\r?)|(\n)|(.)	perror("Identifier expected");
+<pp_def>(\\\r?)|(\n)|(.)	ppy_error("Identifier expected");
 
 	/*
 	 * Scan the substitution of a define
 	 */
-<pp_define>[^'"/\\\n]+		ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
-<pp_define>(\\\r?)|(\/[^/*])	ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
-<pp_define>\\\r?\n{ws}+		newline(0); ppy_lval.cptr = pp_xstrdup(" "); return tLITERAL;
+<pp_define>[^'"/\\\n]+		ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL;
+<pp_define>(\\\r?)|(\/[^/*])	ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL;
+<pp_define>\\\r?\n{ws}+		newline(0); ppy_lval.cptr = xstrdup(" "); return tLITERAL;
 <pp_define>\\\r?\n		newline(0);
 <pp_define>\n			newline(1); yy_pop_state(); return tNL;
 <pp_define>\'			new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_sqs);
@@ -516,22 +462,22 @@ void pp_writestring(const char *format, ...)
 	 */
 <pp_macro>\){ws}*		yy_pp_state(pp_mbody); return tMACROEND;
 <pp_macro>{ws}+			;
-<pp_macro>{cident}		ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
+<pp_macro>{cident}		ppy_lval.cptr = xstrdup(ppy_text); return tIDENT;
 <pp_macro>,			return ',';
-<pp_macro>"..."			return tELIPSIS;
+<pp_macro>"..."			return tELLIPSIS;
 <pp_macro>(\\\r?)|(\n)|(.)|(\.\.?)	ppy_error("Argument identifier expected");
 <pp_macro>\\\r?\n		newline(0);
 
 	/*
 	 * Scan the substitution of a macro
 	 */
-<pp_mbody>[^a-zA-Z0-9'"#/\\\n]+	ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
-<pp_mbody>{cident}		ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
+<pp_mbody>[^a-zA-Z0-9'"#/\\\n]+	ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL;
+<pp_mbody>{cident}		ppy_lval.cptr = xstrdup(ppy_text); return tIDENT;
 <pp_mbody>\#\#			return tCONCAT;
 <pp_mbody>\#			return tSTRINGIZE;
-<pp_mbody>[0-9][a-zA-Z0-9]*[^a-zA-Z0-9'"#/\\\n]*	ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
-<pp_mbody>(\\\r?)|(\/[^/*'"#\\\n]*)	ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
-<pp_mbody>\\\r?\n{ws}+		newline(0); ppy_lval.cptr = pp_xstrdup(" "); return tLITERAL;
+<pp_mbody>[0-9][a-zA-Z0-9]*[^a-zA-Z0-9'"#/\\\n]*	ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL;
+<pp_mbody>(\\\r?)|(\/[^/*'"#\\\n]*)	ppy_lval.cptr = xstrdup(ppy_text); return tLITERAL;
+<pp_mbody>\\\r?\n{ws}+		newline(0); ppy_lval.cptr = xstrdup(" "); return tLITERAL;
 <pp_mbody>\\\r?\n		newline(0);
 <pp_mbody>\n			newline(1); yy_pop_state(); return tNL;
 <pp_mbody>\'			new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_sqs);
@@ -698,7 +644,7 @@ void pp_writestring(const char *format, ...)
 
 			else if(yy_current_state() == pp_if)
 			{
-				ppy_lval.cptr = pp_xstrdup(ppy_text);
+				ppy_lval.cptr = xstrdup(ppy_text);
 				return tIDENT;
 			}
 			else {
@@ -724,7 +670,7 @@ void pp_writestring(const char *format, ...)
 				push_macro(ppp);
 				break;
 			default:
-				pp_internal_error(__FILE__, __LINE__, "Invalid define type %d\n", ppp->type);
+				assert(0);
 			}
 		}
 		else put_buffer(ppy_text, ppy_leng);
@@ -747,8 +693,8 @@ void pp_writestring(const char *format, ...)
 <pp_macexp>(\n)|(.)|(\\\r?(\n|.))	put_buffer(ppy_text, ppy_leng);
 
 <RCINCL>[A-Za-z0-9_\.\\/]+ {
-		ppy_lval.cptr=pp_xstrdup(ppy_text);
-        	yy_pop_state();
+		ppy_lval.cptr = xstrdup(ppy_text);
+		yy_pop_state();
 		return tRCINCLUDEPATH;
 	}
 
@@ -847,14 +793,10 @@ static void newline(int dowrite)
  *
  * FIXME:
  * The sizes of resulting 'int' and 'long' are compiler specific.
- * I depend on sizeof(int) > 2 here (although a relatively safe
- * assumption).
- * Long longs are not yet implemented because this is very compiler
- * specific and I don't want to think too much about the problems.
  *
  *-------------------------------------------------------------------------
  */
-static int make_number(int radix, YYSTYPE *val, const char *str, int len)
+static int make_number(int radix, PPY_STYPE *val, const char *str, int len)
 {
 	int is_l  = 0;
 	int is_ll = 0;
@@ -895,29 +837,21 @@ static int make_number(int radix, YYSTYPE *val, const char *str, int len)
 		is_u++;
 	}
 
-	if(is_ll)
+	if(is_u && is_ll)
 	{
-/* Assume as in the declaration of wrc_ull_t and wrc_sll_t */
-#ifdef HAVE_LONG_LONG
-		if (is_u)
-		{
-			errno = 0;
-			val->ull = strtoull(str, NULL, radix);
-			if (val->ull == ULLONG_MAX && errno == ERANGE)
-				ppy_error("integer constant %s is too large\n", str);
-			return tULONGLONG;
-		}
-		else
-		{
-			errno = 0;
-			val->sll = strtoll(str, NULL, radix);
-			if ((val->sll == LLONG_MIN || val->sll == LLONG_MAX) && errno == ERANGE)
-				ppy_error("integer constant %s is too large\n", str);
-			return tSLONGLONG;
-		}
-#else
-		pp_internal_error(__FILE__, __LINE__, "long long constants not supported on this platform");
-#endif
+		errno = 0;
+		val->ull = strtoull(str, NULL, radix);
+		if (val->ull == ULLONG_MAX && errno == ERANGE)
+		    ppy_error("integer constant %s is too large\n", str);
+		return tULONGLONG;
+	}
+	else if(!is_u && is_ll)
+	{
+		errno = 0;
+		val->sll = strtoll(str, NULL, radix);
+		if ((val->sll == LLONG_MIN || val->sll == LLONG_MAX) && errno == ERANGE)
+		    ppy_error("integer constant %s is too large\n", str);
+		return tSLONGLONG;
 	}
 	else if(is_u && is_l)
 	{
@@ -967,28 +901,19 @@ static int make_number(int radix, YYSTYPE *val, const char *str, int len)
 static void expand_special(pp_entry_t *ppp)
 {
 	static char *buf = NULL;
-	char *new_buf;
 
 	assert(ppp->type == def_special);
 
 	if(!strcmp(ppp->ident, "__LINE__"))
 	{
-		new_buf = pp_xrealloc(buf, 32);
-		if(!new_buf)
-			return;
-		buf = new_buf;
-		sprintf(buf, "%d", pp_status.line_number);
+		buf = xrealloc(buf, 32);
+		snprintf(buf, 32, "%d", pp_status.line_number);
 	}
 	else if(!strcmp(ppp->ident, "__FILE__"))
 	{
-		new_buf = pp_xrealloc(buf, strlen(pp_status.input) + 3);
-		if(!new_buf)
-			return;
-		buf = new_buf;
-		sprintf(buf, "\"%s\"", pp_status.input);
+		buf = xrealloc(buf, strlen(pp_status.input) + 3);
+		snprintf(buf, strlen(pp_status.input) + 3, "\"%s\"", pp_status.input);
 	}
-	else
-		pp_internal_error(__FILE__, __LINE__, "Special macro '%s' not found...\n", ppp->ident);
 
 	if(pp_flex_debug)
 		fprintf(stderr, "expand_special(%d): %s:%d: '%s' -> '%s'\n",
@@ -1029,21 +954,12 @@ static char *curdef_text = NULL;
 
 static void add_text(const char *str, int len)
 {
-	int new_alloc;
-	char *new_text;
-
 	if(len == 0)
 		return;
 	if(curdef_idx >= curdef_alloc || curdef_alloc - curdef_idx < len)
 	{
-		new_alloc = curdef_alloc + ((len + ALLOCBLOCKSIZE-1) & ~(ALLOCBLOCKSIZE-1));
-		new_text = pp_xrealloc(curdef_text, new_alloc * sizeof(curdef_text[0]));
-		if(!new_text)
-			return;
-		curdef_text = new_text;
-		curdef_alloc = new_alloc;
-		if(curdef_alloc > 65536)
-			ppy_warning("Reallocating macro-expansion buffer larger than 64kB");
+		curdef_alloc += (len + ALLOCBLOCKSIZE-1) & ~(ALLOCBLOCKSIZE-1);
+		curdef_text = xrealloc(curdef_text, curdef_alloc * sizeof(curdef_text[0]));
 	}
 	memcpy(&curdef_text[curdef_idx], str, len);
 	curdef_idx += len;
@@ -1139,9 +1055,6 @@ static mtext_t *add_expand_text(mtext_t *mtp, macexpstackentry_t *mep, int *nnl)
 		if(pp_flex_debug)
 			fprintf(stderr, "add_expand_text: exp_subst(%d): '%s'\n", mtp->subst.argidx, exp);
 		break;
-
-	default:
-		pp_internal_error(__FILE__, __LINE__, "Invalid expansion type (%d) in macro expansion\n", mtp->type);
 	}
 	return mtp;
 }
@@ -1158,9 +1071,9 @@ static void expand_macro(macexpstackentry_t *mep)
 	assert(ppp->type == def_macro);
 	assert(ppp->expanding == 0);
 
-	if((ppp->nargs >= 0 && nargs != ppp->nargs) || (ppp->nargs < 0 && nargs < -ppp->nargs))
+	if((!ppp->variadic && nargs != ppp->nargs) || (ppp->variadic && nargs < ppp->nargs))
 	{
-		ppy_error("Too %s macro arguments (%d)", nargs < abs(ppp->nargs) ? "few" : "many", nargs);
+		ppy_error("Too %s macro arguments (%d)", nargs < ppp->nargs ? "few" : "many", nargs);
 		return;
 	}
 
@@ -1229,31 +1142,18 @@ static void expand_macro(macexpstackentry_t *mep)
  */
 static void new_string(void)
 {
-#ifdef DEBUG
-	if(strbuf_idx)
-		ppy_warning("new_string: strbuf_idx != 0");
-#endif
 	strbuf_idx = 0;
 	str_startline = pp_status.line_number;
 }
 
 static void add_string(const char *str, int len)
 {
-	int new_alloc;
-	char *new_buffer;
-
 	if(len == 0)
 		return;
 	if(strbuf_idx >= strbuf_alloc || strbuf_alloc - strbuf_idx < len)
 	{
-		new_alloc = strbuf_alloc + ((len + ALLOCBLOCKSIZE-1) & ~(ALLOCBLOCKSIZE-1));
-		new_buffer = pp_xrealloc(strbuffer, new_alloc * sizeof(strbuffer[0]));
-		if(!new_buffer)
-			return;
-		strbuffer = new_buffer;
-		strbuf_alloc = new_alloc;
-		if(strbuf_alloc > 65536)
-			ppy_warning("Reallocating string buffer larger than 64kB");
+		strbuf_alloc += (len + ALLOCBLOCKSIZE-1) & ~(ALLOCBLOCKSIZE-1);
+		strbuffer = xrealloc(strbuffer, strbuf_alloc * sizeof(strbuffer[0]));
 	}
 	memcpy(&strbuffer[strbuf_idx], str, len);
 	strbuf_idx += len;
@@ -1261,23 +1161,16 @@ static void add_string(const char *str, int len)
 
 static char *get_string(void)
 {
-	char *str = pp_xmalloc(strbuf_idx + 1);
-	if(!str)
-		return NULL;
+	char *str = xmalloc(strbuf_idx + 1);
+
 	memcpy(str, strbuffer, strbuf_idx);
 	str[strbuf_idx] = '\0';
-#ifdef DEBUG
-	strbuf_idx = 0;
-#endif
 	return str;
 }
 
 static void put_string(void)
 {
 	put_buffer(strbuffer, strbuf_idx);
-#ifdef DEBUG
-	strbuf_idx = 0;
-#endif
 }
 
 static int string_start(void)
@@ -1296,11 +1189,11 @@ static void push_buffer(pp_entry_t *ppp, char *filename, char *incname, int pop)
 	if(ppy_debug)
 		printf("push_buffer(%d): %p %p %p %d\n", bufferstackidx, ppp, filename, incname, pop);
 	if(bufferstackidx >= MAXBUFFERSTACK)
-		pp_internal_error(__FILE__, __LINE__, "Buffer stack overflow");
+		error("Buffer stack overflow\n");
 
 	memset(&bufferstack[bufferstackidx], 0, sizeof(bufferstack[0]));
 	bufferstack[bufferstackidx].bufferstate	= YY_CURRENT_BUFFER;
-	bufferstack[bufferstackidx].filehandle  = pp_status.file;
+	bufferstack[bufferstackidx].file        = pp_status.file;
 	bufferstack[bufferstackidx].define	= ppp;
 	bufferstack[bufferstackidx].line_number	= pp_status.line_number;
 	bufferstack[bufferstackidx].char_number	= pp_status.char_number;
@@ -1321,16 +1214,11 @@ static void push_buffer(pp_entry_t *ppp, char *filename, char *incname, int pop)
 		pp_status.input  = filename;
 		ncontinuations = 0;
 	}
-	else if(!pop)
-		pp_internal_error(__FILE__, __LINE__, "Pushing buffer without knowing where to go to");
 	bufferstackidx++;
 }
 
 static bufferstackentry_t *pop_buffer(void)
 {
-	if(bufferstackidx < 0)
-		pp_internal_error(__FILE__, __LINE__, "Bufferstack underflow?");
-
 	if(bufferstackidx == 0)
 		return NULL;
 
@@ -1344,8 +1232,8 @@ static bufferstackentry_t *pop_buffer(void)
 
 		if(!bufferstack[bufferstackidx].should_pop)
 		{
-			wpp_callbacks->close(pp_status.file);
-			pp_writestring("# %d \"%s\" 2\n", bufferstack[bufferstackidx].line_number, bufferstack[bufferstackidx].filename);
+			fclose(pp_status.file);
+			fprintf(ppy_out, "# %d \"%s\" 2\n", bufferstack[bufferstackidx].line_number, bufferstack[bufferstackidx].filename);
 
 			/* We have EOF, check the include logic */
 			if(pp_incl_state.state == 2 && !pp_incl_state.seen_junk && pp_incl_state.ppp)
@@ -1353,21 +1241,14 @@ static bufferstackentry_t *pop_buffer(void)
 				pp_entry_t *ppp = pplookup(pp_incl_state.ppp);
 				if(ppp)
 				{
-					iep = pp_xmalloc(sizeof(includelogicentry_t));
-					if (iep)
-					{
-						iep->ppp = ppp;
-						ppp->iep = iep;
-						iep->filename = bufferstack[bufferstackidx].include_filename;
-						iep->prev = NULL;
-						iep->next = pp_includelogiclist;
-						if(iep->next)
-							iep->next->prev = iep;
-						pp_includelogiclist = iep;
-						if(pp_status.debug)
-							fprintf(stderr, "pop_buffer: %s:%d: includelogic added, include_ppp='%s', file='%s'\n",
-                                                                bufferstack[bufferstackidx].filename, bufferstack[bufferstackidx].line_number, pp_incl_state.ppp, iep->filename);
-					}
+					iep = xmalloc(sizeof(includelogicentry_t));
+					iep->ppp = ppp;
+					ppp->iep = iep;
+					iep->filename = bufferstack[bufferstackidx].include_filename;
+                                        list_add_head( &pp_includelogiclist, &iep->entry );
+					if(pp_status.debug)
+						fprintf(stderr, "pop_buffer: %s:%d: includelogic added, include_ppp='%s', file='%s'\n",
+                                                        bufferstack[bufferstackidx].filename, bufferstack[bufferstackidx].line_number, pp_incl_state.ppp, iep->filename);
 				}
 			}
 			free(pp_incl_state.ppp);
@@ -1397,15 +1278,13 @@ static bufferstackentry_t *pop_buffer(void)
 			bufferstack[bufferstackidx].filename,
 			bufferstack[bufferstackidx].should_pop);
 
-	pp_status.file = bufferstack[bufferstackidx].filehandle;
+	pp_status.file = bufferstack[bufferstackidx].file;
 	ppy__switch_to_buffer(bufferstack[bufferstackidx].bufferstate);
 
 	if(bufferstack[bufferstackidx].should_pop)
 	{
-		if(yy_current_state() == pp_macexp)
-			macro_add_expansion();
-		else
-			pp_internal_error(__FILE__, __LINE__, "Pop buffer and state without macro expansion state");
+		assert( yy_current_state() == pp_macexp );
+		macro_add_expansion();
 		yy_pop_state();
 	}
 
@@ -1426,9 +1305,7 @@ static void push_macro(pp_entry_t *ppp)
 		return;
 	}
 
-	macexpstack[macexpstackidx] = pp_xmalloc(sizeof(macexpstack[0][0]));
-	if(!macexpstack[macexpstackidx])
-		return;
+	macexpstack[macexpstackidx] = xmalloc(sizeof(macexpstack[0][0]));
         memset( macexpstack[macexpstackidx], 0, sizeof(macexpstack[0][0]));
 	macexpstack[macexpstackidx]->ppp = ppp;
 	macexpstackidx++;
@@ -1441,8 +1318,7 @@ static macexpstackentry_t *top_macro(void)
 
 static macexpstackentry_t *pop_macro(void)
 {
-	if(macexpstackidx <= 0)
-		pp_internal_error(__FILE__, __LINE__, "Macro expansion stack underflow\n");
+	assert(macexpstackidx > 0);
 	return macexpstack[--macexpstackidx];
 }
 
@@ -1466,13 +1342,8 @@ static void add_text_to_macro(const char *text, int len)
 
 	if(mep->curargalloc - mep->curargsize <= len+1)	/* +1 for '\0' */
 	{
-		char *new_curarg;
-		int new_alloc =	mep->curargalloc + ((ALLOCBLOCKSIZE > len+1) ? ALLOCBLOCKSIZE : len+1);
-		new_curarg = pp_xrealloc(mep->curarg, new_alloc * sizeof(mep->curarg[0]));
-		if(!new_curarg)
-			return;
-		mep->curarg = new_curarg;
-		mep->curargalloc = new_alloc;
+		mep->curargalloc += (ALLOCBLOCKSIZE > len+1) ? ALLOCBLOCKSIZE : len+1;
+		mep->curarg = xrealloc(mep->curarg, mep->curargalloc * sizeof(mep->curarg[0]));
 	}
 	memcpy(mep->curarg + mep->curargsize, text, len);
 	mep->curargsize += len;
@@ -1483,30 +1354,15 @@ static void macro_add_arg(int last)
 {
 	int nnl = 0;
 	char *cptr;
-	char **new_args, **new_ppargs;
-	int *new_nnls;
 	macexpstackentry_t *mep = top_macro();
 
 	assert(mep->ppp->expanding == 0);
 
-	new_args = pp_xrealloc(mep->args, (mep->nargs+1) * sizeof(mep->args[0]));
-	if(!new_args)
-		return;
-	mep->args = new_args;
+	mep->args = xrealloc(mep->args, (mep->nargs+1) * sizeof(mep->args[0]));
+	mep->ppargs = xrealloc(mep->ppargs, (mep->nargs+1) * sizeof(mep->ppargs[0]));
+	mep->nnls = xrealloc(mep->nnls, (mep->nargs+1) * sizeof(mep->nnls[0]));
 
-	new_ppargs = pp_xrealloc(mep->ppargs, (mep->nargs+1) * sizeof(mep->ppargs[0]));
-	if(!new_ppargs)
-		return;
-	mep->ppargs = new_ppargs;
-
-	new_nnls = pp_xrealloc(mep->nnls, (mep->nargs+1) * sizeof(mep->nnls[0]));
-	if(!new_nnls)
-		return;
-	mep->nnls = new_nnls;
-
-	mep->args[mep->nargs] = pp_xstrdup(mep->curarg ? mep->curarg : "");
-	if(!mep->args[mep->nargs])
-		return;
+	mep->args[mep->nargs] = xstrdup(mep->curarg ? mep->curarg : "");
 	cptr = mep->args[mep->nargs]-1;
 	while((cptr = strchr(cptr+1, '\n')))
 	{
@@ -1541,7 +1397,7 @@ static void macro_add_expansion(void)
 
 	assert(mep->ppp->expanding == 0);
 
-	mep->ppargs[mep->nargs-1] = pp_xstrdup(mep->curarg ? mep->curarg : "");
+	mep->ppargs[mep->nargs-1] = xstrdup(mep->curarg ? mep->curarg : "");
 	free(mep->curarg);
 	mep->curargalloc = mep->curargsize = 0;
 	mep->curarg = NULL;
@@ -1565,7 +1421,7 @@ static void put_buffer(const char *s, int len)
 	if(top_macro())
 		add_text_to_macro(s, len);
 	else
-		wpp_callbacks->write(s, len);
+		fwrite(s, 1, len, ppy_out);
 }
 
 
@@ -1584,7 +1440,7 @@ void pp_do_include(char *fname, int type)
 	if(!fname)
 		return;
 
-	for(iep = pp_includelogiclist; iep; iep = iep->next)
+	LIST_FOR_EACH_ENTRY( iep, &pp_includelogiclist, includelogicentry_t, entry )
 	{
 		if(!strcmp(iep->filename, fname))
 		{
@@ -1624,12 +1480,12 @@ void pp_do_include(char *fname, int type)
 	pp_incl_state.ppp = NULL;
 
 	if(pp_status.debug)
-		fprintf(stderr, "pp_do_include: %s:%d: include_state=%d, include_ppp='%s', include_ifdepth=%d\n",
-                        pp_status.input, pp_status.line_number, pp_incl_state.state, pp_incl_state.ppp, pp_incl_state.ifdepth);
+		fprintf(stderr, "pp_do_include: %s:%d: include_state=%d, include_ifdepth=%d\n",
+                        pp_status.input, pp_status.line_number, pp_incl_state.state, pp_incl_state.ifdepth);
 	pp_status.file = fp;
 	ppy__switch_to_buffer(ppy__create_buffer(NULL, YY_BUF_SIZE));
 
-	pp_writestring("# 1 \"%s\" 1%s\n", newpath, type ? "" : " 3");
+	fprintf(ppy_out, "# 1 \"%s\" 1%s\n", newpath, type ? "" : " 3");
 }
 
 /*
