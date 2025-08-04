@@ -6,8 +6,6 @@ list(APPEND LIBCNTPR_STRING_SOURCE
     string/is_wctype.c
     string/scanf.c
     string/strcspn.c
-    string/stricmp.c
-    string/strnicmp.c
     string/strlwr.c
     string/strrev.c
     string/strset.c
@@ -95,8 +93,10 @@ list(APPEND CRT_STRING_SOURCE
     string/strcoll.c
     string/strdup.c
     string/strerror.c
+    string/stricmp.c
     string/string.c
     string/strncoll.c
+    string/strnicmp.c
     string/strtod.c
     string/strtok.c
     string/strtok_s.c
@@ -111,6 +111,8 @@ list(APPEND CRT_STRING_ASM_SOURCE
 )
 
 list(APPEND LIBCNTPR_STRING_SOURCE
+    string/_stricmp_nt.c
+    string/_strnicmp_nt.c
     string/iswctype_nt.c
     string/mbstowcs_nt.c
     string/tolower_nt.c
