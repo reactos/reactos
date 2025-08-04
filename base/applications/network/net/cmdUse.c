@@ -171,7 +171,7 @@ cmdUse(
     else
     {
         BOOL Persist = FALSE;
-        NETRESOURCE lpNet;
+        NETRESOURCE lpNet = { 0 };
         WCHAR Access[256];
         DWORD OutFlags = 0, Size = ARRAYSIZE(Access);
 
