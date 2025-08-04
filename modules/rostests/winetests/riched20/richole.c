@@ -34,9 +34,6 @@
 #include <imm.h>
 #include <textserv.h>
 #include <wine/test.h>
-#ifdef __REACTOS__
-#define debugstr_guid wine_dbgstr_guid
-#endif
 
 #define EXPECT_TODO_WINE 0x80000000UL
 
