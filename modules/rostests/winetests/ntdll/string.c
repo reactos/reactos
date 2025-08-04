@@ -1991,11 +1991,13 @@ static void test_tolower(void)
 {
     int i, ret, exp_ret;
 
+#ifndef __REACTOS__ // This is nonsense
     if (!GetProcAddress(GetModuleHandleA("ntdll"), "NtRemoveIoCompletionEx"))
     {
         win_skip("tolower tests\n");
         return;
     }
+#endif // __REACTOS__
 
     ok(ptolower != NULL, "tolower is not available\n");
 
