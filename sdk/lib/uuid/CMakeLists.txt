@@ -87,6 +87,7 @@ list(APPEND IDL_SOURCES
 #    netprov.idl
     oaidl.idl
     objidl.idl
+    objidlbase.idl
     objsafe.idl
     ocidl.idl
     ocmm.idl
