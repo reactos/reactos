@@ -114,6 +114,7 @@ list(APPEND LIBCNTPR_STRING_SOURCE
     string/iswctype_nt.c
     string/mbstowcs_nt.c
     string/toupper_nt_mb.c
+    string/towupper_nt.c
     string/wcstombs_nt.c
 )
 
