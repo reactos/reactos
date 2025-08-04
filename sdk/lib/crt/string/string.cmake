@@ -112,6 +112,7 @@ list(APPEND CRT_STRING_ASM_SOURCE
 
 list(APPEND LIBCNTPR_STRING_SOURCE
     string/mbstowcs_nt.c
+    string/tolower_nt.c
     string/towupper_nt.c
     string/wcstombs_nt.c
 )
