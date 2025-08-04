@@ -12,7 +12,6 @@ list(APPEND LIBCNTPR_STRING_SOURCE
     string/strrev.c
     string/strset.c
     string/strstr.c
-    string/strupr.c
     string/strpbrk.c
     string/strspn.c
     string/atoi64.c
@@ -101,6 +100,7 @@ list(APPEND CRT_STRING_SOURCE
     string/strtok.c
     string/strtok_s.c
     string/strtoul.c
+    string/strupr.c
     string/strxfrm.c
     string/wcstombs_s.c
     string/wtof.c
@@ -111,6 +111,8 @@ list(APPEND CRT_STRING_ASM_SOURCE
 )
 
 list(APPEND LIBCNTPR_STRING_SOURCE
+    string/_strlwr.c
+    string/_strupr.c
     string/iswctype_nt.c
     string/mbstowcs_nt.c
     string/toupper_nt_mb.c
