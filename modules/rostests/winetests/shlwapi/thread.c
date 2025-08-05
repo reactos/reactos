@@ -104,44 +104,44 @@ static void test_SHCreateThreadRef(void)
 
     /* start with a clean state */
     hr = pSHSetThreadRef(NULL);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     pobj = NULL;
     refcount = 0xdeadbeef;
     hr = pSHCreateThreadRef(&refcount, &pobj);
     ok((hr == S_OK) && pobj && (refcount == 1),
-        "got 0x%x and %p with %d (expected S_OK and '!= NULL' with 1)\n",
+        "got 0x%lx and %p with %ld (expected S_OK and '!= NULL' with 1)\n",
         hr, pobj, refcount);
 
     /* the object is not automatic set as ThreadRef */
     punk = NULL;
     hr = pSHGetThreadRef(&punk);
     ok( (hr == E_NOINTERFACE) && (punk == NULL),
-        "got 0x%x and %p (expected E_NOINTERFACE and NULL)\n", hr, punk);
+        "got 0x%lx and %p (expected E_NOINTERFACE and NULL)\n", hr, punk);
 
     /* set the object */
     hr = pSHSetThreadRef(pobj);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     /* read back */
     punk = NULL;
     hr = pSHGetThreadRef(&punk);
     ok( (hr == S_OK) && (punk == pobj) && (refcount == 2),
-        "got 0x%x and %p with %d (expected S_OK and %p with 2)\n",
+        "got 0x%lx and %p with %ld (expected S_OK and %p with 2)\n",
         hr, punk, refcount, pobj);
 
     /* free the ref from SHGetThreadRef */
     if (SUCCEEDED(hr)) {
         hr = IUnknown_Release(pobj);
         ok((hr == 1) && (hr == refcount),
-            "got %d with %d (expected 1 with 1)\n", hr, refcount);
+            "got %ld with %ld (expected 1 with 1)\n", hr, refcount);
     }
 
     /* free the object */
     if (pobj) {
         hr = IUnknown_Release(pobj);
         ok((hr == 0) && (hr == refcount),
-            "got %d with %d (expected 0 with 0)\n", hr, refcount);
+            "got %ld with %ld (expected 0 with 0)\n", hr, refcount);
     }
 
     if (0) {
@@ -149,25 +149,25 @@ static void test_SHCreateThreadRef(void)
            but the object no longer exist after the *_Release */
         punk = NULL;
         hr = pSHGetThreadRef(&punk);
-        trace("got 0x%x and %p with %d\n", hr, punk, refcount);
+        trace("got 0x%lx and %p with %ld\n", hr, punk, refcount);
     }
 
     /* remove the dead object pointer */
     hr = pSHSetThreadRef(NULL);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     /* parameter check */
     if (0) {
         /* vista: E_INVALIDARG, XP: crash */
         pobj = NULL;
         hr = pSHCreateThreadRef(NULL, &pobj);
-        ok(hr == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hr);
+        ok(hr == E_INVALIDARG, "got 0x%lx (expected E_INVALIDARG)\n", hr);
 
         refcount = 0xdeadbeef;
         /* vista: E_INVALIDARG, XP: crash */
         hr = pSHCreateThreadRef(&refcount, NULL);
         ok( (hr == E_INVALIDARG) && (refcount == 0xdeadbeef),
-            "got 0x%x with 0x%x (expected E_INVALIDARG and oxdeadbeef)\n",
+            "got 0x%lx with 0x%lx (expected E_INVALIDARG and oxdeadbeef)\n",
             hr, refcount);
     }
 }
@@ -187,7 +187,7 @@ static void test_SHGetThreadRef(void)
     punk = NULL;
     hr = pSHGetThreadRef(&punk);
     ok( (hr == E_NOINTERFACE) && (punk == NULL),
-        "got 0x%x and %p (expected E_NOINTERFACE and NULL)\n", hr, punk);
+        "got 0x%lx and %p (expected E_NOINTERFACE and NULL)\n", hr, punk);
 
     if (0) {
         /* this crash on Windows */
@@ -210,7 +210,7 @@ static void test_SHSetThreadRef(void)
 
     /* start with a clean state */
     hr = pSHSetThreadRef(NULL);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     /* build and set out object */
     init_threadref(&ref, &refcount);
@@ -218,7 +218,7 @@ static void test_SHSetThreadRef(void)
     refcount = 1;
     hr = pSHSetThreadRef(&ref.IUnknown_iface);
     ok( (hr == S_OK) && (refcount == 1) && (!AddRef_called),
-        "got 0x%x with %d, %d (expected S_OK with 1, 0)\n",
+        "got 0x%lx with %ld, %ld (expected S_OK with 1, 0)\n",
         hr, refcount, AddRef_called);
 
     /* read back our object */
@@ -227,17 +227,17 @@ static void test_SHSetThreadRef(void)
     punk = NULL;
     hr = pSHGetThreadRef(&punk);
     ok( (hr == S_OK) && (punk == &ref.IUnknown_iface) && (refcount == 2) && (AddRef_called == 1),
-        "got 0x%x and %p with %d, %d (expected S_OK and %p with 2, 1)\n",
+        "got 0x%lx and %p with %ld, %ld (expected S_OK and %p with 2, 1)\n",
         hr, punk, refcount, AddRef_called, &ref);
 
     /* clear the object pointer */
     hr = pSHSetThreadRef(NULL);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     /* verify, that our object is no longer known as ThreadRef */
     hr = pSHGetThreadRef(&punk);
     ok( (hr == E_NOINTERFACE) && (punk == NULL),
-        "got 0x%x and %p (expected E_NOINTERFACE and NULL)\n", hr, punk);
+        "got 0x%lx and %p (expected E_NOINTERFACE and NULL)\n", hr, punk);
 
 }
 
