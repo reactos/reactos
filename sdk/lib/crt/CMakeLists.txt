@@ -15,7 +15,6 @@ include(misc/misc.cmake)
 include(printf/printf.cmake)
 include(process/process.cmake)
 include(search/search.cmake)
-include(setjmp/setjmp.cmake)
 include(startup/startup.cmake)
 include(stdio/stdio.cmake)
 include(stdlib/stdlib.cmake)
@@ -57,3 +56,10 @@ if(MSVC AND ARCH STREQUAL "i386")
     set_target_properties(ftol2 PROPERTIES LINKER_LANGUAGE "C")
     add_dependencies(ftol2 asm)
 endif()
+
+add_library(dbgrpt misc/dbgrpt.cpp)
+target_link_libraries(dbgrpt chkstk ${PSEH_LIB})
+target_compile_definitions(dbgrpt PRIVATE
+    _MT
+    _DEBUG)
+add_dependencies(dbgrpt psdk asm)
