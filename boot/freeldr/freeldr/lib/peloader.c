@@ -866,16 +866,20 @@ PeLdrLoadImageEx(
     ULONG i, BytesRead;
 
     TRACE("PeLdrLoadImage('%s', %ld)\n", FilePath, MemoryType);
+    DbgPrint("PeLdrLoadImageEx: Opening file '%s'\n", FilePath);
 
     /* Open the image file */
     Status = ArcOpen((PSTR)FilePath, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
+        DbgPrint("PeLdrLoadImageEx: ArcOpen failed for '%s', Status=%u\n", FilePath, Status);
         WARN("ArcOpen('%s') failed. Status: %u\n", FilePath, Status);
         return FALSE;
     }
+    DbgPrint("PeLdrLoadImageEx: File opened successfully, FileId=%lu\n", FileId);
 
     /* Load the first 2 sectors of the image so we can read the PE header */
+    DbgPrint("PeLdrLoadImageEx: Reading PE headers...\n");
     Status = ArcRead(FileId, HeadersBuffer, SECTOR_SIZE * 2, &BytesRead);
     if (Status != ESUCCESS)
     {
@@ -1056,6 +1060,7 @@ PeLdrLoadBootImage(
     _Out_ PLDR_DATA_TABLE_ENTRY* DataTableEntry)
 {
     BOOLEAN Success;
+    
 
     /* Load the image as a bootloader image */
     Success = PeLdrLoadImageEx(FilePath,

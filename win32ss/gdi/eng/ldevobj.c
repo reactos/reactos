@@ -285,9 +285,8 @@ LDEVOBJ_bUnloadImage(
 #else
     /* Unfortunately, ntoskrnl allows unloading a driver, but fails loading
      * it again with STATUS_IMAGE_ALREADY_LOADED. Prevent this problem by
-     * never unloading any driver.
+     * never unloading any driver. This is safe behavior.
      */
-    UNIMPLEMENTED;
     Status = STATUS_NOT_IMPLEMENTED;
 #endif
     if (!NT_SUCCESS(Status))

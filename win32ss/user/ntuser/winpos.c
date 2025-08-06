@@ -793,9 +793,19 @@ WinPosFindIconPos(PWND Window, POINT *Pos)
    pwndParent = Window->spwndParent;
    if (UserIsDesktopWindow(pwndParent))
    {
-      ERR("FIXME: Parent is Desktop, Min off screen!\n");
-      /* FIXME: ReactOS doesn't support iconic minimize to desktop */
-      Pos->x = Pos->y = -32000;
+      /* When parent is desktop, position minimized windows at bottom of screen */
+      RECT rcWork;
+      if (UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rcWork, 0))
+      {
+         /* Position at bottom-left of work area with standard spacing */
+         Pos->x = rcWork.left + 8;
+         Pos->y = rcWork.bottom - 32;
+      }
+      else
+      {
+         /* Fallback to off-screen if work area unavailable */
+         Pos->x = Pos->y = -32000;
+      }
       Window->InternalPos.flags |= WPF_MININIT;
       Window->InternalPos.IconPos.x = Pos->x;
       Window->InternalPos.IconPos.y = Pos->y;

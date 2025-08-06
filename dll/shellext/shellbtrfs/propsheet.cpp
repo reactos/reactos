@@ -1052,7 +1052,7 @@ void BtrfsPropSheet::init_propsheet(HWND hwndDlg) {
 
         EnableWindow(GetDlgItem(hwndDlg, IDC_UID), 0);
     } else
-        s = to_wstring(uid);
+        s = std::to_wstring((unsigned long)uid);
 
     SetDlgItemTextW(hwndDlg, IDC_UID, s.c_str());
 
@@ -1062,7 +1062,7 @@ void BtrfsPropSheet::init_propsheet(HWND hwndDlg) {
 
         EnableWindow(GetDlgItem(hwndDlg, IDC_GID), 0);
     } else
-        s = to_wstring(gid);
+        s = std::to_wstring((unsigned long)gid);
 
     SetDlgItemTextW(hwndDlg, IDC_GID, s.c_str());
 

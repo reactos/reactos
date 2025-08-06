@@ -1,5 +1,5 @@
 /* NFSv4.1 client for Windows
- * Copyright © 2012 The Regents of the University of Michigan
+ * Copyright ï¿½ 2012 The Regents of the University of Michigan
  *
  * Olga Kornievskaia <aglo@umich.edu>
  * Casey Bodley <cbodley@umich.edu>
@@ -422,7 +422,7 @@ authsspi_refresh(AUTH *auth, void *tmp)
                         0, 
                         &gd->ctx, 
                         &out_desc, 
-                        &ret_flags, 
+                        (ULONG *)&ret_flags, 
                         &gd->expiry);
 #endif
 		if (recv_tokenp != SSPI_C_NO_BUFFER) {
@@ -721,7 +721,7 @@ uint32_t sspi_verify_mic(void *dummy, u_int seq, sspi_buffer_desc *bufin,
     log_hexdump(0, "sspi_verify_mic: calculating checksum over", bufin->value, bufin->length, 0);
     log_hexdump(0, "sspi_verify_mic: received checksum ", bufout->value, bufout->length, 0);
 
-    return VerifySignature(ctx, &desc, seq, qop_state);
+    return VerifySignature(ctx, &desc, seq, (ULONG *)qop_state);
 }
 
 void sspi_release_buffer(sspi_buffer_desc *buf)

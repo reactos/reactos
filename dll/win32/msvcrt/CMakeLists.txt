@@ -26,6 +26,11 @@ add_definitions(
 list(APPEND SOURCE
     dllmain.c
     stubs.c
+    mbsrtowcs.c
+    emutls.c
+    strnlen.c
+    wctob.c
+    wctype.c
     msvcrt.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)

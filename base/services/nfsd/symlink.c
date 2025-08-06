@@ -1,5 +1,5 @@
 /* NFSv4.1 client for Windows
- * Copyright © 2012 The Regents of the University of Michigan
+ * Copyright ï¿½ 2012 The Regents of the University of Michigan
  *
  * Olga Kornievskaia <aglo@umich.edu>
  * Casey Bodley <cbodley@umich.edu>
@@ -198,7 +198,7 @@ static int parse_symlink(unsigned char *buffer, uint32_t length, nfs41_upcall *u
     if (status) goto out;
 
     if (args->set)
-        status = get_name(&buffer, &length, &args->target_set);
+        status = get_name(&buffer, &length, (const char **)&args->target_set);
     else
         args->target_set = NULL;
 

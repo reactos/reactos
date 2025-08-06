@@ -47,6 +47,7 @@ LoadRosload(
                        FrLdrBootPath,
                        RosloadPath);
 
+    DbgPrint("LoadRosload: Attempting to load '%s'\n", FullPath);
     TRACE("Loading second stage loader '%s'\n", FullPath);
 
     /* Load rosload.exe as a bootloader image. The base name is "scsiport.sys",
@@ -57,9 +58,11 @@ LoadRosload(
                                  DataTableEntry);
     if (!Success)
     {
+        DbgPrint("LoadRosload: PeLdrLoadBootImage failed for '%s'\n", FullPath);
         WARN("Failed to load second stage loader '%s'\n", FullPath);
         return FALSE;
     }
+    DbgPrint("LoadRosload: Successfully loaded '%s' at base 0x%p\n", FullPath, *ImageBase);
 
     return TRUE;
 }
@@ -73,17 +76,25 @@ LaunchSecondStageLoader(VOID)
     LONG (*EntryPoint)(VOID);
 
     /* Load the second stage loader */
+    DbgPrint("Trying to load rosload.exe from: %s\n", FrLdrBootPath);
     if (!LoadRosload("rosload.exe", &ImageBase, &RosloadDTE))
     {
+        DbgPrint("Failed to load rosload.exe, trying loader directory...\n");
         /* Try in loader directory */
         if (!LoadRosload("loader\\rosload.exe", &ImageBase, &RosloadDTE))
         {
+            DbgPrint("Failed to load loader\\rosload.exe\n");
             return ENOENT;
         }
+        DbgPrint("Successfully loaded loader\\rosload.exe\n");
+    }
+    else
+    {
+        DbgPrint("Successfully loaded rosload.exe\n");
     }
 
     /* Call the entrypoint */
-    printf("Launching rosload.exe...\n");
+    DbgPrint("Launching rosload.exe...\n");
     EntryPoint = VaToPa(RosloadDTE->EntryPoint);
     return (*EntryPoint)();
 }
@@ -136,7 +147,10 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     }
 
     /* Launch second stage loader */
-    if (LaunchSecondStageLoader() != ESUCCESS)
+    DbgPrint("Attempting to launch second stage loader...\n");
+    ULONG Result = LaunchSecondStageLoader();
+    DbgPrint("LaunchSecondStageLoader returned: %lu\n", Result);
+    if (Result != ESUCCESS)
     {
         UiMessageBoxCritical("Unable to load second stage loader.");
     }

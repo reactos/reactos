@@ -6,6 +6,11 @@ if(ENABLE_CCACHE)
     set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
 endif()
 
+# Disable thin archives (binutils 2.44 defaults to thin archives which cause issues)
+set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> rcs <TARGET> <LINK_FLAGS> <OBJECTS>")
+set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> rcs <TARGET> <LINK_FLAGS> <OBJECTS>")
+set(CMAKE_ASM_ARCHIVE_CREATE "<CMAKE_AR> rcs <TARGET> <LINK_FLAGS> <OBJECTS>")
+
 # PDB style debug info
 if(NOT DEFINED SEPARATE_DBG)
     set(SEPARATE_DBG FALSE)
@@ -176,7 +181,6 @@ add_compile_options(-Wall -Wpointer-arith)
 
 # Disable some overzealous warnings
 add_compile_options(
-    -Wno-unknown-warning-option
     -Wno-char-subscripts
     -Wno-multichar
     -Wno-unused-value
@@ -360,15 +364,15 @@ set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor=\"${CMAKE_C_COMPILER}\" ${RC_PREPROCE
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-        target_link_options(${MODULE} PRIVATE "-Wl,-entry,0")
+        target_link_options(${MODULE} PRIVATE "-Wl,--entry=0")
     elseif(ARCH STREQUAL "i386")
         set(_entrysymbol _${ENTRYPOINT})
         if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
         endif()
-        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${_entrysymbol}")
+        target_link_options(${MODULE} PRIVATE "-Wl,--entry=${_entrysymbol}")
     else()
-        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${ENTRYPOINT}")
+        target_link_options(${MODULE} PRIVATE "-Wl,--entry=${ENTRYPOINT}")
     endif()
 endfunction()
 
@@ -382,8 +386,9 @@ endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
     # Set the PE image version numbers from the NT OS version ReactOS is based on
-    target_link_options(${MODULE} PRIVATE
-        -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
+    # FIXME: Disabled due to binutils 2.44 segfault bug with these flags on amd64
+    # target_link_options(${MODULE} PRIVATE
+    #     -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
 
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         target_link_options(${MODULE} PRIVATE -Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000)
@@ -448,7 +453,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
-    # We create a static library with the importlib thus created as object. AR will extract the obj files and archive it again as a thin lib
+    # We create a static library with the importlib thus created as object. AR will extract the obj files and archive it again
     set_source_files_properties(
         ${LIBRARY_PRIVATE_DIR}/${_libname}.a
         PROPERTIES
@@ -470,7 +475,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
-    # We create a static library with the importlib thus created. AR will extract the obj files and archive it again as a thin lib
+    # We create a static library with the importlib thus created. AR will extract the obj files and archive it again
     set_source_files_properties(
         ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a
         PROPERTIES
@@ -644,8 +649,19 @@ add_library(libsupc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
 string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
-# libsupc++ requires libgcc and stdc++compat
-target_link_libraries(libsupc++ INTERFACE libgcc stdc++compat)
+
+# Add libgcc_eh for exception handling on amd64
+if(ARCH STREQUAL "amd64")
+    add_library(libgcc_eh STATIC IMPORTED GLOBAL)
+    execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc_eh.a OUTPUT_VARIABLE LIBGCCEH_LOCATION)
+    string(STRIP ${LIBGCCEH_LOCATION} LIBGCCEH_LOCATION)
+    set_target_properties(libgcc_eh PROPERTIES IMPORTED_LOCATION ${LIBGCCEH_LOCATION})
+    # libsupc++ requires libgcc_eh, libgcc and stdc++compat
+    target_link_libraries(libsupc++ INTERFACE libgcc_eh libgcc stdc++compat)
+else()
+    # libsupc++ requires libgcc and stdc++compat
+    target_link_libraries(libsupc++ INTERFACE libgcc stdc++compat)
+endif()
 
 add_library(libmingwex STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
@@ -666,3 +682,4 @@ target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_ST
 # Create our alias libraries
 add_library(cppstl ALIAS libstdc++)
 
+set(CMAKE_AR_FLAGS "rcs")

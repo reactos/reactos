@@ -36,14 +36,34 @@ typedef struct _floodInfo
 
 static __inline BOOL initFlood(FLOODINFO *info, RECTL *DstRect)
 {
-  ULONG width = DstRect->right - DstRect->left;
-  ULONG height = DstRect->bottom - DstRect->top;
-  info->floodData = ExAllocatePoolWithTag(NonPagedPool, width * height * sizeof(FLOODITEM), TAG_DIB);
+  LONG width, height;
+  SIZE_T size;
+  
+  /* Calculate dimensions, checking for invalid rectangles */
+  width = DstRect->right - DstRect->left;
+  height = DstRect->bottom - DstRect->top;
+  
+  /* Check for invalid dimensions */
+  if (width <= 0 || height <= 0)
+  {
+    DPRINT1("Invalid flood fill dimensions: %ld x %ld\n", width, height);
+    return FALSE;
+  }
+  
+  /* Check for overflow in multiplication */
+  if ((SIZE_T)width > (SIZE_MAX / sizeof(FLOODITEM) / (SIZE_T)height))
+  {
+    DPRINT1("Flood fill area too large: %ld x %ld\n", width, height);
+    return FALSE;
+  }
+  
+  size = (SIZE_T)width * (SIZE_T)height * sizeof(FLOODITEM);
+  info->floodData = ExAllocatePoolWithTag(NonPagedPool, size, TAG_DIB);
   if (info->floodData == NULL)
   {
     return FALSE;
   }
-  info->floodStart = info->floodData + (width * height);
+  info->floodStart = info->floodData + ((SIZE_T)width * (SIZE_T)height);
   DPRINT("Allocated flood stack from %p to %p\n", info->floodData, info->floodStart);
   return TRUE;
 }

@@ -271,6 +271,12 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
         }
     }
 
+    /* Check for empty command line */
+    if (!CommandLine || !CommandLine->Buffer || !CommandLine->Length)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Consume the command line */
     CmdLineCopy = *CommandLine;
     while (TRUE)

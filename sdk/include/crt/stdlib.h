@@ -1458,6 +1458,15 @@ extern "C" {
 
 #endif /* !__NO_ISOCEXT */
 
+/* Quick exit stubs for GCC 15 compatibility */
+#ifndef at_quick_exit
+static inline int at_quick_exit(void (*func)(void)) { return 0; }
+#endif
+
+#ifndef quick_exit  
+static inline void quick_exit(int status) { exit(status); }
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -47,7 +47,7 @@
  */
 
 /* NFSv4.1 client for Windows
- * Copyright © 2012 The Regents of the University of Michigan
+ * Copyright ï¿½ 2012 The Regents of the University of Michigan
  *
  * Olga Kornievskaia <aglo@umich.edu>
  * Casey Bodley <cbodley@umich.edu>
@@ -421,7 +421,7 @@ xdrrec_getoutbase(xdrs)
 	switch (xdrs->x_op) {
 
 	case XDR_ENCODE:
-        buf = rstrm->out_base;
+        buf = (int32_t *)rstrm->out_base;
 		break;
 
 	case XDR_DECODE:

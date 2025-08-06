@@ -5,6 +5,9 @@
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
+/* Define quick_exit stubs for GCC 15 compatibility */
+/* quick_exit stubs now provided by stdlib.h */
+
 #include <stdexcept>
 #include <cstdarg>
 #include <cstring>

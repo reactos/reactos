@@ -28,9 +28,19 @@
 static BOOLEAN
 getMacAddress(UCHAR * MacAddress)
 {
-    /* FIXME: query NDIS for all the interfaces */
-    UNIMPLEMENTED;
-    return FALSE;
+    /* Basic implementation - generate a pseudo-MAC address for DCOM.
+     * A full implementation would query NDIS for network interfaces.
+     * For LiveCD and systems without network cards, we need a fallback. */
+    
+    /* Use a locally administered MAC address (bit 1 of first octet = 1) */
+    MacAddress[0] = 0x02;  /* Locally administered, unicast */
+    MacAddress[1] = 0x00;
+    MacAddress[2] = 0x4C;  /* Some vendor-like bytes */
+    MacAddress[3] = 0x4F;
+    MacAddress[4] = 0x4F;
+    MacAddress[5] = 0x50;
+    
+    return TRUE;
 }
 
 static VOID

@@ -186,7 +186,7 @@ list(APPEND PCATLDR_BASE_SOURCE
     ${freeldr_base_asm}
     ${FREELDR_BASE_SOURCE})
 
-add_executable(freeldr_pe ${PCATLDR_BASE_SOURCE})
+add_executable(freeldr_pe ${PCATLDR_BASE_SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
 
 set_target_properties(freeldr_pe
     PROPERTIES
@@ -204,13 +204,26 @@ if(MSVC)
     remove_target_compile_option(freeldr_pe "/hotpatch")
     remove_target_compile_option(freeldr_common "/hotpatch")
 else()
-    target_link_options(freeldr_pe PRIVATE -Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200)
+    if(ARCH STREQUAL "amd64")
+        # For AMD64, we need to export symbols for rosload.exe
+        target_link_options(freeldr_pe PRIVATE -Wl,--file-alignment,0x200,--section-alignment,0x200)
+    else()
+        target_link_options(freeldr_pe PRIVATE -Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200)
+    endif()
     add_linker_script(freeldr_pe freeldr_gcc.lds)
     # Strip everything, including rossym data
-    add_custom_command(TARGET freeldr_pe
-                    POST_BUILD
-                    COMMAND ${CMAKE_STRIP} --remove-section=.rossym $<TARGET_FILE:freeldr_pe>
-                    COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:freeldr_pe>)
+    if(ARCH STREQUAL "amd64")
+        # For AMD64, we need to keep exports for rosload.exe, so don't strip everything
+        add_custom_command(TARGET freeldr_pe
+                        POST_BUILD
+                        COMMAND ${CMAKE_STRIP} --remove-section=.rossym $<TARGET_FILE:freeldr_pe>
+                        COMMAND ${CMAKE_STRIP} --strip-debug $<TARGET_FILE:freeldr_pe>)
+    else()
+        add_custom_command(TARGET freeldr_pe
+                        POST_BUILD
+                        COMMAND ${CMAKE_STRIP} --remove-section=.rossym $<TARGET_FILE:freeldr_pe>
+                        COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:freeldr_pe>)
+    endif()
 endif()
 
 set_image_base(freeldr_pe 0x10000)

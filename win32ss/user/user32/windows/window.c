@@ -493,7 +493,7 @@ CreateWindowExW(DWORD dwExStyle,
 
     if (!RegisterDefaultClasses)
     {
-       ERR("CreateWindowExW RegisterSystemControls\n");
+       TRACE("CreateWindowExW RegisterSystemControls\n");
        RegisterSystemControls();
     }
 

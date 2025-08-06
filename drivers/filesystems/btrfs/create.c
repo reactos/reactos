@@ -2991,7 +2991,7 @@ static __inline bool called_from_lxss() {
     PROCESS_BASIC_INFORMATION pbi;
     ULONG retlen;
 
-    Status = ZwQueryInformationProcess(NtCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), &retlen);
+    Status = NtQueryInformationProcess(NtCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), &retlen);
 
     if (!NT_SUCCESS(Status)) {
         ERR("ZwQueryInformationProcess returned %08lx\n", Status);

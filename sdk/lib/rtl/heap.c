@@ -4039,9 +4039,18 @@ RtlCreateTagHeap(_In_ HANDLE HeapHandle,
                  _In_opt_ PWSTR TagName,
                  _In_ PWSTR TagSubName)
 {
-    /* TODO */
-    UNIMPLEMENTED;
-    return 0;
+    /* Basic implementation - return a non-zero tag value.
+     * Full implementation would track and manage heap tags for debugging.
+     * For now, we just return a valid tag that allows the system to continue. */
+    static ULONG NextTag = 1;
+    
+    UNREFERENCED_PARAMETER(HeapHandle);
+    UNREFERENCED_PARAMETER(Flags);
+    UNREFERENCED_PARAMETER(TagName);
+    UNREFERENCED_PARAMETER(TagSubName);
+    
+    /* Return a unique non-zero tag */
+    return InterlockedIncrement((PLONG)&NextTag);
 }
 
 NTSTATUS

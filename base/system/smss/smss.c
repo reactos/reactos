@@ -218,6 +218,13 @@ SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
     /* There's no longer a debugging subsystem */
     if (Flags & SMP_DEBUG_FLAG) return STATUS_SUCCESS;
 
+    /* Check for empty command line */
+    if (!CommandLine || !CommandLine->Buffer || !CommandLine->Length)
+    {
+        /* Skip empty commands silently */
+        return STATUS_SUCCESS;
+    }
+
     /* Parse the command line to see what execution flags are requested */
     Status = SmpParseCommandLine(CommandLine,
                                  &Flags,

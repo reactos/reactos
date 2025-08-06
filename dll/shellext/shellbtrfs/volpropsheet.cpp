@@ -719,7 +719,7 @@ void BtrfsVolPropSheet::RefreshDevList(HWND devlist) {
         lvi.iItem = (int)SendMessageW(devlist, LVM_GETITEMCOUNT, 0, 0);
         lvi.lParam = (LPARAM)bd->dev_id;
 
-        s = to_wstring(bd->dev_id);
+        s = std::to_wstring((unsigned long long)bd->dev_id);
         lvi.pszText = (LPWSTR)s.c_str();
 
         SendMessageW(devlist, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
@@ -804,7 +804,7 @@ void BtrfsVolPropSheet::ResetStats(HWND hwndDlg) {
     WCHAR modfn[MAX_PATH];
     SHELLEXECUTEINFOW sei;
 
-    sel = to_wstring(stats_dev);
+    sel = std::to_wstring((unsigned long long)stats_dev);
 
     GetModuleFileNameW(module, modfn, sizeof(modfn) / sizeof(WCHAR));
 

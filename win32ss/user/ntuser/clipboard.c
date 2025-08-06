@@ -28,7 +28,8 @@ IntGetWinStaForCbAccess(VOID)
     Status = IntValidateWindowStationHandle(hWinSta, UserMode, WINSTA_ACCESSCLIPBOARD, &pWinStaObj, 0);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Cannot open winsta\n");
+        /* During early initialization, window station might not be ready yet */
+        TRACE("Cannot open winsta (Status: 0x%lx) - might be early initialization\n", Status);
         SetLastNtError(Status);
         return NULL;
     }

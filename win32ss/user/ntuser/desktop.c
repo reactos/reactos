@@ -3335,7 +3335,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     {
         if (pdesk)
             ObDereferenceObject(pdesk);
-        ERR("Attempted to change thread desktop although the thread has windows!\n");
+        TRACE("Attempted to change thread desktop although the thread has windows!\n");
         EngSetLastError(ERROR_BUSY);
         return FALSE;
     }
@@ -3396,7 +3396,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     if (!(pti->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)) &&
         pti->ppi->rpdeskStartup == NULL && hDesktop != NULL)
     {
-        ERR("The process 0x%p '%s' didn't have an assigned startup desktop before, assigning it now!\n",
+        TRACE("The process 0x%p '%s' didn't have an assigned startup desktop before, assigning it now!\n",
             pti->ppi->peProcess, pti->ppi->peProcess->ImageFileName);
 
         pti->ppi->hdeskStartup = hDesktop;

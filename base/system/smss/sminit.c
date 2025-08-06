@@ -931,7 +931,32 @@ SmpTranslateSystemPartitionInformation(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Cannot find drive letter for system partition\n");
-        return;
+        /* For LiveCD, check if X: drive exists as that's the typical LiveCD drive */
+        UNICODE_STRING XDrive;
+        HANDLE XDriveHandle;
+        RtlInitUnicodeString(&XDrive, L"X:");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &XDrive,
+                                   OBJ_CASE_INSENSITIVE,
+                                   SmpDosDevicesObjectDirectory,
+                                   NULL);
+        Status = NtOpenSymbolicLinkObject(&XDriveHandle,
+                                          SYMBOLIC_LINK_ALL_ACCESS,
+                                          &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            NtClose(XDriveHandle);
+            DPRINT1("SMSS: Using X: drive letter for LiveCD\n");
+            wcscpy(LinkBuffer, L"X:");
+        }
+        else
+        {
+            DPRINT1("SMSS: Using fallback drive letter C:\n");
+            wcscpy(LinkBuffer, L"C:");
+        }
+        DirInfo->Name.Buffer = LinkBuffer;
+        DirInfo->Name.Length = 2 * sizeof(WCHAR);
+        DirInfo->Name.MaximumLength = 3 * sizeof(WCHAR);
     }
 
     /* Open the setup key again, for full access this time */

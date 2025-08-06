@@ -523,7 +523,8 @@
 @ stub -version=0x600+ _freea_s
 @ stub -version=0x600+ _fscanf_l
 @ stub -version=0x600+ _fscanf_s_l
-@ cdecl -version=0x600+ _fseeki64(ptr int64 long)
+@ cdecl _fseeki64(ptr int64 long)
+@ cdecl _ftelli64(ptr)
 @ cdecl _fsopen(str str long)
 @ cdecl _fstat(long ptr)
 @ cdecl _fstat64(long ptr)
@@ -1302,7 +1303,7 @@
 @ cdecl atol(str)
 @ cdecl bsearch(ptr ptr long long ptr)
 @ stub -version=0x600+ bsearch_s
-@ stub -version=0x600+ btowc
+@ cdecl btowc(long)
 @ cdecl calloc(long long)
 @ cdecl ceil(double)
 @ cdecl -arch=x86_64,arm ceilf(long)
@@ -1406,7 +1407,7 @@
 @ cdecl -version=0x600+ mbrlen(str long ptr)
 @ cdecl -version=0x600+ mbrtowc(ptr str long ptr)
 @ stub -version=0x600+ mbsdup_dbg
-@ stub -version=0x600+ mbsrtowcs
+@ cdecl mbsrtowcs(ptr ptr long ptr)
 @ stub -version=0x600+ mbsrtowcs_s
 @ cdecl mbstowcs(ptr str long)
 @ stub -version=0x600+ mbstowcs_s
@@ -1475,7 +1476,7 @@
 @ cdecl strncmp(str str long)
 @ cdecl strncpy(ptr str long)
 @ cdecl -version=0x600+ strncpy_s(ptr long str long)
-@ cdecl -version=0x600+ strnlen(str long)
+@ cdecl strnlen(str long)
 @ cdecl strpbrk(str str)
 @ cdecl strrchr(str long)
 @ cdecl strspn(str str)
@@ -1514,6 +1515,7 @@
 @ cdecl vprintf(str ptr)
 @ stub -version=0x600+ vprintf_s
 @ cdecl -version=0x600+ vsnprintf(ptr long str ptr)
+@ varargs snprintf(ptr long str) _snprintf
 @ cdecl vsprintf(ptr str ptr)
 @ stub -version=0x600+ vsprintf_s
 @ cdecl vswprintf(ptr wstr ptr)
@@ -1537,7 +1539,7 @@
 @ cdecl wcsncmp(wstr wstr long)
 @ cdecl wcsncpy(ptr wstr long)
 @ cdecl -version=0x600+ wcsncpy_s(ptr long wstr long)
-@ cdecl -version=0x600+ wcsnlen(wstr long)
+@ cdecl wcsnlen(wstr long)
 @ cdecl wcspbrk(wstr wstr)
 @ cdecl wcsrchr(wstr long)
 @ stub -version=0x600+ wcsrtombs
@@ -1552,10 +1554,13 @@
 @ stub -version=0x600+ wcstombs_s
 @ cdecl wcstoul(wstr ptr long)
 @ cdecl wcsxfrm(ptr wstr long)
-@ stub -version=0x600+ wctob
+@ cdecl wctob(long)
 @ cdecl wctomb(ptr long)
 @ stub -version=0x600+ wctomb_s
+@ cdecl wctype(str)
 @ varargs wprintf(wstr)
 @ stub -version=0x600+ wprintf_s
 @ varargs wscanf(wstr)
 @ stub -version=0x600+ wscanf_s
+@ cdecl __emutls_get_address(ptr)
+@ cdecl __intrinsic_setjmpex(ptr ptr)

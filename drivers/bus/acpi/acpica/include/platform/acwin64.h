@@ -142,7 +142,7 @@
         { \
             compare = *lock; \
             newval = (compare & ~1) | ((compare >> 1) & 1) | 2; \
-            prev = InterlockedCompareExchange(lock, newval, compare); \
+            prev = InterlockedCompareExchange((long volatile *)lock, newval, compare); \
         } while (prev != compare); \
         acquired = ((newval & 0xFF) < 3) ? 0xFF : 0x00; \
     } \
@@ -155,7 +155,7 @@
 \
     if ((FacsPtr) != 0) \
     { \
-        pending = InterlockedAnd(&(FacsPtr)->GlobalLock, ~3) & 1; \
+        pending = InterlockedAnd((long volatile *)&(FacsPtr)->GlobalLock, ~3) & 1; \
     } \
     (Pnd) = pending; \
 }

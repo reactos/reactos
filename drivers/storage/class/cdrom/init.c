@@ -699,6 +699,17 @@ Return Value:
 
     // Save away the symbolic link name in the driver data block.  We need
     // it so we can delete the link when the device is removed.
+    
+    // Validate the MaximumLength before allocation
+    if (unicodeLinkName.MaximumLength == 0 || 
+        unicodeLinkName.MaximumLength > 256 * sizeof(WCHAR))
+    {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_INIT,
+                    "DeviceCreateWellKnownName: Invalid MaximumLength %u.\n",
+                    unicodeLinkName.MaximumLength));
+        return STATUS_INVALID_PARAMETER;
+    }
+    
     savedName = ExAllocatePoolWithTag(PagedPool,
                                       unicodeLinkName.MaximumLength,
                                       CDROM_TAG_STRINGS);
