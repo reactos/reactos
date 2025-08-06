@@ -588,6 +588,7 @@ __ASM_GLOBAL_FUNC(_ftol,
 
 #endif /* (defined(__GNUC__) || defined(__clang__)) && defined(__i386__) */
 
+#ifndef __REACTOS__
 /*********************************************************************
  *		_fpclass (MSVCRT.@)
  */
@@ -609,6 +610,7 @@ int CDECL _fpclass(double num)
         return s ? _FPCLASS_NN : _FPCLASS_PN;
     }
 }
+#endif // __REACTOS__
 
 /*********************************************************************
  *		_rotl (MSVCRT.@)
@@ -1195,6 +1197,7 @@ int * CDECL __fpecode(void)
     return &msvcrt_get_thread_data()->fpecode;
 }
 
+#ifndef __REACTOS__
 /*********************************************************************
  *		ldexp (MSVCRT.@)
  */
@@ -1208,6 +1211,7 @@ double CDECL ldexp(double num, int exp)
     return math_error(_UNDERFLOW, "ldexp", num, exp, z);
   return z;
 }
+#endif // __REACTOS__
 
 /*********************************************************************
  *		_cabs (MSVCRT.@)
