@@ -6,14 +6,11 @@
  */
 
 #define WIN32_NO_STATUS
-#include <wine/test.h>
+#include <apitest.h>
 #include <tchar.h>
 #include <pseh/pseh2.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
-
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 #define ok_ulong(expression, result) \
     do { \
@@ -24,7 +21,6 @@
 
 START_TEST(tcstoul)
 {
-    NTSTATUS ExceptionStatus;
     ULONG Result;
     _TCHAR Dummy;
     _TCHAR *End;
@@ -67,7 +63,7 @@ START_TEST(tcstoul)
 
     StartSeh()
         Result = _tcstoul(NULL, NULL, 0);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
 
     StartSeh()
         Result = _tcstoul(_T(""), NULL, 0);

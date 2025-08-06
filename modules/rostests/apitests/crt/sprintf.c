@@ -37,11 +37,11 @@ START_TEST(sprintf)
     /* basic parameter tests */
     StartSeh()
         Length = sprintf(NULL, NULL);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
 
     StartSeh()
         Length = sprintf(NULL, "");
-        ok_int(Length, 0);
+        ok_int(Length, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? -1 : 0);
 #if TEST_CRTDLL || TEST_USER32
     EndSeh(STATUS_ACCESS_VIOLATION);
 #else
@@ -50,7 +50,7 @@ START_TEST(sprintf)
 
     StartSeh()
         Length = sprintf(NULL, "Hello");
-        ok_int(Length, 5);
+        ok_int(Length, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? -1 : 5);
 #if TEST_CRTDLL || TEST_USER32
     EndSeh(STATUS_ACCESS_VIOLATION);
 #else
