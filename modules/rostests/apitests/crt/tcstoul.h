@@ -67,7 +67,7 @@ START_TEST(tcstoul)
 
     StartSeh()
         Result = _tcstoul(NULL, NULL, 0);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
 
     StartSeh()
         Result = _tcstoul(_T(""), NULL, 0);
