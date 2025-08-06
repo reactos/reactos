@@ -4130,12 +4130,24 @@ Return Value:
 
     if (NT_SUCCESS(status))
     {
-        valueName = ExAllocatePoolWithTag(PagedPool,
-                                          DeviceExtension->DeviceName.Length + sizeof(WCHAR),
-                                          CDROM_TAG_STRINGS);
-        if (valueName == NULL)
+        // Validate the DeviceName length before allocation
+        if (DeviceExtension->DeviceName.Length == 0 || 
+            DeviceExtension->DeviceName.Length > 512 * sizeof(WCHAR))
         {
-            status = STATUS_INSUFFICIENT_RESOURCES;
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL,
+                       "Invalid DeviceName.Length: %u\n", 
+                       DeviceExtension->DeviceName.Length));
+            status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            valueName = ExAllocatePoolWithTag(PagedPool,
+                                              DeviceExtension->DeviceName.Length + sizeof(WCHAR),
+                                              CDROM_TAG_STRINGS);
+            if (valueName == NULL)
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+            }
         }
     }
 
