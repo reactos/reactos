@@ -1001,8 +1001,12 @@ int main( int argc, char **argv )
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
 #define ok_hdl ok_ptr
 
+/* Magic pointers come from KUSER_SHARED_DATA; needed to get true NT version on Windows 8+ */
+#define KUSER_SHARED_DATA_UMPTR (uintptr_t)0x7FFE0000
+#define GetNTVersion() (((*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C)) << 8) | (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270)))
+
 #define is_reactos() \
-    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
+    (*(unsigned*)(KUSER_SHARED_DATA_UMPTR + 0xFFC) == 0x8EAC705)
 
 #ifdef __cplusplus
 } /* extern "C" */
