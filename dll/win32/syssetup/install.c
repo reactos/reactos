@@ -614,12 +614,23 @@ EnableUserModePnpManager(VOID)
     SERVICE_STATUS_PROCESS ServiceStatus;
     BOOL bRet = FALSE;
     DWORD BytesNeeded, WaitTime;
+    DWORD dwError;
 
     hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCManager == NULL)
     {
+        dwError = GetLastError();
         DPRINT1("Unable to open the service control manager.\n");
-        DPRINT1("Last Error %d\n", GetLastError());
+        DPRINT1("Last Error %d\n", dwError);
+        
+        /* For LiveCD, service manager might not be available yet */
+        /* ERROR_ACCESS_DENIED (5) is common during early LiveCD boot */
+        if (dwError == ERROR_ACCESS_DENIED || dwError == ERROR_SERVICE_DATABASE_LOCKED)
+        {
+            DPRINT1("Service manager not ready, continuing anyway for LiveCD scenario\n");
+            return TRUE;
+        }
+        
         goto cleanup;
     }
 

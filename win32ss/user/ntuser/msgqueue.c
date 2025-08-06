@@ -2246,7 +2246,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    {
       CurrentEntry = pti->PostedMessagesListHead.Flink;
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
-      ERR("Thread Cleanup Post Messages %p\n",CurrentMessage);
+      TRACE("Thread Cleanup Post Messages %p\n",CurrentMessage);
       if (CurrentMessage->dwQEvent)
       {
          if (CurrentMessage->dwQEvent == POSTEVENT_NWE)
