@@ -54,7 +54,7 @@ ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
     {
         WCHAR ch = pszOld[ichOld];
 
-        if (ch == L'\n')
+        if (ch == L'\n') //Check Condition
         {
             if (!bPrevCR)
             {
