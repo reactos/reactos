@@ -4099,7 +4099,10 @@ typedef enum {
   PowerActionShutdown,
   PowerActionShutdownReset,
   PowerActionShutdownOff,
-  PowerActionWarmEject
+  PowerActionWarmEject,
+#if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD) || defined(__REACTOS__)
+  PowerActionDisplayOff
+#endif
 } POWER_ACTION, *PPOWER_ACTION;
 
 typedef enum _DEVICE_POWER_STATE {
