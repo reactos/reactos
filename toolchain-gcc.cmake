@@ -45,9 +45,31 @@ require_program(CMAKE_DLLTOOL ${MINGW_TOOLCHAIN_PREFIX}dlltool)
 #set(CMAKE_AR ${MINGW_TOOLCHAIN_PREFIX}gcc-ar${MINGW_TOOLCHAIN_SUFFIX})
 require_program(CMAKE_OBJCOPY ${MINGW_TOOLCHAIN_PREFIX}objcopy)
 
-set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> crT <TARGET> <LINK_FLAGS> <OBJECTS>")
-set(CMAKE_CXX_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
-set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
+# FIXME: On amd64, archives lose their index when re-archived by AR after being created by dlltool
+# Use regular archives instead of thin archives (T flag) and always run ranlib
+if(ARCH STREQUAL "amd64")
+    # For amd64, we MUST run ranlib after every archive operation
+    set(CMAKE_C_CREATE_STATIC_LIBRARY 
+        "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>"
+        "<CMAKE_RANLIB> <TARGET>")
+    set(CMAKE_CXX_CREATE_STATIC_LIBRARY 
+        "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>"
+        "<CMAKE_RANLIB> <TARGET>")
+    set(CMAKE_ASM_CREATE_STATIC_LIBRARY 
+        "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>"
+        "<CMAKE_RANLIB> <TARGET>")
+    # FIXME: Also override the LINK rule for static libraries to ensure ranlib is called
+    set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_C_ARCHIVE_APPEND "<CMAKE_AR> r <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> <TARGET>")
+    set(CMAKE_CXX_ARCHIVE_CREATE ${CMAKE_C_ARCHIVE_CREATE})
+    set(CMAKE_CXX_ARCHIVE_APPEND ${CMAKE_C_ARCHIVE_APPEND})
+    set(CMAKE_CXX_ARCHIVE_FINISH ${CMAKE_C_ARCHIVE_FINISH})
+else()
+    set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> crT <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_CXX_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
+    set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
+endif()
 
 # Don't link with anything by default unless we say so
 set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
@@ -58,9 +80,16 @@ set(CMAKE_CXX_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C++ Libraries")
 # This allows to have CMake test the compiler without linking
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
-set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
+# Workaround for binutils linker segfault on amd64 with --enable-auto-image-base
+if(ARCH STREQUAL "amd64")
+    set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--disable-auto-import")
+    set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--disable-auto-import")
+    set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -Wl,--disable-auto-import")
+else()
+    set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
+    set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
+    set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
+endif()
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/overrides-gcc.cmake")
 

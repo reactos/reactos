@@ -556,6 +556,8 @@ endif()
 
 function(add_importlibs _module)
     add_dependency_node(${_module})
+    # FIXME: For amd64, link with msvcrt_startup BEFORE msvcrt
+    # FIXME: amd64 - CRT startup is now added via target_sources in set_module_type
     foreach(LIB ${ARGN})
         target_link_libraries(${_module} lib${LIB})
         add_dependency_edge(${_module} ${LIB})
@@ -592,8 +594,10 @@ function(set_module_type MODULE TYPE)
         set_subsystem(${MODULE} native)
     elseif(${TYPE} STREQUAL win32cui)
         set_subsystem(${MODULE} console)
+        # FIXME: For amd64, CRT startup is now included in libmsvcrt
     elseif(${TYPE} STREQUAL win32gui)
         set_subsystem(${MODULE} windows)
+        # FIXME: For amd64, CRT startup is now included in libmsvcrt
     endif()
 
     # Set unicode definitions
@@ -621,6 +625,7 @@ function(set_module_type MODULE TYPE)
     elseif((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl))
         set_entrypoint(${MODULE} DllMainCRTStartup 12)
+        # FIXME: For amd64, CRT startup is now included in libmsvcrt
     elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
         set_entrypoint(${MODULE} DriverEntry 8)
     elseif(${TYPE} STREQUAL nativedll)
@@ -633,22 +638,25 @@ function(set_module_type MODULE TYPE)
 
     # Set base address
     # Use 'IMAGEBASE default' to skip these set_image_base(), especially for win32dll test files
-    if(__module_IMAGEBASE)
-        if(NOT ${__module_IMAGEBASE} STREQUAL "default")
-            set_image_base(${MODULE} ${__module_IMAGEBASE})
-        endif()
-    elseif(${TYPE} STREQUAL win32dll)
-        if(DEFINED baseaddress_${MODULE})
-            set_image_base(${MODULE} ${baseaddress_${MODULE}})
-        else()
-            message(STATUS "${MODULE} has no base address")
-        endif()
-    elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
-        # special case for kernel
-        if (TYPE STREQUAL kernel)
-            set_image_base(${MODULE} 0x00400000)
-        else()
-            set_image_base(${MODULE} 0x00010000)
+    # Skip setting image base for amd64 due to binutils linker segfault bug
+    if(NOT ARCH STREQUAL "amd64")
+        if(__module_IMAGEBASE)
+            if(NOT ${__module_IMAGEBASE} STREQUAL "default")
+                set_image_base(${MODULE} ${__module_IMAGEBASE})
+            endif()
+        elseif(${TYPE} STREQUAL win32dll)
+            if(DEFINED baseaddress_${MODULE})
+                set_image_base(${MODULE} ${baseaddress_${MODULE}})
+            else()
+                message(STATUS "${MODULE} has no base address")
+            endif()
+        elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
+            # special case for kernel
+            if (TYPE STREQUAL kernel)
+                set_image_base(${MODULE} 0x00400000)
+            else()
+                set_image_base(${MODULE} 0x00010000)
+            endif()
         endif()
     endif()
 
