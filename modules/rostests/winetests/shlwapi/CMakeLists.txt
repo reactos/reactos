@@ -36,7 +36,9 @@ add_importlibs(shlwapi_winetest shlwapi shell32 mlang oleaut32 ole32 user32 adva
 if(MSVC)
     add_importlibs(shlwapi_winetest ntdll)
     target_compile_options(shlwapi_winetest PRIVATE
-        /wd4113)
+        /wd4113
+        /wd4028 # ordinal.c(2624): formal parameter different from declaration (VS 2019)
+)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
