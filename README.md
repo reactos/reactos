@@ -1,4 +1,4 @@
-<p align=center>
+<p align=center >
   <a href="https://reactos.org/">
     <img alt="ReactOS" src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
   </a>
