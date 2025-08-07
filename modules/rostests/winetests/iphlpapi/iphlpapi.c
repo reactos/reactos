@@ -3414,6 +3414,16 @@ static void test_ParseNetworkString(void)
     ipv4_address_tests[] =
     {
         {"1.2.3.4",               {{{1, 2, 3, 4}}}},
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
+        {"1.2.3.4a",              {0}, ERROR_INVALID_PARAMETER},
+        {"1.2.3.0x4a",            {0}, ERROR_INVALID_PARAMETER},
+        {"1.2.3",                 {0}, ERROR_INVALID_PARAMETER},
+        {"a1.2.3.4",              {0}, ERROR_INVALID_PARAMETER},
+        {"0xdeadbeef",            {0}, ERROR_INVALID_PARAMETER},
+        {"1.2.3.4:22",            {0}, ERROR_INVALID_PARAMETER},
+        {"::1",                   {0}, ERROR_INVALID_PARAMETER},
+        {"winehq.org",            {0}, ERROR_INVALID_PARAMETER},
+#else
         {"1.2.3.4a",              {}, ERROR_INVALID_PARAMETER},
         {"1.2.3.0x4a",            {}, ERROR_INVALID_PARAMETER},
         {"1.2.3",                 {}, ERROR_INVALID_PARAMETER},
@@ -3422,6 +3432,7 @@ static void test_ParseNetworkString(void)
         {"1.2.3.4:22",            {}, ERROR_INVALID_PARAMETER},
         {"::1",                   {}, ERROR_INVALID_PARAMETER},
         {"winehq.org",            {}, ERROR_INVALID_PARAMETER},
+#endif
     };
     struct
     {
@@ -3433,10 +3444,17 @@ static void test_ParseNetworkString(void)
     ipv4_service_tests[] =
     {
         {"1.2.3.4:22",            {{{1, 2, 3, 4}}}, 22},
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
+        {"winehq.org:22",         {0}, 0, ERROR_INVALID_PARAMETER},
+        {"1.2.3.4",               {0}, 0, ERROR_INVALID_PARAMETER},
+        {"1.2.3.4:0",             {0}, 0, ERROR_INVALID_PARAMETER},
+        {"1.2.3.4:65536",         {0}, 0, ERROR_INVALID_PARAMETER},
+#else
         {"winehq.org:22",         {}, 0, ERROR_INVALID_PARAMETER},
         {"1.2.3.4",               {}, 0, ERROR_INVALID_PARAMETER},
         {"1.2.3.4:0",             {}, 0, ERROR_INVALID_PARAMETER},
         {"1.2.3.4:65536",         {}, 0, ERROR_INVALID_PARAMETER},
+#endif
     };
     WCHAR wstr[IP6_ADDRESS_STRING_BUFFER_LENGTH] = {'1','2','7','.','0','.','0','.','1',':','2','2',0};
     NET_ADDRESS_INFO info;
