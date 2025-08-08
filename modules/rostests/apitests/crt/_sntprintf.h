@@ -38,10 +38,9 @@ START_TEST(_sntprintf)
 
     StartSeh()
         Result = _sntprintf(NULL, 1, _T("Hello"));
-        ok(Result == 5 ||
-           broken(Result == -1) /* Win7 */, "Result = %d\n", Result);
+        ok_int(Result, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? -1 : 5);
 #if defined(_UNICODE) || defined(TEST_CRTDLL)
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
 #else
     EndSeh(STATUS_SUCCESS);
 #endif

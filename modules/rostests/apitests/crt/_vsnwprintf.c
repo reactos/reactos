@@ -21,7 +21,7 @@ static void call_varargs(wchar_t* buf, size_t buf_size, int expected_ret, LPCWST
     va_start(args, formatString);
     ret = _vsnwprintf(buf, buf_size, formatString, args);
     va_end(args);
-    ok(expected_ret == ret, "Test failed: expected %i, got %i.\n", expected_ret, ret);
+    ok(expected_ret == ret, "Test failed for `%ls`: expected %i, got %i.\n", formatString, expected_ret, ret);
 }
 
 START_TEST(_vsnwprintf)
@@ -37,7 +37,10 @@ START_TEST(_vsnwprintf)
 #if defined(TEST_CRTDLL)
         call_varargs(NULL, INT_MAX, -1, L"%s it really work?", L"does");
 #else
-        call_varargs(NULL, INT_MAX, 20, L"%s it really work?", L"does");
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+            call_varargs(NULL, INT_MAX, -1, L"%s it really work?", L"does");
+        else
+            call_varargs(NULL, INT_MAX, 20, L"%s it really work?", L"does");
 #endif
 
 #if defined(TEST_USER32)
@@ -49,7 +52,10 @@ START_TEST(_vsnwprintf)
 #if defined(TEST_USER32)/* NTDLL doesn't use/set errno */
     ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 #else
-    ok(errno == 0, "Expected 0, got %u\n", errno);
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        ok(errno == ERROR_BAD_COMMAND, "Expected 0, got %u\n", errno);
+    else
+        ok(errno == 0, "Expected 0, got %u\n", errno);
 #endif
 
     /* This one is no better */
@@ -60,12 +66,18 @@ START_TEST(_vsnwprintf)
         call_varargs(NULL, 0, 20, L"%s it really work?", L"does");
 #endif
     EndSeh(STATUS_SUCCESS);
-    ok(errno == 0, "Expected 0, got %u\n", errno);
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        ok(errno == ERROR_BAD_COMMAND, "Expected 0, got %u\n", errno);
+    else
+        ok(errno == 0, "Expected 0, got %u\n", errno);
 
 
     /* One more NULL checks */
     StartSeh()
         call_varargs(buffer, 255, -1, NULL);
-    EndSeh(STATUS_ACCESS_VIOLATION);
-    ok(errno == 0, "Expected 0, got %u\n", errno);
+    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        ok(errno == ERROR_BAD_COMMAND, "Expected 0, got %u\n", errno);
+    else
+        ok(errno == 0, "Expected 0, got %u\n", errno);
 }
