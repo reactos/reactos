@@ -89,6 +89,7 @@ static inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( 
 static inline const char *debugstr_an( const CHAR *s, intptr_t n ) { return wine_dbgstr_an( s, n ); }
 static inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 static inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbgstr_wn( s, n ); }
+static inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
 static inline const char *wine_dbgstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
