@@ -694,16 +694,22 @@ MMixerSetGetVolumeControlDetails(
     {
         if (bSet)
         {
+            DPRINT1("Value (Set) = %d\n", Input[Channel].dwValue);
+
             /* FIXME SEH */
             Index = Input[Channel].dwValue / VolumeData->InputSteppingDelta;
+            DPRINT1("Index (Set) = %d\n", Index);
 
-            if (Index >= VolumeData->ValuesCount)
+            if (Index >= VolumeData->ValuesCount || Index < 0)
             {
-                DPRINT1("Index %u out of bounds %u \n", Index, VolumeData->ValuesCount);
-                return MM_STATUS_INVALID_PARAMETER;
+                /* Linear value */
+                Value = Input[Channel].dwValue;
             }
-
-            Value = VolumeData->Values[Index];
+            else
+            {
+                /* Logarithmic value */
+                Value = VolumeData->Values[Index];
+            }
         }
 
         /* Get/set control details */
@@ -711,8 +717,22 @@ MMixerSetGetVolumeControlDetails(
 
         if (!bSet)
         {
+            DPRINT1("Value (Get) = %d\n", Value);
+
             /* FIXME SEH */
-            Input[Channel].dwValue = MMixerGetVolumeControlIndex(VolumeData, Value);
+            Index = Value / VolumeData->InputSteppingDelta;
+            DPRINT1("Index (Get) = %d\n", Index);
+
+            if (Index >= VolumeData->ValuesCount || Index < 0)
+            {
+                /* Linear value */
+                Input[Channel].dwValue = Value;
+            }
+            else
+            {
+                /* Logarithmic value */
+                Input[Channel].dwValue = MMixerGetVolumeControlIndex(VolumeData, Value);
+            }
         }
     }
 
