@@ -1582,6 +1582,23 @@ HRESULT WINAPI SHStrDupA(_In_ LPCSTR psz, _Outptr_ WCHAR** ppwsz);
 HRESULT WINAPI SHStrDupW(_In_ LPCWSTR psz, _Outptr_ WCHAR** ppwsz);
 #define SHStrDup WINELIB_NAME_AW(SHStrDup)
 
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+typedef int SFBS_FLAGS;
+
+enum tagSFBS_FLAGS
+{
+    SFBS_FLAGS_ROUND_TO_NEAREST_DISPLAYED_DIGIT    = 0x0001,
+    SFBS_FLAGS_TRUNCATE_UNDISPLAYED_DECIMAL_DIGITS = 0x0002
+};
+
+LWSTDAPI
+StrFormatByteSizeEx(
+  ULONGLONG ull,
+  SFBS_FLAGS flags,
+  _Out_writes_(cchBuf) PWSTR pszBuf,
+  _In_range_(>,0) UINT cchBuf);
+#endif // (NTDDI_VERSION >= NTDDI_VISTASP1)
+
 LPSTR
 WINAPI
 StrFormatByteSizeA(
