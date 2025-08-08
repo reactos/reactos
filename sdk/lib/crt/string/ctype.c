@@ -845,6 +845,7 @@ int __cdecl __toascii(int c)
    return((unsigned int)(c) & 0x7f);
 }
 
+#ifndef _LIBCNT_
 /*
  * @implemented
  */
@@ -864,6 +865,7 @@ int __cdecl _toupper(int c)
       return (c + upalpha);
    return(c);
 }
+#endif
 
 /*
  * @implemented
@@ -884,6 +886,7 @@ int __cdecl toupper(int c)
       return (c + upalpha);
    return(c);
 }
+//#endif
 
 /*
  * @implemented
