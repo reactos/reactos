@@ -58,7 +58,13 @@ VOID KmtSetIrql(IN KIRQL NewIrql)
 
 BOOLEAN KmtAreInterruptsEnabled(VOID)
 {
-    return (__readeflags() & (1 << 9)) != 0;
+#if defined(_M_IX86) || defined(_M_AMD64)
+    return (__readeflags() & EFLAGS_INTERRUPT_MASK) != 0;
+#else
+#pragma message(__FILE__ ": warning : 'KmtAreInterruptsEnabled()' is UNIMPLEMENTED for this architecture")
+    // HACK: trivial stub. Used by ok_bool_true(KmtAreInterruptsEnabled(), ...).
+    return FALSE;
+#endif
 }
 
 typedef struct _POOL_HEADER
