@@ -3375,11 +3375,11 @@ static enum fill_status fill_networkadapterconfig( struct table *table, const st
     DWORD size = 0, ret;
     enum fill_status status = FILL_STATUS_UNFILTERED;
 
-    ret = GetAdaptersAddresses( AF_UNSPEC, GAA_FLAG_INCLUDE_ALL_GATEWAYS, NULL, NULL, &size );
+    ret = GetAdaptersAddresses( AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, NULL, &size );
     if (ret != ERROR_BUFFER_OVERFLOW) return FILL_STATUS_FAILED;
 
     if (!(buffer = heap_alloc( size ))) return FILL_STATUS_FAILED;
-    if (GetAdaptersAddresses( AF_UNSPEC, GAA_FLAG_INCLUDE_ALL_GATEWAYS, NULL, buffer, &size ))
+    if (GetAdaptersAddresses( AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, buffer, &size ))
     {
         heap_free( buffer );
         return FILL_STATUS_FAILED;
